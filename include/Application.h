@@ -4,6 +4,7 @@
 
 #include <memory>
 
+
 class Application {
 public:
 	Application();
@@ -14,14 +15,12 @@ public:
 	void shutdown();
 
 
+
+
+
 private:
 	std::unique_ptr<Window> window;
 	bool isRunning;
-
-
-
-
-
 
 
 	// Constants
