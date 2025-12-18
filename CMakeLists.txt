@@ -79,10 +79,15 @@ add_executable(AirplaneSim)
 
 # BEST PRACTICE: Explicitly list all source files using target_sources.
 target_sources(AirplaneSim PRIVATE
-    # Main 
+    # main 
     src/main.cpp
     src/Application.cpp
+
+    # /graphics
     src/graphics/Window.cpp
+    src/graphics/Renderer.cpp
+    src/graphics/Shader.cpp
+
 )
 
 

@@ -27,6 +27,7 @@ Window::Window(int width, int height, const std::string& title)
 
 	glfwMakeContextCurrent(handle);
 
+
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
 		std::cout << "GLAD Initialization Failed" << std::endl;
 		return;
@@ -44,6 +45,7 @@ Window::~Window()
 	glfwDestroyWindow(handle);
 	glfwTerminate();
 }
+
 
 
 
@@ -103,4 +105,17 @@ void Window::getSize(int* width, int* height) const
 { 
 	glfwGetFramebufferSize(handle, width, height);
 	return;
+}
+
+
+
+
+
+void Window::setVSync(bool enabled)
+{
+	if (enabled) {
+		glfwSwapInterval(1);
+	} else {
+		glfwSwapInterval(0);
+	}
 }

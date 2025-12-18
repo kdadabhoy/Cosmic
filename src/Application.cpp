@@ -35,10 +35,14 @@ bool Application::initialize() {
 		Window Initialization
 	*/
 	window = std::make_unique<Window>(DEFAULT_WIDTH, DEFAULT_HEIGHT, DEFAULT_WINDOW_TITLE);
+
 	if (!window->getHandle()) {
 		std::cout << "Failed to Create a Window" << std::endl;
 		return false;
 	}
+
+	window->setVSync(true);
+
 
 
 
@@ -124,6 +128,7 @@ void Application::shutdown()
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplGlfw_Shutdown();
 	ImGui::DestroyContext();
+
 
 	// Window Shutdown
 	window.reset();

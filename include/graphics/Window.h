@@ -13,10 +13,12 @@ public:
 
 
 	// GLFW Wrapper functions:
-	bool shouldClose() const;
-	void swapBuffers();
-	void pollEvents();
-	void getSize(int* width, int* height) const;
+	bool shouldClose() const;					  // glfwWindowShouldClose()
+	void swapBuffers();							  // glfwSwapBuffers()
+	void pollEvents();							  // glfwPollEvents() 
+	void getSize(int* width, int* height) const;  // glfwGetFramebufferSize()
+	void setVSync(bool enabled);				  // glfwSwapInterval()
+
 
 private:
 	GLFWwindow* handle;
@@ -63,7 +65,7 @@ Documentation:
 
 
 
-	-------------------------------------------------------------------
+	**************************************
 	GLFW Wrapper functions:
 		- For naming and ease of use
 
@@ -100,6 +102,12 @@ Documentation:
 			- width and height are passed by pointer
 				- Passed by pointer to make it clear we are modifying them
 	
+
+		void setVSync(bool enabled);
+			- A wrapper for glfwSwapInterval()
+			- VSync (Vertical Synchronization) syncs the monitor and games refresh rate
+				- This helps eliminate screen tearing and reduces hardware strain
+
 
 
 */
