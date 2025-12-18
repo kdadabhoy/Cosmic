@@ -82,7 +82,7 @@ target_sources(AirplaneSim PRIVATE
     # Main 
     src/main.cpp
     src/Application.cpp
-
+    src/graphics/Window.cpp
 )
 
 
