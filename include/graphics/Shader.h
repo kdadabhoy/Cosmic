@@ -6,15 +6,37 @@
 
 
 
+struct ShaderProgramSource
+{
+    std::string VertexSource;
+    std::string FragmentSource;
+};
+
+
+
 class Shader {
 public:
-    Shader();
+    Shader(const std::string& vertexFilePath, const std::string& fragmentFilePath);
     ~Shader();
 
 
+    // Wrappers for OpenGL 
+    void bind() const;       // glUseProgram(rendererID)
+    void unBind() const;     // glUseProgram(0)
+
+
 private:
-    unsigned int ID;
-    std::string readFile(const std::string& path);
+    unsigned int rendererID;
+    std::string vertFilePath;
+    std::string fragFilePath;
+
+    std::string parseShader(const std::string& path);
+
+
+    unsigned int compileShader(unsigned int type, const std::string& source);
+    unsigned int createShader(const std::string& vertexShader, const std::string& fragmentShader);
+
+
 };
 
 #endif

@@ -87,6 +87,9 @@ target_sources(AirplaneSim PRIVATE
     src/graphics/Window.cpp
     src/graphics/Renderer.cpp
     src/graphics/Shader.cpp
+    src/graphics/VertexBuffer.cpp
+    src/graphics/VertexArray.cpp
+    src/graphics/IndexBuffer.cpp
 
 )
 

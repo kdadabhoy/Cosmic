@@ -1,8 +1,14 @@
 #ifndef RENDERER_H
 #define RENDERER_H
 
+#include "graphics/VertexArray.h"
+#include "graphics/IndexBuffer.h"
 #include "graphics/Shader.h"
+
 #include <glm/glm.hpp>
+#include <iostream>
+
+
 
 
 
@@ -10,12 +16,13 @@ class Renderer {
 public:
     Renderer();
     ~Renderer();
+    void clear() const;
+    void draw(const VertexArray& va, const IndexBuffer& ib, const Shader& shader) const;
 
-    bool initialize();
-
+    //void drawMesh();
 
 private:
-    Shader mainShader;
+    //Shader mainShader;
 
 };
 
