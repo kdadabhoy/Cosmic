@@ -134,7 +134,6 @@ unsigned int Shader::createShader(const std::string& vertexShader, const std::st
 void Shader::bind() const
 {
 	glUseProgram(rendererID);
-	return;
 }
 
 
@@ -148,5 +147,40 @@ void Shader::bind() const
 void Shader::unBind() const
 {
 	glUseProgram(0);
-	return;
 }
+
+
+
+
+
+
+
+
+
+
+void Shader::setUniform4f(const std::string& name, float v0, float v1, float v2, float v3)
+{
+	glUniform4f(getUniformLocation(name), v0, v1, v2, v3);
+}
+
+
+
+
+
+
+
+int Shader::getUniformLocation(const std::string& name)
+{
+	if (uniformLocationCache.find(name) != uniformLocationCache.end())
+		return uniformLocationCache[name];
+
+	unsigned int location = glGetUniformLocation(rendererID, name.c_str());
+	if (location == -1) {
+		printf("Warning: uniform '%s' doesn't exist!\n", name.c_str());
+	} else {
+		uniformLocationCache[name] = location;
+	}
+
+	return location;
+}
+

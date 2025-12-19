@@ -96,6 +96,51 @@ bool Application::initialize() {
 
 
 void Application::run() {
+
+
+
+
+	// Test code
+
+	float positions[] = {
+	-0.5f, -0.5f, // 0
+	 0.5f, -0.5f, // 1
+	 0.5f,  0.5f, // 2
+	-0.5f,  0.5f, // 3
+	};
+
+	unsigned int indices[] = {
+		0, 1, 2,
+		2, 3, 0
+	};
+
+
+
+
+	VertexArray va;
+	VertexBuffer vb(positions, 4 * 2 * sizeof(float));
+	VertexBufferLayout layout;
+	layout.push<float>(2);
+	va.addBuffer(vb, layout);
+
+	IndexBuffer ib(indices, 6);
+
+	Shader shader("shaders/vert.shader", "shaders/frag.shader");
+	shader.bind();
+	shader.setUniform4f("u_Color", 0.8f, 0.3f, 0.8f, 1.0f);
+
+	va.unBind();
+	vb.unBind();
+	ib.unBind();
+
+	Renderer renderer;
+
+
+	float r = 0.0f;
+	float increment = 0.05f;
+
+
+
 	while (isRunning && !window->shouldClose()) {
 		// Event Pulling:
 		window->pollEvents();
@@ -105,12 +150,22 @@ void Application::run() {
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
-		ImGui::ShowDemoWindow(); // Show demo window! :)
+		//ImGui::ShowDemoWindow(); // Show demo window! :)
 
 
 		// Rendering:
-			// abc I render stuff here efg
+		renderer.clear();
 
+		shader.bind();
+		shader.setUniform4f("u_Color", r, 0.3f, 0.8f, 1.0f);
+		renderer.draw(va, ib, shader);
+		if (r > 1.0f) {
+			increment = -0.05f;
+		} else if (r < 0.0f) {
+			increment = 0.05f;
+		}
+
+		r += increment;
 
 
 		// ImGui Functions from Documentation - Bottom of Loop:

@@ -3,6 +3,7 @@
 
 #include <string>
 #include <glad/glad.h>
+#include <unordered_map>
 
 
 
@@ -25,16 +26,27 @@ public:
     void unBind() const;     // glUseProgram(0)
 
 
+    // Uniforms
+    void setUniform4f(const std::string& name, float v0, float v1, float v2, float v3);
+
+
 private:
     unsigned int rendererID;
     std::string vertFilePath;
     std::string fragFilePath;
 
+
+    // Reading Shader Files
     std::string parseShader(const std::string& path);
 
 
+    // Shader Creation
     unsigned int compileShader(unsigned int type, const std::string& source);
     unsigned int createShader(const std::string& vertexShader, const std::string& fragmentShader);
+
+    // Uniforms
+    std::unordered_map<std::string, int> uniformLocationCache;
+    int getUniformLocation(const std::string& name);
 
 
 };

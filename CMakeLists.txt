@@ -113,3 +113,14 @@ target_link_libraries(AirplaneSim PRIVATE
     glad
     glm
 )
+
+
+
+
+# ----------------------------
+# 5. Asset Management (Shaders)
+# ----------------------------
+
+# Copy the shaders folder to the build directory so the executable can find them
+file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/shaders" 
+     DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
