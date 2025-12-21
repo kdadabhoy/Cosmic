@@ -1,24 +1,23 @@
-#include "Application.h"
+#include "core/Application.h"
 
-
+// ImGui
 #include "imgui.h"
 #include "backends/imgui_impl_glfw.h"
 #include "backends/imgui_impl_opengl3.h"
 
 
-
+// Math
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 
+// Graphics & Layers
+#include <GLFW/glfw3.h>
+#include "core/MenuLayer.h"
 
-#include "graphics/VertexBuffer.h"
-#include "graphics/VertexBufferLayout.h"
-#include "graphics/IndexBuffer.h"
-#include "graphics/VertexArray.h"
-#include "graphics/Shader.h"
-
-
+// Other
 #include <iostream>
+
+
 
 
 
@@ -95,80 +94,60 @@ bool Application::initialize() {
 
 
 
+
+
+
+
+
+
+
+
+
+
 void Application::run() {
+	// Initial State: Push the Menu Layer
+	m_LayerStack.PushLayer(new MenuLayer());
 
-
-
-
-	// Test code
-
-	float positions[] = {
-	-0.5f, -0.5f, // 0
-	 0.5f, -0.5f, // 1
-	 0.5f,  0.5f, // 2
-	-0.5f,  0.5f, // 3
-	};
-
-	unsigned int indices[] = {
-		0, 1, 2,
-		2, 3, 0
-	};
-
-
-
-
-	VertexArray va;
-	VertexBuffer vb(positions, 4 * 2 * sizeof(float));
-	VertexBufferLayout layout;
-	layout.push<float>(2);
-	va.addBuffer(vb, layout);
-
-	IndexBuffer ib(indices, 6);
-
-	Shader shader("shaders/vert.shader", "shaders/frag.shader");
-	shader.bind();
-	shader.setUniform4f("u_Color", 0.8f, 0.3f, 0.8f, 1.0f);
-
-	va.unBind();
-	vb.unBind();
-	ib.unBind();
-
-	Renderer renderer;
-
-
-	float r = 0.0f;
-	float increment = 0.05f;
-
-
+	float lastFrameTime = 0.0f;
 
 	while (isRunning && !window->shouldClose()) {
+		// Calculate Delta Time
+		float time = (float)glfwGetTime();
+		float deltaTime = time - lastFrameTime;
+		lastFrameTime = time;
+
+
 		// Event Pulling:
 		window->pollEvents();
 
 
-		// ImGui Functions from Documentation - Top of Loop:
+		// Start ImGui
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 		//ImGui::ShowDemoWindow(); // Show demo window! :)
 
 
-		// Rendering:
-		renderer.clear();
-
-		shader.bind();
-		shader.setUniform4f("u_Color", r, 0.3f, 0.8f, 1.0f);
-		renderer.draw(va, ib, shader);
-		if (r > 1.0f) {
-			increment = -0.05f;
-		} else if (r < 0.0f) {
-			increment = 0.05f;
+		// Logic Updates:
+		for (Layer* layer : m_LayerStack) {
+			layer->OnUpdate(deltaTime);
 		}
 
-		r += increment;
+
+		// Rendering ("World"):
+		m_Renderer.clear();
+		for (Layer* layer : m_LayerStack) {
+			layer->OnRender();
+		}
 
 
-		// ImGui Functions from Documentation - Bottom of Loop:
+		// UI Rendering (Screens and menus)
+		for (Layer* layer : m_LayerStack) {
+			layer->OnImGuiRender();
+		}
+
+
+		// End ImGui
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
@@ -177,11 +156,8 @@ void Application::run() {
 		window->swapBuffers();
 	}
 
-
-
+	return;
 }
-
-
 
 
 

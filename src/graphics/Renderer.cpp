@@ -28,6 +28,10 @@ void Renderer::clear() const
 
 
 
+
+
+
+
 void Renderer::draw(const VertexArray& va, const IndexBuffer& ib, const Shader& shader) const
 {
     shader.bind();

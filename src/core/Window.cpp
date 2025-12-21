@@ -1,4 +1,4 @@
-#include "graphics/Window.h"
+#include "core/Window.h"
 #include <iostream>
 
 
@@ -43,7 +43,6 @@ Window::Window(int width, int height, const std::string& title)
 Window::~Window() 
 {
 	glfwDestroyWindow(handle);
-	glfwTerminate();
 }
 
 

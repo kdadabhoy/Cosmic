@@ -81,15 +81,20 @@ add_executable(AirplaneSim)
 target_sources(AirplaneSim PRIVATE
     # main 
     src/main.cpp
-    src/Application.cpp
+
+
+    # /core
+    src/core/Application.cpp
+    src/core/Input.cpp
+    src/core/Window.cpp
+    
 
     # /graphics
-    src/graphics/Window.cpp
+    src/graphics/IndexBuffer.cpp
     src/graphics/Renderer.cpp
     src/graphics/Shader.cpp
-    src/graphics/VertexBuffer.cpp
     src/graphics/VertexArray.cpp
-    src/graphics/IndexBuffer.cpp
+    src/graphics/VertexBuffer.cpp
 
 )
 
@@ -122,5 +127,5 @@ target_link_libraries(AirplaneSim PRIVATE
 # ----------------------------
 
 # Copy the shaders folder to the build directory so the executable can find them
-file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/shaders" 
+file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/assets/shaders" 
      DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")

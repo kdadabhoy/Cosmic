@@ -1,7 +1,8 @@
 #ifndef APPLICATION_H
 #define APPLICATION_H
-#include "graphics/Window.h"
-
+#include "core/Window.h"
+#include "core/LayerStack.h"
+#include "graphics/Renderer.h"
 #include <memory>
 
 
@@ -17,9 +18,10 @@ public:
 
 
 
-
 private:
 	std::unique_ptr<Window> window;
+	Renderer m_Renderer;       // One renderer for the whole app
+	LayerStack m_LayerStack;   // Our new layer manager
 	bool isRunning;
 
 

@@ -4,6 +4,8 @@
 #include <GLFW/glfw3.h>
 #include <string>
 
+
+
 class Window {
 public:
 	Window(int width, int height, const std::string& title);
@@ -11,6 +13,8 @@ public:
 
 	GLFWwindow* getHandle() const;
 
+
+	// Accessors
 
 	// GLFW Wrapper functions:
 	bool shouldClose() const;					  // glfwWindowShouldClose()
@@ -22,7 +26,6 @@ public:
 
 private:
 	GLFWwindow* handle;
-
 };
 
 #endif
@@ -51,9 +54,6 @@ Documentation:
 
 	~Window()
 		- Calls glfwDestroyWindow() to kill the specific window
-		- Calls glfwTerminate() to shut down the whole library
-			- ** If you plan to use multiple windows, 
-			delete the glfwTerminate() from this destructor**
 
 
 
