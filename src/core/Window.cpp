@@ -60,10 +60,13 @@ Window::Window(int width, int height, const std::string& title)
 		data.EventCallback(event);
 		});
 
+
+
+	// --- FIX: Close Callback ---
 	glfwSetWindowCloseCallback(handle, [](GLFWwindow* window) {
 		WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 
-		// Create and dispatch the event to the Application
+		// Tell the Application to shut down
 		WindowCloseEvent event;
 		data.EventCallback(event);
 		});

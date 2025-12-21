@@ -14,18 +14,26 @@ MenuLayer::MenuLayer()
 {
 }
 
+
+
+
 MenuLayer::~MenuLayer()
 {
 }
+
+
+
+
+
 
 void MenuLayer::OnAttach()
 {
     // Centered vertices: square is 100x100, origin (0,0) is the dead center
     float positions[] = {
-        -50.0f, -50.0f, // 0 - Bottom Left
-         50.0f, -50.0f, // 1 - Bottom Right
-         50.0f,  50.0f, // 2 - Top Right
-        -50.0f,  50.0f  // 3 - Top Left
+        -200.0f, -200.0f, // 0 - Bottom Left
+         200.0f, -200.0f, // 1 - Bottom Right
+         200.0f,  200.0f, // 2 - Top Right
+        -200.0f,  200.0f  // 3 - Top Left
     };
 
     unsigned int indices[] = {
@@ -52,11 +60,22 @@ void MenuLayer::OnAttach()
     m_Camera = std::make_unique<OrthographicCamera>(0.0f, width, 0.0f, height);
     m_SquarePos = glm::vec3(width / 2.0f, height / 2.0f, 0.0f);
 
+
     // Using the fixed relative path from CMake asset management
     m_Shader = std::make_unique<Shader>("assets/shaders/vert.shader", "assets/shaders/frag.shader");
 }
 
+
+
+
+
 void MenuLayer::OnDetach() {}
+
+
+
+
+
+
 
 void MenuLayer::OnEvent(Event& e)
 {
@@ -74,13 +93,22 @@ void MenuLayer::OnEvent(Event& e)
     }
 }
 
+
+
+
+
+
 void MenuLayer::OnUpdate(float deltaTime)
 {
     // Color cycle logic
-    m_Color[0] += m_ColorIncrement * deltaTime * 2.0f;
+    m_Color[0] += m_ColorIncrement * deltaTime;
     if (m_Color[0] > 1.0f || m_Color[0] < 0.0f)
         m_ColorIncrement = -m_ColorIncrement;
 }
+
+
+
+
 
 void MenuLayer::OnRender()
 {
