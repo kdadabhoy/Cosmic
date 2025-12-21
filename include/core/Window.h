@@ -3,18 +3,25 @@
 #include <glad/glad.h> // It is important that GLAD is included before GLFW
 #include <GLFW/glfw3.h>
 #include <string>
-
-
+#include "events/Event.h"
+#include <functional> // Added for std::function
 
 class Window {
 public:
+	using EventCallbackFn = std::function<void(Event&)>;
+
 	Window(int width, int height, const std::string& title);
 	~Window();
 
 	GLFWwindow* getHandle() const;
 
+	void setEventCallback(const EventCallbackFn& callback) { m_Data.EventCallback = callback; }
 
-	// Accessors
+
+	// --- Added Getters for Easy Access ---
+	inline unsigned int GetWidth() const { return m_Data.Width; }
+	inline unsigned int GetHeight() const { return m_Data.Height; }
+
 
 	// GLFW Wrapper functions:
 	bool shouldClose() const;					  // glfwWindowShouldClose()
@@ -26,6 +33,19 @@ public:
 
 private:
 	GLFWwindow* handle;
+
+
+
+	// We bundle this data so GLFW callbacks can access it
+	struct WindowData {
+		std::string Title;
+		unsigned int Width, Height;
+		bool VSync;
+		EventCallbackFn EventCallback;
+	};
+
+	WindowData m_Data;
+
 };
 
 #endif

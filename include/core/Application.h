@@ -1,10 +1,13 @@
 #ifndef APPLICATION_H
 #define APPLICATION_H
+
 #include "core/Window.h"
 #include "core/LayerStack.h"
 #include "graphics/Renderer.h"
+#include "events/Event.h"       
+#include "events/WindowEvent.h"
 #include <memory>
-
+#include <string>
 
 class Application {
 public:
@@ -15,21 +18,26 @@ public:
 	void run();
 	void shutdown();
 
+	void OnEvent(Event& e);
 
-
+	// --- ADDED FOR DYNAMIC LAYERS ---
+	inline Window& GetWindow() { return *window; }
+	inline static Application& Get() { return *s_Instance; }
 
 private:
+	bool OnWindowClose(WindowCloseEvent& e);
+
 	std::unique_ptr<Window> window;
-	Renderer m_Renderer;       // One renderer for the whole app
-	LayerStack m_LayerStack;   // Our new layer manager
+	Renderer m_Renderer;
+	LayerStack m_LayerStack;
 	bool isRunning;
 
+	// Singleton instance
+	static Application* s_Instance;
 
-	// Constants
 	const static int DEFAULT_WIDTH = 1280;
 	const static int DEFAULT_HEIGHT = 720;
 	std::string DEFAULT_WINDOW_TITLE = "AirplaneSim";
-
 };
 
 #endif

@@ -1,4 +1,5 @@
 #include "core/Window.h"
+#include "events/WindowEvent.h"
 #include <iostream>
 
 
@@ -32,6 +33,41 @@ Window::Window(int width, int height, const std::string& title)
 		std::cout << "GLAD Initialization Failed" << std::endl;
 		return;
 	}
+
+
+
+
+
+
+
+	// --- NEW: Event Setup ---
+	m_Data.Title = title;
+	m_Data.Width = width;
+	m_Data.Height = height;
+
+	// Attach our m_Data struct to this GLFW window instance
+	glfwSetWindowUserPointer(handle, &m_Data);
+
+	// Set GLFW callbacks
+	glfwSetFramebufferSizeCallback(handle, [](GLFWwindow* window, int width, int height) {
+		// Retrieve our data struct from the GLFW user pointer
+		WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+		data.Width = width;
+		data.Height = height;
+
+		// Create the abstract Event and shout it back to the Application
+		WindowResizeEvent event(width, height);
+		data.EventCallback(event);
+		});
+
+	glfwSetWindowCloseCallback(handle, [](GLFWwindow* window) {
+		WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+
+		// Create and dispatch the event to the Application
+		WindowCloseEvent event;
+		data.EventCallback(event);
+		});
+
 }
 
 

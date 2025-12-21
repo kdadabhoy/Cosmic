@@ -5,10 +5,13 @@
 
 #include <glm/glm.hpp>
 
+
 class OrthographicCamera {
 public:
-    // left, right, bottom, top (e.g., 0, 1920, 0, 1080)
     OrthographicCamera(float left, float right, float bottom, float top);
+
+    // Add this to update the projection without recreating the object
+    void setProjection(float left, float right, float bottom, float top);
 
     void setPosition(const glm::vec3& position) { m_Position = position; updateViewMatrix(); }
     const glm::mat4& getProjectionMatrix() const { return m_ProjectionMatrix; }

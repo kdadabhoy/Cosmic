@@ -8,7 +8,7 @@
 
 #ifndef LAYER_H
 #define LAYER_H
-
+#include "events/Event.h"
 #include <string>
 
 class Layer {
@@ -38,6 +38,11 @@ public:
     // For UI tools like ImGui (useful for debugging altitude, etc.)
     virtual void OnImGuiRender() {};
     inline const std::string& GetName() const { return m_DebugName; };
+
+
+    // --- Event Handling ---
+    // Every layer can now override this to "catch" window resizes or key presses
+    virtual void OnEvent(Event& event) {};
 
 
 protected:

@@ -4,7 +4,7 @@
 #include <string>
 #include <glad/glad.h>
 #include <unordered_map>
-
+#include <glm/glm.hpp> // Add this for mat4
 
 
 struct ShaderProgramSource
@@ -28,7 +28,7 @@ public:
 
     // Uniforms
     void setUniform4f(const std::string& name, float v0, float v1, float v2, float v3);
-
+    void setUniformMat4f(const std::string& name, const glm::mat4& matrix);
 
 private:
     unsigned int rendererID;

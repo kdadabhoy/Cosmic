@@ -12,7 +12,7 @@
 
 // Graphics & Layers
 #include <GLFW/glfw3.h>
-#include "core/MenuLayer.h"
+#include "layers/MenuLayer.h"
 
 // Other
 #include <iostream>
@@ -20,12 +20,15 @@
 
 
 
-
+// --- FIX: Initialize the static instance ---
+Application* Application::s_Instance = nullptr;
 
 
 Application::Application() 
 	: isRunning(false)
-{}
+{
+	s_Instance = this;
+}
 
 
 
@@ -60,9 +63,12 @@ bool Application::initialize() {
 
 
 	/*
-		Rendering Initialization?
+		Event Initialization
+		This tells the window to send its events to Application::OnEvent
 	*/
-
+	window->setEventCallback([this](Event& e) {
+		this->OnEvent(e);
+		});
 
 
 
@@ -94,8 +100,38 @@ bool Application::initialize() {
 
 
 
+// --- EVENT DISPATCHER ---
+void Application::OnEvent(Event& e) {
+
+	if (e.GetEventType() == EventType::WindowResize) {
+		auto& re = static_cast<WindowResizeEvent&>(e);
+		// This tells OpenGL to use the ENTIRE new window area
+		glViewport(0, 0, re.GetWidth(), re.GetHeight());
+	}
 
 
+	// 1. Dispatch specific application-level logic
+	if (e.GetEventType() == EventType::WindowClose)
+		OnWindowClose(static_cast<WindowCloseEvent&>(e));
+
+	// 2. Pass events to layers from top to bottom
+	for (auto it = m_LayerStack.rbegin(); it != m_LayerStack.rend(); ++it) {
+		if (e.Handled)
+			break;
+		(*it)->OnEvent(e);
+	}
+}
+
+
+
+
+
+
+
+bool Application::OnWindowClose(WindowCloseEvent& e) {
+	isRunning = false;
+	return true; // Event handled
+}
 
 
 
@@ -116,23 +152,18 @@ void Application::run() {
 		float deltaTime = time - lastFrameTime;
 		lastFrameTime = time;
 
-
 		// Event Pulling:
 		window->pollEvents();
-
 
 		// Start ImGui
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
-		//ImGui::ShowDemoWindow(); // Show demo window! :)
-
 
 		// Logic Updates:
 		for (Layer* layer : m_LayerStack) {
 			layer->OnUpdate(deltaTime);
 		}
-
 
 		// Rendering ("World"):
 		m_Renderer.clear();
@@ -140,17 +171,14 @@ void Application::run() {
 			layer->OnRender();
 		}
 
-
 		// UI Rendering (Screens and menus)
 		for (Layer* layer : m_LayerStack) {
 			layer->OnImGuiRender();
 		}
 
-
 		// End ImGui
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
 
 		// Buffer Swapping:
 		window->swapBuffers();

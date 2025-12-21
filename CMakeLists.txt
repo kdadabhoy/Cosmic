@@ -83,6 +83,10 @@ target_sources(AirplaneSim PRIVATE
     src/main.cpp
 
 
+    # /camera
+    src/camera/OrthographicCamera.cpp
+    
+   
     # /core
     src/core/Application.cpp
     src/core/Input.cpp
@@ -96,6 +100,8 @@ target_sources(AirplaneSim PRIVATE
     src/graphics/VertexArray.cpp
     src/graphics/VertexBuffer.cpp
 
+    # /layers
+    src/layers/MenuLayer.cpp
 )
 
 
@@ -126,6 +132,13 @@ target_link_libraries(AirplaneSim PRIVATE
 # 5. Asset Management (Shaders)
 # ----------------------------
 
-# Copy the shaders folder to the build directory so the executable can find them
-file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/assets/shaders" 
+# This creates a folder named 'assets' inside your build directory 
+# and copies the shaders into 'assets/shaders'.
+file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/assets" 
      DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
+
+# This tells Visual Studio to set the "Working Directory" to the build folder
+# so that it finds the assets immediately when you press F5.
+set_target_properties(AirplaneSim PROPERTIES
+    VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+)

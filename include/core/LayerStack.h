@@ -14,33 +14,23 @@ class LayerStack {
 public:
     LayerStack() = default;
     ~LayerStack() {
-        // Layers are owned by the stack, so we clean them up here
         for (Layer* layer : m_Layers) {
             layer->OnDetach();
             delete layer;
         }
     }
 
-
-
-    // Pushes a layer to the "bottom" half of the stack
     void PushLayer(Layer* layer) {
         m_Layers.emplace(m_Layers.begin() + m_LayerInsertIndex, layer);
         m_LayerInsertIndex++;
         layer->OnAttach();
     }
 
-
-
-    // Pushes an overlay to the "top" of the stack (always rendered last)
     void PushOverlay(Layer* overlay) {
         m_Layers.emplace_back(overlay);
         overlay->OnAttach();
     }
 
-
-
-    // Removing layers (without deleting them immediately)
     void PopLayer(Layer* layer) {
         auto it = std::find(m_Layers.begin(), m_Layers.begin() + m_LayerInsertIndex, layer);
         if (it != m_Layers.begin() + m_LayerInsertIndex) {
@@ -50,11 +40,13 @@ public:
         }
     }
 
-    // Standard iterators so you can use for-each loops in Application.cpp
+    // Standard iterators for rendering (bottom to top)
     std::vector<Layer*>::iterator begin() { return m_Layers.begin(); }
     std::vector<Layer*>::iterator end() { return m_Layers.end(); }
 
-
+    // Reverse iterators for events (top to bottom)
+    std::vector<Layer*>::reverse_iterator rbegin() { return m_Layers.rbegin(); }
+    std::vector<Layer*>::reverse_iterator rend() { return m_Layers.rend(); }
 
 private:
     std::vector<Layer*> m_Layers;
