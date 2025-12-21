@@ -1,20 +1,7 @@
 #include "core/Application.h"
-
-// ImGui
-#include "imgui.h"
-#include "backends/imgui_impl_glfw.h"
-#include "backends/imgui_impl_opengl3.h"
-
-
-// Math
-#include "glm/glm.hpp"
-#include "glm/gtc/matrix_transform.hpp"
-
-// Graphics & Layers
-#include <GLFW/glfw3.h>
 #include "layers/MenuLayer.h"
-
-// Other
+#include "layers/ImGuiLayer.h"
+#include <GLFW/glfw3.h>
 #include <iostream>
 
 
@@ -24,8 +11,8 @@
 Application* Application::s_Instance = nullptr;
 
 
-Application::Application() 
-	: isRunning(false)
+Application::Application()
+	: isRunning(false), m_ImGuiLayer(nullptr)
 {
 	s_Instance = this;
 }
@@ -76,16 +63,8 @@ bool Application::initialize() {
 	/*
 		ImGui Initialization - from Documentation
 	*/
-	IMGUI_CHECKVERSION();
-	ImGui::CreateContext();
-	ImGuiIO& io = ImGui::GetIO();
-	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;    // Enable Keyboard Controls
-	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;     // Enable Gamepad Controls
-	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;        // IF using Docking Branch
-
-	// Setup Platform/Renderer backends
-	ImGui_ImplGlfw_InitForOpenGL(window->getHandle(), true); 
-	ImGui_ImplOpenGL3_Init();
+	m_ImGuiLayer = new ImGuiLayer();
+	m_LayerStack.PushOverlay(m_ImGuiLayer);
 
 
 	isRunning = true;
@@ -102,20 +81,17 @@ bool Application::initialize() {
 
 // --- EVENT DISPATCHER ---
 void Application::OnEvent(Event& e) {
-
+	// Handle window resizing globally
 	if (e.GetEventType() == EventType::WindowResize) {
 		auto& re = static_cast<WindowResizeEvent&>(e);
-		// This tells OpenGL to use the ENTIRE new window area
 		glViewport(0, 0, re.GetWidth(), re.GetHeight());
 	}
 
-
-	// 1. Dispatch specific application-level logic
 	if (e.GetEventType() == EventType::WindowClose)
 		OnWindowClose(static_cast<WindowCloseEvent&>(e));
 
-	// 2. Pass events to layers from top to bottom
-	for (auto it = m_LayerStack.rbegin(); it != m_LayerStack.rend(); ++it) {
+	// Pass events through the layer stack (Overlay/ImGui is usually top)
+	for (auto it = m_LayerStack.begin(); it != m_LayerStack.end(); ++it) {
 		if (e.Handled)
 			break;
 		(*it)->OnEvent(e);
@@ -156,14 +132,14 @@ void Application::run() {
 		window->pollEvents();
 
 		// Start ImGui
-		ImGui_ImplOpenGL3_NewFrame();
-		ImGui_ImplGlfw_NewFrame();
-		ImGui::NewFrame();
+		m_ImGuiLayer->Begin();
+
 
 		// Logic Updates:
 		for (Layer* layer : m_LayerStack) {
 			layer->OnUpdate(deltaTime);
 		}
+
 
 		// Rendering ("World"):
 		m_Renderer.clear();
@@ -177,8 +153,7 @@ void Application::run() {
 		}
 
 		// End ImGui
-		ImGui::Render();
-		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+		m_ImGuiLayer->End();
 
 		// Buffer Swapping:
 		window->swapBuffers();
@@ -198,12 +173,6 @@ void Application::shutdown()
 	if (!isRunning) {
 		return;
 	}
-
-	
-	// ImGui Shutdown
-	ImGui_ImplOpenGL3_Shutdown();
-	ImGui_ImplGlfw_Shutdown();
-	ImGui::DestroyContext();
 
 
 	// Window Shutdown

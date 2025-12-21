@@ -10,6 +10,8 @@
 #define LAYER_H
 #include "events/Event.h"
 #include <string>
+#include <sstream>
+#include <iostream>
 
 class Layer {
 public:

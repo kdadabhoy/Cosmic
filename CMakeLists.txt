@@ -89,8 +89,8 @@ target_sources(AirplaneSim PRIVATE
    
     # /core
     src/core/Application.cpp
-    src/core/Input.cpp
     src/core/Window.cpp
+    src/core/LayerStack.cpp
     
 
     # /graphics
@@ -101,6 +101,7 @@ target_sources(AirplaneSim PRIVATE
     src/graphics/VertexBuffer.cpp
 
     # /layers
+    src/layers/ImGuiLayer.cpp
     src/layers/MenuLayer.cpp
 )
 

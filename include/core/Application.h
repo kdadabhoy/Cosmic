@@ -5,9 +5,15 @@
 #include "core/LayerStack.h"
 #include "graphics/Renderer.h"
 #include "events/Event.h"       
-#include "events/WindowEvent.h"
+#include "events/ApplicationEvent.h"
+#include "layers/ImGuiLayer.h"
+
+
 #include <memory>
 #include <string>
+
+
+
 
 class Application {
 public:
@@ -30,6 +36,7 @@ private:
 	std::unique_ptr<Window> window;
 	Renderer m_Renderer;
 	LayerStack m_LayerStack;
+	ImGuiLayer* m_ImGuiLayer; // Pointer to the overlay layer
 	bool isRunning;
 
 	// Singleton instance

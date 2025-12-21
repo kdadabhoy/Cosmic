@@ -1,10 +1,11 @@
 #ifndef WINDOW_H
 #define WINDOW_H
-#include <glad/glad.h> // It is important that GLAD is included before GLFW
+
+#include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <string>
+#include <functional>
 #include "events/Event.h"
-#include <functional> // Added for std::function
 
 class Window {
 public:
@@ -13,39 +14,39 @@ public:
 	Window(int width, int height, const std::string& title);
 	~Window();
 
-	GLFWwindow* getHandle() const;
+	// --- Core Window Functionality ---
+	void pollEvents();
+	void swapBuffers();
 
-	void setEventCallback(const EventCallbackFn& callback) { m_Data.EventCallback = callback; }
 
-
-	// --- Added Getters for Easy Access ---
+	// --- Getters ---
 	inline unsigned int GetWidth() const { return m_Data.Width; }
 	inline unsigned int GetHeight() const { return m_Data.Height; }
+	inline GLFWwindow* getHandle() const { return handle; }
 
 
-	// GLFW Wrapper functions:
-	bool shouldClose() const;					  // glfwWindowShouldClose()
-	void swapBuffers();							  // glfwSwapBuffers()
-	void pollEvents();							  // glfwPollEvents() 
-	void getSize(int* width, int* height) const;  // glfwGetFramebufferSize()
-	void setVSync(bool enabled);				  // glfwSwapInterval()
+	// --- Window Attributes ---
+	void setEventCallback(const EventCallbackFn& callback) { m_Data.EventCallback = callback; }
+	void setVSync(bool enabled);
+	bool IsVSync() const { return m_Data.VSync; }
 
+	bool shouldClose() const;
+	void getSize(int* width, int* height) const;
 
 private:
 	GLFWwindow* handle;
 
-
-
-	// We bundle this data so GLFW callbacks can access it
+	// This struct is passed to GLFW's "User Pointer" so 
+	// static callbacks can talk back to our Window class.
 	struct WindowData {
 		std::string Title;
 		unsigned int Width, Height;
 		bool VSync;
+
 		EventCallbackFn EventCallback;
 	};
 
 	WindowData m_Data;
-
 };
 
 #endif

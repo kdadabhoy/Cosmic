@@ -1,19 +1,17 @@
 #include "core/Window.h"
-#include "events/WindowEvent.h"
+#include "events/ApplicationEvent.h"
+#include "events/KeyEvent.h"
+#include "events/MouseEvent.h"
 #include <iostream>
-
-
 
 
 Window::Window(int width, int height, const std::string& title)
 	: handle(nullptr)
 {
-	
 	if (!glfwInit()) {
 		return;
 	}
 
-	// OpenGL 3.3 (Major = 3, Minor = 3)
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -28,49 +26,111 @@ Window::Window(int width, int height, const std::string& title)
 
 	glfwMakeContextCurrent(handle);
 
-
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
 		std::cout << "GLAD Initialization Failed" << std::endl;
 		return;
 	}
 
-
-
-
-
-
-
-	// --- NEW: Event Setup ---
 	m_Data.Title = title;
 	m_Data.Width = width;
 	m_Data.Height = height;
 
-	// Attach our m_Data struct to this GLFW window instance
 	glfwSetWindowUserPointer(handle, &m_Data);
 
-	// Set GLFW callbacks
+	// --- Window Resize Callback ---
 	glfwSetFramebufferSizeCallback(handle, [](GLFWwindow* window, int width, int height) {
-		// Retrieve our data struct from the GLFW user pointer
 		WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 		data.Width = width;
 		data.Height = height;
 
-		// Create the abstract Event and shout it back to the Application
 		WindowResizeEvent event(width, height);
 		data.EventCallback(event);
 		});
 
-
-
-	// --- FIX: Close Callback ---
+	// --- Window Close Callback ---
 	glfwSetWindowCloseCallback(handle, [](GLFWwindow* window) {
 		WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
-
-		// Tell the Application to shut down
 		WindowCloseEvent event;
 		data.EventCallback(event);
 		});
 
+	// --- Key Callback ---
+	glfwSetKeyCallback(handle, [](GLFWwindow* window, int key, int scancode, int action, int mods) {
+		WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+
+		switch (action) {
+		case GLFW_PRESS:
+		{
+			KeyPressedEvent event(key, 0);
+			data.EventCallback(event);
+			break;
+		}
+		case GLFW_RELEASE:
+		{
+			KeyReleasedEvent event(key);
+			data.EventCallback(event);
+			break;
+		}
+		case GLFW_REPEAT:
+		{
+			KeyPressedEvent event(key, 1);
+			data.EventCallback(event);
+			break;
+		}
+		}
+		});
+
+
+
+
+
+
+
+	// --- Mouse Button Callback ---
+	glfwSetMouseButtonCallback(handle, [](GLFWwindow* window, int button, int action, int mods) {
+		WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+
+		switch (action) {
+		case GLFW_PRESS:
+		{
+			MouseButtonPressedEvent event(button);
+			data.EventCallback(event);
+			break;
+		}
+		case GLFW_RELEASE:
+		{
+			MouseButtonReleasedEvent event(button);
+			data.EventCallback(event);
+			break;
+		}
+		}
+		});
+
+
+
+
+
+
+
+	// --- Mouse Scroll Callback ---
+	glfwSetScrollCallback(handle, [](GLFWwindow* window, double xOffset, double yOffset) {
+		WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+
+		MouseScrolledEvent event((float)xOffset, (float)yOffset);
+		data.EventCallback(event);
+		});
+
+
+
+
+
+	// --- Mouse Move Callback ---
+	glfwSetCursorPosCallback(handle, [](GLFWwindow* window, double xPos, double yPos) {
+		WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+
+		MouseMovedEvent event((float)xPos, (float)yPos);
+		data.EventCallback(event);
+		});
 }
 
 
@@ -79,7 +139,7 @@ Window::Window(int width, int height, const std::string& title)
 
 
 
-Window::~Window() 
+Window::~Window()
 {
 	glfwDestroyWindow(handle);
 }
@@ -91,26 +151,8 @@ Window::~Window()
 
 
 
-GLFWwindow* Window::getHandle() const 
-{
-	return handle;
-}
 
-
-
-
-
-
-
-
-/*
-	*******************************
-	*** GLFW Wrapper functions: ***
-	********************************
-*/
-
-
-bool Window::shouldClose() const 
+bool Window::shouldClose() const
 {
 	return glfwWindowShouldClose(handle);
 }
@@ -120,9 +162,8 @@ bool Window::shouldClose() const
 
 
 void Window::swapBuffers()
-{ 
+{
 	glfwSwapBuffers(handle);
-	return;
 }
 
 
@@ -130,30 +171,26 @@ void Window::swapBuffers()
 
 
 void Window::pollEvents()
-{ 
+{
 	glfwPollEvents();
-	return;
 }
 
 
 
 
 
-void Window::getSize(int* width, int* height) const 
-{ 
+void Window::getSize(int* width, int* height) const
+{
 	glfwGetFramebufferSize(handle, width, height);
-	return;
 }
-
 
 
 
 
 void Window::setVSync(bool enabled)
 {
-	if (enabled) {
+	if (enabled)
 		glfwSwapInterval(1);
-	} else {
+	else
 		glfwSwapInterval(0);
-	}
 }
