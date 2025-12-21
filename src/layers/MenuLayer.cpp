@@ -99,22 +99,30 @@ void MenuLayer::OnRender()
     renderer.draw(*m_VAO, *m_IBO, *m_Shader);
 }
 
+
+
 void MenuLayer::OnImGuiRender()
 {
-    // Use dynamic bounds for sliders so they always match the window edges
+    // 1. Get the current actual width and height of the window
     auto& window = Application::Get().GetWindow();
-    float width = static_cast<float>(window.GetWidth());
-    float height = static_cast<float>(window.GetHeight());
+    float currentWidth = static_cast<float>(window.GetWidth());
+    float currentHeight = static_cast<float>(window.GetHeight());
 
     ImGui::Begin("Menu Controls");
     ImGui::Text("Aircraft Simulation Setup");
 
-    // Slider now limits movement to exactly the current window width/height
-    ImGui::SliderFloat2("Square Position", &m_SquarePos.x, 0.0f, width);
+    // 2. Update the slider limits to match currentWidth and currentHeight
+    // Now, sliding to the far right will be EXACTLY the edge of your screen
+    ImGui::SliderFloat("X Position", &m_SquarePos.x, 0.0f, currentWidth);
+    ImGui::SliderFloat("Y Position", &m_SquarePos.y, 0.0f, currentHeight);
+
+    ImGui::Separator();
+
     ImGui::ColorEdit4("Square Color", m_Color);
 
     if (ImGui::Button("Start Flight (Climb)")) {
         // Transition logic here
     }
+
     ImGui::End();
 }
