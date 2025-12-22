@@ -1,6 +1,5 @@
 #pragma once
 
-//#include "glpch.h"
 #include "core/Core.h"
 #include <string>
 

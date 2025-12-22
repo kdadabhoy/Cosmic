@@ -5,7 +5,14 @@
 #include "core/Application.h"
 #include <GLFW/glfw3.h>
 
+
+
+
+
 ImGuiLayer::ImGuiLayer() : Layer("ImGuiLayer") {}
+
+
+
 
 void ImGuiLayer::OnAttach() {
     IMGUI_CHECKVERSION();
@@ -18,12 +25,13 @@ void ImGuiLayer::OnAttach() {
     ImGui::StyleColorsDark();
 
     Application& app = Application::Get();
-    // FIX: Changed GetNativeWindow() to getHandle() to match your Window class
     GLFWwindow* window = app.GetWindow().getHandle();
 
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 410");
 }
+
+
 
 
 
@@ -49,6 +57,7 @@ void ImGuiLayer::Begin() {
 
 
 
+
 void ImGuiLayer::End() {
     ImGuiIO& io = ImGui::GetIO();
     Application& app = Application::Get();
@@ -69,11 +78,16 @@ void ImGuiLayer::End() {
 
 
 
+
+
+
 void ImGuiLayer::OnEvent(Event& event) {
     EventDispatcher dispatcher(event);
     // Use the macro from Core.h for binding
     dispatcher.Dispatch<MouseButtonPressedEvent>(GLCORE_BIND_EVENT_FN(ImGuiLayer::OnMouseButtonPressed));
 }
+
+
 
 
 

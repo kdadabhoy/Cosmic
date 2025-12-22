@@ -87,14 +87,20 @@ void Application::OnEvent(Event& e) {
 		glViewport(0, 0, re.GetWidth(), re.GetHeight());
 	}
 
-	if (e.GetEventType() == EventType::WindowClose)
+
+
+	if (e.GetEventType() == EventType::WindowClose) {
 		OnWindowClose(static_cast<WindowCloseEvent&>(e));
+	}
+	
 
 	// Pass events through the layer stack (Overlay/ImGui is usually top)
 	for (auto it = m_LayerStack.begin(); it != m_LayerStack.end(); ++it) {
-		if (e.Handled)
+		if (e.Handled) {
 			break;
-		(*it)->OnEvent(e);
+		}
+
+		(*it)->OnEvent(e); // Derefernces the Layer and then calls it's OnEvent
 	}
 }
 

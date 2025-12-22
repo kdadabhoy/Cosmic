@@ -40,7 +40,8 @@ private:
 	// static callbacks can talk back to our Window class.
 	struct WindowData {
 		std::string Title;
-		unsigned int Width, Height;
+		unsigned int Width;
+		unsigned int Height;
 		bool VSync;
 
 		EventCallbackFn EventCallback;
