@@ -17,9 +17,7 @@ MenuLayer::MenuLayer()
 
 
 
-MenuLayer::~MenuLayer()
-{
-}
+MenuLayer::~MenuLayer() {}
 
 
 
@@ -42,7 +40,7 @@ void MenuLayer::OnAttach()
     };
 
     m_VAO = std::make_unique<VertexArray>();
-    m_VBO = std::make_unique<VertexBuffer>(positions, 4 * 2 * sizeof(float));
+    m_VBO = std::make_unique<VertexBuffer>(positions, (uint32_t)(4 * 2 * sizeof(float)));
 
     VertexBufferLayout layout;
     layout.push<float>(2);
@@ -101,9 +99,11 @@ void MenuLayer::OnEvent(Event& e)
 void MenuLayer::OnUpdate(float deltaTime)
 {
     // Color cycle logic
-    m_Color[0] += m_ColorIncrement * deltaTime;
-    if (m_Color[0] > 1.0f || m_Color[0] < 0.0f)
+    int colorToCycle = 2; // r = 0, g = 1, b = 2, a = 3
+    m_Color[colorToCycle] += m_ColorIncrement * deltaTime;
+    if (m_Color[colorToCycle] > 1.0f || m_Color[colorToCycle] < 0.0f) {
         m_ColorIncrement = -m_ColorIncrement;
+    }
 }
 
 
