@@ -1,0 +1,92 @@
+# =======================================================
+# 1. CMake Build System & Cache Artifacts (CRITICAL)
+# =======================================================
+# CMake's main configuration file - MUST be ignored
+CMakeCache.txt
+# CMake's internal working directory
+CMakeFiles/
+# The hidden directory VS creates for CMake builds (often 'out/build/')
+out/
+# The traditional build folder for command-line CMake
+build/
+# Ninja build files (often used by VS for CMake)
+.ninja/
+.ninja_deps
+.ninja_log
+
+# -------------------------------------------------------
+# 2. Executables, Libraries, and Intermediate Files
+# -------------------------------------------------------
+# Executables and final shared/static libraries
+*.exe
+*.dll
+*.lib
+# Intermediate folders
+obj/
+# Output directories used by VS
+bin/
+lib/
+Debug/
+Release/
+x64/
+x86/
+**/x64/Debug/
+**/x64/Release/
+
+# Intermediate files
+*.obj
+# Object files (standard extension)
+*.o
+# Program Debug Database (PDB) files
+*.pdb
+*.idb
+*.ipdb
+# Compiler output files
+*.iobj
+*.ilk
+*.log
+*.tlog
+*.csv
+
+# -------------------------------------------------------
+# 3. Visual Studio & IDE Specific Files
+# -------------------------------------------------------
+# VS Solution User Options
+*.suo
+# VS Folder Mode cache (VS 2017+)
+.vs/
+# User-specific files
+*.user
+*.userosscache
+*.sln.docstates
+
+# IntelliSense files
+*.VC.db
+*.sdf
+*.opensdf
+ipch/
+
+# NuGet & Dependency Restore Files
+**/packages/*
+project.lock.json
+project.assets.json
+*.nuget.props
+*.nuget.targets
+
+# Test Files
+*.trx
+
+# Ignore JetBrains tool caches (like ReSharper)
+_ReSharper*/
+
+# =======================================================
+# 4. OS-generated Files & Other Junk
+# =======================================================
+Thumbs.db
+.DS_Store
+
+# -------------------------------------------------------
+# 5. Optional: Filters file
+# -------------------------------------------------------
+# If you want to keep Filters in Git, comment out the line below
+#*.filters
