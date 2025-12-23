@@ -3,7 +3,7 @@
 # ----------------------------
 cmake_minimum_required(VERSION 3.21)
 
-project(AirplaneSim LANGUAGES C CXX)
+project(Cosmic LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -74,11 +74,11 @@ target_link_libraries(imgui PUBLIC
 # ----------------------------
 
 # Create the executable target first
-add_executable(AirplaneSim)
+add_executable(Cosmic)
 
 
 # BEST PRACTICE: Explicitly list all source files using target_sources.
-target_sources(AirplaneSim PRIVATE
+target_sources(Cosmic PRIVATE
     # main 
     src/main.cpp
 
@@ -114,13 +114,13 @@ target_sources(AirplaneSim PRIVATE
 # 4. Target Configuration and Linking
 # ----------------------------
 
-target_include_directories(AirplaneSim PRIVATE
+target_include_directories(Cosmic PRIVATE
     # This single line is all that's required for everything in your 'include' folder.
     include
 )
 
 # Link the final application to the libraries you need.
-target_link_libraries(AirplaneSim PRIVATE
+target_link_libraries(Cosmic PRIVATE
     imgui
     glad
     glm
@@ -140,6 +140,6 @@ file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/assets"
 
 # This tells Visual Studio to set the "Working Directory" to the build folder
 # so that it finds the assets immediately when you press F5.
-set_target_properties(AirplaneSim PROPERTIES
+set_target_properties(Cosmic PROPERTIES
     VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
 )

@@ -1,6 +1,6 @@
 <div align="center">
 
-# Airplane Optimizer and Simulator w/ GUI! 
+# Cosmic (Mini Game Engine)
 
 ## by Kaden Dadabhoy
 
@@ -12,18 +12,24 @@
 
 # Introduction / Methodology
 
-Hello. This is a refactored and was more expansive version of the to-9km-and-beyond project (https://github.com/kdadabhoy/to-9km-and-beyond). A lot of the airplane logic from that project is used in this project... However that project was OOP based (very reable, very modular, and easier to develop)... This project is meant to be more like a game. Well it will have:
+Originally I wanted to write an Airplane Application that had graphics and a GUI... This was originally code meant to accomplish that task, but halfway through I realized that this is a mini game engine (not exactly... but close enough)... and that this would be useful to have as it's own repo / thing. :)
 
 
-    1. A main screen where you can configure an airplane 
-    2. A screen where you can see the simulation of that airplane
-    3. A screen where you can run optimization 
-    4. A screen that is a game-like version where you can fly that airplane you configed
-        * You should also be able to export data from this
 
 
-In order to accomplish this... which is a lot more resource intensive... an entity component system (esc) approach was taken. Well... not exactly, but the core principles are there. This apporach allows multi-threading and basically enables this program to run like a game... It should also decrease optimization times! More on this later.
+<br>
+<br>
 
+## Acknowledgments:
+1. Cherno's OpenGL Series
+1. Cherno's Game Engine Series
+1. Others
+
+
+
+
+<br>
+<br>
 
 ## External Libraries / Dependencies
 1. OpenGL
@@ -36,21 +42,6 @@ In order to accomplish this... which is a lot more resource intensive... an enti
 <br>
 <br>
 
-
-
-
-## Entity Component System (ESC) Approach... and my (semi-rip off) version of it!
-1. A
-
-
-
-
-
-<br>
-<br>
-
-
-
 # File Tree of Project
 Put a pic of the file tree here sometime
 <br>
@@ -58,11 +49,13 @@ Put a pic of the file tree here sometime
 
 
 
-# Notes (Updated as Developed... Should give a general overview)
-This section is more of my own personal notes on implementation stuff... we will see if it stays in the final version of this readme
+
+<br>
+<br>
+
+# Notes 
+
 
 <br>
 
 
-
-## General Approach
