@@ -1,5 +1,5 @@
 #include <core/Application.h>  // Use the path relative to the 'include' folder
-
+#include "SandboxLayer.h"
 #include <iostream>
 
 
@@ -9,7 +9,7 @@ class AirplaneSim : public Cosmic::Application {
 public:
     AirplaneSim() {
         // PushLayer is a member of the Application class
-        // PushLayer(new MenuLayer());
+        PushLayer(new SandboxLayer());
     }
 
     ~AirplaneSim() {}
@@ -21,9 +21,9 @@ public:
 int main() {
     auto app = new AirplaneSim();
 
-    if (app->initialize()) {
-        app->run();
-    }
+ 
+    app->Run();
+ 
 
     delete app;
     return 0;

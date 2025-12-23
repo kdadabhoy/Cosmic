@@ -1,5 +1,4 @@
 #include "core/Application.h"
-#include "layers/MenuLayer.h"
 #include "layers/ImGuiLayer.h"
 #include <GLFW/glfw3.h>
 #include <iostream>
@@ -11,10 +10,19 @@ namespace Cosmic {
 	Application* Application::s_Instance = nullptr;
 
 
+
+
+
+
 	Application::Application()
 		: isRunning(false), m_ImGuiLayer(nullptr)
 	{
 		s_Instance = this;
+		if (!Initialize()) {
+			Shutdown();
+			std::cout << "Failed to initialize" << std::endl;
+			return;
+		}
 	}
 
 
@@ -23,7 +31,7 @@ namespace Cosmic {
 
 	Application::~Application()
 	{
-		shutdown();
+		Shutdown();
 	}
 
 
@@ -31,12 +39,10 @@ namespace Cosmic {
 
 
 
+	// Must call initialize before calling run
+	bool Application::Initialize() {
 
-	bool Application::initialize() {
-
-		/*
-			Window Initialization
-		*/
+		// Window Initialization
 		window = std::make_unique<Window>(DEFAULT_WIDTH, DEFAULT_HEIGHT, DEFAULT_WINDOW_TITLE);
 
 		if (!window->getHandle()) {
@@ -59,10 +65,7 @@ namespace Cosmic {
 
 
 
-
-		/*
-			ImGui Initialization - from Documentation
-		*/
+		// ImGui Initialization - from Documentation
 		m_ImGuiLayer = new ImGuiLayer();
 		m_LayerStack.PushOverlay(m_ImGuiLayer);
 
@@ -120,11 +123,19 @@ namespace Cosmic {
 
 
 
+	void Application::PushLayer(Layer* inLayer) {
+		m_LayerStack.PushLayer(inLayer);
+	}
 
 
-	void Application::run() {
+
+
+	void Application::Run() {
 		// Initial State: Push the Menu Layer
-		m_LayerStack.PushLayer(new MenuLayer());
+		// m_LayerStack.PushLayer(new MenuLayer());
+		
+		// Layers should be pushed back by the Sandbox before calling run
+			// ImGUI layer already pushedback tho.. maybe conver this to a PushOverlay
 
 		float lastFrameTime = 0.0f;
 
@@ -174,7 +185,7 @@ namespace Cosmic {
 
 
 
-	void Application::shutdown()
+	void Application::Shutdown()
 	{
 		if (!isRunning) {
 			return;
@@ -186,13 +197,6 @@ namespace Cosmic {
 
 		isRunning = false;
 	}
-
-
-
-
-
-
-
 
 
 

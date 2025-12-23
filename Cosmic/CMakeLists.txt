@@ -83,8 +83,8 @@ target_sources(Cosmic PRIVATE
     src/graphics/VertexBuffer.cpp
 
     # /layers
-    src/layers/ImGuiLayer.cpp
-    src/layers/MenuLayer.cpp
+    "include/layers/ImGuiLayer.cpp"
+    
 )
 
 

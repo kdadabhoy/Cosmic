@@ -1,5 +1,4 @@
-#ifndef APPLICATION_H
-#define APPLICATION_H
+#pragma once
 
 #include "core/Window.h"
 #include "core/LayerStack.h"
@@ -20,17 +19,18 @@ namespace Cosmic{
 		Application();
 		~Application();
 
-		bool initialize();
-		void run();
-		void shutdown();
+		void Run();
+		void Shutdown();
 
 		void OnEvent(Event& e);
+		void PushLayer(Layer* inLayer);
 
 		// --- ADDED FOR DYNAMIC LAYERS ---
 		inline Window& GetWindow() { return *window; }
 		inline static Application& Get() { return *s_Instance; }
 
 	private:
+		bool Initialize();
 		bool OnWindowClose(WindowCloseEvent& e);
 
 		std::unique_ptr<Window> window;
@@ -44,10 +44,9 @@ namespace Cosmic{
 
 		const static int DEFAULT_WIDTH = 1280;
 		const static int DEFAULT_HEIGHT = 720;
-		std::string DEFAULT_WINDOW_TITLE = "AirplaneSim";
+		std::string DEFAULT_WINDOW_TITLE = "CosmicEngine";
 	};
 }
-#endif
 
 
 
