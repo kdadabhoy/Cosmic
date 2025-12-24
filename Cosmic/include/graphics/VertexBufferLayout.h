@@ -40,7 +40,7 @@ namespace Cosmic {
 
 	class VertexBufferLayout {
 	private:
-		std::vector<VertexBufferElement> m_Elements;
+		std::vector<VertexBufferElement> m_Elements;				
 		unsigned int m_Stride;
 
 
