@@ -26,8 +26,8 @@ namespace Cosmic
 		void PushLayer(Layer* inLayer);
 		void PushOverlay(Layer* inOverlay);
 
-		inline Window& GetWindow() { return *m_Window; }
-		inline static Application& Get() { return *s_Instance; }
+		inline Window& GetWindow()						{ return *m_Window; }
+		inline static Application& Get()				{ return *s_Instance; }
 
 	private:
 		bool Initialize();
