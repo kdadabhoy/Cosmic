@@ -1,159 +1,20 @@
 #include "graphics/Shader.h"
+#include "graphics/RendererAPI.h"
+#include "platform/opengl/OpenGLShader.h"
+#include <memory>
 
 
-#include <iostream>
-#include <fstream>
-#include <sstream>
-
-
-
-
-namespace Cosmic 
+namespace Cosmic
 {
-	Shader::Shader(const std::string& vertexFilePath, const std::string& fragmentFilePath)
-		: vertFilePath(vertexFilePath), fragFilePath(fragmentFilePath), rendererID(0)
+	std::shared_ptr<Shader> Shader::Create(const std::string& filepath)
 	{
-		ShaderProgramSource source;
-		source.VertexSource = parseShader(vertFilePath);
-		source.FragmentSource = parseShader(fragmentFilePath);
-		// create shader
-		rendererID = createShader(source.VertexSource, source.FragmentSource);
-	}
-
-	/////////////////////////////////////////////////////////////////////////////////
-
-	Shader::~Shader()
-	{
-		// Shader cleanup
-		glDeleteProgram(rendererID);
-	}
-
-	/////////////////////////////////////////////////////////////////////////////////
-
-	std::string Shader::parseShader(const std::string& filePath)
-	{
-		std::ifstream stream(filePath);
-
-		if (!stream.is_open()) 
+		switch (RendererAPI::GetAPI())
 		{
-			std::cerr << "Error: Could not open shader file: " << filePath << std::endl;
-			return "";
+		case RendererAPI::API::None:    return nullptr;
+		case RendererAPI::API::OpenGL:  return std::make_shared<OpenGLShader>(filepath);
+		case RendererAPI::API::DirectX: return nullptr; // Return DirectXShader(filepath) here later
 		}
 
-		std::string line;
-		std::stringstream ss;
-
-		while (getline(stream, line))
-		{
-			ss << line << '\n';
-		}
-
-		return ss.str();
+		return nullptr;
 	}
-
-	/////////////////////////////////////////////////////////////////////////////////
-
-	unsigned int Shader::compileShader(unsigned int type, const std::string& source)
-	{
-		unsigned int id = glCreateShader(type);
-		const char* src = source.c_str();
-		glShaderSource(id, 1, &src, nullptr);
-		glCompileShader(id);
-
-
-
-		int result;
-		glGetShaderiv(id, GL_COMPILE_STATUS, &result);
-
-		if (result == GL_FALSE)
-		{
-			int length;
-			glGetShaderiv(id, GL_INFO_LOG_LENGTH, &length);
-			char* message = (char*)malloc(length * sizeof(char));
-			glGetShaderInfoLog(id, length, &length, message);
-			printf("Failed to compile %s shader!\n", (type == GL_VERTEX_SHADER) ? "vertex" : "fragment");
-			std::cout << message << std::endl;
-			glDeleteShader(id);
-			return 0;
-		}
-
-
-		return id;
-	}
-
-	/////////////////////////////////////////////////////////////////////////////////
-
-	unsigned int Shader::createShader(const std::string& vertexShader, const std::string& fragmentShader)
-	{
-		unsigned int program = glCreateProgram();
-		unsigned int vs = compileShader(GL_VERTEX_SHADER, vertexShader);
-		unsigned int fs = compileShader(GL_FRAGMENT_SHADER, fragmentShader);
-
-		glAttachShader(program, vs);
-		glAttachShader(program, fs);
-		glLinkProgram(program);
-		glValidateProgram(program);
-
-		glDeleteShader(vs);
-		glDeleteShader(fs);
-
-		return program;
-	}
-
-	/////////////////////////////////////////////////////////////////////////////////
-
-	void Shader::bind() const
-	{
-		glUseProgram(rendererID);
-	}
-
-	/////////////////////////////////////////////////////////////////////////////////
-
-	void Shader::unBind() const
-	{
-		glUseProgram(0);
-	}
-
-	/////////////////////////////////////////////////////////////////////////////////
-
-	void Shader::setUniform4f(const std::string& name, float v0, float v1, float v2, float v3)
-	{
-		glUniform4f(getUniformLocation(name), v0, v1, v2, v3);
-	}
-
-	/////////////////////////////////////////////////////////////////////////////////
-
-	void Shader::setUniformMat4f(const std::string& name, const glm::mat4& matrix)
-	{
-		// 1. Find the location of the uniform in the shader code
-		int location = getUniformLocation(name);
-
-		// 2. Upload the matrix data
-		// Parameters: location, count (1 matrix), transpose (false), pointer to data
-		glUniformMatrix4fv(location, 1, GL_FALSE, &matrix[0][0]);
-	}
-
-	/////////////////////////////////////////////////////////////////////////////////
-
-	int Shader::getUniformLocation(const std::string& name)
-	{
-		if (uniformLocationCache.find(name) != uniformLocationCache.end()) 
-		{
-			return uniformLocationCache[name];
-		}
-	
-		unsigned int location = glGetUniformLocation(rendererID, name.c_str());
-
-		if (location == -1) 
-		{
-			printf("Warning: uniform '%s' doesn't exist!\n", name.c_str());
-		}
-		else 
-		{
-			uniformLocationCache[name] = location;
-		}
-
-		return location;
-	}
-
 }

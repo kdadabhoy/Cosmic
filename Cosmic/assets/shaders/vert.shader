@@ -1,10 +1,9 @@
 #version 330 core
+layout(location = 0) in vec3 a_Position;
 
-layout(location = 0) in vec4 position;
-
-uniform mat4 u_MVP; // Name must match exactly (case-sensitive)
+uniform mat4 u_ViewProjection; // Uploaded by Renderer::BeginScene
+uniform mat4 u_Transform;      // Uploaded by Renderer::Submit
 
 void main() {
-    // If you don't multiply by u_MVP here, the compiler deletes the uniform!
-    gl_Position = u_MVP * position; 
+    gl_Position = u_ViewProjection * u_Transform * vec4(a_Position, 1.0);
 }

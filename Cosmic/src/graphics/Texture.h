@@ -1,3 +1,22 @@
-// Textures are essentially 2D images to add detail to an object
-// Applying textures is done through texture mapping
-// Texture coordinates (UV coordinates)
+#pragma once
+
+#include <string>
+#include <memory>
+
+namespace Cosmic
+{
+
+	class Texture
+	{
+	public:
+		virtual ~Texture() = default;
+
+		virtual uint32_t GetWidth() const = 0;
+		virtual uint32_t GetHeight() const = 0;
+
+		virtual void Bind(uint32_t slot = 0) const = 0;
+
+		static std::shared_ptr<Texture> Create(const std::string& path);
+	};
+
+}

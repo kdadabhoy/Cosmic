@@ -1,186 +1,134 @@
 #include "core/Application.h"
-#include "layers/ImGuiLayer.h"
+#include "renderer/Renderer.h"
+#include "renderer/RenderCommand.h"
+
 #include <GLFW/glfw3.h>
 #include <iostream>
 
-
-namespace Cosmic 
+namespace Cosmic
 {
-
-	// --- FIX: Initialize the static instance ---
 	Application* Application::s_Instance = nullptr;
 
-
-	/////////////////////////////////////////////////////////////////////////////////
-
 	Application::Application()
-		: isRunning(false), m_ImGuiLayer(nullptr)
+		: m_Running(true), m_ImGuiLayer(nullptr)
 	{
 		s_Instance = this;
 
-		if (!Initialize()) 
+		if (!Initialize())
 		{
-			Shutdown();
-			std::cout << "Failed to initialize" << std::endl;
-			return;
+			std::cout << "Cosmic: Failed to initialize application!" << std::endl;
 		}
 	}
-
-	/////////////////////////////////////////////////////////////////////////////////
 
 	Application::~Application()
 	{
 		Shutdown();
 	}
 
-	/////////////////////////////////////////////////////////////////////////////////
-
-	// Must call initialize before calling run
-	bool Application::Initialize() 
+	bool Application::Initialize()
 	{
+		// 1. Create the window - Name matched to m_Window from header
+		m_Window = std::make_unique<Window>(DEFAULT_WIDTH, DEFAULT_HEIGHT, DEFAULT_WINDOW_TITLE);
 
-		// Window Initialization
-		window = std::make_unique<Window>(DEFAULT_WIDTH, DEFAULT_HEIGHT, DEFAULT_WINDOW_TITLE);
+		// 2. Bind events to our OnEvent function
+		m_Window->setEventCallback(GLCORE_BIND_EVENT_FN(Application::OnEvent));
 
-		if (!window->getHandle()) 
-		{
-			std::cout << "Failed to Create a Window" << std::endl;
-			return false;
-		}
+		// 3. Initialize the Renderer (Dispatcher and API)
+		Renderer::Init();
 
-		window->setVSync(true);
-
-
-		// Event Initialization - This tells the window to send its events to Application::OnEvent
-		window->setEventCallback([this](Event& e) {
-			this->OnEvent(e);
-			});
-
-
-		// ImGui Initialization - from Documentation
+		// 4. Initialize ImGui
 		m_ImGuiLayer = new ImGuiLayer();
-		m_LayerStack.PushOverlay(m_ImGuiLayer);
+		PushOverlay(m_ImGuiLayer);
 
-
-		isRunning = true;
 		return true;
 	}
 
-	/////////////////////////////////////////////////////////////////////////////////
-
-	// --- EVENT DISPATCHER ---
-	void Application::OnEvent(Event& e) 
+	void Application::OnEvent(Event& e)
 	{
-		// Handle window resizing globally
-		if (e.GetEventType() == EventType::WindowResize) 
+		EventDispatcher dispatcher(e);
+		dispatcher.Dispatch<WindowCloseEvent>(GLCORE_BIND_EVENT_FN(Application::OnWindowClose));
+		dispatcher.Dispatch<WindowResizeEvent>(GLCORE_BIND_EVENT_FN(Application::OnWindowResize));
+
+		// Propagate events down the layer stack (top to bottom)
+		for (auto it = m_LayerStack.rbegin(); it != m_LayerStack.rend(); ++it)
 		{
-			auto& re = static_cast<WindowResizeEvent&>(e);
-			glViewport(0, 0, re.GetWidth(), re.GetHeight());
-		}
-
-
-
-		if (e.GetEventType() == EventType::WindowClose) 
-		{
-			OnWindowClose(static_cast<WindowCloseEvent&>(e));
-		}
-
-
-		// Pass events through the layer stack (Overlay/ImGui is usually top)
-		for (auto it = m_LayerStack.begin(); it != m_LayerStack.end(); ++it) 
-		{
-			if (e.Handled) 
-			{
+			if (e.Handled)
 				break;
-			}
-
-			(*it)->OnEvent(e); // Dereferences the Layer and then calls it's OnEvent
+			(*it)->OnEvent(e);
 		}
 	}
-
-	/////////////////////////////////////////////////////////////////////////////////
-
-	bool Application::OnWindowClose(WindowCloseEvent& e) 
-	{
-		isRunning = false;
-		return true; // Event handled
-	}
-
-	/////////////////////////////////////////////////////////////////////////////////
-
-	void Application::PushLayer(Layer* inLayer) {
-		m_LayerStack.PushLayer(inLayer);
-	}
-
-	/////////////////////////////////////////////////////////////////////////////////
 
 	void Application::Run()
 	{
-		// Initial State: Push the Menu Layer
-		// m_LayerStack.PushLayer(new MenuLayer());
-		
-		// Layers should be pushed back by the Sandbox before calling run
-			// ImGUI layer already pushed back tho.. maybe convert this to a PushOverlay
-
 		float lastFrameTime = 0.0f;
 
-		while (isRunning && !window->shouldClose()) 
+		while (m_Running && !m_Window->shouldClose())
 		{
 			// Calculate Delta Time
 			float time = (float)glfwGetTime();
 			float deltaTime = time - lastFrameTime;
 			lastFrameTime = time;
 
-			// Event Pulling:
-			window->pollEvents();
-
-			// Start ImGui
-			m_ImGuiLayer->Begin();
-
-
-			// Logic Updates:
-			for (Layer* layer : m_LayerStack) 
+			if (!m_Minimized)
 			{
-				layer->OnUpdate(deltaTime);
+				// 1. Logic Updates
+				for (Layer* layer : m_LayerStack)
+					layer->OnUpdate(deltaTime);
+
+				// 2. Rendering ("World")
+				RenderCommand::Clear(0.1f, 0.1f, 0.1f);
+
+				for (Layer* layer : m_LayerStack)
+					layer->OnRender();
+
+				// 3. UI Rendering
+				m_ImGuiLayer->Begin();
+				for (Layer* layer : m_LayerStack)
+					layer->OnImGuiRender();
+				m_ImGuiLayer->End();
 			}
 
-
-			// Rendering ("World"):
-			m_Renderer.clear();
-			for (Layer* layer : m_LayerStack)
-			{
-				layer->OnRender();
-			}
-
-			// UI Rendering (Screens and menus)
-			for (Layer* layer : m_LayerStack)
-			{
-				layer->OnImGuiRender();
-			}
-
-			// End ImGui
-			m_ImGuiLayer->End();
-
-			// Buffer Swapping:
-			window->swapBuffers();
+			// 4. Update Window
+			m_Window->pollEvents();
+			m_Window->swapBuffers();
 		}
-
-		return;
 	}
 
-	/////////////////////////////////////////////////////////////////////////////////
+	bool Application::OnWindowClose(WindowCloseEvent& e)
+	{
+		m_Running = false;
+		return true;
+	}
+
+	bool Application::OnWindowResize(WindowResizeEvent& e)
+	{
+		// Handle minimization (don't render if window is 0x0)
+		if (e.GetWidth() == 0 || e.GetHeight() == 0)
+		{
+			m_Minimized = true;
+			return false;
+		}
+
+		m_Minimized = false;
+
+		// Update the Graphics API Viewport
+		Renderer::OnWindowResize(e.GetWidth(), e.GetHeight());
+
+		return false;
+	}
+
+	void Application::PushLayer(Layer* inLayer)
+	{
+		m_LayerStack.PushLayer(inLayer);
+	}
+
+	void Application::PushOverlay(Layer* inOverlay)
+	{
+		m_LayerStack.PushOverlay(inOverlay);
+	}
 
 	void Application::Shutdown()
 	{
-		if (!isRunning) {
-			return;
-		}
-
-
-		// Window Shutdown
-		window.reset();
-
-		isRunning = false;
+		// GLFW/Window cleanup is handled by Scope (unique_ptr)
 	}
-
 }

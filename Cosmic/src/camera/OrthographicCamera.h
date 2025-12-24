@@ -1,29 +1,37 @@
-// An orthographic camera (2D) camera is basically a parallel projection
-
-#ifndef ORTHOGRAPHIC_CAMERA_H
-#define ORTHOGRAPHIC_CAMERA_H
+#pragma once
 
 #include <glm/glm.hpp>
 
-namespace Cosmic {
-    class OrthographicCamera {
-    public:
-        OrthographicCamera(float left, float right, float bottom, float top);
+namespace Cosmic
+{
 
-        // Add this to update the projection without recreating the object
-        void setProjection(float left, float right, float bottom, float top);
+	class OrthographicCamera
+	{
+	public:
+		OrthographicCamera(float left, float right, float bottom, float top);
 
-        void setPosition(const glm::vec3& position) { m_Position = position; updateViewMatrix(); }
-        const glm::mat4& getProjectionMatrix() const { return m_ProjectionMatrix; }
-        const glm::mat4& getViewMatrix() const { return m_ViewMatrix; }
+		void SetProjection(float left, float right, float bottom, float top);
 
-    private:
-        void updateViewMatrix();
+		const glm::vec3& GetPosition() const { return m_Position; }
+		void SetPosition(const glm::vec3& position) { m_Position = position; UpdateViewMatrix(); }
 
-        glm::mat4 m_ProjectionMatrix;
-        glm::mat4 m_ViewMatrix;
-        glm::vec3 m_Position = { 0.0f, 0.0f, 0.0f };
-    };
+		float GetRotation() const { return m_Rotation; }
+		void SetRotation(float rotation) { m_Rotation = rotation; UpdateViewMatrix(); }
+
+		const glm::mat4& GetProjectionMatrix() const { return m_ProjectionMatrix; }
+		const glm::mat4& GetViewMatrix() const { return m_ViewMatrix; }
+		const glm::mat4& GetViewProjectionMatrix() const { return m_ViewProjectionMatrix; }
+
+	private:
+		void UpdateViewMatrix();
+
+	private:
+		glm::mat4 m_ProjectionMatrix;
+		glm::mat4 m_ViewMatrix;
+		glm::mat4 m_ViewProjectionMatrix;
+
+		glm::vec3 m_Position = { 0.0f, 0.0f, 0.0f };
+		float m_Rotation = 0.0f; // Added rotation for more dynamic movement
+	};
+
 }
-
-#endif

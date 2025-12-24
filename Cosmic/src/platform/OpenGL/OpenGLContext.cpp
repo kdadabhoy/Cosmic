@@ -1,0 +1,26 @@
+#include "platform/opengl/OpenGLContext.h"
+
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
+
+namespace Cosmic
+{
+
+	OpenGLContext::OpenGLContext(GLFWwindow* windowHandle)
+		: m_WindowHandle(windowHandle)
+	{
+	}
+
+	void OpenGLContext::Init()
+	{
+		glfwMakeContextCurrent(m_WindowHandle);
+		int status = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
+		// Add error handling/logging here
+	}
+
+	void OpenGLContext::SwapBuffers()
+	{
+		glfwSwapBuffers(m_WindowHandle);
+	}
+
+}

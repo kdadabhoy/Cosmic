@@ -1,27 +1,26 @@
 #pragma once
 
-#include "graphics/VertexBuffer.h"
-
+#include <memory>
+#include <vector>
+#include "core/Core.h" // Assuming Ref is defined here
+#include "graphics/Buffer.h"
 
 namespace Cosmic
 {
-	class VertexBufferLayout;
-
-
 	class VertexArray
 	{
 	public:
-		VertexArray();
-		~VertexArray();
+		virtual ~VertexArray() = default;
 
-		void addBuffer(const VertexBuffer& vb, const VertexBufferLayout& layout);
+		virtual void Bind() const = 0;
+		virtual void Unbind() const = 0;
 
-		void bind() const;
-		void unBind() const;
+		virtual void AddVertexBuffer(const Ref<VertexBuffer>& vertexBuffer) = 0;
+		virtual void SetIndexBuffer(const Ref<IndexBuffer>& indexBuffer) = 0;
 
+		virtual const std::vector<Ref<VertexBuffer>>& GetVertexBuffers() const = 0;
+		virtual const Ref<IndexBuffer>& GetIndexBuffer() const = 0;
 
-	private:
-		unsigned int m_RendererID;
-
+		static Ref<VertexArray> Create();
 	};
 }
