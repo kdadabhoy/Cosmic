@@ -35,17 +35,17 @@ namespace Cosmic
 		bool OnWindowResize(WindowResizeEvent& e);
 
 	private:
-		Scope<Window> m_Window;
-		ImGuiLayer* m_ImGuiLayer;
-		LayerStack m_LayerStack;
-		bool m_Running = true;
-		bool m_Minimized = false;
+		Scope<Window>				m_Window;
+		ImGuiLayer*					m_ImGuiLayer;
+		LayerStack					m_LayerStack;
+		bool						m_Running = true;
+		bool						m_Minimized = false;
 
-		static Application* s_Instance;
+		static Application*			s_Instance;
 
-		const static int DEFAULT_WIDTH = 1280;
-		const static int DEFAULT_HEIGHT = 720;
-		const std::string DEFAULT_WINDOW_TITLE = "Cosmic Engine";
+		const static int			DEFAULT_WIDTH = 1280;
+		const static int			DEFAULT_HEIGHT = 720;
+		const std::string			DEFAULT_WINDOW_TITLE = "Cosmic Engine";
 	};
 
 	// To be defined in CLIENT (Sandbox)

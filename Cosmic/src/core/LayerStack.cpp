@@ -1,9 +1,11 @@
 #include "core/LayerStack.h"
-#include <algorithm> // Fixes: std::find undefined
+#include <algorithm> // For std::find
 
 
 namespace Cosmic 
 {
+	/////////////////////////////////////////////////////////////////////////////////
+
 	LayerStack::LayerStack() 
 	{
 
@@ -25,7 +27,7 @@ namespace Cosmic
 
 	void LayerStack::PushLayer(Layer* layer)
 	{
-		// Layers are inserted at the 'middle' before the overlays
+		// Layers are always inserted before Overlays
 		m_Layers.emplace(m_Layers.begin() + m_LayerInsertIndex, layer);
 		m_LayerInsertIndex++;
 		layer->OnAttach();
@@ -67,5 +69,6 @@ namespace Cosmic
 		}
 	}
 
+	/////////////////////////////////////////////////////////////////////////////////
 
 }

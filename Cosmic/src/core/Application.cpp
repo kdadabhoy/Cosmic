@@ -31,12 +31,14 @@ namespace Cosmic
 		Shutdown();
 	}
 
+	/////////////////////////////////////////////////////////////////////////////////
+
 	bool Application::Initialize()
 	{
-		// 1. Create the window - Name matched to m_Window from header
+		// 1. Create the window 
 		m_Window = std::make_unique<Window>(DEFAULT_WIDTH, DEFAULT_HEIGHT, DEFAULT_WINDOW_TITLE);
 
-		// 2. Bind events to our OnEvent function
+		// 2. Bind events to the OnEvent function
 		m_Window->setEventCallback(GLCORE_BIND_EVENT_FN(Application::OnEvent));
 
 		// 3. Initialize the Renderer (Dispatcher and API)
@@ -75,6 +77,7 @@ namespace Cosmic
 		while (m_Running && !m_Window->shouldClose())
 		{
 			// Calculate Delta Time
+			// TODO: Make a TimeManager.h
 			float time = (float)glfwGetTime();
 			float deltaTime = time - lastFrameTime;
 			lastFrameTime = time;
@@ -83,18 +86,24 @@ namespace Cosmic
 			{
 				// 1. Logic Updates
 				for (Layer* layer : m_LayerStack)
+				{
 					layer->OnUpdate(deltaTime);
+				}
 
 				// 2. Rendering ("World")
 				RenderCommand::Clear(0.1f, 0.1f, 0.1f);
 
 				for (Layer* layer : m_LayerStack)
+				{
 					layer->OnRender();
+				}
 
 				// 3. UI Rendering
 				m_ImGuiLayer->Begin();
 				for (Layer* layer : m_LayerStack)
+				{
 					layer->OnImGuiRender();
+				}
 				m_ImGuiLayer->End();
 			}
 

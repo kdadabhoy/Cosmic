@@ -1,14 +1,7 @@
-// Think of a layer as one part of a screen... one layer could be
-// a background. The next layer could be an airplane... etc
-// Layers are used primarily in order to be able to have a draw order
+#pragma once
 
-// We will use polymorphism and derive many layers from the abstract Layer.h
-
-
-
-#ifndef LAYER_H
-#define LAYER_H
 #include "events/Event.h"
+
 #include <string>
 #include <sstream>
 #include <iostream>
@@ -16,7 +9,6 @@
 
 namespace Cosmic
 {
-
     class Layer 
     {
     public:
@@ -45,7 +37,7 @@ namespace Cosmic
         virtual void OnRender() {};
 
 
-        // For UI tools like ImGui (useful for debugging altitude, etc.)
+        // For ImGUI
         virtual void OnImGuiRender() {};
         inline const std::string& GetName() const { return m_DebugName; };
 
@@ -63,10 +55,8 @@ namespace Cosmic
 
 
 
-#endif
+// Think of a layer as one part of a screen... one layer could be
+// a background. The next layer could be an airplane... etc
+// Layers are used primarily in order to be able to have a draw order
 
-
-
-
-
-
+// We will use polymorphisms and derive many layers from the abstract Layer.h
