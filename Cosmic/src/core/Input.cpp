@@ -8,7 +8,7 @@ namespace Cosmic
 	bool Input::IsKeyPressed(int keycode)
 	{
 		// Reach into the singleton Application to get the GLFW window handle
-		auto* windowHandle = Application::Get().GetWindow().getHandle();
+		auto* windowHandle = Application::Get().GetWindow().GetHandle();
 		auto state = glfwGetKey(windowHandle, keycode);
 
 		return state == GLFW_PRESS || state == GLFW_REPEAT;
@@ -18,7 +18,7 @@ namespace Cosmic
 
 	bool Input::IsMouseButtonPressed(int button)
 	{
-		auto* windowHandle = Application::Get().GetWindow().getHandle();
+		auto* windowHandle = Application::Get().GetWindow().GetHandle();
 		auto state = glfwGetMouseButton(windowHandle, button);
 
 		return state == GLFW_PRESS;
@@ -28,7 +28,7 @@ namespace Cosmic
 
 	glm::vec2 Input::GetMousePosition()
 	{
-		auto* windowHandle = Application::Get().GetWindow().getHandle();
+		auto* windowHandle = Application::Get().GetWindow().GetHandle();
 		double xpos, ypos;
 		glfwGetCursorPos(windowHandle, &xpos, &ypos);
 

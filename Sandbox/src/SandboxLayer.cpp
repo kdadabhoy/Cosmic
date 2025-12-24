@@ -5,10 +5,15 @@
 
 using namespace Cosmic;
 
+/////////////////////////////////////////////////////////////////////////////////
+
 SandboxLayer::SandboxLayer()
 	: Layer("Sandbox"), m_SquarePos(0.0f, 0.0f, 0.0f)
 {
+
 }
+
+/////////////////////////////////////////////////////////////////////////////////
 
 void SandboxLayer::OnAttach()
 {
@@ -38,26 +43,39 @@ void SandboxLayer::OnAttach()
 	// 2. Simplified Camera for 2D
 	// Instead of using window pixel units (1280x720), we use a range of -1 to 1.
 	m_Camera = std::make_unique<OrthographicCamera>(-1.0f, 1.0f, -1.0f, 1.0f);
+
+
+	// 3. Color initializing
+	m_Color[0] = 0.29f;								// R
+	//m_Color[1] = (std::sin(time) + 1.0f) / 2.0f;	// G pulse
+	m_Color[2] = 0.4f;								// B
+	m_Color[3] = 1.0f;								// A 
 }
+
+/////////////////////////////////////////////////////////////////////////////////
 
 void SandboxLayer::OnUpdate(float deltaTime)
 {
 	static float time = 0.0f;
 	time += deltaTime;
 
-	m_Color[0] = (std::sin(time) + 1.0f) / 2.0f; // Red pulse
-	m_Color[3] = 1.0f; // Force Alpha to be fully opaque
+	// m_Color[0] = 0.0f;								// R
+	m_Color[1] = (std::sin(time) + 1.0f) / 2.0f;	    // G pulse
+	// m_Color[2] = 0.0f;								// B
+	// m_Color[3] = 1.0f;								// A 
 }
+
+/////////////////////////////////////////////////////////////////////////////////
 
 void SandboxLayer::OnRender()
 {
 	Cosmic::RenderCommand::Clear(1.0f, 0.0f, 1.0f); // Magenta background
 	Renderer::BeginScene(*m_Camera);
 
-	// 1. Bind the shader FIRST
+	// 1. Bind the shader
 	m_Shader->Bind();
 
-	// 2. Upload the color NOW that the shader is bound
+	// 2. Upload the color
 	m_Shader->SetFloat4("u_Color", glm::vec4(m_Color[0], m_Color[1], m_Color[2], m_Color[3]));
 
 	// 3. Submit the draw call
@@ -66,7 +84,14 @@ void SandboxLayer::OnRender()
 	Renderer::EndScene();
 }
 
-void SandboxLayer::OnDetach() {}
+/////////////////////////////////////////////////////////////////////////////////
+
+void SandboxLayer::OnDetach() 
+{
+
+}
+
+/////////////////////////////////////////////////////////////////////////////////
 
 void SandboxLayer::OnImGuiRender()
 {
@@ -76,4 +101,11 @@ void SandboxLayer::OnImGuiRender()
 	ImGui::End();
 }
 
-void SandboxLayer::OnEvent(Event& event) {}
+/////////////////////////////////////////////////////////////////////////////////
+
+void SandboxLayer::OnEvent(Event& event) 
+{
+
+}
+
+/////////////////////////////////////////////////////////////////////////////////

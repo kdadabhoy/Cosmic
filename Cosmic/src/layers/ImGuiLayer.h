@@ -6,23 +6,25 @@
 #include "events/MouseEvent.h"
 
 
-namespace Cosmic {
-    class ImGuiLayer : public Layer {
-    public:
-        ImGuiLayer();
-        ~ImGuiLayer();
+namespace Cosmic
+{
+	class ImGuiLayer : public Layer
+	{
+	public:
+		ImGuiLayer();
+		~ImGuiLayer();
 
-        virtual void OnAttach() override;
-        virtual void OnDetach() override;
-        virtual void OnEvent(Event& event) override; // Fixed signature
+		void OnAttach()			   override;
+		void OnDetach()            override;
+		void OnEvent(Event& event) override;
 
-        // These are needed to bridge the Application loop to ImGui
-        void Begin();
-        void End();
+		// These are needed to bridge the Application loop to ImGui
+		void Begin();
+		void End();
 
-    private:
-        bool OnMouseButtonPressed(MouseButtonPressedEvent& e);
-        // Add other event handlers (Key, MouseMove, etc.) as needed
-    };
+	private:
+		bool OnMouseButtonPressed(MouseButtonPressedEvent& e);
+		// Add other event handlers (Key, MouseMove, etc.) as needed
+	};
 
 }

@@ -1,13 +1,7 @@
 #pragma once
 
-// Interface for window/context creation
-
-
-#pragma once
-
 namespace Cosmic
 {
-
 	class GraphicsContext
 	{
 	public:
@@ -18,3 +12,14 @@ namespace Cosmic
 	};
 
 }
+
+
+
+/*	Documentation:
+
+	Interface for window/context creation
+
+	*** Every Platform will derive it's own Context Class from this ***
+
+*/
+

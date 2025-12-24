@@ -1,6 +1,7 @@
 #pragma once
 
 // Abstract Class for back-end... has a flag to pick what graphics API
+// Every platform will derive a RendererAPI class from this
 
 
 #include <memory>
@@ -29,9 +30,10 @@ namespace Cosmic
 
 		virtual void DrawIndexed(const std::shared_ptr<VertexArray>& vertexArray) = 0;
 
-		inline static API GetAPI() { return s_API; }
+		inline static API GetAPI()				{ return s_API; }
 
 	private:
 		static API s_API;
 	};
 }
+

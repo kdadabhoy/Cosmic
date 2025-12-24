@@ -27,5 +27,4 @@
 
 
 
-// TODO
-	// Add an entry point #include "Cosmic/Core/EntryPoint.h"
+// TODO: Add an entry point #include "Cosmic/Core/EntryPoint.h"

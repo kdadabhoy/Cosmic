@@ -6,9 +6,9 @@
 
 namespace Cosmic
 {
+	/////////////////////////////////////////////////////////////////////////////////
 
 	// --- VertexBuffer Factory -----------------------------------------------
-
 	std::shared_ptr<VertexBuffer> VertexBuffer::Create(float* vertices, uint32_t size)
 	{
 		switch (RendererAPI::GetAPI())
@@ -21,8 +21,9 @@ namespace Cosmic
 		return nullptr;
 	}
 
-	// --- IndexBuffer Factory ------------------------------------------------
+	/////////////////////////////////////////////////////////////////////////////////
 
+	// --- IndexBuffer Factory ------------------------------------------------
 	std::shared_ptr<IndexBuffer> IndexBuffer::Create(uint32_t* indices, uint32_t count)
 	{
 		switch (RendererAPI::GetAPI())

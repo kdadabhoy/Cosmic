@@ -9,12 +9,12 @@ public:
 	SandboxLayer();
 	virtual ~SandboxLayer() = default;
 
-	virtual void OnAttach() override;
-	virtual void OnDetach() override;
-	virtual void OnUpdate(float deltaTime) override;
-	virtual void OnRender() override;
-	virtual void OnImGuiRender() override;
-	virtual void OnEvent(Cosmic::Event& event) override;
+	void OnAttach()								override;
+	void OnDetach()								override;
+	void OnUpdate(float deltaTime)				override;
+	void OnRender()								override;
+	void OnImGuiRender()						override;
+	void OnEvent(Cosmic::Event& event)			override;
 
 private:
 	// Use Ref (shared_ptr) for resources that the Renderer also needs to hold

@@ -51,3 +51,13 @@ namespace Cosmic
 	// To be defined in CLIENT (Sandbox)
 	Application* CreateApplication();
 }
+
+
+
+/*	Documentation:
+	
+	a
+
+
+
+*/

@@ -5,12 +5,16 @@
 
 namespace Cosmic
 {
+	/////////////////////////////////////////////////////////////////////////////////
+
 	static GLenum ShaderTypeFromString(const std::string& type)
 	{
 		if (type == "vertex") return GL_VERTEX_SHADER;
 		if (type == "fragment" || type == "pixel") return GL_FRAGMENT_SHADER;
 		return 0;
 	}
+
+	/////////////////////////////////////////////////////////////////////////////////
 
 	OpenGLShader::OpenGLShader(const std::string& filepath)
 	{
@@ -19,10 +23,14 @@ namespace Cosmic
 		Compile(shaderSources);
 	}
 
+	/////////////////////////////////////////////////////////////////////////////////
+
 	OpenGLShader::~OpenGLShader()
 	{
 		glDeleteProgram(m_RendererID);
 	}
+
+	/////////////////////////////////////////////////////////////////////////////////
 
 	std::string OpenGLShader::ReadFile(const std::string& filepath)
 	{
@@ -38,6 +46,8 @@ namespace Cosmic
 		}
 		return result;
 	}
+
+	/////////////////////////////////////////////////////////////////////////////////
 
 	std::unordered_map<GLenum, std::string> OpenGLShader::PreProcess(const std::string& source)
 	{
@@ -58,6 +68,8 @@ namespace Cosmic
 		}
 		return shaderSources;
 	}
+
+	/////////////////////////////////////////////////////////////////////////////////
 
 	void OpenGLShader::Compile(const std::unordered_map<GLenum, std::string>& shaderSources)
 	{
@@ -86,11 +98,35 @@ namespace Cosmic
 		for (auto id : shaderIDs) glDeleteShader(id);
 	}
 
-	void OpenGLShader::Bind() const { glUseProgram(m_RendererID); }
-	void OpenGLShader::Unbind() const { glUseProgram(0); }
+	/////////////////////////////////////////////////////////////////////////////////
 
-	void OpenGLShader::SetMat4(const std::string& name, const glm::mat4& value) { UploadUniformMat4(name, value); }
-	void OpenGLShader::SetFloat4(const std::string& name, const glm::vec4& value) { UploadUniformFloat4(name, value); }
+	void OpenGLShader::Bind() const 
+	{ 
+		glUseProgram(m_RendererID); 
+	}
+
+	/////////////////////////////////////////////////////////////////////////////////
+
+	void OpenGLShader::Unbind() const
+	{
+		glUseProgram(0);
+	}
+
+	/////////////////////////////////////////////////////////////////////////////////
+
+	void OpenGLShader::SetMat4(const std::string& name, const glm::mat4& value)
+	{
+		UploadUniformMat4(name, value);
+	}
+
+	/////////////////////////////////////////////////////////////////////////////////
+
+	void OpenGLShader::SetFloat4(const std::string& name, const glm::vec4& value)
+	{
+		UploadUniformFloat4(name, value);
+	}
+
+	/////////////////////////////////////////////////////////////////////////////////
 
 	void OpenGLShader::UploadUniformMat4(const std::string& name, const glm::mat4& matrix)
 	{
@@ -98,9 +134,14 @@ namespace Cosmic
 		glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
 	}
 
+	/////////////////////////////////////////////////////////////////////////////////
+
 	void OpenGLShader::UploadUniformFloat4(const std::string& name, const glm::vec4& values)
 	{
 		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
 		glUniform4f(location, values.x, values.y, values.z, values.w);
 	}
+
+	/////////////////////////////////////////////////////////////////////////////////
+
 }

@@ -9,6 +9,8 @@
 
 namespace Cosmic
 {
+	/////////////////////////////////////////////////////////////////////////////////
+
 	Window::Window(int width, int height, const std::string& title)
 	{
 		if (!glfwInit())
@@ -25,7 +27,7 @@ namespace Cosmic
 
 		m_Handle = glfwCreateWindow(width, height, title.c_str(), NULL, NULL);
 
-		// NEW: Initialize the Graphics Context
+		// Initialize the Graphics Context
 		m_Context = new OpenGLContext(m_Handle);
 		m_Context->Init();
 
@@ -46,8 +48,10 @@ namespace Cosmic
 				data.EventCallback(event);
 			});
 
-		// (Other callbacks for Key, Mouse, etc., remain the same as your original file)
+		// Note: Other callbacks for Key, Mouse, etc., stay in the other file
 	}
+
+	/////////////////////////////////////////////////////////////////////////////////
 
 	Window::~Window()
 	{
@@ -56,22 +60,30 @@ namespace Cosmic
 		glfwTerminate();
 	}
 
-	void Window::swapBuffers()
+	/////////////////////////////////////////////////////////////////////////////////
+
+	void Window::SwapBuffers()
 	{
 		m_Context->SwapBuffers();
 	}
 
-	void Window::pollEvents()
+	/////////////////////////////////////////////////////////////////////////////////
+
+	void Window::PollEvents()
 	{
 		glfwPollEvents();
 	}
 
-	bool Window::shouldClose() const
+	/////////////////////////////////////////////////////////////////////////////////
+
+	bool Window::ShouldClose() const
 	{
 		return glfwWindowShouldClose(m_Handle);
 	}
 
-	void Window::setVSync(bool enabled)
+	/////////////////////////////////////////////////////////////////////////////////
+
+	void Window::SetVSync(bool enabled)
 	{
 		if (enabled)
 			glfwSwapInterval(1);
@@ -81,8 +93,13 @@ namespace Cosmic
 		m_Data.VSync = enabled;
 	}
 
-	void Window::getSize(int* width, int* height) const
+	/////////////////////////////////////////////////////////////////////////////////
+
+	void Window::GetSize(int* width, int* height) const
 	{
 		glfwGetFramebufferSize(m_Handle, width, height);
 	}
+
+	/////////////////////////////////////////////////////////////////////////////////
+
 }

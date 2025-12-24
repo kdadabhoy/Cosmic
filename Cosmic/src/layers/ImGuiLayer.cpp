@@ -9,6 +9,7 @@
 
 namespace Cosmic
 {
+	/////////////////////////////////////////////////////////////////////////////////
 
 	ImGuiLayer::ImGuiLayer() : Layer("ImGuiLayer") 
 	{
@@ -16,6 +17,7 @@ namespace Cosmic
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////
+
 	ImGuiLayer::~ImGuiLayer()
 	{
 		// default Layer destructor
@@ -36,7 +38,7 @@ namespace Cosmic
 		ImGui::StyleColorsDark();
 
 		Application& app = Application::Get();
-		GLFWwindow* window = app.GetWindow().getHandle();
+		GLFWwindow* window = app.GetWindow().GetHandle();
 
 		ImGui_ImplGlfw_InitForOpenGL(window, true);
 		ImGui_ImplOpenGL3_Init("#version 410");
@@ -97,7 +99,5 @@ namespace Cosmic
 		// If ImGui wants the mouse, we stop the event from reaching other layers
 		return io.WantCaptureMouse;
 	}
-
-
 
 }

@@ -6,18 +6,17 @@
 
 namespace Cosmic
 {
+	/////////////////////////////////////////////////////////////////////////////////
 
-    /**
-     * @brief Defines the data types supported by the shader.
-     */
+    // Defines the data types supported by the shader.
     enum class ShaderDataType
     {
         None = 0, Float, Float2, Float3, Float4, Mat3, Mat4, Int, Int2, Int3, Int4, Bool
     };
 
-    /**
-     * @brief Helper to get the size of the data types.
-     */
+	/////////////////////////////////////////////////////////////////////////////////
+
+    // Helper to get the size of the data types.
     static uint32_t ShaderDataTypeSize(ShaderDataType type)
     {
         switch (type)
@@ -37,6 +36,8 @@ namespace Cosmic
         return 0;
     }
 
+	/////////////////////////////////////////////////////////////////////////////////
+
     struct BufferElement
     {
         std::string Name;
@@ -48,6 +49,7 @@ namespace Cosmic
         BufferElement(ShaderDataType type, const std::string& name, bool normalized = false)
             : Name(name), Type(type), Size(ShaderDataTypeSize(type)), Offset(0), Normalized(normalized)
         {
+
         }
 
         uint32_t GetComponentCount() const
@@ -70,9 +72,9 @@ namespace Cosmic
         }
     };
 
-    /**
-     * @brief Replaces your old VertexBufferLayout.
-     */
+	/////////////////////////////////////////////////////////////////////////////////
+
+    // Replacement of VertexBufferLayout.
 	class BufferLayout
 	{
 	public:
@@ -110,8 +112,10 @@ namespace Cosmic
 		uint32_t m_Stride = 0;
 	};
 
-    // --- VertexBuffer Interface ---------------------------------------------
+	/////////////////////////////////////////////////////////////////////////////////
 
+
+    // --- VertexBuffer Interface ---------------------------------------------
     class VertexBuffer
     {
     public:
@@ -126,8 +130,9 @@ namespace Cosmic
         static std::shared_ptr<VertexBuffer> Create(float* vertices, uint32_t size);
     };
 
-    // --- IndexBuffer Interface ----------------------------------------------
+	/////////////////////////////////////////////////////////////////////////////////
 
+    // --- IndexBuffer Interface ----------------------------------------------
     class IndexBuffer
     {
     public:

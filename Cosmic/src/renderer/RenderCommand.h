@@ -3,15 +3,11 @@
 #include "graphics/RendererAPI.h"
 #include "graphics/VertexArray.h"
 
-
+// RenderCommand is a static utility class that dispatches commands to the specific RendererAPI implementation
+// TODO: Refactor this to put the commands in the .cpp
 
 namespace Cosmic
 {
-
-    /**
-     * @brief RenderCommand is a static utility class that dispatches
-     * commands to the specific RendererAPI implementation.
-     */
     class RenderCommand
     {
     public:
@@ -39,6 +35,7 @@ namespace Cosmic
         {
             s_RendererAPI->DrawIndexed(vertexArray);
         }
+
 
     private:
         // This is the pointer that holds either OpenGLRendererAPI or DirectXRendererAPI

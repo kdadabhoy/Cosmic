@@ -39,7 +39,7 @@ namespace Cosmic
 		m_Window = std::make_unique<Window>(DEFAULT_WIDTH, DEFAULT_HEIGHT, DEFAULT_WINDOW_TITLE);
 
 		// 2. Bind events to the OnEvent function
-		m_Window->setEventCallback(GLCORE_BIND_EVENT_FN(Application::OnEvent));
+		m_Window->SetEventCallback(GLCORE_BIND_EVENT_FN(Application::OnEvent));
 
 		// 3. Initialize the Renderer (Dispatcher and API)
 		Renderer::Init();
@@ -74,7 +74,7 @@ namespace Cosmic
 	{
 		float lastFrameTime = 0.0f;
 
-		while (m_Running && !m_Window->shouldClose())
+		while (m_Running && !m_Window->ShouldClose())
 		{
 			// Calculate Delta Time
 			// TODO: Make a TimeManager.h
@@ -108,8 +108,8 @@ namespace Cosmic
 			}
 
 			// 4. Update Window
-			m_Window->pollEvents();
-			m_Window->swapBuffers();
+			m_Window->PollEvents();
+			m_Window->SwapBuffers();
 		}
 	}
 

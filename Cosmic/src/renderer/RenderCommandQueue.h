@@ -8,7 +8,6 @@
 
 namespace Cosmic
 {
-
 	class RenderCommand
 	{
 	public:
