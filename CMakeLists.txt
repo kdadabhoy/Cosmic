@@ -1,20 +1,19 @@
 cmake_minimum_required(VERSION 3.21)
 project(CosmicRoot LANGUAGES C CXX)
 
+# These settings flow down into Cosmic and Sandbox automatically
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-
-
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 # -------------------------------------------------------------------
 # 1. Subdirectories
 # -------------------------------------------------------------------
 
-# We call the Engine folder first. 
-# Since the dependencies live INSIDE it, the Engine CMake 
-# will be the one responsible for setting up GLFW, Glad, etc.
+# 1. Build the Engine first. 
+# It sets up glad, glfw, and imgui for everyone else.
 add_subdirectory(Cosmic)
 
-# Then we call the Sandbox, which will link to the engine.
+# 2. Build the Sandbox. 
+# It will link to 'Cosmic' and inherit its 'src' include path.
 add_subdirectory(Sandbox)
