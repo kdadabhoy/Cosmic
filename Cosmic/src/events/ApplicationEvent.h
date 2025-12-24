@@ -2,16 +2,20 @@
 
 #include "events/Event.h"
 #include <sstream>
-#include <string> // Required for std::string
+#include <string>
 #include <iostream>
 
 #pragma once
 
-namespace Cosmic {
-	class WindowResizeEvent : public Event {
+namespace Cosmic
+{
+	class WindowResizeEvent : public Event
+	{
 	public:
 		WindowResizeEvent(uint32_t width, uint32_t height)
-			: m_Width(width), m_Height(height) {
+			: m_Width(width), m_Height(height)
+		{
+
 		}
 
 		inline uint32_t GetWidth() const { return m_Width; }
@@ -30,13 +34,10 @@ namespace Cosmic {
 		uint32_t m_Width, m_Height;
 	};
 
+	/////////////////////////////////////////////////////////////////////////////////
 
-
-
-
-
-
-	class WindowCloseEvent : public Event {
+	class WindowCloseEvent : public Event
+	{
 	public:
 		WindowCloseEvent() {}
 
@@ -44,11 +45,7 @@ namespace Cosmic {
 			EVENT_CLASS_CATEGORY(EventCategoryApplication)
 	};
 
-
-
-
-
-
+	/////////////////////////////////////////////////////////////////////////////////
 
 	class AppTickEvent : public Event
 	{
@@ -59,11 +56,7 @@ namespace Cosmic {
 			EVENT_CLASS_CATEGORY(EventCategoryApplication)
 	};
 
-
-
-
-
-
+	/////////////////////////////////////////////////////////////////////////////////
 
 	class AppUpdateEvent : public Event
 	{
@@ -74,11 +67,7 @@ namespace Cosmic {
 			EVENT_CLASS_CATEGORY(EventCategoryApplication)
 	};
 
-
-
-
-
-
+	/////////////////////////////////////////////////////////////////////////////////
 
 	class AppRenderEvent : public Event
 	{

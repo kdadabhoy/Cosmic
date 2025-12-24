@@ -6,7 +6,8 @@
 
 
 
-namespace Cosmic {
+namespace Cosmic
+{
 	enum class EventType
 	{
 		None = 0,
@@ -16,8 +17,7 @@ namespace Cosmic {
 		MouseButtonPressed, MouseButtonReleased, MouseMoved, MouseScrolled
 	};
 
-
-
+	/////////////////////////////////////////////////////////////////////////////////
 
 	enum EventCategory
 	{
@@ -29,8 +29,7 @@ namespace Cosmic {
 		EventCategoryMouseButton = BIT(4)
 	};
 
-
-
+	/////////////////////////////////////////////////////////////////////////////////
 
 #define EVENT_CLASS_TYPE(type) static EventType GetStaticType() { return EventType::##type; }\
 								virtual EventType GetEventType() const override { return GetStaticType(); }\
@@ -41,15 +40,17 @@ namespace Cosmic {
 
 
 
+	/////////////////////////////////////////////////////////////////////////////////
 
-	class Event {
+	class Event 
+	{
 	public:
 		bool Handled = false;
 
 		virtual EventType GetEventType() const = 0;
 		virtual const char* GetName() const = 0;
 		virtual int GetCategoryFlags() const = 0;
-		virtual std::string ToString() const { return GetName(); }
+		virtual std::string ToString() const							 { return GetName(); }
 
 		inline bool IsInCategory(EventCategory category)
 		{
@@ -57,17 +58,15 @@ namespace Cosmic {
 		}
 	};
 
+	/////////////////////////////////////////////////////////////////////////////////
 
-
-
-
-
-
-	class EventDispatcher {
+	class EventDispatcher
+	{
 	public:
 		EventDispatcher(Event& event)
 			: m_Event(event)
 		{
+
 		}
 
 		// F will be deduced by the compiler
@@ -85,8 +84,7 @@ namespace Cosmic {
 	};
 
 
-
-
+	/////////////////////////////////////////////////////////////////////////////////
 
 	inline std::ostream& operator<<(std::ostream& os, const Event& e)
 	{

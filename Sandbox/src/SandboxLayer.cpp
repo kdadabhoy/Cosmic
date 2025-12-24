@@ -13,20 +13,19 @@ using namespace Cosmic;
 
 
 SandboxLayer::SandboxLayer()
-	: Layer("Menu"),
-	m_SquarePos(0.0f, 0.0f, 0.0f) // Will be set in OnAttach based on actual window size
+	: Layer("Menu"), m_SquarePos(0.0f, 0.0f, 0.0f) // Will be set in OnAttach based on actual window size
 {
+
 }
 
+/////////////////////////////////////////////////////////////////////////////////
 
+SandboxLayer::~SandboxLayer()
+{
+	// Default Layer destructor
+}
 
-
-SandboxLayer::~SandboxLayer() {}
-
-
-
-
-
+/////////////////////////////////////////////////////////////////////////////////
 
 void SandboxLayer::OnAttach()
 {
@@ -67,21 +66,19 @@ void SandboxLayer::OnAttach()
 	m_Shader = std::make_unique<Shader>("assets/shaders/vert.shader", "assets/shaders/frag.shader");
 }
 
+/////////////////////////////////////////////////////////////////////////////////
 
+void SandboxLayer::OnDetach()
+{
 
+}
 
-
-void SandboxLayer::OnDetach() {}
-
-
-
-
-
-
+/////////////////////////////////////////////////////////////////////////////////
 
 void SandboxLayer::OnEvent(Event& e)
 {
-	if (e.GetEventType() == EventType::WindowResize) {
+	if (e.GetEventType() == EventType::WindowResize)
+	{
 		auto& re = static_cast<WindowResizeEvent&>(e);
 		float newWidth = static_cast<float>(re.GetWidth());
 		float newHeight = static_cast<float>(re.GetHeight());
@@ -95,24 +92,20 @@ void SandboxLayer::OnEvent(Event& e)
 	}
 }
 
-
-
-
-
+/////////////////////////////////////////////////////////////////////////////////
 
 void SandboxLayer::OnUpdate(float deltaTime)
 {
 	// Color cycle logic
 	int colorToCycle = 2; // r = 0, g = 1, b = 2, a = 3
 	m_Color[colorToCycle] += m_ColorIncrement * deltaTime;
-	if (m_Color[colorToCycle] > 1.0f || m_Color[colorToCycle] < 0.0f) {
+	if (m_Color[colorToCycle] > 1.0f || m_Color[colorToCycle] < 0.0f)
+	{
 		m_ColorIncrement = -m_ColorIncrement;
 	}
 }
 
-
-
-
+/////////////////////////////////////////////////////////////////////////////////
 
 void SandboxLayer::OnRender()
 {
@@ -131,11 +124,7 @@ void SandboxLayer::OnRender()
 	renderer.draw(*m_VAO, *m_IBO, *m_Shader);
 }
 
-
-
-
-
-
+/////////////////////////////////////////////////////////////////////////////////
 
 void SandboxLayer::OnImGuiRender()
 {
@@ -156,7 +145,8 @@ void SandboxLayer::OnImGuiRender()
 
 	ImGui::ColorEdit4("Square Color", m_Color);
 
-	if (ImGui::Button("Start Flight (Climb)")) {
+	if (ImGui::Button("Start Flight (Climb)"))
+	{
 		// Transition logic here
 	}
 

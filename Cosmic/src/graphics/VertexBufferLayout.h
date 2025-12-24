@@ -7,7 +7,8 @@
 
 
 
-namespace Cosmic {
+namespace Cosmic
+{
 	struct VertexBufferElement
 	{
 		unsigned int type;
@@ -16,7 +17,8 @@ namespace Cosmic {
 
 		static unsigned int getSizeOfType(unsigned int type)
 		{
-			switch (type) {
+			switch (type)
+			{
 			case GL_FLOAT:
 				return sizeof(float);
 
@@ -31,23 +33,21 @@ namespace Cosmic {
 		}
 	};
 
+	/////////////////////////////////////////////////////////////////////////////////
 
-
-
-
-
-
-
-	class VertexBufferLayout {
+	class VertexBufferLayout
+	{
 	private:
-		std::vector<VertexBufferElement> m_Elements;				
+		std::vector<VertexBufferElement> m_Elements;
 		unsigned int m_Stride;
 
 
 
 	public:
 		VertexBufferLayout()
-			: m_Stride(0) {
+			: m_Stride(0)
+		{
+
 		};
 
 		template<typename T>

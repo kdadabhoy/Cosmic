@@ -10,7 +10,7 @@ namespace Cosmic {
     class ImGuiLayer : public Layer {
     public:
         ImGuiLayer();
-        ~ImGuiLayer() = default;
+        ~ImGuiLayer();
 
         virtual void OnAttach() override;
         virtual void OnDetach() override;

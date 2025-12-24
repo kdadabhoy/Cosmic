@@ -13,8 +13,10 @@
 
 
 
-namespace Cosmic{
-	class Application {
+namespace Cosmic
+{
+	class Application 
+	{
 	public:
 		Application();
 		~Application();
@@ -26,8 +28,8 @@ namespace Cosmic{
 		void PushLayer(Layer* inLayer);
 
 		// --- ADDED FOR DYNAMIC LAYERS ---
-		inline Window& GetWindow() { return *window; }
-		inline static Application& Get() { return *s_Instance; }
+		inline Window& GetWindow()							{ return *window; }
+		inline static Application& Get()					{ return *s_Instance; }
 
 	private:
 		bool Initialize();

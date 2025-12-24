@@ -3,7 +3,9 @@
 #include <GLFW/glfw3.h>
 
 
-namespace Cosmic {
+namespace Cosmic 
+{
+
     bool Input::IsKeyPressed(int keycode)
     {
         // Get the window handle from our Application singleton

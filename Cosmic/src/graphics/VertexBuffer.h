@@ -2,9 +2,11 @@
 #define VERTEXBUFFER_H
 
 
-namespace Cosmic {
+namespace Cosmic
+{
 
-	class VertexBuffer {
+	class VertexBuffer
+	{
 	public:
 		VertexBuffer(const void* data, unsigned int size);
 		~VertexBuffer();

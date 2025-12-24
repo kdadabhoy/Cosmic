@@ -10,15 +10,15 @@
 
 
 
-
-namespace Cosmic {
-    class Renderer {
+namespace Cosmic
+{
+    class Renderer
+    {
     public:
         Renderer();
         ~Renderer();
         void clear() const;
         void draw(const VertexArray& va, const IndexBuffer& ib, const Shader& shader) const;
-
 
     private:
 

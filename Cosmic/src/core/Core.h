@@ -3,7 +3,8 @@
 
 #include <memory>
 
-namespace Cosmic {
+namespace Cosmic 
+{
 #ifdef GLCORE_DEBUG
 #define GLCORE_ENABLE_ASSERTS
 #endif

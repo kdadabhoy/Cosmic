@@ -3,11 +3,13 @@
 #include "graphics/VertexBuffer.h"
 
 
-namespace Cosmic {
+namespace Cosmic
+{
 	class VertexBufferLayout;
 
 
-	class VertexArray {
+	class VertexArray
+	{
 	public:
 		VertexArray();
 		~VertexArray();

@@ -6,12 +6,15 @@
 
 
 
-namespace Cosmic {
+namespace Cosmic
+{
 
 	Window::Window(int width, int height, const std::string& title)
 		: handle(nullptr)
 	{
-		if (!glfwInit()) {
+
+		if (!glfwInit()) 
+		{
 			return;
 		}
 
@@ -21,7 +24,8 @@ namespace Cosmic {
 
 		handle = glfwCreateWindow(width, height, title.c_str(), NULL, NULL);
 
-		if (handle == NULL) {
+		if (handle == NULL) 
+		{
 			std::cout << "Failed to Create GLFW Window" << std::endl;
 			glfwTerminate();
 			return;
@@ -29,7 +33,8 @@ namespace Cosmic {
 
 		glfwMakeContextCurrent(handle);
 
-		if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+		if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+		{
 			std::cout << "GLAD Initialization Failed" << std::endl;
 			return;
 		}
@@ -39,6 +44,7 @@ namespace Cosmic {
 		m_Data.Height = height;
 
 		glfwSetWindowUserPointer(handle, &m_Data);
+
 
 		// --- Window Resize Callback ---
 		glfwSetFramebufferSizeCallback(handle, [](GLFWwindow* window, int width, int height) {
@@ -50,6 +56,7 @@ namespace Cosmic {
 			data.EventCallback(event);
 			});
 
+
 		// --- Window Close Callback ---
 		glfwSetWindowCloseCallback(handle, [](GLFWwindow* window) {
 			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
@@ -57,11 +64,13 @@ namespace Cosmic {
 			data.EventCallback(event);
 			});
 
+
 		// --- Key Callback ---
 		glfwSetKeyCallback(handle, [](GLFWwindow* window, int key, int scancode, int action, int mods) {
 			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 
-			switch (action) {
+			switch (action) 
+			{
 			case GLFW_PRESS:
 			{
 				KeyPressedEvent event(key, 0);
@@ -93,7 +102,8 @@ namespace Cosmic {
 		glfwSetMouseButtonCallback(handle, [](GLFWwindow* window, int button, int action, int mods) {
 			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 
-			switch (action) {
+			switch (action) 
+			{
 			case GLFW_PRESS:
 			{
 				MouseButtonPressedEvent event(button);
@@ -136,59 +146,42 @@ namespace Cosmic {
 			});
 	}
 
-
-
-
-
-
+	/////////////////////////////////////////////////////////////////////////////////
 
 	Window::~Window()
 	{
 		glfwDestroyWindow(handle);
 	}
 
-
-
-
-
-
-
-
+	/////////////////////////////////////////////////////////////////////////////////
 
 	bool Window::shouldClose() const
 	{
 		return glfwWindowShouldClose(handle);
 	}
 
-
-
-
+	/////////////////////////////////////////////////////////////////////////////////
 
 	void Window::swapBuffers()
 	{
 		glfwSwapBuffers(handle);
 	}
 
-
-
-
+	/////////////////////////////////////////////////////////////////////////////////
 
 	void Window::pollEvents()
 	{
 		glfwPollEvents();
 	}
 
-
-
-
+	/////////////////////////////////////////////////////////////////////////////////
 
 	void Window::getSize(int* width, int* height) const
 	{
 		glfwGetFramebufferSize(handle, width, height);
 	}
 
-
-
+	/////////////////////////////////////////////////////////////////////////////////
 
 	void Window::setVSync(bool enabled)
 	{

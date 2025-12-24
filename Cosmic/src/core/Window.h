@@ -10,8 +10,10 @@
 
 
 
-namespace Cosmic {
-	class Window {
+namespace Cosmic
+{
+	class Window 
+	{
 	public:
 		using EventCallbackFn = std::function<void(Event&)>;
 
@@ -24,13 +26,13 @@ namespace Cosmic {
 
 
 		// --- Getters ---
-		inline unsigned int GetWidth() const { return m_Data.Width; }
-		inline unsigned int GetHeight() const { return m_Data.Height; }
-		inline GLFWwindow* getHandle() const { return handle; }
+		inline unsigned int GetWidth() const						{ return m_Data.Width; }
+		inline unsigned int GetHeight() const						{ return m_Data.Height; }
+		inline GLFWwindow* getHandle() const						{ return handle; }
 
 
 		// --- Window Attributes ---
-		void setEventCallback(const EventCallbackFn& callback) { m_Data.EventCallback = callback; }
+		void setEventCallback(const EventCallbackFn& callback)		{ m_Data.EventCallback = callback; }
 		void setVSync(bool enabled);
 		bool IsVSync() const { return m_Data.VSync; }
 
