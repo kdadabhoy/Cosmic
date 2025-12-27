@@ -10,7 +10,7 @@ using namespace Cosmic;
 SandboxLayer::SandboxLayer()
 	: Layer("Sandbox"), 
 	m_SquarePos(0.0f, 0.0f, 0.0f), 
-	m_Color{ 0.8f, 0.3f, 0.8f, 1.0f }
+	m_Color{ 0.0f, 0.0f, 0.0f, 1.0f }
 {
 
 }
