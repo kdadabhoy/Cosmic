@@ -1,5 +1,5 @@
 #include "graphics/Buffer.h"
-#include "graphics/RendererAPI.h"
+#include "renderer/RendererAPI.h"
 
 // Include platform-specific implementations
 #include "platform/opengl/OpenGLBuffer.h"

@@ -1,8 +1,8 @@
 #pragma once
 
 // This is the file that fulfills the virtual calls made by RenderCommand
-
-#include "graphics/RendererAPI.h"
+#include "core/Core.h"
+#include "renderer/RendererAPI.h"
 
 namespace Cosmic
 {
@@ -15,7 +15,7 @@ namespace Cosmic
 		void				SetClearColor(const glm::vec4& color)									override;
 		void				Clear()																	override;
 
-		void				DrawIndexed(const std::shared_ptr<VertexArray>& vertexArray)			override;
+		void				DrawIndexed(const Ref<VertexArray>& vertexArray)						override;
 	};
 
 }

@@ -16,14 +16,6 @@ namespace Cosmic
 	/////////////////////////////////////////////////////////////////////////////////
 
 
-	void Renderer::OnWindowResize(uint32_t width, uint32_t height)
-	{
-		RenderCommand::SetViewport(0, 0, width, height);
-	}
-
-	/////////////////////////////////////////////////////////////////////////////////
-
-
 	void Renderer::BeginScene(OrthographicCamera& camera)
 	{
 		// Grab the pre-calculated matrix from the camera we just fixed
@@ -35,7 +27,11 @@ namespace Cosmic
 
 	void Renderer::EndScene()
 	{
-
+		// TODO:
+			// Need to refactor so that we have a CommandQueue...
+				// Each Submit will write to this CommandQueue
+				// End() will then optimize the CommandQueue and make draw calls
+					// Or rather call on the CommandQueue functions to do this :)
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////
@@ -52,6 +48,13 @@ namespace Cosmic
 
 		vertexArray->Bind();
 		RenderCommand::DrawIndexed(vertexArray);
+	}
+
+	/////////////////////////////////////////////////////////////////////////////////
+
+	void Renderer::OnWindowResize(uint32_t width, uint32_t height)
+	{
+		RenderCommand::SetViewport(0, 0, width, height);
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////

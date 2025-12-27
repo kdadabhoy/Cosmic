@@ -1,5 +1,7 @@
 #pragma once
 
+#include "core/Core.h"
+
 #include <string>
 #include <glm/glm.hpp>
 #include <memory>
@@ -18,7 +20,7 @@ namespace Cosmic
 		virtual void						SetMat4(const std::string& name, const glm::mat4& value)	= 0;
 		virtual void						SetFloat4(const std::string& name, const glm::vec4& value)	= 0;
 
-		static std::shared_ptr<Shader>		Create(const std::string& filepath);
+		static Ref<Shader>					Create(const std::string& filepath);
 	};
 
 }

@@ -1,5 +1,6 @@
 #include "platform/opengl/OpenGLRendererAPI.h"
 #include <glad/glad.h>
+#include "core/Core.h"
 
 namespace Cosmic
 {
@@ -34,7 +35,7 @@ namespace Cosmic
 
 	/////////////////////////////////////////////////////////////////////////////////
 
-	void OpenGLRendererAPI::DrawIndexed(const std::shared_ptr<VertexArray>& vertexArray)
+	void OpenGLRendererAPI::DrawIndexed(const Ref<VertexArray>& vertexArray)
 	{
 		uint32_t count = vertexArray->GetIndexBuffer()->GetCount();
 		glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, nullptr);
