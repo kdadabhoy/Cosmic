@@ -1,6 +1,7 @@
 #include "core/Application.h"
 #include "renderer/Renderer.h"
 #include "renderer/RenderCommand.h"
+#include "core/Timestep.h"
 
 #include <GLFW/glfw3.h>
 #include <iostream>
@@ -74,41 +75,81 @@ namespace Cosmic
 	{
 		float lastFrameTime = 0.0f;
 
+		// Simulation / Fixed Time Stuff:
+		float accumulator = 0.0f;
+		float fixedDeltaTime = 1.0f / 60.0f;
+
 		while (m_Running && !m_Window->ShouldClose())
 		{
-			// Calculate Delta Time
-			// TODO: Make a TimeManager.h
-			float time = (float)glfwGetTime();
-			float deltaTime = time - lastFrameTime;
+			// 0.1 Poll Events
+			m_Window->PollEvents();
+
+			// 0.2 Calculate Delta Time
+			float time = (float)glfwGetTime();		//glfwGetTime returns seconds	// Should make this platform agnostic at some point
+			Timestep rawTimestep = time - lastFrameTime;
 			lastFrameTime = time;
 
-			if (!m_Minimized)
+			// 0.3 skipping the loop if minimized
+			if (m_Minimized)
 			{
-				// 1. Logic Updates
-				for (Layer* layer : m_LayerStack)
-				{
-					layer->OnUpdate(deltaTime);
-				}
-
-				// 2. Rendering ("World")
-				RenderCommand::Clear(0.1f, 0.1f, 0.1f);
-
-				for (Layer* layer : m_LayerStack)
-				{
-					layer->OnRender();
-				}
-
-				// 3. UI Rendering
-				m_ImGuiLayer->Begin();
-				for (Layer* layer : m_LayerStack)
-				{
-					layer->OnImGuiRender();
-				}
-				m_ImGuiLayer->End();
+				continue;
 			}
 
+
+
+			// 1. Logic Updates
+
+			// 1A. Fixed Timestep Case (Simulations
+			if (m_UseFixedTimestep)
+			{
+				float frameTime = rawTimestep.GetSeconds();
+
+				// Caps the physics "catch-up" time to prevent the CPU from freezing during major lag spikes.
+				if (frameTime > 0.25f)
+				{
+					frameTime = 0.25f;
+				}
+
+				accumulator += (frameTime * m_TimeScale);
+				while (accumulator >= fixedDeltaTime)
+				{
+					for (Layer* layer : m_LayerStack)
+					{
+						layer->OnFixedUpdate(Timestep(fixedDeltaTime));
+					}
+					accumulator -= fixedDeltaTime;
+				}
+			}
+			
+
+			// 1B. Variable Timestep... Always runs so we can have smooth camera... but physics stuff in layers should use OnFixedUpdate instead of OnUpdate
+			Timestep scaledTimestep = rawTimestep.GetSeconds() * m_TimeScale;
+			for (Layer* layer : m_LayerStack)
+			{
+				layer->OnUpdate(scaledTimestep);
+			}
+
+		
+
+			// 2. Rendering ("World")
+			RenderCommand::Clear(0.1f, 0.1f, 0.1f);
+
+			for (Layer* layer : m_LayerStack)
+			{
+				layer->OnRender();
+			}
+
+
+			// 3. UI Rendering
+			m_ImGuiLayer->Begin();
+			for (Layer* layer : m_LayerStack)
+			{
+				layer->OnImGuiRender();
+			}
+			m_ImGuiLayer->End();
+
+
 			// 4. Update Window
-			m_Window->PollEvents();
 			m_Window->SwapBuffers();
 		}
 	}

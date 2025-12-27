@@ -56,6 +56,8 @@ void SandboxLayer::OnAttach()
 
 void SandboxLayer::OnUpdate(float deltaTime)
 {
+	Cosmic::Application::Get().SetTimeScale(m_TimeScale);
+
 	static float time = 0.0f;
 	time += deltaTime;
 
@@ -98,6 +100,7 @@ void SandboxLayer::OnImGuiRender()
 	ImGui::Begin("Settings");
 	ImGui::ColorEdit4("Square Color", m_Color);
 	ImGui::DragFloat3("Square Position", &m_SquarePos.x, 0.01f); // Lower speed for NDC
+	ImGui::SliderFloat("Time Scale", &m_TimeScale, 0.0f, 5.0f);
 	ImGui::End();
 }
 

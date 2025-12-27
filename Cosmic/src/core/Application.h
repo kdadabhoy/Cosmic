@@ -29,6 +29,9 @@ namespace Cosmic
 		inline Window& GetWindow()						{ return *m_Window; }
 		inline static Application& Get()				{ return *s_Instance; }
 
+		void UseFixedTimeStep(bool useFixedTimeStep)	{ m_UseFixedTimestep = useFixedTimeStep; }
+		void SetTimeScale(float timescale)				{ m_TimeScale = timescale; }
+
 	private:
 		bool Initialize();
 		bool OnWindowClose(WindowCloseEvent& e);
@@ -38,14 +41,17 @@ namespace Cosmic
 		Scope<Window>				m_Window;
 		ImGuiLayer*					m_ImGuiLayer;
 		LayerStack					m_LayerStack;
-		bool						m_Running = true;
-		bool						m_Minimized = false;
-
+		bool						m_Running				= true;
+		bool						m_UseFixedTimestep		= true;
+		bool						m_Minimized				= false;
+	
+		
 		static Application*			s_Instance;
 
-		const static int			DEFAULT_WIDTH = 1280;
-		const static int			DEFAULT_HEIGHT = 720;
-		const std::string			DEFAULT_WINDOW_TITLE = "Cosmic Engine";
+		float						m_TimeScale				= 1.0f;
+		const static int			DEFAULT_WIDTH			= 1280;
+		const static int			DEFAULT_HEIGHT			= 720;
+		const std::string			DEFAULT_WINDOW_TITLE	= "Cosmic Engine";
 	};
 
 	// To be defined in CLIENT (Sandbox)
@@ -56,8 +62,8 @@ namespace Cosmic
 
 /*	Documentation:
 	
-	a
-
+	- UsedFixedTimestep is always true even if no layer has a OnFixedUpdate()... can maybe try to change this later for the very minor performance boost
+	- TimeScale is set to 1.0 (no change) by default
 
 
 */

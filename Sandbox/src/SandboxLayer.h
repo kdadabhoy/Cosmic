@@ -27,4 +27,5 @@ private:
 
 	glm::vec3 m_SquarePos;
 	float m_Color[4] = { 0.8f, 0.3f, 0.8f, 1.0f };
+	float m_TimeScale = 1.0f;
 };

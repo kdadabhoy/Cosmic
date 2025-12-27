@@ -29,9 +29,11 @@ namespace Cosmic
         virtual void OnDetach() {};
 
 
-        // Logic updates (movement, physics, aircraft climbing)
+        // Logic updates that you want to be smooth
         virtual void OnUpdate(float deltaTime) {};
 
+		// Logic updates that you want to happen consistently across devices (Simulation Stuff)
+        virtual void OnFixedUpdate(float deltaFixedTime) {};
 
         // Rendering calls
         virtual void OnRender() {};
