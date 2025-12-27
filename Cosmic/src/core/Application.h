@@ -18,44 +18,49 @@ namespace Cosmic
 		Application();
 		virtual ~Application();
 
-		void Run();
-		void Shutdown();
+		void							Run();
+		void							Shutdown();
+		void							OnEvent(Event& e);
+		void							PushLayer(Layer* inLayer);
+		void							PushOverlay(Layer* inOverlay);
 
-		void OnEvent(Event& e);
 
-		void PushLayer(Layer* inLayer);
-		void PushOverlay(Layer* inOverlay);
+		// Getters that allow any layer/function to talk to the window/application
+		inline static Application&		Get()											{ return *s_Instance; }
+		inline Window&					GetWindow()										{ return *m_Window; }
 
-		inline Window& GetWindow()						{ return *m_Window; }
-		inline static Application& Get()				{ return *s_Instance; }
 
-		void UseFixedTimeStep(bool useFixedTimeStep)	{ m_UseFixedTimestep = useFixedTimeStep; }
-		void SetTimeScale(float timescale)				{ m_TimeScale = timescale; }
+		// Setters for TimeScale stuff
+		void							UseFixedTimeStep(bool useFixedTimeStep)			{ m_UseFixedTimestep = useFixedTimeStep; }
+		void							SetTimeScale(float timescale)					{ m_TimeScale = timescale; }
 
-	private:
-		bool Initialize();
-		bool OnWindowClose(WindowCloseEvent& e);
-		bool OnWindowResize(WindowResizeEvent& e);
 
 	private:
-		Scope<Window>				m_Window;
-		ImGuiLayer*					m_ImGuiLayer;
-		LayerStack					m_LayerStack;
-		bool						m_Running				= true;
-		bool						m_UseFixedTimestep		= true;
-		bool						m_Minimized				= false;
+		bool							Initialize();
+		bool							OnWindowClose(WindowCloseEvent& e);
+		bool							OnWindowResize(WindowResizeEvent& e);
+
+
+	private:
+		Scope<Window>					m_Window;
+		ImGuiLayer*						m_ImGuiLayer;
+		LayerStack						m_LayerStack;
+		bool							m_Running				= true;
+		bool							m_UseFixedTimestep		= true;
+		bool							m_Minimized				= false;
 	
 		
-		static Application*			s_Instance;
+		static Application*				s_Instance;
 
-		float						m_TimeScale				= 1.0f;
-		const static int			DEFAULT_WIDTH			= 1280;
-		const static int			DEFAULT_HEIGHT			= 720;
-		const std::string			DEFAULT_WINDOW_TITLE	= "Cosmic Engine";
+		float							m_TimeScale				= 1.0f;
+		const static int				DEFAULT_WIDTH			= 1280;
+		const static int				DEFAULT_HEIGHT			= 720;
+		const std::string				DEFAULT_WINDOW_TITLE	= "Cosmic Engine";
 	};
 
+
 	// To be defined in CLIENT (Sandbox)
-	Application* CreateApplication();
+	Application*						CreateApplication();
 }
 
 

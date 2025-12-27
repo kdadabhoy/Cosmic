@@ -11,22 +11,25 @@ namespace Cosmic
 		OpenGLShader(const std::string& filepath);
 		virtual ~OpenGLShader();
 
-		void Bind() const override;
-		void Unbind() const override;
 
-		void SetMat4(const std::string& name, const glm::mat4& value) override;
-		void SetFloat4(const std::string& name, const glm::vec4& value) override;
+		void						Bind() const												override;
+		void						Unbind() const												override;
 
-		// OpenGL-specific uniform uploaders
-		void UploadUniformMat4(const std::string& name, const glm::mat4& matrix);
-		void UploadUniformFloat4(const std::string& name, const glm::vec4& values);
+		void						SetMat4(const std::string& name, const glm::mat4& value)	override;
+		void						SetFloat4(const std::string& name, const glm::vec4& value)	override;
 
-	private:
-		std::string ReadFile(const std::string& filepath);
-		std::unordered_map<GLenum, std::string> PreProcess(const std::string& source);
-		void Compile(const std::unordered_map<GLenum, std::string>& shaderSources);
+		// OpenGL-specific uniform unloaders
+		void						UploadUniformMat4(const std::string& name, const glm::mat4& matrix);
+		void						UploadUniformFloat4(const std::string& name, const glm::vec4& values);
+
 
 	private:
-		uint32_t m_RendererID;
+		std::string										ReadFile(const std::string& filepath);
+		std::unordered_map<GLenum, std::string>			PreProcess(const std::string& source);
+		void											Compile(const std::unordered_map<GLenum, std::string>& shaderSources);
+
+
+	private:
+		uint32_t		m_RendererID;
 	};
 }

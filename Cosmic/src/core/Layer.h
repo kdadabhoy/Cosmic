@@ -32,8 +32,10 @@ namespace Cosmic
         // Logic updates that you want to be smooth
         virtual void OnUpdate(float deltaTime) {};
 
+
 		// Logic updates that you want to happen consistently across devices (Simulation Stuff)
         virtual void OnFixedUpdate(float deltaFixedTime) {};
+
 
         // Rendering calls
         virtual void OnRender() {};
@@ -41,7 +43,7 @@ namespace Cosmic
 
         // For ImGUI
         virtual void OnImGuiRender() {};
-        inline const std::string& GetName() const { return m_DebugName; };
+        inline const std::string& GetName() const                { return m_DebugName; };
 
 
         // --- Event Handling ---

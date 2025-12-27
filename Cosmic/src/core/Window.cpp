@@ -12,6 +12,7 @@ namespace Cosmic
 	/////////////////////////////////////////////////////////////////////////////////
 
 	Window::Window(int width, int height, const std::string& title)
+		: m_Context(nullptr), m_Handle(nullptr)
 	{
 		if (!glfwInit())
 		{

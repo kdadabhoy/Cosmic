@@ -10,6 +10,7 @@ namespace Cosmic
 {
 	/////////////////////////////////////////////////////////////////////////////////
 
+	// The singleton so that other layers/classes can call the Application's getters/setters
 	Application* Application::s_Instance = nullptr;
 
 	/////////////////////////////////////////////////////////////////////////////////
@@ -75,31 +76,30 @@ namespace Cosmic
 	{
 		float lastFrameTime = 0.0f;
 
-		// Simulation / Fixed Time Stuff:
 		float accumulator = 0.0f;
 		float fixedDeltaTime = 1.0f / 60.0f;
 
 		while (m_Running && !m_Window->ShouldClose())
 		{
-			// 0.1 Poll Events
+			// 0.1 Poll Events:
 			m_Window->PollEvents();
 
-			// 0.2 Calculate Delta Time
-			float time = (float)glfwGetTime();		//glfwGetTime returns seconds	// Should make this platform agnostic at some point
+			// 0.2 Calculate Delta Time:
+			float time = (float)glfwGetTime();				//glfwGetTime returns seconds	// Should make this platform agnostic at some point
 			Timestep rawTimestep = time - lastFrameTime;
 			lastFrameTime = time;
 
-			// 0.3 skipping the loop if minimized
+			// 0.3 Skipping the loop if minimized:
 			if (m_Minimized)
 			{
-				continue;
+				continue;									// jumps back to top of while loop
 			}
 
 
 
-			// 1. Logic Updates
+			// 1. Logic Updates:
 
-			// 1A. Fixed Timestep Case (Simulations
+			// 1A. Fixed Timestep Case (Simulations):
 			if (m_UseFixedTimestep)
 			{
 				float frameTime = rawTimestep.GetSeconds();
@@ -131,16 +131,17 @@ namespace Cosmic
 
 		
 
-			// 2. Rendering ("World")
+			// 2. Rendering:
 			RenderCommand::Clear(0.1f, 0.1f, 0.1f);
 
 			for (Layer* layer : m_LayerStack)
 			{
 				layer->OnRender();
 			}
+			
 
 
-			// 3. UI Rendering
+			// 3. UI Rendering:
 			m_ImGuiLayer->Begin();
 			for (Layer* layer : m_LayerStack)
 			{
@@ -149,7 +150,8 @@ namespace Cosmic
 			m_ImGuiLayer->End();
 
 
-			// 4. Update Window
+
+			// 4. Update Window:
 			m_Window->SwapBuffers();
 		}
 	}
