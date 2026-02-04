@@ -15,7 +15,7 @@ if not exist "%VS_PATH%" (
     exit /b 1
 )
 
-:: 2. Initialize Developer Environment (Sets up CMake and Compiler paths)
+:: 2. Initialize Developer Environment
 echo [STAGE 0] Initializing MSVC Environment...
 call "%VS_PATH%\Common7\Tools\VsDevCmd.bat" -arch=x64
 
@@ -24,8 +24,15 @@ if not exist build mkdir build
 cd build
 
 :: 4. Configure Project
-echo [STAGE 1] Configuring CMake...
-cmake .. -G "Visual Studio 17 2022" -A x64
+echo [STAGE 1] Configuring CMake for Visual Studio 2026...
+
+:: Try VS 2026 first, fallback to 2022 if configuration fails
+cmake .. -G "Visual Studio 19 2026" -A x64
+if %errorlevel% neq 0 (
+    echo [INFO] VS 2026 not detected by CMake, trying VS 2022 fallback...
+    cmake .. -G "Visual Studio 17 2022" -A x64
+)
+
 if %errorlevel% neq 0 (
     echo ERROR: CMake configuration failed!
     pause
