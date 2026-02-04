@@ -58,6 +58,8 @@ namespace Cosmic
 	void Application::OnEvent(Event& e)
 	{
 		EventDispatcher dispatcher(e);
+
+		// Handling "global" application events
 		dispatcher.Dispatch<WindowCloseEvent>(GLCORE_BIND_EVENT_FN(Application::OnWindowClose));
 		dispatcher.Dispatch<WindowResizeEvent>(GLCORE_BIND_EVENT_FN(Application::OnWindowResize));
 
@@ -65,7 +67,10 @@ namespace Cosmic
 		for (auto it = m_LayerStack.rbegin(); it != m_LayerStack.rend(); ++it)
 		{
 			if (e.Handled)
+			{
 				break;
+			}
+
 			(*it)->OnEvent(e);
 		}
 	}
@@ -96,8 +101,6 @@ namespace Cosmic
 			}
 
 
-
-			// 1. Logic Updates:
 
 			// 1A. Fixed Timestep Case (Simulations):
 			if (m_UseFixedTimestep)

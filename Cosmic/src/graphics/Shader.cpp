@@ -13,9 +13,9 @@ namespace Cosmic
 	{
 		switch (RendererAPI::GetAPI())
 		{
-		case RendererAPI::API::None:    return nullptr;
-		case RendererAPI::API::OpenGL:  return std::make_shared<OpenGLShader>(filepath);
-		case RendererAPI::API::DirectX: return nullptr; // Return DirectXShader(filepath) here later
+		case RendererAPI::API::None:				return nullptr;
+		case RendererAPI::API::OpenGL:				return std::make_shared<OpenGLShader>(filepath);
+		case RendererAPI::API::DirectX:				return nullptr; // Return DirectXShader(filepath) here later
 		}
 
 		return nullptr;

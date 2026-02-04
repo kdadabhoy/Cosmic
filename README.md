@@ -19,7 +19,13 @@ Originally I wanted to write an Airplane Application that had graphics and a GUI
 
 <br>
 <br>
+## Notes:
+1. .bat file (AI generated) relies on having Visual Studio (certain version installed)... should change this at some point
 
+
+
+<br>
+<br>
 ## Acknowledgments:
 1. Cherno's OpenGL Series
 1. Cherno's Game Engine Series

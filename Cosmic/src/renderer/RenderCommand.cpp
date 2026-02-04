@@ -18,9 +18,9 @@ namespace Cosmic
     {
         switch (RendererAPI::GetAPI())
         {
-        case RendererAPI::API::OpenGL:      return new OpenGLRendererAPI();
-        case RendererAPI::API::DirectX:     return nullptr; // return new DirectXRendererAPI();
-        case RendererAPI::API::None:        return nullptr;
+		case RendererAPI::API::OpenGL:                  return new OpenGLRendererAPI();
+		case RendererAPI::API::DirectX:                 return nullptr;                         // return new DirectXRendererAPI();
+		case RendererAPI::API::None:                    return nullptr;
         }
 
         return nullptr;

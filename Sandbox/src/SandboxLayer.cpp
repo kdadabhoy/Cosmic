@@ -8,8 +8,8 @@ using namespace Cosmic;
 /////////////////////////////////////////////////////////////////////////////////
 
 SandboxLayer::SandboxLayer()
-	: Layer("Sandbox"), 
-	m_SquarePos(0.0f, 0.0f, 0.0f), 
+	: Layer("Sandbox"),
+	m_SquarePos(0.0f, 0.0f, 0.0f),
 	m_Color{ 0.0f, 0.0f, 0.0f, 1.0f }
 {
 
@@ -91,7 +91,7 @@ void SandboxLayer::OnRender()
 
 /////////////////////////////////////////////////////////////////////////////////
 
-void SandboxLayer::OnDetach() 
+void SandboxLayer::OnDetach()
 {
 
 }
@@ -109,7 +109,7 @@ void SandboxLayer::OnImGuiRender()
 
 /////////////////////////////////////////////////////////////////////////////////
 
-void SandboxLayer::OnEvent(Event& event) 
+void SandboxLayer::OnEvent(Event& event)
 {
 
 }
