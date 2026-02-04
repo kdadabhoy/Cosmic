@@ -1,4 +1,5 @@
 @echo off
+SETLOCAL
 CLS
 echo ======================================================
 echo           Cosmic Engine - Universal Build
@@ -19,22 +20,29 @@ if not exist "%VS_PATH%" (
 echo [STAGE 0] Initializing MSVC Environment...
 call "%VS_PATH%\Common7\Tools\VsDevCmd.bat" -arch=x64
 
-:: 3. Setup Build Directory
-if not exist build mkdir build
+:: 3. Setup Build Directory (Clean build to prevent Toolset Mismatch)
+if exist build (
+    echo [INFO] Cleaning old build cache...
+    rmdir /s /q build
+)
+mkdir build
 cd build
 
 :: 4. Configure Project
 echo [STAGE 1] Configuring CMake for Visual Studio 2026...
 
-:: Try VS 2026 first, fallback to 2022 if configuration fails
-cmake .. -G "Visual Studio 19 2026" -A x64
+:: Using the version 18 generator for VS 2026
+cmake .. -G "Visual Studio 18 2026" -A x64
+
+:: Fallback if CMake version doesn't recognize the 2026 string yet
 if %errorlevel% neq 0 (
-    echo [INFO] VS 2026 not detected by CMake, trying VS 2022 fallback...
-    cmake .. -G "Visual Studio 17 2022" -A x64
+    echo [INFO] Specific 2026 generator failed, trying auto-detection...
+    cmake .. -A x64
 )
 
 if %errorlevel% neq 0 (
     echo ERROR: CMake configuration failed!
+    echo Ensure "Desktop development with C++" is installed in Visual Studio 2026.
     pause
     exit /b %errorlevel%
 )
@@ -49,5 +57,8 @@ if %errorlevel% neq 0 (
     exit /b %errorlevel%
 )
 
+echo.
 echo SUCCESS: Build Finished!
+echo Path: %CD%
 pause
+ENDLOCAL
