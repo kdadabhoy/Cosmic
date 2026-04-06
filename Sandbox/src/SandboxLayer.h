@@ -32,7 +32,7 @@ namespace Cosmic
 		std::unique_ptr<OrthographicCamera> m_Camera;
 		Ref<Texture2D> m_Texture;
 
-		// Gameplay
+		// --- Gameplay State ---
 		glm::vec3 m_DinoPos = { -1.0f, -0.5f, 0.0f };
 		float m_DinoRotation = 0.0f;
 		float m_VelocityY = 0.0f;
@@ -43,11 +43,15 @@ namespace Cosmic
 		float m_SpawnTimer = 0.0f;
 		float m_NextSpawnTime = 2.0f;
 
-		// State & Input handling
+		// --- Input & Engine Toggles ---
 		bool m_ShowStats = true;
 		bool m_StressTestMode = false;
-		bool m_TKeyPressed = false; // To prevent rapid toggling
 
+		// Debouncing flags (Prevents rapid-fire toggling)
+		bool m_TKeyPressed = false;
+		bool m_F1KeyPressed = false;
+
+		// Randomization
 		std::mt19937 m_RandomEngine;
 	};
 }

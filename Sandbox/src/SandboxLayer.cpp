@@ -32,7 +32,21 @@ namespace Cosmic
 
 	void SandboxLayer::OnUpdate(float deltaTime)
 	{
-		// 1. Better Toggle Logic (Prevents flickering)
+		// --- INPUT HANDLING & TOGGLES ---
+
+		// Toggle Stats/Menu (F1)
+		if (Input::IsKeyPressed(KEY_F1))
+		{
+			if (!m_F1KeyPressed)
+			{
+				m_ShowStats = !m_ShowStats;
+				Renderer2D::SetStatsStatus(m_ShowStats);
+				m_F1KeyPressed = true;
+			}
+		}
+		else { m_F1KeyPressed = false; }
+
+		// Toggle Stress Mode (T)
 		if (Input::IsKeyPressed(KEY_T))
 		{
 			if (!m_TKeyPressed)
@@ -42,7 +56,7 @@ namespace Cosmic
 
 				if (m_StressTestMode)
 				{
-					// Fill screen with 2,500 quads for the ultimate batching demo
+					// Fill screen for the batching demo
 					for (float y = -0.9f; y < 0.9f; y += 0.04f)
 						for (float x = -1.6f; x < 1.6f; x += 0.04f)
 							m_Obstacles.push_back({ {x, y, 0.0f}, {0.03f, 0.03f},
@@ -53,19 +67,17 @@ namespace Cosmic
 		}
 		else { m_TKeyPressed = false; }
 
-		// 2. Gameplay Logic
+		// --- GAMEPLAY LOGIC ---
 		if (!m_StressTestMode)
 		{
 			m_Score += deltaTime * 10.0f;
 
-			// Controls
 			if (Input::IsKeyPressed(KEY_SPACE) && m_IsGrounded)
 			{
 				m_VelocityY = 5.0f;
 				m_IsGrounded = false;
 			}
 
-			// Gravity physics
 			if (!m_IsGrounded)
 			{
 				m_VelocityY -= 12.0f * deltaTime;
@@ -79,7 +91,6 @@ namespace Cosmic
 				m_IsGrounded = true;
 			}
 
-			// Procedural Spawning
 			m_SpawnTimer += deltaTime;
 			if (m_SpawnTimer > m_NextSpawnTime)
 			{
@@ -93,12 +104,10 @@ namespace Cosmic
 				m_NextSpawnTime = timeDist(m_RandomEngine);
 			}
 
-			// Collision & Movement
 			for (int i = 0; i < (int)m_Obstacles.size(); i++)
 			{
 				m_Obstacles[i].Position.x -= 1.8f * deltaTime;
 
-				// Simple AABB Collision
 				bool colX = m_DinoPos.x + 0.2f > m_Obstacles[i].Position.x - (m_Obstacles[i].Size.x / 2) &&
 					m_Obstacles[i].Position.x + (m_Obstacles[i].Size.x / 2) > m_DinoPos.x - 0.2f;
 				bool colY = m_DinoPos.y + 0.2f > m_Obstacles[i].Position.y - (m_Obstacles[i].Size.y / 2) &&
@@ -107,7 +116,6 @@ namespace Cosmic
 				if (colX && colY) { ResetGame(); break; }
 			}
 
-			// Cleanup off-screen obstacles
 			m_Obstacles.erase(std::remove_if(m_Obstacles.begin(), m_Obstacles.end(),
 				[](const Obstacle& o) { return o.Position.x < -2.5f; }), m_Obstacles.end());
 		}
@@ -130,21 +138,19 @@ namespace Cosmic
 		}
 		else
 		{
-			// Background "Stars" (Showing off layers)
 			for (int i = 0; i < 20; i++)
 				Renderer2D::DrawQuad({ -1.5f + (i * 0.2f), 0.5f, -0.1f }, { 0.02f, 0.02f }, { 0.4f, 0.4f, 0.4f, 1.0f });
 
-			// Ground
 			Renderer2D::DrawQuad({ 0.0f, -0.85f }, { 4.0f, 0.2f }, { 0.2f, 0.2f, 0.22f, 1.0f });
 
-			// Obstacles
 			for (const auto& obs : m_Obstacles)
 				Renderer2D::DrawQuad(obs.Position, obs.Size, obs.Color);
 
-			// Animated Dino (Pulsing color + Texture)
 			float pulse = (sin(ImGui::GetTime() * 5.0f) + 1.0f) * 0.5f;
 			glm::vec4 dinoTint = { 1.0f, 0.8f + (pulse * 0.2f), 0.8f + (pulse * 0.2f), 1.0f };
-			Renderer2D::DrawRotatedQuad(m_DinoPos, { 0.5f, 0.5f }, 0.0f, m_Texture, 1.0f, dinoTint);
+
+			// Flipped dino (Width = -0.5f)
+			Renderer2D::DrawRotatedQuad(m_DinoPos, { -0.5f, 0.5f }, 0.0f, m_Texture, 1.0f, dinoTint);
 		}
 
 		Renderer2D::EndScene();
@@ -165,7 +171,7 @@ namespace Cosmic
 			ImGui::Separator();
 			ImGui::Text("Keybinds:");
 			ImGui::BulletText("SPACE to Jump");
-			ImGui::BulletText("'T' Toggle Stress Mode (Batching Demo)");
+			ImGui::BulletText("'T' Toggle Stress Mode");
 			ImGui::BulletText("'F1' Toggle This Menu");
 			ImGui::End();
 		}
