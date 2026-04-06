@@ -12,7 +12,6 @@ SandboxLayer::SandboxLayer()
 void SandboxLayer::OnAttach()
 {
 	// Vertices for a standard quad
-	// Note: TexCoords are flipped as per your request (1.0 at left, 0.0 at right)
 	float vertices[] = {
 		-0.4f, -0.4f, 0.0f,  1.0f, 0.0f, // Bottom Left
 		 0.4f, -0.4f, 0.0f,  0.0f, 0.0f, // Bottom Right
@@ -36,33 +35,36 @@ void SandboxLayer::OnAttach()
 	// Load Shaders and Textures
 	m_TextureShader = Shader::Create("assets/shaders/Texture.glsl");
 	m_FlatColorShader = Shader::Create("assets/shaders/FlatColor.glsl");
-	m_Texture = Texture::Create("assets/shaders/Texture.png"); // Ensure path is correct
+	m_Texture = Texture::Create("assets/shaders/Texture.png");
 
-	// Initialize Camera (Aspect Ratio 16:9)
 	m_Camera = std::make_unique<OrthographicCamera>(-1.6f, 1.6f, -0.9f, 0.9f);
 }
 
-void SandboxLayer::OnDetach()
-{
-}
+void SandboxLayer::OnDetach() {}
 
 void SandboxLayer::OnUpdate(float deltaTime)
 {
-	// 1. Jump Logic
+	// 1. Jump Logic (Modified for higher jumping)
 	if (Input::IsKeyPressed(KEY_SPACE) && m_IsGrounded)
 	{
-		m_VelocityY = 2.5f; // Initial Jump Impulse
+		m_VelocityY = 4.5f; // Increased from 2.5f for "Super Jump"
 		m_IsGrounded = false;
 	}
 
-	// 2. Physics (Gravity)
+	// 2. Rotation Control (Arrow Keys)
+	if (Input::IsKeyPressed(KEY_LEFT))
+		m_DinoRotation += 180.0f * deltaTime; // Rotate CCW
+	if (Input::IsKeyPressed(KEY_RIGHT))
+		m_DinoRotation -= 180.0f * deltaTime; // Rotate CW
+
+	// 3. Physics (Gravity)
 	if (!m_IsGrounded)
 	{
 		m_VelocityY -= 9.8f * deltaTime;
 		m_DinoPos.y += m_VelocityY * deltaTime;
 	}
 
-	// 3. Ground Collision
+	// 4. Ground Collision
 	if (m_DinoPos.y <= -0.5f)
 	{
 		m_DinoPos.y = -0.5f;
@@ -70,7 +72,7 @@ void SandboxLayer::OnUpdate(float deltaTime)
 		m_IsGrounded = true;
 	}
 
-	// 4. Obstacle Spawning
+	// 5. Obstacle Spawning
 	m_SpawnTimer += deltaTime;
 	if (m_SpawnTimer > 2.0f)
 	{
@@ -78,16 +80,16 @@ void SandboxLayer::OnUpdate(float deltaTime)
 		m_SpawnTimer = 0.0f;
 	}
 
-	// 5. Obstacle Movement & Collision
+	// 6. Movement & Collision
 	for (int i = 0; i < m_Obstacles.size(); i++)
 	{
 		m_Obstacles[i].Position.x -= 1.5f * deltaTime;
 
-		// Simple distance-based collision
 		if (glm::distance(m_DinoPos, m_Obstacles[i].Position) < 0.4f)
 		{
 			m_Obstacles.clear();
-			m_DinoPos = { -1.0f, -0.5f, 0.0f }; // Reset position
+			m_DinoPos = { -1.0f, -0.5f, 0.0f };
+			m_DinoRotation = 0.0f; // Reset rotation on death
 			break;
 		}
 	}
@@ -96,42 +98,39 @@ void SandboxLayer::OnUpdate(float deltaTime)
 void SandboxLayer::OnRender()
 {
 	RenderCommand::Clear(0.15f, 0.15f, 0.15f);
-
 	Renderer::BeginScene(*m_Camera);
 
 	// --- Render Ground ---
 	m_FlatColorShader->Bind();
 	m_FlatColorShader->SetFloat4("u_Color", { 0.8f, 0.8f, 0.8f, 1.0f });
-	glm::mat4 groundTransform = glm::translate(glm::mat4(1.0f), { 0.0f, -0.8f, 0.0f })
-		* glm::scale(glm::mat4(1.0f), { 5.0f, 0.1f, 1.0f });
-	Renderer::Submit(m_FlatColorShader, m_VAO, groundTransform);
+	// Use the component-based Submit (No rotation)
+	Renderer::Submit(m_FlatColorShader, m_VAO, { 0.0f, -0.8f, 0.0f }, { 5.0f, 0.1f, 1.0f });
 
 	// --- Render Obstacles ---
 	m_FlatColorShader->SetFloat4("u_Color", { 0.9f, 0.2f, 0.2f, 1.0f });
 	for (const auto& obs : m_Obstacles)
 	{
-		glm::mat4 obsTransform = glm::translate(glm::mat4(1.0f), obs.Position)
-			* glm::scale(glm::mat4(1.0f), { 0.4f, 0.6f, 1.0f });
-		Renderer::Submit(m_FlatColorShader, m_VAO, obsTransform);
+		Renderer::Submit(m_FlatColorShader, m_VAO, obs.Position, { 0.4f, 0.6f, 1.0f });
 	}
 
 	// --- Render Dino (Player) ---
 	m_Texture->Bind();
-	glm::mat4 playerTransform = glm::translate(glm::mat4(1.0f), m_DinoPos);
-	Renderer::Submit(m_TextureShader, m_VAO, playerTransform);
+	// Use the new Rotational Submit command!
+	Renderer::Submit(m_TextureShader, m_VAO, m_DinoPos, m_DinoRotation, { 1.0f, 1.0f, 1.0f });
 
 	Renderer::EndScene();
 }
 
 void SandboxLayer::OnImGuiRender()
 {
-	ImGui::Begin("Game Stats");
-	ImGui::Text("Dino Position: %.2f, %.2f", m_DinoPos.x, m_DinoPos.y);
+	ImGui::Begin("Cosmic Flight Log");
+	ImGui::Text("Altitude: %.2f", m_DinoPos.y + 0.5f);
+	ImGui::Text("Pitch Angle: %.1f deg", m_DinoRotation);
+	ImGui::Separator();
 	ImGui::Text("Active Obstacles: %d", (int)m_Obstacles.size());
 	ImGui::End();
 }
 
 void SandboxLayer::OnEvent(Cosmic::Event& event)
 {
-	// Handle camera resizing if necessary
 }
