@@ -51,6 +51,8 @@ namespace Cosmic
 		bool m_TKeyPressed = false;
 		bool m_F1KeyPressed = false;
 
+		float m_SmoothedDeltaTime = 0.016f; // Start with a default 60fps guess
+
 		// Randomization
 		std::mt19937 m_RandomEngine;
 	};

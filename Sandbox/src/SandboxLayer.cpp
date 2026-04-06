@@ -32,9 +32,12 @@ namespace Cosmic
 
 	void SandboxLayer::OnUpdate(float deltaTime)
 	{
-		// --- INPUT HANDLING & TOGGLES ---
+		// --- SMOOTHED TIMING LOGIC ---
+		// Blend the new deltaTime with the old one (95% old, 5% new)
+		// This makes the FPS counter readable instead of a blur
+		m_SmoothedDeltaTime = m_SmoothedDeltaTime * 0.95f + deltaTime * 0.05f;
 
-		// Toggle Stats/Menu (F1)
+		// --- INPUT HANDLING & TOGGLES ---
 		if (Input::IsKeyPressed(KEY_F1))
 		{
 			if (!m_F1KeyPressed)
@@ -46,7 +49,6 @@ namespace Cosmic
 		}
 		else { m_F1KeyPressed = false; }
 
-		// Toggle Stress Mode (T)
 		if (Input::IsKeyPressed(KEY_T))
 		{
 			if (!m_TKeyPressed)
@@ -56,7 +58,6 @@ namespace Cosmic
 
 				if (m_StressTestMode)
 				{
-					// Fill screen for the batching demo
 					for (float y = -0.9f; y < 0.9f; y += 0.04f)
 						for (float x = -1.6f; x < 1.6f; x += 0.04f)
 							m_Obstacles.push_back({ {x, y, 0.0f}, {0.03f, 0.03f},
@@ -149,7 +150,6 @@ namespace Cosmic
 			float pulse = (sin(ImGui::GetTime() * 5.0f) + 1.0f) * 0.5f;
 			glm::vec4 dinoTint = { 1.0f, 0.8f + (pulse * 0.2f), 0.8f + (pulse * 0.2f), 1.0f };
 
-			// Flipped dino (Width = -0.5f)
 			Renderer2D::DrawRotatedQuad(m_DinoPos, { -0.5f, 0.5f }, 0.0f, m_Texture, 1.0f, dinoTint);
 		}
 
@@ -164,10 +164,22 @@ namespace Cosmic
 		if (m_ShowStats)
 		{
 			ImGui::Begin("Cosmic Engine Monitor");
-			ImGui::Text("Performance Statistics:");
+
+			// Calculate FPS and MS based on smoothed time
+			float fps = 1.0f / m_SmoothedDeltaTime;
+			float ms = m_SmoothedDeltaTime * 1000.0f;
+
+			ImGui::Text("Timing (Smoothed):");
+			ImGui::Text(" - FPS: %.0f", fps); // Round to 0 decimals for extra stability
+			ImGui::Text(" - Frame Time: %.2f ms", ms);
+
+			ImGui::Separator();
+
+			ImGui::Text("Performance Statistics (Current Frame):");
 			ImGui::Text(" - Draw Calls: %d", cachedStats.DrawCalls);
 			ImGui::Text(" - Quads: %d", cachedStats.QuadCount);
 			ImGui::Text(" - Vertices: %d", cachedStats.GetTotalVertexCount());
+
 			ImGui::Separator();
 			ImGui::Text("Keybinds:");
 			ImGui::BulletText("SPACE to Jump");
