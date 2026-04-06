@@ -1,40 +1,45 @@
 #pragma once
+
 #include "Cosmic.h"
+#include "camera/OrthographicCamera.h"
+#include "graphics/Texture.h"
 #include <glm/glm.hpp>
 #include <memory>
 #include <vector>
 
-struct Obstacle
+namespace Cosmic
 {
-	glm::vec3 Position;
-	float Speed = 2.0f;
-};
+	struct Obstacle
+	{
+		glm::vec3 Position;
+		float Speed = 2.0f;
+	};
 
-class SandboxLayer : public Cosmic::Layer
-{
-public:
-	SandboxLayer();
-	virtual ~SandboxLayer() = default;
+	class SandboxLayer : public Layer
+	{
+	public:
+		SandboxLayer();
+		virtual ~SandboxLayer() = default;
 
-	virtual void OnAttach() override;
-	virtual void OnDetach() override;
-	virtual void OnUpdate(float deltaTime) override;
-	virtual void OnImGuiRender() override;
-	virtual void OnEvent(Cosmic::Event& event) override;
-	virtual void OnRender() override;
+		virtual void OnAttach() override;
+		virtual void OnDetach() override;
+		virtual void OnUpdate(float deltaTime) override;
+		virtual void OnImGuiRender() override;
+		virtual void OnEvent(Event& event) override;
 
-private:
-	std::unique_ptr<Cosmic::OrthographicCamera> m_Camera;
+		void OnRender();
 
-	// We only need the texture now, Renderer2D handles the shaders/buffers
-	Cosmic::Ref<Cosmic::Texture> m_Texture;
+	private:
+		std::unique_ptr<OrthographicCamera> m_Camera;
+		Ref<Texture2D> m_Texture; // Updated to Ref<Texture2D>
 
-	// Gameplay Variables
-	glm::vec3 m_DinoPos = { -1.0f, -0.5f, 0.0f };
-	float m_DinoRotation = 0.0f;
-	float m_VelocityY = 0.0f;
-	bool m_IsGrounded = true;
+		// Gameplay Variables
+		glm::vec3 m_DinoPos = { -1.0f, -0.5f, 0.0f };
+		float m_DinoRotation = 0.0f;
+		float m_VelocityY = 0.0f;
+		bool m_IsGrounded = true;
 
-	std::vector<Obstacle> m_Obstacles;
-	float m_SpawnTimer = 0.0f;
-};
+		std::vector<Obstacle> m_Obstacles;
+		float m_SpawnTimer = 0.0f;
+	};
+}

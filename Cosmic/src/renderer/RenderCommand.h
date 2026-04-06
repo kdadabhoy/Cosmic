@@ -3,12 +3,12 @@
 #include "core/Core.h"
 #include "renderer/RendererAPI.h"
 #include "graphics/VertexArray.h"
+#include <glm/glm.hpp>
 
 namespace Cosmic
 {
 	/**
 	 * @brief Static utility class that dispatches commands to the specific RendererAPI implementation.
-	 * * The s_RendererAPI is initialized in the .cpp file based on the selected graphics API.
 	 */
 	class RenderCommand
 	{
@@ -30,7 +30,23 @@ namespace Cosmic
 		}
 
 		/**
-		 * @brief Sets the clear color and clears the buffers.
+		 * @brief Sets the clear color for the setup.
+		 */
+		inline static void SetClearColor(const glm::vec4& color)
+		{
+			s_RendererAPI->SetClearColor(color);
+		}
+
+		/**
+		 * @brief Clears the buffers using the previously set clear color.
+		 */
+		inline static void Clear()
+		{
+			s_RendererAPI->Clear();
+		}
+
+		/**
+		 * @brief Legacy helper to set color and clear in one call.
 		 */
 		inline static void Clear(float r, float g, float b)
 		{
@@ -40,8 +56,7 @@ namespace Cosmic
 
 		/**
 		 * @brief Executes a draw call.
-		 * @param vertexArray The Vertex Array containing the data to draw.
-		 * @param count The number of indices to draw. If 0, the entire Index Buffer is drawn.
+		 * Matches the signature in RendererAPI.h.
 		 */
 		inline static void DrawIndexed(const Ref<VertexArray>& vertexArray, uint32_t count = 0)
 		{
@@ -49,8 +64,6 @@ namespace Cosmic
 		}
 
 	private:
-		// Pointer to the active API implementation (e.g., OpenGLRendererAPI)
 		static RendererAPI* s_RendererAPI;
 	};
-
 }

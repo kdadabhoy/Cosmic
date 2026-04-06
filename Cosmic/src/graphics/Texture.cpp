@@ -8,8 +8,8 @@ namespace Cosmic
 	{
 		switch (RendererAPI::GetAPI())
 		{
-			case RendererAPI::API::None:    return nullptr;
-			case RendererAPI::API::OpenGL:  return CreateRef<OpenGLTexture>(width, height);
+		case RendererAPI::API::None:    return nullptr;
+		case RendererAPI::API::OpenGL:  return std::static_pointer_cast<Texture2D>(CreateRef<OpenGLTexture>(width, height));
 		}
 
 		return nullptr;
@@ -19,14 +19,13 @@ namespace Cosmic
 	{
 		switch (RendererAPI::GetAPI())
 		{
-			case RendererAPI::API::None:    return nullptr;
-			case RendererAPI::API::OpenGL:  return CreateRef<OpenGLTexture>(path);
+		case RendererAPI::API::None:    return nullptr;
+		case RendererAPI::API::OpenGL:  return std::static_pointer_cast<Texture2D>(CreateRef<OpenGLTexture>(path));
 		}
 
 		return nullptr;
 	}
 
-	// Keep existing Texture::Create for backward compatibility if needed
 	Ref<Texture> Texture::Create(const std::string& path)
 	{
 		return Texture2D::Create(path);

@@ -124,6 +124,14 @@ namespace Cosmic
 		RenderCommand::DrawIndexed(s_Data.QuadVertexArray, s_Data.QuadIndexCount);
 	}
 
+	void Renderer2D::FlushAndReset()
+	{
+		Renderer2D::EndScene(); // Explicit scope ensures the compiler finds the static method
+
+		s_Data.QuadIndexCount = 0;
+		s_Data.QuadVertexBufferPtr = s_Data.QuadVertexBufferBase;
+		s_Data.TextureSlotIndex = 1;
+	}
 
 	// --- 2D Primatives ------------------------------------------------------
 
@@ -279,17 +287,5 @@ namespace Cosmic
 		}
 
 		s_Data.QuadIndexCount += 6;
-	}
-
-
-
-
-	void Renderer2D::FlushAndReset()
-	{
-		Renderer2D::EndScene(); // Explicit scope ensures the compiler finds the static method
-
-		s_Data.QuadIndexCount = 0;
-		s_Data.QuadVertexBufferPtr = s_Data.QuadVertexBufferBase;
-		s_Data.TextureSlotIndex = 1;
 	}
 }

@@ -30,7 +30,8 @@ namespace Cosmic
 		 * @param vertexArray The Vertex Array containing the data.
 		 * @param count The specific number of indices to draw. If 0, draws the entire index buffer.
 		 */
-		virtual void DrawIndexed(const Ref<VertexArray>& vertexArray, uint32_t count = 0) = 0;
+		 // Inside RendererAPI class
+		virtual void DrawIndexed(const Ref<VertexArray>& vertexArray, uint32_t indexCount = 0) = 0;
 
 		inline static API GetAPI() { return s_API; }
 
