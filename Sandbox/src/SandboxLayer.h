@@ -1,5 +1,4 @@
 #pragma once
-
 #include "Cosmic.h"
 #include <glm/glm.hpp>
 #include <memory>
@@ -25,19 +24,14 @@ public:
 	virtual void OnRender() override;
 
 private:
-	// Renderer Resources
-	Cosmic::Ref<Cosmic::VertexArray> m_VAO;
-	Cosmic::Ref<Cosmic::VertexBuffer> m_VBO;
-	Cosmic::Ref<Cosmic::IndexBuffer> m_IBO;
-	Cosmic::Ref<Cosmic::Shader> m_TextureShader;
-	Cosmic::Ref<Cosmic::Shader> m_FlatColorShader;
-	Cosmic::Ref<Cosmic::Texture> m_Texture;
-
 	std::unique_ptr<Cosmic::OrthographicCamera> m_Camera;
+
+	// We only need the texture now, Renderer2D handles the shaders/buffers
+	Cosmic::Ref<Cosmic::Texture> m_Texture;
 
 	// Gameplay Variables
 	glm::vec3 m_DinoPos = { -1.0f, -0.5f, 0.0f };
-	float m_DinoRotation = 0.0f; // Track rotation in degrees
+	float m_DinoRotation = 0.0f;
 	float m_VelocityY = 0.0f;
 	bool m_IsGrounded = true;
 

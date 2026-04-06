@@ -6,6 +6,8 @@
 
 namespace Cosmic
 {
+	/////////////////////////////////////////////////////////////////////////////////
+
 	enum class ShaderDataType
 	{
 		None = 0, Float, Float2, Float3, Float4, Mat3, Mat4, Int, Int2, Int3, Int4, Bool
@@ -29,6 +31,8 @@ namespace Cosmic
 		}
 		return 0;
 	}
+
+	/////////////////////////////////////////////////////////////////////////////////
 
 	struct BufferElement
 	{
@@ -62,6 +66,8 @@ namespace Cosmic
 			return 0;
 		}
 	};
+
+	/////////////////////////////////////////////////////////////////////////////////
 
 	class BufferLayout
 	{
@@ -99,6 +105,8 @@ namespace Cosmic
 		uint32_t m_Stride = 0;
 	};
 
+	/////////////////////////////////////////////////////////////////////////////////
+
 	class VertexBuffer
 	{
 	public:
@@ -107,14 +115,19 @@ namespace Cosmic
 		virtual void Bind() const = 0;
 		virtual void Unbind() const = 0;
 
+		// Required for Batch Rendering to update the buffer contents every frame
 		virtual void SetData(const void* data, uint32_t size) = 0;
 
 		virtual const BufferLayout& GetLayout() const = 0;
 		virtual void SetLayout(const BufferLayout& layout) = 0;
 
+		// Overload for dynamic/empty buffers
 		static std::shared_ptr<VertexBuffer> Create(uint32_t size);
+		// Overload for static buffers
 		static std::shared_ptr<VertexBuffer> Create(float* vertices, uint32_t size);
 	};
+
+	/////////////////////////////////////////////////////////////////////////////////
 
 	class IndexBuffer
 	{
@@ -123,8 +136,10 @@ namespace Cosmic
 
 		virtual void Bind() const = 0;
 		virtual void Unbind() const = 0;
+
 		virtual uint32_t GetCount() const = 0;
 
 		static std::shared_ptr<IndexBuffer> Create(uint32_t* indices, uint32_t count);
 	};
+
 }

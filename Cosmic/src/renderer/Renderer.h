@@ -2,6 +2,7 @@
 
 #include "core/Core.h"
 #include "renderer/RenderCommand.h"
+#include "renderer/Renderer2D.h"
 #include "camera/OrthographicCamera.h"
 #include "graphics/Shader.h"
 #include "graphics/VertexArray.h"
@@ -15,6 +16,8 @@ namespace Cosmic
 	{
 	public:
 		static void Init();
+		static void Shutdown();
+
 		static void OnWindowResize(uint32_t width, uint32_t height);
 
 		static void BeginScene(OrthographicCamera& camera);
