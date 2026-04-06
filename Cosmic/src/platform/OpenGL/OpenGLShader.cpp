@@ -144,4 +144,17 @@ namespace Cosmic
 
 	/////////////////////////////////////////////////////////////////////////////////
 
+	// Add these to your existing OpenGLShader.cpp
+
+	void OpenGLShader::SetInt(const std::string& name, int value)
+	{
+		UploadUniformInt(name, value);
+	}
+
+	void OpenGLShader::UploadUniformInt(const std::string& name, int value)
+	{
+		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
+		glUniform1i(location, value);
+	}
+
 }

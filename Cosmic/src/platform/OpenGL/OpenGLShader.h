@@ -23,6 +23,12 @@ namespace Cosmic
 		void						UploadUniformFloat4(const std::string& name, const glm::vec4& values);
 
 
+	public:
+		virtual void SetInt(const std::string& name, int value) override;
+		// Helper for uploading to GPU
+		void UploadUniformInt(const std::string& name, int value);
+
+
 	private:
 		std::string										ReadFile(const std::string& filepath);
 		std::unordered_map<GLenum, std::string>			PreProcess(const std::string& source);
