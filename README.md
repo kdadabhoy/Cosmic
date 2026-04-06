@@ -311,3 +311,286 @@ A true simulation visualizer needs a way to scrub through time, especially for p
 3.  **Data Parser:** Create a simple utility to read a `.csv` file into a `std::vector<FlightDataPoint>`.
 
 Do you want to start with the **CSV Data Parser** to get your flight results into the engine, or should we look at the **Renderer2D** to handle multiple planes at once?
+
+
+
+
+I can definitely generate that for you! Based on your current `SandboxLayer` and `Renderer2D` architecture, a "General User" (or a teammate) needs to understand how you’ve abstracted OpenGL into simple, high-level commands.
+
+Since you are using a **Batch Renderer**, the most important thing for a user to know is that they **must** wrap their drawing commands between `BeginScene` and `EndScene`.
+
+Here is a `README.md` tailored specifically to your **Cosmic Engine Sandbox**.
+
+------
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
+
+
+# 🚀 Cosmic Engine: Sandbox Development Guide
+
+Welcome to the **Cosmic Sandbox**. This layer is designed for rapid 2D prototyping. This guide explains the core commands available to you for creating gameplay, handling input, and monitoring performance.
+
+## 1. The Rendering Lifecycle
+All drawing must happen inside the `OnRender()` function. To keep the GPU efficient, we use a **Batching** system. You must define which camera is viewing the scene before drawing.
+
+```cpp
+void SandboxLayer::OnRender()
+{
+    // 1. Clear the screen
+    RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1.0f });
+    RenderCommand::Clear();
+
+    // 2. Start the batch
+    Renderer2D::BeginScene(*m_Camera);
+
+    // 3. DRAWING COMMANDS GO HERE (See section 2)
+
+    // 4. Submit the batch to the GPU
+    Renderer2D::EndScene();
+}
+```
+
+---
+
+## 2. Drawing Commands
+The `Renderer2D` class provides simple methods to put objects in the world.
+
+### Drawing a Simple Quad (Rectangle)
+```cpp
+// Position (x, y), Size (width, height), Color (RGBA)
+Renderer2D::DrawQuad({ 0.0f, 0.0f }, { 1.0f, 1.0f }, { 0.8f, 0.2f, 0.3f, 1.0f });
+```
+
+### Drawing with Textures
+```cpp
+// Requires a Ref<Texture2D> (e.g., m_Texture)
+Renderer2D::DrawQuad({ 0.0f, 0.0f }, { 1.0f, 1.0f }, m_Texture);
+```
+
+### Drawing Rotated Objects
+Rotation is handled in **radians**.
+```cpp
+float rotation = 45.0f * (3.14159f / 180.0f);
+Renderer2D::DrawRotatedQuad({ 0.0f, 0.0f }, { 1.0f, 1.0f }, rotation, { 1.0f, 1.0f, 1.0f, 1.0f });
+```
+
+---
+
+## 3. Handling Input
+Cosmic uses a static `Input` polling system. You can check for keys anywhere inside `OnUpdate(float deltaTime)`.
+
+| Command | Usage |
+| :--- | :--- |
+| `Input::IsKeyPressed(KEY_SPACE)` | Returns `true` while the key is held down. |
+| `Input::IsMouseButtonPressed(MOUSE_BUTTON_LEFT)` | Returns `true` while the mouse is clicked. |
+| `Input::GetMouseX()` / `GetMouseY()` | Returns current mouse coordinates. |
+
+### Pro-Tip: Debouncing (Toggles)
+To prevent a keypress from triggering 60 times a second, use a boolean flag:
+```cpp
+if (Input::IsKeyPressed(KEY_F1)) {
+    if (!m_F1Pressed) {
+        m_ShowMenu = !m_ShowMenu; // Toggle
+        m_F1Pressed = true;       // Lock
+    }
+} else {
+    m_F1Pressed = false;          // Unlock when key is released
+}
+```
+
+---
+
+## 4. Performance Monitoring
+The engine tracks its own efficiency. You can view these stats via the **Engine Monitor** (F1).
+
+* **Draw Calls:** How many times the CPU talked to the GPU. (Lower is better).
+* **Quad Count:** Total objects being rendered this frame.
+* **FPS:** Frames per second. If this drops below 60, consider optimizing your logic.
+
+---
+
+## 5. Gameplay Logic (The Sandbox Loop)
+* **`OnAttach()`**: Load textures, reset scores, and setup cameras here. This runs **once**.
+* **`OnUpdate(float deltaTime)`**: Move your objects here. Always multiply movement by `deltaTime` to ensure the game runs the same speed on all computers.
+    * *Example:* `pos.x += speed * deltaTime;`
+* **`ResetGame()`**: A helper function to clear obstacles and reset the player position after a collision.
+
+---
+
+### Do you need to see more files?
+I have enough to explain the general usage, but if you want me to document **specific Aerospace tools** (like how to pass your Aircraft Design data into these quads), I would need to see the header file where you store your **Simulation Results** or **Telemetry Data**.
+
+Otherwise, you're ready to start "Drawing" your flight path!
+
+---
+---
+---
+
+
+This README section covers the "engine-level" logic you've built into the **Application**, **LayerStack**, and **Window** classes. It explains the "why" behind your architecture—specifically how you’ve prioritized simulation accuracy and modularity.
+
+---
+
+# 🛠️ Cosmic Engine: Core Architecture & Systems
+
+This guide explains the underlying systems that power the Cosmic Engine. Understanding these is crucial for anyone implementing physics-heavy simulations (like aerospace flight paths) or complex UI-driven games.
+
+## 1. Timestepping: Variable vs. Fixed
+Cosmic handles time in two distinct ways to ensure both visual smoothness and physical accuracy.
+
+### **OnUpdate (Variable Timestep)**
+* **What it is:** Runs as fast as your hardware allows.
+* **Application:** Rendering, camera movement, and non-essential animations.
+* **Why use it:** Provides the smoothest possible visual experience by updating the camera and visuals every single frame.
+
+### **OnFixedUpdate (Fixed Timestep)**
+* **What it is:** Runs at a strictly consistent rate (default: 60Hz or $1/60$s). 
+* **Application:** **Aero Simulations, Physics, and Collision Detection.**
+* **Why use it:** In aerospace simulation, calculating lift or drag with a variable timestep can cause "jitter" or mathematical instability. `OnFixedUpdate` ensures that your flight math remains deterministic and accurate regardless of your frame rate.
+
+
+
+---
+
+## 2. The LayerStack: Organizing Your World
+The `LayerStack` determines the order in which things are updated, rendered, and how they receive input. 
+
+### **Layers vs. Overlays**
+* **Layers:** Represent game worlds or simulation environments. They are pushed to the **bottom** of the stack.
+* **Overlays:** Represent UI, Debug Menus, or ImGui panels. They are always pushed to the **top** to ensure they render over the world and intercept input first.
+
+### **Execution Order**
+1.  **Rendering:** Bottom to Top (World draws first, then UI draws on top).
+2.  **Events (Input):** Top to Bottom. If you click a button on an Overlay, it "consumes" the event so the airplane in the Layer behind it doesn't accidentally move.
+
+```cpp
+// Example of setting up a simulation with a UI panel
+class MyApp : public Cosmic::Application {
+public:
+    MyApp() {
+        PushLayer(new SimulationLayer()); // The aero simulation
+        PushOverlay(new DebugMenu());     // The ImGui control panel
+    }
+};
+```
+
+---
+
+## 3. V-Sync Control
+Vertical Sync (V-Sync) synchronizes the engine's `SwapBuffers` call with your monitor's refresh rate.
+
+* **Turn it ON:** `m_Window->SetVSync(true);`
+    * *Result:* Caps FPS to monitor (e.g., 60Hz). Stops screen tearing and prevents your GPU from overworking. Best for general simulation viewing.
+* **Turn it OFF:** `m_Window->SetVSync(false);`
+    * *Result:* Uncapped FPS. Best for stress-testing the Batch Renderer or measuring raw performance.
+
+---
+
+## 4. Summary for the Developer
+| Feature | Command / Location | Essential for... |
+| :--- | :--- | :--- |
+| **Sim Logic** | `OnFixedUpdate(Timestep ts)` | Deterministic Aero/Physics calculations. |
+| **Visuals** | `OnUpdate(Timestep ts)` | Smooth camera following and animations. |
+| **UI** | `PushOverlay(Layer* overlay)` | Creating control panels and data readouts. |
+| **Performance** | `SetVSync(bool)` | Managing hardware heat and visual tearing. |
+
+> **Note on "Catch-up":** The engine includes a safety cap (0.25s). If the simulation lags significantly, the engine will stop trying to "catch up" on physics frames to prevent the CPU from freezing. This is vital when running heavy CFD or trajectory solvers in the background.
+
+
+
+---
+---
+---
+---
+---
+---
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+##TODO before to-9km stuff
+You have a solid foundation with batch rendering, a layer system, and a fixed timestep. However, to move from a "Dino Game" to a professional-grade **2D Aerospace Visualization** tool, there are four "missing links" in your current engine architecture that will make your life much easier once you start plotting 9km flight paths.
+
+---
+
+## 1. Coordinate System & Camera Controller
+Right now, your camera is static. For an airplane simulation, you need to follow the craft as it climbs to 9km.
+* **The Issue:** Your `OrthographicCamera` is likely hardcoded to a small range (like -1.6 to 1.6). 
+* **The Fix:** You need a **Camera Controller** that can:
+    * **Smooth-Follow:** Keep the airplane in the center of the screen.
+    * **Zoom (Scaling):** Zoom out to see the entire 9km trajectory, or zoom in to see the control surfaces moving.
+    * **World vs. Screen Space:** You’ll want to define your world in **meters**, not just normalized screen coordinates.
+
+## 2. A "Lines" Renderer (Primitive Batching)
+In aerospace viz, you rarely just draw "Quads" (rectangles). You need to draw:
+* **Flight Paths:** A trailing line showing where the plane has been.
+* **Vectors:** Arrows representing Thrust, Lift, and Drag forces.
+* **Grids:** A coordinate grid to provide a sense of scale.
+* **The Missing Feature:** You need `Renderer2D::DrawLine(start, end, color)` and `Renderer2D::DrawCircle()`. These require a different shader or a different way of packing the Vertex Buffer than your current Quad-only batcher.
+
+
+
+## 3. Advanced Input (Mouse Picking/Interaction)
+When visualizing data, you often want to click on a specific data point or the airplane itself to see its current $C_L$ (Lift Coefficient) or $V_y$ (Vertical Velocity).
+* **The Missing Feature:** **Screen-to-World Projection.** You need a way to take a mouse click (pixels) and calculate where that is in your "Aerodynamic World" (meters). This is usually done by inverting your Camera's View-Projection matrix.
+
+## 4. Resource Management (Asset Manager)
+Currently, you are manually loading your texture in `OnAttach`. As your simulation grows (UI icons, different airplane sprites, skybox textures), loading them directly in Layers will get messy.
+* **The Missing Feature:** A static `TextureLibrary` or `AssetManager` class where you can say `m_PlaneTex = TextureLibrary::Get("F16_Sprite")` to avoid loading the same file multiple times and to manage memory better.
+
+---
+
+## Current Architecture Checklist
+
+| Feature | Status | Why you need it for Aero Viz |
+| :--- | :--- | :--- |
+| **Batch Rendering** | ✅ **Done** | Essential for drawing thousands of "telemetry dots" or "air particles." |
+| **Fixed Timestep** | ✅ **Done** | **Crucial.** Your Aero physics must run at a constant rate regardless of FPS. |
+| **ImGui Integration** | ✅ **Done** | Perfect for "Control Panels" where you tweak wing area or air density. |
+| **Line/Path Rendering** | ❌ **Missing** | You can't draw a flight trajectory or a vector with just Quads. |
+| **Camera Following** | ❌ **Missing** | The plane will fly off-screen in 2 seconds without this. |
+
+## Recommended Next Step
+I would suggest adding **Line Rendering** to your `Renderer2D`. It’s essentially a second "Batch" that uses `GL_LINES` instead of `GL_TRIANGLES`. This will allow you to start drawing the **Porkchop plots** or **Time-to-climb** graphs directly in the game world.
+
+Are you planning to plot the "To 9km and Beyond" data as a live graph, or a side-view 2D animation of the plane climbing?
