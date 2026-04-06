@@ -1,8 +1,12 @@
 <div align="center">
 
 # Cosmic (Mini Game Engine)
-
 ## by Kaden Dadabhoy
+
+
+
+## NOTE THIS ENGINE DOES NOT HAVE MULTI THREADING CAPABILITIES YET
+
 
 </div>
 

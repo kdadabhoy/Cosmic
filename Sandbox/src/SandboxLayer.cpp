@@ -25,6 +25,7 @@ namespace Cosmic
 	{
 		m_Obstacles.clear();
 		m_DinoPos = { -1.0f, -0.5f, 0.0f };
+		m_DinoRotation = 0.0f; // Reset rotation on death
 		m_VelocityY = 0.0f;
 		m_Score = 0.0f;
 		m_IsGrounded = true;
@@ -32,9 +33,6 @@ namespace Cosmic
 
 	void SandboxLayer::OnUpdate(float deltaTime)
 	{
-		// --- SMOOTHED TIMING LOGIC ---
-		// Blend the new deltaTime with the old one (95% old, 5% new)
-		// This makes the FPS counter readable instead of a blur
 		m_SmoothedDeltaTime = m_SmoothedDeltaTime * 0.95f + deltaTime * 0.05f;
 
 		// --- INPUT HANDLING & TOGGLES ---
@@ -73,6 +71,14 @@ namespace Cosmic
 		{
 			m_Score += deltaTime * 10.0f;
 
+			// Rotation Logic
+			float rotationSpeed = 5.0f;
+			if (Input::IsKeyPressed(KEY_LEFT))
+				m_DinoRotation += rotationSpeed * deltaTime;
+			if (Input::IsKeyPressed(KEY_RIGHT))
+				m_DinoRotation -= rotationSpeed * deltaTime;
+
+			// Jump Logic
 			if (Input::IsKeyPressed(KEY_SPACE) && m_IsGrounded)
 			{
 				m_VelocityY = 5.0f;
@@ -92,6 +98,7 @@ namespace Cosmic
 				m_IsGrounded = true;
 			}
 
+			// Obstacle Spawning
 			m_SpawnTimer += deltaTime;
 			if (m_SpawnTimer > m_NextSpawnTime)
 			{
@@ -105,6 +112,7 @@ namespace Cosmic
 				m_NextSpawnTime = timeDist(m_RandomEngine);
 			}
 
+			// Collision & Movement
 			for (int i = 0; i < (int)m_Obstacles.size(); i++)
 			{
 				m_Obstacles[i].Position.x -= 1.8f * deltaTime;
@@ -139,6 +147,7 @@ namespace Cosmic
 		}
 		else
 		{
+			// Background / Floor
 			for (int i = 0; i < 20; i++)
 				Renderer2D::DrawQuad({ -1.5f + (i * 0.2f), 0.5f, -0.1f }, { 0.02f, 0.02f }, { 0.4f, 0.4f, 0.4f, 1.0f });
 
@@ -150,7 +159,8 @@ namespace Cosmic
 			float pulse = (sin(ImGui::GetTime() * 5.0f) + 1.0f) * 0.5f;
 			glm::vec4 dinoTint = { 1.0f, 0.8f + (pulse * 0.2f), 0.8f + (pulse * 0.2f), 1.0f };
 
-			Renderer2D::DrawRotatedQuad(m_DinoPos, { -0.5f, 0.5f }, 0.0f, m_Texture, 1.0f, dinoTint);
+			// Draw Dino with Rotation
+			Renderer2D::DrawRotatedQuad(m_DinoPos, { -0.5f, 0.5f }, m_DinoRotation, m_Texture, 1.0f, dinoTint);
 		}
 
 		Renderer2D::EndScene();
@@ -165,12 +175,11 @@ namespace Cosmic
 		{
 			ImGui::Begin("Cosmic Engine Monitor");
 
-			// Calculate FPS and MS based on smoothed time
 			float fps = 1.0f / m_SmoothedDeltaTime;
 			float ms = m_SmoothedDeltaTime * 1000.0f;
 
 			ImGui::Text("Timing (Smoothed):");
-			ImGui::Text(" - FPS: %.0f", fps); // Round to 0 decimals for extra stability
+			ImGui::Text(" - FPS: %.0f", fps);
 			ImGui::Text(" - Frame Time: %.2f ms", ms);
 
 			ImGui::Separator();
@@ -182,9 +191,10 @@ namespace Cosmic
 
 			ImGui::Separator();
 			ImGui::Text("Keybinds:");
-			ImGui::BulletText("SPACE to Jump");
-			ImGui::BulletText("'T' Toggle Stress Mode");
-			ImGui::BulletText("'F1' Toggle This Menu");
+			ImGui::BulletText("SPACE: Jump");
+			ImGui::BulletText("LEFT/RIGHT ARROWS: Rotate Dino");
+			ImGui::BulletText("'T': Toggle Stress Mode");
+			ImGui::BulletText("'F1': Toggle This Menu");
 			ImGui::End();
 		}
 
