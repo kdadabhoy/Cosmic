@@ -174,3 +174,69 @@ public:
 
 ### 📝 License
 This project is developed as part of a multidisciplinary engineering portfolio. Feel free to explore, modify, and build upon the Cosmic architecture!
+
+
+
+
+
+
+
+
+
+To understand how **Cosmic** turns a few lines of C++ into a jumping dinosaur on your screen, you have to look at it as a three-layer "sandwich": the **Application Layer** (your game), the **Engine Abstraction** (the generic tools), and the **Platform Implementation** (the actual OpenGL commands).
+
+Here is the technical flow of how these files interlink.
+
+---
+
+## 1. The Entry Point: `Application` & `SandboxLayer`
+Everything starts in your `main()` function.
+* **`Application.cpp`**: This creates the window and starts the "Heartbeat" (the Game Loop).
+* **`LayerStack.cpp`**: The application holds a stack of layers. It tells your `SandboxLayer` to "Attach" (initialize) and then calls its `OnUpdate` and `OnRender` every single frame.
+
+## 2. The Resource Creators (Factory Pattern)
+When you call `Texture::Create()` or `Shader::Create()`, you aren't actually creating a generic object; you are asking the engine to pick a specialized one.
+* **`Texture.cpp` / `Shader.cpp`**: These files look at `RendererAPI::GetAPI()`.
+* If the API is **OpenGL**, they return a `new OpenGLTexture` or `new OpenGLShader`.
+* **Benefit:** Your `SandboxLayer.cpp` doesn't need to know OpenGL exists. It just works with the abstract `Texture` interface.
+
+
+
+---
+
+## 3. Data Flow: From CPU to GPU
+To render the dinosaur, data must travel from your C++ code to the Graphics Card.
+
+### The Buffer Chain:
+1.  **`SandboxLayer.cpp`**: Defines a raw `float` array (the vertices) and UV coordinates.
+2.  **`Buffer.cpp`**: Takes that raw data and hands it to `OpenGLBuffer.cpp`.
+3.  **`OpenGLBuffer.cpp`**: Calls `glGenBuffers` and `glBufferData`. Your coordinates are now officially sitting in GPU memory.
+4.  **`VertexArray.cpp`**: Acts as the "Organizer." It links the `VertexBuffer` (the data) with the `Shader` (the instructions) so the GPU knows which numbers represent positions and which represent UVs.
+
+### The Texture Chain:
+1.  **`OpenGLTexture.cpp`**: Uses the `stb_image` library to load your `.png` from the disk.
+2.  **GPU Upload:** It calls `glTexImage2D` to send those pixels to the GPU and stores a `RendererID` (a handle) to find them later.
+
+---
+
+## 4. The Render Cycle: `Submit`
+This is the most critical link in the engine. When you call `Renderer::Submit` in your `OnRender` function:
+
+1.  **`Renderer.cpp`**: Receives the `Shader`, `VertexArray`, and a `transform` (the Dino's position).
+2.  **Uniform Upload:** The Renderer tells the `OpenGLShader` to upload the `u_ViewProjection` (camera) and `u_Transform` (position) matrices.
+3.  **`RenderCommand.cpp`**: This is a middleman that passes the final "Draw" command to the active API.
+4.  **`OpenGLRendererAPI.cpp`**: Finally calls `glDrawElements`. This is the exact moment the GPU reads the buffers and the texture to paint pixels on your screen.
+
+
+
+---
+
+## 5. Summary of Interlinking
+| Layer | Files Involved | Responsibility |
+| :--- | :--- | :--- |
+| **Logic** | `SandboxLayer`, `Input`, `Timestep` | Handles the jump math, gravity, and "Space" key detection. |
+| **Broker** | `Renderer`, `RenderCommand` | Collects objects and decides *when* to draw them. |
+| **Interface** | `Buffer`, `Shader`, `Texture` | Hides the complex OpenGL code from the user. |
+| **Driver** | `OpenGLBuffer`, `OpenGLShader`, `OpenGLTexture` | Talks directly to the GPU using OpenGL commands. |
+
+**Essentially:** Your `SandboxLayer` talks to the **Interfaces**, the Interfaces talk to the **Broker**, and the Broker tells the **Driver** to make the GPU draw the dinosaur. This separation is why you could eventually add a `DirectXTexture.cpp` and your game wouldn't have to change a single line of code!
