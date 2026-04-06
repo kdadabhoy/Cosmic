@@ -1,26 +1,16 @@
-#include "core/Core.h"
 #include "graphics/Shader.h"
 #include "renderer/RendererAPI.h"
 #include "platform/opengl/OpenGLShader.h"
-#include <memory>
-
 
 namespace Cosmic
 {
-	/////////////////////////////////////////////////////////////////////////////////
-
 	Ref<Shader> Shader::Create(const std::string& filepath)
 	{
 		switch (RendererAPI::GetAPI())
 		{
-		case RendererAPI::API::None:				return nullptr;
-		case RendererAPI::API::OpenGL:				return std::make_shared<OpenGLShader>(filepath);
-		case RendererAPI::API::DirectX:				return nullptr; // Return DirectXShader(filepath) here later
+		case RendererAPI::API::None:    return nullptr;
+		case RendererAPI::API::OpenGL:  return std::make_shared<OpenGLShader>(filepath);
 		}
-
 		return nullptr;
 	}
-
-	/////////////////////////////////////////////////////////////////////////////////
-
 }
