@@ -14,9 +14,8 @@ namespace Cosmic
 		virtual void Bind() const = 0;
 		virtual void Unbind() const = 0;
 
-		// Add this line for Samplers/Texture Slots
+		// Setters for uniforms
 		virtual void SetInt(const std::string& name, int value) = 0;
-
 		virtual void SetMat4(const std::string& name, const glm::mat4& value) = 0;
 		virtual void SetFloat4(const std::string& name, const glm::vec4& value) = 0;
 
