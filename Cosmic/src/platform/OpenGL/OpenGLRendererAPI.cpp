@@ -10,6 +10,8 @@ namespace Cosmic
 	{
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+		glEnable(GL_DEPTH_TEST);
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////
@@ -35,10 +37,14 @@ namespace Cosmic
 
 	/////////////////////////////////////////////////////////////////////////////////
 
-	void OpenGLRendererAPI::DrawIndexed(const Ref<VertexArray>& vertexArray)
+	void OpenGLRendererAPI::DrawIndexed(const Ref<VertexArray>& vertexArray, uint32_t indexCount)
 	{
-		uint32_t count = vertexArray->GetIndexBuffer()->GetCount();
+		// If indexCount is 0, we use the total count from the index buffer (standard 3D/single quad)
+		// Otherwise, we use the specific count passed in (batch rendering)
+		uint32_t count = indexCount != 0 ? indexCount : vertexArray->GetIndexBuffer()->GetCount();
+
 		glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, nullptr);
+		glBindTexture(GL_TEXTURE_2D, 0);
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////

@@ -8,6 +8,12 @@ namespace Cosmic
 	void Renderer::Init()
 	{
 		RenderCommand::Init();
+		Renderer2D::Init();
+	}
+
+	void Renderer::Shutdown()
+	{
+		Renderer2D::Shutdown();
 	}
 
 	void Renderer::OnWindowResize(uint32_t width, uint32_t height)
@@ -20,9 +26,12 @@ namespace Cosmic
 		s_SceneData->ViewProjectionMatrix = camera.GetViewProjectionMatrix();
 	}
 
-	void Renderer::EndScene() {}
+	void Renderer::EndScene()
+	{
+		// Future: Submit CommandQueue for sorting/optimization
+	}
 
-	// Base Submit
+	// Base Submit (Raw Transform)
 	void Renderer::Submit(const Ref<Shader>& shader, const Ref<VertexArray>& vertexArray, const Ref<Texture>& texture, const glm::mat4& transform)
 	{
 		shader->Bind();
@@ -44,7 +53,7 @@ namespace Cosmic
 		Submit(shader, vertexArray, nullptr, transform);
 	}
 
-	// New: Component Submit (No Rotation)
+	// Component Submit (No Rotation)
 	void Renderer::Submit(const Ref<Shader>& shader, const Ref<VertexArray>& vertexArray, const glm::vec3& position, const glm::vec3& scale)
 	{
 		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
@@ -53,7 +62,7 @@ namespace Cosmic
 		Submit(shader, vertexArray, nullptr, transform);
 	}
 
-	// New: Component Submit (With Rotation)
+	// Component Submit (With Rotation)
 	void Renderer::Submit(const Ref<Shader>& shader, const Ref<VertexArray>& vertexArray, const glm::vec3& position, float rotationDegrees, const glm::vec3& scale)
 	{
 		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)

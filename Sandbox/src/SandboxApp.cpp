@@ -6,14 +6,13 @@ class AirplaneSim : public Cosmic::Application
 public:
 	AirplaneSim()
 	{
-		PushLayer(new SandboxLayer());
+		// Use explicit namespace here
+		PushLayer(new Cosmic::SandboxLayer());
 	}
 
 	~AirplaneSim() {}
 };
 
-// If you are using a separate EntryPoint.h, you just return the new app.
-// If you are keeping main() in this file, use this:
 int main()
 {
 	auto app = new AirplaneSim();

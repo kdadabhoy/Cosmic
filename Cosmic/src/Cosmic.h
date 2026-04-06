@@ -1,7 +1,7 @@
 #pragma once
 
-// Purpose: Have only 1 file that the Sandbox needs to include
-	// Don't include Platform-specific (OpenGL), vendor, or helper classes
+// Purpose: The single entry-point header for Cosmic Engine applications (Sandbox)
+// Do not include Platform-specific (OpenGL), vendor, or internal helper classes here.
 
 // Core
 #include "core/Core.h"
@@ -18,11 +18,12 @@
 
 // Renderer
 #include "renderer/Renderer.h"
+#include "renderer/Renderer2D.h"
 #include "renderer/RenderCommand.h"
 #include "graphics/Buffer.h"
 #include "graphics/Shader.h"
 #include "graphics/VertexArray.h"
-#include "graphics/Texture.h" // Added this so it's accessible to the Sandbox
+#include "graphics/Texture.h"
 
 // Camera
 #include "camera/OrthographicCamera.h"
