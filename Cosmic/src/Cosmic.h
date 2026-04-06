@@ -27,6 +27,8 @@
 // Camera
 #include "camera/OrthographicCamera.h"
 
-
+// Key Codes
+#include "codes/KeyCodes.h"
+#include "codes/MouseButtonCodes.h"
 
 // TODO: Add an entry point #include "Cosmic/Core/EntryPoint.h"

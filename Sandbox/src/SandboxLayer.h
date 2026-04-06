@@ -1,6 +1,15 @@
 #pragma once
+
 #include "Cosmic.h"
+#include <glm/glm.hpp>
 #include <memory>
+#include <vector>
+
+struct Obstacle
+{
+	glm::vec3 Position;
+	float Speed = 2.0f;
+};
 
 class SandboxLayer : public Cosmic::Layer
 {
@@ -16,14 +25,21 @@ public:
 	virtual void OnRender() override;
 
 private:
-	Cosmic::Ref<Cosmic::Shader> m_Shader;
+	// Renderer Resources
 	Cosmic::Ref<Cosmic::VertexArray> m_VAO;
 	Cosmic::Ref<Cosmic::VertexBuffer> m_VBO;
 	Cosmic::Ref<Cosmic::IndexBuffer> m_IBO;
+	Cosmic::Ref<Cosmic::Shader> m_TextureShader;
+	Cosmic::Ref<Cosmic::Shader> m_FlatColorShader;
 	Cosmic::Ref<Cosmic::Texture> m_Texture;
 
 	std::unique_ptr<Cosmic::OrthographicCamera> m_Camera;
 
-	glm::vec3 m_SquarePos;
-	float m_TimeScale = 1.0f;
+	// Gameplay Variables
+	glm::vec3 m_DinoPos = { -1.0f, -0.5f, 0.0f };
+	float m_VelocityY = 0.0f;
+	bool m_IsGrounded = true;
+
+	std::vector<Obstacle> m_Obstacles;
+	float m_SpawnTimer = 0.0f;
 };
