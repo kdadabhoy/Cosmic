@@ -1,7 +1,6 @@
 #pragma once
-
 #include "Cosmic.h"
-#include <glm/glm.hpp>
+#include <memory>
 
 class SandboxLayer : public Cosmic::Layer
 {
@@ -9,22 +8,22 @@ public:
 	SandboxLayer();
 	virtual ~SandboxLayer() = default;
 
-	void										OnAttach()							override;
-	void										OnDetach()							override;
-	void										OnUpdate(float deltaTime)			override;
-	void										OnRender()							override;
-	void										OnImGuiRender()						override;
-	void										OnEvent(Cosmic::Event& event)		override;
+	virtual void OnAttach() override;
+	virtual void OnDetach() override;
+	virtual void OnUpdate(float deltaTime) override;
+	virtual void OnImGuiRender() override;
+	virtual void OnEvent(Cosmic::Event& event) override;
+	virtual void OnRender() override;
 
 private:
-	Cosmic::Ref<Cosmic::VertexArray>				m_VAO;
-	Cosmic::Ref<Cosmic::VertexBuffer>				m_VBO;
-	Cosmic::Ref<Cosmic::IndexBuffer>				m_IBO;
-	Cosmic::Ref<Cosmic::Shader>						m_Shader;
+	Cosmic::Ref<Cosmic::Shader> m_Shader;
+	Cosmic::Ref<Cosmic::VertexArray> m_VAO;
+	Cosmic::Ref<Cosmic::VertexBuffer> m_VBO;
+	Cosmic::Ref<Cosmic::IndexBuffer> m_IBO;
+	Cosmic::Ref<Cosmic::Texture> m_Texture;
 
-	std::unique_ptr<Cosmic::OrthographicCamera>		m_Camera;
+	std::unique_ptr<Cosmic::OrthographicCamera> m_Camera;
 
-	glm::vec3										m_SquarePos;
-	float											m_Color[4];
-	float											m_TimeScale = 1.0f;
+	glm::vec3 m_SquarePos;
+	float m_TimeScale = 1.0f;
 };
