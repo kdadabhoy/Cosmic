@@ -22,10 +22,13 @@
 #include "graphics/Buffer.h"
 #include "graphics/Shader.h"
 #include "graphics/VertexArray.h"
+#include "graphics/Texture.h" // Added this so it's accessible to the Sandbox
 
 // Camera
 #include "camera/OrthographicCamera.h"
 
-
+// Key Codes
+#include "codes/KeyCodes.h"
+#include "codes/MouseButtonCodes.h"
 
 // TODO: Add an entry point #include "Cosmic/Core/EntryPoint.h"

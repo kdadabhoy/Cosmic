@@ -2,19 +2,18 @@
 #include <fstream>
 #include <vector>
 #include <glm/gtc/type_ptr.hpp>
+#include <iostream>
 
 namespace Cosmic
 {
-	/////////////////////////////////////////////////////////////////////////////////
-
 	static GLenum ShaderTypeFromString(const std::string& type)
 	{
 		if (type == "vertex") return GL_VERTEX_SHADER;
 		if (type == "fragment" || type == "pixel") return GL_FRAGMENT_SHADER;
+
+		std::cout << "Cosmic: Unknown shader type '" << type << "'!" << std::endl;
 		return 0;
 	}
-
-	/////////////////////////////////////////////////////////////////////////////////
 
 	OpenGLShader::OpenGLShader(const std::string& filepath)
 	{
@@ -23,14 +22,10 @@ namespace Cosmic
 		Compile(shaderSources);
 	}
 
-	/////////////////////////////////////////////////////////////////////////////////
-
 	OpenGLShader::~OpenGLShader()
 	{
 		glDeleteProgram(m_RendererID);
 	}
-
-	/////////////////////////////////////////////////////////////////////////////////
 
 	std::string OpenGLShader::ReadFile(const std::string& filepath)
 	{
@@ -44,14 +39,17 @@ namespace Cosmic
 			in.read(&result[0], result.size());
 			in.close();
 		}
+		else
+		{
+			std::cout << "Cosmic: Could not open file '" << filepath << "'" << std::endl;
+		}
 		return result;
 	}
-
-	/////////////////////////////////////////////////////////////////////////////////
 
 	std::unordered_map<GLenum, std::string> OpenGLShader::PreProcess(const std::string& source)
 	{
 		std::unordered_map<GLenum, std::string> shaderSources;
+
 		const char* typeToken = "#type";
 		size_t typeTokenLength = strlen(typeToken);
 		size_t pos = source.find(typeToken, 0);
@@ -64,12 +62,12 @@ namespace Cosmic
 
 			size_t nextLinePos = source.find_first_not_of("\r\n", eol);
 			pos = source.find(typeToken, nextLinePos);
-			shaderSources[ShaderTypeFromString(type)] = source.substr(nextLinePos, pos - (nextLinePos == std::string::npos ? source.size() : nextLinePos));
+
+			shaderSources[ShaderTypeFromString(type)] = (pos == std::string::npos) ? source.substr(nextLinePos) : source.substr(nextLinePos, pos - nextLinePos);
 		}
+
 		return shaderSources;
 	}
-
-	/////////////////////////////////////////////////////////////////////////////////
 
 	void OpenGLShader::Compile(const std::unordered_map<GLenum, std::string>& shaderSources)
 	{
@@ -82,51 +80,92 @@ namespace Cosmic
 			const std::string& source = kv.second;
 
 			GLuint shader = glCreateShader(type);
+
 			const GLchar* sourceCStr = source.c_str();
 			glShaderSource(shader, 1, &sourceCStr, 0);
+
 			glCompileShader(shader);
 
-			// (Error checking code omitted for brevity)
+			GLint isCompiled = 0;
+			glGetShaderiv(shader, GL_COMPILE_STATUS, &isCompiled);
+			if (isCompiled == GL_FALSE)
+			{
+				GLint maxLength = 0;
+				glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &maxLength);
+
+				std::vector<GLchar> infoLog(maxLength);
+				glGetShaderInfoLog(shader, maxLength, &maxLength, &infoLog[0]);
+
+				glDeleteShader(shader);
+
+				std::cout << "Cosmic: Shader compilation failure!" << std::endl;
+				std::cout << infoLog.data() << std::endl;
+				break;
+			}
 
 			glAttachShader(program, shader);
 			shaderIDs.push_back(shader);
 		}
 
 		glLinkProgram(program);
+
+		GLint isLinked = 0;
+		glGetProgramiv(program, GL_LINK_STATUS, (int*)&isLinked);
+		if (isLinked == GL_FALSE)
+		{
+			GLint maxLength = 0;
+			glGetProgramiv(program, GL_INFO_LOG_LENGTH, &maxLength);
+
+			std::vector<GLchar> infoLog(maxLength);
+			glGetProgramInfoLog(program, maxLength, &maxLength, &infoLog[0]);
+
+			glDeleteProgram(program);
+			for (auto id : shaderIDs) glDeleteShader(id);
+
+			std::cout << "Cosmic: Shader link failure!" << std::endl;
+			std::cout << infoLog.data() << std::endl;
+			return;
+		}
+
 		m_RendererID = program;
 
-		for (auto id : shaderIDs) glDeleteShader(id);
+		for (auto id : shaderIDs)
+		{
+			glDetachShader(program, id);
+			glDeleteShader(id);
+		}
 	}
 
-	/////////////////////////////////////////////////////////////////////////////////
-
-	void OpenGLShader::Bind() const 
-	{ 
-		glUseProgram(m_RendererID); 
+	void OpenGLShader::Bind() const
+	{
+		glUseProgram(m_RendererID);
 	}
-
-	/////////////////////////////////////////////////////////////////////////////////
 
 	void OpenGLShader::Unbind() const
 	{
 		glUseProgram(0);
 	}
 
-	/////////////////////////////////////////////////////////////////////////////////
+	void OpenGLShader::SetInt(const std::string& name, int value)
+	{
+		UploadUniformInt(name, value);
+	}
 
 	void OpenGLShader::SetMat4(const std::string& name, const glm::mat4& value)
 	{
 		UploadUniformMat4(name, value);
 	}
 
-	/////////////////////////////////////////////////////////////////////////////////
-
 	void OpenGLShader::SetFloat4(const std::string& name, const glm::vec4& value)
 	{
 		UploadUniformFloat4(name, value);
 	}
 
-	/////////////////////////////////////////////////////////////////////////////////
+	void OpenGLShader::UploadUniformInt(const std::string& name, int value)
+	{
+		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
+		glUniform1i(location, value);
+	}
 
 	void OpenGLShader::UploadUniformMat4(const std::string& name, const glm::mat4& matrix)
 	{
@@ -134,14 +173,9 @@ namespace Cosmic
 		glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
 	}
 
-	/////////////////////////////////////////////////////////////////////////////////
-
 	void OpenGLShader::UploadUniformFloat4(const std::string& name, const glm::vec4& values)
 	{
 		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
 		glUniform4f(location, values.x, values.y, values.z, values.w);
 	}
-
-	/////////////////////////////////////////////////////////////////////////////////
-
 }
