@@ -1,18 +1,15 @@
 #pragma once
-
 #include "Cosmic.h"
-#include "camera/OrthographicCamera.h"
-#include "graphics/Texture.h"
-#include <glm/glm.hpp>
-#include <memory>
 #include <vector>
+#include <random>
 
 namespace Cosmic
 {
 	struct Obstacle
 	{
 		glm::vec3 Position;
-		float Speed = 2.0f;
+		glm::vec2 Size;
+		glm::vec4 Color;
 	};
 
 	class SandboxLayer : public Layer
@@ -27,22 +24,30 @@ namespace Cosmic
 		virtual void OnImGuiRender() override;
 		virtual void OnEvent(Event& event) override;
 
+	private:
 		void OnRender();
+		void ResetGame();
 
 	private:
 		std::unique_ptr<OrthographicCamera> m_Camera;
 		Ref<Texture2D> m_Texture;
 
-		// Gameplay Variables
+		// Gameplay
 		glm::vec3 m_DinoPos = { -1.0f, -0.5f, 0.0f };
 		float m_DinoRotation = 0.0f;
 		float m_VelocityY = 0.0f;
 		bool m_IsGrounded = true;
+		float m_Score = 0.0f;
 
 		std::vector<Obstacle> m_Obstacles;
 		float m_SpawnTimer = 0.0f;
+		float m_NextSpawnTime = 2.0f;
 
-		// Stats Toggle - Initialized to true
+		// State & Input handling
 		bool m_ShowStats = true;
+		bool m_StressTestMode = false;
+		bool m_TKeyPressed = false; // To prevent rapid toggling
+
+		std::mt19937 m_RandomEngine;
 	};
 }

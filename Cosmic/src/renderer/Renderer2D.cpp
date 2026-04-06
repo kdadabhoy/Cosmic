@@ -111,8 +111,10 @@ namespace Cosmic
 		s_Data.QuadVertexBufferPtr = s_Data.QuadVertexBufferBase;
 		s_Data.TextureSlotIndex = 1;
 
+		/* // this should be handled by client tbh
 		if (s_Data.StatsEnabled)
 			ResetStats();
+		*/
 	}
 
 	void Renderer2D::EndScene()

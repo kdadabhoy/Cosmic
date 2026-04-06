@@ -8,7 +8,7 @@
 namespace Cosmic
 {
 	SandboxLayer::SandboxLayer()
-		: Layer("Sandbox")
+		: Layer("Sandbox"), m_RandomEngine(std::random_device{}())
 	{
 	}
 
@@ -16,114 +16,165 @@ namespace Cosmic
 	{
 		m_Texture = Texture2D::Create("assets/shaders/Texture.png");
 		m_Camera = std::make_unique<OrthographicCamera>(-1.6f, 1.6f, -0.9f, 0.9f);
-
-		// FIX: Manually enable engine stats on startup to match m_ShowStats
 		Renderer2D::SetStatsStatus(m_ShowStats);
 	}
 
 	void SandboxLayer::OnDetach() {}
 
+	void SandboxLayer::ResetGame()
+	{
+		m_Obstacles.clear();
+		m_DinoPos = { -1.0f, -0.5f, 0.0f };
+		m_VelocityY = 0.0f;
+		m_Score = 0.0f;
+		m_IsGrounded = true;
+	}
+
 	void SandboxLayer::OnUpdate(float deltaTime)
 	{
-		// Toggle Stats Feature via F1
-		if (Input::IsKeyPressed(KEY_F1))
+		// 1. Better Toggle Logic (Prevents flickering)
+		if (Input::IsKeyPressed(KEY_T))
 		{
-			m_ShowStats = !m_ShowStats;
-			Renderer2D::SetStatsStatus(m_ShowStats);
-		}
-
-		// 1. Gameplay Logic
-		if (Input::IsKeyPressed(KEY_SPACE) && m_IsGrounded)
-		{
-			m_VelocityY = 4.5f;
-			m_IsGrounded = false;
-		}
-
-		if (Input::IsKeyPressed(KEY_LEFT))
-			m_DinoRotation += 180.0f * deltaTime;
-		if (Input::IsKeyPressed(KEY_RIGHT))
-			m_DinoRotation -= 180.0f * deltaTime;
-
-		if (!m_IsGrounded)
-		{
-			m_VelocityY -= 9.8f * deltaTime;
-			m_DinoPos.y += m_VelocityY * deltaTime;
-		}
-
-		if (m_DinoPos.y <= -0.5f)
-		{
-			m_DinoPos.y = -0.5f;
-			m_VelocityY = 0.0f;
-			m_IsGrounded = true;
-		}
-
-		m_SpawnTimer += deltaTime;
-		if (m_SpawnTimer > 2.0f)
-		{
-			m_Obstacles.push_back({ { 2.0f, -0.6f, 0.0f } });
-			m_SpawnTimer = 0.0f;
-		}
-
-		for (int i = 0; i < (int)m_Obstacles.size(); i++)
-		{
-			m_Obstacles[i].Position.x -= 1.5f * deltaTime;
-			if (glm::distance(m_DinoPos, m_Obstacles[i].Position) < 0.4f)
+			if (!m_TKeyPressed)
 			{
-				m_Obstacles.clear();
-				m_DinoPos = { -1.0f, -0.5f, 0.0f };
-				m_DinoRotation = 0.0f;
-				break;
+				m_StressTestMode = !m_StressTestMode;
+				ResetGame();
+
+				if (m_StressTestMode)
+				{
+					// Fill screen with 2,500 quads for the ultimate batching demo
+					for (float y = -0.9f; y < 0.9f; y += 0.04f)
+						for (float x = -1.6f; x < 1.6f; x += 0.04f)
+							m_Obstacles.push_back({ {x, y, 0.0f}, {0.03f, 0.03f},
+								{(x + 1.6f) / 3.2f, 0.2f, (y + 0.9f) / 1.8f, 1.0f} });
+				}
+				m_TKeyPressed = true;
 			}
 		}
+		else { m_TKeyPressed = false; }
 
-		// 2. Rendering
+		// 2. Gameplay Logic
+		if (!m_StressTestMode)
+		{
+			m_Score += deltaTime * 10.0f;
+
+			// Controls
+			if (Input::IsKeyPressed(KEY_SPACE) && m_IsGrounded)
+			{
+				m_VelocityY = 5.0f;
+				m_IsGrounded = false;
+			}
+
+			// Gravity physics
+			if (!m_IsGrounded)
+			{
+				m_VelocityY -= 12.0f * deltaTime;
+				m_DinoPos.y += m_VelocityY * deltaTime;
+			}
+
+			if (m_DinoPos.y <= -0.5f)
+			{
+				m_DinoPos.y = -0.5f;
+				m_VelocityY = 0.0f;
+				m_IsGrounded = true;
+			}
+
+			// Procedural Spawning
+			m_SpawnTimer += deltaTime;
+			if (m_SpawnTimer > m_NextSpawnTime)
+			{
+				std::uniform_real_distribution<float> heightDist(0.3f, 0.8f);
+				std::uniform_real_distribution<float> timeDist(1.0f, 2.5f);
+
+				float h = heightDist(m_RandomEngine);
+				m_Obstacles.push_back({ { 2.0f, -0.8f + (h / 2.0f), 0.0f }, { 0.3f, h }, { 0.9f, 0.1f, 0.1f, 1.0f } });
+
+				m_SpawnTimer = 0.0f;
+				m_NextSpawnTime = timeDist(m_RandomEngine);
+			}
+
+			// Collision & Movement
+			for (int i = 0; i < (int)m_Obstacles.size(); i++)
+			{
+				m_Obstacles[i].Position.x -= 1.8f * deltaTime;
+
+				// Simple AABB Collision
+				bool colX = m_DinoPos.x + 0.2f > m_Obstacles[i].Position.x - (m_Obstacles[i].Size.x / 2) &&
+					m_Obstacles[i].Position.x + (m_Obstacles[i].Size.x / 2) > m_DinoPos.x - 0.2f;
+				bool colY = m_DinoPos.y + 0.2f > m_Obstacles[i].Position.y - (m_Obstacles[i].Size.y / 2) &&
+					m_Obstacles[i].Position.y + (m_Obstacles[i].Size.y / 2) > m_DinoPos.y - 0.2f;
+
+				if (colX && colY) { ResetGame(); break; }
+			}
+
+			// Cleanup off-screen obstacles
+			m_Obstacles.erase(std::remove_if(m_Obstacles.begin(), m_Obstacles.end(),
+				[](const Obstacle& o) { return o.Position.x < -2.5f; }), m_Obstacles.end());
+		}
+
+		Renderer2D::ResetStats();
 		OnRender();
 	}
 
 	void SandboxLayer::OnRender()
 	{
-		RenderCommand::SetClearColor({ 0.15f, 0.15f, 0.15f, 1.0f });
+		RenderCommand::SetClearColor({ 0.12f, 0.12f, 0.12f, 1.0f });
 		RenderCommand::Clear();
 
 		Renderer2D::BeginScene(*m_Camera);
 
-		// Ground
-		Renderer2D::DrawQuad({ 0.0f, -0.8f }, { 5.0f, 0.1f }, { 0.8f, 0.8f, 0.8f, 1.0f });
-
-		// Obstacles
-		for (const auto& obs : m_Obstacles)
+		if (m_StressTestMode)
 		{
-			Renderer2D::DrawQuad(obs.Position, { 0.4f, 0.6f }, { 0.9f, 0.2f, 0.2f, 1.0f });
+			for (const auto& obs : m_Obstacles)
+				Renderer2D::DrawQuad(obs.Position, obs.Size, obs.Color);
 		}
+		else
+		{
+			// Background "Stars" (Showing off layers)
+			for (int i = 0; i < 20; i++)
+				Renderer2D::DrawQuad({ -1.5f + (i * 0.2f), 0.5f, -0.1f }, { 0.02f, 0.02f }, { 0.4f, 0.4f, 0.4f, 1.0f });
 
-		// Dino
-		Renderer2D::DrawRotatedQuad(m_DinoPos, { -0.6f, 0.6f }, glm::radians(m_DinoRotation), m_Texture);
+			// Ground
+			Renderer2D::DrawQuad({ 0.0f, -0.85f }, { 4.0f, 0.2f }, { 0.2f, 0.2f, 0.22f, 1.0f });
+
+			// Obstacles
+			for (const auto& obs : m_Obstacles)
+				Renderer2D::DrawQuad(obs.Position, obs.Size, obs.Color);
+
+			// Animated Dino (Pulsing color + Texture)
+			float pulse = (sin(ImGui::GetTime() * 5.0f) + 1.0f) * 0.5f;
+			glm::vec4 dinoTint = { 1.0f, 0.8f + (pulse * 0.2f), 0.8f + (pulse * 0.2f), 1.0f };
+			Renderer2D::DrawRotatedQuad(m_DinoPos, { 0.5f, 0.5f }, 0.0f, m_Texture, 1.0f, dinoTint);
+		}
 
 		Renderer2D::EndScene();
 	}
 
 	void SandboxLayer::OnImGuiRender()
 	{
+		static Renderer2D::Statistics cachedStats;
+		cachedStats = Renderer2D::GetStats();
+
 		if (m_ShowStats)
 		{
-			auto stats = Renderer2D::GetStats();
-			ImGui::Begin("Renderer Statistics");
-			ImGui::Text("Draw Calls: %d", stats.DrawCalls);
-			ImGui::Text("Quads: %d", stats.QuadCount);
-			ImGui::Text("Vertices: %d", stats.GetTotalVertexCount());
-			ImGui::Text("Indices: %d", stats.GetTotalIndexCount());
+			ImGui::Begin("Cosmic Engine Monitor");
+			ImGui::Text("Performance Statistics:");
+			ImGui::Text(" - Draw Calls: %d", cachedStats.DrawCalls);
+			ImGui::Text(" - Quads: %d", cachedStats.QuadCount);
+			ImGui::Text(" - Vertices: %d", cachedStats.GetTotalVertexCount());
+			ImGui::Separator();
+			ImGui::Text("Keybinds:");
+			ImGui::BulletText("SPACE to Jump");
+			ImGui::BulletText("'T' Toggle Stress Mode (Batching Demo)");
+			ImGui::BulletText("'F1' Toggle This Menu");
 			ImGui::End();
 		}
 
 		ImGui::Begin("Dino Game");
-		ImGui::Text("Altitude: %.2f", m_DinoPos.y + 0.5f);
-		ImGui::Text("Pitch Angle: %.1f deg", m_DinoRotation);
-		ImGui::Separator();
-		ImGui::Text("Active Obstacles: %d", (int)m_Obstacles.size());
+		ImGui::Text("Current Score: %.0f", m_Score);
+		ImGui::ProgressBar(m_Score / 1000.0f, ImVec2(0.f, 0.f), "Level Progress");
 		ImGui::End();
 	}
 
-	void SandboxLayer::OnEvent(Event& event)
-	{
-	}
+	void SandboxLayer::OnEvent(Event& event) {}
 }
