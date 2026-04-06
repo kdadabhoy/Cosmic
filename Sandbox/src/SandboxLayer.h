@@ -41,5 +41,8 @@ namespace Cosmic
 
 		std::vector<Obstacle> m_Obstacles;
 		float m_SpawnTimer = 0.0f;
+
+		// Stats Toggle - Initialized to true
+		bool m_ShowStats = true;
 	};
 }

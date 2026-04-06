@@ -2,7 +2,6 @@
 #include "renderer/Renderer2D.h"
 #include "renderer/RenderCommand.h"
 #include "core/Input.h"
-
 #include <imgui.h>
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -15,15 +14,24 @@ namespace Cosmic
 
 	void SandboxLayer::OnAttach()
 	{
-		// Keeping requested pathing: "assets/shaders/Texture.png"
 		m_Texture = Texture2D::Create("assets/shaders/Texture.png");
 		m_Camera = std::make_unique<OrthographicCamera>(-1.6f, 1.6f, -0.9f, 0.9f);
+
+		// FIX: Manually enable engine stats on startup to match m_ShowStats
+		Renderer2D::SetStatsStatus(m_ShowStats);
 	}
 
 	void SandboxLayer::OnDetach() {}
 
 	void SandboxLayer::OnUpdate(float deltaTime)
 	{
+		// Toggle Stats Feature via F1
+		if (Input::IsKeyPressed(KEY_F1))
+		{
+			m_ShowStats = !m_ShowStats;
+			Renderer2D::SetStatsStatus(m_ShowStats);
+		}
+
 		// 1. Gameplay Logic
 		if (Input::IsKeyPressed(KEY_SPACE) && m_IsGrounded)
 		{
@@ -88,7 +96,7 @@ namespace Cosmic
 			Renderer2D::DrawQuad(obs.Position, { 0.4f, 0.6f }, { 0.9f, 0.2f, 0.2f, 1.0f });
 		}
 
-		// Dino - Flipped across the Y-axis using a negative X scale (-0.6f)
+		// Dino
 		Renderer2D::DrawRotatedQuad(m_DinoPos, { -0.6f, 0.6f }, glm::radians(m_DinoRotation), m_Texture);
 
 		Renderer2D::EndScene();
@@ -96,7 +104,18 @@ namespace Cosmic
 
 	void SandboxLayer::OnImGuiRender()
 	{
-		ImGui::Begin("Cosmic Flight Log");
+		if (m_ShowStats)
+		{
+			auto stats = Renderer2D::GetStats();
+			ImGui::Begin("Renderer Statistics");
+			ImGui::Text("Draw Calls: %d", stats.DrawCalls);
+			ImGui::Text("Quads: %d", stats.QuadCount);
+			ImGui::Text("Vertices: %d", stats.GetTotalVertexCount());
+			ImGui::Text("Indices: %d", stats.GetTotalIndexCount());
+			ImGui::End();
+		}
+
+		ImGui::Begin("Dino Game");
 		ImGui::Text("Altitude: %.2f", m_DinoPos.y + 0.5f);
 		ImGui::Text("Pitch Angle: %.1f deg", m_DinoRotation);
 		ImGui::Separator();

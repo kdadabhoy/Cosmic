@@ -36,6 +36,10 @@ namespace Cosmic
 		uint32_t TextureSlotIndex = 1; // 0 = White Texture
 
 		glm::vec4 QuadVertexPositions[4];
+
+		// Statistics
+		Renderer2D::Statistics Stats;
+		bool StatsEnabled = false;
 	};
 
 	static Renderer2DData s_Data;
@@ -106,6 +110,9 @@ namespace Cosmic
 		s_Data.QuadIndexCount = 0;
 		s_Data.QuadVertexBufferPtr = s_Data.QuadVertexBufferBase;
 		s_Data.TextureSlotIndex = 1;
+
+		if (s_Data.StatsEnabled)
+			ResetStats();
 	}
 
 	void Renderer2D::EndScene()
@@ -118,22 +125,28 @@ namespace Cosmic
 
 	void Renderer2D::Flush()
 	{
+		if (s_Data.QuadIndexCount == 0)
+			return;
+
 		for (uint32_t i = 0; i < s_Data.TextureSlotIndex; i++)
 			s_Data.TextureSlots[i]->Bind(i);
 
 		RenderCommand::DrawIndexed(s_Data.QuadVertexArray, s_Data.QuadIndexCount);
+
+		if (s_Data.StatsEnabled)
+			s_Data.Stats.DrawCalls++;
 	}
 
 	void Renderer2D::FlushAndReset()
 	{
-		Renderer2D::EndScene(); // Explicit scope ensures the compiler finds the static method
+		EndScene();
 
 		s_Data.QuadIndexCount = 0;
 		s_Data.QuadVertexBufferPtr = s_Data.QuadVertexBufferBase;
 		s_Data.TextureSlotIndex = 1;
 	}
 
-	// --- 2D Primatives ------------------------------------------------------
+	// --- 2D Primitives ------------------------------------------------------
 
 	void Renderer2D::DrawQuad(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color)
 	{
@@ -162,6 +175,9 @@ namespace Cosmic
 		}
 
 		s_Data.QuadIndexCount += 6;
+
+		if (s_Data.StatsEnabled)
+			s_Data.Stats.QuadCount++;
 	}
 
 	void Renderer2D::DrawQuad(const glm::vec2& position, const glm::vec2& size, const Ref<Texture>& texture, float tilingFactor, const glm::vec4& tintColor)
@@ -208,9 +224,12 @@ namespace Cosmic
 		}
 
 		s_Data.QuadIndexCount += 6;
+
+		if (s_Data.StatsEnabled)
+			s_Data.Stats.QuadCount++;
 	}
 
-	// --- Rotated Primatives -------------------------------------------------
+	// --- Rotated Primitives -------------------------------------------------
 
 	void Renderer2D::DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size, float rotation, const glm::vec4& color)
 	{
@@ -240,6 +259,9 @@ namespace Cosmic
 		}
 
 		s_Data.QuadIndexCount += 6;
+
+		if (s_Data.StatsEnabled)
+			s_Data.Stats.QuadCount++;
 	}
 
 	void Renderer2D::DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size, float rotation, const Ref<Texture>& texture, float tilingFactor, const glm::vec4& tintColor)
@@ -287,5 +309,18 @@ namespace Cosmic
 		}
 
 		s_Data.QuadIndexCount += 6;
+
+		if (s_Data.StatsEnabled)
+			s_Data.Stats.QuadCount++;
+	}
+
+	// --- Stats --------------------------------------------------------------
+
+	void Renderer2D::SetStatsStatus(bool enabled) { s_Data.StatsEnabled = enabled; }
+	Renderer2D::Statistics Renderer2D::GetStats() { return s_Data.Stats; }
+
+	void Renderer2D::ResetStats()
+	{
+		memset(&s_Data.Stats, 0, sizeof(Statistics));
 	}
 }
