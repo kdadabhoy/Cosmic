@@ -37,6 +37,7 @@ private:
 
 	// Gameplay Variables
 	glm::vec3 m_DinoPos = { -1.0f, -0.5f, 0.0f };
+	float m_DinoRotation = 0.0f; // Track rotation in degrees
 	float m_VelocityY = 0.0f;
 	bool m_IsGrounded = true;
 

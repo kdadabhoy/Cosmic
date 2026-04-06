@@ -1,4 +1,5 @@
 #include "renderer/Renderer.h"
+#include <glm/gtc/matrix_transform.hpp>
 
 namespace Cosmic
 {
@@ -19,11 +20,9 @@ namespace Cosmic
 		s_SceneData->ViewProjectionMatrix = camera.GetViewProjectionMatrix();
 	}
 
-	void Renderer::EndScene()
-	{
-		// TODO: Implement CommandQueue optimization
-	}
+	void Renderer::EndScene() {}
 
+	// Base Submit
 	void Renderer::Submit(const Ref<Shader>& shader, const Ref<VertexArray>& vertexArray, const Ref<Texture>& texture, const glm::mat4& transform)
 	{
 		shader->Bind();
@@ -33,7 +32,6 @@ namespace Cosmic
 		if (texture)
 		{
 			texture->Bind(0);
-			// u_Sampler is the common GLSL name, ensuring consistency with your call
 			shader->SetInt("u_Texture", 0);
 		}
 
@@ -43,8 +41,25 @@ namespace Cosmic
 
 	void Renderer::Submit(const Ref<Shader>& shader, const Ref<VertexArray>& vertexArray, const glm::mat4& transform)
 	{
-		// Simply pass nullptr for texture; the textured Submit handles the check.
-		// Alternatively, bind a default 'White' texture here.
+		Submit(shader, vertexArray, nullptr, transform);
+	}
+
+	// New: Component Submit (No Rotation)
+	void Renderer::Submit(const Ref<Shader>& shader, const Ref<VertexArray>& vertexArray, const glm::vec3& position, const glm::vec3& scale)
+	{
+		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
+			* glm::scale(glm::mat4(1.0f), scale);
+
+		Submit(shader, vertexArray, nullptr, transform);
+	}
+
+	// New: Component Submit (With Rotation)
+	void Renderer::Submit(const Ref<Shader>& shader, const Ref<VertexArray>& vertexArray, const glm::vec3& position, float rotationDegrees, const glm::vec3& scale)
+	{
+		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
+			* glm::rotate(glm::mat4(1.0f), glm::radians(rotationDegrees), { 0.0f, 0.0f, 1.0f })
+			* glm::scale(glm::mat4(1.0f), scale);
+
 		Submit(shader, vertexArray, nullptr, transform);
 	}
 }
