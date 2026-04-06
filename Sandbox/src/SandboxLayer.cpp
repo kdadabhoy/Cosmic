@@ -15,6 +15,7 @@ namespace Cosmic
 
 	void SandboxLayer::OnAttach()
 	{
+		// Keeping requested pathing: "assets/shaders/Texture.png"
 		m_Texture = Texture2D::Create("assets/shaders/Texture.png");
 		m_Camera = std::make_unique<OrthographicCamera>(-1.6f, 1.6f, -0.9f, 0.9f);
 	}
@@ -24,7 +25,6 @@ namespace Cosmic
 	void SandboxLayer::OnUpdate(float deltaTime)
 	{
 		// 1. Gameplay Logic
-		// Uses the KEY_ defines from the Cosmic namespace
 		if (Input::IsKeyPressed(KEY_SPACE) && m_IsGrounded)
 		{
 			m_VelocityY = 4.5f;
@@ -88,8 +88,8 @@ namespace Cosmic
 			Renderer2D::DrawQuad(obs.Position, { 0.4f, 0.6f }, { 0.9f, 0.2f, 0.2f, 1.0f });
 		}
 
-		// Dino - Reduced size for better visual/physics alignment
-		Renderer2D::DrawRotatedQuad(m_DinoPos, { 0.6f, 0.6f }, glm::radians(m_DinoRotation), m_Texture);
+		// Dino - Flipped across the Y-axis using a negative X scale (-0.6f)
+		Renderer2D::DrawRotatedQuad(m_DinoPos, { -0.6f, 0.6f }, glm::radians(m_DinoRotation), m_Texture);
 
 		Renderer2D::EndScene();
 	}
@@ -108,5 +108,3 @@ namespace Cosmic
 	{
 	}
 }
-
-

@@ -31,7 +31,7 @@ namespace Cosmic
 
 	private:
 		std::unique_ptr<OrthographicCamera> m_Camera;
-		Ref<Texture2D> m_Texture; // Updated to Ref<Texture2D>
+		Ref<Texture2D> m_Texture;
 
 		// Gameplay Variables
 		glm::vec3 m_DinoPos = { -1.0f, -0.5f, 0.0f };
