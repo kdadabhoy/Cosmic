@@ -244,6 +244,11 @@ namespace Cosmic
 
 	void SandboxLayer::OnImGuiRender()
 	{
+
+		// This version uses the ID of the main viewport automatically
+		ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_PassthruCentralNode;
+		ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport(), dockspace_flags);
+
 		// --- Main Mission Control ---
 		ImGui::Begin("Mission Control");
 		const char* modes[] = { "Dino Runner", "Flight Simulator" };
