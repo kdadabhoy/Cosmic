@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Cosmic.h"
-#include "camera/OrthographicCameraController.h"
 #include <vector>
 #include <random>
 
@@ -39,6 +38,11 @@ namespace Cosmic
 
 		SceneMode m_CurrentMode = SceneMode::DinoRunner;
 
+		// --- Viewport & UI State ---
+		bool m_ViewportFocused = false;
+		bool m_ViewportHovered = false;
+		glm::vec2 m_ViewportSize = { 0.0f, 0.0f };
+
 		// --- Common State ---
 		glm::vec3 m_DinoPos = { -1.0f, -0.5f, 0.0f };
 		float m_DinoRotation = 0.0f;
@@ -68,11 +72,6 @@ namespace Cosmic
 		bool m_CKeyPressed = false;
 		bool m_FKeyPressed = false;
 		bool m_GKeyPressed = false;
-
-		// --- UI State Tracking ---
-		float m_MinZ = 0.25f, m_MaxZ = 10.0f;
-		float m_MinBoundX = -1000.0f, m_MaxBoundX = 1000.0f;
-		float m_MinBoundY = -1000.0f, m_MaxBoundY = 1000.0f;
 
 		std::mt19937 m_RandomEngine;
 	};

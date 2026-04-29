@@ -1,4 +1,4 @@
-#include "platform/OpenGL/OpenGLFrameBuffer.h" // Match file tree case
+#include "platform/OpenGL/OpenGLFrameBuffer.h"
 #include <glad/glad.h>
 
 namespace Cosmic
@@ -28,6 +28,7 @@ namespace Cosmic
 		glGenFramebuffers(1, &m_RendererID);
 		glBindFramebuffer(GL_FRAMEBUFFER, m_RendererID);
 
+		// Color Attachment
 		glGenTextures(1, &m_ColorAttachment);
 		glBindTexture(GL_TEXTURE_2D, m_ColorAttachment);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, m_Specification.Width, m_Specification.Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
@@ -36,6 +37,7 @@ namespace Cosmic
 
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_ColorAttachment, 0);
 
+		// Depth Attachment
 		glGenTextures(1, &m_DepthAttachment);
 		glBindTexture(GL_TEXTURE_2D, m_DepthAttachment);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, m_Specification.Width, m_Specification.Height, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, nullptr);
@@ -43,7 +45,7 @@ namespace Cosmic
 
 		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 		{
-			// Log error here
+			// TODO: Add logging for incomplete framebuffer
 		}
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -62,9 +64,12 @@ namespace Cosmic
 
 	void OpenGLFrameBuffer::Resize(uint32_t width, uint32_t height)
 	{
-		if (width == 0 || height == 0) return;
+		if (width == 0 || height == 0)
+			return;
+
 		m_Specification.Width = width;
 		m_Specification.Height = height;
+
 		Invalidate();
 	}
 }

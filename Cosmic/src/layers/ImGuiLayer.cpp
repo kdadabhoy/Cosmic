@@ -5,24 +5,19 @@
 #include "core/Application.h"
 #include <GLFW/glfw3.h>
 
-
-
 namespace Cosmic
 {
 	/////////////////////////////////////////////////////////////////////////////////
 
-	ImGuiLayer::ImGuiLayer() : Layer("ImGuiLayer") 
+	ImGuiLayer::ImGuiLayer() : Layer("ImGuiLayer")
 	{
-
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////
 
 	ImGuiLayer::~ImGuiLayer()
 	{
-		// default Layer destructor
 	}
-
 
 	/////////////////////////////////////////////////////////////////////////////////
 
@@ -86,8 +81,14 @@ namespace Cosmic
 
 	void ImGuiLayer::OnEvent(Event& event)
 	{
+		if (m_BlockEvents)
+		{
+			ImGuiIO& io = ImGui::GetIO();
+			event.Handled |= event.IsInCategory(EventCategoryMouse) & io.WantCaptureMouse;
+			event.Handled |= event.IsInCategory(EventCategoryKeyboard) & io.WantCaptureKeyboard;
+		}
+
 		EventDispatcher dispatcher(event);
-		// Use the macro from Core.h for binding
 		dispatcher.Dispatch<MouseButtonPressedEvent>(GLCORE_BIND_EVENT_FN(ImGuiLayer::OnMouseButtonPressed));
 	}
 
@@ -96,8 +97,6 @@ namespace Cosmic
 	bool ImGuiLayer::OnMouseButtonPressed(MouseButtonPressedEvent& e)
 	{
 		ImGuiIO& io = ImGui::GetIO();
-		// If ImGui wants the mouse, we stop the event from reaching other layers
 		return io.WantCaptureMouse;
 	}
-
 }

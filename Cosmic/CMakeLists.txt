@@ -35,6 +35,8 @@ add_library(imgui STATIC
     dependencies/imgui/backends/imgui_impl_glfw.cpp
     dependencies/imgui/backends/imgui_impl_opengl3.cpp
 )
+
+# FIXED: Set to PUBLIC so Sandbox can find these headers through the engine link
 target_include_directories(imgui PUBLIC
     dependencies/imgui
     dependencies/imgui/backends
@@ -42,20 +44,16 @@ target_include_directories(imgui PUBLIC
 target_link_libraries(imgui PUBLIC glfw OpenGL::GL)
 
 # stb_image
-# We create an interface library for the header and include the .cpp in the engine
 add_library(stb_image INTERFACE)
 target_include_directories(stb_image INTERFACE dependencies/stb_image)
 
 # ----------------------------
 # 3. Engine Source Files (Automatic)
 # ----------------------------
-# This automatically finds every .cpp and .h file in your src tree
-# Note: I added dependencies/stb_image/stb_image.cpp to the glob list
-# so it gets compiled into the Cosmic library.
 file(GLOB_RECURSE COSMIC_SOURCES 
     "src/*.cpp" 
     "src/*.h"
-    "dependencies/stb_image/*.cpp" # Ensure our new .cpp is included!
+    "dependencies/stb_image/*.cpp"
 )
 
 add_library(Cosmic STATIC ${COSMIC_SOURCES})
@@ -63,18 +61,18 @@ add_library(Cosmic STATIC ${COSMIC_SOURCES})
 # ----------------------------
 # 4. Engine Configuration and Linking
 # ----------------------------
-# Since all headers are now in src, we point here. 
-# PUBLIC ensures SandboxApp can #include "core/Application.h"
+# PUBLIC ensures Sandbox can #include engine headers like "core/Application.h"
 target_include_directories(Cosmic PUBLIC src)
-target_include_directories(Cosmic PRIVATE dependencies/stb_image) # Engine needs to see the header
+target_include_directories(Cosmic PRIVATE dependencies/stb_image)
 
+# Linking ImGui as PUBLIC ensures the Sandbox inherits the ImGui include paths
 target_link_libraries(Cosmic PUBLIC
     imgui
     glad
     glm
     glfw
     OpenGL::GL
-    stb_image # Link the interface
+    stb_image
 )
 
 # ----------------------------

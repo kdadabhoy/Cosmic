@@ -15,6 +15,9 @@ namespace Cosmic
 		void OnUpdate(float ts);
 		void OnEvent(Event& e);
 
+		// Explicit resize for ImGui Viewport scaling
+		void OnResize(float width, float height);
+
 		OrthographicCamera& GetCamera() { return m_Camera; }
 		const OrthographicCamera& GetCamera() const { return m_Camera; }
 

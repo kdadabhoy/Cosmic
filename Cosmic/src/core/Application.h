@@ -32,6 +32,9 @@ namespace Cosmic
 		void							UseFixedTimeStep(bool useFixedTimeStep) { m_UseFixedTimestep = useFixedTimeStep; }
 		void							SetTimeScale(float timescale) { m_TimeScale = timescale; }
 
+
+		inline ImGuiLayer* GetImGuiLayer() { return m_ImGuiLayer; }
+
 	private:
 		bool							Initialize();
 		bool							OnWindowClose(WindowCloseEvent& e);

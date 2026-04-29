@@ -5,7 +5,6 @@
 #include "events/KeyEvent.h"
 #include "events/MouseEvent.h"
 
-
 namespace Cosmic
 {
 	class ImGuiLayer : public Layer
@@ -14,17 +13,19 @@ namespace Cosmic
 		ImGuiLayer();
 		~ImGuiLayer();
 
-		void					OnAttach()				 override;
-		void					OnDetach()				 override;
-		void					OnEvent(Event& event)	 override;
+		virtual void OnAttach() override;
+		virtual void OnDetach() override;
+		virtual void OnEvent(Event& event) override;
 
-		// These are needed to bridge the Application loop to ImGui
-		void					Begin();
-		void					End();
+		void Begin();
+		void End();
+
+		void BlockEvents(bool block) { m_BlockEvents = block; }
 
 	private:
-		bool					OnMouseButtonPressed(MouseButtonPressedEvent& e);
-		// Add other event handlers (Key, MouseMove, etc.) as needed
-	};
+		bool OnMouseButtonPressed(MouseButtonPressedEvent& e);
 
+	private:
+		bool m_BlockEvents = true;
+	};
 }
