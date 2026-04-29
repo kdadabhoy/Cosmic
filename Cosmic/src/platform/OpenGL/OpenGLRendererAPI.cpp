@@ -39,22 +39,20 @@ namespace Cosmic
 
 	void OpenGLRendererAPI::DrawIndexed(const Ref<VertexArray>& vertexArray, uint32_t indexCount)
 	{
-		// Ensure the correct Vertex Array Object is active for this draw call
-		vertexArray->Bind();
-
-		// If indexCount is 0, use the total count from the index buffer (standard 3D)
-		// Otherwise, use the specific count passed in (batch rendering)
+		// We assume vertexArray->Bind() was called by the Renderer
 		uint32_t count = indexCount != 0 ? indexCount : vertexArray->GetIndexBuffer()->GetCount();
-
 		glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, nullptr);
 	}
 
+
 	/////////////////////////////////////////////////////////////////////////////////
+
+
 	void OpenGLRendererAPI::DrawLines(const Ref<VertexArray>& vertexArray, uint32_t vertexCount)
 	{
-		// Ensure the correct Vertex Array Object is active for this draw call
-		vertexArray->Bind();
-
+		// We assume vertexArray->Bind() was called by the Renderer
 		glDrawArrays(GL_LINES, 0, vertexCount);
 	}
+
+	/////////////////////////////////////////////////////////////////////////////////
 }

@@ -181,31 +181,40 @@ namespace Cosmic
 		Flush();
 	}
 
+
+
+
+	// Flush is basically sending all the commands we staged to be drawn by GPU...
 	void Renderer2D::Flush()
 	{
+		// --- QUAD BATCH ---
 		if (s_Data.QuadIndexCount != 0)
 		{
 			uint32_t dataSize = (uint32_t)((uint8_t*)s_Data.QuadVertexBufferPtr - (uint8_t*)s_Data.QuadVertexBufferBase);
 			s_Data.QuadVertexBuffer->SetData(s_Data.QuadVertexBufferBase, dataSize);
 
-			// Bind textures
 			for (uint32_t i = 0; i < s_Data.TextureSlotIndex; i++)
 				s_Data.TextureSlots[i]->Bind(i);
 
-			// MUST Bind the correct shader for quads
 			s_Data.TextureShader->Bind();
+
+			// HIGH LEVEL BINDING: We do it here so RenderCommand stays agnostic
+			s_Data.QuadVertexArray->Bind();
 			RenderCommand::DrawIndexed(s_Data.QuadVertexArray, s_Data.QuadIndexCount);
 
 			s_Data.Stats.DrawCalls++;
 		}
 
+		// --- LINE BATCH ---
 		if (s_Data.LineVertexCount != 0)
 		{
 			uint32_t dataSize = (uint32_t)((uint8_t*)s_Data.LineVertexBufferPtr - (uint8_t*)s_Data.LineVertexBufferBase);
 			s_Data.LineVertexBuffer->SetData(s_Data.LineVertexBufferBase, dataSize);
 
-			// MUST Bind the correct shader for lines
 			s_Data.LineShader->Bind();
+
+			// HIGH LEVEL BINDING: Switch state to the Line VAO
+			s_Data.LineVertexArray->Bind();
 			RenderCommand::DrawLines(s_Data.LineVertexArray, s_Data.LineVertexCount);
 
 			s_Data.Stats.DrawCalls++;

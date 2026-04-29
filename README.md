@@ -598,3 +598,124 @@ Currently, you are manually loading your texture in `OnAttach`. As your simulati
 I would suggest adding **Line Rendering** to your `Renderer2D`. It’s essentially a second "Batch" that uses `GL_LINES` instead of `GL_TRIANGLES`. This will allow you to start drawing the **Porkchop plots** or **Time-to-climb** graphs directly in the game world.
 
 Are you planning to plot the "To 9km and Beyond" data as a live graph, or a side-view 2D animation of the plane climbing?
+
+
+
+
+
+
+
+
+
+
+```python?code_reference&code_event_index=3
+# Define the content for the README.md
+readme_content = """# Cosmic Engine: Renderer2D Batching and Multi-API Architecture
+
+## Overview
+This document explains the architectural shift in the **Cosmic Engine**'s rendering pipeline, specifically focusing on the transition from a standard 3D submission model to a high-performance **2D Batch Rendering** system. It details the resolution of state management issues that arose when introducing line drawing alongside quad rendering.
+
+## 1. The Architecture: High-Level vs. Low-Level
+The Cosmic Engine follows a "Hardware Abstraction Layer" (HAL) design. The goal is to keep the high-level logic (Renderer2D) decoupled from the low-level graphics API (OpenGL, DirectX, etc.).
+
+### High-Level Responsibility (Renderer2D)
+The `Renderer2D` class is responsible for:
+* **Batching**: Grouping multiple draw calls into a single buffer to reduce CPU-to-GPU overhead.
+* **State Preparation**: Ensuring the correct Shaders, Textures, and Vertex Arrays are selected.
+* **Agnostic Logic**: The code here should look identical regardless of whether you are using OpenGL or DirectX.
+
+### Low-Level Execution (RendererAPI)
+The `RendererAPI` and its implementations (e.g., `OpenGLRendererAPI`) are responsible for:
+* **Translation**: Converting the engine's generic commands into API-specific calls (e.g., `glDrawElements`).
+* **Minimal Logic**: In a "pure" high-level architecture, these functions assume the state has already been prepared.
+
+---
+
+## 2. State Management & The "Access Violation" Bug
+When introducing line rendering, a critical state mismatch occurred. OpenGL is a state machine; it remembers the last buffer or shader bound to it.
+
+### The Problem
+1.  **Quad Batch**: Rendered using the Quad Vertex Array.
+2.  **Line Batch**: Rendered using the Line Vertex Array.
+3.  **Next Frame**: If the Renderer attempts to draw Quads again without explicitly re-binding the Quad Vertex Array, OpenGL attempts to use the **Line** buffer configuration to draw **Triangles**.
+
+Since the Line buffer has no Index Buffer (as it uses `glDrawArrays`), the driver attempts to read from a null memory location, resulting in the error:
+`0xc0000005: Access violation reading location 0x0000000000000000`.
+
+### The Solution: High-Level Enforcement
+To maintain multi-API compatibility, the `Renderer2D::Flush()` function was updated to explicitly bind the required resources before each API call. This ensures that the state is "clean" for every batch.
+
+---
+
+## 3. Core Implementation Details
+
+### Texture Batching
+Textures are managed via a slot-based system. Instead of binding a texture every time a quad is drawn, they are stored in a `TextureSlots` array and bound all at once during the `Flush` phase.
+
+```
+```text?code_stdout&code_event_index=3
+README_Renderer_Architecture.md generated.
+
+```cpp
+// Inside Renderer2D::Flush()
+for (uint32_t i = 0; i < s_Data.TextureSlotIndex; i++)
+    s_Data.TextureSlots[i]->Bind(i);
+```
+
+### Vertex Array Binding
+The `VertexArray` must be bound at the high level within the `Flush` function to ensure the `RenderCommand` remains API-agnostic.
+
+```cpp
+// Quad Batch
+s_Data.TextureShader->Bind();
+s_Data.QuadVertexArray->Bind(); // Explicit High-Level Bind
+RenderCommand::DrawIndexed(s_Data.QuadVertexArray, s_Data.QuadIndexCount);
+
+// Line Batch
+s_Data.LineShader->Bind();
+s_Data.LineVertexArray->Bind(); // Explicit High-Level Bind
+RenderCommand::DrawLines(s_Data.LineVertexArray, s_Data.LineVertexCount);
+```
+
+### RenderCommand & API Implementation
+The `RenderCommand` serves as a static dispatcher. It calls the active `RendererAPI`, which performs the final draw call.
+
+```cpp
+// OpenGLRendererAPI.cpp
+void OpenGLRendererAPI::DrawIndexed(const Ref<VertexArray>& vertexArray, uint32_t indexCount)
+{
+    uint32_t count = indexCount != 0 ? indexCount : vertexArray->GetIndexBuffer()->GetCount();
+    glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, nullptr);
+}
+```
+
+---
+
+## 4. Key Takeaways for Future Development
+* **Always Bind Before Draw**: In a batch-based system, never assume the GPU state is what you left it as.
+* **Keep APIs "Dumb"**: The `OpenGLRendererAPI` should focus on executing commands, while `Renderer2D` handles the "What" and "When".
+* **Path Validation**: Ensure all assets (like `Line.glsl`) are validated during `Init()`. A null shader is the most common cause of access violations during state changes.
+"""
+
+# Write the content to a file
+with open("README_Renderer_Architecture.md", "w") as f:
+    f.write(readme_content)
+
+print("README_Renderer_Architecture.md generated.")
+
+
+```
+Your README file is ready.
+
+[file-tag: code-generated-file-0-1777443651413937684]
+
+This document covers:
+* **The Architectural Shift**: Transitions from individual 3D submission to 2D batching.
+* **Bug Post-Mortem**: A detailed explanation of the `0xc0000005` Access Violation and why the state mismatch between quads and lines caused it.
+* **Multi-API Support**: How keeping the binding at the high level (in `Renderer2D::Flush`) ensures the engine stays agnostic for future DirectX or Vulkan implementations.
+* **Implementation Snippets**: Core logic for texture batching and vertex array management.
+
+
+
+
+
