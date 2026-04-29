@@ -227,6 +227,8 @@ namespace Cosmic
 	void SandboxLayer::OnImGuiRender()
 	{
 		static bool dockspaceOpen = true;
+		static bool resetLayoutRequest = false; // Flag to trigger a rebuild
+
 		ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
 		const ImGuiViewport* viewport = ImGui::GetMainViewport();
 		ImGui::SetNextWindowPos(viewport->WorkPos);
@@ -246,22 +248,30 @@ namespace Cosmic
 		{
 			ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
 
-			if (!ImGui::DockBuilderGetNode(dockspace_id))
+			// Only rebuild if the node doesn't exist OR the user clicked the reset button
+			if (!ImGui::DockBuilderGetNode(dockspace_id) || resetLayoutRequest)
 			{
 				ImGui::DockBuilderRemoveNode(dockspace_id);
 				ImGui::DockBuilderAddNode(dockspace_id, ImGuiDockNodeFlags_DockSpace);
 				ImGui::DockBuilderSetNodeSize(dockspace_id, viewport->Size);
 
 				ImGuiID dock_main_id = dockspace_id;
+
+				// 1. Split Top
+				ImGuiID dock_id_top = ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Up, 0.08f, nullptr, &dock_main_id);
+				// 2. Split Sidebars
 				ImGuiID dock_id_left = ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Left, 0.20f, nullptr, &dock_main_id);
 				ImGuiID dock_id_right = ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Right, 0.25f, nullptr, &dock_main_id);
-				ImGuiID dock_id_bottom = ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Down, 0.25f, nullptr, &dock_main_id);
 
+				// 3. Assign windows
+				ImGui::DockBuilderDockWindow("Camera Settings", dock_id_top);
 				ImGui::DockBuilderDockWindow("Cosmic Engine Monitor", dock_id_left);
 				ImGui::DockBuilderDockWindow("Mission Control", dock_id_right);
-				ImGui::DockBuilderDockWindow("Camera Settings", dock_id_bottom);
 				ImGui::DockBuilderDockWindow("Viewport", dock_main_id);
+
 				ImGui::DockBuilderFinish(dockspace_id);
+
+				resetLayoutRequest = false; // Reset the flag
 			}
 			ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_None);
 		}
@@ -269,7 +279,6 @@ namespace Cosmic
 		// --- Viewport Window ---
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
 		ImGui::Begin("Viewport");
-
 		m_ViewportFocused = ImGui::IsWindowFocused();
 		m_ViewportHovered = ImGui::IsWindowHovered();
 		Application::Get().GetImGuiLayer()->BlockEvents(!m_ViewportFocused && !m_ViewportHovered);
@@ -279,7 +288,6 @@ namespace Cosmic
 
 		uint32_t textureID = Application::Get().GetFrameBuffer()->GetColorAttachmentRendererID();
 		ImGui::Image((void*)(uintptr_t)textureID, viewportPanelSize, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
-
 		ImGui::End();
 		ImGui::PopStyleVar();
 
@@ -304,6 +312,11 @@ namespace Cosmic
 			ImGui::DragFloat("Flight Slope", &m_FlightSlope, 0.05f, -2.0f, 2.0f);
 		}
 		if (ImGui::Button("Reset Scene")) ResetGame();
+
+		ImGui::Separator();
+		// NEW: Reset Layout Button
+		if (ImGui::Button("Reset Editor Layout")) resetLayoutRequest = true;
+
 		ImGui::End();
 
 		// --- Engine Monitor ---
@@ -327,6 +340,8 @@ namespace Cosmic
 
 		ImGui::End(); // End DockSpace
 	}
+
+
 
 	void SandboxLayer::OnEvent(Event& event)
 	{
