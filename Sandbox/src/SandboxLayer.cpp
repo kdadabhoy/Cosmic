@@ -26,6 +26,7 @@ namespace Cosmic
 	void SandboxLayer::ResetGame()
 	{
 		m_Obstacles.clear();
+		m_FlightPath.clear(); // NEW: Clear the dashed line path
 		m_VelocityY = 0.0f;
 		m_Score = 0.0f;
 		m_IsGrounded = true;
@@ -143,6 +144,11 @@ namespace Cosmic
 			m_DinoPos.x += m_FlightSpeed * deltaTime;
 			m_DinoPos.y += (m_FlightSpeed * m_FlightSlope) * deltaTime;
 
+			// --- NEW: Record Path for Dashed Line ---
+			m_FlightPath.push_back(m_DinoPos);
+			if (m_FlightPath.size() > 500) // Keep the buffer size reasonable
+				m_FlightPath.erase(m_FlightPath.begin());
+
 			if (Input::IsKeyPressed(KEY_C))
 			{
 				if (!m_CKeyPressed) { m_CameraFollow = !m_CameraFollow; m_CKeyPressed = true; }
@@ -184,6 +190,7 @@ namespace Cosmic
 		}
 		else // Flight Sim Render
 		{
+			// Background Grid
 			float startX = floor(m_DinoPos.x) - 10;
 			float startY = floor(m_DinoPos.y) - 10;
 			for (float x = startX; x < startX + 20; x += 1.0f)
@@ -194,6 +201,16 @@ namespace Cosmic
 					Renderer2D::DrawQuad({ x, y, -0.1f }, { 1.0f, 1.0f }, isEven ? glm::vec4(0.2f, 0.2f, 0.25f, 1.0f) : glm::vec4(0.15f, 0.15f, 0.18f, 1.0f));
 				}
 			}
+
+			// --- NEW: Render the Dashed Red Line Path ---
+			if (m_FlightPath.size() > 1)
+			{
+				for (size_t i = 0; i < m_FlightPath.size() - 1; i++)
+				{
+					Renderer2D::DrawLine(m_FlightPath[i], m_FlightPath[i + 1], { 1.0f, 0.0f, 0.0f, 1.0f });
+				}
+			}
+
 			Renderer2D::DrawQuad(m_DinoPos, { 0.5f, 0.5f }, m_Texture);
 		}
 

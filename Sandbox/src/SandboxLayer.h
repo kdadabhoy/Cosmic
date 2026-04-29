@@ -33,6 +33,11 @@ namespace Cosmic
 		void ResetGame();
 		void ResetCamera();
 
+
+	private:
+		std::vector<glm::vec3> m_FlightPath;
+		const size_t m_MaxPathPoints = 500; // Keep performance stable
+
 	private:
 		OrthographicCameraController m_CameraController;
 		Ref<Texture2D> m_Texture;
