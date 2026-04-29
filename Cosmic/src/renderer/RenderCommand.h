@@ -63,6 +63,17 @@ namespace Cosmic
 			s_RendererAPI->DrawIndexed(vertexArray, count);
 		}
 
+		/**
+			* @brief Executes a non-indexed line draw call.
+		*/
+		inline static void DrawLines(const Ref<VertexArray>& vertexArray, uint32_t vertexCount)
+		{
+			s_RendererAPI->DrawLines(vertexArray, vertexCount);
+		}
+
+
+
+
 	private:
 		static RendererAPI* s_RendererAPI;
 	};

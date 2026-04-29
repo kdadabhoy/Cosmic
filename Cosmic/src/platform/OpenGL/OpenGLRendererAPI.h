@@ -16,5 +16,7 @@ namespace Cosmic
 
 		// Updated to include the index count for batch rendering
 		virtual void DrawIndexed(const Ref<VertexArray>& vertexArray, uint32_t indexCount = 0) override;
+
+		virtual void OpenGLRendererAPI::DrawLines(const Ref<VertexArray>& vertexArray, uint32_t vertexCount) override;
 	};
 }

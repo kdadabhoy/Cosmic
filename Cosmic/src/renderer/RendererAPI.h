@@ -35,6 +35,9 @@ namespace Cosmic
 
 		inline static API GetAPI() { return s_API; }
 
+
+		virtual void DrawLines(const Ref<VertexArray>& vertexArray, uint32_t vertexCount) = 0;
+
 	private:
 		static API s_API;
 	};
