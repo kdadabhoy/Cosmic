@@ -178,6 +178,7 @@ namespace Cosmic
 
 		if (m_ShowStats)
 		{
+			// --- Engine Monitor Window ---
 			ImGui::Begin("Cosmic Engine Monitor");
 
 			float fps = 1.0f / m_SmoothedDeltaTime;
@@ -203,8 +204,50 @@ namespace Cosmic
 			ImGui::BulletText("WASD: Move Camera");
 			ImGui::BulletText("Scroll: Zoom Camera");
 			ImGui::End();
+
+			// --- Camera Controller Settings Window ---
+			ImGui::Begin("Camera Settings");
+
+			// Zoom Controls
+			float zoomLevel = m_CameraController.GetZoomLevel();
+			if (ImGui::DragFloat("Zoom Level", &zoomLevel, 0.1f, 0.1f, 10.0f))
+				m_CameraController.SetZoomLevel(zoomLevel);
+
+			float zoomSpeed = m_CameraController.GetZoomSpeed();
+			if (ImGui::SliderFloat("Zoom Speed", &zoomSpeed, 0.01f, 2.0f))
+				m_CameraController.SetZoomSpeed(zoomSpeed);
+
+			// Speed Controls
+			float transSpeed = m_CameraController.GetTranslationSpeed();
+			if (ImGui::SliderFloat("Translation Speed", &transSpeed, 0.1f, 20.0f))
+				m_CameraController.SetTranslationSpeed(transSpeed);
+
+			float rotSpeed = m_CameraController.GetRotationSpeed();
+			if (ImGui::SliderFloat("Rotation Speed", &rotSpeed, 0.0f, 720.0f))
+				m_CameraController.SetRotationSpeed(rotSpeed);
+
+			ImGui::Separator();
+
+			// Hard Caps / Limits
+			// Using static variables to track range bounds in the UI
+			static float minZ = 0.25f, maxZ = 10.0f;
+			if (ImGui::DragFloatRange2("Zoom Limits", &minZ, &maxZ, 0.1f, 0.1f, 20.0f))
+				m_CameraController.SetZoomLimits(minZ, maxZ);
+
+			static float minX = -1000.0f, maxX = 1000.0f;
+			static float minY = -1000.0f, maxY = 1000.0f;
+			bool boundsChanged = false;
+
+			if (ImGui::DragFloatRange2("X Bounds", &minX, &maxX, 1.0f, -5000.0f, 5000.0f)) boundsChanged = true;
+			if (ImGui::DragFloatRange2("Y Bounds", &minY, &maxY, 1.0f, -5000.0f, 5000.0f)) boundsChanged = true;
+
+			if (boundsChanged)
+				m_CameraController.SetPositionLimits(minX, maxX, minY, maxY);
+
+			ImGui::End();
 		}
 
+		// --- Game UI ---
 		ImGui::Begin("Dino Game");
 		ImGui::Text("Current Score: %.0f", m_Score);
 		ImGui::ProgressBar(m_Score / 1000.0f, ImVec2(0.f, 0.f), "Level Progress");
