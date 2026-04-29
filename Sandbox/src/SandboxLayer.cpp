@@ -8,14 +8,14 @@
 namespace Cosmic
 {
 	SandboxLayer::SandboxLayer()
-		: Layer("Sandbox"), m_RandomEngine(std::random_device{}())
+		: Layer("Sandbox"), m_RandomEngine(std::random_device{}()),
+		m_CameraController(1280.0f / 720.0f, true) // Initialize with 16:9 and rotation enabled
 	{
 	}
 
 	void SandboxLayer::OnAttach()
 	{
 		m_Texture = Texture2D::Create("assets/shaders/Texture.png");
-		m_Camera = std::make_unique<OrthographicCamera>(-1.6f, 1.6f, -0.9f, 0.9f);
 		Renderer2D::SetStatsStatus(m_ShowStats);
 	}
 
@@ -25,7 +25,7 @@ namespace Cosmic
 	{
 		m_Obstacles.clear();
 		m_DinoPos = { -1.0f, -0.5f, 0.0f };
-		m_DinoRotation = 0.0f; // Reset rotation on death
+		m_DinoRotation = 0.0f;
 		m_VelocityY = 0.0f;
 		m_Score = 0.0f;
 		m_IsGrounded = true;
@@ -34,6 +34,10 @@ namespace Cosmic
 	void SandboxLayer::OnUpdate(float deltaTime)
 	{
 		m_SmoothedDeltaTime = m_SmoothedDeltaTime * 0.95f + deltaTime * 0.05f;
+
+		// --- CAMERA CONTROLLER UPDATE ---
+		// This handles WASD / Scrolling / Zooming
+		m_CameraController.OnUpdate(deltaTime);
 
 		// --- INPUT HANDLING & TOGGLES ---
 		if (Input::IsKeyPressed(KEY_F1))
@@ -71,7 +75,7 @@ namespace Cosmic
 		{
 			m_Score += deltaTime * 10.0f;
 
-			// Rotation Logic
+			// Rotation Logic (Game Logic)
 			float rotationSpeed = 5.0f;
 			if (Input::IsKeyPressed(KEY_LEFT))
 				m_DinoRotation += rotationSpeed * deltaTime;
@@ -138,7 +142,8 @@ namespace Cosmic
 		RenderCommand::SetClearColor({ 0.12f, 0.12f, 0.12f, 1.0f });
 		RenderCommand::Clear();
 
-		Renderer2D::BeginScene(*m_Camera);
+		// Start scene with the camera managed by the controller
+		Renderer2D::BeginScene(m_CameraController.GetCamera());
 
 		if (m_StressTestMode)
 		{
@@ -160,7 +165,7 @@ namespace Cosmic
 			glm::vec4 dinoTint = { 1.0f, 0.8f + (pulse * 0.2f), 0.8f + (pulse * 0.2f), 1.0f };
 
 			// Draw Dino with Rotation
-			Renderer2D::DrawRotatedQuad(m_DinoPos, { -0.5f, 0.5f }, m_DinoRotation, m_Texture, 1.0f, dinoTint);
+			Renderer2D::DrawRotatedQuad(m_DinoPos, { 0.5f, 0.5f }, m_DinoRotation, m_Texture, 1.0f, dinoTint);
 		}
 
 		Renderer2D::EndScene();
@@ -195,6 +200,8 @@ namespace Cosmic
 			ImGui::BulletText("LEFT/RIGHT ARROWS: Rotate Dino");
 			ImGui::BulletText("'T': Toggle Stress Mode");
 			ImGui::BulletText("'F1': Toggle This Menu");
+			ImGui::BulletText("WASD: Move Camera");
+			ImGui::BulletText("Scroll: Zoom Camera");
 			ImGui::End();
 		}
 
@@ -204,5 +211,9 @@ namespace Cosmic
 		ImGui::End();
 	}
 
-	void SandboxLayer::OnEvent(Event& event) {}
+	void SandboxLayer::OnEvent(Event& event)
+	{
+		// Pass events to the camera controller (Handles scrolling and resizing)
+		m_CameraController.OnEvent(event);
+	}
 }

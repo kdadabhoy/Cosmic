@@ -27,6 +27,7 @@
 
 // Camera
 #include "camera/OrthographicCamera.h"
+#include "camera/OrthographicCameraController.h"
 
 // Key Codes
 #include "codes/KeyCodes.h"

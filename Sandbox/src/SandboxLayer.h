@@ -1,5 +1,7 @@
 #pragma once
+
 #include "Cosmic.h"
+#include "camera/OrthographicCameraController.h" // New Include
 #include <vector>
 #include <random>
 
@@ -29,7 +31,8 @@ namespace Cosmic
 		void ResetGame();
 
 	private:
-		std::unique_ptr<OrthographicCamera> m_Camera;
+		// Replaced unique_ptr<OrthographicCamera> with the controller
+		OrthographicCameraController m_CameraController;
 		Ref<Texture2D> m_Texture;
 
 		// --- Gameplay State ---
@@ -47,7 +50,7 @@ namespace Cosmic
 		bool m_ShowStats = true;
 		bool m_StressTestMode = false;
 
-		// Debouncing flags (Prevents rapid-fire toggling)
+		// Debouncing flags
 		bool m_TKeyPressed = false;
 		bool m_F1KeyPressed = false;
 
