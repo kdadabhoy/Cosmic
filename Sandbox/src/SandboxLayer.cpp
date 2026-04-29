@@ -2,6 +2,7 @@
 #include "renderer/Renderer2D.h"
 #include "renderer/RenderCommand.h"
 #include "core/Input.h"
+#include "core/Application.h"
 #include <imgui.h>
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -48,7 +49,6 @@ namespace Cosmic
 	{
 		m_SmoothedDeltaTime = m_SmoothedDeltaTime * 0.95f + deltaTime * 0.05f;
 
-		// --- GLOBAL INPUT HANDLING ---
 		if (Input::IsKeyPressed(KEY_F))
 		{
 			if (!m_FKeyPressed)
@@ -72,7 +72,6 @@ namespace Cosmic
 		}
 		else { m_F1KeyPressed = false; }
 
-		// NEW: Chaos Mode Keybind (Key 'G' for Generator/Gravity/Chaos)
 		if (Input::IsKeyPressed(KEY_G))
 		{
 			if (!m_GKeyPressed)
@@ -83,7 +82,6 @@ namespace Cosmic
 		}
 		else { m_GKeyPressed = false; }
 
-		// --- MODE SPECIFIC LOGIC ---
 		if (m_CurrentMode == SceneMode::DinoRunner)
 		{
 			m_CameraController.OnUpdate(deltaTime);
@@ -130,7 +128,6 @@ namespace Cosmic
 					m_IsGrounded = true;
 				}
 
-				// NEW: Chaos influence on Dino Runner
 				if (m_ChaosMode)
 				{
 					std::uniform_real_distribution<float> jitter(-0.1f, 0.1f);
@@ -158,12 +155,11 @@ namespace Cosmic
 				m_Obstacles.erase(std::remove_if(m_Obstacles.begin(), m_Obstacles.end(), [](const Obstacle& o) { return o.Position.x < -2.5f; }), m_Obstacles.end());
 			}
 		}
-		else // Flight Simulator Mode
+		else
 		{
 			m_DinoPos.x += m_FlightSpeed * deltaTime;
 			m_DinoPos.y += (m_FlightSpeed * m_FlightSlope) * deltaTime;
 
-			// NEW: Chaos influence on Flight Path
 			if (m_ChaosMode)
 			{
 				std::uniform_real_distribution<float> noise(-0.2f, 0.2f);
@@ -171,7 +167,6 @@ namespace Cosmic
 				m_DinoPos.y += noise(m_RandomEngine);
 			}
 
-			// Record Path for Dashed Line
 			m_FlightPath.push_back(m_DinoPos);
 			if (m_FlightPath.size() > 500)
 				m_FlightPath.erase(m_FlightPath.begin());
@@ -189,14 +184,12 @@ namespace Cosmic
 		}
 
 		Renderer2D::ResetStats();
-		OnRender();
+		// Note: OnRender is now called by Application::Run after binding the Framebuffer
 	}
 
 	void SandboxLayer::OnRender()
 	{
-		RenderCommand::SetClearColor({ 0.12f, 0.12f, 0.12f, 1.0f });
-		RenderCommand::Clear();
-
+		// RenderCommand::Clear is now handled in Application::Run
 		Renderer2D::BeginScene(m_CameraController.GetCamera());
 
 		if (m_CurrentMode == SceneMode::DinoRunner)
@@ -215,7 +208,7 @@ namespace Cosmic
 				Renderer2D::DrawRotatedQuad(m_DinoPos, { 0.5f, 0.5f }, m_DinoRotation, m_Texture, 1.0f, { 1.0f, 0.8f + (pulse * 0.2f), 0.8f + (pulse * 0.2f), 1.0f });
 			}
 		}
-		else // Flight Sim Render
+		else
 		{
 			float startX = floor(m_DinoPos.x) - 10;
 			float startY = floor(m_DinoPos.y) - 10;
@@ -231,9 +224,7 @@ namespace Cosmic
 			if (m_FlightPath.size() > 1)
 			{
 				for (size_t i = 0; i < m_FlightPath.size() - 1; i++)
-				{
 					Renderer2D::DrawLine(m_FlightPath[i], m_FlightPath[i + 1], { 1.0f, 0.0f, 0.0f, 1.0f });
-				}
 			}
 
 			Renderer2D::DrawQuad(m_DinoPos, { 0.5f, 0.5f }, m_Texture);
@@ -244,12 +235,39 @@ namespace Cosmic
 
 	void SandboxLayer::OnImGuiRender()
 	{
+		static bool dockspaceOpen = true;
+		ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
 
-		// This version uses the ID of the main viewport automatically
-		ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_PassthruCentralNode;
-		ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport(), dockspace_flags);
+		ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
+		const ImGuiViewport* viewport = ImGui::GetMainViewport();
+		ImGui::SetNextWindowPos(viewport->WorkPos);
+		ImGui::SetNextWindowSize(viewport->WorkSize);
+		ImGui::SetNextWindowViewport(viewport->ID);
+		window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
+		window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
 
-		// --- Main Mission Control ---
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+		ImGui::Begin("DockSpace Demo", &dockspaceOpen, window_flags);
+		ImGui::PopStyleVar(3);
+
+		ImGuiIO& io = ImGui::GetIO();
+		if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable)
+		{
+			ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
+			ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
+		}
+
+		// --- Viewport Window (Displays the Game) ---
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
+		ImGui::Begin("Viewport");
+		uint32_t textureID = Application::Get().GetFrameBuffer()->GetColorAttachmentRendererID();
+		ImGui::Image((void*)(uintptr_t)textureID, ImGui::GetContentRegionAvail(), ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
+		ImGui::End();
+		ImGui::PopStyleVar();
+
+		// --- Mission Control ---
 		ImGui::Begin("Mission Control");
 		const char* modes[] = { "Dino Runner", "Flight Simulator" };
 		int currentModeIdx = (int)m_CurrentMode;
@@ -261,8 +279,6 @@ namespace Cosmic
 		}
 		ImGui::Text("Press 'F' to Quick Switch");
 		ImGui::Separator();
-
-		// NEW: Chaos Mode Global Control
 		ImGui::Checkbox("Chaos Mode [G]", &m_ChaosMode);
 		ImGui::Separator();
 
@@ -280,81 +296,32 @@ namespace Cosmic
 		if (ImGui::Button("Reset Scene")) ResetGame();
 		ImGui::End();
 
-		// --- Engine Monitor & Keybinds ---
+		// --- Engine Monitor ---
 		if (m_ShowStats)
 		{
 			ImGui::Begin("Cosmic Engine Monitor");
-
 			float fps = 1.0f / m_SmoothedDeltaTime;
 			ImGui::Text("Timing:");
 			ImGui::Text(" - FPS: %.0f", fps);
 			ImGui::Text(" - Frame Time: %.2f ms", m_SmoothedDeltaTime * 1000.0f);
-
 			ImGui::Separator();
-
 			auto stats = Renderer2D::GetStats();
 			ImGui::Text("Renderer Statistics:");
 			ImGui::Text(" - Draw Calls: %d", stats.DrawCalls);
 			ImGui::Text(" - Quads: %d", stats.QuadCount);
-			ImGui::Text(" - Vertices: %d", stats.GetTotalVertexCount());
-
 			ImGui::Separator();
-
 			ImGui::Text("Position: %.2f, %.2f", m_DinoPos.x, m_DinoPos.y);
-
-			ImGui::Separator();
-
-			ImGui::Text("Keybinds:");
-			ImGui::BulletText("'F': Switch Mode");
-			ImGui::BulletText("'F1': Toggle Stats");
-			ImGui::BulletText("'G': Toggle Chaos Mode"); // NEW
-			if (m_CurrentMode == SceneMode::DinoRunner)
-			{
-				ImGui::BulletText("SPACE: Jump");
-				ImGui::BulletText("'T': Toggle Stress Mode");
-			}
-			else
-			{
-				ImGui::BulletText("'C': Toggle Camera Follow");
-			}
-
 			ImGui::End();
 
-			// --- Camera Controller Settings ---
 			ImGui::Begin("Camera Settings");
-
 			float zoomLevel = m_CameraController.GetZoomLevel();
 			if (ImGui::DragFloat("Zoom Level", &zoomLevel, 0.1f, 0.1f, 10.0f))
 				m_CameraController.SetZoomLevel(zoomLevel);
-
-			float zoomSpeed = m_CameraController.GetZoomSpeed();
-			if (ImGui::SliderFloat("Zoom Speed", &zoomSpeed, 0.01f, 2.0f))
-				m_CameraController.SetZoomSpeed(zoomSpeed);
-
-			float transSpeed = m_CameraController.GetTranslationSpeed();
-			if (ImGui::SliderFloat("Translation Speed", &transSpeed, 0.1f, 20.0f))
-				m_CameraController.SetTranslationSpeed(transSpeed);
-
-			float rotSpeed = m_CameraController.GetRotationSpeed();
-			if (ImGui::SliderFloat("Rotation Speed", &rotSpeed, 0.0f, 720.0f))
-				m_CameraController.SetRotationSpeed(rotSpeed);
-
-			ImGui::Separator();
-
-			if (ImGui::DragFloatRange2("Zoom Limits", &m_MinZ, &m_MaxZ, 0.1f, 0.1f, 20.0f))
-				m_CameraController.SetZoomLimits(m_MinZ, m_MaxZ);
-
-			bool boundsChanged = false;
-			if (ImGui::DragFloatRange2("X Bounds", &m_MinBoundX, &m_MaxBoundX, 1.0f, -5000.0f, 5000.0f)) boundsChanged = true;
-			if (ImGui::DragFloatRange2("Y Bounds", &m_MinBoundY, &m_MaxBoundY, 1.0f, -5000.0f, 5000.0f)) boundsChanged = true;
-
-			if (boundsChanged)
-				m_CameraController.SetPositionLimits(m_MinBoundX, m_MaxBoundX, m_MinBoundY, m_MaxBoundY);
-
 			if (ImGui::Button("Reset Camera View")) ResetCamera();
-
 			ImGui::End();
 		}
+
+		ImGui::End(); // End DockSpace
 	}
 
 	void SandboxLayer::OnEvent(Event& event)

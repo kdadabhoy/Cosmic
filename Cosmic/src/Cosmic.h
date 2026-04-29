@@ -23,7 +23,10 @@
 #include "graphics/Buffer.h"
 #include "graphics/Shader.h"
 #include "graphics/VertexArray.h"
+
+// Graphics
 #include "graphics/Texture.h"
+#include "graphics/FrameBuffer.h"
 
 // Camera
 #include "camera/OrthographicCamera.h"

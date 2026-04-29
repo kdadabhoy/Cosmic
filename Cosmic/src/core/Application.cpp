@@ -2,6 +2,7 @@
 #include "renderer/Renderer.h"
 #include "renderer/RenderCommand.h"
 #include "core/Timestep.h"
+#include "graphics/FrameBuffer.h"
 
 #include <GLFW/glfw3.h>
 #include <iostream>
@@ -46,6 +47,13 @@ namespace Cosmic
 		// 3. Initialize the Renderer (Dispatcher and API)
 		Renderer::Init();
 
+		// --- NEW: Framebuffer Setup ---
+		FramebufferSpecification fbSpec;
+		fbSpec.Width = DEFAULT_WIDTH;
+		fbSpec.Height = DEFAULT_HEIGHT;
+		m_Framebuffer = FrameBuffer::Create(fbSpec);
+		// ------------------------------
+
 		// 4. Initialize ImGui
 		m_ImGuiLayer = new ImGuiLayer();
 		PushOverlay(m_ImGuiLayer);
@@ -80,71 +88,55 @@ namespace Cosmic
 	void Application::Run()
 	{
 		float lastFrameTime = 0.0f;
-
 		float accumulator = 0.0f;
 		float fixedDeltaTime = 1.0f / 60.0f;
 
 		while (m_Running && !m_Window->ShouldClose())
 		{
-			// 0.1 Poll Events:
 			m_Window->PollEvents();
 
-			// 0.2 Calculate Delta Time:
-			float time = (float)glfwGetTime();				//glfwGetTime returns seconds	// Should make this platform agnostic at some point
+			float time = (float)glfwGetTime();
 			Timestep rawTimestep = time - lastFrameTime;
 			lastFrameTime = time;
 
-			// 0.3 Skipping the loop if minimized:
 			if (m_Minimized)
 			{
-				continue;									// jumps back to top of while loop
+				continue;
 			}
 
-
-
-			// 1A. Fixed Timestep Case (Simulations):
+			// 1A. Fixed Timestep Case
 			if (m_UseFixedTimestep)
 			{
 				float frameTime = rawTimestep.GetSeconds();
-
-				// Caps the physics "catch-up" time to prevent the CPU from freezing during major lag spikes.
-				if (frameTime > 0.25f)
-				{
-					frameTime = 0.25f;
-				}
+				if (frameTime > 0.25f) frameTime = 0.25f;
 
 				accumulator += (frameTime * m_TimeScale);
 				while (accumulator >= fixedDeltaTime)
 				{
 					for (Layer* layer : m_LayerStack)
-					{
 						layer->OnFixedUpdate(Timestep(fixedDeltaTime));
-					}
 					accumulator -= fixedDeltaTime;
 				}
 			}
-			
 
-			// 1B. Variable Timestep... Always runs so we can have smooth camera... but physics stuff in layers should use OnFixedUpdate instead of OnUpdate
+			// 1B. Variable Timestep
 			Timestep scaledTimestep = rawTimestep.GetSeconds() * m_TimeScale;
 			for (Layer* layer : m_LayerStack)
 			{
 				layer->OnUpdate(scaledTimestep);
 			}
 
-		
-
-			// 2. Rendering:
+			// 2. Rendering into Framebuffer
+			m_Framebuffer->Bind();
 			RenderCommand::Clear(0.1f, 0.1f, 0.1f);
 
 			for (Layer* layer : m_LayerStack)
 			{
 				layer->OnRender();
 			}
-			
+			m_Framebuffer->Unbind();
 
-
-			// 3. UI Rendering:
+			// 3. UI Rendering (Displays the Framebuffer texture)
 			m_ImGuiLayer->Begin();
 			for (Layer* layer : m_LayerStack)
 			{
@@ -152,9 +144,6 @@ namespace Cosmic
 			}
 			m_ImGuiLayer->End();
 
-
-
-			// 4. Update Window:
 			m_Window->SwapBuffers();
 		}
 	}
@@ -171,7 +160,7 @@ namespace Cosmic
 
 	bool Application::OnWindowResize(WindowResizeEvent& e)
 	{
-		// Handle minimization (don't render if window is 0x0)
+		// 1. Handle minimization (don't render if window is 0x0)
 		if (e.GetWidth() == 0 || e.GetHeight() == 0)
 		{
 			m_Minimized = true;
@@ -180,7 +169,11 @@ namespace Cosmic
 
 		m_Minimized = false;
 
-		// Update the Graphics API Viewport
+		// 2. Resize the Framebuffer!
+		// This recreates the texture at the new resolution so the game stays sharp.
+		m_Framebuffer->Resize(e.GetWidth(), e.GetHeight());
+
+		// 3. Update the Graphics API Viewport
 		Renderer::OnWindowResize(e.GetWidth(), e.GetHeight());
 
 		return false;

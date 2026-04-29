@@ -67,7 +67,7 @@ namespace Cosmic
 		bool m_F1KeyPressed = false;
 		bool m_CKeyPressed = false;
 		bool m_FKeyPressed = false;
-		bool m_GKeyPressed = false; // Tracks 'G' key for Chaos Mode toggle
+		bool m_GKeyPressed = false;
 
 		// --- UI State Tracking ---
 		float m_MinZ = 0.25f, m_MaxZ = 10.0f;
