@@ -39,6 +39,10 @@ namespace Cosmic
 			m_MinY = minY; m_MaxY = maxY;
 		}
 
+		// Manual overrides (Useful for following entities like the Dino/Planes)
+		void SetPosition(const glm::vec3& position) { m_CameraPosition = position; m_Camera.SetPosition(m_CameraPosition); }
+		const glm::vec3& GetPosition() const { return m_CameraPosition; }
+
 	private:
 		void CalculateView();
 		bool OnMouseScrolled(MouseScrolledEvent& e);
