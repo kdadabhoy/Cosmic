@@ -23,6 +23,7 @@ namespace Cosmic
 		virtual uint32_t GetHeight() const override { return m_Specification.Height; }
 		virtual const FramebufferSpecification& GetSpecification() const override { return m_Specification; }
 
+
 	private:
 		uint32_t m_RendererID = 0;
 		uint32_t m_ColorAttachment = 0, m_DepthAttachment = 0;

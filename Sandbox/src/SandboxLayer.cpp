@@ -229,11 +229,14 @@ namespace Cosmic
 		static bool dockspaceOpen = true;
 		static bool resetLayoutRequest = false; // Flag to trigger a rebuild
 
-		ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
+		// REMOVED: ImGuiWindowFlags_MenuBar to eliminate the top gap
+		ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDocking;
+
 		const ImGuiViewport* viewport = ImGui::GetMainViewport();
-		ImGui::SetNextWindowPos(viewport->WorkPos);
-		ImGui::SetNextWindowSize(viewport->WorkSize);
+		ImGui::SetNextWindowPos(viewport->Pos);
+		ImGui::SetNextWindowSize(viewport->Size);
 		ImGui::SetNextWindowViewport(viewport->ID);
+
 		window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
 		window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
 
@@ -314,7 +317,6 @@ namespace Cosmic
 		if (ImGui::Button("Reset Scene")) ResetGame();
 
 		ImGui::Separator();
-		// NEW: Reset Layout Button
 		if (ImGui::Button("Reset Editor Layout")) resetLayoutRequest = true;
 
 		ImGui::End();
@@ -338,7 +340,7 @@ namespace Cosmic
 		if (ImGui::Button("Reset Camera View")) ResetCamera();
 		ImGui::End();
 
-		ImGui::End(); // End DockSpace
+		ImGui::End(); // End "CosmicEditorDockSpace"
 	}
 
 
