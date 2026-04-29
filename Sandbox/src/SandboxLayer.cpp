@@ -26,7 +26,7 @@ namespace Cosmic
 	void SandboxLayer::ResetGame()
 	{
 		m_Obstacles.clear();
-		m_FlightPath.clear(); // NEW: Clear the dashed line path
+		m_FlightPath.clear();
 		m_VelocityY = 0.0f;
 		m_Score = 0.0f;
 		m_IsGrounded = true;
@@ -71,6 +71,17 @@ namespace Cosmic
 			}
 		}
 		else { m_F1KeyPressed = false; }
+
+		// NEW: Chaos Mode Keybind (Key 'G' for Generator/Gravity/Chaos)
+		if (Input::IsKeyPressed(KEY_G))
+		{
+			if (!m_GKeyPressed)
+			{
+				m_ChaosMode = !m_ChaosMode;
+				m_GKeyPressed = true;
+			}
+		}
+		else { m_GKeyPressed = false; }
 
 		// --- MODE SPECIFIC LOGIC ---
 		if (m_CurrentMode == SceneMode::DinoRunner)
@@ -119,6 +130,14 @@ namespace Cosmic
 					m_IsGrounded = true;
 				}
 
+				// NEW: Chaos influence on Dino Runner
+				if (m_ChaosMode)
+				{
+					std::uniform_real_distribution<float> jitter(-0.1f, 0.1f);
+					m_DinoPos.x += jitter(m_RandomEngine);
+					m_DinoRotation += jitter(m_RandomEngine) * 50.0f;
+				}
+
 				m_SpawnTimer += deltaTime;
 				if (m_SpawnTimer > m_NextSpawnTime)
 				{
@@ -144,9 +163,17 @@ namespace Cosmic
 			m_DinoPos.x += m_FlightSpeed * deltaTime;
 			m_DinoPos.y += (m_FlightSpeed * m_FlightSlope) * deltaTime;
 
-			// --- NEW: Record Path for Dashed Line ---
+			// NEW: Chaos influence on Flight Path
+			if (m_ChaosMode)
+			{
+				std::uniform_real_distribution<float> noise(-0.2f, 0.2f);
+				m_DinoPos.x += noise(m_RandomEngine);
+				m_DinoPos.y += noise(m_RandomEngine);
+			}
+
+			// Record Path for Dashed Line
 			m_FlightPath.push_back(m_DinoPos);
-			if (m_FlightPath.size() > 500) // Keep the buffer size reasonable
+			if (m_FlightPath.size() > 500)
 				m_FlightPath.erase(m_FlightPath.begin());
 
 			if (Input::IsKeyPressed(KEY_C))
@@ -190,7 +217,6 @@ namespace Cosmic
 		}
 		else // Flight Sim Render
 		{
-			// Background Grid
 			float startX = floor(m_DinoPos.x) - 10;
 			float startY = floor(m_DinoPos.y) - 10;
 			for (float x = startX; x < startX + 20; x += 1.0f)
@@ -202,7 +228,6 @@ namespace Cosmic
 				}
 			}
 
-			// --- NEW: Render the Dashed Red Line Path ---
 			if (m_FlightPath.size() > 1)
 			{
 				for (size_t i = 0; i < m_FlightPath.size() - 1; i++)
@@ -230,6 +255,10 @@ namespace Cosmic
 			ResetCamera();
 		}
 		ImGui::Text("Press 'F' to Quick Switch");
+		ImGui::Separator();
+
+		// NEW: Chaos Mode Global Control
+		ImGui::Checkbox("Chaos Mode [G]", &m_ChaosMode);
 		ImGui::Separator();
 
 		if (m_CurrentMode == SceneMode::DinoRunner)
@@ -273,6 +302,7 @@ namespace Cosmic
 			ImGui::Text("Keybinds:");
 			ImGui::BulletText("'F': Switch Mode");
 			ImGui::BulletText("'F1': Toggle Stats");
+			ImGui::BulletText("'G': Toggle Chaos Mode"); // NEW
 			if (m_CurrentMode == SceneMode::DinoRunner)
 			{
 				ImGui::BulletText("SPACE: Jump");

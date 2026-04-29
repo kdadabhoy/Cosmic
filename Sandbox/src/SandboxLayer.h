@@ -33,11 +33,6 @@ namespace Cosmic
 		void ResetGame();
 		void ResetCamera();
 
-
-	private:
-		std::vector<glm::vec3> m_FlightPath;
-		const size_t m_MaxPathPoints = 500; // Keep performance stable
-
 	private:
 		OrthographicCameraController m_CameraController;
 		Ref<Texture2D> m_Texture;
@@ -49,6 +44,7 @@ namespace Cosmic
 		float m_DinoRotation = 0.0f;
 		float m_SmoothedDeltaTime = 0.016f;
 		bool m_ShowStats = true;
+		bool m_ChaosMode = false;
 
 		// --- Dino Runner Specifics ---
 		float m_VelocityY = 0.0f;
@@ -63,12 +59,15 @@ namespace Cosmic
 		float m_FlightSpeed = 2.0f;
 		float m_FlightSlope = 1.0f;
 		bool m_CameraFollow = true;
+		std::vector<glm::vec3> m_FlightPath;
+		const size_t m_MaxPathPoints = 500;
 
 		// --- Input Debouncing ---
 		bool m_TKeyPressed = false;
 		bool m_F1KeyPressed = false;
 		bool m_CKeyPressed = false;
 		bool m_FKeyPressed = false;
+		bool m_GKeyPressed = false; // Tracks 'G' key for Chaos Mode toggle
 
 		// --- UI State Tracking ---
 		float m_MinZ = 0.25f, m_MaxZ = 10.0f;
