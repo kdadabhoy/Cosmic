@@ -31,6 +31,10 @@ namespace Workspace
 
         // Synchronizes the simulation's camera projection with the UI viewport size
         virtual void SetViewportSize(float width, float height) = 0;
+
+
+        virtual void OnEvent(Cosmic::Event& e) {};
+
     };
 
 }
