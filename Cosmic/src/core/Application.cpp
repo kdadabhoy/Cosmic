@@ -85,6 +85,28 @@ namespace Cosmic
 
 	/////////////////////////////////////////////////////////////////////////////////
 
+	/*
+	 * THE CORE APPLICATION LOOP (The Engine's Heartbeat)
+	 *
+	 * CONCEPT: This loop follows a "Host/Client" architecture similar to Unity or Unreal.
+	 *
+	 * 1. TIMING: It manages both Variable Timestep (smooth visuals) and Fixed Timestep
+	 *    (stable physics/logic) to ensure consistent behavior across different hardware.
+	 *
+	 * 2. DELEGATION (The "Why"): Notice that the main Render pass is commented out here.
+	 *    In a professional Editor-based engine, the Application doesn't decide WHEN or
+	 *    HOW to draw the game. Instead, it provides the heartbeat, and the "Editor Layer"
+	 *    (the Host) takes over.
+	 *
+	 * 3. THE PIPELINE:
+	 *    - Logic Update: Layers update their state (Dino movement, etc.)
+	 *    - Render: The SandboxLayer binds the Framebuffer, renders the scene, and unbinds.
+	 *    - UI: ImGui begins, grabs the texture from that Framebuffer, and displays it
+	 *      inside the "Viewport" window.
+	 *
+	 * This separation prevents "Redundant Clearing" and allows for a Dockable Editor
+	 * where the Game is just one of many windows being managed.
+	*/
 	void Application::Run()
 	{
 		float lastFrameTime = 0.0f;
@@ -126,15 +148,12 @@ namespace Cosmic
 				layer->OnUpdate(scaledTimestep);
 			}
 
+			// THE Client should handle this... :)
 			// 2. Rendering into Framebuffer
-			m_Framebuffer->Bind();
-			RenderCommand::Clear(0.1f, 0.1f, 0.1f);
-
-			for (Layer* layer : m_LayerStack)
-			{
-				layer->OnRender();
-			}
-			m_Framebuffer->Unbind();
+			// m_Framebuffer->Bind();
+			// RenderCommand::Clear(0.1f, 0.1f, 0.1f);
+			// for (Layer* layer : m_LayerStack) { layer->OnRender(); }
+			// m_Framebuffer->Unbind();
 
 			// 3. UI Rendering (Displays the Framebuffer texture)
 			m_ImGuiLayer->Begin();

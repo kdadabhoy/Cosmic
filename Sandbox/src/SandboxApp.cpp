@@ -6,10 +6,8 @@ class AirplaneSim : public Cosmic::Application
 public:
 	AirplaneSim()
 	{
-		// Use explicit namespace here
 		PushLayer(new Cosmic::SandboxLayer());
 	}
-
 	~AirplaneSim() {}
 };
 
