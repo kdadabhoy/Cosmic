@@ -1,3 +1,99 @@
+
+
+
+# Cosmic Engineering Workspace Architecture
+
+This repository uses a **Host/Client architecture** to separate the core rendering engine from individual engineering simulations. This allows for modular development, where new projects can be added or swapped at runtime without modifying the engine's core pipeline.
+
+## 🧱 Core Components
+
+### 1. `Main.cpp` (The Entry Point)
+`Main.cpp` is the bootstrap for the entire application. Its primary responsibility is to:
+*   **Initialize the Engine:** Inherits from `Cosmic::Application` to start the low-level subsystems (Windowing, Graphics API, Input).
+*   **Push the Workspace:** It pushes the `WorkspaceLayer` onto the application's layer stack. 
+*   **Execution:** It starts the engine's heartbeat via `app->Run()`.
+
+### 2. `WorkspaceLayer` (The Host)
+The `WorkspaceLayer` acts as the **Main Window** and **Project Orchestrator**. 
+*   **Docking & UI:** Implements the ImGui DockSpace, allowing for snap-on windows like the Viewport, Project Inspector, and Monitor.
+*   **Framebuffer Management:** It owns the `Framebuffer`. It binds the buffer before a simulation renders and unbinds it after, ensuring the simulation's output is captured and displayed within an ImGui window rather than directly to the screen.
+*   **Project Switching:** It handles the logic for loading and unloading `Simulation` objects.
+
+### 3. `Simulation.h` (The Interface)
+This is an **Abstract Base Class** (Interface). Every project must inherit from this class to be compatible with the `WorkspaceLayer`. It defines the lifecycle of a simulation:
+*   `OnUpdate(float ts)`: Handle physics, input, and logic.
+*   `OnRender()`: Dispatch draw calls to the `Renderer2D` or `Renderer3D`.
+*   `OnImGuiRender()`: Define custom debug sliders and buttons for the "Project Inspector" panel.
+*   `SetViewportSize()`: Ensure the project's camera projection matches the UI window size.
+
+---
+
+## 📂 Project Requirements
+
+When creating a new project (e.g., `FluidDynamics` or `StructuralAnalysis`), every project must consist of at least two parts: a **Project Manager** and its **Simulation Layers**.
+
+### Required File Structure
+```text
+projects/YourNewProject/
+├── YourProject.h      # The Manager (Inherits from Simulation)
+├── YourProject.cpp    # Handles sub-layer switching
+├── YourLayer.h        # The specific logic/render code
+└── YourLayer.cpp      # Implementation of the simulation
+```
+
+### Why these files?
+
+| File | Purpose | Why? |
+| :--- | :--- | :--- |
+| **Project Manager** (`.h`/`.cpp`) | High-level control. | This is what `WorkspaceLayer` actually "loads." It allows you to switch between different modes (e.g., "Fast Solve" vs "High Precision") within a single project suite. |
+| **Simulation Layer** (`.h`/`.cpp`) | The "Meat" of the project. | Keeps the code clean. The math and rendering logic are isolated from the UI and windowing logic. |
+
+---
+
+## 🚀 How to Add a New Project
+
+1.  **Create the Class:** Create a new class inheriting from `Workspace::Simulation`.
+2.  **Implement Lifecycle:** Fill out `OnUpdate`, `OnRender`, and `OnImGuiRender`.
+3.  **Register in Workspace:**
+    In `WorkspaceLayer.cpp`, include your project header and add a menu item to the "Select Project" dropdown:
+    ```cpp
+    if (ImGui::MenuItem("My New Simulation")) {
+        LoadProject<MyNewProject>();
+    }
+    ```
+
+## 🛠 Rendering Flow
+1. **WorkspaceLayer** binds the Framebuffer and clears the screen.
+2. **WorkspaceLayer** calls `m_ActiveSim->OnUpdate()`.
+3. **Active Project** calls `Renderer2D::BeginScene(camera)`.
+4. **Active Project** submits Quads/Lines/Models.
+5. **Active Project** calls `Renderer2D::EndScene()`.
+6. **WorkspaceLayer** unbinds the Framebuffer and sends the resulting texture to an ImGui Image.
+```
+
+
+
+
+
+
+
+
+
+--------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 <div align="center">
 
 # Cosmic (Mini Game Engine)
