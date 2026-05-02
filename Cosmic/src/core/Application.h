@@ -34,6 +34,7 @@ namespace Cosmic
 
 
 		inline ImGuiLayer* GetImGuiLayer() { return m_ImGuiLayer; }
+		void Close() { m_Running = false; }
 
 	private:
 		bool							Initialize();
