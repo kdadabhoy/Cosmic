@@ -23,17 +23,15 @@ namespace Cosmic
 		void							PushLayer(Layer* inLayer);
 		void							PushOverlay(Layer* inOverlay);
 
-		inline static Application& Get() { return *s_Instance; }
-		inline Window& GetWindow() { return *m_Window; }
+		inline static Application& Get()												{ return *s_Instance; }
+		inline Window& GetWindow()														{ return *m_Window; }
 
-		// FIXED: Changed GetFramebuffer to GetFrameBuffer (Capital B)
-		inline Ref<FrameBuffer>         GetFrameBuffer() { return m_Framebuffer; }
-
-		void							UseFixedTimeStep(bool useFixedTimeStep) { m_UseFixedTimestep = useFixedTimeStep; }
-		void							SetTimeScale(float timescale) { m_TimeScale = timescale; }
+		inline Ref<FrameBuffer>         GetFrameBuffer()								{ return m_Framebuffer; }
+		void							UseFixedTimeStep(bool useFixedTimeStep)			{ m_UseFixedTimestep = useFixedTimeStep; }
+		void							SetTimeScale(float timescale)					{ m_TimeScale = timescale; }
 
 
-		inline ImGuiLayer* GetImGuiLayer() { return m_ImGuiLayer; }
+		inline ImGuiLayer* GetImGuiLayer()												{ return m_ImGuiLayer; }
 		void Close() { m_Running = false; }
 
 	private:
