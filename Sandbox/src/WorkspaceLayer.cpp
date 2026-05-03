@@ -14,6 +14,7 @@
  // Projects are included here
 #include "projects/ExampleProject/ExampleProject.h"
 #include "projects/DinoProject/DinoProject.h"
+#include "projects/TelemetryProject/TelemetryProject.h"
 
 // After adding the include also add a if (ImGui::MenuItem("Dino Simulator Suite")) LoadProject<DinoProject>(); ... in OnImGuiRender
 
@@ -129,6 +130,8 @@ namespace Workspace
 			{
 				if (ImGui::MenuItem("Example Simulation Suite")) LoadProject<ExampleProject>();
 				if (ImGui::MenuItem("Dino Simulator Suite")) LoadProject<DinoProject>();
+				if (ImGui::MenuItem("Telemetry Project")) LoadProject<TelemetryProject>();
+
 				ImGui::EndMenu();
 			}
 			ImGui::EndMenuBar();

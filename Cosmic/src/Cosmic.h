@@ -36,6 +36,9 @@
 #include "codes/KeyCodes.h"
 #include "codes/MouseButtonCodes.h"
 
+// Serial
+#include "serial/SerialPort.h"
+
 // TODO: Add an entry point #include "Cosmic/Core/EntryPoint.h"
 
 
