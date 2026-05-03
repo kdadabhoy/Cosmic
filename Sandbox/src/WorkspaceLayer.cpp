@@ -9,6 +9,7 @@
  */
 
 #include "WorkspaceLayer.h"
+#include <imgui_internal.h>
 
  // Projects are included here
 #include "projects/ExampleProject/ExampleProject.h"
@@ -72,11 +73,14 @@ namespace Workspace
 
 	void WorkspaceLayer::OnImGuiRender()
 	{
-		// Fullscreen Dockspace Container Setup
 		static bool dockspaceOpen = true;
+		static bool firstTime = true; // Flag to trigger our layout setup
+
+		// 1. Setup the full-screen parent window for the DockSpace
 		ImGuiViewport* viewport = ImGui::GetMainViewport();
 		ImGui::SetNextWindowPos(viewport->Pos);
 		ImGui::SetNextWindowSize(viewport->Size);
+		ImGui::SetNextWindowViewport(viewport->ID);
 
 		ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
 		window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
@@ -87,47 +91,83 @@ namespace Workspace
 		ImGui::Begin("MasterDockSpace", &dockspaceOpen, window_flags);
 		ImGui::PopStyleVar(2);
 
+		// 2. Initialize the DockSpace
 		ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
 		ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_None);
 
-		// --- FIXED MENU BAR ---
+		// 3. HARD-CODED INITIAL LAYOUT
+		if (firstTime)
+		{
+			firstTime = false;
+
+			// Clear existing layout to ensure a clean slate
+			ImGui::DockBuilderRemoveNode(dockspace_id);
+			ImGui::DockBuilderAddNode(dockspace_id, ImGuiDockNodeFlags_DockSpace);
+			ImGui::DockBuilderSetNodeSize(dockspace_id, viewport->Size);
+
+			// Split the main area: 25% to the right for the Inspector, 75% left for Viewport
+			ImGuiID dock_id_main = dockspace_id;
+			ImGuiID dock_id_right = ImGui::DockBuilderSplitNode(dock_id_main, ImGuiDir_Right, 0.25f, nullptr, &dock_id_main);
+
+			// Assign our windows to those specific dock slots
+			ImGui::DockBuilderDockWindow("Viewport", dock_id_main);
+			ImGui::DockBuilderDockWindow("Project Inspector", dock_id_right);
+
+			ImGui::DockBuilderFinish(dockspace_id);
+		}
+
+		// 4. MAIN MENU BAR
 		if (ImGui::BeginMenuBar())
 		{
 			if (ImGui::BeginMenu("File"))
 			{
-				if (ImGui::MenuItem("Close Engine")) Cosmic::Application::Get().Close();
+				if (ImGui::MenuItem("Exit")) Cosmic::Application::Get().Close();
 				ImGui::EndMenu();
 			}
 
 			if (ImGui::BeginMenu("Select Project"))
 			{
 				if (ImGui::MenuItem("Example Simulation Suite")) LoadProject<ExampleProject>();
-
-				// MOVED DINO PROJECT HERE
 				if (ImGui::MenuItem("Dino Simulator Suite")) LoadProject<DinoProject>();
-
 				ImGui::EndMenu();
 			}
 			ImGui::EndMenuBar();
 		}
 
-		// --- VIEWPORT WINDOW ---
+		// 5. VIEWPORT WINDOW
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 }); // Edge-to-edge game render
 		ImGui::Begin("Viewport");
+
 		m_ViewportFocused = ImGui::IsWindowFocused();
 		m_ViewportHovered = ImGui::IsWindowHovered();
-		Cosmic::Application::Get().GetImGuiLayer()->BlockEvents(!m_ViewportFocused || !m_ViewportHovered);
+
+		// Only allow game input if the mouse is actually inside the viewport
+		Cosmic::Application::Get().GetImGuiLayer()->BlockEvents(!m_ViewportFocused && !m_ViewportHovered);
 
 		ImVec2 panelSize = ImGui::GetContentRegionAvail();
-		m_ViewportSize = { panelSize.x, panelSize.y };
 
+		// Safety: only update size if the window isn't collapsed/zero
+		if (panelSize.x > 0 && panelSize.y > 0)
+			m_ViewportSize = { panelSize.x, panelSize.y };
+
+		// Get the texture from the Framebuffer and draw it as an Image
 		uint32_t textureID = Cosmic::Application::Get().GetFrameBuffer()->GetColorAttachmentRendererID();
 		ImGui::Image((void*)(uintptr_t)textureID, panelSize, { 0, 1 }, { 1, 0 });
-		ImGui::End();
 
-		// --- PROJECT INSPECTOR ---
+		ImGui::End();
+		ImGui::PopStyleVar();
+
+		// 6. PROJECT INSPECTOR WINDOW
 		ImGui::Begin("Project Inspector");
-		if (m_ActiveSim) m_ActiveSim->OnImGuiRender();
-		else ImGui::Text("No active project loaded.");
+		if (m_ActiveSim)
+		{
+			m_ActiveSim->OnImGuiRender();
+		}
+		else
+		{
+			ImGui::TextColored(ImVec4(1, 1, 0, 1), "System Ready.");
+			ImGui::Text("Please select a project from the 'File' menu to begin.");
+		}
 		ImGui::End();
 
 		ImGui::End(); // End MasterDockSpace
