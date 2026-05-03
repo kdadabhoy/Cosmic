@@ -9,11 +9,14 @@ namespace Workspace
 	{
 	public:
 		TelemetryProject();
+		~TelemetryProject();
+
 		virtual void OnUpdate(float ts) override;
 		virtual void OnRender() override {}
 		virtual void OnImGuiRender() override;
 		virtual void OnEvent(Cosmic::Event& e) override {}
 		virtual void SetViewportSize(float w, float h) override {}
+
 
 	private:
 		Cosmic::SerialPort m_Serial;

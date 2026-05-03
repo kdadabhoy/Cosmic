@@ -1,5 +1,7 @@
 #include "TelemetryProject.h"
 #include <imgui.h>
+#include <windows.h> // Required for GetCurrentProcessorNumber
+
 
 namespace Workspace
 {
@@ -13,6 +15,17 @@ namespace Workspace
 
 	void TelemetryProject::OnUpdate(float ts)
 	{
+		static bool loggedMain = false;
+		if (!loggedMain)
+		{
+			DWORD winThreadId = GetCurrentThreadId();
+			int core = GetCurrentProcessorNumber();
+
+			m_Log += "[ENGINE THREAD] Running with ID: " + std::to_string(winThreadId) + " on Core: " + std::to_string(core) + "\n";
+			loggedMain = true;
+		}
+
+
 		if (m_Serial.IsOpen())
 		{
 			std::string newData = m_Serial.FlushBuffer();
@@ -131,5 +144,11 @@ namespace Workspace
 			ImGui::Text("Waiting for numerical data...");
 		}
 		ImGui::End();
+	}
+
+
+	TelemetryProject::~TelemetryProject()
+	{
+		m_Serial.Close(); // This sets m_Connected to false and joins the thread
 	}
 }

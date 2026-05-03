@@ -42,8 +42,18 @@ namespace Cosmic
 		return true;
 	}
 
+
+
+
 	void SerialPort::ReadLoop()
 	{
+
+
+		// Log once when the thread starts
+		DWORD winThreadId = GetCurrentThreadId();
+		int core = GetCurrentProcessorNumber();
+		printf("[SERIAL THREAD] Started with ID: %lu on Core: %d\n", winThreadId, core);
+
 		char szBuff[256];
 		DWORD dwBytesRead = 0;
 
@@ -58,7 +68,11 @@ namespace Cosmic
 				m_DataBuffer += szBuff;
 			}
 		}
+
+		printf("[SERIAL THREAD] Shutting down.\n");
 	}
+
+
 
 	std::string SerialPort::FlushBuffer()
 	{
