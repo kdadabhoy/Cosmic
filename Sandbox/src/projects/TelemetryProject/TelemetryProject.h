@@ -18,15 +18,19 @@ namespace Workspace
 	private:
 		Cosmic::SerialPort m_Serial;
 
+		// Port Scanning
+		std::vector<std::string> m_AvailablePorts;
+		int m_SelectedPortIndex = 0;
+
+		// Common Baud Rates
+		const std::vector<int> m_BaudRates = { 9600, 19200, 38400, 57600, 115200, 230400, 460800, 921600 };
+		int m_SelectedBaudIndex = 4; // Defaults to 115200
+
 		// Data for the Graph
 		std::vector<float> m_DataPoints;
 
 		// Data for the Serial Monitor (The Log)
 		std::string m_Log;
 		std::string m_AccumulatedString;
-
-		// Connection Settings
-		char m_PortName[16] = "COM3";
-		int m_BaudRate = 115200;
 	};
 }

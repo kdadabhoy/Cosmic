@@ -23,6 +23,9 @@ namespace Cosmic
 		// Thread-safe way to grab all data since the last frame
 		std::string FlushBuffer();
 
+
+		static std::vector<std::string> GetAvailablePorts();
+
 	private:
 		void ReadLoop(); // Runs on the background thread
 

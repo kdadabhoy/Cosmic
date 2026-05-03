@@ -79,4 +79,42 @@ namespace Cosmic
 			m_Handle = INVALID_HANDLE_VALUE;
 		}
 	}
+
+	std::vector<std::string> SerialPort::GetAvailablePorts()
+	{
+		std::vector<std::string> ports;
+		HKEY hKey;
+
+		// Open the Registry Key where Windows lists active serial ports
+		if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, "HARDWARE\\DEVICEMAP\\SERIALCOMM", 0, KEY_READ, &hKey) == ERROR_SUCCESS)
+		{
+			char valueName[256];
+			BYTE valueData[256];
+			DWORD nameSize, dataSize, type;
+			DWORD index = 0;
+
+			while (true)
+			{
+				nameSize = sizeof(valueName);
+				dataSize = sizeof(valueData);
+
+				// Enumerate the values in the key
+				LSTATUS status = RegEnumValueA(hKey, index, valueName, &nameSize, NULL, &type, valueData, &dataSize);
+
+				if (status == ERROR_SUCCESS)
+				{
+					// The "Data" of the registry value is the port name (e.g., "COM3")
+					ports.push_back(std::string((char*)valueData));
+					index++;
+				}
+				else
+				{
+					break; // No more ports found
+				}
+			}
+			RegCloseKey(hKey);
+		}
+
+		return ports;
+	}
 }
