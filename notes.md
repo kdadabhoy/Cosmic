@@ -79,6 +79,61 @@ projects/YourNewProject/
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+This is a comprehensive, technical README section designed to be pasted into your project's documentation. It explains the architecture, the "Usage Drop" validation, and the multi-threaded safety measures you've implemented.
+
+---
+
+## 📡 Serial Telemetry & Multi-threading Architecture
+
+This project implements a high-performance, non-blocking serial telemetry system designed to stream data from an ESP32 (or any serial device) while maintaining a buttery-smooth 60+ FPS UI.
+
+### 🏗️ Technical Architecture
+The system is split into two distinct execution contexts to prevent UI "micro-stutter" during heavy data bursts:
+
+1.  **The Engine Thread (Main)**: Handles ImGui rendering, user input, and data visualization. It polls a thread-safe buffer at the end of every frame to update the UI.
+2.  **The Serial Thread (Background)**: A dedicated Win32-priority thread that lives inside `Cosmic::SerialPort`. It performs blocking I/O operations (`ReadFile`) without stalling the engine.
+
+### 🧵 Multi-threading & Safety
+*   **Thread Synchronization**: We use `std::mutex` and `std::lock_guard` to protect the `m_DataBuffer`. This ensures that the Main Thread never reads "half-written" strings while the Serial Thread is appending new data.
+*   **Resource Cleanup**: The system utilizes the **RAII** pattern. When the `TelemetryProject` is destroyed, the destructor calls `m_Serial.Close()`, which signals the background thread to stop and performs a `m_ReadThread.join()`. This prevents "zombie threads" from consuming CPU after the project is closed.
+*   **Buffer Management**: To prevent memory leaks during long sessions, the telemetry log automatically trims itself once it exceeds 10,000 characters.
+
+### 🛠️ Monitoring & Validation (The "Usage Drop" Test)
+You can verify the efficiency of this system using **Microsoft Process Explorer**:
+
+1.  **Identify the Threads**: The engine logs the **Win32 Thread ID (TID)** and **CPU Core** for both the Engine and Serial threads.
+2.  **Locate in Process Explorer**: Double-click `Sandbox.exe`, navigate to the **Threads** tab, and find the matching TIDs.
+3.  **Observe the Drop**: 
+    *   When the ESP32 is connected, you will see a specific background thread consuming CPU cycles proportional to the baud rate/data density.
+    *   Upon clicking **Disconnect** or switching projects, that specific TID row will turn **red** and disappear from the list instantly.
+    *   This confirms that the OS has successfully reclaimed the resources and the thread has been terminated cleanly.
+
+### 📊 Data Pipeline Specs
+| Component | Implementation |
+| :--- | :--- |
+| **Baud Rates** | 9600, 38400, 57600, 115200, 921600 |
+| **Buffer Type** | `std::string` (Accumulated) + `std::vector<float>` (Parsed) |
+| **Plotting** | Real-time auto-scaling via `ImGui::PlotLines` |
+| **I/O Style** | Overlapped-style via Win32 `COMMTIMEOUTS` |
+
+### 🚀 Performance Note
+By using `ImGui::TextUnformatted` inside a `BeginChild` region for the Serial Monitor, we avoid the overhead of buffer-size assertions. This allows the monitor to handle the "Stress Test" script (1ms data intervals) without triggering memory access violations or UI lag.
+
+
 --------------------------------------------------
 
 

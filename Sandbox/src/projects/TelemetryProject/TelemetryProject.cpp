@@ -1,15 +1,15 @@
 #include "TelemetryProject.h"
 #include <imgui.h>
-#include <windows.h> // Required for GetCurrentProcessorNumber
-
+#include <windows.h> 
+#include <algorithm> // For std::min_element, std::max_element, and std::remove
 
 namespace Workspace
 {
 	TelemetryProject::TelemetryProject()
 	{
-		m_DataPoints.reserve(500);
+		// Increased history size for better visualization
+		m_DataPoints.reserve(1000);
 		m_Log.reserve(8192);
-		// Initial scan for ports
 		m_AvailablePorts = Cosmic::SerialPort::GetAvailablePorts();
 	}
 
@@ -20,11 +20,9 @@ namespace Workspace
 		{
 			DWORD winThreadId = GetCurrentThreadId();
 			int core = GetCurrentProcessorNumber();
-
 			m_Log += "[ENGINE THREAD] Running with ID: " + std::to_string(winThreadId) + " on Core: " + std::to_string(core) + "\n";
 			loggedMain = true;
 		}
-
 
 		if (m_Serial.IsOpen())
 		{
@@ -39,18 +37,30 @@ namespace Workspace
 					std::string line = m_AccumulatedString.substr(0, pos);
 					m_AccumulatedString.erase(0, pos + 1);
 
-					m_Log += "[RAW]: " + line + "\n";
-					if (m_Log.size() > 10000)
-						m_Log.erase(0, 2000);
+					// Clean up line endings (\r\n handling)
+					line.erase(std::remove(line.begin(), line.end(), '\r'), line.end());
 
-					try
+					// 1. Log update
+					m_Log += "[LOG]: " + line + "\n";
+					if (m_Log.size() > 100000) m_Log.erase(0, 20000);
+
+					// 2. Robust Parsing
+					size_t lastSpace = line.find_last_of(' ');
+					std::string numericPart = (lastSpace != std::string::npos) ? line.substr(lastSpace + 1) : line;
+
+					// Only attempt parse if string looks like a number
+					if (!numericPart.empty() && (isdigit(numericPart[0]) || numericPart[0] == '-' || numericPart[0] == '.'))
 					{
-						float val = std::stof(line);
-						m_DataPoints.push_back(val);
-						if (m_DataPoints.size() > 500)
-							m_DataPoints.erase(m_DataPoints.begin());
+						try
+						{
+							float val = std::stof(numericPart);
+							m_DataPoints.push_back(val);
+
+							if (m_DataPoints.size() > 1000)
+								m_DataPoints.erase(m_DataPoints.begin());
+						}
+						catch (...) { /* Ignore "Noise" or malformed packets */ }
 					}
-					catch (...) {}
 				}
 			}
 		}
@@ -58,39 +68,33 @@ namespace Workspace
 
 	void TelemetryProject::OnImGuiRender()
 	{
+		// --- WINDOW 1: SERIAL SETTINGS ---
 		ImGui::Begin("Serial Settings");
-
 		if (ImGui::Button("Refresh Ports"))
 		{
 			m_AvailablePorts = Cosmic::SerialPort::GetAvailablePorts();
-			// Safety: Reset index if it's now out of bounds
-			if (m_SelectedPortIndex >= m_AvailablePorts.size())
-				m_SelectedPortIndex = 0;
+			if (m_SelectedPortIndex >= m_AvailablePorts.size()) m_SelectedPortIndex = 0;
 		}
 
-		// Port Selection Dropdown
 		const char* current_port = m_AvailablePorts.empty() ? "No Ports Found" :
 			(m_SelectedPortIndex < m_AvailablePorts.size() ? m_AvailablePorts[m_SelectedPortIndex].c_str() : "Error");
 
 		if (ImGui::BeginCombo("COM Port", current_port))
 		{
-			for (int n = 0; n < m_AvailablePorts.size(); n++)
+			for (int n = 0; n < (int)m_AvailablePorts.size(); n++)
 			{
-				const bool is_selected = (m_SelectedPortIndex == n);
-				if (ImGui::Selectable(m_AvailablePorts[n].c_str(), is_selected))
+				if (ImGui::Selectable(m_AvailablePorts[n].c_str(), m_SelectedPortIndex == n))
 					m_SelectedPortIndex = n;
 			}
 			ImGui::EndCombo();
 		}
 
-		// Baud Rate Selection Dropdown
 		std::string current_baud = std::to_string(m_BaudRates[m_SelectedBaudIndex]);
 		if (ImGui::BeginCombo("Baud Rate", current_baud.c_str()))
 		{
-			for (int n = 0; n < m_BaudRates.size(); n++)
+			for (int n = 0; n < (int)m_BaudRates.size(); n++)
 			{
-				const bool is_selected = (m_SelectedBaudIndex == n);
-				if (ImGui::Selectable(std::to_string(m_BaudRates[n]).c_str(), is_selected))
+				if (ImGui::Selectable(std::to_string(m_BaudRates[n]).c_str(), m_SelectedBaudIndex == n))
 					m_SelectedBaudIndex = n;
 			}
 			ImGui::EndCombo();
@@ -102,32 +106,33 @@ namespace Workspace
 		{
 			ImGui::BeginDisabled(m_AvailablePorts.empty());
 			if (ImGui::Button("Connect to ESP32", ImVec2(-1, 0)))
-			{
 				m_Serial.Open(m_AvailablePorts[m_SelectedPortIndex], (uint32_t)m_BaudRates[m_SelectedBaudIndex]);
-			}
 			ImGui::EndDisabled();
 		}
 		else
 		{
-			ImGui::TextColored(ImVec4(0, 1, 0, 1), "STATUS: Connected to %s", m_AvailablePorts[m_SelectedPortIndex].c_str());
-			if (ImGui::Button("Disconnect", ImVec2(-1, 0)))
-				m_Serial.Close();
+			ImGui::TextColored(ImVec4(0, 1, 0, 1), "STATUS: Connected");
+			if (ImGui::Button("Disconnect", ImVec2(-1, 0))) m_Serial.Close();
 		}
 		ImGui::End();
 
 		// --- WINDOW 2: SERIAL MONITOR ---
 		ImGui::Begin("Serial Monitor");
+
+		if (ImGui::Button("Copy All"))
+			ImGui::SetClipboardText(m_Log.c_str());
+
+		ImGui::SameLine();
 		if (ImGui::Button("Clear Output")) m_Log.clear();
+
 		ImGui::SameLine();
 		ImGui::TextDisabled("| Total Bytes: %zu", m_Log.size());
+
 		ImGui::Separator();
 
 		ImGui::BeginChild("ScrollingRegion", ImVec2(0, 0), false, ImGuiWindowFlags_HorizontalScrollbar);
 		ImGui::TextUnformatted(m_Log.c_str());
-
-		if (ImGui::GetScrollY() >= ImGui::GetScrollMaxY())
-			ImGui::SetScrollHereY(1.0f);
-
+		if (ImGui::GetScrollY() >= ImGui::GetScrollMaxY()) ImGui::SetScrollHereY(1.0f);
 		ImGui::EndChild();
 		ImGui::End();
 
@@ -135,9 +140,29 @@ namespace Workspace
 		ImGui::Begin("Live Plot");
 		if (!m_DataPoints.empty())
 		{
-			ImGui::Text("Latest Value: %.3f", m_DataPoints.back());
+			static bool autoScale = false;
+			ImGui::Checkbox("Auto-Scale with Padding", &autoScale);
+			ImGui::SameLine();
+			ImGui::Text("| Latest: %.3f", m_DataPoints.back());
+
+			float plotMin, plotMax;
+			if (autoScale)
+			{
+				auto [minIt, maxIt] = std::minmax_element(m_DataPoints.begin(), m_DataPoints.end());
+				float range = (*maxIt - *minIt);
+				if (range < 1.0f) range = 1.0f;
+
+				plotMin = *minIt - (range * 0.1f);
+				plotMax = *maxIt + (range * 0.1f);
+			}
+			else
+			{
+				plotMin = -10.0f;
+				plotMax = 110.0f;
+			}
+
 			ImGui::PlotLines("##Data", m_DataPoints.data(), (int)m_DataPoints.size(),
-				0, nullptr, FLT_MIN, FLT_MAX, ImVec2(ImGui::GetContentRegionAvail().x, 200));
+				0, nullptr, plotMin, plotMax, ImVec2(ImGui::GetContentRegionAvail().x, 250));
 		}
 		else
 		{
@@ -146,9 +171,8 @@ namespace Workspace
 		ImGui::End();
 	}
 
-
 	TelemetryProject::~TelemetryProject()
 	{
-		m_Serial.Close(); // This sets m_Connected to false and joins the thread
+		m_Serial.Close();
 	}
 }
