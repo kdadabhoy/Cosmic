@@ -1,7 +1,8 @@
 #include "TelemetryProject.h"
 #include <imgui.h>
+#include <implot.h>
 #include <windows.h> 
-#include <algorithm> // For std::min_element, std::max_element, and std::remove
+#include <algorithm> 
 
 namespace Workspace
 {
@@ -55,6 +56,7 @@ namespace Workspace
 						{
 							float val = std::stof(numericPart);
 							m_DataPoints.push_back(val);
+							m_TotalPointsProcessed++;
 
 							if (m_DataPoints.size() > 1000)
 								m_DataPoints.erase(m_DataPoints.begin());
@@ -136,33 +138,31 @@ namespace Workspace
 		ImGui::EndChild();
 		ImGui::End();
 
-		// --- WINDOW 3: VISUALIZATION ---
+		// --- WINDOW 3: VISUALIZATION (ImPlot) ---
 		ImGui::Begin("Live Plot");
 		if (!m_DataPoints.empty())
 		{
-			static bool autoScale = false;
-			ImGui::Checkbox("Auto-Scale with Padding", &autoScale);
+			ImGui::Text("Latest: %.3f", m_DataPoints.back());
 			ImGui::SameLine();
-			ImGui::Text("| Latest: %.3f", m_DataPoints.back());
+			ImGui::TextDisabled("| Buffer: %zu/1000", m_DataPoints.size());
 
-			float plotMin, plotMax;
-			if (autoScale)
+			// Set plot height to 250 to match your previous setup
+			if (ImPlot::BeginPlot("##LiveData", ImVec2(-1, 250)))
 			{
-				auto [minIt, maxIt] = std::minmax_element(m_DataPoints.begin(), m_DataPoints.end());
-				float range = (*maxIt - *minIt);
-				if (range < 1.0f) range = 1.0f;
+				double x_min = (double)m_TotalPointsProcessed - m_DataPoints.size();
+				double x_max = (double)m_TotalPointsProcessed;
 
-				plotMin = *minIt - (range * 0.1f);
-				plotMax = *maxIt + (range * 0.1f);
-			}
-			else
-			{
-				plotMin = -10.0f;
-				plotMax = 110.0f;
+
+
+				ImPlot::SetupAxes("Samples", "Value");
+				ImPlot::SetupAxisLimits(ImAxis_Y1, -10.0, 110.0, ImGuiCond_Once);
+
+				ImPlot::PlotLine("Sensor Input", m_DataPoints.data(), (int)m_DataPoints.size(), 1.0, x_min);
+
+				ImPlot::EndPlot();
 			}
 
-			ImGui::PlotLines("##Data", m_DataPoints.data(), (int)m_DataPoints.size(),
-				0, nullptr, plotMin, plotMax, ImVec2(ImGui::GetContentRegionAvail().x, 250));
+			ImGui::TextDisabled("Right-click for options, scroll to zoom, middle-click to pan.");
 		}
 		else
 		{

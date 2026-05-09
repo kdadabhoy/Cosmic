@@ -36,12 +36,26 @@ add_library(imgui STATIC
     dependencies/imgui/backends/imgui_impl_opengl3.cpp
 )
 
-# FIXED: Set to PUBLIC so Sandbox can find these headers through the engine link
 target_include_directories(imgui PUBLIC
     dependencies/imgui
     dependencies/imgui/backends
 )
 target_link_libraries(imgui PUBLIC glfw OpenGL::GL)
+
+# --- NEW: ImPlot ---
+# Define ImPlot as a static library
+add_library(implot STATIC
+    dependencies/implot/implot.cpp
+    dependencies/implot/implot_items.cpp
+    dependencies/implot/implot_demo.cpp
+)
+
+# PUBLIC include ensures that any target linking to 'implot' 
+# (like Cosmic or Sandbox) gets the include path automatically.
+target_include_directories(implot PUBLIC dependencies/implot)
+
+# ImPlot depends on ImGui headers
+target_link_libraries(implot PUBLIC imgui)
 
 # stb_image
 add_library(stb_image INTERFACE)
@@ -61,13 +75,13 @@ add_library(Cosmic STATIC ${COSMIC_SOURCES})
 # ----------------------------
 # 4. Engine Configuration and Linking
 # ----------------------------
-# PUBLIC ensures Sandbox can #include engine headers like "core/Application.h"
 target_include_directories(Cosmic PUBLIC src)
 target_include_directories(Cosmic PRIVATE dependencies/stb_image)
 
-# Linking ImGui as PUBLIC ensures the Sandbox inherits the ImGui include paths
+# Added 'implot' to the PUBLIC link list
 target_link_libraries(Cosmic PUBLIC
     imgui
+    implot
     glad
     glm
     glfw

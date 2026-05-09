@@ -35,5 +35,9 @@ namespace Workspace
 		// Data for the Serial Monitor (The Log)
 		std::string m_Log;
 		std::string m_AccumulatedString;
+
+
+		int m_TotalPointsProcessed = 0;
+
 	};
 }

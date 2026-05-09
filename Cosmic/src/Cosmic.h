@@ -39,8 +39,14 @@
 // Serial
 #include "serial/SerialPort.h"
 
-// TODO: Add an entry point #include "Cosmic/Core/EntryPoint.h"
 
 
+// UI & Plotting... User should include them.. instead of engine forcing it
+/*
+	#include <imgui.h>
+	#include <implot.h>
+*/
 
 
+// TODO: Add an entry point 
+// #include "Cosmic/Core/EntryPoint.h"

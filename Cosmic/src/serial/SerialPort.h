@@ -1,3 +1,6 @@
+// Windows only implementation right now
+
+
 #pragma once
 
 #include <string>

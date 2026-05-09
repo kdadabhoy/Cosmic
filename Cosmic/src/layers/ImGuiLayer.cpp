@@ -1,5 +1,6 @@
 #include "layers/ImGuiLayer.h"
 #include "imgui.h"
+#include "implot.h"
 #include "backends/imgui_impl_glfw.h"
 #include "backends/imgui_impl_opengl3.h"
 #include "core/Application.h"
@@ -25,6 +26,8 @@ namespace Cosmic
 	{
 		IMGUI_CHECKVERSION();
 		ImGui::CreateContext();
+		ImPlot::CreateContext();
+
 		ImGuiIO& io = ImGui::GetIO();
 		io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
@@ -45,6 +48,8 @@ namespace Cosmic
 	{
 		ImGui_ImplOpenGL3_Shutdown();
 		ImGui_ImplGlfw_Shutdown();
+
+		ImPlot::DestroyContext();
 		ImGui::DestroyContext();
 	}
 
