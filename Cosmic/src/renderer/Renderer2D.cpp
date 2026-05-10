@@ -67,7 +67,6 @@ namespace Cosmic
 
 	void Renderer2D::Init()
 	{
-		// --- Quad Initialization ---
 		s_Data.QuadVertexArray = VertexArray::Create();
 
 		s_Data.QuadVertexBuffer = VertexBuffer::Create(s_Data.MaxVertices * sizeof(QuadVertex));
@@ -99,25 +98,20 @@ namespace Cosmic
 		s_Data.QuadVertexArray->SetIndexBuffer(quadIB);
 		delete[] quadIndices;
 
-		// --- Shader & Texture Setup ---
 		s_Data.WhiteTexture = Texture2D::Create(1, 1);
 		uint32_t whiteTextureData = 0xffffffff;
 		s_Data.WhiteTexture->SetData(&whiteTextureData, sizeof(uint32_t));
 
-		s_Data.TextureShader = Shader::Create("assets/shaders/Texture.glsl");
-		if (!s_Data.TextureShader)
-			std::cerr << "[Cosmic Error] Renderer2D: Failed to load Texture shader!" << std::endl;
-
-		// Create Default Material using the batching shader
-		s_Data.DefaultMaterial = Material::Create(s_Data.TextureShader, "Cosmic_Default_Material");
-
+		// Initialize samplers for the default shader
 		int32_t samplers[s_Data.MaxTextureSlots];
 		for (uint32_t i = 0; i < s_Data.MaxTextureSlots; i++)
 			samplers[i] = i;
 
+		s_Data.TextureShader = Shader::Create("assets/shaders/Texture.glsl");
 		s_Data.TextureShader->Bind();
 		s_Data.TextureShader->SetIntArray("u_Textures", samplers, s_Data.MaxTextureSlots);
 
+		s_Data.DefaultMaterial = Material::Create(s_Data.TextureShader, "Cosmic_Default_Material");
 		s_Data.TextureSlots[0] = s_Data.WhiteTexture;
 
 		s_Data.QuadVertexPositions[0] = { -0.5f, -0.5f, 0.0f, 1.0f };
@@ -166,19 +160,29 @@ namespace Cosmic
 
 	void Renderer2D::Flush()
 	{
-		// --- Draw Quads ---
 		if (s_Data.QuadIndexCount != 0)
 		{
 			uint32_t dataSize = (uint32_t)((uint8_t*)s_Data.QuadVertexPtr - (uint8_t*)s_Data.QuadVertexBufferBase);
 			s_Data.QuadVertexBuffer->SetData(s_Data.QuadVertexBufferBase, dataSize);
 
+			// 1. Bind all textures to their slots
 			for (uint32_t i = 0; i < s_Data.TextureSlotIndex; i++)
 				s_Data.TextureSlots[i]->Bind(i);
 
+			// 2. Bind Material and Update its internal Shader
 			if (s_Data.CurrentMaterial)
 			{
 				s_Data.CurrentMaterial->Bind();
-				s_Data.CurrentMaterial->GetShader()->SetMat4("u_ViewProjection", s_Data.ViewProjectionMatrix);
+				auto shader = s_Data.CurrentMaterial->GetShader();
+
+				// Standard Uniforms
+				shader->SetMat4("u_ViewProjection", s_Data.ViewProjectionMatrix);
+
+				// CRITICAL: Custom materials don't know about batching by default.
+				// We must upload the sampler array [0, 1, 2... 31] every time we switch materials.
+				int32_t samplers[32];
+				for (uint32_t i = 0; i < 32; i++) samplers[i] = i;
+				shader->SetIntArray("u_Textures", samplers, 32);
 			}
 
 			s_Data.QuadVertexArray->Bind();
@@ -293,6 +297,16 @@ namespace Cosmic
 		// Try to get texture and color from material, fallback to defaults if not set
 		Ref<Texture> tex = material->GetTexture("u_Texture");
 		if (!tex) tex = s_Data.WhiteTexture;
+
+		if (tex)
+		{
+			// Should print the Dino.png path or a valid ID
+			std::cout << "[DEBUG] Drawing Material with Texture ID: " << tex->GetRendererID() << std::endl;
+		}
+		else
+		{
+			std::cout << "[ERROR] Material 'u_Texture' is NULL!" << std::endl;
+		}
 
 		glm::vec4 color = material->GetVector("u_Color");
 
