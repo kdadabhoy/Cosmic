@@ -44,7 +44,4 @@ file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/../Cosmic/assets/"
 file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/src/projects/DinoProject/assets/" 
      DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/assets/DinoProject")
 
-file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/src/projects/TelemetryProject/assets/" 
-     DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/assets/TelemetryProject")
-
 # Repeat for other projects...
