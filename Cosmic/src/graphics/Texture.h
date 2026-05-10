@@ -19,6 +19,9 @@ namespace Cosmic
 
 		virtual bool operator==(const Texture& other) const = 0;
 
+
+		virtual uint32_t GetRendererID() const = 0; // Added for Renderer2D to identify textures
+
 		// Added back for alignment with Texture.cpp
 		static Ref<Texture> Create(const std::string& path);
 	};

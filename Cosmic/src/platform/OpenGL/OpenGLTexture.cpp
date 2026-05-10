@@ -13,12 +13,13 @@ namespace Cosmic
 		glGenTextures(1, &m_RendererID);
 		glBindTexture(GL_TEXTURE_2D, m_RendererID);
 
+		// Default Parameters for procedural textures
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); // Keep pixel art sharp
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-		// Allocate storage without providing data yet
+		// Pre-allocate storage
 		glTexImage2D(GL_TEXTURE_2D, 0, m_InternalFormat, m_Width, m_Height, 0, m_DataFormat, GL_UNSIGNED_BYTE, nullptr);
 	}
 
@@ -52,12 +53,15 @@ namespace Cosmic
 			glGenTextures(1, &m_RendererID);
 			glBindTexture(GL_TEXTURE_2D, m_RendererID);
 
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+			// Setup Filtering - Using Linear Mipmap for smoother scaling at distances
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); // Dino looks better with Nearest
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
+			// Upload pixel data
 			glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, m_Width, m_Height, 0, dataFormat, GL_UNSIGNED_BYTE, data);
+			glGenerateMipmap(GL_TEXTURE_2D); // Required for GL_LINEAR_MIPMAP_LINEAR
 
 			stbi_image_free(data);
 		}
@@ -75,7 +79,6 @@ namespace Cosmic
 	void OpenGLTexture::SetData(void* data, uint32_t size)
 	{
 		uint32_t bpp = m_DataFormat == GL_RGBA ? 4 : 3;
-		// Verify the data being uploaded matches the texture size
 		if (size != m_Width * m_Height * bpp)
 		{
 			std::cout << "Cosmic Error: Texture data must fill entire texture!" << std::endl;
@@ -87,7 +90,14 @@ namespace Cosmic
 
 	void OpenGLTexture::Bind(uint32_t slot) const
 	{
+		// Set active slot and bind the renderer ID
 		glActiveTexture(GL_TEXTURE0 + slot);
 		glBindTexture(GL_TEXTURE_2D, m_RendererID);
+	}
+
+	bool OpenGLTexture::operator==(const Texture& other) const
+	{
+		// Implementation for source file - must match header signature exactly
+		return m_RendererID == ((const OpenGLTexture&)other).m_RendererID;
 	}
 }

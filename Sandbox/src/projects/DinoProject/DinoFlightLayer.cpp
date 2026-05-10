@@ -3,8 +3,8 @@
 
 namespace Workspace
 {
-	DinoFlightLayer::DinoFlightLayer(Cosmic::Ref<Cosmic::Texture2D> texture)
-		: m_Texture(texture), m_CameraController(1280.0f / 720.0f, true)
+	DinoFlightLayer::DinoFlightLayer(Cosmic::Ref<Cosmic::Material> material)
+		: m_Material(material), m_CameraController(1280.0f / 720.0f, true)
 	{
 	}
 
@@ -14,10 +14,7 @@ namespace Workspace
 		m_DinoPos.y += (m_FlightSpeed * m_FlightSlope) * ts;
 
 		if (m_ChaosMode)
-		{
-			float jitter = (((float)rand() / RAND_MAX) - 0.5f) * 0.2f;
-			m_DinoPos.y += jitter;
-		}
+			m_DinoPos.y += (((float)rand() / RAND_MAX) - 0.5f) * 0.2f;
 
 		m_FlightPath.push_back(m_DinoPos);
 		if (m_FlightPath.size() > 500) m_FlightPath.erase(m_FlightPath.begin());
@@ -32,7 +29,7 @@ namespace Workspace
 	{
 		Cosmic::Renderer2D::BeginScene(m_CameraController.GetCamera());
 
-		// Infinite Grid Logic
+		// Background Grid (Default Material)
 		float startX = floor(m_DinoPos.x) - 10;
 		float startY = floor(m_DinoPos.y) - 10;
 		for (float x = startX; x < startX + 20; x += 1.0f)
@@ -45,14 +42,16 @@ namespace Workspace
 			}
 		}
 
-		// Flight Path Trail
+		// Trail (Lines)
 		if (m_FlightPath.size() > 1)
 		{
 			for (size_t i = 0; i < m_FlightPath.size() - 1; i++)
 				Cosmic::Renderer2D::DrawLine(m_FlightPath[i], m_FlightPath[i + 1], { 1.0f, 0.0f, 0.0f, 1.0f });
 		}
 
-		Cosmic::Renderer2D::DrawQuad(m_DinoPos, { 0.5f, 0.5f }, m_Texture);
+		// Dino (Material System)
+		// This will trigger a Flush because we switch from DefaultMaterial to m_Material
+		Cosmic::Renderer2D::DrawRotatedQuad(m_DinoPos, { 0.5f, 0.5f }, m_FlightSlope * 0.5f, m_Material);
 
 		Cosmic::Renderer2D::EndScene();
 	}
@@ -60,10 +59,7 @@ namespace Workspace
 	void DinoFlightLayer::OnImGuiRender()
 	{
 		ImGui::Checkbox("Camera Follow", &m_CameraFollow);
-		ImGui::Checkbox("Chaos Mode", &m_ChaosMode);
-		ImGui::DragFloat("Flight Speed", &m_FlightSpeed, 0.1f, 0.0f, 20.0f);
-		ImGui::DragFloat("Flight Slope", &m_FlightSlope, 0.05f, -2.0f, 2.0f);
-
-		if (ImGui::Button("Clear Flight Path")) m_FlightPath.clear();
+		ImGui::DragFloat("Flight Speed", &m_FlightSpeed, 0.1f);
+		if (ImGui::Button("Clear Path")) m_FlightPath.clear();
 	}
 }

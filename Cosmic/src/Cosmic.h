@@ -43,6 +43,10 @@
 #include "utils/FileSystem.h"
 
 
+
+#include "graphics/Material.h"
+
+
 // UI & Plotting... User should include them.. instead of engine forcing it
 /*
 	#include <imgui.h>

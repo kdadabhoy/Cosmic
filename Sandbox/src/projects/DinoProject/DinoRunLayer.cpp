@@ -3,8 +3,8 @@
 
 namespace Workspace
 {
-	DinoRunLayer::DinoRunLayer(Cosmic::Ref<Cosmic::Texture2D> texture)
-		: m_Texture(texture), m_CameraController(1280.0f / 720.0f, true), m_RandomEngine(std::random_device{}())
+	DinoRunLayer::DinoRunLayer(Cosmic::Ref<Cosmic::Material> material)
+		: m_Material(material), m_CameraController(1280.0f / 720.0f, true), m_RandomEngine(std::random_device{}())
 	{
 		Reset();
 	}
@@ -43,7 +43,7 @@ namespace Workspace
 			m_IsGrounded = true;
 		}
 
-		// Obstacles
+		// Obstacle Spawning
 		m_SpawnTimer += ts;
 		if (m_SpawnTimer > m_NextSpawnTime)
 		{
@@ -53,11 +53,12 @@ namespace Workspace
 			m_NextSpawnTime = std::uniform_real_distribution<float>(1.0f, 2.0f)(m_RandomEngine);
 		}
 
+		// Collision & Movement
 		for (auto& obs : m_Obstacles)
 		{
 			obs.Position.x -= 2.0f * ts;
-			// Simplified collision
-			if (std::abs(m_DinoPos.x - obs.Position.x) < 0.3f && std::abs(m_DinoPos.y - obs.Position.y) < (obs.Size.y / 2.0f + 0.2f))
+			if (std::abs(m_DinoPos.x - obs.Position.x) < 0.3f &&
+				std::abs(m_DinoPos.y - obs.Position.y) < (obs.Size.y / 2.0f + 0.2f))
 			{
 				Reset();
 				break;
@@ -74,15 +75,16 @@ namespace Workspace
 	{
 		Cosmic::Renderer2D::BeginScene(m_CameraController.GetCamera());
 
-		// Floor
+		// Floor - Uses default batching
 		Cosmic::Renderer2D::DrawQuad({ 0.0f, -0.85f }, { 20.0f, 0.2f }, { 0.3f, 0.3f, 0.33f, 1.0f });
 
-		// Obstacles
+		// Obstacles - Uses default batching
 		for (const auto& obs : m_Obstacles)
 			Cosmic::Renderer2D::DrawQuad(obs.Position, obs.Size, obs.Color);
 
-		// Dino
-		Cosmic::Renderer2D::DrawQuad(m_DinoPos, { 0.5f, 0.5f }, m_Texture);
+		// Dino - Uses THE Material System
+		// This will now respect the "u_Color" and "u_Texture" inside m_Material
+		Cosmic::Renderer2D::DrawQuad(m_DinoPos, { 0.5f, 0.5f }, m_Material);
 
 		Cosmic::Renderer2D::EndScene();
 	}
