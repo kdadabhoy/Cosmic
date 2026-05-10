@@ -35,10 +35,16 @@ source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/src" PREFIX "Source Files" FILES 
 # ----------------------------
 # 5. Asset Management & Debugging
 # ----------------------------
-# Ensure assets are copied to the build folder so the executable can find shaders/textures
-file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/../Cosmic/assets" 
-     DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
 
-set_target_properties(Sandbox PROPERTIES
-    VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
-)
+# 1. Copy Global Engine Assets
+file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/../Cosmic/assets/" 
+     DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/assets")
+
+# 2. Copy Project-Specific Assets into unique subfolders
+file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/src/projects/DinoProject/assets/" 
+     DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/assets/DinoProject")
+
+file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/src/projects/TelemetryProject/assets/" 
+     DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/assets/TelemetryProject")
+
+# Repeat for other projects...

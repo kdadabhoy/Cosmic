@@ -5,7 +5,18 @@ namespace Workspace
 {
 	DinoProject::DinoProject()
 	{
-		m_DinoTexture = Cosmic::Texture2D::Create("assets/shaders/Texture.png");
+		// 1. Tell the FileSystem which project we are in
+		Cosmic::FileSystem::SetActiveProject("DinoProject");
+
+		// 2. Use virtual pathing. 
+		// "project://" automatically looks in assets/DinoProject/
+		std::string dinoPath = Cosmic::FileSystem::Resolve("project://Dino.png");
+
+		m_DinoTexture = Cosmic::Texture2D::Create(dinoPath);
+
+		// If you ever need a global engine asset (like the default texture shader):
+		// std::string shaderPath = Cosmic::FileSystem::Resolve("engine://shaders/Texture.glsl");
+
 		m_RunSim = std::make_unique<DinoRunLayer>(m_DinoTexture);
 		m_FlightSim = std::make_unique<DinoFlightLayer>(m_DinoTexture);
 		m_StressSim = std::make_unique<DinoStressLayer>(m_DinoTexture);
