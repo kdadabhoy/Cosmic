@@ -2,43 +2,63 @@
 #include "events/ApplicationEvent.h"
 #include "events/KeyEvent.h"
 #include "events/MouseEvent.h"
-
 #include <GLFW/glfw3.h>
-#include "platform/opengl/OpenGLContext.h" // Needed to create the context
+#include "platform/opengl/OpenGLContext.h"
 #include <iostream>
 
 namespace Cosmic
 {
 	/////////////////////////////////////////////////////////////////////////////////
 
+	/**
+	 * Window Constructor
+	 * Initializes the GLFW library, configures window hints for the OpenGL Core Profile,
+	 * creates the native window handle, and establishes the Graphics Context.
+	 * It also sets up the "User Pointer" bridge and registers all hardware callbacks.
+	 */
 	Window::Window(int width, int height, const std::string& title)
 		: m_Context(nullptr), m_Handle(nullptr)
 	{
+		
+		// 1. Initialize GLFW
 		if (!glfwInit())
 		{
-			std::cout << "Could not initialize GLFW!" << std::endl;
+			// Note: Using std::cout here as a fallback if the Engine Logger isn't ready
+			std::cout << "Cosmic: Could not initialize GLFW!" << std::endl;
 			return;
 		}
 
-		// We still set these for now since we are in OpenGL, 
-		// but eventually, these hints might move to the Context.
+
+		// 2. Set Window Hints (Targeting OpenGL 3.3 Core)
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
+
+		// 3. Create the Native Window
 		m_Handle = glfwCreateWindow(width, height, title.c_str(), NULL, NULL);
 
-		// Initialize the Graphics Context
+
+		// 4. Initialize Graphics Context (API-Specific)
 		m_Context = new OpenGLContext(m_Handle);
 		m_Context->Init();
 
+
+		// 5. Store metadata and bridge to GLFW
 		m_Data.Title = title;
 		m_Data.Width = width;
 		m_Data.Height = height;
 
+
+		// Link our WindowData struct to the GLFW handle so callbacks can access it
 		glfwSetWindowUserPointer(m_Handle, &m_Data);
 
-		// --- Window Resize Callback ---
+		// -----------------------------------------------------------------
+		// Hardware Callbacks (Mapping Native OS events to Cosmic Events)
+		// -----------------------------------------------------------------
+
+
+		// Window Resize Callback
 		glfwSetWindowSizeCallback(m_Handle, [](GLFWwindow* window, int width, int height)
 			{
 				WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
@@ -50,9 +70,7 @@ namespace Cosmic
 			});
 
 
-
-
-		// Note: Other callbacks for Key, Mouse, etc., stay in the other file
+		// Mouse Scroll Callback
 		glfwSetScrollCallback(m_Handle, [](GLFWwindow* window, double xOffset, double yOffset)
 			{
 				WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
@@ -61,6 +79,8 @@ namespace Cosmic
 				data.EventCallback(event);
 			});
 
+
+		// Mouse Button Callback
 		glfwSetMouseButtonCallback(m_Handle, [](GLFWwindow* window, int button, int action, int mods)
 			{
 				WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
@@ -82,6 +102,8 @@ namespace Cosmic
 				}
 			});
 
+
+		// Mouse Movement Callback
 		glfwSetCursorPosCallback(m_Handle, [](GLFWwindow* window, double xPos, double yPos)
 			{
 				WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
@@ -91,7 +113,7 @@ namespace Cosmic
 			});
 
 
-
+		// Keyboard Input Callback
 		glfwSetKeyCallback(m_Handle, [](GLFWwindow* window, int key, int scancode, int action, int mods)
 			{
 				WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
@@ -100,7 +122,7 @@ namespace Cosmic
 				{
 				case GLFW_PRESS:
 				{
-					KeyPressedEvent event(key, 0);
+					KeyPressedEvent event(key, 0); // 0 = First press
 					data.EventCallback(event);
 					break;
 				}
@@ -112,13 +134,15 @@ namespace Cosmic
 				}
 				case GLFW_REPEAT:
 				{
-					KeyPressedEvent event(key, 1);
+					KeyPressedEvent event(key, 1); // 1 = Repeat/Hold
 					data.EventCallback(event);
 					break;
 				}
 				}
 			});
 
+
+		// Text Input Callback (For ImGui/Text Fields)
 		glfwSetCharCallback(m_Handle, [](GLFWwindow* window, unsigned int keycode)
 			{
 				WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
@@ -126,11 +150,15 @@ namespace Cosmic
 				KeyTypedEvent event(keycode);
 				data.EventCallback(event);
 			});
-
 	}
+
 
 	/////////////////////////////////////////////////////////////////////////////////
 
+	/**
+	 * Window Destructor
+	 * Cleans up the graphics context and destroys the window handle to prevent leaks.
+	 */
 	Window::~Window()
 	{
 		delete m_Context;
@@ -140,6 +168,9 @@ namespace Cosmic
 
 	/////////////////////////////////////////////////////////////////////////////////
 
+	/**
+	 * Delegates the buffer swap to the graphics context.
+	 */
 	void Window::SwapBuffers()
 	{
 		m_Context->SwapBuffers();
@@ -147,6 +178,10 @@ namespace Cosmic
 
 	/////////////////////////////////////////////////////////////////////////////////
 
+	/**
+	 * Event Polling
+	 * Instructs GLFW to check the OS for any pending hardware events.
+	 */
 	void Window::PollEvents()
 	{
 		glfwPollEvents();
@@ -154,6 +189,9 @@ namespace Cosmic
 
 	/////////////////////////////////////////////////////////////////////////////////
 
+	/**
+	 * Returns true if the window has been flagged for closure.
+	 */
 	bool Window::ShouldClose() const
 	{
 		return glfwWindowShouldClose(m_Handle);
@@ -161,6 +199,9 @@ namespace Cosmic
 
 	/////////////////////////////////////////////////////////////////////////////////
 
+	/**
+	 * Sets the swap interval to sync with the monitor's refresh rate.
+	 */
 	void Window::SetVSync(bool enabled)
 	{
 		if (enabled)
@@ -173,6 +214,9 @@ namespace Cosmic
 
 	/////////////////////////////////////////////////////////////////////////////////
 
+	/**
+	 * Retrieves the current pixel width and height from the GLFW framebuffer.
+	 */
 	void Window::GetSize(int* width, int* height) const
 	{
 		glfwGetFramebufferSize(m_Handle, width, height);
@@ -181,5 +225,3 @@ namespace Cosmic
 	/////////////////////////////////////////////////////////////////////////////////
 
 }
-
-
