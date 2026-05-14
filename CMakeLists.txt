@@ -1,19 +1,25 @@
 cmake_minimum_required(VERSION 3.21)
 project(CosmicRoot LANGUAGES C CXX)
 
-# These settings flow down into Cosmic and Sandbox automatically
+# -------------------------------------------------------------------
+# 1. Global Project Standards
+# -------------------------------------------------------------------
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# MSVC specific: Enable UTF-8 encoding globally. 
+# This fixes spdlog/fmt "Unicode support" errors in all sub-projects.
+if(MSVC)
+    add_compile_options(/utf-8)
+endif()
+
 # -------------------------------------------------------------------
-# 1. Subdirectories
+# 2. Subdirectories
 # -------------------------------------------------------------------
 
-# 1. Build the Engine first. 
-# It sets up glad, glfw, and imgui for everyone else.
+# Build the Engine first (Library)
 add_subdirectory(Cosmic)
 
-# 2. Build the Sandbox. 
-# It will link to 'Cosmic' and inherit its 'src' include path.
+# Build the Sandbox (Executable)
 add_subdirectory(Sandbox)

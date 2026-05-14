@@ -1,17 +1,8 @@
 # ----------------------------
-# 1. Project and Standards
+# 1. Project Setup
 # ----------------------------
 cmake_minimum_required(VERSION 3.21)
 project(Cosmic LANGUAGES C CXX)
-
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
-
-# MSVC specific: Enable UTF-8 encoding for spdlog/fmt compatibility
-if(MSVC)
-    add_compile_options(/utf-8)
-endif()
 
 # ----------------------------
 # 2. External Dependencies
@@ -65,7 +56,7 @@ add_library(stb_image INTERFACE)
 target_include_directories(stb_image INTERFACE dependencies/stb_image)
 
 # ----------------------------
-# 3. Engine Source Files (Automatic)
+# 3. Engine Source Files
 # ----------------------------
 file(GLOB_RECURSE COSMIC_SOURCES 
     "src/*.cpp" 
@@ -78,10 +69,11 @@ add_library(Cosmic STATIC ${COSMIC_SOURCES})
 # ----------------------------
 # 4. Engine Configuration and Linking
 # ----------------------------
+# PUBLIC: Anything linking to Cosmic also gets 'src' in its include path
 target_include_directories(Cosmic PUBLIC src)
+# PRIVATE: Only the engine needs the internal stb headers
 target_include_directories(Cosmic PRIVATE dependencies/stb_image)
 
-# Link all external dependencies to the Engine
 target_link_libraries(Cosmic PUBLIC
     imgui
     implot

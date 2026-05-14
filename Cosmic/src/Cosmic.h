@@ -9,6 +9,7 @@
 #include "core/Layer.h"
 #include "core/Input.h"
 #include "core/Timestep.h"
+#include "core/Log.h"
 
 // Events
 #include "events/Event.h"
