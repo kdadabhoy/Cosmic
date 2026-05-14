@@ -2,19 +2,18 @@
 #include "graphics/VertexArray.h"
 #include "graphics/Shader.h"
 #include "renderer/RenderCommand.h"
+
 #include <glm/gtc/matrix_transform.hpp>
 #include <array>
+#include <iostream>
 
 namespace Cosmic
 {
-
 	struct LineVertex
 	{
 		glm::vec3 Position;
 		glm::vec4 Color;
 	};
-
-
 
 	struct QuadVertex
 	{
@@ -37,22 +36,22 @@ namespace Cosmic
 		Ref<Shader> TextureShader;
 		Ref<Texture> WhiteTexture;
 
+		// --- Material System ---
+		Ref<Material> CurrentMaterial = nullptr;
+		Ref<Material> DefaultMaterial = nullptr;
+
 		uint32_t QuadIndexCount = 0;
 		QuadVertex* QuadVertexBufferBase = nullptr;
-		QuadVertex* QuadVertexBufferPtr = nullptr;
+		QuadVertex* QuadVertexPtr = nullptr;
 
 		std::array<Ref<Texture>, MaxTextureSlots> TextureSlots;
 		uint32_t TextureSlotIndex = 1; // 0 = White Texture
 
 		glm::vec4 QuadVertexPositions[4];
-
-		// Statistics
 		Renderer2D::Statistics Stats;
 		bool StatsEnabled = false;
 
-
-
-		// Line Data
+		// --- Line Data ---
 		Ref<VertexArray> LineVertexArray;
 		Ref<VertexBuffer> LineVertexBuffer;
 		Ref<Shader> LineShader;
@@ -60,20 +59,14 @@ namespace Cosmic
 		uint32_t LineVertexCount = 0;
 		LineVertex* LineVertexBufferBase = nullptr;
 		LineVertex* LineVertexBufferPtr = nullptr;
+
+		glm::mat4 ViewProjectionMatrix;
 	};
-
-
-
-
 
 	static Renderer2DData s_Data;
 
-
-
-
 	void Renderer2D::Init()
 	{
-		// --- Quad Initialization ---
 		s_Data.QuadVertexArray = VertexArray::Create();
 
 		s_Data.QuadVertexBuffer = VertexBuffer::Create(s_Data.MaxVertices * sizeof(QuadVertex));
@@ -105,11 +98,11 @@ namespace Cosmic
 		s_Data.QuadVertexArray->SetIndexBuffer(quadIB);
 		delete[] quadIndices;
 
-		// --- Texture Setup ---
 		s_Data.WhiteTexture = Texture2D::Create(1, 1);
 		uint32_t whiteTextureData = 0xffffffff;
 		s_Data.WhiteTexture->SetData(&whiteTextureData, sizeof(uint32_t));
 
+		// Initialize samplers for the default shader
 		int32_t samplers[s_Data.MaxTextureSlots];
 		for (uint32_t i = 0; i < s_Data.MaxTextureSlots; i++)
 			samplers[i] = i;
@@ -118,6 +111,7 @@ namespace Cosmic
 		s_Data.TextureShader->Bind();
 		s_Data.TextureShader->SetIntArray("u_Textures", samplers, s_Data.MaxTextureSlots);
 
+		s_Data.DefaultMaterial = Material::Create(s_Data.TextureShader, "Cosmic_Default_Material");
 		s_Data.TextureSlots[0] = s_Data.WhiteTexture;
 
 		s_Data.QuadVertexPositions[0] = { -0.5f, -0.5f, 0.0f, 1.0f };
@@ -127,23 +121,18 @@ namespace Cosmic
 
 		// --- Line Initialization ---
 		s_Data.LineVertexArray = VertexArray::Create();
-
-		// Ensure LineVertex structure matches this layout
 		s_Data.LineVertexBuffer = VertexBuffer::Create(s_Data.MaxVertices * sizeof(LineVertex));
 		s_Data.LineVertexBuffer->SetLayout({
 			{ ShaderDataType::Float3, "a_Position" },
 			{ ShaderDataType::Float4, "a_Color"    }
 			});
 		s_Data.LineVertexArray->AddVertexBuffer(s_Data.LineVertexBuffer);
-
 		s_Data.LineVertexBufferBase = new LineVertex[s_Data.MaxVertices];
 
-		// IMPORTANT: Verify this file exists at this path to avoid a null pointer crash
 		s_Data.LineShader = Shader::Create("assets/shaders/Line.glsl");
+		if (!s_Data.LineShader)
+			std::cerr << "[Cosmic Error] Renderer2D: Failed to load Line shader!" << std::endl;
 	}
-
-
-	
 
 	void Renderer2D::Shutdown()
 	{
@@ -153,27 +142,15 @@ namespace Cosmic
 
 	void Renderer2D::BeginScene(const OrthographicCamera& camera)
 	{
-		// Setup Quad Shader
-		s_Data.TextureShader->Bind();
-		s_Data.TextureShader->SetMat4("u_ViewProjection", camera.GetViewProjectionMatrix());
-
-
+		s_Data.ViewProjectionMatrix = camera.GetViewProjectionMatrix();
 
 		s_Data.QuadIndexCount = 0;
-		s_Data.QuadVertexBufferPtr = s_Data.QuadVertexBufferBase;
+		s_Data.QuadVertexPtr = s_Data.QuadVertexBufferBase;
 		s_Data.TextureSlotIndex = 1;
-
-		// Setup Line Shader
-		s_Data.LineShader->Bind();
-		s_Data.LineShader->SetMat4("u_ViewProjection", camera.GetViewProjectionMatrix());
+		s_Data.CurrentMaterial = s_Data.DefaultMaterial;
 
 		s_Data.LineVertexCount = 0;
 		s_Data.LineVertexBufferPtr = s_Data.LineVertexBufferBase;
-
-		/* // this should be handled by client tbh
-		if (s_Data.StatsEnabled)
-			ResetStats();
-		*/
 	}
 
 	void Renderer2D::EndScene()
@@ -181,95 +158,104 @@ namespace Cosmic
 		Flush();
 	}
 
-
-
-
-	// Flush is basically sending all the commands we staged to be drawn by GPU...
 	void Renderer2D::Flush()
 	{
-		// --- QUAD BATCH ---
 		if (s_Data.QuadIndexCount != 0)
 		{
-			uint32_t dataSize = (uint32_t)((uint8_t*)s_Data.QuadVertexBufferPtr - (uint8_t*)s_Data.QuadVertexBufferBase);
+			uint32_t dataSize = (uint32_t)((uint8_t*)s_Data.QuadVertexPtr - (uint8_t*)s_Data.QuadVertexBufferBase);
 			s_Data.QuadVertexBuffer->SetData(s_Data.QuadVertexBufferBase, dataSize);
 
+			// 1. Bind all textures to their slots
 			for (uint32_t i = 0; i < s_Data.TextureSlotIndex; i++)
 				s_Data.TextureSlots[i]->Bind(i);
 
-			s_Data.TextureShader->Bind();
+			// 2. Bind Material and Update its internal Shader
+			if (s_Data.CurrentMaterial)
+			{
+				s_Data.CurrentMaterial->Bind();
+				auto shader = s_Data.CurrentMaterial->GetShader();
 
-			// HIGH LEVEL BINDING: We do it here so RenderCommand stays agnostic
+				// Standard Uniforms
+				shader->SetMat4("u_ViewProjection", s_Data.ViewProjectionMatrix);
+
+				// CRITICAL: Custom materials don't know about batching by default.
+				// We must upload the sampler array [0, 1, 2... 31] every time we switch materials.
+				int32_t samplers[32];
+				for (uint32_t i = 0; i < 32; i++) samplers[i] = i;
+				shader->SetIntArray("u_Textures", samplers, 32);
+			}
+
 			s_Data.QuadVertexArray->Bind();
 			RenderCommand::DrawIndexed(s_Data.QuadVertexArray, s_Data.QuadIndexCount);
-
 			s_Data.Stats.DrawCalls++;
 		}
 
-		// --- LINE BATCH ---
+		// --- Draw Lines ---
 		if (s_Data.LineVertexCount != 0)
 		{
 			uint32_t dataSize = (uint32_t)((uint8_t*)s_Data.LineVertexBufferPtr - (uint8_t*)s_Data.LineVertexBufferBase);
 			s_Data.LineVertexBuffer->SetData(s_Data.LineVertexBufferBase, dataSize);
 
 			s_Data.LineShader->Bind();
+			s_Data.LineShader->SetMat4("u_ViewProjection", s_Data.ViewProjectionMatrix);
 
-			// HIGH LEVEL BINDING: Switch state to the Line VAO
 			s_Data.LineVertexArray->Bind();
 			RenderCommand::DrawLines(s_Data.LineVertexArray, s_Data.LineVertexCount);
-
 			s_Data.Stats.DrawCalls++;
 		}
 	}
 
-
-	// --- 2D Primitives ------------------------------------------------------
-
-	void Renderer2D::DrawQuad(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color)
+	void Renderer2D::FlushAndReset()
 	{
-		DrawQuad({ position.x, position.y, 0.0f }, size, color);
+		EndScene();
+
+		s_Data.QuadIndexCount = 0;
+		s_Data.QuadVertexPtr = s_Data.QuadVertexBufferBase;
+		s_Data.TextureSlotIndex = 1;
+
+		s_Data.LineVertexCount = 0;
+		s_Data.LineVertexBufferPtr = s_Data.LineVertexBufferBase;
 	}
+
+	// --- Drawing Implementation ---
 
 	void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color)
 	{
-		if (s_Data.QuadIndexCount >= Renderer2DData::MaxIndices)
-			FlushAndReset();
-
-		const float textureIndex = 0.0f; // White Texture
-		const float tilingFactor = 1.0f;
+		if (s_Data.CurrentMaterial != s_Data.DefaultMaterial) FlushAndReset();
+		if (s_Data.QuadIndexCount >= Renderer2DData::MaxIndices) FlushAndReset();
 
 		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
 			* glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
 
-		for (size_t i = 0; i < 4; i++)
+		for (uint32_t i = 0; i < 4; i++)
 		{
-			s_Data.QuadVertexBufferPtr->Position = transform * s_Data.QuadVertexPositions[i];
-			s_Data.QuadVertexBufferPtr->Color = color;
-			s_Data.QuadVertexBufferPtr->TexCoord = { (i == 0 || i == 3) ? 0.0f : 1.0f, (i == 0 || i == 1) ? 0.0f : 1.0f };
-			s_Data.QuadVertexBufferPtr->TexIndex = textureIndex;
-			s_Data.QuadVertexBufferPtr->TilingFactor = tilingFactor;
-			s_Data.QuadVertexBufferPtr++;
+			s_Data.QuadVertexPtr->Position = transform * s_Data.QuadVertexPositions[i];
+			s_Data.QuadVertexPtr->Color = color;
+			s_Data.QuadVertexPtr->TexCoord = { (i == 0 || i == 3) ? 0.0f : 1.0f, (i == 0 || i == 1) ? 0.0f : 1.0f };
+			s_Data.QuadVertexPtr->TexIndex = 0.0f; // White Texture
+			s_Data.QuadVertexPtr->TilingFactor = 1.0f;
+			s_Data.QuadVertexPtr++;
 		}
-
 		s_Data.QuadIndexCount += 6;
-
-		if (s_Data.StatsEnabled)
-			s_Data.Stats.QuadCount++;
-	}
-
-	void Renderer2D::DrawQuad(const glm::vec2& position, const glm::vec2& size, const Ref<Texture>& texture, float tilingFactor, const glm::vec4& tintColor)
-	{
-		DrawQuad({ position.x, position.y, 0.0f }, size, texture, tilingFactor, tintColor);
+		s_Data.Stats.QuadCount++;
 	}
 
 	void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const Ref<Texture>& texture, float tilingFactor, const glm::vec4& tintColor)
 	{
-		if (s_Data.QuadIndexCount >= Renderer2DData::MaxIndices)
-			FlushAndReset();
+		if (!texture)
+		{
+			std::cerr << "[Cosmic Warning] Renderer2D: DrawQuad received null texture. Falling back to White." << std::endl;
+			DrawQuad(position, size, tintColor);
+			return;
+		}
+
+		if (s_Data.CurrentMaterial != s_Data.DefaultMaterial) FlushAndReset();
+		if (s_Data.QuadIndexCount >= Renderer2DData::MaxIndices) FlushAndReset();
 
 		float textureIndex = -1.0f;
 		for (uint32_t i = 0; i < s_Data.TextureSlotIndex; i++)
 		{
-			if (*s_Data.TextureSlots[i].get() == *texture.get())
+			if (s_Data.TextureSlots[i]->GetRendererID() == texture->GetRendererID())
 			{
 				textureIndex = (float)i;
 				break;
@@ -278,9 +264,7 @@ namespace Cosmic
 
 		if (textureIndex == -1.0f)
 		{
-			if (s_Data.TextureSlotIndex >= Renderer2DData::MaxTextureSlots)
-				FlushAndReset();
-
+			if (s_Data.TextureSlotIndex >= Renderer2DData::MaxTextureSlots) FlushAndReset();
 			textureIndex = (float)s_Data.TextureSlotIndex;
 			s_Data.TextureSlots[s_Data.TextureSlotIndex] = texture;
 			s_Data.TextureSlotIndex++;
@@ -289,32 +273,126 @@ namespace Cosmic
 		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
 			* glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
 
-		// Texture coordinates for standard quad: 0:BL, 1:BR, 2:TR, 3:TL
-		constexpr glm::vec2 textureCoords[] = { { 0.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 1.0f }, { 0.0f, 1.0f } };
+		constexpr glm::vec2 texCoords[] = { { 0.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 1.0f }, { 0.0f, 1.0f } };
 
-		for (size_t i = 0; i < 4; i++)
+		for (uint32_t i = 0; i < 4; i++)
 		{
-			s_Data.QuadVertexBufferPtr->Position = transform * s_Data.QuadVertexPositions[i];
-			s_Data.QuadVertexBufferPtr->Color = tintColor;
-			s_Data.QuadVertexBufferPtr->TexCoord = textureCoords[i];
-			s_Data.QuadVertexBufferPtr->TexIndex = textureIndex;
-			s_Data.QuadVertexBufferPtr->TilingFactor = tilingFactor;
-			s_Data.QuadVertexBufferPtr++;
+			s_Data.QuadVertexPtr->Position = transform * s_Data.QuadVertexPositions[i];
+			s_Data.QuadVertexPtr->Color = tintColor;
+			s_Data.QuadVertexPtr->TexCoord = texCoords[i];
+			s_Data.QuadVertexPtr->TexIndex = textureIndex;
+			s_Data.QuadVertexPtr->TilingFactor = tilingFactor;
+			s_Data.QuadVertexPtr++;
 		}
-
 		s_Data.QuadIndexCount += 6;
-
-		if (s_Data.StatsEnabled)
-			s_Data.Stats.QuadCount++;
+		s_Data.Stats.QuadCount++;
 	}
 
+	void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const Ref<Material>& material)
+	{
+		if (!material) return;
+		if (s_Data.CurrentMaterial != material) FlushAndReset();
+		s_Data.CurrentMaterial = material;
 
+		// Try to get texture and color from material, fallback to defaults if not set
+		Ref<Texture> tex = material->GetTexture("u_Texture");
+		if (!tex) tex = s_Data.WhiteTexture;
+
+		if (tex)
+		{
+			// Should print the Dino.png path or a valid ID
+			std::cout << "[DEBUG] Drawing Material with Texture ID: " << tex->GetRendererID() << std::endl;
+		}
+		else
+		{
+			std::cout << "[ERROR] Material 'u_Texture' is NULL!" << std::endl;
+		}
+
+		glm::vec4 color = material->GetVector("u_Color");
+
+		DrawQuad(position, size, tex, 1.0f, color);
+	}
+
+	void Renderer2D::DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const Ref<Material>& material)
+	{
+		if (!material) return;
+		if (s_Data.CurrentMaterial != material) FlushAndReset();
+		s_Data.CurrentMaterial = material;
+
+		Ref<Texture> tex = material->GetTexture("u_Texture");
+		if (!tex) tex = s_Data.WhiteTexture;
+
+		glm::vec4 color = material->GetVector("u_Color");
+
+		DrawRotatedQuad(position, size, rotation, tex, 1.0f, color);
+	}
+
+	void Renderer2D::DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const glm::vec4& color)
+	{
+		if (s_Data.CurrentMaterial != s_Data.DefaultMaterial) FlushAndReset();
+		if (s_Data.QuadIndexCount >= Renderer2DData::MaxIndices) FlushAndReset();
+
+		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
+			* glm::rotate(glm::mat4(1.0f), rotation, { 0.0f, 0.0f, 1.0f })
+			* glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
+
+		for (uint32_t i = 0; i < 4; i++)
+		{
+			s_Data.QuadVertexPtr->Position = transform * s_Data.QuadVertexPositions[i];
+			s_Data.QuadVertexPtr->Color = color;
+			s_Data.QuadVertexPtr->TexCoord = { (i == 0 || i == 3) ? 0.0f : 1.0f, (i == 0 || i == 1) ? 0.0f : 1.0f };
+			s_Data.QuadVertexPtr->TexIndex = 0.0f;
+			s_Data.QuadVertexPtr->TilingFactor = 1.0f;
+			s_Data.QuadVertexPtr++;
+		}
+		s_Data.QuadIndexCount += 6;
+		s_Data.Stats.QuadCount++;
+	}
+
+	void Renderer2D::DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const Ref<Texture>& texture, float tilingFactor, const glm::vec4& tintColor)
+	{
+		if (s_Data.CurrentMaterial != s_Data.DefaultMaterial) FlushAndReset();
+		if (s_Data.QuadIndexCount >= Renderer2DData::MaxIndices) FlushAndReset();
+
+		float textureIndex = -1.0f;
+		for (uint32_t i = 0; i < s_Data.TextureSlotIndex; i++)
+		{
+			if (s_Data.TextureSlots[i]->GetRendererID() == texture->GetRendererID())
+			{
+				textureIndex = (float)i;
+				break;
+			}
+		}
+
+		if (textureIndex == -1.0f)
+		{
+			if (s_Data.TextureSlotIndex >= Renderer2DData::MaxTextureSlots) FlushAndReset();
+			textureIndex = (float)s_Data.TextureSlotIndex;
+			s_Data.TextureSlots[s_Data.TextureSlotIndex++] = texture;
+		}
+
+		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
+			* glm::rotate(glm::mat4(1.0f), rotation, { 0.0f, 0.0f, 1.0f })
+			* glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
+
+		constexpr glm::vec2 texCoords[] = { { 0.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 1.0f }, { 0.0f, 1.0f } };
+
+		for (uint32_t i = 0; i < 4; i++)
+		{
+			s_Data.QuadVertexPtr->Position = transform * s_Data.QuadVertexPositions[i];
+			s_Data.QuadVertexPtr->Color = tintColor;
+			s_Data.QuadVertexPtr->TexCoord = texCoords[i];
+			s_Data.QuadVertexPtr->TexIndex = textureIndex;
+			s_Data.QuadVertexPtr->TilingFactor = tilingFactor;
+			s_Data.QuadVertexPtr++;
+		}
+		s_Data.QuadIndexCount += 6;
+		s_Data.Stats.QuadCount++;
+	}
 
 	void Renderer2D::DrawLine(const glm::vec3& p0, const glm::vec3& p1, const glm::vec4& color)
 	{
-		// Flush if we are out of space for lines
-		if (s_Data.LineVertexCount >= s_Data.MaxVertices)
-			FlushAndReset();
+		if (s_Data.LineVertexCount >= Renderer2DData::MaxVertices) FlushAndReset();
 
 		s_Data.LineVertexBufferPtr->Position = p0;
 		s_Data.LineVertexBufferPtr->Color = color;
@@ -326,21 +404,6 @@ namespace Cosmic
 
 		s_Data.LineVertexCount += 2;
 	}
-
-
-	void Renderer2D::FlushAndReset()
-	{
-		EndScene();
-
-		s_Data.QuadIndexCount = 0;
-		s_Data.QuadVertexBufferPtr = s_Data.QuadVertexBufferBase;
-		s_Data.TextureSlotIndex = 1;
-
-		s_Data.LineVertexCount = 0;
-		s_Data.LineVertexBufferPtr = s_Data.LineVertexBufferBase;
-	}
-
-
 
 	void Renderer2D::DrawRect(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color)
 	{
@@ -355,103 +418,14 @@ namespace Cosmic
 		DrawLine(p3, p0, color);
 	}
 
+	// --- Helpers / Overloads ---
+	void Renderer2D::DrawQuad(const glm::vec2& pos, const glm::vec2& size, const glm::vec4& col) { DrawQuad({ pos.x, pos.y, 0.0f }, size, col); }
+	void Renderer2D::DrawQuad(const glm::vec2& pos, const glm::vec2& size, const Ref<Texture>& tex, float tiling, const glm::vec4& tint) { DrawQuad({ pos.x, pos.y, 0.0f }, size, tex, tiling, tint); }
+	void Renderer2D::DrawRotatedQuad(const glm::vec2& pos, const glm::vec2& size, float rot, const glm::vec4& col) { DrawRotatedQuad({ pos.x, pos.y, 0.0f }, size, rot, col); }
+	void Renderer2D::DrawRotatedQuad(const glm::vec2& pos, const glm::vec2& size, float rot, const Ref<Texture>& tex, float tiling, const glm::vec4& tint) { DrawRotatedQuad({ pos.x, pos.y, 0.0f }, size, rot, tex, tiling, tint); }
 
-
-
-	// --- Rotated Primitives -------------------------------------------------
-
-	void Renderer2D::DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size, float rotation, const glm::vec4& color)
-	{
-		DrawRotatedQuad({ position.x, position.y, 0.0f }, size, rotation, color);
-	}
-
-	void Renderer2D::DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const glm::vec4& color)
-	{
-		if (s_Data.QuadIndexCount >= Renderer2DData::MaxIndices)
-			FlushAndReset();
-
-		const float textureIndex = 0.0f;
-		const float tilingFactor = 1.0f;
-
-		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
-			* glm::rotate(glm::mat4(1.0f), rotation, { 0.0f, 0.0f, 1.0f })
-			* glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
-
-		for (size_t i = 0; i < 4; i++)
-		{
-			s_Data.QuadVertexBufferPtr->Position = transform * s_Data.QuadVertexPositions[i];
-			s_Data.QuadVertexBufferPtr->Color = color;
-			s_Data.QuadVertexBufferPtr->TexCoord = { (i == 0 || i == 3) ? 0.0f : 1.0f, (i == 0 || i == 1) ? 0.0f : 1.0f };
-			s_Data.QuadVertexBufferPtr->TexIndex = textureIndex;
-			s_Data.QuadVertexBufferPtr->TilingFactor = tilingFactor;
-			s_Data.QuadVertexBufferPtr++;
-		}
-
-		s_Data.QuadIndexCount += 6;
-
-		if (s_Data.StatsEnabled)
-			s_Data.Stats.QuadCount++;
-	}
-
-	void Renderer2D::DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size, float rotation, const Ref<Texture>& texture, float tilingFactor, const glm::vec4& tintColor)
-	{
-		DrawRotatedQuad({ position.x, position.y, 0.0f }, size, rotation, texture, tilingFactor, tintColor);
-	}
-
-	void Renderer2D::DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const Ref<Texture>& texture, float tilingFactor, const glm::vec4& tintColor)
-	{
-		if (s_Data.QuadIndexCount >= Renderer2DData::MaxIndices)
-			FlushAndReset();
-
-		float textureIndex = -1.0f;
-		for (uint32_t i = 0; i < s_Data.TextureSlotIndex; i++)
-		{
-			if (*s_Data.TextureSlots[i].get() == *texture.get())
-			{
-				textureIndex = (float)i;
-				break;
-			}
-		}
-
-		if (textureIndex == -1.0f)
-		{
-			if (s_Data.TextureSlotIndex >= Renderer2DData::MaxTextureSlots)
-				FlushAndReset();
-
-			textureIndex = (float)s_Data.TextureSlotIndex;
-			s_Data.TextureSlots[s_Data.TextureSlotIndex] = texture;
-			s_Data.TextureSlotIndex++;
-		}
-
-		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
-			* glm::rotate(glm::mat4(1.0f), rotation, { 0.0f, 0.0f, 1.0f })
-			* glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
-
-		constexpr glm::vec2 textureCoords[] = { { 0.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 1.0f }, { 0.0f, 1.0f } };
-
-		for (size_t i = 0; i < 4; i++)
-		{
-			s_Data.QuadVertexBufferPtr->Position = transform * s_Data.QuadVertexPositions[i];
-			s_Data.QuadVertexBufferPtr->Color = tintColor;
-			s_Data.QuadVertexBufferPtr->TexCoord = textureCoords[i];
-			s_Data.QuadVertexBufferPtr->TexIndex = textureIndex;
-			s_Data.QuadVertexBufferPtr->TilingFactor = tilingFactor;
-			s_Data.QuadVertexBufferPtr++;
-		}
-
-		s_Data.QuadIndexCount += 6;
-
-		if (s_Data.StatsEnabled)
-			s_Data.Stats.QuadCount++;
-	}
-
-	// --- Stats --------------------------------------------------------------
-
+	// --- Statistics ---
 	void Renderer2D::SetStatsStatus(bool enabled) { s_Data.StatsEnabled = enabled; }
 	Renderer2D::Statistics Renderer2D::GetStats() { return s_Data.Stats; }
-
-	void Renderer2D::ResetStats()
-	{
-		memset(&s_Data.Stats, 0, sizeof(Statistics));
-	}
+	void Renderer2D::ResetStats() { memset(&s_Data.Stats, 0, sizeof(Statistics)); }
 }

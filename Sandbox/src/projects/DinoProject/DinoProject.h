@@ -21,6 +21,8 @@ namespace Workspace
 
 	private:
 		Cosmic::Ref<Cosmic::Texture2D> m_DinoTexture;
+		Cosmic::Ref<Cosmic::Material> m_DinoMaterial; // New Material
+
 		std::unique_ptr<DinoRunLayer> m_RunSim;
 		std::unique_ptr<DinoFlightLayer> m_FlightSim;
 		std::unique_ptr<DinoStressLayer> m_StressSim;

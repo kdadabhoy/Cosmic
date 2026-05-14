@@ -7,7 +7,8 @@ namespace Workspace
 	class DinoFlightLayer : public Simulation
 	{
 	public:
-		DinoFlightLayer(Cosmic::Ref<Cosmic::Texture2D> texture);
+		// Changed: Now takes a Ref<Material>
+		DinoFlightLayer(Cosmic::Ref<Cosmic::Material> material);
 
 		virtual void OnUpdate(float ts) override;
 		virtual void OnRender() override;
@@ -15,7 +16,8 @@ namespace Workspace
 		virtual void SetViewportSize(float w, float h) override { m_CameraController.OnResize(w, h); }
 
 	private:
-		Cosmic::Ref<Cosmic::Texture2D> m_Texture;
+		// Changed: Ref<Material> instead of Ref<Texture2D>
+		Cosmic::Ref<Cosmic::Material> m_Material;
 		Cosmic::OrthographicCameraController m_CameraController;
 
 		glm::vec3 m_DinoPos = { 0.0f, 0.0f, 0.0f };
