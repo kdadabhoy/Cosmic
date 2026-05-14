@@ -2,10 +2,11 @@
 #include "graphics/VertexArray.h"
 #include "graphics/Shader.h"
 #include "renderer/RenderCommand.h"
+#include "core/Log.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <array>
-#include <iostream>
+
 
 namespace Cosmic
 {
@@ -67,6 +68,8 @@ namespace Cosmic
 
 	void Renderer2D::Init()
 	{
+		CS_CORE_TRACE("Initializing Renderer2D...");
+
 		s_Data.QuadVertexArray = VertexArray::Create();
 
 		s_Data.QuadVertexBuffer = VertexBuffer::Create(s_Data.MaxVertices * sizeof(QuadVertex));
@@ -102,7 +105,6 @@ namespace Cosmic
 		uint32_t whiteTextureData = 0xffffffff;
 		s_Data.WhiteTexture->SetData(&whiteTextureData, sizeof(uint32_t));
 
-		// Initialize samplers for the default shader
 		int32_t samplers[s_Data.MaxTextureSlots];
 		for (uint32_t i = 0; i < s_Data.MaxTextureSlots; i++)
 			samplers[i] = i;
@@ -130,12 +132,15 @@ namespace Cosmic
 		s_Data.LineVertexBufferBase = new LineVertex[s_Data.MaxVertices];
 
 		s_Data.LineShader = Shader::Create("assets/shaders/Line.glsl");
+
+		// REPLACED: std::cerr with CS_CORE_ERROR
 		if (!s_Data.LineShader)
-			std::cerr << "[Cosmic Error] Renderer2D: Failed to load Line shader!" << std::endl;
+			CS_CORE_ERROR("Renderer2D: Failed to load Line shader!");
 	}
 
 	void Renderer2D::Shutdown()
 	{
+		CS_CORE_TRACE("Shutting down Renderer2D");
 		delete[] s_Data.QuadVertexBufferBase;
 		delete[] s_Data.LineVertexBufferBase;
 	}
@@ -244,7 +249,7 @@ namespace Cosmic
 	{
 		if (!texture)
 		{
-			std::cerr << "[Cosmic Warning] Renderer2D: DrawQuad received null texture. Falling back to White." << std::endl;
+			CS_CORE_WARN("Renderer2D: DrawQuad received null texture. Falling back to White.");
 			DrawQuad(position, size, tintColor);
 			return;
 		}
@@ -294,24 +299,22 @@ namespace Cosmic
 		if (s_Data.CurrentMaterial != material) FlushAndReset();
 		s_Data.CurrentMaterial = material;
 
-		// Try to get texture and color from material, fallback to defaults if not set
 		Ref<Texture> tex = material->GetTexture("u_Texture");
 		if (!tex) tex = s_Data.WhiteTexture;
 
-		if (tex)
+		// If the texture is STILL null after the fallback, that's an actual error.
+		if (!tex)
 		{
-			// Should print the Dino.png path or a valid ID
-			std::cout << "[DEBUG] Drawing Material with Texture ID: " << tex->GetRendererID() << std::endl;
-		}
-		else
-		{
-			std::cout << "[ERROR] Material 'u_Texture' is NULL!" << std::endl;
+			CS_CORE_ERROR("Renderer2D: Material '{0}' - 'u_Texture' is NULL and fallback failed!", material->GetName());
+			return;
 		}
 
 		glm::vec4 color = material->GetVector("u_Color");
-
 		DrawQuad(position, size, tex, 1.0f, color);
 	}
+
+
+
 
 	void Renderer2D::DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const Ref<Material>& material)
 	{

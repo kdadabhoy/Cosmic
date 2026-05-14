@@ -3,6 +3,7 @@
 #include "renderer/RenderCommand.h"
 #include "core/Timestep.h"
 #include "graphics/FrameBuffer.h"
+#include "core/Log.h"
 
 #include <GLFW/glfw3.h>
 #include <iostream>
@@ -19,11 +20,15 @@ namespace Cosmic
 	Application::Application()
 		: m_Running(true), m_ImGuiLayer(nullptr)
 	{
+		// Initialize Log
+		Log::Init();
+		CS_CORE_INFO("Cosmic Engine Logging Initialized");
+
 		s_Instance = this;
 
 		if (!Initialize())
 		{
-			std::cout << "Cosmic: Failed to initialize application!" << std::endl;
+			CS_CORE_CRITICAL("Cosmic: Failed to initialize application!");
 		}
 	}
 
@@ -38,6 +43,9 @@ namespace Cosmic
 
 	bool Application::Initialize()
 	{
+		// 0. Log statement
+		CS_CORE_TRACE("Initializing Application Subsystems...");
+
 		// 1. Create the window 
 		m_Window = std::make_unique<Window>(DEFAULT_WIDTH, DEFAULT_HEIGHT, DEFAULT_WINDOW_TITLE);
 
