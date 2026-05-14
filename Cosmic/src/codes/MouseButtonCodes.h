@@ -17,7 +17,7 @@
 namespace Cosmic
 {
 
-	// --- Standard Mouse Buttons ---
+// --- Standard Mouse Buttons ---
 #define CS_MOUSE_BUTTON_1         0
 #define CS_MOUSE_BUTTON_2         1
 #define CS_MOUSE_BUTTON_3         2
