@@ -1,5 +1,68 @@
 #pragma once
 
+// OrthographicCamera.h
+// Last Modified 5/14/2026
+
+/**
+ * General Description:
+ * The OrthographicCamera serves as the eyes of the engine in the 2D world.
+ * It utilizes an orthographic projection to ensure objects maintain a consistent
+ * size regardless of their distance (depth) from the camera, eliminating perspective
+ * distortion. The class manages the View, Projection, and combined View-Projection
+ * matrices, allowing for camera movement and rotation by internally inverting
+ * world transformations.
+ *
+ * Documentation Notes:
+ * - Projection Matrix: Determines the world boundaries (left, right, bottom, top).
+ * - View Matrix: Defines the camera's location. The camera doesn't "move"; the
+ *   world moves in the opposite direction (Inverse Transform).
+ * - ViewProjectionMatrix: Updated on the CPU and passed to shaders to be
+ *   multiplied by object transform matrices.
+ *
+ * Public Function Prototypes (Pre and Post Conditions):
+ *
+ * 1. OrthographicCamera(float left, float right, float bottom, float top)
+ *    Pre:  Valid boundary values provided for the frustum.
+ *    Post: Projection matrix is initialized and View-Projection is calculated.
+ *
+ * 2. ~OrthographicCamera()
+ *    Pre:  The camera instance exists.
+ *    Post: Camera resources are released.
+ *
+ * 3. void SetProjection(float left, float right, float bottom, float top)
+ *    Pre:  None.
+ *    Post: Re-calculates the orthographic projection matrix and updates the
+ *          combined View-Projection matrix.
+ *
+ * 4. const glm::vec3& GetPosition()
+ *    Pre:  None.
+ *    Post: Returns the current 3D world position of the camera.
+ *
+ * 5. float GetRotation()
+ *    Pre:  None.
+ *    Post: Returns the camera's rotation around the Z-axis in degrees.
+ *
+ * 6. const glm::mat4& GetProjectionMatrix()
+ *    Pre:  None.
+ *    Post: Returns the 4x4 orthographic projection matrix.
+ *
+ * 7. const glm::mat4& GetViewMatrix()
+ *    Pre:  None.
+ *    Post: Returns the current view matrix (the inverse of the camera's transform).
+ *
+ * 8. const glm::mat4& GetViewProjectionMatrix()
+ *    Pre:  None.
+ *    Post: Returns the pre-multiplied Projection * View matrix for shader use.
+ *
+ * 9. void SetPosition(const glm::vec3& position)
+ *    Pre:  None.
+ *    Post: Updates the camera position and re-calculates the View and VP matrices.
+ *
+ * 10. void SetRotation(float rotation)
+ *     Pre:  None.
+ *     Post: Updates the Z-axis rotation and re-calculates the View and VP matrices.
+ */
+
 #include <glm/glm.hpp>
 
 namespace Cosmic
@@ -7,76 +70,62 @@ namespace Cosmic
 	class OrthographicCamera
 	{
 	public:
+		////////////////////////////////
+		// Constructor & Destructor
+		///////////////////////////////
+
 		OrthographicCamera(float left, float right, float bottom, float top);
 		~OrthographicCamera();
 
-		void							SetProjection(float left, float right, float bottom, float top);
+		////////////////////////////////
+		// Projection & Bounds
+		///////////////////////////////
 
-		// Getters:
-		const glm::vec3& GetPosition() const { return m_Position; }
-		float							GetRotation() const { return m_Rotation; }
-		const glm::mat4& GetProjectionMatrix() const { return m_ProjectionMatrix; }
-		const glm::mat4& GetViewMatrix() const { return m_ViewMatrix; }
-		const glm::mat4& GetViewProjectionMatrix() const { return m_ViewProjectionMatrix; }
+		void					SetProjection(float left, float right, float bottom, float top);
+
+		////////////////////////////////
+		// Getters (Matrices & State)
+		///////////////////////////////
+
+		const glm::vec3&		GetPosition() const					{ return m_Position; }
+		float					GetRotation() const					{ return m_Rotation; }
+
+		const glm::mat4&		GetProjectionMatrix() const			{ return m_ProjectionMatrix; }
+		const glm::mat4&		GetViewMatrix() const				{ return m_ViewMatrix; }
+		const glm::mat4&		GetViewProjectionMatrix() const		{ return m_ViewProjectionMatrix; }
 
 
-		// Setters:
-		void							SetPosition(const glm::vec3& position) { m_Position = position; UpdateViewMatrix(); }
-		void							SetRotation(float rotation) { m_Rotation = rotation; UpdateViewMatrix(); }
+		////////////////////////////////
+		// Setters (Transformation)
+		///////////////////////////////
+
+		void					SetPosition(const glm::vec3& position) { m_Position = position; UpdateViewMatrix(); }
+		void					SetRotation(float rotation) { m_Rotation = rotation; UpdateViewMatrix(); }
 
 
 	private:
-		void							UpdateViewMatrix();
+		////////////////////////////////
+		// Internal Matrix Math
+		///////////////////////////////
+
+		void					UpdateViewMatrix();
 
 
 	private:
-		glm::mat4						m_ProjectionMatrix;
-		glm::mat4						m_ViewMatrix;
-		glm::mat4						m_ViewProjectionMatrix;
+		////////////////////////////////
+		// Matrix Storage
+		///////////////////////////////
 
-		glm::vec3						m_Position = { 0.0f, 0.0f, 0.0f };
-		float							m_Rotation = 0.0f; // z-axis rotation
+		glm::mat4				m_ProjectionMatrix;
+		glm::mat4				m_ViewMatrix;
+		glm::mat4				m_ViewProjectionMatrix;
+
+		////////////////////////////////
+		// Camera State
+		///////////////////////////////
+
+		glm::vec3				m_Position = { 0.0f, 0.0f, 0.0f };
+		float					m_Rotation = 0.0f; // z-axis rotation
 	};
 
 }
-
-
-
-
-
-
-
-
-
-/*	Documentation:
-
-	The OrthographicCamera serves as the eyes of the engine in the 2D world.
-		- Orthographic projection, bc in 2D we don't want perspective distortion (object is same size whether it is close or far away)
-
-
-	Two main matrices for 2D stuff (that this class manages)
-
-		1. Projection Matrix
-			- This determines the boundaries of the world (how far up, left, down, or right that we can see)
-
-		2. View Matrix
-			- This defines where the Camera is in the world (tracks the camera's x,y,z location)
-
-	UpdateViewMatrix()
-		- The camera doesnt actually move... the world moves around the camera
-			- If we want the camera to move 5 units right, the engine actually has to move every object in the world 5 units left
-			- So, we first transform every object (apply a rotational matrix and translation) and then we take the inverse of that... and that is our new ViewMatrix
-
-
-
-	m_ViewProjectionMatrix = m_ProjectionMatrix * m_ViewMatrix
-
-
-	... This needs to be reworked and rewritten... the ViewProjectionMatrix is updated once by CPU... and then used in the shader with the particular object's transform matrix...
-
-
-
-
-
-
-*/
