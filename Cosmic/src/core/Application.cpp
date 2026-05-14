@@ -223,16 +223,26 @@ namespace Cosmic
 
 	/**
 	 * Engine Shutdown
-	 * Manually clears layers before the Scopes go out of context to prevent
-	 * dangling pointers during the destruction sequence.
+	 *
+	 * This method orchestrates a "soft-landing" for the engine. By explicitly clearing
+	 * the LayerStack, we ensure that every layer has a chance to run its OnDetach()
+	 * logic (cleaning up textures, shaders, etc.) while the Renderer and Window are
+	 * still valid.
+	 *
+	 * Because we removed the 'delete' call from the LayerStack destructor, this clear
+	 * only removes raw pointers. The actual memory is then safely freed by the
+	 * Scope<> (unique_ptr) members of the Application class during its final
+	 * destruction phase. This prevents double-frees and dangling pointer crashes.
 	 */
 	void Application::Shutdown()
 	{
-		// Force the layers to detach while subsystems (like Renderer) still exist.
-		for (Layer* layer : m_LayerStack)
-		{
-			layer->OnDetach();
-		}
+		CS_CORE_TRACE("Shutting down Application Subsystems...");
+
+		// 1. Notify and remove all layers/overlays from the heartbeat
+		m_LayerStack.Clear();
+
+		// 2. Additional cleanup for core static subsystems
+		Renderer::Shutdown();
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////
