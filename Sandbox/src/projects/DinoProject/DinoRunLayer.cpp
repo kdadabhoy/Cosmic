@@ -23,7 +23,7 @@ namespace Workspace
 		m_Score += ts * 10.0f;
 
 		// Input
-		if (Cosmic::Input::IsKeyPressed(KEY_SPACE) && m_IsGrounded)
+		if (Cosmic::Input::IsKeyPressed(CS_KEY_SPACE) && m_IsGrounded)
 		{
 			m_VelocityY = 5.0f;
 			m_IsGrounded = false;

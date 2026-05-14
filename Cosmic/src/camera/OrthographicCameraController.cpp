@@ -17,14 +17,14 @@ namespace Cosmic
 		// Movement logic using the translation speed multiplied by zoom level for consistent feel
 		float actualMoveSpeed = m_CameraTranslationSpeed * m_ZoomLevel;
 
-		if (Input::IsKeyPressed(KEY_A))
+		if (Input::IsKeyPressed(CS_KEY_A))
 			m_CameraPosition.x -= actualMoveSpeed * ts;
-		else if (Input::IsKeyPressed(KEY_D))
+		else if (Input::IsKeyPressed(CS_KEY_D))
 			m_CameraPosition.x += actualMoveSpeed * ts;
 
-		if (Input::IsKeyPressed(KEY_W))
+		if (Input::IsKeyPressed(CS_KEY_W))
 			m_CameraPosition.y += actualMoveSpeed * ts;
-		else if (Input::IsKeyPressed(KEY_S))
+		else if (Input::IsKeyPressed(CS_KEY_S))
 			m_CameraPosition.y -= actualMoveSpeed * ts;
 
 		// Apply position constraints
@@ -33,9 +33,9 @@ namespace Cosmic
 
 		if (m_Rotation)
 		{
-			if (Input::IsKeyPressed(KEY_Q))
+			if (Input::IsKeyPressed(CS_KEY_Q))
 				m_CameraRotation += m_CameraRotationSpeed * ts;
-			if (Input::IsKeyPressed(KEY_E))
+			if (Input::IsKeyPressed(CS_KEY_E))
 				m_CameraRotation -= m_CameraRotationSpeed * ts;
 
 			m_Camera.SetRotation(m_CameraRotation);

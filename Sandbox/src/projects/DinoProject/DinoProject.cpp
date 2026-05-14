@@ -58,9 +58,9 @@ namespace Workspace
 		m_SmoothedDeltaTime = m_SmoothedDeltaTime * 0.95f + dt * 0.05f;
 
 		// Input Handling
-		if (Cosmic::Input::IsKeyPressed(KEY_F)) m_ActiveSim = m_FlightSim.get();
-		if (Cosmic::Input::IsKeyPressed(KEY_R)) m_ActiveSim = m_RunSim.get();
-		if (Cosmic::Input::IsKeyPressed(KEY_T)) m_ActiveSim = m_StressSim.get();
+		if (Cosmic::Input::IsKeyPressed(CS_KEY_F)) m_ActiveSim = m_FlightSim.get();
+		if (Cosmic::Input::IsKeyPressed(CS_KEY_R)) m_ActiveSim = m_RunSim.get();
+		if (Cosmic::Input::IsKeyPressed(CS_KEY_T)) m_ActiveSim = m_StressSim.get();
 
 		if (m_ActiveSim)
 			m_ActiveSim->OnUpdate(ts);
