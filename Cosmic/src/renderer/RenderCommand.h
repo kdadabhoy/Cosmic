@@ -1,80 +1,144 @@
 #pragma once
 
+// RenderCommand.h
+// Last Modified: 5/14/2026
+/**
+     * General Description:
+     * The RenderCommand class is a high-level static utility that serves as the
+     * engine's primary entry point for issuing hardware commands. It acts as a
+     * "Command Dispatcher," abstracting the complexities of the active Graphics API
+     * (OpenGL, DirectX, etc.) behind a unified interface.
+     *
+     * The Goal:
+     * The primary goal of this class is to achieve Hardware Independence. By routing
+     * all draw calls, buffer clears, and state changes through this interface, the
+     * rest of the engine (including the high-level Renderer and Renderer2D) can remain
+     * agnostic to which API is currently driving the display. This allows for seamless
+     * multi-platform support and simplified maintenance.
+     *
+     * Public Function Prototypes (Pre and Post Conditions):
+     *
+     * 1. static void Init()
+     *    Pre:  A valid RendererAPI implementation has been instantiated.
+     *    Post: The active Graphics API is initialized with engine-default states.
+     *
+     * 2. static void SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height)
+     *    Pre:  None.
+     *    Post: The rendering region of the window is updated to the specified dimensions.
+     *
+     * 3. static void SetClearColor(const glm::vec4& color)
+     *    Pre:  None.
+     *    Post: Updates the internal state of the API with the color to be used during a Clear() call.
+     *
+     * 4. static void Clear()
+     *    Pre:  None.
+     *    Post: Clears the current frame's backbuffer (Color and Depth) using the stored ClearColor.
+     *
+     * 5. static void Clear(float r, float g, float b)
+     *    Pre:  None.
+     *    Post: Helper overload that sets the clear color and executes a clear in a single command.
+     *
+     * 6. static void DrawIndexed(const Ref<VertexArray>& vertexArray, uint32_t count)
+     *    Pre:  A valid VertexArray containing an Index Buffer must be bound.
+     *    Post: Submits an indexed draw call to the GPU. If count is 0, the VAO's full index count is used.
+     *
+     * 7. static void DrawLines(const Ref<VertexArray>& vertexArray, uint32_t vertexCount)
+     *    Pre:  A valid VertexArray configured for line primitives must be bound.
+     *    Post: Submits a non-indexed line draw call for the specified number of vertices.
+     **/
+
 #include "core/Core.h"
 #include "renderer/RendererAPI.h"
 #include "graphics/VertexArray.h"
 #include <glm/glm.hpp>
 
+
 namespace Cosmic
 {
-	/**
-	 * @brief Static utility class that dispatches commands to the specific RendererAPI implementation.
-	 */
-	class RenderCommand
-	{
-	public:
-		/**
-		 * @brief Initializes the active Graphics API.
-		 */
-		inline static void Init()
-		{
-			s_RendererAPI->Init();
-		}
+    class RenderCommand
+    {
+    public:
 
-		/**
-		 * @brief Sets the screen/window viewport size.
-		 */
-		inline static void SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height)
-		{
-			s_RendererAPI->SetViewport(x, y, width, height);
-		}
+        /**
+         * @brief Initializes the active Graphics API implementation.
+         * Configures global capabilities such as blending, depth testing, and face culling.
+         */
+        inline static void Init()
+        {
+            s_RendererAPI->Init();
+        }
 
-		/**
-		 * @brief Sets the clear color for the setup.
-		 */
-		inline static void SetClearColor(const glm::vec4& color)
-		{
-			s_RendererAPI->SetClearColor(color);
-		}
+        /**
+         * @brief Sets the screen/window viewport size.
+         * Maps the normalized device coordinates to the window's pixel coordinates.
+         * @param x The horizontal offset from the bottom-left corner.
+         * @param y The vertical offset from the bottom-left corner.
+         * @param width The width of the viewport in pixels.
+         * @param height The height of the viewport in pixels.
+         */
+        inline static void SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height)
+        {
+            s_RendererAPI->SetViewport(x, y, width, height);
+        }
 
-		/**
-		 * @brief Clears the buffers using the previously set clear color.
-		 */
-		inline static void Clear()
-		{
-			s_RendererAPI->Clear();
-		}
+        /**
+         * @brief Sets the clear color for the graphics context.
+         * @param color A vec4 representing the (R, G, B, A) values.
+         */
+        inline static void SetClearColor(const glm::vec4& color)
+        {
+            s_RendererAPI->SetClearColor(color);
+        }
 
-		/**
-		 * @brief Legacy helper to set color and clear in one call.
-		 */
-		inline static void Clear(float r, float g, float b)
-		{
-			s_RendererAPI->SetClearColor({ r, g, b, 1.0f });
-			s_RendererAPI->Clear();
-		}
+        /**
+         * @brief Clears the active framebuffers.
+         * Instructs the GPU to wipe the color and depth buffers to prepare for a new frame.
+         */
+        inline static void Clear()
+        {
+            s_RendererAPI->Clear();
+        }
 
-		/**
-		 * @brief Executes a draw call.
-		 * Matches the signature in RendererAPI.h.
-		 */
-		inline static void DrawIndexed(const Ref<VertexArray>& vertexArray, uint32_t count = 0)
-		{
-			s_RendererAPI->DrawIndexed(vertexArray, count);
-		}
+        /**
+         * @brief Convenience helper to set color and clear in a single call.
+         * Primarily used in simple demo applications or quick test sweeps.
+         * @param r Red component (0.0f - 1.0f).
+         * @param g Green component (0.0f - 1.0f).
+         * @param b Blue component (0.0f - 1.0f).
+         */
+        inline static void Clear(float r, float g, float b)
+        {
+            s_RendererAPI->SetClearColor({ r, g, b, 1.0f });
+            s_RendererAPI->Clear();
+        }
 
-		/**
-			* @brief Executes a non-indexed line draw call.
-		*/
-		inline static void DrawLines(const Ref<VertexArray>& vertexArray, uint32_t vertexCount)
-		{
-			s_RendererAPI->DrawLines(vertexArray, vertexCount);
-		}
+        /**
+         * @brief Executes an indexed draw call.
+         * This is the standard method for drawing optimized 2D and 3D geometry.
+         * @param vertexArray The Vertex Array Object containing the vertex and index data.
+         * @param count The number of indices to draw. If 0, uses the VAO's internal index buffer count.
+         */
+        inline static void DrawIndexed(const Ref<VertexArray>& vertexArray, uint32_t count = 0)
+        {
+            s_RendererAPI->DrawIndexed(vertexArray, count);
+        }
 
+        /**
+         * @brief Executes a non-indexed line draw call.
+         * Used for drawing wireframes, debug outlines, and pathfinding visualizations.
+         * @param vertexArray The Vertex Array Object containing the point data.
+         * @param vertexCount The total number of vertices to process as lines.
+         */
+        inline static void DrawLines(const Ref<VertexArray>& vertexArray, uint32_t vertexCount)
+        {
+            s_RendererAPI->DrawLines(vertexArray, vertexCount);
+        }
 
-
-
-	private:
-		static RendererAPI* s_RendererAPI;
-	};
+    private:
+        /**
+         * @brief Internal pointer to the active API implementation.
+         * This static instance is created at startup based on the selected platform.
+         */
+        static RendererAPI* s_RendererAPI;
+    };
 }
