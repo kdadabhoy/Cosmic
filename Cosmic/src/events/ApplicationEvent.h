@@ -1,21 +1,38 @@
 #pragma once
 
+// ApplicationEvent.h
+// Last Modified 5/14/2026
+
+/**
+ * General Description:
+ * ApplicationEvent.h contains specialized Event classes that deal with the
+ * lifecycle of the application and its window. These events are categorized
+ * under 'EventCategoryApplication'.
+ *
+ * These signals are vital for the coordination between the hardware-facing
+ * Window class and the high-level Application logic.
+ */
+
 #include "events/Event.h"
 #include <sstream>
 #include <string>
-#include <iostream>
-
-#pragma once
 
 namespace Cosmic
 {
+
+	/////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////
+	/**
+	 * WindowResizeEvent
+	 * Dispatched when the native window changes size.
+	 * Contains the new width and height in pixels.
+	 */
 	class WindowResizeEvent : public Event
 	{
 	public:
 		WindowResizeEvent(uint32_t width, uint32_t height)
 			: m_Width(width), m_Height(height)
 		{
-
 		}
 
 		inline uint32_t GetWidth() const { return m_Width; }
@@ -34,8 +51,13 @@ namespace Cosmic
 		uint32_t m_Width, m_Height;
 	};
 
-	/////////////////////////////////////////////////////////////////////////////////
 
+	/////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////
+	/**
+	 * WindowCloseEvent
+	 * Dispatched when the OS window is signaled to close.
+	 */
 	class WindowCloseEvent : public Event
 	{
 	public:
@@ -45,6 +67,14 @@ namespace Cosmic
 			EVENT_CLASS_CATEGORY(EventCategoryApplication)
 	};
 
+
+	/////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////
+	/**
+	 * AppTick / AppUpdate / AppRender
+	 * Internal heartbeat events that can be used to synchronize
+	 * logic or external debugging tools with the main engine loop.
+	 */
 	/////////////////////////////////////////////////////////////////////////////////
 
 	class AppTickEvent : public Event
@@ -78,5 +108,7 @@ namespace Cosmic
 			EVENT_CLASS_CATEGORY(EventCategoryApplication)
 	};
 
+	/////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////
 
 }
