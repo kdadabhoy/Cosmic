@@ -6,6 +6,13 @@
 
 namespace Cosmic
 {
+	/////////////////////////////////////////////////////////////////////////////////
+
+	/**
+	 * ShaderTypeFromString
+	 * * INTERNAL HELPER: Converts a string identifier (e.g., "vertex") into
+	 * the corresponding OpenGL shader type constant.
+	 */
 	static GLenum ShaderTypeFromString(const std::string& type)
 	{
 		if (type == "vertex") return GL_VERTEX_SHADER;
@@ -15,6 +22,15 @@ namespace Cosmic
 		return 0;
 	}
 
+	/////////////////////////////////////////////////////////////////////////////////
+
+	/**
+	 * OpenGLShader Constructor
+	 * * Orchestrates the shader build pipeline:
+	 * 1. Reads the raw text file from disk.
+	 * 2. Pre-processes the source to separate different shader stages.
+	 * 3. Compiles and links the source into a usable GPU program.
+	 */
 	OpenGLShader::OpenGLShader(const std::string& filepath)
 	{
 		std::string source = ReadFile(filepath);
@@ -22,11 +38,24 @@ namespace Cosmic
 		Compile(shaderSources);
 	}
 
+	/////////////////////////////////////////////////////////////////////////////////
+
+	/**
+	 * OpenGLShader Destructor
+	 * * Cleans up the GPU program resource once the Shader instance is destroyed.
+	 */
 	OpenGLShader::~OpenGLShader()
 	{
 		glDeleteProgram(m_RendererID);
 	}
 
+	/////////////////////////////////////////////////////////////////////////////////
+
+	/**
+	 * ReadFile
+	 * * Utility function to load GLSL source code from a file into a string.
+	 * It reads in binary mode to ensure file size calculations are accurate.
+	 */
 	std::string OpenGLShader::ReadFile(const std::string& filepath)
 	{
 		std::string result;
@@ -46,6 +75,14 @@ namespace Cosmic
 		return result;
 	}
 
+	/////////////////////////////////////////////////////////////////////////////////
+
+	/**
+	 * PreProcess
+	 * * ASSET WORKFLOW: Parses a single GLSL file and splits it into multiple
+	 * sources based on the "#type" directive. This allows Cosmic to keep
+	 * vertex and fragment logic in one cohesive asset.
+	 */
 	std::unordered_map<GLenum, std::string> OpenGLShader::PreProcess(const std::string& source)
 	{
 		std::unordered_map<GLenum, std::string> shaderSources;
@@ -63,12 +100,22 @@ namespace Cosmic
 			size_t nextLinePos = source.find_first_not_of("\r\n", eol);
 			pos = source.find(typeToken, nextLinePos);
 
-			shaderSources[ShaderTypeFromString(type)] = (pos == std::string::npos) ? source.substr(nextLinePos) : source.substr(nextLinePos, pos - nextLinePos);
+			shaderSources[ShaderTypeFromString(type)] = (pos == std::string::npos) ?
+				source.substr(nextLinePos) : source.substr(nextLinePos, pos - nextLinePos);
 		}
 
 		return shaderSources;
 	}
 
+	/////////////////////////////////////////////////////////////////////////////////
+
+	/**
+	 * Compile
+	 * * THE BUILD CORE: Handles the compilation of individual shader stages,
+	 * links them into a final program, and detaches/deletes individual shaders
+	 * post-link to save GPU memory. Includes comprehensive error logging
+	 * for GLSL compilation and linking failures.
+	 */
 	void OpenGLShader::Compile(const std::unordered_map<GLenum, std::string>& shaderSources)
 	{
 		GLuint program = glCreateProgram();
@@ -129,6 +176,7 @@ namespace Cosmic
 
 		m_RendererID = program;
 
+		// Cleanup: Individual shader stages are no longer needed once linked
 		for (auto id : shaderIDs)
 		{
 			glDetachShader(program, id);
@@ -136,19 +184,31 @@ namespace Cosmic
 		}
 	}
 
+	/////////////////////////////////////////////////////////////////////////////////
+
+	/**
+	 * Bind
+	 * * Makes this shader program active in the GPU pipeline.
+	 */
 	void OpenGLShader::Bind() const
 	{
 		glUseProgram(m_RendererID);
 	}
 
+	/////////////////////////////////////////////////////////////////////////////////
+
+	/**
+	 * Unbind
+	 * * Deactivates the current shader program.
+	 */
 	void OpenGLShader::Unbind() const
 	{
 		glUseProgram(0);
 	}
 
-	// -------------------------------------------------------------------------
+	/////////////////////////////////////////////////////////////////////////////////
 	// Uniform Setters (Implementation of virtual interface)
-	// -------------------------------------------------------------------------
+	/////////////////////////////////////////////////////////////////////////////////
 
 	void OpenGLShader::SetInt(const std::string& name, int value)
 	{
@@ -180,16 +240,25 @@ namespace Cosmic
 		UploadUniformMat4(name, value);
 	}
 
-	// -------------------------------------------------------------------------
+	/////////////////////////////////////////////////////////////////////////////////
 	// OpenGL-specific Uniform Uploaders
-	// -------------------------------------------------------------------------
+	/////////////////////////////////////////////////////////////////////////////////
 
+	/**
+	 * UploadUniformInt
+	 * * Communicates a single integer to the GPU. Used for texture slot IDs.
+	 */
 	void OpenGLShader::UploadUniformInt(const std::string& name, int value)
 	{
 		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
 		glUniform1i(location, value);
 	}
 
+	/**
+	 * UploadUniformIntArray
+	 * * BATCHING LOGIC: Uploads an array of texture unit IDs. Essential for
+	 * multi-texture sampling in the Batch Renderer.
+	 */
 	void OpenGLShader::UploadUniformIntArray(const std::string& name, int* values, uint32_t count)
 	{
 		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
@@ -214,9 +283,16 @@ namespace Cosmic
 		glUniformMatrix3fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
 	}
 
+	/**
+	 * UploadUniformMat4
+	 * * Uploads a 4x4 matrix (usually View-Projection). Uses glm::value_ptr
+	 * to convert GLM types to raw float arrays.
+	 */
 	void OpenGLShader::UploadUniformMat4(const std::string& name, const glm::mat4& matrix)
 	{
 		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
 		glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
 	}
+
+	/////////////////////////////////////////////////////////////////////////////////
 }
