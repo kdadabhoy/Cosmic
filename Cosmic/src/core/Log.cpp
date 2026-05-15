@@ -3,10 +3,20 @@
 
 namespace Cosmic
 {
-
 	Ref<spdlog::logger> Log::s_CoreLogger;
 	Ref<spdlog::logger> Log::s_ClientLogger;
 
+	/////////////////////////////////////////////////////////////////////////////////
+
+	/**
+	 * Init
+	 * * THE DIAGNOSTIC HEARTBEAT: Initializes the logging infrastructure.
+	 * 1. Sets the global formatting pattern: [Time] Name: Message.
+	 * 2. Creates a multi-threaded, color-coded console sink for the engine (COSMIC).
+	 * 3. Creates a separate sink for the user application (APP).
+	 * * The level is set to 'trace' by default to ensure all information is
+	 * captured during development builds.
+	 */
 	void Log::Init()
 	{
 		// Pattern: [Timestamp] [LoggerName] [Level] Message
@@ -20,4 +30,5 @@ namespace Cosmic
 		s_ClientLogger->set_level(spdlog::level::trace);
 	}
 
+	/////////////////////////////////////////////////////////////////////////////////
 }
