@@ -1,5 +1,16 @@
+// Resolve Windows/GLAD macro collision
+#ifdef _WIN32
+    #ifndef WIN32_LEAN_AND_MEAN
+        #define WIN32_LEAN_AND_MEAN
+    #endif
+    #include <windows.h>
+#endif
+
+#ifdef APIENTRY
+    #undef APIENTRY
+#endif
+
 #include "platform/opengl/OpenGLShader.h"
-#include <fstream>
 #include <vector>
 #include <glm/gtc/type_ptr.hpp>
 #include "core/Log.h"

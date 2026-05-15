@@ -8,18 +8,26 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# MSVC specific: Enable UTF-8 encoding globally. 
+# MSVC specific optimizations
 # This fixes spdlog/fmt "Unicode support" errors in all sub-projects.
 if(MSVC)
     add_compile_options(/utf-8)
 endif()
 
 # -------------------------------------------------------------------
-# 2. Subdirectories
+# 2. Windows-Specific Cleanups (The "Anti-Conflict" Block)
+# -------------------------------------------------------------------
+if(WIN32)
+    # This prevents the APIENTRY redefinition warning and speeds up build times
+    add_definitions(-DWIN32_LEAN_AND_MEAN)
+    # This prevents Windows macros from breaking std::min/max
+    add_definitions(-DNOMINMAX) 
+endif()
+
+# -------------------------------------------------------------------
+# 3. Subdirectories
 # -------------------------------------------------------------------
 
-# Build the Engine first (Library)
+# Now when these projects load, they already have the clean Windows environment
 add_subdirectory(Cosmic)
-
-# Build the Sandbox (Executable)
 add_subdirectory(Sandbox)

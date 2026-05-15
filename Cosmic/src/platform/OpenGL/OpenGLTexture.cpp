@@ -1,3 +1,15 @@
+// Resolve Windows/GLAD macro collision
+#ifdef _WIN32
+    #ifndef WIN32_LEAN_AND_MEAN
+        #define WIN32_LEAN_AND_MEAN
+    #endif
+    #include <windows.h>
+#endif
+
+#ifdef APIENTRY
+    #undef APIENTRY
+#endif
+
 #include "platform/opengl/OpenGLTexture.h"
 #include <stb_image.h>
 #include "core/Log.h"
