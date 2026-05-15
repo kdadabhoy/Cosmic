@@ -1,5 +1,5 @@
-#include "platform/opengl/OpenGLVertexArray.h"
 #include <glad/glad.h>
+#include "platform/opengl/OpenGLVertexArray.h"
 
 namespace Cosmic
 {

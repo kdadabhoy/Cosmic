@@ -1,5 +1,5 @@
-#include "platform/OpenGL/OpenGLFrameBuffer.h"
 #include <glad/glad.h>
+#include "platform/OpenGL/OpenGLFrameBuffer.h"
 #include "core/Log.h"
 
 namespace Cosmic

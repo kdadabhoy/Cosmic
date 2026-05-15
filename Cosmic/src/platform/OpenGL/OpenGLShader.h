@@ -45,8 +45,8 @@
  * GPU constants.
  */
 
-#include "graphics/Shader.h"
 #include <glad/glad.h>
+#include "graphics/Shader.h"
 #include <unordered_map>
 
 namespace Cosmic

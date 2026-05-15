@@ -1,5 +1,5 @@
-#include "platform/opengl/OpenGLContext.h"
 #include <glad/glad.h>
+#include "platform/opengl/OpenGLContext.h"
 #include <GLFW/glfw3.h>
 
 namespace Cosmic

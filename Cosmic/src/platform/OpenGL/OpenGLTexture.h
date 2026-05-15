@@ -45,8 +45,8 @@
  * Post: Returns true if both objects share the same internal OpenGL RendererID.
  */
 
-#include "graphics/Texture.h"
 #include <glad/glad.h>
+#include "graphics/Texture.h"
 #include <string>
 
 namespace Cosmic

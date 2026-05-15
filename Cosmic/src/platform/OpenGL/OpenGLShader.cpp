@@ -2,7 +2,8 @@
 #include <fstream>
 #include <vector>
 #include <glm/gtc/type_ptr.hpp>
-#include <iostream>
+#include "core/Log.h"
+
 
 namespace Cosmic
 {
@@ -18,7 +19,7 @@ namespace Cosmic
 		if (type == "vertex") return GL_VERTEX_SHADER;
 		if (type == "fragment" || type == "pixel") return GL_FRAGMENT_SHADER;
 
-		std::cout << "Cosmic: Unknown shader type '" << type << "'!" << std::endl;
+		CS_CORE_ERROR("Unknown shader type '{0}'!", type);
 		return 0;
 	}
 
@@ -70,7 +71,7 @@ namespace Cosmic
 		}
 		else
 		{
-			std::cout << "Cosmic: Could not open file '" << filepath << "'" << std::endl;
+			CS_CORE_ERROR("Could not open file '{0}'", filepath);
 		}
 		return result;
 	}
@@ -145,8 +146,8 @@ namespace Cosmic
 
 				glDeleteShader(shader);
 
-				std::cout << "Cosmic: Shader compilation failure!" << std::endl;
-				std::cout << infoLog.data() << std::endl;
+				CS_CORE_ERROR("Shader compilation failure!");
+				CS_CORE_ERROR("{0}", infoLog.data());
 				break;
 			}
 
@@ -169,8 +170,8 @@ namespace Cosmic
 			glDeleteProgram(program);
 			for (auto id : shaderIDs) glDeleteShader(id);
 
-			std::cout << "Cosmic: Shader link failure!" << std::endl;
-			std::cout << infoLog.data() << std::endl;
+			CS_CORE_ERROR("Shader link failure!");
+			CS_CORE_ERROR("{0}", infoLog.data());
 			return;
 		}
 

@@ -1,5 +1,5 @@
-#include "platform/opengl/OpenGLBuffer.h"
 #include <glad/glad.h>
+#include "platform/opengl/OpenGLBuffer.h"
 
 namespace Cosmic
 {

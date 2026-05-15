@@ -1,5 +1,5 @@
-#include "platform/opengl/OpenGLRendererAPI.h"
 #include <glad/glad.h>
+#include "platform/opengl/OpenGLRendererAPI.h"
 #include "core/Core.h"
 
 namespace Cosmic
