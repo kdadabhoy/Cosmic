@@ -1,9 +1,18 @@
 #include "platform/opengl/OpenGLTexture.h"
 #include <stb_image.h>
-#include <iostream>
+#include "core/Log.h"
+
 
 namespace Cosmic
 {
+	/////////////////////////////////////////////////////////////////////////////////
+
+	/**
+	 * OpenGLTexture Constructor (Procedural/Empty)
+	 * * Generates a GPU texture with specified dimensions but no initial data.
+	 * * Useful for creating solid color textures (like the engine's default 1x1 white texture)
+	 * or for textures that will be populated later via SetData().
+	 */
 	OpenGLTexture::OpenGLTexture(uint32_t width, uint32_t height)
 		: m_Width(width), m_Height(height)
 	{
@@ -14,19 +23,32 @@ namespace Cosmic
 		glBindTexture(GL_TEXTURE_2D, m_RendererID);
 
 		// Default Parameters for procedural textures
+		// We use GL_NEAREST for magnification to keep pixel-art style sharp
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); // Keep pixel art sharp
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-		// Pre-allocate storage
+		// Pre-allocate GPU storage without uploading data (nullptr)
 		glTexImage2D(GL_TEXTURE_2D, 0, m_InternalFormat, m_Width, m_Height, 0, m_DataFormat, GL_UNSIGNED_BYTE, nullptr);
 	}
 
+	/////////////////////////////////////////////////////////////////////////////////
+
+	/**
+	 * OpenGLTexture Constructor (File-based)
+	 * * Orchestrates the full asset loading pipeline:
+	 * 1. Uses stb_image to load and decode compressed image data (PNG, JPG, etc.).
+	 * 2. Flips the image vertically to match OpenGL's coordinate system (origin at bottom-left).
+	 * 3. Dynamically determines the format (RGB vs RGBA) based on the image's channel count.
+	 * 4. Configures Mipmaps for high-quality scaling at various distances.
+	 */
 	OpenGLTexture::OpenGLTexture(const std::string& path)
 		: m_Path(path)
 	{
 		int width, height, channels;
+
+		// OpenGL expects 0.0 on the y-axis to be the bottom, but images usually store the top row first.
 		stbi_set_flip_vertically_on_load(1);
 		stbi_uc* data = stbi_load(path.c_str(), &width, &height, &channels, 0);
 
@@ -35,6 +57,7 @@ namespace Cosmic
 			m_Width = width;
 			m_Height = height;
 
+			// Logic to select the appropriate GPU internal format based on source channels
 			GLenum internalFormat = 0, dataFormat = 0;
 			if (channels == 4)
 			{
@@ -54,50 +77,86 @@ namespace Cosmic
 			glBindTexture(GL_TEXTURE_2D, m_RendererID);
 
 			// Setup Filtering - Using Linear Mipmap for smoother scaling at distances
+			// Dino and other sprites use NEAREST for magnification to maintain the retro aesthetic.
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); // Dino looks better with Nearest
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-			// Upload pixel data
+			// Upload pixel data to the GPU
 			glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, m_Width, m_Height, 0, dataFormat, GL_UNSIGNED_BYTE, data);
-			glGenerateMipmap(GL_TEXTURE_2D); // Required for GL_LINEAR_MIPMAP_LINEAR
+
+			// Required for the GL_LINEAR_MIPMAP_LINEAR filter to work correctly
+			glGenerateMipmap(GL_TEXTURE_2D);
 
 			stbi_image_free(data);
 		}
 		else
 		{
-			std::cout << "Cosmic Error: Failed to load texture at " << path << std::endl;
+			CS_CORE_ERROR("Failed to load texture at {0}", path);
 		}
 	}
 
+	/////////////////////////////////////////////////////////////////////////////////
+
+	/**
+	 * OpenGLTexture Destructor
+	 * * Ensures GPU memory is released when the texture object is destroyed.
+	 */
 	OpenGLTexture::~OpenGLTexture()
 	{
 		glDeleteTextures(1, &m_RendererID);
 	}
 
+	/////////////////////////////////////////////////////////////////////////////////
+
+	/**
+	 * SetData
+	 * * Allows manual updates to the texture pixels.
+	 * * CORE LOGIC: Uses glTexSubImage2D to overwrite the existing GPU memory block.
+	 * This is much more efficient than glTexImage2D as it doesn't reallocate the buffer.
+	 */
 	void OpenGLTexture::SetData(void* data, uint32_t size)
 	{
 		uint32_t bpp = m_DataFormat == GL_RGBA ? 4 : 3;
+
+		// Pre-condition: The incoming data must exactly match the texture's footprint
 		if (size != m_Width * m_Height * bpp)
 		{
-			std::cout << "Cosmic Error: Texture data must fill entire texture!" << std::endl;
+			CS_CORE_ERROR("Texture data must fill entire texture! Expected size: {0}, provided: {1}", m_Width * m_Height * bpp, size);
 			return;
 		}
+
 		glBindTexture(GL_TEXTURE_2D, m_RendererID);
 		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_Width, m_Height, m_DataFormat, GL_UNSIGNED_BYTE, data);
 	}
 
+	/////////////////////////////////////////////////////////////////////////////////
+
+	/**
+	 * Bind
+	 * * Maps the texture to a specific GPU hardware slot.
+	 * * BATCH RENDERING: By specifying a 'slot', the engine can have multiple
+	 * textures active simultaneously, allowing the Batch Renderer to draw quads
+	 * from different textures in a single draw call.
+	 */
 	void OpenGLTexture::Bind(uint32_t slot) const
 	{
-		// Set active slot and bind the renderer ID
 		glActiveTexture(GL_TEXTURE0 + slot);
 		glBindTexture(GL_TEXTURE_2D, m_RendererID);
 	}
 
+	/////////////////////////////////////////////////////////////////////////////////
+
+	/**
+	 * Equality Operator
+	 * * Compares textures based on their internal RendererID.
+	 * * Used by the Batch Renderer to verify if a texture is already bound to a slot.
+	 */
 	bool OpenGLTexture::operator==(const Texture& other) const
 	{
-		// Implementation for source file - must match header signature exactly
 		return m_RendererID == ((const OpenGLTexture&)other).m_RendererID;
 	}
+
+	/////////////////////////////////////////////////////////////////////////////////
 }
