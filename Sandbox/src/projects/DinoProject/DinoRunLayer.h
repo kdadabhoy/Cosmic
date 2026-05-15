@@ -1,4 +1,5 @@
 #pragma once
+
 #include "../../Simulation.h"
 #include <random>
 #include <vector>
@@ -8,10 +9,12 @@ namespace Workspace
 	class DinoRunLayer : public Simulation
 	{
 	public:
-		// Changed: Now accepts Material instead of Texture
 		DinoRunLayer(Cosmic::Ref<Cosmic::Material> material);
+		virtual ~DinoRunLayer() = default;
 
+		// --- Lifecycle Overrides ---
 		virtual void OnUpdate(float ts) override;
+		virtual void OnFixedUpdate(float deltaFixedTime) override; 
 		virtual void OnRender() override;
 		virtual void OnImGuiRender() override;
 		virtual void OnEvent(Cosmic::Event& e) override { m_CameraController.OnEvent(e); }
@@ -20,9 +23,10 @@ namespace Workspace
 		void Reset();
 
 	private:
-		Cosmic::Ref<Cosmic::Material> m_Material; // Changed from Texture2D
+		Cosmic::Ref<Cosmic::Material> m_Material;
 		Cosmic::OrthographicCameraController m_CameraController;
 
+		// Physics State
 		glm::vec3 m_DinoPos = { -1.0f, -0.5f, 0.0f };
 		float m_VelocityY = 0.0f;
 		bool m_IsGrounded = true;
@@ -30,6 +34,7 @@ namespace Workspace
 		struct Obstacle { glm::vec3 Position; glm::vec2 Size; glm::vec4 Color; };
 		std::vector<Obstacle> m_Obstacles;
 
+		// Simulation Helpers
 		std::mt19937 m_RandomEngine;
 		float m_SpawnTimer = 0.0f;
 		float m_NextSpawnTime = 2.0f;

@@ -189,5 +189,23 @@ namespace Workspace
 		// Optional: Handle engine events before passing them to the simulation.
 	}
 
+
+	/////////////////////////////////////////////////////////////////////////////////
+
+	/**
+	 * OnFixedUpdate
+	 * * THE STABLE HEARTBEAT: Forwards the constant-time update signal to the
+	 * active simulation. This is where physics calculations (gravity,
+	 * collision detection, stress analysis) should occur to ensure
+	 * deterministic behavior regardless of the frame rate.
+	 */
+	void WorkspaceLayer::OnFixedUpdate(float deltaFixedTime)
+	{
+		if (m_ActiveSim)
+		{
+			m_ActiveSim->OnFixedUpdate(deltaFixedTime);
+		}
+	}
+
 	/////////////////////////////////////////////////////////////////////////////////
 }

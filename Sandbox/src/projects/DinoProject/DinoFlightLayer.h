@@ -1,4 +1,5 @@
 #pragma once
+
 #include "../../Simulation.h"
 #include <vector>
 
@@ -7,16 +8,16 @@ namespace Workspace
 	class DinoFlightLayer : public Simulation
 	{
 	public:
-		// Changed: Now takes a Ref<Material>
 		DinoFlightLayer(Cosmic::Ref<Cosmic::Material> material);
+		virtual ~DinoFlightLayer() = default;
 
 		virtual void OnUpdate(float ts) override;
+		virtual void OnFixedUpdate(float deltaFixedTime) override; 
 		virtual void OnRender() override;
 		virtual void OnImGuiRender() override;
 		virtual void SetViewportSize(float w, float h) override { m_CameraController.OnResize(w, h); }
 
 	private:
-		// Changed: Ref<Material> instead of Ref<Texture2D>
 		Cosmic::Ref<Cosmic::Material> m_Material;
 		Cosmic::OrthographicCameraController m_CameraController;
 

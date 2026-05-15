@@ -1,4 +1,5 @@
 #pragma once
+
 #include "../../Simulation.h"
 #include "DinoRunLayer.h"
 #include "DinoFlightLayer.h"
@@ -14,6 +15,7 @@ namespace Workspace
 		virtual ~DinoProject() = default;
 
 		virtual void OnUpdate(float ts) override;
+		virtual void OnFixedUpdate(float deltaFixedTime) override; 
 		virtual void OnRender() override;
 		virtual void OnImGuiRender() override;
 		virtual void OnEvent(Cosmic::Event& e) override;
@@ -21,9 +23,9 @@ namespace Workspace
 
 	private:
 		Cosmic::Ref<Cosmic::Texture2D> m_DinoTexture;
-		Cosmic::Ref<Cosmic::Material> m_DinoMaterial; // New Material
+		Cosmic::Ref<Cosmic::Material>  m_DinoMaterial;
 
-		std::unique_ptr<DinoRunLayer> m_RunSim;
+		std::unique_ptr<DinoRunLayer>    m_RunSim;
 		std::unique_ptr<DinoFlightLayer> m_FlightSim;
 		std::unique_ptr<DinoStressLayer> m_StressSim;
 

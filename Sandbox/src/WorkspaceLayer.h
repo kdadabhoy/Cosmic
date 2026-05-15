@@ -68,7 +68,7 @@ namespace Workspace
 		///////////////////////////////
 
 		virtual void OnUpdate(float ts) override;
-		//virtual void OnFixedUpdate(float deltaFixedTime) override; // need to implement
+		virtual void OnFixedUpdate(float deltaFixedTime) override;
 		virtual void OnImGuiRender() override;
 
 		////////////////////////////////

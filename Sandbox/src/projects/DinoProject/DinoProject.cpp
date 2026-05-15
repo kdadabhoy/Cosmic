@@ -1,6 +1,6 @@
 #include "DinoProject.h"
 #include <imgui.h>
-#include <iostream>
+#include "core/Log.h" // Using logging system
 
 namespace Workspace
 {
@@ -9,24 +9,17 @@ namespace Workspace
 		Cosmic::FileSystem::SetActiveProject("DinoProject");
 
 		// --- Path Resolution ---
-		// Based on your FileSystem.h logic:
-		// "project://Dino.png" -> "assets/DinoProject/Dino.png"
 		std::string dinoPath = Cosmic::FileSystem::Resolve("project://Dino.png");
-
-		// "project://shaders/DebugTexture.glsl" -> "assets/DinoProject/shaders/DebugTexture.glsl"
-		// Note: We removed "assets/" from the middle because FileSystem/CMake handles it.
 		std::string shaderPath = Cosmic::FileSystem::Resolve("project://shaders/DebugTexture.glsl");
 
 		// --- Resource Loading ---
 		m_DinoTexture = Cosmic::Texture2D::Create(dinoPath);
-
 		auto debugShader = Cosmic::Shader::Create(shaderPath);
 		m_DinoMaterial = Cosmic::Material::Create(debugShader, "DinoMaterial");
 
 		// --- Material Setup ---
 		if (m_DinoMaterial)
 		{
-			// Ensure these uniform names match your DebugTexture.glsl exactly!
 			m_DinoMaterial->Set("u_Texture", m_DinoTexture);
 			m_DinoMaterial->Set("u_Color", glm::vec4(1.0f));
 		}
@@ -38,32 +31,42 @@ namespace Workspace
 
 		m_ActiveSim = m_RunSim.get();
 
-
-		// Add these to DinoProject.cpp constructor
-		std::cout << "[DEBUG] Resolved Texture Path: " << dinoPath << std::endl;
-		std::cout << "[DEBUG] Resolved Shader Path: " << shaderPath << std::endl;
+		// Log resource status using the engine's core logger
+		CS_CORE_INFO("DinoProject: Resolved Texture Path: {0}", dinoPath);
+		CS_CORE_INFO("DinoProject: Resolved Shader Path: {0}", shaderPath);
 
 		if (!std::filesystem::exists(dinoPath))
-			std::cout << "[ERROR] Dino.png NOT FOUND at resolved path!" << std::endl;
+			CS_CORE_ERROR("DinoProject: Dino.png NOT FOUND at {0}", dinoPath);
 
 		if (!std::filesystem::exists(shaderPath))
-			std::cout << "[ERROR] DebugTexture.glsl NOT FOUND at resolved path!" << std::endl;
-
+			CS_CORE_ERROR("DinoProject: DebugTexture.glsl NOT FOUND at {0}", shaderPath);
 	}
 
 	void DinoProject::OnUpdate(float ts)
 	{
-		// Prevent division by zero on first frame
+		// Smooth delta time for the UI FPS counter
 		float dt = ts > 0.0f ? ts : 0.001f;
 		m_SmoothedDeltaTime = m_SmoothedDeltaTime * 0.95f + dt * 0.05f;
 
-		// Input Handling
+		// Real-time Input Handling (Polling)
 		if (Cosmic::Input::IsKeyPressed(CS_KEY_F)) m_ActiveSim = m_FlightSim.get();
 		if (Cosmic::Input::IsKeyPressed(CS_KEY_R)) m_ActiveSim = m_RunSim.get();
 		if (Cosmic::Input::IsKeyPressed(CS_KEY_T)) m_ActiveSim = m_StressSim.get();
 
 		if (m_ActiveSim)
 			m_ActiveSim->OnUpdate(ts);
+	}
+
+	/**
+	 * OnFixedUpdate
+	 * * THE PASSTHROUGH: Forwards the stable physics heartbeat to the active
+	 * simulation layer. This ensures that whichever mode we are in (Run,
+	 * Flight, or Stress) receives the constant-time signal.
+	 */
+	void DinoProject::OnFixedUpdate(float deltaFixedTime)
+	{
+		if (m_ActiveSim)
+			m_ActiveSim->OnFixedUpdate(deltaFixedTime);
 	}
 
 	void DinoProject::OnRender()
@@ -92,7 +95,7 @@ namespace Workspace
 		ImGui::Text("Dino Simulator Suite");
 		ImGui::Text("FPS: %.0f (%.3f ms)", 1.0f / m_SmoothedDeltaTime, m_SmoothedDeltaTime * 1000.0f);
 
-		// --- Material Editor UI ---
+		// --- Global Material Editor ---
 		if (m_DinoMaterial && ImGui::CollapsingHeader("Global Dino Material", ImGuiTreeNodeFlags_DefaultOpen))
 		{
 			glm::vec4 color = m_DinoMaterial->GetVector("u_Color");
@@ -110,6 +113,7 @@ namespace Workspace
 
 		ImGui::Separator();
 
+		// Render the active sub-layer's specific UI
 		if (m_ActiveSim)
 			m_ActiveSim->OnImGuiRender();
 
