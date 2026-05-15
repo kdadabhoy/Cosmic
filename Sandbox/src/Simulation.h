@@ -1,46 +1,97 @@
+#pragma once
+
+// Simulation.h
+// Last Modified 5/14/2026
+
 /**
- * @file Simulation.h
- * @brief The abstract interface for all engineering projects.
- *
- * PURPOSE: In a Host/Client architecture, the Simulation class is the "Client."
- * By inheriting from this class, any project (aerodynamics, structural, etc.)
- * becomes compatible with the WorkspaceLayer. This allows the engine to
- * swap complex logic modules at runtime without needing to recompile the
- * entire application shell.
+ * General Description:
+ * The Simulation class is the foundational "Client" interface in the Cosmic
+ * Engineering Suite's Host-Client architecture. It defines the standardized
+ * contract that any engineering project must follow to be compatible with
+ * the WorkspaceLayer (The Host).
+ * * Why does this interface exist?
+ * It allows the engine to decouple the "Editor Shell" from the "Engineering Logic."
+ * By inheriting from Simulation, complex modules (such as aerodynamics,
+ * structural analysis, or fluid dynamics) can be hot-swapped at runtime.
+ * This ensures that the engine doesn't need to know the specifics of a project
+ * to render its viewport or provide it with input.
+ * * Implementation Requirements:
+ * Any derived class must implement the core lifecycle methods (OnUpdate, OnRender,
+ * OnImGuiRender, and SetViewportSize) to ensure the engine's heartbeat and
+ * windowing systems remain synchronized with the project logic.
  */
 
-
-
-
- // Need to add an void OnFixedUpdate(float deltaFixedTime) {};
-
-
-#pragma once
 #include "Cosmic.h"
 
 namespace Workspace
 {
+	class Simulation
+	{
+	public:
+		virtual ~Simulation() = default;
 
-    class Simulation
-    {
-    public:
-        virtual ~Simulation() = default;
+		////////////////////////////////
+		// The Heartbeat (Logic & Physics)
+		///////////////////////////////
 
-        // Called every frame for physics and logic calculations
-        virtual void OnUpdate(float ts) = 0;
+		/**
+		 * OnUpdate
+		 * * Purpose: Handles frame-variable logic and physics.
+		 * * @param ts: TimeStep (time elapsed since the last frame).
+		 */
+		virtual void	OnUpdate(float ts) = 0;
 
-        // Called for 2D/3D rendering commands
-        virtual void OnRender() = 0;
-
-        // Called to draw project-specific ImGui debugging/control panels
-        virtual void OnImGuiRender() = 0;
-
-        // Synchronizes the simulation's camera projection with the UI viewport size
-        virtual void SetViewportSize(float width, float height) = 0;
+		/**
+		 * OnFixedUpdate
+		 * * Purpose: Handles constant-time physics calculations.
+		 * * @param deltaFixedTime: The fixed interval (e.g., 1/60th of a second).
+		 */
+		virtual void	OnFixedUpdate(float deltaFixedTime) = 0;
 
 
-        virtual void OnEvent(Cosmic::Event& e) {};
 
-    };
+		////////////////////////////////
+		// The Visuals (Graphics)
+		///////////////////////////////
 
+		/**
+		 * OnRender
+		 * * Purpose: Contains all Renderer2D or Renderer3D draw calls.
+		 * * Note: This is called while the Workspace's Framebuffer is bound.
+		 */
+		virtual void	OnRender() = 0;
+
+
+
+		////////////////////////////////
+		// The Interface (UI)
+		///////////////////////////////
+
+		/**
+		 * OnImGuiRender
+		 * * Purpose: Used to "inject" project-specific sliders and buttons
+		 * into the Workspace's Project Inspector panel.
+		 */
+		virtual void	OnImGuiRender() = 0;
+
+
+
+		////////////////////////////////
+		// Synchronization & Events
+		///////////////////////////////
+
+		/**
+		 * SetViewportSize
+		 * * Purpose: Notifies the simulation when the ImGui Viewport panel
+		 * resizes, allowing for Camera Aspect Ratio corrections.
+		 */
+		virtual void	SetViewportSize(float width, float height) = 0;
+
+		/**
+		 * OnEvent
+		 * * Purpose: Optional override to handle keyboard, mouse, or system
+		 * events within the simulation context.
+		 */
+		virtual void	OnEvent(Cosmic::Event& e) {};
+	};
 }
