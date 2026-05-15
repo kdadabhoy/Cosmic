@@ -1,32 +1,109 @@
 #pragma once
+
+// FrameBuffer.h
+// Last Modified 5/14/2026
+
+/**
+ * General Description:
+ * 
+ * FrameBuffer.h defines the abstract interface for off-screen rendering targets.
+ * In the Cosmic Engine, a FrameBuffer (FBO) allows the Renderer to redirect its
+ * output into a GPU-resident texture rather than the system's back buffer.
+ * 
+ * This is the cornerstone of the engine's Editor/Sandbox architecture, enabling
+ * the game scene to be rendered into an ImGui window, facilitating post-processing,
+ * and allowing for dynamic viewport scaling independent of the native window resolution.
+ * 
+ * 
+ * Architecture Components:
+ * 
+ * 1. FramebufferSpecification: A configuration structure defining the physical
+ * properties of the buffer, including dimensions, multi-sampling (MSAA) levels,
+ * and whether it targets the application's swap chain.
+ * 
+ * 2. FrameBuffer (Base): The abstract interface providing methods to Bind/Unbind
+ * the target, handle dynamic resizing, and retrieve the underlying texture IDs
+ * for UI consumption.
+ * 
+ * 
+ * Public Function Prototypes (Pre and Post Conditions):
+ * 
+ * 1. virtual void Bind()
+ * Pre:  The FrameBuffer has been successfully initialized on the GPU.
+ * Post: All subsequent draw calls are directed to this FrameBuffer's attachments.
+ * 
+ * 2. virtual void Unbind()
+ * Pre:  None.
+ * Post: Rendering target is reset to the default system framebuffer (Screen).
+ * 
+ * 3. virtual void Resize(uint32_t width, uint32_t height)
+ * Pre:  Width and height are greater than zero.
+ * Post: The internal GPU textures are destroyed and re-allocated at the new
+ * dimensions to prevent sampling distortion.
+ * 
+ * 4. virtual uint32_t GetColorAttachmentRendererID()
+ * Pre:  None.
+ * Post: Returns the API-specific handle (e.g., OpenGL ID) for the texture
+ * representing the color buffer. Used for ImGui::Image calls.
+ * 
+ * 5. static Ref<FrameBuffer> Create(const FramebufferSpecification& spec)
+ * Pre:  A valid specification is provided.
+ * Post: Returns a reference-counted, platform-specific FrameBuffer instance
+ * based on the active RendererAPI.
+ */
+
 #include "core/Core.h"
 
 namespace Cosmic
 {
+	/**
+	 * FramebufferSpecification
+	 * Configuration data for creating a new FrameBuffer.
+	 */
 	struct FramebufferSpecification
 	{
 		uint32_t Width = 0, Height = 0;
-		uint32_t Samples = 1;
-		bool SwapChainTarget = false;
+		uint32_t Samples = 1;           // MSAA Sample count
+		bool SwapChainTarget = false;   // True if rendering directly to screen
 	};
+
+	///////////////////////////////////////////////
+	///////////////////////////////////////////////
 
 	class FrameBuffer
 	{
 	public:
+		////////////////////////////////
+		// Destructor
+		///////////////////////////////
 		virtual ~FrameBuffer() = default;
 
+		////////////////////////////////
+		// Pipeline State
+		///////////////////////////////
 		virtual void Bind() = 0;
 		virtual void Unbind() = 0;
 
+		////////////////////////////////
+		// Dynamic Transformation
+		///////////////////////////////
 		virtual void Resize(uint32_t width, uint32_t height) = 0;
 
-		// --- ADD THESE ---
+		////////////////////////////////
+		// Metadata Accessors
+		///////////////////////////////
 		virtual uint32_t GetWidth() const = 0;
 		virtual uint32_t GetHeight() const = 0;
-
-		virtual uint32_t GetColorAttachmentRendererID() const = 0;
 		virtual const FramebufferSpecification& GetSpecification() const = 0;
 
+		////////////////////////////////
+		// GPU Resource Accessors
+		///////////////////////////////
+		virtual uint32_t GetColorAttachmentRendererID() const = 0;
+
+		////////////////////////////////
+		// Factory Pattern
+		///////////////////////////////
 		static Ref<FrameBuffer> Create(const FramebufferSpecification& spec);
 	};
 }
