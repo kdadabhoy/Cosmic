@@ -40,6 +40,8 @@
  * Post: The front and back buffers of the linked window are swapped.
  */
 
+#include "graphics/GraphicsContext.h"
+
 struct GLFWwindow;
 
 namespace Cosmic
@@ -53,8 +55,8 @@ namespace Cosmic
 
 		OpenGLContext(GLFWwindow* windowHandle);
 
-		virtual void Init() override;
-		virtual void SwapBuffers() override;
+		virtual void	Init() override;
+		virtual void	SwapBuffers() override;
 
 	private:
 		GLFWwindow* m_WindowHandle;
