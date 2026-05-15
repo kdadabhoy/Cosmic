@@ -1,4 +1,51 @@
 #pragma once
+
+// OpenGLFrameBuffer.h
+// Last Modified 5/14/2026
+
+/**
+ * General Description:
+ * 
+ * OpenGLFrameBuffer is the concrete implementation of the FrameBuffer interface
+ * for the OpenGL graphics backend. It manages "off-screen" rendering targets,
+ * allowing the engine to render scenes to textures rather than directly to the
+ * primary window backbuffer.
+ * 
+ * This class is a fundamental component for Editor viewports, post-processing
+ * pipelines, and shadow mapping. It handles the generation of Framebuffer
+ * Objects (FBOs), manages color and depth/stencil attachments, and provides
+ * robust reconstruction logic for handling window or viewport resizing.
+ * 
+ * 
+ * Public Function Prototypes (Pre and Post Conditions):
+ * 
+ * 1. OpenGLFrameBuffer(const FramebufferSpecification& spec)
+ * Pre:  The specification contains non-zero width and height.
+ * Post: An FBO is generated and initialized with the requested attachments.
+ * 
+ * 2. virtual ~OpenGLFrameBuffer()
+ * Pre:  The OpenGLFrameBuffer instance exists.
+ * Post: All associated GPU resources (FBO and Texture attachments) are deleted.
+ * 
+ * 3. void Invalidate()
+ * Pre:  None.
+ * Post: Deletes any existing resources and re-allocates the entire framebuffer
+ * based on the current specification.
+ * 
+ * 4. void Bind()
+ * Pre:  The framebuffer is complete and valid.
+ * Post: Sets the current OpenGL draw target to this FBO and updates the viewport.
+ * 
+ * 5. void Unbind()
+ * Pre:  None.
+ * Post: Resets the OpenGL draw target to the default screen buffer (ID 0).
+ * 
+ * 6. void Resize(uint32_t width, uint32_t height)
+ * Pre:  Width and height are greater than zero.
+ * Post: Updates the internal specification and triggers Invalidate() to
+ * re-allocate textures at the new resolution.
+ */
+
 #include "graphics/FrameBuffer.h"
 
 namespace Cosmic
@@ -6,28 +53,54 @@ namespace Cosmic
 	class OpenGLFrameBuffer : public FrameBuffer
 	{
 	public:
+		////////////////////////////////
+		// Life Cycle & Initialization
+		///////////////////////////////
+
 		OpenGLFrameBuffer(const FramebufferSpecification& spec);
 		virtual ~OpenGLFrameBuffer();
 
-		void Invalidate();
+		void									Invalidate();
 
-		virtual void Bind() override;
-		virtual void Unbind() override;
 
-		virtual void Resize(uint32_t width, uint32_t height) override;
+		////////////////////////////////
+		// Pipeline State
+		///////////////////////////////
 
-		virtual uint32_t GetColorAttachmentRendererID() const override { return m_ColorAttachment; }
+		virtual void							Bind() override;
+		virtual void							Unbind() override;
 
-		// --- UPDATED OVERRIDES ---
-		virtual uint32_t GetWidth() const override { return m_Specification.Width; }
-		virtual uint32_t GetHeight() const override { return m_Specification.Height; }
-		virtual const FramebufferSpecification& GetSpecification() const override { return m_Specification; }
+
+		////////////////////////////////
+		// Dynamic Transformation
+		///////////////////////////////
+
+		virtual void							Resize(uint32_t width, uint32_t height) override;
+
+
+		////////////////////////////////
+		// Resource Accessors
+		///////////////////////////////
+
+		virtual uint32_t							GetColorAttachmentRendererID() const override		{ return m_ColorAttachment; }
+		virtual uint32_t							GetWidth() const override							{ return m_Specification.Width; }
+		virtual uint32_t							GetHeight() const override							{ return m_Specification.Height; }
+		virtual const FramebufferSpecification&		GetSpecification() const override					{ return m_Specification; }
 
 
 	private:
-		uint32_t m_RendererID = 0;
-		uint32_t m_ColorAttachment = 0, m_DepthAttachment = 0;
+		////////////////////////////////
+		// GPU Resource Handles
+		///////////////////////////////
 
-		FramebufferSpecification m_Specification;
+		uint32_t					m_RendererID = 0;
+		uint32_t					m_ColorAttachment = 0;
+		uint32_t					m_DepthAttachment = 0;
+
+		////////////////////////////////
+		// Configuration State
+		///////////////////////////////
+
+		FramebufferSpecification	m_Specification;
 	};
 }
