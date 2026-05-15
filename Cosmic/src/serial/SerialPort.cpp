@@ -1,25 +1,34 @@
 #include "SerialPort.h"
-#include <windows.h> // Win32 API
+#include <windows.h> 
 #include <iostream>
 
 namespace Cosmic
 {
-
 	SerialPort::SerialPort() : m_Handle(INVALID_HANDLE_VALUE) {}
 
 	SerialPort::~SerialPort() { Close(); }
 
+	/////////////////////////////////////////////////////////////////////////////////
+
+	/**
+	 * Open
+	 * * THE HARDWARE HANDSHAKE:
+	 * 1. Opens the COM port via CreateFileA. The "\\\\.\\" prefix is used to
+	 * support port numbers higher than COM9.
+	 * 2. Configures the Device Control Block (DCB) for 8N1 (8 data bits,
+	 * No parity, 1 stop bit).
+	 * 3. Sets non-blocking timeouts to ensure the ReadFile call doesn't
+	 * hang the background thread indefinitely.
+	 */
 	bool SerialPort::Open(const std::string& portName, uint32_t baudRate)
 	{
 		if (m_Connected) Close();
 
-		// 1. Open the COM port (Prefix with \\.\ for COM ports > 9)
 		std::string fullPath = "\\\\.\\" + portName;
 		m_Handle = CreateFileA(fullPath.c_str(), GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
 
 		if (m_Handle == INVALID_HANDLE_VALUE) return false;
 
-		// 2. Configure Port (Baud rate, 8N1)
 		DCB dcbSerialParams = { 0 };
 		dcbSerialParams.DCBlength = sizeof(dcbSerialParams);
 		if (!GetCommState(m_Handle, &dcbSerialParams)) return false;
@@ -30,7 +39,6 @@ namespace Cosmic
 		dcbSerialParams.Parity = NOPARITY;
 		if (!SetCommState(m_Handle, &dcbSerialParams)) return false;
 
-		// 3. Set Timeouts (Non-blocking style)
 		COMMTIMEOUTS timeouts = { 0 };
 		timeouts.ReadIntervalTimeout = 50;
 		timeouts.ReadTotalTimeoutConstant = 50;
@@ -42,14 +50,16 @@ namespace Cosmic
 		return true;
 	}
 
+	/////////////////////////////////////////////////////////////////////////////////
 
-
-
+	/**
+	 * ReadLoop
+	 * * ASYNC INGESTION: This function runs on its own thread. It continuously
+	 * polls the hardware handle for new data. When data arrives, it is
+	 * appended to the thread-safe buffer.
+	 */
 	void SerialPort::ReadLoop()
 	{
-
-
-		// Log once when the thread starts
 		DWORD winThreadId = GetCurrentThreadId();
 		int core = GetCurrentProcessorNumber();
 		printf("[SERIAL THREAD] Started with ID: %lu on Core: %d\n", winThreadId, core);
@@ -59,11 +69,11 @@ namespace Cosmic
 
 		while (m_Connected)
 		{
-			// This will block or wait based on the timeouts set above
 			if (ReadFile(m_Handle, szBuff, sizeof(szBuff) - 1, &dwBytesRead, NULL) && dwBytesRead > 0)
 			{
 				szBuff[dwBytesRead] = '\0';
 
+				// Lock only when appending to the shared buffer
 				std::lock_guard<std::mutex> lock(m_BufferMutex);
 				m_DataBuffer += szBuff;
 			}
@@ -72,8 +82,13 @@ namespace Cosmic
 		printf("[SERIAL THREAD] Shutting down.\n");
 	}
 
+	/////////////////////////////////////////////////////////////////////////////////
 
-
+	/**
+	 * FlushBuffer
+	 * * BRIDGE TO MAIN THREAD: Safely extracts all data collected by the
+	 * background thread and clears the source buffer in one atomic-like operation.
+	 */
 	std::string SerialPort::FlushBuffer()
 	{
 		std::lock_guard<std::mutex> lock(m_BufferMutex);
@@ -82,6 +97,13 @@ namespace Cosmic
 		return temp;
 	}
 
+	/////////////////////////////////////////////////////////////////////////////////
+
+	/**
+	 * Close
+	 * * CLEAN SHUTDOWN: Sets the connection flag to false, ensuring the
+	 * ReadLoop exits gracefully before closing the Win32 hardware handle.
+	 */
 	void SerialPort::Close()
 	{
 		m_Connected = false;
@@ -94,12 +116,19 @@ namespace Cosmic
 		}
 	}
 
+	/////////////////////////////////////////////////////////////////////////////////
+
+	/**
+	 * GetAvailablePorts
+	 * * REGISTRY DISCOVERY: Windows does not have a simple "ListPorts" function.
+	 * This method parses the Windows Registry at 'SERIALCOMM' to find
+	 * which hardware communication ports are currently recognized by the OS.
+	 */
 	std::vector<std::string> SerialPort::GetAvailablePorts()
 	{
 		std::vector<std::string> ports;
 		HKEY hKey;
 
-		// Open the Registry Key where Windows lists active serial ports
 		if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, "HARDWARE\\DEVICEMAP\\SERIALCOMM", 0, KEY_READ, &hKey) == ERROR_SUCCESS)
 		{
 			char valueName[256];
@@ -112,19 +141,14 @@ namespace Cosmic
 				nameSize = sizeof(valueName);
 				dataSize = sizeof(valueData);
 
-				// Enumerate the values in the key
 				LSTATUS status = RegEnumValueA(hKey, index, valueName, &nameSize, NULL, &type, valueData, &dataSize);
 
 				if (status == ERROR_SUCCESS)
 				{
-					// The "Data" of the registry value is the port name (e.g., "COM3")
 					ports.push_back(std::string((char*)valueData));
 					index++;
 				}
-				else
-				{
-					break; // No more ports found
-				}
+				else break;
 			}
 			RegCloseKey(hKey);
 		}
