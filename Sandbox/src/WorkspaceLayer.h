@@ -1,60 +1,117 @@
+#pragma once
+
+// WorkspaceLayer.h
+// Last Modified 5/14/2026
+
 /**
- * @file WorkspaceLayer.h
- * @brief The primary Editor/Host layer for the Cosmic Engineering Suite.
- *
- * ROLE: This class manages the global state of the application, including
- * the ImGui Dockspace, the Framebuffer resize synchronization, and the
- * high-level Project selection logic. It provides the "shell" in which
- * individual simulations run.
+ * General Description:
+ * 
+ * The WorkspaceLayer is the "Conductor" of the Cosmic Engineering Suite. It acts
+ * as the primary Host interface (The Editor) that manages the lifecycle of
+ * individual engineering simulations (The Clients).
+ * 
+ * 
+ * Why does this file exist?
+ * While the Engine handles the heavy lifting (rendering, input, logging), the
+ * WorkspaceLayer provides the high-level logic for the Editor experience. It
+ * manages the ImGui DockSpace, captures the simulation's output into a Viewport
+ * window, and handles the hot-swapping of different projects (like switching
+ * from a Dino simulation to a Structural Analysis project) at runtime.
+ * 
+ * Note for Beginners:
+ * 
+ * This is the "Shell" of your workspace. If you want to change how the editor
+ * looks (add a new menu or a new panel), you work here. If you want to change
+ * how a specific simulation behaves, you should look into the 'projects/'
+ * folder and the Simulation interface instead.
+ * 
+ * 
+ * Public Function Prototypes (Pre and Post Conditions):
+ * 
+ * 1. void OnUpdate(float ts)
+ * Pre:  A project has been loaded into m_ActiveSim.
+ * Post: Forwards the engine's heartbeat to the active simulation for physics
+ * and logic processing.
+ * 
+ * 2. void OnImGuiRender()
+ * Pre:  ImGui context is initialized.
+ * Post: Renders the DockSpace, the Viewport (via the Framebuffer), and the
+ * Project Inspector panels.
+ * 
+ * 3. void LoadProject<T>() [Internal Template]
+ * Pre:  T must be a class that inherits from Workspace::Simulation.
+ * Post: The old project is destroyed, the new project is instantiated, and
+ * the current viewport dimensions are synchronized.
  */
 
-
-
-
-
- // Need to add an void OnFixedUpdate(float deltaFixedTime) {};
-
-
-#pragma once
 #include "Cosmic.h"
 #include "Simulation.h"
 #include <memory>
 
 namespace Workspace
 {
+	class WorkspaceLayer : public Cosmic::Layer
+	{
+	public:
+		////////////////////////////////
+		// Layer Lifecycle
+		///////////////////////////////
 
-    class WorkspaceLayer : public Cosmic::Layer
-    {
-    public:
-        WorkspaceLayer();
-        virtual ~WorkspaceLayer() = default;
+		WorkspaceLayer();
+		virtual ~WorkspaceLayer() = default;
 
-        virtual void OnAttach() override;
-        virtual void OnDetach() override;
-        virtual void OnUpdate(float ts) override;
-        virtual void OnImGuiRender() override;
-        virtual void OnEvent(Cosmic::Event& e) override;
+		virtual void OnAttach() override;
+		virtual void OnDetach() override;
 
-    private:
-        /**
-         * @brief Template helper to instantiate and initialize a new project.
-         * @tparam T The project class (must inherit from Workspace::Simulation).
-         */
-        template<typename T>
-        void LoadProject()
-        {
-            m_ActiveSim = std::make_unique<T>();
-            // If the UI is already open, tell the new project how big the viewport is
-            if (m_ViewportSize.x > 0)
-                m_ActiveSim->SetViewportSize(m_ViewportSize.x, m_ViewportSize.y);
-        }
+		////////////////////////////////
+		// The Heartbeat (Game Loop)
+		///////////////////////////////
 
-    private:
-        std::unique_ptr<Simulation> m_ActiveSim;
-        glm::vec2 m_ViewportSize = { 0.0f, 0.0f };
+		virtual void OnUpdate(float ts) override;
+		//virtual void OnFixedUpdate(float deltaFixedTime) override; // need to implement
+		virtual void OnImGuiRender() override;
 
-        bool m_ViewportFocused = false;
-        bool m_ViewportHovered = false;
-    };
+		////////////////////////////////
+		// Input & Interaction
+		///////////////////////////////
 
+		virtual void OnEvent(Cosmic::Event& e) override;
+
+	private:
+		////////////////////////////////
+		// Project Management Helpers
+		///////////////////////////////
+
+		/**
+		 * LoadProject
+		 * * THE HOT-SWAPPER: This template method allows the engine to switch
+		 * between entirely different engineering modules without a restart.
+		 */
+		template<typename T>
+		void LoadProject()
+		{
+			// Resetting the unique_ptr automatically destroys the old simulation
+			m_ActiveSim = std::make_unique<T>();
+
+			// Ensure the new simulation knows the size of the editor window 
+			// so the aspect ratio is correct immediately.
+			if (m_ViewportSize.x > 0)
+				m_ActiveSim->SetViewportSize(m_ViewportSize.x, m_ViewportSize.y);
+		}
+
+	private:
+		////////////////////////////////
+		// Active State & Simulation Logic
+		///////////////////////////////
+
+		std::unique_ptr<Simulation> m_ActiveSim;
+
+		////////////////////////////////
+		// Viewport & UI Metadata
+		///////////////////////////////
+
+		glm::vec2 m_ViewportSize = { 0.0f, 0.0f };
+		bool      m_ViewportFocused = false;
+		bool      m_ViewportHovered = false;
+	};
 }
