@@ -22,6 +22,14 @@ namespace Cosmic
 
 	/////////////////////////////////////////////////////////////////////////////////
 
+	/**
+	 * OnAttach
+	 * * THE UI BOOTSTRAP: Sets up the ImGui environment.
+	 * 1. Creates the primary ImGui and ImPlot contexts.
+	 * 2. Enables "Modern" UI features: Docking (for workspace layouts) and
+	 * Viewports (allowing UI windows to float outside the main app window).
+	 * 3. Links ImGui to the engine's GLFW window handle and OpenGL 3.3+ renderer.
+	 */
 	void ImGuiLayer::OnAttach()
 	{
 		IMGUI_CHECKVERSION();
@@ -44,6 +52,11 @@ namespace Cosmic
 
 	/////////////////////////////////////////////////////////////////////////////////
 
+	/**
+	 * OnDetach
+	 * * CLEANUP: Ensures all backend resources and global UI contexts are
+	 * released when the layer is removed.
+	 */
 	void ImGuiLayer::OnDetach()
 	{
 		ImGui_ImplOpenGL3_Shutdown();
@@ -55,6 +68,11 @@ namespace Cosmic
 
 	/////////////////////////////////////////////////////////////////////////////////
 
+	/**
+	 * Begin
+	 * * FRAME START: Prepares the GPU and Platform backends for a new batch
+	 * of UI draw commands.
+	 */
 	void ImGuiLayer::Begin()
 	{
 		ImGui_ImplOpenGL3_NewFrame();
@@ -64,6 +82,12 @@ namespace Cosmic
 
 	/////////////////////////////////////////////////////////////////////////////////
 
+	/**
+	 * End
+	 * * FRAME RENDER: Collects all ImGui commands issued during the update,
+	 * flushes them to the GPU, and handles OS-level window management
+	 * for detached viewports.
+	 */
 	void ImGuiLayer::End()
 	{
 		ImGuiIO& io = ImGui::GetIO();
@@ -73,6 +97,7 @@ namespace Cosmic
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
+		// Viewport logic: Allows ImGui windows to have their own OS windows
 		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
 		{
 			GLFWwindow* backup_current_context = glfwGetCurrentContext();
@@ -84,6 +109,14 @@ namespace Cosmic
 
 	/////////////////////////////////////////////////////////////////////////////////
 
+	/**
+	 * OnEvent
+	 * * EVENT CAPTURE LOGIC: This is critical for engine stability.
+	 * If the mouse is hovering over an ImGui window (io.WantCaptureMouse),
+	 * the event is marked as "Handled" so that the game/simulation layer
+	 * below doesn't react (e.g., clicking a UI button shouldn't make the
+	 * player shoot).
+	 */
 	void ImGuiLayer::OnEvent(Event& event)
 	{
 		if (m_BlockEvents)
