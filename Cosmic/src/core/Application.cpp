@@ -1,13 +1,22 @@
 // Application.cpp
+#include "Cosmic.h"
 #include "core/Application.h"
 #include "renderer/Renderer.h"
 #include "renderer/RenderCommand.h"
 #include "core/Timestep.h"
 #include "graphics/FrameBuffer.h"
 #include "core/Log.h"
+#include "layers/WorkspaceLayer.h"
 
 // Note: glfw3.h is kept only for glfwGetTime() in the Run() loop.
 #include <GLFW/glfw3.h>
+
+// CRITICAL FIX: Wrap Windows.h to isolate polluting win32 macro definitions
+// Note: WIN32_LEAN_AND_MEAN removed here because it is already declared via the command line compiler flags
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <Windows.h>
 
 namespace Cosmic
 {
@@ -15,6 +24,11 @@ namespace Cosmic
 
 	// Global pointer to the application instance allowing subsystems to access engine methods
 	Application* Application::s_Instance = nullptr;
+
+	Application& Application::Get()
+	{
+		return *s_Instance;
+	}
 
 	/////////////////////////////////////////////////////////////////////////////////
 
@@ -24,9 +38,8 @@ namespace Cosmic
 	 * the internal subsystem initialization sequence.
 	 */
 	Application::Application()
-		: m_Running(true), m_ImGuiLayer(nullptr)
+		: m_Running(true), m_Minimized(false), m_UseFixedTimestep(true), m_TimeScale(1.0f), m_ImGuiLayer(nullptr)
 	{
-		// Initialize Log
 		Log::Init();
 		CS_CORE_INFO("Cosmic Engine Logging Initialized");
 
@@ -77,9 +90,13 @@ namespace Cosmic
 		m_Framebuffer = FrameBuffer::Create(fbSpec);
 
 		// 5. Initialize ImGui
-		// We use CreateScope so the Application owns the ImGuiLayer's memory.
 		m_ImGuiLayer = CreateScope<ImGuiLayer>();
 		PushOverlay(m_ImGuiLayer.get());
+
+		// 6. Mount the Engine Editor Shell Workspace Out-Of-The-Box
+		// Keep a member variable tracking reference (e.g., m_WorkspaceLayer) if needed globally
+		m_WorkspaceLayer = new Workspace::WorkspaceLayer();
+		PushLayer(m_WorkspaceLayer);
 
 		return true;
 	}
@@ -143,8 +160,10 @@ namespace Cosmic
 				accumulator += (frameTime * m_TimeScale);
 				while (accumulator >= fixedDeltaTime)
 				{
+					// Notify engine layers (WorkspaceLayer picks this up and forwards it to the viewport)
 					for (Layer* layer : m_LayerStack)
 						layer->OnFixedUpdate(Timestep(fixedDeltaTime));
+
 					accumulator -= fixedDeltaTime;
 				}
 			}
@@ -156,12 +175,47 @@ namespace Cosmic
 				layer->OnUpdate(scaledTimestep);
 			}
 
-			// 3. UI Rendering
+			// 2. UI Rendering Pass (The layout layers draw themselves automatically)
 			m_ImGuiLayer->Begin();
+
 			for (Layer* layer : m_LayerStack)
 			{
 				layer->OnImGuiRender();
 			}
+
+			// --- Unified Dynamic Project Launcher Manager Overlay ---
+			ImGui::Begin("Cosmic Project Launcher");
+			ImGui::Text("Enter filename or absolute system download path location:");
+			ImGui::InputText("DLL Target Path", m_DLLPathBuffer, sizeof(m_DLLPathBuffer));
+
+			ImGui::Separator();
+
+			if (ImGui::Button("Load / Hot-Swap Module", ImVec2(200, 0)))
+			{
+				LoadProjectDLL(m_DLLPathBuffer);
+			}
+
+			ImGui::SameLine();
+
+			if (ImGui::Button("Unload Module", ImVec2(150, 0)))
+			{
+				if (m_PluginHandle)
+				{
+					UnloadProjectDLL();
+				}
+			}
+
+			if (m_ActivePluginLayer)
+			{
+				ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "Status: Project Layer active and running inside Viewport.");
+			}
+			else
+			{
+				ImGui::TextColored(ImVec4(1.0f, 0.4f, 0.4f, 1.0f), "Status: No guest project layer loaded.");
+			}
+			ImGui::End();
+			// --------------------------------------------------------
+
 			m_ImGuiLayer->End();
 
 			m_Window->SwapBuffers();
@@ -246,5 +300,79 @@ namespace Cosmic
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+	void Application::LoadProjectDLL(const std::string& filepath)
+	{
+		if (m_PluginHandle) UnloadProjectDLL();
+
+		// 1. Load the DLL into Cosmic's memory space
+		HMODULE handle = LoadLibraryA(filepath.c_str());
+		if (!handle)
+		{
+			CS_CORE_ERROR("Failed to load plugin: {0}", filepath);
+			return;
+		}
+
+		// 2. Find the function pointers inside the DLL
+		auto initContexts = (void(*)(HostContext))GetProcAddress(handle, "InitializePluginContexts");
+
+		// Change: The plugin export signature now drops custom abstractions 
+		// and simply creates a standard engine Layer pointer.
+		auto createPluginLayer = (Cosmic::Layer * (*)())GetProcAddress(handle, "CreatePluginLayer");
+
+		if (!initContexts || !createPluginLayer)
+		{
+			CS_CORE_ERROR("Plugin is missing engine export signatures!");
+			FreeLibrary(handle);
+			return;
+		}
+
+		m_PluginHandle = handle;
+
+		// 3. Share the exact memory address of ImGui/ImPlot contexts across boundaries
+		HostContext ctx;
+		ctx.ImGuiCtx = ImGui::GetCurrentContext();
+		ctx.ImPlotCtx = ImPlot::GetCurrentContext();
+		initContexts(ctx);
+
+		// 4. Instantiate the plugin layer and assign it as the center layout viewport focus
+		m_ActivePluginLayer = createPluginLayer();
+
+		if (m_WorkspaceLayer)
+		{
+			m_WorkspaceLayer->SetViewportLayer(m_ActivePluginLayer);
+			CS_CORE_INFO("Successfully loaded and mounted project DLL Layer!");
+		}
+		else
+		{
+			CS_CORE_WARN("Plugin Layer created but no active Workspace target was found to bind it to.");
+		}
+	}
+
+	void Application::UnloadProjectDLL()
+	{
+		if (!m_PluginHandle) return;
+
+		// 1. Decouple the canvas display safely before purging memory allocations
+		if (m_WorkspaceLayer)
+		{
+			m_WorkspaceLayer->ClearViewportLayer();
+		}
+
+		// 2. Delete the dynamic active client layer instances safely
+		if (m_ActivePluginLayer)
+		{
+			delete m_ActivePluginLayer;
+			m_ActivePluginLayer = nullptr;
+		}
+
+		// 3. Drop library handles out of standard environment address structures
+		FreeLibrary((HMODULE)m_PluginHandle);
+		m_PluginHandle = nullptr;
+		CS_CORE_INFO("Project DLL safely unmounted and unloaded.");
+	}
 
 }

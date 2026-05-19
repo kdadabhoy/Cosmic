@@ -62,7 +62,7 @@
 
 namespace Cosmic
 {
-    class Material
+    class COSMIC_API Material
     {
     public:
         ////////////////////////////////

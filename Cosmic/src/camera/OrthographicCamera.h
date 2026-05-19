@@ -63,11 +63,12 @@
  *     Post: Updates the Z-axis rotation and re-calculates the View and VP matrices.
  */
 
+#include "core/Core.h"
 #include <glm/glm.hpp>
 
 namespace Cosmic
 {
-	class OrthographicCamera
+	class COSMIC_API OrthographicCamera
 	{
 	public:
 		////////////////////////////////

@@ -64,14 +64,13 @@ file(GLOB_RECURSE COSMIC_SOURCES
     "dependencies/stb_image/*.cpp"
 )
 
-add_library(Cosmic STATIC ${COSMIC_SOURCES})
+# CRITICAL CHANGE: Build as an EXECUTABLE (Host container), not a STATIC library
+add_executable(Cosmic ${COSMIC_SOURCES})
 
 # ----------------------------
 # 4. Engine Configuration and Linking
 # ----------------------------
-# PUBLIC: Anything linking to Cosmic also gets 'src' in its include path
 target_include_directories(Cosmic PUBLIC src)
-# PRIVATE: Only the engine needs the internal stb headers
 target_include_directories(Cosmic PRIVATE dependencies/stb_image)
 
 target_link_libraries(Cosmic PUBLIC
@@ -84,6 +83,10 @@ target_link_libraries(Cosmic PUBLIC
     stb_image
     spdlog
 )
+
+# CRITICAL CHANGE: Tell the linker to export engine symbols from Cosmic.exe.
+# This prevents you from needing a dll/api macro soup across engine classes.
+set_target_properties(Cosmic PROPERTIES ENABLE_EXPORTS TRUE)
 
 # ----------------------------
 # 5. Asset Management

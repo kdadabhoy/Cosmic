@@ -33,7 +33,7 @@
 
 namespace Cosmic
 {
-	class Timestep
+	class COSMIC_API Timestep
 	{
 	public:
 		////////////////////////////////

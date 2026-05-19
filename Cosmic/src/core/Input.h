@@ -30,11 +30,13 @@
  *    Post: Returns the specific individual component of the mouse position.
  */
 
+#include "core/Core.h"
 #include <glm/glm.hpp>
+
 
 namespace Cosmic
 {
-	class Input
+	class COSMIC_API Input
 	{
 	public:
 		////////////////////////////////

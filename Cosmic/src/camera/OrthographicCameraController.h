@@ -58,14 +58,16 @@
  *    Post: Manually overrides the current position (useful for following entities).
  */
 
+#include "core/Core.h"
 #include "camera/OrthographicCamera.h"
 #include "events/ApplicationEvent.h"
 #include "events/MouseEvent.h"
 #include <glm/glm.hpp>
 
+
 namespace Cosmic
 {
-	class OrthographicCameraController
+	class COSMIC_API OrthographicCameraController
 	{
 	public:
 		////////////////////////////////

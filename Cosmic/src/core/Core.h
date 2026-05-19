@@ -37,13 +37,31 @@ namespace Cosmic
 	////////////////////////////////
 	// Platform Detection
 	///////////////////////////////
-
 #ifdef _WIN32
-#ifdef _WIN64
-#define COSMIC_PLATFORM_WINDOWS
-#else
-#error "x86 Builds are not supported! Please switch to x64."
+	#ifdef _WIN64
+		#define COSMIC_PLATFORM_WINDOWS
+	#else
+		#error "x86 Builds are not supported! Please switch to x64."
+	#endif
 #endif
+
+	////////////////////////////////
+	// DLL Export/Import Macros
+	///////////////////////////////
+#ifdef COSMIC_PLATFORM_WINDOWS
+	#ifdef COSMIC_DYNAMIC_LINK
+		#ifdef COSMIC_BUILD_DLL
+			#define COSMIC_API __declspec(dllexport)
+		#else
+			#define COSMIC_API __declspec(dllimport)
+		#endif
+	#else
+		// Since we are compiling an EXE but allowing companion DLLs to link into it,
+		// we force the executable to export its engine functions, generating Cosmic.lib!
+		#define COSMIC_API __declspec(dllexport)
+	#endif
+#else
+	#define COSMIC_API
 #endif
 
 

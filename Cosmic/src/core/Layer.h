@@ -38,14 +38,17 @@
  *    Post: Processes hardware or application signals; may "handle" the event to stop propagation.
  */
 
+#include "core/Core.h"
 #include "events/Event.h"
 #include <string>
 #include <sstream>
 #include <iostream>
 
+
+
 namespace Cosmic
 {
-    class Layer
+    class COSMIC_API Layer
     {
     public:
         ////////////////////////////////

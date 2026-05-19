@@ -61,6 +61,7 @@
  *    Post: Zeroes out all performance counters.
  */
 
+#include "core/Core.h"
 #include "camera/OrthographicCamera.h"
 #include "graphics/Texture.h"
 #include "graphics/Material.h"
@@ -68,7 +69,7 @@
 
 namespace Cosmic
 {
-	class Renderer2D
+	class COSMIC_API Renderer2D
 	{
 	public:
 		////////////////////////////////

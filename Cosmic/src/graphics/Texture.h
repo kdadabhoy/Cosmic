@@ -62,7 +62,7 @@
 
 namespace Cosmic
 {
-	class Texture
+	class COSMIC_API Texture
 	{
 	public:
 		////////////////////////////////
