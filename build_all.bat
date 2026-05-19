@@ -2,12 +2,13 @@
 SETLOCAL
 CLS
 echo ======================================================
-echo           Cosmic Engine - Universal Build
+echo           Cosmic Engine - Full Universal Build
+echo           Target: Core Engine + All Project Modules
 echo ======================================================
 
 :: 1. Find Visual Studio Installation Path
 for /f "usebackq tokens=*" %%i in (`"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath`) do (
-  set "VS_PATH=%%i"
+    set "VS_PATH=%%i"
 )
 
 if not exist "%VS_PATH%" (
@@ -47,18 +48,19 @@ if %errorlevel% neq 0 (
     exit /b %errorlevel%
 )
 
-:: 5. Compile
+:: 5. Compile Everything (Engine + Plugins)
 echo.
-echo [STAGE 2] Building Engine and Sandbox (Multi-Threaded)...
+echo [STAGE 2] Building Engine Host and All Client Projects (Multi-Threaded)...
+:: No explicit target here compiles the entire solution tree natively!
 cmake --build . --config Debug --parallel
 if %errorlevel% neq 0 (
-    echo ERROR: Build failed!
+    echo ERROR: Global build failed!
     pause
     exit /b %errorlevel%
 )
 
 echo.
-echo SUCCESS: Build Finished!
+echo SUCCESS: Engine Core and Game Modules Compiled Successfully!
 echo Path: %CD%
 pause
 ENDLOCAL
