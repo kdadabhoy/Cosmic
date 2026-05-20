@@ -5,50 +5,42 @@
 
 /**
  * General Description:
- * The LayerStack is a specialized container designed to manage the execution order of
- * the Cosmic Engine's update and event loops. It organizes "Layers" (game logic/scenes)
- * and "Overlays" (UI/Debug tools) into a coherent stack.
- *
- * Logic Layers are kept at the bottom/middle of the stack, while Overlays are strictly
- * maintained at the end (the "top"). This architecture ensures that UI elements are
- * always rendered last (on top) and receive hardware events first.
- *
  * 
- * CRITICAL OWNERSHIP NOTE:
- * The LayerStack manages execution, rendering priorities, and event dispatch patterns.
- * It does not maintain structural memory lifecycles or ownership strings.
+ * The LayerStack functions strictly as an execution router and prioritization engine.
+ * It borrows raw pointers (`Layer*`) to adjust execution pipelines, render layering,
+ * and hardware input dispatch order. It does NOT own the memory of the layers it references.
  *
- * To avoid double-free loops or mismatched deletions during normal frame execution,
- * the Application class handles ultimate cleanup sequences during its formal
- * Shutdown() timeline.
+ * To eliminate use-after-free bugs and context destruction race conditions, the
+ * underlying allocation lifecycles are explicitly driven by the `Application` subsystem
+ * during its runtime state transitions and final termination routines.
  *
  * Public Function Prototypes (Pre and Post Conditions):
  *
  * 1. LayerStack()
- *    Post: Internal storage is initialized and the insertion index is reset to 0.
+ *    Post: Clears structural pointer maps natively. Does not free layer memory.
  *
  * 2. ~LayerStack()
  *    Post: Iterates through all remaining layers and triggers OnDetach() for cleanup.
  *          Internal memory pointers are cleared.
  *
  * 3. void PushLayer(Layer* layer)
- *    Pre:  The provided layer pointer must be valid.
- *    Post: The layer is inserted at the current m_LayerInsertIndex and OnAttach() is called.
+ *    Pre:  `layer` must point to a valid heap allocation.
+ *    Post:  Appends the overlay to the back of the stack (on top of logic). Calls `OnAttach()`.
  *
  * 4. void PushOverlay(Layer* overlay)
- *    Pre:  The provided overlay pointer must be valid.
+ *    Pre:  `overlay` must point to a valid heap allocation.
  *    Post: The overlay is appended to the very end of the stack and OnAttach() is called.
  *
  * 5. void PopLayer(Layer* layer)
- *    Pre:  The layer must currently exist within the "logic" section of the stack.
- *    Post: OnDetach() is called on the layer and its pointer is removed from the stack.
+ *    Pre:  `layer` must exist within the active logic sequence range.
+ *    Post: Triggers `OnDetach()`, removes the reference tracking, decrements the insert index.
  *
  * 6. void PopOverlay(Layer* overlay)
- *    Pre:  The overlay must currently exist within the "overlay" section of the stack.
- *    Post: OnDetach() is called on the overlay and its pointer is removed from the stack.
+ *    Pre: `overlay` must exist within the active overlay sequence range.
+ *    Post: Triggers `OnDetach()`, removes the tracking reference from the back of the vector.
  *
  * 7. void Clear()
- *    Post: Every layer in the stack is detached (OnDetach) and the container is emptied.
+ *    Post: Rapidly purges structural vectors and clears the insert index. Does not trigger detaches.
  *
  * 8. Iterators (begin, end, rbegin, rend)
  *    Post: Returns standard vector iterators. Use rbegin/rend for event propagation

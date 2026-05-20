@@ -15,20 +15,15 @@ namespace Cosmic
 
 	/**
 	 * Destructor
-	 *
-	 * CRITICAL OWNERSHIP NOTE: The LayerStack does NOT own the memory of the layers
-	 * it points to. It only manages their order of execution.
-	 *
-	 * We only trigger OnDetach() to allow layers to release their own internal resources.
-	 * We do NOT call 'delete' here because layers are owned by the Application
-	 * (via Scope/unique_ptr) or the client. Deleting here would cause a double-free.
+	 * CRITICAL LIFECYCLE NOTE: Structural vector elements are cleared passively.
+	 * No deletion loops are triggered here to safeguard hardware graphics context stability
+	 * and prevent double-free violations on engine exit.
 	 */
 	LayerStack::~LayerStack()
 	{
-		for (Layer* layer : m_Layers)
-		{
-			layer->OnDetach();
-		}
+		// Memory cleanup and detachment are now driven explicitly by Application::Shutdown
+		// or Clear() to protect context lifecycles.
+		m_Layers.clear();
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////
@@ -86,18 +81,13 @@ namespace Cosmic
 
 	/**
 	 * Clear
-	 *
-	 * Orchestrates a full detachment of all layers. This is the primary method
-	 * used during Application::Shutdown() to ensure all layers clean up their
-	 * GPU/API resources before the Engine Subsystems (Renderer/Window) are destroyed.
+	 * Purges the layer registration array structures instantly. This is used by the
+	 * Application during system state changes or shutdown sequences to prevent event
+	 * execution loops from traversing expired addresses before raw allocations are freed.
 	 */
 	void LayerStack::Clear()
 	{
-		for (Layer* layer : m_Layers)
-		{
-			layer->OnDetach();
-		}
-
+		// Simply clear the tracking array context structures without double-triggering events
 		m_Layers.clear();
 		m_LayerInsertIndex = 0;
 	}

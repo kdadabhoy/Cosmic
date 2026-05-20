@@ -63,19 +63,26 @@ target_include_directories(DinoProject PRIVATE
 if(TARGET Cosmic)
     target_link_libraries(DinoProject PRIVATE Cosmic)
 else()
-    # FIXED: Replaced explicit '.lib' string formatting with an imported interface 
-    # link dependency so it scales natively across compilers (MSVC, Clang, MinGW).
+    # Create the imported placeholder target
     add_library(CosmicCore_Imported SHARED IMPORTED)
     
     if(WIN32)
+        # Fix the literal expression bug by using per-configuration properties
         set_target_properties(CosmicCore_Imported PROPERTIES
-            IMPORTED_IMPLIB "${COSMIC_SDK_DIR}/build/Runtime/$<CONFIG>/Cosmic.lib"
-            IMPORTED_LOCATION "${COSMIC_SDK_DIR}/build/Runtime/$<CONFIG>/Cosmic.dll"
+            IMPORTED_IMPLIB_DEBUG   "${COSMIC_SDK_DIR}/build/Runtime/Debug/Cosmic.lib"
+            IMPORTED_LOCATION_DEBUG "${COSMIC_SDK_DIR}/build/Runtime/Debug/Cosmic.dll"
+            
+            IMPORTED_IMPLIB_RELEASE   "${COSMIC_SDK_DIR}/build/Runtime/Release/Cosmic.lib"
+            IMPORTED_LOCATION_RELEASE "${COSMIC_SDK_DIR}/build/Runtime/Release/Cosmic.dll"
+            
+            # MAP FALLBACKS: Tells CMake how to route missing configurations
+            MAP_IMPORTED_CONFIG_MINSIZEREL   "Release"
+            MAP_IMPORTED_CONFIG_RELWITHDEBINFO "Release"
         )
     else()
         # Non-Windows systems fallbacks (.so / .dylib)
         set_target_properties(CosmicCore_Imported PROPERTIES
-            IMPORTED_LOCATION "${COSMIC_SDK_DIR}/build/Runtime/$<CONFIG>/libCosmic${CMAKE_SHARED_LIBRARY_SUFFIX}"
+            IMPORTED_LOCATION "${COSMIC_SDK_DIR}/build/Runtime/Debug/libCosmic${CMAKE_SHARED_LIBRARY_SUFFIX}"
         )
     endif()
     

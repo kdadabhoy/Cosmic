@@ -142,14 +142,27 @@ namespace Cosmic
 
 	/////////////////////////////////////////////////////////////////////////////////
 
+/////////////////////////////////////////////////////////////////////////////////
+
 	/**
+	 * Run()
+	 * 
 	 * THE CORE APPLICATION LOOP (The Engine's Heartbeat)
+	 *
+	 * Controls the primary execution cycle of the engine. It handles window polling,
+	 * orchestrates the semi-implicit fixed timestep accumulator for physics/logic updates,
+	 * runs variable update passes for visuals, and executes the master ImGui render loop.
+	 * 
+	 * Note... THE SAFE ZONE: The bottom section of the loop guarantees that no iterations
+	 * are currently operating over the LayerStack. This provides a safe, synchronization-free
+	 * environment to safely push, pop, allocate, or delete unmanaged layers without invalidating
+	 * active iterators or throwing context-teardown execution errors.
 	 */
 	void Application::Run()
 	{
 		float lastFrameTime = 0.0f;
 		float accumulator = 0.0f;
-		float fixedDeltaTime = 1.0f / 60.0f;
+		const float fixedDeltaTime = 1.0f / 60.0f;
 
 		while (m_Running && !m_Window->ShouldClose())
 		{
@@ -159,90 +172,99 @@ namespace Cosmic
 			Timestep rawTimestep = time - lastFrameTime;
 			lastFrameTime = time;
 
+			// Skip execution passes entirely if the hardware window framework is minimized
 			if (m_Minimized)
 			{
 				continue;
 			}
 
-			// 1A. Fixed Timestep Case (Physics/Deterministic Logic)
+
+			// -----------------------------------------------------------------
+			// PASS 1A: Fixed Timestep Updates (Deterministic Logic / Physics)
+			// -----------------------------------------------------------------
 			if (m_UseFixedTimestep)
 			{
 				float frameTime = rawTimestep.GetSeconds();
-				if (frameTime > 0.25f) frameTime = 0.25f;
+
+				// Spiral-of-death panic protection clamping
+				if (frameTime > 0.25f)
+				{
+					frameTime = 0.25f;
+				}
 
 				accumulator += (frameTime * m_TimeScale);
 				while (accumulator >= fixedDeltaTime)
 				{
-					// Notify engine layers (Pushed layers handle physics routines independently)
 					for (Layer* layer : m_LayerStack)
+					{
 						layer->OnFixedUpdate(Timestep(fixedDeltaTime));
-
+					}
 					accumulator -= fixedDeltaTime;
 				}
 			}
 
-			// 1B. Variable Timestep (Animations/Smooth Visuals & Screen Clearing)
+
+			// -----------------------------------------------------------------
+			// PASS 1B: Variable Timestep Updates (Animations & Visual States)
+			// -----------------------------------------------------------------
 			Timestep scaledTimestep = rawTimestep.GetSeconds() * m_TimeScale;
 			for (Layer* layer : m_LayerStack)
 			{
 				layer->OnUpdate(scaledTimestep);
 			}
 
-			// 2. UI Rendering Pass (The layout layers draw themselves automatically)
-			m_ImGuiLayer->Begin();
 
+			// -----------------------------------------------------------------
+			// PASS 2: Main UI Rendering and Dockspace Composition
+			// -----------------------------------------------------------------
+			m_ImGuiLayer->Begin();
 			for (Layer* layer : m_LayerStack)
 			{
 				layer->OnImGuiRender();
 			}
-
 			m_ImGuiLayer->End();
 
 			m_Window->SwapBuffers();
 
+
 			// =================================================================
-			// SAFE ZONE: No loops are running on m_LayerStack right now!
+			// THE SAFE ZONE: Guaranteed zero-iteration window on m_LayerStack
 			// =================================================================
-			
-			////// Handle Return to Launcher Request ////// 
+
+			// --- Handle Return to Launcher Request ---
 			if (m_PendingReturnToLauncher)
 			{
-				// 1. Unload the plugin first
+				// Unlink guest library assemblies before cleaning host panels
 				UnloadProjectDLL();
 
 				if (m_WorkspaceLayer)
 				{
-					// Tell the layer to flag itself for cleanup. 
-					// DO NOT delete it here yet!
+					// Notify WorkspaceLayer to begin its multi-stage ImGui cleanup sequence. 
+					// Allocation destruction is deferred until it flags readiness.
 					m_WorkspaceLayer->RequestLayoutReset();
 				}
-
-				// We do NOT call PopLayer/delete here.
-				// The WorkspaceLayer will flag m_ShouldResetLayout, 
-				// run its next ImGui frame to clean up, and then we need to remove it.
 
 				m_PendingReturnToLauncher = false;
 			}
 
-			// After the UI render loop in Application::Run():
+			// Deferred destruction sequence for Workspace allocations 
 			if (m_WorkspaceLayer && m_WorkspaceLayer->IsReadyForDeletion())
 			{
 				m_LayerStack.PopLayer(m_WorkspaceLayer);
 				delete m_WorkspaceLayer;
 				m_WorkspaceLayer = nullptr;
 
-				// Now push the launcher
+				// Swap active display modes back to the Launcher Hub context
 				PushLayer(new LauncherLayer());
-				SynchronizeRenderingState(); // a bit of a gerry-rigged way to get rid of an ImGui docking glitch
+
+				// Force state synchronization to eliminate ImGui dockspace caching artifacts
+				SynchronizeRenderingState();
 			}
 
-			////// End Handle Return to Launcher Request ////// 
-
-
-			// Handle Other Redirection Requests (go to .dll for example)
+			// --- Handle Project Workspace Redirection Requests (.dll loading) ---
 			if (!m_PendingProjectDLL.empty())
 			{
-				// 1. Find and pop the old LauncherLayer out of the active loop
+				// 1. Locate and strip out the legacy Launcher context layer
 				Layer* launcherTarget = nullptr;
 				for (Layer* layer : m_LayerStack)
 				{
@@ -256,17 +278,17 @@ namespace Cosmic
 				if (launcherTarget)
 				{
 					m_LayerStack.PopLayer(launcherTarget);
-					delete launcherTarget; // Safely delete it since it's no longer being updated
+					delete launcherTarget;
 				}
 
-				// 2. Instantiate and mount the full developer Workspace environment
+				// 2. Initialize and push the master workspace platform
 				m_WorkspaceLayer = new WorkspaceLayer();
 				PushLayer(m_WorkspaceLayer);
 
-				// 3. Load the project DLL and mount its viewport layout onto the workspace
+				// 3. Mount guest assembly definitions directly onto the target workspace panel
 				LoadProjectDLL(m_PendingProjectDLL);
 
-				// 4. Reset the string so it waits for the next click event
+				// 4. Invalidate request string to wait for subsequent transition inputs
 				m_PendingProjectDLL = "";
 			}
 		}
@@ -326,58 +348,25 @@ namespace Cosmic
 	/////////////////////////////////////////////////////////////////////////////////
 
 	/**
-	 * Engine Shutdown
+	 * LoadProjectDLL(const std::string& filepath)
 	 *
-	 * Orchestrates an explicit "soft-landing" for the engine components.
+	 * Dynamically Loads a Client Project Assembly Module (DLL)
 	 * 
-	 * APPLICATION MEMORY OWNERSHIP POLICY:
-	 * While LayerStack dictates runtime execution order and routes event logic via
-	 * a borrow arrangement, the Application class retains explicit ultimate lifecycle
-	 * ownership of all raw heap-allocated layers pushed into the stack.
+	 * This handles the runtime plugin linking process. It maps a client project DLL into
+	 * the engine's virtual memory space, hooks into its export signatures, shares
+	 * rendering state handles across compilation boundaries, and initializes the client logic.
+	 *
+	 * @param filepath The dynamic path or name of the `.dll` module to load.
 	 * 
-	 * This method sweeps through active layers to explicitly free their memory allocations
-	 * while the hardware window context remains alive, preventing stray background threads,
-	 * OS process leaks, or driver-level validation faults on context termination.
+	 * @note LIFECYCLE MANAGEMENT: The returned dynamic `Layer*` from the plugin is completely
+	 * unmanaged by smart pointers across the DLL boundary. Ultimate lifecycle management and
+	 * deletion tracking are held explicitly by the host application's `m_ActivePluginLayer`.
 	 */
-	void Application::Shutdown()
-	{
-		CS_CORE_TRACE("Shutting down Application Subsystems...");
-
-		// 1. Unload the project DLL runtime if it's still attached
-		UnloadProjectDLL();
-
-		// 2. EXPLICITLY destroy remaining heap-allocated layers sitting in the stack
-		// (This completely catches any unmanaged allocations like the bootup LauncherLayer)
-		for (Layer* layer : m_LayerStack)
-		{
-			delete layer;
-		}
-
-		// 3. Notify remaining systems of full detachment and drop raw tracking pointer elements
-		m_LayerStack.Clear();
-
-		// 4. FORCE the ImGui layer overlay to destroy itself while context is alive
-		m_ImGuiLayer.reset();
-
-		// 5. Clean up core static graphics pipelines
-		Renderer::Shutdown();
-
-		// 6. FORCE the window to close and terminate the OpenGL Context 
-		m_Window.reset();
-
-		CS_CORE_TRACE("Application Subsystems safely terminated.");
-	}
-
-	/////////////////////////////////////////////////////////////////////////////////
-
-
-
-
 	void Application::LoadProjectDLL(const std::string& filepath)
 	{
 		if (m_PluginHandle) UnloadProjectDLL();
 
-		// 1. Load the DLL into Cosmic's memory space
+		// 1. Load the DLL into Cosmic's virtual address memory space
 		HMODULE handle = LoadLibraryA(filepath.c_str());
 		if (!handle)
 		{
@@ -385,29 +374,30 @@ namespace Cosmic
 			return;
 		}
 
-		// 2. Find the function pointers inside the DLL
+		// 2. Locate dynamic linkage hooks and engine export signatures
 		auto initContexts = (void(*)(HostContext))GetProcAddress(handle, "InitializePluginContexts");
 
-		// Change: The plugin export signature now drops custom abstractions 
-		// and simply creates a standard engine Layer pointer.
+		// The plugin export signature drops complex abstractions and passes raw Layer pointers
 		auto createPluginLayer = (Cosmic::Layer * (*)())GetProcAddress(handle, "CreatePluginLayer");
 
 		if (!initContexts || !createPluginLayer)
 		{
-			CS_CORE_ERROR("Plugin is missing engine export signatures!");
+			CS_CORE_ERROR("Plugin is missing required engine export signatures!");
 			FreeLibrary(handle);
 			return;
 		}
 
 		m_PluginHandle = handle;
 
-		// 3. Share the exact memory address of ImGui/ImPlot contexts across boundaries
+		// 3. Context Sharing Architecture
+		// Synchronizes memory addresses of UI context structures across compilation domains 
+		// to allow client DLLs to render UI elements straight into the master ImGui backend.
 		HostContext ctx;
 		ctx.ImGuiCtx = ImGui::GetCurrentContext();
 		ctx.ImPlotCtx = ImPlot::GetCurrentContext();
 		initContexts(ctx);
 
-		// 4. Instantiate the plugin layer and assign it as the center layout viewport focus
+		// 4. Instantiate the plugin layer and assign it as the workspace viewport focus
 		m_ActivePluginLayer = createPluginLayer();
 
 		if (m_WorkspaceLayer)
@@ -421,40 +411,132 @@ namespace Cosmic
 		}
 	}
 
+	/////////////////////////////////////////////////////////////////////////////////
+
+	/**
+	 * UnloadProjectDLL()
+	 * 
+	 * Gracefully Unmounts and Purges the Client Project DLL Module
+	 * * Safely down-steps the active plugin. It disengages viewport references, calls individual
+	 * destructors to allow the DLL to release its independent graphics subsystem allocations,
+	 * frees the module handle from memory, and scrubs active tracking pointers to prevent
+	 * context destruction race conditions.
+	 */
 	void Application::UnloadProjectDLL()
 	{
 		if (!m_PluginHandle) return;
 
-		// 1. Decouple the canvas display safely before purging memory allocations
+		// 1. Decouple the canvas frame buffers safely before wiping memory structures
 		if (m_WorkspaceLayer)
 		{
 			m_WorkspaceLayer->ClearViewportLayer();
 		}
 
-		// 2. Delete the dynamic active client layer instances safely
+		// 2. Free dynamic client layers explicitly while the library allocation is valid.
+		// This must run BEFORE FreeLibrary so the virtual table instructions still exist in memory!
 		if (m_ActivePluginLayer)
 		{
 			delete m_ActivePluginLayer;
 			m_ActivePluginLayer = nullptr;
 		}
 
-		// 3. Drop library handles out of standard environment address structures
+		// 3. Flush the library handle out of the operating system process memory space
 		FreeLibrary((HMODULE)m_PluginHandle);
 		m_PluginHandle = nullptr;
 		CS_CORE_INFO("Project DLL safely unmounted and unloaded.");
 	}
 
+	/////////////////////////////////////////////////////////////////////////////////
 
-
+	/**
+	 * SynchronizeRenderingState()
+	 * 
+	 * Synchronizes the Rendering Engine State with Physical Canvas Dimensions
+	 * * Manually queries OS window dimensions to synchronously fire a `WindowResizeEvent`.
+	 * This is primarily used as a state synchronization bridge when swapping master layouts
+	 * (e.g., flipping between Launcher and Workspace hubs) to prevent viewport trailing
+	 * artifacts or ImGui dockspace state discrepancies.
+	 */
 	void Application::SynchronizeRenderingState()
 	{
-		// Query the hardware window directly
+		// Query the hardware window context directly
 		int width, height;
 		m_Window->GetSize(&width, &height);
 
-		// Trigger the engine's internal resize pipeline
+		// Manually route a window resize command directly down the rasterizer pipeline
 		WindowResizeEvent e(width, height);
 		OnWindowResize(e);
 	}
+
+	/////////////////////////////////////////////////////////////////////////////////
+
+	/**
+	 * Engine Shutdown
+	 *
+	 * Orchestrates a deterministic, staggered "soft-landing" cleanup sequence for all
+	 * active hardware contexts, dynamic allocations, and modules.
+	 *
+	 * ENGINE MEMORY OWNERSHIP & LIFECYCLE POLICY:
+	 * The Application class maintains ABSOLUTE OWNERSHIP of unmanaged heap-allocated
+	 * layers (e.g., `LauncherLayer`, `WorkspaceLayer`). To guarantee that GPU assets
+	 * (Textures, Framebuffers) delete themselves while an active OpenGL context exists,
+	 * memory destruction is executed in a highly controlled, multi-stage sequence.
+	 *
+	 * PIPELINE CLEANUP FLOW:
+	 * 1. Detach and unmount active dynamic Project DLL modules.
+	 * 2. Pop scope-managed overlayers (ImGui) to prevent raw-pointer double deletions.
+	 * 3. Snapshot remaining active layers into a temporary local sequence cache.
+	 * 4. Evacuate LayerStack tracking arrays to invalidate update/event access loops.
+	 * 5. Iteratively delete unmanaged heap layer memory instances.
+	 * 6. Dissolve ImGui subsystems, close the UI window, and terminate the graphics context.
+	 */
+	void Application::Shutdown()
+	{
+		CS_CORE_TRACE("Shutting down Application Subsystems...");
+
+		// 1. Unload the project DLL runtime if it's still attached
+		UnloadProjectDLL();
+
+		// 2. Extract Scope-owned overlays (ImGui) from the LayerStack matrix
+		// This shields the unique_ptr raw address from being processed in raw delete passes.
+		if (m_ImGuiLayer)
+		{
+			m_LayerStack.PopOverlay(m_ImGuiLayer.get());
+		}
+
+		// 3. Cache references to remaining unmanaged app-level layers (e.g., LauncherLayer)
+		std::vector<Layer*> layersToDelete;
+		for (Layer* layer : m_LayerStack)
+		{
+			layersToDelete.push_back(layer);
+		}
+
+		// 4. Clear the active LayerStack immediately.
+		// By emptying tracking vectors now, we guarantee that no stray events or threads 
+		// can step through dangling pointer ranges during the upcoming deletion process.
+		m_LayerStack.Clear();
+
+		// 5. Execute explicit memory destruction on unmanaged layers.
+		// This triggers layer destructors, releasing graphics assets (Textures, Shaders)
+		// safely while the hardware OpenGL window context is completely alive.
+		for (Layer* layer : layersToDelete)
+		{
+			delete layer;
+		}
+		layersToDelete.clear();
+
+		// 6. Dissolve unique-scoped UI systems while graphics contexts are hot
+		m_ImGuiLayer.reset();
+
+		// 7. Flush static engine rendering layers and hardware structures
+		Renderer::Shutdown();
+
+		// 8. Safely close physical window frames and dismantle the OpenGL core context
+		m_Window.reset();
+
+		CS_CORE_TRACE("Application Subsystems safely terminated.");
+	}
+
+	/////////////////////////////////////////////////////////////////////////////////
 
 }
