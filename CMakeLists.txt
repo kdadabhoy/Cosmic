@@ -25,6 +25,18 @@ option(COSMIC_BUILD_ENGINE_ONLY "Build only the core engine components" OFF)
 add_subdirectory(Cosmic)
 add_subdirectory(Runtime)
 
+# AUTOMATED GAME PROJECT SCANNER
 if(NOT COSMIC_BUILD_ENGINE_ONLY)
-    add_subdirectory(Projects/DinoProject)
+    # 1. Grab a list of every item inside the Projects directory
+    file(GLOB PROJECT_SUBDIRS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}/Projects" "Projects/*")
+    
+    foreach(SUBDIR ${PROJECT_SUBDIRS})
+        set(FULL_PATH "${CMAKE_CURRENT_SOURCE_DIR}/Projects/${SUBDIR}")
+        
+        # 2. If it's a directory and contains a CMakeLists.txt, include it automatically!
+        if(IS_DIRECTORY "${FULL_PATH}" AND EXISTS "${FULL_PATH}/CMakeLists.txt")
+            message(STATUS "--> Auto-detected game project: ${SUBDIR}")
+            add_subdirectory("Projects/${SUBDIR}")
+        endif()
+    endforeach()
 endif()
