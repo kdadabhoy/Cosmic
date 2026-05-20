@@ -3,6 +3,18 @@
 // Log.h
 // Last Modified 5/14/2026
 
+
+
+
+// TODO
+// Need to add the Log writing to an output file
+// Need to have client log commands that are scrippted a bit better
+	// Like some log commands should be used only for Engine... some log commands only for client projects
+
+
+
+
+
 /**
  * General Description:
  * 
