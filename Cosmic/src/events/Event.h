@@ -84,7 +84,7 @@ namespace Cosmic
 	   * Event (Base Class)
 	   * The abstract blueprint for all signals in the engine.
 	   */
-	class Event
+	class COSMIC_API Event
 	{
 	public:
 		// When true, the event stops moving through the LayerStack.

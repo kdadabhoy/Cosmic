@@ -45,23 +45,20 @@ namespace Cosmic
 	#endif
 #endif
 
-	////////////////////////////////
-	// DLL Export/Import Macros
-	///////////////////////////////
+
+////////////////////////////////
+// DLL Export/Import Macros
+///////////////////////////////
 #ifdef COSMIC_PLATFORM_WINDOWS
-	#ifdef COSMIC_DYNAMIC_LINK
-		#ifdef COSMIC_BUILD_DLL
-			#define COSMIC_API __declspec(dllexport)
-		#else
-			#define COSMIC_API __declspec(dllimport)
-		#endif
-	#else
-		// Since we are compiling an EXE but allowing companion DLLs to link into it,
-		// we force the executable to export its engine functions, generating Cosmic.lib!
-		#define COSMIC_API __declspec(dllexport)
-	#endif
+    #ifdef COSMIC_BUILD_DLL
+        // Compiling Cosmic.dll: Export symbols to create Cosmic.lib
+        #define COSMIC_API __declspec(dllexport)
+    #else
+        // Compiling DinoProject.dll / Runtime App: Hook into Cosmic.dll
+        #define COSMIC_API __declspec(dllimport)
+    #endif
 #else
-	#define COSMIC_API
+    #define COSMIC_API
 #endif
 
 

@@ -6,7 +6,7 @@
 #include "Cosmic.h"
 #include <glm/glm.hpp>
 
-namespace Workspace
+namespace Cosmic
 {
 	class WorkspaceLayer : public Cosmic::Layer
 	{

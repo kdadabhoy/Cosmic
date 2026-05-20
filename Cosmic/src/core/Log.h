@@ -43,7 +43,7 @@
 
 namespace Cosmic
 {
-	class Log
+	class COSMIC_API Log
 	{
 	public:
 		////////////////////////////////
@@ -56,8 +56,8 @@ namespace Cosmic
 		// Logger Accessors
 		///////////////////////////////
 
-		inline static Ref<spdlog::logger>&		GetCoreLogger()			{ return s_CoreLogger; }
-		inline static Ref<spdlog::logger>&		GetClientLogger()		{ return s_ClientLogger; }
+		static Ref<spdlog::logger>& GetCoreLogger();
+		static Ref<spdlog::logger>& GetClientLogger();
 
 	private:
 		static Ref<spdlog::logger> s_CoreLogger;
