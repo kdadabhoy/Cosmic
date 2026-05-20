@@ -62,24 +62,27 @@ target_include_directories(DinoProject PRIVATE
 if(TARGET Cosmic)
     target_link_libraries(DinoProject PRIVATE Cosmic)
 else()
-    target_link_libraries(DinoProject PRIVATE "${COSMIC_SDK_DIR}/build/Runtime/Debug/Cosmic.lib")
+    # FIXED: Re-routed to the dynamic configuration file path layer
+    target_link_libraries(DinoProject PRIVATE "${COSMIC_SDK_DIR}/build/Runtime/$<CONFIG>/Cosmic.lib")
 endif()
 
 # -------------------------------------------------------------------
 # 5. Output Redirection Configuration
 # -------------------------------------------------------------------
+# FIXED: Redirect game DLL right next to CosmicApp.exe in the active config folder
 set_target_properties(DinoProject PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${COSMIC_SDK_DIR}/build/Runtime"
+    RUNTIME_OUTPUT_DIRECTORY "${COSMIC_SDK_DIR}/build/Runtime/$<CONFIG>"
 )
 
 # -------------------------------------------------------------------
 # 6. Project-Specific Asset Management
 # -------------------------------------------------------------------
+# FIXED: Ensure game textures/assets land cleanly in the active executable context
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/assets")
     add_custom_command(TARGET DinoProject POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory
         "${CMAKE_CURRENT_SOURCE_DIR}/assets"
-        "$<TARGET_FILE_DIR:DinoProject>/assets/projects/DinoProject"
+        "${COSMIC_SDK_DIR}/build/Runtime/$<CONFIG>/assets/projects/DinoProject"
         COMMENT "Syncing DinoProject game assets to sandbox output directory..."
     )
 endif()
