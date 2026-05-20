@@ -15,13 +15,13 @@ if not exist "%VS_PATH%" (echo ERROR: Visual Studio not found! && pause && exit 
 echo [STAGE 0] Initializing MSVC Environment...
 call "%VS_PATH%\Common7\Tools\VsDevCmd.bat" -arch=x64
 
-:: 3. Setup Isolated Build Directory *inside* DinoProject
-:: This keeps the root directory perfectly clean!
-if not exist build mkdir build
+:: 3. Setup Isolated Build Directory inside DinoProject
+:: Clean out old cache files to prevent macro collisions or stale state
+if exist build rmdir /s /q build
+mkdir build
 cd build
 
 echo [STAGE 1] Configuring CMake directly on DinoProject...
-:: The ".." points to Projects/DinoProject/ since we are inside its build folder
 cmake .. -A x64
 
 echo [STAGE 2] Building DinoProject DLL Module...
