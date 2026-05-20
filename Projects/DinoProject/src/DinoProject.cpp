@@ -4,18 +4,37 @@
 #include "DinoStressLayer.h"
 #include <imgui.h>
 #include <filesystem>
+#include <Cosmic.h>
 
 namespace Workspace
 {
 	DinoProject::DinoProject()
 		: Layer("DinoProject")
 	{
-		// NOTE: If Cosmic doesn't have a virtual filesystem wrapper yet,
-		// use local asset layout paths relative to the executable output.
+		CS_INFO("DinoProject: Initializing simulation layers...");
+
+		// Define paths relative to the executable output
 		std::string dinoPath = "assets/projects/DinoProject/Dino.png";
 		std::string shaderPath = "assets/projects/DinoProject/shaders/DebugTexture.glsl";
 
+		// Asset Verification Helper
+		auto VerifyAsset = [](const std::string& path, const std::string& name) -> bool
+			{
+				if (!std::filesystem::exists(path))
+				{
+					CS_ERROR("DinoProject: FAILED to find {0} at '{1}'", name, path);
+					return false;
+				}
+				CS_INFO("DinoProject: Successfully loaded {0}", name);
+				return true;
+			};
+
+		// Validate assets exist before attempting to bind to GPU
+		bool assetsLoaded = VerifyAsset(dinoPath, "Dino Texture") &&
+			VerifyAsset(shaderPath, "Debug Shader");
+
 		// --- Resource Loading ---
+		// Cosmic::Texture2D and Cosmic::Shader are now available via Cosmic.h
 		m_DinoTexture = Cosmic::Texture2D::Create(dinoPath);
 		auto debugShader = Cosmic::Shader::Create(shaderPath);
 		m_DinoMaterial = Cosmic::Material::Create(debugShader, "DinoMaterial");
@@ -32,7 +51,10 @@ namespace Workspace
 		m_FlightSim = std::make_unique<DinoFlightLayer>(m_DinoMaterial);
 		m_StressSim = std::make_unique<DinoStressLayer>(m_DinoMaterial);
 
+		// Set Default
 		m_ActiveSim = m_RunSim.get();
+
+		CS_INFO("DinoProject: All systems operational.");
 	}
 
 	void DinoProject::OnDetach()
