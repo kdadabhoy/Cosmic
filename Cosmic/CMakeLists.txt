@@ -57,13 +57,13 @@ target_include_directories(Cosmic PRIVATE dependencies/stb_image)
 target_compile_definitions(Cosmic PRIVATE COSMIC_BUILD_DLL)
 target_link_libraries(Cosmic PUBLIC imgui implot glad glm glfw OpenGL::GL stb_image spdlog)
 
-# FIXED: Explicitly map binaries directly into the active configuration runtime folder
+# FIXED: Map binaries safely across VS (multi-config) and Ninja/Make (single-config)
 set_target_properties(Cosmic PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${COSMIC_SDK_DIR}/build/Runtime/$<CONFIG>"
     ARCHIVE_OUTPUT_DIRECTORY "${COSMIC_SDK_DIR}/build/Runtime/$<CONFIG>"
 )
 
-# FIXED: Ensure core assets copy straight into the active configuration folder directory
+# FIXED: Uses generator expressions to safely resolve paths during asset sync
 add_custom_command(TARGET Cosmic POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
     "${CMAKE_CURRENT_SOURCE_DIR}/assets"

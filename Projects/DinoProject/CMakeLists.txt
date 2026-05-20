@@ -7,6 +7,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 if(MSVC)
     add_compile_options(/utf-8)
+else()
+    add_compile_options(-Wall -Wextra)
 endif()
 
 if(WIN32)
@@ -15,7 +17,7 @@ if(WIN32)
 endif()
 
 # -------------------------------------------------------------------
-# 1. SDK Path Resolution (The Future-Proof Secret)
+# 1. SDK Path Resolution
 # -------------------------------------------------------------------
 if(NOT COSMIC_SDK_DIR)
     set(COSMIC_SDK_DIR $ENV{COSMIC_SDK})
@@ -30,7 +32,6 @@ endif()
 # -------------------------------------------------------------------
 file(GLOB_RECURSE DINO_SOURCES "src/*.cpp" "src/*.h")
 
-# NATIVE STANDALONE WORKAROUND: Fallback for third-party tools context linkages
 if(NOT TARGET Cosmic)
     list(APPEND DINO_SOURCES
         "${COSMIC_SDK_DIR}/Cosmic/dependencies/imgui/imgui.cpp"
@@ -45,7 +46,7 @@ endif()
 add_library(DinoProject SHARED ${DINO_SOURCES})
 
 # -------------------------------------------------------------------
-# 3. Include Paths (Cleanly mapped from SDK variable root)
+# 3. Include Paths
 # -------------------------------------------------------------------
 target_include_directories(DinoProject PRIVATE 
     src
@@ -57,27 +58,41 @@ target_include_directories(DinoProject PRIVATE
 )
 
 # -------------------------------------------------------------------
-# 4. Smart Target Linking Architecture
+# 4. Agnostic Target Linking Architecture
 # -------------------------------------------------------------------
 if(TARGET Cosmic)
     target_link_libraries(DinoProject PRIVATE Cosmic)
 else()
-    # FIXED: Re-routed to the dynamic configuration file path layer
-    target_link_libraries(DinoProject PRIVATE "${COSMIC_SDK_DIR}/build/Runtime/$<CONFIG>/Cosmic.lib")
+    # FIXED: Replaced explicit '.lib' string formatting with an imported interface 
+    # link dependency so it scales natively across compilers (MSVC, Clang, MinGW).
+    add_library(CosmicCore_Imported SHARED IMPORTED)
+    
+    if(WIN32)
+        set_target_properties(CosmicCore_Imported PROPERTIES
+            IMPORTED_IMPLIB "${COSMIC_SDK_DIR}/build/Runtime/$<CONFIG>/Cosmic.lib"
+            IMPORTED_LOCATION "${COSMIC_SDK_DIR}/build/Runtime/$<CONFIG>/Cosmic.dll"
+        )
+    else()
+        # Non-Windows systems fallbacks (.so / .dylib)
+        set_target_properties(CosmicCore_Imported PROPERTIES
+            IMPORTED_LOCATION "${COSMIC_SDK_DIR}/build/Runtime/$<CONFIG>/libCosmic${CMAKE_SHARED_LIBRARY_SUFFIX}"
+        )
+    endif()
+    
+    target_link_libraries(DinoProject PRIVATE CosmicCore_Imported)
 endif()
 
 # -------------------------------------------------------------------
 # 5. Output Redirection Configuration
 # -------------------------------------------------------------------
-# FIXED: Redirect game DLL right next to CosmicApp.exe in the active config folder
 set_target_properties(DinoProject PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${COSMIC_SDK_DIR}/build/Runtime/$<CONFIG>"
+    LIBRARY_OUTPUT_DIRECTORY "${COSMIC_SDK_DIR}/build/Runtime/$<CONFIG>"
 )
 
 # -------------------------------------------------------------------
 # 6. Project-Specific Asset Management
 # -------------------------------------------------------------------
-# FIXED: Ensure game textures/assets land cleanly in the active executable context
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/assets")
     add_custom_command(TARGET DinoProject POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory
