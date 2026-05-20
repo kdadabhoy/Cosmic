@@ -1,7 +1,7 @@
 #pragma once
 
 // Application.h
-// Last Modified 5/19/2026
+// Last Modified 5/20/2026
 
 /**
  * General Description:
@@ -25,11 +25,12 @@
 #include <memory>
 #include <string>
 
- // Forward declaration of the generalized engine layout shell context
-namespace Workspace { class WorkspaceLayer; }
-
 namespace Cosmic
 {
+	// Forward Declarations (Prevent Compiler Issues):
+	class WorkspaceLayer; 
+
+
 	class COSMIC_API Application
 	{
 	public:
@@ -45,6 +46,8 @@ namespace Cosmic
 		void		OnEvent(Event& e);
 		void		PushLayer(Layer* inLayer);
 		void		PushOverlay(Layer* inOverlay);
+
+		void		TransitionFromLauncherToWorkspace(const std::string& projectDllFilename);
 
 
 		///////////////////////////////
@@ -97,9 +100,6 @@ namespace Cosmic
 		LayerStack						m_LayerStack;
 		Ref<FrameBuffer>                m_Framebuffer;
 
-		// Project independent tracking reference for the editor shell interface layout
-		Workspace::WorkspaceLayer* m_WorkspaceLayer = nullptr;
-
 		///////////////////////////////
 		// Application State Flags
 		///////////////////////////////
@@ -114,6 +114,11 @@ namespace Cosmic
 		///////////////////////////////
 
 		static Application* s_Instance;
+
+		///////////////////////////////
+		// Tracking to Prevent Iterator Errors when Popping layers
+		///////////////////////////////
+		std::string m_PendingProjectDLL = "";
 
 
 		///////////////////////////////
@@ -131,9 +136,9 @@ namespace Cosmic
 		void UnloadProjectDLL();
 
 		// --- Dynamic Guest Module Allocation Data Handlers ---
-		void* m_PluginHandle = nullptr;            // Holds raw OS Win32 HMODULE pointer
-		Cosmic::Layer* m_ActivePluginLayer = nullptr; // Live project plugin runtime layer pointer
-		char m_DLLPathBuffer[256] = "DinoProject.dll";
+		WorkspaceLayer* m_WorkspaceLayer = nullptr;
+		void* m_PluginHandle = nullptr;
+		Layer* m_ActivePluginLayer = nullptr; // Live project plugin runtime layer pointer
 	};
 
 	///////////////////////////////

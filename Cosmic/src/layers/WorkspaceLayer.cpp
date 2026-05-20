@@ -2,7 +2,7 @@
 #include <imgui.h>
 #include <imgui_internal.h>
 
-namespace Workspace
+namespace Cosmic
 {
 	WorkspaceLayer::WorkspaceLayer()
 		: Layer("WorkspaceLayer")

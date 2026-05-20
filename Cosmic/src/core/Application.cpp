@@ -7,6 +7,7 @@
 #include "graphics/FrameBuffer.h"
 #include "core/Log.h"
 #include "layers/WorkspaceLayer.h"
+#include "layers/LauncherLayer.h"
 
 // Note: glfw3.h is kept only for glfwGetTime() in the Run() loop.
 #include <GLFW/glfw3.h>
@@ -71,34 +72,37 @@ namespace Cosmic
 	 */
 	bool Application::Initialize()
 	{
-		// 0. Log statement
 		CS_CORE_TRACE("Initializing Application Subsystems...");
 
 		// 1. Create the window 
 		m_Window = CreateScope<Window>(DEFAULT_WIDTH, DEFAULT_HEIGHT, DEFAULT_WINDOW_TITLE);
-
-		// 2. Bind events to the OnEvent function
 		m_Window->SetEventCallback(GLCORE_BIND_EVENT_FN(Application::OnEvent));
 
-		// 3. Initialize the Renderer (Dispatcher and API)
+		// 2. Initialize the Renderer
 		Renderer::Init();
 
-		// 4. Framebuffer Setup 
+		// 3. Framebuffer Setup 
 		FramebufferSpecification fbSpec;
 		fbSpec.Width = DEFAULT_WIDTH;
 		fbSpec.Height = DEFAULT_HEIGHT;
 		m_Framebuffer = FrameBuffer::Create(fbSpec);
 
-		// 5. Initialize ImGui
+		// 4. Initialize ImGui Frame Layer Context Overlay
 		m_ImGuiLayer = CreateScope<ImGuiLayer>();
 		PushOverlay(m_ImGuiLayer.get());
 
-		// 6. Mount the Engine Editor Shell Workspace Out-Of-The-Box
-		// Keep a member variable tracking reference (e.g., m_WorkspaceLayer) if needed globally
-		m_WorkspaceLayer = new Workspace::WorkspaceLayer();
-		PushLayer(m_WorkspaceLayer);
+		// 5. BOOT EXCLUSIVELY INTO THE LAUNCHER HUB HUB STATE
+		// We completely skip mounting the editor layout or loading any projects out-of-the-box.
+		PushLayer(new LauncherLayer());
 
 		return true;
+	}
+
+	/////////////////////////////////////////////////////////////////////////////////
+
+	void Application::TransitionFromLauncherToWorkspace(const std::string& dllPath)
+	{
+		m_PendingProjectDLL = dllPath; // Just cache the request
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////
@@ -160,7 +164,7 @@ namespace Cosmic
 				accumulator += (frameTime * m_TimeScale);
 				while (accumulator >= fixedDeltaTime)
 				{
-					// Notify engine layers (WorkspaceLayer picks this up and forwards it to the viewport)
+					// Notify engine layers (Pushed layers handle physics routines independently)
 					for (Layer* layer : m_LayerStack)
 						layer->OnFixedUpdate(Timestep(fixedDeltaTime));
 
@@ -168,7 +172,7 @@ namespace Cosmic
 				}
 			}
 
-			// 1B. Variable Timestep (Animations/Smooth Visuals)
+			// 1B. Variable Timestep (Animations/Smooth Visuals & Screen Clearing)
 			Timestep scaledTimestep = rawTimestep.GetSeconds() * m_TimeScale;
 			for (Layer* layer : m_LayerStack)
 			{
@@ -183,42 +187,42 @@ namespace Cosmic
 				layer->OnImGuiRender();
 			}
 
-			// --- Unified Dynamic Project Launcher Manager Overlay ---
-			ImGui::Begin("Cosmic Project Launcher");
-			ImGui::Text("Enter filename or absolute system download path location:");
-			ImGui::InputText("DLL Target Path", m_DLLPathBuffer, sizeof(m_DLLPathBuffer));
-
-			ImGui::Separator();
-
-			if (ImGui::Button("Load / Hot-Swap Module", ImVec2(200, 0)))
-			{
-				LoadProjectDLL(m_DLLPathBuffer);
-			}
-
-			ImGui::SameLine();
-
-			if (ImGui::Button("Unload Module", ImVec2(150, 0)))
-			{
-				if (m_PluginHandle)
-				{
-					UnloadProjectDLL();
-				}
-			}
-
-			if (m_ActivePluginLayer)
-			{
-				ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "Status: Project Layer active and running inside Viewport.");
-			}
-			else
-			{
-				ImGui::TextColored(ImVec4(1.0f, 0.4f, 0.4f, 1.0f), "Status: No guest project layer loaded.");
-			}
-			ImGui::End();
-			// --------------------------------------------------------
-
 			m_ImGuiLayer->End();
 
 			m_Window->SwapBuffers();
+
+			// =================================================================
+			// SAFE ZONE: No loops are running on m_LayerStack right now!
+			// =================================================================
+			if (!m_PendingProjectDLL.empty())
+			{
+				// 1. Find and pop the old LauncherLayer out of the active loop
+				Layer* launcherTarget = nullptr;
+				for (Layer* layer : m_LayerStack)
+				{
+					if (layer->GetName() == "LauncherLayer")
+					{
+						launcherTarget = layer;
+						break;
+					}
+				}
+
+				if (launcherTarget)
+				{
+					m_LayerStack.PopLayer(launcherTarget);
+					delete launcherTarget; // Safely delete it since it's no longer being updated
+				}
+
+				// 2. Instantiate and mount the full developer Workspace environment
+				m_WorkspaceLayer = new WorkspaceLayer();
+				PushLayer(m_WorkspaceLayer);
+
+				// 3. Load the project DLL and mount its viewport layout onto the workspace
+				LoadProjectDLL(m_PendingProjectDLL);
+
+				// 4. Reset the string so it waits for the next click event
+				m_PendingProjectDLL = "";
+			}
 		}
 	}
 
