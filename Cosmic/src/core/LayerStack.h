@@ -13,10 +13,14 @@
  * maintained at the end (the "top"). This architecture ensures that UI elements are
  * always rendered last (on top) and receive hardware events first.
  *
- * OWNERSHIP POLICY:
- * This class operates on a "Borrow" model. It stores raw pointers for performance and
- * iteration logic, but it does NOT own the memory of the layers. Lifetime management
- * is handled by the Application class using smart pointers (Scope/unique_ptr).
+ * 
+ * CRITICAL OWNERSHIP NOTE:
+ * The LayerStack manages execution, rendering priorities, and event dispatch patterns.
+ * It does not maintain structural memory lifecycles or ownership strings.
+ *
+ * To avoid double-free loops or mismatched deletions during normal frame execution,
+ * the Application class handles ultimate cleanup sequences during its formal
+ * Shutdown() timeline.
  *
  * Public Function Prototypes (Pre and Post Conditions):
  *

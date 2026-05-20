@@ -328,25 +328,44 @@ namespace Cosmic
 	/**
 	 * Engine Shutdown
 	 *
-	 * This method orchestrates a "soft-landing" for the engine. By explicitly clearing
-	 * the LayerStack, we ensure that every layer has a chance to run its OnDetach()
-	 * logic (cleaning up textures, shaders, etc.) while the Renderer and Window are
-	 * still valid.
-	 *
-	 * Because we removed the 'delete' call from the LayerStack destructor, this clear
-	 * only removes raw pointers. The actual memory is then safely freed by the
-	 * Scope<> (unique_ptr) members of the Application class during its final
-	 * destruction phase. This prevents double-frees and dangling pointer crashes.
+	 * Orchestrates an explicit "soft-landing" for the engine components.
+	 * 
+	 * APPLICATION MEMORY OWNERSHIP POLICY:
+	 * While LayerStack dictates runtime execution order and routes event logic via
+	 * a borrow arrangement, the Application class retains explicit ultimate lifecycle
+	 * ownership of all raw heap-allocated layers pushed into the stack.
+	 * 
+	 * This method sweeps through active layers to explicitly free their memory allocations
+	 * while the hardware window context remains alive, preventing stray background threads,
+	 * OS process leaks, or driver-level validation faults on context termination.
 	 */
 	void Application::Shutdown()
 	{
 		CS_CORE_TRACE("Shutting down Application Subsystems...");
 
-		// 1. Notify and remove all layers/overlays from the heartbeat
+		// 1. Unload the project DLL runtime if it's still attached
+		UnloadProjectDLL();
+
+		// 2. EXPLICITLY destroy remaining heap-allocated layers sitting in the stack
+		// (This completely catches any unmanaged allocations like the bootup LauncherLayer)
+		for (Layer* layer : m_LayerStack)
+		{
+			delete layer;
+		}
+
+		// 3. Notify remaining systems of full detachment and drop raw tracking pointer elements
 		m_LayerStack.Clear();
 
-		// 2. Additional cleanup for core static subsystems
+		// 4. FORCE the ImGui layer overlay to destroy itself while context is alive
+		m_ImGuiLayer.reset();
+
+		// 5. Clean up core static graphics pipelines
 		Renderer::Shutdown();
+
+		// 6. FORCE the window to close and terminate the OpenGL Context 
+		m_Window.reset();
+
+		CS_CORE_TRACE("Application Subsystems safely terminated.");
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////
