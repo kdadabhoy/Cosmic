@@ -3,11 +3,12 @@ project(CosmicRuntime LANGUAGES C CXX)
 
 add_executable(CosmicApp Main.cpp)
 
+# FIXED: Replaced relative "../Cosmic" pathing with the global absolute SDK root variable
 target_include_directories(CosmicApp PRIVATE 
-    ../Cosmic/src
-    ../Cosmic/dependencies/imgui
-    ../Cosmic/dependencies/implot
-    ../Cosmic/dependencies/glm
+    ${COSMIC_SDK_DIR}/Cosmic/src
+    ${COSMIC_SDK_DIR}/Cosmic/dependencies/imgui
+    ${COSMIC_SDK_DIR}/Cosmic/dependencies/implot
+    ${COSMIC_SDK_DIR}/Cosmic/dependencies/glm
 )
 
 target_link_libraries(CosmicApp PRIVATE Cosmic)

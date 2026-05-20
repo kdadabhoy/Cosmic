@@ -11,13 +11,14 @@ for /f "usebackq tokens=*" %%i in (`"%ProgramFiles(x86)%\Microsoft Visual Studio
 )
 if not exist "%VS_PATH%" (echo ERROR: Visual Studio not found! && pause && exit /b 1)
 
-:: 2. Dynamic Absolute SDK Trace Resolution Validation
-:: If the project remains nested inside the SDK layout structure, calculate it:
-set "ENGINE_DETECTED_PATH=%~dp0..\.."
-
-pushd "%ENGINE_DETECTED_PATH%"
-set "COSMIC_SDK=%CD%"
-popd
+:: 2. Smart SDK Detection (Looks at System Variable first, falls back if local)
+if "%COSMIC_SDK%"=="" (
+    echo [WARN] COSMIC_SDK environment variable not found. Testing local relative fallback...
+    set "ENGINE_DETECTED_PATH=%~dp0..\.."
+    pushd "%ENGINE_DETECTED_PATH%"
+    set "COSMIC_SDK=%CD%"
+    popd
+)
 
 echo [INFO] Environment Context Pathing Resolved To: %COSMIC_SDK%
 
