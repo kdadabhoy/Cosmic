@@ -26,6 +26,10 @@ namespace Cosmic
 		inline void ClearViewportLayer() { m_ClientViewportLayer = nullptr; }
 		inline bool HasViewportLayer() const { return m_ClientViewportLayer != nullptr; }
 
+
+		void RequestLayoutReset()			{ m_ShouldResetLayout = true; }
+		bool IsReadyForDeletion() const		{ return m_ReadyForDeletion; }
+
 	private:
 		Cosmic::Layer* m_ClientViewportLayer = nullptr;
 
@@ -33,5 +37,10 @@ namespace Cosmic
 		glm::vec2 m_ViewportSize = { 0.0f, 0.0f };
 		bool m_ViewportFocused = false;
 		bool m_ViewportHovered = false;
+
+
+	private:
+		bool m_ShouldResetLayout = false;
+		bool m_ReadyForDeletion = false;
 	};
 }

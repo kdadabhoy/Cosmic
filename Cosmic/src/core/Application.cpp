@@ -8,6 +8,7 @@
 #include "core/Log.h"
 #include "layers/WorkspaceLayer.h"
 #include "layers/LauncherLayer.h"
+#include "imgui_internal.h"
 
 
 // Note: glfw3.h is kept only for glfwGetTime() in the Run() loop.
@@ -203,25 +204,39 @@ namespace Cosmic
 			// SAFE ZONE: No loops are running on m_LayerStack right now!
 			// =================================================================
 			
-			// Handle Return to Launcher Request
+			////// Handle Return to Launcher Request ////// 
 			if (m_PendingReturnToLauncher)
 			{
-				// 1. Unload the plugin
+				// 1. Unload the plugin first
 				UnloadProjectDLL();
 
 				if (m_WorkspaceLayer)
 				{
-					m_LayerStack.PopLayer(m_WorkspaceLayer);
-					delete m_WorkspaceLayer;
-					m_WorkspaceLayer = nullptr;
+					// Tell the layer to flag itself for cleanup. 
+					// DO NOT delete it here yet!
+					m_WorkspaceLayer->RequestLayoutReset();
 				}
 
-				// 2. Push the Launcher back
-				PushLayer(new LauncherLayer());
+				// We do NOT call PopLayer/delete here.
+				// The WorkspaceLayer will flag m_ShouldResetLayout, 
+				// run its next ImGui frame to clean up, and then we need to remove it.
 
-				// 3. Reset flag
 				m_PendingReturnToLauncher = false;
 			}
+
+			// After the UI render loop in Application::Run():
+			if (m_WorkspaceLayer && m_WorkspaceLayer->IsReadyForDeletion())
+			{
+				m_LayerStack.PopLayer(m_WorkspaceLayer);
+				delete m_WorkspaceLayer;
+				m_WorkspaceLayer = nullptr;
+
+				// Now push the launcher
+				PushLayer(new LauncherLayer());
+				SynchronizeRenderingState(); // a bit of a gerry-rigged way to get rid of an ImGui docking glitch
+			}
+
+			////// End Handle Return to Launcher Request ////// 
 
 
 			// Handle Other Redirection Requests (go to .dll for example)
@@ -408,6 +423,19 @@ namespace Cosmic
 		FreeLibrary((HMODULE)m_PluginHandle);
 		m_PluginHandle = nullptr;
 		CS_CORE_INFO("Project DLL safely unmounted and unloaded.");
+	}
+
+
+
+	void Application::SynchronizeRenderingState()
+	{
+		// Query the hardware window directly
+		int width, height;
+		m_Window->GetSize(&width, &height);
+
+		// Trigger the engine's internal resize pipeline
+		WindowResizeEvent e(width, height);
+		OnWindowResize(e);
 	}
 
 }

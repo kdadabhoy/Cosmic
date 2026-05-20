@@ -68,6 +68,18 @@ namespace Cosmic
 
 	void WorkspaceLayer::OnImGuiRender()
 	{
+		// 0. Handle Reset/Cleanup first
+		if (m_ShouldResetLayout)
+		{
+			ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
+			ImGui::DockBuilderRemoveNode(dockspace_id);
+
+			m_ShouldResetLayout = false;
+			m_ReadyForDeletion = true;
+			return; // Exit immediately; do not attempt to render layout or framebuffers
+		}
+
+
 		static bool dockspaceOpen = true;
 		static bool firstTime = true;
 

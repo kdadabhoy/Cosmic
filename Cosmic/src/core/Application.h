@@ -141,6 +141,11 @@ namespace Cosmic
 		void*				m_PluginHandle					= nullptr;
 		Layer*				m_ActivePluginLayer				= nullptr; // Live project plugin runtime layer pointer
 		bool				m_PendingReturnToLauncher		= false; 
+
+
+	private:
+		void SynchronizeRenderingState(); // The "Refresh" method
+
 	};
 
 	///////////////////////////////
