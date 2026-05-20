@@ -12,16 +12,13 @@ target_include_directories(CosmicApp PRIVATE
 
 target_link_libraries(CosmicApp PRIVATE Cosmic)
 
-# Sets CosmicApp.exe output directory
+# FIXED: Outputs directly to workspace bin directory
 set_target_properties(CosmicApp PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Runtime"
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build/Runtime"
 )
 
-# ===================================================================
-# AUTOMATION FIX: Force Visual Studio to use the target folder as working dir
-# ===================================================================
 if(MSVC)
     set_target_properties(CosmicApp PROPERTIES
-        VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/Runtime/\$(Configuration)"
+        VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/build/Runtime/\$(Configuration)"
     )
 endif()

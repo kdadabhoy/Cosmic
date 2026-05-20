@@ -65,7 +65,6 @@ file(GLOB_RECURSE COSMIC_SOURCES
     "dependencies/stb_image/*.cpp"
 )
 
-# Build as a SHARED library (.dll)
 add_library(Cosmic SHARED ${COSMIC_SOURCES})
 
 # ----------------------------
@@ -74,34 +73,22 @@ add_library(Cosmic SHARED ${COSMIC_SOURCES})
 target_include_directories(Cosmic PUBLIC src)
 target_include_directories(Cosmic PRIVATE dependencies/stb_image)
 
-# CRITICAL: Tell Core.h to use __declspec(dllexport)
 target_compile_definitions(Cosmic PRIVATE COSMIC_BUILD_DLL)
 
 target_link_libraries(Cosmic PUBLIC
-    imgui
-    implot
-    glad
-    glm
-    glfw
-    OpenGL::GL
-    stb_image
-    spdlog
+    imgui implot glad glm glfw OpenGL::GL stb_image spdlog
 )
 
-# FIXED: Directs the DLL (.dll) and import export tables (.lib) 
-# straight into the common Runtime environment directory tree
+# FIXED: Always drop artifacts relative to the Workspace Root directory,
+# ensuring separate builds find them in the exact same absolute workspace folder.
 set_target_properties(Cosmic PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Runtime"
-    ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Runtime"
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build/Runtime"
+    ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build/Runtime"
 )
-
-# Inside Cosmic/CMakeLists.txt
 
 # ----------------------------
 # 5. Asset Management
 # ----------------------------
-# AUTOMATED FIX: Copies engine assets directly next to the executable EVERY single build.
-# $<TARGET_FILE_DIR:Cosmic> automatically resolves to the exact /Debug or /Release folder!
 add_custom_command(TARGET Cosmic POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
     "${CMAKE_CURRENT_SOURCE_DIR}/assets"
