@@ -1,173 +1,120 @@
-#include "Cosmic.h"
+#include "DinoProject.h"
+#include "DinoRunLayer.h"
+#include "DinoFlightLayer.h"
+#include "DinoStressLayer.h"
 #include <imgui.h>
-#include <random>
-#include <vector>
-#include <algorithm>
-#include <cmath>
+#include <filesystem>
 
 namespace Workspace
 {
-	// Minimal Inline Obstacle Blueprint
-	struct Obstacle
+	DinoProject::DinoProject()
+		: Layer("DinoProject")
 	{
-		glm::vec3 Position;
-		glm::vec2 Size;
-		glm::vec4 Color;
-	};
+		// NOTE: If Cosmic doesn't have a virtual filesystem wrapper yet,
+		// use local asset layout paths relative to the executable output.
+		std::string dinoPath = "assets/projects/DinoProject/Dino.png";
+		std::string shaderPath = "assets/projects/DinoProject/shaders/DebugTexture.glsl";
 
-	// FIXED: Inherit from Cosmic::Layer instead of ProjectPlugin
-	class SimpleDinoProject : public Cosmic::Layer
+		// --- Resource Loading ---
+		m_DinoTexture = Cosmic::Texture2D::Create(dinoPath);
+		auto debugShader = Cosmic::Shader::Create(shaderPath);
+		m_DinoMaterial = Cosmic::Material::Create(debugShader, "DinoMaterial");
+
+		// --- Material Setup ---
+		if (m_DinoMaterial)
+		{
+			m_DinoMaterial->Set("u_Texture", m_DinoTexture);
+			m_DinoMaterial->Set("u_Color", glm::vec4(1.0f));
+		}
+
+		// --- Simulation Initialization ---
+		m_RunSim = std::make_unique<DinoRunLayer>(m_DinoMaterial);
+		m_FlightSim = std::make_unique<DinoFlightLayer>(m_DinoMaterial);
+		m_StressSim = std::make_unique<DinoStressLayer>(m_DinoMaterial);
+
+		m_ActiveSim = m_RunSim.get();
+	}
+
+	void DinoProject::OnDetach()
 	{
-	public:
-		SimpleDinoProject()
-			: Layer("SimpleDinoProject"), m_CameraController(1280.0f / 720.0f, true), m_RandomEngine(std::random_device{}())
+		m_RunSim.reset();
+		m_FlightSim.reset();
+		m_StressSim.reset();
+	}
+
+	void DinoProject::OnUpdate(float ts)
+	{
+		float dt = ts > 0.0f ? ts : 0.001f;
+		m_SmoothedDeltaTime = m_SmoothedDeltaTime * 0.95f + dt * 0.05f;
+
+		// Real-time Input Polling Mode Switches
+		if (Cosmic::Input::IsKeyPressed(CS_KEY_F)) m_ActiveSim = m_FlightSim.get();
+		if (Cosmic::Input::IsKeyPressed(CS_KEY_R)) m_ActiveSim = m_RunSim.get();
+		if (Cosmic::Input::IsKeyPressed(CS_KEY_T)) m_ActiveSim = m_StressSim.get();
+
+		if (m_ActiveSim)
+			m_ActiveSim->OnUpdate(ts);
+
+		// Core Rendering Pass
+		if (m_ActiveSim)
+			m_ActiveSim->OnRender();
+	}
+
+	void DinoProject::OnFixedUpdate(float deltaFixedTime)
+	{
+		if (m_ActiveSim)
+			m_ActiveSim->OnFixedUpdate(deltaFixedTime);
+	}
+
+	void DinoProject::OnEvent(Cosmic::Event& e)
+	{
+		if (m_ActiveSim)
+			m_ActiveSim->OnEvent(e);
+
+		// Handle window viewport resizing triggers dynamically
+		if (e.GetEventType() == Cosmic::EventType::WindowResize)
 		{
+			auto& re = (Cosmic::WindowResizeEvent&)e;
+			if (m_RunSim)    m_RunSim->SetViewportSize((float)re.GetWidth(), (float)re.GetHeight());
+			if (m_FlightSim) m_FlightSim->SetViewportSize((float)re.GetWidth(), (float)re.GetHeight());
+			if (m_StressSim) m_StressSim->SetViewportSize((float)re.GetWidth(), (float)re.GetHeight());
+		}
+	}
+
+	void DinoProject::OnImGuiRender()
+	{
+		ImGui::Begin("Dino Project Controller");
+
+		ImGui::Text("Dino Simulator Suite");
+		ImGui::Text("FPS: %.0f (%.3f ms)", 1.0f / m_SmoothedDeltaTime, m_SmoothedDeltaTime * 1000.0f);
+
+		// --- Global Material Editor ---
+		if (m_DinoMaterial && ImGui::CollapsingHeader("Global Dino Material", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			glm::vec4 color = m_DinoMaterial->GetVector("u_Color");
+			if (ImGui::ColorEdit4("Dino Tint", &color.x))
+				m_DinoMaterial->Set("u_Color", color);
 		}
 
-		virtual ~SimpleDinoProject() = default;
+		ImGui::Separator();
+		ImGui::Text("Switch Mode:");
+		if (ImGui::Button("Runner [R]")) m_ActiveSim = m_RunSim.get();
+		ImGui::SameLine();
+		if (ImGui::Button("Flight [F]")) m_ActiveSim = m_FlightSim.get();
+		ImGui::SameLine();
+		if (ImGui::Button("Stress [T]")) m_ActiveSim = m_StressSim.get();
 
-		// --- Host Lifecycle Subscriptions ---
+		ImGui::Separator();
 
-		virtual void OnAttach() override
-		{
-			ResetSimulation();
-		}
+		// Render the active sub-layer's specific UI
+		if (m_ActiveSim)
+			m_ActiveSim->OnImGuiRender();
 
-		virtual void OnDetach() override
-		{
-			m_Obstacles.clear();
-		}
-
-		// FIXED: Signature changed from Cosmic::Timestep to float to match Layer.h
-		virtual void OnUpdate(float deltaTime) override
-		{
-			// 1. High-frequency Input Polling
-			if (Cosmic::Input::IsKeyPressed(CS_KEY_SPACE) && m_IsGrounded)
-			{
-				m_VelocityY = 5.0f;
-				m_IsGrounded = false;
-			}
-
-			m_CameraController.OnUpdate(deltaTime);
-
-			// 2. Direct Rendering
-			RenderActiveScene();
-		}
-
-		// FIXED: Signature changed from Cosmic::Timestep to float to match Layer.h
-		virtual void OnFixedUpdate(float deltaFixedTime) override
-		{
-			m_Score += deltaFixedTime * 10.0f;
-
-			// 1. Gravity and Linear Physics Jump Processing
-			if (!m_IsGrounded)
-			{
-				m_VelocityY -= 12.0f * deltaFixedTime;
-				m_DinoPos.y += m_VelocityY * deltaFixedTime;
-			}
-
-			// Floor Bounds Collision Check
-			if (m_DinoPos.y <= -0.5f)
-			{
-				m_DinoPos.y = -0.5f;
-				m_VelocityY = 0.0f;
-				m_IsGrounded = true;
-			}
-
-			// 2. Obstacle Generation Tick Logic
-			m_SpawnTimer += deltaFixedTime;
-			if (m_SpawnTimer > m_NextSpawnTime)
-			{
-				float calculatedHeight = std::uniform_real_distribution<float>(0.3f, 0.8f)(m_RandomEngine);
-				m_Obstacles.push_back({
-					{ 2.5f, -0.8f + (calculatedHeight / 2.0f), 0.0f },
-					{ 0.3f, calculatedHeight },
-					{ 0.8f, 0.2f, 0.2f, 1.0f }
-					});
-				m_SpawnTimer = 0.0f;
-				m_NextSpawnTime = std::uniform_real_distribution<float>(1.0f, 2.0f)(m_RandomEngine);
-			}
-
-			// 3. Positional Progression & AABB Intersect Checking
-			for (auto& obs : m_Obstacles)
-			{
-				obs.Position.x -= 2.0f * deltaFixedTime;
-
-				if (std::abs(m_DinoPos.x - obs.Position.x) < 0.3f &&
-					std::abs(m_DinoPos.y - obs.Position.y) < (obs.Size.y / 2.0f + 0.2f))
-				{
-					ResetSimulation();
-					return;
-				}
-			}
-
-			// Garbage collection for out-of-bounds obstacles
-			m_Obstacles.erase(std::remove_if(m_Obstacles.begin(), m_Obstacles.end(),
-				[](const Obstacle& o) { return o.Position.x < -3.0f; }), m_Obstacles.end());
-		}
-
-		virtual void OnImGuiRender() override
-		{
-			ImGui::Begin("Dino Game Panel");
-			ImGui::Text("Proof of Concept Runner DLL Active!");
-			ImGui::Separator();
-
-			ImGui::Value("Score Counter", (int)m_Score);
-			ImGui::Text("Player Grounded: %s", m_IsGrounded ? "True" : "False");
-			ImGui::Text("Vertical Velocity: %.2f", m_VelocityY);
-
-			if (ImGui::Button("Force Clear Obstacles"))
-			{
-				ResetSimulation();
-			}
-			ImGui::End();
-		}
-
-	private:
-		void ResetSimulation()
-		{
-			m_DinoPos = { -1.0f, -0.5f, 0.0f };
-			m_VelocityY = 0.0f;
-			m_Score = 0.0f;
-			m_IsGrounded = true;
-			m_Obstacles.clear();
-		}
-
-		void RenderActiveScene()
-		{
-			Cosmic::Renderer2D::BeginScene(m_CameraController.GetCamera());
-
-			// Render Static Floor Anchor
-			Cosmic::Renderer2D::DrawQuad({ 0.0f, -0.85f }, { 20.0f, 0.2f }, { 0.3f, 0.3f, 0.33f, 1.0f });
-
-			// Render Generated Moving Obstacles
-			for (const auto& obs : m_Obstacles)
-			{
-				Cosmic::Renderer2D::DrawQuad(obs.Position, obs.Size, obs.Color);
-			}
-
-			// Render Minimalist Dino Block
-			Cosmic::Renderer2D::DrawQuad(m_DinoPos, { 0.5f, 0.5f }, { 0.2f, 0.8f, 0.2f, 1.0f });
-
-			Cosmic::Renderer2D::EndScene();
-		}
-
-	private:
-		Cosmic::OrthographicCameraController m_CameraController;
-		std::mt19937 m_RandomEngine;
-
-		glm::vec3 m_DinoPos = { -1.0f, -0.5f, 0.0f };
-		float m_VelocityY = 0.0f;
-		bool m_IsGrounded = true;
-
-		std::vector<Obstacle> m_Obstacles;
-		float m_SpawnTimer = 0.0f;
-		float m_NextSpawnTime = 2.0f;
-		float m_Score = 0.0f;
-	};
+		ImGui::End();
+	}
 }
 
-// --- Dynamic Module Export Linkages ---
+// --- DLL Linkages ---
 extern "C"
 {
 	__declspec(dllexport) void InitializePluginContexts(Cosmic::HostContext context)
@@ -176,9 +123,8 @@ extern "C"
 		ImPlot::SetCurrentContext(context.ImPlotCtx);
 	}
 
-	// FIXED: Signature changed to match the CreatePluginLayer expectations returning a Cosmic::Layer*
 	__declspec(dllexport) Cosmic::Layer* CreatePluginLayer()
 	{
-		return new Workspace::SimpleDinoProject();
+		return new Workspace::DinoProject();
 	}
 }

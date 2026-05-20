@@ -55,7 +55,7 @@
 
 namespace Cosmic
 {
-	class Shader
+	class COSMIC_API Shader
 	{
 	public:
 		////////////////////////////////
