@@ -1,5 +1,13 @@
 #pragma once
 
+
+// TODO
+// Need to add a way to select projects that aren't auto-scanned... well maybe not bc projects .dlls build to the folder, so they should always get scanned
+// Need to implement New Project implementation (scripting for the CMake, built, common folders, and a template project or something)
+// Need to make look nicer :)
+
+
+
 #include "core/Layer.h"
 #include "graphics/Texture.h" 
 #include "camera/OrthographicCamera.h"
