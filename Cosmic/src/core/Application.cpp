@@ -9,10 +9,11 @@
 #include "layers/WorkspaceLayer.h"
 #include "layers/LauncherLayer.h"
 
+
 // Note: glfw3.h is kept only for glfwGetTime() in the Run() loop.
 #include <GLFW/glfw3.h>
 
-// CRITICAL FIX: Wrap Windows.h to isolate polluting win32 macro definitions
+// Wrap Windows.h to isolate polluting win32 macro definitions
 // Note: WIN32_LEAN_AND_MEAN removed here because it is already declared via the command line compiler flags
 #ifndef NOMINMAX
 #define NOMINMAX
@@ -107,6 +108,13 @@ namespace Cosmic
 
 	/////////////////////////////////////////////////////////////////////////////////
 
+	void Application::TransitionToLauncher()
+	{
+		m_PendingReturnToLauncher = true; // Set the flag to process in the Safe Zone
+	}
+
+	/////////////////////////////////////////////////////////////////////////////////
+
 	/**
 	 * Global Event Entry Point
 	 * Handles top-level window events and propagates remaining events through the LayerStack.
@@ -194,6 +202,29 @@ namespace Cosmic
 			// =================================================================
 			// SAFE ZONE: No loops are running on m_LayerStack right now!
 			// =================================================================
+			
+			// Handle Return to Launcher Request
+			if (m_PendingReturnToLauncher)
+			{
+				// 1. Unload the plugin
+				UnloadProjectDLL();
+
+				if (m_WorkspaceLayer)
+				{
+					m_LayerStack.PopLayer(m_WorkspaceLayer);
+					delete m_WorkspaceLayer;
+					m_WorkspaceLayer = nullptr;
+				}
+
+				// 2. Push the Launcher back
+				PushLayer(new LauncherLayer());
+
+				// 3. Reset flag
+				m_PendingReturnToLauncher = false;
+			}
+
+
+			// Handle Other Redirection Requests (go to .dll for example)
 			if (!m_PendingProjectDLL.empty())
 			{
 				// 1. Find and pop the old LauncherLayer out of the active loop

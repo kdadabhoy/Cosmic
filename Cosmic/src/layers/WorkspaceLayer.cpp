@@ -2,6 +2,8 @@
 #include <imgui.h>
 #include <imgui_internal.h>
 
+
+
 namespace Cosmic
 {
 	WorkspaceLayer::WorkspaceLayer()
@@ -19,6 +21,7 @@ namespace Cosmic
 	void WorkspaceLayer::OnDetach()
 	{
 		ClearViewportLayer();
+		// Do NOT call ImGui functions... or it will cause crashes
 	}
 
 	void WorkspaceLayer::OnUpdate(float ts)
@@ -103,12 +106,21 @@ namespace Cosmic
 			ImGui::DockBuilderFinish(dockspace_id);
 		}
 
+
 		// 4. Main Menu Bar
 		if (ImGui::BeginMenuBar())
 		{
 			if (ImGui::BeginMenu("File"))
 			{
-				if (ImGui::MenuItem("Exit")) Cosmic::Application::Get().Close();
+				// Add the "Back to Home" option
+				if (ImGui::MenuItem("Return to Launcher"))
+				{
+					Cosmic::Application::Get().TransitionToLauncher();
+				}
+
+				if (ImGui::MenuItem("Exit"))
+					Cosmic::Application::Get().Close();
+
 				ImGui::EndMenu();
 			}
 			ImGui::EndMenuBar();
@@ -152,6 +164,7 @@ namespace Cosmic
 		ImGui::End();
 
 		ImGui::End(); // End MasterDockSpace
+
 	}
 
 	void WorkspaceLayer::OnEvent(Cosmic::Event& e)

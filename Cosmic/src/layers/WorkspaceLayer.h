@@ -14,14 +14,10 @@ namespace Cosmic
 		WorkspaceLayer();
 		virtual ~WorkspaceLayer() = default;
 
-		// --- Core Engine Layer Lifecycle Hooks ---
 		virtual void OnAttach() override;
 		virtual void OnDetach() override;
-
-		// FIXED SIGNATURES: Match Cosmic::Layer's float types exactly
 		virtual void OnUpdate(float ts) override;
 		virtual void OnFixedUpdate(float deltaFixedTime) override;
-
 		virtual void OnImGuiRender() override;
 		virtual void OnEvent(Cosmic::Event& e) override;
 

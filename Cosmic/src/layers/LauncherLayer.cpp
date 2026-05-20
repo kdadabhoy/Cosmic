@@ -4,6 +4,7 @@
 #include "renderer/Renderer2D.h"
 #include "camera/OrthographicCamera.h"
 #include <imgui.h>
+#include <imgui_internal.h>
 #include <Windows.h>
 #include "core/Log.h"
 
@@ -148,7 +149,6 @@ namespace Cosmic
 	{
 		m_DiscoveredProjects.clear();
 
-		// Scan for any compiled DLL files sitting directly in the active runtime folder
 		std::string searchPath = "*.dll";
 		WIN32_FIND_DATAA findData;
 		HANDLE hFind = FindFirstFileA(searchPath.c_str(), &findData);
@@ -157,13 +157,18 @@ namespace Cosmic
 		{
 			do
 			{
-				// Make sure it's a file, not a directory
 				if (!(findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
 				{
 					std::string fileName = findData.cFileName;
 
-					// Strip the ".dll" extension off the display name so the button looks clean
-					// e.g., "SandboxProject.dll" becomes "SandboxProject" on the UI
+					// --- ADDED FILTER LOGIC ---
+					// Skip the engine binary itself and any other files you don't want to load
+					if (fileName == "Cosmic.dll" || fileName == "Renderer.dll")
+					{
+						continue;
+					}
+					// --------------------------
+
 					size_t lastDot = fileName.find_last_of(".");
 					if (lastDot != std::string::npos)
 					{

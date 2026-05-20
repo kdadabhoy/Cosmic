@@ -48,6 +48,7 @@ namespace Cosmic
 		void		PushOverlay(Layer* inOverlay);
 
 		void		TransitionFromLauncherToWorkspace(const std::string& projectDllFilename);
+		void		TransitionToLauncher();
 
 
 		///////////////////////////////
@@ -136,9 +137,10 @@ namespace Cosmic
 		void UnloadProjectDLL();
 
 		// --- Dynamic Guest Module Allocation Data Handlers ---
-		WorkspaceLayer* m_WorkspaceLayer = nullptr;
-		void* m_PluginHandle = nullptr;
-		Layer* m_ActivePluginLayer = nullptr; // Live project plugin runtime layer pointer
+		WorkspaceLayer*		m_WorkspaceLayer				= nullptr;
+		void*				m_PluginHandle					= nullptr;
+		Layer*				m_ActivePluginLayer				= nullptr; // Live project plugin runtime layer pointer
+		bool				m_PendingReturnToLauncher		= false; 
 	};
 
 	///////////////////////////////
