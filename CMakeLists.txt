@@ -14,7 +14,9 @@ if(WIN32)
     add_definitions(-DNOMINMAX) 
 endif()
 
-# Define a global option to build ONLY the engine core and its runtime app
+# CRITICAL: Dynamically register the absolute layout anchor location of the SDK core
+set(COSMIC_SDK_DIR "${CMAKE_CURRENT_SOURCE_DIR}" CACHE PATH "Root absolute workspace path for Cosmic SDK")
+
 option(COSMIC_BUILD_ENGINE_ONLY "Build only the core engine components" OFF)
 
 # -------------------------------------------------------------------
@@ -23,7 +25,6 @@ option(COSMIC_BUILD_ENGINE_ONLY "Build only the core engine components" OFF)
 add_subdirectory(Cosmic)
 add_subdirectory(Runtime)
 
-# If this flag is flipped on by the batch script, completely bypass games!
 if(NOT COSMIC_BUILD_ENGINE_ONLY)
     add_subdirectory(Projects/DinoProject)
 endif()
