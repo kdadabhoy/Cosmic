@@ -30,25 +30,21 @@ mkdir build
 cd build
 
 :: 4. Configure Project
-echo [STAGE 1] Configuring CMake for Visual Studio 2026...
+echo [STAGE 1] Configuring CMake for Visual Studio...
 
-:: Using the version 18 generator for VS 2026
-cmake .. -G "Visual Studio 18 2026" -A x64
-
-:: Fallback if CMake version doesn't recognize the 2026 string yet
-if %errorlevel% neq 0 (
-    echo [INFO] Specific 2026 generator failed, trying auto-detection...
-    cmake .. -A x64
-)
+:: FIXED: Using native architecture auto-detection syntax.
+:: This naturally selects your latest installed MSVC toolchain (VS 2022 / 2025 / 2026) 
+:: without failing on rigid generator string checks.
+cmake .. -A x64
 
 if %errorlevel% neq 0 (
     echo ERROR: CMake configuration failed!
-    echo Ensure "Desktop development with C++" is installed in Visual Studio 2026.
+    echo Ensure "Desktop development with C++" is installed in your Visual Studio instance.
     pause
     exit /b %errorlevel%
 )
 
-:: 5. Compile Everything (Engine + Plugins)
+:: 5. Compile Everything (Engine + Launcher + Plugins)
 echo.
 echo [STAGE 2] Building Engine Host and All Client Projects (Multi-Threaded)...
 :: No explicit target here compiles the entire solution tree natively!

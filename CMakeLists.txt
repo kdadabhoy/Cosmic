@@ -25,4 +25,5 @@ endif()
 # 3. Host and Guest Subdirectories
 # -------------------------------------------------------------------
 add_subdirectory(Cosmic)
+add_subdirectory(Runtime)
 add_subdirectory(Projects/DinoProject)

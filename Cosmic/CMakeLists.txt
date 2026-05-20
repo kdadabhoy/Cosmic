@@ -55,6 +55,7 @@ target_include_directories(spdlog INTERFACE dependencies/spdlog/include)
 add_library(stb_image INTERFACE)
 target_include_directories(stb_image INTERFACE dependencies/stb_image)
 
+
 # ----------------------------
 # 3. Engine Source Files
 # ----------------------------
@@ -64,14 +65,17 @@ file(GLOB_RECURSE COSMIC_SOURCES
     "dependencies/stb_image/*.cpp"
 )
 
-# CRITICAL CHANGE: Build as an EXECUTABLE (Host container), not a STATIC library
-add_executable(Cosmic ${COSMIC_SOURCES})
+# Build as a SHARED library (.dll)
+add_library(Cosmic SHARED ${COSMIC_SOURCES})
 
 # ----------------------------
 # 4. Engine Configuration and Linking
 # ----------------------------
 target_include_directories(Cosmic PUBLIC src)
 target_include_directories(Cosmic PRIVATE dependencies/stb_image)
+
+# CRITICAL: Tell Core.h to use __declspec(dllexport)
+target_compile_definitions(Cosmic PRIVATE COSMIC_BUILD_DLL)
 
 target_link_libraries(Cosmic PUBLIC
     imgui
@@ -84,12 +88,23 @@ target_link_libraries(Cosmic PUBLIC
     spdlog
 )
 
-# CRITICAL CHANGE: Tell the linker to export engine symbols from Cosmic.exe.
-# This prevents you from needing a dll/api macro soup across engine classes.
-set_target_properties(Cosmic PROPERTIES ENABLE_EXPORTS TRUE)
+# FIXED: Directs the DLL (.dll) and import export tables (.lib) 
+# straight into the common Runtime environment directory tree
+set_target_properties(Cosmic PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Runtime"
+    ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Runtime"
+)
+
+# Inside Cosmic/CMakeLists.txt
 
 # ----------------------------
 # 5. Asset Management
 # ----------------------------
-file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/assets" 
-     DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
+# AUTOMATED FIX: Copies engine assets directly next to the executable EVERY single build.
+# $<TARGET_FILE_DIR:Cosmic> automatically resolves to the exact /Debug or /Release folder!
+add_custom_command(TARGET Cosmic POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    "${CMAKE_CURRENT_SOURCE_DIR}/assets"
+    "$<TARGET_FILE_DIR:Cosmic>/assets"
+    COMMENT "Syncing Cosmic Engine core assets to output directory..."
+)

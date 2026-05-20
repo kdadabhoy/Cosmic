@@ -56,8 +56,8 @@ namespace Cosmic
 		// Logger Accessors
 		///////////////////////////////
 
-		inline static Ref<spdlog::logger>&		GetCoreLogger()			{ return s_CoreLogger; }
-		inline static Ref<spdlog::logger>&		GetClientLogger()		{ return s_ClientLogger; }
+		static COSMIC_API Ref<spdlog::logger>& GetCoreLogger();
+		static COSMIC_API Ref<spdlog::logger>& GetClientLogger();
 
 	private:
 		static Ref<spdlog::logger> s_CoreLogger;
