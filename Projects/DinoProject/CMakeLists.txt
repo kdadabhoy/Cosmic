@@ -48,7 +48,6 @@ add_library(DinoProject SHARED ${DINO_SOURCES})
 # -------------------------------------------------------------------
 # 3. Include Paths
 # -------------------------------------------------------------------
-# UPDATED: Appended the dependency path for EnTT so templates compile cleanly standalone
 target_include_directories(DinoProject PRIVATE 
     src
     ${COSMIC_SDK_DIR}/Cosmic/src
@@ -65,11 +64,9 @@ target_include_directories(DinoProject PRIVATE
 if(TARGET Cosmic)
     target_link_libraries(DinoProject PRIVATE Cosmic)
 else()
-    # Create the imported placeholder target
     add_library(CosmicCore_Imported SHARED IMPORTED)
     
     if(WIN32)
-        # Fix the literal expression bug by using per-configuration properties
         set_target_properties(CosmicCore_Imported PROPERTIES
             IMPORTED_IMPLIB_DEBUG   "${COSMIC_SDK_DIR}/build/Runtime/Debug/Cosmic.lib"
             IMPORTED_LOCATION_DEBUG "${COSMIC_SDK_DIR}/build/Runtime/Debug/Cosmic.dll"
@@ -77,12 +74,10 @@ else()
             IMPORTED_IMPLIB_RELEASE   "${COSMIC_SDK_DIR}/build/Runtime/Release/Cosmic.lib"
             IMPORTED_LOCATION_RELEASE "${COSMIC_SDK_DIR}/build/Runtime/Release/Cosmic.dll"
             
-            # MAP FALLBACKS: Tells CMake how to route missing configurations
             MAP_IMPORTED_CONFIG_MINSIZEREL   "Release"
             MAP_IMPORTED_CONFIG_RELWITHDEBINFO "Release"
         )
     else()
-        # Non-Windows systems fallbacks (.so / .dylib)
         set_target_properties(CosmicCore_Imported PROPERTIES
             IMPORTED_LOCATION "${COSMIC_SDK_DIR}/build/Runtime/Debug/libCosmic${CMAKE_SHARED_LIBRARY_SUFFIX}"
         )
@@ -92,21 +87,21 @@ else()
 endif()
 
 # -------------------------------------------------------------------
-# 5. Output Redirection Configuration
+# 5. Output Redirection Configuration (FIXED DOUBLE-SIGN TYPO)
 # -------------------------------------------------------------------
 set_target_properties(DinoProject PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${COSMIC_SDK_DIR}/build/Runtime/$$<CONFIG>"
-    LIBRARY_OUTPUT_DIRECTORY "${COSMIC_SDK_DIR}/build/Runtime/$$<CONFIG>"
+    RUNTIME_OUTPUT_DIRECTORY "${COSMIC_SDK_DIR}/build/Runtime/$<CONFIG>"
+    LIBRARY_OUTPUT_DIRECTORY "${COSMIC_SDK_DIR}/build/Runtime/$<CONFIG>"
 )
 
 # -------------------------------------------------------------------
-# 6. Project-Specific Asset Management
+# 6. Project-Specific Asset Management (FIXED DOUBLE-SIGN TYPO)
 # -------------------------------------------------------------------
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/assets")
     add_custom_command(TARGET DinoProject POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory
         "${CMAKE_CURRENT_SOURCE_DIR}/assets"
-        "${COSMIC_SDK_DIR}/build/Runtime/$$<CONFIG>/assets/projects/DinoProject"
+        "${COSMIC_SDK_DIR}/build/Runtime/$<CONFIG>/assets/projects/DinoProject"
         COMMENT "Syncing DinoProject game assets to sandbox output directory..."
     )
 endif()
