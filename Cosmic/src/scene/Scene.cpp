@@ -1,10 +1,13 @@
 // Scene.cpp
-// Last Modified: 5/20/2026
+// Optimized Material Grouping System implemented 5/21/2026
 
 #include "Scene.h"
 #include "Entity.h"
 #include "Components.h"
 #include "renderer/Renderer2D.h"
+
+#include <unordered_map>
+#include <vector>
 
 namespace Cosmic
 {
@@ -15,11 +18,8 @@ namespace Cosmic
 	Entity Scene::CreateEntity(const std::string& name)
 	{
 		Entity entity = { m_Registry.create(), this };
-
-		// Every entity automatically receives identity and position records by default
 		entity.AddComponent<TransformComponent>();
 		entity.AddComponent<TagComponent>(name.empty() ? "Entity" : name);
-
 		return entity;
 	}
 
@@ -30,40 +30,64 @@ namespace Cosmic
 
 	void Scene::OnUpdate(float deltaTime)
 	{
-		// Future system expansions go here (e.g., Physics2D, Native Script Updates)
 	}
 
 	void Scene::OnRender()
 	{
-		// 1. Gather all entities containing both positioning and material layout properties
-		auto group = m_Registry.view<TransformComponent, SpriteRendererComponent>();
+		// 1. Gather all entities containing rendering properties
+		auto view = m_Registry.view<TransformComponent, SpriteRendererComponent>();
 
-		for (auto entity : group)
+		// 2. Establish sorting buckets to minimize batch breaking state changes
+		std::unordered_map<Material*, std::vector<entt::entity>> materialBuckets;
+		std::vector<entt::entity> flatColorFallbackBucket;
+
+		materialBuckets.reserve(16);
+
+		// Use EnTT's native .each() layout to cleanly extract entity IDs and references
+		view.each([&](auto entity, const auto& transform, const auto& sprite)
+			{
+				if (sprite.ActiveMaterial)
+				{
+					materialBuckets[sprite.ActiveMaterial.get()].push_back(entity);
+				}
+				else
+				{
+					flatColorFallbackBucket.push_back(entity);
+				}
+			});
+
+		// 3. Dispatch Material-Batched Quads
+		for (const auto& [materialPtr, entities] : materialBuckets)
 		{
-			auto& transform = group.get<TransformComponent>(entity);
-			auto& sprite = group.get<SpriteRendererComponent>(entity);
+			// Safely extract the shared_ptr reference from the first entity in the bucket
+			auto& firstSprite = view.get<SpriteRendererComponent>(entities[0]);
+			Ref<Material> activeMaterial = firstSprite.ActiveMaterial;
 
-			// 2. Route directly to your native Renderer2D batching system
-			if (sprite.ActiveMaterial)
+			for (auto entity : entities)
 			{
-				// Pulling exact vectors from your structural definitions
-				Renderer2D::DrawRotatedQuad(
-					transform.Position,
-					transform.Scale,
-					transform.Rotation.z, // Mapping 2D roll
-					sprite.ActiveMaterial
-				);
-			}
-			else
-			{
-				// Fallback: If no material is assigned, render via raw tint color override
+				auto& transform = view.get<TransformComponent>(entity);
+
 				Renderer2D::DrawRotatedQuad(
 					transform.Position,
 					transform.Scale,
 					transform.Rotation.z,
-					sprite.Color
+					activeMaterial
 				);
 			}
+		}
+
+		// 4. Dispatch Fallback Flat-Color Quads
+		for (auto entity : flatColorFallbackBucket)
+		{
+			auto& transform = view.get<TransformComponent>(entity);
+			auto& sprite = view.get<SpriteRendererComponent>(entity);
+
+			Renderer2D::DrawRotatedQuad(
+				transform.Position,
+				transform.Scale,
+				transform.Rotation.z,
+				sprite.Color
+			);
 		}
 	}
 }
