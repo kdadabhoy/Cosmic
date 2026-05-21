@@ -38,6 +38,27 @@ namespace Cosmic
 	 */
 	void OrthographicCameraController::OnUpdate(float ts)
 	{
+
+		// --- Smooth Zoom Interpolation ---
+		// Higher multiplier = faster/snappier zoom. Lower multiplier = smoother/floatier zoom.
+		float smoothnessFactor = 10.0f;
+
+		if (std::abs(m_ZoomLevel - m_TargetZoomLevel) > 0.001f)
+		{
+			// Prevent overshooting if frame rate hiccups by clamping the step multiplier to 1.0max
+			float blendStep = std::clamp(smoothnessFactor * ts, 0.0f, 1.0f);
+
+			m_ZoomLevel += (m_TargetZoomLevel - m_ZoomLevel) * blendStep;
+			m_ZoomLevel = std::clamp(m_ZoomLevel, m_MinZoom, m_MaxZoom);
+			CalculateView();
+		}
+		else
+		{
+			m_ZoomLevel = m_TargetZoomLevel;
+		}
+		// ---------------------------------
+
+
 		float actualMoveSpeed = m_CameraTranslationSpeed * m_ZoomLevel;
 
 		if (Input::IsKeyPressed(CS_KEY_A))
@@ -121,10 +142,9 @@ namespace Cosmic
 	 */
 	bool OrthographicCameraController::OnMouseScrolled(MouseScrolledEvent& e)
 	{
-		m_ZoomLevel -= e.GetYOffset() * m_ZoomSpeed;
-		m_ZoomLevel = std::clamp(m_ZoomLevel, m_MinZoom, m_MaxZoom);
+		m_TargetZoomLevel -= e.GetYOffset() * m_ZoomSpeed;
+		m_TargetZoomLevel = std::clamp(m_TargetZoomLevel, m_MinZoom, m_MaxZoom);
 
-		CalculateView();
 		return false;
 	}
 
@@ -143,4 +163,14 @@ namespace Cosmic
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////
+
+	void OrthographicCameraController::SetZoomLevel(float level)
+	{
+		m_TargetZoomLevel = std::clamp(level, m_MinZoom, m_MaxZoom);
+		m_ZoomLevel = m_TargetZoomLevel;
+		CalculateView();
+	}
+
+	/////////////////////////////////////////////////////////////////////////////////
+
 }

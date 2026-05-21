@@ -1,61 +1,73 @@
 #pragma once
 
 // OrthographicCameraController.h
-// Last Modified 5/14/2026
+// Last Modified 5/21/2026
 
-/**
+/** 
  * General Description:
+ * 
  * The OrthographicCameraController acts as a high-level wrapper for the
  * OrthographicCamera, providing an automated interaction layer. It handles user
- * input (Keyboard/Mouse), manages smooth zooming, and ensures the camera's aspect
- * ratio remains synchronized with the application window or viewport. It
- * simplifies camera manipulation by calculating proportional movement speeds
+ * input (Keyboard/Mouse), manages smooth asymptotic zooming, and ensures the camera's
+ * aspect ratio remains synchronized with the application window or viewport. It
+ * simplifies camera manipulation by calculating proportional movement speeds,
+ * smoothing out hardware mouse-scroll inputs via delta-time clamped interpolation,
  * and enforcing spatial constraints (clamping).
- *
+ * 
+ * 
  * Documentation Notes:
- * - Proportional Movement: Movement speed is multiplied by the zoom level to
- *   ensure consistent feel regardless of magnification.
+ * - Proportional Movement: Movement speed is multiplied by the current live zoom level
+ * to ensure consistent feel regardless of magnification.
+ * 
+ * - Smooth Interpolation: Separates input target destination from active camera state
+ * to prevent sudden frame snapping, incorporating step clamping to remain immune
+ * to framerate spikes.
+ * 
  * - Aspect Ratio Management: Automatically re-calculates projection bounds
- *   during resize events to prevent image stretching.
+ * during resize events to prevent image stretching.
+ * 
  * - Event Dispatching: Built-in handlers for MouseScrolled and WindowResized events.
- *
+ * 
  * Public Function Prototypes (Pre and Post Conditions):
- *
+ * 
+ * 
  * 1. OrthographicCameraController(float aspectRatio, bool rotation = false)
- *    Pre:  Initial aspect ratio is provided.
- *    Post: Camera and controller state are initialized; rotation logic is enabled if specified.
- *
+ * Pre:  Initial aspect ratio is provided.
+ * Post: Camera and controller state are initialized; rotation logic is enabled if specified.
+ * 
  * 2. void OnUpdate(float ts)
- *    Pre:  ts (timestep) is the time elapsed since the last frame.
- *    Post: Polls input (WASD/Arrows) and updates camera position and rotation.
- *
+ * Pre:  ts (timestep) is the time elapsed since the last frame.
+ * Post: Smoothly interpolates the live zoom state toward the target scroll level
+ * and polls keyboard input (WASD/Arrows) to update position and rotation limits.
+ * 
  * 3. void OnEvent(Event& e)
- *    Pre:  A valid Event object is passed.
- *    Post: Dispatches resize and scroll events to internal handler functions.
- *
+ * Pre:  A valid Event object is passed.
+ * Post: Dispatches resize and scroll events to internal handler functions.
+ * 
  * 4. void OnResize(float width, float height)
- *    Pre:  None.
- *    Post: Updates internal aspect ratio and forces a camera projection re-calculation.
- *
+ * Pre:  None.
+ * Post: Updates internal aspect ratio and forces a camera projection re-calculation.
+ * 
  * 5. OrthographicCamera& GetCamera()
- *    Pre:  None.
- *    Post: Returns a reference to the underlying OrthographicCamera object.
- *
+ * Pre:  None.
+ * Post: Returns a reference to the underlying OrthographicCamera object.
+ * 
  * 6. void SetZoomLevel(float level)
- *    Pre:  None.
- *    Post: Sets the camera zoom and immediately updates the view projection.
- *
+ * Pre:  None.
+ * Post: Enforces a hard override, clamping and setting both the target destination
+ * and live zoom simultaneously to immediately update the view projection matrix.
+ * 
  * 7. void SetZoomLimits(float min, float max)
- *    Pre:  min < max.
- *    Post: Defines the hard caps for mouse-wheel zooming.
- *
+ * Pre:  min < max.
+ * Post: Defines the hard caps for mouse-wheel zooming.
+ * 
  * 8. void SetPositionLimits(float minX, float maxX, float minY, float maxY)
- *    Pre:  None.
- *    Post: Enforces boundaries that the camera position cannot exceed during update.
- *
+ * Pre:  None.
+ * Post: Enforces boundaries that the camera position cannot exceed during update.
+ * 
  * 9. void SetPosition(const glm::vec3& position)
- *    Pre:  None.
- *    Post: Manually overrides the current position (useful for following entities).
+ * Pre:  None.
+ * Post: Manually overrides the current position (useful for following entities).
  */
 
 #include "core/Core.h"
@@ -93,7 +105,7 @@ namespace Cosmic
 		const OrthographicCamera&		GetCamera() const			{ return m_Camera; }
 
 		float							GetZoomLevel() const		{ return m_ZoomLevel; }
-		void							SetZoomLevel(float level)	{ m_ZoomLevel = level; CalculateView(); }
+		void							SetZoomLevel(float level);
 
 		////////////////////////////////
 		// Speed Controls (Mutators)
@@ -112,7 +124,7 @@ namespace Cosmic
 		// Constraint & Limit Management
 		///////////////////////////////
 
-		void		SetZoomLimits(float min, float max)				{ m_MinZoom = min; m_MaxZoom = max; }
+		void				SetZoomLimits(float min, float max)		{ m_MinZoom = min; m_MaxZoom = max; }
 
 
 		void SetPositionLimits(float minX, float maxX, float minY, float maxY)
@@ -145,6 +157,7 @@ namespace Cosmic
 
 		float m_AspectRatio;
 		float m_ZoomLevel = 1.0f;
+		float m_TargetZoomLevel = 1.0f;
 
 		////////////////////////////////
 		// Limit Constants
