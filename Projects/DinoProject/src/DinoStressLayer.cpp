@@ -3,11 +3,18 @@
 
 namespace Workspace
 {
-	DinoStressLayer::DinoStressLayer(Cosmic::Ref<Cosmic::Scene> scene, Cosmic::Ref<Cosmic::Material> fireMaterial, Cosmic::Ref<Cosmic::Material> dinoMaterial)
-		: m_Scene(scene), m_FireMaterial(fireMaterial), m_DinoMaterial(dinoMaterial),
-		m_CamController(1280.0f / 720.0f, true) // Updated initializer
+	DinoStressLayer::DinoStressLayer(Cosmic::Ref<Cosmic::Scene> scene)
+		: m_Scene(scene), m_CamController(1280.0f / 720.0f, true)
 	{
-		m_CamController.SetZoomLimits(0.05f, 10.0f);
+		m_CamController.SetZoomLimits(0.005f, 10.0f);
+	}
+
+	void DinoStressLayer::SetMaterials(Cosmic::Ref<Cosmic::Material> fireMaterial, Cosmic::Ref<Cosmic::Material> dinoMaterial)
+	{
+		m_CachedFireMaterial = fireMaterial;
+		m_CachedDinoMaterial = dinoMaterial;
+
+		// Regenerate or update the grid once we have valid assets to apply
 		RegenerateGrid();
 	}
 
@@ -38,12 +45,17 @@ namespace Workspace
 				else
 				{
 					entity = m_Scene->CreateEntity("StressCell");
+					entity.AddComponent<Cosmic::SpriteRendererComponent>();
 					m_GridEntities.push_back(entity);
 				}
 
 				auto& t = entity.GetComponent<Cosmic::TransformComponent>();
 				t.Position = { x * 0.1f, y * 0.1f, 0.0f };
 				t.Scale = { 0.08f, 0.08f };
+
+				// Assign materials directly to the ECS component structure properties
+				auto& sprite = entity.GetComponent<Cosmic::SpriteRendererComponent>();
+				sprite.ActiveMaterial = (index % 2 == 0) ? m_CachedFireMaterial : m_CachedDinoMaterial;
 
 				index++;
 			}
@@ -53,13 +65,8 @@ namespace Workspace
 	void DinoStressLayer::OnUpdate(float ts)
 	{
 		Cosmic::Renderer2D::ResetStats();
-		m_CamController.OnUpdate(ts); // FIX: Polls input layout transforms smoothly now
+		m_CamController.OnUpdate(ts);
 		m_Time += ts;
-
-		if (m_FireMaterial)
-		{
-			m_FireMaterial->Set("u_Time", m_Time);
-		}
 	}
 
 	void DinoStressLayer::OnFixedUpdate(float deltaFixedTime)
@@ -69,22 +76,13 @@ namespace Workspace
 
 	void DinoStressLayer::OnRender()
 	{
-		// FIX: Pull camera data matrix out from the controller state wrapper
+		// 1. Establish camera matrices
 		Cosmic::Renderer2D::BeginScene(m_CamController.GetCamera());
 
-		size_t index = 0;
-		for (auto& entity : m_GridEntities)
+		// 2. TRUE ECS RENDERING: Pass drawing completely off to your native scene system view loops!
+		if (m_Scene)
 		{
-			auto& t = entity.GetComponent<Cosmic::TransformComponent>();
-
-			Cosmic::Ref<Cosmic::Material> targetMaterial = (index % 2 == 0) ? m_FireMaterial : m_DinoMaterial;
-
-			if (targetMaterial)
-			{
-				Cosmic::Renderer2D::DrawQuad(t.Position, t.Scale, targetMaterial);
-			}
-
-			index++;
+			m_Scene->OnRender();
 		}
 
 		Cosmic::Renderer2D::EndScene();

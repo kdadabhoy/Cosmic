@@ -67,8 +67,15 @@ namespace Workspace
 		m_RunSim = std::make_unique<DinoRunLayer>(m_Scene, m_DinoMaterial);
 		m_FlightSim = std::make_unique<DinoFlightLayer>(m_Scene, m_DinoMaterial);
 
-		// Update: Hand down both materials to the stress simulation layer context
-		m_StressSim = std::make_unique<DinoStressLayer>(m_Scene, m_FireMaterial, m_DinoMaterial);
+		// SUCCESS: Instantiation is fully decoupled from asset references!
+		m_StressSim = std::make_unique<DinoStressLayer>(m_Scene);
+
+		// Safe component registry injection configuration post-creation
+		auto stressLayerPtr = static_cast<DinoStressLayer*>(m_StressSim.get());
+		if (stressLayerPtr)
+		{
+			stressLayerPtr->SetMaterials(m_FireMaterial, m_DinoMaterial);
+		}
 
 		m_ActiveSim = m_RunSim.get();
 		CS_INFO("DinoProject: All sub-simulation layers bound. Simulation root fully operational.");
@@ -168,7 +175,6 @@ namespace Workspace
 			}
 		}
 
-		// 1. New: Add ImGui CollapsingHeader section for controlling the Fire Material parameters
 		if (m_FireMaterial && ImGui::CollapsingHeader("Global Fire Material", ImGuiTreeNodeFlags_DefaultOpen))
 		{
 			glm::vec4 fireColor = m_FireMaterial->GetVector("u_Color");
