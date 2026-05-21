@@ -6,6 +6,8 @@ namespace Workspace
 	DinoStressLayer::DinoStressLayer(Cosmic::Ref<Cosmic::Scene> scene, Cosmic::Ref<Cosmic::Material> material)
 		: m_Scene(scene), m_Material(material), m_Cam(1280.0f / 720.0f, true)
 	{
+		m_Cam.SetZoomLimits(0.05f, 10);
+
 		RegenerateGrid();
 	}
 
