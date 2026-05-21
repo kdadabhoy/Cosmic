@@ -48,12 +48,14 @@ add_library(DinoProject SHARED ${DINO_SOURCES})
 # -------------------------------------------------------------------
 # 3. Include Paths
 # -------------------------------------------------------------------
+# UPDATED: Appended the dependency path for EnTT so templates compile cleanly standalone
 target_include_directories(DinoProject PRIVATE 
     src
     ${COSMIC_SDK_DIR}/Cosmic/src
     ${COSMIC_SDK_DIR}/Cosmic/dependencies/imgui
     ${COSMIC_SDK_DIR}/Cosmic/dependencies/implot
     ${COSMIC_SDK_DIR}/Cosmic/dependencies/glm
+    ${COSMIC_SDK_DIR}/Cosmic/dependencies/entt/src
     ${COSMIC_SDK_DIR}/Cosmic/dependencies/spdlog/include
 )
 
@@ -93,8 +95,8 @@ endif()
 # 5. Output Redirection Configuration
 # -------------------------------------------------------------------
 set_target_properties(DinoProject PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${COSMIC_SDK_DIR}/build/Runtime/$<CONFIG>"
-    LIBRARY_OUTPUT_DIRECTORY "${COSMIC_SDK_DIR}/build/Runtime/$<CONFIG>"
+    RUNTIME_OUTPUT_DIRECTORY "${COSMIC_SDK_DIR}/build/Runtime/$$<CONFIG>"
+    LIBRARY_OUTPUT_DIRECTORY "${COSMIC_SDK_DIR}/build/Runtime/$$<CONFIG>"
 )
 
 # -------------------------------------------------------------------
@@ -104,7 +106,7 @@ if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/assets")
     add_custom_command(TARGET DinoProject POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory
         "${CMAKE_CURRENT_SOURCE_DIR}/assets"
-        "${COSMIC_SDK_DIR}/build/Runtime/$<CONFIG>/assets/projects/DinoProject"
+        "${COSMIC_SDK_DIR}/build/Runtime/$$<CONFIG>/assets/projects/DinoProject"
         COMMENT "Syncing DinoProject game assets to sandbox output directory..."
     )
 endif()

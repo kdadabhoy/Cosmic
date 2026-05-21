@@ -14,6 +14,10 @@ target_link_libraries(glad PUBLIC OpenGL::GL)
 add_library(glm INTERFACE)
 target_include_directories(glm INTERFACE dependencies/glm)
 
+# ADDED: EnTT Header-Only Dependency Target
+add_library(entt INTERFACE)
+target_include_directories(entt INTERFACE dependencies/entt/src)
+
 add_library(imgui STATIC
     dependencies/imgui/imgui.cpp
     dependencies/imgui/imgui_draw.cpp
@@ -55,7 +59,9 @@ add_library(Cosmic SHARED ${COSMIC_SOURCES})
 target_include_directories(Cosmic PUBLIC src)
 target_include_directories(Cosmic PRIVATE dependencies/stb_image)
 target_compile_definitions(Cosmic PRIVATE COSMIC_BUILD_DLL)
-target_link_libraries(Cosmic PUBLIC imgui implot glad glm glfw OpenGL::GL stb_image spdlog)
+
+# UPDATED: Linked 'entt' PUBLICLY so all dependent client targets inherit the headers
+target_link_libraries(Cosmic PUBLIC imgui implot glad glm entt glfw OpenGL::GL stb_image spdlog)
 
 # FIXED: Map binaries safely across VS (multi-config) and Ninja/Make (single-config)
 set_target_properties(Cosmic PROPERTIES
