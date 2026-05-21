@@ -3,20 +3,18 @@
 
 namespace Workspace
 {
-	DinoStressLayer::DinoStressLayer(Cosmic::Ref<Cosmic::Scene> scene, Cosmic::Ref<Cosmic::Material> material)
-		: m_Scene(scene), m_Material(material), m_Cam(1280.0f / 720.0f, true)
+	DinoStressLayer::DinoStressLayer(Cosmic::Ref<Cosmic::Scene> scene, Cosmic::Ref<Cosmic::Material> fireMaterial, Cosmic::Ref<Cosmic::Material> dinoMaterial)
+		: m_Scene(scene), m_FireMaterial(fireMaterial), m_DinoMaterial(dinoMaterial),
+		m_CamController(1280.0f / 720.0f, true) // Updated initializer
 	{
-		m_Cam.SetZoomLimits(0.05f, 10);
-
+		m_CamController.SetZoomLimits(0.05f, 10.0f);
 		RegenerateGrid();
 	}
 
 	void DinoStressLayer::RegenerateGrid()
 	{
-		// Calculate how many entities we actually need
 		size_t targetCount = static_cast<size_t>(m_GridSize * 2) * static_cast<size_t>(m_GridSize * 2);
 
-		// Optimization: Trim excess entities if the grid size decreased
 		if (m_GridEntities.size() > targetCount)
 		{
 			for (size_t i = targetCount; i < m_GridEntities.size(); i++)
@@ -26,7 +24,6 @@ namespace Workspace
 			m_GridEntities.resize(targetCount);
 		}
 
-		// Optimization: Re-use existing entities and only create new ones if needed
 		size_t index = 0;
 		for (int x = -m_GridSize; x < m_GridSize; x++)
 		{
@@ -36,19 +33,17 @@ namespace Workspace
 
 				if (index < m_GridEntities.size())
 				{
-					// Re-use existing entity
 					entity = m_GridEntities[index];
 				}
 				else
 				{
-					// Allocate new entity
 					entity = m_Scene->CreateEntity("StressCell");
 					m_GridEntities.push_back(entity);
 				}
 
 				auto& t = entity.GetComponent<Cosmic::TransformComponent>();
 				t.Position = { x * 0.1f, y * 0.1f, 0.0f };
-				t.Scale = { 0.08f, 0.08f }; // Safe 2D Vector scaling
+				t.Scale = { 0.08f, 0.08f };
 
 				index++;
 			}
@@ -57,19 +52,13 @@ namespace Workspace
 
 	void DinoStressLayer::OnUpdate(float ts)
 	{
-		// CRITICAL FIX: Reset rendering metrics at the start of the frame loop, 
-		// ensuring telemetry is accurate regardless of ImGui visibility states.
 		Cosmic::Renderer2D::ResetStats();
-
-		m_Cam.OnUpdate(ts);
-
-		// Accumulate running engine time
+		m_CamController.OnUpdate(ts); // FIX: Polls input layout transforms smoothly now
 		m_Time += ts;
 
-		// Update the uniform inside the material's cache so it uploads during OnRender -> Flush
-		if (m_Material)
+		if (m_FireMaterial)
 		{
-			m_Material->Set("u_Time", m_Time);
+			m_FireMaterial->Set("u_Time", m_Time);
 		}
 	}
 
@@ -80,15 +69,22 @@ namespace Workspace
 
 	void DinoStressLayer::OnRender()
 	{
-		Cosmic::Renderer2D::BeginScene(m_Cam.GetCamera());
+		// FIX: Pull camera data matrix out from the controller state wrapper
+		Cosmic::Renderer2D::BeginScene(m_CamController.GetCamera());
 
-		// Batch submit our grid matrix structures
+		size_t index = 0;
 		for (auto& entity : m_GridEntities)
 		{
 			auto& t = entity.GetComponent<Cosmic::TransformComponent>();
 
-			// Explicitly passing glm::vec3 position and glm::vec2 scale
-			Cosmic::Renderer2D::DrawQuad(t.Position, t.Scale, m_Material);
+			Cosmic::Ref<Cosmic::Material> targetMaterial = (index % 2 == 0) ? m_FireMaterial : m_DinoMaterial;
+
+			if (targetMaterial)
+			{
+				Cosmic::Renderer2D::DrawQuad(t.Position, t.Scale, targetMaterial);
+			}
+
+			index++;
 		}
 
 		Cosmic::Renderer2D::EndScene();
@@ -113,13 +109,10 @@ namespace Workspace
 
 		ImGui::Separator();
 
-		// Extract compiled batching statistics
 		auto stats = Cosmic::Renderer2D::GetStats();
 		ImGui::Text("Renderer2D Stats:");
 		ImGui::Text("Draw Calls: %d", stats.DrawCalls);
 		ImGui::Text("Quads: %d", stats.QuadCount);
-
-		// NOTE: Cosmic::Renderer2D::ResetStats() removed from here to prevent state loss.
 
 		if (ImGui::Button("Reset Tick Counter")) m_FixedUpdateCount = 0;
 

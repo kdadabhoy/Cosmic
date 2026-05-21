@@ -18,7 +18,6 @@ namespace Workspace
 		std::string shaderPath = "assets/projects/DinoProject/shaders/DebugTexture.glsl";
 		std::string fireShaderPath = "assets/projects/DinoProject/shaders/FireShader.glsl";
 
-		// Asset Verification Helper to ensure assets exist before loading
 		auto VerifyAsset = [](const std::string& path, const std::string& name) -> bool
 			{
 				if (!std::filesystem::exists(path))
@@ -26,8 +25,6 @@ namespace Workspace
 					CS_ERROR("DinoProject: FAILED to find {0} at '{1}'", name, path);
 					return false;
 				}
-
-				// Dynamic size reporting via filesystem
 				uintmax_t fileSize = std::filesystem::file_size(path);
 				CS_INFO("DinoProject: Verified asset '{0}' ({1} bytes)", name, fileSize);
 				return true;
@@ -43,14 +40,12 @@ namespace Workspace
 			return;
 		}
 
-		// --- Resource Loading ---
 		m_DinoTexture = Cosmic::Texture2D::Create(dinoPath);
 		CS_TRACE("DinoProject: Native Texture2D allocated handle ID: {0}", m_DinoTexture->GetRendererID());
 
 		auto debugShader = Cosmic::Shader::Create(shaderPath);
 		auto fireShader = Cosmic::Shader::Create(fireShaderPath);
 
-		// Material Allocation
 		m_DinoMaterial = Cosmic::Material::Create(debugShader, "DinoMaterial");
 		if (m_DinoMaterial && m_DinoTexture)
 		{
@@ -60,17 +55,21 @@ namespace Workspace
 		}
 
 		m_FireMaterial = Cosmic::Material::Create(fireShader, "FireMaterial");
+		if (m_FireMaterial)
+		{
+			// Initialize default flame tint variable cache entry
+			m_FireMaterial->Set("u_Color", glm::vec4(1.0f, 0.5f, 0.2f, 1.0f));
+		}
 
-		// --- Long-Term Static Factory Instantiation ---
 		m_Scene = Cosmic::Scene::Create();
 		CS_TRACE("DinoProject: Master scene runtime context created.");
 
-		// Instantiate layers passing down our shared master scene smart pointer context
 		m_RunSim = std::make_unique<DinoRunLayer>(m_Scene, m_DinoMaterial);
 		m_FlightSim = std::make_unique<DinoFlightLayer>(m_Scene, m_DinoMaterial);
-		m_StressSim = std::make_unique<DinoStressLayer>(m_Scene, m_FireMaterial);
 
-		// Default Active Layer Configuration
+		// Update: Hand down both materials to the stress simulation layer context
+		m_StressSim = std::make_unique<DinoStressLayer>(m_Scene, m_FireMaterial, m_DinoMaterial);
+
 		m_ActiveSim = m_RunSim.get();
 		CS_INFO("DinoProject: All sub-simulation layers bound. Simulation root fully operational.");
 	}
@@ -91,17 +90,14 @@ namespace Workspace
 
 	void DinoProject::OnUpdate(float ts)
 	{
-		// 1. Prevent division by zero if timescale freezes or hits a hard stutter step frame
 		float dt = ts > 0.0f ? ts : 0.001f;
 		m_SmoothedDeltaTime = m_SmoothedDeltaTime * 0.95f + dt * 0.05f;
 
-		// 2. Accumulate continuous frame ticks over time
 		static float s_AccumulatedTime = 0.0f;
 		static float s_LogHeartbeatTimer = 0.0f;
 		s_AccumulatedTime += dt;
 		s_LogHeartbeatTimer += dt;
 
-		// Telemetry Heartbeat: Log frame information every 5 seconds to avoid flooding output
 		if (s_LogHeartbeatTimer >= 5.0f)
 		{
 			CS_TRACE("Telemetry: RunTime: {0:.2f}s | FPS: {1:.1f} ({2:.3f} ms/frame)",
@@ -109,13 +105,11 @@ namespace Workspace
 			s_LogHeartbeatTimer = 0.0f;
 		}
 
-		// 3. Upload the current timeline clock to the Fire Material uniform cache
 		if (m_FireMaterial)
 		{
 			m_FireMaterial->Set("u_Time", s_AccumulatedTime);
 		}
 
-		// 4. Fix: Use auto deduction to store the previous ISimulationMode state accurately
 		auto previousSim = m_ActiveSim;
 
 		if (Cosmic::Input::IsKeyPressed(CS_KEY_R)) m_ActiveSim = m_RunSim.get();
@@ -174,10 +168,20 @@ namespace Workspace
 			}
 		}
 
+		// 1. New: Add ImGui CollapsingHeader section for controlling the Fire Material parameters
+		if (m_FireMaterial && ImGui::CollapsingHeader("Global Fire Material", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			glm::vec4 fireColor = m_FireMaterial->GetVector("u_Color");
+			if (ImGui::ColorEdit4("Flame Tint", &fireColor.x))
+			{
+				m_FireMaterial->Set("u_Color", fireColor);
+				CS_TRACE("DinoProject: Flame uniform color tint tracker updated -> ({0}, {1}, {2}, {3})", fireColor.r, fireColor.g, fireColor.b, fireColor.a);
+			}
+		}
+
 		ImGui::Separator();
 		ImGui::Text("Switch Mode:");
 
-		// Fix: Use auto deduction to store previous interface pointer safely inside UI loop
 		auto previousSim = m_ActiveSim;
 
 		if (ImGui::Button("Runner [R]"))  m_ActiveSim = m_RunSim.get();
