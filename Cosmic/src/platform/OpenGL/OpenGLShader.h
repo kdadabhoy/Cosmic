@@ -1,7 +1,7 @@
 #pragma once
 
 // OpenGLShader.h
-// Last Modified 5/14/2026
+// Last Modified 5/21/2026
 
 /**
  * General Description:
@@ -111,5 +111,6 @@ namespace Cosmic
 		///////////////////////////////
 
 		uint32_t			m_RendererID;
+		std::string         m_Name; // Added to store shader identity safely for tracking and log systems
 	};
 }

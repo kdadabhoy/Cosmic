@@ -15,6 +15,8 @@
 #include <glm/gtc/type_ptr.hpp>
 #include "core/Log.h"
 
+#include <filesystem>
+
 
 namespace Cosmic
 {
@@ -47,6 +49,11 @@ namespace Cosmic
 	{
 		std::string source = ReadFile(filepath);
 		auto shaderSources = PreProcess(source);
+
+		// Fix: Extract and store the filename in m_Name before compiling
+		std::filesystem::path path = filepath;
+		m_Name = path.stem().string();
+
 		Compile(shaderSources);
 	}
 
@@ -127,6 +134,8 @@ namespace Cosmic
 	 * links them into a final program, and detaches/deletes individual shaders
 	 * post-link to save GPU memory. Includes comprehensive error logging
 	 * for GLSL compilation and linking failures.
+	 * Now automatically queries hardware texture limits and initializes
+	 * batching arrays (`u_Textures`) if present.
 	 */
 	void OpenGLShader::Compile(const std::unordered_map<GLenum, std::string>& shaderSources)
 	{
@@ -187,6 +196,36 @@ namespace Cosmic
 		}
 
 		m_RendererID = program;
+
+		// =========================================================================
+		// ENGINE CORE AUTOMATION: Dynamic Sampler Array Initialization
+		// =========================================================================
+		GLint texturesArrayLocation = glGetUniformLocation(m_RendererID, "u_Textures");
+		if (texturesArrayLocation != -1)
+		{
+			glUseProgram(m_RendererID);
+
+			// Ask the active physical GPU driver for its maximum supported texture units
+			GLint maxHardwareSlots = 0;
+			glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &maxHardwareSlots);
+
+			// Cap it to a maximum of 32 to safely align with Renderer2D's fixed-size tracking arrays
+			int32_t maxEngineSlots = std::min(maxHardwareSlots, 32);
+
+			// Create and populate a dynamic array matching the slot sequence [0, 1, 2, ... 31]
+			std::vector<int32_t> samplers(maxEngineSlots);
+			for (int32_t i = 0; i < maxEngineSlots; i++)
+			{
+				samplers[i] = i;
+			}
+
+			// Upload the indices seamlessly straight to the driver allocation registry
+			glUniform1iv(texturesArrayLocation, maxEngineSlots, samplers.data());
+
+			// Build tracking works perfectly now!
+			CS_CORE_INFO("Shader [{0}]: Automatically mapped 'u_Textures' to {1} hardware slots.", m_Name, maxEngineSlots);
+		}
+		// =========================================================================
 
 		// Cleanup: Individual shader stages are no longer needed once linked
 		for (auto id : shaderIDs)

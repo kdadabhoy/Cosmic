@@ -40,23 +40,12 @@ namespace Workspace
 		auto debugShader = Cosmic::Shader::Create(shaderPath);
 		auto fireShader = Cosmic::Shader::Create(fireShaderPath);
 
-		// Crucial: Initialize the sampler array slots inside the shader context layout 
-		if (debugShader)
-		{
-			debugShader->Bind();
-			int32_t samplers[32];
-			for (uint32_t i = 0; i < 32; i++) samplers[i] = i;
-			debugShader->SetIntArray("u_Textures", samplers, 32);
-		}
-
+		// Material Allocation - The engine now auto-assigns 'u_Textures' internally on compile!
 		m_DinoMaterial = Cosmic::Material::Create(debugShader, "DinoMaterial");
 		if (m_DinoMaterial)
 		{
-			// Fix: Redundantly bind keys to catch whatever string literal your Renderer2D core expects
+			// Clean, high-level developer code: Just map the texture and color directly.
 			m_DinoMaterial->Set("u_Texture", m_DinoTexture);
-			m_DinoMaterial->Set("u_Textures", m_DinoTexture); // Add this fallback key!
-			m_DinoMaterial->Set("Texture", m_DinoTexture);    // Add this fallback key!
-
 			m_DinoMaterial->Set("u_Color", glm::vec4(1.0f));
 		}
 
@@ -68,7 +57,7 @@ namespace Workspace
 		// Instantiate layers passing down our shared master scene smart pointer context
 		m_RunSim = std::make_unique<DinoRunLayer>(m_Scene, m_DinoMaterial);
 		m_FlightSim = std::make_unique<DinoFlightLayer>(m_Scene, m_DinoMaterial);
-		m_StressSim = std::make_unique<DinoStressLayer>(m_Scene, m_FireMaterial); // Swapped to fire material!
+		m_StressSim = std::make_unique<DinoStressLayer>(m_Scene, m_FireMaterial);
 
 		// Default Active Layer Configuration
 		m_ActiveSim = m_RunSim.get();
@@ -92,9 +81,9 @@ namespace Workspace
 		float dt = ts > 0.0f ? ts : 0.001f;
 		m_SmoothedDeltaTime = m_SmoothedDeltaTime * 0.95f + dt * 0.05f;
 
-		// 2. Accumulate continuous frame ticks over time (ADD THIS LINE IF MISSING)
+		// 2. Accumulate continuous frame ticks over time
 		static float s_AccumulatedTime = 0.0f;
-		s_AccumulatedTime += dt; // Use smoothed or raw timestep delta
+		s_AccumulatedTime += dt;
 
 		// 3. Upload the current timeline clock to the Fire Material uniform cache
 		if (m_FireMaterial)

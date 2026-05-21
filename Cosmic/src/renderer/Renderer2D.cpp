@@ -366,12 +366,18 @@ namespace Cosmic
 
 		s_Data.CurrentMaterial = material;
 
-		// UNIVERSAL FALLBACK ENGINE LOGIC: 
-		// Look up material data map values; use defaults if the shader uses procedural or alternate names
+		// =========================================================================
+		// ENGINE CORE MULTI-KEY FALLBACK SWEEP
+		// =========================================================================
 		Ref<Texture> tex = material->GetTexture("u_Texture");
+		if (!tex) tex = material->GetTexture("Texture");
+		if (!tex) tex = material->GetTexture("u_Textures");
+
+		// Final absolute fallback: Use the engine's built-in 1x1 white texture
 		if (!tex) tex = s_Data.WhiteTexture;
 
 		glm::vec4 color = material->GetVector("u_Color");
+		// =========================================================================
 
 		if (s_Data.QuadIndexCount >= Renderer2DData::MaxIndices)
 			FlushAndReset();
