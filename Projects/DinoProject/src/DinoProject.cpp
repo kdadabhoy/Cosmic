@@ -16,6 +16,7 @@ namespace Workspace
 
 		std::string dinoPath = "assets/projects/DinoProject/Dino.png";
 		std::string shaderPath = "assets/projects/DinoProject/shaders/DebugTexture.glsl";
+		std::string fireShaderPath = "assets/projects/DinoProject/shaders/FireShader.glsl";
 
 		// Asset Verification Helper to ensure assets exist before loading
 		auto VerifyAsset = [](const std::string& path, const std::string& name) -> bool
@@ -30,18 +31,36 @@ namespace Workspace
 			};
 
 		bool assetsLoaded = VerifyAsset(dinoPath, "Dino Texture") &&
-			VerifyAsset(shaderPath, "Debug Shader");
+			VerifyAsset(shaderPath, "Debug Shader") &&
+			VerifyAsset(fireShaderPath, "Fire Shader");
 
 		// --- Resource Loading ---
 		m_DinoTexture = Cosmic::Texture2D::Create(dinoPath);
-		auto debugShader = Cosmic::Shader::Create(shaderPath);
-		m_DinoMaterial = Cosmic::Material::Create(debugShader);
 
+		auto debugShader = Cosmic::Shader::Create(shaderPath);
+		auto fireShader = Cosmic::Shader::Create(fireShaderPath);
+
+		// Crucial: Initialize the sampler array slots inside the shader context layout 
+		if (debugShader)
+		{
+			debugShader->Bind();
+			int32_t samplers[32];
+			for (uint32_t i = 0; i < 32; i++) samplers[i] = i;
+			debugShader->SetIntArray("u_Textures", samplers, 32);
+		}
+
+		m_DinoMaterial = Cosmic::Material::Create(debugShader, "DinoMaterial");
 		if (m_DinoMaterial)
 		{
+			// Fix: Redundantly bind keys to catch whatever string literal your Renderer2D core expects
 			m_DinoMaterial->Set("u_Texture", m_DinoTexture);
+			m_DinoMaterial->Set("u_Textures", m_DinoTexture); // Add this fallback key!
+			m_DinoMaterial->Set("Texture", m_DinoTexture);    // Add this fallback key!
+
 			m_DinoMaterial->Set("u_Color", glm::vec4(1.0f));
 		}
+
+		m_FireMaterial = Cosmic::Material::Create(fireShader, "FireMaterial");
 
 		// --- Long-Term Static Factory Instantiation ---
 		m_Scene = Cosmic::Scene::Create();
@@ -49,7 +68,7 @@ namespace Workspace
 		// Instantiate layers passing down our shared master scene smart pointer context
 		m_RunSim = std::make_unique<DinoRunLayer>(m_Scene, m_DinoMaterial);
 		m_FlightSim = std::make_unique<DinoFlightLayer>(m_Scene, m_DinoMaterial);
-		m_StressSim = std::make_unique<DinoStressLayer>(m_Scene, m_DinoMaterial);
+		m_StressSim = std::make_unique<DinoStressLayer>(m_Scene, m_FireMaterial); // Swapped to fire material!
 
 		// Default Active Layer Configuration
 		m_ActiveSim = m_RunSim.get();
@@ -62,16 +81,28 @@ namespace Workspace
 		m_RunSim.reset();
 		m_FlightSim.reset();
 		m_StressSim.reset();
+		m_FireMaterial.reset();
+		m_DinoMaterial.reset();
 		m_Scene.reset();
 	}
 
 	void DinoProject::OnUpdate(float ts)
 	{
-		// Prevent division by zero if timescale freezes or hits a hard stutter step frame
+		// 1. Prevent division by zero if timescale freezes or hits a hard stutter step frame
 		float dt = ts > 0.0f ? ts : 0.001f;
 		m_SmoothedDeltaTime = m_SmoothedDeltaTime * 0.95f + dt * 0.05f;
 
-		// Handle active simulation mode quick switching hotkeys
+		// 2. Accumulate continuous frame ticks over time (ADD THIS LINE IF MISSING)
+		static float s_AccumulatedTime = 0.0f;
+		s_AccumulatedTime += dt; // Use smoothed or raw timestep delta
+
+		// 3. Upload the current timeline clock to the Fire Material uniform cache
+		if (m_FireMaterial)
+		{
+			m_FireMaterial->Set("u_Time", s_AccumulatedTime);
+		}
+
+		// 4. Handle active simulation mode quick switching hotkeys
 		if (Cosmic::Input::IsKeyPressed(CS_KEY_R)) m_ActiveSim = m_RunSim.get();
 		if (Cosmic::Input::IsKeyPressed(CS_KEY_F)) m_ActiveSim = m_FlightSim.get();
 		if (Cosmic::Input::IsKeyPressed(CS_KEY_T)) m_ActiveSim = m_StressSim.get();
@@ -134,9 +165,6 @@ namespace Workspace
 	}
 }
 
-// ============================================================================
-// EXTERNAL INTERFACE DLL ASSEMBLY BOUNDARY EXPORTS
-// ============================================================================
 extern "C"
 {
 	__declspec(dllexport) void InitializePluginContexts(Cosmic::HostContext context)

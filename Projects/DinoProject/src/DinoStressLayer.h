@@ -28,5 +28,6 @@ namespace Workspace
 		std::vector<Cosmic::Entity> m_GridEntities;
 		int m_GridSize = 25; // Balanced size for ECS iteration tracking
 		uint32_t m_FixedUpdateCount = 0;
+		float m_Time = 0.0f; // <-- ADD THIS LINE
 	};
 }

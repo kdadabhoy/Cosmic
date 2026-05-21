@@ -252,6 +252,11 @@ namespace Cosmic
 		UploadUniformMat4(name, value);
 	}
 
+	void OpenGLShader::SetFloat(const std::string& name, float value)
+	{
+		UploadUniformFloat(name, value);
+	}
+
 	/////////////////////////////////////////////////////////////////////////////////
 	// OpenGL-specific Uniform Uploaders
 	/////////////////////////////////////////////////////////////////////////////////
@@ -304,6 +309,13 @@ namespace Cosmic
 	{
 		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
 		glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
+	}
+
+
+	void OpenGLShader::UploadUniformFloat(const std::string& name, float value)
+	{
+		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
+		glUniform1f(location, value);
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////

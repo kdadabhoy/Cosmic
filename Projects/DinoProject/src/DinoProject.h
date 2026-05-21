@@ -21,7 +21,8 @@ namespace Workspace
 
 	private:
 		Cosmic::Ref<Cosmic::Texture2D> m_DinoTexture;
-		Cosmic::Ref<Cosmic::Material>  m_DinoMaterial;
+		Cosmic::Ref<Cosmic::Material>  m_DinoMaterial;  // Default Texture Material
+		Cosmic::Ref<Cosmic::Material>  m_FireMaterial;  // Procedural Fire Material
 
 		// The master scene container context used across your simulation modes
 		Cosmic::Ref<Cosmic::Scene>     m_Scene;

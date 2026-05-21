@@ -34,19 +34,29 @@ in vec2 v_TexCoord;
 in float v_TexIndex;
 in float v_TilingFactor;
 
-// The array of all texture slots bound by the Renderer2D
+// BATCH INTERFACE: Master texture array managed by Renderer2D::Flush
 uniform sampler2D u_Textures[32];
+
+// MATERIAL ANCHORS: Prevents driver optimization stripping and exposes named properties
+uniform sampler2D u_Texture;
+uniform vec4 u_Color;
 
 void main()
 {
-    // Sample the texture from the correct slot using the index passed from C++
-    // We multiply by v_TilingFactor in case you want to repeat the texture
-    vec4 texColor = texture(u_Textures[int(v_TexIndex)], v_TexCoord * v_TilingFactor);
+    // Start with the vertex color (which holds our material tint)
+    vec4 texColor = v_Color;
+
+    int index = int(v_TexIndex);
     
-    // Multiply the texture pixel by the color passed from the Material/ImGui
-    color = texColor * v_Color;
-    
-    // Discard pixels with low alpha to allow for clean transparency
-    if (color.a < 0.1)
+    if (index >= 0 && index < 32)
+    {
+        // Sample from the batch array slot provided by Renderer2D
+        texColor *= texture(u_Textures[index], v_TexCoord * v_TilingFactor);
+    }
+
+    // Alpha test discard to remove transparency artifacts around your Dino sprite
+    if (texColor.a < 0.1)
         discard;
+
+    color = texColor;
 }

@@ -79,6 +79,9 @@ namespace Cosmic
 		virtual void			SetMat3(const std::string& name, const glm::mat3& value)			= 0;
 		virtual void			SetMat4(const std::string& name, const glm::mat4& value)			= 0;
 
+
+		virtual void SetFloat(const std::string& name, float value) = 0;
+
 		////////////////////////////////
 		// Factory Pattern
 		///////////////////////////////

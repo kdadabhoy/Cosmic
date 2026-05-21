@@ -79,6 +79,8 @@ namespace Cosmic
 		virtual void		SetMat3(const std::string& name, const glm::mat3& value) override;
 		virtual void		SetMat4(const std::string& name, const glm::mat4& value) override;
 
+		virtual void SetFloat(const std::string& name, float value) override;
+
 		////////////////////////////////
 		// Native OpenGL Uniform Uploaders
 		///////////////////////////////
@@ -89,6 +91,8 @@ namespace Cosmic
 		void				UploadUniformFloat4(const std::string& name, const glm::vec4& values);
 		void				UploadUniformMat3(const std::string& name, const glm::mat3& matrix);
 		void				UploadUniformMat4(const std::string& name, const glm::mat4& matrix);
+
+		void UploadUniformFloat(const std::string& name, float value);
 
 
 	private:
