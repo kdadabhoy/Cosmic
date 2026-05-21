@@ -434,8 +434,10 @@ namespace Cosmic
 
 		s_Data.CurrentMaterial = material;
 
-		// Universal data mapping queries
+		// multi-key fallback sweep
 		Ref<Texture> tex = material->GetTexture("u_Texture");
+		if (!tex) tex = material->GetTexture("Texture");
+		if (!tex) tex = material->GetTexture("u_Textures");
 		if (!tex) tex = s_Data.WhiteTexture;
 
 		glm::vec4 color = material->GetVector("u_Color");

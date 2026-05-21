@@ -26,33 +26,44 @@ namespace Workspace
 					CS_ERROR("DinoProject: FAILED to find {0} at '{1}'", name, path);
 					return false;
 				}
-				CS_INFO("DinoProject: Successfully loaded {0}", name);
+
+				// Dynamic size reporting via filesystem
+				uintmax_t fileSize = std::filesystem::file_size(path);
+				CS_INFO("DinoProject: Verified asset '{0}' ({1} bytes)", name, fileSize);
 				return true;
 			};
 
-		bool assetsLoaded = VerifyAsset(dinoPath, "Dino Texture") &&
+		bool assetsValid = VerifyAsset(dinoPath, "Dino Texture") &&
 			VerifyAsset(shaderPath, "Debug Shader") &&
 			VerifyAsset(fireShaderPath, "Fire Shader");
 
+		if (!assetsValid)
+		{
+			CS_ERROR("DinoProject: Critical error during asset verification. Aborting structural simulation allocation!");
+			return;
+		}
+
 		// --- Resource Loading ---
 		m_DinoTexture = Cosmic::Texture2D::Create(dinoPath);
+		CS_TRACE("DinoProject: Native Texture2D allocated handle ID: {0}", m_DinoTexture->GetRendererID());
 
 		auto debugShader = Cosmic::Shader::Create(shaderPath);
 		auto fireShader = Cosmic::Shader::Create(fireShaderPath);
 
-		// Material Allocation - The engine now auto-assigns 'u_Textures' internally on compile!
+		// Material Allocation
 		m_DinoMaterial = Cosmic::Material::Create(debugShader, "DinoMaterial");
-		if (m_DinoMaterial)
+		if (m_DinoMaterial && m_DinoTexture)
 		{
-			// Clean, high-level developer code: Just map the texture and color directly.
-			m_DinoMaterial->Set("u_Texture", m_DinoTexture);
+			m_DinoMaterial->Set("Texture", m_DinoTexture);
 			m_DinoMaterial->Set("u_Color", glm::vec4(1.0f));
+			CS_INFO("DinoProject: DinoMaterial bound to registry address: 0x{0:x}", (uintptr_t)m_DinoMaterial.get());
 		}
 
 		m_FireMaterial = Cosmic::Material::Create(fireShader, "FireMaterial");
 
 		// --- Long-Term Static Factory Instantiation ---
 		m_Scene = Cosmic::Scene::Create();
+		CS_TRACE("DinoProject: Master scene runtime context created.");
 
 		// Instantiate layers passing down our shared master scene smart pointer context
 		m_RunSim = std::make_unique<DinoRunLayer>(m_Scene, m_DinoMaterial);
@@ -61,18 +72,21 @@ namespace Workspace
 
 		// Default Active Layer Configuration
 		m_ActiveSim = m_RunSim.get();
-		CS_INFO("DinoProject: All systems operational.");
+		CS_INFO("DinoProject: All sub-simulation layers bound. Simulation root fully operational.");
 	}
 
 	void DinoProject::OnDetach()
 	{
-		// Clean up and release owned unique smart pointer simulation contexts safely
+		CS_WARN("DinoProject: Detach lifecycle triggered. Releasing resource handlers...");
+
 		m_RunSim.reset();
 		m_FlightSim.reset();
 		m_StressSim.reset();
 		m_FireMaterial.reset();
 		m_DinoMaterial.reset();
 		m_Scene.reset();
+
+		CS_INFO("DinoProject: All simulation contexts cleanly destroyed.");
 	}
 
 	void DinoProject::OnUpdate(float ts)
@@ -83,7 +97,17 @@ namespace Workspace
 
 		// 2. Accumulate continuous frame ticks over time
 		static float s_AccumulatedTime = 0.0f;
+		static float s_LogHeartbeatTimer = 0.0f;
 		s_AccumulatedTime += dt;
+		s_LogHeartbeatTimer += dt;
+
+		// Telemetry Heartbeat: Log frame information every 5 seconds to avoid flooding output
+		if (s_LogHeartbeatTimer >= 5.0f)
+		{
+			CS_TRACE("Telemetry: RunTime: {0:.2f}s | FPS: {1:.1f} ({2:.3f} ms/frame)",
+				s_AccumulatedTime, 1.0f / m_SmoothedDeltaTime, m_SmoothedDeltaTime * 1000.0f);
+			s_LogHeartbeatTimer = 0.0f;
+		}
 
 		// 3. Upload the current timeline clock to the Fire Material uniform cache
 		if (m_FireMaterial)
@@ -91,15 +115,23 @@ namespace Workspace
 			m_FireMaterial->Set("u_Time", s_AccumulatedTime);
 		}
 
-		// 4. Handle active simulation mode quick switching hotkeys
+		// 4. Fix: Use auto deduction to store the previous ISimulationMode state accurately
+		auto previousSim = m_ActiveSim;
+
 		if (Cosmic::Input::IsKeyPressed(CS_KEY_R)) m_ActiveSim = m_RunSim.get();
 		if (Cosmic::Input::IsKeyPressed(CS_KEY_F)) m_ActiveSim = m_FlightSim.get();
 		if (Cosmic::Input::IsKeyPressed(CS_KEY_T)) m_ActiveSim = m_StressSim.get();
 
+		if (m_ActiveSim != previousSim && m_ActiveSim != nullptr)
+		{
+			CS_INFO("DinoProject: Active context modified. Swapped target layer pointer over to pipeline state: '{0}' at timestamp {1:.2f}s",
+				m_ActiveSim->GetName(), s_AccumulatedTime);
+		}
+
 		if (m_ActiveSim)
 		{
 			m_ActiveSim->OnUpdate(ts);
-			m_ActiveSim->OnRender(); // Route system parameters to Renderer2D batchers
+			m_ActiveSim->OnRender();
 		}
 	}
 
@@ -117,6 +149,8 @@ namespace Workspace
 		if (e.GetEventType() == Cosmic::EventType::WindowResize)
 		{
 			auto& re = (Cosmic::WindowResizeEvent&)e;
+			CS_TRACE("DinoProject: Catching resize notification cascade ({0}, {1})", re.GetWidth(), re.GetHeight());
+
 			if (m_RunSim)    m_RunSim->SetViewportSize((float)re.GetWidth(), (float)re.GetHeight());
 			if (m_FlightSim) m_FlightSim->SetViewportSize((float)re.GetWidth(), (float)re.GetHeight());
 			if (m_StressSim) m_StressSim->SetViewportSize((float)re.GetWidth(), (float)re.GetHeight());
@@ -134,16 +168,29 @@ namespace Workspace
 		{
 			glm::vec4 color = m_DinoMaterial->GetVector("u_Color");
 			if (ImGui::ColorEdit4("Dino Tint", &color.x))
+			{
 				m_DinoMaterial->Set("u_Color", color);
+				CS_TRACE("DinoProject: Dynamic color tint uniform updated -> ({0}, {1}, {2}, {3})", color.r, color.g, color.b, color.a);
+			}
 		}
 
 		ImGui::Separator();
 		ImGui::Text("Switch Mode:");
-		if (ImGui::Button("Runner [R]")) m_ActiveSim = m_RunSim.get();
+
+		// Fix: Use auto deduction to store previous interface pointer safely inside UI loop
+		auto previousSim = m_ActiveSim;
+
+		if (ImGui::Button("Runner [R]"))  m_ActiveSim = m_RunSim.get();
 		ImGui::SameLine();
-		if (ImGui::Button("Flight [F]")) m_ActiveSim = m_FlightSim.get();
+		if (ImGui::Button("Flight [F]"))  m_ActiveSim = m_FlightSim.get();
 		ImGui::SameLine();
-		if (ImGui::Button("Stress [T]")) m_ActiveSim = m_StressSim.get();
+		if (ImGui::Button("Stress [T]"))  m_ActiveSim = m_StressSim.get();
+
+		if (m_ActiveSim != previousSim && m_ActiveSim != nullptr)
+		{
+			CS_INFO("DinoProject: Active context modified via UI. Swapped target layer pointer over to pipeline state: '{0}'",
+				m_ActiveSim->GetName());
+		}
 
 		ImGui::Separator();
 

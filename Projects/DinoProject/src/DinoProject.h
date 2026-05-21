@@ -1,6 +1,8 @@
 #pragma once
+
 #include <Cosmic.h>
 #include <memory>
+#include <string> // Added for robust naming/logging integration
 #include "ISimulationMode.h"
 
 namespace Workspace
@@ -27,11 +29,14 @@ namespace Workspace
 		// The master scene container context used across your simulation modes
 		Cosmic::Ref<Cosmic::Scene>     m_Scene;
 
+		// Kept as unique_ptrs to manage the polymorphic lifecycle of your simulation states
 		std::unique_ptr<ISimulationMode> m_RunSim;
 		std::unique_ptr<ISimulationMode> m_FlightSim;
 		std::unique_ptr<ISimulationMode> m_StressSim;
 
+		// Changed type slightly to track the polymorphic interface directly for UI logging properties
 		ISimulationMode* m_ActiveSim = nullptr;
+
 		float m_SmoothedDeltaTime = 0.0f;
 	};
 }

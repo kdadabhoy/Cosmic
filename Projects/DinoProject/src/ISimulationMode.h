@@ -2,6 +2,7 @@
 #include <Cosmic.h>
 #include <vector>
 #include <glm/glm.hpp>
+#include <string> // Required for std::string
 
 namespace Workspace
 {
@@ -35,6 +36,9 @@ namespace Workspace
 	{
 	public:
 		virtual ~ISimulationMode() = default;
+
+		// Pure virtual method interface declaration forcing implementations to supply names
+		virtual const std::string& GetName() const = 0;
 
 		virtual void OnUpdate(float ts) {}
 		virtual void OnFixedUpdate(float deltaFixedTime) {}

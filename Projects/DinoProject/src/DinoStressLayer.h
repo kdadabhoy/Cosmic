@@ -17,6 +17,13 @@ namespace Workspace
 		virtual void OnEvent(Cosmic::Event& e) override { m_Cam.OnEvent(e); }
 		virtual void SetViewportSize(float w, float h) override { m_Cam.OnResize(w, h); }
 
+	public:
+		virtual const std::string& GetName() const override
+		{
+			static std::string name = "DinoStressLayer";
+			return name;
+		}
+
 	private:
 		void RegenerateGrid();
 

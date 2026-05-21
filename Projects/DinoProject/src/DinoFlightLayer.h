@@ -17,6 +17,13 @@ namespace Workspace
 		virtual void OnEvent(Cosmic::Event& e) override { m_CameraController.OnEvent(e); }
 		virtual void SetViewportSize(float w, float h) override { m_CameraController.OnResize(w, h); }
 
+	public:
+		virtual const std::string& GetName() const override
+		{
+			static std::string name = "DinoFlightLayer";
+			return name;
+		}
+
 	private:
 		Cosmic::Ref<Cosmic::Scene> m_Scene;
 		Cosmic::Ref<Cosmic::Material> m_Material;

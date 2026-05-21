@@ -19,6 +19,13 @@ namespace Workspace
 
 		void Reset();
 
+	public:
+		virtual const std::string& GetName() const override
+		{
+			static std::string name = "DinoRunLayer";
+			return name;
+		}
+
 	private:
 		Cosmic::Ref<Cosmic::Scene> m_Scene;
 		Cosmic::Ref<Cosmic::Material> m_Material;
