@@ -1,15 +1,17 @@
 cmake_minimum_required(VERSION 3.21)
 project(CosmicRoot LANGUAGES C CXX)
 
-set(CMAKE_CXX_STANDARD 17)
+# Global fallback standards for newly discovered targets
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 if(MSVC)
-    add_compile_options(/utf-8)
+    # /std:c++20 forces MSVC to activate concepts, <bit>, and <compare> templates
+    add_compile_options(/utf-8 /std:c++20)
 else()
     # Ensure standard compliance/warnings for GCC/Clang alternatives
-    add_compile_options(-Wall -Wextra)
+    add_compile_options(-Wall -Wextra -std=c++20)
 endif()
 
 if(WIN32)

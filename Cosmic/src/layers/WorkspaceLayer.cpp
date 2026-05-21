@@ -2,8 +2,6 @@
 #include <imgui.h>
 #include <imgui_internal.h>
 
-
-
 namespace Cosmic
 {
 	WorkspaceLayer::WorkspaceLayer()
@@ -26,7 +24,8 @@ namespace Cosmic
 
 	void WorkspaceLayer::OnUpdate(float ts)
 	{
-		auto& fb = Cosmic::Application::Get().GetFrameBuffer();
+		// FIX: Use your engine's native Ref<T> handle instead of an auto& lvalue reference helper
+		Ref<FrameBuffer> fb = Cosmic::Application::Get().GetFrameBuffer();
 
 		// 1. Synchronize the hardware framebuffer with the layout window viewport metrics
 		if (m_ViewportSize.x > 0.0f && (fb->GetWidth() != m_ViewportSize.x || fb->GetHeight() != m_ViewportSize.y))

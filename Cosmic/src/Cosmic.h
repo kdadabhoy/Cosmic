@@ -1,8 +1,9 @@
 #pragma once
 // Cosmic.h
-// Last Modified: 5/19/2026
+// Last Modified: 5/20/2026
 
-/** * General Description:
+/**
+ * General Description:
  * Cosmic.h is the single entry-point header for all applications built with the
  * Cosmic Engine. It aggregates the entire engine's public API into one file,
  * streamlining the development process for Sandbox and Game projects.
@@ -41,6 +42,11 @@
 #include "camera/OrthographicCamera.h"
 #include "camera/OrthographicCameraController.h"
 
+// Entity Component System Submodule Architecture
+#include "scene/Scene.h"
+#include "scene/Entity.h"
+#include "scene/Components.h"
+
 // Input Mapping
 #include "codes/KeyCodes.h"
 #include "codes/MouseButtonCodes.h"
@@ -54,29 +60,19 @@
 
 namespace Cosmic
 {
-	// The bucket that carries the host contexts to the DLL boundary safely
-	struct COSMIC_API HostContext
-	{
-		ImGuiContext* ImGuiCtx;
-		ImPlotContext* ImPlotCtx;
-	};
-
-	// NOTE: ProjectPlugin can be kept for legacy compatibility, but your layout now uses Cosmic::Layer!
-	class COSMIC_API ProjectPlugin
-	{
-	public:
-		virtual ~ProjectPlugin() = default;
-		virtual void OnAttach() = 0;
-		virtual void OnDetach() = 0;
-		virtual void OnUpdate(Timestep ts) = 0;
-		virtual void OnFixedUpdate(Timestep ts) = 0;
-		virtual void OnImGuiRender() = 0;
-	};
+    /**
+     * @brief The data bucket that carries the host contexts across the DLL boundary safely.
+     */
+    struct COSMIC_API HostContext
+    {
+        ImGuiContext* ImGuiCtx;
+        ImPlotContext* ImPlotCtx;
+    };
 }
 
 // The native Win32/C communication module interface tunnels
 extern "C" {
-	// UPDATED: This signature now matches Application.cpp's factory expectations perfectly!
-	__declspec(dllexport) Cosmic::Layer* CreatePluginLayer();
-	__declspec(dllexport) void InitializePluginContexts(Cosmic::HostContext context);
+    // This signature matches Application.cpp's dynamic runtime factory expectations perfectly.
+    __declspec(dllexport) Cosmic::Layer* CreatePluginLayer();
+    __declspec(dllexport) void InitializePluginContexts(Cosmic::HostContext context);
 }
