@@ -1,5 +1,6 @@
-// Inside Runtime/Main.cpp
 #include <Cosmic.h>
+
+// Basic Bootloader / Entry Point
 
 int main()
 {
