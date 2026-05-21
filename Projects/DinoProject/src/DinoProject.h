@@ -23,6 +23,9 @@ namespace Workspace
 		Cosmic::Ref<Cosmic::Texture2D> m_DinoTexture;
 		Cosmic::Ref<Cosmic::Material>  m_DinoMaterial;
 
+		// The master scene container context used across your simulation modes
+		Cosmic::Ref<Cosmic::Scene>     m_Scene;
+
 		std::unique_ptr<ISimulationMode> m_RunSim;
 		std::unique_ptr<ISimulationMode> m_FlightSim;
 		std::unique_ptr<ISimulationMode> m_StressSim;

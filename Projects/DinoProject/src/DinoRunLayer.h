@@ -1,14 +1,13 @@
 #pragma once
 #include "ISimulationMode.h"
 #include <random>
-#include <vector>
 
 namespace Workspace
 {
 	class DinoRunLayer : public ISimulationMode
 	{
 	public:
-		DinoRunLayer(Cosmic::Ref<Cosmic::Material> material);
+		DinoRunLayer(Cosmic::Ref<Cosmic::Scene> scene, Cosmic::Ref<Cosmic::Material> material);
 		virtual ~DinoRunLayer() = default;
 
 		virtual void OnUpdate(float ts) override;
@@ -21,15 +20,15 @@ namespace Workspace
 		void Reset();
 
 	private:
+		Cosmic::Ref<Cosmic::Scene> m_Scene;
 		Cosmic::Ref<Cosmic::Material> m_Material;
 		Cosmic::OrthographicCameraController m_CameraController;
 
-		glm::vec3 m_DinoPos = { -1.0f, -0.5f, 0.0f };
+		Cosmic::Entity m_DinoEntity;
+		std::vector<Cosmic::Entity> m_ObstacleEntities;
+
 		float m_VelocityY = 0.0f;
 		bool m_IsGrounded = true;
-
-		struct Obstacle { glm::vec3 Position; glm::vec2 Size; glm::vec4 Color; };
-		std::vector<Obstacle> m_Obstacles;
 
 		std::mt19937 m_RandomEngine;
 		float m_SpawnTimer = 0.0f;

@@ -1,12 +1,13 @@
 #pragma once
 #include "ISimulationMode.h"
+#include <vector>
 
 namespace Workspace
 {
 	class DinoStressLayer : public ISimulationMode
 	{
 	public:
-		DinoStressLayer(Cosmic::Ref<Cosmic::Material> material);
+		DinoStressLayer(Cosmic::Ref<Cosmic::Scene> scene, Cosmic::Ref<Cosmic::Material> material);
 		virtual ~DinoStressLayer() = default;
 
 		virtual void OnUpdate(float ts) override;
@@ -17,9 +18,15 @@ namespace Workspace
 		virtual void SetViewportSize(float w, float h) override { m_Cam.OnResize(w, h); }
 
 	private:
+		void RegenerateGrid();
+
+	private:
+		Cosmic::Ref<Cosmic::Scene> m_Scene;
 		Cosmic::Ref<Cosmic::Material> m_Material;
 		Cosmic::OrthographicCameraController m_Cam;
-		int m_GridSize = 40;
+
+		std::vector<Cosmic::Entity> m_GridEntities;
+		int m_GridSize = 25; // Balanced size for ECS iteration tracking
 		uint32_t m_FixedUpdateCount = 0;
 	};
 }

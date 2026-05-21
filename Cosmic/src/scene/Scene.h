@@ -4,6 +4,8 @@
 
 #include "core/Core.h"
 #include <entt/entt.hpp>
+#include <string>
+#include <memory>
 
 namespace Cosmic
 {
@@ -16,23 +18,24 @@ namespace Cosmic
         ~Scene() = default;
 
         /**
-         * @brief Instantiates a blank Entity handle bound to this scene instance.
+         * @brief Static factory helper to match unified engine smart pointer instantiation rules.
          */
+        template<typename... Args>
+        static Ref<Scene> Create(Args&&... args)
+        {
+            return std::make_shared<Scene>(std::forward<Args>(args)...);
+        }
+
+        /** * @brief Instantiates a blank Entity handle bound to this scene instance.         */
         Entity CreateEntity(const std::string& name = "GenericEntity");
 
-        /**
-         * @brief Destroys and cleans up internal registry component references.
-         */
+        /** * @brief Destroys and cleans up internal registry component references.         */
         void DestroyEntity(Entity entity);
 
-        /**
-         * @brief Runs ongoing frame logic updates.
-         */
+        /** * @brief Runs ongoing frame logic updates.         */
         void OnUpdate(float deltaTime);
 
-        /**
-         * @brief Extracts view parameters and pipes them to Renderer2D.
-         */
+        /** * @brief Extracts view parameters and pipes them to Renderer2D.         */
         void OnRender();
 
     private:
