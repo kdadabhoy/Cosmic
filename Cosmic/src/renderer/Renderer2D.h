@@ -131,7 +131,12 @@ namespace Cosmic
 		static Statistics GetStats();
 		static void ResetStats();
 
+
+	public:
+		static void UpdateTimeline(float ts, uint32_t width, uint32_t height);
+
 	private:
 		static void FlushAndReset();
+
 	};
 }

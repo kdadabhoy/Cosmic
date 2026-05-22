@@ -35,7 +35,7 @@ float noise(vec3 p)
     vec3 i = floor(p);
     vec4 a = dot(i, vec3(1., 57., 21.)) + vec4(0., 57., 21., 78.);
     vec3 f = cos((p-i)*acos(-1.))*(-.5)+.5;
-    a = mix(sin(cos(a)*a),sin(cos(1.+a)*(1.+a)), f.x);
+    a = mix(sin(cos(a)*a), sin(cos(1.+a)*(1.+a)), f.x);
     a.xy = mix(a.xz, a.yw, f.y);
     return mix(a.x, a.y, f.z);
 }
@@ -79,11 +79,15 @@ vec4 raymarch(vec3 org, vec3 dir)
 
 void main()
 {
-    // Convert 2D Quad texture space [0, 1] to centered screen coords [-1, 1]
+    // Convert 2D Quad texture space [0, 1] to centered coordinates [-1, 1]
     vec2 uv = v_TexCoord * 2.0 - 1.0;
     
     vec3 org = vec3(0., -2., 4.);
-    vec3 dir = normalize(vec3(uv.x * 1.6, -uv.y, -1.5));
+    
+    // FIX: Removed the hardcoded 1.6 screen multiplier. 
+    // Since the layout sprite entities are square quads, a 1.0 baseline ensures 
+    // the raymarched camera projection treats local X and Y dimensions uniformly.
+    vec3 dir = normalize(vec3(uv.x * 1.0, -uv.y, -1.5));
     
     vec4 p = raymarch(org, dir);
     float glow = p.w;

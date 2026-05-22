@@ -119,8 +119,37 @@ namespace Cosmic
 			size_t nextLinePos = source.find_first_not_of("\r\n", eol);
 			pos = source.find(typeToken, nextLinePos);
 
-			shaderSources[ShaderTypeFromString(type)] = (pos == std::string::npos) ?
+			std::string rawSource = (pos == std::string::npos) ?
 				source.substr(nextLinePos) : source.substr(nextLinePos, pos - nextLinePos);
+
+			// --- SAFE INJECTION GATEWAY ---
+			std::string enginePreamble = "";
+
+			// Only inject declarations if the shader source hasn't manually declared them yet
+			if (rawSource.find("u_ViewProjection") == std::string::npos)
+				enginePreamble += "uniform mat4 u_ViewProjection;\n";
+
+			if (rawSource.find("u_Time") == std::string::npos && rawSource.find("iTime") == std::string::npos)
+				enginePreamble += "uniform float u_Time;\n#define iTime u_Time\n";
+
+			if (rawSource.find("u_ViewportSize") == std::string::npos && rawSource.find("iResolution") == std::string::npos)
+				enginePreamble += "uniform vec2 u_ViewportSize;\n#define iResolution vec3(u_ViewportSize, 1.0)\n";
+
+			// Find the line ending of '#version' to safely append downstream strings
+			size_t versionPos = rawSource.find("#version");
+			if (versionPos != std::string::npos)
+			{
+				size_t versionEol = rawSource.find_first_of("\r\n", versionPos);
+
+				// Advance past whichever line ending style (\r\n or \n) is actively being read
+				while (rawSource[versionEol] == '\r' || rawSource[versionEol] == '\n')
+				{
+					versionEol++;
+				}
+				rawSource.insert(versionEol, enginePreamble);
+			}
+
+			shaderSources[ShaderTypeFromString(type)] = rawSource;
 		}
 
 		return shaderSources;
@@ -297,65 +326,77 @@ namespace Cosmic
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////
-	// OpenGL-specific Uniform Uploaders
+	// OpenGL-specific Uniform Uploaders: Safe Location Cache Gateway
 	/////////////////////////////////////////////////////////////////////////////////
 
-	/**
-	 * UploadUniformInt
-	 * * Communicates a single integer to the GPU. Used for texture slot IDs.
-	 */
-	void OpenGLShader::UploadUniformInt(const std::string& name, int value)
+	GLint OpenGLShader::GetUniformLocation(const std::string& name)
 	{
+		// Check if we already looked up this location to avoid expensive driver calls
+		if (m_UniformLocationCache.find(name) != m_UniformLocationCache.end())
+			return m_UniformLocationCache[name];
+
 		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
-		glUniform1i(location, value);
+
+		// Cache it even if it's -1 so we don't query the driver again
+		m_UniformLocationCache[name] = location;
+		return location;
 	}
 
-	/**
-	 * UploadUniformIntArray
-	 * * BATCHING LOGIC: Uploads an array of texture unit IDs. Essential for
-	 * multi-texture sampling in the Batch Renderer.
-	 */
+	void OpenGLShader::UploadUniformInt(const std::string& name, int value)
+	{
+		GLint location = GetUniformLocation(name);
+		if (location != -1) glUniform1i(location, value);
+	}
+
 	void OpenGLShader::UploadUniformIntArray(const std::string& name, int* values, uint32_t count)
 	{
-		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
-		glUniform1iv(location, count, values);
+		GLint location = GetUniformLocation(name);
+		if (location != -1) glUniform1iv(location, count, values);
+	}
+
+	void OpenGLShader::UploadUniformFloat(const std::string& name, float value)
+	{
+		GLint location = GetUniformLocation(name);
+		if (location != -1) glUniform1f(location, value);
 	}
 
 	void OpenGLShader::UploadUniformFloat3(const std::string& name, const glm::vec3& values)
 	{
-		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
-		glUniform3f(location, values.x, values.y, values.z);
+		GLint location = GetUniformLocation(name);
+		if (location != -1) glUniform3f(location, values.x, values.y, values.z);
 	}
 
 	void OpenGLShader::UploadUniformFloat4(const std::string& name, const glm::vec4& values)
 	{
-		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
-		glUniform4f(location, values.x, values.y, values.z, values.w);
+		GLint location = GetUniformLocation(name);
+		if (location != -1) glUniform4f(location, values.x, values.y, values.z, values.w);
+	}
+
+	void OpenGLShader::UploadUniformMat4(const std::string& name, const glm::mat4& matrix)
+	{
+		GLint location = GetUniformLocation(name);
+		if (location != -1) glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
+	}
+
+	/////////////////////////////////////////////////////////////////////////////////
+	void OpenGLShader::SetFloat2(const std::string& name, const glm::vec2& value)
+	{
+		UploadUniformFloat2(name, value);
+	}
+
+	void OpenGLShader::UploadUniformFloat2(const std::string& name, const glm::vec2& values)
+	{
+		GLint location = GetUniformLocation(name);
+		if (location != -1) glUniform2f(location, values.x, values.y);
 	}
 
 	void OpenGLShader::UploadUniformMat3(const std::string& name, const glm::mat3& matrix)
 	{
-		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
-		glUniformMatrix3fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
-	}
-
-	/**
-	 * UploadUniformMat4
-	 * * Uploads a 4x4 matrix (usually View-Projection). Uses glm::value_ptr
-	 * to convert GLM types to raw float arrays.
-	 */
-	void OpenGLShader::UploadUniformMat4(const std::string& name, const glm::mat4& matrix)
-	{
-		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
-		glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
+		GLint location = GetUniformLocation(name);
+		if (location != -1)
+			glUniformMatrix3fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
 	}
 
 
-	void OpenGLShader::UploadUniformFloat(const std::string& name, float value)
-	{
-		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
-		glUniform1f(location, value);
-	}
 
-	/////////////////////////////////////////////////////////////////////////////////
 }

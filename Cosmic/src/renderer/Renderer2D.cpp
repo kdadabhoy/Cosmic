@@ -84,6 +84,10 @@ namespace Cosmic
 
         // Camera Data
         glm::mat4 ViewProjectionMatrix;
+
+        // Other
+        float TimeAccumulator = 0.0f;
+        glm::vec2 ViewportDimensions = { 1280.0f, 720.0f };
     };
 
     static Renderer2DData s_Data;
@@ -212,8 +216,8 @@ namespace Cosmic
     /**
      * Submits all currently batched geometry to the GPU.
      */
-    void Renderer2D::Flush()
-    {
+	void Renderer2D::Flush()
+	{
 		/// Draw Quads
 		if (s_Data.QuadIndexCount != 0)
 		{
@@ -225,11 +229,11 @@ namespace Cosmic
 				s_Data.TextureSlots[i]->Bind(i);
 
 			// 2. Bind the active material parameters and extract the target pipeline shader
-			Ref<Shader> activeShader = s_Data.TextureShader; // Fallback default
+			Ref<Shader> activeShader = s_Data.TextureShader;
 
 			if (s_Data.CurrentMaterial)
 			{
-				s_Data.CurrentMaterial->Bind(); // Activates the shader and uploads material properties
+				s_Data.CurrentMaterial->Bind();
 				activeShader = s_Data.CurrentMaterial->GetShader();
 			}
 			else
@@ -239,6 +243,8 @@ namespace Cosmic
 
 			// 3. Upload global, scene-wide system uniforms to the active program context
 			activeShader->SetMat4("u_ViewProjection", s_Data.ViewProjectionMatrix);
+			activeShader->SetFloat("u_Time", s_Data.TimeAccumulator);
+			activeShader->SetFloat2("u_ViewportSize", s_Data.ViewportDimensions);
 
 			// 4. Dispatch Indexed Draw Call
 			s_Data.QuadVertexArray->Bind();
@@ -246,20 +252,21 @@ namespace Cosmic
 			s_Data.Stats.DrawCalls++;
 		}
 
-        // Draw Lines
-        if (s_Data.LineVertexCount != 0)
-        {
-            uint32_t dataSize = (uint32_t)((uint8_t*)s_Data.LineVertexBufferPtr - (uint8_t*)s_Data.LineVertexBufferBase);
-            s_Data.LineVertexBuffer->SetData(s_Data.LineVertexBufferBase, dataSize);
+		// Draw Lines
+		if (s_Data.LineVertexCount != 0)
+		{
+			uint32_t dataSize = (uint32_t)((uint8_t*)s_Data.LineVertexBufferPtr - (uint8_t*)s_Data.LineVertexBufferBase);
+			s_Data.LineVertexBuffer->SetData(s_Data.LineVertexBufferBase, dataSize);
 
-            s_Data.LineShader->Bind();
-            s_Data.LineShader->SetMat4("u_ViewProjection", s_Data.ViewProjectionMatrix);
+			s_Data.LineShader->Bind();
+			s_Data.LineShader->SetMat4("u_ViewProjection", s_Data.ViewProjectionMatrix);
 
-            s_Data.LineVertexArray->Bind();
-            RenderCommand::DrawLines(s_Data.LineVertexArray, s_Data.LineVertexCount);
-            s_Data.Stats.DrawCalls++;
-        }
-    }
+			s_Data.LineVertexArray->Bind();
+			RenderCommand::DrawLines(s_Data.LineVertexArray, s_Data.LineVertexCount);
+			s_Data.Stats.DrawCalls++;
+		}
+	}
+
 
     /**
      * Forces a flush and resets batch counters. Used for state changes or buffer overflows.
@@ -550,20 +557,23 @@ namespace Cosmic
     // Debug & Primitive Utilities
     /////////////////////////////////////////////////////////////////////////////////
 
-    void Renderer2D::DrawLine(const glm::vec3& p0, const glm::vec3& p1, const glm::vec4& color)
-    {
-        if (s_Data.LineVertexCount >= Renderer2DData::MaxVertices) FlushAndReset();
+	void Renderer2D::DrawLine(const glm::vec3& p0, const glm::vec3& p1, const glm::vec4& color)
+	{
+		if (s_Data.LineVertexCount >= Renderer2DData::MaxVertices - 1)
+		{
+			FlushAndReset();
+		}
 
-        s_Data.LineVertexBufferPtr->Position = p0;
-        s_Data.LineVertexBufferPtr->Color = color;
-        s_Data.LineVertexBufferPtr++;
+		s_Data.LineVertexBufferPtr->Position = p0;
+		s_Data.LineVertexBufferPtr->Color = color;
+		s_Data.LineVertexBufferPtr++;
 
-        s_Data.LineVertexBufferPtr->Position = p1;
-        s_Data.LineVertexBufferPtr->Color = color;
-        s_Data.LineVertexBufferPtr++;
+		s_Data.LineVertexBufferPtr->Position = p1;
+		s_Data.LineVertexBufferPtr->Color = color;
+		s_Data.LineVertexBufferPtr++;
 
-        s_Data.LineVertexCount += 2;
-    }
+		s_Data.LineVertexCount += 2;
+	}
 
     void Renderer2D::DrawRect(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color)
     {
@@ -609,5 +619,13 @@ namespace Cosmic
     void Renderer2D::SetStatsStatus(bool enabled) { s_Data.StatsEnabled = enabled; }
     Renderer2D::Statistics Renderer2D::GetStats() { return s_Data.Stats; }
     void Renderer2D::ResetStats() { memset(&s_Data.Stats, 0, sizeof(Statistics)); }
+
+    //////////////////////////////////////
+
+	void Renderer2D::UpdateTimeline(float ts, uint32_t width, uint32_t height)
+	{
+		s_Data.TimeAccumulator += ts;
+		s_Data.ViewportDimensions = { static_cast<float>(width), static_cast<float>(height) };
+	}
 
 } // namespace Cosmic

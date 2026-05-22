@@ -15,6 +15,12 @@ namespace Workspace
 		m_CachedFireMaterial = fireMaterial;
 		m_CachedDinoMaterial = dinoMaterial;
 
+		// Set default fallback values inside the material context maps if they aren't configured yet
+		if (m_CachedFireMaterial)
+		{
+			m_CachedFireMaterial->Set("u_Color", glm::vec4(1.0f));
+		}
+
 		// Regenerate or update the grid once we have valid assets to apply
 		RegenerateGrid();
 	}
@@ -72,6 +78,11 @@ namespace Workspace
 	{
 		Cosmic::Renderer2D::ResetStats();
 		m_CamController.OnUpdate(ts);
+
+		// FIX: Push time updates straight into the core 2D renderer staging buffers.
+		// This keeps u_Time animating inside any custom Shadertoy-style fragment shaders.
+		Cosmic::Renderer2D::UpdateTimeline(ts, 1280, 720);
+
 		m_Time += ts;
 	}
 
