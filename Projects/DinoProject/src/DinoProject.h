@@ -2,7 +2,7 @@
 
 #include <Cosmic.h>
 #include <memory>
-#include <string> // Added for robust naming/logging integration
+#include <string> 
 #include "ISimulationMode.h"
 
 namespace Workspace
@@ -23,8 +23,9 @@ namespace Workspace
 
 	private:
 		Cosmic::Ref<Cosmic::Texture2D> m_DinoTexture;
-		Cosmic::Ref<Cosmic::Material>  m_DinoMaterial;  // Default Texture Material
-		Cosmic::Ref<Cosmic::Material>  m_FireMaterial;  // Procedural Fire Material
+		Cosmic::Ref<Cosmic::Material>  m_DinoMaterial;       // Default Texture Material
+		Cosmic::Ref<Cosmic::Material>  m_FireMaterial;       // Procedural Fire Material
+		Cosmic::Ref<Cosmic::Material>  m_ShaderTestMaterial;   // Sandbox Raymarched Material
 
 		// The master scene container context used across your simulation modes
 		Cosmic::Ref<Cosmic::Scene>     m_Scene;
@@ -33,6 +34,7 @@ namespace Workspace
 		std::unique_ptr<ISimulationMode> m_RunSim;
 		std::unique_ptr<ISimulationMode> m_FlightSim;
 		std::unique_ptr<ISimulationMode> m_StressSim;
+		std::unique_ptr<ISimulationMode> m_ShaderTestSim;    // The New Sandbox State
 
 		// Changed type slightly to track the polymorphic interface directly for UI logging properties
 		ISimulationMode* m_ActiveSim = nullptr;

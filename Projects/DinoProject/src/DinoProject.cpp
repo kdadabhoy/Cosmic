@@ -2,6 +2,7 @@
 #include "DinoRunLayer.h"
 #include "DinoFlightLayer.h"
 #include "DinoStressLayer.h"
+#include "DinoShaderTestLayer.h" // Include your new shader sandbox compilation header
 #include <imgui.h>
 #include <implot.h>
 #include <filesystem>
@@ -16,12 +17,13 @@ namespace Workspace
 
 		std::string dinoPath = "assets/projects/DinoProject/Dino.png";
 
-		std::string shaderPath = "assets/projects/DinoProject/shaders/GloriousLineAlgorithm.glsl";
-		//std::string shaderPath = "assets/projects/DinoProject/shaders/DebugTexture.glsl";
+		// Restored back to native distinct pipeline shader profiles
+		std::string shaderPath = "assets/projects/DinoProject/shaders/DebugTexture.glsl";
+		std::string fireShaderPath = "assets/projects/DinoProject/shaders/FireShader.glsl";
 
-
-		std::string fireShaderPath = "assets/projects/DinoProject/shaders/GloriousLineAlgorithm.glsl";
-		//std::string fireShaderPath = "assets/projects/DinoProject/shaders/FireShader.glsl";
+		// shaderTest
+		//std::string shaderTestPath = "assets/projects/DinoProject/shaders/GloriousLineAlgorithm.glsl";
+		std::string shaderTestPath = "assets/projects/DinoProject/shaders/Octagrams.glsl";
 
 		auto VerifyAsset = [](const std::string& path, const std::string& name) -> bool
 			{
@@ -37,7 +39,8 @@ namespace Workspace
 
 		bool assetsValid = VerifyAsset(dinoPath, "Dino Texture") &&
 			VerifyAsset(shaderPath, "Debug Shader") &&
-			VerifyAsset(fireShaderPath, "Fire Shader");
+			VerifyAsset(fireShaderPath, "Fire Shader") &&
+			VerifyAsset(shaderTestPath, "Inputted Test Shader");
 
 		if (!assetsValid)
 		{
@@ -50,6 +53,7 @@ namespace Workspace
 
 		auto debugShader = Cosmic::Shader::Create(shaderPath);
 		auto fireShader = Cosmic::Shader::Create(fireShaderPath);
+		auto shaderTestShader = Cosmic::Shader::Create(shaderTestPath);
 
 		m_DinoMaterial = Cosmic::Material::Create(debugShader, "DinoMaterial");
 		if (m_DinoMaterial && m_DinoTexture)
@@ -62,20 +66,22 @@ namespace Workspace
 		m_FireMaterial = Cosmic::Material::Create(fireShader, "FireMaterial");
 		if (m_FireMaterial)
 		{
-			// Initialize default flame tint variable cache entry
 			m_FireMaterial->Set("u_Color", glm::vec4(1.0f, 0.5f, 0.2f, 1.0f));
 		}
+
+		// Allocate new procedural material context tracking container
+		m_ShaderTestMaterial = Cosmic::Material::Create(shaderTestShader, "ShaderTestMaterial");
 
 		m_Scene = Cosmic::Scene::Create();
 		CS_TRACE("DinoProject: Master scene runtime context created.");
 
 		m_RunSim = std::make_unique<DinoRunLayer>(m_Scene, m_DinoMaterial);
 		m_FlightSim = std::make_unique<DinoFlightLayer>(m_Scene, m_DinoMaterial);
-
-		// SUCCESS: Instantiation is fully decoupled from asset references!
 		m_StressSim = std::make_unique<DinoStressLayer>(m_Scene);
 
-		// Safe component registry injection configuration post-creation
+		// Initialize the structural sandbox layout mode container
+		m_ShaderTestSim = std::make_unique<DinoShaderTestLayer>(m_Scene, m_ShaderTestMaterial);
+
 		auto stressLayerPtr = static_cast<DinoStressLayer*>(m_StressSim.get());
 		if (stressLayerPtr)
 		{
@@ -90,9 +96,12 @@ namespace Workspace
 	{
 		CS_WARN("DinoProject: Detach lifecycle triggered. Releasing resource handlers...");
 
+		m_ShaderTestSim.reset();
 		m_RunSim.reset();
 		m_FlightSim.reset();
 		m_StressSim.reset();
+
+		m_ShaderTestMaterial.reset();
 		m_FireMaterial.reset();
 		m_DinoMaterial.reset();
 		m_Scene.reset();
@@ -122,11 +131,18 @@ namespace Workspace
 			m_FireMaterial->Set("u_Time", s_AccumulatedTime);
 		}
 
+		// Update global clock updates inside the automated preprocessor uniform hook bounds
+		if (m_ShaderTestMaterial)
+		{
+			m_ShaderTestMaterial->Set("u_Time", s_AccumulatedTime);
+		}
+
 		auto previousSim = m_ActiveSim;
 
 		if (Cosmic::Input::IsKeyPressed(CS_KEY_R)) m_ActiveSim = m_RunSim.get();
 		if (Cosmic::Input::IsKeyPressed(CS_KEY_F)) m_ActiveSim = m_FlightSim.get();
 		if (Cosmic::Input::IsKeyPressed(CS_KEY_T)) m_ActiveSim = m_StressSim.get();
+		if (Cosmic::Input::IsKeyPressed(CS_KEY_G)) m_ActiveSim = m_ShaderTestSim.get(); // Hook up G hotkey
 
 		if (m_ActiveSim != previousSim && m_ActiveSim != nullptr)
 		{
@@ -157,9 +173,10 @@ namespace Workspace
 			auto& re = (Cosmic::WindowResizeEvent&)e;
 			CS_TRACE("DinoProject: Catching resize notification cascade ({0}, {1})", re.GetWidth(), re.GetHeight());
 
-			if (m_RunSim)    m_RunSim->SetViewportSize((float)re.GetWidth(), (float)re.GetHeight());
-			if (m_FlightSim) m_FlightSim->SetViewportSize((float)re.GetWidth(), (float)re.GetHeight());
-			if (m_StressSim) m_StressSim->SetViewportSize((float)re.GetWidth(), (float)re.GetHeight());
+			if (m_RunSim)        m_RunSim->SetViewportSize((float)re.GetWidth(), (float)re.GetHeight());
+			if (m_FlightSim)     m_FlightSim->SetViewportSize((float)re.GetWidth(), (float)re.GetHeight());
+			if (m_StressSim)     m_StressSim->SetViewportSize((float)re.GetWidth(), (float)re.GetHeight());
+			if (m_ShaderTestSim) m_ShaderTestSim->SetViewportSize((float)re.GetWidth(), (float)re.GetHeight());
 		}
 	}
 
@@ -169,6 +186,23 @@ namespace Workspace
 
 		ImGui::Text("Dino Simulator Suite");
 		ImGui::Text("FPS: %.0f (%.3f ms)", 1.0f / m_SmoothedDeltaTime, m_SmoothedDeltaTime * 1000.0f);
+
+
+	
+		if (m_ShaderTestMaterial && ImGui::CollapsingHeader("Shader Sandbox Material", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			// Fetch the current color uniform from your shader test material
+			glm::vec4 shaderColor = m_ShaderTestMaterial->GetVector("u_Color");
+
+			// Create the ColorEdit4 UI control
+			if (ImGui::ColorEdit4("Shader Tint", &shaderColor.x))
+			{
+				// Update the material uniform when the UI changes
+				m_ShaderTestMaterial->Set("u_Color", shaderColor);
+				CS_TRACE("DinoProject: Shader Sandbox tint uniform updated -> ({0}, {1}, {2}, {3})",
+					shaderColor.r, shaderColor.g, shaderColor.b, shaderColor.a);
+			}
+		}
 
 		if (m_DinoMaterial && ImGui::CollapsingHeader("Global Dino Material", ImGuiTreeNodeFlags_DefaultOpen))
 		{
@@ -190,6 +224,7 @@ namespace Workspace
 			}
 		}
 
+
 		ImGui::Separator();
 		ImGui::Text("Switch Mode:");
 
@@ -200,6 +235,8 @@ namespace Workspace
 		if (ImGui::Button("Flight [F]"))  m_ActiveSim = m_FlightSim.get();
 		ImGui::SameLine();
 		if (ImGui::Button("Stress [T]"))  m_ActiveSim = m_StressSim.get();
+		ImGui::SameLine();
+		if (ImGui::Button("Shader Sandbox [G]")) m_ActiveSim = m_ShaderTestSim.get();
 
 		if (m_ActiveSim != previousSim && m_ActiveSim != nullptr)
 		{
