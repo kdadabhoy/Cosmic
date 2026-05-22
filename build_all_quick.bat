@@ -2,7 +2,7 @@
 SETLOCAL EnableDelayedExpansion
 CLS
 echo ======================================================
-echo            Cosmic Engine - Full Universal Build
+echo            Cosmic Engine - Quick Full Universal Build
 echo ======================================================
 
 @echo off
