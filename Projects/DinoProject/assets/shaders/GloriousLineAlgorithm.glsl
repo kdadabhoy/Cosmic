@@ -1,3 +1,27 @@
+#type vertex
+#version 330 core
+
+layout(location = 0) in vec3 a_Position;
+layout(location = 1) in vec4 a_Color;
+layout(location = 2) in vec2 a_TexCoord;
+layout(location = 3) in float a_TexIndex;
+layout(location = 4) in float a_TilingFactor;
+
+// Preprocessor Test 1: Implicit engine uniform detection
+// The engine must scan this block and recognize that 'u_ViewProjection' is explicitly 
+// declared here. It should NOT inject a duplicate uniform header declaration.
+uniform mat4 u_ViewProjection;
+
+out vec4 v_Color;
+out vec2 v_TexCoord;
+
+void main()
+{
+    v_Color = a_Color;
+    v_TexCoord = a_TexCoord;
+    gl_Position = u_ViewProjection * vec4(a_Position, 1.0);
+}
+
 #type fragment
 #version 330 core
 
@@ -13,13 +37,14 @@ Optimized for multi-instance ECS layout grids. Bypasses raw screenspace hardware
 derivatives to prevent coordinate-space blowing out on sub-unit meshes.
 */
 
-// Clamp [0..1] range
+// Preprocessor Test 2: Substring isolation lookup logic safety validation
+// The preprocessor must NOT match these names inside strings/comments and try to inject them.
+// False positive flags to test: "u_Time", "u_ViewportSize", "u_ViewProjection"
+
 #define saturate(a) clamp(a, 0.0, 1.0)
 
-// Basically a triangle wave
 float repeat(float x) { return abs(fract(x*0.5+0.5)-0.5)*2.0; }
 
-// Signed distance field algorithm that outputs proximity bounds from line vectors
 float LineDistField(vec2 uv, vec2 pA, vec2 pB, vec2 thick, float rounded, float dashOn) {
     rounded = min(thick.y, rounded);
     vec2 mid = (pB + pA) * 0.5;
@@ -38,7 +63,8 @@ float LineDistField(vec2 uv, vec2 pA, vec2 pB, vec2 thick, float rounded, float 
     float dist = length(vec2(max(0.0, distx), max(0.0,disty))) - rounded;
     dist = min(dist, max(distx, disty));
 
-    // Animated dashed lines
+    // Preprocessor Test 3: Macro token replacements
+    // The engine's injection blocks should define 'iTime' mapping to 'u_Time'
     float dashScale = 2.0 * thick.y;
     float dash = (repeat(dpx / dashScale + iTime) - 0.5) * dashScale;
     dist = max(dist, dash - (1.0 - dashOn * 1.0) * 10000.0);
@@ -46,10 +72,9 @@ float LineDistField(vec2 uv, vec2 pA, vec2 pB, vec2 thick, float rounded, float 
     return dist;
 }
 
-// BATCH-SAFE FUNCTIONS: Uses smooth fixed-step boundaries to keep shapes sharp inside tiny cells
 float FillLineFixed(vec2 uv, vec2 pA, vec2 pB, vec2 thick, float rounded) {
     float df = LineDistField(uv, pA, pB, thick, rounded, 0.0);
-    return saturate(df / 0.08); // Stable procedural gradient edge
+    return saturate(df / 0.08);
 }
 
 float FillLineDashFixed(vec2 uv, vec2 pA, vec2 pB, vec2 thick, float rounded) {
@@ -68,12 +93,14 @@ void DrawPointFixed(vec2 uv, vec2 p, inout vec3 col) {
 
 void mainImage( out vec4 fragColor, in vec2 fragCoord )
 {
-    // Get local coordinate mapping derived from C++ structural preprocessor strings
+    // Preprocessor Test 4: Implicit uniform extraction
+    // Your engine preprocessor must parse 'u_ViewportSize', find no declaration, 
+    // and inject: 'uniform vec2 u_ViewportSize;' in the auto-generated preamble.
     vec2 uv = fragCoord / u_ViewportSize;
-    uv -= 0.5;      // Center origin perfectly in middle of individual sprite quad
-    uv *= 16.0;     // Scale local grid array space out evenly
+    uv -= 0.5;
+    uv *= 16.0;
 
-    // Rotational transformation equations
+    // Preprocessor Test 5: iTime token resolution usage validation
     vec2 rotA = vec2(cos(iTime*0.82), sin(iTime*0.82));
     vec2 rotB = vec2(sin(iTime*0.82), -cos(iTime*0.82));
     
@@ -82,16 +109,13 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
     vec2 pC = pA + vec2(0.0, 4.0);
     vec2 pD = pB + vec2(0.0, 4.0);
 
-    // Initial canvas color context (White baseline)
     vec3 finalColor = vec3(1.0);
 
-    // Sample Geometry Pipeline passes utilizing normalized cell scaling properties
     finalColor *= FillLineFixed(uv, pA, pB, vec2(0.1, 0.1), 0.0);
     finalColor *= DrawOutlineFixed(uv, pA, pB, vec2(2.0), 1.0, 0.08);
     finalColor *= DrawOutlineFixed(uv, pA, pB, vec2(4.0), 0.0, 0.08);
     finalColor *= DrawOutlineFixed(uv, pA, pB, vec2(6.0), 6.0, 0.4);
     
-    // Dashed geometric constraints inside localized quad elements
     finalColor *= FillLineDashFixed(uv, pC, pD, vec2(0.0, 0.3), 0.0);
     finalColor *= FillLineDashFixed(uv, pC + vec2(0.0, 2.0), pD + vec2(0.0, 2.0), vec2(0.125), 1.0);
     
@@ -99,16 +123,20 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
     finalColor *= FillLineFixed(uv, pA - vec2(4.0, 0.0), pC - vec2(4.0, 0.0) + rotA, vec2(0.125), 1.0);
     finalColor *= FillLineFixed(uv, pB + vec2(4.0, 0.0), pD + vec2(4.0, 0.0) - rotA, vec2(0.125), 1.0);
 
-    // Debug anchor vertex representations
     DrawPointFixed(uv, pA, finalColor);
     DrawPointFixed(uv, pB, finalColor);
     DrawPointFixed(uv, pC, finalColor);
     DrawPointFixed(uv, pD, finalColor);
 
-    // Dynamic grid alignments scaled precisely to cell constraints
     finalColor -= vec3(1.0, 1.0, 0.2) * saturate(repeat(uv.x * 2.0) - 0.92) * 2.0;
     finalColor -= vec3(1.0, 1.0, 0.2) * saturate(repeat(uv.y * 2.0) - 0.92) * 2.0;
 
-    // Output final composition using gamma space curve correction
-    fragColor = vec4(sqrt(saturate(finalColor)), 1.0);
+    // Preprocessor Test 6: Verify second macro resolution ('iResolution')
+    // Ensuring vec3 translation layout rules evaluate successfully inside equations
+    vec3 screenCheck = iResolution;
+    if(screenCheck.x > 0.0) {
+        fragColor = vec4(sqrt(saturate(finalColor)), 1.0);
+    } else {
+        fragColor = vec4(1.0, 0.0, 1.0, 1.0); // Fail safe magenta tint if iResolution drops out
+    }
 }
