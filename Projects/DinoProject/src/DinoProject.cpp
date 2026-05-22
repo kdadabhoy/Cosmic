@@ -24,7 +24,8 @@ namespace Workspace
 		// shaderTest
 		//std::string shaderTestPath = "assets/projects/DinoProject/shaders/GloriousLineAlgorithm.glsl";
 		//std::string shaderTestPath = "assets/projects/DinoProject/shaders/Octagrams.glsl";
-		std::string shaderTestPath = "assets/projects/DinoProject/shaders/FractalPyramid.glsl";
+		//std::string shaderTestPath = "assets/projects/DinoProject/shaders/FractalPyramid.glsl";
+		std::string shaderTestPath = "assets/projects/DinoProject/shaders/CyberFuji.glsl";
 
 
 

@@ -31,12 +31,17 @@ namespace Workspace
 
 	void DinoShaderTestLayer::OnRender()
 	{
+		float aspectRatio = m_ViewportSize.x / m_ViewportSize.y;
+		// Scale the quad to match the screen's aspect ratio
+		float quadWidth = 20.0f * aspectRatio;
+		float quadHeight = 20.0f;
+
 		// BeginScene uses the camera updated by the controller's zoom/pan state
 		Cosmic::Renderer2D::BeginScene(m_CameraController.GetCamera());
 
 		if (m_FullscreenMaterial)
 		{
-			Cosmic::Renderer2D::DrawQuad(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec2(20.0f, 20.0f), m_FullscreenMaterial);
+			Cosmic::Renderer2D::DrawQuad(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec2(quadWidth, quadHeight), m_FullscreenMaterial);
 		}
 
 		Cosmic::Renderer2D::EndScene();
