@@ -15,8 +15,13 @@ namespace Workspace
 		CS_INFO("DinoProject: Initializing simulation layers...");
 
 		std::string dinoPath = "assets/projects/DinoProject/Dino.png";
-		std::string shaderPath = "assets/projects/DinoProject/shaders/DebugTexture.glsl";
-		std::string fireShaderPath = "assets/projects/DinoProject/shaders/FireShader.glsl";
+
+		std::string shaderPath = "assets/projects/DinoProject/shaders/GloriousLineAlgorithm.glsl";
+		//std::string shaderPath = "assets/projects/DinoProject/shaders/DebugTexture.glsl";
+
+
+		std::string fireShaderPath = "assets/projects/DinoProject/shaders/GloriousLineAlgorithm.glsl";
+		//std::string fireShaderPath = "assets/projects/DinoProject/shaders/FireShader.glsl";
 
 		auto VerifyAsset = [](const std::string& path, const std::string& name) -> bool
 			{
