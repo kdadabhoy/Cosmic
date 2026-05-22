@@ -126,11 +126,8 @@ namespace Cosmic
 		// =================================================================
 		if (pos == std::string::npos)
 		{
-			CS_TRACE("Shader Preprocessor: Parsing file without direct engine '#type' tags...");
 			if (source.find("mainImage") != std::string::npos || source.find("iTime") != std::string::npos)
 			{
-				CS_WARN("Shader Preprocessor [Fallback 1 Triggered]: Detected pure Shadertoy asset. Auto-generating pipeline stages...");
-
 				std::string autoFragmentPreamble = "\n";
 				autoFragmentPreamble += "uniform mat4 u_ViewProjection;\n";
 				autoFragmentPreamble += "uniform float u_Time;\n";
@@ -148,7 +145,7 @@ namespace Cosmic
 				return shaderSources;
 			}
 
-			CS_ERROR("Shader Preprocessor Critical Failure: File contains no '#type' configurations and lacks Shadertoy compatibility signatures ('mainImage' / 'iTime'). Returning empty map.");
+			CS_ERROR("Shader Preprocessor Critical Failure: File contains no '#type' configurations and lacks Shadertoy compatibility signatures.");
 			return shaderSources;
 		}
 
@@ -160,12 +157,18 @@ namespace Cosmic
 		{
 			size_t eol = source.find_first_of("\r\n", pos);
 			size_t begin = pos + typeTokenLength + 1;
+
+			// Sanity Check: Ensure we didn't hit the end of the file or an malformed token line
+			if (eol == std::string::npos || eol <= begin)
+			{
+				CS_CORE_ERROR("Shader Preprocessor Syntax Error: Malformed '#type' identifier line.");
+				return shaderSources;
+			}
+
 			std::string typeStr = source.substr(begin, eol - begin);
 
 			typeStr.erase(std::remove_if(typeStr.begin(), typeStr.end(), ::isspace), typeStr.end());
 			GLenum shaderType = ShaderTypeFromString(typeStr);
-
-			CS_TRACE("Shader Preprocessor: Found valid token marker block processing target type: {0}", typeStr);
 
 			size_t nextLinePos = source.find_first_not_of("\r\n", eol);
 			pos = source.find(typeToken, nextLinePos);
@@ -175,7 +178,6 @@ namespace Cosmic
 
 			// --- ROCK-SOLID COMMENT INSULATION ---
 			std::string cleanSearchSource = rawSource;
-			// Strip out block comments /* ... */
 			size_t blockStart = cleanSearchSource.find("/*");
 			while (blockStart != std::string::npos)
 			{
@@ -184,20 +186,25 @@ namespace Cosmic
 				else break;
 				blockStart = cleanSearchSource.find("/*");
 			}
-			// Strip out line comments // ...
 			size_t lineStart = cleanSearchSource.find("//");
 			while (lineStart != std::string::npos)
 			{
 				size_t lineEnd = cleanSearchSource.find_first_of("\r\n", lineStart);
-				if (lineEnd != std::string::npos) cleanSearchSource.erase(lineStart, lineEnd - lineStart);
-				else break;
+				if (lineEnd != std::string::npos)
+				{
+					cleanSearchSource.erase(lineStart, lineEnd - lineStart);
+				}
+				else
+				{
+					cleanSearchSource.erase(lineStart); // Cleanly erase everything left to the end
+					break;
+				}
 				lineStart = cleanSearchSource.find("//");
 			}
 			// -----------------------------------------------------------------
 
 			std::string enginePreamble = "\n";
 
-			// STEP 2: Scan for standard uniform register definitions
 			struct EngineUniform
 			{
 				std::string exactUniformName;
@@ -214,7 +221,6 @@ namespace Cosmic
 			for (const auto& uniform : globalUniformRegistry)
 			{
 				bool usesFeature = false;
-				// FIXED: Scan cleanSearchSource instead of rawSource
 				if (cleanSearchSource.find(uniform.exactUniformName) != std::string::npos)
 				{
 					usesFeature = true;
@@ -223,7 +229,6 @@ namespace Cosmic
 				{
 					for (const auto& key : uniform.compatibilityKeys)
 					{
-						// FIXED: Scan cleanSearchSource instead of rawSource
 						if (cleanSearchSource.find(key) != std::string::npos)
 						{
 							usesFeature = true;
@@ -233,7 +238,6 @@ namespace Cosmic
 				}
 
 				bool alreadyDeclared = false;
-				// FIXED: Scan cleanSearchSource instead of rawSource
 				size_t namePos = cleanSearchSource.find(uniform.exactUniformName);
 				while (namePos != std::string::npos)
 				{
@@ -251,55 +255,44 @@ namespace Cosmic
 				{
 					if (uniform.exactUniformName == "u_ViewProjection" && shaderType != GL_VERTEX_SHADER)
 					{
-						// Avoid vertex transformation declarations inside fragment stages
 						continue;
 					}
-					CS_TRACE("Shader Preprocessor: Auto-registering engine baseline binding definition: {0}", uniform.exactUniformName);
 					enginePreamble += uniform.glslDeclaration;
 				}
 			}
 
-			// STEP 3: Safe Batch interface verification (Accounts for wrapper usage)
 			if (shaderType == GL_FRAGMENT_SHADER)
 			{
-				// FIXED: Scan cleanSearchSource instead of rawSource
 				if (cleanSearchSource.find("v_TexCoord") == std::string::npos)
 				{
-					CS_TRACE("Shader Preprocessor: Injecting layout standard 'in vec2 v_TexCoord' interface linkage.");
 					enginePreamble += "in vec2 v_TexCoord;\n";
 				}
 				if (cleanSearchSource.find("v_Color") == std::string::npos)
 				{
-					CS_TRACE("Shader Preprocessor: Injecting layout standard 'in vec4 v_Color' interface linkage.");
 					enginePreamble += "in vec4 v_Color;\n";
 				}
 				if (cleanSearchSource.find("color") == std::string::npos)
 				{
-					CS_TRACE("Shader Preprocessor: Asset missing explicit location output declaration target. Injecting safety default 'layout(location = 0) out vec4 color' binding frame.");
 					enginePreamble += "layout(location = 0) out vec4 color;\n";
 				}
 			}
 
-			// STEP 1-B: Check for Shadertoy variables and configure macros/wrappers safely
-			// FIXED: Scan cleanSearchSource instead of rawSource
 			bool isShadertoy = (cleanSearchSource.find("iTime") != std::string::npos || cleanSearchSource.find("mainImage") != std::string::npos);
 			std::string shadertoyWrapper = "";
 
 			if (isShadertoy)
 			{
-				CS_TRACE("Shader Preprocessor: Found active Shadertoy compatibility variables inside native block layer.");
 				enginePreamble += "#define iTime u_Time\n";
 				enginePreamble += "#define iResolution vec3(u_ViewportSize, 1.0)\n";
 
 				if (shaderType == GL_FRAGMENT_SHADER && cleanSearchSource.find("mainImage") != std::string::npos)
 				{
-					CS_TRACE("Shader Preprocessor: Injecting missing 'void main()' link wrapper target onto Fragment pass.");
 					shadertoyWrapper = "\nvoid main(){\n\tvec2 shadertoyFragCoord = v_TexCoord * u_ViewportSize;\n\tvec4 shadertoyFragColor;\n\tmainImage(shadertoyFragColor, shadertoyFragCoord);\n\tcolor = shadertoyFragColor * v_Color;\n}\n";
 				}
 			}
 
 			// =================================================================
-			// STEP 4: Reconstruction Assembly (Uses original rawSource to preserve comments!)
+			// STEP 4: Reconstruction Assembly
 			// =================================================================
 			size_t versionPos = rawSource.find("#version");
 			if (versionPos != std::string::npos)
@@ -317,7 +310,6 @@ namespace Cosmic
 			}
 			else
 			{
-				CS_WARN("Shader Preprocessor Warning: Core parsing block completely lacks explicit '#version' profiles. Forcing fallback target configuration '#version 450 core'.");
 				rawSource = "#version 450 core\n" + enginePreamble + "\n" + rawSource + shadertoyWrapper;
 			}
 
@@ -329,22 +321,26 @@ namespace Cosmic
 		// =================================================================
 		if (shaderSources.find(GL_VERTEX_SHADER) == shaderSources.end() && shaderSources.find(GL_FRAGMENT_SHADER) != shaderSources.end())
 		{
-			CS_WARN("Shader Preprocessor [Fallback 2 Triggered]: Found explicitly tagged fragment token but no vertex tag. Injecting default vertex pipeline...");
 			shaderSources[GL_VERTEX_SHADER] = autoVertexShader;
 		}
 		else if (shaderSources.find(GL_FRAGMENT_SHADER) == shaderSources.end() && shaderSources.find(GL_VERTEX_SHADER) != shaderSources.end())
 		{
-			CS_ERROR("Shader Preprocessor Diagnostic Failure: Context map generated a valid Vertex pipeline block, but totally omitted a target Fragment block stage.");
+			CS_ERROR("Shader Preprocessor Diagnostic Failure: Generated a valid Vertex pipeline block, but missing target Fragment block stage.");
 		}
 
-		// =================================================================
-		// DEBUGGING SYSTEM: PRE-COMPILATION SOURCE DUMP
-		// =================================================================
-		CS_TRACE("--------------------- PREPROCESSED SHADER DUMP BEGIN ---------------------");
+		return shaderSources;
+	}
+
+	/////////////////////////////////////////////////////////////////////////////////
+
+	// Helper to dump shader source on failure instead of spamming standard initialization logs
+	void OpenGLShader::DumpPreprocessedShader(const std::unordered_map<GLenum, std::string>& shaderSources)
+	{
+		CS_ERROR("--------------------- PREPROCESSED SHADER DUMP BEGIN ---------------------");
 		for (const auto& [stage, sourceText] : shaderSources)
 		{
 			std::string stageName = (stage == GL_VERTEX_SHADER) ? "VERTEX SHADER" : "FRAGMENT SHADER";
-			CS_TRACE("==================== STAGE: {0} ====================", stageName);
+			CS_ERROR("==================== STAGE: {0} ====================", stageName);
 
 			std::stringstream ss(sourceText);
 			std::string line;
@@ -353,12 +349,10 @@ namespace Cosmic
 			{
 				char linePrefix[32];
 				sprintf(linePrefix, "[Line %03d]: ", lineCounter++);
-				CS_TRACE("{0}{1}", linePrefix, line);
+				CS_ERROR("{0}{1}", linePrefix, line);
 			}
 		}
-		CS_TRACE("--------------------- PREPROCESSED SHADER DUMP END -----------------------");
-
-		return shaderSources;
+		CS_ERROR("--------------------- PREPROCESSED SHADER DUMP END -----------------------");
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////
@@ -399,11 +393,17 @@ namespace Cosmic
 				std::vector<GLchar> infoLog(maxLength);
 				glGetShaderInfoLog(shader, maxLength, &maxLength, &infoLog[0]);
 
-				glDeleteShader(shader);
-
-				CS_CORE_ERROR("Shader compilation failure!");
+				CS_CORE_ERROR("Shader compilation failure in stage: {0}", type == GL_VERTEX_SHADER ? "VERTEX" : "FRAGMENT");
 				CS_CORE_ERROR("{0}", infoLog.data());
-				break;
+
+				// Trigger the source code dump to pinpoint line number issues
+				DumpPreprocessedShader(shaderSources);
+
+				// Clean up resources allocated up to this point
+				glDeleteShader(shader);
+				for (auto id : shaderIDs) glDeleteShader(id);
+				glDeleteProgram(program);
+				return; // Exit completely; do not attempt to link a broken shader pipeline
 			}
 
 			glAttachShader(program, shader);
@@ -422,11 +422,14 @@ namespace Cosmic
 			std::vector<GLchar> infoLog(maxLength);
 			glGetProgramInfoLog(program, maxLength, &maxLength, &infoLog[0]);
 
-			glDeleteProgram(program);
-			for (auto id : shaderIDs) glDeleteShader(id);
-
 			CS_CORE_ERROR("Shader link failure!");
 			CS_CORE_ERROR("{0}", infoLog.data());
+
+			// Trigger dump on link validation failure
+			DumpPreprocessedShader(shaderSources);
+
+			glDeleteProgram(program);
+			for (auto id : shaderIDs) glDeleteShader(id);
 			return;
 		}
 

@@ -61,6 +61,10 @@ namespace Cosmic
 		OpenGLShader(const std::string& filepath);
 		virtual ~OpenGLShader();
 
+		// Prevent shallow copies of GPU Resource Handles 
+		OpenGLShader(const OpenGLShader&) = delete;
+		OpenGLShader& operator=(const OpenGLShader&) = delete;
+
 		////////////////////////////////
 		// State Management
 		///////////////////////////////
@@ -120,6 +124,9 @@ namespace Cosmic
 	private: 
 		std::unordered_map<std::string, GLint>	m_UniformLocationCache;
 		GLint GetUniformLocation(const std::string& name);
+
+		void DumpPreprocessedShader(const std::unordered_map<GLenum, std::string>& shaderSources);
+
 
 
 
