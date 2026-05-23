@@ -9,6 +9,7 @@
 ## Table of Contents
 
 ### Part I — Client Developer Guide
+
 1. [Getting Started](#1-getting-started)
 2. [Memory Management](#2-memory-management)
 3. [Application Lifecycle](#3-application-lifecycle)
@@ -26,6 +27,7 @@
 15. [Complete API Reference Tables](#15-complete-api-reference-tables)
 
 ### Part II — Engine Internals
+
 16. [Source File Map](#16-source-file-map)
 17. [The OpenGL Graphics Pipeline](#17-the-opengl-graphics-pipeline)
 18. [Hardware Abstraction Architecture](#18-hardware-abstraction-architecture)
@@ -33,11 +35,13 @@
 20. [The DLL Plugin System](#20-the-dll-plugin-system)
 21. [Shader Preprocessing System](#21-shader-preprocessing-system)
 22. [Build System](#22-build-system)
+23. [Event System — Implementation Details](#23-event-system--implementation-details)
 
 ### Part III — Code Review
-23. [Refactor Candidates](#23-refactor-candidates)
-24. [Missing Implementations](#24-missing-implementations)
-25. [Technical Debt & Open Issues](#25-technical-debt--open-issues)
+
+24. [Refactor Candidates](#24-refactor-candidates)
+25. [Missing Implementations](#25-missing-implementations)
+26. [Technical Debt & Open Issues](#26-technical-debt--open-issues)
 
 ---
 
@@ -73,6 +77,7 @@ YourSDKRoot/
 ### Minimal Project Skeleton
 
 **YourProject.h**
+
 ```cpp
 #pragma once
 #include <Cosmic.h>
@@ -94,6 +99,7 @@ namespace Workspace
 ```
 
 **YourProject.cpp**
+
 ```cpp
 #include "YourProject.h"
 #include <imgui.h>
@@ -149,10 +155,10 @@ Build with `build.bat`, then launch the engine and select your project from the 
 
 Cosmic wraps standard C++ smart pointers into two named aliases to enforce explicit ownership rules and prevent ambiguity.
 
-| Alias | Underlying Type | Rule |
-|-------|----------------|------|
-| `Scope<T>` | `std::unique_ptr<T>` | **Single owner.** One system holds and destroys this. Use for windows, layers, dedicated sub-modules. |
-| `Ref<T>` | `std::shared_ptr<T>` | **Shared owner.** Multiple systems hold a reference; destroyed when the last holder releases it. Use for textures, shaders, materials, scenes. |
+| Alias      | Underlying Type      | Rule                                                                                                                                           |
+| ---------- | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Scope<T>` | `std::unique_ptr<T>` | **Single owner.** One system holds and destroys this. Use for windows, layers, dedicated sub-modules.                                          |
+| `Ref<T>`   | `std::shared_ptr<T>` | **Shared owner.** Multiple systems hold a reference; destroyed when the last holder releases it. Use for textures, shaders, materials, scenes. |
 
 Always use the factory helpers — never call `new` into a smart pointer directly:
 
@@ -300,69 +306,275 @@ app.PushOverlay(new MyDebugOverlay()); // always on top
 
 ## 5. The Event System
 
-Events are reactive signals fired by OS hardware and propagated top-to-bottom through the `LayerStack`. Any layer can consume an event to stop it propagating further.
+The event system is **reactive and propagating**. When the OS fires a hardware signal — a key press, a mouse click, a window resize — the engine packages it into a typed `Event` object and walks it down the `LayerStack` from top to bottom. Any layer can mark an event as "handled" (`e.Handled = true`) to stop it from reaching layers below.
 
-<!-- RECOMMENDED GRAPHIC: Event flow diagram — OS signal → Application::OnEvent → LayerStack top-to-bottom, with "Handled?" check at each layer -->
+This is different from [Input Polling (Section 6)](#6-input-polling), which queries the current hardware state on demand. Use events for one-shot reactions ("the user just pressed Escape"), use polling for continuous per-frame checks ("is W held down right now?").
 
-### Handling Events
+### How Events Flow Through the Stack
+
+```
+OS Hardware Signal
+        │
+        ▼
+Application::OnEvent(e)
+        │
+        ├── WindowCloseEvent  ──► Application::OnWindowClose()   (consumed here)
+        ├── WindowResizeEvent ──► Application::OnWindowResize()  (consumed here)
+        │
+        ▼  (all other events propagate through the layer stack)
+        │
+        ▼  rbegin() → rend()  (TOP OF STACK FIRST)
+┌───────────────────┐
+│   ImGuiLayer      │  ← receives events first (it's an overlay)
+│  (overlay)        │    blocks mouse/keyboard when ImGui panels are focused
+└────────┬──────────┘
+         │ e.Handled == true? → STOP
+         ▼
+┌───────────────────┐
+│  WorkspaceLayer   │  ← forwards to client DLL layer
+│  (layer)          │
+└────────┬──────────┘
+         │ e.Handled == true? → STOP
+         ▼
+┌───────────────────┐
+│  Your Game Layer  │  ← your OnEvent() runs here
+│  (inside DLL)     │
+└───────────────────┘
+```
+
+> **Key rule:** Events flow top-to-bottom through the stack. The engine reverses the layer iteration order for events (overlays first) so UI layers can intercept clicks before the game world sees them. Set `e.Handled = true` to stop propagation.
+
+### When ImGui Blocks Your Events
+
+`ImGuiLayer` automatically blocks mouse and keyboard events when an ImGui window is focused, so the game world never fires a weapon or moves the camera because the user clicked a UI button. This is controlled by `WorkspaceLayer`:
+
+```cpp
+// WorkspaceLayer sets this every frame based on viewport focus:
+Application::Get().GetImGuiLayer()->BlockEvents(!m_ViewportFocused && !m_ViewportHovered);
+```
+
+When your game viewport is focused, `BlockEvents(false)` — ImGui steps back and your game layer receives all input. When the inspector panel is focused instead, `BlockEvents(true)` — ImGui eats mouse/keyboard events and your game never sees them.
+
+**You don't need to manage this.** It's automatic. Just make sure your layer is mounted inside the `WorkspaceLayer` viewport (which happens automatically through the DLL plugin system).
+
+### Handling Events in Your Layer
+
+Override `OnEvent` and use `EventDispatcher` to route specific event types to dedicated handler functions:
 
 ```cpp
 void MyLayer::OnEvent(Cosmic::Event& e)
 {
     Cosmic::EventDispatcher dispatcher(e);
 
-    // Route specific event types to dedicated handlers
+    // Route specific types to handlers
     dispatcher.Dispatch<Cosmic::KeyPressedEvent>(
         GLCORE_BIND_EVENT_FN(MyLayer::OnKeyPressed));
 
-    dispatcher.Dispatch<Cosmic::MouseScrolledEvent>(
-        GLCORE_BIND_EVENT_FN(MyLayer::OnMouseScrolled));
+    dispatcher.Dispatch<Cosmic::MouseButtonPressedEvent>(
+        GLCORE_BIND_EVENT_FN(MyLayer::OnMouseClicked));
+
+    dispatcher.Dispatch<Cosmic::WindowResizeEvent>(
+        GLCORE_BIND_EVENT_FN(MyLayer::OnWindowResize));
 }
 
-// Return true to consume the event (stops propagation to lower layers)
-// Return false to pass it down
+// Handler signature: takes the specific event type, returns bool
+// true  = consumed (stops propagating to layers below)
+// false = not consumed (passes through to lower layers)
 bool MyLayer::OnKeyPressed(Cosmic::KeyPressedEvent& e)
 {
     if (e.GetKeyCode() == CS_KEY_ESCAPE)
     {
         TogglePauseMenu();
-        return true; // consumed
+        return true; // consumed — lower layers won't see this
+    }
+    return false; // not consumed — passes through
+}
+
+bool MyLayer::OnMouseClicked(Cosmic::MouseButtonPressedEvent& e)
+{
+    if (e.GetMouseButton() == CS_MOUSE_BUTTON_LEFT)
+    {
+        HandleLeftClick();
+    }
+    return false; // let other layers also respond if needed
+}
+
+bool MyLayer::OnWindowResize(Cosmic::WindowResizeEvent& e)
+{
+    m_Camera.OnResize((float)e.GetWidth(), (float)e.GetHeight());
+    return false; // don't consume — other layers may also need resize
+}
+```
+
+> **Important:** `Dispatch<T>()` returns `true` if the event _type_ matched, not necessarily if your handler consumed it. What matters for propagation is the `bool` your handler function returns — that value is written to `e.Handled`.
+
+### Forwarding Events to Sub-Systems
+
+If your layer owns sub-systems that need events (like a camera controller or a simulation sub-layer), forward the event to them first, then handle your own logic. Always check `e.Handled` before doing further work:
+
+```cpp
+void MyLayer::OnEvent(Cosmic::Event& e)
+{
+    // Forward to sub-systems first
+    m_CameraController.OnEvent(e);
+    if (e.Handled) return; // camera consumed it (e.g. scroll zoom)
+
+    // Then handle your own events
+    Cosmic::EventDispatcher dispatcher(e);
+    dispatcher.Dispatch<Cosmic::KeyPressedEvent>(
+        GLCORE_BIND_EVENT_FN(MyLayer::OnKeyPressed));
+}
+```
+
+If you have multiple simulation modes / sub-layers, only forward to the **active** one. Inactive modes shouldn't respond to input. However, if they need to stay synchronized on non-input events (like `WindowResizeEvent`), call their update methods directly rather than routing the event:
+
+```cpp
+void MyLayer::OnEvent(Cosmic::Event& e)
+{
+    // Active sim handles all input
+    if (m_ActiveSim) m_ActiveSim->OnEvent(e);
+    if (e.Handled) return;
+
+    // Window resize must go to ALL sims so their cameras stay correct
+    Cosmic::EventDispatcher dispatcher(e);
+    dispatcher.Dispatch<Cosmic::WindowResizeEvent>(
+        GLCORE_BIND_EVENT_FN(MyLayer::OnWindowResize));
+}
+
+bool MyLayer::OnWindowResize(Cosmic::WindowResizeEvent& e)
+{
+    float w = (float)e.GetWidth();
+    float h = (float)e.GetHeight();
+
+    // Update ALL sims, not just the active one
+    if (m_SimA) m_SimA->SetViewportSize(w, h);
+    if (m_SimB) m_SimB->SetViewportSize(w, h);
+    if (m_SimC) m_SimC->SetViewportSize(w, h);
+
+    return false; // don't consume — let it propagate
+}
+```
+
+### Common Event Patterns
+
+**Pause on Escape, resume on Escape:**
+
+```cpp
+bool MyLayer::OnKeyPressed(Cosmic::KeyPressedEvent& e)
+{
+    if (e.GetKeyCode() == CS_KEY_ESCAPE)
+    {
+        m_Paused = !m_Paused;
+        return true;
     }
     return false;
 }
+```
 
-bool MyLayer::OnMouseScrolled(Cosmic::MouseScrolledEvent& e)
+**Jump on Space, ignore held repeats:**
+
+```cpp
+bool MyLayer::OnKeyPressed(Cosmic::KeyPressedEvent& e)
 {
-    m_Camera.Zoom(e.GetYOffset());
+    // GetRepeatCount() > 0 means the key is being held, not freshly pressed
+    if (e.GetKeyCode() == CS_KEY_SPACE && e.GetRepeatCount() == 0)
+    {
+        if (m_IsGrounded)
+        {
+            m_VelocityY = 8.0f;
+            m_IsGrounded = false;
+            return true;
+        }
+    }
     return false;
 }
 ```
 
-### Blocking events from lower layers
+**Click to select an entity:**
 
 ```cpp
-void UILayer::OnEvent(Cosmic::Event& e)
+bool MyLayer::OnMouseClicked(Cosmic::MouseButtonPressedEvent& e)
 {
-    // If the cursor is over an ImGui panel, eat mouse events
-    // so the game world doesn't fire a weapon behind the UI
-    if (m_PanelHovered && e.IsInCategory(Cosmic::EventCategoryMouse))
-        e.Handled = true;
+    if (e.GetMouseButton() != CS_MOUSE_BUTTON_LEFT) return false;
+
+    glm::vec2 screenPos = Cosmic::Input::GetMousePosition();
+    // Convert to world space (see Section 10 on camera)
+    glm::vec4 ndc = {
+        (screenPos.x / m_ViewportSize.x) * 2.f - 1.f,
+        1.f - (screenPos.y / m_ViewportSize.y) * 2.f,
+        0.f, 1.f
+    };
+    glm::mat4 invVP = glm::inverse(m_Camera.GetCamera().GetViewProjectionMatrix());
+    glm::vec4 worldPos = invVP * ndc;
+
+    m_SelectedEntity = FindEntityAt({worldPos.x, worldPos.y});
+    return true; // consume — clicked in viewport, nothing else needs this
 }
 ```
 
-### Event Type Reference
+**Smooth camera zoom via scroll:**
 
-| Event Class | Category Flags | Key Data |
-|------------|---------------|----------|
-| `WindowResizeEvent` | `EventCategoryApplication` | `GetWidth()`, `GetHeight()` |
-| `WindowCloseEvent` | `EventCategoryApplication` | — |
-| `KeyPressedEvent` | `EventCategoryKeyboard \| EventCategoryInput` | `GetKeyCode()`, `GetRepeatCount()` |
-| `KeyReleasedEvent` | `EventCategoryKeyboard \| EventCategoryInput` | `GetKeyCode()` |
-| `KeyTypedEvent` | `EventCategoryKeyboard \| EventCategoryInput` | `GetKeyCode()` (character value) |
-| `MouseMovedEvent` | `EventCategoryMouse \| EventCategoryInput` | `GetX()`, `GetY()` |
-| `MouseScrolledEvent` | `EventCategoryMouse \| EventCategoryInput` | `GetXOffset()`, `GetYOffset()` |
-| `MouseButtonPressedEvent` | `EventCategoryMouse \| EventCategoryInput` | `GetMouseButton()` |
-| `MouseButtonReleasedEvent` | `EventCategoryMouse \| EventCategoryInput` | `GetMouseButton()` |
+```cpp
+// The OrthographicCameraController handles this automatically in its OnEvent.
+// Just forward the event:
+void MyLayer::OnEvent(Cosmic::Event& e)
+{
+    m_CameraController.OnEvent(e); // handles MouseScrolledEvent internally
+    if (e.Handled) return;
+    // ... your other event handling
+}
+// Note: the camera controller does NOT consume (mark Handled) scroll events,
+// so they will still propagate. If you want to prevent that, wrap it:
+bool MyLayer::OnMouseScrolled(Cosmic::MouseScrolledEvent& e)
+{
+    m_CameraController.OnEvent(e);
+    return true; // consume so nothing else reacts to this scroll
+}
+```
+
+### Event Type Quick Reference
+
+| Event Class                | Useful Accessors                   | Notes                                                                          |
+| -------------------------- | ---------------------------------- | ------------------------------------------------------------------------------ |
+| `KeyPressedEvent`          | `GetKeyCode()`, `GetRepeatCount()` | RepeatCount > 0 = key held                                                     |
+| `KeyReleasedEvent`         | `GetKeyCode()`                     | Fired once on key release                                                      |
+| `KeyTypedEvent`            | `GetKeyCode()`                     | Character input (text fields). Value is the Unicode codepoint, not a key code. |
+| `MouseButtonPressedEvent`  | `GetMouseButton()`                 | Use `CS_MOUSE_BUTTON_LEFT/RIGHT/MIDDLE`                                        |
+| `MouseButtonReleasedEvent` | `GetMouseButton()`                 |                                                                                |
+| `MouseMovedEvent`          | `GetX()`, `GetY()`                 | Screen-space coordinates, origin top-left                                      |
+| `MouseScrolledEvent`       | `GetXOffset()`, `GetYOffset()`     | Y is typically ±1.0 per scroll tick                                            |
+| `WindowResizeEvent`        | `GetWidth()`, `GetHeight()`        | Pixel dimensions of the new window size                                        |
+| `WindowCloseEvent`         | —                                  | Consumed by Application before reaching layers                                 |
+
+### Category Filtering
+
+Use `IsInCategory` to check broad groups without dispatching a specific type:
+
+```cpp
+void MyLayer::OnEvent(Cosmic::Event& e)
+{
+    // Block all input events while a cutscene is playing
+    if (m_CutscenePlaying && e.IsInCategory(Cosmic::EventCategoryInput))
+    {
+        e.Handled = true;
+        return;
+    }
+
+    // Only respond to mouse events
+    if (e.IsInCategory(Cosmic::EventCategoryMouse))
+        HandleMouseEvent(e);
+}
+```
+
+Available categories (can be OR'd together in event classes):
+
+| Category Constant          | Covers                          |
+| -------------------------- | ------------------------------- |
+| `EventCategoryApplication` | Window resize, close, tick      |
+| `EventCategoryInput`       | All keyboard + all mouse        |
+| `EventCategoryKeyboard`    | Key press, release, typed       |
+| `EventCategoryMouse`       | Mouse move, scroll, button      |
+| `EventCategoryMouseButton` | Mouse button press/release only |
 
 ---
 
@@ -396,33 +608,33 @@ void MyLayer::OnUpdate(float ts)
 
 ### When to use Input vs. Events
 
-| Use `Input::` | Use `OnEvent` |
-|--------------|--------------|
+| Use `Input::`                             | Use `OnEvent`                                   |
+| ----------------------------------------- | ----------------------------------------------- |
 | Continuous hold checks (movement, camera) | Single-press reactions (menu toggle, fire once) |
-| Per-frame polling loops | State change notifications |
-| "Is this key held right now?" | "Did the user just press Escape?" |
+| Per-frame polling loops                   | State change notifications                      |
+| "Is this key held right now?"             | "Did the user just press Escape?"               |
 
 ### Key Code Constants
 
 Defined in `codes/KeyCodes.h`. Full list in the reference table in Section 15.
 
-| Constant | Value | Constant | Value |
-|----------|-------|----------|-------|
-| `CS_KEY_SPACE` | 32 | `CS_KEY_ESCAPE` | 256 |
-| `CS_KEY_A`–`CS_KEY_Z` | 65–90 | `CS_KEY_ENTER` | 257 |
-| `CS_KEY_0`–`CS_KEY_9` | 48–57 | `CS_KEY_LEFT_CONTROL` | 341 |
-| `CS_KEY_UP` | 265 | `CS_KEY_LEFT_SHIFT` | 340 |
-| `CS_KEY_DOWN` | 264 | `CS_KEY_LEFT_ALT` | 342 |
-| `CS_KEY_LEFT` | 263 | `CS_KEY_F1`–`CS_KEY_F12` | 290–301 |
-| `CS_KEY_RIGHT` | 262 | `CS_KEY_TAB` | 258 |
+| Constant              | Value | Constant                 | Value   |
+| --------------------- | ----- | ------------------------ | ------- |
+| `CS_KEY_SPACE`        | 32    | `CS_KEY_ESCAPE`          | 256     |
+| `CS_KEY_A`–`CS_KEY_Z` | 65–90 | `CS_KEY_ENTER`           | 257     |
+| `CS_KEY_0`–`CS_KEY_9` | 48–57 | `CS_KEY_LEFT_CONTROL`    | 341     |
+| `CS_KEY_UP`           | 265   | `CS_KEY_LEFT_SHIFT`      | 340     |
+| `CS_KEY_DOWN`         | 264   | `CS_KEY_LEFT_ALT`        | 342     |
+| `CS_KEY_LEFT`         | 263   | `CS_KEY_F1`–`CS_KEY_F12` | 290–301 |
+| `CS_KEY_RIGHT`        | 262   | `CS_KEY_TAB`             | 258     |
 
 ### Mouse Button Constants
 
-| Constant | Alias | Button |
-|----------|-------|--------|
-| `CS_MOUSE_BUTTON_LEFT` | `CS_MOUSE_BUTTON_1` | Primary action |
-| `CS_MOUSE_BUTTON_RIGHT` | `CS_MOUSE_BUTTON_2` | Secondary / context |
-| `CS_MOUSE_BUTTON_MIDDLE` | `CS_MOUSE_BUTTON_3` | Pan / zoom |
+| Constant                 | Alias               | Button              |
+| ------------------------ | ------------------- | ------------------- |
+| `CS_MOUSE_BUTTON_LEFT`   | `CS_MOUSE_BUTTON_1` | Primary action      |
+| `CS_MOUSE_BUTTON_RIGHT`  | `CS_MOUSE_BUTTON_2` | Secondary / context |
+| `CS_MOUSE_BUTTON_MIDDLE` | `CS_MOUSE_BUTTON_3` | Pan / zoom          |
 
 ---
 
@@ -596,12 +808,12 @@ void main()
 
 These uniforms are automatically declared by the preprocessor if your shader uses them without declaring them yourself:
 
-| Uniform | Type | Source |
-|---------|------|--------|
-| `u_ViewProjection` | `mat4` | Camera VP matrix, updated per `BeginScene` |
-| `u_Time` | `float` | Accumulated engine time, updated via `UpdateTimeline` |
-| `u_ViewportSize` | `vec2` | Viewport pixel size, updated via `UpdateTimeline` |
-| `u_Textures[32]` | `sampler2D[]` | Batch renderer texture slots, auto-initialized |
+| Uniform            | Type          | Source                                                |
+| ------------------ | ------------- | ----------------------------------------------------- |
+| `u_ViewProjection` | `mat4`        | Camera VP matrix, updated per `BeginScene`            |
+| `u_Time`           | `float`       | Accumulated engine time, updated via `UpdateTimeline` |
+| `u_ViewportSize`   | `vec2`        | Viewport pixel size, updated via `UpdateTimeline`     |
+| `u_Textures[32]`   | `sampler2D[]` | Batch renderer texture slots, auto-initialized        |
 
 ### Shadertoy Compatibility
 
@@ -828,11 +1040,11 @@ void OnEvent(Cosmic::Event& e) override
 
 The `FileSystem` utility maps short protocol strings to real disk paths so your asset references survive directory restructuring and build configuration changes.
 
-| Protocol | Resolves to |
-|----------|------------|
-| `engine://path` | `assets/path` |
+| Protocol         | Resolves to                            |
+| ---------------- | -------------------------------------- |
+| `engine://path`  | `assets/path`                          |
 | `project://path` | `assets/projects/<ActiveProject>/path` |
-| Raw path | Returned unchanged |
+| Raw path         | Returned unchanged                     |
 
 ```cpp
 // Set the active project once in your constructor
@@ -978,141 +1190,141 @@ port.Close();
 
 ### Renderer2D
 
-| Function | Parameters | Description |
-|----------|-----------|-------------|
-| `BeginScene` | `const OrthographicCamera&` | Starts a batch pass, caches VP matrix, resets buffers |
-| `EndScene` | — | Flushes all batched geometry to GPU |
-| `UpdateTimeline` | `float ts, uint32_t w, uint32_t h` | Advances `u_Time`, sets `u_ViewportSize` for shaders |
-| `DrawQuad` | `vec2/vec3 pos, vec2 size, vec4 color` | Flat-color quad |
-| `DrawQuad` | `vec2/vec3 pos, vec2 size, Ref<Texture>, float tiling, vec4 tint` | Textured quad |
-| `DrawQuad` | `vec3 pos, vec2 size, Ref<Material>` | Material/shader-driven quad |
-| `DrawRotatedQuad` | `vec2/vec3 pos, vec2 size, float rot, vec4 color` | Rotated flat quad (rot in radians) |
-| `DrawRotatedQuad` | `vec2/vec3 pos, vec2 size, float rot, Ref<Texture>, float tiling, vec4 tint` | Rotated textured quad |
-| `DrawRotatedQuad` | `vec3 pos, vec2 size, float rot, Ref<Material>` | Rotated material quad |
-| `DrawLine` | `vec3 p0, vec3 p1, vec4 color` | Line segment between two world-space points |
-| `DrawRect` | `vec3 pos, vec2 size, vec4 color` | Wireframe rectangle (4 lines) |
-| `ResetStats` | — | Clears draw call and quad counters |
-| `GetStats` | — | Returns `Statistics` struct |
-| `SetStatsStatus` | `bool enabled` | Toggle stats recording |
+| Function          | Parameters                                                                   | Description                                           |
+| ----------------- | ---------------------------------------------------------------------------- | ----------------------------------------------------- |
+| `BeginScene`      | `const OrthographicCamera&`                                                  | Starts a batch pass, caches VP matrix, resets buffers |
+| `EndScene`        | —                                                                            | Flushes all batched geometry to GPU                   |
+| `UpdateTimeline`  | `float ts, uint32_t w, uint32_t h`                                           | Advances `u_Time`, sets `u_ViewportSize` for shaders  |
+| `DrawQuad`        | `vec2/vec3 pos, vec2 size, vec4 color`                                       | Flat-color quad                                       |
+| `DrawQuad`        | `vec2/vec3 pos, vec2 size, Ref<Texture>, float tiling, vec4 tint`            | Textured quad                                         |
+| `DrawQuad`        | `vec3 pos, vec2 size, Ref<Material>`                                         | Material/shader-driven quad                           |
+| `DrawRotatedQuad` | `vec2/vec3 pos, vec2 size, float rot, vec4 color`                            | Rotated flat quad (rot in radians)                    |
+| `DrawRotatedQuad` | `vec2/vec3 pos, vec2 size, float rot, Ref<Texture>, float tiling, vec4 tint` | Rotated textured quad                                 |
+| `DrawRotatedQuad` | `vec3 pos, vec2 size, float rot, Ref<Material>`                              | Rotated material quad                                 |
+| `DrawLine`        | `vec3 p0, vec3 p1, vec4 color`                                               | Line segment between two world-space points           |
+| `DrawRect`        | `vec3 pos, vec2 size, vec4 color`                                            | Wireframe rectangle (4 lines)                         |
+| `ResetStats`      | —                                                                            | Clears draw call and quad counters                    |
+| `GetStats`        | —                                                                            | Returns `Statistics` struct                           |
+| `SetStatsStatus`  | `bool enabled`                                                               | Toggle stats recording                                |
 
 ### Material
 
-| Function | Parameters | Description |
-|----------|-----------|-------------|
-| `Material::Create` | `Ref<Shader>, string name` | Factory — creates a new material |
-| `Set` | `string name, float` | Set a scalar float uniform |
-| `Set` | `string name, vec3` | Set a 3-component vector uniform |
-| `Set` | `string name, vec4` | Set a 4-component vector uniform (color, RGBA) |
-| `Set` | `string name, Ref<Texture>` | Bind a texture to a named slot |
-| `GetFloat` | `string name` | Retrieve cached float (0.0 if missing) |
-| `GetVector` | `string name` | Retrieve cached vec4 (white if missing) |
-| `GetTexture` | `string name` | Retrieve cached texture (nullptr if missing) |
-| `Bind` | — | Binds shader and uploads all cached uniforms |
-| `GetShader` | — | Returns the underlying `Ref<Shader>` |
-| `GetName` | — | Returns material debug name |
+| Function           | Parameters                  | Description                                    |
+| ------------------ | --------------------------- | ---------------------------------------------- |
+| `Material::Create` | `Ref<Shader>, string name`  | Factory — creates a new material               |
+| `Set`              | `string name, float`        | Set a scalar float uniform                     |
+| `Set`              | `string name, vec3`         | Set a 3-component vector uniform               |
+| `Set`              | `string name, vec4`         | Set a 4-component vector uniform (color, RGBA) |
+| `Set`              | `string name, Ref<Texture>` | Bind a texture to a named slot                 |
+| `GetFloat`         | `string name`               | Retrieve cached float (0.0 if missing)         |
+| `GetVector`        | `string name`               | Retrieve cached vec4 (white if missing)        |
+| `GetTexture`       | `string name`               | Retrieve cached texture (nullptr if missing)   |
+| `Bind`             | —                           | Binds shader and uploads all cached uniforms   |
+| `GetShader`        | —                           | Returns the underlying `Ref<Shader>`           |
+| `GetName`          | —                           | Returns material debug name                    |
 
 ### Shader
 
-| Function | Parameters | Description |
-|----------|-----------|-------------|
-| `Shader::Create` | `string filepath` | Load and compile from `.glsl` file |
-| `Bind` | — | Activate in GPU pipeline |
-| `Unbind` | — | Deactivate |
-| `SetInt` | `string, int` | Upload integer uniform |
-| `SetIntArray` | `string, int*, uint32_t count` | Upload integer array |
-| `SetFloat` | `string, float` | Upload float |
-| `SetFloat2` | `string, vec2` | Upload 2-component float |
-| `SetFloat3` | `string, vec3` | Upload 3-component float |
-| `SetFloat4` | `string, vec4` | Upload 4-component float |
-| `SetMat3` | `string, mat3` | Upload 3×3 matrix |
-| `SetMat4` | `string, mat4` | Upload 4×4 matrix |
+| Function         | Parameters                     | Description                        |
+| ---------------- | ------------------------------ | ---------------------------------- |
+| `Shader::Create` | `string filepath`              | Load and compile from `.glsl` file |
+| `Bind`           | —                              | Activate in GPU pipeline           |
+| `Unbind`         | —                              | Deactivate                         |
+| `SetInt`         | `string, int`                  | Upload integer uniform             |
+| `SetIntArray`    | `string, int*, uint32_t count` | Upload integer array               |
+| `SetFloat`       | `string, float`                | Upload float                       |
+| `SetFloat2`      | `string, vec2`                 | Upload 2-component float           |
+| `SetFloat3`      | `string, vec3`                 | Upload 3-component float           |
+| `SetFloat4`      | `string, vec4`                 | Upload 4-component float           |
+| `SetMat3`        | `string, mat3`                 | Upload 3×3 matrix                  |
+| `SetMat4`        | `string, mat4`                 | Upload 4×4 matrix                  |
 
 ### Texture
 
-| Function | Parameters | Description |
-|----------|-----------|-------------|
-| `Texture2D::Create` | `string path` | Load image from disk (PNG, JPG, etc.) |
-| `Texture2D::Create` | `uint32_t w, uint32_t h` | Create empty procedural texture |
-| `Bind` | `uint32_t slot = 0` | Activate in hardware texture slot |
-| `SetData` | `void* data, uint32_t size` | Upload pixel data (size must match w×h×bpp) |
-| `GetWidth` / `GetHeight` | — | Pixel dimensions |
-| `GetRendererID` | — | OpenGL texture ID (for ImGui::Image) |
-| `operator==` | `const Texture&` | True if same GPU resource |
+| Function                 | Parameters                  | Description                                 |
+| ------------------------ | --------------------------- | ------------------------------------------- |
+| `Texture2D::Create`      | `string path`               | Load image from disk (PNG, JPG, etc.)       |
+| `Texture2D::Create`      | `uint32_t w, uint32_t h`    | Create empty procedural texture             |
+| `Bind`                   | `uint32_t slot = 0`         | Activate in hardware texture slot           |
+| `SetData`                | `void* data, uint32_t size` | Upload pixel data (size must match w×h×bpp) |
+| `GetWidth` / `GetHeight` | —                           | Pixel dimensions                            |
+| `GetRendererID`          | —                           | OpenGL texture ID (for ImGui::Image)        |
+| `operator==`             | `const Texture&`            | True if same GPU resource                   |
 
 ### Scene / Entity
 
-| Function | Parameters | Description |
-|----------|-----------|-------------|
-| `Scene::Create` | — | Factory — creates a new scene |
-| `Scene::CreateEntity` | `string name = "GenericEntity"` | Creates entity; auto-adds Transform + Tag |
-| `Scene::DestroyEntity` | `Entity` | Removes entity from registry |
-| `Scene::OnUpdate` | `float dt` | Tick scene logic (currently hooks available) |
-| `Scene::OnRender` | — | Dispatches all entities to Renderer2D by material bucket |
-| `Entity::AddComponent<T>` | `Args...` | Construct and attach component (asserts if duplicate) |
-| `Entity::GetComponent<T>` | — | Returns reference (asserts if missing) |
-| `Entity::HasComponent<T>` | — | Returns bool |
-| `Entity::RemoveComponent<T>` | — | Removes component (asserts if missing) |
-| `Entity::operator bool` | — | True if handle is valid and scene-bound |
+| Function                     | Parameters                      | Description                                              |
+| ---------------------------- | ------------------------------- | -------------------------------------------------------- |
+| `Scene::Create`              | —                               | Factory — creates a new scene                            |
+| `Scene::CreateEntity`        | `string name = "GenericEntity"` | Creates entity; auto-adds Transform + Tag                |
+| `Scene::DestroyEntity`       | `Entity`                        | Removes entity from registry                             |
+| `Scene::OnUpdate`            | `float dt`                      | Tick scene logic (currently hooks available)             |
+| `Scene::OnRender`            | —                               | Dispatches all entities to Renderer2D by material bucket |
+| `Entity::AddComponent<T>`    | `Args...`                       | Construct and attach component (asserts if duplicate)    |
+| `Entity::GetComponent<T>`    | —                               | Returns reference (asserts if missing)                   |
+| `Entity::HasComponent<T>`    | —                               | Returns bool                                             |
+| `Entity::RemoveComponent<T>` | —                               | Removes component (asserts if missing)                   |
+| `Entity::operator bool`      | —                               | True if handle is valid and scene-bound                  |
 
 ### OrthographicCameraController
 
-| Function | Parameters | Description |
-|----------|-----------|-------------|
-| `OrthographicCameraController` | `float aspectRatio, bool rotation = false` | Constructor |
-| `OnUpdate` | `float ts` | WASD + smooth zoom interpolation |
-| `OnEvent` | `Event&` | Routes scroll and resize events |
-| `OnResize` | `float w, float h` | Recalculate aspect ratio |
-| `SetZoomLevel` | `float` | Hard-snap zoom (bypasses interpolation) |
-| `SetZoomLimits` | `float min, float max` | Clamp scroll zoom range |
-| `SetZoomSpeed` | `float` | Speed per scroll tick |
-| `SetTranslationSpeed` | `float` | Pan speed (multiplied by zoom level) |
-| `SetPositionLimits` | `float minX, maxX, minY, maxY` | Camera pan bounds |
-| `SetPosition` | `vec3` | Force camera position |
-| `GetCamera` | — | Returns `OrthographicCamera&` |
-| `GetZoomLevel` | — | Current active zoom |
+| Function                       | Parameters                                 | Description                             |
+| ------------------------------ | ------------------------------------------ | --------------------------------------- |
+| `OrthographicCameraController` | `float aspectRatio, bool rotation = false` | Constructor                             |
+| `OnUpdate`                     | `float ts`                                 | WASD + smooth zoom interpolation        |
+| `OnEvent`                      | `Event&`                                   | Routes scroll and resize events         |
+| `OnResize`                     | `float w, float h`                         | Recalculate aspect ratio                |
+| `SetZoomLevel`                 | `float`                                    | Hard-snap zoom (bypasses interpolation) |
+| `SetZoomLimits`                | `float min, float max`                     | Clamp scroll zoom range                 |
+| `SetZoomSpeed`                 | `float`                                    | Speed per scroll tick                   |
+| `SetTranslationSpeed`          | `float`                                    | Pan speed (multiplied by zoom level)    |
+| `SetPositionLimits`            | `float minX, maxX, minY, maxY`             | Camera pan bounds                       |
+| `SetPosition`                  | `vec3`                                     | Force camera position                   |
+| `GetCamera`                    | —                                          | Returns `OrthographicCamera&`           |
+| `GetZoomLevel`                 | —                                          | Current active zoom                     |
 
 ### RenderCommand (Low Level)
 
-| Function | Parameters | Description |
-|----------|-----------|-------------|
-| `SetClearColor` | `vec4 color` | Set RGBA background clear color |
-| `Clear` | — | Clear color + depth buffers |
-| `Clear` | `float r, float g, float b` | Set color and clear in one call |
-| `SetViewport` | `uint32_t x, y, w, h` | Map NDC to window pixels |
-| `DrawIndexed` | `Ref<VertexArray>, uint32_t count = 0` | Indexed draw call (count 0 = use VAO's full count) |
-| `DrawLines` | `Ref<VertexArray>, uint32_t vertexCount` | Non-indexed line draw |
+| Function        | Parameters                               | Description                                        |
+| --------------- | ---------------------------------------- | -------------------------------------------------- |
+| `SetClearColor` | `vec4 color`                             | Set RGBA background clear color                    |
+| `Clear`         | —                                        | Clear color + depth buffers                        |
+| `Clear`         | `float r, float g, float b`              | Set color and clear in one call                    |
+| `SetViewport`   | `uint32_t x, y, w, h`                    | Map NDC to window pixels                           |
+| `DrawIndexed`   | `Ref<VertexArray>, uint32_t count = 0`   | Indexed draw call (count 0 = use VAO's full count) |
+| `DrawLines`     | `Ref<VertexArray>, uint32_t vertexCount` | Non-indexed line draw                              |
 
 ### FileSystem
 
-| Function | Parameters | Description |
-|----------|-----------|-------------|
+| Function           | Parameters    | Description                                    |
+| ------------------ | ------------- | ---------------------------------------------- |
 | `SetActiveProject` | `string name` | Set active project for `project://` resolution |
-| `Resolve` | `string path` | Translate VFS protocol to real disk path |
+| `Resolve`          | `string path` | Translate VFS protocol to real disk path       |
 
 ### SerialPort
 
-| Function | Parameters | Description |
-|----------|-----------|-------------|
-| `Open` | `string portName, uint32_t baudRate = 115200` | Open port, spawn read thread |
-| `Close` | — | Signal thread, join, release handle |
-| `IsOpen` | — | Returns bool |
-| `FlushBuffer` | — | Thread-safe extract + clear accumulated data |
-| `GetAvailablePorts` | — | Static — queries Windows Registry, returns port list |
+| Function            | Parameters                                    | Description                                          |
+| ------------------- | --------------------------------------------- | ---------------------------------------------------- |
+| `Open`              | `string portName, uint32_t baudRate = 115200` | Open port, spawn read thread                         |
+| `Close`             | —                                             | Signal thread, join, release handle                  |
+| `IsOpen`            | —                                             | Returns bool                                         |
+| `FlushBuffer`       | —                                             | Thread-safe extract + clear accumulated data         |
+| `GetAvailablePorts` | —                                             | Static — queries Windows Registry, returns port list |
 
 ### Logging Macros
 
-| Macro | Level | Channel |
-|-------|-------|---------|
-| `CS_CORE_TRACE(...)` | Verbose | Engine |
-| `CS_CORE_INFO(...)` | Info | Engine |
-| `CS_CORE_WARN(...)` | Warning | Engine |
-| `CS_CORE_ERROR(...)` | Error | Engine |
-| `CS_CORE_CRITICAL(...)` | Fatal | Engine |
-| `CS_TRACE(...)` | Verbose | Client/Game |
-| `CS_INFO(...)` | Info | Client/Game |
-| `CS_WARN(...)` | Warning | Client/Game |
-| `CS_ERROR(...)` | Error | Client/Game |
-| `CS_CRITICAL(...)` | Fatal | Client/Game |
+| Macro                   | Level   | Channel     |
+| ----------------------- | ------- | ----------- |
+| `CS_CORE_TRACE(...)`    | Verbose | Engine      |
+| `CS_CORE_INFO(...)`     | Info    | Engine      |
+| `CS_CORE_WARN(...)`     | Warning | Engine      |
+| `CS_CORE_ERROR(...)`    | Error   | Engine      |
+| `CS_CORE_CRITICAL(...)` | Fatal   | Engine      |
+| `CS_TRACE(...)`         | Verbose | Client/Game |
+| `CS_INFO(...)`          | Info    | Client/Game |
+| `CS_WARN(...)`          | Warning | Client/Game |
+| `CS_ERROR(...)`         | Error   | Client/Game |
+| `CS_CRITICAL(...)`      | Fatal   | Client/Game |
 
 ---
 
@@ -1128,100 +1340,100 @@ This section documents every source file, its role, and how it fits into the eng
 
 ### `src/core/`
 
-| File | Purpose |
-|------|---------|
-| `Core.h` | Universal foundation — `Scope<T>`, `Ref<T>`, `COSMIC_API` DLL macros, `BIT()`, `GLCORE_ASSERT`, `GLCORE_BIND_EVENT_FN`. Included first in nearly every file. |
+| File                 | Purpose                                                                                                                                                          |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Core.h`             | Universal foundation — `Scope<T>`, `Ref<T>`, `COSMIC_API` DLL macros, `BIT()`, `GLCORE_ASSERT`, `GLCORE_BIND_EVENT_FN`. Included first in nearly every file.     |
 | `Application.h/.cpp` | Root singleton. Owns the window, renderer, framebuffer, ImGui, LayerStack. Drives the frame loop. Manages launcher↔workspace transitions and DLL plugin loading. |
-| `Layer.h` | Abstract base for all engine components. Declares `OnAttach`, `OnDetach`, `OnUpdate`, `OnFixedUpdate`, `OnRender`, `OnImGuiRender`, `OnEvent`. |
-| `LayerStack.h/.cpp` | Ordered container of `Layer*` borrows. Manages insertion boundary between game layers and overlays. Provides forward (render) and reverse (event) iterators. |
-| `Window.h/.cpp` | GLFW window wrapper. Handles creation, event callbacks, VSync, buffer swapping. Owns `GraphicsContext`. Translates GLFW C callbacks into Cosmic `Event` objects. |
-| `Input.h/.cpp` | Static polling interface. Wraps `glfwGetKey`, `glfwGetMouseButton`, `glfwGetCursorPos` through the Application singleton. |
-| `Log.h/.cpp` | spdlog wrapper. Initializes two loggers (engine + client) with color-coded console output. |
-| `Timestep.h` | Thin float wrapper for delta-time. Prevents seconds/milliseconds confusion. Implicit `float` conversion. |
+| `Layer.h`            | Abstract base for all engine components. Declares `OnAttach`, `OnDetach`, `OnUpdate`, `OnFixedUpdate`, `OnRender`, `OnImGuiRender`, `OnEvent`.                   |
+| `LayerStack.h/.cpp`  | Ordered container of `Layer*` borrows. Manages insertion boundary between game layers and overlays. Provides forward (render) and reverse (event) iterators.     |
+| `Window.h/.cpp`      | GLFW window wrapper. Handles creation, event callbacks, VSync, buffer swapping. Owns `GraphicsContext`. Translates GLFW C callbacks into Cosmic `Event` objects. |
+| `Input.h/.cpp`       | Static polling interface. Wraps `glfwGetKey`, `glfwGetMouseButton`, `glfwGetCursorPos` through the Application singleton.                                        |
+| `Log.h/.cpp`         | spdlog wrapper. Initializes two loggers (engine + client) with color-coded console output.                                                                       |
+| `Timestep.h`         | Thin float wrapper for delta-time. Prevents seconds/milliseconds confusion. Implicit `float` conversion.                                                         |
 
 ### `src/events/`
 
-| File | Purpose |
-|------|---------|
-| `Event.h` | Base `Event` class, `EventType` enum, `EventCategory` bitmask flags, `EventDispatcher` template. |
-| `ApplicationEvent.h` | `WindowResizeEvent`, `WindowCloseEvent`, `AppTickEvent`, `AppUpdateEvent`, `AppRenderEvent`. |
-| `KeyEvent.h` | `KeyEvent` base, `KeyPressedEvent` (with repeat count), `KeyReleasedEvent`, `KeyTypedEvent`. |
-| `MouseEvent.h` | `MouseMovedEvent`, `MouseScrolledEvent`, `MouseButtonEvent` base, `MouseButtonPressedEvent`, `MouseButtonReleasedEvent`. |
+| File                 | Purpose                                                                                                                  |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `Event.h`            | Base `Event` class, `EventType` enum, `EventCategory` bitmask flags, `EventDispatcher` template.                         |
+| `ApplicationEvent.h` | `WindowResizeEvent`, `WindowCloseEvent`, `AppTickEvent`, `AppUpdateEvent`, `AppRenderEvent`.                             |
+| `KeyEvent.h`         | `KeyEvent` base, `KeyPressedEvent` (with repeat count), `KeyReleasedEvent`, `KeyTypedEvent`.                             |
+| `MouseEvent.h`       | `MouseMovedEvent`, `MouseScrolledEvent`, `MouseButtonEvent` base, `MouseButtonPressedEvent`, `MouseButtonReleasedEvent`. |
 
 ### `src/renderer/`
 
-| File | Purpose |
-|------|---------|
-| `RendererAPI.h/.cpp` | Abstract backend interface. Declares pure virtual methods: `Init`, `SetViewport`, `Clear`, `DrawIndexed`, `DrawLines`. Holds the static `API` enum (`None`, `OpenGL`, `DirectX`). Compile-time selection via `#ifdef COSMIC_PLATFORM_WINDOWS`. |
-| `RenderCommand.h/.cpp` | Static dispatcher. Forwards calls to the `RendererAPI*` instance. Provides `SetClearColor`, `Clear`, `SetViewport`, `DrawIndexed`, `DrawLines`. The single point of contact between the high-level renderers and the hardware API. |
-| `Renderer.h/.cpp` | High-level 3D/static orchestrator. Manages per-scene `SceneData` (VP matrix), provides `Submit` overloads for direct shader+VAO draws. Parent of `Renderer2D`. |
-| `Renderer2D.h/.cpp` | High-performance 2D batch renderer. Manages vertex/index staging buffers (up to 10,000 quads per batch), texture slot tracking (up to 32), material state tracking, and line rendering. The primary draw interface for game code. |
+| File                   | Purpose                                                                                                                                                                                                                                        |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `RendererAPI.h/.cpp`   | Abstract backend interface. Declares pure virtual methods: `Init`, `SetViewport`, `Clear`, `DrawIndexed`, `DrawLines`. Holds the static `API` enum (`None`, `OpenGL`, `DirectX`). Compile-time selection via `#ifdef COSMIC_PLATFORM_WINDOWS`. |
+| `RenderCommand.h/.cpp` | Static dispatcher. Forwards calls to the `RendererAPI*` instance. Provides `SetClearColor`, `Clear`, `SetViewport`, `DrawIndexed`, `DrawLines`. The single point of contact between the high-level renderers and the hardware API.             |
+| `Renderer.h/.cpp`      | High-level 3D/static orchestrator. Manages per-scene `SceneData` (VP matrix), provides `Submit` overloads for direct shader+VAO draws. Parent of `Renderer2D`.                                                                                 |
+| `Renderer2D.h/.cpp`    | High-performance 2D batch renderer. Manages vertex/index staging buffers (up to 10,000 quads per batch), texture slot tracking (up to 32), material state tracking, and line rendering. The primary draw interface for game code.              |
 
 ### `src/graphics/`
 
-| File | Purpose |
-|------|---------|
-| `Buffer.h/.cpp` | `ShaderDataType` enum + size utilities. `BufferElement` (name, type, offset, size). `BufferLayout` (stride calculator). Abstract `VertexBuffer` and `IndexBuffer` interfaces with factory `Create` methods. |
-| `VertexArray.h/.cpp` | Abstract VAO interface. Links vertex buffers + their layouts to an index buffer. Factory `Create` method. |
-| `Shader.h/.cpp` | Abstract GPU program interface. Uniform set methods. Factory `Create` from filepath. |
-| `Texture.h/.cpp` | `Texture` base and `Texture2D` derived interfaces. Factory `Create` from path or dimensions. |
-| `Material.h/.cpp` | Pairs a `Ref<Shader>` with named uniform caches (`float`, `vec3`, `vec4`, `Ref<Texture>`). `Bind()` uploads all cached uniforms. |
-| `FrameBuffer.h/.cpp` | Abstract FBO interface. `FramebufferSpecification` config struct. Factory `Create`. |
-| `GraphicsContext.h` | Two-method interface: `Init()` and `SwapBuffers()`. The bridge between the windowing library and the graphics API. |
+| File                 | Purpose                                                                                                                                                                                                     |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Buffer.h/.cpp`      | `ShaderDataType` enum + size utilities. `BufferElement` (name, type, offset, size). `BufferLayout` (stride calculator). Abstract `VertexBuffer` and `IndexBuffer` interfaces with factory `Create` methods. |
+| `VertexArray.h/.cpp` | Abstract VAO interface. Links vertex buffers + their layouts to an index buffer. Factory `Create` method.                                                                                                   |
+| `Shader.h/.cpp`      | Abstract GPU program interface. Uniform set methods. Factory `Create` from filepath.                                                                                                                        |
+| `Texture.h/.cpp`     | `Texture` base and `Texture2D` derived interfaces. Factory `Create` from path or dimensions.                                                                                                                |
+| `Material.h/.cpp`    | Pairs a `Ref<Shader>` with named uniform caches (`float`, `vec3`, `vec4`, `Ref<Texture>`). `Bind()` uploads all cached uniforms.                                                                            |
+| `FrameBuffer.h/.cpp` | Abstract FBO interface. `FramebufferSpecification` config struct. Factory `Create`.                                                                                                                         |
+| `GraphicsContext.h`  | Two-method interface: `Init()` and `SwapBuffers()`. The bridge between the windowing library and the graphics API.                                                                                          |
 
 ### `src/platform/opengl/`
 
-| File | Purpose |
-|------|---------|
-| `OpenGLContext.h/.cpp` | Calls `glfwMakeContextCurrent` and initializes GLAD. Implements `SwapBuffers` via `glfwSwapBuffers`. |
+| File                       | Purpose                                                                                                                                                                                        |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `OpenGLContext.h/.cpp`     | Calls `glfwMakeContextCurrent` and initializes GLAD. Implements `SwapBuffers` via `glfwSwapBuffers`.                                                                                           |
 | `OpenGLRendererAPI.h/.cpp` | Concrete `RendererAPI` for OpenGL. Implements `Init` (enables blending + depth test), `SetViewport`, `SetClearColor`, `Clear`, `DrawIndexed` (`glDrawElements`), `DrawLines` (`glDrawArrays`). |
-| `OpenGLBuffer.h/.cpp` | `OpenGLVertexBuffer` (dynamic via `GL_DYNAMIC_DRAW`, static via `GL_STATIC_DRAW`, streams via `glBufferSubData`). `OpenGLIndexBuffer` (`GL_ELEMENT_ARRAY_BUFFER`). |
-| `OpenGLVertexArray.h/.cpp` | Generates a VAO, calls `glVertexAttribPointer` for each layout element, links VBOs and IBO. |
-| `OpenGLShader.h/.cpp` | Reads `.glsl` from disk, preprocesses `#type` directives, compiles vertex + fragment stages, links program. Caches uniform locations. Includes Shadertoy compatibility wrapper. |
-| `OpenGLTexture.h/.cpp` | File-based loader uses stb_image (handles RGB/RGBA, flips vertically). Procedural creates empty RGBA8 texture. Supports `SetData` via `glTexSubImage2D`. |
-| `OpenGLFrameBuffer.h/.cpp` | Creates FBO with color attachment (RGBA8) and depth/stencil attachment (Depth24_Stencil8). `Invalidate()` tears down and reallocates on resize. |
+| `OpenGLBuffer.h/.cpp`      | `OpenGLVertexBuffer` (dynamic via `GL_DYNAMIC_DRAW`, static via `GL_STATIC_DRAW`, streams via `glBufferSubData`). `OpenGLIndexBuffer` (`GL_ELEMENT_ARRAY_BUFFER`).                             |
+| `OpenGLVertexArray.h/.cpp` | Generates a VAO, calls `glVertexAttribPointer` for each layout element, links VBOs and IBO.                                                                                                    |
+| `OpenGLShader.h/.cpp`      | Reads `.glsl` from disk, preprocesses `#type` directives, compiles vertex + fragment stages, links program. Caches uniform locations. Includes Shadertoy compatibility wrapper.                |
+| `OpenGLTexture.h/.cpp`     | File-based loader uses stb_image (handles RGB/RGBA, flips vertically). Procedural creates empty RGBA8 texture. Supports `SetData` via `glTexSubImage2D`.                                       |
+| `OpenGLFrameBuffer.h/.cpp` | Creates FBO with color attachment (RGBA8) and depth/stencil attachment (Depth24_Stencil8). `Invalidate()` tears down and reallocates on resize.                                                |
 
 ### `src/camera/`
 
-| File | Purpose |
-|------|---------|
-| `OrthographicCamera.h/.cpp` | Maintains P, V, VP matrices. `UpdateViewMatrix` computes V = inverse(TRS). Provides `SetPosition`, `SetRotation`, `SetProjection`. |
-| `OrthographicCameraController.h/.cpp` | Wraps `OrthographicCamera` with WASD input, asymptotic zoom interpolation, aspect ratio sync, and position/zoom clamping. |
+| File                                  | Purpose                                                                                                                            |
+| ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `OrthographicCamera.h/.cpp`           | Maintains P, V, VP matrices. `UpdateViewMatrix` computes V = inverse(TRS). Provides `SetPosition`, `SetRotation`, `SetProjection`. |
+| `OrthographicCameraController.h/.cpp` | Wraps `OrthographicCamera` with WASD input, asymptotic zoom interpolation, aspect ratio sync, and position/zoom clamping.          |
 
 ### `src/scene/`
 
-| File | Purpose |
-|------|---------|
+| File           | Purpose                                                                                                                                                       |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `Scene.h/.cpp` | Owns `entt::registry`. `CreateEntity` adds Transform + Tag automatically. `OnRender` sorts entities into material buckets before dispatching to `Renderer2D`. |
-| `Entity.h` | Lightweight handle (`entt::entity` + `Scene*`). Template `AddComponent`, `GetComponent`, `HasComponent`, `RemoveComponent`. |
-| `Components.h` | `TagComponent`, `TransformComponent` (with `GetTransform()`), `SpriteRendererComponent`. Includes `entt::type_hash` specializations for DLL boundary safety. |
+| `Entity.h`     | Lightweight handle (`entt::entity` + `Scene*`). Template `AddComponent`, `GetComponent`, `HasComponent`, `RemoveComponent`.                                   |
+| `Components.h` | `TagComponent`, `TransformComponent` (with `GetTransform()`), `SpriteRendererComponent`. Includes `entt::type_hash` specializations for DLL boundary safety.  |
 
 ### `src/layers/`
 
-| File | Purpose |
-|------|---------|
-| `ImGuiLayer.h/.cpp` | Initializes ImGui + ImPlot contexts, GLFW backend, OpenGL3 backend. `Begin`/`End` frame control. Event blocking logic (mouse/keyboard capture flags). |
+| File                    | Purpose                                                                                                                                                                               |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ImGuiLayer.h/.cpp`     | Initializes ImGui + ImPlot contexts, GLFW backend, OpenGL3 backend. `Begin`/`End` frame control. Event blocking logic (mouse/keyboard capture flags).                                 |
 | `WorkspaceLayer.h/.cpp` | The editor host. Manages ImGui dockspace layout (Viewport + Inspector panels). Owns the client viewport slot. Handles framebuffer resize, viewport focus, deferred DLL mount/unmount. |
-| `LauncherLayer.h/.cpp` | The startup hub. Scans for `.dll` files, renders project list, hosts the "Create New Project" wizard, reads template files, runs `build.bat` via `CreateProcessA`. |
+| `LauncherLayer.h/.cpp`  | The startup hub. Scans for `.dll` files, renders project list, hosts the "Create New Project" wizard, reads template files, runs `build.bat` via `CreateProcessA`.                    |
 
 ### `src/serial/`
 
-| File | Purpose |
-|------|---------|
+| File                | Purpose                                                                                                                                                                                             |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `SerialPort.h/.cpp` | Win32 serial communication. Background `ReadLoop` thread polls `ReadFile`. `FlushBuffer` extracts data thread-safely. `GetAvailablePorts` queries Windows Registry `HARDWARE\DEVICEMAP\SERIALCOMM`. |
 
 ### `src/utils/`
 
-| File | Purpose |
-|------|---------|
+| File           | Purpose                                                                                       |
+| -------------- | --------------------------------------------------------------------------------------------- |
 | `FileSystem.h` | Static path resolver. Maps `engine://` and `project://` protocol prefixes to real disk paths. |
 
 ### `src/codes/`
 
-| File | Purpose |
-|------|---------|
-| `KeyCodes.h` | `CS_KEY_*` constants (mirrors GLFW values). |
-| `MouseButtonCodes.h` | `CS_MOUSE_BUTTON_*` constants. |
+| File                 | Purpose                                     |
+| -------------------- | ------------------------------------------- |
+| `KeyCodes.h`         | `CS_KEY_*` constants (mirrors GLFW values). |
+| `MouseButtonCodes.h` | `CS_MOUSE_BUTTON_*` constants.              |
 
 ### `src/Cosmic.h`
 
@@ -1533,6 +1745,7 @@ Any component type you want to share across the DLL boundary needs this override
 **Case 1: Standard multi-stage file** (has `#type vertex` and `#type fragment`)
 
 The preprocessor splits the source at `#type` boundaries, then for each stage:
+
 - Scans for usage of `u_ViewProjection`, `u_Time`, `u_ViewportSize`
 - If used but not declared, injects the declaration just after the `#version` line
 - Injects `in vec2 v_TexCoord; in vec4 v_Color; layout(...) out vec4 color;` for fragment stages missing them
@@ -1575,17 +1788,234 @@ The project uses CMake 3.21+ with a three-tier structure:
 
 ---
 
+## 23. Event System — Implementation Details
+
+This section covers how the event system is wired together internally, why it is designed the way it is, and where the design has known sharp edges.
+
+<!-- RECOMMENDED GRAPHIC: Full event pipeline diagram — GLFW C callback → WindowData::EventCallback → Application::OnEvent → EventDispatcher (window events consumed) → LayerStack rbegin/rend loop → ImGuiLayer → WorkspaceLayer → ClientLayer, with "e.Handled?" diamond at each step -->
+
+### Event Generation: GLFW → Cosmic
+
+Events originate from GLFW's C callback system. `Window.cpp` registers a callback for each hardware signal type (`glfwSetKeyCallback`, `glfwSetMouseButtonCallback`, etc.). Each callback:
+
+1. Retrieves the `WindowData` struct from `glfwGetWindowUserPointer` — this is a pointer to an engine struct stored inside the GLFW window, the standard pattern for bridging C callbacks to C++ state
+2. Constructs the appropriate Cosmic event object on the stack (e.g. `KeyPressedEvent(key, repeatCount)`)
+3. Calls `WindowData.EventCallback(event)` — which is bound to `Application::OnEvent`
+
+This means all events enter the engine through one single function. The GLFW layer has no knowledge of layers, handlers, or the dispatcher — it just fires and forgets.
+
+```
+glfwSetKeyCallback:
+    KeyPressedEvent e(key, repeatCount == GLFW_REPEAT ? 1 : 0);
+    data.EventCallback(e);     // → Application::OnEvent(e)
+```
+
+### Application::OnEvent — The Router
+
+`Application::OnEvent` is the first stop. It handles two top-level concerns before anything else sees the event:
+
+```cpp
+void Application::OnEvent(Event& e)
+{
+    EventDispatcher dispatcher(e);
+    dispatcher.Dispatch<WindowCloseEvent>(GLCORE_BIND_EVENT_FN(Application::OnWindowClose));
+    dispatcher.Dispatch<WindowResizeEvent>(GLCORE_BIND_EVENT_FN(Application::OnWindowResize));
+
+    for (auto it = m_LayerStack.rbegin(); it != m_LayerStack.rend(); ++it)
+    {
+        if (e.Handled) break;
+        (*it)->OnEvent(e);
+    }
+}
+```
+
+`WindowClose` and `WindowResize` are handled here — `OnWindowClose` sets `m_Running = false`, `OnWindowResize` resizes the framebuffer and calls `Renderer::OnWindowResize`. Note that neither handler returns `true`, so `e.Handled` is not set after these dispatches. This means `WindowResizeEvent` **still propagates down the layer stack** after the application handles it. This is intentional — layers need to update their camera aspect ratios on resize.
+
+After dispatching window events, the stack is iterated in **reverse** order (overlays first, game layers last), stopping when `e.Handled` becomes true.
+
+### EventDispatcher Internals
+
+```cpp
+template<typename T, typename F>
+bool Dispatch(const F& func)
+{
+    if (m_Event.GetEventType() == T::GetStaticType())
+    {
+        m_Event.Handled = func(static_cast<T&>(m_Event));
+        return true;
+    }
+    return false;
+}
+```
+
+Two important subtleties here:
+
+**Return value semantics:** `Dispatch` returns `true` if the event _type matched_, regardless of whether your handler consumed it. If you write `if (dispatcher.Dispatch<KeyPressedEvent>(handler))`, that condition is true even if `handler` returned `false`. What matters for propagation is `e.Handled`, which is set to whatever your handler function returns.
+
+**The handler's return value is authoritative:** When you return `true` from a handler, `e.Handled` is set to `true` and the LayerStack loop stops at the next iteration. There is no way to "un-handle" an event once `e.Handled = true`.
+
+**Multiple dispatches in one OnEvent are fine:** A single `EventDispatcher` instance can call `Dispatch` multiple times for different types. Each call is independent — they check the event type and either match or skip. If a `KeyPressedEvent` comes in and you dispatch for both `KeyPressedEvent` and `MouseScrolledEvent`, only the key handler fires; the scroll dispatch silently does nothing.
+
+### ImGuiLayer Event Handling
+
+`ImGuiLayer` is an overlay and therefore receives events before all regular layers:
+
+```cpp
+void ImGuiLayer::OnEvent(Event& event)
+{
+    if (m_BlockEvents)
+    {
+        ImGuiIO& io = ImGui::GetIO();
+        event.Handled |= event.IsInCategory(EventCategoryMouse)    & io.WantCaptureMouse;
+        event.Handled |= event.IsInCategory(EventCategoryKeyboard) & io.WantCaptureKeyboard;
+    }
+
+    EventDispatcher dispatcher(event);
+    dispatcher.Dispatch<MouseButtonPressedEvent>(
+        GLCORE_BIND_EVENT_FN(ImGuiLayer::OnMouseButtonPressed));
+}
+```
+
+Note the use of `|=` rather than `=`. This is important: if `e.Handled` was already `true` coming into ImGuiLayer (unusual, but possible), it stays true. The bitwise `&` between `IsInCategory` and `io.WantCapture*` returns 1 only when both conditions are met — the event is a mouse event AND ImGui wants the mouse.
+
+`m_BlockEvents` is toggled by `WorkspaceLayer` based on viewport focus:
+
+```cpp
+Application::Get().GetImGuiLayer()->BlockEvents(!m_ViewportFocused && !m_ViewportHovered);
+```
+
+When the game viewport is focused, `BlockEvents(false)` — the `if (m_BlockEvents)` block is skipped entirely and ImGui does not intercept anything. When an ImGui panel is focused instead, `BlockEvents(true)` — mouse and keyboard events are swallowed before reaching game layers.
+
+### The LayerStack Ordering Contract
+
+```
+Stack indices:  [0]   [1]  ...  [N-1]  [N]
+                ┌──────────────────────────┐
+                │Layer Layer ... Overlay  │
+                └──────────────────────────┘
+                                   ▲
+                        m_LayerInsertIndex boundary
+
+Render order:  0 → N  (game layers drawn first, overlays on top)
+Event order:   N → 0  (overlays intercept first, game layers last)
+```
+
+Layers added with `PushLayer` are inserted at `m_LayerInsertIndex` and the index is incremented. Layers added with `PushOverlay` are appended after all regular layers. This means overlays always sit at the top of the stack and always receive events first.
+
+In the Cosmic runtime, the typical stack at runtime looks like:
+
+```
+[0] LauncherLayer  (or WorkspaceLayer after transition)
+[1] ImGuiLayer     (overlay — receives events first)
+```
+
+After a project is loaded:
+
+```
+[0] WorkspaceLayer
+[1] ImGuiLayer     (overlay — receives events first)
+```
+
+### WorkspaceLayer Event Forwarding
+
+`WorkspaceLayer::OnEvent` currently has a design gap:
+
+```cpp
+void WorkspaceLayer::OnEvent(Cosmic::Event& e)
+{
+    if (m_ClientViewportLayer)
+        m_ClientViewportLayer->OnEvent(e);
+    // ← Does NOT check e.Handled before forwarding
+    // ← Does NOT do any event handling of its own
+}
+```
+
+This means `WorkspaceLayer` will always forward events to your plugin layer, **even events that ImGuiLayer already consumed** (`e.Handled = true`). In practice this is tolerable because ImGuiLayer sets `e.Handled` based on `io.WantCaptureMouse/Keyboard`, and most game code should also check that state before acting. But it is a correctness hole — a consumed event should not reach further handlers. A guard should be added:
+
+```cpp
+// Correct behavior:
+void WorkspaceLayer::OnEvent(Cosmic::Event& e)
+{
+    if (e.Handled) return; // respect upstream handlers
+    if (m_ClientViewportLayer)
+        m_ClientViewportLayer->OnEvent(e);
+}
+```
+
+### OrthographicCameraController — Events Are Never Consumed
+
+Both handlers in `OrthographicCameraController` return `false`:
+
+```cpp
+bool OrthographicCameraController::OnMouseScrolled(MouseScrolledEvent& e)
+{
+    m_TargetZoomLevel -= e.GetYOffset() * m_ZoomSpeed;
+    m_TargetZoomLevel = std::clamp(m_TargetZoomLevel, m_MinZoom, m_MaxZoom);
+    return false; // ← never consumed
+}
+
+bool OrthographicCameraController::OnWindowResized(WindowResizeEvent& e)
+{
+    OnResize((float)e.GetWidth(), (float)e.GetHeight());
+    return false; // ← never consumed
+}
+```
+
+This is a deliberate design choice — the camera controller is a sub-system, not a full layer, and it shouldn't be making decisions about whether the event should propagate further. The **layer that owns the camera** decides whether to consume the event after forwarding to the controller. If you have two cameras and want only one to respond to scroll, consume the event in your layer's `OnMouseScrolled` handler after the appropriate controller processes it.
+
+### Known Design Issues
+
+**1. WorkspaceLayer forwards consumed events**
+As noted above, `WorkspaceLayer::OnEvent` does not check `e.Handled` before forwarding to the client layer. This means your game layer's `OnEvent` can receive events with `e.Handled = true`. Your handlers should generally not care (the `EventDispatcher` still works fine on handled events — it doesn't check `e.Handled` before dispatching), but it's architecturally incorrect.
+
+**2. `WindowResizeEvent` is handled by Application but not consumed**
+`Application::OnWindowResize` does real work (resizes the framebuffer, calls `Renderer::OnWindowResize`) but returns `false`, leaving `e.Handled = false`. The event propagates to all layers. This is intentional — all camera controllers in all layers need to call `OnResize`. But it means "application handled this" and "propagation stopped" are conflated concepts in the current design.
+
+**3. Multi-sim layers must manually broadcast resize**
+If your layer has multiple simulation modes (only one active at a time), the inactive modes will not receive `WindowResizeEvent` through the event chain. Their cameras will be wrong after a window resize. The correct pattern is to intercept `WindowResizeEvent` in the parent layer's `OnEvent` and explicitly call `SetViewportSize` on **all** sim modes, not just the active one:
+
+```cpp
+bool MyProject::OnWindowResize(Cosmic::WindowResizeEvent& e)
+{
+    float w = (float)e.GetWidth();
+    float h = (float)e.GetHeight();
+    if (m_SimA) m_SimA->SetViewportSize(w, h);
+    if (m_SimB) m_SimB->SetViewportSize(w, h);
+    if (m_SimC) m_SimC->SetViewportSize(w, h);
+    return false;
+}
+```
+
+**4. No event queue — all events are immediate and synchronous**
+Events are dispatched synchronously from GLFW callbacks during `glfwPollEvents()`, which is called at the top of each frame. There is no command queue or deferred processing. This means event handlers run during the event propagation phase, not during the update phase. Side effects (changing game state, modifying the layer stack) during event handling need to be careful about re-entrancy. Layer stack modifications (push/pop) are safe because they're queued for the Safe Zone at the end of the frame loop, but any state mutations happen immediately.
+
+**5. `Dispatch` return value is rarely the right thing to check**
+`dispatcher.Dispatch<T>(fn)` returns `true` on type match, not on consumption. Most code in the engine ignores the return value entirely (correct). If you need to know whether your handler consumed the event, check `e.Handled` directly after the dispatch call.
+
+### Refactor Candidates for the Event System
+
+| Issue                                                                         | Severity | Suggested Fix                                                                                                                              |
+| ----------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `WorkspaceLayer::OnEvent` does not check `e.Handled` before forwarding        | Medium   | Add `if (e.Handled) return;` at the top                                                                                                    |
+| Multi-sim layers must manually broadcast `WindowResizeEvent` to inactive sims | Medium   | Document the pattern; consider a `OnResize` virtual on `ISimulationMode` that the parent calls directly                                    |
+| `Dispatch` return value semantics are confusing (type match ≠ consumed)       | Low      | Consider renaming to `TryDispatch` or documenting clearly; the current name implies "was this dispatched and handled?"                     |
+| No deferred event queue                                                       | Low      | For complex interactions, a simple `std::vector<std::function<void()>>` deferred callback queue would improve safety during event handling |
+| Camera controller never consumes scroll events                                | Low      | Fine for single-camera setups; document that callers should consume the event themselves if they want to prevent propagation               |
+
+---
+
 # Part III — Code Review
 
 ---
 
-## 23. Refactor Candidates
+## 24. Refactor Candidates
 
 ### High Priority
 
 **`OpenGLShader::PreProcess` — complexity and fragility**
 
 The preprocessor is doing too much in one 300-line function. The comment-stripping logic (removing `/* */` and `//` before scanning for uniform names) is custom hand-written parsing that will break on edge cases (multi-line strings, conditional compilation, etc.). Consider:
+
 - Split into `StripComments`, `ExtractStage`, `InjectPreamble` functions
 - Use a proper tokenizer or a regex pass rather than manual `find`/`erase` loops
 - The "already declared" check (`find("uniform")` in a 20-char context window before the name) is fragile — a false negative will inject a duplicate declaration and fail to compile
@@ -1600,7 +2030,7 @@ The `Run()` method is ~150 lines and handles the frame loop, fixed timestep, lay
 
 **`LayerStack` documentation mismatch**
 
-The header documentation for `PushLayer` says: *"Appends the overlay to the back of the stack (on top of logic)"* — this is the documentation for `PushOverlay`, not `PushLayer`. The docs need a pass for correctness.
+The header documentation for `PushLayer` says: _"Appends the overlay to the back of the stack (on top of logic)"_ — this is the documentation for `PushOverlay`, not `PushLayer`. The docs need a pass for correctness.
 
 ### Medium Priority
 
@@ -1636,7 +2066,7 @@ If `glfwCreateWindow` fails after a successful `glfwInit`, the function returns 
 
 ---
 
-## 24. Missing Implementations
+## 25. Missing Implementations
 
 ### Critical Missing Features
 
@@ -1658,7 +2088,7 @@ The `Renderer2D.h` header declares `DrawQuad(vec3, vec2, Ref<Material>)` but the
 
 **`Renderer::EndScene` — Empty**
 
-`Renderer::EndScene()` has a comment: *"Future: Submit CommandQueue for sorting/optimization"* — this command buffer/deferred submission architecture has not been implemented.
+`Renderer::EndScene()` has a comment: _"Future: Submit CommandQueue for sorting/optimization"_ — this command buffer/deferred submission architecture has not been implemented.
 
 ### Missing Quality-of-Life Features
 
@@ -1678,7 +2108,7 @@ The `Renderer2D.h` header declares `DrawQuad(vec3, vec2, Ref<Material>)` but the
 
 ---
 
-## 25. Technical Debt & Open Issues
+## 26. Technical Debt & Open Issues
 
 ### Architectural Issues
 
@@ -1727,6 +2157,6 @@ There is no utility function to convert a screen-space mouse position (from `Inp
 
 ---
 
-*README last updated to reflect codebase state as of May 2026.*
+_README last updated to reflect codebase state as of May 2026._
 
-*For questions about engine architecture or to report issues, see the project repository.*
+_For questions about engine architecture or to report issues, see the project repository._
