@@ -21,6 +21,9 @@ namespace Cosmic
 	// HELPER FUNCTIONS FOR DECOUPLED FILE TEMPLATES
 	// ===================================================================
 
+	// ===================================================================
+	// FIXED: DECOUPLED FILE TEMPLATE PROCESSOR WITH LINE-ENDING SANITIZER
+	// ===================================================================
 	std::string ReadAndProcessTemplate(const fs::path& templateFilePath, const std::string& projectName, const std::string& engineSDKPath)
 	{
 		if (!fs::exists(templateFilePath))
@@ -40,6 +43,7 @@ namespace Cosmic
 		buffer << in.rdbuf();
 		std::string content = buffer.str();
 
+		// 1. Perform template token substitutions
 		size_t pos;
 		while ((pos = content.find("TemplateProject")) != std::string::npos)
 		{
@@ -51,7 +55,35 @@ namespace Cosmic
 			content.replace(pos, 21, engineSDKPath);
 		}
 
-		return content;
+		// 2. UNIVERSAL LINE ENDING SANITIZER
+		// Catch all variations (\r, \n, \r\n) and firmly normalize to Windows \r\n
+		std::string sanitized = "";
+		sanitized.reserve(content.size() * 1.1); // Reserve slight overhead for line expansions
+
+		for (size_t i = 0; i < content.size(); ++i)
+		{
+			if (content[i] == '\r')
+			{
+				sanitized += "\r\n";
+				// If it's a standard Windows line ending (\r\n), skip the \n so it isn't doubled
+				if (i + 1 < content.size() && content[i + 1] == '\n')
+				{
+					++i;
+				}
+				// If it's an isolated \r (Old Mac format), the block safely upgrades it to \r\n
+			}
+			else if (content[i] == '\n')
+			{
+				// Standalone Unix \n line endings cleanly map to \r\n
+				sanitized += "\r\n";
+			}
+			else
+			{
+				sanitized += content[i];
+			}
+		}
+
+		return sanitized;
 	}
 
 	void LauncherLayer::WriteFileContents(const std::filesystem::path& filepath, const std::string& content)
@@ -62,10 +94,11 @@ namespace Cosmic
 			return;
 		}
 
-		std::ofstream file(filepath);
+		// Opened in binary mode so the underlying OS file streams don't double-translate our pristine \r\n formatting
+		std::ofstream file(filepath, std::ios::out | std::ios::binary);
 		if (file.is_open())
 		{
-			file << content;
+			file.write(content.c_str(), content.size());
 			file.close();
 			CS_CORE_INFO("Successfully synchronized file creation: {0}", filepath.string());
 		}
