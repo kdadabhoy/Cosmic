@@ -13,10 +13,15 @@ namespace Showcase
 	ShowcaseProject::ShowcaseProject()
 		: Cosmic::Layer("ShowcaseProject")
 	{
+		m_ActiveModeIndex = 0;
+
+		// =========================================================================
+		// INITIALIZE DIRECTLY IN CONSTRUCTOR TO FORCE LIFECYCLE EXECUTION
+		// =========================================================================
+		CS_INFO("ShowcaseProject: Initializing project context inside constructor...");
+
 		// 1. Establish Virtual File System context for the Showcase workspace
 		Cosmic::FileSystem::SetActiveProject("Showcase");
-
-		CS_INFO("ShowcaseProject: Initializing simulation layers via Virtual File System...");
 
 		std::string virtualFirePath = "project://shaders/FireShader.glsl";
 		std::string fireShaderPath = Cosmic::FileSystem::Resolve(virtualFirePath);
@@ -40,10 +45,11 @@ namespace Showcase
 
 		if (!assetsValid)
 		{
-			CS_ERROR("ShowcaseProject: Critical error during asset verification. Aborting structural simulation allocation!");
+			CS_ERROR("ShowcaseProject: Critical error during asset verification. Aborting simulation allocation!");
 			return;
 		}
 
+		// 2. Safely create engine structures
 		m_Scene = Cosmic::Scene::Create();
 		auto fireShader = Cosmic::Shader::Create(fireShaderPath);
 		m_DinoMaterial = Cosmic::Material::Create(fireShader, "DinoMaterial");
@@ -54,9 +60,7 @@ namespace Showcase
 			CS_INFO("ShowcaseProject: DinoMaterial bound to registry address: 0x{0:x}", (uintptr_t)m_DinoMaterial.get());
 		}
 
-		// =========================================================================
-		// INITIALIZE MODES DIRECTLY IN CONSTRUCTOR
-		// =========================================================================
+		// 3. Populate sub-modes
 		if (m_DinoMaterial)
 		{
 			m_Modes.push_back(std::make_shared<ShowcaseFlightLayer>(m_Scene, m_DinoMaterial));
@@ -73,12 +77,15 @@ namespace Showcase
 			{
 				mode->SetViewportSize(1280.0f, 720.0f);
 			}
+
+			CS_INFO("ShowcaseProject: Succesfully initialized {0} simulation sub-modes.", m_Modes.size());
 		}
 	}
 
 	void ShowcaseProject::OnAttach()
 	{
-		// Safe to leave empty, or add runtime-specific hooks here later
+		// Kept as a safe fallback fallback hook 
+		CS_INFO("ShowcaseProject: OnAttach event handshaking completed.");
 	}
 
 	void ShowcaseProject::OnDetach()
@@ -94,7 +101,6 @@ namespace Showcase
 	{
 		if (m_Modes.empty()) return;
 
-		// Track running application timestamps for uniform modifications
 		float dt = ts > 0.0f ? ts : 0.001f;
 		static float s_AccumulatedTime = 0.0f;
 		s_AccumulatedTime += dt;
@@ -104,7 +110,6 @@ namespace Showcase
 			m_DinoMaterial->Set("u_Time", s_AccumulatedTime);
 		}
 
-		// Run updates on our simulations
 		m_Modes[m_ActiveModeIndex]->OnUpdate(ts);
 		m_Modes[m_ActiveModeIndex]->OnFixedUpdate(ts);
 		m_Modes[m_ActiveModeIndex]->OnRender();
@@ -115,7 +120,8 @@ namespace Showcase
 		if (m_Modes.empty())
 		{
 			ImGui::Begin("Cosmic Module: Showcase Manager");
-			ImGui::Text("Waiting for simulation modes to initialize or verify assets...");
+			ImGui::TextColored(ImVec4(1.0f, 0.4f, 0.4f, 1.0f), "CRITICAL: Asset validation failed or workspace directories missing.");
+			ImGui::Text("Verify that assets/projects/Showcase/shaders/FireShader.glsl exists.");
 			ImGui::End();
 			return;
 		}
