@@ -40,15 +40,12 @@ namespace Cosmic
 		buffer << in.rdbuf();
 		std::string content = buffer.str();
 
-		// Perform global replacements
 		size_t pos;
-		// Replace the project name token
 		while ((pos = content.find("TemplateProject")) != std::string::npos)
 		{
 			content.replace(pos, 15, projectName);
 		}
 
-		// Replace engine SDK path reference if present in CMakeLists or batch files
 		while ((pos = content.find("ENGINE_SDK_PATH_TOKEN")) != std::string::npos)
 		{
 			content.replace(pos, 21, engineSDKPath);
@@ -191,8 +188,7 @@ namespace Cosmic
 			return;
 		}
 
-		// Resolve absolute root to SDK home by navigating out of build/Runtime/Config
-		fs::path engineSDKDir = fs::current_path(); // inside build/Runtime/<Config>
+		fs::path engineSDKDir = fs::current_path();
 		if (engineSDKDir.filename() == "Debug" || engineSDKDir.filename() == "Release")
 		{
 			engineSDKDir = engineSDKDir.parent_path().parent_path().parent_path();
@@ -205,7 +201,6 @@ namespace Cosmic
 		std::string engineSDKPath = engineSDKDir.string();
 		std::replace(engineSDKPath.begin(), engineSDKPath.end(), '\\', '/');
 
-		// FIXED: Point directly to where your template configurations are safely housed
 		fs::path templateRoot = engineSDKDir / "Cosmic" / "templates" / "ExampleProject";
 
 		if (!fs::exists(templateRoot))
@@ -221,26 +216,22 @@ namespace Cosmic
 		fs::create_directories(srcPath);
 		fs::create_directories(assetsPath);
 
-		// Read template structures
 		std::string cmakeContent = ReadAndProcessTemplate(templateRoot / "CMakeLists.txt", projName, engineSDKPath);
 		std::string batchContent = ReadAndProcessTemplate(templateRoot / "build.bat", projName, engineSDKPath);
 		std::string headerContent = ReadAndProcessTemplate(templateRoot / "src" / "TemplateProject.h", projName, engineSDKPath);
 		std::string cppContent = ReadAndProcessTemplate(templateRoot / "src" / "TemplateProject.cpp", projName, engineSDKPath);
 
-		// Guard from blank target writing
 		if (cmakeContent.empty() || batchContent.empty() || headerContent.empty() || cppContent.empty())
 		{
 			m_StatusMessage = "[ERROR] Project files parsing failure. Check core engine log files.";
 			return;
 		}
 
-		// Write processed payload files 
 		WriteFileContents(rootPath / "CMakeLists.txt", cmakeContent);
 		WriteFileContents(rootPath / "build.bat", batchContent);
 		WriteFileContents(srcPath / (projName + ".h"), headerContent);
 		WriteFileContents(srcPath / (projName + ".cpp"), cppContent);
 
-		// Mirror structural assets files if they exist
 		fs::path templateShaderSrc = templateRoot / "assets" / "shaders" / "FireShader.glsl";
 		if (fs::exists(templateShaderSrc))
 		{
@@ -250,7 +241,6 @@ namespace Cosmic
 
 		m_StatusMessage = "Successfully generated project: " + projName + ". Running compilation pipeline...";
 
-		// Execute build pipeline console asynchronously
 		fs::path batchPath = rootPath / "build.bat";
 		std::string command = "cmd.exe /c \"" + batchPath.string() + "\"";
 
@@ -350,12 +340,28 @@ namespace Cosmic
 			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.1f, 0.3f, 0.15f, 1.0f));
 			if (ImGui::Button("+ Create New Project Wizard", ImVec2(220, 40)))
 			{
-				std::string selectedDir = BrowseFolder();
-				if (!selectedDir.empty())
+				// DEDUCE ENGINE SDK DIRECTORY ROOT 
+				fs::path engineSDKDir = fs::current_path();
+				if (engineSDKDir.filename() == "Debug" || engineSDKDir.filename() == "Release")
 				{
-					m_TargetGenerationPath = selectedDir;
-					ImGui::OpenPopup("Project Creation Wizard");
+					engineSDKDir = engineSDKDir.parent_path().parent_path().parent_path();
 				}
+				else if (engineSDKDir.filename() == "Runtime")
+				{
+					engineSDKDir = engineSDKDir.parent_path().parent_path();
+				}
+
+				// DETERMINE DEFAULT TARGET GENERATION SUB-FOLDER
+				fs::path defaultProjectsFolder = engineSDKDir / "Projects";
+
+				// Keep the runtime sturdy: construct directory if missing
+				if (!fs::exists(defaultProjectsFolder))
+				{
+					fs::create_directories(defaultProjectsFolder);
+				}
+
+				m_TargetGenerationPath = defaultProjectsFolder.string();
+				ImGui::OpenPopup("Project Creation Wizard");
 			}
 			ImGui::PopStyleColor();
 
@@ -387,7 +393,18 @@ namespace Cosmic
 				ImGui::Separator();
 				ImGui::Spacing();
 
-				ImGui::Text("Destination Directory: %s", m_TargetGenerationPath.c_str());
+				// DISPLAY PRE-DEDUCED ROUTE ALONGSIDE THE MANUAL SEARCH OVERRIDE
+				ImGui::Text("Target Root: %s", m_TargetGenerationPath.c_str());
+				ImGui::SameLine();
+				if (ImGui::Button("Browse..."))
+				{
+					std::string manualSelection = BrowseFolder();
+					if (!manualSelection.empty())
+					{
+						m_TargetGenerationPath = manualSelection;
+					}
+				}
+
 				ImGui::InputText("Project App Name", nameBuffer, IM_ARRAYSIZE(nameBuffer));
 
 				if (!modalError.empty())
