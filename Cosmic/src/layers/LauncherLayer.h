@@ -29,9 +29,6 @@ namespace Cosmic
 		virtual void OnImGuiRender() override;
 
 	private:
-		void ScanForProjects();
-
-	private:
 		std::vector<std::string> m_DiscoveredProjects;
 		std::string m_StatusMessage = "Ready to launch.";
 		std::string m_SelectedProject = "";
@@ -43,5 +40,13 @@ namespace Cosmic
 
 
 		std::string m_TargetGenerationPath = "";
+
+
+	private:
+		void ScanForProjects();
+		std::string BrowseFolder();
+		void GenerateProjectTemplate(const std::string& baseDir, const std::string& projName); 
+
+
 	};
 }
