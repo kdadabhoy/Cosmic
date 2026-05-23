@@ -1,31 +1,30 @@
 #pragma once
-// ShowcaseStressLayer.h
 
-#include "IShowcaseMode.h"
+#include <Cosmic.h>
+#include <vector>
 
 namespace Showcase
 {
-	class ShowcaseStressLayer : public IShowcaseMode
+	class ShowcaseStressLayer : public Cosmic::Layer
 	{
 	public:
-		ShowcaseStressLayer(Cosmic::Ref<Cosmic::Scene> scene, Cosmic::Ref<Cosmic::Material> materialA, Cosmic::Ref<Cosmic::Material> materialB);
-		virtual ~ShowcaseStressLayer() = default;
+		ShowcaseStressLayer(
+			Cosmic::Ref<Cosmic::Scene> scene,
+			Cosmic::Ref<Cosmic::Material> materialA,
+			Cosmic::Ref<Cosmic::Material> materialB
+		);
+		virtual ~ShowcaseStressLayer() override = default;
 
-		virtual const std::string& GetName() const override
-		{
-			static std::string s_Name = "ECS Stress Test";
-			return s_Name;
-		}
-
+		// Standard engine layer lifecycle contract
+		virtual void OnAttach() override;
+		virtual void OnDetach() override;
 		virtual void OnUpdate(float ts) override;
-		virtual void OnFixedUpdate(float fixedDt) override;
-		virtual void OnRender() override;
 		virtual void OnImGuiRender() override;
 		virtual void OnEvent(Cosmic::Event& e) override;
-		virtual void SetViewportSize(float w, float h) override { m_Camera.OnResize(w, h); }
 
 	private:
 		void RebuildGrid();
+		bool OnWindowResize(Cosmic::WindowResizeEvent& e);
 
 	private:
 		Cosmic::Ref<Cosmic::Scene> m_Scene;
@@ -38,7 +37,8 @@ namespace Showcase
 		int m_GridRadius = 15;
 		float m_CellSpacing = 0.15f;
 		float m_Time = 0.0f;
-		uint32_t m_FixedTicks = 0;
+		uint32_t m_UpdateTicks = 0;
 		bool m_Animate = true;
+		glm::vec2 m_ViewportSize = { 1280.0f, 720.0f };
 	};
 }

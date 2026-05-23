@@ -1,7 +1,6 @@
 #pragma once
-
 // WorkspaceLayer.h
-// Last Modified: 5/19/2026
+// Last Modified: 5/23/2026
 
 #include "Cosmic.h"
 #include <glm/glm.hpp>
@@ -12,7 +11,7 @@ namespace Cosmic
 	{
 	public:
 		WorkspaceLayer();
-		virtual ~WorkspaceLayer() = default;
+		virtual ~WorkspaceLayer() override = default;
 
 		virtual void OnAttach() override;
 		virtual void OnDetach() override;
@@ -22,13 +21,13 @@ namespace Cosmic
 		virtual void OnEvent(Cosmic::Event& e) override;
 
 		// --- Project-Agnostic Viewport Layer Management ---
-		inline void SetViewportLayer(Cosmic::Layer* layer) { m_ClientViewportLayer = layer; }
-		inline void ClearViewportLayer() { m_ClientViewportLayer = nullptr; }
+		// Crucial Lifecycle Hook Fixes: Promoted to source file implementations
+		void SetViewportLayer(Cosmic::Layer* layer);
+		void ClearViewportLayer();
 		inline bool HasViewportLayer() const { return m_ClientViewportLayer != nullptr; }
 
-
-		void RequestLayoutReset()			{ m_ShouldResetLayout = true; }
-		bool IsReadyForDeletion() const		{ return m_ReadyForDeletion; }
+		void RequestLayoutReset() { m_ShouldResetLayout = true; }
+		bool IsReadyForDeletion() const { return m_ReadyForDeletion; }
 
 	private:
 		Cosmic::Layer* m_ClientViewportLayer = nullptr;
@@ -37,7 +36,6 @@ namespace Cosmic
 		glm::vec2 m_ViewportSize = { 0.0f, 0.0f };
 		bool m_ViewportFocused = false;
 		bool m_ViewportHovered = false;
-
 
 	private:
 		bool m_ShouldResetLayout = false;

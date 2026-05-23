@@ -1,38 +1,43 @@
 #pragma once
-// ShowcaseFlightLayer.h
 
-#include "IShowcaseMode.h"
+#include <Cosmic.h>
+#include <vector>
+#include <glm/glm.hpp>
 
 namespace Showcase
 {
-	class ShowcaseFlightLayer : public IShowcaseMode
+	struct FlightDinoComponent
+	{
+		float Speed = 2.0f;
+		float Slope = 0.0f;
+		glm::vec4 Color = { 1.0f, 1.0f, 1.0f, 1.0f };
+		std::vector<glm::vec3> Trail;
+		bool Selected = false;
+	};
+
+	class ShowcaseFlightLayer : public Cosmic::Layer
 	{
 	public:
 		ShowcaseFlightLayer(Cosmic::Ref<Cosmic::Scene> scene, Cosmic::Ref<Cosmic::Material> dinoMaterial);
-		virtual ~ShowcaseFlightLayer() = default;
+		virtual ~ShowcaseFlightLayer() override = default;
 
-		virtual const std::string& GetName() const override
-		{
-			static std::string s_Name = "Flight";
-			return s_Name;
-		}
-
-		virtual void OnUpdate(float ts)            override;
-		virtual void OnFixedUpdate(float fixedDt)  override;
-		virtual void OnRender()                    override;
-		virtual void OnImGuiRender()               override;
-		virtual void OnEvent(Cosmic::Event& e)     override;
-		virtual void SetViewportSize(float w, float h) override;
+		// Standard layer engine lifecycle callbacks
+		virtual void OnAttach() override;
+		virtual void OnDetach() override;
+		virtual void OnUpdate(float ts) override;
+		virtual void OnImGuiRender() override;
+		virtual void OnEvent(Cosmic::Event& e) override;
 
 	private:
 		bool OnMouseClicked(Cosmic::MouseButtonPressedEvent& e);
+		bool OnWindowResize(Cosmic::WindowResizeEvent& e);
 		glm::vec2 ScreenToWorld(glm::vec2 screenPos) const;
 		bool HitTest(Cosmic::Entity entity, glm::vec2 worldPos) const;
 		void SelectEntity(Cosmic::Entity e);
 		void DeselectAll();
 
 	private:
-		Cosmic::Ref<Cosmic::Scene>    m_Scene;
+		Cosmic::Ref<Cosmic::Scene> m_Scene;
 		Cosmic::Ref<Cosmic::Material> m_DinoMaterial;
 		Cosmic::OrthographicCameraController m_Camera;
 

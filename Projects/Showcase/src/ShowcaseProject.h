@@ -1,8 +1,8 @@
 #pragma once
+
 #include <Cosmic.h>
 #include <vector>
 #include <memory>
-#include "IShowcaseMode.h"
 
 namespace Showcase
 {
@@ -19,7 +19,8 @@ namespace Showcase
 		virtual void OnEvent(Cosmic::Event& e) override;
 
 	private:
-		std::vector<std::shared_ptr<IShowcaseMode>> m_Modes;
+		// Clean engine design: The workspace manages an array of actual engine layers
+		std::vector<std::shared_ptr<Cosmic::Layer>> m_Modes;
 		int m_ActiveModeIndex = 0;
 
 		Cosmic::Ref<Cosmic::Scene> m_Scene;

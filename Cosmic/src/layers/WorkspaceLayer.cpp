@@ -22,9 +22,37 @@ namespace Cosmic
 		// Do NOT call ImGui functions... or it will cause crashes
 	}
 
+	void WorkspaceLayer::SetViewportLayer(Cosmic::Layer* layer)
+	{
+		// 1. If there is an existing runtime layer mounted, detach it cleanly first
+		if (m_ClientViewportLayer)
+		{
+			CS_CORE_WARN("WorkspaceLayer: Evicting previous client layer context: {0}", m_ClientViewportLayer->GetName());
+			m_ClientViewportLayer->OnDetach();
+		}
+
+		m_ClientViewportLayer = layer;
+
+		// 2. Crucial Engine Fix: Instantly link the engine assembly lifecycle cascade
+		if (m_ClientViewportLayer)
+		{
+			CS_CORE_INFO("WorkspaceLayer: Coupling incoming dynamic plugin layer: {0}", m_ClientViewportLayer->GetName());
+			m_ClientViewportLayer->OnAttach();
+		}
+	}
+
+	void WorkspaceLayer::ClearViewportLayer()
+	{
+		if (m_ClientViewportLayer)
+		{
+			CS_CORE_WARN("WorkspaceLayer: Clearing viewport layer context: {0}", m_ClientViewportLayer->GetName());
+			m_ClientViewportLayer->OnDetach();
+		}
+		m_ClientViewportLayer = nullptr;
+	}
+
 	void WorkspaceLayer::OnUpdate(float ts)
 	{
-		// FIX: Use your engine's native Ref<T> handle instead of an auto& lvalue reference helper
 		Ref<FrameBuffer> fb = Cosmic::Application::Get().GetFrameBuffer();
 
 		// 1. Synchronize the hardware framebuffer with the layout window viewport metrics
@@ -78,7 +106,6 @@ namespace Cosmic
 			return; // Exit immediately; do not attempt to render layout or framebuffers
 		}
 
-
 		static bool dockspaceOpen = true;
 		static bool firstTime = true;
 
@@ -117,13 +144,11 @@ namespace Cosmic
 			ImGui::DockBuilderFinish(dockspace_id);
 		}
 
-
 		// 4. Main Menu Bar
 		if (ImGui::BeginMenuBar())
 		{
 			if (ImGui::BeginMenu("File"))
 			{
-				// Add the "Back to Home" option
 				if (ImGui::MenuItem("Return to Launcher"))
 				{
 					Cosmic::Application::Get().TransitionToLauncher();
@@ -175,7 +200,6 @@ namespace Cosmic
 		ImGui::End();
 
 		ImGui::End(); // End MasterDockSpace
-
 	}
 
 	void WorkspaceLayer::OnEvent(Cosmic::Event& e)

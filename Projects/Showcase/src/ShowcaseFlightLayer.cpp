@@ -5,11 +5,16 @@
 namespace Showcase
 {
 	ShowcaseFlightLayer::ShowcaseFlightLayer(
-		Cosmic::Ref<Cosmic::Scene>    scene,
+		Cosmic::Ref<Cosmic::Scene> scene,
 		Cosmic::Ref<Cosmic::Material> dinoMaterial)
-		: m_Scene(scene)
+		: Cosmic::Layer("ShowcaseFlightLayer") // Registers standard native name identifier
+		, m_Scene(scene)
 		, m_DinoMaterial(dinoMaterial)
 		, m_Camera(1280.0f / 720.0f, false)
+	{
+	}
+
+	void ShowcaseFlightLayer::OnAttach()
 	{
 		m_Camera.SetZoomLevel(2.0f);
 		m_Camera.SetZoomLimits(0.5f, 20.0f);
@@ -41,91 +46,21 @@ namespace Showcase
 		}
 	}
 
-	void ShowcaseFlightLayer::SetViewportSize(float w, float h)
-	{
-		m_ViewportSize = { w, h };
-		m_Camera.OnResize(w, h);
-	}
-
-	void ShowcaseFlightLayer::OnEvent(Cosmic::Event& e)
-	{
-		m_Camera.OnEvent(e);
-		if (e.Handled) return;
-
-		Cosmic::EventDispatcher dispatcher(e);
-		dispatcher.Dispatch<Cosmic::MouseButtonPressedEvent>(
-			GLCORE_BIND_EVENT_FN(ShowcaseFlightLayer::OnMouseClicked));
-	}
-
-	bool ShowcaseFlightLayer::OnMouseClicked(Cosmic::MouseButtonPressedEvent& e)
-	{
-		if (e.GetMouseButton() != CS_MOUSE_BUTTON_LEFT) return false;
-
-		glm::vec2 screenPos = Cosmic::Input::GetMousePosition();
-		glm::vec2 worldPos = ScreenToWorld(screenPos);
-
-		if (HitTest(m_DinoA, worldPos))
-		{
-			SelectEntity(m_DinoA);
-			return true;
-		}
-		if (HitTest(m_DinoB, worldPos))
-		{
-			SelectEntity(m_DinoB);
-			return true;
-		}
-
-		DeselectAll();
-		return false;
-	}
-
-	glm::vec2 ShowcaseFlightLayer::ScreenToWorld(glm::vec2 screenPos) const
-	{
-		float ndcX = (screenPos.x / m_ViewportSize.x) * 2.0f - 1.0f;
-		float ndcY = 1.0f - (screenPos.y / m_ViewportSize.y) * 2.0f;
-
-		glm::mat4 invVP = glm::inverse(m_Camera.GetCamera().GetViewProjectionMatrix());
-		glm::vec4 world = invVP * glm::vec4(ndcX, ndcY, 0.0f, 1.0f);
-		return { world.x, world.y };
-	}
-
-	bool ShowcaseFlightLayer::HitTest(Cosmic::Entity entity, glm::vec2 worldPos) const
-	{
-		if (!entity) return false;
-		auto& t = entity.GetComponent<Cosmic::TransformComponent>();
-
-		float halfW = t.Scale.x * 0.5f;
-		float halfH = t.Scale.y * 0.5f;
-		return (worldPos.x >= t.Position.x - halfW &&
-			worldPos.x <= t.Position.x + halfW &&
-			worldPos.y >= t.Position.y - halfH &&
-			worldPos.y <= t.Position.y + halfH);
-	}
-
-	void ShowcaseFlightLayer::SelectEntity(Cosmic::Entity e)
+	void ShowcaseFlightLayer::OnDetach()
 	{
 		DeselectAll();
-		if (e) e.GetComponent<FlightDinoComponent>().Selected = true;
-		m_SelectedEntity = e;
-		CS_INFO("ShowcaseFlightLayer: Selected entity '{0}'", e ? e.GetComponent<Cosmic::TagComponent>().Tag : "none");
-	}
-
-	void ShowcaseFlightLayer::DeselectAll()
-	{
-		if (m_DinoA) m_DinoA.GetComponent<FlightDinoComponent>().Selected = false;
-		if (m_DinoB) m_DinoB.GetComponent<FlightDinoComponent>().Selected = false;
-		m_SelectedEntity = Cosmic::Entity{};
+		// In a production app, you could clear entities here if the scenes weren't shared globally
 	}
 
 	void ShowcaseFlightLayer::OnUpdate(float ts)
 	{
+		// 1. Update Camera and Trajectory Physics Engine simulation ticks
 		m_Camera.OnUpdate(ts);
-	}
 
-	void ShowcaseFlightLayer::OnFixedUpdate(float fixedDt)
-	{
+		float fixedDt = ts > 0.0f ? ts : 0.001f;
 		auto moveDino = [&](Cosmic::Entity ent)
 			{
+				if (!ent) return;
 				auto& t = ent.GetComponent<Cosmic::TransformComponent>();
 				auto& fd = ent.GetComponent<FlightDinoComponent>();
 
@@ -146,14 +81,13 @@ namespace Showcase
 					fd.Trail.erase(fd.Trail.begin());
 			};
 
-		if (m_DinoA) moveDino(m_DinoA);
-		if (m_DinoB) moveDino(m_DinoB);
-	}
+		moveDino(m_DinoA);
+		moveDino(m_DinoB);
 
-	void ShowcaseFlightLayer::OnRender()
-	{
+		// 2. Hardware Accelerated Scene Rendering Frame
 		Cosmic::Renderer2D::BeginScene(m_Camera.GetCamera());
 
+		// Grid background rendering
 		for (float x = -12.0f; x <= 12.0f; x += 2.0f)
 			Cosmic::Renderer2D::DrawLine({ x, -6.0f, -0.1f }, { x, 6.0f, -0.1f }, { 0.15f, 0.15f, 0.18f, 1.0f });
 		for (float y = -6.0f; y <= 6.0f; y += 2.0f)
@@ -190,9 +124,10 @@ namespace Showcase
 
 	void ShowcaseFlightLayer::OnImGuiRender()
 	{
-		ImGui::Text("--- Flight Simulation ---");
+		ImGui::Begin("Simulation Inspection Window");
+		ImGui::Text("--- Flight Simulation Viewport ---");
 		ImGui::Separator();
-		ImGui::Text("Left-click a dino to select it.");
+		ImGui::Text("Click down directly inside the editor grid viewport to map-select entity nodes.");
 		ImGui::Spacing();
 
 		auto showDinoStats = [&](const char* label, Cosmic::Entity ent)
@@ -213,13 +148,13 @@ namespace Showcase
 					ImGui::Text("Trail Pts:   %zu / %zu", fd.Trail.size(), k_MaxTrailLength);
 
 					ImGui::ColorEdit4("Trail Color", &fd.Color.x);
-					ImGui::SliderFloat("Speed##ctrl", &fd.Speed, 0.5f, 8.0f);
-					ImGui::SliderFloat("Slope##ctrl", &fd.Slope, -1.0f, 1.0f);
+					ImGui::SliderFloat("Speed Rate", &fd.Speed, 0.5f, 8.0f);
+					ImGui::SliderFloat("Ascent Angle", &fd.Slope, -1.0f, 1.0f);
 
-					if (ImGui::Button("Clear Trail"))
+					if (ImGui::Button("Flush Trail Cache"))
 						fd.Trail.clear();
 
-					if (ImGui::Button("Select"))
+					if (ImGui::Button("Focus Node"))
 						SelectEntity(ent);
 				}
 
@@ -227,18 +162,87 @@ namespace Showcase
 					ImGui::PopStyleColor();
 			};
 
-		showDinoStats("Dino A (Orange)", m_DinoA);
-		showDinoStats("Dino B (Cyan)", m_DinoB);
+		showDinoStats("Dino Entity Alpha (Orange)", m_DinoA);
+		showDinoStats("Dino Entity Beta (Cyan)", m_DinoB);
 
 		ImGui::Spacing();
 		if (m_SelectedEntity)
 		{
 			auto& tag = m_SelectedEntity.GetComponent<Cosmic::TagComponent>();
-			ImGui::TextColored({ 1.0f, 1.0f, 0.0f, 1.0f }, "Selected: %s", tag.Tag.c_str());
+			ImGui::TextColored({ 1.0f, 1.0f, 0.0f, 1.0f }, "Selected Node: %s", tag.Tag.c_str());
 		}
 		else
 		{
-			ImGui::TextDisabled("No dino selected.");
+			ImGui::TextDisabled("No active simulation entity focused.");
 		}
+		ImGui::End();
+	}
+
+	void ShowcaseFlightLayer::OnEvent(Cosmic::Event& e)
+	{
+		m_Camera.OnEvent(e);
+		if (e.Handled) return;
+
+		Cosmic::EventDispatcher dispatcher(e);
+		dispatcher.Dispatch<Cosmic::MouseButtonPressedEvent>(GLCORE_BIND_EVENT_FN(ShowcaseFlightLayer::OnMouseClicked));
+		dispatcher.Dispatch<Cosmic::WindowResizeEvent>(GLCORE_BIND_EVENT_FN(ShowcaseFlightLayer::OnWindowResize));
+	}
+
+	bool ShowcaseFlightLayer::OnMouseClicked(Cosmic::MouseButtonPressedEvent& e)
+	{
+		if (e.GetMouseButton() != CS_MOUSE_BUTTON_LEFT) return false;
+
+		glm::vec2 screenPos = Cosmic::Input::GetMousePosition();
+		glm::vec2 worldPos = ScreenToWorld(screenPos);
+
+		if (HitTest(m_DinoA, worldPos)) { SelectEntity(m_DinoA); return true; }
+		if (HitTest(m_DinoB, worldPos)) { SelectEntity(m_DinoB); return true; }
+
+		DeselectAll();
+		return false;
+	}
+
+	bool ShowcaseFlightLayer::OnWindowResize(Cosmic::WindowResizeEvent& e)
+	{
+		m_ViewportSize = { static_cast<float>(e.GetWidth()), static_cast<float>(e.GetHeight()) };
+		m_Camera.OnResize(m_ViewportSize.x, m_ViewportSize.y);
+		return false;
+	}
+
+	glm::vec2 ShowcaseFlightLayer::ScreenToWorld(glm::vec2 screenPos) const
+	{
+		float ndcX = (screenPos.x / m_ViewportSize.x) * 2.0f - 1.0f;
+		float ndcY = 1.0f - (screenPos.y / m_ViewportSize.y) * 2.0f;
+
+		glm::mat4 invVP = glm::inverse(m_Camera.GetCamera().GetViewProjectionMatrix());
+		glm::vec4 world = invVP * glm::vec4(ndcX, ndcY, 0.0f, 1.0f);
+		return { world.x, world.y };
+	}
+
+	bool ShowcaseFlightLayer::HitTest(Cosmic::Entity entity, glm::vec2 worldPos) const
+	{
+		if (!entity) return false;
+		auto& t = entity.GetComponent<Cosmic::TransformComponent>();
+
+		float halfW = t.Scale.x * 0.5f;
+		float halfH = t.Scale.y * 0.5f;
+		return (worldPos.x >= t.Position.x - halfW &&
+			worldPos.x <= t.Position.x + halfW &&
+			worldPos.y >= t.Position.y - halfH &&
+			worldPos.y <= t.Position.y + halfH);
+	}
+
+	void ShowcaseFlightLayer::SelectEntity(Cosmic::Entity e)
+	{
+		DeselectAll();
+		if (e) e.GetComponent<FlightDinoComponent>().Selected = true;
+		m_SelectedEntity = e;
+	}
+
+	void ShowcaseFlightLayer::DeselectAll()
+	{
+		if (m_DinoA) m_DinoA.GetComponent<FlightDinoComponent>().Selected = false;
+		if (m_DinoB) m_DinoB.GetComponent<FlightDinoComponent>().Selected = false;
+		m_SelectedEntity = Cosmic::Entity{};
 	}
 }

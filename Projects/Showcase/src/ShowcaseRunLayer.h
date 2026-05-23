@@ -1,33 +1,44 @@
 #pragma once
-// ShowcaseRunLayer.h
 
-#include "IShowcaseMode.h"
+#include <Cosmic.h>
+#include <vector>
 #include <random>
 
 namespace Showcase
 {
-	class ShowcaseRunLayer : public IShowcaseMode
+	struct RunnerDinoComponent
+	{
+		float Score = 0.0f;
+		float HighScore = 0.0f;
+		float SpeedMultiplier = 1.0f;
+		float VelocityY = 0.0f;
+		bool IsGrounded = false;
+	};
+
+	struct ObstacleComponent
+	{
+		float Speed = 3.5f;
+		float Width = 0.3f;
+		float Height = 1.0f;
+	};
+
+	class ShowcaseRunLayer : public Cosmic::Layer
 	{
 	public:
 		ShowcaseRunLayer(Cosmic::Ref<Cosmic::Scene> scene, Cosmic::Ref<Cosmic::Material> dinoMaterial);
-		virtual ~ShowcaseRunLayer() = default;
+		virtual ~ShowcaseRunLayer() override = default;
 
-		virtual const std::string& GetName() const override
-		{
-			static std::string s_Name = "Runner";
-			return s_Name;
-		}
-
+		// Native engine lifecycle mappings
+		virtual void OnAttach() override;
+		virtual void OnDetach() override;
 		virtual void OnUpdate(float ts) override;
-		virtual void OnFixedUpdate(float fixedDt) override;
-		virtual void OnRender() override;
 		virtual void OnImGuiRender() override;
 		virtual void OnEvent(Cosmic::Event& e) override;
-		virtual void SetViewportSize(float w, float h) override { m_Camera.OnResize(w, h); }
 
 	private:
 		void Reset();
 		bool OnKeyPressed(Cosmic::KeyPressedEvent& e);
+		bool OnWindowResize(Cosmic::WindowResizeEvent& e);
 
 	private:
 		Cosmic::Ref<Cosmic::Scene> m_Scene;
@@ -42,6 +53,7 @@ namespace Showcase
 		bool m_GameOver = false;
 
 		std::mt19937 m_Rng{ std::random_device{}() };
+		glm::vec2 m_ViewportSize = { 1280.0f, 720.0f };
 
 		static constexpr float k_GroundY = -0.8f;
 		static constexpr float k_Gravity = -16.0f;

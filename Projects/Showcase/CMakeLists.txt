@@ -5,6 +5,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# --- Compiler Toolchain Configurations ---
 if(MSVC)
     add_compile_options(/utf-8)
     add_compile_options(/external:W0)
@@ -18,7 +19,9 @@ if(WIN32)
     add_definitions(-DNOMINMAX)
 endif()
 
+# -------------------------------------------------------------------
 # 1. SDK Path Resolution
+# -------------------------------------------------------------------
 if(NOT COSMIC_SDK_DIR)
     set(COSMIC_SDK_DIR $ENV{COSMIC_SDK})
 endif()
@@ -27,26 +30,30 @@ if(NOT COSMIC_SDK_DIR)
     message(FATAL_ERROR "Cosmic Engine SDK path not found! Please verify environment parameters.")
 endif()
 
-# 2. Identify Source Files
-file(GLOB_RECURSE TEMPLATE_SOURCES "src/*.cpp" "src/*.h")
+# -------------------------------------------------------------------
+# 2. Automated File Discovery (Recursively Indexes All New & Extracted Layers)
+# -------------------------------------------------------------------
+file(GLOB_RECURSE SHOWCASE_SOURCES "src/*.cpp" "src/*.h")
 
+# If building outside the primary engine project tree, bundle embedded vendor sources
 if(NOT TARGET Cosmic)
-    list(APPEND TEMPLATE_SOURCES
+    list(APPEND SHOWCASE_SOURCES
         "${COSMIC_SDK_DIR}/Cosmic/dependencies/imgui/imgui.cpp"
         "${COSMIC_SDK_DIR}/Cosmic/dependencies/imgui/imgui_draw.cpp"
         "${COSMIC_SDK_DIR}/Cosmic/dependencies/imgui/imgui_widgets.cpp"
         "${COSMIC_SDK_DIR}/Cosmic/dependencies/imgui/imgui_tables.cpp"
-        "${COSMIC_SDK_DIR}/Cosmic/dependencies/imgui/imgui_demo.cpp" # Fixed: Prevents linker errors
+        "${COSMIC_SDK_DIR}/Cosmic/dependencies/imgui/imgui_demo.cpp"
         "${COSMIC_SDK_DIR}/Cosmic/dependencies/implot/implot.cpp"
         "${COSMIC_SDK_DIR}/Cosmic/dependencies/implot/implot_items.cpp"
     )
 endif()
 
-add_library(Showcase SHARED ${TEMPLATE_SOURCES})
+add_library(Showcase SHARED ${SHOWCASE_SOURCES})
 
-# 3. Include Paths
+# -------------------------------------------------------------------
+# 3. Comprehensive Virtual File System Include Mappings
+# -------------------------------------------------------------------
 target_include_directories(Showcase PRIVATE src)
-
 target_include_directories(Showcase SYSTEM PRIVATE 
     ${COSMIC_SDK_DIR}/Cosmic/src
     ${COSMIC_SDK_DIR}/Cosmic/dependencies/imgui
@@ -56,7 +63,9 @@ target_include_directories(Showcase SYSTEM PRIVATE
     ${COSMIC_SDK_DIR}/Cosmic/dependencies/spdlog/include
 )
 
-# 4. Target Linking
+# -------------------------------------------------------------------
+# 4. Agnostic Shared Library Target Linking Architecture
+# -------------------------------------------------------------------
 if(TARGET Cosmic)
     target_link_libraries(Showcase PRIVATE Cosmic)
 else()
@@ -65,8 +74,10 @@ else()
         set_target_properties(CosmicCore_Imported PROPERTIES
             IMPORTED_IMPLIB_DEBUG   "${COSMIC_SDK_DIR}/build/Runtime/Debug/Cosmic.lib"
             IMPORTED_LOCATION_DEBUG "${COSMIC_SDK_DIR}/build/Runtime/Debug/Cosmic.dll"
+            
             IMPORTED_IMPLIB_RELEASE   "${COSMIC_SDK_DIR}/build/Runtime/Release/Cosmic.lib"
             IMPORTED_LOCATION_RELEASE "${COSMIC_SDK_DIR}/build/Runtime/Release/Cosmic.dll"
+            
             MAP_IMPORTED_CONFIG_MINSIZEREL   "Release"
             MAP_IMPORTED_CONFIG_RELWITHDEBINFO "Release"
         )
@@ -78,18 +89,22 @@ else()
     target_link_libraries(Showcase PRIVATE CosmicCore_Imported)
 endif()
 
-# 5. Output Redirection
+# -------------------------------------------------------------------
+# 5. Native Frame Registry & Binaries Redirection
+# -------------------------------------------------------------------
 set_target_properties(Showcase PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${COSMIC_SDK_DIR}/build/Runtime/$<CONFIG>"
     LIBRARY_OUTPUT_DIRECTORY "${COSMIC_SDK_DIR}/build/Runtime/$<CONFIG>"
 )
 
-# 6. Asset Sync
+# -------------------------------------------------------------------
+# 6. Hands-Off Context Asset Stream Mirroring
+# -------------------------------------------------------------------
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/assets")
     add_custom_command(TARGET Showcase POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory
         "${CMAKE_CURRENT_SOURCE_DIR}/assets"
         "${COSMIC_SDK_DIR}/build/Runtime/$<CONFIG>/assets/projects/Showcase"
-        COMMENT "Syncing Showcase game assets to sandbox output directory..."
+        COMMENT "Syncing unified Showcase module assets to sandboxed VFS workspace..."
     )
 endif()

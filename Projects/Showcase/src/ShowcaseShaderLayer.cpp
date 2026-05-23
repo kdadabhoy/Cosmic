@@ -5,8 +5,13 @@
 namespace Showcase
 {
 	ShowcaseShaderLayer::ShowcaseShaderLayer(const std::string& shaderDirectory)
-		: m_ShaderDirectory(shaderDirectory)
+		: Cosmic::Layer("ShowcaseShaderLayer")
+		, m_ShaderDirectory(shaderDirectory)
 		, m_Camera(1280.0f / 720.0f, false)
+	{
+	}
+
+	void ShowcaseShaderLayer::OnAttach()
 	{
 		m_Camera.SetZoomLevel(1.0f);
 		m_Camera.SetZoomLimits(0.1f, 10.0f);
@@ -14,7 +19,16 @@ namespace Showcase
 		ScanShaderDirectory();
 
 		if (!m_ShaderPaths.empty())
+		{
 			LoadShader(m_ShaderPaths[0]);
+		}
+	}
+
+	void ShowcaseShaderLayer::OnDetach()
+	{
+		m_Material.reset();
+		m_ShaderPaths.clear();
+		m_ShaderNames.clear();
 	}
 
 	void ShowcaseShaderLayer::ScanShaderDirectory()
@@ -25,7 +39,7 @@ namespace Showcase
 		namespace fs = std::filesystem;
 		if (!fs::exists(m_ShaderDirectory))
 		{
-			CS_WARN("ShowcaseShaderLayer: Shader directory does not exist: '{0}'", m_ShaderDirectory);
+			CS_WARN("ShowcaseShaderLayer: Target workspace shader pool missing at: '{0}'", m_ShaderDirectory);
 			return;
 		}
 
@@ -43,7 +57,7 @@ namespace Showcase
 		std::sort(m_ShaderPaths.begin(), m_ShaderPaths.end());
 		std::sort(m_ShaderNames.begin(), m_ShaderNames.end());
 
-		CS_INFO("ShowcaseShaderLayer: Found {} shader(s) in '{}'.", m_ShaderPaths.size(), m_ShaderDirectory);
+		CS_INFO("ShowcaseShaderLayer: VFS indexed {0} standalone workspace shaders.", m_ShaderPaths.size());
 	}
 
 	void ShowcaseShaderLayer::LoadShader(const std::string& filepath)
@@ -58,23 +72,118 @@ namespace Showcase
 		if (!shader)
 		{
 			m_LoadError = true;
-			m_ErrorMsg = "Shader::Create returned nullptr for: " + filepath;
+			m_ErrorMsg = "Shader::Create context allocation failure for: " + filepath;
 			CS_ERROR("ShowcaseShaderLayer: {0}", m_ErrorMsg);
 			m_Material.reset();
 			return;
 		}
 
 		m_Material = Cosmic::Material::Create(shader, "ShaderBrowserMaterial");
-		m_Material->Set("u_Color", glm::vec4(1.0f));
-		m_Material->Set("u_Time", m_AccumulatedTime);
-
-		CS_INFO("ShowcaseShaderLayer: Loaded shader '{}'.", std::filesystem::path(filepath).filename().string());
+		if (m_Material)
+		{
+			m_Material->Set("u_Color", glm::vec4(1.0f));
+			m_Material->Set("u_Time", m_AccumulatedTime);
+			CS_INFO("ShowcaseShaderLayer: Pipeline bound to compilation node '{0}'.", std::filesystem::path(filepath).filename().string());
+		}
 	}
 
-	void ShowcaseShaderLayer::SetViewportSize(float w, float h)
+	void ShowcaseShaderLayer::OnUpdate(float ts)
 	{
-		m_ViewportSize = { w, h };
-		m_Camera.OnResize(w, h);
+		// 1. Structural View Camera Update
+		m_Camera.OnUpdate(ts);
+		m_AccumulatedTime += ts;
+
+		if (m_Material)
+		{
+			m_Material->Set("u_Time", m_AccumulatedTime);
+		}
+
+		Cosmic::Renderer2D::UpdateTimeline(ts, static_cast<uint32_t>(m_ViewportSize.x), static_cast<uint32_t>(m_ViewportSize.y));
+
+		// 2. Hardware Accelerated Procedural Material Pass
+		Cosmic::Renderer2D::BeginScene(m_Camera.GetCamera());
+
+		if (m_Material && !m_LoadError)
+		{
+			float aspect = m_ViewportSize.x / m_ViewportSize.y;
+			Cosmic::Renderer2D::DrawQuad({ 0.0f, 0.0f, 0.0f }, { 2.0f * aspect, 2.0f }, m_Material);
+		}
+		else
+		{
+			// Fallback error baseline color quad
+			Cosmic::Renderer2D::DrawQuad({ 0.0f, 0.0f, 0.0f }, { 4.0f, 4.0f }, { 0.08f, 0.08f, 0.1f, 1.0f });
+		}
+
+		Cosmic::Renderer2D::EndScene();
+	}
+
+	void ShowcaseShaderLayer::OnImGuiRender()
+	{
+		ImGui::Begin("Simulation Inspection Window");
+		ImGui::Text("--- Shader Browser Node Matrix ---");
+		ImGui::Separator();
+
+		ImGui::TextWrapped("Scanning System Target: %s", m_ShaderDirectory.c_str());
+		ImGui::SameLine();
+		if (ImGui::SmallButton("Rescan Pool (F5)")) ScanShaderDirectory();
+
+		ImGui::Spacing();
+
+		if (m_ShaderPaths.empty())
+		{
+			ImGui::TextColored({ 1.0f, 0.5f, 0.2f, 1.0f }, "No valid .glsl context definitions found in targeted project tree.");
+			ImGui::End();
+			return;
+		}
+
+		ImGui::Text("Available Pipeline Modules:");
+		ImGui::BeginChild("ShaderList", { 0.0f, 200.0f }, true);
+		for (int i = 0; i < static_cast<int>(m_ShaderNames.size()); ++i)
+		{
+			bool selected = (i == m_SelectedIndex);
+			if (selected) ImGui::PushStyleColor(ImGuiCol_Text, { 0.4f, 1.0f, 0.4f, 1.0f });
+
+			if (ImGui::Selectable(m_ShaderNames[i].c_str(), selected))
+			{
+				LoadShader(m_ShaderPaths[i]);
+			}
+
+			if (selected) ImGui::PopStyleColor();
+		}
+		ImGui::EndChild();
+
+		ImGui::Spacing();
+
+		bool canReload = (m_SelectedIndex >= 0 && m_SelectedIndex < static_cast<int>(m_ShaderPaths.size()));
+		if (!canReload) ImGui::BeginDisabled();
+		if (ImGui::Button("Hot-Reload Compilation (R)")) LoadShader(m_ShaderPaths[m_SelectedIndex]);
+		if (!canReload) ImGui::EndDisabled();
+
+		if (m_LoadError)
+		{
+			ImGui::Spacing();
+			ImGui::TextColored({ 1.0f, 0.2f, 0.2f, 1.0f }, "GPU Compilation Backtrace Error:");
+			ImGui::TextWrapped("%s", m_ErrorMsg.c_str());
+		}
+		else if (m_SelectedIndex >= 0)
+		{
+			ImGui::Spacing();
+			ImGui::TextColored({ 0.4f, 1.0f, 0.4f, 1.0f }, "Active Buffer: %s", m_ShaderNames[m_SelectedIndex].c_str());
+			ImGui::Text("Shader Clock Phase: %.2fs", m_AccumulatedTime);
+
+			if (m_Material)
+			{
+				glm::vec4 tint = m_Material->GetVector("u_Color");
+				if (ImGui::ColorEdit4("Uniform Color Overlay", &tint.x))
+				{
+					m_Material->Set("u_Color", tint);
+				}
+			}
+		}
+
+		ImGui::Spacing();
+		ImGui::TextDisabled("Hotkeys: R = reload buffer  |  F5 = rescan project paths  |  Scroll Wheel = camera zoom");
+		ImGui::End();
 	}
 
 	void ShowcaseShaderLayer::OnEvent(Cosmic::Event& e)
@@ -83,8 +192,8 @@ namespace Showcase
 		if (e.Handled) return;
 
 		Cosmic::EventDispatcher dispatcher(e);
-		dispatcher.Dispatch<Cosmic::KeyPressedEvent>(
-			GLCORE_BIND_EVENT_FN(ShowcaseShaderLayer::OnKeyPressed));
+		dispatcher.Dispatch<Cosmic::KeyPressedEvent>(GLCORE_BIND_EVENT_FN(ShowcaseShaderLayer::OnKeyPressed));
+		dispatcher.Dispatch<Cosmic::WindowResizeEvent>(GLCORE_BIND_EVENT_FN(ShowcaseShaderLayer::OnWindowResize));
 	}
 
 	bool ShowcaseShaderLayer::OnKeyPressed(Cosmic::KeyPressedEvent& e)
@@ -95,7 +204,7 @@ namespace Showcase
 		{
 			if (m_SelectedIndex >= 0 && m_SelectedIndex < static_cast<int>(m_ShaderPaths.size()))
 			{
-				CS_INFO("ShowcaseShaderLayer: Hot-reloading shader (R pressed).");
+				CS_INFO("ShowcaseShaderLayer: Hot-reloading shader via hotkey tracking...");
 				LoadShader(m_ShaderPaths[m_SelectedIndex]);
 				return true;
 			}
@@ -110,93 +219,10 @@ namespace Showcase
 		return false;
 	}
 
-	void ShowcaseShaderLayer::OnUpdate(float ts)
+	bool ShowcaseShaderLayer::OnWindowResize(Cosmic::WindowResizeEvent& e)
 	{
-		m_Camera.OnUpdate(ts);
-		m_AccumulatedTime += ts;
-
-		if (m_Material)
-		{
-			m_Material->Set("u_Time", m_AccumulatedTime);
-		}
-
-		Cosmic::Renderer2D::UpdateTimeline(ts, static_cast<uint32_t>(m_ViewportSize.x), static_cast<uint32_t>(m_ViewportSize.y));
-	}
-
-	void ShowcaseShaderLayer::OnRender()
-	{
-		Cosmic::Renderer2D::BeginScene(m_Camera.GetCamera());
-
-		if (m_Material && !m_LoadError)
-		{
-			float aspect = m_ViewportSize.x / m_ViewportSize.y;
-			Cosmic::Renderer2D::DrawQuad({ 0.0f, 0.0f, 0.0f }, { 2.0f * aspect, 2.0f }, m_Material);
-		}
-		else
-		{
-			Cosmic::Renderer2D::DrawQuad({ 0.0f, 0.0f, 0.0f }, { 4.0f, 4.0f }, { 0.08f, 0.08f, 0.1f, 1.0f });
-		}
-
-		Cosmic::Renderer2D::EndScene();
-	}
-
-	void ShowcaseShaderLayer::OnImGuiRender()
-	{
-		ImGui::Text("--- Shader Browser ---");
-		ImGui::Separator();
-
-		ImGui::TextWrapped("Scanning: %s", m_ShaderDirectory.c_str());
-		ImGui::SameLine();
-		if (ImGui::SmallButton("Rescan (F5)")) ScanShaderDirectory();
-
-		ImGui::Spacing();
-
-		if (m_ShaderPaths.empty())
-		{
-			ImGui::TextColored({ 1.0f, 0.5f, 0.2f, 1.0f }, "No .glsl files found in the directory above.");
-			return;
-		}
-
-		ImGui::Text("Select a shader:");
-		ImGui::BeginChild("ShaderList", { 0.0f, 200.0f }, true);
-		for (int i = 0; i < static_cast<int>(m_ShaderNames.size()); ++i)
-		{
-			bool selected = (i == m_SelectedIndex);
-			if (selected) ImGui::PushStyleColor(ImGuiCol_Text, { 0.4f, 1.0f, 0.4f, 1.0f });
-
-			if (ImGui::Selectable(m_ShaderNames[i].c_str(), selected)) LoadShader(m_ShaderPaths[i]);
-
-			if (selected) ImGui::PopStyleColor();
-		}
-		ImGui::EndChild();
-
-		ImGui::Spacing();
-
-		bool canReload = (m_SelectedIndex >= 0 && m_SelectedIndex < static_cast<int>(m_ShaderPaths.size()));
-		if (!canReload) ImGui::BeginDisabled();
-		if (ImGui::Button("Reload (R)")) LoadShader(m_ShaderPaths[m_SelectedIndex]);
-		if (!canReload) ImGui::EndDisabled();
-
-		if (m_LoadError)
-		{
-			ImGui::Spacing();
-			ImGui::TextColored({ 1.0f, 0.2f, 0.2f, 1.0f }, "Load Error:");
-			ImGui::TextWrapped("%s", m_ErrorMsg.c_str());
-		}
-		else if (m_SelectedIndex >= 0)
-		{
-			ImGui::Spacing();
-			ImGui::TextColored({ 0.4f, 1.0f, 0.4f, 1.0f }, "Active: %s", m_ShaderNames[m_SelectedIndex].c_str());
-			ImGui::Text("Elapsed time: %.2fs", m_AccumulatedTime);
-
-			if (m_Material)
-			{
-				glm::vec4 tint = m_Material->GetVector("u_Color");
-				if (ImGui::ColorEdit4("Tint Override", &tint.x)) m_Material->Set("u_Color", tint);
-			}
-		}
-
-		ImGui::Spacing();
-		ImGui::TextDisabled("R = reload  |  F5 = rescan  |  Scroll = zoom");
+		m_ViewportSize = { static_cast<float>(e.GetWidth()), static_cast<float>(e.GetHeight()) };
+		m_Camera.OnResize(m_ViewportSize.x, m_ViewportSize.y);
+		return false;
 	}
 }

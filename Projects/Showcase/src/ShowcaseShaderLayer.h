@@ -1,33 +1,30 @@
 #pragma once
-// ShowcaseShaderLayer.h
 
-#include "IShowcaseMode.h"
+#include <Cosmic.h>
+#include <vector>
+#include <string>
 #include <filesystem>
 
 namespace Showcase
 {
-	class ShowcaseShaderLayer : public IShowcaseMode
+	class ShowcaseShaderLayer : public Cosmic::Layer
 	{
 	public:
 		ShowcaseShaderLayer(const std::string& shaderDirectory);
-		virtual ~ShowcaseShaderLayer() = default;
+		virtual ~ShowcaseShaderLayer() override = default;
 
-		virtual const std::string& GetName() const override
-		{
-			static std::string s_Name = "Shader Browser";
-			return s_Name;
-		}
-
+		// Standard engine lifecycle overrides
+		virtual void OnAttach() override;
+		virtual void OnDetach() override;
 		virtual void OnUpdate(float ts) override;
-		virtual void OnRender() override;
 		virtual void OnImGuiRender() override;
 		virtual void OnEvent(Cosmic::Event& e) override;
-		virtual void SetViewportSize(float w, float h) override;
 
 	private:
 		void ScanShaderDirectory();
 		void LoadShader(const std::string& filepath);
 		bool OnKeyPressed(Cosmic::KeyPressedEvent& e);
+		bool OnWindowResize(Cosmic::WindowResizeEvent& e);
 
 	private:
 		std::string m_ShaderDirectory;
