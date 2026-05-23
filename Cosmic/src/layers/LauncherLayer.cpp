@@ -183,7 +183,7 @@ namespace Cosmic
 
 		if (fs::exists(rootPath))
 		{
-			m_StatusMessage = "[ERROR] Generation aborted: Directory '" + projName + "' already exists!";
+			m_StatusMessage = "[ERROR] Generation aborted: Directory already exists!";
 			CS_CORE_ERROR("Project generation failed: {0} already exists.", rootPath.string());
 			return;
 		}
@@ -224,6 +224,7 @@ namespace Cosmic
 		if (cmakeContent.empty() || batchContent.empty() || headerContent.empty() || cppContent.empty())
 		{
 			m_StatusMessage = "[ERROR] Project files parsing failure. Check core engine log files.";
+			CS_CORE_ERROR("Project structure parsing failed: One or more critical template components generated completely empty vectors.");
 			return;
 		}
 
@@ -240,6 +241,7 @@ namespace Cosmic
 		}
 
 		m_StatusMessage = "Successfully generated project: " + projName + ". Running compilation pipeline...";
+		CS_CORE_INFO("Project workspace configuration complete. Initializing background compilation process.");
 
 		fs::path batchPath = rootPath / "build.bat";
 		std::string command = "cmd.exe /c \"" + batchPath.string() + "\"";
@@ -258,6 +260,7 @@ namespace Cosmic
 		else
 		{
 			m_StatusMessage = "[WARNING] Project created, but build.bat failed to initialize execution environment.";
+			CS_CORE_WARN("Build System Warning: Win32 Environment Engine was unable to launch build process process handle.");
 		}
 	}
 
@@ -422,20 +425,39 @@ namespace Cosmic
 					std::string finalName = nameBuffer;
 					if (!finalName.empty())
 					{
-						fs::path checkPath = fs::path(m_TargetGenerationPath) / finalName;
-
-						if (fs::exists(checkPath))
+						// 1. Check if the project name matches a project that is already compiled/synced
+						auto it = std::find(m_DiscoveredProjects.begin(), m_DiscoveredProjects.end(), finalName);
+						if (it != m_DiscoveredProjects.end())
 						{
-							modalError = "Error: Folder '" + finalName + "' already exists!";
+							modalError = "Error: A project named '" + finalName + "' is already synced!";
+							CS_CORE_ERROR("Project Wizard Aborted: Validation checking failed. A project named '{0}' is already tracked in active layout.", finalName);
 						}
 						else
 						{
-							modalError = "";
-							GenerateProjectTemplate(m_TargetGenerationPath, finalName);
-							ImGui::CloseCurrentPopup();
+							// 2. Fallback check: Does the physical folder already exist at the target path?
+							fs::path checkPath = fs::path(m_TargetGenerationPath) / finalName;
+
+							if (fs::exists(checkPath))
+							{
+								modalError = "Error: Folder '" + finalName + "' already exists at destination!";
+								CS_CORE_ERROR("Project Wizard Aborted: Local validation failed. Destination subdirectory already exists on disk: '{0}'", checkPath.string());
+							}
+							else
+							{
+								// Clear errors and run generation pipeline safely
+								modalError = "";
+								GenerateProjectTemplate(m_TargetGenerationPath, finalName);
+								ImGui::CloseCurrentPopup();
+							}
 						}
 					}
+					else
+					{
+						modalError = "Error: Project name cannot be empty!";
+						CS_CORE_ERROR("Project Wizard Aborted: Target verification failed. Given configuration project string parameter was blank.");
+					}
 				}
+
 				ImGui::SameLine();
 				if (ImGui::Button("Cancel", ImVec2(140, 30)))
 				{
