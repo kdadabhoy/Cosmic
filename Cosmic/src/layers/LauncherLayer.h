@@ -40,5 +40,8 @@ namespace Cosmic
 		// Cleaned up tracking definitions
 		Ref<Texture2D> m_BackgroundTexture;
 		OrthographicCamera m_Camera;
+
+
+		std::string m_TargetGenerationPath = "";
 	};
 }
