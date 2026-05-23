@@ -59,7 +59,8 @@ namespace Cosmic
 
 			if (path.find("project://") == 0)
 			{
-				return "assets/" + s_ActiveProjectName + "/" + path.substr(10);
+				// Added "projects/" to match the CMake POST_BUILD directory structure perfectly
+				return "assets/projects/" + s_ActiveProjectName + "/" + path.substr(10);
 			}
 
 			return path; // Fallback for raw paths

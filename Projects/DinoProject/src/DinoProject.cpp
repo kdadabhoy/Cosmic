@@ -13,15 +13,39 @@ namespace Workspace
 	DinoProject::DinoProject()
 		: Layer("DinoProject")
 	{
+		// 1. Establish our Virtual File System context
+		Cosmic::FileSystem::SetActiveProject("DinoProject");
+
 		CS_INFO("DinoProject: Initializing simulation layers...");
 
-		std::string dinoPath = "assets/projects/DinoProject/Dino.png";
+		// =========================================================================
+		// VIRTUAL PATH CONFIGURATION (Easily swap files here)
+		// =========================================================================
+		std::string virtualDinoPath = "project://Dino.png";
+		std::string virtualShaderPath = "project://shaders/DebugTexture.glsl";
 
-		// Restored back to native distinct pipeline shader profiles
+		// Dynamic Fire Shader Choices
+		std::string virtualFirePath = "project://shaders/FireShader.glsl";
+		// std::string virtualFirePath = "project://shaders/GloriousLineAlgorithm.glsl";
+
+		// Shader Sandbox Test Selection Matrix
+		//std::string virtualTestPath  = "project://shaders/GloriousLineAlgorithm.glsl";
+		//std::string virtualTestPath  = "project://shaders/Octagrams.glsl";
+		//std::string virtualTestPath  = "project://shaders/FractalPyramid.glsl";
+		//std::string virtualTestPath  = "project://shaders/CyberFuji.glsl";
+		//std::string virtualTestPath  = "project://shaders/Mandelbulb.glsl";
+		//std::string virtualTestPath  = "project://shaders/Cloud.glsl";
+		std::string virtualTestPath = "project://shaders/Space.glsl";
+
+		// =========================================================================
+		// HARDCODED FALLBACK REFERENCES (Preserved for your internal documentation)
+		// =========================================================================
+		/*
+		std::string dinoPath = "assets/projects/DinoProject/Dino.png";
 		std::string shaderPath = "assets/projects/DinoProject/shaders/DebugTexture.glsl";
 		std::string fireShaderPath = "assets/projects/DinoProject/shaders/FireShader.glsl";
 
-		// shaderTest
+		// shaderTest Legacy Native Strings
 		//std::string shaderTestPath = "assets/projects/DinoProject/shaders/GloriousLineAlgorithm.glsl";
 		//std::string shaderTestPath = "assets/projects/DinoProject/shaders/Octagrams.glsl";
 		//std::string shaderTestPath = "assets/projects/DinoProject/shaders/FractalPyramid.glsl";
@@ -29,15 +53,21 @@ namespace Workspace
 		//std::string shaderTestPath = "assets/projects/DinoProject/shaders/Mandelbulb.glsl";
 		//std::string shaderTestPath = "assets/projects/DinoProject/shaders/Cloud.glsl";
 		std::string shaderTestPath = "assets/projects/DinoProject/shaders/Space.glsl";
+		*/
 
-
-
+		// =========================================================================
+		// PATH RESOLUTION AND VALIDATION PIPELINE
+		// =========================================================================
+		std::string dinoPath = Cosmic::FileSystem::Resolve(virtualDinoPath);
+		std::string shaderPath = Cosmic::FileSystem::Resolve(virtualShaderPath);
+		std::string fireShaderPath = Cosmic::FileSystem::Resolve(virtualFirePath);
+		std::string shaderTestPath = Cosmic::FileSystem::Resolve(virtualTestPath);
 
 		auto VerifyAsset = [](const std::string& path, const std::string& name) -> bool
 			{
 				if (!std::filesystem::exists(path))
 				{
-					CS_ERROR("DinoProject: FAILED to find {0} at '{1}'", name, path);
+					CS_ERROR("DinoProject: FAILED to find {0} at resolved path: '{1}'", name, path);
 					return false;
 				}
 				uintmax_t fileSize = std::filesystem::file_size(path);
@@ -56,6 +86,9 @@ namespace Workspace
 			return;
 		}
 
+		// =========================================================================
+		// RESOURCE RESOURCE ALLOCATION & REGISTRY REGISTRATION
+		// =========================================================================
 		m_DinoTexture = Cosmic::Texture2D::Create(dinoPath);
 		CS_TRACE("DinoProject: Native Texture2D allocated handle ID: {0}", m_DinoTexture->GetRendererID());
 
@@ -77,17 +110,17 @@ namespace Workspace
 			m_FireMaterial->Set("u_Color", glm::vec4(1.0f, 0.5f, 0.2f, 1.0f));
 		}
 
-		// Allocate new procedural material context tracking container
 		m_ShaderTestMaterial = Cosmic::Material::Create(shaderTestShader, "ShaderTestMaterial");
 
+		// =========================================================================
+		// SUB-SIMULATION LAYER INSTANTIATION
+		// =========================================================================
 		m_Scene = Cosmic::Scene::Create();
 		CS_TRACE("DinoProject: Master scene runtime context created.");
 
 		m_RunSim = std::make_unique<DinoRunLayer>(m_Scene, m_DinoMaterial);
 		m_FlightSim = std::make_unique<DinoFlightLayer>(m_Scene, m_DinoMaterial);
 		m_StressSim = std::make_unique<DinoStressLayer>(m_Scene);
-
-		// Initialize the structural sandbox layout mode container
 		m_ShaderTestSim = std::make_unique<DinoShaderTestLayer>(m_Scene, m_ShaderTestMaterial);
 
 		auto stressLayerPtr = static_cast<DinoStressLayer*>(m_StressSim.get());
@@ -99,6 +132,8 @@ namespace Workspace
 		m_ActiveSim = m_RunSim.get();
 		CS_INFO("DinoProject: All sub-simulation layers bound. Simulation root fully operational.");
 	}
+
+
 
 	void DinoProject::OnDetach()
 	{
