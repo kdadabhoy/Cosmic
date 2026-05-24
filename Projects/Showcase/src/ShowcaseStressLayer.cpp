@@ -90,7 +90,8 @@ namespace Showcase
 		// By querying Layer::GetLocalTime(), updates match variable hardware monitor refresh rates perfectly.
 		if (m_Animate)
 		{
-			float currentTimelineTime = Cosmic::Layer::GetLocalTime();
+			// ARCHITECTURE FIX: Called member instance method to safely capture the current context time
+			float currentTimelineTime = GetLocalTime();
 			for (auto& ent : m_GridEntities)
 			{
 				auto& t = ent.GetComponent<Cosmic::TransformComponent>();
@@ -154,7 +155,9 @@ namespace Showcase
 
 		// ARCHITECTURE FIX: Display pure system ticks along with native engine layer time
 		ImGui::Text("Fixed Step Iterations: %u steps", m_UpdateTicks);
-		ImGui::Text("Timeline Sync Phase:   %.2fs", Cosmic::Layer::GetLocalTime());
+
+		// ARCHITECTURE FIX: Extracted value using the local instance function call
+		ImGui::Text("Timeline Sync Phase:   %.2fs", GetLocalTime());
 		ImGui::Spacing();
 
 		ImGui::TextWrapped("System Architecture Notice: Entities are grouped automatically into localized asset/material buckets. Alternate layouts using 2 materials will trigger a pipeline flush only when batch array bounds or allocation thresholds are exceeded.");

@@ -83,8 +83,9 @@ namespace Showcase
 		if (m_Material)
 		{
 			m_Material->Set("u_Color", glm::vec4(1.0f));
-			// ARCHITECTURE FIX: Query the synchronized local layer timeline instead of a local float
-			m_Material->Set("u_Time", Cosmic::Layer::GetLocalTime());
+
+			// ARCHITECTURE FIX: Called instance method to fetch this layer's individual timeline clock
+			m_Material->Set("u_Time", GetLocalTime());
 			CS_INFO("ShowcaseShaderLayer: Pipeline bound to compilation node '{0}'.", std::filesystem::path(filepath).filename().string());
 		}
 	}
@@ -106,11 +107,10 @@ namespace Showcase
 	{
 		m_Camera.OnUpdate(ts);
 
-		// ARCHITECTURE FIX: Push variable framerate updates down to the shader
-		// using the pre-scaled timeline provider.
+		// ARCHITECTURE FIX: Called instance method to fetch this layer's individual timeline clock
 		if (m_Material)
 		{
-			m_Material->Set("u_Time", Cosmic::Layer::GetLocalTime());
+			m_Material->Set("u_Time", GetLocalTime());
 		}
 
 		Cosmic::Renderer2D::BeginScene(m_Camera.GetCamera());
@@ -181,8 +181,8 @@ namespace Showcase
 			ImGui::Spacing();
 			ImGui::TextColored({ 0.4f, 1.0f, 0.4f, 1.0f }, "Active Buffer: %s", m_ShaderNames[m_SelectedIndex].c_str());
 
-			// ARCHITECTURE FIX: Reflect the native synchronized timeline phase in the inspector UI
-			ImGui::Text("Shader Clock Phase: %.2fs", Cosmic::Layer::GetLocalTime());
+			// ARCHITECTURE FIX: Called instance method to fetch this layer's individual timeline clock
+			ImGui::Text("Shader Clock Phase: %.2fs", GetLocalTime());
 
 			if (m_Material)
 			{

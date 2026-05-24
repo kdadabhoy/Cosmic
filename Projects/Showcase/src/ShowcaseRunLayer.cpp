@@ -175,9 +175,10 @@ namespace Showcase
 	{
 		m_Camera.OnUpdate(ts);
 
+		// TIMELINE UPDATE FIX: Use this layer instance's local time tracking context
 		if (m_DinoMaterial)
 		{
-			m_DinoMaterial->Set("u_Time", Cosmic::Layer::GetLocalTime());
+			m_DinoMaterial->Set("u_Time", GetLocalTime());
 		}
 
 		Cosmic::Renderer2D::BeginScene(m_Camera.GetCamera());
@@ -263,8 +264,8 @@ namespace Showcase
 	{
 		if (e.GetRepeatCount() > 0) return false;
 
-		// FIX: If the simulation is frozen or running backwards, ignore active gameplay movements
-		if (Cosmic::Application::Get().GetTimeScale() <= 0.0f)
+		// TIMELINE UPDATE FIX: Map checking behavior to this layer's clock context speed scale
+		if (GetTimeScale() <= 0.0f)
 		{
 			// Allow pressing R or SPACE to reset a Game Over screen even while paused
 			if (m_GameOver && (e.GetKeyCode() == CS_KEY_SPACE || e.GetKeyCode() == CS_KEY_UP || e.GetKeyCode() == CS_KEY_R))

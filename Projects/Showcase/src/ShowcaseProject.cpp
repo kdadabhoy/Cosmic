@@ -80,16 +80,20 @@ namespace Showcase
 	{
 		if (m_Modes.empty()) return;
 
-		if (m_DinoMaterial)
-		{
-			m_DinoMaterial->Set("u_Time", Cosmic::Application::Get().GetAbsoluteTime());
-		}
-
 		// CLEAN ENGINE ARCHITECTURE: 
 		// We pass the incoming timestep down directly. The engine loop and WorkspaceLayer
 		// have already scaled 'ts' perfectly before it hits us.
 		auto& activeMode = m_Modes[m_ActiveModeIndex];
 		activeMode->UpdateLayerTime(ts);
+
+		// CLEAN ARCHITECTURE FIX: 
+		// Query the localized synchronised timeline from the active mode layer 
+		// to feed materials instead of fetching engine global absolute time.
+		if (m_DinoMaterial)
+		{
+			m_DinoMaterial->Set("u_Time", activeMode->GetLocalTime());
+		}
+
 		activeMode->OnUpdate(ts);
 	}
 
