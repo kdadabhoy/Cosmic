@@ -10,7 +10,7 @@ namespace Showcase
 	{
 		float Score = 0.0f;
 		float HighScore = 0.0f;
-		float SpeedMultiplier = 1.0f;
+		float SpeedMultiplier = 1.0f; // Shifted default from 0.01f to 1.0f so standard scale equals normal speed
 		float VelocityY = 0.0f;
 		bool IsGrounded = false;
 	};
@@ -32,6 +32,7 @@ namespace Showcase
 		virtual void OnAttach() override;
 		virtual void OnDetach() override;
 		virtual void OnUpdate(float ts) override;
+		virtual void OnFixedUpdate(float deltaFixedTime) override;
 		virtual void OnImGuiRender() override;
 		virtual void OnEvent(Cosmic::Event& e) override;
 
@@ -59,6 +60,7 @@ namespace Showcase
 		static constexpr float k_Gravity = -16.0f;
 		static constexpr float k_JumpV = 6.2f;
 
-		float m_AccumulatedTime = 0.0f;
+		// Interactive Tuning Modifiers
+		float m_BaseObstacleSpeed = 3.5f;
 	};
 }

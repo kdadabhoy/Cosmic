@@ -1,5 +1,4 @@
 #pragma once
-
 #include <Cosmic.h>
 #include <vector>
 
@@ -19,6 +18,7 @@ namespace Showcase
 		virtual void OnAttach() override;
 		virtual void OnDetach() override;
 		virtual void OnUpdate(float ts) override;
+		virtual void OnFixedUpdate(float deltaFixedTime) override;
 		virtual void OnImGuiRender() override;
 		virtual void OnEvent(Cosmic::Event& e) override;
 

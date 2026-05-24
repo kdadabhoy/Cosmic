@@ -1,7 +1,7 @@
 #pragma once
 
 // Material.h
-// Last Modified 5/14/2026
+// Last Modified 5/24/2026
 
 /**
  * General Description:
@@ -103,6 +103,8 @@ namespace Cosmic
 
         inline Ref<Shader>                  GetShader() const       { return m_Shader; }
         inline const std::string&           GetName() const         { return m_Name; }
+
+        bool HasFloat(const std::string& name) const;
 
     private:
         ////////////////////////////////

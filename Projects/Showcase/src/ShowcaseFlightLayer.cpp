@@ -14,16 +14,11 @@ namespace Showcase
 	{
 	}
 
-	// =========================================================================
-	// Lifecycle Management
-	// =========================================================================
-
 	void ShowcaseFlightLayer::OnAttach()
 	{
 		m_Camera.SetZoomLevel(2.0f);
 		m_Camera.SetZoomLimits(0.5f, 20.0f);
 
-		// Allocate and configure Flight Dino Entity Alpha
 		m_DinoA = m_Scene->CreateEntity("FlightDino_A");
 		{
 			auto& t = m_DinoA.GetComponent<Cosmic::TransformComponent>();
@@ -37,7 +32,6 @@ namespace Showcase
 			fd.Trail.push_back(t.Position);
 		}
 
-		// Allocate and configure Flight Dino Entity Beta
 		m_DinoB = m_Scene->CreateEntity("FlightDino_B");
 		{
 			auto& t = m_DinoB.GetComponent<Cosmic::TransformComponent>();
@@ -55,41 +49,38 @@ namespace Showcase
 	void ShowcaseFlightLayer::OnDetach()
 	{
 		DeselectAll();
+		if (m_DinoA) m_Scene->DestroyEntity(m_DinoA);
+		if (m_DinoB) m_Scene->DestroyEntity(m_DinoB);
 	}
 
 	// =========================================================================
-	// System Core Ticks
+	// Deterministic Simulation Updates
 	// =========================================================================
-
-	void ShowcaseFlightLayer::OnUpdate(float ts)
+	void ShowcaseFlightLayer::OnFixedUpdate(float deltaFixedTime)
 	{
-		m_Camera.OnUpdate(ts);
-		float fixedDt = ts > 0.0f ? ts : 0.001f;
+		// NO MORE MANUAL TIMELINE HACKS:
+		// The incoming deltaFixedTime is pre-scaled natively by our workspace shell.
 
-		// Lambda routine to step linear flight translation kinematics
 		auto moveDino = [&](Cosmic::Entity ent)
 			{
 				if (!ent) return;
 				auto& t = ent.GetComponent<Cosmic::TransformComponent>();
 				auto& fd = ent.GetComponent<FlightDinoComponent>();
 
-				t.Position.x += fd.Speed * fixedDt;
-				t.Position.y += fd.Speed * fd.Slope * fixedDt;
+				t.Position.x += fd.Speed * deltaFixedTime;
+				t.Position.y += fd.Speed * fd.Slope * deltaFixedTime;
 
-				// Handle wrap-around boundary logic
 				if (t.Position.x > 12.0f)
 				{
 					t.Position.x = -12.0f;
 					fd.Trail.clear();
 				}
 
-				// Bounce orientation on vertical limits
 				if (t.Position.y > 5.0f || t.Position.y < -5.0f)
 				{
 					fd.Slope = -fd.Slope;
 				}
 
-				// Push tracking breadcrumbs down to the trail structure
 				fd.Trail.push_back(t.Position);
 				if (fd.Trail.size() > k_MaxTrailLength)
 				{
@@ -99,17 +90,26 @@ namespace Showcase
 
 		moveDino(m_DinoA);
 		moveDino(m_DinoB);
+	}
 
-		// ---------------------------------------------------------------------
-		// Hardware Render Pipeline Execution Blocks
-		// ---------------------------------------------------------------------
+	// =========================================================================
+	// Frame Graphics Render Pass
+	// =========================================================================
+	void ShowcaseFlightLayer::OnUpdate(float ts)
+	{
+		m_Camera.OnUpdate(ts);
 
-		// 🌟 FIX: Synchronize engine timeline contexts to update procedural shader uniforms
-		Cosmic::Renderer2D::UpdateTimeline(ts, static_cast<uint32_t>(m_ViewportSize.x), static_cast<uint32_t>(m_ViewportSize.y));
+		// CLEAN ARCHITECTURE FIX: 
+		// We query the native synchronized timeline via Layer::GetLocalTime() 
+		// to feed our materials. This ensures smooth, scaled rendering frame updates.
+		if (m_DinoMaterial)
+		{
+			m_DinoMaterial->Set("u_Time", Cosmic::Layer::GetLocalTime());
+		}
 
 		Cosmic::Renderer2D::BeginScene(m_Camera.GetCamera());
 
-		// Render backdrop structural alignment grid
+		// Draw background structural alignment grid lines
 		for (float x = -12.0f; x <= 12.0f; x += 2.0f)
 		{
 			Cosmic::Renderer2D::DrawLine({ x, -6.0f, -0.1f }, { x, 6.0f, -0.1f }, { 0.15f, 0.15f, 0.18f, 1.0f });
@@ -119,14 +119,12 @@ namespace Showcase
 			Cosmic::Renderer2D::DrawLine({ -12.0f, y, -0.1f }, { 12.0f, y, -0.1f }, { 0.15f, 0.15f, 0.18f, 1.0f });
 		}
 
-		// Lambda routine to process graphic primitives for entities
 		auto drawDino = [&](Cosmic::Entity ent)
 			{
 				if (!ent) return;
 				auto& t = ent.GetComponent<Cosmic::TransformComponent>();
 				auto& fd = ent.GetComponent<FlightDinoComponent>();
 
-				// Step and draw alpha blended path lines
 				size_t n = fd.Trail.size();
 				for (size_t i = 1; i < n; ++i)
 				{
@@ -136,10 +134,8 @@ namespace Showcase
 					Cosmic::Renderer2D::DrawLine(fd.Trail[i - 1], fd.Trail[i], trailColor);
 				}
 
-				// Draw entity sprite utilizing the global Raymarched Fire Material context
 				Cosmic::Renderer2D::DrawQuad(t.Position, t.Scale, m_DinoMaterial);
 
-				// Overlay highlighted border outlines if focused
 				if (fd.Selected)
 				{
 					Cosmic::Renderer2D::DrawRect(t.Position, { t.Scale.x + 0.12f, t.Scale.y + 0.12f }, { 1.0f, 1.0f, 0.0f, 1.0f });
@@ -157,24 +153,21 @@ namespace Showcase
 		ImGui::Begin("Simulation Inspection Window");
 		ImGui::Text("--- Flight Simulation Viewport ---");
 		ImGui::Separator();
-		ImGui::Text("Click down directly inside the editor grid viewport to map-select entity nodes.");
+
+		// Read directly from the Layer's native timeline for UI inspection output
+		ImGui::Text("Flight Timeline Phase: %.2fs", Cosmic::Layer::GetLocalTime());
 		ImGui::Spacing();
 
-		// Lambda to display interactive GUI configuration nodes
 		auto showDinoStats = [&](const char* label, Cosmic::Entity ent)
 			{
 				if (!ent) return;
 
 				ImGui::PushID((int)(uint32_t)ent);
-
 				auto& t = ent.GetComponent<Cosmic::TransformComponent>();
 				auto& fd = ent.GetComponent<FlightDinoComponent>();
 
 				bool selected = fd.Selected;
-				if (selected)
-				{
-					ImGui::PushStyleColor(ImGuiCol_Text, { 1.0f, 1.0f, 0.0f, 1.0f });
-				}
+				if (selected) ImGui::PushStyleColor(ImGuiCol_Text, { 1.0f, 1.0f, 0.0f, 1.0f });
 
 				if (ImGui::CollapsingHeader(label, selected ? ImGuiTreeNodeFlags_DefaultOpen : 0))
 				{
@@ -187,16 +180,12 @@ namespace Showcase
 					ImGui::SliderFloat("Speed Rate", &fd.Speed, 0.5f, 8.0f);
 					ImGui::SliderFloat("Ascent Angle", &fd.Slope, -1.0f, 1.0f);
 
-					if (ImGui::Button("Flush Trail Cache"))        fd.Trail.clear();
+					if (ImGui::Button("Flush Trail Cache")) fd.Trail.clear();
 					ImGui::SameLine();
-					if (ImGui::Button("Focus Node"))               SelectEntity(ent);
+					if (ImGui::Button("Focus Node"))      SelectEntity(ent);
 				}
 
-				if (selected)
-				{
-					ImGui::PopStyleColor();
-				}
-
+				if (selected) ImGui::PopStyleColor();
 				ImGui::PopID();
 			};
 
@@ -204,7 +193,6 @@ namespace Showcase
 		showDinoStats("Dino Entity Beta (Cyan)", m_DinoB);
 
 		ImGui::Spacing();
-
 		if (m_SelectedEntity)
 		{
 			auto& tag = m_SelectedEntity.GetComponent<Cosmic::TagComponent>();
@@ -217,10 +205,6 @@ namespace Showcase
 
 		ImGui::End();
 	}
-
-	// =========================================================================
-	// Engine Event Routing Channels
-	// =========================================================================
 
 	void ShowcaseFlightLayer::OnEvent(Cosmic::Event& e)
 	{
@@ -239,7 +223,6 @@ namespace Showcase
 		glm::vec2 screenPos = Cosmic::Input::GetMousePosition();
 		glm::vec2 worldPos = ScreenToWorld(screenPos);
 
-		// Perform raycast check intersection calculations
 		if (HitTest(m_DinoA, worldPos)) { SelectEntity(m_DinoA); return true; }
 		if (HitTest(m_DinoB, worldPos)) { SelectEntity(m_DinoB); return true; }
 
@@ -254,33 +237,19 @@ namespace Showcase
 		return false;
 	}
 
-	// =========================================================================
-	// Coordinate Space Transforms & Utilities
-	// =========================================================================
-
 	glm::vec2 ShowcaseFlightLayer::ScreenToWorld(glm::vec2 screenPos) const
 	{
 		glm::vec2 displaySize = { m_ViewportSize.x, m_ViewportSize.y };
-
-		// Fallback safe mapping using ImGui's main viewport context space
 		ImGuiViewport* viewport = ImGui::GetMainViewport();
 		float localX = screenPos.x - viewport->Pos.x;
 		float localY = screenPos.y - viewport->Pos.y;
 
-		if (ImGui::GetCurrentContext() != nullptr)
-		{
-			// Safe evaluation of relative viewport mouse mapping
-			glm::vec2 mousePosInViewport = { ImGui::GetIO().MousePos.x, ImGui::GetIO().MousePos.y };
-		}
-
-		// Convert screen layout boundaries down to NDC space
 		float ndcX = (localX / displaySize.x) * 2.0f - 1.0f;
 		float ndcY = 1.0f - (localY / displaySize.y) * 2.0f;
 
 		ndcX = glm::clamp(ndcX, -1.0f, 1.0f);
 		ndcY = glm::clamp(ndcY, -1.0f, 1.0f);
 
-		// Multiply by the inverse View-Projection matrix to reach world space coordinates
 		glm::mat4 invVP = glm::inverse(m_Camera.GetCamera().GetViewProjectionMatrix());
 		glm::vec4 world = invVP * glm::vec4(ndcX, ndcY, 0.0f, 1.0f);
 		return { world.x, world.y };

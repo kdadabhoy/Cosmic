@@ -86,7 +86,7 @@ namespace Cosmic
         glm::mat4 ViewProjectionMatrix;
 
         // Other
-        float TimeAccumulator = 0.0f;
+		//float TimeAccumulator = 0.0f;
         glm::vec2 ViewportDimensions = { 1280.0f, 720.0f };
     };
 
@@ -243,8 +243,16 @@ namespace Cosmic
 
 			// 3. Upload global, scene-wide system uniforms to the active program context
 			activeShader->SetMat4("u_ViewProjection", s_Data.ViewProjectionMatrix);
-			activeShader->SetFloat("u_Time", s_Data.TimeAccumulator);
 			activeShader->SetFloat2("u_ViewportSize", s_Data.ViewportDimensions);
+
+
+            /*
+			// Only use global time if the current material hasn't explicitly set its own "u_Time"
+			if (s_Data.CurrentMaterial && s_Data.CurrentMaterial->HasFloat("u_Time"))
+			{
+				// Do nothing! Material::Bind() already uploaded your local layer time perfectly.
+			}
+            */
 
 			// 4. Dispatch Indexed Draw Call
 			s_Data.QuadVertexArray->Bind();
@@ -622,10 +630,13 @@ namespace Cosmic
 
     //////////////////////////////////////
 
+
+    /* Old
 	void Renderer2D::UpdateTimeline(float ts, uint32_t width, uint32_t height)
 	{
 		s_Data.TimeAccumulator += ts;
 		s_Data.ViewportDimensions = { static_cast<float>(width), static_cast<float>(height) };
 	}
+    */
 
 } // namespace Cosmic

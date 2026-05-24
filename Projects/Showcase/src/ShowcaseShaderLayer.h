@@ -1,5 +1,4 @@
 #pragma once
-
 #include <Cosmic.h>
 #include <vector>
 #include <string>
@@ -17,6 +16,7 @@ namespace Showcase
 		virtual void OnAttach() override;
 		virtual void OnDetach() override;
 		virtual void OnUpdate(float ts) override;
+		virtual void OnFixedUpdate(float deltaFixedTime) override;
 		virtual void OnImGuiRender() override;
 		virtual void OnEvent(Cosmic::Event& e) override;
 
@@ -36,7 +36,6 @@ namespace Showcase
 		Cosmic::Ref<Cosmic::Material> m_Material;
 		int m_SelectedIndex = -1;
 
-		float m_AccumulatedTime = 0.0f;
 		glm::vec2 m_ViewportSize = { 1280.0f, 720.0f };
 
 		bool m_LoadError = false;

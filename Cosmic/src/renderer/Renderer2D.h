@@ -133,7 +133,8 @@ namespace Cosmic
 
 
 	public:
-		static void UpdateTimeline(float ts, uint32_t width, uint32_t height);
+		//Old and will be deleted.. should be the users job to set the material with u_Time
+		// static void UpdateTimeline(float ts, uint32_t width, uint32_t height);
 
 	private:
 		static void FlushAndReset();

@@ -1,7 +1,5 @@
 #pragma once
-
 #include <Cosmic.h>
-#include <glm/glm.hpp>
 #include <vector>
 
 namespace Showcase
@@ -19,18 +17,18 @@ namespace Showcase
 	{
 	public:
 		ShowcaseFlightLayer(Cosmic::Ref<Cosmic::Scene> scene, Cosmic::Ref<Cosmic::Material> dinoMaterial);
-		virtual ~ShowcaseFlightLayer() = default;
+		virtual ~ShowcaseFlightLayer() override = default;
 
 		virtual void OnAttach() override;
 		virtual void OnDetach() override;
 		virtual void OnUpdate(float ts) override;
+		virtual void OnFixedUpdate(float deltaFixedTime) override;
 		virtual void OnImGuiRender() override;
 		virtual void OnEvent(Cosmic::Event& e) override;
 
 	private:
 		bool OnMouseClicked(Cosmic::MouseButtonPressedEvent& e);
 		bool OnWindowResize(Cosmic::WindowResizeEvent& e);
-
 		glm::vec2 ScreenToWorld(glm::vec2 screenPos) const;
 		bool HitTest(Cosmic::Entity entity, glm::vec2 worldPos) const;
 		void SelectEntity(Cosmic::Entity e);
@@ -46,6 +44,6 @@ namespace Showcase
 		Cosmic::Entity m_SelectedEntity;
 
 		glm::vec2 m_ViewportSize = { 1280.0f, 720.0f };
-		const size_t k_MaxTrailLength = 300;
+		static constexpr size_t k_MaxTrailLength = 40;
 	};
 }

@@ -1,4 +1,3 @@
-// Application.cpp
 #include "Cosmic.h"
 #include "core/Application.h"
 #include "renderer/Renderer.h"
@@ -171,6 +170,7 @@ namespace Cosmic
 			float time = (float)glfwGetTime();
 			Timestep rawTimestep = time - lastFrameTime;
 			lastFrameTime = time;
+			m_AbsoluteTime += rawTimestep.GetSeconds() * m_TimeScale;
 
 			// Skip execution passes entirely if the hardware window framework is minimized
 			if (m_Minimized)
@@ -197,7 +197,7 @@ namespace Cosmic
 				{
 					for (Layer* layer : m_LayerStack)
 					{
-						layer->OnFixedUpdate(Timestep(fixedDeltaTime));
+						layer->OnFixedUpdate(fixedDeltaTime);;
 					}
 					accumulator -= fixedDeltaTime;
 				}
@@ -210,7 +210,11 @@ namespace Cosmic
 			Timestep scaledTimestep = rawTimestep.GetSeconds() * m_TimeScale;
 			for (Layer* layer : m_LayerStack)
 			{
-				layer->OnUpdate(scaledTimestep);
+				// 1. Core Engine updates the layer's local timeline automatically
+				layer->UpdateLayerTime(scaledTimestep.GetSeconds());
+
+				// 2. Client code runs its standard frame updates
+				layer->OnUpdate(scaledTimestep.GetSeconds());
 			}
 
 
@@ -376,8 +380,6 @@ namespace Cosmic
 
 		// 2. Locate dynamic linkage hooks and engine export signatures
 		auto initContexts = (void(*)(HostContext))GetProcAddress(handle, "InitializePluginContexts");
-
-		// The plugin export signature drops complex abstractions and passes raw Layer pointers
 		auto createPluginLayer = (Cosmic::Layer * (*)())GetProcAddress(handle, "CreatePluginLayer");
 
 		if (!initContexts || !createPluginLayer)
@@ -390,8 +392,6 @@ namespace Cosmic
 		m_PluginHandle = handle;
 
 		// 3. Context Sharing Architecture
-		// Synchronizes memory addresses of UI context structures across compilation domains 
-		// to allow client DLLs to render UI elements straight into the master ImGui backend.
 		HostContext ctx;
 		ctx.ImGuiCtx = ImGui::GetCurrentContext();
 		ctx.ImPlotCtx = ImPlot::GetCurrentContext();
@@ -403,6 +403,7 @@ namespace Cosmic
 		if (m_WorkspaceLayer)
 		{
 			m_WorkspaceLayer->SetViewportLayer(m_ActivePluginLayer);
+
 			CS_CORE_INFO("Successfully loaded and mounted project DLL Layer!");
 		}
 		else
@@ -433,7 +434,6 @@ namespace Cosmic
 		}
 
 		// 2. Free dynamic client layers explicitly while the library allocation is valid.
-		// This must run BEFORE FreeLibrary so the virtual table instructions still exist in memory!
 		if (m_ActivePluginLayer)
 		{
 			delete m_ActivePluginLayer;

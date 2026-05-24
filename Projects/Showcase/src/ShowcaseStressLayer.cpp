@@ -29,7 +29,6 @@ namespace Showcase
 	{
 		for (auto& e : m_GridEntities)
 		{
-			// FIX: Verify handle integrity via operator bool 
 			if (e)
 				m_Scene->DestroyEntity(e);
 		}
@@ -40,7 +39,6 @@ namespace Showcase
 	{
 		for (auto& e : m_GridEntities)
 		{
-			// FIX: Verify handle integrity via operator bool
 			if (e)
 				m_Scene->DestroyEntity(e);
 		}
@@ -71,18 +69,32 @@ namespace Showcase
 		CS_INFO("ShowcaseStressLayer: Component grid allocation completed via {0} entities.", total);
 	}
 
+	// =========================================================================
+	// Deterministic Simulation Steps
+	// =========================================================================
+	void ShowcaseStressLayer::OnFixedUpdate(float deltaFixedTime)
+	{
+		// ARCHITECTURE FIX: Manual time accumulation removed.
+		// We preserve only pure execution logic tracking counters here.
+		++m_UpdateTicks;
+	}
+
+	// =========================================================================
+	// Frame Graphics Render Pass
+	// =========================================================================
 	void ShowcaseStressLayer::OnUpdate(float ts)
 	{
 		m_Camera.OnUpdate(ts);
-		m_Time += ts;
-		++m_UpdateTicks;
 
+		// VISUAL FIX: Move kinematic visual animations out of OnFixedUpdate into OnUpdate.
+		// By querying Layer::GetLocalTime(), updates match variable hardware monitor refresh rates perfectly.
 		if (m_Animate)
 		{
+			float currentTimelineTime = Cosmic::Layer::GetLocalTime();
 			for (auto& ent : m_GridEntities)
 			{
 				auto& t = ent.GetComponent<Cosmic::TransformComponent>();
-				t.Rotation.z = m_Time * 30.0f;
+				t.Rotation.z = currentTimelineTime * 30.0f;
 			}
 		}
 
@@ -139,12 +151,15 @@ namespace Showcase
 		ImGui::Text("Rendered Quads:        %u", stats.QuadCount);
 		ImGui::Text("Vertex Buffer Usage:   %u", stats.GetTotalVertexCount());
 		ImGui::Text("Index Buffer Usage:    %u", stats.GetTotalIndexCount());
-		ImGui::Text("Simulation Evaluated:  %u frames", m_UpdateTicks);
+
+		// ARCHITECTURE FIX: Display pure system ticks along with native engine layer time
+		ImGui::Text("Fixed Step Iterations: %u steps", m_UpdateTicks);
+		ImGui::Text("Timeline Sync Phase:   %.2fs", Cosmic::Layer::GetLocalTime());
 		ImGui::Spacing();
 
 		ImGui::TextWrapped("System Architecture Notice: Entities are grouped automatically into localized asset/material buckets. Alternate layouts using 2 materials will trigger a pipeline flush only when batch array bounds or allocation thresholds are exceeded.");
 
-		if (ImGui::Button("Reset Framework Frame Counters"))
+		if (ImGui::Button("Reset Framework Fixed Counters"))
 		{
 			m_UpdateTicks = 0;
 		}

@@ -1,6 +1,6 @@
 #pragma once
 // Application.h
-// Last Modified 5/20/2026
+// Last Modified 5/24/2026
 
 /**
  * @brief Master Controller and Resource Host for the Cosmic Engine.
@@ -79,8 +79,11 @@ namespace Cosmic
 		// Time & Step Control (Mutators) 
 		/////////////////////////////////////////////////////////////////////////////////
 
-		void		UseFixedTimeStep(bool useFixedTimeStep)		{ m_UseFixedTimestep = useFixedTimeStep; }
-		void		SetTimeScale(float timescale)				{ m_TimeScale = timescale; }
+		void			UseFixedTimeStep(bool useFixedTimeStep)		{ m_UseFixedTimestep = useFixedTimeStep; }
+		void			SetTimeScale(float timescale)				{ m_TimeScale = timescale; }
+		float			GetTimeScale() const						{ return m_TimeScale; }
+
+		inline float	GetAbsoluteTime() const						{ return m_AbsoluteTime; } //s
 
 
 		/////////////////////////////////////////////////////////////////////////////////
@@ -139,10 +142,12 @@ namespace Cosmic
 		// Default Configuration Constants
 		/////////////////////////////////////////////////////////////////////////////////
 
-		float							m_TimeScale		= 1.0f;
-		const static int				DEFAULT_WIDTH	= 1280;
-		const static int				DEFAULT_HEIGHT	= 720;
+		const static int				DEFAULT_WIDTH		 = 1280;
+		const static int				DEFAULT_HEIGHT		 = 720;
 		const std::string				DEFAULT_WINDOW_TITLE = "Cosmic Engine";
+
+		float			m_TimeScale		= 1.0f;
+		float			m_AbsoluteTime  = 0.0f;
 
 
 	private:

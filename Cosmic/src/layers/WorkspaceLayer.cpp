@@ -55,40 +55,35 @@ namespace Cosmic
 	{
 		Ref<FrameBuffer> fb = Cosmic::Application::Get().GetFrameBuffer();
 
-		// 1. Synchronize the hardware framebuffer with the layout window viewport metrics
 		if (m_ViewportSize.x > 0.0f && (fb->GetWidth() != m_ViewportSize.x || fb->GetHeight() != m_ViewportSize.y))
 		{
 			fb->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
 		}
 
-		// --- START GPU CAPTURE PASS ---
 		fb->Bind();
-
-		// Render the backing workstation canvas background (Dark Slate Grey)
 		Cosmic::RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1.0f });
 		Cosmic::RenderCommand::Clear();
-
-		// Configure the hardware rasterizer viewport mapping parameters
 		Cosmic::RenderCommand::SetViewport(0, 0, (uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
 
-		// Execute update loops natively on whatever client layer is active in the center panel
 		if (m_ClientViewportLayer)
 		{
+			// 'ts' arriving here is already scaled by Application::Run!
+			// Simply propagate it downward safely.
+			m_ClientViewportLayer->UpdateLayerTime(ts);
 			m_ClientViewportLayer->OnUpdate(ts);
 		}
 
 		fb->Unbind();
-		// --- END GPU CAPTURE PASS ---
-
-		// Clear core background backing window cleanly to prevent frame trailing artefacts
 		Cosmic::RenderCommand::Clear(0.0f, 0.0f, 0.0f);
 	}
 
 	void WorkspaceLayer::OnFixedUpdate(float deltaFixedTime)
 	{
-		// Forward steady-interval physics ticks down to our active viewport layer context
 		if (m_ClientViewportLayer)
 		{
+			// ENGINE FIX: Pass down the scaled/unscaled deterministic timestep directly.
+			// Because WorkspaceLayer's OnFixedUpdate is only called when the application
+			// accumulator is ready, the timestep passing through here is already inherently scaled.
 			m_ClientViewportLayer->OnFixedUpdate(deltaFixedTime);
 		}
 	}

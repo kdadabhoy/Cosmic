@@ -1,6 +1,7 @@
 #include "ShowcaseShaderLayer.h"
 #include <imgui.h>
 #include <algorithm>
+#include <filesystem>
 
 namespace Showcase
 {
@@ -82,25 +83,36 @@ namespace Showcase
 		if (m_Material)
 		{
 			m_Material->Set("u_Color", glm::vec4(1.0f));
-			m_Material->Set("u_Time", m_AccumulatedTime);
+			// ARCHITECTURE FIX: Query the synchronized local layer timeline instead of a local float
+			m_Material->Set("u_Time", Cosmic::Layer::GetLocalTime());
 			CS_INFO("ShowcaseShaderLayer: Pipeline bound to compilation node '{0}'.", std::filesystem::path(filepath).filename().string());
 		}
 	}
 
+	// =========================================================================
+	// Deterministic Simulation / Timeline Management
+	// =========================================================================
+	void ShowcaseShaderLayer::OnFixedUpdate(float deltaFixedTime)
+	{
+		// CLEAN ENGINE ARCHITECTURE:
+		// Manual clock tracking accumulation is removed. 
+		// Time updates are stream-fed via WorkspaceLayer directly into base class timelines.
+	}
+
+	// =========================================================================
+	// Frame Graphics Render Pass
+	// =========================================================================
 	void ShowcaseShaderLayer::OnUpdate(float ts)
 	{
-		// 1. Structural View Camera Update
 		m_Camera.OnUpdate(ts);
-		m_AccumulatedTime += ts;
 
+		// ARCHITECTURE FIX: Push variable framerate updates down to the shader
+		// using the pre-scaled timeline provider.
 		if (m_Material)
 		{
-			m_Material->Set("u_Time", m_AccumulatedTime);
+			m_Material->Set("u_Time", Cosmic::Layer::GetLocalTime());
 		}
 
-		Cosmic::Renderer2D::UpdateTimeline(ts, static_cast<uint32_t>(m_ViewportSize.x), static_cast<uint32_t>(m_ViewportSize.y));
-
-		// 2. Hardware Accelerated Procedural Material Pass
 		Cosmic::Renderer2D::BeginScene(m_Camera.GetCamera());
 
 		if (m_Material && !m_LoadError)
@@ -110,7 +122,6 @@ namespace Showcase
 		}
 		else
 		{
-			// Fallback error baseline color quad
 			Cosmic::Renderer2D::DrawQuad({ 0.0f, 0.0f, 0.0f }, { 4.0f, 4.0f }, { 0.08f, 0.08f, 0.1f, 1.0f });
 		}
 
@@ -169,7 +180,9 @@ namespace Showcase
 		{
 			ImGui::Spacing();
 			ImGui::TextColored({ 0.4f, 1.0f, 0.4f, 1.0f }, "Active Buffer: %s", m_ShaderNames[m_SelectedIndex].c_str());
-			ImGui::Text("Shader Clock Phase: %.2fs", m_AccumulatedTime);
+
+			// ARCHITECTURE FIX: Reflect the native synchronized timeline phase in the inspector UI
+			ImGui::Text("Shader Clock Phase: %.2fs", Cosmic::Layer::GetLocalTime());
 
 			if (m_Material)
 			{

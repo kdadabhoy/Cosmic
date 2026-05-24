@@ -12,10 +12,10 @@ namespace Cosmic
 	{
 	}
 
-	void Material::Set(const std::string& name, float value) { m_Floats[name] = value; }
-	void Material::Set(const std::string& name, const glm::vec3& value) { m_Float3s[name] = value; }
-	void Material::Set(const std::string& name, const glm::vec4& value) { m_Float4s[name] = value; }
-	void Material::Set(const std::string& name, const Ref<Texture>& texture) { m_Textures[name] = texture; }
+	void Material::Set(const std::string& name, float value)					{ m_Floats[name] = value; }
+	void Material::Set(const std::string& name, const glm::vec3& value)			{ m_Float3s[name] = value; }
+	void Material::Set(const std::string& name, const glm::vec4& value)			{ m_Float4s[name] = value; }
+	void Material::Set(const std::string& name, const Ref<Texture>& texture)	{ m_Textures[name] = texture; }
 
 	 /**
 	  * Bind
@@ -54,5 +54,11 @@ namespace Cosmic
 	Ref<Texture> Material::GetTexture(const std::string& name)
 	{
 		return m_Textures.count(name) ? m_Textures[name] : nullptr;
+	}
+
+
+	bool Material::HasFloat(const std::string& name) const
+	{
+		return m_Floats.count(name) > 0;
 	}
 }
