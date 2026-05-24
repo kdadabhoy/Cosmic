@@ -1,14 +1,14 @@
 #pragma once
 
 #include <Cosmic.h>
-#include <vector>
 #include <glm/glm.hpp>
+#include <vector>
 
 namespace Showcase
 {
 	struct FlightDinoComponent
 	{
-		float Speed = 2.0f;
+		float Speed = 1.0f;
 		float Slope = 0.0f;
 		glm::vec4 Color = { 1.0f, 1.0f, 1.0f, 1.0f };
 		std::vector<glm::vec3> Trail;
@@ -19,9 +19,8 @@ namespace Showcase
 	{
 	public:
 		ShowcaseFlightLayer(Cosmic::Ref<Cosmic::Scene> scene, Cosmic::Ref<Cosmic::Material> dinoMaterial);
-		virtual ~ShowcaseFlightLayer() override = default;
+		virtual ~ShowcaseFlightLayer() = default;
 
-		// Standard layer engine lifecycle callbacks
 		virtual void OnAttach() override;
 		virtual void OnDetach() override;
 		virtual void OnUpdate(float ts) override;
@@ -31,6 +30,7 @@ namespace Showcase
 	private:
 		bool OnMouseClicked(Cosmic::MouseButtonPressedEvent& e);
 		bool OnWindowResize(Cosmic::WindowResizeEvent& e);
+
 		glm::vec2 ScreenToWorld(glm::vec2 screenPos) const;
 		bool HitTest(Cosmic::Entity entity, glm::vec2 worldPos) const;
 		void SelectEntity(Cosmic::Entity e);
@@ -46,6 +46,6 @@ namespace Showcase
 		Cosmic::Entity m_SelectedEntity;
 
 		glm::vec2 m_ViewportSize = { 1280.0f, 720.0f };
-		static constexpr size_t k_MaxTrailLength = 300;
+		const size_t k_MaxTrailLength = 300;
 	};
 }

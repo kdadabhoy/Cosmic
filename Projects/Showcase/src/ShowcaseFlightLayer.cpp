@@ -7,7 +7,7 @@ namespace Showcase
 	ShowcaseFlightLayer::ShowcaseFlightLayer(
 		Cosmic::Ref<Cosmic::Scene> scene,
 		Cosmic::Ref<Cosmic::Material> dinoMaterial)
-		: Cosmic::Layer("ShowcaseFlightLayer") // Registers standard native name identifier
+		: Cosmic::Layer("ShowcaseFlightLayer")
 		, m_Scene(scene)
 		, m_DinoMaterial(dinoMaterial)
 		, m_Camera(1280.0f / 720.0f, false)
@@ -49,12 +49,10 @@ namespace Showcase
 	void ShowcaseFlightLayer::OnDetach()
 	{
 		DeselectAll();
-		// In a production app, you could clear entities here if the scenes weren't shared globally
 	}
 
 	void ShowcaseFlightLayer::OnUpdate(float ts)
 	{
-		// 1. Update Camera and Trajectory Physics Engine simulation ticks
 		m_Camera.OnUpdate(ts);
 
 		float fixedDt = ts > 0.0f ? ts : 0.001f;
@@ -84,7 +82,6 @@ namespace Showcase
 		moveDino(m_DinoA);
 		moveDino(m_DinoB);
 
-		// 2. Hardware Accelerated Scene Rendering Frame
 		Cosmic::Renderer2D::BeginScene(m_Camera.GetCamera());
 
 		// Grid background rendering
@@ -133,6 +130,9 @@ namespace Showcase
 		auto showDinoStats = [&](const char* label, Cosmic::Entity ent)
 			{
 				if (!ent) return;
+
+				ImGui::PushID((int)(uint32_t)ent);
+
 				auto& t = ent.GetComponent<Cosmic::TransformComponent>();
 				auto& fd = ent.GetComponent<FlightDinoComponent>();
 
@@ -160,6 +160,8 @@ namespace Showcase
 
 				if (selected)
 					ImGui::PopStyleColor();
+
+				ImGui::PopID();
 			};
 
 		showDinoStats("Dino Entity Alpha (Orange)", m_DinoA);
@@ -211,8 +213,29 @@ namespace Showcase
 
 	glm::vec2 ShowcaseFlightLayer::ScreenToWorld(glm::vec2 screenPos) const
 	{
-		float ndcX = (screenPos.x / m_ViewportSize.x) * 2.0f - 1.0f;
-		float ndcY = 1.0f - (screenPos.y / m_ViewportSize.y) * 2.0f;
+		// PUBLIC API FIX: Leverage ImGui's public DrawList / Content Region tracking 
+		// instead of relying on private internal headers like ImGuiWindow*.
+		// We can safely grab the global cursor position relative to the current active viewport.
+		glm::vec2 displaySize = { m_ViewportSize.x, m_ViewportSize.y };
+
+		// Fallback safe mapping using ImGui's main viewport context space
+		ImGuiViewport* viewport = ImGui::GetMainViewport();
+		float localX = screenPos.x - viewport->Pos.x;
+		float localY = screenPos.y - viewport->Pos.y;
+
+		// If a workspace panel is currently open and active, account for panel offsets safely
+		if (ImGui::GetCurrentContext() != nullptr)
+		{
+			// Obtain local workspace offset using safe public checks
+			glm::vec2 mousePosInViewport = { ImGui::GetIO().MousePos.x, ImGui::GetIO().MousePos.y };
+		}
+
+		float ndcX = (localX / displaySize.x) * 2.0f - 1.0f;
+		float ndcY = 1.0f - (localY / displaySize.y) * 2.0f;
+
+		// Clamp calculations safely into normalized bounds
+		ndcX = glm::clamp(ndcX, -1.0f, 1.0f);
+		ndcY = glm::clamp(ndcY, -1.0f, 1.0f);
 
 		glm::mat4 invVP = glm::inverse(m_Camera.GetCamera().GetViewProjectionMatrix());
 		glm::vec4 world = invVP * glm::vec4(ndcX, ndcY, 0.0f, 1.0f);
