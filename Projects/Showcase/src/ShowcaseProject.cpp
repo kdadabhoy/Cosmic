@@ -3,6 +3,7 @@
 #include "ShowcaseRunLayer.h"
 #include "ShowcaseShaderLayer.h"
 #include "ShowcaseStressLayer.h"
+
 #include <imgui.h>
 #include <implot.h>
 #include <filesystem>
@@ -12,54 +13,36 @@ namespace Showcase
 	ShowcaseProject::ShowcaseProject()
 		: Cosmic::Layer("ShowcaseProject")
 	{
+		// Default to the first registered simulation sub-layer mode
 		m_ActiveModeIndex = 0;
 	}
+
+	// =========================================================================
+	// Lifecycle Management
+	// =========================================================================
 
 	void ShowcaseProject::OnAttach()
 	{
 		CS_INFO("ShowcaseProject: Composite Root attached. Initializing asset environment...");
 
-		// 1. Establish Virtual File System context for the Showcase workspace
+		// 1. Establish Virtual File System context for the Showcase workspace.
+		//    This mounts the core project directory prefix maps.
 		Cosmic::FileSystem::SetActiveProject("Showcase");
 
 		std::string virtualFirePath = "project://shaders/FireShader.glsl";
 		std::string fireShaderPath = Cosmic::FileSystem::Resolve(virtualFirePath);
 
-		// FALLBACK DIAGNOSTIC: If the VFS path resolution fails due to Working Directory offsets,
-		// search for the local application development runtime assets directly.
-		if (!std::filesystem::exists(fireShaderPath))
-		{
-			CS_WARN("ShowcaseProject: VFS path failed to resolve target [{}]. Attempting relative local sandbox fallback...", fireShaderPath);
-
-			std::vector<std::string> fallbackPaths = {
-				"assets/projects/Showcase/shaders/FireShader.glsl",
-				"assets/shaders/FireShader.glsl",
-				"../assets/shaders/FireShader.glsl"
-			};
-
-			for (const auto& path : fallbackPaths)
-			{
-				if (std::filesystem::exists(path))
-				{
-					fireShaderPath = path;
-					CS_INFO("ShowcaseProject: Successfully localized fallback shader asset path at: {}", fireShaderPath);
-					break;
-				}
-			}
-		}
-
 		std::filesystem::path resolvedPath(fireShaderPath);
 		m_ShaderDir = resolvedPath.parent_path().string();
 
+		// Gracefully abort initialization if asset generation prerequisites fail validation
 		if (!std::filesystem::exists(fireShaderPath))
 		{
-			CS_ERROR("ShowcaseProject: Critical error during asset verification. Aborting workspace allocation!");
-			CS_ERROR("ShowcaseProject: Looked everywhere. Ensure assets folder exists at your runtime working directory: {}",
-				std::filesystem::current_path().string());
-			return; // Leaves m_Modes empty, triggering diagnostic window view safely
+			CS_ERROR("ShowcaseProject: Critical error. VFS failed to resolve asset path: {}", fireShaderPath);
+			return;
 		}
 
-		// 2. Create foundational graphic runtime resources
+		// 2. Create foundational graphic runtime resources.
 		m_Scene = Cosmic::Scene::Create();
 		auto fireShader = Cosmic::Shader::Create(fireShaderPath);
 		m_DinoMaterial = Cosmic::Material::Create(fireShader, "DinoMaterial");
@@ -70,22 +53,26 @@ namespace Showcase
 			CS_INFO("ShowcaseProject: DinoMaterial bound to registry address: 0x{0:x}", (uintptr_t)m_DinoMaterial.get());
 		}
 
-		// 3. Allocate specialized child simulations directly as engine layers
+		// 3. Allocate specialized child simulations directly as managed sub-layers.
 		if (m_DinoMaterial)
 		{
-			// Add modes safely to vector
+			// Populate the sub-layer execution vector with concrete simulation instances
 			m_Modes.push_back(std::make_shared<ShowcaseFlightLayer>(m_Scene, m_DinoMaterial));
 			m_Modes.push_back(std::make_shared<ShowcaseRunLayer>(m_Scene, m_DinoMaterial));
 			m_Modes.push_back(std::make_shared<ShowcaseShaderLayer>(m_ShaderDir));
 
-			auto fallBackShader = Cosmic::Shader::Create(m_ShaderDir + "/FireShader.glsl");
-			auto alternativeMaterial = Cosmic::Material::Create(fallBackShader, "AlternativeMaterial");
+			// Build alternative material resources using the dynamically discovered VFS root path
+			auto alternativeShader = Cosmic::Shader::Create(m_ShaderDir + "/FireShader.glsl");
+			auto alternativeMaterial = Cosmic::Material::Create(alternativeShader, "AlternativeMaterial");
+
 			if (alternativeMaterial)
+			{
 				alternativeMaterial->Set("u_Color", glm::vec4(0.2f, 0.7f, 1.0f, 1.0f));
+			}
 
 			m_Modes.push_back(std::make_shared<ShowcaseStressLayer>(m_Scene, m_DinoMaterial, alternativeMaterial));
 
-			// Standard lifecycle cascade: Let the engine layers configure themselves
+			// Standard internal lifecycle cascade: Boot and mount all registered sub-layers
 			for (auto& mode : m_Modes)
 			{
 				mode->OnAttach();
@@ -99,6 +86,7 @@ namespace Showcase
 	{
 		CS_WARN("ShowcaseProject: Detach lifecycle triggered. Cascading destruction down the layer array...");
 
+		// Safely spin down sub-layers before flushing ownership wrappers
 		for (auto& mode : m_Modes)
 		{
 			mode->OnDetach();
@@ -107,28 +95,36 @@ namespace Showcase
 		m_Modes.clear();
 		m_DinoMaterial.reset();
 		m_Scene.reset();
+
 		CS_INFO("ShowcaseProject: Clean workspace shutdown finalized.");
 	}
+
+	// =========================================================================
+	// System Core Ticks
+	// =========================================================================
 
 	void ShowcaseProject::OnUpdate(float ts)
 	{
 		if (m_Modes.empty()) return;
 
+		// Protect shader clock math against zero-delta pausing hitches
 		float dt = ts > 0.0f ? ts : 0.001f;
 		static float s_AccumulatedTime = 0.0f;
 		s_AccumulatedTime += dt;
 
+		// Inject elapsed delta coordinates into materials for global dynamic effects
 		if (m_DinoMaterial)
 		{
 			m_DinoMaterial->Set("u_Time", s_AccumulatedTime);
 		}
 
-		// Isolate update processing to the explicitly selected sub-layer
+		// Isolate system update ticks exclusively to the chosen active sub-layer
 		m_Modes[m_ActiveModeIndex]->OnUpdate(ts);
 	}
 
 	void ShowcaseProject::OnImGuiRender()
 	{
+		// Diagnostic Fallback: Render error notice overlay if resources failed to mount
 		if (m_Modes.empty())
 		{
 			ImGui::Begin("Cosmic Workspace Manager");
@@ -138,9 +134,10 @@ namespace Showcase
 			return;
 		}
 
+		// 1. Render Root Project Management Hub Controls
 		ImGui::Begin("Cosmic Workspace Manager");
 
-		// Fetch standard layer debug name natively via .GetName()
+		// Display dropdown selector linked directly to native layer string markers
 		if (ImGui::BeginCombo("Active Layer Module", m_Modes[m_ActiveModeIndex]->GetName().c_str()))
 		{
 			for (size_t i = 0; i < m_Modes.size(); ++i)
@@ -154,6 +151,7 @@ namespace Showcase
 			ImGui::EndCombo();
 		}
 
+		// Render global material uniform parameters
 		if (m_DinoMaterial && ImGui::CollapsingHeader("Global Fire Material Settings", ImGuiTreeNodeFlags_DefaultOpen))
 		{
 			glm::vec4 color = m_DinoMaterial->GetVector("u_Color");
@@ -167,27 +165,33 @@ namespace Showcase
 		ImGui::Spacing();
 		ImGui::End();
 
-		// Forward ImGui context pipeline commands into the target layer
+		// 2. Pass UI rendering pipelines onwards down to the focused sub-layer
 		m_Modes[m_ActiveModeIndex]->OnImGuiRender();
 	}
 
 	void ShowcaseProject::OnEvent(Cosmic::Event& e)
 	{
+		// Interrupt and halt propagation if layers are unassigned or event is marked handled
 		if (m_Modes.empty() || e.Handled) return;
 
-		// Propagate active inputs exclusively into the chosen system layer
+		// Propagate system events exclusively down into the active subsystem scope
 		m_Modes[m_ActiveModeIndex]->OnEvent(e);
 	}
 }
 
+// =============================================================================
+// C-Linkage Dynamic Library Entry Points (Required for Hot-Reloading Host)
+// =============================================================================
 extern "C"
 {
+	// Synchronize rendering contexts across dll context boundaries
 	__declspec(dllexport) void InitializePluginContexts(Cosmic::HostContext context)
 	{
 		ImGui::SetCurrentContext(context.ImGuiCtx);
 		ImPlot::SetCurrentContext(context.ImPlotCtx);
 	}
 
+	// Factory hook called by engine module loader to mount the plugin entry layer
 	__declspec(dllexport) Cosmic::Layer* CreatePluginLayer()
 	{
 		return new Showcase::ShowcaseProject();
