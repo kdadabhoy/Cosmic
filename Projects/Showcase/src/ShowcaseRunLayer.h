@@ -58,5 +58,7 @@ namespace Showcase
 		static constexpr float k_GroundY = -0.8f;
 		static constexpr float k_Gravity = -16.0f;
 		static constexpr float k_JumpV = 6.2f;
+
+		float m_AccumulatedTime = 0.0f;
 	};
 }

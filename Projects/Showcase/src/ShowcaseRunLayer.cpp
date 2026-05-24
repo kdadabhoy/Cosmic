@@ -74,21 +74,27 @@ namespace Showcase
 		m_Camera.OnUpdate(ts);
 		float fixedDt = ts > 0.0f ? ts : 0.001f;
 
+		// =========================================================================
+		// 1. Game Simulation / State Engine
+		// =========================================================================
 		if (!m_GameOver)
 		{
 			auto& dinoT = m_DinoEntity.GetComponent<Cosmic::TransformComponent>();
 			auto& dinoD = m_DinoEntity.GetComponent<RunnerDinoComponent>();
 
+			// Progress score tracking metrics
 			dinoD.Score += fixedDt * 10.0f * dinoD.SpeedMultiplier;
 			dinoD.SpeedMultiplier += fixedDt * 0.01f;
 			dinoD.HighScore = std::max(dinoD.HighScore, dinoD.Score);
 
+			// Handle kinematic physics integrations
 			if (!dinoD.IsGrounded)
 			{
 				dinoD.VelocityY += k_Gravity * fixedDt;
 				dinoT.Position.y += dinoD.VelocityY * fixedDt;
 			}
 
+			// Enforce terrain ground plane boundaries
 			float groundRestY = k_GroundY + dinoT.Scale.y * 0.5f;
 			if (dinoT.Position.y <= groundRestY)
 			{
@@ -97,6 +103,7 @@ namespace Showcase
 				dinoD.IsGrounded = true;
 			}
 
+			// Procedural entity generation manager
 			m_SpawnTimer += fixedDt;
 			if (m_SpawnTimer >= m_NextSpawnTime)
 			{
@@ -120,6 +127,7 @@ namespace Showcase
 				m_NextSpawnTime = gapDist(m_Rng) / dinoD.SpeedMultiplier;
 			}
 
+			// Evaluate collision bounds state transformations
 			const float dinoHalfW = dinoT.Scale.x * 0.45f;
 			const float dinoHalfH = dinoT.Scale.y * 0.45f;
 
@@ -138,6 +146,7 @@ namespace Showcase
 				}
 			}
 
+			// Garbage collect off-screen obstacle instances
 			m_Obstacles.erase(
 				std::remove_if(m_Obstacles.begin(), m_Obstacles.end(),
 					[this](Cosmic::Entity ent) mutable
@@ -153,19 +162,30 @@ namespace Showcase
 				m_Obstacles.end());
 		}
 
+		// =========================================================================
+		// 2. Hardware Accelerated Hardware Render Pipeline Pass
+		// =========================================================================
+
+		// FIX: Update the engine's timeline parameters to drive procedural shader clocks
+		Cosmic::Renderer2D::UpdateTimeline(ts, static_cast<uint32_t>(m_ViewportSize.x), static_cast<uint32_t>(m_ViewportSize.y));
+
 		Cosmic::Renderer2D::BeginScene(m_Camera.GetCamera());
 
+		// Draw the static ground plane line strip
 		Cosmic::Renderer2D::DrawQuad({ 0.0f, k_GroundY - 0.05f, -0.1f }, { 20.0f, 0.12f }, { 0.35f, 0.35f, 0.38f, 1.0f });
 
+		// Draw player entity with procedural fire material applied
 		auto& dinoT = m_DinoEntity.GetComponent<Cosmic::TransformComponent>();
 		Cosmic::Renderer2D::DrawQuad(dinoT.Position, dinoT.Scale, m_DinoMaterial);
 
+		// Draw live obstacles active on screen
 		for (auto& obs : m_Obstacles)
 		{
 			auto& ot = obs.GetComponent<Cosmic::TransformComponent>();
 			Cosmic::Renderer2D::DrawQuad(ot.Position, ot.Scale, { 0.85f, 0.2f, 0.2f, 1.0f });
 		}
 
+		// Draw collision crash indicator if state signals game over
 		if (m_GameOver)
 		{
 			Cosmic::Renderer2D::DrawLine({ -10.0f, dinoT.Position.y, 0.0f }, { 10.0f, dinoT.Position.y, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f });
@@ -173,6 +193,7 @@ namespace Showcase
 
 		Cosmic::Renderer2D::EndScene();
 	}
+	
 
 	void ShowcaseRunLayer::OnImGuiRender()
 	{

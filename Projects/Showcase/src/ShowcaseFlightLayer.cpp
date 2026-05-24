@@ -14,11 +14,16 @@ namespace Showcase
 	{
 	}
 
+	// =========================================================================
+	// Lifecycle Management
+	// =========================================================================
+
 	void ShowcaseFlightLayer::OnAttach()
 	{
 		m_Camera.SetZoomLevel(2.0f);
 		m_Camera.SetZoomLimits(0.5f, 20.0f);
 
+		// Allocate and configure Flight Dino Entity Alpha
 		m_DinoA = m_Scene->CreateEntity("FlightDino_A");
 		{
 			auto& t = m_DinoA.GetComponent<Cosmic::TransformComponent>();
@@ -32,6 +37,7 @@ namespace Showcase
 			fd.Trail.push_back(t.Position);
 		}
 
+		// Allocate and configure Flight Dino Entity Beta
 		m_DinoB = m_Scene->CreateEntity("FlightDino_B");
 		{
 			auto& t = m_DinoB.GetComponent<Cosmic::TransformComponent>();
@@ -51,11 +57,16 @@ namespace Showcase
 		DeselectAll();
 	}
 
+	// =========================================================================
+	// System Core Ticks
+	// =========================================================================
+
 	void ShowcaseFlightLayer::OnUpdate(float ts)
 	{
 		m_Camera.OnUpdate(ts);
-
 		float fixedDt = ts > 0.0f ? ts : 0.001f;
+
+		// Lambda routine to step linear flight translation kinematics
 		auto moveDino = [&](Cosmic::Entity ent)
 			{
 				if (!ent) return;
@@ -65,37 +76,57 @@ namespace Showcase
 				t.Position.x += fd.Speed * fixedDt;
 				t.Position.y += fd.Speed * fd.Slope * fixedDt;
 
+				// Handle wrap-around boundary logic
 				if (t.Position.x > 12.0f)
 				{
 					t.Position.x = -12.0f;
 					fd.Trail.clear();
 				}
 
+				// Bounce orientation on vertical limits
 				if (t.Position.y > 5.0f || t.Position.y < -5.0f)
+				{
 					fd.Slope = -fd.Slope;
+				}
 
+				// Push tracking breadcrumbs down to the trail structure
 				fd.Trail.push_back(t.Position);
 				if (fd.Trail.size() > k_MaxTrailLength)
+				{
 					fd.Trail.erase(fd.Trail.begin());
+				}
 			};
 
 		moveDino(m_DinoA);
 		moveDino(m_DinoB);
 
+		// ---------------------------------------------------------------------
+		// Hardware Render Pipeline Execution Blocks
+		// ---------------------------------------------------------------------
+
+		// 🌟 FIX: Synchronize engine timeline contexts to update procedural shader uniforms
+		Cosmic::Renderer2D::UpdateTimeline(ts, static_cast<uint32_t>(m_ViewportSize.x), static_cast<uint32_t>(m_ViewportSize.y));
+
 		Cosmic::Renderer2D::BeginScene(m_Camera.GetCamera());
 
-		// Grid background rendering
+		// Render backdrop structural alignment grid
 		for (float x = -12.0f; x <= 12.0f; x += 2.0f)
+		{
 			Cosmic::Renderer2D::DrawLine({ x, -6.0f, -0.1f }, { x, 6.0f, -0.1f }, { 0.15f, 0.15f, 0.18f, 1.0f });
+		}
 		for (float y = -6.0f; y <= 6.0f; y += 2.0f)
+		{
 			Cosmic::Renderer2D::DrawLine({ -12.0f, y, -0.1f }, { 12.0f, y, -0.1f }, { 0.15f, 0.15f, 0.18f, 1.0f });
+		}
 
+		// Lambda routine to process graphic primitives for entities
 		auto drawDino = [&](Cosmic::Entity ent)
 			{
 				if (!ent) return;
 				auto& t = ent.GetComponent<Cosmic::TransformComponent>();
 				auto& fd = ent.GetComponent<FlightDinoComponent>();
 
+				// Step and draw alpha blended path lines
 				size_t n = fd.Trail.size();
 				for (size_t i = 1; i < n; ++i)
 				{
@@ -105,8 +136,10 @@ namespace Showcase
 					Cosmic::Renderer2D::DrawLine(fd.Trail[i - 1], fd.Trail[i], trailColor);
 				}
 
+				// Draw entity sprite utilizing the global Raymarched Fire Material context
 				Cosmic::Renderer2D::DrawQuad(t.Position, t.Scale, m_DinoMaterial);
 
+				// Overlay highlighted border outlines if focused
 				if (fd.Selected)
 				{
 					Cosmic::Renderer2D::DrawRect(t.Position, { t.Scale.x + 0.12f, t.Scale.y + 0.12f }, { 1.0f, 1.0f, 0.0f, 1.0f });
@@ -127,6 +160,7 @@ namespace Showcase
 		ImGui::Text("Click down directly inside the editor grid viewport to map-select entity nodes.");
 		ImGui::Spacing();
 
+		// Lambda to display interactive GUI configuration nodes
 		auto showDinoStats = [&](const char* label, Cosmic::Entity ent)
 			{
 				if (!ent) return;
@@ -138,7 +172,9 @@ namespace Showcase
 
 				bool selected = fd.Selected;
 				if (selected)
+				{
 					ImGui::PushStyleColor(ImGuiCol_Text, { 1.0f, 1.0f, 0.0f, 1.0f });
+				}
 
 				if (ImGui::CollapsingHeader(label, selected ? ImGuiTreeNodeFlags_DefaultOpen : 0))
 				{
@@ -151,15 +187,15 @@ namespace Showcase
 					ImGui::SliderFloat("Speed Rate", &fd.Speed, 0.5f, 8.0f);
 					ImGui::SliderFloat("Ascent Angle", &fd.Slope, -1.0f, 1.0f);
 
-					if (ImGui::Button("Flush Trail Cache"))
-						fd.Trail.clear();
-
-					if (ImGui::Button("Focus Node"))
-						SelectEntity(ent);
+					if (ImGui::Button("Flush Trail Cache"))        fd.Trail.clear();
+					ImGui::SameLine();
+					if (ImGui::Button("Focus Node"))               SelectEntity(ent);
 				}
 
 				if (selected)
+				{
 					ImGui::PopStyleColor();
+				}
 
 				ImGui::PopID();
 			};
@@ -168,6 +204,7 @@ namespace Showcase
 		showDinoStats("Dino Entity Beta (Cyan)", m_DinoB);
 
 		ImGui::Spacing();
+
 		if (m_SelectedEntity)
 		{
 			auto& tag = m_SelectedEntity.GetComponent<Cosmic::TagComponent>();
@@ -177,8 +214,13 @@ namespace Showcase
 		{
 			ImGui::TextDisabled("No active simulation entity focused.");
 		}
+
 		ImGui::End();
 	}
+
+	// =========================================================================
+	// Engine Event Routing Channels
+	// =========================================================================
 
 	void ShowcaseFlightLayer::OnEvent(Cosmic::Event& e)
 	{
@@ -197,6 +239,7 @@ namespace Showcase
 		glm::vec2 screenPos = Cosmic::Input::GetMousePosition();
 		glm::vec2 worldPos = ScreenToWorld(screenPos);
 
+		// Perform raycast check intersection calculations
 		if (HitTest(m_DinoA, worldPos)) { SelectEntity(m_DinoA); return true; }
 		if (HitTest(m_DinoB, worldPos)) { SelectEntity(m_DinoB); return true; }
 
@@ -211,11 +254,12 @@ namespace Showcase
 		return false;
 	}
 
+	// =========================================================================
+	// Coordinate Space Transforms & Utilities
+	// =========================================================================
+
 	glm::vec2 ShowcaseFlightLayer::ScreenToWorld(glm::vec2 screenPos) const
 	{
-		// PUBLIC API FIX: Leverage ImGui's public DrawList / Content Region tracking 
-		// instead of relying on private internal headers like ImGuiWindow*.
-		// We can safely grab the global cursor position relative to the current active viewport.
 		glm::vec2 displaySize = { m_ViewportSize.x, m_ViewportSize.y };
 
 		// Fallback safe mapping using ImGui's main viewport context space
@@ -223,20 +267,20 @@ namespace Showcase
 		float localX = screenPos.x - viewport->Pos.x;
 		float localY = screenPos.y - viewport->Pos.y;
 
-		// If a workspace panel is currently open and active, account for panel offsets safely
 		if (ImGui::GetCurrentContext() != nullptr)
 		{
-			// Obtain local workspace offset using safe public checks
+			// Safe evaluation of relative viewport mouse mapping
 			glm::vec2 mousePosInViewport = { ImGui::GetIO().MousePos.x, ImGui::GetIO().MousePos.y };
 		}
 
+		// Convert screen layout boundaries down to NDC space
 		float ndcX = (localX / displaySize.x) * 2.0f - 1.0f;
 		float ndcY = 1.0f - (localY / displaySize.y) * 2.0f;
 
-		// Clamp calculations safely into normalized bounds
 		ndcX = glm::clamp(ndcX, -1.0f, 1.0f);
 		ndcY = glm::clamp(ndcY, -1.0f, 1.0f);
 
+		// Multiply by the inverse View-Projection matrix to reach world space coordinates
 		glm::mat4 invVP = glm::inverse(m_Camera.GetCamera().GetViewProjectionMatrix());
 		glm::vec4 world = invVP * glm::vec4(ndcX, ndcY, 0.0f, 1.0f);
 		return { world.x, world.y };
@@ -249,6 +293,7 @@ namespace Showcase
 
 		float halfW = t.Scale.x * 0.5f;
 		float halfH = t.Scale.y * 0.5f;
+
 		return (worldPos.x >= t.Position.x - halfW &&
 			worldPos.x <= t.Position.x + halfW &&
 			worldPos.y >= t.Position.y - halfH &&
@@ -258,7 +303,10 @@ namespace Showcase
 	void ShowcaseFlightLayer::SelectEntity(Cosmic::Entity e)
 	{
 		DeselectAll();
-		if (e) e.GetComponent<FlightDinoComponent>().Selected = true;
+		if (e)
+		{
+			e.GetComponent<FlightDinoComponent>().Selected = true;
+		}
 		m_SelectedEntity = e;
 	}
 
