@@ -1,26 +1,26 @@
-#include "CircleDebugLayer.h"
+#include "ShowcaseCircleLayer.h"
 #include <imgui.h>
 
 namespace Showcase
 {
-	CircleDebugLayer::CircleDebugLayer()
-		: Cosmic::Layer("CircleDebugLayer")
+	ShowcaseCircleLayer::ShowcaseCircleLayer()
+		: Cosmic::Layer("ShowcaseCircleLayer")
 		, m_CameraController(1280.0f / 720.0f, false)
 	{
 	}
 
-	void CircleDebugLayer::OnAttach()
+	void ShowcaseCircleLayer::OnAttach()
 	{
-		CS_INFO("CircleDebugLayer: Attached sandbox context matching working system patterns.");
+		CS_INFO("ShowcaseCircleLayer: Attached sandbox context matching working system patterns.");
 		m_CameraController.SetZoomLevel(3.0f);
 	}
 
-	void CircleDebugLayer::OnDetach()
+	void ShowcaseCircleLayer::OnDetach()
 	{
-		CS_INFO("CircleDebugLayer: Detached sandbox context.");
+		CS_INFO("ShowcaseCircleLayer: Detached sandbox context.");
 	}
 
-	void CircleDebugLayer::OnUpdate(float ts)
+	void ShowcaseCircleLayer::OnUpdate(float ts)
 	{
 		// 1. Viewport Synchronization (Matching working layers pattern perfectly)
 		auto fb = Cosmic::Application::Get().GetFrameBuffer();
@@ -78,7 +78,7 @@ namespace Showcase
 		Cosmic::Renderer2D::EndScene();
 	}
 
-	void CircleDebugLayer::OnImGuiRender()
+	void ShowcaseCircleLayer::OnImGuiRender()
 	{
 		ImGui::Begin("Renderer2D Circle Isolation Sandbox");
 
@@ -109,9 +109,10 @@ namespace Showcase
 		}
 
 		ImGui::End();
+		Cosmic::Renderer2D::ResetStats();
 	}
 
-	void CircleDebugLayer::OnEvent(Cosmic::Event& e)
+	void ShowcaseCircleLayer::OnEvent(Cosmic::Event& e)
 	{
 		m_CameraController.OnEvent(e);
 	}

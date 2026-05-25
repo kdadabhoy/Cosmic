@@ -4,7 +4,7 @@
 #include "ShowcaseShaderLayer.h"
 #include "ShowcaseStressLayer.h"
 #include "ShowcaseDinoLayer.h"
-#include "CircleDebugLayer.h" 
+#include "ShowcaseCircleLayer.h" 
 
 #include <imgui.h>
 #include <implot.h>
@@ -47,11 +47,12 @@ namespace Showcase
 
 		if (m_FlameMaterial)
 		{
-			m_Modes.push_back(std::make_shared<CircleDebugLayer>());
 			m_Modes.push_back(std::make_shared<ShowcaseFlightLayer>(m_Scene, m_FlameMaterial));
-			m_Modes.push_back(std::make_shared<ShowcaseRunLayer>(m_Scene, m_FlameMaterial));
+			m_Modes.push_back(std::make_shared<ShowcaseCircleLayer>());
 			m_Modes.push_back(std::make_shared<ShowcaseShaderLayer>(m_ShaderDir));
 			m_Modes.push_back(std::make_shared<ShowcaseDinoLayer>(m_Scene));
+			m_Modes.push_back(std::make_shared<ShowcaseRunLayer>(m_Scene, m_FlameMaterial));
+
 
 
 			auto alternativeShader = Cosmic::Shader::Create(m_ShaderDir + "/DebugTexture.glsl");
@@ -159,6 +160,23 @@ namespace Showcase
 		{
 			ImGui::TextColored(ImVec4(0.6f, 0.6f, 0.6f, 1.0f), "▶ Standard Hardware Synchronized Playback");
 		}
+
+		ImGui::Spacing();
+		ImGui::Separator();
+		ImGui::Spacing();
+
+		float fps = ImGui::GetIO().Framerate;
+		float ms = 1000.0f / fps;
+
+		// Color thresholds: Green for 60+ FPS, Yellow for 30-60 FPS, Red for below 30 FPS
+		ImVec4 fpsColor = (fps >= 60.0f) ? ImVec4(0.2f, 1.0f, 0.2f, 1.0f) :
+			(fps >= 30.0f) ? ImVec4(1.0f, 0.8f, 0.2f, 1.0f) :
+			ImVec4(1.0f, 0.2f, 0.2f, 1.0f);
+
+		ImGui::Text("Performance Metrics:");
+		ImGui::TextColored(fpsColor, "  FPS: %.1f", fps);
+		ImGui::Text("  Frame Time: %.2f ms", ms);
+
 
 		ImGui::Separator();
 

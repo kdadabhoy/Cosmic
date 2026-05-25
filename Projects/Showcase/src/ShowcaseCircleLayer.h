@@ -4,11 +4,11 @@
 
 namespace Showcase
 {
-	class CircleDebugLayer : public Cosmic::Layer
+	class ShowcaseCircleLayer : public Cosmic::Layer
 	{
 	public:
-		CircleDebugLayer();
-		virtual ~CircleDebugLayer() override = default;
+		ShowcaseCircleLayer();
+		virtual ~ShowcaseCircleLayer() override = default;
 
 		virtual void OnAttach() override;
 		virtual void OnDetach() override;

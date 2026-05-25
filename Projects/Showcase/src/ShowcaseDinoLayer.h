@@ -55,8 +55,9 @@ namespace Showcase
 		bool m_ShowTrackingRing = true;
 		bool m_ShowBackgroundRings = true;
 		glm::vec4 m_RingColor = { 0.0f, 0.95f, 0.85f, 0.85f };
+		float m_BaseRingSize = 1.2f;
 		float m_BaseRingThickness = 0.08f;
-		float m_BaseRingFade = 0.01f;
+		float m_BaseRingFade = 1.20f;
 		float m_PulseFrequency = 4.0f;
 		float m_PulseAmplitude = 0.10f;
 	};

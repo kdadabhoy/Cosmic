@@ -162,7 +162,7 @@ namespace Showcase
 		float time = Cosmic::Layer::GetLocalTime();
 
 		// =========================================================================
-		// 🔵 BACKGROUND PROCEDURAL SHADER SHOWCASE (Radar / Beacon Bounds)
+		//  BACKGROUND PROCEDURAL SHADER SHOWCASE (Radar / Beacon Bounds)
 		// =========================================================================
 		if (m_ShowBackgroundRings)
 		{
@@ -210,14 +210,13 @@ namespace Showcase
 		{
 			auto& playerTrans = m_Dinos[0].EntityHandle.GetComponent<Cosmic::TransformComponent>();
 
-			// Center ring at player's feet but bring it visually forward (Z = +0.05f) 
-			// so it doesn't get clipped out by the quad asset footprint bounds.
 			glm::vec3 trackingRingPos = playerTrans.Position;
 			trackingRingPos.y -= 0.55f;
 			trackingRingPos.z += 0.05f;
 
+			// FIX C2440: Explicit constructor wrap for multi-component glm expression types
 			float pulseScale = 1.0f + (sin(time * m_PulseFrequency) * m_PulseAmplitude);
-			glm::vec2 ringSize = glm::vec2(1.2f, 0.4f) * pulseScale;
+			glm::vec2 ringSize = glm::vec2{ m_BaseRingSize, m_BaseRingSize * 0.333f } * pulseScale;
 
 			// Enforce color formatting norms dynamically
 			glm::vec4 safeRingColor = m_RingColor;
@@ -262,7 +261,7 @@ namespace Showcase
 
 		ImGui::Spacing();
 
-		if (ImGui::CollapsingHeader("🔴 PROCEDURAL RENDERER2D CIRCLE SHOWCASE", ImGuiTreeNodeFlags_DefaultOpen))
+		if (ImGui::CollapsingHeader("PROCEDURAL RENDERER2D CIRCLE SHOWCASE", ImGuiTreeNodeFlags_DefaultOpen))
 		{
 			ImGui::Checkbox("Render Player Selection Ring", &m_ShowTrackingRing);
 			ImGui::Checkbox("Render Background Radar Zone", &m_ShowBackgroundRings);
@@ -271,13 +270,16 @@ namespace Showcase
 			ImGui::Text("Selection Ring Attribute Modifiers:");
 
 			ImGui::ColorEdit4("Ring Tint Color", &m_RingColor.x);
+
+			// Dynamically scales the ring up to 5.0f structural units wide
+			ImGui::SliderFloat("Ring Base Size", &m_BaseRingSize, 0.2f, 5.0f, "%.2f units");
 			ImGui::SliderFloat("Ring Thickness", &m_BaseRingThickness, 0.01f, 1.0f, "%.3f (1.0 = Solid Disk)");
 			ImGui::SliderFloat("Edge AA Fade Sharpness", &m_BaseRingFade, 0.001f, 0.5f, "%.4f");
 
 			ImGui::Spacing();
 			ImGui::Text("Sin Wave Pulse Animation System:");
 			ImGui::SliderFloat("Pulse Speed (Freq)", &m_PulseFrequency, 0.0f, 10.0f, "%.1f Hz");
-			ImGui::SliderFloat("Pulse Size (Amp)", &m_PulseAmplitude, 0.0f, 0.5f, "%.2f");
+			ImGui::SliderFloat("Pulse Size (Amp)", &m_PulseAmplitude, 0.0f, 1.0f, "%.2f");
 			ImGui::Separator();
 		}
 
