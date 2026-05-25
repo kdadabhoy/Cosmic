@@ -7,10 +7,10 @@ namespace Showcase
 {
 	ShowcaseRunLayer::ShowcaseRunLayer(
 		Cosmic::Ref<Cosmic::Scene> scene,
-		Cosmic::Ref<Cosmic::Material> dinoMaterial)
+		Cosmic::Ref<Cosmic::Material> flameMaterial)
 		: Cosmic::Layer("ShowcaseRunLayer")
 		, m_Scene(scene)
-		, m_DinoMaterial(dinoMaterial)
+		, m_FlameMaterial(flameMaterial)
 		, m_Camera(1280.0f / 720.0f, false)
 	{
 	}
@@ -24,11 +24,11 @@ namespace Showcase
 		// WASD/Arrow panning updates without breaking smooth scroll-wheel zooming metrics.
 		m_Camera.SetManualMovementEnabled(false);
 
-		m_DinoEntity = m_Scene->CreateEntity("RunnerDino");
-		auto& t = m_DinoEntity.GetComponent<Cosmic::TransformComponent>();
+		m_FlameEntity = m_Scene->CreateEntity("RunnerFlame");
+		auto& t = m_FlameEntity.GetComponent<Cosmic::TransformComponent>();
 		t.Scale = { 0.45f, 0.45f };
 
-		m_DinoEntity.AddComponent<RunnerDinoComponent>();
+		m_FlameEntity.AddComponent<RunnerFlameComponent>();
 		Reset();
 	}
 
@@ -41,8 +41,8 @@ namespace Showcase
 		}
 		m_Obstacles.clear();
 
-		if (m_DinoEntity)
-			m_Scene->DestroyEntity(m_DinoEntity);
+		if (m_FlameEntity)
+			m_Scene->DestroyEntity(m_FlameEntity);
 	}
 
 	void ShowcaseRunLayer::Reset()
@@ -54,12 +54,12 @@ namespace Showcase
 		}
 		m_Obstacles.clear();
 
-		auto& t = m_DinoEntity.GetComponent<Cosmic::TransformComponent>();
-		auto& d = m_DinoEntity.GetComponent<RunnerDinoComponent>();
+		auto& t = m_FlameEntity.GetComponent<Cosmic::TransformComponent>();
+		auto& d = m_FlameEntity.GetComponent<RunnerFlameComponent>();
 		t.Position = { -1.5f, k_GroundY + 0.225f, 0.0f };
 
 		float prevHigh = d.HighScore;
-		d = RunnerDinoComponent{};
+		d = RunnerFlameComponent{};
 		d.HighScore = prevHigh;
 
 		m_SpawnTimer = 0.0f;
@@ -80,8 +80,8 @@ namespace Showcase
 		{
 			// Simple Rewind Behavior fallback: Run the matrix operations opposite positions
 			// (Note: For flawless physics rewinding, a structural state-history buffer is recommended)
-			auto& dinoT = m_DinoEntity.GetComponent<Cosmic::TransformComponent>();
-			auto& dinoD = m_DinoEntity.GetComponent<RunnerDinoComponent>();
+			auto& flameT = m_FlameEntity.GetComponent<Cosmic::TransformComponent>();
+			auto& flameD = m_FlameEntity.GetComponent<RunnerFlameComponent>();
 
 			for (auto& obs : m_Obstacles)
 			{
@@ -92,27 +92,27 @@ namespace Showcase
 			return;
 		}
 
-		auto& dinoT = m_DinoEntity.GetComponent<Cosmic::TransformComponent>();
-		auto& dinoD = m_DinoEntity.GetComponent<RunnerDinoComponent>();
+		auto& flameT = m_FlameEntity.GetComponent<Cosmic::TransformComponent>();
+		auto& flameD = m_FlameEntity.GetComponent<RunnerFlameComponent>();
 
 		// 1. Progress score tracking metrics (Game Speed scales difficulty smoothly automatically)
-		dinoD.Score += deltaFixedTime * 10.0f * dinoD.SpeedMultiplier;
-		dinoD.SpeedMultiplier += deltaFixedTime * 0.01f;
-		dinoD.HighScore = std::max(dinoD.HighScore, dinoD.Score);
+		flameD.Score += deltaFixedTime * 10.0f * flameD.SpeedMultiplier;
+		flameD.SpeedMultiplier += deltaFixedTime * 0.01f;
+		flameD.HighScore = std::max(flameD.HighScore, flameD.Score);
 
 		// 2. Handle kinematic physics integrations
-		if (!dinoD.IsGrounded)
+		if (!flameD.IsGrounded)
 		{
-			dinoD.VelocityY += k_Gravity * deltaFixedTime;
-			dinoT.Position.y += dinoD.VelocityY * deltaFixedTime;
+			flameD.VelocityY += k_Gravity * deltaFixedTime;
+			flameT.Position.y += flameD.VelocityY * deltaFixedTime;
 		}
 
-		float groundRestY = k_GroundY + dinoT.Scale.y * 0.5f;
-		if (dinoT.Position.y <= groundRestY)
+		float groundRestY = k_GroundY + flameT.Scale.y * 0.5f;
+		if (flameT.Position.y <= groundRestY)
 		{
-			dinoT.Position.y = groundRestY;
-			dinoD.VelocityY = 0.0f;
-			dinoD.IsGrounded = true;
+			flameT.Position.y = groundRestY;
+			flameD.VelocityY = 0.0f;
+			flameD.IsGrounded = true;
 		}
 
 		// 3. Procedural entity generation manager
@@ -131,17 +131,17 @@ namespace Showcase
 			t.Scale = { 0.3f, h };
 
 			auto& oc = obs.AddComponent<ObstacleComponent>();
-			oc.Speed = m_BaseObstacleSpeed * dinoD.SpeedMultiplier; // Multiplied by pure game difficulty metrics
+			oc.Speed = m_BaseObstacleSpeed * flameD.SpeedMultiplier; // Multiplied by pure game difficulty metrics
 			oc.Width = t.Scale.x;
 			oc.Height = h;
 
 			m_Obstacles.push_back(obs);
-			m_NextSpawnTime = gapDist(m_Rng) / dinoD.SpeedMultiplier;
+			m_NextSpawnTime = gapDist(m_Rng) / flameD.SpeedMultiplier;
 		}
 
 		// 4. Evaluate collision bounds state transformations
-		const float dinoHalfW = dinoT.Scale.x * 0.45f;
-		const float dinoHalfH = dinoT.Scale.y * 0.45f;
+		const float flameHalfW = flameT.Scale.x * 0.45f;
+		const float flameHalfH = flameT.Scale.y * 0.45f;
 
 		for (auto& obs : m_Obstacles)
 		{
@@ -149,12 +149,12 @@ namespace Showcase
 			auto& oc = obs.GetComponent<ObstacleComponent>();
 			ot.Position.x -= oc.Speed * deltaFixedTime;
 
-			float dx = std::abs(dinoT.Position.x - ot.Position.x);
-			float dy = std::abs(dinoT.Position.y - ot.Position.y);
-			if (dx < (dinoHalfW + oc.Width * 0.5f) && dy < (dinoHalfH + oc.Height * 0.5f))
+			float dx = std::abs(flameT.Position.x - ot.Position.x);
+			float dy = std::abs(flameT.Position.y - ot.Position.y);
+			if (dx < (flameHalfW + oc.Width * 0.5f) && dy < (flameHalfH + oc.Height * 0.5f))
 			{
 				m_GameOver = true;
-				CS_INFO("ShowcaseRunLayer: Collision registered! Score: {0:.0f}", dinoD.Score);
+				CS_INFO("ShowcaseRunLayer: Collision registered! Score: {0:.0f}", flameD.Score);
 			}
 		}
 
@@ -195,25 +195,25 @@ namespace Showcase
 		m_Camera.OnUpdate(ts);
 
 		// --- CAMERA FOCUS TRACKING OVERRIDE ---
-		// Update the view matrix to automatically track the flame runner runner dino.
-		if (m_DinoEntity)
+		// Update the view matrix to automatically track the flame runner runner flame.
+		if (m_FlameEntity)
 		{
-			auto& dinoTransform = m_DinoEntity.GetComponent<Cosmic::TransformComponent>();
+			auto& flameTransform = m_FlameEntity.GetComponent<Cosmic::TransformComponent>();
 			glm::vec3 cameraTarget = m_Camera.GetPosition();
 
 			// Center tracking directly onto player positions.
-			// (Tip: Add + 1.0f to cameraTarget.x if you want the dino positioned further left for framing oncoming obstacles)
-			cameraTarget.x = dinoTransform.Position.x;
-			cameraTarget.y = dinoTransform.Position.y;
+			// (Tip: Add + 1.0f to cameraTarget.x if you want the flame positioned further left for framing oncoming obstacles)
+			cameraTarget.x = flameTransform.Position.x;
+			cameraTarget.y = flameTransform.Position.y;
 
 			m_Camera.SetPosition(cameraTarget);
 		}
 		// -----------------------------------------------------------------
 
 		// TIMELINE UPDATE FIX: Use this layer instance's local time tracking context
-		if (m_DinoMaterial)
+		if (m_FlameMaterial)
 		{
-			m_DinoMaterial->Set("u_Time", GetLocalTime());
+			m_FlameMaterial->Set("u_Time", GetLocalTime());
 		}
 
 		Cosmic::Renderer2D::BeginScene(m_Camera.GetCamera());
@@ -222,8 +222,8 @@ namespace Showcase
 		Cosmic::Renderer2D::DrawQuad({ 0.0f, k_GroundY - 0.05f, -0.1f }, { 20.0f, 0.12f }, { 0.35f, 0.35f, 0.38f, 1.0f });
 
 		// Draw player node
-		auto& dinoT = m_DinoEntity.GetComponent<Cosmic::TransformComponent>();
-		Cosmic::Renderer2D::DrawQuad(dinoT.Position, dinoT.Scale, m_DinoMaterial);
+		auto& flameT = m_FlameEntity.GetComponent<Cosmic::TransformComponent>();
+		Cosmic::Renderer2D::DrawQuad(flameT.Position, flameT.Scale, m_FlameMaterial);
 
 		// Draw procedural obstacle array nodes
 		for (auto& obs : m_Obstacles)
@@ -235,7 +235,7 @@ namespace Showcase
 		// Draw debug fail line if collision state flags are tripped
 		if (m_GameOver)
 		{
-			Cosmic::Renderer2D::DrawLine({ -10.0f, dinoT.Position.y, 0.0f }, { 10.0f, dinoT.Position.y, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f });
+			Cosmic::Renderer2D::DrawLine({ -10.0f, flameT.Position.y, 0.0f }, { 10.0f, flameT.Position.y, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f });
 		}
 
 		Cosmic::Renderer2D::EndScene();
@@ -243,7 +243,7 @@ namespace Showcase
 
 	void ShowcaseRunLayer::OnImGuiRender()
 	{
-		auto& d = m_DinoEntity.GetComponent<RunnerDinoComponent>();
+		auto& d = m_FlameEntity.GetComponent<RunnerFlameComponent>();
 
 		ImGui::Begin("Simulation Inspection Window");
 		ImGui::Text("--- Runner Simulation Panel ---");
@@ -326,7 +326,7 @@ namespace Showcase
 				return true;
 			}
 
-			auto& d = m_DinoEntity.GetComponent<RunnerDinoComponent>();
+			auto& d = m_FlameEntity.GetComponent<RunnerFlameComponent>();
 			if (d.IsGrounded)
 			{
 				d.VelocityY = k_JumpV;

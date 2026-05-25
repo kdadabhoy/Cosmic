@@ -6,10 +6,10 @@ namespace Showcase
 {
 	ShowcaseFlightLayer::ShowcaseFlightLayer(
 		Cosmic::Ref<Cosmic::Scene> scene,
-		Cosmic::Ref<Cosmic::Material> dinoMaterial)
+		Cosmic::Ref<Cosmic::Material> flameMaterial)
 		: Cosmic::Layer("ShowcaseFlightLayer")
 		, m_Scene(scene)
-		, m_DinoMaterial(dinoMaterial)
+		, m_FlameMaterial(flameMaterial)
 		, m_Camera(1280.0f / 720.0f, false)
 	{
 	}
@@ -19,26 +19,26 @@ namespace Showcase
 		m_Camera.SetZoomLevel(2.0f);
 		m_Camera.SetZoomLimits(0.5f, 20.0f);
 
-		m_DinoA = m_Scene->CreateEntity("FlightDino_A");
+		m_FlameA = m_Scene->CreateEntity("FlightFlame_A");
 		{
-			auto& t = m_DinoA.GetComponent<Cosmic::TransformComponent>();
+			auto& t = m_FlameA.GetComponent<Cosmic::TransformComponent>();
 			t.Position = { -5.0f, 1.0f, 0.0f };
 			t.Scale = { 0.45f, 0.45f };
 
-			auto& fd = m_DinoA.AddComponent<FlightDinoComponent>();
+			auto& fd = m_FlameA.AddComponent<FlightFlameComponent>();
 			fd.Speed = 2.5f;
 			fd.Slope = 0.1f;
 			fd.Color = { 1.0f, 0.6f, 0.1f, 1.0f };
 			fd.Trail.push_back(t.Position);
 		}
 
-		m_DinoB = m_Scene->CreateEntity("FlightDino_B");
+		m_FlameB = m_Scene->CreateEntity("FlightFlame_B");
 		{
-			auto& t = m_DinoB.GetComponent<Cosmic::TransformComponent>();
+			auto& t = m_FlameB.GetComponent<Cosmic::TransformComponent>();
 			t.Position = { -5.0f, -1.0f, 0.0f };
 			t.Scale = { 0.45f, 0.45f };
 
-			auto& fd = m_DinoB.AddComponent<FlightDinoComponent>();
+			auto& fd = m_FlameB.AddComponent<FlightFlameComponent>();
 			fd.Speed = 1.8f;
 			fd.Slope = -0.15f;
 			fd.Color = { 0.2f, 0.9f, 1.0f, 1.0f };
@@ -49,8 +49,8 @@ namespace Showcase
 	void ShowcaseFlightLayer::OnDetach()
 	{
 		DeselectAll();
-		if (m_DinoA) m_Scene->DestroyEntity(m_DinoA);
-		if (m_DinoB) m_Scene->DestroyEntity(m_DinoB);
+		if (m_FlameA) m_Scene->DestroyEntity(m_FlameA);
+		if (m_FlameB) m_Scene->DestroyEntity(m_FlameB);
 	}
 
 	// =========================================================================
@@ -61,11 +61,11 @@ namespace Showcase
 		// NO MORE MANUAL TIMELINE HACKS:
 		// The incoming deltaFixedTime is pre-scaled natively by our workspace shell.
 
-		auto moveDino = [&](Cosmic::Entity ent)
+		auto moveFlame = [&](Cosmic::Entity ent)
 			{
 				if (!ent) return;
 				auto& t = ent.GetComponent<Cosmic::TransformComponent>();
-				auto& fd = ent.GetComponent<FlightDinoComponent>();
+				auto& fd = ent.GetComponent<FlightFlameComponent>();
 
 				t.Position.x += fd.Speed * deltaFixedTime;
 				t.Position.y += fd.Speed * fd.Slope * deltaFixedTime;
@@ -88,8 +88,8 @@ namespace Showcase
 				}
 			};
 
-		moveDino(m_DinoA);
-		moveDino(m_DinoB);
+		moveFlame(m_FlameA);
+		moveFlame(m_FlameB);
 	}
 
 	// =========================================================================
@@ -118,9 +118,9 @@ namespace Showcase
 		// CLEAN ARCHITECTURE FIX: 
 		// Feed the native synchronized timeline via Layer::GetLocalTime() down to 
 		// the pipeline materials to track animation states linearly without hitching.
-		if (m_DinoMaterial)
+		if (m_FlameMaterial)
 		{
-			m_DinoMaterial->Set("u_Time", Cosmic::Layer::GetLocalTime());
+			m_FlameMaterial->Set("u_Time", Cosmic::Layer::GetLocalTime());
 		}
 
 		// Flush camera matrices to draw commands
@@ -137,11 +137,11 @@ namespace Showcase
 		}
 
 		// Local vertex array dispatch pipeline lambdas
-		auto drawDino = [&](Cosmic::Entity ent)
+		auto drawFlame = [&](Cosmic::Entity ent)
 			{
 				if (!ent) return;
 				auto& t = ent.GetComponent<Cosmic::TransformComponent>();
-				auto& fd = ent.GetComponent<FlightDinoComponent>();
+				auto& fd = ent.GetComponent<FlightFlameComponent>();
 
 				// Process and fade trail segments based on sample age
 				size_t n = fd.Trail.size();
@@ -154,7 +154,7 @@ namespace Showcase
 				}
 
 				// Render active quad material
-				Cosmic::Renderer2D::DrawQuad(t.Position, t.Scale, m_DinoMaterial);
+				Cosmic::Renderer2D::DrawQuad(t.Position, t.Scale, m_FlameMaterial);
 
 				// Render spatial focus wireframes if actively targeted
 				if (fd.Selected)
@@ -164,8 +164,8 @@ namespace Showcase
 			};
 
 		// Submit render commands to graphics pipeline backend
-		drawDino(m_DinoA);
-		drawDino(m_DinoB);
+		drawFlame(m_FlameA);
+		drawFlame(m_FlameB);
 
 		Cosmic::Renderer2D::EndScene();
 	}
@@ -180,13 +180,13 @@ namespace Showcase
 		ImGui::Text("Flight Timeline Phase: %.2fs", Cosmic::Layer::GetLocalTime());
 		ImGui::Spacing();
 
-		auto showDinoStats = [&](const char* label, Cosmic::Entity ent)
+		auto showFlameStats = [&](const char* label, Cosmic::Entity ent)
 			{
 				if (!ent) return;
 
 				ImGui::PushID((int)(uint32_t)ent);
 				auto& t = ent.GetComponent<Cosmic::TransformComponent>();
-				auto& fd = ent.GetComponent<FlightDinoComponent>();
+				auto& fd = ent.GetComponent<FlightFlameComponent>();
 
 				bool selected = fd.Selected;
 				if (selected) ImGui::PushStyleColor(ImGuiCol_Text, { 1.0f, 1.0f, 0.0f, 1.0f });
@@ -211,8 +211,8 @@ namespace Showcase
 				ImGui::PopID();
 			};
 
-		showDinoStats("Dino Entity Alpha (Orange)", m_DinoA);
-		showDinoStats("Dino Entity Beta (Cyan)", m_DinoB);
+		showFlameStats("Flame Entity Alpha (Orange)", m_FlameA);
+		showFlameStats("Flame Entity Beta (Cyan)", m_FlameB);
 
 		ImGui::Spacing();
 		if (m_SelectedEntity)
@@ -248,8 +248,8 @@ namespace Showcase
 		glm::vec2 screenPos = Cosmic::Input::GetMousePosition();
 		glm::vec2 worldPos = ScreenToWorld(screenPos);
 
-		if (HitTest(m_DinoA, worldPos)) { SelectEntity(m_DinoA); return true; }
-		if (HitTest(m_DinoB, worldPos)) { SelectEntity(m_DinoB); return true; }
+		if (HitTest(m_FlameA, worldPos)) { SelectEntity(m_FlameA); return true; }
+		if (HitTest(m_FlameB, worldPos)) { SelectEntity(m_FlameB); return true; }
 
 		DeselectAll();
 		return false;
@@ -299,15 +299,15 @@ namespace Showcase
 		DeselectAll();
 		if (e)
 		{
-			e.GetComponent<FlightDinoComponent>().Selected = true;
+			e.GetComponent<FlightFlameComponent>().Selected = true;
 		}
 		m_SelectedEntity = e;
 	}
 
 	void ShowcaseFlightLayer::DeselectAll()
 	{
-		if (m_DinoA) m_DinoA.GetComponent<FlightDinoComponent>().Selected = false;
-		if (m_DinoB) m_DinoB.GetComponent<FlightDinoComponent>().Selected = false;
+		if (m_FlameA) m_FlameA.GetComponent<FlightFlameComponent>().Selected = false;
+		if (m_FlameB) m_FlameB.GetComponent<FlightFlameComponent>().Selected = false;
 		m_SelectedEntity = Cosmic::Entity{};
 	}
 }

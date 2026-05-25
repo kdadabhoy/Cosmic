@@ -6,7 +6,7 @@
 
 namespace Showcase
 {
-	struct RunnerDinoComponent
+	struct RunnerFlameComponent
 	{
 		float Score = 0.0f;
 		float HighScore = 0.0f;
@@ -25,7 +25,7 @@ namespace Showcase
 	class ShowcaseRunLayer : public Cosmic::Layer
 	{
 	public:
-		ShowcaseRunLayer(Cosmic::Ref<Cosmic::Scene> scene, Cosmic::Ref<Cosmic::Material> dinoMaterial);
+		ShowcaseRunLayer(Cosmic::Ref<Cosmic::Scene> scene, Cosmic::Ref<Cosmic::Material> flameMaterial);
 		virtual ~ShowcaseRunLayer() override = default;
 
 		// Native engine lifecycle mappings
@@ -43,10 +43,10 @@ namespace Showcase
 
 	private:
 		Cosmic::Ref<Cosmic::Scene> m_Scene;
-		Cosmic::Ref<Cosmic::Material> m_DinoMaterial;
+		Cosmic::Ref<Cosmic::Material> m_FlameMaterial;
 		Cosmic::OrthographicCameraController m_Camera;
 
-		Cosmic::Entity m_DinoEntity;
+		Cosmic::Entity m_FlameEntity;
 		std::vector<Cosmic::Entity> m_Obstacles;
 
 		float m_SpawnTimer = 0.0f;

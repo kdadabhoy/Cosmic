@@ -24,8 +24,8 @@ namespace Showcase
 		std::vector<std::shared_ptr<Cosmic::Layer>> m_Modes;
 		int m_ActiveModeIndex = 0;
 
-		Cosmic::Ref<Cosmic::Scene> m_Scene;
-		Cosmic::Ref<Cosmic::Material> m_DinoMaterial;
-		std::string m_ShaderDir;
+		Cosmic::Ref<Cosmic::Scene>		m_Scene;
+		Cosmic::Ref<Cosmic::Material>	m_FlameMaterial;
+		std::string						m_ShaderDir;
 	};
 }

@@ -4,7 +4,7 @@
 
 namespace Showcase
 {
-	struct FlightDinoComponent
+	struct FlightFlameComponent
 	{
 		float Speed = 1.0f;
 		float Slope = 0.0f;
@@ -16,7 +16,7 @@ namespace Showcase
 	class ShowcaseFlightLayer : public Cosmic::Layer
 	{
 	public:
-		ShowcaseFlightLayer(Cosmic::Ref<Cosmic::Scene> scene, Cosmic::Ref<Cosmic::Material> dinoMaterial);
+		ShowcaseFlightLayer(Cosmic::Ref<Cosmic::Scene> scene, Cosmic::Ref<Cosmic::Material> flameMaterial);
 		virtual ~ShowcaseFlightLayer() override = default;
 
 		virtual void OnAttach() override;
@@ -36,11 +36,11 @@ namespace Showcase
 
 	private:
 		Cosmic::Ref<Cosmic::Scene> m_Scene;
-		Cosmic::Ref<Cosmic::Material> m_DinoMaterial;
+		Cosmic::Ref<Cosmic::Material> m_FlameMaterial;
 		Cosmic::OrthographicCameraController m_Camera;
 
-		Cosmic::Entity m_DinoA;
-		Cosmic::Entity m_DinoB;
+		Cosmic::Entity m_FlameA;
+		Cosmic::Entity m_FlameB;
 		Cosmic::Entity m_SelectedEntity;
 
 		glm::vec2 m_ViewportSize = { 1280.0f, 720.0f };

@@ -35,17 +35,17 @@ namespace Showcase
 
 		m_Scene = Cosmic::Scene::Create();
 		auto fireShader = Cosmic::Shader::Create(fireShaderPath);
-		m_DinoMaterial = Cosmic::Material::Create(fireShader, "DinoMaterial");
+		m_FlameMaterial = Cosmic::Material::Create(fireShader, "DinoMaterial");
 
-		if (m_DinoMaterial)
+		if (m_FlameMaterial)
 		{
-			m_DinoMaterial->Set("u_Color", glm::vec4(1.0f));
+			m_FlameMaterial->Set("u_Color", glm::vec4(1.0f));
 		}
 
-		if (m_DinoMaterial)
+		if (m_FlameMaterial)
 		{
-			m_Modes.push_back(std::make_shared<ShowcaseFlightLayer>(m_Scene, m_DinoMaterial));
-			m_Modes.push_back(std::make_shared<ShowcaseRunLayer>(m_Scene, m_DinoMaterial));
+			m_Modes.push_back(std::make_shared<ShowcaseFlightLayer>(m_Scene, m_FlameMaterial));
+			m_Modes.push_back(std::make_shared<ShowcaseRunLayer>(m_Scene, m_FlameMaterial));
 			m_Modes.push_back(std::make_shared<ShowcaseShaderLayer>(m_ShaderDir));
 
 			auto alternativeShader = Cosmic::Shader::Create(m_ShaderDir + "/FireShader.glsl");
@@ -56,7 +56,7 @@ namespace Showcase
 				alternativeMaterial->Set("u_Color", glm::vec4(0.2f, 0.7f, 1.0f, 1.0f));
 			}
 
-			m_Modes.push_back(std::make_shared<ShowcaseStressLayer>(m_Scene, m_DinoMaterial, alternativeMaterial));
+			m_Modes.push_back(std::make_shared<ShowcaseStressLayer>(m_Scene, m_FlameMaterial, alternativeMaterial));
 
 			for (auto& mode : m_Modes)
 			{
@@ -72,7 +72,7 @@ namespace Showcase
 			mode->OnDetach();
 		}
 		m_Modes.clear();
-		m_DinoMaterial.reset();
+		m_FlameMaterial.reset();
 		m_Scene.reset();
 	}
 
@@ -89,9 +89,9 @@ namespace Showcase
 		// CLEAN ARCHITECTURE FIX: 
 		// Query the localized synchronised timeline from the active mode layer 
 		// to feed materials instead of fetching engine global absolute time.
-		if (m_DinoMaterial)
+		if (m_FlameMaterial)
 		{
-			m_DinoMaterial->Set("u_Time", activeMode->GetLocalTime());
+			m_FlameMaterial->Set("u_Time", activeMode->GetLocalTime());
 		}
 
 		activeMode->OnUpdate(ts);
@@ -156,12 +156,12 @@ namespace Showcase
 
 		ImGui::Separator();
 
-		if (m_DinoMaterial && ImGui::CollapsingHeader("Global Fire Material Settings", ImGuiTreeNodeFlags_DefaultOpen))
+		if (m_FlameMaterial && ImGui::CollapsingHeader("Global Fire Material Settings", ImGuiTreeNodeFlags_DefaultOpen))
 		{
-			glm::vec4 color = m_DinoMaterial->GetVector("u_Color");
+			glm::vec4 color = m_FlameMaterial->GetVector("u_Color");
 			if (ImGui::ColorEdit4("Flame Tint", &color.x))
 			{
-				m_DinoMaterial->Set("u_Color", color);
+				m_FlameMaterial->Set("u_Color", color);
 			}
 		}
 
