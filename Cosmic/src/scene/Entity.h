@@ -39,6 +39,16 @@ namespace Cosmic
         }
 
         /**
+         * @brief Returns a read-only reference to a component type held by a const entity.
+         */
+        template<typename T>
+        const T& GetComponent() const
+        {
+            CS_ASSERT(HasComponent<T>(), "Entity does not possess this component type!");
+            return m_Scene->m_Registry.get<T>(m_EntityHandle);
+        }
+
+        /**
          * @brief Checks if the entity contains the given component.
          */
         template<typename T>

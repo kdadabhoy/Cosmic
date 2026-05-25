@@ -97,13 +97,18 @@ namespace Cosmic
 	/**
 	 * Bind
 	 * * Activates this framebuffer for rendering.
-	 * * CRITICAL: We update the glViewport to match the framebuffer dimensions to
-	 * ensure coordinates remain mapped correctly within the off-screen texture.
+	 *
+	 * ARCHITECTURAL NOTE: The glViewport call has been intentionally removed.
+	 * Framebuffer binding now strictly controls memory targets (which FBO is the
+	 * active draw target). Viewport area control (sub-quadrant regions for
+	 * picture-in-picture or multi-camera grids) is managed exclusively by the
+	 * active RenderPass, which has full awareness of the desired viewport bounds.
+	 * This separation allows multiple RenderPass instances to share the same
+	 * framebuffer while targeting different pixel regions.
 	 */
 	void OpenGLFrameBuffer::Bind()
 	{
 		glBindFramebuffer(GL_FRAMEBUFFER, m_RendererID);
-		glViewport(0, 0, m_Specification.Width, m_Specification.Height);
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////

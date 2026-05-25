@@ -5,6 +5,7 @@
 #include "ShowcaseStressLayer.h"
 #include "ShowcaseDinoLayer.h"
 #include "ShowcaseCircleLayer.h" 
+#include "ShowcaseMultiViewportLayer.h"
 
 #include <imgui.h>
 #include <implot.h>
@@ -52,6 +53,7 @@ namespace Showcase
 			m_Modes.push_back(std::make_shared<ShowcaseShaderLayer>(m_ShaderDir));
 			m_Modes.push_back(std::make_shared<ShowcaseDinoLayer>(m_Scene));
 			m_Modes.push_back(std::make_shared<ShowcaseRunLayer>(m_Scene, m_FlameMaterial));
+			m_Modes.push_back(std::make_shared<ShowcaseMultiViewportLayer>());
 
 
 
