@@ -81,10 +81,10 @@ namespace Cosmic
 	{
 		if (m_ClientViewportLayer)
 		{
-			// ENGINE FIX: Pass down the scaled/unscaled deterministic timestep directly.
-			// Because WorkspaceLayer's OnFixedUpdate is only called when the application
-			// accumulator is ready, the timestep passing through here is already inherently scaled.
-			m_ClientViewportLayer->OnFixedUpdate(deltaFixedTime);
+			// Fix: Scale the fixed step by the client layer's explicit local time scale
+			float scaledFixedDelta = deltaFixedTime * m_ClientViewportLayer->GetTimeScale();
+
+			m_ClientViewportLayer->OnFixedUpdate(scaledFixedDelta);
 		}
 	}
 
