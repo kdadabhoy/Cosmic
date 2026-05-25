@@ -84,6 +84,22 @@ namespace Showcase
 	// =========================================================================
 	void ShowcaseStressLayer::OnUpdate(float ts)
 	{
+		// --- ARCHITECTURAL FIX: Dynamic Canvas Layout Synchronization ---
+		// Fetch active resolution properties directly from the host application's 
+		// primary framebuffers. This guarantees that orthographic rendering matrices
+		// never become stretched, corrupted, or uninitialized on initial execution frames.
+		auto fb = Cosmic::Application::Get().GetFrameBuffer();
+		float activeWidth = static_cast<float>(fb->GetWidth());
+		float activeHeight = static_cast<float>(fb->GetHeight());
+
+		if (m_ViewportSize.x != activeWidth || m_ViewportSize.y != activeHeight)
+		{
+			m_ViewportSize = { activeWidth, activeHeight };
+			m_Camera.OnResize(m_ViewportSize.x, m_ViewportSize.y);
+		}
+		// -----------------------------------------------------------------
+
+		// Step smooth camera interpolation parameters forward
 		m_Camera.OnUpdate(ts);
 
 		// VISUAL FIX: Move kinematic visual animations out of OnFixedUpdate into OnUpdate.
@@ -99,9 +115,11 @@ namespace Showcase
 			}
 		}
 
+		// Reset metric structures before drawing batch
 		Cosmic::Renderer2D::ResetStats();
 		Cosmic::Renderer2D::BeginScene(m_Camera.GetCamera());
 
+		// Process and flush component sprites down to backend drivers
 		m_Scene->OnRender();
 
 		Cosmic::Renderer2D::EndScene();
@@ -172,11 +190,14 @@ namespace Showcase
 
 	void ShowcaseStressLayer::OnEvent(Cosmic::Event& e)
 	{
+		// Pass down events uniformly into the camera controller matrix pipeline
 		m_Camera.OnEvent(e);
 		if (e.Handled) return;
 
 		Cosmic::EventDispatcher dispatcher(e);
-		dispatcher.Dispatch<Cosmic::WindowResizeEvent>(GLCORE_BIND_EVENT_FN(ShowcaseStressLayer::OnWindowResize));
+
+		// MODERN C++ LAMBDA REFACTOR: Eliminates legacy template binding macros
+		dispatcher.Dispatch<Cosmic::WindowResizeEvent>([this](Cosmic::WindowResizeEvent& event) { return OnWindowResize(event); });
 	}
 
 	bool ShowcaseStressLayer::OnWindowResize(Cosmic::WindowResizeEvent& e)

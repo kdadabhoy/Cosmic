@@ -36,9 +36,13 @@ namespace Showcase
 		Cosmic::Ref<Cosmic::Material> m_Material;
 		int m_SelectedIndex = -1;
 
-		glm::vec2 m_ViewportSize = { 1280.0f, 720.0f };
-
 		bool m_LoadError = false;
 		std::string m_ErrorMsg;
+
+
+		bool m_FillScreen = false;
+		bool m_LockAspect = false;
+		float m_TargetAspect = 16.0f / 9.0f;
+		glm::vec2 m_ViewportSize = { 1280.0f, 720.0f }; // Fallback starting layout baseline
 	};
 }

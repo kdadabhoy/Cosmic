@@ -21,6 +21,9 @@ namespace Showcase
 		m_Camera.SetZoomLimits(0.5f, 5.0f);
 		m_Camera.SetTranslationSpeed(4.0f);
 
+		// WASD/Arrow panning updates without breaking smooth scroll-wheel zooming metrics.
+		m_Camera.SetManualMovementEnabled(false);
+
 		m_DinoEntity = m_Scene->CreateEntity("RunnerDino");
 		auto& t = m_DinoEntity.GetComponent<Cosmic::TransformComponent>();
 		t.Scale = { 0.45f, 0.45f };
@@ -173,7 +176,39 @@ namespace Showcase
 
 	void ShowcaseRunLayer::OnUpdate(float ts)
 	{
+		// --- ARCHITECTURAL FIX: Dynamic Canvas Layout Synchronization ---
+		// Fetch active resolution properties directly from the host application's 
+		// primary framebuffers. This guarantees that orthographic view matrix bounds
+		// never become stretched, corrupted, or uninitialized during initial load frames.
+		auto fb = Cosmic::Application::Get().GetFrameBuffer();
+		float activeWidth = static_cast<float>(fb->GetWidth());
+		float activeHeight = static_cast<float>(fb->GetHeight());
+
+		if (m_ViewportSize.x != activeWidth || m_ViewportSize.y != activeHeight)
+		{
+			m_ViewportSize = { activeWidth, activeHeight };
+			m_Camera.OnResize(m_ViewportSize.x, m_ViewportSize.y);
+		}
+		// -----------------------------------------------------------------
+
+		// Step smooth camera zoom interpolation parameters forward
 		m_Camera.OnUpdate(ts);
+
+		// --- CAMERA FOCUS TRACKING OVERRIDE ---
+		// Update the view matrix to automatically track the flame runner runner dino.
+		if (m_DinoEntity)
+		{
+			auto& dinoTransform = m_DinoEntity.GetComponent<Cosmic::TransformComponent>();
+			glm::vec3 cameraTarget = m_Camera.GetPosition();
+
+			// Center tracking directly onto player positions.
+			// (Tip: Add + 1.0f to cameraTarget.x if you want the dino positioned further left for framing oncoming obstacles)
+			cameraTarget.x = dinoTransform.Position.x;
+			cameraTarget.y = dinoTransform.Position.y;
+
+			m_Camera.SetPosition(cameraTarget);
+		}
+		// -----------------------------------------------------------------
 
 		// TIMELINE UPDATE FIX: Use this layer instance's local time tracking context
 		if (m_DinoMaterial)
@@ -183,17 +218,21 @@ namespace Showcase
 
 		Cosmic::Renderer2D::BeginScene(m_Camera.GetCamera());
 
+		// Draw world layout base floor
 		Cosmic::Renderer2D::DrawQuad({ 0.0f, k_GroundY - 0.05f, -0.1f }, { 20.0f, 0.12f }, { 0.35f, 0.35f, 0.38f, 1.0f });
 
+		// Draw player node
 		auto& dinoT = m_DinoEntity.GetComponent<Cosmic::TransformComponent>();
 		Cosmic::Renderer2D::DrawQuad(dinoT.Position, dinoT.Scale, m_DinoMaterial);
 
+		// Draw procedural obstacle array nodes
 		for (auto& obs : m_Obstacles)
 		{
 			auto& ot = obs.GetComponent<Cosmic::TransformComponent>();
 			Cosmic::Renderer2D::DrawQuad(ot.Position, ot.Scale, { 0.85f, 0.2f, 0.2f, 1.0f });
 		}
 
+		// Draw debug fail line if collision state flags are tripped
 		if (m_GameOver)
 		{
 			Cosmic::Renderer2D::DrawLine({ -10.0f, dinoT.Position.y, 0.0f }, { 10.0f, dinoT.Position.y, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f });
@@ -252,12 +291,15 @@ namespace Showcase
 
 	void ShowcaseRunLayer::OnEvent(Cosmic::Event& e)
 	{
+		// Pass down events uniformly into the camera controller matrix pipeline
 		m_Camera.OnEvent(e);
 		if (e.Handled) return;
 
 		Cosmic::EventDispatcher dispatcher(e);
-		dispatcher.Dispatch<Cosmic::KeyPressedEvent>(GLCORE_BIND_EVENT_FN(ShowcaseRunLayer::OnKeyPressed));
-		dispatcher.Dispatch<Cosmic::WindowResizeEvent>(GLCORE_BIND_EVENT_FN(ShowcaseRunLayer::OnWindowResize));
+
+		// MODERN C++ LAMBDA REFACTOR: Eliminates legacy template binding macros
+		dispatcher.Dispatch<Cosmic::KeyPressedEvent>([this](Cosmic::KeyPressedEvent& event) { return OnKeyPressed(event); });
+		dispatcher.Dispatch<Cosmic::WindowResizeEvent>([this](Cosmic::WindowResizeEvent& event) { return OnWindowResize(event); });
 	}
 
 	bool ShowcaseRunLayer::OnKeyPressed(Cosmic::KeyPressedEvent& e)

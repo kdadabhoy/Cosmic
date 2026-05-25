@@ -199,6 +199,12 @@ namespace Cosmic
 
 	void WorkspaceLayer::OnEvent(Cosmic::Event& e)
 	{
+		if (e.Handled)
+		{
+			return;
+		}
+	
+
 		// Pass core inputs/window alterations downward to the client viewport layer context
 		if (m_ClientViewportLayer)
 		{

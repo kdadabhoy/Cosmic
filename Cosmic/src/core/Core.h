@@ -1,9 +1,12 @@
 #pragma once
 
-// Core.h
-// Last Modified 5/14/2026
+// Last Modified 5/24/2026
 
 /**
+*  Needs to be Updated
+* 
+* 
+* 
  * General Description:
  * Core.h serves as the fundamental definition layer for the Cosmic Engine. It is
  * designed to be the first inclusion in nearly every engine file, providing
@@ -27,6 +30,7 @@
  */
 
 #include <memory>
+
 
 namespace Cosmic
 {
@@ -65,27 +69,27 @@ namespace Cosmic
 
 
 
-	////////////////////////////////
+
+////////////////////////////////
 	// Debugging & Asserts
 	///////////////////////////////
-
-#ifdef GLCORE_DEBUG
-#define GLCORE_ENABLE_ASSERTS
+#if defined(GLCORE_DEBUG) || defined(CS_DEBUG)
+#define CS_ENABLE_ASSERTS
 #endif
 
-
-
-
 	/**
-	 * GLCORE_ASSERT
-	 * A development tool used to verify assumptions in the code. If the condition 'x'
-	 * fails, the engine will trigger a debug break, allowing the developer to
-	 * inspect the call stack.
+	 * CS_ASSERT / GLCORE_ASSERT
+	 * Verifies conditions during evaluation. If 'x' returns false, the engine outputs
+	 * a localized core error via the logger stream subsystem before forcing a debug halt.
 	 */
-#ifdef GLCORE_ENABLE_ASSERTS
-#define GLCORE_ASSERT(x, ...) { if(!(x)) { /* TODO: Add Logger Error Call */; __debugbreak(); } }
+#ifdef CS_ENABLE_ASSERTS
+	// We use an expansion technique so that any file including Core.h knows the macro signature,
+	// but the actual call to Log occurs downstream without requiring a tight #include "Log.h" dependency here.
+	#define CS_ASSERT(x, ...)     { if(!(x)) { CS_CORE_ERROR("Assertion Failed: {0}", __VA_ARGS__); __debugbreak(); } }
+	#define GLCORE_ASSERT(x, ...) { if(!(x)) { CS_CORE_ERROR("Assertion Failed: {0}", __VA_ARGS__); __debugbreak(); } }
 #else
-#define GLCORE_ASSERT(x, ...)
+	#define CS_ASSERT(x, ...)
+	#define GLCORE_ASSERT(x, ...)
 #endif
 
 
@@ -106,11 +110,16 @@ namespace Cosmic
 
 
 	  /**
-	   * GLCORE_BIND_EVENT_FN(fn)
+	   * CS_BIND_EVENT_FN(fn)
 	   * A helper macro to simplify binding class member functions to the Event system.
-	   * It handles the 'std::bind' syntax and 'this' pointer placement automatically.
+	   * Prefer modern C++20 lambda syntax in client-facing code over this macro:
+	   * dispatcher.Dispatch<Event>([this](auto& e) { return OnEvent(e); });
 	   */
+#define CS_BIND_EVENT_FN(fn)     std::bind(&fn, this, std::placeholders::_1)
 #define GLCORE_BIND_EVENT_FN(fn) std::bind(&fn, this, std::placeholders::_1)
+
+
+
 
 
 

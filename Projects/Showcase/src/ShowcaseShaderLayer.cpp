@@ -103,8 +103,27 @@ namespace Showcase
 	// =========================================================================
 	// Frame Graphics Render Pass
 	// =========================================================================
+	// =========================================================================
+	// Frame Graphics Render Pass
+	// =========================================================================
 	void ShowcaseShaderLayer::OnUpdate(float ts)
 	{
+		// --- ARCHITECTURAL FIX: Dynamic Canvas Layout Synchronization ---
+		// Fetch active resolution properties directly from the host application's 
+		// primary framebuffers. This guarantees that screen-to-world bounds and aspect 
+		// ratios never become uninitialized or stretched during initial load frames.
+		auto fb = Cosmic::Application::Get().GetFrameBuffer();
+		float activeWidth = static_cast<float>(fb->GetWidth());
+		float activeHeight = static_cast<float>(fb->GetHeight());
+
+		if (m_ViewportSize.x != activeWidth || m_ViewportSize.y != activeHeight)
+		{
+			m_ViewportSize = { activeWidth, activeHeight };
+			m_Camera.OnResize(m_ViewportSize.x, m_ViewportSize.y);
+		}
+		// -----------------------------------------------------------------
+
+		// Step smooth camera interpolation parameters forward
 		m_Camera.OnUpdate(ts);
 
 		// ARCHITECTURE FIX: Called instance method to fetch this layer's individual timeline clock
@@ -117,8 +136,25 @@ namespace Showcase
 
 		if (m_Material && !m_LoadError)
 		{
-			float aspect = m_ViewportSize.x / m_ViewportSize.y;
-			Cosmic::Renderer2D::DrawQuad({ 0.0f, 0.0f, 0.0f }, { 2.0f * aspect, 2.0f }, m_Material);
+			// FEATURE IMPLEMENTATION: Handle Fill Screen Toggle & Locked Aspect Constraints
+			if (m_FillScreen)
+			{
+				// Compute exactly what is needed to cover the orthographic viewing projection space completely
+				float aspect = m_ViewportSize.x / m_ViewportSize.y;
+				float zoom = m_Camera.GetZoomLevel();
+				Cosmic::Renderer2D::DrawQuad({ 0.0f, 0.0f, 0.0f }, { 2.0f * aspect * zoom, 2.0f * zoom }, m_Material);
+			}
+			else if (m_LockAspect)
+			{
+				// Constrain the render canvas strictly to the user's targeted custom ratio (e.g., 16:9 box)
+				Cosmic::Renderer2D::DrawQuad({ 0.0f, 0.0f, 0.0f }, { m_TargetAspect * 2.0f, 2.0f }, m_Material);
+			}
+			else
+			{
+				// Default behavior: Scale matching the exact layout viewport aspect ratio
+				float aspect = m_ViewportSize.x / m_ViewportSize.y;
+				Cosmic::Renderer2D::DrawQuad({ 0.0f, 0.0f, 0.0f }, { 2.0f * aspect, 2.0f }, m_Material);
+			}
 		}
 		else
 		{
@@ -140,6 +176,27 @@ namespace Showcase
 
 		ImGui::Spacing();
 
+		// --- ASPECT RATIO & FULLSCREEN MANAGEMENT PANEL ---
+		if (ImGui::CollapsingHeader("Display Topology Configuration", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			ImGui::Checkbox("Fill Screen Projection Space (Ignore Bounds)", &m_FillScreen);
+
+			if (m_FillScreen) ImGui::BeginDisabled();
+			ImGui::Checkbox("Lock Custom Aspect Ratio", &m_LockAspect);
+			if (m_LockAspect && !m_FillScreen)
+			{
+				ImGui::SliderFloat("Aspect Value", &m_TargetAspect, 0.5f, 3.0f, "Ratio: %.2f");
+				if (ImGui::Button("Force 16:9")) m_TargetAspect = 16.0f / 9.0f;
+				ImGui::SameLine();
+				if (ImGui::Button("Force 4:3"))  m_TargetAspect = 4.0f / 3.0f;
+				ImGui::SameLine();
+				if (ImGui::Button("Force 1:1"))  m_TargetAspect = 1.0f;
+			}
+			if (m_FillScreen) ImGui::EndDisabled();
+		}
+		ImGui::Separator();
+		ImGui::Spacing();
+
 		if (m_ShaderPaths.empty())
 		{
 			ImGui::TextColored({ 1.0f, 0.5f, 0.2f, 1.0f }, "No valid .glsl context definitions found in targeted project tree.");
@@ -148,7 +205,7 @@ namespace Showcase
 		}
 
 		ImGui::Text("Available Pipeline Modules:");
-		ImGui::BeginChild("ShaderList", { 0.0f, 200.0f }, true);
+		ImGui::BeginChild("ShaderList", { 0.0f, 150.0f }, true); // Shrunk height slightly to fit new aspect panels
 		for (int i = 0; i < static_cast<int>(m_ShaderNames.size()); ++i)
 		{
 			bool selected = (i == m_SelectedIndex);
@@ -201,12 +258,15 @@ namespace Showcase
 
 	void ShowcaseShaderLayer::OnEvent(Cosmic::Event& e)
 	{
+		// Pass down updates uniformly into the camera matrix pipeline
 		m_Camera.OnEvent(e);
 		if (e.Handled) return;
 
 		Cosmic::EventDispatcher dispatcher(e);
-		dispatcher.Dispatch<Cosmic::KeyPressedEvent>(GLCORE_BIND_EVENT_FN(ShowcaseShaderLayer::OnKeyPressed));
-		dispatcher.Dispatch<Cosmic::WindowResizeEvent>(GLCORE_BIND_EVENT_FN(ShowcaseShaderLayer::OnWindowResize));
+
+		// MODERN C++ LAMBDA REFACTOR: Eliminates standard template library macro plumbing
+		dispatcher.Dispatch<Cosmic::KeyPressedEvent>([this](Cosmic::KeyPressedEvent& event) { return OnKeyPressed(event); });
+		dispatcher.Dispatch<Cosmic::WindowResizeEvent>([this](Cosmic::WindowResizeEvent& event) { return OnWindowResize(event); });
 	}
 
 	bool ShowcaseShaderLayer::OnKeyPressed(Cosmic::KeyPressedEvent& e)

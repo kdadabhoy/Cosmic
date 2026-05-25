@@ -173,7 +173,29 @@ namespace Showcase
 
 	void ShowcaseProject::OnEvent(Cosmic::Event& e)
 	{
-		if (m_Modes.empty() || e.Handled) return;
+		if (m_Modes.empty()) return;
+
+		// 1. CRITICAL INFRASTRUCTURE EVENT BROADCAST
+		// Window size and viewport updates must be sent to ALL layers uniformly. 
+		// If an inactive layer misses a resize event, its camera controller projection matrix
+		// will become stretched and corrupted when the user switches to it later.
+		if (e.IsInCategory(Cosmic::EventCategoryApplication))
+		{
+			for (auto& mode : m_Modes)
+			{
+				if (mode)
+				{
+					mode->OnEvent(e);
+				}
+			}
+			return; // Layout synchronization complete
+		}
+
+		// 2. INPUT ISOLATION FILTERING
+		// If the event has been intercepted/consumed by ImGui blocking layers downstream, or 
+		// if it's an isolated input (Key/Mouse), dispatch it exclusively to the active simulation panel.
+		if (e.Handled) return;
+
 		m_Modes[m_ActiveModeIndex]->OnEvent(e);
 	}
 }

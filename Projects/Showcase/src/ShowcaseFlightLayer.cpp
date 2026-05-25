@@ -97,16 +97,33 @@ namespace Showcase
 	// =========================================================================
 	void ShowcaseFlightLayer::OnUpdate(float ts)
 	{
+		// --- ARCHITECTURAL FIX: Dynamic Canvas Layout Synchronization ---
+		// Fetch active resolution properties directly from the host application's 
+		// primary framebuffers. This guarantees that screen-to-world mouse raycasting
+		// and orthographic clipping spaces never become uninitialized or stretched.
+		auto fb = Cosmic::Application::Get().GetFrameBuffer();
+		float activeWidth = static_cast<float>(fb->GetWidth());
+		float activeHeight = static_cast<float>(fb->GetHeight());
+
+		if (m_ViewportSize.x != activeWidth || m_ViewportSize.y != activeHeight)
+		{
+			m_ViewportSize = { activeWidth, activeHeight };
+			m_Camera.OnResize(m_ViewportSize.x, m_ViewportSize.y);
+		}
+		// -----------------------------------------------------------------
+
+		// Asymptotically step the smooth camera interpolation parameters forward
 		m_Camera.OnUpdate(ts);
 
 		// CLEAN ARCHITECTURE FIX: 
-		// We query the native synchronized timeline via Layer::GetLocalTime() 
-		// to feed our materials. This ensures smooth, scaled rendering frame updates.
+		// Feed the native synchronized timeline via Layer::GetLocalTime() down to 
+		// the pipeline materials to track animation states linearly without hitching.
 		if (m_DinoMaterial)
 		{
 			m_DinoMaterial->Set("u_Time", Cosmic::Layer::GetLocalTime());
 		}
 
+		// Flush camera matrices to draw commands
 		Cosmic::Renderer2D::BeginScene(m_Camera.GetCamera());
 
 		// Draw background structural alignment grid lines
@@ -119,12 +136,14 @@ namespace Showcase
 			Cosmic::Renderer2D::DrawLine({ -12.0f, y, -0.1f }, { 12.0f, y, -0.1f }, { 0.15f, 0.15f, 0.18f, 1.0f });
 		}
 
+		// Local vertex array dispatch pipeline lambdas
 		auto drawDino = [&](Cosmic::Entity ent)
 			{
 				if (!ent) return;
 				auto& t = ent.GetComponent<Cosmic::TransformComponent>();
 				auto& fd = ent.GetComponent<FlightDinoComponent>();
 
+				// Process and fade trail segments based on sample age
 				size_t n = fd.Trail.size();
 				for (size_t i = 1; i < n; ++i)
 				{
@@ -134,14 +153,17 @@ namespace Showcase
 					Cosmic::Renderer2D::DrawLine(fd.Trail[i - 1], fd.Trail[i], trailColor);
 				}
 
+				// Render active quad material
 				Cosmic::Renderer2D::DrawQuad(t.Position, t.Scale, m_DinoMaterial);
 
+				// Render spatial focus wireframes if actively targeted
 				if (fd.Selected)
 				{
 					Cosmic::Renderer2D::DrawRect(t.Position, { t.Scale.x + 0.12f, t.Scale.y + 0.12f }, { 1.0f, 1.0f, 0.0f, 1.0f });
 				}
 			};
 
+		// Submit render commands to graphics pipeline backend
 		drawDino(m_DinoA);
 		drawDino(m_DinoB);
 
@@ -208,12 +230,15 @@ namespace Showcase
 
 	void ShowcaseFlightLayer::OnEvent(Cosmic::Event& e)
 	{
+		// Pass down events uniformly into the camera controller matrix pipeline
 		m_Camera.OnEvent(e);
 		if (e.Handled) return;
 
 		Cosmic::EventDispatcher dispatcher(e);
-		dispatcher.Dispatch<Cosmic::MouseButtonPressedEvent>(GLCORE_BIND_EVENT_FN(ShowcaseFlightLayer::OnMouseClicked));
-		dispatcher.Dispatch<Cosmic::WindowResizeEvent>(GLCORE_BIND_EVENT_FN(ShowcaseFlightLayer::OnWindowResize));
+
+		// MODERN C++ LAMBDA REFACTOR: Eliminates standard template library macro plumbing
+		dispatcher.Dispatch<Cosmic::MouseButtonPressedEvent>([this](Cosmic::MouseButtonPressedEvent& event) { return OnMouseClicked(event); });
+		dispatcher.Dispatch<Cosmic::WindowResizeEvent>([this](Cosmic::WindowResizeEvent& event) { return OnWindowResize(event); });
 	}
 
 	bool ShowcaseFlightLayer::OnMouseClicked(Cosmic::MouseButtonPressedEvent& e)
