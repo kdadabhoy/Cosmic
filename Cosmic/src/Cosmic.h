@@ -35,6 +35,7 @@
 #include "graphics/Shader.h"
 #include "graphics/VertexArray.h"
 #include "graphics/Texture.h"
+#include "graphics/SubTexture2D.h" 
 #include "graphics/FrameBuffer.h"
 #include "graphics/Material.h"
 
