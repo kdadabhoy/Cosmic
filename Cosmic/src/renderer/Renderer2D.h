@@ -61,6 +61,7 @@
  *    Post: Zeroes out all performance counters.
  */
 
+#pragma once
 #include "core/Core.h"
 #include "camera/OrthographicCamera.h"
 #include "graphics/Texture.h"
@@ -69,55 +70,64 @@
 
 namespace Cosmic
 {
-    class COSMIC_API Renderer2D
-    {
-    public:
-        static void Init();
-        static void Shutdown();
+	// Forward Declaration
+	class SubTexture2D;
 
-        static void BeginScene(const OrthographicCamera& camera);
-        static void EndScene();
-        static void Flush();
+	class COSMIC_API Renderer2D
+	{
+	public:
+		static void Init();
+		static void Shutdown();
 
-        // Viewport handling
-        static void SetViewportSize(uint32_t width, uint32_t height);
+		static void BeginScene(const OrthographicCamera& camera);
+		static void EndScene();
+		static void Flush();
 
-        // Material-Based Drawing Overloads
-        static void DrawQuad(const glm::vec2& position, const glm::vec2& size, const Ref<Material>& material);
-        static void DrawQuad(const glm::vec3& position, const glm::vec2& size, const Ref<Material>& material);
-        static void DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const Ref<Material>& material);
+		// Viewport handling
+		static void SetViewportSize(uint32_t width, uint32_t height);
 
-        // Primitive Drawing (Quads - Tint/Texture)
-        static void DrawQuad(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color);
-        static void DrawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color);
-        static void DrawQuad(const glm::vec2& position, const glm::vec2& size, const Ref<Texture>& texture, float tilingFactor = 1.0f, const glm::vec4& tintColor = glm::vec4(1.0f));
-        static void DrawQuad(const glm::vec3& position, const glm::vec2& size, const Ref<Texture>& texture, float tilingFactor = 1.0f, const glm::vec4& tintColor = glm::vec4(1.0f));
+		// SubTexture2D Drawing Overloads
+		static void DrawQuad(const glm::vec2& position, const glm::vec2& size, const Ref<SubTexture2D>& subTexture, const glm::vec4& tintColor = glm::vec4(1.0f));
+		static void DrawQuad(const glm::vec3& position, const glm::vec2& size, const Ref<SubTexture2D>& subTexture, const glm::vec4& tintColor = glm::vec4(1.0f));
+		static void DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size, float rotation, const Ref<SubTexture2D>& subTexture, const glm::vec4& tintColor = glm::vec4(1.0f));
+		static void DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const Ref<SubTexture2D>& subTexture, const glm::vec4& tintColor = glm::vec4(1.0f));
 
-        // Rotated Quads (Tint/Texture)
-        static void DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size, float rotation, const glm::vec4& color);
-        static void DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const glm::vec4& color);
-        static void DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size, float rotation, const Ref<Texture>& texture, float tilingFactor = 1.0f, const glm::vec4& tintColor = glm::vec4(1.0f));
-        static void DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const Ref<Texture>& texture, float tilingFactor = 1.0f, const glm::vec4& tintColor = glm::vec4(1.0f));
+		// Material-Based Drawing Overloads
+		static void DrawQuad(const glm::vec2& position, const glm::vec2& size, const Ref<Material>& material);
+		static void DrawQuad(const glm::vec3& position, const glm::vec2& size, const Ref<Material>& material);
+		static void DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const Ref<Material>& material);
 
-        // Utilities
-        static void DrawLine(const glm::vec3& p0, const glm::vec3& p1, const glm::vec4& color);
-        static void DrawRect(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color);
+		// Primitive Drawing (Quads - Tint/Texture)
+		static void DrawQuad(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color);
+		static void DrawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color);
+		static void DrawQuad(const glm::vec2& position, const glm::vec2& size, const Ref<Texture>& texture, float tilingFactor = 1.0f, const glm::vec4& tintColor = glm::vec4(1.0f));
+		static void DrawQuad(const glm::vec3& position, const glm::vec2& size, const Ref<Texture>& texture, float tilingFactor = 1.0f, const glm::vec4& tintColor = glm::vec4(1.0f));
 
-        // Telemetry / Statistics
-        struct Statistics
-        {
-            uint32_t DrawCalls = 0;
-            uint32_t QuadCount = 0;
-            uint32_t LineCount = 0; // Added for architectural completeness
+		// Rotated Quads (Tint/Texture)
+		static void DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size, float rotation, const glm::vec4& color);
+		static void DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const glm::vec4& color);
+		static void DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size, float rotation, const Ref<Texture>& texture, float tilingFactor = 1.0f, const glm::vec4& tintColor = glm::vec4(1.0f));
+		static void DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const Ref<Texture>& texture, float tilingFactor = 1.0f, const glm::vec4& tintColor = glm::vec4(1.0f));
 
-            uint32_t GetTotalVertexCount() const { return QuadCount * 4 + LineCount * 2; }
-            uint32_t GetTotalIndexCount() const { return QuadCount * 6; }
-        };
-        static void ResetStats();
-        static Statistics GetStats();
-        static void SetStatsStatus(bool enabled);
+		// Utilities
+		static void DrawLine(const glm::vec3& p0, const glm::vec3& p1, const glm::vec4& color);
+		static void DrawRect(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color);
 
-    private:
-        static void FlushAndReset();
-    };
+		// Telemetry / Statistics
+		struct Statistics
+		{
+			uint32_t DrawCalls = 0;
+			uint32_t QuadCount = 0;
+			uint32_t LineCount = 0;
+
+			uint32_t GetTotalVertexCount() const { return QuadCount * 4 + LineCount * 2; }
+			uint32_t GetTotalIndexCount() const { return QuadCount * 6; }
+		};
+		static void ResetStats();
+		static Statistics GetStats();
+		static void SetStatsStatus(bool enabled);
+
+	private:
+		static void FlushAndReset();
+	};
 }

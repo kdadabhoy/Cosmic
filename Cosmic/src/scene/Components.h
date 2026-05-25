@@ -50,6 +50,7 @@ namespace Cosmic
         }
     };
 
+
     /**
      * @brief Combines spatial layout data with your graphic engine's Material layers.
      */
@@ -57,6 +58,9 @@ namespace Cosmic
     {
         Ref<Material> ActiveMaterial;
         glm::vec4 Color{ 1.0f, 1.0f, 1.0f, 1.0f }; // Solid default fallback color tint
+
+        bool FlipX = false;
+        bool FlipY = false;
 
         SpriteRendererComponent() = default;
         SpriteRendererComponent(const SpriteRendererComponent&) = default;

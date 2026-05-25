@@ -6,6 +6,7 @@
 #include "graphics/Shader.h"
 #include "renderer/RenderCommand.h"
 #include "core/Log.h"
+#include "graphics/SubTexture2D.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <array>
@@ -639,12 +640,104 @@ namespace Cosmic
     //////////////////////////////////////
 
 
-    /* Old
-	void Renderer2D::UpdateTimeline(float ts, uint32_t width, uint32_t height)
+	/////////////////////////////////////////////////////////////////////////////////
+	// SubTexture2D Drawing Implementation
+	// /////////////////////////////////////////////////////////////////////////////////
+
+	void Renderer2D::DrawQuad(const glm::vec2& pos, const glm::vec2& size, const Ref<SubTexture2D>& subTexture, const glm::vec4& tintColor)
 	{
-		s_Data.TimeAccumulator += ts;
-		s_Data.ViewportDimensions = { static_cast<float>(width), static_cast<float>(height) };
+		DrawQuad({ pos.x, pos.y, 0.0f }, size, subTexture, tintColor);
 	}
-    */
+
+	void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const Ref<SubTexture2D>& subTexture, const glm::vec4& tintColor)
+	{
+		if (s_Data.CurrentMaterial != s_Data.DefaultMaterial) FlushAndReset();
+		if (s_Data.QuadIndexCount >= Renderer2DData::MaxIndices) FlushAndReset();
+
+		Ref<Texture> texture = subTexture->GetTexture();
+		float textureIndex = -1.0f;
+		for (uint32_t i = 0; i < s_Data.TextureSlotIndex; i++)
+		{
+			if (s_Data.TextureSlots[i]->GetRendererID() == texture->GetRendererID())
+			{
+				textureIndex = (float)i;
+				break;
+			}
+		}
+
+		if (textureIndex == -1.0f)
+		{
+			if (s_Data.TextureSlotIndex >= Renderer2DData::MaxTextureSlots) FlushAndReset();
+			textureIndex = (float)s_Data.TextureSlotIndex;
+			s_Data.TextureSlots[s_Data.TextureSlotIndex] = texture;
+			s_Data.TextureSlotIndex++;
+		}
+
+		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
+			* glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
+
+		const glm::vec2* texCoords = subTexture->GetTexCoords();
+
+		for (uint32_t i = 0; i < 4; i++)
+		{
+			s_Data.QuadVertexPtr->Position = transform * s_Data.QuadVertexPositions[i];
+			s_Data.QuadVertexPtr->Color = tintColor;
+			s_Data.QuadVertexPtr->TexCoord = texCoords[i];
+			s_Data.QuadVertexPtr->TexIndex = textureIndex;
+			s_Data.QuadVertexPtr->TilingFactor = 1.0f;
+			s_Data.QuadVertexPtr++;
+		}
+		s_Data.QuadIndexCount += 6;
+		s_Data.Stats.QuadCount++;
+	}
+
+	void Renderer2D::DrawRotatedQuad(const glm::vec2& pos, const glm::vec2& size, float rot, const Ref<SubTexture2D>& subTexture, const glm::vec4& tint)
+	{
+		DrawRotatedQuad({ pos.x, pos.y, 0.0f }, size, rot, subTexture, tint);
+	}
+
+	void Renderer2D::DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const Ref<SubTexture2D>& subTexture, const glm::vec4& tintColor)
+	{
+		if (s_Data.CurrentMaterial != s_Data.DefaultMaterial) FlushAndReset();
+		if (s_Data.QuadIndexCount >= Renderer2DData::MaxIndices) FlushAndReset();
+
+		Ref<Texture> texture = subTexture->GetTexture();
+		float textureIndex = -1.0f;
+		for (uint32_t i = 0; i < s_Data.TextureSlotIndex; i++)
+		{
+			if (s_Data.TextureSlots[i]->GetRendererID() == texture->GetRendererID())
+			{
+				textureIndex = (float)i;
+				break;
+			}
+		}
+
+		if (textureIndex == -1.0f)
+		{
+			if (s_Data.TextureSlotIndex >= Renderer2DData::MaxTextureSlots) FlushAndReset();
+			textureIndex = (float)s_Data.TextureSlotIndex;
+			s_Data.TextureSlots[s_Data.TextureSlotIndex] = texture;
+			s_Data.TextureSlotIndex++;
+		}
+
+		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
+			* glm::rotate(glm::mat4(1.0f), rotation, { 0.0f, 0.0f, 1.0f })
+			* glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
+
+		const glm::vec2* texCoords = subTexture->GetTexCoords();
+
+		for (uint32_t i = 0; i < 4; i++)
+		{
+			s_Data.QuadVertexPtr->Position = transform * s_Data.QuadVertexPositions[i];
+			s_Data.QuadVertexPtr->Color = tintColor;
+			s_Data.QuadVertexPtr->TexCoord = texCoords[i];
+			s_Data.QuadVertexPtr->TexIndex = textureIndex;
+			s_Data.QuadVertexPtr->TilingFactor = 1.0f;
+			s_Data.QuadVertexPtr++;
+		}
+		s_Data.QuadIndexCount += 6;
+		s_Data.Stats.QuadCount++;
+	}
+
 
 } // namespace Cosmic

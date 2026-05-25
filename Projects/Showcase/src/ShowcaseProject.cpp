@@ -3,6 +3,8 @@
 #include "ShowcaseRunLayer.h"
 #include "ShowcaseShaderLayer.h"
 #include "ShowcaseStressLayer.h"
+#include "ShowcaseDinoLayer.h"
+
 #include <imgui.h>
 #include <implot.h>
 #include <filesystem>
@@ -47,8 +49,9 @@ namespace Showcase
 			m_Modes.push_back(std::make_shared<ShowcaseFlightLayer>(m_Scene, m_FlameMaterial));
 			m_Modes.push_back(std::make_shared<ShowcaseRunLayer>(m_Scene, m_FlameMaterial));
 			m_Modes.push_back(std::make_shared<ShowcaseShaderLayer>(m_ShaderDir));
+			m_Modes.push_back(std::make_shared<ShowcaseDinoLayer>(m_Scene));
 
-			auto alternativeShader = Cosmic::Shader::Create(m_ShaderDir + "/FireShader.glsl");
+			auto alternativeShader = Cosmic::Shader::Create(m_ShaderDir + "/DebugTexture.glsl");
 			auto alternativeMaterial = Cosmic::Material::Create(alternativeShader, "AlternativeMaterial");
 
 			if (alternativeMaterial)

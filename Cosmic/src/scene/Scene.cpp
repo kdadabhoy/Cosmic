@@ -1,4 +1,3 @@
-// Scene.cpp
 // Optimized Material Grouping System implemented 5/21/2026
 #include "scene/Scene.h"
 #include "scene/Entity.h"
@@ -77,10 +76,17 @@ namespace Cosmic
 			for (auto entity : entities)
 			{
 				auto& transform = view.get<TransformComponent>(entity);
+				auto& sprite = view.get<SpriteRendererComponent>(entity);
+
+				// INTERCEPT & APPLY ORIENTATION FLIPS VIA NEGATIVE MATRIX SCALING ADJUSTMENTS
+				glm::vec2 drawScale = {
+					transform.Scale.x * (sprite.FlipX ? -1.0f : 1.0f),
+					transform.Scale.y * (sprite.FlipY ? -1.0f : 1.0f)
+				};
 
 				Renderer2D::DrawRotatedQuad(
 					transform.Position,
-					transform.Scale,
+					drawScale,
 					transform.Rotation.z,
 					activeMaterial
 				);
@@ -93,12 +99,18 @@ namespace Cosmic
 			auto& transform = view.get<TransformComponent>(entity);
 			auto& sprite = view.get<SpriteRendererComponent>(entity);
 
+			// INTERCEPT & APPLY ORIENTATION FLIPS VIA NEGATIVE MATRIX SCALING ADJUSTMENTS
+			glm::vec2 drawScale = {
+				transform.Scale.x * (sprite.FlipX ? -1.0f : 1.0f),
+				transform.Scale.y * (sprite.FlipY ? -1.0f : 1.0f)
+			};
+
 			Renderer2D::DrawRotatedQuad(
 				transform.Position,
-				transform.Scale,
+				drawScale,
 				transform.Rotation.z,
 				sprite.Color
 			);
 		}
-	}
-}
+	} // Closes void Scene::OnRender()
+} // Closes namespace Cosmic
