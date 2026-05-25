@@ -39,6 +39,19 @@ namespace Cosmic
     };
 
     /**
+     * Represents a single vertex for hardware-accelerated procedural circles.
+     */
+    struct CircleVertex
+    {
+        glm::vec3 WorldPosition;
+        glm::vec2 LocalPosition;
+        glm::vec4 Color;
+        float Thickness;
+        float Fade;
+    };
+
+
+    /**
      * Internal state storage for the 2D Renderer.
      * Manages batching buffers, texture slots, and scene-wide uniforms.
      */
@@ -82,6 +95,19 @@ namespace Cosmic
         uint32_t LineVertexCount = 0;
         LineVertex* LineVertexBufferBase = nullptr;
         LineVertex* LineVertexBufferPtr = nullptr;
+
+		// Circle Batch Data
+		static const uint32_t MaxCircles = 2000;
+		static const uint32_t MaxCircleVertices = MaxCircles * 4;
+		static const uint32_t MaxCircleIndices = MaxCircles * 6;
+
+		Ref<VertexArray> CircleVertexArray;
+		Ref<VertexBuffer> CircleVertexBuffer;
+		Ref<Shader> CircleShader;
+
+		uint32_t CircleIndexCount = 0;
+		CircleVertex* CircleVertexBufferBase = nullptr;
+		CircleVertex* CircleVertexBufferPtr = nullptr;
 
         // Camera Data
         glm::mat4 ViewProjectionMatrix;
@@ -172,6 +198,23 @@ namespace Cosmic
 
         if (!s_Data.LineShader)
             CS_CORE_ERROR("Renderer2D: Failed to load Line shader!");
+
+		// --- Circle Initialization ---
+		s_Data.CircleVertexArray = VertexArray::Create();
+
+		s_Data.CircleVertexBuffer = VertexBuffer::Create(s_Data.MaxCircleVertices * sizeof(CircleVertex));
+		s_Data.CircleVertexBuffer->SetLayout({
+			{ ShaderDataType::Float3, "a_WorldPosition" },
+			{ ShaderDataType::Float2, "a_LocalPosition" },
+			{ ShaderDataType::Float4, "a_Color"         },
+			{ ShaderDataType::Float,  "a_Thickness"     },
+			{ ShaderDataType::Float,  "a_Fade"          }
+			});
+		s_Data.CircleVertexArray->AddVertexBuffer(s_Data.CircleVertexBuffer);
+
+		s_Data.CircleVertexBufferBase = new CircleVertex[s_Data.MaxCircleVertices];
+		s_Data.CircleVertexArray->SetIndexBuffer(quadIB); // Share the existing quad index layout buffer handle perfectly!
+		s_Data.CircleShader = Shader::Create("assets/shaders/Circle.glsl");
     }
 
     /**
@@ -183,6 +226,7 @@ namespace Cosmic
         CS_CORE_TRACE("Shutting down Renderer2D");
         delete[] s_Data.QuadVertexBufferBase;
         delete[] s_Data.LineVertexBufferBase;
+        delete[] s_Data.CircleVertexBufferBase;
     }
 
     /////////////////////////////////////////////////////////////////////////////////
@@ -193,18 +237,21 @@ namespace Cosmic
      * Prepares the renderer for a new scene.
      * @param camera The camera providing the View-Projection matrix.
      */
-    void Renderer2D::BeginScene(const OrthographicCamera& camera)
-    {
-        s_Data.ViewProjectionMatrix = camera.GetViewProjectionMatrix();
+	void Renderer2D::BeginScene(const OrthographicCamera& camera)
+	{
+		s_Data.ViewProjectionMatrix = camera.GetViewProjectionMatrix();
 
-        s_Data.QuadIndexCount = 0;
-        s_Data.QuadVertexPtr = s_Data.QuadVertexBufferBase;
-        s_Data.TextureSlotIndex = 1;
-        s_Data.CurrentMaterial = s_Data.DefaultMaterial;
+		s_Data.QuadIndexCount = 0;
+		s_Data.QuadVertexPtr = s_Data.QuadVertexBufferBase;
+		s_Data.TextureSlotIndex = 1;
+		s_Data.CurrentMaterial = s_Data.DefaultMaterial;
 
-        s_Data.LineVertexCount = 0;
-        s_Data.LineVertexBufferPtr = s_Data.LineVertexBufferBase;
-    }
+		s_Data.LineVertexCount = 0;
+		s_Data.LineVertexBufferPtr = s_Data.LineVertexBufferBase;
+
+		s_Data.CircleIndexCount = 0;
+		s_Data.CircleVertexBufferPtr = s_Data.CircleVertexBufferBase;
+	}
 
     /**
      * Finalizes scene submission.
@@ -274,6 +321,21 @@ namespace Cosmic
 			RenderCommand::DrawLines(s_Data.LineVertexArray, s_Data.LineVertexCount);
 			s_Data.Stats.DrawCalls++;
 		}
+
+		// Draw Circles 
+		if (s_Data.CircleIndexCount != 0)
+		{
+			uint32_t dataSize = (uint32_t)((uint8_t*)s_Data.CircleVertexBufferPtr - (uint8_t*)s_Data.CircleVertexBufferBase);
+			s_Data.CircleVertexBuffer->SetData(s_Data.CircleVertexBufferBase, dataSize);
+
+			s_Data.CircleShader->Bind();
+			s_Data.CircleShader->SetMat4("u_ViewProjection", s_Data.ViewProjectionMatrix);
+
+			s_Data.CircleVertexArray->Bind();
+			RenderCommand::DrawIndexed(s_Data.CircleVertexArray, s_Data.CircleIndexCount);
+			s_Data.Stats.DrawCalls++;
+		}
+
 	}
 
 
@@ -284,7 +346,7 @@ namespace Cosmic
 	{
 		Ref<Material> activeMaterial = s_Data.CurrentMaterial;
 
-		Flush(); // Directly call Flush instead of EndScene to safeguard system lifecycle state
+		Flush();
 
 		s_Data.QuadIndexCount = 0;
 		s_Data.QuadVertexPtr = s_Data.QuadVertexBufferBase;
@@ -292,6 +354,9 @@ namespace Cosmic
 
 		s_Data.LineVertexCount = 0;
 		s_Data.LineVertexBufferPtr = s_Data.LineVertexBufferBase;
+
+		s_Data.CircleIndexCount = 0;
+		s_Data.CircleVertexBufferPtr = s_Data.CircleVertexBufferBase;
 
 		s_Data.CurrentMaterial = activeMaterial;
 	}
@@ -739,5 +804,48 @@ namespace Cosmic
 		s_Data.Stats.QuadCount++;
 	}
 
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	void Renderer2D::DrawCircle(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color, float thickness, float fade)
+	{
+		// 1. Buffer Overflow Check
+		if (s_Data.CircleIndexCount >= Renderer2DData::MaxCircleIndices)
+			FlushAndReset();
+
+		// 2. Generate standard 4-point quad boundary centered around the target position
+		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
+			* glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
+
+		// Explicitly mapped bounds matching local coordinates for distance extraction
+		constexpr glm::vec2 localPositions[4] = {
+			{ -1.0f, -1.0f },
+			{  1.0f, -1.0f },
+			{  1.0f,  1.0f },
+			{ -1.0f,  1.0f }
+		};
+
+		// 3. Populate 4 staging layout entries per circle primitive
+		for (uint32_t i = 0; i < 4; i++)
+		{
+			s_Data.CircleVertexBufferPtr->WorldPosition = transform * s_Data.QuadVertexPositions[i];
+			s_Data.CircleVertexBufferPtr->LocalPosition = localPositions[i];
+
+			// 🟢 Normalize color if it originates from an integer-based ImGui widget
+			glm::vec4 normalizedColor = color;
+			if (color.r > 1.0f || color.g > 1.0f || color.b > 1.0f || color.a > 1.0f)
+			{
+				normalizedColor = color / 255.0f;
+			}
+			s_Data.CircleVertexBufferPtr->Color = normalizedColor;
+
+			s_Data.CircleVertexBufferPtr->Thickness = thickness;
+			s_Data.CircleVertexBufferPtr->Fade = fade;
+			s_Data.CircleVertexBufferPtr++;
+		}
+
+		s_Data.CircleIndexCount += 6;
+		// Optional telemetry increment if tracking circle statistics:
+		s_Data.Stats.QuadCount++; 
+	}
 
 } // namespace Cosmic

@@ -1,64 +1,74 @@
 #pragma once
-
 // Renderer2D.h
-// Last Modified 5/14/2026
+// Last Modified: 5/24/2026
 
 /**
- * General Description:
- * Renderer2D is a high-performance, 2D-specific rendering system that utilizes
- * batch rendering to minimize draw calls. It manages internal vertex buffers for
- * quads and lines, automatically "flushing" data to the GPU when buffers are full
- * or when a state change (like a new Material or Texture) occurs.
+ * * General Description:
+ * Renderer2D is a high-performance, 2D-specific hardware batch rendering system
+ * designed to minimize draw call overhead. It manages separate internal vertex staging
+ * buffers for Quads, Lines, and procedurally generated Circles. The system dynamically
+ * executes automatic "flushes" to dispatch vertex arrays to the GPU when target buffer capacities
+ * are saturated or when pipeline state transitions (such as switching Active Materials or Textures) occur.
  *
- * Public Function Prototypes (Pre and Post Conditions):
+ * * Public Function Prototypes (Pre and Post Conditions):
  *
  * 1. void Init()
- *    Pre:  None.
- *    Post: Internal batching buffers, shaders, and white texture resources are allocated.
+ * Pre:  None.
+ * Post: Core batching geometry data pools, Vertex Array objects, layouts, procedural shaders,
+ * and fallback color texture resources are fully allocated on the GPU.
  *
  * 2. void Shutdown()
- *    Pre:  The system was previously initialized.
- *    Post: All allocated CPU and GPU resources are safely released.
+ * Pre:  The subsystem was previously initialized.
+ * Post: System allocations on the CPU are deleted; smart pointer tracking handles clean up graphics resources safely.
  *
  * 3. void BeginScene(const OrthographicCamera& camera)
- *    Pre:  None.
- *    Post: Resets batch counters and caches the camera's View-Projection matrix for the frame.
+ * Pre:  An active camera projection instance is provided.
+ * Post: Clears geometry index/vertex tracking counters and caches the frame's View-Projection uniform matrix.
  *
  * 4. void EndScene()
- *    Pre:  BeginScene() has been called.
- *    Post: Finalizes the scene and triggers a Flush() to render remaining batched data.
+ * Pre:  BeginScene() was called to establish a render block context.
+ * Post: Finalizes scene layout graph entries and executes a mandatory Flush() pass to render remaining batched geometry.
  *
  * 5. void Flush()
- *    Pre:  A scene is currently active.
- *    Post: Submits all currently batched vertices to the GPU and executes the draw call.
+ * Pre:  A scene pass is currently active.
+ * Post: Submits all currently staged Quads, Lines, and procedural Circles to the GPU via independent pipeline draw calls.
  *
- * 6. void DrawQuad(...) [Multiple Overloads]
- *    Pre:  BeginScene() has been called.
- *    Post: Adds vertex data for a quad to the batch; triggers FlushAndReset() if capacity is reached.
+ * 6. void SetViewportSize(uint32_t width, uint32_t height)
+ * Pre:  None.
+ * Post: Updates internal viewport scale tracking vector variables.
  *
- * 7. void DrawRotatedQuad(...) [Multiple Overloads]
- *    Pre:  BeginScene() has been called.
- *    Post: Transforms quad vertices by the given rotation and adds them to the batch.
+ * 7. void DrawQuad(...) [Multiple Overloads: Pure Color, Texture Assets, SubTexture Atlases, Materials]
+ * Pre:  BeginScene() has been called.
+ * Post: Appends 4 layout vertices to the Quad batch array; forces FlushAndReset() if index boundaries are exceeded.
  *
- * 8. void DrawLine(const glm::vec3& p0, const glm::vec3& p1, const glm::vec4& color)
- *    Pre:  BeginScene() has been called.
- *    Post: Adds two vertices to the line batch for rendering.
+ * 8. void DrawRotatedQuad(...) [Multiple Overloads: Pure Color, Texture Assets, SubTexture Atlases, Materials]
+ * Pre:  BeginScene() has been called.
+ * Post: Applies a Z-axis rotation matrix transformation onto vertex coordinates before submitting them to the Quad batch.
  *
- * 9. void DrawRect(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color)
- *    Pre:  BeginScene() has been called.
- *    Post: Submits four DrawLine() calls to form a wireframe rectangle.
+ * 9. void DrawCircle(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color, float thickness, float fade) [And 2D Vector Overload]
+ * Pre:  BeginScene() has been called.
+ * Post: Builds a quad boundary block passing explicit standard screen space offsets [-1, 1] as LocalPosition. Stages elements
+ * into the specialized Circle buffer for procedural rendering via Signed Distance Fields (SDF).
  *
- * 10. void SetStatsStatus(bool enabled)
- *    Pre:  None.
- *    Post: Toggles the internal recording of draw calls and quad counts.
+ * 10. void DrawLine(const glm::vec3& p0, const glm::vec3& p1, const glm::vec4& color)
+ * Pre:  BeginScene() has been called.
+ * Post: Appends two distinct point vertex elements directly into the debug Line batch array.
  *
- * 11. Statistics GetStats()
- *    Pre:  None.
- *    Post: Returns a copy of the current performance telemetry data.
+ * 11. void DrawRect(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color)
+ * Pre:  BeginScene() has been called.
+ * Post: Coordinates 4 independent sequence calls to DrawLine() to render a wireframe rectangle boundary.
  *
- * 12. void ResetStats()
- *    Pre:  None.
- *    Post: Zeroes out all performance counters.
+ * 12. void SetStatsStatus(bool enabled)
+ * Pre:  None.
+ * Post: Toggles performance tracking engine calculations.
+ *
+ * 13. Statistics GetStats()
+ * Pre:  None.
+ * Post: Returns a local snapshot data payload containing current frame draw call metrics and element totals.
+ *
+ * 14. void ResetStats()
+ * Pre:  None.
+ * Post: Clears all tracking registers in the telemetry memory structure.
  */
 
 #pragma once
@@ -109,6 +119,10 @@ namespace Cosmic
 		static void DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size, float rotation, const Ref<Texture>& texture, float tilingFactor = 1.0f, const glm::vec4& tintColor = glm::vec4(1.0f));
 		static void DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const Ref<Texture>& texture, float tilingFactor = 1.0f, const glm::vec4& tintColor = glm::vec4(1.0f));
 
+		// Specialized Math Primitives
+		static void DrawCircle(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color, float thickness = 1.0f, float fade = 0.005f);
+		inline static void DrawCircle(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color, float thickness = 1.0f, float fade = 0.005f) { DrawCircle({ position.x, position.y, 0.0f }, size, color, thickness, fade); }
+
 		// Utilities
 		static void DrawLine(const glm::vec3& p0, const glm::vec3& p1, const glm::vec4& color);
 		static void DrawRect(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color);
@@ -130,4 +144,4 @@ namespace Cosmic
 	private:
 		static void FlushAndReset();
 	};
-}
+} // namespace Cosmic

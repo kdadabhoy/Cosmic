@@ -4,6 +4,7 @@
 #include "ShowcaseShaderLayer.h"
 #include "ShowcaseStressLayer.h"
 #include "ShowcaseDinoLayer.h"
+#include "CircleDebugLayer.h" 
 
 #include <imgui.h>
 #include <implot.h>
@@ -46,10 +47,12 @@ namespace Showcase
 
 		if (m_FlameMaterial)
 		{
+			m_Modes.push_back(std::make_shared<CircleDebugLayer>());
 			m_Modes.push_back(std::make_shared<ShowcaseFlightLayer>(m_Scene, m_FlameMaterial));
 			m_Modes.push_back(std::make_shared<ShowcaseRunLayer>(m_Scene, m_FlameMaterial));
 			m_Modes.push_back(std::make_shared<ShowcaseShaderLayer>(m_ShaderDir));
 			m_Modes.push_back(std::make_shared<ShowcaseDinoLayer>(m_Scene));
+
 
 			auto alternativeShader = Cosmic::Shader::Create(m_ShaderDir + "/DebugTexture.glsl");
 			auto alternativeMaterial = Cosmic::Material::Create(alternativeShader, "AlternativeMaterial");

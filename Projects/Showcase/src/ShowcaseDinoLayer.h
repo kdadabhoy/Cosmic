@@ -1,4 +1,5 @@
 #pragma once
+
 #include <Cosmic.h>
 #include <vector>
 #include <string>
@@ -13,6 +14,8 @@ namespace Showcase
 		glm::vec2 AtlasCoords = { 0.0f, 0.0f };
 		std::string Name;
 		int SelectedAtlasIndex = 0; // Tracks which file variation is selected in ImGui
+
+		glm::vec3 BasePosition = { 0.0f, 0.0f, 0.0f };
 	};
 
 	class ShowcaseDinoLayer : public Cosmic::Layer
@@ -47,5 +50,14 @@ namespace Showcase
 		// Global configurations
 		float m_MoveSpeed = 5.0f;
 		glm::vec2 m_SpriteCellSize = { 24.0f, 24.0f }; // Arks Dino assets are exactly 24x24 px
+
+		// Procedural Circle Showcase Configurations
+		bool m_ShowTrackingRing = true;
+		bool m_ShowBackgroundRings = true;
+		glm::vec4 m_RingColor = { 0.0f, 0.95f, 0.85f, 0.85f };
+		float m_BaseRingThickness = 0.08f;
+		float m_BaseRingFade = 0.01f;
+		float m_PulseFrequency = 4.0f;
+		float m_PulseAmplitude = 0.10f;
 	};
 }

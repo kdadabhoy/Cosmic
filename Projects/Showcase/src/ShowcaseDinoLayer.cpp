@@ -22,7 +22,7 @@ namespace Showcase
 			"project://sprites/DinoSprites - tard.png", // Index 2 = Yellow (Tard)
 			"project://sprites/DinoSprites - vita.png"  // Index 3 = Green (Doux)
 		};
-		m_TextureNames = { "Blue (Vita)", "Red (Mort)", "Yellow (Tard)","Green (Doux)" };
+		m_TextureNames = { "Blue (Vita)", "Red (Mort)", "Yellow (Tard)", "Green (Doux)" };
 
 		for (const auto& path : vfsPaths)
 		{
@@ -46,18 +46,22 @@ namespace Showcase
 		m_Dinos[0].Name = "Player Dino (Main)";
 		m_Dinos[0].SelectedAtlasIndex = 0;       // 0 = Blue
 		m_Dinos[0].AtlasCoords = { 0.0f, 0.0f };
+		m_Dinos[0].BasePosition = { 0.0f, 0.0f, 0.0f };
 
 		m_Dinos[1].Name = "Companion Dino Alpha";
 		m_Dinos[1].SelectedAtlasIndex = 1;       // 1 = Red
 		m_Dinos[1].AtlasCoords = { 4.0f, 0.0f };
+		m_Dinos[1].BasePosition = { -0.5f, -1.2f, 0.0f };
 
 		m_Dinos[2].Name = "Companion Dino Beta";
 		m_Dinos[2].SelectedAtlasIndex = 2;       // 2 = Yellow
 		m_Dinos[2].AtlasCoords = { 6.0f, 0.0f };
+		m_Dinos[2].BasePosition = { 1.0f, -1.2f, 0.0f };
 
 		m_Dinos[3].Name = "Companion Dino Gamma";
 		m_Dinos[3].SelectedAtlasIndex = 3;       // 3 = Green
 		m_Dinos[3].AtlasCoords = { 14.0f, 0.0f };
+		m_Dinos[3].BasePosition = { 2.5f, -1.2f, 0.0f };
 
 		// 3. Register entity configurations directly inside EnTT registry
 		for (size_t i = 0; i < m_Dinos.size(); ++i)
@@ -66,15 +70,13 @@ namespace Showcase
 			auto& trans = m_Dinos[i].EntityHandle.GetComponent<Cosmic::TransformComponent>();
 			m_Dinos[i].EntityHandle.AddComponent<Cosmic::SpriteRendererComponent>();
 
+			trans.Position = m_Dinos[i].BasePosition;
 			if (i == 0)
 			{
-				trans.Position = { 0.0f, 0.0f, 0.0f };
 				trans.Scale = { 1.5f, 1.5f };
 			}
 			else
 			{
-				// Stagger companions across the scene matrix floor
-				trans.Position = { -2.0f + (static_cast<float>(i) * 1.5f), -1.2f, 0.0f };
 				trans.Scale = { 0.9f, 0.9f };
 			}
 
@@ -104,29 +106,34 @@ namespace Showcase
 	{
 		if (m_Dinos.empty() || !m_Dinos[0].EntityHandle) return;
 
-		// Handle Main Player input logic tracking
-		auto& trans = m_Dinos[0].EntityHandle.GetComponent<Cosmic::TransformComponent>();
+		// Handle Main Player keyboard input logic tracking updates to BasePosition
 		auto& sprite = m_Dinos[0].EntityHandle.GetComponent<Cosmic::SpriteRendererComponent>();
 
-		if (Cosmic::Input::IsKeyPressed(CS_KEY_W) || Cosmic::Input::IsKeyPressed(CS_KEY_UP))    trans.Position.y += m_MoveSpeed * deltaFixedTime;
-		if (Cosmic::Input::IsKeyPressed(CS_KEY_S) || Cosmic::Input::IsKeyPressed(CS_KEY_DOWN))  trans.Position.y -= m_MoveSpeed * deltaFixedTime;
+		if (Cosmic::Input::IsKeyPressed(CS_KEY_W) || Cosmic::Input::IsKeyPressed(CS_KEY_UP))    m_Dinos[0].BasePosition.y += m_MoveSpeed * deltaFixedTime;
+		if (Cosmic::Input::IsKeyPressed(CS_KEY_S) || Cosmic::Input::IsKeyPressed(CS_KEY_DOWN))  m_Dinos[0].BasePosition.y -= m_MoveSpeed * deltaFixedTime;
 		if (Cosmic::Input::IsKeyPressed(CS_KEY_A) || Cosmic::Input::IsKeyPressed(CS_KEY_LEFT))
 		{
-			trans.Position.x -= m_MoveSpeed * deltaFixedTime;
+			m_Dinos[0].BasePosition.x -= m_MoveSpeed * deltaFixedTime;
 			sprite.FlipX = true;
 		}
 		if (Cosmic::Input::IsKeyPressed(CS_KEY_D) || Cosmic::Input::IsKeyPressed(CS_KEY_RIGHT))
 		{
-			trans.Position.x += m_MoveSpeed * deltaFixedTime;
+			m_Dinos[0].BasePosition.x += m_MoveSpeed * deltaFixedTime;
 			sprite.FlipX = false;
 		}
 
-		// Apply continuous wave hovering animations for the companions (Indices 1 to 3)
+		// Apply updated positions directly to the component structure
+		m_Dinos[0].EntityHandle.GetComponent<Cosmic::TransformComponent>().Position = m_Dinos[0].BasePosition;
+
+		// Apply continuous wave hovering animations stacked over custom BasePosition values for companions
 		for (size_t i = 1; i < m_Dinos.size(); ++i)
 		{
 			if (!m_Dinos[i].EntityHandle) continue;
 			auto& compTrans = m_Dinos[i].EntityHandle.GetComponent<Cosmic::TransformComponent>();
-			compTrans.Position.y = -1.0f + (sin(Cosmic::Layer::GetLocalTime() * 2.5f + static_cast<float>(i)) * 0.20f);
+
+			compTrans.Position.x = m_Dinos[i].BasePosition.x;
+			compTrans.Position.y = m_Dinos[i].BasePosition.y + (sin(Cosmic::Layer::GetLocalTime() * 2.5f + static_cast<float>(i)) * 0.20f);
+			compTrans.Position.z = m_Dinos[i].BasePosition.z;
 		}
 	}
 
@@ -152,7 +159,34 @@ namespace Showcase
 		for (float y = -6.0f; y <= 6.0f; y += 1.0f)
 			Cosmic::Renderer2D::DrawLine({ -10.0f, y, -0.1f }, { 10.0f, y, -0.1f }, { 0.11f, 0.11f, 0.13f, 1.0f });
 
-		// Iterate and batch-render all four dinos
+		float time = Cosmic::Layer::GetLocalTime();
+
+		// =========================================================================
+		// 🔵 BACKGROUND PROCEDURAL SHADER SHOWCASE (Radar / Beacon Bounds)
+		// =========================================================================
+		if (m_ShowBackgroundRings)
+		{
+			float radarPulse = sin(time * 1.5f) * 0.05f;
+			Cosmic::Renderer2D::DrawCircle(
+				{ 0.0f, 0.0f, -0.15f },
+				glm::vec2(8.0f + radarPulse),
+				{ 0.15f, 0.3f, 0.4f, 0.08f },
+				1.0f,
+				0.15f
+			);
+
+			Cosmic::Renderer2D::DrawCircle(
+				{ 0.0f, 0.0f, -0.14f },
+				glm::vec2(8.0f),
+				{ 0.0f, 0.6f, 0.9f, 0.25f },
+				0.02f,
+				0.005f
+			);
+		}
+
+		// =========================================================================
+		// 🦖 RENDER ALL DINOSAUR SPRITES FIRST
+		// =========================================================================
 		for (auto& dino : m_Dinos)
 		{
 			if (!dino.EntityHandle || !dino.SubTexture) continue;
@@ -169,6 +203,32 @@ namespace Showcase
 			Cosmic::Renderer2D::DrawQuad(exactPos, flippedScale, dino.SubTexture, glm::vec4(1.0f));
 		}
 
+		// =========================================================================
+		// 🟢 PLAYER TRACKING INDICATOR SHOWCASE (Rendered on top + Forward Z-Offset)
+		// =========================================================================
+		if (m_ShowTrackingRing && !m_Dinos.empty() && m_Dinos[0].EntityHandle)
+		{
+			auto& playerTrans = m_Dinos[0].EntityHandle.GetComponent<Cosmic::TransformComponent>();
+
+			// Center ring at player's feet but bring it visually forward (Z = +0.05f) 
+			// so it doesn't get clipped out by the quad asset footprint bounds.
+			glm::vec3 trackingRingPos = playerTrans.Position;
+			trackingRingPos.y -= 0.55f;
+			trackingRingPos.z += 0.05f;
+
+			float pulseScale = 1.0f + (sin(time * m_PulseFrequency) * m_PulseAmplitude);
+			glm::vec2 ringSize = glm::vec2(1.2f, 0.4f) * pulseScale;
+
+			// Enforce color formatting norms dynamically
+			glm::vec4 safeRingColor = m_RingColor;
+			if (safeRingColor.r > 1.0f || safeRingColor.g > 1.0f || safeRingColor.b > 1.0f || safeRingColor.a > 1.0f)
+			{
+				safeRingColor /= 255.0f;
+			}
+
+			Cosmic::Renderer2D::DrawCircle(trackingRingPos, ringSize, safeRingColor, m_BaseRingThickness, m_BaseRingFade);
+		}
+
 		Cosmic::Renderer2D::EndScene();
 	}
 
@@ -178,31 +238,22 @@ namespace Showcase
 		ImGui::Text("--- Engine VFS Pack Slicing Simulation ---");
 		ImGui::Separator();
 
-		// =========================================================================
-		// 🦖 TEXT ATLAS CHEAT SHEET DOCUMENTATION BOX
-		// =========================================================================
-		if (ImGui::CollapsingHeader("CLICK TO READ THIS: Atlas Frame Cheat Sheet (Arks 24x24 px)"))
+		if (ImGui::CollapsingHeader("Atlas Frame Cheat Sheet (Arks 24x24 px)"))
 		{
 			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.7f, 0.9f, 0.7f, 1.0f));
 			ImGui::TextWrapped("The sheet is sliced horizontally along Row 0. Keep the Row coordinate at 0 for standard frames!");
 			ImGui::PopStyleColor();
-
 			ImGui::Spacing();
 			ImGui::BulletText("Columns 0 -> 2   : Idle Cycles (Standing/Blinking)");
 			ImGui::BulletText("Columns 4 -> 9   : Move / Run Cycle Animation");
 			ImGui::BulletText("Columns 11 -> 13 : Kick / Hurt Stance");
 			ImGui::BulletText("Columns 14 -> 16 : Shocked / Eyes Open");
 			ImGui::BulletText("Columns 18 -> 23 : Sneak / Ducking Down");
-
-			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.9f, 0.4f, 0.4f, 1.0f));
-			ImGui::TextWrapped("Caution: Row values > 0 or Column values > 23 sample empty texture data zones!");
-			ImGui::PopStyleColor();
 			ImGui::Separator();
 		}
 
 		ImGui::Spacing();
 
-		// Pipeline control sliders
 		ImGui::SliderFloat("Global Run Speed", &m_MoveSpeed, 1.0f, 15.0f, "%.1f m/s");
 		if (ImGui::DragFloat2("Asset Cell Size Base (Px)", &m_SpriteCellSize.x, 1.0f, 8.0f, 64.0f, "%.0f px"))
 		{
@@ -211,7 +262,29 @@ namespace Showcase
 
 		ImGui::Spacing();
 
-		// Create unique selection configurations for each dinosaur variant
+		if (ImGui::CollapsingHeader("🔴 PROCEDURAL RENDERER2D CIRCLE SHOWCASE", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			ImGui::Checkbox("Render Player Selection Ring", &m_ShowTrackingRing);
+			ImGui::Checkbox("Render Background Radar Zone", &m_ShowBackgroundRings);
+
+			ImGui::Separator();
+			ImGui::Text("Selection Ring Attribute Modifiers:");
+
+			ImGui::ColorEdit4("Ring Tint Color", &m_RingColor.x);
+			ImGui::SliderFloat("Ring Thickness", &m_BaseRingThickness, 0.01f, 1.0f, "%.3f (1.0 = Solid Disk)");
+			ImGui::SliderFloat("Edge AA Fade Sharpness", &m_BaseRingFade, 0.001f, 0.5f, "%.4f");
+
+			ImGui::Spacing();
+			ImGui::Text("Sin Wave Pulse Animation System:");
+			ImGui::SliderFloat("Pulse Speed (Freq)", &m_PulseFrequency, 0.0f, 10.0f, "%.1f Hz");
+			ImGui::SliderFloat("Pulse Size (Amp)", &m_PulseAmplitude, 0.0f, 0.5f, "%.2f");
+			ImGui::Separator();
+		}
+
+		ImGui::Spacing();
+		ImGui::Text("Individual Entity Configurations & Placement:");
+		ImGui::Separator();
+
 		for (size_t i = 0; i < m_Dinos.size(); ++i)
 		{
 			auto& dino = m_Dinos[i];
@@ -219,7 +292,11 @@ namespace Showcase
 			{
 				auto& sprite = dino.EntityHandle.GetComponent<Cosmic::SpriteRendererComponent>();
 
-				// 1. Dropdown Selector for switching the Atlas Texture
+				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.3f, 0.8f, 1.0f, 1.0f));
+				ImGui::DragFloat3("World Position Offset", &dino.BasePosition.x, 0.05f, -15.0f, 15.0f, "%.2f m");
+				ImGui::PopStyleColor();
+				ImGui::Spacing();
+
 				if (ImGui::BeginCombo("Texture Variant", m_TextureNames[dino.SelectedAtlasIndex].c_str()))
 				{
 					for (int n = 0; n < m_TextureNames.size(); n++)
@@ -235,13 +312,11 @@ namespace Showcase
 					ImGui::EndCombo();
 				}
 
-				// 2. Frame Navigation controls with interactive text help markers
 				if (ImGui::DragFloat2("Grid Coord Offset (Col/Row)", &dino.AtlasCoords.x, 1.0f, 0.0f, 24.0f, "%.0f"))
 				{
 					UpdateDinoSubTexture(i);
 				}
 
-				// Inline item tooltip description helper
 				if (ImGui::IsItemHovered())
 				{
 					ImGui::BeginTooltip();
@@ -250,7 +325,6 @@ namespace Showcase
 					ImGui::EndTooltip();
 				}
 
-				// 3. Individual orientation flip checks
 				ImGui::Checkbox("FlipX (Mirror Direction)", &sprite.FlipX);
 				ImGui::Checkbox("FlipY (Invert Gravity)", &sprite.FlipY);
 
