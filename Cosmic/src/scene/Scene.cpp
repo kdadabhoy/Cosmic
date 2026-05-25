@@ -1,11 +1,9 @@
 // Scene.cpp
 // Optimized Material Grouping System implemented 5/21/2026
-
-#include "Scene.h"
-#include "Entity.h"
-#include "Components.h"
+#include "scene/Scene.h"
+#include "scene/Entity.h"
+#include "scene/Components.h"
 #include "renderer/Renderer2D.h"
-
 #include <unordered_map>
 #include <vector>
 
@@ -30,6 +28,19 @@ namespace Cosmic
 
 	void Scene::OnUpdate(float deltaTime)
 	{
+		// Sequentially process each decoupled subsystem dispatch logic
+		for (auto& system : m_Systems)
+		{
+			system->OnUpdate(*this, deltaTime);
+		}
+	}
+
+	void Scene::OnFixedUpdate(float fixedDeltaTime)
+	{
+		for (auto& system : m_Systems)
+		{
+			system->OnFixedUpdate(*this, fixedDeltaTime);
+		}
 	}
 
 	void Scene::OnRender()

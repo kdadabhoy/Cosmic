@@ -1,9 +1,9 @@
 #pragma once
-// Components.h
-// Last Modified: 5/20/2026
+// Last Modified: 5/24/2026
 
 #include "core/Core.h"
 #include "graphics/Material.h"
+#include "scene/ComponentRegistry.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <string>
@@ -65,39 +65,53 @@ namespace Cosmic
     };
 }
 
+// ============================================================================
+// CRITICAL ARCHITECTURAL NOTE ON CLIENT COMPONENT REGISTRATION:
+// Built-in engine components below use manual specialization layouts. 
+// If you are writing a custom simulation or game component inside an external 
+// client module / DLL project, you MUST use the 'CS_REGISTER_COMPONENT(MyType)' 
+// macro inside your component header file. 
+// Failure to do so will cause the host binary and dynamic plugin binary to map 
+// the same type name to divergent integer indices, breaking component storage.
+// ============================================================================
+
+// Register built-in engine types using the standardized registration macro
+CS_REGISTER_COMPONENT(Cosmic::TagComponent)
+CS_REGISTER_COMPONENT(Cosmic::TransformComponent)
+CS_REGISTER_COMPONENT(Cosmic::SpriteRendererComponent)
 
 
-// ============================================================================
-// CRITICAL: Type Hash Safety Adapters for multi-binary/DLL boundaries
-// ============================================================================
+
+// The block below just manually does this (shows what ComponentRegistry is doing)
+/*
 #include <entt/entt.hpp>
-
 namespace entt
 {
-	template<>
-	struct type_hash<Cosmic::TagComponent> final
-	{
-		[[nodiscard]] static consteval id_type value() noexcept
-		{
-			return hashed_string::value("TagComponent");
-		}
-	};
+    template<>
+    struct type_hash<Cosmic::TagComponent> final
+    {
+        [[nodiscard]] static consteval id_type value() noexcept
+        {
+            return hashed_string::value("TagComponent");
+        }
+    };
 
-	template<>
-	struct type_hash<Cosmic::TransformComponent> final
-	{
-		[[nodiscard]] static consteval id_type value() noexcept
-		{
-			return hashed_string::value("TransformComponent");
-		}
-	};
+    template<>
+    struct type_hash<Cosmic::TransformComponent> final
+    {
+        [[nodiscard]] static consteval id_type value() noexcept
+        {
+            return hashed_string::value("TransformComponent");
+        }
+    };
 
-	template<>
-	struct type_hash<Cosmic::SpriteRendererComponent> final
-	{
-		[[nodiscard]] static consteval id_type value() noexcept
-		{
-			return hashed_string::value("SpriteRendererComponent");
-		}
-	};
+    template<>
+    struct type_hash<Cosmic::SpriteRendererComponent> final
+    {
+        [[nodiscard]] static consteval id_type value() noexcept
+        {
+            return hashed_string::value("SpriteRendererComponent");
+        }
+    };
 }
+*/

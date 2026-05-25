@@ -1,4 +1,6 @@
 #pragma once
+// ShowcaseFlightLayer.h
+
 #include <Cosmic.h>
 #include <vector>
 
@@ -47,3 +49,6 @@ namespace Showcase
 		static constexpr size_t k_MaxTrailLength = 40;
 	};
 }
+
+// Ensure the engine's EnTT context maps this client component across DLL barriers cleanly
+CS_REGISTER_COMPONENT(Showcase::FlightFlameComponent)

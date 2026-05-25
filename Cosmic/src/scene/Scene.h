@@ -1,46 +1,69 @@
 #pragma once
 // Scene.h
-// Last Modified: 5/20/2026
 
 #include "core/Core.h"
+#include "scene/System.h"
 #include <entt/entt.hpp>
 #include <string>
 #include <memory>
+#include <vector>
 
 namespace Cosmic
 {
-    class Entity; // Forward declaration
+	class Entity; // Forward declaration
 
-    class COSMIC_API Scene
-    {
-    public:
-        Scene();
-        ~Scene() = default;
+	class COSMIC_API Scene
+	{
+	public:
+		Scene();
+		~Scene() = default;
 
-        /**
-         * @brief Static factory helper to match unified engine smart pointer instantiation rules.
-         */
-        template<typename... Args>
-        static Ref<Scene> Create(Args&&... args)
-        {
-            return std::make_shared<Scene>(std::forward<Args>(args)...);
-        }
+		/** * @brief Static factory helper to match unified engine smart pointer instantiation rules.         */
+		template<typename... Args>
+		static Ref<Scene> Create(Args&&... args)
+		{
+			return std::make_shared<Scene>(std::forward<Args>(args)...);
+		}
 
-        /** * @brief Instantiates a blank Entity handle bound to this scene instance.         */
-        Entity CreateEntity(const std::string& name = "GenericEntity");
+		/** * @brief Instantiates a blank Entity handle bound to this scene instance.         */
+		Entity CreateEntity(const std::string& name = "GenericEntity");
 
-        /** * @brief Destroys and cleans up internal registry component references.         */
-        void DestroyEntity(Entity entity);
+		/** * @brief Destroys and cleans up internal registry component references.         */
+		void DestroyEntity(Entity entity);
 
-        /** * @brief Runs ongoing frame logic updates.         */
-        void OnUpdate(float deltaTime);
+		/** * @brief Runs ongoing frame logic updates.         */
+		void OnUpdate(float deltaTime);
 
-        /** * @brief Extracts view parameters and pipes them to Renderer2D.         */
-        void OnRender();
+		/** * @brief Runs fixed time-step physics/simulation routines across systems.         */
+		void OnFixedUpdate(float fixedDeltaTime);
 
-    private:
-        entt::registry m_Registry;
+		/** * @brief Extracts view parameters and pipes them to Renderer2D.         */
+		void OnRender();
 
-        friend class Entity; // Gives access to the registry mapping internals securely
-    };
+		/** * @brief Allocates and attaches an execution system to the scene lifecycle.         */
+		template<typename T, typename... Args>
+		T& AddSystem(Args&&... args)
+		{
+			auto system = CreateScope<T>(std::forward<Args>(args)...);
+			T& ref = *system;
+			m_Systems.push_back(std::move(system));
+			return ref;
+		}
+
+		/** * @brief Clears out all systems bound to this scene instance.         */
+		void RemoveAllSystems() { m_Systems.clear(); }
+
+		/** * @brief Safe multi-component layout querying mechanism for external or client layers.         */
+		template<typename... Components>
+		auto View()
+		{
+			return m_Registry.view<Components...>();
+		}
+
+	private:
+		entt::registry m_Registry;
+		std::vector<Scope<System>> m_Systems;
+
+		friend class Entity; // Gives access to the registry mapping internals securely
+	};
 }

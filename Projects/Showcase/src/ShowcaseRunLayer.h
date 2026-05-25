@@ -1,4 +1,5 @@
 #pragma once
+// ShowcaseRunLayer.h
 
 #include <Cosmic.h>
 #include <vector>
@@ -10,7 +11,7 @@ namespace Showcase
 	{
 		float Score = 0.0f;
 		float HighScore = 0.0f;
-		float SpeedMultiplier = 1.0f; // Shifted default from 0.01f to 1.0f so standard scale equals normal speed
+		float SpeedMultiplier = 1.0f;
 		float VelocityY = 0.0f;
 		bool IsGrounded = false;
 	};
@@ -28,7 +29,6 @@ namespace Showcase
 		ShowcaseRunLayer(Cosmic::Ref<Cosmic::Scene> scene, Cosmic::Ref<Cosmic::Material> flameMaterial);
 		virtual ~ShowcaseRunLayer() override = default;
 
-		// Native engine lifecycle mappings
 		virtual void OnAttach() override;
 		virtual void OnDetach() override;
 		virtual void OnUpdate(float ts) override;
@@ -60,7 +60,11 @@ namespace Showcase
 		static constexpr float k_Gravity = -16.0f;
 		static constexpr float k_JumpV = 6.2f;
 
-		// Interactive Tuning Modifiers
 		float m_BaseObstacleSpeed = 3.5f;
 	};
 }
+
+// CRITICAL STEP 2 ENGINE SYNCHRONIZATION:
+// Register the components safely across the executable and DLL plugin boundary.
+CS_REGISTER_COMPONENT(Showcase::RunnerFlameComponent)
+CS_REGISTER_COMPONENT(Showcase::ObstacleComponent)

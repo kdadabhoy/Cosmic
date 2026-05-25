@@ -1,6 +1,6 @@
 #pragma once
 // Entity.h
-// Last Modified: 5/20/2026
+// Last Modified: 5/24/2026
 
 #include "Scene.h"
 #include "Components.h"
@@ -24,7 +24,7 @@ namespace Cosmic
         template<typename T, typename... Args>
         T& AddComponent(Args&&... args)
         {
-            GLCORE_ASSERT(!HasComponent<T>(), "Entity already contains this component type!");
+            CS_ASSERT(!HasComponent<T>(), "Entity already contains this component type!");
             return m_Scene->m_Registry.emplace<T>(m_EntityHandle, std::forward<Args>(args)...);
         }
 
@@ -34,7 +34,7 @@ namespace Cosmic
         template<typename T>
         T& GetComponent()
         {
-            GLCORE_ASSERT(HasComponent<T>(), "Entity does not possess this component type!");
+            CS_ASSERT(HasComponent<T>(), "Entity does not possess this component type!");
             return m_Scene->m_Registry.get<T>(m_EntityHandle);
         }
 
@@ -42,7 +42,7 @@ namespace Cosmic
          * @brief Checks if the entity contains the given component.
          */
         template<typename T>
-        bool HasComponent()
+        bool HasComponent() const
         {
             return m_Scene->m_Registry.all_of<T>(m_EntityHandle);
         }
@@ -53,7 +53,7 @@ namespace Cosmic
         template<typename T>
         void RemoveComponent()
         {
-            GLCORE_ASSERT(HasComponent<T>(), "Cannot remove a non-existent component type!");
+            CS_ASSERT(HasComponent<T>(), "Cannot remove a non-existent component type!");
             m_Scene->m_Registry.remove<T>(m_EntityHandle);
         }
 

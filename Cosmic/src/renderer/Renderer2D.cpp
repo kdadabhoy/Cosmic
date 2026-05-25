@@ -279,23 +279,31 @@ namespace Cosmic
     /**
      * Forces a flush and resets batch counters. Used for state changes or buffer overflows.
      */
-    void Renderer2D::FlushAndReset()
-    {
-        // Save the active material state before finalizing the current batch submission
-        Ref<Material> activeMaterial = s_Data.CurrentMaterial;
+	void Renderer2D::FlushAndReset()
+	{
+		Ref<Material> activeMaterial = s_Data.CurrentMaterial;
 
-        EndScene();
+		Flush(); // Directly call Flush instead of EndScene to safeguard system lifecycle state
 
-        s_Data.QuadIndexCount = 0;
-        s_Data.QuadVertexPtr = s_Data.QuadVertexBufferBase;
-        s_Data.TextureSlotIndex = 1;
+		s_Data.QuadIndexCount = 0;
+		s_Data.QuadVertexPtr = s_Data.QuadVertexBufferBase;
+		s_Data.TextureSlotIndex = 1;
 
-        s_Data.LineVertexCount = 0;
-        s_Data.LineVertexBufferPtr = s_Data.LineVertexBufferBase;
+		s_Data.LineVertexCount = 0;
+		s_Data.LineVertexBufferPtr = s_Data.LineVertexBufferBase;
 
-        // Restore the active material so subsequent geometry in this frame binds correctly
-        s_Data.CurrentMaterial = activeMaterial;
-    }
+		s_Data.CurrentMaterial = activeMaterial;
+	}
+
+	void Renderer2D::SetViewportSize(uint32_t width, uint32_t height)
+	{
+		s_Data.ViewportDimensions = { (float)width, (float)height };
+	}
+
+	void Renderer2D::DrawQuad(const glm::vec2& pos, const glm::vec2& size, const Ref<Material>& material)
+	{
+		DrawQuad({ pos.x, pos.y, 0.0f }, size, material);
+	}
 
 
     /////////////////////////////////////////////////////////////////////////////////

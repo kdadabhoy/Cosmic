@@ -305,34 +305,38 @@ namespace Cosmic
             // =================================================================
             // STEP 4: Reconstruction Assembly
             // =================================================================
-            size_t versionPos = rawSource.find("#version");
-            if (versionPos != std::string::npos)
-            {
-                size_t versionEol = rawSource.find_first_of("\r\n", versionPos);
-                if (versionEol != std::string::npos)
-                {
-                    while (versionEol < rawSource.size() && (rawSource[versionEol] == '\r' || rawSource[versionEol] == '\n'))
-                    {
-                        versionEol++;
-                    }
+			size_t versionPos = rawSource.find("#version");
+			if (versionPos != std::string::npos)
+			{
+				size_t versionEol = rawSource.find_first_of("\r\n", versionPos);
 
-                    std::string versionLine = rawSource.substr(0, versionEol);
-                    std::string remainingSource = rawSource.substr(versionEol);
+				// CRITICAL SAFETY GUARD: Handle files ending abruptly without newline markers
+				if (versionEol == std::string::npos)
+					versionEol = rawSource.size();
 
-                    rawSource = versionLine + "\n" + enginePreamble + "\n" + remainingSource + shadertoyWrapper;
-                }
-                else
-                {
-                    // Fallback if #version is on a single line with no trailing newlines at all
-                    rawSource = rawSource + "\n" + enginePreamble + shadertoyWrapper;
-                }
-            }
-            else
-            {
-                rawSource = "#version 450 core\n" + enginePreamble + "\n" + rawSource + shadertoyWrapper;
-            }
+				while (versionEol < rawSource.size() && (rawSource[versionEol] == '\r' || rawSource[versionEol] == '\n'))
+				{
+					versionEol++;
+				}
 
-            shaderSources[shaderType] = rawSource;
+				if (versionEol < rawSource.size())
+				{
+					std::string versionLine = rawSource.substr(0, versionEol);
+					std::string remainingSource = rawSource.substr(versionEol);
+
+					rawSource = versionLine + "\n" + enginePreamble + "\n" + remainingSource + shadertoyWrapper;
+				}
+				else
+				{
+					rawSource = rawSource + "\n" + enginePreamble + shadertoyWrapper;
+				}
+			}
+			else
+			{
+				rawSource = "#version 450 core\n" + enginePreamble + "\n" + rawSource + shadertoyWrapper;
+			}
+
+			shaderSources[shaderType] = rawSource;
         }
 
         // =================================================================
