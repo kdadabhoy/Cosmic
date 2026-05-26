@@ -12,7 +12,7 @@
 2. [Memory Management](#2-memory-management)
 3. [Application Lifecycle](#3-application-lifecycle)
 4. [The Layer System](#4-the-layer-system)
-5. Update [The Event System](#5-the-event-system)
+5. [The Event System](#5-the-event-system)
 6. [Input Polling](#6-input-polling)
 7. [Time & Timeline System](#7-time--timeline-system)
 8. [2D Rendering API](#8-2d-rendering-api)
