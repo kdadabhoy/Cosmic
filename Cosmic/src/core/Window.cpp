@@ -1,257 +1,432 @@
+// Window.cpp
+// Last Modified 5/26/2026
+//
+// Fullscreen implementation notes
+// --------------------------------
+// We use "borderless windowed fullscreen" rather than exclusive fullscreen or
+// GLFW's monitor-switch path.  The technique is:
+//
+//   Enter fullscreen:
+//     1. Save the current windowed position + size.
+//     2. Strip WS_OVERLAPPEDWINDOW (title bar, borders, resize frame) from the
+//        Win32 style bits via SetWindowLong.
+//     3. Call SetWindowPos to cover the target monitor's full resolution.
+//     4. Do NOT call glfwSetWindowMonitor — that triggers a display-mode switch
+//        which causes DWM to flash black.
+//
+//   Exit fullscreen:
+//     1. Restore WS_OVERLAPPEDWINDOW style bits.
+//     2. Call SetWindowPos with the saved rect.
+//     3. Tell GLFW about the new size so its internal state stays consistent.
+//
+// Why not ClipCursor?
+//   ClipCursor prevents Win+Shift+S (Snipping Tool), screenshot overlays, and
+//   multi-monitor mouse movement.  Borderless windowed fullscreen does not need
+//   cursor confinement — the window already fills the monitor.
+//
+// Why not HWND_TOPMOST?
+//   HWND_TOPMOST fights the compositor and causes rendering artefacts with
+//   hardware overlays (Discord, GeForce Experience, Xbox Game Bar).  Since we
+//   are not exclusive fullscreen we do not need it.
+
 #include "core/Window.h"
 #include "events/ApplicationEvent.h"
 #include "events/KeyEvent.h"
 #include "events/MouseEvent.h"
-#include <GLFW/glfw3.h>
 #include "platform/opengl/OpenGLContext.h"
 #include "codes/KeyCodes.h"
+#include "core/Log.h"
+
+// 1. Standard library dependencies
 #include <iostream>
 
+// 2. Platform Specific Windows block (Ordered perfectly to eliminate redefinition)
+#ifdef _WIN32
+    #ifndef WIN32_LEAN_AND_MEAN
+        #define WIN32_LEAN_AND_MEAN
+    #endif
+    #ifndef NOMINMAX
+        #define NOMINMAX
+    #endif
+    #include <Windows.h>
+#endif
+
+// 3. Main library includes (Includes Windows backend nicely now)
+#include <GLFW/glfw3.h>
+
+// 4. Native extensions (Loaded only after standard GLFW declarations are mapped)
 #ifdef _WIN32
     #define GLFW_EXPOSE_NATIVE_WIN32
     #include <GLFW/glfw3native.h>
-    #include <Windows.h>
 #endif
 
 namespace Cosmic
 {
+	// =========================================================================
+	// Construction
+	// =========================================================================
+
 	Window::Window(int width, int height, const std::string& title)
-		: m_Context(nullptr), m_Handle(nullptr)
 	{
 		if (!glfwInit())
 		{
-			std::cout << "Cosmic: Could not initialize GLFW!" << std::endl;
+			CS_CORE_CRITICAL("Window: Failed to initialise GLFW!");
 			return;
 		}
 
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-		// Prevent DWM minimized flash behaviors
+		// Keep window visible even when focus changes; avoids an iconify on Alt+Tab
+		// out of fullscreen.
 		glfwWindowHint(GLFW_AUTO_ICONIFY, GLFW_FALSE);
-		
-		#ifdef _WIN32
-			glfwWindowHint(GLFW_FOCUS_ON_SHOW, GLFW_TRUE);
-		#endif
 
-		m_Handle = glfwCreateWindow(width, height, title.c_str(), NULL, NULL);
+		m_Handle = glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);
+		if (!m_Handle)
+		{
+			CS_CORE_CRITICAL("Window: glfwCreateWindow failed!");
+			glfwTerminate();
+			return;
+		}
 
 		m_Context = new OpenGLContext(m_Handle);
 		m_Context->Init();
 
 		m_Data.Title = title;
-		m_Data.Width = width;
-		m_Data.Height = height;
-		m_Data.WindowInstancePtr = this;
+		m_Data.Width = static_cast<unsigned int>(width);
+		m_Data.Height = static_cast<unsigned int>(height);
+		m_Data.Self = this;
+
+		// Save initial windowed position so we can restore it after fullscreen.
+		glfwGetWindowPos(m_Handle, &m_SavedX, &m_SavedY);
+		m_SavedWidth = width;
+		m_SavedHeight = height;
 
 		glfwSetWindowUserPointer(m_Handle, &m_Data);
 
-		// -----------------------------------------------------------------
-		// Hardware Callbacks
-		// -----------------------------------------------------------------
+		// ---------------------------------------------------------------------
+		// GLFW Callbacks
+		// All lambdas capture nothing from the host scope — they reach Window
+		// state through the WindowData pointer stored in the GLFW user pointer.
+		// ---------------------------------------------------------------------
 
-		glfwSetWindowSizeCallback(m_Handle, [](GLFWwindow* window, int width, int height)
+		glfwSetWindowSizeCallback(m_Handle, [](GLFWwindow* win, int w, int h)
 			{
-				WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
-				data.Width = width;
-				data.Height = height;
+				auto& data = *static_cast<WindowData*>(glfwGetWindowUserPointer(win));
+				data.Width = static_cast<unsigned int>(w);
+				data.Height = static_cast<unsigned int>(h);
 
-				WindowResizeEvent event(width, height);
-				data.EventCallback(event);
+				WindowResizeEvent e(static_cast<uint32_t>(w), static_cast<uint32_t>(h));
+				data.EventCallback(e);
 			});
 
-		glfwSetWindowFocusCallback(m_Handle, [](GLFWwindow* window, int focused)
+		glfwSetWindowCloseCallback(m_Handle, [](GLFWwindow* win)
 			{
-				WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
-
-				if (focused)
-				{
-					if (data.Fullscreen && data.WindowInstancePtr)
-					{
-						data.WindowInstancePtr->ReassertFullscreenTopology();
-					}
-				}
-				else
-				{
-					// If we lose focus, unlock the cursor so the developer can multi-task
-					#ifdef _WIN32
-						ClipCursor(NULL);
-					#endif
-				}
+				auto& data = *static_cast<WindowData*>(glfwGetWindowUserPointer(win));
+				WindowCloseEvent e;
+				data.EventCallback(e);
 			});
 
-		glfwSetScrollCallback(m_Handle, [](GLFWwindow* window, double xOffset, double yOffset)
+		glfwSetScrollCallback(m_Handle, [](GLFWwindow* win, double xOff, double yOff)
 			{
-				WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
-				MouseScrolledEvent event((float)xOffset, (float)yOffset);
-				data.EventCallback(event);
+				auto& data = *static_cast<WindowData*>(glfwGetWindowUserPointer(win));
+				MouseScrolledEvent e(static_cast<float>(xOff), static_cast<float>(yOff));
+				data.EventCallback(e);
 			});
 
-		glfwSetMouseButtonCallback(m_Handle, [](GLFWwindow* window, int button, int action, int mods)
+		glfwSetMouseButtonCallback(m_Handle, [](GLFWwindow* win, int btn, int action, int /*mods*/)
 			{
-				WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+				auto& data = *static_cast<WindowData*>(glfwGetWindowUserPointer(win));
 				switch (action)
 				{
-					case GLFW_PRESS:   { MouseButtonPressedEvent event(button);  data.EventCallback(event); break; }
-					case GLFW_RELEASE: { MouseButtonReleasedEvent event(button); data.EventCallback(event); break; }
-				}
-			});
-
-		glfwSetCursorPosCallback(m_Handle, [](GLFWwindow* window, double xPos, double yPos)
-			{
-				WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
-				MouseMovedEvent event((float)xPos, (float)yPos);
-				data.EventCallback(event);
-			});
-
-		glfwSetKeyCallback(m_Handle, [](GLFWwindow* window, int key, int scancode, int action, int mods)
-			{
-				WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
-
-				if (data.FullscreenOverride && data.FullscreenOverride(key, action, mods))
-					return;
-
-				if (key == CS_KEY_F11 && action == 1) // GLFW_PRESS
+				case GLFW_PRESS:
 				{
-					if (data.WindowInstancePtr)
-					{
-						data.WindowInstancePtr->SetFullscreen(!data.Fullscreen);
-					}
-					return;
+					MouseButtonPressedEvent e(btn);
+					data.EventCallback(e);
+					break;
 				}
+				case GLFW_RELEASE:
+				{
+					MouseButtonReleasedEvent e(btn);
+					data.EventCallback(e);
+					break;
+				}
+				}
+			});
+
+		glfwSetCursorPosCallback(m_Handle, [](GLFWwindow* win, double x, double y)
+			{
+				auto& data = *static_cast<WindowData*>(glfwGetWindowUserPointer(win));
+				MouseMovedEvent e(static_cast<float>(x), static_cast<float>(y));
+				data.EventCallback(e);
+			});
+
+		// Key callback — hotkey handling delegated to Window::HandleFullscreenHotkey
+		// so the override and F11 logic live in one place with clear ownership.
+		glfwSetKeyCallback(m_Handle, [](GLFWwindow* win, int key, int /*scancode*/, int action, int mods)
+			{
+				auto& data = *static_cast<WindowData*>(glfwGetWindowUserPointer(win));
+
+				// Let the Window handle fullscreen toggling first.
+				// If consumed, do not propagate the key to the engine event system.
+				if (data.Self && data.Self->HandleFullscreenHotkey(key, action, mods))
+					return;
 
 				switch (action)
 				{
-					case GLFW_PRESS:   { KeyPressedEvent event(key, 0); data.EventCallback(event); break; }
-					case GLFW_RELEASE: { KeyReleasedEvent event(key);   data.EventCallback(event); break; }
-					case GLFW_REPEAT:  { KeyPressedEvent event(key, 1); data.EventCallback(event); break; }
+				case GLFW_PRESS: { KeyPressedEvent  e(key, 0); data.EventCallback(e); break; }
+				case GLFW_RELEASE: { KeyReleasedEvent e(key);    data.EventCallback(e); break; }
+				case GLFW_REPEAT: { KeyPressedEvent  e(key, 1); data.EventCallback(e); break; }
 				}
 			});
 
-		glfwSetCharCallback(m_Handle, [](GLFWwindow* window, unsigned int keycode)
+		glfwSetCharCallback(m_Handle, [](GLFWwindow* win, unsigned int codepoint)
 			{
-				WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
-				KeyTypedEvent event(keycode);
-				data.EventCallback(event);
+				auto& data = *static_cast<WindowData*>(glfwGetWindowUserPointer(win));
+				KeyTypedEvent e(static_cast<int>(codepoint));
+				data.EventCallback(e);
 			});
+
+		SetVSync(true);
 	}
+
+	// =========================================================================
+	// Destruction
+	// =========================================================================
 
 	Window::~Window()
 	{
-		#ifdef _WIN32
-			ClipCursor(NULL); // Free cursor bounds safely on teardown
-		#endif
+		// Clear the hotkey override first so nothing can fire during teardown.
+		m_HotkeyOverride = nullptr;
+
+		// If we are in fullscreen, restore the window style before destroying it
+		// so the DWM does not leave the desktop in an unusual state.
+		if (m_Fullscreen && m_Handle)
+		{
+#ifdef _WIN32
+			HWND hwnd = glfwGetWin32Window(m_Handle);
+			if (hwnd)
+			{
+				LONG style = GetWindowLong(hwnd, GWL_STYLE);
+				style |= WS_OVERLAPPEDWINDOW;
+				SetWindowLong(hwnd, GWL_STYLE, style);
+				// SetWindowPos to apply the style change immediately; position
+				// doesn't matter since the window is about to be destroyed.
+				SetWindowPos(hwnd, nullptr, 0, 0, 0, 0,
+					SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER |
+					SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
+			}
+#endif
+			m_Fullscreen = false;
+		}
+
+		// Null out the GLFW user pointer so any lingering callbacks can't
+		// dereference our now-dying WindowData.
+		if (m_Handle)
+			glfwSetWindowUserPointer(m_Handle, nullptr);
+
 		delete m_Context;
-		glfwDestroyWindow(m_Handle);
+		m_Context = nullptr;
+
+		if (m_Handle)
+		{
+			glfwDestroyWindow(m_Handle);
+			m_Handle = nullptr;
+		}
+
 		glfwTerminate();
 	}
 
-	void Window::SwapBuffers() { m_Context->SwapBuffers(); }
-	void Window::PollEvents()  { glfwPollEvents(); }
-	bool Window::ShouldClose() const { return glfwWindowShouldClose(m_Handle); }
+	// =========================================================================
+	// Frame
+	// =========================================================================
 
-	void Window::SetVSync(bool enabled)
-	{
-		m_Data.VSync = enabled;
-		if (m_Handle) glfwSwapInterval(enabled ? 1 : 0);
-	}
+	void Window::PollEvents() { glfwPollEvents(); }
+	void Window::SwapBuffers() { m_Context->SwapBuffers(); }
+	bool Window::ShouldClose() const { return glfwWindowShouldClose(m_Handle); }
 
 	void Window::GetSize(int* width, int* height) const
 	{
 		glfwGetFramebufferSize(m_Handle, width, height);
 	}
 
+	// =========================================================================
+	// VSync
+	// =========================================================================
+
+	void Window::SetVSync(bool enabled)
+	{
+		glfwSwapInterval(enabled ? 1 : 0);
+		m_Data.VSync = enabled;
+	}
+
+	// =========================================================================
+	// Fullscreen — borderless windowed technique
+	// =========================================================================
+
 	void Window::SetFullscreen(bool enabled)
 	{
-		if (m_Data.Fullscreen == enabled)
+		if (m_Fullscreen == enabled || !m_Handle)
 			return;
 
-		m_Data.Fullscreen = enabled;
+		m_Fullscreen = enabled;
+		ApplyFullscreenWin32(enabled);
+	}
 
-		if (m_Data.Fullscreen)
+	void Window::ApplyFullscreenWin32(bool enabled)
+	{
+#ifdef _WIN32
+		HWND hwnd = glfwGetWin32Window(m_Handle);
+		if (!hwnd)
 		{
-			// 1. Cache the windowed properties so we can revert back to them cleanly
-			glfwGetWindowPos(m_Handle, &m_Data.WindowedX, &m_Data.WindowedY);
-			glfwGetWindowSize(m_Handle, (int*)&m_Data.WindowedWidth, (int*)&m_Data.WindowedHeight);
+			CS_CORE_ERROR("Window::ApplyFullscreenWin32: No valid HWND.");
+			return;
+		}
 
-			// 2. Identify the target monitor based on the window center coordinate (Raylib's style)
-			int monitorCount;
-			GLFWmonitor** monitors = glfwGetMonitors(&monitorCount);
-			GLFWmonitor* targetMonitor = glfwGetPrimaryMonitor();
+		if (enabled)
+		{
+			// ---- Entering fullscreen ----
 
-			int windowCenterX = m_Data.WindowedX + (m_Data.WindowedWidth / 2);
-			int windowCenterY = m_Data.WindowedY + (m_Data.WindowedHeight / 2);
+			// 1. Save current windowed rect (window position, not client area).
+			RECT winRect = {};
+			GetWindowRect(hwnd, &winRect);
+			m_SavedX = winRect.left;
+			m_SavedY = winRect.top;
+			m_SavedWidth = winRect.right - winRect.left;
+			m_SavedHeight = winRect.bottom - winRect.top;
 
-			for (int i = 0; i < monitorCount; i++)
-			{
-				int mx, my;
-				glfwGetMonitorPos(monitors[i], &mx, &my);
-				const GLFWvidmode* mode = glfwGetVideoMode(monitors[i]);
-				
-				if ((windowCenterX >= mx && windowCenterX < mx + mode->width) &&
-					(windowCenterY >= my && windowCenterY < my + mode->height))
-				{
-					targetMonitor = monitors[i];
-					break;
-				}
-			}
+			// 2. Find the monitor the window centre currently lives on.
+			GLFWmonitor* monitor = FindCurrentMonitor();
+			if (!monitor)
+				monitor = glfwGetPrimaryMonitor();
 
-			const GLFWvidmode* mode = glfwGetVideoMode(targetMonitor);
-			int monitorX, monitorY;
-			glfwGetMonitorPos(targetMonitor, &monitorX, &monitorY);
+			int monX = 0, monY = 0;
+			glfwGetMonitorPos(monitor, &monX, &monY);
+			const GLFWvidmode* mode = glfwGetVideoMode(monitor);
 
-			// 3. Set properties inside standard Windowed Mode (Passes NULL as monitor pointer)
-			// This tells the DWM that we are just a standard window layout, completely preventing black screen glitches.
-			glfwSetWindowAttrib(m_Handle, GLFW_DECORATED, GLFW_FALSE);
-			glfwSetWindowMonitor(m_Handle, NULL, monitorX, monitorY, mode->width, mode->height, mode->refreshRate);
+			// 3. Strip window decorations via style bits.
+			//    We keep WS_VISIBLE so the window does not flash hidden.
+			LONG style = GetWindowLong(hwnd, GWL_STYLE);
+			style &= ~WS_OVERLAPPEDWINDOW;
+			SetWindowLong(hwnd, GWL_STYLE, style);
 
-			// 4. Pin layout explicitly above desktop layers to defend against overlapping windows or taskbars
-			#ifdef _WIN32
-				HWND hwnd = glfwGetWin32Window(m_Handle);
-				SetWindowPos(hwnd, HWND_TOPMOST, monitorX, monitorY, mode->width, mode->height, SWP_FRAMECHANGED | SWP_SHOWWINDOW);
+			// 4. Stretch window to cover the monitor exactly.
+			//    SWP_FRAMECHANGED forces the style change to be applied.
+			//    No HWND_TOPMOST — we stay in the normal z-order stack.
+			SetWindowPos(hwnd, HWND_TOP,
+				monX, monY,
+				mode->width, mode->height,
+				SWP_NOOWNERZORDER | SWP_FRAMECHANGED | SWP_SHOWWINDOW);
 
-				// Traps the cursor precisely within this monitor grid so it can't escape to an extended display,
-				// while leaving the cursor shape fully intact and visible for ImGui panels.
-				RECT clipRect = { monitorX, monitorY, monitorX + mode->width, monitorY + mode->height };
-				ClipCursor(&clipRect);
-			#endif
+			CS_CORE_INFO("Window: Entered borderless fullscreen ({}x{} @ {},{}).",
+				mode->width, mode->height, monX, monY);
 		}
 		else
 		{
-			// Restore standard desktop layout aesthetics cleanly
-			#ifdef _WIN32
-				ClipCursor(NULL); // Give back standard desktop mouse access
-				HWND hwnd = glfwGetWin32Window(m_Handle);
-				SetWindowPos(hwnd, HWND_NOTOPMOST, m_Data.WindowedX, m_Data.WindowedY, m_Data.WindowedWidth, m_Data.WindowedHeight, SWP_FRAMECHANGED);
-			#endif
+			// ---- Exiting fullscreen ----
 
-			glfwSetWindowAttrib(m_Handle, GLFW_DECORATED, GLFW_TRUE);
-			glfwSetWindowMonitor(m_Handle, NULL, m_Data.WindowedX, m_Data.WindowedY, m_Data.WindowedWidth, m_Data.WindowedHeight, 0);
+			// 1. Restore window decorations.
+			LONG style = GetWindowLong(hwnd, GWL_STYLE);
+			style |= WS_OVERLAPPEDWINDOW;
+			SetWindowLong(hwnd, GWL_STYLE, style);
+
+			// 2. Restore saved position and size.
+			SetWindowPos(hwnd, HWND_TOP,
+				m_SavedX, m_SavedY,
+				m_SavedWidth, m_SavedHeight,
+				SWP_NOOWNERZORDER | SWP_FRAMECHANGED | SWP_SHOWWINDOW);
+
+			CS_CORE_INFO("Window: Restored windowed mode ({}x{} @ {},{}).",
+				m_SavedWidth, m_SavedHeight, m_SavedX, m_SavedY);
 		}
 
+		// Keep VSync setting intact across the transition.
 		glfwSwapInterval(m_Data.VSync ? 1 : 0);
+
+#else
+		// Non-Windows fallback: use GLFW's built-in fullscreen toggle.
+		// This may cause a mode switch on some platforms.
+		if (enabled)
+		{
+			GLFWmonitor* monitor = FindCurrentMonitor();
+			if (!monitor) monitor = glfwGetPrimaryMonitor();
+			const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+
+			glfwGetWindowPos(m_Handle, &m_SavedX, &m_SavedY);
+			int w, h;
+			glfwGetWindowSize(m_Handle, &w, &h);
+			m_SavedWidth = w;
+			m_SavedHeight = h;
+
+			glfwSetWindowMonitor(m_Handle, monitor,
+				0, 0, mode->width, mode->height, mode->refreshRate);
+		}
+		else
+		{
+			glfwSetWindowMonitor(m_Handle, nullptr,
+				m_SavedX, m_SavedY, m_SavedWidth, m_SavedHeight, 0);
+		}
+		glfwSwapInterval(m_Data.VSync ? 1 : 0);
+#endif
 	}
 
-	void Window::ReassertFullscreenTopology()
+	// =========================================================================
+	// Monitor detection
+	// =========================================================================
+
+	GLFWmonitor* Window::FindCurrentMonitor() const
 	{
-		#ifdef _WIN32
-			if (m_Data.Fullscreen && m_Handle)
-			{
-				HWND hwnd = glfwGetWin32Window(m_Handle);
-				
-				// Re-verify monitor dimensions to accommodate dynamic display arrangement adjustments
-				int width, height;
-				glfwGetWindowSize(m_Handle, &width, &height);
-				
-				int mx, my;
-				glfwGetWindowPos(m_Handle, &mx, &my);
+		// Window centre in screen coordinates.
+		int wx = 0, wy = 0, ww = 0, wh = 0;
+		glfwGetWindowPos(m_Handle, &wx, &wy);
+		glfwGetWindowSize(m_Handle, &ww, &wh);
 
-				SetWindowPos(hwnd, HWND_TOPMOST, mx, my, width, height, SWP_FRAMECHANGED | SWP_NOACTIVATE | SWP_SHOWWINDOW);
-				
-				RECT clipRect = { mx, my, mx + width, my + height };
-				ClipCursor(&clipRect);
+		int centreX = wx + ww / 2;
+		int centreY = wy + wh / 2;
+
+		int count = 0;
+		GLFWmonitor** monitors = glfwGetMonitors(&count);
+		GLFWmonitor* best = glfwGetPrimaryMonitor();
+
+		for (int i = 0; i < count; ++i)
+		{
+			int mx = 0, my = 0;
+			glfwGetMonitorPos(monitors[i], &mx, &my);
+			const GLFWvidmode* mode = glfwGetVideoMode(monitors[i]);
+			if (!mode) continue;
+
+			if (centreX >= mx && centreX < mx + mode->width &&
+				centreY >= my && centreY < my + mode->height)
+			{
+				best = monitors[i];
+				break;
 			}
-		#endif
+		}
+
+		return best;
 	}
-}
+
+	// =========================================================================
+	// Fullscreen hotkey dispatch
+	// =========================================================================
+
+	bool Window::HandleFullscreenHotkey(int key, int action, int mods)
+	{
+		// Give the registered override first refusal.
+		if (m_HotkeyOverride)
+		{
+			if (m_HotkeyOverride(key, action, mods))
+				return true; // consumed by the override
+		}
+
+		// Default: F11 on press (not repeat) toggles fullscreen.
+		if (key == CS_KEY_F11 && action == GLFW_PRESS)
+		{
+			SetFullscreen(!m_Fullscreen);
+			return true;
+		}
+
+		return false;
+	}
+
+} // namespace Cosmic
