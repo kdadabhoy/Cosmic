@@ -1,56 +1,19 @@
 #pragma once
 
 // Log.h
-// Last Modified 5/14/2026
+// Last Modified 5/26/2026 - Exporting Log stuff
 
-
-
-
-// TODO
-// Need to add the Log writing to an output file
-// Need to have client log commands that are scrippted a bit better
-	// Like some log commands should be used only for Engine... some log commands only for client projects
-
-
-
-
-
-/**
- * General Description:
- * 
- * The Log class is the primary diagnostic subsystem of the Cosmic Engine. It provides
- * a centralized, thread-safe logging interface built upon the spdlog library.
- * By separating concerns between "Core" (engine-level) and "Client" (game-level)
- * loggers, it allows developers to easily distinguish between internal engine
- * status updates and application-specific logic.
- * 
- * This system utilizes preprocessor macros to simplify logging calls and
- * provides color-coded console output to highlight different severity levels
- * from Trace to Critical.
- * 
- * 
- * Public Function Prototypes (Pre and Post Conditions):
- * 
- * 1. static void Init()
- * Pre:  None.
- * Post: The spdlog sinks are initialized, patterns are set, and both Core
- * and Client loggers are instantiated and ready for use.
- * 
- * 2. static Ref<spdlog::logger>& GetCoreLogger()
- * Pre:  Init() must have been called.
- * Post: Returns a reference to the internal engine logger ("COSMIC").
- * 
- * 3. static Ref<spdlog::logger>& GetClientLogger()
- * Pre:  Init() must have been called.
- * Post: Returns a reference to the application-facing logger ("APP").
- */
+#pragma once
 
 #include "core/Core.h"
+#include <mutex>
+#include <shared_mutex>
 
- // This ignores warning from external headers when compiling with high warning levels
+// This ignores warnings from external headers when compiling with high warning levels
 #pragma warning(push, 0)
 #include <spdlog/spdlog.h>
 #include <spdlog/fmt/ostr.h>
+#include <spdlog/sinks/basic_file_sink.h> // Persistent basic file sink support
 #pragma warning(pop)
 
 namespace Cosmic
@@ -62,7 +25,11 @@ namespace Cosmic
 		// System Lifecycle
 		///////////////////////////////
 
-		static void Init();
+		// Accepts an optional log file layout target path string
+		static void Init(const std::string& logDirectory = "logs");
+
+		// Allows the client runtime to change the log location on the fly
+		static void SetLogDirectory(const std::string& logDirectory);
 
 		////////////////////////////////
 		// Logger Accessors
@@ -74,12 +41,15 @@ namespace Cosmic
 	private:
 		static Ref<spdlog::logger> s_CoreLogger;
 		static Ref<spdlog::logger> s_ClientLogger;
+
+		// Guard mutex to guarantee safe thread swaps during hot-reloads
+		static std::shared_mutex s_LoggerMutex;
 	};
 }
 
-/////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
 // Logging Macros
-/////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
 
 // Core log macros
 #define CS_CORE_TRACE(...)    ::Cosmic::Log::GetCoreLogger()->trace(__VA_ARGS__)

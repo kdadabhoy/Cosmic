@@ -42,8 +42,12 @@ namespace Cosmic
 	Application::Application()
 		: m_Running(true), m_Minimized(false), m_UseFixedTimestep(true), m_TimeScale(1.0f), m_ImGuiLayer(nullptr)
 	{
-		Log::Init();
-		CS_CORE_INFO("Cosmic Engine Logging Initialized");
+		// This generates the logs/ directory and mounts console + file streams
+		Log::Init("logs");
+
+		CS_CORE_INFO("=================================================");
+		CS_CORE_INFO("  Cosmic Engine Framework: Subsystems Initialized ");
+		CS_CORE_INFO("=================================================");
 
 		s_Instance = this;
 

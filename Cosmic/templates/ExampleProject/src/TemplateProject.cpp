@@ -19,6 +19,10 @@ namespace Workspace
 		// 1. Resolve asset paths through the VFS
 		Cosmic::FileSystem::SetActiveProject("TemplateProject");
 
+		// Redirect logging outputs into the localized project workspace subfolder (still lives in build)
+		std::string physicalLogPath = Cosmic::FileSystem::Resolve("project://logs");
+		Cosmic::Log::SetLogDirectory(physicalLogPath);
+
 		std::string shaderPath = Cosmic::FileSystem::Resolve("project://shaders/TemplateShader.glsl");
 		std::filesystem::path resolvedPath(shaderPath);
 		m_ShaderDir = resolvedPath.parent_path().string();
@@ -67,6 +71,9 @@ namespace Workspace
 		m_Scene.reset();
 
 		CS_INFO("TemplateProject: Detached and cleaned up.");
+
+		// Optional Safety Measure: Reset logging back to engine defaults when leaving workspace
+		Cosmic::Log::SetLogDirectory("logs");
 	}
 
 	// -------------------------------------------------------------------------
