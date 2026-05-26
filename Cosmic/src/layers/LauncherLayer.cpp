@@ -1,523 +1,654 @@
+// LauncherLayer.cpp
+// Last Modified: 2026
+
 #include "LauncherLayer.h"
 #include "core/Application.h"
 #include "renderer/RenderCommand.h"
 #include "renderer/Renderer2D.h"
 #include "camera/OrthographicCamera.h"
+#include "graphics/Shader.h"
+#include "layers/ImGuiLayer.h"
+#include "core/Log.h"
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <Windows.h>
-#include <shlobj.h> 
+#include <shlobj.h>
 #include <filesystem>
 #include <fstream>
-#include "core/Log.h"
 #include <sstream>
 #include <algorithm>
-#include "layers/ImGuiLayer.h"
+#include <cmath>
 
 namespace fs = std::filesystem;
 
 namespace Cosmic
 {
-	// ===================================================================
-	// HELPER FUNCTIONS FOR DECOUPLED FILE TEMPLATES
-	// ===================================================================
 
-	// ===================================================================
-	// FIXED: DECOUPLED FILE TEMPLATE PROCESSOR WITH LINE-ENDING SANITIZER
-	// ===================================================================
-	std::string ReadAndProcessTemplate(const fs::path& templateFilePath, const std::string& projectName, const std::string& engineSDKPath)
+	// =============================================================================
+	// Internal helpers — file generation
+	// =============================================================================
+
+	static std::string ReadAndProcessTemplate(
+		const fs::path& templatePath,
+		const std::string& projectName,
+		const std::string& sdkPath)
 	{
-		if (!fs::exists(templateFilePath))
+		if (!fs::exists(templatePath))
 		{
-			CS_CORE_ERROR("Template reading failure: Source file does not exist at '{0}'", templateFilePath.string());
+			CS_CORE_ERROR("LauncherLayer: Template missing at '{0}'", templatePath.string());
 			return "";
 		}
 
-		std::ifstream in(templateFilePath, std::ios::in | std::ios::binary);
+		std::ifstream in(templatePath, std::ios::in | std::ios::binary);
 		if (!in.is_open())
 		{
-			CS_CORE_ERROR("Template reading failure: Failed to open stream for '{0}'", templateFilePath.string());
+			CS_CORE_ERROR("LauncherLayer: Cannot open template '{0}'", templatePath.string());
 			return "";
 		}
 
-		std::stringstream buffer;
-		buffer << in.rdbuf();
-		std::string content = buffer.str();
+		std::stringstream buf;
+		buf << in.rdbuf();
+		std::string content = buf.str();
 
-		// 1. Perform template token substitutions
-		size_t pos;
-		while ((pos = content.find("TemplateProject")) != std::string::npos)
-		{
-			content.replace(pos, 15, projectName);
-		}
+		// Token replacement
+		auto replaceAll = [](std::string& str, const std::string& from, const std::string& to)
+			{
+				size_t pos = 0;
+				while ((pos = str.find(from, pos)) != std::string::npos)
+				{
+					str.replace(pos, from.size(), to);
+					pos += to.size();
+				}
+			};
 
-		while ((pos = content.find("ENGINE_SDK_PATH_TOKEN")) != std::string::npos)
-		{
-			content.replace(pos, 21, engineSDKPath);
-		}
+		replaceAll(content, "TemplateProject", projectName);
+		replaceAll(content, "ENGINE_SDK_PATH_TOKEN", sdkPath);
 
-		// 2. UNIVERSAL LINE ENDING SANITIZER
-		// Catch all variations (\r, \n, \r\n) and firmly normalize to Windows \r\n
-		std::string sanitized = "";
-		sanitized.reserve(content.size() * 1.1); // Reserve slight overhead for line expansions
-
+		// Normalise line endings to \r\n
+		std::string out;
+		out.reserve(static_cast<size_t>(content.size() * 1.05));
 		for (size_t i = 0; i < content.size(); ++i)
 		{
 			if (content[i] == '\r')
 			{
-				sanitized += "\r\n";
-				// If it's a standard Windows line ending (\r\n), skip the \n so it isn't doubled
-				if (i + 1 < content.size() && content[i + 1] == '\n')
-				{
-					++i;
-				}
-				// If it's an isolated \r (Old Mac format), the block safely upgrades it to \r\n
+				out += "\r\n";
+				if (i + 1 < content.size() && content[i + 1] == '\n') ++i;
 			}
 			else if (content[i] == '\n')
 			{
-				// Standalone Unix \n line endings cleanly map to \r\n
-				sanitized += "\r\n";
+				out += "\r\n";
 			}
 			else
 			{
-				sanitized += content[i];
+				out += content[i];
 			}
 		}
-
-		return sanitized;
+		return out;
 	}
 
-	void LauncherLayer::WriteFileContents(const std::filesystem::path& filepath, const std::string& content)
+	// =============================================================================
+
+	void LauncherLayer::WriteFileContents(const fs::path& filepath, const std::string& content)
 	{
 		if (content.empty())
 		{
-			CS_CORE_ERROR("Write aborted: Intended payload for '{0}' is completely empty!", filepath.string());
+			CS_CORE_ERROR("LauncherLayer: Aborting write — empty content for '{0}'", filepath.string());
 			return;
 		}
 
-		// Opened in binary mode so the underlying OS file streams don't double-translate our pristine \r\n formatting
 		std::ofstream file(filepath, std::ios::out | std::ios::binary);
 		if (file.is_open())
 		{
-			file.write(content.c_str(), content.size());
-			file.close();
-			CS_CORE_INFO("Successfully synchronized file creation: {0}", filepath.string());
+			file.write(content.c_str(), static_cast<std::streamsize>(content.size()));
+			CS_CORE_INFO("LauncherLayer: Wrote '{0}'", filepath.string());
 		}
 		else
 		{
-			CS_CORE_ERROR("Write failure: Unable to open target location '{0}' for stream output.", filepath.string());
+			CS_CORE_ERROR("LauncherLayer: Failed to write '{0}'", filepath.string());
 		}
 	}
 
-	// ===================================================================
-	// 1. CONSTRUCTOR & CORE LIFECYCLE
-	// ===================================================================
+	// =============================================================================
+	// Construction & Lifecycle
+	// =============================================================================
+
 	LauncherLayer::LauncherLayer()
-		: Layer("LauncherLayer"), m_Camera(-8.0f, 8.0f, -4.5f, 4.5f), m_ScanTimer(0.0f)
+		: Layer("LauncherLayer")
+		, m_Camera(-8.0f, 8.0f, -4.5f, 4.5f)
 	{
 	}
 
 	void LauncherLayer::OnAttach()
 	{
 		ImGuiLayer::SetTheme(ImGuiTheme::CosmicEmerald);
-		ScanForProjects();
 
-		m_BackgroundTexture = Texture2D::Create("assets/textures/Galaxy.png");
-		if (!m_BackgroundTexture)
+		// Try to build an animated background material from the built-in launcher shader.
+		// Falls back gracefully to a plain clear colour if the shader is absent.
+		const std::string shaderPath = "assets/shaders/Launcher.glsl";
+		if (fs::exists(shaderPath))
 		{
-			CS_CORE_WARN("LauncherLayer: Failed to load splash background 'assets/textures/Galaxy.png'!");
+			auto shader = Shader::Create(shaderPath);
+			if (shader)
+			{
+				m_BgMaterial = Material::Create(shader, "LauncherBg");
+				m_BgMaterial->Set("u_Color", glm::vec4(0.18f, 0.42f, 0.72f, 1.0f));
+				CS_CORE_INFO("LauncherLayer: Background shader loaded.");
+			}
 		}
+		else
+		{
+			CS_CORE_WARN("LauncherLayer: Launcher.glsl not found — falling back to solid clear colour.");
+		}
+
+		ScanForProjects();
 	}
 
 	void LauncherLayer::OnDetach()
 	{
+		m_BgMaterial.reset();
 	}
 
-	void LauncherLayer::OnUpdate(float deltaTime)
-	{
-		m_ScanTimer += deltaTime;
-		if (m_ScanTimer >= 2.0f)
-		{
-			ScanForProjects();
-			m_ScanTimer = 0.0f;
-		}
+	// =============================================================================
+	// Per-frame update
+	// =============================================================================
 
-		RenderCommand::SetClearColor({ 0.02f, 0.02f, 0.04f, 1.0f });
+	void LauncherLayer::OnUpdate(float dt)
+	{
+		m_BgTime += dt;
+
+		// Auto-rescan every 2 s
+		m_ScanTimer += dt;
+		if (m_ScanTimer >= 2.0f) { ScanForProjects(); m_ScanTimer = 0.0f; }
+
+		RenderBackground(dt);
+	}
+
+	void LauncherLayer::RenderBackground(float /*dt*/)
+	{
+		// Dark base clear
+		RenderCommand::SetClearColor({ 0.04f, 0.04f, 0.07f, 1.0f });
 		RenderCommand::Clear();
 
-		if (m_BackgroundTexture)
+		Renderer2D::BeginScene(m_Camera);
+
+		if (m_BgMaterial)
 		{
-			Renderer2D::BeginScene(m_Camera);
-			Renderer2D::DrawQuad({ 0.0f, 0.0f, -0.1f }, { 16.0f, 9.0f }, m_BackgroundTexture);
-			Renderer2D::EndScene();
-		}
-	}
-
-	// ===================================================================
-	// 2. FILE SCANNING ENGINE
-	// ===================================================================
-	void LauncherLayer::ScanForProjects()
-	{
-		m_DiscoveredProjects.clear();
-
-		std::string searchPath = "*.dll";
-		WIN32_FIND_DATAA findData;
-		HANDLE hFind = FindFirstFileA(searchPath.c_str(), &findData);
-
-		if (hFind != INVALID_HANDLE_VALUE)
-		{
-			do
-			{
-				if (!(findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
-				{
-					std::string fileName = findData.cFileName;
-
-					if (fileName == "Cosmic.dll" || fileName == "Renderer.dll")
-					{
-						continue;
-					}
-
-					size_t lastDot = fileName.find_last_of(".");
-					if (lastDot != std::string::npos)
-					{
-						std::string rawProjectName = fileName.substr(0, lastDot);
-						m_DiscoveredProjects.push_back(rawProjectName);
-					}
-				}
-			} while (FindNextFileA(hFind, &findData));
-			FindClose(hFind);
-		}
-	}
-
-	// ===================================================================
-	// 3. PROJECT GENERATOR UTILITIES
-	// ===================================================================
-	std::string LauncherLayer::BrowseFolder()
-	{
-		std::string resultPath = "";
-		BROWSEINFOA bi = { 0 };
-		bi.lpszTitle = "Select the directory where your new project folder will be created:";
-		bi.ulFlags = BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE;
-
-		LPITEMIDLIST pidl = SHBrowseForFolderA(&bi);
-		if (pidl != 0)
-		{
-			char path[MAX_PATH];
-			if (SHGetPathFromIDListA(pidl, path))
-			{
-				resultPath = path;
-			}
-			CoTaskMemFree(pidl);
-		}
-		return resultPath;
-	}
-
-	void LauncherLayer::GenerateProjectTemplate(const std::string& baseDir, const std::string& projName)
-	{
-		fs::path rootPath = fs::path(baseDir) / projName;
-
-		if (fs::exists(rootPath))
-		{
-			m_StatusMessage = "[ERROR] Generation aborted: Directory already exists!";
-			CS_CORE_ERROR("Project generation failed: {0} already exists.", rootPath.string());
-			return;
-		}
-
-		fs::path engineSDKDir = fs::current_path();
-		if (engineSDKDir.filename() == "Debug" || engineSDKDir.filename() == "Release")
-		{
-			engineSDKDir = engineSDKDir.parent_path().parent_path().parent_path();
-		}
-		else if (engineSDKDir.filename() == "Runtime")
-		{
-			engineSDKDir = engineSDKDir.parent_path().parent_path();
-		}
-
-		std::string engineSDKPath = engineSDKDir.string();
-		std::replace(engineSDKPath.begin(), engineSDKPath.end(), '\\', '/');
-
-		fs::path templateRoot = engineSDKDir / "Cosmic" / "templates" / "ExampleProject";
-
-		if (!fs::exists(templateRoot))
-		{
-			m_StatusMessage = "[ERROR] Template source directory not found inside SDK tree!";
-			CS_CORE_ERROR("Failed to generate project: Template path missing at '{0}'", templateRoot.string());
-			return;
-		}
-
-		fs::path srcPath = rootPath / "src";
-		fs::path assetsPath = rootPath / "assets";
-
-		fs::create_directories(srcPath);
-		fs::create_directories(assetsPath);
-
-		std::string cmakeContent = ReadAndProcessTemplate(templateRoot / "CMakeLists.txt", projName, engineSDKPath);
-		std::string batchContent = ReadAndProcessTemplate(templateRoot / "build.bat", projName, engineSDKPath);
-		std::string headerContent = ReadAndProcessTemplate(templateRoot / "src" / "TemplateProject.h", projName, engineSDKPath);
-		std::string cppContent = ReadAndProcessTemplate(templateRoot / "src" / "TemplateProject.cpp", projName, engineSDKPath);
-
-		if (cmakeContent.empty() || batchContent.empty() || headerContent.empty() || cppContent.empty())
-		{
-			m_StatusMessage = "[ERROR] Project files parsing failure. Check core engine log files.";
-			CS_CORE_ERROR("Project structure parsing failed: One or more critical template components generated completely empty vectors.");
-			return;
-		}
-
-		WriteFileContents(rootPath / "CMakeLists.txt", cmakeContent);
-		WriteFileContents(rootPath / "build.bat", batchContent);
-		WriteFileContents(srcPath / (projName + ".h"), headerContent);
-		WriteFileContents(srcPath / (projName + ".cpp"), cppContent);
-
-		fs::path templateShaderSrc = templateRoot / "assets" / "shaders" / "FireShader.glsl";
-		if (fs::exists(templateShaderSrc))
-		{
-			fs::create_directories(assetsPath / "shaders");
-			fs::copy_file(templateShaderSrc, assetsPath / "shaders" / "FireShader.glsl", fs::copy_options::overwrite_existing);
-		}
-
-		m_StatusMessage = "Successfully generated project: " + projName + ". Running compilation pipeline...";
-		CS_CORE_INFO("Project workspace configuration complete. Initializing background compilation process.");
-
-		fs::path batchPath = rootPath / "build.bat";
-		std::string command = "cmd.exe /c \"" + batchPath.string() + "\"";
-
-		STARTUPINFOA si;
-		PROCESS_INFORMATION pi;
-		ZeroMemory(&si, sizeof(si));
-		si.cb = sizeof(si);
-		ZeroMemory(&pi, sizeof(pi));
-
-		if (CreateProcessA(NULL, command.data(), NULL, NULL, FALSE, CREATE_NEW_CONSOLE, NULL, rootPath.string().c_str(), &si, &pi))
-		{
-			CloseHandle(pi.hProcess);
-			CloseHandle(pi.hThread);
+			// Full-screen animated background quad
+			m_BgMaterial->Set("u_Time", m_BgTime);
+			Renderer2D::DrawQuad({ 0.0f, 0.0f, -0.5f }, { 16.0f, 9.0f }, m_BgMaterial);
 		}
 		else
 		{
-			m_StatusMessage = "[WARNING] Project created, but build.bat failed to initialize execution environment.";
-			CS_CORE_WARN("Build System Warning: Win32 Environment Engine was unable to launch build process process handle.");
+			// Fallback: dark backdrop + subtle grid + a few decorative SDF circles
+			const glm::vec4 gridCol = { 0.10f, 0.10f, 0.15f, 1.0f };
+			for (float x = -8.0f; x <= 8.0f; x += 1.0f)
+				Renderer2D::DrawLine({ x, -4.5f, -0.4f }, { x,  4.5f, -0.4f }, gridCol);
+			for (float y = -4.5f; y <= 4.5f; y += 1.0f)
+				Renderer2D::DrawLine({ -8.0f, y, -0.4f }, { 8.0f, y, -0.4f }, gridCol);
 		}
+
+		// Decorative pulsing rings — always drawn regardless of shader availability
+		float p1 = 1.0f + std::sin(m_BgTime * 0.7f) * 0.06f;
+		float p2 = 1.0f + std::sin(m_BgTime * 0.5f + 1.2f) * 0.08f;
+		float p3 = 1.0f + std::sin(m_BgTime * 0.9f + 2.4f) * 0.05f;
+
+		// Outer glow
+		Renderer2D::DrawCircle({ 0.0f, -0.3f, -0.3f }, glm::vec2(12.0f * p1), { 0.15f, 0.35f, 0.65f, 0.10f }, 1.0f, 0.30f);
+		// Mid ring
+		Renderer2D::DrawCircle({ 0.0f, -0.3f, -0.29f }, glm::vec2(8.5f * p2), { 0.20f, 0.55f, 0.90f, 0.18f }, 0.02f, 0.005f);
+		// Inner ring
+		Renderer2D::DrawCircle({ 0.0f, -0.3f, -0.28f }, glm::vec2(5.8f * p3), { 0.25f, 0.65f, 1.00f, 0.22f }, 0.015f, 0.004f);
+		// Core dot
+		Renderer2D::DrawCircle({ 0.0f, -0.3f, -0.27f }, { 1.2f, 1.2f }, { 0.30f, 0.75f, 1.00f, 0.12f }, 1.0f, 0.20f);
+
+		// Accent corner lines
+		const glm::vec4 ac = { 0.25f, 0.60f, 0.95f, 0.40f };
+		Renderer2D::DrawLine({ -7.5f, -4.0f, -0.2f }, { -5.5f, -4.0f, -0.2f }, ac);
+		Renderer2D::DrawLine({ -7.5f, -4.0f, -0.2f }, { -7.5f, -2.5f, -0.2f }, ac);
+		Renderer2D::DrawLine({ 7.5f,  4.0f, -0.2f }, { 5.5f,  4.0f, -0.2f }, ac);
+		Renderer2D::DrawLine({ 7.5f,  4.0f, -0.2f }, { 7.5f,  2.5f, -0.2f }, ac);
+		Renderer2D::DrawLine({ -7.5f,  4.0f, -0.2f }, { -5.5f,  4.0f, -0.2f }, ac);
+		Renderer2D::DrawLine({ -7.5f,  4.0f, -0.2f }, { -7.5f,  2.5f, -0.2f }, ac);
+		Renderer2D::DrawLine({ 7.5f, -4.0f, -0.2f }, { 5.5f, -4.0f, -0.2f }, ac);
+		Renderer2D::DrawLine({ 7.5f, -4.0f, -0.2f }, { 7.5f, -2.5f, -0.2f }, ac);
+
+		Renderer2D::EndScene();
 	}
 
-	// ===================================================================
-	// 4. IMGUI UI LAYER RENDER LOOP
-	// ===================================================================
+	// =============================================================================
+	// ImGui UI
+	// =============================================================================
+
 	void LauncherLayer::OnImGuiRender()
 	{
-		ImGuiViewport* viewport = ImGui::GetMainViewport();
+		ImGuiViewport* vp = ImGui::GetMainViewport();
 
-		ImGui::SetNextWindowPos(viewport->WorkPos);
-		ImGui::SetNextWindowSize(viewport->WorkSize);
-		ImGui::SetNextWindowViewport(viewport->ID);
+		// Full-screen transparent host window
+		ImGui::SetNextWindowPos(vp->WorkPos);
+		ImGui::SetNextWindowSize(vp->WorkSize);
+		ImGui::SetNextWindowViewport(vp->ID);
 
-		ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse |
+		ImGuiWindowFlags hostFlags =
+			ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse |
 			ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
 			ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus |
 			ImGuiWindowFlags_NoBackground;
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(40.0f, 40.0f));
-
-		ImGui::Begin("CosmicEngineLauncherWindow", nullptr, window_flags);
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+		ImGui::Begin("##CosmicLauncher", nullptr, hostFlags);
 		ImGui::PopStyleVar(3);
 
-		ImGui::Spacing(); ImGui::Spacing();
-		ImGui::Indent(40.0f);
-		ImGui::TextColored(ImVec4(0.9f, 0.9f, 1.0f, 1.0f), "C O S M I C   E N G I N E");
-		ImGui::TextColored(ImVec4(0.6f, 0.6f, 0.7f, 1.0f), "Project Hub System Launcher");
+		// -----------------------------------------------------------------------
+		// Centre panel — fixed size, centred on screen
+		// -----------------------------------------------------------------------
+		const float panelW = std::min(vp->WorkSize.x * 0.72f, 860.0f);
+		const float panelH = std::min(vp->WorkSize.y * 0.78f, 580.0f);
+		const float panelX = vp->WorkPos.x + (vp->WorkSize.x - panelW) * 0.5f;
+		const float panelY = vp->WorkPos.y + (vp->WorkSize.y - panelH) * 0.5f;
+
+		ImGui::SetNextWindowPos({ panelX, panelY }, ImGuiCond_Always);
+		ImGui::SetNextWindowSize({ panelW, panelH }, ImGuiCond_Always);
+
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 10.0f);
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.0f);
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(28.0f, 22.0f));
+		ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.05f, 0.06f, 0.10f, 0.92f));
+		ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.22f, 0.48f, 0.80f, 0.60f));
+
+		ImGui::Begin("##LauncherPanel", nullptr,
+			ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse |
+			ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
+			ImGuiWindowFlags_NoScrollbar);
+
+		ImGui::PopStyleColor(2);
+		ImGui::PopStyleVar(3);
+
+		// Header
+		ImGui::Spacing();
+		ImGui::TextColored({ 0.30f, 0.72f, 1.00f, 1.0f }, "COSMIC ENGINE");
+		ImGui::SameLine(0.0f, 12.0f);
+		ImGui::TextDisabled("  Project Launcher");
 		ImGui::Separator();
 		ImGui::Spacing();
 
-		if (ImGui::BeginTable("LauncherColumns", 2, ImGuiTableFlags_Resizable))
+		// Two-column layout
+		const float leftW = panelW * 0.56f - 40.0f;
+		const float rightW = panelW - leftW - 80.0f;
+
+		ImGui::Columns(2, "LauncherCols", false);
+		ImGui::SetColumnWidth(0, leftW);
+
+		// ---- Left: project list ----
+		ImGui::TextDisabled("Discovered Projects");
+		ImGui::Spacing();
+
+		ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.03f, 0.04f, 0.07f, 0.85f));
+		ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.18f, 0.35f, 0.60f, 0.50f));
+		ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 6.0f);
+
+		const float listH = panelH - 180.0f;
+		ImGui::BeginChild("##ProjectList", { leftW - 4.0f, listH }, true);
+
+		if (m_DiscoveredProjects.empty())
 		{
-			ImGui::TableNextRow();
-			ImGui::TableSetColumnIndex(0);
-
-			ImGui::Text("Select Active Project Workspace:");
 			ImGui::Spacing();
-
-			ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 6.0f);
-			ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.03f, 0.03f, 0.06f, 0.75f));
-
-			ImGui::BeginChild("ProjectList", ImVec2(0, 350), true);
-
-			if (m_DiscoveredProjects.empty())
+			ImGui::TextDisabled("  No project assemblies found.");
+			ImGui::TextDisabled("  Build a project and place the .dll");
+			ImGui::TextDisabled("  next to CosmicApp.exe.");
+		}
+		else
+		{
+			for (const auto& name : m_DiscoveredProjects)
 			{
-				ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), " No project assemblies found in directory workspace root.");
-			}
-			else
-			{
-				for (const auto& projectName : m_DiscoveredProjects)
+				ImGui::PushID(name.c_str());
+
+				// Highlight selected
+				bool sel = (m_SelectedProject == name);
+				if (sel)
+					ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.14f, 0.44f, 0.80f, 1.0f));
+				else
+					ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.08f, 0.12f, 0.20f, 1.0f));
+
+				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.18f, 0.50f, 0.88f, 1.0f));
+				ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.10f, 0.36f, 0.70f, 1.0f));
+				ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 5.0f);
+
+				if (ImGui::Button(name.c_str(), { ImGui::GetContentRegionAvail().x, 42.0f }))
 				{
-					ImGui::PushID(projectName.c_str());
-
-					if (ImGui::Button(projectName.c_str(), ImVec2(ImGui::GetContentRegionAvail().x - 10, 50)))
-					{
-						m_SelectedProject = projectName;
-						m_TransitionTriggered = true;
-					}
-
-					ImGui::PopID();
-					ImGui::Spacing();
-				}
-			}
-			ImGui::EndChild();
-			ImGui::PopStyleColor();
-			ImGui::PopStyleVar();
-
-			ImGui::TableSetColumnIndex(1);
-			ImGui::Indent(20.0f);
-
-			ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.03f, 0.03f, 0.06f, 0.6f));
-			ImGui::BeginChild("ActionsPanel", ImVec2(0, 350), true);
-
-			ImGui::Text("Quick Actions");
-			ImGui::Separator(); ImGui::Spacing();
-
-			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.1f, 0.3f, 0.15f, 1.0f));
-			if (ImGui::Button("+ Create New Project Wizard", ImVec2(220, 40)))
-			{
-				// DEDUCE ENGINE SDK DIRECTORY ROOT 
-				fs::path engineSDKDir = fs::current_path();
-				if (engineSDKDir.filename() == "Debug" || engineSDKDir.filename() == "Release")
-				{
-					engineSDKDir = engineSDKDir.parent_path().parent_path().parent_path();
-				}
-				else if (engineSDKDir.filename() == "Runtime")
-				{
-					engineSDKDir = engineSDKDir.parent_path().parent_path();
+					m_SelectedProject = name;
+					m_TransitionTriggered = true;
 				}
 
-				// DETERMINE DEFAULT TARGET GENERATION SUB-FOLDER
-				fs::path defaultProjectsFolder = engineSDKDir / "Projects";
-
-				// Keep the runtime sturdy: construct directory if missing
-				if (!fs::exists(defaultProjectsFolder))
-				{
-					fs::create_directories(defaultProjectsFolder);
-				}
-
-				m_TargetGenerationPath = defaultProjectsFolder.string();
-				ImGui::OpenPopup("Project Creation Wizard");
-			}
-			ImGui::PopStyleColor();
-
-			ImGui::Spacing();
-
-			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.2f, 0.3f, 1.0f));
-			if (ImGui::Button("Sync Directories (Scan Workspace)", ImVec2(220, 30)))
-			{
-				ScanForProjects();
-				m_StatusMessage = "Manual workspace assembly tree scan finished.";
-			}
-			ImGui::PopStyleColor();
-
-			ImGui::Spacing();
-
-			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.45f, 0.12f, 0.12f, 1.0f));
-			if (ImGui::Button("Exit Engine", ImVec2(220, 30)))
-			{
-				Application::Get().Close();
-			}
-			ImGui::PopStyleColor();
-
-			if (ImGui::BeginPopupModal("Project Creation Wizard", NULL, ImGuiWindowFlags_AlwaysAutoResize))
-			{
-				static char nameBuffer[128] = "MyCosmicSimulation";
-				static std::string modalError = "";
-
-				ImGui::Text("Configure Blueprint Attributes");
-				ImGui::Separator();
+				ImGui::PopStyleVar();
+				ImGui::PopStyleColor(3);
 				ImGui::Spacing();
-
-				// DISPLAY PRE-DEDUCED ROUTE ALONGSIDE THE MANUAL SEARCH OVERRIDE
-				ImGui::Text("Target Root: %s", m_TargetGenerationPath.c_str());
-				ImGui::SameLine();
-				if (ImGui::Button("Browse..."))
-				{
-					std::string manualSelection = BrowseFolder();
-					if (!manualSelection.empty())
-					{
-						m_TargetGenerationPath = manualSelection;
-					}
-				}
-
-				ImGui::InputText("Project App Name", nameBuffer, IM_ARRAYSIZE(nameBuffer));
-
-				if (!modalError.empty())
-				{
-					ImGui::Spacing();
-					ImGui::TextColored(ImVec4(1.0f, 0.3f, 0.3f, 1.0f), modalError.c_str());
-				}
-
-				ImGui::Spacing();
-				ImGui::Separator();
-				ImGui::Spacing();
-
-				if (ImGui::Button("Generate Template", ImVec2(140, 30)))
-				{
-					std::string finalName = nameBuffer;
-					if (!finalName.empty())
-					{
-						// 1. Check if the project name matches a project that is already compiled/synced
-						auto it = std::find(m_DiscoveredProjects.begin(), m_DiscoveredProjects.end(), finalName);
-						if (it != m_DiscoveredProjects.end())
-						{
-							modalError = "Error: A project named '" + finalName + "' is already synced!";
-							CS_CORE_ERROR("Project Wizard Aborted: Validation checking failed. A project named '{0}' is already tracked in active layout.", finalName);
-						}
-						else
-						{
-							// 2. Fallback check: Does the physical folder already exist at the target path?
-							fs::path checkPath = fs::path(m_TargetGenerationPath) / finalName;
-
-							if (fs::exists(checkPath))
-							{
-								modalError = "Error: Folder '" + finalName + "' already exists at destination!";
-								CS_CORE_ERROR("Project Wizard Aborted: Local validation failed. Destination subdirectory already exists on disk: '{0}'", checkPath.string());
-							}
-							else
-							{
-								// Clear errors and run generation pipeline safely
-								modalError = "";
-								GenerateProjectTemplate(m_TargetGenerationPath, finalName);
-								ImGui::CloseCurrentPopup();
-							}
-						}
-					}
-					else
-					{
-						modalError = "Error: Project name cannot be empty!";
-						CS_CORE_ERROR("Project Wizard Aborted: Target verification failed. Given configuration project string parameter was blank.");
-					}
-				}
-
-				ImGui::SameLine();
-				if (ImGui::Button("Cancel", ImVec2(140, 30)))
-				{
-					modalError = "";
-					ImGui::CloseCurrentPopup();
-				}
-
-				ImGui::EndPopup();
+				ImGui::PopID();
 			}
-
-			ImGui::EndChild();
-			ImGui::PopStyleColor();
-
-			ImGui::EndTable();
 		}
 
-		ImGui::SetCursorPosY(viewport->Size.y - 45.0f);
+		ImGui::EndChild();
+		ImGui::PopStyleColor(2);
+		ImGui::PopStyleVar();
+
+		// Rescan button beneath the list
+		ImGui::Spacing();
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.10f, 0.18f, 0.30f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.16f, 0.28f, 0.46f, 1.0f));
+		if (ImGui::Button("Rescan Directory", { leftW - 4.0f, 28.0f }))
+		{
+			ScanForProjects();
+			m_StatusMessage = "Workspace rescanned.";
+		}
+		ImGui::PopStyleColor(2);
+
+		// ---- Right: actions ----
+		ImGui::NextColumn();
+		ImGui::SetColumnWidth(1, rightW);
+		ImGui::Spacing();
+		ImGui::TextDisabled("Actions");
+		ImGui::Spacing();
+
+		// Create new project
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.08f, 0.38f, 0.18f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.12f, 0.52f, 0.26f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.06f, 0.28f, 0.13f, 1.0f));
+		if (ImGui::Button("+ New Project", { rightW - 4.0f, 40.0f }))
+		{
+			// Default target = SDK_ROOT/Projects/
+			fs::path sdkDir = fs::current_path();
+			// Walk up if inside build/Runtime/Debug
+			for (const char* name : { "Debug", "Release", "Runtime", "build" })
+			{
+				if (sdkDir.filename() == name) sdkDir = sdkDir.parent_path();
+			}
+			fs::path projDir = sdkDir / "Projects";
+			if (!fs::exists(projDir)) fs::create_directories(projDir);
+			m_TargetGenerationPath = projDir.string();
+			ImGui::OpenPopup("##ProjectWizard");
+		}
+		ImGui::PopStyleColor(3);
+
+		ImGui::Spacing();
+
+		// Exit
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.30f, 0.09f, 0.09f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.48f, 0.14f, 0.14f, 1.0f));
+		if (ImGui::Button("Exit", { rightW - 4.0f, 32.0f }))
+			Application::Get().Close();
+		ImGui::PopStyleColor(2);
+
+		ImGui::Spacing();
 		ImGui::Separator();
-		ImGui::TextColored(ImVec4(0.8f, 0.8f, 0.9f, 1.0f), "Engine Pipeline Status: %s", m_StatusMessage.c_str());
+		ImGui::Spacing();
 
-		ImGui::End();
+		// Status message
+		ImGui::TextWrapped("%s", m_StatusMessage.c_str());
 
+		ImGui::Spacing();
+		ImGui::Separator();
+		ImGui::Spacing();
+
+		// FPS
+		float fps = ImGui::GetIO().Framerate;
+		ImGui::TextColored({ 0.4f, 0.4f, 0.5f, 1.0f }, "%.0f fps", fps);
+
+		ImGui::Columns(1);
+
+		// -----------------------------------------------------------------------
+		// New Project Wizard popup
+		// -----------------------------------------------------------------------
+		ImGui::SetNextWindowSize({ 420.0f, 0.0f }, ImGuiCond_Always);
+		if (ImGui::BeginPopupModal("##ProjectWizard", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+		{
+			static char nameBuf[128] = "MyProject";
+			static std::string errMsg = "";
+
+			ImGui::Text("New Project Wizard");
+			ImGui::Separator();
+			ImGui::Spacing();
+
+			ImGui::Text("Target directory:");
+			ImGui::TextColored({ 0.6f, 0.8f, 1.0f, 1.0f }, "%s", m_TargetGenerationPath.c_str());
+			ImGui::SameLine();
+			if (ImGui::SmallButton("Browse"))
+			{
+				std::string sel = BrowseFolder();
+				if (!sel.empty()) m_TargetGenerationPath = sel;
+			}
+
+			ImGui::Spacing();
+			ImGui::InputText("Project Name", nameBuf, IM_ARRAYSIZE(nameBuf));
+
+			if (!errMsg.empty())
+			{
+				ImGui::Spacing();
+				ImGui::TextColored({ 1.0f, 0.35f, 0.35f, 1.0f }, "%s", errMsg.c_str());
+			}
+
+			ImGui::Spacing();
+			ImGui::Separator();
+			ImGui::Spacing();
+
+			if (ImGui::Button("Generate", { 180.0f, 32.0f }))
+			{
+				std::string finalName = nameBuf;
+				if (finalName.empty())
+				{
+					errMsg = "Name cannot be empty.";
+				}
+				else if (std::any_of(m_DiscoveredProjects.begin(), m_DiscoveredProjects.end(),
+					[&](const std::string& p) { return p == finalName; }))
+				{
+					errMsg = "A project named '" + finalName + "' is already loaded.";
+				}
+				else if (fs::exists(fs::path(m_TargetGenerationPath) / finalName))
+				{
+					errMsg = "Folder already exists at target path.";
+				}
+				else
+				{
+					errMsg = "";
+					GenerateProjectTemplate(m_TargetGenerationPath, finalName);
+					ImGui::CloseCurrentPopup();
+				}
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Cancel", { 180.0f, 32.0f }))
+			{
+				errMsg = "";
+				ImGui::CloseCurrentPopup();
+			}
+
+			ImGui::EndPopup();
+		}
+
+		ImGui::End(); // ##LauncherPanel
+		ImGui::End(); // ##CosmicLauncher
+
+		// Trigger engine transition (deferred, safe to call from ImGui)
 		if (m_TransitionTriggered)
 		{
 			Application::Get().TransitionFromLauncherToWorkspace(m_SelectedProject + ".dll");
 		}
 	}
-}
+
+	// =============================================================================
+	// File scanning
+	// =============================================================================
+
+	void LauncherLayer::ScanForProjects()
+	{
+		m_DiscoveredProjects.clear();
+
+		WIN32_FIND_DATAA fd;
+		HANDLE hFind = FindFirstFileA("*.dll", &fd);
+		if (hFind == INVALID_HANDLE_VALUE) return;
+
+		do
+		{
+			if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) continue;
+
+			std::string file = fd.cFileName;
+			// Skip known engine DLLs
+			if (file == "Cosmic.dll" || file == "Renderer.dll") continue;
+
+			size_t dot = file.find_last_of('.');
+			if (dot != std::string::npos)
+				m_DiscoveredProjects.push_back(file.substr(0, dot));
+
+		} while (FindNextFileA(hFind, &fd));
+
+		FindClose(hFind);
+
+		std::sort(m_DiscoveredProjects.begin(), m_DiscoveredProjects.end());
+	}
+
+	// =============================================================================
+	// Folder browser (Win32)
+	// =============================================================================
+
+	std::string LauncherLayer::BrowseFolder()
+	{
+		BROWSEINFOA bi = {};
+		bi.lpszTitle = "Select the parent directory for the new project:";
+		bi.ulFlags = BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE;
+
+		LPITEMIDLIST pidl = SHBrowseForFolderA(&bi);
+		if (!pidl) return "";
+
+		char path[MAX_PATH] = {};
+		SHGetPathFromIDListA(pidl, path);
+		CoTaskMemFree(pidl);
+		return path;
+	}
+
+	// =============================================================================
+	// Template generation
+	// =============================================================================
+
+	void LauncherLayer::GenerateProjectTemplate(const std::string& baseDir, const std::string& projName)
+	{
+		fs::path rootPath = fs::path(baseDir) / projName;
+
+		// Safety: don't overwrite existing project
+		if (fs::exists(rootPath))
+		{
+			m_StatusMessage = "[ERROR] Directory already exists: " + rootPath.string();
+			CS_CORE_ERROR("LauncherLayer: GenerateProjectTemplate aborted — directory exists.");
+			return;
+		}
+
+		// Resolve SDK root from CWD (handles Debug/Release/Runtime sub-directories)
+		fs::path sdkDir = fs::current_path();
+		for (const char* name : { "Debug", "Release", "Runtime", "build" })
+		{
+			if (sdkDir.filename() == name) sdkDir = sdkDir.parent_path();
+		}
+
+		std::string sdkPathStr = sdkDir.string();
+		std::replace(sdkPathStr.begin(), sdkPathStr.end(), '\\', '/');
+
+		fs::path templateRoot = sdkDir / "Cosmic" / "templates" / "ExampleProject";
+		if (!fs::exists(templateRoot))
+		{
+			m_StatusMessage = "[ERROR] Template source missing — expected at Cosmic/templates/ExampleProject";
+			CS_CORE_ERROR("LauncherLayer: Template root not found at '{0}'", templateRoot.string());
+			return;
+		}
+
+		bool anyFailed = false;
+
+		// -----------------------------------------------------------------------
+		// Dynamic Recursive Generation
+		// -----------------------------------------------------------------------
+		try
+		{
+			for (const auto& entry : fs::recursive_directory_iterator(templateRoot))
+			{
+				const auto& srcPath = entry.path();
+
+				// Compute the relative path from the template root
+				fs::path relative = fs::relative(srcPath, templateRoot);
+				std::string relativeStr = relative.string();
+
+				// If the filename contains 'TemplateProject', swap it out for the actual project name
+				size_t fileTokenPos = relativeStr.find("TemplateProject");
+				if (fileTokenPos != std::string::npos)
+				{
+					relativeStr.replace(fileTokenPos, std::string("TemplateProject").length(), projName);
+				}
+
+				fs::path dstPath = rootPath / relativeStr;
+
+				if (fs::is_directory(srcPath))
+				{
+					fs::create_directories(dstPath);
+				}
+				else if (fs::is_regular_file(srcPath))
+				{
+					// Ensure parent directory exists
+					fs::create_directories(dstPath.parent_path());
+
+					// Process text files that might require token replacements
+					std::string ext = srcPath.extension().string();
+					if (ext == ".cpp" || ext == ".h" || ext == ".txt" || ext == ".bat")
+					{
+						std::string content = ReadAndProcessTemplate(srcPath, projName, sdkPathStr);
+						if (!content.empty())
+						{
+							WriteFileContents(dstPath, content);
+						}
+						else
+						{
+							anyFailed = true;
+						}
+					}
+					else
+					{
+						// Binary or raw configuration files (like assets/shaders) get cleanly copied
+						fs::copy_file(srcPath, dstPath, fs::copy_options::overwrite_existing);
+						CS_CORE_INFO("LauncherLayer: Copied asset '{0}'", dstPath.string());
+					}
+				}
+			}
+		}
+		catch (const fs::filesystem_error& e)
+		{
+			CS_CORE_ERROR("LauncherLayer: Filesystem exception during generation: {0}", e.what());
+			anyFailed = true;
+		}
+
+		if (anyFailed)
+		{
+			m_StatusMessage = "[WARNING] Some template files failed — check the engine log.";
+			CS_CORE_WARN("LauncherLayer: One or more template files failed processing.");
+			return;
+		}
+
+		m_StatusMessage = "Generated '" + projName + "'. Run build.bat inside the new folder.";
+		CS_CORE_INFO("LauncherLayer: Project '{}' generated at '{}'", projName, rootPath.string());
+
+		// Launch build.bat in a new console window
+		fs::path batchPath = rootPath / "build.bat";
+		std::string cmd = "cmd.exe /c \"" + batchPath.string() + "\"";
+
+		STARTUPINFOA si = {};
+		si.cb = sizeof(si);
+		PROCESS_INFORMATION pi = {};
+
+		if (CreateProcessA(nullptr, cmd.data(), nullptr, nullptr, FALSE,
+			CREATE_NEW_CONSOLE, nullptr, rootPath.string().c_str(), &si, &pi))
+		{
+			CloseHandle(pi.hProcess);
+			CloseHandle(pi.hThread);
+		}
+		else
+		{
+			m_StatusMessage += " (build.bat failed to launch — run it manually)";
+			CS_CORE_WARN("LauncherLayer: Could not launch build.bat for '{}'", projName);
+		}
+	}
+
+} // namespace Cosmic
