@@ -3790,8 +3790,6 @@ void WorkspaceLayer::OnEvent(Cosmic::Event& e)
 
 ### High Priority
 
-**`OpenGLShader::PreProcess` — complexity and fragility.** The preprocessor is doing too much in one 300-line function. The comment-stripping logic (removing `/* */` and `//` before scanning for uniform names) is hand-written parsing that will break on edge cases (multi-line strings, conditional compilation). Consider splitting into `StripComments`, `ExtractStage`, `InjectPreamble` functions.
-
 **`Renderer2D` — code duplication across overloads.** `DrawQuad(material)` and `DrawRotatedQuad(material)` share ~80% identical code (texture key fallback sweep, slot lookup, vertex write loop). Should be refactored into a shared internal `WriteQuadVertices(transform, color, texIndex)` helper.
 
 **`Application::Run` — length and responsibility.** The `Run()` method is ~150 lines and handles the frame loop, fixed timestep, layer iteration, ImGui, and Safe Zone DLL transition logic. The DLL transition logic should be extracted into `ProcessPendingTransitions()`.
@@ -3818,15 +3816,11 @@ void WorkspaceLayer::OnEvent(Cosmic::Event& e)
 
 ## 34. Missing Implementations
 
-### Critical Missing Features
+### Missing Features
 
-**`Scene::OnUpdate` is empty.** There is no ECS system dispatch or component-driven update loop. All game logic currently runs in the layer's `OnUpdate` by manually fetching components. A proper ECS system (visitor/view-based update callbacks) is missing.
+**`Renderer::EndScene` is empty.** Placeholder for future command sorting and batch submission optimization. (has a comment)
 
-**`Renderer2D` — no `DrawQuad(vec2, vec2, Ref<Material>)` overload.** The 3D vec3 overload exists but the 2D convenience overload for materials is missing, unlike the color and texture variants which have both.
-
-**`Renderer::EndScene` is empty.** Placeholder for future command sorting and batch submission optimization.
-
-**`RendererAPI::DirectX` is a stub.** Returns `nullptr` everywhere; expected for now but worth tracking.
+**`RendererAPI::DirectX` is a stub.** Returns `nullptr` everywhere; expected for now but worth tracking. (future thing to add)
 
 ### Missing Quality-of-Life Features
 
@@ -3852,14 +3846,40 @@ void WorkspaceLayer::OnEvent(Cosmic::Event& e)
 
 **`Cosmic.h` extern "C" block.** The public header declares export symbols as if any file including it is implementing them. This should be moved to a separate `CosmicPlugin.h` that only plugin root files include.
 
-**`Line.glsl` preprocessor failure.** The `Line.glsl` built-in shader in the Showcase project has `// #type vertex` commented out, which means it hits the preprocessor's Shadertoy fallback path and will fail silently. The `//` prefixes on `#type` directives must be removed.
-
-**`Renderer2D::FlushAndReset` calls `EndScene` instead of `Flush`.** `FlushAndReset` calls `EndScene()` which calls `Flush()`. It works, but `EndScene` is being invoked mid-batch, which is semantically confusing. Should call `Flush()` directly.
-
 **Static `s_SceneData` in `Renderer`.** `Renderer::s_SceneData` is allocated with `new Renderer::SceneData` at global scope and never `delete`d. Fine in practice, but violates the engine's ownership model.
 
-**Hardcoded viewport dimensions.** Several simulation layers pass hardcoded `1280, 720` to viewport-dependent calculations. When the viewport is resized, `u_ViewportSize` becomes stale. The correct width/height should be tracked and passed dynamically from `OnWindowResize`.
+**Hardcoded viewport dimensions.** Several simulation layers pass hardcoded `1280, 720` to viewport-dependent calculations. When the viewport is resized, `u_ViewportSize` becomes stale. The correct width/height should be tracked and passed dynamically from `OnWindowResize`.... Still partially true but most layers now use the framebuffer sync pattern
 
 ---
 
 _README last updated to reflect codebase state as of May 2026._
+
+## Newer Bugs
+
+SpriteRendererComponent rotation degrees/radians mismatch in Scene::OnRender — transform.Rotation.z is stored in degrees but passed directly to DrawRotatedQuad which expects radians.
+
+WorkspaceLayer::OnEvent forwards consumed events — no e.Handled check before forwarding to m_ClientViewportLayer.
+
+Log.h TODO items still unaddressed — file sink not implemented, client/core log separation incomplete.
+
+## The Cleaned Up Summary
+
+| Entry                                  | Action                    |
+| -------------------------------------- | ------------------------- |
+| FlushAndReset calls EndScene           | DELETE — fixed            |
+| Scene::OnUpdate is empty               | DELETE — fixed            |
+| No DrawQuad vec2 material overload     | DELETE — fixed            |
+| No SubTexture2D / sprite sheet support | DELETE — fixed            |
+| Line.glsl preprocessor failure         | DELETE — fixed            |
+| WorkspaceLayer firstTime static        | KEEP                      |
+| LayerStack doc mismatch                | KEEP                      |
+| Renderer2D overload duplication        | KEEP                      |
+| Application::Run length                | KEEP                      |
+| Scene::OnRender no camera              | KEEP + expand             |
+| s_SceneData raw new                    | KEEP                      |
+| Cosmic.h extern C block                | KEEP                      |
+| Hardcoded viewports                    | UPDATE — mostly fixed     |
+| Renderer::EndScene empty               | KEEP, clarify intentional |
+| Degrees/radians bug in Scene           | ADD NEW                   |
+| WorkspaceLayer event forwarding        | ADD NEW                   |
+| Log file sink missing                  | ADD NEW                   |
