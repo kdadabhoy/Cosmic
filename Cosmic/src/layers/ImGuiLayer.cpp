@@ -41,7 +41,8 @@ namespace Cosmic
 		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 		io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
-		ImGui::StyleColorsDark();
+		// Set a default polished theme right out of the box on start
+		SetTheme(ImGuiTheme::CosmicEmerald);
 
 		Application& app = Application::Get();
 		GLFWwindow* window = app.GetWindow().GetHandle();
@@ -136,5 +137,38 @@ namespace Cosmic
 	{
 		ImGuiIO& io = ImGui::GetIO();
 		return io.WantCaptureMouse;
+	}
+
+	/////////////////////////////////////////////////////////////////////////////////
+
+	void ImGuiLayer::SetTheme(ImGuiTheme theme)
+	{
+		ImGuiStyle& style = ImGui::GetStyle();
+
+		// 1. Apply global structural configurations automatically
+		style.WindowRounding = 5.0f;
+		style.FrameRounding = 4.0f;
+		style.PopupRounding = 4.0f;
+		style.GrabRounding = 3.0f;
+		style.TabRounding = 4.0f;
+		style.WindowBorderSize = 1.0f;
+		style.FrameBorderSize = 0.0f;
+		style.WindowPadding = ImVec2(8.0f, 8.0f);
+		style.ItemSpacing = ImVec2(6.0f, 4.0f);
+
+		// 2. Fetch the automated lookup map
+		const auto& registry = GetThemeRegistry();
+		auto it = registry.find(theme);
+
+		if (it != registry.end())
+		{
+			// Execute the registered function directly!
+			it->second(style);
+		}
+		else
+		{
+			// Automated Fallback if an enum item wasn't added to the map yet
+			ImGui::StyleColorsDark();
+		}
 	}
 }

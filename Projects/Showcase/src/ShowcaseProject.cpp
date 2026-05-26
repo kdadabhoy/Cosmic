@@ -22,6 +22,7 @@ namespace Showcase
 	void ShowcaseProject::OnAttach()
 	{
 		CS_INFO("ShowcaseProject: Composite Root attached. Initializing asset environment...");
+		Cosmic::SetImGuiTheme(Cosmic::ImGuiTheme::CosmicEmerald);
 
 		Cosmic::FileSystem::SetActiveProject("Showcase");
 
@@ -181,6 +182,46 @@ namespace Showcase
 
 
 		ImGui::Separator();
+
+
+		// =========================================================================
+		// ADDED: LIVE ENGINE VISUAL THEME SELECTOR
+		// =========================================================================
+		ImGui::Text("Workspace Cosmetics:");
+
+		// Track the current theme state locally across frame instances
+		static int currentThemeIdx = 1; // Default to CosmicEmerald
+
+		const char* themeNames[] = {
+			"Default Dark",
+			"Cosmic Emerald",
+			"Deep Embedded",
+			"Corporate Light",
+			"Cyberpunk Neon",
+			"Retro Terminal",
+			"Dracula Dark",
+			"Solarized Ash"
+		};
+
+		if (ImGui::BeginCombo("UI Color Profile", themeNames[currentThemeIdx]))
+		{
+			// Loop constraint expanded to 8 to register all profile functions automatically
+			for (int i = 0; i < 8; ++i)
+			{
+				bool isSelected = (currentThemeIdx == i);
+				if (ImGui::Selectable(themeNames[i], isSelected))
+				{
+					currentThemeIdx = i;
+
+					// Safely fire our wrapper across the hot-reloaded DLL boundary!
+					Cosmic::SetImGuiTheme(static_cast<Cosmic::ImGuiTheme>(currentThemeIdx));
+				}
+			}
+			ImGui::EndCombo();
+		}
+
+		ImGui::Separator();
+
 
 		if (m_FlameMaterial && ImGui::CollapsingHeader("Global Fire Material Settings", ImGuiTreeNodeFlags_DefaultOpen))
 		{

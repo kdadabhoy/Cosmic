@@ -12,6 +12,7 @@
 #include "core/Log.h"
 #include <sstream>
 #include <algorithm>
+#include "layers/ImGuiLayer.h"
 
 namespace fs = std::filesystem;
 
@@ -118,6 +119,7 @@ namespace Cosmic
 
 	void LauncherLayer::OnAttach()
 	{
+		ImGuiLayer::SetTheme(ImGuiTheme::CosmicEmerald);
 		ScanForProjects();
 
 		m_BackgroundTexture = Texture2D::Create("assets/textures/Galaxy.png");

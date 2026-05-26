@@ -59,6 +59,10 @@
 #include "serial/SerialPort.h"
 #include "utils/FileSystem.h"
 
+// Layers
+#include "layers/ImGuiLayer.h"
+
+// ImGui
 #include <imgui.h>
 #include <implot.h>
 
@@ -72,6 +76,12 @@ namespace Cosmic
         ImGuiContext* ImGuiCtx;
         ImPlotContext* ImPlotCtx;
     };
+
+	// Forward the helper inline configuration down to the engine's compiled Layer implementation
+	inline void SetImGuiTheme(Cosmic::ImGuiTheme theme)
+	{
+		Cosmic::ImGuiLayer::SetTheme(theme);
+	}
 }
 
 // The native Win32/C communication module interface tunnels

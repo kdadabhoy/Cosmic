@@ -46,10 +46,11 @@
 #include "events/ApplicationEvent.h"
 #include "events/KeyEvent.h"
 #include "events/MouseEvent.h"
+#include "layers/ImGuiThemes.h" // Includes the enum and inline themes instantly
 
 namespace Cosmic
 {
-	class ImGuiLayer : public Layer
+	class COSMIC_API ImGuiLayer : public Layer
 	{
 	public:
 		////////////////////////////////
@@ -62,6 +63,9 @@ namespace Cosmic
 		virtual void	OnAttach() override;
 		virtual void	OnDetach() override;
 		virtual void	OnEvent(Event& event) override;
+
+		// Universal style wrapper accessible across DLLs
+		static void     SetTheme(Cosmic::ImGuiTheme theme);
 
 		////////////////////////////////
 		// Frame Control
