@@ -28,6 +28,7 @@ namespace Workspace
 	//   - ImGui runtime controls: spawn, clear, gravity, damping
 	//   - CS_REGISTER_COMPONENT for DLL-safe component type IDs
 	// ============================================================================
+
 	class TemplateSimLayer : public Cosmic::Layer
 	{
 	public:
