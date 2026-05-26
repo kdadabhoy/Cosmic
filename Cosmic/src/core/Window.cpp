@@ -7,6 +7,11 @@
 #include "codes/KeyCodes.h"
 #include <iostream>
 
+#ifdef _WIN32
+    #define GLFW_EXPOSE_NATIVE_WIN32
+    #include <GLFW/glfw3native.h>
+#endif
+
 namespace Cosmic
 {
 	Window::Window(int width, int height, const std::string& title)
@@ -56,7 +61,6 @@ namespace Cosmic
 		// Hardware Callbacks
 		// -----------------------------------------------------------------
 
-		
 		glfwSetWindowSizeCallback(m_Handle, [](GLFWwindow* window, int width, int height)
 			{
 				WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
@@ -65,6 +69,20 @@ namespace Cosmic
 
 				WindowResizeEvent event(width, height);
 				data.EventCallback(event);
+			});
+
+		glfwSetWindowFocusCallback(m_Handle, [](GLFWwindow* window, int focused)
+			{
+				WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+
+				if (focused)
+				{
+					// Defends against taskbar overlapping layouts when focus transfers back to the engine window context
+					if (data.Fullscreen && data.WindowInstancePtr)
+					{
+						data.WindowInstancePtr->ReassertFullscreenTopology();
+					}
+				}
 			});
 
 		glfwSetScrollCallback(m_Handle, [](GLFWwindow* window, double xOffset, double yOffset)
@@ -198,17 +216,6 @@ namespace Cosmic
 		glfwGetFramebufferSize(m_Handle, width, height);
 	}
 
-
-
-
-
-
-
-	#ifdef _WIN32
-        #define GLFW_EXPOSE_NATIVE_WIN32
-        #include <GLFW/glfw3native.h>
-    #endif
-
 	void Window::SetFullscreen(bool enabled)
 	{
 		if (m_Data.Fullscreen == enabled)
@@ -269,5 +276,26 @@ namespace Cosmic
 		}
 
 		glfwSwapInterval(m_Data.VSync ? 1 : 0);
+	}
+
+	void Window::ReassertFullscreenTopology()
+	{
+#ifdef _WIN32
+		if (m_Data.Fullscreen && m_Handle)
+		{
+			HWND hwnd = glfwGetWin32Window(m_Handle);
+			GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+			if (monitor)
+			{
+				const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+				int monitorX, monitorY;
+				glfwGetMonitorPos(monitor, &monitorX, &monitorY);
+
+				// Pushes window state properties over desktop compositor frames using lightweight hints
+				SetWindowPos(hwnd, HWND_TOPMOST, monitorX, monitorY + 1, mode->width, mode->height - 1, 
+					SWP_FRAMECHANGED | SWP_NOACTIVATE | SWP_SHOWWINDOW);
+			}
+		}
+#endif
 	}
 }

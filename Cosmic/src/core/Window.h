@@ -126,6 +126,12 @@ namespace Cosmic
 
 	private:
 		///////////////////////////////
+		// Focus Recovery Internal Helper
+		///////////////////////////////
+		void        ReassertFullscreenTopology();
+
+
+		///////////////////////////////
 		// Platform-Specific Handles
 		///////////////////////////////
 
