@@ -1,10 +1,13 @@
 // Optimized Material Grouping System implemented 5/21/2026
+// Scene::OnRender camera parameter + BeginScene/EndScene ownership added 5/26/2026
 #include "scene/Scene.h"
 #include "scene/Entity.h"
 #include "scene/Components.h"
 #include "renderer/Renderer2D.h"
+#include "camera/OrthographicCamera.h"
 #include <unordered_map>
 #include <vector>
+#include <glm/gtc/matrix_transform.hpp>
 
 namespace Cosmic
 {
@@ -42,8 +45,12 @@ namespace Cosmic
 		}
 	}
 
-	void Scene::OnRender()
+	void Scene::OnRender(const OrthographicCamera& camera)
 	{
+		// The scene owns the full render pass. Callers must NOT wrap this
+		// call in their own BeginScene/EndScene.
+		Renderer2D::BeginScene(camera);
+
 		// 1. Gather all entities containing rendering properties
 		auto view = m_Registry.view<TransformComponent, SpriteRendererComponent>();
 
@@ -84,10 +91,11 @@ namespace Cosmic
 					transform.Scale.y * (sprite.FlipY ? -1.0f : 1.0f)
 				};
 
+				// FIX: TransformComponent stores rotation in degrees; DrawRotatedQuad expects radians.
 				Renderer2D::DrawRotatedQuad(
 					transform.Position,
 					drawScale,
-					transform.Rotation.z,
+					glm::radians(transform.Rotation.z),
 					activeMaterial
 				);
 			}
@@ -105,12 +113,16 @@ namespace Cosmic
 				transform.Scale.y * (sprite.FlipY ? -1.0f : 1.0f)
 			};
 
+			// FIX: TransformComponent stores rotation in degrees; DrawRotatedQuad expects radians.
 			Renderer2D::DrawRotatedQuad(
 				transform.Position,
 				drawScale,
-				transform.Rotation.z,
+				glm::radians(transform.Rotation.z),
 				sprite.Color
 			);
 		}
+
+		Renderer2D::EndScene();
+
 	} // Closes void Scene::OnRender()
 } // Closes namespace Cosmic

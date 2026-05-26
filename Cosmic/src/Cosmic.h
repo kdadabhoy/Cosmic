@@ -58,6 +58,7 @@
 // Specialized Utilities
 #include "serial/SerialPort.h"
 #include "utils/FileSystem.h"
+#include "utils/DataExport.h"
 
 // Layers
 #include "layers/ImGuiLayer.h"
