@@ -10,6 +10,7 @@
 #ifdef _WIN32
     #define GLFW_EXPOSE_NATIVE_WIN32
     #include <GLFW/glfw3native.h>
+    #include <Windows.h>
 #endif
 
 namespace Cosmic
@@ -17,42 +18,31 @@ namespace Cosmic
 	Window::Window(int width, int height, const std::string& title)
 		: m_Context(nullptr), m_Handle(nullptr)
 	{
-		// 1. Initialize GLFW
 		if (!glfwInit())
 		{
 			std::cout << "Cosmic: Could not initialize GLFW!" << std::endl;
 			return;
 		}
 
-		// 2. Set Window Hints (Targeting OpenGL 3.3 Core Profile)
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-		// --- THE DOUBLE FLASH FIX ---
-		// 1. Tell Windows not to use exclusive mode when switching styles (removes first flash)
+		// Prevent DWM minimized flash behaviors
 		glfwWindowHint(GLFW_AUTO_ICONIFY, GLFW_FALSE);
 		
-		// 2. Force GLFW to request a hardware-composed flip model backbuffer path from the OS DWM
-		// This bypasses the old blit-model presentation that triggers the second Windows HDR/G-Sync flash.
 		#ifdef _WIN32
 			glfwWindowHint(GLFW_FOCUS_ON_SHOW, GLFW_TRUE);
 		#endif
 
-		// 3. Create the Native Window
 		m_Handle = glfwCreateWindow(width, height, title.c_str(), NULL, NULL);
 
-		// 4. Initialize Graphics Context
 		m_Context = new OpenGLContext(m_Handle);
 		m_Context->Init();
 
-		// 5. Store metadata and bridge to GLFW
 		m_Data.Title = title;
 		m_Data.Width = width;
 		m_Data.Height = height;
-
-		// --- CRITICAL STEP ---
-		// Save the class address so static callbacks can call member functions safely
 		m_Data.WindowInstancePtr = this;
 
 		glfwSetWindowUserPointer(m_Handle, &m_Data);
@@ -77,18 +67,23 @@ namespace Cosmic
 
 				if (focused)
 				{
-					// Defends against taskbar overlapping layouts when focus transfers back to the engine window context
 					if (data.Fullscreen && data.WindowInstancePtr)
 					{
 						data.WindowInstancePtr->ReassertFullscreenTopology();
 					}
+				}
+				else
+				{
+					// If we lose focus, unlock the cursor so the developer can multi-task
+					#ifdef _WIN32
+						ClipCursor(NULL);
+					#endif
 				}
 			});
 
 		glfwSetScrollCallback(m_Handle, [](GLFWwindow* window, double xOffset, double yOffset)
 			{
 				WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
-
 				MouseScrolledEvent event((float)xOffset, (float)yOffset);
 				data.EventCallback(event);
 			});
@@ -96,28 +91,16 @@ namespace Cosmic
 		glfwSetMouseButtonCallback(m_Handle, [](GLFWwindow* window, int button, int action, int mods)
 			{
 				WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
-
 				switch (action)
 				{
-				case GLFW_PRESS:
-				{
-					MouseButtonPressedEvent event(button);
-					data.EventCallback(event);
-					break;
-				}
-				case GLFW_RELEASE:
-				{
-					MouseButtonReleasedEvent event(button);
-					data.EventCallback(event);
-					break;
-				}
+					case GLFW_PRESS:   { MouseButtonPressedEvent event(button);  data.EventCallback(event); break; }
+					case GLFW_RELEASE: { MouseButtonReleasedEvent event(button); data.EventCallback(event); break; }
 				}
 			});
 
 		glfwSetCursorPosCallback(m_Handle, [](GLFWwindow* window, double xPos, double yPos)
 			{
 				WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
-
 				MouseMovedEvent event((float)xPos, (float)yPos);
 				data.EventCallback(event);
 			});
@@ -126,52 +109,29 @@ namespace Cosmic
 			{
 				WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 
-				// 1. Client-Side DLL Hotkey Override Interception
-				if (data.FullscreenOverride)
-				{
-					if (data.FullscreenOverride(key, action, mods))
-						return;
-				}
+				if (data.FullscreenOverride && data.FullscreenOverride(key, action, mods))
+					return;
 
-				// 2. Default Engine Fallback Behavior (Cleanly Routing to Member Function)
-				if (key == CS_KEY_F11 && action == 1) // 1 = GLFW_PRESS
+				if (key == CS_KEY_F11 && action == 1) // GLFW_PRESS
 				{
 					if (data.WindowInstancePtr)
 					{
-						// Call the single source of truth method!
 						data.WindowInstancePtr->SetFullscreen(!data.Fullscreen);
 					}
 					return;
 				}
 
-				// 3. Normal Engine Input Event Distribution System
 				switch (action)
 				{
-				case GLFW_PRESS:
-				{
-					KeyPressedEvent event(key, 0);
-					data.EventCallback(event);
-					break;
-				}
-				case GLFW_RELEASE:
-				{
-					KeyReleasedEvent event(key);
-					data.EventCallback(event);
-					break;
-				}
-				case GLFW_REPEAT:
-				{
-					KeyPressedEvent event(key, 1);
-					data.EventCallback(event);
-					break;
-				}
+					case GLFW_PRESS:   { KeyPressedEvent event(key, 0); data.EventCallback(event); break; }
+					case GLFW_RELEASE: { KeyReleasedEvent event(key);   data.EventCallback(event); break; }
+					case GLFW_REPEAT:  { KeyPressedEvent event(key, 1); data.EventCallback(event); break; }
 				}
 			});
 
 		glfwSetCharCallback(m_Handle, [](GLFWwindow* window, unsigned int keycode)
 			{
 				WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
-
 				KeyTypedEvent event(keycode);
 				data.EventCallback(event);
 			});
@@ -179,36 +139,22 @@ namespace Cosmic
 
 	Window::~Window()
 	{
+		#ifdef _WIN32
+			ClipCursor(NULL); // Free cursor bounds safely on teardown
+		#endif
 		delete m_Context;
 		glfwDestroyWindow(m_Handle);
 		glfwTerminate();
 	}
 
-	void Window::SwapBuffers()
-	{
-		m_Context->SwapBuffers();
-	}
-
-	void Window::PollEvents()
-	{
-		glfwPollEvents();
-	}
-
-	bool Window::ShouldClose() const
-	{
-		return glfwWindowShouldClose(m_Handle);
-	}
+	void Window::SwapBuffers() { m_Context->SwapBuffers(); }
+	void Window::PollEvents()  { glfwPollEvents(); }
+	bool Window::ShouldClose() const { return glfwWindowShouldClose(m_Handle); }
 
 	void Window::SetVSync(bool enabled)
 	{
 		m_Data.VSync = enabled;
-		if (m_Handle)
-		{
-			if (enabled)
-				glfwSwapInterval(1);
-			else
-				glfwSwapInterval(0);
-		}
+		if (m_Handle) glfwSwapInterval(enabled ? 1 : 0);
 	}
 
 	void Window::GetSize(int* width, int* height) const
@@ -225,54 +171,63 @@ namespace Cosmic
 
 		if (m_Data.Fullscreen)
 		{
+			// 1. Cache the windowed properties so we can revert back to them cleanly
 			glfwGetWindowPos(m_Handle, &m_Data.WindowedX, &m_Data.WindowedY);
 			glfwGetWindowSize(m_Handle, (int*)&m_Data.WindowedWidth, (int*)&m_Data.WindowedHeight);
 
-			GLFWmonitor* monitor = glfwGetPrimaryMonitor();
-			if (monitor)
+			// 2. Identify the target monitor based on the window center coordinate (Raylib's style)
+			int monitorCount;
+			GLFWmonitor** monitors = glfwGetMonitors(&monitorCount);
+			GLFWmonitor* targetMonitor = glfwGetPrimaryMonitor();
+
+			int windowCenterX = m_Data.WindowedX + (m_Data.WindowedWidth / 2);
+			int windowCenterY = m_Data.WindowedY + (m_Data.WindowedHeight / 2);
+
+			for (int i = 0; i < monitorCount; i++)
 			{
-				const GLFWvidmode* mode = glfwGetVideoMode(monitor);
-				int monitorX, monitorY;
-				glfwGetMonitorPos(monitor, &monitorX, &monitorY);
-
-				// Strip the OS borders
-				glfwSetWindowAttrib(m_Handle, GLFW_DECORATED, GLFW_FALSE);
-				glfwSetWindowAttrib(m_Handle, GLFW_AUTO_ICONIFY, GLFW_FALSE);
-
-				// --- THE DEFINITIVE MULTI-MONITOR MULTI-PLANE OVERRIDE ---
-				// We offset the vertical positioning by exactly 1 pixel.
-				// This explicitly breaks the driver's ability to silently promote this window to exclusive mode.
-				// Result: ZERO black flashes, instant toggles, and flawless screenshots!
-				glfwSetWindowPos(m_Handle, monitorX, monitorY + 1);
-				glfwSetWindowSize(m_Handle, mode->width, mode->height - 1);
-
-				#ifdef _WIN32
-					HWND hwnd = glfwGetWin32Window(m_Handle);
-					
-					LONG_PTR style = GetWindowLongPtr(hwnd, GWL_STYLE);
-					style &= ~(WS_CAPTION | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_SYSMENU);
-					SetWindowLongPtr(hwnd, GWL_STYLE, style);
-					
-					// Pin it right above the taskbar layer so you don't see any visual gap
-					SetWindowPos(hwnd, HWND_TOPMOST, monitorX, monitorY + 1, mode->width, mode->height - 1, SWP_FRAMECHANGED | SWP_SHOWWINDOW);
-				#endif
+				int mx, my;
+				glfwGetMonitorPos(monitors[i], &mx, &my);
+				const GLFWvidmode* mode = glfwGetVideoMode(monitors[i]);
+				
+				if ((windowCenterX >= mx && windowCenterX < mx + mode->width) &&
+					(windowCenterY >= my && windowCenterY < my + mode->height))
+				{
+					targetMonitor = monitors[i];
+					break;
+				}
 			}
+
+			const GLFWvidmode* mode = glfwGetVideoMode(targetMonitor);
+			int monitorX, monitorY;
+			glfwGetMonitorPos(targetMonitor, &monitorX, &monitorY);
+
+			// 3. Set properties inside standard Windowed Mode (Passes NULL as monitor pointer)
+			// This tells the DWM that we are just a standard window layout, completely preventing black screen glitches.
+			glfwSetWindowAttrib(m_Handle, GLFW_DECORATED, GLFW_FALSE);
+			glfwSetWindowMonitor(m_Handle, NULL, monitorX, monitorY, mode->width, mode->height, mode->refreshRate);
+
+			// 4. Pin layout explicitly above desktop layers to defend against overlapping windows or taskbars
+			#ifdef _WIN32
+				HWND hwnd = glfwGetWin32Window(m_Handle);
+				SetWindowPos(hwnd, HWND_TOPMOST, monitorX, monitorY, mode->width, mode->height, SWP_FRAMECHANGED | SWP_SHOWWINDOW);
+
+				// Traps the cursor precisely within this monitor grid so it can't escape to an extended display,
+				// while leaving the cursor shape fully intact and visible for ImGui panels.
+				RECT clipRect = { monitorX, monitorY, monitorX + mode->width, monitorY + mode->height };
+				ClipCursor(&clipRect);
+			#endif
 		}
 		else
 		{
-			glfwSetWindowAttrib(m_Handle, GLFW_DECORATED, GLFW_TRUE);
-			glfwSetWindowPos(m_Handle, m_Data.WindowedX, m_Data.WindowedY);
-			glfwSetWindowSize(m_Handle, m_Data.WindowedWidth, m_Data.WindowedHeight);
-
+			// Restore standard desktop layout aesthetics cleanly
 			#ifdef _WIN32
+				ClipCursor(NULL); // Give back standard desktop mouse access
 				HWND hwnd = glfwGetWin32Window(m_Handle);
-				
-				LONG_PTR style = GetWindowLongPtr(hwnd, GWL_STYLE);
-				style |= (WS_CAPTION | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_SYSMENU);
-				SetWindowLongPtr(hwnd, GWL_STYLE, style);
-
-				SetWindowPos(hwnd, HWND_NOTOPMOST, m_Data.WindowedX, m_Data.WindowedY, m_Data.WindowedWidth, m_Data.WindowedHeight, SWP_FRAMECHANGED | SWP_SHOWWINDOW);
+				SetWindowPos(hwnd, HWND_NOTOPMOST, m_Data.WindowedX, m_Data.WindowedY, m_Data.WindowedWidth, m_Data.WindowedHeight, SWP_FRAMECHANGED);
 			#endif
+
+			glfwSetWindowAttrib(m_Handle, GLFW_DECORATED, GLFW_TRUE);
+			glfwSetWindowMonitor(m_Handle, NULL, m_Data.WindowedX, m_Data.WindowedY, m_Data.WindowedWidth, m_Data.WindowedHeight, 0);
 		}
 
 		glfwSwapInterval(m_Data.VSync ? 1 : 0);
@@ -280,22 +235,23 @@ namespace Cosmic
 
 	void Window::ReassertFullscreenTopology()
 	{
-#ifdef _WIN32
-		if (m_Data.Fullscreen && m_Handle)
-		{
-			HWND hwnd = glfwGetWin32Window(m_Handle);
-			GLFWmonitor* monitor = glfwGetPrimaryMonitor();
-			if (monitor)
+		#ifdef _WIN32
+			if (m_Data.Fullscreen && m_Handle)
 			{
-				const GLFWvidmode* mode = glfwGetVideoMode(monitor);
-				int monitorX, monitorY;
-				glfwGetMonitorPos(monitor, &monitorX, &monitorY);
+				HWND hwnd = glfwGetWin32Window(m_Handle);
+				
+				// Re-verify monitor dimensions to accommodate dynamic display arrangement adjustments
+				int width, height;
+				glfwGetWindowSize(m_Handle, &width, &height);
+				
+				int mx, my;
+				glfwGetWindowPos(m_Handle, &mx, &my);
 
-				// Pushes window state properties over desktop compositor frames using lightweight hints
-				SetWindowPos(hwnd, HWND_TOPMOST, monitorX, monitorY + 1, mode->width, mode->height - 1, 
-					SWP_FRAMECHANGED | SWP_NOACTIVATE | SWP_SHOWWINDOW);
+				SetWindowPos(hwnd, HWND_TOPMOST, mx, my, width, height, SWP_FRAMECHANGED | SWP_NOACTIVATE | SWP_SHOWWINDOW);
+				
+				RECT clipRect = { mx, my, mx + width, my + height };
+				ClipCursor(&clipRect);
 			}
-		}
-#endif
+		#endif
 	}
 }
