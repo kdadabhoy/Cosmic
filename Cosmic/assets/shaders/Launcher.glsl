@@ -31,6 +31,7 @@ in vec2 v_TexCoord;
 // Declaring engine uniforms explicitly to bypass automatic injection loops
 uniform float u_Time;
 uniform vec4  u_Color;
+uniform vec4  u_MountainColor;
 
 // Simple deterministic hash for procedural star placement
 float Hash(vec2 p) 
@@ -55,7 +56,7 @@ void main()
 
     // 2. Deep Midnight Sky Gradient Background
     vec3 skyTop = vec3(0.02, 0.03, 0.08);
-    vec3 skyBottom = vec3(0.06, 0.16, 0.14); // Elegant emerald accent matching engine theme
+    vec3 skyBottom = u_Color.rgb;
     vec3 finalColor = mix(skyBottom, skyTop, clamp(uv.y * 0.5 + 0.5, 0.0, 1.0));
 
     // 3. Procedural Twinkling Stars
@@ -92,8 +93,11 @@ void main()
     finalColor = mix(finalColor, vec3(0.98, 0.96, 0.88), crescent); 
 
     // 5. Parallax Mountain Ridges (Layered Silhouettes)
-    vec3 backMountainColor = vec3(0.04, 0.08, 0.11);
-    vec3 foreMountainColor = vec3(0.02, 0.04, 0.06);
+    // Read the background color directly from the new uniform vector
+    vec3 backMountainColor = u_MountainColor.rgb;
+    
+    // Automatically derive a deeper, darker foreground shade for depth contrast
+    vec3 foreMountainColor = u_MountainColor.rgb * 0.5; 
 
     // Far mountains (Slower movement)
     float backHeight = -0.1 + LinearNoise(uv.x * 1.2 + u_Time * 0.02) * 0.35;

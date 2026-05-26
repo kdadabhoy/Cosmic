@@ -175,6 +175,8 @@ namespace Cosmic
 		{
 			// Full-screen animated background quad
 			m_BgMaterial->Set("u_Time", m_BgTime);
+			m_BgMaterial->Set("u_Color", m_ShaderColor); // Upload our real-time color variable here
+			m_BgMaterial->Set("u_MountainColor", m_MountainColor); // <-- Send the mountain color vector
 			Renderer2D::DrawQuad({ 0.0f, 0.0f, -0.5f }, { 16.0f, 9.0f }, m_BgMaterial);
 		}
 		else
@@ -390,9 +392,23 @@ namespace Cosmic
 		ImGui::Separator();
 		ImGui::Spacing();
 
-		// FPS
+		// -----------------------------------------------------------------------
+		// FPS Display & Shader Color Modifier Actions
+		// -----------------------------------------------------------------------
 		float fps = ImGui::GetIO().Framerate;
 		ImGui::TextColored({ 0.4f, 0.4f, 0.5f, 1.0f }, "%.0f fps", fps);
+
+		ImGui::SameLine(0.0f, 20.0f);
+
+		// Sky color picker
+		ImGui::PushItemWidth(120.0f);
+		ImGui::ColorEdit4("Sky Horizon Tone", &m_ShaderColor.x, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_AlphaPreview);
+
+		ImGui::SameLine(0.0f, 10.0f); // Leave a small space between the two pickers
+
+		// Mountain color picker
+		ImGui::ColorEdit4("Mountain Tone", &m_MountainColor.x, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_AlphaPreview);
+		ImGui::PopItemWidth();
 
 		ImGui::Columns(1);
 
