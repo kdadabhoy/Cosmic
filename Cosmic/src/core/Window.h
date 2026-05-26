@@ -124,6 +124,8 @@ namespace Cosmic
 		void		GetSize(int* width, int* height) const;
 
 
+		inline void ClearFullscreenHotkeyOverride() { m_Data.FullscreenOverride = nullptr; }
+
 	private:
 		///////////////////////////////
 		// Focus Recovery Internal Helper

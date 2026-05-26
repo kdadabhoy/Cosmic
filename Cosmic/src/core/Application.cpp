@@ -447,6 +447,11 @@ namespace Cosmic
 			m_ActivePluginLayer = nullptr;
 		}
 
+		if (m_Window)
+		{
+			m_Window->ClearFullscreenHotkeyOverride();
+		}
+
 		// 3. Flush the library handle out of the operating system process memory space
 		FreeLibrary((HMODULE)m_PluginHandle);
 		m_PluginHandle = nullptr;
