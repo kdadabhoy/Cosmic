@@ -137,7 +137,7 @@ namespace Cosmic
 		}
 		else
 		{
-			CS_CORE_WARN("LauncherLayer: Launcher.glsl not found — falling back to solid clear colour.");
+			CS_CORE_WARN("LauncherLayer: Launcher.glsl not found - falling back to solid clear colour.");
 		}
 
 		ScanForProjects();
