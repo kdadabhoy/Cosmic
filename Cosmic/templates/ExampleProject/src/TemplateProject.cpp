@@ -55,7 +55,30 @@ namespace Workspace
 			mode->OnAttach();
 		}
 
-		CS_INFO("TemplateProject: {} child layers attached.", m_Modes.size());
+		// ---------------------------------------------------------------------
+		// 6. Client DLL Fullscreen Hotkey Override
+		// ---------------------------------------------------------------------
+		// Fetch the exported Engine instance and register a custom bypass lambda
+		auto& window = Cosmic::Application::Get().GetWindow();
+
+		window.SetFullscreenHotkeyOverride([](int key, int action, int mods) -> bool
+			{
+				// Example Custom Override: Listen for Alt + Enter (GLFW tokens 257 & 0x0002)
+				// instead of the engine's default F11 key behavior
+				if (key == 257 && action == 1 && (mods & 0x0002)) // 257 = GLFW_KEY_ENTER, 1 = GLFW_PRESS, 0x0002 = GLFW_MOD_ALT
+				{
+					auto& app = Cosmic::Application::Get();
+					app.GetWindow().SetFullscreen(!app.GetWindow().IsFullscreen());
+
+					return true; // Match found! Abort the engine's default key actions
+				}
+
+				return false; // Not our key combo, let the engine handle it normally
+			});
+
+		CS_INFO("TemplateProject: {} child layers attached. Fullscreen override active.", m_Modes.size());
+
+		
 	}
 
 	// -------------------------------------------------------------------------

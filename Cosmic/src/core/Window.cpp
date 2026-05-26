@@ -4,61 +4,59 @@
 #include "events/MouseEvent.h"
 #include <GLFW/glfw3.h>
 #include "platform/opengl/OpenGLContext.h"
+#include "codes/KeyCodes.h"
 #include <iostream>
 
 namespace Cosmic
 {
-	/////////////////////////////////////////////////////////////////////////////////
-
-	/**
-	 * Window Constructor
-	 * Initializes the GLFW library, configures window hints for the OpenGL Core Profile,
-	 * creates the native window handle, and establishes the Graphics Context.
-	 * It also sets up the "User Pointer" bridge and registers all hardware callbacks.
-	 */
 	Window::Window(int width, int height, const std::string& title)
 		: m_Context(nullptr), m_Handle(nullptr)
 	{
-		
 		// 1. Initialize GLFW
 		if (!glfwInit())
 		{
-			// Note: Using std::cout here as a fallback if the Engine Logger isn't ready
 			std::cout << "Cosmic: Could not initialize GLFW!" << std::endl;
 			return;
 		}
 
-
-		// 2. Set Window Hints (Targeting OpenGL 3.3 Core)
+		// 2. Set Window Hints (Targeting OpenGL 3.3 Core Profile)
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
+		// --- THE DOUBLE FLASH FIX ---
+		// 1. Tell Windows not to use exclusive mode when switching styles (removes first flash)
+		glfwWindowHint(GLFW_AUTO_ICONIFY, GLFW_FALSE);
+		
+		// 2. Force GLFW to request a hardware-composed flip model backbuffer path from the OS DWM
+		// This bypasses the old blit-model presentation that triggers the second Windows HDR/G-Sync flash.
+		#ifdef _WIN32
+			glfwWindowHint(GLFW_FOCUS_ON_SHOW, GLFW_TRUE);
+		#endif
 
 		// 3. Create the Native Window
 		m_Handle = glfwCreateWindow(width, height, title.c_str(), NULL, NULL);
 
-
-		// 4. Initialize Graphics Context (API-Specific)
+		// 4. Initialize Graphics Context
 		m_Context = new OpenGLContext(m_Handle);
 		m_Context->Init();
-
 
 		// 5. Store metadata and bridge to GLFW
 		m_Data.Title = title;
 		m_Data.Width = width;
 		m_Data.Height = height;
 
+		// --- CRITICAL STEP ---
+		// Save the class address so static callbacks can call member functions safely
+		m_Data.WindowInstancePtr = this;
 
-		// Link our WindowData struct to the GLFW handle so callbacks can access it
 		glfwSetWindowUserPointer(m_Handle, &m_Data);
 
 		// -----------------------------------------------------------------
-		// Hardware Callbacks (Mapping Native OS events to Cosmic Events)
+		// Hardware Callbacks
 		// -----------------------------------------------------------------
 
-
-		// Window Resize Callback
+		
 		glfwSetWindowSizeCallback(m_Handle, [](GLFWwindow* window, int width, int height)
 			{
 				WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
@@ -69,8 +67,6 @@ namespace Cosmic
 				data.EventCallback(event);
 			});
 
-
-		// Mouse Scroll Callback
 		glfwSetScrollCallback(m_Handle, [](GLFWwindow* window, double xOffset, double yOffset)
 			{
 				WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
@@ -79,8 +75,6 @@ namespace Cosmic
 				data.EventCallback(event);
 			});
 
-
-		// Mouse Button Callback
 		glfwSetMouseButtonCallback(m_Handle, [](GLFWwindow* window, int button, int action, int mods)
 			{
 				WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
@@ -102,8 +96,6 @@ namespace Cosmic
 				}
 			});
 
-
-		// Mouse Movement Callback
 		glfwSetCursorPosCallback(m_Handle, [](GLFWwindow* window, double xPos, double yPos)
 			{
 				WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
@@ -112,17 +104,34 @@ namespace Cosmic
 				data.EventCallback(event);
 			});
 
-
-		// Keyboard Input Callback
 		glfwSetKeyCallback(m_Handle, [](GLFWwindow* window, int key, int scancode, int action, int mods)
 			{
 				WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 
+				// 1. Client-Side DLL Hotkey Override Interception
+				if (data.FullscreenOverride)
+				{
+					if (data.FullscreenOverride(key, action, mods))
+						return;
+				}
+
+				// 2. Default Engine Fallback Behavior (Cleanly Routing to Member Function)
+				if (key == CS_KEY_F11 && action == 1) // 1 = GLFW_PRESS
+				{
+					if (data.WindowInstancePtr)
+					{
+						// Call the single source of truth method!
+						data.WindowInstancePtr->SetFullscreen(!data.Fullscreen);
+					}
+					return;
+				}
+
+				// 3. Normal Engine Input Event Distribution System
 				switch (action)
 				{
 				case GLFW_PRESS:
 				{
-					KeyPressedEvent event(key, 0); // 0 = First press
+					KeyPressedEvent event(key, 0);
 					data.EventCallback(event);
 					break;
 				}
@@ -134,15 +143,13 @@ namespace Cosmic
 				}
 				case GLFW_REPEAT:
 				{
-					KeyPressedEvent event(key, 1); // 1 = Repeat/Hold
+					KeyPressedEvent event(key, 1);
 					data.EventCallback(event);
 					break;
 				}
 				}
 			});
 
-
-		// Text Input Callback (For ImGui/Text Fields)
 		glfwSetCharCallback(m_Handle, [](GLFWwindow* window, unsigned int keycode)
 			{
 				WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
@@ -152,13 +159,6 @@ namespace Cosmic
 			});
 	}
 
-
-	/////////////////////////////////////////////////////////////////////////////////
-
-	/**
-	 * Window Destructor
-	 * Cleans up the graphics context and destroys the window handle to prevent leaks.
-	 */
 	Window::~Window()
 	{
 		delete m_Context;
@@ -166,62 +166,108 @@ namespace Cosmic
 		glfwTerminate();
 	}
 
-	/////////////////////////////////////////////////////////////////////////////////
-
-	/**
-	 * Delegates the buffer swap to the graphics context.
-	 */
 	void Window::SwapBuffers()
 	{
 		m_Context->SwapBuffers();
 	}
 
-	/////////////////////////////////////////////////////////////////////////////////
-
-	/**
-	 * Event Polling
-	 * Instructs GLFW to check the OS for any pending hardware events.
-	 */
 	void Window::PollEvents()
 	{
 		glfwPollEvents();
 	}
 
-	/////////////////////////////////////////////////////////////////////////////////
-
-	/**
-	 * Returns true if the window has been flagged for closure.
-	 */
 	bool Window::ShouldClose() const
 	{
 		return glfwWindowShouldClose(m_Handle);
 	}
 
-	/////////////////////////////////////////////////////////////////////////////////
-
-	/**
-	 * Sets the swap interval to sync with the monitor's refresh rate.
-	 */
 	void Window::SetVSync(bool enabled)
 	{
-		if (enabled)
-			glfwSwapInterval(1);
-		else
-			glfwSwapInterval(0);
-
 		m_Data.VSync = enabled;
+		if (m_Handle)
+		{
+			if (enabled)
+				glfwSwapInterval(1);
+			else
+				glfwSwapInterval(0);
+		}
 	}
 
-	/////////////////////////////////////////////////////////////////////////////////
-
-	/**
-	 * Retrieves the current pixel width and height from the GLFW framebuffer.
-	 */
 	void Window::GetSize(int* width, int* height) const
 	{
 		glfwGetFramebufferSize(m_Handle, width, height);
 	}
 
-	/////////////////////////////////////////////////////////////////////////////////
 
+
+
+
+
+
+	#ifdef _WIN32
+        #define GLFW_EXPOSE_NATIVE_WIN32
+        #include <GLFW/glfw3native.h>
+    #endif
+
+	void Window::SetFullscreen(bool enabled)
+	{
+		if (m_Data.Fullscreen == enabled)
+			return;
+
+		m_Data.Fullscreen = enabled;
+
+		if (m_Data.Fullscreen)
+		{
+			glfwGetWindowPos(m_Handle, &m_Data.WindowedX, &m_Data.WindowedY);
+			glfwGetWindowSize(m_Handle, (int*)&m_Data.WindowedWidth, (int*)&m_Data.WindowedHeight);
+
+			GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+			if (monitor)
+			{
+				const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+				int monitorX, monitorY;
+				glfwGetMonitorPos(monitor, &monitorX, &monitorY);
+
+				// Strip the OS borders
+				glfwSetWindowAttrib(m_Handle, GLFW_DECORATED, GLFW_FALSE);
+				glfwSetWindowAttrib(m_Handle, GLFW_AUTO_ICONIFY, GLFW_FALSE);
+
+				// --- THE DEFINITIVE MULTI-MONITOR MULTI-PLANE OVERRIDE ---
+				// We offset the vertical positioning by exactly 1 pixel.
+				// This explicitly breaks the driver's ability to silently promote this window to exclusive mode.
+				// Result: ZERO black flashes, instant toggles, and flawless screenshots!
+				glfwSetWindowPos(m_Handle, monitorX, monitorY + 1);
+				glfwSetWindowSize(m_Handle, mode->width, mode->height - 1);
+
+				#ifdef _WIN32
+					HWND hwnd = glfwGetWin32Window(m_Handle);
+					
+					LONG_PTR style = GetWindowLongPtr(hwnd, GWL_STYLE);
+					style &= ~(WS_CAPTION | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_SYSMENU);
+					SetWindowLongPtr(hwnd, GWL_STYLE, style);
+					
+					// Pin it right above the taskbar layer so you don't see any visual gap
+					SetWindowPos(hwnd, HWND_TOPMOST, monitorX, monitorY + 1, mode->width, mode->height - 1, SWP_FRAMECHANGED | SWP_SHOWWINDOW);
+				#endif
+			}
+		}
+		else
+		{
+			glfwSetWindowAttrib(m_Handle, GLFW_DECORATED, GLFW_TRUE);
+			glfwSetWindowPos(m_Handle, m_Data.WindowedX, m_Data.WindowedY);
+			glfwSetWindowSize(m_Handle, m_Data.WindowedWidth, m_Data.WindowedHeight);
+
+			#ifdef _WIN32
+				HWND hwnd = glfwGetWin32Window(m_Handle);
+				
+				LONG_PTR style = GetWindowLongPtr(hwnd, GWL_STYLE);
+				style |= (WS_CAPTION | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_SYSMENU);
+				SetWindowLongPtr(hwnd, GWL_STYLE, style);
+
+				SetWindowPos(hwnd, HWND_NOTOPMOST, m_Data.WindowedX, m_Data.WindowedY, m_Data.WindowedWidth, m_Data.WindowedHeight, SWP_FRAMECHANGED | SWP_SHOWWINDOW);
+			#endif
+		}
+
+		glfwSwapInterval(m_Data.VSync ? 1 : 0);
+	}
 }

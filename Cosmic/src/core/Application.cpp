@@ -83,6 +83,10 @@ namespace Cosmic
 		m_Window = CreateScope<Window>(DEFAULT_WIDTH, DEFAULT_HEIGHT, DEFAULT_WINDOW_TITLE);
 		m_Window->SetEventCallback(GLCORE_BIND_EVENT_FN(Application::OnEvent));
 
+		// --- THE CRITICAL HAZEL FIX ---
+		// Explicitly lock your frame present scheduling onto your primary monitor refresh rate on boot!
+		m_Window->SetVSync(true);
+
 		// 2. Initialize the Renderer
 		Renderer::Init();
 
@@ -96,8 +100,7 @@ namespace Cosmic
 		m_ImGuiLayer = CreateScope<ImGuiLayer>();
 		PushOverlay(m_ImGuiLayer.get());
 
-		// 5. BOOT EXCLUSIVELY INTO THE LAUNCHER HUB HUB STATE
-		// We completely skip mounting the editor layout or loading any projects out-of-the-box.
+		// 5. Boot exclusively into the Launcher state
 		PushLayer(new LauncherLayer());
 
 		return true;
