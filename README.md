@@ -358,21 +358,22 @@ Application::OnEvent(e)
 
 ### Handling Events in Your Layer
 
-Override `OnEvent` and use `EventDispatcher` to route specific event types to dedicated handler functions:
+Override `OnEvent` and use `EventDispatcher` to route specific event types to dedicated handler functions. **The preferred modern style uses lambdas** — they are more readable, avoid the macro boilerplate, and capture `this` explicitly rather than implicitly:
 
 ```cpp
 void MyLayer::OnEvent(Cosmic::Event& e)
 {
     Cosmic::EventDispatcher dispatcher(e);
 
+    // Preferred: lambda captures this explicitly, no macro plumbing
     dispatcher.Dispatch<Cosmic::KeyPressedEvent>(
-        GLCORE_BIND_EVENT_FN(MyLayer::OnKeyPressed));
+        [this](Cosmic::KeyPressedEvent& event) { return OnKeyPressed(event); });
 
     dispatcher.Dispatch<Cosmic::MouseButtonPressedEvent>(
-        GLCORE_BIND_EVENT_FN(MyLayer::OnMouseClicked));
+        [this](Cosmic::MouseButtonPressedEvent& event) { return OnMouseClicked(event); });
 
     dispatcher.Dispatch<Cosmic::WindowResizeEvent>(
-        GLCORE_BIND_EVENT_FN(MyLayer::OnWindowResize));
+        [this](Cosmic::WindowResizeEvent& event) { return OnWindowResize(event); });
 }
 
 // Handler signature: takes the specific event type, returns bool
@@ -395,6 +396,16 @@ bool MyLayer::OnWindowResize(Cosmic::WindowResizeEvent& e)
 }
 ```
 
+The legacy macro form (`GLCORE_BIND_EVENT_FN` / `CS_BIND_EVENT_FN`) still compiles and produces correct behavior. The macros expand to a `std::bind` call with `std::placeholders::_1`. Prefer the lambda form in new code.
+
+| Style                  | Syntax                                        | Status               |
+| ---------------------- | --------------------------------------------- | -------------------- |
+| Lambda (modern)        | `[this](EventType& e) { return Handler(e); }` | **Preferred**        |
+| `CS_BIND_EVENT_FN`     | `CS_BIND_EVENT_FN(MyLayer::Handler)`          | Alias — still valid  |
+| `GLCORE_BIND_EVENT_FN` | `GLCORE_BIND_EVENT_FN(MyLayer::Handler)`      | Legacy — still valid |
+
+Both macro names expand identically to `std::bind(&fn, this, std::placeholders::_1)` and are defined in `Core.h`. They exist purely as aliases of each other.
+
 ### Forwarding Events to Sub-Systems
 
 If your layer owns sub-systems that need events (like a camera controller or a simulation sub-layer), forward the event to them first, then check `e.Handled` before doing further work:
@@ -407,7 +418,7 @@ void MyLayer::OnEvent(Cosmic::Event& e)
 
     Cosmic::EventDispatcher dispatcher(e);
     dispatcher.Dispatch<Cosmic::KeyPressedEvent>(
-        GLCORE_BIND_EVENT_FN(MyLayer::OnKeyPressed));
+        [this](Cosmic::KeyPressedEvent& event) { return OnKeyPressed(event); });
 }
 ```
 
@@ -677,9 +688,15 @@ void MyLayer::OnUpdate(float ts)
 
 ### Flat Color Quads
 
+Both `vec2` and `vec3` position overloads are available. The `vec2` shims insert `z = 0.0f` automatically:
+
 ```cpp
-Cosmic::Renderer2D::DrawQuad({0.f, 0.f}, {1.f, 1.f}, {1.f, 0.f, 0.f, 1.f}); // red
-Cosmic::Renderer2D::DrawQuad({0.f, 0.f, 0.0f}, {1.f, 1.f}, {0.f, 1.f, 0.f, 1.f}); // green, z-layered
+// vec3 position — explicit z-layering
+Cosmic::Renderer2D::DrawQuad({0.f, 0.f, 0.0f}, {1.f, 1.f}, {1.f, 0.f, 0.f, 1.f}); // red
+Cosmic::Renderer2D::DrawQuad({0.f, 0.f, 0.5f}, {1.f, 1.f}, {0.f, 1.f, 0.f, 1.f}); // green, in front
+
+// vec2 position — z is 0.0 automatically
+Cosmic::Renderer2D::DrawQuad({0.f, 0.f}, {1.f, 1.f}, {0.f, 0.f, 1.f, 1.f}); // blue
 ```
 
 ### Textured Quads
@@ -687,9 +704,14 @@ Cosmic::Renderer2D::DrawQuad({0.f, 0.f, 0.0f}, {1.f, 1.f}, {0.f, 1.f, 0.f, 1.f})
 ```cpp
 Ref<Cosmic::Texture2D> tex = Cosmic::Texture2D::Create("assets/sprite.png");
 
+// vec3 overloads
 Cosmic::Renderer2D::DrawQuad({0.f, 0.f, 0.f}, {1.f, 1.f}, tex);
-Cosmic::Renderer2D::DrawQuad({0.f, 0.f, 0.f}, {1.f, 1.f}, tex, 2.0f); // 2x tiling
+Cosmic::Renderer2D::DrawQuad({0.f, 0.f, 0.f}, {1.f, 1.f}, tex, 2.0f);                           // 2x tiling
 Cosmic::Renderer2D::DrawQuad({0.f, 0.f, 0.f}, {1.f, 1.f}, tex, 1.0f, {1.f, 0.5f, 0.5f, 1.f}); // tint
+
+// vec2 convenience overloads
+Cosmic::Renderer2D::DrawQuad({0.f, 1.f}, {1.f, 1.f}, tex);
+Cosmic::Renderer2D::DrawQuad({0.f, 1.f}, {1.f, 1.f}, tex, 2.0f, {1.f, 1.f, 1.f, 1.f});
 ```
 
 ### Material Quads (Shader-driven)
@@ -697,27 +719,55 @@ Cosmic::Renderer2D::DrawQuad({0.f, 0.f, 0.f}, {1.f, 1.f}, tex, 1.0f, {1.f, 0.5f,
 ```cpp
 auto shader   = Cosmic::Shader::Create(Cosmic::FileSystem::Resolve("project://shaders/Fire.glsl"));
 auto material = Cosmic::Material::Create(shader, "FireMaterial");
-material->Set("u_Color",  glm::vec4(1.f, 0.5f, 0.2f, 1.f));
+material->Set("u_Color", glm::vec4(1.f, 0.5f, 0.2f, 1.f));
 
-// Update time every frame using layer's local clock
 void MyLayer::OnUpdate(float ts)
 {
     material->Set("u_Time", GetLocalTime());
 
     Cosmic::Renderer2D::BeginScene(m_Camera.GetCamera());
+
+    // vec3 form
     Cosmic::Renderer2D::DrawQuad({0.f, 0.f, 0.f}, {2.f, 2.f}, material);
+
+    // vec2 convenience form
+    Cosmic::Renderer2D::DrawQuad({0.f, 0.f}, {2.f, 2.f}, material);
+
     Cosmic::Renderer2D::EndScene();
 }
 ```
 
 ### Rotated Quads
 
+Both `vec2` and `vec3` position overloads exist for all `DrawRotatedQuad` variants. Rotation is always in **radians**:
+
 ```cpp
-// rotation is in radians
+// Color
 Cosmic::Renderer2D::DrawRotatedQuad({0.f, 0.f, 0.f}, {1.f, 1.f}, glm::radians(45.f), {1.f, 1.f, 0.f, 1.f});
+Cosmic::Renderer2D::DrawRotatedQuad({0.f, 0.f},       {1.f, 1.f}, glm::radians(45.f), {1.f, 1.f, 0.f, 1.f}); // vec2
+
+// Texture
 Cosmic::Renderer2D::DrawRotatedQuad({0.f, 0.f, 0.f}, {1.f, 1.f}, rotation, texture);
+Cosmic::Renderer2D::DrawRotatedQuad({0.f, 0.f},       {1.f, 1.f}, rotation, texture); // vec2
+
+// Material
 Cosmic::Renderer2D::DrawRotatedQuad({0.f, 0.f, 0.f}, {1.f, 1.f}, rotation, material);
 ```
+
+### SDF Circles
+
+```cpp
+// Solid disk
+Cosmic::Renderer2D::DrawCircle({0.f, 0.f, 0.f}, {2.f, 2.f}, {0.2f, 0.8f, 1.f, 1.f});
+
+// Hollow ring — thin wall
+Cosmic::Renderer2D::DrawCircle({0.f, 0.f, 0.f}, {2.f, 2.f}, {1.f, 0.5f, 0.f, 0.9f}, 0.05f, 0.005f);
+
+// vec2 overload — z inserted as 0
+Cosmic::Renderer2D::DrawCircle({0.f, 2.f}, {1.f, 1.f}, {1.f, 1.f, 1.f, 1.f});
+```
+
+See [Section 12 — SDF Circles](#12-sdf-circles) for the full thickness/fade reference.
 
 ### Debug Geometry
 
@@ -735,6 +785,7 @@ Cosmic::Renderer2D::Statistics stats = Cosmic::Renderer2D::GetStats();
 ImGui::Text("Draw Calls: %d", stats.DrawCalls);
 ImGui::Text("Quads:      %d", stats.QuadCount);
 ImGui::Text("Vertices:   %d", stats.GetTotalVertexCount());
+ImGui::Text("Indices:    %d", stats.GetTotalIndexCount());
 ```
 
 ---
@@ -752,15 +803,27 @@ Ref<Cosmic::Shader> shader = Cosmic::Shader::Create(path);
 
 ### Creating and Using a Material
 
+The material uniform cache supports `float`, `vec2`, `vec3`, `vec4`, and `Ref<Texture>`. All setter types have corresponding getters:
+
 ```cpp
 auto material = Cosmic::Material::Create(shader, "SpriteMaterial");
 
-material->Set("u_Color",   glm::vec4(1.f, 0.8f, 0.2f, 1.f));
-material->Set("u_Texture", myTexture);
-material->Set("u_Time",    GetLocalTime()); // always use layer's local time
+// Scalar and vector uniforms
+material->Set("u_Color",    glm::vec4(1.f, 0.8f, 0.2f, 1.f));
+material->Set("u_Offset",   glm::vec2(0.5f, 0.0f));   // vec2 uniform
+material->Set("u_Scale3",   glm::vec3(1.f, 1.f, 1.f));
+material->Set("u_Texture",  myTexture);
+material->Set("u_Time",     GetLocalTime());            // always use layer's local time
+
+// Read values back (useful for ImGui editors)
+glm::vec4 color   = material->GetVector("u_Color");    // returns vec4; white if missing
+glm::vec2 offset  = material->GetVector2("u_Offset");  // returns vec2; zero if missing
+float     elapsed = material->GetFloat("u_Time");
 
 Cosmic::Renderer2D::DrawQuad(position, scale, material);
 ```
+
+Note that `GetVector` is a legacy alias for `GetVector4` — both return `glm::vec4`. Use `GetVector2` when reading back a uniform that was set as a `vec2`.
 
 ### Shader Single-File Format
 
@@ -2740,37 +2803,124 @@ To add a new simulation mode to a Showcase-style project:
 
 ### Renderer2D
 
-| Function          | Parameters                                                                   | Description                                           |
-| ----------------- | ---------------------------------------------------------------------------- | ----------------------------------------------------- |
-| `BeginScene`      | `const OrthographicCamera&`                                                  | Starts a batch pass, caches VP matrix, resets buffers |
-| `EndScene`        | —                                                                            | Flushes all batched geometry to GPU                   |
-| `DrawQuad`        | `vec2/vec3 pos, vec2 size, vec4 color`                                       | Flat-color quad                                       |
-| `DrawQuad`        | `vec2/vec3 pos, vec2 size, Ref<Texture>, float tiling, vec4 tint`            | Textured quad                                         |
-| `DrawQuad`        | `vec3 pos, vec2 size, Ref<Material>`                                         | Material/shader-driven quad                           |
-| `DrawRotatedQuad` | `vec2/vec3 pos, vec2 size, float rot, vec4 color`                            | Rotated flat quad (rot in radians)                    |
-| `DrawRotatedQuad` | `vec2/vec3 pos, vec2 size, float rot, Ref<Texture>, float tiling, vec4 tint` | Rotated textured quad                                 |
-| `DrawRotatedQuad` | `vec3 pos, vec2 size, float rot, Ref<Material>`                              | Rotated material quad                                 |
-| `DrawLine`        | `vec3 p0, vec3 p1, vec4 color`                                               | Line segment between two world-space points           |
-| `DrawRect`        | `vec3 pos, vec2 size, vec4 color`                                            | Wireframe rectangle (4 lines)                         |
-| `ResetStats`      | —                                                                            | Clears draw call and quad counters                    |
-| `GetStats`        | —                                                                            | Returns `Statistics` struct                           |
-| `SetStatsStatus`  | `bool enabled`                                                               | Toggle stats recording                                |
+| Function          | Parameters                                                                   | Description                                                      |
+| ----------------- | ---------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| `BeginScene`      | `const OrthographicCamera&`                                                  | Starts a batch pass, caches VP matrix, resets buffers            |
+| `EndScene`        | —                                                                            | Flushes all batched geometry to GPU                              |
+| `PushRenderPass`  | `const glm::mat4& viewProj, const glm::vec4& viewportBounds`                 | Push a scoped camera pass; flushes pending geometry first        |
+| `PopRenderPass`   | —                                                                            | Flush, pop current pass, restore prior pass state                |
+| `DrawQuad`        | `vec2/vec3 pos, vec2 size, vec4 color`                                       | Flat-color quad; `vec2` inserts z=0                              |
+| `DrawQuad`        | `vec2/vec3 pos, vec2 size, Ref<Texture>, float tiling, vec4 tint`            | Textured quad; `vec2` inserts z=0                                |
+| `DrawQuad`        | `vec2/vec3 pos, vec2 size, Ref<Material>`                                    | Material/shader-driven quad; `vec2` inserts z=0                  |
+| `DrawQuad`        | `vec2/vec3 pos, vec2 size, Ref<SubTexture2D>, vec4 tint`                     | Sprite-atlas tile; `vec2` inserts z=0                            |
+| `DrawRotatedQuad` | `vec2/vec3 pos, vec2 size, float rot, vec4 color`                            | Rotated flat quad (rot in radians); `vec2` inserts z=0           |
+| `DrawRotatedQuad` | `vec2/vec3 pos, vec2 size, float rot, Ref<Texture>, float tiling, vec4 tint` | Rotated textured quad; `vec2` inserts z=0                        |
+| `DrawRotatedQuad` | `vec3 pos, vec2 size, float rot, Ref<Material>`                              | Rotated material quad                                            |
+| `DrawRotatedQuad` | `vec2/vec3 pos, vec2 size, float rot, Ref<SubTexture2D>, vec4 tint`          | Rotated sprite-atlas tile; `vec2` inserts z=0                    |
+| `DrawCircle`      | `vec3 pos, vec2 size, vec4 color, float thickness=1.0, float fade=0.005`     | SDF circle; thickness 1.0=disk, <1.0=ring; fade=AA edge softness |
+| `DrawCircle`      | `vec2 pos, vec2 size, vec4 color, float thickness=1.0, float fade=0.005`     | SDF circle convenience overload; inserts z=0                     |
+| `DrawLine`        | `vec3 p0, vec3 p1, vec4 color`                                               | Line segment between two world-space points                      |
+| `DrawRect`        | `vec3 pos, vec2 size, vec4 color`                                            | Wireframe rectangle (4 lines)                                    |
+| `SetViewportSize` | `uint32_t width, uint32_t height`                                            | Update internal `ViewportDimensions`; used for `u_ViewportSize`  |
+| `ResetStats`      | —                                                                            | Clears draw call and quad counters                               |
+| `GetStats`        | —                                                                            | Returns `Statistics` struct                                      |
+| `SetStatsStatus`  | `bool enabled`                                                               | Toggle stats recording                                           |
+| `Flush`           | —                                                                            | Submit all staged quads, lines, and circles to GPU immediately   |
 
 ### Material
 
-| Function           | Parameters                  | Description                                  |
-| ------------------ | --------------------------- | -------------------------------------------- |
-| `Material::Create` | `Ref<Shader>, string name`  | Factory — creates a new material             |
-| `Set`              | `string name, float`        | Set a scalar float uniform                   |
-| `Set`              | `string name, vec3`         | Set a 3-component vector uniform             |
-| `Set`              | `string name, vec4`         | Set a 4-component vector uniform             |
-| `Set`              | `string name, Ref<Texture>` | Bind a texture to a named slot               |
-| `GetFloat`         | `string name`               | Retrieve cached float (0.0 if missing)       |
-| `GetVector`        | `string name`               | Retrieve cached vec4 (white if missing)      |
-| `GetTexture`       | `string name`               | Retrieve cached texture (nullptr if missing) |
-| `Bind`             | —                           | Binds shader and uploads all cached uniforms |
-| `GetShader`        | —                           | Returns the underlying `Ref<Shader>`         |
-| `HasFloat`         | `string name`               | Returns true if the float uniform is set     |
+| Function           | Parameters                   | Description                                                 |
+| ------------------ | ---------------------------- | ----------------------------------------------------------- |
+| `Material::Create` | `Ref<Shader>, string name`   | Factory — creates a new material                            |
+| `Clone`            | `Ref<Material>, string name` | Deep-copy all uniform caches; shares the same `Ref<Shader>` |
+| `Set`              | `string name, float`         | Set a scalar float uniform                                  |
+| `Set`              | `string name, vec2`          | Set a 2-component vector uniform                            |
+| `Set`              | `string name, vec3`          | Set a 3-component vector uniform                            |
+| `Set`              | `string name, vec4`          | Set a 4-component vector uniform                            |
+| `Set`              | `string name, Ref<Texture>`  | Bind a texture to a named slot                              |
+| `GetFloat`         | `string name`                | Retrieve cached float (0.0 if missing)                      |
+| `GetVector2`       | `string name`                | Retrieve cached vec2 (zero if missing)                      |
+| `GetVector3`       | `string name`                | Retrieve cached vec3 (zero if missing)                      |
+| `GetVector4`       | `string name`                | Retrieve cached vec4 (white if missing)                     |
+| `GetVector`        | `string name`                | Legacy alias for `GetVector4`; returns `glm::vec4`          |
+| `GetTexture`       | `string name`                | Retrieve cached texture (nullptr if missing)                |
+| `Bind`             | —                            | Binds shader and uploads all cached uniforms                |
+| `GetShader`        | —                            | Returns the underlying `Ref<Shader>`                        |
+| `GetName`          | —                            | Returns the material's debug name string                    |
+| `HasFloat`         | `string name`                | Returns true if the float uniform is set                    |
+| `HasFloat2`        | `string name`                | Returns true if the vec2 uniform is set                     |
+
+### SubTexture2D
+
+| Function           | Parameters                                                          | Description                                                                             |
+| ------------------ | ------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `CreateFromCoords` | `Ref<Texture2D>, vec2 coords, vec2 cellSize, vec2 spriteSize={1,1}` | Static factory. `coords` is (column, row) in grid units; `cellSize` is tile pixel size. |
+| `SubTexture2D`     | `Ref<Texture2D>, vec2 min, vec2 max`                                | Direct UV-range constructor. `min`/`max` in normalized [0,1] texture space.             |
+| `GetTexture`       | —                                                                   | Returns `const Ref<Texture2D>&` — the parent atlas.                                     |
+| `GetTexCoords`     | —                                                                   | Returns `const glm::vec2*` — pointer to the 4-element UV corner array (CCW order).      |
+
+**UV corner order** (counter-clockwise, matching stb_image vertical flip):
+
+| Index | Corner       |
+| ----- | ------------ |
+| 0     | Bottom-Left  |
+| 1     | Bottom-Right |
+| 2     | Top-Right    |
+| 3     | Top-Left     |
+
+**`CreateFromCoords` UV math:**
+
+```
+min.x = (coords.x * cellSize.x) / textureWidth
+min.y = (coords.y * cellSize.y) / textureHeight
+max.x = ((coords.x + spriteSize.x) * cellSize.x) / textureWidth
+max.y = ((coords.y + spriteSize.y) * cellSize.y) / textureHeight
+```
+
+### RenderPass
+
+`RenderPass` is an RAII wrapper. Constructing it calls `PushRenderPass`; destroying it calls `PopRenderPass`. It is non-copyable and non-movable — each instance must be owned by exactly one scope.
+
+| Function / Construct       | Parameters                                                          | Description                                                                                                                                                          |
+| -------------------------- | ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `RenderPass` (constructor) | `const OrthographicCamera& camera, const glm::vec4& viewportBounds` | Calls `PushRenderPass(camera.GetViewProjectionMatrix(), viewportBounds)`. Flushes pending geometry, pushes new VP matrix, calls `glViewport`, resets batch counters. |
+| `~RenderPass` (destructor) | —                                                                   | Calls `PopRenderPass()`. Flushes remaining geometry, pops the stack, restores prior VP matrix and viewport if a previous pass exists.                                |
+| `PushRenderPass` (static)  | `const glm::mat4& viewProj, const glm::vec4& viewportBounds`        | Low-level push. `viewportBounds = {x_offset, y_offset, width, height}` in pixels from bottom-left.                                                                   |
+| `PopRenderPass` (static)   | —                                                                   | Low-level pop. Asserts (debug) on empty stack.                                                                                                                       |
+
+**Viewport bounds convention:** `{x, y, width, height}` in pixels, OpenGL bottom-left origin. For a 1280×720 framebuffer split into equal quadrants:
+
+| Quadrant     | Bounds `{x, y, w, h}`  |
+| ------------ | ---------------------- |
+| Top-left     | `{0, 360, 640, 360}`   |
+| Top-right    | `{640, 360, 640, 360}` |
+| Bottom-left  | `{0, 0, 640, 360}`     |
+| Bottom-right | `{640, 0, 640, 360}`   |
+
+### OrthographicCameraController
+
+| Function                       | Parameters                                       | Description                                                                                                                                       |
+| ------------------------------ | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `OrthographicCameraController` | `float aspectRatio, bool rotation = false`       | Constructor. Initializes camera with the given aspect ratio and optional Z-rotation support.                                                      |
+| `OnUpdate`                     | `float ts`                                       | Polls WASD/arrow input, advances smooth zoom interpolation, updates the underlying camera transform. Must be called once per frame.               |
+| `OnEvent`                      | `Event&`                                         | Routes `MouseScrolledEvent` to the zoom system and `WindowResizeEvent` to `OnResize`.                                                             |
+| `OnResize`                     | `float width, float height`                      | Recalculates aspect ratio and orthographic projection. Call whenever the render target changes size.                                              |
+| `GetCamera`                    | —                                                | Returns `OrthographicCamera&` for passing to `BeginScene` or `RenderPass`.                                                                        |
+| `GetZoomLevel`                 | —                                                | Returns the current interpolated zoom scalar.                                                                                                     |
+| `SetZoomLevel`                 | `float level`                                    | Hard-snap to a zoom level, bypassing interpolation. Sets both the current and target zoom immediately.                                            |
+| `SetZoomLimits`                | `float min, float max`                           | Clamps the scroll-wheel zoom range. Default: 0.25 – 10.0.                                                                                         |
+| `SetZoomSpeed`                 | `float speed`                                    | World units zoomed per scroll tick. Default: 0.25.                                                                                                |
+| `SetTranslationSpeed`          | `float speed`                                    | Pan speed in world units per second. Scaled internally by the current zoom level so panning feels consistent at all zoom levels. Default: 5.0.    |
+| `GetTranslationSpeed`          | —                                                | Returns the current translation speed setting.                                                                                                    |
+| `SetRotationSpeed`             | `float speed`                                    | Degrees per second for Q/E rotation. Only active when `rotation = true` was passed to the constructor. Default: 180.0.                            |
+| `GetRotationSpeed`             | —                                                | Returns the current rotation speed setting.                                                                                                       |
+| `SetPositionLimits`            | `float minX, float maxX, float minY, float maxY` | Hard-clamps the camera pan bounds in world space. Default: ±1000 on both axes.                                                                    |
+| `SetPosition`                  | `const glm::vec3& position`                      | Directly sets the camera world position, bypassing keyboard input. Also updates the underlying `OrthographicCamera` immediately.                  |
+| `GetPosition`                  | —                                                | Returns the current camera world position as `const glm::vec3&`.                                                                                  |
+| `SetManualMovementEnabled`     | `bool enabled`                                   | Enable or disable WASD/arrow key panning. Disable when driving the camera from code (entity follow, cutscene track, scripted pan). Default: true. |
+| `IsManualMovementEnabled`      | —                                                | Returns true if keyboard panning is currently active.                                                                                             |
+| `SetKeyBindings`               | `const CameraKeyBindings& bindings`              | Replace the default WASD+QE key mapping with a custom layout.                                                                                     |
+| `GetKeyBindings`               | —                                                | Returns a mutable reference to the active key bindings for per-key adjustment.                                                                    |
 
 ### Shader
 
@@ -2814,29 +2964,14 @@ To add a new simulation mode to a Showcase-style project:
 | `Scene::Create`              | —                               | Factory — creates a new scene                            |
 | `Scene::CreateEntity`        | `string name = "GenericEntity"` | Creates entity; auto-adds Transform + Tag                |
 | `Scene::DestroyEntity`       | `Entity`                        | Removes entity from registry                             |
-| `Scene::OnUpdate`            | `float dt`                      | Tick scene logic                                         |
+| `Scene::OnUpdate`            | `float dt`                      | Tick scene systems                                       |
+| `Scene::OnFixedUpdate`       | `float dt`                      | Fixed-step tick for scene systems                        |
 | `Scene::OnRender`            | —                               | Dispatches all entities to Renderer2D by material bucket |
 | `Entity::AddComponent<T>`    | `Args...`                       | Construct and attach component (asserts if duplicate)    |
 | `Entity::GetComponent<T>`    | —                               | Returns reference (asserts if missing)                   |
 | `Entity::HasComponent<T>`    | —                               | Returns bool                                             |
 | `Entity::RemoveComponent<T>` | —                               | Removes component (asserts if missing)                   |
 | `Entity::operator bool`      | —                               | True if handle is valid and scene-bound                  |
-
-### OrthographicCameraController
-
-| Function                       | Parameters                                 | Description                             |
-| ------------------------------ | ------------------------------------------ | --------------------------------------- |
-| `OrthographicCameraController` | `float aspectRatio, bool rotation = false` | Constructor                             |
-| `OnUpdate`                     | `float ts`                                 | WASD + smooth zoom interpolation        |
-| `OnEvent`                      | `Event&`                                   | Routes scroll and resize events         |
-| `OnResize`                     | `float w, float h`                         | Recalculate aspect ratio                |
-| `SetZoomLevel`                 | `float`                                    | Hard-snap zoom (bypasses interpolation) |
-| `SetZoomLimits`                | `float min, float max`                     | Clamp scroll zoom range                 |
-| `SetZoomSpeed`                 | `float`                                    | Speed per scroll tick                   |
-| `SetTranslationSpeed`          | `float`                                    | Pan speed (multiplied by zoom level)    |
-| `SetPositionLimits`            | `float minX, maxX, minY, maxY`             | Camera pan bounds                       |
-| `SetPosition`                  | `vec3`                                     | Force camera position                   |
-| `GetCamera`                    | —                                          | Returns `OrthographicCamera&`           |
 
 ### RenderCommand
 
@@ -3274,6 +3409,270 @@ All `glGetUniformLocation` results are cached in `m_UniformLocationCache`. The f
 
 ---
 
+## 30. RenderPass Stack — Implementation Details
+
+This section is the internal companion to [Section 13 — RenderPass and Multi-Camera Rendering](#13-renderpass-and-multi-camera-rendering). It describes the data structures, ordering guarantees, and exact sequencing of every operation inside `PushRenderPass`, `PopRenderPass`, `FlushAndReset`, and the `BeginScene`/`EndScene` shims.
+
+### The RenderPassState Struct
+
+The pass stack is built from `Renderer2D::RenderPassState`, a plain struct defined in `Renderer2D.h` and stored as a member of `Renderer2DData`:
+
+```cpp
+struct RenderPassState
+{
+    glm::mat4 ViewProjectionMatrix { 1.0f };
+    glm::vec4 ViewportBounds       { 0.0f, 0.0f, 1280.0f, 720.0f }; // x, y, width, height
+};
+```
+
+The field `s_Data.RenderPassStack` is a `std::vector<RenderPassState>` used as a LIFO stack — entries are pushed to the back and popped from the back. The vector is pre-allocated at startup and cleared (but not deallocated) during `Renderer2D::Shutdown`.
+
+The separate field `s_Data.ViewProjectionMatrix` is the **live** VP matrix that `Flush` reads when uploading `u_ViewProjection` to the shader. It is kept synchronized with `RenderPassStack.back().ViewProjectionMatrix` at all times.
+
+Similarly, `s_Data.ViewportDimensions` (`glm::vec2`) is the live width/height used for `u_ViewportSize`. It is derived from the z/w components of `ViewportBounds` on every push and pop.
+
+### PushRenderPass — Step-by-Step
+
+```cpp
+void Renderer2D::PushRenderPass(const glm::mat4& viewProj, const glm::vec4& viewportBounds)
+```
+
+The function executes the following in strict order:
+
+**Step 1 — Flush pending geometry.**
+Check whether any geometry from the currently active pass is staged but not yet submitted:
+
+```cpp
+bool hasPendingGeometry = (s_Data.QuadIndexCount   > 0 ||
+                           s_Data.CircleIndexCount  > 0 ||
+                           s_Data.LineVertexCount   > 0);
+if (hasPendingGeometry) Flush();
+```
+
+This is the mechanism that guarantees isolation. Geometry submitted under Camera A is flushed with Camera A's VP matrix **before** Camera B's matrix is installed. Without this step, Camera B's matrix would be uploaded to the shader while Camera A's vertex data is still in the staging buffer.
+
+**Step 2 — Build and push the new state.**
+
+```cpp
+RenderPassState newState;
+newState.ViewProjectionMatrix = viewProj;
+newState.ViewportBounds       = viewportBounds;
+s_Data.RenderPassStack.push_back(newState);
+```
+
+**Step 3 — Install the new VP matrix.**
+
+```cpp
+s_Data.ViewProjectionMatrix = viewProj;
+```
+
+This directly updates the live field that `Flush` reads.
+
+**Step 4 — Call `glViewport`.**
+
+```cpp
+glViewport(
+    static_cast<int>(viewportBounds.x),
+    static_cast<int>(viewportBounds.y),
+    static_cast<int>(viewportBounds.z),
+    static_cast<int>(viewportBounds.w)
+);
+```
+
+The GPU's rasterization region is updated immediately. All draw calls inside this pass will rasterize into this pixel region of the bound framebuffer.
+
+**Step 5 — Update `ViewportDimensions`.**
+
+```cpp
+s_Data.ViewportDimensions = { viewportBounds.z, viewportBounds.w };
+```
+
+This feeds the `u_ViewportSize` uniform in `Flush`. Shaders that use `iResolution` (mapped to `vec3(u_ViewportSize, 1.0)`) will correctly report the quadrant dimensions for this pass, not the full framebuffer size.
+
+**Step 6 — Reset all batch counters.**
+
+```cpp
+s_Data.QuadIndexCount   = 0;
+s_Data.QuadVertexPtr    = s_Data.QuadVertexBufferBase;
+s_Data.TextureSlotIndex = 1;  // slot 0 is always the white texture
+s_Data.CurrentMaterial  = s_Data.DefaultMaterial;
+
+s_Data.LineVertexCount    = 0;
+s_Data.LineVertexBufferPtr = s_Data.LineVertexBufferBase;
+
+s_Data.CircleIndexCount    = 0;
+s_Data.CircleVertexBufferPtr = s_Data.CircleVertexBufferBase;
+```
+
+The staging pointers and counters are reset to empty so the new pass starts accumulating from the beginning of the pre-allocated CPU buffers.
+
+### PopRenderPass — Step-by-Step
+
+```cpp
+void Renderer2D::PopRenderPass()
+```
+
+**Step 1 — Assert on empty stack.**
+
+```cpp
+CS_CORE_ASSERT(!s_Data.RenderPassStack.empty(),
+    "PopRenderPass called with an empty stack! Mismatched Push/Pop.");
+```
+
+This fires as a debug-build assert. In release builds there is no guard — a mismatched pop causes undefined batch state.
+
+**Step 2 — Flush remaining geometry.**
+Any draw calls submitted during this pass that have not yet been flushed (because `MaxIndices` was not hit) are submitted now:
+
+```cpp
+bool hasPendingGeometry = (s_Data.QuadIndexCount   > 0 ||
+                           s_Data.CircleIndexCount  > 0 ||
+                           s_Data.LineVertexCount   > 0);
+if (hasPendingGeometry) Flush();
+```
+
+**Step 3 — Pop the current entry.**
+
+```cpp
+s_Data.RenderPassStack.pop_back();
+```
+
+**Step 4 — Restore prior state (if any).**
+If the stack is non-empty after the pop, the previous pass's VP matrix and viewport bounds are reinstated:
+
+```cpp
+if (!s_Data.RenderPassStack.empty())
+{
+    const RenderPassState& restored = s_Data.RenderPassStack.back();
+    s_Data.ViewProjectionMatrix = restored.ViewProjectionMatrix;
+
+    glViewport(
+        static_cast<int>(restored.ViewportBounds.x),
+        static_cast<int>(restored.ViewportBounds.y),
+        static_cast<int>(restored.ViewportBounds.z),
+        static_cast<int>(restored.ViewportBounds.w)
+    );
+
+    s_Data.ViewportDimensions = { restored.ViewportBounds.z, restored.ViewportBounds.w };
+}
+```
+
+If the stack is empty after the pop (the outermost pass just ended), the live VP matrix and viewport dimensions are left at their last-known values until the next `PushRenderPass` overwrites them. This is safe because no further `Flush` calls will occur in that state.
+
+**Step 5 — Reset batch counters.**
+Identical to the reset in `PushRenderPass`. The counters are zeroed so any geometry that arrives after the pop (in a subsequent pass or a new `BeginScene`) starts from a clean state.
+
+### BeginScene and EndScene as Shims
+
+`BeginScene` and `EndScene` are thin backward-compatibility wrappers over `PushRenderPass` / `PopRenderPass`. They are the correct choice for single-camera rendering and require no changes to existing code.
+
+```cpp
+void Renderer2D::BeginScene(const OrthographicCamera& camera)
+{
+    // Derive full-window bounds from the current tracked viewport dimensions
+    glm::vec4 fullWindowBounds = {
+        0.0f,
+        0.0f,
+        s_Data.ViewportDimensions.x,
+        s_Data.ViewportDimensions.y
+    };
+    PushRenderPass(camera.GetViewProjectionMatrix(), fullWindowBounds);
+}
+
+void Renderer2D::EndScene()
+{
+    PopRenderPass();
+}
+```
+
+The key detail: `BeginScene` derives the viewport bounds from `s_Data.ViewportDimensions`, which is kept in sync with the framebuffer size via `Renderer2D::SetViewportSize`. `Renderer::OnWindowResize` calls `SetViewportSize` whenever the window changes. This means `BeginScene` always produces a full-framebuffer pass targeting the current render target size without needing the caller to supply explicit bounds.
+
+### FlushAndReset — Material Preservation Across Mid-Batch Flushes
+
+`FlushAndReset` is called internally when a batch limit is hit (index count, texture slot count, or material change) mid-frame — before `EndScene` / `PopRenderPass`. It must not alter the render pass stack or the current VP matrix. It only flushes and resets the geometry staging buffers.
+
+Critically, it **preserves `s_Data.CurrentMaterial`** across the reset:
+
+```cpp
+void Renderer2D::FlushAndReset()
+{
+    // Capture the active material before the reset wipes it
+    Ref<Material> activeMaterial = s_Data.CurrentMaterial;
+
+    Flush();
+
+    // Reset geometry counters and staging pointers
+    s_Data.QuadIndexCount    = 0;
+    s_Data.QuadVertexPtr     = s_Data.QuadVertexBufferBase;
+    s_Data.TextureSlotIndex  = 1;
+
+    s_Data.LineVertexCount     = 0;
+    s_Data.LineVertexBufferPtr = s_Data.LineVertexBufferBase;
+
+    s_Data.CircleIndexCount      = 0;
+    s_Data.CircleVertexBufferPtr = s_Data.CircleVertexBufferBase;
+
+    // Restore the material so the next DrawQuad call continues into the
+    // same material bucket without an unnecessary second FlushAndReset
+    s_Data.CurrentMaterial = activeMaterial;
+}
+```
+
+Without this restoration, the first `DrawQuad` after the mid-batch flush would see `CurrentMaterial == DefaultMaterial` and immediately trigger another `FlushAndReset` to "change" back to the actual material, even though no material change occurred. The preservation means `DrawQuad(material)` calls can span multiple underlying `FlushAndReset` cycles transparently.
+
+Note that `FlushAndReset` does **not** call `BeginScene`, `EndScene`, `PushRenderPass`, or `PopRenderPass`. It operates entirely within the currently active render pass. The pass stack remains untouched.
+
+### Stack Lifecycle Across a Multi-Camera Frame
+
+To make the sequencing concrete, here is the full stack state for a two-camera frame:
+
+```
+Initial:  RenderPassStack = []
+
+{
+    RenderPass passA(camA, boundsA);
+        // PushRenderPass:
+        //   hasPendingGeometry = false → no flush
+        //   push RenderPassState{camA.VP, boundsA}
+        //   s_Data.ViewProjectionMatrix = camA.VP
+        //   glViewport(boundsA)
+        //   s_Data.ViewportDimensions = {boundsA.z, boundsA.w}
+        //   reset all counters
+        //   Stack: [ {camA.VP, boundsA} ]
+
+    DrawQuad(...); DrawQuad(...); DrawLine(...);
+        // Stack: [ {camA.VP, boundsA} ]   counters: QuadIndexCount=12, LineVertexCount=2
+
+}   // ~RenderPass → PopRenderPass:
+    //   hasPendingGeometry = true → Flush() with camA.VP active → draw calls go to GPU
+    //   pop → Stack: []
+    //   stack empty → no restoration
+    //   reset all counters
+
+{
+    RenderPass passB(camB, boundsB);
+        // PushRenderPass:
+        //   hasPendingGeometry = false → no flush
+        //   push RenderPassState{camB.VP, boundsB}
+        //   s_Data.ViewProjectionMatrix = camB.VP
+        //   glViewport(boundsB)
+        //   reset all counters
+        //   Stack: [ {camB.VP, boundsB} ]
+
+    DrawQuad(...);
+
+}   // ~RenderPass → PopRenderPass:
+    //   Flush() with camB.VP → draw calls go to GPU
+    //   pop → Stack: []
+    //   reset all counters
+
+Final: RenderPassStack = []
+```
+
+Geometry submitted under `passA` is always flushed with `camA.VP`. Geometry submitted under `passB` is always flushed with `camB.VP`. The two sets never mix.
+
+---
+
 ## 31. Build System
 
 The project uses CMake 3.21+ with a three-tier structure:
@@ -3317,7 +3716,36 @@ Note that `OnWindowResize` returns `false`, so `WindowResizeEvent` still propaga
 
 ### EventDispatcher Internals
 
-`Dispatch<T>()` returns `true` if the event type matched, regardless of whether your handler consumed it. What matters for propagation is `e.Handled`, which is set to your handler's return value. Multiple `Dispatch` calls on the same dispatcher are independent.
+`EventDispatcher::Dispatch<T>` is a function template that accepts any callable whose signature matches `bool(T&)`. This includes free functions, member function pointers bound with `std::bind`, and lambdas. Lambdas are the preferred form in client code because they are more readable and capture context explicitly.
+
+```cpp
+// Equivalent forms — all produce identical behavior
+dispatcher.Dispatch<Cosmic::KeyPressedEvent>(
+    [this](Cosmic::KeyPressedEvent& e) { return OnKeyPressed(e); });       // lambda (preferred)
+
+dispatcher.Dispatch<Cosmic::KeyPressedEvent>(
+    CS_BIND_EVENT_FN(MyLayer::OnKeyPressed));                               // CS_ macro
+
+dispatcher.Dispatch<Cosmic::KeyPressedEvent>(
+    GLCORE_BIND_EVENT_FN(MyLayer::OnKeyPressed));                           // GLCORE_ legacy alias
+```
+
+`Dispatch<T>()` returns `true` if the runtime event type matched `T::GetStaticType()`, regardless of whether your handler consumed it. What determines whether the event continues propagating down the stack is `e.Handled`, which is set to your handler's return value. Multiple `Dispatch` calls on the same dispatcher are fully independent — each checks the event type independently.
+
+```cpp
+template<typename T, typename F>
+bool Dispatch(const F& func)
+{
+    if (m_Event.GetEventType() == T::GetStaticType())
+    {
+        m_Event.Handled = func(static_cast<T&>(m_Event));
+        return true;  // type matched
+    }
+    return false;     // type did not match — event untouched
+}
+```
+
+Because `F` is a template parameter resolved at compile time, the lambda form carries zero additional runtime overhead compared to the macro form.
 
 ### ImGuiLayer Event Handling
 
