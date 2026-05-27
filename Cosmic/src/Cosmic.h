@@ -63,6 +63,13 @@
 // Layers
 #include "layers/ImGuiLayer.h"
 
+// Job System / Multithreading
+#include "jobs/JobSystem.h"
+#include "jobs/ParallelSystem.h"
+#include "jobs/ComponentArray.h"
+#include "jobs/ParallelFor.h"
+
+
 // ImGui
 #include <imgui.h>
 #include <implot.h>

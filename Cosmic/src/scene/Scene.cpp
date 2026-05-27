@@ -9,6 +9,9 @@
 #include <vector>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include "jobs/ParallelSystem.h"
+#include "core/Log.h"             
+
 namespace Cosmic
 {
 	Scene::Scene()
@@ -30,18 +33,41 @@ namespace Cosmic
 
 	void Scene::OnUpdate(float deltaTime)
 	{
-		// Sequentially process each decoupled subsystem dispatch logic
+		// PASS A: Run standard sequential updates
 		for (auto& system : m_Systems)
 		{
 			system->OnUpdate(*this, deltaTime);
+		}
+
+		// PASS B, C, D: Run variable frame-rate Parallel Systems
+		for (auto& system : m_Systems)
+		{
+			if (auto* parallelSys = dynamic_cast<ParallelSystem*>(system.get()))
+			{
+				parallelSys->OnPrepare(*this, deltaTime);
+				parallelSys->OnParallelExecute(*this, deltaTime);
+				parallelSys->OnMerge(*this, deltaTime);
+			}
 		}
 	}
 
 	void Scene::OnFixedUpdate(float fixedDeltaTime)
 	{
+		// PASS A: Run traditional sequential fixed steps
 		for (auto& system : m_Systems)
 		{
 			system->OnFixedUpdate(*this, fixedDeltaTime);
+		}
+
+		// PASS B, C, D: Run fixed-timestep Parallel Systems
+		for (auto& system : m_Systems)
+		{
+			if (auto* parallelSys = dynamic_cast<ParallelSystem*>(system.get()))
+			{
+				parallelSys->OnFixedPrepare(*this, fixedDeltaTime);
+				parallelSys->OnFixedParallelExecute(*this, fixedDeltaTime);
+				parallelSys->OnFixedMerge(*this, fixedDeltaTime);
+			}
 		}
 	}
 

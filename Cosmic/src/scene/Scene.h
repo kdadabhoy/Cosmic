@@ -71,6 +71,24 @@ namespace Cosmic
 			return m_Registry.view<Components...>();
 		}
 
+		inline entt::registry& GetRegistry() { return m_Registry; }
+		inline const entt::registry& GetRegistry() const { return m_Registry; }
+
+
+	public:
+		template<typename T>
+		T* GetSystem()
+		{
+			for (auto& system : m_Systems)
+			{
+				// Safely attempt to downcast the base System pointer to your requested subclass
+				T* target = dynamic_cast<T*>(system.get());
+				if (target)
+					return target;
+			}
+			return nullptr;
+		}
+
 	private:
 		entt::registry m_Registry;
 		std::vector<Scope<System>> m_Systems;
