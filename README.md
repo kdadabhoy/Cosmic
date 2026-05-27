@@ -2179,7 +2179,7 @@ struct TagComponent { std::string Tag; };
 
 ---
 
-### Scene Update and Render
+### Old? - Scene Update and Render
 
 ```cpp
 void MyLayer::OnUpdate(float ts) override
