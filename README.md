@@ -29,6 +29,8 @@
 19. [Serial Communication](#19-serial-communication)
 20. [The Showcase Project](#20-the-showcase-project)
 21. Update [Complete API Reference Tables](#21-complete-api-reference-tables)
+22. Reorder Eventually - [Scene System](#22-scene-system)
+23. Reorder Eventually - [Window System](#23)
 
 ### Part II — Engine Internals
 
@@ -3015,6 +3017,407 @@ max.y = ((coords.y + spriteSize.y) * cellSize.y) / textureHeight
 | `CS_WARN(...)`          | Warning | Client/Game |
 | `CS_ERROR(...)`         | Error   | Client/Game |
 | `CS_CRITICAL(...)`      | Fatal   | Client/Game |
+
+---
+
+## 22. Scene System
+
+### Overview
+
+`Scene` is the container for all entity and component data. It owns an `entt::registry`, drives registered `System` objects, and manages the full render pass for sprite-bearing entities.
+
+The key architectural rule introduced in the current implementation:
+
+> **`Scene::OnRender(camera)` owns its own `BeginScene` / `EndScene`.** Callers must never wrap it in their own `BeginScene` / `EndScene` — doing so will double-push the render pass stack and corrupt the View-Projection matrix state.
+
+If you need to render scene entities alongside manual `Renderer2D` draw calls in the same frame, make two separate passes: one via `Scene::OnRender` and one wrapped in your own `BeginScene` / `EndScene`. They will each flush independently and both draw correctly.
+
+---
+
+### Creating a Scene
+
+```cpp
+Ref<Cosmic::Scene> m_Scene = Cosmic::Scene::Create();
+```
+
+Always use `Scene::Create()` — it returns a `Ref<Scene>` (`shared_ptr`) and keeps ownership consistent with the rest of the engine.
+
+---
+
+### Creating and Managing Entities
+
+```cpp
+// CreateEntity always auto-adds TransformComponent and TagComponent
+Cosmic::Entity player = m_Scene->CreateEntity("Player");
+Cosmic::Entity enemy  = m_Scene->CreateEntity("Enemy");
+Cosmic::Entity bullet = m_Scene->CreateEntity(); // name defaults to "GenericEntity"
+```
+
+```cpp
+// Add components
+auto& body   = player.AddComponent<MyRigidBodyComponent>(1.0f, 0.3f);
+auto& sprite = player.AddComponent<Cosmic::SpriteRendererComponent>(myMaterial);
+
+// Read and modify
+auto& transform = player.GetComponent<Cosmic::TransformComponent>();
+transform.Position = { 2.0f, 0.5f, 0.0f };
+transform.Rotation.z = 45.0f;  // always in DEGREES — Scene::OnRender converts internally
+transform.Scale = { 1.0f, 1.0f };
+
+// Safe conditional access
+if (player.HasComponent<MyRigidBodyComponent>())
+    player.GetComponent<MyRigidBodyComponent>().Velocity = { 3.0f, 0.0f };
+
+// Remove
+player.RemoveComponent<MyRigidBodyComponent>();
+
+// Validity check
+if (player) { /* handle is valid and scene-bound */ }
+
+// Destroy
+m_Scene->DestroyEntity(player);
+// Do not call GetComponent on a destroyed handle afterward
+```
+
+---
+
+### Built-in Components
+
+**`TransformComponent`**
+
+```cpp
+struct TransformComponent {
+    glm::vec3 Position { 0.f, 0.f, 0.f };
+    glm::vec3 Rotation { 0.f, 0.f, 0.f }; // Z = 2D roll, stored in DEGREES
+    glm::vec2 Scale    { 1.f, 1.f };
+    glm::mat4 GetTransform() const;        // full TRS matrix (converts Z to radians internally)
+};
+```
+
+> **Degrees vs. Radians:** `TransformComponent::Rotation.z` is stored and set in **degrees**. `Scene::OnRender` applies `glm::radians(transform.Rotation.z)` before passing to `Renderer2D::DrawRotatedQuad`. If you call `DrawRotatedQuad` yourself (outside of `Scene::OnRender`), you are responsible for the conversion.
+
+**`SpriteRendererComponent`**
+
+```cpp
+struct SpriteRendererComponent {
+    Ref<Material> ActiveMaterial;
+    glm::vec4     Color { 1.f, 1.f, 1.f, 1.f }; // flat-color fallback when no material
+    bool FlipX = false;
+    bool FlipY = false;
+};
+```
+
+**`TagComponent`**
+
+```cpp
+struct TagComponent { std::string Tag; };
+```
+
+---
+
+### Scene Update and Render
+
+```cpp
+void MyLayer::OnUpdate(float ts) override
+{
+    m_Scene->OnUpdate(ts);         // ticks all registered Systems
+
+    // Scene::OnRender owns BeginScene and EndScene.
+    // Do NOT wrap this in your own BeginScene / EndScene.
+    m_Scene->OnRender(m_Camera.GetCamera());
+}
+
+void MyLayer::OnFixedUpdate(float dt) override
+{
+    m_Scene->OnFixedUpdate(dt);    // fixed-step tick for Systems
+}
+```
+
+### Mixed Manual + Scene Rendering
+
+If you need to draw both scene entities and manual primitives (lines, circles, custom quads) in the same frame, use two separate passes. They are fully independent:
+
+```cpp
+void MyLayer::OnUpdate(float ts) override
+{
+    m_Scene->OnUpdate(ts);
+
+    // Pass 1: scene entities (owns its own BeginScene/EndScene)
+    m_Scene->OnRender(m_Camera.GetCamera());
+
+    // Pass 2: manual overlay geometry
+    Cosmic::Renderer2D::BeginScene(m_Camera.GetCamera());
+    Cosmic::Renderer2D::DrawCircle(playerPos, { 1.2f, 0.4f }, ringColor, 0.05f, 0.005f);
+    Cosmic::Renderer2D::DrawLine(start, end, { 1.f, 1.f, 0.f, 1.f });
+    Cosmic::Renderer2D::EndScene();
+}
+```
+
+### Scene Render Internals
+
+`Scene::OnRender` groups all entities that have both a `TransformComponent` and a `SpriteRendererComponent` into material buckets before submitting to `Renderer2D`. All entities sharing the same `ActiveMaterial` are drawn in a single batch, minimizing `FlushAndReset` calls caused by material state changes.
+
+Entities with no `ActiveMaterial` fall back to flat-color rendering using `SpriteRendererComponent::Color`.
+
+`SpriteRendererComponent::FlipX` and `FlipY` are applied by negating the corresponding scale component in the draw call — the `TransformComponent` itself is never modified.
+
+---
+
+### Writing ECS Systems
+
+`System` is an abstract base class for broad update logic that spans many entities. Systems are owned by the scene and dispatched automatically.
+
+```cpp
+class GravitySystem : public Cosmic::System
+{
+public:
+    void OnFixedUpdate(Cosmic::Scene& scene, float dt) override
+    {
+        auto view = scene.View<Cosmic::TransformComponent, MyRigidBodyComponent>();
+        view.each([dt](auto& transform, auto& body)
+        {
+            if (!body.IsGrounded)
+            {
+                body.VelocityY       += -9.8f * dt;
+                transform.Position.y += body.VelocityY * dt;
+            }
+        });
+    }
+};
+```
+
+```cpp
+// Register in OnAttach
+void MyLayer::OnAttach() override
+{
+    m_Scene = Cosmic::Scene::Create();
+    m_Scene->AddSystem<GravitySystem>();
+}
+```
+
+---
+
+### DLL-Safe Component Registration
+
+EnTT assigns component type IDs using sequential static counters that reset independently in each compiled binary. When your game compiles as a separate `.dll`, a component registered as ID 3 in `Cosmic.dll` may be ID 1 in `MyProject.dll` — any `AddComponent` or `GetComponent` that crosses the boundary will silently operate on the wrong pool.
+
+**The fix is `CS_REGISTER_COMPONENT`:**
+
+```cpp
+// In your component header — must be compiled by both the engine and the DLL
+CS_REGISTER_COMPONENT(MyNamespace::MyComponent)
+```
+
+This specializes `entt::type_hash<T>` to return a compile-time hash of the fully-qualified type name, which is identical in every binary that includes the header.
+
+**Rules:**
+
+- Always use the fully-qualified name with namespace: `CS_REGISTER_COMPONENT(Workspace::BallComponent)` — not just `CS_REGISTER_COMPONENT(BallComponent)`.
+- Place the macro at file scope in the header, outside any class or function body.
+- Built-in engine components (`TagComponent`, `TransformComponent`, `SpriteRendererComponent`) are already registered in `Components.h` — do not register them again.
+- Missing registration produces no compile error; the only symptom is silent runtime data corruption.
+
+```cpp
+// Example — register all components in your header
+struct MyPhysicsComponent { float Mass = 1.0f; glm::vec2 Velocity = { 0.f, 0.f }; };
+CS_REGISTER_COMPONENT(Workspace::MyPhysicsComponent)
+```
+
+---
+
+### Complete Scene + Entity API Reference
+
+| Function                     | Parameters                      | Description                                                                                      |
+| ---------------------------- | ------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `Scene::Create`              | —                               | Static factory — returns `Ref<Scene>`                                                            |
+| `Scene::CreateEntity`        | `string name = "GenericEntity"` | Creates entity; auto-adds `TransformComponent` + `TagComponent`                                  |
+| `Scene::DestroyEntity`       | `Entity`                        | Removes entity and all its components from the registry                                          |
+| `Scene::OnUpdate`            | `float dt`                      | Ticks all registered Systems via `System::OnUpdate`                                              |
+| `Scene::OnFixedUpdate`       | `float dt`                      | Fixed-step tick for all registered Systems via `System::OnFixedUpdate`                           |
+| `Scene::OnRender`            | `const OrthographicCamera&`     | Calls `BeginScene(camera)`, dispatches all sprite entities grouped by material, calls `EndScene` |
+| `Scene::AddSystem<T>`        | `Args...`                       | Construct and attach a System; returns `T&`                                                      |
+| `Scene::RemoveAllSystems`    | —                               | Clears all registered systems                                                                    |
+| `Scene::View<Components...>` | —                               | Returns an EnTT view for querying entities with the specified component set                      |
+| `Entity::AddComponent<T>`    | `Args...`                       | Construct and attach component (asserts in debug if already present)                             |
+| `Entity::GetComponent<T>`    | —                               | Returns mutable reference (asserts in debug if absent)                                           |
+| `Entity::HasComponent<T>`    | —                               | Returns bool                                                                                     |
+| `Entity::RemoveComponent<T>` | —                               | Removes component (asserts in debug if absent)                                                   |
+| `Entity::operator bool`      | —                               | True if handle is valid and scene-bound                                                          |
+
+---
+
+## 23. Window System
+
+### Overview
+
+`Window` wraps GLFW and provides the engine's connection to the OS windowing system. It handles window creation, the OpenGL context, event callbacks, VSync, and fullscreen toggling. Most client code interacts with the window indirectly through `Application::Get().GetWindow()`.
+
+The window is created and owned by `Application` — it is a `Scope<Window>` (unique_ptr) and is destroyed during `Application::Shutdown`.
+
+---
+
+### Fullscreen
+
+Cosmic uses **borderless windowed fullscreen** rather than exclusive fullscreen or GLFW's monitor-switch path. The technique strips Win32 window decoration style bits and stretches the window to cover the target monitor without changing the display mode.
+
+**Why borderless windowed instead of exclusive fullscreen:**
+
+- No black-screen flash on entry/exit (no DWM mode switch)
+- Win+Shift+S, screen capture tools, and hardware overlays (Discord, Xbox Game Bar) continue working
+- Alt+Tab works naturally — the app remains a normal window in the z-order
+- No `ClipCursor` needed, so multi-monitor mouse movement is unaffected
+
+**Entering fullscreen:**
+
+1. Current windowed position and size are saved.
+2. `WS_OVERLAPPEDWINDOW` style bits are stripped via `SetWindowLong`.
+3. `SetWindowPos` stretches the window to cover the monitor that currently contains the window center.
+4. `glfwSetWindowMonitor` is **not** called — that path triggers a display-mode switch.
+
+**Exiting fullscreen:**
+
+1. `WS_OVERLAPPEDWINDOW` bits are restored.
+2. `SetWindowPos` restores the saved position and size.
+
+On non-Windows platforms, a `glfwSetWindowMonitor` fallback is used.
+
+---
+
+### Toggling Fullscreen
+
+The engine default hotkey is **F11** (press, not repeat). This is handled inside the GLFW key callback before the event is dispatched to the engine's layer system — F11 never reaches `OnEvent` in your layers.
+
+```cpp
+// Programmatic toggle from anywhere
+Cosmic::Application::Get().GetWindow().SetFullscreen(true);
+Cosmic::Application::Get().GetWindow().SetFullscreen(false);
+
+// Query current state
+bool fs = Cosmic::Application::Get().GetWindow().IsFullscreen();
+```
+
+---
+
+### Custom Fullscreen Hotkey Override
+
+A plugin DLL can replace the default F11 behavior with its own key combination. The override receives raw GLFW key/action/mods before any engine logic runs. Return `true` to consume the key (prevents F11 default and engine event dispatch); return `false` to pass through.
+
+```cpp
+// Register in OnAttach
+void MyLayer::OnAttach() override
+{
+    auto& window = Cosmic::Application::Get().GetWindow();
+
+    window.SetFullscreenHotkeyOverride([](int key, int action, int mods) -> bool
+    {
+        // Alt + Enter toggles fullscreen
+        // GLFW_KEY_ENTER = 257, GLFW_PRESS = 1, GLFW_MOD_ALT = 0x0004
+        if (key == 257 && action == 1 && (mods & 0x0004))
+        {
+            auto& app = Cosmic::Application::Get();
+            app.GetWindow().SetFullscreen(!app.GetWindow().IsFullscreen());
+            return true; // consumed — do not dispatch as a KeyPressedEvent
+        }
+        return false;
+    });
+}
+```
+
+The override is stored directly on `Window`, not in the GLFW user pointer, so `Application` can always reach it. **Always clear the override before your DLL is unloaded.** `Application::UnloadProjectDLL` calls `m_Window->ClearFullscreenHotkeyOverride()` automatically, so if you use the standard DLL lifecycle you do not need to clear it manually. If you register an override from a non-DLL context, clear it in `OnDetach`.
+
+```cpp
+void MyLayer::OnDetach() override
+{
+    // Only needed if you registered the override yourself outside the DLL lifecycle
+    Cosmic::Application::Get().GetWindow().ClearFullscreenHotkeyOverride();
+}
+```
+
+---
+
+### Monitor Detection
+
+When entering fullscreen, the engine finds the monitor that currently contains the window center and covers that monitor — not necessarily the primary display. This is handled internally and requires no client code.
+
+If the window is repositioned before fullscreen is entered (e.g., dragged to a second monitor), fullscreen will correctly target the second monitor.
+
+---
+
+### Window API Reference
+
+| Function                        | Parameters                           | Description                                                                                                        |
+| ------------------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------ |
+| `GetWidth`                      | —                                    | Returns cached client-area width in pixels                                                                         |
+| `GetHeight`                     | —                                    | Returns cached client-area height in pixels                                                                        |
+| `GetSize`                       | `int* width, int* height`            | Queries framebuffer size directly from GLFW — use this for FBO resize matching                                     |
+| `GetHandle`                     | —                                    | Returns raw `GLFWwindow*` for API-specific operations                                                              |
+| `SetEventCallback`              | `const EventCallbackFn&`             | Binds the function that receives all engine events from this window                                                |
+| `SetVSync`                      | `bool enabled`                       | Enables or disables vertical sync (`glfwSwapInterval`)                                                             |
+| `IsVSync`                       | —                                    | Returns current VSync state                                                                                        |
+| `ShouldClose`                   | —                                    | Returns true when the OS has signalled the window should close                                                     |
+| `PollEvents`                    | —                                    | Processes pending OS input; dispatches via EventCallback                                                           |
+| `SwapBuffers`                   | —                                    | Presents the rendered frame (calls `glfwSwapBuffers` through the graphics context)                                 |
+| `SetFullscreen`                 | `bool enabled`                       | Toggles borderless windowed fullscreen on the monitor containing the window center                                 |
+| `IsFullscreen`                  | —                                    | Returns current fullscreen state                                                                                   |
+| `SetFullscreenHotkeyOverride`   | `const FullscreenToggleActionFn& fn` | Register a delegate that intercepts raw key events before F11 handling. `fn(key, action, mods) -> bool (consumed)` |
+| `ClearFullscreenHotkeyOverride` | —                                    | Remove any registered delegate. Call before unloading a plugin DLL that registered an override                     |
+
+---
+
+### FullscreenToggleActionFn Signature
+
+```cpp
+// Defined in Window.h
+using FullscreenToggleActionFn = std::function<bool(int key, int action, int mods)>;
+```
+
+| Parameter | Type  | Values                                                                       |
+| --------- | ----- | ---------------------------------------------------------------------------- |
+| `key`     | `int` | GLFW key code (e.g. `257` = Enter, `290` = F1, `294` = F5)                   |
+| `action`  | `int` | `0` = release, `1` = press, `2` = repeat                                     |
+| `mods`    | `int` | Bitmask: `0x0001` = Shift, `0x0002` = Ctrl, `0x0004` = Alt, `0x0008` = Super |
+
+Return `true` to consume the key (no engine event dispatched, F11 default suppressed). Return `false` to pass through normally.
+
+---
+
+### VSync
+
+VSync is enabled by default at engine startup (`Application::Initialize` calls `m_Window->SetVSync(true)`). This locks the frame present rate to the monitor refresh rate, preventing screen tearing and reducing GPU load when the simulation is less demanding than the maximum frame rate.
+
+```cpp
+// Disable for uncapped frame rate (useful for benchmarking)
+Cosmic::Application::Get().GetWindow().SetVSync(false);
+
+// Re-enable
+Cosmic::Application::Get().GetWindow().SetVSync(true);
+```
+
+VSync state is preserved across fullscreen transitions.
+
+---
+
+### Events Generated by Window
+
+The GLFW callbacks translate OS signals into engine events. These are dispatched through `Application::OnEvent` and propagate down the `LayerStack`:
+
+| OS Signal         | Engine Event               | Key Data                           |
+| ----------------- | -------------------------- | ---------------------------------- |
+| Window resized    | `WindowResizeEvent`        | `GetWidth()`, `GetHeight()`        |
+| Window closed     | `WindowCloseEvent`         | —                                  |
+| Key pressed/held  | `KeyPressedEvent`          | `GetKeyCode()`, `GetRepeatCount()` |
+| Key released      | `KeyReleasedEvent`         | `GetKeyCode()`                     |
+| Character typed   | `KeyTypedEvent`            | `GetKeyCode()` (Unicode codepoint) |
+| Mouse button down | `MouseButtonPressedEvent`  | `GetMouseButton()`                 |
+| Mouse button up   | `MouseButtonReleasedEvent` | `GetMouseButton()`                 |
+| Mouse moved       | `MouseMovedEvent`          | `GetX()`, `GetY()`                 |
+| Scroll wheel      | `MouseScrolledEvent`       | `GetXOffset()`, `GetYOffset()`     |
+
+Fullscreen hotkey keys (F11 by default, or whatever your override intercepts) are **consumed before** any engine event is generated — they never appear as `KeyPressedEvent` in your layers.
+
+`WindowCloseEvent` is consumed by `Application::OnWindowClose` and does not propagate to layers.
+
+`WindowResizeEvent` is handled by `Application::OnWindowResize` (resizes the framebuffer) but is **not consumed** — it continues propagating to all layers so camera controllers can update their aspect ratios.
 
 ---
 
