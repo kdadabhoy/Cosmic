@@ -248,6 +248,9 @@ namespace Cosmic
 	{
 		CS_CORE_TRACE("Shutting down Application Subsystems...");
 
+		// 0. Unloading threads
+		Cosmic::JobSystem::Get().Shutdown();
+
 		// 1. Unload the project DLL runtime if it's still attached
 		UnloadProjectDLL();
 
@@ -366,6 +369,11 @@ namespace Cosmic
 	bool Application::Initialize()
 	{
 		CS_CORE_TRACE("Initializing Application Subsystems...");
+
+		// =====================================================================
+		// INITIALIZE THE JOB SYSTEM MULTITHREADING POOL FIRST
+		// =====================================================================
+		Cosmic::JobSystem::Get().Initialize();
 
 		// 1. Create the window 
 		m_Window = CreateScope<Window>(DEFAULT_WIDTH, DEFAULT_HEIGHT, DEFAULT_WINDOW_TITLE);

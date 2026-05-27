@@ -78,7 +78,7 @@ namespace Cosmic
 
     void JobSystem::Shutdown()
     {
-        if (!m_Initialized) return;
+        if (!m_Initialized || m_Workers.empty()) return;
 
         // Signal all workers to stop after draining the queue.
         {
@@ -191,7 +191,7 @@ namespace Cosmic
                     // Re-acquire the lock briefly so the notify + condition check
                     // in WaitIdle() are atomic with respect to each other.
                     std::lock_guard<std::mutex> lock(m_QueueMutex);
-                    m_AllIdle.notify_one();
+                    m_AllIdle.notify_all();
                 }
             }
         }

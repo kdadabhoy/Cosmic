@@ -1,6 +1,6 @@
 #include "TemplateProject.h"
 #include "TemplateRenderLayer.h"
-//#include "TemplateSimLayer.h"
+#include "TemplateSimLayer.h"
 #include "TemplateParallelSimLayer.h"
 #include "TemplateSpriteLayer.h"
 #include <imgui.h>
@@ -49,7 +49,7 @@ namespace Workspace
 
 		// 4. Construct child layers — NOT pushed onto the engine LayerStack
 		m_Modes.push_back(std::make_shared<TemplateRenderLayer>(m_SharedMaterial));
-		//m_Modes.push_back(std::make_shared<TemplateSimLayer>(m_Scene));
+		m_Modes.push_back(std::make_shared<TemplateSimLayer>(m_Scene));
 		m_Modes.push_back(std::make_shared<TemplateParallelSimLayer>(m_Scene));
 		m_Modes.push_back(std::make_shared<TemplateSpriteLayer>(m_Scene));
 
