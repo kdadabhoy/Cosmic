@@ -362,7 +362,11 @@ namespace Showcase
 
 	void ShowcaseMultiViewportLayer::OnImGuiRender()
 	{
-		ImGui::Begin("Simulation Inspection Window");
+		// -------------------------------------------------------------------------
+		// MIDDLE SIDEBAR LAYER: Mounts cleanly right under the Master panel
+		// -------------------------------------------------------------------------
+		ImGui::Begin("Project Inspector Mid");
+
 		ImGui::Text("--- RenderPass Multi-Viewport Showcase ---");
 		ImGui::Separator();
 
@@ -430,7 +434,7 @@ namespace Showcase
 			"vertices. All four cameras observe the same Scene entity data each frame."
 		);
 
-		ImGui::End();
+		ImGui::End(); // End "Project Inspector Mid"
 	}
 
 	// =========================================================================

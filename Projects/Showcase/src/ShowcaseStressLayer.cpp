@@ -112,7 +112,11 @@ namespace Showcase
 
 	void ShowcaseStressLayer::OnImGuiRender()
 	{
-		ImGui::Begin("Simulation Inspection Window");
+		// -------------------------------------------------------------------------
+		// MIDDLE SIDEBAR LAYER: Mounts cleanly right under the Master panel
+		// -------------------------------------------------------------------------
+		ImGui::Begin("Project Inspector Mid");
+
 		ImGui::Text("--- ECS Massive Grid Stress Target ---");
 		ImGui::Separator();
 
@@ -167,7 +171,8 @@ namespace Showcase
 			m_UpdateTicks = 0;
 		}
 
-		ImGui::End();
+		ImGui::End(); // End "Project Inspector Mid"
+
 		Cosmic::Renderer2D::ResetStats(); // reset AFTER reading
 	}
 

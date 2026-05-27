@@ -233,7 +233,11 @@ namespace Showcase
 
 	void ShowcaseDinoLayer::OnImGuiRender()
 	{
-		ImGui::Begin("Multi-Dino Sprite Sheet Inspector");
+		// -------------------------------------------------------------------------
+		// MIDDLE SIDEBAR LAYER: Mounts cleanly right under the Master panel
+		// -------------------------------------------------------------------------
+		ImGui::Begin("Project Inspector Mid");
+
 		ImGui::Text("--- Engine VFS Pack Slicing Simulation ---");
 		ImGui::Separator();
 
@@ -335,7 +339,7 @@ namespace Showcase
 			}
 		}
 
-		ImGui::End();
+		ImGui::End(); // End "Project Inspector Mid"
 	}
 
 	void ShowcaseDinoLayer::OnEvent(Cosmic::Event& e)

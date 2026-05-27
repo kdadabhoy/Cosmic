@@ -172,7 +172,11 @@ namespace Showcase
 
 	void ShowcaseFlightLayer::OnImGuiRender()
 	{
-		ImGui::Begin("Simulation Inspection Window");
+		// -------------------------------------------------------------------------
+		// MIDDLE SIDEBAR LAYER: Mounts cleanly right under the Master panel
+		// -------------------------------------------------------------------------
+		ImGui::Begin("Project Inspector Mid");
+
 		ImGui::Text("--- Flight Simulation Viewport ---");
 		ImGui::Separator();
 
@@ -225,7 +229,7 @@ namespace Showcase
 			ImGui::TextDisabled("No active simulation entity focused.");
 		}
 
-		ImGui::End();
+		ImGui::End(); // End "Project Inspector Mid"
 	}
 
 	void ShowcaseFlightLayer::OnEvent(Cosmic::Event& e)

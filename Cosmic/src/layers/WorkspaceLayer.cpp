@@ -292,21 +292,53 @@ namespace Cosmic
 		ImGui::DockBuilderAddNode(dockspaceId, ImGuiDockNodeFlags_DockSpace);
 		ImGui::DockBuilderSetNodeSize(dockspaceId, viewport->Size);
 
-		// Split: LEFT panel (Project Inspector) | MAIN (Viewport)
+		// Split: LEFT panel (Project Inspector Region) | MAIN (Viewport)
 		ImGuiID dock_main;
 		ImGuiID dock_left = ImGui::DockBuilderSplitNode(
 			dockspaceId, ImGuiDir_Left, 0.22f, nullptr, &dock_main);
 
-		ImGui::DockBuilderDockWindow("Project Inspector", dock_left);
+		// -----------------------------------------------------------------------
+		// ARCHITECTURAL UPDATE: Vertical Sidebar Slicing
+		// We slice the 22% left sidebar region into 3 generic vertical slots.
+		// -----------------------------------------------------------------------
+
+		// 1. Cut off the bottom 33% of the left sidebar
+		ImGuiID dock_left_top_mid;
+		ImGuiID dock_left_bottom = ImGui::DockBuilderSplitNode(
+			dock_left, ImGuiDir_Down, 0.33f, nullptr, &dock_left_top_mid);
+
+		// 2. Split the remaining upper sidebar space right down the middle (50%)
+		ImGuiID dock_left_top;
+		ImGuiID dock_left_mid = ImGui::DockBuilderSplitNode(
+			dock_left_top_mid, ImGuiDir_Down, 0.50f, nullptr, &dock_left_top);
+
+		// 3. Bind the structural layout slots to generic Engine Window IDs.
+		// Clients can target these exact strings if they want a raw window to mount here,
+		// or use RequestExtraDockedPanel to route custom-named windows to them.
+		ImGui::DockBuilderDockWindow("Project Inspector Top", dock_left_top);
+		ImGui::DockBuilderDockWindow("Project Inspector Mid", dock_left_mid);
+		ImGui::DockBuilderDockWindow("Project Inspector Bottom", dock_left_bottom);
+
+		// Bind the core central viewport window
 		ImGui::DockBuilderDockWindow("Viewport", dock_main);
 
 		// Process any extra panel requests the client submitted before this frame
+		// (This allows clients to dynamically map custom names into the layout nodes)
 		ImGuiID dock_remaining = dock_main;
 		for (const auto& req : m_PendingPanelRequests)
 		{
 			ImGuiID dock_new;
+
+			// INTERCEPTOR HELPER: If the client explicitly requests to dock relative to the 
+			// sidebar instead of the central viewport area, we redirect the builder node target.
+			ImGuiID target_node = dock_remaining;
+			if (req.WindowName == "Project Inspector Top") { ImGui::DockBuilderDockWindow(req.WindowName.c_str(), dock_left_top);    continue; }
+			if (req.WindowName == "Project Inspector Mid") { ImGui::DockBuilderDockWindow(req.WindowName.c_str(), dock_left_mid);    continue; }
+			if (req.WindowName == "Project Inspector Bottom") { ImGui::DockBuilderDockWindow(req.WindowName.c_str(), dock_left_bottom); continue; }
+
+			// Default path: Split cleanly out of the remaining viewport space
 			dock_remaining = ImGui::DockBuilderSplitNode(
-				dock_remaining, req.SplitDir, req.SplitRatio, &dock_new, &dock_remaining);
+				target_node, req.SplitDir, req.SplitRatio, &dock_new, &dock_remaining);
 			ImGui::DockBuilderDockWindow(req.WindowName.c_str(), dock_new);
 
 			CS_CORE_INFO("WorkspaceLayer: Pre-docked panel '{}' ({} split, ratio {:.2f})",
@@ -320,7 +352,7 @@ namespace Cosmic
 
 		ImGui::DockBuilderFinish(dockspaceId);
 
-		CS_CORE_INFO("WorkspaceLayer: Dockspace layout built. Inspector left (22%), Viewport main.");
+		CS_CORE_INFO("WorkspaceLayer: Dockspace layout built. Generic 3-tier Sidebar Left (22%), Viewport main.");
 	}
 
 	// =============================================================================

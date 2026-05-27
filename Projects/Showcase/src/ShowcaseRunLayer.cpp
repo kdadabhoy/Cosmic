@@ -245,7 +245,11 @@ namespace Showcase
 	{
 		auto& d = m_FlameEntity.GetComponent<RunnerFlameComponent>();
 
-		ImGui::Begin("Simulation Inspection Window");
+		// -------------------------------------------------------------------------
+		// MIDDLE SIDEBAR LAYER: Mounts cleanly right under the Master panel
+		// -------------------------------------------------------------------------
+		ImGui::Begin("Project Inspector Mid");
+
 		ImGui::Text("--- Runner Simulation Panel ---");
 		ImGui::Separator();
 
@@ -286,7 +290,7 @@ namespace Showcase
 		if (ImGui::Button("Reset Game Run"))
 			Reset();
 
-		ImGui::End();
+		ImGui::End(); // End "Project Inspector Mid"
 	}
 
 	void ShowcaseRunLayer::OnEvent(Cosmic::Event& e)

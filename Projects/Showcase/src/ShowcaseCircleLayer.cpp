@@ -80,7 +80,14 @@ namespace Showcase
 
 	void ShowcaseCircleLayer::OnImGuiRender()
 	{
-		ImGui::Begin("Renderer2D Circle Isolation Sandbox");
+		// -------------------------------------------------------------------------
+		// MIDDLE SIDEBAR LAYER: Mounts cleanly right under the Master panel
+		// -------------------------------------------------------------------------
+		ImGui::Begin("Project Inspector Mid");
+
+		ImGui::Text("--- Circle Isolation Sandbox ---");
+		ImGui::Separator();
+		ImGui::Spacing();
 
 		// Live Telemetry Monitoring via exposed Renderer Stats
 		auto stats = Cosmic::Renderer2D::GetStats();
@@ -108,7 +115,8 @@ namespace Showcase
 			ImGui::SliderFloat("Ring Edge Anti-Aliasing", &m_RingFade, 0.001f, 0.2f, "%.4f");
 		}
 
-		ImGui::End();
+		ImGui::End(); // End "Project Inspector Mid"
+
 		Cosmic::Renderer2D::ResetStats();
 	}
 

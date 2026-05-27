@@ -166,7 +166,11 @@ namespace Showcase
 
 	void ShowcaseShaderLayer::OnImGuiRender()
 	{
-		ImGui::Begin("Simulation Inspection Window");
+		// -------------------------------------------------------------------------
+		// MIDDLE SIDEBAR LAYER: Mounts cleanly right under the Master panel
+		// -------------------------------------------------------------------------
+		ImGui::Begin("Project Inspector Mid");
+
 		ImGui::Text("--- Shader Browser Node Matrix ---");
 		ImGui::Separator();
 
@@ -200,7 +204,7 @@ namespace Showcase
 		if (m_ShaderPaths.empty())
 		{
 			ImGui::TextColored({ 1.0f, 0.5f, 0.2f, 1.0f }, "No valid .glsl context definitions found in targeted project tree.");
-			ImGui::End();
+			ImGui::End(); // Cleanly seal this node before early return
 			return;
 		}
 
@@ -253,7 +257,8 @@ namespace Showcase
 
 		ImGui::Spacing();
 		ImGui::TextDisabled("Hotkeys: R = reload buffer  |  F5 = rescan project paths  |  Scroll Wheel = camera zoom");
-		ImGui::End();
+
+		ImGui::End(); // End "Project Inspector Mid"
 	}
 
 	void ShowcaseShaderLayer::OnEvent(Cosmic::Event& e)

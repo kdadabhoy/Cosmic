@@ -120,140 +120,92 @@ namespace Showcase
 		if (m_Modes.empty()) return;
 
 		// -------------------------------------------------------------------------
-		// STEP 1 — Claim the Pre-Docked Left Sidebar Real Estate
+		// MASTER PANEL: Always pinned directly to the Top Sidebar layout node
 		// -------------------------------------------------------------------------
-		ImGui::Begin("Project Inspector");
+		ImGui::Begin("Project Inspector Top");
 
-		// -------------------------------------------------------------------------
-		// STEP 2 — Setup a TabBar inside the Sidebar
-		// -------------------------------------------------------------------------
-		if (ImGui::BeginTabBar("InspectorTabs"))
+		ImGui::Text("--- Cosmic Workspace Manager ---");
+		ImGui::Separator();
+		ImGui::Spacing();
+
+		if (ImGui::BeginCombo("Active Layer Module", m_Modes[m_ActiveModeIndex]->GetName().c_str()))
 		{
-			// MAIN TAB: Cosmic Workspace Manager
-			if (ImGui::BeginTabItem("Cosmic Workspace Manager"))
+			for (size_t i = 0; i < m_Modes.size(); ++i)
 			{
-				ImGui::Spacing();
-
-				if (ImGui::BeginCombo("Active Layer Module", m_Modes[m_ActiveModeIndex]->GetName().c_str()))
+				bool isSelected = (m_ActiveModeIndex == i);
+				if (ImGui::Selectable(m_Modes[i]->GetName().c_str(), isSelected))
 				{
-					for (size_t i = 0; i < m_Modes.size(); ++i)
-					{
-						bool isSelected = (m_ActiveModeIndex == i);
-						if (ImGui::Selectable(m_Modes[i]->GetName().c_str(), isSelected))
-						{
-							m_ActiveModeIndex = static_cast<int>(i);
-						}
-					}
-					ImGui::EndCombo();
+					m_ActiveModeIndex = static_cast<int>(i);
 				}
-
-				// FIXED DYNAMIC DLL STATE LINKAGE:
-				// We query the core engine application singleton directly rather than relying on 
-				// local DLL memory space. This immediately couples the slider mechanics to the main loops.
-				ImGui::Spacing();
-				float hostTimeScale = Cosmic::Application::Get().GetTimeScale();
-
-				// Range extended to negative floats (-2.0f) to allow full rewinding support
-				if (ImGui::SliderFloat("Simulation TimeScale", &hostTimeScale, -2.0f, 3.0f, "%.2fx"))
-				{
-					Cosmic::Application::Get().SetTimeScale(hostTimeScale);
-				}
-
-				// State Notification Overlays for Playback Manipulation Status
-				if (hostTimeScale == 0.0f)
-				{
-					ImGui::TextColored(ImVec4(1.0f, 0.2f, 0.2f, 1.0f), "⏸ SIMULATION SYSTEM PAUSED");
-				}
-				else if (hostTimeScale < 0.0f)
-				{
-					ImGui::TextColored(ImVec4(1.0f, 0.64f, 0.0f, 1.0f), "⏪ REWINDING TIMELINE CONTEXT");
-				}
-				else if (hostTimeScale > 1.0f)
-				{
-					ImGui::TextColored(ImVec4(0.2f, 1.0f, 0.2f, 1.0f), "⏩ FAST-FORWARDING ACTIVE SIMULATION");
-				}
-				else
-				{
-					ImGui::TextColored(ImVec4(0.6f, 0.6f, 0.6f, 1.0f), "▶ Standard Hardware Synchronized Playback");
-				}
-
-				ImGui::Spacing();
-				ImGui::Separator();
-				ImGui::Spacing();
-
-				float fps = ImGui::GetIO().Framerate;
-				float ms = 1000.0f / fps;
-
-				// Color thresholds: Green for 60+ FPS, Yellow for 30-60 FPS, Red for below 30 FPS
-				ImVec4 fpsColor = (fps >= 60.0f) ? ImVec4(0.2f, 1.0f, 0.2f, 1.0f) :
-					(fps >= 30.0f) ? ImVec4(1.0f, 0.8f, 0.2f, 1.0f) :
-					ImVec4(1.0f, 0.2f, 0.2f, 1.0f);
-
-				ImGui::Text("Performance Metrics:");
-				ImGui::TextColored(fpsColor, "  FPS: %.1f", fps);
-				ImGui::Text("  Frame Time: %.2f ms", ms);
-
-				ImGui::Separator();
-
-				// =========================================================================
-				// LIVE ENGINE VISUAL THEME SELECTOR
-				// =========================================================================
-				ImGui::Text("Workspace Cosmetics:");
-
-				// Track the current theme state locally across frame instances
-				static int currentThemeIdx = 1; // Default to CosmicEmerald
-
-				const char* themeNames[] = {
-					"Default Dark",
-					"Cosmic Emerald",
-					"Deep Embedded",
-					"Corporate Light",
-					"Cyberpunk Neon",
-					"Retro Terminal",
-					"Dracula Dark",
-					"Solarized Ash"
-				};
-
-				if (ImGui::BeginCombo("UI Color Profile", themeNames[currentThemeIdx]))
-				{
-					// Loop constraint expanded to 8 to register all profile functions automatically
-					for (int i = 0; i < 8; ++i)
-					{
-						bool isSelected = (currentThemeIdx == i);
-						if (ImGui::Selectable(themeNames[i], isSelected))
-						{
-							currentThemeIdx = i;
-
-							// Safely fire our wrapper across the hot-reloaded DLL boundary!
-							Cosmic::SetImGuiTheme(static_cast<Cosmic::ImGuiTheme>(currentThemeIdx));
-						}
-					}
-					ImGui::EndCombo();
-				}
-
-				ImGui::Separator();
-
-				if (m_FlameMaterial && ImGui::CollapsingHeader("Global Fire Material Settings", ImGuiTreeNodeFlags_DefaultOpen))
-				{
-					glm::vec4 color = m_FlameMaterial->GetVector("u_Color");
-					if (ImGui::ColorEdit4("Flame Tint", &color.x))
-					{
-						m_FlameMaterial->Set("u_Color", color);
-					}
-				}
-
-				ImGui::EndTabItem();
 			}
-
-			// OPTIONAL: Place space here for an "Object Properties" or secondary tab if needed later!
-
-			ImGui::EndTabBar();
+			ImGui::EndCombo();
 		}
 
-		ImGui::End(); // End "Project Inspector"
+		ImGui::Spacing();
+		float hostTimeScale = Cosmic::Application::Get().GetTimeScale();
+
+		if (ImGui::SliderFloat("Simulation TimeScale", &hostTimeScale, -2.0f, 3.0f, "%.2fx"))
+		{
+			Cosmic::Application::Get().SetTimeScale(hostTimeScale);
+		}
+
+		if (hostTimeScale == 0.0f)        ImGui::TextColored(ImVec4(1.0f, 0.2f, 0.2f, 1.0f), "⏸ SIMULATION SYSTEM PAUSED");
+		else if (hostTimeScale < 0.0f)   ImGui::TextColored(ImVec4(1.0f, 0.64f, 0.0f, 1.0f), "⏪ REWINDING TIMELINE CONTEXT");
+		else if (hostTimeScale > 1.0f)   ImGui::TextColored(ImVec4(0.2f, 1.0f, 0.2f, 1.0f), "⏩ FAST-FORWARDING ACTIVE SIMULATION");
+		else                             ImGui::TextColored(ImVec4(0.6f, 0.6f, 0.6f, 1.0f), "▶ Standard Hardware Synchronized Playback");
+
+		ImGui::Spacing();
+		ImGui::Separator();
+		ImGui::Spacing();
+
+		float fps = ImGui::GetIO().Framerate;
+		float ms = 1000.0f / fps;
+
+		ImVec4 fpsColor = (fps >= 60.0f) ? ImVec4(0.2f, 1.0f, 0.2f, 1.0f) :
+			(fps >= 30.0f) ? ImVec4(1.0f, 0.8f, 0.2f, 1.0f) : ImVec4(1.0f, 0.2f, 0.2f, 1.0f);
+
+		ImGui::Text("Performance Metrics:");
+		ImGui::TextColored(fpsColor, "  FPS: %.1f", fps);
+		ImGui::Text("  Frame Time: %.2f ms", ms);
+
+		ImGui::Separator();
+		ImGui::Text("Workspace Cosmetics:");
+
+		static int currentThemeIdx = 1;
+		const char* themeNames[] = {
+			"Default Dark", "Cosmic Emerald", "Deep Embedded", "Corporate Light",
+			"Cyberpunk Neon", "Retro Terminal", "Dracula Dark", "Solarized Ash"
+		};
+
+		if (ImGui::BeginCombo("UI Color Profile", themeNames[currentThemeIdx]))
+		{
+			for (int i = 0; i < 8; ++i)
+			{
+				bool isSelected = (currentThemeIdx == i);
+				if (ImGui::Selectable(themeNames[i], isSelected))
+				{
+					currentThemeIdx = i;
+					Cosmic::SetImGuiTheme(static_cast<Cosmic::ImGuiTheme>(currentThemeIdx));
+				}
+			}
+			ImGui::EndCombo();
+		}
+
+		ImGui::Separator();
+
+		if (m_FlameMaterial && ImGui::CollapsingHeader("Global Fire Material Settings", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			glm::vec4 color = m_FlameMaterial->GetVector("u_Color");
+			if (ImGui::ColorEdit4("Flame Tint", &color.x))
+			{
+				m_FlameMaterial->Set("u_Color", color);
+			}
+		}
+
+		ImGui::End(); // End "Project Inspector Top"
 
 		// -------------------------------------------------------------------------
-		// STEP 3 — Let the sub-modules dispatch their own secondary windows
+		// STEP 3 — Dispatch the downstream sub-module UI layouts
 		// -------------------------------------------------------------------------
 		m_Modes[m_ActiveModeIndex]->OnImGuiRender();
 	}
