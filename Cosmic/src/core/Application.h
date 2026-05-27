@@ -73,6 +73,7 @@ namespace Cosmic
 
 		inline Window&					GetWindow()							{ return *m_Window; }
 		inline Ref<FrameBuffer>         GetFrameBuffer()					{ return m_Framebuffer; }
+		inline WorkspaceLayer*			GetWorkspaceLayer()					{ return m_WorkspaceLayer; } 
 
 
 		/////////////////////////////////////////////////////////////////////////////////
@@ -83,7 +84,7 @@ namespace Cosmic
 		void			SetTimeScale(float timescale)				{ m_TimeScale = timescale; }
 		float			GetTimeScale() const						{ return m_TimeScale; }
 
-		inline float	GetAbsoluteTime() const						{ return m_AbsoluteTime; } //s
+		inline float	GetAbsoluteTime() const						{ return m_AbsoluteTime; } // seconds
 
 
 		/////////////////////////////////////////////////////////////////////////////////
@@ -180,6 +181,7 @@ namespace Cosmic
 		void*				m_PluginHandle = nullptr;
 		Layer*				m_ActivePluginLayer = nullptr;
 		bool				m_PendingReturnToLauncher = false;
+
 	};
 
 	/////////////////////////////////////////////////////////////////////////////////

@@ -27,11 +27,6 @@ namespace Cosmic
 	// Global pointer to the application instance allowing subsystems to access engine methods
 	Application* Application::s_Instance = nullptr;
 
-	Application& Application::Get()
-	{
-		return *s_Instance;
-	}
-
 	/////////////////////////////////////////////////////////////////////////////////
 
 	/**
@@ -66,84 +61,6 @@ namespace Cosmic
 	Application::~Application()
 	{
 		Shutdown();
-	}
-
-	/////////////////////////////////////////////////////////////////////////////////
-
-	/**
-	 * Internal Initialization
-	 * Orchestrates the creation of the Window, Renderer, Framebuffer, and ImGui.
-	 * Returns: true if all subsystems started successfully.
-	 */
-	bool Application::Initialize()
-	{
-		CS_CORE_TRACE("Initializing Application Subsystems...");
-
-		// 1. Create the window 
-		m_Window = CreateScope<Window>(DEFAULT_WIDTH, DEFAULT_HEIGHT, DEFAULT_WINDOW_TITLE);
-		m_Window->SetEventCallback(GLCORE_BIND_EVENT_FN(Application::OnEvent));
-
-		// --- THE CRITICAL HAZEL FIX ---
-		// Explicitly lock your frame present scheduling onto your primary monitor refresh rate on boot!
-		m_Window->SetVSync(true);
-
-		// 2. Initialize the Renderer
-		Renderer::Init();
-
-		// 3. Framebuffer Setup 
-		FramebufferSpecification fbSpec;
-		fbSpec.Width = DEFAULT_WIDTH;
-		fbSpec.Height = DEFAULT_HEIGHT;
-		m_Framebuffer = FrameBuffer::Create(fbSpec);
-
-		// 4. Initialize ImGui Frame Layer Context Overlay
-		m_ImGuiLayer = CreateScope<ImGuiLayer>();
-		PushOverlay(m_ImGuiLayer.get());
-
-		// 5. Boot exclusively into the Launcher state
-		PushLayer(new LauncherLayer());
-
-		return true;
-	}
-
-	/////////////////////////////////////////////////////////////////////////////////
-
-	void Application::TransitionFromLauncherToWorkspace(const std::string& dllPath)
-	{
-		m_PendingProjectDLL = dllPath; // Just cache the request
-	}
-
-	/////////////////////////////////////////////////////////////////////////////////
-
-	void Application::TransitionToLauncher()
-	{
-		m_PendingReturnToLauncher = true; // Set the flag to process in the Safe Zone
-	}
-
-	/////////////////////////////////////////////////////////////////////////////////
-
-	/**
-	 * Global Event Entry Point
-	 * Handles top-level window events and propagates remaining events through the LayerStack.
-	 */
-	void Application::OnEvent(Event& e)
-	{
-		EventDispatcher dispatcher(e);
-
-		// Handling "global" application events
-		dispatcher.Dispatch<WindowCloseEvent>(GLCORE_BIND_EVENT_FN(Application::OnWindowClose));
-		dispatcher.Dispatch<WindowResizeEvent>(GLCORE_BIND_EVENT_FN(Application::OnWindowResize));
-
-		// Propagate events down the layer stack (top to bottom)
-		for (auto it = m_LayerStack.rbegin(); it != m_LayerStack.rend(); ++it)
-		{
-			if (e.Handled)
-			{
-				break;
-			}
-
-			(*it)->OnEvent(e);
-		}
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////
@@ -308,6 +225,178 @@ namespace Cosmic
 	/////////////////////////////////////////////////////////////////////////////////
 
 	/**
+	 * Engine Shutdown
+	 *
+	 * Orchestrates a deterministic, staggered "soft-landing" cleanup sequence for all
+	 * active hardware contexts, dynamic allocations, and modules.
+	 *
+	 * ENGINE MEMORY OWNERSHIP & LIFECYCLE POLICY:
+	 * The Application class maintains ABSOLUTE OWNERSHIP of unmanaged heap-allocated
+	 * layers (e.g., `LauncherLayer`, `WorkspaceLayer`). To guarantee that GPU assets
+	 * (Textures, Framebuffers) delete themselves while an active OpenGL context exists,
+	 * memory destruction is executed in a highly controlled, multi-stage sequence.
+	 *
+	 * PIPELINE CLEANUP FLOW:
+	 * 1. Detach and unmount active dynamic Project DLL modules.
+	 * 2. Pop scope-managed overlayers (ImGui) to prevent raw-pointer double deletions.
+	 * 3. Snapshot remaining active layers into a temporary local sequence cache.
+	 * 4. Evacuate LayerStack tracking arrays to invalidate update/event access loops.
+	 * 5. Iteratively delete unmanaged heap layer memory instances.
+	 * 6. Dissolve ImGui subsystems, close the UI window, and terminate the graphics context.
+	 */
+	void Application::Shutdown()
+	{
+		CS_CORE_TRACE("Shutting down Application Subsystems...");
+
+		// 1. Unload the project DLL runtime if it's still attached
+		UnloadProjectDLL();
+
+		// 2. Extract Scope-owned overlays (ImGui) from the LayerStack matrix
+		// This shields the unique_ptr raw address from being processed in raw delete passes.
+		if (m_ImGuiLayer)
+		{
+			m_LayerStack.PopOverlay(m_ImGuiLayer.get());
+		}
+
+		// 3. Cache references to remaining unmanaged app-level layers (e.g., LauncherLayer)
+		std::vector<Layer*> layersToDelete;
+		for (Layer* layer : m_LayerStack)
+		{
+			layersToDelete.push_back(layer);
+		}
+
+		// 4. Clear the active LayerStack immediately.
+		// By emptying tracking vectors now, we guarantee that no stray events or threads 
+		// can step through dangling pointer ranges during the upcoming deletion process.
+		m_LayerStack.Clear();
+
+		// 5. Execute explicit memory destruction on unmanaged layers.
+		// This triggers layer destructors, releasing graphics assets (Textures, Shaders)
+		// safely while the hardware OpenGL window context is completely alive.
+		for (Layer* layer : layersToDelete)
+		{
+			delete layer;
+		}
+		layersToDelete.clear();
+
+		// 6. Dissolve unique-scoped UI systems while graphics contexts are hot
+		m_ImGuiLayer.reset();
+
+		// 7. Flush static engine rendering layers and hardware structures
+		Renderer::Shutdown();
+
+		// 8. Safely close physical window frames and dismantle the OpenGL core context
+		m_Window.reset();
+
+		CS_CORE_TRACE("Application Subsystems safely terminated.");
+	}
+
+	/////////////////////////////////////////////////////////////////////////////////
+
+	/**
+	 * Global Event Entry Point
+	 * Handles top-level window events and propagates remaining events through the LayerStack.
+	 */
+	void Application::OnEvent(Event& e)
+	{
+		EventDispatcher dispatcher(e);
+
+		// Handling "global" application events
+		dispatcher.Dispatch<WindowCloseEvent>(GLCORE_BIND_EVENT_FN(Application::OnWindowClose));
+		dispatcher.Dispatch<WindowResizeEvent>(GLCORE_BIND_EVENT_FN(Application::OnWindowResize));
+
+		// Propagate events down the layer stack (top to bottom)
+		for (auto it = m_LayerStack.rbegin(); it != m_LayerStack.rend(); ++it)
+		{
+			if (e.Handled)
+			{
+				break;
+			}
+
+			(*it)->OnEvent(e);
+		}
+	}
+
+	/////////////////////////////////////////////////////////////////////////////////
+
+	/**
+	 * Logic Layer Registration
+	 */
+	void Application::PushLayer(Layer* inLayer)
+	{
+		m_LayerStack.PushLayer(inLayer);
+	}
+
+	/////////////////////////////////////////////////////////////////////////////////
+
+	/**
+	 * Overlay Registration
+	 */
+	void Application::PushOverlay(Layer* inOverlay)
+	{
+		m_LayerStack.PushOverlay(inOverlay);
+	}
+
+	/////////////////////////////////////////////////////////////////////////////////
+
+	void Application::TransitionFromLauncherToWorkspace(const std::string& dllPath)
+	{
+		m_PendingProjectDLL = dllPath; // Just cache the request
+	}
+
+	/////////////////////////////////////////////////////////////////////////////////
+
+	void Application::TransitionToLauncher()
+	{
+		m_PendingReturnToLauncher = true; // Set the flag to process in the Safe Zone
+	}
+
+	Application& Application::Get()
+	{
+		return *s_Instance;
+	}
+
+	/////////////////////////////////////////////////////////////////////////////////
+
+	/**
+	 * Internal Initialization
+	 * Orchestrates the creation of the Window, Renderer, Framebuffer, and ImGui.
+	 * Returns: true if all subsystems started successfully.
+	 */
+	bool Application::Initialize()
+	{
+		CS_CORE_TRACE("Initializing Application Subsystems...");
+
+		// 1. Create the window 
+		m_Window = CreateScope<Window>(DEFAULT_WIDTH, DEFAULT_HEIGHT, DEFAULT_WINDOW_TITLE);
+		m_Window->SetEventCallback(GLCORE_BIND_EVENT_FN(Application::OnEvent));
+
+		// --- THE CRITICAL HAZEL FIX ---
+		// Explicitly lock your frame present scheduling onto your primary monitor refresh rate on boot!
+		m_Window->SetVSync(true);
+
+		// 2. Initialize the Renderer
+		Renderer::Init();
+
+		// 3. Framebuffer Setup 
+		FramebufferSpecification fbSpec;
+		fbSpec.Width = DEFAULT_WIDTH;
+		fbSpec.Height = DEFAULT_HEIGHT;
+		m_Framebuffer = FrameBuffer::Create(fbSpec);
+
+		// 4. Initialize ImGui Frame Layer Context Overlay
+		m_ImGuiLayer = CreateScope<ImGuiLayer>();
+		PushOverlay(m_ImGuiLayer.get());
+
+		// 5. Boot exclusively into the Launcher state
+		PushLayer(new LauncherLayer());
+
+		return true;
+	}
+
+	/////////////////////////////////////////////////////////////////////////////////
+
+	/**
 	 * Window Close Handler
 	 */
 	bool Application::OnWindowClose(WindowCloseEvent& e)
@@ -334,26 +423,6 @@ namespace Cosmic
 		Renderer::OnWindowResize(e.GetWidth(), e.GetHeight());
 
 		return false;
-	}
-
-	/////////////////////////////////////////////////////////////////////////////////
-
-	/**
-	 * Logic Layer Registration
-	 */
-	void Application::PushLayer(Layer* inLayer)
-	{
-		m_LayerStack.PushLayer(inLayer);
-	}
-
-	/////////////////////////////////////////////////////////////////////////////////
-
-	/**
-	 * Overlay Registration
-	 */
-	void Application::PushOverlay(Layer* inOverlay)
-	{
-		m_LayerStack.PushOverlay(inOverlay);
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////
@@ -410,7 +479,10 @@ namespace Cosmic
 		if (m_WorkspaceLayer)
 		{
 			m_WorkspaceLayer->SetViewportLayer(m_ActivePluginLayer);
+			std::string displayName = std::filesystem::path(filepath).stem().string();
+			m_WorkspaceLayer->SetProjectName(displayName);
 
+			CS_CORE_INFO("WorkspaceLayer project name set to: '{0}'", displayName);
 			CS_CORE_INFO("Successfully loaded and mounted project DLL Layer!");
 		}
 		else
@@ -478,75 +550,6 @@ namespace Cosmic
 		// Manually route a window resize command directly down the rasterizer pipeline
 		WindowResizeEvent e(width, height);
 		OnWindowResize(e);
-	}
-
-	/////////////////////////////////////////////////////////////////////////////////
-
-	/**
-	 * Engine Shutdown
-	 *
-	 * Orchestrates a deterministic, staggered "soft-landing" cleanup sequence for all
-	 * active hardware contexts, dynamic allocations, and modules.
-	 *
-	 * ENGINE MEMORY OWNERSHIP & LIFECYCLE POLICY:
-	 * The Application class maintains ABSOLUTE OWNERSHIP of unmanaged heap-allocated
-	 * layers (e.g., `LauncherLayer`, `WorkspaceLayer`). To guarantee that GPU assets
-	 * (Textures, Framebuffers) delete themselves while an active OpenGL context exists,
-	 * memory destruction is executed in a highly controlled, multi-stage sequence.
-	 *
-	 * PIPELINE CLEANUP FLOW:
-	 * 1. Detach and unmount active dynamic Project DLL modules.
-	 * 2. Pop scope-managed overlayers (ImGui) to prevent raw-pointer double deletions.
-	 * 3. Snapshot remaining active layers into a temporary local sequence cache.
-	 * 4. Evacuate LayerStack tracking arrays to invalidate update/event access loops.
-	 * 5. Iteratively delete unmanaged heap layer memory instances.
-	 * 6. Dissolve ImGui subsystems, close the UI window, and terminate the graphics context.
-	 */
-	void Application::Shutdown()
-	{
-		CS_CORE_TRACE("Shutting down Application Subsystems...");
-
-		// 1. Unload the project DLL runtime if it's still attached
-		UnloadProjectDLL();
-
-		// 2. Extract Scope-owned overlays (ImGui) from the LayerStack matrix
-		// This shields the unique_ptr raw address from being processed in raw delete passes.
-		if (m_ImGuiLayer)
-		{
-			m_LayerStack.PopOverlay(m_ImGuiLayer.get());
-		}
-
-		// 3. Cache references to remaining unmanaged app-level layers (e.g., LauncherLayer)
-		std::vector<Layer*> layersToDelete;
-		for (Layer* layer : m_LayerStack)
-		{
-			layersToDelete.push_back(layer);
-		}
-
-		// 4. Clear the active LayerStack immediately.
-		// By emptying tracking vectors now, we guarantee that no stray events or threads 
-		// can step through dangling pointer ranges during the upcoming deletion process.
-		m_LayerStack.Clear();
-
-		// 5. Execute explicit memory destruction on unmanaged layers.
-		// This triggers layer destructors, releasing graphics assets (Textures, Shaders)
-		// safely while the hardware OpenGL window context is completely alive.
-		for (Layer* layer : layersToDelete)
-		{
-			delete layer;
-		}
-		layersToDelete.clear();
-
-		// 6. Dissolve unique-scoped UI systems while graphics contexts are hot
-		m_ImGuiLayer.reset();
-
-		// 7. Flush static engine rendering layers and hardware structures
-		Renderer::Shutdown();
-
-		// 8. Safely close physical window frames and dismantle the OpenGL core context
-		m_Window.reset();
-
-		CS_CORE_TRACE("Application Subsystems safely terminated.");
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////
