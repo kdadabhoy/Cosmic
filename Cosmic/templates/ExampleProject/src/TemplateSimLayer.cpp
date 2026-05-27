@@ -39,50 +39,50 @@ namespace Workspace
 	// Physics — runs deterministically at 60 Hz
 	void TemplateSimLayer::OnFixedUpdate(float dt)
 	{
-		// Guard: do nothing when paused or rewinding
 		if (dt <= 0.0f) return;
 
 		++m_FixedTicks;
 
-		for (auto& ent : m_Balls)
-		{
-			if (!ent) continue;
 
-			auto& t = ent.GetComponent<Cosmic::TransformComponent>();
-			auto& b = ent.GetComponent<BallComponent>();
+		// Get a sequential view of only entities that have BOTH components
+		// Use the public View method you already wrote!
+		auto view = m_Scene->View<Cosmic::TransformComponent, BallComponent>();
 
-			// Apply gravity
-			b.Velocity.y += m_Gravity * dt;
-
-			// Integrate position
-			t.Position.x += b.Velocity.x * dt;
-			t.Position.y += b.Velocity.y * dt;
-
-			// Wall bounce — left / right
-			if (t.Position.x + b.Radius > m_BoundsX)
+		// EnTT iterates through this sequentially in memory. Maximum L1/L2 Cache efficiency!
+		view.each([&](auto entity, auto& t, auto& b)
 			{
-				t.Position.x = m_BoundsX - b.Radius;
-				b.Velocity.x = -b.Velocity.x * m_Damping;
-			}
-			else if (t.Position.x - b.Radius < -m_BoundsX)
-			{
-				t.Position.x = -m_BoundsX + b.Radius;
-				b.Velocity.x = -b.Velocity.x * m_Damping;
-			}
+				// Apply gravity
+				b.Velocity.y += m_Gravity * dt;
 
-			// Floor / ceiling bounce
-			if (t.Position.y - b.Radius < -m_BoundsY)
-			{
-				t.Position.y = -m_BoundsY + b.Radius;
-				b.Velocity.y = -b.Velocity.y * m_Damping;
-				b.Velocity.x *= m_Damping; // friction on floor
-			}
-			else if (t.Position.y + b.Radius > m_BoundsY)
-			{
-				t.Position.y = m_BoundsY - b.Radius;
-				b.Velocity.y = -b.Velocity.y * m_Damping;
-			}
-		}
+				// Integrate position
+				t.Position.x += b.Velocity.x * dt;
+				t.Position.y += b.Velocity.y * dt;
+
+				// Wall bounce — left / right
+				if (t.Position.x + b.Radius > m_BoundsX)
+				{
+					t.Position.x = m_BoundsX - b.Radius;
+					b.Velocity.x = -b.Velocity.x * m_Damping;
+				}
+				else if (t.Position.x - b.Radius < -m_BoundsX)
+				{
+					t.Position.x = -m_BoundsX + b.Radius;
+					b.Velocity.x = -b.Velocity.x * m_Damping;
+				}
+
+				// Floor / ceiling bounce
+				if (t.Position.y - b.Radius < -m_BoundsY)
+				{
+					t.Position.y = -m_BoundsY + b.Radius;
+					b.Velocity.y = -b.Velocity.y * m_Damping;
+					b.Velocity.x *= m_Damping;
+				}
+				else if (t.Position.y + b.Radius > m_BoundsY)
+				{
+					t.Position.y = m_BoundsY - b.Radius;
+					b.Velocity.y = -b.Velocity.y * m_Damping;
+				}
+			});
 	}
 
 	// -------------------------------------------------------------------------
@@ -128,36 +128,34 @@ namespace Workspace
 		}
 
 		// Balls — rendered as SDF circles
-		for (auto& ent : m_Balls)
-		{
-			if (!ent) continue;
-			auto& t = ent.GetComponent<Cosmic::TransformComponent>();
-			auto& b = ent.GetComponent<BallComponent>();
+		auto view = m_Scene->View<Cosmic::TransformComponent, BallComponent>();
 
-			// Shadow under each ball
-			Cosmic::Renderer2D::DrawCircle(
-				{ t.Position.x, -m_BoundsY + 0.05f, -0.05f },
-				{ b.Radius * 2.2f, b.Radius * 0.5f },
-				{ 0.0f, 0.0f, 0.0f, 0.4f },
-				1.0f, 0.15f
-			);
+		view.each([&](auto entity, const auto& t, const auto& b)
+			{
+				// 1. Shadow under each ball
+				Cosmic::Renderer2D::DrawCircle(
+					{ t.Position.x, -m_BoundsY + 0.05f, -0.05f },
+					{ b.Radius * 2.2f, b.Radius * 0.5f },
+					{ 0.0f, 0.0f, 0.0f, 0.4f },
+					1.0f, 0.15f
+				);
 
-			// Ball body
-			Cosmic::Renderer2D::DrawCircle(
-				t.Position,
-				{ b.Radius * 2.0f, b.Radius * 2.0f },
-				b.Color,
-				1.0f, 0.02f
-			);
+				// 2. Ball body
+				Cosmic::Renderer2D::DrawCircle(
+					t.Position,
+					{ b.Radius * 2.0f, b.Radius * 2.0f },
+					b.Color,
+					1.0f, 0.02f
+				);
 
-			// Highlight specular dot
-			Cosmic::Renderer2D::DrawCircle(
-				{ t.Position.x + b.Radius * 0.3f, t.Position.y + b.Radius * 0.3f, t.Position.z + 0.01f },
-				{ b.Radius * 0.6f, b.Radius * 0.6f },
-				{ 1.0f, 1.0f, 1.0f, 0.35f },
-				1.0f, 0.08f
-			);
-		}
+				// 3. Highlight specular dot
+				Cosmic::Renderer2D::DrawCircle(
+					{ t.Position.x + b.Radius * 0.3f, t.Position.y + b.Radius * 0.3f, t.Position.z + 0.01f },
+					{ b.Radius * 0.6f, b.Radius * 0.6f },
+					{ 1.0f, 1.0f, 1.0f, 0.35f },
+					1.0f, 0.08f
+				);
+			});
 
 		Cosmic::Renderer2D::EndScene();
 	}
@@ -170,7 +168,7 @@ namespace Workspace
 		ImGui::Separator();
 		ImGui::Spacing();
 
-		ImGui::Text("Active Balls:  %zu", m_Balls.size());
+		ImGui::Text("Active Balls:  %zu", m_Scene->View<BallComponent>().size());;
 		ImGui::Text("Fixed Ticks:   %u", m_FixedTicks);
 		ImGui::Text("Layer Time:    %.2fs", GetLocalTime());
 		ImGui::Spacing();
