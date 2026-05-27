@@ -18,7 +18,7 @@ namespace Workspace
 	{
 		m_Camera.SetZoomLevel(3.0f);
 		m_Camera.SetZoomLimits(0.5f, 20.0f);
-		m_Camera.SetManualMovementEnabled(false);
+		m_Camera.SetManualMovementEnabled(true);
 
 		// ---------------------------------------------------------------------
 		// VFS SHADER RESOLUTION & LOADING
