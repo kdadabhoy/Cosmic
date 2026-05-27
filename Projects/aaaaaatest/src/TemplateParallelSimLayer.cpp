@@ -178,6 +178,50 @@ namespace Workspace
 		ImGui::Text("Fixed Ticks:     %u", m_FixedTicks);
 		ImGui::Spacing();
 
+		// --- NEW: Parallel System Profiler ---
+		if (m_PhysicsSystem && ImGui::CollapsingHeader("Parallel System Profiler", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			float prep = m_PhysicsSystem->TimePrepareMs;
+			float exec = m_PhysicsSystem->TimeExecuteMs;
+			float merge = m_PhysicsSystem->TimeMergeMs;
+			float total = prep + exec + merge;
+
+			ImGui::Text("Total Pipeline Time: %.3f ms", total);
+			ImGui::Spacing();
+
+			if (total > 0.0f)
+			{
+				char label[64];
+
+				// 1. Prepare Pass Progress Bar (Single Threaded Copy)
+				float prepPct = prep / total;
+				sprintf_s(label, "Prepare: %.3f ms (%.1f%%)", prep, prepPct * 100.0f);
+				ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(0.9f, 0.4f, 0.4f, 1.0f)); // Soft Red
+				ImGui::ProgressBar(prepPct, ImVec2(-1, 0), label);
+				ImGui::PopStyleColor();
+
+				// 2. Execute Pass Progress Bar (Multithreaded Compute)
+				float execPct = exec / total;
+				sprintf_s(label, "Execute: %.3f ms (%.1f%%)", exec, execPct * 100.0f);
+				ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(0.4f, 0.8f, 0.4f, 1.0f)); // Soft Green
+				ImGui::ProgressBar(execPct, ImVec2(-1, 0), label);
+				ImGui::PopStyleColor();
+
+				// 3. Merge Pass Progress Bar (Single Threaded Sync)
+				float mergePct = merge / total;
+				sprintf_s(label, "Merge:   %.3f ms (%.1f%%)", merge, mergePct * 100.0f);
+				ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(0.4f, 0.6f, 0.9f, 1.0f)); // Soft Blue
+				ImGui::ProgressBar(mergePct, ImVec2(-1, 0), label);
+				ImGui::PopStyleColor();
+			}
+			else
+			{
+				ImGui::TextDisabled("No active physics steps recorded yet.");
+			}
+			ImGui::Spacing();
+		}
+
+
 		// --- Simulation parameters (wired directly into BallPhysicsSystem) ---
 		if (m_PhysicsSystem && ImGui::CollapsingHeader("Simulation Parameters", ImGuiTreeNodeFlags_DefaultOpen))
 		{

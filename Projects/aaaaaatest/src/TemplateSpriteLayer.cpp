@@ -50,7 +50,7 @@ namespace Workspace
 
 		// --- Atlas loading via VFS ---
 		// Sprites must be placed at:
-		//   assets/projects/awdtest/sprites/DinoSprites - <name>.png
+		//   assets/projects/aaaaaatest/sprites/DinoSprites - <name>.png
 		// after the CMake POST_BUILD asset sync runs.
 		std::vector<std::string> vfsPaths = {
 			"project://sprites/DinoSprites - doux.png",  // 0 = Blue

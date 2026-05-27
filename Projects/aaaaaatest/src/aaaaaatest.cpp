@@ -1,4 +1,4 @@
-#include "awdtest.h"
+#include "aaaaaatest.h"
 #include "TemplateRenderLayer.h"
 #include "TemplateSimLayer.h"
 #include "TemplateParallelSimLayer.h"
@@ -8,18 +8,18 @@
 
 namespace Workspace
 {
-	awdtest::awdtest()
-		: Cosmic::Layer("awdtest")
+	aaaaaatest::aaaaaatest()
+		: Cosmic::Layer("aaaaaatest")
 	{
 	}
 
 	// -------------------------------------------------------------------------
-	void awdtest::OnAttach()
+	void aaaaaatest::OnAttach()
 	{
-		CS_INFO("awdtest: Attaching root manager layer.");
+		CS_INFO("aaaaaatest: Attaching root manager layer.");
 
 		// 1. Resolve asset paths through the VFS
-		Cosmic::FileSystem::SetActiveProject("awdtest");
+		Cosmic::FileSystem::SetActiveProject("aaaaaatest");
 
 		// Redirect logging outputs into the localized project workspace subfolder (still lives in build)
 		std::string physicalLogPath = Cosmic::FileSystem::Resolve("project://logs");
@@ -44,7 +44,7 @@ namespace Workspace
 		}
 		else
 		{
-			CS_WARN("awdtest: Shader not found at '{0}'. Rendering layers will use fallback geometry.", shaderPath);
+			CS_WARN("aaaaaatest: Shader not found at '{0}'. Rendering layers will use fallback geometry.", shaderPath);
 		}
 
 		// 4. Construct child layers — NOT pushed onto the engine LayerStack
@@ -81,13 +81,13 @@ namespace Workspace
 				return false; // Not our key combo, let the engine handle it normally
 			});
 
-		CS_INFO("awdtest: {} child layers attached. Fullscreen override active.", m_Modes.size());
+		CS_INFO("aaaaaatest: {} child layers attached. Fullscreen override active.", m_Modes.size());
 
 		
 	}
 
 	// -------------------------------------------------------------------------
-	void awdtest::OnDetach()
+	void aaaaaatest::OnDetach()
 	{
 		for (auto& mode : m_Modes)
 		{
@@ -98,14 +98,14 @@ namespace Workspace
 		m_SharedMaterial.reset();
 		m_Scene.reset();
 
-		CS_INFO("awdtest: Detached and cleaned up.");
+		CS_INFO("aaaaaatest: Detached and cleaned up.");
 
 		// Optional Safety Measure: Reset logging back to engine defaults when leaving workspace
 		Cosmic::Log::SetLogDirectory("logs");
 	}
 
 	// -------------------------------------------------------------------------
-	void awdtest::OnUpdate(float ts)
+	void aaaaaatest::OnUpdate(float ts)
 	{
 		if (m_Modes.empty()) return;
 
@@ -126,7 +126,7 @@ namespace Workspace
 	}
 
 	// -------------------------------------------------------------------------
-	void awdtest::OnFixedUpdate(float deltaFixedTime)
+	void aaaaaatest::OnFixedUpdate(float deltaFixedTime)
 	{
 		if (m_Modes.empty()) return;
 
@@ -136,7 +136,7 @@ namespace Workspace
 	}
 
 	// -------------------------------------------------------------------------
-	void awdtest::OnImGuiRender()
+	void aaaaaatest::OnImGuiRender()
 	{
 		if (m_Modes.empty()) return;
 
@@ -217,7 +217,7 @@ namespace Workspace
 	}
 
 	// -------------------------------------------------------------------------
-	void awdtest::OnEvent(Cosmic::Event& e)
+	void aaaaaatest::OnEvent(Cosmic::Event& e)
 	{
 		if (m_Modes.empty()) return;
 
@@ -249,6 +249,6 @@ extern "C"
 
 	__declspec(dllexport) Cosmic::Layer* CreatePluginLayer()
 	{
-		return new Workspace::awdtest();
+		return new Workspace::aaaaaatest();
 	}
 }

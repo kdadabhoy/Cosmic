@@ -22,6 +22,7 @@
 #include <Cosmic.h>
 #include "jobs/DoubleBuffer.h"   // Not included transitively via Cosmic.h — must be explicit
 #include "Components.h"
+#include <chrono>
 
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
@@ -45,18 +46,27 @@ namespace Workspace
         float BoundsX = 6.0f;
         float BoundsY = 4.0f;
 
+		// =====================================================================
+		// Profiling Telemetry Data (Read by ImGui layer)
+		// =====================================================================
+		float TimePrepareMs = 0.0f;
+		float TimeExecuteMs = 0.0f;
+		float TimeMergeMs = 0.0f;
+
         // =====================================================================
         // PASS B — OnFixedPrepare
         // =====================================================================
-        virtual void OnFixedPrepare(Cosmic::Scene& scene, float fixedDt) override
-        {
-            entt::registry& reg = scene.GetRegistry();
-            auto view = reg.view<PhysicsBody>();
+		virtual void OnFixedPrepare(Cosmic::Scene& scene, float fixedDt) override
+		{
+			auto start = std::chrono::high_resolution_clock::now();
+
+			entt::registry& reg = scene.GetRegistry();
+			auto view = reg.view<PhysicsBody>();
+			const size_t count = view.size();
 
             // view.size() is correct for a single-component view.
             // view.size_hint() requires a multi-component view (storage_view) in
             // this version of EnTT and will fail to compile on single-component views.
-            const size_t count = view.size();
 
             if (m_Buffer.Count() != count)
             {
@@ -76,6 +86,9 @@ namespace Workspace
 
             // Promote write → read.  Workers will read this stable snapshot.
             m_Buffer.Swap();
+
+			auto end = std::chrono::high_resolution_clock::now();
+			TimePrepareMs = std::chrono::duration<float, std::milli>(end - start).count();
         }
 
         // =====================================================================
@@ -83,8 +96,14 @@ namespace Workspace
         // =====================================================================
         virtual void OnFixedParallelExecute(Cosmic::Scene& scene, float fixedDt) override
         {
+            auto start = std::chrono::high_resolution_clock::now();
+
             const size_t count = m_Buffer.Count();
-            if (count == 0) return;
+			if (count == 0)
+			{
+				TimeExecuteMs = 0.0f;
+				return;
+			}
 
             m_LogTimer += fixedDt;
             if (m_LogTimer >= 5.0f)
@@ -104,9 +123,9 @@ namespace Workspace
             const PhysicsBody* readBuf = m_Buffer.GetReadBuffer();
             PhysicsBody* writeBuf = m_Buffer.GetWriteBuffer();
 
-            Cosmic::ParallelFor(count,
-                [readBuf, writeBuf, gravity, damping, boundsX, boundsY, dt]
-                (size_t begin, size_t end)
+			Cosmic::ParallelFor(count,
+				[readBuf, writeBuf, gravity, damping, boundsX, boundsY, dt]
+				(size_t begin, size_t end)
                 {
                     for (size_t i = begin; i < end; ++i)
                     {
@@ -152,6 +171,9 @@ namespace Workspace
                 },
                 32
             );
+
+			auto end = std::chrono::high_resolution_clock::now();
+			TimeExecuteMs = std::chrono::duration<float, std::milli>(end - start).count();
         }
 
         // =====================================================================
@@ -159,7 +181,13 @@ namespace Workspace
         // =====================================================================
         virtual void OnFixedMerge(Cosmic::Scene& scene, float fixedDt) override
         {
-            if (m_Buffer.Count() == 0) return;
+            auto start = std::chrono::high_resolution_clock::now();
+
+			if (m_Buffer.Count() == 0)
+			{
+				TimeMergeMs = 0.0f;
+				return;
+			}
 
             // Promote workers' write buffer → read buffer.
             m_Buffer.Swap();
@@ -185,6 +213,9 @@ namespace Workspace
                     transform->Position.y = results[i].Position.y;
                     // Z (depth / layering) is not owned by the physics system.
                 }
+
+				auto end = std::chrono::high_resolution_clock::now();
+				TimeMergeMs = std::chrono::duration<float, std::milli>(end - start).count();
             }
         }
 
