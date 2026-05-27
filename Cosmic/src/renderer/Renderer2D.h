@@ -171,11 +171,28 @@ namespace Cosmic
 		// Specialized Math Primitives (SDF)
 		/////////////////////////////////////////////////////////////////////////////////
 
-		static void DrawCircle(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color, float thickness = 1.0f, float fade = 0.005f);
+		// Primary Implementation
+		static void DrawCircle(
+			const glm::vec3& position,
+			const glm::vec2& size,
+			const glm::vec4& color,
+			float thickness,
+			float fade,
+			Cosmic::Ref<Cosmic::Shader> customShader = nullptr
+		);
 
-		inline static void DrawCircle(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color, float thickness = 1.0f, float fade = 0.005f)
+		// Inline 2D Wrapper
+		inline static void DrawCircle(
+			const glm::vec2& position,
+			const glm::vec2& size,
+			const glm::vec4& color,
+			float thickness = 1.0f,
+			float fade = 0.005f,
+			Cosmic::Ref<Cosmic::Shader> customShader = nullptr
+		)
 		{
-			DrawCircle({ position.x, position.y, 0.0f }, size, color, thickness, fade);
+			// Forward the customShader reference down to the 3D implementation
+			DrawCircle({ position.x, position.y, 0.0f }, size, color, thickness, fade, customShader);
 		}
 
 		/////////////////////////////////////////////////////////////////////////////////

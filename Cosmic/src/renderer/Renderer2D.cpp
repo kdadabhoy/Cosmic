@@ -88,7 +88,8 @@ namespace Cosmic
 		// --- Circle Data ---
 		Ref<VertexArray>  CircleVertexArray;
 		Ref<VertexBuffer> CircleVertexBuffer;
-		Ref<Shader>       CircleShader;
+		Ref<Shader>       DefaultCircleShader; // Fallback core engine shader
+		Ref<Shader>       ActiveCircleShader;  // Current bound shader in active batch
 
 		uint32_t      CircleIndexCount = 0;
 		CircleVertex* CircleVertexBufferBase = nullptr;
@@ -201,7 +202,18 @@ namespace Cosmic
 
 		// Reuse the quad index buffer — circle quads use the same 0-1-2/2-3-0 topology
 		s_Data.CircleVertexArray->SetIndexBuffer(quadIB);
-		s_Data.CircleShader = Shader::Create("assets/shaders/Circle.glsl");
+
+		// -------------------------------------------------------------------------
+		// CIRCLE RENDERING PIPELINE ALLOCATION
+		// -------------------------------------------------------------------------
+		// Load the engine fallback shader into the default allocation slot
+		s_Data.DefaultCircleShader = Shader::Create("assets/shaders/Circle.glsl");
+
+		// Point our working runtime tracker directly to the fallback default program
+		s_Data.ActiveCircleShader = s_Data.DefaultCircleShader;
+
+		if (!s_Data.DefaultCircleShader)
+			CS_CORE_ERROR("Renderer2D: Failed to load Engine Default Circle shader!");
 
 		CS_CORE_INFO("Renderer2D initialized.");
 	}
@@ -261,8 +273,10 @@ namespace Cosmic
 		s_Data.LineVertexCount = 0;
 		s_Data.LineVertexBufferPtr = s_Data.LineVertexBufferBase;
 
+		// Reset circle batch counters and restore state to the default core fallback shader
 		s_Data.CircleIndexCount = 0;
 		s_Data.CircleVertexBufferPtr = s_Data.CircleVertexBufferBase;
+		s_Data.ActiveCircleShader = s_Data.DefaultCircleShader; // Prevent custom shader leakage
 	}
 
 	void Renderer2D::PopRenderPass()
@@ -306,8 +320,10 @@ namespace Cosmic
 		s_Data.LineVertexCount = 0;
 		s_Data.LineVertexBufferPtr = s_Data.LineVertexBufferBase;
 
+		// Reset circle batch counters and restore state to the default core fallback shader
 		s_Data.CircleIndexCount = 0;
 		s_Data.CircleVertexBufferPtr = s_Data.CircleVertexBufferBase;
+		s_Data.ActiveCircleShader = s_Data.DefaultCircleShader; // Prevent custom shader leakage
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////
@@ -323,7 +339,7 @@ namespace Cosmic
 			s_Data.ViewportDimensions.x,
 			s_Data.ViewportDimensions.y
 		};
-
+		s_Data.ActiveCircleShader = s_Data.DefaultCircleShader;
 		PushRenderPass(camera.GetViewProjectionMatrix(), fullWindowBounds);
 	}
 
@@ -386,9 +402,13 @@ namespace Cosmic
 			uint32_t dataSize = (uint32_t)((uint8_t*)s_Data.CircleVertexBufferPtr - (uint8_t*)s_Data.CircleVertexBufferBase);
 			s_Data.CircleVertexBuffer->SetData(s_Data.CircleVertexBufferBase, dataSize);
 
-			s_Data.CircleShader->Bind();
-			s_Data.CircleShader->SetMat4("u_ViewProjection", s_Data.ViewProjectionMatrix);
+			// Dynamic shader selection from the tracking slot
+			s_Data.ActiveCircleShader->Bind();
+			s_Data.ActiveCircleShader->SetMat4("u_ViewProjection", s_Data.ViewProjectionMatrix);
 
+			// OPTIMIZATION CONTRACT: Provide standard uniform contexts so that 
+			// client shaders can sample layout properties and match your quad contract
+			s_Data.ActiveCircleShader->SetFloat2("u_ViewportSize", s_Data.ViewportDimensions);
 			s_Data.CircleVertexArray->Bind();
 			RenderCommand::DrawIndexed(s_Data.CircleVertexArray, s_Data.CircleIndexCount);
 			s_Data.Stats.DrawCalls++;
@@ -405,6 +425,15 @@ namespace Cosmic
 		// into the same material bucket without a spurious batch break.
 		Ref<Material> activeMaterial = s_Data.CurrentMaterial;
 
+		// -------------------------------------------------------------------------
+		// SHADER PIPELINE PERSISTENCE TRACKING
+		// -------------------------------------------------------------------------
+		// Preserve the active circle shader state across the hardware batch fence.
+		// If a client passed a custom shader, we want to continue streaming into 
+		// that same shader block after the flush without forcing an immediate, 
+		// redundant state-change flush on the very next element.
+		Ref<Shader> activeCircleShader = s_Data.ActiveCircleShader;
+
 		Flush();
 
 		// Reset counters only — do NOT pop/push the render pass stack
@@ -415,10 +444,13 @@ namespace Cosmic
 		s_Data.LineVertexCount = 0;
 		s_Data.LineVertexBufferPtr = s_Data.LineVertexBufferBase;
 
+		// Reset circle buffer positions back to their origins
 		s_Data.CircleIndexCount = 0;
 		s_Data.CircleVertexBufferPtr = s_Data.CircleVertexBufferBase;
 
+		// Restore tracking anchors safely to prevent state contamination 
 		s_Data.CurrentMaterial = activeMaterial;
+		s_Data.ActiveCircleShader = activeCircleShader;
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////
@@ -806,9 +838,28 @@ namespace Cosmic
 	// DrawCircle (SDF)
 	/////////////////////////////////////////////////////////////////////////////////
 
-	void Renderer2D::DrawCircle(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color, float thickness, float fade)
+	void Renderer2D::DrawCircle(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color, float thickness, float fade, Cosmic::Ref<Cosmic::Shader> customShader)
 	{
-		if (s_Data.CircleIndexCount >= Renderer2DData::MaxCircleIndices) FlushAndReset();
+		// -------------------------------------------------------------------------
+		// SHADER PIPELINE SWITCH TRACKING
+		// -------------------------------------------------------------------------
+		// Determine what shader we should be using for this call.
+		// If the client passed null, default back to our built-in fallback shader.
+		Cosmic::Ref<Cosmic::Shader> targetShader = customShader ? customShader : s_Data.DefaultCircleShader;
+
+		// If the target shader differs from our current active batch pipeline state,
+		// flush the current geometry to the GPU before binding the new state.
+		if (s_Data.ActiveCircleShader != targetShader)
+		{
+			// Note: If you have split flush methods, call FlushCircles() here. 
+			// Otherwise, use your engine's macro FlushAndReset() pattern.
+			FlushAndReset();
+			s_Data.ActiveCircleShader = targetShader;
+		}
+
+		// Batch full verification
+		if (s_Data.CircleIndexCount >= Renderer2DData::MaxCircleIndices)
+			FlushAndReset();
 
 		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
 			* glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
