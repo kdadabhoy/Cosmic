@@ -54,7 +54,7 @@ namespace Cosmic
 		static const uint32_t MaxVertices = MaxQuads * 4;
 		static const uint32_t MaxIndices = MaxQuads * 6;
 		static const uint32_t MaxTextureSlots = 32;
-		static const uint32_t MaxCircles = 2000;
+		static const uint32_t MaxCircles = 10000;
 		static const uint32_t MaxCircleVertices = MaxCircles * 4;
 		static const uint32_t MaxCircleIndices = MaxCircles * 6;
 
