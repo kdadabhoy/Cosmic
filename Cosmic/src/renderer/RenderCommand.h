@@ -55,7 +55,7 @@
 
 namespace Cosmic
 {
-    class RenderCommand
+    class COSMIC_API RenderCommand
     {
     public:
 

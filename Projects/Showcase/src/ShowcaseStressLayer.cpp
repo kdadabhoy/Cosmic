@@ -84,7 +84,6 @@ namespace Showcase
 	// =========================================================================
 	void ShowcaseStressLayer::OnUpdate(float ts)
 	{
-		// --- ARCHITECTURAL FIX: Dynamic Canvas Layout Synchronization ---
 		auto fb = Cosmic::Application::Get().GetFrameBuffer();
 		float activeWidth = static_cast<float>(fb->GetWidth());
 		float activeHeight = static_cast<float>(fb->GetHeight());
@@ -95,28 +94,19 @@ namespace Showcase
 			m_Camera.OnResize(m_ViewportSize.x, m_ViewportSize.y);
 		}
 
-		// Step smooth camera interpolation parameters forward
 		m_Camera.OnUpdate(ts);
 
-		// VISUAL FIX: Move kinematic visual animations out of OnFixedUpdate into OnUpdate.
-		// By querying Layer::GetLocalTime(), updates match variable hardware monitor refresh rates.
 		if (m_Animate)
 		{
-			// TransformComponent stores rotation in DEGREES. Scene::OnRender applies
-			// glm::radians() internally before passing to DrawRotatedQuad.
 			float currentTimelineTime = GetLocalTime();
 			for (auto& ent : m_GridEntities)
 			{
 				auto& t = ent.GetComponent<Cosmic::TransformComponent>();
-				t.Rotation.z = currentTimelineTime * 30.0f; // degrees — converted in Scene::OnRender
+				t.Rotation.z = currentTimelineTime * 30.0f;
 			}
 		}
 
-		// Reset metric structures before drawing batch
-		Cosmic::Renderer2D::ResetStats();
-
-		// Scene::OnRender owns BeginScene/EndScene internally.
-		// Do NOT wrap this call with BeginScene/EndScene here.
+		// ResetStats moved to OnImGuiRender — stats are only meaningful after draw calls
 		m_Scene->OnRender(m_Camera.GetCamera());
 	}
 
@@ -178,6 +168,7 @@ namespace Showcase
 		}
 
 		ImGui::End();
+		Cosmic::Renderer2D::ResetStats(); // reset AFTER reading
 	}
 
 	void ShowcaseStressLayer::OnEvent(Cosmic::Event& e)

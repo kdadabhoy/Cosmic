@@ -1,4 +1,4 @@
-#include "TemplateProject.h"
+#include "MyProject.h"
 #include "TemplateRenderLayer.h"
 #include "TemplateSimLayer.h"
 #include "TemplateSpriteLayer.h"
@@ -7,18 +7,18 @@
 
 namespace Workspace
 {
-	TemplateProject::TemplateProject()
-		: Cosmic::Layer("TemplateProject")
+	MyProject::MyProject()
+		: Cosmic::Layer("MyProject")
 	{
 	}
 
 	// -------------------------------------------------------------------------
-	void TemplateProject::OnAttach()
+	void MyProject::OnAttach()
 	{
-		CS_INFO("TemplateProject: Attaching root manager layer.");
+		CS_INFO("MyProject: Attaching root manager layer.");
 
 		// 1. Resolve asset paths through the VFS
-		Cosmic::FileSystem::SetActiveProject("TemplateProject");
+		Cosmic::FileSystem::SetActiveProject("MyProject");
 
 		// Redirect logging outputs into the localized project workspace subfolder (still lives in build)
 		std::string physicalLogPath = Cosmic::FileSystem::Resolve("project://logs");
@@ -43,7 +43,7 @@ namespace Workspace
 		}
 		else
 		{
-			CS_WARN("TemplateProject: Shader not found at '{0}'. Rendering layers will use fallback geometry.", shaderPath);
+			CS_WARN("MyProject: Shader not found at '{0}'. Rendering layers will use fallback geometry.", shaderPath);
 		}
 
 		// 4. Construct child layers — NOT pushed onto the engine LayerStack
@@ -79,13 +79,13 @@ namespace Workspace
 				return false; // Not our key combo, let the engine handle it normally
 			});
 
-		CS_INFO("TemplateProject: {} child layers attached. Fullscreen override active.", m_Modes.size());
+		CS_INFO("MyProject: {} child layers attached. Fullscreen override active.", m_Modes.size());
 
 		
 	}
 
 	// -------------------------------------------------------------------------
-	void TemplateProject::OnDetach()
+	void MyProject::OnDetach()
 	{
 		for (auto& mode : m_Modes)
 		{
@@ -96,14 +96,14 @@ namespace Workspace
 		m_SharedMaterial.reset();
 		m_Scene.reset();
 
-		CS_INFO("TemplateProject: Detached and cleaned up.");
+		CS_INFO("MyProject: Detached and cleaned up.");
 
 		// Optional Safety Measure: Reset logging back to engine defaults when leaving workspace
 		Cosmic::Log::SetLogDirectory("logs");
 	}
 
 	// -------------------------------------------------------------------------
-	void TemplateProject::OnUpdate(float ts)
+	void MyProject::OnUpdate(float ts)
 	{
 		if (m_Modes.empty()) return;
 
@@ -124,7 +124,7 @@ namespace Workspace
 	}
 
 	// -------------------------------------------------------------------------
-	void TemplateProject::OnFixedUpdate(float deltaFixedTime)
+	void MyProject::OnFixedUpdate(float deltaFixedTime)
 	{
 		if (m_Modes.empty()) return;
 
@@ -134,12 +134,12 @@ namespace Workspace
 	}
 
 	// -------------------------------------------------------------------------
-	void TemplateProject::OnImGuiRender()
+	void MyProject::OnImGuiRender()
 	{
 		if (m_Modes.empty()) return;
 
 		// Root manager panel — mode selector + global controls
-		ImGui::Begin("TemplateProject");
+		ImGui::Begin("MyProject");
 
 		ImGui::TextColored({ 0.4f, 1.0f, 0.4f, 1.0f }, "Template Project — Root Manager");
 		ImGui::Separator();
@@ -214,7 +214,7 @@ namespace Workspace
 	}
 
 	// -------------------------------------------------------------------------
-	void TemplateProject::OnEvent(Cosmic::Event& e)
+	void MyProject::OnEvent(Cosmic::Event& e)
 	{
 		if (m_Modes.empty()) return;
 
@@ -246,6 +246,6 @@ extern "C"
 
 	__declspec(dllexport) Cosmic::Layer* CreatePluginLayer()
 	{
-		return new Workspace::TemplateProject();
+		return new Workspace::MyProject();
 	}
 }
