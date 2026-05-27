@@ -105,10 +105,10 @@ namespace Workspace
 		};
 
 		const std::vector<DinoConfig> configs = {
-			{ "Player (Blue)",   0, {  0.0f,  0.0f, 0.0f }, 3.5f, 0.0f,              { 1.4f, 1.4f } },
-			{ "Buddy (Red)",     1, { -2.5f, -1.5f, 0.0f }, 2.8f, 1.05f,             { 1.1f, 1.1f } },
-			{ "Buddy (Yellow)",  2, {  2.5f, -1.5f, 0.0f }, 3.1f, 2.09f,             { 1.1f, 1.1f } },
-			{ "Buddy (Green)",   3, {  0.0f, -3.0f, 0.0f }, 2.5f, 3.14f,             { 1.1f, 1.1f } },
+			{ "Player (Blue)",   0, {  0.0f,  0.0f, 0.0f }, 3.5f, 0.0f,  { 1.4f, 1.4f } },
+			{ "Buddy (Red)",     1, { -2.5f, -1.5f, 0.0f }, 2.8f, 1.05f, { 1.1f, 1.1f } },
+			{ "Buddy (Yellow)",  2, {  2.5f, -1.5f, 0.0f }, 3.1f, 2.09f, { 1.1f, 1.1f } },
+			{ "Buddy (Green)",   3, {  0.0f, -3.0f, 0.0f }, 2.5f, 3.14f, { 1.1f, 1.1f } },
 		};
 
 		m_Entities.resize(configs.size());
@@ -126,17 +126,12 @@ namespace Workspace
 			auto& t = ent.GetComponent<Cosmic::TransformComponent>();
 			t.Position = cfg.homePos;
 			t.Scale = cfg.scale;
-			// Rotation.z is in DEGREES — Scene::OnRender converts automatically.
-			// We leave it at 0 here; animation does not rotate the sprites.
 
-			ent.AddComponent<Cosmic::SpriteRendererComponent>();
-			// ActiveMaterial is left null — we drive rendering via SubTexture2D directly
-			// using manual DrawQuad calls in OnUpdate (pass 2), so Scene::OnRender
-			// (pass 1) will fall back to flat-white for these entities.
-			// We deliberately keep the SpriteRendererComponent so Scene::OnRender
-			// still processes the entity; we just override the visual in pass 2.
-			// (Alternatively you could skip SpriteRendererComponent and render
-			//  entirely manually — both patterns are demonstrated in the Showcase.)
+			// No SpriteRendererComponent — all rendering is done manually via
+			// SubTexture2D DrawQuad calls inside each RenderPass block in OnUpdate.
+			// Scene::OnRender is intentionally not called by this layer; using it
+			// with no ActiveMaterial set would draw white fallback quads over every
+			// sprite in every quadrant.
 
 			auto& dino = ent.AddComponent<DinoCharacterComponent>();
 			dino.WalkSpeed = cfg.walkSpeed * m_GlobalMoveSpeed;
@@ -266,8 +261,7 @@ namespace Workspace
 				.GetComponent<Cosmic::TransformComponent>();
 			m_CamTL.SetPosition({ followTrans.Position.x, followTrans.Position.y, 0.f });
 
-			// BL mirrors TL with a slight lag (sample from 0.3s behind)
-			// We approximate lag by using a 0.3-unit offset in the sinusoidal phase
+			// BL mirrors TL with a slight lag
 			float lagX = followTrans.Position.x * 0.92f;
 			float lagY = followTrans.Position.y;
 			m_CamBL.SetPosition({ lagX, lagY, 0.f });
@@ -298,66 +292,30 @@ namespace Workspace
 
 		// -----------------------------------------------------------------------
 		// QUADRANT 1 — TOP-LEFT: close-up follow camera
-		// Rendering strategy: two passes
-		//   Pass A — Scene::OnRender (white fallback flat sprites, no material)
-		//            This demonstrates Scene::OnRender in its simplest form.
-		//   Pass B — Manual DrawQuad with SubTexture2D for actual atlas sprites
-		//            and SDF tracking ring overlay.
-		// We intentionally use BOTH so the layer showcases both patterns.
-		// In production you would pick one approach per layer.
+		// Pure manual rendering — SubTexture2D DrawQuad calls only.
 		// -----------------------------------------------------------------------
 		{
-			// Pass A: scene entity batch (flat-white fallback, shows the entity bounds)
-			// Scene::OnRender owns BeginScene / EndScene — do not wrap it.
-			// We set the viewport bounds via a RenderPass first so Scene::OnRender
-			// picks up the correct quadrant dimensions via BeginScene's full-viewport
-			// derivation... however Scene::OnRender calls BeginScene internally which
-			// always uses full ViewportDimensions.
-			//
-			// To give Scene::OnRender the correct sub-viewport we need to call
-			// SetViewportSize before it runs, then restore afterward.
-			// A cleaner future API would accept bounds directly; for now we use the
-			// manual glViewport + SetViewportSize approach.
-			Cosmic::RenderCommand::SetViewport(
-				0, static_cast<uint32_t>(hh),
-				static_cast<uint32_t>(hw), static_cast<uint32_t>(hh));
-			Cosmic::Renderer2D::SetViewportSize(
-				static_cast<uint32_t>(hw), static_cast<uint32_t>(hh));
+			Cosmic::RenderPass passTL(m_CamTL.GetCamera(), { 0.f, hh, hw, hh });
 
-			// Scene::OnRender: draws all SpriteRendererComponent entities.
-			// Entities with no ActiveMaterial render as flat white quads — useful
-			// to see their bounding boxes and verify transform correctness.
-			m_Scene->OnRender(m_CamTL.GetCamera());
+			if (m_ShowGrid)
+				DrawGrid({ 0.10f, 0.10f, 0.14f, 1.0f }, 1.0f, 10.0f);
 
-			// Pass B: proper atlas sprites + overlay in the same quadrant
+			if (m_ShowRings)
+				DrawTrackingRings();
+
+			for (int i = 0; i < static_cast<int>(m_Entities.size()); ++i)
 			{
-				Cosmic::RenderPass passB(m_CamTL.GetCamera(), { 0.f, hh, hw, hh });
+				if (!m_Entities[i] || !m_SubTextures[i]) continue;
+				auto& t = m_Entities[i].GetComponent<Cosmic::TransformComponent>();
+				auto& d = m_Entities[i].GetComponent<DinoCharacterComponent>();
 
-				if (m_ShowGrid)
-					DrawGrid({ 0.10f, 0.10f, 0.14f, 1.0f }, 1.0f, 10.0f);
-
-				if (m_ShowRings)
-					DrawTrackingRings();
-
-				// Draw dinos with correct atlas sub-textures and orientation flips
-				for (int i = 0; i < static_cast<int>(m_Entities.size()); ++i)
-				{
-					if (!m_Entities[i] || !m_SubTextures[i]) continue;
-					auto& t = m_Entities[i].GetComponent<Cosmic::TransformComponent>();
-					auto& d = m_Entities[i].GetComponent<DinoCharacterComponent>();
-
-					glm::vec2 drawScale = {
-						t.Scale.x * (d.FacingLeft ? -1.0f : 1.0f),
-						t.Scale.y
-					};
-					Cosmic::Renderer2D::DrawQuad(t.Position, drawScale, m_SubTextures[i]);
-				}
+				glm::vec2 drawScale = {
+					t.Scale.x * (d.FacingLeft ? -1.0f : 1.0f),
+					t.Scale.y
+				};
+				Cosmic::Renderer2D::DrawQuad(t.Position, drawScale, m_SubTextures[i]);
 			}
 		}
-
-		// Restore full viewport dimensions for subsequent passes so BeginScene works
-		Cosmic::Renderer2D::SetViewportSize(
-			static_cast<uint32_t>(w), static_cast<uint32_t>(h));
 
 		// -----------------------------------------------------------------------
 		// QUADRANT 2 — TOP-RIGHT: overhead overview
@@ -396,7 +354,7 @@ namespace Workspace
 				Cosmic::Renderer2D::DrawQuad(t.Position, drawScale, m_SubTextures[i]);
 			}
 
-			// Highlight selected dino with a bright ring
+			// Highlight selected dino with a bright rect
 			if (m_SelectedIndex >= 0 && m_SelectedIndex < static_cast<int>(m_Entities.size()))
 			{
 				auto& t = m_Entities[m_SelectedIndex].GetComponent<Cosmic::TransformComponent>();
@@ -434,7 +392,6 @@ namespace Workspace
 					t.Scale.x * (d.FacingLeft ? -1.0f : 1.0f),
 					t.Scale.y
 				};
-				// tint parameter tints the atlas sample
 				Cosmic::Renderer2D::DrawQuad(
 					t.Position, drawScale, m_SubTextures[i],
 					{ 0.55f, 0.72f, 1.0f, 1.0f }
@@ -453,7 +410,7 @@ namespace Workspace
 			if (m_ShowDebugBounds)
 				DrawDebugOverlay();
 
-			// Velocity direction arrows (tangent of bob motion)
+			// Velocity direction arrows
 			float t = m_LocalTime;
 			for (int i = 0; i < static_cast<int>(m_Entities.size()); ++i)
 			{
@@ -470,10 +427,6 @@ namespace Workspace
 				Cosmic::Renderer2D::DrawLine(start, end, { 1.0f, 1.0f, 0.2f, 0.85f });
 			}
 		}
-
-		// Restore full viewport so the WorkspaceLayer's ImGui pass is correct
-		Cosmic::Renderer2D::SetViewportSize(
-			static_cast<uint32_t>(w), static_cast<uint32_t>(h));
 	}
 
 	// ============================================================================
@@ -499,14 +452,12 @@ namespace Workspace
 				? glm::vec4{ 1.0f, 1.0f, 0.2f, 1.0f }
 			: glm::vec4{ 0.4f, 0.8f, 0.4f, 0.8f };
 
-			// Axis-aligned bounding rect
 			Cosmic::Renderer2D::DrawRect(
 				{ t.Position.x, t.Position.y, 0.01f },
 				{ t.Scale.x, t.Scale.y },
 				color
 			);
 
-			// Small centre dot
 			Cosmic::Renderer2D::DrawCircle(
 				{ t.Position.x, t.Position.y, 0.02f },
 				{ t.Scale.x * 0.25f, t.Scale.y * 0.25f },
@@ -523,17 +474,15 @@ namespace Workspace
 		float pulse = 1.0f + std::sin(m_LocalTime * m_RingPulseSpeed) * m_RingPulseAmp;
 
 		glm::vec3 ringPos = t.Position;
-		ringPos.y -= t.Scale.y * 0.52f;  // place ring below feet
-		ringPos.z -= 0.05f;              // behind the sprite
+		ringPos.y -= t.Scale.y * 0.52f;
+		ringPos.z -= 0.05f;
 
-		// Outer glow
 		Cosmic::Renderer2D::DrawCircle(
 			ringPos,
 			{ t.Scale.x * 1.6f * pulse, t.Scale.y * 0.55f * pulse },
 			{ 0.2f, 0.9f, 0.5f, 0.18f },
 			1.0f, 0.25f
 		);
-		// Crisp ring
 		Cosmic::Renderer2D::DrawCircle(
 			ringPos,
 			{ t.Scale.x * 1.3f, t.Scale.y * 0.42f },
@@ -554,9 +503,6 @@ namespace Workspace
 		ImGui::Separator();
 		ImGui::Spacing();
 
-		// -----------------------------------------------------------------------
-		// Camera layout legend
-		// -----------------------------------------------------------------------
 		ImGui::TextDisabled("Quadrant layout:");
 		ImGui::Text("  TL  Close-up follow camera");
 		ImGui::Text("  TR  Overhead overview + orbit markers");
@@ -566,9 +512,6 @@ namespace Workspace
 		ImGui::Separator();
 		ImGui::Spacing();
 
-		// -----------------------------------------------------------------------
-		// Entity selection
-		// -----------------------------------------------------------------------
 		if (ImGui::CollapsingHeader("Entity Selection", ImGuiTreeNodeFlags_DefaultOpen))
 		{
 			for (int i = 0; i < static_cast<int>(m_Entities.size()); ++i)
@@ -586,9 +529,6 @@ namespace Workspace
 
 		ImGui::Spacing();
 
-		// -----------------------------------------------------------------------
-		// Selected entity details
-		// -----------------------------------------------------------------------
 		if (m_SelectedIndex >= 0 && m_SelectedIndex < static_cast<int>(m_Entities.size())
 			&& m_Entities[m_SelectedIndex])
 		{
@@ -605,7 +545,6 @@ namespace Workspace
 				ImGui::Text("Facing:    %s", d.FacingLeft ? "Left" : "Right");
 				ImGui::Spacing();
 
-				// Atlas picker
 				if (ImGui::BeginCombo("Atlas Variant", m_AtlasNames[m_AtlasIndex[m_SelectedIndex]].c_str()))
 				{
 					for (int n = 0; n < static_cast<int>(m_AtlasNames.size()); ++n)
@@ -631,9 +570,6 @@ namespace Workspace
 		ImGui::Separator();
 		ImGui::Spacing();
 
-		// -----------------------------------------------------------------------
-		// Global controls
-		// -----------------------------------------------------------------------
 		if (ImGui::CollapsingHeader("Display", ImGuiTreeNodeFlags_DefaultOpen))
 		{
 			ImGui::Checkbox("Show Grid", &m_ShowGrid);
@@ -681,7 +617,6 @@ namespace Workspace
 
 	void TemplateSpriteLayer::OnEvent(Cosmic::Event& e)
 	{
-		// All four cameras get scroll events so their zoom responds
 		m_CamTL.OnEvent(e);
 		m_CamTR.OnEvent(e);
 		m_CamBL.OnEvent(e);
@@ -701,7 +636,6 @@ namespace Workspace
 	{
 		if (e.GetRepeatCount() > 0) return false;
 
-		// Tab cycles through dinos
 		if (e.GetKeyCode() == CS_KEY_TAB)
 		{
 			m_SelectedIndex = (m_SelectedIndex + 1) % static_cast<int>(m_Entities.size());
@@ -714,7 +648,6 @@ namespace Workspace
 	{
 		if (e.GetMouseButton() != CS_MOUSE_BUTTON_LEFT) return false;
 
-		// Only handle clicks inside the TL quadrant (top-left half of the screen)
 		glm::vec2 screenPos = Cosmic::Input::GetMousePosition();
 		if (screenPos.x > m_ViewportSize.x * 0.5f) return false;
 		if (screenPos.y > m_ViewportSize.y * 0.5f) return false;
@@ -740,24 +673,20 @@ namespace Workspace
 
 		m_ViewportSize = { w, h };
 
-		// Resize ALL cameras, even those not currently rendered.
-		// A camera that misses a resize retains a stale aspect ratio and will
-		// produce stretched geometry the next time it is used.
 		m_CamTL.OnResize(hw, hh);
 		m_CamTR.OnResize(hw, hh);
 		m_CamBL.OnResize(hw, hh);
 		m_CamBR.OnResize(hw, hh);
 
-		return false; // do not consume — other systems also need the resize
+		return false;
 	}
 
 	// ============================================================================
-	// Utility — screen-to-world for TL quadrant
+	// Utility
 	// ============================================================================
 
 	glm::vec2 TemplateSpriteLayer::ScreenToWorldTL(glm::vec2 screenPos) const
 	{
-		// TL quadrant occupies [0, hw] x [0, hh] in screen pixels
 		float hw = m_ViewportSize.x * 0.5f;
 		float hh = m_ViewportSize.y * 0.5f;
 
