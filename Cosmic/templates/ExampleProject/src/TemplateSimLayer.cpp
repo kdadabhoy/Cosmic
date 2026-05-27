@@ -2,6 +2,7 @@
 #include <imgui.h>
 #include <cmath>
 #include <algorithm>
+#include <filesystem> // Just for path validation
 
 namespace Workspace
 {
@@ -17,9 +18,24 @@ namespace Workspace
 	{
 		m_Camera.SetZoomLevel(3.0f);
 		m_Camera.SetZoomLimits(0.5f, 20.0f);
-		m_Camera.SetManualMovementEnabled(false); // camera is locked; sim fills the view
+		m_Camera.SetManualMovementEnabled(false);
 
-		// Spawn an initial set of balls so the layer isn't blank on first load
+		// ---------------------------------------------------------------------
+		// VFS SHADER RESOLUTION & LOADING
+		// ---------------------------------------------------------------------
+		std::string shaderPath = Cosmic::FileSystem::Resolve("project://shaders/ClientSpecularCircle.glsl");
+		if (std::filesystem::exists(shaderPath))
+		{
+			m_SpecularCircleShader = Cosmic::Shader::Create(shaderPath);
+			CS_INFO("TemplateSimLayer: Successfully loaded custom specular shader via VFS.");
+		}
+		else
+		{
+			CS_WARN("TemplateSimLayer: Custom shader missing at '{0}'. Defaulting to engine fallback.", shaderPath);
+			m_SpecularCircleShader = nullptr; // Explicit fallback
+		}
+
+		// Spawn an initial set of balls
 		SpawnBall({ -2.0f,  2.0f }, { 3.2f, -1.5f });
 		SpawnBall({ 2.0f,  2.5f }, { -2.8f, -0.8f });
 		SpawnBall({ -1.5f,  3.0f }, { 1.0f, -3.0f });
@@ -32,19 +48,17 @@ namespace Workspace
 	void TemplateSimLayer::OnDetach()
 	{
 		ClearBalls();
+		m_SpecularCircleShader.reset(); // Clean up GPU context pointer
 		CS_INFO("TemplateSimLayer: Detached.");
 	}
 
 	// -------------------------------------------------------------------------
-	// Physics — runs deterministically at 60 Hz
 	void TemplateSimLayer::OnFixedUpdate(float dt)
 	{
 		if (dt <= 0.0f) return;
 
 		++m_FixedTicks;
 
-		// OPTIMIZATION: Avoid per-frame view construction overhead by using 
-		// the pre-cached entity vector pool directly
 		for (auto& ent : m_Balls)
 		{
 			if (!ent) continue;
@@ -52,14 +66,11 @@ namespace Workspace
 			auto& t = ent.GetComponent<Cosmic::TransformComponent>();
 			auto& b = ent.GetComponent<BallComponent>();
 
-			// Apply gravity
 			b.Velocity.y += m_Gravity * dt;
 
-			// Integrate position
 			t.Position.x += b.Velocity.x * dt;
 			t.Position.y += b.Velocity.y * dt;
 
-			// Wall bounce — left / right
 			if (t.Position.x + b.Radius > m_BoundsX)
 			{
 				t.Position.x = m_BoundsX - b.Radius;
@@ -71,7 +82,6 @@ namespace Workspace
 				b.Velocity.x = -b.Velocity.x * m_Damping;
 			}
 
-			// Floor / ceiling bounce
 			if (t.Position.y - b.Radius < -m_BoundsY)
 			{
 				t.Position.y = -m_BoundsY + b.Radius;
@@ -87,10 +97,8 @@ namespace Workspace
 	}
 
 	// -------------------------------------------------------------------------
-	// Rendering — runs every frame (variable rate)
 	void TemplateSimLayer::OnUpdate(float ts)
 	{
-		// Framebuffer sync
 		auto fb = Cosmic::Application::Get().GetFrameBuffer();
 		float w = static_cast<float>(fb->GetWidth());
 		float h = static_cast<float>(fb->GetHeight());
@@ -112,8 +120,7 @@ namespace Workspace
 			{ 0.06f, 0.06f, 0.09f, 1.0f }
 		);
 
-		// OPTIMIZATION: Shared soft floor shadow quad instead of drawing 
-		// separate individual shadow circles per single entity element
+		// Shared soft floor shadow quad (Left as nullptr so it uses the standard engine shader)
 		Cosmic::Renderer2D::DrawCircle(
 			{ 0.0f, -m_BoundsY + 0.02f, -0.26f },
 			{ m_BoundsX * 2.0f, 0.8f },
@@ -137,8 +144,7 @@ namespace Workspace
 				Cosmic::Renderer2D::DrawLine({ -m_BoundsX, y, -0.2f }, { m_BoundsX, y, -0.2f }, gc);
 		}
 
-		// OPTIMIZATION: Iterating directly through m_Balls vector pool.
-		// Dropped the shadow and specular draw calls to maximize vertex fill throughput.
+		// Physics Rendering Loop
 		for (auto& ent : m_Balls)
 		{
 			if (!ent) continue;
@@ -146,12 +152,17 @@ namespace Workspace
 			const auto& t = ent.GetComponent<Cosmic::TransformComponent>();
 			const auto& b = ent.GetComponent<BallComponent>();
 
-			// Ball body (Specular highlight handled inside fragment shader)
+			// -----------------------------------------------------------------
+			// SPECULAR SHADER PIPELINE EXECUTION
+			// -----------------------------------------------------------------
+			// We pass our compiled m_SpecularCircleShader here. If it failed to load
+			// and is nullptr, the engine gracefully utilizes the default unlit fallback shader.
 			Cosmic::Renderer2D::DrawCircle(
 				t.Position,
 				{ b.Radius * 2.0f, b.Radius * 2.0f },
 				b.Color,
-				1.0f, 0.02f
+				1.0f, 0.02f,
+				m_SpecularCircleShader // <--- Pass custom pipeline here
 			);
 		}
 
@@ -161,9 +172,6 @@ namespace Workspace
 	// -------------------------------------------------------------------------
 	void TemplateSimLayer::OnImGuiRender()
 	{
-		// -------------------------------------------------------------------------
-		// BOTTOM SIDEBAR LAYER: Mounts cleanly at the base of the Sidebar region
-		// -------------------------------------------------------------------------
 		ImGui::Begin("Project Inspector Bottom");
 
 		ImGui::TextColored({ 0.4f, 1.0f, 0.8f, 1.0f }, "Layer: Physics Simulation");
@@ -175,7 +183,6 @@ namespace Workspace
 		ImGui::Text("Layer Time:    %.2fs", GetLocalTime());
 		ImGui::Spacing();
 
-		// Simulation parameters
 		if (ImGui::CollapsingHeader("Simulation Parameters", ImGuiTreeNodeFlags_DefaultOpen))
 		{
 			ImGui::SliderFloat("Gravity", &m_Gravity, -20.0f, 0.0f, "%.1f m/s²");
@@ -186,7 +193,6 @@ namespace Workspace
 
 		ImGui::Spacing();
 
-		// Spawn controls
 		if (ImGui::CollapsingHeader("Spawn", ImGuiTreeNodeFlags_DefaultOpen))
 		{
 			ImGui::SliderInt("Count", &m_SpawnCount, 1, 20);
@@ -214,7 +220,6 @@ namespace Workspace
 					b.Mass = r * r * 3.14159f;
 					b.Color = { colDist(m_Rng), colDist(m_Rng), colDist(m_Rng), 1.0f };
 
-					// Brighten dim colors
 					float maxC = std::max({ b.Color.r, b.Color.g, b.Color.b });
 					if (maxC < 0.4f) { b.Color.r += 0.4f; b.Color.g += 0.3f; b.Color.b += 0.5f; }
 				}
@@ -234,7 +239,7 @@ namespace Workspace
 		ImGui::Text("Draw Calls: %u", stats.DrawCalls);
 		ImGui::Text("Quads:      %u", stats.QuadCount);
 
-		ImGui::End(); // End "Project Inspector Bottom"
+		ImGui::End();
 
 		Cosmic::Renderer2D::ResetStats();
 	}

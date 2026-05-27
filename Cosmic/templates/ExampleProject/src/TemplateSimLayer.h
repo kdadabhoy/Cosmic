@@ -56,6 +56,9 @@ namespace Workspace
 		Cosmic::OrthographicCameraController m_Camera;
 		glm::vec2                            m_ViewportSize = { 1280.0f, 720.0f };
 
+		// Shader
+		Cosmic::Ref<Cosmic::Shader> m_SpecularCircleShader = nullptr;
+
 		// Simulation parameters
 		float m_Gravity = -9.8f;
 		float m_Damping = 0.78f;
