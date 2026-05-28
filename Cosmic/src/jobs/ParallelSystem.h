@@ -54,22 +54,27 @@
  *       void OnPrepare(Scene& scene, float dt) override
  *       {
  *           // Snapshot component data into a DoubleBuffer or local array.
- *           // Reserve output buffers. Do NOT access JobSystem here.
+ *           // Reserve output buffers. Do NOT submit jobs here.
  *       }
  *
  *       void OnParallelExecute(Scene& scene, float dt) override
  *       {
- *           // Submit jobs via ParallelFor / JobSystem::Submit.
- *           // This function is called on the main thread but the submitted
- *           // jobs run concurrently on workers. DO NOT call WaitIdle here —
- *           // the Scene does that after all parallel systems have submitted.
+ *           // Submit jobs using the ASYNC variants so the Scene's single
+ *           // WaitIdle barrier covers all systems together:
+ *           //
+ *           //   ParallelForAsync(count, [src, dst](size_t begin, size_t end) { ... });
+ *           //   ParallelForEachAsync(data, count, [](T* begin, T* end) { ... });
+ *           //
+ *           // DO NOT use the synchronous ParallelFor here — it calls WaitIdle
+ *           // internally and serialises systems against each other.
+ *           // DO NOT call JobSystem::WaitIdle() yourself — the Scene does it.
  *       }
  *
  *       void OnMerge(Scene& scene, float dt) override
  *       {
- *           // Results are now ready. Swap double buffers, write back to the
- *           // registry, or update derived state. Single-threaded, safe to
- *           // perform structural registry changes here.
+ *           // All jobs from all systems are now complete (Scene called WaitIdle).
+ *           // Swap double buffers, write back to the registry, or update derived
+ *           // state. Single-threaded, safe to perform structural registry changes.
  *       }
  *   };
  *
@@ -121,18 +126,19 @@ namespace Cosmic
         /**
          * @brief Submit parallel work to the JobSystem.
          *
-         * Use ParallelFor() or JobSystem::Get().Submit() to dispatch jobs.
-         * This function itself runs on the main thread, but the jobs it
-         * submits run concurrently on worker threads.
+         * Use ParallelForAsync() or ParallelForEachAsync() to dispatch jobs.
+         * This function runs on the main thread; the submitted jobs run
+         * concurrently on worker threads.
          *
          * RULES:
-         * - Do NOT call JobSystem::WaitIdle() here — the Scene will call it
-         *   once after ALL parallel systems have had a chance to submit jobs.
-         *   Calling WaitIdle() early serialises the pipeline unnecessarily.
+         * - Use the ASYNC variants (ParallelForAsync / ParallelForEachAsync).
+         *   The synchronous variants (ParallelFor / ParallelForEach) call
+         *   WaitIdle internally, serialising systems against each other.
+         * - Do NOT call JobSystem::WaitIdle() yourself — the Scene calls it
+         *   once after ALL systems have submitted, maximising job overlap.
          * - Do NOT modify the EnTT registry from a worker thread. Read from
          *   ComponentArray / DoubleBuffer read buffers; write to write buffers.
-         * - Do NOT submit new submissions from within a running job (nested
-         *   parallel dispatch). Submit all jobs at the top level here.
+         * - Do NOT submit jobs from inside a running job (nested dispatch).
          *
          * @param scene  The scene owning this system.
          * @param dt     Scaled variable delta-time (seconds).

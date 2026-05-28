@@ -3,6 +3,7 @@
 
 #include "core/Core.h"
 #include "scene/System.h"
+#include "jobs/ParallelSystem.h"
 #include <entt/entt.hpp>
 #include <string>
 #include <memory>
@@ -57,12 +58,18 @@ namespace Cosmic
 		{
 			auto system = CreateScope<T>(std::forward<Args>(args)...);
 			T& ref = *system;
+			if (auto* ps = dynamic_cast<ParallelSystem*>(system.get()))
+				m_ParallelSystems.push_back(ps);
 			m_Systems.push_back(std::move(system));
 			return ref;
 		}
 
 		/** @brief Clears out all systems bound to this scene instance. */
-		void RemoveAllSystems() { m_Systems.clear(); }
+		void RemoveAllSystems()
+		{
+			m_ParallelSystems.clear();
+			m_Systems.clear();
+		}
 
 		/** @brief Safe multi-component layout querying mechanism for external or client layers. */
 		template<typename... Components>
@@ -91,7 +98,8 @@ namespace Cosmic
 
 	private:
 		entt::registry m_Registry;
-		std::vector<Scope<System>> m_Systems;
+		std::vector<Scope<System>>   m_Systems;
+		std::vector<ParallelSystem*> m_ParallelSystems; // non-owning; owned by m_Systems
 
 		friend class Entity; // Gives access to the registry mapping internals securely
 	};

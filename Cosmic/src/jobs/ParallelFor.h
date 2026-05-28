@@ -38,11 +38,18 @@
  *
  * FUNCTION SIGNATURES
  * -----------------------------------------------------------------------
- * // Index-based: func receives (size_t begin, size_t end) for a sub-range.
+ * // Synchronous — submits jobs AND calls WaitIdle before returning.
+ * // Use for standalone parallel work outside of a ParallelSystem.
  * ParallelFor(size_t totalCount, auto func);
- *
- * // Element-based: func receives (T* begin, T* end) for a sub-array.
  * ParallelForEach(T* data, size_t count, auto func);
+ * ParallelForEachIndexed(T* data, size_t count, auto func);
+ *
+ * // Async — submits jobs, does NOT call WaitIdle.
+ * // Use inside ParallelSystem::OnParallelExecute. The Scene calls
+ * // JobSystem::WaitIdle() once after all systems have submitted.
+ * ParallelForAsync(size_t totalCount, auto func);
+ * ParallelForEachAsync(T* data, size_t count, auto func);
+ * ParallelForEachIndexedAsync(T* data, size_t count, auto func);
  * -----------------------------------------------------------------------
  *
  * USAGE EXAMPLES
@@ -148,6 +155,52 @@ namespace Cosmic
     }
 
     // =========================================================================
+    // ParallelForAsync — index range variant, no WaitIdle
+    // =========================================================================
+
+    /**
+     * @brief Like ParallelFor, but does NOT call WaitIdle before returning.
+     *
+     * Use this inside ParallelSystem::OnParallelExecute so that all parallel
+     * systems can submit their jobs before the Scene issues a single WaitIdle
+     * barrier. Calling the synchronous ParallelFor inside OnParallelExecute
+     * would stall after each system, serialising the pipeline.
+     *
+     * The caller is responsible for ensuring WaitIdle (or the Scene's barrier)
+     * is called before reading any results.
+     */
+    template<typename Func>
+    void ParallelForAsync(size_t totalCount, Func&& func, size_t minChunkSize = 64)
+    {
+        if (totalCount == 0) return;
+
+        JobSystem& js = JobSystem::Get();
+
+        const uint32_t workerCount = js.GetWorkerCount();
+        if (workerCount <= 1 || totalCount <= minChunkSize)
+        {
+            func(0, totalCount);
+            return;
+        }
+
+        const size_t maxChunks = static_cast<size_t>(workerCount);
+        const size_t chunkSize = std::max(minChunkSize, (totalCount + maxChunks - 1) / maxChunks);
+        const size_t chunkCount = (totalCount + chunkSize - 1) / chunkSize;
+
+        for (size_t c = 0; c < chunkCount; ++c)
+        {
+            const size_t begin = c * chunkSize;
+            const size_t end = std::min(begin + chunkSize, totalCount);
+
+            js.Submit([&func, begin, end]()
+                {
+                    func(begin, end);
+                });
+        }
+        // No WaitIdle — caller's Scene barrier covers this.
+    }
+
+    // =========================================================================
     // ParallelForEach — typed pointer span variant
     // =========================================================================
 
@@ -170,6 +223,18 @@ namespace Cosmic
         if (!data || count == 0) return;
 
         ParallelFor(count, [data, &func](size_t begin, size_t end)
+            {
+                func(data + begin, data + end);
+            }, minChunkSize);
+    }
+
+    /** @brief Async variant of ParallelForEach — no WaitIdle. Use in OnParallelExecute. */
+    template<typename T, typename Func>
+    void ParallelForEachAsync(T* data, size_t count, Func&& func, size_t minChunkSize = 64)
+    {
+        if (!data || count == 0) return;
+
+        ParallelForAsync(count, [data, &func](size_t begin, size_t end)
             {
                 func(data + begin, data + end);
             }, minChunkSize);
@@ -198,6 +263,19 @@ namespace Cosmic
         if (!data || count == 0) return;
 
         ParallelFor(count, [data, &func](size_t begin, size_t end)
+            {
+                for (size_t i = begin; i < end; ++i)
+                    func(data[i], i);
+            }, minChunkSize);
+    }
+
+    /** @brief Async variant of ParallelForEachIndexed — no WaitIdle. Use in OnParallelExecute. */
+    template<typename T, typename Func>
+    void ParallelForEachIndexedAsync(T* data, size_t count, Func&& func, size_t minChunkSize = 64)
+    {
+        if (!data || count == 0) return;
+
+        ParallelForAsync(count, [data, &func](size_t begin, size_t end)
             {
                 for (size_t i = begin; i < end; ++i)
                     func(data[i], i);

@@ -156,7 +156,7 @@ namespace Cosmic
          */
         T* GetWriteBuffer()
         {
-            return m_Buffers[m_WriteIndex()].data();
+            return m_Buffers[WriteIndex()].data();
         }
 
         /**
@@ -173,7 +173,7 @@ namespace Cosmic
          */
         T& WriteAt(size_t index)
         {
-            return m_Buffers[m_WriteIndex()][index];
+            return m_Buffers[WriteIndex()][index];
         }
 
         // =====================================================================
@@ -208,7 +208,7 @@ namespace Cosmic
         void CopyReadToWrite()
         {
             const auto& src = m_Buffers[m_ReadIndex];
-            auto&       dst = m_Buffers[m_WriteIndex()];
+            auto&       dst = m_Buffers[WriteIndex()];
             std::memcpy(dst.data(), src.data(), src.size() * sizeof(T));
         }
 
@@ -218,7 +218,7 @@ namespace Cosmic
         // =====================================================================
 
         /** @brief Index of the write buffer (always the opposite of m_ReadIndex). */
-        uint32_t m_WriteIndex() const { return m_ReadIndex ^ 1u; }
+        uint32_t WriteIndex() const { return m_ReadIndex ^ 1u; }
 
         // =====================================================================
         // Storage

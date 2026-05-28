@@ -5,12 +5,11 @@
 #include "scene/Components.h"
 #include "renderer/Renderer2D.h"
 #include "camera/OrthographicCamera.h"
+#include "jobs/JobSystem.h"
+#include "core/Log.h"
 #include <unordered_map>
 #include <vector>
 #include <glm/gtc/matrix_transform.hpp>
-
-#include "jobs/ParallelSystem.h"
-#include "core/Log.h"             
 
 namespace Cosmic
 {
@@ -33,41 +32,49 @@ namespace Cosmic
 
 	void Scene::OnUpdate(float deltaTime)
 	{
-		// PASS A: Run standard sequential updates
+		// PASS A — Sequential systems (main thread)
 		for (auto& system : m_Systems)
-		{
 			system->OnUpdate(*this, deltaTime);
-		}
 
-		// PASS B, C, D: Run variable frame-rate Parallel Systems
-		for (auto& system : m_Systems)
+		// PASS B/C/D — Parallel systems (skipped entirely if none registered)
+		if (!m_ParallelSystems.empty())
 		{
-			if (auto* parallelSys = dynamic_cast<ParallelSystem*>(system.get()))
-			{
-				parallelSys->OnPrepare(*this, deltaTime);
-				parallelSys->OnParallelExecute(*this, deltaTime);
-				parallelSys->OnMerge(*this, deltaTime);
-			}
+			// PASS B — Snapshot state, resize buffers, compute constants (main thread)
+			for (auto* ps : m_ParallelSystems)
+				ps->OnPrepare(*this, deltaTime);
+
+			// PASS C — Submit parallel work; ALL systems submit before any waits (main thread)
+			for (auto* ps : m_ParallelSystems)
+				ps->OnParallelExecute(*this, deltaTime);
+
+			// Single barrier: wait for every job from every system to complete
+			JobSystem::Get().WaitIdle();
+
+			// PASS D — Merge results back into scene state (main thread)
+			for (auto* ps : m_ParallelSystems)
+				ps->OnMerge(*this, deltaTime);
 		}
 	}
 
 	void Scene::OnFixedUpdate(float fixedDeltaTime)
 	{
-		// PASS A: Run traditional sequential fixed steps
+		// PASS A — Sequential fixed-step systems (main thread)
 		for (auto& system : m_Systems)
-		{
 			system->OnFixedUpdate(*this, fixedDeltaTime);
-		}
 
-		// PASS B, C, D: Run fixed-timestep Parallel Systems
-		for (auto& system : m_Systems)
+		// PASS B/C/D — Fixed-timestep parallel systems
+		if (!m_ParallelSystems.empty())
 		{
-			if (auto* parallelSys = dynamic_cast<ParallelSystem*>(system.get()))
-			{
-				parallelSys->OnFixedPrepare(*this, fixedDeltaTime);
-				parallelSys->OnFixedParallelExecute(*this, fixedDeltaTime);
-				parallelSys->OnFixedMerge(*this, fixedDeltaTime);
-			}
+			for (auto* ps : m_ParallelSystems)
+				ps->OnFixedPrepare(*this, fixedDeltaTime);
+
+			for (auto* ps : m_ParallelSystems)
+				ps->OnFixedParallelExecute(*this, fixedDeltaTime);
+
+			JobSystem::Get().WaitIdle();
+
+			for (auto* ps : m_ParallelSystems)
+				ps->OnFixedMerge(*this, fixedDeltaTime);
 		}
 	}
 
