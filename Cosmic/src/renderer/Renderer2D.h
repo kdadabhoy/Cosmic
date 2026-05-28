@@ -1,69 +1,9 @@
 #pragma once
 // Renderer2D.h
-// Last Modified: 5/24/2026
-
-/**
- * General Description:
- * Renderer2D is a high-performance, 2D-specific hardware batch rendering system
- * designed to minimize draw call overhead. It manages separate internal vertex staging
- * buffers for Quads, Lines, and procedurally generated Circles. The system dynamically
- * executes automatic "flushes" to dispatch vertex arrays to the GPU when target buffer
- * capacities are saturated or when pipeline state transitions (such as switching Active
- * Materials or Textures) occur.
- *
- * RENDER PASS STACK (Multi-Camera / Multi-Viewport):
- * The renderer now supports a scoped render pass stack via PushRenderPass / PopRenderPass.
- * Each push captures the camera's View-Projection matrix and a pixel-space viewport region,
- * flushing any pending geometry from the prior pass before installing new state.
- * This allows multiple independent camera passes per frame without state leakage.
- * Clients should prefer the RAII RenderPass helper class over calling these directly.
- *
- * See RenderPass.h for usage patterns.
- *
- *
- * Public Function Prototypes (Pre and Post Conditions):
- *
- * 1. void Init()
- *    Pre:  None.
- *    Post: GPU buffers, VAOs, shaders, and the fallback white texture are allocated.
- *
- * 2. void Shutdown()
- *    Pre:  Init() was previously called.
- *    Post: CPU staging buffers are freed; smart pointers release GPU resources.
- *
- * 3. void BeginScene(const OrthographicCamera& camera)
- *    Pre:  An active camera is provided.
- *    Post: Pushes a full-window render pass using the camera's VP matrix. Resets
- *          batch counters. Legacy compatibility wrapper over PushRenderPass.
- *
- * 4. void EndScene()
- *    Pre:  BeginScene() was called.
- *    Post: Calls PopRenderPass(), flushing remaining geometry.
- *
- * 5. void PushRenderPass(const glm::mat4& viewProj, const glm::vec4& viewportBounds)
- *    Pre:  Renderer2D::Init() must have been called.
- *    Post: Any pending geometry is flushed. The given VP matrix and viewport bounds
- *          are pushed onto the internal stack. The hardware viewport is updated.
- *          Batch counters are reset for the new pass.
- *
- * 6. void PopRenderPass()
- *    Pre:  A matching PushRenderPass call exists on the stack.
- *    Post: Remaining geometry is flushed. The top entry is removed. If a prior
- *          pass exists, its VP matrix and viewport are restored.
- *
- * 7. void Flush()
- *    Pre:  A render pass is active.
- *    Post: Submits all staged Quads, Lines, and Circles to the GPU.
- *
- * 8. void SetViewportSize(uint32_t width, uint32_t height)
- *    Pre:  None.
- *    Post: Updates internal viewport dimension tracking (used by shader uniforms).
- *
- * 9–N. DrawQuad / DrawRotatedQuad / DrawCircle / DrawLine / DrawRect
- *    Pre:  A render pass is active (BeginScene or PushRenderPass was called).
- *    Post: Geometry is appended to the appropriate batch buffer. A FlushAndReset is
- *          triggered automatically if buffer capacity is exceeded or state changes.
- */
+// Last Modified: 5/28/2026
+// 
+// 
+// **Needs Header documentation**
 
 #include "core/Core.h"
 #include "camera/OrthographicCamera.h"
@@ -73,184 +13,247 @@
 
 namespace Cosmic
 {
-	// Forward Declaration
-	class SubTexture2D;
+    class SubTexture2D;
 
-	class COSMIC_API Renderer2D
-	{
-	public:
-		/////////////////////////////////////////////////////////////////////////////////
-		// Lifecycle
-		/////////////////////////////////////////////////////////////////////////////////
+    class COSMIC_API Renderer2D
+    {
+    public:
+        /////////////////////////////////////////////////////////////////////////////////
+        // Lifecycle
+        /////////////////////////////////////////////////////////////////////////////////
 
-		static void Init();
-		static void Shutdown();
+        static void Init();
+        static void Shutdown();
 
-		/////////////////////////////////////////////////////////////////////////////////
-		// Scene / Pass Control
-		/////////////////////////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////////////////////////
+        // Scene / Pass Control
+        /////////////////////////////////////////////////////////////////////////////////
 
-		/**
-		 * @brief Legacy scene wrapper. Equivalent to PushRenderPass with full viewport bounds.
-		 * Prefer PushRenderPass / RenderPass RAII for multi-camera work.
-		 */
-		static void BeginScene(const OrthographicCamera& camera);
+        static void BeginScene(const OrthographicCamera& camera);
+        static void EndScene();
 
-		/**
-		 * @brief Legacy scene terminator. Equivalent to PopRenderPass.
-		 */
-		static void EndScene();
+        static void PushRenderPass(const glm::mat4& viewProj,
+            const glm::vec4& viewportBounds);
+        static void PopRenderPass();
 
-		/**
-		 * @brief Push a new scoped render pass onto the stack.
-		 *
-		 * Flushes any pending geometry from the currently active pass, then installs the
-		 * new camera VP matrix and updates the hardware viewport to viewportBounds.
-		 *
-		 * @param viewProj       Camera View-Projection matrix for this pass.
-		 * @param viewportBounds Pixel region { x_offset, y_offset, width, height }.
-		 */
-		static void PushRenderPass(const glm::mat4& viewProj, const glm::vec4& viewportBounds);
+        /////////////////////////////////////////////////////////////////////////////////
+        // Flush
+        /////////////////////////////////////////////////////////////////////////////////
 
-		/**
-		 * @brief Pop the current render pass from the stack.
-		 *
-		 * Flushes remaining geometry, removes the top entry, and restores the prior pass's
-		 * VP matrix and viewport if one exists.
-		 */
-		static void PopRenderPass();
+        static void Flush();
 
-		/////////////////////////////////////////////////////////////////////////////////
-		// Flush
-		/////////////////////////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////////////////////////
+        // Viewport
+        /////////////////////////////////////////////////////////////////////////////////
 
-		static void Flush();
+        static void SetViewportSize(uint32_t width, uint32_t height);
 
-		/////////////////////////////////////////////////////////////////////////////////
-		// Viewport
-		/////////////////////////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////////////////////////
+        // SubTexture2D Drawing
+        /////////////////////////////////////////////////////////////////////////////////
 
-		static void SetViewportSize(uint32_t width, uint32_t height);
+        static void DrawQuad(const glm::vec2& position, const glm::vec2& size,
+            const Ref<SubTexture2D>& subTexture,
+            const glm::vec4& tintColor = glm::vec4(1.0f));
+        static void DrawQuad(const glm::vec3& position, const glm::vec2& size,
+            const Ref<SubTexture2D>& subTexture,
+            const glm::vec4& tintColor = glm::vec4(1.0f));
+        static void DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size,
+            float rotation,
+            const Ref<SubTexture2D>& subTexture,
+            const glm::vec4& tintColor = glm::vec4(1.0f));
+        static void DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size,
+            float rotation,
+            const Ref<SubTexture2D>& subTexture,
+            const glm::vec4& tintColor = glm::vec4(1.0f));
 
-		/////////////////////////////////////////////////////////////////////////////////
-		// SubTexture2D Drawing
-		/////////////////////////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////////////////////////
+        // Material-Based Drawing
+        /////////////////////////////////////////////////////////////////////////////////
 
-		static void DrawQuad(const glm::vec2& position, const glm::vec2& size, const Ref<SubTexture2D>& subTexture, const glm::vec4& tintColor = glm::vec4(1.0f));
-		static void DrawQuad(const glm::vec3& position, const glm::vec2& size, const Ref<SubTexture2D>& subTexture, const glm::vec4& tintColor = glm::vec4(1.0f));
-		static void DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size, float rotation, const Ref<SubTexture2D>& subTexture, const glm::vec4& tintColor = glm::vec4(1.0f));
-		static void DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const Ref<SubTexture2D>& subTexture, const glm::vec4& tintColor = glm::vec4(1.0f));
+        static void DrawQuad(const glm::vec2& position, const glm::vec2& size,
+            const Ref<Material>& material);
+        static void DrawQuad(const glm::vec3& position, const glm::vec2& size,
+            const Ref<Material>& material);
+        static void DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size,
+            float rotation, const Ref<Material>& material);
 
-		/////////////////////////////////////////////////////////////////////////////////
-		// Material-Based Drawing
-		/////////////////////////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////////////////////////
+        // Primitive Drawing — Color & Texture
+        /////////////////////////////////////////////////////////////////////////////////
 
-		static void DrawQuad(const glm::vec2& position, const glm::vec2& size, const Ref<Material>& material);
-		static void DrawQuad(const glm::vec3& position, const glm::vec2& size, const Ref<Material>& material);
-		static void DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const Ref<Material>& material);
+        static void DrawQuad(const glm::vec2& position, const glm::vec2& size,
+            const glm::vec4& color);
+        static void DrawQuad(const glm::vec3& position, const glm::vec2& size,
+            const glm::vec4& color);
+        static void DrawQuad(const glm::vec2& position, const glm::vec2& size,
+            const Ref<Texture>& texture,
+            float tilingFactor = 1.0f,
+            const glm::vec4& tintColor = glm::vec4(1.0f));
+        static void DrawQuad(const glm::vec3& position, const glm::vec2& size,
+            const Ref<Texture>& texture,
+            float tilingFactor = 1.0f,
+            const glm::vec4& tintColor = glm::vec4(1.0f));
 
-		/////////////////////////////////////////////////////////////////////////////////
-		// Primitive Drawing — Color & Texture
-		/////////////////////////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////////////////////////
+        // Rotated Quads — Color & Texture
+        /////////////////////////////////////////////////////////////////////////////////
 
-		static void DrawQuad(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color);
-		static void DrawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color);
-		static void DrawQuad(const glm::vec2& position, const glm::vec2& size, const Ref<Texture>& texture, float tilingFactor = 1.0f, const glm::vec4& tintColor = glm::vec4(1.0f));
-		static void DrawQuad(const glm::vec3& position, const glm::vec2& size, const Ref<Texture>& texture, float tilingFactor = 1.0f, const glm::vec4& tintColor = glm::vec4(1.0f));
+        static void DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size,
+            float rotation, const glm::vec4& color);
+        static void DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size,
+            float rotation, const glm::vec4& color);
+        static void DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size,
+            float rotation, const Ref<Texture>& texture,
+            float tilingFactor = 1.0f,
+            const glm::vec4& tintColor = glm::vec4(1.0f));
+        static void DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size,
+            float rotation, const Ref<Texture>& texture,
+            float tilingFactor = 1.0f,
+            const glm::vec4& tintColor = glm::vec4(1.0f));
 
-		/////////////////////////////////////////////////////////////////////////////////
-		// Rotated Quads — Color & Texture
-		/////////////////////////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////////////////////////
+        // Specialized Math Primitives (SDF)
+        /////////////////////////////////////////////////////////////////////////////////
 
-		static void DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size, float rotation, const glm::vec4& color);
-		static void DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const glm::vec4& color);
-		static void DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size, float rotation, const Ref<Texture>& texture, float tilingFactor = 1.0f, const glm::vec4& tintColor = glm::vec4(1.0f));
-		static void DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const Ref<Texture>& texture, float tilingFactor = 1.0f, const glm::vec4& tintColor = glm::vec4(1.0f));
+        static void DrawCircle(
+            const glm::vec3& position,
+            const glm::vec2& size,
+            const glm::vec4& color,
+            float thickness,
+            float fade,
+            Cosmic::Ref<Cosmic::Shader> customShader = nullptr);
 
-		/////////////////////////////////////////////////////////////////////////////////
-		// Specialized Math Primitives (SDF)
-		/////////////////////////////////////////////////////////////////////////////////
+        inline static void DrawCircle(
+            const glm::vec2& position,
+            const glm::vec2& size,
+            const glm::vec4& color,
+            float thickness = 1.0f,
+            float fade = 0.005f,
+            Cosmic::Ref<Cosmic::Shader> customShader = nullptr)
+        {
+            DrawCircle({ position.x, position.y, 0.0f }, size, color,
+                thickness, fade, customShader);
+        }
 
-		// Primary Implementation
-		static void DrawCircle(
-			const glm::vec3& position,
-			const glm::vec2& size,
-			const glm::vec4& color,
-			float thickness,
-			float fade,
-			Cosmic::Ref<Cosmic::Shader> customShader = nullptr
-		);
+        /////////////////////////////////////////////////////////////////////////////////
+        // Debug Geometry
+        /////////////////////////////////////////////////////////////////////////////////
 
-		// Inline 2D Wrapper
-		inline static void DrawCircle(
-			const glm::vec2& position,
-			const glm::vec2& size,
-			const glm::vec4& color,
-			float thickness = 1.0f,
-			float fade = 0.005f,
-			Cosmic::Ref<Cosmic::Shader> customShader = nullptr
-		)
-		{
-			// Forward the customShader reference down to the 3D implementation
-			DrawCircle({ position.x, position.y, 0.0f }, size, color, thickness, fade, customShader);
-		}
+        static void DrawLine(const glm::vec3& p0, const glm::vec3& p1,
+            const glm::vec4& color);
+        static void DrawRect(const glm::vec3& position, const glm::vec2& size,
+            const glm::vec4& color);
 
-		/////////////////////////////////////////////////////////////////////////////////
-		// Debug Geometry
-		/////////////////////////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////////////////////////
+        // Telemetry
+        /////////////////////////////////////////////////////////////////////////////////
 
-		static void DrawLine(const glm::vec3& p0, const glm::vec3& p1, const glm::vec4& color);
-		static void DrawRect(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color);
+        struct Statistics
+        {
+            uint32_t DrawCalls = 0;
+            uint32_t QuadCount = 0;
+            uint32_t LineCount = 0;
 
-		/////////////////////////////////////////////////////////////////////////////////
-		// Telemetry
-		/////////////////////////////////////////////////////////////////////////////////
+            uint32_t GetTotalVertexCount() const { return QuadCount * 4 + LineCount * 2; }
+            uint32_t GetTotalIndexCount()  const { return QuadCount * 6; }
+        };
 
-		struct Statistics
-		{
-			uint32_t DrawCalls = 0;
-			uint32_t QuadCount = 0;
-			uint32_t LineCount = 0;
+        static void       ResetStats();
+        static Statistics GetStats();
+        static void       SetStatsStatus(bool enabled);
 
-			uint32_t GetTotalVertexCount() const { return QuadCount * 4 + LineCount * 2; }
-			uint32_t GetTotalIndexCount()  const { return QuadCount * 6; }
-		};
+        /////////////////////////////////////////////////////////////////////////////////
+        // Render Pass State
+        /////////////////////////////////////////////////////////////////////////////////
 
-		static void       ResetStats();
-		static Statistics GetStats();
-		static void       SetStatsStatus(bool enabled);
+        struct RenderPassState
+        {
+            glm::mat4 ViewProjectionMatrix{ 1.0f };
+            glm::vec4 ViewportBounds{ 0.0f, 0.0f, 1280.0f, 720.0f };
+        };
 
-		/////////////////////////////////////////////////////////////////////////////////
-		// Render Pass State (used internally by RenderPass.h)
-		/////////////////////////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////////////////////////
+        // Instanced Circle Pipeline (existing)
+        /////////////////////////////////////////////////////////////////////////////////
 
-		struct RenderPassState
-		{
-			glm::mat4 ViewProjectionMatrix{ 1.0f };
-			glm::vec4 ViewportBounds{ 0.0f, 0.0f, 1280.0f, 720.0f }; // x, y, width, height
-		};
+        struct InstanceCircleData
+        {
+            glm::vec3 Position;
+            glm::vec2 Scale;
+            glm::vec4 Color;
+            float     Thickness;
+            float     Fade;
+        };
 
-	private:
-		static void FlushAndReset();
+        static void DrawInstancedCircles(const InstanceCircleData* instances,
+            uint32_t count,
+            Ref<Shader> customShader = nullptr);
 
+        /////////////////////////////////////////////////////////////////////////////////
+        // NEW: Instanced Quad Pipeline
+        /////////////////////////////////////////////////////////////////////////////////
 
+        /**
+         * @brief Per-instance data layout for hardware-instanced quad rendering.
+         *
+         * Matches the vertex attribute layout in QuadInstance.glsl:
+         *   location 1  a_InstanceWorldPosition   (vec3)
+         *   location 2  a_InstanceScale            (vec2)
+         *   location 3  a_InstanceColor            (vec4)
+         *   location 4  a_InstanceTexCoordOffset   (vec2)  — set to {0,0} for solid color
+         *   location 5  a_InstanceTexCoordScale    (vec2)  — set to {1,1} for solid color
+         *   location 6  a_InstanceTexIndex         (float) — 0 = white texture fallback
+         *   location 7  a_InstanceTilingFactor     (float) — UV tiling multiplier
+         *
+         * Total size: 3+2+4+2+2+1+1 floats = 15 floats = 60 bytes per instance.
+         *
+         * Usage notes:
+         *   - For flat-color quads:  set TexIndex = 0, TexCoordOffset = {0,0},
+         *                            TexCoordScale = {1,1}, TilingFactor = 1
+         *   - For textured quads:    bind the texture to u_Textures slot N,
+         *                            set TexIndex = N
+         *   - For sprite-sheet tiles: set TexCoordOffset/Scale to the normalised
+         *                             UV rect of the tile within the atlas
+         */
+        struct InstanceQuadData
+        {
+            glm::vec3 Position;           // World-space centre of the quad
+            glm::vec2 Scale;              // Full width and height in world units
+            glm::vec4 Color;              // RGBA tint (multiplied with texture sample)
+            glm::vec2 TexCoordOffset;     // Normalised UV origin  (atlas support)
+            glm::vec2 TexCoordScale;      // Normalised UV extent  (atlas support)
+            float     TexIndex;           // u_Textures[] slot index (0 = white)
+            float     TilingFactor;       // UV tiling multiplier
+        };
 
-	public:
-		struct InstanceCircleData
-		{
-			glm::vec3 Position;
-			glm::vec2 Scale;
-			glm::vec4 Color;
-			float Thickness;
-			float Fade;
-		};
+        static_assert(sizeof(InstanceQuadData) == 60,
+            "InstanceQuadData must be exactly 60 bytes (15 floats) to match "
+            "the QuadInstance.glsl attribute stride.");
 
-		/**
-		 * DrawInstancedCircles
-		 * Pre:  BeginScene() was called. An array of valid instance blocks is supplied.
-		 * Post: Instantly streams instance data directly to the GPU in a single instanced batch.
-		 */
-		static void DrawInstancedCircles(const InstanceCircleData* instances, uint32_t count, Ref<Shader> customShader = nullptr);
-	};
+        /**
+         * @brief Draw quads using a single GPU instanced draw call.
+         *
+         * Flushes any pending batched geometry, streams all instance data to the
+         * GPU in one SetData call, then issues a single DrawIndexedInstanced
+         * through the RenderCommand abstraction.
+         *
+         * @param instances   Pointer to an array of InstanceQuadData structs.
+         * @param count       Number of quads to draw.
+         * @param customShader Optional override shader. Defaults to QuadInstance.glsl.
+         *
+         * Pre:   A render pass must be active (BeginScene / PushRenderPass called).
+         *        `instances` must point to a valid array of at least `count` elements.
+         * Post:  All `count` quads are submitted to the GPU as a single draw call.
+         *        Pending batch state is reset afterwards so normal DrawQuad calls
+         *        continue to work correctly.
+         */
+        static void DrawInstancedQuads(const InstanceQuadData* instances,
+            uint32_t count,
+            Ref<Shader> customShader = nullptr);
+
+    private:
+        static void FlushAndReset();
+    };
 
 } // namespace Cosmic

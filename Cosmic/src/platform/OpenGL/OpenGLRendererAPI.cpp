@@ -85,4 +85,17 @@ namespace Cosmic
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////
+
+	void OpenGLRendererAPI::DrawIndexedInstanced(const Ref<VertexArray>& vertexArray, uint32_t indexCount, uint32_t instanceCount)
+	{
+		glDrawElementsInstanced(GL_TRIANGLES,
+			static_cast<GLsizei>(indexCount),
+			GL_UNSIGNED_INT,
+			nullptr,
+			static_cast<GLsizei>(instanceCount));
+	}
+
+	/////////////////////////////////////////////////////////////////////////////////
+
+
 }

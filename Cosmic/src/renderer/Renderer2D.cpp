@@ -103,12 +103,25 @@ namespace Cosmic
 		CircleVertex* CircleVertexBufferPtr = nullptr;
 
 		// =========================================================================
-		// --- New: Instanced Circle Pipeline Assets ---
+		// --- Instanced Circle Pipeline Assets ---
 		// =========================================================================
 		Ref<VertexArray>  InstancedCircleVAO;
 		Ref<VertexBuffer> InstancedCircleQuadVBO;
 		Ref<VertexBuffer> InstancedCircleInstanceVBO;
 		Ref<Shader>       DefaultInstancedCircleShader; // Dedicated (CircleInstance.glsl)
+
+
+		// =========================================================================
+		// --- Instanced Quad Pipeline Assets ---
+		// =========================================================================
+		Ref<VertexArray>  InstancedQuadVAO;
+		Ref<VertexBuffer> InstancedQuadBaseVBO;      // Shared unit-quad geometry
+		Ref<VertexBuffer> InstancedQuadInstanceVBO;  // Per-instance stream
+		Ref<Shader>       DefaultInstancedQuadShader; // QuadInstance.glsl
+
+		// Hardware ceiling matching the circle instancing limit
+		static const uint32_t MaxInstancedQuads = 20000;
+
 
 		// =========================================================================
 		// --- Global Texture State ---
@@ -298,19 +311,89 @@ namespace Cosmic
 		if (!s_Data.DefaultInstancedCircleShader)
 			CS_CORE_ERROR("Renderer2D: Failed to load Engine Default Instanced Circle shader (CircleInstance.glsl)!");
 
+
+
+		// =========================================================================
+		// --- Instanced Quad Hardware Pipeline Initialization ---
+		// =========================================================================
+		s_Data.InstancedQuadVAO = VertexArray::Create();
+
+		// Shared base geometry: a unit quad with corners at [-0.5, 0.5].
+		// Matches the local-position convention expected by QuadInstance.glsl.
+		glm::vec2 quadCorners[4] = {
+			{ -0.5f, -0.5f },  // Bottom-left
+			{  0.5f, -0.5f },  // Bottom-right
+			{  0.5f,  0.5f },  // Top-right
+			{ -0.5f,  0.5f }   // Top-left
+		};
+
+		s_Data.InstancedQuadBaseVBO = VertexBuffer::Create(sizeof(quadCorners));
+		s_Data.InstancedQuadBaseVBO->SetLayout({
+			{ ShaderDataType::Float2, "a_LocalPosition" }  // location 0, divisor 0
+			});
+		s_Data.InstancedQuadVAO->AddVertexBuffer(s_Data.InstancedQuadBaseVBO);
+		s_Data.InstancedQuadBaseVBO->SetData(quadCorners, sizeof(quadCorners));
+
+		// Reuse the pre-built quad index buffer (0,1,2,2,3,0 winding)
+		uint32_t instancedQuadIndices[6] = { 0, 1, 2, 2, 3, 0 };
+		Ref<IndexBuffer> instancedQuadIB = IndexBuffer::Create(instancedQuadIndices, 6);
+		s_Data.InstancedQuadVAO->SetIndexBuffer(instancedQuadIB);
+
+		// Per-instance stream — allocate for MaxInstancedQuads entries.
+		s_Data.InstancedQuadInstanceVBO = VertexBuffer::Create(
+			s_Data.MaxInstancedQuads * sizeof(Renderer2D::InstanceQuadData));
+
+		// Build the per-instance layout.
+		// Every element is flagged Instanced = true so AddVertexBuffer sets
+		// glVertexAttribDivisor(location, 1) for each attribute.
+		// Attribute indices start at 1 because location 0 is the base VBO above.
+		BufferLayout instancedQuadLayout = {
+			{ ShaderDataType::Float3, "a_InstanceWorldPosition" },   // loc 1
+			{ ShaderDataType::Float2, "a_InstanceScale"          },  // loc 2
+			{ ShaderDataType::Float4, "a_InstanceColor"          },  // loc 3
+			{ ShaderDataType::Float2, "a_InstanceTexCoordOffset" },  // loc 4
+			{ ShaderDataType::Float2, "a_InstanceTexCoordScale"  },  // loc 5
+			{ ShaderDataType::Float,  "a_InstanceTexIndex"       },  // loc 6
+			{ ShaderDataType::Float,  "a_InstanceTilingFactor"   }   // loc 7
+		};
+
+		// Mark every element as per-instance so OpenGLVertexArray::AddVertexBuffer
+		// calls glVertexAttribDivisor(n, 1) for each location, exactly mirroring
+		// the circle instancing setup.
+		for (auto& element : instancedQuadLayout)
+			element.Instanced = true;
+
+		s_Data.InstancedQuadInstanceVBO->SetLayout(instancedQuadLayout);
+		s_Data.InstancedQuadVAO->AddVertexBuffer(s_Data.InstancedQuadInstanceVBO);
+
+		// Load the instanced quad shader
+		s_Data.DefaultInstancedQuadShader = Shader::Create("assets/shaders/QuadInstance.glsl");
+		if (!s_Data.DefaultInstancedQuadShader)
+			CS_CORE_ERROR("Renderer2D: Failed to load QuadInstance.glsl!");
+
+
 		CS_CORE_INFO("Renderer2D initialized successfully.");
 	}
 
 	void Renderer2D::Shutdown()
 	{
 		CS_CORE_TRACE("Shutting down Renderer2D");
+
 		delete[] s_Data.QuadVertexBufferBase;
 		delete[] s_Data.LineVertexBufferBase;
 		delete[] s_Data.CircleVertexBufferBase;
+
 		s_Data.RenderPassStack.clear();
+
+		// Instanced circle pipeline
 		s_Data.InstancedCircleVAO.reset();
 		s_Data.InstancedCircleQuadVBO.reset();
 		s_Data.InstancedCircleInstanceVBO.reset();
+
+		// Instanced quad pipeline
+		s_Data.InstancedQuadVAO.reset();
+		s_Data.InstancedQuadBaseVBO.reset();
+		s_Data.InstancedQuadInstanceVBO.reset();
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////
@@ -1031,57 +1114,175 @@ namespace Cosmic
 	///////
 	void Renderer2D::DrawInstancedCircles(const InstanceCircleData* instances, uint32_t count, Ref<Shader> customShader)
 	{
-		if (count == 0) return;
+		if (!instances || count == 0) return;
 
-		// =========================================================================
-		// 1. PIPELINE ISOLATION CRITICAL FIX
-		// =========================================================================
-		// Force-flush ALL active traditional batches (Quads, Lines, and Batched Circles)
-		// before we alter the global pipeline bindings. This prevents our instanced draw
-		// states from clipping or corrupting textures/materials from previous draws.
+		// =====================================================================
+		// 1. PIPELINE ISOLATION
+		// Flush all pending batched geometry (quads, lines, batch circles) before
+		// changing VAO / shader bindings. Prevents state leakage in either
+		// direction between the batch and instanced pipelines.
+		// =====================================================================
 		FlushAndReset();
 
-		// 2. Select the designated instanced pipeline shader program target
-		Ref<Shader> targetShader = customShader ? customShader : s_Data.DefaultInstancedCircleShader;
+		// =====================================================================
+		// 2. SHADER SELECTION
+		// Fall back to the default instanced circle shader if none is supplied.
+		// If even the default is missing, bail with a log rather than crash.
+		// =====================================================================
+		Ref<Shader> targetShader = customShader
+			? customShader
+			: s_Data.DefaultInstancedCircleShader;
+
+		if (!targetShader)
+		{
+			CS_CORE_ERROR("Renderer2D::DrawInstancedCircles: No valid shader available. "
+				"Ensure CircleInstance.glsl loaded correctly during Init.");
+			return;
+		}
+
 		targetShader->Bind();
 		targetShader->SetMat4("u_ViewProjection", s_Data.ViewProjectionMatrix);
 
-		uint32_t remainingInstances = count;
-		uint32_t currentOffset = 0;
+		// =====================================================================
+		// 3. CHUNKED STREAMING LOOP
+		// Stream instance data in MaxInstancedCircles-sized chunks, issuing one
+		// abstracted draw call per chunk. Keeps GPU buffer usage bounded
+		// regardless of how many instances are submitted per frame.
+		// =====================================================================
+		uint32_t remaining = count;
+		uint32_t offset = 0;
 
 		s_Data.InstancedCircleVAO->Bind();
 
-		// Handle chunk streaming loops if inputs saturate the layout configuration capacities
-		while (remainingInstances > 0)
+		while (remaining > 0)
 		{
-			uint32_t batchSize = std::min(remainingInstances, s_Data.MaxInstancedCircles);
+			const uint32_t batchSize = (remaining < Renderer2DData::MaxInstancedCircles)
+				? remaining
+				: Renderer2DData::MaxInstancedCircles;
 
-			// Stream raw instance memory straight down across the PCIe bus pipeline bounds
-			s_Data.InstancedCircleInstanceVBO->SetData(&instances[currentOffset], batchSize * sizeof(InstanceCircleData));
+			// Upload only the slice of instance data needed for this chunk.
+			// SetData calls glBufferSubData internally — no reallocation occurs.
+			s_Data.InstancedCircleInstanceVBO->SetData(
+				instances + offset,
+				batchSize * static_cast<uint32_t>(sizeof(InstanceCircleData)));
 
-			// Trigger high performance GPU drawing calculations sequence pass
-			glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, batchSize);
+			// Route through RenderCommand — zero raw GL calls in Renderer2D.
+			// The index buffer holds 6 indices (two triangles) for the unit quad.
+			// DrawIndexedInstanced maps to glDrawElementsInstanced internally.
+			RenderCommand::DrawIndexedInstanced(s_Data.InstancedCircleVAO, 6, batchSize);
 
-			// Track performance and profiling metric metrics accurately
 			s_Data.Stats.DrawCalls++;
 			s_Data.Stats.QuadCount += batchSize;
 
-			remainingInstances -= batchSize;
-			currentOffset += batchSize;
+			remaining -= batchSize;
+			offset += batchSize;
 		}
 
 		s_Data.InstancedCircleVAO->Unbind();
 
-		// =========================================================================
-		// 3. CLEAN UP TRACKING HANDLES
-		// =========================================================================
-		// Signal to the traditional circle batch system that its pipeline binding 
-		// was altered so it explicitly re-binds on its next draw command.
+		// =====================================================================
+		// 4. STATE CLEANUP
+		// Signal to the batch circle system that its pipeline binding was altered
+		// so it explicitly re-binds on its next draw command. Null out the
+		// current material for the same reason on the quad side.
+		// =====================================================================
 		s_Data.ActiveCircleShader = nullptr;
-
-		// REMOVED: s_Data.TextureShader->Bind(); 
-		// Let the state tracking code in DrawQuad/Flush handle binding the texture 
-		// shader lazily only when a quad is actually drawn next. No more blind binding!
+		s_Data.CurrentMaterial = nullptr;
 	}
+
+
+	//////////////////////////////////////////////////////////////////////////////////////
+
+	void Renderer2D::DrawInstancedQuads(const InstanceQuadData* instances,
+		uint32_t count,
+		Ref<Shader> customShader)
+	{
+		if (!instances || count == 0) return;
+
+		// =====================================================================
+		// 1. PIPELINE ISOLATION
+		// Flush all active traditional batches (quads, lines, circles) before
+		// altering global VAO / shader bindings. This mirrors the circle path
+		// and prevents state leakage in either direction.
+		// =====================================================================
+		FlushAndReset();
+
+		// =====================================================================
+		// 2. SHADER SELECTION
+		// Fall back to the default instanced quad shader if none is supplied.
+		// If even the default is missing (failed to load), bail early with a log.
+		// =====================================================================
+		Ref<Shader> targetShader = customShader
+			? customShader
+			: s_Data.DefaultInstancedQuadShader;
+
+		if (!targetShader)
+		{
+			CS_CORE_ERROR("Renderer2D::DrawInstancedQuads: No valid shader available. "
+				"Ensure QuadInstance.glsl loaded correctly during Init.");
+			return;
+		}
+
+		targetShader->Bind();
+		targetShader->SetMat4("u_ViewProjection", s_Data.ViewProjectionMatrix);
+
+		// Upload the sampler array so the shader can access u_Textures[].
+		// White texture occupies slot 0; callers bind additional textures before
+		// calling this function when TexIndex > 0.
+		int32_t samplers[Renderer2DData::MaxTextureSlots];
+		for (int32_t i = 0; i < static_cast<int32_t>(Renderer2DData::MaxTextureSlots); ++i)
+			samplers[i] = i;
+		targetShader->SetIntArray("u_Textures", samplers, Renderer2DData::MaxTextureSlots);
+
+		// Ensure the white texture is always present in slot 0 so solid-color
+		// quads (TexIndex = 0) render correctly without caller setup.
+		s_Data.WhiteTexture->Bind(0);
+
+		// =====================================================================
+		// 3. CHUNKED STREAMING LOOP
+		// Stream instance data in chunks bounded by MaxInstancedQuads, issuing
+		// one GPU draw call per chunk. This keeps GPU buffer usage bounded even
+		// when thousands of instances are submitted per frame.
+		// =====================================================================
+		uint32_t remaining = count;
+		uint32_t offset = 0;
+
+		s_Data.InstancedQuadVAO->Bind();
+
+		while (remaining > 0)
+		{
+			const uint32_t batchSize = (remaining < Renderer2DData::MaxInstancedQuads)
+				? remaining
+				: Renderer2DData::MaxInstancedQuads;
+
+			// Upload only the slice of instance data for this chunk.
+			// SetData calls glBufferSubData internally — zero reallocation.
+			s_Data.InstancedQuadInstanceVBO->SetData(
+				instances + offset,
+				batchSize * static_cast<uint32_t>(sizeof(InstanceQuadData)));
+
+			// Issue the draw through the engine abstraction.
+			// The index buffer holds 6 indices (two triangles) for the unit quad.
+			// DrawIndexedInstanced calls glDrawElementsInstanced internally.
+			RenderCommand::DrawIndexedInstanced(s_Data.InstancedQuadVAO, 6, batchSize);
+
+			s_Data.Stats.DrawCalls++;
+			s_Data.Stats.QuadCount += batchSize;
+
+			remaining -= batchSize;
+			offset += batchSize;
+		}
+
+		s_Data.InstancedQuadVAO->Unbind();
+
+		// =====================================================================
+		// 4. STATE CLEANUP
+		// Null out the current material so the first subsequent DrawQuad call
+		// re-binds the correct shader without a stale material assumption,
+		// mirroring the cleanup done at the end of DrawInstancedCircles.
+		// =====================================================================
+		s_Data.CurrentMaterial = nullptr;
+	}
+
 
 } // namespace Cosmic
