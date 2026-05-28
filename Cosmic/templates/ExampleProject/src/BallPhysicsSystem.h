@@ -90,7 +90,7 @@ namespace Workspace
 			}
 
 			const float gravity = Gravity;
-			const float damping = Damping;
+			const float damping = Damping; // ImGui Slider (0.0 = bounce forever, 1.0 = stop instantly)
 			const float boundsX = BoundsX;
 			const float boundsY = BoundsY;
 			const float dt = fixedDt;
@@ -106,33 +106,56 @@ namespace Workspace
 					{
 						PhysicsBody body = readBuf[i];
 
+						// 1. Integrate forces (Gravity) and apply linear drag in flight
 						body.Velocity.y += gravity * dt;
+
+						// Apply standard atmospheric air resistance drag while moving
+						// If drag multiplier is 1.0 and damping is 0, this does nothing.
+						float airDragFactor = 1.0f - (damping * body.LinearDrag * dt);
+						body.Velocity *= glm::clamp(airDragFactor, 0.0f, 1.0f);
+
+						// Update positions based on newly calculated velocities
 						body.Position.x += body.Velocity.x * dt;
 						body.Position.y += body.Velocity.y * dt;
 
-						const float ed = damping * body.Restitution * body.LinearDrag;
+						// 2. Compute true structural energy conservation ratio during impacts.
+						// If damping slider is 0.0, energy retention is driven 100% by Restitution.
+						// If Restitution is 1.0 and Damping is 0.0, bounces are completely lossless.
+						const float totalBounceRetention = glm::clamp(body.Restitution - damping, 0.0f, 1.0f);
 
+						// --- X Axis Bounds Collision ---
 						if (body.Position.x + body.Radius > boundsX)
 						{
 							body.Position.x = boundsX - body.Radius;
-							body.Velocity.x = -body.Velocity.x * ed;
+							body.Velocity.x = -body.Velocity.x * totalBounceRetention;
 						}
 						else if (body.Position.x - body.Radius < -boundsX)
 						{
 							body.Position.x = -boundsX + body.Radius;
-							body.Velocity.x = -body.Velocity.x * ed;
+							body.Velocity.x = -body.Velocity.x * totalBounceRetention;
 						}
 
-						if (body.Position.y - body.Radius < -boundsY)
+						// --- Y Axis Bounds Collision ---
+						if (body.Position.y - body.Radius < -boundsY) // Floor
 						{
 							body.Position.y = -boundsY + body.Radius;
-							body.Velocity.y = -body.Velocity.y * ed;
-							body.Velocity.x *= ed; // floor friction
+							body.Velocity.y = -body.Velocity.y * totalBounceRetention;
+
+							// Apply horizontal floor friction (only when contacting the floor)
+							// Scales smoothly alongside the core damping factor.
+							float floorFriction = glm::clamp(1.0f - (damping * 2.0f * dt), 0.0f, 1.0f);
+							body.Velocity.x *= floorFriction;
+
+							// Micro-jitter mitigation: Kill tiny velocities to allow resting states
+							if (glm::abs(body.Velocity.y) < 0.15f && gravity < 0.0f)
+							{
+								body.Velocity.y = 0.0f;
+							}
 						}
-						else if (body.Position.y + body.Radius > boundsY)
+						else if (body.Position.y + body.Radius > boundsY) // Ceiling
 						{
 							body.Position.y = boundsY - body.Radius;
-							body.Velocity.y = -body.Velocity.y * ed;
+							body.Velocity.y = -body.Velocity.y * totalBounceRetention;
 						}
 
 						writeBuf[i] = body;
@@ -145,9 +168,7 @@ namespace Workspace
 			TimeExecuteMs = std::chrono::duration<float, std::milli>(end - start).count();
 		}
 
-		// =====================================================================
-		// PASS D — OnFixedMerge
-		// =====================================================================
+
 		// =====================================================================
         // PASS D — OnFixedMerge
         // =====================================================================

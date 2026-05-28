@@ -270,7 +270,7 @@ namespace Workspace
 		// --- Spawn controls ---
 		if (ImGui::CollapsingHeader("Spawn Controls", ImGuiTreeNodeFlags_DefaultOpen))
 		{
-			ImGui::SliderInt("Spawn Count", &m_SpawnCount, 1, 50);
+			ImGui::SliderInt("Spawn Count", &m_SpawnCount, 1, 500);
 
 			if (ImGui::Button("Spawn Balls"))
 			{
@@ -368,7 +368,7 @@ namespace Workspace
 		body.Velocity = velocity;
 		body.Radius = radius;
 		body.Mass = b.Mass;
-		body.Restitution = 0.85f;
+		body.Restitution = 1.0f;
 		body.LinearDrag = 1.0f;
 	}
 
