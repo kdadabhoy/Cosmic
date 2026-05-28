@@ -1,12 +1,15 @@
 #pragma once
+// BallPhysicsSystem.h
+// Last Modified: 5/27/2026
 
 #include <Cosmic.h>
+#include "jobs/DoubleBuffer.h"   
 #include "Components.h"
-
+#include <chrono>
 #ifndef WIN32_LEAN_AND_MEAN
-    #define WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
 #endif
-#include <windows.h> // Required for GetCurrentThreadId()
+#include <windows.h>
 
 namespace Workspace
 {
@@ -20,90 +23,200 @@ namespace Workspace
 		float BoundsX = 6.0f;
 		float BoundsY = 4.0f;
 
+		// Profiling Telemetry Data
+		float TimePrepareMs = 0.0f;
+		float TimeExecuteMs = 0.0f;
+		float TimeMergeMs = 0.0f;
 
 		// =====================================================================
-		// 1. PASS B — Prepare
+		// PASS B — OnFixedPrepare
 		// =====================================================================
 		virtual void OnFixedPrepare(Cosmic::Scene& scene, float fixedDt) override
 		{
+			auto start = std::chrono::high_resolution_clock::now();
+
 			entt::registry& reg = scene.GetRegistry();
 
-			// Query elements matching BOTH required components simultaneously to guarantee aligned paged memory tables
-			auto matchedView = reg.view<Cosmic::TransformComponent, BallComponent>();
+			// OPTIMIZATION: Initialize / enforce an owning group layout.
+			// This tells EnTT to tightly pack matching components sequentially.
+			auto group = reg.group<PhysicsBody>(entt::get<Cosmic::TransformComponent>);
 
-			// Synchronize both buffers onto identical structural indices mapped cleanly by view allocation order
-			m_Transforms.PrepareFromView(reg, matchedView);
-			m_PhysicsData.PrepareFromView(reg, matchedView);
+			const size_t count = group.size();
+
+			if (m_Buffer.Count() != count)
+			{
+				m_Buffer.Resize(count);
+				m_EntitySlots.clear();
+				m_EntitySlots.reserve(count);
+			}
+
+			m_EntitySlots.clear();
+			size_t slot = 0;
+
+			// Group iteration is exceptionally fast and perfectly ordered
+			for (auto entity : group)
+			{
+				m_Buffer.WriteAt(slot) = group.get<PhysicsBody>(entity);
+				m_EntitySlots.push_back(entity);
+				++slot;
+			}
+
+			m_Buffer.Swap();
+
+			auto end = std::chrono::high_resolution_clock::now();
+			TimePrepareMs = std::chrono::duration<float, std::milli>(end - start).count();
 		}
 
 		// =====================================================================
-		// 2. PASS C — Parallel Execute
+		// PASS C — OnFixedParallelExecute
 		// =====================================================================
 		virtual void OnFixedParallelExecute(Cosmic::Scene& scene, float fixedDt) override
 		{
-			size_t elementCount = m_PhysicsData.Count();
-			if (elementCount == 0 || m_Transforms.IsEmpty()) return;
+			auto start = std::chrono::high_resolution_clock::now();
 
-			// Active Thread Optimization Log: Dynamic runtime worker-pool tracking
-			// Accumulate time and log only every 5 seconds
+			const size_t count = m_Buffer.Count();
+			if (count == 0)
+			{
+				TimeExecuteMs = 0.0f;
+				return;
+			}
+
 			m_LogTimer += fixedDt;
 			if (m_LogTimer >= 5.0f)
 			{
-				uint32_t activeWorkers = Cosmic::JobSystem::Get().GetWorkerCount();
-				CS_INFO("BallPhysicsSystem: Processing {0} objects across {1} workers.",
-					elementCount, activeWorkers);
-
-				m_LogTimer = 0.0f; // Reset the timer
+				CS_INFO("BallPhysicsSystem: Integrating {0} bodies across {1} workers.",
+					count, Cosmic::JobSystem::Get().GetWorkerCount());
+				m_LogTimer = 0.0f;
 			}
 
-			float g = Gravity;
-			float d = Damping;
-			float bx = BoundsX;
-			float by = BoundsY;
+			const float gravity = Gravity;
+			const float damping = Damping; // ImGui Slider (0.0 = bounce forever, 1.0 = stop instantly)
+			const float boundsX = BoundsX;
+			const float boundsY = BoundsY;
+			const float dt = fixedDt;
 
-			Cosmic::TransformComponent* transformRaw = m_Transforms.Data();
-			BallComponent* physicsRaw = m_PhysicsData.Data();
+			const PhysicsBody* readBuf = m_Buffer.GetReadBuffer();
+			PhysicsBody* writeBuf = m_Buffer.GetWriteBuffer();
 
-			Cosmic::ParallelFor(elementCount, [transformRaw, physicsRaw, g, d, bx, by, fixedDt](size_t begin, size_t end)
+			Cosmic::ParallelFor(count,
+				[readBuf, writeBuf, gravity, damping, boundsX, boundsY, dt]
+				(size_t begin, size_t end)
 				{
-					// Thread Chunk Audit: Identifies exactly which Win32 Thread Handle is crunching which block
-					//CS_TRACE("Thread [ID: {0}] claimed index slice [{1} -> {2})", GetCurrentThreadId(), begin, end);
-
 					for (size_t i = begin; i < end; ++i)
 					{
-						auto& t = transformRaw[i];
-						auto& b = physicsRaw[i];
+						PhysicsBody body = readBuf[i];
 
-						// Integrate Gravity & Position steps
-						b.Velocity.y += g * fixedDt;
-						t.Position.x += b.Velocity.x * fixedDt;
-						t.Position.y += b.Velocity.y * fixedDt;
+						// 1. Integrate forces (Gravity) and apply linear drag in flight
+						body.Velocity.y += gravity * dt;
 
-						// Hard boundary collision checks (X Axis)
-						if (t.Position.x + b.Radius > bx) { t.Position.x = bx - b.Radius;  b.Velocity.x = -b.Velocity.x * d; }
-						else if (t.Position.x - b.Radius < -bx) { t.Position.x = -bx + b.Radius; b.Velocity.x = -b.Velocity.x * d; }
+						// Apply standard atmospheric air resistance drag while moving
+						// If drag multiplier is 1.0 and damping is 0, this does nothing.
+						float airDragFactor = 1.0f - (damping * body.LinearDrag * dt);
+						body.Velocity *= glm::clamp(airDragFactor, 0.0f, 1.0f);
 
-						// Hard boundary collision checks (Y Axis)
-						if (t.Position.y - b.Radius < -by) { t.Position.y = -by + b.Radius; b.Velocity.y = -b.Velocity.y * d; b.Velocity.x *= d; }
-						else if (t.Position.y + b.Radius > by) { t.Position.y = by - b.Radius;  b.Velocity.y = -b.Velocity.y * d; }
+						// Update positions based on newly calculated velocities
+						body.Position.x += body.Velocity.x * dt;
+						body.Position.y += body.Velocity.y * dt;
+
+						// 2. Compute true structural energy conservation ratio during impacts.
+						// If damping slider is 0.0, energy retention is driven 100% by Restitution.
+						// If Restitution is 1.0 and Damping is 0.0, bounces are completely lossless.
+						const float totalBounceRetention = glm::clamp(body.Restitution - damping, 0.0f, 1.0f);
+
+						// --- X Axis Bounds Collision ---
+						if (body.Position.x + body.Radius > boundsX)
+						{
+							body.Position.x = boundsX - body.Radius;
+							body.Velocity.x = -body.Velocity.x * totalBounceRetention;
+						}
+						else if (body.Position.x - body.Radius < -boundsX)
+						{
+							body.Position.x = -boundsX + body.Radius;
+							body.Velocity.x = -body.Velocity.x * totalBounceRetention;
+						}
+
+						// --- Y Axis Bounds Collision ---
+						if (body.Position.y - body.Radius < -boundsY) // Floor
+						{
+							body.Position.y = -boundsY + body.Radius;
+							body.Velocity.y = -body.Velocity.y * totalBounceRetention;
+
+							// Apply horizontal floor friction (only when contacting the floor)
+							// Scales smoothly alongside the core damping factor.
+							float floorFriction = glm::clamp(1.0f - (damping * 2.0f * dt), 0.0f, 1.0f);
+							body.Velocity.x *= floorFriction;
+
+							// Micro-jitter mitigation: Kill tiny velocities to allow resting states
+							if (glm::abs(body.Velocity.y) < 0.15f && gravity < 0.0f)
+							{
+								body.Velocity.y = 0.0f;
+							}
+						}
+						else if (body.Position.y + body.Radius > boundsY) // Ceiling
+						{
+							body.Position.y = boundsY - body.Radius;
+							body.Velocity.y = -body.Velocity.y * totalBounceRetention;
+						}
+
+						writeBuf[i] = body;
 					}
-				}, 32);
+				},
+				32
+			);
+
+			auto end = std::chrono::high_resolution_clock::now();
+			TimeExecuteMs = std::chrono::duration<float, std::milli>(end - start).count();
 		}
 
-		// =====================================================================
-		// 3. PASS D — Merge
-		// =====================================================================
-		virtual void OnFixedMerge(Cosmic::Scene& scene, float fixedDt) override
-		{
-			// Safely commit flat pointer changes directly back into internal stable EnTT memory pages
-			m_Transforms.WriteBack(scene.GetRegistry());
-			m_PhysicsData.WriteBack(scene.GetRegistry());
-		}
 
+		// =====================================================================
+        // PASS D — OnFixedMerge
+        // =====================================================================
+        virtual void OnFixedMerge(Cosmic::Scene& scene, float fixedDt) override
+        {
+            auto start = std::chrono::high_resolution_clock::now();
+
+            if (m_Buffer.Count() == 0)
+            {
+                TimeMergeMs = 0.0f;
+                return;
+            }
+
+            // Promote workers' write buffer → read buffer.
+            m_Buffer.Swap();
+
+            entt::registry& reg = scene.GetRegistry();
+            const PhysicsBody* results = m_Buffer.GetReadBuffer();
+            const size_t count = m_EntitySlots.size();
+
+            // Re-acquire the exact group layout context used in Prepare
+            auto group = reg.group<PhysicsBody>(entt::get<Cosmic::TransformComponent>);
+
+            for (size_t i = 0; i < count; ++i)
+            {
+                const entt::entity entity = m_EntitySlots[i];
+
+                // Fast group-member lookup. Avoids registry hash-mapping completely.
+                if (group.contains(entity))
+                {
+                    // Update the sorted PhysicsBody
+                    group.get<PhysicsBody>(entity) = results[i];
+
+                    // Sync data over to the paired TransformComponent
+                    auto& transform = group.get<Cosmic::TransformComponent>(entity);
+                    transform.Position.x = results[i].Position.x;
+                    transform.Position.y = results[i].Position.y;
+                }
+            }
+
+            auto end = std::chrono::high_resolution_clock::now();
+            TimeMergeMs = std::chrono::duration<float, std::milli>(end - start).count();
+        }
 
 	private:
-		Cosmic::FlatComponentArray<Cosmic::TransformComponent> m_Transforms;
-		Cosmic::FlatComponentArray<BallComponent> m_PhysicsData;
-		float m_LogTimer = 0.0f; // Track time here
+		Cosmic::DoubleBuffer<PhysicsBody> m_Buffer;
+		std::vector<entt::entity>         m_EntitySlots;
+		float                             m_LogTimer = 0.0f;
 	};
-}
+
+} // namespace Workspace

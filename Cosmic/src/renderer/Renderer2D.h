@@ -232,6 +232,25 @@ namespace Cosmic
 
 	private:
 		static void FlushAndReset();
+
+
+
+	public:
+		struct InstanceCircleData
+		{
+			glm::vec3 Position;
+			glm::vec2 Scale;
+			glm::vec4 Color;
+			float Thickness;
+			float Fade;
+		};
+
+		/**
+		 * DrawInstancedCircles
+		 * Pre:  BeginScene() was called. An array of valid instance blocks is supplied.
+		 * Post: Instantly streams instance data directly to the GPU in a single instanced batch.
+		 */
+		static void DrawInstancedCircles(const InstanceCircleData* instances, uint32_t count, Ref<Shader> customShader = nullptr);
 	};
 
 } // namespace Cosmic

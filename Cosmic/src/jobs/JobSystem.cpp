@@ -76,30 +76,30 @@ namespace Cosmic
     // Shutdown
     // =========================================================================
 
-    void JobSystem::Shutdown()
-    {
-        if (!m_Initialized || m_Workers.empty()) return;
+	void JobSystem::Shutdown()
+	{
+		if (!m_Initialized || m_Workers.empty()) return;
 
-        // Signal all workers to stop after draining the queue.
-        {
-            std::lock_guard<std::mutex> lock(m_QueueMutex);
-            m_Stopping.store(true, std::memory_order_release);
-        }
+		// Signal all workers to stop after draining the queue.
+		{
+			std::lock_guard<std::mutex> lock(m_QueueMutex);
+			m_Stopping.store(true, std::memory_order_release);
+		}
 
-        // Wake every sleeping worker so they can observe m_Stopping and exit.
-        m_WorkAvailable.notify_all();
+		// Wake every sleeping worker so they can observe m_Stopping and exit.
+		m_WorkAvailable.notify_all();
 
-        // Join all worker threads. This blocks until the last job finishes.
-        for (auto& worker : m_Workers)
-        {
-            if (worker.joinable())
-                worker.join();
-        }
+		// Join all worker threads. This blocks until the last job finishes.
+		for (auto& worker : m_Workers)
+		{
+			if (worker.joinable())
+				worker.join();
+		}
 
-        m_Workers.clear();
-        m_Initialized = false;
-        CS_CORE_INFO("JobSystem: Thread pool shut down cleanly.");
-    }
+		m_Workers.clear();
+		m_Initialized = false;
+		CS_CORE_INFO("JobSystem: Thread pool shut down cleanly.");
+	}
 
     // =========================================================================
     // Submit
@@ -138,63 +138,66 @@ namespace Cosmic
     // WorkerThread — runs for the lifetime of the thread pool
     // =========================================================================
 
-    void JobSystem::WorkerThread()
-    {
-        while (true)
-        {
-            Job job;
+	void JobSystem::WorkerThread()
+	{
+		while (true)
+		{
+			Job job;
 
-            // ---------------------------------------------------------------
-            // Scope 1: Try to dequeue a job
-            // ---------------------------------------------------------------
-            {
-                std::unique_lock<std::mutex> lock(m_QueueMutex);
+			// ---------------------------------------------------------------
+			// Scope 1: Try to dequeue a job
+			// ---------------------------------------------------------------
+			{
+				std::unique_lock<std::mutex> lock(m_QueueMutex);
 
-                // Block until there is work OR we are asked to stop.
-                m_WorkAvailable.wait(lock, [this]()
-                {
-                    return !m_JobQueue.empty() || m_Stopping.load(std::memory_order_acquire);
-                });
+				// Block until there is work OR we are asked to stop.
+				m_WorkAvailable.wait(lock, [this]()
+					{
+						return !m_JobQueue.empty() || m_Stopping.load(std::memory_order_acquire);
+					});
 
-                // If the pool is shutting down and the queue is drained, exit.
-                if (m_Stopping.load(std::memory_order_acquire) && m_JobQueue.empty())
-                    return;
+				// Crucial Check: If stopping, only exit if the queue is completely empty.
+				// If there are still lingering jobs in the queue, we must finish them first!
+				if (m_Stopping.load(std::memory_order_acquire) && m_JobQueue.empty())
+				{
+					break; // Use break to safely unwind out of the lock context
+				}
 
-                // Claim the front job.
-                job = std::move(m_JobQueue.front());
-                m_JobQueue.pop();
+				// Double Check: Safety guard against spurious wakeups
+				if (m_JobQueue.empty())
+				{
+					continue;
+				}
 
-                // Increment *before* releasing the lock so WaitIdle() cannot
-                // observe an empty queue with zero active jobs prematurely
-                // (i.e. between the pop and the actual execution below).
-                m_ActiveJobs.fetch_add(1, std::memory_order_acq_rel);
-            }
+				// Claim the front job.
+				job = std::move(m_JobQueue.front());
+				m_JobQueue.pop();
 
-            // ---------------------------------------------------------------
-            // Scope 2: Execute the job outside the lock
-            // This is critical — holding the lock during execution would
-            // serialize all workers through the mutex, defeating parallelism.
-            // ---------------------------------------------------------------
-            job();
+				// Increment safely before releasing the lock
+				m_ActiveJobs.fetch_add(1, std::memory_order_acq_rel);
+			}
 
-            // ---------------------------------------------------------------
-            // Scope 3: Mark this job done and potentially wake WaitIdle()
-            // ---------------------------------------------------------------
-            {
-                // Decrement the active-job counter.
-                uint32_t remaining = m_ActiveJobs.fetch_sub(1, std::memory_order_acq_rel) - 1;
+			// ---------------------------------------------------------------
+			// Scope 2: Execute the job outside the lock
+			// ---------------------------------------------------------------
+			if (job)
+			{
+				job();
+			}
 
-                // If the counter just hit zero and the queue is empty, notify
-                // anyone blocked in WaitIdle().
-                if (remaining == 0)
-                {
-                    // Re-acquire the lock briefly so the notify + condition check
-                    // in WaitIdle() are atomic with respect to each other.
-                    std::lock_guard<std::mutex> lock(m_QueueMutex);
-                    m_AllIdle.notify_all();
-                }
-            }
-        }
-    }
+			// ---------------------------------------------------------------
+			// Scope 3: Mark this job done and potentially wake WaitIdle()
+			// ---------------------------------------------------------------
+			{
+				uint32_t remaining = m_ActiveJobs.fetch_sub(1, std::memory_order_acq_rel) - 1;
+
+				if (remaining == 0)
+				{
+					std::lock_guard<std::mutex> lock(m_QueueMutex);
+					m_AllIdle.notify_all();
+				}
+			}
+		}
+	}
 
 } // namespace Cosmic

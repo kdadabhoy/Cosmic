@@ -7,10 +7,9 @@ namespace Cosmic
 
 	/**
 	 * ShaderDataTypeToOpenGLBaseType
-	 * * INTERNAL HELPER: Maps the engine's abstract ShaderDataType to the
+	 *
+	 * INTERNAL HELPER: Maps the engine's abstract ShaderDataType to the
 	 * corresponding OpenGL fundamental type (GL_FLOAT, GL_INT, etc.).
-	 * This is critical for the glVertexAttribPointer call to understand
-	 * the bit-depth and format of the raw memory.
 	 */
 	static GLenum ShaderDataTypeToOpenGLBaseType(ShaderDataType type)
 	{
@@ -34,45 +33,21 @@ namespace Cosmic
 
 	/////////////////////////////////////////////////////////////////////////////////
 
-	/**
-	 * OpenGLVertexArray Constructor
-	 * * Generates a unique Vertex Array Object (VAO) ID on the GPU.
-	 */
 	OpenGLVertexArray::OpenGLVertexArray()
 	{
 		glGenVertexArrays(1, &m_RendererID);
 	}
 
-	/////////////////////////////////////////////////////////////////////////////////
-
-	/**
-	 * OpenGLVertexArray Destructor
-	 * * Deletes the VAO resource from GPU memory to prevent VRAM leaks.
-	 */
 	OpenGLVertexArray::~OpenGLVertexArray()
 	{
 		glDeleteVertexArrays(1, &m_RendererID);
 	}
 
-	/////////////////////////////////////////////////////////////////////////////////
-
-	/**
-	 * Bind
-	 * * Activates this VAO in the OpenGL state machine. Subsequent buffer
-	 * operations and draw calls will refer to the configuration stored here.
-	 */
 	void OpenGLVertexArray::Bind() const
 	{
 		glBindVertexArray(m_RendererID);
 	}
 
-	/////////////////////////////////////////////////////////////////////////////////
-
-	/**
-	 * Unbind
-	 * * Resets the current VAO binding to 0, preventing accidental modification
-	 * of this state by other parts of the engine.
-	 */
 	void OpenGLVertexArray::Unbind() const
 	{
 		glBindVertexArray(0);
@@ -82,12 +57,9 @@ namespace Cosmic
 
 	/**
 	 * AddVertexBuffer
-	 * * The "Logic Hub" of the VertexArray.
-	 * * 1. Binds the VAO and the target VertexBuffer.
-	 * 2. Iterates through the VertexBuffer's Layout (Metadata).
-	 * 3. Calls glVertexAttribPointer for every element (Position, Color, UV, etc.).
-	 * This "records" the memory offsets and strides into the VAO, so that
-	 * the engine doesn't have to re-specify the layout every frame.
+	 *
+	 * Robustly loops over buffer elements, dynamically appending attribute locations
+	 * sequentially to support multiple VBO layouts, while processing per-instance hardware divisors.
 	 */
 	void OpenGLVertexArray::AddVertexBuffer(const Ref<VertexBuffer>& vertexBuffer)
 	{
@@ -96,14 +68,21 @@ namespace Cosmic
 		vertexBuffer->Bind();
 
 		const auto& layout = vertexBuffer->GetLayout();
-		uint32_t index = 0;
+
+		// DYNAMIC FIX: Calculate the starting layout location index based on 
+		// how many attributes have already been registered by previously added VBOs.
+		uint32_t currentAttributeIndex = 0;
+		for (const auto& existingBuffer : m_VertexBuffers)
+		{
+			currentAttributeIndex += (uint32_t)existingBuffer->GetLayout().GetElements().size();
+		}
 
 		for (const auto& element : layout)
 		{
-			glEnableVertexAttribArray(index);
+			glEnableVertexAttribArray(currentAttributeIndex);
 
 			glVertexAttribPointer(
-				index,                                        // Attribute index
+				currentAttributeIndex,                        // Contextually safe attribute index
 				element.GetComponentCount(),                  // Count (e.g. 3 for Float3)
 				ShaderDataTypeToOpenGLBaseType(element.Type), // GL_FLOAT, etc.
 				element.Normalized ? GL_TRUE : GL_FALSE,      // Normalized?
@@ -111,7 +90,19 @@ namespace Cosmic
 				(const void*)(uintptr_t)element.Offset        // Offset (Where this data starts)
 			);
 
-			index++;
+			// HARDWARE DIVISOR STATE MANAGEMENT FIX:
+			// Explicitly configure or clear the instancing divisor flag state bound natively 
+			// within this VAO allocation scope to completely isolate batching vs instanced rendering passes.
+			if (element.Instanced)
+			{
+				glVertexAttribDivisor(currentAttributeIndex, 1); // Advances once per instance
+			}
+			else
+			{
+				glVertexAttribDivisor(currentAttributeIndex, 0); // Advances once per vertex (Restores core default)
+			}
+
+			currentAttributeIndex++;
 		}
 
 		m_VertexBuffers.push_back(vertexBuffer);
@@ -119,13 +110,6 @@ namespace Cosmic
 
 	/////////////////////////////////////////////////////////////////////////////////
 
-	/**
-	 * SetIndexBuffer
-	 * * Links an IndexBuffer to the VAO.
-	 * * Note: OpenGL VAOs store the GL_ELEMENT_ARRAY_BUFFER binding, meaning
-	 * that simply binding this VAO in the future automatically binds this
-	 * specific IndexBuffer for the next draw call.
-	 */
 	void OpenGLVertexArray::SetIndexBuffer(const Ref<IndexBuffer>& indexBuffer)
 	{
 		glBindVertexArray(m_RendererID);

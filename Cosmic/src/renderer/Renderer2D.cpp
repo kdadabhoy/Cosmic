@@ -49,66 +49,89 @@ namespace Cosmic
 
 	struct Renderer2DData
 	{
-		// Batch Limits
+		// =========================================================================
+		// Pipeline Allocation Limits
+		// =========================================================================
 		static const uint32_t MaxQuads = 10000;
 		static const uint32_t MaxVertices = MaxQuads * 4;
 		static const uint32_t MaxIndices = MaxQuads * 6;
 		static const uint32_t MaxTextureSlots = 32;
+
 		static const uint32_t MaxCircles = 10000;
 		static const uint32_t MaxCircleVertices = MaxCircles * 4;
 		static const uint32_t MaxCircleIndices = MaxCircles * 6;
 
-		// --- Quad Data ---
+		// Hardware Limit ceiling for dedicated instancing pipeline chunks
+		static const uint32_t MaxInstancedCircles = 20000;
+
+		// =========================================================================
+		// --- Quad Batch Data ---
+		// =========================================================================
 		Ref<VertexArray>  QuadVertexArray;
 		Ref<VertexBuffer> QuadVertexBuffer;
 		Ref<Shader>       TextureShader;
-		Ref<Texture>      WhiteTexture;
+		Ref<Texture>      WhiteTexture; // Keeps original base Ref<Texture> typing
 
 		Ref<Material> CurrentMaterial = nullptr;
 		Ref<Material> DefaultMaterial = nullptr;
 
-		uint32_t    QuadIndexCount = 0;
+		uint32_t      QuadIndexCount = 0;
 		QuadVertex* QuadVertexBufferBase = nullptr;
-		QuadVertex* QuadVertexPtr = nullptr;
+		QuadVertex* QuadVertexPtr = nullptr; // Restored from original implementation
 
-		std::array<Ref<Texture>, MaxTextureSlots> TextureSlots;
-		uint32_t TextureSlotIndex = 1; // Slot 0 = White Texture
-
-		glm::vec4 QuadVertexPositions[4];
-
-		// --- Line Data ---
+		// =========================================================================
+		// --- Line Batch Data ---
+		// =========================================================================
 		Ref<VertexArray>  LineVertexArray;
 		Ref<VertexBuffer> LineVertexBuffer;
 		Ref<Shader>       LineShader;
 
-		uint32_t    LineVertexCount = 0;
+		uint32_t          LineVertexCount = 0; // Restored from original implementation
 		LineVertex* LineVertexBufferBase = nullptr;
 		LineVertex* LineVertexBufferPtr = nullptr;
 
-		// --- Circle Data ---
+		// =========================================================================
+		// --- Classic Batch Circle Data ---
+		// =========================================================================
 		Ref<VertexArray>  CircleVertexArray;
 		Ref<VertexBuffer> CircleVertexBuffer;
-		Ref<Shader>       DefaultCircleShader; // Fallback core engine shader
+		Ref<Shader>       DefaultCircleShader; // Fallback core engine shader (Circle.glsl)
 		Ref<Shader>       ActiveCircleShader;  // Current bound shader in active batch
 
-		uint32_t      CircleIndexCount = 0;
+		uint32_t          CircleIndexCount = 0;
 		CircleVertex* CircleVertexBufferBase = nullptr;
 		CircleVertex* CircleVertexBufferPtr = nullptr;
 
-		// --- Scene-Wide Uniforms ---
-		glm::mat4  ViewProjectionMatrix{ 1.0f };
-		glm::vec2  ViewportDimensions{ 1280.0f, 720.0f };
-
-		// --- Telemetry ---
-		Renderer2D::Statistics Stats;
-		bool StatsEnabled = false;
+		// =========================================================================
+		// --- New: Instanced Circle Pipeline Assets ---
+		// =========================================================================
+		Ref<VertexArray>  InstancedCircleVAO;
+		Ref<VertexBuffer> InstancedCircleQuadVBO;
+		Ref<VertexBuffer> InstancedCircleInstanceVBO;
+		Ref<Shader>       DefaultInstancedCircleShader; // Dedicated (CircleInstance.glsl)
 
 		// =========================================================================
-		// RENDER PASS STACK
-		// Stores per-pass camera matrix + viewport bounds so that multiple cameras
-		// can render sequentially (or even in nested scopes) within a single frame.
-		// Push flushes the current batch before installing new state.
-		// Pop flushes again and restores the prior state.
+		// --- Global Texture State ---
+		// =========================================================================
+		std::array<Ref<Texture>, MaxTextureSlots> TextureSlots; // Restored Ref<Texture> array
+		uint32_t TextureSlotIndex = 1; // Slot 0 = White Texture
+
+		glm::vec4 QuadVertexPositions[4];
+
+		// =========================================================================
+		// --- Scene-Wide Uniform Tracking ---
+		// =========================================================================
+		glm::mat4 ViewProjectionMatrix{ 1.0f };
+		glm::vec2 ViewportDimensions{ 1280.0f, 720.0f }; // Restored from original implementation
+
+		// =========================================================================
+		// --- Telemetry & Profiling ---
+		// =========================================================================
+		Renderer2D::Statistics Stats;
+		bool StatsEnabled = false; // Restored from original implementation
+
+		// =========================================================================
+		// --- Render Pass Stack ---
 		// =========================================================================
 		std::vector<Renderer2D::RenderPassState> RenderPassStack;
 	};
@@ -123,7 +146,9 @@ namespace Cosmic
 	{
 		CS_CORE_TRACE("Initializing Renderer2D...");
 
-		// --- Quad Initialization ---
+		// =========================================================================
+		// --- Quad Batch Initialization ---
+		// =========================================================================
 		s_Data.QuadVertexArray = VertexArray::Create();
 		s_Data.QuadVertexBuffer = VertexBuffer::Create(s_Data.MaxVertices * sizeof(QuadVertex));
 		s_Data.QuadVertexBuffer->SetLayout({
@@ -134,7 +159,10 @@ namespace Cosmic
 			{ ShaderDataType::Float,  "a_TilingFactor" }
 			});
 		s_Data.QuadVertexArray->AddVertexBuffer(s_Data.QuadVertexBuffer);
+
+		// Allocate host-side staging buffer and bind runtime writing pointer
 		s_Data.QuadVertexBufferBase = new QuadVertex[s_Data.MaxVertices];
+		s_Data.QuadVertexPtr = s_Data.QuadVertexBufferBase; // RESTORED FIX
 
 		uint32_t* quadIndices = new uint32_t[s_Data.MaxIndices];
 		uint32_t offset = 0;
@@ -152,7 +180,7 @@ namespace Cosmic
 		s_Data.QuadVertexArray->SetIndexBuffer(quadIB);
 		delete[] quadIndices;
 
-		// --- White Texture (Slot 0 fallback) ---
+		// --- White Texture Asset Mapping (Slot 0 fallback) ---
 		s_Data.WhiteTexture = Texture2D::Create(1, 1);
 		uint32_t whiteTextureData = 0xffffffff;
 		s_Data.WhiteTexture->SetData(&whiteTextureData, sizeof(uint32_t));
@@ -173,7 +201,9 @@ namespace Cosmic
 		s_Data.QuadVertexPositions[2] = { 0.5f,  0.5f, 0.0f, 1.0f };
 		s_Data.QuadVertexPositions[3] = { -0.5f,  0.5f, 0.0f, 1.0f };
 
-		// --- Line Initialization ---
+		// =========================================================================
+		// --- Line Batch Initialization ---
+		// =========================================================================
 		s_Data.LineVertexArray = VertexArray::Create();
 		s_Data.LineVertexBuffer = VertexBuffer::Create(s_Data.MaxVertices * sizeof(LineVertex));
 		s_Data.LineVertexBuffer->SetLayout({
@@ -181,13 +211,18 @@ namespace Cosmic
 			{ ShaderDataType::Float4, "a_Color"    }
 			});
 		s_Data.LineVertexArray->AddVertexBuffer(s_Data.LineVertexBuffer);
-		s_Data.LineVertexBufferBase = new LineVertex[s_Data.MaxVertices];
-		s_Data.LineShader = Shader::Create("assets/shaders/Line.glsl");
 
+		// Allocate host-side staging buffer and bind runtime writing pointer
+		s_Data.LineVertexBufferBase = new LineVertex[s_Data.MaxVertices];
+		s_Data.LineVertexBufferPtr = s_Data.LineVertexBufferBase; // RESTORED FIX
+
+		s_Data.LineShader = Shader::Create("assets/shaders/Line.glsl");
 		if (!s_Data.LineShader)
 			CS_CORE_ERROR("Renderer2D: Failed to load Line shader!");
 
-		// --- Circle Initialization ---
+		// =========================================================================
+		// --- Classic Batch Circle Initialization ---
+		// =========================================================================
 		s_Data.CircleVertexArray = VertexArray::Create();
 		s_Data.CircleVertexBuffer = VertexBuffer::Create(s_Data.MaxCircleVertices * sizeof(CircleVertex));
 		s_Data.CircleVertexBuffer->SetLayout({
@@ -199,23 +234,71 @@ namespace Cosmic
 			});
 		s_Data.CircleVertexArray->AddVertexBuffer(s_Data.CircleVertexBuffer);
 		s_Data.CircleVertexBufferBase = new CircleVertex[s_Data.MaxCircleVertices];
-
-		// Reuse the quad index buffer — circle quads use the same 0-1-2/2-3-0 topology
+		s_Data.CircleVertexBufferPtr = s_Data.CircleVertexBufferBase; // RESTORED FIX
 		s_Data.CircleVertexArray->SetIndexBuffer(quadIB);
 
-		// -------------------------------------------------------------------------
-		// CIRCLE RENDERING PIPELINE ALLOCATION
-		// -------------------------------------------------------------------------
-		// Load the engine fallback shader into the default allocation slot
 		s_Data.DefaultCircleShader = Shader::Create("assets/shaders/Circle.glsl");
-
-		// Point our working runtime tracker directly to the fallback default program
 		s_Data.ActiveCircleShader = s_Data.DefaultCircleShader;
-
 		if (!s_Data.DefaultCircleShader)
-			CS_CORE_ERROR("Renderer2D: Failed to load Engine Default Circle shader!");
+			CS_CORE_ERROR("Renderer2D: Failed to load Engine Default Batch Circle shader!");
 
-		CS_CORE_INFO("Renderer2D initialized.");
+		// =========================================================================
+		// --- Instanced Circle Hardware Pipeline Initialization ---
+		// =========================================================================
+		s_Data.InstancedCircleVAO = VertexArray::Create();
+
+		// Base mesh shared layout geometry [-0.5, 0.5] unit-bounds quad configuration
+		glm::vec2 quadVertices[4] = {
+			{ -0.5f, -0.5f },
+			{  0.5f, -0.5f },
+			{  0.5f,  0.5f },
+			{ -0.5f,  0.5f }
+		};
+
+		s_Data.InstancedCircleQuadVBO = VertexBuffer::Create(4 * sizeof(glm::vec2));
+		s_Data.InstancedCircleQuadVBO->SetLayout({
+			{ ShaderDataType::Float2, "a_LocalPosition" }
+			});
+		s_Data.InstancedCircleVAO->AddVertexBuffer(s_Data.InstancedCircleQuadVBO);
+		s_Data.InstancedCircleQuadVBO->SetData(quadVertices, sizeof(quadVertices));
+
+		// Base index template mapping configuration
+		uint32_t instancedIndices[6] = { 0, 1, 2, 2, 3, 0 };
+		Ref<IndexBuffer> instancedIB = IndexBuffer::Create(instancedIndices, 6);
+		s_Data.InstancedCircleVAO->SetIndexBuffer(instancedIB);
+
+		// Setup instance data stream VBO allocation
+		s_Data.InstancedCircleInstanceVBO = VertexBuffer::Create(s_Data.MaxInstancedCircles * sizeof(Renderer2D::InstanceCircleData));
+
+		// SAFE STRUCTURAL RE-ALIGNMENT:
+		// We add the per-element data layouts using your internal engine enum conventions.
+		// To cleanly bypass the cross-contamination bug, we explicitly supply the 
+		// "instanced" flag argument (or update layout fields sequentially) so that your 
+		// internal `VertexArray::AddVertexBuffer` class handles calling `glVertexAttribDivisor` 
+		// locally only inside this specific VAO context footprint.
+		BufferLayout instanceDataLayout = {
+			{ ShaderDataType::Float3, "a_InstanceWorldPosition" },
+			{ ShaderDataType::Float2, "a_InstanceScale"         },
+			{ ShaderDataType::Float4, "a_InstanceColor"         },
+			{ ShaderDataType::Float,  "a_InstanceThickness"     },
+			{ ShaderDataType::Float,  "a_InstanceFade"          }
+		};
+
+		// Tag elements as instanced streams so VertexArray natively enables divisors automatically
+		for (auto& element : instanceDataLayout)
+		{
+			element.Instanced = true;
+		}
+
+		s_Data.InstancedCircleInstanceVBO->SetLayout(instanceDataLayout);
+		s_Data.InstancedCircleVAO->AddVertexBuffer(s_Data.InstancedCircleInstanceVBO);
+
+		// Load specialized pipeline hardware shader companion program
+		s_Data.DefaultInstancedCircleShader = Shader::Create("assets/shaders/CircleInstance.glsl");
+		if (!s_Data.DefaultInstancedCircleShader)
+			CS_CORE_ERROR("Renderer2D: Failed to load Engine Default Instanced Circle shader (CircleInstance.glsl)!");
+
+		CS_CORE_INFO("Renderer2D initialized successfully.");
 	}
 
 	void Renderer2D::Shutdown()
@@ -225,6 +308,9 @@ namespace Cosmic
 		delete[] s_Data.LineVertexBufferBase;
 		delete[] s_Data.CircleVertexBufferBase;
 		s_Data.RenderPassStack.clear();
+		s_Data.InstancedCircleVAO.reset();
+		s_Data.InstancedCircleQuadVBO.reset();
+		s_Data.InstancedCircleInstanceVBO.reset();
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////
@@ -402,13 +488,17 @@ namespace Cosmic
 			uint32_t dataSize = (uint32_t)((uint8_t*)s_Data.CircleVertexBufferPtr - (uint8_t*)s_Data.CircleVertexBufferBase);
 			s_Data.CircleVertexBuffer->SetData(s_Data.CircleVertexBufferBase, dataSize);
 
-			// Dynamic shader selection from the tracking slot
-			s_Data.ActiveCircleShader->Bind();
-			s_Data.ActiveCircleShader->SetMat4("u_ViewProjection", s_Data.ViewProjectionMatrix);
+			// FIX: Fall back safely to DefaultCircleShader if ActiveCircleShader was cleared out 
+			// by the instancing system or not yet assigned.
+			Ref<Shader> activeCircleShader = s_Data.ActiveCircleShader ? s_Data.ActiveCircleShader : s_Data.DefaultCircleShader;
+
+			activeCircleShader->Bind();
+			activeCircleShader->SetMat4("u_ViewProjection", s_Data.ViewProjectionMatrix);
 
 			// OPTIMIZATION CONTRACT: Provide standard uniform contexts so that 
 			// client shaders can sample layout properties and match your quad contract
-			s_Data.ActiveCircleShader->SetFloat2("u_ViewportSize", s_Data.ViewportDimensions);
+			activeCircleShader->SetFloat2("u_ViewportSize", s_Data.ViewportDimensions);
+
 			s_Data.CircleVertexArray->Bind();
 			RenderCommand::DrawIndexed(s_Data.CircleVertexArray, s_Data.CircleIndexCount);
 			s_Data.Stats.DrawCalls++;
@@ -840,30 +930,32 @@ namespace Cosmic
 
 	void Renderer2D::DrawCircle(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color, float thickness, float fade, Cosmic::Ref<Cosmic::Shader> customShader)
 	{
-		// -------------------------------------------------------------------------
-		// SHADER PIPELINE SWITCH TRACKING
-		// -------------------------------------------------------------------------
-		// Determine what shader we should be using for this call.
-		// If the client passed null, default back to our built-in fallback shader.
+		// Determine what shader we should be using for this batch call
 		Cosmic::Ref<Cosmic::Shader> targetShader = customShader ? customShader : s_Data.DefaultCircleShader;
 
-		// If the target shader differs from our current active batch pipeline state,
-		// flush the current geometry to the GPU before binding the new state.
+		// CRITICAL EDGE-CASE FALLBACK WORKAROUND:
+		// If a client layer accidently drops scope on a custom shader handle during hot-reloads,
+		// guarantee we fall back cleanly to preventing nullptr asset dereferencing exceptions.
+		if (!targetShader)
+		{
+			targetShader = s_Data.DefaultCircleShader;
+		}
+
+		// State verification tracking
 		if (s_Data.ActiveCircleShader != targetShader)
 		{
-			// Note: If you have split flush methods, call FlushCircles() here. 
-			// Otherwise, use your engine's macro FlushAndReset() pattern.
 			FlushAndReset();
 			s_Data.ActiveCircleShader = targetShader;
 		}
 
-		// Batch full verification
+		// Flush geometry automatically if internal batch limits are saturated
 		if (s_Data.CircleIndexCount >= Renderer2DData::MaxCircleIndices)
 			FlushAndReset();
 
 		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
 			* glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
 
+		// Classic batching maps local texture spaces from [-1.0, 1.0] for the SDF fragment layout calculation
 		constexpr glm::vec2 localPositions[4] = {
 			{ -1.0f, -1.0f },
 			{  1.0f, -1.0f },
@@ -871,11 +963,12 @@ namespace Cosmic
 			{ -1.0f,  1.0f }
 		};
 
-		// Normalize color if it appears to be in 0-255 range
+		// Range normalizations boundaries checks
 		glm::vec4 normalizedColor = color;
 		if (color.r > 1.0f || color.g > 1.0f || color.b > 1.0f || color.a > 1.0f)
 			normalizedColor = color / 255.0f;
 
+		// Stage unique vertex entries sequentially to the batch stream array
 		for (uint32_t i = 0; i < 4; i++)
 		{
 			s_Data.CircleVertexBufferPtr->WorldPosition = transform * s_Data.QuadVertexPositions[i];
@@ -929,5 +1022,66 @@ namespace Cosmic
 	void Renderer2D::SetStatsStatus(bool enabled) { s_Data.StatsEnabled = enabled; }
 	Renderer2D::Statistics Renderer2D::GetStats() { return s_Data.Stats; }
 	void Renderer2D::ResetStats() { memset(&s_Data.Stats, 0, sizeof(Statistics)); }
+
+
+
+
+
+	//////////////////////////////
+	///////
+	void Renderer2D::DrawInstancedCircles(const InstanceCircleData* instances, uint32_t count, Ref<Shader> customShader)
+	{
+		if (count == 0) return;
+
+		// =========================================================================
+		// 1. PIPELINE ISOLATION CRITICAL FIX
+		// =========================================================================
+		// Force-flush ALL active traditional batches (Quads, Lines, and Batched Circles)
+		// before we alter the global pipeline bindings. This prevents our instanced draw
+		// states from clipping or corrupting textures/materials from previous draws.
+		FlushAndReset();
+
+		// 2. Select the designated instanced pipeline shader program target
+		Ref<Shader> targetShader = customShader ? customShader : s_Data.DefaultInstancedCircleShader;
+		targetShader->Bind();
+		targetShader->SetMat4("u_ViewProjection", s_Data.ViewProjectionMatrix);
+
+		uint32_t remainingInstances = count;
+		uint32_t currentOffset = 0;
+
+		s_Data.InstancedCircleVAO->Bind();
+
+		// Handle chunk streaming loops if inputs saturate the layout configuration capacities
+		while (remainingInstances > 0)
+		{
+			uint32_t batchSize = std::min(remainingInstances, s_Data.MaxInstancedCircles);
+
+			// Stream raw instance memory straight down across the PCIe bus pipeline bounds
+			s_Data.InstancedCircleInstanceVBO->SetData(&instances[currentOffset], batchSize * sizeof(InstanceCircleData));
+
+			// Trigger high performance GPU drawing calculations sequence pass
+			glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, batchSize);
+
+			// Track performance and profiling metric metrics accurately
+			s_Data.Stats.DrawCalls++;
+			s_Data.Stats.QuadCount += batchSize;
+
+			remainingInstances -= batchSize;
+			currentOffset += batchSize;
+		}
+
+		s_Data.InstancedCircleVAO->Unbind();
+
+		// =========================================================================
+		// 3. CLEAN UP TRACKING HANDLES
+		// =========================================================================
+		// Signal to the traditional circle batch system that its pipeline binding 
+		// was altered so it explicitly re-binds on its next draw command.
+		s_Data.ActiveCircleShader = nullptr;
+
+		// REMOVED: s_Data.TextureShader->Bind(); 
+		// Let the state tracking code in DrawQuad/Flush handle binding the texture 
+		// shader lazily only when a quad is actually drawn next. No more blind binding!
+	}
 
 } // namespace Cosmic
