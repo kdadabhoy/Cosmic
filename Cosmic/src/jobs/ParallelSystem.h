@@ -88,10 +88,38 @@
  */
 
 #include "scene/System.h"
+#include <vector>
 
 namespace Cosmic
 {
     class Scene; // forward declaration
+
+    // =========================================================================
+    // ISystemQuery
+    // =========================================================================
+
+    /**
+     * @brief Abstract interface implemented by ReadWriteQuery<T> and ReadOnlyQuery<T>.
+     *
+     * ParallelSystem holds a list of these and the Scene calls Stage/Commit
+     * automatically around the parallel passes. Users never interact with this
+     * interface directly — it is an engine-internal lifecycle contract.
+     */
+    class COSMIC_API ISystemQuery
+    {
+    public:
+        virtual ~ISystemQuery() = default;
+
+        /** @brief Snapshot component state from the registry. Called before OnPrepare. */
+        virtual void Stage(Scene& scene)  = 0;
+
+        /** @brief Write staged results back to the registry. Called after OnMerge. */
+        virtual void Commit(Scene& scene) = 0;
+    };
+
+    // =========================================================================
+    // ParallelSystem
+    // =========================================================================
 
     class COSMIC_API ParallelSystem : public System
     {
@@ -179,6 +207,46 @@ namespace Cosmic
         virtual void OnFixedPrepare(Scene& scene, float fixedDt)          {}
         virtual void OnFixedParallelExecute(Scene& scene, float fixedDt)  {}
         virtual void OnFixedMerge(Scene& scene, float fixedDt)            {}
+
+        // =====================================================================
+        // Query management — ENGINE USE ONLY
+        // These are called by the Scene. Do not call them from user code.
+        // =====================================================================
+
+        /**
+         * @brief Register a SystemQuery with this system.
+         *
+         * Called automatically by ReadWriteQuery<T> and ReadOnlyQuery<T>
+         * constructors when you pass `this` as the owner. You never call
+         * this directly.
+         */
+        void RegisterQuery(ISystemQuery* query)
+        {
+            m_Queries.push_back(query);
+        }
+
+        /**
+         * @brief Snapshot all registered queries from the registry.
+         * Called by the Scene before OnPrepare each frame.
+         */
+        void StageQueries(Scene& scene)
+        {
+            for (auto* q : m_Queries)
+                q->Stage(scene);
+        }
+
+        /**
+         * @brief Write all registered query results back to the registry.
+         * Called by the Scene after OnMerge each frame.
+         */
+        void CommitQueries(Scene& scene)
+        {
+            for (auto* q : m_Queries)
+                q->Commit(scene);
+        }
+
+    private:
+        std::vector<ISystemQuery*> m_Queries; // non-owning; registered by query constructors
     };
 
 } // namespace Cosmic

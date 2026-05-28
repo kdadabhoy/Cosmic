@@ -39,20 +39,26 @@ namespace Cosmic
 		// PASS B/C/D — Parallel systems (skipped entirely if none registered)
 		if (!m_ParallelSystems.empty())
 		{
-			// PASS B — Snapshot state, resize buffers, compute constants (main thread)
+			// PASS B — Stage queries (engine), then optional user setup (main thread)
 			for (auto* ps : m_ParallelSystems)
+			{
+				ps->StageQueries(*this);
 				ps->OnPrepare(*this, deltaTime);
+			}
 
-			// PASS C — Submit parallel work; ALL systems submit before any waits (main thread)
+			// PASS C — All systems submit async jobs before any barrier (main thread)
 			for (auto* ps : m_ParallelSystems)
 				ps->OnParallelExecute(*this, deltaTime);
 
-			// Single barrier: wait for every job from every system to complete
+			// Single barrier: every job from every system completes here
 			JobSystem::Get().WaitIdle();
 
-			// PASS D — Merge results back into scene state (main thread)
+			// PASS D — Optional user finalization, then commit queries (main thread)
 			for (auto* ps : m_ParallelSystems)
+			{
 				ps->OnMerge(*this, deltaTime);
+				ps->CommitQueries(*this);
+			}
 		}
 	}
 
@@ -66,7 +72,10 @@ namespace Cosmic
 		if (!m_ParallelSystems.empty())
 		{
 			for (auto* ps : m_ParallelSystems)
+			{
+				ps->StageQueries(*this);
 				ps->OnFixedPrepare(*this, fixedDeltaTime);
+			}
 
 			for (auto* ps : m_ParallelSystems)
 				ps->OnFixedParallelExecute(*this, fixedDeltaTime);
@@ -74,7 +83,10 @@ namespace Cosmic
 			JobSystem::Get().WaitIdle();
 
 			for (auto* ps : m_ParallelSystems)
+			{
 				ps->OnFixedMerge(*this, fixedDeltaTime);
+				ps->CommitQueries(*this);
+			}
 		}
 	}
 

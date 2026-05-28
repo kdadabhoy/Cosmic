@@ -1,428 +1,486 @@
-# Cosmic Engine — Job System & Parallel Pipeline
+# Cosmic Engine — Parallel Systems & Job Pipeline
 
-This document explains the multithreading infrastructure provided by the engine, what the engine manages automatically, and exactly how to write parallel systems as a client.
+This document explains how to write parallel systems using the engine's multithreading infrastructure, what the engine manages for you automatically, and when (if ever) you need to reach for lower-level primitives.
 
 ---
 
 ## Table of Contents
 
-1. [What the Engine Provides](#1-what-the-engine-provides)
-2. [Core Primitives](#2-core-primitives)
-3. [The Parallel Pipeline](#3-the-parallel-pipeline)
-4. [Writing a Parallel System](#4-writing-a-parallel-system)
-5. [Template Project Walkthrough](#5-template-project-walkthrough)
-6. [Standalone Parallel Work (Outside a System)](#6-standalone-parallel-work-outside-a-system)
-7. [DoubleBuffer Reference](#7-doublebuffer-reference)
-8. [ComponentArray Reference](#8-componentarray-reference)
-9. [Rules & Constraints](#9-rules--constraints)
-10. [When NOT to Use the Job System](#10-when-not-to-use-the-job-system)
+1. [The 30-Second Version](#1-the-30-second-version)
+2. [How the Pipeline Works](#2-how-the-pipeline-works)
+3. [Writing a Parallel System](#3-writing-a-parallel-system)
+4. [ReadWriteQuery Reference](#4-readwritequery-reference)
+5. [ReadOnlyQuery Reference](#5-readonlyquery-reference)
+6. [Cross-Component Sync in OnMerge](#6-cross-component-sync-in-onmerge)
+7. [Cross-Entity Patterns (Collision, Flocking)](#7-cross-entity-patterns-collision-flocking)
+8. [Standalone Parallel Work (Layers & Helpers)](#8-standalone-parallel-work-layers--helpers)
+9. [Template Project — BallPhysicsSystem](#9-template-project--ballphysicssystem)
+10. [Rules & Constraints](#10-rules--constraints)
+11. [Lower-Level Primitives Reference](#11-lower-level-primitives-reference)
 
 ---
 
-## 1. What the Engine Provides
+## 1. The 30-Second Version
 
-| Header | What it gives you |
-|--------|-------------------|
-| `jobs/JobSystem.h` | Persistent thread pool. Submit any `void()` callable. |
-| `jobs/ParallelFor.h` | Data-parallel iteration over index ranges and typed arrays. |
-| `jobs/ParallelSystem.h` | Base class. Override three hooks; the Scene drives the pipeline. |
-| `jobs/DoubleBuffer.h` | Thread-safe read/write buffering for component data. |
-| `jobs/ComponentArray.h` | Zero-copy view (or flattened copy) of EnTT component storage. |
+```cpp
+class MyPhysicsSystem : public Cosmic::ParallelSystem
+{
+    // 1. Declare a query. Pass `this` — that's all the setup required.
+    Cosmic::ReadWriteQuery<PhysicsBody> m_Bodies{ this };
 
-All five headers are included by `Cosmic.h`.
+public:
+    // 2. Submit parallel work. The engine stages m_Bodies before this runs
+    //    and commits results back to the registry after OnMerge.
+    void OnFixedParallelExecute(Cosmic::Scene& scene, float dt) override
+    {
+        m_Bodies.ForEachAsync([dt](PhysicsBody& body)
+        {
+            body.Velocity.y  += -9.8f * dt;
+            body.Position    += body.Velocity * dt;
+        });
+    }
+};
 
-The `JobSystem` creates `(logical_core_count − 1)` persistent worker threads at `Application::Initialize` and joins them at `Application::Shutdown`. Thread creation happens **once** — there is no per-frame spawn overhead.
+// Register once. The engine handles everything else.
+scene->AddSystem<MyPhysicsSystem>();
+```
+
+That's a fully parallel, data-safe physics system. No buffer management, no swap calls, no registry iteration, no WaitIdle.
 
 ---
 
-## 2. Core Primitives
+## 2. How the Pipeline Works
+
+Every frame the Scene runs all parallel systems in four ordered passes. A Scene with no parallel systems never touches the job system at all.
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ PASS A — Sequential systems (main thread)                                   │
+│   System::OnUpdate / OnFixedUpdate for each registered System               │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ PASS B — Stage + Prepare (main thread)                                      │
+│   For each ParallelSystem:                                                  │
+│     [engine] StageQueries  → snapshot all declared queries from registry    │
+│     [user]   OnPrepare     → optional per-frame setup (rarely needed)       │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ PASS C — Execute (main thread submits; workers execute concurrently)        │
+│   For each ParallelSystem:                                                  │
+│     [user] OnParallelExecute → call ForEachAsync / DispatchAsync           │
+│                                                                             │
+│   JobSystem::WaitIdle()  ←── single barrier after ALL systems submit       │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ PASS D — Merge + Commit (main thread)                                       │
+│   For each ParallelSystem:                                                  │
+│     [user]   OnMerge       → optional post-processing / cross-component sync│
+│     [engine] CommitQueries → write ReadWriteQuery results back to registry  │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Why one WaitIdle for all systems?
+
+If each system waited for its own jobs before the next system submitted, systems would execute one at a time. With a single barrier after all submissions, jobs from System A and System B are in the worker queue simultaneously and execute in parallel — maximum utilisation.
+
+```
+Staggered (wrong):  [A submit][A wait][B submit][B wait]   → 2× M ms
+Batched  (correct): [A submit][B submit][WaitIdle]          → M ms
+```
+
+---
+
+## 3. Writing a Parallel System
+
+### Inherit and declare queries
+
+```cpp
+#include <Cosmic.h>
+
+class BallPhysicsSystem : public Cosmic::ParallelSystem
+{
+    // Declare as a member variable. Pass `this` to register automatically.
+    Cosmic::ReadWriteQuery<PhysicsBody> m_Bodies{ this };
+
+public:
+    float Gravity = -9.8f;
+    // ...
+};
+```
+
+The query constructor calls `RegisterQuery(this)` on the owning system. The Scene discovers registered queries via `StageQueries` / `CommitQueries` — no extra setup needed.
+
+### Implement OnParallelExecute
+
+```cpp
+void OnFixedParallelExecute(Cosmic::Scene& scene, float dt) override
+{
+    // Capture constants by value — required for cross-thread safety.
+    const float g = Gravity;
+
+    m_Bodies.ForEachAsync([g, dt](PhysicsBody& body)
+    {
+        body.Velocity.y += g * dt;
+        body.Position   += body.Velocity * dt;
+    });
+
+    // Do NOT call WaitIdle here. Do NOT use ParallelFor (synchronous).
+    // The Scene issues a single WaitIdle after all systems submit.
+}
+```
+
+### Register with the Scene
+
+```cpp
+scene->AddSystem<BallPhysicsSystem>();
+```
+
+`AddSystem` detects that `BallPhysicsSystem` derives from `ParallelSystem` and caches the pointer. No per-frame `dynamic_cast` occurs.
+
+### Variable vs fixed timestep
+
+| Hook | Timestep | When to use |
+|------|----------|-------------|
+| `OnParallelExecute` | Variable (per-frame) | Transform animations, camera work |
+| `OnFixedParallelExecute` | Fixed (60 Hz) | Physics, deterministic simulation |
+
+Both use the same query objects — queries stage fresh data on every call regardless of timestep type.
+
+---
+
+## 4. ReadWriteQuery Reference
+
+Declare as a member, pass `this`:
+```cpp
+Cosmic::ReadWriteQuery<PhysicsBody> m_Bodies{ this };
+```
+
+### What the engine does automatically
+
+| Engine action | When |
+|---------------|------|
+| Snapshot all `PhysicsBody` components from registry → internal buffer | Before `OnPrepare` |
+| Make buffer available via `Data()`, `operator[]`, iteration methods | Throughout Prepare/Execute/Merge |
+| Write buffer results back to registry by entity ID | After `OnMerge` |
+
+### Async iteration (use in OnParallelExecute)
+
+```cpp
+// Per-element — worker receives mutable ref, modifies in place
+m_Bodies.ForEachAsync([dt](PhysicsBody& body) { ... });
+
+// Range-based — worker receives (T* begin, T* end) sub-array
+m_Bodies.DispatchAsync([](PhysicsBody* begin, PhysicsBody* end) { ... });
+
+// Optional minimum chunk size (default 64)
+m_Bodies.ForEachAsync([](PhysicsBody& body) { ... }, /*minChunkSize=*/32);
+```
+
+### Sync iteration (use in OnPrepare or OnMerge)
+
+```cpp
+// Per-element, main thread
+m_Bodies.ForEach([](PhysicsBody& body) { ... });
+
+// Per-element with entity handle — for cross-component sync in OnMerge
+m_Bodies.ForEachWithEntity([&scene](PhysicsBody& body, entt::entity e)
+{
+    scene.GetRegistry().get<TransformComponent>(e).Position = { body.Position.x, body.Position.y, 0.f };
+});
+```
+
+### Direct data access
+
+```cpp
+T*           m_Bodies.Data()           // raw pointer to staged array
+size_t       m_Bodies.Count()          // element count
+bool         m_Bodies.IsEmpty()        // true if no entities have this component
+T&           m_Bodies[i]               // indexed element access
+entt::entity m_Bodies.EntityAt(i)      // entity handle for element i
+```
+
+---
+
+## 5. ReadOnlyQuery Reference
+
+Provides a stable, immutable snapshot — no writeback, no races. Use it when workers need to read the whole dataset safely while other workers are writing to a separate `ReadWriteQuery`.
+
+```cpp
+Cosmic::ReadOnlyQuery<PhysicsBody> m_ReadBodies{ this };
+```
+
+### Async iteration
+
+```cpp
+// Per-element read-only
+m_ReadBodies.ForEachAsync([](const PhysicsBody& body) { ... });
+
+// Range-based read-only
+m_ReadBodies.DispatchAsync([](const PhysicsBody* begin, const PhysicsBody* end) { ... });
+```
+
+### Direct access
+
+```cpp
+const T*     m_ReadBodies.Data()
+size_t       m_ReadBodies.Count()
+const T&     m_ReadBodies[i]
+entt::entity m_ReadBodies.EntityAt(i)
+```
+
+---
+
+## 6. Cross-Component Sync in OnMerge
+
+`ReadWriteQuery` handles writeback for its own component type automatically. When you also need to update a *second* component with the computed results (the classic "sync physics position to render transform" pattern), do it in `OnMerge`:
+
+```cpp
+void OnFixedMerge(Cosmic::Scene& scene, float dt) override
+{
+    // At this point: m_Bodies holds this tick's computed results.
+    // The engine will auto-commit PhysicsBody AFTER this function returns.
+    // Here we propagate position to TransformComponent for the renderer.
+
+    auto& reg = scene.GetRegistry();
+
+    m_Bodies.ForEachWithEntity([&reg](PhysicsBody& body, entt::entity e)
+    {
+        if (!reg.valid(e)) return;
+        auto& t = reg.get<Cosmic::TransformComponent>(e);
+        t.Position.x = body.Position.x;
+        t.Position.y = body.Position.y;
+    });
+}
+```
+
+**Timing note:** `CommitQueries` runs *after* `OnMerge`. When `OnMerge` executes, `m_Bodies[i]` has the final computed result but `registry.get<PhysicsBody>(e)` still has last frame's value. Use `m_Bodies[i]` (or `ForEachWithEntity`) for reading results in `OnMerge`; the registry is updated automatically once `OnMerge` returns.
+
+---
+
+## 7. Cross-Entity Patterns (Collision, Flocking)
+
+`ForEachAsync` gives each element a mutable reference. Workers operate on disjoint index ranges — no two workers touch the same element. This is safe for independent per-entity transforms (gravity, drag, bounds).
+
+For algorithms where entity A reads entity B's value (collision response, boid steering), reading from the same buffer another worker is writing is a data race. Use a `ReadOnlyQuery` as the stable input snapshot and a `ReadWriteQuery` as the output:
+
+```cpp
+class CollisionSystem : public Cosmic::ParallelSystem
+{
+    Cosmic::ReadOnlyQuery<PhysicsBody>  m_Snapshot{ this }; // stable frame-start state
+    Cosmic::ReadWriteQuery<PhysicsBody> m_Output{ this };   // computed new state
+
+    void OnFixedParallelExecute(Cosmic::Scene& scene, float dt) override
+    {
+        const PhysicsBody* snap    = m_Snapshot.Data();
+        const size_t       count   = m_Snapshot.Count();
+
+        m_Output.DispatchAsync([snap, count, dt](PhysicsBody* begin, PhysicsBody* end)
+        {
+            for (PhysicsBody* b = begin; b != end; ++b)
+            {
+                size_t i = static_cast<size_t>(b - /* base ptr */ ???);
+                // Safe: reads snap[j] (immutable) for any j, writes b (disjoint range)
+                for (size_t j = 0; j < count; ++j)
+                    ResolveCollision(*b, snap[j], dt);
+            }
+        });
+    }
+};
+```
+
+> Both queries stage independently from the same registry state, so they begin each frame as identical snapshots. Workers read from `m_Snapshot` (constant), write to `m_Output` (disjoint ranges). No races.
+
+---
+
+## 8. Standalone Parallel Work (Layers & Helpers)
+
+If you need parallel work outside a `ParallelSystem` — from a Layer's `OnFixedUpdate`, a one-off helper, etc. — use the **synchronous** `ParallelFor` family. These submit jobs *and* call `WaitIdle` before returning, so results are available immediately.
+
+```cpp
+// Index-based
+Cosmic::ParallelFor(count, [src, dst, dt](size_t begin, size_t end)
+{
+    for (size_t i = begin; i < end; ++i)
+        Integrate(src[i], dst[i], dt);
+});
+// Execution is complete here.
+
+// Element-based (typed pointer)
+Cosmic::ParallelForEach(bodies, count, [dt](PhysicsBody* begin, PhysicsBody* end)
+{
+    for (auto* b = begin; b != end; ++b)
+        b->Velocity.y += -9.8f * dt;
+});
+
+// Element + global index
+Cosmic::ParallelForEachIndexed(bodies, count, [](PhysicsBody& body, size_t i)
+{
+    body.Mass = static_cast<float>(i) * 0.1f;
+});
+```
+
+The template project's `TemplateRenderBenchmarkLayer` uses this pattern — it drives a full Prepare/Execute/Merge cycle manually from a Layer without registering a `ParallelSystem`. This is correct for self-contained benchmark layers that manage their own timing.
+
+---
+
+## 9. Template Project — BallPhysicsSystem
+
+`BallPhysicsSystem` in `templates/ExampleProject/src/BallPhysicsSystem.h` is the canonical example. Here is the complete annotated version:
+
+```cpp
+class BallPhysicsSystem : public Cosmic::ParallelSystem
+{
+    // ── Query declaration ─────────────────────────────────────────────────────
+    // Engine stages PhysicsBody from the registry before OnFixedPrepare.
+    // Engine commits results back to the registry after OnFixedMerge.
+    Cosmic::ReadWriteQuery<PhysicsBody> m_Bodies{ this };
+
+public:
+    float Gravity = -9.8f;
+    float Damping = 0.85f;
+    float BoundsX = 6.0f;
+    float BoundsY = 4.0f;
+
+    // ── PASS B (optional) ─────────────────────────────────────────────────────
+    // m_Bodies is already staged when this runs. Override only for custom setup.
+    void OnFixedPrepare(Cosmic::Scene& scene, float dt) override
+    {
+        m_PrepareStart = Clock::now(); // telemetry only
+    }
+
+    // ── PASS C ───────────────────────────────────────────────────────────────
+    void OnFixedParallelExecute(Cosmic::Scene& scene, float dt) override
+    {
+        if (m_Bodies.IsEmpty()) return;
+
+        const float g = Gravity, d = Damping, bx = BoundsX, by = BoundsY;
+
+        m_Bodies.ForEachAsync([g, d, bx, by, dt](PhysicsBody& body)
+        {
+            body.Velocity.y += g * dt;
+
+            float drag = 1.f - (d * body.LinearDrag * dt);
+            body.Velocity  *= glm::clamp(drag, 0.f, 1.f);
+            body.Position  += body.Velocity * dt;
+
+            const float r = glm::clamp(body.Restitution - d, 0.f, 1.f);
+
+            if (body.Position.x + body.Radius >  bx) { body.Position.x =  bx - body.Radius; body.Velocity.x *= -r; }
+            if (body.Position.x - body.Radius < -bx) { body.Position.x = -bx + body.Radius; body.Velocity.x *= -r; }
+            if (body.Position.y - body.Radius < -by) { body.Position.y = -by + body.Radius; body.Velocity.y *= -r; }
+            if (body.Position.y + body.Radius >  by) { body.Position.y =  by - body.Radius; body.Velocity.y *= -r; }
+        }, 32);
+    }
+
+    // ── PASS D ───────────────────────────────────────────────────────────────
+    // Sync computed physics positions to TransformComponent for the renderer.
+    // The engine commits PhysicsBody AFTER this returns — use m_Bodies[i], not
+    // the registry, to read results here.
+    void OnFixedMerge(Cosmic::Scene& scene, float dt) override
+    {
+        auto& reg = scene.GetRegistry();
+        m_Bodies.ForEachWithEntity([&reg](PhysicsBody& body, entt::entity e)
+        {
+            if (!reg.valid(e)) return;
+            auto& t = reg.get<Cosmic::TransformComponent>(e);
+            t.Position.x = body.Position.x;
+            t.Position.y = body.Position.y;
+        });
+    }
+};
+```
+
+Before this system was ~220 lines including manual `DoubleBuffer` management, two `Swap()` calls, an explicit entity-slot vector, EnTT group/view iteration in both Prepare and Merge, and raw `GetReadBuffer()`/`GetWriteBuffer()` pointer plumbing. The same system is now ~80 lines with none of that complexity.
+
+---
+
+## 10. Rules & Constraints
+
+### Lambda captures in ForEachAsync
+
+Workers execute after `OnParallelExecute` returns. By that point any local variable that was captured by reference is destroyed.
+
+```cpp
+// ✅ Correct — all captures by value
+const float g = Gravity;
+m_Bodies.ForEachAsync([g, dt](PhysicsBody& body) { ... });
+
+// ❌ Wrong — reference to local variable dangling when workers run
+float& gRef = Gravity;
+m_Bodies.ForEachAsync([&gRef, dt](PhysicsBody& body) { gRef; }); // UB
+```
+
+**Safe to capture by value:** scalars, raw pointers to stable data (e.g. `m_Bodies.Data()` which lives for the frame), `glm::vec2`, `glm::vec4`.
+
+**Never capture by reference in async lambdas.**
+
+### Worker threads must NOT
+
+- Modify the EnTT registry (add/remove components, create/destroy entities)
+- Call `JobSystem::WaitIdle()` — deadlock with a fixed-size pool
+- Submit new jobs from inside a running job
+- Write to an element index owned by another worker's chunk
+
+### Worker threads MAY
+
+- Read from `ReadOnlyQuery::Data()` (concurrent reads, no writes)
+- Write to any element in their assigned chunk of a `ReadWriteQuery`
+- Call pure functions, allocate thread-local scratch memory
+- Read simulation constants captured by value in the lambda
+
+### Use the correct ParallelFor variant
+
+| Context | Use |
+|---------|-----|
+| Inside `OnParallelExecute` / `OnFixedParallelExecute` | `ForEachAsync`, `DispatchAsync`, `ParallelForAsync` |
+| Anywhere else (Layers, helpers, standalone) | `ForEach`, `ParallelFor`, `ParallelForEach` |
+
+The `*Async` variants submit jobs without waiting. The synchronous variants submit and block until complete. Using a synchronous variant inside `OnParallelExecute` stalls after each system and defeats cross-system parallelism.
+
+---
+
+## 11. Lower-Level Primitives Reference
+
+These are available when you need manual control — benchmarks, custom scheduling, or work that doesn't fit the ParallelSystem pattern.
 
 ### `JobSystem`
 
 ```cpp
 JobSystem& js = JobSystem::Get();
-
-// Submit any zero-argument callable
-js.Submit([]{ DoSomeWork(); });
-
-// Block until every submitted job has completed
-js.WaitIdle();
-
-// Hardware info
-uint32_t cores   = js.GetCoreCount();   // logical CPUs detected
-uint32_t workers = js.GetWorkerCount(); // cores - 1
+js.Submit([]{ DoSomeWork(); });   // enqueue any void() callable
+js.WaitIdle();                    // block until queue empty + all jobs done
+js.GetWorkerCount();              // logical cores − 1
 ```
 
-**Thread safety contract:**
-- `Submit()` — thread-safe, callable from any thread at any time.
-- `WaitIdle()` — blocks caller until the queue is empty and all executing jobs have returned.
-- `Shutdown()` — main thread only, drains queue before joining threads.
-
-### `ParallelFor` / `ParallelForAsync`
-
-```
-Synchronous variants   — submit jobs + WaitIdle before returning
-  ParallelFor(count, func)
-  ParallelForEach(data, count, func)
-  ParallelForEachIndexed(data, count, func)
-
-Async variants         — submit jobs, NO WaitIdle
-  ParallelForAsync(count, func)
-  ParallelForEachAsync(data, count, func)
-  ParallelForEachIndexedAsync(data, count, func)
-```
-
-**Which to use:**
-
-| Context | Use |
-|---------|-----|
-| Standalone parallel work in a Layer or helper function | Synchronous (`ParallelFor`) |
-| Inside `ParallelSystem::OnParallelExecute` | **Async** (`ParallelForAsync`) |
-
-The async variants let the Scene issue a **single** `WaitIdle` barrier after all systems have submitted, so jobs from different systems run concurrently. The synchronous variants stall immediately after submission — using them inside `OnParallelExecute` would serialise your systems.
-
-**Function signatures:**
+### `ParallelFor` (synchronous)
 
 ```cpp
-// Index-based: func(size_t begin, size_t end) — sub-range [begin, end)
-ParallelFor(size_t totalCount, Func func, size_t minChunkSize = 64);
-ParallelForAsync(size_t totalCount, Func func, size_t minChunkSize = 64);
-
-// Pointer-based: func(T* begin, T* end) — contiguous sub-array
-ParallelForEach(T* data, size_t count, Func func, size_t minChunkSize = 64);
-ParallelForEachAsync(T* data, size_t count, Func func, size_t minChunkSize = 64);
-
-// Indexed: func(T& element, size_t globalIndex) — one call per element
-ParallelForEachIndexed(T* data, size_t count, Func func, size_t minChunkSize = 64);
-ParallelForEachIndexedAsync(T* data, size_t count, Func func, size_t minChunkSize = 64);
+Cosmic::ParallelFor(count, [](size_t begin, size_t end) { ... });
+Cosmic::ParallelForEach(ptr, count, [](T* begin, T* end) { ... });
+Cosmic::ParallelForEachIndexed(ptr, count, [](T& item, size_t i) { ... });
 ```
 
-`minChunkSize` controls the minimum number of elements dispatched to a single worker. Below that threshold the work runs serially on the calling thread. Default is 64 — tune per system based on profiling.
+### `DoubleBuffer<T>`
 
----
-
-## 3. The Parallel Pipeline
-
-Every frame the Scene runs systems in four ordered passes. The job system is only touched during passes B–D, and **only if at least one `ParallelSystem` is registered**. A Scene with no parallel systems never calls `WaitIdle` and never involves the job system at all.
-
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│ PASS A — Sequential (main thread)                                           │
-│   for each System* s  →  s->OnUpdate(scene, dt)                            │
-│   for each System* s  →  s->OnFixedUpdate(scene, dt)     [fixed step only] │
-├─────────────────────────────────────────────────────────────────────────────┤
-│ PASS B — Prepare (main thread, single-threaded)                             │
-│   for each ParallelSystem* ps  →  ps->OnPrepare(scene, dt)                 │
-│                                                                             │
-│   Purpose: snapshot EnTT state into read buffers, resize output arrays,    │
-│   compute per-frame constants. No jobs submitted here.                      │
-├─────────────────────────────────────────────────────────────────────────────┤
-│ PASS C — Execute (main thread submits; worker threads execute)              │
-│   for each ParallelSystem* ps  →  ps->OnParallelExecute(scene, dt)         │
-│                                                                             │
-│   All systems submit their async jobs before any synchronisation.           │
-│   Workers from different systems run concurrently — maximum utilisation.   │
-│                                                                             │
-│   JobSystem::WaitIdle()  ←── single barrier; main thread blocks here       │
-├─────────────────────────────────────────────────────────────────────────────┤
-│ PASS D — Merge (main thread, single-threaded)                               │
-│   for each ParallelSystem* ps  →  ps->OnMerge(scene, dt)                   │
-│                                                                             │
-│   All workers are idle. Safe to swap DoubleBuffers, write back to registry, │
-│   create/destroy entities, fire events.                                     │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
-
-The fixed-timestep path (`OnFixedUpdate`) runs the identical B/C/D structure using `OnFixedPrepare`, `OnFixedParallelExecute`, `OnFixedMerge`.
-
-### Why a single WaitIdle matters
-
-With `N` parallel systems each doing `M` ms of work:
-
-```
-Sequential (wrong — synchronous ParallelFor in Execute):
-  System A: submit → wait → merge   [M ms]
-  System B: submit → wait → merge   [M ms]
-  Total: N×M ms
-
-Batched (correct — async submit + single WaitIdle):
-  All systems submit               [~0 ms]
-  Workers run A + B concurrently  [M ms, not N×M]
-  All merge                       [~0 ms]
-  Total: M ms
-```
-
----
-
-## 4. Writing a Parallel System
-
-### Step 1 — Inherit from `ParallelSystem`
+Double-buffering container for raw simulation state. Used internally by `ReadWriteQuery` — you only need this directly for custom low-level systems.
 
 ```cpp
-#include "jobs/ParallelSystem.h"
-#include "jobs/DoubleBuffer.h"
-#include "jobs/ParallelFor.h"
-
-class BallPhysicsSystem : public Cosmic::ParallelSystem
-{
-public:
-    // Called once before the frame loop if you need setup
-    void OnAttach(Cosmic::Scene& scene) { /* optional */ }
-
-    void OnPrepare(Cosmic::Scene& scene, float dt) override;
-    void OnParallelExecute(Cosmic::Scene& scene, float dt) override;
-    void OnMerge(Cosmic::Scene& scene, float dt) override;
-
-private:
-    Cosmic::DoubleBuffer<PhysicsBody> m_Buffer;
-    std::vector<entt::entity>         m_Entities;
-};
+Cosmic::DoubleBuffer<PhysicsBody> buf;
+buf.Resize(count);
+buf.WriteAt(i) = ...;      // populate write buffer
+buf.Swap();                // write → read
+const T* r = buf.GetReadBuffer();  // workers read
+T*       w = buf.GetWriteBuffer(); // workers write
+buf.Swap();                // commit results
 ```
 
-### Step 2 — Prepare: snapshot state into your buffers
+### `ComponentArray<T>` / `FlatComponentArray<T>`
+
+Zero-copy or flattened views into EnTT storage. Useful for `ParallelFor` calls that need raw pointers without staging a full copy.
 
 ```cpp
-void BallPhysicsSystem::OnPrepare(Cosmic::Scene& scene, float dt)
-{
-    auto& reg = scene.GetRegistry();
-    auto view = reg.view<PhysicsBody>();
-    const size_t count = view.size_hint();
-
-    // Resize once if entity count changed
-    if (m_Buffer.Count() != count)
-    {
-        m_Buffer.Resize(count);
-        m_Entities.resize(count);
-    }
-
-    // Copy current state into the write buffer, then swap it to become the read buffer
-    size_t i = 0;
-    for (auto entity : view)
-    {
-        m_Buffer.WriteAt(i) = reg.get<PhysicsBody>(entity);
-        m_Entities[i]       = entity;
-        ++i;
-    }
-    m_Buffer.Swap(); // write becomes new read — authoritative snapshot for this frame
-}
-```
-
-### Step 3 — Execute: submit async jobs
-
-```cpp
-void BallPhysicsSystem::OnParallelExecute(Cosmic::Scene& scene, float dt)
-{
-    const PhysicsBody* src = m_Buffer.GetReadBuffer();  // workers read this
-          PhysicsBody* dst = m_Buffer.GetWriteBuffer(); // workers write this
-
-    // Capture simulation constants by value — safe across threads
-    const float gravity = m_Gravity;
-    const float boundsY = m_BoundsY;
-
-    // Use the ASYNC variant — no WaitIdle, Scene handles the barrier
-    Cosmic::ParallelForAsync(m_Buffer.Count(),
-        [src, dst, dt, gravity, boundsY](size_t begin, size_t end)
-        {
-            for (size_t i = begin; i < end; ++i)
-                Integrate(src[i], dst[i], dt, gravity, boundsY);
-        });
-}
-```
-
-### Step 4 — Merge: write results back
-
-```cpp
-void BallPhysicsSystem::OnMerge(Cosmic::Scene& scene, float dt)
-{
-    // All workers are idle by the time this runs.
-    m_Buffer.Swap(); // promote computed results to read buffer
-
-    auto& reg = scene.GetRegistry();
-    const PhysicsBody* result = m_Buffer.GetReadBuffer();
-
-    for (size_t i = 0; i < m_Entities.size(); ++i)
-    {
-        if (reg.valid(m_Entities[i]))
-            reg.get<PhysicsBody>(m_Entities[i]) = result[i];
-    }
-}
-```
-
-### Step 5 — Register with the Scene
-
-```cpp
-auto scene = Cosmic::Scene::Create();
-scene->AddSystem<BallPhysicsSystem>();
-// That's it — the Scene manages the pipeline automatically.
-```
-
-The `AddSystem` call detects that `BallPhysicsSystem` derives from `ParallelSystem` and caches the pointer. No per-frame `dynamic_cast` occurs.
-
----
-
-## 5. Template Project Walkthrough
-
-The included `TemplateRenderBenchmarkLayer` demonstrates a **self-contained** parallel physics loop driven directly from a `Layer`, without a `ParallelSystem` registration. This is the right approach for benchmark layers and other self-managed parallel work that doesn't need Scene-level scheduling.
-
-It implements the exact same Prepare → Execute → Merge pattern manually:
-
-```
-OnFixedUpdate:
-  ┌── PREPARE ───────────────────────────────────────────────────────────┐
-  │  Group all physics bodies via EnTT view                              │
-  │  Copy current component state into DoubleBuffer write buffer         │
-  │  Swap write→read (authoritative snapshot for this tick)              │
-  └──────────────────────────────────────────────────────────────────────┘
-  ┌── EXECUTE ───────────────────────────────────────────────────────────┐
-  │  ParallelFor(count, [src, dst, ...](begin, end) { Integrate(...); }) │
-  │  ParallelFor calls WaitIdle internally — synchronous here is correct │
-  │  because this is standalone code, not inside OnParallelExecute       │
-  └──────────────────────────────────────────────────────────────────────┘
-  ┌── MERGE ─────────────────────────────────────────────────────────────┐
-  │  Swap DoubleBuffer (computed results → read buffer)                  │
-  │  Write back positions to TransformComponent in EnTT registry         │
-  └──────────────────────────────────────────────────────────────────────┘
-```
-
-**Single-threaded mode** runs the exact same `Integrate()` kernel in a plain `for` loop on the main thread — same math, no job overhead — making performance comparisons apples-to-apples.
-
-### Why it uses `ParallelFor` (synchronous) instead of `ParallelForAsync`
-
-Because the layer manually calls `WaitIdle` (implicitly, through `ParallelFor`) and then immediately reads results. There is no Scene barrier to rely on. `ParallelFor` is the correct choice whenever you own the call site end-to-end.
-
----
-
-## 6. Standalone Parallel Work (Outside a System)
-
-If you need parallel work inside a Layer or a one-off helper — not inside a `ParallelSystem` — use the synchronous variants:
-
-```cpp
-// Integrate physics on-demand (e.g. from a Layer::OnFixedUpdate)
-Cosmic::ParallelFor(bodyCount,
-    [src, dst, dt](size_t begin, size_t end)
-    {
-        for (size_t i = begin; i < end; ++i)
-            Integrate(src[i], dst[i], dt);
-    });
-// Execution is complete here — safe to read dst immediately.
-
-// Or with a typed array:
-Cosmic::ParallelForEach(transforms, count,
-    [dt](TransformComponent* begin, TransformComponent* end)
-    {
-        for (auto* t = begin; t != end; ++t)
-            t->Position += t->Velocity * dt;
-    });
-```
-
----
-
-## 7. DoubleBuffer Reference
-
-`DoubleBuffer<T>` maintains two identically-sized arrays. At any given time one is the **read buffer** (authoritative world state) and the other is the **write buffer** (results being computed by workers).
-
-```
-Frame N:
-  ReadBuffer  → state from end of frame N-1   (workers read)
-  WriteBuffer → output of frame N computation (workers write)
-
-After Swap():
-  ReadBuffer  → state from end of frame N     (ready for render / merge)
-  WriteBuffer → will be overwritten in frame N+1
-```
-
-| Method | Description | Thread safety |
-|--------|-------------|---------------|
-| `Resize(count)` | Reallocate both buffers | Main thread only |
-| `GetReadBuffer()` | Pointer to current read buffer | Thread-safe concurrent reads |
-| `GetWriteBuffer()` | Pointer to current write buffer | Each index owned by one thread |
-| `ReadAt(i)` / `WriteAt(i)` | Element access | Same as above |
-| `Swap()` | O(1) index toggle | Main thread only, after WaitIdle |
-| `CopyReadToWrite()` | Carry-forward: copy read → write | Main thread only, before jobs |
-| `Count()` | Number of elements per buffer | Read-only, any thread |
-
-**Typical frame sequence:**
-
-```cpp
-// --- OnPrepare (main thread) ---
-// Copy EnTT components into write buffer
-for (size_t i = 0; i < count; ++i)
-    m_Buffer.WriteAt(i) = reg.get<T>(entities[i]);
-m_Buffer.Swap();             // write → read (snapshot)
-
-// --- OnParallelExecute (main thread, jobs on workers) ---
-const T* src = m_Buffer.GetReadBuffer();
-      T* dst = m_Buffer.GetWriteBuffer();
-ParallelForAsync(count, [src, dst](...) { /* process src[i] → dst[i] */ });
-
-// --- OnMerge (main thread, after WaitIdle) ---
-m_Buffer.Swap();             // computed results → read buffer
-const T* result = m_Buffer.GetReadBuffer();
-// ... write back to registry ...
-```
-
----
-
-## 8. ComponentArray Reference
-
-`ComponentArray<T>` is a non-owning zero-copy view into EnTT's internal component storage. Use it when you need a raw pointer to pass to `ParallelFor`.
-
-```cpp
+// Zero-copy (first EnTT page only — safe up to ~4000–16000 entities)
 auto view = Cosmic::ComponentArray<TransformComponent>::From(scene.GetRegistry());
+Cosmic::ParallelForEach(view.Data(), view.Count(), ...);
 
-Cosmic::ParallelForEach(view.Data(), view.Count(),
-    [dt](TransformComponent* begin, TransformComponent* end)
-    {
-        for (auto* t = begin; t != end; ++t)
-            t->Position.x += t->Velocity.x * dt;
-    });
-```
-
-**Important limitation:** EnTT stores components in paged memory. `ComponentArray` accesses only the first page via `storage.raw()[0]`. For dense components under ~4000–16000 entities this is always one page and fully correct. For larger counts use `FlatComponentArray<T>`, which copies all pages into a single contiguous allocation.
-
-```cpp
-// FlatComponentArray — safe at any entity count, costs a memcpy upfront
+// Fully flattened copy (any entity count, costs a memcpy)
 auto flat = Cosmic::FlatComponentArray<PhysicsBody>::From(scene.GetRegistry());
-
-Cosmic::ParallelForEach(flat.Data(), flat.Count(),
-    [](PhysicsBody* begin, PhysicsBody* end) { /* ... */ });
-
-// After parallel phase:
-flat.WriteBack(scene.GetRegistry()); // copies modified values back by entity ID
+flat.WriteBack(scene.GetRegistry()); // after modification
 ```
-
----
-
-## 9. Rules & Constraints
-
-### Worker threads must NOT:
-- Modify the EnTT registry (create/destroy entities, add/remove components)
-- Call `WaitIdle()` — fixed-size pool would deadlock if a job tried to wait on other jobs
-- Submit new jobs from within a running job (nested dispatch)
-- Access mutable state shared with other workers without external synchronisation
-
-### Safe from worker threads:
-- Read from `DoubleBuffer::GetReadBuffer()` (concurrent reads, no writes)
-- Write to `DoubleBuffer::GetWriteBuffer()` — **each index must be owned by exactly one thread**, which `ParallelFor` chunk assignment guarantees
-- Read from `ComponentArray` (non-modifying access)
-- Call pure functions and allocate thread-local scratch memory
-
-### Capture rules for job lambdas:
-- Capture simulation constants (floats, ints) **by value**
-- Capture pointers to pre-allocated buffers **by value** (the pointer itself, not what it points to)
-- Never capture `std::vector`, `std::string`, or other owning types by reference unless you can prove the lambda executes within the owning scope and WaitIdle is called before it returns
-- Never capture `this` from a system unless you are certain no structural changes happen during execution
-
----
-
-## 10. When NOT to Use the Job System
-
-The job system has overhead — mutex locks, condition variable signals, cache misses from cross-thread data. It is beneficial only when the per-element work is substantial enough to amortise that cost.
-
-| Scenario | Guidance |
-|----------|----------|
-| < ~500 entities | Serial loop is faster; `ParallelFor`'s serial fast-path triggers at `minChunkSize` |
-| Work with complex branching or I/O | Workers stall, gaining nothing; keep on main thread |
-| Code that modifies the registry | Must run single-threaded (OnMerge or OnUpdate) |
-| Rendering / GPU submission | OpenGL contexts are thread-local; render on main thread only |
-| Debug / editor tools | Simpler to keep synchronous; parallelise in shipping builds if needed |

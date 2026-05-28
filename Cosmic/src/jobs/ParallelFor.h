@@ -192,7 +192,11 @@ namespace Cosmic
             const size_t begin = c * chunkSize;
             const size_t end = std::min(begin + chunkSize, totalCount);
 
-            js.Submit([&func, begin, end]()
+            // Capture func BY VALUE. Unlike the synchronous ParallelFor (which
+            // calls WaitIdle before returning, keeping func alive), the async
+            // variant returns immediately. Capturing by reference would leave
+            // workers holding a dangling pointer once the caller's stack unwinds.
+            js.Submit([func, begin, end]()
                 {
                     func(begin, end);
                 });
@@ -234,7 +238,8 @@ namespace Cosmic
     {
         if (!data || count == 0) return;
 
-        ParallelForAsync(count, [data, &func](size_t begin, size_t end)
+        // Capture func BY VALUE — see ParallelForAsync for the reasoning.
+        ParallelForAsync(count, [data, func](size_t begin, size_t end)
             {
                 func(data + begin, data + end);
             }, minChunkSize);
@@ -275,7 +280,8 @@ namespace Cosmic
     {
         if (!data || count == 0) return;
 
-        ParallelForAsync(count, [data, &func](size_t begin, size_t end)
+        // Capture func BY VALUE — see ParallelForAsync for the reasoning.
+        ParallelForAsync(count, [data, func](size_t begin, size_t end)
             {
                 for (size_t i = begin; i < end; ++i)
                     func(data[i], i);

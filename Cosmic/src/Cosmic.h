@@ -66,6 +66,7 @@
 // Job System / Multithreading
 #include "jobs/JobSystem.h"
 #include "jobs/ParallelSystem.h"
+#include "jobs/SystemQuery.h"
 #include "jobs/ComponentArray.h"
 #include "jobs/ParallelFor.h"
 #include "jobs/DoubleBuffer.h"
