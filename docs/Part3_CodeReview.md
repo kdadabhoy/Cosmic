@@ -11,14 +11,14 @@ Each section is scoped to be reviewable independently. Sections marked as review
 - [40. Event System Review](#40-event-system-review) ✅
 - [41. Rendering Pipeline Review](#41-rendering-pipeline-review) ✅
 - [42. Shader & Material System Review](#42-shader--material-system-review) ✅
-- [43. ECS & Scene System Review](#43-ecs--scene-system-review)
-- [44. Parallel Pipeline Review](#44-parallel-pipeline-review)
-- [45. Camera System Review](#45-camera-system-review)
-- [46. Platform & Window System Review](#46-platform--window-system-review)
-- [47. Virtual File System & Asset Loading Review](#47-virtual-file-system--asset-loading-review)
-- [48. Launcher & Workspace Shell Review](#48-launcher--workspace-shell-review)
-- [49. Serial Communication Review](#49-serial-communication-review)
-- [50. Build System & Project Generation Review](#50-build-system--project-generation-review)
+- [43. ECS & Scene System Review](#43-ecs--scene-system-review) ✅
+- [44. Parallel Pipeline Review](#44-parallel-pipeline-review) ✅
+- [45. Camera System Review](#45-camera-system-review) ✅
+- [46. Platform & Window System Review](#46-platform--window-system-review) ✅
+- [47. Virtual File System & Asset Loading Review](#47-virtual-file-system--asset-loading-review) ✅
+- [48. Launcher & Workspace Shell Review](#48-launcher--workspace-shell-review) ✅
+- [49. Serial Communication Review](#49-serial-communication-review) ✅
+- [50. Build System & Project Generation Review](#50-build-system--project-generation-review) ✅
 
 ---
 
@@ -581,65 +581,797 @@ This has been deferred indefinitely. It appears in `Renderer2D.cpp` at lines 738
 
 ## 43. ECS & Scene System Review
 
-- `Scene` registry ownership and entity handle validity guarantees
-- `CS_REGISTER_COMPONENT` macro — hash stability, collision risk, missing-registration failure mode
-- Built-in components (`TransformComponent`, `SpriteRendererComponent`, `TagComponent`) — data layout, degrees vs. radians consistency
-- `Scene::View` — correct usage patterns, potential pitfalls with in-loop mutation
+**Files reviewed:** `scene/Scene.h`, `scene/Scene.cpp`, `scene/Entity.h`, `scene/Components.h`, `scene/ComponentRegistry.h`, `scene/System.h`
+
+---
+
+### What it does well
+
+**`CS_REGISTER_COMPONENT` solves the cross-DLL type-ID problem correctly** — EnTT's default type IDs are sequential integers assigned at static-initialisation time. Two DLLs that each load the same header will assign the same component type to *different* integers, silently making `registry.get<TransformComponent>()` in the engine DLL address a completely different pool than the same call in the plugin DLL. `ComponentRegistry.h` forces the hash to a compile-time string value (`consteval hashed_string::value(#T)`), making the ID stable and identical across module boundaries. This is the correct solution and is consistently applied to all three built-in components.
+
+**`Scene::AddSystem<T>` registers parallel systems non-invasively** — When `AddSystem` is called, it `dynamic_cast`s the new system to `ParallelSystem*` and, if it succeeds, also pushes the raw pointer into `m_ParallelSystems`. The ownership stays with `m_Systems` (a `vector<Scope<System>>`). The non-owning parallel pointer list is clearly documented in the header (`// non-owning; owned by m_Systems`). This is a clean pattern for the split-pass architecture without duplicating ownership.
+
+**`Scene::OnRender` owns the full render pass** — The method calls `Renderer2D::BeginScene` and `EndScene` internally, and the doc comment explicitly forbids callers from wrapping it. This prevents the common mistake of pushing a BeginScene on the wrong camera or leaving an open render pass. The material-bucketing pass (grouping entities by `Material*` before issuing draw calls) correctly minimises batch-breaking shader state changes.
+
+**`Entity` conversion operators cover all practical access patterns** — The three implicit conversions to `bool`, `entt::entity`, and `uint32_t` make the handle usable in if-checks, registry calls, and index arithmetic without casts. The `bool` operator checks both `m_EntityHandle != entt::null` and `m_Scene != nullptr`, so a default-constructed `Entity{}` is falsy.
+
+**`System` virtual destructor is present** — `System::~System() = default` is declared `virtual`. Any subclass destroyed through a `System*` in `m_Systems` will call the correct destructor chain.
+
+---
+
+### Architecture notes
+
+`Scene` is a thin orchestrator over an `entt::registry`. It does not own entity data — EnTT does. The system list (`m_Systems`) is the scene's primary owned resource. The parallel pass ordering (Stage → Prepare → Execute → WaitIdle → Merge → Commit) is enforced entirely in `OnUpdate` and `OnFixedUpdate`, meaning there is no way for a `ParallelSystem` to accidentally skip the barrier or commit out of order.
+
+The `Entity` handle is a value type (two members: `entt::entity` + `Scene*`). Copying it is safe and cheap. It does not guard against use-after-destroy — once `Scene::DestroyEntity` is called, any outstanding `Entity` handle becomes dangling. This is the same semantic as a raw iterator and is acceptable for a game-engine ECS, but is worth being explicit about in documentation.
+
+---
+
+### Issues to address
+
+**`Scene::OnRender` ignores the `z`-component of `Position` for depth sorting**
+
+`Scene.cpp` lines 140–145 pass `transform.Position` directly to `DrawRotatedQuad`. The z-coordinate is forwarded to the renderer, but `Renderer2D::DrawRotatedQuad` uses it as-is for depth bias, not as an explicit sort key. Entities with the same material bucket are drawn in the arbitrary order EnTT's view returns them — not in depth order. For a 2D engine where z controls draw order, this means sprites with the same material can appear in the wrong order depending on entity creation sequence rather than their z-value. Fix: sort each material bucket by `transform.Position.z` before issuing draw calls:
+```cpp
+std::sort(entities.begin(), entities.end(), [&](entt::entity a, entt::entity b)
+{
+    return view.get<TransformComponent>(a).Position.z <
+           view.get<TransformComponent>(b).Position.z;
+});
+```
+
+---
+
+**`CS_REGISTER_COMPONENT` is called at global scope in a header — ODR hazard**
+
+`Components.h` lines 83–85 invoke `CS_REGISTER_COMPONENT(...)` directly in the header body, outside any `namespace` or `inline` guard. The macro expands to a `template<>` specialisation of `entt::type_hash<T>`. Because this is a full specialisation in a non-inline context, every translation unit that includes `Components.h` defines the same specialisation. The C++ ODR permits this only if the definitions are identical. This is currently fine because the macro body is pure `consteval`, but any future change that makes the specialisation non-trivially identical between TUs will be a silent ODR violation. The standard pattern for `template<>` specialisations in headers is to put them in a `.cpp` file or guard with `#pragma once` (already present) and ensure they are `inline` or `constexpr`. The current approach is safe in practice but fragile in principle — add a comment explaining the ODR contract.
+
+---
+
+**`Entity::operator bool` does not check that `m_EntityHandle` is still valid in the registry**
+
+`Entity.h` line 71:
+```cpp
+operator bool() const { return m_EntityHandle != entt::null && m_Scene != nullptr; }
+```
+This returns `true` for a destroyed entity as long as the handle was not explicitly set to `entt::null`. After `Scene::DestroyEntity(e)`, any copy of `e` passes the `bool` check and then crashes or corrupts on `GetComponent<T>()` (the `CS_ASSERT(HasComponent<T>())` will call `registry.all_of<T>` on an invalid entity, which is undefined behavior). The check should additionally validate liveness:
+```cpp
+operator bool() const
+{
+    return m_Scene != nullptr &&
+           m_EntityHandle != entt::null &&
+           m_Scene->GetRegistry().valid(m_EntityHandle);
+}
+```
+
+---
+
+**`Scene::GetSystem<T>` is `public` but placed in a `public` block with no access comment, while being documented as engine-internal**
+
+`Scene.h` lines 85–97: `GetSystem<T>` is in the second `public:` block at the bottom of the class, while the first `public:` block contains the intentionally public API. There is no documentation distinguishing internal-engine use from client use. The method uses `dynamic_cast` in a loop over all systems, which is O(n) and called potentially every frame. If clients start caching the result by calling it every tick, hidden performance regressions will follow. The method should be documented with its cost ("O(n), do not call per-frame; cache the result in OnAttach") and moved to a named section.
+
+---
+
+**`TransformComponent::GetTransform()` applies Euler angles with a fixed XYZ order, but `Scene::OnRender` only uses `Rotation.z`**
+
+`Components.h` lines 43–45 build a full 3D rotation matrix from all three Euler angles. `Scene.cpp` line 143 passes only `glm::radians(transform.Rotation.z)` to `DrawRotatedQuad`, ignoring X and Y rotation entirely. For a 2D renderer this is correct, but the existence of `GetTransform()` (which uses all three) invites clients to call it expecting 3D rotation support. If X or Y rotation is non-zero, `GetTransform()` and `Scene::OnRender` will produce different results for the same entity. Either document that Rotation.x and Rotation.y are reserved/ignored by `OnRender`, or add an assert that they are zero in `OnRender`'s draw loop.
+
+---
+
+**`Scene::RemoveAllSystems()` clears `m_ParallelSystems` before `m_Systems`**
+
+`Scene.h` lines 68–72:
+```cpp
+void RemoveAllSystems()
+{
+    m_ParallelSystems.clear();  // clears non-owning pointers
+    m_Systems.clear();          // runs destructors
+}
+```
+The non-owning `m_ParallelSystems` is cleared first, then `m_Systems` destructs the actual objects. This is safe because the objects are destroyed in the second `clear()`. However, if any `ParallelSystem` destructor attempts to look up `m_ParallelSystems` (e.g., a future change that adds an "unregister from scene" step in the destructor), it would find the list already empty. The safer order is to clear `m_Systems` first (running destructors while `m_ParallelSystems` is still valid) then clear the now-stale non-owning list. Reversing these two lines is a one-line fix that removes the latent fragility.
 
 ---
 
 ## 44. Parallel Pipeline Review
 
-- `JobSystem` thread pool — worker count heuristic, queue implementation, WaitIdle correctness
-- `ParallelFor` / `ParallelForAsync` — chunk sizing, sync vs. async contract
-- `ParallelSystem` four-pass pipeline — pass ordering enforcement, barrier placement
-- `SystemQuery<T>` / `DoubleBuffer<T>` — stage/commit correctness, race condition analysis
-- `ComponentArray<T>` — memory layout, iteration safety
+**Files reviewed:** `jobs/JobSystem.h`, `jobs/JobSystem.cpp`, `jobs/ParallelFor.h`, `jobs/ParallelSystem.h`, `jobs/SystemQuery.h`, `jobs/DoubleBuffer.h`, `jobs/ComponentArray.h`
+
+---
+
+### What it does well
+
+**`WaitIdle` is race-condition-free by design** — The combined condition `m_JobQueue.empty() && m_ActiveJobs == 0` (checked under `m_QueueMutex`) is the correct two-part test. Neither condition alone is sufficient: an empty queue with a running job would exit early; a non-zero `m_ActiveJobs` with an empty queue would also exit early. Holding `m_QueueMutex` while evaluating both conditions prevents a worker from decrementing `m_ActiveJobs` and adding new work between the two checks. The `m_AllIdle.notify_all()` inside the queue lock scope is also correct — it fires only after the last job decrements `m_ActiveJobs`, and the notification can't race with `WaitIdle`'s condition check.
+
+**`ParallelForAsync` captures `func` by value** — Unlike the synchronous `ParallelFor` (which calls `WaitIdle` before returning, keeping the caller's stack alive), the async variant returns immediately. `ParallelFor.h` line 199 explicitly captures `func` by value in the job closure, preventing a dangling reference to the caller's stack frame. The comment (`// Capture func BY VALUE — see ParallelForAsync for the reasoning`) is paired consistently across all three async variants. This is a subtle correctness requirement that is handled well and documented.
+
+**`ReadWriteQuery<T>` and `ReadOnlyQuery<T>` self-register** — The constructor calls `owner->RegisterQuery(this)`, so the system's query list is populated automatically at member-variable construction time without any OnAttach boilerplate. The entity list is kept parallel to the data array, enabling `ForEachWithEntity` and `Commit` to write results back to the correct registry slot without a separate lookup.
+
+**`DoubleBuffer<T>::Swap()` is O(1) with a single XOR** — `m_ReadIndex ^= 1u` toggles the active buffer with no data movement, no memory allocation, and no branch. The comment explains exactly why `uint32_t` is used instead of a pointer swap. `CopyReadToWrite()` uses `std::memcpy` for the carry-forward pattern, which is the fastest correct approach for trivially-copyable types.
+
+**Worker shutdown drains the queue before exiting** — `JobSystem.cpp` line 161: a worker only `break`s if `m_Stopping` is true *and* `m_JobQueue.empty()`. A worker that wakes up during shutdown will continue to drain any remaining jobs before exiting. This ensures `Shutdown()` is equivalent to `WaitIdle()` + teardown rather than an abrupt drop of in-flight work.
+
+---
+
+### Architecture notes
+
+The pipeline has two modes of parallelism: the explicit `ParallelFor` (synchronous, for standalone use outside a system) and the `ParallelForAsync` family (used inside `OnParallelExecute`, covered by the scene's single `WaitIdle` barrier). The documentation consistently enforces which variant to use in which context, and the header comments explain the consequences of choosing wrong. This is an unusually thorough safety net for a parallel API.
+
+`ComponentArray<T>` exposes `storage.raw()[0]` — the first page of EnTT's internal storage — as a raw pointer. For small-to-medium component counts this is effectively a flat array. For large counts spanning multiple pages, `Data()` only covers the first page and silently truncates the iteration. The header documents this limitation clearly and provides `FlatComponentArray<T>` as the correct alternative. The correctness boundary (`~50,000 elements`) is explicitly stated.
+
+---
+
+### Issues to address
+
+**`ParallelForAsync` serial fast-path executes the work synchronously, hiding an async contract violation**
+
+`ParallelFor.h` lines 180–183:
+```cpp
+if (workerCount <= 1 || totalCount <= minChunkSize)
+{
+    func(0, totalCount);
+    return;
+}
+```
+On a single-worker machine (or when `totalCount <= minChunkSize`), the async variant runs `func` immediately and returns. The caller assumes that work has been *submitted* (not completed), and will call `WaitIdle()` later. But the work is already done — `WaitIdle` is then a no-op, which is correct. The issue is subtler: any captured-by-reference lambda in `func` must remain valid until the callee's barrier fires. In the serial path, `func` completes synchronously before `OnParallelExecute` returns, which means a `func` that captures state from `OnParallelExecute`'s local scope is safe here but would dangle in the parallel path. The serial and parallel paths have different lifetime requirements for captured references, but there is no static check or documentation warning about this asymmetry.
+
+---
+
+**`WorkerThread` holds `m_QueueMutex` while calling `m_AllIdle.notify_all()`**
+
+`JobSystem.cpp` lines 191–198:
+```cpp
+uint32_t remaining = m_ActiveJobs.fetch_sub(1, std::memory_order_acq_rel) - 1;
+if (remaining == 0)
+{
+    std::lock_guard<std::mutex> lock(m_QueueMutex);
+    m_AllIdle.notify_all();
+}
+```
+The notification is issued while holding `m_QueueMutex`. `WaitIdle` also holds `m_QueueMutex` (via `unique_lock`) when its condition predicate is evaluated. This is correct — the condition variable requires the mutex to be held during `notify` when the notifier wants to guarantee the waiting thread re-evaluates the predicate before it can re-sleep. However, the notification lock is acquired *after* the `fetch_sub`, meaning there is a window where `m_ActiveJobs` is 0 and the queue is empty but `m_AllIdle` has not fired yet. `WaitIdle` will catch this on its next wakeup (spurious wake), but a profiler may show `WaitIdle` sleeping longer than necessary in low-contention cases. The canonical fix is to notify outside the lock: acquire, check, release, notify. This is a performance concern, not a correctness bug.
+
+---
+
+**`ReadWriteQuery<T>::Commit` may write stale data if an entity was destroyed between `Stage` and `Commit`**
+
+`SystemQuery.h` lines 162–166:
+```cpp
+if (reg.valid(entity) && reg.all_of<T>(entity))
+    reg.get<T>(entity) = m_Data[i];
+```
+The `valid()` + `all_of<T>()` guard correctly skips entities destroyed during the parallel phase. However, EnTT recycles entity IDs — a destroyed entity's slot may be reallocated to a *new* entity during the same frame (e.g., in `OnMerge` of another system). If this happens, `Commit` will overwrite the new entity's component with the destroyed entity's stale staged data. The current safe-zone convention prevents structural changes during the parallel phase, but there is no assert or runtime check enforcing this. A debug-mode `CS_CORE_ASSERT` in `OnMerge` that no entity-creation occurred since `StageQueries` would catch this class of bug early.
+
+---
+
+**`ComponentArray<T>::From` only reads `storage.raw()[0]` — silently wrong for large or fragmented pools**
+
+`ComponentArray.h` line 103:
+```cpp
+arr.m_Data = storage.raw()[0];
+arr.m_Count = storage.size();
+```
+`m_Count` reflects the total number of components across all pages, but `m_Data` points only to the first page. On a scene with more components than fit in one EnTT page (`ENTT_SPARSE_PAGE`, default 4096), `m_Data[pageSize]` through `m_Data[m_Count-1]` are out-of-bounds accesses. The header warns about this ("only covers the first page"), but there is no assert gating the use of `ComponentArray` when `m_Count` exceeds one page. Add a debug assert:
+```cpp
+CS_CORE_ASSERT(arr.m_Count <= ENTT_SPARSE_PAGE ||
+               storage.raw().size() == 1,
+    "ComponentArray only covers page 0; use FlatComponentArray for large pools.");
+```
+
+---
+
+**`DoubleBuffer<T>` does not assert that `T` is trivially copyable before using `memcpy`**
+
+`DoubleBuffer.h` line 212:
+```cpp
+std::memcpy(dst.data(), src.data(), src.size() * sizeof(T));
+```
+`CopyReadToWrite()` uses raw `memcpy`. If `T` contains a `std::string`, `std::shared_ptr`, or any non-trivially-copyable member, `memcpy` produces a bitwise copy that bypasses constructors — the copy's destructor will double-free or corrupt reference counts. Since `DoubleBuffer` is designed for POD physics-state structs this is currently safe, but there is nothing preventing a client from instantiating `DoubleBuffer<SpriteRendererComponent>` (which contains a `Ref<Material>`). Add a static assert:
+```cpp
+static_assert(std::is_trivially_copyable_v<T>,
+    "DoubleBuffer requires trivially-copyable T; use ReadWriteQuery for complex types.");
+```
+
+---
+
+**`ParallelSystem::RegisterQuery` does not check for duplicate registration**
+
+`ParallelSystem.h` line 223:
+```cpp
+void RegisterQuery(ISystemQuery* query)
+{
+    m_Queries.push_back(query);
+}
+```
+A query object registering itself in its constructor is called exactly once per construction. However, if a `ReadWriteQuery<T>` is ever move-constructed or copy-constructed (e.g., by storing a `ParallelSystem` in a `std::vector` that reallocates), the constructor runs again, registering the same query twice. `Stage` and `Commit` would then execute twice per frame, causing double-commit races. The fix is to `static_assert` that `ParallelSystem` is non-movable, or to check for duplicate pointers in `RegisterQuery`.
 
 ---
 
 ## 45. Camera System Review
 
-- `OrthographicCameraController` — zoom interpolation, pan-speed-with-zoom scaling, position limits
-- `OrthographicCamera` — projection matrix correctness, view matrix recalculation triggers
-- Window resize handling — aspect ratio update path
+**Files reviewed:** `camera/OrthographicCamera.h`, `camera/OrthographicCamera.cpp`, `camera/OrthographicCameraController.h`, `camera/OrthographicCameraController.cpp`
+
+---
+
+### What it does well
+
+**View matrix computed as the inverse of the camera's world transform** — `OrthographicCamera::UpdateViewMatrix()` constructs a standard translation × rotation matrix and then inverts it to produce the view matrix. This is the mathematically correct approach: the camera does not move through the world; the world transforms in the opposite direction. Computing the inverse of a simple affine 4×4 (translation + Z-rotation) is slightly more expensive than the closed-form formula, but it is correct and readable.
+
+**`SetPosition` and `SetRotation` both call `UpdateViewMatrix()`** — Any mutation of camera state immediately recomputes both the view matrix and the combined VP matrix. There is no "dirty" flag that could be forgotten, and no frame where the GPU receives a stale VP matrix.
+
+**Asymptotic zoom interpolation is frame-rate independent** — `OnUpdate` uses `blendStep = clamp(smoothnessFactor * ts, 0.0f, 1.0f)` and then `m_ZoomLevel += (m_TargetZoomLevel - m_ZoomLevel) * blendStep`. This is an exponential ease-out that is correctly independent of frame rate — slower frames take a larger step, keeping the zoom feel consistent whether running at 30 Hz or 144 Hz.
+
+**Pan speed scales with zoom level** — `actualMoveSpeed = m_CameraTranslationSpeed * m_ZoomLevel`. When zoomed in (low `m_ZoomLevel`), pan speed is proportionally reduced. When zoomed out (high `m_ZoomLevel`), pan covers more ground per second. This is the correct intuitive behavior: a zoomed-in camera should feel precise.
+
+**`OnMouseScrolled` and `OnWindowResized` both return `false`** — Both event handlers explicitly return `false` to allow the event to continue propagating. The comments in the header explain the exact reason for each: scroll events should also reach client systems; resize events should also reach framebuffers. This is a good-citizenship design.
+
+**Position limits are clamped after movement, not inside the input check** — `OrthographicCameraController.cpp` lines 53–54 apply `std::clamp` to the final camera position regardless of which key moved it. This means position limits are enforced for all movement sources (keyboard, SetPosition, programmatic), not just the keyboard branch.
+
+---
+
+### Architecture notes
+
+`OrthographicCameraController` owns an `OrthographicCamera` by value. This means controllers cannot share a camera instance, and the camera's lifetime is tied to the controller. For a single-camera 2D engine this is the right model. Multi-camera or spectator-camera scenarios would require a `Ref<OrthographicCamera>`.
+
+The controller listens to `WindowResizeEvent` via the engine event system but also exposes `OnResize(float, float)` for callers who drive resize explicitly from the framebuffer. Both paths call `CalculateView()`, so they are equivalent. The redundancy is intentional and clearly labeled.
+
+---
+
+### Issues to address
+
+**`m_ZoomLevel` can snap when `SetZoomLevel` is called while interpolation is in progress**
+
+`OrthographicCameraController.cpp` lines 91–96:
+```cpp
+void OrthographicCameraController::SetZoomLevel(float level)
+{
+    m_TargetZoomLevel = std::clamp(level, m_MinZoom, m_MaxZoom);
+    m_ZoomLevel = m_TargetZoomLevel;  // ← immediate snap
+    CalculateView();
+}
+```
+`SetZoomLevel` sets both `m_ZoomLevel` *and* `m_TargetZoomLevel` to the new value, snapping the camera instantly. This is documented as "forces an absolute override... instantly" — which is its purpose. However, if a client calls `SetZoomLevel(2.0f)` while the user is mid-scroll (e.g., to programmatically focus on a game object), the visible zoom will jump rather than interpolate. There is no "animate to zoom level" variant. This is a missing feature rather than a bug, but worth documenting: add `SetTargetZoomLevel(float)` that sets only `m_TargetZoomLevel` to allow smooth programmatic zoom.
+
+---
+
+**`CalculateView()` does not update the camera position, only projection**
+
+`OrthographicCameraController.cpp` line 100:
+```cpp
+void OrthographicCameraController::CalculateView()
+{
+    m_Camera.SetProjection(...);
+}
+```
+`CalculateView` only calls `SetProjection`. It does not call `m_Camera.SetPosition(m_CameraPosition)`. This means that after a call to `OnResize` (which calls `CalculateView`), the camera's view matrix is not updated unless `SetPosition` happens to be called on the same frame. In practice this is fine because `OnUpdate` calls `m_Camera.SetPosition(m_CameraPosition)` unconditionally at the end of every frame (line 69). But if `OnResize` is called without a subsequent `OnUpdate` before rendering (e.g., a resize event fires after the update pass but before the render pass), the aspect ratio is correct but the camera position is stale. The fix is to also sync position in `CalculateView`:
+```cpp
+void OrthographicCameraController::CalculateView()
+{
+    m_Camera.SetProjection(-m_AspectRatio * m_ZoomLevel, m_AspectRatio * m_ZoomLevel,
+                           -m_ZoomLevel, m_ZoomLevel);
+    m_Camera.SetPosition(m_CameraPosition);
+}
+```
+
+---
+
+**`CameraKeyBindings` uses raw integer key codes instead of the engine's `CS_KEY_*` constants**
+
+`OrthographicCameraController.h` lines 39–44:
+```cpp
+uint32_t MoveLeft  = 65;  // Default: CS_KEY_A
+uint32_t MoveRight = 68;  // Default: CS_KEY_D
+// ...
+```
+The comment names the key, but the default value is the raw GLFW/ASCII integer. A client who reads `GetKeyBindings().MoveLeft` has no way to compare it against a `CS_KEY_A` constant without knowing that `65 == CS_KEY_A`. The struct should use the named constants as default values:
+```cpp
+uint32_t MoveLeft  = CS_KEY_A;
+uint32_t MoveRight = CS_KEY_D;
+```
+This requires including `codes/KeyCodes.h` in the header, which is a one-line change. It makes the defaults self-documenting and removes the comment-to-integer mismatch risk.
+
+---
+
+**`OrthographicCamera` uses `glm::inverse()` for the view matrix instead of the cheaper closed-form**
+
+`OrthographicCamera.cpp` line 66:
+```cpp
+m_ViewMatrix = glm::inverse(transform);
+```
+For a 2D camera with only translation and Z-rotation, the inverse of `T * R` is `R^T * (-T)`. This can be computed in ~10 multiplications. `glm::inverse()` on a 4×4 matrix uses Cramer's rule or LU decomposition — around 80 operations. `UpdateViewMatrix` is called on every `SetPosition` or `SetRotation` call (potentially multiple times per frame), and this is pure CPU math. For the camera system in isolation this cost is negligible, but it sets a poor precedent. Use the closed-form inverse for a pure translate+rotate transform:
+```cpp
+glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), glm::radians(m_Rotation), { 0,0,1 });
+m_ViewMatrix = glm::transpose(rotation) *
+               glm::translate(glm::mat4(1.0f), -m_Position);
+```
 
 ---
 
 ## 46. Platform & Window System Review
 
-- `Window` abstraction — GLFW lifecycle, VSync, event callback wiring
-- `GraphicsContext` — context creation, swap interval
-- OpenGL platform implementations — any platform-specific leakage into abstractions
+**Files reviewed:** `core/Window.h`, `core/Window.cpp`, `platform/OpenGL/OpenGLContext.h`, `platform/OpenGL/OpenGLContext.cpp`, `platform/OpenGL/OpenGLRendererAPI.h`, `platform/OpenGL/OpenGLRendererAPI.cpp`
+
+---
+
+### What it does well
+
+**Borderless windowed fullscreen avoids every known DWM pitfall** — The `Window.cpp` file header documents precisely why each design decision was made: no `HWND_TOPMOST` (fights hardware overlays), no `ClipCursor` (breaks Snipping Tool and multi-monitor), no `glfwSetWindowMonitor` (triggers a mode switch that causes DWM to flash black). The implementation saves the windowed rect from `GetWindowRect` (which includes the frame, not just the client area) and restores it exactly. The monitor-detection helper (`FindCurrentMonitor`) uses the window centre to handle the case where the window straddles two monitors.
+
+**GLFW user-pointer callbacks are stateless closures** — All seven GLFW callbacks are lambdas that capture nothing from the host scope. They reach all engine state through the `WindowData*` retrieved from the GLFW user pointer. This is the correct pattern: stateless lambdas can be stored as GLFW function pointers safely, and they do not capture `this` in a way that could dangle if the `Window` moves.
+
+**`WindowData::Self` pointer enables the fullscreen hotkey dispatch** — The hotkey handler (`HandleFullscreenHotkey`) lives on `Window`, not in `WindowData`. The GLFW key lambda reaches it via `data.Self->HandleFullscreenHotkey(...)`. The comment in the header explicitly explains why the override lives on `Window` rather than in `WindowData`: Application must be able to clear it before unloading a plugin DLL, and it needs to be accessible without going through the GLFW user pointer. This is a correct and well-reasoned ownership split.
+
+**Destructor restores DWM state before destroying the GLFW window** — `Window::~Window()` restores `WS_OVERLAPPEDWINDOW` style bits on the HWND if fullscreen is active, then nulls the GLFW user pointer, then deletes the context, then destroys the window. This ordering prevents a GLFW resize callback from firing against a dead `WindowData` during teardown.
+
+**`OpenGLRendererAPI` has a complete interface including `DrawIndexedInstanced`** — The API covers the four core draw patterns (`DrawIndexed`, `DrawLines`, `DrawIndexedInstanced`) and global state operations (`Init`, `SetViewport`, `SetClearColor`, `Clear`). The batch/flush partial-buffer logic in `DrawIndexed` (using the provided `indexCount` instead of the full index buffer count) is the correct pattern for the batch renderer's overflow flush.
+
+---
+
+### Architecture notes
+
+`GraphicsContext` is owned as a raw `GraphicsContext*` inside `Window` (created with `new`, deleted in the destructor). Since `Window` is non-copyable and the context's lifetime is bounded exactly by the window's lifetime, this is acceptable. It could be a `Scope<GraphicsContext>` for clarity, but the current implementation is correct.
+
+`OpenGLRendererAPI` is a thin wrapper over direct GL calls. The `RendererAPI` abstraction layer exists for future backend portability (Vulkan, Metal). Currently the layer is thin but correctly structured — no concrete GL types leak into the abstract `RendererAPI.h` header.
+
+---
+
+### Issues to address
+
+**`OpenGLContext::Init()` does not check the GLAD load result**
+
+`OpenGLContext.cpp` lines 33–36:
+```cpp
+glfwMakeContextCurrent(m_WindowHandle);
+int status = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
+// Note: status check is critical here...
+```
+The comment says the check is critical, but the check is not implemented. `gladLoadGLLoader` returns 0 on failure (driver doesn't support the requested version, or a null proc address was returned). If GLAD fails to load, every subsequent GL call through function pointers (e.g., `glDrawElements`) is a null pointer dereference. The fix is one line:
+```cpp
+CS_CORE_ASSERT(status, "Failed to initialize GLAD — OpenGL function pointers not loaded.");
+```
+
+---
+
+**`Window` requests GLFW context version 3.3 but the engine uses OpenGL 4.5 features**
+
+`Window.cpp` lines 77–79:
+```cpp
+glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+```
+GLAD is configured for OpenGL 4.5 (the shaders use `#version 450 core`, the `GL_LINEAR_MIPMAP_LINEAR` filter is used, `glDrawElementsInstanced` is called). Requesting a 3.3 core context means the driver may create a 3.3 context, making `glDrawElementsInstanced` and other 4.x entry points undefined. On most desktop drivers this works because drivers return the latest context even when 3.3 is requested, but it is not guaranteed. Fix:
+```cpp
+glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
+```
+
+---
+
+**`m_Context` is a raw pointer with no null guard in `SwapBuffers`**
+
+`Window.cpp` line 245:
+```cpp
+void Window::SwapBuffers() { m_Context->SwapBuffers(); }
+```
+If `Window` construction fails partway (e.g., `glfwCreateWindow` returns null on line 84 and the constructor returns early), `m_Context` is never assigned and remains `nullptr`. A caller that then calls `SwapBuffers()` on the partially-constructed window will crash. The constructor should set a flag (`m_Initialized`) on success and the public API methods should check it, or the constructor should throw/assert on failure instead of returning silently.
+
+---
+
+**`OpenGLRendererAPI::DrawLines` does not use the `vertexArray` parameter**
+
+`OpenGLRendererAPI.cpp` lines 82–85:
+```cpp
+void OpenGLRendererAPI::DrawLines(const Ref<VertexArray>& vertexArray, uint32_t vertexCount)
+{
+    glDrawArrays(GL_LINES, 0, vertexCount);
+}
+```
+The `vertexArray` parameter is never used. `glDrawArrays` draws from whatever vertex array is currently bound. The caller is responsible for binding the correct VAO before calling `DrawLines`. This works by convention (callers always bind first), but the parameter name and the unused argument create a misleading signature. Either remove the parameter (breaking the interface contract) or add `vertexArray->Bind()` inside the function body for robustness.
+
+---
+
+**`glfwTerminate` is called in the `Window` destructor — problematic for multi-window scenarios**
+
+`Window.cpp` line 237:
+```cpp
+glfwTerminate();
+```
+`glfwTerminate()` destroys all remaining GLFW windows and frees internal state. In a single-window application this is correct. If a second `Window` were ever created (e.g., for a debug overlay or asset preview), destroying the first would terminate GLFW and invalidate the second window's internal handles, crashing on the next `glfwPollEvents`. The correct pattern is to balance `glfwInit`/`glfwTerminate` at the `Application` level, not inside each `Window`. For now the engine is single-window, so this is not a bug — but it is a strong architectural constraint that should be documented in the header.
 
 ---
 
 ## 47. Virtual File System & Asset Loading Review
 
-- `FileSystem` protocol resolution — path separator handling, edge cases
-- `Texture2D::Create` / `Shader::Create` load paths — error handling on missing files
-- `SetActiveProject` — thread safety, re-entrant call behavior
+**Files reviewed:** `utils/FileSystem.h`, `platform/OpenGL/OpenGLTexture.h`, `platform/OpenGL/OpenGLTexture.cpp`
+
+---
+
+### What it does well
+
+**Protocol-based VFS cleanly decouples asset references from disk layout** — `FileSystem::Resolve` replaces `engine://` and `project://` prefixes with concrete relative paths, allowing all asset loading code to use portable virtual paths. Switching the active project (`SetActiveProject`) remaps `project://` globally with a single call.
+
+**`stbi_set_flip_vertically_on_load(1)` is set at load time, not globally** — `OpenGLTexture.cpp` line 64 sets the flip flag immediately before each `stbi_load` call rather than once at startup. This means if any other code path loads images (e.g., a future font loader) without expecting vertical flip, it won't be silently affected.
+
+**`stbi_image_free(data)` is called before the constructor returns** — The pixel data is freed as soon as `glTexImage2D` has uploaded it to the GPU. There is no path where `stbi_uc*` outlives the constructor, preventing a memory leak even if an exception were thrown after the upload (though the constructor uses no RAII wrappers for the GL handle itself — see issues).
+
+**`SetData` validates size before uploading** — `OpenGLTexture.cpp` lines 136–140 check that the incoming buffer size exactly matches `width * height * bpp` and log an error and early-return if not. This prevents a partial or oversized upload from corrupting GPU memory or producing undefined GL behavior.
+
+**`operator==` compares renderer IDs** — The equality check in the batch renderer's texture slot lookup compares `m_RendererID` values, not pointer addresses. Two textures loaded from the same GPU resource would compare equal. Currently all textures have unique IDs, but the design is correct for a future texture-sharing cache.
+
+---
+
+### Architecture notes
+
+`FileSystem` is a fully static class with a single `static inline` member (`s_ActiveProjectName`). There is no instance, no initialization, and no dependency injection. This is simple and appropriate for what is essentially a global path-remapping table. The risk is that it is globally mutable from any thread at any time.
+
+The VFS currently only handles two protocols. There is no registry for custom protocols, no validation that the resolved path exists before returning it, and no normalization of path separators. All path manipulation is done with `std::string` operations rather than `std::filesystem::path`. This works on Windows (where both `\` and `/` are valid separators) but would be incorrect on Linux.
+
+---
+
+### Issues to address
+
+**`OpenGLTexture` GPU handle is not initialized — will call `glDeleteTextures(0)` on a failed load**
+
+`OpenGLTexture.h` line 97: `m_RendererID` is a `uint32_t` with no default initializer. In the file-based constructor (`OpenGLTexture(const std::string& path)`), if `stbi_load` returns `nullptr` (line 67), the else branch only logs an error. `m_RendererID` is never assigned, leaving it as an indeterminate value. The destructor then calls `glDeleteTextures(1, &m_RendererID)` on that indeterminate value — which is undefined behavior. Fix: add a default initializer:
+```cpp
+uint32_t m_RendererID = 0;
+```
+`glDeleteTextures(1, &id)` silently ignores a zero ID, so `0` is the correct sentinel for "not yet allocated."
+
+---
+
+**Failed texture load leaves `m_Width`, `m_Height`, `m_InternalFormat`, and `m_DataFormat` uninitialised**
+
+In the file-based constructor's failure branch (`data == nullptr`), only the error log fires. All four member variables (`m_Width`, `m_Height`, `m_InternalFormat`, `m_DataFormat`) are uninitialized. Any subsequent call to `GetWidth()`, `GetHeight()`, or `SetData()` on a failed texture reads garbage values. The factory function should return `nullptr` on failure, or the constructor should set safe sentinel values:
+```cpp
+else
+{
+    CS_CORE_ERROR("Failed to load texture at {0}", path);
+    m_Width = 0; m_Height = 0;
+    m_InternalFormat = GL_RGBA8; m_DataFormat = GL_RGBA;
+}
+```
+
+---
+
+**`FileSystem::Resolve` uses forward slashes on a `std::string` but does not normalize the result**
+
+`FileSystem.h` lines 55–66: both protocol branches hardcode forward slashes (`"assets/" + ...`). On Windows, `std::filesystem::exists` and `std::ifstream::open` accept forward slashes, so this currently works. But `path.substr(9)` returns the user-supplied suffix unmodified — if a client writes `engine://shaders\\MyShader.glsl` (backslash suffix), the resolved path will contain a mixed separator. `FileSystem::Resolve` should normalize the result:
+```cpp
+return (std::filesystem::path("assets") / path.substr(9)).generic_string();
+```
+Using `std::filesystem::path` for concatenation also handles edge cases like double slashes and `.` components.
+
+---
+
+**`FileSystem::SetActiveProject` is not thread-safe**
+
+`FileSystem.h` line 73:
+```cpp
+static void SetActiveProject(const std::string& name) { s_ActiveProjectName = name; }
+```
+`s_ActiveProjectName` is a `static inline std::string`. Assignment to `std::string` is not atomic. If `SetActiveProject` is called from the main thread while a worker thread calls `Resolve` (e.g., a background texture loader), there is a data race on `s_ActiveProjectName` producing undefined behavior. For the current single-threaded asset loading model this is safe. If background loading is ever added, this must be protected by a mutex or changed to `std::atomic<std::string>` (C++20).
+
+---
+
+**`OpenGLTexture` constructor does not bind the texture before calling `glTexParameteri` for the procedural variant**
+
+`OpenGLTexture.cpp` lines 34–36:
+```cpp
+glGenTextures(1, &m_RendererID);
+glBindTexture(GL_TEXTURE_2D, m_RendererID);
+```
+The bind is present. This is correct. However, the file-based constructor calls `glGenTextures` and `glBindTexture` only inside the `if (data)` branch (lines 88–89), meaning the GL texture is only generated and bound when the file loads successfully. If it fails, `m_RendererID` is zero (after the fix above) and no GL object is created. The destructor then safely passes `0` to `glDeleteTextures`. This is fine, but it means a failed-load texture still occupies its slot in any material that holds a `Ref<OpenGLTexture>` — subsequent `Bind(slot)` calls will bind texture 0 (the default/uninitialized slot), which usually renders as black. A warning log when `Bind` is called on a zero-ID texture would surface this silently wrong state.
 
 ---
 
 ## 48. Launcher & Workspace Shell Review
 
-- `LauncherLayer` — project discovery, DLL load/unload sequence
-- `WorkspaceLayer` — pre-docked panel reservation, extra panel request mechanism
-- Hot-reload DLL transition — Safe Zone correctness, dangling pointer risk
+**Files reviewed:** `layers/LauncherLayer.h`, `layers/LauncherLayer.cpp`, `layers/WorkspaceLayer.h`, `layers/WorkspaceLayer.cpp`
+
+---
+
+### What it does well
+
+**`GenerateProjectTemplate` uses a recursive directory iterator** — The template generation in `LauncherLayer.cpp` lines 584–637 walks the entire `ExampleProject` tree recursively rather than hard-coding individual file names. Adding a new file to the template directory is automatically picked up without changing the generator. Token replacement applies to all `.cpp`, `.h`, `.txt`, and `.bat` files; binary files and shader assets are copied verbatim.
+
+**Path traversal safety: `fs::exists(rootPath)` guard before creation** — Line 553 aborts generation if the destination directory already exists, preventing an accidental overwrite. The error is reported in both the UI status message and the engine log.
+
+**`WorkspaceLayer` dockspace state is member variables, not statics** — The header comment explicitly calls this out: "member variables (NOT statics) so re-creation works correctly." Using static variables inside `OnImGuiRender` (as many ImGui examples do) would prevent a second workspace from having independent dockspace state after a hot-reload cycle. The member variable approach is the correct choice.
+
+**`WorkspaceLayer::OnEvent` checks `e.Handled` at entry** — Line 364: `if (e.Handled) return;`. This prevents the workspace from forwarding already-consumed events to the client layer, which is the correct propagation behavior.
+
+**`WorkspaceLayer::OnDetach` calls `ClearViewportLayer()`** — `OnDetach` (line 25) calls `ClearViewportLayer()` which calls `OnDetach()` on the client layer before nulling the pointer. This ensures the client layer's cleanup runs before the workspace is destroyed, even if `Application` does not explicitly call `ClearViewportLayer` first.
+
+**`LauncherLayer` falls back gracefully if the background shader is absent** — `OnAttach` checks `fs::exists(shaderPath)` before creating the material, and `RenderBackground` renders a fallback grid + decorative SDF rings if `m_BgMaterial` is null. The application remains functional without the launcher shader.
+
+---
+
+### Architecture notes
+
+`WorkspaceLayer` communicates with its client layer by holding a raw `Layer*` (`m_ClientViewportLayer`). Ownership of the client layer lives in `Application::m_ActivePluginLayer`. The workspace only borrows the pointer. `SetViewportLayer` calls `OnAttach` on the new layer and `OnDetach` on the evicted one — which means `WorkspaceLayer` drives the lifecycle hooks on layers it does not own. This is a deliberate architectural choice but creates an implicit contract: the pointer passed to `SetViewportLayer` must remain alive for as long as the workspace holds it.
+
+The `DockedPanelRequest` mechanism gives clients a pre-construction hook to claim named DockBuilder slots before the first `ImGui::DockBuilderFinish`. The `m_PendingPanelRequests` list is intentionally *not* cleared after a layout rebuild (comment on line 351), so a layout reset re-applies all client requests. This is the correct design for a "reset layout" feature.
+
+---
+
+### Issues to address
+
+**`m_TransitionTriggered` is set inside an `ImGui::Button` click handler and checked at the bottom of the same `OnImGuiRender` call — always fires on the same frame as the click**
+
+`LauncherLayer.cpp` lines 320–324 set `m_TransitionTriggered = true` when the user clicks a project button. Lines 487–490 check the flag and call `Application::Get().TransitionFromLauncherToWorkspace(...)` unconditionally. This means the transition fires every frame that `OnImGuiRender` is called while `m_TransitionTriggered` is true — which is one frame (the transition call likely resets state). If `TransitionFromLauncherToWorkspace` is idempotent this is fine, but if it is called a second time before the transition completes (e.g., if the ImGui layer renders twice in one engine tick), it will attempt to double-load the DLL. Fix: reset the flag immediately after dispatching:
+```cpp
+if (m_TransitionTriggered)
+{
+    m_TransitionTriggered = false;
+    Application::Get().TransitionFromLauncherToWorkspace(m_SelectedProject + ".dll");
+}
+```
+
+---
+
+**`LauncherLayer::ScanForProjects()` uses `FindFirstFileA("*.dll", ...)` with no explicit directory — depends on CWD**
+
+`LauncherLayer.cpp` line 502: `FindFirstFileA("*.dll", &fd)` searches the current working directory without qualification. If the CWD changes between engine start and the scan (e.g., a `std::filesystem::current_path` call in another system), the scan silently finds no DLLs and `m_DiscoveredProjects` is empty. The scan should use an explicit path rooted to the executable:
+```cpp
+// Prefer exe-relative path over CWD
+fs::path exeDir = fs::absolute(fs::current_path()); // or use GetModuleFileNameA
+std::string pattern = (exeDir / "*.dll").string();
+HANDLE hFind = FindFirstFileA(pattern.c_str(), &fd);
+```
+
+---
+
+**`LauncherLayer` skips only `Cosmic.dll` and `Renderer.dll` from the project list — fragile hardcoded exclusion list**
+
+`LauncherLayer.cpp` lines 511–512:
+```cpp
+if (file == "Cosmic.dll" || file == "Renderer.dll") continue;
+```
+Any new engine DLL (e.g., a future `CosmicPhysics.dll`, or third-party libraries like `glfw3.dll`, `freetype.dll`) will appear in the project list. Users will see and potentially attempt to load engine-internal DLLs as projects, producing a log error or crash. A more robust filter is to check for the `CreatePluginLayer` export symbol using `GetProcAddress` and only list DLLs that expose it. Alternatively, use a naming convention (e.g., only list `*Project.dll`) combined with the existing exclusion list.
+
+---
+
+**`ReadAndProcessTemplate` normalises line endings to `\r\n` but copies binary files untouched — generated `.bat` files may have wrong endings**
+
+`LauncherLayer.cpp` lines 67–85: the line-ending normalisation runs on files with extensions `.cpp`, `.h`, `.txt`, and `.bat`. Binary files are copied with `fs::copy_file`. The normalisation correctly avoids running on `.glsl` or asset files. However, the `\r\n` normalisation means generated `.bat` files always use Windows line endings — which is correct on Windows but wrong if the project is ever used on WSL or a Linux build system. The normalisation should be conditional on the target platform, or applied only to `.bat` files (which are Windows-only by nature).
+
+---
+
+**`WorkspaceLayer::OnFixedUpdate` applies `GetTimeScale()` from the client layer but `OnUpdate` does not**
+
+`WorkspaceLayer.cpp` lines 97–104:
+```cpp
+void WorkspaceLayer::OnFixedUpdate(float deltaFixedTime)
+{
+    if (m_ClientViewportLayer)
+    {
+        float scaledDelta = deltaFixedTime * m_ClientViewportLayer->GetTimeScale();
+        m_ClientViewportLayer->OnFixedUpdate(scaledDelta);
+    }
+}
+```
+`OnFixedUpdate` manually scales the delta by the client layer's time scale. `OnUpdate` (lines 87–91) calls `m_ClientViewportLayer->OnUpdate(ts)` without any time scale application — the `ts` it passes was already scaled by `Application`'s global time scale, but not by the plugin layer's own time scale. If a plugin layer sets its own time scale (a feature the `Layer` base class appears to support via `GetTimeScale()`), variable updates will ignore it while fixed updates respect it. Either apply the same scaling in `OnUpdate` or document that only fixed-update time scaling is supported at the workspace level.
 
 ---
 
 ## 49. Serial Communication Review
 
-- `SerialPort` — background thread lifecycle, buffer mutex usage, `FlushBuffer` atomicity
-- OVERLAPPED I/O — error handling, port enumeration correctness
-- Cleanup on abnormal disconnect
+**Files reviewed:** `serial/SerialPort.h`, `serial/SerialPort.cpp`
+
+---
+
+### What it does well
+
+**Background read thread is cleanly joined in `Close()`** — `SerialPort.cpp` lines 109–117: `m_Connected` is set to `false` before `join()`. The `ReadLoop` checks `m_Connected` in its `while` condition, so it will exit on the next loop iteration after the flag drops. Only after the join completes is the `HANDLE` closed. This ordering is correct: closing the handle while the read thread is inside `ReadFile` is undefined behavior on Windows; joining first ensures `ReadFile` has returned.
+
+**`FlushBuffer` swaps atomically under the lock** — Lines 92–98 lock the mutex, copy the buffer to a local, clear the source, and return the local. This is the correct pattern for a produce/consume handoff: the lock duration is bounded (no I/O or processing inside it), and the caller receives a consistent snapshot. Using `std::move` instead of copy would make it marginally more efficient:
+```cpp
+std::string temp = std::move(m_DataBuffer);
+m_DataBuffer.clear(); // now redundant — move leaves empty string
+return temp;
+```
+
+**`GetAvailablePorts` parses the correct registry key** — `HARDWARE\DEVICEMAP\SERIALCOMM` is the authoritative Windows location for currently active COM ports registered by device drivers. The enumeration loop correctly increments `index` only on `ERROR_SUCCESS`, so enumeration terminates cleanly on `ERROR_NO_MORE_ITEMS` or any other error.
+
+**`Open` closes an existing connection before re-opening** — Line 25: `if (m_Connected) Close()` ensures there is no leaked handle or zombie read thread if `Open` is called on an already-open port.
+
+---
+
+### Architecture notes
+
+`SerialPort` is a thin synchronous-write, async-read abstraction: writes (not yet exposed in the API) would be synchronous; reads are polled on a background thread. For sensor data arriving at 115200 baud (typical Arduino rate), the 50 ms timeout (`ReadIntervalTimeout = 50`) means the read thread wakes at most every 50 ms with data, consuming negligible CPU. The `FlushBuffer` pattern is appropriate for a game-engine integration where the main thread polls serial data at frame rate.
+
+The class is Windows-only by design (`// WINDOWS ONLY RIGHT NOW`). Porting would require abstracting the `HANDLE`, `DCB`, `COMMTIMEOUTS`, and `ReadFile` APIs. The current design is clean enough that the platform-specific code is well-isolated in the `.cpp` file.
+
+---
+
+### Issues to address
+
+**`m_Handle` is typed as `void*` and initialized to `INVALID_HANDLE_VALUE` — type mismatch**
+
+`SerialPort.h` line 102: `void* m_Handle`. `SerialPort.cpp` line 7: `SerialPort::SerialPort() : m_Handle(INVALID_HANDLE_VALUE)`. On Windows, `HANDLE` is `void*`, so this compiles. But `INVALID_HANDLE_VALUE` is `(HANDLE)(LONG_PTR)-1`, which is `-1` cast to a pointer — `0xFFFFFFFFFFFFFFFF` on 64-bit. Storing it as `void*` means `m_Handle == INVALID_HANDLE_VALUE` comparisons work by coincidence. The member should be typed as `HANDLE` (with the appropriate `#ifdef _WIN32` guard) for correctness and intent clarity, matching the `JobSystem` precedent.
+
+---
+
+**`ReadLoop` does not handle `ReadFile` error cases — an I/O error silently stops reading without setting `m_Connected = false`**
+
+`SerialPort.cpp` lines 72–79:
+```cpp
+if (ReadFile(m_Handle, szBuff, sizeof(szBuff) - 1, &dwBytesRead, NULL) && dwBytesRead > 0)
+{
+    // ... append to buffer
+}
+```
+If `ReadFile` returns `FALSE` (e.g., device disconnected, I/O error), the condition fails silently. The thread continues looping, calling `ReadFile` again on the now-invalid handle, burning CPU and generating log noise. The correct behavior is to detect the error and signal disconnection:
+```cpp
+BOOL ok = ReadFile(m_Handle, szBuff, sizeof(szBuff) - 1, &dwBytesRead, NULL);
+if (!ok)
+{
+    DWORD err = GetLastError();
+    if (err != ERROR_TIMEOUT)
+    {
+        CS_CORE_WARN("SerialPort: ReadFile error {0} — device disconnected.", err);
+        m_Connected = false;  // exits the while loop
+        break;
+    }
+}
+```
+
+---
+
+**`ReadLoop` prints to `printf` / `stdout` instead of the engine log**
+
+`SerialPort.cpp` lines 64–65 and 82:
+```cpp
+printf("[SERIAL THREAD] Started with ID: %lu on Core: %d\n", winThreadId, core);
+// ...
+printf("[SERIAL THREAD] Shutting down.\n");
+```
+These are debug prints that bypass the spdlog logger. They will appear on stdout even in release builds (no `CS_CORE_DEBUG` or `#ifdef DEBUG` guard), and they will not appear in any log file the application captures. Replace with `CS_CORE_INFO` / `CS_CORE_TRACE`.
+
+---
+
+**`GetAvailablePorts` casts `valueData` through `char*` without null-termination guarantee**
+
+`SerialPort.cpp` line 148:
+```cpp
+ports.push_back(std::string((char*)valueData));
+```
+`RegEnumValueA` fills `valueData` with a `REG_SZ` string. The data *should* be null-terminated because Windows always null-terminates `REG_SZ` values, and `dataSize` includes the null. However, constructing `std::string` from a bare `char*` pointer walks memory until it finds a `\0`. If a driver stores a malformed registry entry without a null terminator (possible in corrupted registries), this reads beyond the `valueData[256]` buffer. The safe form uses the known data size:
+```cpp
+ports.push_back(std::string((char*)valueData, strnlen((char*)valueData, dataSize)));
+```
+
+---
+
+**No write API is exposed despite the port being opened with `GENERIC_READ | GENERIC_WRITE`**
+
+`SerialPort.cpp` line 28: `CreateFileA(..., GENERIC_READ | GENERIC_WRITE, ...)`. The port is opened read-write, but the public API has only `FlushBuffer()` (read) and no `Write(const std::string&)` method. The `GENERIC_WRITE` access is either forward-looking (a planned feature) or forgotten. If write support is not planned, opening with `GENERIC_READ` only reduces the required privilege and prevents accidental writes. If it is planned, it should be documented as pending in the header.
+
+---
+
+**`SerialPort` destructor calls `Close()`, but if the read thread is blocked in `ReadFile` with a long timeout, destruction stalls the caller**
+
+`SerialPort.cpp` line 9: `SerialPort::~SerialPort() { Close(); }`. `Close` sets `m_Connected = false` and then joins the read thread. If the read thread is mid-blocking `ReadFile` with the configured 50 ms timeout, the join blocks for up to 50 ms. If `SerialPort` is destroyed from a hot-reload or layer-detach path, this stall occurs on the main thread, causing a visible frame hitch. The fix is to cancel the pending I/O before joining by using `CancelIoEx(m_Handle, nullptr)` prior to the join:
+```cpp
+m_Connected = false;
+if (m_Handle != INVALID_HANDLE_VALUE)
+    CancelIoEx(m_Handle, nullptr); // unblocks pending ReadFile immediately
+if (m_ReadThread.joinable()) m_ReadThread.join();
+```
 
 ---
 
 ## 50. Build System & Project Generation Review
 
-- CMake structure — `Projects/` auto-scan, SDK path resolution
-- Launcher project generator — rename correctness, generated `CMakeLists.txt` validity
-- Template project — correctness of the `ExampleProject` as a starting baseline
+**Files reviewed:** root `CMakeLists.txt`, `build_all.bat`, `setup.bat`, `layers/LauncherLayer.cpp` (project generation code)
+
+---
+
+### What it does well
+
+**Auto-project scanner uses a safe `IS_DIRECTORY` + `EXISTS CMakeLists.txt` guard** — `CMakeLists.txt` lines 41–49: `file(GLOB PROJECT_SUBDIRS ...)` lists subdirectory names, then each candidate is checked for `IS_DIRECTORY` and the presence of a `CMakeLists.txt` before calling `add_subdirectory`. This prevents the scanner from chocking on stale files, empty directories, or non-CMake projects placed in the `Projects/` folder.
+
+**`COSMIC_BUILD_ENGINE_ONLY` option allows CI to skip project scanning** — The `OFF`-by-default option lets a build server or SDK packager build only the engine and runtime without needing any project subdirectories present.
+
+**`CMAKE_BUILD_TYPE` fallback to Debug for single-config generators** — Lines 27–29 default `CMAKE_BUILD_TYPE` to `Debug` when it is not set and no multi-config generator is detected. Without this, Ninja and Makefile generators would produce a configuration-less build that omits all `$<CONFIG>` generator expressions.
+
+**`build_all.bat` uses `vswhere.exe` for MSVC discovery** — Lines 10–12 use the official Visual Studio installer tool to find the MSVC path, rather than hardcoding it. The `if defined VS_PATH` guard falls through gracefully to `system default CMake generator` if Visual Studio is not installed (e.g., on a Clang-only machine).
+
+**`setup.bat` uses `%~dp0` for the self-referential path** — `%~dp0` is the drive and directory of the batch file itself, not the CWD. This means `setup.bat` correctly sets `COSMIC_SDK` to the repo root even if run from a different directory.
+
+---
+
+### Architecture notes
+
+The build topology is: root `CMakeLists.txt` → `add_subdirectory(Cosmic)` (engine DLL) + `add_subdirectory(Runtime)` (launcher exe) + auto-scanned `Projects/*` (plugin DLLs). Each project in `Projects/` is an independent CMake subproject that links against `Cosmic.dll`. This is the correct structure for a plugin-based engine: projects don't need to be in the root CMake; they are discovered dynamically.
+
+The `GenerateProjectTemplate` code in `LauncherLayer.cpp` is functionally a second build system (template instantiation, token replacement, directory creation, `build.bat` launch). This logic is inside a UI layer rather than a standalone tool, which makes it harder to test in isolation and harder to extend without touching the engine binary.
+
+---
+
+### Issues to address
+
+**`build_all.bat` deletes and recreates the `build/` directory unconditionally — breaks incremental builds**
+
+`build_all.bat` lines 23–24:
+```batch
+if exist build rmdir /s /q build
+mkdir build
+```
+Every invocation of `build_all.bat` deletes the entire CMake cache and all build artifacts, forcing a full reconfiguration and full rebuild. For CI this is correct ("clean build"), but developers who run `build_all.bat` for a quick recompile lose all incremental build state (object files, cached CMake decisions). Provide a separate `build_incremental.bat` that skips the `rmdir` step, or add a `--clean` flag and default to incremental.
+
+---
+
+**`build_all.bat` hard-codes `--config Debug` — release builds require manual editing**
+
+`build_all.bat` line 31:
+```batch
+cmake --build . --config Debug --parallel
+```
+There is no way to build a Release configuration from this script without editing it. Standard practice is to accept a command-line argument:
+```batch
+set BUILD_CONFIG=%1
+if "%BUILD_CONFIG%"=="" set BUILD_CONFIG=Debug
+cmake --build . --config %BUILD_CONFIG% --parallel
+```
+
+---
+
+**`CMakeLists.txt` does not set `CMAKE_RUNTIME_OUTPUT_DIRECTORY` — DLL placement depends on generator defaults**
+
+The root `CMakeLists.txt` has no `CMAKE_RUNTIME_OUTPUT_DIRECTORY` or `CMAKE_LIBRARY_OUTPUT_DIRECTORY` settings. This means `Cosmic.dll` and project plugin DLLs land in generator-specific subdirectories (`build/Cosmic/Debug/`, `build/Projects/MyProject/Debug/`, etc.). The launcher's `ScanForProjects()` uses `FindFirstFileA("*.dll", ...)` in the CWD, which is wherever `CosmicApp.exe` runs from. If the DLLs are in subdirectories rather than the same directory as the exe, the scanner finds nothing. Add:
+```cmake
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Runtime/$<CONFIG>")
+```
+to ensure all DLLs land in the same directory as the launcher executable.
+
+---
+
+**`GenerateProjectTemplate` SDK path resolution is fragile — walks up by folder name, not by sentinel file**
+
+`LauncherLayer.cpp` lines 560–563:
+```cpp
+for (const char* name : { "Debug", "Release", "Runtime", "build" })
+{
+    if (sdkDir.filename() == name) sdkDir = sdkDir.parent_path();
+}
+```
+This walks up the directory tree as long as the current leaf name matches one of four hardcoded strings. If the user builds into a directory named `Debug` somewhere outside the engine tree, or names their SDK directory `build`, the walk will ascend past the actual SDK root. A more robust sentinel is to check for the presence of a known SDK file (e.g., `Cosmic/CMakeLists.txt` or `setup.bat`) at each candidate level:
+```cpp
+while (!fs::exists(sdkDir / "setup.bat") && sdkDir.has_parent_path())
+    sdkDir = sdkDir.parent_path();
+```
+
+---
+
+**`GenerateProjectTemplate` only replaces the first occurrence of `TemplateProject` in a relative path — multi-segment paths with the token in a non-leaf segment are skipped**
+
+`LauncherLayer.cpp` lines 593–598:
+```cpp
+size_t fileTokenPos = relativeStr.find("TemplateProject");
+if (fileTokenPos != std::string::npos)
+{
+    relativeStr.replace(fileTokenPos, std::string("TemplateProject").length(), projName);
+}
+```
+`std::string::replace` on a single `find` result replaces only the first occurrence. If a template has a path like `TemplateProject/src/TemplateProject.cpp` and the project is named `MyGame`, the result is `MyGame/src/TemplateProject.cpp` — the second token in the filename is missed. Use the same `replaceAll` lambda that is already defined at the top of the file to replace all occurrences:
+```cpp
+replaceAll(relativeStr, "TemplateProject", projName);
+```
+
+---
+
+**`build_all.bat` does not set the CMake generator explicitly — falls back to VS default (x86 on some machines)**
+
+`build_all.bat` line 29:
+```batch
+cmake .. -DCOSMIC_BUILD_ENGINE_ONLY=OFF
+```
+The comment says `"-A x64"` was removed to allow non-MSVC generators, but this means a Visual Studio user on a machine where the VS default generator targets x86 will silently build a 32-bit engine. The engine uses Win32 APIs (`GetSystemInfo`, `glfwGetWin32Window`) that behave differently in 32-bit and are unlikely to have been tested there. The correct fix is to keep the architecture flag for the VS generator path and omit it only for non-VS generators:
+```batch
+if defined VS_PATH (
+    cmake .. -A x64 -DCOSMIC_BUILD_ENGINE_ONLY=OFF
+) else (
+    cmake .. -DCOSMIC_BUILD_ENGINE_ONLY=OFF
+)
+```
