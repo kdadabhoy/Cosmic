@@ -6,8 +6,6 @@
 
 ## Table of Contents
 
-### Part 1: Client Developer Guide
-
 1. [Getting Started](#1-getting-started)
 2. [Memory Management](#2-memory-management)
 3. [Application Lifecycle](#3-application-lifecycle)
@@ -33,23 +31,6 @@
 23. [Scene System](#23-scene-system)
 24. [Window System](#24-window-system)
 25. [Complete API Reference Tables](#25-complete-api-reference-tables)
-
----
-
-### Part 2: Engine Internals
-
-26. [Source File Map](#26-source-file-map)
-27. [Hot-Reloadable DLL Architecture](#27-hot-reloadable-dll-architecture)
-28. [Top-Down Time Propagation Waterfall](#28-top-down-time-propagation-waterfall)
-29. [The Double-Tick Trap](#29-the-double-tick-trap)
-30. [The OpenGL Graphics Pipeline](#30-the-opengl-graphics-pipeline)
-31. [Hardware Abstraction Architecture](#31-hardware-abstraction-architecture)
-32. [Batch Rendering Deep Dive](#32-batch-rendering-deep-dive)
-33. [Shader Preprocessing System](#33-shader-preprocessing-system)
-34. [RenderPass Stack — Implementation Details](#34-renderpass-stack--implementation-details)
-35. [Parallel Pipeline Architecture](#35-parallel-pipeline-architecture)
-36. [Build System](#36-build-system)
-37. [Event System — Implementation Details](#37-event-system--implementation-details)
 
 ---
 
@@ -79,11 +60,11 @@ You only need to do this once per machine. If you skip it, CMake will not be abl
 
 After setup, you have two main build scripts:
 
-| Script                | When to use                                                                                                                         |
-| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `build_all.bat`       | Full CMake reconfigure + compile of the engine and all projects. Use after cloning or adding a new project.                         |
+| Script | When to use |
+|---|---|
+| `build_all.bat` | Full CMake reconfigure + compile of the engine and all projects. Use after cloning or adding a new project. |
 | `build_all_quick.bat` | Incremental build — skips CMake reconfigure. Use for iterating on your project code when you haven't changed the project structure. |
-| `build_engine.bat`    | Builds the engine host only, skipping all project DLLs. Useful when validating engine changes in isolation.                         |
+| `build_engine.bat` | Builds the engine host only, skipping all project DLLs. Useful when validating engine changes in isolation. |
 
 Outputs land in `build/Runtime/Debug/`. The engine executable and all project DLLs are placed here so the launcher can discover them.
 
@@ -131,7 +112,6 @@ For this reason, the DLL boundary is crossed at exactly two points:
 The engine takes ownership of the `Layer*` returned by `CreatePluginLayer()`. It stores it, calls its hooks, and `delete`s it when the DLL is unloaded — in the correct order, before `FreeLibrary` is called so the destructor runs while DLL code is still mapped.
 
 **You must never:**
-
 - Push child layers onto `Application`'s `LayerStack` from inside your DLL. The engine would take ownership of a DLL-allocated object and `delete` it after `FreeLibrary` — executing the destructor against unmapped memory and crashing.
 - `delete` any layer pointer yourself. The engine owns and destroys everything returned from `CreatePluginLayer()`.
 - Call `app.PushLayer()` / `app.PushOverlay()` with child layers you intend to drive manually.
@@ -229,11 +209,11 @@ Build with `build.bat` (inside your project directory), then launch the engine. 
 
 The workspace shell (`WorkspaceLayer`) reserves three **pre-docked slots** in the Project Inspector sidebar. Name your panels to match these exact strings and they will automatically appear in the correct position without any extra docking configuration:
 
-| Window name                  | Position                        | Best used for                                              |
-| ---------------------------- | ------------------------------- | ---------------------------------------------------------- |
-| `"Project Inspector Top"`    | Top section of the left sidebar | Mode selector, global controls (time scale, primary state) |
-| `"Project Inspector"`        | Middle section                  | Per-mode parameters, object properties                     |
-| `"Project Inspector Bottom"` | Bottom section                  | Stats, telemetry, debug toggles                            |
+| Window name | Position | Best used for |
+|---|---|---|
+| `"Project Inspector Top"` | Top section of the left sidebar | Mode selector, global controls (time scale, primary state) |
+| `"Project Inspector"` | Middle section | Per-mode parameters, object properties |
+| `"Project Inspector Bottom"` | Bottom section | Stats, telemetry, debug toggles |
 
 ```cpp
 // Root manager — mode selector and global controls
@@ -262,10 +242,10 @@ To request additional pre-docked panels beyond the three standard slots, call `W
 
 Cosmic wraps standard C++ smart pointers into two named aliases to enforce explicit ownership rules.
 
-| Alias      | Underlying Type      | Rule                                                                                                        |
-| ---------- | -------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `Scope<T>` | `std::unique_ptr<T>` | **Single owner.** One system holds and destroys this. Use for windows, layers, dedicated sub-modules.       |
-| `Ref<T>`   | `std::shared_ptr<T>` | **Shared owner.** Destroyed when the last holder releases it. Use for textures, shaders, materials, scenes. |
+| Alias        | Underlying Type        | Rule                                                                                                    |
+| ------------ | ---------------------- | ------------------------------------------------------------------------------------------------------- |
+| `Scope<T>`   | `std::unique_ptr<T>`   | **Single owner.** One system holds and destroys this. Use for windows, layers, dedicated sub-modules.   |
+| `Ref<T>`     | `std::shared_ptr<T>`   | **Shared owner.** Destroyed when the last holder releases it. Use for textures, shaders, materials, scenes. |
 
 Always use the factory helpers — never construct a smart pointer directly from `new`:
 
@@ -576,17 +556,17 @@ bool MyLayer::OnKeyPressed(Cosmic::KeyPressedEvent& e)
 
 ### Event Type Quick Reference
 
-| Event Class                | Useful Accessors                   | Notes                                     |
-| -------------------------- | ---------------------------------- | ----------------------------------------- |
-| `KeyPressedEvent`          | `GetKeyCode()`, `GetRepeatCount()` | `RepeatCount > 0` = key held              |
-| `KeyReleasedEvent`         | `GetKeyCode()`                     | Fired once on key release                 |
-| `KeyTypedEvent`            | `GetKeyCode()`                     | Character input for text fields           |
-| `MouseButtonPressedEvent`  | `GetMouseButton()`                 | Use `CS_MOUSE_BUTTON_LEFT/RIGHT/MIDDLE`   |
-| `MouseButtonReleasedEvent` | `GetMouseButton()`                 |                                           |
-| `MouseMovedEvent`          | `GetX()`, `GetY()`                 | Screen-space coordinates, top-left origin |
-| `MouseScrolledEvent`       | `GetXOffset()`, `GetYOffset()`     | Y is typically ±1.0 per scroll tick       |
-| `WindowResizeEvent`        | `GetWidth()`, `GetHeight()`        | Pixel dimensions of the new window size   |
-| `WindowCloseEvent`         | —                                  | Consumed by `Application` before layers   |
+| Event Class                | Useful Accessors                   | Notes                                      |
+| -------------------------- | ---------------------------------- | ------------------------------------------ |
+| `KeyPressedEvent`          | `GetKeyCode()`, `GetRepeatCount()` | `RepeatCount > 0` = key held               |
+| `KeyReleasedEvent`         | `GetKeyCode()`                     | Fired once on key release                  |
+| `KeyTypedEvent`            | `GetKeyCode()`                     | Character input for text fields            |
+| `MouseButtonPressedEvent`  | `GetMouseButton()`                 | Use `CS_MOUSE_BUTTON_LEFT/RIGHT/MIDDLE`    |
+| `MouseButtonReleasedEvent` | `GetMouseButton()`                 |                                            |
+| `MouseMovedEvent`          | `GetX()`, `GetY()`                 | Screen-space coordinates, top-left origin  |
+| `MouseScrolledEvent`       | `GetXOffset()`, `GetYOffset()`     | Y is typically ±1.0 per scroll tick        |
+| `WindowResizeEvent`        | `GetWidth()`, `GetHeight()`        | Pixel dimensions of the new window size    |
+| `WindowCloseEvent`         | —                                  | Consumed by `Application` before layers    |
 
 ### Category Filtering
 
@@ -602,13 +582,13 @@ void MyLayer::OnEvent(Cosmic::Event& e)
 }
 ```
 
-| Category Constant          | Covers                          |
-| -------------------------- | ------------------------------- |
-| `EventCategoryApplication` | Window resize, close, tick      |
-| `EventCategoryInput`       | All keyboard + all mouse        |
-| `EventCategoryKeyboard`    | Key press, release, typed       |
-| `EventCategoryMouse`       | Mouse move, scroll, button      |
-| `EventCategoryMouseButton` | Mouse button press/release only |
+| Category Constant          | Covers                            |
+| -------------------------- | --------------------------------- |
+| `EventCategoryApplication` | Window resize, close, tick        |
+| `EventCategoryInput`       | All keyboard + all mouse          |
+| `EventCategoryKeyboard`    | Key press, release, typed         |
+| `EventCategoryMouse`       | Mouse move, scroll, button        |
+| `EventCategoryMouseButton` | Mouse button press/release only   |
 
 ---
 
@@ -639,32 +619,32 @@ void MyLayer::OnUpdate(float ts)
 
 ### When to Use Input vs. Events
 
-| Use `Input::`                             | Use `OnEvent`                                   |
-| ----------------------------------------- | ----------------------------------------------- |
-| Continuous hold checks (movement, camera) | Single-press reactions (menu toggle, fire once) |
-| Per-frame polling loops                   | State change notifications                      |
-| "Is this key held right now?"             | "Did the user just press Escape?"               |
+| Use `Input::`                               | Use `OnEvent`                                     |
+| ------------------------------------------- | ------------------------------------------------- |
+| Continuous hold checks (movement, camera)   | Single-press reactions (menu toggle, fire once)   |
+| Per-frame polling loops                     | State change notifications                        |
+| "Is this key held right now?"               | "Did the user just press Escape?"                 |
 
 ### Key Code Constants
 
-| Constant                 | Value   | Constant                | Value   |
-| ------------------------ | ------- | ----------------------- | ------- |
-| `CS_KEY_SPACE`           | 32      | `CS_KEY_ESCAPE`         | 256     |
-| `CS_KEY_A`–`CS_KEY_Z`    | 65–90   | `CS_KEY_ENTER`          | 257     |
-| `CS_KEY_0`–`CS_KEY_9`    | 48–57   | `CS_KEY_TAB`            | 258     |
-| `CS_KEY_RIGHT`           | 262     | `CS_KEY_BACKSPACE`      | 259     |
-| `CS_KEY_LEFT`            | 263     | `CS_KEY_LEFT_SHIFT`     | 340     |
-| `CS_KEY_DOWN`            | 264     | `CS_KEY_LEFT_CONTROL`   | 341     |
-| `CS_KEY_UP`              | 265     | `CS_KEY_LEFT_ALT`       | 342     |
+| Constant              | Value  | Constant                 | Value   |
+| --------------------- | ------ | ------------------------ | ------- |
+| `CS_KEY_SPACE`        | 32     | `CS_KEY_ESCAPE`          | 256     |
+| `CS_KEY_A`–`CS_KEY_Z` | 65–90  | `CS_KEY_ENTER`           | 257     |
+| `CS_KEY_0`–`CS_KEY_9` | 48–57  | `CS_KEY_TAB`             | 258     |
+| `CS_KEY_RIGHT`        | 262    | `CS_KEY_BACKSPACE`       | 259     |
+| `CS_KEY_LEFT`         | 263    | `CS_KEY_LEFT_SHIFT`      | 340     |
+| `CS_KEY_DOWN`         | 264    | `CS_KEY_LEFT_CONTROL`    | 341     |
+| `CS_KEY_UP`           | 265    | `CS_KEY_LEFT_ALT`        | 342     |
 | `CS_KEY_F1`–`CS_KEY_F12` | 290–301 | `CS_KEY_Q` / `CS_KEY_E` | 81 / 69 |
 
 ### Mouse Button Constants
 
-| Constant                 | Alias               | Button              |
-| ------------------------ | ------------------- | ------------------- |
-| `CS_MOUSE_BUTTON_LEFT`   | `CS_MOUSE_BUTTON_1` | Primary action      |
-| `CS_MOUSE_BUTTON_RIGHT`  | `CS_MOUSE_BUTTON_2` | Secondary / context |
-| `CS_MOUSE_BUTTON_MIDDLE` | `CS_MOUSE_BUTTON_3` | Pan / zoom          |
+| Constant                 | Alias               | Button               |
+| ------------------------ | ------------------- | -------------------- |
+| `CS_MOUSE_BUTTON_LEFT`   | `CS_MOUSE_BUTTON_1` | Primary action       |
+| `CS_MOUSE_BUTTON_RIGHT`  | `CS_MOUSE_BUTTON_2` | Secondary / context  |
+| `CS_MOUSE_BUTTON_MIDDLE` | `CS_MOUSE_BUTTON_3` | Pan / zoom           |
 
 ---
 
@@ -717,15 +697,15 @@ Because `GetLocalTime()` is pre-scaled by both the global `TimeScale` and this l
 
 ### Fixed vs. Variable Timestep — Dual-Rate Simulation Matrix
 
-| Aspect              | `OnUpdate(float ts)`                         | `OnFixedUpdate(float dt)`                       |
-| ------------------- | -------------------------------------------- | ----------------------------------------------- |
-| **Purpose**         | Visual updates, animation, camera            | Physics, collision, deterministic simulation    |
-| **Rate**            | Variable — depends on monitor refresh rate   | Fixed at 60 Hz regardless of frame rate         |
-| **Input**           | Scaled variable delta-time in seconds        | Constant 1/60s interval (also globally scaled)  |
-| **Rendering calls** | Yes — call `BeginScene`/`EndScene` here      | No — never issue draw calls here                |
-| **Shader uniforms** | Yes — update `u_Time`, `u_Color` etc. here   | No — GPU state should not be touched here       |
-| **Anti-pattern**    | Running collision math that breaks at 144Hz  | Running sprite rotation or lerp animations      |
-| **Timeline guards** | `ts` is pre-scaled, no manual multiplication | Check `dt <= 0.0f` to guard pause/rewind states |
+| Aspect              | `OnUpdate(float ts)`                          | `OnFixedUpdate(float dt)`                        |
+| ------------------- | --------------------------------------------- | ------------------------------------------------ |
+| **Purpose**         | Visual updates, animation, camera             | Physics, collision, deterministic simulation     |
+| **Rate**            | Variable — depends on monitor refresh rate    | Fixed at 60 Hz regardless of frame rate          |
+| **Input**           | Scaled variable delta-time in seconds         | Constant 1/60s interval (also globally scaled)   |
+| **Rendering calls** | Yes — call `BeginScene`/`EndScene` here       | No — never issue draw calls here                 |
+| **Shader uniforms** | Yes — update `u_Time`, `u_Color` etc. here    | No — GPU state should not be touched here        |
+| **Anti-pattern**    | Running collision math that breaks at 144Hz   | Running sprite rotation or lerp animations       |
+| **Timeline guards** | `ts` is pre-scaled, no manual multiplication  | Check `dt <= 0.0f` to guard pause/rewind states  |
 
 ### Timeline Guards in Fixed Update
 
@@ -973,11 +953,11 @@ If the file has no `#type` tags and no Shadertoy signatures, the preprocessor lo
 
 Three engine uniforms are candidates for injection, evaluated per-stage. Injection only fires when a uniform is referenced in a stage's source but not already declared in it:
 
-| Uniform            | Type    | Trigger Keywords                                                | Stage       |
-| ------------------ | ------- | --------------------------------------------------------------- | ----------- |
-| `u_ViewProjection` | `mat4`  | `u_ViewProjection`                                              | Vertex only |
-| `u_Time`           | `float` | `u_Time`, `iTime`, `TIME`, `_Time`                              | Any stage   |
-| `u_ViewportSize`   | `vec2`  | `u_ViewportSize`, `iResolution`, `BUFFER_SIZE`, `_ScreenParams` | Any stage   |
+| Uniform            | Type    | Trigger Keywords                                                | Stage          |
+| ------------------ | ------- | --------------------------------------------------------------- | -------------- |
+| `u_ViewProjection` | `mat4`  | `u_ViewProjection`                                              | Vertex only    |
+| `u_Time`           | `float` | `u_Time`, `iTime`, `TIME`, `_Time`                              | Any stage      |
+| `u_ViewportSize`   | `vec2`  | `u_ViewportSize`, `iResolution`, `BUFFER_SIZE`, `_ScreenParams` | Any stage      |
 
 **To bypass injection entirely:** Declare the uniform explicitly in your source. The preprocessor sees the `uniform` keyword on that line and skips injection. Your source is compiled verbatim after the `#type` split.
 
@@ -1096,12 +1076,12 @@ Cosmic::Renderer2D::DrawRotatedQuad({0.f, 0.f},       {1.f, 1.f}, glm::radians(4
 
 ### SubTexture2D API
 
-| Function / Constructor | Parameters                                                          | Description                                                                        |
-| ---------------------- | ------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| `CreateFromCoords`     | `Ref<Texture2D>, vec2 coords, vec2 cellSize, vec2 spriteSize={1,1}` | Static factory. `coords` is (column, row) in grid units from the bottom-left.      |
-| `SubTexture2D`         | `Ref<Texture2D>, vec2 min, vec2 max`                                | Direct UV-range constructor. `min`/`max` in normalized [0,1] texture space.        |
-| `GetTexture()`         | —                                                                   | Returns `const Ref<Texture2D>&` — the parent atlas.                                |
-| `GetTexCoords()`       | —                                                                   | Returns `const glm::vec2*` — pointer to the 4-element UV corner array (CCW order). |
+| Function / Constructor | Parameters                                                            | Description                                                                      |
+| ---------------------- | --------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `CreateFromCoords`     | `Ref<Texture2D>, vec2 coords, vec2 cellSize, vec2 spriteSize={1,1}`   | Static factory. `coords` is (column, row) in grid units from the bottom-left.    |
+| `SubTexture2D`         | `Ref<Texture2D>, vec2 min, vec2 max`                                  | Direct UV-range constructor. `min`/`max` in normalized [0,1] texture space.      |
+| `GetTexture()`         | —                                                                     | Returns `const Ref<Texture2D>&` — the parent atlas.                              |
+| `GetTexCoords()`       | —                                                                     | Returns `const glm::vec2*` — pointer to the 4-element UV corner array (CCW order). |
 
 **UV corner order** (counter-clockwise, matching stb_image vertical flip):
 
@@ -1144,18 +1124,18 @@ Cosmic::Renderer2D::DrawCircle({0.f, 2.f}, {1.f, 1.f}, {1.f, 1.f, 1.f, 1.f});
 
 ### Thickness and Fade Reference
 
-| `thickness` | Visual result                          |
-| ----------- | -------------------------------------- |
-| `1.0`       | Solid filled disk                      |
-| `0.5`       | Half-thickness ring (50% outer radius) |
-| `0.1`       | Narrow ring                            |
-| `0.01`      | Very thin ring / orbit indicator       |
+| `thickness` | Visual result                           |
+| ----------- | --------------------------------------- |
+| `1.0`       | Solid filled disk                       |
+| `0.5`       | Half-thickness ring (50% outer radius)  |
+| `0.1`       | Narrow ring                             |
+| `0.01`      | Very thin ring / orbit indicator        |
 
-| `fade`  | Visual result                      |
-| ------- | ---------------------------------- |
-| `0.005` | Default — crisp, anti-aliased edge |
-| `0.05`  | Soft glow edge                     |
-| `0.2`   | Very blurry / neon glow effect     |
+| `fade`    | Visual result                              |
+| --------- | ------------------------------------------ |
+| `0.005`   | Default — crisp, anti-aliased edge         |
+| `0.05`    | Soft glow edge                             |
+| `0.2`     | Very blurry / neon glow effect             |
 
 ### Custom Circle Shader
 
@@ -1271,12 +1251,12 @@ m_SideFramebuffer->Unbind();
 
 **Viewport bounds convention for a 1280×720 window split into quadrants:**
 
-| Quadrant     | Bounds `{x, y, w, h}`  |
-| ------------ | ---------------------- |
-| Top-left     | `{0, 360, 640, 360}`   |
-| Top-right    | `{640, 360, 640, 360}` |
-| Bottom-left  | `{0, 0, 640, 360}`     |
-| Bottom-right | `{640, 0, 640, 360}`   |
+| Quadrant     | Bounds `{x, y, w, h}`   |
+| ------------ | ----------------------- |
+| Top-left     | `{0, 360, 640, 360}`    |
+| Top-right    | `{640, 360, 640, 360}`  |
+| Bottom-left  | `{0, 0, 640, 360}`      |
+| Bottom-right | `{640, 0, 640, 360}`    |
 
 ---
 
@@ -1467,11 +1447,11 @@ cam.SetProjection(-aspect, aspect, -1.f, 1.f);
 
 ### Protocol Prefixes
 
-| Prefix       | Resolves to                              | Use for                       |
-| ------------ | ---------------------------------------- | ----------------------------- |
-| `engine://`  | `assets/{path}`                          | Engine-owned shaders, sprites |
-| `project://` | `assets/projects/{activeProject}/{path}` | Your project's own assets     |
-| _(none)_     | Returned unchanged (raw path fallback)   | Absolute or already-resolved  |
+| Prefix        | Resolves to                                                | Use for                        |
+| ------------- | ---------------------------------------------------------- | ------------------------------ |
+| `engine://`   | `assets/{path}`                                            | Engine-owned shaders, sprites  |
+| `project://`  | `assets/projects/{activeProject}/{path}`                  | Your project's own assets      |
+| *(none)*      | Returned unchanged (raw path fallback)                     | Absolute or already-resolved   |
 
 ### Setting the Active Project
 
@@ -1524,7 +1504,7 @@ void YourProject::OnDetach()
 
 ### Why Framebuffers Exist
 
-By default, every OpenGL draw call writes pixels directly to the screen's back buffer — the surface that gets swapped to the monitor at the end of each frame. This is the fastest path for full-screen rendering, but it creates a problem when you want to display your scene _inside_ a UI panel rather than directly on the screen.
+By default, every OpenGL draw call writes pixels directly to the screen's back buffer — the surface that gets swapped to the monitor at the end of each frame. This is the fastest path for full-screen rendering, but it creates a problem when you want to display your scene *inside* a UI panel rather than directly on the screen.
 
 Cosmic's workspace shell renders the entire engine UI (the sidebar, toolbar, and viewport panels) using ImGui, which itself draws into the screen's back buffer. If your scene also draws into the back buffer at the same time, the two sets of draw calls fight over the same pixels with no way to composite them correctly.
 
@@ -1614,13 +1594,13 @@ CS_CRITICAL("Out of GPU memory — aborting.");
 
 All macros accept spdlog-style format strings (equivalent to `{fmt}`). Positional `{0}`, `{1}` syntax and format specifiers like `{:.2f}` (two decimal places) are both supported.
 
-| Macro         | Level    | When to use                                      |
-| ------------- | -------- | ------------------------------------------------ |
-| `CS_TRACE`    | Trace    | High-frequency per-frame diagnostics             |
-| `CS_INFO`     | Info     | Normal lifecycle events (attach, load, connect)  |
-| `CS_WARN`     | Warning  | Recoverable issues (missing file, fallback used) |
-| `CS_ERROR`    | Error    | Non-fatal failures                               |
-| `CS_CRITICAL` | Critical | Unrecoverable failures                           |
+| Macro         | Level       | When to use                                          |
+| ------------- | ----------- | ---------------------------------------------------- |
+| `CS_TRACE`    | Trace       | High-frequency per-frame diagnostics                 |
+| `CS_INFO`     | Info        | Normal lifecycle events (attach, load, connect)      |
+| `CS_WARN`     | Warning     | Recoverable issues (missing file, fallback used)     |
+| `CS_ERROR`    | Error       | Non-fatal failures                                   |
+| `CS_CRITICAL` | Critical    | Unrecoverable failures                               |
 
 The logger is thread-safe and protected by a shared mutex, so it can be called from job worker threads (e.g., inside a `ParallelSystem`).
 
@@ -1893,7 +1873,6 @@ PASS D — Parallel Merge (main thread, single-threaded)
 Fixed-step equivalents (`OnFixedPrepare`, `OnFixedParallelExecute`, `OnFixedMerge`) run through the same pipeline inside the fixed timestep pass.
 
 **Key rules:**
-
 - Inside `OnParallelExecute`: use only the **Async** `ParallelFor` variants. The synchronous variants call `WaitIdle` internally and serialize all systems against each other.
 - Do **not** call `JobSystem::WaitIdle()` yourself from `OnParallelExecute` — the Scene calls it once after all systems have submitted.
 - Do **not** modify the EnTT registry from a worker thread. Read from staged data; write to staged output buffers.
@@ -1989,17 +1968,17 @@ class CollisionSystem : public Cosmic::ParallelSystem
 
 ### SystemQuery API Summary
 
-| Method                    | Available In        | Description                                                     |
-| ------------------------- | ------------------- | --------------------------------------------------------------- |
-| `ForEachAsync(func)`      | OnParallelExecute   | Submit parallel per-element jobs — `func(T& item)`              |
-| `DispatchAsync(func)`     | OnParallelExecute   | Submit parallel range jobs — `func(T* begin, T* end)`           |
-| `ForEach(func)`           | OnPrepare / OnMerge | Sequential iteration — `func(T& item)`                          |
-| `ForEachWithEntity(func)` | OnMerge             | Sequential with entity handle — `func(T& item, entt::entity e)` |
-| `Data()`                  | Any phase           | Raw pointer to the staged array                                 |
-| `Count()`                 | Any phase           | Number of staged elements                                       |
-| `IsEmpty()`               | Any phase           | True if no components of type T exist in the scene              |
-| `operator[](i)`           | Any phase           | Indexed access to a staged element                              |
-| `EntityAt(i)`             | Any phase           | Entity handle for element at index `i`                          |
+| Method                    | Available In    | Description                                                          |
+| ------------------------- | --------------- | -------------------------------------------------------------------- |
+| `ForEachAsync(func)`      | OnParallelExecute | Submit parallel per-element jobs — `func(T& item)`                  |
+| `DispatchAsync(func)`     | OnParallelExecute | Submit parallel range jobs — `func(T* begin, T* end)`               |
+| `ForEach(func)`           | OnPrepare / OnMerge | Sequential iteration — `func(T& item)`                           |
+| `ForEachWithEntity(func)` | OnMerge         | Sequential with entity handle — `func(T& item, entt::entity e)`      |
+| `Data()`                  | Any phase       | Raw pointer to the staged array                                      |
+| `Count()`                 | Any phase       | Number of staged elements                                            |
+| `IsEmpty()`               | Any phase       | True if no components of type T exist in the scene                   |
+| `operator[](i)`           | Any phase       | Indexed access to a staged element                                   |
+| `EntityAt(i)`             | Any phase       | Entity handle for element at index `i`                               |
 
 ---
 
@@ -2154,1200 +2133,209 @@ void YourProject::OnAttach()
 
 ### Renderer2D
 
-| Function               | Parameters                                                                               | Description                                                    |
-| ---------------------- | ---------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
-| `BeginScene`           | `const OrthographicCamera&`                                                              | Start a batch pass; cache VP matrix, reset buffers             |
-| `EndScene`             | —                                                                                        | Flush all batched geometry to GPU                              |
-| `PushRenderPass`       | `const glm::mat4& viewProj, const glm::vec4& viewportBounds`                             | Flush pending geometry; push new VP matrix + viewport          |
-| `PopRenderPass`        | —                                                                                        | Flush; pop current pass; restore prior pass state              |
-| `Flush`                | —                                                                                        | Submit all staged quads, lines, and circles to GPU immediately |
-| `SetViewportSize`      | `uint32_t width, uint32_t height`                                                        | Update `u_ViewportSize` uniform source                         |
-| `DrawQuad`             | `vec2/vec3 pos, vec2 size, vec4 color`                                                   | Flat-color quad; `vec2` inserts z=0                            |
-| `DrawQuad`             | `vec2/vec3 pos, vec2 size, Ref<Texture>, float tiling=1, vec4 tint=white`                | Textured quad                                                  |
-| `DrawQuad`             | `vec2/vec3 pos, vec2 size, Ref<Material>`                                                | Material/shader-driven quad                                    |
-| `DrawQuad`             | `vec2/vec3 pos, vec2 size, Ref<SubTexture2D>, vec4 tint=white`                           | Sprite-atlas tile                                              |
-| `DrawRotatedQuad`      | `vec2/vec3 pos, vec2 size, float rot, vec4 color`                                        | Rotated flat quad (rot in radians)                             |
-| `DrawRotatedQuad`      | `vec2/vec3 pos, vec2 size, float rot, Ref<Texture>, float tiling=1, vec4 tint=white`     | Rotated textured quad                                          |
-| `DrawRotatedQuad`      | `vec3 pos, vec2 size, float rot, Ref<Material>`                                          | Rotated material quad (vec3 only)                              |
-| `DrawRotatedQuad`      | `vec2/vec3 pos, vec2 size, float rot, Ref<SubTexture2D>, vec4 tint=white`                | Rotated sprite-atlas tile                                      |
-| `DrawCircle`           | `vec3 pos, vec2 size, vec4 color, float thickness, float fade, Ref<Shader>=nullptr`      | SDF circle; explicit thickness+fade required for vec3 overload |
-| `DrawCircle`           | `vec2 pos, vec2 size, vec4 color, float thickness=1, float fade=0.005, Ref<Shader>=null` | SDF circle; z=0; thickness+fade have defaults                  |
-| `DrawLine`             | `vec3 p0, vec3 p1, vec4 color`                                                           | Line segment between two world-space points                    |
-| `DrawRect`             | `vec3 pos, vec2 size, vec4 color`                                                        | Wireframe rectangle (4 lines)                                  |
-| `DrawInstancedQuads`   | `const InstanceQuadData* instances, uint32_t count, Ref<Shader>=nullptr`                 | Single GPU instanced draw call for N quads                     |
-| `DrawInstancedCircles` | `const InstanceCircleData* instances, uint32_t count, Ref<Shader>=nullptr`               | Single GPU instanced draw call for N circles                   |
-| `ResetStats`           | —                                                                                        | Clear draw call and geometry counters                          |
-| `GetStats`             | —                                                                                        | Returns `Statistics` struct                                    |
-| `SetStatsStatus`       | `bool enabled`                                                                           | Toggle stats recording                                         |
+| Function                | Parameters                                                                              | Description                                                             |
+| ----------------------- | --------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| `BeginScene`            | `const OrthographicCamera&`                                                             | Start a batch pass; cache VP matrix, reset buffers                      |
+| `EndScene`              | —                                                                                       | Flush all batched geometry to GPU                                       |
+| `PushRenderPass`        | `const glm::mat4& viewProj, const glm::vec4& viewportBounds`                            | Flush pending geometry; push new VP matrix + viewport                   |
+| `PopRenderPass`         | —                                                                                       | Flush; pop current pass; restore prior pass state                       |
+| `Flush`                 | —                                                                                       | Submit all staged quads, lines, and circles to GPU immediately          |
+| `SetViewportSize`       | `uint32_t width, uint32_t height`                                                       | Update `u_ViewportSize` uniform source                                  |
+| `DrawQuad`              | `vec2/vec3 pos, vec2 size, vec4 color`                                                  | Flat-color quad; `vec2` inserts z=0                                     |
+| `DrawQuad`              | `vec2/vec3 pos, vec2 size, Ref<Texture>, float tiling=1, vec4 tint=white`               | Textured quad                                                           |
+| `DrawQuad`              | `vec2/vec3 pos, vec2 size, Ref<Material>`                                               | Material/shader-driven quad                                             |
+| `DrawQuad`              | `vec2/vec3 pos, vec2 size, Ref<SubTexture2D>, vec4 tint=white`                          | Sprite-atlas tile                                                       |
+| `DrawRotatedQuad`       | `vec2/vec3 pos, vec2 size, float rot, vec4 color`                                       | Rotated flat quad (rot in radians)                                      |
+| `DrawRotatedQuad`       | `vec2/vec3 pos, vec2 size, float rot, Ref<Texture>, float tiling=1, vec4 tint=white`    | Rotated textured quad                                                   |
+| `DrawRotatedQuad`       | `vec3 pos, vec2 size, float rot, Ref<Material>`                                         | Rotated material quad (vec3 only)                                       |
+| `DrawRotatedQuad`       | `vec2/vec3 pos, vec2 size, float rot, Ref<SubTexture2D>, vec4 tint=white`               | Rotated sprite-atlas tile                                               |
+| `DrawCircle`            | `vec3 pos, vec2 size, vec4 color, float thickness, float fade, Ref<Shader>=nullptr`     | SDF circle; explicit thickness+fade required for vec3 overload          |
+| `DrawCircle`            | `vec2 pos, vec2 size, vec4 color, float thickness=1, float fade=0.005, Ref<Shader>=null` | SDF circle; z=0; thickness+fade have defaults                          |
+| `DrawLine`              | `vec3 p0, vec3 p1, vec4 color`                                                          | Line segment between two world-space points                             |
+| `DrawRect`              | `vec3 pos, vec2 size, vec4 color`                                                       | Wireframe rectangle (4 lines)                                           |
+| `DrawInstancedQuads`    | `const InstanceQuadData* instances, uint32_t count, Ref<Shader>=nullptr`                | Single GPU instanced draw call for N quads                              |
+| `DrawInstancedCircles`  | `const InstanceCircleData* instances, uint32_t count, Ref<Shader>=nullptr`              | Single GPU instanced draw call for N circles                            |
+| `ResetStats`            | —                                                                                       | Clear draw call and geometry counters                                   |
+| `GetStats`              | —                                                                                       | Returns `Statistics` struct                                             |
+| `SetStatsStatus`        | `bool enabled`                                                                          | Toggle stats recording                                                  |
 
 **`Statistics` struct:**
 
-| Field                   | Type       | Description                         |
-| ----------------------- | ---------- | ----------------------------------- |
-| `DrawCalls`             | `uint32_t` | Number of GPU draw calls this frame |
-| `QuadCount`             | `uint32_t` | Number of batched quads submitted   |
-| `LineCount`             | `uint32_t` | Number of batched lines submitted   |
-| `GetTotalVertexCount()` | `uint32_t` | `QuadCount * 4 + LineCount * 2`     |
-| `GetTotalIndexCount()`  | `uint32_t` | `QuadCount * 6`                     |
+| Field                   | Type       | Description                              |
+| ----------------------- | ---------- | ---------------------------------------- |
+| `DrawCalls`             | `uint32_t` | Number of GPU draw calls this frame      |
+| `QuadCount`             | `uint32_t` | Number of batched quads submitted        |
+| `LineCount`             | `uint32_t` | Number of batched lines submitted        |
+| `GetTotalVertexCount()` | `uint32_t` | `QuadCount * 4 + LineCount * 2`          |
+| `GetTotalIndexCount()`  | `uint32_t` | `QuadCount * 6`                          |
 
 ---
 
 ### Material
 
-| Function           | Parameters                   | Description                                                 |
-| ------------------ | ---------------------------- | ----------------------------------------------------------- |
-| `Material::Create` | `Ref<Shader>, string name`   | Factory — creates a new material                            |
-| `Clone`            | `Ref<Material>, string name` | Deep-copy all uniform caches; shares the same `Ref<Shader>` |
-| `Set`              | `string name, float`         | Set a scalar float uniform                                  |
-| `Set`              | `string name, vec2`          | Set a 2-component vector uniform                            |
-| `Set`              | `string name, vec3`          | Set a 3-component vector uniform                            |
-| `Set`              | `string name, vec4`          | Set a 4-component vector uniform                            |
-| `Set`              | `string name, Ref<Texture>`  | Bind a texture to a named slot                              |
-| `GetFloat`         | `string name`                | Retrieve cached float (0.0 if missing)                      |
-| `GetVector2`       | `string name`                | Retrieve cached vec2 (zero if missing)                      |
-| `GetVector3`       | `string name`                | Retrieve cached vec3 (zero if missing)                      |
-| `GetVector4`       | `string name`                | Retrieve cached vec4 (white if missing)                     |
-| `GetVector`        | `string name`                | Legacy alias for `GetVector4`; returns `glm::vec4`          |
-| `GetTexture`       | `string name`                | Retrieve cached texture (`nullptr` if missing)              |
-| `Bind`             | —                            | Bind shader and upload all cached uniforms                  |
-| `GetShader`        | —                            | Returns the underlying `Ref<Shader>`                        |
-| `GetName`          | —                            | Returns the material's debug name string                    |
-| `HasFloat`         | `string name`                | True if the float uniform is set                            |
-| `HasFloat2`        | `string name`                | True if the vec2 uniform is set                             |
+| Function           | Parameters                    | Description                                                      |
+| ------------------ | ----------------------------- | ---------------------------------------------------------------- |
+| `Material::Create` | `Ref<Shader>, string name`    | Factory — creates a new material                                 |
+| `Clone`            | `Ref<Material>, string name`  | Deep-copy all uniform caches; shares the same `Ref<Shader>`      |
+| `Set`              | `string name, float`          | Set a scalar float uniform                                       |
+| `Set`              | `string name, vec2`           | Set a 2-component vector uniform                                 |
+| `Set`              | `string name, vec3`           | Set a 3-component vector uniform                                 |
+| `Set`              | `string name, vec4`           | Set a 4-component vector uniform                                 |
+| `Set`              | `string name, Ref<Texture>`   | Bind a texture to a named slot                                   |
+| `GetFloat`         | `string name`                 | Retrieve cached float (0.0 if missing)                           |
+| `GetVector2`       | `string name`                 | Retrieve cached vec2 (zero if missing)                           |
+| `GetVector3`       | `string name`                 | Retrieve cached vec3 (zero if missing)                           |
+| `GetVector4`       | `string name`                 | Retrieve cached vec4 (white if missing)                          |
+| `GetVector`        | `string name`                 | Legacy alias for `GetVector4`; returns `glm::vec4`               |
+| `GetTexture`       | `string name`                 | Retrieve cached texture (`nullptr` if missing)                   |
+| `Bind`             | —                             | Bind shader and upload all cached uniforms                       |
+| `GetShader`        | —                             | Returns the underlying `Ref<Shader>`                             |
+| `GetName`          | —                             | Returns the material's debug name string                         |
+| `HasFloat`         | `string name`                 | True if the float uniform is set                                 |
+| `HasFloat2`        | `string name`                 | True if the vec2 uniform is set                                  |
 
 ---
 
 ### Shader
 
-| Function         | Parameters                     | Description                          |
-| ---------------- | ------------------------------ | ------------------------------------ |
-| `Shader::Create` | `string filepath`              | Load and compile from a `.glsl` file |
-| `Bind`           | —                              | Activate in the GPU pipeline         |
-| `Unbind`         | —                              | Deactivate                           |
-| `SetInt`         | `string, int`                  | Upload integer uniform               |
-| `SetIntArray`    | `string, int*, uint32_t count` | Upload integer array uniform         |
-| `SetFloat`       | `string, float`                | Upload float uniform                 |
-| `SetFloat2`      | `string, vec2`                 | Upload 2-component float uniform     |
-| `SetFloat3`      | `string, vec3`                 | Upload 3-component float uniform     |
-| `SetFloat4`      | `string, vec4`                 | Upload 4-component float uniform     |
-| `SetMat3`        | `string, mat3`                 | Upload 3×3 matrix uniform            |
-| `SetMat4`        | `string, mat4`                 | Upload 4×4 matrix uniform            |
+| Function         | Parameters                       | Description                              |
+| ---------------- | -------------------------------- | ---------------------------------------- |
+| `Shader::Create` | `string filepath`                | Load and compile from a `.glsl` file     |
+| `Bind`           | —                                | Activate in the GPU pipeline             |
+| `Unbind`         | —                                | Deactivate                               |
+| `SetInt`         | `string, int`                    | Upload integer uniform                   |
+| `SetIntArray`    | `string, int*, uint32_t count`   | Upload integer array uniform             |
+| `SetFloat`       | `string, float`                  | Upload float uniform                     |
+| `SetFloat2`      | `string, vec2`                   | Upload 2-component float uniform         |
+| `SetFloat3`      | `string, vec3`                   | Upload 3-component float uniform         |
+| `SetFloat4`      | `string, vec4`                   | Upload 4-component float uniform         |
+| `SetMat3`        | `string, mat3`                   | Upload 3×3 matrix uniform                |
+| `SetMat4`        | `string, mat4`                   | Upload 4×4 matrix uniform                |
 
 ---
 
 ### SubTexture2D
 
-| Function / Constructor | Parameters                                                          | Description                                                                        |
-| ---------------------- | ------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| `CreateFromCoords`     | `Ref<Texture2D>, vec2 coords, vec2 cellSize, vec2 spriteSize={1,1}` | Static factory. `coords` is (column, row) in grid units from bottom-left.          |
-| `SubTexture2D`         | `Ref<Texture2D>, vec2 min, vec2 max`                                | Direct UV-range constructor. `min`/`max` in normalized [0,1] texture space.        |
-| `GetTexture()`         | —                                                                   | Returns `const Ref<Texture2D>&` — the parent atlas.                                |
-| `GetTexCoords()`       | —                                                                   | Returns `const glm::vec2*` — pointer to the 4-element UV corner array (CCW order). |
+| Function / Constructor | Parameters                                                                  | Description                                                                             |
+| ---------------------- | --------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `CreateFromCoords`     | `Ref<Texture2D>, vec2 coords, vec2 cellSize, vec2 spriteSize={1,1}`         | Static factory. `coords` is (column, row) in grid units from bottom-left.               |
+| `SubTexture2D`         | `Ref<Texture2D>, vec2 min, vec2 max`                                        | Direct UV-range constructor. `min`/`max` in normalized [0,1] texture space.             |
+| `GetTexture()`         | —                                                                           | Returns `const Ref<Texture2D>&` — the parent atlas.                                     |
+| `GetTexCoords()`       | —                                                                           | Returns `const glm::vec2*` — pointer to the 4-element UV corner array (CCW order).      |
 
 ---
 
 ### OrthographicCameraController
 
-| Function                       | Parameters                                       | Description                                                                                 |
-| ------------------------------ | ------------------------------------------------ | ------------------------------------------------------------------------------------------- |
-| `OrthographicCameraController` | `float aspectRatio, bool rotation=false`         | Constructor. Enables Q/E rotation support if `rotation=true`.                               |
-| `OnUpdate`                     | `float ts`                                       | Poll WASD input, advance zoom interpolation, update camera transform. Call from `OnUpdate`. |
-| `OnEvent`                      | `Event&`                                         | Route `MouseScrolledEvent` to zoom, `WindowResizeEvent` to `OnResize`.                      |
-| `OnResize`                     | `float width, float height`                      | Recalculate aspect ratio and projection. Call when the render target changes size.          |
-| `GetCamera`                    | —                                                | Returns `OrthographicCamera&` for `BeginScene` or `RenderPass`.                             |
-| `GetZoomLevel`                 | —                                                | Current interpolated zoom scalar.                                                           |
-| `SetZoomLevel`                 | `float level`                                    | Hard-snap zoom, bypassing interpolation.                                                    |
-| `SetZoomLimits`                | `float min, float max`                           | Clamp the scroll-wheel zoom range. Default: 0.25–10.0.                                      |
-| `SetZoomSpeed`                 | `float speed`                                    | World units per scroll tick. Default: 0.25.                                                 |
-| `GetZoomSpeed`                 | —                                                | Returns current zoom speed.                                                                 |
-| `SetTranslationSpeed`          | `float speed`                                    | Pan speed in world units/second. Scales with zoom level. Default: 5.0.                      |
-| `GetTranslationSpeed`          | —                                                | Returns current translation speed.                                                          |
-| `SetRotationSpeed`             | `float speed`                                    | Degrees/second for Q/E rotation. Only active when `rotation=true`. Default: 180.0.          |
-| `GetRotationSpeed`             | —                                                | Returns current rotation speed.                                                             |
-| `SetPositionLimits`            | `float minX, float maxX, float minY, float maxY` | Hard-clamp pan bounds in world space. Default: ±1000 on both axes.                          |
-| `SetPosition`                  | `const glm::vec3& position`                      | Directly set world position, bypassing keyboard input.                                      |
-| `GetPosition`                  | —                                                | Returns `const glm::vec3&` — current camera world position.                                 |
-| `SetManualMovementEnabled`     | `bool enabled`                                   | Enable/disable WASD panning. Disable for code-driven cameras. Default: true.                |
-| `IsManualMovementEnabled`      | —                                                | Returns true if keyboard panning is active.                                                 |
-| `SetKeyBindings`               | `const CameraKeyBindings& bindings`              | Replace the default WASD+QE key mapping.                                                    |
-| `GetKeyBindings`               | —                                                | Returns a mutable reference to the active key bindings.                                     |
+| Function                    | Parameters                                          | Description                                                                         |
+| --------------------------- | --------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `OrthographicCameraController` | `float aspectRatio, bool rotation=false`         | Constructor. Enables Q/E rotation support if `rotation=true`.                       |
+| `OnUpdate`                  | `float ts`                                          | Poll WASD input, advance zoom interpolation, update camera transform. Call from `OnUpdate`. |
+| `OnEvent`                   | `Event&`                                            | Route `MouseScrolledEvent` to zoom, `WindowResizeEvent` to `OnResize`.              |
+| `OnResize`                  | `float width, float height`                         | Recalculate aspect ratio and projection. Call when the render target changes size.  |
+| `GetCamera`                 | —                                                   | Returns `OrthographicCamera&` for `BeginScene` or `RenderPass`.                     |
+| `GetZoomLevel`              | —                                                   | Current interpolated zoom scalar.                                                   |
+| `SetZoomLevel`              | `float level`                                       | Hard-snap zoom, bypassing interpolation.                                            |
+| `SetZoomLimits`             | `float min, float max`                              | Clamp the scroll-wheel zoom range. Default: 0.25–10.0.                              |
+| `SetZoomSpeed`              | `float speed`                                       | World units per scroll tick. Default: 0.25.                                         |
+| `GetZoomSpeed`              | —                                                   | Returns current zoom speed.                                                         |
+| `SetTranslationSpeed`       | `float speed`                                       | Pan speed in world units/second. Scales with zoom level. Default: 5.0.              |
+| `GetTranslationSpeed`       | —                                                   | Returns current translation speed.                                                  |
+| `SetRotationSpeed`          | `float speed`                                       | Degrees/second for Q/E rotation. Only active when `rotation=true`. Default: 180.0.  |
+| `GetRotationSpeed`          | —                                                   | Returns current rotation speed.                                                     |
+| `SetPositionLimits`         | `float minX, float maxX, float minY, float maxY`    | Hard-clamp pan bounds in world space. Default: ±1000 on both axes.                  |
+| `SetPosition`               | `const glm::vec3& position`                         | Directly set world position, bypassing keyboard input.                              |
+| `GetPosition`               | —                                                   | Returns `const glm::vec3&` — current camera world position.                         |
+| `SetManualMovementEnabled`  | `bool enabled`                                      | Enable/disable WASD panning. Disable for code-driven cameras. Default: true.        |
+| `IsManualMovementEnabled`   | —                                                   | Returns true if keyboard panning is active.                                         |
+| `SetKeyBindings`            | `const CameraKeyBindings& bindings`                 | Replace the default WASD+QE key mapping.                                            |
+| `GetKeyBindings`            | —                                                   | Returns a mutable reference to the active key bindings.                             |
 
 ---
 
 ### Layer Timeline API
 
-| Function                    | Description                                                            |
-| --------------------------- | ---------------------------------------------------------------------- |
-| `GetLocalTime()`            | Returns the accumulated scaled time for this layer (seconds).          |
-| `SetLocalTime(float)`       | Directly set the time accumulator (e.g. for level reset).              |
-| `GetTimeScale()`            | Returns this layer's local time scale multiplier.                      |
-| `SetTimeScale(float)`       | Set the layer's local scale (0=paused, 0.5=half speed, -1=rewind).     |
-| `UpdateLayerTime(float dt)` | Called by the engine each frame. Do not call manually in normal usage. |
+| Function              | Description                                                                    |
+| --------------------- | ------------------------------------------------------------------------------ |
+| `GetLocalTime()`      | Returns the accumulated scaled time for this layer (seconds).                  |
+| `SetLocalTime(float)` | Directly set the time accumulator (e.g. for level reset).                      |
+| `GetTimeScale()`      | Returns this layer's local time scale multiplier.                              |
+| `SetTimeScale(float)` | Set the layer's local scale (0=paused, 0.5=half speed, -1=rewind).             |
+| `UpdateLayerTime(float dt)` | Called by the engine each frame. Do not call manually in normal usage.   |
 
 ---
 
 ### Application
 
-| Function                                        | Description                                                      |
-| ----------------------------------------------- | ---------------------------------------------------------------- |
-| `Application::Get()`                            | Static singleton accessor.                                       |
-| `GetWindow()`                                   | Returns `Window&`.                                               |
-| `GetFrameBuffer()`                              | Returns `Ref<FrameBuffer>` — the main render target.             |
-| `GetWorkspaceLayer()`                           | Returns `WorkspaceLayer*` (nullptr before a DLL transition).     |
-| `PushLayer(Layer*)`                             | Add a layer to the stack.                                        |
-| `PushOverlay(Layer*)`                           | Add an overlay (always above layers) to the stack.               |
-| `TransitionFromLauncherToWorkspace(string dll)` | Queue a DLL load transition for the Safe Zone.                   |
-| `TransitionToLauncher()`                        | Queue a return to the Launcher for the Safe Zone.                |
-| `UseFixedTimeStep(bool)`                        | Enable/disable the 60Hz fixed update pass.                       |
-| `SetTimeScale(float)`                           | Set the global time scale multiplier.                            |
-| `GetTimeScale()`                                | Returns the current global time scale.                           |
-| `GetAbsoluteTime()`                             | Returns raw engine uptime in seconds (unaffected by time scale). |
-| `Close()`                                       | Signal the engine to exit the run loop cleanly.                  |
+| Function                                      | Description                                                                    |
+| --------------------------------------------- | ------------------------------------------------------------------------------ |
+| `Application::Get()`                          | Static singleton accessor.                                                     |
+| `GetWindow()`                                 | Returns `Window&`.                                                             |
+| `GetFrameBuffer()`                            | Returns `Ref<FrameBuffer>` — the main render target.                           |
+| `GetWorkspaceLayer()`                         | Returns `WorkspaceLayer*` (nullptr before a DLL transition).                   |
+| `PushLayer(Layer*)`                           | Add a layer to the stack.                                                      |
+| `PushOverlay(Layer*)`                         | Add an overlay (always above layers) to the stack.                             |
+| `TransitionFromLauncherToWorkspace(string dll)` | Queue a DLL load transition for the Safe Zone.                               |
+| `TransitionToLauncher()`                      | Queue a return to the Launcher for the Safe Zone.                              |
+| `UseFixedTimeStep(bool)`                      | Enable/disable the 60Hz fixed update pass.                                     |
+| `SetTimeScale(float)`                         | Set the global time scale multiplier.                                          |
+| `GetTimeScale()`                              | Returns the current global time scale.                                         |
+| `GetAbsoluteTime()`                           | Returns raw engine uptime in seconds (unaffected by time scale).               |
+| `Close()`                                     | Signal the engine to exit the run loop cleanly.                                |
 
 ---
 
 ### FrameBuffer
 
-| Function                       | Parameters                        | Description                                                            |
-| ------------------------------ | --------------------------------- | ---------------------------------------------------------------------- |
-| `FrameBuffer::Create`          | `const FramebufferSpecification&` | Factory — creates a platform-specific FBO instance.                    |
-| `Bind`                         | —                                 | Redirect subsequent draw calls to this FBO.                            |
-| `Unbind`                       | —                                 | Restore the default screen framebuffer.                                |
-| `Resize`                       | `uint32_t width, uint32_t height` | Reallocate GPU textures at new dimensions.                             |
-| `GetWidth`                     | —                                 | Returns current FBO width in pixels.                                   |
-| `GetHeight`                    | —                                 | Returns current FBO height in pixels.                                  |
-| `GetColorAttachmentRendererID` | —                                 | Returns the OpenGL texture ID for the color buffer (for ImGui::Image). |
-| `GetSpecification`             | —                                 | Returns `const FramebufferSpecification&`.                             |
+| Function                      | Parameters                          | Description                                                          |
+| ----------------------------- | ----------------------------------- | -------------------------------------------------------------------- |
+| `FrameBuffer::Create`         | `const FramebufferSpecification&`   | Factory — creates a platform-specific FBO instance.                  |
+| `Bind`                        | —                                   | Redirect subsequent draw calls to this FBO.                          |
+| `Unbind`                      | —                                   | Restore the default screen framebuffer.                              |
+| `Resize`                      | `uint32_t width, uint32_t height`   | Reallocate GPU textures at new dimensions.                           |
+| `GetWidth`                    | —                                   | Returns current FBO width in pixels.                                 |
+| `GetHeight`                   | —                                   | Returns current FBO height in pixels.                                |
+| `GetColorAttachmentRendererID` | —                                  | Returns the OpenGL texture ID for the color buffer (for ImGui::Image). |
+| `GetSpecification`            | —                                   | Returns `const FramebufferSpecification&`.                           |
 
 **`FramebufferSpecification` fields:**
 
-| Field             | Type       | Default | Description                                        |
-| ----------------- | ---------- | ------- | -------------------------------------------------- |
-| `Width`           | `uint32_t` | 0       | Width in pixels.                                   |
-| `Height`          | `uint32_t` | 0       | Height in pixels.                                  |
-| `Samples`         | `uint32_t` | 1       | MSAA sample count (1 = no MSAA).                   |
-| `SwapChainTarget` | `bool`     | false   | True if targeting the system back buffer directly. |
+| Field            | Type       | Default | Description                                        |
+| ---------------- | ---------- | ------- | -------------------------------------------------- |
+| `Width`          | `uint32_t` | 0       | Width in pixels.                                   |
+| `Height`         | `uint32_t` | 0       | Height in pixels.                                  |
+| `Samples`        | `uint32_t` | 1       | MSAA sample count (1 = no MSAA).                   |
+| `SwapChainTarget`| `bool`     | false   | True if targeting the system back buffer directly. |
 
 ---
 
 ### Scene
 
-| Function                              | Description                                                                                                  |
-| ------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| `Scene::Create()`                     | Static factory — returns `Ref<Scene>`.                                                                       |
-| `CreateEntity(string name)`           | Instantiate entity with `TransformComponent` + `TagComponent`. Default tag = `"GenericEntity"`.              |
-| `DestroyEntity(Entity)`               | Remove entity and all its components from the registry.                                                      |
-| `OnUpdate(float dt)`                  | Tick all sequential system `OnUpdate` passes + parallel prepare/execute/merge passes.                        |
-| `OnFixedUpdate(float dt)`             | Tick all sequential system `OnFixedUpdate` passes + parallel fixed-step passes.                              |
+| Function                         | Description                                                                            |
+| -------------------------------- | -------------------------------------------------------------------------------------- |
+| `Scene::Create()`                | Static factory — returns `Ref<Scene>`.                                                 |
+| `CreateEntity(string name)`      | Instantiate entity with `TransformComponent` + `TagComponent`. Default tag = `"GenericEntity"`. |
+| `DestroyEntity(Entity)`          | Remove entity and all its components from the registry.                                |
+| `OnUpdate(float dt)`             | Tick all sequential system `OnUpdate` passes + parallel prepare/execute/merge passes. |
+| `OnFixedUpdate(float dt)`        | Tick all sequential system `OnFixedUpdate` passes + parallel fixed-step passes.        |
 | `OnRender(const OrthographicCamera&)` | Full render pass — `BeginScene`, draw all `SpriteRendererComponent` entities by material bucket, `EndScene`. |
-| `AddSystem<T>(args...)`               | Allocate and attach a system. Returns `T&`. Automatically registers `ParallelSystem`s.                       |
-| `GetSystem<T>()`                      | Returns `T*` if a system of that type is registered, `nullptr` otherwise.                                    |
-| `RemoveAllSystems()`                  | Clear all registered systems.                                                                                |
-| `View<Components...>()`               | Returns an EnTT view for iterating entities with all listed component types.                                 |
-| `GetRegistry()`                       | Returns `entt::registry&` for direct registry access.                                                        |
+| `AddSystem<T>(args...)`          | Allocate and attach a system. Returns `T&`. Automatically registers `ParallelSystem`s. |
+| `GetSystem<T>()`                 | Returns `T*` if a system of that type is registered, `nullptr` otherwise.              |
+| `RemoveAllSystems()`             | Clear all registered systems.                                                          |
+| `View<Components...>()`          | Returns an EnTT view for iterating entities with all listed component types.           |
+| `GetRegistry()`                  | Returns `entt::registry&` for direct registry access.                                  |
 
 ---
 
 ### Window
 
-| Function                          | Description                                                                                       |
-| --------------------------------- | ------------------------------------------------------------------------------------------------- |
-| `GetWidth()`                      | Current window client-area width in pixels.                                                       |
-| `GetHeight()`                     | Current window client-area height in pixels.                                                      |
-| `SetVSync(bool)`                  | Enable/disable vertical synchronization.                                                          |
-| `GetHandle()`                     | Returns `GLFWwindow*` for API-specific calls.                                                     |
-| `SetFullscreen(bool)`             | Toggle borderless-windowed fullscreen on the current monitor.                                     |
-| `IsFullscreen()`                  | Returns the current fullscreen state.                                                             |
-| `SetFullscreenHotkeyOverride(fn)` | Register a callback `(int key, int action, int mods) -> bool` to intercept key events before F11. |
-| `ClearFullscreenHotkeyOverride()` | Remove the registered callback. Call from `OnDetach` before DLL unload.                           |
-
-# Cosmic Engine — Part 2: Engine Internals
-
-> **Audience:** Engine contributors and advanced client developers who need to understand how Cosmic works under the hood. Assumes familiarity with [Part 1 — Client Developer Guide](Part1_ClientGuide.md).
-
----
-
-## §26 Source File Map
-
-```
-Cosmic/
-├── src/
-│   ├── Cosmic.h                        Single-include public API
-│   ├── core/
-│   │   ├── Application.h / .cpp        Main loop, DLL loading, time system
-│   │   ├── Core.h                      Ref<T>, Scope<T>, BIT(), macros
-│   │   ├── Layer.h                     Layer base class + timeline API
-│   │   ├── LayerStack.h / .cpp         Ordered layer container
-│   │   ├── Log.h / .cpp                spdlog wrappers, CS_* macros
-│   │   ├── Input.h / .cpp              Platform-agnostic polling
-│   │   └── Window.h                    Abstract window + fullscreen API
-│   ├── events/
-│   │   ├── Event.h                     EventType, EventCategory, EventDispatcher
-│   │   ├── ApplicationEvent.h          WindowResize, WindowClose
-│   │   ├── KeyEvent.h                  KeyPressed, KeyReleased, KeyTyped
-│   │   └── MouseEvent.h                MouseMoved, MouseScrolled, MouseButton*
-│   ├── renderer/
-│   │   ├── Renderer2D.h / .cpp         Batch renderer, instanced draw calls
-│   │   ├── RenderCommand.h             Static forwarder → RendererAPI
-│   │   ├── RendererAPI.h               Abstract GPU commands
-│   │   └── RenderPass.h                RAII camera/viewport scope
-│   ├── graphics/
-│   │   ├── Buffer.h / .cpp             VertexBuffer, IndexBuffer, BufferLayout
-│   │   ├── VertexArray.h / .cpp        VAO abstraction
-│   │   ├── Shader.h / .cpp             Abstract shader + factory
-│   │   ├── Texture.h / .cpp            2D texture + factory
-│   │   ├── SubTexture2D.h / .cpp       Atlas sub-region helper
-│   │   ├── Material.h / .cpp           Typed uniform bag
-│   │   └── FrameBuffer.h / .cpp        Offscreen FBO
-│   ├── scene/
-│   │   ├── Scene.h / .cpp              EnTT registry, system dispatch
-│   │   ├── Entity.h                    Lightweight EnTT handle
-│   │   ├── Components.h                TransformComponent, SpriteRendererComponent, TagComponent
-│   │   ├── System.h                    Serial system base
-│   │   └── ComponentRegistry.h         CS_REGISTER_COMPONENT macro
-│   ├── jobs/
-│   │   ├── JobSystem.h / .cpp          Thread pool singleton
-│   │   ├── ParallelSystem.h            4-pass parallel system base
-│   │   ├── SystemQuery.h               ReadWriteQuery<T>, ReadOnlyQuery<T>
-│   │   ├── ParallelFor.h               6 free-function parallel helpers
-│   │   ├── DoubleBuffer.h              Read/write double-buffer
-│   │   └── ComponentArray.h            ComponentArray<T>, FlatComponentArray<T>
-│   ├── camera/
-│   │   ├── OrthographicCamera.h / .cpp Low-level camera matrices
-│   │   └── OrthographicCameraController.h  WASD + zoom controller
-│   ├── layers/
-│   │   ├── ImGuiLayer.h / .cpp         ImGui/ImPlot initialization
-│   │   └── WorkspaceLayer.h / .cpp     Docked panel shell, DLL bridge
-│   ├── platform/
-│   │   └── OpenGL/
-│   │       ├── OpenGLRendererAPI.h/.cpp    glDraw* calls
-│   │       ├── OpenGLShader.h/.cpp         GLSL compilation, uniform cache
-│   │       ├── OpenGLBuffer.h/.cpp         VBO/IBO
-│   │       ├── OpenGLVertexArray.h/.cpp    VAO + attrib pointers
-│   │       ├── OpenGLTexture.h/.cpp        stb_image, GL texture objects
-│   │       └── OpenGLFrameBuffer.h/.cpp    FBO + color attachment
-│   ├── serial/
-│   │   └── SerialPort.h / .cpp         Windows HANDLE-based COM port
-│   └── utils/
-│       └── FileSystem.h / .cpp         VFS: engine:// and project://
-└── templates/
-    └── ExampleProject/                 Canonical client template
-        └── src/
-            ├── TemplateProject.h/.cpp  Root manager layer
-            ├── TemplateRenderLayer.*   Shader/material demo layer
-            ├── TemplateSpriteLayer.*   ECS sprite demo layer
-            ├── TemplateRenderBenchmarkLayer.*  Instanced rendering benchmark
-            ├── BallPhysicsSystem.h     ParallelSystem example
-            └── Components.h           PhysicsBody component definition
-```
-
----
-
-## §27 Hot-Reloadable DLL Architecture
-
-### Overview
-
-Cosmic separates the engine host (the `.exe`) from client workspaces (`.dll` files). The engine compiles once; client projects are rebuilt and hot-reloaded without restarting the host process.
-
-### Required DLL Exports
-
-Every client DLL must export exactly two C-linkage functions:
-
-```cpp
-extern "C"
-{
-    __declspec(dllexport) void InitializePluginContexts(Cosmic::HostContext context)
-    {
-        ImGui::SetCurrentContext(context.ImGuiCtx);
-        ImPlot::SetCurrentContext(context.ImPlotCtx);
-    }
-
-    __declspec(dllexport) Cosmic::Layer* CreatePluginLayer()
-    {
-        return new Workspace::TemplateProject();
-    }
-}
-```
-
-`HostContext` is defined in `Cosmic.h`:
-
-```cpp
-struct HostContext
-{
-    ImGuiContext*  ImGuiCtx;
-    ImPlotContext* ImPlotCtx;
-};
-```
-
-Both ImGui and ImPlot store global state in a per-module pointer. Because the `.dll` is a separate module from the `.exe`, each has its own default context pointer — initially null in the DLL. `InitializePluginContexts` copies the host's live context pointer into the DLL's module-local global, making all subsequent `ImGui::*` calls in the DLL write to the same draw list the host will render.
-
-### Load Sequence (`Application::LoadProjectDLL`)
-
-```
-LoadLibraryA(dllPath)
-  └─ GetProcAddress("InitializePluginContexts")  → call immediately
-  └─ GetProcAddress("CreatePluginLayer")          → call to get Layer*
-       └─ WorkspaceLayer::SetViewportLayer(layer)
-            └─ layer->OnAttach()                  ← GPU resources created here
-```
-
-All steps occur inside the **Safe Zone** — the end of a frame loop iteration after the LayerStack iterator has been destroyed and before the next iteration begins. This ensures no iterator invalidation occurs.
-
-### Unload Sequence (`Application::UnloadProjectDLL`)
-
-```
-WorkspaceLayer::ClearViewportLayer()
-  └─ layer->OnDetach()                            ← GPU resources freed here
-Window::ClearFullscreenHotkeyOverride()            ← lambda lifetime ends
-delete m_ActivePluginLayer                         ← destructor runs in DLL code
-FreeLibrary(hModule)                               ← DLL code unmapped after delete
-```
-
-**Critical ordering:** `delete` must happen **before** `FreeLibrary`. The destructor body lives in DLL code. Freeing the library first would unmap that code, causing an access violation when the destructor executes.
-
-### Component Type ID Stability
-
-EnTT assigns type IDs via a static counter. If the engine and a DLL see different counter values for the same component type (because each module has its own static storage), registry lookups silently corrupt.
-
-`CS_REGISTER_COMPONENT(T)` forces a deterministic hash:
-
-```cpp
-#define CS_REGISTER_COMPONENT(T) \
-    template<> struct entt::type_hash<T> { \
-        static constexpr entt::id_type value() noexcept { \
-            return entt::hashed_string::value(#T); \
-        } \
-    };
-```
-
-Every component used across the DLL boundary must appear in a `CS_REGISTER_COMPONENT` call **in a header shared by both the engine and the client**.
-
----
-
-## §28 Top-Down Time Propagation Waterfall
-
-The engine applies a two-level time system. Understanding the exact multiplication order is essential for building correct per-layer timelines.
-
-### Hardware Timer
-
-`Application::Run()` uses `glfwGetTime()` (a monotonically increasing double, seconds since GLFW init):
-
-```cpp
-double time         = glfwGetTime();
-float  rawTimestep  = static_cast<float>(time - m_LastFrameTime);
-m_LastFrameTime     = time;
-```
-
-`rawTimestep` is always a positive wall-clock delta — unaffected by `TimeScale`.
-
-### Global Scaling
-
-```cpp
-float scaledTs = rawTimestep * m_TimeScale;   // m_TimeScale set by SetTimeScale()
-m_AbsoluteTime += scaledTs;
-```
-
-`scaledTs` is what flows down to layers. `m_AbsoluteTime` accumulates scaled time (so it pauses when `TimeScale == 0` and rewinds when `TimeScale < 0`).
-
-### Fixed Accumulator
-
-```cpp
-m_FixedAccumulator += scaledTs;
-constexpr float fixedDt = 1.0f / 60.0f;
-constexpr float maxAccumulation = 0.25f;       // spiral-of-death clamp
-
-if (m_FixedAccumulator > maxAccumulation)
-    m_FixedAccumulator = maxAccumulation;
-
-while (m_FixedAccumulator >= fixedDt)
-{
-    // OnFixedUpdate fired for all layers
-    m_FixedAccumulator -= fixedDt;
-}
-```
-
-The 0.25 s clamp means a frame that stalls for 500 ms will still only dispatch at most 15 fixed steps (0.25 / 0.016̄ ≈ 15), keeping physics stable at the cost of simulated time dilation.
-
-### Layer Dispatch
-
-Variable-rate:
-
-```
-Application::Run()
-  → scaledTs  →  Layer::OnUpdate(scaledTs)
-                   → Layer::UpdateLayerTime(scaledTs)
-                       m_LocalTime += scaledTs * m_LocalTimeScale
-```
-
-Fixed-rate:
-
-```
-Application::Run()
-  → fixedDt (constant 1/60)  →  Layer::OnFixedUpdate(fixedDt)
-```
-
-`fixedDt` is **already scaled** — it was accumulated from `scaledTs`. A client layer does not need to apply `GetTimeScale()` again inside `OnFixedUpdate`.
-
-### Full Waterfall Diagram
-
-```
-Wall clock (glfwGetTime)
-   │
-   ▼
-rawTimestep
-   │  × m_TimeScale  (Application global)
-   ▼
-scaledTs  ──────────────────────────────────────► OnUpdate(scaledTs)
-   │                                                  │  × m_LocalTimeScale  (per-layer)
-   │  (accumulated)                                   ▼
-   ▼                                              m_LocalTime
-fixedDt (constant 1/60, fire when ready)
-   │
-   ▼
-OnFixedUpdate(fixedDt)
-```
-
----
-
-## §29 The Double-Tick Trap
-
-### What It Is
-
-If a child layer is both **pushed onto the engine `LayerStack`** and **driven manually** by a parent layer, every hook fires twice per frame. This produces doubled physics integration, doubled renderer draw calls, and doubled ImGui widget registration (which crashes ImGui with duplicate IDs).
-
-### How It Happens
-
-```cpp
-// WRONG — child layer pushed onto LayerStack AND driven by parent
-void TemplateProject::OnAttach()
-{
-    auto child = std::make_shared<TemplateRenderLayer>(m_SharedMaterial);
-    Cosmic::Application::Get().PushLayer(child.get());  // ← engine will call OnUpdate
-    m_Modes.push_back(child);                           // ← OnUpdate called again by parent
-}
-```
-
-### The Correct Pattern
-
-Child layers must **never** be pushed onto the engine `LayerStack`. The root manager layer owns them and drives them exclusively:
-
-```cpp
-// CORRECT — child layers are invisible to the engine
-void TemplateProject::OnAttach()
-{
-    m_Modes.push_back(std::make_shared<TemplateRenderLayer>(m_SharedMaterial));
-    // NOT pushed onto the engine LayerStack
-
-    for (auto& mode : m_Modes)
-        mode->OnAttach();   // ← manual GPU resource init
-}
-
-void TemplateProject::OnUpdate(float ts)
-{
-    m_Modes[m_ActiveModeIndex]->OnUpdate(ts);   // ← manual drive
-}
-```
-
-The engine sees exactly one `Layer` object (`TemplateProject`). All child layers are an implementation detail of that object.
-
-### Application-Event Broadcast Exception
-
-Input events route only to the active child layer. Application events (resize, etc.) must broadcast to **all** child layers so inactive cameras don't accumulate stale projection matrices:
-
-```cpp
-void TemplateProject::OnEvent(Cosmic::Event& e)
-{
-    if (e.IsInCategory(Cosmic::EventCategoryApplication))
-    {
-        for (auto& mode : m_Modes)
-            mode->OnEvent(e);   // all modes receive resize
-        return;
-    }
-
-    // Input — active mode only
-    if (e.Handled) return;
-    m_Modes[m_ActiveModeIndex]->OnEvent(e);
-}
-```
-
----
-
-## §30 The OpenGL Graphics Pipeline
-
-### Command Flow
-
-```
-Client code
-  └─ Renderer2D::DrawQuad(...)         [high-level batch API]
-       └─ RenderCommand::DrawIndexed(vertexArray, count)
-            └─ s_RendererAPI->DrawIndexed(vertexArray, count)   [virtual dispatch]
-                 └─ OpenGLRendererAPI::DrawIndexed(...)
-                      └─ glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, nullptr)
-```
-
-`RenderCommand` is a pure static class — all methods forward to a single `RendererAPI*` stored as a static member. The abstraction allows a future DirectX backend to be swapped in without touching any call site above `RenderCommand`.
-
-### `RendererAPI` Virtual Interface
-
-```cpp
-class RendererAPI
-{
-public:
-    enum class API { None = 0, OpenGL = 1, DirectX = 2 };
-
-    virtual void Init() = 0;
-    virtual void SetClearColor(const glm::vec4&) = 0;
-    virtual void Clear() = 0;
-    virtual void DrawIndexed(Ref<VertexArray>, uint32_t indexCount = 0) = 0;
-    virtual void DrawLines(Ref<VertexArray>, uint32_t vertexCount) = 0;
-    virtual void DrawIndexedInstanced(Ref<VertexArray>, uint32_t indexCount, uint32_t instanceCount) = 0;
-    virtual void SetLineWidth(float) = 0;
-
-    static API GetAPI();
-};
-```
-
-`DrawIndexedInstanced` was added for the instanced rendering path (`DrawInstancedQuads` / `DrawInstancedCircles`).
-
-### Frame Lifecycle
-
-```
-Application::Run() each frame:
-  ├── RenderCommand::SetClearColor(...)
-  ├── RenderCommand::Clear()
-  ├── FrameBuffer::Bind()              ← offscreen FBO
-  │
-  ├── [LayerStack OnUpdate loop]
-  │     └── Layer::OnUpdate(ts)
-  │           └── RenderPass rp(camera, bounds)   ← PushRenderPass
-  │                 └── Renderer2D::BeginScene(...)
-  │                       └── ... draw calls ...
-  │                 └── Renderer2D::EndScene()     ← flush batch
-  │           └── [rp destructor]                 ← PopRenderPass
-  │
-  ├── FrameBuffer::Unbind()            ← back to default FBO
-  ├── WorkspaceLayer renders FBO color attachment as ImGui image
-  └── ImGui::Render() + SwapBuffers()
-```
-
----
-
-## §31 Hardware Abstraction Architecture
-
-### Buffer Layout System
-
-`BufferLayout` describes how vertex data is packed into a VBO:
-
-```cpp
-BufferLayout layout = {
-    { ShaderDataType::Float3, "a_Position"                    },
-    { ShaderDataType::Float4, "a_Color"                       },
-    { ShaderDataType::Float2, "a_TexCoord"                    },
-    { ShaderDataType::Float,  "a_TexIndex"                    },
-    { ShaderDataType::Float,  "a_TilingFactor"                },
-    // Instanced attributes set Instanced = true:
-    { ShaderDataType::Float3, "a_InstancePosition", true      },
-};
-```
-
-`BufferElement` carries `Name`, `Type`, `Size`, `Offset`, and an `Instanced` bool. When `Instanced == true`, `OpenGLVertexArray::AddVertexBuffer` calls `glVertexAttribDivisor(location, 1)`, enabling hardware instancing — the GPU advances that attribute once per instance rather than once per vertex.
-
-`BufferLayout::CalculateOffsetsAndStride()` is called in the `BufferLayout` constructor and walks the element list to set per-element byte offsets and the total stride.
-
-### `ShaderDataType` → GL Type Mapping
-
-| `ShaderDataType` | GL type    | Component count |
-| ---------------- | ---------- | --------------- |
-| `Float`          | `GL_FLOAT` | 1               |
-| `Float2`         | `GL_FLOAT` | 2               |
-| `Float3`         | `GL_FLOAT` | 3               |
-| `Float4`         | `GL_FLOAT` | 4               |
-| `Mat3`           | `GL_FLOAT` | 3×3 = 9         |
-| `Mat4`           | `GL_FLOAT` | 4×4 = 16        |
-| `Int`            | `GL_INT`   | 1               |
-| `Bool`           | `GL_BOOL`  | 1               |
-
-### `VertexBuffer::SetData`
-
-Allows dynamic update of buffer contents without reallocating the GPU object:
-
-```cpp
-vertexBuffer->SetData(myVertexData, sizeof(myVertexData));
-// Internally: glBufferSubData(GL_ARRAY_BUFFER, 0, size, data)
-```
-
-The batch renderer uses this each frame to upload the CPU-side vertex staging buffer to the GPU.
-
-### Object Hierarchy
-
-```
-VertexArray  (owns)
-  ├── vector<Ref<VertexBuffer>>   (one or more VBOs)
-  └── Ref<IndexBuffer>            (one IBO)
-```
-
-The VAO stores the attrib-pointer configuration. Binding a `VertexArray` is sufficient to restore the full pipeline state for a draw call.
-
----
-
-## §32 Batch Rendering Deep Dive
-
-### Purpose
-
-OpenGL draw calls carry significant CPU-side overhead (driver state validation, command encoding). The batch renderer accumulates many logical draw requests (quads, circles, lines) into a single VBO upload and a single `glDrawElements` call per flush.
-
-### Quad Batch Internals
-
-Each quad occupies 4 vertices and 6 indices (two triangles). The batch maintains:
-
-- A CPU-side vertex staging array sized for `MaxQuads * 4` vertices
-- A pre-computed index buffer for `MaxQuads * 6` indices (filled once at init, never changed)
-- A flush counter tracking how many quads have been added this batch
-
-`Renderer2D::DrawQuad` appends 4 `QuadVertex` structs to the staging array. When the staging array is full, `Renderer2D::FlushAndReset` uploads it via `VertexBuffer::SetData`, issues `RenderCommand::DrawIndexed`, and resets the pointer to the start of the staging buffer.
-
-At `EndScene()`, any remaining unflushed geometry is flushed with a final `DrawIndexed` call.
-
-### Texture Slot Management
-
-OpenGL shaders access textures via integer indices (`a_TexIndex`). The batch pre-binds up to `MaxTextureSlots` textures (typically 32, queried from `GL_MAX_TEXTURE_IMAGE_UNITS`). When `DrawQuad` is called with a texture not currently bound, it:
-
-1. Checks if the texture is already in the slot array — reuses the slot index if found.
-2. Otherwise appends the texture to the slot array.
-3. If the slot array is full, flushes the current batch first (triggering a draw call), then binds the new texture in slot 0 of the fresh batch.
-
-Slot 0 is always reserved for a 1×1 white pixel texture used for untextured quads and solid-color fills.
-
-### `Statistics` Struct
-
-```cpp
-struct Statistics
-{
-    uint32_t DrawCalls = 0;
-    uint32_t QuadCount = 0;
-    uint32_t LineCount = 0;
-
-    uint32_t GetTotalVertexCount() const { return QuadCount * 4 + LineCount * 2; }
-    uint32_t GetTotalIndexCount()  const { return QuadCount * 6; }
-};
-```
-
-`ResetStats()` zeros all fields. Call it once per frame (typically at the start of `OnUpdate`) so the displayed counts reflect the current frame only.
-
-### Instanced Rendering Path
-
-For `N` identical-geometry objects (e.g., 100,000 physics balls), the standard quad batch still submits `ceil(N / MaxQuads)` draw calls. The instanced path submits **one** draw call regardless of N:
-
-```
-DrawInstancedQuads(data, count)
-  └─ upload instance VBO  (VertexBuffer::SetData)
-  └─ RenderCommand::DrawIndexedInstanced(vao, 6, count)
-       └─ glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, count)
-```
-
-The vertex shader reads per-instance attributes (Position, Scale, Color, etc.) from the instance VBO via `glVertexAttribDivisor(location, 1)`. The six static quad indices are shared — the GPU replays them `count` times, incrementing the instance attribute pointer once per replay.
-
-`InstanceQuadData` layout (60 bytes / 15 floats):
-
-| Field          | Type  | Bytes |
-| -------------- | ----- | ----- |
-| Position       | vec3  | 12    |
-| Scale          | vec2  | 8     |
-| Color          | vec4  | 16    |
-| TexCoordOffset | vec2  | 8     |
-| TexCoordScale  | vec2  | 8     |
-| TexIndex       | float | 4     |
-| TilingFactor   | float | 4     |
-
-`InstanceCircleData` layout:
-
-| Field     | Type  | Bytes |
-| --------- | ----- | ----- |
-| Position  | vec3  | 12    |
-| Scale     | vec2  | 8     |
-| Color     | vec4  | 16    |
-| Thickness | float | 4     |
-| Fade      | float | 4     |
-
----
-
-## §33 Shader Preprocessing System
-
-### Three Input Formats
-
-`OpenGLShader::PreProcess` recognizes three input formats and normalizes them to `{GLenum → source}` maps:
-
-**Format 1 — Explicit split (`#type` directives)**
-
-```glsl
-#type vertex
-#version 330 core
-// vertex source ...
-
-#type fragment
-#version 330 core
-// fragment source ...
-```
-
-The preprocessor splits on `#type` tokens. Both stages are compiled independently.
-
-**Format 2 — Fragment-only**
-
-```glsl
-#version 330 core
-// fragment source only (no #type directives present)
-```
-
-Detected when no `#type` token is found. A hardcoded passthrough vertex shader is injected automatically.
-
-**Format 3 — Shadertoy-style**
-
-```glsl
-void mainImage(out vec4 fragColor, in vec2 fragCoord) { ... }
-```
-
-Detected by the presence of `mainImage`. The preprocessor wraps it with a `main()` stub and a Shadertoy-compatible uniform block, then injects the passthrough vertex shader.
-
-### Auto-Injected Uniforms
-
-After preprocessing and before compilation, the system inspects the fragment source for these uniforms and injects declarations if they are absent:
-
-| Uniform            | Type    | Injected value source           |
-| ------------------ | ------- | ------------------------------- |
-| `u_ViewProjection` | `mat4`  | `RenderPass` camera matrix      |
-| `u_Time`           | `float` | Active layer's `GetLocalTime()` |
-| `u_ViewportSize`   | `vec2`  | Framebuffer width/height        |
-
-This means a minimal fragment shader can use `u_Time` without declaring it — the preprocessor will add the `uniform float u_Time;` line before the GLSL compiler sees the source.
-
-### Compilation Pipeline (`OpenGLShader::Compile`)
-
-```
-PreProcess(source)
-  └─ returns map<GLenum, string>
-
-For each {GL_VERTEX_SHADER, source} and {GL_FRAGMENT_SHADER, source}:
-  glCreateShader(type)
-  glShaderSource(...)
-  glCompileShader(...)
-  glGetShaderiv(GL_COMPILE_STATUS)
-    → on failure: glGetShaderInfoLog → CS_CORE_ERROR + glDeleteShader
-
-glCreateProgram()
-  glAttachShader(program, vertexShader)
-  glAttachShader(program, fragmentShader)
-  glLinkProgram(program)
-  glGetProgramiv(GL_LINK_STATUS)
-    → on failure: glGetProgramInfoLog → CS_CORE_ERROR + glDeleteProgram
-
-glDetachShader(program, each)
-glDeleteShader(each)
-```
-
-`m_UniformLocationCache` (an `unordered_map<string, GLint>`) caches `glGetUniformLocation` results. The first `SetFloat("u_Time", ...)` call queries GL and stores the location; subsequent calls use the cached value directly.
-
-### Debug Helper
-
-`DumpPreprocessedShader()` writes the post-preprocessed, pre-compilation GLSL to the log at `CS_CORE_TRACE` level. Useful for debugging auto-injected uniforms or Shadertoy conversion.
-
----
-
-## §34 RenderPass Stack — Implementation Details
-
-### RAII Contract
-
-`RenderPass` is a non-copyable, non-movable RAII guard:
-
-```cpp
-class RenderPass
-{
-public:
-    RenderPass(const OrthographicCamera& camera,
-               std::optional<glm::vec4> viewportBounds = std::nullopt);
-    ~RenderPass();
-
-    RenderPass(const RenderPass&)            = delete;
-    RenderPass& operator=(const RenderPass&) = delete;
-    RenderPass(RenderPass&&)                 = delete;
-    RenderPass& operator=(RenderPass&&)      = delete;
-};
-```
-
-Constructor calls `Renderer2D::PushRenderPass(camera.GetViewProjectionMatrix(), viewportBounds)`.
-Destructor calls `Renderer2D::PopRenderPass()`.
-
-Because copy and move are both deleted, `RenderPass` objects cannot be transferred. They must be stack-allocated and will always be destroyed in LIFO order — maintaining the stack invariant.
-
-### Stack Semantics
-
-`Renderer2D` maintains an internal stack of `{viewProjectionMatrix, viewportBounds}` pairs. `PushRenderPass` pushes; `PopRenderPass` pops and restores the previous camera state.
-
-This allows nested render passes (e.g., render a scene to a texture inside a larger scene pass) without manual state save/restore.
-
-### `viewportBounds`
-
-When `viewportBounds` is supplied (`glm::vec4{x, y, width, height}`), the renderer calls `glViewport` on push and restores the previous viewport on pop. When it is `std::nullopt`, the viewport is left unchanged — useful when the caller has already set the viewport explicitly.
-
----
-
-## §35 Parallel Pipeline Architecture
-
-### Thread Pool — `JobSystem`
-
-`JobSystem` is a singleton initialized before any other engine subsystem in `Application::Initialize()`:
-
-```cpp
-JobSystem::Get().Initialize();
-```
-
-`Initialize()` queries `GetSystemInfo().dwNumberOfProcessors` and spawns `coreCount - 1` worker threads (reserving one core for the main thread). Workers block on a condition variable (`m_WorkAvailable`) until a job is submitted.
-
-```cpp
-using Job = std::function<void()>;
-
-void Submit(Job job);   // thread-safe: locks m_QueueMutex, notifies m_WorkAvailable
-void WaitIdle();        // blocks caller on m_AllIdle until m_ActiveJobs == 0
-```
-
-`WaitIdle()` is the synchronization point between the parallel execute phase and the merge phase. The `m_ActiveJobs` counter is an `atomic<uint32_t>` incremented on submit and decremented (with `m_AllIdle.notify_all()`) when a worker finishes a job and the queue is empty.
-
-`Shutdown()` is called first in `Application::Shutdown()`. It sets `m_Stopping = true`, notifies all workers, and joins every thread. Shutdown before any other subsystem teardown prevents jobs from accessing freed resources.
-
-### `ParallelSystem` 4-Pass Pipeline
-
-`Scene` separates serial and parallel systems internally. `AddSystem<T>()` uses `dynamic_cast<ParallelSystem*>` to detect parallel systems and adds them to a separate `m_ParallelSystems` vector (non-owning) alongside the owning `m_Systems` vector.
-
-Each fixed-step frame the `Scene` executes four passes in order:
-
-```
-Pass A — Serial systems:
-  for each System in m_Systems (serial only):
-    system->OnFixedUpdate(scene, fixedDt)
-
-Pass B — Parallel prepare (main thread):
-  for each ParallelSystem:
-    system->StageQueries(scene)     ← snapshots all registered queries
-    system->OnFixedPrepare(scene, fixedDt)
-
-Pass C — Parallel execute (worker threads):
-  for each ParallelSystem:
-    system->OnFixedParallelExecute(scene, fixedDt)   ← submits jobs, returns immediately
-  JobSystem::Get().WaitIdle()       ← single barrier for ALL systems
-
-Pass D — Merge (main thread):
-  for each ParallelSystem:
-    system->OnFixedMerge(scene, fixedDt)
-    system->CommitQueries(scene)    ← writes staged data back to registry
-```
-
-The single `WaitIdle()` after all systems have submitted means systems can overlap their parallel work — system B's workers run while system A's workers are still running, maximizing thread utilization.
-
-### `SystemQuery<T>` — Staged Snapshot Protocol
-
-`ReadWriteQuery<T>` and `ReadOnlyQuery<T>` implement `ISystemQuery`. Registering a query:
-
-```cpp
-Cosmic::ReadWriteQuery<PhysicsBody> m_Bodies{ this };
-// passes `this` (the ParallelSystem*) to RegisterQuery(&m_Bodies)
-```
-
-`RegisterQuery` appends the query pointer to `m_Queries`. The engine calls `StageQueries` → each query's `Stage(Scene&)` before Pass B, and `CommitQueries` → each query's `Commit(Scene&)` after Pass D.
-
-**`ReadWriteQuery<T>::Stage(Scene&)`**
-
-1. Iterates the registry view for `T`.
-2. Copies component values and entity handles into internal `std::vector<T>` and `std::vector<entt::entity>` arrays.
-3. Sets a dirty flag.
-
-**`ReadWriteQuery<T>::Commit(Scene&)`**
-
-1. Iterates the snapshot arrays.
-2. For each entity, if still valid in the registry, patches the registry component with the staged value.
-
-**`ReadOnlyQuery<T>::Commit`** — no-op. The snapshot is never written back.
-
-### `ForEachAsync` Internals
-
-```cpp
-m_Bodies.ForEachAsync([](PhysicsBody& body) { ... }, /*minChunkSize=*/32);
-```
-
-`ForEachAsync` divides `Count()` elements across worker count, with chunks of at least `minChunkSize`. For each chunk, one `Job` lambda is submitted to `JobSystem::Submit`. The lambda captures a raw pointer range into the staging vector (safe because the vector is stable for the lifetime of the parallel execute phase).
-
-Serial fallback: when `JobSystem::GetWorkerCount() <= 1`, `ForEachAsync` runs the lambda synchronously inline rather than submitting to the (empty) pool.
-
-### `DoubleBuffer<T>` — Inter-Entity Parallel Safety
-
-When a system needs to read one entity's component while writing another's — a pattern that creates data races with a single buffer — `DoubleBuffer<T>` provides read/write separation:
-
-```cpp
-DoubleBuffer<glm::vec2> velocities;
-velocities.Resize(entityCount);
-
-// Each tick, main thread:
-velocities.CopyReadToWrite();   // seed write buffer from last frame's results
-velocities.Swap();              // O(1): m_ReadIndex ^= 1u
-
-// Workers read from GetReadBuffer() and write to GetWriteBuffer() — no overlap
-```
-
-`Swap()` is an XOR on a single index: `m_ReadIndex ^= 1u`. It is O(1) and does not move any data. It must be called on the main thread before workers are dispatched.
-
-### `ComponentArray<T>` vs `FlatComponentArray<T>`
-
-EnTT stores component data in paged arrays (default page size 1024). `ComponentArray<T>` gets a non-owning pointer to the **first page only**:
-
-```cpp
-auto arr = ComponentArray<PhysicsBody>::From(registry);
-// arr.Data()  — pointer into registry's first storage page
-// arr.Count() — count of entities on that page (≤ 1024 for small counts)
-```
-
-Safe for entity counts ≤ ~1024. Cheaper than `FlatComponentArray` (zero allocation, zero copy).
-
-`FlatComponentArray<T>` copies **all pages** into a single contiguous buffer:
-
-```cpp
-auto flat = FlatComponentArray<PhysicsBody>::From(registry);
-// flat.Data()  — owned contiguous copy
-// flat.Count() — total entity count across all pages
-
-// After parallel mutation:
-flat.WriteBack(registry);   // patches registry component-by-component
-```
-
-Required when entity count exceeds one page, or when writing back mutated values.
-
-### `ParallelFor` Free Functions
-
-Six functions in `ParallelFor.h`:
-
-**Synchronous (block until done):**
-
-```cpp
-ParallelFor(count, [](size_t i) { ... }, minChunkSize);
-ParallelForEach<T>(span<T>, [](T& item) { ... }, minChunkSize);
-ParallelForEachIndexed<T>(span<T>, [](T& item, size_t i) { ... }, minChunkSize);
-```
-
-**Async (submit and return immediately — caller must WaitIdle):**
-
-```cpp
-ParallelForAsync(count, [](size_t i) { ... }, minChunkSize);
-ParallelForEachAsync<T>(span<T>, [](T& item) { ... }, minChunkSize);
-ParallelForEachIndexedAsync<T>(span<T>, [](T& item, size_t i) { ... }, minChunkSize);
-```
-
-Chunk size: `max(minChunkSize, ceil(totalCount / workerCount))`. This ensures at most one job per worker thread, avoiding over-subscription on small datasets.
-
----
-
-## §36 Build System
-
-### `CMakeLists.txt` Structure
-
-```cmake
-cmake_minimum_required(VERSION 3.21)
-project(CosmicRoot LANGUAGES C CXX)
-
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-```
-
-MSVC compiler flags applied globally:
-
-```cmake
-add_compile_options(/utf-8 /std:c++20)
-```
-
-Platform definitions:
-
-```cmake
-add_compile_definitions(WIN32_LEAN_AND_MEAN NOMINMAX)
-```
-
-`WIN32_LEAN_AND_MEAN` suppresses rarely-used Windows headers. `NOMINMAX` prevents the Windows SDK from defining `min`/`max` macros that conflict with `std::min`/`std::max`.
-
-### SDK Path Cache Variable
-
-```cmake
-set(COSMIC_SDK_DIR "" CACHE PATH "Path to Cosmic SDK installation")
-```
-
-Client project `CMakeLists.txt` files use `COSMIC_SDK_DIR` to locate engine headers and import libraries. If unset, the build system falls back to in-tree paths (for development builds where the engine and projects share a repository).
-
-### Engine-Only Mode
-
-```cmake
-option(COSMIC_BUILD_ENGINE_ONLY "Build only the engine, skip all Projects/" OFF)
-```
-
-When `ON`, the automated project scanner (below) is skipped. Used in CI to validate the engine compiles without client code.
-
-### Automated Project Scanner
-
-```cmake
-file(GLOB PROJECT_SUBDIRS RELATIVE "${CMAKE_SOURCE_DIR}" "Projects/*")
-
-foreach(SUBDIR ${PROJECT_SUBDIRS})
-    if(EXISTS "${CMAKE_SOURCE_DIR}/${SUBDIR}/CMakeLists.txt")
-        add_subdirectory(${SUBDIR})
-    endif()
-endforeach()
-```
-
-Any directory placed under `Projects/` with a `CMakeLists.txt` is automatically included in the build. No manual registration in the root `CMakeLists.txt` is required — dropping a new project folder into `Projects/` is sufficient.
-
-### Client Project `CMakeLists.txt` Template
-
-A minimal client project CMake file:
-
-```cmake
-project(MyProject LANGUAGES CXX)
-
-add_library(MyProject SHARED
-    src/MyProject.cpp
-    src/MyRenderLayer.cpp
-)
-
-target_include_directories(MyProject PRIVATE
-    ${COSMIC_SDK_DIR}/include
-    src/
-)
-
-target_link_libraries(MyProject PRIVATE
-    CosmicEngine
-    opengl32
-)
-
-set_target_properties(MyProject PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Projects/MyProject"
-)
-```
-
-The `SHARED` keyword produces a `.dll`. The output directory convention places the DLL where the engine launcher expects to find it.
-
----
-
-## §37 Event System — Implementation Details
-
-### `Event` Base Class
-
-```cpp
-class Event
-{
-public:
-    bool Handled = false;
-
-    virtual EventType       GetEventType()   const = 0;
-    virtual const char*     GetName()        const = 0;
-    virtual int             GetCategoryFlags() const = 0;
-    virtual std::string     ToString()       const { return GetName(); }
-
-    bool IsInCategory(EventCategory category) const
-    {
-        return GetCategoryFlags() & category;
-    }
-};
-```
-
-`Handled` is a public mutable flag. An event handler sets `Handled = true` to stop propagation. Subsequent handlers in the dispatch chain check `e.Handled` and bail out early.
-
-### `EventDispatcher` Template
-
-```cpp
-class EventDispatcher
-{
-public:
-    explicit EventDispatcher(Event& event) : m_Event(event) {}
-
-    template<typename T, typename F>
-    bool Dispatch(const F& func)
-    {
-        if (m_Event.GetEventType() == T::GetStaticType())
-        {
-            m_Event.Handled |= func(static_cast<T&>(m_Event));
-            return true;
-        }
-        return false;
-    }
-
-private:
-    Event& m_Event;
-};
-```
-
-Key details:
-
-- `T::GetStaticType()` is a static method on every concrete event class (generated by macro) that returns the `EventType` enum value.
-- `static_cast<T&>` is safe because `GetEventType()` has already confirmed the dynamic type.
-- `m_Event.Handled |= func(...)` — the `|=` means a handler that returns `false` cannot un-handle an event already marked handled by a previous dispatch call on the same dispatcher.
-- `Dispatch` returns `true` if the type matched (regardless of `func`'s return value), `false` if the type did not match. This return value is rarely used but allows the caller to distinguish "wrong type" from "handled/not handled."
-
-### Event Propagation — `LayerStack` Order
-
-Events enter `Application::OnEvent()` and are dispatched to the `LayerStack` in **reverse order** (overlays first, base layers last):
-
-```cpp
-void Application::OnEvent(Event& e)
-{
-    EventDispatcher dispatcher(e);
-    dispatcher.Dispatch<WindowCloseEvent>(CS_BIND_EVENT_FN(Application::OnWindowClose));
-    dispatcher.Dispatch<WindowResizeEvent>(CS_BIND_EVENT_FN(Application::OnWindowResize));
-
-    for (auto it = m_LayerStack.rbegin(); it != m_LayerStack.rend(); ++it)
-    {
-        if (e.Handled) break;
-        (*it)->OnEvent(e);
-    }
-}
-```
-
-Overlays (pushed via `PushOverlay`) sit at the end of the `LayerStack` container and are therefore visited first during reverse iteration. This mirrors the rendering order inversion: overlays render on top visually, and intercept events first logically.
-
-### `EventCategory` Flags
-
-```cpp
-enum EventCategory
-{
-    EventCategoryApplication = BIT(0),   // WindowClose, WindowResize, ...
-    EventCategoryInput       = BIT(1),   // All key and mouse events
-    EventCategoryKeyboard    = BIT(2),   // KeyPressed, KeyReleased, KeyTyped
-    EventCategoryMouse       = BIT(3),   // MouseMoved, MouseScrolled
-    EventCategoryMouseButton = BIT(4),   // MouseButtonPressed, MouseButtonReleased
-};
-```
-
-`BIT(x)` expands to `(1 << (x))`. A single event can belong to multiple categories — `KeyPressedEvent` sets flags for `Input | Keyboard`. `IsInCategory` tests with bitwise AND.
-
-The `TemplateProject::OnEvent` broadcast pattern uses `IsInCategory(EventCategoryApplication)` to route resize events to all child layers without inspecting specific event types.
-
-### Concrete Event Macros
-
-Every concrete event class uses two macros:
-
-```cpp
-#define EVENT_CLASS_TYPE(type) \
-    static  EventType GetStaticType()           { return EventType::type; } \
-    virtual EventType GetEventType()  const override { return GetStaticType(); } \
-    virtual const char* GetName()     const override { return #type; }
-
-#define EVENT_CLASS_CATEGORY(category) \
-    virtual int GetCategoryFlags() const override { return category; }
-```
-
-Example usage in `KeyPressedEvent`:
-
-```cpp
-class KeyPressedEvent : public Event
-{
-public:
-    EVENT_CLASS_TYPE(KeyPressed)
-    EVENT_CLASS_CATEGORY(EventCategoryInput | EventCategoryKeyboard)
-    // ...
-};
-```
-
-This pattern provides `GetStaticType()` (for `EventDispatcher`'s type comparison), `GetEventType()` (virtual, for polymorphic dispatch), and `GetName()` (for logging/`ToString()`), all without virtual table overhead for the type comparison path.
-
----
+| Function                        | Description                                                                                          |
+| ------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `GetWidth()`                    | Current window client-area width in pixels.                                                          |
+| `GetHeight()`                   | Current window client-area height in pixels.                                                         |
+| `SetVSync(bool)`                | Enable/disable vertical synchronization.                                                             |
+| `GetHandle()`                   | Returns `GLFWwindow*` for API-specific calls.                                                        |
+| `SetFullscreen(bool)`           | Toggle borderless-windowed fullscreen on the current monitor.                                        |
+| `IsFullscreen()`                | Returns the current fullscreen state.                                                                |
+| `SetFullscreenHotkeyOverride(fn)` | Register a callback `(int key, int action, int mods) -> bool` to intercept key events before F11.  |
+| `ClearFullscreenHotkeyOverride()` | Remove the registered callback. Call from `OnDetach` before DLL unload.                            |
