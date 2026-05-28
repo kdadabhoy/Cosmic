@@ -16,7 +16,7 @@ namespace Workspace
 }
 
 // ============================================================================
-// zzzzztest — Root Manager Layer
+// wwwwwwwwwwwwwwwwwwww — Root Manager Layer
 //
 // Architecture mirrors ShowcaseProject: this layer owns and drives two
 // child layers internally. Neither child is pushed onto the engine
@@ -24,11 +24,11 @@ namespace Workspace
 // ============================================================================
 namespace Workspace
 {
-	class zzzzztest : public Cosmic::Layer
+	class wwwwwwwwwwwwwwwwwwww : public Cosmic::Layer
 	{
 	public:
-		zzzzztest();
-		virtual ~zzzzztest() override = default;
+		wwwwwwwwwwwwwwwwwwww();
+		virtual ~wwwwwwwwwwwwwwwwwwww() override = default;
 
 		virtual void OnAttach()                          override;
 		virtual void OnDetach()                          override;

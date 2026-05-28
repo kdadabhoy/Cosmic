@@ -21,11 +21,11 @@ namespace Workspace
 
 		// 1. Attempt to load the custom specular circle shader via VFS.
 		//    Falls back gracefully to the engine's built-in circle shader if missing.
-		std::string shaderPath = Cosmic::FileSystem::Resolve("project://shaders/ClientSpecularCircle.glsl");
+		std::string shaderPath = Cosmic::FileSystem::Resolve("project://shaders/ClientSpecularCircleInstance.glsl");
 		if (std::filesystem::exists(shaderPath))
 		{
 			m_SpecularCircleShader = Cosmic::Shader::Create(shaderPath);
-			CS_INFO("TemplateParallelSimLayer: Loaded custom specular shader via VFS.");
+			CS_INFO("TemplateParallelSimLayer: Loaded custom instanced specular shader via VFS.");
 		}
 		else
 		{
@@ -139,23 +139,54 @@ namespace Workspace
 				Cosmic::Renderer2D::DrawLine({ -bx, y, -0.2f }, { bx,  y, -0.2f }, gc);
 		}
 
-		// --- Ball entities ---
-		// Read TransformComponent.Position (synced by merge pass) and
-		// BallComponent for visual properties.  PhysicsBody is NOT read here.
-		auto view = m_Scene->View<Cosmic::TransformComponent, BallComponent>();
-		for (auto entity : view)
-		{
-			const auto& t = view.get<Cosmic::TransformComponent>(entity);
-			const auto& b = view.get<BallComponent>(entity);
 
-			Cosmic::Renderer2D::DrawCircle(
-				t.Position,
-				{ b.Radius * 2.0f, b.Radius * 2.0f },
-				b.Color,
-				1.0f,
-				0.02f,
-				m_SpecularCircleShader // nullptr → engine uses default circle shader
-			);
+		/// =========================================================================
+		// --- Ball entities Rendering Path ---
+		// =========================================================================
+		auto view = m_Scene->View<Cosmic::TransformComponent, BallComponent>();
+
+		if (view.begin() != view.end())
+		{
+			// Allocate a contiguous block of stack/heap memory to hold our instances.
+			std::vector<Cosmic::Renderer2D::InstanceCircleData> instanceBuffer;
+
+			// size_hint() returns the size of the smallest component pool in the view,
+			// which is a perfect safe upper bound for reserving vector capacity!
+			instanceBuffer.reserve(view.size_hint());
+
+			// 2. Linear iteration pass to pack entity component fields straight into our data structs
+			for (auto entity : view)
+			{
+				const auto& t = view.get<Cosmic::TransformComponent>(entity);
+				const auto& b = view.get<BallComponent>(entity);
+
+				// Range protection: normalize ball color if components fall into a 0-255 boundary format
+				glm::vec4 ballColor = b.Color;
+				if (ballColor.r > 1.0f || ballColor.g > 1.0f || ballColor.b > 1.0f || ballColor.a > 1.0f)
+				{
+					ballColor /= 255.0f;
+				}
+
+				// Push raw data parameters without performing any matrix mathematics on the CPU
+				instanceBuffer.push_back({
+					t.Position,                                 // Center position (X, Y, Z)
+					glm::vec2(b.Radius * 2.0f, b.Radius * 2.0f), // Sizing bounds (Width, Height dimensions)
+					ballColor,                                  // Normalized color properties
+					1.0f,                                       // Thickness (1.0f = solid filled circle)
+					0.02f                                       // Fade (Edge anti-aliasing profile value)
+					});
+			}
+
+			// 3. Blast the entire vector of circles across the PCIe bus in a single call!
+			// Only draw if we actually packed elements into the buffer.
+			if (!instanceBuffer.empty())
+			{
+				Cosmic::Renderer2D::DrawInstancedCircles(
+					instanceBuffer.data(),
+					static_cast<uint32_t>(instanceBuffer.size()),
+					m_SpecularCircleShader
+				);
+			}
 		}
 
 		Cosmic::Renderer2D::EndScene();

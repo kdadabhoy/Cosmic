@@ -81,9 +81,11 @@ namespace Cosmic
 		uint32_t Size;
 		size_t Offset;
 		bool Normalized;
+		bool Instanced; // Dedicated hardware divisor flag
 
-		BufferElement(ShaderDataType type, const std::string& name, bool normalized = false)
-			: Name(name), Type(type), Size(ShaderDataTypeSize(type)), Offset(0), Normalized(normalized)
+		// Updated constructor to support explicit instancing parameters
+		BufferElement(ShaderDataType type, const std::string& name, bool normalized = false, bool instanced = false)
+			: Name(name), Type(type), Size(ShaderDataTypeSize(type)), Offset(0), Normalized(normalized), Instanced(instanced)
 		{
 		}
 

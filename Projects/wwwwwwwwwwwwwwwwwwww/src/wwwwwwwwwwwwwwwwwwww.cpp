@@ -1,4 +1,4 @@
-#include "zzzzztest.h"
+#include "wwwwwwwwwwwwwwwwwwww.h"
 #include "TemplateRenderLayer.h"
 #include "TemplateSimLayer.h"
 #include "TemplateParallelSimLayer.h"
@@ -8,18 +8,18 @@
 
 namespace Workspace
 {
-	zzzzztest::zzzzztest()
-		: Cosmic::Layer("zzzzztest")
+	wwwwwwwwwwwwwwwwwwww::wwwwwwwwwwwwwwwwwwww()
+		: Cosmic::Layer("wwwwwwwwwwwwwwwwwwww")
 	{
 	}
 
 	// -------------------------------------------------------------------------
-	void zzzzztest::OnAttach()
+	void wwwwwwwwwwwwwwwwwwww::OnAttach()
 	{
-		CS_INFO("zzzzztest: Attaching root manager layer.");
+		CS_INFO("wwwwwwwwwwwwwwwwwwww: Attaching root manager layer.");
 
 		// 1. Resolve asset paths through the VFS
-		Cosmic::FileSystem::SetActiveProject("zzzzztest");
+		Cosmic::FileSystem::SetActiveProject("wwwwwwwwwwwwwwwwwwww");
 
 		// Redirect logging outputs into the localized project workspace subfolder (still lives in build)
 		std::string physicalLogPath = Cosmic::FileSystem::Resolve("project://logs");
@@ -44,7 +44,7 @@ namespace Workspace
 		}
 		else
 		{
-			CS_WARN("zzzzztest: Shader not found at '{0}'. Rendering layers will use fallback geometry.", shaderPath);
+			CS_WARN("wwwwwwwwwwwwwwwwwwww: Shader not found at '{0}'. Rendering layers will use fallback geometry.", shaderPath);
 		}
 
 		// 4. Construct child layers — NOT pushed onto the engine LayerStack
@@ -81,13 +81,13 @@ namespace Workspace
 				return false; // Not our key combo, let the engine handle it normally
 			});
 
-		CS_INFO("zzzzztest: {} child layers attached. Fullscreen override active.", m_Modes.size());
+		CS_INFO("wwwwwwwwwwwwwwwwwwww: {} child layers attached. Fullscreen override active.", m_Modes.size());
 
 		
 	}
 
 	// -------------------------------------------------------------------------
-	void zzzzztest::OnDetach()
+	void wwwwwwwwwwwwwwwwwwww::OnDetach()
 	{
 		for (auto& mode : m_Modes)
 		{
@@ -98,14 +98,14 @@ namespace Workspace
 		m_SharedMaterial.reset();
 		m_Scene.reset();
 
-		CS_INFO("zzzzztest: Detached and cleaned up.");
+		CS_INFO("wwwwwwwwwwwwwwwwwwww: Detached and cleaned up.");
 
 		// Optional Safety Measure: Reset logging back to engine defaults when leaving workspace
 		Cosmic::Log::SetLogDirectory("logs");
 	}
 
 	// -------------------------------------------------------------------------
-	void zzzzztest::OnUpdate(float ts)
+	void wwwwwwwwwwwwwwwwwwww::OnUpdate(float ts)
 	{
 		if (m_Modes.empty()) return;
 
@@ -126,7 +126,7 @@ namespace Workspace
 	}
 
 	// -------------------------------------------------------------------------
-	void zzzzztest::OnFixedUpdate(float deltaFixedTime)
+	void wwwwwwwwwwwwwwwwwwww::OnFixedUpdate(float deltaFixedTime)
 	{
 		if (m_Modes.empty()) return;
 
@@ -136,7 +136,7 @@ namespace Workspace
 	}
 
 	// -------------------------------------------------------------------------
-	void zzzzztest::OnImGuiRender()
+	void wwwwwwwwwwwwwwwwwwww::OnImGuiRender()
 	{
 		if (m_Modes.empty()) return;
 
@@ -217,7 +217,7 @@ namespace Workspace
 	}
 
 	// -------------------------------------------------------------------------
-	void zzzzztest::OnEvent(Cosmic::Event& e)
+	void wwwwwwwwwwwwwwwwwwww::OnEvent(Cosmic::Event& e)
 	{
 		if (m_Modes.empty()) return;
 
@@ -249,6 +249,6 @@ extern "C"
 
 	__declspec(dllexport) Cosmic::Layer* CreatePluginLayer()
 	{
-		return new Workspace::zzzzztest();
+		return new Workspace::wwwwwwwwwwwwwwwwwwww();
 	}
 }

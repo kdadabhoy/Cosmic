@@ -6,7 +6,7 @@
 /**
  * Components.h
  * ============
- * Defines all client-side ECS components used by the zzzzztest.
+ * Defines all client-side ECS components used by the wwwwwwwwwwwwwwwwwwww.
  * Every component that crosses the engine/DLL boundary MUST be registered
  * with CS_REGISTER_COMPONENT so EnTT uses a stable compile-time hash
  * instead of a sequential counter that differs between binaries.
