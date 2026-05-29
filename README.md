@@ -285,6 +285,8 @@ When your project compiles as a separate `.dll`, both sides share the same `Ref<
 
 > **Rule:** Never `delete` a layer pointer yourself. The engine owns and destroys everything returned from `CreatePluginLayer()`.
 
+> **Critical — shared `Cosmic.dll` requirement:** The `Ref<T>` (`std::shared_ptr<T>`) safety model only holds when all DLLs (engine + your project) link dynamically against the same `Cosmic.dll`. This ensures a single shared allocator and a single `shared_ptr` control block per resource. If your project accidentally statically links the engine (e.g. via a CMake misconfiguration), each side gets its own allocator, and releasing a shared `Ref<Texture2D>` or `Ref<Material>` from both sides will double-free and crash — often silently during shutdown. Always verify your project links `Cosmic.lib` (the import library for `Cosmic.dll`), not a static `.lib` build of the engine.
+
 ---
 
 ## 3. Application Lifecycle
@@ -2494,6 +2496,12 @@ LoadLibraryA(dllPath)
 ```
 
 All steps occur inside the **Safe Zone** — the end of a frame loop iteration after the LayerStack iterator has been destroyed and before the next iteration begins. This ensures no iterator invalidation occurs.
+
+> **`CreatePluginLayer()` null guard:** If the plugin's `CreatePluginLayer` export returns `nullptr` (e.g. internal allocation failure), the engine logs an error, frees the library, and aborts the load. `SetViewportLayer` is never called with a null pointer.
+
+### WorkspaceLayer ownership note
+
+`m_WorkspaceLayer` is tracked by two places simultaneously: as a typed raw pointer on `Application` (for direct access) and as a `Layer*` inside the `LayerStack` (for iteration). This is intentional — the `LayerStack` is a non-owning borrow container. `Application` holds the sole ownership and is responsible for both `PopLayer` and `delete` in the correct order. These two operations are always paired in the codebase; separating them would cause either a leak (`PopLayer` without `delete`) or a dangling iterator (`delete` without `PopLayer`). The long-term fix would mirror how `m_ImGuiLayer` is managed — a `Scope<WorkspaceLayer>` whose raw pointer is lent to the stack — but that requires restructuring the shutdown sequence and is deferred.
 
 ### Unload Sequence (`Application::UnloadProjectDLL`)
 

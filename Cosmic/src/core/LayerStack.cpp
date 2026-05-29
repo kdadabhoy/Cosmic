@@ -38,6 +38,11 @@ namespace Cosmic
 	 */
 	void LayerStack::PushLayer(Layer* layer)
 	{
+		// Layers are deleted through Layer* — virtual dtor on the base is required.
+		// This assert fires at compile time if virtual is ever accidentally removed from Layer::~Layer().
+		// Derived classes inherit virtual destruction automatically via the base.
+		static_assert(std::has_virtual_destructor_v<Layer>,
+			"Layer::~Layer() must be virtual. Deleting a derived layer through Layer* without it is UB.");
 		m_Layers.emplace(m_Layers.begin() + m_LayerInsertIndex, layer);
 		m_LayerInsertIndex++;
 		layer->OnAttach();

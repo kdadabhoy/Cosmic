@@ -482,6 +482,14 @@ namespace Cosmic
 		// 4. Instantiate the plugin layer and assign it as the workspace viewport focus
 		m_ActivePluginLayer = createPluginLayer();
 
+		if (!m_ActivePluginLayer)
+		{
+			CS_CORE_ERROR("Plugin's CreatePluginLayer() returned nullptr — aborting load.");
+			FreeLibrary(handle);
+			m_PluginHandle = nullptr;
+			return;
+		}
+
 		if (m_WorkspaceLayer)
 		{
 			m_WorkspaceLayer->SetViewportLayer(m_ActivePluginLayer);
@@ -531,7 +539,7 @@ namespace Cosmic
 		}
 
 		// 3. Flush the library handle out of the operating system process memory space
-		FreeLibrary((HMODULE)m_PluginHandle);
+		FreeLibrary(m_PluginHandle);
 		m_PluginHandle = nullptr;
 		CS_CORE_INFO("Project DLL safely unmounted and unloaded.");
 	}

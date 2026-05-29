@@ -24,16 +24,23 @@
  * memory corruption, dangling pointer exceptions, or OpenGL state failures.
  */
 
-#include "core/Core.h" 
+#include "core/Core.h"
 #include "core/Window.h"
 #include "core/LayerStack.h"
-#include "events/Event.h"       
+#include "events/Event.h"
 #include "events/ApplicationEvent.h"
 #include "layers/ImGuiLayer.h"
-#include "graphics/FrameBuffer.h" 
+#include "graphics/FrameBuffer.h"
 #include "core/Timestep.h"
 #include <memory>
 #include <string>
+
+// Forward-declare HMODULE to avoid pulling Windows.h into every file that includes Application.h.
+// HMODULE is defined as DECLARE_HANDLE(HMODULE) which expands to: struct HMODULE__*
+#if defined(_WIN32) && !defined(_WINDOWS_)
+struct HINSTANCE__;
+typedef struct HINSTANCE__* HMODULE;
+#endif
 
 namespace Cosmic
 {
@@ -178,7 +185,7 @@ namespace Cosmic
 		/////////////////////////////////////////////////////////////////////////////////
 
 		WorkspaceLayer*		m_WorkspaceLayer = nullptr;
-		void*				m_PluginHandle = nullptr;
+		HMODULE				m_PluginHandle = nullptr;  // typed as HMODULE — communicates "loaded DLL handle" clearly
 		Layer*				m_ActivePluginLayer = nullptr;
 		bool				m_PendingReturnToLauncher = false;
 
