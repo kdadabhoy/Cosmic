@@ -69,6 +69,8 @@ set_target_properties(Cosmic PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY "${COSMIC_SDK_DIR}/build/Runtime/$<CONFIG>"
 )
 
+target_precompile_headers(Cosmic PRIVATE src/CosmicPCH.h)
+
 # FIXED: Uses generator expressions to safely resolve paths during asset sync
 add_custom_command(TARGET Cosmic POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory

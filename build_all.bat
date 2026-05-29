@@ -5,6 +5,10 @@ echo ======================================================
 echo            Cosmic Engine - Full Universal Build
 echo ======================================================
 
+:: Accept optional config argument: build_all.bat [Debug|Release]
+set BUILD_CONFIG=%1
+if "%BUILD_CONFIG%"=="" set BUILD_CONFIG=Debug
+
 :: Try to find MSVC environment but don't hard fail if it's missing
 set "VS_PATH="
 if exist "%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" (
@@ -25,13 +29,16 @@ mkdir build
 cd build
 
 echo [STAGE 1] Configuring Global Solution Tree...
-:: Note: Removed "-A x64" to allow non-MSVC generators (like Ninja) to configure gracefully
-cmake .. -DCOSMIC_BUILD_ENGINE_ONLY=OFF
+if defined VS_PATH (
+    cmake .. -A x64 -DCOSMIC_BUILD_ENGINE_ONLY=OFF
+) else (
+    cmake .. -DCOSMIC_BUILD_ENGINE_ONLY=OFF
+)
 
 echo [STAGE 2] Building Engine Host and All Client Projects...
-cmake --build . --config Debug --parallel
+cmake --build . --config %BUILD_CONFIG% --parallel
 
 echo.
-echo SUCCESS: Full System Context Built Natively - Foolproof Version!
+echo SUCCESS: Full System Context Built! (%BUILD_CONFIG%)
 pause
 ENDLOCAL

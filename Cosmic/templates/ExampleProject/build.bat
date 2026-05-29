@@ -6,6 +6,10 @@ echo ======================================================
 echo            Cosmic Engine - TemplateProject
 echo ======================================================
 
+:: Accept optional config argument: build.bat [Debug|Release]
+set BUILD_CONFIG=%1
+if "%BUILD_CONFIG%"=="" set BUILD_CONFIG=Debug
+
 :: 1. Smart MSVC Environment Detection
 set "VS_PATH="
 if exist "%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" (
@@ -36,7 +40,7 @@ if not exist CMakeCache.txt (
 )
 
 echo [STAGE 2] Building TemplateProject.dll...
-cmake --build . --config Debug --parallel
+cmake --build . --config %BUILD_CONFIG% --parallel
 
 if %ERRORLEVEL% NEQ 0 (
     echo.
@@ -47,6 +51,6 @@ if %ERRORLEVEL% NEQ 0 (
 )
 
 echo.
-echo SUCCESS: TemplateProject.dll built and assets synced!
+echo SUCCESS: TemplateProject.dll built and assets synced! (%BUILD_CONFIG%)
 cd ..
 ENDLOCAL

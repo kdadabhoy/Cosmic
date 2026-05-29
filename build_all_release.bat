@@ -1,12 +1,13 @@
 @echo off
 SETLOCAL EnableDelayedExpansion
 CLS
-
 echo ======================================================
-echo            Cosmic Engine - MyProject
+echo            Cosmic Engine - Full Universal Build (Release)
 echo ======================================================
 
-:: 1. Smart MSVC Environment Detection
+set BUILD_CONFIG=Release
+
+:: Try to find MSVC environment but don't hard fail if it's missing
 set "VS_PATH="
 if exist "%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" (
     for /f "usebackq tokens=*" %%i in (`"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath`) do (set "VS_PATH=%%i")
@@ -17,36 +18,25 @@ if defined VS_PATH (
         echo [STAGE 0] Initializing MSVC Environment...
         call "!VS_PATH!\Common7\Tools\VsDevCmd.bat" -arch=x64
     )
+) else (
+    echo [INFO] Visual Studio not detected. Relying on system default CMake generator...
 )
 
-:: 2. SDK Path Resolution
-if "%COSMIC_SDK%"=="" (
-    echo [WARN] COSMIC_SDK environment variable not found. Using C:/dev/Cosmic...
-    set "COSMIC_SDK=C:/dev/Cosmic"
-)
-
-echo [INFO] SDK Root: %COSMIC_SDK%
-
-if not exist build mkdir build
+if exist build rmdir /s /q build
+mkdir build
 cd build
 
-if not exist CMakeCache.txt (
-    echo [STAGE 1] Configuring CMake...
-    cmake .. -DCOSMIC_SDK_DIR="%COSMIC_SDK%"
+echo [STAGE 1] Configuring Global Solution Tree...
+if defined VS_PATH (
+    cmake .. -A x64 -DCOSMIC_BUILD_ENGINE_ONLY=OFF
+) else (
+    cmake .. -DCOSMIC_BUILD_ENGINE_ONLY=OFF
 )
 
-echo [STAGE 2] Building MyProject.dll...
-cmake --build . --config Debug --parallel
-
-if %ERRORLEVEL% NEQ 0 (
-    echo.
-    echo [ERROR] Build failed! Check log output above.
-    cd ..
-    pause
-    exit /b %ERRORLEVEL%
-)
+echo [STAGE 2] Building Engine Host and All Client Projects...
+cmake --build . --config %BUILD_CONFIG% --parallel
 
 echo.
-echo SUCCESS: MyProject.dll built and assets synced!
-cd ..
+echo SUCCESS: Full System Context Built! (%BUILD_CONFIG%)
+pause
 ENDLOCAL

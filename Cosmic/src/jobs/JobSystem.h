@@ -61,15 +61,7 @@
 #include <vector>
 #include <cstdint>
 
-// Windows headers — isolated here so they never pollute engine headers.
-// WIN32_LEAN_AND_MEAN is set via CMake globally, but we guard against the
-// macro collision between Windows.h min/max and STL just in case.
-#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN
-#endif
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
+// WIN32_LEAN_AND_MEAN and NOMINMAX are defined globally via CMake.
 #include <Windows.h>
 
 namespace Cosmic

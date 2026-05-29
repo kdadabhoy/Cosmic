@@ -5,6 +5,10 @@ echo ======================================================
 echo            Cosmic Engine - CORE ONLY BUILD
 echo ======================================================
 
+:: Accept optional config argument: build_engine.bat [Debug|Release]
+set BUILD_CONFIG=%1
+if "%BUILD_CONFIG%"=="" set BUILD_CONFIG=Debug
+
 set "VS_PATH="
 if exist "%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" (
     for /f "usebackq tokens=*" %%i in (`"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath`) do (set "VS_PATH=%%i")
@@ -19,16 +23,35 @@ if defined VS_PATH (
     echo [INFO] Visual Studio not detected. Relying on system default CMake generator...
 )
 
-if not exist build mkdir build
+:: If no build directory exists, configure fresh with ENGINE_ONLY=ON.
+:: If the cache exists but was configured with ENGINE_ONLY=OFF (e.g. after build.bat),
+:: re-configure so the flag matches what this script needs.
+set NEEDS_CONFIGURE=0
+if not exist build (
+    mkdir build
+    set NEEDS_CONFIGURE=1
+) else (
+    findstr /C:"COSMIC_BUILD_ENGINE_ONLY:BOOL=OFF" build\CMakeCache.txt >nul 2>&1
+    if not errorlevel 1 (
+        echo [INFO] Cache has ENGINE_ONLY=OFF — reconfiguring for engine-only build...
+        set NEEDS_CONFIGURE=1
+    )
+)
+
 cd build
 
-echo [STAGE 1] Configuring CMake for Engine Core Only...
-cmake .. -DCOSMIC_BUILD_ENGINE_ONLY=ON
+if "!NEEDS_CONFIGURE!"=="1" (
+    if defined VS_PATH (
+        cmake .. -A x64 -DCOSMIC_BUILD_ENGINE_ONLY=ON
+    ) else (
+        cmake .. -DCOSMIC_BUILD_ENGINE_ONLY=ON
+    )
+)
 
-echo [STAGE 2] Compiling Engine Host components...
-cmake --build . --config Debug --target Cosmic CosmicApp --parallel
+echo [STAGE 1] Compiling Engine Host components...
+cmake --build . --config %BUILD_CONFIG% --target Cosmic CosmicApp --parallel
 
 echo.
-echo SUCCESS: Engine Core Components Updated!
+echo SUCCESS: Engine Core Components Updated! (%BUILD_CONFIG%)
 pause
 ENDLOCAL

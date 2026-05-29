@@ -82,7 +82,7 @@ After setup, you have two main build scripts:
 | Script                | When to use                                                                                                                         |
 | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
 | `build_all.bat`       | Full CMake reconfigure + compile of the engine and all projects. Use after cloning or adding a new project.                         |
-| `build_all_quick.bat` | Incremental build — skips CMake reconfigure. Use for iterating on your project code when you haven't changed the project structure. |
+| `build.bat` | Incremental build — skips CMake reconfigure. Use for iterating on your project code when you haven't changed the project structure. |
 | `build_engine.bat`    | Builds the engine host only, skipping all project DLLs. Useful when validating engine changes in isolation.                         |
 
 Outputs land in `build/Runtime/Debug/`. The engine executable and all project DLLs are placed here so the launcher can discover them.
@@ -96,7 +96,7 @@ The easiest way to start a new project is from inside the engine itself. Launch 
 3. Generate a correct `CMakeLists.txt` wired to your local SDK path.
 4. Generate a `build.bat` inside the project directory.
 
-After generation, run `build_all.bat` once from the SDK root to register and compile the new project. Subsequent iterations can use `build_all_quick.bat` or the project's own `build.bat`.
+After generation, run `build_all.bat` once from the SDK root to register and compile the new project. Subsequent iterations can use `build.bat` (root-level incremental) or the project's own `build.bat`.
 
 ### Project Structure
 
@@ -109,7 +109,7 @@ YourSDKRoot/
 ├── Projects/                   ← Your project folders live here (CMake scans this automatically)
 ├── docs/                       ← Engine documentation
 ├── build_all.bat               ← Full CMake reconfigure + build engine + all projects
-├── build_all_quick.bat         ← Incremental build (no CMake reconfigure)
+├── build.bat                   ← Incremental build (no CMake reconfigure)
 ├── build_engine.bat            ← Engine only
 ├── setup.bat                   ← First-time environment variable setup (run once)
 └── build/
@@ -3331,6 +3331,158 @@ set_target_properties(MyProject PROPERTIES
 ```
 
 The `SHARED` keyword produces a `.dll`. The output directory convention places the DLL where the engine launcher expects to find it.
+
+### Build Scripts
+
+There are five batch files in the SDK root and inside each project. Here is what each one does and when to use it.
+
+---
+
+#### `setup.bat` — run once per machine
+
+Permanently registers the `COSMIC_SDK` environment variable pointing at the SDK root using `setx`. This is required before any project `build.bat` can locate the engine headers and import library. Run it once after cloning. Restart any open terminals afterward for the variable to take effect.
+
+---
+
+#### `build_all.bat` — clean full rebuild
+
+```bat
+build_all.bat [Debug|Release]     :: defaults to Debug
+```
+
+Deletes the entire `build/` directory, re-runs CMake configure from scratch, then builds the engine and every project under `Projects/`. Use this when:
+- You have just cloned the repo for the first time
+- A `CMakeLists.txt` has changed in a way that left the cache stale
+- You want a guaranteed clean state (CI, release packaging)
+
+Because it deletes `build/`, **all incremental state is lost** — the next compile is a full rebuild of everything. Do not use this for day-to-day iteration.
+
+---
+
+#### `build.bat` — incremental full build
+
+```bat
+build.bat [Debug|Release]     :: defaults to Debug
+```
+
+The script you will use most often. Calls `cmake --build` directly without re-running configure. CMake automatically re-runs configure if any `CMakeLists.txt` has changed. Use this for iterating on engine source or any project when you want to rebuild everything in one step.
+
+On first run (no `build/` directory yet), it detects the missing cache and runs a full configure automatically before building — so it is safe to run even on a fresh clone.
+
+It also detects if the cache was left in engine-only mode by a prior `build_engine.bat` run (`COSMIC_BUILD_ENGINE_ONLY=ON`) and re-configures with `OFF` before building, so switching between the two scripts never produces a silently wrong build.
+
+---
+
+#### `build_engine.bat` — engine-only incremental build
+
+```bat
+build_engine.bat [Debug|Release]     :: defaults to Debug
+```
+
+Runs `cmake --build` targeting only the `Cosmic` and `CosmicApp` targets. Project DLLs under `Projects/` are skipped entirely. Use this when you are making changes to the engine itself and want the fastest possible turnaround.
+
+Like `build.bat`, it handles the first-run case automatically. It also detects if the cache was left in full-build mode by a prior `build.bat` run (`COSMIC_BUILD_ENGINE_ONLY=OFF`) and re-configures with `ON` before building.
+
+---
+
+#### `Projects/<name>/build.bat` — single project build
+
+```bat
+build.bat [Debug|Release]     :: defaults to Debug
+```
+
+Builds one project DLL in isolation without touching the engine. It has its own `build/` subdirectory and its own CMake cache, separate from the root build tree. Configure only runs on first use (when `CMakeCache.txt` does not yet exist) — subsequent runs go straight to `cmake --build`. Use this when:
+- You are iterating on a single project and do not need to rebuild anything else
+- Your project lives outside the SDK repo (standalone workflow)
+
+The script reads `COSMIC_SDK` to locate the engine headers and import library. If the variable is not set, it falls back to the hardcoded path written by the Launcher at project generation time.
+
+---
+
+#### When to use which script
+
+| Situation | Script |
+| --- | --- |
+| First clone / clean slate needed | `build_all.bat` |
+| Changing engine source, rebuild everything | `build.bat` |
+| Changing engine source only | `build_engine.bat` |
+| Changing one project | `Projects/<name>/build.bat` |
+| Building Release for distribution | Any script with `Release` argument |
+
+### Debug vs Release
+
+All scripts default to `Debug`. To build Release, either double-click `build_all_release.bat` or pass `Release` as the first argument to any script from a terminal:
+
+```bat
+build.bat Release
+build_all.bat Release
+build_engine.bat Release
+```
+
+`build_all_release.bat` is the recommended path for distribution — it deletes the build directory and rebuilds everything from scratch, so there is no risk of stale incremental state or a mismatched cache flag making it into your release output.
+
+#### What actually changes between the two
+
+**Debug** — what you use during development:
+- Full debug symbols (`.pdb` files) — the debugger can show you exact line numbers, variable values, and call stacks
+- No optimizations — code runs slower but executes predictably; the compiler does not reorder, inline, or eliminate anything, so stepping through code in a debugger behaves exactly as written
+- `assert()` and `CS_CORE_ASSERT` are active — contract violations crash immediately with a message rather than silently corrupting state
+
+**Release** — what you use for distribution or performance measurement:
+- Full compiler optimizations (`/O2` on MSVC) — the compiler can inline functions, reorder instructions, eliminate dead code, and vectorize loops. Typically 2–5× faster than Debug for compute-heavy code
+- No debug symbols by default — stack traces in a crash are less readable
+- `assert()` and `CS_CORE_ASSERT` are compiled out — a failing assert silently does nothing
+
+#### The important rule: never benchmark in Debug
+
+If you are measuring frame time, job throughput, or serial throughput, always run Release. Debug builds can be 5–10× slower than Release for hot loops due to the lack of optimization and the overhead of iterator debug checks in the MSVC standard library. A result that looks slow in Debug may be perfectly fine in Release.
+
+#### Outputs land in separate directories
+
+Both configurations build into the same `build/Runtime/` tree but in separate subdirectories:
+
+```
+build/Runtime/Debug/      ← Debug DLLs and exe
+build/Runtime/Release/    ← Release DLLs and exe
+```
+
+They do not overwrite each other, so you can keep both around and switch by launching the exe from the appropriate folder.
+
+### Precompiled Headers
+
+The engine target uses a precompiled header (`Cosmic/src/CosmicPCH.h`) to avoid re-parsing heavy third-party headers on every translation unit. It is registered in `Cosmic/CMakeLists.txt`:
+
+```cmake
+target_precompile_headers(Cosmic PRIVATE src/CosmicPCH.h)
+```
+
+CMake injects the PCH into every engine `.cpp` automatically via the compiler's force-include flag (`/FI` on MSVC). **You do not add `#include "CosmicPCH.h"` to any source file** — the injection happens at the compiler command line level.
+
+#### What belongs in the PCH
+
+The PCH only contains headers that are **stable** — headers you will never edit during development. If any header inside the PCH changes, the compiler invalidates the cached parse result and rebuilds it, then recompiles every translation unit in the target. One bad choice in the PCH turns any small change into a full engine rebuild.
+
+| Belongs in PCH | Stays as explicit includes |
+| --- | --- |
+| Standard library (`<string>`, `<vector>`, `<windows.h>`, etc.) | Engine headers (`core/Log.h`, `renderer/Renderer2D.h`, etc.) |
+| Third-party libraries you do not modify (glm, spdlog) | Any header that changes during active development |
+| Platform headers (`<windows.h>`) | Headers with ordering constraints (e.g. `<glad/glad.h>`) |
+
+#### glad ordering note
+
+`<glad/glad.h>` is intentionally excluded from the PCH. Glad must be included before any code that would pull in `<GL/gl.h>` from the system SDK. The PCH force-includes `<windows.h>` first, but `<windows.h>` with `WIN32_LEAN_AND_MEAN` does not include `<GL/gl.h>`, so there is no conflict. Files that use glad (`OpenGLBuffer.cpp`, `OpenGLVertexArray.cpp`, etc.) continue to list `#include <glad/glad.h>` as their first explicit include and this remains correct.
+
+#### Build scripts
+
+All three build scripts accept an optional configuration argument (default: `Debug`):
+
+```bat
+build_all.bat Release           :: clean reconfigure + Release build
+build.bat Release               :: incremental Release build
+build_engine.bat                :: engine-only Debug build
+```
+
+`build.bat` does not invoke `cmake ..` — it calls `cmake --build` directly. CMake re-runs configure automatically when any `CMakeLists.txt` changes, so the explicit configure step is unnecessary for day-to-day iteration and only costs time.
 
 ---
 
