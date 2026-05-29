@@ -33,7 +33,6 @@ namespace Cosmic
 	{
 		None = 0,
 		WindowClose, WindowResize, WindowFocus, WindowLostFocus, WindowMoved,
-		AppTick, AppUpdate, AppRender,
 		KeyPressed, KeyReleased, KeyTyped,
 		MouseButtonPressed, MouseButtonReleased, MouseMoved, MouseScrolled
 	};
@@ -65,7 +64,7 @@ namespace Cosmic
 	 * Implements the required virtual functions for identifying the event type.
 	 * Includes a 'StaticType' so the Dispatcher can compare types without an instance.
 	 */
-#define EVENT_CLASS_TYPE(type) static EventType GetStaticType() { return EventType::##type; }\
+#define EVENT_CLASS_TYPE(type) static EventType GetStaticType() { return EventType::type; }\
 								virtual EventType GetEventType() const override { return GetStaticType(); }\
 								virtual const char* GetName() const override { return #type; }
 
@@ -100,7 +99,7 @@ namespace Cosmic
 		 * IsInCategory
 		 * Uses bitwise AND to check if this event belongs to a specific group.
 		 */
-		inline bool IsInCategory(EventCategory category)
+		inline bool IsInCategory(EventCategory category) const
 		{
 			return GetCategoryFlags() & category;
 		}
@@ -133,9 +132,11 @@ namespace Cosmic
 		{
 			if (m_Event.GetEventType() == T::GetStaticType())
 			{
-				// cast the base event to the specific type (e.g., KeyPressedEvent) 
+				// Cast the base event to the specific type (e.g., KeyPressedEvent)
 				// so the function can access specialized data like 'KeyCode'.
-				m_Event.Handled = func(static_cast<T&>(m_Event));
+				// Only set Handled to true — never clear a true set by a prior handler.
+				if (func(static_cast<T&>(m_Event)))
+					m_Event.Handled = true;
 				return true;
 			}
 			return false;
