@@ -4,17 +4,17 @@ namespace Cosmic
 {
 	Ref<Material> Material::Create(const Ref<Shader>& shader, const std::string& name)
 	{
-		return std::make_shared<Material>(shader, name);
+		return std::make_shared<Material>(PrivateTag{}, shader, name);
 	}
 
-	Material::Material(const Ref<Shader>& shader, const std::string& name)
+	Material::Material(PrivateTag, const Ref<Shader>& shader, const std::string& name)
 		: m_Shader(shader), m_Name(name)
 	{
 	}
 
 	Ref<Material> Material::Clone(const Ref<Material>& source, const std::string& newName)
 	{
-		auto copy = std::make_shared<Material>(source->m_Shader, newName);
+		auto copy = std::make_shared<Material>(PrivateTag{}, source->m_Shader, newName);
 		copy->m_Floats = source->m_Floats;
 		copy->m_Float2s = source->m_Float2s;
 		copy->m_Float3s = source->m_Float3s;
@@ -89,5 +89,20 @@ namespace Cosmic
 	bool Material::HasFloat2(const std::string& name) const
 	{
 		return m_Float2s.count(name) > 0;
+	}
+
+	bool Material::HasFloat3(const std::string& name) const
+	{
+		return m_Float3s.count(name) > 0;
+	}
+
+	bool Material::HasFloat4(const std::string& name) const
+	{
+		return m_Float4s.count(name) > 0;
+	}
+
+	bool Material::HasTexture(const std::string& name) const
+	{
+		return m_Textures.count(name) > 0;
 	}
 }

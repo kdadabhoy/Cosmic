@@ -205,6 +205,7 @@ namespace Cosmic
 			samplers[i] = i;
 
 		s_Data.TextureShader = Shader::Create("assets/shaders/Texture.glsl");
+		CS_CORE_ASSERT(s_Data.TextureShader, "Renderer2D: Failed to load core Texture shader — engine cannot continue.");
 		s_Data.TextureShader->Bind();
 		s_Data.TextureShader->SetIntArray("u_Textures", samplers, s_Data.MaxTextureSlots);
 
@@ -742,7 +743,7 @@ namespace Cosmic
 		Ref<Texture> tex = material->GetTexture("u_Texture");
 		if (!tex) tex = s_Data.WhiteTexture;
 
-		glm::vec4 color = material->GetVector("u_Color");
+		glm::vec4 color = material->GetVector4("u_Color");
 
 		if (s_Data.QuadIndexCount >= Renderer2DData::MaxIndices) FlushAndReset();
 
@@ -925,7 +926,7 @@ namespace Cosmic
 		Ref<Texture> tex = material->GetTexture("u_Texture");
 		if (!tex) tex = s_Data.WhiteTexture;
 
-		glm::vec4 color = material->GetVector("u_Color");
+		glm::vec4 color = material->GetVector4("u_Color");
 
 		if (s_Data.QuadIndexCount >= Renderer2DData::MaxIndices) FlushAndReset();
 

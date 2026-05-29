@@ -16,7 +16,6 @@ namespace Cosmic
         // Life Cycle & Creation
         ///////////////////////////////
 
-        Material(const Ref<Shader>& shader, const std::string& name = "Untitled Material");
         ~Material() = default;
 
         static Ref<Material>        Create(const Ref<Shader>& shader, const std::string& name = "Untitled Material");
@@ -45,8 +44,9 @@ namespace Cosmic
         float               GetFloat(const std::string& name);
         glm::vec2           GetVector2(const std::string& name);
         glm::vec3           GetVector3(const std::string& name);
+        /** Returns the cached vec4 for `name`, or glm::vec4(1.0f) (opaque white) if the key is absent.
+         *  The white default is intentional so a missing u_Color tints geometry at full brightness rather than erasing it. */
         glm::vec4           GetVector4(const std::string& name);
-        inline glm::vec4 GetVector(const std::string& name)             { return GetVector4(name); } // Legacy (Refactor Renderer2D later to be able to remove this)
 
         Ref<Texture>        GetTexture(const std::string& name);
 
@@ -74,6 +74,14 @@ namespace Cosmic
 
         bool                                HasFloat(const std::string& name) const;
         bool                                HasFloat2(const std::string& name) const;
+        bool                                HasFloat3(const std::string& name) const;
+        bool                                HasFloat4(const std::string& name) const;
+        bool                                HasTexture(const std::string& name) const;
+
+    private:
+        struct PrivateTag {};
+    public:
+        Material(PrivateTag, const Ref<Shader>& shader, const std::string& name = "Untitled Material");
 
     private:
         Ref<Shader>     m_Shader;

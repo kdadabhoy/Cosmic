@@ -196,7 +196,7 @@ namespace Workspace
 		{
 			if (ImGui::CollapsingHeader("Shared Material"))
 			{
-				glm::vec4 col = m_SharedMaterial->GetVector("u_Color");
+				glm::vec4 col = m_SharedMaterial->GetVector4("u_Color");
 				if (ImGui::ColorEdit4("Tint##shared", &col.x))
 					m_SharedMaterial->Set("u_Color", col);
 			}

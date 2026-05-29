@@ -883,6 +883,8 @@ Always resolve paths through the VFS before passing them to `Shader::Create`:
 ```cpp
 std::string path   = Cosmic::FileSystem::Resolve("project://shaders/MyShader.glsl");
 Ref<Cosmic::Shader> shader = Cosmic::Shader::Create(path);
+// Shader::Create returns nullptr on compilation or link failure — always null-check before use.
+if (!shader) { CS_ERROR("Failed to load shader: {}", path); return; }
 ```
 
 ### Creating and Configuring a Material
@@ -905,12 +907,15 @@ material->Set("u_NoiseTex", tex);
 ```cpp
 float         roughness = material->GetFloat("u_Roughness");
 glm::vec2     offset    = material->GetVector2("u_Offset");
-glm::vec4     color     = material->GetVector4("u_Color");
+glm::vec4     color     = material->GetVector4("u_Color"); // missing key returns glm::vec4(1.0f) — opaque white, not zero
 Ref<Cosmic::Texture2D> tex = material->GetTexture("u_NoiseTex");
 
 // Check presence before reading
-if (material->HasFloat("u_Roughness")) { ... }
-if (material->HasFloat2("u_Offset"))   { ... }
+if (material->HasFloat("u_Roughness"))  { ... }
+if (material->HasFloat2("u_Offset"))    { ... }
+if (material->HasFloat3("u_Dir"))       { ... }
+if (material->HasFloat4("u_Color"))     { ... }
+if (material->HasTexture("u_NoiseTex")) { ... }
 ```
 
 ### Cloning a Material
@@ -994,7 +999,7 @@ Copy this as the starting point for any new shader. It declares everything expli
 
 ```glsl
 #type vertex
-#version 330 core
+#version 450 core
 
 // Renderer2D batch layout — do not reorder or rename.
 // The VAO attribute pointers are fixed at engine init time.
@@ -1022,7 +1027,7 @@ void main()
 
 
 #type fragment
-#version 330 core
+#version 450 core
 
 layout(location = 0) out vec4 color;
 
@@ -2211,14 +2216,16 @@ void YourProject::OnAttach()
 | `GetFloat`         | `string name`                | Retrieve cached float (0.0 if missing)                      |
 | `GetVector2`       | `string name`                | Retrieve cached vec2 (zero if missing)                      |
 | `GetVector3`       | `string name`                | Retrieve cached vec3 (zero if missing)                      |
-| `GetVector4`       | `string name`                | Retrieve cached vec4 (white if missing)                     |
-| `GetVector`        | `string name`                | Legacy alias for `GetVector4`; returns `glm::vec4`          |
+| `GetVector4`       | `string name`                | Retrieve cached vec4 (**`glm::vec4(1.0f)` — white — if missing**, not zero) |
 | `GetTexture`       | `string name`                | Retrieve cached texture (`nullptr` if missing)              |
 | `Bind`             | —                            | Bind shader and upload all cached uniforms                  |
 | `GetShader`        | —                            | Returns the underlying `Ref<Shader>`                        |
 | `GetName`          | —                            | Returns the material's debug name string                    |
 | `HasFloat`         | `string name`                | True if the float uniform is set                            |
 | `HasFloat2`        | `string name`                | True if the vec2 uniform is set                             |
+| `HasFloat3`        | `string name`                | True if the vec3 uniform is set                             |
+| `HasFloat4`        | `string name`                | True if the vec4 uniform is set                             |
+| `HasTexture`       | `string name`                | True if the texture slot is set                             |
 
 ---
 
@@ -2226,7 +2233,7 @@ void YourProject::OnAttach()
 
 | Function         | Parameters                     | Description                          |
 | ---------------- | ------------------------------ | ------------------------------------ |
-| `Shader::Create` | `string filepath`              | Load and compile from a `.glsl` file |
+| `Shader::Create` | `string filepath`              | Load and compile from a `.glsl` file; returns `nullptr` on compilation or link failure — always null-check the result |
 | `Bind`           | —                              | Activate in the GPU pipeline         |
 | `Unbind`         | —                              | Deactivate                           |
 | `SetInt`         | `string, int`                  | Upload integer uniform               |

@@ -282,7 +282,7 @@ namespace Cosmic
                 {
                     enginePreamble += "in vec4 v_Color;\n";
                 }
-                if (cleanSearchSource.find("color") == std::string::npos)
+                if (cleanSearchSource.find("out vec4 color") == std::string::npos)
                 {
                     enginePreamble += "layout(location = 0) out vec4 color;\n";
                 }
@@ -296,7 +296,7 @@ namespace Cosmic
                 enginePreamble += "#define iTime u_Time\n";
                 enginePreamble += "#define iResolution vec3(u_ViewportSize, 1.0)\n";
 
-                if (shaderType == GL_FRAGMENT_SHADER && cleanSearchSource.find("mainImage") != std::string::npos)
+                if (shaderType == GL_FRAGMENT_SHADER && cleanSearchSource.find("mainImage") != std::string::npos && cleanSearchSource.find("void main") == std::string::npos)
                 {
                     shadertoyWrapper = "\nvoid main(){\n\tvec2 shadertoyFragCoord = v_TexCoord * u_ViewportSize;\n\tvec4 shadertoyFragColor;\n\tmainImage(shadertoyFragColor, shadertoyFragCoord);\n\tcolor = shadertoyFragColor * v_Color;\n}\n";
                 }

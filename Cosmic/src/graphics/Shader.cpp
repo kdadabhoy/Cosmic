@@ -1,4 +1,5 @@
 #include "graphics/Shader.h"
+#include "core/Log.h"
 #include "renderer/RendererAPI.h"
 #include "platform/opengl/OpenGLShader.h"
 
@@ -23,7 +24,16 @@ namespace Cosmic
 		switch (RendererAPI::GetAPI())
 		{
 		case RendererAPI::API::None:    return nullptr;
-		case RendererAPI::API::OpenGL:  return std::make_shared<OpenGLShader>(filepath);
+		case RendererAPI::API::OpenGL:
+		{
+			auto shader = std::make_shared<OpenGLShader>(filepath);
+			if (!shader->IsValid())
+			{
+				CS_CORE_ERROR("Shader::Create: compilation or link failure for '{0}'. Returning nullptr.", filepath);
+				return nullptr;
+			}
+			return shader;
+		}
 		}
 
 		return nullptr;
