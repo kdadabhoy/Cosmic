@@ -1423,8 +1423,14 @@ const glm::vec3& pos = m_Camera.GetPosition();
 m_Camera.SetPosition({0.f, 0.f, 0.f});
 
 // Zoom
+// Two zoom methods — choose based on whether you want instant or animated:
+//   SetZoomLevel      — hard-snaps both current and target zoom instantly, no interpolation.
+//                       Use for initialization, teleports, or ImGui slider driven overrides.
+//   SetTargetZoomLevel — sets only the target; OnUpdate's asymptotic blend animates toward it.
+//                       Use when focusing on a game object or responding to a game event smoothly.
 float z = m_Camera.GetZoomLevel();
-m_Camera.SetZoomLevel(2.0f);           // hard snap (bypasses interpolation)
+m_Camera.SetZoomLevel(2.0f);           // hard snap — bypasses interpolation entirely
+m_Camera.SetTargetZoomLevel(2.0f);     // smooth animated zoom toward 2.0 over subsequent frames
 m_Camera.SetZoomLimits(0.25f, 10.0f); // clamp scroll range (these are the defaults)
 m_Camera.SetZoomSpeed(0.25f);          // world units per scroll tick (default)
 
@@ -1471,6 +1477,12 @@ float rot            = cam.GetRotation();
 // Update frustum bounds (e.g. after resize)
 cam.SetProjection(-aspect, aspect, -1.f, 1.f);
 ```
+
+> **Implementation note:** `UpdateViewMatrix` uses the closed-form inverse for a translate+rotate
+> transform (`transpose(R) * T(-pos)`) rather than `glm::inverse()`. For a pure Z-rotation camera,
+> `transpose(R) == inverse(R)` because rotation matrices have orthonormal columns. This eliminates
+> the general-purpose Cramer's rule path (~80 ops) in favour of roughly 10 multiplications,
+> called on every `SetPosition` / `SetRotation` mutation.
 
 ---
 

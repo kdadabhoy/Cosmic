@@ -95,9 +95,17 @@ namespace Cosmic
 		CalculateView();
 	}
 
+	void OrthographicCameraController::SetTargetZoomLevel(float level)
+	{
+		m_TargetZoomLevel = std::clamp(level, m_MinZoom, m_MaxZoom);
+		// m_ZoomLevel is intentionally NOT updated here — OnUpdate's asymptotic
+		// blend will animate from the current zoom toward m_TargetZoomLevel.
+	}
+
 	void OrthographicCameraController::CalculateView()
 	{
 		m_Camera.SetProjection(-m_AspectRatio * m_ZoomLevel, m_AspectRatio * m_ZoomLevel, -m_ZoomLevel, m_ZoomLevel);
+		m_Camera.SetPosition(m_CameraPosition);
 	}
 
 	bool OrthographicCameraController::OnMouseScrolled(MouseScrolledEvent& e)

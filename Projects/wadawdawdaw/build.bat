@@ -3,7 +3,7 @@ SETLOCAL EnableDelayedExpansion
 CLS
 
 echo ======================================================
-echo            Cosmic Engine - waeawea
+echo            Cosmic Engine - wadawdawdaw
 echo ======================================================
 
 :: 1. Smart MSVC Environment Detection
@@ -35,7 +35,7 @@ if not exist CMakeCache.txt (
     cmake .. -DCOSMIC_SDK_DIR="%COSMIC_SDK%"
 )
 
-echo [STAGE 2] Building waeawea.dll...
+echo [STAGE 2] Building wadawdawdaw.dll...
 cmake --build . --config Debug --parallel
 
 if %ERRORLEVEL% NEQ 0 (
@@ -47,6 +47,6 @@ if %ERRORLEVEL% NEQ 0 (
 )
 
 echo.
-echo SUCCESS: waeawea.dll built and assets synced!
+echo SUCCESS: wadawdawdaw.dll built and assets synced!
 cd ..
 ENDLOCAL

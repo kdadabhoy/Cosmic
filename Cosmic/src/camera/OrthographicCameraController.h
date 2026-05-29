@@ -23,6 +23,7 @@
 #include "camera/OrthographicCamera.h"
 #include "events/ApplicationEvent.h"
 #include "events/MouseEvent.h"
+#include "codes/KeyCodes.h"
 #include <glm/glm.hpp>
 
 namespace Cosmic
@@ -36,12 +37,12 @@ namespace Cosmic
 
 		struct CameraKeyBindings
 		{
-			uint32_t MoveLeft = 65;  // Default: CS_KEY_A
-			uint32_t MoveRight = 68;  // Default: CS_KEY_D
-			uint32_t MoveUp = 87;  // Default: CS_KEY_W
-			uint32_t MoveDown = 83;  // Default: CS_KEY_S
-			uint32_t RotateQ = 81;  // Default: CS_KEY_Q
-			uint32_t RotateE = 69;  // Default: CS_KEY_E
+			uint32_t MoveLeft  = CS_KEY_A;
+			uint32_t MoveRight = CS_KEY_D;
+			uint32_t MoveUp    = CS_KEY_W;
+			uint32_t MoveDown  = CS_KEY_S;
+			uint32_t RotateQ   = CS_KEY_Q;
+			uint32_t RotateE   = CS_KEY_E;
 		};
 
 	public:
@@ -88,8 +89,19 @@ namespace Cosmic
 
 		/**
 		 * @brief Forces an absolute override of active and target zoom levels instantly.
+		 *        Hard-snaps to the new zoom with no interpolation; bypasses the smooth
+		 *        asymptotic blend. Use SetTargetZoomLevel for animated transitions.
 		 */
 		void  SetZoomLevel(float level);
+
+		/**
+		 * @brief Initiates a smooth interpolated zoom toward the given level.
+		 *        Sets only m_TargetZoomLevel; m_ZoomLevel is left unchanged so that
+		 *        OnUpdate's asymptotic blend animates the camera naturally over time.
+		 *        Do NOT call CalculateView() inside this method — the view is
+		 *        recalculated by OnUpdate on the next tick.
+		 */
+		void  SetTargetZoomLevel(float level);
 
 		/////////////////////////////////////////////////////////////////////////////////
 		// Physics & Dynamic Translation Speed Controls

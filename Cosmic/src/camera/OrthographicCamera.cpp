@@ -60,10 +60,15 @@ namespace Cosmic
 	 */
 	void OrthographicCamera::UpdateViewMatrix()
 	{
-		glm::mat4 transform = glm::translate(glm::mat4(1.0f), m_Position) *
-			glm::rotate(glm::mat4(1.0f), glm::radians(m_Rotation), glm::vec3(0, 0, 1));
+		// For a pure translate * rotate transform, (T*R)^-1 == R^T * T(-pos).
+		// transpose(R) == inverse(R) because rotation matrices have orthonormal columns.
+		// This avoids the general-case glm::inverse() (Cramer's rule, ~80 ops) in favour
+		// of the closed-form (~10 ops), which matters since this is called on every
+		// SetPosition and SetRotation mutation.
+		glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), glm::radians(m_Rotation), { 0, 0, 1 });
+		m_ViewMatrix = glm::transpose(rotation) *
+		               glm::translate(glm::mat4(1.0f), -m_Position);
 
-		m_ViewMatrix = glm::inverse(transform);
 		m_ViewProjectionMatrix = m_ProjectionMatrix * m_ViewMatrix;
 	}
 

@@ -16,7 +16,7 @@ namespace Workspace
 }
 
 // ============================================================================
-// waeawea — Root Manager Layer
+// wadawdawdaw — Root Manager Layer
 //
 // Architecture mirrors ShowcaseProject: this layer owns and drives two
 // child layers internally. Neither child is pushed onto the engine
@@ -24,11 +24,11 @@ namespace Workspace
 // ============================================================================
 namespace Workspace
 {
-	class waeawea : public Cosmic::Layer
+	class wadawdawdaw : public Cosmic::Layer
 	{
 	public:
-		waeawea();
-		virtual ~waeawea() override = default;
+		wadawdawdaw();
+		virtual ~wadawdawdaw() override = default;
 
 		virtual void OnAttach()                          override;
 		virtual void OnDetach()                          override;

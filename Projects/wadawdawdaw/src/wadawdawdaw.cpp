@@ -1,4 +1,4 @@
-#include "waeawea.h"
+#include "wadawdawdaw.h"
 #include "TemplateRenderLayer.h"
 #include "TemplateSpriteLayer.h"
 #include "TemplateRenderBenchmarkLayer.h"
@@ -8,18 +8,18 @@
 
 namespace Workspace
 {
-	waeawea::waeawea()
-		: Cosmic::Layer("waeawea")
+	wadawdawdaw::wadawdawdaw()
+		: Cosmic::Layer("wadawdawdaw")
 	{
 	}
 
 	// -------------------------------------------------------------------------
-	void waeawea::OnAttach()
+	void wadawdawdaw::OnAttach()
 	{
-		CS_INFO("waeawea: Attaching root manager layer.");
+		CS_INFO("wadawdawdaw: Attaching root manager layer.");
 
 		// 1. Resolve asset paths through the VFS
-		Cosmic::FileSystem::SetActiveProject("waeawea");
+		Cosmic::FileSystem::SetActiveProject("wadawdawdaw");
 
 		// Redirect logging outputs into the localized project workspace subfolder (still lives in build)
 		std::string physicalLogPath = Cosmic::FileSystem::Resolve("project://logs");
@@ -44,7 +44,7 @@ namespace Workspace
 		}
 		else
 		{
-			CS_WARN("waeawea: Shader not found at '{0}'. Rendering layers will use fallback geometry.", shaderPath);
+			CS_WARN("wadawdawdaw: Shader not found at '{0}'. Rendering layers will use fallback geometry.", shaderPath);
 		}
 
 		// 4. Construct child layers — NOT pushed onto the engine LayerStack
@@ -81,13 +81,13 @@ namespace Workspace
 				return false; // Not our key combo, let the engine handle it normally
 			});
 
-		CS_INFO("waeawea: {} child layers attached. Fullscreen override active.", m_Modes.size());
+		CS_INFO("wadawdawdaw: {} child layers attached. Fullscreen override active.", m_Modes.size());
 
 		
 	}
 
 	// -------------------------------------------------------------------------
-	void waeawea::OnDetach()
+	void wadawdawdaw::OnDetach()
 	{
 		for (auto& mode : m_Modes)
 		{
@@ -98,14 +98,14 @@ namespace Workspace
 		m_SharedMaterial.reset();
 		m_Scene.reset();
 
-		CS_INFO("waeawea: Detached and cleaned up.");
+		CS_INFO("wadawdawdaw: Detached and cleaned up.");
 
 		// Optional Safety Measure: Reset logging back to engine defaults when leaving workspace
 		Cosmic::Log::SetLogDirectory("logs");
 	}
 
 	// -------------------------------------------------------------------------
-	void waeawea::OnUpdate(float ts)
+	void wadawdawdaw::OnUpdate(float ts)
 	{
 		if (m_Modes.empty()) return;
 
@@ -126,7 +126,7 @@ namespace Workspace
 	}
 
 	// -------------------------------------------------------------------------
-	void waeawea::OnFixedUpdate(float deltaFixedTime)
+	void wadawdawdaw::OnFixedUpdate(float deltaFixedTime)
 	{
 		if (m_Modes.empty()) return;
 
@@ -136,7 +136,7 @@ namespace Workspace
 	}
 
 	// -------------------------------------------------------------------------
-	void waeawea::OnImGuiRender()
+	void wadawdawdaw::OnImGuiRender()
 	{
 		if (m_Modes.empty()) return;
 
@@ -217,7 +217,7 @@ namespace Workspace
 	}
 
 	// -------------------------------------------------------------------------
-	void waeawea::OnEvent(Cosmic::Event& e)
+	void wadawdawdaw::OnEvent(Cosmic::Event& e)
 	{
 		if (m_Modes.empty()) return;
 
@@ -249,6 +249,6 @@ extern "C"
 
 	__declspec(dllexport) Cosmic::Layer* CreatePluginLayer()
 	{
-		return new Workspace::waeawea();
+		return new Workspace::wadawdawdaw();
 	}
 }
