@@ -291,6 +291,23 @@ namespace Workspace
         // manager before dispatch.  Guard <= 0 to detect pause / rewind as normal.
         if (dt <= 0.0f) return;
 
+        // Recording paused — two behaviours controlled by m_PreservePauses:
+        //   false (default): return early; clock holds, no frames captured.
+        //                    Replay compresses the pause out entirely.
+        //   true:            run simulation with dt=0 so agents record frozen
+        //                    values without moving, then tick the clock with real
+        //                    dt.  Replay shows agents standing still for exactly
+        //                    as long as the pause lasted.
+        if (m_RecordingPaused)
+        {
+            if (m_PreservePauses && m_Panel.GetMode() != Cosmic::TelemetryPanel::Mode::Replay)
+            {
+                m_Scene->OnFixedUpdate(0.0f);
+                m_Recorder.Tick(dt);
+            }
+            return;
+        }
+
         // Only run simulation and advance the recorder clock when live.
         if (m_Panel.GetMode() != Cosmic::TelemetryPanel::Mode::Replay)
             m_Scene->OnFixedUpdate(dt);
@@ -333,17 +350,34 @@ namespace Workspace
             ImGui::TextDisabled("(blank = timestamp)");
         }
 
+        ImGui::Checkbox("Preserve pauses in recording##rec_preservepause", &m_PreservePauses);
+        if (ImGui::IsItemHovered())
+            ImGui::SetTooltip(
+                "OFF: pauses are compressed out; replay plays continuously.\n"
+                "ON:  frozen frames are written during pause; replay shows\n"
+                "     agents standing still for the real pause duration.");
+
         ImGui::Spacing();
 
-        // Start / Stop
+        // Start / Stop / Pause
         if (!m_Recording)
         {
             if (ImGui::Button("  Start Recording  ##rec_start"))
             {
+                // If a replay is loaded, unload it cleanly before starting a new
+                // recording — the player and entity selection hold stale state that
+                // would cause a crash the next time OnFixedUpdate runs the simulation.
+                if (m_Panel.GetMode() == Cosmic::TelemetryPanel::Mode::Replay)
+                {
+                    m_Player.Unload();
+                    Cosmic::EntitySelection::Clear();
+                }
+
                 m_Recorder.Clear();
                 m_Recorder.ReserveCapacity(k_RecordCapacity);
-                m_Recording    = true;
-                m_RecordStatus = "Recording...";
+                m_Recording       = true;
+                m_RecordingPaused = false;
+                m_RecordStatus    = "Recording...";
                 m_Panel.SetMode(Cosmic::TelemetryPanel::Mode::Live);
                 CS_INFO("TemplateTelemetryLayer: Recording started.");
             }
@@ -351,14 +385,44 @@ namespace Workspace
         else
         {
             ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.8f, 0.15f, 0.15f, 1.0f));
-            if (ImGui::Button("  Stop Recording   ##rec_stop"))
+            if (ImGui::Button("  Stop  ##rec_stop"))
             {
-                m_Recording    = false;
-                m_RecordStatus = "Stopped. Ready to export.";
+                m_Recording       = false;
+                m_RecordingPaused = false;
+                m_RecordStatus    = "Stopped. Ready to export.";
                 CS_INFO("TemplateTelemetryLayer: Recording stopped ({:.2f}s).",
                         m_Recorder.GetRecordedDuration());
             }
             ImGui::PopStyleColor();
+
+            ImGui::SameLine();
+
+            if (!m_RecordingPaused)
+            {
+                ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.65f, 0.50f, 0.05f, 1.0f));
+                if (ImGui::Button("  Pause  ##rec_pause"))
+                {
+                    m_RecordingPaused = true;
+                    m_PausedAtTime    = m_Recorder.GetRecordedDuration();
+                    char buf[64];
+                    snprintf(buf, sizeof(buf), "Paused at %.2fs", m_PausedAtTime);
+                    m_RecordStatus = buf;
+                    CS_INFO("TemplateTelemetryLayer: Recording paused at {:.2f}s.", m_PausedAtTime);
+                }
+                ImGui::PopStyleColor();
+            }
+            else
+            {
+                ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.15f, 0.55f, 0.15f, 1.0f));
+                if (ImGui::Button("  Resume  ##rec_resume"))
+                {
+                    m_RecordingPaused = false;
+                    m_RecordStatus    = "Recording...";
+                    CS_INFO("TemplateTelemetryLayer: Recording resumed at {:.2f}s.",
+                            m_Recorder.GetRecordedDuration());
+                }
+                ImGui::PopStyleColor();
+            }
         }
 
         ImGui::SameLine();
@@ -379,8 +443,10 @@ namespace Workspace
 
         ImGui::Spacing();
 
-        // Colour-code: orange while flushing, green on complete, plain otherwise.
-        if (m_Recorder.IsFlushing())
+        // Colour-code: yellow when paused, orange while flushing, green on complete, plain otherwise.
+        if (m_RecordingPaused)
+            ImGui::TextColored({ 1.0f, 0.85f, 0.1f, 1.0f }, "Status:   %s", m_RecordStatus.c_str());
+        else if (m_Recorder.IsFlushing())
             ImGui::TextColored({ 1.0f, 0.75f, 0.1f, 1.0f }, "Status:   %s", m_RecordStatus.c_str());
         else if (m_RecordStatus.rfind("Export complete", 0) == 0)
             ImGui::TextColored({ 0.2f, 1.0f, 0.35f, 1.0f }, "Status:   %s", m_RecordStatus.c_str());

@@ -66,8 +66,11 @@ namespace Workspace
         AgentSystem* m_AgentSystem = nullptr;
 
         // Recording state
-        bool        m_Recording    = false;
-        bool        m_WasFlushing  = false;
+        bool        m_Recording       = false;
+        bool        m_RecordingPaused = false;
+        bool        m_PreservePauses  = false; // true = record frozen frames during pause
+        bool        m_WasFlushing     = false;
+        float       m_PausedAtTime    = 0.0f;  // recorder duration at pause point
         std::string m_SessionName;
         std::string m_RecordStatus = "Ready.";
 
