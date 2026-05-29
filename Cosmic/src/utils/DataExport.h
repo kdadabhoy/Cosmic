@@ -79,7 +79,7 @@ namespace Cosmic
 		/**
 		 * @brief Write a multi-column CSV file from parallel column vectors.
 		 *
-		 * @param filepath  Output path. Parent directory must exist.
+		 * @param filepath  Output path. Parent directory is created if absent.
 		 * @param headers   Column names; size must equal columns.size().
 		 * @param columns   Parallel vectors of sample values; all must have the
 		 *                  same length.
@@ -107,7 +107,7 @@ namespace Cosmic
 		 * For high-frequency streaming consider buffering rows in a
 		 * std::vector<std::vector<double>> and calling WriteCSV at run end.
 		 *
-		 * @param filepath  Output path.
+		 * @param filepath  Output path. Parent directory is created if absent.
 		 * @param values    One value per column for this row.
 		 * @return True on success.
 		 */
@@ -127,7 +127,7 @@ namespace Cosmic
 		 * (offset + i) % capacity index pattern. This correctly handles the
 		 * wrap-around without requiring the caller to copy or linearise data.
 		 *
-		 * @param filepath   Output path.
+		 * @param filepath   Output path. Parent directory is created if absent.
 		 * @param headers    Column names; size must equal buffers.size().
 		 * @param buffers    Pointers to circular float arrays, one per column.
 		 *                   Each array must contain at least `capacity` elements.

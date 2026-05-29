@@ -28,9 +28,9 @@ cd build
 
 echo [STAGE 1] Configuring Global Solution Tree...
 if defined VS_PATH (
-    cmake .. -A x64 -DCOSMIC_BUILD_ENGINE_ONLY=OFF
+    cmake .. -A x64 -DCOSMIC_BUILD_ENGINE_ONLY=OFF -DCOSMIC_DIST=ON
 ) else (
-    cmake .. -DCOSMIC_BUILD_ENGINE_ONLY=OFF
+    cmake .. -DCOSMIC_BUILD_ENGINE_ONLY=OFF -DCOSMIC_DIST=ON
 )
 
 echo [STAGE 2] Building Engine Host and All Client Projects...

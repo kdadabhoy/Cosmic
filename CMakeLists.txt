@@ -29,12 +29,17 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
 endif()
 
 option(COSMIC_BUILD_ENGINE_ONLY "Build only the core engine components" OFF)
+option(COSMIC_DIST "Distribution build — disables project creation in the Launcher" OFF)
 
 # -------------------------------------------------------------------
 # 3. Host and Guest Subdirectories
 # -------------------------------------------------------------------
 add_subdirectory(Cosmic)
 add_subdirectory(Runtime)
+
+if(COSMIC_DIST)
+    target_compile_definitions(Cosmic PRIVATE COSMIC_DIST)
+endif()
 
 # AUTOMATED GAME PROJECT SCANNER
 if(NOT COSMIC_BUILD_ENGINE_ONLY)

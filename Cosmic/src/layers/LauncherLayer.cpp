@@ -25,9 +25,10 @@ namespace Cosmic
 {
 
 	// =============================================================================
-	// Internal helpers — file generation
+	// Internal helpers — file generation (excluded from distribution builds)
 	// =============================================================================
 
+#ifndef COSMIC_DIST
 	static std::string ReadAndProcessTemplate(
 		const fs::path& templatePath,
 		const std::string& projectName,
@@ -107,6 +108,8 @@ namespace Cosmic
 			CS_CORE_ERROR("LauncherLayer: Failed to write '{0}'", filepath.string());
 		}
 	}
+
+#endif // COSMIC_DIST
 
 	// =============================================================================
 	// Construction & Lifecycle
@@ -352,6 +355,7 @@ namespace Cosmic
 		ImGui::TextDisabled("Actions");
 		ImGui::Spacing();
 
+#ifndef COSMIC_DIST
 		// Create new project
 		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.08f, 0.38f, 0.18f, 1.0f));
 		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.12f, 0.52f, 0.26f, 1.0f));
@@ -371,6 +375,7 @@ namespace Cosmic
 			ImGui::OpenPopup("##ProjectWizard");
 		}
 		ImGui::PopStyleColor(3);
+#endif // COSMIC_DIST
 
 		ImGui::Spacing();
 
@@ -415,6 +420,7 @@ namespace Cosmic
 		// -----------------------------------------------------------------------
 		// New Project Wizard popup
 		// -----------------------------------------------------------------------
+#ifndef COSMIC_DIST
 		ImGui::SetNextWindowSize({ 420.0f, 0.0f }, ImGuiCond_Always);
 		if (ImGui::BeginPopupModal("##ProjectWizard", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
 		{
@@ -480,6 +486,8 @@ namespace Cosmic
 			ImGui::EndPopup();
 		}
 
+#endif // COSMIC_DIST
+
 		ImGui::End(); // ##LauncherPanel
 		ImGui::End(); // ##CosmicLauncher
 
@@ -534,6 +542,8 @@ namespace Cosmic
 
 		std::sort(m_DiscoveredProjects.begin(), m_DiscoveredProjects.end());
 	}
+
+#ifndef COSMIC_DIST
 
 	// =============================================================================
 	// Folder browser (Win32)
@@ -680,5 +690,7 @@ namespace Cosmic
 			CS_CORE_WARN("LauncherLayer: Could not launch build.bat for '{}'", projName);
 		}
 	}
+
+#endif // COSMIC_DIST
 
 } // namespace Cosmic
