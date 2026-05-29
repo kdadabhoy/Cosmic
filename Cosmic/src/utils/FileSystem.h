@@ -54,13 +54,13 @@ namespace Cosmic
 		{
 			if (path.find("engine://") == 0)
 			{
-				return "assets/" + path.substr(9);
+				return (std::filesystem::path("assets") / path.substr(9)).generic_string();
 			}
 
 			if (path.find("project://") == 0)
 			{
 				// Added "projects/" to match the CMake POST_BUILD directory structure perfectly
-				return "assets/projects/" + s_ActiveProjectName + "/" + path.substr(10);
+				return (std::filesystem::path("assets") / "projects" / s_ActiveProjectName / path.substr(10)).generic_string();
 			}
 
 			return path; // Fallback for raw paths
@@ -70,6 +70,8 @@ namespace Cosmic
 		// Project Management
 		///////////////////////////////
 
+		// Not thread-safe: must only be called from the main thread before any worker calls Resolve with a project:// path.
+		// If background asset loading is introduced, protect this with a shared_mutex.
 		static void						SetActiveProject(const std::string& name)			{ s_ActiveProjectName = name; }
 
 	private:
@@ -77,6 +79,9 @@ namespace Cosmic
 		// Internal State
 		///////////////////////////////
 
+		// Not thread-safe: SetActiveProject must only be called from the main thread,
+		// and no worker thread may call Resolve with a project:// path concurrently.
+		// If background asset loading is introduced, protect this with a shared_mutex.
 		static inline std::string		s_ActiveProjectName		= "";
 	};
 }

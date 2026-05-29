@@ -106,6 +106,10 @@ namespace Cosmic
 		else
 		{
 			CS_CORE_ERROR("Failed to load texture at {0}", path);
+			m_Width          = 0;
+			m_Height         = 0;
+			m_InternalFormat = GL_RGBA8;
+			m_DataFormat     = GL_RGBA;
 		}
 	}
 
@@ -154,6 +158,11 @@ namespace Cosmic
 	 */
 	void OpenGLTexture::Bind(uint32_t slot) const
 	{
+		if (m_RendererID == 0)
+		{
+			CS_CORE_WARN("OpenGLTexture::Bind: Attempted to bind a texture that failed to load (path: {0}). Slot {1} will render black.", m_Path, slot);
+			return;
+		}
 		glActiveTexture(GL_TEXTURE0 + slot);
 		glBindTexture(GL_TEXTURE_2D, m_RendererID);
 	}

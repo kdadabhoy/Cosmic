@@ -800,6 +800,8 @@ Cosmic::Renderer2D::DrawQuad({0.f, 0.f}, {1.f, 1.f}, {0.f, 0.f, 1.f, 1.f}); // b
 
 ### Textured Quads
 
+> **Load failure behavior:** `Texture2D::Create` always returns a non-null `Ref` — on failure it returns a degraded object with zero width, zero height, and a zero GPU handle. Calling `Bind` on such a texture emits a core warning and binds nothing (the slot renders black). Always check whether the file exists before calling `Create`; the engine does not throw or return `nullptr` on a missing file.
+
 ```cpp
 Ref<Cosmic::Texture2D> tex = Cosmic::Texture2D::Create("assets/sprite.png");
 
@@ -1523,6 +1525,10 @@ std::string engineTex = Cosmic::FileSystem::Resolve("engine://textures/white.png
 auto shader  = Cosmic::Shader::Create(shaderPath);
 auto texture = Cosmic::Texture2D::Create(shaderPath); // same pattern
 ```
+
+> **Path separator normalization:** `Resolve` uses `std::filesystem::path` internally and always returns forward-slash-separated paths on all platforms. Mixed separators in the suffix (e.g. `engine://shaders\\MyShader.glsl`) are normalized automatically. The result is accepted directly by `std::ifstream`, `Shader::Create`, and `Texture2D::Create`.
+
+> **Thread-safety:** `SetActiveProject` is not thread-safe. It must only be called from the main thread. No worker thread may call `Resolve` with a `project://` path concurrently with a `SetActiveProject` call. If background asset loading is introduced, guard both with a `shared_mutex`.
 
 ### Log Directory Relocation
 
