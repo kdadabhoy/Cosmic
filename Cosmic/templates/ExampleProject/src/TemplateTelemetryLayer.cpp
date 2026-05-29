@@ -118,9 +118,9 @@ namespace Workspace
 
     void TemplateTelemetryLayer::OnUpdate(float ts)
     {
-        const float localTs = ts * GetTimeScale();
-
-        m_Camera.OnUpdate(localTs);
+        // ts already carries both global and layer scale — applied by the root
+        // manager (TemplateProject) before dispatch.  Use it directly everywhere.
+        m_Camera.OnUpdate(ts);
 
         // Detect flush completion and update the status label on the falling edge.
         const bool flushing = m_Recorder.IsFlushing();
@@ -129,7 +129,7 @@ namespace Workspace
         m_WasFlushing = flushing;
 
         // Advance panel (ticks player if in replay mode, pushes frame to ring buffer).
-        m_Panel.OnUpdate(localTs);
+        m_Panel.OnUpdate(ts);
 
         // -----------------------------------------------------------------------
         // Replay position sync
@@ -173,7 +173,7 @@ namespace Workspace
             if (m_Player.IsLoaded())
             {
                 const float expectedStep =
-                    std::abs(localTs * m_Player.GetSpeed()) + 0.1f;
+                    std::abs(ts * m_Player.GetSpeed()) + 0.1f;
                 const float actualStep =
                     std::abs(m_Player.GetPosition() - m_LastPlayerPos);
                 if (actualStep > expectedStep)
@@ -287,15 +287,16 @@ namespace Workspace
 
     void TemplateTelemetryLayer::OnFixedUpdate(float dt)
     {
-        const float localDt = dt * GetTimeScale();
-        if (localDt <= 0.0f) return;
+        // dt already carries both global and layer scale — applied by the root
+        // manager before dispatch.  Guard <= 0 to detect pause / rewind as normal.
+        if (dt <= 0.0f) return;
 
         // Only run simulation and advance the recorder clock when live.
         if (m_Panel.GetMode() != Cosmic::TelemetryPanel::Mode::Replay)
-            m_Scene->OnFixedUpdate(localDt);
+            m_Scene->OnFixedUpdate(dt);
 
         if (m_Recording)
-            m_Recorder.Tick(localDt);
+            m_Recorder.Tick(dt);
     }
 
     // =========================================================================

@@ -114,17 +114,22 @@ namespace Workspace
 		auto& activeMode = m_Modes[m_ActiveModeIndex];
 
 		// Drive the active mode's local clock — this is what GetLocalTime() returns.
-		// The incoming 'ts' is already scaled by the engine (global TimeScale applied).
+		// ts is already globally scaled by the engine; UpdateLayerTime multiplies it
+		// again by the mode's own scale so GetLocalTime() reflects both.
 		activeMode->UpdateLayerTime(ts);
 
 		// Feed the shared material's time from the active mode's local clock.
-		// This means pause/rewind affects the shader automatically.
+		// Responds to both global TimeScale AND the layer's own scale automatically.
 		if (m_SharedMaterial)
 		{
 			m_SharedMaterial->Set("u_Time", activeMode->GetLocalTime());
 		}
 
-		activeMode->OnUpdate(ts);
+		// Pass a fully-scaled delta (global × layer) so movement, camera, and any
+		// sub-system tick inside the child layer all respond to the Layer TimeScale
+		// slider without each child needing to re-apply the scale manually.
+		const float localTs = ts * activeMode->GetTimeScale();
+		activeMode->OnUpdate(localTs);
 	}
 
 	// -------------------------------------------------------------------------
@@ -132,9 +137,13 @@ namespace Workspace
 	{
 		if (m_Modes.empty()) return;
 
-		// No manual scaling — the engine already applied global TimeScale before
-		// this arrives. The active mode must guard against dt <= 0 itself.
-		m_Modes[m_ActiveModeIndex]->OnFixedUpdate(deltaFixedTime);
+		auto& active = m_Modes[m_ActiveModeIndex];
+
+		// Apply the layer's own scale so fixed-step physics also slows / pauses
+		// independently of the global TimeScale.  Child layers guard dt <= 0 to
+		// detect pause and rewind; they do NOT need to re-apply GetTimeScale().
+		const float localDt = deltaFixedTime * active->GetTimeScale();
+		active->OnFixedUpdate(localDt);
 	}
 
 	// -------------------------------------------------------------------------

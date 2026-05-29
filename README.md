@@ -694,16 +694,62 @@ float scale = Cosmic::Application::Get().GetTimeScale();
 
 ### Per-Layer Local Time
 
-Every `Layer` has its own local timeline accumulator. The engine calls `layer->UpdateLayerTime(scaledDelta)` once per frame before `OnUpdate`. Call these helpers inside your layer body directly:
+Every `Layer` has its own local timeline accumulator. The engine calls `layer->UpdateLayerTime(scaledDelta)` once per frame before `OnUpdate`, which does:
+
+```
+m_LocalTime += scaledDelta × m_LocalTimeScale
+```
+
+Call these helpers inside your layer body directly:
 
 ```cpp
-float t  = GetLocalTime();    // accumulated scaled time in seconds
+float t  = GetLocalTime();    // accumulated (global scale × layer scale) time in seconds
 float s  = GetTimeScale();    // this layer's own scale multiplier (default 1.0)
 SetLocalTime(0.0f);           // reset (e.g. on level restart)
 SetTimeScale(0.5f);           // slow this layer independently of the global scale
 ```
 
 > **Critical:** `GetLocalTime()` is an **instance method** on the base `Layer` class. Always call it as `GetLocalTime()` inside your derived class body — never as `Cosmic::Layer::GetLocalTime()`. The latter form performs static scope resolution and will either fail to compile or invoke the wrong context.
+
+### What ts and dt Actually Contain
+
+Understanding the two-level time architecture is essential before using `SetTimeScale`:
+
+| Source | Contains | Use for |
+| --- | --- | --- |
+| `ts` in `OnUpdate(float ts)` | `rawDelta × globalTimeScale` — **global scale only** | Movement, camera, any per-frame delta |
+| `dt` in `OnFixedUpdate(float dt)` | `(1/60) × globalTimeScale` — **global scale only** | Physics, collision, fixed-step integration |
+| `GetLocalTime()` | accumulated `rawDelta × globalScale × layerScale` — **both scales** | Shader `u_Time`, particle age, any accumulated value |
+
+`ts` and `dt` do **not** automatically include the layer's own scale. The engine only applies the layer scale when accumulating `GetLocalTime()` internally. This has two practical consequences:
+
+**1. For shaders and accumulated values — always use `GetLocalTime()`.** It is already double-scaled with no extra work required. Setting the layer scale to 0.5 will immediately halve the rate at which `GetLocalTime()` grows, and your shader animation slows down automatically.
+
+**2. For movement and physics inside a standalone layer — apply the layer scale manually if you want per-layer time control:**
+
+```cpp
+// Standalone layer that supports its own independent SetTimeScale():
+void MyLayer::OnUpdate(float ts)
+{
+    // ts is global-scaled only. Multiply by GetTimeScale() to also apply the layer scale.
+    const float localTs = ts * GetTimeScale();
+
+    m_Camera.OnUpdate(localTs);          // camera pan speed respects layer scale
+    m_MySystem.Tick(localTs);            // system tick respects layer scale
+    // GetLocalTime() for shaders is already correct — don't touch it
+}
+
+void MyLayer::OnFixedUpdate(float dt)
+{
+    const float localDt = dt * GetTimeScale();
+    if (localDt <= 0.0f) return;         // pause / rewind guard still works
+    m_Body.Position += m_Velocity * localDt;
+}
+```
+
+If your layer is driven by a **root manager layer** (the Composite Layer Pattern), the root manager should apply the scale once before dispatching — see [Section 21](#21-the-template-project). Child layers then receive a pre-scaled delta and use `ts`/`dt` directly without multiplying again.
+
+If your layer is pushed directly onto the engine's `LayerStack` and you never call `SetTimeScale()` on it, `GetTimeScale()` always returns `1.0` and the multiplication is a no-op — skip it.
 
 ### How to Feed Time to Shaders
 
@@ -727,11 +773,11 @@ Because `GetLocalTime()` is pre-scaled by both the global `TimeScale` and this l
 | ------------------- | -------------------------------------------- | ----------------------------------------------- |
 | **Purpose**         | Visual updates, animation, camera            | Physics, collision, deterministic simulation    |
 | **Rate**            | Variable — depends on monitor refresh rate   | Fixed at 60 Hz regardless of frame rate         |
-| **Input**           | Scaled variable delta-time in seconds        | Constant 1/60s interval (also globally scaled)  |
+| **Input**           | Globally-scaled variable delta — `rawDelta × globalScale` | Globally-scaled fixed interval — `(1/60) × globalScale` |
 | **Rendering calls** | Yes — call `BeginScene`/`EndScene` here      | No — never issue draw calls here                |
 | **Shader uniforms** | Yes — update `u_Time`, `u_Color` etc. here   | No — GPU state should not be touched here       |
 | **Anti-pattern**    | Running collision math that breaks at 144Hz  | Running sprite rotation or lerp animations      |
-| **Timeline guards** | `ts` is pre-scaled, no manual multiplication | Check `dt <= 0.0f` to guard pause/rewind states |
+| **Timeline guards** | Use `GetLocalTime()` for shaders; `ts * GetTimeScale()` only if the layer needs its own independent scale | Guard `dt <= 0.0f` to detect pause and rewind |
 
 ### Timeline Guards in Fixed Update
 
@@ -760,7 +806,7 @@ void MyLayer::OnFixedUpdate(float dt)
 
 ### Common Time Pitfalls
 
-**Manual accumulation ignoring time scale:** Writing `m_Time += ts;` inside your layer bypasses both the global `TimeScale` and the layer's own scale. Use `GetLocalTime()` instead — it is already correctly accumulated by the engine.
+**Manual time accumulation:** Writing `m_Time += ts;` inside your layer accumulates time yourself instead of using the engine's built-in clock. The problem is that `ts` does not include the layer's own scale — your manual counter only gets the global scale. Use `GetLocalTime()` instead: it is accumulated automatically with both the global scale and the layer's own scale applied, and it rewinds correctly when `TimeScale` is negative.
 
 **Animating in `OnFixedUpdate`:** Sprite rotation, camera lerp, and uniform uploads driven from `OnFixedUpdate` produce micro-stuttering at high refresh rates because they only update 60 times per second. Move visual updates to `OnUpdate`.
 
@@ -1734,13 +1780,24 @@ ExampleProject/
 ```cpp
 // In TemplateProject::OnUpdate
 auto& activeMode = m_Modes[m_ActiveModeIndex];
-activeMode->UpdateLayerTime(ts);         // drive the mode's local clock
+
+// Drive the mode's local clock. ts is globally-scaled; UpdateLayerTime multiplies
+// it again by the mode's own scale so GetLocalTime() reflects both.
+activeMode->UpdateLayerTime(ts);
+
 if (m_SharedMaterial)
     m_SharedMaterial->Set("u_Time", activeMode->GetLocalTime());
-activeMode->OnUpdate(ts);                // visual updates
+
+// Pass a fully-scaled delta (global × layer) to the child layer so that movement,
+// camera, and any sub-system ticks inside it respond to the Layer TimeScale slider
+// without each child needing to re-apply GetTimeScale() manually.
+activeMode->OnUpdate(ts * activeMode->GetTimeScale());
 
 // In TemplateProject::OnFixedUpdate
-m_Modes[m_ActiveModeIndex]->OnFixedUpdate(deltaFixedTime); // physics
+auto& active = m_Modes[m_ActiveModeIndex];
+// Same principle: apply layer scale here so physics also slows/pauses independently.
+// Child layers guard dt <= 0 to detect pause and rewind; they do not call GetTimeScale() again.
+active->OnFixedUpdate(deltaFixedTime * active->GetTimeScale());
 
 // In TemplateProject::OnEvent — resize goes to ALL modes; input goes only to active
 if (e.IsInCategory(Cosmic::EventCategoryApplication))
@@ -1764,7 +1821,7 @@ if (ImGui::SliderFloat("Global TimeScale", &hostScale, -2.0f, 3.0f, "%.2fx"))
     Cosmic::Application::Get().SetTimeScale(hostScale);
 ```
 
-Setting this to zero pauses all modes simultaneously. Setting it negative reverses time — the shared material's `u_Time` scrubs backward automatically because it's driven by `GetLocalTime()`, which reflects the scaled accumulation.
+Setting this to zero pauses all modes simultaneously. Setting it negative reverses time — the shared material's `u_Time` scrubs backward automatically because it's driven by `GetLocalTime()`, which reflects both the global and per-layer scale. The per-layer **Layer TimeScale** slider controls only the active mode, independently of the global scale.
 
 ### Shared Material Pattern
 
