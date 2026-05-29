@@ -54,9 +54,10 @@ namespace Cosmic
         // Clear ring buffers — data from the old source is stale.
         m_PlotBuffers.clear();
         m_PlotTimes.clear();
-        m_PlotOffset = 0;
-        m_PlotCount  = 0;
-        m_LastFrame  = TelemetryFrame{};
+        m_PlotOffset    = 0;
+        m_PlotCount     = 0;
+        m_LastFrame     = TelemetryFrame{};
+        m_LastReplayPos = -1.0f;
     }
 
     // =========================================================================
@@ -96,8 +97,9 @@ namespace Cosmic
 
     void TelemetryPanel::OnSelectionChanged(const std::string& name, const std::string& tag)
     {
-        m_SelectedName = name;
-        m_SelectedTag  = tag;
+        m_SelectedName  = name;
+        m_SelectedTag   = tag;
+        m_LastReplayPos = -1.0f; // force first-frame push for the new entity
 
         if (name.empty())
         {
@@ -175,9 +177,21 @@ namespace Cosmic
         bool got = false;
 
         if (m_Mode == Mode::Live && m_Recorder)
+        {
             got = m_Recorder->GetCurrentFrame(m_SelectedName, frame);
+        }
         else if (m_Mode == Mode::Replay && m_Player && m_Player->IsLoaded())
-            got = m_Player->GetFrame(m_SelectedName, frame);
+        {
+            // Only push when the playback position has changed — this both
+            // freezes the plot while paused and avoids wasting ring-buffer
+            // capacity with duplicate entries during normal scrubbing.
+            const float pos = m_Player->GetPosition();
+            if (std::abs(pos - m_LastReplayPos) > 1e-6f)
+            {
+                got = m_Player->GetFrame(m_SelectedName, frame);
+                m_LastReplayPos = pos;
+            }
+        }
 
         if (got)
             PushFrame(frame);
@@ -376,8 +390,24 @@ namespace Cosmic
         {
             const char* chName = m_ChannelNames[ch].c_str();
 
+            // Compute Y range from the valid portion of the ring buffer only.
+            // SetNextAxisToFit scans all 512 slots including zero-initialised ones
+            // not yet written, which keeps pinning the range to include 0 until
+            // the buffer is full. Scanning m_PlotCount entries through the offset
+            // gives the exact range of the data actually on screen.
+            float yMin = FLT_MAX, yMax = -FLT_MAX;
+            for (int s = 0; s < m_PlotCount; ++s)
+            {
+                float v = m_PlotBuffers[ch][(m_PlotOffset + s) % k_PlotCapacity];
+                if (v < yMin) yMin = v;
+                if (v > yMax) yMax = v;
+            }
+            if (yMin > yMax)       { yMin = 0.0f; yMax = 1.0f; }
+            else if (yMin == yMax) { yMin -= 0.5f; yMax += 0.5f; }
+            const float pad = (yMax - yMin) * 0.1f;
+
             ImPlot::SetNextAxisLimits(ImAxis_X1, tOldest, tNewest, ImPlotCond_Always);
-            ImPlot::SetNextAxisToFit(ImAxis_Y1);
+            ImPlot::SetNextAxisLimits(ImAxis_Y1, yMin - pad, yMax + pad, ImPlotCond_Always);
 
             if (ImPlot::BeginPlot(chName, ImVec2(-1.0f, 110.0f)))
             {

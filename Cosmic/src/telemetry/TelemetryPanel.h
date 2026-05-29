@@ -184,9 +184,10 @@ namespace Cosmic
         TelemetryFrame m_LastFrame;
 
         // Replay loader UI state
-        std::string m_ReplayPath   = "logs/";
-        std::string m_ReplayStatus = "No recording loaded.";
-        bool        m_ReplayLoadOk = false;
+        std::string m_ReplayPath      = "logs/";
+        std::string m_ReplayStatus    = "No recording loaded.";
+        bool        m_ReplayLoadOk    = false;
+        float       m_LastReplayPos   = -1.0f; // guards duplicate pushes when paused
 
         std::unordered_map<std::string, InspectorFn> m_TagInspectors;
         std::unordered_map<std::string, InspectorFn> m_EntityInspectors;
