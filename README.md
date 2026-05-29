@@ -33,6 +33,7 @@
 23. [Scene System](#23-scene-system)
 24. [Window System](#24-window-system)
 25. [Complete API Reference Tables](#25-complete-api-reference-tables)
+26. [Telemetry System](#26-telemetry-system)
 
 ---
 
@@ -50,6 +51,7 @@
 35. [Parallel Pipeline Architecture](#35-parallel-pipeline-architecture)
 36. [Build System](#36-build-system)
 37. [Event System — Implementation Details](#37-event-system--implementation-details)
+38. [Telemetry System — Implementation Details](#38-telemetry-system--implementation-details)
 
 ---
 
@@ -2414,6 +2416,312 @@ void YourProject::OnAttach()
 | `SetFullscreenHotkeyOverride(fn)` | Register a callback `(int key, int action, int mods) -> bool` to intercept key events before F11. |
 | `ClearFullscreenHotkeyOverride()` | Remove the registered callback. Call from `OnDetach` before DLL unload.                           |
 
+---
+
+## 26. Telemetry System
+
+Five subsystems work together to record, export, and replay per-entity float-channel data. The complete working reference is [`TemplateTelemetryLayer`](Cosmic/templates/ExampleProject/src/TemplateTelemetryLayer.cpp), which wires all five for 20 simulated agents.
+
+| Subsystem | File | Role |
+| --------- | ---- | ---- |
+| `DataRecorder` | `telemetry/DataRecorder.h/.cpp` | Thread-safe multi-entity capture |
+| `DataPlayer` | `telemetry/DataPlayer.h/.cpp` | Binary playback with seek and interpolation |
+| `TelemetryPanel` | `telemetry/TelemetryPanel.h/.cpp` | ImGui/ImPlot UI; owns the replay lifecycle |
+| `EntitySelection` | `telemetry/EntitySelection.h/.cpp` | Global "which entity is selected" service |
+| `EntityPicker` | `telemetry/EntityPicker.h` | Left-click → world-space AABB hit test |
+
+### Recording
+
+**Step 1 — Register entities** (main-thread only, before any parallel jobs):
+
+```cpp
+// Returns a stable uint32_t ID. Store it on the component that will call Record.
+uint32_t id = m_Recorder.Register(
+    "Agent_00", "Agent",
+    { "PosX", "PosY", "Speed", "Heading", "Power" }
+);
+```
+
+**Step 2 — Pre-allocate buffers** (once, after all `Register` calls):
+
+```cpp
+// 5 minutes at 60 Hz — zero heap allocation in the hot path after this call.
+m_Recorder.ReserveCapacity(static_cast<size_t>(60.0f * 300.0f));
+```
+
+**Step 3 — Record each tick** (thread-safe; call from `OnFixedParallelExecute` or the main thread):
+
+```cpp
+recorder->Record(agent.recordId, {
+    agent.position.x, agent.position.y,
+    vLen, agent.heading, agent.power
+});
+```
+
+**Step 4 — Advance the recorder clock** (once per fixed tick while recording is active):
+
+```cpp
+void MyLayer::OnFixedUpdate(float dt)
+{
+    if (m_Recording)
+        m_Recorder.Tick(dt);
+}
+```
+
+**Step 5 — Stop and export** (non-blocking; background thread writes the files):
+
+```cpp
+m_Recording = false;
+m_Recorder.Flush("logs", "my_session", 60.0f);
+// Poll IsFlushing() each frame, or call WaitForFlush() before shutdown.
+```
+
+Output layout:
+```
+logs/my_session/
+├── scene.bin      ← all entities, v3 binary
+├── Agent_00.csv
+├── Agent_01.csv
+...
+```
+
+If `sessionName` is empty, Flush uses an ISO-8601 timestamp for the folder name.
+
+> **Between recording sessions:** Call `m_Recorder.Clear()` to drop all frames without losing registrations or reserved capacity. Re-calling `Register` is not required.
+
+### Replay
+
+```cpp
+Cosmic::DataPlayer m_Player;
+
+if (m_Player.Load("logs/my_session")) // directory or single .bin path
+{
+    m_Player.SetSpeed(1.0f);   // negative = reverse
+    m_Player.Play();
+}
+
+// Drive from OnUpdate
+m_Player.Tick(ts);
+
+// Query the interpolated state for any entity at the current playhead
+Cosmic::TelemetryFrame frame;
+if (m_Player.GetFrame("Agent_00", frame))
+{
+    float x = frame.values[0]; // PosX
+    float y = frame.values[1]; // PosY
+}
+
+// Sample a historical position without moving the playhead
+Cosmic::TelemetryFrame historical;
+m_Player.SampleAt("Agent_00", 12.5f, historical);
+```
+
+### Making Entities Selectable
+
+Add the empty `SelectableComponent` tag to any entity you want `EntityPicker` to test:
+
+```cpp
+entity.AddComponent<Cosmic::SelectableComponent>();
+CS_REGISTER_COMPONENT(Workspace::MyComponent) // required for any component crossing the DLL boundary
+```
+
+No fields, no configuration. Adding the tag is the only requirement.
+
+### Entity Picking on Left-Click
+
+```cpp
+void MyLayer::OnEvent(Cosmic::Event& e)
+{
+    Cosmic::EventDispatcher dispatcher(e);
+    dispatcher.Dispatch<Cosmic::MouseButtonPressedEvent>(
+        [this](Cosmic::MouseButtonPressedEvent& ev) -> bool
+        {
+            if (ev.GetMouseButton() != CS_MOUSE_BUTTON_LEFT) return false;
+
+            // Skip picking during replay — live entity handles are invalid.
+            if (m_Panel.GetMode() == Cosmic::TelemetryPanel::Mode::Replay)
+                return false;
+
+            glm::vec2 mousePos = Cosmic::Input::GetMousePosition();
+            glm::vec2 vpSize   = {
+                (float)Cosmic::Application::Get().GetWindow().GetWidth(),
+                (float)Cosmic::Application::Get().GetWindow().GetHeight()
+            };
+
+            glm::vec2 worldPos = Cosmic::EntityPicker::ScreenToWorld(
+                m_Camera.GetCamera(), mousePos, vpSize);
+
+            Cosmic::Entity hit = Cosmic::EntityPicker::Pick(m_Scene, worldPos);
+            if (hit)
+            {
+                const std::string& name = hit.GetComponent<Cosmic::TagComponent>().Tag;
+                Cosmic::EntitySelection::Set(hit, name, "Agent");
+                ev.Handled = true;
+                return true;
+            }
+            return false;
+        });
+}
+```
+
+`Pick` iterates only entities with both `TransformComponent` and `SelectableComponent`. It tests the 2D AABB (`Position ± Scale/2`) and returns the first hit, or an invalid `Entity{}` if nothing was hit.
+
+### EntitySelection — Subscribing to Selection Changes
+
+```cpp
+// Subscribe — returns a handle you must store.
+m_SubHandle = Cosmic::EntitySelection::OnChanged(
+    [this](const std::string& name, const std::string& tag)
+    {
+        m_SelectedName = name;
+        RebuildCharts(name, tag);
+    });
+
+// Always unsubscribe in the destructor to prevent dangling captures.
+MySystem::~MySystem()
+{
+    Cosmic::EntitySelection::Unsubscribe(m_SubHandle);
+}
+```
+
+Read the current selection from any thread:
+
+```cpp
+std::string name = Cosmic::EntitySelection::GetName();
+std::string tag  = Cosmic::EntitySelection::GetTag();
+bool        has  = Cosmic::EntitySelection::HasSelection();
+
+// Live handle — invalid during replay (SetByName was called, not Set).
+Cosmic::Entity e = Cosmic::EntitySelection::GetEntity();
+if (e) { /* valid live handle */ }
+```
+
+### Wiring TelemetryPanel
+
+Set up in `OnAttach`. Both data sources are attached regardless of the starting mode:
+
+```cpp
+// Panel starts in Live mode automatically when a non-null recorder is attached.
+m_Panel.SetRecorder(&m_Recorder);
+m_Panel.SetPlayer(&m_Player);
+
+// Register a custom inspector for entities whose tag matches "Agent".
+// Priority: entity name inspector > tag inspector > auto raw-value fallback.
+m_Panel.RegisterTagInspector("Agent",
+    [](const std::string& name, const Cosmic::TelemetryFrame& f)
+    {
+        if (f.values.size() >= 5)
+        {
+            ImGui::Text("Position : (%.2f, %.2f)", f.values[0], f.values[1]);
+            ImGui::Text("Speed    : %.3f u/s",     f.values[2]);
+            ImGui::Text("Heading  : %.2f rad",     f.values[3]);
+            ImGui::Text("Power    : %.3f",         f.values[4]);
+        }
+    });
+```
+
+Drive from layer hooks:
+
+```cpp
+void MyLayer::OnUpdate(float ts)
+{
+    // Advances player clock (replay) and pushes the current frame into ring buffers.
+    m_Panel.OnUpdate(ts);
+}
+
+void MyLayer::OnImGuiRender()
+{
+    // Transport controls are decoupled from the chart panel — embed them anywhere.
+    ImGui::Begin("Project Inspector Top");
+    m_Panel.DrawTransportControls(); // no-op when no recording is loaded
+    ImGui::End();
+
+    // Replay loader, entity selector, ImPlot charts, inspector.
+    ImGui::Begin("Telemetry");
+    m_Panel.OnImGuiRender();
+    ImGui::End();
+}
+```
+
+### Mode Transitions
+
+| Mode | Active when | Data source |
+| ---- | ----------- | ----------- |
+| `Mode::None` | No sources attached | — |
+| `Mode::Live` | `SetRecorder()` called, or `SetMode(Mode::Live)` explicit | `DataRecorder` |
+| `Mode::Replay` | User clicks Load in the panel and file loads successfully | `DataPlayer` |
+
+Gate simulation on mode to prevent the physics pass from running during replay:
+
+```cpp
+void MyLayer::OnFixedUpdate(float dt)
+{
+    const float localDt = dt * GetTimeScale();
+    if (localDt <= 0.0f) return;
+
+    // Simulation only runs in Live mode — player drives positions in Replay mode.
+    if (m_Panel.GetMode() != Cosmic::TelemetryPanel::Mode::Replay)
+        m_Scene->OnFixedUpdate(localDt);
+
+    if (m_Recording)
+        m_Recorder.Tick(localDt);
+}
+```
+
+Override `TransformComponent` positions from player data during replay so entities move with the playhead:
+
+```cpp
+// In OnUpdate, after m_Panel.OnUpdate(ts):
+if (m_Panel.GetMode() == Cosmic::TelemetryPanel::Mode::Replay && m_Player.IsLoaded())
+{
+    auto view = m_Scene->View<Cosmic::TagComponent, Cosmic::TransformComponent>();
+    for (auto rawE : view)
+    {
+        const std::string& tag = view.get<Cosmic::TagComponent>(rawE).Tag;
+        Cosmic::TelemetryFrame frame;
+        if (m_Player.GetFrame(tag, frame) && frame.values.size() >= 2)
+        {
+            auto& t = view.get<Cosmic::TransformComponent>(rawE);
+            t.Position.x = frame.values[0];
+            t.Position.y = frame.values[1];
+        }
+    }
+}
+```
+
+### DataRecorder API Summary
+
+| Function | Thread | Description |
+| -------- | ------ | ----------- |
+| `Register(name, tag, channels)` | Main only | Register entity; returns stable `uint32_t` ID. Must complete before any `Record` calls. |
+| `ReserveCapacity(frames)` | Main only | Pre-allocate columnar storage. Eliminates all hot-path allocations. |
+| `Record(id, {values...})` | Any | Per-entity lock held <1 µs. Zero-alloc after `ReserveCapacity`. |
+| `Tick(dt)` | Main | Advance elapsed-time counter. Call once per fixed tick while recording. |
+| `GetCurrentFrame(name, out)` | Any | Latest recorded frame for display (copy, safe after lock). |
+| `GetRecordedDuration()` | Any | Total simulated time recorded, in seconds. |
+| `Flush(folder, session, rate)` | Main | Non-blocking snapshot + background write to `scene.bin` + CSVs. |
+| `WaitForFlush()` | Main | Block until background write thread has finished. |
+| `IsFlushing()` | Any | True while background thread is active. |
+| `Clear()` | Main | Drop all frames; keep registrations and reserved capacity. Resets elapsed time to zero. |
+
+### DataPlayer API Summary
+
+| Function | Description |
+| -------- | ----------- |
+| `Load(folderOrPath)` | Load directory (prefers `scene.bin`) or single `.bin`. Returns `true` on success. |
+| `Unload()` | Clear all data and reset playback state. |
+| `Play()` / `Pause()` | Start/stop advancing the playhead on `Tick`. |
+| `SetSpeed(float)` | Playback multiplier. Negative values play in reverse. |
+| `SetPosition(seconds)` | Seek to an arbitrary timestamp. |
+| `GetPosition()` / `GetDuration()` | Current playhead position and total recording duration in seconds. |
+| `Tick(dt)` | Advance by `dt × speed`. Auto-stops at both endpoints. No-op when paused or not loaded. |
+| `GetFrame(name, out)` | Linearly interpolated frame at the current playhead position. |
+| `SampleAt(name, seconds, out)` | Interpolated frame at an arbitrary position without moving the playhead. |
+| `IsLoaded()` / `IsPlaying()` | State queries. |
+| `GetSampleRate()` | Sample rate from the file header (Hz). Returns 60 if not loaded. |
+
+---
+
 # Cosmic Engine — Part 2: Engine Internals
 
 > **Audience:** Engine contributors and advanced client developers who need to understand how Cosmic works under the hood. Assumes familiarity with [Part 1 — Client Developer Guide](Part1_ClientGuide.md).
@@ -3486,7 +3794,7 @@ build_engine.bat                :: engine-only Debug build
 
 ---
 
-## §37 Event System — Implementation Details
+## 37 Event System — Implementation Details
 
 ### `Event` Base Class
 
@@ -3611,5 +3919,236 @@ public:
 ```
 
 This pattern provides `GetStaticType()` (for `EventDispatcher`'s type comparison), `GetEventType()` (virtual, for polymorphic dispatch), and `GetName()` (for logging/`ToString()`), all without virtual table overhead for the type comparison path.
+
+---
+
+## 38 Telemetry System — Implementation Details
+
+### Source Files
+
+```
+Cosmic/src/telemetry/
+├── TelemetryChannel.h      Shared POD — TelemetryFrame, EntityTelemetryInfo
+├── EntitySelection.h/.cpp  Global selection service, subscription callbacks
+├── EntityPicker.h          Header-only AABB picker + screen-to-world math
+├── DataRecorder.h/.cpp     Columnar capture engine, binary v3 writer
+├── DataPlayer.h/.cpp       Binary reader (v1/v2/v3), linear interpolation
+└── TelemetryPanel.h/.cpp   Mode state machine, ring buffer, ImPlot UI
+
+Cosmic/src/scene/
+└── SelectableComponent.h   Empty EnTT tag — marks entities as pickable
+
+Cosmic/templates/ExampleProject/src/
+├── AgentSystem.h           ParallelSystem + DataRecorder integration example
+└── TemplateTelemetryLayer.h/.cpp   End-to-end wiring of all five subsystems
+```
+
+The telemetry subsystem has no dependency on any renderer or GPU state — only `scene/`, `core/`, ImGui, and ImPlot. All telemetry headers can be included from both engine-side and DLL-side code without pulling in OpenGL.
+
+### DataRecorder — Columnar Storage
+
+Earlier iterations stored data as `vector<TelemetryFrame>`, where each frame contained a `vector<float>`. Every `Record()` call allocated memory to grow that inner vector. At 60 Hz across 20 entities this was 1,200 allocations per second.
+
+The current design flips the layout from **row-major** (one object per frame) to **columnar** (one contiguous array per channel):
+
+```cpp
+struct EntityRecord
+{
+    std::vector<float>              timestamps;  // [frame_index]
+    std::vector<std::vector<float>> columns;     // [channel_index][frame_index]
+    mutable std::mutex              mutex;       // per-entity; held <1 µs in Record()
+};
+```
+
+After `ReserveCapacity(N)` each inner vector is pre-allocated for N floats. Subsequent `push_back` calls never trigger a reallocation — `Record()` performs **zero heap allocations** in the hot path. Multiple threads can record to different entities simultaneously because each entity owns an independent mutex; there is no global contention point.
+
+`m_Records` is a `vector<unique_ptr<EntityRecord>>` that is populated exclusively on the main thread during `Register()` and never resized afterward. This means `m_Records[id]` is safe to dereference lock-free from any worker thread.
+
+### DataRecorder — Thread Safety Model
+
+| Variable | Writer | Readers | Synchronization |
+| -------- | ------ | ------- | --------------- |
+| `columns`, `timestamps` | Worker via `Record()` | Main via `GetCurrentFrame()`, `Flush()` | Per-entity `mutex` |
+| `m_Records` (vector of ptrs) | Main via `Register()` | All threads via `Record()` | None — never resized after registration is complete |
+| `m_ElapsedTime` | Main via `Tick()` | Worker via `RecordImpl()` | `std::atomic<float>`, relaxed ordering |
+| `m_Flushing` | Flush thread | Main via `IsFlushing()` | `std::atomic<bool>` |
+
+Relaxed ordering on `m_ElapsedTime` is sufficient on x86-64 because the TSO memory model makes stores from one core visible to other cores in program order regardless of the C++ memory order tag. The practical consequence is that a worker thread may see a timestamp that is one tick stale — acceptable for telemetry data.
+
+### DataRecorder — Binary v3 Format
+
+```
+Offset   Size    Field
+[0]      4       char    magic[4]       = "CSMC"
+[4]      4       uint32  version        = 3
+[8]      4       uint32  entity_count
+[12]     4       float   sample_rate
+
+── descriptor table, entity_count entries ──
+For each entity:
+  [+0]    64     char    entity_name[64]
+  [+64]   64     char    entity_tag[64]
+  [+128]  4      uint32  channel_count
+  [+132]  4      uint32  sample_count     ← per-entity (moved from global header in v2)
+  [+136]  channel_count × 32  char channel_name[32]
+
+── data table, entity_count contiguous blocks ──
+For each entity:
+  sample_count × channel_count × sizeof(float)
+  float32, row-major (all channels for frame 0, then all channels for frame 1, …)
+```
+
+The key change from v2 to v3 is the promotion of `sample_count` from a single global field in the file header to a per-entity field in the descriptor. This allows entities registered at different times — or that recorded for different durations — to have different frame counts without corrupting the data offsets for subsequent entities.
+
+### DataPlayer — Format Compatibility
+
+`DataPlayer` reads all three versions transparently:
+
+| Version | Identifies via | `sample_count` location | Produced by |
+| ------- | -------------- | ----------------------- | ----------- |
+| v1 | Single entity per `.bin` (no `"CSMC"` magic) | Derived from file size | Legacy single-entity recorder |
+| v2 | `magic == "CSMC"`, `version == 2` | Single global field in header | Older `scene.bin` sessions |
+| v3 | `magic == "CSMC"`, `version == 3` | Per-entity in descriptor table | Current `DataRecorder::Flush()` |
+
+`Load(directory)` prefers `scene.bin` (v2/v3) and skips any individual `.bin` files in the same folder. This deduplication prevents double-loading entities when a session directory contains both a `scene.bin` and leftover per-entity files from an older format.
+
+### DataPlayer — Linear Interpolation
+
+Given playback position `P` seconds and sample rate `R` Hz:
+
+```
+t    = P × R
+i    = clamp(floor(t), 0, sample_count − 2)   // lower frame index
+frac = t − float(i)                            // interpolation weight in [0, 1)
+
+out.values[ch] = frames[i].values[ch] × (1 − frac)
+               + frames[i+1].values[ch] × frac
+```
+
+`SampleAt(name, seconds, out)` runs this identical calculation at an arbitrary position without modifying `m_Position`. The template layer uses it for **trail reconstruction**: when the user scrubs the playhead, the trail is rebuilt by sampling the entity's position at evenly-spaced past timestamps rather than replaying all intermediate frames in order.
+
+### TelemetryPanel — Mode State Machine
+
+```
+         SetRecorder(non-null)
+                 │
+         ┌───────▼──────┐
+         │  Mode::Live   │ ◄─── SetMode(Live) — called by layer when a new
+         └───────┬───────┘       recording session starts while replay was loaded
+                 │
+     User clicks Load → file succeeds
+                 │
+         ┌───────▼───────┐
+         │  Mode::Replay  │
+         └───────────────┘
+```
+
+`OnUpdate` branches on `m_Mode` so that:
+- In `Live` mode: `DataRecorder::GetCurrentFrame()` is polled and pushed into the ring buffer.
+- In `Replay` mode: `DataPlayer::Tick(dt)` advances the playhead; the ring buffer is updated only if the position moved by more than 1 µs — keeping plots frozen while paused and updating correctly during scrub.
+
+Frozen recorder data never bleeds into replay plots because the mode gate is exclusive.
+
+### TelemetryPanel — Ring Buffer
+
+Up to 512 samples per channel are retained for ImPlot. The buffer is described by two indices rather than a single write pointer:
+
+```
+m_PlotOffset  — index of the oldest valid sample (read head)
+m_PlotCount   — number of valid samples currently in the ring
+write index   = (m_PlotOffset + m_PlotCount) % k_PlotCapacity
+```
+
+**Write (push one frame):**
+```
+if m_PlotCount == k_PlotCapacity:
+    m_PlotOffset = (m_PlotOffset + 1) % k_PlotCapacity  // evict oldest slot
+else:
+    m_PlotCount++
+m_PlotBuffers[ch][writeIndex] = value
+m_PlotTimes[writeIndex]       = timestamp
+```
+
+**Read (for ImPlot):** samples are not contiguous in memory. ImPlot is given two spans described by `(m_PlotOffset, k_PlotCapacity)` then `(0, writeIndex)`, covering all `m_PlotCount` valid samples from oldest to newest.
+
+Y-axis limits are computed over only the `m_PlotCount` valid slots — not all 512. This prevents zero-initialized slots from collapsing the Y scale during the first few seconds after a buffer rebuild.
+
+### EntitySelection — Subscription Model and Notify Safety
+
+```cpp
+SubscriptionHandle OnChanged(Callback cb);  // returns opaque handle
+void Unsubscribe(SubscriptionHandle id);     // call from subscriber's destructor
+```
+
+`TelemetryPanel` stores its handle as a member (`m_SubHandle`) and calls `Unsubscribe(m_SubHandle)` in its destructor. If this is omitted, the captured `this` pointer inside the lambda becomes dangling after the panel is destroyed; the next selection change fires the dead callback and crashes.
+
+`Notify` snapshots the subscriber list before firing to prevent re-entrant deadlock:
+
+```cpp
+// Simplified from EntitySelection.cpp
+static void Notify(const std::string& name, const std::string& tag)
+{
+    std::vector<Subscription> snapshot;
+    {
+        std::lock_guard lock(s_Mutex);
+        snapshot = s_Callbacks;      // copy under lock
+    }
+    for (auto& sub : snapshot)       // fire outside lock
+        sub.cb(name, tag);
+}
+```
+
+Without the snapshot, if a callback called `EntitySelection::Set()` or `Unsubscribe()`, that call would attempt to acquire `s_Mutex` on the same thread that already holds it — a deadlock. The snapshot releases the lock before any callback runs, making re-entrant calls from inside callbacks safe.
+
+### EntityPicker — Screen-to-World Math
+
+GLFW reports mouse coordinates with (0,0) at the **top-left** of the window. OpenGL NDC places (0,0) at the **bottom-left** of the clip volume. The Y-axis must be flipped during unprojection:
+
+```
+// 1. Normalize to [0, 1]
+normX = screenPos.x / viewportSize.x
+normY = screenPos.y / viewportSize.y
+
+// 2. Map to NDC in [−1, +1]; flip Y
+ndcX =  normX * 2.0 − 1.0
+ndcY =  1.0 − normY * 2.0      ← flip here
+
+// 3. Inverse view-projection
+world = inverse(VP) × vec4(ndcX, ndcY, 0, 1)
+
+// 4. Perspective divide (w == 1 for orthographic; kept for correctness)
+world.xy /= world.w
+```
+
+Once in world space, `Pick` tests each entity with `TransformComponent + SelectableComponent`:
+
+```
+hitX = |worldPos.x − entity.Position.x| ≤ entity.Scale.x × 0.5
+hitY = |worldPos.y − entity.Position.y| ≤ entity.Scale.y × 0.5
+```
+
+`EntityPicker` is header-only and carries no `COSMIC_API` export — the class is never instantiated, only called through its two static members.
+
+### AgentSystem — Component Layout and Parallel Integration
+
+`AgentComponent` is exactly 48 bytes — one cache line on common x86-64 hardware:
+
+```
+Offset  Bytes  Field
+0       8      glm::vec2 velocity   worker-owned XY velocity
+8       8      glm::vec2 target     current steering target in world space
+16      8      glm::vec2 position   worker-owned; merged to TransformComponent in OnFixedMerge
+24      4      float     speed      max movement speed (units/s)
+28      4      float     power      sinusoidal cosmetic channel
+32      4      float     heading    atan2(vy, vx) in radians
+36      4      uint32_t  recordId   DataRecorder registration ID
+40      8      float[2]  _pad       explicit alignment pad → 48 bytes total
+```
+
+Storing `recordId` on `AgentComponent` means each worker thread reads and records data from the same 48-byte cache line — no second cache miss to retrieve the ID.
+
+`AgentSystem` uses `ReadWriteQuery<AgentComponent>` with `ForEachAsync` (the async variant that does not call `WaitIdle`). The scene issues a single `WaitIdle` barrier after all systems have submitted their parallel work, allowing `AgentSystem` jobs to overlap with any other `ParallelSystem` registered in the same scene.
+
+`OnFixedMerge` then walks the staged results with `ForEachWithEntity` and copies `agent.position` back to `TransformComponent`. This two-buffer discipline — `AgentComponent.position` written in parallel, `TransformComponent.Position` written on the main thread in merge — is what makes the renderer safe: the renderer reads `TransformComponent` in `OnUpdate`, which follows the fixed-update pass where `OnFixedMerge` has already completed and the engine has committed the query back to the registry.
 
 ---
