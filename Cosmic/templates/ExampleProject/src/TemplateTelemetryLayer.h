@@ -67,6 +67,7 @@ namespace Workspace
 
         // Recording state
         bool        m_Recording    = false;
+        bool        m_WasFlushing  = false;
         std::string m_SessionName;
         std::string m_RecordStatus = "Ready.";
 

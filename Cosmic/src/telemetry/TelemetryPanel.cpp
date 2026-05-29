@@ -254,16 +254,7 @@ namespace Cosmic
         ImGui::Spacing();
 
         // -----------------------------------------------------------------------
-        // 3. Playback transport (replay mode only)
-        // -----------------------------------------------------------------------
-        if (m_Mode == Mode::Replay && m_Player && m_Player->IsLoaded())
-        {
-            DrawPlaybackControls();
-            ImGui::Spacing();
-        }
-
-        // -----------------------------------------------------------------------
-        // 4. ImPlot charts
+        // 3. ImPlot charts
         // -----------------------------------------------------------------------
         if (!m_SelectedName.empty() && m_PlotCount > 0)
         {
@@ -426,11 +417,14 @@ namespace Cosmic
     }
 
     // =========================================================================
-    // DrawPlaybackControls
+    // DrawTransportControls  (public — embed in any ImGui window)
     // =========================================================================
 
-    void TelemetryPanel::DrawPlaybackControls()
+    void TelemetryPanel::DrawTransportControls()
     {
+        if (m_Mode != Mode::Replay || !m_Player || !m_Player->IsLoaded())
+            return;
+
         ImGui::SeparatorText("Playback");
 
         const float duration = m_Player->GetDuration();

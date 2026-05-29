@@ -122,6 +122,12 @@ namespace Workspace
 
         m_Camera.OnUpdate(localTs);
 
+        // Detect flush completion and update the status label on the falling edge.
+        const bool flushing = m_Recorder.IsFlushing();
+        if (m_WasFlushing && !flushing)
+            m_RecordStatus = "Export complete.";
+        m_WasFlushing = flushing;
+
         // Advance panel (ticks player if in replay mode, pushes frame to ring buffer).
         m_Panel.OnUpdate(localTs);
 
@@ -299,13 +305,20 @@ namespace Workspace
     void TemplateTelemetryLayer::OnImGuiRender()
     {
         // -----------------------------------------------------------------------
-        // Recording controls window
+        // "Project Inspector" — transport bar first, then recording controls
         // -----------------------------------------------------------------------
-        ImGui::Begin("Recording");
+        ImGui::Begin("Project Inspector Top");
 
         ImGui::TextColored({ 0.4f, 1.0f, 0.8f, 1.0f },
                            "Telemetry Demo  |  %d Agents", k_AgentCount);
         ImGui::Separator();
+        ImGui::Spacing();
+
+        // Transport controls at the very top — always reachable without scrolling.
+        m_Panel.DrawTransportControls();
+
+        ImGui::Spacing();
+        ImGui::SeparatorText("Recording");
         ImGui::Spacing();
 
         // Session name
@@ -327,11 +340,9 @@ namespace Workspace
             if (ImGui::Button("  Start Recording  ##rec_start"))
             {
                 m_Recorder.Clear();
-                // Restore pre-allocated capacity after Clear.
                 m_Recorder.ReserveCapacity(k_RecordCapacity);
                 m_Recording    = true;
                 m_RecordStatus = "Recording...";
-                // Force live mode while recording.
                 m_Panel.SetMode(Cosmic::TelemetryPanel::Mode::Live);
                 CS_INFO("TemplateTelemetryLayer: Recording started.");
             }
@@ -351,19 +362,29 @@ namespace Workspace
 
         ImGui::SameLine();
 
-        // Export
-        const bool canExport = !m_Recording && (m_Recorder.GetTotalFrameCount() > 0);
+        // Export — disabled while recording or a flush is already in flight.
+        const bool canExport = !m_Recording
+                               && !m_Recorder.IsFlushing()
+                               && (m_Recorder.GetTotalFrameCount() > 0);
         if (!canExport) ImGui::BeginDisabled();
         if (ImGui::Button("  Export  ##rec_export"))
         {
             m_Recorder.Flush("logs", m_SessionName, k_SampleRate);
-            m_RecordStatus = "Exporting → logs/"
-                + (m_SessionName.empty() ? "<timestamp>" : m_SessionName) + "/";
+            const std::string dest = m_SessionName.empty() ? "<timestamp>" : m_SessionName;
+            m_RecordStatus = "Exporting... -> logs/" + dest + "/";
+            m_WasFlushing  = true;
         }
         if (!canExport) ImGui::EndDisabled();
 
         ImGui::Spacing();
-        ImGui::Text("Status:   %s", m_RecordStatus.c_str());
+
+        // Colour-code: orange while flushing, green on complete, plain otherwise.
+        if (m_Recorder.IsFlushing())
+            ImGui::TextColored({ 1.0f, 0.75f, 0.1f, 1.0f }, "Status:   %s", m_RecordStatus.c_str());
+        else if (m_RecordStatus.rfind("Export complete", 0) == 0)
+            ImGui::TextColored({ 0.2f, 1.0f, 0.35f, 1.0f }, "Status:   %s", m_RecordStatus.c_str());
+        else
+            ImGui::Text("Status:   %s", m_RecordStatus.c_str());
         ImGui::Text("Frames:   %zu", m_Recorder.GetTotalFrameCount());
         ImGui::Text("Duration: %.2f s", m_Recorder.GetRecordedDuration());
 
@@ -379,9 +400,7 @@ namespace Workspace
         ImGui::End();
 
         // -----------------------------------------------------------------------
-        // Telemetry panel window
-        // The panel draws its own Replay section (Load/Browse), entity selector,
-        // transport controls, charts, and inspector.
+        // "Telemetry" — replay loader, entity selector, plots, inspector
         // -----------------------------------------------------------------------
         ImGui::Begin("Telemetry");
         m_Panel.OnImGuiRender();

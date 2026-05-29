@@ -138,13 +138,28 @@ namespace Cosmic
          * Sections rendered:
          *   - Replay section (when DataPlayer attached): file path, Browse, Load, status.
          *   - Entity selector combo.
-         *   - Playback transport controls (replay mode only).
          *   - ImPlot line charts (one per channel, circular-buffer sourced).
-         *   - Inspector section (entity → tag → auto raw-value fallback).
+         *   - Inspector section (entity -> tag -> auto raw-value fallback).
+         *
+         * Transport controls are intentionally NOT drawn here — call
+         * DrawTransportControls() separately to embed them anywhere you like
+         * (e.g. at the top of a different ImGui window).
          *
          * The caller must already be inside an ImGui::Begin/End block.
          */
         void OnImGuiRender();
+
+        /**
+         * @brief Draw only the playback transport bar (|< << |> >> >|, speed, scrub).
+         *
+         * No-op when no DataPlayer is attached or no recording is loaded.
+         * Call this from any ImGui window scope — it is intentionally
+         * decoupled from OnImGuiRender so the transport can live in a
+         * different window (e.g. at the top of the Project Inspector).
+         *
+         * The caller must already be inside an ImGui::Begin/End block.
+         */
+        void DrawTransportControls();
 
     private:
         static constexpr int k_PlotCapacity = 512;
@@ -158,7 +173,6 @@ namespace Cosmic
         void PushFrame(const TelemetryFrame& frame);
         void DrawReplayLoader();
         void DrawPlots();
-        void DrawPlaybackControls();
         void DrawInspector(const TelemetryFrame& frame);
 
         // -------------------------------------------------------------------------
