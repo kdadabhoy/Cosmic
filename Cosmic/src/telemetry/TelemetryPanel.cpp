@@ -422,6 +422,9 @@ namespace Cosmic
         if (ImGui::Button("<<##tp_rev"))
         {
             m_Player->SetSpeed(-std::abs(speed));
+            // If already at the start, jump to end so rewind has somewhere to go.
+            if (m_Player->GetPosition() <= 0.0f)
+                m_Player->SetPosition(m_Player->GetDuration());
             m_Player->Play();
         }
         if (playing && reverse) ImGui::PopStyleColor();
