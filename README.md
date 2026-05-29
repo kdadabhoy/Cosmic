@@ -1687,6 +1687,14 @@ port.Close();
 
 > **Windows only.** `SerialPort` uses Win32 APIs (`CreateFile`, OVERLAPPED I/O, Registry enumeration). It will not compile on Linux/macOS without a platform implementation.
 
+> **Device disconnect handling.** `ReadLoop` now treats any `ReadFile` error other than `ERROR_TIMEOUT` (e.g., a USB pull or I/O fault) as a fatal disconnect: it logs a warning, sets `m_Connected` to `false`, and exits. Callers polling `IsOpen()` will observe the disconnection automatically without needing to call `Close()`.
+
+> **Write support (planned).** The port is opened with `GENERIC_READ | GENERIC_WRITE`. A `Write(const std::string&)` method is planned but not yet implemented or exposed in the API.
+
+> **Bounded `Close()`.** `Close()` calls `CancelIoEx` before joining the read thread, so any in-flight `ReadFile` call is unblocked immediately. Destruction is bounded and does not stall the caller for a full timeout interval (up to 50 ms).
+
+> **Job system compatibility.** The serial read thread is a raw `std::thread` created by `Open()` — it is entirely separate from the job system's worker pool. The job system consuming all of its threads has no effect on the serial thread, which keeps running and filling its buffer regardless. The safe integration point is `OnFixedUpdate`: by the time that hook fires, the parallel job pass for that frame has not yet dispatched, so any component state you write from `FlushBuffer()` data is already settled before job workers read it. This ordering is automatic — no extra synchronization is required.
+
 ---
 
 ## 21. The Template Project

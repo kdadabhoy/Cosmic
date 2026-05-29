@@ -38,6 +38,9 @@
  * Pre:  None.
  * Post: Queries the Windows Registry to return a list of active COM ports
  * (e.g., {"COM3", "COM4"}).
+ *
+ * Write support: port is opened GENERIC_READ | GENERIC_WRITE. A Write(const std::string&)
+ * method is planned but not yet implemented.
  */
 
 #include <string>
@@ -45,6 +48,10 @@
 #include <mutex>
 #include <thread>
 #include <atomic>
+
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 namespace Cosmic
 {
@@ -99,6 +106,8 @@ namespace Cosmic
 		// Platform Handle
 		///////////////////////////////
 
-		void*		m_Handle; // Internal Win32 HANDLE
+#ifdef _WIN32
+		HANDLE		m_Handle;
+#endif
 	};
 }

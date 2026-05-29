@@ -1,6 +1,8 @@
 #include "SerialPort.h"
-#include <windows.h> 
+#include <windows.h>
+#include <string.h>
 #include <iostream>
+#include "core/Log.h"
 
 namespace Cosmic
 {
@@ -25,6 +27,8 @@ namespace Cosmic
 		if (m_Connected) Close();
 
 		std::string fullPath = "\\\\.\\" + portName;
+		// Opened with GENERIC_WRITE to support future command transmission (not yet exposed in the API).
+		// Change to GENERIC_READ only if write support is confirmed out-of-scope.
 		m_Handle = CreateFileA(fullPath.c_str(), GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
 
 		if (m_Handle == INVALID_HANDLE_VALUE) return false;
@@ -62,14 +66,25 @@ namespace Cosmic
 	{
 		DWORD winThreadId = GetCurrentThreadId();
 		int core = GetCurrentProcessorNumber();
-		printf("[SERIAL THREAD] Started with ID: %lu on Core: %d\n", winThreadId, core);
+		CS_CORE_INFO("[SERIAL THREAD] Started with ID: {0} on Core: {1}", winThreadId, core);
 
 		char szBuff[256];
 		DWORD dwBytesRead = 0;
 
 		while (m_Connected)
 		{
-			if (ReadFile(m_Handle, szBuff, sizeof(szBuff) - 1, &dwBytesRead, NULL) && dwBytesRead > 0)
+			BOOL ok = ReadFile(m_Handle, szBuff, sizeof(szBuff) - 1, &dwBytesRead, NULL);
+			if (!ok)
+			{
+				DWORD err = GetLastError();
+				if (err != ERROR_TIMEOUT)
+				{
+					CS_CORE_WARN("SerialPort: ReadFile error {0} — device disconnected.", err);
+					m_Connected = false;
+					break;
+				}
+			}
+			else if (dwBytesRead > 0)
 			{
 				szBuff[dwBytesRead] = '\0';
 
@@ -79,7 +94,7 @@ namespace Cosmic
 			}
 		}
 
-		printf("[SERIAL THREAD] Shutting down.\n");
+		CS_CORE_INFO("[SERIAL THREAD] Shutting down.");
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////
@@ -107,7 +122,10 @@ namespace Cosmic
 	void SerialPort::Close()
 	{
 		m_Connected = false;
-		if (m_ReadThread.joinable()) m_ReadThread.join();
+		if (m_Handle != INVALID_HANDLE_VALUE)
+			CancelIoEx(m_Handle, nullptr); // unblocks any pending ReadFile immediately
+		if (m_ReadThread.joinable())
+			m_ReadThread.join();
 
 		if (m_Handle != INVALID_HANDLE_VALUE)
 		{
@@ -145,7 +163,7 @@ namespace Cosmic
 
 				if (status == ERROR_SUCCESS)
 				{
-					ports.push_back(std::string((char*)valueData));
+					ports.push_back(std::string((char*)valueData, strnlen((char*)valueData, dataSize)));
 					index++;
 				}
 				else break;
