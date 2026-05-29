@@ -2540,6 +2540,8 @@ All steps occur inside the **Safe Zone** — the end of a frame loop iteration a
 
 > **`CreatePluginLayer()` null guard:** If the plugin's `CreatePluginLayer` export returns `nullptr` (e.g. internal allocation failure), the engine logs an error, frees the library, and aborts the load. `SetViewportLayer` is never called with a null pointer.
 
+> **Launcher discovery:** The launcher's project scanner only lists DLLs that actually export `CreatePluginLayer`. Each DLL in the executable directory is probed with `LoadLibraryExA(..., DONT_RESOLVE_DLL_REFERENCES)` + `GetProcAddress("CreatePluginLayer")` before appearing in the project list. Engine DLLs (`Cosmic.dll`), renderer backends, and third-party libraries are silently excluded without requiring a hardcoded name list.
+
 ### WorkspaceLayer ownership note
 
 `m_WorkspaceLayer` is tracked by two places simultaneously: as a typed raw pointer on `Application` (for direct access) and as a `Layer*` inside the `LayerStack` (for iteration). This is intentional — the `LayerStack` is a non-owning borrow container. `Application` holds the sole ownership and is responsible for both `PopLayer` and `delete` in the correct order. These two operations are always paired in the codebase; separating them would cause either a leak (`PopLayer` without `delete`) or a dangling iterator (`delete` without `PopLayer`). The long-term fix would mirror how `m_ImGuiLayer` is managed — a `Scope<WorkspaceLayer>` whose raw pointer is lent to the stack — but that requires restructuring the shutdown sequence and is deferred.
@@ -2621,6 +2623,8 @@ The 0.25 s clamp means a frame that stalls for 500 ms will still only dispatch a
 
 ### Layer Dispatch
 
+**Layers on the Application LayerStack** (engine-internal, non-plugin):
+
 Variable-rate:
 
 ```
@@ -2639,6 +2643,26 @@ Application::Run()
 
 `fixedDt` is `1/60` in magnitude, but its sign matches `TimeScale`: positive during normal play, negative during rewind. A client layer can read the sign of `dt` in `OnFixedUpdate` to know whether to simulate forward or backward — no need to query `GetTimeScale()` separately.
 
+**Plugin layers loaded via WorkspaceLayer** (DLL client layers):
+
+The WorkspaceLayer applies an additional per-layer time scale multiplication before forwarding to the plugin. Both `OnUpdate` and `OnFixedUpdate` respect the plugin layer's own `SetTimeScale`:
+
+Variable-rate:
+```
+WorkspaceLayer::OnUpdate(scaledTs)
+  → pluginLayer->UpdateLayerTime(scaledTs)         // local time accumulates as normal
+      m_LocalTime += scaledTs * m_LocalTimeScale
+  → pluginLayer->OnUpdate(scaledTs * pluginLayer->GetTimeScale())
+```
+
+Fixed-rate:
+```
+WorkspaceLayer::OnFixedUpdate(fixedDt)
+  → pluginLayer->OnFixedUpdate(fixedDt * pluginLayer->GetTimeScale())
+```
+
+This means a plugin layer that calls `SetTimeScale(0.5f)` will receive half-speed deltas in both its `OnUpdate` and `OnFixedUpdate` — in addition to any global time scale already applied. Layers on the engine's own LayerStack do not get this treatment; their `OnUpdate`'s `ts` argument is global-scaled only, and `m_LocalTimeScale` only affects `GetLocalTime()`.
+
 ### Full Waterfall Diagram
 
 ```
@@ -2648,14 +2672,22 @@ Wall clock (glfwGetTime)
 rawTimestep
    │  × m_TimeScale  (Application global)
    ▼
-scaledTs  ──────────────────────────────────────► OnUpdate(scaledTs)
-   │                                                  │  × m_LocalTimeScale  (per-layer)
-   │  (accumulated)                                   ▼
-   ▼                                              m_LocalTime
-fixedDt (constant 1/60, fire when ready)
+scaledTs
    │
-   ▼
-OnFixedUpdate(fixedDt)
+   ├──► LayerStack layers: OnUpdate(scaledTs)
+   │       UpdateLayerTime(scaledTs)
+   │           m_LocalTime += scaledTs × m_LocalTimeScale
+   │
+   └──► Plugin layer (via WorkspaceLayer):
+           UpdateLayerTime(scaledTs)
+               m_LocalTime += scaledTs × m_LocalTimeScale
+           OnUpdate(scaledTs × pluginLayer.GetTimeScale())
+
+fixedDt (constant 1/60 × sign(TimeScale), fire when ready)
+   │
+   ├──► LayerStack layers: OnFixedUpdate(fixedDt)
+   │
+   └──► Plugin layer: OnFixedUpdate(fixedDt × pluginLayer.GetTimeScale())
 ```
 
 ---

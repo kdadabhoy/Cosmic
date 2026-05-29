@@ -90,7 +90,7 @@ namespace Cosmic
 		if (m_ClientViewportLayer)
 		{
 			m_ClientViewportLayer->UpdateLayerTime(ts);
-			m_ClientViewportLayer->OnUpdate(ts);
+			m_ClientViewportLayer->OnUpdate(ts * m_ClientViewportLayer->GetTimeScale());
 		}
 
 		fb->Unbind();

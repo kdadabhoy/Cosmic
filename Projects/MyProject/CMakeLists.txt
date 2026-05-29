@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
-project(wwwwwwwww LANGUAGES C CXX)
+project(MyProject LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -46,14 +46,14 @@ if(NOT TARGET Cosmic)
     )
 endif()
 
-add_library(wwwwwwwww SHARED ${TEMPLATE_SOURCES})
+add_library(MyProject SHARED ${TEMPLATE_SOURCES})
 
 # -------------------------------------------------------------------
 # 3. Include Paths
 # -------------------------------------------------------------------
-target_include_directories(wwwwwwwww PRIVATE src)
+target_include_directories(MyProject PRIVATE src)
 
-target_include_directories(wwwwwwwww SYSTEM PRIVATE
+target_include_directories(MyProject SYSTEM PRIVATE
     ${COSMIC_SDK_DIR}/Cosmic/src
     ${COSMIC_SDK_DIR}/Cosmic/dependencies/imgui
     ${COSMIC_SDK_DIR}/Cosmic/dependencies/implot
@@ -66,7 +66,7 @@ target_include_directories(wwwwwwwww SYSTEM PRIVATE
 # 4. Linking — agnostic (works in-tree or standalone)
 # -------------------------------------------------------------------
 if(TARGET Cosmic)
-    target_link_libraries(wwwwwwwww PRIVATE Cosmic)
+    target_link_libraries(MyProject PRIVATE Cosmic)
 else()
     add_library(CosmicCore_Imported SHARED IMPORTED)
 
@@ -85,13 +85,13 @@ else()
         )
     endif()
 
-    target_link_libraries(wwwwwwwww PRIVATE CosmicCore_Imported)
+    target_link_libraries(MyProject PRIVATE CosmicCore_Imported)
 endif()
 
 # -------------------------------------------------------------------
 # 5. Output directories — land next to CosmicApp.exe
 # -------------------------------------------------------------------
-set_target_properties(wwwwwwwww PROPERTIES
+set_target_properties(MyProject PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${COSMIC_SDK_DIR}/build/Runtime/$<CONFIG>"
     LIBRARY_OUTPUT_DIRECTORY "${COSMIC_SDK_DIR}/build/Runtime/$<CONFIG>"
 )
@@ -100,10 +100,10 @@ set_target_properties(wwwwwwwww PROPERTIES
 # 6. Asset sync
 # -------------------------------------------------------------------
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/assets")
-    add_custom_command(TARGET wwwwwwwww POST_BUILD
+    add_custom_command(TARGET MyProject POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory
             "${CMAKE_CURRENT_SOURCE_DIR}/assets"
-            "${COSMIC_SDK_DIR}/build/Runtime/$<CONFIG>/assets/projects/wwwwwwwww"
-        COMMENT "Syncing wwwwwwwww assets to VFS output directory..."
+            "${COSMIC_SDK_DIR}/build/Runtime/$<CONFIG>/assets/projects/MyProject"
+        COMMENT "Syncing MyProject assets to VFS output directory..."
     )
 endif()

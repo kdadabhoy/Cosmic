@@ -486,6 +486,7 @@ namespace Cosmic
 		// Trigger engine transition (deferred, safe to call from ImGui)
 		if (m_TransitionTriggered)
 		{
+			m_TransitionTriggered = false;
 			Application::Get().TransitionFromLauncherToWorkspace(m_SelectedProject + ".dll");
 		}
 	}
@@ -498,8 +499,12 @@ namespace Cosmic
 	{
 		m_DiscoveredProjects.clear();
 
+		// Use an explicit exe-relative path so the scan is not sensitive to CWD changes.
+		fs::path exeDir = fs::current_path();
+		std::string pattern = (exeDir / "*.dll").string();
+
 		WIN32_FIND_DATAA fd;
-		HANDLE hFind = FindFirstFileA("*.dll", &fd);
+		HANDLE hFind = FindFirstFileA(pattern.c_str(), &fd);
 		if (hFind == INVALID_HANDLE_VALUE) return;
 
 		do
@@ -507,8 +512,17 @@ namespace Cosmic
 			if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) continue;
 
 			std::string file = fd.cFileName;
-			// Skip known engine DLLs
-			if (file == "Cosmic.dll" || file == "Renderer.dll") continue;
+
+			// Only list DLLs that export the plugin entry point.
+			// This replaces the fragile name-based exclusion list — any engine DLL,
+			// third-party library, or renderer backend that lacks CreatePluginLayer
+			// is silently skipped regardless of its name.
+			fs::path fullPath = exeDir / file;
+			HMODULE hMod = LoadLibraryExA(fullPath.string().c_str(), nullptr, DONT_RESOLVE_DLL_REFERENCES);
+			if (!hMod) continue;
+			bool isPlugin = (GetProcAddress(hMod, "CreatePluginLayer") != nullptr);
+			FreeLibrary(hMod);
+			if (!isPlugin) continue;
 
 			size_t dot = file.find_last_of('.');
 			if (dot != std::string::npos)
