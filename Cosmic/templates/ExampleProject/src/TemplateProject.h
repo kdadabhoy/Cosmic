@@ -13,6 +13,7 @@ namespace Workspace
 {
 	class TemplateRenderLayer;
 	class TemplateSimLayer;
+	class TemplateTelemetryLayer;
 }
 
 // ============================================================================

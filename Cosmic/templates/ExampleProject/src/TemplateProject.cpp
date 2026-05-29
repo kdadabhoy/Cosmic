@@ -2,6 +2,7 @@
 #include "TemplateRenderLayer.h"
 #include "TemplateSpriteLayer.h"
 #include "TemplateRenderBenchmarkLayer.h"
+#include "TemplateTelemetryLayer.h"
 
 #include <imgui.h>
 #include <filesystem>
@@ -51,6 +52,7 @@ namespace Workspace
 		m_Modes.push_back(std::make_shared<TemplateRenderBenchmarkLayer>(m_Scene));
 		m_Modes.push_back(std::make_shared<TemplateRenderLayer>(m_SharedMaterial));
 		m_Modes.push_back(std::make_shared<TemplateSpriteLayer>(m_Scene));
+		m_Modes.push_back(std::make_shared<TemplateTelemetryLayer>());
 
 
 

@@ -60,6 +60,15 @@
 #include "utils/FileSystem.h"
 #include "utils/DataExport.h"
 
+// Telemetry, Recording, and Entity Selection
+#include "telemetry/TelemetryChannel.h"
+#include "telemetry/EntitySelection.h"
+#include "telemetry/DataRecorder.h"
+#include "telemetry/DataPlayer.h"
+#include "telemetry/TelemetryPanel.h"
+#include "telemetry/EntityPicker.h"
+#include "scene/SelectableComponent.h"
+
 // Layers
 #include "layers/ImGuiLayer.h"
 

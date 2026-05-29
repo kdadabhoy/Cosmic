@@ -4,6 +4,7 @@
 
 #include "Scene.h"
 #include "Components.h"
+#include "core/Log.h"
 #include <entt/entt.hpp>
 
 namespace Cosmic
@@ -20,32 +21,81 @@ namespace Cosmic
 
         /**
          * @brief Variadic template wrapper to construct components in-place.
+         *
+         * DOUBLE-ADD PROTECTION: If the entity already owns this component type the
+         * engine logs a warning and returns the existing component rather than
+         * forwarding to EnTT, which would trigger a sparse-set assertion and abort
+         * the process. This guard is always active (not gated on CS_ENABLE_ASSERTS).
+         *
+         * EMPTY/TAG TYPE HANDLING: EnTT's zero-page-size storage (used for any T
+         * where std::is_empty_v<T>) returns void from both emplace() and get() —
+         * there is no component data to address. For those types we emplace to mark
+         * the entity's presence, then return a reference to a process-lifetime static
+         * sentinel. All instances of an empty type are equivalent so sharing the
+         * sentinel is correct.
          */
         template<typename T, typename... Args>
         T& AddComponent(Args&&... args)
         {
-            CS_ASSERT(!HasComponent<T>(), "Entity already contains this component type!");
-            return m_Scene->m_Registry.emplace<T>(m_EntityHandle, std::forward<Args>(args)...);
+            if (HasComponent<T>())
+            {
+                CS_CORE_WARN("Entity::AddComponent: entity already owns this component type "
+                             "— returning the existing component without re-emplacing. "
+                             "Call GetComponent<T>() directly to suppress this warning.");
+                return GetComponent<T>();
+            }
+
+            if constexpr (std::is_empty_v<T>)
+            {
+                m_Scene->m_Registry.emplace<T>(m_EntityHandle, std::forward<Args>(args)...);
+                static T s_EmptyInstance{};
+                return s_EmptyInstance;
+            }
+            else
+            {
+                return m_Scene->m_Registry.emplace<T>(m_EntityHandle, std::forward<Args>(args)...);
+            }
         }
 
         /**
-         * @brief Returns a reference to a component type held by this entity.
+         * @brief Returns a mutable reference to a component held by this entity.
+         *
+         * For empty/tag types EnTT's get() returns void (no storage), so we return
+         * a reference to the same process-lifetime static sentinel used by AddComponent.
          */
         template<typename T>
         T& GetComponent()
         {
             CS_ASSERT(HasComponent<T>(), "Entity does not possess this component type!");
-            return m_Scene->m_Registry.get<T>(m_EntityHandle);
+            if constexpr (std::is_empty_v<T>)
+            {
+                static T s_EmptyInstance{};
+                return s_EmptyInstance;
+            }
+            else
+            {
+                return m_Scene->m_Registry.get<T>(m_EntityHandle);
+            }
         }
 
         /**
-         * @brief Returns a read-only reference to a component type held by a const entity.
+         * @brief Returns a read-only reference to a component held by a const entity.
+         *
+         * Same empty-type sentinel logic as the non-const overload.
          */
         template<typename T>
         const T& GetComponent() const
         {
             CS_ASSERT(HasComponent<T>(), "Entity does not possess this component type!");
-            return m_Scene->m_Registry.get<T>(m_EntityHandle);
+            if constexpr (std::is_empty_v<T>)
+            {
+                static T s_EmptyInstance{};
+                return s_EmptyInstance;
+            }
+            else
+            {
+                return m_Scene->m_Registry.get<T>(m_EntityHandle);
+            }
         }
 
         /**

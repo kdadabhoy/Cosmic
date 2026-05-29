@@ -124,6 +124,13 @@ namespace Cosmic
     class COSMIC_API ParallelSystem : public System
     {
     public:
+        // Explicitly declared so MSVC emits and exports the symbol from the engine
+        // DLL. Without this, client projects that inherit from ParallelSystem and
+        // define a parameterised constructor receive C2512 ("no appropriate default
+        // constructor available") because MSVC does not guarantee that an implicit
+        // default constructor is exported across a __declspec(dllimport) boundary
+        // when copy/move constructors are explicitly deleted on the same class.
+        ParallelSystem() = default;
         virtual ~ParallelSystem() = default;
 
         // Non-copyable, non-movable. ReadWriteQuery<T> members register themselves
