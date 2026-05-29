@@ -74,8 +74,8 @@ namespace Cosmic
 			return;
 		}
 
-		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
 		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 		// Keep window visible even when focus changes; avoids an iconify on Alt+Tab
 		// out of fullscreen.
@@ -234,6 +234,11 @@ namespace Cosmic
 			m_Handle = nullptr;
 		}
 
+		// ARCHITECTURAL CONSTRAINT: glfwTerminate() is intentionally called here rather than
+		// at the Application level. This is safe only because the engine is single-window.
+		// If a second Window is ever introduced, this call must be moved to Application::Shutdown()
+		// and balanced with the glfwInit() call there — terminating GLFW inside a Window destructor
+		// would invalidate all remaining GLFW handles and crash on the next glfwPollEvents.
 		glfwTerminate();
 	}
 
@@ -242,7 +247,12 @@ namespace Cosmic
 	// =========================================================================
 
 	void Window::PollEvents() { glfwPollEvents(); }
-	void Window::SwapBuffers() { m_Context->SwapBuffers(); }
+
+	void Window::SwapBuffers()
+	{
+		CS_CORE_ASSERT(m_Context, "SwapBuffers called on a window with no graphics context.");
+		m_Context->SwapBuffers();
+	}
 	bool Window::ShouldClose() const { return glfwWindowShouldClose(m_Handle); }
 
 	void Window::GetSize(int* width, int* height) const

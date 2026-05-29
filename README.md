@@ -2158,6 +2158,14 @@ win.ClearFullscreenHotkeyOverride();
 
 > Always call `ClearFullscreenHotkeyOverride()` from `OnDetach`. The callback captures a lambda that lives inside the DLL — if the DLL is unloaded before the engine clears the callback, the next keypress will invoke a dangling function pointer and crash.
 
+### OpenGL Version Requirement
+
+The engine requires **OpenGL 4.5** or higher. The GLFW context hint is set to 4.5 at window creation time, so the driver will refuse context creation and `glfwCreateWindow` will return null on hardware that does not support OpenGL 4.5. If that happens, a `CS_CORE_CRITICAL` log message is emitted and the constructor returns early without creating a graphics context.
+
+### GLFW Single-Window Constraint
+
+`glfwTerminate()` is called inside `Window::~Window()`. This is safe for the current single-window architecture, but it is a global operation — it destroys all remaining GLFW resources, not just those of the window being destructed. If a second `Window` instance is ever introduced, the first window's destructor will terminate GLFW and invalidate the second window's handles, crashing on the next `glfwPollEvents` call. The correct long-term fix is to move `glfwTerminate()` to `Application::Shutdown()`, balanced against the single `glfwInit()` call in `Window::Window()`. Until then, only one `Window` instance may exist at a time.
+
 ### Extra Pre-Docked Inspector Panels
 
 Request additional pre-docked panels from `OnAttach` before the first ImGui frame:
@@ -2745,6 +2753,16 @@ public:
 ```
 
 `DrawIndexedInstanced` was added for the instanced rendering path (`DrawInstancedQuads` / `DrawInstancedCircles`).
+
+### OpenGL Context Initialization and GLAD
+
+`OpenGLContext::Init()` calls `gladLoadGLLoader` to load all OpenGL function pointers from the driver. If GLAD fails (the driver does not support the requested OpenGL version, or returns null proc addresses), `Init()` fires a `CS_CORE_ASSERT` and terminates immediately. Every GL call made through GLAD function pointers (`glDrawElements`, `glGenVertexArrays`, etc.) is a null-pointer dereference if GLAD did not load successfully — there is no recoverable fallback. This means the engine requires a driver and GPU that support at least OpenGL 4.5.
+
+### `DrawLines` VAO Binding
+
+`OpenGLRendererAPI::DrawLines` binds the provided `vertexArray` internally before issuing `glDrawArrays`. This makes the VAO parameter active, not merely advisory — the bound array at draw time is always the one passed to the function, regardless of what was previously current on the GPU.
+
+Note: `DrawIndexed` and `DrawIndexedInstanced` do **not** bind the vertex array internally; callers are responsible for binding before those calls. `DrawLines` is the exception because its parameter was previously unused (a latent bug), and the fix adds the bind for robustness.
 
 ### Frame Lifecycle
 

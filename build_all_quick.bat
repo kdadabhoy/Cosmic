@@ -25,4 +25,5 @@ cmake --build . --config Debug --parallel
 
 echo.
 echo [DONE] Quick Build Complete!
+pause
 ENDLOCAL

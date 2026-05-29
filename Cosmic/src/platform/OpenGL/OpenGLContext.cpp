@@ -1,5 +1,6 @@
 #include <glad/glad.h>
 #include "platform/opengl/OpenGLContext.h"
+#include "core/Core.h"
 #include <GLFW/glfw3.h>
 
 namespace Cosmic
@@ -31,9 +32,7 @@ namespace Cosmic
 	{
 		glfwMakeContextCurrent(m_WindowHandle);
 		int status = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
-
-		// Note: status check is critical here to ensure GLAD loaded correctly
-		// before any rendering commands are issued.
+		CS_CORE_ASSERT(status, "Failed to initialize GLAD — OpenGL function pointers not loaded.");
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////

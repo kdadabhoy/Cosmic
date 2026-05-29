@@ -83,6 +83,9 @@ namespace Cosmic
 		Cosmic::RenderCommand::SetViewport(0, 0,
 			static_cast<uint32_t>(m_ViewportSize.x),
 			static_cast<uint32_t>(m_ViewportSize.y));
+		Cosmic::Renderer2D::SetViewportSize(
+			static_cast<uint32_t>(m_ViewportSize.x),
+			static_cast<uint32_t>(m_ViewportSize.y));
 
 		if (m_ClientViewportLayer)
 		{
