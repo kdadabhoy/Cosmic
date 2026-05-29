@@ -58,6 +58,9 @@ namespace Cosmic
 	 */
 	void OpenGLFrameBuffer::Invalidate()
 	{
+		CS_CORE_ASSERT(m_Specification.Width > 0 && m_Specification.Height > 0,
+			"FrameBuffer::Invalidate() called with zero dimensions.");
+
 		if (m_RendererID)
 		{
 			glDeleteFramebuffers(1, &m_RendererID);

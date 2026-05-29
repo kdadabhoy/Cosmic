@@ -16,7 +16,7 @@ namespace Workspace
 }
 
 // ============================================================================
-// MyProjecta — Root Manager Layer
+// MyProjectaaaaa — Root Manager Layer
 //
 // Architecture mirrors ShowcaseProject: this layer owns and drives two
 // child layers internally. Neither child is pushed onto the engine
@@ -24,11 +24,11 @@ namespace Workspace
 // ============================================================================
 namespace Workspace
 {
-	class MyProjecta : public Cosmic::Layer
+	class MyProjectaaaaa : public Cosmic::Layer
 	{
 	public:
-		MyProjecta();
-		virtual ~MyProjecta() override = default;
+		MyProjectaaaaa();
+		virtual ~MyProjectaaaaa() override = default;
 
 		virtual void OnAttach()                          override;
 		virtual void OnDetach()                          override;

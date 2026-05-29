@@ -1,4 +1,4 @@
-#include "MyProjecta.h"
+#include "MyProjectaaaaa.h"
 #include "TemplateRenderLayer.h"
 #include "TemplateSpriteLayer.h"
 #include "TemplateRenderBenchmarkLayer.h"
@@ -8,18 +8,18 @@
 
 namespace Workspace
 {
-	MyProjecta::MyProjecta()
-		: Cosmic::Layer("MyProjecta")
+	MyProjectaaaaa::MyProjectaaaaa()
+		: Cosmic::Layer("MyProjectaaaaa")
 	{
 	}
 
 	// -------------------------------------------------------------------------
-	void MyProjecta::OnAttach()
+	void MyProjectaaaaa::OnAttach()
 	{
-		CS_INFO("MyProjecta: Attaching root manager layer.");
+		CS_INFO("MyProjectaaaaa: Attaching root manager layer.");
 
 		// 1. Resolve asset paths through the VFS
-		Cosmic::FileSystem::SetActiveProject("MyProjecta");
+		Cosmic::FileSystem::SetActiveProject("MyProjectaaaaa");
 
 		// Redirect logging outputs into the localized project workspace subfolder (still lives in build)
 		std::string physicalLogPath = Cosmic::FileSystem::Resolve("project://logs");
@@ -44,7 +44,7 @@ namespace Workspace
 		}
 		else
 		{
-			CS_WARN("MyProjecta: Shader not found at '{0}'. Rendering layers will use fallback geometry.", shaderPath);
+			CS_WARN("MyProjectaaaaa: Shader not found at '{0}'. Rendering layers will use fallback geometry.", shaderPath);
 		}
 
 		// 4. Construct child layers — NOT pushed onto the engine LayerStack
@@ -81,13 +81,13 @@ namespace Workspace
 				return false; // Not our key combo, let the engine handle it normally
 			});
 
-		CS_INFO("MyProjecta: {} child layers attached. Fullscreen override active.", m_Modes.size());
+		CS_INFO("MyProjectaaaaa: {} child layers attached. Fullscreen override active.", m_Modes.size());
 
 		
 	}
 
 	// -------------------------------------------------------------------------
-	void MyProjecta::OnDetach()
+	void MyProjectaaaaa::OnDetach()
 	{
 		for (auto& mode : m_Modes)
 		{
@@ -98,14 +98,14 @@ namespace Workspace
 		m_SharedMaterial.reset();
 		m_Scene.reset();
 
-		CS_INFO("MyProjecta: Detached and cleaned up.");
+		CS_INFO("MyProjectaaaaa: Detached and cleaned up.");
 
 		// Optional Safety Measure: Reset logging back to engine defaults when leaving workspace
 		Cosmic::Log::SetLogDirectory("logs");
 	}
 
 	// -------------------------------------------------------------------------
-	void MyProjecta::OnUpdate(float ts)
+	void MyProjectaaaaa::OnUpdate(float ts)
 	{
 		if (m_Modes.empty()) return;
 
@@ -126,7 +126,7 @@ namespace Workspace
 	}
 
 	// -------------------------------------------------------------------------
-	void MyProjecta::OnFixedUpdate(float deltaFixedTime)
+	void MyProjectaaaaa::OnFixedUpdate(float deltaFixedTime)
 	{
 		if (m_Modes.empty()) return;
 
@@ -136,7 +136,7 @@ namespace Workspace
 	}
 
 	// -------------------------------------------------------------------------
-	void MyProjecta::OnImGuiRender()
+	void MyProjectaaaaa::OnImGuiRender()
 	{
 		if (m_Modes.empty()) return;
 
@@ -217,7 +217,7 @@ namespace Workspace
 	}
 
 	// -------------------------------------------------------------------------
-	void MyProjecta::OnEvent(Cosmic::Event& e)
+	void MyProjectaaaaa::OnEvent(Cosmic::Event& e)
 	{
 		if (m_Modes.empty()) return;
 
@@ -249,6 +249,6 @@ extern "C"
 
 	__declspec(dllexport) Cosmic::Layer* CreatePluginLayer()
 	{
-		return new Workspace::MyProjecta();
+		return new Workspace::MyProjectaaaaa();
 	}
 }

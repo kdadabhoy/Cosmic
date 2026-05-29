@@ -8,7 +8,6 @@
 #include "core/Log.h"
 #include "graphics/SubTexture2D.h"
 
-#include <glad/glad.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <array>
 #include <vector>
@@ -56,6 +55,9 @@ namespace Cosmic
 		static const uint32_t MaxVertices = MaxQuads * 4;
 		static const uint32_t MaxIndices = MaxQuads * 6;
 		static const uint32_t MaxTextureSlots = 32;
+
+		static const uint32_t MaxLines = 10000;
+		static const uint32_t MaxLineVertices = MaxLines * 2;
 
 		static const uint32_t MaxCircles = 10000;
 		static const uint32_t MaxCircleVertices = MaxCircles * 4;
@@ -218,7 +220,7 @@ namespace Cosmic
 		// --- Line Batch Initialization ---
 		// =========================================================================
 		s_Data.LineVertexArray = VertexArray::Create();
-		s_Data.LineVertexBuffer = VertexBuffer::Create(s_Data.MaxVertices * sizeof(LineVertex));
+		s_Data.LineVertexBuffer = VertexBuffer::Create(s_Data.MaxLineVertices * sizeof(LineVertex));
 		s_Data.LineVertexBuffer->SetLayout({
 			{ ShaderDataType::Float3, "a_Position" },
 			{ ShaderDataType::Float4, "a_Color"    }
@@ -226,7 +228,7 @@ namespace Cosmic
 		s_Data.LineVertexArray->AddVertexBuffer(s_Data.LineVertexBuffer);
 
 		// Allocate host-side staging buffer and bind runtime writing pointer
-		s_Data.LineVertexBufferBase = new LineVertex[s_Data.MaxVertices];
+		s_Data.LineVertexBufferBase = new LineVertex[s_Data.MaxLineVertices];
 		s_Data.LineVertexBufferPtr = s_Data.LineVertexBufferBase; // RESTORED FIX
 
 		s_Data.LineShader = Shader::Create("assets/shaders/Line.glsl");
@@ -383,6 +385,13 @@ namespace Cosmic
 		delete[] s_Data.LineVertexBufferBase;
 		delete[] s_Data.CircleVertexBufferBase;
 
+		s_Data.QuadVertexBufferBase   = nullptr;
+		s_Data.QuadVertexPtr          = nullptr;
+		s_Data.LineVertexBufferBase   = nullptr;
+		s_Data.LineVertexBufferPtr    = nullptr;
+		s_Data.CircleVertexBufferBase = nullptr;
+		s_Data.CircleVertexBufferPtr  = nullptr;
+
 		s_Data.RenderPassStack.clear();
 
 		// Instanced circle pipeline
@@ -423,11 +432,11 @@ namespace Cosmic
 		s_Data.ViewProjectionMatrix = viewProj;
 
 		// Update the hardware viewport to the requested bounds
-		glViewport(
-			static_cast<int>(viewportBounds.x),
-			static_cast<int>(viewportBounds.y),
-			static_cast<int>(viewportBounds.z),
-			static_cast<int>(viewportBounds.w)
+		RenderCommand::SetViewport(
+			static_cast<uint32_t>(viewportBounds.x),
+			static_cast<uint32_t>(viewportBounds.y),
+			static_cast<uint32_t>(viewportBounds.z),
+			static_cast<uint32_t>(viewportBounds.w)
 		);
 
 		// Update viewport dimension tracking for shader uniforms (u_ViewportSize)
@@ -470,11 +479,11 @@ namespace Cosmic
 			const RenderPassState& restored = s_Data.RenderPassStack.back();
 			s_Data.ViewProjectionMatrix = restored.ViewProjectionMatrix;
 
-			glViewport(
-				static_cast<int>(restored.ViewportBounds.x),
-				static_cast<int>(restored.ViewportBounds.y),
-				static_cast<int>(restored.ViewportBounds.z),
-				static_cast<int>(restored.ViewportBounds.w)
+			RenderCommand::SetViewport(
+				static_cast<uint32_t>(restored.ViewportBounds.x),
+				static_cast<uint32_t>(restored.ViewportBounds.y),
+				static_cast<uint32_t>(restored.ViewportBounds.z),
+				static_cast<uint32_t>(restored.ViewportBounds.w)
 			);
 
 			s_Data.ViewportDimensions = { restored.ViewportBounds.z, restored.ViewportBounds.w };
@@ -548,7 +557,7 @@ namespace Cosmic
 
 			s_Data.QuadVertexArray->Bind();
 			RenderCommand::DrawIndexed(s_Data.QuadVertexArray, s_Data.QuadIndexCount);
-			s_Data.Stats.DrawCalls++;
+			if (s_Data.StatsEnabled) s_Data.Stats.DrawCalls++;
 		}
 
 		// --- Draw Lines ---
@@ -562,7 +571,7 @@ namespace Cosmic
 
 			s_Data.LineVertexArray->Bind();
 			RenderCommand::DrawLines(s_Data.LineVertexArray, s_Data.LineVertexCount);
-			s_Data.Stats.DrawCalls++;
+			if (s_Data.StatsEnabled) s_Data.Stats.DrawCalls++;
 		}
 
 		// --- Draw Circles (SDF) ---
@@ -584,7 +593,7 @@ namespace Cosmic
 
 			s_Data.CircleVertexArray->Bind();
 			RenderCommand::DrawIndexed(s_Data.CircleVertexArray, s_Data.CircleIndexCount);
-			s_Data.Stats.DrawCalls++;
+			if (s_Data.StatsEnabled) s_Data.Stats.DrawCalls++;
 		}
 	}
 
@@ -657,7 +666,7 @@ namespace Cosmic
 			s_Data.QuadVertexPtr++;
 		}
 		s_Data.QuadIndexCount += 6;
-		s_Data.Stats.QuadCount++;
+		if (s_Data.StatsEnabled) s_Data.Stats.QuadCount++;
 	}
 
 	void Renderer2D::DrawQuad(const glm::vec2& pos, const glm::vec2& size, const glm::vec4& col)
@@ -711,7 +720,7 @@ namespace Cosmic
 			s_Data.QuadVertexPtr++;
 		}
 		s_Data.QuadIndexCount += 6;
-		s_Data.Stats.QuadCount++;
+		if (s_Data.StatsEnabled) s_Data.Stats.QuadCount++;
 	}
 
 	void Renderer2D::DrawQuad(const glm::vec2& pos, const glm::vec2& size, const Ref<Texture>& tex, float tiling, const glm::vec4& tint)
@@ -731,8 +740,6 @@ namespace Cosmic
 		s_Data.CurrentMaterial = material;
 
 		Ref<Texture> tex = material->GetTexture("u_Texture");
-		if (!tex) tex = material->GetTexture("Texture");
-		if (!tex) tex = material->GetTexture("u_Textures");
 		if (!tex) tex = s_Data.WhiteTexture;
 
 		glm::vec4 color = material->GetVector("u_Color");
@@ -769,7 +776,7 @@ namespace Cosmic
 			s_Data.QuadVertexPtr++;
 		}
 		s_Data.QuadIndexCount += 6;
-		s_Data.Stats.QuadCount++;
+		if (s_Data.StatsEnabled) s_Data.Stats.QuadCount++;
 	}
 
 	void Renderer2D::DrawQuad(const glm::vec2& pos, const glm::vec2& size, const Ref<Material>& material)
@@ -817,7 +824,7 @@ namespace Cosmic
 			s_Data.QuadVertexPtr++;
 		}
 		s_Data.QuadIndexCount += 6;
-		s_Data.Stats.QuadCount++;
+		if (s_Data.StatsEnabled) s_Data.Stats.QuadCount++;
 	}
 
 	void Renderer2D::DrawQuad(const glm::vec2& pos, const glm::vec2& size, const Ref<SubTexture2D>& subTexture, const glm::vec4& tintColor)
@@ -848,7 +855,7 @@ namespace Cosmic
 			s_Data.QuadVertexPtr++;
 		}
 		s_Data.QuadIndexCount += 6;
-		s_Data.Stats.QuadCount++;
+		if (s_Data.StatsEnabled) s_Data.Stats.QuadCount++;
 	}
 
 	void Renderer2D::DrawRotatedQuad(const glm::vec2& pos, const glm::vec2& size, float rot, const glm::vec4& col)
@@ -896,7 +903,7 @@ namespace Cosmic
 			s_Data.QuadVertexPtr++;
 		}
 		s_Data.QuadIndexCount += 6;
-		s_Data.Stats.QuadCount++;
+		if (s_Data.StatsEnabled) s_Data.Stats.QuadCount++;
 	}
 
 	void Renderer2D::DrawRotatedQuad(const glm::vec2& pos, const glm::vec2& size, float rot, const Ref<Texture>& tex, float tiling, const glm::vec4& tint)
@@ -916,8 +923,6 @@ namespace Cosmic
 		s_Data.CurrentMaterial = material;
 
 		Ref<Texture> tex = material->GetTexture("u_Texture");
-		if (!tex) tex = material->GetTexture("Texture");
-		if (!tex) tex = material->GetTexture("u_Textures");
 		if (!tex) tex = s_Data.WhiteTexture;
 
 		glm::vec4 color = material->GetVector("u_Color");
@@ -955,7 +960,7 @@ namespace Cosmic
 			s_Data.QuadVertexPtr++;
 		}
 		s_Data.QuadIndexCount += 6;
-		s_Data.Stats.QuadCount++;
+		if (s_Data.StatsEnabled) s_Data.Stats.QuadCount++;
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////
@@ -999,7 +1004,7 @@ namespace Cosmic
 			s_Data.QuadVertexPtr++;
 		}
 		s_Data.QuadIndexCount += 6;
-		s_Data.Stats.QuadCount++;
+		if (s_Data.StatsEnabled) s_Data.Stats.QuadCount++;
 	}
 
 	void Renderer2D::DrawRotatedQuad(const glm::vec2& pos, const glm::vec2& size, float rot, const Ref<SubTexture2D>& subTexture, const glm::vec4& tint)
@@ -1046,24 +1051,19 @@ namespace Cosmic
 			{ -1.0f,  1.0f }
 		};
 
-		// Range normalizations boundaries checks
-		glm::vec4 normalizedColor = color;
-		if (color.r > 1.0f || color.g > 1.0f || color.b > 1.0f || color.a > 1.0f)
-			normalizedColor = color / 255.0f;
-
 		// Stage unique vertex entries sequentially to the batch stream array
 		for (uint32_t i = 0; i < 4; i++)
 		{
 			s_Data.CircleVertexBufferPtr->WorldPosition = transform * s_Data.QuadVertexPositions[i];
 			s_Data.CircleVertexBufferPtr->LocalPosition = localPositions[i];
-			s_Data.CircleVertexBufferPtr->Color = normalizedColor;
+			s_Data.CircleVertexBufferPtr->Color = color;
 			s_Data.CircleVertexBufferPtr->Thickness = thickness;
 			s_Data.CircleVertexBufferPtr->Fade = fade;
 			s_Data.CircleVertexBufferPtr++;
 		}
 
 		s_Data.CircleIndexCount += 6;
-		s_Data.Stats.QuadCount++;
+		if (s_Data.StatsEnabled) s_Data.Stats.CircleCount++;
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////
@@ -1072,7 +1072,7 @@ namespace Cosmic
 
 	void Renderer2D::DrawLine(const glm::vec3& p0, const glm::vec3& p1, const glm::vec4& color)
 	{
-		if (s_Data.LineVertexCount >= Renderer2DData::MaxVertices - 1) FlushAndReset();
+		if (s_Data.LineVertexCount >= Renderer2DData::MaxLineVertices - 1) FlushAndReset();
 
 		s_Data.LineVertexBufferPtr->Position = p0;
 		s_Data.LineVertexBufferPtr->Color = color;
@@ -1171,8 +1171,8 @@ namespace Cosmic
 			// DrawIndexedInstanced maps to glDrawElementsInstanced internally.
 			RenderCommand::DrawIndexedInstanced(s_Data.InstancedCircleVAO, 6, batchSize);
 
-			s_Data.Stats.DrawCalls++;
-			s_Data.Stats.QuadCount += batchSize;
+			if (s_Data.StatsEnabled) s_Data.Stats.DrawCalls++;
+			if (s_Data.StatsEnabled) s_Data.Stats.CircleCount += batchSize;
 
 			remaining -= batchSize;
 			offset += batchSize;
@@ -1183,11 +1183,12 @@ namespace Cosmic
 		// =====================================================================
 		// 4. STATE CLEANUP
 		// Signal to the batch circle system that its pipeline binding was altered
-		// so it explicitly re-binds on its next draw command. Null out the
-		// current material for the same reason on the quad side.
+		// so it explicitly re-binds on its next draw command. Reset the current
+		// material to DefaultMaterial so the next DrawQuad does not trigger a
+		// spurious FlushAndReset due to nullptr != DefaultMaterial.
 		// =====================================================================
 		s_Data.ActiveCircleShader = nullptr;
-		s_Data.CurrentMaterial = nullptr;
+		s_Data.CurrentMaterial = s_Data.DefaultMaterial;
 	}
 
 
@@ -1266,8 +1267,8 @@ namespace Cosmic
 			// DrawIndexedInstanced calls glDrawElementsInstanced internally.
 			RenderCommand::DrawIndexedInstanced(s_Data.InstancedQuadVAO, 6, batchSize);
 
-			s_Data.Stats.DrawCalls++;
-			s_Data.Stats.QuadCount += batchSize;
+			if (s_Data.StatsEnabled) s_Data.Stats.DrawCalls++;
+			if (s_Data.StatsEnabled) s_Data.Stats.QuadCount += batchSize;
 
 			remaining -= batchSize;
 			offset += batchSize;
@@ -1277,11 +1278,10 @@ namespace Cosmic
 
 		// =====================================================================
 		// 4. STATE CLEANUP
-		// Null out the current material so the first subsequent DrawQuad call
-		// re-binds the correct shader without a stale material assumption,
-		// mirroring the cleanup done at the end of DrawInstancedCircles.
+		// Reset to DefaultMaterial so the first subsequent DrawQuad does not
+		// trigger a spurious FlushAndReset due to nullptr != DefaultMaterial.
 		// =====================================================================
-		s_Data.CurrentMaterial = nullptr;
+		s_Data.CurrentMaterial = s_Data.DefaultMaterial;
 	}
 
 

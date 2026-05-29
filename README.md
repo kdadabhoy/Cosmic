@@ -861,7 +861,8 @@ Cosmic::Renderer2D::ResetStats();
 
 Cosmic::Renderer2D::Statistics stats = Cosmic::Renderer2D::GetStats();
 ImGui::Text("Draw Calls: %d", stats.DrawCalls);
-ImGui::Text("Quads:      %d", stats.QuadCount);
+ImGui::Text("Quads:      %d", stats.QuadCount);   // batched + instanced quads only
+ImGui::Text("Circles:    %d", stats.CircleCount); // batched + instanced circles only
 ImGui::Text("Lines:      %d", stats.LineCount);
 ImGui::Text("Vertices:   %d", stats.GetTotalVertexCount());
 ImGui::Text("Indices:    %d", stats.GetTotalIndexCount());
@@ -1551,8 +1552,8 @@ You only need to create your own FBOs when you want **secondary render targets**
 Cosmic::FramebufferSpecification spec;
 spec.Width          = 1280;
 spec.Height         = 720;
-spec.Samples        = 1;           // MSAA sample count (1 = no MSAA)
-spec.SwapChainTarget = false;      // true = render directly to the screen
+spec.Samples        = 1;           // Reserved — MSAA not yet implemented; leave at 1
+spec.SwapChainTarget = false;      // Reserved — not yet implemented; leave at false
 
 Ref<Cosmic::FrameBuffer> fbo = Cosmic::FrameBuffer::Create(spec);
 ```

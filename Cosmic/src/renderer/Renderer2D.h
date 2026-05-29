@@ -153,9 +153,10 @@ namespace Cosmic
         {
             uint32_t DrawCalls = 0;
             uint32_t QuadCount = 0;
+            uint32_t CircleCount = 0;
             uint32_t LineCount = 0;
 
-            uint32_t GetTotalVertexCount() const { return QuadCount * 4 + LineCount * 2; }
+            uint32_t GetTotalVertexCount() const { return QuadCount * 4 + CircleCount * 4 + LineCount * 2; }
             uint32_t GetTotalIndexCount()  const { return QuadCount * 6; }
         };
 
