@@ -37,6 +37,12 @@ namespace Cosmic
 
         /**
          * @brief Standard matrix transformation construction convenience helper.
+         *
+         * NOTE: GetTransform() applies all three Euler angles (X, Y, Z). However,
+         * Scene::OnRender only passes Rotation.z to DrawRotatedQuad — Rotation.x and
+         * Rotation.y are reserved for future 3D use and are intentionally ignored by
+         * the 2D render path. Entities with non-zero X or Y rotation will therefore
+         * produce different results from GetTransform() vs. what OnRender draws.
          */
         glm::mat4 GetTransform() const
         {
@@ -79,7 +85,16 @@ namespace Cosmic
 // the same type name to divergent integer indices, breaking component storage.
 // ============================================================================
 
-// Register built-in engine types using the standardized registration macro
+// ODR CONTRACT: These three CS_REGISTER_COMPONENT expansions appear at global
+// scope in a header and are therefore included in every translation unit that
+// includes Components.h. This is safe under the One Definition Rule because each
+// expansion produces a full template specialisation of entt::type_hash<T> whose
+// only member is a `consteval` function returning a compile-time constant — the
+// definitions are therefore token-for-token identical in every TU. Any future
+// component registration added here MUST preserve this property: no static data
+// members, no non-consteval member functions, and no initialisation that could
+// differ between TUs. If those guarantees cannot be met, move the registration
+// to a dedicated .cpp file and add a corresponding extern declaration here.
 CS_REGISTER_COMPONENT(Cosmic::TagComponent)
 CS_REGISTER_COMPONENT(Cosmic::TransformComponent)
 CS_REGISTER_COMPONENT(Cosmic::SpriteRendererComponent)

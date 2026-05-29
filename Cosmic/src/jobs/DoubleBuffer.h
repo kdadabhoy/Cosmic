@@ -91,6 +91,10 @@ namespace Cosmic
     template<typename T>
     class DoubleBuffer
     {
+        static_assert(std::is_trivially_copyable_v<T>,
+            "DoubleBuffer<T> requires trivially-copyable T. "
+            "Use ReadWriteQuery<T> for types with non-trivial copy semantics.");
+
     public:
         // =====================================================================
         // Construction

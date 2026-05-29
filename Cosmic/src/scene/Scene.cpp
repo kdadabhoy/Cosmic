@@ -9,6 +9,7 @@
 #include "core/Log.h"
 #include <unordered_map>
 #include <vector>
+#include <algorithm>
 #include <glm/gtc/matrix_transform.hpp>
 
 namespace Cosmic
@@ -119,11 +120,26 @@ namespace Cosmic
 			});
 
 		// 3. Dispatch Material-Batched Quads
-		for (const auto& [materialPtr, entities] : materialBuckets)
+		for (auto& [materialPtr, entities] : materialBuckets)
 		{
 			// Safely extract the shared_ptr reference from the first entity in the bucket
 			auto& firstSprite = view.get<SpriteRendererComponent>(entities[0]);
 			Ref<Material> activeMaterial = firstSprite.ActiveMaterial;
+
+			// Sort ascending by z so sprites within the same material bucket are drawn
+			// back-to-front regardless of entity creation order.
+			// PERFORMANCE NOTE: This is O(n log n) per bucket per frame, where n is the
+			// number of entities sharing this material. For small-to-medium bucket sizes
+			// (< ~1000 entities) the cost is negligible. If a single material bucket grows
+			// very large, consider one of these mitigations:
+			//   1. Dirty-flag: skip the sort when no TransformComponent z-values changed.
+			//   2. Pre-sorted container: maintain a z-ordered structure (e.g. std::multiset)
+			//      that is updated incrementally rather than re-sorted every frame.
+			std::sort(entities.begin(), entities.end(), [&](entt::entity a, entt::entity b)
+			{
+				return view.get<TransformComponent>(a).Position.z <
+				       view.get<TransformComponent>(b).Position.z;
+			});
 
 			for (auto entity : entities)
 			{
@@ -137,6 +153,9 @@ namespace Cosmic
 				};
 
 				// FIX: TransformComponent stores rotation in degrees; DrawRotatedQuad expects radians.
+				// NOTE: Only Rotation.z is used here. Rotation.x and Rotation.y are reserved for
+				// future 3D use and are intentionally ignored by this 2D render path. This means
+				// OnRender diverges from TransformComponent::GetTransform() for non-zero X/Y rotation.
 				Renderer2D::DrawRotatedQuad(
 					transform.Position,
 					drawScale,

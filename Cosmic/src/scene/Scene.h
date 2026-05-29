@@ -47,6 +47,13 @@ namespace Cosmic
 		 * Callers must NOT wrap this in their own BeginScene/EndScene — the scene owns the
 		 * full render pass so that the camera and viewport state are always correct.
 		 *
+		 * Entities within each material bucket are sorted ascending by Position.z before
+		 * drawing to guarantee correct depth order. This sort is O(n log n) per bucket per
+		 * frame, where n is the number of entities sharing one material. Cost is negligible
+		 * for typical bucket sizes (< ~1000). If a single material bucket becomes very large,
+		 * consider a dirty-flag skip (only sort when z-values changed) or a pre-sorted
+		 * container updated incrementally rather than re-sorted every frame.
+		 *
 		 * @param camera  The orthographic camera whose View-Projection matrix will be used
 		 *                for this render pass.
 		 */
@@ -67,8 +74,12 @@ namespace Cosmic
 		/** @brief Clears out all systems bound to this scene instance. */
 		void RemoveAllSystems()
 		{
-			m_ParallelSystems.clear();
+			// Destroy owned systems first (runs their destructors), then clear the
+			// non-owning parallel pointer list. This order ensures that if a future
+			// ParallelSystem destructor ever inspects m_ParallelSystems (e.g. to
+			// unregister itself), the list is still intact when the destructor runs.
 			m_Systems.clear();
+			m_ParallelSystems.clear();
 		}
 
 		/** @brief Safe multi-component layout querying mechanism for external or client layers. */
@@ -83,6 +94,15 @@ namespace Cosmic
 
 
 	public:
+		/**
+		 * @brief Linear search for a registered system of type T.
+		 *
+		 * WARNING — O(n) per call: iterates the full system list and performs a
+		 * dynamic_cast on each entry. Must NOT be called per-frame. Cache the
+		 * returned pointer in your layer's OnAttach and reuse it every tick.
+		 *
+		 * @return Pointer to the first system of type T, or nullptr if none is found.
+		 */
 		template<typename T>
 		T* GetSystem()
 		{

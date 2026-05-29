@@ -193,7 +193,16 @@ namespace Cosmic
 
 				if (remaining == 0)
 				{
-					std::lock_guard<std::mutex> lock(m_QueueMutex);
+					{
+						// Acquire the mutex so WaitIdle()'s predicate re-evaluation
+						// (queue.empty() && activeJobs == 0) is always mutex-protected.
+						// The lock is released before notify_all so the waking thread
+						// does not immediately re-block trying to re-acquire it — this
+						// avoids a needless contention round-trip on every idle signal.
+						std::lock_guard<std::mutex> lock(m_QueueMutex);
+					}
+					// Notify AFTER the lock is released: the woken WaitIdle thread can
+					// re-acquire m_QueueMutex immediately without contention.
 					m_AllIdle.notify_all();
 				}
 			}

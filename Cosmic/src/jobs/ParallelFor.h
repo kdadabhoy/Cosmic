@@ -168,6 +168,16 @@ namespace Cosmic
      *
      * The caller is responsible for ensuring WaitIdle (or the Scene's barrier)
      * is called before reading any results.
+     *
+     * CAPTURE SEMANTICS WARNING: In the parallel path, submitted jobs execute
+     * after this function returns. func — and any closure it captures — must
+     * therefore outlive the WaitIdle barrier that follows. Capturing local
+     * variables by reference is unsafe; capture by value or ensure the captured
+     * objects have a lifetime that extends past WaitIdle.
+     * Exception: in the serial fast-path (workerCount <= 1 or count <= minChunkSize),
+     * func runs synchronously before this call returns, so local-reference captures
+     * are safe. The two paths have different capture requirements; always write
+     * captures as if the parallel path will execute.
      */
     template<typename Func>
     void ParallelForAsync(size_t totalCount, Func&& func, size_t minChunkSize = 64)
@@ -177,6 +187,10 @@ namespace Cosmic
         JobSystem& js = JobSystem::Get();
 
         const uint32_t workerCount = js.GetWorkerCount();
+        // Serial fast-path: func runs synchronously here — local-reference captures are
+        // safe in this branch. In the parallel path below, func is enqueued and runs
+        // after this function returns, so all captures must be by value or must outlive
+        // the caller's WaitIdle barrier. Write captures defensively for the parallel case.
         if (workerCount <= 1 || totalCount <= minChunkSize)
         {
             func(0, totalCount);

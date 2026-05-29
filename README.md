@@ -1328,9 +1328,12 @@ if (player.HasComponent<MyRigidBodyComponent>())
 // Remove a component
 player.RemoveComponent<MyRigidBodyComponent>();
 
-// Entity handle boolean — true when the handle is valid and scene-bound
+// Entity handle boolean — true when the handle is valid, scene-bound, and the
+// underlying registry slot is still alive. Returns false after DestroyEntity.
 if (player) { /* handle is valid */ }
 ```
+
+> **Dangling-handle warning:** `Entity` is a lightweight value type. Any copy of a handle held after `Scene::DestroyEntity(e)` becomes invalid — `operator bool` returns `false` and all `GetComponent`/`HasComponent` calls will assert. Always discard `Entity` handles after calling `DestroyEntity`, and do not cache handles across frames without re-validating with `if (handle)` each frame.
 
 ### Built-in Components
 
@@ -2053,8 +2056,10 @@ m_Scene->AddSystem<SpawnSystem>();
 // Parallel system — see Section 22 for the full API
 m_Scene->AddSystem<BallPhysicsSystem>();
 
-// Get a reference to an already-registered system
-BallPhysicsSystem* phys = m_Scene->GetSystem<BallPhysicsSystem>();
+// Get a reference to an already-registered system.
+// WARNING — O(n): GetSystem<T> performs a dynamic_cast loop over all registered
+// systems. Do NOT call this per-frame. Cache the result in OnAttach and reuse it.
+BallPhysicsSystem* phys = m_Scene->GetSystem<BallPhysicsSystem>(); // call once, in OnAttach
 if (phys) phys->Gravity = -15.f;
 
 // Remove all systems (e.g. on level unload)
@@ -2063,7 +2068,9 @@ m_Scene->RemoveAllSystems();
 
 ### Scene::OnRender
 
-`OnRender` handles the full render pass autonomously — it calls `BeginScene` with the provided camera, iterates all entities that have both `TransformComponent` and `SpriteRendererComponent`, groups them by material bucket to minimize draw calls, then calls `EndScene`. Do **not** wrap a `Scene::OnRender` call inside your own `BeginScene`/`EndScene` pair.
+`OnRender` handles the full render pass autonomously — it calls `BeginScene` with the provided camera, iterates all entities that have both `TransformComponent` and `SpriteRendererComponent`, groups them by material bucket to minimize draw calls, sorts each bucket by ascending `Position.z` for correct depth order, then calls `EndScene`. Do **not** wrap a `Scene::OnRender` call inside your own `BeginScene`/`EndScene` pair.
+
+> **Performance note — per-bucket z-sort:** Entities within each material bucket are sorted by `Position.z` every frame using `std::sort` (O(n log n) per bucket). For typical bucket sizes this cost is negligible. If you have thousands of sprites sharing a single material, the sort can become measurable. Two mitigations to consider if profiling reveals it as a hotspot: (1) a **dirty flag** — skip the sort in frames where no z-values changed; (2) a **pre-sorted container** (e.g. `std::multiset`) maintained incrementally rather than rebuilt each frame.
 
 ```cpp
 // Correct
@@ -3111,6 +3118,8 @@ velocities.Swap();              // O(1): m_ReadIndex ^= 1u
 
 `Swap()` is an XOR on a single index: `m_ReadIndex ^= 1u`. It is O(1) and does not move any data. It must be called on the main thread before workers are dispatched.
 
+> **Trivial-copyability requirement:** `DoubleBuffer<T>` uses `std::memcpy` internally (`CopyReadToWrite`). `T` must be trivially copyable — plain structs of scalars, `glm::vec*`, or similar POD types. Types that contain `std::string`, `std::shared_ptr`, `Ref<>`, or any other non-trivially-copyable member will compile but produce double-frees or corrupted reference counts at runtime. A `static_assert` fires at instantiation time if `T` is not trivially copyable. Use `ReadWriteQuery<T>` for component types with non-trivial copy semantics.
+
 ### `ComponentArray<T>` vs `FlatComponentArray<T>`
 
 EnTT stores component data in paged arrays (default page size 1024). `ComponentArray<T>` gets a non-owning pointer to the **first page only**:
@@ -3121,7 +3130,9 @@ auto arr = ComponentArray<PhysicsBody>::From(registry);
 // arr.Count() — count of entities on that page (≤ 1024 for small counts)
 ```
 
-Safe for entity counts ≤ ~1024. Cheaper than `FlatComponentArray` (zero allocation, zero copy).
+Safe for entity counts that fit within a single EnTT storage page (≤ ~1024 by default). Cheaper than `FlatComponentArray` (zero allocation, zero copy).
+
+> **Single-page limit:** `ComponentArray<T>::Data()` points only to EnTT's first storage page. `Count()` reflects the total component count across all pages, so accessing indices past the first page is undefined behaviour. A debug assert (`CS_CORE_ASSERT`) fires at `From()` time if the pool spans more than one page. Use `FlatComponentArray<T>` whenever component count may exceed one page.
 
 `FlatComponentArray<T>` copies **all pages** into a single contiguous buffer:
 

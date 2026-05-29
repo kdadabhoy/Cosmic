@@ -149,6 +149,10 @@ namespace Cosmic
                 m_Data.push_back(component);
                 m_Entities.push_back(entity);
             }
+
+#ifdef CS_ENABLE_ASSERTS
+            m_StagedEntityCount = scene.GetRegistry().alive();
+#endif
         }
 
         /**
@@ -157,6 +161,16 @@ namespace Cosmic
          */
         void Commit(Scene& scene) override
         {
+            // Guard against the EnTT entity-ID recycling hazard: if an entity is
+            // destroyed and a new one is created between Stage and Commit, the new
+            // entity may occupy the same slot and receive stale staged data.
+            // The safe-zone convention prohibits structural changes during the parallel
+            // phase; this assert catches violations in debug builds.
+            CS_CORE_ASSERT(scene.GetRegistry().alive() == m_StagedEntityCount,
+                "ReadWriteQuery::Commit: living entity count changed since Stage — "
+                "structural registry changes (create/destroy) are not permitted "
+                "between StageQueries and CommitQueries.");
+
             auto& reg = scene.GetRegistry();
             for (size_t i = 0; i < m_Entities.size(); ++i)
             {
@@ -280,6 +294,9 @@ namespace Cosmic
     private:
         std::vector<T>            m_Data;     // staged component values; workers modify in-place
         std::vector<entt::entity> m_Entities; // parallel entity map for Commit and ForEachWithEntity
+#ifdef CS_ENABLE_ASSERTS
+        size_t m_StagedEntityCount = 0; // living entity count at Stage time; compared at Commit
+#endif
     };
 
 

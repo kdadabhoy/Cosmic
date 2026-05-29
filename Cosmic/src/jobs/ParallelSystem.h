@@ -126,6 +126,18 @@ namespace Cosmic
     public:
         virtual ~ParallelSystem() = default;
 
+        // Non-copyable, non-movable. ReadWriteQuery<T> members register themselves
+        // via RegisterQuery(this) in their constructors. If a ParallelSystem were
+        // ever move- or copy-constructed, those constructors would fire again and
+        // register every query a second time, causing Stage and Commit to run twice
+        // per frame per query. Deleting these operations prevents that silently.
+        // Store ParallelSystem subclasses by Scope<T> (unique_ptr), never in a
+        // std::vector<T> that may reallocate and move its elements.
+        ParallelSystem(const ParallelSystem&)            = delete;
+        ParallelSystem& operator=(const ParallelSystem&) = delete;
+        ParallelSystem(ParallelSystem&&)                 = delete;
+        ParallelSystem& operator=(ParallelSystem&&)      = delete;
+
         // =====================================================================
         // PASS B — Prepare
         // =====================================================================

@@ -102,6 +102,13 @@ namespace Cosmic
                 // This is the fast path — direct pointer, zero copies.
                 arr.m_Data = storage.raw()[0];
                 arr.m_Count = storage.size();
+
+                // ComponentArray only maps page 0. If the pool has grown beyond one
+                // EnTT storage page, m_Data covers only a subset of m_Count elements —
+                // accessing indices past the first page is undefined behaviour.
+                // Use FlatComponentArray<T> for pools that may exceed one page.
+                CS_CORE_ASSERT(storage.raw().size() == 1,
+                    "ComponentArray only covers page 0; use FlatComponentArray for large pools.");
             }
             return arr;
         }

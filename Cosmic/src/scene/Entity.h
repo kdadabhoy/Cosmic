@@ -68,7 +68,15 @@ namespace Cosmic
         }
 
         // Implicit type conversion operators so this handle behaves like a primitive index
-        operator bool() const { return m_EntityHandle != entt::null && m_Scene != nullptr; }
+        // NOTE: Checks registry liveness so that copies of an Entity handle held after
+        // Scene::DestroyEntity(e) evaluate to false rather than silently aliasing the
+        // recycled slot. Always discard Entity handles after destroying the entity.
+        operator bool() const
+        {
+            return m_Scene != nullptr &&
+                   m_EntityHandle != entt::null &&
+                   m_Scene->GetRegistry().valid(m_EntityHandle);
+        }
         operator entt::entity() const { return m_EntityHandle; }
         operator uint32_t() const { return (uint32_t)m_EntityHandle; }
 
