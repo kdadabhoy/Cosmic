@@ -1,13 +1,15 @@
 # Telemetry System Audit
+
 **Date:** 2026-05-29  
 **Scope:** All files under `Cosmic/src/telemetry/`, `templates/ExampleProject/src/AgentSystem.h`, `TemplateTelemetryLayer.h/.cpp`  
 **Method:** Source cross-check against `README.md §26` (client guide) and `§38` (internals)
+
+**Status:** All issues fixed — 2026-05-29
 
 ---
 
 ## Table of Contents
 
-1. [Layer Time Scaling — Root Cause of the Bug](#1-layer-time-scaling--root-cause-of-the-bug)
 2. [Binary Format — Timestamps Discarded on Export](#2-binary-format--timestamps-discarded-on-export)
 3. [DataPlayer::Tick — Freeze at Position 0 with Negative dt](#3-dataplayertick--freeze-at-position-0-with-negative-dt)
 4. [DataRecorder — Inconsistent Mutex Usage on m_NameToId](#4-datarecorder--inconsistent-mutex-usage-on-m_nametoid)
@@ -17,68 +19,6 @@
 8. [README Documentation Gaps](#8-readme-documentation-gaps)
 9. [What Is Correct and Working](#9-what-is-correct-and-working)
 10. [Priority Fix List](#10-priority-fix-list)
-
----
-
-## 1. Layer Time Scaling — Root Cause of the Bug
-
-**Files:** `TemplateTelemetryLayer.cpp:121–128`, `TemplateTelemetryLayer.cpp:289–299`, `README.md §7`
-
-### What the engine actually provides
-
-From the frame loop documented in `README.md §3`:
-
-```
-Pass 1A — OnFixedUpdate(scaledFixedDelta)
-Pass 1B — UpdateLayerTime(scaledDelta) → OnUpdate(scaledDelta)
-```
-
-Both `scaledDelta` and `scaledFixedDelta` are:
-
-```
-scaledDelta      = rawDelta      * globalTimeScale
-scaledFixedDelta = (1/60)        * globalTimeScale
-```
-
-The engine passes the **globally-scaled delta** to `OnUpdate` and `OnFixedUpdate`. It does NOT automatically apply the layer's own per-layer time scale to these parameters — it only applies the layer scale when accumulating `GetLocalTime()` internally via `UpdateLayerTime`.
-
-### What TemplateTelemetryLayer does (correctly)
-
-```cpp
-// TemplateTelemetryLayer.cpp:121
-void TemplateTelemetryLayer::OnUpdate(float ts)
-{
-    const float localTs = ts * GetTimeScale();   // ← manually applies layer scale
-    m_Camera.OnUpdate(localTs);
-    m_Panel.OnUpdate(localTs);
-    ...
-}
-
-// TemplateTelemetryLayer.cpp:289
-void TemplateTelemetryLayer::OnFixedUpdate(float dt)
-{
-    const float localDt = dt * GetTimeScale();   // ← manually applies layer scale
-    if (localDt <= 0.0f) return;
-    m_Scene->OnFixedUpdate(localDt);
-    m_Recorder.Tick(localDt);
-}
-```
-
-This is the **correct pattern** for a layer that wants independent per-layer time control. `ts * GetTimeScale()` produces `rawDelta * globalTimeScale * layerTimeScale` — identical to what `GetLocalTime()` accumulates frame-by-frame.
-
-### Why it "only works in the telem layer"
-
-Other client layers that call `OnUpdate(float ts)` and use `ts` directly receive `rawDelta * globalTimeScale`. They never apply the layer's own scale multiplier. When the user calls `SetTimeScale(0.5f)` on their layer, `GetLocalTime()` slows down correctly, but `ts` and `dt` passed to their code are unchanged — giving the impression that per-layer time only works in the telem layer.
-
-### The gap the README doesn't explain
-
-Section 7 of the README describes `GetLocalTime()` as "accumulated scaled time in seconds" and `GetTimeScale()` as "this layer's own scale multiplier," but it never states that `ts` in `OnUpdate` is **not** layer-scaled. A reader naturally assumes both use the same scale. The section should explicitly say:
-
-> `ts` in `OnUpdate(float ts)` is globally scaled only. To apply your layer's own time scale to the incoming delta, use `ts * GetTimeScale()`. Use `GetLocalTime()` for any accumulated time value (e.g. shader `u_Time`) — it is already double-scaled automatically.
-
-### Immediate consequence for the recorder
-
-When `globalTimeScale ≠ 1.0`, `m_Recorder.Tick(localDt)` advances `m_ElapsedTime` by `globalScale × layerScale / 60` per fixed tick instead of `1/60`. The timestamps embedded in each recorded sample therefore reflect **simulated time**, not wall-clock time. This is correct behaviour — and is directly connected to the binary format bug described next.
 
 ---
 
@@ -132,13 +72,7 @@ The CSV export is not affected — it writes `timestamps[s]` as the time column 
 
 ### Fix
 
-Either write the timestamps to the binary format, or write a `timePerSample` float per entity to the descriptor (actual average `m_ElapsedTime / sampleCount`) so the player can reconstruct correctly. The simplest safe fix is to write `m_ElapsedTime` to the file header as a `totalDuration` float that the player uses instead of the frame-count calculation:
-
-```
-[header] float total_duration  ← actual m_ElapsedTime (per-entity in v3 descriptor)
-```
-
-Then `DataPlayer::Load` uses `entity.totalDuration` instead of `frames / sampleRate`.
+# write the timestamps to the binary format
 
 ---
 
@@ -175,15 +109,6 @@ The player is in an infinite "stuck-at-zero-but-playing" state with no audio or 
 
 **Fix:**
 
-```cpp
-else if (m_Position <= 0.0f)
-{
-    m_Position = 0.0f;
-    if (m_Speed < 0.0f || dt < 0.0f)   // stop also if dt pulled us backward
-        m_Playing = false;
-}
-```
-
 Or more robustly, guard against negative `dt` at the top of `TelemetryPanel::OnUpdate`:
 
 ```cpp
@@ -205,11 +130,11 @@ This is the cleaner fix because it matches the mental model: replay only advance
 
 `m_NameToId` is written under `m_RegistryMutex` in `Register()`. Three functions read it:
 
-| Function | Locks m_RegistryMutex? |
-|---|---|
-| `GetEntityNames()` | ✅ Yes |
-| `GetCurrentFrame()` | ❌ No |
-| `GetInfo()` | ❌ No |
+| Function            | Locks m_RegistryMutex? |
+| ------------------- | ---------------------- |
+| `GetEntityNames()`  | ✅ Yes                 |
+| `GetCurrentFrame()` | ❌ No                  |
+| `GetInfo()`         | ❌ No                  |
 
 ```cpp
 // DataRecorder.cpp:100 — no lock
@@ -219,6 +144,7 @@ bool DataRecorder::GetCurrentFrame(const std::string& entityName, TelemetryFrame
 ```
 
 The documented contract (Register() on main thread only, before any Record() calls) means this is not a live data race in the template project. However:
+
 - The inconsistency is a maintenance trap — a future developer may reasonably add a late `Register()` call
 - `GetEntityNames()` taking the lock while the other two don't is misleading
 
@@ -252,6 +178,9 @@ If v1 files truly lack the CSMC magic prefix, they can never be loaded — the f
 **Likely explanation:** Either (a) the README description of v1 is wrong and all v1 files did have the CSMC magic, or (b) v1 files without magic exist on disk and are silently unloadable. Either way, one of the two must be corrected.
 
 If v1 files have no magic, the loader needs a pre-check before the magic read (e.g., if file size matches single-entity layout, treat as v1). If v1 files do have the magic, update the README table.
+
+Fix...
+Just delete v1 and v2 formats... only keep the most recent format and rebrand it to v1
 
 ---
 
@@ -297,34 +226,9 @@ if (m_Player.GetFrame(entityName, frame) && ...)
 
 ---
 
-## 8. README Documentation Gaps
-
-### §7 — Per-Layer Time Scale not explained for ts/dt
-
-The README explains `GetLocalTime()` and `GetTimeScale()` but never states that `ts` in `OnUpdate(float ts)` is only globally-scaled. The critical pattern:
-
-```cpp
-// To apply both global AND layer time scale to delta:
-const float localTs = ts * GetTimeScale();
-```
-
-...is only visible in the template layer source and is not documented anywhere in the client guide.
-
-**Recommended addition to §7:**
-
-> **Note:** `ts` in `OnUpdate(float ts)` and `dt` in `OnFixedUpdate(float dt)` are pre-scaled by the global `TimeScale` only — the layer's own scale multiplier is **not** automatically applied to these parameters. If your layer uses `SetTimeScale()` for independent time control, apply it manually:
-> ```cpp
-> void MyLayer::OnUpdate(float ts)
-> {
->     const float localTs = ts * GetTimeScale();  // global + layer scale
->     // use localTs for movement, animation, player Tick, etc.
-> }
-> ```
-> `GetLocalTime()` is always double-scaled automatically (no extra work needed for time values that accumulate).
-
 ### §38 — v1 format description contradicts the code
 
-The format compatibility table says v1 has "no `CSMC` magic." The implementation rejects files without the magic. One of these must be corrected.
+The format compatibility table says v1 has "no `CSMC` magic." The implementation rejects files without the magic. One of these must be corrected.... again just delete v1 and v2 and anything that isnt the newest approach
 
 ### §26 — Replay position sync loop is undocumented
 
@@ -336,40 +240,24 @@ The fact that `OnUpdate` does a full entity view iteration every frame to overri
 
 The following subsystems were verified against the README and source and are correct:
 
-| Subsystem | Status |
-|---|---|
-| **DataRecorder columnar storage** | ✅ Correct — zero alloc after `ReserveCapacity` |
-| **DataRecorder thread-safety model** | ✅ Correct — per-entity mutex, atomic ElapsedTime, no global contention |
-| **DataRecorder v3 binary write** | ✅ Correct — per-entity sample_count, descriptor + data layout matches spec |
-| **DataPlayer v2/v3 loading** | ✅ Correct — reads descriptor and data in matching order |
-| **DataPlayer interpolation** | ✅ Correct — `clamp(floor(t), 0, N-2)` prevents out-of-bounds on last frame |
-| **DataPlayer::SampleAt** | ✅ Correct — does not modify m_Position |
-| **EntitySelection subscription model** | ✅ Correct — snapshot-before-fire prevents re-entrant deadlock |
-| **EntitySelection::Unsubscribe in destructor** | ✅ Correct — dangling callback impossible |
-| **TelemetryPanel mode state machine** | ✅ Correct — Live/Replay exclusive, buffers cleared on mode switch |
-| **TelemetryPanel ring buffer** | ✅ Correct — write index, eviction, Y-range from valid slots only |
-| **EntityPicker screen-to-world math** | ✅ Correct — Y-flip, perspective divide, AABB hit test |
-| **AgentSystem parallel/merge pattern** | ✅ Correct — ForEachAsync (no WaitIdle), merge writes TransformComponent on main thread |
-| **Trail scrub detection** | ✅ Correct — `abs(actualStep) > abs(expectedStep)` clears stale trail |
-| **Replay picking blocked** | ✅ Correct — event handler returns false during replay mode |
-| **WaitForFlush on OnDetach** | ✅ Correct — blocks until background write completes before scene teardown |
-| **DrawReplayLoader null guard** | ✅ Correct — `DrawReplayLoader()` only called when `m_Player != nullptr` |
-| **Transport >| button wraparound** | ✅ Correct — Jump-to-end logic, reverse wraparound on rewind |
+| Subsystem                                      | Status                                                                                  |
+| ---------------------------------------------- | --------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| **DataRecorder columnar storage**              | ✅ Correct — zero alloc after `ReserveCapacity`                                         |
+| **DataRecorder thread-safety model**           | ✅ Correct — per-entity mutex, atomic ElapsedTime, no global contention                 |
+| **DataRecorder v3 binary write**               | ✅ Correct — per-entity sample_count, descriptor + data layout matches spec             |
+| **DataPlayer v2/v3 loading**                   | ✅ Correct — reads descriptor and data in matching order                                |
+| **DataPlayer interpolation**                   | ✅ Correct — `clamp(floor(t), 0, N-2)` prevents out-of-bounds on last frame             |
+| **DataPlayer::SampleAt**                       | ✅ Correct — does not modify m_Position                                                 |
+| **EntitySelection subscription model**         | ✅ Correct — snapshot-before-fire prevents re-entrant deadlock                          |
+| **EntitySelection::Unsubscribe in destructor** | ✅ Correct — dangling callback impossible                                               |
+| **TelemetryPanel mode state machine**          | ✅ Correct — Live/Replay exclusive, buffers cleared on mode switch                      |
+| **TelemetryPanel ring buffer**                 | ✅ Correct — write index, eviction, Y-range from valid slots only                       |
+| **EntityPicker screen-to-world math**          | ✅ Correct — Y-flip, perspective divide, AABB hit test                                  |
+| **AgentSystem parallel/merge pattern**         | ✅ Correct — ForEachAsync (no WaitIdle), merge writes TransformComponent on main thread |
+| **Trail scrub detection**                      | ✅ Correct — `abs(actualStep) > abs(expectedStep)` clears stale trail                   |
+| **Replay picking blocked**                     | ✅ Correct — event handler returns false during replay mode                             |
+| **WaitForFlush on OnDetach**                   | ✅ Correct — blocks until background write completes before scene teardown              |
+| **DrawReplayLoader null guard**                | ✅ Correct — `DrawReplayLoader()` only called when `m_Player != nullptr`                |
+| \*\*Transport >                                | button wraparound\*\*                                                                   | ✅ Correct — Jump-to-end logic, reverse wraparound on rewind |
 
 ---
-
-## 10. Priority Fix List
-
-| Priority | Issue | File(s) | Impact |
-|---|---|---|---|
-| **P1** | Binary format loses actual timestamps; replay duration is wrong at any time scale ≠ 1.0 | `DataRecorder.cpp:279`, `DataPlayer.cpp:84` | Incorrect replay playback speed after scaled recording |
-| **P1** | README §7 doesn't explain that `ts`/`dt` are not layer-scaled | `README.md §7` | Every new client layer that uses `SetTimeScale()` will not behave correctly |
-| **P2** | `DataPlayer::Tick` freezes in playing state at position 0 when `dt < 0` | `DataPlayer.cpp:335` | Infinite no-op Tick calls when global time scale is negative during replay |
-| **P2** | v1 format description in README contradicts the code | `DataPlayer.cpp:104`, `README.md §38` | Either legacy files are unloadable, or the docs are wrong |
-| **P3** | `GetCurrentFrame` and `GetInfo` read `m_NameToId` without `m_RegistryMutex` | `DataRecorder.cpp:100,113` | Potential data race if contract is violated; inconsistent with `GetEntityNames` |
-| **P4** | Variable `tag` in replay sync loop actually holds the entity name | `TemplateTelemetryLayer.cpp:143` | Misleading naming, maintenance hazard |
-| **P4** | Comment section numbering skips 4 | `TelemetryPanel.cpp:265` | Cosmetic |
-
----
-
-*Generated by code audit — all line numbers reference the `5/29/2026` revisions of the listed files.*

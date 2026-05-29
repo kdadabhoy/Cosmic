@@ -119,7 +119,7 @@ namespace Workspace
     void TemplateTelemetryLayer::OnUpdate(float ts)
     {
         // ts already carries both global and layer scale — applied by the root
-        // manager (TemplateProject) before dispatch.  Use it directly everywhere.
+        // manager (MyProjecta) before dispatch.  Use it directly everywhere.
         m_Camera.OnUpdate(ts);
 
         // Detect flush completion and update the status label on the falling edge.

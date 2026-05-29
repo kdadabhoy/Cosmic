@@ -24,16 +24,16 @@
  *
  * FORMAT SUPPORT
  * --------------
- * v1 — one entity per file (legacy)
- * v2 — all entities in one file, global sample_count
- * v3 — all entities in one file, per-entity sample_count
+ * v1 — all entities in one file, per-entity sample_count, timestamp per row
  *
  * INTERPOLATION
  * -------------
- * Given position P seconds and sample rate R Hz:
- *   t    = P * R
- *   i    = clamp((int)t, 0, sample_count - 2)
- *   frac = t - (float)i
+ * Binary search on stored timestamps to find the straddling frame pair, then
+ * linear interpolation within that pair. Correct for any recorded time scale.
+ *
+ *   i    = last index where frames[i].timestamp <= posSeconds
+ *   span = frames[i+1].timestamp - frames[i].timestamp
+ *   frac = clamp((posSeconds - frames[i].timestamp) / span, 0, 1)
  *   out.values[ch] = frames[i].values[ch] * (1 - frac)
  *                  + frames[i+1].values[ch] * frac
  *
@@ -138,7 +138,7 @@ namespace Cosmic
         };
 
         bool LoadBinaryFile(const std::string& filepath);
-        void Interpolate(const PlayerEntityData& data, float t, TelemetryFrame& out) const;
+        void Interpolate(const PlayerEntityData& data, float posSeconds, TelemetryFrame& out) const;
 
         std::vector<PlayerEntityData>             m_Entities;
         std::unordered_map<std::string, uint32_t> m_NameToId;

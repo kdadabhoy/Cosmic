@@ -167,8 +167,9 @@ namespace Cosmic
 
     void TelemetryPanel::OnUpdate(float dt)
     {
-        // Advance the player each frame when in replay mode.
-        if (m_Mode == Mode::Replay && m_Player && m_Player->IsLoaded())
+        // Only advance player when time moves forward — negative dt (global time
+        // scale < 0) would pin the position at 0 with m_Playing still true.
+        if (dt > 0.0f && m_Mode == Mode::Replay && m_Player && m_Player->IsLoaded())
             m_Player->Tick(dt);
 
         if (m_SelectedName.empty()) return;
@@ -263,7 +264,7 @@ namespace Cosmic
         }
 
         // -----------------------------------------------------------------------
-        // 5. Inspector
+        // 4. Inspector
         // -----------------------------------------------------------------------
         if (!m_SelectedName.empty() && !m_LastFrame.values.empty())
         {

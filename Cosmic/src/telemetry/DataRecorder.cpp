@@ -99,10 +99,19 @@ namespace Cosmic
 
     bool DataRecorder::GetCurrentFrame(const std::string& entityName, TelemetryFrame& out) const
     {
-        auto it = m_NameToId.find(entityName);
-        if (it == m_NameToId.end()) return false;
+        // m_NameToId is written only in Register() (main thread, before jobs).
+        // These query functions are also called on the main thread, so there is
+        // no live data race. The registry lock is still acquired for correctness
+        // if that contract ever changes.
+        uint32_t id;
+        {
+            std::lock_guard<std::mutex> regLock(m_RegistryMutex);
+            auto it = m_NameToId.find(entityName);
+            if (it == m_NameToId.end()) return false;
+            id = it->second;
+        }
 
-        const EntityRecord& rec = *m_Records[it->second];
+        const EntityRecord& rec = *m_Records[id];
         std::lock_guard<std::mutex> lock(rec.mutex);
         if (rec.timestamps.empty()) return false;
 
@@ -112,6 +121,7 @@ namespace Cosmic
 
     const EntityTelemetryInfo* DataRecorder::GetInfo(const std::string& name) const
     {
+        std::lock_guard<std::mutex> lock(m_RegistryMutex);
         auto it = m_NameToId.find(name);
         if (it == m_NameToId.end()) return nullptr;
         return &m_Records[it->second]->info;
@@ -241,7 +251,7 @@ namespace Cosmic
                 // Header
                 const char magic[4] = { 'C', 'S', 'M', 'C' };
                 binFile.write(magic, 4);
-                const uint32_t version = 3u;
+                const uint32_t version = 1u;
                 binFile.write(reinterpret_cast<const char*>(&version),     sizeof(version));
                 binFile.write(reinterpret_cast<const char*>(&entityCount), sizeof(entityCount));
                 binFile.write(reinterpret_cast<const char*>(&sampleRate),  sizeof(sampleRate));
@@ -269,20 +279,22 @@ namespace Cosmic
                     }
                 }
 
-                // Data blocks — one per entity, row-major (frame × channel)
+                // Data blocks — one per entity, row-major (frame × (1 + channel_count))
+                // Each row: [timestamp, ch0, ch1, ..., ch(N-1)]
                 std::vector<float> rowBuf;
                 for (const auto& snap : snapshots)
                 {
                     const uint32_t chCount = static_cast<uint32_t>(snap.info.channels.size());
-                    rowBuf.resize(chCount);
+                    rowBuf.resize(chCount + 1);
 
                     for (uint32_t s = 0; s < snap.sampleCount; ++s)
                     {
+                        rowBuf[0] = (s < snap.timestamps.size()) ? snap.timestamps[s] : 0.0f;
                         for (uint32_t ch = 0; ch < chCount; ++ch)
-                            rowBuf[ch] = (ch < snap.columns.size() && s < snap.columns[ch].size())
-                                         ? snap.columns[ch][s] : 0.0f;
+                            rowBuf[ch + 1] = (ch < snap.columns.size() && s < snap.columns[ch].size())
+                                             ? snap.columns[ch][s] : 0.0f;
                         binFile.write(reinterpret_cast<const char*>(rowBuf.data()),
-                                      chCount * sizeof(float));
+                                      (chCount + 1) * sizeof(float));
                     }
                 }
 

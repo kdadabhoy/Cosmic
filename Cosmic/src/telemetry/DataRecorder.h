@@ -30,15 +30,14 @@
  * pre-reserved float vectors — zero malloc in the hot path after
  * ReserveCapacity() is called.
  *
- * BINARY FILE FORMAT v3 — per-entity sample count
- * -------------------------------------------------
- * v3 replaces the single global sample_count in the header with a per-entity
- * sample_count in each entity's descriptor. This allows entities registered at
- * different times to have different frame counts without corrupting the file.
- * DataPlayer still reads v1 (legacy single-entity) and v2 (global sample_count).
+ * BINARY FILE FORMAT v1
+ * ----------------------
+ * Single supported format. Each data row prepends the recorded simulation
+ * timestamp so the player reconstructs exact timing regardless of any time
+ * scale active during recording.
  *
  *   [4]  char     magic[4]         = "CSMC"
- *   [4]  uint32   version          = 3
+ *   [4]  uint32   version          = 1
  *   [4]  uint32   entity_count
  *   [4]  float    sample_rate
  *
@@ -47,12 +46,13 @@
  *     [64] char entity_name[64]
  *     [64] char entity_tag[64]
  *     [4]  uint32 channel_count
- *     [4]  uint32 sample_count      ← per-entity (changed from v2)
+ *     [4]  uint32 sample_count      ← per-entity
  *     [channel_count × 32] char channel_name[32]
  *
  *   -- data table (entity_count contiguous blocks) --
  *   For each entity:
- *     [sample_count × channel_count × 4] float32 row-major
+ *     [sample_count × (channel_count + 1) × 4] float32 row-major
+ *     Each row: [timestamp, ch0, ch1, ..., ch(N-1)]
  *
  * ============================================================================
  */

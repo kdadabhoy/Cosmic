@@ -2536,7 +2536,7 @@ m_Recorder.Flush("logs", "my_session", 60.0f);
 Output layout:
 ```
 logs/my_session/
-├── scene.bin      ← all entities, v3 binary
+├── scene.bin      ← all entities, v1 binary
 ├── Agent_00.csv
 ├── Agent_01.csv
 ...
@@ -2734,9 +2734,9 @@ if (m_Panel.GetMode() == Cosmic::TelemetryPanel::Mode::Replay && m_Player.IsLoad
     auto view = m_Scene->View<Cosmic::TagComponent, Cosmic::TransformComponent>();
     for (auto rawE : view)
     {
-        const std::string& tag = view.get<Cosmic::TagComponent>(rawE).Tag;
+        const std::string& entityName = view.get<Cosmic::TagComponent>(rawE).Tag;
         Cosmic::TelemetryFrame frame;
-        if (m_Player.GetFrame(tag, frame) && frame.values.size() >= 2)
+        if (m_Player.GetFrame(entityName, frame) && frame.values.size() >= 2)
         {
             auto& t = view.get<Cosmic::TransformComponent>(rawE);
             t.Position.x = frame.values[0];
@@ -3988,8 +3988,8 @@ Cosmic/src/telemetry/
 ├── TelemetryChannel.h      Shared POD — TelemetryFrame, EntityTelemetryInfo
 ├── EntitySelection.h/.cpp  Global selection service, subscription callbacks
 ├── EntityPicker.h          Header-only AABB picker + screen-to-world math
-├── DataRecorder.h/.cpp     Columnar capture engine, binary v3 writer
-├── DataPlayer.h/.cpp       Binary reader (v1/v2/v3), linear interpolation
+├── DataRecorder.h/.cpp     Columnar capture engine, binary v1 writer
+├── DataPlayer.h/.cpp       Binary v1 reader, timestamp-based interpolation
 └── TelemetryPanel.h/.cpp   Mode state machine, ring buffer, ImPlot UI
 
 Cosmic/src/scene/
@@ -4032,12 +4032,12 @@ After `ReserveCapacity(N)` each inner vector is pre-allocated for N floats. Subs
 
 Relaxed ordering on `m_ElapsedTime` is sufficient on x86-64 because the TSO memory model makes stores from one core visible to other cores in program order regardless of the C++ memory order tag. The practical consequence is that a worker thread may see a timestamp that is one tick stale — acceptable for telemetry data.
 
-### DataRecorder — Binary v3 Format
+### DataRecorder — Binary v1 Format
 
 ```
 Offset   Size    Field
 [0]      4       char    magic[4]       = "CSMC"
-[4]      4       uint32  version        = 3
+[4]      4       uint32  version        = 1
 [8]      4       uint32  entity_count
 [12]     4       float   sample_rate
 
@@ -4046,43 +4046,39 @@ For each entity:
   [+0]    64     char    entity_name[64]
   [+64]   64     char    entity_tag[64]
   [+128]  4      uint32  channel_count
-  [+132]  4      uint32  sample_count     ← per-entity (moved from global header in v2)
+  [+132]  4      uint32  sample_count     ← per-entity
   [+136]  channel_count × 32  char channel_name[32]
 
 ── data table, entity_count contiguous blocks ──
 For each entity:
-  sample_count × channel_count × sizeof(float)
-  float32, row-major (all channels for frame 0, then all channels for frame 1, …)
+  sample_count × (channel_count + 1) × sizeof(float)
+  float32, row-major — each row is [timestamp, ch0, ch1, …, ch(N-1)]
 ```
 
-The key change from v2 to v3 is the promotion of `sample_count` from a single global field in the file header to a per-entity field in the descriptor. This allows entities registered at different times — or that recorded for different durations — to have different frame counts without corrupting the data offsets for subsequent entities.
+Storing the simulation timestamp in each row means the player reconstructs exact timing regardless of any global time scale that was active during recording. Duration is derived from the last frame's stored timestamp, not from `(sample_count − 1) / sample_rate`.
 
 ### DataPlayer — Format Compatibility
 
-`DataPlayer` reads all three versions transparently:
+| Version | Identifies via | Produced by |
+| ------- | -------------- | ----------- |
+| v1 | `magic == "CSMC"`, `version == 1` | Current `DataRecorder::Flush()` |
 
-| Version | Identifies via | `sample_count` location | Produced by |
-| ------- | -------------- | ----------------------- | ----------- |
-| v1 | Single entity per `.bin` (no `"CSMC"` magic) | Derived from file size | Legacy single-entity recorder |
-| v2 | `magic == "CSMC"`, `version == 2` | Single global field in header | Older `scene.bin` sessions |
-| v3 | `magic == "CSMC"`, `version == 3` | Per-entity in descriptor table | Current `DataRecorder::Flush()` |
+`Load(directory)` looks for `scene.bin` and loads it if found.
 
-`Load(directory)` prefers `scene.bin` (v2/v3) and skips any individual `.bin` files in the same folder. This deduplication prevents double-loading entities when a session directory contains both a `scene.bin` and leftover per-entity files from an older format.
+### DataPlayer — Timestamp-Based Interpolation
 
-### DataPlayer — Linear Interpolation
-
-Given playback position `P` seconds and sample rate `R` Hz:
+Each frame carries its recorded simulation timestamp. Given playback position `P` seconds:
 
 ```
-t    = P × R
-i    = clamp(floor(t), 0, sample_count − 2)   // lower frame index
-frac = t − float(i)                            // interpolation weight in [0, 1)
+i    = last index where frames[i].timestamp ≤ P   (binary search)
+span = frames[i+1].timestamp − frames[i].timestamp
+frac = clamp((P − frames[i].timestamp) / span, 0, 1)
 
 out.values[ch] = frames[i].values[ch] × (1 − frac)
                + frames[i+1].values[ch] × frac
 ```
 
-`SampleAt(name, seconds, out)` runs this identical calculation at an arbitrary position without modifying `m_Position`. The template layer uses it for **trail reconstruction**: when the user scrubs the playhead, the trail is rebuilt by sampling the entity's position at evenly-spaced past timestamps rather than replaying all intermediate frames in order.
+This is correct for recordings made under any time scale. `SampleAt(name, seconds, out)` runs the same lookup at an arbitrary position without modifying `m_Position`. The template layer uses it for **trail reconstruction**: when the user scrubs the playhead, the trail is rebuilt by sampling the entity's position at evenly-spaced past timestamps rather than replaying all intermediate frames in order.
 
 ### TelemetryPanel — Mode State Machine
 
