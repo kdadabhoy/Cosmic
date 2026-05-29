@@ -25,6 +25,7 @@
  */
 
 #include <memory>
+#include <cstdio>
 
 namespace Cosmic
 {
@@ -69,8 +70,8 @@ namespace Cosmic
 #ifdef CS_ENABLE_ASSERTS
 	 // We use an expansion technique so that any file including Core.h knows the macro signature,
 	 // but the actual call to Log occurs downstream without requiring a tight #include "Log.h" dependency here.
-#define CS_ASSERT(x, ...)          { if(!(x)) { CS_CORE_ERROR("Assertion Failed: {0}", __VA_ARGS__); __debugbreak(); } }
-#define GLCORE_ASSERT(x, ...)      { if(!(x)) { CS_CORE_ERROR("Assertion Failed: {0}", __VA_ARGS__); __debugbreak(); } }
+#define CS_ASSERT(x, ...)          { if(!(x)) { fprintf(stderr, "Assertion Failed\n"); CS_CORE_ERROR("Assertion Failed: {0}", __VA_ARGS__); __debugbreak(); } }
+#define GLCORE_ASSERT(x, ...)      { if(!(x)) { fprintf(stderr, "Assertion Failed\n"); CS_CORE_ERROR("Assertion Failed: {0}", __VA_ARGS__); __debugbreak(); } }
 
 // Legacy Alias Mapping for engine-internal code files
 #define CS_CORE_ASSERT(x, ...)     CS_ASSERT(x, __VA_ARGS__)
@@ -88,7 +89,7 @@ namespace Cosmic
 	  * Converts an integer into a bitwise flag (1 shifted left by x).
 	  * Primarily used in Event.h to define overlapping Event Categories.
 	  */
-#define BIT(x) (1 << x)
+#define BIT(x) (1u << (x))
 
 	  /**
 	   * CS_BIND_EVENT_FN(fn)
@@ -96,8 +97,7 @@ namespace Cosmic
 	   * Prefer modern C++20 lambda syntax in client-facing code over this macro:
 	   * dispatcher.Dispatch<Event>([this](auto& e) { return OnEvent(e); });
 	   */
-#define CS_BIND_EVENT_FN(fn)     std::bind(&fn, this, std::placeholders::_1)
-#define GLCORE_BIND_EVENT_FN(fn) std::bind(&fn, this, std::placeholders::_1)
+#define CS_BIND_EVENT_FN(fn) std::bind(&fn, this, std::placeholders::_1)
 
 	   ////////////////////////////////
 	   // Smart Pointer Aliases

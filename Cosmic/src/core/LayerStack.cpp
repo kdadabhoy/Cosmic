@@ -1,4 +1,5 @@
 #include "core/LayerStack.h"
+#include "core/Log.h"
 #include <algorithm> // For std::find
 
 
@@ -87,7 +88,19 @@ namespace Cosmic
 	 */
 	void LayerStack::Clear()
 	{
-		// Simply clear the tracking array context structures without double-triggering events
+		// Safe public path: all layers must have been detached via PopLayer/PopOverlay first.
+		CS_CORE_ASSERT(m_Layers.empty(),
+			"LayerStack::Clear() called while layers are still attached. "
+			"Call PopLayer/PopOverlay to detach each layer first, or use ForceCleanForShutdown() in shutdown.");
+
+		m_Layers.clear();
+		m_LayerInsertIndex = 0;
+	}
+
+	void LayerStack::ForceCleanForShutdown()
+	{
+		// Shutdown-only raw wipe. Ownership and deletion are handled externally by Application::Shutdown()
+		// after snapshotting the layer list — OnDetach() is intentionally not called here.
 		m_Layers.clear();
 		m_LayerInsertIndex = 0;
 	}

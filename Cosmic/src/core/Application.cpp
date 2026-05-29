@@ -45,11 +45,7 @@ namespace Cosmic
 		CS_CORE_INFO("=================================================");
 
 		s_Instance = this;
-
-		if (!Initialize())
-		{
-			CS_CORE_CRITICAL("Cosmic: Failed to initialize application!");
-		}
+		Initialize();
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////
@@ -94,7 +90,7 @@ namespace Cosmic
 			float time = (float)glfwGetTime();
 			Timestep rawTimestep = time - lastFrameTime;
 			lastFrameTime = time;
-			m_AbsoluteTime += rawTimestep.GetSeconds() * m_TimeScale;
+			m_AbsoluteTime += rawTimestep.GetSeconds();
 
 			// Skip execution passes entirely if the hardware window framework is minimized
 			if (m_Minimized)
@@ -117,11 +113,15 @@ namespace Cosmic
 				}
 
 				accumulator += (frameTime * m_TimeScale);
+
+				// Signed so layers receive a negative dt during rewind (TimeScale < 0)
+				const float signedFixedDelta = m_TimeScale >= 0.f ? fixedDeltaTime : -fixedDeltaTime;
+
 				while (accumulator >= fixedDeltaTime)
 				{
 					for (Layer* layer : m_LayerStack)
 					{
-						layer->OnFixedUpdate(fixedDeltaTime);;
+						layer->OnFixedUpdate(signedFixedDelta);
 					}
 					accumulator -= fixedDeltaTime;
 				}
@@ -193,12 +193,12 @@ namespace Cosmic
 			if (!m_PendingProjectDLL.empty())
 			{
 				// 1. Locate and strip out the legacy Launcher context layer
-				Layer* launcherTarget = nullptr;
+				LauncherLayer* launcherTarget = nullptr;
 				for (Layer* layer : m_LayerStack)
 				{
-					if (layer->GetName() == "LauncherLayer")
+					if (auto* launcher = dynamic_cast<LauncherLayer*>(layer))
 					{
-						launcherTarget = layer;
+						launcherTarget = launcher;
 						break;
 					}
 				}
@@ -271,7 +271,7 @@ namespace Cosmic
 		// 4. Clear the active LayerStack immediately.
 		// By emptying tracking vectors now, we guarantee that no stray events or threads 
 		// can step through dangling pointer ranges during the upcoming deletion process.
-		m_LayerStack.Clear();
+		m_LayerStack.ForceCleanForShutdown();
 
 		// 5. Execute explicit memory destruction on unmanaged layers.
 		// This triggers layer destructors, releasing graphics assets (Textures, Shaders)
@@ -305,8 +305,8 @@ namespace Cosmic
 		EventDispatcher dispatcher(e);
 
 		// Handling "global" application events
-		dispatcher.Dispatch<WindowCloseEvent>(GLCORE_BIND_EVENT_FN(Application::OnWindowClose));
-		dispatcher.Dispatch<WindowResizeEvent>(GLCORE_BIND_EVENT_FN(Application::OnWindowResize));
+		dispatcher.Dispatch<WindowCloseEvent>([this](WindowCloseEvent& e) { return OnWindowClose(e); });
+		dispatcher.Dispatch<WindowResizeEvent>([this](WindowResizeEvent& e) { return OnWindowResize(e); });
 
 		// Propagate events down the layer stack (top to bottom)
 		for (auto it = m_LayerStack.rbegin(); it != m_LayerStack.rend(); ++it)
@@ -366,7 +366,7 @@ namespace Cosmic
 	 * Orchestrates the creation of the Window, Renderer, Framebuffer, and ImGui.
 	 * Returns: true if all subsystems started successfully.
 	 */
-	bool Application::Initialize()
+	void Application::Initialize()
 	{
 		CS_CORE_TRACE("Initializing Application Subsystems...");
 
@@ -377,7 +377,7 @@ namespace Cosmic
 
 		// 1. Create the window 
 		m_Window = CreateScope<Window>(DEFAULT_WIDTH, DEFAULT_HEIGHT, DEFAULT_WINDOW_TITLE);
-		m_Window->SetEventCallback(GLCORE_BIND_EVENT_FN(Application::OnEvent));
+		m_Window->SetEventCallback([this](Event& e) { OnEvent(e); });
 
 		// --- THE CRITICAL HAZEL FIX ---
 		// Explicitly lock your frame present scheduling onto your primary monitor refresh rate on boot!
@@ -398,8 +398,6 @@ namespace Cosmic
 
 		// 5. Boot exclusively into the Launcher state
 		PushLayer(new LauncherLayer());
-
-		return true;
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////

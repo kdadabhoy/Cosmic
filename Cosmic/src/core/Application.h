@@ -100,7 +100,7 @@ namespace Cosmic
 		// Internal Event Handlers & Initialization
 		/////////////////////////////////////////////////////////////////////////////////
 
-		bool		Initialize();
+		void		Initialize();
 		bool		OnWindowClose(WindowCloseEvent& e);
 		bool		OnWindowResize(WindowResizeEvent& e);
 

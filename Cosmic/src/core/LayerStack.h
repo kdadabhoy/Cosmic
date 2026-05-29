@@ -20,8 +20,8 @@
  *    Post: Clears structural pointer maps natively. Does not free layer memory.
  *
  * 2. ~LayerStack()
- *    Post: Iterates through all remaining layers and triggers OnDetach() for cleanup.
- *          Internal memory pointers are cleared.
+ *    Post: Clears internal pointer vectors. Does NOT call OnDetach() or free layer memory.
+ *          Detachment and deletion are driven explicitly by Application::Shutdown().
  *
  * 3. void PushLayer(Layer* layer)
  *    Pre:  `layer` must point to a valid heap allocation.
@@ -40,7 +40,12 @@
  *    Post: Triggers `OnDetach()`, removes the tracking reference from the back of the vector.
  *
  * 7. void Clear()
- *    Post: Rapidly purges structural vectors and clears the insert index. Does not trigger detaches.
+ *    Pre:  All layers must have been detached via PopLayer/PopOverlay first (asserts this in debug).
+ *    Post: Purges structural vectors and clears the insert index.
+ *
+ * 8. void ForceCleanForShutdown()
+ *    Post: Raw wipe of structural vectors. Intentionally skips OnDetach(). Only for Application::Shutdown()
+ *          after layers have been snapshotted and ownership transferred for external deletion.
  *
  * 8. Iterators (begin, end, rbegin, rend)
  *    Post: Returns standard vector iterators. Use rbegin/rend for event propagation
@@ -68,7 +73,8 @@ namespace Cosmic
 		void		PushOverlay(Layer* overlay);
 		void		PopLayer(Layer* layer);
 		void		PopOverlay(Layer* overlay);
-		void		Clear();
+		void		Clear();                  // Asserts all layers are already detached
+		void		ForceCleanForShutdown();  // Raw wipe for Application::Shutdown() only — skips OnDetach()
 
 
 		////////////////////////////////

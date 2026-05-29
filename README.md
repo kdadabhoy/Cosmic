@@ -291,6 +291,8 @@ When your project compiles as a separate `.dll`, both sides share the same `Ref<
 
 The `Application` singleton drives the entire engine. You interact with it through `Cosmic::Application::Get()`.
 
+> **Singleton ordering note:** `s_Instance` is assigned at the top of the `Application` constructor, before `Initialize()` runs. This is intentional — subsystems called during `Initialize()` (notably `ImGuiLayer::OnAttach()`) reach back through `Application::Get()` to access the window. Moving the assignment to after `Initialize()` returns would leave `s_Instance` null during those callbacks and crash. The tradeoff is that a caller who invokes `Application::Get()` from a static initializer or very early constructor — before the `Application` object is constructed at all — will receive a null dereference. The correct long-term fix is to pass subsystem references (e.g. `Window&`) explicitly into `OnAttach()` rather than routing through the singleton, but that requires a broader refactor.
+
 ### The Frame Loop
 
 Every frame executes four sequential passes:
@@ -503,7 +505,7 @@ bool MyLayer::OnWindowResize(Cosmic::WindowResizeEvent& e)
 }
 ```
 
-The legacy macro forms (`CS_BIND_EVENT_FN(fn)` and `GLCORE_BIND_EVENT_FN(fn)`) both expand identically to `std::bind(&fn, this, std::placeholders::_1)` and are defined in `Core.h`. They still compile and produce correct behavior; prefer lambdas in new code.
+The legacy macro form `CS_BIND_EVENT_FN(fn)` expands to `std::bind(&fn, this, std::placeholders::_1)` and is defined in `Core.h`. It still compiles and produces correct behavior; prefer lambdas in new code.
 
 ### Forwarding Events to Sub-Systems
 
@@ -684,7 +686,7 @@ Cosmic::Application::Get().SetTimeScale(-1.0f);  // rewind
 float scale = Cosmic::Application::Get().GetTimeScale();
 ```
 
-When `TimeScale` is negative, `GetAbsoluteTime()` decreases each frame. Any shader reading `u_Time` will naturally scrub backward, making animated effects appear to reverse without any code changes on your end.
+`GetAbsoluteTime()` is always monotonically increasing — it accumulates raw wall-clock time and is unaffected by `TimeScale`. Use it for profiling, session duration, or any clock that must not pause or rewind. Shaders reading `u_Time` receive this raw value. For a time value that does rewind with negative scale, use `GetLocalTime()` from within a layer.
 
 ### Per-Layer Local Time
 
@@ -2544,10 +2546,10 @@ m_LastFrameTime     = time;
 
 ```cpp
 float scaledTs = rawTimestep * m_TimeScale;   // m_TimeScale set by SetTimeScale()
-m_AbsoluteTime += scaledTs;
+m_AbsoluteTime += rawTimestep;                // always raw — monotonically increasing
 ```
 
-`scaledTs` is what flows down to layers. `m_AbsoluteTime` accumulates scaled time (so it pauses when `TimeScale == 0` and rewinds when `TimeScale < 0`).
+`scaledTs` is what flows down to layers. `m_AbsoluteTime` accumulates raw wall-clock time (unaffected by `TimeScale`), so it never pauses or rewinds.
 
 ### Fixed Accumulator
 
@@ -2583,10 +2585,10 @@ Fixed-rate:
 
 ```
 Application::Run()
-  → fixedDt (constant 1/60)  →  Layer::OnFixedUpdate(fixedDt)
+  → fixedDt * sign(TimeScale)  →  Layer::OnFixedUpdate(signedDt)
 ```
 
-`fixedDt` is **already scaled** — it was accumulated from `scaledTs`. A client layer does not need to apply `GetTimeScale()` again inside `OnFixedUpdate`.
+`fixedDt` is `1/60` in magnitude, but its sign matches `TimeScale`: positive during normal play, negative during rewind. A client layer can read the sign of `dt` in `OnFixedUpdate` to know whether to simulate forward or backward — no need to query `GetTimeScale()` separately.
 
 ### Full Waterfall Diagram
 
@@ -3318,7 +3320,7 @@ enum EventCategory
 };
 ```
 
-`BIT(x)` expands to `(1 << (x))`. A single event can belong to multiple categories — `KeyPressedEvent` sets flags for `Input | Keyboard`. `IsInCategory` tests with bitwise AND.
+`BIT(x)` expands to `(1u << (x))` (unsigned shift, avoids UB for bits ≥ 31). A single event can belong to multiple categories — `KeyPressedEvent` sets flags for `Input | Keyboard`. `IsInCategory` tests with bitwise AND.
 
 The `TemplateProject::OnEvent` broadcast pattern uses `IsInCategory(EventCategoryApplication)` to route resize events to all child layers without inspecting specific event types.
 
