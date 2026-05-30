@@ -363,6 +363,11 @@ Ref<Cosmic::FrameBuffer> fb = app.GetFrameBuffer();
 // Workspace shell access
 Cosmic::WorkspaceLayer* ws = app.GetWorkspaceLayer(); // nullptr before transition
 
+// Minimize behaviour — default is true (all passes skipped while minimized).
+// Set false for simulations or headless servers that must keep ticking regardless.
+app.SetPauseOnMinimize(false);
+bool pauses = app.GetPauseOnMinimize();
+
 // Shutdown
 app.Close(); // sets m_Running = false, exits the loop cleanly
 ```

@@ -213,6 +213,13 @@ namespace Workspace
 			}
 		}
 
+		// Engine settings
+		ImGui::Spacing();
+		ImGui::Separator();
+		bool pauseOnMinimize = Cosmic::Application::Get().GetPauseOnMinimize();
+		if (ImGui::Checkbox("Pause on Minimize", &pauseOnMinimize))
+			Cosmic::Application::Get().SetPauseOnMinimize(pauseOnMinimize);
+
 		// Frame stats
 		ImGui::Spacing();
 		ImGui::Separator();

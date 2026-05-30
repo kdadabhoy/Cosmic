@@ -107,6 +107,12 @@ namespace Cosmic
 		inline ImGuiLayer*			GetImGuiLayer()			{ return m_ImGuiLayer.get(); }
 		void						Close()					{ m_Running = false; }
 
+		// When true (default), all update and render passes are skipped while the window
+		// is minimized. Set false for simulations or servers that must keep ticking
+		// regardless of window state.
+		void						SetPauseOnMinimize(bool pause)	{ m_PauseOnMinimize = pause; }
+		bool						GetPauseOnMinimize() const		{ return m_PauseOnMinimize; }
+
 
 	private:
 		/////////////////////////////////////////////////////////////////////////////////
@@ -136,6 +142,7 @@ namespace Cosmic
 		bool							m_Running = true;
 		bool							m_UseFixedTimestep = true;
 		bool							m_Minimized = false;
+		bool							m_PauseOnMinimize = true;
 
 
 		/////////////////////////////////////////////////////////////////////////////////

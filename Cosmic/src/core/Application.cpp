@@ -92,8 +92,8 @@ namespace Cosmic
 			lastFrameTime = time;
 			m_AbsoluteTime += rawTimestep.GetSeconds();
 
-			// Skip execution passes entirely if the hardware window framework is minimized
-			if (m_Minimized)
+			// Skip execution passes while minimized (default). Disabled via SetPauseOnMinimize(false).
+			if (m_Minimized && m_PauseOnMinimize)
 			{
 				continue;
 			}
