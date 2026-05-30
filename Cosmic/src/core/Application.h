@@ -32,6 +32,7 @@
 #include "layers/ImGuiLayer.h"
 #include "graphics/FrameBuffer.h"
 #include "core/Timestep.h"
+#include <glm/glm.hpp>
 #include <memory>
 #include <string>
 
@@ -80,7 +81,12 @@ namespace Cosmic
 
 		inline Window&					GetWindow()							{ return *m_Window; }
 		inline Ref<FrameBuffer>         GetFrameBuffer()					{ return m_Framebuffer; }
-		inline WorkspaceLayer*			GetWorkspaceLayer()					{ return m_WorkspaceLayer; } 
+		inline WorkspaceLayer*			GetWorkspaceLayer()					{ return m_WorkspaceLayer; }
+
+		// Viewport bounds in GLFW window-space pixels (top-left of rendered image content).
+		// Delegates to WorkspaceLayer; returns zero vectors when no workspace is active.
+		glm::vec2			GetViewportPos()  const;
+		glm::vec2			GetViewportSize() const;
 
 
 		/////////////////////////////////////////////////////////////////////////////////

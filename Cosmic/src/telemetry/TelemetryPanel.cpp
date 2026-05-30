@@ -216,8 +216,13 @@ namespace Cosmic
         }
 
         // -----------------------------------------------------------------------
-        // 2. Entity selector combo
+        // 2. Picking toggle + entity selector combo
         // -----------------------------------------------------------------------
+        ImGui::Checkbox("Click to Select", &m_PickingEnabled);
+        ImGui::SameLine();
+        ImGui::TextDisabled("(click entities in viewport)");
+        ImGui::Spacing();
+
         std::vector<std::string> names;
         if (m_Mode == Mode::Live && m_Recorder)
             names = m_Recorder->GetEntityNames();

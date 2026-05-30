@@ -27,6 +27,7 @@
 #include "camera/OrthographicCamera.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <functional>
 
 namespace Cosmic
 {
@@ -80,12 +81,18 @@ namespace Cosmic
          * The hit box is: [Position.x ± Scale.x * 0.5, Position.y ± Scale.y * 0.5].
          * Z is ignored — this is strictly 2D picking.
          *
-         * @param scene     The scene to search. Accepts Ref<Scene> directly so
-         *                  callers can pass m_Scene without dereferencing.
+         * @param scene     The scene to search.
          * @param worldPos  2D world-space query point (from ScreenToWorld).
-         * @return          First entity whose AABB contains worldPos, or Entity{}.
+         * @param filter    Optional extra predicate — return false to reject an
+         *                  otherwise-hit entity (e.g. "only Agents", "skip locked").
+         *                  Null means accept all entities with SelectableComponent.
+         * @return          First entity whose AABB contains worldPos and passes
+         *                  the filter, or Entity{}.
          */
-        static Entity Pick(const Ref<Scene>& scene, glm::vec2 worldPos)
+        static Entity Pick(
+            const Ref<Scene>& scene,
+            glm::vec2         worldPos,
+            const std::function<bool(Entity)>& filter = nullptr)
         {
             auto view = scene->View<TransformComponent, SelectableComponent>();
 
@@ -100,7 +107,11 @@ namespace Cosmic
                 bool hitY = glm::abs(worldPos.y - transform.Position.y) <= halfH;
 
                 if (hitX && hitY)
-                    return Entity{ rawEntity, scene.get() };
+                {
+                    Entity candidate{ rawEntity, scene.get() };
+                    if (!filter || filter(candidate))
+                        return candidate;
+                }
             }
 
             return Entity{};

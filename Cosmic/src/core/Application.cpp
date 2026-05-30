@@ -322,6 +322,18 @@ namespace Cosmic
 
 	/////////////////////////////////////////////////////////////////////////////////
 
+	glm::vec2 Application::GetViewportPos() const
+	{
+		return m_WorkspaceLayer ? m_WorkspaceLayer->GetViewportPos() : glm::vec2{ 0.0f, 0.0f };
+	}
+
+	glm::vec2 Application::GetViewportSize() const
+	{
+		return m_WorkspaceLayer ? m_WorkspaceLayer->GetViewportSize() : glm::vec2{ 0.0f, 0.0f };
+	}
+
+	/////////////////////////////////////////////////////////////////////////////////
+
 	/**
 	 * Logic Layer Registration
 	 */

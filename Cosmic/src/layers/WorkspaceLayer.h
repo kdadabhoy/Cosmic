@@ -99,6 +99,13 @@ namespace Cosmic
         }
 
         // -----------------------------------------------------------------------
+        // Viewport bounds — pixel coords matching glfwGetCursorPos space.
+        // ViewportPos is the top-left of the rendered image content (below title bar).
+        // -----------------------------------------------------------------------
+        glm::vec2 GetViewportPos()  const { return m_ViewportPos; }
+        glm::vec2 GetViewportSize() const { return m_ViewportSize; }
+
+        // -----------------------------------------------------------------------
         // Teardown / layout
         // -----------------------------------------------------------------------
         void RequestLayoutReset()
@@ -127,6 +134,7 @@ namespace Cosmic
         bool m_DockspaceOpen = true;
 
         // Viewport tracking
+        glm::vec2 m_ViewportPos  = { 0.0f, 0.0f };
         glm::vec2 m_ViewportSize = { 0.0f, 0.0f };
         bool      m_ViewportFocused = false;
         bool      m_ViewportHovered = false;

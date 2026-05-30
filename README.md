@@ -346,6 +346,13 @@ float t     = app.GetAbsoluteTime(); // raw engine uptime in seconds (unaffected
 app.GetWindow().GetWidth();
 app.GetWindow().GetHeight();
 
+// Viewport bounds — pixel coordinates matching glfwGetCursorPos space.
+// Returns the top-left and size of the rendered image content area inside the
+// "Viewport" ImGui panel (excludes the inspector sidebar and ImGui title bars).
+// Use these instead of GetWindow().GetWidth/Height() for accurate mouse picking.
+glm::vec2 vpPos  = app.GetViewportPos();   // top-left of image content
+glm::vec2 vpSize = app.GetViewportSize();  // width/height of image content
+
 // Transitions (queued for the Safe Zone — safe to call from anywhere)
 app.TransitionFromLauncherToWorkspace("MyProject.dll");
 app.TransitionToLauncher();
@@ -453,7 +460,10 @@ Application::OnEvent(e)
         ▼  rbegin() → rend()  (TOP OF STACK FIRST)
 ┌───────────────────┐
 │   ImGuiLayer      │  ← receives events first (it's an overlay)
-│  (overlay)        │    blocks mouse/keyboard when ImGui panels are focused
+│  (overlay)        │    blocks mouse/keyboard only when m_BlockEvents=true
+│                   │    WorkspaceLayer sets BlockEvents(false) while the
+│                   │    Viewport panel is hovered, so clicks in the 3D view
+│                   │    pass through to your layer unmodified
 └────────┬──────────┘
          │ e.Handled == true? → STOP
          ▼
@@ -2586,6 +2596,10 @@ No fields, no configuration. Adding the tag is the only requirement.
 
 ### Entity Picking on Left-Click
 
+`Input::GetMousePosition()` returns coordinates in GLFW window space — (0,0) at the top-left of the OS window. The rendered image lives inside the "Viewport" ImGui panel, which is offset from the window origin by the inspector sidebar and title bars. You must subtract the viewport content origin and use the viewport size (not the full window size) before calling `ScreenToWorld`, or every pick will land at the wrong world coordinate.
+
+Use `Application::GetViewportPos()` and `Application::GetViewportSize()` to get the correct bounds:
+
 ```cpp
 void MyLayer::OnEvent(Cosmic::Event& e)
 {
@@ -2595,15 +2609,24 @@ void MyLayer::OnEvent(Cosmic::Event& e)
         {
             if (ev.GetMouseButton() != CS_MOUSE_BUTTON_LEFT) return false;
 
+            // Respect the panel's picking toggle (checkbox in the telemetry panel).
+            if (!m_Panel.IsPickingEnabled()) return false;
+
             // Skip picking during replay — live entity handles are invalid.
             if (m_Panel.GetMode() == Cosmic::TelemetryPanel::Mode::Replay)
                 return false;
 
-            glm::vec2 mousePos = Cosmic::Input::GetMousePosition();
-            glm::vec2 vpSize   = {
-                (float)Cosmic::Application::Get().GetWindow().GetWidth(),
-                (float)Cosmic::Application::Get().GetWindow().GetHeight()
-            };
+            auto& app        = Cosmic::Application::Get();
+            glm::vec2 vpPos  = app.GetViewportPos();   // top-left of rendered image
+            glm::vec2 vpSize = app.GetViewportSize();  // size of rendered image
+
+            // Subtract the viewport origin so (0,0) = top-left of the image.
+            glm::vec2 mousePos = Cosmic::Input::GetMousePosition() - vpPos;
+
+            // Reject clicks that landed on a panel border or title bar.
+            if (mousePos.x < 0.0f || mousePos.y < 0.0f ||
+                mousePos.x > vpSize.x || mousePos.y > vpSize.y)
+                return false;
 
             glm::vec2 worldPos = Cosmic::EntityPicker::ScreenToWorld(
                 m_Camera.GetCamera(), mousePos, vpSize);
@@ -2622,6 +2645,30 @@ void MyLayer::OnEvent(Cosmic::Event& e)
 ```
 
 `Pick` iterates only entities with both `TransformComponent` and `SelectableComponent`. It tests the 2D AABB (`Position ± Scale/2`) and returns the first hit, or an invalid `Entity{}` if nothing was hit.
+
+#### Picking Toggle
+
+`TelemetryPanel` renders a **"Click to Select"** checkbox in its panel UI. Check `m_Panel.IsPickingEnabled()` at the top of your click handler (as shown above) to respect it. This lets users disable viewport clicking without modifying any code — useful when the camera's own drag-pan conflicts with selection.
+
+#### Filtering Which Entities Are Selectable
+
+`Pick` accepts an optional second argument: a `std::function<bool(Entity)>` predicate. Return `false` from the predicate to reject an otherwise-hit entity. This lets different systems define their own selectability rules without removing `SelectableComponent`:
+
+```cpp
+// Only select entities tagged "Agent"
+Cosmic::Entity hit = Cosmic::EntityPicker::Pick(m_Scene, worldPos,
+    [](Cosmic::Entity e) {
+        return e.GetComponent<Cosmic::TagComponent>().Tag.starts_with("Agent");
+    });
+
+// Only select unlocked entities
+Cosmic::Entity hit = Cosmic::EntityPicker::Pick(m_Scene, worldPos,
+    [](Cosmic::Entity e) {
+        return !e.GetComponent<MyLockComponent>().Locked;
+    });
+```
+
+Passing `nullptr` (or omitting the argument) accepts all entities that have `SelectableComponent`.
 
 ### EntitySelection — Subscribing to Selection Changes
 
@@ -4155,12 +4202,29 @@ Without the snapshot, if a callback called `EntitySelection::Set()` or `Unsubscr
 
 ### EntityPicker — Screen-to-World Math
 
-GLFW reports mouse coordinates with (0,0) at the **top-left** of the window. OpenGL NDC places (0,0) at the **bottom-left** of the clip volume. The Y-axis must be flipped during unprojection:
+#### Viewport Offset (critical)
+
+`glfwGetCursorPos` (and therefore `Input::GetMousePosition()`) returns coordinates relative to the top-left corner of the **OS window**, not the rendered image. The rendered image lives inside the "Viewport" ImGui panel which is offset from the window origin by any docked panels and ImGui title bars. Passing raw GLFW coordinates to `ScreenToWorld` maps the wrong pixel to NDC and the pick misses.
+
+The correct pipeline:
 
 ```
-// 1. Normalize to [0, 1]
-normX = screenPos.x / viewportSize.x
-normY = screenPos.y / viewportSize.y
+mouseWindow  = Input::GetMousePosition()          // GLFW window space
+vpPos        = Application::GetViewportPos()       // top-left of image content
+vpSize       = Application::GetViewportSize()      // width × height of image content
+mouseViewport = mouseWindow − vpPos                // relative to image top-left
+```
+
+Reject clicks where `mouseViewport` is outside `[0, vpSize]` before calling `ScreenToWorld`.
+
+#### Y-Axis Flip
+
+GLFW places (0,0) at the **top-left** of its coordinate space. OpenGL NDC places (0,0) at the **bottom-left** of the clip volume. The Y-axis must be flipped during unprojection:
+
+```
+// 1. Normalize to [0, 1] — input is already relative to image top-left
+normX = mouseViewport.x / vpSize.x
+normY = mouseViewport.y / vpSize.y
 
 // 2. Map to NDC in [−1, +1]; flip Y
 ndcX =  normX * 2.0 − 1.0
@@ -4173,12 +4237,16 @@ world = inverse(VP) × vec4(ndcX, ndcY, 0, 1)
 world.xy /= world.w
 ```
 
+#### AABB Hit Test
+
 Once in world space, `Pick` tests each entity with `TransformComponent + SelectableComponent`:
 
 ```
 hitX = |worldPos.x − entity.Position.x| ≤ entity.Scale.x × 0.5
 hitY = |worldPos.y − entity.Position.y| ≤ entity.Scale.y × 0.5
 ```
+
+An optional `std::function<bool(Entity)>` predicate can be passed as the third argument to `Pick` to reject entities that pass the AABB test but fail a custom condition (e.g. tag filter, lock state). Passing `nullptr` or omitting the argument accepts all `SelectableComponent`-tagged entities.
 
 `EntityPicker` is header-only and carries no `COSMIC_API` export — the class is never instantiated, only called through its two static members.
 

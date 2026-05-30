@@ -179,6 +179,10 @@ namespace Cosmic
 		Cosmic::Application::Get().GetImGuiLayer()->BlockEvents(
 			!m_ViewportFocused && !m_ViewportHovered);
 
+		// Record content-area origin so pickers can map mouse → viewport space.
+		ImVec2 contentOrigin = ImGui::GetCursorScreenPos();
+		m_ViewportPos = { contentOrigin.x, contentOrigin.y };
+
 		ImVec2 panelSize = ImGui::GetContentRegionAvail();
 		if (panelSize.x > 0.0f && panelSize.y > 0.0f)
 			m_ViewportSize = { panelSize.x, panelSize.y };

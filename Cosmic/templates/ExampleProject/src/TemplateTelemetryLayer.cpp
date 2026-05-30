@@ -489,16 +489,28 @@ namespace Workspace
                 if (ev.GetMouseButton() != CS_MOUSE_BUTTON_LEFT)
                     return false;
 
+                if (!m_Panel.IsPickingEnabled())
+                    return false;
+
                 // Skip picking during replay — no live entities to select by handle.
                 if (m_Panel.GetMode() == Cosmic::TelemetryPanel::Mode::Replay)
                     return false;
 
-                glm::vec2 mousePos = Cosmic::Input::GetMousePosition();
-                auto& window       = Cosmic::Application::Get().GetWindow();
-                glm::vec2 vpSize   = {
-                    static_cast<float>(window.GetWidth()),
-                    static_cast<float>(window.GetHeight())
-                };
+                // Use the actual rendered viewport bounds (content area below title bar,
+                // to the right of any docked inspector panels) so the mouse→world
+                // conversion is relative to the image, not the full GLFW window.
+                auto& app        = Cosmic::Application::Get();
+                glm::vec2 vpPos  = app.GetViewportPos();
+                glm::vec2 vpSize = app.GetViewportSize();
+
+                // Mouse position is in GLFW window space; subtract the viewport
+                // content origin so (0,0) aligns with the top-left of the image.
+                glm::vec2 mousePos = Cosmic::Input::GetMousePosition() - vpPos;
+
+                // Reject clicks that landed outside the viewport panel.
+                if (mousePos.x < 0.0f || mousePos.y < 0.0f ||
+                    mousePos.x > vpSize.x || mousePos.y > vpSize.y)
+                    return false;
 
                 glm::vec2 worldPos = Cosmic::EntityPicker::ScreenToWorld(
                     m_Camera.GetCamera(), mousePos, vpSize);

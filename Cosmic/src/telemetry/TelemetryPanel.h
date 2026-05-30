@@ -119,6 +119,13 @@ namespace Cosmic
         void RegisterEntityInspector(const std::string& entityName, InspectorFn fn);
 
         // -------------------------------------------------------------------------
+        // Picking toggle
+        // -------------------------------------------------------------------------
+
+        /** @brief Whether viewport click-to-select is active. Rendered as a checkbox in the panel. */
+        bool IsPickingEnabled() const { return m_PickingEnabled; }
+
+        // -------------------------------------------------------------------------
         // Per-frame hooks
         // -------------------------------------------------------------------------
 
@@ -202,6 +209,8 @@ namespace Cosmic
         std::string m_ReplayStatus    = "No recording loaded.";
         bool        m_ReplayLoadOk    = false;
         float       m_LastReplayPos   = -1.0f; // guards duplicate pushes when paused
+
+        bool m_PickingEnabled = true;
 
         std::unordered_map<std::string, InspectorFn> m_TagInspectors;
         std::unordered_map<std::string, InspectorFn> m_EntityInspectors;
