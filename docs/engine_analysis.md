@@ -1,7 +1,7 @@
 # Cosmic Engine — Analysis Report
-**Date:** 2026-05-29  
-**Scope:** Render system (graphics/, renderer/, platform/OpenGL/), Telemetry system (telemetry/), Engine/Client architecture, README accuracy  
-**Files Reviewed:** 50+ source files across all subsystems
+**Date:** 2026-05-30 (updated from 2026-05-29)  
+**Scope:** Render system (graphics/, renderer/, platform/OpenGL/), Telemetry system (telemetry/), Job System & Parallel Pipeline (jobs/), Engine/Client architecture, README accuracy  
+**Files Reviewed:** 60+ source files across all subsystems
 
 ---
 
@@ -9,13 +9,14 @@
 
 1. [Render System Overview](#1-render-system-overview)
 2. [Telemetry System Overview](#2-telemetry-system-overview)
-3. [Issues & Bugs — Priority List](#3-issues--bugs--priority-list)
+3. [Job System & Parallel Pipeline Overview](#3-job-system--parallel-pipeline-overview)
+4. [Issues & Bugs — Priority List](#4-issues--bugs--priority-list)
    - [P1 — Critical Bugs](#p1--critical-bugs)
    - [P2 — High Priority](#p2--high-priority)
    - [P3 — Medium Priority](#p3--medium-priority)
    - [P4 — Low Priority / Design Issues](#p4--low-priority--design-issues)
-4. [README Inaccuracies](#4-readme-inaccuracies)
-5. [Possible Additions](#5-possible-additions)
+5. [README Inaccuracies](#5-readme-inaccuracies)
+6. [Possible Additions](#6-possible-additions)
 
 ---
 
@@ -71,23 +72,133 @@ EntitySelection — global "which entity is selected" pub-sub service
 EntityPicker   — header-only CPU AABB hit test + screen-to-world math
 ```
 
-**DataRecorder** stores data in a columnar layout: `columns[channel][frame]` rather than `frames[frame][channel]`. After `ReserveCapacity()` is called, `Record()` performs zero heap allocations per call. Each entity has its own mutex; parallel workers recording to different entities never contend.
+**DataRecorder** stores data in a columnar layout: `columns[channel][frame]` rather than `frames[frame][channel]`. After `ReserveCapacity()` is called, `Record()` performs zero heap allocations per call. Each entity has its own mutex; parallel workers recording to different entities never contend. `Register()` returns a stable `uint32_t` ID that parallel jobs capture by value to avoid string lookups in the hot path.
 
-**DataPlayer** reads the binary `scene.bin` format and exposes linear interpolation via `GetFrame()` and `SampleAt()`. Binary search on stored timestamps gives O(log n) seek.
+**DataPlayer** reads the binary `scene.bin` v1 format and exposes linear interpolation via `GetFrame()` and `SampleAt()`. Binary search on stored timestamps gives O(log n) seek. Each frame stores its recorded simulation timestamp, so playback is correct regardless of what `TimeScale` was active during recording.
 
-**TelemetryPanel** owns the replay lifecycle — it drives `DataPlayer::Tick()` each frame when in Replay mode. It uses a circular ring buffer (512 samples deep) per channel for live and replay plots, and dispatches to user-registered inspector callbacks by entity name or tag.
+**TelemetryPanel** owns the replay lifecycle — it drives `DataPlayer::Tick()` each frame when in Replay mode. The panel tracks an explicit `Mode` enum (`Mode::None`, `Mode::Live`, `Mode::Replay`) so data sources are unambiguous. `SetRecorder()` switches to Live; the panel switches to Replay automatically on a successful user-initiated file load. It uses a circular ring buffer (512 samples deep) per channel, and dispatches to user-registered inspector callbacks by entity name or tag (exact name takes priority over tag match). **`DrawTransportControls()`** is a separate public method intentionally decoupled from `OnImGuiRender()` — it renders the playback transport bar and can be embedded in any independent ImGui window.
 
-**EntitySelection** is a global static service with a snapshot-based pub-sub model. `Notify()` takes a copy of the subscriber list before releasing the mutex, so new subscriptions or unsubscriptions within a callback don't corrupt the active iteration.
+**EntitySelection** is a global static service with a snapshot-based pub-sub model. `OnChanged()` returns a `SubscriptionHandle` (opaque `uint32_t`) that callers must store and pass to `Unsubscribe()` from their destructor to prevent dangling callback captures. `Notify()` snapshots the subscriber list under the lock before firing, so re-entrant calls (e.g. calling `Set()` from inside a callback) don't deadlock. `SetByName()` allows replay mode to set name/tag without a live entity handle.
+
+**EntityPicker** is header-only (no `COSMIC_API` export). `Pick()` accepts an optional `std::function<bool(Entity)>` predicate to filter hits beyond the basic AABB + `SelectableComponent` check. `ScreenToWorld()` handles the GLFW-to-viewport offset and the Y-axis flip from GLFW top-left origin to OpenGL bottom-left NDC.
+
+### Canonical Reference: `TemplateTelemetryLayer`
+
+`Cosmic/templates/ExampleProject/src/TemplateTelemetryLayer.h/.cpp` is the complete end-to-end reference wiring all five subsystems for 20 simulated agents. It also includes `AgentSystem.h` as a `ParallelSystem` + `DataRecorder` integration example. The README §26 references this as the complete working reference.
 
 ### Engine vs. Client Perspective
 
 **From the engine side**, the telemetry system has zero renderer or GPU dependencies — it only touches `core/`, `scene/`, ImGui, and ImPlot. The engine provides `TelemetryPanel` as a ready-to-embed ImGui widget. The `EntityPicker` provides picking support using the engine's `TransformComponent` and the `SelectableComponent` tag.
 
-**From the client side**, a project registers entities with `DataRecorder::Register()`, calls `Record()` from parallel systems (thread-safe), ticks the recorder clock with `Tick()`, and exports data with `Flush()`. The `TelemetryPanel` handles all UI automatically once `SetRecorder` and `SetPlayer` are called.
+**From the client side**, a project registers entities with `DataRecorder::Register()`, calls `Record()` from parallel systems (thread-safe), ticks the recorder clock with `Tick()`, and exports data with `Flush()`. The `TelemetryPanel` handles all UI automatically once `SetRecorder` and `SetPlayer` are called. Transport controls are embedded via `DrawTransportControls()` in a separate window (typically the "Project Inspector Top" sidebar slot).
 
 ---
 
-## 3. Issues & Bugs — Priority List
+## 3. Job System & Parallel Pipeline Overview
+
+### Architecture
+
+Six cooperating components across `jobs/`:
+
+```
+JobSystem          — singleton thread pool (coreCount−1 persistent workers)
+ParallelFor        — 6 free-function helpers: sync and async index-range dispatch
+ParallelSystem     — 4-pass ECS parallel integration base class
+ReadWriteQuery<T>  — auto-staged mutable component snapshot (ISystemQuery impl)
+ReadOnlyQuery<T>   — auto-staged immutable snapshot for cross-entity reads
+DoubleBuffer<T>    — O(1) Swap() read/write separation for inter-entity parallelism
+ComponentArray<T>  — zero-copy pointer into the first EnTT storage page
+FlatComponentArray<T> — full-copy of all pages into a single contiguous buffer
+```
+
+### The 4-Pass Pipeline
+
+Every fixed-step (and variable-step) frame the `Scene` executes four passes in strict order:
+
+| Pass | Thread | What happens |
+|---|---|---|
+| A — Sequential | Main | All `System::OnFixedUpdate()` calls. Safe for entity create/destroy, ordered logic, registry writes. |
+| B — Prepare | Main | Engine stages all `SystemQuery` snapshots from registry. Then `ParallelSystem::OnFixedPrepare()` runs. Per-tick setup, constant pre-computation. |
+| C — Execute | Workers | All `ParallelSystem::OnFixedParallelExecute()` submit jobs and return immediately. `JobSystem::WaitIdle()` is called **once** after all systems have submitted — jobs from different systems can overlap. |
+| D — Merge | Main | All `ParallelSystem::OnFixedMerge()` run. Engine commits `ReadWriteQuery` results back to registry. Structural changes (entity create/destroy) are safe here. |
+
+Variable-rate equivalents (`OnPrepare`, `OnParallelExecute`, `OnMerge`) run through the same pipeline inside `Scene::OnUpdate`.
+
+### `SystemQuery<T>` — Staged Snapshot Protocol
+
+`ReadWriteQuery<T>` and `ReadOnlyQuery<T>` implement `ISystemQuery`. Declare them as member variables of a `ParallelSystem` subclass, pass `this` to the constructor, and the engine handles the rest:
+
+```cpp
+class BallPhysicsSystem : public Cosmic::ParallelSystem
+{
+    Cosmic::ReadWriteQuery<PhysicsBody> m_Bodies{ this };  // self-registers
+public:
+    void OnFixedParallelExecute(Cosmic::Scene& scene, float dt) override
+    {
+        const float g = Gravity;
+        m_Bodies.ForEachAsync([dt, g](PhysicsBody& body)
+        {
+            body.Velocity.y += g * dt;
+            body.Position   += body.Velocity * dt;
+        });
+        // Do NOT call WaitIdle — Scene calls it once after all systems submit
+    }
+
+    void OnFixedMerge(Cosmic::Scene& scene, float dt) override
+    {
+        m_Bodies.ForEachWithEntity([&scene](PhysicsBody& body, entt::entity e)
+        {
+            auto& t = scene.GetRegistry().get<Cosmic::TransformComponent>(e);
+            t.Position = { body.Position.x, body.Position.y, t.Position.z };
+        });
+        // Engine commits m_Bodies → PhysicsBody registry after this returns
+    }
+};
+```
+
+`Stage()` copies component values + entity handles into internal vectors before Pass B. `Commit()` writes them back after Pass D. `ReadOnlyQuery::Commit()` is a no-op.
+
+### `ParallelFor` Free Functions
+
+Six functions are provided — three synchronous (call `WaitIdle` before returning) and three async (submit only; caller's barrier covers them):
+
+| Synchronous | Async | Signature pattern |
+|---|---|---|
+| `ParallelFor` | `ParallelForAsync` | `(count, func(begin, end))` |
+| `ParallelForEach<T>` | `ParallelForEachAsync<T>` | `(T* data, count, func(T* begin, T* end))` |
+| `ParallelForEachIndexed<T>` | `ParallelForEachIndexedAsync<T>` | `(T* data, count, func(T& item, size_t i))` |
+
+**Critical rule:** Use only the **Async** variants inside `OnParallelExecute`. The synchronous variants call `WaitIdle` internally and would serialize systems against each other. Never call `JobSystem::WaitIdle()` yourself from `OnParallelExecute` — the Scene calls it once after all systems submit.
+
+The async variants capture their `func` argument **by value** — unlike the synchronous variants which capture by reference (the caller's stack frame is alive for the synchronous lifetime). Closures submitted to the async pool execute after the caller returns; capturing stack locals by reference produces dangling pointers.
+
+### `DoubleBuffer<T>` — Inter-Entity Parallel Safety
+
+When a worker must read one entity's data while writing another's (e.g. flocking, collision), a single buffer creates data races. `DoubleBuffer<T>` provides read/write separation:
+
+```cpp
+DoubleBuffer<glm::vec2> velocities;
+velocities.Resize(entityCount);
+velocities.CopyReadToWrite();  // seed write buffer
+velocities.Swap();             // O(1) — XOR on m_ReadIndex; no data move
+// Workers read GetReadBuffer(), write GetWriteBuffer() — no overlap
+```
+
+`T` must be **trivially copyable** — `CopyReadToWrite` uses `std::memcpy`. A `static_assert` fires at instantiation if `T` is not trivially copyable. Use `ReadWriteQuery<T>` instead for component types with non-trivial copy semantics.
+
+### `ComponentArray<T>` and `FlatComponentArray<T>`
+
+`ComponentArray<T>::From(registry)` returns a non-owning pointer into EnTT's **first storage page only** (≤ ~1024 elements). Zero allocation, zero copy — useful for small scenes. `CS_CORE_ASSERT` fires if the pool spans more than one page. For larger scenes, use `FlatComponentArray<T>`, which copies all pages into a single contiguous buffer and provides a `WriteBack()` method to patch the registry after mutation.
+
+### Engine vs. Client Perspective
+
+**From the engine side**, the job system is initialized before any other subsystem in `Application::Initialize()` and shut down first in `Application::Shutdown()` to prevent jobs from accessing freed resources. The engine's `Scene::OnFixedUpdate()` drives all four passes automatically.
+
+**From the client side**, a project subclasses `ParallelSystem`, declares `ReadWriteQuery<T>` or `ReadOnlyQuery<T>` members (passing `this`), overrides the parallel hooks, and registers the system with `m_Scene->AddSystem<MySystem>()`. The engine handles all staging, dispatch, barrier, and commit plumbing. The most common anti-pattern is calling the synchronous `ParallelFor` variants (or `JobSystem::WaitIdle()`) from inside `OnParallelExecute`, which collapses the parallel overlap into serial execution.
+
+---
+
+## 4. Issues & Bugs — Priority List
 
 ---
 
@@ -444,6 +555,32 @@ bool hit = std::abs(localX) <= halfW && std::abs(localY) <= halfH;
 
 ---
 
+#### P3-F-NEW: `ParallelForAsync` captures `func` by value, `ParallelFor` by reference — different capture rules are easy to confuse
+
+**File:** `Cosmic/src/jobs/ParallelFor.h`  
+**Priority:** Medium (subtle undefined behavior if the wrong capture convention is used)
+
+**The issue:** The synchronous `ParallelFor` captures `func` by reference (safe because `WaitIdle` blocks until workers finish, keeping the caller's stack alive). The async `ParallelForAsync` captures `func` by value (required because it returns before workers finish). This difference is documented in the header but it's easy to write a closure that captures a local variable by reference, paste it into the async variant, and get a dangling reference with no compile-time warning.
+
+There is no `static_assert` or type-level distinction that prevents accidentally using a by-reference capturing lambda with the async path.
+
+**How to fix (long term):** Add a `static_assert` checking that the functor is trivially copyable, or at minimum add a `[[nodiscard]]` attribute and a comment at each call site reminding users of the capture convention. A template wrapper that forces `std::decay_t<Func>` (value copy) on the async path would catch most accidental by-reference captures at instantiation time.
+
+---
+
+#### P3-G-NEW: `ComponentArray<T>` single-page limit has silent UB beyond ~1024 entities
+
+**File:** `Cosmic/src/jobs/ComponentArray.h` (referenced in README §35)  
+**Priority:** Medium (works on small projects, silently corrupts on growth)
+
+**The issue:** `ComponentArray<T>::From(registry)` returns a pointer into EnTT's first storage page only. `Count()` returns the total component count across all pages. If `Count() > page_size` (~1024 by default), indexing past the first page is out-of-bounds. A `CS_CORE_ASSERT` fires at `From()` time in Debug, but in Release the assert is compiled out and the access silently reads garbage memory or crashes.
+
+Projects that start small and grow beyond 1024 entities will hit this silently in Release builds.
+
+**How to fix:** Either always return an error/assert in both Debug and Release when the pool spans multiple pages, or remove `ComponentArray<T>` in favor of always using `FlatComponentArray<T>`. The zero-copy advantage of `ComponentArray` is real but not worth the silent Release corruption.
+
+---
+
 #### P3-F: `Renderer` class maintains a parallel `SceneData` alongside `Renderer2DData`
 
 **File:** `Cosmic/src/renderer/Renderer.h`, `Renderer.cpp`  
@@ -513,42 +650,50 @@ If entities are registered at different times or have different recording interv
 
 ---
 
-## 4. README Inaccuracies
+## 5. README Inaccuracies
 
 ---
 
-#### README-A: `RenderPass` constructor signature is wrong in §34
+#### README-A: `RenderPass` constructor in §34 documents a non-existent optional-viewport interface
 
 **Section:** §34 RenderPass Stack — Implementation Details  
-**Severity:** Misleading
+**Severity:** Misleading (still present; the README was updated but in the wrong direction)
 
-The README shows:
+The actual constructor in `Cosmic/src/renderer/RenderPass.h:90`:
+```cpp
+RenderPass(const OrthographicCamera& camera, const glm::vec4& viewportBounds)
+```
+The viewport is **mandatory** — no default, no `std::optional`.
+
+The README §34 now shows:
 ```cpp
 RenderPass(const OrthographicCamera& camera,
            std::optional<glm::vec4> viewportBounds = std::nullopt);
 ```
-The actual constructor signature is:
+and describes semantics for the `std::nullopt` case ("viewport is left unchanged"). This interface does not exist. The `PushRenderPass` function that the constructor calls also takes a mandatory `const glm::vec4&` (confirmed in the §25 API table). The README §14 usage examples always pass a `glm::vec4` — only §34 shows the wrong signature.
+
+The README was edited after the original analysis but in a way that retained (and arguably deepened) the inaccuracy, now also attributing non-existent runtime behavior to `std::nullopt`.
+
+**Fix:** Update §34 to show the correct mandatory signature:
 ```cpp
 RenderPass(const OrthographicCamera& camera, const glm::vec4& viewportBounds);
 ```
-The viewport is **mandatory** (no default). The `std::optional` variant does not exist. Code written to the README signature will fail to compile.
-
-**Fix:** Update §34 to show the correct mandatory `glm::vec4` parameter.
+Remove the `std::nullopt` behavior description entirely.
 
 ---
 
-#### README-B: DataPlayer version claims in §26 and §38 are inconsistent
+#### README-B: DataPlayer and DataRecorder header docstrings still claim wrong versions
 
-**Section:** §26 Telemetry System, §38 Telemetry System — Implementation Details  
-**Severity:** Minor confusion
+**Section:** `DataRecorder.h` and `DataPlayer.h` header docstrings  
+**Severity:** Minor confusion (README itself is now accurate; only the header docs are wrong)
 
-§38 correctly says "Binary v1 reader" for `DataPlayer`. §26's `DataPlayer` description says "Binary playback with seek and interpolation" (accurate). The inconsistency is in the source files:  
-- `DataRecorder.h` `Flush()` says "v3 binary format" but the code writes version 1.  
-- `DataPlayer.h` `Load()` says "scene.bin (v2/v3)" but only version 1 is parsed.
+The README §26 and §38 both correctly document the v1 format. However the header files have not been corrected:
+- `DataRecorder.h` `Flush()` docstring (line ~166): still says **"v3 binary format"** — but the code writes `version = 1u` and the file-level block comment says "BINARY FILE FORMAT v1".
+- `DataPlayer.h` `Load()` docstring (line ~67): still says **"loads scene.bin (v2/v3) if present"** — but only v1 is parsed in `LoadBinaryFile`.
 
-The README itself is broadly accurate on this point, but the header docstrings contradict it. Developers reading the header docs will be misled.
+Developers reading the header files (e.g. in an IDE tooltip) see wrong version numbers even though the README is correct.
 
-**Fix:** Correct the header docstrings in `DataRecorder.h` and `DataPlayer.h` to say "v1" consistently.
+**Fix:** Update `DataRecorder.h` `Flush()` docstring: change "v3 binary format" → "v1 binary format". Update `DataPlayer.h` `Load()` docstring: change "scene.bin (v2/v3)" → "scene.bin (v1)".
 
 ---
 
@@ -588,9 +733,11 @@ The minimal skeleton and all introductory examples in §8 use `Renderer2D::Begin
 
 ---
 
-## 5. Possible Additions
+## 6. Possible Additions
 
 These are features not currently present that would be high-value additions to the engine or editor tooling.
+
+> **Note:** §6.9 (Multi-Entity Overlay Charts) and the underlying 20-agent simulation infrastructure are now **implemented** in `TemplateTelemetryLayer` and `AgentSystem`. The `TelemetryPanel` entity selector and ring buffer architecture are in place for single-entity display; the overlay chart extension (plotting the same channel from multiple entities simultaneously) remains a potential addition on top of the existing UI.
 
 ---
 
