@@ -43,6 +43,8 @@
  * method is planned but not yet implemented.
  */
 
+#include "core/Core.h"   // COSMIC_API — export across the engine DLL boundary
+
 #include <string>
 #include <vector>
 #include <mutex>
@@ -55,7 +57,7 @@
 
 namespace Cosmic
 {
-	class SerialPort
+	class COSMIC_API SerialPort
 	{
 	public:
 		////////////////////////////////
