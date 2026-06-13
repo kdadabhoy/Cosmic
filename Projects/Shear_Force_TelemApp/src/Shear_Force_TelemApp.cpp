@@ -88,6 +88,13 @@ namespace Workspace
                 }
             });
 
+        // Camera is a top-down map centred on the origin. Disable WASD/scroll
+        // driving (the view auto-frames or follows the manual size field) and
+        // widen the zoom range so the robot can roam far without clipping.
+        m_Camera.SetManualMovementEnabled(false);
+        m_Camera.SetZoomLimits(0.5f, 2000.0f);
+        m_Camera.SetZoomLevel(m_ViewSizeUnits);
+
         m_AvailablePorts = Cosmic::SerialPort::GetAvailablePorts();
         Cosmic::EntitySelection::SetByName(SideEntity(SIDE_RIGHT), "ESC");
 
@@ -122,6 +129,7 @@ namespace Workspace
     void Shear_Force_TelemApp::OnUpdate(float ts)
     {
         m_AppClock += std::abs(ts);
+        UpdateCameraFraming();   // centre on origin + pick zoom (auto or manual)
         m_Camera.OnUpdate(ts);
 
         const bool flushing = m_Recorder.IsFlushing();
@@ -279,9 +287,7 @@ namespace Workspace
         m_RobotHeading += omega * dt;
         m_RobotPos.x   += v * std::cos(m_RobotHeading) * dt;
         m_RobotPos.y   += v * std::sin(m_RobotHeading) * dt;
-
-        m_RobotPos.x = glm::clamp(m_RobotPos.x, -4.5f, 4.5f);
-        m_RobotPos.y = glm::clamp(m_RobotPos.y, -4.5f, 4.5f);
+        // No bounds clamp — the robot roams freely; the view scales to follow.
 
         if (m_Trail.empty() || glm::length(m_RobotPos - m_Trail.back()) > 0.03f)
         {
@@ -291,7 +297,40 @@ namespace Workspace
     }
 
     // =========================================================================
-    // RenderRobot — trail + chassis + wheels (coloured by per-side health).
+    // Camera framing — keep the origin centred; auto-fit the robot + trail, or
+    // use the manual view-size field. Lets the robot roam without getting stuck.
+    // =========================================================================
+    float Shear_Force_TelemApp::ComputeAutoZoom(float aspect) const
+    {
+        float mx = 0.0f, my = 0.0f;
+        auto acc = [&](const glm::vec2& p)
+        {
+            mx = std::max(mx, std::abs(p.x));
+            my = std::max(my, std::abs(p.y));
+        };
+        acc(m_RobotPos);
+        for (const auto& p : m_Trail) acc(p);
+
+        const float a = (aspect > 0.01f) ? aspect : 1.0f;
+        float zoom = std::max(my, mx / a) * 1.25f + 0.5f; // margin past the extent
+        return std::max(zoom, 2.5f);                       // floor so it never over-zooms
+    }
+
+    void Shear_Force_TelemApp::UpdateCameraFraming()
+    {
+        const glm::vec2 vp = Cosmic::Application::Get().GetViewportSize();
+        const float aspect = (vp.y > 0.0f) ? vp.x / vp.y : (16.0f / 9.0f);
+
+        m_Camera.SetPosition({ 0.0f, 0.0f, 0.0f });
+
+        if (m_AutoScaleView)
+            m_Camera.SetTargetZoomLevel(ComputeAutoZoom(aspect)); // smooth follow
+        else
+            m_Camera.SetZoomLevel(std::max(m_ViewSizeUnits, 0.5f)); // snap to field
+    }
+
+    // =========================================================================
+    // RenderRobot — grid + trail + chassis + wheels (coloured by side health).
     // =========================================================================
     void Shear_Force_TelemApp::RenderRobot()
     {
@@ -306,9 +345,7 @@ namespace Workspace
 
         Cosmic::Renderer2D::BeginScene(m_Camera.GetCamera());
 
-        // Faint arena border.
-        Cosmic::Renderer2D::DrawRect({ 0.0f, 0.0f, -0.05f }, { 9.0f, 9.0f },
-                                     { 0.3f, 0.3f, 0.35f, 1.0f });
+        DrawGrid(); // cartesian grid + origin marker
 
         // Trail — fading gold dots.
         const int n = (int)m_Trail.size();
@@ -345,6 +382,136 @@ namespace Workspace
     }
 
     // =========================================================================
+    // DrawGrid — cartesian grid lines + axes + origin, spacing auto-derived
+    // from the visible region as a "nice" 1/2/5 number. Caches the params so
+    // DrawGridLabels() can place matching numeric labels.
+    // =========================================================================
+    namespace
+    {
+        // Round to a 1/2/5 * 10^n "nice" number.
+        float NiceStep(float raw)
+        {
+            if (raw <= 0.0f) return 1.0f;
+            const float exp  = std::floor(std::log10(raw));
+            const float base = std::pow(10.0f, exp);
+            const float f    = raw / base;            // 1 .. 10
+            const float nice = (f < 1.5f) ? 1.0f : (f < 3.5f) ? 2.0f
+                             : (f < 7.5f) ? 5.0f : 10.0f;
+            return nice * base;
+        }
+    }
+
+    void Shear_Force_TelemApp::DrawGrid()
+    {
+        // Visible world bounds = unproject the NDC corners.
+        const glm::mat4 inv = glm::inverse(m_Camera.GetCamera().GetViewProjectionMatrix());
+        auto unproj = [&](float nx, float ny)
+        {
+            glm::vec4 w = inv * glm::vec4(nx, ny, 0.0f, 1.0f);
+            if (w.w != 0.0f) w /= w.w;
+            return glm::vec2(w.x, w.y);
+        };
+        const glm::vec2 c0 = unproj(-1.0f, -1.0f);
+        const glm::vec2 c1 = unproj( 1.0f,  1.0f);
+
+        const float xMin = std::min(c0.x, c1.x), xMax = std::max(c0.x, c1.x);
+        const float yMin = std::min(c0.y, c1.y), yMax = std::max(c0.y, c1.y);
+        const float span = std::max(xMax - xMin, yMax - yMin);
+
+        const float step = NiceStep(span / 10.0f); // ~10 divisions across
+        m_GridStep = step;
+        m_GridXMin = xMin; m_GridXMax = xMax;
+        m_GridYMin = yMin; m_GridYMax = yMax;
+
+        const glm::vec4 gridCol = { 0.22f, 0.24f, 0.30f, 1.0f };
+        const glm::vec4 axisCol = { 0.45f, 0.48f, 0.58f, 1.0f };
+
+        int guard = 0;
+        for (float gx = std::ceil(xMin / step) * step; gx <= xMax && guard < 400; gx += step, ++guard)
+        {
+            const bool axis = std::abs(gx) < step * 0.001f;
+            Cosmic::Renderer2D::DrawLine({ gx, yMin, -0.05f }, { gx, yMax, -0.05f },
+                                         axis ? axisCol : gridCol);
+        }
+        guard = 0;
+        for (float gy = std::ceil(yMin / step) * step; gy <= yMax && guard < 400; gy += step, ++guard)
+        {
+            const bool axis = std::abs(gy) < step * 0.001f;
+            Cosmic::Renderer2D::DrawLine({ xMin, gy, -0.05f }, { xMax, gy, -0.05f },
+                                         axis ? axisCol : gridCol);
+        }
+
+        // Origin marker.
+        Cosmic::Renderer2D::DrawCircle({ 0.0f, 0.0f, -0.04f },
+                                       { step * 0.12f, step * 0.12f },
+                                       { 1.0f, 0.85f, 0.2f, 1.0f }, 1.0f, 0.05f);
+    }
+
+    // =========================================================================
+    // DrawGridLabels — numeric axis labels projected world->screen and drawn
+    // with ImGui over the viewport (the engine renderer has no text).
+    // =========================================================================
+    void Shear_Force_TelemApp::DrawGridLabels()
+    {
+        auto& app = Cosmic::Application::Get();
+        const glm::vec2 vpPos  = app.GetViewportPos();
+        const glm::vec2 vpSize = app.GetViewportSize();
+        if (vpSize.x <= 1.0f || vpSize.y <= 1.0f || m_GridStep <= 0.0f) return;
+
+        const glm::mat4 vp = m_Camera.GetCamera().GetViewProjectionMatrix();
+        auto worldToScreen = [&](float wx, float wy, ImVec2& out) -> bool
+        {
+            glm::vec4 c = vp * glm::vec4(wx, wy, 0.0f, 1.0f);
+            if (c.w != 0.0f) c /= c.w;
+            const float sx = vpPos.x + (c.x * 0.5f + 0.5f) * vpSize.x;
+            const float sy = vpPos.y + (1.0f - (c.y * 0.5f + 0.5f)) * vpSize.y;
+            out = ImVec2(sx, sy);
+            return sx >= vpPos.x && sx <= vpPos.x + vpSize.x
+                && sy >= vpPos.y && sy <= vpPos.y + vpSize.y;
+        };
+
+        ImDrawList* dl  = ImGui::GetForegroundDrawList();
+        const ImU32  col = IM_COL32(170, 178, 200, 255);
+        const float  step = m_GridStep;
+
+        // Where to pin the tick labels: along the visible axis if 0 is in view,
+        // otherwise clamped to the bottom / left edge.
+        const float labelY = (m_GridYMin <= 0.0f && m_GridYMax >= 0.0f) ? 0.0f : m_GridYMin;
+        const float labelX = (m_GridXMin <= 0.0f && m_GridXMax >= 0.0f) ? 0.0f : m_GridXMin;
+
+        char buf[32];
+        int guard = 0;
+        for (float gx = std::ceil(m_GridXMin / step) * step;
+             gx <= m_GridXMax && guard < 400; gx += step, ++guard)
+        {
+            if (std::abs(gx) < step * 0.001f) continue; // origin handled separately
+            ImVec2 p;
+            if (worldToScreen(gx, labelY, p))
+            {
+                snprintf(buf, sizeof(buf), "%g", gx);
+                dl->AddText(ImVec2(p.x + 3.0f, p.y + 3.0f), col, buf);
+            }
+        }
+        guard = 0;
+        for (float gy = std::ceil(m_GridYMin / step) * step;
+             gy <= m_GridYMax && guard < 400; gy += step, ++guard)
+        {
+            if (std::abs(gy) < step * 0.001f) continue;
+            ImVec2 p;
+            if (worldToScreen(labelX, gy, p))
+            {
+                snprintf(buf, sizeof(buf), "%g", gy);
+                dl->AddText(ImVec2(p.x + 4.0f, p.y + 2.0f), col, buf);
+            }
+        }
+
+        // Origin "0".
+        ImVec2 o;
+        if (worldToScreen(0.0f, 0.0f, o))
+            dl->AddText(ImVec2(o.x + 4.0f, o.y + 3.0f), IM_COL32(255, 216, 80, 255), "0");
+    }
+
+    // =========================================================================
     // OnImGuiRender
     // =========================================================================
     void Shear_Force_TelemApp::OnImGuiRender()
@@ -353,6 +520,7 @@ namespace Workspace
         DrawSerialWindow();
         DrawDashboardWindow();
         DrawTelemetryWindow();
+        DrawGridLabels(); // numeric axis labels over the viewport
     }
 
     // -------------------------------------------------------------------------
@@ -452,7 +620,7 @@ namespace Workspace
         ImGui::SetNextItemWidth(110.0f); ImGui::InputFloat("Track width", &m_TrackWidth, 0,0,"%.2f");
         ImGui::SetNextItemWidth(110.0f); ImGui::InputFloat("Speed scale", &m_SpeedScale, 0,0,"%.3f");
         ImGui::Checkbox("Invert turn direction", &m_InvertHeading);
-        if (ImGui::Button("Reset Robot Pose"))
+        if (ImGui::Button("Reset to Origin"))
         {
             m_RobotPos = { 0.0f, 0.0f };
             m_RobotHeading = 1.5708f;
@@ -460,6 +628,20 @@ namespace Workspace
         }
         ImGui::TextDisabled("Note: KISS telemetry is unsigned — direction/reverse\n"
                             "isn't known, so the visual assumes forward drive.");
+
+        // ---- Map view ----
+        ImGui::Spacing();
+        ImGui::SeparatorText("Map View");
+        ImGui::Checkbox("Auto-scale view", &m_AutoScaleView);
+        if (ImGui::IsItemHovered())
+            ImGui::SetTooltip("On: the grid auto-zooms to keep the robot + trail framed.\n"
+                              "Off: use the fixed view size below.");
+        ImGui::BeginDisabled(m_AutoScaleView);
+        ImGui::SetNextItemWidth(110.0f);
+        if (ImGui::InputFloat("View size (+/- units)", &m_ViewSizeUnits, 0,0,"%.1f"))
+            m_ViewSizeUnits = (m_ViewSizeUnits < 0.5f) ? 0.5f : m_ViewSizeUnits;
+        ImGui::EndDisabled();
+        ImGui::TextDisabled("Grid spacing = %g units", m_GridStep);
 
         ImGui::Spacing();
         ImGui::Separator();

@@ -79,7 +79,11 @@ namespace Workspace
         void PumpSerial();            // drain + parse the COM buffer
         void SampleForDisplay(float ts); // fill rings + integrate robot pose
         void IntegratePose(float vRight, float vLeft, float dt);
+        void UpdateCameraFraming();   // centre on origin, auto/manual zoom
+        float ComputeAutoZoom(float aspect) const;
         void RenderRobot();
+        void DrawGrid();              // cartesian grid lines + origin (viewport)
+        void DrawGridLabels();        // numeric axis labels (ImGui overlay)
         bool SideStale(int side) const;
 
     private:
@@ -117,6 +121,14 @@ namespace Workspace
         float     m_TrackWidth    = 0.8f;          // world units between wheels
         float     m_SpeedScale    = 0.12f;         // world units/sec per mph
         bool      m_InvertHeading = false;         // flip turn direction if wired opposite
+
+        // --- Map view (cartesian grid) ---
+        bool  m_AutoScaleView = true;              // auto-fit zoom vs manual
+        float m_ViewSizeUnits = 6.0f;              // manual half-height (world units)
+        // Grid params cached each frame for the ImGui label pass.
+        float m_GridStep = 1.0f;
+        float m_GridXMin = 0.0f, m_GridXMax = 0.0f;
+        float m_GridYMin = 0.0f, m_GridYMax = 0.0f;
 
         // --- Replay/live bookkeeping ---
         Cosmic::TelemetryPanel::Mode m_LastMode = Cosmic::TelemetryPanel::Mode::None;

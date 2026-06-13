@@ -64,7 +64,14 @@ omega = (vR - vL) / TrackWidth yaw rate   (right faster => turns left)
 ```
 
 `TrackWidth`, `SpeedScale`, and an `Invert turn direction` toggle live in **Robot
-Kinematics**, with a **Reset Robot Pose** button.
+Kinematics**, with a **Reset to Origin** button.
+
+The viewport is a top-down **Cartesian map**: an origin marker at (0,0) and a grid
+whose spacing snaps to nice 1/2/5 numbers with projected numeric axis labels. The
+robot roams freely (no bounding box). **Map View** controls:
+- **Auto-scale view** (default): the grid zooms to keep the robot + trail framed,
+  so it never drives off-screen.
+- Manual: untick it and set **View size (± units)** to a fixed half-extent.
 
 > **Direction caveat:** KISS telemetry is *unsigned* — it reports wheel-speed
 > magnitude only, with no forward/reverse or true rotation sense. The visual
