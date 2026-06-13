@@ -142,7 +142,7 @@ namespace Cosmic
 		bool							m_Running = true;
 		bool							m_UseFixedTimestep = true;
 		bool							m_Minimized = false;
-		bool							m_PauseOnMinimize = true;
+		bool							m_PauseOnMinimize = false;
 
 
 		/////////////////////////////////////////////////////////////////////////////////
