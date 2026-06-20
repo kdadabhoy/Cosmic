@@ -49,10 +49,11 @@ namespace Workspace
         void DrawInputsWindow();    // all editable parameters
         void DrawPlotsWindow();     // ImPlot performance curves
         void DrawResultsWindow();   // detailed metrics table + CSV export
-        void DrawExplorersWindow(); // tabbed sweeps (wheel Ø + pulley ratios)
+        void DrawExplorersWindow(); // tabbed sweeps (wheel dia + pulley ratios)
         void DrawFeasibilityTab();  // tangential-velocity "is it possible" check
         void DrawWheelSweepTab();   // metrics vs wheel diameter
         void DrawPulleyRatioTab();  // metrics vs pulley teeth (+/-5 around current)
+        void DrawWheelGrowthTab();  // raise wheels by a delta + re-sync the system
 
         // --- Helpers ---
         void Recompute();                       // re-run the sim from m_Cfg
@@ -90,6 +91,11 @@ namespace Workspace
         int    m_PulleyAxle = 0;           // 0 = front, 1 = rear
         int    m_PulleyVary = 0;           // 0 = wheel pulley, 1 = motor pulley
         int    m_PulleySpan = 5;           // +/- teeth around current
+
+        // --- Wheel growth / lift planner ---
+        double m_GrowDelta       = 0.5;    // wheel-diameter increase (in)
+        double m_WheelStep       = 0.25;   // plausible wheel-size increment (in)
+        int    m_GrowAdjustPulley = 0;     // 0=rear driven,1=rear motor,2=front driven,3=front motor
 
         // CSV export
         char        m_ExportName[96] = "drivetrain_run";
