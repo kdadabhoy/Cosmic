@@ -19,6 +19,21 @@ namespace Cosmic
     }
 
     // =========================================================================
+    // Destructor
+    // =========================================================================
+
+    JobSystem::~JobSystem()
+    {
+        // Last line of defence against std::terminate(): if the pool was never
+        // explicitly Shut down (e.g. an exit path that skipped ~Application),
+        // m_Workers would still hold joinable threads, and the implicit
+        // ~vector<std::thread> would terminate the process. Joining here makes
+        // teardown safe regardless of how the program exits. Shutdown() is
+        // idempotent — if it already ran, this is a cheap no-op.
+        Shutdown();
+    }
+
+    // =========================================================================
     // Initialize
     // =========================================================================
 

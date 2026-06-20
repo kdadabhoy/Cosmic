@@ -163,7 +163,15 @@ namespace Cosmic
     private:
         // Not publicly constructible — access via Get()
         JobSystem()  = default;
-        ~JobSystem() = default;
+
+        // NOT defaulted on purpose. A defaulted destructor would simply destroy
+        // m_Workers, and destroying a *joinable* std::thread calls std::terminate().
+        // That makes correctness depend on an external Shutdown() call having run
+        // first — which is not guaranteed on every exit path (e.g. a teardown that
+        // bypasses ~Application via exit()). The destructor therefore joins the
+        // pool itself by calling Shutdown(), which is idempotent and safe to call
+        // even after an explicit Shutdown(). Defined in JobSystem.cpp.
+        ~JobSystem();
 
         // Non-copyable, non-movable singleton
         JobSystem(const JobSystem&)            = delete;
