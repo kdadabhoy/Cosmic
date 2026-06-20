@@ -53,7 +53,8 @@ namespace Workspace
         void DrawFeasibilityTab();  // tangential-velocity "is it possible" check
         void DrawWheelSweepTab();   // metrics vs wheel diameter
         void DrawPulleyRatioTab();  // metrics vs pulley teeth (+/-5 around current)
-        void DrawWheelGrowthTab();  // raise wheels by a delta + re-sync the system
+        void DrawLiftPlannerTab();      // target a clearance gain; list whole-tooth re-sync options
+        void DrawSamePulleyRangeTab();  // clearance range achievable with pulleys untouched
 
         // --- Helpers ---
         void Recompute();                       // re-run the sim from m_Cfg
@@ -92,10 +93,12 @@ namespace Workspace
         int    m_PulleyVary = 0;           // 0 = wheel pulley, 1 = motor pulley
         int    m_PulleySpan = 5;           // +/- teeth around current
 
-        // --- Wheel growth / lift planner ---
-        double m_GrowDelta       = 0.5;    // wheel-diameter increase (in)
-        double m_WheelStep       = 0.25;   // plausible wheel-size increment (in)
-        int    m_GrowAdjustPulley = 0;     // 0=rear driven,1=rear motor,2=front driven,3=front motor
+        // --- Lift planner ---
+        double m_LiftTarget       = 0.5;   // target ground-clearance increase (in)
+        bool   m_LiftIncludeMotor = false; // also offer motor-pulley swaps (changes speed more)
+
+        // Dock node of "Project Inspector Top" — every other panel tabs into it.
+        unsigned int m_LeftDockId = 0;
 
         // CSV export
         char        m_ExportName[96] = "drivetrain_run";

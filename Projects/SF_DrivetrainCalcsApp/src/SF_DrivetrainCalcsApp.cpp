@@ -91,15 +91,22 @@ namespace Workspace
     // =========================================================================
     void SF_DrivetrainCalcsApp::OnImGuiRender()
     {
-        DrawInputsWindow();
-
+        // Recompute from last frame's edits before any panel reads the result.
         if (m_AutoRun && m_Dirty)
             Recompute();
 
+        // Inspector first: it lives in the engine's left "Project Inspector Top"
+        // slot, so after drawing it we know that dock node and can tab every
+        // other panel into it (FirstUseEver = the user can drag them out later).
         DrawInspectorTop();
-        DrawPlotsWindow();
-        DrawResultsWindow();
-        DrawExplorersWindow();
+
+        auto dockLeft = [&]() { if (m_LeftDockId) ImGui::SetNextWindowDockID(m_LeftDockId, ImGuiCond_FirstUseEver); };
+
+        dockLeft(); DrawInputsWindow();
+        dockLeft(); DrawPlotsWindow();
+        dockLeft(); DrawResultsWindow();
+        dockLeft(); DrawExplorersWindow();
+
         DrawSchematicLabels();
     }
 
@@ -109,6 +116,9 @@ namespace Workspace
     void SF_DrivetrainCalcsApp::DrawInspectorTop()
     {
         ImGui::Begin("Project Inspector Top");
+
+        // Remember the engine's left dock node so the other panels can tab in.
+        m_LeftDockId = ImGui::GetWindowDockID();
 
         ImGui::TextColored(k_AccentCol, "Shear Force  |  Drivetrain Calculator");
         ImGui::TextDisabled("Rapid wheel / pulley / battery prototyping");
@@ -444,10 +454,11 @@ namespace Workspace
 
         if (ImGui::BeginTabBar("##explorers"))
         {
-            if (ImGui::BeginTabItem("Feasibility")) { DrawFeasibilityTab();  ImGui::EndTabItem(); }
-            if (ImGui::BeginTabItem("Wheel sweep")) { DrawWheelSweepTab();   ImGui::EndTabItem(); }
-            if (ImGui::BeginTabItem("Pulley ratios")){ DrawPulleyRatioTab(); ImGui::EndTabItem(); }
-            if (ImGui::BeginTabItem("Lift / grow"))  { DrawWheelGrowthTab(); ImGui::EndTabItem(); }
+            if (ImGui::BeginTabItem("Lift planner"))     { DrawLiftPlannerTab();     ImGui::EndTabItem(); }
+            if (ImGui::BeginTabItem("Same-pulley range")){ DrawSamePulleyRangeTab(); ImGui::EndTabItem(); }
+            if (ImGui::BeginTabItem("Feasibility"))      { DrawFeasibilityTab();     ImGui::EndTabItem(); }
+            if (ImGui::BeginTabItem("Wheel sweep"))      { DrawWheelSweepTab();      ImGui::EndTabItem(); }
+            if (ImGui::BeginTabItem("Pulley ratios"))    { DrawPulleyRatioTab();     ImGui::EndTabItem(); }
             ImGui::EndTabBar();
         }
 
@@ -716,162 +727,238 @@ namespace Workspace
     }
 
     // -------------------------------------------------------------------------
-    // Lift / grow planner — bump every wheel's diameter by a delta (e.g. for
-    // ground clearance) and offer two ways to keep the drive feasible:
-    //   Option 1: resize wheels only (pulleys untouched) — both wheels move to
-    //             plausible sizes that keep front/rear synced.
-    //   Option 2: lift both wheels evenly, then re-sync by changing one pulley
-    //             to an integer tooth count (with the exact-height tweak shown
-    //             so the teeth can stay "nice" and sync stays perfect).
+    // Lift planner — enter a target ground-clearance increase; the tool lifts
+    // both wheels equally (diameter += 2 x clearance, so the chassis stays
+    // level) and lists WHOLE-TOOTH pulley changes that keep the drive perfectly
+    // synced (0 error). Each integer tooth count maps to exactly one clearance,
+    // so the menu is the clearances nearest your target that land on round teeth.
     // -------------------------------------------------------------------------
-    void SF_DrivetrainCalcsApp::DrawWheelGrowthTab()
+    namespace
     {
-        using DT::INCHES_TO_METERS;
-
-        ImGui::TextWrapped(
-            "Grow each wheel's diameter by a height delta (e.g. for more ground "
-            "clearance), then pick how to keep the drive feasible. Ride height "
-            "rises by about delta / 2.");
-
-        ImGui::SetNextItemWidth(120);
-        ImGui::InputDouble("Height delta (in)", &m_GrowDelta, 0.125, 0.5, "%.3f");
-        ImGui::SetNextItemWidth(120);
-        ImGui::InputDouble("Wheel size step (in)", &m_WheelStep, 0.0625, 0.25, "%.4f");
-        if (m_WheelStep < 0.01) m_WheelStep = 0.01;
-        ImGui::TextDisabled("Ride height change ~ %.3f in", m_GrowDelta * 0.5);
-
-        const double G    = m_Cfg.gearboxReduction;
-        const double curF = m_Cfg.frontWheelInches;
-        const double curR = m_Cfg.rearWheelInches;
-        const double Rf   = m_Cfg.frontPulleyTeeth / m_Cfg.motorPulleyFront; // driven/driving
-        const double Rr   = m_Cfg.rearPulleyTeeth  / m_Cfg.motorPulleyRear;
-        const double ratioTarget = (Rr > 1e-9) ? (Rf / Rr) : 0.0; // required dF/dR for sync
-
-        auto roundStep = [&](double x) { return (m_WheelStep > 0.0) ? std::round(x / m_WheelStep) * m_WheelStep : x; };
-        auto Kof = [&](double diaIn, double wp, double mp)
+        // Sync ratio T = (WPf*MPr)/(MPf*WPr) with one pulley swapped to `teeth`.
+        // Sync needs (dF0+2h)/(dR0+2h) = T.  fam: 0 rear-driven, 1 rear-motor,
+        // 2 front-driven, 3 front-motor.
+        double FamilyT(int fam, double teeth, double WPf, double MPf, double WPr, double MPr)
         {
-            const double r = (diaIn * 0.5) * INCHES_TO_METERS;
-            const double R = (mp != 0.0) ? wp / mp : 0.0;
-            return (G != 0.0 && R != 0.0) ? r / (G * R) : 0.0;
+            switch (fam)
+            {
+                case 0: return (WPf * MPr) / (MPf * teeth);
+                case 1: return (WPf * teeth) / (MPf * WPr);
+                case 2: return (teeth * MPr) / (MPf * WPr);
+                case 3: return (WPf * MPr) / (teeth * WPr);
+            }
+            return 0.0;
+        }
+        const char* FamilyName(int fam)
+        {
+            switch (fam)
+            {
+                case 0: return "rear wheel pulley";
+                case 1: return "rear motor pulley";
+                case 2: return "front wheel pulley";
+                case 3: return "front motor pulley";
+            }
+            return "?";
+        }
+    }
+
+    void SF_DrivetrainCalcsApp::DrawLiftPlannerTab()
+    {
+        ImGui::TextWrapped(
+            "Enter a target ground-clearance gain. Both wheels grow by 2x that "
+            "(clearance = wheel radius), so the chassis stays level. The tool then "
+            "lists whole-tooth pulley changes whose EXACT clearance (0 sync error) "
+            "lands nearest your target.");
+
+        ImGui::SetNextItemWidth(140);
+        ImGui::InputDouble("Target clearance (in)", &m_LiftTarget, 0.05, 0.25, "%.3f");
+        if (m_LiftTarget < 0.0) m_LiftTarget = 0.0;
+        ImGui::SameLine();
+        ImGui::Checkbox("Include motor-pulley swaps", &m_LiftIncludeMotor);
+        ImGui::TextDisabled("At target: each wheel diameter +%.3f in (front %.2f, rear %.2f)",
+                            2.0 * m_LiftTarget, m_Cfg.frontWheelInches + 2.0 * m_LiftTarget,
+                            m_Cfg.rearWheelInches + 2.0 * m_LiftTarget);
+
+        const double dF0 = m_Cfg.frontWheelInches;
+        const double dR0 = m_Cfg.rearWheelInches;
+        const double WPf = m_Cfg.frontPulleyTeeth, MPf = m_Cfg.motorPulleyFront;
+        const double WPr = m_Cfg.rearPulleyTeeth,  MPr = m_Cfg.motorPulleyRear;
+
+        // Even-lift clearance h that perfectly syncs for sync ratio T:
+        //   (dF0+2h)/(dR0+2h) = T  =>  h = (T*dR0 - dF0) / (2(1-T))
+        auto solveH = [&](double T) -> double
+        {
+            const double denom = 2.0 * (1.0 - T);
+            return (std::abs(denom) < 1e-9) ? -1.0 : (T * dR0 - dF0) / denom;
         };
 
-        // =====================================================================
-        // Option 1 — resize wheels only (pulleys unchanged).
-        // To stay synced with fixed pulleys the wheels must keep dF/dR = Rf/Rr,
-        // so we lift the front to the next plausible size and the rear follows.
-        // =====================================================================
-        ImGui::Spacing();
-        ImGui::SeparatorText("Option 1 - resize wheels only (pulleys unchanged)");
+        struct LiftOpt { double clr, fDia, rDia, top; int fam, teeth, oldTeeth; };
+        std::vector<LiftOpt> opts;
 
-        const double dF1      = roundStep(curF + m_GrowDelta);
-        const double dR1exact = (ratioTarget > 1e-9) ? (dF1 / ratioTarget) : curR;
-        const double dR1      = roundStep(dR1exact);
-        const double gap1     = TangGapPct(Kof(dF1, m_Cfg.frontPulleyTeeth, m_Cfg.motorPulleyFront),
-                                           Kof(dR1, m_Cfg.rearPulleyTeeth,  m_Cfg.motorPulleyRear));
-        const double topF1    = SimulateAxleMetrics(m_Cfg, dF1, m_Cfg.frontPulleyTeeth, m_Cfg.motorPulleyFront).topSpeedMph;
+        const int    window = 14;
+        const int    tMin   = 8;                 // smallest sensible pulley
+        const double hLo    = 0.005;             // ignore ~zero lifts
+        const double hHi    = m_LiftTarget + 1.5;
 
-        ImGui::TextColored(k_FrontCol, "Front"); ImGui::SameLine();
-        ImGui::Text(": %.2f -> %.2f in  (+%.2f)", curF, dF1, dF1 - curF);
-        ImGui::TextColored(k_RearCol, "Rear "); ImGui::SameLine();
-        ImGui::Text(": %.2f -> %.2f in  (+%.2f)", curR, dR1, dR1 - curR);
-        ImGui::TextDisabled("Exact-sync rear at this front = %.3f in (custom size, gap 0)", dR1exact);
-
-        if (gap1 <= m_FeasTolPct) ImGui::TextColored({ 0.4f, 1.0f, 0.5f, 1.0f }, "Sync gap: %.2f%%  (feasible)", gap1);
-        else                      ImGui::TextColored({ 1.0f, 0.55f, 0.3f, 1.0f }, "Sync gap: %.2f%%  (rounding broke sync - use exact rear or Option 2)", gap1);
-        ImGui::SameLine(); ImGui::TextDisabled("|  top speed %.2f mph", topF1);
-
-        if (ImGui::Button("Apply plausible##opt1"))
+        const int famList[4] = { 0, 2, 1, 3 };   // wheel pulleys first
+        const int famN = m_LiftIncludeMotor ? 4 : 2;
+        for (int fi = 0; fi < famN; ++fi)
         {
-            m_Cfg.frontWheelInches = dF1;
-            m_Cfg.rearWheelInches  = dR1;
+            const int fam = famList[fi];
+            const double cur = (fam == 0) ? WPr : (fam == 1) ? MPr : (fam == 2) ? WPf : MPf;
+            const int c = (int)std::lround(cur);
+            for (int t = c - window; t <= c + window; ++t)
+            {
+                if (t < tMin || t == c) continue;
+                const double h = solveH(FamilyT(fam, (double)t, WPf, MPf, WPr, MPr));
+                if (h <= hLo || h > hHi) continue;
+
+                LiftOpt o;
+                o.clr = h; o.fDia = dF0 + 2.0 * h; o.rDia = dR0 + 2.0 * h;
+                o.fam = fam; o.teeth = t; o.oldTeeth = c;
+                const double wpf = (fam == 2) ? (double)t : WPf;
+                const double mpf = (fam == 3) ? (double)t : MPf;
+                o.top = SimulateAxleMetrics(m_Cfg, o.fDia, wpf, mpf).topSpeedMph;
+                opts.push_back(o);
+            }
+        }
+
+        std::sort(opts.begin(), opts.end(), [&](const LiftOpt& a, const LiftOpt& b)
+        {
+            return std::abs(a.clr - m_LiftTarget) < std::abs(b.clr - m_LiftTarget);
+        });
+        if (opts.size() > 40) opts.resize(40);
+
+        ImGui::Spacing();
+        if (opts.empty())
+        {
+            ImGui::TextColored({ 1.0f, 0.55f, 0.3f, 1.0f },
+                "No whole-tooth option near this target. Raise the target or tick motor-pulley swaps.");
+            return;
+        }
+
+        ImGui::SeparatorText("Whole-tooth options (0 sync error), nearest target first");
+        if (ImGui::BeginTable("liftopts", 6,
+                ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg |
+                ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingStretchProp, ImVec2(0, 280)))
+        {
+            ImGui::TableSetupScrollFreeze(0, 1);
+            ImGui::TableSetupColumn("Clearance");
+            ImGui::TableSetupColumn("Front dia");
+            ImGui::TableSetupColumn("Rear dia");
+            ImGui::TableSetupColumn("Pulley change");
+            ImGui::TableSetupColumn("Top mph");
+            ImGui::TableSetupColumn("");
+            ImGui::TableHeadersRow();
+
+            for (int i = 0; i < (int)opts.size(); ++i)
+            {
+                const LiftOpt& o = opts[i];
+                ImGui::TableNextRow();
+                if (i == 0) ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, IM_COL32(40, 110, 55, 90));
+
+                ImGui::TableNextColumn();
+                ImGui::Text("+%.3f in", o.clr);
+                if (i == 0) { ImGui::SameLine(); ImGui::TextDisabled("(closest)"); }
+                ImGui::TableNextColumn(); ImGui::Text("%.3f", o.fDia);
+                ImGui::TableNextColumn(); ImGui::Text("%.3f", o.rDia);
+                ImGui::TableNextColumn(); ImGui::Text("%s %d->%d", FamilyName(o.fam), o.oldTeeth, o.teeth);
+                ImGui::TableNextColumn(); ImGui::Text("%.2f", o.top);
+
+                ImGui::TableNextColumn();
+                ImGui::PushID(i);
+                if (ImGui::SmallButton("Apply"))
+                {
+                    m_Cfg.frontWheelInches = o.fDia;
+                    m_Cfg.rearWheelInches  = o.rDia;
+                    switch (o.fam)
+                    {
+                        case 0: m_Cfg.rearPulleyTeeth  = o.teeth; break;
+                        case 1: m_Cfg.motorPulleyRear  = o.teeth; break;
+                        case 2: m_Cfg.frontPulleyTeeth = o.teeth; break;
+                        case 3: m_Cfg.motorPulleyFront = o.teeth; break;
+                    }
+                    m_Dirty = true;
+                }
+                ImGui::PopID();
+            }
+            ImGui::EndTable();
+        }
+        ImGui::TextDisabled("Wheel diameters come out exact (custom) so the teeth stay whole and sync is perfect.");
+    }
+
+    // -------------------------------------------------------------------------
+    // Same-pulley range — how much clearance you can add or remove WITHOUT
+    // touching any pulley, staying inside the feasibility tolerance. For a level
+    // even lift with different-size wheels, perfect sync only holds at zero, so
+    // this band is whatever your tolerance allows around the current setup.
+    // -------------------------------------------------------------------------
+    void SF_DrivetrainCalcsApp::DrawSamePulleyRangeTab()
+    {
+        ImGui::TextWrapped(
+            "Keeps every pulley exactly as-is and reports how far ground clearance "
+            "can move (up or down) before the front/rear sync error exceeds your "
+            "tolerance. Both wheels move together so the chassis stays level.");
+
+        ImGui::SetNextItemWidth(110);
+        if (ImGui::InputDouble("Tolerance (%)##sprange", &m_FeasTolPct, 0.1, 1.0, "%.2f") && m_FeasTolPct < 0.0)
+            m_FeasTolPct = 0.0;
+
+        const double dF0 = m_Cfg.frontWheelInches;
+        const double dR0 = m_Cfg.rearWheelInches;
+        const double Rf  = m_Cfg.frontPulleyTeeth / m_Cfg.motorPulleyFront;
+        const double Rr  = m_Cfg.rearPulleyTeeth  / m_Cfg.motorPulleyRear;
+        const double G   = m_Cfg.gearboxReduction;
+
+        auto gapAt = [&](double h) -> double
+        {
+            const double dF = dF0 + 2.0 * h, dR = dR0 + 2.0 * h;
+            if (dF <= 0.05 || dR <= 0.05) return 1e9;
+            const double kF = (dF * 0.5 * DT::INCHES_TO_METERS) / (G * Rf);
+            const double kR = (dR * 0.5 * DT::INCHES_TO_METERS) / (G * Rr);
+            return TangGapPct(kF, kR);
+        };
+
+        // Walk outward from 0 in both directions until the gap exceeds tolerance.
+        const double step = 0.005;
+        double hUp = 0.0, hDn = 0.0;
+        for (double h = 0.0; h <= 12.0; h += step) { if (gapAt(h) <= m_FeasTolPct) hUp = h; else break; }
+        for (double h = 0.0; h > -12.0; h -= step) { if (gapAt(h) <= m_FeasTolPct) hDn = h; else break; }
+
+        ImGui::Spacing();
+        ImGui::SeparatorText("Clearance band with pulleys unchanged");
+
+        const bool any = (hUp > step * 0.5) || (hDn < -step * 0.5);
+        if (!any)
+        {
+            ImGui::TextColored({ 1.0f, 0.55f, 0.3f, 1.0f },
+                "Essentially none (only ~0).");
+            ImGui::TextWrapped(
+                "Your front and rear wheels are different sizes, so any level lift "
+                "changes their ratio - a pulley must change. Use the Lift planner "
+                "tab, or raise the tolerance above to allow a small band.");
+            return;
+        }
+
+        ImGui::Text("Clearance you can apply:");
+        ImGui::SameLine();
+        ImGui::TextColored({ 0.4f, 1.0f, 0.5f, 1.0f }, "%+.3f in  to  %+.3f in", hDn, hUp);
+        ImGui::TextDisabled("Front dia %.2f..%.2f in,  rear dia %.2f..%.2f in",
+                            dF0 + 2.0 * hDn, dF0 + 2.0 * hUp, dR0 + 2.0 * hDn, dR0 + 2.0 * hUp);
+        ImGui::TextDisabled("Sync error reaches your %.2f%% tolerance at the ends.", m_FeasTolPct);
+
+        ImGui::Spacing();
+        if (ImGui::Button("Apply max lift"))
+        {
+            m_Cfg.frontWheelInches = dF0 + 2.0 * hUp;
+            m_Cfg.rearWheelInches  = dR0 + 2.0 * hUp;
             m_Dirty = true;
         }
         ImGui::SameLine();
-        if (ImGui::Button("Apply exact-sync rear##opt1"))
+        if (ImGui::Button("Apply max drop"))
         {
-            m_Cfg.frontWheelInches = dF1;
-            m_Cfg.rearWheelInches  = dR1exact;
-            m_Dirty = true;
-        }
-
-        // =====================================================================
-        // Option 2 — even lift, then re-sync via one integer pulley.
-        // =====================================================================
-        ImGui::Spacing();
-        ImGui::SeparatorText("Option 2 - even lift + re-sync via integer pulley teeth");
-
-        const char* pulleyNames[] = { "Rear wheel pulley (driven)", "Rear motor pulley (driving)",
-                                      "Front wheel pulley (driven)", "Front motor pulley (driving)" };
-        ImGui::SetNextItemWidth(240);
-        ImGui::Combo("Adjust", &m_GrowAdjustPulley, pulleyNames, IM_ARRAYSIZE(pulleyNames));
-
-        const double dF2 = roundStep(curF + m_GrowDelta); // both lifted evenly
-        const double dR2 = roundStep(curR + m_GrowDelta);
-
-        const bool adjustRear    = (m_GrowAdjustPulley <= 1);
-        const bool adjustDriven  = (m_GrowAdjustPulley == 0 || m_GrowAdjustPulley == 2);
-
-        const double rF2 = (dF2 * 0.5) * INCHES_TO_METERS;
-        const double rR2 = (dR2 * 0.5) * INCHES_TO_METERS;
-
-        // Reference K = the axle we are NOT touching, at its lifted size.
-        const double refK = adjustRear ? (rF2 / (G * Rf)) : (rR2 / (G * Rr));
-        const double rAdj = adjustRear ? rR2 : rF2;
-        const double Rtarget = (refK > 1e-12) ? rAdj / (G * refK) : 0.0; // wanted driven/driving
-
-        const double wpCur = adjustRear ? m_Cfg.rearPulleyTeeth : m_Cfg.frontPulleyTeeth;
-        const double mpCur = adjustRear ? m_Cfg.motorPulleyRear : m_Cfg.motorPulleyFront;
-
-        const double idealTeeth = adjustDriven ? (Rtarget * mpCur)
-                                               : (Rtarget > 1e-9 ? wpCur / Rtarget : 0.0);
-        double newTeeth = std::round(idealTeeth);
-        if (newTeeth < 1.0) newTeeth = 1.0;
-
-        // Resulting ratio with the integer teeth, and the residual sync gap.
-        const double wpNew = adjustDriven ? newTeeth : wpCur;
-        const double mpNew = adjustDriven ? mpCur    : newTeeth;
-        const double Radj  = (mpNew != 0.0) ? wpNew / mpNew : 0.0;
-        const double kAdj  = (G != 0.0 && Radj != 0.0) ? rAdj / (G * Radj) : 0.0;
-        const double gap2  = TangGapPct(kAdj, refK);
-
-        // Exact height for the adjusted axle to perfectly sync at these teeth.
-        const double rAdjExact   = refK * G * Radj;
-        const double diaAdjExact = 2.0 * rAdjExact / INCHES_TO_METERS;
-
-        ImGui::TextColored(k_FrontCol, "Front"); ImGui::SameLine();
-        ImGui::Text(": %.2f -> %.2f in  (+%.2f)", curF, dF2, dF2 - curF);
-        ImGui::TextColored(k_RearCol, "Rear "); ImGui::SameLine();
-        ImGui::Text(": %.2f -> %.2f in  (+%.2f)", curR, dR2, dR2 - curR);
-
-        const double teethCur = adjustDriven ? wpCur : mpCur;
-        ImGui::Text("%s: %.0f -> %.0f teeth", pulleyNames[m_GrowAdjustPulley], teethCur, newTeeth);
-        if (newTeeth < 10.0)
-            ImGui::TextColored({ 1.0f, 0.75f, 0.1f, 1.0f }, "  (warning: %.0f teeth is very small)", newTeeth);
-
-        if (gap2 <= m_FeasTolPct) ImGui::TextColored({ 0.4f, 1.0f, 0.5f, 1.0f }, "Sync gap: %.2f%%  (feasible)", gap2);
-        else                      ImGui::TextColored({ 1.0f, 0.55f, 0.3f, 1.0f }, "Sync gap: %.2f%%  (integer teeth can't hit it exactly)", gap2);
-
-        const char* adjAxleName = adjustRear ? "rear" : "front";
-        ImGui::TextDisabled("Exact-sync %s wheel at %.0f teeth = %.3f in (use this height for a perfect 0%% gap)",
-                            adjAxleName, newTeeth, diaAdjExact);
-
-        if (ImGui::Button("Apply integer teeth##opt2"))
-        {
-            m_Cfg.frontWheelInches = dF2;
-            m_Cfg.rearWheelInches  = dR2;
-            if (adjustDriven) { if (adjustRear) m_Cfg.rearPulleyTeeth = newTeeth; else m_Cfg.frontPulleyTeeth = newTeeth; }
-            else              { if (adjustRear) m_Cfg.motorPulleyRear = newTeeth; else m_Cfg.motorPulleyFront = newTeeth; }
-            m_Dirty = true;
-        }
-        ImGui::SameLine();
-        if (ImGui::Button("Apply + exact height##opt2"))
-        {
-            // Reference axle keeps its plausible lift; adjusted axle takes the
-            // exact height + integer teeth for a perfect sync.
-            if (adjustRear) { m_Cfg.frontWheelInches = dF2; m_Cfg.rearWheelInches = diaAdjExact; }
-            else            { m_Cfg.rearWheelInches  = dR2; m_Cfg.frontWheelInches = diaAdjExact; }
-            if (adjustDriven) { if (adjustRear) m_Cfg.rearPulleyTeeth = newTeeth; else m_Cfg.frontPulleyTeeth = newTeeth; }
-            else              { if (adjustRear) m_Cfg.motorPulleyRear = newTeeth; else m_Cfg.motorPulleyFront = newTeeth; }
+            m_Cfg.frontWheelInches = dF0 + 2.0 * hDn;
+            m_Cfg.rearWheelInches  = dR0 + 2.0 * hDn;
             m_Dirty = true;
         }
     }

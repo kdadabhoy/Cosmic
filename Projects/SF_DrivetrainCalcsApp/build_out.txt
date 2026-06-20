@@ -11,8 +11,8 @@
 MSBuild version 18.7.8+1ac568fee for .NET Framework
 
   SF_DrivetrainCalcsApp.cpp
-  LINK : C:\dev\Cosmic\build\Runtime\Debug\SF_DrivetrainCalcsApp.dll not found or not built by the last incremental link; performing full link
-LINK : fatal error LNK1104: cannot open file 'C:\dev\Cosmic\build\Runtime\Debug\SF_DrivetrainCalcsApp.dll' [C:\dev\Cosmic\Projects\SF_DrivetrainCalcsApp\build\SF_DrivetrainCalcsApp.vcxproj]
+     Creating library C:/dev/Cosmic/Projects/SF_DrivetrainCalcsApp/build/Debug/SF_DrivetrainCalcsApp.lib and object C:/dev/Cosmic/Projects/SF_DrivetrainCalcsApp/build/Debug/SF_DrivetrainCalcsApp.exp
+  SF_DrivetrainCalcsApp.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\SF_DrivetrainCalcsApp.dll
+  Syncing SF_DrivetrainCalcsApp assets to VFS output directory...
 
-[ERROR] Build failed Check log output above.
-Press any key to continue . . . 
+SUCCESS: SF_DrivetrainCalcsApp.dll built and assets synced (Debug)
