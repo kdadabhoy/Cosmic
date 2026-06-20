@@ -21,4 +21,13 @@ if(MSVC)
     set_target_properties(CosmicApp PROPERTIES
         VS_DEBUGGER_WORKING_DIRECTORY "${COSMIC_SDK_DIR}/build/Runtime/$<CONFIG>"
     )
+
+    # Release: link as a Windows GUI app so NO console/terminal window opens.
+    # Debug keeps the default console subsystem so spdlog output stays visible
+    # while developing. /ENTRY:mainCRTStartup preserves the existing int main()
+    # entry point under the WINDOWS subsystem (no WinMain needed).
+    target_link_options(CosmicApp PRIVATE
+        $<$<CONFIG:Release>:/SUBSYSTEM:WINDOWS>
+        $<$<CONFIG:Release>:/ENTRY:mainCRTStartup>
+    )
 endif()
