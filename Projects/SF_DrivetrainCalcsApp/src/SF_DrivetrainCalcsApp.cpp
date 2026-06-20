@@ -100,11 +100,14 @@ namespace Workspace
         // other panel into it (FirstUseEver = the user can drag them out later).
         DrawInspectorTop();
 
+        // Every panel starts tabbed into the engine's left "Project Inspector
+        // Top" node, but only loosely (FirstUseEver) — drag any of them out to
+        // float or re-dock wherever you like; the layout then persists.
         auto dockLeft = [&]() { if (m_LeftDockId) ImGui::SetNextWindowDockID(m_LeftDockId, ImGuiCond_FirstUseEver); };
 
         dockLeft(); DrawInputsWindow();
-        dockLeft(); DrawPlotsWindow();
         dockLeft(); DrawResultsWindow();
+        dockLeft(); DrawPlotsWindow();
         dockLeft(); DrawExplorersWindow();
 
         DrawSchematicLabels();
@@ -230,13 +233,13 @@ namespace Workspace
 
         ImGui::Spacing();
         ImGui::TextColored(k_FrontCol, "Front axle");
-        Dbl("Wheel dia (in)##f",     &m_Cfg.frontWheelInches, 0.25, "%.2f");
+        Dbl("Wheel dia (in)##f",     &m_Cfg.frontWheelInches, 0.25, "%.4f");
         Dbl("Wheel pulley teeth##f", &m_Cfg.frontPulleyTeeth, 1.0,  "%.0f");
         Dbl("Motor pulley teeth##f", &m_Cfg.motorPulleyFront, 1.0,  "%.0f");
 
         ImGui::Spacing();
         ImGui::TextColored(k_RearCol, "Rear axle");
-        Dbl("Wheel dia (in)##r",     &m_Cfg.rearWheelInches, 0.25, "%.2f");
+        Dbl("Wheel dia (in)##r",     &m_Cfg.rearWheelInches, 0.25, "%.4f");
         Dbl("Wheel pulley teeth##r", &m_Cfg.rearPulleyTeeth, 1.0,  "%.0f");
         Dbl("Motor pulley teeth##r", &m_Cfg.motorPulleyRear, 1.0,  "%.0f");
 
@@ -423,6 +426,43 @@ namespace Workspace
 
         ImGui::Spacing();
         ImGui::TextDisabled("Rows: %zu (front) / %zu (rear)", f.time.size(), r.time.size());
+
+        // --- Full configuration echo (handy after lift-planner tweaks) ---
+        ImGui::Spacing();
+        ImGui::SeparatorText("Configuration");
+        if (ImGui::BeginTable("cfg", 2,
+                ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingStretchProp))
+        {
+            ImGui::TableSetupColumn("Parameter");
+            ImGui::TableSetupColumn("Value");
+            ImGui::TableHeadersRow();
+
+            auto CRow = [&](const char* name, const char* fmt, double v)
+            {
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn(); ImGui::TextUnformatted(name);
+                ImGui::TableNextColumn(); ImGui::Text(fmt, v);
+            };
+
+            CRow("Total sim time (s)",      "%.3f", m_Cfg.simTime);
+            CRow("Time step (s)",           "%.4f", m_Cfg.dt);
+            CRow("Gearbox reduction",       "%.3f", m_Cfg.gearboxReduction);
+            CRow("Front wheel dia (in)",    "%.4f", m_Cfg.frontWheelInches);
+            CRow("Front wheel pulley",      "%.0f", m_Cfg.frontPulleyTeeth);
+            CRow("Front motor pulley",      "%.0f", m_Cfg.motorPulleyFront);
+            CRow("Rear wheel dia (in)",     "%.4f", m_Cfg.rearWheelInches);
+            CRow("Rear wheel pulley",       "%.0f", m_Cfg.rearPulleyTeeth);
+            CRow("Rear motor pulley",       "%.0f", m_Cfg.motorPulleyRear);
+            CRow("Speed factor",            "%.3f", m_Cfg.speedFactor);
+            CRow("Drivetrain efficiency",   "%.3f", m_Cfg.drivetrainEfficiency);
+            CRow("Motor Kv (rpm/V)",        "%.1f", m_Cfg.kv);
+            CRow("Current limit (A)",       "%.2f", m_Cfg.currentLimit);
+            CRow("Battery voltage (V)",     "%.2f", m_Cfg.vBatt);
+            CRow("Coeff. of friction",      "%.3f", m_Cfg.mu);
+            CRow("Total weight (lb)",       "%.2f", m_Cfg.totalWeightLb);
+
+            ImGui::EndTable();
+        }
 
         ImGui::End();
     }
@@ -1086,7 +1126,7 @@ namespace Workspace
 
         // Pulley radii: scaled from tooth counts so the reduction is visible
         // without being physically exact.
-        const float pScale = 0.0011f;
+        const float pScale = 0.0008f;
         const float rpFd = (float)m_Cfg.frontPulleyTeeth * pScale; // front driven
         const float rpFm = (float)m_Cfg.motorPulleyFront * pScale; // front motor
         const float rpRd = (float)m_Cfg.rearPulleyTeeth  * pScale;
@@ -1108,43 +1148,57 @@ namespace Workspace
         const float extentY = (yMotor + std::max(rpFm, rpRm) + 0.04f) * 0.5f;
         const float extentX = (spacing + maxR + 0.05f);
         const float zoom = std::max(extentY, extentX / std::max(aspect, 0.1f)) * 1.15f;
+        // Match the camera aspect to the ACTUAL viewport each frame, otherwise
+        // circles render as ellipses (the engine's resize events carry the whole
+        // window size, not this docked viewport's).
+        if (vp.y > 0.0f) m_Camera.OnResize(vp.x, vp.y);
         m_Camera.SetPosition({ 0.0f, extentY, 0.0f });
         m_Camera.SetZoomLevel(std::max(zoom, 0.08f));
 
         Cosmic::Renderer2D::BeginScene(m_Camera.GetCamera());
 
-        // Ground line.
-        const glm::vec4 ground = { 0.35f, 0.38f, 0.45f, 1.0f };
-        Cosmic::Renderer2D::DrawLine({ cxR - maxR - 0.05f, 0.0f, -0.02f },
-                                     { cxF + maxR + 0.05f, 0.0f, -0.02f }, ground);
+        // Ground line (behind everything; wheels are open rings so it reads as
+        // one continuous line under the wheels).
+        const glm::vec4 ground = { 0.40f, 0.43f, 0.50f, 1.0f };
+        Cosmic::Renderer2D::DrawLine({ cxR - maxR - 0.06f, 0.0f, -0.05f },
+                                     { cxF + maxR + 0.06f, 0.0f, -0.05f }, ground);
 
         auto drawAxle = [&](float cx, float rWheel, float rDriven, float rMotor,
                             const ImVec4& colIm)
         {
-            const glm::vec4 col   = ToVec4(colIm);
-            const glm::vec4 faint = { col.r, col.g, col.b, 0.35f };
-            const glm::vec4 belt  = { 0.7f, 0.7f, 0.75f, 1.0f };
-            const glm::vec4 hub   = { 0.85f, 0.87f, 0.9f, 1.0f };
+            const glm::vec4 col  = ToVec4(colIm);
+            const glm::vec4 dim  = { col.r * 0.55f, col.g * 0.55f, col.b * 0.55f, 1.0f };
+            const glm::vec4 belt = { 0.70f, 0.72f, 0.78f, 1.0f };
+            const glm::vec4 hub  = { 0.90f, 0.92f, 0.95f, 1.0f };
 
             const glm::vec3 wheelC = { cx, rWheel, 0.0f };
             const glm::vec3 motorC = { cx, yMotor, 0.0f };
 
-            // Tyre (thick ring) + faint disc fill.
-            Cosmic::Renderer2D::DrawCircle(wheelC, { 2 * rWheel, 2 * rWheel }, faint, 1.0f, 0.01f);
-            Cosmic::Renderer2D::DrawCircle(wheelC, { 2 * rWheel, 2 * rWheel }, col, 0.10f, 0.005f);
+            // Tyre — open ring so the ground stays continuous behind it.
+            Cosmic::Renderer2D::DrawCircle(wheelC, { 2 * rWheel, 2 * rWheel }, col, 0.06f, 0.004f);
 
-            // Driven pulley at the hub.
-            Cosmic::Renderer2D::DrawCircle(wheelC, { 2 * rDriven, 2 * rDriven }, col, 0.30f, 0.005f);
-            Cosmic::Renderer2D::DrawCircle(wheelC, { 0.012f, 0.012f }, hub, 1.0f, 0.01f);
+            // Spokes (4), faint.
+            for (int i = 0; i < 4; ++i)
+            {
+                const float a = i * 1.5708f + 0.4f;
+                Cosmic::Renderer2D::DrawLine(
+                    { cx, rWheel, -0.01f },
+                    { cx + std::cos(a) * rWheel * 0.82f, rWheel + std::sin(a) * rWheel * 0.82f, -0.01f },
+                    dim);
+            }
 
-            // Motor block + motor pulley.
-            Cosmic::Renderer2D::DrawQuad({ cx, yMotor, -0.01f },
-                                         { rMotor * 1.4f, rMotor * 1.4f },
-                                         { 0.30f, 0.32f, 0.38f, 1.0f });
-            Cosmic::Renderer2D::DrawCircle(motorC, { 2 * rMotor, 2 * rMotor }, col, 0.30f, 0.005f);
-            Cosmic::Renderer2D::DrawCircle(motorC, { 0.012f, 0.012f }, hub, 1.0f, 0.01f);
+            // Driven pulley ring on the axle + hub dot.
+            Cosmic::Renderer2D::DrawCircle(wheelC, { 2 * rDriven, 2 * rDriven }, col, 0.22f, 0.004f);
+            Cosmic::Renderer2D::DrawCircle(wheelC, { 0.010f, 0.010f }, hub, 1.0f, 0.01f);
 
-            // Belts (two near-vertical strands between the pulley edges).
+            // Motor body + motor pulley.
+            Cosmic::Renderer2D::DrawQuad({ cx, yMotor, -0.02f },
+                                         { rMotor * 1.2f, rMotor * 1.7f },
+                                         { 0.28f, 0.30f, 0.36f, 1.0f });
+            Cosmic::Renderer2D::DrawCircle(motorC, { 2 * rMotor, 2 * rMotor }, col, 0.22f, 0.004f);
+            Cosmic::Renderer2D::DrawCircle(motorC, { 0.010f, 0.010f }, hub, 1.0f, 0.01f);
+
+            // Belts (two strands between the pulley edges).
             Cosmic::Renderer2D::DrawLine({ cx - rMotor, yMotor, -0.005f }, { cx - rDriven, rWheel, -0.005f }, belt);
             Cosmic::Renderer2D::DrawLine({ cx + rMotor, yMotor, -0.005f }, { cx + rDriven, rWheel, -0.005f }, belt);
         };
