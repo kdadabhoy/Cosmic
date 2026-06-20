@@ -76,6 +76,11 @@ namespace Workspace
         bool             m_Dirty   = true; // inputs changed since last Recompute
         bool             m_AutoRun = true; // recompute on every edit
 
+        // Baseline snapshot — Results highlights what changed against it.
+        DrivetrainConfig m_Baseline;
+        SimOutput        m_BaselineSim;
+        bool             m_HasBaseline = false;
+
         bool m_ShowRear   = true;          // overlay the rear axle on the charts
         bool m_FillCurves = true;          // shade the front curve area
 
@@ -94,8 +99,9 @@ namespace Workspace
         int    m_PulleySpan = 5;           // +/- teeth around current
 
         // --- Lift planner ---
-        double m_LiftTarget       = 0.5;   // target ground-clearance increase (in)
+        double m_LiftTarget       = 0.5;   // target ground-clearance increase (always stored in inches)
         bool   m_LiftIncludeMotor = false; // also offer motor-pulley swaps (changes speed more)
+        bool   m_LiftUnitMM       = false; // input/display the lift target in mm instead of inches
 
         // Dock node of "Project Inspector Top" — every other panel tabs into it.
         unsigned int m_LeftDockId = 0;

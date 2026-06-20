@@ -381,6 +381,63 @@ namespace Workspace
         const AxleResult& f = m_Sim.front;
         const AxleResult& r = m_Sim.rear;
 
+        // --- Baseline snapshot controls ---
+        ImGui::SeparatorText("Baseline");
+        if (!m_HasBaseline)
+        {
+            if (ImGui::Button("Set current config as baseline"))
+            {
+                m_Baseline = m_Cfg; m_BaselineSim = m_Sim; m_HasBaseline = true;
+            }
+            ImGui::SameLine();
+            ImGui::TextDisabled("snapshot to compare against");
+        }
+        else
+        {
+            ImGui::TextColored(k_AccentCol, "Baseline active");
+            ImGui::SameLine();
+            ImGui::TextDisabled("(front top %.2f mph)", m_BaselineSim.front.topSpeedMph);
+            if (ImGui::Button("Update baseline")) { m_Baseline = m_Cfg; m_BaselineSim = m_Sim; }
+            ImGui::SameLine();
+            if (ImGui::Button("Clear baseline")) { m_HasBaseline = false; }
+            ImGui::TextDisabled("Changed values are highlighted; (was X) shows the baseline.");
+        }
+
+        // Ground clearance — approximated as the wheel radius (axle height).
+        const double clrF = m_Cfg.frontWheelInches * 0.5;
+        const double clrR = m_Cfg.rearWheelInches  * 0.5;
+        ImGui::Spacing();
+        ImGui::Text("Ground clearance (wheel radius): front %.3f in (%.1f mm), rear %.3f in (%.1f mm)",
+                    clrF, clrF * 25.4, clrR, clrR * 25.4);
+        if (m_HasBaseline)
+        {
+            const double gF = (m_Cfg.frontWheelInches - m_Baseline.frontWheelInches) * 0.5;
+            const double gR = (m_Cfg.rearWheelInches  - m_Baseline.rearWheelInches)  * 0.5;
+            const bool moved = std::abs(gF) > 1e-6 || std::abs(gR) > 1e-6;
+            const ImVec4 gc = moved ? ImVec4(0.45f, 1.0f, 0.55f, 1.0f) : ImVec4(0.6f, 0.6f, 0.6f, 1.0f);
+            ImGui::TextColored(gc, "  gained vs baseline: front %+.3f in (%+.1f mm), rear %+.3f in (%+.1f mm)",
+                               gF, gF * 25.4, gR, gR * 25.4);
+        }
+
+        // Colour a numeric cell when it differs from the baseline, and show the
+        // baseline value inline. No-op styling when there is no baseline.
+        auto CellVal = [&](const char* fmt, double v, double base)
+        {
+            if (!m_HasBaseline) { ImGui::Text(fmt, v); return; }
+            const double tol = 1e-6 * (1.0 + std::abs(base));
+            if (std::abs(v - base) <= tol) { ImGui::Text(fmt, v); return; }
+            const ImVec4 col = (v > base) ? ImVec4(0.45f, 1.0f, 0.55f, 1.0f)
+                                          : ImVec4(1.0f, 0.6f, 0.35f, 1.0f);
+            ImGui::TextColored(col, fmt, v);
+            char bb[48]; snprintf(bb, sizeof(bb), fmt, base);
+            ImGui::SameLine(0.0f, 6.0f); ImGui::TextDisabled("(was %s)", bb);
+        };
+
+        const AxleResult& bf = m_BaselineSim.front;
+        const AxleResult& br = m_BaselineSim.rear;
+
+        ImGui::Spacing();
+        ImGui::SeparatorText("Performance metrics");
         if (ImGui::BeginTable("metrics", 3,
                 ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingStretchProp))
         {
@@ -389,24 +446,25 @@ namespace Workspace
             ImGui::TableSetupColumn("Rear");
             ImGui::TableHeadersRow();
 
-            auto Row = [&](const char* name, const char* fmt, double fv, double rv)
+            auto Row = [&](const char* name, const char* fmt,
+                           double fv, double rv, double bfv, double brv)
             {
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn(); ImGui::TextUnformatted(name);
-                ImGui::TableNextColumn(); ImGui::Text(fmt, fv);
-                ImGui::TableNextColumn(); ImGui::Text(fmt, rv);
+                ImGui::TableNextColumn(); CellVal(fmt, fv, bfv);
+                ImGui::TableNextColumn(); CellVal(fmt, rv, brv);
             };
 
-            Row("Top speed (mph)",     "%.2f", f.topSpeedMph,       r.topSpeedMph);
-            Row("No-load top (mph)",   "%.2f", f.noLoadTopSpeedMph, r.noLoadTopSpeedMph);
-            Row("Peak accel (g)",      "%.3f", f.peakAccelG,        r.peakAccelG);
-            Row("Launch force (N)",    "%.1f", f.launchForceN,      r.launchForceN);
-            Row("Traction cap (N)",    "%.1f", f.tractionLimitN,    r.tractionLimitN);
-            Row("Distance (ft)",       "%.2f", f.distanceFt,        r.distanceFt);
-            Row("K_sys (m/rad)",       "%.5f", f.K_sys,             r.K_sys);
-            Row("Stall torque (Nm)",   "%.3f", f.torqueStall,       r.torqueStall);
-            Row("No-load omega (rad/s)","%.1f", f.omegaNoLoad,      r.omegaNoLoad);
-            Row("Reflected inertia",   "%.5f", f.inertiaEq,         r.inertiaEq);
+            Row("Top speed (mph)",      "%.2f", f.topSpeedMph,       r.topSpeedMph,       bf.topSpeedMph,       br.topSpeedMph);
+            Row("No-load top (mph)",    "%.2f", f.noLoadTopSpeedMph, r.noLoadTopSpeedMph, bf.noLoadTopSpeedMph, br.noLoadTopSpeedMph);
+            Row("Peak accel (g)",       "%.3f", f.peakAccelG,        r.peakAccelG,        bf.peakAccelG,        br.peakAccelG);
+            Row("Launch force (N)",     "%.1f", f.launchForceN,      r.launchForceN,      bf.launchForceN,      br.launchForceN);
+            Row("Traction cap (N)",     "%.1f", f.tractionLimitN,    r.tractionLimitN,    bf.tractionLimitN,    br.tractionLimitN);
+            Row("Distance (ft)",        "%.2f", f.distanceFt,        r.distanceFt,        bf.distanceFt,        br.distanceFt);
+            Row("K_sys (m/rad)",        "%.5f", f.K_sys,             r.K_sys,             bf.K_sys,             br.K_sys);
+            Row("Stall torque (Nm)",    "%.3f", f.torqueStall,       r.torqueStall,       bf.torqueStall,       br.torqueStall);
+            Row("No-load omega (rad/s)","%.1f", f.omegaNoLoad,       r.omegaNoLoad,       bf.omegaNoLoad,       br.omegaNoLoad);
+            Row("Reflected inertia",    "%.5f", f.inertiaEq,         r.inertiaEq,         bf.inertiaEq,         br.inertiaEq);
 
             ImGui::EndTable();
         }
@@ -437,29 +495,29 @@ namespace Workspace
             ImGui::TableSetupColumn("Value");
             ImGui::TableHeadersRow();
 
-            auto CRow = [&](const char* name, const char* fmt, double v)
+            auto CRow = [&](const char* name, const char* fmt, double v, double base)
             {
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn(); ImGui::TextUnformatted(name);
-                ImGui::TableNextColumn(); ImGui::Text(fmt, v);
+                ImGui::TableNextColumn(); CellVal(fmt, v, base);
             };
 
-            CRow("Total sim time (s)",      "%.3f", m_Cfg.simTime);
-            CRow("Time step (s)",           "%.4f", m_Cfg.dt);
-            CRow("Gearbox reduction",       "%.3f", m_Cfg.gearboxReduction);
-            CRow("Front wheel dia (in)",    "%.4f", m_Cfg.frontWheelInches);
-            CRow("Front wheel pulley",      "%.0f", m_Cfg.frontPulleyTeeth);
-            CRow("Front motor pulley",      "%.0f", m_Cfg.motorPulleyFront);
-            CRow("Rear wheel dia (in)",     "%.4f", m_Cfg.rearWheelInches);
-            CRow("Rear wheel pulley",       "%.0f", m_Cfg.rearPulleyTeeth);
-            CRow("Rear motor pulley",       "%.0f", m_Cfg.motorPulleyRear);
-            CRow("Speed factor",            "%.3f", m_Cfg.speedFactor);
-            CRow("Drivetrain efficiency",   "%.3f", m_Cfg.drivetrainEfficiency);
-            CRow("Motor Kv (rpm/V)",        "%.1f", m_Cfg.kv);
-            CRow("Current limit (A)",       "%.2f", m_Cfg.currentLimit);
-            CRow("Battery voltage (V)",     "%.2f", m_Cfg.vBatt);
-            CRow("Coeff. of friction",      "%.3f", m_Cfg.mu);
-            CRow("Total weight (lb)",       "%.2f", m_Cfg.totalWeightLb);
+            CRow("Total sim time (s)",    "%.3f", m_Cfg.simTime,              m_Baseline.simTime);
+            CRow("Time step (s)",         "%.4f", m_Cfg.dt,                   m_Baseline.dt);
+            CRow("Gearbox reduction",     "%.3f", m_Cfg.gearboxReduction,     m_Baseline.gearboxReduction);
+            CRow("Front wheel dia (in)",  "%.4f", m_Cfg.frontWheelInches,     m_Baseline.frontWheelInches);
+            CRow("Front wheel pulley",    "%.0f", m_Cfg.frontPulleyTeeth,     m_Baseline.frontPulleyTeeth);
+            CRow("Front motor pulley",    "%.0f", m_Cfg.motorPulleyFront,     m_Baseline.motorPulleyFront);
+            CRow("Rear wheel dia (in)",   "%.4f", m_Cfg.rearWheelInches,      m_Baseline.rearWheelInches);
+            CRow("Rear wheel pulley",     "%.0f", m_Cfg.rearPulleyTeeth,      m_Baseline.rearPulleyTeeth);
+            CRow("Rear motor pulley",     "%.0f", m_Cfg.motorPulleyRear,      m_Baseline.motorPulleyRear);
+            CRow("Speed factor",          "%.3f", m_Cfg.speedFactor,          m_Baseline.speedFactor);
+            CRow("Drivetrain efficiency", "%.3f", m_Cfg.drivetrainEfficiency, m_Baseline.drivetrainEfficiency);
+            CRow("Motor Kv (rpm/V)",      "%.1f", m_Cfg.kv,                   m_Baseline.kv);
+            CRow("Current limit (A)",     "%.2f", m_Cfg.currentLimit,         m_Baseline.currentLimit);
+            CRow("Battery voltage (V)",   "%.2f", m_Cfg.vBatt,                m_Baseline.vBatt);
+            CRow("Coeff. of friction",    "%.3f", m_Cfg.mu,                   m_Baseline.mu);
+            CRow("Total weight (lb)",     "%.2f", m_Cfg.totalWeightLb,        m_Baseline.totalWeightLb);
 
             ImGui::EndTable();
         }
@@ -810,13 +868,33 @@ namespace Workspace
             "lists whole-tooth pulley changes whose EXACT clearance (0 sync error) "
             "lands nearest your target.");
 
-        ImGui::SetNextItemWidth(140);
-        ImGui::InputDouble("Target clearance (in)", &m_LiftTarget, 0.05, 0.25, "%.3f");
-        if (m_LiftTarget < 0.0) m_LiftTarget = 0.0;
+        // Target is always stored in inches; the box just lets you type mm.
+        const double IN_TO_MM = 25.4;
+        ImGui::TextUnformatted("Input units:"); ImGui::SameLine();
+        if (ImGui::RadioButton("inches##liftunit", !m_LiftUnitMM)) m_LiftUnitMM = false;
         ImGui::SameLine();
+        if (ImGui::RadioButton("mm##liftunit", m_LiftUnitMM)) m_LiftUnitMM = true;
+
+        ImGui::SetNextItemWidth(140);
+        if (m_LiftUnitMM)
+        {
+            double mm = m_LiftTarget * IN_TO_MM;
+            if (ImGui::InputDouble("Target clearance (mm)", &mm, 1.0, 5.0, "%.2f"))
+                m_LiftTarget = mm / IN_TO_MM;
+            if (m_LiftTarget < 0.0) m_LiftTarget = 0.0;
+            ImGui::SameLine(); ImGui::TextDisabled("= %.4f in", m_LiftTarget);
+        }
+        else
+        {
+            ImGui::InputDouble("Target clearance (in)", &m_LiftTarget, 0.05, 0.25, "%.4f");
+            if (m_LiftTarget < 0.0) m_LiftTarget = 0.0;
+            ImGui::SameLine(); ImGui::TextDisabled("= %.2f mm", m_LiftTarget * IN_TO_MM);
+        }
+
         ImGui::Checkbox("Include motor-pulley swaps", &m_LiftIncludeMotor);
-        ImGui::TextDisabled("At target: each wheel diameter +%.3f in (front %.2f, rear %.2f)",
-                            2.0 * m_LiftTarget, m_Cfg.frontWheelInches + 2.0 * m_LiftTarget,
+        ImGui::TextDisabled("At target: each wheel diameter +%.4f in (= %.2f mm);  front %.4f in, rear %.4f in",
+                            2.0 * m_LiftTarget, 2.0 * m_LiftTarget * IN_TO_MM,
+                            m_Cfg.frontWheelInches + 2.0 * m_LiftTarget,
                             m_Cfg.rearWheelInches + 2.0 * m_LiftTarget);
 
         const double dF0 = m_Cfg.frontWheelInches;
@@ -883,7 +961,7 @@ namespace Workspace
                 ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingStretchProp, ImVec2(0, 280)))
         {
             ImGui::TableSetupScrollFreeze(0, 1);
-            ImGui::TableSetupColumn("Clearance");
+            ImGui::TableSetupColumn(m_LiftUnitMM ? "Clearance (mm)" : "Clearance (in)");
             ImGui::TableSetupColumn("Front dia");
             ImGui::TableSetupColumn("Rear dia");
             ImGui::TableSetupColumn("Pulley change");
@@ -898,7 +976,8 @@ namespace Workspace
                 if (i == 0) ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, IM_COL32(40, 110, 55, 90));
 
                 ImGui::TableNextColumn();
-                ImGui::Text("+%.3f in", o.clr);
+                if (m_LiftUnitMM) ImGui::Text("+%.2f", o.clr * 25.4);
+                else              ImGui::Text("+%.3f", o.clr);
                 if (i == 0) { ImGui::SameLine(); ImGui::TextDisabled("(closest)"); }
                 ImGui::TableNextColumn(); ImGui::Text("%.3f", o.fDia);
                 ImGui::TableNextColumn(); ImGui::Text("%.3f", o.rDia);
@@ -1069,7 +1148,17 @@ namespace Workspace
         csv << "Speed Factor,"                << c.speedFactor         << "\n";
         csv << "Front K_sys (m/rad),"         << m_Sim.kFront          << "\n";
         csv << "Rear K_sys (m/rad),"          << m_Sim.kRear           << "\n";
-        csv << "Velocity Sync,"               << (m_Sim.velMismatch ? "MISMATCH" : "OK") << "\n\n";
+        csv << "Velocity Sync,"               << (m_Sim.velMismatch ? "MISMATCH" : "OK") << "\n";
+        csv << "Front Ground Clearance (in)," << (c.frontWheelInches * 0.5) << "\n";
+        csv << "Rear Ground Clearance (in),"  << (c.rearWheelInches  * 0.5) << "\n";
+        if (m_HasBaseline)
+        {
+            csv << "Baseline Front Wheel Dia (in)," << m_Baseline.frontWheelInches << "\n";
+            csv << "Baseline Rear Wheel Dia (in),"  << m_Baseline.rearWheelInches  << "\n";
+            csv << "Clearance Gain Front (in),"     << ((c.frontWheelInches - m_Baseline.frontWheelInches) * 0.5) << "\n";
+            csv << "Clearance Gain Rear (in),"      << ((c.rearWheelInches  - m_Baseline.rearWheelInches)  * 0.5) << "\n";
+        }
+        csv << "\n";
 
         // --- Time series (front then rear columns) ---
         csv << "Time(s),"
