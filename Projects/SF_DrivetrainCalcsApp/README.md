@@ -39,9 +39,18 @@ wheelspin) or `MOTOR` (motor-curve-limited).
 
 A robot has a **front** and a **rear** axle. The front axle is the primary
 simulation (matching the original); the rear is simulated too so it can be
-overlaid for tuning. For a belt-coupled robot both axles must produce the same
-linear speed — if `K_front != K_rear` the app flags a **VELOCITY MISMATCH** (the
-axles would fight each other).
+overlaid for tuning.
+
+## Feasibility — wheel tangential velocity
+
+A rigid chassis forces both driven wheels to roll at the same ground speed. Each
+wheel's tangential (surface) velocity is `motor_speed * K_sys`, so if the front
+and rear `K_sys` differ the wheels **must** slip or fight — the build is
+mechanically impossible. The app reports the relative surface-speed gap
+`|v_front - v_rear| / max * 100%` and a **POSSIBLE / IMPOSSIBLE** verdict against
+an adjustable tolerance (default 1%). The Inspector shows the verdict; the
+**Drivetrain Explorers → Feasibility** tab adds the numbers plus one-click fixes
+(the exact sync wheel diameter or pulley ratio for either axle).
 
 ## Windows
 
@@ -56,6 +65,15 @@ axles would fight each other).
 - **Performance Curves** — Speed / Accel / Force / Torque / Distance vs time,
   front (orange) with the rear axle (teal) optionally overlaid, auto-framed.
 - **Results & Export** — a front-vs-rear metrics table and the CSV exporter.
+- **Drivetrain Explorers** — a tabbed what-if bench (all sweeps hold every other
+  parameter fixed and use the *other* axle as the sync reference):
+  - **Feasibility** — the tangential-velocity check + one-click sync fixes.
+  - **Wheel sweep** — pick an axle and a Ø range/step; get top speed, peak g,
+    launch force, ratio, K_sys, status and the sync gap % per diameter, with the
+    perfect-sync diameter called out and Apply-able.
+  - **Pulley ratios** — pick an axle and which pulley to walk ±N teeth around the
+    current value; get the resulting ratio / K_sys / metrics / sync gap % per
+    tooth count, with the perfect-sync ratio called out.
 
 ## Viewport schematic
 

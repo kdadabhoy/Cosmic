@@ -124,9 +124,59 @@ namespace Workspace
         double kRear       = 0.0;
         bool   velMismatch = false;
 
+        // Tangential (ground) wheel-surface speed feasibility. For a rigid
+        // chassis both driven wheels must roll at the same ground speed, so
+        // the two axles' tangential velocities must match or one wheel has to
+        // slip — i.e. the build is mechanically impossible.
+        double vTangFrontMph  = 0.0; // front wheel surface speed (no-load ref)
+        double vTangRearMph   = 0.0; // rear  wheel surface speed (no-load ref)
+        double tangMismatchPct = 0.0; // |vF - vR| / max(vF,vR) * 100
+
         bool        valid = true;
         std::string error;
     };
+
+    // -----------------------------------------------------------------------
+    // Derived per-axle constants (single source of truth shared by the full
+    // time-series sim and the lightweight metrics-only sweep sim).
+    // -----------------------------------------------------------------------
+    struct AxleConstants
+    {
+        double massSide        = 0.0;
+        double weightSide      = 0.0;
+        double r               = 0.0;  // wheel radius (m)
+        double R               = 0.0;  // pulley ratio (driven / driving)
+        double K_sys           = 0.0;  // m travelled per motor-radian
+        double kt              = 0.0;
+        double omegaNoLoad     = 0.0;
+        double torqueStall     = 0.0;
+        double tractionTorque  = 0.0;  // mu*W*K_sys (torque cap, original)
+        double tractionForceN  = 0.0;  // mu*W       (force at the patch)
+        double inertiaEq       = 0.0;
+        double noLoadTopSpeedMph = 0.0;
+    };
+
+    inline AxleConstants ComputeAxleConstants(const DrivetrainConfig& cfg,
+                                              double wheelInches,
+                                              double pulleyTeeth,
+                                              double motorPulley)
+    {
+        AxleConstants a;
+        a.massSide       = (cfg.totalWeightLb / 2.0) * DT::LB_TO_KG;
+        a.weightSide     = a.massSide * DT::G;
+        a.r              = (wheelInches / 2.0) * DT::INCHES_TO_METERS;
+        a.R              = (motorPulley != 0.0) ? pulleyTeeth / motorPulley : 0.0;
+        a.K_sys          = (cfg.gearboxReduction != 0.0 && a.R != 0.0)
+                           ? a.r / (cfg.gearboxReduction * a.R) : 0.0;
+        a.kt             = (cfg.kv != 0.0) ? 60.0 / (2.0 * DT::PI * cfg.kv) : 0.0;
+        a.omegaNoLoad    = (cfg.kv * cfg.vBatt * cfg.speedFactor) * (2.0 * DT::PI / 60.0);
+        a.torqueStall    = cfg.currentLimit * a.kt * cfg.drivetrainEfficiency;
+        a.tractionTorque = cfg.mu * a.weightSide * a.K_sys;
+        a.tractionForceN = cfg.mu * a.weightSide;
+        a.inertiaEq      = a.massSide * std::pow(a.K_sys, 2);
+        a.noLoadTopSpeedMph = a.omegaNoLoad * a.K_sys * DT::MPS_TO_MPH;
+        return a;
+    }
 
     // -----------------------------------------------------------------------
     // Simulate one axle. wheelInches/pulleyTeeth/motorPulley select the axle;
@@ -140,27 +190,19 @@ namespace Workspace
         AxleResult out;
 
         // --- Derived physical constants (identical to the original tool) ---
-        const double mass_kg_side  = (cfg.totalWeightLb / 2.0) * DT::LB_TO_KG;
-        const double weight_n_side = mass_kg_side * DT::G;
-        const double r             = (wheelInches / 2.0) * DT::INCHES_TO_METERS;
-        const double R             = pulleyTeeth / motorPulley;
+        const AxleConstants ac = ComputeAxleConstants(cfg, wheelInches, pulleyTeeth, motorPulley);
+        const double K_sys          = ac.K_sys;
+        const double omega_no_load  = ac.omegaNoLoad;
+        const double torque_stall   = ac.torqueStall;
+        const double Traction_Limit = ac.tractionTorque;
+        const double Inertia_eq     = ac.inertiaEq;
 
-        const double K_sys         = r / (cfg.gearboxReduction * R);
-        const double kt            = 60.0 / (2.0 * DT::PI * cfg.kv);
-        const double omega_no_load = (cfg.kv * cfg.vBatt * cfg.speedFactor) * (2.0 * DT::PI / 60.0);
-        const double torque_stall  = cfg.currentLimit * kt * cfg.drivetrainEfficiency;
-        const double Traction_Limit = cfg.mu * weight_n_side * K_sys;
-        const double Inertia_eq    = mass_kg_side * std::pow(K_sys, 2);
-
-        out.K_sys          = K_sys;
-        out.omegaNoLoad    = omega_no_load;
-        out.torqueStall    = torque_stall;
-        out.inertiaEq      = Inertia_eq;
-        out.noLoadTopSpeedMph = omega_no_load * K_sys * DT::MPS_TO_MPH;
-
-        // In the original, Traction_Limit is a *torque* cap (mu*W*K_sys). The
-        // contact-patch force at that cap is Traction_Limit / K_sys = mu*W.
-        out.tractionLimitN = cfg.mu * weight_n_side;
+        out.K_sys          = ac.K_sys;
+        out.omegaNoLoad    = ac.omegaNoLoad;
+        out.torqueStall    = ac.torqueStall;
+        out.inertiaEq      = ac.inertiaEq;
+        out.noLoadTopSpeedMph = ac.noLoadTopSpeedMph;
+        out.tractionLimitN = ac.tractionForceN;
 
         // --- Integrate the spin-up ---
         const double dt   = (cfg.dt > 0.0) ? cfg.dt : 0.02;
@@ -226,6 +268,132 @@ namespace Workspace
     }
 
     // -----------------------------------------------------------------------
+    // Lightweight, allocation-free headline metrics for one axle. Same step
+    // physics as SimulateAxle but stores no time series — cheap enough to call
+    // dozens of times per frame for the sweep / explorer tables.
+    // -----------------------------------------------------------------------
+    struct AxleMetrics
+    {
+        double K_sys             = 0.0;
+        double R                 = 0.0;
+        double noLoadTopSpeedMph = 0.0;
+        double topSpeedMph       = 0.0;
+        double peakAccelG        = 0.0;
+        double launchForceN      = 0.0;
+        double tractionLimitN    = 0.0;
+        double distanceFt        = 0.0;
+        bool   launchTractionLimited = false;
+        int    finalStatus       = STATUS_MOTOR;
+        bool   valid             = false;
+    };
+
+    inline AxleMetrics SimulateAxleMetrics(const DrivetrainConfig& cfg,
+                                           double wheelInches,
+                                           double pulleyTeeth,
+                                           double motorPulley)
+    {
+        const AxleConstants ac = ComputeAxleConstants(cfg, wheelInches, pulleyTeeth, motorPulley);
+
+        AxleMetrics m;
+        m.K_sys             = ac.K_sys;
+        m.R                 = ac.R;
+        m.noLoadTopSpeedMph = ac.noLoadTopSpeedMph;
+        m.tractionLimitN    = ac.tractionForceN;
+
+        if (ac.omegaNoLoad <= 0.0 || ac.K_sys <= 0.0 || cfg.dt <= 0.0 || cfg.simTime <= 0.0)
+            return m; // valid stays false
+
+        const double dt   = cfg.dt;
+        const double tEnd = std::max(cfg.simTime, 0.0);
+
+        double time = 0.0, omega_m = 0.0, vel_m_s = 0.0, dist_m = 0.0;
+        bool wasLimited = false, first = true;
+        int guard = 0;
+
+        while (time <= tEnd + 1e-9 && guard < 2'000'001)
+        {
+            const double torque_pot = ac.torqueStall * (1.0 - (omega_m / ac.omegaNoLoad));
+            const double torque_m   = std::min(std::max(torque_pot, 0.0), ac.tractionTorque);
+            const double accel_mps2 = (torque_m * ac.K_sys) / std::fmax(ac.inertiaEq, 0.00001);
+            const double alpha_m    = torque_m / std::fmax(ac.inertiaEq, 0.00001);
+            const bool   limited    = (torque_m >= ac.tractionTorque - 0.01);
+
+            // Display values mirror SimulateAxle (speed/dist lag one step).
+            m.topSpeedMph = vel_m_s * DT::MPS_TO_MPH;
+            m.distanceFt  = dist_m * DT::M_TO_FT;
+            m.peakAccelG  = std::max(m.peakAccelG, accel_mps2 / DT::G);
+            m.finalStatus = limited ? STATUS_LIMIT : STATUS_MOTOR;
+            if (first)
+            {
+                m.launchForceN = (ac.K_sys > 1e-12) ? (torque_m / ac.K_sys) : 0.0;
+                m.launchTractionLimited = limited;
+                first = false;
+            }
+            wasLimited = limited; (void)wasLimited;
+
+            omega_m += alpha_m * dt;
+            vel_m_s  = omega_m * ac.K_sys;
+            dist_m  += vel_m_s * dt;
+            time    += dt;
+            ++guard;
+        }
+
+        m.valid = true;
+        return m;
+    }
+
+    // -----------------------------------------------------------------------
+    // Solver helpers for the explorer tabs (no integration needed).
+    // -----------------------------------------------------------------------
+
+    // Wheel diameter (in) for `front`(true)/rear(false) that makes its K_sys
+    // equal the OTHER axle's K_sys, with all pulleys + the other wheel fixed.
+    inline double SyncWheelDiameterIn(const DrivetrainConfig& cfg, bool forFront)
+    {
+        const double G = cfg.gearboxReduction;
+        double kOther, Rthis;
+        if (forFront)
+        {
+            const double rRear = (cfg.rearWheelInches / 2.0) * DT::INCHES_TO_METERS;
+            const double Rrear = cfg.rearPulleyTeeth / cfg.motorPulleyRear;
+            kOther = rRear / (G * Rrear);
+            Rthis  = cfg.frontPulleyTeeth / cfg.motorPulleyFront;
+        }
+        else
+        {
+            const double rFront = (cfg.frontWheelInches / 2.0) * DT::INCHES_TO_METERS;
+            const double Rfront = cfg.frontPulleyTeeth / cfg.motorPulleyFront;
+            kOther = rFront / (G * Rfront);
+            Rthis  = cfg.rearPulleyTeeth / cfg.motorPulleyRear;
+        }
+        const double rThis = kOther * G * Rthis;
+        return 2.0 * rThis / DT::INCHES_TO_METERS;
+    }
+
+    // Pulley ratio R (= driven/driving) for `front`(true)/rear(false) that makes
+    // its K_sys equal the OTHER axle's, with both wheels + the other axle fixed.
+    inline double SyncPulleyRatio(const DrivetrainConfig& cfg, bool forFront)
+    {
+        const double G = cfg.gearboxReduction;
+        double kOther, rThis;
+        if (forFront)
+        {
+            const double rRear = (cfg.rearWheelInches / 2.0) * DT::INCHES_TO_METERS;
+            const double Rrear = cfg.rearPulleyTeeth / cfg.motorPulleyRear;
+            kOther = rRear / (G * Rrear);
+            rThis  = (cfg.frontWheelInches / 2.0) * DT::INCHES_TO_METERS;
+        }
+        else
+        {
+            const double rFront = (cfg.frontWheelInches / 2.0) * DT::INCHES_TO_METERS;
+            const double Rfront = cfg.frontPulleyTeeth / cfg.motorPulleyFront;
+            kOther = rFront / (G * Rfront);
+            rThis  = (cfg.rearWheelInches / 2.0) * DT::INCHES_TO_METERS;
+        }
+        return (kOther > 1e-12) ? rThis / (G * kOther) : 0.0;
+    }
+
+    // -----------------------------------------------------------------------
     // Validate inputs, then simulate both axles. Returns valid=false with a
     // human-readable error if a parameter would produce NaN/Inf curves.
     // -----------------------------------------------------------------------
@@ -255,6 +423,15 @@ namespace Workspace
         sim.kFront = sim.front.K_sys;
         sim.kRear  = sim.rear.K_sys;
         sim.velMismatch = std::abs(sim.kFront - sim.kRear) > 0.0001;
+
+        // Tangential (ground) wheel-surface speeds. noLoadTopSpeedMph already
+        // equals omegaNoLoad * K_sys, i.e. the wheel's no-slip surface speed,
+        // so the relative gap is speed-independent (= |K_f - K_r| / max(K)).
+        sim.vTangFrontMph = sim.front.noLoadTopSpeedMph;
+        sim.vTangRearMph  = sim.rear.noLoadTopSpeedMph;
+        const double denom = std::max({ std::abs(sim.vTangFrontMph),
+                                        std::abs(sim.vTangRearMph), 1e-9 });
+        sim.tangMismatchPct = std::abs(sim.vTangFrontMph - sim.vTangRearMph) / denom * 100.0;
 
         return sim;
     }

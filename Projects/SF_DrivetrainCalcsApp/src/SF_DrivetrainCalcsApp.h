@@ -45,10 +45,14 @@ namespace Workspace
 
     private:
         // --- ImGui windows ---
-        void DrawInspectorTop();   // docked sidebar: headline KPIs + recompute + sync
-        void DrawInputsWindow();   // all editable parameters
-        void DrawPlotsWindow();    // ImPlot performance curves
-        void DrawResultsWindow();  // detailed metrics table + CSV export
+        void DrawInspectorTop();    // docked sidebar: headline KPIs + recompute + sync
+        void DrawInputsWindow();    // all editable parameters
+        void DrawPlotsWindow();     // ImPlot performance curves
+        void DrawResultsWindow();   // detailed metrics table + CSV export
+        void DrawExplorersWindow(); // tabbed sweeps (wheel Ø + pulley ratios)
+        void DrawFeasibilityTab();  // tangential-velocity "is it possible" check
+        void DrawWheelSweepTab();   // metrics vs wheel diameter
+        void DrawPulleyRatioTab();  // metrics vs pulley teeth (+/-5 around current)
 
         // --- Helpers ---
         void Recompute();                       // re-run the sim from m_Cfg
@@ -72,6 +76,20 @@ namespace Workspace
 
         bool m_ShowRear   = true;          // overlay the rear axle on the charts
         bool m_FillCurves = true;          // shade the front curve area
+
+        // --- Feasibility (tangential velocity) ---
+        double m_FeasTolPct = 1.0;         // max allowed front/rear surface-speed gap
+
+        // --- Wheel diameter sweep ---
+        int    m_SweepAxle    = 0;         // 0 = front, 1 = rear
+        double m_SweepDiaMin  = 1.0;       // in
+        double m_SweepDiaMax  = 6.0;       // in
+        double m_SweepDiaStep = 0.25;      // in
+
+        // --- Pulley ratio explorer ---
+        int    m_PulleyAxle = 0;           // 0 = front, 1 = rear
+        int    m_PulleyVary = 0;           // 0 = wheel pulley, 1 = motor pulley
+        int    m_PulleySpan = 5;           // +/- teeth around current
 
         // CSV export
         char        m_ExportName[96] = "drivetrain_run";

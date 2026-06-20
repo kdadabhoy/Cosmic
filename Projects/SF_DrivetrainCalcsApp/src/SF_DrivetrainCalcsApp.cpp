@@ -99,6 +99,7 @@ namespace Workspace
         DrawInspectorTop();
         DrawPlotsWindow();
         DrawResultsWindow();
+        DrawExplorersWindow();
         DrawSchematicLabels();
     }
 
@@ -170,22 +171,22 @@ namespace Workspace
             ImGui::TextColored({ 0.4f, 1.0f, 0.5f, 1.0f }, "  Launch is MOTOR-LIMITED (no wheelspin)");
         }
 
-        // --- Front/Rear velocity-sync check ---
+        // --- Tangential-velocity feasibility: is the build even possible? ---
         ImGui::Spacing();
-        ImGui::SeparatorText("Front / Rear sync");
-        if (m_Sim.velMismatch)
-        {
-            ImGui::TextColored({ 1.0f, 0.3f, 0.3f, 1.0f }, "  VELOCITY MISMATCH");
-            ImGui::TextDisabled("  Axles would fight: K_front %.5f vs K_rear %.5f m/rad",
-                                m_Sim.kFront, m_Sim.kRear);
-            const double rf = (m_Sim.kRear != 0.0) ? (m_Sim.kFront / m_Sim.kRear) : 0.0;
-            ImGui::TextDisabled("  Front runs %.1f%% %s than rear",
-                                std::abs(rf - 1.0) * 100.0, rf > 1.0 ? "faster" : "slower");
-        }
+        ImGui::SeparatorText("Feasibility — wheel tangential velocity");
+        const bool feasible = m_Sim.tangMismatchPct <= m_FeasTolPct;
+        if (feasible)
+            ImGui::TextColored({ 0.4f, 1.0f, 0.5f, 1.0f },
+                               "  POSSIBLE — wheels track (%.2f%% gap)", m_Sim.tangMismatchPct);
         else
-        {
-            ImGui::TextColored({ 0.4f, 1.0f, 0.5f, 1.0f }, "  Axles synced (K matched)");
-        }
+            ImGui::TextColored({ 1.0f, 0.3f, 0.3f, 1.0f },
+                               "  IMPOSSIBLE — wheels slip/fight (%.2f%% gap)", m_Sim.tangMismatchPct);
+        ImGui::TextDisabled("  Front surface %.2f mph  vs  rear %.2f mph",
+                            m_Sim.vTangFrontMph, m_Sim.vTangRearMph);
+        ImGui::SetNextItemWidth(110.0f);
+        if (ImGui::InputDouble("Tolerance (%)", &m_FeasTolPct, 0.1, 1.0, "%.2f") && m_FeasTolPct < 0.0)
+            m_FeasTolPct = 0.0;
+        ImGui::TextDisabled("  Fixes in: Drivetrain Explorers > Feasibility");
 
         ImGui::Spacing();
         ImGui::Separator();
@@ -414,6 +415,303 @@ namespace Workspace
         ImGui::TextDisabled("Rows: %zu (front) / %zu (rear)", f.time.size(), r.time.size());
 
         ImGui::End();
+    }
+
+    // =========================================================================
+    // Explorers — a tabbed window of "what-if" sweeps. All use the lightweight
+    // allocation-free metrics sim, so the tables are recomputed live each frame.
+    // =========================================================================
+    namespace
+    {
+        // Relative gap between two K_sys values, as a percent (sync = 0%).
+        double TangGapPct(double k, double kOther)
+        {
+            const double d = std::max({ std::abs(k), std::abs(kOther), 1e-9 });
+            return std::abs(k - kOther) / d * 100.0;
+        }
+    }
+
+    void SF_DrivetrainCalcsApp::DrawExplorersWindow()
+    {
+        ImGui::Begin("Drivetrain Explorers");
+
+        if (!m_Sim.valid)
+        {
+            ImGui::TextColored({ 1.0f, 0.35f, 0.35f, 1.0f }, "%s", m_Sim.error.c_str());
+            ImGui::End();
+            return;
+        }
+
+        if (ImGui::BeginTabBar("##explorers"))
+        {
+            if (ImGui::BeginTabItem("Feasibility")) { DrawFeasibilityTab();  ImGui::EndTabItem(); }
+            if (ImGui::BeginTabItem("Wheel sweep")) { DrawWheelSweepTab();   ImGui::EndTabItem(); }
+            if (ImGui::BeginTabItem("Pulley ratios")){ DrawPulleyRatioTab(); ImGui::EndTabItem(); }
+            ImGui::EndTabBar();
+        }
+
+        ImGui::End();
+    }
+
+    // -------------------------------------------------------------------------
+    // Feasibility tab — explain the tangential-velocity rule, show the gap, and
+    // offer concrete one-click fixes (sync wheel dia / sync pulley ratio).
+    // -------------------------------------------------------------------------
+    void SF_DrivetrainCalcsApp::DrawFeasibilityTab()
+    {
+        ImGui::TextWrapped(
+            "A rigid chassis forces both driven wheels to roll at the same ground "
+            "speed. The tangential (surface) velocity of each wheel = motor speed x "
+            "K_sys, so if the front and rear K_sys differ the wheels MUST slip or "
+            "fight each other -- the build is mechanically impossible.");
+
+        ImGui::Spacing();
+        const bool feasible = m_Sim.tangMismatchPct <= m_FeasTolPct;
+        if (feasible)
+            ImGui::TextColored({ 0.4f, 1.0f, 0.5f, 1.0f },
+                               "POSSIBLE  -  front/rear surface speeds within %.2f%% (tol %.2f%%)",
+                               m_Sim.tangMismatchPct, m_FeasTolPct);
+        else
+            ImGui::TextColored({ 1.0f, 0.3f, 0.3f, 1.0f },
+                               "IMPOSSIBLE  -  %.2f%% surface-speed gap exceeds the %.2f%% tolerance",
+                               m_Sim.tangMismatchPct, m_FeasTolPct);
+
+        ImGui::Spacing();
+        if (ImGui::BeginTable("feas", 4, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg))
+        {
+            ImGui::TableSetupColumn("");
+            ImGui::TableSetupColumn("Front");
+            ImGui::TableSetupColumn("Rear");
+            ImGui::TableSetupColumn("Gap");
+            ImGui::TableHeadersRow();
+
+            ImGui::TableNextRow();
+            ImGui::TableNextColumn(); ImGui::TextUnformatted("Tangential speed (mph)");
+            ImGui::TableNextColumn(); ImGui::Text("%.3f", m_Sim.vTangFrontMph);
+            ImGui::TableNextColumn(); ImGui::Text("%.3f", m_Sim.vTangRearMph);
+            ImGui::TableNextColumn(); ImGui::Text("%.2f%%", m_Sim.tangMismatchPct);
+
+            ImGui::TableNextRow();
+            ImGui::TableNextColumn(); ImGui::TextUnformatted("K_sys (m/rad)");
+            ImGui::TableNextColumn(); ImGui::Text("%.5f", m_Sim.kFront);
+            ImGui::TableNextColumn(); ImGui::Text("%.5f", m_Sim.kRear);
+            ImGui::TableNextColumn(); ImGui::TextDisabled("-");
+            ImGui::EndTable();
+        }
+
+        ImGui::SetNextItemWidth(110.0f);
+        if (ImGui::InputDouble("Tolerance (%)##feas", &m_FeasTolPct, 0.1, 1.0, "%.2f") && m_FeasTolPct < 0.0)
+            m_FeasTolPct = 0.0;
+
+        ImGui::Spacing();
+        ImGui::SeparatorText("One-click fixes (keep everything else fixed)");
+
+        const double syncFrontDia = SyncWheelDiameterIn(m_Cfg, true);
+        const double syncRearDia  = SyncWheelDiameterIn(m_Cfg, false);
+
+        ImGui::Text("Front wheel dia -> %.3f in  (currently %.3f)", syncFrontDia, m_Cfg.frontWheelInches);
+        ImGui::SameLine();
+        if (ImGui::SmallButton("Apply##fdia")) { m_Cfg.frontWheelInches = syncFrontDia; m_Dirty = true; }
+
+        ImGui::Text("Rear  wheel dia -> %.3f in  (currently %.3f)", syncRearDia, m_Cfg.rearWheelInches);
+        ImGui::SameLine();
+        if (ImGui::SmallButton("Apply##rdia")) { m_Cfg.rearWheelInches = syncRearDia; m_Dirty = true; }
+
+        const double syncRfront = SyncPulleyRatio(m_Cfg, true);
+        const double syncRrear  = SyncPulleyRatio(m_Cfg, false);
+        ImGui::Spacing();
+        ImGui::TextDisabled("Or match the pulley ratio (driven/driving):");
+        ImGui::Text("Front ratio -> %.4f  => motor teeth %.1f (wheel %.0f fixed)",
+                    syncRfront, (syncRfront > 1e-6 ? m_Cfg.frontPulleyTeeth / syncRfront : 0.0),
+                    m_Cfg.frontPulleyTeeth);
+        ImGui::Text("Rear  ratio -> %.4f  => motor teeth %.1f (wheel %.0f fixed)",
+                    syncRrear, (syncRrear > 1e-6 ? m_Cfg.rearPulleyTeeth / syncRrear : 0.0),
+                    m_Cfg.rearPulleyTeeth);
+    }
+
+    // -------------------------------------------------------------------------
+    // Shared table renderer for a single sweep (rows already gathered).
+    // -------------------------------------------------------------------------
+    namespace
+    {
+        struct SweepRow
+        {
+            double value;        // wheel dia or teeth
+            AxleMetrics m;
+            double gapPct;
+            bool   isCurrent;
+        };
+
+        void RenderSweepTable(const char* id, const char* valueHeader,
+                              const char* valueFmt, const std::vector<SweepRow>& rows,
+                              double tolPct, const ImVec4& frontCol)
+        {
+            if (ImGui::BeginTable(id, 7,
+                    ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg |
+                    ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingStretchProp,
+                    ImVec2(0, 260)))
+            {
+                ImGui::TableSetupScrollFreeze(0, 1);
+                ImGui::TableSetupColumn(valueHeader);
+                ImGui::TableSetupColumn("Ratio");
+                ImGui::TableSetupColumn("K_sys");
+                ImGui::TableSetupColumn("Top mph");
+                ImGui::TableSetupColumn("Peak g");
+                ImGui::TableSetupColumn("Gap %");
+                ImGui::TableSetupColumn("Status");
+                ImGui::TableHeadersRow();
+
+                for (const SweepRow& r : rows)
+                {
+                    ImGui::TableNextRow();
+                    if (r.isCurrent)
+                        ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, IM_COL32(60, 90, 130, 110));
+                    else if (r.gapPct <= tolPct)
+                        ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, IM_COL32(40, 110, 55, 90));
+
+                    ImGui::TableNextColumn();
+                    ImGui::TextColored(frontCol, valueFmt, r.value);
+                    if (r.isCurrent) { ImGui::SameLine(); ImGui::TextDisabled("(now)"); }
+
+                    if (!r.m.valid)
+                    {
+                        for (int c = 1; c < 7; ++c) { ImGui::TableNextColumn(); ImGui::TextDisabled("-"); }
+                        continue;
+                    }
+
+                    ImGui::TableNextColumn(); ImGui::Text("%.3f", r.m.R);
+                    ImGui::TableNextColumn(); ImGui::Text("%.5f", r.m.K_sys);
+                    ImGui::TableNextColumn(); ImGui::Text("%.2f", r.m.topSpeedMph);
+                    ImGui::TableNextColumn(); ImGui::Text("%.2f", r.m.peakAccelG);
+                    ImGui::TableNextColumn();
+                    if (r.gapPct <= tolPct) ImGui::TextColored({ 0.4f, 1.0f, 0.5f, 1.0f }, "%.2f", r.gapPct);
+                    else                    ImGui::TextColored({ 1.0f, 0.55f, 0.3f, 1.0f }, "%.2f", r.gapPct);
+                    ImGui::TableNextColumn();
+                    ImGui::TextUnformatted(r.m.launchTractionLimited ? "LIMIT" : "MOTOR");
+                }
+                ImGui::EndTable();
+            }
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Wheel diameter sweep — vary one axle's wheel dia, hold everything else.
+    // -------------------------------------------------------------------------
+    void SF_DrivetrainCalcsApp::DrawWheelSweepTab()
+    {
+        ImGui::TextDisabled("All other parameters stay fixed; the rear/front axle "
+                            "you are NOT sweeping is the sync reference.");
+
+        ImGui::RadioButton("Front axle##swaxle", &m_SweepAxle, 0); ImGui::SameLine();
+        ImGui::RadioButton("Rear axle##swaxle",  &m_SweepAxle, 1);
+
+        const bool front = (m_SweepAxle == 0);
+        const ImVec4 col = front ? k_FrontCol : k_RearCol;
+
+        ImGui::SetNextItemWidth(90); ImGui::InputDouble("min (in)",  &m_SweepDiaMin,  0.25, 1.0, "%.2f"); ImGui::SameLine();
+        ImGui::SetNextItemWidth(90); ImGui::InputDouble("max (in)",  &m_SweepDiaMax,  0.25, 1.0, "%.2f"); ImGui::SameLine();
+        ImGui::SetNextItemWidth(90); ImGui::InputDouble("step (in)", &m_SweepDiaStep, 0.05, 0.25, "%.3f");
+        if (m_SweepDiaMin  < 0.1)  m_SweepDiaMin  = 0.1;
+        if (m_SweepDiaStep < 0.01) m_SweepDiaStep = 0.01;
+        if (m_SweepDiaMax  < m_SweepDiaMin) m_SweepDiaMax = m_SweepDiaMin;
+
+        const double syncDia = SyncWheelDiameterIn(m_Cfg, front);
+        ImGui::Text("Perfect-sync dia for the %s axle: ", front ? "front" : "rear");
+        ImGui::SameLine();
+        ImGui::TextColored({ 0.4f, 1.0f, 0.5f, 1.0f }, "%.3f in", syncDia);
+        ImGui::SameLine();
+        if (ImGui::SmallButton("Apply##syncdia"))
+        {
+            if (front) m_Cfg.frontWheelInches = syncDia; else m_Cfg.rearWheelInches = syncDia;
+            m_Dirty = true;
+        }
+
+        // Gather rows (cap to keep the table bounded).
+        const double pulley = front ? m_Cfg.frontPulleyTeeth : m_Cfg.rearPulleyTeeth;
+        const double motor  = front ? m_Cfg.motorPulleyFront  : m_Cfg.motorPulleyRear;
+        const double kOther = front ? m_Sim.kRear : m_Sim.kFront;
+        const double curDia = front ? m_Cfg.frontWheelInches : m_Cfg.rearWheelInches;
+
+        std::vector<SweepRow> rows;
+        const int maxRows = 240;
+        int closest = -1; double closestDelta = 1e30;
+        for (double d = m_SweepDiaMin; d <= m_SweepDiaMax + 1e-9 && (int)rows.size() < maxRows; d += m_SweepDiaStep)
+        {
+            SweepRow row;
+            row.value = d;
+            row.m     = SimulateAxleMetrics(m_Cfg, d, pulley, motor);
+            row.gapPct = TangGapPct(row.m.K_sys, kOther);
+            row.isCurrent = false;
+            const double delta = std::abs(d - curDia);
+            if (delta < closestDelta) { closestDelta = delta; closest = (int)rows.size(); }
+            rows.push_back(row);
+        }
+        if (closest >= 0 && closestDelta <= m_SweepDiaStep * 0.5 + 1e-9)
+            rows[closest].isCurrent = true;
+
+        RenderSweepTable("##wheelsweep", "dia (in)", "%.2f", rows, m_FeasTolPct, col);
+    }
+
+    // -------------------------------------------------------------------------
+    // Pulley ratio explorer — vary one pulley's teeth +/- span around current.
+    // -------------------------------------------------------------------------
+    void SF_DrivetrainCalcsApp::DrawPulleyRatioTab()
+    {
+        ImGui::TextDisabled("Walks the chosen pulley +/- a few teeth around the "
+                            "current value; everything else stays fixed.");
+
+        ImGui::RadioButton("Front axle##plaxle", &m_PulleyAxle, 0); ImGui::SameLine();
+        ImGui::RadioButton("Rear axle##plaxle",  &m_PulleyAxle, 1);
+
+        ImGui::RadioButton("Vary wheel pulley", &m_PulleyVary, 0); ImGui::SameLine();
+        ImGui::RadioButton("Vary motor pulley", &m_PulleyVary, 1);
+
+        ImGui::SetNextItemWidth(90);
+        ImGui::InputInt("+/- teeth", &m_PulleySpan);
+        m_PulleySpan = std::clamp(m_PulleySpan, 1, 30);
+
+        const bool  front     = (m_PulleyAxle == 0);
+        const bool  varyWheel = (m_PulleyVary == 0);
+        const ImVec4 col      = front ? k_FrontCol : k_RearCol;
+
+        const double wheelIn   = front ? m_Cfg.frontWheelInches : m_Cfg.rearWheelInches;
+        const double wheelTeeth = front ? m_Cfg.frontPulleyTeeth : m_Cfg.rearPulleyTeeth;
+        const double motorTeeth = front ? m_Cfg.motorPulleyFront  : m_Cfg.motorPulleyRear;
+        const double kOther     = front ? m_Sim.kRear : m_Sim.kFront;
+
+        const double center = varyWheel ? wheelTeeth : motorTeeth;
+        const double syncR  = SyncPulleyRatio(m_Cfg, front);
+        ImGui::Text("Perfect-sync ratio for the %s axle: ", front ? "front" : "rear");
+        ImGui::SameLine();
+        ImGui::TextColored({ 0.4f, 1.0f, 0.5f, 1.0f }, "%.4f", syncR);
+        ImGui::SameLine();
+        if (varyWheel)
+            ImGui::TextDisabled("(=> %.1f wheel teeth at motor %.0f)",
+                                syncR * motorTeeth, motorTeeth);
+        else
+            ImGui::TextDisabled("(=> %.1f motor teeth at wheel %.0f)",
+                                (syncR > 1e-6 ? wheelTeeth / syncR : 0.0), wheelTeeth);
+
+        std::vector<SweepRow> rows;
+        for (int off = -m_PulleySpan; off <= m_PulleySpan; ++off)
+        {
+            const double teeth = center + off;
+            if (teeth < 1.0) continue; // a pulley needs at least 1 tooth
+
+            const double pulley = varyWheel ? teeth : wheelTeeth;
+            const double motor  = varyWheel ? motorTeeth : teeth;
+
+            SweepRow row;
+            row.value     = teeth;
+            row.m         = SimulateAxleMetrics(m_Cfg, wheelIn, pulley, motor);
+            row.gapPct    = TangGapPct(row.m.K_sys, kOther);
+            row.isCurrent = (off == 0);
+            rows.push_back(row);
+        }
+
+        RenderSweepTable("##pulleysweep",
+                         varyWheel ? "Wheel teeth" : "Motor teeth",
+                         "%.0f", rows, m_FeasTolPct, col);
     }
 
     // -------------------------------------------------------------------------
