@@ -243,6 +243,12 @@ namespace Workspace
         Dbl("Wheel pulley teeth##r", &m_Cfg.rearPulleyTeeth, 1.0,  "%.0f");
         Dbl("Motor pulley teeth##r", &m_Cfg.motorPulleyRear, 1.0,  "%.0f");
 
+        ImGui::SeparatorText("Chassis");
+        Dbl("Axle mount offset (rear-front, in)", &m_Cfg.mountOffsetIn, 0.05, "%.4f");
+        if (ImGui::IsItemHovered())
+            ImGui::SetTooltip("How much higher the rear axle mounts than the front on the chassis.\n"
+                              "Level when this equals (rear radius - front radius) = (rearDia - frontDia)/2.");
+
         ImGui::SeparatorText("Efficiency");
         Dbl("Speed factor",          &m_Cfg.speedFactor,          0.01, "%.3f");
         Dbl("Drivetrain efficiency", &m_Cfg.drivetrainEfficiency, 0.01, "%.3f");
@@ -511,6 +517,7 @@ namespace Workspace
             CRow("Rear wheel dia (in)",   "%.4f", m_Cfg.rearWheelInches,      m_Baseline.rearWheelInches);
             CRow("Rear wheel pulley",     "%.0f", m_Cfg.rearPulleyTeeth,      m_Baseline.rearPulleyTeeth);
             CRow("Rear motor pulley",     "%.0f", m_Cfg.motorPulleyRear,      m_Baseline.motorPulleyRear);
+            CRow("Axle mount offset (in)","%.4f", m_Cfg.mountOffsetIn,        m_Baseline.mountOffsetIn);
             CRow("Speed factor",          "%.3f", m_Cfg.speedFactor,          m_Baseline.speedFactor);
             CRow("Drivetrain efficiency", "%.3f", m_Cfg.drivetrainEfficiency, m_Baseline.drivetrainEfficiency);
             CRow("Motor Kv (rpm/V)",      "%.1f", m_Cfg.kv,                   m_Baseline.kv);
@@ -1151,6 +1158,8 @@ namespace Workspace
         csv << "Velocity Sync,"               << (m_Sim.velMismatch ? "MISMATCH" : "OK") << "\n";
         csv << "Front Ground Clearance (in)," << (c.frontWheelInches * 0.5) << "\n";
         csv << "Rear Ground Clearance (in),"  << (c.rearWheelInches  * 0.5) << "\n";
+        csv << "Axle Mount Offset (in),"      << c.mountOffsetIn << "\n";
+        csv << "Chassis Level,"               << ((std::abs((c.rearWheelInches - c.frontWheelInches) * 0.5 - c.mountOffsetIn) < 0.02) ? "LEVEL" : "TILTED") << "\n";
         if (m_HasBaseline)
         {
             csv << "Baseline Front Wheel Dia (in)," << m_Baseline.frontWheelInches << "\n";
@@ -1200,107 +1209,125 @@ namespace Workspace
     }
 
     // =========================================================================
-    // Viewport schematic — a to-scale side view of the two drive wheels with
-    // their driven pulleys, the motor pulleys and the belts. Wheel circles are
-    // drawn at true relative size so changing a diameter is visible instantly.
+    // Viewport schematic — a side view of the robot. The two wheel MOUNTS (axles)
+    // are pinned at the same fixed height (a level chassis); each wheel grows
+    // around its mount, so changing a diameter moves the ground contact and the
+    // ride height. The faded ring is the saved baseline, the bold ring is the
+    // current wheel. The line joining the two ground contacts tilts when the
+    // wheels differ, i.e. when the chassis would NOT sit level.
     // =========================================================================
     void SF_DrivetrainCalcsApp::RenderSchematic()
     {
         m_SchematicValid = m_Sim.valid;
 
-        using namespace DT;
-        const float rF = (float)((m_Cfg.frontWheelInches * 0.5) * INCHES_TO_METERS);
-        const float rB = (float)((m_Cfg.rearWheelInches  * 0.5) * INCHES_TO_METERS);
-        const float maxR = std::max({ rF, rB, 0.02f });
+        // Work in inches. Wheels sit on FLAT ground (contact at y = 0); the axle
+        // rises with the wheel. Bold ring = current, faded ring = baseline.
+        const float rNewF  = (float)(m_Cfg.frontWheelInches * 0.5);
+        const float rNewR  = (float)(m_Cfg.rearWheelInches  * 0.5);
+        const bool  hasBase = m_HasBaseline;
+        const float rBaseF = hasBase ? (float)(m_Baseline.frontWheelInches * 0.5) : rNewF;
+        const float rBaseR = hasBase ? (float)(m_Baseline.rearWheelInches  * 0.5) : rNewR;
+        const float rMax   = std::max({ rNewF, rNewR, rBaseF, rBaseR, 0.5f });
+        const float mountOffset = (float)m_Cfg.mountOffsetIn; // rear mount above front
 
-        // Pulley radii: scaled from tooth counts so the reduction is visible
-        // without being physically exact.
-        const float pScale = 0.0008f;
-        const float rpFd = (float)m_Cfg.frontPulleyTeeth * pScale; // front driven
-        const float rpFm = (float)m_Cfg.motorPulleyFront * pScale; // front motor
-        const float rpRd = (float)m_Cfg.rearPulleyTeeth  * pScale;
-        const float rpRm = (float)m_Cfg.motorPulleyRear  * pScale;
+        const float halfSep = rMax + 0.8f;
+        const float xF = halfSep, xR = -halfSep;
 
-        const float spacing = maxR + 0.06f;
-        const float cxF =  spacing;   // front on the right
-        const float cxR = -spacing;   // rear on the left
-        const float yMotor = 2.0f * maxR + 0.06f;
+        // Chassis attach points: the rear mount sits `mountOffset` higher on the
+        // chassis, which cancels the wheel-radius difference. The bar is level
+        // exactly when mountOffset == (rNewR - rNewF).
+        const float base = 0.35f;                      // attach a touch above each axle
+        const float topF = rNewF + base;
+        const float topR = rNewR + base - mountOffset;
+        const float mismatch = (rNewR - rNewF) - mountOffset; // 0 => level
 
-        m_FrontWheelWorld = { cxF, rF };
-        m_RearWheelWorld  = { cxR, rB };
+        m_FrontWheelWorld = { xF, rNewF };
+        m_RearWheelWorld  = { xR, rNewR };
         m_FrontWheelDia   = (float)m_Cfg.frontWheelInches;
         m_RearWheelDia    = (float)m_Cfg.rearWheelInches;
 
-        // Frame the stage: fit width + height with margin.
+        // Frame the full wheels + chassis (extra headroom for the verdict label).
+        const float yTop = std::max({ 2.0f * rMax, topF, topR }) + 0.8f;
+        const float yBot = -0.4f;
+        const float xMin = xR - rMax - 0.5f, xMax = xF + rMax + 0.5f;
+        const float cy = (yTop + yBot) * 0.5f;
+        const float halfH = (yTop - yBot) * 0.5f;
+        const float halfW = (xMax - xMin) * 0.5f;
+
         const glm::vec2 vp = Cosmic::Application::Get().GetViewportSize();
         const float aspect = (vp.y > 0.0f) ? vp.x / vp.y : (16.0f / 9.0f);
-        const float extentY = (yMotor + std::max(rpFm, rpRm) + 0.04f) * 0.5f;
-        const float extentX = (spacing + maxR + 0.05f);
-        const float zoom = std::max(extentY, extentX / std::max(aspect, 0.1f)) * 1.15f;
+        const float zoom = std::max(halfH, halfW / std::max(aspect, 0.1f)) * 1.08f;
         // Match the camera aspect to the ACTUAL viewport each frame, otherwise
-        // circles render as ellipses (the engine's resize events carry the whole
-        // window size, not this docked viewport's).
+        // circles render as ellipses (resize events carry the whole window size).
         if (vp.y > 0.0f) m_Camera.OnResize(vp.x, vp.y);
-        m_Camera.SetPosition({ 0.0f, extentY, 0.0f });
-        m_Camera.SetZoomLevel(std::max(zoom, 0.08f));
+        m_Camera.SetPosition({ 0.0f, cy, 0.0f });
+        m_Camera.SetZoomLevel(std::max(zoom, 0.5f));
 
         Cosmic::Renderer2D::BeginScene(m_Camera.GetCamera());
 
-        // Ground line (behind everything; wheels are open rings so it reads as
-        // one continuous line under the wheels).
-        const glm::vec4 ground = { 0.40f, 0.43f, 0.50f, 1.0f };
-        Cosmic::Renderer2D::DrawLine({ cxR - maxR - 0.06f, 0.0f, -0.05f },
-                                     { cxF + maxR + 0.06f, 0.0f, -0.05f }, ground);
+        const glm::vec4 frontCol = ToVec4(k_FrontCol);
+        const glm::vec4 rearCol  = ToVec4(k_RearCol);
 
-        auto drawAxle = [&](float cx, float rWheel, float rDriven, float rMotor,
-                            const ImVec4& colIm)
+        // Flat ground line.
+        Cosmic::Renderer2D::DrawLine({ xMin, 0.0f, -0.04f }, { xMax, 0.0f, -0.04f },
+                                     { 0.50f, 0.53f, 0.60f, 1.0f });
+
+        // --- Chassis: a bar between the two mount attach points (tilts with the
+        // mismatch). Green when level, orange when not. Drawn behind the wheels.
+        const bool  level = std::abs(mismatch) < 0.02f;
+        const glm::vec4 ccol = level ? glm::vec4(0.30f, 0.85f, 0.40f, 1.0f)
+                                     : glm::vec4(1.0f, 0.60f, 0.25f, 1.0f);
         {
-            const glm::vec4 col  = ToVec4(colIm);
-            const glm::vec4 dim  = { col.r * 0.55f, col.g * 0.55f, col.b * 0.55f, 1.0f };
-            const glm::vec4 belt = { 0.70f, 0.72f, 0.78f, 1.0f };
-            const glm::vec4 hub  = { 0.90f, 0.92f, 0.95f, 1.0f };
+            const glm::vec2 a = { xR, topR }, b = { xF, topF };
+            const glm::vec2 mid = (a + b) * 0.5f;
+            const glm::vec2 d = b - a;
+            const float ang = std::atan2(d.y, d.x);
+            const float len = glm::length(d);
+            Cosmic::Renderer2D::DrawRotatedQuad({ mid.x, mid.y, -0.03f }, { len, 0.28f }, ang,
+                                                { ccol.r, ccol.g, ccol.b, 0.85f });
+            // Faded horizontal reference so any tilt is obvious.
+            if (!level)
+                Cosmic::Renderer2D::DrawLine({ xR, topF, -0.02f }, { xF, topF, -0.02f },
+                                             { 0.7f, 0.7f, 0.72f, 0.35f });
+        }
+        // Mount struts (axle -> chassis attach point).
+        Cosmic::Renderer2D::DrawLine({ xF, rNewF, -0.02f }, { xF, topF, -0.02f }, { 0.55f, 0.58f, 0.66f, 1.0f });
+        Cosmic::Renderer2D::DrawLine({ xR, rNewR, -0.02f }, { xR, topR, -0.02f }, { 0.55f, 0.58f, 0.66f, 1.0f });
 
-            const glm::vec3 wheelC = { cx, rWheel, 0.0f };
-            const glm::vec3 motorC = { cx, yMotor, 0.0f };
+        auto wheelAt = [&](float cx, float rNew, float rBase, const glm::vec4& col)
+        {
+            // Baseline wheel — faded ring, also sitting on the ground.
+            if (hasBase)
+                Cosmic::Renderer2D::DrawCircle({ cx, rBase, 0.0f }, { 2 * rBase, 2 * rBase },
+                                               { col.r, col.g, col.b, 0.28f }, 0.03f, 0.004f);
 
-            // Tyre — open ring so the ground stays continuous behind it.
-            Cosmic::Renderer2D::DrawCircle(wheelC, { 2 * rWheel, 2 * rWheel }, col, 0.06f, 0.004f);
-
-            // Spokes (4), faint.
-            for (int i = 0; i < 4; ++i)
+            // Current wheel — bold tyre + spokes + hub.
+            const glm::vec3 c = { cx, rNew, 0.0f };
+            Cosmic::Renderer2D::DrawCircle(c, { 2 * rNew, 2 * rNew }, col, 0.11f, 0.004f);
+            for (int i = 0; i < 6; ++i)
             {
-                const float a = i * 1.5708f + 0.4f;
+                const float a = i * 1.0472f; // 60 deg
                 Cosmic::Renderer2D::DrawLine(
-                    { cx, rWheel, -0.01f },
-                    { cx + std::cos(a) * rWheel * 0.82f, rWheel + std::sin(a) * rWheel * 0.82f, -0.01f },
-                    dim);
+                    { cx, rNew, -0.005f },
+                    { cx + std::cos(a) * rNew * 0.86f, rNew + std::sin(a) * rNew * 0.86f, -0.005f },
+                    { col.r * 0.5f, col.g * 0.5f, col.b * 0.5f, 1.0f });
             }
+            Cosmic::Renderer2D::DrawCircle(c, { 0.20f, 0.20f }, { 0.92f, 0.94f, 0.97f, 1.0f }, 1.0f, 0.01f);
 
-            // Driven pulley ring on the axle + hub dot.
-            Cosmic::Renderer2D::DrawCircle(wheelC, { 2 * rDriven, 2 * rDriven }, col, 0.22f, 0.004f);
-            Cosmic::Renderer2D::DrawCircle(wheelC, { 0.010f, 0.010f }, hub, 1.0f, 0.01f);
-
-            // Motor body + motor pulley.
-            Cosmic::Renderer2D::DrawQuad({ cx, yMotor, -0.02f },
-                                         { rMotor * 1.2f, rMotor * 1.7f },
-                                         { 0.28f, 0.30f, 0.36f, 1.0f });
-            Cosmic::Renderer2D::DrawCircle(motorC, { 2 * rMotor, 2 * rMotor }, col, 0.22f, 0.004f);
-            Cosmic::Renderer2D::DrawCircle(motorC, { 0.010f, 0.010f }, hub, 1.0f, 0.01f);
-
-            // Belts (two strands between the pulley edges).
-            Cosmic::Renderer2D::DrawLine({ cx - rMotor, yMotor, -0.005f }, { cx - rDriven, rWheel, -0.005f }, belt);
-            Cosmic::Renderer2D::DrawLine({ cx + rMotor, yMotor, -0.005f }, { cx + rDriven, rWheel, -0.005f }, belt);
+            // Ground-contact dot.
+            Cosmic::Renderer2D::DrawCircle({ cx, 0.0f, 0.02f }, { 0.14f, 0.14f },
+                                           { 0.8f, 0.82f, 0.88f, 1.0f }, 1.0f, 0.01f);
         };
 
-        drawAxle(cxR, rB, rpRd, rpRm, k_RearCol);
-        drawAxle(cxF, rF, rpFd, rpFm, k_FrontCol);
+        wheelAt(xR, rNewR, rBaseR, rearCol);
+        wheelAt(xF, rNewF, rBaseF, frontCol);
 
         Cosmic::Renderer2D::EndScene();
     }
 
     // -------------------------------------------------------------------------
-    // Schematic labels — project the cached world anchors to screen and draw
-    // text with the ImGui foreground draw list (the renderer has no text).
+    // Schematic labels — project world anchors to screen and draw text with the
+    // ImGui foreground draw list (the renderer has no text primitive).
     // -------------------------------------------------------------------------
     void SF_DrivetrainCalcsApp::DrawSchematicLabels()
     {
@@ -1324,20 +1351,52 @@ namespace Workspace
         };
 
         ImDrawList* dl = ImGui::GetForegroundDrawList();
-        char buf[64];
+        char buf[80];
         ImVec2 p;
 
         if (worldToScreen(m_FrontWheelWorld, p))
         {
-            snprintf(buf, sizeof(buf), "Front  %.2f\"", m_FrontWheelDia);
-            dl->AddText(ImVec2(p.x - 22.0f, p.y - 8.0f),
-                        IM_COL32(255, 158, 51, 255), buf);
+            snprintf(buf, sizeof(buf), "Front  %.3f\"", m_FrontWheelDia);
+            dl->AddText(ImVec2(p.x + 8.0f, p.y - 16.0f), IM_COL32(255, 158, 51, 255), buf);
+            if (m_HasBaseline)
+            {
+                snprintf(buf, sizeof(buf), "base %.3f\"", m_Baseline.frontWheelInches);
+                dl->AddText(ImVec2(p.x + 8.0f, p.y + 2.0f), IM_COL32(255, 158, 51, 140), buf);
+            }
         }
         if (worldToScreen(m_RearWheelWorld, p))
         {
-            snprintf(buf, sizeof(buf), "Rear  %.2f\"", m_RearWheelDia);
-            dl->AddText(ImVec2(p.x - 22.0f, p.y - 8.0f),
-                        IM_COL32(77, 204, 217, 255), buf);
+            snprintf(buf, sizeof(buf), "Rear  %.3f\"", m_RearWheelDia);
+            dl->AddText(ImVec2(p.x - 96.0f, p.y - 16.0f), IM_COL32(77, 204, 217, 255), buf);
+            if (m_HasBaseline)
+            {
+                snprintf(buf, sizeof(buf), "base %.3f\"", m_Baseline.rearWheelInches);
+                dl->AddText(ImVec2(p.x - 96.0f, p.y + 2.0f), IM_COL32(77, 204, 217, 140), buf);
+            }
+        }
+
+        // Level / tilt verdict above the chassis. Level when the mount offset
+        // matches the wheel-radius difference.
+        const float rNewF = m_FrontWheelDia * 0.5f;
+        const float rNewR = m_RearWheelDia  * 0.5f;
+        const float mismatch = (rNewR - rNewF) - (float)m_Cfg.mountOffsetIn; // 0 => level
+        const glm::vec2 anchor = { 0.0f, std::max(m_FrontWheelDia, m_RearWheelDia) + 0.35f };
+        ImVec2 mp;
+        if (worldToScreen(anchor, mp))
+        {
+            if (std::abs(mismatch) < 0.02f)
+            {
+                snprintf(buf, sizeof(buf), "CHASSIS LEVEL  (mount offset %.3f\" = rear-front radius)",
+                         (float)m_Cfg.mountOffsetIn);
+                dl->AddText(ImVec2(mp.x - 150.0f, mp.y), IM_COL32(90, 240, 115, 255), buf);
+            }
+            else
+            {
+                snprintf(buf, sizeof(buf), "NOT LEVEL: %s end rides %.3f\" high  (need mount offset %.3f\")",
+                         mismatch > 0 ? "rear" : "front", std::abs(mismatch),
+                         rNewR - rNewF);
+                dl->AddText(ImVec2(mp.x - 160.0f, mp.y), IM_COL32(255, 150, 60, 255), buf);
+            }
         }
     }
 

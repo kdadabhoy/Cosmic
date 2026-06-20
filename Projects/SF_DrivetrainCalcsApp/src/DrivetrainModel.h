@@ -66,6 +66,12 @@ namespace Workspace
         double rearPulleyTeeth  = 28.0;
         double motorPulleyRear  = 30.0;
 
+        // Chassis geometry (does NOT affect the sim) — the rear axle mount sits
+        // this much higher than the front mount on the chassis. The robot is
+        // level when this offset equals (rearRadius - frontRadius); the default
+        // 0.5 in makes the stock 2.5 in / 3.5 in combo sit level.
+        double mountOffsetIn = 0.5;
+
         // Efficiency
         double speedFactor           = 0.85;
         double drivetrainEfficiency  = 0.80;
