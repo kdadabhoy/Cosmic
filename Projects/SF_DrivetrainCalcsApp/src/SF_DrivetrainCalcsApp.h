@@ -100,11 +100,8 @@ namespace Workspace
 
         // --- Lift planner ---
         double m_LiftTarget       = 0.5;   // target ground-clearance increase (always stored in inches)
-        bool   m_LiftIncludeMotor = false; // also offer motor-pulley swaps (changes speed more)
+        bool   m_LiftIncludeMotor = true;  // also offer motor-pulley swaps (changes speed more)
         bool   m_LiftUnitMM       = false; // input/display the lift target in mm instead of inches
-
-        // Dock node of "Project Inspector Top" — every other panel tabs into it.
-        unsigned int m_LeftDockId = 0;
 
         // CSV export
         char        m_ExportName[96] = "drivetrain_run";

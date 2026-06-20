@@ -61,6 +61,12 @@ namespace Workspace
 
         Recompute();
 
+        // Snapshot the loaded config as the baseline so Results highlights any
+        // changes from the moment the app starts.
+        m_Baseline    = m_Cfg;
+        m_BaselineSim = m_Sim;
+        m_HasBaseline = true;
+
         CS_INFO("SF_DrivetrainCalcsApp: OnAttach complete.");
     }
 
@@ -95,20 +101,16 @@ namespace Workspace
         if (m_AutoRun && m_Dirty)
             Recompute();
 
-        // Inspector first: it lives in the engine's left "Project Inspector Top"
-        // slot, so after drawing it we know that dock node and can tab every
-        // other panel into it (FirstUseEver = the user can drag them out later).
-        DrawInspectorTop();
-
-        // Every panel starts tabbed into the engine's left "Project Inspector
-        // Top" node, but only loosely (FirstUseEver) — drag any of them out to
-        // float or re-dock wherever you like; the layout then persists.
-        auto dockLeft = [&]() { if (m_LeftDockId) ImGui::SetNextWindowDockID(m_LeftDockId, ImGuiCond_FirstUseEver); };
-
-        dockLeft(); DrawInputsWindow();
-        dockLeft(); DrawResultsWindow();
-        dockLeft(); DrawPlotsWindow();
-        dockLeft(); DrawExplorersWindow();
+        // The three compact panels are named after the engine's left dock slots
+        // ("Project Inspector Top/Mid/Bottom"). The WorkspaceLayer's DockBuilder
+        // re-docks those exact names into the left column on every launch, so the
+        // layout is stable across restarts (no fragile saved node-ids that scatter
+        // the tabs). Curves + Explorers are free-floating pop-outs.
+        DrawInspectorTop();   // "Project Inspector Top"
+        DrawInputsWindow();   // "Project Inspector Mid"
+        DrawResultsWindow();  // "Project Inspector Bottom"
+        DrawPlotsWindow();
+        DrawExplorersWindow();
 
         DrawSchematicLabels();
     }
@@ -119,9 +121,6 @@ namespace Workspace
     void SF_DrivetrainCalcsApp::DrawInspectorTop()
     {
         ImGui::Begin("Project Inspector Top");
-
-        // Remember the engine's left dock node so the other panels can tab in.
-        m_LeftDockId = ImGui::GetWindowDockID();
 
         ImGui::TextColored(k_AccentCol, "Shear Force  |  Drivetrain Calculator");
         ImGui::TextDisabled("Rapid wheel / pulley / battery prototyping");
@@ -214,7 +213,9 @@ namespace Workspace
     // -------------------------------------------------------------------------
     void SF_DrivetrainCalcsApp::DrawInputsWindow()
     {
-        ImGui::Begin("Drivetrain Inputs");
+        ImGui::Begin("Project Inspector Mid");
+        ImGui::TextColored(k_AccentCol, "Drivetrain Inputs");
+        ImGui::Separator();
 
         bool changed = false;
         const float w = 130.0f;
@@ -339,6 +340,9 @@ namespace Workspace
     // -------------------------------------------------------------------------
     void SF_DrivetrainCalcsApp::DrawPlotsWindow()
     {
+        const ImGuiViewport* mv = ImGui::GetMainViewport();
+        ImGui::SetNextWindowSize(ImVec2(700.0f, 760.0f), ImGuiCond_FirstUseEver);
+        ImGui::SetNextWindowPos(ImVec2(mv->WorkPos.x + mv->WorkSize.x * 0.30f, mv->WorkPos.y + 60.0f), ImGuiCond_FirstUseEver);
         ImGui::Begin("Performance Curves");
 
         if (!m_Sim.valid)
@@ -375,7 +379,9 @@ namespace Workspace
     // -------------------------------------------------------------------------
     void SF_DrivetrainCalcsApp::DrawResultsWindow()
     {
-        ImGui::Begin("Results & Export");
+        ImGui::Begin("Project Inspector Bottom");
+        ImGui::TextColored(k_AccentCol, "Results & Export");
+        ImGui::Separator();
 
         if (!m_Sim.valid)
         {
@@ -548,6 +554,9 @@ namespace Workspace
 
     void SF_DrivetrainCalcsApp::DrawExplorersWindow()
     {
+        const ImGuiViewport* mv = ImGui::GetMainViewport();
+        ImGui::SetNextWindowSize(ImVec2(660.0f, 540.0f), ImGuiCond_FirstUseEver);
+        ImGui::SetNextWindowPos(ImVec2(mv->WorkPos.x + mv->WorkSize.x - 690.0f, mv->WorkPos.y + 60.0f), ImGuiCond_FirstUseEver);
         ImGui::Begin("Drivetrain Explorers");
 
         if (!m_Sim.valid)
