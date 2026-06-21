@@ -3,6 +3,7 @@
 // ESP32 / dual-ESC drive telemetry — see Shear_Force_TelemApp.h for overview.
 
 #include "Shear_Force_TelemApp.h"
+#include "layers/WorkspaceLayer.h"   // dock-port registration (DockWindow)
 
 #include <imgui.h>
 #include <implot.h>
@@ -101,6 +102,15 @@ namespace Workspace
         m_Log.reserve(1 << 16);
         m_RxAccumulator.reserve(1 << 12);
         m_LastMode = m_Panel.GetMode();
+
+        // Dock panels into the engine's predefined ports (user can still drag).
+        if (auto* ws = Cosmic::Application::Get().GetWorkspaceLayer())
+        {
+            ws->DockWindow("Project Inspector Top",  Cosmic::DockPort::LeftTop);
+            ws->DockWindow("Serial Link",            Cosmic::DockPort::LeftBottom);
+            ws->DockWindow("Drive Dashboard",        Cosmic::DockPort::RightTop);
+            ws->DockWindow("Telemetry (drill-down)", Cosmic::DockPort::BottomCenter);
+        }
 
         CS_INFO("Shear_Force_TelemApp: OnAttach complete.");
     }

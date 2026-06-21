@@ -162,7 +162,11 @@ namespace Cosmic
 		if (!m_DockspaceInitialized)
 		{
 			m_DockspaceInitialized = true;
-			BuildDockspace(dockspace_id, viewport);
+			if (m_ApplyCodedLayoutOnLoad)
+				BuildDockspace(dockspace_id, viewport);
+			// else (future): leave the layout restored from imgui.ini untouched so
+			// the user's last arrangement persists. Not wired yet — default path
+			// always re-applies the client-coded layout.
 		}
 
 		ImGui::End(); // ##CosmicWorkspace
@@ -293,73 +297,131 @@ namespace Cosmic
 	// DockBuilder — called once per layout initialization
 	// =============================================================================
 
+	// File-local: split `node` into `count` near-equal sub-nodes along `dir`
+	// (ImGuiDir_Up for vertical columns -> sections stack top..bottom;
+	//  ImGuiDir_Left for horizontal rows -> sections run left..right).
+	// Returns the sub-node ids in visual order. count <= 1 returns {node}.
+	static std::vector<ImGuiID> SplitIntoSections(ImGuiID node, int count, ImGuiDir dir)
+	{
+		std::vector<ImGuiID> out;
+		if (count <= 1) { out.push_back(node); return out; }
+
+		ImGuiID remaining = node;
+		for (int i = 0; i < count - 1; ++i)
+		{
+			// 1st cut gives 1/count to the leading piece, then 1/(count-1), ...
+			const float ratio = 1.0f / static_cast<float>(count - i);
+			ImGuiID piece = ImGui::DockBuilderSplitNode(remaining, dir, ratio, nullptr, &remaining);
+			out.push_back(piece);
+		}
+		out.push_back(remaining);
+		return out;
+	}
+
 	void WorkspaceLayer::BuildDockspace(ImGuiID dockspaceId, const ImGuiViewport* viewport)
 	{
 		ImGui::DockBuilderRemoveNode(dockspaceId);
 		ImGui::DockBuilderAddNode(dockspaceId, ImGuiDockNodeFlags_DockSpace);
 		ImGui::DockBuilderSetNodeSize(dockspaceId, viewport->Size);
 
-		// Split: LEFT panel (Project Inspector Region) | MAIN (Viewport)
-		ImGuiID dock_main;
-		ImGuiID dock_left = ImGui::DockBuilderSplitNode(
-			dockspaceId, ImGuiDir_Left, 0.22f, nullptr, &dock_main);
+		// =====================================================================
+		// LEGACY MODE — no DockWindow() bindings registered.
+		// Reproduce the original fixed 3-tier left sidebar so existing projects
+		// that simply Begin("Project Inspector Top/Mid/Bottom") look identical.
+		// =====================================================================
+		if (m_DockBindings.empty())
+		{
+			ImGuiID dock_main;
+			ImGuiID dock_left = ImGui::DockBuilderSplitNode(dockspaceId, ImGuiDir_Left, 0.22f, nullptr, &dock_main);
 
-		// -----------------------------------------------------------------------
-		// ARCHITECTURAL UPDATE: Vertical Sidebar Slicing
-		// We slice the 22% left sidebar region into 3 generic vertical slots.
-		// -----------------------------------------------------------------------
+			ImGuiID dock_left_top_mid;
+			ImGuiID dock_left_bottom = ImGui::DockBuilderSplitNode(dock_left, ImGuiDir_Down, 0.33f, nullptr, &dock_left_top_mid);
+			ImGuiID dock_left_top;
+			ImGuiID dock_left_mid = ImGui::DockBuilderSplitNode(dock_left_top_mid, ImGuiDir_Down, 0.50f, nullptr, &dock_left_top);
 
-		// 1. Cut off the bottom 33% of the left sidebar
-		ImGuiID dock_left_top_mid;
-		ImGuiID dock_left_bottom = ImGui::DockBuilderSplitNode(
-			dock_left, ImGuiDir_Down, 0.33f, nullptr, &dock_left_top_mid);
+			ImGui::DockBuilderDockWindow("Project Inspector Top",    dock_left_top);
+			ImGui::DockBuilderDockWindow("Project Inspector Mid",    dock_left_mid);
+			ImGui::DockBuilderDockWindow("Project Inspector Bottom", dock_left_bottom);
+			ImGui::DockBuilderDockWindow("Viewport", dock_main);
 
-		// 2. Split the remaining upper sidebar space right down the middle (50%)
-		ImGuiID dock_left_top;
-		ImGuiID dock_left_mid = ImGui::DockBuilderSplitNode(
-			dock_left_top_mid, ImGuiDir_Down, 0.50f, nullptr, &dock_left_top);
+			ImGuiID dock_remaining = dock_main;
+			for (const auto& req : m_PendingPanelRequests)
+			{
+				if (req.WindowName == "Project Inspector Top")    { ImGui::DockBuilderDockWindow(req.WindowName.c_str(), dock_left_top);    continue; }
+				if (req.WindowName == "Project Inspector Mid")    { ImGui::DockBuilderDockWindow(req.WindowName.c_str(), dock_left_mid);    continue; }
+				if (req.WindowName == "Project Inspector Bottom") { ImGui::DockBuilderDockWindow(req.WindowName.c_str(), dock_left_bottom); continue; }
 
-		// 3. Bind the structural layout slots to generic Engine Window IDs.
-		// Clients can target these exact strings if they want a raw window to mount here,
-		// or use RequestExtraDockedPanel to route custom-named windows to them.
-		ImGui::DockBuilderDockWindow("Project Inspector Top", dock_left_top);
-		ImGui::DockBuilderDockWindow("Project Inspector Mid", dock_left_mid);
-		ImGui::DockBuilderDockWindow("Project Inspector Bottom", dock_left_bottom);
+				ImGuiID dock_new;
+				dock_remaining = ImGui::DockBuilderSplitNode(dock_remaining, req.SplitDir, req.SplitRatio, &dock_new, &dock_remaining);
+				ImGui::DockBuilderDockWindow(req.WindowName.c_str(), dock_new);
+			}
 
-		// Bind the core central viewport window
+			ImGui::DockBuilderFinish(dockspaceId);
+			CS_CORE_INFO("WorkspaceLayer: Dockspace built (legacy 3-tier left sidebar).");
+			return;
+		}
+
+		// =====================================================================
+		// PORT MODE — build ONLY the edges/sections that have bound windows, so
+		// unused ports take no space. Multiple windows per port become tabs.
+		// =====================================================================
+		std::vector<std::string> portWindows[static_cast<int>(DockPort::Center) + 1];
+		for (const auto& b : m_DockBindings)
+			portWindows[static_cast<int>(b.Port)].push_back(b.WindowName);
+
+		auto used   = [&](DockPort p) { return !portWindows[static_cast<int>(p)].empty(); };
+		auto anyOf  = [&](DockPort a, DockPort b, DockPort c) { return used(a) || used(b) || used(c); };
+		auto dockAll = [&](const std::vector<std::string>& names, ImGuiID node)
+		{
+			for (const auto& n : names) ImGui::DockBuilderDockWindow(n.c_str(), node);
+		};
+
+		const bool useLeft   = anyOf(DockPort::LeftTop,    DockPort::LeftMiddle,   DockPort::LeftBottom);
+		const bool useRight  = anyOf(DockPort::RightTop,   DockPort::RightMiddle,  DockPort::RightBottom);
+		const bool useTop    = anyOf(DockPort::TopLeft,    DockPort::TopCenter,    DockPort::TopRight);
+		const bool useBottom = anyOf(DockPort::BottomLeft, DockPort::BottomCenter, DockPort::BottomRight);
+
+		// Full-height side columns first, then top/bottom rows span the central band.
+		ImGuiID dock_main = dockspaceId;
+		ImGuiID dock_left = 0, dock_right = 0, dock_top = 0, dock_bottom = 0;
+		if (useLeft)   dock_left   = ImGui::DockBuilderSplitNode(dock_main, ImGuiDir_Left,  m_LeftRatio,   nullptr, &dock_main);
+		if (useRight)  dock_right  = ImGui::DockBuilderSplitNode(dock_main, ImGuiDir_Right, m_RightRatio,  nullptr, &dock_main);
+		if (useTop)    dock_top    = ImGui::DockBuilderSplitNode(dock_main, ImGuiDir_Up,    m_TopRatio,    nullptr, &dock_main);
+		if (useBottom) dock_bottom = ImGui::DockBuilderSplitNode(dock_main, ImGuiDir_Down,  m_BottomRatio, nullptr, &dock_main);
+
+		// Central viewport (+ any windows explicitly bound to Center -> tabbed with it).
 		ImGui::DockBuilderDockWindow("Viewport", dock_main);
+		dockAll(portWindows[static_cast<int>(DockPort::Center)], dock_main);
 
-		// Process any extra panel requests the client submitted before this frame
-		// (This allows clients to dynamically map custom names into the layout nodes)
+		// Carve an edge node into its used sections and dock each section's windows.
+		auto buildEdge = [&](ImGuiID edgeNode, DockPort s0, DockPort s1, DockPort s2, ImGuiDir dir)
+		{
+			DockPort secs[3] = { s0, s1, s2 };
+			std::vector<int> usedIdx;
+			for (int i = 0; i < 3; ++i) if (used(secs[i])) usedIdx.push_back(i);
+
+			std::vector<ImGuiID> nodes = SplitIntoSections(edgeNode, static_cast<int>(usedIdx.size()), dir);
+			for (size_t k = 0; k < usedIdx.size(); ++k)
+				dockAll(portWindows[static_cast<int>(secs[usedIdx[k]])], nodes[k]);
+		};
+
+		if (useLeft)   buildEdge(dock_left,   DockPort::LeftTop,    DockPort::LeftMiddle,   DockPort::LeftBottom,   ImGuiDir_Up);
+		if (useRight)  buildEdge(dock_right,  DockPort::RightTop,   DockPort::RightMiddle,  DockPort::RightBottom,  ImGuiDir_Up);
+		if (useTop)    buildEdge(dock_top,    DockPort::TopLeft,    DockPort::TopCenter,    DockPort::TopRight,     ImGuiDir_Left);
+		if (useBottom) buildEdge(dock_bottom, DockPort::BottomLeft, DockPort::BottomCenter, DockPort::BottomRight,  ImGuiDir_Left);
+
+		// Escape-hatch custom split requests (RequestExtraDockedPanel), off center.
 		ImGuiID dock_remaining = dock_main;
 		for (const auto& req : m_PendingPanelRequests)
 		{
 			ImGuiID dock_new;
-
-			// INTERCEPTOR HELPER: If the client explicitly requests to dock relative to the 
-			// sidebar instead of the central viewport area, we redirect the builder node target.
-			ImGuiID target_node = dock_remaining;
-			if (req.WindowName == "Project Inspector Top") { ImGui::DockBuilderDockWindow(req.WindowName.c_str(), dock_left_top);    continue; }
-			if (req.WindowName == "Project Inspector Mid") { ImGui::DockBuilderDockWindow(req.WindowName.c_str(), dock_left_mid);    continue; }
-			if (req.WindowName == "Project Inspector Bottom") { ImGui::DockBuilderDockWindow(req.WindowName.c_str(), dock_left_bottom); continue; }
-
-			// Default path: Split cleanly out of the remaining viewport space
-			dock_remaining = ImGui::DockBuilderSplitNode(
-				target_node, req.SplitDir, req.SplitRatio, &dock_new, &dock_remaining);
+			dock_remaining = ImGui::DockBuilderSplitNode(dock_remaining, req.SplitDir, req.SplitRatio, &dock_new, &dock_remaining);
 			ImGui::DockBuilderDockWindow(req.WindowName.c_str(), dock_new);
-
-			CS_CORE_INFO("WorkspaceLayer: Pre-docked panel '{}' ({} split, ratio {:.2f})",
-				req.WindowName,
-				req.SplitDir == ImGuiDir_Left ? "Left" :
-				req.SplitDir == ImGuiDir_Right ? "Right" :
-				req.SplitDir == ImGuiDir_Up ? "Up" : "Down",
-				req.SplitRatio);
 		}
-		// Don't clear m_PendingPanelRequests — keep them so a layout reset re-applies them
 
 		ImGui::DockBuilderFinish(dockspaceId);
-
-		CS_CORE_INFO("WorkspaceLayer: Dockspace layout built. Generic 3-tier Sidebar Left (22%), Viewport main.");
+		CS_CORE_INFO("WorkspaceLayer: Dockspace built (port mode L={} R={} T={} B={}).",
+			useLeft, useRight, useTop, useBottom);
 	}
 
 	// =============================================================================

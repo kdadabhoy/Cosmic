@@ -3,6 +3,7 @@
 // ESP32 / single weapon-motor ESC telemetry — see SF_Telem_Weapon.h for overview.
 
 #include "SF_Telem_Weapon.h"
+#include "layers/WorkspaceLayer.h"   // dock-port registration (DockWindow)
 
 #include <imgui.h>
 #include <implot.h>
@@ -92,6 +93,17 @@ namespace Workspace
         m_Log.reserve(1 << 16);
         m_RxAccumulator.reserve(1 << 12);
         m_LastMode = m_Panel.GetMode();
+
+        // Dock panels into the engine's predefined ports. Unused ports take no
+        // space; Dashboard + Model share RightTop as tabs. User can still drag.
+        if (auto* ws = Cosmic::Application::Get().GetWorkspaceLayer())
+        {
+            ws->DockWindow("Project Inspector Top",    Cosmic::DockPort::LeftTop);
+            ws->DockWindow("Serial Link",              Cosmic::DockPort::LeftBottom);
+            ws->DockWindow("Weapon Dashboard",         Cosmic::DockPort::RightTop);
+            ws->DockWindow("Weapon Model (Predicted)", Cosmic::DockPort::RightTop);    // tab
+            ws->DockWindow("Telemetry (drill-down)",   Cosmic::DockPort::BottomCenter);
+        }
 
         CS_INFO("SF_Telem_Weapon: OnAttach complete.");
     }

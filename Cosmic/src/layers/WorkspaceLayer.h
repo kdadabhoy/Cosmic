@@ -32,6 +32,20 @@
  * drag and dock it wherever they want. To *programmatically* request a second
  * pre-docked slot, call WorkspaceLayer::RequestExtraDockedPanel() from OnAttach
  * (see below).
+ *
+ * Dock Ports (preferred)
+ * ----------------------
+ * The engine exposes a fixed set of 12 docking ports (4 edges x 3 sections) via
+ * the DockPort enum. Bind your windows to ports in OnAttach:
+ *
+ *   auto* ws = Cosmic::Application::Get().GetWorkspaceLayer();
+ *   ws->DockWindow("Serial Link",      Cosmic::DockPort::LeftTop);
+ *   ws->DockWindow("Dashboard",        Cosmic::DockPort::RightTop);
+ *   ws->DockWindow("Model",            Cosmic::DockPort::RightTop);   // same port -> tab
+ *   ws->DockWindow("Telemetry",        Cosmic::DockPort::BottomCenter);
+ *
+ * Only ports that receive a window are carved out (unused ports take no space);
+ * multiple windows on one port become tabs. See DockWindow() / DockPort below.
  */
 
 #include "Cosmic.h"
@@ -42,9 +56,38 @@
 namespace Cosmic
 {
     // ---------------------------------------------------------------------------
+    // DockPort — the fixed set of pre-defined docking slots the engine offers.
+    // Four optional edges, each divided into three sections, plus the central
+    // Viewport. A client binds a window to a port with WorkspaceLayer::DockWindow().
+    //
+    //   * Only edges/sections that actually receive a window are carved out, so
+    //     unused ports take ZERO space (no empty panels).
+    //   * Binding multiple windows to the SAME port makes them tabs.
+    //   * The set is fixed, so clients use these from the engine header without
+    //     ever recompiling the engine. For an arbitrary position not covered
+    //     here, fall back to RequestExtraDockedPanel().
+    // ---------------------------------------------------------------------------
+    enum class DockPort
+    {
+        LeftTop,    LeftMiddle,    LeftBottom,     // left edge,  stacked top -> bottom
+        RightTop,   RightMiddle,   RightBottom,    // right edge, stacked top -> bottom
+        TopLeft,    TopCenter,     TopRight,       // top edge,   left -> right
+        BottomLeft, BottomCenter,  BottomRight,    // bottom edge, left -> right
+        Center                                     // tabbed with the central Viewport
+    };
+
+    // One window-to-port binding registered by a client layer.
+    struct DockBinding
+    {
+        std::string WindowName; // must match the client's ImGui::Begin("...")
+        DockPort    Port = DockPort::LeftTop;
+    };
+
+    // ---------------------------------------------------------------------------
     // Describes one extra panel slot to be pre-docked in the DockBuilder pass.
     // Client layers fill this in OnAttach and push to WorkspaceLayer via
-    // RequestExtraDockedPanel() before the first ImGui frame.
+    // RequestExtraDockedPanel() before the first ImGui frame. (Escape hatch for
+    // arbitrary split positions not covered by the fixed DockPort set.)
     // ---------------------------------------------------------------------------
     struct DockedPanelRequest
     {
@@ -99,6 +142,53 @@ namespace Cosmic
         }
 
         // -----------------------------------------------------------------------
+        // Dock a client window into one of the engine's pre-defined ports.
+        //
+        // Call from your root layer's OnAttach(), before the first ImGui frame:
+        //
+        //   auto* ws = Cosmic::Application::Get().GetWorkspaceLayer();
+        //   ws->DockWindow("Serial Link",      Cosmic::DockPort::LeftTop);
+        //   ws->DockWindow("Weapon Dashboard", Cosmic::DockPort::RightTop);
+        //   ws->DockWindow("Weapon Model",     Cosmic::DockPort::RightTop); // -> tab
+        //
+        // The WindowName must match your ImGui::Begin("..."). Multiple windows on
+        // the same port become tabs. Ports with no windows are never created.
+        //
+        // Inline on purpose: WorkspaceLayer is not COSMIC_API-exported, so this
+        // compiles into the client DLL (same pattern as RequestExtraDockedPanel).
+        // -----------------------------------------------------------------------
+        void DockWindow(const std::string& windowName, DockPort port)
+        {
+            for (auto& b : m_DockBindings)
+                if (b.WindowName == windowName) { b.Port = port; m_DockspaceInitialized = false; return; }
+            m_DockBindings.push_back({ windowName, port });
+            m_DockspaceInitialized = false; // trigger a DockBuilder rebuild
+        }
+
+        // Drop all port bindings (e.g. before re-registering for a new project).
+        void ClearDockWindows()
+        {
+            m_DockBindings.clear();
+            m_DockspaceInitialized = false;
+        }
+
+        // Per-edge size as a fraction of the dockspace. Optional; sane defaults
+        // are used otherwise. Re-runs the builder next frame.
+        void SetEdgeRatios(float left, float right, float top, float bottom)
+        {
+            m_LeftRatio = left; m_RightRatio = right; m_TopRatio = top; m_BottomRatio = bottom;
+            m_DockspaceInitialized = false;
+        }
+
+        // Layout-persistence policy.
+        //   true  (default): re-apply the client-coded layout on EVERY load.
+        //   false (future) : restore the user's last arrangement from imgui.ini.
+        // Only the coded-layout path is wired today; the flag is the hook for the
+        // future "remember my layout" toggle.
+        void SetApplyCodedLayoutOnLoad(bool enable) { m_ApplyCodedLayoutOnLoad = enable; }
+        bool GetApplyCodedLayoutOnLoad() const { return m_ApplyCodedLayoutOnLoad; }
+
+        // -----------------------------------------------------------------------
         // Viewport bounds — pixel coords matching glfwGetCursorPos space.
         // ViewportPos is the top-left of the rendered image content (below title bar).
         // -----------------------------------------------------------------------
@@ -148,5 +238,17 @@ namespace Cosmic
 
         // Extra panel requests accumulated before the first DockBuilder run
         std::vector<DockedPanelRequest> m_PendingPanelRequests;
+
+        // Window -> port bindings registered via DockWindow() (new dock-port API)
+        std::vector<DockBinding> m_DockBindings;
+
+        // Per-edge layout ratios (fraction of the dockspace) — tunable via SetEdgeRatios.
+        float m_LeftRatio   = 0.20f;
+        float m_RightRatio  = 0.20f;
+        float m_TopRatio    = 0.18f;
+        float m_BottomRatio = 0.22f;
+
+        // Layout-persistence policy (see SetApplyCodedLayoutOnLoad).
+        bool m_ApplyCodedLayoutOnLoad = true;
     };
 }

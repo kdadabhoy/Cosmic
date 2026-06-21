@@ -4,6 +4,7 @@
 // overview; all physics lives in DrivetrainModel.h.
 
 #include "SF_DrivetrainCalcsApp.h"
+#include "layers/WorkspaceLayer.h"   // dock-port registration (DockWindow)
 
 #include <imgui.h>
 #include <implot.h>
@@ -66,6 +67,17 @@ namespace Workspace
         m_Baseline    = m_Cfg;
         m_BaselineSim = m_Sim;
         m_HasBaseline = true;
+
+        // Dock panels into the engine's predefined ports: the three inspector
+        // tiers down the left, plots on the right, explorers along the bottom.
+        if (auto* ws = Cosmic::Application::Get().GetWorkspaceLayer())
+        {
+            ws->DockWindow("Project Inspector Top",    Cosmic::DockPort::LeftTop);
+            ws->DockWindow("Project Inspector Mid",    Cosmic::DockPort::LeftMiddle);
+            ws->DockWindow("Project Inspector Bottom", Cosmic::DockPort::LeftBottom);
+            ws->DockWindow("Performance Curves",       Cosmic::DockPort::RightTop);
+            ws->DockWindow("Drivetrain Explorers",     Cosmic::DockPort::BottomCenter);
+        }
 
         CS_INFO("SF_DrivetrainCalcsApp: OnAttach complete.");
     }
