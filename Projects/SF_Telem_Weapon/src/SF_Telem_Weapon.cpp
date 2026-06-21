@@ -14,7 +14,8 @@ namespace Workspace
 {
     namespace
     {
-        const ImVec4 k_WeaponColor = { 1.00f, 0.55f, 0.20f, 1.0f }; // amber = weapon
+        const ImVec4 k_WeaponColor = { 1.00f, 0.55f, 0.20f, 1.0f }; // amber = weapon (measured)
+        const ImVec4 k_PredColor   = { 0.30f, 1.00f, 0.45f, 1.0f }; // green = predicted
     }
 
     // =========================================================================
@@ -112,6 +113,31 @@ namespace Workspace
         return !m_HasData || (m_AppClock - m_LastSeen) > k_StaleTimeout;
     }
 
+    // Tip radius (m) derived from the live decode weapon diameter (inches), so
+    // the predictive model and the telemetry tip-speed share one geometry.
+    float SF_Telem_Weapon::TipRadiusM() const
+    {
+        return (m_Config.WeaponDiameterIn * 0.0254f) * 0.5f;
+    }
+
+    // Voltage the prediction runs on: the live measured pack voltage when the
+    // toggle is on and a fresh packet is in, otherwise the manual input.
+    float SF_Telem_Weapon::ModelEffectiveVoltage() const
+    {
+        if (m_ModelUseLiveVoltage && m_HasData && !WeaponStale() && m_Sample.voltageV > 1.0f)
+            return m_Sample.voltageV;
+        return m_Model.BatteryVoltage;
+    }
+
+    void SF_Telem_Weapon::RecomputeModel()
+    {
+        WeaponModelConfig cfg = m_Model;
+        cfg.BatteryVoltage = ModelEffectiveVoltage();
+        m_ModelLastVoltage = cfg.BatteryVoltage;
+        m_ModelResult = SimulateWeaponModel(cfg, m_Config.GearRatio, TipRadiusM());
+        m_ModelDirty  = false;
+    }
+
     // =========================================================================
     // OnUpdate
     // =========================================================================
@@ -119,6 +145,14 @@ namespace Workspace
     {
         m_AppClock += std::abs(ts);
         m_Camera.OnUpdate(ts);
+
+        // When driving the prediction off live voltage, recompute as the pack
+        // voltage drifts (or when it goes stale and reverts to the manual value).
+        if (m_ModelUseLiveVoltage &&
+            std::abs(ModelEffectiveVoltage() - m_ModelLastVoltage) > 0.05f)
+            m_ModelDirty = true;
+
+        if (m_ModelDirty) RecomputeModel();
 
         const bool flushing = m_Recorder.IsFlushing();
         if (m_WasFlushing && !flushing) m_RecordStatus = "Export complete.";
@@ -229,6 +263,7 @@ namespace Workspace
         DrawControlsWindow();
         DrawSerialWindow();
         DrawDashboardWindow();
+        DrawModelWindow();
         DrawTelemetryWindow();
     }
 
@@ -317,8 +352,10 @@ namespace Workspace
         ImGui::SeparatorText("Decode Constants");
         ImGui::SetNextItemWidth(110.0f); ImGui::InputInt("Motor pole pairs", &m_Config.PolePairs);
         if (m_Config.PolePairs < 1) m_Config.PolePairs = 1;
-        ImGui::SetNextItemWidth(110.0f); ImGui::InputFloat("Gear ratio (1=direct)", &m_Config.GearRatio, 0,0,"%.2f");
-        ImGui::SetNextItemWidth(110.0f); ImGui::InputFloat("Weapon dia (in)", &m_Config.WeaponDiameterIn, 0,0,"%.2f");
+        ImGui::SetNextItemWidth(110.0f);
+        if (ImGui::InputFloat("Gear ratio (1=direct)", &m_Config.GearRatio, 0,0,"%.2f")) m_ModelDirty = true;
+        ImGui::SetNextItemWidth(110.0f);
+        if (ImGui::InputFloat("Weapon dia (in)", &m_Config.WeaponDiameterIn, 0,0,"%.2f")) m_ModelDirty = true;
         ImGui::SetNextItemWidth(110.0f); ImGui::InputFloat("Volt scale", &m_Config.VoltageScale, 0,0,"%.4f");
         ImGui::SetNextItemWidth(110.0f); ImGui::InputFloat("Curr scale", &m_Config.CurrentScale, 0,0,"%.4f");
         ImGui::TextDisabled("Tip speed = WeaponRPM * pi * dia / 1056  (mph)");
@@ -439,8 +476,21 @@ namespace Workspace
                                m_Sample.weaponRPM, m_Sample.currentA, m_Sample.tipSpeedMph);
         }
 
+        // ---- Predicted vs measured headline ----
+        if (m_ModelResult.MaxTipSpeedMph > 0.0f)
+        {
+            ImGui::TextColored(k_PredColor, "Predicted max: %.1f mph tip   %.0f rpm",
+                               m_ModelResult.MaxTipSpeedMph, m_ModelResult.MaxWeaponRPM);
+            if (!replay && !WeaponStale())
+            {
+                const float pct = 100.0f * m_Sample.tipSpeedMph / m_ModelResult.MaxTipSpeedMph;
+                ImGui::SameLine();
+                ImGui::Text("  |  live = %.0f%% of predicted", pct);
+            }
+        }
+
         ImGui::Spacing();
-        ImGui::SeparatorText("Channels");
+        ImGui::SeparatorText("Channels  (green = predicted max)");
 
         const auto names = WeaponChannelNames();
 
@@ -455,6 +505,11 @@ namespace Workspace
 
         for (int c = 0; c < WPN_CH_COUNT; ++c)
         {
+            // Predicted steady-state reference for the channels the model covers.
+            float predMax = 0.0f;
+            if      (c == WPN_CH_TIP_SPEED)  predMax = m_ModelResult.MaxTipSpeedMph;
+            else if (c == WPN_CH_WEAPON_RPM) predMax = m_ModelResult.MaxWeaponRPM;
+
             // Y range for this channel.
             float yMin = FLT_MAX, yMax = -FLT_MAX;
             for (int i = 0; i < m_Ring.count; ++i)
@@ -465,6 +520,7 @@ namespace Workspace
             }
             if (yMin > yMax)       { yMin = 0.0f; yMax = 1.0f; }
             else if (yMin == yMax) { yMin -= 0.5f; yMax += 0.5f; }
+            if (predMax > 0.0f) { yMin = std::min(yMin, 0.0f); yMax = std::max(yMax, predMax); }
             const float pad = (yMax - yMin) * 0.1f;
 
             ImPlot::SetNextAxisLimits(ImAxis_X1, xMin, xMax, ImPlotCond_Always);
@@ -479,6 +535,103 @@ namespace Workspace
                     ImPlot::PlotLine(names[c].c_str(), m_Ring.times.data(),
                                      m_Ring.ch[c].data(), m_Ring.count, spec);
                 }
+                // Predicted steady-state line (flat reference across the window).
+                if (predMax > 0.0f)
+                {
+                    const float px[2] = { xMin, xMax };
+                    const float py[2] = { predMax, predMax };
+                    ImPlotSpec ps; ps.LineColor = k_PredColor;
+                    ImPlot::PlotLine("Predicted max", px, py, 2, ps);
+                }
+                ImPlot::EndPlot();
+            }
+        }
+
+        ImGui::End();
+    }
+
+    // -------------------------------------------------------------------------
+    // Weapon Model — predictive spin-up (ported "Weapon Speed Analysis" sheet):
+    // editable inputs, derived parameters, headline KPIs, and the spin-up curve.
+    // Reduction + tip diameter are shared with the live Decode Constants.
+    // -------------------------------------------------------------------------
+    void SF_Telem_Weapon::DrawModelWindow()
+    {
+        ImGui::Begin("Weapon Model (Predicted)");
+
+        ImGui::TextColored(k_PredColor, "Full-throttle spin-up prediction");
+        ImGui::SameLine(); ImGui::TextDisabled("(motor torque vs aero drag)");
+        ImGui::Separator();
+
+        ImGui::SeparatorText("Inputs");
+        bool d = false;
+
+        // Battery voltage: live measured (default) or a fixed manual value.
+        if (ImGui::Checkbox("Use live battery voltage", &m_ModelUseLiveVoltage)) m_ModelDirty = true;
+        ImGui::BeginDisabled(m_ModelUseLiveVoltage);
+        ImGui::SetNextItemWidth(130.0f); d |= ImGui::InputFloat("Battery voltage (V)", &m_Model.BatteryVoltage, 0,0,"%.2f");
+        ImGui::EndDisabled();
+        if (m_ModelUseLiveVoltage)
+        {
+            ImGui::SameLine();
+            if (m_HasData && !WeaponStale())
+                ImGui::TextColored(k_WeaponColor, "live: %.2f V", m_ModelLastVoltage);
+            else
+                ImGui::TextDisabled("(no live data -> %.2f V)", m_ModelLastVoltage);
+        }
+
+        ImGui::SetNextItemWidth(130.0f); d |= ImGui::InputFloat("Motor Kv (rpm/V)",      &m_Model.MotorKv, 0,0,"%.1f");
+        ImGui::SetNextItemWidth(130.0f); d |= ImGui::InputFloat("No-load current (A)",   &m_Model.NoLoadCurrent, 0,0,"%.2f");
+        ImGui::SetNextItemWidth(130.0f); d |= ImGui::InputFloat("Max current (A)",       &m_Model.MaxCurrent, 0,0,"%.1f");
+        ImGui::SetNextItemWidth(130.0f); d |= ImGui::InputFloat("Inertia (kg m^2)",      &m_Model.Inertia, 0,0,"%.7f");
+        ImGui::SetNextItemWidth(130.0f); d |= ImGui::InputFloat("Drag coeff (Nm/rpm^2)", &m_Model.DragCoeff, 0,0,"%.3e");
+        ImGui::SetNextItemWidth(130.0f); d |= ImGui::InputFloat("Internal res (ohm)",    &m_Model.InternalRes, 0,0,"%.4f");
+        ImGui::TextDisabled("(internal res shown for reference; not in the linear t-w line)");
+        ImGui::SetNextItemWidth(130.0f); d |= ImGui::InputFloat("Sim duration (s)",      &m_Model.SimDuration, 0,0,"%.1f");
+        ImGui::SetNextItemWidth(130.0f); d |= ImGui::InputInt  ("Sim steps",             &m_Model.SimSteps);
+        if (m_Model.SimSteps < 2) m_Model.SimSteps = 2;
+        ImGui::TextDisabled("Reduction = %.2f : 1 and tip dia = %.3f in come from Decode Constants.",
+                            m_Config.GearRatio, m_Config.WeaponDiameterIn);
+        if (d) m_ModelDirty = true;
+
+        ImGui::SeparatorText("Derived");
+        ImGui::Text("Kt             : %.6f Nm/A", m_ModelResult.Kt);
+        ImGui::Text("Motor no-load  : %.0f rpm    stall %.3f Nm",
+                    m_ModelResult.MotorNoLoadRPM, m_ModelResult.MotorStallTorque);
+        ImGui::Text("Weapon no-load : %.0f rpm    stall %.3f Nm",
+                    m_ModelResult.WeaponNoLoadRPM, m_ModelResult.WeaponStallTorque);
+        ImGui::Text("t-w slope      : %.6f Nm/rpm", m_ModelResult.TWSlope);
+
+        ImGui::SeparatorText("Predicted");
+        ImGui::TextColored(k_PredColor, "Max tip speed  : %.1f mph", m_ModelResult.MaxTipSpeedMph);
+        ImGui::TextColored(k_PredColor, "Max weapon RPM : %.0f rpm", m_ModelResult.MaxWeaponRPM);
+        if (m_ModelResult.TimeTo90Pct >= 0.0f)
+            ImGui::Text("Time to 90%%    : %.2f s", m_ModelResult.TimeTo90Pct);
+        else
+            ImGui::Text("Time to 90%%    : n/a (raise sim duration)");
+        ImGui::Text("Steady-state   : %.0f rpm", m_ModelResult.SteadyStateRPM);
+
+        // Compare against the live measurement when streaming.
+        if (m_HasData && !WeaponStale() && m_ModelResult.MaxTipSpeedMph > 0.0f)
+        {
+            const float pct = 100.0f * m_Sample.tipSpeedMph / m_ModelResult.MaxTipSpeedMph;
+            ImGui::Separator();
+            ImGui::Text("Live: %.1f mph tip   %.0f rpm   (%.0f%% of predicted max)",
+                        m_Sample.tipSpeedMph, m_Sample.weaponRPM, pct);
+        }
+
+        // Predicted spin-up curve.
+        if (!m_ModelResult.t.empty())
+        {
+            const int n = (int)m_ModelResult.t.size();
+            ImPlot::SetNextAxisLimits(ImAxis_X1, 0.0f, m_ModelResult.t.back(), ImPlotCond_Always);
+            ImPlot::SetNextAxisLimits(ImAxis_Y1, 0.0f,
+                                      m_ModelResult.MaxTipSpeedMph * 1.1f + 0.001f, ImPlotCond_Always);
+            if (ImPlot::BeginPlot("Predicted Tip Speed (mph) vs Time (s)", ImVec2(-1.0f, 220.0f)))
+            {
+                ImPlotSpec spec; spec.LineColor = k_PredColor;
+                ImPlot::PlotLine("Tip speed", m_ModelResult.t.data(),
+                                 m_ModelResult.tipMph.data(), n, spec);
                 ImPlot::EndPlot();
             }
         }

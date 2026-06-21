@@ -85,9 +85,9 @@ namespace Workspace
         float CurrentScale     = 0.01f;  // A    per raw count   (KISS = centi-amps)
         float ErpmScale        = 100.0f; // eRPM per raw count   (KISS sends eRPM/100)
 
-        int   PolePairs        = 3;      // motor pole pairs (6-pole motor = 3; 14-pole = 7)
-        float GearRatio        = 1.0f;   // motor : weapon reduction (1.0 = direct drive)
-        float WeaponDiameterIn = 4.0f;   // weapon disk/bar diameter (inches)
+        int   PolePairs        = 3;       // motor pole pairs (6-pole motor = 3; 14-pole = 7)
+        float GearRatio        = 4.0f;    // motor : weapon reduction (4:1 pulley; 1.0 = direct)
+        float WeaponDiameterIn = 7.874f;  // weapon tip diameter (in) — 0.2 m radius-to-tip x2
     };
 
     // -------------------------------------------------------------------------

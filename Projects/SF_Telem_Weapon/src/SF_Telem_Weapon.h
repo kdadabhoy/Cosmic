@@ -22,6 +22,7 @@
 
 #include <Cosmic.h>
 #include "WeaponTelemetry.h"
+#include "WeaponModel.h"
 
 #include <array>
 #include <string>
@@ -62,9 +63,13 @@ namespace Workspace
         void DrawSerialWindow();
         void DrawControlsWindow();    // transport, recording, decode constants
         void DrawDashboardWindow();   // health banner + per-channel plots
+        void DrawModelWindow();       // predictive spin-up model + measured-vs-theory
         void DrawTelemetryWindow();   // engine panel: replay loader + drill-down
         void PumpSerial();            // drain + parse the COM buffer
         void SampleForDisplay();      // fill the plot ring (live or replay)
+        void RecomputeModel();        // re-run the spin-up sim from current inputs
+        float TipRadiusM() const;     // tip radius (m) from the decode weapon diameter
+        float ModelEffectiveVoltage() const; // live measured V, or the manual input
         bool WeaponStale() const;
 
     private:
@@ -83,6 +88,13 @@ namespace Workspace
 
         // --- Decode config (live-editable) ---
         WeaponConfig m_Config;
+
+        // --- Predictive spin-up model (ported spreadsheet) ---
+        WeaponModelConfig m_Model;
+        WeaponModelResult m_ModelResult;
+        bool              m_ModelDirty          = true;
+        bool              m_ModelUseLiveVoltage = true;  // drive prediction off measured V
+        float             m_ModelLastVoltage    = -1.0f; // V used by the last recompute
 
         // --- Camera (drives the empty viewport clear; no scene is rendered) ---
         Cosmic::OrthographicCameraController m_Camera{ 1280.0f / 720.0f };
