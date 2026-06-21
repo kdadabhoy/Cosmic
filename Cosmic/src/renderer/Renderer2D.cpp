@@ -404,6 +404,36 @@ namespace Cosmic
 		s_Data.InstancedQuadVAO.reset();
 		s_Data.InstancedQuadBaseVBO.reset();
 		s_Data.InstancedQuadInstanceVBO.reset();
+
+		// ---------------------------------------------------------------------
+		// Release ALL remaining GPU-resource handles WHILE THE OPENGL CONTEXT IS
+		// STILL ALIVE. These Refs live in the file-scope static s_Data, so if we
+		// leave them set their underlying GL objects (textures, shaders, buffers)
+		// are only freed at static-destruction time — which happens AFTER
+		// Application::Shutdown() destroys the window and OpenGL context. That
+		// makes ~OpenGLTexture call glDeleteTextures()/glDeleteProgram() with no
+		// current context and crash (access violation in opengl32.dll on close).
+		// Resetting them here deletes them now, while the context is valid.
+		for (auto& slot : s_Data.TextureSlots)
+			slot.reset();
+		s_Data.WhiteTexture.reset();
+
+		s_Data.QuadVertexArray.reset();
+		s_Data.QuadVertexBuffer.reset();
+		s_Data.LineVertexArray.reset();
+		s_Data.LineVertexBuffer.reset();
+		s_Data.CircleVertexArray.reset();
+		s_Data.CircleVertexBuffer.reset();
+
+		s_Data.TextureShader.reset();
+		s_Data.LineShader.reset();
+		s_Data.DefaultCircleShader.reset();
+		s_Data.ActiveCircleShader.reset();
+		s_Data.DefaultInstancedCircleShader.reset();
+		s_Data.DefaultInstancedQuadShader.reset();
+
+		s_Data.CurrentMaterial.reset();
+		s_Data.DefaultMaterial.reset();
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////
