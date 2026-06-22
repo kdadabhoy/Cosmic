@@ -1,9 +1,9 @@
 #pragma once
 
-// SF_DrivetrainCalcsApp.h
+// DrivetrainLayer.h
 //
 // ============================================================================
-// SF_DrivetrainCalcsApp — interactive Shear Force drivetrain calculator
+// DrivetrainLayer — interactive Shear Force drivetrain calculator
 // ============================================================================
 //
 // A single Cosmic plugin layer that turns the old command-line drivetrain
@@ -31,11 +31,11 @@
 
 namespace Workspace
 {
-    class SF_DrivetrainCalcsApp : public Cosmic::Layer
+    class DrivetrainLayer : public Cosmic::Layer
     {
     public:
-        SF_DrivetrainCalcsApp();
-        virtual ~SF_DrivetrainCalcsApp() override = default;
+        DrivetrainLayer();
+        virtual ~DrivetrainLayer() override = default;
 
         virtual void OnAttach()                override;
         virtual void OnDetach()                override;

@@ -1,10 +1,9 @@
-// SF_DrivetrainCalcsApp.cpp
+// DrivetrainLayer.cpp
 //
 // Interactive Shear Force drivetrain calculator. See the header for the
 // overview; all physics lives in DrivetrainModel.h.
 
-#include "SF_DrivetrainCalcsApp.h"
-#include "layers/WorkspaceLayer.h"   // dock-port registration (DockWindow)
+#include "DrivetrainLayer.h"
 
 #include <imgui.h>
 #include <implot.h>
@@ -42,18 +41,15 @@ namespace Workspace
     }
 
     // =========================================================================
-    SF_DrivetrainCalcsApp::SF_DrivetrainCalcsApp()
-        : Cosmic::Layer("SF_DrivetrainCalcsApp")
+    DrivetrainLayer::DrivetrainLayer()
+        : Cosmic::Layer("DrivetrainLayer")
     {
     }
 
     // =========================================================================
-    void SF_DrivetrainCalcsApp::OnAttach()
+    void DrivetrainLayer::OnAttach()
     {
-        CS_INFO("SF_DrivetrainCalcsApp: Attaching drivetrain calculator.");
-
-        Cosmic::FileSystem::SetActiveProject("SF_DrivetrainCalcsApp");
-        Cosmic::Log::SetLogDirectory(Cosmic::FileSystem::Resolve("project://logs"));
+        CS_INFO("DrivetrainLayer: Attaching drivetrain calculator screen.");
 
         // The viewport is a small fixed schematic stage — no manual panning.
         m_Camera.SetManualMovementEnabled(false);
@@ -63,41 +59,30 @@ namespace Workspace
         Recompute();
 
         // Snapshot the loaded config as the baseline so Results highlights any
-        // changes from the moment the app starts.
+        // changes from the moment the screen starts. (Active project, log dir and
+        // dock layout are owned by the SF_Telem root manager.)
         m_Baseline    = m_Cfg;
         m_BaselineSim = m_Sim;
         m_HasBaseline = true;
 
-        // Dock panels into the engine's predefined ports: the three inspector
-        // tiers down the left, plots on the right, explorers along the bottom.
-        if (auto* ws = Cosmic::Application::Get().GetWorkspaceLayer())
-        {
-            ws->DockWindow("Project Inspector Top",    Cosmic::DockPort::LeftTop);
-            ws->DockWindow("Project Inspector Mid",    Cosmic::DockPort::LeftMiddle);
-            ws->DockWindow("Project Inspector Bottom", Cosmic::DockPort::LeftBottom);
-            ws->DockWindow("Performance Curves",       Cosmic::DockPort::RightTop);
-            ws->DockWindow("Drivetrain Explorers",     Cosmic::DockPort::BottomCenter);
-        }
-
-        CS_INFO("SF_DrivetrainCalcsApp: OnAttach complete.");
+        CS_INFO("DrivetrainLayer: OnAttach complete.");
     }
 
     // =========================================================================
-    void SF_DrivetrainCalcsApp::OnDetach()
+    void DrivetrainLayer::OnDetach()
     {
-        Cosmic::Log::SetLogDirectory("logs");
-        CS_INFO("SF_DrivetrainCalcsApp: Detached.");
+        CS_INFO("DrivetrainLayer: Detached.");
     }
 
     // =========================================================================
-    void SF_DrivetrainCalcsApp::OnUpdate(float ts)
+    void DrivetrainLayer::OnUpdate(float ts)
     {
         m_Camera.OnUpdate(ts);
         RenderSchematic();
     }
 
     // =========================================================================
-    void SF_DrivetrainCalcsApp::Recompute()
+    void DrivetrainLayer::Recompute()
     {
         m_Sim   = Simulate(m_Cfg);
         m_Dirty = false;
@@ -107,7 +92,7 @@ namespace Workspace
     // OnImGuiRender — inputs first (which may dirty the sim), recompute, then
     // draw everything that reads the result.
     // =========================================================================
-    void SF_DrivetrainCalcsApp::OnImGuiRender()
+    void DrivetrainLayer::OnImGuiRender()
     {
         // Recompute from last frame's edits before any panel reads the result.
         if (m_AutoRun && m_Dirty)
@@ -130,9 +115,9 @@ namespace Workspace
     // -------------------------------------------------------------------------
     // Inspector Top (docked sidebar) — headline KPIs + recompute + sync banner.
     // -------------------------------------------------------------------------
-    void SF_DrivetrainCalcsApp::DrawInspectorTop()
+    void DrivetrainLayer::DrawInspectorTop()
     {
-        ImGui::Begin("Project Inspector Top");
+        ImGui::Begin("Drivetrain KPIs");
 
         ImGui::TextColored(k_AccentCol, "Shear Force  |  Drivetrain Calculator");
         ImGui::TextDisabled("Rapid wheel / pulley / battery prototyping");
@@ -223,9 +208,9 @@ namespace Workspace
     // -------------------------------------------------------------------------
     // Inputs — every editable parameter, grouped. Each edit dirties the sim.
     // -------------------------------------------------------------------------
-    void SF_DrivetrainCalcsApp::DrawInputsWindow()
+    void DrivetrainLayer::DrawInputsWindow()
     {
-        ImGui::Begin("Project Inspector Mid");
+        ImGui::Begin("Drivetrain Inputs");
         ImGui::TextColored(k_AccentCol, "Drivetrain Inputs");
         ImGui::Separator();
 
@@ -295,7 +280,7 @@ namespace Workspace
     // -------------------------------------------------------------------------
     // One performance curve (front solid + optional rear overlay), auto-framed.
     // -------------------------------------------------------------------------
-    void SF_DrivetrainCalcsApp::PlotChannel(const char* title, const char* yLabel,
+    void DrivetrainLayer::PlotChannel(const char* title, const char* yLabel,
                                             const std::vector<double>& fX,
                                             const std::vector<double>& fY,
                                             const std::vector<double>& rX,
@@ -350,7 +335,7 @@ namespace Workspace
     // -------------------------------------------------------------------------
     // Plots — Speed / Accel / Force / Torque / Distance vs time.
     // -------------------------------------------------------------------------
-    void SF_DrivetrainCalcsApp::DrawPlotsWindow()
+    void DrivetrainLayer::DrawPlotsWindow()
     {
         const ImGuiViewport* mv = ImGui::GetMainViewport();
         ImGui::SetNextWindowSize(ImVec2(700.0f, 760.0f), ImGuiCond_FirstUseEver);
@@ -389,9 +374,9 @@ namespace Workspace
     // -------------------------------------------------------------------------
     // Results & export — detailed metric table + CSV writer.
     // -------------------------------------------------------------------------
-    void SF_DrivetrainCalcsApp::DrawResultsWindow()
+    void DrivetrainLayer::DrawResultsWindow()
     {
-        ImGui::Begin("Project Inspector Bottom");
+        ImGui::Begin("Drivetrain Results");
         ImGui::TextColored(k_AccentCol, "Results & Export");
         ImGui::Separator();
 
@@ -564,7 +549,7 @@ namespace Workspace
         }
     }
 
-    void SF_DrivetrainCalcsApp::DrawExplorersWindow()
+    void DrivetrainLayer::DrawExplorersWindow()
     {
         const ImGuiViewport* mv = ImGui::GetMainViewport();
         ImGui::SetNextWindowSize(ImVec2(660.0f, 540.0f), ImGuiCond_FirstUseEver);
@@ -595,7 +580,7 @@ namespace Workspace
     // Feasibility tab — explain the tangential-velocity rule, show the gap, and
     // offer concrete one-click fixes (sync wheel dia / sync pulley ratio).
     // -------------------------------------------------------------------------
-    void SF_DrivetrainCalcsApp::DrawFeasibilityTab()
+    void DrivetrainLayer::DrawFeasibilityTab()
     {
         ImGui::TextWrapped(
             "A rigid chassis forces both driven wheels to roll at the same ground "
@@ -735,7 +720,7 @@ namespace Workspace
     // -------------------------------------------------------------------------
     // Wheel diameter sweep — vary one axle's wheel dia, hold everything else.
     // -------------------------------------------------------------------------
-    void SF_DrivetrainCalcsApp::DrawWheelSweepTab()
+    void DrivetrainLayer::DrawWheelSweepTab()
     {
         ImGui::TextDisabled("All other parameters stay fixed; the rear/front axle "
                             "you are NOT sweeping is the sync reference.");
@@ -793,7 +778,7 @@ namespace Workspace
     // -------------------------------------------------------------------------
     // Pulley ratio explorer — vary one pulley's teeth +/- span around current.
     // -------------------------------------------------------------------------
-    void SF_DrivetrainCalcsApp::DrawPulleyRatioTab()
+    void DrivetrainLayer::DrawPulleyRatioTab()
     {
         ImGui::TextDisabled("Walks the chosen pulley +/- a few teeth around the "
                             "current value; everything else stays fixed.");
@@ -888,7 +873,7 @@ namespace Workspace
         }
     }
 
-    void SF_DrivetrainCalcsApp::DrawLiftPlannerTab()
+    void DrivetrainLayer::DrawLiftPlannerTab()
     {
         ImGui::TextWrapped(
             "Enter a target ground-clearance gain. Both wheels grow by 2x that "
@@ -1040,7 +1025,7 @@ namespace Workspace
     // even lift with different-size wheels, perfect sync only holds at zero, so
     // this band is whatever your tolerance allows around the current setup.
     // -------------------------------------------------------------------------
-    void SF_DrivetrainCalcsApp::DrawSamePulleyRangeTab()
+    void DrivetrainLayer::DrawSamePulleyRangeTab()
     {
         ImGui::TextWrapped(
             "Keeps every pulley exactly as-is and reports how far ground clearance "
@@ -1114,7 +1099,7 @@ namespace Workspace
     // CSV export — same config-header layout as the original command-line tool,
     // with both axles' time series side by side.
     // -------------------------------------------------------------------------
-    bool SF_DrivetrainCalcsApp::ExportCSV(std::string fileName)
+    bool DrivetrainLayer::ExportCSV(std::string fileName)
     {
         if (!m_Sim.valid)
         {
@@ -1225,7 +1210,7 @@ namespace Workspace
 
         const std::string abs = std::filesystem::absolute(outPath, ec).string();
         m_ExportStatus = "Saved: " + (ec ? outPath.string() : abs);
-        CS_INFO("SF_DrivetrainCalcsApp: exported CSV -> {}", m_ExportStatus);
+        CS_INFO("DrivetrainLayer: exported CSV -> {}", m_ExportStatus);
         return true;
     }
 
@@ -1237,7 +1222,7 @@ namespace Workspace
     // current wheel. The line joining the two ground contacts tilts when the
     // wheels differ, i.e. when the chassis would NOT sit level.
     // =========================================================================
-    void SF_DrivetrainCalcsApp::RenderSchematic()
+    void DrivetrainLayer::RenderSchematic()
     {
         m_SchematicValid = m_Sim.valid;
 
@@ -1350,7 +1335,7 @@ namespace Workspace
     // Schematic labels — project world anchors to screen and draw text with the
     // ImGui foreground draw list (the renderer has no text primitive).
     // -------------------------------------------------------------------------
-    void SF_DrivetrainCalcsApp::DrawSchematicLabels()
+    void DrivetrainLayer::DrawSchematicLabels()
     {
         if (!m_SchematicValid) return;
 
@@ -1422,26 +1407,9 @@ namespace Workspace
     }
 
     // =========================================================================
-    void SF_DrivetrainCalcsApp::OnEvent(Cosmic::Event& e)
+    void DrivetrainLayer::OnEvent(Cosmic::Event& e)
     {
         m_Camera.OnEvent(e);
     }
 
 } // namespace Workspace
-
-// =============================================================================
-// Required C-linkage DLL entry points — do not rename or remove
-// =============================================================================
-extern "C"
-{
-    __declspec(dllexport) void InitializePluginContexts(Cosmic::HostContext context)
-    {
-        ImGui::SetCurrentContext(context.ImGuiCtx);
-        ImPlot::SetCurrentContext(context.ImPlotCtx);
-    }
-
-    __declspec(dllexport) Cosmic::Layer* CreatePluginLayer()
-    {
-        return new Workspace::SF_DrivetrainCalcsApp();
-    }
-}
