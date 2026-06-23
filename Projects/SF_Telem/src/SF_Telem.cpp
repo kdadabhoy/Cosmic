@@ -166,14 +166,17 @@ namespace Workspace
         ws->ClearDockWindows();
         ws->DockWindow("Project Inspector Top", Cosmic::DockPort::LeftTop);
 
+        // Give the Main screen a taller bottom strip for the wide ESC Readouts.
+        ws->SetEdgeRatios(0.20f, 0.20f, 0.18f, mode == MODE_MAIN ? 0.30f : 0.22f);
+
         switch (mode)
         {
         case MODE_MAIN:
             ws->DockWindow("Serial Link",            Cosmic::DockPort::LeftBottom);
-            ws->DockWindow("Live Dashboard",         Cosmic::DockPort::Center);      // CAD + readouts in the center
-            ws->DockWindow("ESC Readouts",           Cosmic::DockPort::RightTop);
-            ws->DockWindow("ESC Plots",              Cosmic::DockPort::RightBottom);
-            ws->DockWindow("Telemetry (drill-down)", Cosmic::DockPort::RightBottom); // tab with ESC Plots
+            ws->DockWindow("Live Dashboard",         Cosmic::DockPort::Center);       // CAD + readouts in the center
+            ws->DockWindow("ESC Plots",              Cosmic::DockPort::RightTop);
+            ws->DockWindow("Telemetry (drill-down)", Cosmic::DockPort::RightTop);     // tab with ESC Plots
+            ws->DockWindow("ESC Readouts",           Cosmic::DockPort::BottomCenter); // wide strip along the bottom
             break;
 
         case MODE_WEAPON:

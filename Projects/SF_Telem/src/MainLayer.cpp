@@ -6,6 +6,9 @@
 
 #include <imgui.h>
 
+#include <algorithm>
+#include <cmath>
+
 namespace Workspace
 {
     namespace
@@ -96,6 +99,64 @@ namespace Workspace
             if (hub->Present(id)) return IM_COL32(45, 200, 95, 255);
             if (hub->HasData(id)) return IM_COL32(230, 170, 45, 255);
             return IM_COL32(200, 70, 70, 255);
+        }
+
+        // =====================================================================
+        // Responsive stat-box grid. One spec per box; the grid auto-fits as many
+        // columns as the panel width allows (min 2 by default) and stretches the
+        // boxes to fill the row — so the same panel reads well whether it's docked
+        // narrow on an edge or wide along the bottom, on any screen size.
+        // =====================================================================
+        struct BoxSpec
+        {
+            const char* id;
+            const char* label;
+            bool        isRpm;     // true -> RpmBox (value/pred/max), else StatBox (value/unit/max)
+            float       value;     // StatBox value or RpmBox rpm
+            const char* unit;      // StatBox unit
+            float       maxValue;
+            float       predicted; // RpmBox only
+            ImVec4      accent;
+        };
+
+        void DrawStatGrid(const BoxSpec* boxes, int count,
+                          int minCols = 2, float minColWidth = 168.0f, float maxColWidth = 320.0f)
+        {
+            if (count <= 0) return;
+
+            const float avail   = ImGui::GetContentRegionAvail().x;
+            const float spacing = ImGui::GetStyle().ItemSpacing.x;
+
+            // How many columns fit at the minimum comfortable width...
+            int cols = (int)std::floor((avail + spacing) / (minColWidth + spacing));
+            cols = std::max(cols, minCols);   // ...but never fewer than the default
+            cols = std::min(cols, count);     // ...nor more boxes than we have
+            cols = std::max(cols, 1);
+
+            float boxW = (avail - spacing * (cols - 1)) / cols;
+            boxW = std::min(boxW, maxColWidth);     // don't let boxes get absurdly wide
+            boxW = std::max(boxW, 1.0f);
+            const ImVec2 size(boxW, 84.0f);
+
+            for (int i = 0; i < count; ++i)
+            {
+                if (i % cols != 0) ImGui::SameLine();
+                const BoxSpec& b = boxes[i];
+                if (b.isRpm)
+                    RpmBox(b.id, b.label, b.value, b.predicted, b.maxValue, b.accent, size);
+                else
+                    StatBox(b.id, b.label, b.value, b.unit, b.maxValue, b.accent, size);
+            }
+        }
+
+        // A faint full-width divider (lighter than ImGui::Separator).
+        void LightDivider()
+        {
+            ImGui::Spacing();
+            ImGui::PushStyleColor(ImGuiCol_Separator, IM_COL32(255, 255, 255, 28));
+            ImGui::Separator();
+            ImGui::PopStyleColor();
+            ImGui::Spacing();
         }
     }
 
@@ -202,11 +263,12 @@ namespace Workspace
             ImGui::TextColored({ 1.0f, 0.3f, 0.3f, 1.0f }, "NO SIGNAL — weapon ESC not detected");
 
         ImGui::Spacing();
-        StatBox("##wcur", "Current", m_Hub->Cur(W), "A", m_Hub->MaxCur(W), k_WeaponColor);
-        ImGui::SameLine();
-        StatBox("##wvolt", "Voltage", m_Hub->Volt(W), "V", m_Hub->MaxVolt(W), k_WeaponColor);
-        ImGui::SameLine();
-        RpmBox("##wrpm", "Weapon RPM", m_Hub->Rpm(W), m_Hub->PredictedRpm(W), m_Hub->MaxRpm(W), k_WeaponColor);
+        const BoxSpec boxes[] = {
+            { "##wcur",  "Current",    false, m_Hub->Cur(W),  "A", m_Hub->MaxCur(W),  0.0f,                   k_WeaponColor },
+            { "##wvolt", "Voltage",    false, m_Hub->Volt(W), "V", m_Hub->MaxVolt(W), 0.0f,                   k_WeaponColor },
+            { "##wrpm",  "Weapon RPM", true,  m_Hub->Rpm(W),  "",  m_Hub->MaxRpm(W),  m_Hub->PredictedRpm(W), k_WeaponColor },
+        };
+        DrawStatGrid(boxes, IM_ARRAYSIZE(boxes));
 
         ImGui::Spacing();
         if (ImGui::Button("Reset Weapon Stats")) m_Hub->ResetMax(W);
@@ -218,6 +280,8 @@ namespace Workspace
 
         for (int id = ESC_RIGHT; id <= ESC_LEFT; ++id)
         {
+            if (id == ESC_LEFT) LightDivider();   // visually separate Right / Left
+
             const ImVec4 col = DriveColor(id);
             ImGui::TextColored(col, "%-6s", IdLabel(id));
             ImGui::SameLine();
@@ -229,13 +293,13 @@ namespace Workspace
             snprintf(a, sizeof(a), "##c%d", id); snprintf(b, sizeof(b), "##v%d", id);
             snprintf(c, sizeof(c), "##r%d", id); snprintf(d, sizeof(d), "##s%d", id);
 
-            StatBox(a, "Current", m_Hub->Cur(id), "A", m_Hub->MaxCur(id), col);
-            ImGui::SameLine();
-            StatBox(b, "Voltage", m_Hub->Volt(id), "V", m_Hub->MaxVolt(id), col);
-            ImGui::SameLine();
-            RpmBox(c, "Motor RPM", m_Hub->Rpm(id), m_Hub->PredictedRpm(id), m_Hub->MaxRpm(id), col);
-            ImGui::SameLine();
-            StatBox(d, "Speed", m_Hub->Speed(id), "mph", m_Hub->MaxSpeed(id), col);
+            const BoxSpec boxes[] = {
+                { a, "Current",   false, m_Hub->Cur(id),   "A",   m_Hub->MaxCur(id),   0.0f,                    col },
+                { b, "Voltage",   false, m_Hub->Volt(id),  "V",   m_Hub->MaxVolt(id),  0.0f,                    col },
+                { c, "Motor RPM", true,  m_Hub->Rpm(id),   "",    m_Hub->MaxRpm(id),   m_Hub->PredictedRpm(id), col },
+                { d, "Speed",     false, m_Hub->Speed(id), "mph", m_Hub->MaxSpeed(id), 0.0f,                    col },
+            };
+            DrawStatGrid(boxes, IM_ARRAYSIZE(boxes));
         }
 
         ImGui::Spacing();
