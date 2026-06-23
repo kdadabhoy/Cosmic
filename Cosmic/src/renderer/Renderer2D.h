@@ -10,10 +10,12 @@
 #include "graphics/Texture.h"
 #include "graphics/Material.h"
 #include <glm/glm.hpp>
+#include <string>
 
 namespace Cosmic
 {
     class SubTexture2D;
+    class Font;
 
     class COSMIC_API Renderer2D
     {
@@ -135,6 +137,22 @@ namespace Cosmic
             DrawCircle({ position.x, position.y, 0.0f }, size, color,
                 thickness, fade, customShader);
         }
+
+        /////////////////////////////////////////////////////////////////////////////////
+        // Text (world-space, SDF) — see Cosmic::Font
+        /////////////////////////////////////////////////////////////////////////////////
+
+        // Draw `text` with `font` under an arbitrary transform. Glyph metrics are in
+        // em units (1 em = the transform's unit scale), so scale the transform to set
+        // the world height. The baseline of the first line sits at the transform origin.
+        static void DrawString(const std::string& text, const Ref<Font>& font,
+            const glm::mat4& transform, const glm::vec4& color = glm::vec4(1.0f),
+            float kerning = 0.0f, float lineSpacing = 0.0f);
+
+        // Convenience: draw at a 2D position with a world-space size (height), no rotation.
+        static void DrawString(const std::string& text, const Ref<Font>& font,
+            const glm::vec2& position, float size, const glm::vec4& color = glm::vec4(1.0f),
+            float kerning = 0.0f, float lineSpacing = 0.0f);
 
         /////////////////////////////////////////////////////////////////////////////////
         // Debug Geometry

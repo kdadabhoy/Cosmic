@@ -7,6 +7,7 @@
 #include "renderer/RenderCommand.h"
 #include "core/Log.h"
 #include "graphics/SubTexture2D.h"
+#include "graphics/Font.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <array>
@@ -40,6 +41,13 @@ namespace Cosmic
 		glm::vec4 Color;
 		float     Thickness;
 		float     Fade;
+	};
+
+	struct TextVertex
+	{
+		glm::vec3 Position;
+		glm::vec4 Color;
+		glm::vec2 TexCoord;
 	};
 
 	/////////////////////////////////////////////////////////////////////////////////
@@ -103,6 +111,22 @@ namespace Cosmic
 		uint32_t          CircleIndexCount = 0;
 		CircleVertex* CircleVertexBufferBase = nullptr;
 		CircleVertex* CircleVertexBufferPtr = nullptr;
+
+		// =========================================================================
+		// --- Text Batch Data (world-space SDF) ---
+		// =========================================================================
+		static const uint32_t MaxTextQuads    = 10000;
+		static const uint32_t MaxTextVertices = MaxTextQuads * 4;
+		static const uint32_t MaxTextIndices  = MaxTextQuads * 6;
+
+		Ref<VertexArray>  TextVertexArray;
+		Ref<VertexBuffer> TextVertexBuffer;
+		Ref<Shader>       TextShader;
+		Ref<Texture2D>    TextFontAtlas;   // atlas of the current text batch
+
+		uint32_t      TextIndexCount = 0;
+		TextVertex*   TextVertexBufferBase = nullptr;
+		TextVertex*   TextVertexBufferPtr  = nullptr;
 
 		// =========================================================================
 		// --- Instanced Circle Pipeline Assets ---
@@ -259,6 +283,25 @@ namespace Cosmic
 			CS_CORE_ERROR("Renderer2D: Failed to load Engine Default Batch Circle shader!");
 
 		// =========================================================================
+		// --- Text Batch Initialization (world-space SDF) ---
+		// Reuses the shared quad index buffer (same 0,1,2,2,3,0 winding).
+		// =========================================================================
+		s_Data.TextVertexArray = VertexArray::Create();
+		s_Data.TextVertexBuffer = VertexBuffer::Create(s_Data.MaxTextVertices * sizeof(TextVertex));
+		s_Data.TextVertexBuffer->SetLayout({
+			{ ShaderDataType::Float3, "a_Position" },
+			{ ShaderDataType::Float4, "a_Color"    },
+			{ ShaderDataType::Float2, "a_TexCoord" }
+			});
+		s_Data.TextVertexArray->AddVertexBuffer(s_Data.TextVertexBuffer);
+		s_Data.TextVertexBufferBase = new TextVertex[s_Data.MaxTextVertices];
+		s_Data.TextVertexArray->SetIndexBuffer(quadIB);
+
+		s_Data.TextShader = Shader::Create("assets/shaders/Text.glsl");
+		if (!s_Data.TextShader)
+			CS_CORE_ERROR("Renderer2D: Failed to load Text shader (Text.glsl)!");
+
+		// =========================================================================
 		// --- Instanced Circle Hardware Pipeline Initialization ---
 		// =========================================================================
 		s_Data.InstancedCircleVAO = VertexArray::Create();
@@ -385,6 +428,7 @@ namespace Cosmic
 		delete[] s_Data.QuadVertexBufferBase;
 		delete[] s_Data.LineVertexBufferBase;
 		delete[] s_Data.CircleVertexBufferBase;
+		delete[] s_Data.TextVertexBufferBase;
 
 		s_Data.QuadVertexBufferBase   = nullptr;
 		s_Data.QuadVertexPtr          = nullptr;
@@ -392,6 +436,8 @@ namespace Cosmic
 		s_Data.LineVertexBufferPtr    = nullptr;
 		s_Data.CircleVertexBufferBase = nullptr;
 		s_Data.CircleVertexBufferPtr  = nullptr;
+		s_Data.TextVertexBufferBase   = nullptr;
+		s_Data.TextVertexBufferPtr    = nullptr;
 
 		s_Data.RenderPassStack.clear();
 
@@ -424,6 +470,9 @@ namespace Cosmic
 		s_Data.LineVertexBuffer.reset();
 		s_Data.CircleVertexArray.reset();
 		s_Data.CircleVertexBuffer.reset();
+		s_Data.TextVertexArray.reset();
+		s_Data.TextVertexBuffer.reset();
+		s_Data.TextFontAtlas.reset();
 
 		s_Data.TextureShader.reset();
 		s_Data.LineShader.reset();
@@ -431,6 +480,7 @@ namespace Cosmic
 		s_Data.ActiveCircleShader.reset();
 		s_Data.DefaultInstancedCircleShader.reset();
 		s_Data.DefaultInstancedQuadShader.reset();
+		s_Data.TextShader.reset();
 
 		s_Data.CurrentMaterial.reset();
 		s_Data.DefaultMaterial.reset();
@@ -447,7 +497,8 @@ namespace Cosmic
 		// VP matrix, and not contaminated by the incoming Camera B matrix.
 		bool hasPendingGeometry = (s_Data.QuadIndexCount > 0 ||
 			s_Data.CircleIndexCount > 0 ||
-			s_Data.LineVertexCount > 0);
+			s_Data.LineVertexCount > 0 ||
+			s_Data.TextIndexCount > 0);
 		if (hasPendingGeometry)
 		{
 			Flush();
@@ -486,6 +537,11 @@ namespace Cosmic
 		s_Data.CircleIndexCount = 0;
 		s_Data.CircleVertexBufferPtr = s_Data.CircleVertexBufferBase;
 		s_Data.ActiveCircleShader = s_Data.DefaultCircleShader; // Prevent custom shader leakage
+
+		// Reset text batch
+		s_Data.TextIndexCount = 0;
+		s_Data.TextVertexBufferPtr = s_Data.TextVertexBufferBase;
+		s_Data.TextFontAtlas = nullptr;
 	}
 
 	void Renderer2D::PopRenderPass()
@@ -495,7 +551,8 @@ namespace Cosmic
 		// Flush geometry staged under the pass being popped
 		bool hasPendingGeometry = (s_Data.QuadIndexCount > 0 ||
 			s_Data.CircleIndexCount > 0 ||
-			s_Data.LineVertexCount > 0);
+			s_Data.LineVertexCount > 0 ||
+			s_Data.TextIndexCount > 0);
 		if (hasPendingGeometry)
 		{
 			Flush();
@@ -533,6 +590,11 @@ namespace Cosmic
 		s_Data.CircleIndexCount = 0;
 		s_Data.CircleVertexBufferPtr = s_Data.CircleVertexBufferBase;
 		s_Data.ActiveCircleShader = s_Data.DefaultCircleShader; // Prevent custom shader leakage
+
+		// Reset text batch
+		s_Data.TextIndexCount = 0;
+		s_Data.TextVertexBufferPtr = s_Data.TextVertexBufferBase;
+		s_Data.TextFontAtlas = nullptr;
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////
@@ -626,6 +688,23 @@ namespace Cosmic
 			RenderCommand::DrawIndexed(s_Data.CircleVertexArray, s_Data.CircleIndexCount);
 			if (s_Data.StatsEnabled) s_Data.Stats.DrawCalls++;
 		}
+
+		// --- Draw Text (SDF) ---
+		if (s_Data.TextIndexCount != 0 && s_Data.TextFontAtlas && s_Data.TextShader)
+		{
+			uint32_t dataSize = (uint32_t)((uint8_t*)s_Data.TextVertexBufferPtr - (uint8_t*)s_Data.TextVertexBufferBase);
+			s_Data.TextVertexBuffer->SetData(s_Data.TextVertexBufferBase, dataSize);
+
+			s_Data.TextFontAtlas->Bind(0);
+
+			s_Data.TextShader->Bind();
+			s_Data.TextShader->SetMat4("u_ViewProjection", s_Data.ViewProjectionMatrix);
+			s_Data.TextShader->SetInt("u_FontAtlas", 0);
+
+			s_Data.TextVertexArray->Bind();
+			RenderCommand::DrawIndexed(s_Data.TextVertexArray, s_Data.TextIndexCount);
+			if (s_Data.StatsEnabled) s_Data.Stats.DrawCalls++;
+		}
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////
@@ -661,7 +740,12 @@ namespace Cosmic
 		s_Data.CircleIndexCount = 0;
 		s_Data.CircleVertexBufferPtr = s_Data.CircleVertexBufferBase;
 
-		// Restore tracking anchors safely to prevent state contamination 
+		// Reset text batch positions (atlas is re-set by the next DrawString)
+		s_Data.TextIndexCount = 0;
+		s_Data.TextVertexBufferPtr = s_Data.TextVertexBufferBase;
+		s_Data.TextFontAtlas = nullptr;
+
+		// Restore tracking anchors safely to prevent state contamination
 		s_Data.CurrentMaterial = activeMaterial;
 		s_Data.ActiveCircleShader = activeCircleShader;
 	}
@@ -1095,6 +1179,86 @@ namespace Cosmic
 
 		s_Data.CircleIndexCount += 6;
 		if (s_Data.StatsEnabled) s_Data.Stats.CircleCount++;
+	}
+
+	/////////////////////////////////////////////////////////////////////////////////
+	// DrawString (world-space SDF text)
+	/////////////////////////////////////////////////////////////////////////////////
+
+	void Renderer2D::DrawString(const std::string& text, const Ref<Font>& font,
+		const glm::mat4& transform, const glm::vec4& color, float kerning, float lineSpacing)
+	{
+		if (!font || text.empty()) return;
+
+		const Ref<Texture2D>& atlas = font->GetAtlas();
+		if (!atlas) return;
+
+		// A different atlas means a different texture binding — break the batch.
+		if (s_Data.TextFontAtlas && s_Data.TextFontAtlas->GetRendererID() != atlas->GetRendererID())
+			FlushAndReset();
+		s_Data.TextFontAtlas = atlas;
+
+		const float lineAdvance = font->LineHeight() + lineSpacing;
+		float x = 0.0f;
+		float y = 0.0f;
+
+		for (size_t i = 0; i < text.size(); ++i)
+		{
+			const unsigned char c = (unsigned char)text[i];
+			if (c == '\n') { x = 0.0f; y -= lineAdvance; continue; }
+			if (c == '\r') continue;
+
+			const Glyph* g = font->GetGlyph(c);
+			if (!g) { g = font->GetGlyph((uint32_t)'?'); if (!g) continue; }
+
+			// Visible glyph -> emit a quad. Whitespace just advances the pen.
+			if (g->size.x > 0.0f && g->size.y > 0.0f)
+			{
+				if (s_Data.TextIndexCount >= Renderer2DData::MaxTextIndices)
+				{
+					FlushAndReset();
+					s_Data.TextFontAtlas = atlas; // restore after the reset cleared it
+				}
+
+				const float x0 = x + g->offset.x;       // left
+				const float y0 = y + g->offset.y;       // top
+				const float x1 = x0 + g->size.x;        // right
+				const float y1 = y0 - g->size.y;        // bottom
+
+				const glm::vec3 corners[4] = {
+					{ x0, y1, 0.0f }, // BL
+					{ x1, y1, 0.0f }, // BR
+					{ x1, y0, 0.0f }, // TR
+					{ x0, y0, 0.0f }, // TL
+				};
+				const glm::vec2 uvs[4] = {
+					{ g->uv0.x, g->uv1.y }, // BL
+					{ g->uv1.x, g->uv1.y }, // BR
+					{ g->uv1.x, g->uv0.y }, // TR
+					{ g->uv0.x, g->uv0.y }, // TL
+				};
+
+				for (int k = 0; k < 4; ++k)
+				{
+					s_Data.TextVertexBufferPtr->Position = transform * glm::vec4(corners[k], 1.0f);
+					s_Data.TextVertexBufferPtr->Color = color;
+					s_Data.TextVertexBufferPtr->TexCoord = uvs[k];
+					s_Data.TextVertexBufferPtr++;
+				}
+				s_Data.TextIndexCount += 6;
+				if (s_Data.StatsEnabled) s_Data.Stats.QuadCount++;
+			}
+
+			x += g->advance + kerning;
+		}
+	}
+
+	void Renderer2D::DrawString(const std::string& text, const Ref<Font>& font,
+		const glm::vec2& position, float size, const glm::vec4& color, float kerning, float lineSpacing)
+	{
+		glm::mat4 transform = glm::translate(glm::mat4(1.0f), { position.x, position.y, 0.0f })
+			* glm::scale(glm::mat4(1.0f), { size, size, 1.0f });
+		DrawString(text, font, transform, color, kerning, lineSpacing);
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////
