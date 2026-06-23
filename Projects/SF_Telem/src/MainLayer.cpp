@@ -123,8 +123,7 @@ namespace Workspace
     void MainLayer::OnImGuiRender()
     {
         DrawDashboard();
-        DrawWeaponPanel();
-        DrawDrivetrainPanel();
+        DrawStatsPanel();
         DrawPlots();
         DrawTelemetry();
     }
@@ -134,6 +133,10 @@ namespace Workspace
     // white readout boxes overlaid at normalized positions (see k_*Readouts).
     void MainLayer::DrawDashboard()
     {
+        // Select the dashboard tab in the center node for a few frames after a
+        // (re)dock, so it shows instead of the empty Viewport it's tabbed with.
+        if (m_DashFocusFrames > 0) { ImGui::SetNextWindowFocus(); --m_DashFocusFrames; }
+
         ImGui::Begin("Live Dashboard");
 
         // Real bold face for the thick black values; fall back to faux-bold if the
@@ -175,12 +178,20 @@ namespace Workspace
     }
 
     // -------------------------------------------------------------------------
-    void MainLayer::DrawWeaponPanel()
+    // Combined numeric readouts — weapon + drivetrain in a single panel/tab. The
+    // hardware photos now live on the Live Dashboard, so no image strip here.
+    void MainLayer::DrawStatsPanel()
     {
-        ImGui::Begin("Weapon System");
+        ImGui::Begin("ESC Readouts");
+        DrawWeaponStats();
+        ImGui::Spacing();
+        DrawDrivetrainStats();
+        ImGui::End();
+    }
 
-        ImagePlaceholder("##wpnimg", "[ weapon system — upload texture later ]",
-                         ImVec2(-1.0f, 90.0f), k_WeaponColor);
+    void MainLayer::DrawWeaponStats()
+    {
+        ImGui::SeparatorText("Weapon");
 
         const int W = ESC_WEAPON;
         if (m_Hub->Present(W))
@@ -199,17 +210,11 @@ namespace Workspace
 
         ImGui::Spacing();
         if (ImGui::Button("Reset Weapon Stats")) m_Hub->ResetMax(W);
-
-        ImGui::End();
     }
 
-    // -------------------------------------------------------------------------
-    void MainLayer::DrawDrivetrainPanel()
+    void MainLayer::DrawDrivetrainStats()
     {
-        ImGui::Begin("Drivetrain");
-
-        ImagePlaceholder("##dtimg", "[ drivetrain — upload texture later ]",
-                         ImVec2(-1.0f, 90.0f), k_LeftColor);
+        ImGui::SeparatorText("Drivetrain");
 
         for (int id = ESC_RIGHT; id <= ESC_LEFT; ++id)
         {
@@ -239,8 +244,6 @@ namespace Workspace
             m_Hub->ResetMax(ESC_RIGHT);
             m_Hub->ResetMax(ESC_LEFT);
         }
-
-        ImGui::End();
     }
 
     // -------------------------------------------------------------------------

@@ -170,11 +170,10 @@ namespace Workspace
         {
         case MODE_MAIN:
             ws->DockWindow("Serial Link",            Cosmic::DockPort::LeftBottom);
-            ws->DockWindow("Live Dashboard",         Cosmic::DockPort::RightTop);
-            ws->DockWindow("Weapon System",          Cosmic::DockPort::RightBottom);
-            ws->DockWindow("Drivetrain",             Cosmic::DockPort::RightBottom); // tab with Weapon System
-            ws->DockWindow("ESC Plots",              Cosmic::DockPort::BottomCenter);
-            ws->DockWindow("Telemetry (drill-down)", Cosmic::DockPort::BottomRight);
+            ws->DockWindow("Live Dashboard",         Cosmic::DockPort::Center);      // CAD + readouts in the center
+            ws->DockWindow("ESC Readouts",           Cosmic::DockPort::RightTop);
+            ws->DockWindow("ESC Plots",              Cosmic::DockPort::RightBottom);
+            ws->DockWindow("Telemetry (drill-down)", Cosmic::DockPort::RightBottom); // tab with ESC Plots
             break;
 
         case MODE_WEAPON:
@@ -193,6 +192,11 @@ namespace Workspace
             ws->DockWindow("Drivetrain Explorers", Cosmic::DockPort::BottomCenter);
             break;
         }
+
+        // The dashboard is tabbed with the central Viewport — make it the active
+        // tab once the Main layout is (re)applied.
+        if (mode == MODE_MAIN && !m_Modes.empty())
+            static_cast<MainLayer*>(m_Modes[MODE_MAIN].get())->RequestDashboardFocus();
 
         m_AppliedDockMode = mode;
     }

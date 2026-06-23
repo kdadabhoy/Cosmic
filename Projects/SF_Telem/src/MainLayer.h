@@ -24,10 +24,16 @@ namespace Workspace
         virtual void OnImGuiRender()           override;
         virtual void OnEvent(Cosmic::Event& e) override;
 
+        // Make the Live Dashboard the active center tab for the next few frames
+        // (the engine docks it tabbed with the Viewport; this selects it on load
+        // and whenever we switch back to the Main screen).
+        void RequestDashboardFocus() { m_DashFocusFrames = 3; }
+
     private:
         void DrawDashboard();
-        void DrawWeaponPanel();
-        void DrawDrivetrainPanel();
+        void DrawStatsPanel();
+        void DrawWeaponStats();
+        void DrawDrivetrainStats();
         void DrawPlots();
         void DrawTelemetry();
 
@@ -37,6 +43,9 @@ namespace Workspace
         // Hardware photos overlaid with live readouts on the dashboard.
         Cosmic::Ref<Cosmic::Texture2D> m_WeaponTex;
         Cosmic::Ref<Cosmic::Texture2D> m_DrivetrainTex;
+
+        // Frames remaining to force-focus the dashboard tab (see RequestDashboardFocus).
+        int m_DashFocusFrames = 3;
     };
 
 } // namespace Workspace
