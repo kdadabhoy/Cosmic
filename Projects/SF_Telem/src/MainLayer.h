@@ -25,6 +25,7 @@ namespace Workspace
         virtual void OnEvent(Cosmic::Event& e) override;
 
     private:
+        void DrawDashboard();
         void DrawWeaponPanel();
         void DrawDrivetrainPanel();
         void DrawPlots();
@@ -32,6 +33,10 @@ namespace Workspace
 
         TelemHub* m_Hub = nullptr;
         Cosmic::OrthographicCameraController m_Camera{ 1280.0f / 720.0f };
+
+        // Hardware photos overlaid with live readouts on the dashboard.
+        Cosmic::Ref<Cosmic::Texture2D> m_WeaponTex;
+        Cosmic::Ref<Cosmic::Texture2D> m_DrivetrainTex;
     };
 
 } // namespace Workspace

@@ -170,8 +170,9 @@ namespace Workspace
         {
         case MODE_MAIN:
             ws->DockWindow("Serial Link",            Cosmic::DockPort::LeftBottom);
-            ws->DockWindow("Weapon System",          Cosmic::DockPort::RightTop);
-            ws->DockWindow("Drivetrain",             Cosmic::DockPort::RightBottom);
+            ws->DockWindow("Live Dashboard",         Cosmic::DockPort::RightTop);
+            ws->DockWindow("Weapon System",          Cosmic::DockPort::RightBottom);
+            ws->DockWindow("Drivetrain",             Cosmic::DockPort::RightBottom); // tab with Weapon System
             ws->DockWindow("ESC Plots",              Cosmic::DockPort::BottomCenter);
             ws->DockWindow("Telemetry (drill-down)", Cosmic::DockPort::BottomRight);
             break;

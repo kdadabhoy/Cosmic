@@ -43,13 +43,21 @@ target_include_directories(spdlog INTERFACE dependencies/spdlog/include)
 add_library(stb_image INTERFACE)
 target_include_directories(stb_image INTERFACE dependencies/stb_image)
 
+add_library(stb_truetype INTERFACE)
+target_include_directories(stb_truetype INTERFACE dependencies/stb_truetype)
+
+add_library(stb_image_write INTERFACE)
+target_include_directories(stb_image_write INTERFACE dependencies/stb_image_write)
+
 # ----------------------------
 # 3. Engine Source Files
 # ----------------------------
-file(GLOB_RECURSE COSMIC_SOURCES 
-    "src/*.cpp" 
+file(GLOB_RECURSE COSMIC_SOURCES
+    "src/*.cpp"
     "src/*.h"
     "dependencies/stb_image/*.cpp"
+    "dependencies/stb_truetype/*.cpp"
+    "dependencies/stb_image_write/*.cpp"
 )
 add_library(Cosmic SHARED ${COSMIC_SOURCES})
 
@@ -57,11 +65,11 @@ add_library(Cosmic SHARED ${COSMIC_SOURCES})
 # 4. Engine Configuration and Linking
 # ----------------------------
 target_include_directories(Cosmic PUBLIC src)
-target_include_directories(Cosmic PRIVATE dependencies/stb_image)
+target_include_directories(Cosmic PRIVATE dependencies/stb_image dependencies/stb_truetype dependencies/stb_image_write)
 target_compile_definitions(Cosmic PRIVATE COSMIC_BUILD_DLL)
 
 # UPDATED: Linked 'entt' PUBLICLY so all dependent client targets inherit the headers
-target_link_libraries(Cosmic PUBLIC imgui implot glad glm entt glfw OpenGL::GL stb_image spdlog)
+target_link_libraries(Cosmic PUBLIC imgui implot glad glm entt glfw OpenGL::GL stb_image stb_truetype stb_image_write spdlog)
 
 # FIXED: Map binaries safely across VS (multi-config) and Ninja/Make (single-config)
 set_target_properties(Cosmic PROPERTIES

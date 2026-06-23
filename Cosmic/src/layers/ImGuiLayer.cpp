@@ -4,6 +4,7 @@
 #include "backends/imgui_impl_glfw.h"
 #include "backends/imgui_impl_opengl3.h"
 #include "core/Application.h"
+#include "ui/Fonts.h"
 #include <GLFW/glfw3.h>
 
 namespace Cosmic
@@ -49,6 +50,11 @@ namespace Cosmic
 
 		ImGui_ImplGlfw_InitForOpenGL(window, true);
 		ImGui_ImplOpenGL3_Init("#version 410");
+
+		// Register custom UI fonts from engine://fonts (and project://fonts) into the
+		// shared atlas. Must happen before the first frame — the OpenGL backend bakes
+		// the atlas texture lazily on the first NewFrame.
+		UI::Fonts::Init();
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////

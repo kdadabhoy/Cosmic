@@ -85,6 +85,11 @@
 #include <imgui.h>
 #include <implot.h>
 
+// User Interface helpers (font registry + overlay/text drawing).
+// Included after ImGui so the header-only overlay helpers see ImGui types.
+#include "ui/Fonts.h"
+#include "ui/Overlay.h"
+
 namespace Cosmic
 {
     /**
