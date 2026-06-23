@@ -34,24 +34,27 @@
 24. [Window System](#24-window-system)
 25. [Complete API Reference Tables](#25-complete-api-reference-tables)
 26. [Telemetry System](#26-telemetry-system)
+27. [Fonts and Text Rendering](#27-fonts-and-text-rendering)
+28. [ImGui Overlay & Image Helpers](#28-imgui-overlay--image-helpers)
+29. [Viewport Visibility & Center Docking](#29-viewport-visibility--center-docking)
 
 ---
 
 ### Part 2: Engine Internals
 
-26. [Source File Map](#26-source-file-map)
-27. [Hot-Reloadable DLL Architecture](#27-hot-reloadable-dll-architecture)
-28. [Top-Down Time Propagation Waterfall](#28-top-down-time-propagation-waterfall)
-29. [The Double-Tick Trap](#29-the-double-tick-trap)
-30. [The OpenGL Graphics Pipeline](#30-the-opengl-graphics-pipeline)
-31. [Hardware Abstraction Architecture](#31-hardware-abstraction-architecture)
-32. [Batch Rendering Deep Dive](#32-batch-rendering-deep-dive)
-33. [Shader Preprocessing System](#33-shader-preprocessing-system)
-34. [RenderPass Stack — Implementation Details](#34-renderpass-stack--implementation-details)
-35. [Parallel Pipeline Architecture](#35-parallel-pipeline-architecture)
-36. [Build System](#36-build-system)
-37. [Event System — Implementation Details](#37-event-system--implementation-details)
-38. [Telemetry System — Implementation Details](#38-telemetry-system--implementation-details)
+30. [Source File Map](#30-source-file-map)
+31. [Hot-Reloadable DLL Architecture](#31-hot-reloadable-dll-architecture)
+32. [Top-Down Time Propagation Waterfall](#32-top-down-time-propagation-waterfall)
+33. [The Double-Tick Trap](#33-the-double-tick-trap)
+34. [The OpenGL Graphics Pipeline](#34-the-opengl-graphics-pipeline)
+35. [Hardware Abstraction Architecture](#35-hardware-abstraction-architecture)
+36. [Batch Rendering Deep Dive](#36-batch-rendering-deep-dive)
+37. [Shader Preprocessing System](#37-shader-preprocessing-system)
+38. [RenderPass Stack — Implementation Details](#38-renderpass-stack--implementation-details)
+39. [Parallel Pipeline Architecture](#39-parallel-pipeline-architecture)
+40. [Build System](#40-build-system)
+41. [Event System — Implementation Details](#41-event-system--implementation-details)
+42. [Telemetry System — Implementation Details](#42-telemetry-system--implementation-details)
 
 ---
 
@@ -2831,13 +2834,116 @@ if (m_Panel.GetMode() == Cosmic::TelemetryPanel::Mode::Replay && m_Player.IsLoad
 
 ---
 
+## 27. Fonts and Text Rendering
+
+Cosmic has **two** text systems, both fed by the same `.ttf`/`.otf` files dropped
+into a fonts folder — `engine://fonts` (bundled with the engine) or
+`project://fonts` (per-project faces):
+
+- **UI text** — `Cosmic::UI::Fonts` registers fonts into ImGui's own glyph atlas,
+  for panels, overlays and HUDs.
+- **World-space text** — `Cosmic::Font` + `Renderer2D::DrawString` draw text inside
+  the 2D scene (it scales/rotates with the camera) using a cached SDF atlas.
+
+The engine bundles **Roboto** Regular / Medium / Bold in `Cosmic/assets/fonts/`.
+
+### UI fonts (ImGui)
+
+At startup the engine scans the fonts folders and registers every face. ImGui's
+built-in font stays the global default (so existing layouts don't shift); custom
+faces are opt-in:
+
+```cpp
+ImFont* bold = Cosmic::UI::Fonts::Get("Roboto-Bold", 26.0f); // by file stem
+Cosmic::UI::Fonts::Push("Roboto-Bold", 26.0f);
+ImGui::Text("Big bold value");
+Cosmic::UI::Fonts::Pop();
+```
+
+ImGui 1.92 renders any size from a single face, so `Get(name, sizePx)` selects by
+name and the size is applied at draw time.
+
+### World-space text (SDF)
+
+`Cosmic::Font` bakes a TTF/OTF into a single-channel **signed distance field** glyph
+atlas (via stb_truetype) so text stays crisp at any zoom. The bake is cached to
+`assets/cache/fonts/` and reused on later runs (re-baked only if the source font
+is newer):
+
+```cpp
+auto font = Cosmic::Font::Get("Roboto-Bold");   // library lookup (or Font::Create("path.ttf"))
+Renderer2D::BeginScene(camera);
+Renderer2D::DrawString("RPM 10445", font, { x, y }, 0.5f, { 1,1,1,1 }); // position + world height
+Renderer2D::EndScene();
+```
+
+| API | Description |
+|-----|-------------|
+| `Font::Create(path, atlasPx = 64)` | Bake (or load from cache) a font from disk. |
+| `Font::Get(name)` / `Font::Default()` | Library lookup by file stem; lazily scans the fonts folders. |
+| `Renderer2D::DrawString(text, font, transform, color, kerning, lineSpacing)` | Draw under an arbitrary transform (glyph metrics are in em units). |
+| `Renderer2D::DrawString(text, font, position, size, color, …)` | Convenience: 2D position + world-space height, no rotation. |
+
+Text is a dedicated batch flushed alongside quads/circles/lines; `\n`, kerning and
+line spacing are supported, and the SDF shader (`assets/shaders/Text.glsl`)
+anti-aliases edges with `fwidth`.
+
+---
+
+## 28. ImGui Overlay & Image Helpers
+
+`Cosmic::UI` (header-only, `ui/Overlay.h`) provides reusable ImGui drawing helpers
+for image overlays and free-form text — ideal for dashboards that annotate a photo
+or diagram with live values:
+
+```cpp
+Cosmic::UI::Rect r = Cosmic::UI::ImageFitted(texture);            // aspect-fit image; returns its rect
+ImDrawList* dl = ImGui::GetWindowDrawList();
+Cosmic::UI::ReadoutBox(dl, r.At(0.5f, 0.2f), "RPM", "10445");     // white box at a normalized point
+Cosmic::UI::Text(dl, r.At(0.1f, 0.9f), IM_COL32_WHITE, "label");  // standalone text primitive
+```
+
+| Helper | Description |
+|--------|-------------|
+| `ImageFitted(tex, region)` | Draw a texture aspect-fitted (letterboxed) into a region; returns the on-screen `Rect`. |
+| `Rect::At(nx, ny)` | Map a normalized [0,1] coordinate to a screen pixel inside the rect — trivial overlay positioning. |
+| `Text(dl, pos, color, text, font, sizePx, align)` | Draw a string with a chosen UI font + alignment. |
+| `TextThick(...)` | Font-agnostic faux-bold fallback. |
+| `ReadoutBox(dl, pos, label, value, style)` | A framed label-over-value box (uses `Text` internally). |
+
+`ReadoutStyle` exposes the fill/border/label/value colors, fonts, sizes, padding,
+rounding and anchor — so the box is just one consumer of the text primitive.
+
+---
+
+## 29. Viewport Visibility & Center Docking
+
+A screen with no 3D scene can hide the central Viewport panel, and client windows
+can dock into the central area:
+
+```cpp
+auto* ws = Cosmic::Application::Get().GetWorkspaceLayer();
+ws->SetViewportVisible(false);                          // remove the empty Viewport tab
+ws->DockWindow("Dashboard", Cosmic::DockPort::Center);  // own the central node
+```
+
+- **`DockPort::Center`** — docks a window tabbed with the central Viewport (or, when
+  the viewport is hidden, in its place). Multiple Center windows tab together.
+- **`SetViewportVisible(bool)`** — when `false`, the Viewport is neither drawn nor
+  docked, leaving the central node for whatever you bind to `Center`. Re-runs the
+  dock builder.
+
+See [Section 24 — Window System](#24-window-system) for the full dock-port API.
+
+---
+
 # Cosmic Engine — Part 2: Engine Internals
 
 > **Audience:** Engine contributors and advanced client developers who need to understand how Cosmic works under the hood. Assumes familiarity with [Part 1 — Client Developer Guide](Part1_ClientGuide.md).
 
 ---
 
-## §26 Source File Map
+## §30 Source File Map
 
 ```
 Cosmic/
@@ -2913,7 +3019,7 @@ Cosmic/
 
 ---
 
-## §27 Hot-Reloadable DLL Architecture
+## §31 Hot-Reloadable DLL Architecture
 
 ### Overview
 
@@ -3002,7 +3108,7 @@ Every component used across the DLL boundary must appear in a `CS_REGISTER_COMPO
 
 ---
 
-## §28 Top-Down Time Propagation Waterfall
+## §32 Top-Down Time Propagation Waterfall
 
 The engine applies a two-level time system. Understanding the exact multiplication order is essential for building correct per-layer timelines.
 
@@ -3117,7 +3223,7 @@ fixedDt (constant 1/60 × sign(TimeScale), fire when ready)
 
 ---
 
-## §29 The Double-Tick Trap
+## §33 The Double-Tick Trap
 
 ### What It Is
 
@@ -3180,7 +3286,7 @@ void TemplateProject::OnEvent(Cosmic::Event& e)
 
 ---
 
-## §30 The OpenGL Graphics Pipeline
+## §34 The OpenGL Graphics Pipeline
 
 ### Command Flow
 
@@ -3250,7 +3356,7 @@ Application::Run() each frame:
 
 ---
 
-## §31 Hardware Abstraction Architecture
+## §35 Hardware Abstraction Architecture
 
 ### Buffer Layout System
 
@@ -3308,7 +3414,7 @@ The VAO stores the attrib-pointer configuration. Binding a `VertexArray` is suff
 
 ---
 
-## §32 Batch Rendering Deep Dive
+## §36 Batch Rendering Deep Dive
 
 ### Purpose
 
@@ -3389,7 +3495,7 @@ The vertex shader reads per-instance attributes (Position, Scale, Color, etc.) f
 
 ---
 
-## §33 Shader Preprocessing System
+## §37 Shader Preprocessing System
 
 ### Three Input Formats
 
@@ -3470,7 +3576,7 @@ glDeleteShader(each)
 
 ---
 
-## §34 RenderPass Stack — Implementation Details
+## §38 RenderPass Stack — Implementation Details
 
 ### RAII Contract
 
@@ -3508,7 +3614,7 @@ When `viewportBounds` is supplied (`glm::vec4{x, y, width, height}`), the render
 
 ---
 
-## §35 Parallel Pipeline Architecture
+## §39 Parallel Pipeline Architecture
 
 ### Thread Pool — `JobSystem`
 
@@ -3664,7 +3770,7 @@ Chunk size: `max(minChunkSize, ceil(totalCount / workerCount))`. This ensures at
 
 ---
 
-## §36 Build System
+## §40 Build System
 
 ### `CMakeLists.txt` Structure
 
@@ -3903,7 +4009,7 @@ build_engine.bat                :: engine-only Debug build
 
 ---
 
-## 37 Event System — Implementation Details
+## 41 Event System — Implementation Details
 
 ### `Event` Base Class
 
@@ -4031,7 +4137,7 @@ This pattern provides `GetStaticType()` (for `EventDispatcher`'s type comparison
 
 ---
 
-## 38 Telemetry System — Implementation Details
+## 42 Telemetry System — Implementation Details
 
 ### Source Files
 

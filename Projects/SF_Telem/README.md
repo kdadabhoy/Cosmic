@@ -13,19 +13,27 @@ screen switcher, sharing a single serial connection and recorder across screens.
 Switch screens from the **Main / Drivetrain / Weapon** buttons in *Project
 Inspector Top*. Each screen registers its panels into the engine's dock ports.
 
-1. **Main** — weapon data-box panel (Current / Voltage / RPM-vs-Predicted, each
-   with live value + running max + reset) over a placeholder weapon image, and a
-   drivetrain data-box panel (Current / Voltage / RPM-vs-Predicted / Speed, per
-   side R + L). Below: **per-ESC plot tabs** (Right / Left / Weapon) and the
-   telemetry drill-down. Records all three ESCs to CSV.
+1. **Main** — a **Live Dashboard** fills the center: the weapon photo on top and
+   the drivetrain photo below, each overlaid with white **readout boxes** that show
+   the live value plus the running **avg + max** (in gray). Three compact **ESC
+   readout panels** (Weapon / Left Drive / Right Drive) line the bottom, each
+   auto-wrapping to 2 boxes per row. The right column holds **per-ESC plot tabs**
+   (Right / Left / Weapon) and the telemetry drill-down. Records all three ESCs to CSV.
 2. **Drivetrain** — the Shear Force drivetrain calculator (inputs, performance
    curves, results + CSV, what-if explorers, to-scale schematic). Mirrors
    `SF_DrivetrainCalcsApp`.
 3. **Weapon** — the weapon data boxes + the predicted spin-up model + weapon
    plots. Drivetrain removed.
 
-> The weapon "image" is a framed placeholder for now — a real texture can be
-> dropped in later without touching the data boxes.
+> The dashboard photos live in `assets/images/` (`SF_Weapon.PNG`,
+> `SF_Drivetrain.PNG`) and load as textures. Box positions are **normalized** over
+> each image (`k_WeaponReadouts` / `k_DriveReadouts` in `MainLayer.cpp`), so moving
+> a box is a one-line edit. The dashboard owns the center via the engine's
+> `DockPort::Center` (the empty Viewport tab is hidden on this screen).
+
+> **Live stats:** every box's avg/max reset together from *Project Inspector Top →
+> Live Stats* — set an **Avg window (s)** to auto-reset on an interval (0 = keep
+> accumulating until you press **Reset All Stats**); each panel also has its own reset.
 
 ## Robustness (1, 2 or 3 ESCs)
 
@@ -42,10 +50,11 @@ shows each ESC's live/stale/absent state.
 | `src/Telemetry.h` | Wire protocol + drive/weapon decode + configs for R/L/W. |
 | `src/TelemHub.{h,cpp}` | Shared backbone: serial, parse/route, samples, max-stats, rings, recorder, weapon model, shared Serial + Recording UI, per-ESC plots. |
 | `src/SF_Telem.{h,cpp}` | Root manager: owns the hub + 3 screens, screen switching, per-screen dock layout, decode constants. |
-| `src/MainLayer.{h,cpp}` | Screen 1 (data boxes + plot tabs). |
+| `src/MainLayer.{h,cpp}` | Screen 1: Live Dashboard (image overlays) + 3 ESC readout panels + plot tabs. |
 | `src/DrivetrainLayer.{h,cpp}` | Screen 2 (drivetrain calculator). |
 | `src/WeaponLayer.{h,cpp}` | Screen 3 (weapon + predicted model). |
-| `src/StatBox.h` | Framed indication-box widgets. |
+| `src/StatBox.h` | Framed indication-box widgets (live value + avg + max) and the responsive grid. |
+| `assets/images/` | Weapon + drivetrain photos shown on the Live Dashboard. |
 | `src/WeaponModel.h` | Predicted weapon spin-up (ported spreadsheet). |
 | `src/DrivetrainModel.h` | Drivetrain spin-up physics. |
 | `firmware/sf_telem_esp32/` | ESP32 sketch: reads all 3 ESCs, R/L/W tags, alive heartbeat. |
@@ -87,7 +96,8 @@ Weapon: WeaponRPM = (eRPM/PolePairs)/Gear ; TipSpeed = WeaponRPM*pi*WeaponDia/10
 
 ## Workflow
 
-1. **Build:** engine first (`build_engine.bat`), then `build.bat` here.
+1. **Build:** `build_all.bat` at the repo root (engine + all projects), or
+   `build_engine.bat` then `build.bat` here.
 2. Flash `firmware/sf_telem_esp32` (or `sf_telem_sim_test`), pair the ESP32 in
    Windows Bluetooth → outgoing COM port.
 3. Run `CosmicApp.exe`, load **SF_Telem**, **Serial Link → Connect** (115200).
@@ -99,7 +109,13 @@ Weapon: WeaponRPM = (eRPM/PolePairs)/Gear ; TipSpeed = WeaponRPM*pi*WeaponDia/10
 
 ## Engine note
 
-Uses the engine dock-port API (`DockWindow(DockPort::…)`) and the shared
-`Cosmic::SerialPort` / `DataRecorder` / `TelemetryPanel`. Multithreading comes
-from those engine subsystems (threaded serial reader + async recorder flush);
-the screen-manager pattern follows the Template Project.
+Uses the engine dock-port API (`DockWindow(DockPort::…)`, incl. `DockPort::Center`
++ `WorkspaceLayer::SetViewportVisible`), the `Cosmic::UI` overlay/font helpers and
+`Cosmic::Texture2D` for the dashboard, and the shared `Cosmic::SerialPort` /
+`DataRecorder` / `TelemetryPanel`. Multithreading comes from those engine
+subsystems (threaded serial reader + async recorder flush); the screen-manager
+pattern follows the Template Project.
+
+See the engine README's [Fonts and Text Rendering](../../README.md#27-fonts-and-text-rendering)
+and [ImGui Overlay & Image Helpers](../../README.md#28-imgui-overlay--image-helpers)
+for the dashboard's text/overlay APIs.
