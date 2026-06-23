@@ -139,6 +139,11 @@ namespace Workspace
     {
         m_MaxCur[id] = m_MaxVolt[id] = m_MaxRpm[id] = m_MaxSpeed[id] = 0.0f;
         if (id == ESC_WEAPON) m_MaxTip = 0.0f;
+
+        // Clear the running-average accumulators for this ESC too.
+        m_SumCur[id] = m_SumVolt[id] = m_SumRpm[id] = m_SumSpeed[id] = 0.0;
+        if (id == ESC_WEAPON) m_SumTip = 0.0;
+        m_StatCount[id] = 0;
     }
     void TelemHub::ResetMaxAll() { for (int i = 0; i < ESC_COUNT; ++i) ResetMax(i); }
 
@@ -167,6 +172,14 @@ namespace Workspace
     void TelemHub::OnUpdate(float ts)
     {
         m_AppClock += std::abs(ts);
+
+        // Windowed averaging: periodically clear max+average so the displayed
+        // stats reflect the most recent window (0 = accumulate until manual reset).
+        if (m_StatsWindowSec > 0.0f && (m_AppClock - m_LastStatsReset) >= m_StatsWindowSec)
+        {
+            ResetMaxAll();
+            m_LastStatsReset = m_AppClock;
+        }
 
         const bool flushing = m_Recorder.IsFlushing();
         if (m_WasFlushing && !flushing) m_RecordStatus = "Export complete.";
@@ -244,6 +257,13 @@ namespace Workspace
                 }
                 m_MaxCur[id]  = std::max(m_MaxCur[id],  Cur(id));
                 m_MaxVolt[id] = std::max(m_MaxVolt[id], Volt(id));
+
+                // Accumulate for the running average (per received sample).
+                m_SumCur[id]  += Cur(id);
+                m_SumVolt[id] += Volt(id);
+                if (IsDrive(id)) { m_SumRpm[id] += m_Drive[id].motorRPM; m_SumSpeed[id] += m_Drive[id].speedMph; }
+                else             { m_SumRpm[id] += m_Weapon.weaponRPM;   m_SumTip       += m_Weapon.tipSpeedMph; }
+                ++m_StatCount[id];
 
                 m_HasData[id]  = true;
                 m_LastSeen[id] = m_AppClock;

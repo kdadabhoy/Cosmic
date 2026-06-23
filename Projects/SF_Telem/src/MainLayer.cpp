@@ -114,8 +114,9 @@ namespace Workspace
             bool        isRpm;     // true -> RpmBox (value/pred/max), else StatBox (value/unit/max)
             float       value;     // StatBox value or RpmBox rpm
             const char* unit;      // StatBox unit
-            float       maxValue;
-            float       predicted; // RpmBox only
+            float       avg;       // running average (shown in gray)
+            float       maxValue;  // running max (shown in gray)
+            float       predicted; // RpmBox only (drives the color tint)
             ImVec4      accent;
         };
 
@@ -143,20 +144,18 @@ namespace Workspace
                 if (i % cols != 0) ImGui::SameLine();
                 const BoxSpec& b = boxes[i];
                 if (b.isRpm)
-                    RpmBox(b.id, b.label, b.value, b.predicted, b.maxValue, b.accent, size);
+                    RpmBox(b.id, b.label, b.value, b.predicted, b.avg, b.maxValue, b.accent, size);
                 else
-                    StatBox(b.id, b.label, b.value, b.unit, b.maxValue, b.accent, size);
+                    StatBox(b.id, b.label, b.value, b.unit, b.avg, b.maxValue, b.accent, size);
             }
         }
 
-        // A faint full-width divider (lighter than ImGui::Separator).
-        void LightDivider()
+        // Compact link-status line ("LIVE" / "STALE" / "no signal").
+        void StatusLine(const TelemHub* hub, int id)
         {
-            ImGui::Spacing();
-            ImGui::PushStyleColor(ImGuiCol_Separator, IM_COL32(255, 255, 255, 28));
-            ImGui::Separator();
-            ImGui::PopStyleColor();
-            ImGui::Spacing();
+            if (hub->Present(id))      ImGui::TextColored({ 0.3f, 1.0f, 0.4f, 1.0f }, "LIVE");
+            else if (hub->HasData(id)) ImGui::TextColored({ 1.0f, 0.7f, 0.2f, 1.0f }, "STALE");
+            else                       ImGui::TextColored({ 1.0f, 0.3f, 0.3f, 1.0f }, "no signal");
         }
     }
 
@@ -184,7 +183,9 @@ namespace Workspace
     void MainLayer::OnImGuiRender()
     {
         DrawDashboard();
-        DrawStatsPanel();
+        DrawWeaponReadouts();
+        DrawDriveReadouts(ESC_LEFT,  "Left Drive");
+        DrawDriveReadouts(ESC_RIGHT, "Right Drive");
         DrawPlots();
         DrawTelemetry();
     }
@@ -239,75 +240,54 @@ namespace Workspace
     }
 
     // -------------------------------------------------------------------------
-    // Combined numeric readouts — weapon + drivetrain in a single panel/tab. The
-    // hardware photos now live on the Live Dashboard, so no image strip here.
-    void MainLayer::DrawStatsPanel()
+    // Three compact readout panels (Weapon / Left Drive / Right Drive) — each its
+    // own dockable window, with boxes auto-wrapping (2 per row when narrow). Each
+    // box shows the live value with running avg + max underneath (in gray).
+    void MainLayer::DrawWeaponReadouts()
     {
-        ImGui::Begin("ESC Readouts");
-        DrawWeaponStats();
-        ImGui::Spacing();
-        DrawDrivetrainStats();
-        ImGui::End();
-    }
-
-    void MainLayer::DrawWeaponStats()
-    {
-        ImGui::SeparatorText("Weapon");
+        ImGui::Begin("Weapon");
 
         const int W = ESC_WEAPON;
-        if (m_Hub->Present(W))
-            ImGui::TextColored({ 0.3f, 1.0f, 0.4f, 1.0f }, "LIVE");
-        else if (m_Hub->HasData(W))
-            ImGui::TextColored({ 1.0f, 0.7f, 0.2f, 1.0f }, "STALE");
-        else
-            ImGui::TextColored({ 1.0f, 0.3f, 0.3f, 1.0f }, "NO SIGNAL — weapon ESC not detected");
-
+        StatusLine(m_Hub, W);
         ImGui::Spacing();
+
         const BoxSpec boxes[] = {
-            { "##wcur",  "Current",    false, m_Hub->Cur(W),  "A", m_Hub->MaxCur(W),  0.0f,                   k_WeaponColor },
-            { "##wvolt", "Voltage",    false, m_Hub->Volt(W), "V", m_Hub->MaxVolt(W), 0.0f,                   k_WeaponColor },
-            { "##wrpm",  "Weapon RPM", true,  m_Hub->Rpm(W),  "",  m_Hub->MaxRpm(W),  m_Hub->PredictedRpm(W), k_WeaponColor },
+            { "##wcur",  "Current",    false, m_Hub->Cur(W),  "A", m_Hub->AvgCur(W),  m_Hub->MaxCur(W),  0.0f,                   k_WeaponColor },
+            { "##wvolt", "Voltage",    false, m_Hub->Volt(W), "V", m_Hub->AvgVolt(W), m_Hub->MaxVolt(W), 0.0f,                   k_WeaponColor },
+            { "##wrpm",  "Weapon RPM", true,  m_Hub->Rpm(W),  "",  m_Hub->AvgRpm(W),  m_Hub->MaxRpm(W),  m_Hub->PredictedRpm(W), k_WeaponColor },
         };
         DrawStatGrid(boxes, IM_ARRAYSIZE(boxes));
 
         ImGui::Spacing();
-        if (ImGui::Button("Reset Weapon Stats")) m_Hub->ResetMax(W);
+        if (ImGui::Button("Reset Stats")) m_Hub->ResetMax(W);
+
+        ImGui::End();
     }
 
-    void MainLayer::DrawDrivetrainStats()
+    void MainLayer::DrawDriveReadouts(int id, const char* title)
     {
-        ImGui::SeparatorText("Drivetrain");
+        ImGui::Begin(title);
 
-        for (int id = ESC_RIGHT; id <= ESC_LEFT; ++id)
-        {
-            if (id == ESC_LEFT) LightDivider();   // visually separate Right / Left
+        const ImVec4 col = DriveColor(id);
+        StatusLine(m_Hub, id);
+        ImGui::Spacing();
 
-            const ImVec4 col = DriveColor(id);
-            ImGui::TextColored(col, "%-6s", IdLabel(id));
-            ImGui::SameLine();
-            if (m_Hub->Present(id))      ImGui::TextColored({ 0.3f, 1.0f, 0.4f, 1.0f }, "LIVE");
-            else if (m_Hub->HasData(id)) ImGui::TextColored({ 1.0f, 0.7f, 0.2f, 1.0f }, "STALE");
-            else                         ImGui::TextColored({ 1.0f, 0.3f, 0.3f, 1.0f }, "no signal");
+        char a[8], b[8], c[8], d[8];
+        snprintf(a, sizeof(a), "##c%d", id); snprintf(b, sizeof(b), "##v%d", id);
+        snprintf(c, sizeof(c), "##r%d", id); snprintf(d, sizeof(d), "##s%d", id);
 
-            char a[8], b[8], c[8], d[8];
-            snprintf(a, sizeof(a), "##c%d", id); snprintf(b, sizeof(b), "##v%d", id);
-            snprintf(c, sizeof(c), "##r%d", id); snprintf(d, sizeof(d), "##s%d", id);
-
-            const BoxSpec boxes[] = {
-                { a, "Current",   false, m_Hub->Cur(id),   "A",   m_Hub->MaxCur(id),   0.0f,                    col },
-                { b, "Voltage",   false, m_Hub->Volt(id),  "V",   m_Hub->MaxVolt(id),  0.0f,                    col },
-                { c, "Motor RPM", true,  m_Hub->Rpm(id),   "",    m_Hub->MaxRpm(id),   m_Hub->PredictedRpm(id), col },
-                { d, "Speed",     false, m_Hub->Speed(id), "mph", m_Hub->MaxSpeed(id), 0.0f,                    col },
-            };
-            DrawStatGrid(boxes, IM_ARRAYSIZE(boxes));
-        }
+        const BoxSpec boxes[] = {
+            { a, "Current",   false, m_Hub->Cur(id),   "A",   m_Hub->AvgCur(id),   m_Hub->MaxCur(id),   0.0f,                    col },
+            { b, "Voltage",   false, m_Hub->Volt(id),  "V",   m_Hub->AvgVolt(id),  m_Hub->MaxVolt(id),  0.0f,                    col },
+            { c, "Motor RPM", true,  m_Hub->Rpm(id),   "",    m_Hub->AvgRpm(id),   m_Hub->MaxRpm(id),   m_Hub->PredictedRpm(id), col },
+            { d, "Speed",     false, m_Hub->Speed(id), "mph", m_Hub->AvgSpeed(id), m_Hub->MaxSpeed(id), 0.0f,                    col },
+        };
+        DrawStatGrid(boxes, IM_ARRAYSIZE(boxes));
 
         ImGui::Spacing();
-        if (ImGui::Button("Reset Drivetrain Stats"))
-        {
-            m_Hub->ResetMax(ESC_RIGHT);
-            m_Hub->ResetMax(ESC_LEFT);
-        }
+        if (ImGui::Button("Reset Stats")) m_Hub->ResetMax(id);
+
+        ImGui::End();
     }
 
     // -------------------------------------------------------------------------

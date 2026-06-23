@@ -116,6 +116,17 @@ namespace Cosmic
         void ClearViewportLayer();
         inline bool HasViewportLayer() const { return m_ClientViewportLayer != nullptr; }
 
+        // Show/hide the central Viewport panel. When hidden, the (often empty)
+        // Viewport tab is not drawn and is not docked, leaving the central node
+        // for whatever the client docks to DockPort::Center. Re-runs the builder.
+        void SetViewportVisible(bool visible)
+        {
+            if (m_ShowViewport == visible) return;
+            m_ShowViewport = visible;
+            m_DockspaceInitialized = false;
+        }
+        bool IsViewportVisible() const { return m_ShowViewport; }
+
         // -----------------------------------------------------------------------
         // Project identification (called by Application after DLL load)
         // -----------------------------------------------------------------------
@@ -228,6 +239,7 @@ namespace Cosmic
         glm::vec2 m_ViewportSize = { 0.0f, 0.0f };
         bool      m_ViewportFocused = false;
         bool      m_ViewportHovered = false;
+        bool      m_ShowViewport    = true;   // see SetViewportVisible()
 
         // Teardown handshake
         bool m_PendingTeardown = false;

@@ -31,9 +31,8 @@ namespace Workspace
 
     private:
         void DrawDashboard();
-        void DrawStatsPanel();
-        void DrawWeaponStats();
-        void DrawDrivetrainStats();
+        void DrawWeaponReadouts();
+        void DrawDriveReadouts(int id, const char* title);
         void DrawPlots();
         void DrawTelemetry();
 

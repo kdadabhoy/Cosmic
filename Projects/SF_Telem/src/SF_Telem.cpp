@@ -124,6 +124,16 @@ namespace Workspace
             ImGui::Separator();
         }
 
+        // ---- Live stats (the avg/max shown on every readout box) ----
+        ImGui::SeparatorText("Live Stats");
+        ImGui::SetNextItemWidth(110);
+        ImGui::DragFloat("Avg window (s)", &m_Hub.StatsWindowSec(), 0.1f, 0.0f, 120.0f, "%.1f");
+        if (ImGui::IsItemHovered())
+            ImGui::SetTooltip("Auto-reset max/avg every N seconds (0 = accumulate until manual reset).");
+        if (ImGui::Button("Reset All Stats")) m_Hub.ResetStats();
+        ImGui::Spacing();
+        ImGui::Separator();
+
         // ---- Decode constants ----
         if (ImGui::CollapsingHeader("Decode Constants"))
         {
@@ -166,8 +176,12 @@ namespace Workspace
         ws->ClearDockWindows();
         ws->DockWindow("Project Inspector Top", Cosmic::DockPort::LeftTop);
 
-        // Give the Main screen a taller bottom strip for the wide ESC Readouts.
+        // Give the Main screen a taller bottom strip for the readout panels.
         ws->SetEdgeRatios(0.20f, 0.20f, 0.18f, mode == MODE_MAIN ? 0.30f : 0.22f);
+
+        // The Main screen has no 3D scene — hide the empty Viewport tab so the
+        // Live Dashboard owns the center outright. Other screens keep the viewport.
+        ws->SetViewportVisible(mode != MODE_MAIN);
 
         switch (mode)
         {
@@ -176,7 +190,9 @@ namespace Workspace
             ws->DockWindow("Live Dashboard",         Cosmic::DockPort::Center);       // CAD + readouts in the center
             ws->DockWindow("ESC Plots",              Cosmic::DockPort::RightTop);
             ws->DockWindow("Telemetry (drill-down)", Cosmic::DockPort::RightTop);     // tab with ESC Plots
-            ws->DockWindow("ESC Readouts",           Cosmic::DockPort::BottomCenter); // wide strip along the bottom
+            ws->DockWindow("Left Drive",             Cosmic::DockPort::BottomLeft);   // three equal readout panels
+            ws->DockWindow("Weapon",                 Cosmic::DockPort::BottomCenter);
+            ws->DockWindow("Right Drive",            Cosmic::DockPort::BottomRight);
             break;
 
         case MODE_WEAPON:

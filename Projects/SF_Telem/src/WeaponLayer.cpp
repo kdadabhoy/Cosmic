@@ -51,13 +51,13 @@ namespace Workspace
             ImGui::TextColored({ 1.0f, 0.3f, 0.3f, 1.0f }, "NO SIGNAL — weapon ESC not detected");
 
         ImGui::Spacing();
-        StatBox("##w2cur", "Current", m_Hub->Cur(W), "A", m_Hub->MaxCur(W), k_WeaponColor);
+        StatBox("##w2cur", "Current", m_Hub->Cur(W), "A", m_Hub->AvgCur(W), m_Hub->MaxCur(W), k_WeaponColor);
         ImGui::SameLine();
-        StatBox("##w2volt", "Voltage", m_Hub->Volt(W), "V", m_Hub->MaxVolt(W), k_WeaponColor);
+        StatBox("##w2volt", "Voltage", m_Hub->Volt(W), "V", m_Hub->AvgVolt(W), m_Hub->MaxVolt(W), k_WeaponColor);
         ImGui::SameLine();
-        RpmBox("##w2rpm", "Weapon RPM", m_Hub->Rpm(W), m_Hub->PredictedRpm(W), m_Hub->MaxRpm(W), k_WeaponColor);
+        RpmBox("##w2rpm", "Weapon RPM", m_Hub->Rpm(W), m_Hub->PredictedRpm(W), m_Hub->AvgRpm(W), m_Hub->MaxRpm(W), k_WeaponColor);
         ImGui::SameLine();
-        StatBox("##w2tip", "Tip speed", m_Hub->Tip(), "mph", m_Hub->MaxTip(), k_WeaponColor);
+        StatBox("##w2tip", "Tip speed", m_Hub->Tip(), "mph", m_Hub->AvgTip(), m_Hub->MaxTip(), k_WeaponColor);
 
         ImGui::Spacing();
         if (ImGui::Button("Reset Weapon Stats")) m_Hub->ResetMax(W);

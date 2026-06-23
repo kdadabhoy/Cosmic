@@ -172,32 +172,42 @@ namespace Cosmic
 		ImGui::End(); // ##CosmicWorkspace
 
 		// ------------------------------------------------------------------
-		// STEP 4 — Viewport panel (owned by WorkspaceLayer)
+		// STEP 4 — Viewport panel (owned by WorkspaceLayer). Optional: a client
+		// can hide it via SetViewportVisible(false) when the scene isn't used.
 		// ------------------------------------------------------------------
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-		ImGui::Begin("Viewport");
+		if (m_ShowViewport)
+		{
+			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+			ImGui::Begin("Viewport");
 
-		m_ViewportFocused = ImGui::IsWindowFocused();
-		m_ViewportHovered = ImGui::IsWindowHovered();
+			m_ViewportFocused = ImGui::IsWindowFocused();
+			m_ViewportHovered = ImGui::IsWindowHovered();
 
-		Cosmic::Application::Get().GetImGuiLayer()->BlockEvents(
-			!m_ViewportFocused && !m_ViewportHovered);
+			Cosmic::Application::Get().GetImGuiLayer()->BlockEvents(
+				!m_ViewportFocused && !m_ViewportHovered);
 
-		// Record content-area origin so pickers can map mouse → viewport space.
-		ImVec2 contentOrigin = ImGui::GetCursorScreenPos();
-		m_ViewportPos = { contentOrigin.x, contentOrigin.y };
+			// Record content-area origin so pickers can map mouse → viewport space.
+			ImVec2 contentOrigin = ImGui::GetCursorScreenPos();
+			m_ViewportPos = { contentOrigin.x, contentOrigin.y };
 
-		ImVec2 panelSize = ImGui::GetContentRegionAvail();
-		if (panelSize.x > 0.0f && panelSize.y > 0.0f)
-			m_ViewportSize = { panelSize.x, panelSize.y };
+			ImVec2 panelSize = ImGui::GetContentRegionAvail();
+			if (panelSize.x > 0.0f && panelSize.y > 0.0f)
+				m_ViewportSize = { panelSize.x, panelSize.y };
 
-		uint32_t textureID =
-			Cosmic::Application::Get().GetFrameBuffer()->GetColorAttachmentRendererID();
-		ImGui::Image(reinterpret_cast<void*>(static_cast<uintptr_t>(textureID)),
-			panelSize, { 0, 1 }, { 1, 0 });
+			uint32_t textureID =
+				Cosmic::Application::Get().GetFrameBuffer()->GetColorAttachmentRendererID();
+			ImGui::Image(reinterpret_cast<void*>(static_cast<uintptr_t>(textureID)),
+				panelSize, { 0, 1 }, { 1, 0 });
 
-		ImGui::End();
-		ImGui::PopStyleVar();
+			ImGui::End();
+			ImGui::PopStyleVar();
+		}
+		else
+		{
+			// No viewport to interact with — let ImGui own all input this frame.
+			Cosmic::Application::Get().GetImGuiLayer()->BlockEvents(true);
+			m_ViewportFocused = m_ViewportHovered = false;
+		}
 
 		// ------------------------------------------------------------------
 		// STEP 5 — Client renders its OWN ImGui windows at top level.
@@ -342,7 +352,7 @@ namespace Cosmic
 			ImGui::DockBuilderDockWindow("Project Inspector Top",    dock_left_top);
 			ImGui::DockBuilderDockWindow("Project Inspector Mid",    dock_left_mid);
 			ImGui::DockBuilderDockWindow("Project Inspector Bottom", dock_left_bottom);
-			ImGui::DockBuilderDockWindow("Viewport", dock_main);
+			if (m_ShowViewport) ImGui::DockBuilderDockWindow("Viewport", dock_main);
 
 			ImGuiID dock_remaining = dock_main;
 			for (const auto& req : m_PendingPanelRequests)
@@ -390,7 +400,7 @@ namespace Cosmic
 		if (useBottom) dock_bottom = ImGui::DockBuilderSplitNode(dock_main, ImGuiDir_Down,  m_BottomRatio, nullptr, &dock_main);
 
 		// Central viewport (+ any windows explicitly bound to Center -> tabbed with it).
-		ImGui::DockBuilderDockWindow("Viewport", dock_main);
+		if (m_ShowViewport) ImGui::DockBuilderDockWindow("Viewport", dock_main);
 		dockAll(portWindows[static_cast<int>(DockPort::Center)], dock_main);
 
 		// Carve an edge node into its used sections and dock each section's windows.

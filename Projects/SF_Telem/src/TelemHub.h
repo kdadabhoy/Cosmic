@@ -90,6 +90,19 @@ namespace Workspace
         void  ResetMax(int id);
         void  ResetMaxAll();
 
+        // ---- Average stats (mean since last reset / over the stats window) ----
+        float AvgCur(int id)   const { return m_StatCount[id] ? (float)(m_SumCur[id]   / m_StatCount[id]) : 0.0f; }
+        float AvgVolt(int id)  const { return m_StatCount[id] ? (float)(m_SumVolt[id]  / m_StatCount[id]) : 0.0f; }
+        float AvgRpm(int id)   const { return m_StatCount[id] ? (float)(m_SumRpm[id]   / m_StatCount[id]) : 0.0f; }
+        float AvgSpeed(int id) const { return m_StatCount[id] ? (float)(m_SumSpeed[id] / m_StatCount[id]) : 0.0f; }
+        float AvgTip()         const { return m_StatCount[ESC_WEAPON] ? (float)(m_SumTip / m_StatCount[ESC_WEAPON]) : 0.0f; }
+
+        // Averaging window (seconds): stats auto-reset after this long, so the
+        // average reflects the last window. 0 = never (mean accumulates until a
+        // manual reset). Bind directly in the UI; ResetStats() also restarts it.
+        float& StatsWindowSec() { return m_StatsWindowSec; }
+        void   ResetStats() { ResetMaxAll(); m_LastStatsReset = m_AppClock; }
+
         // ---- Configs (edited by panels) ----
         DriveConfig&  DriveCfg()  { return m_DriveCfg; }
         WeaponConfig& WeaponCfg() { return m_WeaponCfg; }   // call MarkModelDirty() if gear/dia change
@@ -149,6 +162,16 @@ namespace Workspace
         float m_MaxRpm[ESC_COUNT]   = { 0, 0, 0 };
         float m_MaxSpeed[ESC_COUNT] = { 0, 0, 0 };
         float m_MaxTip = 0.0f;
+
+        // --- Running-average accumulators (mean since last stats reset) ---
+        double   m_SumCur[ESC_COUNT]   = { 0, 0, 0 };
+        double   m_SumVolt[ESC_COUNT]  = { 0, 0, 0 };
+        double   m_SumRpm[ESC_COUNT]   = { 0, 0, 0 };
+        double   m_SumSpeed[ESC_COUNT] = { 0, 0, 0 };
+        double   m_SumTip = 0.0;
+        uint64_t m_StatCount[ESC_COUNT] = { 0, 0, 0 };
+        float    m_StatsWindowSec = 0.0f;   // 0 = never auto-reset
+        float    m_LastStatsReset = 0.0f;
 
         // --- Rings ---
         Ring m_Ring[ESC_COUNT];

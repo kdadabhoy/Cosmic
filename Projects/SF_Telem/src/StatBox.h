@@ -17,23 +17,24 @@ namespace Workspace
         ImGui::SetWindowFontScale(1.0f);
     }
 
-    // A bordered indication box: label, big live value + unit, running max below.
+    // A bordered indication box: label, big live value + unit, then the running
+    // average and max underneath (in the dimmed/gray style).
     inline void StatBox(const char* id, const char* label, float value,
-                        const char* unit, float maxValue, ImVec4 accent,
+                        const char* unit, float avgValue, float maxValue, ImVec4 accent,
                         ImVec2 size = ImVec2(168.0f, 84.0f))
     {
         ImGui::BeginChild(id, size, true);
         ImGui::TextColored(accent, "%s", label);
         char buf[48]; snprintf(buf, sizeof(buf), "%.1f %s", value, unit);
         BigValue(buf, ImVec4(1, 1, 1, 1));
-        ImGui::TextDisabled("max %.1f %s", maxValue, unit);
+        ImGui::TextDisabled("avg %.1f  max %.1f", avgValue, maxValue);
         ImGui::EndChild();
     }
 
-    // RPM-vs-predicted box: big measured RPM, with predicted + max underneath.
+    // RPM-vs-predicted box: big measured RPM, with average + max underneath.
     // The value is tinted green as it approaches/exceeds the predicted ceiling.
     inline void RpmBox(const char* id, const char* label, float rpm,
-                       float predicted, float maxValue, ImVec4 accent,
+                       float predicted, float avgValue, float maxValue, ImVec4 accent,
                        ImVec2 size = ImVec2(200.0f, 84.0f))
     {
         ImGui::BeginChild(id, size, true);
@@ -45,7 +46,7 @@ namespace Workspace
                                        : ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
         char buf[32]; snprintf(buf, sizeof(buf), "%.0f", rpm);
         BigValue(buf, vc);
-        ImGui::TextDisabled("pred %.0f   max %.0f", predicted, maxValue);
+        ImGui::TextDisabled("avg %.0f  max %.0f", avgValue, maxValue);
         ImGui::EndChild();
     }
 
