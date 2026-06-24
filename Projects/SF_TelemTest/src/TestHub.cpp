@@ -276,7 +276,7 @@ namespace Workspace
 
         // ---- Arduino firmware: copy the sketch for the ACTIVE test screen ----
         ImGui::Spacing();
-        if (ImGui::CollapsingHeader("Arduino Firmware"))
+        if (ImGui::CollapsingHeader("Arduino Firmware", ImGuiTreeNodeFlags_DefaultOpen))
         {
             ImGui::TextDisabled("GPIO numbers (NOT the 1-30 board positions)");
             ImGui::SameLine(); FwHelp();

@@ -50,12 +50,12 @@ Each sketch forwards over **USB-Serial and Bluetooth-SPP** (device name
 
 ### Copy a ready-to-flash sketch from the app
 
-In **Serial Link → Arduino Firmware** the section **auto-matches the active test
-screen** — pick the screen you're testing, set its **GPIO** pin(s) — GPIO numbers,
-*not* the 1–30 board positions (e.g. `16` = pad `RX2`); each field shows its pad
-name live (single-drive also has a Right/Left tag toggle; the `(?)` hint and
-**Pinout** pop-out show `assets/images/ESP32_Dev_Pin_Layout.png`), then
-**Copy sketch (.ino)**. The
+The **Serial Link → Arduino Firmware** section (open by default) **auto-matches the
+active test screen** — pick the screen you're testing, set its **GPIO** pin(s) —
+GPIO numbers, *not* the 1–30 board positions (e.g. `16` = pad `RX2`); each field
+shows its pad name live (single-drive also has a Right/Left tag toggle; the `(?)`
+hint and **Pinout** pop-out show `assets/images/ESP32_Dev_Pin_Layout.png` with a
+naming-scheme legend underneath), then **Copy sketch (.ino)**. The
 generated sketch has your pins baked in — paste into the Arduino IDE and upload.
 Templates live in `src/FirmwareTemplates.h` and mirror `firmware/sf_test_*.ino`.
 

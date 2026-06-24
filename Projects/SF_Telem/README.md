@@ -87,11 +87,13 @@ drive and weapon to weapon. To test the missing-ESC behaviour, flash
 
 ### Copy a ready-to-flash sketch from the app
 
-You don't have to hand-edit pins. In **Serial Link → Arduino Firmware** set the
-**Right / Left / Weapon** **GPIO numbers** — these are GPIO numbers, *not* the
-1–30 board positions (e.g. `16` = pad `RX2`, `17` = pad `TX2`, `13` = pad `D13`);
-each field shows its pad name live. The `(?)` hint and the **Pinout** pop-out
-show the board diagram (`assets/images/ESP32_Dev_Pin_Layout.png`), then
+You don't have to hand-edit pins. The **Serial Link → Arduino Firmware** section
+(open by default) lets you set the **Right / Left / Weapon** **GPIO numbers** —
+these are GPIO numbers, *not* the 1–30 board positions (e.g. `16` = pad `RX2`,
+`17` = pad `TX2`, `13` = pad `D13`); each field shows its pad name live. The `(?)`
+hint and the **Pinout** pop-out show the board diagram
+(`assets/images/ESP32_Dev_Pin_Layout.png`) with a naming-scheme legend underneath,
+then
 **Copy firmware (.ino)** — the generated sketch has your pins baked into the
 `#define`s. Paste into the Arduino IDE and upload. **Copy simulator** grabs the
 no-ESC simulator. The embedded templates live in `src/FirmwareTemplates.h` and
