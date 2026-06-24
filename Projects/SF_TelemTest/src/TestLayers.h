@@ -13,6 +13,7 @@
 // sniffer is a raw-activity dashboard.
 
 #include <Cosmic.h>
+#include "Telemetry.h"   // ESC_RIGHT / ESC_LEFT
 
 namespace Workspace
 {
@@ -27,6 +28,7 @@ namespace Workspace
     private:
         TestHub* m_Hub = nullptr;
         Cosmic::Ref<Cosmic::Texture2D> m_Tex;
+        int      m_Side = ESC_RIGHT;   // which drive ESC this test watches (R or L)
     };
 
     class WeaponSingleLayer : public Cosmic::Layer

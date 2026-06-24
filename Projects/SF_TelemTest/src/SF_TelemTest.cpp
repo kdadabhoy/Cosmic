@@ -95,15 +95,15 @@ namespace Workspace
             WeaponConfig& w = m_Hub.WeaponCfg();
 
             ImGui::SeparatorText("Drive (Right + Left)");
-            ImGui::SetNextItemWidth(110); ImGui::InputInt  ("Pole pairs##d", &d.PolePairs);
-            if (d.PolePairs < 1) d.PolePairs = 1;
+            ImGui::SetNextItemWidth(110); ImGui::InputInt  ("Poles##d", &d.Poles);
+            if (d.Poles < 2) d.Poles = 2;
             ImGui::SetNextItemWidth(110); ImGui::InputFloat("Gear ratio##d",     &d.GearRatio,       0, 0, "%.2f");
             ImGui::SetNextItemWidth(110); ImGui::InputFloat("Wheel dia (in)##d", &d.WheelDiameterIn, 0, 0, "%.2f");
             ImGui::SetNextItemWidth(110); ImGui::InputFloat("Slip factor##d",    &d.SlipFactor,      0, 0, "%.3f");
 
             ImGui::SeparatorText("Weapon");
-            ImGui::SetNextItemWidth(110); ImGui::InputInt  ("Pole pairs##w", &w.PolePairs);
-            if (w.PolePairs < 1) w.PolePairs = 1;
+            ImGui::SetNextItemWidth(110); ImGui::InputInt  ("Poles##w", &w.Poles);
+            if (w.Poles < 2) w.Poles = 2;
             ImGui::SetNextItemWidth(110); ImGui::InputFloat("Gear ratio##w",      &w.GearRatio,       0, 0, "%.2f");
             ImGui::SetNextItemWidth(110); ImGui::InputFloat("Weapon dia (in)##w", &w.WeaponDiameterIn, 0, 0, "%.2f");
         }

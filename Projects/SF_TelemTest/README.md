@@ -14,7 +14,9 @@ Switch with the buttons in *Project Inspector Top*. Each screen shows a big
 **PASS / STALE / WAITING** banner, the hardware photo with live overlay boxes,
 and frame diagnostics (good frames, frames/sec, CRC/parse errors, last raw frame).
 
-1. **Single Drive** — verify ONE drive ESC streams valid telemetry.
+1. **Single Drive** — verify ONE drive ESC streams valid telemetry. Pick
+   **Right / Left** at the top to choose which side you're testing (match the
+   sketch's `DRIVE_SIDE`, default `'R'`).
 2. **Single Weapon** — verify the weapon ESC streams valid telemetry.
 3. **Dual Drive** — verify BOTH drive ESCs at once (per-side PASS/PARTIAL).
 4. **Sniffer** — detect **any bytes at all** on each telemetry wire, valid KISS

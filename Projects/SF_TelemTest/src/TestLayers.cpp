@@ -38,6 +38,13 @@ namespace Workspace
             { 0.55f, 0.50f, "VOLTAGE",   ESC_RIGHT, Metric::Volt  },
         };
 
+        const Readout k_DriveLOnly[] = {
+            { 0.15f, 0.22f, "L RPM",     ESC_LEFT, Metric::Rpm   },
+            { 0.15f, 0.50f, "L SPEED",   ESC_LEFT, Metric::Speed },
+            { 0.15f, 0.78f, "L CURRENT", ESC_LEFT, Metric::Cur   },
+            { 0.45f, 0.50f, "VOLTAGE",   ESC_LEFT, Metric::Volt  },
+        };
+
         const Readout k_Dual[] = {
             { 0.15f, 0.22f, "L RPM",     ESC_LEFT,  Metric::Rpm   },
             { 0.15f, 0.50f, "L SPEED",   ESC_LEFT,  Metric::Speed },
@@ -155,17 +162,31 @@ namespace Workspace
     {
         ImGui::Begin("Drive ESC Test");
 
-        EscBanner(m_Hub, ESC_RIGHT, "PASS - drive ESC telemetry OK");
-        const float h = ImGui::GetContentRegionAvail().y;
-        DrawImageOverlay(m_Tex, k_DriveR, IM_ARRAYSIZE(k_DriveR), m_Hub, h * 0.60f);
+        // --- pick which drive side this ESC is being tested as ---
+        ImGui::TextDisabled("Drive side:");
+        ImGui::SameLine();
+        if (ImGui::RadioButton("Right", m_Side == ESC_RIGHT)) m_Side = ESC_RIGHT;
+        ImGui::SameLine();
+        if (ImGui::RadioButton("Left",  m_Side == ESC_LEFT))  m_Side = ESC_LEFT;
+        ImGui::Spacing();
+
+        const bool isRight = (m_Side == ESC_RIGHT);
+        EscBanner(m_Hub, m_Side, isRight ? "PASS - right drive ESC telemetry OK"
+                                         : "PASS - left drive ESC telemetry OK");
+
+        const Readout* tbl = isRight ? k_DriveR : k_DriveLOnly;
+        const int      n   = isRight ? (int)IM_ARRAYSIZE(k_DriveR) : (int)IM_ARRAYSIZE(k_DriveLOnly);
+        const float    h   = ImGui::GetContentRegionAvail().y;
+        DrawImageOverlay(m_Tex, tbl, n, m_Hub, h * 0.58f);
 
         ImGui::Spacing();
-        Diagnostics(m_Hub, ESC_RIGHT, "RIGHT");
+        Diagnostics(m_Hub, m_Side, isRight ? "RIGHT" : "LEFT ");
 
         ImGui::Spacing(); ImGui::Separator();
         ImGui::TextWrapped("Flash firmware/sf_test_single_drive. Wire ONE drive ESC telemetry to "
-                           "GPIO16 (UART1, board silk RX2) + common GND. Power the ESC so it streams; "
-                           "the boxes should populate and the banner turn green.");
+                           "GPIO16 (UART1, board silk RX2) + common GND. Pick the side above to match the "
+                           "sketch's DRIVE_SIDE (default 'R'; set it to 'L' to label the ESC as the left "
+                           "drive). Power the ESC so it streams; the boxes should populate and the banner turn green.");
         ImGui::End();
     }
 

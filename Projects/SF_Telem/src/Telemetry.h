@@ -95,7 +95,7 @@ namespace Workspace
         float VoltageScale    = 0.01f;
         float CurrentScale    = 0.01f;
         float ErpmScale       = 100.0f;
-        int   PolePairs       = 7;       // 14-pole motor = 7
+        int   Poles           = 14;      // motor poles (14-pole drive motor)
         float GearRatio       = 19.0f;   // motor : wheel reduction
         float SlipFactor      = 0.933f;  // drivetrain slip / efficiency
         float WheelDiameterIn = 3.5f;    // drive wheel diameter (in)
@@ -107,7 +107,7 @@ namespace Workspace
         float VoltageScale     = 0.01f;
         float CurrentScale     = 0.01f;
         float ErpmScale        = 100.0f;
-        int   PolePairs        = 3;       // 6-pole motor = 3
+        int   Poles            = 6;       // motor poles (6-pole weapon motor)
         float GearRatio        = 4.0f;    // motor : weapon reduction (4:1 pulley)
         float WeaponDiameterIn = 7.874f;  // weapon tip diameter (in)
     };
@@ -148,11 +148,11 @@ namespace Workspace
             s.consumption = static_cast<float>(p.consumption);
             s.eRPM        = p.erpmRaw   * cfg.ErpmScale;
 
-            const int   pp   = (cfg.PolePairs  > 0)    ? cfg.PolePairs  : 1;
-            const float gr   = (cfg.GearRatio  != 0.0f) ? cfg.GearRatio  : 1.0f;
-            const float slip = (cfg.SlipFactor != 0.0f) ? cfg.SlipFactor : 1.0f;
+            const int   poles = (cfg.Poles      > 1)    ? cfg.Poles      : 2;
+            const float gr    = (cfg.GearRatio  != 0.0f) ? cfg.GearRatio  : 1.0f;
+            const float slip  = (cfg.SlipFactor != 0.0f) ? cfg.SlipFactor : 1.0f;
 
-            s.motorRPM = s.eRPM / static_cast<float>(pp);
+            s.motorRPM = s.eRPM / (poles * 0.5f);   // motor RPM = eRPM / (poles/2)
             const float wheelRPM = s.motorRPM / gr / slip;
             const float circIn   = 3.14159265f * cfg.WheelDiameterIn;
             s.speedMph = wheelRPM * circIn / 1056.0f; // 1 mph == 1056 in/min
@@ -184,10 +184,10 @@ namespace Workspace
             s.consumption = static_cast<float>(p.consumption);
             s.eRPM        = p.erpmRaw   * cfg.ErpmScale;
 
-            const int   pp = (cfg.PolePairs > 0)    ? cfg.PolePairs : 1;
-            const float gr = (cfg.GearRatio != 0.0f) ? cfg.GearRatio : 1.0f;
+            const int   poles = (cfg.Poles     > 1)    ? cfg.Poles     : 2;
+            const float gr    = (cfg.GearRatio != 0.0f) ? cfg.GearRatio : 1.0f;
 
-            s.motorRPM  = s.eRPM / static_cast<float>(pp);
+            s.motorRPM  = s.eRPM / (poles * 0.5f);   // motor RPM = eRPM / (poles/2)
             s.weaponRPM = s.motorRPM / gr;
             const float circIn = 3.14159265f * cfg.WeaponDiameterIn;
             s.tipSpeedMph = s.weaponRPM * circIn / 1056.0f;

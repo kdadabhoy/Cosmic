@@ -88,10 +88,10 @@ drive and weapon to weapon. To test the missing-ESC behaviour, flash
 ## Decode (live-editable in *Project Inspector Top → Decode Constants*)
 
 ```
-Drive:  MotorRPM = eRPM/PolePairs ; Speed_mph = (MotorRPM/Gear/Slip)*pi*WheelDia/1056
-        Predicted RPM = MotorKv * Voltage  (no-load)
-Weapon: WeaponRPM = (eRPM/PolePairs)/Gear ; TipSpeed = WeaponRPM*pi*WeaponDia/1056
-        Predicted RPM = weapon spin-up model steady-state (vs aero drag)
+Drive:  MotorRPM = eRPM/(Poles/2) ; Speed_mph = (MotorRPM/Gear/Slip)*pi*WheelDia/1056
+        (14-pole drive motor)  Predicted RPM = MotorKv * Voltage  (no-load)
+Weapon: WeaponRPM = (eRPM/(Poles/2))/Gear ; TipSpeed = WeaponRPM*pi*WeaponDia/1056
+        (6-pole weapon motor)  Predicted RPM = weapon spin-up model steady-state (vs aero drag)
 ```
 
 ## Workflow

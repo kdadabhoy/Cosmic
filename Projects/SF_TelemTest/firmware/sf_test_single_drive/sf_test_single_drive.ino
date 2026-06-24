@@ -5,7 +5,7 @@
 // Reads ONE drive ESC's KISS telemetry and forwards it as a tagged ASCII frame
 // over USB-Serial AND Bluetooth-SPP, identical to the main SF_Telem protocol:
 //
-//      $R,<temp>,<vraw>,<iraw>,<craw>,<erpmraw>*<HH>\n
+//      $<S>,<temp>,<vraw>,<iraw>,<craw>,<erpmraw>*<HH>\n   (S = DRIVE_SIDE, 'R' or 'L')
 //
 // Wire the drive ESC telemetry pad to:
 //      DRIVE telem  ->  GPIO16  (UART1 RX, board silk "RX2")
@@ -19,6 +19,7 @@
 
 #define BT_DEVICE_NAME  "SF_TelemTest"
 #define DRIVE_TLM_PIN   16        // drive ESC telemetry -> UART1 RX
+#define DRIVE_SIDE      'R'       // 'R' or 'L' — match the app's Right/Left toggle
 #define ESC_BAUD        115200
 #define STALE_MS        600
 
@@ -81,7 +82,7 @@ bool serviceSide(Stream& port)
     if (port.available() >= 10)
     {
         port.readBytes(buf, 10);
-        if (parseESC(buf, tlm)) { sendFrame('R', tlm); tlm.valid = false; return true; }
+        if (parseESC(buf, tlm)) { sendFrame(DRIVE_SIDE, tlm); tlm.valid = false; return true; }
     }
     return false;
 }
@@ -104,7 +105,7 @@ void loop()
     {
         const bool ok = (millis() - lastMs) < STALE_MS;
         char s[48];
-        snprintf(s, sizeof(s), "# R=%s bt=%s\n", ok ? "ok" : "ERR", SerialBT.connected() ? "yes" : "no");
+        snprintf(s, sizeof(s), "# %c=%s bt=%s\n", DRIVE_SIDE, ok ? "ok" : "ERR", SerialBT.connected() ? "yes" : "no");
         broadcastPrint(s);
         lastHeartbeat = millis();
     }
