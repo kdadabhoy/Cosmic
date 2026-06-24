@@ -54,7 +54,8 @@ shows each ESC's live/stale/absent state.
 | `src/DrivetrainLayer.{h,cpp}` | Screen 2 (drivetrain calculator). |
 | `src/WeaponLayer.{h,cpp}` | Screen 3 (weapon + predicted model). |
 | `src/StatBox.h` | Framed indication-box widgets (live value + avg + max) and the responsive grid. |
-| `assets/images/` | Weapon + drivetrain photos shown on the Live Dashboard. |
+| `src/FirmwareTemplates.h` | Embedded `.ino` sources (main + simulator) for the in-app "Copy firmware" buttons. |
+| `assets/images/` | Weapon + drivetrain photos (Live Dashboard) + `ESP32_Dev_Pin_Layout.png` (pinout pop-out). |
 | `src/WeaponModel.h` | Predicted weapon spin-up (ported spreadsheet). |
 | `src/DrivetrainModel.h` | Drivetrain spin-up physics. |
 | `firmware/sf_telem_esp32/` | ESP32 sketch: reads all 3 ESCs, R/L/W tags, alive heartbeat. |
@@ -79,11 +80,22 @@ weapon shares UART0 (RX remapped, USB TX kept). On a 30-pin ESP32 Dev Module:
 | 5 V in      | VIN     | `VIN` | from the UBEC 5 V rail |
 
 All three GPIOs are safe (not flash 6–11, not strapping 0/2/5/12/15, not
-input-only 34–39). Change `RIGHT_TLM_PIN` / `LEFT_TLM_PIN` / `WEAPON_TLM_PIN` at
-the top of the sketch. The `RX2`/`TX2` silk labels are just chip defaults — they
+input-only 34–39). The `RX2`/`TX2` silk labels are just chip defaults — they
 work as inputs via the GPIO matrix. Each frame is tagged R/L/W so drive routes to
 drive and weapon to weapon. To test the missing-ESC behaviour, flash
 `sf_telem_sim_test` and set any of `SEND_RIGHT/LEFT/WEAPON` to 0.
+
+### Copy a ready-to-flash sketch from the app
+
+You don't have to hand-edit pins. In **Serial Link → Arduino Firmware** set the
+**Right / Left / Weapon** **GPIO numbers** — these are GPIO numbers, *not* the
+1–30 board positions (e.g. `16` = pad `RX2`, `17` = pad `TX2`, `13` = pad `D13`);
+each field shows its pad name live. The `(?)` hint and the **Pinout** pop-out
+show the board diagram (`assets/images/ESP32_Dev_Pin_Layout.png`), then
+**Copy firmware (.ino)** — the generated sketch has your pins baked into the
+`#define`s. Paste into the Arduino IDE and upload. **Copy simulator** grabs the
+no-ESC simulator. The embedded templates live in `src/FirmwareTemplates.h` and
+mirror `firmware/*.ino`.
 
 ## Decode (live-editable in *Project Inspector Top → Decode Constants*)
 

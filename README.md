@@ -2910,6 +2910,7 @@ Cosmic::UI::Text(dl, r.At(0.1f, 0.9f), IM_COL32_WHITE, "label");  // standalone 
 | `Text(dl, pos, color, text, font, sizePx, align)` | Draw a string with a chosen UI font + alignment. |
 | `TextThick(...)` | Font-agnostic faux-bold fallback. |
 | `ReadoutBox(dl, pos, label, value, style)` | A framed label-over-value box (uses `Text` internally). |
+| `ImageWindow(title, tex, &open, caption, firstSize)` | A resizable floating window showing a texture aspect-fitted — a generic "pop-out" for reference images (e.g. a board pinout); optional `caption` is wrapped below the image (a legend), and a hint shows when `tex` is null. |
 
 `ReadoutStyle` exposes the fill/border/label/value colors, fonts, sizes, padding,
 rounding and anchor — so the box is just one consumer of the text primitive.

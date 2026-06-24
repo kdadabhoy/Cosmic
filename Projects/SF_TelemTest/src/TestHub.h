@@ -40,6 +40,10 @@ namespace Workspace
         void DrawSerialPanel();      // "Serial Link" window
         bool Connected() const { return m_Serial.IsOpen(); }
 
+        // The firmware copy section auto-matches the active test screen; the root
+        // pushes the active mode here each frame (0=drive,1=weapon,2=dual,3=sniff).
+        void SetActiveTest(int mode) { m_ActiveTest = mode; }
+
         // ---- Per-ESC decoded-frame state (R / L / W) ----
         bool     HasData(int id) const { return m_HasData[id]; }
         bool     Stale(int id)   const;
@@ -103,6 +107,15 @@ namespace Workspace
         std::string              m_RxAccumulator;
         std::string              m_Log;
         bool                     m_AutoScrollLog = true;
+
+        // --- Arduino firmware copy UI (auto-matches the active test screen) ---
+        int  m_ActiveTest  = 0;    // 0=drive 1=weapon 2=dual 3=sniff
+        int  m_FwRightPin  = 16;   // GPIO defaults match the wiring diagram
+        int  m_FwLeftPin   = 17;
+        int  m_FwWeaponPin = 13;
+        int  m_FwDriveSide = 0;    // single-drive tag: 0='R', 1='L'
+        bool m_ShowPinout  = false;
+        Cosmic::Ref<Cosmic::Texture2D> m_PinoutTex;
 
         // --- Configs ---
         DriveConfig  m_DriveCfg;

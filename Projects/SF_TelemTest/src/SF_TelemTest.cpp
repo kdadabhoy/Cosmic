@@ -52,6 +52,7 @@ namespace Workspace
             ApplyDockLayout(m_ActiveMode);
 
         DrawTopPanel();
+        m_Hub.SetActiveTest(m_ActiveMode);   // firmware section follows the active test
         m_Hub.DrawSerialPanel();
 
         if (!m_Modes.empty())

@@ -1,6 +1,7 @@
 // TelemHub.cpp — see TelemHub.h for the overview.
 
 #include "TelemHub.h"
+#include "FirmwareTemplates.h"
 
 #include <imgui.h>
 #include <implot.h>
@@ -24,6 +25,55 @@ namespace Workspace
             return id == ESC_RIGHT ? k_RightColor : id == ESC_LEFT ? k_LeftColor : k_WeaponColor;
         }
         const char* TagFor(int id) { return IsDrive(id) ? "Drive" : "Weapon"; }
+
+        // "(?)" hint with ESP32 pin guidance (consistent with the wiring diagram).
+        void FwHelp()
+        {
+            ImGui::TextDisabled("(?)");
+            if (ImGui::IsItemHovered())
+                ImGui::SetTooltip(
+                    "Enter GPIO numbers - NOT the 1-30 board positions.\n"
+                    "  Right drive  -> GPIO16  (pad RX2,  UART1 RX)\n"
+                    "  Left  drive  -> GPIO17  (pad TX2,  UART2 RX)\n"
+                    "  Weapon       -> GPIO13  (pad D13,  UART0 RX; TX stays on GPIO1 for USB)\n"
+                    "Avoid flash pins 6-11 and strapping pins 0/2/5/12/15.\n"
+                    "Click Pinout for the board diagram.");
+        }
+
+        void ClampPin(int& p) { if (p < 0) p = 0; if (p > 39) p = 39; }
+
+        // GPIO -> the silk pad label on a 30-pin ESP32-WROOM-32 dev module.
+        std::string PadName(int gpio)
+        {
+            switch (gpio)
+            {
+            case 16: return "RX2"; case 17: return "TX2";
+            case 1:  return "TX0"; case 3:  return "RX0";
+            case 36: return "VP";  case 39: return "VN";
+            default: return "D" + std::to_string(gpio);
+            }
+        }
+
+        // GPIO number input that shows the live pad name beside it.
+        void PinInput(const char* label, int& pin)
+        {
+            ImGui::SetNextItemWidth(80);
+            ImGui::InputInt(label, &pin);
+            ClampPin(pin);
+            ImGui::SameLine();
+            ImGui::TextDisabled("= GPIO%d, pad %s", pin, PadName(pin).c_str());
+        }
+
+        // Legend shown under the pinout image (explains the board's naming scheme).
+        const char* k_PinoutCaption =
+            "Naming on this 30-pin ESP32 board:\n"
+            "- The 1-30 numbers around the edge are PHYSICAL POSITIONS, not GPIOs - never used in code.\n"
+            "- The inner labels are each pin's GPIO / function (this is what code uses):\n"
+            "    'D<n>' pads  = GPIO<n>   (D13 = GPIO13, D34 = GPIO34, ...)\n"
+            "    named pads   : RX2=GPIO16  TX2=GPIO17  RX0=GPIO3  TX0=GPIO1  VP=GPIO36  VN=GPIO39\n"
+            "    3V3 / GND / VIN / EN are power/control pins, not GPIOs.\n"
+            "- The pin fields here take GPIO numbers: 16 -> pad RX2, 17 -> pad TX2, 13 -> pad D13.\n"
+            "- Avoid flash pins GPIO6-11 and strapping pins GPIO0/2/5/12/15; GPIO34-39 are input-only.";
     }
 
     // =========================================================================
@@ -368,6 +418,34 @@ namespace Workspace
         ImGui::Text("Frames  good: %llu   bad: %llu",
                     (unsigned long long)m_GoodFrames, (unsigned long long)m_BadFrames);
 
+        // ---- Arduino firmware: copy a ready-to-flash sketch with your pins ----
+        ImGui::Spacing();
+        if (ImGui::CollapsingHeader("Arduino Firmware"))
+        {
+            ImGui::TextDisabled("GPIO numbers (NOT the 1-30 board positions)");
+            ImGui::SameLine(); FwHelp();
+
+            PinInput("Right##fwr",  m_FwRightPin);
+            PinInput("Left##fwl",   m_FwLeftPin);
+            PinInput("Weapon##fww", m_FwWeaponPin);
+
+            ImGui::Spacing();
+            if (ImGui::Button("Copy firmware (.ino)"))
+                ImGui::SetClipboardText(BuildMainFirmware(m_FwRightPin, m_FwLeftPin, m_FwWeaponPin).c_str());
+            ImGui::SameLine();
+            if (ImGui::Button("Copy simulator"))
+                ImGui::SetClipboardText(BuildSimulatorFirmware().c_str());
+            ImGui::SameLine();
+            if (ImGui::Button("Pinout"))
+            {
+                m_ShowPinout = !m_ShowPinout;
+                if (m_ShowPinout && !m_PinoutTex)
+                    m_PinoutTex = Cosmic::Texture2D::Create(
+                        Cosmic::FileSystem::Resolve("project://images/ESP32_Dev_Pin_Layout.png"));
+            }
+            ImGui::TextDisabled("Paste into the Arduino IDE and upload.");
+        }
+
         ImGui::Separator();
         if (ImGui::Button("Copy Log")) ImGui::SetClipboardText(m_Log.c_str());
         ImGui::SameLine();
@@ -382,6 +460,9 @@ namespace Workspace
         ImGui::EndChild();
 
         ImGui::End();
+
+        // ESP32 pinout reference — its own floating window (toggled above).
+        Cosmic::UI::ImageWindow("ESP32 Pinout", m_PinoutTex, &m_ShowPinout, k_PinoutCaption);
     }
 
     // =========================================================================

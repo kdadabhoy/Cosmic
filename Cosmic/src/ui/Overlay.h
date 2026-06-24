@@ -235,5 +235,45 @@ namespace Cosmic
 
 			return r;
 		}
+
+		// A resizable floating window that shows a texture aspect-fitted — a generic
+		// "pop-out" for reference images (e.g. a board pinout). The caller owns the
+		// open flag; pass &bool so the window's close button works. An optional
+		// `caption` is wrapped below the image (e.g. a legend / naming key).
+		inline void ImageWindow(const char* title, const Ref<Texture2D>& tex, bool* p_open,
+		                        const char* caption = nullptr,
+		                        ImVec2 firstSize = ImVec2(460.0f, 720.0f))
+		{
+			if (!p_open || !*p_open) return;
+			ImGui::SetNextWindowSize(firstSize, ImGuiCond_FirstUseEver);
+			if (ImGui::Begin(title, p_open))
+			{
+				const bool hasCaption = caption && *caption;
+
+				if (tex && tex->GetWidth() > 0)
+				{
+					ImVec2 avail = ImGui::GetContentRegionAvail();
+					float  capH  = 0.0f;
+					if (hasCaption)
+						capH = ImGui::CalcTextSize(caption, nullptr, false, avail.x).y
+						     + ImGui::GetStyle().ItemSpacing.y * 3.0f;
+
+					float imgH = avail.y - capH;
+					if (imgH < 48.0f) imgH = avail.y;   // tiny window: prioritise the image
+					ImageFitted(tex, ImVec2(avail.x, imgH));
+				}
+				else
+				{
+					ImGui::TextWrapped("Image not found. Place the file in assets/images and rebuild.");
+				}
+
+				if (hasCaption)
+				{
+					ImGui::Separator();
+					ImGui::TextWrapped("%s", caption);
+				}
+			}
+			ImGui::End();
+		}
 	}
 }

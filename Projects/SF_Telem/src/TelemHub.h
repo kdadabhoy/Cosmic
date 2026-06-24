@@ -138,6 +138,13 @@ namespace Workspace
         uint64_t                 m_GoodFrames = 0;
         uint64_t                 m_BadFrames  = 0;
 
+        // --- Arduino firmware copy UI (Serial Link -> Arduino Firmware) ---
+        int  m_FwRightPin  = 16;   // GPIO defaults match the wiring diagram
+        int  m_FwLeftPin   = 17;
+        int  m_FwWeaponPin = 13;
+        bool m_ShowPinout  = false;
+        Cosmic::Ref<Cosmic::Texture2D> m_PinoutTex;
+
         // --- Configs ---
         DriveConfig  m_DriveCfg;
         WeaponConfig m_WeaponCfg;

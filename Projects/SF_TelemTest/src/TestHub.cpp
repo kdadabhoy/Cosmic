@@ -1,12 +1,14 @@
 // TestHub.cpp — see TestHub.h.
 
 #include "TestHub.h"
+#include "FirmwareTemplates.h"
 
 #include <imgui.h>
 
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
+#include <string>
 
 namespace Workspace
 {
@@ -14,6 +16,55 @@ namespace Workspace
     {
         const ImVec4 k_Live = { 0.30f, 1.00f, 0.45f, 1.0f };
         const ImVec4 k_Dead = { 1.00f, 0.35f, 0.35f, 1.0f };
+
+        // "(?)" hint with ESP32 pin guidance (consistent with the wiring diagram).
+        void FwHelp()
+        {
+            ImGui::TextDisabled("(?)");
+            if (ImGui::IsItemHovered())
+                ImGui::SetTooltip(
+                    "Enter GPIO numbers - NOT the 1-30 board positions.\n"
+                    "  Drive/Right -> GPIO16  (pad RX2,  UART1 RX)\n"
+                    "  Left  drive -> GPIO17  (pad TX2,  UART2 RX)\n"
+                    "  Weapon      -> GPIO13  (pad D13,  UART0 RX; TX stays on GPIO1 for USB)\n"
+                    "Avoid flash pins 6-11 and strapping pins 0/2/5/12/15.\n"
+                    "Click Pinout for the board diagram.");
+        }
+
+        void ClampPin(int& p) { if (p < 0) p = 0; if (p > 39) p = 39; }
+
+        // GPIO -> the silk pad label on a 30-pin ESP32-WROOM-32 dev module.
+        std::string PadName(int gpio)
+        {
+            switch (gpio)
+            {
+            case 16: return "RX2"; case 17: return "TX2";
+            case 1:  return "TX0"; case 3:  return "RX0";
+            case 36: return "VP";  case 39: return "VN";
+            default: return "D" + std::to_string(gpio);
+            }
+        }
+
+        // GPIO number input that shows the live pad name beside it.
+        void PinInput(const char* label, int& pin)
+        {
+            ImGui::SetNextItemWidth(80);
+            ImGui::InputInt(label, &pin);
+            ClampPin(pin);
+            ImGui::SameLine();
+            ImGui::TextDisabled("= GPIO%d, pad %s", pin, PadName(pin).c_str());
+        }
+
+        // Legend shown under the pinout image (explains the board's naming scheme).
+        const char* k_PinoutCaption =
+            "Naming on this 30-pin ESP32 board:\n"
+            "- The 1-30 numbers around the edge are PHYSICAL POSITIONS, not GPIOs - never used in code.\n"
+            "- The inner labels are each pin's GPIO / function (this is what code uses):\n"
+            "    'D<n>' pads  = GPIO<n>   (D13 = GPIO13, D34 = GPIO34, ...)\n"
+            "    named pads   : RX2=GPIO16  TX2=GPIO17  RX0=GPIO3  TX0=GPIO1  VP=GPIO36  VN=GPIO39\n"
+            "    3V3 / GND / VIN / EN are power/control pins, not GPIOs.\n"
+            "- The pin fields here take GPIO numbers: 16 -> pad RX2, 17 -> pad TX2, 13 -> pad D13.\n"
+            "- Avoid flash pins GPIO6-11 and strapping pins GPIO0/2/5/12/15; GPIO34-39 are input-only.";
     }
 
     void TestHub::Init()    {}
@@ -223,6 +274,54 @@ namespace Workspace
                     (unsigned long long)m_Good[ESC_WEAPON],
                     (unsigned long long)m_BadFrames);
 
+        // ---- Arduino firmware: copy the sketch for the ACTIVE test screen ----
+        ImGui::Spacing();
+        if (ImGui::CollapsingHeader("Arduino Firmware"))
+        {
+            ImGui::TextDisabled("GPIO numbers (NOT the 1-30 board positions)");
+            ImGui::SameLine(); FwHelp();
+
+            std::string sketch;
+            switch (m_ActiveTest)
+            {
+            case 1: // single weapon
+                PinInput("Weapon##fww", m_FwWeaponPin);
+                sketch = BuildSingleWeapon(m_FwWeaponPin);
+                break;
+            case 2: // dual drive
+                PinInput("Right##fwr", m_FwRightPin);
+                PinInput("Left##fwl",  m_FwLeftPin);
+                sketch = BuildDualDrive(m_FwRightPin, m_FwLeftPin);
+                break;
+            case 3: // sniffer
+                PinInput("Right##fwr",  m_FwRightPin);
+                PinInput("Left##fwl",   m_FwLeftPin);
+                PinInput("Weapon##fww", m_FwWeaponPin);
+                sketch = BuildSniffer(m_FwRightPin, m_FwLeftPin, m_FwWeaponPin);
+                break;
+            default: // 0 = single drive
+                PinInput("Drive##fwd", m_FwRightPin);
+                ImGui::TextDisabled("Side:"); ImGui::SameLine();
+                if (ImGui::RadioButton("R##fwside", m_FwDriveSide == 0)) m_FwDriveSide = 0;
+                ImGui::SameLine();
+                if (ImGui::RadioButton("L##fwside", m_FwDriveSide == 1)) m_FwDriveSide = 1;
+                sketch = BuildSingleDrive(m_FwRightPin, m_FwDriveSide == 0 ? 'R' : 'L');
+                break;
+            }
+
+            ImGui::Spacing();
+            if (ImGui::Button("Copy sketch (.ino)")) ImGui::SetClipboardText(sketch.c_str());
+            ImGui::SameLine();
+            if (ImGui::Button("Pinout"))
+            {
+                m_ShowPinout = !m_ShowPinout;
+                if (m_ShowPinout && !m_PinoutTex)
+                    m_PinoutTex = Cosmic::Texture2D::Create(
+                        Cosmic::FileSystem::Resolve("project://images/ESP32_Dev_Pin_Layout.png"));
+            }
+            ImGui::TextDisabled("Sketch follows the active test screen. Paste into Arduino IDE.");
+        }
+
         ImGui::Separator();
         if (ImGui::Button("Copy Log")) ImGui::SetClipboardText(m_Log.c_str());
         ImGui::SameLine();
@@ -237,6 +336,9 @@ namespace Workspace
         ImGui::EndChild();
 
         ImGui::End();
+
+        // ESP32 pinout reference — its own floating window (toggled above).
+        Cosmic::UI::ImageWindow("ESP32 Pinout", m_PinoutTex, &m_ShowPinout, k_PinoutCaption);
     }
 
 } // namespace Workspace
