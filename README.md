@@ -55,6 +55,7 @@
 40. [Build System](#40-build-system)
 41. [Event System — Implementation Details](#41-event-system--implementation-details)
 42. [Telemetry System — Implementation Details](#42-telemetry-system--implementation-details)
+43. [Known Limitations & Roadmap](#43-known-limitations--roadmap)
 
 ---
 
@@ -4383,5 +4384,34 @@ Storing `recordId` on `AgentComponent` means each worker thread reads and record
 `AgentSystem` uses `ReadWriteQuery<AgentComponent>` with `ForEachAsync` (the async variant that does not call `WaitIdle`). The scene issues a single `WaitIdle` barrier after all systems have submitted their parallel work, allowing `AgentSystem` jobs to overlap with any other `ParallelSystem` registered in the same scene.
 
 `OnFixedMerge` then walks the staged results with `ForEachWithEntity` and copies `agent.position` back to `TransformComponent`. This two-buffer discipline — `AgentComponent.position` written in parallel, `TransformComponent.Position` written on the main thread in merge — is what makes the renderer safe: the renderer reads `TransformComponent` in `OnUpdate`, which follows the fixed-update pass where `OnFixedMerge` has already completed and the engine has committed the query back to the registry.
+
+---
+
+## §43 Known Limitations & Roadmap
+
+The engine is production-usable for 2D simulation and telemetry work, but a handful of known rough
+edges are tracked rather than hidden. The two living documents below are kept current against the
+source and are the place to look before filing a bug or starting a refactor:
+
+| Document | Purpose |
+| -------- | ------- |
+| [`docs/IMPROVEMENTS.md`](docs/IMPROVEMENTS.md) | Prioritized, actionable roadmap — the short list of changes to make next, ordered by return on effort. Start here. |
+| [`docs/engine_analysis.md`](docs/engine_analysis.md) | The longer reference analysis: full subsystem walkthroughs and an exhaustive P1–P4 issue list. |
+
+**Known limitations to be aware of as a client developer:**
+
+- **Renderer statistics under-report.** `Stats.LineCount` is never incremented and
+  `GetTotalIndexCount()` omits circles, so the profiling overlay undercounts line and circle work. Use
+  `DrawCalls`/`QuadCount` as the reliable figures until this is fixed (see IMPROVEMENTS §1.1).
+- **Grayscale textures render black.** Only 3- and 4-channel images are uploaded correctly today;
+  1- and 2-channel PNGs produce an invalid GL format. Export sprites as RGB/RGBA until IMPROVEMENTS §1.3
+  lands.
+- **`ComponentArray<T>` is single-page.** It is only valid below EnTT's page size (~1024 entities);
+  past that, prefer `FlatComponentArray<T>`. The guard is Debug-only today (IMPROVEMENTS §4.1).
+- **`Renderer::Submit` does not share a camera with `Renderer2D`.** Treat it as a low-level custom-shader
+  escape hatch; do not mix it with `Renderer2D::DrawQuad` in the same frame expecting one camera
+  (IMPROVEMENTS §3.2).
+- **`FramebufferSpecification::Samples` / `SwapChainTarget` are reserved.** Setting them has no effect
+  yet — there is no MSAA path (IMPROVEMENTS §5.4).
 
 ---
