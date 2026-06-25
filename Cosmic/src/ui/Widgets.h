@@ -46,5 +46,16 @@ namespace Cosmic
 
 		// A filled "primary action" button tinted with the theme accent.
 		COSMIC_API bool AccentButton(const char* label, const ImVec2& size = ImVec2(0.0f, 0.0f));
+
+		// A ready-made theme picker: a list of every registered theme (accent
+		// swatch + name), applying the clicked one immediately. Drop it into any
+		// window. The engine can also host it for you as a dockable panel — see
+		// WorkspaceLayer::ShowThemeSelector().
+		COSMIC_API void ThemeSelector();
+
+		// Right-aligned window control buttons (minimize / maximize-restore /
+		// close) wired to the application window. Draw inside your custom title
+		// bar / menu bar when using borderless chrome.
+		COSMIC_API void WindowControls();
 	}
 }

@@ -5,6 +5,8 @@
 #include "TemplateTelemetryLayer.h"
 #include "TemplateThemeShowcaseLayer.h"
 
+#include "layers/WorkspaceLayer.h"
+
 #include <imgui.h>
 #include <filesystem>
 
@@ -62,6 +64,25 @@ namespace Workspace
 		for (auto& mode : m_Modes)
 		{
 			mode->OnAttach();
+		}
+
+		// ---------------------------------------------------------------------
+		// 5b. Dock layout — bind panels to engine dock ports.
+		//
+		// Window names are ARBITRARY; they just have to match the string you pass
+		// to ImGui::Begin("..."). The old "Project Inspector Top/Mid/Bottom" magic
+		// names are no longer required — name your windows whatever you like and
+		// dock them to any DockPort here.
+		// ---------------------------------------------------------------------
+		if (auto* ws = Cosmic::Application::Get().GetWorkspaceLayer())
+		{
+			ws->DockWindow("Project Inspector Top", Cosmic::DockPort::LeftTop);
+			ws->DockWindow("Project Inspector Mid", Cosmic::DockPort::LeftMiddle);
+			ws->DockWindow("Telemetry",             Cosmic::DockPort::BottomCenter);
+			ws->DockWindow(THEME_STUDIO_WINDOW,     Cosmic::DockPort::Center);
+
+			// Engine-hosted theme picker, docked top-right in a single call.
+			ws->ShowThemeSelector(true, Cosmic::DockPort::RightTop, "Themes");
 		}
 
 		// ---------------------------------------------------------------------

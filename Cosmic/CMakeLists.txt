@@ -71,6 +71,11 @@ target_compile_definitions(Cosmic PRIVATE COSMIC_BUILD_DLL)
 # UPDATED: Linked 'entt' PUBLICLY so all dependent client targets inherit the headers
 target_link_libraries(Cosmic PUBLIC imgui implot glad glm entt glfw OpenGL::GL stb_image stb_truetype stb_image_write spdlog)
 
+# Borderless custom window chrome uses DWM (drop shadow) on Windows.
+if(WIN32)
+    target_link_libraries(Cosmic PRIVATE dwmapi)
+endif()
+
 # FIXED: Map binaries safely across VS (multi-config) and Ninja/Make (single-config)
 set_target_properties(Cosmic PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${COSMIC_SDK_DIR}/build/Runtime/$<CONFIG>"

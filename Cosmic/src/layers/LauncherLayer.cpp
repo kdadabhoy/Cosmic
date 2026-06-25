@@ -3,11 +3,14 @@
 
 #include "LauncherLayer.h"
 #include "core/Application.h"
+#include "core/Window.h"
 #include "renderer/RenderCommand.h"
 #include "renderer/Renderer2D.h"
 #include "camera/OrthographicCamera.h"
 #include "graphics/Shader.h"
 #include "layers/ImGuiLayer.h"
+#include "ui/Widgets.h"
+#include "ui/IconsLucide.h"
 #include "core/Log.h"
 #include <imgui.h>
 #include <imgui_internal.h>
@@ -125,6 +128,10 @@ namespace Cosmic
 	{
 		ImGuiLayer::SetTheme("Sleek Pro");
 
+		// Borderless chrome: report our title-bar drag region to the window.
+		Cosmic::Application::Get().GetWindow().SetTitlebarHitTestCallback(
+			[this](int, int) { return m_TitlebarDrag; });
+
 		// Try to build an animated background material from the built-in launcher shader.
 		// Falls back gracefully to a plain clear colour if the shader is absent.
 		const std::string shaderPath = "assets/shaders/Launcher.glsl";
@@ -148,6 +155,7 @@ namespace Cosmic
 
 	void LauncherLayer::OnDetach()
 	{
+		Cosmic::Application::Get().GetWindow().ClearTitlebarHitTestCallback();
 		m_BgMaterial.reset();
 	}
 
@@ -244,6 +252,34 @@ namespace Cosmic
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 		ImGui::Begin("##CosmicLauncher", nullptr, hostFlags);
 		ImGui::PopStyleVar(3);
+
+		// -----------------------------------------------------------------------
+		// Custom borderless title bar: app name (left), window controls (right),
+		// and a drag region across the top band.
+		// -----------------------------------------------------------------------
+		{
+			const float barH = ImGui::GetFrameHeight() + 6.0f;
+			ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
+			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(8.0f, 3.0f));
+			ImGui::BeginChild("##LauncherTitleBar", ImVec2(0.0f, barH), false,
+				ImGuiWindowFlags_NoScrollbar);
+
+			ImGui::AlignTextToFramePadding();
+			ImGui::TextColored(ImVec4(0.30f, 0.72f, 1.00f, 1.0f),
+				"  " ICON_LC_ROCKET "  Cosmic Engine");
+			ImGui::SameLine();
+			Cosmic::UI::WindowControls();
+
+			ImGui::EndChild();
+			ImGui::PopStyleVar();
+			ImGui::PopStyleColor();
+
+			const ImVec2 mouse = ImGui::GetMousePos();
+			const bool inBar =
+				mouse.x >= vp->Pos.x && mouse.x < vp->Pos.x + vp->Size.x &&
+				mouse.y >= vp->WorkPos.y && mouse.y < vp->WorkPos.y + barH;
+			m_TitlebarDrag = inBar && !ImGui::IsAnyItemHovered() && !ImGui::IsAnyItemActive();
+		}
 
 		// -----------------------------------------------------------------------
 		// Centre panel — fixed size, centred on screen

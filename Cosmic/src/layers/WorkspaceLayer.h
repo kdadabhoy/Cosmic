@@ -183,6 +183,39 @@ namespace Cosmic
             m_DockspaceInitialized = false;
         }
 
+        // -----------------------------------------------------------------------
+        // Engine-hosted theme selector.
+        //
+        // One call gives the client a ready-made, dockable theme picker — the
+        // engine owns the window and renders Cosmic::UI::ThemeSelector() into it;
+        // the client just chooses where it docks. Call from OnAttach:
+        //
+        //   auto* ws = Cosmic::Application::Get().GetWorkspaceLayer();
+        //   ws->ShowThemeSelector(true, Cosmic::DockPort::RightTop);   // or any port
+        //
+        // Pass a custom windowName to control its tab label (and dock identity).
+        // -----------------------------------------------------------------------
+        void ShowThemeSelector(bool show, DockPort port = DockPort::RightTop,
+                               const char* windowName = "Themes")
+        {
+            m_ThemeSelectorWindow = (windowName && *windowName) ? windowName : "Themes";
+            m_ThemeSelectorPort   = port;
+            m_ShowThemeSelector   = show;
+
+            if (show)
+            {
+                DockWindow(m_ThemeSelectorWindow, port); // also flags a rebuild
+            }
+            else
+            {
+                // Drop its binding so a hidden selector doesn't carve empty space.
+                for (auto it = m_DockBindings.begin(); it != m_DockBindings.end(); ++it)
+                    if (it->WindowName == m_ThemeSelectorWindow) { m_DockBindings.erase(it); break; }
+                m_DockspaceInitialized = false;
+            }
+        }
+        bool IsThemeSelectorVisible() const { return m_ShowThemeSelector; }
+
         // Per-edge size as a fraction of the dockspace. Optional; sane defaults
         // are used otherwise. Re-runs the builder next frame.
         void SetEdgeRatios(float left, float right, float top, float bottom)
@@ -253,6 +286,16 @@ namespace Cosmic
 
         // Window -> port bindings registered via DockWindow() (new dock-port API)
         std::vector<DockBinding> m_DockBindings;
+
+        // Engine-hosted theme selector window (see ShowThemeSelector()).
+        bool        m_ShowThemeSelector   = false;
+        std::string m_ThemeSelectorWindow = "Themes";
+        DockPort    m_ThemeSelectorPort   = DockPort::RightTop;
+
+        // Borderless chrome: whether the cursor is over the draggable part of the
+        // custom title bar (the menu bar minus its menus/buttons). Read by the
+        // window's hit-test callback (registered in OnAttach).
+        bool m_TitlebarDrag = false;
 
         // Per-edge layout ratios (fraction of the dockspace) — tunable via SetEdgeRatios.
         float m_LeftRatio   = 0.20f;

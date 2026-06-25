@@ -1,4 +1,5 @@
 #include "WorkspaceLayer.h"
+#include "core/Window.h"
 #include <imgui.h>
 #include <imgui_internal.h>
 
@@ -16,12 +17,16 @@ namespace Cosmic
 
 	void WorkspaceLayer::OnAttach()
 	{
-		// Nothing to load — starts completely clean.
-		// DLL plugin loaders push their layer via SetViewportLayer().
+		// Report the draggable title-bar region to the borderless window chrome.
+		// The predicate just returns the flag we recompute each frame while drawing
+		// the menu/title bar (1-frame lag is fine for dragging).
+		Cosmic::Application::Get().GetWindow().SetTitlebarHitTestCallback(
+			[this](int, int) { return m_TitlebarDrag; });
 	}
 
 	void WorkspaceLayer::OnDetach()
 	{
+		Cosmic::Application::Get().GetWindow().ClearTitlebarHitTestCallback();
 		ClearViewportLayer();
 		// Do NOT call ImGui functions here — context may already be torn down.
 	}
@@ -210,6 +215,17 @@ namespace Cosmic
 		}
 
 		// ------------------------------------------------------------------
+		// STEP 4.5 — Engine-hosted theme selector (optional; docked via the
+		// binding registered in ShowThemeSelector).
+		// ------------------------------------------------------------------
+		if (m_ShowThemeSelector)
+		{
+			if (ImGui::Begin(m_ThemeSelectorWindow.c_str()))
+				UI::ThemeSelector();
+			ImGui::End();
+		}
+
+		// ------------------------------------------------------------------
 		// STEP 5 — Client renders its OWN ImGui windows at top level.
 		//
 		// Clients that want to appear in the default "Project Inspector" slot
@@ -260,6 +276,16 @@ namespace Cosmic
 			if (ImGui::MenuItem("Reset Layout"))
 				m_DockspaceInitialized = false; // Re-runs DockBuilder next frame
 
+			ImGui::Separator();
+
+			bool showViewport = m_ShowViewport;
+			if (ImGui::MenuItem("Show Viewport", nullptr, &showViewport))
+				SetViewportVisible(showViewport);
+
+			bool showThemes = m_ShowThemeSelector;
+			if (ImGui::MenuItem("Theme Selector", nullptr, &showThemes))
+				ShowThemeSelector(showThemes, m_ThemeSelectorPort, m_ThemeSelectorWindow.c_str());
+
 			ImGui::EndMenu();
 		}
 
@@ -280,27 +306,24 @@ namespace Cosmic
 				"%s", displayName.c_str());
 		}
 
-		// ---- Exit button — right-aligned ----
-		{
-			const char* label = "  Exit  ";
-			float       btnWidth = ImGui::CalcTextSize(label).x + 16.0f;
-			float       menuBarW = ImGui::GetWindowWidth();
-			float       rightEdge = menuBarW - btnWidth - 4.0f;
-
-			if (ImGui::GetCursorPosX() < rightEdge)
-				ImGui::SetCursorPosX(rightEdge);
-
-			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.55f, 0.12f, 0.12f, 1.0f));
-			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.75f, 0.18f, 0.18f, 1.0f));
-			ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.40f, 0.08f, 0.08f, 1.0f));
-
-			if (ImGui::Button(label))
-				Cosmic::Application::Get().TransitionToLauncher();
-
-			ImGui::PopStyleColor(3);
-		}
+		// ---- Window controls (minimize / maximize / close) — right-aligned ----
+		UI::WindowControls();
 
 		ImGui::EndMenuBar();
+
+		// ---- Compute the draggable title-bar region for the borderless chrome ----
+		// The menu bar occupies the top frame-height band of the host window. It's
+		// draggable wherever the cursor is in that band but not over a menu/button.
+		{
+			const ImGuiViewport* vp = ImGui::GetMainViewport();
+			const ImVec2 mouse = ImGui::GetMousePos();
+			const float  barH  = ImGui::GetFrameHeight();
+			const bool   inBar =
+				mouse.x >= vp->Pos.x && mouse.x < vp->Pos.x + vp->Size.x &&
+				mouse.y >= vp->Pos.y && mouse.y < vp->Pos.y + barH;
+
+			m_TitlebarDrag = inBar && !ImGui::IsAnyItemHovered() && !ImGui::IsAnyItemActive();
+		}
 	}
 
 	// =============================================================================

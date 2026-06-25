@@ -52,7 +52,96 @@
 #ifdef _WIN32
     #define GLFW_EXPOSE_NATIVE_WIN32
     #include <GLFW/glfw3native.h>
+    #include <windowsx.h>   // GET_X_LPARAM / GET_Y_LPARAM
+    #include <dwmapi.h>     // DwmExtendFrameIntoClientArea (link: dwmapi)
 #endif
+
+// =============================================================================
+// Borderless custom chrome — Win32 WndProc subclass
+// -----------------------------------------------------------------------------
+// We keep the window's standard style (WS_OVERLAPPEDWINDOW), so Windows still
+// gives us native resize, Aero Snap, min/max animations and the drop shadow, but
+// we remove the *visual* frame in WM_NCCALCSIZE and re-implement hit-testing for
+// resize borders + a client-drawn title bar in WM_NCHITTEST. The GLFW WndProc is
+// chained via CallWindowProc so all normal input keeps working.
+// =============================================================================
+#ifdef _WIN32
+namespace
+{
+    constexpr int kResizeBorder = 8; // resize-grip thickness in pixels
+
+    LRESULT CosmicHitTest(Cosmic::Window* self, HWND hwnd, LPARAM lParam)
+    {
+        if (self->IsFullscreen())
+            return HTCLIENT; // no drag / no resize while covering the monitor
+
+        POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+        RECT  rc; GetWindowRect(hwnd, &rc);
+
+        const bool maximized = IsZoomed(hwnd) != 0;
+        const bool left   = pt.x <  rc.left   + kResizeBorder;
+        const bool right  = pt.x >= rc.right  - kResizeBorder;
+        const bool top    = pt.y <  rc.top    + kResizeBorder;
+        const bool bottom = pt.y >= rc.bottom - kResizeBorder;
+
+        if (!maximized) // resize only when not maximized
+        {
+            if (top && left)     return HTTOPLEFT;
+            if (top && right)    return HTTOPRIGHT;
+            if (bottom && left)  return HTBOTTOMLEFT;
+            if (bottom && right) return HTBOTTOMRIGHT;
+            if (left)   return HTLEFT;
+            if (right)  return HTRIGHT;
+            if (top)    return HTTOP;
+            if (bottom) return HTBOTTOM;
+        }
+
+        // Draggable title bar region (reported by the layer drawing it).
+        POINT cp = pt; ScreenToClient(hwnd, &cp);
+        if (self->TitlebarHitTest(static_cast<int>(cp.x), static_cast<int>(cp.y)))
+            return HTCAPTION; // native drag + double-click maximize + snap
+
+        return HTCLIENT;
+    }
+
+    LRESULT CALLBACK CosmicWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+    {
+        auto*   self = reinterpret_cast<Cosmic::Window*>(GetPropW(hwnd, L"CosmicWindowPtr"));
+        WNDPROC orig = self ? reinterpret_cast<WNDPROC>(self->NativeOrigWndProc()) : nullptr;
+
+        if (self && self->HasCustomChrome())
+        {
+            switch (msg)
+            {
+            case WM_NCCALCSIZE:
+                if (wParam == TRUE)
+                {
+                    auto* p = reinterpret_cast<NCCALCSIZE_PARAMS*>(lParam);
+                    // Maximized (but not fullscreen): inset by the frame so the
+                    // window neither spills off-screen nor covers the taskbar.
+                    if (!self->IsFullscreen() && IsZoomed(hwnd))
+                    {
+                        const int xb = GetSystemMetrics(SM_CXFRAME) + GetSystemMetrics(SM_CXPADDEDBORDER);
+                        const int yb = GetSystemMetrics(SM_CYFRAME) + GetSystemMetrics(SM_CXPADDEDBORDER);
+                        p->rgrc[0].left   += xb;
+                        p->rgrc[0].right  -= xb;
+                        p->rgrc[0].top    += yb;
+                        p->rgrc[0].bottom -= yb;
+                    }
+                    return 0; // client area == whole window: no OS title bar
+                }
+                break;
+
+            case WM_NCHITTEST:
+                return CosmicHitTest(self, hwnd, lParam);
+            }
+        }
+
+        if (orig) return CallWindowProcW(orig, hwnd, msg, wParam, lParam);
+        return DefWindowProcW(hwnd, msg, wParam, lParam);
+    }
+}
+#endif // _WIN32
 
 namespace Cosmic
 {
@@ -90,6 +179,13 @@ namespace Cosmic
 		m_Data.Width = static_cast<unsigned int>(width);
 		m_Data.Height = static_cast<unsigned int>(height);
 		m_Data.Self = this;
+
+		// Default no-op so any GLFW callback that fires DURING construction never
+		// invokes an empty std::function. In particular, enabling custom chrome
+		// (SetCustomChrome below) triggers a WM_SIZE when the frame is removed,
+		// which GLFW turns into a window-size callback — and Application doesn't
+		// install the real EventCallback until after the Window is constructed.
+		m_Data.EventCallback = [](Event&) {};
 
 		// Save initial windowed position so we can restore it after fullscreen.
 		glfwGetWindowPos(m_Handle, &m_SavedX, &m_SavedY);
@@ -182,6 +278,12 @@ namespace Cosmic
 			});
 
 		SetVSync(true);
+
+#ifdef _WIN32
+		// Borderless custom chrome on by default (Windows). Call SetCustomChrome(false)
+		// to fall back to the standard OS title bar if needed.
+		SetCustomChrome(true);
+#endif
 	}
 
 	// =========================================================================
@@ -213,6 +315,12 @@ namespace Cosmic
 #endif
 			m_Fullscreen = false;
 		}
+
+#ifdef _WIN32
+		// Restore the original GLFW WndProc before the window goes away.
+		if (m_CustomChrome)
+			DisableCustomChromeWin32();
+#endif
 
 		// Null out the GLFW user pointer so any lingering callbacks can't
 		// dereference our now-dying WindowData.
@@ -265,6 +373,81 @@ namespace Cosmic
 	}
 
 	// =========================================================================
+	// Window state controls (driven by the custom title bar)
+	// =========================================================================
+
+	void Window::Minimize()       { if (m_Handle) glfwIconifyWindow(m_Handle); }
+	void Window::Maximize()       { if (m_Handle) glfwMaximizeWindow(m_Handle); }
+	void Window::Restore()        { if (m_Handle) glfwRestoreWindow(m_Handle); }
+	void Window::Close()          { if (m_Handle) glfwSetWindowShouldClose(m_Handle, GLFW_TRUE); }
+
+	bool Window::IsWindowMaximized() const
+	{
+		return m_Handle && glfwGetWindowAttrib(m_Handle, GLFW_MAXIMIZED) != 0;
+	}
+
+	void Window::ToggleMaximize()
+	{
+		if (IsWindowMaximized()) Restore();
+		else                     Maximize();
+	}
+
+	// =========================================================================
+	// Borderless custom chrome
+	// =========================================================================
+
+	void Window::SetCustomChrome(bool enabled)
+	{
+#ifdef _WIN32
+		if (enabled == m_CustomChrome) return;
+		if (enabled) EnableCustomChromeWin32();
+		else         DisableCustomChromeWin32();
+#else
+		(void)enabled; // custom chrome is Windows-only for now
+#endif
+	}
+
+	void Window::EnableCustomChromeWin32()
+	{
+#ifdef _WIN32
+		HWND hwnd = glfwGetWin32Window(m_Handle);
+		if (!hwnd) return;
+
+		SetPropW(hwnd, L"CosmicWindowPtr", reinterpret_cast<HANDLE>(this));
+		m_OrigWndProc = static_cast<intptr_t>(
+			SetWindowLongPtrW(hwnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(&CosmicWndProc)));
+		m_CustomChrome = true;
+
+		// A 1px frame extension gives the borderless window its drop shadow while
+		// the compositor is active.
+		MARGINS margins = { 1, 1, 1, 1 };
+		DwmExtendFrameIntoClientArea(hwnd, &margins);
+
+		// Recompute the non-client area now that WM_NCCALCSIZE is intercepted.
+		SetWindowPos(hwnd, nullptr, 0, 0, 0, 0,
+			SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
+
+		CS_CORE_INFO("Window: borderless custom chrome enabled.");
+#endif
+	}
+
+	void Window::DisableCustomChromeWin32()
+	{
+#ifdef _WIN32
+		HWND hwnd = glfwGetWin32Window(m_Handle);
+		if (hwnd && m_OrigWndProc)
+		{
+			SetWindowLongPtrW(hwnd, GWLP_WNDPROC, static_cast<LONG_PTR>(m_OrigWndProc));
+			RemovePropW(hwnd, L"CosmicWindowPtr");
+			SetWindowPos(hwnd, nullptr, 0, 0, 0, 0,
+				SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
+		}
+		m_OrigWndProc  = 0;
+		m_CustomChrome = false;
+#endif
+	}
+
+	// =========================================================================
 	// Fullscreen — borderless windowed technique
 	// =========================================================================
 
@@ -284,6 +467,40 @@ namespace Cosmic
 		if (!hwnd)
 		{
 			CS_CORE_ERROR("Window::ApplyFullscreenWin32: No valid HWND.");
+			return;
+		}
+
+		// ---- Borderless custom chrome path ----
+		// The frame is already removed by our WM_NCCALCSIZE, so fullscreen is just
+		// a resize to cover the whole monitor (and back). No style-bit thrash, so
+		// no flicker and no conflict with the chrome subclass. m_Fullscreen is set
+		// before we get here, so the hit test/NCCALCSIZE already treat us as
+		// fullscreen (full client, no resize borders).
+		if (m_CustomChrome)
+		{
+			if (enabled)
+			{
+				RECT wr = {}; GetWindowRect(hwnd, &wr);
+				m_SavedX = wr.left; m_SavedY = wr.top;
+				m_SavedWidth  = wr.right  - wr.left;
+				m_SavedHeight = wr.bottom - wr.top;
+
+				GLFWmonitor* monitor = FindCurrentMonitor();
+				if (!monitor) monitor = glfwGetPrimaryMonitor();
+				int monX = 0, monY = 0; glfwGetMonitorPos(monitor, &monX, &monY);
+				const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+
+				SetWindowPos(hwnd, HWND_TOP, monX, monY, mode->width, mode->height,
+					SWP_NOOWNERZORDER | SWP_FRAMECHANGED | SWP_SHOWWINDOW);
+				CS_CORE_INFO("Window: Entered borderless fullscreen ({}x{}).", mode->width, mode->height);
+			}
+			else
+			{
+				SetWindowPos(hwnd, HWND_TOP, m_SavedX, m_SavedY, m_SavedWidth, m_SavedHeight,
+					SWP_NOOWNERZORDER | SWP_FRAMECHANGED | SWP_SHOWWINDOW);
+				CS_CORE_INFO("Window: Restored windowed mode ({}x{}).", m_SavedWidth, m_SavedHeight);
+			}
+			glfwSwapInterval(m_Data.VSync ? 1 : 0);
 			return;
 		}
 

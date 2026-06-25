@@ -14,6 +14,10 @@
 // doubles as the "create your own theme" workflow.
 // ============================================================================
 
+// The Theme Studio window title. Used both by ImGui::Begin() and by the
+// WorkspaceLayer::DockWindow() binding, so they must be the exact same string.
+#define THEME_STUDIO_WINDOW (ICON_LC_PALETTE "  Theme Studio")
+
 namespace Workspace
 {
 	class TemplateThemeShowcaseLayer : public Cosmic::Layer

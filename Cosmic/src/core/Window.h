@@ -85,6 +85,7 @@
 #include "events/Event.h"
 #include <string>
 #include <functional>
+#include <cstdint>
 
 struct GLFWwindow;
 struct GLFWmonitor;
@@ -93,6 +94,11 @@ namespace Cosmic
 {
     // Callback signature: (key, action, mods) -> true = consumed
     using FullscreenToggleActionFn = std::function<bool(int key, int action, int mods)>;
+
+    // Predicate used by the borderless-chrome hit test: given a point in CLIENT
+    // pixels, return true where the cursor should DRAG the window (i.e. the custom
+    // title bar, excluding its buttons/menus). Set by the layer drawing the bar.
+    using TitlebarHitTestFn = std::function<bool(int x, int y)>;
 
     class COSMIC_API Window
     {
@@ -141,6 +147,40 @@ namespace Cosmic
         bool IsFullscreen() const { return m_Fullscreen; }
 
         // =====================================================================
+        // Window state controls (used by the custom title bar)
+        // =====================================================================
+
+        void Minimize();
+        void Maximize();
+        void Restore();
+        void ToggleMaximize();
+        // NOTE: named IsWindowMaximized (not IsMaximized) because <windows.h>
+        // defines IsMaximized as a macro aliasing IsZoomed.
+        bool IsWindowMaximized() const;
+        void Close();   // request the window to close (quits the app)
+
+        // =====================================================================
+        // Borderless custom chrome (Windows)
+        //
+        // When enabled the OS title bar/frame is removed but the window keeps
+        // native resize, Aero Snap, min/max animations and the drop shadow (via a
+        // WndProc subclass + DWM). The app draws its own title bar and reports the
+        // draggable region through SetTitlebarHitTestCallback(). On by default on
+        // Windows; SetCustomChrome(false) restores the standard OS frame.
+        // =====================================================================
+
+        void SetCustomChrome(bool enabled);
+        bool HasCustomChrome() const { return m_CustomChrome; }
+
+        void SetTitlebarHitTestCallback(const TitlebarHitTestFn& fn) { m_TitlebarHit = fn; }
+        void ClearTitlebarHitTestCallback() { m_TitlebarHit = nullptr; }
+
+        // Used by the native WndProc subclass (implementation detail; public so
+        // the file-local Win32 proc can reach them without exposing Win32 types).
+        bool      TitlebarHitTest(int x, int y) const { return m_TitlebarHit ? m_TitlebarHit(x, y) : false; }
+        intptr_t  NativeOrigWndProc() const { return m_OrigWndProc; }
+
+        // =====================================================================
         // Hotkey Override (cleared by Application before plugin DLL unload)
         // =====================================================================
 
@@ -173,6 +213,10 @@ namespace Cosmic
         // Applies or removes borderless-fullscreen Win32 style bits.
         // Safe to call only while m_Handle is valid.
         void ApplyFullscreenWin32(bool enabled);
+
+        // Install / remove the borderless WndProc subclass (Windows only).
+        void EnableCustomChromeWin32();
+        void DisableCustomChromeWin32();
 
         // Finds the GLFWmonitor whose work-area contains the window centre.
         GLFWmonitor* FindCurrentMonitor() const;
@@ -213,6 +257,11 @@ namespace Cosmic
         // Plugin-registered hotkey override — lives on Window, NOT in WindowData,
         // so Application can always reach it without going through the GLFW user pointer.
         FullscreenToggleActionFn m_HotkeyOverride;
+
+        // Borderless custom chrome state.
+        bool              m_CustomChrome = false;  // true once the WndProc subclass is installed
+        TitlebarHitTestFn m_TitlebarHit;           // draggable-region predicate (client px)
+        intptr_t          m_OrigWndProc = 0;       // original GLFW WNDPROC, for CallWindowProc
     };
 
 } // namespace Cosmic

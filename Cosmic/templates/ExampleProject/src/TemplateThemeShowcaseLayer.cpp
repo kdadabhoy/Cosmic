@@ -34,7 +34,7 @@ namespace Workspace
 	// -------------------------------------------------------------------------
 	void TemplateThemeShowcaseLayer::OnImGuiRender()
 	{
-		ImGui::Begin(ICON_LC_PALETTE "  Theme Studio");
+		ImGui::Begin(THEME_STUDIO_WINDOW);
 
 		DrawThemePicker();
 		ImGui::Separator();
@@ -111,15 +111,17 @@ namespace Workspace
 
 		if (ImGui::CollapsingHeader("Colors"))
 		{
-			ImGui::PushItemWidth(-1.0f);
+			// Compact swatch + name rows (the name is the editor label and stays
+			// visible). Click a swatch to open the full picker. Using NoInputs
+			// keeps the long list readable in the narrow editor column.
 			for (int i = 0; i < ImGuiCol_COUNT; ++i)
 			{
 				ImGui::PushID(i);
 				changed |= ImGui::ColorEdit4(ImGui::GetStyleColorName(i), &m_Edit.colors[i].x,
-				                             ImGuiColorEditFlags_AlphaBar);
+				                             ImGuiColorEditFlags_NoInputs |
+				                             ImGuiColorEditFlags_AlphaPreviewHalf);
 				ImGui::PopID();
 			}
-			ImGui::PopItemWidth();
 		}
 
 		if (changed)
@@ -244,7 +246,8 @@ namespace Workspace
 				y2[i] = std::cos(i * 0.04f + t * 0.7f) * 0.5f;
 			}
 			ImPlot::SetupAxes(nullptr, nullptr, ImPlotAxisFlags_NoTickLabels, 0);
-			ImPlot::SetNextLineStyle(accent, 2.0f);
+			// ImPlot v1.0 styles series via the colormap (per-item SetNextLineStyle
+			// was obsoleted); the lines pick up the theme-synced plot style.
 			ImPlot::PlotLine("signal", xs, y1, 256);
 			ImPlot::PlotLine("reference", xs, y2, 256);
 			ImPlot::EndPlot();

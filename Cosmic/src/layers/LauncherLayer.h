@@ -56,5 +56,8 @@ namespace Cosmic
 
 		glm::vec4 m_ShaderColor = glm::vec4(0.06f, 0.16f, 0.14f, 1.0f); // Default elegant emerald sky accent
 		glm::vec4 m_MountainColor = glm::vec4(0.04f, 0.08f, 0.11f, 1.0f); // Default dark navy mountain color
+
+		// Borderless chrome: draggable title-bar region flag (see OnImGuiRender).
+		bool m_TitlebarDrag = false;
 	};
 }

@@ -3,6 +3,10 @@
 #include "ui/Widgets.h"
 #include "ui/Fonts.h"
 #include "ui/ThemeManager.h"
+#include "ui/Theme.h"
+#include "ui/IconsLucide.h"
+#include "core/Application.h"
+#include "core/Window.h"
 
 #include <imgui.h>
 
@@ -175,6 +179,69 @@ namespace Cosmic
 			const bool pressed = ImGui::Button(label, size);
 			ImGui::PopStyleColor(4);
 			return pressed;
+		}
+
+		void ThemeSelector()
+		{
+			const std::string current = ThemeManager::CurrentName();
+			const float       rowH    = ImGui::GetFrameHeight();
+			const float       swatch  = rowH * 0.6f;
+			const float       pad     = (rowH - swatch) * 0.5f;
+			ImDrawList*       dl      = ImGui::GetWindowDrawList();
+
+			for (const Theme& t : ThemeManager::All())
+			{
+				ImGui::PushID(t.name.c_str());
+
+				const ImVec2 p = ImGui::GetCursorScreenPos();
+				const bool   selected = (t.name == current);
+				if (ImGui::Selectable("##theme_row", selected, 0, ImVec2(0.0f, rowH)))
+					ThemeManager::Apply(t.name);
+
+				// Accent swatch + theme name drawn over the full-width selectable.
+				dl->AddRectFilled(ImVec2(p.x + pad, p.y + pad),
+				                  ImVec2(p.x + pad + swatch, p.y + pad + swatch),
+				                  ImGui::ColorConvertFloat4ToU32(t.accent), 3.0f);
+				dl->AddText(ImVec2(p.x + rowH + 4.0f, p.y + (rowH - ImGui::GetTextLineHeight()) * 0.5f),
+				            ImGui::GetColorU32(ImGuiCol_Text), t.name.c_str());
+
+				ImGui::PopID();
+			}
+		}
+
+		void WindowControls()
+		{
+			Window& win = Application::Get().GetWindow();
+
+			const float  h     = ImGui::GetFrameHeight();
+			const ImVec2 btn   = ImVec2(h * 1.4f, h);
+			const float  total = btn.x * 3.0f;
+			const float  avail = ImGui::GetContentRegionAvail().x;
+			if (avail > total)
+				ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (avail - total));
+
+			// Flat, chrome-style buttons: transparent until hovered, square edges.
+			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+			ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0.0f);
+
+			if (IconButton("##win_min", ICON_LC_MINUS, "Minimize", btn))
+				win.Minimize();
+			ImGui::SameLine(0.0f, 0.0f);
+
+			const bool maxed = win.IsWindowMaximized();
+			if (IconButton("##win_max", maxed ? ICON_LC_COPY : ICON_LC_SQUARE,
+			               maxed ? "Restore" : "Maximize", btn))
+				win.ToggleMaximize();
+			ImGui::SameLine(0.0f, 0.0f);
+
+			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.80f, 0.18f, 0.18f, 1.0f));
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive,  ImVec4(0.65f, 0.12f, 0.12f, 1.0f));
+			if (IconButton("##win_close", ICON_LC_X, "Close", btn))
+				win.Close();
+			ImGui::PopStyleColor(2);
+
+			ImGui::PopStyleVar();
+			ImGui::PopStyleColor();
 		}
 	}
 }
