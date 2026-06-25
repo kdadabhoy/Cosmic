@@ -92,6 +92,17 @@ Paths are relative to the repo root (`C:\dev\Cosmic`).
 - Dock a window: `ws->DockWindow("MyWindow", Cosmic::DockPort::LeftTop)` (names arbitrary).
 - Disable borderless chrome (fallback): `Application::Get().GetWindow().SetCustomChrome(false)`.
 
+## 7. Post-integration fixes (after first runs)
+
+- **Instant-load crash fix** — `Cosmic/src/core/Window.cpp`: `m_Data.EventCallback` defaults to a no-op lambda in the ctor. Enabling chrome fires a `WM_SIZE` during construction → GLFW size callback → `EventCallback`, which `Application` only sets *after* construction (was throwing `bad_function_call`).
+- **`IsMaximized` rename** — `<windows.h>` defines `IsMaximized` as a macro (→`IsZoomed`); the engine method is now `Window::IsWindowMaximized()` (Window.h/.cpp, Widgets.cpp).
+- **Fullscreen taskbar + title bar** — `Window.cpp` fullscreen now always uses the style-strip path (removes `WS_OVERLAPPEDWINDOW`) so the shell hides the taskbar; `WorkspaceLayer.cpp` hides the menu/title bar when `IsFullscreen()`.
+- **Generated projects are copies** — `Projects/MyProject/` (and any generated project) is a *copy* of the template with the root renamed (`TemplateProject`→`MyProject`). Engine/UI-library changes flow via the DLL, but template *layer* code (showcase, root `OnAttach`) does NOT auto-update. MyProject's `TemplateThemeShowcaseLayer.*` + `MyProject.cpp` were patched directly (color-name `NoInputs` editor, `THEME_STUDIO_WINDOW` macro, port-mode `DockWindow` + `ShowThemeSelector`).
+- **SF_Telem** (`Projects/SF_Telem/`):
+  - `TelemHub.cpp` `PinInput` and `SF_Telem.cpp` `PolesInput` — widened the `InputInt` item width (computed from `GetFrameHeight()`), because `InputInt`'s -/+ step buttons sit inside the item width and the modern themes' larger `FramePadding` had squeezed the digits to ~1 visible character.
+  - `SF_Telem.cpp` `ApplyDockLayout` — added `ShowThemeSelector(true, port, ICON_LC_PALETTE "  Themes")` per screen (re-registered after `ClearDockWindows`).
+  - `SF_Telem.cpp` `DrawTopPanel` — screen-selector buttons now carry Lucide icons (Gauge / Car / Swords).
+
 ## Known risk / watch areas
 - **Win32 chrome** (`Window.cpp`): shadow, edge-resize, Aero Snap, and maximized-vs-taskbar are the untested edge cases. `SetCustomChrome(false)` reverts to the OS frame.
 - **ImPlot v1.0** API differs from common docs (no `LineWeight`/`FillAlpha` on `ImPlotStyle`; no `SetNextLineStyle`). Style series via colormap / `ImPlotSpec`.

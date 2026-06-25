@@ -57,7 +57,12 @@ namespace Workspace
         // GPIO number input that shows the live pad name beside it.
         void PinInput(const char* label, int& pin)
         {
-            ImGui::SetNextItemWidth(80);
+            // InputInt's -/+ step buttons sit INSIDE the item width and scale with
+            // FramePadding, so a fixed 80px left almost no room for the digits with
+            // the modern (roomier) themes. Size the field off the actual frame
+            // height: two square step buttons + spacing + room for ~3 digits.
+            const float btn = ImGui::GetFrameHeight();
+            ImGui::SetNextItemWidth(btn * 2.0f + ImGui::GetStyle().ItemInnerSpacing.x * 2.0f + 56.0f);
             ImGui::InputInt(label, &pin);
             ClampPin(pin);
             ImGui::SameLine();

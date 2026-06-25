@@ -20,7 +20,10 @@ namespace Workspace
         // how it's presented. Kept >= 2 poles (>= 1 pole pair).
         void PolesInput(const char* label, int& poles, bool asPairs)
         {
-            ImGui::SetNextItemWidth(110);
+            // Roomy enough for the InputInt -/+ step buttons plus the digits with
+            // the modern themes' larger FramePadding (see PinInput in TelemHub).
+            ImGui::SetNextItemWidth(ImGui::GetFrameHeight() * 2.0f
+                + ImGui::GetStyle().ItemInnerSpacing.x * 2.0f + 56.0f);
             if (asPairs)
             {
                 int pairs = poles / 2;
@@ -129,13 +132,15 @@ namespace Workspace
         ImGui::Spacing();
 
         // ---- Screen selector ----
+        static const char* kModeIcons[MODE_COUNT] = { ICON_LC_GAUGE, ICON_LC_CAR, ICON_LC_SWORDS };
         ImGui::TextDisabled("Screen");
         for (int i = 0; i < MODE_COUNT; ++i)
         {
             if (i > 0) ImGui::SameLine();
             const bool active = (m_ActiveMode == i);
             if (active) ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.20f, 0.55f, 0.45f, 1.0f));
-            if (ImGui::Button(m_ModeNames[i], ImVec2(90, 0)))
+            const std::string lbl = std::string(kModeIcons[i]) + "  " + m_ModeNames[i];
+            if (ImGui::Button(lbl.c_str(), ImVec2(120, 0)))
                 m_ActiveMode = i;
             if (active) ImGui::PopStyleColor();
         }
@@ -245,6 +250,12 @@ namespace Workspace
             ws->DockWindow("Drivetrain Explorers", Cosmic::DockPort::BottomCenter);
             break;
         }
+
+        // Engine-hosted theme picker, docked into a free slot per screen
+        // (ClearDockWindows above drops its binding, so re-register it here).
+        const Cosmic::DockPort themePort =
+            (mode == MODE_MAIN) ? Cosmic::DockPort::RightBottom : Cosmic::DockPort::RightMiddle;
+        ws->ShowThemeSelector(true, themePort, ICON_LC_PALETTE "  Themes");
 
         // The dashboard is tabbed with the central Viewport — make it the active
         // tab once the Main layout is (re)applied.
