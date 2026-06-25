@@ -142,6 +142,7 @@ namespace Workspace
         int  m_FwRightPin  = 16;   // GPIO defaults match the wiring diagram
         int  m_FwLeftPin   = 17;
         int  m_FwWeaponPin = 13;
+        char m_FwBtName[32] = "SF_Telem";  // Bluetooth device name baked into the sketch
         bool m_ShowPinout  = false;
         Cosmic::Ref<Cosmic::Texture2D> m_PinoutTex;
 

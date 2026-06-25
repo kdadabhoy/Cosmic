@@ -7,8 +7,35 @@
 #include <imgui.h>
 #include <implot.h>
 
+#include <string>
+
 namespace Workspace
 {
+    namespace
+    {
+        // Motor count input that can show/edit the value as poles OR pole pairs.
+        // The config always stores POLES (poles = 2 x pole pairs); this only changes
+        // how it's presented. Kept >= 2 poles (>= 1 pole pair).
+        void PolesInput(const char* label, int& poles, bool asPairs)
+        {
+            ImGui::SetNextItemWidth(110);
+            if (asPairs)
+            {
+                int pairs = poles / 2;
+                if (ImGui::InputInt(label, &pairs))
+                {
+                    if (pairs < 1) pairs = 1;
+                    poles = pairs * 2;
+                }
+            }
+            else
+            {
+                ImGui::InputInt(label, &poles);
+                if (poles < 2) poles = 2;
+            }
+        }
+    }
+
     SF_TelemTest::SF_TelemTest() : Cosmic::Layer("SF_TelemTest") {}
 
     // =========================================================================
@@ -95,16 +122,23 @@ namespace Workspace
             DriveConfig&  d = m_Hub.DriveCfg();
             WeaponConfig& w = m_Hub.WeaponCfg();
 
+            // Quality-of-life: enter the motor magnet count either way. eRPM is divided
+            // by pole pairs (= poles / 2) to get motor RPM, so some datasheets quote one
+            // and some the other.
+            const char* countLabel = m_PolesAsPairs ? "Pole pairs" : "Poles";
+            ImGui::Checkbox("Enter as pole pairs", &m_PolesAsPairs);
+            if (ImGui::IsItemHovered())
+                ImGui::SetTooltip("Pole pairs = poles / 2. Switches the inputs below between the two;\n"
+                                  "the decode math is identical either way.");
+
             ImGui::SeparatorText("Drive (Right + Left)");
-            ImGui::SetNextItemWidth(110); ImGui::InputInt  ("Poles##d", &d.Poles);
-            if (d.Poles < 2) d.Poles = 2;
+            PolesInput((std::string(countLabel) + "##d").c_str(), d.Poles, m_PolesAsPairs);
             ImGui::SetNextItemWidth(110); ImGui::InputFloat("Gear ratio##d",     &d.GearRatio,       0, 0, "%.2f");
             ImGui::SetNextItemWidth(110); ImGui::InputFloat("Wheel dia (in)##d", &d.WheelDiameterIn, 0, 0, "%.2f");
             ImGui::SetNextItemWidth(110); ImGui::InputFloat("Slip factor##d",    &d.SlipFactor,      0, 0, "%.3f");
 
             ImGui::SeparatorText("Weapon");
-            ImGui::SetNextItemWidth(110); ImGui::InputInt  ("Poles##w", &w.Poles);
-            if (w.Poles < 2) w.Poles = 2;
+            PolesInput((std::string(countLabel) + "##w").c_str(), w.Poles, m_PolesAsPairs);
             ImGui::SetNextItemWidth(110); ImGui::InputFloat("Gear ratio##w",      &w.GearRatio,       0, 0, "%.2f");
             ImGui::SetNextItemWidth(110); ImGui::InputFloat("Weapon dia (in)##w", &w.WeaponDiameterIn, 0, 0, "%.2f");
         }

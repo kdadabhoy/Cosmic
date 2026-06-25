@@ -114,6 +114,7 @@ namespace Workspace
         int  m_FwLeftPin   = 17;
         int  m_FwWeaponPin = 13;
         int  m_FwDriveSide = 0;    // single-drive tag: 0='R', 1='L'
+        char m_FwBtName[32] = "SF_TelemTest";  // Bluetooth device name baked into the sketch
         bool m_ShowPinout  = false;
         Cosmic::Ref<Cosmic::Texture2D> m_PinoutTex;
 

@@ -47,6 +47,8 @@ namespace Workspace
         int m_ActiveMode      = MODE_DRIVE;
         int m_AppliedDockMode = -1;
 
+        bool m_PolesAsPairs = false;  // Decode Constants: enter motor count as pole pairs vs. poles
+
         const char* m_ModeNames[MODE_COUNT]   = { "Single Drive", "Single Weapon", "Dual Drive", "Sniffer" };
         const char* m_WindowNames[MODE_COUNT] = { "Drive ESC Test", "Weapon ESC Test", "Dual Drive Test", "Telem Sniffer" };
     };

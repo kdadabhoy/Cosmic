@@ -53,6 +53,8 @@ namespace Workspace
         int m_ActiveMode      = MODE_MAIN;
         int m_AppliedDockMode = -1;
 
+        bool m_PolesAsPairs = false;  // Decode Constants: enter motor count as pole pairs vs. poles
+
         const char* m_ModeNames[MODE_COUNT] = { "Main", "Drivetrain", "Weapon" };
     };
 

@@ -57,14 +57,19 @@ namespace Workspace
 
         // Legend shown under the pinout image (explains the board's naming scheme).
         const char* k_PinoutCaption =
-            "Naming on this 30-pin ESP32 board:\n"
-            "- The 1-30 numbers around the edge are PHYSICAL POSITIONS, not GPIOs - never used in code.\n"
-            "- The inner labels are each pin's GPIO / function (this is what code uses):\n"
-            "    'D<n>' pads  = GPIO<n>   (D13 = GPIO13, D34 = GPIO34, ...)\n"
+            "Reference diagram for a 30-pin ESP32-WROOM-32 dev module. Use it to translate the\n"
+            "GPIO numbers the firmware needs into the pads silk-screened on your board.\n"
+            "\n"
+            "Reading the board:\n"
+            "- The 1-30 numbers around the edge are PHYSICAL pin POSITIONS, not GPIOs - never used in code.\n"
+            "- The inner labels are each pin's GPIO / function - this is what the code and the pin fields use:\n"
+            "    'D<n>' pads  = GPIO<n>      (D13 = GPIO13, D34 = GPIO34, ...)\n"
             "    named pads   : RX2=GPIO16  TX2=GPIO17  RX0=GPIO3  TX0=GPIO1  VP=GPIO36  VN=GPIO39\n"
             "    3V3 / GND / VIN / EN are power/control pins, not GPIOs.\n"
-            "- The pin fields here take GPIO numbers: 16 -> pad RX2, 17 -> pad TX2, 13 -> pad D13.\n"
-            "- Avoid flash pins GPIO6-11 and strapping pins GPIO0/2/5/12/15; GPIO34-39 are input-only.";
+            "\n"
+            "This project's wiring:  Right = GPIO16 (RX2)   Left = GPIO17 (TX2)   Weapon = GPIO13 (D13).\n"
+            "Enter those GPIO numbers in the pin fields above (16 -> pad RX2, 17 -> pad TX2, 13 -> pad D13).\n"
+            "Avoid flash pins GPIO6-11 and strapping pins GPIO0/2/5/12/15; GPIO34-39 are input-only.";
     }
 
     void TestHub::Init()    {}
@@ -286,18 +291,18 @@ namespace Workspace
             {
             case 1: // single weapon
                 PinInput("Weapon##fww", m_FwWeaponPin);
-                sketch = BuildSingleWeapon(m_FwWeaponPin);
+                sketch = BuildSingleWeapon(m_FwWeaponPin, m_FwBtName);
                 break;
             case 2: // dual drive
                 PinInput("Right##fwr", m_FwRightPin);
                 PinInput("Left##fwl",  m_FwLeftPin);
-                sketch = BuildDualDrive(m_FwRightPin, m_FwLeftPin);
+                sketch = BuildDualDrive(m_FwRightPin, m_FwLeftPin, m_FwBtName);
                 break;
             case 3: // sniffer
                 PinInput("Right##fwr",  m_FwRightPin);
                 PinInput("Left##fwl",   m_FwLeftPin);
                 PinInput("Weapon##fww", m_FwWeaponPin);
-                sketch = BuildSniffer(m_FwRightPin, m_FwLeftPin, m_FwWeaponPin);
+                sketch = BuildSniffer(m_FwRightPin, m_FwLeftPin, m_FwWeaponPin, m_FwBtName);
                 break;
             default: // 0 = single drive
                 PinInput("Drive##fwd", m_FwRightPin);
@@ -305,9 +310,16 @@ namespace Workspace
                 if (ImGui::RadioButton("R##fwside", m_FwDriveSide == 0)) m_FwDriveSide = 0;
                 ImGui::SameLine();
                 if (ImGui::RadioButton("L##fwside", m_FwDriveSide == 1)) m_FwDriveSide = 1;
-                sketch = BuildSingleDrive(m_FwRightPin, m_FwDriveSide == 0 ? 'R' : 'L');
+                sketch = BuildSingleDrive(m_FwRightPin, m_FwDriveSide == 0 ? 'R' : 'L', m_FwBtName);
                 break;
             }
+
+            ImGui::SetNextItemWidth(200);
+            ImGui::InputText("Bluetooth name", m_FwBtName, sizeof(m_FwBtName));
+            if (ImGui::IsItemHovered())
+                ImGui::SetTooltip("Name the ESP32 advertises over Bluetooth (BT_DEVICE_NAME in the\n"
+                                  "sketch). Pair this name in Windows, then connect its COM port here.\n"
+                                  "'Copy sketch' bakes in whatever you type.");
 
             ImGui::Spacing();
             if (ImGui::Button("Copy sketch (.ino)")) ImGui::SetClipboardText(sketch.c_str());
@@ -319,6 +331,9 @@ namespace Workspace
                     m_PinoutTex = Cosmic::Texture2D::Create(
                         Cosmic::FileSystem::Resolve("project://images/ESP32_Dev_Pin_Layout.png"));
             }
+            if (ImGui::IsItemHovered())
+                ImGui::SetTooltip("Toggle the 30-pin ESP32 board diagram, with a legend mapping\n"
+                                  "the silk pad names to GPIO numbers.");
             ImGui::TextDisabled("Sketch follows the active test screen. Paste into Arduino IDE.");
         }
 
