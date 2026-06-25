@@ -137,8 +137,11 @@ namespace Cosmic
 		ImGui::SetNextWindowSize(viewport->Size);
 		ImGui::SetNextWindowViewport(viewport->ID);
 
+		// In fullscreen the custom title bar / menu bar is hidden so content fills
+		// the whole monitor.
+		const bool fullscreen = Cosmic::Application::Get().GetWindow().IsFullscreen();
+
 		ImGuiWindowFlags hostFlags =
-			ImGuiWindowFlags_MenuBar |
 			ImGuiWindowFlags_NoDocking |
 			ImGuiWindowFlags_NoTitleBar |
 			ImGuiWindowFlags_NoCollapse |
@@ -146,6 +149,8 @@ namespace Cosmic
 			ImGuiWindowFlags_NoMove |
 			ImGuiWindowFlags_NoBringToFrontOnFocus |
 			ImGuiWindowFlags_NoNavFocus;
+		if (!fullscreen)
+			hostFlags |= ImGuiWindowFlags_MenuBar;
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
@@ -154,9 +159,12 @@ namespace Cosmic
 		ImGui::PopStyleVar(3);
 
 		// ------------------------------------------------------------------
-		// STEP 2 — Menu bar (File, View, project name, exit button)
+		// STEP 2 — Custom title bar / menu bar (hidden in fullscreen)
 		// ------------------------------------------------------------------
-		RenderMenuBar();
+		if (!fullscreen)
+			RenderMenuBar();
+		else
+			m_TitlebarDrag = false; // nothing draggable while fullscreen
 
 		// ------------------------------------------------------------------
 		// STEP 3 — Dockspace

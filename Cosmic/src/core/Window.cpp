@@ -470,39 +470,11 @@ namespace Cosmic
 			return;
 		}
 
-		// ---- Borderless custom chrome path ----
-		// The frame is already removed by our WM_NCCALCSIZE, so fullscreen is just
-		// a resize to cover the whole monitor (and back). No style-bit thrash, so
-		// no flicker and no conflict with the chrome subclass. m_Fullscreen is set
-		// before we get here, so the hit test/NCCALCSIZE already treat us as
-		// fullscreen (full client, no resize borders).
-		if (m_CustomChrome)
-		{
-			if (enabled)
-			{
-				RECT wr = {}; GetWindowRect(hwnd, &wr);
-				m_SavedX = wr.left; m_SavedY = wr.top;
-				m_SavedWidth  = wr.right  - wr.left;
-				m_SavedHeight = wr.bottom - wr.top;
-
-				GLFWmonitor* monitor = FindCurrentMonitor();
-				if (!monitor) monitor = glfwGetPrimaryMonitor();
-				int monX = 0, monY = 0; glfwGetMonitorPos(monitor, &monX, &monY);
-				const GLFWvidmode* mode = glfwGetVideoMode(monitor);
-
-				SetWindowPos(hwnd, HWND_TOP, monX, monY, mode->width, mode->height,
-					SWP_NOOWNERZORDER | SWP_FRAMECHANGED | SWP_SHOWWINDOW);
-				CS_CORE_INFO("Window: Entered borderless fullscreen ({}x{}).", mode->width, mode->height);
-			}
-			else
-			{
-				SetWindowPos(hwnd, HWND_TOP, m_SavedX, m_SavedY, m_SavedWidth, m_SavedHeight,
-					SWP_NOOWNERZORDER | SWP_FRAMECHANGED | SWP_SHOWWINDOW);
-				CS_CORE_INFO("Window: Restored windowed mode ({}x{}).", m_SavedWidth, m_SavedHeight);
-			}
-			glfwSwapInterval(m_Data.VSync ? 1 : 0);
-			return;
-		}
+		// NOTE: even with custom chrome we use the style-strip path below. Stripping
+		// WS_OVERLAPPEDWINDOW is what makes the Windows shell treat us as a true
+		// fullscreen window and HIDE THE TASKBAR. (Just resizing a styled window to
+		// the monitor leaves the taskbar on top.) The WndProc subclass keeps working
+		// throughout — its WM_NCHITTEST/WM_NCCALCSIZE are gated on m_Fullscreen.
 
 		if (enabled)
 		{
