@@ -66,7 +66,10 @@ namespace Cosmic
 			m_Width = width;
 			m_Height = height;
 
-			// Logic to select the appropriate GPU internal format based on source channels
+			// Logic to select the appropriate GPU internal format based on source channels.
+			// Covers RGBA, RGB, grayscale+alpha (RG), and grayscale (R). Leaving the format
+			// at 0 for an unhandled channel count would feed glTexImage2D an invalid enum,
+			// silently failing the upload and rendering the texture black.
 			GLenum internalFormat = 0, dataFormat = 0;
 			if (channels == 4)
 			{
@@ -77,6 +80,26 @@ namespace Cosmic
 			{
 				internalFormat = GL_RGB8;
 				dataFormat = GL_RGB;
+			}
+			else if (channels == 2)
+			{
+				internalFormat = GL_RG8;
+				dataFormat = GL_RG;
+			}
+			else if (channels == 1)
+			{
+				internalFormat = GL_R8;
+				dataFormat = GL_RED;
+			}
+			else
+			{
+				CS_CORE_ERROR("OpenGLTexture: Unsupported channel count ({0}) in '{1}'.", channels, path);
+				stbi_image_free(data);
+				m_Width          = 0;
+				m_Height         = 0;
+				m_InternalFormat = GL_RGBA8;
+				m_DataFormat     = GL_RGBA;
+				return;
 			}
 
 			m_InternalFormat = internalFormat;

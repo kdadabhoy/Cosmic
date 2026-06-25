@@ -78,10 +78,12 @@ namespace Cosmic
 	 * * Specialized draw call for wireframes and debug shapes. Unlike DrawIndexed,
 	 * this utilizes glDrawArrays as debug lines in the Cosmic Engine often use
 	 * non-indexed streaming buffers.
+	 * * CONTRACT: The caller binds the VertexArray before calling — identical to
+	 * DrawIndexed and DrawIndexedInstanced. (Renderer2D::Flush already binds the line
+	 * VAO before this call; binding here too would be a redundant second bind.)
 	 */
 	void OpenGLRendererAPI::DrawLines(const Ref<VertexArray>& vertexArray, uint32_t vertexCount)
 	{
-		vertexArray->Bind();
 		glDrawArrays(GL_LINES, 0, vertexCount);
 	}
 

@@ -100,11 +100,16 @@ namespace Cosmic
 		// 1. Gather all entities containing rendering properties
 		auto view = m_Registry.view<TransformComponent, SpriteRendererComponent>();
 
-		// 2. Establish sorting buckets to minimize batch breaking state changes
-		std::unordered_map<Material*, std::vector<entt::entity>> materialBuckets;
-		std::vector<entt::entity> flatColorFallbackBucket;
+		// 2. Reuse persistent sorting buckets to minimize batch-breaking state changes
+		//    AND avoid per-frame heap allocation. Clear the inner vectors (capacity is
+		//    retained); stale keys from a previous frame survive with empty vectors and
+		//    are skipped below. The fallback bucket is cleared the same way.
+		auto& materialBuckets = m_RenderMaterialBuckets;
+		auto& flatColorFallbackBucket = m_RenderFlatColorBucket;
 
-		materialBuckets.reserve(16);
+		for (auto& bucket : materialBuckets)
+			bucket.second.clear();
+		flatColorFallbackBucket.clear();
 
 		// Use EnTT's native .each() layout to cleanly extract entity IDs and references
 		view.each([&](auto entity, const auto& transform, const auto& sprite)
@@ -122,6 +127,10 @@ namespace Cosmic
 		// 3. Dispatch Material-Batched Quads
 		for (auto& [materialPtr, entities] : materialBuckets)
 		{
+			// Skip buckets left empty this frame (material no longer in use, key retained).
+			if (entities.empty())
+				continue;
+
 			// Safely extract the shared_ptr reference from the first entity in the bucket
 			auto& firstSprite = view.get<SpriteRendererComponent>(entities[0]);
 			Ref<Material> activeMaterial = firstSprite.ActiveMaterial;

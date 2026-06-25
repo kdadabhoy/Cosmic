@@ -12,6 +12,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <array>
 #include <vector>
+#include <unordered_map>
 
 namespace Cosmic
 {
@@ -154,6 +155,11 @@ namespace Cosmic
 		// =========================================================================
 		std::array<Ref<Texture>, MaxTextureSlots> TextureSlots; // Restored Ref<Texture> array
 		uint32_t TextureSlotIndex = 1; // Slot 0 = White Texture
+
+		// O(1) renderer-ID -> slot lookup for the active quad batch. Mirrors the
+		// occupied range of TextureSlots[1..TextureSlotIndex). Cleared wherever
+		// TextureSlotIndex is reset to 1 (PushRenderPass / PopRenderPass / FlushAndReset).
+		std::unordered_map<uint32_t, uint32_t> TextureSlotLookup;
 
 		glm::vec4 QuadVertexPositions[4];
 
@@ -415,7 +421,17 @@ namespace Cosmic
 		// Load the instanced quad shader
 		s_Data.DefaultInstancedQuadShader = Shader::Create("assets/shaders/QuadInstance.glsl");
 		if (!s_Data.DefaultInstancedQuadShader)
+		{
 			CS_CORE_ERROR("Renderer2D: Failed to load QuadInstance.glsl!");
+		}
+		else
+		{
+			// Upload the sampler array ONCE here rather than on every DrawInstancedQuads
+			// call. The default shader's u_Textures binding is immutable for the engine's
+			// lifetime; only caller-supplied custom shaders re-upload it (see DrawInstancedQuads).
+			s_Data.DefaultInstancedQuadShader->Bind();
+			s_Data.DefaultInstancedQuadShader->SetIntArray("u_Textures", samplers, s_Data.MaxTextureSlots);
+		}
 
 
 		CS_CORE_INFO("Renderer2D initialized successfully.");
@@ -528,6 +544,7 @@ namespace Cosmic
 		s_Data.QuadIndexCount = 0;
 		s_Data.QuadVertexPtr = s_Data.QuadVertexBufferBase;
 		s_Data.TextureSlotIndex = 1;
+		s_Data.TextureSlotLookup.clear();
 		s_Data.CurrentMaterial = s_Data.DefaultMaterial;
 
 		s_Data.LineVertexCount = 0;
@@ -581,6 +598,7 @@ namespace Cosmic
 		s_Data.QuadIndexCount = 0;
 		s_Data.QuadVertexPtr = s_Data.QuadVertexBufferBase;
 		s_Data.TextureSlotIndex = 1;
+		s_Data.TextureSlotLookup.clear();
 		s_Data.CurrentMaterial = s_Data.DefaultMaterial;
 
 		s_Data.LineVertexCount = 0;
@@ -732,6 +750,7 @@ namespace Cosmic
 		s_Data.QuadIndexCount = 0;
 		s_Data.QuadVertexPtr = s_Data.QuadVertexBufferBase;
 		s_Data.TextureSlotIndex = 1;
+		s_Data.TextureSlotLookup.clear();
 
 		s_Data.LineVertexCount = 0;
 		s_Data.LineVertexBufferPtr = s_Data.LineVertexBufferBase;
@@ -757,6 +776,34 @@ namespace Cosmic
 	void Renderer2D::SetViewportSize(uint32_t width, uint32_t height)
 	{
 		s_Data.ViewportDimensions = { (float)width, (float)height };
+	}
+
+	/////////////////////////////////////////////////////////////////////////////////
+	// ResolveTextureSlot (internal) — shared texture-slot binding for all quad paths
+	/////////////////////////////////////////////////////////////////////////////////
+
+	float Renderer2D::ResolveTextureSlot(const Ref<Texture>& texture)
+	{
+		const uint32_t rendererID = texture->GetRendererID();
+
+		// Slot 0 is permanently the 1x1 white texture; never consume a batch slot for it.
+		if (s_Data.WhiteTexture && rendererID == s_Data.WhiteTexture->GetRendererID())
+			return 0.0f;
+
+		// Already bound in this batch? O(1) lookup replaces the old per-quad linear scan.
+		auto it = s_Data.TextureSlotLookup.find(rendererID);
+		if (it != s_Data.TextureSlotLookup.end())
+			return static_cast<float>(it->second);
+
+		// New texture: break the batch if the 32-slot table is full, then register.
+		if (s_Data.TextureSlotIndex >= Renderer2DData::MaxTextureSlots)
+			FlushAndReset();
+
+		const uint32_t slot = s_Data.TextureSlotIndex;
+		s_Data.TextureSlots[slot] = texture;
+		s_Data.TextureSlotLookup[rendererID] = slot;
+		s_Data.TextureSlotIndex++;
+		return static_cast<float>(slot);
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////
@@ -805,21 +852,7 @@ namespace Cosmic
 		if (s_Data.CurrentMaterial != s_Data.DefaultMaterial) FlushAndReset();
 		if (s_Data.QuadIndexCount >= Renderer2DData::MaxIndices) FlushAndReset();
 
-		float textureIndex = -1.0f;
-		for (uint32_t i = 0; i < s_Data.TextureSlotIndex; i++)
-		{
-			if (s_Data.TextureSlots[i]->GetRendererID() == texture->GetRendererID())
-			{
-				textureIndex = (float)i;
-				break;
-			}
-		}
-		if (textureIndex == -1.0f)
-		{
-			if (s_Data.TextureSlotIndex >= Renderer2DData::MaxTextureSlots) FlushAndReset();
-			textureIndex = (float)s_Data.TextureSlotIndex;
-			s_Data.TextureSlots[s_Data.TextureSlotIndex++] = texture;
-		}
+		float textureIndex = ResolveTextureSlot(texture);
 
 		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
 			* glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
@@ -861,21 +894,7 @@ namespace Cosmic
 
 		if (s_Data.QuadIndexCount >= Renderer2DData::MaxIndices) FlushAndReset();
 
-		float textureIndex = -1.0f;
-		for (uint32_t i = 0; i < s_Data.TextureSlotIndex; i++)
-		{
-			if (s_Data.TextureSlots[i]->GetRendererID() == tex->GetRendererID())
-			{
-				textureIndex = (float)i;
-				break;
-			}
-		}
-		if (textureIndex == -1.0f)
-		{
-			if (s_Data.TextureSlotIndex >= Renderer2DData::MaxTextureSlots) FlushAndReset();
-			textureIndex = (float)s_Data.TextureSlotIndex;
-			s_Data.TextureSlots[s_Data.TextureSlotIndex++] = tex;
-		}
+		float textureIndex = ResolveTextureSlot(tex);
 
 		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
 			* glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
@@ -909,21 +928,7 @@ namespace Cosmic
 		if (s_Data.QuadIndexCount >= Renderer2DData::MaxIndices) FlushAndReset();
 
 		Ref<Texture> texture = subTexture->GetTexture();
-		float textureIndex = -1.0f;
-		for (uint32_t i = 0; i < s_Data.TextureSlotIndex; i++)
-		{
-			if (s_Data.TextureSlots[i]->GetRendererID() == texture->GetRendererID())
-			{
-				textureIndex = (float)i;
-				break;
-			}
-		}
-		if (textureIndex == -1.0f)
-		{
-			if (s_Data.TextureSlotIndex >= Renderer2DData::MaxTextureSlots) FlushAndReset();
-			textureIndex = (float)s_Data.TextureSlotIndex;
-			s_Data.TextureSlots[s_Data.TextureSlotIndex++] = texture;
-		}
+		float textureIndex = ResolveTextureSlot(texture);
 
 		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
 			* glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
@@ -987,21 +992,7 @@ namespace Cosmic
 		if (s_Data.CurrentMaterial != s_Data.DefaultMaterial) FlushAndReset();
 		if (s_Data.QuadIndexCount >= Renderer2DData::MaxIndices) FlushAndReset();
 
-		float textureIndex = -1.0f;
-		for (uint32_t i = 0; i < s_Data.TextureSlotIndex; i++)
-		{
-			if (s_Data.TextureSlots[i]->GetRendererID() == texture->GetRendererID())
-			{
-				textureIndex = (float)i;
-				break;
-			}
-		}
-		if (textureIndex == -1.0f)
-		{
-			if (s_Data.TextureSlotIndex >= Renderer2DData::MaxTextureSlots) FlushAndReset();
-			textureIndex = (float)s_Data.TextureSlotIndex;
-			s_Data.TextureSlots[s_Data.TextureSlotIndex++] = texture;
-		}
+		float textureIndex = ResolveTextureSlot(texture);
 
 		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
 			* glm::rotate(glm::mat4(1.0f), rotation, { 0.0f, 0.0f, 1.0f })
@@ -1030,6 +1021,11 @@ namespace Cosmic
 	// DrawRotatedQuad — Material
 	/////////////////////////////////////////////////////////////////////////////////
 
+	void Renderer2D::DrawRotatedQuad(const glm::vec2& pos, const glm::vec2& size, float rot, const Ref<Material>& material)
+	{
+		DrawRotatedQuad({ pos.x, pos.y, 0.0f }, size, rot, material);
+	}
+
 	void Renderer2D::DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const Ref<Material>& material)
 	{
 		if (!material) return;
@@ -1044,21 +1040,7 @@ namespace Cosmic
 
 		if (s_Data.QuadIndexCount >= Renderer2DData::MaxIndices) FlushAndReset();
 
-		float textureIndex = -1.0f;
-		for (uint32_t i = 0; i < s_Data.TextureSlotIndex; i++)
-		{
-			if (s_Data.TextureSlots[i]->GetRendererID() == tex->GetRendererID())
-			{
-				textureIndex = (float)i;
-				break;
-			}
-		}
-		if (textureIndex == -1.0f)
-		{
-			if (s_Data.TextureSlotIndex >= Renderer2DData::MaxTextureSlots) FlushAndReset();
-			textureIndex = (float)s_Data.TextureSlotIndex;
-			s_Data.TextureSlots[s_Data.TextureSlotIndex++] = tex;
-		}
+		float textureIndex = ResolveTextureSlot(tex);
 
 		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
 			* glm::rotate(glm::mat4(1.0f), rotation, { 0.0f, 0.0f, 1.0f })
@@ -1088,21 +1070,7 @@ namespace Cosmic
 		if (s_Data.QuadIndexCount >= Renderer2DData::MaxIndices) FlushAndReset();
 
 		Ref<Texture> texture = subTexture->GetTexture();
-		float textureIndex = -1.0f;
-		for (uint32_t i = 0; i < s_Data.TextureSlotIndex; i++)
-		{
-			if (s_Data.TextureSlots[i]->GetRendererID() == texture->GetRendererID())
-			{
-				textureIndex = (float)i;
-				break;
-			}
-		}
-		if (textureIndex == -1.0f)
-		{
-			if (s_Data.TextureSlotIndex >= Renderer2DData::MaxTextureSlots) FlushAndReset();
-			textureIndex = (float)s_Data.TextureSlotIndex;
-			s_Data.TextureSlots[s_Data.TextureSlotIndex++] = texture;
-		}
+		float textureIndex = ResolveTextureSlot(texture);
 
 		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
 			* glm::rotate(glm::mat4(1.0f), rotation, { 0.0f, 0.0f, 1.0f })
@@ -1278,6 +1246,7 @@ namespace Cosmic
 		s_Data.LineVertexBufferPtr++;
 
 		s_Data.LineVertexCount += 2;
+		if (s_Data.StatsEnabled) s_Data.Stats.LineCount++;
 	}
 
 	void Renderer2D::DrawRect(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color)
@@ -1422,13 +1391,16 @@ namespace Cosmic
 		targetShader->Bind();
 		targetShader->SetMat4("u_ViewProjection", s_Data.ViewProjectionMatrix);
 
-		// Upload the sampler array so the shader can access u_Textures[].
-		// White texture occupies slot 0; callers bind additional textures before
-		// calling this function when TexIndex > 0.
-		int32_t samplers[Renderer2DData::MaxTextureSlots];
-		for (int32_t i = 0; i < static_cast<int32_t>(Renderer2DData::MaxTextureSlots); ++i)
-			samplers[i] = i;
-		targetShader->SetIntArray("u_Textures", samplers, Renderer2DData::MaxTextureSlots);
+		// The default instanced-quad shader already had its u_Textures sampler array
+		// uploaded once in Init(). Only a caller-supplied custom shader needs it set
+		// here — this avoids 32 redundant uniform uploads on every default-path call.
+		if (customShader)
+		{
+			int32_t samplers[Renderer2DData::MaxTextureSlots];
+			for (int32_t i = 0; i < static_cast<int32_t>(Renderer2DData::MaxTextureSlots); ++i)
+				samplers[i] = i;
+			customShader->SetIntArray("u_Textures", samplers, Renderer2DData::MaxTextureSlots);
+		}
 
 		// Ensure the white texture is always present in slot 0 so solid-color
 		// quads (TexIndex = 0) render correctly without caller setup.

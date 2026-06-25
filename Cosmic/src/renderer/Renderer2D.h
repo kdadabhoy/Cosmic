@@ -77,11 +77,18 @@ namespace Cosmic
             const Ref<Material>& material);
         static void DrawQuad(const glm::vec3& position, const glm::vec2& size,
             const Ref<Material>& material);
+        static void DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size,
+            float rotation, const Ref<Material>& material);
         static void DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size,
             float rotation, const Ref<Material>& material);
 
         /////////////////////////////////////////////////////////////////////////////////
         // Primitive Drawing — Color & Texture
+        //
+        // DRAW ORDER: Batched geometry is rasterized in submission order — there is no
+        // automatic depth sort within a batch. With alpha blending, draw back-to-front
+        // yourself by ordering your Draw* calls. (Scene::OnRender does sort its sprites
+        // by Position.z per material bucket; raw Renderer2D calls do not.)
         /////////////////////////////////////////////////////////////////////////////////
 
         static void DrawQuad(const glm::vec2& position, const glm::vec2& size,
@@ -175,7 +182,9 @@ namespace Cosmic
             uint32_t LineCount = 0;
 
             uint32_t GetTotalVertexCount() const { return QuadCount * 4 + CircleCount * 4 + LineCount * 2; }
-            uint32_t GetTotalIndexCount()  const { return QuadCount * 6; }
+            // Quads and SDF circles each emit 6 indices (two triangles). Lines are
+            // non-indexed (glDrawArrays) and therefore contribute nothing here.
+            uint32_t GetTotalIndexCount()  const { return (QuadCount + CircleCount) * 6; }
         };
 
         static void       ResetStats();
@@ -273,6 +282,12 @@ namespace Cosmic
 
     private:
         static void FlushAndReset();
+
+        // Resolves a texture to its slot index in the active quad batch. Returns the
+        // existing slot if the texture is already bound this batch (O(1) lookup),
+        // otherwise registers it in the next free slot, flushing first if the slot
+        // table is full. Slot 0 is permanently the 1x1 white texture.
+        static float ResolveTextureSlot(const Ref<Texture>& texture);
     };
 
 } // namespace Cosmic

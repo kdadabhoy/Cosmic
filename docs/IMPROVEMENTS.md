@@ -2,248 +2,199 @@
 
 > **Scope:** A prioritized, actionable engineering roadmap for the Cosmic engine core (`Cosmic/src/`).
 > **Verified against:** commit `9078662`, 2026-06-24. Every claim below was checked against the
-> current source; file/line references are live as of this commit.
+> current source before being written; file references are live as of this commit.
+> **Status:** The §1–§4 items marked **✅ Implemented** were applied in the 2026-06-24 cleanup pass.
+> The §5 feature items remain as roadmap. Two originally-suspected issues were **disproved on
+> verification** and are recorded as such in §7 so they are not "fixed" by mistake later.
 > **Companion doc:** [`engine_analysis.md`](engine_analysis.md) is the longer reference analysis.
-> This document is the *short list of things I would change next*, grouped by the value they deliver
-> and ordered so the cheap, high-impact fixes come first.
 
 ---
 
 ## How to read this
 
-Each item has a **cost** (rough implementation effort) and an **impact**. The summary table is the
-TL;DR; the sections below give the rationale and the concrete change. Nothing here requires an
-architectural rewrite — the engine is in good shape. These are sharpening passes.
+Each item has a **cost** (rough effort), an **impact**, and a **status**. The summary table is the
+TL;DR; the sections below give the rationale and the concrete change.
 
-| # | Improvement | Category | Cost | Impact |
-|---|-------------|----------|------|--------|
-| 1 | Fix `Stats` line/index counters | Correctness | XS | Medium |
-| 2 | Delete `Renderer::s_SceneData` on shutdown | Correctness | XS | Medium |
-| 3 | Handle 1/2-channel textures (and failed loads) | Correctness | S | High |
-| 4 | Reconcile `m_PauseOnMinimize` doc vs. default | Correctness | XS | Low |
-| 5 | Hoist the instanced-quad sampler upload out of the draw loop | Performance | S | Medium |
-| 6 | Persistent scratch buffers in `Scene::OnRender` | Performance | S | Medium |
-| 7 | O(1) texture-slot lookup | Performance | S | Medium |
-| 8 | Collapse the six copies of texture-slot resolution | Maintainability | M | Medium |
-| 9 | Unify or clearly demote the legacy `Renderer::Submit` path | Architecture | M | Medium |
-| 10 | Normalize the `RendererAPI::Draw*` bind contract | Architecture | S | Low |
-| 11 | Guard `ComponentArray<T>` multi-page UB in Release | Safety | S | High |
-| 12 | Verify / wrap the `ImPlotSpec` plotting call | Portability | S | Medium |
-| 13 | Asset cache (textures, shaders, fonts) | Feature | M | High |
-| 14 | Sprite-animation component | Feature | M | Medium |
-| 15 | Hot-reload shader file watching | Feature | M | Medium |
+| # | Improvement | Category | Cost | Impact | Status |
+|---|-------------|----------|------|--------|--------|
+| 1 | Fix `Stats` line/index counters | Correctness | XS | Medium | ✅ Implemented |
+| 2 | Stop leaking `Renderer::s_SceneData` | Correctness | XS | Medium | ✅ Implemented |
+| 3 | Handle 1/2-channel textures | Correctness | S | High | ✅ Implemented |
+| 4 | Reconcile `PauseOnMinimize` doc vs. default | Correctness | XS | Low | ✅ Implemented |
+| 5 | Hoist instanced-quad sampler upload out of draw loop | Performance | S | Medium | ✅ Implemented |
+| 6 | Persistent scratch buffers in `Scene::OnRender` | Performance | S | Medium | ✅ Implemented |
+| 7 | O(1) texture-slot lookup | Performance | S | Medium | ✅ Implemented |
+| 8 | Collapse the six copies of texture-slot resolution | Maintainability | M | Medium | ✅ Implemented |
+| 9 | Demote the legacy `Renderer::Submit` path in docs | Architecture | S | Medium | ✅ Implemented |
+| 10 | Normalize the `RendererAPI::Draw*` bind contract | Architecture | S | Low | ✅ Implemented |
+| 11 | Guard `ComponentArray<T>` multi-page UB in Release | Safety | S | High | ✅ Implemented |
+| 12 | Add `DrawRotatedQuad(vec2, …, Material)` overload | API ergonomics | XS | Low | ✅ Implemented |
+| 13 | Asset cache (textures, shaders, fonts) | Feature | M | High | ⬜ Roadmap |
+| 14 | Sprite-animation component | Feature | M | Medium | ⬜ Roadmap |
+| 15 | Hot-reload shader file watching | Feature | M | Medium | ⬜ Roadmap |
+| 16 | MSAA (or remove the reserved spec fields) | Feature | M | Low | ⬜ Roadmap |
 
 ---
 
-## 1. Correctness fixes
+## 1. Correctness fixes ✅ Implemented
 
-These produce wrong results *silently* — no crash, no log — which makes them the highest-leverage
+These produced wrong results *silently* — no crash, no log — which made them the highest-leverage
 fixes despite being tiny.
 
-### 1.1 Renderer statistics under-report (XS)
+### 1.1 Renderer statistics under-reported
 
-`Renderer2D::DrawLine` advances the vertex count but never touches the stat counter, so
-`Stats.LineCount` is always `0` and `GetTotalVertexCount()` drops the line contribution entirely.
+`Renderer2D::DrawLine` advanced the vertex count but never the stat counter, so `Stats.LineCount` was
+always `0`; and `GetTotalIndexCount()` only counted quads, ignoring circles (which also emit 6 indices).
 
-- [`Renderer2D.cpp:1280`](../Cosmic/src/renderer/Renderer2D.cpp:1280) — add `if (s_Data.StatsEnabled) s_Data.Stats.LineCount++;` after `LineVertexCount += 2`.
+- [`Renderer2D.cpp`](../Cosmic/src/renderer/Renderer2D.cpp) `DrawLine` now does
+  `if (s_Data.StatsEnabled) s_Data.Stats.LineCount++;`.
+- [`Renderer2D.h`](../Cosmic/src/renderer/Renderer2D.h) `GetTotalIndexCount()` is now
+  `(QuadCount + CircleCount) * 6`.
 
-Separately, `GetTotalIndexCount()` only counts quads, even though circles also emit 6 indices each:
+### 1.2 `Renderer::s_SceneData` leaked every run
 
-- [`Renderer2D.h:178`](../Cosmic/src/renderer/Renderer2D.h:178) — change `QuadCount * 6` to `(QuadCount + CircleCount) * 6`.
+It was `new`-allocated at namespace scope and never freed by `Renderer::Shutdown`. Replaced with a
+**value** member (`static SceneData s_SceneData;`) in
+[`Renderer.h`](../Cosmic/src/renderer/Renderer.h) / [`Renderer.cpp`](../Cosmic/src/renderer/Renderer.cpp) —
+no allocation, nothing to leak, and one less pointer indirection in `Submit`.
 
-**Why it matters:** the stats overlay is the only built-in profiling surface. If it lies, every
-optimization decision made from it is made on bad data.
+### 1.3 Textures with 1 or 2 channels uploaded an invalid GL format
 
-### 1.2 `Renderer::s_SceneData` leaks every run (XS)
+[`OpenGLTexture.cpp`](../Cosmic/src/platform/OpenGL/OpenGLTexture.cpp) only assigned a format for 3- and
+4-channel images; a grayscale (1ch) or grayscale+alpha (2ch) image left the format at `0`, so
+`glTexImage2D` got an invalid enum and the texture rendered black. Added `GL_R8`/`GL_RED` and
+`GL_RG8`/`GL_RG` branches plus an `else` that logs the unsupported channel count, frees the pixels, and
+bails. *(Note: the failed-`stbi_load` path already logged an error — that part of the original
+suspicion was incorrect; only the channel-format gap was real.)*
 
-[`Renderer.cpp:10`](../Cosmic/src/renderer/Renderer.cpp:10) heap-allocates `s_SceneData` but
-[`Renderer::Shutdown`](../Cosmic/src/renderer/Renderer.cpp:29) never frees it.
+### 1.4 `PauseOnMinimize` default contradicted its own documentation
 
-**Fix:** make it a value member (`static Renderer::SceneData s_SceneData;`) so there is no allocation
-to leak, or `delete`/null it in `Shutdown()`. The value-member form is strictly better — it also
-removes a layer of pointer indirection from `Submit`.
-
-### 1.3 Textures with 1 or 2 channels upload an invalid GL format (S)
-
-[`OpenGLTexture.cpp:70-80`](../Cosmic/src/platform/OpenGL/OpenGLTexture.cpp:70) only assigns a format
-for 3- and 4-channel images. A grayscale (1ch) or grayscale+alpha (2ch) PNG leaves
-`internalFormat`/`dataFormat` at `0`, so `glTexImage2D` is called with an invalid enum, the upload
-fails silently, and the texture renders black.
-
-**Fix:** add `GL_R8`/`GL_RED` and `GL_RG8`/`GL_RG` branches, and an `else` that logs and bails.
-While here, the constructor's `if (data)` block has no `else` — a failed `stbi_load` produces a
-texture object with `m_RendererID == 0` and no diagnostic. Add a `CS_CORE_ERROR` on the failure path
-so a missing/corrupt file is visible instead of mysteriously invisible.
-
-### 1.4 `PauseOnMinimize` default contradicts its own documentation (XS)
-
-[`Application.h:113`](../Cosmic/src/core/Application.h:113) documents *"When true (default), all update
-and render passes are skipped while the window is minimized"*, but the member is initialized to
-`false` at [`Application.h:145`](../Cosmic/src/core/Application.h:145). The `Run()` loop honors the
-field, so the engine actually keeps ticking while minimized — the opposite of the comment.
-
-**Fix:** pick one. For a simulation/telemetry engine, keeping `false` (keep running) is the right
-behavior; just correct the comment. If pausing is intended, flip the default. Either way the two
-should agree.
+The header comment in [`Application.h`](../Cosmic/src/core/Application.h) claimed *"When true (default)…"*
+while the member defaulted to `false`. The `false` behavior (keep ticking while minimized) is correct
+for a simulation/telemetry engine, so the **comment** was corrected to match the code.
 
 ---
 
-## 2. Performance
+## 2. Performance ✅ Implemented
 
-The engine already does the hard part well (CPU-side batching, instancing, a real job system).
-These are the next bottlenecks in order of how often they execute.
+### 2.1 Instanced-quad sampler array was re-uploaded every draw
 
-### 2.1 Instanced-quad sampler array is re-uploaded every draw (S)
+`DrawInstancedQuads` rebuilt and re-uploaded all 32 `u_Textures` samplers on every call. The upload now
+happens **once** in [`Renderer2D::Init`](../Cosmic/src/renderer/Renderer2D.cpp) for the default shader;
+only a caller-supplied **custom** shader re-uploads it in the draw call (it has its own program and
+can't inherit the default's binding).
 
-[`DrawInstancedQuads`](../Cosmic/src/renderer/Renderer2D.cpp:1428) rebuilds and re-uploads the 32-entry
-`u_Textures` sampler array on **every** call:
+### 2.2 `Scene::OnRender` allocated its sort buckets every frame
 
-```cpp
-int32_t samplers[MaxTextureSlots];
-for (...) samplers[i] = i;
-targetShader->SetIntArray("u_Textures", samplers, MaxTextureSlots);
-```
+The material-bucket `unordered_map` and the fallback `vector` are now **persistent members** of
+[`Scene`](../Cosmic/src/scene/Scene.h), cleared (not destroyed) each frame so their backing storage is
+reused. Empty buckets left by a no-longer-used material are skipped during dispatch. Steady-state
+per-frame heap allocation for this path drops to zero.
 
-The batch-quad pipeline does this exactly once in `Init()`. At, say, 500 instanced calls/frame that's
-16,000 wasted uniform uploads/frame.
+### 2.3 Texture-slot lookup was a linear scan per quad
 
-**Fix:** upload the sampler array once after `QuadInstance.glsl` loads in
-[`Renderer2D::Init`](../Cosmic/src/renderer/Renderer2D.cpp:416), mirroring the batch path.
-
-### 2.2 `Scene::OnRender` allocates its sort buckets every frame (S)
-
-[`Scene::OnRender`](../Cosmic/src/scene/Scene.cpp:104) constructs a fresh
-`unordered_map<Material*, vector<entity>>` plus a fallback `vector` every frame, then lets them free
-at end of scope. That is a map + N vectors of churn per frame, every frame.
-
-**Fix:** promote the buckets to members that are `.clear()`ed (not destroyed) each frame so their
-backing storage is reused. `clear()` keeps capacity; the steady-state allocation count drops to zero.
-
-### 2.3 Texture-slot lookup is a linear scan per quad (S)
-
-Every textured `DrawQuad`/`DrawRotatedQuad` linearly scans up to 32 slots comparing renderer IDs
-(e.g. [`Renderer2D.cpp:809`](../Cosmic/src/renderer/Renderer2D.cpp:809)). Bounded, but it runs once
-per quad and degrades as the slot count approaches 32.
-
-**Fix:** add `std::unordered_map<uint32_t, uint32_t>` (renderer-ID → slot) to `Renderer2DData`,
-cleared on each `FlushAndReset`. This pairs naturally with item 3 below — both want a single
-`ResolveTextureSlot()` helper.
+Folded into the new `ResolveTextureSlot` helper (see §3.1) as a `std::unordered_map<uint32_t, uint32_t>`
+(renderer-ID → slot), cleared at each of the three batch-reset sites. Slot 0 (the white texture) is
+special-cased so it never consumes a slot — preserving the exact behavior of the old linear scan.
 
 ---
 
-## 3. Architecture & maintainability
+## 3. Architecture & maintainability ✅ Implemented
 
-### 3.1 Six near-identical copies of texture-slot resolution (M)
+### 3.1 Six near-identical copies of texture-slot resolution
 
-The block "search slots → if missing, flush-if-full → register" is duplicated verbatim across the
-texture, material, and subtexture variants of both `DrawQuad` and `DrawRotatedQuad`
-(~[`808`](../Cosmic/src/renderer/Renderer2D.cpp:808),
-[`864`](../Cosmic/src/renderer/Renderer2D.cpp:864),
-[`912`](../Cosmic/src/renderer/Renderer2D.cpp:912),
-[`990`](../Cosmic/src/renderer/Renderer2D.cpp:990),
-[`1047`](../Cosmic/src/renderer/Renderer2D.cpp:1047),
-[`1091`](../Cosmic/src/renderer/Renderer2D.cpp:1091)). That's ~120 lines that must all change together.
+The "search slots → flush-if-full → register" block was duplicated verbatim across the texture,
+material, and subtexture variants of both `DrawQuad` and `DrawRotatedQuad` (~120 lines). All six now
+call a single private `Renderer2D::ResolveTextureSlot(const Ref<Texture>&)`, which also carries the
+O(1) lookup from §2.3. One place to change, one place to get right.
 
-**Fix:** a single private `float ResolveTextureSlot(const Ref<Texture>&)` that does the lookup,
-flush-on-full, and registration, returning the slot index. Every draw variant collapses to one call.
-This is also the cleanest place to land the O(1) map from item 2.3 — fix it once, fix it everywhere.
+### 3.2 The legacy `Renderer::Submit` path is a desynced second camera
 
-### 3.2 The legacy `Renderer::Submit` path is a second, desynced source of truth (M)
+`Renderer` keeps its own view-projection matrix, independent of `Renderer2D`'s; mixing the two in one
+frame silently draws under two cameras, and every `Submit` is an un-batched draw. Rather than rewire it
+(risk for little gain — it's barely used), the path is now clearly **demoted in the header docs** of
+[`Renderer.h`](../Cosmic/src/renderer/Renderer.h) as a low-level custom-shader escape hatch, with the
+camera-desync caveat stated explicitly.
 
-`Renderer` keeps its own `s_SceneData->ViewProjectionMatrix`, set by `Renderer::BeginScene`, entirely
-independent of `Renderer2D`'s VP matrix. A project that mixes `Renderer::Submit` with
-`Renderer2D::DrawQuad` in one frame silently draws under two different cameras, and every `Submit` is
-an un-batched single draw call.
+### 3.3 `RendererAPI::Draw*` bind contract was inconsistent
 
-**Fix:** decide its fate explicitly. Either (a) demote it in code and docs to "low-level custom-shader
-escape hatch only," with a `CS_CORE_WARN` in `Renderer::BeginScene` noting it does not sync with
-`Renderer2D`; or (b) have `Renderer::BeginScene` forward its camera into
-`Renderer2D::PushRenderPass` so the two can't diverge. (a) is less work and matches how it's actually
-used today.
-
-### 3.3 `RendererAPI::Draw*` bind contract is inconsistent (S)
-
-[`OpenGLRendererAPI::DrawLines`](../Cosmic/src/platform/OpenGL/OpenGLRendererAPI.cpp:84) binds the VAO
-internally; `DrawIndexed` and `DrawIndexedInstanced` do not. `Renderer2D::Flush` already binds before
-calling `DrawLines`, so the VAO is bound twice, and a reader can't tell from the interface who owns the
-bind.
-
-**Fix:** remove the internal `Bind()` from `DrawLines` (the caller already binds) and document in
-`RendererAPI.h` that binding is the caller's responsibility for all `Draw*` entry points.
+`OpenGLRendererAPI::DrawLines` bound the VAO internally while `DrawIndexed`/`DrawIndexedInstanced` did
+not, and `Renderer2D::Flush` already binds before calling it (a redundant double-bind). The internal
+bind was removed from [`OpenGLRendererAPI.cpp`](../Cosmic/src/platform/OpenGL/OpenGLRendererAPI.cpp) and
+the "caller binds" contract documented. Verified the only caller (`Renderer2D::Flush`) binds first.
 
 ---
 
-## 4. Safety & portability
+## 4. Safety & API ergonomics ✅ Implemented
 
-### 4.1 `ComponentArray<T>` silently corrupts past one EnTT page (S, High impact)
+### 4.1 `ComponentArray<T>` silently corrupted past one EnTT page
 
-`ComponentArray<T>::From` returns a pointer into EnTT's first storage page while `Count()` reports the
-total across all pages. Past ~1024 entities, indexing reads out of bounds. A `CS_CORE_ASSERT` guards
-it in Debug, but asserts compile out in Release, so a project that starts small and grows crosses the
-threshold into silent memory corruption with no warning.
+`From()` returned a pointer into page 0 while `Count()` reported the total across all pages; past
+~1024 entities, indexing read out of bounds. The guard was a Debug-only `CS_CORE_ASSERT` that compiled
+out in Release. It is now a **hard runtime guard in every build**: if the pool spans more than one page,
+[`ComponentArray.h`](../Cosmic/src/jobs/ComponentArray.h) logs an error and returns an **empty** view
+instead of a half-valid pointer. (Use `FlatComponentArray<T>` for large pools.)
 
-**Fix:** make the multi-page check a hard runtime guard in *both* configs (return empty + log), or
-retire `ComponentArray<T>` in favor of the already-present, always-correct `FlatComponentArray<T>`.
-The zero-copy win is not worth a Release-only corruption footgun.
+### 4.2 `DrawRotatedQuad(vec2, …, Material)` overload was missing
 
-### 4.2 `ImPlotSpec` may not exist in stock ImPlot (S)
-
-[`TelemetryPanel.cpp:411`](../Cosmic/src/telemetry/TelemetryPanel.cpp:411) plots via an `ImPlotSpec`
-struct with an `Offset` field. That is not part of the upstream ImPlot API, whose `PlotLine` takes
-`flags`/`offset`/`stride` as plain parameters. If the vendored ImPlot is ever updated or swapped, this
-fails to compile.
-
-**Fix:** if `ImPlotSpec` is a local fork extension, note that explicitly at the call site and in the
-build docs; otherwise switch to the standard `PlotLine(label, xs, ys, count, flags, offset)` overload
-and pass `m_PlotOffset` as the `offset` argument.
+Every other rotated-quad variant had both `vec2` and `vec3` position forms; the material one was
+`vec3`-only, so `vec2` call sites wouldn't compile. Added the one-line forwarding overload to
+[`Renderer2D.h`](../Cosmic/src/renderer/Renderer2D.h) / `Renderer2D.cpp`. Also documented the
+batch submission-order (no automatic depth sort) contract in the header.
 
 ---
 
-## 5. Feature roadmap
+## 5. Feature roadmap ⬜ (not yet implemented)
 
 Ordered by leverage for the engine's actual use case (interactive 2D simulations / telemetry tooling).
+These are genuine new subsystems, intentionally left for a dedicated pass rather than folded into the
+cleanup above.
 
 ### 5.1 Asset cache for textures/shaders/fonts (M, High)
 
-Today `Texture2D::Create("foo.png")` reloads and re-uploads the file every call, and there is no
-shared ownership across layers. A small `AssetLibrary` keyed by path that hands back the existing
-`Ref<>` would cut load time, VRAM, and the duplicate-texture-slot pressure that motivates items
-2.3/3.1. This is the single feature most other features benefit from.
+`Texture2D::Create("foo.png")` reloads and re-uploads the file on every call with no shared ownership.
+A small `AssetLibrary` keyed by path that returns the existing `Ref<>` would cut load time, VRAM, and
+the duplicate-texture-slot pressure that motivates §2.3/§3.1. The single feature most others benefit
+from.
 
 ### 5.2 Sprite-animation component (M)
 
-There is `SubTexture2D` for atlas slicing but no time-driven frame advance. A
-`SpriteAnimationComponent { frames, fps, loop }` plus a tiny system that advances the active
-`SubTexture2D` on `OnUpdate(dt)` would make animated sprites a data-only feature instead of per-project
-boilerplate. The `Timestep`/local-time plumbing it needs already exists.
+`SubTexture2D` slices atlases but nothing advances frames over time. A
+`SpriteAnimationComponent { frames, fps, loop }` plus a tiny system that swaps the active `SubTexture2D`
+on `OnUpdate(dt)` would make animated sprites a data-only feature. The `Timestep`/local-time plumbing it
+needs already exists.
 
-### 5.3 Hot-reload shader watching (M)
+### 5.3 Hot-reload shader file watching (M)
 
-The DLL hot-reload story is already strong; shaders are the obvious next thing to iterate on without a
-rebuild. A background `std::filesystem::last_write_time` poll on loaded `.glsl` files that triggers a
-recompile-and-swap would tighten the shader iteration loop dramatically. Compile errors should keep the
-last-good program bound rather than dropping to a black screen.
+The DLL hot-reload story is strong; shaders are the obvious next iterate-without-rebuild target. A
+background `last_write_time` poll on loaded `.glsl` files that recompiles-and-swaps would tighten the
+loop dramatically. A failed recompile should keep the last-good program bound rather than dropping to a
+black screen.
 
-### 5.4 Smaller wins worth queueing
+### 5.4 MSAA, or remove the reserved spec fields (M, Low)
 
-- **MSAA or remove the dead spec fields.** `FramebufferSpecification::Samples` and `SwapChainTarget`
-  are public but unimplemented — a caller setting `Samples = 4` gets single-sampled output with no
-  warning. Implement, or hide them behind `// RESERVED` until then.
-- **`DrawRotatedQuad(vec2, …, Material)` overload.** Every other rotated-quad variant has both `vec2`
-  and `vec3` forms; the material one is `vec3`-only, so `vec2` call sites won't compile.
-- **Depth-sort documentation.** Batch geometry draws in submission order. That's a deliberate 2D
-  tradeoff, but it should be stated in `Renderer2D.h` so users know layering is their responsibility.
+`FramebufferSpecification::Samples` and `SwapChainTarget` are public but unimplemented — setting
+`Samples = 4` yields single-sampled output with no warning. Either implement an MSAA resolve path or
+hide the fields until then. They are at least clearly commented as "Reserved" today.
 
 ---
 
-## 6. Suggested sequencing
+## 6. Suggested sequencing (remaining work)
 
-1. **Land the §1 correctness fixes in one pass** — they're all XS/S, touch isolated lines, and stop
-   the engine from quietly lying (stats) or leaking/failing (textures, scene data).
-2. **Do §3.1 + §2.3 together** — one `ResolveTextureSlot` helper delivers both the dedup and the O(1)
-   lookup.
-3. **Then §2.1 / §2.2** — cheap, hot-path wins.
-4. **§4.1 before any project scales past ~1000 entities** — it's latent until it isn't.
-5. **§5.1 asset cache first among features** — it pays for itself and unblocks the rest.
+1. **§5.1 asset cache first** among features — it pays for itself and unblocks the rest.
+2. **§5.2 / §5.3** are independent and can be done in either order.
+3. **§5.4** only when MSAA is actually wanted; until then the reserved fields are documented.
 
-None of these block each other; the ordering is purely by ROI.
+---
+
+## 7. Verified NON-issues (do not "fix")
+
+Recorded so a future reader doesn't re-flag code that is actually correct:
+
+- **`TelemetryPanel` `ImPlotSpec` usage is correct.** The vendored ImPlot
+  (`Cosmic/dependencies/implot/implot.h:990`) provides `PlotLine(label, xs, ys, count, const ImPlotSpec&)`
+  as a first-class overload; `spec.Offset` is valid. The engine uses its bundled ImPlot, not stock, so
+  there is nothing to change. *(Earlier analyses that assumed stock ImPlot were mistaken.)*
+- **The file-based `OpenGLTexture` constructor does log on load failure.** The `else` branch on a null
+  `stbi_load` already emits `CS_CORE_ERROR("Failed to load texture at …")` and resets to a safe 0×0
+  state. Only the *channel-count* format gap (§1.3) was a real defect.

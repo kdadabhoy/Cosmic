@@ -4398,19 +4398,23 @@ source and are the place to look before filing a bug or starting a refactor:
 | [`docs/IMPROVEMENTS.md`](docs/IMPROVEMENTS.md) | Prioritized, actionable roadmap — the short list of changes to make next, ordered by return on effort. Start here. |
 | [`docs/engine_analysis.md`](docs/engine_analysis.md) | The longer reference analysis: full subsystem walkthroughs and an exhaustive P1–P4 issue list. |
 
+The 2026-06-24 cleanup pass implemented IMPROVEMENTS §1–§4 (statistics counters, the `s_SceneData`
+leak, grayscale-texture upload, the `PauseOnMinimize` doc, the instanced-sampler upload, `Scene::OnRender`
+allocation churn, the texture-slot dedup/lookup, the `DrawLines` bind contract, the `ComponentArray`
+release guard, and the missing `DrawRotatedQuad(vec2, Material)` overload). The limitations below are
+the ones that remain.
+
 **Known limitations to be aware of as a client developer:**
 
-- **Renderer statistics under-report.** `Stats.LineCount` is never incremented and
-  `GetTotalIndexCount()` omits circles, so the profiling overlay undercounts line and circle work. Use
-  `DrawCalls`/`QuadCount` as the reliable figures until this is fixed (see IMPROVEMENTS §1.1).
-- **Grayscale textures render black.** Only 3- and 4-channel images are uploaded correctly today;
-  1- and 2-channel PNGs produce an invalid GL format. Export sprites as RGB/RGBA until IMPROVEMENTS §1.3
-  lands.
-- **`ComponentArray<T>` is single-page.** It is only valid below EnTT's page size (~1024 entities);
-  past that, prefer `FlatComponentArray<T>`. The guard is Debug-only today (IMPROVEMENTS §4.1).
+- **`ComponentArray<T>` is single-page.** It is only valid below EnTT's page size (~1024 entities). Past
+  that it now logs an error and returns an **empty** view in every build (no more silent UB), so prefer
+  `FlatComponentArray<T>` for large pools (IMPROVEMENTS §4.1).
 - **`Renderer::Submit` does not share a camera with `Renderer2D`.** Treat it as a low-level custom-shader
   escape hatch; do not mix it with `Renderer2D::DrawQuad` in the same frame expecting one camera
   (IMPROVEMENTS §3.2).
+- **No automatic depth sort within a `Renderer2D` batch.** Geometry rasterizes in submission order;
+  with alpha blending you control layering by draw order. (`Scene::OnRender` does sort sprites by
+  `Position.z` per material bucket.)
 - **`FramebufferSpecification::Samples` / `SwapChainTarget` are reserved.** Setting them has no effect
   yet — there is no MSAA path (IMPROVEMENTS §5.4).
 

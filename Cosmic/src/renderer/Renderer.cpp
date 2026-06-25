@@ -5,9 +5,9 @@ namespace Cosmic
 {
 	/////////////////////////////////////////////////////////////////////////////////
 
-	// Global storage for scene-wide data (like View-Projection matrices)
-	// This is allocated on the heap to persist across the static class lifetime.
-	Renderer::SceneData* Renderer::s_SceneData = new Renderer::SceneData;
+	// Global storage for scene-wide data (like View-Projection matrices).
+	// A value member with static storage duration — no allocation, nothing to leak.
+	Renderer::SceneData Renderer::s_SceneData;
 
 	/////////////////////////////////////////////////////////////////////////////////
 
@@ -51,7 +51,7 @@ namespace Cosmic
 	 */
 	void Renderer::BeginScene(OrthographicCamera& camera)
 	{
-		s_SceneData->ViewProjectionMatrix = camera.GetViewProjectionMatrix();
+		s_SceneData.ViewProjectionMatrix = camera.GetViewProjectionMatrix();
 	}
 
 	/**
@@ -77,7 +77,7 @@ namespace Cosmic
 	void Renderer::Submit(const Ref<Shader>& shader, const Ref<VertexArray>& vertexArray, const Ref<Texture>& texture, const glm::mat4& transform)
 	{
 		shader->Bind();
-		shader->SetMat4("u_ViewProjection", s_SceneData->ViewProjectionMatrix);
+		shader->SetMat4("u_ViewProjection", s_SceneData.ViewProjectionMatrix);
 		shader->SetMat4("u_Transform", transform);
 
 		if (texture)

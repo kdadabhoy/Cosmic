@@ -64,6 +64,7 @@
  */
 
 #include "core/Core.h"
+#include "core/Log.h"
 #include <entt/entt.hpp>
 #include <vector>
 #include <cstddef>
@@ -98,17 +99,23 @@ namespace Cosmic
             // Use object dot accessors (.) uniformly
             if (!storage.empty())
             {
-                // EnTT's basic_storage exposes raw() for the first page.
-                // This is the fast path — direct pointer, zero copies.
+                // ComponentArray only maps page 0. If the pool has grown beyond one
+                // EnTT storage page, raw()[0] covers only a subset of size() elements —
+                // indexing past the first page is undefined behaviour. The old guard was
+                // a Debug-only CS_CORE_ASSERT, which compiles out in Release and let the
+                // UB through silently. Guard in ALL configs: log and return an empty view
+                // rather than hand back a pointer valid for only part of Count().
+                if (storage.raw().size() != 1)
+                {
+                    CS_CORE_ERROR("ComponentArray<T>::From: pool spans {0} pages; page 0 covers "
+                        "only a subset. Use FlatComponentArray<T> for pools larger than one "
+                        "page. Returning empty view.", storage.raw().size());
+                    return arr; // empty: Data() == nullptr, Count() == 0
+                }
+
+                // Single-page fast path — direct pointer, zero copies.
                 arr.m_Data = storage.raw()[0];
                 arr.m_Count = storage.size();
-
-                // ComponentArray only maps page 0. If the pool has grown beyond one
-                // EnTT storage page, m_Data covers only a subset of m_Count elements —
-                // accessing indices past the first page is undefined behaviour.
-                // Use FlatComponentArray<T> for pools that may exceed one page.
-                CS_CORE_ASSERT(storage.raw().size() == 1,
-                    "ComponentArray only covers page 0; use FlatComponentArray for large pools.");
             }
             return arr;
         }

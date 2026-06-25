@@ -8,11 +8,13 @@
 #include <string>
 #include <memory>
 #include <vector>
+#include <unordered_map>
 
 namespace Cosmic
 {
 	class Entity;          // Forward declaration
 	class OrthographicCamera; // Forward declaration
+	class Material;        // Forward declaration (used only as a bucket key pointer)
 
 	class COSMIC_API Scene
 	{
@@ -120,6 +122,12 @@ namespace Cosmic
 		entt::registry m_Registry;
 		std::vector<Scope<System>>   m_Systems;
 		std::vector<ParallelSystem*> m_ParallelSystems; // non-owning; owned by m_Systems
+
+		// Persistent scratch buffers for OnRender's material-bucket sort. Reused every
+		// frame (cleared, not reallocated) to avoid per-frame heap churn. Inner vectors
+		// retain their capacity across frames; empty buckets are skipped during dispatch.
+		std::unordered_map<Material*, std::vector<entt::entity>> m_RenderMaterialBuckets;
+		std::vector<entt::entity>                                m_RenderFlatColorBucket;
 
 		friend class Entity; // Gives access to the registry mapping internals securely
 	};

@@ -15,6 +15,20 @@
  *
  * It is the parent system to specialized renderers like Renderer2D and
  * directly interfaces with RenderCommand for API execution.
+ *
+ * ----------------------------------------------------------------------------
+ * LEGACY PATH WARNING
+ * ----------------------------------------------------------------------------
+ * This class is the original low-level, un-batched submission path. Each
+ * Submit() is one GPU draw call, and its camera (BeginScene below) is tracked
+ * SEPARATELY from Renderer2D's. The two do NOT share view-projection state:
+ * Renderer::BeginScene has no effect on Renderer2D, and vice-versa. Mixing
+ * Renderer::Submit with Renderer2D::DrawQuad in the same frame will silently
+ * draw the two sets of geometry under different cameras.
+ *
+ * Prefer Renderer2D (batched) for all normal 2D drawing. Reach for
+ * Renderer::Submit only as an escape hatch for custom-shader geometry that the
+ * batch renderer cannot express, and drive it from its own BeginScene/EndScene.
  */
 
 #include "core/Core.h"
@@ -79,9 +93,11 @@ namespace Cosmic
 	private:
 		struct SceneData
 		{
-			glm::mat4 ViewProjectionMatrix;
+			glm::mat4 ViewProjectionMatrix{ 1.0f };
 		};
 
-		static SceneData* s_SceneData; // Global state for the active camera pass
+		// Value member, not a heap pointer: it lives for the program's lifetime with
+		// no allocation to leak. (Previously `new SceneData` that Shutdown never freed.)
+		static SceneData s_SceneData; // Global state for the active camera pass
 	};
 }

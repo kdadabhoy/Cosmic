@@ -107,9 +107,10 @@ namespace Cosmic
 		inline ImGuiLayer*			GetImGuiLayer()			{ return m_ImGuiLayer.get(); }
 		void						Close()					{ m_Running = false; }
 
-		// When true (default), all update and render passes are skipped while the window
-		// is minimized. Set false for simulations or servers that must keep ticking
-		// regardless of window state.
+		// When true, all update and render passes are skipped while the window is
+		// minimized. Default is FALSE — the engine keeps ticking while minimized, which
+		// suits simulations, telemetry tools, and servers that must run regardless of
+		// window state. Set true for a game that should fully pause when minimized.
 		void						SetPauseOnMinimize(bool pause)	{ m_PauseOnMinimize = pause; }
 		bool						GetPauseOnMinimize() const		{ return m_PauseOnMinimize; }
 
