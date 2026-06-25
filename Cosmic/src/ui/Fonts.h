@@ -55,6 +55,18 @@ namespace Cosmic
 			// Convenience wrappers around ImGui::PushFont / PopFont.
 			static void Push(const std::string& name, float sizePx);
 			static void Pop();
+
+			// True if the icon font (Lucide) was found and merged into the text
+			// faces, so ICON_LC_* glyphs (see ui/IconsLucide.h) will render.
+			static bool HasIcons();
+
+			// Standard UI text sizes (pixels) for a consistent type hierarchy.
+			// Sizes are applied per-draw in ImGui 1.92, so any face renders crisp
+			// at any of these — e.g. Fonts::Push("Roboto-Bold", Fonts::SizeBig).
+			static constexpr float SizeSmall   = 13.0f;
+			static constexpr float SizeBody    = 16.0f;
+			static constexpr float SizeHeading = 22.0f;
+			static constexpr float SizeBig     = 32.0f;
 		};
 	}
 }

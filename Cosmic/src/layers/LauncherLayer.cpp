@@ -123,7 +123,7 @@ namespace Cosmic
 
 	void LauncherLayer::OnAttach()
 	{
-		ImGuiLayer::SetTheme(ImGuiTheme::CosmicEmerald);
+		ImGuiLayer::SetTheme("Sleek Pro");
 
 		// Try to build an animated background material from the built-in launcher shader.
 		// Falls back gracefully to a plain clear colour if the shader is absent.

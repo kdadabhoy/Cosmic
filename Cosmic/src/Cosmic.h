@@ -90,6 +90,11 @@
 // Included after ImGui so the header-only overlay helpers see ImGui types.
 #include "ui/Fonts.h"
 #include "ui/Overlay.h"
+#include "ui/Theme.h"
+#include "ui/ThemeManager.h"
+#include "ui/IconsLucide.h"
+#include "ui/Widgets.h"
+#include "ui/PlotStyle.h"
 
 namespace Cosmic
 {
@@ -106,6 +111,14 @@ namespace Cosmic
 	inline void SetImGuiTheme(Cosmic::ImGuiTheme theme)
 	{
 		Cosmic::ImGuiLayer::SetTheme(theme);
+	}
+
+	// Name-based theme selection — works with built-in, client-, and
+	// editor-registered themes. Enumerate available names via
+	// Cosmic::ThemeManager::All().
+	inline void SetImGuiTheme(const std::string& name)
+	{
+		Cosmic::ImGuiLayer::SetTheme(name);
 	}
 }
 

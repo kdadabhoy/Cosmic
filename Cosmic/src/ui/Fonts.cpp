@@ -1,6 +1,7 @@
 // Fonts.cpp — see Fonts.h.
 
 #include "ui/Fonts.h"
+#include "ui/IconsLucide.h"
 #include "utils/FileSystem.h"
 #include "core/Log.h"
 
@@ -32,6 +33,11 @@ namespace Cosmic
 			// when a size isn't specified — a sensible body-text size.
 			constexpr float k_BaseSize = 18.0f;
 
+			// Icon font (Lucide) merged into every text face so icon glyphs render
+			// inline with text under any pushed face. Discovered in Init().
+			std::string s_IconPath;
+			bool        s_HasIcons = false;
+
 			bool IEquals(const std::string& a, const std::string& b)
 			{
 				if (a.size() != b.size()) return false;
@@ -39,6 +45,29 @@ namespace Cosmic
 					if (std::tolower((unsigned char)a[i]) != std::tolower((unsigned char)b[i]))
 						return false;
 				return true;
+			}
+
+			// Icon fonts are merged into the text faces, not registered as their
+			// own selectable body face.
+			bool IsIconFontStem(const std::string& stem)
+			{
+				return IEquals(stem, "lucide");
+			}
+
+			// Merge the icon glyphs into the most recently added font (ImGui's
+			// merge mode attaches to the previous AddFont* call). Call right
+			// after adding each text face.
+			void MergeIconsInto(float sizePx)
+			{
+				if (!s_HasIcons) return;
+
+				static const ImWchar range[] = { ICON_MIN_LC, ICON_MAX_LC, 0 };
+				ImFontConfig cfg;
+				cfg.MergeMode        = true;
+				cfg.PixelSnapH       = true;
+				cfg.GlyphMinAdvanceX = sizePx; // keep icons a consistent width
+
+				ImGui::GetIO().Fonts->AddFontFromFileTTF(s_IconPath.c_str(), sizePx, &cfg, range);
 			}
 		}
 
@@ -63,10 +92,15 @@ namespace Cosmic
 				const std::string path = de.path().string();
 				const std::string name = de.path().stem().string();
 
+				// The icon font is merged into each text face below, not added as
+				// a standalone selectable body face.
+				if (IsIconFontStem(name)) continue;
+
 				ImFont* f = io.Fonts->AddFontFromFileTTF(path.c_str(), k_BaseSize);
 				if (f)
 				{
 					s_Fonts.push_back({ name, f });
+					MergeIconsInto(k_BaseSize); // icons available under this face
 					CS_CORE_INFO("Fonts: registered '{0}'", name);
 				}
 				else
@@ -83,24 +117,38 @@ namespace Cosmic
 
 			ImGuiIO& io = ImGui::GetIO();
 
-			// Register ImGui's built-in font FIRST so it stays the global default —
-			// the first font added is what ImGui uses by default, and we don't want
-			// loading custom faces to silently restyle every existing panel/project.
-			// Custom faces are strictly opt-in via Get()/Push().
+			// Discover the icon font up front so it can be merged into each text
+			// face as the faces are loaded.
+			s_IconPath = FileSystem::Resolve("engine://fonts/lucide.ttf");
+			{
+				std::error_code ec;
+				s_HasIcons = std::filesystem::exists(s_IconPath, ec);
+			}
+
+			// Keep ImGui's built-in bitmap font as a last-resort fallback (Fonts[0]),
+			// but we override io.FontDefault below so the UI renders in Roboto.
 			io.Fonts->AddFontDefault();
 
 			LoadFolder(FileSystem::Resolve("engine://fonts"));
 			LoadFolder(FileSystem::Resolve("project://fonts")); // best-effort; usually empty at startup
 
-			// Fallback font for overlay helpers that don't name a face: prefer a
-			// regular custom face (nicer than the bitmap font), else the built-in.
+			// Pick the default UI face: prefer Roboto-Regular, else the first
+			// custom face, else ImGui's built-in.
 			s_Default = Get("Roboto-Regular", k_BaseSize);
 			if (!s_Default && !s_Fonts.empty())
 				s_Default = s_Fonts.front().font;
 			if (!s_Default && !io.Fonts->Fonts.empty())
 				s_Default = io.Fonts->Fonts[0];
 
-			CS_CORE_INFO("Fonts: initialised ({0} custom face(s))", s_Fonts.size());
+			// Make the proportional face the GLOBAL default. Previously the default
+			// was ImGui's chunky bitmap font (ProggyClean), which is the main reason
+			// the UI looked dated — every panel that didn't explicitly push a face
+			// rendered in it. Now everything defaults to Roboto (+ merged icons).
+			if (s_Default)
+				io.FontDefault = s_Default;
+
+			CS_CORE_INFO("Fonts: initialised ({0} custom face(s), icons {1})",
+				s_Fonts.size(), s_HasIcons ? "on" : "off");
 		}
 
 		ImFont* Fonts::Get(const std::string& name, float /*sizePx*/)
@@ -122,6 +170,11 @@ namespace Cosmic
 		bool Fonts::Available()
 		{
 			return !s_Fonts.empty();
+		}
+
+		bool Fonts::HasIcons()
+		{
+			return s_HasIcons;
 		}
 
 		void Fonts::Push(const std::string& name, float sizePx)

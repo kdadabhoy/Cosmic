@@ -5,6 +5,7 @@
 #include "backends/imgui_impl_opengl3.h"
 #include "core/Application.h"
 #include "ui/Fonts.h"
+#include "ui/ThemeManager.h"
 #include <GLFW/glfw3.h>
 
 namespace Cosmic
@@ -42,8 +43,9 @@ namespace Cosmic
 		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 		io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
-		// Set a default polished theme right out of the box on start
-		SetTheme(ImGuiTheme::CosmicEmerald);
+		// Register built-in themes + any user themes, then apply the default.
+		ThemeManager::Init();
+		SetTheme("Sleek Pro");
 
 		Application& app = Application::Get();
 		GLFWwindow* window = app.GetWindow().GetHandle();
@@ -149,32 +151,15 @@ namespace Cosmic
 
 	void ImGuiLayer::SetTheme(ImGuiTheme theme)
 	{
-		ImGuiStyle& style = ImGui::GetStyle();
+		// Legacy enum path → resolve to a theme name and apply via the registry.
+		SetTheme(std::string(NameForTheme(theme)));
+	}
 
-		// 1. Apply global structural configurations automatically
-		style.WindowRounding = 5.0f;
-		style.FrameRounding = 4.0f;
-		style.PopupRounding = 4.0f;
-		style.GrabRounding = 3.0f;
-		style.TabRounding = 4.0f;
-		style.WindowBorderSize = 1.0f;
-		style.FrameBorderSize = 0.0f;
-		style.WindowPadding = ImVec2(8.0f, 8.0f);
-		style.ItemSpacing = ImVec2(6.0f, 4.0f);
-
-		// 2. Fetch the automated lookup map
-		const auto& registry = GetThemeRegistry();
-		auto it = registry.find(theme);
-
-		if (it != registry.end())
-		{
-			// Execute the registered function directly!
-			it->second(style);
-		}
-		else
-		{
-			// Automated Fallback if an enum item wasn't added to the map yet
-			ImGui::StyleColorsDark();
-		}
+	void ImGuiLayer::SetTheme(const std::string& name)
+	{
+		// Idempotent: makes the theme API robust regardless of call order
+		// (a client can call SetTheme before our OnAttach has run).
+		ThemeManager::Init();
+		ThemeManager::Apply(name);
 	}
 }
