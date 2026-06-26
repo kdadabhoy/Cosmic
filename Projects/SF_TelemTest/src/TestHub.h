@@ -71,7 +71,9 @@ namespace Workspace
         // ---- Raw link activity (ESP32 -> PC) ----
         uint64_t TotalBytes()  const { return m_TotalBytes; }
         float    BytesPerSec() const { return m_LinkBps; }
-        const std::string& RawTail() const { return m_RawTail; } // recent raw bytes
+        const std::string& RawHex()   const { return m_RawHex; }   // accumulating hex dump
+        const std::string& RawAscii() const { return m_RawAscii; } // same bytes, translated
+        void ClearRaw() { m_RawHex.clear(); m_RawAscii.clear(); } // clears both raw logs
 
         // ---- Per-wire sniff stats (ESC -> ESP32, from SNIFF lines) ----
         struct Sniff
@@ -94,16 +96,19 @@ namespace Workspace
     private:
         void PumpSerial();
         void HandleLine(const std::string& line);
-        void AppendRawTail(const std::string& chunk);
+        void AppendRaw(const std::string& chunk);   // appends to m_RawHex + m_RawAscii
 
     private:
         // --- Serial ---
         Cosmic::SerialPort       m_Serial;
         std::vector<std::string> m_Ports;
-        int                      m_PortIndex = 0;
+        std::string              m_SelectedPort;        // selected by NAME, not index
         const std::vector<int>   m_BaudRates = { 9600, 19200, 38400, 57600,
                                                  115200, 230400, 460800, 921600 };
         int                      m_BaudIndex = 4; // 115200
+        bool                     m_AutoReconnect = true;  // re-open the link when data stops
+        bool                     m_WantConnection = false; // user intends to stay connected
+        float                    m_ReconnectClock = 0.0f;
         std::string              m_RxAccumulator;
         std::string              m_Log;
         bool                     m_AutoScrollLog = true;
@@ -146,17 +151,21 @@ namespace Workspace
         uint64_t    m_TotalBytes    = 0;
         uint64_t    m_LinkAccumBytes = 0;
         float       m_LinkBps       = 0.0f;
-        std::string m_RawTail;
+        float       m_LastByteTime  = -100.0f;  // m_AppClock of the last byte received
+        std::string m_RawHex;                   // accumulating hex view (capped)
+        std::string m_RawAscii;                 // accumulating ASCII translation (capped)
 
         // --- Sniff ---
         Sniff    m_Sniff[ESC_COUNT];
         uint64_t m_SniffAccum[ESC_COUNT] = { 0, 0, 0 };
 
-        float m_AppClock  = 0.0f;
-        float m_RateClock = 0.0f;
+        float m_AppClock     = 0.0f;
+        float m_RateClock    = 0.0f;
+        float m_PortScanClock = 1.0f;  // start >= interval so the first scan is immediate
 
-        static constexpr float k_StaleTimeout = 1.5f;
-        static constexpr size_t k_RawTailCap  = 1024; // bytes kept for the hex dump
+        static constexpr float  k_StaleTimeout      = 1.5f;
+        static constexpr float  k_ReconnectInterval = 3.0f;  // s of no-data before each retry
+        static constexpr size_t k_RawLogCap         = 65536; // raw hex/ascii log byte cap
     };
 
 } // namespace Workspace

@@ -67,7 +67,6 @@ Templates live in `src/FirmwareTemplates.h` and mirror `firmware/sf_test_*.ino`.
 | `src/TestHub.{h,cpp}` | Shared serial backbone: parse `$frames` (per-ESC counts/fps/last-frame/decode), `SNIFF` lines (per-wire activity), raw link bytes/sec; Serial Link UI. |
 | `src/TestLayers.{h,cpp}` | The four screens (PASS/FAIL banners, photo overlays, diagnostics, sniffer cards). |
 | `src/Telemetry.h` | Wire protocol + decode (copied from SF_Telem — identical format). |
-| `src/StatBox.h` | Framed value widgets + responsive grid. |
 | `src/FirmwareTemplates.h` | Embedded `.ino` sources for all four tests (in-app "Copy sketch"). |
 | `assets/images/` | Weapon + drivetrain photos + `ESP32_Dev_Pin_Layout.png` (pinout pop-out). |
 | `firmware/sf_test_*` | One Arduino sketch per test (see table above). |

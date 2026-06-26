@@ -18,7 +18,10 @@ namespace Workspace
         // how it's presented. Kept >= 2 poles (>= 1 pole pair).
         void PolesInput(const char* label, int& poles, bool asPairs)
         {
-            ImGui::SetNextItemWidth(110);
+            // Roomy enough for the InputInt -/+ step buttons plus the digits with
+            // the modern themes' larger FramePadding (matches PinInput in TestHub).
+            ImGui::SetNextItemWidth(ImGui::GetFrameHeight() * 2.0f
+                + ImGui::GetStyle().ItemInnerSpacing.x * 2.0f + 56.0f);
             if (asPairs)
             {
                 int pairs = poles / 2;
@@ -98,6 +101,8 @@ namespace Workspace
         ImGui::Spacing();
 
         // ---- Test selector (2 per row so it fits the narrow column) ----
+        static const char* kModeIcons[MODE_COUNT] =
+            { ICON_LC_CAR, ICON_LC_SWORDS, ICON_LC_GIT_FORK, ICON_LC_RADAR };
         ImGui::TextDisabled("Test");
         const float bw = (ImGui::GetContentRegionAvail().x - ImGui::GetStyle().ItemSpacing.x) * 0.5f;
         for (int i = 0; i < MODE_COUNT; ++i)
@@ -105,7 +110,8 @@ namespace Workspace
             if (i % 2 != 0) ImGui::SameLine();
             const bool active = (m_ActiveMode == i);
             if (active) ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.20f, 0.55f, 0.45f, 1.0f));
-            if (ImGui::Button(m_ModeNames[i], ImVec2(bw, 0))) m_ActiveMode = i;
+            const std::string lbl = std::string(kModeIcons[i]) + "  " + m_ModeNames[i];
+            if (ImGui::Button(lbl.c_str(), ImVec2(bw, 0))) m_ActiveMode = i;
             if (active) ImGui::PopStyleColor();
         }
 
@@ -166,6 +172,10 @@ namespace Workspace
         ws->DockWindow("Project Inspector Top", Cosmic::DockPort::LeftTop);
         ws->DockWindow("Serial Link",           Cosmic::DockPort::LeftBottom);
         ws->DockWindow(m_WindowNames[mode],     Cosmic::DockPort::Center);
+
+        // Engine-hosted theme picker in its own right column (ClearDockWindows
+        // above drops its binding, so re-register it here each layout).
+        ws->ShowThemeSelector(true, Cosmic::DockPort::RightTop, ICON_LC_PALETTE "  Themes");
 
         m_AppliedDockMode = mode;
     }

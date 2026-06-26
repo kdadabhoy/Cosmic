@@ -110,6 +110,9 @@ namespace Cosmic
 
 #ifdef _WIN32
 		HANDLE		m_Handle;
+		// Manual-reset event signalled by Close() to wake the overlapped read
+		// thread instantly, so join() can never hang on a stalled port.
+		HANDLE		m_StopEvent = nullptr;
 #endif
 	};
 }

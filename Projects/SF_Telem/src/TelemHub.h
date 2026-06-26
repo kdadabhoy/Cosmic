@@ -128,7 +128,7 @@ namespace Workspace
         // --- Serial ---
         Cosmic::SerialPort       m_Serial;
         std::vector<std::string> m_Ports;
-        int                      m_PortIndex = 0;
+        std::string              m_SelectedPort;        // selected by NAME, not index
         const std::vector<int>   m_BaudRates = { 9600, 19200, 38400, 57600,
                                                  115200, 230400, 460800, 921600 };
         int                      m_BaudIndex = 4; // 115200
@@ -137,6 +137,12 @@ namespace Workspace
         bool                     m_AutoScrollLog = true;
         uint64_t                 m_GoodFrames = 0;
         uint64_t                 m_BadFrames  = 0;
+        float                    m_LastByteTime  = -100.0f; // m_AppClock of last byte in
+        float                    m_PortScanClock = 1.0f;    // >= interval: first scan now
+        bool                     m_AutoReconnect = true;    // re-open the link when data stops
+        bool                     m_WantConnection = false;  // user intends to stay connected
+        float                    m_ReconnectClock = 0.0f;
+        static constexpr float   k_ReconnectInterval = 3.0f; // s of no-data before each retry
 
         // --- Arduino firmware copy UI (Serial Link -> Arduino Firmware) ---
         int  m_FwRightPin  = 16;   // GPIO defaults match the wiring diagram

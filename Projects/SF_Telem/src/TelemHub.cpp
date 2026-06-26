@@ -19,10 +19,22 @@ namespace Workspace
         const ImVec4 k_PredColor   = { 0.30f, 1.00f, 0.45f, 1.0f };
         const ImVec4 k_LiveColor   = { 0.30f, 1.00f, 0.40f, 1.0f };
         const ImVec4 k_DeadColor   = { 0.55f, 0.55f, 0.55f, 1.0f };
+        const ImVec4 k_OpenColor   = { 1.00f, 0.70f, 0.20f, 1.0f };  // open but no data yet
 
         ImVec4 ColorFor(int id)
         {
             return id == ESC_RIGHT ? k_RightColor : id == ESC_LEFT ? k_LeftColor : k_WeaponColor;
+        }
+
+        // Re-scan the available COM ports, keeping the current selection by NAME so
+        // a changing list can never leave us pointed at the wrong port. Falls back
+        // to the first port (or empty) when the selected one disappears.
+        void RefreshPortList(std::vector<std::string>& ports, std::string& selected)
+        {
+            ports = Cosmic::SerialPort::GetAvailablePorts();
+            if (ports.empty()) { selected.clear(); return; }
+            if (std::find(ports.begin(), ports.end(), selected) == ports.end())
+                selected = ports.front();
         }
         const char* TagFor(int id) { return IsDrive(id) ? "Drive" : "Weapon"; }
 
@@ -151,7 +163,7 @@ namespace Workspace
                 }
             });
 
-        m_Ports = Cosmic::SerialPort::GetAvailablePorts();
+        RefreshPortList(m_Ports, m_SelectedPort);
         Cosmic::EntitySelection::SetByName(IdEntity(ESC_RIGHT), "Drive");
 
         m_Log.reserve(1 << 16);
@@ -245,6 +257,40 @@ namespace Workspace
         if (m_WasFlushing && !flushing) m_RecordStatus = "Export complete.";
         m_WasFlushing = flushing;
 
+        // Auto-refresh the port list (~1 Hz) so freshly paired / unplugged devices
+        // show up without clicking Refresh. Skip while a session is live so the
+        // selection isn't disturbed mid-connection.
+        m_PortScanClock += std::abs(ts);
+        if (m_PortScanClock >= 1.0f)
+        {
+            m_PortScanClock = 0.0f;
+            if (!m_Serial.IsOpen())
+                RefreshPortList(m_Ports, m_SelectedPort);
+        }
+
+        // Auto-reconnect: if the user asked to stay connected but data has stopped
+        // (soft Bluetooth stall while still "open", or a hard unplug), periodically
+        // drop and reopen the selected port until the stream returns. Toggle off
+        // (m_AutoReconnect) to only ever connect manually.
+        if (m_AutoReconnect && m_WantConnection)
+        {
+            const bool receiving = (m_AppClock - m_LastByteTime) < 1.0f;
+            if (receiving) m_ReconnectClock = 0.0f;
+            else
+            {
+                m_ReconnectClock += std::abs(ts);
+                if (m_ReconnectClock >= k_ReconnectInterval)
+                {
+                    m_ReconnectClock = 0.0f;
+                    if (m_Serial.IsOpen()) m_Serial.Close();
+                    RefreshPortList(m_Ports, m_SelectedPort);
+                    if (!m_SelectedPort.empty()
+                        && m_Serial.Open(m_SelectedPort, (uint32_t)m_BaudRates[m_BaudIndex]))
+                        m_RxAccumulator.clear();
+                }
+            }
+        }
+
         PumpSerial();
         m_Panel.OnUpdate(ts);
 
@@ -285,6 +331,7 @@ namespace Workspace
 
         std::string chunk = m_Serial.FlushBuffer();
         if (chunk.empty()) return;
+        m_LastByteTime = m_AppClock;
         m_RxAccumulator += chunk;
 
         size_t nl;
@@ -373,19 +420,17 @@ namespace Workspace
         ImGui::Begin("Serial Link");
 
         if (ImGui::Button("Refresh Ports"))
-        {
-            m_Ports = Cosmic::SerialPort::GetAvailablePorts();
-            if (m_PortIndex >= (int)m_Ports.size()) m_PortIndex = 0;
-        }
+            RefreshPortList(m_Ports, m_SelectedPort);
+        ImGui::SameLine();
+        ImGui::TextDisabled("(auto-refreshes)");
 
-        const char* curPort = m_Ports.empty() ? "No Ports Found"
-            : (m_PortIndex < (int)m_Ports.size() ? m_Ports[m_PortIndex].c_str() : "Error");
+        const char* curPort = m_SelectedPort.empty() ? "No Ports Found" : m_SelectedPort.c_str();
 
         ImGui::SetNextItemWidth(160.0f);
         if (ImGui::BeginCombo("COM Port", curPort))
         {
-            for (int i = 0; i < (int)m_Ports.size(); ++i)
-                if (ImGui::Selectable(m_Ports[i].c_str(), m_PortIndex == i)) m_PortIndex = i;
+            for (const auto& p : m_Ports)
+                if (ImGui::Selectable(p.c_str(), p == m_SelectedPort)) m_SelectedPort = p;
             ImGui::EndCombo();
         }
         ImGui::SetNextItemWidth(160.0f);
@@ -397,19 +442,43 @@ namespace Workspace
         }
 
         ImGui::Separator();
-        if (!m_Serial.IsOpen())
+        ImGui::Checkbox("Auto-reconnect", &m_AutoReconnect);
+        if (ImGui::IsItemHovered())
+            ImGui::SetTooltip("Automatically re-open the selected port and resume the stream\n"
+                              "if data stops (e.g. the ESP32 was unplugged or power-cycled).\n"
+                              "Turn off to only connect manually.");
+
+        if (m_Serial.IsOpen())
         {
-            ImGui::BeginDisabled(m_Ports.empty());
-            if (ImGui::Button("Connect", ImVec2(-1, 0)))
-                if (m_Serial.Open(m_Ports[m_PortIndex], (uint32_t)m_BaudRates[m_BaudIndex]))
-                    m_RxAccumulator.clear();
-            ImGui::EndDisabled();
+            // Distinguish "port open" from "actually receiving": a Bluetooth COM
+            // port opens fine even when the ESP32 isn't streaming, so flag a dead
+            // link instead of falsely claiming a good connection.
+            const bool receiving = (m_AppClock - m_LastByteTime) < 1.0f;
+            const bool retrying  = m_AutoReconnect && m_WantConnection;
+            if (receiving)
+                ImGui::TextColored(k_LiveColor, "RECEIVING (%s)", m_SelectedPort.c_str());
+            else
+                ImGui::TextColored(k_OpenColor, retrying ? "OPEN - no data (%s) - retrying..."
+                                                         : "OPEN - no data (%s)", m_SelectedPort.c_str());
+            if (ImGui::Button("Disconnect", ImVec2(-1, 0))) { m_WantConnection = false; m_Serial.Close(); }
+        }
+        else if (m_AutoReconnect && m_WantConnection)
+        {
+            // Hard drop (port closed) while the user still wants to be connected —
+            // OnUpdate is retrying the reopen in the background.
+            ImGui::TextColored(k_OpenColor, "RECONNECTING (%s)...", m_SelectedPort.c_str());
+            if (ImGui::Button("Stop / Disconnect", ImVec2(-1, 0))) m_WantConnection = false;
         }
         else
         {
-            ImGui::TextColored(k_LiveColor, "CONNECTED");
-            ImGui::SameLine();
-            if (ImGui::Button("Disconnect", ImVec2(-1, 0))) m_Serial.Close();
+            ImGui::BeginDisabled(m_SelectedPort.empty());
+            if (ImGui::Button("Connect", ImVec2(-1, 0)))
+                if (m_Serial.Open(m_SelectedPort, (uint32_t)m_BaudRates[m_BaudIndex]))
+                {
+                    m_RxAccumulator.clear();
+                    m_WantConnection = true;
+                }
+            ImGui::EndDisabled();
         }
 
         // ---- Per-ESC presence (so a missing wire is obvious) ----
@@ -488,8 +557,9 @@ namespace Workspace
 
         ImGui::BeginChild("##rawmon", ImVec2(0, 0), true, ImGuiWindowFlags_HorizontalScrollbar);
         ImGui::TextUnformatted(m_Log.c_str());
-        if (m_AutoScrollLog && ImGui::GetScrollY() >= ImGui::GetScrollMaxY())
-            ImGui::SetScrollHereY(1.0f);
+        // Always follow the tail while Auto-scroll is on (not only when already at the
+        // bottom) so it keeps tracking no matter where the user last scrolled.
+        if (m_AutoScrollLog) ImGui::SetScrollHereY(1.0f);
         ImGui::EndChild();
 
         ImGui::End();

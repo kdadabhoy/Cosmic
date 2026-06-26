@@ -3,6 +3,8 @@
 #include "TestLayers.h"
 #include "TestHub.h"
 
+#include "ui/Fonts.h"   // crisp scaled text (replaces legacy SetWindowFontScale)
+
 #include <imgui.h>
 
 #include <cstdio>
@@ -280,10 +282,10 @@ namespace Workspace
 
             const TestHub::Sniff& s = m_Hub->GetSniff(ids[k]);
             const bool active = m_Hub->SniffActive(ids[k]);
-            ImGui::SetWindowFontScale(1.6f);
+            Cosmic::UI::Fonts::Push("Roboto-Bold", Cosmic::UI::Fonts::SizeHeading);
             ImGui::TextColored(active ? ImVec4(0.30f, 1.0f, 0.45f, 1.0f) : ImVec4(1.0f, 0.35f, 0.35f, 1.0f),
                                active ? "DETECTED" : "SILENT");
-            ImGui::SetWindowFontScale(1.0f);
+            Cosmic::UI::Fonts::Pop();
 
             ImGui::Text("%.0f B/s", s.bps);
             ImGui::Text("total %llu", (unsigned long long)s.total);
@@ -293,20 +295,35 @@ namespace Workspace
         }
 
         ImGui::Spacing();
-        ImGui::SeparatorText("Raw bytes off the link (hex)");
+        ImGui::SeparatorText("Raw bytes off the link");
 
-        const std::string& raw = m_Hub->RawTail();
-        std::string hex;
-        hex.reserve(raw.size() * 3);
-        const size_t start = raw.size() > 256 ? raw.size() - 256 : 0;
-        char tmp[4];
-        for (size_t i = start; i < raw.size(); ++i)
+        static bool rawAutoScroll = true;
+        if (ImGui::Button("Clear")) m_Hub->ClearRaw();
+        ImGui::SameLine();
+        ImGui::Checkbox("Auto-scroll", &rawAutoScroll);
+        ImGui::SameLine();
+        ImGui::TextDisabled("hex + ASCII translation of the same stream");
+
+        // Two stacked boxes split the remaining height (leave room for the footer).
+        float boxH = (ImGui::GetContentRegionAvail().y - 64.0f) * 0.5f;
+        if (boxH < 80.0f) boxH = 80.0f;
+
+        ImGui::TextDisabled("Hex");
+        ImGui::BeginChild("##rawhex", ImVec2(0, boxH), true, ImGuiWindowFlags_HorizontalScrollbar);
         {
-            snprintf(tmp, sizeof(tmp), "%02X ", (unsigned char)raw[i]);
-            hex += tmp;
+            const std::string& hex = m_Hub->RawHex();
+            ImGui::TextUnformatted(hex.empty() ? "(no bytes yet)" : hex.c_str());
+            if (rawAutoScroll) ImGui::SetScrollHereY(1.0f);
         }
-        ImGui::BeginChild("##rawhex", ImVec2(0, 120.0f), true, ImGuiWindowFlags_HorizontalScrollbar);
-        ImGui::TextWrapped("%s", hex.empty() ? "(no bytes yet)" : hex.c_str());
+        ImGui::EndChild();
+
+        ImGui::TextDisabled("Translated (ASCII)");
+        ImGui::BeginChild("##rawascii", ImVec2(0, boxH), true, ImGuiWindowFlags_HorizontalScrollbar);
+        {
+            const std::string& asc = m_Hub->RawAscii();
+            ImGui::TextUnformatted(asc.empty() ? "(no bytes yet)" : asc.c_str());
+            if (rawAutoScroll) ImGui::SetScrollHereY(1.0f);
+        }
         ImGui::EndChild();
 
         ImGui::Spacing(); ImGui::Separator();
