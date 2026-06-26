@@ -27,14 +27,30 @@ mkdir build
 cd build
 
 echo [STAGE 1] Configuring Global Solution Tree...
+:: Distribution behaviour (no console, launcher New Project UI disabled, /O2) is
+:: implied by the Release config now — no -DCOSMIC_DIST flag needed.
 if defined VS_PATH (
-    cmake .. -A x64 -DCOSMIC_BUILD_ENGINE_ONLY=OFF -DCOSMIC_DIST=ON
+    cmake .. -A x64 -DCOSMIC_BUILD_ENGINE_ONLY=OFF
 ) else (
-    cmake .. -DCOSMIC_BUILD_ENGINE_ONLY=OFF -DCOSMIC_DIST=ON
+    cmake .. -DCOSMIC_BUILD_ENGINE_ONLY=OFF
+)
+if errorlevel 1 (
+    echo.
+    echo [ERROR] CMake configure failed! Check log output above.
+    pause
+    ENDLOCAL
+    exit /b 1
 )
 
 echo [STAGE 2] Building Engine Host and All Client Projects...
 cmake --build . --config %BUILD_CONFIG% --parallel
+if errorlevel 1 (
+    echo.
+    echo [ERROR] Release build failed! Check log output above.
+    pause
+    ENDLOCAL
+    exit /b 1
+)
 
 echo.
 echo SUCCESS: Full System Context Built! (%BUILD_CONFIG%)

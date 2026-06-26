@@ -9,6 +9,8 @@ CMakeFiles/
 out/
 # The traditional build folder for command-line CMake
 build/
+# Staged distributable output from package.bat
+dist/
 # Ninja build files (often used by VS for CMake)
 .ninja/
 .ninja_deps

@@ -31,3 +31,6 @@ if(MSVC)
         $<$<CONFIG:Release>:/ENTRY:mainCRTStartup>
     )
 endif()
+
+# Packaging (cmake --install): the host exe lands at the package root.
+install(TARGETS CosmicApp RUNTIME DESTINATION .)

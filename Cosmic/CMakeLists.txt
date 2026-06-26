@@ -68,6 +68,11 @@ target_include_directories(Cosmic PUBLIC src)
 target_include_directories(Cosmic PRIVATE dependencies/stb_image dependencies/stb_truetype dependencies/stb_image_write)
 target_compile_definitions(Cosmic PRIVATE COSMIC_BUILD_DLL)
 
+# Distribution build is implied by the Release config — disables the Launcher's
+# "New Project" UI. Evaluated per-config, so Debug/RelWithDebInfo stay non-DIST
+# automatically with no sticky cache flag.
+target_compile_definitions(Cosmic PRIVATE $<$<CONFIG:Release>:COSMIC_DIST>)
+
 # UPDATED: Linked 'entt' PUBLICLY so all dependent client targets inherit the headers
 target_link_libraries(Cosmic PUBLIC imgui implot glad glm entt glfw OpenGL::GL stb_image stb_truetype stb_image_write spdlog)
 
@@ -91,3 +96,12 @@ add_custom_command(TARGET Cosmic POST_BUILD
     "${COSMIC_SDK_DIR}/build/Runtime/$<CONFIG>/assets"
     COMMENT "Syncing Cosmic Engine core assets to output directory..."
 )
+
+# ----------------------------
+# 5. Packaging (cmake --install)
+# ----------------------------
+# Engine DLL lands flat next to CosmicApp.exe; core assets go under assets/.
+install(TARGETS Cosmic
+    RUNTIME DESTINATION .
+    LIBRARY DESTINATION .)
+install(DIRECTORY assets/ DESTINATION assets)

@@ -3932,7 +3932,8 @@ The script reads `COSMIC_SDK` to locate the engine headers and import library. I
 | Changing engine source, rebuild everything | `build.bat` |
 | Changing engine source only | `build_engine.bat` |
 | Changing one project | `Projects/<name>/build.bat` |
-| Building Release for distribution | Any script with `Release` argument |
+| Optimized Release build, run in place | Any script with `Release` argument, or `build_all_release.bat` |
+| Producing a shippable distributable folder | `package.bat` |
 
 ### Debug vs Release
 
@@ -3944,7 +3945,32 @@ build_all.bat Release
 build_engine.bat Release
 ```
 
-`build_all_release.bat` is the recommended path for distribution — it deletes the build directory and rebuilds everything from scratch, so there is no risk of stale incremental state or a mismatched cache flag making it into your release output.
+**Release is always a distribution build.** The distribution behaviour — the Launcher's "New Project" UI is disabled, no console window opens, and the compiler optimizes with `/O2` — is now keyed directly off the Release configuration via a CMake generator expression (`$<$<CONFIG:Release>:COSMIC_DIST>` in `Cosmic/CMakeLists.txt`, plus the `/SUBSYSTEM:WINDOWS` link in `Runtime/CMakeLists.txt`). There is no separate `COSMIC_DIST` cache flag to set or accidentally leave on — Debug always gives you the full dev launcher with a console, Release always gives you the locked-down distribution build, and switching between them never requires a manual reconfigure. If you want an optimized build that still has the dev launcher (e.g. for profiling), use the `RelWithDebInfo` configuration, which stays non-distribution.
+
+### Packaging a distributable — `package.bat`
+
+`build_all_release.bat` builds Release binaries in place under `build/Runtime/Release/`, mixed in with import libraries (`.lib`), export files (`.exp`), and CMake artifacts. To produce a **clean, self-contained folder you can hand to someone else**, run:
+
+```bat
+package.bat
+```
+
+It does a clean Release configure + build, then stages everything via CMake's `install()` rules into `dist/Cosmic/` and zips it to `dist/Cosmic.zip`. The staged folder contains only what the app needs to run:
+
+```
+dist/Cosmic/
+├── CosmicApp.exe
+├── Cosmic.dll
+├── <YourProject>.dll          ← every built project DLL
+├── msvcp140.dll               ← bundled VC++ runtime (app-local) so it runs
+├── vcruntime140.dll              on a machine without the VC++ Redistributable
+├── vcruntime140_1.dll
+└── assets/
+    ├── ...                    ← engine core assets
+    └── projects/<YourProject>/ ← per-project assets (VFS layout)
+```
+
+No `.lib`, `.exp`, `.pdb`, or CMake files are copied. Because only the Release CRT is redistributable, packaging always builds Release.
 
 #### What actually changes between the two
 
