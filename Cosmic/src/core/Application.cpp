@@ -464,11 +464,28 @@ namespace Cosmic
 	{
 		if (m_PluginHandle) UnloadProjectDLL();
 
-		// 1. Load the DLL into Cosmic's virtual address memory space
-		HMODULE handle = LoadLibraryA(filepath.c_str());
+		// 1. Resolve the actual DLL location. Project DLLs live in the "projects/"
+		//    subfolder in the packaged dist layout, but land flat next to the exe in
+		//    dev builds — try projects/ first, then the exe dir, then the raw path
+		//    (covers an absolute path being passed in). Cosmic.dll resolves from the
+		//    exe dir for either location via the default loader search order.
+		namespace fs = std::filesystem;
+		std::string resolved = filepath;
+		if (!fs::path(filepath).is_absolute())
+		{
+			fs::path cwd = fs::current_path();
+			fs::path candidates[] = { cwd / "projects" / filepath, cwd / filepath };
+			for (const fs::path& c : candidates)
+			{
+				if (fs::exists(c)) { resolved = c.string(); break; }
+			}
+		}
+
+		// 2. Load the DLL into Cosmic's virtual address memory space
+		HMODULE handle = LoadLibraryA(resolved.c_str());
 		if (!handle)
 		{
-			CS_CORE_ERROR("Failed to load plugin: {0}", filepath);
+			CS_CORE_ERROR("Failed to load plugin: {0}", resolved);
 			return;
 		}
 

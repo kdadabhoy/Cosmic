@@ -72,11 +72,13 @@ if errorlevel 1 (
     exit /b 1
 )
 
-:: 3. Zip the staged folder (tar ships with Windows 10+)
+:: 3. Zip the staged folder. Use PowerShell's Compress-Archive — reliable on
+::    Windows 10/11. (Plain `tar` is often the GNU build from Git-for-Windows,
+::    which cannot write .zip archives.)
 echo [STAGE 4] Zipping to "%SDK_ROOT%\dist\Cosmic.zip"...
-tar -a -c -f "%SDK_ROOT%\dist\Cosmic.zip" -C "%DIST_DIR%" .
+powershell -NoProfile -ExecutionPolicy Bypass -Command "Compress-Archive -Path '%DIST_DIR%\*' -DestinationPath '%SDK_ROOT%\dist\Cosmic.zip' -Force"
 if errorlevel 1 (
-    echo [WARN] Zip step failed (tar unavailable?). The staged folder is still valid.
+    echo [WARN] Zip step failed. The staged folder at "%DIST_DIR%" is still valid.
 )
 
 cd "%SDK_ROOT%"

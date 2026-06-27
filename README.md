@@ -3959,18 +3959,29 @@ It does a clean Release configure + build, then stages everything via CMake's `i
 
 ```
 dist/Cosmic/
-├── CosmicApp.exe
-├── Cosmic.dll
-├── <YourProject>.dll          ← every built project DLL
-├── msvcp140.dll               ← bundled VC++ runtime (app-local) so it runs
-├── vcruntime140.dll              on a machine without the VC++ Redistributable
+├── CosmicApp.exe              ← carries the embedded app icon (Runtime/app.ico)
+├── Cosmic.dll                ← core engine + CRT stay next to the exe (implicit deps,
+├── msvcp140.dll                 loaded before any of our code runs, so they can't be
+├── vcruntime140.dll             relocated to a subfolder)
 ├── vcruntime140_1.dll
-└── assets/
-    ├── ...                    ← engine core assets
-    └── projects/<YourProject>/ ← per-project assets (VFS layout)
+├── assets/
+│   ├── ...                    ← engine core assets
+│   └── projects/<YourProject>/ ← per-project assets (VFS layout)
+├── logs/                      ← created at runtime next to the exe
+└── projects/
+    └── <YourProject>.dll      ← every built project DLL (launcher scans here)
 ```
 
-No `.lib`, `.exp`, `.pdb`, or CMake files are copied. Because only the Release CRT is redistributable, packaging always builds Release.
+The launcher discovers project DLLs in `projects/` *and* next to the exe, so the flat
+dev-build layout (`build/Runtime/<config>/`) keeps working unchanged. No `.lib`, `.exp`,
+`.pdb`, or CMake files are copied into `dist/`. Because only the Release CRT is
+redistributable, packaging always builds Release.
+
+The `.zip` is produced with PowerShell's `Compress-Archive` (reliable on Windows 10/11);
+if that step fails, the staged `dist/Cosmic/` folder is still complete and usable.
+
+To rebrand the app icon, replace `Runtime/app.ico` and rebuild — it is compiled into the
+exe via `Runtime/CosmicApp.rc` (which also feeds the live window/taskbar icon through GLFW).
 
 #### What actually changes between the two
 

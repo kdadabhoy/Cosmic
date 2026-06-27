@@ -21,6 +21,8 @@
 #include <sstream>
 #include <algorithm>
 #include <cmath>
+#include <set>
+#include <vector>
 
 namespace fs = std::filesystem;
 
@@ -544,37 +546,51 @@ namespace Cosmic
 		m_DiscoveredProjects.clear();
 
 		// Use an explicit exe-relative path so the scan is not sensitive to CWD changes.
+		// Scan the packaged "projects/" subfolder first, then the exe dir itself — this
+		// supports both the organized dist layout (DLLs in projects/) and the flat
+		// dev-build layout (DLLs alongside CosmicApp.exe) without a config switch.
 		fs::path exeDir = fs::current_path();
-		std::string pattern = (exeDir / "*.dll").string();
+		std::vector<fs::path> scanDirs = { exeDir / "projects", exeDir };
 
-		WIN32_FIND_DATAA fd;
-		HANDLE hFind = FindFirstFileA(pattern.c_str(), &fd);
-		if (hFind == INVALID_HANDLE_VALUE) return;
+		std::set<std::string> seen; // de-dup if a project appears in both locations
 
-		do
+		for (const fs::path& dir : scanDirs)
 		{
-			if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) continue;
+			std::string pattern = (dir / "*.dll").string();
 
-			std::string file = fd.cFileName;
+			WIN32_FIND_DATAA fd;
+			HANDLE hFind = FindFirstFileA(pattern.c_str(), &fd);
+			if (hFind == INVALID_HANDLE_VALUE) continue;
 
-			// Only list DLLs that export the plugin entry point.
-			// This replaces the fragile name-based exclusion list — any engine DLL,
-			// third-party library, or renderer backend that lacks CreatePluginLayer
-			// is silently skipped regardless of its name.
-			fs::path fullPath = exeDir / file;
-			HMODULE hMod = LoadLibraryExA(fullPath.string().c_str(), nullptr, DONT_RESOLVE_DLL_REFERENCES);
-			if (!hMod) continue;
-			bool isPlugin = (GetProcAddress(hMod, "CreatePluginLayer") != nullptr);
-			FreeLibrary(hMod);
-			if (!isPlugin) continue;
+			do
+			{
+				if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) continue;
 
-			size_t dot = file.find_last_of('.');
-			if (dot != std::string::npos)
-				m_DiscoveredProjects.push_back(file.substr(0, dot));
+				std::string file = fd.cFileName;
 
-		} while (FindNextFileA(hFind, &fd));
+				size_t dot = file.find_last_of('.');
+				if (dot == std::string::npos) continue;
+				std::string name = file.substr(0, dot);
+				if (seen.count(name)) continue; // already found in an earlier dir
 
-		FindClose(hFind);
+				// Only list DLLs that export the plugin entry point.
+				// This replaces the fragile name-based exclusion list — any engine DLL,
+				// third-party library, or renderer backend that lacks CreatePluginLayer
+				// is silently skipped regardless of its name.
+				fs::path fullPath = dir / file;
+				HMODULE hMod = LoadLibraryExA(fullPath.string().c_str(), nullptr, DONT_RESOLVE_DLL_REFERENCES);
+				if (!hMod) continue;
+				bool isPlugin = (GetProcAddress(hMod, "CreatePluginLayer") != nullptr);
+				FreeLibrary(hMod);
+				if (!isPlugin) continue;
+
+				seen.insert(name);
+				m_DiscoveredProjects.push_back(name);
+
+			} while (FindNextFileA(hFind, &fd));
+
+			FindClose(hFind);
+		}
 
 		std::sort(m_DiscoveredProjects.begin(), m_DiscoveredProjects.end());
 	}

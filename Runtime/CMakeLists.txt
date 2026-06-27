@@ -1,7 +1,9 @@
 cmake_minimum_required(VERSION 3.21)
 project(CosmicRuntime LANGUAGES C CXX)
 
-add_executable(CosmicApp Main.cpp)
+# CosmicApp.rc embeds app.ico — MSVC compiles the .rc and links the icon into the
+# exe (shown by Explorer, the taskbar, and the window frame). Harmless on non-MSVC.
+add_executable(CosmicApp Main.cpp CosmicApp.rc)
 
 target_include_directories(CosmicApp PRIVATE 
     ${COSMIC_SDK_DIR}/Cosmic/src

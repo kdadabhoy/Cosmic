@@ -70,11 +70,12 @@ if(NOT COSMIC_BUILD_ENGINE_ONLY)
 
             # Generic per-project packaging rule — relies on the convention that the
             # project's target name matches its directory name (true for all current
-            # projects). Lands the DLL next to CosmicApp.exe and mirrors the
-            # assets/projects/<name>/ VFS layout the POST_BUILD sync produces.
+            # projects). Project DLLs land in projects/ (the launcher scans there);
+            # their assets mirror the assets/projects/<name>/ VFS layout the POST_BUILD
+            # sync produces.
             install(TARGETS ${SUBDIR}
-                RUNTIME DESTINATION .
-                LIBRARY DESTINATION .
+                RUNTIME DESTINATION projects
+                LIBRARY DESTINATION projects
                 OPTIONAL)
             if(EXISTS "${FULL_PATH}/assets")
                 install(DIRECTORY "${FULL_PATH}/assets/"

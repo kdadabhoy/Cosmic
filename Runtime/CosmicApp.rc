@@ -1,0 +1,11 @@
+// Windows resource script for CosmicApp.
+// Embeds the application icon used by Explorer, the taskbar, and the window frame.
+// Swap app.ico (kept next to this file) to rebrand — no code changes needed.
+
+#define IDI_ICON1 101
+
+// IDI_ICON1 (lowest numeric ID) is what Explorer/the shell use for the .exe icon.
+// GLFW_ICON is the named resource GLFW looks up to set the live window + taskbar
+// icon automatically (see glfw win32_window.c) — no glfwSetWindowIcon call needed.
+IDI_ICON1 ICON "app.ico"
+GLFW_ICON ICON "app.ico"
