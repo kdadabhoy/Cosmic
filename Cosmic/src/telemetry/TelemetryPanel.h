@@ -106,6 +106,13 @@ namespace Cosmic
          */
         void SetPlayer(DataPlayer* player);
 
+        /**
+         * @brief Set the default folder shown in the replay loader's path box and
+         * the starting directory for its Browse dialog. Lets a project point the
+         * loader at wherever it writes recordings (default: "logs/").
+         */
+        void SetReplayPath(const std::string& path) { m_ReplayPath = path; }
+
         // -------------------------------------------------------------------------
         // Inspector callbacks
         // -------------------------------------------------------------------------

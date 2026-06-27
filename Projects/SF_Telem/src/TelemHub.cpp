@@ -128,6 +128,9 @@ namespace Workspace
 
         m_Panel.SetRecorder(&m_Recorder);
         m_Panel.SetPlayer(&m_Player);
+        // Point the replay loader at the same folder recordings are written to, so
+        // Browse opens where the .bin/.csv files actually live.
+        m_Panel.SetReplayPath(std::string(k_RecordDir) + "/");
 
         m_Panel.RegisterTagInspector("Drive",
             [](const std::string& name, const Cosmic::TelemetryFrame& f)
@@ -620,9 +623,9 @@ namespace Workspace
         if (!canExport) ImGui::BeginDisabled();
         if (ImGui::Button("  Export CSV + bin  ##recexport"))
         {
-            m_Recorder.Flush("logs", m_SessionName, k_SampleRate);
+            m_Recorder.Flush(k_RecordDir, m_SessionName, k_SampleRate);
             const std::string dest = m_SessionName.empty() ? "<timestamp>" : m_SessionName;
-            m_RecordStatus = "Exporting -> logs/" + dest + "/";
+            m_RecordStatus = "Exporting -> " + std::string(k_RecordDir) + "/" + dest + "/";
             m_WasFlushing  = true;
         }
         if (!canExport) ImGui::EndDisabled();

@@ -332,8 +332,13 @@ namespace Cosmic
                     DataExport::WriteCSV(csvPath, headers, columns);
                 }
 
+                // Log the absolute path so it's obvious on disk where the recording
+                // landed (outputDir is relative to the working dir = the exe folder).
+                std::error_code absEc;
+                const fs::path absDir = fs::absolute(outputDir, absEc);
                 CS_CORE_INFO("DataRecorder: Flush complete — {} entities → '{}'.",
-                             snapshots.size(), outputDir);
+                             snapshots.size(),
+                             absEc ? outputDir : absDir.string());
                 m_Flushing.store(false);
             });
     }

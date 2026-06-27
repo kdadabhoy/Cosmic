@@ -209,6 +209,11 @@ namespace Workspace
         static constexpr float  k_SampleRate   = 60.0f;
         static constexpr size_t k_RecordCap    = static_cast<size_t>(60.0f * 300.0f);
         static constexpr float  k_StaleTimeout = 1.5f;
+
+        // Recordings land in a top-level, project-namespaced folder next to the exe
+        // (e.g. recordings/SF_Telem/<session>/) — discoverable, and won't collide
+        // with other projects' recordings. Kept separate from the app's logs/.
+        static constexpr const char* k_RecordDir = "recordings/SF_Telem";
     };
 
 } // namespace Workspace
