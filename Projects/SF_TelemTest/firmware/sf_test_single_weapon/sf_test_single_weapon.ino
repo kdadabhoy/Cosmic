@@ -27,10 +27,9 @@
 BluetoothSerial SerialBT;
 
 struct ESC_Data { uint8_t temp = 0; uint16_t voltage = 0, current = 0, consumption = 0, erpm = 0; bool valid = false; };
-ESC_Data      tlm;
-uint8_t       buf[10];
 unsigned long lastMs = 0, lastHeartbeat = 0;
 
+// ---- KISS CRC8 ----
 uint8_t update_crc8(uint8_t crc, uint8_t seed)
 {
     uint8_t u = crc ^ seed;
@@ -55,6 +54,8 @@ bool parseESC(uint8_t* b, ESC_Data& d)
     return true;
 }
 
+// BT write can briefly block under SPP congestion, but that's no longer fatal: the
+// self-syncing reader below re-locks cleanly after any stall instead of desyncing.
 void broadcastPrint(const char* msg)
 {
     Serial.print(msg);                       // UART0 TX (GPIO1) -> USB
@@ -75,20 +76,52 @@ void sendFrame(char side, const ESC_Data& d)
     broadcastPrint(frame);
 }
 
-bool serviceSide(Stream& port)
+// ---- Self-synchronizing KISS reader ----------------------------------------
+// KISS frames are 10 delimiter-less bytes; byte[9] is a CRC8 over bytes[0..8], so a
+// correctly-aligned window is the ONLY one that passes CRC. Ingest every available byte,
+// then test the CRC at the current offset: pass -> consume 10 (locked on the boundary);
+// fail -> drop ONE byte and re-test (slides onto the real boundary). A glitch costs <=9
+// byte-drops to re-lock, never a permanent offset like the old readBytes(10) path.
+struct FrameSync
 {
-    if (port.available() > 50) while (port.available()) port.read();
-    if (port.available() >= 10)
+    uint8_t       buf[64];
+    uint8_t       len   = 0;
+    unsigned long bytes = 0, good = 0, drops = 0;   // diagnostics; reset each heartbeat
+};
+
+int serviceKiss(Stream& port, char side, FrameSync& fs, bool emit = true)
+{
+    ESC_Data d;
+    while (port.available())
     {
-        port.readBytes(buf, 10);
-        if (parseESC(buf, tlm)) { sendFrame('W', tlm); tlm.valid = false; return true; }
+        int b = port.read();
+        if (b < 0) break;
+        fs.bytes++;
+        if (fs.len >= sizeof(fs.buf)) { memmove(fs.buf, fs.buf + 1, sizeof(fs.buf) - 1); fs.len--; }
+        fs.buf[fs.len++] = (uint8_t)b;
     }
-    return false;
+    int got = 0;
+    uint8_t i = 0;
+    while ((uint8_t)(fs.len - i) >= 10)
+    {
+        if (get_crc8(&fs.buf[i], 9) == fs.buf[i + 9])
+        {
+            parseESC(&fs.buf[i], d);
+            if (emit) sendFrame(side, d);
+            fs.good++; got++; i += 10;
+        }
+        else { fs.drops++; i += 1; }
+    }
+    if (i) { fs.len -= i; memmove(fs.buf, fs.buf + i, fs.len); }
+    return got;
 }
+
+FrameSync fs;
 
 void setup()
 {
     // UART0 / Serial: RX remapped to the weapon pin, TX kept on GPIO1 for USB.
+    Serial.setRxBufferSize(512);
     Serial.begin(115200, SERIAL_8N1, WEAPON_TLM_PIN, 1);
     delay(1000);
     SerialBT.begin(BT_DEVICE_NAME);
@@ -98,14 +131,17 @@ void setup()
 
 void loop()
 {
-    if (serviceSide(Serial)) lastMs = millis();
+    if (serviceKiss(Serial, 'W', fs)) lastMs = millis();
 
     if (millis() - lastHeartbeat > 1000)
     {
         const bool ok = (millis() - lastMs) < STALE_MS;
-        char s[48];
-        snprintf(s, sizeof(s), "# W=%s bt=%s\n", ok ? "ok" : "ERR", SerialBT.connected() ? "yes" : "no");
+        char s[96];
+        snprintf(s, sizeof(s), "# W=%s bt=%s | b=%lu f=%lu d=%lu\n",
+                 ok ? "ok" : "ERR", SerialBT.connected() ? "yes" : "no",
+                 fs.bytes, fs.good, fs.drops);
         broadcastPrint(s);
+        fs.bytes = fs.good = fs.drops = 0;
         lastHeartbeat = millis();
     }
 }

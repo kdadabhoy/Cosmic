@@ -1,38 +1,43 @@
 // ============================================================================
-// sf_test_dual_drive.ino  —  SF_TelemTest: BOTH drive ESCs telemetry test
+// sf_test_sniffer_decode.ino  —  SF_TelemTest: DECODING telemetry sniffer
 // ============================================================================
 //
-// Reads both drive ESCs' KISS telemetry and forwards tagged ASCII frames over
-// USB-Serial AND Bluetooth-SPP (same protocol as SF_Telem):
+// Companion to sf_test_sniffer.ino. The raw sniffer only COUNTS bytes — it can't
+// tell valid telemetry from noise. This one runs the real self-syncing KISS
+// decoder and reports, per wire every ~150 ms:
 //
-//      $R,...*HH   (right drive)      $L,...*HH   (left drive)
+//      SNIFF,<tag>,<bytesThisInterval>,<goodFrames>,<crcDrops>\n   (tag = R / L / W)
 //
-// Wire the drive ESC telemetry pads to:
-//      RIGHT telem ->  GPIO16  (UART1 RX, board silk "RX2")
-//      LEFT  telem ->  GPIO17  (UART2 RX, board silk "TX2")
-//      GND         ->  GND     (common ground, required)
+// goodFrames ~= bytes/10  -> clean, valid telemetry.
+// bytes high but goodFrames low / crcDrops high -> the wire is noisy/corrupt
+// (e.g. weapon-motor EMI), NOT a framing bug. Use this to tell the two apart.
 //
-// Open the SF_TelemTest app, "Dual Drive" screen, connect the COM port.
+// Wire the ESC telemetry pads to:
+//      RIGHT  -> GPIO16 (UART1)   LEFT -> GPIO17 (UART2)   WEAPON -> GPIO13 (UART0 RX remapped)
+//      GND    -> GND    (common ground, required)
+//
+// Open the SF_TelemTest app, "Sniffer" screen, pick "Decode", connect the COM port.
 // ============================================================================
 
 #include <Arduino.h>
 #include "BluetoothSerial.h"
 
 #define BT_DEVICE_NAME  "SF_TelemTest"
-#define RIGHT_TLM_PIN   16        // RIGHT drive ESC telemetry -> UART1 RX
-#define LEFT_TLM_PIN    17        // LEFT  drive ESC telemetry -> UART2 RX
+#define RIGHT_TLM_PIN   16
+#define LEFT_TLM_PIN    17
+#define WEAPON_TLM_PIN  13        // UART0 RX (remapped); TX stays on GPIO1 for USB
 #define ESC_BAUD        115200
-#define STALE_MS        600
+#define REPORT_MS       150
 
 HardwareSerial  SerialRight(1);   // UART1
 HardwareSerial  SerialLeft(2);    // UART2
 BluetoothSerial SerialBT;
 
-enum { R = 0, L = 1, N = 2 };
-const char SIDE_CHAR[N] = { 'R', 'L' };
+enum { R = 0, L = 1, W = 2, N = 3 };
+const char TAG[N] = { 'R', 'L', 'W' };
 
 struct ESC_Data { uint8_t temp = 0; uint16_t voltage = 0, current = 0, consumption = 0, erpm = 0; bool valid = false; };
-unsigned long lastMs[N] = { 0, 0 }, lastHeartbeat = 0;
+unsigned long lastReport = 0;
 
 // ---- KISS CRC8 ----
 uint8_t update_crc8(uint8_t crc, uint8_t seed)
@@ -59,8 +64,6 @@ bool parseESC(uint8_t* b, ESC_Data& d)
     return true;
 }
 
-// BT write can briefly block under SPP congestion, but that's no longer fatal: the
-// self-syncing reader below re-locks cleanly after any stall instead of desyncing.
 void broadcastPrint(const char* msg)
 {
     Serial.print(msg);
@@ -85,13 +88,13 @@ void sendFrame(char side, const ESC_Data& d)
 // KISS frames are 10 delimiter-less bytes; byte[9] is a CRC8 over bytes[0..8], so a
 // correctly-aligned window is the ONLY one that passes CRC. Ingest every available byte,
 // then test the CRC at the current offset: pass -> consume 10 (locked on the boundary);
-// fail -> drop ONE byte and re-test (slides onto the real boundary). A glitch costs <=9
-// byte-drops to re-lock, never a permanent offset like the old readBytes(10) path.
+// fail -> drop ONE byte and re-test (slides onto the real boundary). emit=false suppresses
+// the $-frame output — here we only want the bytes/good/drops diagnostics.
 struct FrameSync
 {
     uint8_t       buf[64];
     uint8_t       len   = 0;
-    unsigned long bytes = 0, good = 0, drops = 0;   // diagnostics; reset each heartbeat
+    unsigned long bytes = 0, good = 0, drops = 0;
 };
 
 int serviceKiss(Stream& port, char side, FrameSync& fs, bool emit = true)
@@ -125,32 +128,35 @@ FrameSync fs[N];
 
 void setup()
 {
-    Serial.begin(115200);
-    delay(500);
+    // Weapon on UART0: RX remapped to GPIO13, TX kept on GPIO1 for USB output.
+    Serial.setRxBufferSize(512);
+    Serial.begin(115200, SERIAL_8N1, WEAPON_TLM_PIN, 1);
+    delay(1000);
     SerialRight.setRxBufferSize(512);
     SerialLeft.setRxBufferSize(512);
     SerialRight.begin(ESC_BAUD, SERIAL_8N1, RIGHT_TLM_PIN, -1, false);
     SerialLeft.begin(ESC_BAUD, SERIAL_8N1, LEFT_TLM_PIN,  -1, false);
     SerialBT.begin(BT_DEVICE_NAME);
-    Serial.println("# SF_TelemTest dual-drive online");
-    Serial.printf("# RIGHT pin: %d (UART1)   LEFT pin: %d (UART2)\n", RIGHT_TLM_PIN, LEFT_TLM_PIN);
+    Serial.println("# SF_TelemTest decode-sniffer online");
+    Serial.printf("# Sniffing R=%d (UART1) L=%d (UART2) W=%d (UART0)\n",
+                  RIGHT_TLM_PIN, LEFT_TLM_PIN, WEAPON_TLM_PIN);
 }
 
 void loop()
 {
-    if (serviceKiss(SerialRight, SIDE_CHAR[R], fs[R])) lastMs[R] = millis();
-    if (serviceKiss(SerialLeft,  SIDE_CHAR[L], fs[L])) lastMs[L] = millis();
+    serviceKiss(SerialRight, 'R', fs[R], false);
+    serviceKiss(SerialLeft,  'L', fs[L], false);
+    serviceKiss(Serial,      'W', fs[W], false);
 
-    if (millis() - lastHeartbeat > 1000)
+    if (millis() - lastReport >= REPORT_MS)
     {
-        const bool rOk = (millis() - lastMs[R]) < STALE_MS;
-        const bool lOk = (millis() - lastMs[L]) < STALE_MS;
-        char s[128];
-        snprintf(s, sizeof(s), "# R=%s L=%s bt=%s | Rb=%lu Rf=%lu Rd=%lu Lb=%lu Lf=%lu Ld=%lu\n",
-                 rOk ? "ok" : "ERR", lOk ? "ok" : "ERR", SerialBT.connected() ? "yes" : "no",
-                 fs[R].bytes, fs[R].good, fs[R].drops, fs[L].bytes, fs[L].good, fs[L].drops);
-        broadcastPrint(s);
-        for (int k = 0; k < N; k++) { fs[k].bytes = fs[k].good = fs[k].drops = 0; }
-        lastHeartbeat = millis();
+        for (int i = 0; i < N; i++)
+        {
+            char line[64];
+            snprintf(line, sizeof(line), "SNIFF,%c,%lu,%lu,%lu\n", TAG[i], fs[i].bytes, fs[i].good, fs[i].drops);
+            broadcastPrint(line);
+            fs[i].bytes = fs[i].good = fs[i].drops = 0;
+        }
+        lastReport = millis();
     }
 }

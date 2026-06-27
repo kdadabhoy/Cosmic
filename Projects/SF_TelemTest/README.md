@@ -67,9 +67,9 @@ Templates live in `src/FirmwareTemplates.h` and mirror `firmware/sf_test_*.ino`.
 | `src/TestHub.{h,cpp}` | Shared serial backbone: parse `$frames` (per-ESC counts/fps/last-frame/decode), `SNIFF` lines (per-wire activity), raw link bytes/sec; Serial Link UI. |
 | `src/TestLayers.{h,cpp}` | The four screens (PASS/FAIL banners, photo overlays, diagnostics, sniffer cards). |
 | `src/Telemetry.h` | Wire protocol + decode (copied from SF_Telem — identical format). |
-| `src/FirmwareTemplates.h` | Embedded `.ino` sources for all four tests (in-app "Copy sketch"). |
+| `src/FirmwareTemplates.h` | Embedded `.ino` sources, composed from a shared `FwKissModule()` (CRC + self-syncing `serviceKiss` reader + non-blocking output) per test; in-app "Copy sketch". The Sniffer screen offers **Raw** (byte counter) and **Decode** (valid-frame / CRC-drop) builds. |
 | `assets/images/` | Weapon + drivetrain photos + `ESP32_Dev_Pin_Layout.png` (pinout pop-out). |
-| `firmware/sf_test_*` | One Arduino sketch per test (see table above). |
+| `firmware/sf_test_*` | One Arduino sketch per test (incl. `sf_test_sniffer` raw + `sf_test_sniffer_decode`). |
 
 ## Workflow
 

@@ -26,3 +26,4 @@ self-contained and grounded:
 | ---- | -------------- |
 | [borderless-window-dpi.md](borderless-window-dpi.md) | HiDPI-only missing custom title bar + mouse-click offset — GLFW's decorated-frame DPI geometry math vs. a visually-stripped frame, and the borderless-model fix. |
 | [gl-resource-teardown.md](gl-resource-teardown.md) | `glDelete*` access violation in `opengl32.dll` on close — static GPU-handle lifetime vs. OpenGL context destruction, and the current-context destructor guard. |
+| [kiss-telemetry-resync.md](kiss-telemetry-resync.md) | Intermittent "stale weapon" telemetry — delimiter-less KISS frames desyncing permanently after a BT-stall flush, the self-syncing CRC reader that re-locks, and the ESP32 `availableForWrite()` footgun. |

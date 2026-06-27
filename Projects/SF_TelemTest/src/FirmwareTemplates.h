@@ -25,8 +25,10 @@ namespace Workspace
         return s;
     }
 
-    // Shared boilerplate appended to the single-ESC decode sketches.
-    inline const char* FwKissHelpers()
+    // Shared KISS module appended to the decode sketches: CRC, parse, output, and the
+    // self-syncing reader. Requires the sketch to have already declared `ESC_Data` and the
+    // `Serial`/`SerialBT` objects above it. Define `FrameSync` instances AFTER this block.
+    inline const char* FwKissModule()
     {
         return R"FW(uint8_t update_crc8(uint8_t crc, uint8_t seed)
 {
@@ -48,6 +50,8 @@ bool parseESC(uint8_t* b, ESC_Data& d)
     d.consumption = (b[5] << 8) | b[6]; d.erpm = (b[7] << 8) | b[8];
     d.valid = true; return true;
 }
+// BT write can briefly block under SPP congestion, but that's no longer fatal: the
+// self-syncing reader below re-locks cleanly after any stall instead of desyncing.
 void broadcastPrint(const char* msg)
 {
     Serial.print(msg);
@@ -65,6 +69,44 @@ void sendFrame(char side, const ESC_Data& d)
     char frame[64];
     snprintf(frame, sizeof(frame), "$%s*%02X\n", payload, crc);
     broadcastPrint(frame);
+}
+// Self-synchronizing KISS reader. KISS frames are 10 delimiter-less bytes where byte[9] is a
+// CRC8 over bytes[0..8], so a correctly-aligned window is the ONLY one that passes CRC. We
+// ingest every available byte into a rolling buffer, then test the CRC at the current offset:
+// pass -> consume 10 (locked on the boundary); fail -> drop ONE byte and re-test (slides the
+// window onto the real boundary). A glitch costs <=9 byte-drops to re-lock, never a permanent
+// offset like the old readBytes(10) path. emit=false suppresses $-output (decode sniffer).
+struct FrameSync
+{
+    uint8_t       buf[64];
+    uint8_t       len   = 0;
+    unsigned long bytes = 0, good = 0, drops = 0;   // diagnostics; caller resets each heartbeat
+};
+int serviceKiss(Stream& port, char side, FrameSync& fs, bool emit = true)
+{
+    ESC_Data d;
+    while (port.available())
+    {
+        int b = port.read();
+        if (b < 0) break;
+        fs.bytes++;
+        if (fs.len >= sizeof(fs.buf)) { memmove(fs.buf, fs.buf + 1, sizeof(fs.buf) - 1); fs.len--; }
+        fs.buf[fs.len++] = (uint8_t)b;
+    }
+    int got = 0;
+    uint8_t i = 0;
+    while ((uint8_t)(fs.len - i) >= 10)
+    {
+        if (get_crc8(&fs.buf[i], 9) == fs.buf[i + 9])
+        {
+            parseESC(&fs.buf[i], d);
+            if (emit) sendFrame(side, d);
+            fs.good++; got++; i += 10;
+        }
+        else { fs.drops++; i += 1; }
+    }
+    if (i) { fs.len -= i; memmove(fs.buf, fs.buf + i, fs.len); }
+    return got;
 }
 )FW";
     }
@@ -87,28 +129,18 @@ HardwareSerial  SerialDrive(1);   // UART1
 BluetoothSerial SerialBT;
 
 struct ESC_Data { uint8_t temp = 0; uint16_t voltage = 0, current = 0, consumption = 0, erpm = 0; bool valid = false; };
-ESC_Data      tlm;
-uint8_t       buf[10];
 unsigned long lastMs = 0, lastHeartbeat = 0;
 
 )FW";
-        s += FwKissHelpers();
+        s += FwKissModule();
         s += R"FW(
-bool serviceSide(Stream& port)
-{
-    if (port.available() > 50) while (port.available()) port.read();
-    if (port.available() >= 10)
-    {
-        port.readBytes(buf, 10);
-        if (parseESC(buf, tlm)) { sendFrame(DRIVE_SIDE, tlm); tlm.valid = false; return true; }
-    }
-    return false;
-}
+FrameSync fs;
 
 void setup()
 {
     Serial.begin(115200);
     delay(500);
+    SerialDrive.setRxBufferSize(512);
     SerialDrive.begin(ESC_BAUD, SERIAL_8N1, DRIVE_TLM_PIN, -1, false);
     SerialBT.begin(BT_DEVICE_NAME);
     Serial.printf("# SF_TelemTest single-drive online (pin %d, side %c)\n", DRIVE_TLM_PIN, DRIVE_SIDE);
@@ -116,13 +148,16 @@ void setup()
 
 void loop()
 {
-    if (serviceSide(SerialDrive)) lastMs = millis();
+    if (serviceKiss(SerialDrive, DRIVE_SIDE, fs)) lastMs = millis();
     if (millis() - lastHeartbeat > 1000)
     {
         const bool ok = (millis() - lastMs) < STALE_MS;
-        char s[48];
-        snprintf(s, sizeof(s), "# %c=%s bt=%s\n", DRIVE_SIDE, ok ? "ok" : "ERR", SerialBT.connected() ? "yes" : "no");
+        char s[96];
+        snprintf(s, sizeof(s), "# %c=%s bt=%s | b=%lu f=%lu d=%lu\n",
+                 DRIVE_SIDE, ok ? "ok" : "ERR", SerialBT.connected() ? "yes" : "no",
+                 fs.bytes, fs.good, fs.drops);
         broadcastPrint(s);
+        fs.bytes = fs.good = fs.drops = 0;
         lastHeartbeat = millis();
     }
 }
@@ -149,27 +184,17 @@ void loop()
 BluetoothSerial SerialBT;
 
 struct ESC_Data { uint8_t temp = 0; uint16_t voltage = 0, current = 0, consumption = 0, erpm = 0; bool valid = false; };
-ESC_Data      tlm;
-uint8_t       buf[10];
 unsigned long lastMs = 0, lastHeartbeat = 0;
 
 )FW";
-        s += FwKissHelpers();
+        s += FwKissModule();
         s += R"FW(
-bool serviceSide(Stream& port)
-{
-    if (port.available() > 50) while (port.available()) port.read();
-    if (port.available() >= 10)
-    {
-        port.readBytes(buf, 10);
-        if (parseESC(buf, tlm)) { sendFrame('W', tlm); tlm.valid = false; return true; }
-    }
-    return false;
-}
+FrameSync fs;
 
 void setup()
 {
     // UART0 / Serial: RX remapped to the weapon pin, TX kept on GPIO1 for USB.
+    Serial.setRxBufferSize(512);
     Serial.begin(115200, SERIAL_8N1, WEAPON_TLM_PIN, 1);
     delay(1000);
     SerialBT.begin(BT_DEVICE_NAME);
@@ -178,13 +203,16 @@ void setup()
 
 void loop()
 {
-    if (serviceSide(Serial)) lastMs = millis();
+    if (serviceKiss(Serial, 'W', fs)) lastMs = millis();
     if (millis() - lastHeartbeat > 1000)
     {
         const bool ok = (millis() - lastMs) < STALE_MS;
-        char s[48];
-        snprintf(s, sizeof(s), "# W=%s bt=%s\n", ok ? "ok" : "ERR", SerialBT.connected() ? "yes" : "no");
+        char s[96];
+        snprintf(s, sizeof(s), "# W=%s bt=%s | b=%lu f=%lu d=%lu\n",
+                 ok ? "ok" : "ERR", SerialBT.connected() ? "yes" : "no",
+                 fs.bytes, fs.good, fs.drops);
         broadcastPrint(s);
+        fs.bytes = fs.good = fs.drops = 0;
         lastHeartbeat = millis();
     }
 }
@@ -216,28 +244,19 @@ enum { R = 0, L = 1, N = 2 };
 const char SIDE_CHAR[N] = { 'R', 'L' };
 
 struct ESC_Data { uint8_t temp = 0; uint16_t voltage = 0, current = 0, consumption = 0, erpm = 0; bool valid = false; };
-ESC_Data      tlm[N];
-uint8_t       buf[N][10];
 unsigned long lastMs[N] = { 0, 0 }, lastHeartbeat = 0;
 
 )FW";
-        s += FwKissHelpers();
+        s += FwKissModule();
         s += R"FW(
-bool serviceSide(Stream& port, int idx)
-{
-    if (port.available() > 50) while (port.available()) port.read();
-    if (port.available() >= 10)
-    {
-        port.readBytes(buf[idx], 10);
-        if (parseESC(buf[idx], tlm[idx])) { sendFrame(SIDE_CHAR[idx], tlm[idx]); tlm[idx].valid = false; return true; }
-    }
-    return false;
-}
+FrameSync fs[N];
 
 void setup()
 {
     Serial.begin(115200);
     delay(500);
+    SerialRight.setRxBufferSize(512);
+    SerialLeft.setRxBufferSize(512);
     SerialRight.begin(ESC_BAUD, SERIAL_8N1, RIGHT_TLM_PIN, -1, false);
     SerialLeft.begin(ESC_BAUD, SERIAL_8N1, LEFT_TLM_PIN,  -1, false);
     SerialBT.begin(BT_DEVICE_NAME);
@@ -246,15 +265,18 @@ void setup()
 
 void loop()
 {
-    if (serviceSide(SerialRight, R)) lastMs[R] = millis();
-    if (serviceSide(SerialLeft,  L)) lastMs[L] = millis();
+    if (serviceKiss(SerialRight, SIDE_CHAR[R], fs[R])) lastMs[R] = millis();
+    if (serviceKiss(SerialLeft,  SIDE_CHAR[L], fs[L])) lastMs[L] = millis();
     if (millis() - lastHeartbeat > 1000)
     {
         const bool rOk = (millis() - lastMs[R]) < STALE_MS;
         const bool lOk = (millis() - lastMs[L]) < STALE_MS;
-        char s[64];
-        snprintf(s, sizeof(s), "# R=%s L=%s bt=%s\n", rOk ? "ok" : "ERR", lOk ? "ok" : "ERR", SerialBT.connected() ? "yes" : "no");
+        char s[128];
+        snprintf(s, sizeof(s), "# R=%s L=%s bt=%s | Rb=%lu Rf=%lu Rd=%lu Lb=%lu Lf=%lu Ld=%lu\n",
+                 rOk ? "ok" : "ERR", lOk ? "ok" : "ERR", SerialBT.connected() ? "yes" : "no",
+                 fs[R].bytes, fs[R].good, fs[R].drops, fs[L].bytes, fs[L].good, fs[L].drops);
         broadcastPrint(s);
+        for (int k = 0; k < N; k++) { fs[k].bytes = fs[k].good = fs[k].drops = 0; }
         lastHeartbeat = millis();
     }
 }
@@ -344,6 +366,81 @@ void loop()
                      TAG[i], interval[i], total[i], sampleLen[i] ? sample[i] : "-");
             broadcastPrint(line);
             interval[i] = 0; sampleLen[i] = 0; sample[i][0] = 0;
+        }
+        lastReport = millis();
+    }
+}
+)FW";
+        s = FwReplaceAll(s, "{{RIGHT_PIN}}",  std::to_string(rightPin));
+        s = FwReplaceAll(s, "{{LEFT_PIN}}",   std::to_string(leftPin));
+        s = FwReplaceAll(s, "{{WEAPON_PIN}}", std::to_string(weaponPin));
+        s = FwReplaceAll(s, "{{BT_NAME}}",    btName);
+        return s;
+    }
+
+    // ---- 5. Decode sniffer (self-syncing; reports valid-frame / CRC-fail rates) ----
+    inline std::string BuildDecodeSniffer(int rightPin, int leftPin, int weaponPin, const std::string& btName)
+    {
+        std::string s = R"FW(// sf_test_sniffer_decode.ino — SF_TelemTest: DECODING telemetry sniffer
+// Generated by the app. Same wiring as the raw sniffer, but runs the real self-syncing KISS
+// decoder and reports, per wire every ~150 ms:
+//      SNIFF,<tag>,<bytesThisInterval>,<goodFrames>,<crcDrops>
+// goodFrames ~= bytes/10 -> clean valid telemetry; bytes high with goodFrames low / crcDrops
+// high -> the wire is noisy/corrupt (not a framing bug).
+// RIGHT -> GPIO {{RIGHT_PIN}} (UART1), LEFT -> GPIO {{LEFT_PIN}} (UART2),
+// WEAPON -> GPIO {{WEAPON_PIN}} (UART0 RX remapped; TX on GPIO1) + GND.
+#include <Arduino.h>
+#include "BluetoothSerial.h"
+
+#define BT_DEVICE_NAME  "{{BT_NAME}}"
+#define RIGHT_TLM_PIN   {{RIGHT_PIN}}
+#define LEFT_TLM_PIN    {{LEFT_PIN}}
+#define WEAPON_TLM_PIN  {{WEAPON_PIN}}
+#define ESC_BAUD        115200
+#define REPORT_MS       150
+
+HardwareSerial  SerialRight(1);   // UART1
+HardwareSerial  SerialLeft(2);    // UART2
+BluetoothSerial SerialBT;
+
+enum { R = 0, L = 1, W = 2, N = 3 };
+const char TAG[N] = { 'R', 'L', 'W' };
+
+struct ESC_Data { uint8_t temp = 0; uint16_t voltage = 0, current = 0, consumption = 0, erpm = 0; bool valid = false; };
+unsigned long lastReport = 0;
+
+)FW";
+        s += FwKissModule();
+        s += R"FW(
+FrameSync fs[N];
+
+void setup()
+{
+    Serial.setRxBufferSize(512);
+    Serial.begin(115200, SERIAL_8N1, WEAPON_TLM_PIN, 1);  // weapon RX remapped, USB TX kept
+    delay(1000);
+    SerialRight.setRxBufferSize(512);
+    SerialLeft.setRxBufferSize(512);
+    SerialRight.begin(ESC_BAUD, SERIAL_8N1, RIGHT_TLM_PIN, -1, false);
+    SerialLeft.begin(ESC_BAUD, SERIAL_8N1, LEFT_TLM_PIN,  -1, false);
+    SerialBT.begin(BT_DEVICE_NAME);
+    Serial.printf("# SF_TelemTest decode-sniffer online (R %d / L %d / W %d)\n", RIGHT_TLM_PIN, LEFT_TLM_PIN, WEAPON_TLM_PIN);
+}
+
+void loop()
+{
+    serviceKiss(SerialRight, 'R', fs[R], false);
+    serviceKiss(SerialLeft,  'L', fs[L], false);
+    serviceKiss(Serial,      'W', fs[W], false);
+
+    if (millis() - lastReport >= REPORT_MS)
+    {
+        for (int i = 0; i < N; i++)
+        {
+            char line[64];
+            snprintf(line, sizeof(line), "SNIFF,%c,%lu,%lu,%lu\n", TAG[i], fs[i].bytes, fs[i].good, fs[i].drops);
+            broadcastPrint(line);
+            fs[i].bytes = fs[i].good = fs[i].drops = 0;
         }
         lastReport = millis();
     }

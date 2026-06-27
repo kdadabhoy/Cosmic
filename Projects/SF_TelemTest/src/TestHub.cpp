@@ -386,7 +386,17 @@ namespace Workspace
                 PinInput("Right##fwr",  m_FwRightPin);
                 PinInput("Left##fwl",   m_FwLeftPin);
                 PinInput("Weapon##fww", m_FwWeaponPin);
-                sketch = BuildSniffer(m_FwRightPin, m_FwLeftPin, m_FwWeaponPin, m_FwBtName);
+                ImGui::TextDisabled("Mode:"); ImGui::SameLine();
+                if (ImGui::RadioButton("Raw##fwsniff", m_FwSnifferMode == 0)) m_FwSnifferMode = 0;
+                ImGui::SameLine();
+                if (ImGui::RadioButton("Decode##fwsniff", m_FwSnifferMode == 1)) m_FwSnifferMode = 1;
+                if (ImGui::IsItemHovered())
+                    ImGui::SetTooltip("Raw counts every byte on each wire (proves telem is present).\n"
+                                      "Decode runs the real self-syncing parser and reports good frames\n"
+                                      "vs CRC drops (proves the bytes are VALID, not just present).");
+                sketch = m_FwSnifferMode == 1
+                       ? BuildDecodeSniffer(m_FwRightPin, m_FwLeftPin, m_FwWeaponPin, m_FwBtName)
+                       : BuildSniffer(m_FwRightPin, m_FwLeftPin, m_FwWeaponPin, m_FwBtName);
                 break;
             default: // 0 = single drive
                 PinInput("Drive##fwd", m_FwRightPin);

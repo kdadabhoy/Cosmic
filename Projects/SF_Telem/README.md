@@ -54,7 +54,7 @@ shows each ESC's live/stale/absent state.
 | `src/DrivetrainLayer.{h,cpp}` | Screen 2 (drivetrain calculator). |
 | `src/WeaponLayer.{h,cpp}` | Screen 3 (weapon + predicted model). |
 | `src/StatBox.h` | Framed indication-box widgets (live value + avg + max) and the responsive grid. |
-| `src/FirmwareTemplates.h` | Embedded `.ino` sources (main + simulator) for the in-app "Copy firmware" buttons. |
+| `src/FirmwareTemplates.h` | Embedded `.ino` sources (main + simulator); the main build composes a shared `FwKissModule()` (CRC + self-syncing `serviceKiss` reader + non-blocking output) for the in-app "Copy firmware" buttons. |
 | `assets/images/` | Weapon + drivetrain photos (Live Dashboard) + `ESP32_Dev_Pin_Layout.png` (pinout pop-out). |
 | `src/WeaponModel.h` | Predicted weapon spin-up (ported spreadsheet). |
 | `src/DrivetrainModel.h` | Drivetrain spin-up physics. |

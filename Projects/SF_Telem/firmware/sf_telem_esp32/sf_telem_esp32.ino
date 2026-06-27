@@ -64,8 +64,6 @@ struct ESC_Data
     bool     valid       = false;
 };
 
-ESC_Data      tlm[N];
-uint8_t       buf[N][10];
 unsigned long lastMs[N]      = { 0, 0, 0 };
 unsigned long lastHeartbeat  = 0;
 
@@ -98,6 +96,8 @@ bool parseESC(uint8_t* buffer, ESC_Data& d)
 }
 
 // ---- Output helpers --------------------------------------------------------
+// BT write can briefly block under SPP congestion, but that's no longer fatal: the
+// self-syncing reader below re-locks cleanly after any stall instead of desyncing.
 void broadcastPrint(const char* msg)
 {
     Serial.print(msg);                       // UART0 TX -> USB (debug)
@@ -124,35 +124,61 @@ void sendFrame(char side, const ESC_Data& d)
     broadcastPrint(frame);
 }
 
-// Read + forward one side. Returns true if a fresh valid packet was sent.
-bool serviceSide(Stream& port, int idx)
+// ---- Self-synchronizing KISS reader ----------------------------------------
+// KISS frames are 10 delimiter-less bytes; byte[9] is a CRC8 over bytes[0..8], so a
+// correctly-aligned window is the ONLY one that passes CRC. Ingest every available byte,
+// then test the CRC at the current offset: pass -> consume 10 (locked on the boundary);
+// fail -> drop ONE byte and re-test (slides onto the real boundary). A glitch costs <=9
+// byte-drops to re-lock, never a permanent offset like the old readBytes(10) path that
+// stayed stuck at the wrong phase until a lucky flush. emit=false suppresses $-output.
+struct FrameSync
 {
-    // Drain backlog so a BT stall can't desync the 10-byte KISS framing.
-    if (port.available() > 50)
-        while (port.available()) port.read();
+    uint8_t       buf[64];
+    uint8_t       len   = 0;
+    unsigned long bytes = 0, good = 0, drops = 0;   // diagnostics; reset each heartbeat
+};
 
-    bool sent = false;
-    if (port.available() >= 10)
+int serviceKiss(Stream& port, char side, FrameSync& fs, bool emit = true)
+{
+    ESC_Data d;
+    while (port.available())
     {
-        port.readBytes(buf[idx], 10);
-        if (parseESC(buf[idx], tlm[idx]))
-        {
-            sendFrame(SIDE_CHAR[idx], tlm[idx]);
-            tlm[idx].valid = false;
-            sent = true;
-        }
+        int b = port.read();
+        if (b < 0) break;
+        fs.bytes++;
+        if (fs.len >= sizeof(fs.buf)) { memmove(fs.buf, fs.buf + 1, sizeof(fs.buf) - 1); fs.len--; }
+        fs.buf[fs.len++] = (uint8_t)b;
     }
-    return sent;
+    int got = 0;
+    uint8_t i = 0;
+    while ((uint8_t)(fs.len - i) >= 10)
+    {
+        if (get_crc8(&fs.buf[i], 9) == fs.buf[i + 9])
+        {
+            parseESC(&fs.buf[i], d);
+            if (emit) sendFrame(side, d);
+            fs.good++; got++; i += 10;
+        }
+        else { fs.drops++; i += 1; }
+    }
+    if (i) { fs.len -= i; memmove(fs.buf, fs.buf + i, fs.len); }
+    return got;
 }
+
+FrameSync fs[N];
 
 // ---- Setup -----------------------------------------------------------------
 void setup()
 {
     // UART0 / Serial: RX remapped to the WEAPON pin, TX kept on GPIO1 for USB.
+    // Bigger RX buffers so a transient loop stall can't overflow the FIFO and drop bytes.
+    Serial.setRxBufferSize(512);
     Serial.begin(115200, SERIAL_8N1, WEAPON_TLM_PIN, 1);
     delay(1000);
 
     // One-wire telemetry on the two drive UARTs (RX only, TX pin = -1).
+    SerialRight.setRxBufferSize(512);
+    SerialLeft.setRxBufferSize(512);
     SerialRight.begin(ESC_BAUD, SERIAL_8N1, RIGHT_TLM_PIN, -1, false);
     SerialLeft.begin(ESC_BAUD, SERIAL_8N1, LEFT_TLM_PIN,  -1, false);
 
@@ -167,22 +193,29 @@ void setup()
 // ---- Loop ------------------------------------------------------------------
 void loop()
 {
-    if (serviceSide(SerialRight, R)) lastMs[R] = millis();
-    if (serviceSide(SerialLeft,  L)) lastMs[L] = millis();
-    if (serviceSide(Serial,      W)) lastMs[W] = millis();
+    if (serviceKiss(SerialRight, SIDE_CHAR[R], fs[R])) lastMs[R] = millis();
+    if (serviceKiss(SerialLeft,  SIDE_CHAR[L], fs[L])) lastMs[L] = millis();
+    if (serviceKiss(Serial,      SIDE_CHAR[W], fs[W])) lastMs[W] = millis();
 
-    // Heartbeat — '#' comment line; the host logs but ignores it. Shows which
-    // sides are alive so a dead telem wire is obvious at the bench.
+    // Heartbeat — '#' comment line; the host logs but ignores it. Shows which sides are
+    // alive plus per-side diagnostics since the last beat: <X>b = bytes received,
+    // <X>f = valid frames decoded, <X>d = bytes dropped re-syncing. Bytes high with
+    // frames low / drops high == a noisy/corrupt wire (e.g. weapon EMI), not a framing bug.
     if (millis() - lastHeartbeat > 1000)
     {
         const bool rOk = (millis() - lastMs[R]) < SIDE_STALE_MS;
         const bool lOk = (millis() - lastMs[L]) < SIDE_STALE_MS;
         const bool wOk = (millis() - lastMs[W]) < SIDE_STALE_MS;
-        char status[80];
-        snprintf(status, sizeof(status), "# R=%s L=%s W=%s bt=%s\n",
+        char status[200];
+        snprintf(status, sizeof(status),
+                 "# R=%s L=%s W=%s bt=%s | Rb=%lu Rf=%lu Rd=%lu Lb=%lu Lf=%lu Ld=%lu Wb=%lu Wf=%lu Wd=%lu\n",
                  rOk ? "ok" : "ERR", lOk ? "ok" : "ERR", wOk ? "ok" : "ERR",
-                 SerialBT.connected() ? "yes" : "no");
+                 SerialBT.connected() ? "yes" : "no",
+                 fs[R].bytes, fs[R].good, fs[R].drops,
+                 fs[L].bytes, fs[L].good, fs[L].drops,
+                 fs[W].bytes, fs[W].good, fs[W].drops);
         broadcastPrint(status);
+        for (int k = 0; k < N; k++) { fs[k].bytes = fs[k].good = fs[k].drops = 0; }
         lastHeartbeat = millis();
     }
 }
