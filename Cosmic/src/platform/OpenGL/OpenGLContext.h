@@ -38,6 +38,13 @@
  * 3. void SwapBuffers() override
  * Pre:  The context has been successfully initialized.
  * Post: The front and back buffers of the linked window are swapped.
+ *
+ * 4. static bool HasCurrentContext()
+ * Pre:  None (safe to call at any point, including after glfwTerminate).
+ * Post: Returns true if an OpenGL context is current on the calling thread.
+ * Used by GL resource destructors to skip glDelete* calls during teardown
+ * once the context is gone — issuing GL commands with no current context
+ * faults inside opengl32.dll (access violation on close).
  */
 
 #include "graphics/GraphicsContext.h"
@@ -57,6 +64,11 @@ namespace Cosmic
 
 		virtual void	Init() override;
 		virtual void	SwapBuffers() override;
+
+		// True when an OpenGL context is current on the calling thread. GL resource
+		// destructors guard their glDelete* calls with this so an abnormal/abort exit
+		// that tears down the context before graceful shutdown can't crash on close.
+		static bool		HasCurrentContext();
 
 	private:
 		GLFWwindow* m_WindowHandle;

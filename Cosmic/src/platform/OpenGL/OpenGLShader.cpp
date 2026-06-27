@@ -8,6 +8,7 @@
 #endif
 
 #include "platform/opengl/OpenGLShader.h"
+#include "platform/opengl/OpenGLContext.h"
 #include <vector>
 #include <glm/gtc/type_ptr.hpp>
 #include "core/Log.h"
@@ -62,7 +63,11 @@ namespace Cosmic
      */
     OpenGLShader::~OpenGLShader()
     {
-        glDeleteProgram(m_RendererID);
+        // Skip the GL delete if the context is already gone (abort/teardown order) —
+        // see OpenGLContext::HasCurrentContext(). The driver reclaims the program with
+        // the context, so this leaks nothing.
+        if (OpenGLContext::HasCurrentContext())
+            glDeleteProgram(m_RendererID);
     }
 
     /////////////////////////////////////////////////////////////////////////////////

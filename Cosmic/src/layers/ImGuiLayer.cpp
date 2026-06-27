@@ -100,8 +100,14 @@ namespace Cosmic
 	void ImGuiLayer::End()
 	{
 		ImGuiIO& io = ImGui::GetIO();
-		Application& app = Application::Get();
-		io.DisplaySize = ImVec2((float)app.GetWindow().GetWidth(), (float)app.GetWindow().GetHeight());
+
+		// NOTE: do NOT override io.DisplaySize here. The GLFW backend already sets both
+		// io.DisplaySize and io.DisplayFramebufferScale from the live window/framebuffer
+		// size in Begin() (ImGui_ImplGlfw_NewFrame), before layout. Re-assigning it here
+		// — after the frame was laid out and hit-tested — made ImGui render in a different
+		// coordinate space than it laid out in whenever the cached window size was stale,
+		// which clipped the custom title bar off-screen and offset every mouse click until
+		// a resize (F11) refreshed the cache.
 
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

@@ -410,6 +410,17 @@ namespace Cosmic
 
 		// 5. Boot exclusively into the Launcher state
 		PushLayer(new LauncherLayer());
+
+		// 6. Sync the renderer to the TRUE framebuffer size now that the window,
+		//    callbacks, framebuffer, and layers all exist. The window enables
+		//    borderless custom chrome during construction, which enlarges the client
+		//    area beyond the requested DEFAULT_WIDTH/HEIGHT — but that resize fires into
+		//    a no-op callback (the real EventCallback isn't installed yet) and the GL
+		//    viewport defaults to the size at context creation. Without this, the engine
+		//    renders at a stale viewport until the first user resize / F11 toggle.
+		//    SynchronizeRenderingState() queries glfwGetFramebufferSize and drives a
+		//    WindowResizeEvent through OnWindowResize (FBO resize + glViewport).
+		SynchronizeRenderingState();
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////

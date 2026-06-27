@@ -50,4 +50,21 @@ namespace Cosmic
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////
+
+	/**
+	 * HasCurrentContext
+	 * * Reports whether an OpenGL context is current on the calling thread.
+	 * * GL resource destructors call this before issuing glDelete* so that a
+	 * shutdown/abort path that destroys the window (and context) before the normal
+	 * cleanup runs cannot fault inside the driver. glfwGetCurrentContext() returns
+	 * null after the context is destroyed — and remains safe to call even after
+	 * glfwTerminate (it just returns null) — so this is a reliable "can I safely
+	 * issue GL commands right now?" check.
+	 */
+	bool OpenGLContext::HasCurrentContext()
+	{
+		return glfwGetCurrentContext() != nullptr;
+	}
+
+	/////////////////////////////////////////////////////////////////////////////////
 }

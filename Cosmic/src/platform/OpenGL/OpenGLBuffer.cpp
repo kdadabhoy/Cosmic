@@ -1,5 +1,6 @@
 #include <glad/glad.h>
 #include "platform/opengl/OpenGLBuffer.h"
+#include "platform/opengl/OpenGLContext.h"
 
 namespace Cosmic
 {
@@ -41,7 +42,11 @@ namespace Cosmic
 	 */
 	OpenGLVertexBuffer::~OpenGLVertexBuffer()
 	{
-		glDeleteBuffers(1, &m_RendererID);
+		// Skip the GL delete if the context is already gone (abort/teardown order) —
+		// see OpenGLContext::HasCurrentContext(). The driver reclaims the buffer with
+		// the context, so this leaks nothing.
+		if (OpenGLContext::HasCurrentContext())
+			glDeleteBuffers(1, &m_RendererID);
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////
@@ -104,7 +109,11 @@ namespace Cosmic
 	 */
 	OpenGLIndexBuffer::~OpenGLIndexBuffer()
 	{
-		glDeleteBuffers(1, &m_RendererID);
+		// Skip the GL delete if the context is already gone (abort/teardown order) —
+		// see OpenGLContext::HasCurrentContext(). The driver reclaims the buffer with
+		// the context, so this leaks nothing.
+		if (OpenGLContext::HasCurrentContext())
+			glDeleteBuffers(1, &m_RendererID);
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////

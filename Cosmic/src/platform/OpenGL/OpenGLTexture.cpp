@@ -8,6 +8,7 @@
 #endif
 
 #include "platform/opengl/OpenGLTexture.h"
+#include "platform/opengl/OpenGLContext.h"
 #include <stb_image.h>
 #include "core/Log.h"
 
@@ -141,7 +142,13 @@ namespace Cosmic
 	 */
 	OpenGLTexture::~OpenGLTexture()
 	{
-		glDeleteTextures(1, &m_RendererID);
+		// Guard against teardown order: if the OpenGL context has already been
+		// destroyed (e.g. an abort/early-exit path that skipped Renderer2D::Shutdown,
+		// or static destruction at process exit), glDeleteTextures would fault inside
+		// opengl32.dll. The driver already reclaimed the GPU memory when the context
+		// died, so skipping the call here leaks nothing.
+		if (m_RendererID != 0 && OpenGLContext::HasCurrentContext())
+			glDeleteTextures(1, &m_RendererID);
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////

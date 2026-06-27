@@ -1,5 +1,6 @@
 #include <glad/glad.h>
 #include "platform/opengl/OpenGLVertexArray.h"
+#include "platform/opengl/OpenGLContext.h"
 
 namespace Cosmic
 {
@@ -40,7 +41,11 @@ namespace Cosmic
 
 	OpenGLVertexArray::~OpenGLVertexArray()
 	{
-		glDeleteVertexArrays(1, &m_RendererID);
+		// Skip the GL delete if the context is already gone (abort/teardown order) —
+		// see OpenGLContext::HasCurrentContext(). The driver reclaims the VAO with the
+		// context, so this leaks nothing.
+		if (OpenGLContext::HasCurrentContext())
+			glDeleteVertexArrays(1, &m_RendererID);
 	}
 
 	void OpenGLVertexArray::Bind() const

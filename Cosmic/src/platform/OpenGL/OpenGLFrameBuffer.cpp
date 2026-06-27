@@ -10,6 +10,7 @@
 
 #include <glad/glad.h>
 #include "platform/OpenGL/OpenGLFrameBuffer.h"
+#include "platform/OpenGL/OpenGLContext.h"
 #include "core/Log.h"
 
 namespace Cosmic
@@ -36,6 +37,12 @@ namespace Cosmic
 	 */
 	OpenGLFrameBuffer::~OpenGLFrameBuffer()
 	{
+		// Skip GL deletes if the context is already gone (abort/teardown order) —
+		// see OpenGLContext::HasCurrentContext(). The driver reclaims these handles
+		// with the context, so this leaks nothing.
+		if (!OpenGLContext::HasCurrentContext())
+			return;
+
 		glDeleteFramebuffers(1, &m_RendererID);
 		glDeleteTextures(1, &m_ColorAttachment);
 		glDeleteTextures(1, &m_DepthAttachment);

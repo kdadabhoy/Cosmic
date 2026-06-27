@@ -2258,6 +2258,31 @@ The engine requires **OpenGL 4.5** or higher. The GLFW context hint is set to 4.
 
 `glfwTerminate()` is called inside `Window::~Window()`. This is safe for the current single-window architecture, but it is a global operation — it destroys all remaining GLFW resources, not just those of the window being destructed. If a second `Window` instance is ever introduced, the first window's destructor will terminate GLFW and invalidate the second window's handles, crashing on the next `glfwPollEvents` call. The correct long-term fix is to move `glfwTerminate()` to `Application::Shutdown()`, balanced against the single `glfwInit()` call in `Window::Window()`. Until then, only one `Window` instance may exist at a time.
 
+### Borderless Custom Chrome (Custom Title Bar)
+
+On Windows the engine ships with **borderless custom chrome** enabled by default (`Window::SetCustomChrome(true)`, called from the constructor). The application **draws its own title bar** — the rocket + "Cosmic Engine" caption and the minimize / maximize / close buttons in the launcher — and reports its draggable region back to the window via `SetTitlebarHitTestCallback()` so dragging that strip performs a native window move.
+
+The implementation follows the Windows Terminal / Chromium pattern of **decoupling what the windowing framework models from what Windows actually renders**:
+
+- **GLFW models the window as borderless.** It is created with `GLFW_DECORATED = GLFW_FALSE`. This matters because GLFW computes *every* window rectangle (creation, DPI changes, min/max, programmatic resize) with `AdjustWindowRectExForDpi(getWindowStyle(), dpi)` using its **own** notion of the style. For a *decorated* window that adds a **DPI-scaled** caption + resize frame — so if GLFW believed the window were decorated while we stripped the frame only visually, its geometry would carry a phantom frame that grows with monitor scale. Borderless ⇒ that adjustment is **zero frame at every DPI**, so GLFW's client model always matches the real client.
+- **The real Win32 window keeps the full style.** `EnableCustomChromeWin32()` re-adds `WS_OVERLAPPEDWINDOW` via `SetWindowLong` so Windows still provides native **resize, Aero Snap, min/max animations**, and (with `DwmExtendFrameIntoClientArea`) the **drop shadow**. GLFW never reads `GetWindowLong` for its math, so these bits are invisible to it.
+- **The frame is removed visually**, not structurally, by a WndProc subclass: `WM_NCCALCSIZE` makes the client area span the whole window and `WM_NCHITTEST` re-implements the resize borders + the client-drawn caption drag region.
+- **The window is created hidden** (`GLFW_VISIBLE = GLFW_FALSE`) and shown with `glfwShowWindow()` only after the chrome is applied, so the first painted frame already has the settled frameless client (no first-show DPI race). `Application::Initialize()` then calls `SynchronizeRenderingState()` once to drive the true framebuffer size through `OnWindowResize` (FBO resize + `glViewport`). ImGui's `io.DisplaySize`/`io.DisplayFramebufferScale` are owned exclusively by the GLFW backend each frame — nothing re-assigns them after layout.
+
+> **Historical note (resolved):** Earlier builds created the window **decorated** and stripped the frame only via `WM_NCCALCSIZE`. At 100% scaling this was invisible, but on a HiDPI laptop (e.g. 125%) GLFW's decorated-frame DPI math left a persistent ~caption-height mismatch: the custom title bar was clipped off the top and **every click landed with a vertical offset**, until a fullscreen toggle (F11 in/out) forced a manual `SetWindowPos` that overrode GLFW's geometry. The fix was to make GLFW model the window as borderless (above), so the title bar and mouse mapping are correct on the first frame at any DPI. If a click offset ever returns, suspect the window is being modeled as decorated again, or a stray `io.DisplaySize` write between `Begin()` and `Render()`. See [`docs/engineering-notes/borderless-window-dpi.md`](docs/engineering-notes/borderless-window-dpi.md) for the full trace.
+
+Note that `Input::GetMousePosition()` still returns coordinates in GLFW window space (top-left origin) — see [Section 6](#6-input-polling) and the picking notes below; that contract is unchanged by custom chrome.
+
+### GPU Resource Teardown & Context Lifetime
+
+GPU resources must be released **while the OpenGL context is still current**. Issuing `glDelete*` after the context is gone faults inside `opengl32.dll` (an access violation on close).
+
+- `Renderer2D` holds its GPU handles (vertex arrays, buffers, shaders, and the 1×1 white texture) in a file-scope `static s_Data`. `Renderer2D::Shutdown()` resets every one of those `Ref<>`s explicitly, and `Application::Shutdown()` calls it **before** the window/context is destroyed — so the normal exit path frees everything cleanly.
+- As a safety net, all OpenGL resource destructors — `OpenGLTexture`, `OpenGLShader`, `OpenGLFrameBuffer`, `OpenGLVertexArray`, and the vertex/index buffers — guard their `glDelete*` calls behind `OpenGLContext::HasCurrentContext()` (a thin wrapper over `glfwGetCurrentContext()`). If an abnormal/abort exit tears down the context before graceful shutdown runs, these destructors become no-ops instead of crashing; the driver has already reclaimed the GPU memory with the context, so nothing leaks.
+- `main()` wraps `Run()` in a try/catch so that an exception escaping the frame loop still reaches `delete app` (graceful shutdown with the context alive) and is logged, rather than `std::terminate`.
+
+> **Client-dev rule:** reset your own `Ref<>` GPU handles (textures, shaders, materials, framebuffers) in `OnDetach()` so they free while the context is live — see [Section 4](#4-the-layer-system). The destructor guard is a crash safety net for teardown ordering, **not** a license to leak resources during normal operation.
+
 ### Extra Pre-Docked Inspector Panels
 
 Request additional pre-docked panels from `OnAttach` before the first ImGui frame:
@@ -4440,6 +4465,20 @@ leak, grayscale-texture upload, the `PauseOnMinimize` doc, the instanced-sampler
 allocation churn, the texture-slot dedup/lookup, the `DrawLines` bind contract, the `ComponentArray`
 release guard, and the missing `DrawRotatedQuad(vec2, Material)` overload). The limitations below are
 the ones that remain.
+
+The 2026-06-26 stability pass fixed two laptop-/DPI-sensitive defects (see [Section 24](#24-window-system) and
+[`docs/engineering-notes/`](docs/engineering-notes/)):
+(1) **borderless title bar missing + mouse-click offset at HiDPI** (reproduced on a 125% laptop; absent at
+100%). Root cause: the window was created **decorated**, so GLFW's DPI geometry math added a phantom,
+scale-dependent caption/frame that the visual `WM_NCCALCSIZE` strip had removed. Fix: create the window with
+`GLFW_DECORATED=FALSE` (GLFW models it borderless ⇒ zero-frame math at any DPI) while re-adding
+`WS_OVERLAPPEDWINDOW` to the real window for native resize/snap/animations/shadow, and create-hidden then
+`glfwShowWindow()` after chrome is applied. (Supporting hygiene: the GLFW backend now owns
+`io.DisplaySize`/`DisplayFramebufferScale`, and `Application::Initialize()` calls `SynchronizeRenderingState()`
+once at startup.) (2) **`glDeleteTextures` access violation on close** — the static `Renderer2D` white texture
+was freed at process exit with no current GL context whenever an abort bypassed graceful shutdown. Fix: all
+OpenGL resource destructors guard `glDelete*` behind `OpenGLContext::HasCurrentContext()`, and `main()` now
+wraps `Run()` in try/catch so graceful shutdown always runs.
 
 **Known limitations to be aware of as a client developer:**
 

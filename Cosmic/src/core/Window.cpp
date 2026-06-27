@@ -164,6 +164,27 @@ namespace Cosmic
 		// out of fullscreen.
 		glfwWindowHint(GLFW_AUTO_ICONIFY, GLFW_FALSE);
 
+#ifdef _WIN32
+		// --- Borderless custom chrome: model the window as FRAMELESS in GLFW ---
+		// We draw our own title bar, so the window must be borderless. Critically, we
+		// tell GLFW it is undecorated BEFORE creation. GLFW computes every window rect
+		// (creation, DPI changes, min/max, resize) with AdjustWindowRectExForDpi() using
+		// its OWN notion of the style — and for a decorated window that adds a DPI-SCALED
+		// caption + resize frame. If we kept GLFW "decorated" and only stripped the frame
+		// visually via WM_NCCALCSIZE, GLFW's geometry would include a phantom frame that
+		// grows with the monitor's scale (≈0 at 100%, tens of px at 125%+), which on a
+		// HiDPI laptop pushes the custom title bar off-screen and offsets every mouse
+		// click until a manual SetWindowPos (F11) overrides it. With GLFW_DECORATED=FALSE,
+		// getWindowStyle() is frameless (WS_POPUP) so AdjustWindowRectExForDpi adds ZERO
+		// frame at any DPI — GLFW's client model matches the real client. We re-add the
+		// native Win32 style bits (resize/snap/animations/shadow) in EnableCustomChromeWin32;
+		// GLFW never sees those because it always feeds its own computed style to the DPI math.
+		glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
+		// Create hidden; we show it only after the chrome is fully applied, so the first
+		// visible frame already has the settled frameless client (no first-show DPI race).
+		glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+#endif
+
 		m_Handle = glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);
 		if (!m_Handle)
 		{
@@ -283,7 +304,25 @@ namespace Cosmic
 		// Borderless custom chrome on by default (Windows). Call SetCustomChrome(false)
 		// to fall back to the standard OS title bar if needed.
 		SetCustomChrome(true);
+
+		// The window was created hidden (GLFW_VISIBLE=FALSE) so the chrome could be fully
+		// applied first. Now reveal it — the first painted frame already has the settled
+		// frameless client, so the custom title bar and mouse mapping are correct from
+		// frame one with no F11 nudge needed.
+		glfwShowWindow(m_Handle);
 #endif
+
+		// Cache the true client size now that the window exists and chrome is applied.
+		// glfwGetFramebufferSize queries the live client rect, so m_Data never starts stale.
+		{
+			int fbW = 0, fbH = 0;
+			glfwGetFramebufferSize(m_Handle, &fbW, &fbH);
+			if (fbW > 0 && fbH > 0)
+			{
+				m_Data.Width  = static_cast<unsigned int>(fbW);
+				m_Data.Height = static_cast<unsigned int>(fbH);
+			}
+		}
 	}
 
 	// =========================================================================
@@ -417,6 +456,18 @@ namespace Cosmic
 		m_OrigWndProc = static_cast<intptr_t>(
 			SetWindowLongPtrW(hwnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(&CosmicWndProc)));
 		m_CustomChrome = true;
+
+		// GLFW created this window borderless (GLFW_DECORATED=FALSE) so its DPI geometry
+		// math stays frame-free. Re-add the FULL native style on the real window so Windows
+		// still provides native resize, Aero Snap, min/max animations and (with DWM below)
+		// the drop shadow. The visual frame is removed by our WM_NCCALCSIZE handler, so this
+		// only restores *behaviors*, not chrome. GLFW never reads GetWindowLong for its size
+		// math — it uses its own (still-borderless) style — so these bits are invisible to it.
+		{
+			LONG style = GetWindowLong(hwnd, GWL_STYLE);
+			style |= WS_OVERLAPPEDWINDOW; // WS_CAPTION|WS_THICKFRAME|WS_SYSMENU|WS_MIN/MAXIMIZEBOX
+			SetWindowLong(hwnd, GWL_STYLE, style);
+		}
 
 		// A 1px frame extension gives the borderless window its drop shadow while
 		// the compositor is active.
