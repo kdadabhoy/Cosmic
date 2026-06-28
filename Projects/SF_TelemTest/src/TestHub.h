@@ -38,7 +38,7 @@ namespace Workspace
 
         // ---- Serial ----
         void DrawSerialPanel();      // "Serial Link" window
-        bool Connected() const { return m_Serial.IsOpen(); }
+        bool Connected() const { return m_Link.IsOpen(); }
 
         // The firmware copy section auto-matches the active test screen; the root
         // pushes the active mode here each frame (0=drive,1=weapon,2=dual,3=sniff).
@@ -100,16 +100,10 @@ namespace Workspace
 
     private:
         // --- Serial ---
-        Cosmic::SerialPort       m_Serial;
-        std::vector<std::string> m_Ports;
-        std::string              m_SelectedPort;        // selected by NAME, not index
-        const std::vector<int>   m_BaudRates = { 9600, 19200, 38400, 57600,
-                                                 115200, 230400, 460800, 921600 };
-        int                      m_BaudIndex = 4; // 115200
-        bool                     m_AutoReconnect = true;  // re-open the link when data stops
-        bool                     m_WantConnection = false; // user intends to stay connected
-        float                    m_ReconnectClock = 0.0f;
-        std::string              m_RxAccumulator;
+        // Engine component owns the port list, baud, async (non-blocking)
+        // connect + auto-reconnect, and the connection menu UI.
+        Cosmic::SerialLink       m_Link;
+        std::string              m_RxAccumulator;       // line-framing buffer for parsing
         std::string              m_Log;
         bool                     m_AutoScrollLog = true;
 
@@ -152,7 +146,6 @@ namespace Workspace
         uint64_t    m_TotalBytes    = 0;
         uint64_t    m_LinkAccumBytes = 0;
         float       m_LinkBps       = 0.0f;
-        float       m_LastByteTime  = -100.0f;  // m_AppClock of the last byte received
         std::string m_RawHex;                   // accumulating hex view (capped)
         std::string m_RawAscii;                 // accumulating ASCII translation (capped)
 
@@ -162,10 +155,8 @@ namespace Workspace
 
         float m_AppClock     = 0.0f;
         float m_RateClock    = 0.0f;
-        float m_PortScanClock = 1.0f;  // start >= interval so the first scan is immediate
 
         static constexpr float  k_StaleTimeout      = 1.5f;
-        static constexpr float  k_ReconnectInterval = 3.0f;  // s of no-data before each retry
         static constexpr size_t k_RawLogCap         = 65536; // raw hex/ascii log byte cap
     };
 

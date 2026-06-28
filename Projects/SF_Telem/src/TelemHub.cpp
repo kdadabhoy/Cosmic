@@ -29,13 +29,6 @@ namespace Workspace
         // Re-scan the available COM ports, keeping the current selection by NAME so
         // a changing list can never leave us pointed at the wrong port. Falls back
         // to the first port (or empty) when the selected one disappears.
-        void RefreshPortList(std::vector<std::string>& ports, std::string& selected)
-        {
-            ports = Cosmic::SerialPort::GetAvailablePorts();
-            if (ports.empty()) { selected.clear(); return; }
-            if (std::find(ports.begin(), ports.end(), selected) == ports.end())
-                selected = ports.front();
-        }
         const char* TagFor(int id) { return IsDrive(id) ? "Drive" : "Weapon"; }
 
         // "(?)" hint with ESP32 pin guidance (consistent with the wiring diagram).
@@ -166,7 +159,6 @@ namespace Workspace
                 }
             });
 
-        RefreshPortList(m_Ports, m_SelectedPort);
         Cosmic::EntitySelection::SetByName(IdEntity(ESC_RIGHT), "Drive");
 
         m_Log.reserve(1 << 16);
@@ -177,7 +169,13 @@ namespace Workspace
 
     void TelemHub::Shutdown()
     {
-        m_Serial.Close();
+        // Failsafe: if an intentional recording was made but never exported, write it
+        // out now so returning to the launcher / closing the app never loses it.
+        if (m_RecordingDirty && m_Recorder.GetTotalFrameCount() > 0 && !m_Recorder.IsFlushing())
+            m_Recorder.Flush(k_RecordDir, m_SessionName, k_SampleRate);
+
+        m_Recorder.DisableAutosave();
+        m_Link.Shutdown();          // clears reconnect intent + closes the port
         m_Recorder.WaitForFlush();
         Cosmic::EntitySelection::Clear();
     }
@@ -260,39 +258,9 @@ namespace Workspace
         if (m_WasFlushing && !flushing) m_RecordStatus = "Export complete.";
         m_WasFlushing = flushing;
 
-        // Auto-refresh the port list (~1 Hz) so freshly paired / unplugged devices
-        // show up without clicking Refresh. Skip while a session is live so the
-        // selection isn't disturbed mid-connection.
-        m_PortScanClock += std::abs(ts);
-        if (m_PortScanClock >= 1.0f)
-        {
-            m_PortScanClock = 0.0f;
-            if (!m_Serial.IsOpen())
-                RefreshPortList(m_Ports, m_SelectedPort);
-        }
-
-        // Auto-reconnect: if the user asked to stay connected but data has stopped
-        // (soft Bluetooth stall while still "open", or a hard unplug), periodically
-        // drop and reopen the selected port until the stream returns. Toggle off
-        // (m_AutoReconnect) to only ever connect manually.
-        if (m_AutoReconnect && m_WantConnection)
-        {
-            const bool receiving = (m_AppClock - m_LastByteTime) < 1.0f;
-            if (receiving) m_ReconnectClock = 0.0f;
-            else
-            {
-                m_ReconnectClock += std::abs(ts);
-                if (m_ReconnectClock >= k_ReconnectInterval)
-                {
-                    m_ReconnectClock = 0.0f;
-                    if (m_Serial.IsOpen()) m_Serial.Close();
-                    RefreshPortList(m_Ports, m_SelectedPort);
-                    if (!m_SelectedPort.empty()
-                        && m_Serial.Open(m_SelectedPort, (uint32_t)m_BaudRates[m_BaudIndex]))
-                        m_RxAccumulator.clear();
-                }
-            }
-        }
+        // Port scanning + async (non-blocking) auto-reconnect are owned by the
+        // engine SerialLink, so a dead Bluetooth port can no longer freeze the UI.
+        m_Link.OnUpdate(ts);
 
         PumpSerial();
         m_Panel.OnUpdate(ts);
@@ -330,11 +298,12 @@ namespace Workspace
     // =========================================================================
     void TelemHub::PumpSerial()
     {
-        if (!m_Serial.IsOpen()) return;
+        // Reset the framing buffer on each fresh (re)connect so a partial line from
+        // a previous session can't corrupt the first frame of the new one.
+        if (m_Link.ConsumeJustConnected()) m_RxAccumulator.clear();
 
-        std::string chunk = m_Serial.FlushBuffer();
+        std::string chunk = m_Link.Poll();
         if (chunk.empty()) return;
-        m_LastByteTime = m_AppClock;
         m_RxAccumulator += chunk;
 
         size_t nl;
@@ -422,67 +391,8 @@ namespace Workspace
     {
         ImGui::Begin("Serial Link");
 
-        if (ImGui::Button("Refresh Ports"))
-            RefreshPortList(m_Ports, m_SelectedPort);
-        ImGui::SameLine();
-        ImGui::TextDisabled("(auto-refreshes)");
-
-        const char* curPort = m_SelectedPort.empty() ? "No Ports Found" : m_SelectedPort.c_str();
-
-        ImGui::SetNextItemWidth(160.0f);
-        if (ImGui::BeginCombo("COM Port", curPort))
-        {
-            for (const auto& p : m_Ports)
-                if (ImGui::Selectable(p.c_str(), p == m_SelectedPort)) m_SelectedPort = p;
-            ImGui::EndCombo();
-        }
-        ImGui::SetNextItemWidth(160.0f);
-        if (ImGui::BeginCombo("Baud", std::to_string(m_BaudRates[m_BaudIndex]).c_str()))
-        {
-            for (int i = 0; i < (int)m_BaudRates.size(); ++i)
-                if (ImGui::Selectable(std::to_string(m_BaudRates[i]).c_str(), m_BaudIndex == i)) m_BaudIndex = i;
-            ImGui::EndCombo();
-        }
-
-        ImGui::Separator();
-        ImGui::Checkbox("Auto-reconnect", &m_AutoReconnect);
-        if (ImGui::IsItemHovered())
-            ImGui::SetTooltip("Automatically re-open the selected port and resume the stream\n"
-                              "if data stops (e.g. the ESP32 was unplugged or power-cycled).\n"
-                              "Turn off to only connect manually.");
-
-        if (m_Serial.IsOpen())
-        {
-            // Distinguish "port open" from "actually receiving": a Bluetooth COM
-            // port opens fine even when the ESP32 isn't streaming, so flag a dead
-            // link instead of falsely claiming a good connection.
-            const bool receiving = (m_AppClock - m_LastByteTime) < 1.0f;
-            const bool retrying  = m_AutoReconnect && m_WantConnection;
-            if (receiving)
-                ImGui::TextColored(k_LiveColor, "RECEIVING (%s)", m_SelectedPort.c_str());
-            else
-                ImGui::TextColored(k_OpenColor, retrying ? "OPEN - no data (%s) - retrying..."
-                                                         : "OPEN - no data (%s)", m_SelectedPort.c_str());
-            if (ImGui::Button("Disconnect", ImVec2(-1, 0))) { m_WantConnection = false; m_Serial.Close(); }
-        }
-        else if (m_AutoReconnect && m_WantConnection)
-        {
-            // Hard drop (port closed) while the user still wants to be connected —
-            // OnUpdate is retrying the reopen in the background.
-            ImGui::TextColored(k_OpenColor, "RECONNECTING (%s)...", m_SelectedPort.c_str());
-            if (ImGui::Button("Stop / Disconnect", ImVec2(-1, 0))) m_WantConnection = false;
-        }
-        else
-        {
-            ImGui::BeginDisabled(m_SelectedPort.empty());
-            if (ImGui::Button("Connect", ImVec2(-1, 0)))
-                if (m_Serial.Open(m_SelectedPort, (uint32_t)m_BaudRates[m_BaudIndex]))
-                {
-                    m_RxAccumulator.clear();
-                    m_WantConnection = true;
-                }
-            ImGui::EndDisabled();
-        }
+        // Shared connection menu (ports / baud / auto-reconnect / status / connect).
+        m_Link.DrawConnectionUI();
 
         // ---- Per-ESC presence (so a missing wire is obvious) ----
         ImGui::Spacing();
@@ -589,6 +499,14 @@ namespace Workspace
             ImGui::TextDisabled("(blank = timestamp)");
         }
 
+        ImGui::Checkbox("Auto-export on stop", &m_AutoExportOnStop);
+        if (ImGui::IsItemHovered())
+            ImGui::SetTooltip("Write the recording to %s/<session>/ automatically when you press Stop.\n"
+                              "Regardless of this setting, a rolling autosave is written to %s/ every\n"
+                              "%.0f s while recording, and any unexported data is flushed on exit \xE2\x80\x94 so a\n"
+                              "crash or forgotten export never loses the run.",
+                              k_RecordDir, k_AutoSaveDir, k_AutoSaveInterval);
+
         if (!m_Recording)
         {
             if (ImGui::Button("  Start Recording  ##recstart"))
@@ -601,9 +519,12 @@ namespace Workspace
                 m_Recorder.Clear();
                 m_Recorder.ReserveCapacity(k_RecordCap);
                 for (auto& r : m_Ring) r.Clear();
-                m_Recording    = true;
+                m_Recording      = true;
+                m_RecordingDirty = true;   // user intends to keep this run
                 m_RecordStatus = "Recording...";
                 m_Panel.SetMode(Cosmic::TelemetryPanel::Mode::Live);
+                // Crash failsafe: roll a snapshot to _autosave/ every few seconds.
+                m_Recorder.SetAutosave(k_AutoSaveDir, m_SessionName, k_AutoSaveInterval, k_SampleRate);
             }
         }
         else
@@ -611,8 +532,20 @@ namespace Workspace
             ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.8f, 0.15f, 0.15f, 1.0f));
             if (ImGui::Button("  Stop  ##recstop"))
             {
-                m_Recording    = false;
-                m_RecordStatus = "Stopped. Ready to export.";
+                m_Recording = false;
+                m_Recorder.DisableAutosave();
+                if (m_AutoExportOnStop && m_Recorder.GetTotalFrameCount() > 0 && !m_Recorder.IsFlushing())
+                {
+                    m_Recorder.Flush(k_RecordDir, m_SessionName, k_SampleRate);
+                    const std::string dest = m_SessionName.empty() ? "<timestamp>" : m_SessionName;
+                    m_RecordStatus = "Exporting -> " + std::string(k_RecordDir) + "/" + dest + "/";
+                    m_WasFlushing  = true;
+                    m_RecordingDirty = false;
+                }
+                else
+                {
+                    m_RecordStatus = "Stopped. Ready to export.";
+                }
             }
             ImGui::PopStyleColor();
         }
@@ -627,6 +560,7 @@ namespace Workspace
             const std::string dest = m_SessionName.empty() ? "<timestamp>" : m_SessionName;
             m_RecordStatus = "Exporting -> " + std::string(k_RecordDir) + "/" + dest + "/";
             m_WasFlushing  = true;
+            m_RecordingDirty = false;
         }
         if (!canExport) ImGui::EndDisabled();
 

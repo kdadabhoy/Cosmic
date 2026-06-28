@@ -58,6 +58,7 @@
 
 // Specialized Utilities
 #include "serial/SerialPort.h"
+#include "serial/SerialLink.h"
 #include "utils/FileSystem.h"
 #include "utils/DataExport.h"
 

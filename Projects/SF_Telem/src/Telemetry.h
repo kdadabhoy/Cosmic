@@ -95,7 +95,7 @@ namespace Workspace
         float VoltageScale    = 0.01f;
         float CurrentScale    = 0.01f;
         float ErpmScale       = 100.0f;
-        int   Poles           = 14;      // motor poles (14-pole drive motor)
+        int   Poles           = 12;      // motor poles (12-pole drive motor / 6 pole pairs)
         float GearRatio       = 19.0f;   // motor : wheel reduction
         float SlipFactor      = 0.933f;  // drivetrain slip / efficiency
         float WheelDiameterIn = 3.5f;    // drive wheel diameter (in)

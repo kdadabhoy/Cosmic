@@ -151,6 +151,20 @@ namespace Cosmic
     void DataRecorder::Tick(float dt)
     {
         m_ElapsedTime.fetch_add(dt, std::memory_order_relaxed);
+
+        // Crash-failsafe autosave: periodically write a rolling snapshot so a hard
+        // crash loses at most m_AutosaveInterval of data. Non-blocking; skipped if a
+        // flush (manual export or a previous autosave) is still in progress.
+        if (m_AutosaveEnabled)
+        {
+            m_AutosaveClock += dt;
+            if (m_AutosaveClock >= m_AutosaveInterval)
+            {
+                m_AutosaveClock = 0.0f;
+                if (!m_Flushing.load() && GetTotalFrameCount() > 0)
+                    Flush(m_AutosaveDir, m_AutosaveName, m_AutosaveSampleRate);
+            }
+        }
     }
 
     float DataRecorder::GetRecordedDuration() const
@@ -347,6 +361,29 @@ namespace Cosmic
     {
         if (m_FlushThread.joinable())
             m_FlushThread.join();
+    }
+
+    // =========================================================================
+    // Autosave
+    // =========================================================================
+
+    void DataRecorder::SetAutosave(const std::string& baseDir,
+                                   const std::string& name,
+                                   float              intervalSec,
+                                   float              sampleRate)
+    {
+        m_AutosaveDir        = baseDir;
+        m_AutosaveName       = name.empty() ? "autosave" : name; // never empty → fixed rolling folder
+        m_AutosaveInterval   = (intervalSec > 0.1f) ? intervalSec : 0.1f;
+        m_AutosaveSampleRate = sampleRate;
+        m_AutosaveClock      = 0.0f;
+        m_AutosaveEnabled    = true;
+    }
+
+    void DataRecorder::DisableAutosave()
+    {
+        m_AutosaveEnabled = false;
+        m_AutosaveClock   = 0.0f;
     }
 
     // =========================================================================
