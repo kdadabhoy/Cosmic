@@ -3,30 +3,37 @@
 // SF_Telem.h
 //
 // ============================================================================
-// SF_Telem — combined drive + weapon telemetry application (root manager)
+// SF_Telem — the combined Shear Force telemetry application (root manager).
 // ============================================================================
 //
 // One ESP32 streams telemetry for THREE ESCs (2 drive + 1 weapon). This root
-// layer owns a single shared TelemHub (serial + decode + recorder) and three
-// screens, switching between them like the Template Project's mode manager:
+// layer presents a homescreen (Minecraft-style tile menu) that selects between
+// four screens, all sharing ONE serial connection so it persists across switches:
 //
-//   * Main      — weapon + drivetrain data boxes, per-ESC plot tabs, recording.
-//   * Drivetrain— the SF_DrivetrainCalcs calculator.
-//   * Weapon    — weapon data boxes + predicted spin-up model.
+//   * Main Telemetry — live dashboard (weapon/drivetrain photos + readout boxes),
+//                      per-side stat panels, ESC plots, recording.
+//   * Testing        — the four bench tests (single drive / single weapon /
+//                      dual drive / sniffer), via TestingManager.
+//   * Analysis       — the drivetrain spin-up calculator.
+//   * Replay         — load a recording and scrub it; the dashboard diagram
+//                      animates with the playback position.
 //
-// The hub is shared so the serial connection and recording persist across
-// screen switches. Each screen registers its windows into the engine's dock
-// ports when it becomes active.
+// A "Home" button on the shared top bar returns to the homescreen from anywhere.
 // ============================================================================
 
 #include <Cosmic.h>
+
 #include "TelemHub.h"
+#include "TestingManager.h"
 
 #include <memory>
-#include <vector>
 
 namespace Workspace
 {
+    class MainLayer;
+    class DrivetrainLayer;
+    class ReplayLayer;
+
     class SF_Telem : public Cosmic::Layer
     {
     public:
@@ -40,22 +47,36 @@ namespace Workspace
         virtual void OnImGuiRender()           override;
         virtual void OnEvent(Cosmic::Event& e) override;
 
-        enum Mode { MODE_MAIN = 0, MODE_DRIVE = 1, MODE_WEAPON = 2, MODE_COUNT = 3 };
+        enum Screen { SCREEN_HOME = 0, SCREEN_MAIN, SCREEN_TESTING, SCREEN_ANALYSIS, SCREEN_REPLAY, SCREEN_COUNT };
 
     private:
-        void DrawTopPanel();          // mode selector + recording + decode constants
-        void ApplyDockLayout(int mode);
-        bool IsTelemetryScreen() const { return m_ActiveMode == MODE_MAIN || m_ActiveMode == MODE_WEAPON; }
+        void SetScreen(Screen s);
+        void DrawHomescreen();
+        void DrawTopPanel();          // Home + screen tabs + screen-specific controls
+        void ApplyDockLayout();
+        int  DockStateKey() const;    // screen (+ testing sub-mode) -> re-dock trigger
 
-        TelemHub m_Hub;
+        bool UsesTelemHub() const { return m_Screen == SCREEN_MAIN || m_Screen == SCREEN_REPLAY; }
 
-        std::vector<std::shared_ptr<Cosmic::Layer>> m_Modes;
-        int m_ActiveMode      = MODE_MAIN;
-        int m_AppliedDockMode = -1;
+        // One shared serial connection for the whole app (root-owned).
+        Cosmic::SerialLink m_Link;
 
-        bool m_PolesAsPairs = false;  // Decode Constants: enter motor count as pole pairs vs. poles
+        // Telemetry backbone (Main + Replay) and the testing sub-router.
+        TelemHub       m_TelemHub;
+        TestingManager m_Testing;
 
-        const char* m_ModeNames[MODE_COUNT] = { "Main", "Drivetrain", "Weapon" };
+        std::shared_ptr<MainLayer>       m_Main;
+        std::shared_ptr<DrivetrainLayer> m_Analysis;
+        std::shared_ptr<ReplayLayer>     m_Replay;
+
+        Screen m_Screen     = SCREEN_HOME;
+        int    m_AppliedDock = -1;
+
+        bool m_PolesAsPairs = false;  // Decode Constants: enter motor count as poles vs. pairs
+
+        // Homescreen tile art (the existing hardware photos).
+        Cosmic::Ref<Cosmic::Texture2D> m_WeaponTex;
+        Cosmic::Ref<Cosmic::Texture2D> m_DrivetrainTex;
     };
 
 } // namespace Workspace

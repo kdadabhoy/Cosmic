@@ -170,7 +170,10 @@ namespace Cosmic
 		// STEP 3 — Dockspace
 		// ------------------------------------------------------------------
 		ImGuiID dockspace_id = ImGui::GetID("CosmicDockSpace");
-		ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_None);
+		// AutoHideTabBar: hide the dock tab when a node holds a single window — keeps
+		// single-panel nodes (and the full-window homescreen) clean; multi-window
+		// nodes still show tabs.
+		ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_AutoHideTabBar);
 
 		if (!m_DockspaceInitialized)
 		{

@@ -32,7 +32,10 @@ endif()
 # -------------------------------------------------------------------
 # 2. Source Files
 # -------------------------------------------------------------------
-file(GLOB_RECURSE TEMPLATE_SOURCES "src/*.cpp" "src/*.h")
+# CONFIGURE_DEPENDS re-globs at build time, so newly added src files (e.g. the
+# Testing/Replay/DashboardView modules) are picked up without manually deleting
+# the CMake cache.
+file(GLOB_RECURSE TEMPLATE_SOURCES CONFIGURE_DEPENDS "src/*.cpp" "src/*.h")
 
 # When building standalone (outside the engine root), bundle vendor ImGui/ImPlot sources
 if(NOT TARGET Cosmic)

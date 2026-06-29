@@ -139,6 +139,23 @@ namespace Workspace
                      eRPM, motorRPM, speedMph, powerW };
         }
 
+        // Inverse of ToChannels: rebuild a sample from a recorded/replayed frame
+        // (channel order is the DCH_* contract). Tolerant of short vectors.
+        static DriveSample FromChannels(const std::vector<float>& v)
+        {
+            DriveSample s;
+            auto at = [&](size_t i) { return i < v.size() ? v[i] : 0.0f; };
+            s.tempC       = at(DCH_TEMP);
+            s.voltageV    = at(DCH_VOLT);
+            s.currentA    = at(DCH_CURR);
+            s.consumption = at(DCH_CONS);
+            s.eRPM        = at(DCH_ERPM);
+            s.motorRPM    = at(DCH_MOTRPM);
+            s.speedMph    = at(DCH_SPEED);
+            s.powerW      = at(DCH_POWER);
+            return s;
+        }
+
         static DriveSample Decode(const RawPacket& p, const DriveConfig& cfg)
         {
             DriveSample s;
@@ -173,6 +190,24 @@ namespace Workspace
         {
             return { tempC, voltageV, currentA, consumption,
                      eRPM, motorRPM, weaponRPM, tipSpeedMph, powerW };
+        }
+
+        // Inverse of ToChannels: rebuild a sample from a recorded/replayed frame
+        // (channel order is the WCH_* contract). Tolerant of short vectors.
+        static WeaponSample FromChannels(const std::vector<float>& v)
+        {
+            WeaponSample s;
+            auto at = [&](size_t i) { return i < v.size() ? v[i] : 0.0f; };
+            s.tempC       = at(WCH_TEMP);
+            s.voltageV    = at(WCH_VOLT);
+            s.currentA    = at(WCH_CURR);
+            s.consumption = at(WCH_CONS);
+            s.eRPM        = at(WCH_ERPM);
+            s.motorRPM    = at(WCH_MOTRPM);
+            s.weaponRPM   = at(WCH_WPNRPM);
+            s.tipSpeedMph = at(WCH_TIP);
+            s.powerW      = at(WCH_POWER);
+            return s;
         }
 
         static WeaponSample Decode(const RawPacket& p, const WeaponConfig& cfg)

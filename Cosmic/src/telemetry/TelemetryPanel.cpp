@@ -51,13 +51,24 @@ namespace Cosmic
         if (m_Mode == mode) return;
         m_Mode = mode;
 
-        // Clear ring buffers — data from the old source is stale.
+        // Clear ring buffers — data from the old source is stale. Clearing the
+        // channel names too keeps the invariant "names non-empty => buffers sized":
+        // PushFrame() guards on m_ChannelNames, so leaving names set while the
+        // buffers are empty let it write out of range (crash on Live<->Replay flips).
         m_PlotBuffers.clear();
         m_PlotTimes.clear();
+        m_ChannelNames.clear();
         m_PlotOffset    = 0;
         m_PlotCount     = 0;
         m_LastFrame     = TelemetryFrame{};
         m_LastReplayPos = -1.0f;
+
+        // Re-resolve the current selection against the new source so the plots keep
+        // working across a mode switch (rebuilds if the entity exists in this mode,
+        // otherwise leaves the buffers cleared). OnSelectionChanged never calls back
+        // into SetMode, so there's no recursion.
+        if (!m_SelectedName.empty())
+            OnSelectionChanged(m_SelectedName, m_SelectedTag);
     }
 
     // =========================================================================
@@ -141,6 +152,9 @@ namespace Cosmic
     void TelemetryPanel::PushFrame(const TelemetryFrame& frame)
     {
         if (m_ChannelNames.empty()) return;
+        // Defensive: buffers must be allocated to k_PlotCapacity. Guards against any
+        // path where names are set but the ring vectors aren't sized yet.
+        if (m_PlotTimes.empty()) return;
 
         const int writeIdx = (m_PlotOffset + m_PlotCount) % k_PlotCapacity;
         m_PlotTimes[writeIdx] = frame.timestamp;
