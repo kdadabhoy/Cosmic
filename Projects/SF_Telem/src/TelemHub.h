@@ -144,8 +144,9 @@ namespace Workspace
         void DrawSerialPanel();        // "Serial Link"
         void DrawRecordingControls();  // recording + status (inside a parent window)
 
-        // ---- Reusable per-ESC plot pass (one ImPlot chart per channel) ----
-        void DrawEscPlots(int id);
+        // ---- Reusable plot pass (split so Main can tab and Replay can show 3 cols) ----
+        void DrawPlotToolbar();        // shared toolbar (Follow/Window/Fit/Stats/Min-Max); drives linked X
+        void DrawEscChannels(int id);  // one ESC's per-channel charts (no toolbar)
 
     private:
         void PumpSerial();
@@ -169,8 +170,8 @@ namespace Workspace
 
         // --- Arduino firmware copy UI (Serial Link -> Arduino Firmware) ---
         int  m_FwRightPin  = 16;   // GPIO defaults match the wiring diagram
-        int  m_FwLeftPin   = 17;
-        int  m_FwWeaponPin = 13;
+        int  m_FwLeftPin   = 13;
+        int  m_FwWeaponPin = 17;
         char m_FwBtName[32] = "SF_Telem";  // Bluetooth device name baked into the sketch
         bool m_ShowPinout  = false;
         Cosmic::Ref<Cosmic::Texture2D> m_PinoutTex;

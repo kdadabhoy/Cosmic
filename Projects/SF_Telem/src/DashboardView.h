@@ -30,9 +30,16 @@ namespace Workspace
                            const Cosmic::Ref<Cosmic::Texture2D>& drivetrainTex,
                            int* focusFrames = nullptr);
 
-        void DrawWeaponReadouts(TelemHub* hub);                       // "Weapon" window
-        void DrawDriveReadouts(TelemHub* hub, int id, const char* title); // Left/Right Drive windows
-        void DrawPlots(TelemHub* hub);                               // "ESC Plots" window
+        void DrawWeaponReadouts(TelemHub* hub);                       // "Weapon" window (Main)
+        void DrawDriveReadouts(TelemHub* hub, int id, const char* title); // Left/Right Drive windows (Main)
+
+        // "ESC Plots" window — Main uses the tabbed view (R/L/W tabs); Replay uses
+        // the triple view (R/L/W as three equal side-by-side columns).
+        void DrawPlots(TelemHub* hub);          // tabbed
+        void DrawPlotsTriple(TelemHub* hub);    // 3 columns
+
+        // "Stats" window — all three readout panels stacked (Replay left column).
+        void DrawStatsPanel(TelemHub* hub);
     }
 
 } // namespace Workspace

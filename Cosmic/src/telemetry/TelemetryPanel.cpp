@@ -216,6 +216,20 @@ namespace Cosmic
     // ImGui / ImPlot rendering
     // =========================================================================
 
+    void TelemetryPanel::DrawTransport()
+    {
+        // Loader + transport bar only (no channel plots / inspector). The caller
+        // renders the plots elsewhere so there's a single plot view.
+        if (m_Player)
+        {
+            DrawReplayLoader();
+            ImGui::Spacing();
+            ImGui::Separator();
+            ImGui::Spacing();
+        }
+        DrawTransportControls();
+    }
+
     void TelemetryPanel::OnImGuiRender()
     {
         // -----------------------------------------------------------------------

@@ -41,9 +41,9 @@ namespace Workspace
             if (ImGui::IsItemHovered())
                 ImGui::SetTooltip(
                     "Enter GPIO numbers - NOT the 1-30 board positions.\n"
-                    "  Right drive  -> GPIO16  (pad RX2,  UART1 RX)\n"
-                    "  Left  drive  -> GPIO17  (pad TX2,  UART2 RX)\n"
-                    "  Weapon       -> GPIO13  (pad D13,  UART0 RX; TX stays on GPIO1 for USB)\n"
+                    "  Right drive  -> GPIO16  (pad RX2)\n"
+                    "  Left  drive  -> GPIO13  (pad D13)\n"
+                    "  Weapon       -> GPIO17  (pad TX2)\n"
                     "Avoid flash pins 6-11 and strapping pins 0/2/5/12/15.\n"
                     "Click Pinout for the board diagram.");
         }
@@ -89,8 +89,8 @@ namespace Workspace
             "    named pads   : RX2=GPIO16  TX2=GPIO17  RX0=GPIO3  TX0=GPIO1  VP=GPIO36  VN=GPIO39\n"
             "    3V3 / GND / VIN / EN are power/control pins, not GPIOs.\n"
             "\n"
-            "This project's wiring:  Right = GPIO16 (RX2)   Left = GPIO17 (TX2)   Weapon = GPIO13 (D13).\n"
-            "Enter those GPIO numbers in the pin fields above (16 -> pad RX2, 17 -> pad TX2, 13 -> pad D13).\n"
+            "This project's wiring:  Right = GPIO16 (RX2)   Left = GPIO13 (D13)   Weapon = GPIO17 (TX2).\n"
+            "Enter those GPIO numbers in the pin fields above (16 -> pad RX2, 13 -> pad D13, 17 -> pad TX2).\n"
             "Avoid flash pins GPIO6-11 and strapping pins GPIO0/2/5/12/15; GPIO34-39 are input-only.";
     }
 
@@ -434,6 +434,12 @@ namespace Workspace
     {
         ImGui::Begin("Serial Link");
 
+        // ---- Recording (lives with the connection) ----
+        DrawRecordingControls();
+        ImGui::Spacing();
+        ImGui::Separator();
+        ImGui::Spacing();
+
         // Shared connection menu (ports / baud / auto-reconnect / status / connect).
         m_Link->DrawConnectionUI();
 
@@ -621,28 +627,13 @@ namespace Workspace
     }
 
     // =========================================================================
-    // Reusable per-ESC plot pass — interactive (zoom/pan/box), shared linked X,
-    // per-plot Y autofit/caps/step (right-click), visible-range stats, and a
-    // replay playhead (draggable to seek).
+    // Shared plot toolbar (drawn ONCE above the per-ESC charts): Follow / Window /
+    // Fit / Stats / Min-Max, and it drives the linked X axis all channels share.
     // =========================================================================
-    void TelemHub::DrawEscPlots(int id)
+    void TelemHub::DrawPlotToolbar()
     {
-        const bool   weapon = (id == ESC_WEAPON);
-        const auto   names  = weapon ? WeaponChannelNames() : DriveChannelNames();
-        const int    chCount= weapon ? WCH_COUNT : DCH_COUNT;
-        Ring&        r      = m_Ring[id];
-        const ImVec4 col    = ColorFor(id);
-        PlotView&    pv     = m_PlotView;
-        const bool   replay = Replaying();
-
-        // Full data X-extent (for "Fit" and the follow window anchor).
-        float xMin = 0.0f, xMax = 1.0f;
-        if (r.count > 0)
-        {
-            xMin = r.times[r.offset % Ring::Cap];
-            xMax = r.times[(r.offset + r.count - 1) % Ring::Cap];
-            if (xMax <= xMin) xMax = xMin + 1.0f;
-        }
+        PlotView&  pv     = m_PlotView;
+        const bool replay = Replaying();
 
         // Entering replay defaults to free interaction (follow off) and fits the
         // whole recording once, so it opens framed and ready to zoom/scrub.
@@ -654,7 +645,6 @@ namespace Workspace
         }
         if (!replay) pv.replayDefaultApplied = false;
 
-        // ---- Toolbar (once per panel) ----
         ImGui::Checkbox(replay ? "Follow playhead" : "Follow", &pv.follow);
         if (pv.follow)
         {
@@ -667,7 +657,18 @@ namespace Workspace
         if (replay) { ImGui::SameLine(); ImGui::Checkbox("Drag to seek", &pv.seekOnDrag); }
         ImGui::TextDisabled("scroll = zoom   drag = pan   right-drag = box   right-click = Y options   dbl-click = fit");
 
-        // ---- Drive the shared, linked X axis ----
+        // Global X-extent across all ESC rings (for Fit / the follow anchor).
+        float xMin = FLT_MAX, xMax = -FLT_MAX;
+        for (int i = 0; i < ESC_COUNT; ++i)
+        {
+            const Ring& rr = m_Ring[i];
+            if (rr.count <= 0) continue;
+            xMin = std::min(xMin, rr.times[rr.offset % Ring::Cap]);
+            xMax = std::max(xMax, rr.times[(rr.offset + rr.count - 1) % Ring::Cap]);
+        }
+        if (xMin > xMax) { xMin = 0.0f; xMax = 1.0f; }
+        if (xMax <= xMin) xMax = xMin + 1.0f;
+
         const float playPos = replay ? ReplayPosition() : 0.0f;
         if (pv.follow)
         {
@@ -676,6 +677,23 @@ namespace Workspace
             pv.linkXMin = anchor - pv.windowSec;
         }
         if (pv.fitRequested) { pv.linkXMin = xMin; pv.linkXMax = xMax; pv.fitRequested = false; }
+    }
+
+    // =========================================================================
+    // One ESC's per-channel charts (no toolbar) — interactive (zoom/pan/box),
+    // shares the linked X set by DrawPlotToolbar, per-plot Y autofit/caps/step
+    // (right-click), visible-range stats, and a draggable replay playhead.
+    // =========================================================================
+    void TelemHub::DrawEscChannels(int id)
+    {
+        const bool   weapon = (id == ESC_WEAPON);
+        const auto   names  = weapon ? WeaponChannelNames() : DriveChannelNames();
+        const int    chCount= weapon ? WCH_COUNT : DCH_COUNT;
+        Ring&        r      = m_Ring[id];
+        const ImVec4 col    = ColorFor(id);
+        PlotView&    pv     = m_PlotView;
+        const bool   replay = Replaying();
+        const float  playPos= replay ? ReplayPosition() : 0.0f;
 
         for (int c = 0; c < chCount; ++c)
         {
@@ -779,7 +797,7 @@ namespace Workspace
                     if (pv.seekOnDrag)
                     {
                         double p = playPos;
-                        if (ImPlot::DragLineX(9000 + c, &p, phCol, 1.5f))
+                        if (ImPlot::DragLineX(9000 + id * 100 + c, &p, phCol, 1.5f))
                             SeekReplay((float)p);
                     }
                     else

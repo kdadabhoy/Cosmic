@@ -24,9 +24,9 @@ namespace Workspace
             if (ImGui::IsItemHovered())
                 ImGui::SetTooltip(
                     "Enter GPIO numbers - NOT the 1-30 board positions.\n"
-                    "  Drive/Right -> GPIO16  (pad RX2,  UART1 RX)\n"
-                    "  Left  drive -> GPIO17  (pad TX2,  UART2 RX)\n"
-                    "  Weapon      -> GPIO13  (pad D13,  UART0 RX; TX stays on GPIO1 for USB)\n"
+                    "  Drive/Right -> GPIO16  (pad RX2)\n"
+                    "  Left  drive -> GPIO13  (pad D13)\n"
+                    "  Weapon      -> GPIO17  (pad TX2)\n"
                     "Avoid flash pins 6-11 and strapping pins 0/2/5/12/15.\n"
                     "Click Pinout for the board diagram.");
         }
@@ -72,8 +72,8 @@ namespace Workspace
             "    named pads   : RX2=GPIO16  TX2=GPIO17  RX0=GPIO3  TX0=GPIO1  VP=GPIO36  VN=GPIO39\n"
             "    3V3 / GND / VIN / EN are power/control pins, not GPIOs.\n"
             "\n"
-            "This project's wiring:  Right = GPIO16 (RX2)   Left = GPIO17 (TX2)   Weapon = GPIO13 (D13).\n"
-            "Enter those GPIO numbers in the pin fields above (16 -> pad RX2, 17 -> pad TX2, 13 -> pad D13).\n"
+            "This project's wiring:  Right = GPIO16 (RX2)   Left = GPIO13 (D13)   Weapon = GPIO17 (TX2).\n"
+            "Enter those GPIO numbers in the pin fields above (16 -> pad RX2, 13 -> pad D13, 17 -> pad TX2).\n"
             "Avoid flash pins GPIO6-11 and strapping pins GPIO0/2/5/12/15; GPIO34-39 are input-only.";
     }
 

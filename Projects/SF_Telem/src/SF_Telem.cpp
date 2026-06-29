@@ -216,7 +216,7 @@ namespace Workspace
             return;
         }
 
-        ws->DockWindow("Project Inspector Top", Cosmic::DockPort::LeftTop);
+        ws->DockWindow("Navigation", Cosmic::DockPort::LeftTop);
 
         switch (m_Screen)
         {
@@ -229,20 +229,17 @@ namespace Workspace
             ws->DockWindow("Left Drive",     Cosmic::DockPort::BottomLeft);
             ws->DockWindow("Weapon",         Cosmic::DockPort::BottomCenter);
             ws->DockWindow("Right Drive",    Cosmic::DockPort::BottomRight);
-            ws->ShowThemeSelector(true, Cosmic::DockPort::RightBottom, ICON_LC_PALETTE "  Themes");
             if (m_Main) m_Main->RequestDashboardFocus();
             break;
 
         case SCREEN_REPLAY:
-            ws->SetEdgeRatios(0.20f, 0.20f, 0.18f, 0.30f);
+            // nav top-left, stats left, 3-col plots center, dashboard right, transport bottom.
+            ws->SetEdgeRatios(0.22f, 0.24f, 0.18f, 0.24f);
             ws->SetViewportVisible(false);
-            ws->DockWindow("Replay",         Cosmic::DockPort::LeftBottom);   // transport
-            ws->DockWindow("Live Dashboard", Cosmic::DockPort::Center);
-            ws->DockWindow("ESC Plots",      Cosmic::DockPort::RightTop);
-            ws->DockWindow("Left Drive",     Cosmic::DockPort::BottomLeft);
-            ws->DockWindow("Weapon",         Cosmic::DockPort::BottomCenter);
-            ws->DockWindow("Right Drive",    Cosmic::DockPort::BottomRight);
-            ws->ShowThemeSelector(true, Cosmic::DockPort::RightBottom, ICON_LC_PALETTE "  Themes");
+            ws->DockWindow("Stats",          Cosmic::DockPort::LeftMiddle);    // min/max/avg panels
+            ws->DockWindow("ESC Plots",      Cosmic::DockPort::Center);        // 3 equal R/L/W columns
+            ws->DockWindow("Live Dashboard", Cosmic::DockPort::RightTop);      // the real-time visual
+            ws->DockWindow("Replay",         Cosmic::DockPort::BottomCenter);  // load + transport
             if (m_Replay) m_Replay->RequestDashboardFocus();
             break;
 
@@ -254,14 +251,12 @@ namespace Workspace
             ws->DockWindow("Performance Curves",   Cosmic::DockPort::RightTop);
             ws->DockWindow("Drivetrain KPIs",      Cosmic::DockPort::RightBottom);
             ws->DockWindow("Drivetrain Explorers", Cosmic::DockPort::BottomCenter);
-            ws->ShowThemeSelector(true, Cosmic::DockPort::RightMiddle, ICON_LC_PALETTE "  Themes");
             break;
 
         case SCREEN_TESTING:
             ws->SetViewportVisible(false);
             ws->DockWindow("Serial Link",              Cosmic::DockPort::LeftBottom);
             ws->DockWindow(m_Testing.ActiveWindowName(), Cosmic::DockPort::Center);
-            ws->ShowThemeSelector(true, Cosmic::DockPort::RightTop, ICON_LC_PALETTE "  Themes");
             break;
 
         default: break;
@@ -275,7 +270,7 @@ namespace Workspace
     // =========================================================================
     void SF_Telem::DrawTopPanel()
     {
-        ImGui::Begin("Project Inspector Top");
+        ImGui::Begin("Navigation");
 
         ImGui::TextColored({ 0.4f, 1.0f, 0.8f, 1.0f }, "Shear Force Telemetry");
         ImGui::Separator();
@@ -314,9 +309,7 @@ namespace Workspace
         {
             if (m_Screen == SCREEN_MAIN)
             {
-                m_TelemHub.DrawRecordingControls();
-                ImGui::Spacing(); ImGui::Separator();
-
+                // (Recording controls now live at the top of the Serial Link panel.)
                 ImGui::SeparatorText("Live Stats");
                 ImGui::SetNextItemWidth(110);
                 ImGui::DragFloat("Avg window (s)", &m_TelemHub.StatsWindowSec(), 0.1f, 0.0f, 120.0f, "%.1f");

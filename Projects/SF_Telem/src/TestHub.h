@@ -113,8 +113,8 @@ namespace Workspace
         // --- Arduino firmware copy UI (auto-matches the active test screen) ---
         int  m_ActiveTest  = 0;    // 0=drive 1=weapon 2=dual 3=sniff
         int  m_FwRightPin  = 16;   // GPIO defaults match the wiring diagram
-        int  m_FwLeftPin   = 17;
-        int  m_FwWeaponPin = 13;
+        int  m_FwLeftPin   = 13;
+        int  m_FwWeaponPin = 17;
         int  m_FwDriveSide = 0;    // single-drive tag: 0='R', 1='L'
         int  m_FwSnifferMode = 0;  // sniffer build: 0=raw byte counter, 1=self-syncing decode
         char m_FwBtName[32] = "SF_TelemTest";  // Bluetooth device name baked into the sketch

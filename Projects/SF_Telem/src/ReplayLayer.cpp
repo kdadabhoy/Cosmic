@@ -18,18 +18,20 @@ namespace Workspace
 
     void ReplayLayer::OnImGuiRender()
     {
-        // The diagram + panels are identical to Main; they just read replayed
-        // values because TelemHub is feeding them from the DataPlayer.
+        // Layout (docked by SF_Telem::ApplyDockLayout):
+        //   right  = Live Dashboard (the real-time visual, replayed)
+        //   left   = Stats (min/max/avg panels)
+        //   center = ESC Plots, three equal R/L/W columns
+        //   bottom = Replay transport (load + play/pause + time scrubber + speed)
+        // All read replayed values because TelemHub feeds them from the DataPlayer.
         DashboardView::DrawDashboard(m_Hub, m_WeaponTex, m_DrivetrainTex, &m_DashFocusFrames);
-        DashboardView::DrawWeaponReadouts(m_Hub);
-        DashboardView::DrawDriveReadouts(m_Hub, ESC_LEFT,  "Left Drive");
-        DashboardView::DrawDriveReadouts(m_Hub, ESC_RIGHT, "Right Drive");
-        DashboardView::DrawPlots(m_Hub);
+        DashboardView::DrawStatsPanel(m_Hub);
+        DashboardView::DrawPlotsTriple(m_Hub);
 
-        // Transport: load a recording, play / pause / seek. The hub watches the
-        // player position and pushes frames into the dashboard each update.
+        // Transport only (no duplicate plots) — load/browse, play/pause, time
+        // scrubber, speed. Playback advances via TelemHub::OnUpdate -> Panel.OnUpdate.
         ImGui::Begin("Replay");
-        m_Hub->Panel().OnImGuiRender();
+        m_Hub->Panel().DrawTransport();
         ImGui::End();
     }
 

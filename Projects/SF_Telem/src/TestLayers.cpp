@@ -213,7 +213,7 @@ namespace Workspace
 
         ImGui::Spacing(); ImGui::Separator();
         ImGui::TextWrapped("Flash firmware/sf_test_single_weapon. Wire the weapon ESC telemetry to "
-                           "GPIO13 (UART0 RX, remapped; USB TX kept) + common GND. Power the ESC so it "
+                           "GPIO17 (board silk TX2) + common GND. Power the ESC so it "
                            "streams; the boxes should populate and the banner turn green.");
         ImGui::End();
     }
@@ -245,7 +245,7 @@ namespace Workspace
 
         ImGui::Spacing(); ImGui::Separator();
         ImGui::TextWrapped("Flash firmware/sf_test_dual_drive. Wire RIGHT drive ESC telem to GPIO16 "
-                           "(UART1) and LEFT to GPIO17 (UART2), with a common GND. Both banners/sides "
+                           "(pad RX2) and LEFT to GPIO13 (pad D13), with a common GND. Both banners/sides "
                            "should report data.");
         ImGui::End();
     }
@@ -267,7 +267,7 @@ namespace Workspace
         ImGui::SeparatorText("Per-wire telemetry activity (valid or not)");
 
         const int         ids[3]   = { ESC_RIGHT, ESC_LEFT, ESC_WEAPON };
-        const char*       names[3] = { "RIGHT  GPIO16", "LEFT  GPIO17", "WEAPON  GPIO13" };
+        const char*       names[3] = { "RIGHT  GPIO16", "LEFT  GPIO13", "WEAPON  GPIO17" };
         const ImVec4      cols[3]  = { k_RColor, k_LColor, k_WColor };
         const float cardW = (ImGui::GetContentRegionAvail().x - 2.0f * ImGui::GetStyle().ItemSpacing.x) / 3.0f;
 
@@ -328,7 +328,7 @@ namespace Workspace
 
         ImGui::Spacing(); ImGui::Separator();
         ImGui::TextWrapped("Flash firmware/sf_test_sniffer. It watches the raw telemetry wires "
-                           "(GPIO16 / GPIO17 / GPIO13) and reports byte activity regardless of whether the "
+                           "(GPIO16 / GPIO13 / GPIO17) and reports byte activity regardless of whether the "
                            "data is valid KISS — use it to confirm an ESC is emitting ANYTHING at all.");
         ImGui::End();
     }

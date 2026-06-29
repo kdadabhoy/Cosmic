@@ -204,51 +204,75 @@ namespace Workspace
         ImGui::End();
     }
 
+    // ---- Readout panel BODIES (no Begin/End) so they can stack in one window ----
+    namespace
+    {
+        void WeaponReadoutsBody(TelemHub* hub)
+        {
+            const int W = ESC_WEAPON;
+            StatusLine(hub, W);
+            ImGui::Spacing();
+
+            const BoxSpec boxes[] = {
+                { "##wcur",  "Current",    false, hub->Cur(W),  "A", hub->AvgCur(W),  hub->MaxCur(W),  0.0f,                  k_WeaponColor },
+                { "##wvolt", "Voltage",    false, hub->Volt(W), "V", hub->AvgVolt(W), hub->MaxVolt(W), 0.0f,                  k_WeaponColor },
+                { "##wrpm",  "Weapon RPM", true,  hub->Rpm(W),  "",  hub->AvgRpm(W),  hub->MaxRpm(W),  hub->PredictedRpm(W),  k_WeaponColor },
+            };
+            DrawStatGrid(boxes, IM_ARRAYSIZE(boxes));
+
+            ImGui::Spacing();
+            if (ImGui::Button("Reset Stats##w")) hub->ResetMax(W);
+        }
+
+        void DriveReadoutsBody(TelemHub* hub, int id)
+        {
+            const ImVec4 col = DriveColor(id);
+            StatusLine(hub, id);
+            ImGui::Spacing();
+
+            char a[8], b[8], c[8], d[8];
+            snprintf(a, sizeof(a), "##c%d", id); snprintf(b, sizeof(b), "##v%d", id);
+            snprintf(c, sizeof(c), "##r%d", id); snprintf(d, sizeof(d), "##s%d", id);
+
+            const BoxSpec boxes[] = {
+                { a, "Current",   false, hub->Cur(id),   "A",   hub->AvgCur(id),   hub->MaxCur(id),   0.0f,                  col },
+                { b, "Voltage",   false, hub->Volt(id),  "V",   hub->AvgVolt(id),  hub->MaxVolt(id),  0.0f,                  col },
+                { c, "Motor RPM", true,  hub->Rpm(id),   "",    hub->AvgRpm(id),   hub->MaxRpm(id),   hub->PredictedRpm(id), col },
+                { d, "Speed",     false, hub->Speed(id), "mph", hub->AvgSpeed(id), hub->MaxSpeed(id), 0.0f,                  col },
+            };
+            DrawStatGrid(boxes, IM_ARRAYSIZE(boxes));
+
+            ImGui::Spacing();
+            char rs[16]; snprintf(rs, sizeof(rs), "Reset Stats##%d", id);
+            if (ImGui::Button(rs)) hub->ResetMax(id);
+        }
+    }
+
     // -------------------------------------------------------------------------
     void DashboardView::DrawWeaponReadouts(TelemHub* hub)
     {
         ImGui::Begin("Weapon");
-
-        const int W = ESC_WEAPON;
-        StatusLine(hub, W);
-        ImGui::Spacing();
-
-        const BoxSpec boxes[] = {
-            { "##wcur",  "Current",    false, hub->Cur(W),  "A", hub->AvgCur(W),  hub->MaxCur(W),  0.0f,                  k_WeaponColor },
-            { "##wvolt", "Voltage",    false, hub->Volt(W), "V", hub->AvgVolt(W), hub->MaxVolt(W), 0.0f,                  k_WeaponColor },
-            { "##wrpm",  "Weapon RPM", true,  hub->Rpm(W),  "",  hub->AvgRpm(W),  hub->MaxRpm(W),  hub->PredictedRpm(W),  k_WeaponColor },
-        };
-        DrawStatGrid(boxes, IM_ARRAYSIZE(boxes));
-
-        ImGui::Spacing();
-        if (ImGui::Button("Reset Stats")) hub->ResetMax(W);
-
+        WeaponReadoutsBody(hub);
         ImGui::End();
     }
 
     void DashboardView::DrawDriveReadouts(TelemHub* hub, int id, const char* title)
     {
         ImGui::Begin(title);
+        DriveReadoutsBody(hub, id);
+        ImGui::End();
+    }
 
-        const ImVec4 col = DriveColor(id);
-        StatusLine(hub, id);
-        ImGui::Spacing();
-
-        char a[8], b[8], c[8], d[8];
-        snprintf(a, sizeof(a), "##c%d", id); snprintf(b, sizeof(b), "##v%d", id);
-        snprintf(c, sizeof(c), "##r%d", id); snprintf(d, sizeof(d), "##s%d", id);
-
-        const BoxSpec boxes[] = {
-            { a, "Current",   false, hub->Cur(id),   "A",   hub->AvgCur(id),   hub->MaxCur(id),   0.0f,                  col },
-            { b, "Voltage",   false, hub->Volt(id),  "V",   hub->AvgVolt(id),  hub->MaxVolt(id),  0.0f,                  col },
-            { c, "Motor RPM", true,  hub->Rpm(id),   "",    hub->AvgRpm(id),   hub->MaxRpm(id),   hub->PredictedRpm(id), col },
-            { d, "Speed",     false, hub->Speed(id), "mph", hub->AvgSpeed(id), hub->MaxSpeed(id), 0.0f,                  col },
-        };
-        DrawStatGrid(boxes, IM_ARRAYSIZE(boxes));
-
-        ImGui::Spacing();
-        if (ImGui::Button("Reset Stats")) hub->ResetMax(id);
-
+    // Combined min/max stats panel (Replay left column): Left / Weapon / Right.
+    void DashboardView::DrawStatsPanel(TelemHub* hub)
+    {
+        ImGui::Begin("Stats");
+        ImGui::SeparatorText("Left Drive");
+        DriveReadoutsBody(hub, ESC_LEFT);
+        ImGui::Spacing(); ImGui::SeparatorText("Weapon");
+        WeaponReadoutsBody(hub);
+        ImGui::Spacing(); ImGui::SeparatorText("Right Drive");
+        DriveReadoutsBody(hub, ESC_RIGHT);
         ImGui::End();
     }
 
@@ -256,12 +280,37 @@ namespace Workspace
     void DashboardView::DrawPlots(TelemHub* hub)
     {
         ImGui::Begin("ESC Plots");
+        hub->DrawPlotToolbar();
         if (ImGui::BeginTabBar("##escplots"))
         {
-            if (ImGui::BeginTabItem("Right"))  { ImGui::BeginChild("##pr"); hub->DrawEscPlots(ESC_RIGHT);  ImGui::EndChild(); ImGui::EndTabItem(); }
-            if (ImGui::BeginTabItem("Left"))   { ImGui::BeginChild("##pl"); hub->DrawEscPlots(ESC_LEFT);   ImGui::EndChild(); ImGui::EndTabItem(); }
-            if (ImGui::BeginTabItem("Weapon")) { ImGui::BeginChild("##pw"); hub->DrawEscPlots(ESC_WEAPON); ImGui::EndChild(); ImGui::EndTabItem(); }
+            if (ImGui::BeginTabItem("Right"))  { ImGui::BeginChild("##pr"); hub->DrawEscChannels(ESC_RIGHT);  ImGui::EndChild(); ImGui::EndTabItem(); }
+            if (ImGui::BeginTabItem("Left"))   { ImGui::BeginChild("##pl"); hub->DrawEscChannels(ESC_LEFT);   ImGui::EndChild(); ImGui::EndTabItem(); }
+            if (ImGui::BeginTabItem("Weapon")) { ImGui::BeginChild("##pw"); hub->DrawEscChannels(ESC_WEAPON); ImGui::EndChild(); ImGui::EndTabItem(); }
             ImGui::EndTabBar();
+        }
+        ImGui::End();
+    }
+
+    // Replay center: Right / Left / Weapon as three equal side-by-side columns.
+    void DashboardView::DrawPlotsTriple(TelemHub* hub)
+    {
+        ImGui::Begin("ESC Plots");
+        hub->DrawPlotToolbar();
+
+        const float spacing = ImGui::GetStyle().ItemSpacing.x;
+        const float colW    = (ImGui::GetContentRegionAvail().x - 2.0f * spacing) / 3.0f;
+
+        const int   ids[3]    = { ESC_RIGHT, ESC_LEFT, ESC_WEAPON };
+        const char* titles[3] = { "Right", "Left", "Weapon" };
+        for (int k = 0; k < 3; ++k)
+        {
+            if (k > 0) ImGui::SameLine();
+            ImGui::BeginChild(titles[k], ImVec2(colW, 0.0f), true);
+            const ImVec4 tcol = (ids[k] == ESC_WEAPON) ? k_WeaponColor : DriveColor(ids[k]);
+            ImGui::TextColored(tcol, "%s", titles[k]);
+            ImGui::Separator();
+            hub->DrawEscChannels(ids[k]);
+            ImGui::EndChild();
         }
         ImGui::End();
     }
