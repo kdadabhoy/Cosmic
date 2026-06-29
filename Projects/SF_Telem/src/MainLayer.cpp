@@ -40,7 +40,11 @@ namespace Workspace
         DashboardView::DrawWeaponReadouts(m_Hub);
         DashboardView::DrawDriveReadouts(m_Hub, ESC_LEFT,  "Left Drive");
         DashboardView::DrawDriveReadouts(m_Hub, ESC_RIGHT, "Right Drive");
-        DashboardView::DrawPlots(m_Hub);
+
+        // Same "ESC Plots" window, two layouts: tabbed (Dashboard view) or three
+        // equal R/L/W columns (Plots view). The dock layout positions it per view.
+        if (m_PlotsView) DashboardView::DrawPlotsTriple(m_Hub);
+        else             DashboardView::DrawPlots(m_Hub);
     }
 
 } // namespace Workspace

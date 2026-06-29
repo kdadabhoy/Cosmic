@@ -189,8 +189,10 @@ namespace Workspace
 
     int SF_Telem::DockStateKey() const
     {
-        // Testing re-docks when its sub-mode changes; other screens key on screen.
+        // Testing re-docks when its sub-mode changes; Main re-docks when its
+        // view toggles (Dashboard vs Plots); other screens key on the screen.
         if (m_Screen == SCREEN_TESTING) return 100 + m_Testing.ActiveMode();
+        if (m_Screen == SCREEN_MAIN && m_Main && m_Main->IsPlotsView()) return 1000 + SCREEN_MAIN;
         return static_cast<int>(m_Screen);
     }
 
@@ -221,14 +223,25 @@ namespace Workspace
         switch (m_Screen)
         {
         case SCREEN_MAIN:
-            ws->SetEdgeRatios(0.20f, 0.20f, 0.18f, 0.30f);
-            ws->SetViewportVisible(false);   // Live Dashboard owns the center
-            ws->DockWindow("Serial Link",    Cosmic::DockPort::LeftBottom);
-            ws->DockWindow("Live Dashboard", Cosmic::DockPort::Center);
-            ws->DockWindow("ESC Plots",      Cosmic::DockPort::RightTop);
-            ws->DockWindow("Left Drive",     Cosmic::DockPort::BottomLeft);
-            ws->DockWindow("Weapon",         Cosmic::DockPort::BottomCenter);
-            ws->DockWindow("Right Drive",    Cosmic::DockPort::BottomRight);
+            ws->SetViewportVisible(false);
+            ws->DockWindow("Serial Link", Cosmic::DockPort::LeftBottom);   // left, both views
+            ws->DockWindow("Left Drive",  Cosmic::DockPort::BottomLeft);   // stats, both views
+            ws->DockWindow("Weapon",      Cosmic::DockPort::BottomCenter);
+            ws->DockWindow("Right Drive", Cosmic::DockPort::BottomRight);
+            if (m_Main && m_Main->IsPlotsView())
+            {
+                // Plots view: 3 R/L/W plots center, live dashboard right.
+                ws->SetEdgeRatios(0.20f, 0.24f, 0.18f, 0.26f);
+                ws->DockWindow("ESC Plots",      Cosmic::DockPort::Center);
+                ws->DockWindow("Live Dashboard", Cosmic::DockPort::RightTop);
+            }
+            else
+            {
+                // Dashboard view: live dashboard center, tabbed ESC plots right.
+                ws->SetEdgeRatios(0.20f, 0.20f, 0.18f, 0.30f);
+                ws->DockWindow("Live Dashboard", Cosmic::DockPort::Center);
+                ws->DockWindow("ESC Plots",      Cosmic::DockPort::RightTop);
+            }
             if (m_Main) m_Main->RequestDashboardFocus();
             break;
 
@@ -309,6 +322,15 @@ namespace Workspace
         {
             if (m_Screen == SCREEN_MAIN)
             {
+                // Layout toggle — switch between the dashboard-centric view and the
+                // 3-plot view without losing any data (same shared TelemHub).
+                const bool plots = m_Main && m_Main->IsPlotsView();
+                const std::string viewLbl = std::string(plots ? ICON_LC_GAUGE : ICON_LC_CHART_LINE)
+                                          + (plots ? "  View: Dashboard" : "  View: Plots");
+                if (ImGui::Button(viewLbl.c_str(), ImVec2(-1, 0)) && m_Main)
+                    m_Main->SetPlotsView(!plots);
+                ImGui::Spacing(); ImGui::Separator();
+
                 // (Recording controls now live at the top of the Serial Link panel.)
                 ImGui::SeparatorText("Live Stats");
                 ImGui::SetNextItemWidth(110);
