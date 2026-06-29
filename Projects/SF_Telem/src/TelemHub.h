@@ -235,6 +235,7 @@ namespace Workspace
         std::string m_RecordStatus = "Ready.";
 
         float m_AppClock = 0.0f;
+        float m_LastReplayStatPos = -1.0f;  // accumulate replay stats once per advanced frame
 
         static constexpr float  k_SampleRate   = 60.0f;
         static constexpr size_t k_RecordCap    = static_cast<size_t>(60.0f * 300.0f);

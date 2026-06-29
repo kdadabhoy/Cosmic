@@ -285,6 +285,8 @@ namespace Workspace
         if (mode != m_LastMode)
         {
             for (auto& r : m_Ring) r.Clear();
+            ResetStats();                  // fresh max/avg baseline for the new source
+            m_LastReplayStatPos = -1.0f;   // re-accumulate replay stats from the first frame
             m_LastMode = mode;
         }
 
@@ -387,6 +389,12 @@ namespace Workspace
     // =========================================================================
     void TelemHub::ApplyReplayFrame()
     {
+        // Accumulate max/avg once per *advanced* playback frame, mirroring the live
+        // path in PumpSerial — otherwise the stat panels show avg/max 0 in replay.
+        // (Headline values are refreshed every frame for the dashboard regardless.)
+        const float pos      = m_Player.GetPosition();
+        const bool  advanced = (pos != m_LastReplayStatPos);
+
         for (int i = 0; i < ESC_COUNT; ++i)
         {
             Cosmic::TelemetryFrame frame;
@@ -397,7 +405,32 @@ namespace Workspace
 
             m_HasData[i]  = true;
             m_LastSeen[i] = m_AppClock;   // keep Present() green while scrubbing/playing
+
+            if (!advanced) continue;
+
+            // Same max/avg bookkeeping as PumpSerial(), per replayed sample.
+            if (IsDrive(i))
+            {
+                m_MaxRpm[i]   = std::max(m_MaxRpm[i],   m_Drive[i].motorRPM);
+                m_MaxSpeed[i] = std::max(m_MaxSpeed[i], m_Drive[i].speedMph);
+                m_SumRpm[i]   += m_Drive[i].motorRPM;
+                m_SumSpeed[i] += m_Drive[i].speedMph;
+            }
+            else
+            {
+                m_MaxRpm[i] = std::max(m_MaxRpm[i], m_Weapon.weaponRPM);
+                m_MaxTip    = std::max(m_MaxTip,    m_Weapon.tipSpeedMph);
+                m_SumRpm[i] += m_Weapon.weaponRPM;
+                m_SumTip    += m_Weapon.tipSpeedMph;
+            }
+            m_MaxCur[i]  = std::max(m_MaxCur[i],  Cur(i));
+            m_MaxVolt[i] = std::max(m_MaxVolt[i], Volt(i));
+            m_SumCur[i]  += Cur(i);
+            m_SumVolt[i] += Volt(i);
+            ++m_StatCount[i];
         }
+
+        if (advanced) m_LastReplayStatPos = pos;
     }
 
     // =========================================================================
@@ -635,12 +668,11 @@ namespace Workspace
         PlotView&  pv     = m_PlotView;
         const bool replay = Replaying();
 
-        // Entering replay defaults to free interaction (follow off) and fits the
-        // whole recording once, so it opens framed and ready to zoom/scrub.
+        // Replay defaults to following the playhead (trailing window tracks the
+        // current playback time); the user can untick Follow to free-zoom/scrub.
         if (replay && !pv.replayDefaultApplied)
         {
-            pv.follow = false;
-            pv.fitRequested = true;
+            pv.follow = true;
             pv.replayDefaultApplied = true;
         }
         if (!replay) pv.replayDefaultApplied = false;
