@@ -177,6 +177,27 @@ namespace Cosmic
         void WaitForFlush();
 
         // -------------------------------------------------------------------------
+        // Autosave  (crash-failsafe: periodic non-blocking Flush while recording)
+        // -------------------------------------------------------------------------
+
+        /**
+         * @brief Periodically flush to a fixed rolling folder while recording.
+         *
+         * Once enabled, Tick() triggers a non-blocking Flush() every intervalSec of
+         * recorded time (skipped if a flush is already in progress), so even a hard
+         * crash leaves a snapshot at most intervalSec old. Uses a FIXED, non-empty
+         * session name so it overwrites one folder instead of spawning a new
+         * timestamped folder per tick. Call DisableAutosave() when recording stops.
+         */
+        void SetAutosave(const std::string& baseDir,
+                         const std::string& name,
+                         float              intervalSec,
+                         float              sampleRate = 60.0f);
+
+        /** @brief Stop periodic autosave (does not touch already-written files). */
+        void DisableAutosave();
+
+        // -------------------------------------------------------------------------
         // Reset
         // -------------------------------------------------------------------------
 
@@ -215,6 +236,14 @@ namespace Cosmic
         std::thread             m_FlushThread;
         std::atomic<bool>       m_Flushing{ false };
         std::atomic<float>      m_ElapsedTime{ 0.0f }; // written by Tick (main), read by RecordImpl (workers)
+
+        // Autosave state (main-thread only — driven from Tick()).
+        bool        m_AutosaveEnabled    = false;
+        std::string m_AutosaveDir;
+        std::string m_AutosaveName;
+        float       m_AutosaveInterval   = 5.0f;
+        float       m_AutosaveSampleRate = 60.0f;
+        float       m_AutosaveClock      = 0.0f;
 
         void RecordImpl(uint32_t id, const float* values, size_t count);
     };

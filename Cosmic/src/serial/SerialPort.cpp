@@ -23,13 +23,65 @@ namespace Cosmic
 	 */
 	bool SerialPort::Open(const std::string& portName, uint32_t baudRate)
 	{
-		// Always tear down any previous session before opening a new one. After an
-		// auto-disconnect (device unplugged) m_Connected is already false but the
-		// read thread is still joinable and m_Handle is still valid — so guarding
-		// on m_Connected would leak the handle and then std::terminate() when we
-		// reassign m_ReadThread below. Close() is safe to call when idle.
-		Close();
+		// Synchronous (blocking) open. Tear down any previous read session first —
+		// after an auto-disconnect (device unplugged) m_Connected is already false
+		// but the read thread is still joinable and m_Handle is still valid, so
+		// skipping this would leak the handle and then std::terminate() when we
+		// reassign m_ReadThread below. CloseReadSession() is safe to call when idle.
+		CloseReadSession();
 
+		m_Abandon.store(false);
+		m_State.store(State::Connecting);
+		const bool ok = DoOpen(portName, baudRate);
+		m_State.store(ok ? State::Open : State::Failed);
+		return ok;
+	}
+
+	/////////////////////////////////////////////////////////////////////////////////
+
+	/**
+	 * BeginOpen
+	 * * NON-BLOCKING CONNECT: CreateFileA on an unreachable Bluetooth SPP port can
+	 * block for 10-20 s before failing. Running it on the main/render thread froze
+	 * the UI (and, via the 3 s auto-reconnect retry, kept refreezing it). BeginOpen
+	 * moves the blocking open onto a one-shot worker thread so the UI stays live;
+	 * callers poll GetState().
+	 */
+	void SerialPort::BeginOpen(const std::string& portName, uint32_t baudRate)
+	{
+		// Never stack connect attempts — one in-flight worker at a time.
+		if (m_State.load() == State::Connecting) return;
+
+		// We are not Connecting, so the previous worker (if any) has finished:
+		// joining it here cannot block.
+		if (m_ConnectThread.joinable()) m_ConnectThread.join();
+
+		// Drop any current session synchronously — fast, the read thread wakes on
+		// the stop event. Only the CreateFileA below is slow, and it runs off-thread.
+		CloseReadSession();
+
+		m_Abandon.store(false);
+		m_State.store(State::Connecting);
+		m_ConnectThread = std::thread([this, portName, baudRate]()
+		{
+			const bool ok = DoOpen(portName, baudRate);
+			m_State.store(ok ? State::Open : State::Failed);
+			// If Close() was requested while we were blocked in CreateFileA, tear the
+			// freshly-opened session back down so nothing leaks.
+			if (ok && m_Abandon.load())
+				CloseReadSession();
+		});
+	}
+
+	/////////////////////////////////////////////////////////////////////////////////
+
+	/**
+	 * DoOpen
+	 * * The actual blocking open. Assumes any previous read session was already torn
+	 * down by the caller (Open/BeginOpen call CloseReadSession first).
+	 */
+	bool SerialPort::DoOpen(const std::string& portName, uint32_t baudRate)
+	{
 		std::string fullPath = "\\\\.\\" + portName;
 		// Opened with GENERIC_WRITE to support future command transmission (not yet exposed in the API).
 		// FILE_FLAG_OVERLAPPED: reads are asynchronous so the read thread can wait on
@@ -118,6 +170,7 @@ namespace Cosmic
 						{
 							CS_CORE_WARN("SerialPort: read error {0} — device disconnected.", e2);
 							m_Connected = false;
+							m_State.store(State::Failed);
 							break;
 						}
 					}
@@ -126,6 +179,7 @@ namespace Cosmic
 				{
 					CS_CORE_WARN("SerialPort: ReadFile error {0} — device disconnected.", err);
 					m_Connected = false;
+					m_State.store(State::Failed);
 					break;
 				}
 			}
@@ -159,13 +213,13 @@ namespace Cosmic
 	/////////////////////////////////////////////////////////////////////////////////
 
 	/**
-	 * Close
-	 * * CLEAN SHUTDOWN: Signals the stop event (which the read thread waits on), so
-	 * the ReadLoop returns immediately even if a read is pending on a stalled port.
-	 * join() is therefore guaranteed to be prompt — this is what keeps app shutdown
-	 * (and the frequent auto-reconnect Close/Open cycle) from hanging.
+	 * CloseReadSession
+	 * * Tears down the read thread + handle only. Signals the stop event (which the
+	 * read thread waits on), so ReadLoop returns immediately even if a read is
+	 * pending on a stalled port — join() is therefore prompt. Does NOT touch the
+	 * connect thread, so the connect worker can call it safely (no self-join).
 	 */
-	void SerialPort::Close()
+	void SerialPort::CloseReadSession()
 	{
 		m_Connected = false;
 		if (m_StopEvent)
@@ -185,6 +239,24 @@ namespace Cosmic
 			CloseHandle(m_StopEvent);
 			m_StopEvent = nullptr;
 		}
+	}
+
+	/////////////////////////////////////////////////////////////////////////////////
+
+	/**
+	 * Close
+	 * * CLEAN SHUTDOWN: joins any in-flight connect worker, then tears down the read
+	 * session. m_Abandon tells a worker still blocked in CreateFileA to self-close
+	 * the moment it returns, so the connect join here stays bounded even against a
+	 * dead Bluetooth port. Safe to call when already idle, and from the destructor.
+	 */
+	void SerialPort::Close()
+	{
+		m_Abandon.store(true);
+		if (m_ConnectThread.joinable())
+			m_ConnectThread.join();
+		CloseReadSession();
+		m_State.store(State::Idle);
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////

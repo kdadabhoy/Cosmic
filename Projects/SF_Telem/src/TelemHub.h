@@ -126,23 +126,14 @@ namespace Workspace
 
     private:
         // --- Serial ---
-        Cosmic::SerialPort       m_Serial;
-        std::vector<std::string> m_Ports;
-        std::string              m_SelectedPort;        // selected by NAME, not index
-        const std::vector<int>   m_BaudRates = { 9600, 19200, 38400, 57600,
-                                                 115200, 230400, 460800, 921600 };
-        int                      m_BaudIndex = 4; // 115200
-        std::string              m_RxAccumulator;
+        // Engine component owns the port list, baud, async (non-blocking)
+        // connect + auto-reconnect, and the connection menu UI.
+        Cosmic::SerialLink       m_Link;
+        std::string              m_RxAccumulator;       // line-framing buffer for parsing
         std::string              m_Log;
         bool                     m_AutoScrollLog = true;
         uint64_t                 m_GoodFrames = 0;
         uint64_t                 m_BadFrames  = 0;
-        float                    m_LastByteTime  = -100.0f; // m_AppClock of last byte in
-        float                    m_PortScanClock = 1.0f;    // >= interval: first scan now
-        bool                     m_AutoReconnect = true;    // re-open the link when data stops
-        bool                     m_WantConnection = false;  // user intends to stay connected
-        float                    m_ReconnectClock = 0.0f;
-        static constexpr float   k_ReconnectInterval = 3.0f; // s of no-data before each retry
 
         // --- Arduino firmware copy UI (Serial Link -> Arduino Firmware) ---
         int  m_FwRightPin  = 16;   // GPIO defaults match the wiring diagram
@@ -199,8 +190,10 @@ namespace Workspace
         Cosmic::TelemetryPanel::Mode m_LastMode = Cosmic::TelemetryPanel::Mode::None;
 
         // --- Recording ---
-        bool        m_Recording   = false;
-        bool        m_WasFlushing = false;
+        bool        m_Recording          = false;
+        bool        m_WasFlushing        = false;
+        bool        m_AutoExportOnStop   = true;   // checkbox: export to k_RecordDir when Stop is pressed
+        bool        m_RecordingDirty     = false;  // an intentional recording exists that hasn't been exported
         std::string m_SessionName;
         std::string m_RecordStatus = "Ready.";
 
@@ -214,6 +207,11 @@ namespace Workspace
         // (e.g. recordings/SF_Telem/<session>/) — discoverable, and won't collide
         // with other projects' recordings. Kept separate from the app's logs/.
         static constexpr const char* k_RecordDir = "recordings/SF_Telem";
+
+        // Crash-failsafe autosave: a rolling snapshot written every few seconds
+        // while recording, so a hard crash loses at most k_AutoSaveInterval seconds.
+        static constexpr const char* k_AutoSaveDir      = "recordings/SF_Telem/_autosave";
+        static constexpr float       k_AutoSaveInterval = 5.0f;
     };
 
 } // namespace Workspace

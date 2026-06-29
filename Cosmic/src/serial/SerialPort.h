@@ -60,6 +60,13 @@ namespace Cosmic
 	class COSMIC_API SerialPort
 	{
 	public:
+		// Connection lifecycle state for the asynchronous (non-blocking) open path.
+		// Idle      — never opened, or fully closed.
+		// Connecting— a background worker is running the blocking CreateFileA.
+		// Open       — the port is open and the read thread is live.
+		// Failed     — the last open attempt failed, or the device dropped.
+		enum class State { Idle, Connecting, Open, Failed };
+
 		////////////////////////////////
 		// Life Cycle
 		///////////////////////////////
@@ -72,8 +79,16 @@ namespace Cosmic
 		///////////////////////////////
 
 		bool		Open(const std::string& portName, uint32_t baudRate = 115200);
+
+		// Non-blocking connect: spawns a one-shot worker thread to run the blocking
+		// CreateFileA so the caller (main/render thread) never stalls on an
+		// unreachable Bluetooth port — which could otherwise hang ~10-20 s. Poll
+		// GetState() for progress. No-op while already Connecting.
+		void		BeginOpen(const std::string& portName, uint32_t baudRate = 115200);
+
 		void		Close();
 		bool		IsOpen() const															{ return m_Connected; }
+		State		GetState() const														{ return m_State.load(); }
 
 		////////////////////////////////
 		// Data Retrieval
@@ -94,13 +109,26 @@ namespace Cosmic
 
 		void		ReadLoop();
 
+		// Core open work: CreateFileA -> DCB/timeouts -> start read thread. Does NOT
+		// tear down a previous session (callers must CloseReadSession first) and does
+		// NOT touch the connect thread (so the worker can call it without self-join).
+		bool		DoOpen(const std::string& portName, uint32_t baudRate);
+
+		// Tear down only the read session (thread + handle + stop event). Unlike
+		// Close() this does not join the connect thread, so it is safe to call from
+		// inside the connect worker.
+		void		CloseReadSession();
+
 	private:
 		////////////////////////////////
 		// State & Synchronization
 		///////////////////////////////
 
 		std::atomic<bool>		m_Connected			{ false };
+		std::atomic<State>		m_State				{ State::Idle };
+		std::atomic<bool>		m_Abandon			{ false };  // set by Close() so an in-flight connect self-closes
 		std::thread				m_ReadThread;
+		std::thread				m_ConnectThread;
 		std::mutex				m_BufferMutex;
 		std::string				m_DataBuffer;
 
