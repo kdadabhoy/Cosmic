@@ -4,8 +4,8 @@
 > implementation details, written down so they can be reviewed and refined ahead of the code.
 >
 > This is the **proposed-design** counterpart to [`../engineering-notes/`](../engineering-notes/) (which is
-> *postmortems* of bugs already fixed) and is distinct from [`../IMPROVEMENTS.md`](../IMPROVEMENTS.md) (a
-> prioritized roadmap) and [`../engine_analysis.md`](../engine_analysis.md) (subsystem reference).
+> *postmortems* of bugs already fixed) and is distinct from [`../plans/`](../plans/) (the live roadmap and
+> plan docs) and [`../archive/`](../archive/) (historical analyses).
 
 ## How to add a proposal
 

@@ -4,9 +4,9 @@
 > investigation to root-cause — especially platform/driver/DPI/threading issues that only reproduce on
 > *some* machines — the understanding goes here so the next person (or the next you) doesn't re-derive it.
 >
-> This is **not** a roadmap (see [`../IMPROVEMENTS.md`](../IMPROVEMENTS.md)) and **not** a subsystem
-> reference (see [`../engine_analysis.md`](../engine_analysis.md)). It's a growing collection of focused
-> postmortems and system deep-dives.
+> This is **not** a roadmap (see [`../plans/00-MASTER-ROADMAP.md`](../plans/00-MASTER-ROADMAP.md)) and
+> **not** a subsystem reference (see README Part 2 and [`../archive/`](../archive/)). It's a growing
+> collection of focused postmortems and system deep-dives.
 
 ## How to add a note
 

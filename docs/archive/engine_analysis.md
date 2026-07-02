@@ -2,7 +2,7 @@
 
 > **⚠️ Historical analysis (2026-05-30).** P1/P2 items were fixed in the 2026-06-24 pass (see
 > [IMPROVEMENTS.md](IMPROVEMENTS.md)); remaining live items were re-audited into
-> [docs/plans/01-bug-audit.md](plans/01-bug-audit.md) (2026-07-01). Section 6/5.1 (text rendering)
+> [docs/plans/archive/01-bug-audit.md](../plans/archive/01-bug-audit.md) (2026-07-01). Section 6/5.1 (text rendering)
 > is stale — world-space SDF text now exists (README §27).
 
 **Date:** 2026-05-30 (updated from 2026-05-29)  

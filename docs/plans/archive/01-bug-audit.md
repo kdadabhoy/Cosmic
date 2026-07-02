@@ -1,8 +1,8 @@
 # Cosmic Engine — Bug Audit (2026-07-01)
 
 > **Scope:** Fresh audit of the engine core against the current `main` (post SF-Improvements merge, `3e8b1f8`).
-> Builds on [`docs/IMPROVEMENTS.md`](../IMPROVEMENTS.md) (§1–§4 already implemented) and
-> [`docs/engine_analysis.md`](../engine_analysis.md) (2026-05-30; partially stale — see §5 below).
+> Builds on [`docs/archive/IMPROVEMENTS.md`](../../archive/IMPROVEMENTS.md) (§1–§4 already implemented) and
+> [`docs/archive/engine_analysis.md`](../../archive/engine_analysis.md) (2026-05-30; partially stale — see §5 below).
 > **Every item in §1 was hand-verified against source at the stated file:line on 2026-07-01.**
 > Items in §2 are verified design gaps (not defects). Items in §4 are claims from automated review
 > that were **checked and disproved** — do not "fix" them.
@@ -156,4 +156,4 @@ Recorded so nobody (human or AI) regresses correct code:
 
 From IMPROVEMENTS §5, still the right list, in the right order: **asset cache** (§5.1, unlocks the most),
 sprite animation (§5.2), shader hot-reload (§5.3), MSAA-or-remove-fields (§5.4). The UAV-sim feature set
-lives separately in [`03-uav-sim-engine-features.md`](03-uav-sim-engine-features.md).
+lives separately in [`03-simulation-engine-plan.md`](../03-simulation-engine-plan.md) (rewritten 2026-07-01; was `03-uav-sim-engine-features.md`).

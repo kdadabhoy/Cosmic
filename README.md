@@ -9,6 +9,7 @@
 ### Part 1: Client Developer Guide
 
 1. [Getting Started](#1-getting-started)
+   - [1.5 Command Reference — Every Command](#15-command-reference--every-command)
 2. [Memory Management](#2-memory-management)
 3. [Application Lifecycle](#3-application-lifecycle)
 4. [The Layer System](#4-the-layer-system)
@@ -261,6 +262,78 @@ ImGui::End();
 You only need to use the slots you actually want — unused slots are simply absent from the layout. Any window name that doesn't match one of the three reserved strings creates a **floating panel** that the user can dock manually.
 
 To request additional pre-docked panels beyond the three standard slots, call `WorkspaceLayer::RequestExtraDockedPanel()` from `OnAttach` — see [Section 24 — Window System](#24-window-system).
+
+---
+
+## 1.5 Command Reference — Every Command
+
+Every command you can run against this SDK, in one place. All `.bat` scripts run from the **repo root** and pause on completion unless noted. (Contract: any PR that adds or changes a script, flag, or option updates this section — see `docs/plans/06-docs-plan.md` D1.)
+
+### Build & setup scripts
+
+| Command | What it does |
+| --- | --- |
+| `setup.bat` | One-time SDK registration: permanently sets the `COSMIC_SDK` environment variable to the repo root (via `setx`). Project `CMakeLists.txt` files use it to find the engine when a project is configured standalone (they fall back to `$ENV{COSMIC_SDK}` when `-DCOSMIC_SDK_DIR` isn't passed). Build-time only — packaged apps never need it. Restart terminals/VS afterwards. |
+| `build.bat [Debug\|Release]` | **Incremental** build of everything (engine + runtime + all projects + tests). Default config `Debug`. Creates/reconfigures `build/` automatically, including flipping the cache back if it was last configured engine-only. |
+| `build_all.bat [Debug\|Release]` | **Clean** rebuild: deletes `build/`, reconfigures, builds everything. Default `Debug`. |
+| `build_all_release.bat` | Clean rebuild pinned to `Release`. Release *is* the distribution configuration (console-less subsystem, launcher New-Project UI disabled, `/O2`) — there is no separate dist flag. |
+| `build_engine.bat [Debug\|Release]` | Engine-only incremental build (`Cosmic` + `CosmicApp` targets, configured with `COSMIC_BUILD_ENGINE_ONLY=ON`). Fastest loop for engine-core work; skips all project DLLs. |
+
+Examples:
+
+```bat
+build.bat                    :: incremental Debug — the everyday command
+build.bat Release            :: incremental Release
+build_engine.bat Debug       :: engine core only
+```
+
+### Packaging & installer scripts
+
+| Command | What it does |
+| --- | --- |
+| `package.bat` | Clean Release build → `cmake --install` staging → self-contained **full SDK** distributable at `dist\Cosmic\` (launcher + every project + assets + VC++ runtime DLLs) → `dist\Cosmic.zip`. |
+| `package.bat <AppName>` | Same, but **single-app**: stages `dist\<AppName>\`, prunes every other project DLL and asset folder. Example: `package.bat SF_Telem`. |
+| `package_installer.bat <AppName>` | Runs `package.bat <AppName>`, then compiles `installer\CosmicSetup.iss` with Inno Setup 6 → `dist\<AppName>-Setup-<version>.exe` (version read from `Cosmic/src/core/Version.h`). Requires [Inno Setup 6](https://jrsoftware.org/isinfo.php). Full walkthrough: [`docs/installer-guide.md`](docs/installer-guide.md). |
+
+Environment switch: set `COSMIC_NOPAUSE=1` to suppress `package.bat`'s final pause (used when chained from `package_installer.bat`).
+
+### Running the engine — `CosmicApp.exe`
+
+| Command | What it does |
+| --- | --- |
+| `CosmicApp.exe` | Boots into the **Launcher** (project picker / New Project UI). |
+| `CosmicApp.exe --project <NameOrDll>` | Boots **directly into that project**, skipping the Launcher. Accepts a bare name (`SF_Telem`), a DLL name (`SF_Telem.dll`), or an absolute path. Resolution order: `projects\<name>.dll` next to the exe, then the exe dir, then absolute. A missing DLL logs an error and falls back to the Launcher — never a dead exe. |
+| `CosmicApp.exe --project=<NameOrDll>` | Same flag, `=` form. |
+
+Any other argument prints `unrecognized argument` to stderr and is ignored. Dev-tree example:
+
+```bat
+build\Runtime\Debug\CosmicApp.exe --project SF_Telem
+```
+
+### Tests
+
+| Command | What it does |
+| --- | --- |
+| `build\Runtime\<Config>\CosmicTests.exe` | Runs the headless doctest suite (built by default with any full build). |
+| `CosmicTests.exe -ts="*COBS*"` | Filter by test-suite/name (any doctest filter flag works). |
+| `ctest -C Debug --output-on-failure` | Same suite via CTest, from inside `build\`. |
+
+### Raw CMake configure options (what the scripts pass for you)
+
+| Option | Default | Effect |
+| --- | --- | --- |
+| `-DCOSMIC_BUILD_ENGINE_ONLY=ON\|OFF` | `OFF` | `ON` skips the `Projects/` scanner (engine + runtime only). The build scripts flip this automatically. |
+| `-DCOSMIC_BUILD_TESTS=ON\|OFF` | `ON` | Build the `CosmicTests` target. Never installed/packaged either way. |
+| `-DCOSMIC_SDK_DIR=<path>` | repo root (cache) | Where project builds look for the engine; standalone project configures fall back to the `COSMIC_SDK` env var from `setup.bat`. |
+
+### In-app global hotkeys
+
+| Key | Effect |
+| --- | --- |
+| `F11` | Toggle borderless-windowed fullscreen (see [Section 24](#24-window-system)). Projects can intercept/replace this via `Window::SetFullscreenHotkeyOverride` — see §24. |
+
+All other shortcuts are app-defined (check the project's own docs/panels).
 
 ---
 
@@ -4622,13 +4695,14 @@ Storing `recordId` on `AgentComponent` means each worker thread reads and record
 ## §43 Known Limitations & Roadmap
 
 The engine is production-usable for 2D simulation and telemetry work, but a handful of known rough
-edges are tracked rather than hidden. The two living documents below are kept current against the
+edges are tracked rather than hidden. The living documents below are kept current against the
 source and are the place to look before filing a bug or starting a refactor:
 
 | Document | Purpose |
 | -------- | ------- |
-| [`docs/IMPROVEMENTS.md`](docs/IMPROVEMENTS.md) | Prioritized, actionable roadmap — the short list of changes to make next, ordered by return on effort. Start here. |
-| [`docs/engine_analysis.md`](docs/engine_analysis.md) | The longer reference analysis: full subsystem walkthroughs and an exhaustive P1–P4 issue list. |
+| [`docs/plans/00-MASTER-ROADMAP.md`](docs/plans/00-MASTER-ROADMAP.md) | The live roadmap — phases, sequencing, and links to every active plan doc. Start here. |
+| [`docs/plans/`](docs/plans/) | Per-workstream plans (3D engine, simulation toolkit, ViperSim, windowing, docs, audio) with PR-sized items and acceptance criteria. |
+| [`docs/archive/`](docs/archive/) | Historical analyses (2026-05/06 audits and improvement passes) — superseded, kept for the "why". |
 
 The 2026-06-24 cleanup pass implemented IMPROVEMENTS §1–§4 (statistics counters, the `s_SceneData`
 leak, grayscale-texture upload, the `PauseOnMinimize` doc, the instanced-sampler upload, `Scene::OnRender`
