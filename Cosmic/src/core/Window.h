@@ -81,6 +81,7 @@
  *           plugin DLL that registered an override.
  */
 
+#include "core/Core.h"
 #include "graphics/GraphicsContext.h"
 #include "events/Event.h"
 #include <string>
@@ -241,7 +242,7 @@ namespace Cosmic
         // =====================================================================
 
         GLFWwindow* m_Handle = nullptr;
-        GraphicsContext* m_Context = nullptr;   // owned; deleted in destructor
+        Scope<GraphicsContext> m_Context;   // owned; released before glfwDestroyWindow in the destructor
 
         WindowData m_Data;
 

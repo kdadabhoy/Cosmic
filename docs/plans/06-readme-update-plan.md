@@ -10,7 +10,7 @@
 
 ## A. Corrections (stale/wrong content)
 
-### A1 — Fix the §34 `RenderPass` constructor claim  *(= BUG-5 in doc 01)*
+### A1 — Fix the §34 `RenderPass` constructor claim  *(= BUG-5 in doc 01)* ✅ *(done 2026-07-01; the section is numbered §38 in the current README)*
 ```
 File: README.md, line ~3617 (section "§34 RenderPass Stack — Implementation Details").
 The README shows: RenderPass(const OrthographicCamera& camera, std::optional<glm::vec4> viewportBounds = std::nullopt);
@@ -20,7 +20,7 @@ signature(s), replace the README's version, and DELETE the paragraph describing 
 Cross-check the §14 and §25 usage examples still match (they already pass explicit vec4s).
 ```
 
-### A2 — Telemetry version sweep
+### A2 — Telemetry version sweep ✅ *(done 2026-07-01 — §26/§38/§42 v1-consistent; directory fallback documented)*
 ```
 File: README.md. Search for "v2", "v3", "scene.bin". The binary format is v1 (DataRecorder.h writes
 version = 1). Fix any remaining claim that says otherwise, and make §26/§38/§42 consistent with the
@@ -28,14 +28,14 @@ header docstrings once WO-2 (doc 02) has landed — including documenting the ne
 ("scene.bin if present, else every *.bin in the folder").
 ```
 
-### A3 — Retire `docs/old/`
+### A3 — Retire `docs/old/` ✅ *(done 2026-07-01 — still-referenced files moved back to `docs/`, duplicate drafts deleted)*
 ```
 docs/old/ contains Part1/2/3 drafts duplicating README content plus superseded JobSystem/TelemetryAudit
 docs. Delete the folder (git history preserves it). Update any links that point into it (search the
 repo for "docs/old").
 ```
 
-### A4 — Mark `docs/engine_analysis.md` as historical
+### A4 — Mark `docs/engine_analysis.md` as historical ✅ *(done 2026-07-01)*
 ```
 Add a banner at the top of docs/engine_analysis.md: "Historical analysis (2026-05-30). P1/P2 items were
 fixed in the 2026-06-24 pass (see IMPROVEMENTS.md); remaining live items were re-audited into
@@ -48,7 +48,7 @@ now exists (README §27)." Do not edit the body.
 ## B. Missing sections to write (each: read the named source first, then write the section in the
 README's existing voice — second person, tables for API surfaces, "why" callouts)
 
-### B1 — SerialLink (the biggest gap)
+### B1 — SerialLink (the biggest gap) ✅ *(done 2026-07-01 — README §20.5, plus a §20.6 Framing bonus)*
 ```
 Sources: Cosmic/src/serial/SerialLink.h/.cpp (+ SerialPort.h for the State enum). README §20 covers
 raw SerialPort only. Add "§20.5 SerialLink — Managed Connections": what it adds over SerialPort
@@ -57,7 +57,7 @@ matching how Projects/SF_Telem/src/TelemHub.h uses it. Include the "never call b
 render thread for Bluetooth ports" warning (SerialPort.cpp:44-48 comment explains why).
 ```
 
-### B2 — Theme system
+### B2 — Theme system ✅ *(done 2026-07-01 — README §28.5)*
 ```
 Sources: Cosmic/src/layers/ImGuiThemes.h, the ThemeManager implementation (search "ThemeManager"),
 engine ThemeSelector widget, Theme Studio (see docs/IMGUI_MODERNIZATION_CHANGES.md). Add a client-guide
@@ -66,7 +66,7 @@ section: available built-in themes, how a project selects/persists a theme, how 
 Roboto font setup.
 ```
 
-### B3 — Window chrome & DPI (promote from engineering-notes)
+### B3 — Window chrome & DPI (promote from engineering-notes) ✅ *(verified 2026-07-01 — README §24 already covered every required point and links the note; no edit needed)*
 ```
 Source: docs/engineering-notes/borderless-window-dpi.md + README §24. Add a short client-facing
 subsection to §24: borderless chrome behavior (native snap/resize/animations preserved), what happens
@@ -74,14 +74,14 @@ at >100% DPI scale, F11/fullscreen override hooks, and a link to the engineering
 war story. Keep it ~30 lines; the note stays the deep dive.
 ```
 
-### B4 — DataRecorder autosave & failsafe
+### B4 — DataRecorder autosave & failsafe ✅ *(done 2026-07-01 — README §26 "Autosave (Crash Failsafe)")*
 ```
 Source: Cosmic/src/telemetry/DataRecorder.h (SetAutosave API) and TelemHub usage in SF_Telem
 (recordings/<app>/_autosave every 5 s). Document in §26: the API, the interval/threading behavior,
 where files land, and recovery-after-crash workflow.
 ```
 
-### B5 — Homescreen / multi-screen app pattern
+### B5 — Homescreen / multi-screen app pattern ✅ *(done 2026-07-01 — README §21.5)*
 ```
 Source: Projects/SF_Telem/src (root layer + screen layers + SimHub-style TelemHub). §21 documents the
 template's composite pattern; add "§21.5 Real-world pattern: homescreen + screens" describing the

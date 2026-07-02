@@ -52,8 +52,30 @@ namespace Cosmic
 			m_Shader->SetFloat4(name, val);
 
 		// NOTE: Manual binding loop removed here!
-		// Custom texture arrays and material samplers are resolved dynamically 
+		// Custom texture arrays and material samplers are resolved dynamically
 		// per-quad slot tracking inside Renderer2D::DrawQuad / DrawRotatedQuad.
+		// For rendering OUTSIDE the batch renderer, use BindFull() below.
+	}
+
+	/**
+	 * BindFull
+	 * Bind() plus texture slot binding for use outside the batch renderer
+	 * (e.g. Renderer::Submit with a textured material). Each cached texture is
+	 * bound to slots 0, 1, 2, ... in iteration order and its sampler uniform is
+	 * pointed at that slot.
+	 */
+	void Material::BindFull()
+	{
+		Bind();
+
+		uint32_t slot = 0;
+		for (auto const& [name, texture] : m_Textures)
+		{
+			if (!texture) continue;
+			texture->Bind(slot);
+			m_Shader->SetInt(name, static_cast<int>(slot));
+			++slot;
+		}
 	}
 
 	float Material::GetFloat(const std::string& name)

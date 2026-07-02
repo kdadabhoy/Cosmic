@@ -86,6 +86,7 @@
 #include "jobs/JobSystem.h"
 #include <cstddef>
 #include <algorithm>
+#include <type_traits>
 
 namespace Cosmic
 {
@@ -182,6 +183,15 @@ namespace Cosmic
     template<typename Func>
     void ParallelForAsync(size_t totalCount, Func&& func, size_t minChunkSize = 64)
     {
+        // The async path stores func BY VALUE in each job closure (it must — the
+        // caller's stack unwinds before workers run). A move-only functor cannot be
+        // stored this way; and remember that by-reference CAPTURES inside your lambda
+        // still dangle even though the lambda object itself is copied.
+        static_assert(std::is_copy_constructible_v<std::decay_t<Func>>,
+            "ParallelForAsync requires a copyable functor: it is captured by value because "
+            "jobs outlive the caller's stack frame. Capture state by value ([=] or explicit "
+            "copies) — by-reference captures of locals dangle.");
+
         if (totalCount == 0) return;
 
         JobSystem& js = JobSystem::Get();
@@ -250,6 +260,10 @@ namespace Cosmic
     template<typename T, typename Func>
     void ParallelForEachAsync(T* data, size_t count, Func&& func, size_t minChunkSize = 64)
     {
+        static_assert(std::is_copy_constructible_v<std::decay_t<Func>>,
+            "ParallelForEachAsync requires a copyable functor — see ParallelForAsync. "
+            "Capture by value; by-reference captures of locals dangle.");
+
         if (!data || count == 0) return;
 
         // Capture func BY VALUE — see ParallelForAsync for the reasoning.
@@ -292,6 +306,10 @@ namespace Cosmic
     template<typename T, typename Func>
     void ParallelForEachIndexedAsync(T* data, size_t count, Func&& func, size_t minChunkSize = 64)
     {
+        static_assert(std::is_copy_constructible_v<std::decay_t<Func>>,
+            "ParallelForEachIndexedAsync requires a copyable functor — see ParallelForAsync. "
+            "Capture by value; by-reference captures of locals dangle.");
+
         if (!data || count == 0) return;
 
         // Capture func BY VALUE — see ParallelForAsync for the reasoning.

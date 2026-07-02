@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Cache CMake build
+        uses: actions/cache@v4
+        with:
+          path: build
+          key: cmake-build-${{ runner.os }}-${{ hashFiles('CMakeLists.txt', 'Cosmic/CMakeLists.txt', 'Runtime/CMakeLists.txt', 'tests/CMakeLists.txt') }}
+          restore-keys: |
+            cmake-build-${{ runner.os }}-
+
+      - name: Configure
+        run: cmake -S . -B build -A x64 -DCOSMIC_BUILD_TESTS=ON
+
+      - name: Build (Release)
+        run: cmake --build build --config Release --parallel
+
+      - name: Run unit tests
+        working-directory: build/Runtime/Release
+        run: ./CosmicTests.exe --reporters=console --no-intro
+
+      # Packaging is intentionally not part of CI yet — see
+      # docs/plans/07-installer-packaging-plan.md step 6 for the release job.

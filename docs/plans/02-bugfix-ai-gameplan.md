@@ -1,5 +1,10 @@
 # Bugfix Gameplan — AI Work Orders
 
+> ✅ **ALL WORK ORDERS COMPLETE (2026-07-01).** WO-1…13 (fixes), WO-14 (`tests/` doctest harness),
+> WO-15 (`.github/workflows/ci.yml`), and WO-16 (`.clang-tidy` baseline,
+> `docs/engineering-notes/static-analysis.md`) have all landed. This doc is retained as the
+> reference for what was changed and why.
+>
 > **Purpose:** Ready-to-paste prompts for driving a smaller/cheaper AI model through the fixes in
 > [`01-bug-audit.md`](01-bug-audit.md). Each work order is self-contained: exact file, exact change,
 > acceptance check. Paste **one work order per session/prompt** — small models drift when given

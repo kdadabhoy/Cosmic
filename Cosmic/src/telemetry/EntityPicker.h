@@ -28,6 +28,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <functional>
+#include <cmath>
 
 namespace Cosmic
 {
@@ -78,16 +79,18 @@ namespace Cosmic
          * @brief Return the first entity under worldPos, or an invalid Entity{}.
          *
          * Iterates all entities with BOTH TransformComponent and SelectableComponent.
-         * The hit box is: [Position.x ± Scale.x * 0.5, Position.y ± Scale.y * 0.5].
-         * Z is ignored — this is strictly 2D picking.
+         * The hit box is the entity's Scale-sized rectangle, rotated by Rotation.z:
+         * the query point is transformed into the entity's local frame before the
+         * axis-aligned test, so rotated entities pick exactly on their visual bounds.
+         * Z position is ignored — this is strictly 2D picking.
          *
          * @param scene     The scene to search.
          * @param worldPos  2D world-space query point (from ScreenToWorld).
          * @param filter    Optional extra predicate — return false to reject an
          *                  otherwise-hit entity (e.g. "only Agents", "skip locked").
          *                  Null means accept all entities with SelectableComponent.
-         * @return          First entity whose AABB contains worldPos and passes
-         *                  the filter, or Entity{}.
+         * @return          First entity whose (rotated) box contains worldPos and
+         *                  passes the filter, or Entity{}.
          */
         static Entity Pick(
             const Ref<Scene>& scene,
@@ -103,8 +106,19 @@ namespace Cosmic
                 float halfW = transform.Scale.x * 0.5f;
                 float halfH = transform.Scale.y * 0.5f;
 
-                bool hitX = glm::abs(worldPos.x - transform.Position.x) <= halfW;
-                bool hitY = glm::abs(worldPos.y - transform.Position.y) <= halfH;
+                // Rotate the query point into the entity's local frame by the
+                // inverse of its 2D rotation. Rotation is stored in DEGREES
+                // (GetTransform() converts with glm::radians — mirror that here).
+                const float ang = glm::radians(-transform.Rotation.z);
+                const float c   = std::cos(ang);
+                const float s   = std::sin(ang);
+                const float dx  = worldPos.x - transform.Position.x;
+                const float dy  = worldPos.y - transform.Position.y;
+                const float localX = c * dx - s * dy;
+                const float localY = s * dx + c * dy;
+
+                bool hitX = glm::abs(localX) <= halfW;
+                bool hitY = glm::abs(localY) <= halfH;
 
                 if (hitX && hitY)
                 {

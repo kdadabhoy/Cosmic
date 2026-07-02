@@ -32,6 +32,8 @@
 
 #include <string>
 #include <filesystem>
+#include <fstream>
+#include <cstdlib>
 
 namespace Cosmic
 {
@@ -47,8 +49,12 @@ namespace Cosmic
 		 * * THE VIRTUAL BRIDGE: Translates virtual engine paths into physical
 		 * paths on the disk.
 		 * * Protocols:
-		 * - "engine://"  -> Maps to the base engine asset directory.
-		 * - "project://" -> Maps to a sub-folder named after the active project.
+		 * - "engine://"  -> Maps to the base engine asset directory (read-only content).
+		 * - "project://" -> Maps to a sub-folder named after the active project (read-only content).
+		 * - "user://"    -> Maps to the WRITABLE user-data root (logs, recordings,
+		 *                   imgui.ini, settings). See GetUserDataRoot() for the
+		 *                   portable-vs-installed mapping. ALWAYS route writes here —
+		 *                   an installed app's exe dir (Program Files) is read-only.
 		 */
 		static std::string Resolve(const std::string& path)
 		{
@@ -63,7 +69,62 @@ namespace Cosmic
 				return (std::filesystem::path("assets") / "projects" / s_ActiveProjectName / path.substr(10)).generic_string();
 			}
 
+			if (path.find("user://") == 0)
+			{
+				return (std::filesystem::path(GetUserDataRoot()) / path.substr(7)).generic_string();
+			}
+
 			return path; // Fallback for raw paths
+		}
+
+		////////////////////////////////
+		// User Data Root
+		///////////////////////////////
+
+		/**
+		 * GetUserDataRoot
+		 * * The writable root that "user://" maps to. Decided once at first use:
+		 *
+		 * - PORTABLE MODE: if the working directory is writable (dev tree, unzipped
+		 *   folder — Runtime/Main.cpp sets the CWD to the exe dir), user data stays
+		 *   next to the app: "user://logs" resolves to "logs" exactly as before.
+		 *
+		 * - INSTALLED MODE: if the exe dir is NOT writable (Program Files under a
+		 *   standard user), user data goes to %LOCALAPPDATA%/Cosmic/ — created on
+		 *   demand. Falls back to the system temp dir if LOCALAPPDATA is unset.
+		 */
+		static const std::string& GetUserDataRoot()
+		{
+			static const std::string root = []() -> std::string
+			{
+				namespace fs = std::filesystem;
+
+				// Writability probe in the working directory (== exe dir).
+				const fs::path probe = fs::path(".") / ".cosmic_write_probe";
+				{
+					std::ofstream test(probe);
+					if (test.is_open())
+					{
+						test.close();
+						std::error_code ec;
+						fs::remove(probe, ec);
+						return std::string(".");
+					}
+				}
+
+				// Installed / read-only location: per-user local app data.
+			#pragma warning(push)
+			#pragma warning(disable: 4996) // std::getenv is fine here; no CRT state is retained
+				const char* localAppData = std::getenv("LOCALAPPDATA");
+			#pragma warning(pop)
+
+				fs::path dataRoot = localAppData ? (fs::path(localAppData) / "Cosmic")
+				                                 : (fs::temp_directory_path() / "Cosmic");
+				std::error_code ec;
+				fs::create_directories(dataRoot, ec);
+				return dataRoot.generic_string();
+			}();
+			return root;
 		}
 
 		////////////////////////////////

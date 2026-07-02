@@ -76,6 +76,12 @@ namespace Cosmic
 		void		Clear();                  // Asserts all layers are already detached
 		void		ForceCleanForShutdown();  // Raw wipe for Application::Shutdown() only — skips OnDetach()
 
+		// Engine-internal: Application marks the stack as "under iteration" around its
+		// update/render/event loops. While set, Push/Pop asserts — mutating the vector
+		// mid-iteration invalidates the live iterators (UB). Client code must defer
+		// layer transitions to the Safe Zone (see Application::Run / README §3).
+		void		SetIterating(bool iterating)	{ m_Iterating = iterating; }
+
 
 		////////////////////////////////
 		// Iteration Support
@@ -96,6 +102,9 @@ namespace Cosmic
 
 		// Tracks where game layers end and overlays begin
 		uint32_t				m_LayerInsertIndex	= 0;
+
+		// True while Application iterates the stack — guards against mid-iteration mutation.
+		bool					m_Iterating			= false;
 	};
 
 }

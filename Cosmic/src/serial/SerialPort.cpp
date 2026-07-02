@@ -23,6 +23,15 @@ namespace Cosmic
 	 */
 	bool SerialPort::Open(const std::string& portName, uint32_t baudRate)
 	{
+		// Refuse to race an in-flight asynchronous connect: BeginOpen's worker may be
+		// inside DoOpen right now, and running a second DoOpen here would have both
+		// threads writing m_Handle concurrently. (BeginOpen has the same guard.)
+		if (m_State.load() == State::Connecting)
+		{
+			CS_CORE_WARN("SerialPort::Open: an asynchronous connect is already in flight — ignored.");
+			return false;
+		}
+
 		// Synchronous (blocking) open. Tear down any previous read session first —
 		// after an auto-disconnect (device unplugged) m_Connected is already false
 		// but the read thread is still joinable and m_Handle is still valid, so

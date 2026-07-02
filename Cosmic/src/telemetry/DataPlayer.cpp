@@ -39,6 +39,18 @@ namespace Cosmic
                     break;
                 }
             }
+
+            // Fallback: no scene.bin produced any entities — load every individual
+            // *.bin file in the directory (legacy per-entity session layout). Only
+            // runs when scene.bin is absent/empty, so entities are never duplicated.
+            if (m_Entities.empty())
+            {
+                for (const auto& entry : fs::directory_iterator(path))
+                {
+                    if (entry.is_regular_file() && entry.path().extension() == ".bin")
+                        LoadBinaryFile(entry.path().string());
+                }
+            }
         }
         else if (fs::is_regular_file(path) && path.extension() == ".bin")
         {

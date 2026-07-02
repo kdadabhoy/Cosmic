@@ -11,7 +11,7 @@
 
 ---
 
-## Step 1 — `--project` boot flag (engine, small) — the keystone
+## Step 1 — `--project` boot flag (engine, small) — the keystone ✅ *(done 2026-07-01)*
 
 The desktop shortcut must open **your app**, not the launcher.
 
@@ -27,7 +27,7 @@ The desktop shortcut must open **your app**, not the launcher.
 - Acceptance: `CosmicApp.exe --project SF_Telem` boots directly into SF_Telem; no args = launcher
   exactly as today.
 
-## Step 2 — Version identity + DPI manifest (engine/Runtime, small)
+## Step 2 — Version identity + DPI manifest (engine/Runtime, small) ✅ *(done 2026-07-01)*
 
 1. `Cosmic/src/core/Version.h`: `COSMIC_VERSION_MAJOR/MINOR/PATCH` + `COSMIC_VERSION_STRING`
    (start at `0.9.0`). Log it at startup banner; show in launcher corner and workspace title bar.
@@ -41,7 +41,7 @@ The desktop shortcut must open **your app**, not the launcher.
    fix danced around.
 4. Optional polish: `ProductName "Cosmic Engine"`, per-app override later (Step 4).
 
-## Step 3 — Writable data location (engine, IMPORTANT before any installer)
+## Step 3 — Writable data location (engine, IMPORTANT before any installer) ✅ *(done 2026-07-01)*
 
 Installed apps live in `Program Files` = **read-only for standard users**. Today would break:
 - `Log::Init("logs")` (`Application.cpp:41`) — CWD-relative,
@@ -57,7 +57,7 @@ Fix in the VFS (single choke point, `Cosmic/src/utils/FileSystem.h`):
 - Acceptance: run from `Program Files` as a standard user → logs + recordings land under
   `%LOCALAPPDATA%\Cosmic\...`, zero write errors; run from the dev tree → identical to today.
 
-## Step 4 — App-branded package profile (build script, small)
+## Step 4 — App-branded package profile (build script, small) ✅ *(done 2026-07-01)*
 
 `package.bat` parameterized: `package.bat SF_Telem` →
 - installs only that project's DLL + its assets (skip other projects),
@@ -66,7 +66,7 @@ Fix in the VFS (single choke point, `Cosmic/src/utils/FileSystem.h`):
 Keep plain `package.bat` producing the full SDK zip. (Implementation: an `--app` install component
 or a post-install prune script — component-based `cmake --install --component` is the clean route.)
 
-## Step 5 — Inno Setup installer (new, the deliverable)
+## Step 5 — Inno Setup installer (new, the deliverable) ✅ *(done 2026-07-01 — `installer/CosmicSetup.iss` + `package_installer.bat`; run the fresh-VM acceptance when convenient)*
 
 **Choice: Inno Setup** — free, one `.iss` text file (reviewable/AI-editable), pervasive for Win32
 tools, trivially makes shortcuts with arguments, per-user install without admin. WiX/MSIX rejected:

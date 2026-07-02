@@ -6,7 +6,7 @@
 > eventually drive the real board (HIL) and a physical attitude rig.
 >
 > Engine prerequisites are in [`03-uav-sim-engine-features.md`](03-uav-sim-engine-features.md) (E1–E7)
-> and [`05-3d-viewport-plan.md`](05-3d-viewport-plan.md). This doc is the **app**.
+> and [`05-3d-engine-plan.md`](05-3d-engine-plan.md). This doc is the **app**.
 
 ---
 

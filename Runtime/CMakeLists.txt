@@ -1,9 +1,11 @@
 cmake_minimum_required(VERSION 3.21)
 project(CosmicRuntime LANGUAGES C CXX)
 
-# CosmicApp.rc embeds app.ico — MSVC compiles the .rc and links the icon into the
-# exe (shown by Explorer, the taskbar, and the window frame). Harmless on non-MSVC.
-add_executable(CosmicApp Main.cpp CosmicApp.rc)
+# CosmicApp.rc embeds app.ico + VERSIONINFO — MSVC compiles the .rc and links them
+# into the exe (icon in Explorer/taskbar, version in Properties > Details).
+# CosmicApp.manifest declares PerMonitorV2 DPI awareness + longPathAware; CMake
+# embeds *.manifest sources automatically via mt.exe on MSVC. Harmless on non-MSVC.
+add_executable(CosmicApp Main.cpp CosmicApp.rc CosmicApp.manifest)
 
 target_include_directories(CosmicApp PRIVATE 
     ${COSMIC_SDK_DIR}/Cosmic/src

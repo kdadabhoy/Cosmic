@@ -113,6 +113,28 @@ namespace Cosmic
 		}
 
 		/**
+		 * @brief Enables or disables depth testing.
+		 * ON by default from Init(). Generic render-state verb (see doc 05's
+		 * forward-compatibility contract): passes that need explicit control — a sky
+		 * gradient drawn without depth, transparent 3D geometry — toggle it here and
+		 * MUST restore it before their scope ends. Never call GL directly for this.
+		 */
+		inline static void SetDepthTest(bool enabled)
+		{
+			s_RendererAPI->SetDepthTest(enabled);
+		}
+
+		/**
+		 * @brief Enables or disables depth-buffer writes (depth mask).
+		 * ON by default from Init(). Changers must restore — Renderer2D relies on
+		 * the default state being in place when its batches flush.
+		 */
+		inline static void SetDepthWrite(bool enabled)
+		{
+			s_RendererAPI->SetDepthWrite(enabled);
+		}
+
+		/**
 		 * @brief Executes an indexed draw call.
 		 * This is the standard method for drawing optimized 2D and 3D geometry.
 		 * @param vertexArray The Vertex Array Object containing the vertex and index data.

@@ -161,7 +161,25 @@ namespace Cosmic
 	 */
 	void OpenGLTexture::SetData(void* data, uint32_t size)
 	{
-		uint32_t bpp = m_DataFormat == GL_RGBA ? 4 : 3;
+		if (m_RendererID == 0)
+		{
+			CS_CORE_WARN("OpenGLTexture::SetData called on a failed/empty texture (path: {0}).", m_Path);
+			return;
+		}
+
+		// Map the data format to its byte-per-pixel footprint. Must cover every
+		// format the constructors can assign (RGBA, RGB, RG, RED).
+		uint32_t bpp = 4;
+		switch (m_DataFormat)
+		{
+			case GL_RGBA: bpp = 4; break;
+			case GL_RGB:  bpp = 3; break;
+			case GL_RG:   bpp = 2; break;
+			case GL_RED:  bpp = 1; break;
+			default:
+				CS_CORE_ERROR("OpenGLTexture::SetData: unsupported data format {0:x} (path: {1}).", m_DataFormat, m_Path);
+				return;
+		}
 
 		// Pre-condition: The incoming data must exactly match the texture's footprint
 		if (size != m_Width * m_Height * bpp)

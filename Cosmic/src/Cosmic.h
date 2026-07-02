@@ -30,6 +30,7 @@
 // Rendering & Graphics
 #include "renderer/Renderer.h"
 #include "renderer/Renderer2D.h"
+#include "renderer/Renderer3D.h"
 #include "renderer/RenderCommand.h"
 #include "renderer/RenderPass.h"
 #include "graphics/Buffer.h"
@@ -39,11 +40,17 @@
 #include "graphics/SubTexture2D.h"
 #include "graphics/FrameBuffer.h"
 #include "graphics/Material.h"
+#include "graphics/Mesh.h"
 #include "graphics/Font.h"
 
 // Camera & Control
 #include "camera/OrthographicCamera.h"
 #include "camera/OrthographicCameraController.h"
+#include "camera/PerspectiveCamera.h"
+#include "camera/OrbitCameraController.h"
+
+// Math (spatial conventions: NED world frame, Y-up render frame, quaternions)
+#include "math/Spatial.h"
 
 // Entity Component System Submodule Architecture
 #include "scene/Scene.h"
@@ -59,6 +66,7 @@
 // Specialized Utilities
 #include "serial/SerialPort.h"
 #include "serial/SerialLink.h"
+#include "serial/Framing.h"
 #include "utils/FileSystem.h"
 #include "utils/DataExport.h"
 

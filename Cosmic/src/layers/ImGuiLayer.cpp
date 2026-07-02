@@ -6,6 +6,7 @@
 #include "core/Application.h"
 #include "ui/Fonts.h"
 #include "ui/ThemeManager.h"
+#include "utils/FileSystem.h"
 #include <GLFW/glfw3.h>
 
 namespace Cosmic
@@ -42,6 +43,14 @@ namespace Cosmic
 		io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 		io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+
+		// Dock-layout persistence must live in the WRITABLE user-data root: ImGui's
+		// default writes "imgui.ini" into the working directory, which is read-only
+		// for an installed app (Program Files). In portable/dev mode this resolves to
+		// "./imgui.ini" — identical to the old behavior. ImGui borrows the pointer,
+		// so the string must outlive the context: keep it in a static.
+		static const std::string s_IniPath = FileSystem::Resolve("user://imgui.ini");
+		io.IniFilename = s_IniPath.c_str();
 
 		// Register built-in themes + any user themes, then apply the default.
 		ThemeManager::Init();

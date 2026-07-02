@@ -5,13 +5,29 @@ echo ======================================================
 echo        Cosmic Engine - Distributable Packager
 echo ======================================================
 
-:: Builds a clean Release and stages a self-contained distributable folder at
-:: dist\Cosmic\ containing only CosmicApp.exe, Cosmic.dll, project DLLs, the
-:: bundled VC++ runtime DLLs, and assets/ — then zips it to dist\Cosmic.zip.
+:: Builds a clean Release and stages a self-contained distributable folder, then
+:: zips it.
+::
+:: Usage:
+::   package.bat              -> full SDK dist (every project) at dist\Cosmic\
+::   package.bat <AppName>    -> single-app dist at dist\<AppName>\ containing
+::                               ONLY that project's DLL and assets (e.g.
+::                               "package.bat SF_Telem"). Pair with
+::                               package_installer.bat for a setup exe.
+::
+:: Set COSMIC_NOPAUSE=1 to suppress the final pause (used when chained from
+:: package_installer.bat).
 
 set "SDK_ROOT=%~dp0"
 if "%SDK_ROOT:~-1%"=="\" set "SDK_ROOT=%SDK_ROOT:~0,-1%"
-set "DIST_DIR=%SDK_ROOT%\dist\Cosmic"
+
+set "APP_NAME=%~1"
+if defined APP_NAME (
+    set "DIST_NAME=%APP_NAME%"
+) else (
+    set "DIST_NAME=Cosmic"
+)
+set "DIST_DIR=%SDK_ROOT%\dist\!DIST_NAME!"
 
 :: Try to find MSVC environment but don't hard fail if it's missing
 set "VS_PATH="
@@ -43,7 +59,7 @@ if errorlevel 1 (
     echo.
     echo [ERROR] CMake configure failed! Check log output above.
     cd "%SDK_ROOT%"
-    pause
+    if not defined COSMIC_NOPAUSE pause
     ENDLOCAL
     exit /b 1
 )
@@ -54,7 +70,7 @@ if errorlevel 1 (
     echo.
     echo [ERROR] Release build failed! Check log output above.
     cd "%SDK_ROOT%"
-    pause
+    if not defined COSMIC_NOPAUSE pause
     ENDLOCAL
     exit /b 1
 )
@@ -67,22 +83,42 @@ if errorlevel 1 (
     echo.
     echo [ERROR] Install/staging failed! Check log output above.
     cd "%SDK_ROOT%"
-    pause
+    if not defined COSMIC_NOPAUSE pause
     ENDLOCAL
     exit /b 1
+)
+
+:: 2b. Single-app mode: prune every project except the requested one so the
+::     distributable carries exactly one app (the desktop shortcut boots it via
+::     "CosmicApp.exe --project <AppName>").
+if defined APP_NAME (
+    echo [STAGE 3b] Pruning distributable to app "%APP_NAME%"...
+    if not exist "%DIST_DIR%\projects\%APP_NAME%.dll" (
+        echo [ERROR] Project DLL "%APP_NAME%.dll" was not produced by the build!
+        cd "%SDK_ROOT%"
+        if not defined COSMIC_NOPAUSE pause
+        ENDLOCAL
+        exit /b 1
+    )
+    for %%f in ("%DIST_DIR%\projects\*.dll") do (
+        if /I not "%%~nf"=="%APP_NAME%" del "%%f"
+    )
+    for /d %%d in ("%DIST_DIR%\assets\projects\*") do (
+        if /I not "%%~nxd"=="%APP_NAME%" rmdir /s /q "%%d"
+    )
 )
 
 :: 3. Zip the staged folder. Use PowerShell's Compress-Archive — reliable on
 ::    Windows 10/11. (Plain `tar` is often the GNU build from Git-for-Windows,
 ::    which cannot write .zip archives.)
-echo [STAGE 4] Zipping to "%SDK_ROOT%\dist\Cosmic.zip"...
-powershell -NoProfile -ExecutionPolicy Bypass -Command "Compress-Archive -Path '%DIST_DIR%\*' -DestinationPath '%SDK_ROOT%\dist\Cosmic.zip' -Force"
+echo [STAGE 4] Zipping to "%SDK_ROOT%\dist\!DIST_NAME!.zip"...
+powershell -NoProfile -ExecutionPolicy Bypass -Command "Compress-Archive -Path '%DIST_DIR%\*' -DestinationPath '%SDK_ROOT%\dist\!DIST_NAME!.zip' -Force"
 if errorlevel 1 (
     echo [WARN] Zip step failed. The staged folder at "%DIST_DIR%" is still valid.
 )
 
 cd "%SDK_ROOT%"
 echo.
-echo SUCCESS: Distributable ready at dist\Cosmic\  (and dist\Cosmic.zip)
-pause
+echo SUCCESS: Distributable ready at dist\!DIST_NAME!\  (and dist\!DIST_NAME!.zip)
+if not defined COSMIC_NOPAUSE pause
 ENDLOCAL

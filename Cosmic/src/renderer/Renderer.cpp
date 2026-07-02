@@ -1,4 +1,5 @@
 #include "renderer/Renderer.h"
+#include "renderer/Renderer3D.h"
 #include <glm/gtc/matrix_transform.hpp>
 
 namespace Cosmic
@@ -20,6 +21,7 @@ namespace Cosmic
 	{
 		RenderCommand::Init();
 		Renderer2D::Init();
+		Renderer3D::Init();
 	}
 
 	/**
@@ -29,6 +31,7 @@ namespace Cosmic
 	void Renderer::Shutdown()
 	{
 		Renderer2D::Shutdown();
+		Renderer3D::Shutdown();
 	}
 
 	/**

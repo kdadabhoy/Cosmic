@@ -193,7 +193,7 @@ namespace Cosmic
 			return;
 		}
 
-		m_Context = new OpenGLContext(m_Handle);
+		m_Context = CreateScope<OpenGLContext>(m_Handle);
 		m_Context->Init();
 
 		m_Data.Title = title;
@@ -366,8 +366,9 @@ namespace Cosmic
 		if (m_Handle)
 			glfwSetWindowUserPointer(m_Handle, nullptr);
 
-		delete m_Context;
-		m_Context = nullptr;
+		// Release the graphics context at the same point the manual delete used to
+		// run — before glfwDestroyWindow, while the native window still exists.
+		m_Context.reset();
 
 		if (m_Handle)
 		{

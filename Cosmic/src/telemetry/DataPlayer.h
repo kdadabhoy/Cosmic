@@ -61,9 +61,10 @@ namespace Cosmic
         /**
          * @brief Load one entity (file) or many entities (folder).
          *
-         * For a directory: loads scene.bin (v2/v3) if present; otherwise loads
-         * all individual .bin files (v1). This prevents duplicate entities when
-         * both scene.bin and legacy per-entity files coexist.
+         * For a directory: loads scene.bin (v1) if present; otherwise falls back
+         * to loading every individual *.bin file in the directory. The fallback
+         * only runs when scene.bin is absent, so entities are never duplicated
+         * when scene.bin and legacy per-entity files coexist.
          *
          * On success all previously loaded data is replaced.
          *

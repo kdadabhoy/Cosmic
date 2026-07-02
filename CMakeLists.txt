@@ -57,6 +57,13 @@ include(InstallRequiredSystemLibraries)
 add_subdirectory(Cosmic)
 add_subdirectory(Runtime)
 
+# Headless unit tests (tests/). Built by default; never installed/packaged.
+option(COSMIC_BUILD_TESTS "Build the CosmicTests unit-test target" ON)
+if(COSMIC_BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(tests)
+endif()
+
 # AUTOMATED GAME PROJECT SCANNER
 if(NOT COSMIC_BUILD_ENGINE_ONLY)
     file(GLOB PROJECT_SUBDIRS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}/Projects" "Projects/*")

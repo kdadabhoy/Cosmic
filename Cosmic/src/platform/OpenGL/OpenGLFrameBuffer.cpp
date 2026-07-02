@@ -90,10 +90,13 @@ namespace Cosmic
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, m_Specification.Width, m_Specification.Height, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, nullptr);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, m_DepthAttachment, 0);
 
-		// Validation Check: Ensure the GPU driver is satisfied with the requested attachments
-		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+		// Validation Check: Ensure the GPU driver is satisfied with the requested attachments.
+		// An incomplete FBO renders garbage every frame from here on — fail loudly in debug.
+		const GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+		if (status != GL_FRAMEBUFFER_COMPLETE)
 		{
-			CS_CORE_ERROR("Framebuffer is incomplete!");
+			CS_CORE_ERROR("Framebuffer is incomplete! glCheckFramebufferStatus = {0:#x}", status);
+			CS_CORE_ASSERT(false, "Framebuffer incomplete — see error log for the status code.");
 		}
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);

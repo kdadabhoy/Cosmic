@@ -162,7 +162,7 @@ namespace Cosmic
          * Call WaitForFlush() to block until writes complete.
          *
          * Output layout:
-         *   <baseFolder>/<sessionName>/scene.bin  — all entities, v3 binary format
+         *   <baseFolder>/<sessionName>/scene.bin  — all entities, v1 binary format
          *   <baseFolder>/<sessionName>/<name>.csv — one CSV per entity
          *
          * @param baseFolder   Root output directory (e.g. "logs"). Created if absent.
@@ -210,7 +210,7 @@ namespace Cosmic
         /** @brief True if a background flush is currently in progress. */
         bool IsFlushing() const { return m_Flushing.load(); }
 
-        /** @brief Total frame count of the first registered entity (proxy for recording length). */
+        /** @brief Maximum frame count across all registered entities (recording length). */
         size_t GetTotalFrameCount() const;
 
     private:

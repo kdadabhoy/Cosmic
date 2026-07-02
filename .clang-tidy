@@ -1,0 +1,17 @@
+# Cosmic engine static-analysis baseline.
+# Deliberately curated: high-signal bug/concurrency/perf checks on; style churn off.
+# How to run: see docs/engineering-notes/static-analysis.md
+Checks: >
+  bugprone-*,
+  performance-*,
+  concurrency-*,
+  modernize-use-nullptr,
+  readability-braces-around-statements,
+  -bugprone-easily-swappable-parameters,
+  -bugprone-narrowing-conversions,
+  -performance-avoid-endl,
+  -modernize-use-trailing-return-type
+
+WarningsAsErrors: ''
+HeaderFilterRegex: 'Cosmic/src/.*'
+FormatStyle: none

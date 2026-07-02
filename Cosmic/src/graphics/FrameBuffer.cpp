@@ -1,6 +1,7 @@
 #include "graphics/FrameBuffer.h"
 #include "renderer/Renderer.h"
 #include "platform/OpenGL/OpenGLFrameBuffer.h"
+#include "core/Log.h"
 
 namespace Cosmic
 {
@@ -20,6 +21,13 @@ namespace Cosmic
 	 */
 	Ref<FrameBuffer> FrameBuffer::Create(const FramebufferSpecification& spec)
 	{
+		// Surface the reserved spec fields — silently ignoring them (e.g. Samples = 4
+		// yielding single-sampled output) has burned users before. See IMPROVEMENTS §5.4.
+		if (spec.Samples > 1)
+			CS_CORE_WARN("FramebufferSpecification::Samples is reserved — MSAA is not implemented; rendering single-sampled.");
+		if (spec.SwapChainTarget)
+			CS_CORE_WARN("FramebufferSpecification::SwapChainTarget is reserved and has no effect.");
+
 		switch (Renderer::GetAPI())
 		{
 		case RendererAPI::API::None:    return nullptr;

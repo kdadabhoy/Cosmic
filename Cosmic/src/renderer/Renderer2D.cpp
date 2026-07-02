@@ -1346,12 +1346,13 @@ namespace Cosmic
 
 		// =====================================================================
 		// 4. STATE CLEANUP
-		// Signal to the batch circle system that its pipeline binding was altered
-		// so it explicitly re-binds on its next draw command. Reset the current
-		// material to DefaultMaterial so the next DrawQuad does not trigger a
-		// spurious FlushAndReset due to nullptr != DefaultMaterial.
+		// Restore the default circle shader (matching the other reset sites) so
+		// the next batched DrawCircle does not see a nullptr != DefaultCircleShader
+		// mismatch and trigger a spurious FlushAndReset on an empty batch. Flush
+		// itself binds the circle shader unconditionally, so no rebind is lost.
+		// Reset the current material to DefaultMaterial for the same reason.
 		// =====================================================================
-		s_Data.ActiveCircleShader = nullptr;
+		s_Data.ActiveCircleShader = s_Data.DefaultCircleShader;
 		s_Data.CurrentMaterial = s_Data.DefaultMaterial;
 	}
 

@@ -139,9 +139,15 @@ namespace Cosmic
 
     size_t DataRecorder::GetTotalFrameCount() const
     {
-        if (m_Records.empty()) return 0;
-        std::lock_guard<std::mutex> lock(m_Records[0]->mutex);
-        return m_Records[0]->timestamps.size();
+        // Entities can register at different times (or record at different rates),
+        // so their frame counts diverge — report the maximum as the session length.
+        size_t maxFrames = 0;
+        for (const auto& rec : m_Records)
+        {
+            std::lock_guard<std::mutex> lock(rec->mutex);
+            maxFrames = std::max(maxFrames, rec->timestamps.size());
+        }
+        return maxFrames;
     }
 
     // =========================================================================

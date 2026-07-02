@@ -43,6 +43,8 @@ namespace Cosmic
 		// Derived classes inherit virtual destruction automatically via the base.
 		static_assert(std::has_virtual_destructor_v<Layer>,
 			"Layer::~Layer() must be virtual. Deleting a derived layer through Layer* without it is UB.");
+		CS_CORE_ASSERT(!m_Iterating,
+			"LayerStack::PushLayer called during stack iteration — defer layer transitions to the Safe Zone (see Application::Run).");
 		m_Layers.emplace(m_Layers.begin() + m_LayerInsertIndex, layer);
 		m_LayerInsertIndex++;
 		layer->OnAttach();
@@ -58,6 +60,8 @@ namespace Cosmic
 	 */
 	void LayerStack::PushOverlay(Layer* overlay)
 	{
+		CS_CORE_ASSERT(!m_Iterating,
+			"LayerStack::PushOverlay called during stack iteration — defer layer transitions to the Safe Zone (see Application::Run).");
 		m_Layers.emplace_back(overlay);
 		overlay->OnAttach();
 	}
@@ -73,6 +77,8 @@ namespace Cosmic
 	 */
 	void LayerStack::PopLayer(Layer* layer)
 	{
+		CS_CORE_ASSERT(!m_Iterating,
+			"LayerStack::PopLayer called during stack iteration — defer layer transitions to the Safe Zone (see Application::Run).");
 		auto it = std::find(m_Layers.begin(), m_Layers.begin() + m_LayerInsertIndex, layer);
 
 		if (it != m_Layers.begin() + m_LayerInsertIndex)
@@ -120,6 +126,8 @@ namespace Cosmic
 	 */
 	void LayerStack::PopOverlay(Layer* overlay)
 	{
+		CS_CORE_ASSERT(!m_Iterating,
+			"LayerStack::PopOverlay called during stack iteration — defer layer transitions to the Safe Zone (see Application::Run).");
 		auto it = std::find(m_Layers.begin() + m_LayerInsertIndex, m_Layers.end(), overlay);
 
 		if (it != m_Layers.end())

@@ -3,10 +3,20 @@
 #include <filesystem>
 #include <iostream>
 #include <exception>
+#include <string>
 
 // Basic Bootloader / Entry Point
+//
+// Command line:
+//   CosmicApp.exe                       -> boots into the Launcher (default)
+//   CosmicApp.exe --project <NameOrDll> -> boots straight into that project,
+//                                          skipping the Launcher. Accepts
+//                                          "SF_Telem", "SF_Telem.dll", or an
+//                                          absolute path. A missing DLL logs an
+//                                          error and falls back to the Launcher.
+//                                          (--project=Name is also accepted.)
 
-int main()
+int main(int argc, char** argv)
 {
 	// Force the working directory to the exe's own directory so all relative
 	// paths (assets/, logs/, exports/) resolve correctly regardless of how
@@ -15,6 +25,25 @@ int main()
 	GetModuleFileNameA(nullptr, exePath, MAX_PATH);
 	std::filesystem::path exeDir = std::filesystem::path(exePath).parent_path();
 	SetCurrentDirectoryA(exeDir.string().c_str());
+
+	// Parse command-line flags (deliberately dependency-free).
+	std::string startupProject;
+	for (int i = 1; i < argc; ++i)
+	{
+		const std::string arg = argv[i];
+		if (arg == "--project" && i + 1 < argc)
+		{
+			startupProject = argv[++i];
+		}
+		else if (arg.rfind("--project=", 0) == 0)
+		{
+			startupProject = arg.substr(10);
+		}
+		else
+		{
+			std::cerr << "CosmicApp: unrecognized argument '" << arg << "' (supported: --project <NameOrDll>)" << std::endl;
+		}
+	}
 
 	// The app is heap-allocated so we can guarantee graceful destruction even if
 	// Run() throws. ~Application() -> Shutdown() releases GPU resources WHILE THE
@@ -26,7 +55,9 @@ int main()
 	Cosmic::Application* app = nullptr;
 	try
 	{
-		app = new Cosmic::Application();
+		// The startup project must be a constructor argument: Application's
+		// constructor runs Initialize(), which decides Launcher-vs-project boot.
+		app = new Cosmic::Application(startupProject);
 		app->Run();
 		delete app;
 		return 0;

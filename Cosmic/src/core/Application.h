@@ -55,7 +55,14 @@ namespace Cosmic
 		// Main Life Cycle & Execution 
 		/////////////////////////////////////////////////////////////////////////////////
 
-		Application();
+		// startupProjectDll: optional project to boot directly into, skipping the
+		// Launcher — Runtime/Main.cpp wires this to the `--project` command-line
+		// flag. Accepts "Name", "Name.dll", or an absolute path. Must be a
+		// constructor argument (not a post-construction setter) because
+		// Initialize() runs inside the constructor and decides Launcher-vs-project
+		// there. If the DLL cannot be found the engine logs an error and falls
+		// back to the Launcher.
+		Application(const std::string& startupProjectDll = "");
 		virtual ~Application();
 
 		void		Run();
@@ -96,6 +103,13 @@ namespace Cosmic
 		void			UseFixedTimeStep(bool useFixedTimeStep)		{ m_UseFixedTimestep = useFixedTimeStep; }
 		void			SetTimeScale(float timescale)				{ m_TimeScale = timescale; }
 		float			GetTimeScale() const						{ return m_TimeScale; }
+
+		// Fixed-step rate control (default 60 Hz, clamped to [1, 1000]). The new rate
+		// is picked up at the start of the next frame. For very high control-loop
+		// rates prefer app-side substepping inside OnFixedUpdate — raising this rate
+		// ticks EVERY layer's OnFixedUpdate faster, not just yours.
+		void			SetFixedTimestepHz(float hz);
+		float			GetFixedTimestepHz() const					{ return m_FixedTimestepHz; }
 
 		inline float	GetAbsoluteTime() const						{ return m_AbsoluteTime; } // seconds
 
@@ -168,8 +182,13 @@ namespace Cosmic
 		const static int				DEFAULT_HEIGHT		 = 720;
 		const std::string				DEFAULT_WINDOW_TITLE = "Cosmic Engine";
 
-		float			m_TimeScale		= 1.0f;
-		float			m_AbsoluteTime  = 0.0f;
+		float			m_TimeScale			= 1.0f;
+		float			m_AbsoluteTime		= 0.0f;
+		float			m_FixedTimestepHz	= 60.0f;
+
+		// Set via the constructor argument; consumed by Initialize() to skip the
+		// Launcher and route straight into the pending-project Safe Zone path.
+		std::string		m_StartupProjectDLL = "";
 
 
 	private:
@@ -191,6 +210,13 @@ namespace Cosmic
 		 * @brief Dispatches synchronous WindowResize signals to re-dock and align UI layout dimensions.
 		 */
 		void SynchronizeRenderingState();
+
+		/**
+		 * @brief THE SAFE ZONE body — applies deferred layer/DLL transitions.
+		 * Called from Run() only while no LayerStack iteration is active (including
+		 * while minimized, so queued transitions never stall).
+		 */
+		void ProcessDeferredTransitions();
 
 
 	private:

@@ -60,10 +60,20 @@ namespace Cosmic
          * 1. When drawn through Renderer2D::DrawQuad, actual slot binding optimization
          * is evaluated dynamically on the fly per-quad by batch tracking queues.
          * 2. When executed outside the batch renderer (e.g., custom Renderer::Submit calls),
-         * calling Bind() alone does NOT bind individual sample units to physical slots.
-         * The caller must explicitly bind textures to slots and map uniform integers manually.
+         * calling Bind() alone does NOT bind individual sample units to physical slots —
+         * use BindFull() there instead.
          */
         void    Bind();
+
+        /**
+         * BindFull
+         * * Bind() plus texture binding: every cached texture uniform is bound to a
+         * physical slot (0, 1, 2, ... in iteration order) and its sampler uniform is
+         * set to that slot. Use for manual / Renderer::Submit rendering where the
+         * batch renderer's per-quad slot tracking is not in play. Inside
+         * Renderer2D::DrawQuad paths, keep using Bind() — the batch renderer owns slots.
+         */
+        void    BindFull();
 
         ////////////////////////////////
         // Accessors

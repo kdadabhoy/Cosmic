@@ -58,6 +58,25 @@ namespace Cosmic
 	/////////////////////////////////////////////////////////////////////////////////
 
 	/**
+	 * SetDepthTest / SetDepthWrite
+	 * * Depth-state toggles for passes that need explicit control (e.g. a sky
+	 * gradient drawn without depth, or transparent 3D geometry drawn without depth
+	 * writes). Both are ON by default from Init(); changers must restore.
+	 */
+	void OpenGLRendererAPI::SetDepthTest(bool enabled)
+	{
+		if (enabled) glEnable(GL_DEPTH_TEST);
+		else         glDisable(GL_DEPTH_TEST);
+	}
+
+	void OpenGLRendererAPI::SetDepthWrite(bool enabled)
+	{
+		glDepthMask(enabled ? GL_TRUE : GL_FALSE);
+	}
+
+	/////////////////////////////////////////////////////////////////////////////////
+
+	/**
 	 * DrawIndexed
 	 * * The primary method for rendering geometry.
 	 * * BATCHING LOGIC: If indexCount is provided (non-zero), we draw only that specific

@@ -1,5 +1,7 @@
 #include "Cosmic.h"
 #include "core/Application.h"
+#include "core/Version.h"
+#include "utils/FileSystem.h"
 #include "renderer/Renderer.h"
 #include "renderer/RenderCommand.h"
 #include "core/Timestep.h"
@@ -12,6 +14,8 @@
 
 // Note: glfw3.h is kept only for glfwGetTime() in the Run() loop.
 #include <GLFW/glfw3.h>
+
+#include <algorithm>
 
 // Wrap Windows.h to isolate polluting win32 macro definitions
 // Note: WIN32_LEAN_AND_MEAN removed here because it is already declared via the command line compiler flags
@@ -30,19 +34,63 @@ namespace Cosmic
 	/////////////////////////////////////////////////////////////////////////////////
 
 	/**
+	 * ResolveProjectDLLPath
+	 * Resolves a project name ("SF_Telem"), DLL filename ("SF_Telem.dll"), or absolute
+	 * path to an existing DLL file. Search order matches the Launcher's discovery:
+	 * <exeDir>/projects/ first (packaged dist layout), then <exeDir> (dev build layout).
+	 * Returns "" (and logs an error) when no candidate exists on disk.
+	 */
+	static std::string ResolveProjectDLLPath(const std::string& nameOrPath)
+	{
+		namespace fs = std::filesystem;
+
+		fs::path request(nameOrPath);
+		if (request.extension() != ".dll")
+			request += ".dll";
+
+		if (request.is_absolute())
+		{
+			if (fs::exists(request))
+				return request.string();
+			CS_CORE_ERROR("Project DLL not found: '{0}'", request.string());
+			return "";
+		}
+
+		const fs::path cwd = fs::current_path();
+		const fs::path candidates[] = { cwd / "projects" / request, cwd / request };
+		for (const fs::path& c : candidates)
+		{
+			if (fs::exists(c))
+				return c.string();
+		}
+
+		CS_CORE_ERROR("Project DLL not found: '{0}' (searched '{1}' and '{2}')",
+			nameOrPath, candidates[0].string(), candidates[1].string());
+		return "";
+	}
+
+	/////////////////////////////////////////////////////////////////////////////////
+
+	/**
 	 * Constructor
 	 * Sets up the engine singleton, initializes the core Logger, and triggers
 	 * the internal subsystem initialization sequence.
 	 */
-	Application::Application()
+	Application::Application(const std::string& startupProjectDll)
 		: m_Running(true), m_Minimized(false), m_UseFixedTimestep(true), m_TimeScale(1.0f), m_ImGuiLayer(nullptr)
 	{
-		// This generates the logs/ directory and mounts console + file streams
-		Log::Init("logs");
+		// Must be assigned before Initialize() below — it decides Launcher vs project.
+		m_StartupProjectDLL = startupProjectDll;
+
+		// Logs go to the writable user-data root: "logs/" next to the exe in a dev
+		// tree (portable mode), %LOCALAPPDATA%/Cosmic/logs when installed under a
+		// read-only location like Program Files. See FileSystem::GetUserDataRoot().
+		Log::Init(FileSystem::Resolve("user://logs"));
 
 		CS_CORE_INFO("=================================================");
-		CS_CORE_INFO("  Cosmic Engine Framework: Subsystems Initialized ");
+		CS_CORE_INFO("  Cosmic Engine v{0} — Subsystems Initialized", COSMIC_VERSION_STRING);
 		CS_CORE_INFO("=================================================");
+		CS_CORE_INFO("User data root: {0}", FileSystem::GetUserDataRoot());
 
 		s_Instance = this;
 		Initialize();
@@ -81,7 +129,6 @@ namespace Cosmic
 	{
 		float lastFrameTime = 0.0f;
 		float accumulator = 0.0f;
-		const float fixedDeltaTime = 1.0f / 60.0f;
 
 		while (m_Running && !m_Window->ShouldClose())
 		{
@@ -93,8 +140,11 @@ namespace Cosmic
 			m_AbsoluteTime += rawTimestep.GetSeconds();
 
 			// Skip execution passes while minimized (default). Disabled via SetPauseOnMinimize(false).
+			// The Safe Zone still runs, so a project transition queued just before
+			// minimizing does not stall until the window is restored.
 			if (m_Minimized && m_PauseOnMinimize)
 			{
+				ProcessDeferredTransitions();
 				continue;
 			}
 
@@ -104,6 +154,11 @@ namespace Cosmic
 			// -----------------------------------------------------------------
 			if (m_UseFixedTimestep)
 			{
+				// The interval derives from the configurable rate (default 60 Hz —
+				// see SetFixedTimestepHz). Sampled once per frame so a rate change
+				// mid-frame cannot tear the accumulator loop.
+				const float fixedDeltaTime = 1.0f / m_FixedTimestepHz;
+
 				float frameTime = rawTimestep.GetSeconds();
 
 				// Spiral-of-death panic protection clamping
@@ -117,6 +172,7 @@ namespace Cosmic
 				// Signed so layers receive a negative dt during rewind (TimeScale < 0)
 				const float signedFixedDelta = m_TimeScale >= 0.f ? fixedDeltaTime : -fixedDeltaTime;
 
+				m_LayerStack.SetIterating(true);
 				while (accumulator >= fixedDeltaTime)
 				{
 					for (Layer* layer : m_LayerStack)
@@ -125,6 +181,7 @@ namespace Cosmic
 					}
 					accumulator -= fixedDeltaTime;
 				}
+				m_LayerStack.SetIterating(false);
 			}
 
 
@@ -132,6 +189,7 @@ namespace Cosmic
 			// PASS 1B: Variable Timestep Updates (Animations & Visual States)
 			// -----------------------------------------------------------------
 			Timestep scaledTimestep = rawTimestep.GetSeconds() * m_TimeScale;
+			m_LayerStack.SetIterating(true);
 			for (Layer* layer : m_LayerStack)
 			{
 				// 1. Core Engine updates the layer's local timeline automatically
@@ -140,16 +198,19 @@ namespace Cosmic
 				// 2. Client code runs its standard frame updates
 				layer->OnUpdate(scaledTimestep.GetSeconds());
 			}
+			m_LayerStack.SetIterating(false);
 
 
 			// -----------------------------------------------------------------
 			// PASS 2: Main UI Rendering and Dockspace Composition
 			// -----------------------------------------------------------------
 			m_ImGuiLayer->Begin();
+			m_LayerStack.SetIterating(true);
 			for (Layer* layer : m_LayerStack)
 			{
 				layer->OnImGuiRender();
 			}
+			m_LayerStack.SetIterating(false);
 			m_ImGuiLayer->End();
 
 			m_Window->SwapBuffers();
@@ -158,67 +219,96 @@ namespace Cosmic
 			// =================================================================
 			// THE SAFE ZONE: Guaranteed zero-iteration window on m_LayerStack
 			// =================================================================
+			ProcessDeferredTransitions();
+		}
+	}
 
-			// --- Handle Return to Launcher Request ---
-			if (m_PendingReturnToLauncher)
+	/////////////////////////////////////////////////////////////////////////////////
+
+	/**
+	 * ProcessDeferredTransitions — THE SAFE ZONE body.
+	 *
+	 * Applies all deferred layer/DLL transitions. Only callable from points in the
+	 * frame where no LayerStack iteration is active: the bottom of Run()'s loop, and
+	 * the minimized early-out (so queued transitions don't stall while minimized).
+	 */
+	void Application::ProcessDeferredTransitions()
+	{
+		// --- Handle Return to Launcher Request ---
+		if (m_PendingReturnToLauncher)
+		{
+			// Unlink guest library assemblies before cleaning host panels
+			UnloadProjectDLL();
+
+			if (m_WorkspaceLayer)
 			{
-				// Unlink guest library assemblies before cleaning host panels
-				UnloadProjectDLL();
-
-				if (m_WorkspaceLayer)
-				{
-					// Notify WorkspaceLayer to begin its multi-stage ImGui cleanup sequence. 
-					// Allocation destruction is deferred until it flags readiness.
-					m_WorkspaceLayer->RequestLayoutReset();
-				}
-
-				m_PendingReturnToLauncher = false;
+				// Notify WorkspaceLayer to begin its multi-stage ImGui cleanup sequence.
+				// Allocation destruction is deferred until it flags readiness.
+				m_WorkspaceLayer->RequestLayoutReset();
 			}
 
-			// Deferred destruction sequence for Workspace allocations 
-			if (m_WorkspaceLayer && m_WorkspaceLayer->IsReadyForDeletion())
+			m_PendingReturnToLauncher = false;
+		}
+
+		// Deferred destruction sequence for Workspace allocations
+		if (m_WorkspaceLayer && m_WorkspaceLayer->IsReadyForDeletion())
+		{
+			m_LayerStack.PopLayer(m_WorkspaceLayer);
+			delete m_WorkspaceLayer;
+			m_WorkspaceLayer = nullptr;
+
+			// Swap active display modes back to the Launcher Hub context
+			PushLayer(new LauncherLayer());
+
+			// Force state synchronization to eliminate ImGui dockspace caching artifacts
+			SynchronizeRenderingState();
+		}
+
+		// --- Handle Project Workspace Redirection Requests (.dll loading) ---
+		if (!m_PendingProjectDLL.empty())
+		{
+			// 0. Validate BEFORE tearing the Launcher down, so a bad --project flag
+			//    or a missing DLL degrades to the Launcher instead of a dead workspace.
+			const std::string resolved = ResolveProjectDLLPath(m_PendingProjectDLL);
+			m_PendingProjectDLL = "";
+
+			if (resolved.empty())
 			{
-				m_LayerStack.PopLayer(m_WorkspaceLayer);
-				delete m_WorkspaceLayer;
-				m_WorkspaceLayer = nullptr;
-
-				// Swap active display modes back to the Launcher Hub context
-				PushLayer(new LauncherLayer());
-
-				// Force state synchronization to eliminate ImGui dockspace caching artifacts
-				SynchronizeRenderingState();
-			}
-
-			// --- Handle Project Workspace Redirection Requests (.dll loading) ---
-			if (!m_PendingProjectDLL.empty())
-			{
-				// 1. Locate and strip out the legacy Launcher context layer
-				LauncherLayer* launcherTarget = nullptr;
+				// Direct-boot (--project) never pushed a Launcher — make sure one
+				// exists to land on. The launcher-click path always has one already.
+				bool hasLauncher = false;
 				for (Layer* layer : m_LayerStack)
 				{
-					if (auto* launcher = dynamic_cast<LauncherLayer*>(layer))
-					{
-						launcherTarget = launcher;
-						break;
-					}
+					if (dynamic_cast<LauncherLayer*>(layer)) { hasLauncher = true; break; }
 				}
-
-				if (launcherTarget)
-				{
-					m_LayerStack.PopLayer(launcherTarget);
-					delete launcherTarget;
-				}
-
-				// 2. Initialize and push the master workspace platform
-				m_WorkspaceLayer = new WorkspaceLayer();
-				PushLayer(m_WorkspaceLayer);
-
-				// 3. Mount guest assembly definitions directly onto the target workspace panel
-				LoadProjectDLL(m_PendingProjectDLL);
-
-				// 4. Invalidate request string to wait for subsequent transition inputs
-				m_PendingProjectDLL = "";
+				if (!hasLauncher)
+					PushLayer(new LauncherLayer());
+				return;
 			}
+
+			// 1. Locate and strip out the legacy Launcher context layer
+			LauncherLayer* launcherTarget = nullptr;
+			for (Layer* layer : m_LayerStack)
+			{
+				if (auto* launcher = dynamic_cast<LauncherLayer*>(layer))
+				{
+					launcherTarget = launcher;
+					break;
+				}
+			}
+
+			if (launcherTarget)
+			{
+				m_LayerStack.PopLayer(launcherTarget);
+				delete launcherTarget;
+			}
+
+			// 2. Initialize and push the master workspace platform
+			m_WorkspaceLayer = new WorkspaceLayer();
+			PushLayer(m_WorkspaceLayer);
+
+			// 3. Mount guest assembly definitions directly onto the target workspace panel
+			LoadProjectDLL(resolved);
 		}
 	}
 
@@ -309,6 +399,7 @@ namespace Cosmic
 		dispatcher.Dispatch<WindowResizeEvent>([this](WindowResizeEvent& e) { return OnWindowResize(e); });
 
 		// Propagate events down the layer stack (top to bottom)
+		m_LayerStack.SetIterating(true);
 		for (auto it = m_LayerStack.rbegin(); it != m_LayerStack.rend(); ++it)
 		{
 			if (e.Handled)
@@ -318,6 +409,7 @@ namespace Cosmic
 
 			(*it)->OnEvent(e);
 		}
+		m_LayerStack.SetIterating(false);
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////
@@ -366,6 +458,18 @@ namespace Cosmic
 		m_PendingReturnToLauncher = true; // Set the flag to process in the Safe Zone
 	}
 
+	/////////////////////////////////////////////////////////////////////////////////
+
+	void Application::SetFixedTimestepHz(float hz)
+	{
+		// Clamp to a sane band: below 1 Hz the accumulator starves; above 1000 Hz the
+		// per-tick overhead of ticking every layer dominates (prefer app-side substepping).
+		const float clamped = std::clamp(hz, 1.0f, 1000.0f);
+		if (clamped != hz)
+			CS_CORE_WARN("SetFixedTimestepHz({0}) clamped to {1} Hz.", hz, clamped);
+		m_FixedTimestepHz = clamped;
+	}
+
 	Application& Application::Get()
 	{
 		return *s_Instance;
@@ -408,8 +512,19 @@ namespace Cosmic
 		m_ImGuiLayer = CreateScope<ImGuiLayer>();
 		PushOverlay(m_ImGuiLayer.get());
 
-		// 5. Boot exclusively into the Launcher state
-		PushLayer(new LauncherLayer());
+		// 5. Boot into the Launcher — unless a startup project was requested (the
+		//    --project flag). Direct boot routes through the same pending-DLL Safe
+		//    Zone path the Launcher uses, so the first frame performs the load with
+		//    the proven transition machinery; a missing DLL falls back to the Launcher.
+		if (!m_StartupProjectDLL.empty())
+		{
+			CS_CORE_INFO("Startup project requested: '{0}' — skipping the Launcher.", m_StartupProjectDLL);
+			m_PendingProjectDLL = m_StartupProjectDLL;
+		}
+		else
+		{
+			PushLayer(new LauncherLayer());
+		}
 
 		// 6. Sync the renderer to the TRUE framebuffer size now that the window,
 		//    callbacks, framebuffer, and layers all exist. The window enables
@@ -477,20 +592,12 @@ namespace Cosmic
 
 		// 1. Resolve the actual DLL location. Project DLLs live in the "projects/"
 		//    subfolder in the packaged dist layout, but land flat next to the exe in
-		//    dev builds — try projects/ first, then the exe dir, then the raw path
-		//    (covers an absolute path being passed in). Cosmic.dll resolves from the
-		//    exe dir for either location via the default loader search order.
-		namespace fs = std::filesystem;
-		std::string resolved = filepath;
-		if (!fs::path(filepath).is_absolute())
-		{
-			fs::path cwd = fs::current_path();
-			fs::path candidates[] = { cwd / "projects" / filepath, cwd / filepath };
-			for (const fs::path& c : candidates)
-			{
-				if (fs::exists(c)) { resolved = c.string(); break; }
-			}
-		}
+		//    dev builds — ResolveProjectDLLPath tries projects/ first, then the exe
+		//    dir, and accepts absolute paths. Cosmic.dll resolves from the exe dir
+		//    for either location via the default loader search order.
+		const std::string resolved = ResolveProjectDLLPath(filepath);
+		if (resolved.empty())
+			return;   // helper already logged the error
 
 		// 2. Load the DLL into Cosmic's virtual address memory space
 		HMODULE handle = LoadLibraryA(resolved.c_str());

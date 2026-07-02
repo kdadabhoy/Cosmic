@@ -101,6 +101,11 @@ namespace Cosmic
 		///////////////////////////////
 		virtual uint32_t GetColorAttachmentRendererID() const = 0;
 
+		// Depth/stencil attachment handle (DEPTH24_STENCIL8 texture — always created
+		// alongside the color attachment). Exposed for 3D work: depth read-back,
+		// debug visualization, and future post-processing passes.
+		virtual uint32_t GetDepthAttachmentRendererID() const = 0;
+
 		////////////////////////////////
 		// Factory Pattern
 		///////////////////////////////

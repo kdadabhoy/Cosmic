@@ -1762,6 +1762,72 @@ port.Close();
 
 > **Job system compatibility.** The serial read thread is a raw `std::thread` created by `Open()` — it is entirely separate from the job system's worker pool. The job system consuming all of its threads has no effect on the serial thread, which keeps running and filling its buffer regardless. The safe integration point is `OnFixedUpdate`: by the time that hook fires, the parallel job pass for that frame has not yet dispatched, so any component state you write from `FlushBuffer()` data is already settled before job workers read it. This ordering is automatic — no extra synchronization is required.
 
+### §20.5 SerialLink — Managed Connections
+
+`SerialPort` is the raw transport. Every real app then needs the same plumbing on top of it: a discovered-ports list, a selected port + baud, connect/disconnect intent, auto-reconnect when the device drops, and a connection UI. `Cosmic::SerialLink` (`serial/SerialLink.h`) packages all of that so each app doesn't rebuild it.
+
+**Why it exists:** connecting to an unreachable Bluetooth SPP port blocks `CreateFileA` for 10–20 seconds. Early apps called the blocking `SerialPort::Open` from the render thread and froze (and, via the auto-reconnect retry, kept re-freezing). `SerialLink` always connects through the asynchronous `SerialPort::BeginOpen`, which runs the blocking call on a one-shot worker thread — the UI stays live while the port state is `Connecting`.
+
+> **Never call the blocking `SerialPort::Open` on the render thread for Bluetooth ports.** Use `SerialLink`, or at minimum `BeginOpen` + `GetState()` polling.
+
+| Member | Description |
+| ------ | ----------- |
+| `OnUpdate(float dt)` | Per-frame drive: advances the internal clock, re-scans ports ~1 Hz, runs the async auto-reconnect policy |
+| `Poll()` | Drains received bytes (`std::string`, empty if none) and updates last-byte tracking — parse them with your own protocol |
+| `Connect()` / `Disconnect()` | User-initiated intent: begin async connect on the selected port / stop trying and close |
+| `Shutdown()` | Teardown for app exit or return-to-launcher — clears reconnect intent |
+| `IsOpen()` / `GetState()` | Port status (`SerialPort::State`: `Idle`, `Connecting`, `Open`, `Failed`) |
+| `IsReceiving()` | `true` when open **and** a byte arrived less than 1 s ago — drives "link healthy" indicators |
+| `SecondsSinceLastByte()` | Staleness metric for your own timeout logic |
+| `ConsumeJustConnected()` | One-shot `true` after each fresh (re)connect — reset your RX accumulator there |
+| `DrawConnectionUI()` | Renders the Refresh / COM combo / Baud combo / Auto-reconnect / status widgets. No `Begin`/`End` — drop it inside your own window |
+
+**Usage pattern** (how `Projects/SF_Telem/src/TelemHub.h` wires it — the root layer owns the link so one connection survives screen switches):
+
+```cpp
+// Root layer owns the link and drives it every frame
+Cosmic::SerialLink m_Link;
+
+void Root::OnUpdate(float ts)
+{
+    m_Link.OnUpdate(ts);                       // port scan + async auto-reconnect
+
+    if (m_Link.ConsumeJustConnected())
+        m_RxAccumulator.clear();               // stale half-frame from the old session
+
+    std::string chunk = m_Link.Poll();         // drain bytes; parse them yourself
+    if (!chunk.empty())
+        ParseProtocol(m_RxAccumulator, chunk);
+}
+
+void Root::OnImGuiRender()
+{
+    ImGui::Begin("Connection");
+    m_Link.DrawConnectionUI();                 // shared connect UI, app adds extras around it
+    ImGui::End();
+}
+
+void Root::OnDetach() { m_Link.Shutdown(); }
+```
+
+Auto-reconnect is on by default: while the user *wants* a connection (`Connect()` was clicked and `Disconnect()` wasn't), the link retries the selected port every 3 seconds of silence. `SerialLink` never parses bytes — protocol framing/decoding is app code (see `Projects/SF_Telem/src/Telemetry.h` for an ASCII example and §20.6 below for binary framing).
+
+### §20.6 Binary Framing — COBS + CRC16
+
+For binary links (hardware-in-the-loop, flight computers), `serial/Framing.h` provides a dependency-free frame codec: **COBS byte stuffing** (so a single `0x00` delimiter terminates every frame unambiguously) plus **CRC16-CCITT** integrity. The header is deliberately freestanding — no engine includes, no STL beyond `<stdint.h>`, no heap — so the *same file* compiles on an embedded target (Teensy/Arduino) as the shared wire contract.
+
+```cpp
+#include "serial/Framing.h"
+
+// Sender: payload -> COBS(payload + CRC16) + 0x00 delimiter.
+// Worst-case output: length + 2 (CRC) + ~1 byte COBS overhead per 254 + 1 delimiter.
+uint8_t frame[64];
+size_t n = Cosmic::Framing::EncodeFrame(payload, payloadLen, frame, sizeof(frame)); // 0 = buffer too small
+
+// Receiver: accumulate bytes; on each 0x00 delimiter, decode the bytes since the previous one
+size_t decoded = Cosmic::Framing::DecodeFrame(rx, rxLen, out, sizeof(out)); // 0 = corrupt/short — drop
+```
+
 ---
 
 ## 21. The Template Project
@@ -1871,6 +1937,35 @@ m_Modes.back()->OnAttach();
 ```
 
 4. **Do not** push it onto `Application`'s `LayerStack`.
+
+### §21.5 Real-World Pattern: Homescreen + Screens
+
+The template's composite pattern scales up into the recommended shape for **tool-style apps**: a root layer that presents a homescreen tile menu and routes between full-screen "screens" that share expensive resources. `Projects/SF_Telem/src` is the production reference — one app, four screens, one serial connection:
+
+```
+                      SF_Telem (root Layer — the only layer on the engine stack)
+                      │  owns: SerialLink (ONE connection for the whole app)
+                      │        TelemHub   (decode + record + replay backbone)
+                      │        top bar    (Home button + screen tabs)
+                      │
+        ┌─────────────┼──────────────┬───────────────┐
+        ▼             ▼              ▼               ▼
+   MainLayer     TestingManager  DrivetrainLayer  ReplayLayer
+   (live dash)   (bench tests)   (calculator)     (load + scrub)
+        │                                            │
+        └────────── DashboardView (shared) ──────────┘
+                    live data drives it ←→ replay data drives it
+```
+
+The rules that make this shape work:
+
+- **One root layer on the engine stack.** Screens are plain `Layer`-derived classes stored in `shared_ptr` members, driven manually from the root's hooks (`OnUpdate`, `OnFixedUpdate`, `OnImGuiRender`, `OnEvent`) — exactly the composite pattern above, with an enum (`SCREEN_HOME`, `SCREEN_MAIN`, …) instead of a mode index.
+- **Shared services live on the root, passed by pointer.** The `SerialLink` and the `TelemHub` (recorder + player + decoded samples) are root members handed to each screen at construction. Switching screens never drops the serial connection or the recording session.
+- **The homescreen is just another screen state** — a tile menu (image + caption per tile) drawn by the root itself. A persistent top bar offers Home + screen tabs from anywhere.
+- **Replay drives the same UI as live data.** `DashboardView` renders from a data snapshot struct; the Main screen fills it from live telemetry, the Replay screen fills it from `DataPlayer` at the scrub position. One dashboard implementation, zero duplication.
+- **Dock layouts are per-screen.** The root tracks a dock-state key (screen + sub-mode) and reapplies the appropriate `DockBuilder` layout when it changes, so each screen keeps its own panel arrangement.
+
+Start from the template's composite pattern, then graduate to this shape the moment your app grows a second screen or a resource that must survive screen switches.
 
 ---
 
@@ -2590,12 +2685,36 @@ If `sessionName` is empty, Flush uses an ISO-8601 timestamp for the folder name.
 
 > **Between recording sessions:** Call `m_Recorder.Clear()` to drop all frames without losing registrations or reserved capacity. Re-calling `Register` is not required.
 
+### Autosave (Crash Failsafe)
+
+Long recording sessions shouldn't be lost to a crash or power pull. `SetAutosave` makes the recorder periodically flush a rolling snapshot while recording:
+
+```cpp
+// When recording starts:
+m_Recorder.SetAutosave(
+    "recordings/MyApp/_autosave",  // fixed base folder for the rolling snapshot
+    m_SessionName,                 // fixed session name — REUSED, not timestamped
+    5.0f,                          // flush interval in seconds of recorded time
+    60.0f);                        // sample rate written into the file header
+
+// When recording stops (before the final manual Flush):
+m_Recorder.DisableAutosave();
+```
+
+**How it works:** every `intervalSec` of recorded time, `Tick()` triggers the same non-blocking background `Flush()` you'd call manually — the main thread never stalls. If a flush is still in progress when the next interval elapses, that tick is skipped rather than queued. Because the session name is fixed and non-empty, each snapshot **overwrites the same folder** instead of spawning a new timestamped folder per tick.
+
+**Recovery after a crash:** the autosave folder contains a complete, loadable session at most `intervalSec` old — open it with the replay Load dialog (or `DataPlayer::Load`) like any other recording. SF_Telem uses `recordings/SF_Telem/_autosave` with a 5-second interval; adopt the same `_autosave` naming convention so users can tell rolling snapshots from deliberately saved sessions.
+
+> `DisableAutosave()` only stops the periodic flushing — files already written stay on disk until the next autosaved session overwrites them.
+
 ### Replay
 
 ```cpp
 Cosmic::DataPlayer m_Player;
 
-if (m_Player.Load("logs/my_session")) // directory or single .bin path
+// Directory: loads scene.bin if present, else every *.bin in the folder.
+// A single .bin path loads just that file.
+if (m_Player.Load("logs/my_session"))
 {
     m_Player.SetSpeed(1.0f);   // negative = reverse
     m_Player.Play();
@@ -2941,6 +3060,58 @@ Cosmic::UI::Text(dl, r.At(0.1f, 0.9f), IM_COL32_WHITE, "label");  // standalone 
 `ReadoutStyle` exposes the fill/border/label/value colors, fonts, sizes, padding,
 rounding and anchor — so the box is just one consumer of the text primitive.
 
+### §28.5 Themes, Icons & Fonts
+
+The engine's look is **data-driven**: a `Cosmic::Theme` (`ui/Theme.h`) is plain data — a name, an accent color, a *complete* `ImGuiCol_` color table, and the structural style knobs (rounding/padding/borders). Because every theme carries the full color array, applying one deterministically replaces the previous look; there is no "set a subset and hope" residue when switching at runtime.
+
+**Why a registry:** themes live in `Cosmic::ThemeManager` (`ui/ThemeManager.h`), whose storage is inside the engine DLL — so the engine and every client project share ONE registry across the DLL boundary. A theme registered by your app shows up in the engine's picker, and vice versa.
+
+| `ThemeManager` member | Description |
+| --------------------- | ----------- |
+| `Init()` | Registers the built-ins + loads user themes from `project://themes`. Called by the engine; safe to re-call (no-op) |
+| `Apply(name)` | Switch theme by name — writes the full color table + style into ImGui and syncs the ImPlot style. `false` if unknown |
+| `ApplyTheme(theme)` | Apply a `Theme` object directly without registering (live preview while editing) |
+| `Register(theme)` | Add or replace a theme; the name is its stable identity |
+| `All()` / `Find(name)` / `CurrentName()` | Enumerate / look up / query the applied theme |
+| `Accent()` | The applied theme's semantic accent color — use it for custom widgets/plots so they track the theme |
+| `CaptureCurrentStyle(name)` | Snapshot the live ImGui style into a new named `Theme` |
+| `SaveToFile` / `LoadFromFile` / `LoadFolder` | Simple text `.ctheme` persistence (resolve `project://themes/...` with `FileSystem::Resolve` first) |
+
+**Built-in themes** (registration order = picker order): Sleek Pro *(engine default)*, Neon HUD, Clean Flat, Cosmic Emerald, Deep Embedded, Dracula Dark, Solarized Ash, Cyberpunk Neon, Retro Terminal, Corporate Light, Default Dark.
+
+**Selecting and persisting a theme from a project:**
+
+```cpp
+// Apply at startup (OnAttach) — or let the user pick:
+Cosmic::ThemeManager::Apply("Deep Embedded");
+
+// Ready-made picker widget (accent swatch + name per row), drop into any window:
+Cosmic::UI::ThemeSelector();
+
+// Or ask the engine to host the picker as a dockable panel:
+Cosmic::Application::Get().GetWorkspaceLayer()->ShowThemeSelector(true, Cosmic::DockPort::RightTop);
+```
+
+**Authoring a theme** — two workflows:
+
+1. **Theme Studio** (the template's `TemplateThemeShowcaseLayer`): a live gallery + editor panel. Pick a base theme, tweak colors/style knobs with live preview (`ApplyTheme` under the hood), then save — it lands in `project://themes/<name>.ctheme` and is registered immediately.
+2. **In code:** build a `Theme` in a `BuildMyTheme()` function (see `layers/ImGuiThemes.h` for the seeded-builder pattern), then `ThemeManager::Register(t)` at startup.
+
+**Icons — Lucide.** The Lucide icon font is merged into every registered text face at `Fonts::Init()`, so `ICON_LC_*` glyphs (from `ui/IconsLucide.h`) render inline in any label:
+
+```cpp
+ImGui::Button(ICON_LC_ROCKET "  Launch");
+if (Cosmic::UI::Fonts::HasIcons()) { /* icon font found + merged */ }
+```
+
+**Fonts — Roboto by default.** `Cosmic::UI::Fonts` (`ui/Fonts.h`) scans the engine + project font folders at startup and registers every face; a regular face (Roboto) becomes the default UI font. Use the standard size ladder for a consistent hierarchy:
+
+```cpp
+Cosmic::UI::Fonts::Push("Roboto-Bold", Cosmic::UI::Fonts::SizeHeading); // 13/16/22/32 px ladder
+ImGui::TextUnformatted("Section Title");
+Cosmic::UI::Fonts::Pop();
+```
+
 ---
 
 ## 29. Viewport Visibility & Center Docking
@@ -2966,7 +3137,7 @@ See [Section 24 — Window System](#24-window-system) for the full dock-port API
 
 # Cosmic Engine — Part 2: Engine Internals
 
-> **Audience:** Engine contributors and advanced client developers who need to understand how Cosmic works under the hood. Assumes familiarity with [Part 1 — Client Developer Guide](Part1_ClientGuide.md).
+> **Audience:** Engine contributors and advanced client developers who need to understand how Cosmic works under the hood. Assumes familiarity with [Part I — Client Developer Guide](#table-of-contents) (§1–§29 above).
 
 ---
 
@@ -3613,8 +3784,7 @@ glDeleteShader(each)
 class RenderPass
 {
 public:
-    RenderPass(const OrthographicCamera& camera,
-               std::optional<glm::vec4> viewportBounds = std::nullopt);
+    RenderPass(const OrthographicCamera& camera, const glm::vec4& viewportBounds);
     ~RenderPass();
 
     RenderPass(const RenderPass&)            = delete;
@@ -3637,7 +3807,7 @@ This allows nested render passes (e.g., render a scene to a texture inside a lar
 
 ### `viewportBounds`
 
-When `viewportBounds` is supplied (`glm::vec4{x, y, width, height}`), the renderer calls `glViewport` on push and restores the previous viewport on pop. When it is `std::nullopt`, the viewport is left unchanged — useful when the caller has already set the viewport explicitly.
+`viewportBounds` is a mandatory `glm::vec4{x, y, width, height}` in pixels (bottom-left origin). The renderer calls `glViewport` with it on push and restores the previous viewport on pop. There is no "leave the viewport unchanged" form — every pass declares its target region explicitly (see the §14 examples, which all pass explicit bounds).
 
 ---
 
@@ -4285,7 +4455,7 @@ Storing the simulation timestamp in each row means the player reconstructs exact
 | ------- | -------------- | ----------- |
 | v1 | `magic == "CSMC"`, `version == 1` | Current `DataRecorder::Flush()` |
 
-`Load(directory)` looks for `scene.bin` and loads it if found.
+`Load(directory)` looks for `scene.bin` and loads it if found. If `scene.bin` is absent (or produced no entities), the player falls back to loading **every individual `*.bin` file** in the directory — the legacy per-entity session layout. The fallback only runs when `scene.bin` yielded nothing, so entities are never duplicated when both layouts coexist in one folder.
 
 ### DataPlayer — Timestamp-Based Interpolation
 
