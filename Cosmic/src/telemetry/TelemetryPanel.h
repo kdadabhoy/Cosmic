@@ -175,6 +175,16 @@ namespace Cosmic
          */
         void DrawTransportControls();
 
+        /**
+         * @brief Draw the replay loader (path / Browse / Load / Unload / status)
+         * followed by the transport bar — but NOT the channel plots or inspector.
+         *
+         * Use this when the per-channel plots are rendered elsewhere, so the
+         * replay screen shows a single plot view plus a self-contained transport.
+         * The caller must already be inside an ImGui::Begin/End block.
+         */
+        void DrawTransport();
+
     private:
         static constexpr int k_PlotCapacity = 512;
 

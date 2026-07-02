@@ -170,6 +170,7 @@ namespace Cosmic
 		// STEP 3 — Dockspace
 		// ------------------------------------------------------------------
 		ImGuiID dockspace_id = ImGui::GetID("CosmicDockSpace");
+		// Keep tab bars visible so docked panels always show their titles.
 		ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_None);
 
 		if (!m_DockspaceInitialized)
@@ -223,12 +224,13 @@ namespace Cosmic
 		}
 
 		// ------------------------------------------------------------------
-		// STEP 4.5 — Engine-hosted theme selector (optional; docked via the
-		// binding registered in ShowThemeSelector).
+		// STEP 4.5 — Engine-hosted theme selector — a floating popout toggled
+		// from the View menu (off by default; never docked).
 		// ------------------------------------------------------------------
 		if (m_ShowThemeSelector)
 		{
-			if (ImGui::Begin(m_ThemeSelectorWindow.c_str()))
+			ImGui::SetNextWindowSize(ImVec2(240.0f, 360.0f), ImGuiCond_FirstUseEver);
+			if (ImGui::Begin(m_ThemeSelectorWindow.c_str(), &m_ShowThemeSelector))
 				UI::ThemeSelector();
 			ImGui::End();
 		}

@@ -8,6 +8,9 @@
 
 #include <algorithm>
 #include <cfloat>
+#include <cmath>
+#include <cstdio>
+#include <limits>
 
 namespace Workspace
 {
@@ -38,9 +41,9 @@ namespace Workspace
             if (ImGui::IsItemHovered())
                 ImGui::SetTooltip(
                     "Enter GPIO numbers - NOT the 1-30 board positions.\n"
-                    "  Right drive  -> GPIO16  (pad RX2,  UART1 RX)\n"
-                    "  Left  drive  -> GPIO17  (pad TX2,  UART2 RX)\n"
-                    "  Weapon       -> GPIO13  (pad D13,  UART0 RX; TX stays on GPIO1 for USB)\n"
+                    "  Right drive  -> GPIO16  (pad RX2)\n"
+                    "  Left  drive  -> GPIO13  (pad D13)\n"
+                    "  Weapon       -> GPIO17  (pad TX2)\n"
                     "Avoid flash pins 6-11 and strapping pins 0/2/5/12/15.\n"
                     "Click Pinout for the board diagram.");
         }
@@ -86,8 +89,8 @@ namespace Workspace
             "    named pads   : RX2=GPIO16  TX2=GPIO17  RX0=GPIO3  TX0=GPIO1  VP=GPIO36  VN=GPIO39\n"
             "    3V3 / GND / VIN / EN are power/control pins, not GPIOs.\n"
             "\n"
-            "This project's wiring:  Right = GPIO16 (RX2)   Left = GPIO17 (TX2)   Weapon = GPIO13 (D13).\n"
-            "Enter those GPIO numbers in the pin fields above (16 -> pad RX2, 17 -> pad TX2, 13 -> pad D13).\n"
+            "This project's wiring:  Right = GPIO16 (RX2)   Left = GPIO13 (D13)   Weapon = GPIO17 (TX2).\n"
+            "Enter those GPIO numbers in the pin fields above (16 -> pad RX2, 13 -> pad D13, 17 -> pad TX2).\n"
             "Avoid flash pins GPIO6-11 and strapping pins GPIO0/2/5/12/15; GPIO34-39 are input-only.";
     }
 
@@ -110,8 +113,10 @@ namespace Workspace
     // =========================================================================
     // Lifecycle
     // =========================================================================
-    void TelemHub::Init()
+    void TelemHub::Init(Cosmic::SerialLink* link)
     {
+        m_Link = link;   // shared, root-owned connection
+
         for (int i = 0; i < ESC_COUNT; ++i)
         {
             const auto channels = IsDrive(i) ? DriveChannelNames() : WeaponChannelNames();
@@ -175,7 +180,7 @@ namespace Workspace
             m_Recorder.Flush(k_RecordDir, m_SessionName, k_SampleRate);
 
         m_Recorder.DisableAutosave();
-        m_Link.Shutdown();          // clears reconnect intent + closes the port
+        // The shared serial link is shut down by the root manager that owns it.
         m_Recorder.WaitForFlush();
         Cosmic::EntitySelection::Clear();
     }
@@ -195,6 +200,16 @@ namespace Workspace
     bool TelemHub::Replaying() const
     {
         return m_Panel.GetMode() == Cosmic::TelemetryPanel::Mode::Replay && m_Player.IsLoaded();
+    }
+
+    float TelemHub::ReplayPosition() const { return m_Player.GetPosition(); }
+    float TelemHub::ReplayDuration() const { return m_Player.GetDuration(); }
+    void  TelemHub::SeekReplay(float seconds)
+    {
+        const float dur = m_Player.GetDuration();
+        if (seconds < 0.0f)  seconds = 0.0f;
+        if (dur > 0.0f && seconds > dur) seconds = dur;
+        m_Player.SetPosition(seconds);
     }
 
     float TelemHub::Cur(int id)  const { return IsDrive(id) ? m_Drive[id].currentA : m_Weapon.currentA; }
@@ -258,19 +273,28 @@ namespace Workspace
         if (m_WasFlushing && !flushing) m_RecordStatus = "Export complete.";
         m_WasFlushing = flushing;
 
-        // Port scanning + async (non-blocking) auto-reconnect are owned by the
-        // engine SerialLink, so a dead Bluetooth port can no longer freeze the UI.
-        m_Link.OnUpdate(ts);
-
-        PumpSerial();
-        m_Panel.OnUpdate(ts);
+        // Port scanning + async (non-blocking) auto-reconnect are driven by the
+        // root manager (the shared SerialLink persists across screens); here we
+        // only drain whatever bytes have arrived while this screen is active.
+        // While replaying we ignore live bytes so they can't overwrite the
+        // replayed sample being shown on the dashboard.
+        if (!Replaying()) PumpSerial();
+        m_Panel.OnUpdate(ts);   // advances the player position when in Replay mode
 
         const auto mode = m_Panel.GetMode();
         if (mode != m_LastMode)
         {
             for (auto& r : m_Ring) r.Clear();
+            ResetStats();                  // fresh max/avg baseline for the new source
+            m_LastReplayStatPos = -1.0f;   // re-accumulate replay stats from the first frame
             m_LastMode = mode;
         }
+
+        // Replay drives the live diagram: pull the player's frame at the current
+        // position back into the decoded samples so the weapon/drivetrain photos,
+        // readout boxes and stat panels animate with the scrubber (the rings/plots
+        // are fed separately in SampleRings()).
+        if (Replaying()) ApplyReplayFrame();
 
         if (m_ModelUseLiveVoltage &&
             std::abs(ModelEffectiveVoltage() - m_ModelLastVoltage) > 0.05f)
@@ -300,9 +324,9 @@ namespace Workspace
     {
         // Reset the framing buffer on each fresh (re)connect so a partial line from
         // a previous session can't corrupt the first frame of the new one.
-        if (m_Link.ConsumeJustConnected()) m_RxAccumulator.clear();
+        if (m_Link->ConsumeJustConnected()) m_RxAccumulator.clear();
 
-        std::string chunk = m_Link.Poll();
+        std::string chunk = m_Link->Poll();
         if (chunk.empty()) return;
         m_RxAccumulator += chunk;
 
@@ -358,6 +382,58 @@ namespace Workspace
     }
 
     // =========================================================================
+    // Replay -> live samples. Map each entity's player frame (recorded decoded
+    // channels, DCH_*/WCH_* order) back into m_Drive/m_Weapon and mark it present
+    // so the dashboard reads green and shows the replayed values. Entities with no
+    // frame at this position are left to go stale on their own.
+    // =========================================================================
+    void TelemHub::ApplyReplayFrame()
+    {
+        // Accumulate max/avg once per *advanced* playback frame, mirroring the live
+        // path in PumpSerial — otherwise the stat panels show avg/max 0 in replay.
+        // (Headline values are refreshed every frame for the dashboard regardless.)
+        const float pos      = m_Player.GetPosition();
+        const bool  advanced = (pos != m_LastReplayStatPos);
+
+        for (int i = 0; i < ESC_COUNT; ++i)
+        {
+            Cosmic::TelemetryFrame frame;
+            if (!m_Player.GetFrame(IdEntity(i), frame)) continue;
+
+            if (IsDrive(i)) m_Drive[i] = DriveSample::FromChannels(frame.values);
+            else            m_Weapon   = WeaponSample::FromChannels(frame.values);
+
+            m_HasData[i]  = true;
+            m_LastSeen[i] = m_AppClock;   // keep Present() green while scrubbing/playing
+
+            if (!advanced) continue;
+
+            // Same max/avg bookkeeping as PumpSerial(), per replayed sample.
+            if (IsDrive(i))
+            {
+                m_MaxRpm[i]   = std::max(m_MaxRpm[i],   m_Drive[i].motorRPM);
+                m_MaxSpeed[i] = std::max(m_MaxSpeed[i], m_Drive[i].speedMph);
+                m_SumRpm[i]   += m_Drive[i].motorRPM;
+                m_SumSpeed[i] += m_Drive[i].speedMph;
+            }
+            else
+            {
+                m_MaxRpm[i] = std::max(m_MaxRpm[i], m_Weapon.weaponRPM);
+                m_MaxTip    = std::max(m_MaxTip,    m_Weapon.tipSpeedMph);
+                m_SumRpm[i] += m_Weapon.weaponRPM;
+                m_SumTip    += m_Weapon.tipSpeedMph;
+            }
+            m_MaxCur[i]  = std::max(m_MaxCur[i],  Cur(i));
+            m_MaxVolt[i] = std::max(m_MaxVolt[i], Volt(i));
+            m_SumCur[i]  += Cur(i);
+            m_SumVolt[i] += Volt(i);
+            ++m_StatCount[i];
+        }
+
+        if (advanced) m_LastReplayStatPos = pos;
+    }
+
+    // =========================================================================
     // Ring sampling — live (recorder) or replay (player).
     // =========================================================================
     void TelemHub::SampleRings()
@@ -391,8 +467,14 @@ namespace Workspace
     {
         ImGui::Begin("Serial Link");
 
+        // ---- Recording (lives with the connection) ----
+        DrawRecordingControls();
+        ImGui::Spacing();
+        ImGui::Separator();
+        ImGui::Spacing();
+
         // Shared connection menu (ports / baud / auto-reconnect / status / connect).
-        m_Link.DrawConnectionUI();
+        m_Link->DrawConnectionUI();
 
         // ---- Per-ESC presence (so a missing wire is obvious) ----
         ImGui::Spacing();
@@ -578,23 +660,72 @@ namespace Workspace
     }
 
     // =========================================================================
-    // Reusable per-ESC plot pass
+    // Shared plot toolbar (drawn ONCE above the per-ESC charts): Follow / Window /
+    // Fit / Stats / Min-Max, and it drives the linked X axis all channels share.
     // =========================================================================
-    void TelemHub::DrawEscPlots(int id)
+    void TelemHub::DrawPlotToolbar()
     {
-        const bool weapon = (id == ESC_WEAPON);
-        const auto names  = weapon ? WeaponChannelNames() : DriveChannelNames();
-        const int  chCount= weapon ? WCH_COUNT : DCH_COUNT;
-        Ring&      r      = m_Ring[id];
-        const ImVec4 col  = ColorFor(id);
+        PlotView&  pv     = m_PlotView;
+        const bool replay = Replaying();
 
-        float xMin = 0.0f, xMax = 1.0f;
-        if (r.count > 0)
+        // Replay defaults to following the playhead (trailing window tracks the
+        // current playback time); the user can untick Follow to free-zoom/scrub.
+        if (replay && !pv.replayDefaultApplied)
         {
-            xMin = r.times[r.offset % Ring::Cap];
-            xMax = r.times[(r.offset + r.count - 1) % Ring::Cap];
-            if (xMax <= xMin) xMax = xMin + 1.0f;
+            pv.follow = true;
+            pv.replayDefaultApplied = true;
         }
+        if (!replay) pv.replayDefaultApplied = false;
+
+        ImGui::Checkbox(replay ? "Follow playhead" : "Follow", &pv.follow);
+        if (pv.follow)
+        {
+            ImGui::SameLine(); ImGui::SetNextItemWidth(120);
+            ImGui::SliderFloat("Window (s)", &pv.windowSec, 1.0f, 120.0f, "%.0f");
+        }
+        ImGui::SameLine(); if (ImGui::Button("Fit")) pv.fitRequested = true;
+        ImGui::SameLine(); ImGui::Checkbox("Stats",   &pv.showStats);
+        ImGui::SameLine(); ImGui::Checkbox("Min/Max", &pv.showMinMax);
+        if (replay) { ImGui::SameLine(); ImGui::Checkbox("Drag to seek", &pv.seekOnDrag); }
+        ImGui::TextDisabled("scroll = zoom   drag = pan   right-drag = box   right-click = Y options   dbl-click = fit");
+
+        // Global X-extent across all ESC rings (for Fit / the follow anchor).
+        float xMin = FLT_MAX, xMax = -FLT_MAX;
+        for (int i = 0; i < ESC_COUNT; ++i)
+        {
+            const Ring& rr = m_Ring[i];
+            if (rr.count <= 0) continue;
+            xMin = std::min(xMin, rr.times[rr.offset % Ring::Cap]);
+            xMax = std::max(xMax, rr.times[(rr.offset + rr.count - 1) % Ring::Cap]);
+        }
+        if (xMin > xMax) { xMin = 0.0f; xMax = 1.0f; }
+        if (xMax <= xMin) xMax = xMin + 1.0f;
+
+        const float playPos = replay ? ReplayPosition() : 0.0f;
+        if (pv.follow)
+        {
+            const float anchor = replay ? playPos : xMax;
+            pv.linkXMax = anchor;
+            pv.linkXMin = anchor - pv.windowSec;
+        }
+        if (pv.fitRequested) { pv.linkXMin = xMin; pv.linkXMax = xMax; pv.fitRequested = false; }
+    }
+
+    // =========================================================================
+    // One ESC's per-channel charts (no toolbar) — interactive (zoom/pan/box),
+    // shares the linked X set by DrawPlotToolbar, per-plot Y autofit/caps/step
+    // (right-click), visible-range stats, and a draggable replay playhead.
+    // =========================================================================
+    void TelemHub::DrawEscChannels(int id)
+    {
+        const bool   weapon = (id == ESC_WEAPON);
+        const auto   names  = weapon ? WeaponChannelNames() : DriveChannelNames();
+        const int    chCount= weapon ? WCH_COUNT : DCH_COUNT;
+        Ring&        r      = m_Ring[id];
+        const ImVec4 col    = ColorFor(id);
+        PlotView&    pv     = m_PlotView;
+        const bool   replay = Replaying();
+        const float  playPos= replay ? ReplayPosition() : 0.0f;
 
         for (int c = 0; c < chCount; ++c)
         {
@@ -602,36 +733,164 @@ namespace Workspace
             if (weapon && c == WCH_WPNRPM) predMax = m_ModelResult.MaxWeaponRPM;
             if (weapon && c == WCH_TIP)    predMax = m_ModelResult.MaxTipSpeedMph;
 
-            float yMin = FLT_MAX, yMax = -FLT_MAX;
+            YAxisCfg& y = m_YCfg[id][c];
+            const ImPlotAxisFlags yFlags = (y.autoFit && !y.capMin && !y.capMax)
+                                         ? ImPlotAxisFlags_AutoFit : 0;
+
+            // Full-ring data extent for this channel (used to place step ticks when
+            // a side isn't hard-capped, so we don't need GetPlotLimits during setup).
+            float dMin = FLT_MAX, dMax = -FLT_MAX;
             for (int i = 0; i < r.count; ++i)
             {
-                float v = r.ch[c][(r.offset + i) % Ring::Cap];
-                yMin = std::min(yMin, v);
-                yMax = std::max(yMax, v);
+                const float v = r.ch[c][(r.offset + i) % Ring::Cap];
+                dMin = std::min(dMin, v); dMax = std::max(dMax, v);
             }
-            if (yMin > yMax)       { yMin = 0.0f; yMax = 1.0f; }
-            else if (yMin == yMax) { yMin -= 0.5f; yMax += 0.5f; }
-            if (predMax > 0.0f) { yMin = std::min(yMin, 0.0f); yMax = std::max(yMax, predMax); }
-            const float pad = (yMax - yMin) * 0.1f;
+            if (dMin > dMax) { dMin = 0.0f; dMax = 1.0f; }
+            if (predMax > 0.0f) dMax = std::max(dMax, predMax);
 
-            ImPlot::SetNextAxisLimits(ImAxis_X1, xMin, xMax, ImPlotCond_Always);
-            ImPlot::SetNextAxisLimits(ImAxis_Y1, yMin - pad, yMax + pad, ImPlotCond_Always);
+            // Stats over the visible X-range (filled inside the plot, drawn after).
+            float vMin = FLT_MAX, vMax = -FLT_MAX, vSum = 0.0f, vLast = 0.0f; int vN = 0;
+            bool  hovered = false;
 
-            if (ImPlot::BeginPlot(names[c].c_str(), ImVec2(-1.0f, 130.0f)))
+            // No menus (our right-click owns Y options); no box-select so a right
+            // click can't be mistaken for a box drag.
+            if (ImPlot::BeginPlot(names[c].c_str(), ImVec2(-1.0f, 140.0f),
+                                  ImPlotFlags_NoMenus | ImPlotFlags_NoBoxSelect))
             {
+                // X — shared/linked across all channels in this tab.
+                ImPlot::SetupAxis(ImAxis_X1, nullptr);
+                ImPlot::SetupAxisLinks(ImAxis_X1, &pv.linkXMin, &pv.linkXMax);
+
+                // Y — autofit / free / hard caps / fixed step. Any cap (one side or
+                // both) fixes the axis: the capped side uses the cap value, the
+                // uncapped side follows the channel's data extent (padded). This is
+                // why a lone Y-max now takes effect immediately.
+                ImPlot::SetupAxis(ImAxis_Y1, nullptr, yFlags);
+                if (y.capMin || y.capMax)
+                {
+                    float lo = y.capMin ? y.yMin : dMin;
+                    float hi = y.capMax ? y.yMax : dMax;
+                    const float pad = std::max(1e-3f, (hi - lo) * 0.05f);
+                    if (!y.capMin) lo -= pad;
+                    if (!y.capMax) hi += pad;
+                    if (hi <= lo) hi = lo + 1.0f;
+                    ImPlot::SetupAxisLimits(ImAxis_Y1, lo, hi, ImPlotCond_Always);
+                }
+
+                if (y.useStep && y.step > 0.0f)
+                {
+                    const double lo = y.capMin ? (double)y.yMin : (double)dMin;
+                    const double hi = y.capMax ? (double)y.yMax : (double)dMax;
+                    if (hi > lo)
+                    {
+                        const int n = (int)((hi - lo) / y.step + 0.5) + 1;
+                        if (n >= 2 && n <= 1000) ImPlot::SetupAxisTicks(ImAxis_Y1, lo, hi, n);
+                    }
+                }
+
+                // Series.
                 if (r.count > 0)
                 {
                     ImPlotSpec spec; spec.LineColor = col; spec.Offset = r.offset;
                     ImPlot::PlotLine(names[c].c_str(), r.times.data(), r.ch[c].data(), r.count, spec);
                 }
+
+                // Predicted-max reference line spanning the visible X-range.
                 if (predMax > 0.0f)
                 {
-                    const float px[2] = { xMin, xMax };
+                    const float px[2] = { (float)pv.linkXMin, (float)pv.linkXMax };
                     const float py[2] = { predMax, predMax };
                     ImPlotSpec ps; ps.LineColor = k_PredColor;
                     ImPlot::PlotLine("Predicted max", px, py, 2, ps);
                 }
+
+                // Stats over the currently visible X-range.
+                const ImPlotRect lim = ImPlot::GetPlotLimits();
+                for (int i = 0; i < r.count; ++i)
+                {
+                    const int   idx = (r.offset + i) % Ring::Cap;
+                    const float t   = r.times[idx];
+                    if (t < lim.X.Min || t > lim.X.Max) continue;
+                    const float v = r.ch[c][idx];
+                    vMin = std::min(vMin, v); vMax = std::max(vMax, v);
+                    vSum += v; vLast = v; ++vN;
+                }
+
+                if (pv.showMinMax && vN > 0)
+                {
+                    ImPlot::TagY(vMin, col, "min %.1f", vMin);
+                    ImPlot::TagY(vMax, col, "max %.1f", vMax);
+                }
+
+                // Replay playhead — draggable to scrub the whole dashboard.
+                if (replay)
+                {
+                    const ImVec4 phCol(0.95f, 0.85f, 0.20f, 1.0f);
+                    if (pv.seekOnDrag)
+                    {
+                        double p = playPos;
+                        if (ImPlot::DragLineX(9000 + id * 100 + c, &p, phCol, 1.5f))
+                            SeekReplay((float)p);
+                    }
+                    else
+                    {
+                        ImPlotSpec ph; ph.LineColor = phCol;
+                        ImPlot::PlotInfLines("##playhead", &playPos, 1, ph);
+                    }
+                }
+
+                hovered = ImPlot::IsPlotHovered();
                 ImPlot::EndPlot();
+            }
+
+            // Right-click -> per-plot Y options popup.
+            char popupId[40]; snprintf(popupId, sizeof(popupId), "##ycfg_%d_%d", id, c);
+            if (hovered && ImGui::IsMouseClicked(ImGuiMouseButton_Right))
+                ImGui::OpenPopup(popupId);
+
+            if (ImGui::BeginPopup(popupId))
+            {
+                ImGui::TextDisabled("%s - Y axis", names[c].c_str());
+
+                // Auto-fit and hard caps are mutually exclusive: a cap means a fixed
+                // range, so Auto-fit is disabled (and unchecked) while either cap is on.
+                const bool anyCap = y.capMin || y.capMax;
+                ImGui::BeginDisabled(anyCap);
+                ImGui::Checkbox("Auto-fit Y", &y.autoFit);
+                ImGui::EndDisabled();
+                ImGui::Separator();
+
+                if (ImGui::Checkbox("##capmin", &y.capMin) && y.capMin) y.autoFit = false;
+                ImGui::SameLine();
+                ImGui::BeginDisabled(!y.capMin);
+                ImGui::SetNextItemWidth(130); ImGui::InputFloat("Y min", &y.yMin);
+                ImGui::EndDisabled();
+
+                if (ImGui::Checkbox("##capmax", &y.capMax) && y.capMax) y.autoFit = false;
+                ImGui::SameLine();
+                ImGui::BeginDisabled(!y.capMax);
+                ImGui::SetNextItemWidth(130); ImGui::InputFloat("Y max", &y.yMax);
+                ImGui::EndDisabled();
+
+                ImGui::Separator();
+                ImGui::Checkbox("##usestep", &y.useStep); ImGui::SameLine();
+                ImGui::BeginDisabled(!y.useStep);
+                ImGui::SetNextItemWidth(130); ImGui::InputFloat("Tick step", &y.step);
+                ImGui::EndDisabled();
+
+                ImGui::Separator();
+                if (ImGui::Button("Reset")) y = YAxisCfg{};
+                ImGui::EndPopup();
+            }
+
+            // Visible-range stats caption.
+            if (pv.showStats)
+            {
+                if (vN > 0)
+                    ImGui::TextDisabled("min %.1f   max %.1f   avg %.1f   last %.1f",
+                                        vMin, vMax, vSum / (float)vN, vLast);
+                else
+                    ImGui::TextDisabled("(no samples in view)");
             }
         }
     }

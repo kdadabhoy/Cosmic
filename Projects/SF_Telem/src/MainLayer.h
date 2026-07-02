@@ -2,10 +2,11 @@
 
 // MainLayer.h — SF_Telem screen 1
 //
-// The landing screen: a weapon data-box panel and a drivetrain data-box panel
-// (live value + running max + reset, nothing animated), plus per-ESC plot tabs
-// (Right / Left / Weapon) and the telemetry drill-down. All data comes from the
-// shared TelemHub, so it stays robust if any ESC is unplugged.
+// The Main telemetry screen: the live dashboard (weapon/drivetrain photos with
+// readout boxes), the weapon + per-side drive stat panels, and per-ESC plot
+// tabs (Right / Left / Weapon) — all shared with the Replay screen via
+// DashboardView. All data comes from the shared TelemHub, so it stays robust if
+// any ESC is unplugged. (The telemetry drill-down / replay UI is its own screen.)
 
 #include <Cosmic.h>
 
@@ -29,14 +30,15 @@ namespace Workspace
         // and whenever we switch back to the Main screen).
         void RequestDashboardFocus() { m_DashFocusFrames = 3; }
 
-    private:
-        void DrawDashboard();
-        void DrawWeaponReadouts();
-        void DrawDriveReadouts(int id, const char* title);
-        void DrawPlots();
-        void DrawTelemetry();
+        // Two interchangeable layouts (toggled from the nav bar, no data lost):
+        //   false = Dashboard view (live dashboard center, tabbed ESC plots right)
+        //   true  = Plots view     (3 R/L/W plots center, live dashboard right)
+        void SetPlotsView(bool plots) { m_PlotsView = plots; }
+        bool IsPlotsView() const { return m_PlotsView; }
 
+    private:
         TelemHub* m_Hub = nullptr;
+        bool      m_PlotsView = false;
         Cosmic::OrthographicCameraController m_Camera{ 1280.0f / 720.0f };
 
         // Hardware photos overlaid with live readouts on the dashboard.

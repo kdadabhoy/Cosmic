@@ -195,24 +195,15 @@ namespace Cosmic
         //
         // Pass a custom windowName to control its tab label (and dock identity).
         // -----------------------------------------------------------------------
+        // The theme selector is a FLOATING popout (not docked), off by default,
+        // toggled from the View menu. (port is accepted for source compatibility
+        // but no longer used.)
         void ShowThemeSelector(bool show, DockPort port = DockPort::RightTop,
                                const char* windowName = "Themes")
         {
             m_ThemeSelectorWindow = (windowName && *windowName) ? windowName : "Themes";
             m_ThemeSelectorPort   = port;
             m_ShowThemeSelector   = show;
-
-            if (show)
-            {
-                DockWindow(m_ThemeSelectorWindow, port); // also flags a rebuild
-            }
-            else
-            {
-                // Drop its binding so a hidden selector doesn't carve empty space.
-                for (auto it = m_DockBindings.begin(); it != m_DockBindings.end(); ++it)
-                    if (it->WindowName == m_ThemeSelectorWindow) { m_DockBindings.erase(it); break; }
-                m_DockspaceInitialized = false;
-            }
         }
         bool IsThemeSelectorVisible() const { return m_ShowThemeSelector; }
 

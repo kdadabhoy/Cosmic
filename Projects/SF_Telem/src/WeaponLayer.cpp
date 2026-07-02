@@ -145,7 +145,8 @@ namespace Workspace
     void WeaponLayer::DrawPlots()
     {
         ImGui::Begin("Weapon Plots");
-        m_Hub->DrawEscPlots(ESC_WEAPON);
+        m_Hub->DrawPlotToolbar();
+        m_Hub->DrawEscChannels(ESC_WEAPON);
         ImGui::End();
     }
 

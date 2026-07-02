@@ -50,7 +50,32 @@ namespace Workspace
             void Push(float t, const std::vector<float>& values);
         };
 
-        void Init();      // register recorder entities + panel inspectors + ports
+        // -------- Plot interactivity (shared toolbar + per-channel Y config) --------
+        // One shared PlotView for the panel (the three ESC tabs are mutually exclusive),
+        // plus a per-(ESC,channel) Y-axis config edited from each plot's right-click menu.
+        struct PlotView
+        {
+            bool   follow       = true;     // X auto-scrolls to the newest sample (live default)
+            float  windowSec    = 10.0f;    // trailing window width while following
+            bool   showStats    = true;     // min/max/avg/last caption under each plot
+            bool   showMinMax   = true;     // TagY markers at the visible min & max
+            bool   seekOnDrag   = true;     // replay: drag the playhead to scrub
+            bool   fitRequested = false;    // one-shot "Fit all" -> data extents
+            bool   replayDefaultApplied = false; // set follow=false once when replay starts
+            double linkXMin = 0.0, linkXMax = 1.0; // shared X across all channels
+        };
+        struct YAxisCfg
+        {
+            bool  autoFit = true;                 // ON => AutoFit; OFF => manual scroll/zoom
+            bool  capMin = false, capMax = false; // hard caps
+            float yMin = 0.0f, yMax = 1.0f;       // cap values
+            bool  useStep = false; float step = 1.0f; // fixed tick interval
+        };
+
+        // The serial connection is owned by the root manager and shared with the
+        // testing hub, so one connection persists across screen switches. The root
+        // drives link.OnUpdate()/Shutdown(); this hub only polls bytes when active.
+        void Init(Cosmic::SerialLink* link);  // register recorder entities + panel inspectors
         void Shutdown();
         void OnUpdate(float ts);     // clock, serial pump, panel, model, rings, flush
         void RecordFixed(float dt);  // continuous capture (call from OnFixedUpdate)
@@ -61,6 +86,11 @@ namespace Workspace
         bool Present(int id)  const { return m_HasData[id] && !Stale(id); }
         bool AnyPresent()     const;
         bool Replaying()      const;
+
+        // ---- Replay transport (thin wrappers over the player, for the plot playhead) ----
+        float ReplayPosition() const;
+        float ReplayDuration() const;
+        void  SeekReplay(float seconds);
 
         // ---- Live readings (headline values for the data boxes) ----
         float Cur(int id)   const;   // A
@@ -114,21 +144,24 @@ namespace Workspace
         void DrawSerialPanel();        // "Serial Link"
         void DrawRecordingControls();  // recording + status (inside a parent window)
 
-        // ---- Reusable per-ESC plot pass (one ImPlot chart per channel) ----
-        void DrawEscPlots(int id);
+        // ---- Reusable plot pass (split so Main can tab and Replay can show 3 cols) ----
+        void DrawPlotToolbar();        // shared toolbar (Follow/Window/Fit/Stats/Min-Max); drives linked X
+        void DrawEscChannels(int id);  // one ESC's per-channel charts (no toolbar)
 
     private:
         void PumpSerial();
         void SampleRings();
+        void ApplyReplayFrame();   // during replay: drive m_Drive/m_Weapon from the player
         void RecomputeModel();
         float ModelEffectiveVoltage() const;
         float TipRadiusM() const { return (m_WeaponCfg.WeaponDiameterIn * 0.0254f) * 0.5f; }
 
     private:
         // --- Serial ---
-        // Engine component owns the port list, baud, async (non-blocking)
-        // connect + auto-reconnect, and the connection menu UI.
-        Cosmic::SerialLink       m_Link;
+        // Shared engine component (owned by the root manager). Owns the port list,
+        // baud, async (non-blocking) connect + auto-reconnect, and the connection
+        // menu UI. Set in Init(); never owned/destroyed here.
+        Cosmic::SerialLink*      m_Link = nullptr;
         std::string              m_RxAccumulator;       // line-framing buffer for parsing
         std::string              m_Log;
         bool                     m_AutoScrollLog = true;
@@ -137,8 +170,8 @@ namespace Workspace
 
         // --- Arduino firmware copy UI (Serial Link -> Arduino Firmware) ---
         int  m_FwRightPin  = 16;   // GPIO defaults match the wiring diagram
-        int  m_FwLeftPin   = 17;
-        int  m_FwWeaponPin = 13;
+        int  m_FwLeftPin   = 13;
+        int  m_FwWeaponPin = 17;
         char m_FwBtName[32] = "SF_Telem";  // Bluetooth device name baked into the sketch
         bool m_ShowPinout  = false;
         Cosmic::Ref<Cosmic::Texture2D> m_PinoutTex;
@@ -181,6 +214,10 @@ namespace Workspace
         // --- Rings ---
         Ring m_Ring[ESC_COUNT];
 
+        // --- Plot interactivity ---
+        PlotView m_PlotView;
+        YAxisCfg m_YCfg[ESC_COUNT][WCH_COUNT];   // WCH_COUNT (9) also covers drive (8)
+
         // --- Telemetry pipeline ---
         Cosmic::DataRecorder   m_Recorder;
         Cosmic::DataPlayer     m_Player;
@@ -198,6 +235,7 @@ namespace Workspace
         std::string m_RecordStatus = "Ready.";
 
         float m_AppClock = 0.0f;
+        float m_LastReplayStatPos = -1.0f;  // accumulate replay stats once per advanced frame
 
         static constexpr float  k_SampleRate   = 60.0f;
         static constexpr size_t k_RecordCap    = static_cast<size_t>(60.0f * 300.0f);
