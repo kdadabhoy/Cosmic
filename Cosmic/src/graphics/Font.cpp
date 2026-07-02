@@ -355,6 +355,31 @@ namespace Cosmic
 		return it != s_Library.end() ? it->second : nullptr;
 	}
 
+	void Font::LoadProjectFonts()
+	{
+		// Project-mount rescan (Application::LoadProjectDLL). Only relevant when
+		// the lazy EnsureLibrary already ran BEFORE the project was mounted (its
+		// project:// scan resolved against no project and found nothing). If the
+		// library hasn't initialised yet, stay lazy: the eventual first-use scan
+		// now runs with the engine-side active project set, so it sees the
+		// project faces itself — and we avoid eagerly SDF-baking fonts for apps
+		// that never draw world-space text. LoadFolderInternal skips stems
+		// already in the library, so this is idempotent. Baking creates GL
+		// textures — the engine calls this on the main thread, context current.
+		if (!s_LibraryInit)
+			return;
+
+		LoadFolderInternal(FileSystem::Resolve("project://fonts"));
+
+		// The pre-mount init may have found no faces at all (empty engine
+		// folder) — give the default another chance now that project faces exist.
+		if (!s_Default && !s_Library.empty())
+		{
+			auto it = s_Library.find("Roboto-Regular");
+			s_Default = (it != s_Library.end()) ? it->second : s_Library.begin()->second;
+		}
+	}
+
 	Ref<Font> Font::Default()
 	{
 		EnsureLibrary();

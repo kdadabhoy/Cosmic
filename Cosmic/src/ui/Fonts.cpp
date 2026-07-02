@@ -96,6 +96,13 @@ namespace Cosmic
 				// a standalone selectable body face.
 				if (IsIconFontStem(name)) continue;
 
+				// First registration of a stem wins (engine faces load before
+				// project faces) — and the project-mount rescan stays idempotent.
+				bool exists = false;
+				for (const auto& e : s_Fonts)
+					if (IEquals(e.name, name)) { exists = true; break; }
+				if (exists) continue;
+
 				ImFont* f = io.Fonts->AddFontFromFileTTF(path.c_str(), k_BaseSize);
 				if (f)
 				{
@@ -129,8 +136,10 @@ namespace Cosmic
 			// but we override io.FontDefault below so the UI renders in Roboto.
 			io.Fonts->AddFontDefault();
 
+			// Engine faces only: Init runs at ImGuiLayer attach, BEFORE any project
+			// is mounted, so "project://" cannot resolve here. Project faces load
+			// via LoadProjectFonts(), called from Application::LoadProjectDLL.
 			LoadFolder(FileSystem::Resolve("engine://fonts"));
-			LoadFolder(FileSystem::Resolve("project://fonts")); // best-effort; usually empty at startup
 
 			// Pick the default UI face: prefer Roboto-Regular, else the first
 			// custom face, else ImGui's built-in.
@@ -149,6 +158,20 @@ namespace Cosmic
 
 			CS_CORE_INFO("Fonts: initialised ({0} custom face(s), icons {1})",
 				s_Fonts.size(), s_HasIcons ? "on" : "off");
+		}
+
+		void Fonts::LoadProjectFonts()
+		{
+			// Project-mount rescan (Application::LoadProjectDLL). Requires an
+			// initialised registry — Init always precedes any project mount.
+			// Adding faces mid-run is safe with ImGui 1.92's dynamic atlas
+			// (RendererHasTextures): glyphs bake on demand, no atlas rebuild —
+			// but only call this OUTSIDE a frame (the engine calls it from the
+			// Safe Zone, between EndFrame and the next NewFrame).
+			if (!s_Initialized)
+				return;
+
+			LoadFolder(FileSystem::Resolve("project://fonts"));
 		}
 
 		ImFont* Fonts::Get(const std::string& name, float /*sizePx*/)

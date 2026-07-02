@@ -445,6 +445,21 @@ Cosmic::WorkspaceLayer* ws = app.GetWorkspaceLayer(); // nullptr before transiti
 app.SetPauseOnMinimize(false);
 bool pauses = app.GetPauseOnMinimize();
 
+// First-class pause — freezes simulation/animation while the scene keeps
+// rendering and ImGui stays interactive. Orthogonal to TimeScale: Resume()
+// never touches the user's scale. See §7 "Pause vs. TimeScale(0)".
+// The engine binds no hotkey — the client does (e.g. Escape in OnEvent):
+app.Pause();
+app.Resume();
+app.TogglePause();
+bool paused = app.IsPaused();
+
+// Responsive drag/resize — keep rendering while the user drags the title bar
+// or a resize border (default ON). Opt out for minimal/low-power tools; the
+// window then freezes while dragged (the old behavior).
+app.SetRenderWhileDragging(false);
+bool live = app.IsRenderWhileDragging();
+
 // Shutdown
 app.Close(); // sets m_Running = false, exits the loop cleanly
 ```
@@ -783,6 +798,20 @@ float scale = Cosmic::Application::Get().GetTimeScale();
 ```
 
 `GetAbsoluteTime()` is always monotonically increasing — it accumulates raw wall-clock time and is unaffected by `TimeScale`. Use it for profiling, session duration, or any clock that must not pause or rewind. Shaders reading `u_Time` receive this raw value. For a time value that does rewind with negative scale, use `GetLocalTime()` from within a layer.
+
+### Pause vs. `TimeScale(0)`
+
+`SetTimeScale(0.0f)` remains the low-level soft-pause: layers still receive `OnUpdate` with a zero delta, but it overwrites whatever scale the user had set. `Application::Pause()` is the ergonomic, queryable, **scale-preserving** first-class version intended for end-user pause:
+
+| | Paused behavior | Why |
+| --- | --- | --- |
+| `OnFixedUpdate` (fixed pass) | **Skipped** — accumulator frozen | Pure logic/physics; no catch-up burst on `Resume()` |
+| `OnUpdate` (variable pass) | Called with **dt = 0** | `OnUpdate` issues draw calls — the scene keeps rendering, frozen |
+| ImGui + present | Runs normally | Pause menus animate and stay clickable |
+| `GetAbsoluteTime()` | Keeps advancing | Scale-independent uptime — e.g. a live "PAUSED" clock |
+| `GetLocalTime()` | Frozen (advances by 0) | Shader/animation time driven by it freezes — the visual "pause" |
+
+Both can coexist; `Pause()` wins (forces dt = 0) regardless of the current scale, and `Resume()` restores exactly the scale the user had. Effects reading `u_Time` / `GetAbsoluteTime()` keep moving while paused — intended. The engine binds no pause hotkey; the client does (`TogglePause()` from an `OnEvent` key handler).
 
 ### Per-Layer Local Time
 
@@ -2394,6 +2423,21 @@ win.SetFullscreen(true);   // go fullscreen on the current monitor
 win.SetFullscreen(false);  // restore windowed mode
 bool fs = win.IsFullscreen();
 ```
+
+Transition details (2026-07-01, windowing plan W2/W5):
+
+- **Paint-through-transition:** immediately after the fullscreen `SetWindowPos`, the engine renders and presents one frame at the new size within the same toggle (the resize event is dispatched synchronously), so DWM never shows a stale windowed-size buffer. Both `SetWindowPos` calls also pass `SWP_NOCOPYBITS` so old client pixels are never blitted into the new rect.
+- **Maximize round-trip:** entering fullscreen from a maximized window saves the maximize state and the *normal* (restored) rect; exiting restores maximized properly instead of a floating window with the maximized rect.
+- **Stale-rect protection:** on exit the saved rect is clamped to the nearest monitor's work area (covers monitor unplugged / resolution changed while fullscreen), and `WM_DISPLAYCHANGE` / `WM_DPICHANGED` while fullscreen re-assert the monitor cover.
+- **Compat mode (W3, default since 2026-07-02):** the fullscreen cover rect is sized 1 px taller than the monitor (`FullscreenCompatMode::OversizeByOne`) so DWM never promotes the window to independent-flip "fullscreen optimizations" — the fix for black/torn frames when a capture overlay (Win+Shift+S) appears over fullscreen, since the forced flip→composed demotion glitches the GL present path and GL has no API to opt out of the promotion heuristic. The taskbar still hides and the extra row is off-screen; the only cost is composed-present latency a tools engine doesn't need. A/B without a rebuild via the env var `COSMIC_FULLSCREEN_COMPAT=exact|oversize`, or live via `win.SetFullscreenCompatMode(...)`. Rationale: [`docs/engineering-notes/borderless-window-dpi.md`](docs/engineering-notes/borderless-window-dpi.md).
+
+### Window Trace (debugging window/DWM issues)
+
+Set the environment variable `COSMIC_WINDOW_TRACE=1` (or call `Cosmic::Window::SetTraceEnabled(true)`) to log every window-state transition with millisecond timestamps: `WM_WINDOWPOSCHANGED` (rect + flags), `WM_SIZE` / `WM_DPICHANGED`, focus changes, `WM_SYSCOMMAND`, `WM_DISPLAYCHANGE`, modal move/size loop enter/exit, every fullscreen step (saved rect, style bits, cover rect), and `SwapBuffers` calls slower than 25 ms (occlusion-throttle signature). Lines are tagged `[WinTrace]` in the log.
+
+### Responsive Drag/Resize
+
+Dragging the title bar or a resize border does **not** freeze rendering: a `WM_TIMER` pumped inside the Win32 modal move/size loop keeps running full engine frames (fixed-step logic, animation, ImGui, serial polling) while the drag is in progress. Default **on**; clients opt out with `Application::SetRenderWhileDragging(false)` (see §3), which restores the old freeze-while-dragging behavior. Design rationale: [`docs/design/responsive-rendering-and-pause.md`](docs/design/responsive-rendering-and-pause.md).
 
 The default engine hotkey is **F11**. Client DLLs can override this with a custom key combination:
 
@@ -4709,6 +4753,15 @@ leak, grayscale-texture upload, the `PauseOnMinimize` doc, the instanced-sampler
 allocation churn, the texture-slot dedup/lookup, the `DrawLines` bind contract, the `ComponentArray`
 release guard, and the missing `DrawRotatedQuad(vec2, Material)` overload). The limitations below are
 the ones that remain.
+
+The 2026-07-01 windowing pass (plan doc [`docs/plans/09-windowing-plan.md`](docs/plans/09-windowing-plan.md), W1–W6)
+shipped: `[WinTrace]` window-event instrumentation (`COSMIC_WINDOW_TRACE=1`), paint-through-transition
+fullscreen toggles (present-at-new-size within the toggle + `SWP_NOCOPYBITS`), the
+`SetFullscreenCompatMode(OversizeByOne)` anti-black-flash mode (**the default since 2026-07-02**, with
+`COSMIC_FULLSCREEN_COMPAT=exact|oversize` as the A/B override — see §24),
+**responsive rendering during window drag/resize** (default on; `SetRenderWhileDragging(false)` opts out),
+a first-class **`Pause()`/`Resume()`** API (sim frozen, UI+render live — see §7), and window-state
+hardening (maximize↔fullscreen round-trip, stale-rect clamping, display-change re-assertion).
 
 The 2026-06-26 stability pass fixed two laptop-/DPI-sensitive defects (see [Section 24](#24-window-system) and
 [`docs/engineering-notes/`](docs/engineering-notes/)):

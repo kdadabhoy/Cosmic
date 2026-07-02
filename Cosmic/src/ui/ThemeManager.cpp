@@ -87,8 +87,9 @@ namespace Cosmic
 			Register(t);
 
 		// User-authored themes (saved by the in-app editor) live alongside the
-		// active project's assets. Best-effort; the folder may not exist yet.
-		LoadFolder(FileSystem::Resolve("project://themes"));
+		// active project's assets — but Init runs at ImGuiLayer attach, BEFORE any
+		// project is mounted, so "project://" cannot resolve yet. Project themes
+		// are loaded by Application::LoadProjectDLL's rescan hook at mount time.
 
 		CS_CORE_INFO("ThemeManager: initialised ({0} theme(s))", s_Themes.size());
 	}

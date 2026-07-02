@@ -51,6 +51,12 @@ namespace Cosmic
 		static Ref<Font> Get(const std::string& name);
 		static Ref<Font> Default();
 
+		// Rescan project://fonts for the mounted project. Called by the engine from
+		// Application::LoadProjectDLL — the lazy first-use scan may have run before
+		// any project was mounted (e.g. from the Launcher), missing project faces.
+		// Idempotent (stems already in the library are kept, first wins).
+		static void LoadProjectFonts();
+
 		// ---- Per-font data ----
 		const Ref<Texture2D>& GetAtlas() const { return m_Atlas; }
 		const Glyph*          GetGlyph(uint32_t codepoint) const;

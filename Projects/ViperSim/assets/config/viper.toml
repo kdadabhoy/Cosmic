@@ -1,0 +1,40 @@
+# viper.toml — the app-owned airframe file (E10). Numbers flow from the Viper
+# Cost & Weight tracker and sizing calculator; no recompiles to change them.
+# (Plan doc 04 §2.2.) Values marked * are placeholders until bench data lands.
+
+[meta]
+name = "Viper (dual-motor tailsitter)"
+config_rev = "0.3"
+
+[airframe]
+auw_kg        = 1.49          # all-up weight (NE 2.0 kg)
+wing_area_m2  = 0.30
+aspect_ratio  = 6.0
+inertia_diag  = [0.02, 0.05, 0.06]   # kg·m², body xx/yy/zz *
+body_radius_m = 0.18          # lowest-point offset for ground contact
+
+[motors]
+count         = 2
+max_thrust_gf = 1490          # per motor *
+tau_s         = 0.05          # first-order motor lag *
+
+[battery]
+capacity_wh   = 100.0
+mass_g        = 500.0
+cells_s       = 4             # 4S nominal 14.8 V
+usable_frac   = 0.85
+
+[aero]
+cd0    = 0.035
+clmax  = 1.2                  # replaced by XFLR5 polars (P4)
+
+[sim]
+perfect_sensors = true        # develop against perfect, harden estimator later (P3)
+substeps        = 8           # physics substeps per engine fixed tick
+ground_agl_m    = 0.0         # ground plane altitude
+ground_k        = 4000.0      # ground contact spring (N/m)
+ground_c        = 350.0       # ground contact damper (N·s/m)
+
+[limits]
+geofence_agl_m = 121.9        # FAA 400 ft
+hover_budget_s = 300          # 5 min cumulative hover cap (enforced in SW, P3+)

@@ -39,6 +39,8 @@
 
 // 1. Standard library dependencies
 #include <iostream>
+#include <cstdlib>    // std::getenv (COSMIC_WINDOW_TRACE, non-Windows path)
+#include <algorithm>  // std::min / std::clamp (restore-rect clamping)
 
 // 2. Platform Specific Windows block
 #ifdef _WIN32
@@ -55,6 +57,17 @@
     #include <windowsx.h>   // GET_X_LPARAM / GET_Y_LPARAM
     #include <dwmapi.h>     // DwmExtendFrameIntoClientArea (link: dwmapi)
 #endif
+
+// =============================================================================
+// Window trace (W1, docs/plans/09-windowing-plan.md)
+// -----------------------------------------------------------------------------
+// Timestamped logging of every window-state transition the OS hands us, plus
+// our own fullscreen steps and slow SwapBuffers. spdlog's pattern already
+// carries millisecond timestamps. Enable via Window::SetTraceEnabled(true) or
+// the environment variable COSMIC_WINDOW_TRACE=1 (read once at first Window
+// construction).
+// =============================================================================
+#define CS_WINTRACE(...) do { if (::Cosmic::Window::IsTraceEnabled()) { CS_CORE_TRACE("[WinTrace] " __VA_ARGS__); } } while (0)
 
 // =============================================================================
 // Borderless custom chrome — Win32 WndProc subclass
@@ -104,10 +117,123 @@ namespace
         return HTCLIENT;
     }
 
+    // W1 trace helper — logs the message with the current framebuffer size so
+    // every event line shows what size the engine believes it is rendering at.
+    void TraceWindowMessage(Cosmic::Window* self, HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+    {
+        if (!Cosmic::Window::IsTraceEnabled())
+            return;
+
+        int fbW = 0, fbH = 0;
+        self->GetSize(&fbW, &fbH);
+
+        switch (msg)
+        {
+        case WM_WINDOWPOSCHANGED:
+        {
+            const auto* wp = reinterpret_cast<const WINDOWPOS*>(lParam);
+            CS_CORE_TRACE("[WinTrace] WM_WINDOWPOSCHANGED pos=({},{}) size={}x{} flags=0x{:X} fb={}x{}",
+                wp->x, wp->y, wp->cx, wp->cy, wp->flags, fbW, fbH);
+            break;
+        }
+        case WM_SIZE:
+            CS_CORE_TRACE("[WinTrace] WM_SIZE type={} client={}x{} fb={}x{}",
+                wParam == SIZE_MINIMIZED ? "MINIMIZED" : wParam == SIZE_MAXIMIZED ? "MAXIMIZED" : "RESTORED",
+                LOWORD(lParam), HIWORD(lParam), fbW, fbH);
+            break;
+        case WM_DPICHANGED:
+            CS_CORE_TRACE("[WinTrace] WM_DPICHANGED dpi={} suggested=({},{},{},{}) fb={}x{}",
+                HIWORD(wParam),
+                reinterpret_cast<RECT*>(lParam)->left,  reinterpret_cast<RECT*>(lParam)->top,
+                reinterpret_cast<RECT*>(lParam)->right, reinterpret_cast<RECT*>(lParam)->bottom,
+                fbW, fbH);
+            break;
+        case WM_ACTIVATE:
+            CS_CORE_TRACE("[WinTrace] WM_ACTIVATE state={} minimized={} fb={}x{}",
+                LOWORD(wParam) == WA_INACTIVE ? "INACTIVE" : LOWORD(wParam) == WA_CLICKACTIVE ? "CLICKACTIVE" : "ACTIVE",
+                HIWORD(wParam) != 0, fbW, fbH);
+            break;
+        case WM_SETFOCUS:
+            CS_CORE_TRACE("[WinTrace] WM_SETFOCUS fb={}x{}", fbW, fbH);
+            break;
+        case WM_KILLFOCUS:
+            CS_CORE_TRACE("[WinTrace] WM_KILLFOCUS fb={}x{}", fbW, fbH);
+            break;
+        case WM_SYSCOMMAND:
+            CS_CORE_TRACE("[WinTrace] WM_SYSCOMMAND cmd=0x{:X} fb={}x{}", wParam & 0xFFF0u, fbW, fbH);
+            break;
+        case WM_DISPLAYCHANGE:
+            CS_CORE_TRACE("[WinTrace] WM_DISPLAYCHANGE {}x{} bpp={} fb={}x{}",
+                LOWORD(lParam), HIWORD(lParam), wParam, fbW, fbH);
+            break;
+        case WM_ENTERSIZEMOVE:
+            CS_CORE_TRACE("[WinTrace] WM_ENTERSIZEMOVE (modal move/size loop begins) fb={}x{}", fbW, fbH);
+            break;
+        case WM_EXITSIZEMOVE:
+            CS_CORE_TRACE("[WinTrace] WM_EXITSIZEMOVE (modal move/size loop ends) fb={}x{}", fbW, fbH);
+            break;
+        default:
+            break;
+        }
+    }
+
     LRESULT CALLBACK CosmicWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     {
         auto*   self = reinterpret_cast<Cosmic::Window*>(GetPropW(hwnd, L"CosmicWindowPtr"));
         WNDPROC orig = self ? reinterpret_cast<WNDPROC>(self->NativeOrigWndProc()) : nullptr;
+
+        // ---------------------------------------------------------------------
+        // Chrome-independent handling: trace (W1), the modal frame pump (W4),
+        // and fullscreen re-assertion on display/DPI changes (W5.3). The modal
+        // move/size freeze exists with or without custom chrome, so none of
+        // this is gated on HasCustomChrome().
+        // ---------------------------------------------------------------------
+        if (self)
+        {
+            TraceWindowMessage(self, hwnd, msg, wParam, lParam);
+
+            switch (msg)
+            {
+            case WM_ENTERSIZEMOVE:
+            case WM_ENTERMENULOOP:
+                self->BeginModalFramePump();
+                break;  // fall through to GLFW (cursor handling)
+            case WM_EXITSIZEMOVE:
+            case WM_EXITMENULOOP:
+                self->EndModalFramePump();
+                break;  // fall through to GLFW
+            case WM_TIMER:
+                if (wParam == Cosmic::Window::kModalFrameTimerId)
+                {
+                    self->ModalFrameTick();
+                    return 0;
+                }
+                break;
+            case WM_DISPLAYCHANGE:
+                // Resolution/monitor layout changed under us. If fullscreen,
+                // re-cover the (possibly re-sized) monitor after GLFW has seen
+                // the message.
+                if (self->IsFullscreen() && orig)
+                {
+                    const LRESULT r = CallWindowProcW(orig, hwnd, msg, wParam, lParam);
+                    self->ReassertFullscreenCoverWin32();
+                    return r;
+                }
+                break;
+            case WM_DPICHANGED:
+                // Scale changed while fullscreen (settings change — you can't
+                // drag a fullscreen window between monitors): let GLFW process
+                // the DPI change, then re-assert the exact monitor cover so the
+                // suggested-rect reposition can't shrink us out of fullscreen.
+                if (self->IsFullscreen() && orig)
+                {
+                    const LRESULT r = CallWindowProcW(orig, hwnd, msg, wParam, lParam);
+                    self->ReassertFullscreenCoverWin32();
+                    return r;
+                }
+                break;
+            }
+        }
 
         if (self && self->HasCustomChrome())
         {
@@ -145,12 +271,50 @@ namespace
 
 namespace Cosmic
 {
+	// Window trace switch (W1) — off unless SetTraceEnabled(true) or
+	// COSMIC_WINDOW_TRACE=1 in the environment (checked once, below).
+	bool Window::s_TraceEnabled = false;
+
 	// =========================================================================
 	// Construction
 	// =========================================================================
 
 	Window::Window(int width, int height, const std::string& title)
 	{
+		// One-time environment check so the trace can be enabled without a
+		// client code change (COSMIC_WINDOW_TRACE=1).
+		static const bool s_TraceEnvChecked = []()
+		{
+#ifdef _WIN32
+			char buf[8] = {};
+			if (GetEnvironmentVariableA("COSMIC_WINDOW_TRACE", buf, sizeof(buf)) > 0 && buf[0] == '1')
+				s_TraceEnabled = true;
+#else
+			if (const char* v = std::getenv("COSMIC_WINDOW_TRACE"); v && v[0] == '1')
+				s_TraceEnabled = true;
+#endif
+			return true;
+		}();
+		(void)s_TraceEnvChecked;
+
+#ifdef _WIN32
+		// W3 A/B override: COSMIC_FULLSCREEN_COMPAT=exact|oversize picks the
+		// fullscreen sizing strategy for this run without a rebuild (default is
+		// OversizeByOne — see FullscreenCompatMode in Window.h).
+		{
+			char cbuf[16] = {};
+			if (GetEnvironmentVariableA("COSMIC_FULLSCREEN_COMPAT", cbuf, sizeof(cbuf)) > 0)
+			{
+				if (cbuf[0] == 'e' || cbuf[0] == 'E')
+					m_FullscreenCompatMode = FullscreenCompatMode::ExactCover;
+				else if (cbuf[0] == 'o' || cbuf[0] == 'O')
+					m_FullscreenCompatMode = FullscreenCompatMode::OversizeByOne;
+				CS_CORE_INFO("Window: COSMIC_FULLSCREEN_COMPAT override -> {}.",
+					m_FullscreenCompatMode == FullscreenCompatMode::OversizeByOne ? "OversizeByOne" : "ExactCover");
+			}
+		}
+#endif
+
 		if (!glfwInit())
 		{
 			CS_CORE_CRITICAL("Window: Failed to initialise GLFW!");
@@ -334,6 +498,11 @@ namespace Cosmic
 		// Clear the hotkey override first so nothing can fire during teardown.
 		m_HotkeyOverride = nullptr;
 
+		// No timer may outlive the HWND, and no frame callback may fire into a
+		// dying Application.
+		m_ModalFrameCallback = nullptr;
+		EndModalFramePump();
+
 		// If we are in fullscreen, restore the window style before destroying it
 		// so the DWM does not leave the desktop in an unusual state.
 		if (m_Fullscreen && m_Handle)
@@ -393,6 +562,20 @@ namespace Cosmic
 	void Window::SwapBuffers()
 	{
 		CS_CORE_ASSERT(m_Context, "SwapBuffers called on a window with no graphics context.");
+
+		// W1: when tracing, time the present. A swap that takes far longer than
+		// a vsync interval is the signature of driver throttling of an occluded/
+		// demoted swapchain (hypothesis H-B2 in docs/plans/09-windowing-plan.md).
+		if (s_TraceEnabled)
+		{
+			const double t0 = glfwGetTime();
+			m_Context->SwapBuffers();
+			const double ms = (glfwGetTime() - t0) * 1000.0;
+			if (ms > 25.0)
+				CS_CORE_TRACE("[WinTrace] SwapBuffers took {:.1f} ms (possible occlusion throttle)", ms);
+			return;
+		}
+
 		m_Context->SwapBuffers();
 	}
 	bool Window::ShouldClose() const { return glfwWindowShouldClose(m_Handle); }
@@ -486,6 +669,10 @@ namespace Cosmic
 	void Window::DisableCustomChromeWin32()
 	{
 #ifdef _WIN32
+		// The modal pump timer is dispatched through our subclass WndProc —
+		// kill it before the subclass is removed.
+		EndModalFramePump();
+
 		HWND hwnd = glfwGetWin32Window(m_Handle);
 		if (hwnd && m_OrigWndProc)
 		{
@@ -500,6 +687,58 @@ namespace Cosmic
 	}
 
 	// =========================================================================
+	// Modal frame pump (W4 — responsive rendering during the Win32 modal
+	// move/size loop). See docs/design/responsive-rendering-and-pause.md.
+	// =========================================================================
+
+	void Window::SetModalRenderingEnabled(bool enabled)
+	{
+		m_ModalRenderingEnabled = enabled;
+		if (!enabled)
+			EndModalFramePump(); // if mid-drag, stop pumping immediately
+	}
+
+	void Window::BeginModalFramePump()
+	{
+#ifdef _WIN32
+		if (!m_ModalRenderingEnabled || m_InModalLoop || !m_Handle)
+			return;
+
+		HWND hwnd = glfwGetWin32Window(m_Handle);
+		if (!hwnd)
+			return;
+
+		m_InModalLoop = true;
+		// USER_TIMER_MINIMUM (~10 ms, floored near ~15 ms by the scheduler) is
+		// plenty — VSync caps the effective rate anyway.
+		SetTimer(hwnd, static_cast<UINT_PTR>(kModalFrameTimerId), USER_TIMER_MINIMUM, nullptr);
+		CS_WINTRACE("Modal frame pump started");
+#endif
+	}
+
+	void Window::EndModalFramePump()
+	{
+#ifdef _WIN32
+		if (!m_InModalLoop)
+			return;
+
+		m_InModalLoop = false;
+		if (m_Handle)
+		{
+			if (HWND hwnd = glfwGetWin32Window(m_Handle))
+				KillTimer(hwnd, static_cast<UINT_PTR>(kModalFrameTimerId));
+		}
+		CS_WINTRACE("Modal frame pump stopped");
+#endif
+	}
+
+	void Window::ModalFrameTick()
+	{
+		if (m_ModalFrameCallback)
+			m_ModalFrameCallback();
+	}
+
+	// =========================================================================
 	// Fullscreen — borderless windowed technique
 	// =========================================================================
 
@@ -510,6 +749,30 @@ namespace Cosmic
 
 		m_Fullscreen = enabled;
 		ApplyFullscreenWin32(enabled);
+
+		// W2: present a correctly-sized frame within the same toggle. The
+		// SetWindowPos above already dispatched WM_SIZE synchronously (GLFW size
+		// callback → WindowResizeEvent → FBO resize), so the engine state is at
+		// the new size — render and swap NOW instead of up to a frame later,
+		// which is what DWM otherwise fills with stale/black content.
+		ModalFrameTick();
+	}
+
+	void Window::SetFullscreenCompatMode(FullscreenCompatMode mode)
+	{
+		if (m_FullscreenCompatMode == mode)
+			return;
+
+		m_FullscreenCompatMode = mode;
+		CS_CORE_INFO("Window: fullscreen compat mode = {}.",
+			mode == FullscreenCompatMode::OversizeByOne ? "OversizeByOne" : "ExactCover");
+
+		// Live re-apply so the A/B experiment can flip modes while fullscreen.
+		if (m_Fullscreen && m_Handle)
+		{
+			ReassertFullscreenCoverWin32();
+			ModalFrameTick();
+		}
 	}
 
 	void Window::ApplyFullscreenWin32(bool enabled)
@@ -532,39 +795,48 @@ namespace Cosmic
 		{
 			// ---- Entering fullscreen ----
 
-			// 1. Save current windowed rect (window position, not client area).
-			RECT winRect = {};
-			GetWindowRect(hwnd, &winRect);
-			m_SavedX = winRect.left;
-			m_SavedY = winRect.top;
-			m_SavedWidth = winRect.right - winRect.left;
-			m_SavedHeight = winRect.bottom - winRect.top;
+			// 1. Save the current windowed placement. W5.1: if the window is
+			//    maximized, GetWindowRect returns the ZOOMED rect — restoring
+			//    that as a normal window produces a pseudo-maximized floating
+			//    window. Save the *normal* (restored) rect from the window
+			//    placement plus the maximize flag, and re-maximize on exit.
+			m_SavedMaximized = IsZoomed(hwnd) != 0;
 
-			// 2. Find the monitor the window centre currently lives on.
-			GLFWmonitor* monitor = FindCurrentMonitor();
-			if (!monitor)
-				monitor = glfwGetPrimaryMonitor();
+			WINDOWPLACEMENT wp = {};
+			wp.length = sizeof(wp);
+			if (m_SavedMaximized && GetWindowPlacement(hwnd, &wp))
+			{
+				// Note: rcNormalPosition is in workspace coordinates; identical
+				// to screen coordinates unless the taskbar docks left/top.
+				m_SavedX      = wp.rcNormalPosition.left;
+				m_SavedY      = wp.rcNormalPosition.top;
+				m_SavedWidth  = wp.rcNormalPosition.right  - wp.rcNormalPosition.left;
+				m_SavedHeight = wp.rcNormalPosition.bottom - wp.rcNormalPosition.top;
+			}
+			else
+			{
+				RECT winRect = {};
+				GetWindowRect(hwnd, &winRect);
+				m_SavedX = winRect.left;
+				m_SavedY = winRect.top;
+				m_SavedWidth = winRect.right - winRect.left;
+				m_SavedHeight = winRect.bottom - winRect.top;
+			}
 
-			int monX = 0, monY = 0;
-			glfwGetMonitorPos(monitor, &monX, &monY);
-			const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+			CS_WINTRACE("Fullscreen enter: saved rect ({},{}) {}x{} maximized={}",
+				m_SavedX, m_SavedY, m_SavedWidth, m_SavedHeight, m_SavedMaximized);
 
-			// 3. Strip window decorations via style bits.
+			// 2. Strip window decorations via style bits.
 			//    We keep WS_VISIBLE so the window does not flash hidden.
 			LONG style = GetWindowLong(hwnd, GWL_STYLE);
 			style &= ~WS_OVERLAPPEDWINDOW;
 			SetWindowLong(hwnd, GWL_STYLE, style);
+			CS_WINTRACE("Fullscreen enter: stripped WS_OVERLAPPEDWINDOW (style 0x{:X})", static_cast<unsigned long>(style));
 
-			// 4. Stretch window to cover the monitor exactly.
-			//    SWP_FRAMECHANGED forces the style change to be applied.
-			//    No HWND_TOPMOST — we stay in the normal z-order stack.
-			SetWindowPos(hwnd, HWND_TOP,
-				monX, monY,
-				mode->width, mode->height,
-				SWP_NOOWNERZORDER | SWP_FRAMECHANGED | SWP_SHOWWINDOW);
-
-			CS_CORE_INFO("Window: Entered borderless fullscreen ({}x{} @ {},{}).",
-				mode->width, mode->height, monX, monY);
+			// 3. Stretch the window to cover the current monitor (exact cover,
+			//    or +1 px height in OversizeByOne compat mode — W3). Shared with
+			//    the display-change path.
+			ReassertFullscreenCoverWin32();
 		}
 		else
 		{
@@ -574,15 +846,50 @@ namespace Cosmic
 			LONG style = GetWindowLong(hwnd, GWL_STYLE);
 			style |= WS_OVERLAPPEDWINDOW;
 			SetWindowLong(hwnd, GWL_STYLE, style);
+			CS_WINTRACE("Fullscreen exit: restored WS_OVERLAPPEDWINDOW (style 0x{:X})", static_cast<unsigned long>(style));
 
-			// 2. Restore saved position and size.
+			// 2. W5.2: the saved rect may be stale — the monitor could have been
+			//    unplugged or the resolution changed while fullscreen. Clamp to
+			//    the work area of the nearest monitor so the window always comes
+			//    back reachable.
+			RECT restore = { m_SavedX, m_SavedY, m_SavedX + m_SavedWidth, m_SavedY + m_SavedHeight };
+			HMONITOR mon = MonitorFromRect(&restore, MONITOR_DEFAULTTONEAREST);
+			MONITORINFO mi = {};
+			mi.cbSize = sizeof(mi);
+			if (mon && GetMonitorInfoW(mon, &mi))
+			{
+				const RECT& wa = mi.rcWork;
+				int w = std::min<int>(m_SavedWidth,  wa.right  - wa.left);
+				int h = std::min<int>(m_SavedHeight, wa.bottom - wa.top);
+				int x = std::clamp<int>(m_SavedX, wa.left, wa.right  - w);
+				int y = std::clamp<int>(m_SavedY, wa.top,  wa.bottom - h);
+				if (x != m_SavedX || y != m_SavedY || w != m_SavedWidth || h != m_SavedHeight)
+				{
+					CS_WINTRACE("Fullscreen exit: clamped restore rect ({},{}) {}x{} -> ({},{}) {}x{}",
+						m_SavedX, m_SavedY, m_SavedWidth, m_SavedHeight, x, y, w, h);
+					m_SavedX = x; m_SavedY = y; m_SavedWidth = w; m_SavedHeight = h;
+				}
+			}
+
+			// 3. Restore saved position and size. SWP_NOCOPYBITS: never blit
+			//    stale fullscreen-sized pixels into the smaller rect (W2/H-A3).
 			SetWindowPos(hwnd, HWND_TOP,
 				m_SavedX, m_SavedY,
 				m_SavedWidth, m_SavedHeight,
-				SWP_NOOWNERZORDER | SWP_FRAMECHANGED | SWP_SHOWWINDOW);
+				SWP_NOOWNERZORDER | SWP_FRAMECHANGED | SWP_SHOWWINDOW | SWP_NOCOPYBITS);
 
-			CS_CORE_INFO("Window: Restored windowed mode ({}x{} @ {},{}).",
-				m_SavedWidth, m_SavedHeight, m_SavedX, m_SavedY);
+			// 4. W5.1: the window was maximized when it entered fullscreen —
+			//    put it back to maximized (the normal rect restored above is
+			//    what a later un-maximize returns to).
+			if (m_SavedMaximized)
+			{
+				ShowWindow(hwnd, SW_MAXIMIZE);
+				CS_WINTRACE("Fullscreen exit: re-maximized");
+			}
+
+			CS_CORE_INFO("Window: Restored windowed mode ({}x{} @ {},{}){}.",
+				m_SavedWidth, m_SavedHeight, m_SavedX, m_SavedY,
+				m_SavedMaximized ? " [maximized]" : "");
 		}
 
 		// Keep VSync setting intact across the transition.
@@ -616,11 +923,66 @@ namespace Cosmic
 	}
 
 	// =========================================================================
+	// Fullscreen cover (shared: enter path, W3 compat re-apply, W5.3
+	// display/DPI change re-assertion)
+	// =========================================================================
+
+	void Window::ReassertFullscreenCoverWin32()
+	{
+#ifdef _WIN32
+		if (!m_Fullscreen || !m_Handle)
+			return;
+
+		HWND hwnd = glfwGetWin32Window(m_Handle);
+		if (!hwnd)
+			return;
+
+		// Find the monitor the window centre currently lives on.
+		GLFWmonitor* monitor = FindCurrentMonitor();
+		if (!monitor)
+			monitor = glfwGetPrimaryMonitor();
+		if (!monitor)
+			return;
+
+		int monX = 0, monY = 0;
+		glfwGetMonitorPos(monitor, &monX, &monY);
+		const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+		if (!mode)
+			return;
+
+		// W3: OversizeByOne makes the window 1 px taller than the monitor so
+		// DWM never classifies it as fullscreen (no independent-flip promotion,
+		// so capture overlays composite normally). The taskbar still hides —
+		// that comes from the stripped style, not the exact size.
+		const int extraH = (m_FullscreenCompatMode == FullscreenCompatMode::OversizeByOne) ? 1 : 0;
+
+		// SWP_FRAMECHANGED forces the style change to be applied.
+		// No HWND_TOPMOST — we stay in the normal z-order stack.
+		// SWP_NOCOPYBITS (W2/H-A3): without it, SetWindowPos may blit the old
+		// windowed-size client pixels into the new rect before our first
+		// correctly-sized present, which reads as a stretched/garbage flash.
+		SetWindowPos(hwnd, HWND_TOP,
+			monX, monY,
+			mode->width, mode->height + extraH,
+			SWP_NOOWNERZORDER | SWP_FRAMECHANGED | SWP_SHOWWINDOW | SWP_NOCOPYBITS);
+
+		CS_CORE_INFO("Window: Entered borderless fullscreen ({}x{} @ {},{}){}.",
+			mode->width, mode->height + extraH, monX, monY,
+			extraH ? " [compat: oversize-by-one]" : "");
+#endif
+	}
+
+	// =========================================================================
 	// Monitor detection
 	// =========================================================================
 
 	GLFWmonitor* Window::FindCurrentMonitor() const
 	{
+		// W5.4 test note: using the window CENTRE (not the top-left corner) is
+		// deliberate — a window straddling two monitors goes fullscreen on the
+		// one holding the majority of it, and the saved rect restores onto that
+		// same monitor. Verified manually with the dual-monitor checklist in
+		// docs/plans/09-windowing-plan.md (W5).
 		// Window centre in screen coordinates.
 		int wx = 0, wy = 0, ww = 0, wh = 0;
 		glfwGetWindowPos(m_Handle, &wx, &wy);

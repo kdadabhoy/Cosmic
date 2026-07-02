@@ -52,6 +52,13 @@
 // Math (spatial conventions: NED world frame, Y-up render frame, quaternions)
 #include "math/Spatial.h"
 
+// Simulation toolkit (E-series: docs/plans/03-simulation-engine-plan.md)
+#include "math/Integrators.h"    // E11 — RK4, semi-implicit Euler, FixedSubstepper
+#include "math/Filters.h"        // E12 — LPF, derivative, rate limit, biquad, washout
+#include "math/LookupTable.h"    // E13 — 1D/2D interp tables (aero polars, thrust maps)
+#include "math/Noise.h"          // E14 — seeded value/Perlin/fBm noise
+#include "math/Random.h"         // E15 — deterministic PCG32 RNG
+
 // Entity Component System Submodule Architecture
 #include "scene/Scene.h"
 #include "scene/Entity.h"
@@ -62,6 +69,7 @@
 // Input Mapping
 #include "codes/KeyCodes.h"
 #include "codes/MouseButtonCodes.h"
+#include "codes/GamepadCodes.h"
 
 // Specialized Utilities
 #include "serial/SerialPort.h"
@@ -69,6 +77,7 @@
 #include "serial/Framing.h"
 #include "utils/FileSystem.h"
 #include "utils/DataExport.h"
+#include "utils/Config.h"        // E10 — TOML config facade
 
 // Telemetry, Recording, and Entity Selection
 #include "telemetry/TelemetryChannel.h"

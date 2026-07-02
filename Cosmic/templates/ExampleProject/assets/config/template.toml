@@ -1,0 +1,17 @@
+# template.toml — sample config consumed by TemplateProject (E10 demo).
+# Edit a value, relaunch the project, watch the inspector update: parameters
+# without recompiles is the whole point.
+
+[demo]
+label = "hello from template.toml"
+gravity_mss = 9.80665
+spin_rate_hz = 0.25
+tint = [1.0, 0.6, 0.2]
+
+[[waypoints]]
+name = "alpha"
+pos = [0.0, 0.0, -10.0]
+
+[[waypoints]]
+name = "bravo"
+pos = [25.0, 5.0, -12.0]

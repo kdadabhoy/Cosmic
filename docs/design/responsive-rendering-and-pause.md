@@ -1,8 +1,17 @@
 # Design: Responsive Window Rendering (client-toggleable) + First-Class Pause
 
-> **Status:** Proposed (not yet implemented).
-> **Targets commit:** `b168754` — all file:line references are live as of this commit; re-check before
-> implementing.
+> **Status:** Implemented 2026-07-01 (windowing plan W2/W4). Both features shipped as specced, with
+> two deliberate divergences noted below.
+> **Implementation divergences:**
+> 1. `Run()` calls `ProcessDeferredTransitions()` every iteration — including the minimized
+>    early-out — rather than `continue`-skipping it as the sketch below shows. That preserves the
+>    pre-existing behavior (a project transition queued just before minimizing must not stall),
+>    which this doc's sketch mischaracterized. The invariant that matters holds either way: the
+>    Safe Zone never runs from inside the modal-loop frame pump.
+> 2. The immediate-frame hook is also fired by `Window::SetFullscreen` after its transition
+>    (paint-through-transition, plan W2) — same callback, one more caller.
+> **Targets commit:** `b168754` — all file:line references were live as of that commit; they have
+> since drifted (the implementation moved the loop body into `Application::RenderSingleFrame`).
 > **Summary:** Two related controls over the engine's update/render heartbeat. **(A)** Keep rendering while
 > the user drags/resizes the OS window (today it freezes), exposed as a client-toggleable option that
 > defaults **on**. **(B)** A first-class **pause** the end-user can trigger that freezes simulation and

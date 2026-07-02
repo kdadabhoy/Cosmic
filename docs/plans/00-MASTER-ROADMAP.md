@@ -46,9 +46,13 @@ Two long tracks run through the roadmap — **Sim/Viper** (phases 2–6) and **3
 interleave them freely; the numbering is the default serialization, not a hard dependency, except
 where a phase lists explicit prerequisites.
 
-### Phase 1 — Windowing correctness *(doc 09, W1–W6)*
+### Phase 1 — Windowing correctness *(doc 09, W1–W6)* — ✅ code complete 2026-07-02
 Fix the daily irritations: fullscreen black-flash, snip-overlay glitch, frozen render during
 drag/resize, window-state edge cases.
+> **Status:** W1–W6 implemented and building. W2/W4/W5 log-verified (paint-through-transition,
+> modal frame pump, maximize round-trip). W3 compat-mode mechanism ships (default unchanged); the
+> W3 *decision* + the interactive repro matrix (snip overlay, 125% laptop, slow-mo capture) remain
+> a **user manual pass** — template + findings table in doc 09 §3.5.
 - **Do:** W1 (instrument + repro matrix) → W2 (paint-through-transition) → W3 (DWM experiment,
   gated on W1 evidence) → W4 (responsive rendering + pause, per the accepted design doc) → W5
   (state hardening, parallel-safe) → W6 (docs).
@@ -56,8 +60,10 @@ drag/resize, window-state edge cases.
 - **Done when:** doc 09's acceptance checks pass at 100% and 125% scaling; snip over fullscreen
   captures cleanly; dragging the window keeps painting; README §24 + engineering note updated.
 
-### Phase 2 — Sim math & config toolkit *(doc 03: E10–E15, E7)*
+### Phase 2 — Sim math & config toolkit *(doc 03: E10–E15, E7)* — ✅ 2026-07-02
 Small, header-heavy, unit-tested engine verbs that unblock everything sim-shaped.
+> **Status:** all seven shipped on `main` with green tests (`CosmicTests`: 55 cases / 103,870
+> assertions). Template project demonstrates config load + gamepad axes (§ doc 03 status table).
 - **Do (order in doc 03):** E10 TOML config → E11 integrators → E13 lookup tables → E12 filters →
   E15 RNG → E14 noise → E7 gamepad. All parallel-safe on separate branches; all land with doctest
   coverage.
@@ -65,11 +71,17 @@ Small, header-heavy, unit-tested engine verbs that unblock everything sim-shaped
 - **Done when:** all seven merged with green tests; template project demonstrates config load +
   gamepad axes.
 
-### Phase 3 — ViperSim skeleton + dynamics decision *(doc 04: P0–P1)*
+### Phase 3 — ViperSim skeleton + dynamics decision *(doc 04: P0–P1)* — ✅ 2026-07-02
 - **Do:** P0 (project skeleton, SimHub, `viper.toml`, telemetry schema) → P1 (JSBSim spike behind
   `IDynamics`, **1-week timebox**, drop-test demo; record the JSBSim-vs-hand-rolled outcome in the
   Viper decision log and in doc 04).
 - **Done when:** drop test replayable in ReplayScreen; dynamics decision CLOSED with rationale.
+> **Status:** `Projects/ViperSim` ships. P0 skeleton (SimHub, `viper.toml` via E10, telemetry
+> schema, homescreen → Flight/Replay + phase stubs) + P1 (`IDynamics` + `ComposableDynamics` drop
+> test on E11 RK4, DataRecorder→replay, drop verified numerically). Dynamics decision
+> **provisional-closed** → ship ComposableDynamics, keep JSBSim behind `IDynamics`
+> (`Projects/ViperSim/docs/DYNAMICS_DECISION.md`). The formal JSBSim build spike itself is the one
+> outstanding user item; the interface makes running it later cost-free.
 
 ### Phase 4 — Tuned hover + energy truth *(doc 04: P2–P3; doc 08: A1–A2)*
 - **Do:** P2 (`viper-fc` + SimHal + attitude loop + TuningScreen) → P3 (position hold, sensor

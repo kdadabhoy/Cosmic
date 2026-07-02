@@ -18,6 +18,10 @@
  *   - Keeps the Windows compositor active (Win+Shift+S, screen capture tools work)
  *   - Avoids fighting GLFW's monitor-switch path, which has DWM interaction issues
  *   - Lets Alt+Tab work naturally since we remain a normal window
+ * By default the cover rect is monitor height + 1 px (FullscreenCompatMode::
+ * OversizeByOne, W3): an EXACTLY monitor-sized borderless window gets promoted to
+ * DWM independent flip, and the demotion forced by capture overlays glitches the
+ * GL present path. The 1 px oversize keeps the window permanently composed.
  *
  * Hotkey Override:
  * A per-frame global hotkey override callback can be registered via
@@ -96,6 +100,24 @@ namespace Cosmic
     // Callback signature: (key, action, mods) -> true = consumed
     using FullscreenToggleActionFn = std::function<bool(int key, int action, int mods)>;
 
+    // Fullscreen sizing strategy (W3, docs/plans/09-windowing-plan.md).
+    // ExactCover sizes the borderless window to exactly the monitor — DWM/the
+    // driver may promote it to independent-flip "fullscreen optimizations",
+    // and the forced demotion when a capture overlay (Win+Shift+S) appears
+    // black-flashes/tears on the legacy GL present path. OversizeByOne adds
+    // 1px of height so the window is never classified as fullscreen: no
+    // promotion, so overlays composite normally. The taskbar still hides and
+    // the extra row is off-screen; the only cost is composed-present latency
+    // this tools engine does not need. OversizeByOne is the DEFAULT (W3
+    // decision 2026-07-02 — GL has no API opt-out of the promotion heuristic;
+    // the real fix, a DXGI flip-model swapchain, is out of scope per plan §4).
+    // Override per-run with COSMIC_FULLSCREEN_COMPAT=exact|oversize for A/B.
+    enum class FullscreenCompatMode
+    {
+        ExactCover,     // exact monitor cover (A/B control case)
+        OversizeByOne,  // monitor height + 1 px — defeats iFlip promotion (default)
+    };
+
     // Predicate used by the borderless-chrome hit test: given a point in CLIENT
     // pixels, return true where the cursor should DRAG the window (i.e. the custom
     // title bar, excluding its buttons/menus). Set by the layer drawing the bar.
@@ -146,6 +168,45 @@ namespace Cosmic
 
         void SetFullscreen(bool enabled);
         bool IsFullscreen() const { return m_Fullscreen; }
+
+        // W3 debug/compat toggle — see FullscreenCompatMode above. Takes effect on
+        // the next fullscreen enter (re-applied live if currently fullscreen).
+        void                 SetFullscreenCompatMode(FullscreenCompatMode mode);
+        FullscreenCompatMode GetFullscreenCompatMode() const { return m_FullscreenCompatMode; }
+
+        // =====================================================================
+        // Window trace (W1) — timestamped logging of window/DWM state changes:
+        // WM_WINDOWPOSCHANGED, WM_SIZE, WM_DPICHANGED, focus, WM_SYSCOMMAND,
+        // fullscreen transitions, style changes, slow SwapBuffers. Off by
+        // default; enable with SetTraceEnabled(true) or the environment
+        // variable COSMIC_WINDOW_TRACE=1.
+        // =====================================================================
+
+        static void SetTraceEnabled(bool enabled) { s_TraceEnabled = enabled; }
+        static bool IsTraceEnabled()              { return s_TraceEnabled; }
+
+        // =====================================================================
+        // Modal frame pump (W4 — responsive rendering during drag/resize).
+        // While the Win32 modal move/size loop runs, glfwPollEvents blocks and
+        // the main loop starves. A WM_TIMER set on WM_ENTERSIZEMOVE pumps one
+        // frame per tick through the callback (Application::RenderSingleFrame).
+        // Default ON; clients opt out via Application::SetRenderWhileDragging.
+        // =====================================================================
+
+        static constexpr uintptr_t kModalFrameTimerId = 0xC05;
+
+        void SetModalFrameCallback(const std::function<void()>& cb) { m_ModalFrameCallback = cb; }
+        void SetModalRenderingEnabled(bool enabled);
+        bool IsModalRenderingEnabled() const { return m_ModalRenderingEnabled; }
+
+        // Used by the native WndProc subclass (implementation detail; public so
+        // the file-local Win32 proc can reach them without exposing Win32 types).
+        void BeginModalFramePump();
+        void EndModalFramePump();
+        void ModalFrameTick();
+        // Re-issues the fullscreen cover SetWindowPos after a display/DPI change
+        // while fullscreen (W5.3). No-op when not fullscreen.
+        void ReassertFullscreenCoverWin32();
 
         // =====================================================================
         // Window state controls (used by the custom title bar)
@@ -248,12 +309,26 @@ namespace Cosmic
 
         // Fullscreen state
         bool m_Fullscreen = false;
+        // W3 default: oversize-by-one (see FullscreenCompatMode above). The
+        // ctor honours COSMIC_FULLSCREEN_COMPAT=exact|oversize for A/B runs.
+        FullscreenCompatMode m_FullscreenCompatMode = FullscreenCompatMode::OversizeByOne;
 
-        // Saved windowed rect (client area, screen coords)
+        // Saved windowed rect (window rect, screen coords) + maximize state (W5.1:
+        // a window that was maximized when it entered fullscreen must restore as
+        // maximized, not as a floating window with the maximized rect).
         int  m_SavedX = 100;
         int  m_SavedY = 100;
         int  m_SavedWidth = 1280;
         int  m_SavedHeight = 720;
+        bool m_SavedMaximized = false;
+
+        // Modal frame pump state (W4)
+        bool m_InModalLoop = false;
+        bool m_ModalRenderingEnabled = true;
+        std::function<void()> m_ModalFrameCallback;
+
+        // Window trace switch (W1) — process-wide, cheap to test per message.
+        static bool s_TraceEnabled;
 
         // Plugin-registered hotkey override — lives on Window, NOT in WindowData,
         // so Application can always reach it without going through the GLFW user pointer.

@@ -146,5 +146,31 @@ namespace Cosmic
 			int offset,
 			int capacity
 		);
+
+		// -----------------------------------------------------------------------
+		// Load — WriteCSV's read counterpart (E13: lookup tables from CSV data)
+		// -----------------------------------------------------------------------
+
+		/**
+		 * @brief Read a numeric CSV file into parallel column vectors.
+		 *
+		 * The transpose of WriteCSV. If the first row contains any non-numeric
+		 * cell it is treated as the header row (returned via outHeaders when
+		 * non-null, otherwise skipped). Ragged rows and rows with non-numeric
+		 * cells after the header are rejected with a logged error.
+		 *
+		 * @param filepath    Input path (goes through no VFS resolution — pass a
+		 *                    resolved or relative disk path, or resolve with
+		 *                    FileSystem::Resolve first).
+		 * @param outColumns  Receives one vector per column, all equal length.
+		 * @param outHeaders  Optional; receives the header row if one existed
+		 *                    (empty when the file starts with data).
+		 * @return True on success (at least one data row).
+		 */
+		static bool LoadCSV(
+			const std::string& filepath,
+			std::vector<std::vector<double>>& outColumns,
+			std::vector<std::string>* outHeaders = nullptr
+		);
 	};
 }

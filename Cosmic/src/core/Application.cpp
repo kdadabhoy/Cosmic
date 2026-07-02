@@ -9,6 +9,9 @@
 #include "core/Log.h"
 #include "layers/WorkspaceLayer.h"
 #include "layers/LauncherLayer.h"
+#include "ui/ThemeManager.h"   // project://themes rescan on project mount
+#include "ui/Fonts.h"          // project://fonts rescan (ImGui atlas) on project mount
+#include "graphics/Font.h"     // project://fonts rescan (SDF library) on project mount
 #include "imgui_internal.h"
 
 
@@ -127,100 +130,139 @@ namespace Cosmic
 	 */
 	void Application::Run()
 	{
-		float lastFrameTime = 0.0f;
-		float accumulator = 0.0f;
+		// Seed the shared frame clock so the first frame's dt is ~0 rather than
+		// the full boot duration. Shared with the modal-loop frame pump.
+		m_LastFrameTime = (float)glfwGetTime();
 
 		while (m_Running && !m_Window->ShouldClose())
 		{
 			m_Window->PollEvents();
 
-			float time = (float)glfwGetTime();
-			Timestep rawTimestep = time - lastFrameTime;
-			lastFrameTime = time;
-			m_AbsoluteTime += rawTimestep.GetSeconds();
-
-			// Skip execution passes while minimized (default). Disabled via SetPauseOnMinimize(false).
-			// The Safe Zone still runs, so a project transition queued just before
-			// minimizing does not stall until the window is restored.
-			if (m_Minimized && m_PauseOnMinimize)
-			{
-				ProcessDeferredTransitions();
-				continue;
-			}
-
-
-			// -----------------------------------------------------------------
-			// PASS 1A: Fixed Timestep Updates (Deterministic Logic / Physics)
-			// -----------------------------------------------------------------
-			if (m_UseFixedTimestep)
-			{
-				// The interval derives from the configurable rate (default 60 Hz —
-				// see SetFixedTimestepHz). Sampled once per frame so a rate change
-				// mid-frame cannot tear the accumulator loop.
-				const float fixedDeltaTime = 1.0f / m_FixedTimestepHz;
-
-				float frameTime = rawTimestep.GetSeconds();
-
-				// Spiral-of-death panic protection clamping
-				if (frameTime > 0.25f)
-				{
-					frameTime = 0.25f;
-				}
-
-				accumulator += (frameTime * m_TimeScale);
-
-				// Signed so layers receive a negative dt during rewind (TimeScale < 0)
-				const float signedFixedDelta = m_TimeScale >= 0.f ? fixedDeltaTime : -fixedDeltaTime;
-
-				m_LayerStack.SetIterating(true);
-				while (accumulator >= fixedDeltaTime)
-				{
-					for (Layer* layer : m_LayerStack)
-					{
-						layer->OnFixedUpdate(signedFixedDelta);
-					}
-					accumulator -= fixedDeltaTime;
-				}
-				m_LayerStack.SetIterating(false);
-			}
-
-
-			// -----------------------------------------------------------------
-			// PASS 1B: Variable Timestep Updates (Animations & Visual States)
-			// -----------------------------------------------------------------
-			Timestep scaledTimestep = rawTimestep.GetSeconds() * m_TimeScale;
-			m_LayerStack.SetIterating(true);
-			for (Layer* layer : m_LayerStack)
-			{
-				// 1. Core Engine updates the layer's local timeline automatically
-				layer->UpdateLayerTime(scaledTimestep.GetSeconds());
-
-				// 2. Client code runs its standard frame updates
-				layer->OnUpdate(scaledTimestep.GetSeconds());
-			}
-			m_LayerStack.SetIterating(false);
-
-
-			// -----------------------------------------------------------------
-			// PASS 2: Main UI Rendering and Dockspace Composition
-			// -----------------------------------------------------------------
-			m_ImGuiLayer->Begin();
-			m_LayerStack.SetIterating(true);
-			for (Layer* layer : m_LayerStack)
-			{
-				layer->OnImGuiRender();
-			}
-			m_LayerStack.SetIterating(false);
-			m_ImGuiLayer->End();
-
-			m_Window->SwapBuffers();
-
+			// The per-frame body lives in RenderSingleFrame() so the Win32 modal
+			// move/size loop can pump it via WM_TIMER (responsive drag/resize)
+			// and fullscreen toggles can present a correctly-sized frame within
+			// the same transition. Returns false while minimized-and-paused.
+			RenderSingleFrame();
 
 			// =================================================================
-			// THE SAFE ZONE: Guaranteed zero-iteration window on m_LayerStack
+			// THE SAFE ZONE: Guaranteed zero-iteration window on m_LayerStack.
+			// Runs even while minimized, so a project transition queued just
+			// before minimizing does not stall until the window is restored.
+			// Deliberately NOT part of RenderSingleFrame(): no DLL load/unload
+			// or layer push/pop may run from inside the modal-loop frame pump.
 			// =================================================================
 			ProcessDeferredTransitions();
 		}
+	}
+
+	/////////////////////////////////////////////////////////////////////////////////
+
+	/**
+	 * RenderSingleFrame — one full engine frame (see Application.h docs).
+	 *
+	 * Pause semantics (docs/design/responsive-rendering-and-pause.md):
+	 *   - PASS 1A (fixed) is SKIPPED while paused — the accumulator does not
+	 *     advance, so no catch-up burst on Resume().
+	 *   - PASS 1B runs with dt = 0 — OnUpdate ISSUES DRAW CALLS in this engine,
+	 *     so it must keep running or the scene goes black; dt = 0 freezes motion.
+	 *   - PASS 2 (ImGui) + SwapBuffers run normally — pause menus stay live.
+	 *   - m_AbsoluteTime keeps advancing (scale-independent uptime);
+	 *     GetLocalTime()-driven animation freezes (advances by 0).
+	 */
+	bool Application::RenderSingleFrame()
+	{
+		// Re-entrancy guard: a fullscreen toggle inside a layer's OnUpdate fires
+		// an immediate frame request; SendMessage edge cases in the modal pump
+		// are ruled out for free.
+		if (m_InFrameTick)
+			return true;
+		m_InFrameTick = true;
+
+		float time = (float)glfwGetTime();
+		Timestep rawTimestep = time - m_LastFrameTime;
+		m_LastFrameTime = time;
+		m_AbsoluteTime += rawTimestep.GetSeconds();
+
+		// Skip execution passes while minimized (default). Disabled via
+		// SetPauseOnMinimize(false). Run() still processes the Safe Zone.
+		if (m_Minimized && m_PauseOnMinimize)
+		{
+			m_InFrameTick = false;
+			return false;
+		}
+
+
+		// -----------------------------------------------------------------
+		// PASS 1A: Fixed Timestep Updates (Deterministic Logic / Physics)
+		// Skipped entirely while paused (pure logic — nothing to draw).
+		// -----------------------------------------------------------------
+		if (m_UseFixedTimestep && !m_Paused)
+		{
+			// The interval derives from the configurable rate (default 60 Hz —
+			// see SetFixedTimestepHz). Sampled once per frame so a rate change
+			// mid-frame cannot tear the accumulator loop.
+			const float fixedDeltaTime = 1.0f / m_FixedTimestepHz;
+
+			float frameTime = rawTimestep.GetSeconds();
+
+			// Spiral-of-death panic protection clamping
+			if (frameTime > 0.25f)
+			{
+				frameTime = 0.25f;
+			}
+
+			m_Accumulator += (frameTime * m_TimeScale);
+
+			// Signed so layers receive a negative dt during rewind (TimeScale < 0)
+			const float signedFixedDelta = m_TimeScale >= 0.f ? fixedDeltaTime : -fixedDeltaTime;
+
+			m_LayerStack.SetIterating(true);
+			while (m_Accumulator >= fixedDeltaTime)
+			{
+				for (Layer* layer : m_LayerStack)
+				{
+					layer->OnFixedUpdate(signedFixedDelta);
+				}
+				m_Accumulator -= fixedDeltaTime;
+			}
+			m_LayerStack.SetIterating(false);
+		}
+
+
+		// -----------------------------------------------------------------
+		// PASS 1B: Variable Timestep Updates (Animations & Visual States)
+		// While paused the pass still runs — with dt = 0 — because OnUpdate
+		// is where world rendering happens; skipping it would blank the scene.
+		// -----------------------------------------------------------------
+		Timestep scaledTimestep = m_Paused ? 0.0f : rawTimestep.GetSeconds() * m_TimeScale;
+		m_LayerStack.SetIterating(true);
+		for (Layer* layer : m_LayerStack)
+		{
+			// 1. Core Engine updates the layer's local timeline automatically
+			layer->UpdateLayerTime(scaledTimestep.GetSeconds());
+
+			// 2. Client code runs its standard frame updates
+			layer->OnUpdate(scaledTimestep.GetSeconds());
+		}
+		m_LayerStack.SetIterating(false);
+
+
+		// -----------------------------------------------------------------
+		// PASS 2: Main UI Rendering and Dockspace Composition
+		// -----------------------------------------------------------------
+		m_ImGuiLayer->Begin();
+		m_LayerStack.SetIterating(true);
+		for (Layer* layer : m_LayerStack)
+		{
+			layer->OnImGuiRender();
+		}
+		m_LayerStack.SetIterating(false);
+		m_ImGuiLayer->End();
+
+		m_Window->SwapBuffers();
+
+		m_InFrameTick = false;
+		return true;
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////
@@ -536,6 +578,31 @@ namespace Cosmic
 		//    SynchronizeRenderingState() queries glfwGetFramebufferSize and drives a
 		//    WindowResizeEvent through OnWindowResize (FBO resize + glViewport).
 		SynchronizeRenderingState();
+
+		// 7. Frame pump hookup: lets the window request full engine frames from
+		//    inside the Win32 modal move/size loop (responsive drag/resize —
+		//    default on) and immediately after fullscreen transitions (paint-
+		//    through-transition). Everything RenderSingleFrame touches exists by
+		//    this point. The Window clears this callback in its destructor.
+		m_Window->SetModalFrameCallback([this] { RenderSingleFrame(); });
+	}
+
+	/////////////////////////////////////////////////////////////////////////////////
+
+	/**
+	 * Responsive-drag toggle — forwards to the Window's modal frame pump.
+	 * Default on; a client that wants the old freeze-while-dragging behavior
+	 * (e.g. a minimal/low-power tool) calls SetRenderWhileDragging(false).
+	 */
+	void Application::SetRenderWhileDragging(bool enabled)
+	{
+		if (m_Window)
+			m_Window->SetModalRenderingEnabled(enabled);
+	}
+
+	bool Application::IsRenderWhileDragging() const
+	{
+		return m_Window && m_Window->IsModalRenderingEnabled();
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////
@@ -637,10 +704,20 @@ namespace Cosmic
 			return;
 		}
 
+		// 5. Engine-side VFS binding. FileSystem is header-only with per-DLL
+		//    static state, so the client calling SetActiveProject in its OnAttach
+		//    only ever updates the CLIENT DLL's copy — engine-compiled code that
+		//    resolves "project://" (theme registry, font libraries, Config::Load)
+		//    used to resolve against an empty project name forever. Set the ENGINE
+		//    copy from the DLL stem (== assets/projects/<stem> by the CMake asset-
+		//    sync convention) BEFORE mounting, so engine-side resolution works even
+		//    during the client's OnAttach.
+		const std::string displayName = std::filesystem::path(filepath).stem().string();
+		FileSystem::SetActiveProject(displayName);
+
 		if (m_WorkspaceLayer)
 		{
 			m_WorkspaceLayer->SetViewportLayer(m_ActivePluginLayer);
-			std::string displayName = std::filesystem::path(filepath).stem().string();
 			m_WorkspaceLayer->SetProjectName(displayName);
 
 			CS_CORE_INFO("WorkspaceLayer project name set to: '{0}'", displayName);
@@ -650,6 +727,17 @@ namespace Cosmic
 		{
 			CS_CORE_WARN("Plugin Layer created but no active Workspace target was found to bind it to.");
 		}
+
+		// 6. Project-scoped theme/font rescan. ThemeManager::Init and Fonts::Init
+		//    run at ImGuiLayer attach — BEFORE any project is mounted — so they can
+		//    never see project://themes or project://fonts; this is the hook that
+		//    actually loads them. Runs in the Safe Zone between frames, where adding
+		//    ImGui fonts is safe: ImGui 1.92's dynamic atlas (RendererHasTextures)
+		//    bakes new glyphs on demand, no upfront atlas rebuild required. All
+		//    three rescans are idempotent (registries dedupe/replace by name).
+		ThemeManager::LoadFolder(FileSystem::Resolve("project://themes"));
+		UI::Fonts::LoadProjectFonts();
+		Font::LoadProjectFonts();
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////
@@ -685,7 +773,14 @@ namespace Cosmic
 			m_Window->ClearFullscreenHotkeyOverride();
 		}
 
-		// 3. Flush the library handle out of the operating system process memory space
+		// 3. Clear the ENGINE's active-project binding (set at load step 5). Project
+		//    themes/fonts loaded at mount stay REGISTERED — the registries are
+		//    additive by design: Register() replaces by name on the next mount, and
+		//    dropping them here would dangle ImFont* / Ref<Font> handles that other
+		//    engine systems may still hold for the current frame.
+		FileSystem::SetActiveProject("");
+
+		// 4. Flush the library handle out of the operating system process memory space
 		FreeLibrary(m_PluginHandle);
 		m_PluginHandle = nullptr;
 		CS_CORE_INFO("Project DLL safely unmounted and unloaded.");

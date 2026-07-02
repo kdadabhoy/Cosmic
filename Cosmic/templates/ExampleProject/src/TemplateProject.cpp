@@ -9,6 +9,8 @@
 
 #include <imgui.h>
 #include <filesystem>
+#include <algorithm>   // std::min (gamepad axis clamp)
+#include <cstdio>      // snprintf (axis labels)
 
 namespace Workspace
 {
@@ -32,6 +34,15 @@ namespace Workspace
 		std::string shaderPath = Cosmic::FileSystem::Resolve("project://shaders/TemplateShader.glsl");
 		std::filesystem::path resolvedPath(shaderPath);
 		m_ShaderDir = resolvedPath.parent_path().string();
+
+		// 1b. Sim-toolkit demo (E10): load data-driven parameters from TOML.
+		//     Missing/unparseable file degrades to defaults — never fatal.
+		//     Resolve the VFS path HERE (client side): FileSystem has per-DLL
+		//     static state, so the engine-compiled Config::Load would resolve
+		//     "project://" against the ENGINE's (unset) active project. The
+		//     resolved path passes through the engine's Resolve unchanged.
+		m_Config = Cosmic::Config::Load(
+			Cosmic::FileSystem::Resolve("project://config/template.toml"));
 
 		// 2. Create the shared scene (passed by Ref<> — never duplicated)
 		m_Scene = Cosmic::Scene::Create();
@@ -242,6 +253,60 @@ namespace Workspace
 		bool pauseOnMinimize = Cosmic::Application::Get().GetPauseOnMinimize();
 		if (ImGui::Checkbox("Pause on Minimize", &pauseOnMinimize))
 			Cosmic::Application::Get().SetPauseOnMinimize(pauseOnMinimize);
+
+		// -------------------------------------------------------------------
+		// Sim Toolkit demo (E10 config + E7 gamepad)
+		// -------------------------------------------------------------------
+		ImGui::Spacing();
+		ImGui::Separator();
+		if (ImGui::CollapsingHeader("Sim Toolkit (E10 config / E7 gamepad)"))
+		{
+			// E10 — values straight out of project://config/template.toml
+			if (m_Config)
+			{
+				ImGui::TextDisabled("config: %s", m_Config->GetSource().c_str());
+				ImGui::Text("demo.label:        %s", m_Config->Get<std::string>("demo.label", "<missing>").c_str());
+				ImGui::Text("demo.gravity_mss:  %.5f", m_Config->Get<float>("demo.gravity_mss", 0.0f));
+				ImGui::Text("demo.spin_rate_hz: %.2f", m_Config->Get<float>("demo.spin_rate_hz", 0.0f));
+				const auto waypoints = m_Config->GetTable("waypoints");
+				ImGui::Text("waypoints:         %d", static_cast<int>(waypoints.size()));
+				for (const auto& wp : waypoints)
+				{
+					const glm::vec3 p = wp->Get<glm::vec3>("pos", glm::vec3(0.0f));
+					ImGui::BulletText("%s  (%.1f, %.1f, %.1f)",
+						wp->Get<std::string>("name", "?").c_str(), p.x, p.y, p.z);
+				}
+			}
+			else
+			{
+				ImGui::TextColored({ 1.0f, 0.6f, 0.2f, 1.0f },
+					"template.toml not found (project://config/template.toml)");
+			}
+
+			// E7 — live stick values; an RC transmitter in USB-joystick mode
+			// shows up here exactly like a gamepad.
+			ImGui::Spacing();
+			if (Cosmic::Input::IsGamepadConnected())
+			{
+				ImGui::Text("Pad: %s  (%d axes, %d buttons)",
+					Cosmic::Input::GetGamepadName().c_str(),
+					Cosmic::Input::GetGamepadAxisCount(),
+					Cosmic::Input::GetGamepadButtonCount());
+
+				const int axisCount = std::min(Cosmic::Input::GetGamepadAxisCount(), 6);
+				for (int i = 0; i < axisCount; ++i)
+				{
+					const float v = Cosmic::Input::GetGamepadAxis(i);
+					char label[32];
+					snprintf(label, sizeof(label), "axis %d: %+.3f", i, v);
+					ImGui::ProgressBar(v * 0.5f + 0.5f, ImVec2(-1.0f, 0.0f), label);
+				}
+			}
+			else
+			{
+				ImGui::TextDisabled("No gamepad connected (plug one in — values appear live).");
+			}
+		}
 
 		// Frame stats
 		ImGui::Spacing();

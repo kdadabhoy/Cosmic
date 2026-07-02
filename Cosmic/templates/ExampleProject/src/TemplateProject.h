@@ -52,5 +52,11 @@ namespace Workspace
 		Cosmic::Ref<Cosmic::Scene>    m_Scene;
 		Cosmic::Ref<Cosmic::Material> m_SharedMaterial;
 		std::string                   m_ShaderDir;
+
+		// -----------------------------------------------------------------------
+		// Sim-toolkit demo state (E10 config + E7 gamepad) — see the
+		// "Sim Toolkit" section of the root inspector panel.
+		// -----------------------------------------------------------------------
+		Cosmic::Ref<Cosmic::Config>   m_Config;   // nullptr when template.toml is absent
 	};
 }

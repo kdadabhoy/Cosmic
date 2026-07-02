@@ -21,7 +21,7 @@
 | Endurance targets | ≥45 min economical cruise · ~35 min orbit @ 45 mph · **hover capped 3–5 min cumulative (enforced in software)** |
 | Motors | ~1,490 gf max thrust each (selection in progress — thrust maps arrive as bench data) |
 | Flight computer | Teensy 4.1, PlatformIO + Arduino framework |
-| Dynamics engine | **JSBSim wrap — LEANING** (decision record): prototype first, 1-week timebox; hand-rolled composable forces is the fallback |
+| Dynamics engine | **ComposableDynamics (hand-rolled 6DOF)** shipped 2026-07-02 behind `IDynamics`; JSBSim kept as a drop-in option (provisional-closed, `Projects/ViperSim/docs/DYNAMICS_DECISION.md`). ~~JSBSim wrap — LEANING~~ |
 | Camera/orbit v1 | Fixed camera + aircraft-pointing (bank/crab holds ROI in frame); gimbal deferred |
 | Regulatory | 400 ft AGL geofence, Remote ID, failsafes — sim enforces the same envelope the firmware will |
 
@@ -180,8 +180,8 @@ replay is the estimator's report card.
 
 | Phase | Build | Demo that proves it |
 | --- | --- | --- |
-| **P0** | Skeleton from launcher template; SimHub; **E10 config loading**; **telemetry schema defined**; screens stubbed | Opens from launcher; tiles navigate; viper.toml values shown |
-| **P1** | **JSBSim spike (1-week timebox)** behind `IDynamics`; fallback decision recorded in the Viper decision log; drop-test scene (gravity + ground) in the 3D viewport; DataRecorder wired | Box/airframe drops, settles, replayable in ReplayScreen; JSBSim-vs-fallback decision CLOSED |
+| **P0** ✅ 2026-07-02 | Skeleton (`Projects/ViperSim`); SimHub; **E10 config loading** (`viper.toml`); **telemetry schema defined** (`fc_glue/telemetry_schema.h`); homescreen tiles → Flight/Replay live + Tuning/Energy/Transition stubs | Boots via `--project ViperSim`; tiles navigate; viper.toml values shown (verified: config resolves to `assets/projects/ViperSim/config/viper.toml`, no crash) |
+| **P1** ✅ 2026-07-02 | `IDynamics` abstraction; **`ComposableDynamics`** (6DOF, E11 RK4) drop-test scene (gravity + ground spring-damper) in the 3D viewport; DataRecorder → replayable session; **dynamics decision recorded** (`Projects/ViperSim/docs/DYNAMICS_DECISION.md`) | Airframe drops, settles at ground, replayable in ReplayScreen. Numeric drop check PASSES (impact 1.10 s vs 1.09 s analytic; peak 10.62 vs 10.68 m/s; rest compression 3.7 mm = mg/k; no tunneling). Decision: ship ComposableDynamics, keep JSBSim behind `IDynamics` (provisional-closed — see record) |
 | **P2** | `viper-fc` skeleton + IHal + SimHal; rate→attitude hover loop, perfect sensors; TuningScreen | 20° roll step: clean response, no divergence; offline replay-through-FC runs |
 | **P3** | Full hover: position hold, battery + energy accounting, sensor noise + complementary filter, gamepad (E7), EnergyScreen; audio alerts (doc 08 A1/A2) | **Gate G1** (playbook S1): hover stable vs noise + 5 m/s gusts; hover-power within ~15% of 230 W model |
 | **P4** | Full-envelope aero tables; cruise (TECS-lite); transition state machine both directions; S3 viewport conveniences as needed | **Gate G2** (playbook S2): scripted VTOL→cruise→VTOL repeatable across CG/airspeed envelope; blend traces recorded |

@@ -98,3 +98,62 @@ If you ever set `GLFW_DECORATED` back to `TRUE` (or let GLFW re-derive a decorat
 `glfwSetWindowAttrib(GLFW_DECORATED, …)`) while keeping the `WM_NCCALCSIZE` frame strip, the phantom-frame
 offset comes back on HiDPI displays. The window must be borderless **in GLFW's model**; native chrome
 behaviors are added on the real `HWND` only.
+
+## Addendum 2026-07-01 — Windowing plan W-series (fullscreen transitions, trace, modal pump)
+
+The windowing plan (`docs/plans/09-windowing-plan.md`) landed on top of this design; the pieces the
+next investigation will want:
+
+### Start any window investigation with the trace
+
+Set `COSMIC_WINDOW_TRACE=1` (or call `Cosmic::Window::SetTraceEnabled(true)`) and every relevant
+window event logs with millisecond timestamps, tagged `[WinTrace]`: `WM_WINDOWPOSCHANGED`
+(rect+flags), `WM_SIZE`, `WM_DPICHANGED` (dpi + suggested rect), `WM_ACTIVATE`/`WM_SETFOCUS`/
+`WM_KILLFOCUS`, `WM_SYSCOMMAND`, `WM_DISPLAYCHANGE`, modal move/size loop enter/exit, every
+fullscreen step (saved rect + maximize flag, style bits before/after, cover rect), and any
+`SwapBuffers` slower than 25 ms (the occlusion-throttle signature). Each line carries the current
+framebuffer size, so a stale-viewport bug is visible directly in the log.
+
+### Fullscreen transition changes (W2/W5)
+
+- `Window::SetFullscreen` now presents one correctly-sized frame *within the toggle* (the resize
+  event is synchronous inside `SetWindowPos`; the window then fires the frame callback that runs
+  `Application::RenderSingleFrame`). `SWP_NOCOPYBITS` is set on both transitions.
+- Maximized windows round-trip: the *normal* rect + maximize flag are saved on enter (via
+  `GetWindowPlacement`), and exit restores maximized state with `ShowWindow(SW_MAXIMIZE)`.
+- Exit clamps the saved rect to the nearest monitor work area; `WM_DISPLAYCHANGE`/`WM_DPICHANGED`
+  while fullscreen re-assert the monitor cover (`Window::ReassertFullscreenCoverWin32`).
+- `WM_ERASEBKGND` needs no handling: GLFW returns `TRUE` for it and the subclass chains through
+  (verified `dependencies/glfw/src/win32_window.c:1145`).
+
+### Fullscreen compat mode (W3 — decided 2026-07-02: OversizeByOne is the default)
+
+`FullscreenCompatMode::OversizeByOne` sizes the fullscreen window to monitor height + 1 px so DWM
+never classifies it as fullscreen (no independent-flip promotion — the confirmed-by-symptom H-B1
+mechanism behind the snip-overlay glitch). **It is now the default.** Rationale:
+
+- The 2026-07-01 W-series shipped the mechanism but left the default at ExactCover with *no
+  caller* flipping it, so the snip glitch persisted unchanged — consistent with H-B1 and
+  inconsistent with H-A1/H-A3 (both fixed by W2) being the cause.
+- An exactly monitor-sized borderless window is promoted to independent flip by driver/DWM
+  heuristics; a topmost capture overlay forces demotion, and on the legacy OpenGL present path
+  that transition black-flashes/tears. There is **no GL-side API to opt out** of the heuristic.
+- The industry-standard *proper* fix is presenting via a DXGI flip-model swapchain (Chromium via
+  ANGLE/DirectComposition; D3D titles natively) where promote/demote is seamless — for this WGL
+  engine that is a presentation-layer rewrite, an explicit non-goal (plan §4; doc-05 S13 gate).
+  The equally standard *pragmatic* fix for GL tools and "borderless" game modes is exactly this
+  oversize-by-one rect: still covers the desktop (taskbar hides — the style strip does that),
+  extra row is off-screen, and the window stays permanently composed so overlays cost nothing.
+- Cost of staying composed is ~1 frame of present latency + a DWM blit — irrelevant for a tools
+  engine; the win is glitch-free capture overlays, recording, and Alt+Tab.
+
+Live-switchable while fullscreen for A/B runs (`SetFullscreenCompatMode`), and overridable per run
+without a rebuild via `COSMIC_FULLSCREEN_COMPAT=exact|oversize` (read once in the Window ctor,
+same pattern as `COSMIC_WINDOW_TRACE`). ExactCover is kept as the A/B control case.
+
+### Modal frame pump (W4)
+
+`WM_ENTERSIZEMOVE`→`SetTimer`, `WM_TIMER`→`RenderSingleFrame`, `WM_EXITSIZEMOVE`→`KillTimer`, all
+chrome-independent in the subclass WndProc. Client gate: `Application::SetRenderWhileDragging`
+(default on). The timer is defensively killed in `DisableCustomChromeWin32` and `~Window`, and the
+frame callback is cleared before teardown so no tick can fire into a dying `Application`.

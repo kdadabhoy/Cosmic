@@ -39,7 +39,14 @@ namespace Cosmic
 
 			// Register every .ttf/.otf in a resolved directory at the standard sizes.
 			// Safe to call with a non-existent path (it simply does nothing).
+			// Already-registered stems are skipped (first registration wins).
 			static void LoadFolder(const std::string& resolvedDir);
+
+			// Rescan project://fonts for the mounted project. Called by the engine
+			// from Application::LoadProjectDLL (the Safe Zone, between frames) —
+			// Init runs before any project is mounted, so it can't see these.
+			// Idempotent; loaded faces stay registered after the project unmounts.
+			static void LoadProjectFonts();
 
 			// Nearest registered face for `name` (the file stem, e.g. "Roboto-Bold")
 			// at the requested pixel size. Falls back to the default font when the

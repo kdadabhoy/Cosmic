@@ -40,6 +40,11 @@ target_link_libraries(implot PUBLIC imgui)
 add_library(spdlog INTERFACE)
 target_include_directories(spdlog INTERFACE dependencies/spdlog/include)
 
+# toml++ (single header, MIT) — TOML parser behind utils/Config. PRIVATE to the
+# engine: Config.h exposes no toml types, so clients never need this include.
+add_library(tomlplusplus INTERFACE)
+target_include_directories(tomlplusplus INTERFACE dependencies/tomlplusplus)
+
 add_library(stb_image INTERFACE)
 target_include_directories(stb_image INTERFACE dependencies/stb_image)
 
@@ -75,6 +80,7 @@ target_compile_definitions(Cosmic PRIVATE $<$<CONFIG:Release>:COSMIC_DIST>)
 
 # UPDATED: Linked 'entt' PUBLICLY so all dependent client targets inherit the headers
 target_link_libraries(Cosmic PUBLIC imgui implot glad glm entt glfw OpenGL::GL stb_image stb_truetype stb_image_write spdlog)
+target_link_libraries(Cosmic PRIVATE tomlplusplus)
 
 # Borderless custom window chrome uses DWM (drop shadow) on Windows.
 if(WIN32)

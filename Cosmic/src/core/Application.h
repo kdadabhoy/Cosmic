@@ -113,6 +113,22 @@ namespace Cosmic
 
 		inline float	GetAbsoluteTime() const						{ return m_AbsoluteTime; } // seconds
 
+		// First-class pause (docs/design/responsive-rendering-and-pause.md,
+		// Feature B). Orthogonal to TimeScale — Resume() never touches the
+		// user's scale. While paused: OnFixedUpdate is skipped, OnUpdate runs
+		// with dt = 0 (the scene keeps DRAWING, frozen), ImGui stays fully
+		// interactive, GetAbsoluteTime() keeps advancing, GetLocalTime()-driven
+		// animation/shaders freeze. No engine hotkey — clients bind their own.
+		void			Pause()										{ m_Paused = true; }
+		void			Resume()									{ m_Paused = false; }
+		void			TogglePause()								{ m_Paused = !m_Paused; }
+		bool			IsPaused() const							{ return m_Paused; }
+
+		// Responsive rendering during OS window drag/resize (Feature A of the
+		// same design doc). Default ON; forwards to Window's modal frame pump.
+		void			SetRenderWhileDragging(bool enabled);
+		bool			IsRenderWhileDragging() const;
+
 
 		/////////////////////////////////////////////////////////////////////////////////
 		// UI & Application State
@@ -137,6 +153,17 @@ namespace Cosmic
 		void		Initialize();
 		bool		OnWindowClose(WindowCloseEvent& e);
 		bool		OnWindowResize(WindowResizeEvent& e);
+
+		/**
+		 * @brief One full frame: timing, fixed-step pass, variable pass, ImGui, swap.
+		 *
+		 * The per-frame body of Run(), factored out so it can ALSO be pumped from
+		 * the Win32 modal move/size loop (Window's WM_TIMER frame pump) and fired
+		 * once immediately after a fullscreen toggle (paint-through-transition).
+		 * Excludes PollEvents() and the Safe Zone — no DLL load/unload or layer
+		 * push/pop can run mid-drag. Returns false on the minimized early-out.
+		 */
+		bool		RenderSingleFrame();
 
 
 	private:
@@ -185,6 +212,13 @@ namespace Cosmic
 		float			m_TimeScale			= 1.0f;
 		float			m_AbsoluteTime		= 0.0f;
 		float			m_FixedTimestepHz	= 60.0f;
+
+		// Frame-loop clock state. Members (not Run() locals) so the main loop
+		// and the modal-loop frame pump share one coherent clock/accumulator.
+		float			m_LastFrameTime		= 0.0f;
+		float			m_Accumulator		= 0.0f;
+		bool			m_InFrameTick		= false;	// RenderSingleFrame re-entrancy guard
+		bool			m_Paused			= false;	// first-class pause (orthogonal to TimeScale)
 
 		// Set via the constructor argument; consumed by Initialize() to skip the
 		// Launcher and route straight into the pending-project Safe Zone path.

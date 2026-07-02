@@ -120,6 +120,40 @@ trace switch usage to the note so the next investigation starts warm.
 **Acceptance:** docs updated; `docs/design/responsive-rendering-and-pause.md` status flipped to
 Implemented (or updated where reality diverged).
 
+## 3.5 Status & W1 findings (2026-07-01)
+
+**Implementation status:**
+
+| Order | Code | Acceptance |
+| --- | --- | --- |
+| W1 instrumentation | ✅ 2026-07-01 — `[WinTrace]` logging via `COSMIC_WINDOW_TRACE=1` or `Window::SetTraceEnabled(true)` | Partial — automated findings below; the interactive matrix rows (snip overlay, Alt+Tab, monitor sleep, 125% laptop, slow-mo capture) need a manual run |
+| W2 paint-through-transition | ✅ 2026-07-01 — `RenderSingleFrame()` factored out; immediate present inside `SetFullscreen`; `SWP_NOCOPYBITS` both directions | Log-verified: present-at-new-size within the toggle's dispatch (below). Frame-by-frame visual capture pending manual run |
+| W3 DWM experiment | Mechanism ✅ 2026-07-01 (`SetFullscreenCompatMode`, live-switchable); **default flipped to OversizeByOne + `COSMIC_FULLSCREEN_COMPAT=exact\|oversize` env override 2026-07-02** | **Decision MADE 2026-07-02** (see findings below + engineering note) — user visual confirmation of the snip flow pending (repro matrix) |
+| W4 responsive render + pause | ✅ 2026-07-01 — WM_TIMER modal pump (default on) + `Pause()/Resume()/TogglePause()/IsPaused()` | Per design doc's verification section — drag/snap/pause checklist pending manual run |
+| W5 state hardening | ✅ 2026-07-01 — maximize round-trip, work-area clamp, WM_DISPLAYCHANGE/WM_DPICHANGED re-assert, monitor-centre note | Manual checklist at 100%+125%, single+dual monitor pending |
+| W6 docs | ✅ 2026-07-01 — README §3/§7/§24, engineering note, design doc flipped to Implemented | — |
+
+**Findings so far (automated / code-inspection evidence):**
+
+| Check | Result |
+| --- | --- |
+| GLFW window-class background brush (W2 item 4) | **No handler needed.** GLFW's WndProc returns `TRUE` for `WM_ERASEBKGND` (`dependencies/glfw/src/win32_window.c:1145`) and our subclass chains to it — GDI never erases the client to the class brush. Any black flash must come from DWM/present timing (H-A1/H-A2), not `WM_ERASEBKGND`. |
+| F11 enter, 100%/2560×1440 (log 2026-07-01 22:12) | `WM_SIZE 2560x1440` and FBO resize dispatched **synchronously inside** `SetWindowPos`; immediate `RenderSingleFrame()` presents at the new size within the same toggle (H-A1 mitigated by construction). Style strip → cover → present sequence ~8 ms end-to-end. |
+| F11 exit, same run | Restore rect + style + re-present within the dispatch; restore correct. |
+| H-A3 stale-bit blit | `SWP_NOCOPYBITS` now set on both transitions — eliminated by construction. |
+| H-A2/H-B1 iFlip promotion | **W3 decision made 2026-07-02: OversizeByOne is now the default.** Elimination evidence: W2 closed H-A1/H-A3 by construction, W4 closed H-B3, yet the snip glitch persisted on the user's machine — and the 2026-07-01 code had **no caller** of `SetFullscreenCompatMode`, i.e. every run so far was ExactCover. H-B1 is the only live hypothesis, and its fix class is the industry-standard one for GL apps (no GL API opt-out of the promotion heuristic; DXGI flip-model rewrite is a §4 non-goal). ExactCover kept as A/B control: `COSMIC_FULLSCREEN_COMPAT=exact`. PresentMon confirmation optional now; the deciding evidence is the user-run snip matrix below. |
+| H-B2 occlusion throttle | Instrumented (SwapBuffers > 25 ms logged); no data yet. If the user matrix still glitches under OversizeByOne, pull `[WinTrace]` SwapBuffers timings from the run before revisiting. |
+| H-B3 modal-loop freeze | Closed by W4 — frames pump during move/size loops. Snip flow itself remains to be observed under trace. |
+
+**Repro-matrix template for the manual run** — fill each cell with OK / symptom + log timestamp, app run with `COSMIC_WINDOW_TRACE=1`:
+
+| Scenario | 100% windowed | 100% maximized | 100% fullscreen | 125% windowed | 125% maximized | 125% fullscreen |
+| --- | --- | --- | --- | --- | --- | --- |
+| F11 toggle (both ways) | | | | | | |
+| Snip overlay (Win+Shift+S) | | | | | | |
+| Alt+Tab out/in | | | | | | |
+| Monitor sleep/wake | | | | | | |
+
 ## 4. Non-goals
 
 - **No exclusive fullscreen** and **no `glfwSetWindowMonitor`** path — the borderless-windowed

@@ -33,8 +33,10 @@ namespace Cosmic
 	class COSMIC_API ThemeManager
 	{
 	public:
-		// Register the built-in themes and load any user themes from
-		// project://themes. Safe to call more than once (no-op after the first).
+		// Register the built-in themes. Safe to call more than once (no-op after
+		// the first). Project themes (project://themes/*.ctheme) are loaded by
+		// the engine's project-mount rescan (Application::LoadProjectDLL), since
+		// Init runs before any project is mounted.
 		static void Init();
 
 		// Add a theme, or replace an existing one with the same name. Names are

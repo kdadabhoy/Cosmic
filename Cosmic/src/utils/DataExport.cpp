@@ -3,6 +3,7 @@
 #include <fstream>
 #include <filesystem>
 #include <limits>
+#include <cstdlib>   // std::strtod (LoadCSV)
 
 namespace Cosmic
 {
@@ -184,6 +185,114 @@ namespace Cosmic
 		}
 
 		CS_CORE_INFO("DataExport::WriteCircularBuffer: wrote {0} rows to '{1}'.", count, filepath);
+		return true;
+	}
+
+	// -----------------------------------------------------------------------
+	// LoadCSV (E13 - read counterpart for lookup tables)
+	// -----------------------------------------------------------------------
+
+	bool DataExport::LoadCSV(
+		const std::string& filepath,
+		std::vector<std::vector<double>>& outColumns,
+		std::vector<std::string>* outHeaders)
+	{
+		outColumns.clear();
+		if (outHeaders)
+			outHeaders->clear();
+
+		std::ifstream file(filepath);
+		if (!file.is_open())
+		{
+			CS_CORE_ERROR("DataExport::LoadCSV: could not open '{0}' for reading.", filepath);
+			return false;
+		}
+
+		auto splitRow = [](const std::string& line, std::vector<std::string>& cells)
+		{
+			cells.clear();
+			std::string cell;
+			for (char c : line)
+			{
+				if (c == ',') { cells.push_back(cell); cell.clear(); }
+				else if (c != '\r') { cell.push_back(c); }
+			}
+			cells.push_back(cell);
+		};
+
+		auto parseCell = [](const std::string& cell, double& out) -> bool
+		{
+			if (cell.empty())
+				return false;
+			char* end = nullptr;
+			out = std::strtod(cell.c_str(), &end);
+			// require full consumption modulo trailing spaces
+			while (end && *end == ' ') ++end;
+			return end && *end == '\0';
+		};
+
+		std::string line;
+		std::vector<std::string> cells;
+		size_t lineNo = 0;
+		bool sawData = false;
+
+		while (std::getline(file, line))
+		{
+			++lineNo;
+			if (line.empty() || line == "\r")
+				continue;
+
+			splitRow(line, cells);
+
+			// First non-empty row: decide header vs data.
+			if (!sawData && outColumns.empty())
+			{
+				bool allNumeric = true;
+				double d;
+				for (const std::string& c : cells)
+					if (!parseCell(c, d)) { allNumeric = false; break; }
+
+				outColumns.assign(cells.size(), {});
+
+				if (!allNumeric)
+				{
+					if (outHeaders)
+						*outHeaders = cells;
+					continue;   // header consumed
+				}
+				// fall through: first row is data
+			}
+
+			if (cells.size() != outColumns.size())
+			{
+				CS_CORE_ERROR("DataExport::LoadCSV: '{0}' line {1}: {2} cells, expected {3}.",
+					filepath, lineNo, cells.size(), outColumns.size());
+				outColumns.clear();
+				return false;
+			}
+
+			for (size_t i = 0; i < cells.size(); ++i)
+			{
+				double d = 0.0;
+				if (!parseCell(cells[i], d))
+				{
+					CS_CORE_ERROR("DataExport::LoadCSV: '{0}' line {1}: non-numeric cell '{2}'.",
+						filepath, lineNo, cells[i]);
+					outColumns.clear();
+					return false;
+				}
+				outColumns[i].push_back(d);
+			}
+			sawData = true;
+		}
+
+		if (!sawData)
+		{
+			CS_CORE_ERROR("DataExport::LoadCSV: '{0}' contained no data rows.", filepath);
+			outColumns.clear();
+			return false;
+		}
+
 		return true;
 	}
 }

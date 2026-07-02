@@ -34,6 +34,18 @@
 | E3 quaternion/frame math (`Spatial.h`) | ✅ 2026-07-01 |
 | E5 COBS+CRC framing (`Framing.h`) | ✅ 2026-07-01 |
 | E9 audio | → [doc 08](08-audio-plan.md) |
+| **E10 config (TOML)** | ✅ 2026-07-02 — `utils/Config.h/.cpp`, toml++ vendored, `test_config.cpp` (7 cases), template demo |
+| **E11 integrators** | ✅ 2026-07-02 — `math/Integrators.h`, `test_integrators.cpp` (projectile/spring/order/substepper) |
+| **E12 filters** | ✅ 2026-07-02 — `math/Filters.h`, `test_filters.cpp` (LPF τ, biquad −3 dB, rate-limit, notch, washout) |
+| **E13 lookup tables** | ✅ 2026-07-02 — `math/LookupTable.h` + `DataExport::LoadCSV`, `test_lookuptable.cpp` (1D/2D/CSV) |
+| **E14 noise** | ✅ 2026-07-02 — `math/Noise.h` (value/Perlin/fBm 1-3D), `test_noise.cpp` (seed determinism, bounds, falloff) |
+| **E15 RNG** | ✅ 2026-07-02 — `math/Random.h` (PCG32), `test_random.cpp` (canonical reference seq, Gaussian moments) |
+| **E7 gamepad** | ✅ 2026-07-02 — `Input::GetGamepadAxis/…` + `codes/GamepadCodes.h`; template layer live axis readout (needs a physical pad to see values) |
+
+> **E-series acceptance (2026-07-02):** all seven merged on `main` with green tests — `CosmicTests`
+> reports 55 cases / 103,870 assertions passing. The `ExampleProject` template (instantiated via the
+> Launcher's New Project) demonstrates E10 config load (`project://config/template.toml`) and E7
+> live gamepad axes in its root inspector's "Sim Toolkit" section.
 
 ## Live items, in build order
 
