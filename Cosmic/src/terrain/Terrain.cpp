@@ -70,7 +70,22 @@ namespace Cosmic
 		const uint32_t res = m_Spec.Resolution;
 		m_Heights.assign(static_cast<size_t>(res) * res, 0.0f);
 
-		if (!m_Spec.HeightmapPath.empty())
+		if (m_Spec.HeightFunction)
+		{
+			// Source C (F4): an app-supplied deterministic height function. Sampled
+			// at the SAME texel centers the fBm path uses (u = i/(res-1)), so
+			// SampleHeight's triangle interpolation stays exact and its unit tests
+			// apply unchanged. Wins over the image / fBm sources.
+			for (uint32_t j = 0; j < res; ++j)
+				for (uint32_t i = 0; i < res; ++i)
+				{
+					const float u = static_cast<float>(i) / (res - 1);
+					const float v = static_cast<float>(j) / (res - 1);
+					m_Heights[static_cast<size_t>(j) * res + i] =
+						std::clamp(m_Spec.HeightFunction(u, v), 0.0f, 1.0f);
+				}
+		}
+		else if (!m_Spec.HeightmapPath.empty())
 		{
 			// Grayscale image source. stbi_load_16 widens 8-bit files, so 16-bit
 			// precision is preserved when present.
@@ -416,15 +431,58 @@ namespace Cosmic
 		m_Shader->SetFloat("u_LowBlend", mp.LowBlend);
 		m_Shader->SetFloat("u_TriplanarSharpness", mp.TriplanarSharpness);
 
+		// Wet band (F4). Default WetDarken = 0 makes these a no-op (shipped look).
+		m_Shader->SetFloat("u_WetLine", mp.WetLine);
+		m_Shader->SetFloat("u_WetBand", mp.WetBand);
+		m_Shader->SetFloat("u_WetDarken", mp.WetDarken);
+
 		m_Patch->GetVertexArray()->Bind();
 
-		m_LastDrawnNodes = 0;
-		DrawNode(0, 0, static_cast<int>(m_Spec.Resolution) - 1, cameraPos, 0);
+		std::vector<NodeDraw> cut;
+		CollectCut(0, 0, static_cast<int>(m_Spec.Resolution) - 1, cameraPos, 0, cut);
+		DrawCut(m_Shader, cut);
+		m_LastDrawnNodes = static_cast<uint32_t>(cut.size());
 	}
 
-	void Terrain::DrawNode(int nodeX, int nodeZ, int nodeTexels, const glm::vec3& cameraPos, int depth)
+	// Depth-only pass for shadow casting (F4). Shares the LOD cut with Render so
+	// mountain casters and their receivers select the same tessellation. Runs
+	// inside ShadowMap's depth pass (BeginDepthPass already set the FBO, viewport,
+	// clear, and front-face cull) — no global render-state changes here.
+	void Terrain::RenderDepth(const glm::mat4& lightViewProj, const glm::vec3& cameraPos)
 	{
-		const float half   = m_Spec.WorldSize * 0.5f;
+		if (!EnsureGpuResources())
+			return;
+
+		if (!m_DepthShader)
+		{
+			m_DepthShader = Shader::Create("assets/shaders/TerrainDepth.glsl");
+			if (!m_DepthShader)
+			{
+				CS_CORE_ERROR("Terrain: TerrainDepth.glsl failed to load — terrain shadow casting disabled.");
+				return;
+			}
+		}
+
+		m_DepthShader->Bind();
+		m_DepthShader->SetMat4("u_LightViewProj", lightViewProj);
+
+		m_HeightTex->Bind(0);
+		m_DepthShader->SetInt("u_HeightMap", 0);
+		m_DepthShader->SetFloat("u_HeightScale", m_Spec.HeightScale);
+		m_DepthShader->SetFloat("u_BaseHeight", m_Spec.BaseHeight);
+		m_DepthShader->SetFloat("u_SkirtDepth", m_Spec.SkirtDepth);
+
+		m_Patch->GetVertexArray()->Bind();
+
+		std::vector<NodeDraw> cut;
+		CollectCut(0, 0, static_cast<int>(m_Spec.Resolution) - 1, cameraPos, 0, cut);
+		DrawCut(m_DepthShader, cut);
+	}
+
+	void Terrain::CollectCut(int nodeX, int nodeZ, int nodeTexels,
+	                         const glm::vec3& cameraPos, int depth, std::vector<NodeDraw>& out) const
+	{
+		const float half    = m_Spec.WorldSize * 0.5f;
 		const float originX = m_Spec.Origin.x - half + nodeX * m_CellSize;
 		const float originZ = m_Spec.Origin.y - half + nodeZ * m_CellSize;
 		const float size    = nodeTexels * m_CellSize;
@@ -440,20 +498,43 @@ namespace Cosmic
 			if (glm::distance(cameraPos, center) < size * m_Spec.LodDistanceFactor)
 			{
 				const int childTexels = nodeTexels / 2;
-				DrawNode(nodeX,               nodeZ,               childTexels, cameraPos, depth + 1);
-				DrawNode(nodeX + childTexels, nodeZ,               childTexels, cameraPos, depth + 1);
-				DrawNode(nodeX,               nodeZ + childTexels, childTexels, cameraPos, depth + 1);
-				DrawNode(nodeX + childTexels, nodeZ + childTexels, childTexels, cameraPos, depth + 1);
+				CollectCut(nodeX,               nodeZ,               childTexels, cameraPos, depth + 1, out);
+				CollectCut(nodeX + childTexels, nodeZ,               childTexels, cameraPos, depth + 1, out);
+				CollectCut(nodeX,               nodeZ + childTexels, childTexels, cameraPos, depth + 1, out);
+				CollectCut(nodeX + childTexels, nodeZ + childTexels, childTexels, cameraPos, depth + 1, out);
 				return;
 			}
 		}
 
-		m_Shader->SetFloat2("u_NodeOrigin", { originX, originZ });
-		m_Shader->SetFloat("u_NodeSize", size);
-		m_Shader->SetFloat2("u_NodeTexelOrigin", { static_cast<float>(nodeX), static_cast<float>(nodeZ) });
-		m_Shader->SetFloat("u_NodeTexels", static_cast<float>(nodeTexels));
+		out.push_back({ nodeX, nodeZ, nodeTexels });
+	}
 
-		RenderCommand::DrawIndexed(m_Patch->GetVertexArray(), m_Patch->GetIndexCount());
-		m_LastDrawnNodes++;
+	void Terrain::DrawCut(const Ref<Shader>& shader, const std::vector<NodeDraw>& cut)
+	{
+		const float half = m_Spec.WorldSize * 0.5f;
+		for (const NodeDraw& n : cut)
+		{
+			const float originX = m_Spec.Origin.x - half + n.X * m_CellSize;
+			const float originZ = m_Spec.Origin.y - half + n.Z * m_CellSize;
+			const float size    = n.Texels * m_CellSize;
+
+			shader->SetFloat2("u_NodeOrigin", { originX, originZ });
+			shader->SetFloat("u_NodeSize", size);
+			shader->SetFloat2("u_NodeTexelOrigin", { static_cast<float>(n.X), static_cast<float>(n.Z) });
+			shader->SetFloat("u_NodeTexels", static_cast<float>(n.Texels));
+
+			RenderCommand::DrawIndexed(m_Patch->GetVertexArray(), m_Patch->GetIndexCount());
+		}
+	}
+
+	uint32_t Terrain::GetHeightTextureID() const
+	{
+		return m_HeightTex ? m_HeightTex->GetRendererID() : 0;
+	}
+
+	glm::vec2 Terrain::GetWorldMinCorner() const
+	{
+		const float half = m_Spec.WorldSize * 0.5f;
+		return { m_Spec.Origin.x - half, m_Spec.Origin.y - half };
 	}
 }

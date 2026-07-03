@@ -24,7 +24,8 @@
 //             the orbit rig stays as an inspect fallback toggle.
 //   [F2 DONE]: worlds render through the engine SceneRenderer; the root owns one
 //             and hands it to them via WorldContext (lazy Init on first entry).
-//   TODO(F3): GPU-profiler HUD panel (per-pass ms) docked bottom-right.
+//   [F3 DONE]: GPU-profiler HUD panel (per-pass ms) docked bottom-right — reads
+//             the SceneRenderer's timer zones via RenderCommand::GetGpuZoneResults.
 // ============================================================================
 
 #include <Cosmic.h>

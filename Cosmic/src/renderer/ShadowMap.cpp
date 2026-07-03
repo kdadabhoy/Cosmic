@@ -3,6 +3,7 @@
 #include "renderer/ShadowMap.h"
 #include "renderer/RenderCommand.h"
 #include "renderer/Renderer3D.h"
+#include "renderer/InstanceSet.h"
 #include "graphics/FrameBuffer.h"
 #include "graphics/Shader.h"
 #include "graphics/Mesh.h"
@@ -10,6 +11,7 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
+#include <algorithm>
 #include <cmath>
 
 namespace Cosmic
@@ -43,6 +45,7 @@ namespace Cosmic
 	{
 		m_Fbo.reset();
 		m_DepthShader.reset();
+		m_DepthInstancedShader.reset();
 		m_Initialized = false;
 	}
 
@@ -85,9 +88,43 @@ namespace Cosmic
 		if (!m_Initialized || !mesh || !m_DepthShader)
 			return;
 
+		// Re-bind the plain depth program: an interleaved DrawCasterInstanced may
+		// have left the instanced program bound, and the uniform setters below
+		// target the CURRENTLY bound program. Program uniforms persist, so
+		// u_LightViewProj (set in BeginDepthPass) is restored by the rebind.
+		m_DepthShader->Bind();
 		m_DepthShader->SetMat4("u_Model", transform);
 		mesh->GetVertexArray()->Bind();
 		RenderCommand::DrawIndexed(mesh->GetVertexArray(), mesh->GetIndexCount());
+	}
+
+	void ShadowMap::DrawCasterInstanced(const Ref<Mesh>& mesh, const Ref<InstanceSet>& instances, uint32_t count)
+	{
+		if (!m_Initialized || !mesh || !instances || count == 0)
+			return;
+
+		const uint32_t drawCount = std::min(count, instances->GetCount());
+		if (drawCount == 0)
+			return;
+
+		if (!m_DepthInstancedShader)
+		{
+			m_DepthInstancedShader = Shader::Create("assets/shaders/ShadowDepthInstanced.glsl");
+			if (!m_DepthInstancedShader)
+			{
+				CS_CORE_ERROR("ShadowMap: ShadowDepthInstanced shader failed to load — instanced casters disabled.");
+				return;
+			}
+		}
+
+		// Bind the instanced program and (re-)assert its light matrix — it has its
+		// own uniform state separate from the plain depth program.
+		m_DepthInstancedShader->Bind();
+		m_DepthInstancedShader->SetMat4("u_LightViewProj", m_LightViewProj);
+
+		instances->Bind();
+		mesh->GetVertexArray()->Bind();
+		RenderCommand::DrawIndexedInstanced(mesh->GetVertexArray(), mesh->GetIndexCount(), drawCount);
 	}
 
 	void ShadowMap::EndDepthPass()

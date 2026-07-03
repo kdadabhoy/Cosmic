@@ -223,6 +223,124 @@ namespace Cosmic
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////
+	// GPU Timing (S12.5 profiler — doc 10 F3)
+	/////////////////////////////////////////////////////////////////////////////////
+	//
+	// Each zone records a GL_TIMESTAMP query at Begin and another at End. Unlike
+	// GL_TIME_ELAPSED, timestamp queries can be issued while other queries are
+	// open, so zones nest freely. GpuFrameMark closes the just-recorded frame,
+	// pushes it into the in-flight ring, and resolves the oldest frame ONLY when
+	// its last query is available (never a glGet* stall on the current frame).
+	// A small ring (up to 3 frames) absorbs GPU latency; if results never arrive
+	// the oldest frame is force-dropped so the ring can't grow unbounded.
+
+	namespace { constexpr size_t kMaxPendingFrames = 3; }
+
+	uint32_t OpenGLRendererAPI::AcquireGpuQuery()
+	{
+		if (!m_FreeQueries.empty())
+		{
+			const uint32_t q = m_FreeQueries.back();
+			m_FreeQueries.pop_back();
+			return q;
+		}
+		GLuint q = 0;
+		glGenQueries(1, &q);
+		return q;
+	}
+
+	void OpenGLRendererAPI::RecycleGpuFrame(GpuFrameRecord& frame)
+	{
+		for (const GpuZoneRecord& z : frame.Zones)
+		{
+			if (z.StartQ) m_FreeQueries.push_back(z.StartQ);
+			if (z.EndQ)   m_FreeQueries.push_back(z.EndQ);
+		}
+		frame.Zones.clear();
+	}
+
+	void OpenGLRendererAPI::BeginGpuZone(const char* name)
+	{
+		GpuZoneRecord z;
+		z.Name   = name ? name : "";
+		z.Depth  = static_cast<uint32_t>(m_ZoneStack.size());
+		z.StartQ = AcquireGpuQuery();
+		glQueryCounter(z.StartQ, GL_TIMESTAMP);
+
+		m_ZoneStack.push_back(m_RecordingFrame.Zones.size());
+		m_RecordingFrame.Zones.push_back(std::move(z));
+	}
+
+	void OpenGLRendererAPI::EndGpuZone()
+	{
+		if (m_ZoneStack.empty())
+			return;   // unbalanced End — ignore
+
+		const size_t idx = m_ZoneStack.back();
+		m_ZoneStack.pop_back();
+
+		GpuZoneRecord& z = m_RecordingFrame.Zones[idx];
+		z.EndQ = AcquireGpuQuery();
+		glQueryCounter(z.EndQ, GL_TIMESTAMP);
+	}
+
+	void OpenGLRendererAPI::GpuFrameMark()
+	{
+		// 1) Close the frame recorded since the previous mark (drop any unbalanced
+		//    zone stack — a missing EndGpuZone shouldn't corrupt the next frame).
+		m_ZoneStack.clear();
+		if (!m_RecordingFrame.Zones.empty())
+			m_PendingFrames.push_back(std::move(m_RecordingFrame));
+		m_RecordingFrame.Zones.clear();
+
+		if (m_PendingFrames.empty())
+			return;
+
+		// 2) Resolve the oldest frame if its last query has landed (no stall).
+		GpuFrameRecord& oldest = m_PendingFrames.front();
+		bool ready = true;
+		if (!oldest.Zones.empty())
+		{
+			const uint32_t lastQ = oldest.Zones.back().EndQ;
+			GLint available = 0;
+			if (lastQ)
+				glGetQueryObjectiv(lastQ, GL_QUERY_RESULT_AVAILABLE, &available);
+			ready = (available != 0);
+		}
+
+		// Force-drop the oldest if the ring overflows even though it isn't ready
+		// (keeps the last good results; prevents unbounded query growth).
+		const bool overflow = m_PendingFrames.size() > kMaxPendingFrames;
+		if (!ready && !overflow)
+			return;
+
+		if (ready)
+		{
+			m_ZoneResults.clear();
+			m_ZoneResults.reserve(oldest.Zones.size());
+			for (const GpuZoneRecord& z : oldest.Zones)
+			{
+				if (!z.StartQ || !z.EndQ)
+					continue;
+				GLuint64 startNs = 0, endNs = 0;
+				glGetQueryObjectui64v(z.StartQ, GL_QUERY_RESULT, &startNs);
+				glGetQueryObjectui64v(z.EndQ,   GL_QUERY_RESULT, &endNs);
+				const double ms = (endNs >= startNs)
+					? static_cast<double>(endNs - startNs) / 1.0e6 : 0.0;
+				m_ZoneResults.push_back({ z.Name, static_cast<float>(ms), z.Depth });
+			}
+		}
+
+		RecycleGpuFrame(oldest);
+		m_PendingFrames.pop_front();
+	}
+
+	const std::vector<GpuZoneResult>& OpenGLRendererAPI::GetGpuZoneResults() const
+	{
+		return m_ZoneResults;
+	}
+
+	/////////////////////////////////////////////////////////////////////////////////
 
 
 }

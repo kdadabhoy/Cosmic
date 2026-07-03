@@ -65,6 +65,7 @@ namespace Cosmic
 	class Material;
 	class Model;
 	class Shader;
+	class InstanceSet;
 
 	class COSMIC_API Renderer3D
 	{
@@ -162,6 +163,18 @@ namespace Cosmic
 		 * places the whole model.
 		 */
 		static void DrawModel(const Ref<Model>& model, const glm::mat4& transform, int entityID = -1);
+
+		/**
+		 * @brief Hardware-instanced mesh draw (S12.3-lite / doc 10 F5). Draws
+		 * `count` copies of `mesh` (clamped to the InstanceSet's uploaded count),
+		 * reading per-instance `{ mat4 Model; vec4 Tint }` from the SSBO bound at
+		 * Bindings::InstancesSsbo. The material's shader MUST be the instanced
+		 * variant (PBRInstanced.glsl) — there is no per-draw u_Model/u_NormalMatrix;
+		 * the SSBO replaces them. The scene IBL/shadow set is applied as usual.
+		 * Call between BeginScene/EndScene.
+		 */
+		static void DrawMeshInstanced(const Ref<Mesh>& mesh, const Ref<Material>& material,
+		                              const Ref<InstanceSet>& instances, uint32_t count, int entityID = -1);
 
 		////////////////////////////////
 		// Scene Lighting (S2 scope: one directional light)

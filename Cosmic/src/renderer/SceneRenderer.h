@@ -59,6 +59,7 @@ namespace Cosmic
 	class Mesh;
 	class Model;
 	class Material;
+	class InstanceSet;
 	class Terrain;
 	class Water;
 	class ParticleEmitter;
@@ -93,7 +94,11 @@ namespace Cosmic
 		void DrawMesh (const Ref<Mesh>& mesh, const glm::mat4& transform,
 		               const Ref<Material>& material, int entityID = -1) const;
 		void DrawModel(const Ref<Model>& model, const glm::mat4& transform, int entityID = -1) const;
-		// F5 appends DrawMeshInstanced here.
+
+		// Instanced submit (F5): Reflection/Main → Renderer3D::DrawMeshInstanced;
+		// ShadowDepth → ShadowMap::DrawCasterInstanced (material/entityID ignored).
+		void DrawMeshInstanced(const Ref<Mesh>& mesh, const Ref<Material>& material,
+		                       const Ref<InstanceSet>& instances, uint32_t count, int entityID = -1) const;
 
 	private:
 		friend class SceneRenderer;
@@ -117,7 +122,13 @@ namespace Cosmic
 		                    float FogDensity = 0.02f, FogHeightFalloff = 0.12f, FogBaseHeight = 0.0f;
 		bool GodRays = false; float GodRaysIntensity = 0.6f, GodRaysDensity = 0.04f; // auto-off when !Shadows
 		bool HeatHaze = false; float HeatHazeStrength = 0.02f;
-		// F6 appends the underwater block; F7 appends detailed-sky + lens-flare fields.
+		// Underwater medium (F6): tonemap fogs + tints the frame when the camera is
+		// below UnderwaterY. The app sets UnderwaterY to the primary water surface.
+		bool Underwater = false; float UnderwaterY = 0.0f;
+		glm::vec3 UnderwaterColor{ 0.05f, 0.18f, 0.22f };
+		float     UnderwaterDensity = 0.08f;
+		glm::vec3 UnderwaterTint{ 0.55f, 0.75f, 0.90f };
+		// F7 appends detailed-sky + lens-flare fields.
 	};
 
 	/**

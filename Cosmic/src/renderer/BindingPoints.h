@@ -55,6 +55,12 @@ namespace Cosmic::Bindings
 	 *  vertex stage. First slot of the engine SSBO range (8+). */
 	constexpr uint32_t ParticlesSsbo = 8;
 
+	/** Instanced-mesh pool (S12.3-lite / doc 10 F5) — InstanceSet's std430 array
+	 *  of `{ mat4 Model; vec4 Tint; }` (80 bytes/instance), read by
+	 *  PBRInstanced.glsl and ShadowDepthInstanced.glsl by gl_InstanceID. Uploaded
+	 *  + bound by InstanceSet. */
+	constexpr uint32_t InstancesSsbo = 9;
+
 	// ------------------------------------------------------------------
 	// Reserved fragment texture units
 	// ------------------------------------------------------------------
@@ -76,6 +82,6 @@ namespace Cosmic::Bindings
 
 	// F2 SceneRenderer claims NO new slots: it orchestrates the existing
 	// Renderer3D / EnvironmentMap / ShadowMap / PostProcessStack passes, which
-	// already own every binding above. (F5 instancing claims SSBO 9; F8 snow
-	// claims TexUnitSnowMask = 12.)
+	// already own every binding above. (F5 instancing claims SSBO 9 above; F8
+	// snow claims TexUnitSnowMask = 12.)
 }

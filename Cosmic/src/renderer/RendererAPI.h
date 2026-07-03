@@ -60,8 +60,20 @@
 #include <glm/glm.hpp>
 #include "graphics/VertexArray.h"
 
+#include <string>
+#include <vector>
+
 namespace Cosmic
 {
+	// One resolved GPU timing zone (S12.5 profiler, doc 10 F3). Depth = zone
+	// nesting level (0 = top-level) so a HUD can indent nested zones.
+	struct GpuZoneResult
+	{
+		std::string Name;
+		float       Milliseconds = 0.0f;
+		uint32_t    Depth        = 0;
+	};
+
 	class RendererAPI
 	{
 	public:
@@ -181,6 +193,21 @@ namespace Cosmic
 		// final FXAA pass; a future backend tracks the bound target itself.
 		virtual uint32_t GetBoundFramebuffer() const = 0;
 		virtual void     BindFramebufferHandle(uint32_t id) = 0;
+
+		////////////////////////////////
+		// GPU Timing (S12.5 profiler — doc 10 F3)
+		///////////////////////////////
+
+		// Scoped GPU timer zones. Zones may nest; the backend records a timestamp
+		// pair per zone (GL_TIMESTAMP queries, which — unlike GL_TIME_ELAPSED — do
+		// not have a no-nest restriction). Results are read a few frames late so
+		// the GPU is never stalled waiting on a query. GpuFrameMark is called once
+		// per frame and both closes the just-recorded frame and resolves the oldest
+		// ready one. A None/DirectX backend leaves these as no-ops.
+		virtual void BeginGpuZone(const char* name) = 0;
+		virtual void EndGpuZone() = 0;
+		virtual void GpuFrameMark() = 0;
+		virtual const std::vector<GpuZoneResult>& GetGpuZoneResults() const = 0;
 
 		////////////////////////////////
 		// Global API Accessor

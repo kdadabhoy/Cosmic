@@ -334,7 +334,15 @@ feature with zero GL errors in the log; Engine3DDemo renders identically.
 
 ## F3 — GPU profiler (S12.5): timer-query verbs + HUD
 
-**Status:** ☐ not started
+**Status:** ✅ 2026-07-03 — Timer-query verbs `BeginGpuZone`/`EndGpuZone`/`GpuFrameMark`/
+`GetGpuZoneResults` on `RendererAPI`+`RenderCommand`; OpenGL impl uses `GL_TIMESTAMP` query pairs
+(pooled/recycled, 3-frame ring, resolves the oldest only when available — never stalls, force-drops
+on overflow). `SceneRenderer::Render` marks the frame + wraps each pass in a named zone
+(Shadow/Reflection/Opaque/Transparents/Post+Composite). Frontier `panels/GpuProfilerPanel` (docked
+RightBottom) draws per-pass ms bars scaled to the GPU frame total + CPU frame ms. Build + configure
+green; **CosmicTests 107/107**; Frontier boots clean (self-check 8/8, GL 4.5) and the auto-entered
+IslandWorld SceneRenderer path logs zero GL errors; Engine3DDemo renders identically. *(In-world
+toggle-response pixel check remains a user visual pass.)*
 
 **Files:** MODIFY `renderer/RendererAPI.h`, `renderer/RenderCommand.h`,
 `platform/OpenGL/OpenGLRendererAPI.h/.cpp`, `renderer/SceneRenderer.cpp` (zones around each pass);
@@ -378,7 +386,15 @@ within noise when the panel is open).
 
 ## F4 — Terrain growth: app heightfield source, shadow casting, wet band
 
-**Status:** ☐ not started
+**Status:** ✅ 2026-07-03 — `TerrainSpecification::HeightFunction` (Source C, wins over image/fBm;
+sampled at texel centers `u,v∈[0,1]`, clamped). `Terrain::RenderDepth(lightVP, cameraPos)` binds
+`TerrainDepth.glsl` and walks the SAME LOD cut as `Render` (extracted into shared `CollectCut` +
+`DrawCut` helpers using the REAL camera pos). Wet-band `TerrainMaterialParams` (`WetLine`/`WetBand`/
+`WetDarken`, default 0 = shipped look) → `Terrain.glsl`. Shore accessors `GetHeightTextureID` /
+`GetWorldMinCorner` / `GetWorldSize` / `GetHeightScale` / `GetBaseHeight` (F6 consumes). `SceneRenderer`
+PassShadow casts terrain when `TerrainCastsShadows`. Tests: linear-ramp reproduction (≤ quantization
+tol) + Source-C-wins/accessor consistency. **CosmicTests 107/107**; Engine3DDemo terrain unregressed.
+*(Sunset mountain-shadow visual check remains a user pass.)*
 
 **Files:** MODIFY `terrain/Terrain.h/.cpp`, `renderer/SceneRenderer.cpp` (the reserved shadow
 slot), `scene/Components.h` is NOT touched. Shaders (already written): `TerrainDepth.glsl` +
@@ -421,7 +437,18 @@ Engine3DDemo identical.
 
 ## F5 — Instancing (S12.3-lite) + frustum culling (S12.1-lite)
 
-**Status:** ☐ not started
+**Status:** ✅ 2026-07-03 — `Bindings::InstancesSsbo = 9`. NEW `renderer/InstanceSet` (reuses
+`StorageBuffer::Create(size, 9)`; packs `{ mat4 Model; vec4 Tint }` — `static_assert(sizeof==80)`).
+`Renderer3D::DrawMeshInstanced` (material `BindFull` → `ApplySceneBindings` → `InstanceSet::Bind` →
+`DrawIndexedInstanced`; no `u_Model`/`u_NormalMatrix` — the SSBO supplies them) +
+`ShadowMap::DrawCasterInstanced` (lazy `ShadowDepthInstanced.glsl`); `DrawCaster` now re-binds its
+depth program so instanced/non-instanced casters interleave safely (uniform setters target the bound
+program). `SceneDrawContext::DrawMeshInstanced` routes per pass. NEW header-only `math/Frustum.h`
+(Gribb–Hartmann extraction + AABB/sphere tests; follows the `GerstnerWave.h` header-only-math
+convention — no `COSMIC_API` on a fully-inline utility). NEW `tests/test_frustum.cpp` (6 cases:
+inside / each face outside / enclosing / straddling / sphere variants / unit normals). **CosmicTests
+107/107**; Engine3DDemo shadow path (uses `DrawCaster`) unregressed. *(In-scene scatter draw is F12c
+content; the one-draw profiler check is a user pass.)*
 
 **Files:** MODIFY `renderer/BindingPoints.h` (claim `InstancesSsbo = 9`), `renderer/Renderer3D.h/.cpp`,
 `renderer/ShadowMap.h/.cpp`, `renderer/SceneRenderer.h/.cpp` (`SceneDrawContext::DrawMeshInstanced`
@@ -490,7 +517,17 @@ disappears cleanly when culled behind the camera; fps ≥ 60.
 
 ## F6 — Water v2 C++ (8 waves, shore, caustics, whitecaps, sparkle, underwater)
 
-**Status:** ☐ not started
+**Status:** ✅ 2026-07-03 — Wave cap 4→8 (`kMaxShaderWaves`; CPU query path already evaluates the full
+vector — verified with an 8-wave doctest set + a Create-clamp test). `WaterSpecification::ShoreDepthRange`
++ `Water::SetShoreTerrain(terrain)`: each `Render` binds the terrain's packed height texture on local
+unit 6 and sets `u_HasShoreTex`/`u_ShoreRect`/`u_ShoreHeight`/`u_ShoreDepthRange` (gate off + sampler
+unit assigned unconditionally when no shore terrain). New optics spec fields + uniforms
+`u_CausticStrength`/`u_CausticScale`/`u_SparkleStrength`/`u_WhitecapStrength` (default 0). Underwater:
+`PostProcessStack::SetUnderwater(...)` → `Tonemap.glsl`'s `u_UseUnderwater`/`u_WaterlineY`/
+`u_UnderwaterColor`/`u_UnderwaterDensity`/`u_UnderwaterTint` in Composite (shares fog's depth
+reconstruction); `SceneRendererSettings` underwater block plumbed in PassPostAndComposite. `Water::Render`
+signature unchanged. **CosmicTests 107/107**; Engine3DDemo's lake byte-identical (all new gates default 0).
+*(Beach flatten/caustics/underwater visuals arrive with F12a wiring — user visual pass.)*
 
 **Files:** MODIFY `water/Water.h/.cpp`, `renderer/PostProcessStack.h/.cpp` (underwater),
 `renderer/SceneRenderer.h/.cpp` (Settings growth), `tests/test_phase10_world.cpp` (8-wave

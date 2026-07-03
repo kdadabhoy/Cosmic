@@ -137,6 +137,69 @@ TEST_SUITE("Terrain (S8)")
 			CHECK(h <= terrain->GetMaxHeight() + 1e-4f);
 		}
 	}
+
+	TEST_CASE("Source C: HeightFunction reproduces a linear ramp (F4)")
+	{
+		// A linear field, interpolated on the renderer's triangle split, is exact;
+		// SampleHeight reads the float heightfield (not the 16-bit texture), so it
+		// reproduces the ramp within a generous quantization-scale tolerance at
+		// texel corners and mid-cell alike.
+		Cosmic::TerrainSpecification spec;
+		spec.Resolution  = 129;        // 128 = 32 * 2^2 — valid
+		spec.WorldSize   = 128.0f;     // cell = 1 m
+		spec.HeightScale = 40.0f;
+		spec.BaseHeight  = -5.0f;
+		spec.HeightFunction = [](float u, float v) { return 0.15f + 0.5f * u + 0.25f * v; };
+
+		auto terrain = Cosmic::Terrain::Create(spec);
+		REQUIRE(terrain);
+
+		const float half = spec.WorldSize * 0.5f;
+		const float tol  = spec.HeightScale / 65535.0f * 2.0f + 1e-3f;
+
+		int checked = 0;
+		for (int a = 0; a < 12; ++a)
+			for (int b = 0; b < 12; ++b)
+			{
+				// Mix of grid corners and mid-cell fractions across the terrain.
+				const float x = -half + a * 10.0f + (b & 1 ? 0.5f : 0.0f);
+				const float z = -half + b * 10.0f + (a & 1 ? 0.37f : 0.0f);
+				if (!terrain->Contains(x, z))
+					continue;
+				const float u = (x + half) / spec.WorldSize;
+				const float v = (z + half) / spec.WorldSize;
+				const float expected = spec.BaseHeight + (0.15f + 0.5f * u + 0.25f * v) * spec.HeightScale;
+				CHECK(std::abs(terrain->SampleHeight(x, z) - expected) < tol);
+				++checked;
+			}
+		CHECK(checked > 100);
+	}
+
+	TEST_CASE("Source C wins over fBm and shore accessors are consistent (F4)")
+	{
+		Cosmic::TerrainSpecification spec;
+		spec.Resolution  = 65;
+		spec.WorldSize   = 200.0f;
+		spec.HeightScale = 50.0f;
+		spec.BaseHeight  = 3.0f;
+		spec.Origin      = { 10.0f, -20.0f };
+		spec.HeightFunction = [](float, float) { return 0.4f; };   // flat 0.4
+
+		auto terrain = Cosmic::Terrain::Create(spec);
+		REQUIRE(terrain);
+
+		// Flat function -> constant world height everywhere inside the extent.
+		CHECK(terrain->SampleHeight(10.0f, -20.0f)
+		      == doctest::Approx(3.0f + 0.4f * 50.0f).epsilon(1e-4));
+
+		// Shore-awareness accessors (consumed by Water v2, F6).
+		CHECK(terrain->GetWorldSize()   == doctest::Approx(200.0f));
+		CHECK(terrain->GetHeightScale() == doctest::Approx(50.0f));
+		CHECK(terrain->GetBaseHeight()  == doctest::Approx(3.0f));
+		CHECK(terrain->GetWorldMinCorner().x == doctest::Approx(10.0f - 100.0f));
+		CHECK(terrain->GetWorldMinCorner().y == doctest::Approx(-20.0f - 100.0f));
+		CHECK(terrain->GetHeightTextureID() == 0);   // GPU resources are lazy (headless)
+	}
 }
 
 TEST_SUITE("Gerstner water (S9)")
@@ -200,6 +263,65 @@ TEST_SUITE("Gerstner water (S9)")
 			CHECK(std::abs(grid.x + s.Offset.x - x) < 0.01f);
 			CHECK(std::abs(grid.y + s.Offset.z - z) < 0.01f);
 		}
+	}
+
+	TEST_CASE("8-wave set: bounded height, unit normals, inversion converges (v2 / F6)")
+	{
+		// Water v2 uploads up to 8 waves; the CPU query path evaluates the full
+		// vector, so the buoyancy contract must hold for an 8-wave stack too.
+		std::vector<Cosmic::GerstnerWave> waves = {
+			{ {  1.0f,  0.20f }, 60.0f, 1.60f, 0.80f, 0.0f, 0.0f },
+			{ {  0.7f, -0.70f }, 38.0f, 1.00f, 0.75f, 0.0f, 1.1f },
+			{ { -0.3f,  0.95f }, 22.0f, 0.55f, 0.65f, 0.0f, 2.0f },
+			{ {  0.5f,  0.85f }, 14.0f, 0.32f, 0.55f, 0.0f, 0.6f },
+			{ { -0.9f,  0.30f },  9.0f, 0.18f, 0.50f, 0.0f, 2.8f },
+			{ {  0.1f, -1.00f },  6.0f, 0.10f, 0.45f, 0.0f, 1.7f },
+			{ {  0.8f,  0.10f },  4.0f, 0.06f, 0.40f, 0.0f, 3.3f },
+			{ { -0.4f, -0.60f },  3.0f, 0.04f, 0.35f, 0.0f, 0.9f },
+		};
+		float ampSum = 0.0f;
+		for (const auto& w : waves)
+			ampSum += w.Amplitude;
+
+		for (int k = 0; k < 200; ++k)
+		{
+			const float x = k * 0.53f - 40.0f;
+			const float z = k * 0.31f - 25.0f;
+			const float t = k * 0.037f;
+
+			const float h = Cosmic::SampleGerstnerHeight(waves, x, z, t);
+			CHECK(std::abs(h) <= ampSum + 1e-2f);
+
+			const glm::vec3 n = Cosmic::SampleGerstnerNormal(waves, x, z, t);
+			CHECK(glm::length(n) == doctest::Approx(1.0f).epsilon(1e-4));
+			CHECK(n.y > 0.0f);
+
+			// Inversion re-lands on the queried (x, z) within 1 cm (buoyancy).
+			glm::vec2 grid{ x, z };
+			for (int i = 0; i < 4; ++i)
+			{
+				const auto s = Cosmic::EvaluateGerstner(waves, grid.x, grid.y, t);
+				grid = { x - s.Offset.x, z - s.Offset.z };
+			}
+			const auto s = Cosmic::EvaluateGerstner(waves, grid.x, grid.y, t);
+			CHECK(std::abs(grid.x + s.Offset.x - x) < 0.01f);
+			CHECK(std::abs(grid.y + s.Offset.z - z) < 0.01f);
+		}
+	}
+
+	TEST_CASE("Water::Create keeps up to 8 waves (v2 / F6)")
+	{
+		Cosmic::WaterSpecification spec;
+		spec.Waves.assign(8, Cosmic::GerstnerWave{ { 1.0f, 0.0f }, 10.0f, 0.1f, 0.5f, 0.0f, 0.0f });
+		auto water = Cosmic::Water::Create(spec);
+		REQUIRE(water);
+		CHECK(water->GetWaves().size() == 8);   // v2 cap (was 4)
+
+		// A 9th wave is dropped to the cap.
+		spec.Waves.assign(9, Cosmic::GerstnerWave{ { 1.0f, 0.0f }, 10.0f, 0.1f, 0.5f, 0.0f, 0.0f });
+		auto clamped = Cosmic::Water::Create(spec);
+		REQUIRE(clamped);
+		CHECK(clamped->GetWaves().size() == 8);
 	}
 
 	TEST_CASE("Water::Create resolves defaults and offsets SurfaceHeight")

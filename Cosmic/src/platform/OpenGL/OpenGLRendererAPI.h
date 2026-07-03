@@ -45,6 +45,11 @@
 #include "core/Core.h"
 #include "renderer/RendererAPI.h"
 
+#include <cstdint>
+#include <deque>
+#include <string>
+#include <vector>
+
 namespace Cosmic
 {
 	class OpenGLRendererAPI : public RendererAPI
@@ -94,9 +99,39 @@ namespace Cosmic
 		virtual uint32_t GetBoundFramebuffer() const override;
 		virtual void     BindFramebufferHandle(uint32_t id) override;
 
+		////////////////////////////////
+		// GPU Timing (S12.5 profiler — doc 10 F3)
+		///////////////////////////////
+
+		virtual void BeginGpuZone(const char* name) override;
+		virtual void EndGpuZone() override;
+		virtual void GpuFrameMark() override;
+		virtual const std::vector<GpuZoneResult>& GetGpuZoneResults() const override;
+
 	private:
 		// Lazily-created empty VAO for attribute-less DrawArrays (core GL requires
 		// a bound VAO). Created on first DrawArrays call.
 		uint32_t m_EmptyVAO = 0;
+
+		// --- GPU timer-query state (F3) ---------------------------------------
+		// GL_TIMESTAMP query pairs per zone, read back a few frames late so the
+		// GPU never stalls. glGenQueries objects are pooled and recycled.
+		struct GpuZoneRecord
+		{
+			std::string Name;
+			uint32_t    Depth   = 0;
+			uint32_t    StartQ  = 0;   // GL_TIMESTAMP query at BeginGpuZone
+			uint32_t    EndQ    = 0;   // GL_TIMESTAMP query at EndGpuZone
+		};
+		struct GpuFrameRecord { std::vector<GpuZoneRecord> Zones; };
+
+		uint32_t AcquireGpuQuery();                 // pool front or glGenQueries
+		void     RecycleGpuFrame(GpuFrameRecord& frame);
+
+		std::vector<uint32_t>       m_FreeQueries;  // recycled query object pool
+		GpuFrameRecord              m_RecordingFrame;   // zones since the last GpuFrameMark
+		std::vector<size_t>         m_ZoneStack;    // indices into m_RecordingFrame.Zones
+		std::deque<GpuFrameRecord>  m_PendingFrames;    // in-flight (awaiting GPU results)
+		std::vector<GpuZoneResult>  m_ZoneResults;  // most recent resolved frame
 	};
 }

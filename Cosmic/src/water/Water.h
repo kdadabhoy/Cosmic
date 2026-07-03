@@ -52,6 +52,7 @@ namespace Cosmic
 	class Shader;
 	class Texture2D;
 	class FrameBuffer;
+	class Terrain;
 
 	struct WaterSpecification
 	{
@@ -60,7 +61,7 @@ namespace Cosmic
 		float     SurfaceHeight = 0.0f;      // world Y of the calm surface
 		uint32_t  GridResolution = 129;      // vertices per side of the displaced grid
 
-		/** Wave set (<= 4 uploaded). Empty -> a plausible default 3-wave swell. */
+		/** Wave set (<= 8 uploaded — v2). Empty -> a plausible default 3-wave swell. */
 		std::vector<GerstnerWave> Waves;
 
 		// --- Optics (S9.1) ---
@@ -74,6 +75,13 @@ namespace Cosmic
 		float     DetailSpeed        = 0.03f;   // scroll speed, uv/second
 		float     DetailStrength     = 0.30f;   // detail normal contribution
 		float     SpecularPower      = 240.0f;  // sun glint tightness
+
+		// --- v2 optics (doc 10 F6). All default 0 = off -> the shipped S9.1 look. ---
+		float     ShoreDepthRange = 6.0f;       // water depth (m) over which waves regain amplitude
+		float     CausticStrength = 0.0f;       // animated light webs on the shallow floor
+		float     CausticScale    = 0.15f;      // caustic world repeats per meter
+		float     SparkleStrength = 0.0f;       // twinkling micro-glints on the sun glint
+		float     WhitecapStrength = 0.0f;      // open-water crest foam (heavy seas)
 
 		uint32_t  ReflectionResolution = 512;   // reflection RT size (square)
 	};
@@ -139,6 +147,19 @@ namespace Cosmic
 		/** @brief Unit surface normal at world (x, z). */
 		glm::vec3 SampleNormal(float x, float z, float timeSeconds) const;
 
+		////////////////////////////////
+		// Shore awareness (v2 / doc 10 F6)
+		///////////////////////////////
+
+		/**
+		 * @brief Bind a terrain whose packed height texture makes waves flatten
+		 * (and breakers foam) in shallow water. The terrain's height texture is
+		 * texelFetch'd in the water vertex/fragment shader each Render, so the
+		 * terrain must have built its GPU resources (it renders before the water in
+		 * the SceneRenderer). Pass null to clear the shore gate (open water).
+		 */
+		void SetShoreTerrain(const Ref<Terrain>& terrain);
+
 		const WaterSpecification&        GetSpecification() const { return m_Spec; }
 		const std::vector<GerstnerWave>& GetWaves() const         { return m_Waves; }
 
@@ -152,6 +173,7 @@ namespace Cosmic
 
 		WaterSpecification        m_Spec;
 		std::vector<GerstnerWave> m_Waves;      // resolved set (defaults applied)
+		Ref<Terrain>              m_ShoreTerrain; // v2 shore-awareness source (F6; null = open water)
 
 		// --- GPU state (lazy) ---
 		bool             m_GpuReady = false;

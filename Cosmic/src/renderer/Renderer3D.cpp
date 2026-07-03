@@ -13,6 +13,7 @@
 #include "graphics/Material.h"
 #include "graphics/Model.h"
 #include "graphics/UniformBuffer.h"
+#include "renderer/InstanceSet.h"
 #include "core/Log.h"
 
 #include <glm/glm.hpp>
@@ -506,6 +507,41 @@ namespace Cosmic
 		{
 			shader->SetFloat("u_HasShadow", 0.0f);
 		}
+	}
+
+	void Renderer3D::DrawMeshInstanced(const Ref<Mesh>& mesh, const Ref<Material>& material,
+	                                   const Ref<InstanceSet>& instances, uint32_t count, int entityID)
+	{
+		if (!mesh || !material || !instances || count == 0)
+			return;
+		if (!s_Data.InScene)
+		{
+			CS_CORE_WARN("Renderer3D::DrawMeshInstanced called outside BeginScene/EndScene — ignored.");
+			return;
+		}
+
+		const Ref<Shader>& shader = material->GetShader();
+		if (!shader)
+			return;
+
+		const uint32_t drawCount = std::min(count, instances->GetCount());
+		if (drawCount == 0)
+			return;
+
+		// 1) Material shader + its cached uniforms/textures (low units). The SSBO
+		//    supplies the per-instance transform, so — unlike the single-mesh path
+		//    — NO u_Model / u_NormalMatrix is set (PBRInstanced derives both from
+		//    the instance's Model matrix).
+		material->BindFull();
+		shader->SetInt("u_EntityID", entityID);   // S4.6 (silent no-op if undeclared)
+
+		// 2) Scene-level lighting resources (S6.3 IBL + S6.4 shadow), reserved units.
+		ApplySceneBindings(shader);
+
+		// 3) Per-instance pool (binding 9) + the instanced draw.
+		instances->Bind();
+		mesh->GetVertexArray()->Bind();
+		RenderCommand::DrawIndexedInstanced(mesh->GetVertexArray(), mesh->GetIndexCount(), drawCount);
 	}
 
 	void Renderer3D::DrawModel(const Ref<Model>& model, const glm::mat4& transform, int entityID)

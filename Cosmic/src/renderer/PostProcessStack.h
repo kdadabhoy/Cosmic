@@ -146,6 +146,21 @@ namespace Cosmic
 		bool BeginDistortion();
 		void EndDistortion();
 
+		// ---- Underwater medium (S9.4-lite / doc 10 F6) ----
+		/**
+		 * When enabled AND the camera is below `waterlineY`, the tonemap fogs the
+		 * frame toward `color` with distance (1/m `density`) and tints it by `tint`
+		 * (spectral absorption). Gated by `enabled` (default off = the shipped
+		 * output). The app sets the waterline to the primary water surface height.
+		 */
+		void SetUnderwater(bool enabled, float waterlineY,
+		                   const glm::vec3& color, float density, const glm::vec3& tint)
+		{
+			m_UnderwaterEnabled = enabled; m_WaterlineY = waterlineY;
+			m_UnderwaterColor = color; m_UnderwaterDensity = density; m_UnderwaterTint = tint;
+		}
+		bool IsUnderwaterEnabled() const { return m_UnderwaterEnabled; }
+
 		uint32_t GetWidth()  const { return m_Width; }
 		uint32_t GetHeight() const { return m_Height; }
 
@@ -223,5 +238,12 @@ namespace Cosmic
 		bool     m_DistortionWritten = false;       // a field was rendered this frame
 		bool     m_InDistortion      = false;
 		uint32_t m_DistortPrevFbo    = 0;
+
+		// ---- Underwater medium (S9.4-lite / doc 10 F6) ----
+		bool      m_UnderwaterEnabled = false;
+		float     m_WaterlineY        = 0.0f;
+		glm::vec3 m_UnderwaterColor{ 0.05f, 0.18f, 0.22f };
+		float     m_UnderwaterDensity = 0.08f;
+		glm::vec3 m_UnderwaterTint{ 0.55f, 0.75f, 0.90f };
 	};
 }

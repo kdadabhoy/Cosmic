@@ -44,6 +44,7 @@
 
 #include <glm/glm.hpp>
 #include <cstdint>
+#include <functional>
 #include <string>
 #include <vector>
 
@@ -73,6 +74,13 @@ namespace Cosmic
 		float LowHeight          = 1.5f;    // world Y where the low layer (sand/ash) fades out
 		float LowBlend           = 1.5f;
 		float TriplanarSharpness = 4.0f;    // blend-weight exponent on steep slopes
+
+		// --- Wet band (S11.1 / doc 10 F4): darken the surface at/below a waterline
+		//     (wet sand at the beach, lakeshore mud). WetDarken = 0 (default) is a
+		//     no-op — the shipped S8 look is byte-identical until an app feeds it. ---
+		float WetLine   = 0.0f;             // world Y at/below which the surface reads wet
+		float WetBand   = 1.5f;             // fade band above the line (m)
+		float WetDarken = 0.0f;             // 0 = off; 1 = full wet darkening
 	};
 
 	struct TerrainSpecification
@@ -94,6 +102,13 @@ namespace Cosmic
 		float    Lacunarity = 2.0f;
 		float    Gain       = 0.5f;
 		float    EdgeFalloff = 0.0f;        // 0 = none; else fraction of half-size faded to 0 (island)
+
+		// --- Source C: an app-supplied heightfield function (S11.1 / doc 10 F4) ---
+		// When set it WINS over HeightmapPath/fBm: sampled at every heightfield
+		// texel with u,v in [0,1] (texel centers, exactly as the fBm path samples),
+		// its return clamped to [0,1]. Must be deterministic — SampleHeight's unit
+		// tests apply unchanged. The Frontier island composer (F11) plugs in here.
+		std::function<float(float u, float v)> HeightFunction;
 
 		// --- LOD ---
 		float LodDistanceFactor = 2.5f;     // split a node when camera dist < size * factor
@@ -134,6 +149,16 @@ namespace Cosmic
 		 */
 		void Render(const glm::vec3& cameraPos, int entityID = -1);
 
+		/**
+		 * @brief Depth-only draw for shadow casting (S11.1 / doc 10 F4). Walks the
+		 * SAME quadtree cut as Render(cameraPos) — so caster and receiver agree on
+		 * LOD — but binds TerrainDepth.glsl with the sun's ortho matrix. Call from
+		 * inside a ShadowMap depth pass (state already set by BeginDepthPass); this
+		 * changes no global render state of its own. cameraPos is the REAL camera
+		 * (not the light) so the cut matches the lit pass.
+		 */
+		void RenderDepth(const glm::mat4& lightViewProj, const glm::vec3& cameraPos);
+
 		////////////////////////////////
 		// Queries (S8.3) — pure CPU
 		///////////////////////////////
@@ -165,16 +190,43 @@ namespace Cosmic
 		/** @brief Nodes drawn by the last Render call (LOD debug HUD). */
 		uint32_t GetLastDrawnNodeCount() const { return m_LastDrawnNodes; }
 
+		////////////////////////////////
+		// Shore-awareness accessors (doc 10 F4 → consumed by Water v2, F6)
+		///////////////////////////////
+
+		/** @brief The packed height+normal texture's renderer ID (RG = 16-bit
+		 *  height hi/lo byte, BA = normal.xz). 0 until the first Render/RenderDepth
+		 *  builds the GPU resources. Water v2 texelFetches it for shore attenuation. */
+		uint32_t  GetHeightTextureID() const;
+		/** @brief World XZ of the terrain's minimum corner (Origin - half size). */
+		glm::vec2 GetWorldMinCorner() const;
+		/** @brief World size (meters) along X and Z. */
+		float     GetWorldSize()   const { return m_Spec.WorldSize; }
+		/** @brief World height of a 1.0 normalized sample. */
+		float     GetHeightScale() const { return m_Spec.HeightScale; }
+		/** @brief World Y of a 0.0 normalized sample. */
+		float     GetBaseHeight()  const { return m_Spec.BaseHeight; }
+
 	public:
 		// Public only so Ref<Terrain> construction works inside Create();
 		// client code should always go through the factory.
 		Terrain() = default;
 
 	private:
-		bool  BuildHeights();                       // image or fBm -> m_Heights
+		/** One quadtree leaf selected by the LOD cut: grid corner (X, Z) and the
+		 *  texel span. Both Render and RenderDepth walk the same cut. */
+		struct NodeDraw { int X; int Z; int Texels; };
+
+		bool  BuildHeights();                       // image / fBm / HeightFunction -> m_Heights
 		void  BuildNormals();                       // CPU normals (S8.1)
 		bool  EnsureGpuResources();                 // patch mesh, textures, shader
-		void  DrawNode(int nodeX, int nodeZ, int nodeTexels, const glm::vec3& cameraPos, int depth);
+
+		// Recursively select the visible leaf nodes for `cameraPos` (the LOD cut).
+		// Shared by Render (lit) and RenderDepth (shadow) so caster/receiver agree.
+		void  CollectCut(int nodeX, int nodeZ, int nodeTexels,
+		                 const glm::vec3& cameraPos, int depth, std::vector<NodeDraw>& out) const;
+		// Set the per-node uniforms + draw the shared patch for each cut node.
+		void  DrawCut(const Ref<Shader>& shader, const std::vector<NodeDraw>& cut);
 
 		float HeightAtGrid(int i, int j) const;     // clamped world-space height
 
@@ -190,6 +242,7 @@ namespace Cosmic
 		bool           m_GpuReady = false;
 		Ref<Mesh>      m_Patch;                     // shared 33x33 grid + skirt
 		Ref<Shader>    m_Shader;                    // Terrain.glsl
+		Ref<Shader>    m_DepthShader;               // TerrainDepth.glsl (lazy; F4 shadow cast)
 		Ref<Texture2D> m_HeightTex;                 // RG = height hi/lo byte, BA = normal xz
 		Ref<Texture2D> m_DetailTex;                 // shared procedural albedo detail
 		uint32_t       m_LastDrawnNodes = 0;

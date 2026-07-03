@@ -249,6 +249,36 @@ namespace Cosmic
 			s_RendererAPI->BindFramebufferHandle(id);
 		}
 
+		/////////////////////////////////////////////////////////////////////////////////
+		// GPU Timing (S12.5 profiler — doc 10 F3)
+		/////////////////////////////////////////////////////////////////////////////////
+
+		/** @brief Open a named GPU timer zone (may nest). Pair with EndGpuZone. */
+		inline static void BeginGpuZone(const char* name)
+		{
+			s_RendererAPI->BeginGpuZone(name);
+		}
+
+		/** @brief Close the most recently opened GPU timer zone. */
+		inline static void EndGpuZone()
+		{
+			s_RendererAPI->EndGpuZone();
+		}
+
+		/** @brief Call once per frame (SceneRenderer::Render entry): closes the
+		 *  frame's zones and resolves the oldest ready frame without stalling. */
+		inline static void GpuFrameMark()
+		{
+			s_RendererAPI->GpuFrameMark();
+		}
+
+		/** @brief The most recently RESOLVED frame's zone timings (may be a few
+		 *  frames old; empty until the first resolve). */
+		inline static const std::vector<GpuZoneResult>& GetGpuZoneResults()
+		{
+			return s_RendererAPI->GetGpuZoneResults();
+		}
+
 	private:
 		/**
 		 * @brief Internal pointer to the active API implementation.

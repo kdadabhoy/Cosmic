@@ -5,6 +5,7 @@
 #include "renderer/RenderCommand.h"
 #include "renderer/Renderer3D.h"
 #include "renderer/PostProcessStack.h"
+#include "terrain/Terrain.h"
 #include "graphics/Mesh.h"
 #include "graphics/Shader.h"
 #include "graphics/Texture.h"
@@ -22,7 +23,7 @@ namespace Cosmic
 {
 	namespace
 	{
-		constexpr uint32_t kMaxShaderWaves  = 4;    // mirrored by Water.glsl's arrays
+		constexpr uint32_t kMaxShaderWaves  = 8;    // v2 (F6): mirrored by Water.glsl's arrays
 		constexpr uint32_t kDetailTexSize   = 128;
 
 		// Lengyel oblique near-plane: replace the projection's near plane with an
@@ -89,6 +90,11 @@ namespace Cosmic
 	glm::vec3 Water::SampleNormal(float x, float z, float timeSeconds) const
 	{
 		return SampleGerstnerNormal(m_Waves, x, z, timeSeconds);
+	}
+
+	void Water::SetShoreTerrain(const Ref<Terrain>& terrain)
+	{
+		m_ShoreTerrain = terrain;   // null clears the shore gate (open water)
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////
@@ -325,6 +331,12 @@ namespace Cosmic
 		m_Shader->SetFloat("u_DetailStrength", m_Spec.DetailStrength);
 		m_Shader->SetFloat("u_SpecularPower", m_Spec.SpecularPower);
 
+		// v2 optics (F6). All default 0 -> off (the shipped S9.1 look is byte-identical).
+		m_Shader->SetFloat("u_CausticStrength", m_Spec.CausticStrength);
+		m_Shader->SetFloat("u_CausticScale", m_Spec.CausticScale);
+		m_Shader->SetFloat("u_SparkleStrength", m_Spec.SparkleStrength);
+		m_Shader->SetFloat("u_WhitecapStrength", m_Spec.WhitecapStrength);
+
 		// Screen-space resources (low units; reserved 8+ stay for the scene set).
 		RenderCommand::BindTextureSlot(0, m_RefractionFbo->GetColorAttachmentRendererID(0));
 		m_Shader->SetInt("u_Refraction", 0);
@@ -339,6 +351,30 @@ namespace Cosmic
 		m_Shader->SetFloat("u_HasReflection", m_HasReflection ? 1.0f : 0.0f);
 		m_Shader->SetMat4("u_ReflectionViewProj", m_ReflectionViewProj);
 		m_Shader->SetMat4("u_InvViewProj", glm::inverse(viewProjection));
+
+		// v2 shore awareness (F6): bind the terrain's packed height texture (unit 6;
+		// water owns 0..5, engine reserves 8+) so waves flatten + break in the
+		// shallows. The sampler unit is assigned unconditionally (same rule as the
+		// scene set); the gate uniform u_HasShoreTex enables the sampling. Requires
+		// the terrain's GPU resources (built when it renders earlier this frame).
+		m_Shader->SetInt("u_ShoreHeightTex", 6);
+		const uint32_t shoreTexID = m_ShoreTerrain ? m_ShoreTerrain->GetHeightTextureID() : 0;
+		if (shoreTexID != 0)
+		{
+			RenderCommand::BindTextureSlot(6, shoreTexID);
+			const glm::vec2 minCorner = m_ShoreTerrain->GetWorldMinCorner();
+			const float     worldSize = m_ShoreTerrain->GetWorldSize();
+			const float     invSize   = worldSize > 0.0f ? 1.0f / worldSize : 0.0f;
+			m_Shader->SetFloat4("u_ShoreRect", { minCorner.x, minCorner.y, invSize, invSize });
+			m_Shader->SetFloat2("u_ShoreHeight", { m_ShoreTerrain->GetHeightScale(),
+			                                       m_ShoreTerrain->GetBaseHeight() });
+			m_Shader->SetFloat("u_ShoreDepthRange", m_Spec.ShoreDepthRange);
+			m_Shader->SetFloat("u_HasShoreTex", 1.0f);
+		}
+		else
+		{
+			m_Shader->SetFloat("u_HasShoreTex", 0.0f);
+		}
 
 		m_Grid->GetVertexArray()->Bind();
 

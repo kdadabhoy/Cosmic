@@ -38,6 +38,7 @@ namespace Cosmic
 	class FrameBuffer;
 	class Shader;
 	class Mesh;
+	class InstanceSet;
 
 	class COSMIC_API ShadowMap
 	{
@@ -62,6 +63,17 @@ namespace Cosmic
 
 		void BeginDepthPass();
 		void DrawCaster(const Ref<Mesh>& mesh, const glm::mat4& transform);
+
+		/**
+		 * @brief Instanced shadow caster (S12.3-lite / doc 10 F5): draws `count`
+		 * copies of `mesh` (clamped to the InstanceSet's uploaded count) from the
+		 * SAME per-instance SSBO PBRInstanced.glsl renders — a scattered forest
+		 * shadows itself in one draw. Binds its own ShadowDepthInstanced.glsl, so
+		 * a following non-instanced DrawCaster re-binds the plain depth shader
+		 * (both restore their own program state). Call inside a depth pass.
+		 */
+		void DrawCasterInstanced(const Ref<Mesh>& mesh, const Ref<InstanceSet>& instances, uint32_t count);
+
 		void EndDepthPass();
 
 		/** Register the shadow map + light matrix with Renderer3D (lit materials sample it). */
@@ -72,8 +84,9 @@ namespace Cosmic
 		uint32_t         GetSize() const { return m_Size; }
 
 	private:
-		Ref<FrameBuffer> m_Fbo;          // depth-only
-		Ref<Shader>      m_DepthShader;  // ShadowDepth.glsl
+		Ref<FrameBuffer> m_Fbo;                   // depth-only
+		Ref<Shader>      m_DepthShader;           // ShadowDepth.glsl
+		Ref<Shader>      m_DepthInstancedShader;  // ShadowDepthInstanced.glsl (lazy; F5)
 		glm::mat4        m_LightViewProj{ 1.0f };
 		uint32_t         m_Size = 2048;
 		bool             m_Initialized = false;

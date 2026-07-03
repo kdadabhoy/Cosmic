@@ -3,6 +3,7 @@
 #include "renderer/SceneRenderer.h"
 
 #include "renderer/RenderCommand.h"
+#include "renderer/InstanceSet.h"
 #include "graphics/FrameBuffer.h"
 #include "graphics/Mesh.h"
 #include "graphics/Model.h"
@@ -84,6 +85,18 @@ namespace Cosmic
 		Renderer3D::DrawModel(model, transform, entityID);
 	}
 
+	void SceneDrawContext::DrawMeshInstanced(const Ref<Mesh>& mesh, const Ref<Material>& material,
+	                                         const Ref<InstanceSet>& instances, uint32_t count, int entityID) const
+	{
+		if (Pass == ScenePass::ShadowDepth)
+		{
+			if (m_Shadow && mesh)
+				m_Shadow->DrawCasterInstanced(mesh, instances, count);   // material/entityID ignored
+			return;
+		}
+		Renderer3D::DrawMeshInstanced(mesh, material, instances, count, entityID);
+	}
+
 	// =========================================================================
 	// SceneRenderDesc
 	// =========================================================================
@@ -161,6 +174,11 @@ namespace Cosmic
 		}
 		m_InRender = true;
 
+		// GPU profiler (F3): mark the frame boundary — this closes last frame's
+		// zones and resolves the oldest ready frame. Each pass below is wrapped in
+		// a named GPU zone (why Render() is decomposed into one method per pass).
+		RenderCommand::GpuFrameMark();
+
 		// 1) Capture the final target FIRST, before any pass rebinds a framebuffer,
 		//    and precompute the main camera matrices reused across passes.
 		m_FinalFbo    = RenderCommand::GetBoundFramebuffer();
@@ -183,11 +201,14 @@ namespace Cosmic
 		else
 			Renderer3D::ClearIBL();
 
-		PassShadow(desc);            // 4
-		PassReflection(desc);        // 5
-		PassOpaqueHDR(desc);         // 6
-		PassTransparents(desc);      // 7
-		PassPostAndComposite(desc);  // 8
+		// Each pass runs inside a GPU timer zone (F3). Zone names are the profiler
+		// HUD's rows; they respond live to the Settings toggles (a disabled feature
+		// shrinks or zeroes its zone).
+		RenderCommand::BeginGpuZone("Shadow");         PassShadow(desc);           RenderCommand::EndGpuZone();  // 4
+		RenderCommand::BeginGpuZone("Reflection");     PassReflection(desc);       RenderCommand::EndGpuZone();  // 5
+		RenderCommand::BeginGpuZone("Opaque");         PassOpaqueHDR(desc);        RenderCommand::EndGpuZone();  // 6
+		RenderCommand::BeginGpuZone("Transparents");   PassTransparents(desc);     RenderCommand::EndGpuZone();  // 7
+		RenderCommand::BeginGpuZone("Post+Composite"); PassPostAndComposite(desc); RenderCommand::EndGpuZone();  // 8
 
 		m_InRender = false;          // 9
 	}
@@ -228,7 +249,11 @@ namespace Cosmic
 			}
 		}
 
-		// F4 slot: terrain depth casters go here (RenderDepth into the shadow map).
+		// Terrain casts too (F4): walks the same LOD cut as the lit pass using the
+		// REAL camera position so caster and receiver tessellation agree. Uses the
+		// shadow pass's render state (front-cull + viewport already set).
+		if (desc.TerrainSystem && desc.Settings.TerrainCastsShadows)
+			desc.TerrainSystem->RenderDepth(m_Shadow.GetLightViewProj(), desc.CameraPosition);
 
 		m_Shadow.EndDepthPass();
 		m_Shadow.PushToRenderer(desc.Settings.ShadowBias);
@@ -366,6 +391,10 @@ namespace Cosmic
 		m_Post.SetFXAAEnabled(s.FXAA);
 		m_Post.SetFogEnabled(s.Fog);
 		m_Post.SetFogParams(s.FogColor, s.FogDensity, s.FogHeightFalloff, s.FogBaseHeight);
+		// Underwater medium (F6): the tonemap fogs + tints when the camera is below
+		// the waterline (checked shader-side against UnderwaterY).
+		m_Post.SetUnderwater(s.Underwater, s.UnderwaterY, s.UnderwaterColor,
+		                     s.UnderwaterDensity, s.UnderwaterTint);
 		// Camera for depth reconstruction (fog + god rays) — needed by both
 		// RenderEffects and Composite; set once, it persists across both.
 		m_Post.SetCamera(m_ViewProj, desc.CameraPosition);

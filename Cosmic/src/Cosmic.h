@@ -38,6 +38,7 @@
 #include "renderer/EnvironmentMap.h"     // S6.3 — image-based lighting + skybox
 #include "renderer/ShadowMap.h"          // S6.4 — directional sun shadows
 #include "renderer/SceneRenderer.h"      // F2  — engine-owned multi-pass frame orchestration
+#include "renderer/InstanceSet.h"        // F5  — per-instance transform pool (instanced draw)
 #include "terrain/Terrain.h"             // S8  — heightmap terrain (quadtree LOD + queries)
 #include "water/Water.h"                 // S9  — Gerstner water surface + buoyancy queries
 #include "particles/ParticleSystem.h"    // S10 — GPU particles + ribbon trails
@@ -70,6 +71,7 @@
 
 // Math (spatial conventions: NED world frame, Y-up render frame, quaternions)
 #include "math/Spatial.h"
+#include "math/Frustum.h"        // F5 — view-frustum extraction + culling tests
 
 // Simulation toolkit (E-series: docs/plans/03-simulation-engine-plan.md)
 #include "math/Integrators.h"    // E11 — RK4, semi-implicit Euler, FixedSubstepper

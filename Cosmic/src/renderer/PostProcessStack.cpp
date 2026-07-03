@@ -382,6 +382,24 @@ namespace Cosmic
 		else
 			m_TonemapShader->SetFloat("u_UseFog", 0.0f);
 
+		// Underwater medium (F6): shares fog's depth reconstruction inputs (scene
+		// depth on slot 3, inverse-VP, camera). Rebinding them is idempotent when
+		// fog is also on; when fog is off this block supplies them.
+		if (m_UnderwaterEnabled)
+		{
+			RenderCommand::BindTextureSlot(3, m_SceneHDR->GetDepthAttachmentRendererID());
+			m_TonemapShader->SetInt("u_Depth", 3);
+			m_TonemapShader->SetMat4("u_InvViewProj", glm::inverse(m_ViewProjection));
+			m_TonemapShader->SetFloat3("u_CameraPos", m_CameraPos);
+			m_TonemapShader->SetFloat("u_UseUnderwater", 1.0f);
+			m_TonemapShader->SetFloat("u_WaterlineY", m_WaterlineY);
+			m_TonemapShader->SetFloat3("u_UnderwaterColor", m_UnderwaterColor);
+			m_TonemapShader->SetFloat("u_UnderwaterDensity", m_UnderwaterDensity);
+			m_TonemapShader->SetFloat3("u_UnderwaterTint", m_UnderwaterTint);
+		}
+		else
+			m_TonemapShader->SetFloat("u_UseUnderwater", 0.0f);
+
 		if (m_SsaoEnabled && m_AoResultID)
 		{
 			RenderCommand::BindTextureSlot(1, m_AoResultID);

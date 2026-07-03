@@ -21,7 +21,8 @@
 //             inspect toggle; Camera is null when the nav panel selects orbit.
 //   [F2 DONE]: Cosmic::SceneRenderer* Renderer — worlds fill a SceneRenderDesc
 //             and call Renderer->Render(desc) instead of hand-rolling passes.
-//   TODO(F3): GPU-profiler results pointer for the HUD panel.
+//   [F3 DONE]: no WorldContext field — the GPU-profiler HUD reads engine state
+//             directly (RenderCommand::GetGpuZoneResults); see panels/GpuProfilerPanel.
 //   TODO(F10): ambience audio helper (DistanceLoop registry).
 // ============================================================================
 

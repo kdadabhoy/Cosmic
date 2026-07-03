@@ -8,6 +8,8 @@
 #include "worlds/MirrorLakeWorld.h"
 #include "worlds/StormOceanWorld.h"
 
+#include "panels/GpuProfilerPanel.h"   // F3 — GPU-profiler HUD
+
 #include "layers/WorkspaceLayer.h"   // dock-port registration + viewport queries
 #include "ui/ThemeManager.h"         // accent colour for the homescreen tiles
 #include "ui/Fonts.h"
@@ -171,6 +173,11 @@ namespace Frontier
 
         DrawNavPanel();
 
+        // Shared GPU-profiler HUD (F3): per-pass ms from the SceneRenderer's timer
+        // zones. Drawn before the world panels so clicking Home (which may clear
+        // m_ActiveWorld) doesn't skip it.
+        GpuProfilerPanel::Draw();
+
         // DrawNavPanel's Home / world-switch buttons call SetWorld, which can
         // clear m_ActiveWorld to -1 (Home) or change it mid-frame — re-check
         // before indexing, or clicking Home dereferences m_Worlds[-1].
@@ -250,7 +257,7 @@ namespace Frontier
         ws->SetEdgeRatios(0.18f, 0.20f, 0.16f, 0.20f);
         ws->DockWindow("Frontier",       Cosmic::DockPort::LeftTop);
         ws->DockWindow("World Settings", Cosmic::DockPort::LeftBottom);
-        // TODO(F3): ws->DockWindow("GPU Profiler", Cosmic::DockPort::RightBottom);
+        ws->DockWindow("GPU Profiler",   Cosmic::DockPort::RightBottom);   // F3
 
         m_AppliedDock = DockStateKey();
     }
