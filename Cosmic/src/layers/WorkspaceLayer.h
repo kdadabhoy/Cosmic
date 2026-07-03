@@ -224,11 +224,64 @@ namespace Cosmic
         bool GetApplyCodedLayoutOnLoad() const { return m_ApplyCodedLayoutOnLoad; }
 
         // -----------------------------------------------------------------------
-        // Viewport bounds — pixel coords matching glfwGetCursorPos space.
-        // ViewportPos is the top-left of the rendered image content (below title bar).
+        // Viewport bounds — ImGui SCREEN pixels (OS virtual-desktop coordinates;
+        // multi-viewport is enabled, so all ImGui rects live in this space).
+        // ViewportPos is the top-left of the rendered image content (below the
+        // tab bar). Compare against Input::GetMouseScreenPosition() — the
+        // window-relative Input::GetMousePosition() only matches when the app
+        // window sits at the desktop origin (e.g. borderless maximized).
         // -----------------------------------------------------------------------
         glm::vec2 GetViewportPos()  const { return m_ViewportPos; }
         glm::vec2 GetViewportSize() const { return m_ViewportSize; }
+
+        // Hover/focus state of the central Viewport panel, refreshed each ImGui
+        // frame (so worth one frame of lag when read in OnUpdate). Use these to
+        // gate POLLED input — e.g. only let a camera controller orbit while the
+        // viewport is actually under the cursor, not while the user drags a
+        // slider in a side panel. (The EVENT path is already gated: ImGuiLayer
+        // blocks mouse/key events to client layers when ImGui wants them.)
+        bool IsViewportHovered() const { return m_ViewportHovered; }
+        bool IsViewportFocused() const { return m_ViewportFocused; }
+
+        // -----------------------------------------------------------------------
+        // Viewport overlay — draw ImGui content ON TOP of the rendered viewport
+        // image (transform gizmos, view cubes, HUD chips). ImGui supports
+        // appending to an existing window by re-Begin'ing it within the frame;
+        // these helpers wrap that so clients never hard-code the viewport
+        // window's identity, and Cosmic::Gizmo gets the host window its hover
+        // logic requires (see graphics/Gizmo.h FRAME PROTOCOL).
+        //
+        //   if (ws->BeginViewportOverlay())
+        //   {
+        //       // current window == the Viewport; draw list is clipped to it
+        //       Cosmic::Gizmo::SetRect(...);  Cosmic::Gizmo::Manipulate(...);
+        //       ImGui::SetCursorScreenPos(...); ImGui::Image(...);   // widgets OK
+        //   }
+        //   ws->EndViewportOverlay();   // ALWAYS pair with BeginViewportOverlay
+        //
+        // Returns false (and pushes no window) when the viewport is hidden via
+        // SetViewportVisible(false). Call from OnImGuiRender only — the client
+        // renders after the viewport window exists for the frame.
+        //
+        // Inline on purpose: WorkspaceLayer is not COSMIC_API-exported, so this
+        // compiles into the client DLL (same pattern as DockWindow).
+        // -----------------------------------------------------------------------
+        bool BeginViewportOverlay()
+        {
+            if (!m_ShowViewport)
+                return false;
+            ImGui::Begin("Viewport");   // appends to this frame's existing window
+            m_OverlayOpen = true;
+            return true;
+        }
+        void EndViewportOverlay()
+        {
+            if (m_OverlayOpen)
+            {
+                ImGui::End();
+                m_OverlayOpen = false;
+            }
+        }
 
         // -----------------------------------------------------------------------
         // Teardown / layout
@@ -264,6 +317,7 @@ namespace Cosmic
         bool      m_ViewportFocused = false;
         bool      m_ViewportHovered = false;
         bool      m_ShowViewport    = true;   // see SetViewportVisible()
+        bool      m_OverlayOpen     = false;  // BeginViewportOverlay pairing guard
 
         // Teardown handshake
         bool m_PendingTeardown = false;

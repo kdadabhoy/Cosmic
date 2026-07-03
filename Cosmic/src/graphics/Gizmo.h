@@ -13,15 +13,28 @@
  * engine enums so no third-party type leaks into a public header (§0 rule 2).
  *
  * FRAME PROTOCOL (per frame, inside the ImGui frame):
- *   1. Gizmo::BeginFrame();                       // after ImGui::NewFrame
- *   2. Gizmo::SetRect(vpX, vpY, vpW, vpH);        // the viewport panel rect (screen px)
- *   3. if (selected) Gizmo::Manipulate(cam, xform, op, space, snap);
- *   4. camera controller should yield while Gizmo::IsUsing() so a drag on the
- *      gizmo doesn't also orbit the camera.
  *
- * ImGuizmo draws into the foreground draw list within the rect, so the gizmo
- * renders on top of the viewport image regardless of which ImGui window is
- * active when Manipulate is called.
+ *   auto* ws = Cosmic::Application::Get().GetWorkspaceLayer();
+ *   if (ws->BeginViewportOverlay())                        // append to the Viewport window
+ *   {
+ *       Gizmo::SetRect(vpPos.x, vpPos.y, vpSize.x, vpSize.y);   // ImGui screen px
+ *       if (selected) Gizmo::Manipulate(cam, xform, op, space, snap);
+ *   }
+ *   ws->EndViewportOverlay();                              // always pair with Begin
+ *
+ * Manipulate MUST be called between ImGui::Begin/End of the window that shows
+ * the rendered scene (BeginViewportOverlay does that for the engine viewport):
+ * it draws into — and, critically, hit-tests hover against — the CURRENT ImGui
+ * window. Calling it outside a window (e.g. with a foreground draw list) draws
+ * a gizmo that can never be grabbed, because ImGuizmo treats the mouse as
+ * "over some other window" whenever the viewport is hovered.
+ *
+ * The engine resets ImGuizmo once per frame in ImGuiLayer::Begin — clients have
+ * no per-frame bookkeeping.
+ *
+ * Input etiquette: the camera controller should yield while IsUsing() (an
+ * active drag) or IsOver() (cursor on a handle) so grabbing the gizmo doesn't
+ * also orbit the camera, and click-to-select should skip clicks on handles.
  *
  * The TransformComponent overload writes rotation as a QUATERNION (and sets
  * UseQuatRotation) — the component's Euler/quat representations are independent
@@ -44,10 +57,7 @@ namespace Cosmic
 		enum class Operation { Translate, Rotate, Scale };
 		enum class Space     { Local, World };
 
-		/** @brief Reset ImGuizmo's per-frame state. Call once, after ImGui::NewFrame. */
-		static void BeginFrame();
-
-		/** @brief The screen-space rect (window px) the gizmo draws + hit-tests within. */
+		/** @brief The screen-space rect (ImGui screen px) the gizmo draws + hit-tests within. */
 		static void SetRect(float x, float y, float width, float height);
 
 		/** @brief Master enable (grey out the gizmo without removing it). */
@@ -55,13 +65,15 @@ namespace Cosmic
 
 		/** @brief True while the gizmo is being dragged (camera should yield). */
 		static bool IsUsing();
-		/** @brief True while the cursor is over any gizmo handle. */
+		/** @brief True while the cursor is over any gizmo handle (selection should skip). */
 		static bool IsOver();
 
 		/**
 		 * @brief Manipulate a raw model matrix in place. Returns true if it changed
 		 * this frame. `snap` > 0 snaps to that increment (world units for
 		 * translate/scale, degrees for rotate); 0 disables snapping.
+		 * Pre: called between Begin/End of the viewport window (see FRAME PROTOCOL).
+		 * Orthographic vs perspective is detected from the camera's projection.
 		 */
 		static bool Manipulate(const Camera& camera, glm::mat4& model,
 		                       Operation op, Space space, float snap = 0.0f);
@@ -70,6 +82,7 @@ namespace Cosmic
 		 * @brief Manipulate a TransformComponent in place (decomposes the result back
 		 * into Position/Scale/RotationQuat; sets UseQuatRotation). Returns true if the
 		 * transform changed this frame.
+		 * Pre: called between Begin/End of the viewport window (see FRAME PROTOCOL).
 		 */
 		static bool Manipulate(const Camera& camera, TransformComponent& transform,
 		                       Operation op, Space space, float snap = 0.0f);

@@ -650,10 +650,33 @@ S4.0 — `glDispatchCompute` isn't in the old loader.
 > `NavStyle`/`ViewPreset` + CAD bindings / zoom-to-cursor / orbit-about-cursor / snap+frame on
 > `OrbitCameraController` (S5.1/S5.2), `camera/NavigationCube` (S5.3), `scene/ScenePicker` +
 > `FrameBuffer::ReadDepth` + `Mesh` local AABB (S5.4), `graphics/Gizmo` over vendored ImGuizmo
-> (S5.5). Every item wired into Engine3DDemo under a "CAD Tools (S5)" panel + hotkeys (F / Home /
-> W-E-R). **Remaining — user visual pass:** run Engine3DDemo, toggle CAD nav (MMB orbit about the
-> cursor point, scroll-to-cursor), click the ViewCube faces, enable editor mode → click-select an
-> ECS mesh (outline shows), drag the gizmo (move/rotate/scale + snap), F/Home framing.
+> (S5.5). Every item wired into Engine3DDemo + hotkeys (F / Home / W-E-R).
+>
+> **Hardening pass 2026-07-02 (same day, post-commit `ec8f575`):**
+> - **Gizmo interaction fix:** ImGuizmo hover-tests against the *host window of its draw list*;
+>   drawing to the foreground list made the gizmo render but never activate (any hovered window
+>   ⇒ `mbMouseOver == false`). New protocol: `ImGuiLayer::Begin` owns `ImGuizmo::BeginFrame()`
+>   (Gizmo::BeginFrame removed), and `Gizmo::Manipulate` binds the CURRENT window's draw list —
+>   call it inside `WorkspaceLayer::BeginViewportOverlay()/EndViewportOverlay()` (new engine API
+>   that appends to the Viewport window). Ortho vs perspective now auto-detected from `proj[3][3]`.
+> - **One coordinate space:** viewport math is ImGui SCREEN pixels end-to-end (multi-viewport is
+>   on). New `Input::GetMouseScreenPosition()`; `OrbitCameraController` (drag/pivot/zoom-to-cursor)
+>   and demo picking use it — window-client coords only matched when the app sat at the desktop
+>   origin (borderless maximized), a latent multi-monitor/windowed bug.
+> - **Polled-input gating:** the orbit controller polls the mouse, so panel drags also orbited the
+>   camera. `WorkspaceLayer::IsViewportHovered()/IsViewportFocused()` + `Orbit::IsDragging()` let
+>   the demo enable camera control only over the viewport (drags may finish outside), yield to
+>   gizmo hover/drag + the ViewCube, and drop scroll-zoom when the cursor is on a panel.
+> - **Demo UI split into dock-port panels** (port mode, one window per concern): left = "Camera &
+>   Views" / "Editor Tools" / "Rendering & Lighting"; right = "Simulation & Timing" / "Feature
+>   Demos"; the ViewCube + gizmo moved ONTO the viewport (top-right overlay) via
+>   BeginViewportOverlay — the CAD convention. Panels carry usage instructions (nav bindings,
+>   editor how-to, hotkeys). ImGuizmo now links PRIVATE (no include-dir leak to clients).
+>
+> **Remaining — user visual pass:** run Engine3DDemo, toggle CAD nav (MMB orbit about the
+> cursor point, scroll-to-cursor), click the ViewCube faces (top-right of the viewport), enable
+> editor mode → click-select an ECS mesh (outline shows), drag the gizmo (move/rotate/scale +
+> snap), F/Home framing.
 > **Deviation (documented, not silent):** the selection *outline* is an oriented mesh-AABB wire box
 > drawn depth-test-off, not the ID-buffer edge-detect post pass named in S5.4 — the edge-detect
 > variant needs a fullscreen pass that samples an FBO attachment as a texture, which has no clean

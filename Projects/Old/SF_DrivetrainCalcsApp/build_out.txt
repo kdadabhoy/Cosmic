@@ -1,18 +1,0 @@
-======================================================
-           Cosmic Engine - SF_DrivetrainCalcsApp
-======================================================
-[STAGE 0] Initializing MSVC Environment...
-**********************************************************************
-** Visual Studio 2026 Developer Command Prompt v18.0
-** Copyright (c) 2026 Microsoft Corporation
-**********************************************************************
-[INFO] SDK Root: C:\dev\Cosmic
-[STAGE 2] Building SF_DrivetrainCalcsApp.dll...
-MSBuild version 18.7.8+1ac568fee for .NET Framework
-
-  SF_DrivetrainCalcsApp.cpp
-     Creating library C:/dev/Cosmic/Projects/SF_DrivetrainCalcsApp/build/Debug/SF_DrivetrainCalcsApp.lib and object C:/dev/Cosmic/Projects/SF_DrivetrainCalcsApp/build/Debug/SF_DrivetrainCalcsApp.exp
-  SF_DrivetrainCalcsApp.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\SF_DrivetrainCalcsApp.dll
-  Syncing SF_DrivetrainCalcsApp assets to VFS output directory...
-
-SUCCESS: SF_DrivetrainCalcsApp.dll built and assets synced (Debug)

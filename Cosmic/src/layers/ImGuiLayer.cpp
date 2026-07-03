@@ -3,6 +3,7 @@
 #include "implot.h"
 #include "backends/imgui_impl_glfw.h"
 #include "backends/imgui_impl_opengl3.h"
+#include <ImGuizmo.h>   // per-frame gizmo reset lives with the ImGui frame (see Begin)
 #include "core/Application.h"
 #include "ui/Fonts.h"
 #include "ui/ThemeManager.h"
@@ -96,6 +97,11 @@ namespace Cosmic
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
+
+		// Reset ImGuizmo's per-frame state alongside ImGui's. The engine owns this
+		// call (exactly once per ImGui frame) so client layers can use
+		// Cosmic::Gizmo without any per-frame bookkeeping of their own.
+		ImGuizmo::BeginFrame();
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////

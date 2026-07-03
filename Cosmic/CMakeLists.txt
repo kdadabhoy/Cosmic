@@ -88,8 +88,11 @@ target_compile_definitions(Cosmic PRIVATE COSMIC_BUILD_DLL)
 target_compile_definitions(Cosmic PRIVATE $<$<CONFIG:Release>:COSMIC_DIST>)
 
 # UPDATED: Linked 'entt' PUBLICLY so all dependent client targets inherit the headers
-target_link_libraries(Cosmic PUBLIC imgui implot ImGuizmo glad glm entt glfw OpenGL::GL stb_image stb_truetype stb_image_write spdlog)
-target_link_libraries(Cosmic PRIVATE tomlplusplus)
+target_link_libraries(Cosmic PUBLIC imgui implot glad glm entt glfw OpenGL::GL stb_image stb_truetype stb_image_write spdlog)
+# PRIVATE deps: no public engine header includes them, so clients never see the
+# include dirs — ImGuizmo stays behind graphics/Gizmo (its symbols aren't
+# dllexported, so leaking the headers would only invite link errors).
+target_link_libraries(Cosmic PRIVATE tomlplusplus ImGuizmo)
 
 # Borderless custom window chrome uses DWM (drop shadow) on Windows.
 if(WIN32)

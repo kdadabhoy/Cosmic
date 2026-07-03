@@ -56,6 +56,14 @@ namespace Cosmic
 		static float		GetMouseX();
 		static float		GetMouseY();
 
+		// Cursor position in SCREEN pixels (OS virtual-desktop coordinates) — the
+		// space ImGui reports positions in while multi-viewport is enabled, and the
+		// space WorkspaceLayer::GetViewportPos() lives in. Use this whenever mouse
+		// math involves an ImGui rect (viewport picking, gizmos, zoom-to-cursor);
+		// GetMousePosition() is window-client-relative and only matches by luck
+		// when the window sits at the desktop origin (e.g. borderless maximized).
+		static glm::vec2	GetMouseScreenPosition();
+
 
 		////////////////////////////////
 		// Gamepad / Joystick Queries (E7)

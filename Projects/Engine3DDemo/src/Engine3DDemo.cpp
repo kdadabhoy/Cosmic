@@ -25,9 +25,18 @@ namespace Workspace
 	{
 		CS_INFO("Engine3DDemo attached — Phase 4 acceptance scene.");
 
-		// Left-column inspector panel (engine dock slot by window NAME).
+		// Panels → engine dock ports (port mode: window names are free-form and
+		// must match the ImGui::Begin calls in the Draw*Panel helpers). Left
+		// column: interactive tools; right column: sim + acceptance rigs.
 		if (auto* ws = Cosmic::Application::Get().GetWorkspaceLayer())
-			ws->DockWindow("Project Inspector Top", Cosmic::DockPort::LeftTop);
+		{
+			ws->ClearDockWindows();
+			ws->DockWindow("Camera & Views",       Cosmic::DockPort::LeftTop);
+			ws->DockWindow("Editor Tools",         Cosmic::DockPort::LeftMiddle);
+			ws->DockWindow("Rendering & Lighting", Cosmic::DockPort::LeftBottom);
+			ws->DockWindow("Simulation & Timing",  Cosmic::DockPort::RightTop);
+			ws->DockWindow("Feature Demos",        Cosmic::DockPort::RightBottom);
+		}
 
 		BuildAircraftMeshes();
 
@@ -94,15 +103,16 @@ namespace Workspace
 		// Orbit-about-surface (S5.1): reconstruct the world point under the cursor
 		// from the editor id-pass depth. Only valid in editor mode (that's when the
 		// picker FBO is rendered each frame); otherwise the controller falls back to
-		// its ray/target-plane pivot. Window mouse → viewport-local pixel first.
-		m_Orbit.SetPivotProbe([this](const glm::vec2& windowMouse, glm::vec3& out) -> bool
+		// its ray/target-plane pivot. screenMouse and the viewport rect are both in
+		// ImGui screen pixels, so the subtraction is a straight space-local remap.
+		m_Orbit.SetPivotProbe([this](const glm::vec2& screenMouse, glm::vec3& out) -> bool
 		{
 			if (!m_EditorMode || !m_Picker)
 				return false;
 			auto& app = Cosmic::Application::Get();
 			const glm::vec2 vpPos = app.GetViewportPos();
-			const int px = static_cast<int>(windowMouse.x - vpPos.x);
-			const int py = static_cast<int>(windowMouse.y - vpPos.y);
+			const int px = static_cast<int>(screenMouse.x - vpPos.x);
+			const int py = static_cast<int>(screenMouse.y - vpPos.y);
 			return m_Picker->WorldPoint(m_Orbit.GetCamera(), px, py, out);
 		});
 
@@ -364,19 +374,25 @@ namespace Workspace
 
 	void Engine3DDemo::HandleEditorPicking()
 	{
-		// Edge-detect a left click; skip if a gizmo is (or was just) under the cursor
-		// so grabbing a handle doesn't reselect / clear the selection.
+		// Edge-detect a left click; route it to selection only when the click is
+		// really meant for the 3D scene: viewport hovered (not a side panel or a
+		// floating window on top of it), no gizmo handle under the cursor, and
+		// not on the ViewCube corner.
 		const bool lmb     = Cosmic::Input::IsMouseButtonPressed(CS_MOUSE_BUTTON_LEFT);
 		const bool clicked = lmb && !m_LmbWasDown;
 		m_LmbWasDown = lmb;
 
-		if (!clicked || m_GizmoActive || m_GizmoOver || !m_Picker || !m_Scene)
+		auto& app = Cosmic::Application::Get();
+		auto* ws  = app.GetWorkspaceLayer();
+		const bool vpHovered = ws && ws->IsViewportHovered();
+
+		if (!clicked || !vpHovered || m_GizmoActive || m_GizmoOver || m_NavCubeHovered ||
+		    !m_Picker || !m_Scene)
 			return;
 
-		auto& app = Cosmic::Application::Get();
 		const glm::vec2 vpPos  = app.GetViewportPos();
 		const glm::vec2 vpSize = app.GetViewportSize();
-		const glm::vec2 mouse  = Cosmic::Input::GetMousePosition();
+		const glm::vec2 mouse  = Cosmic::Input::GetMouseScreenPosition();   // vpPos space
 		const int px = static_cast<int>(mouse.x - vpPos.x);
 		const int py = static_cast<int>(mouse.y - vpPos.y);
 		if (px < 0 || py < 0 || px >= static_cast<int>(vpSize.x) || py >= static_cast<int>(vpSize.y))
@@ -389,12 +405,10 @@ namespace Workspace
 				? hit.GetComponent<Cosmic::TagComponent>().Tag
 				: std::string("Entity");
 			Cosmic::EntitySelection::Set(hit, name);   // feed the shared selection bus
-			m_SelectionInfo = name;
 		}
 		else
 		{
 			Cosmic::EntitySelection::Clear();
-			m_SelectionInfo.clear();
 		}
 	}
 
@@ -550,9 +564,17 @@ namespace Workspace
 			HandleEditorPicking();
 		}
 
-		// A gizmo drag (LMB) must not also drive the camera — yield while it's active.
-		// (State is from last frame; CAD orbit is MMB, so they rarely collide anyway.)
-		m_Orbit.SetControlEnabled(!m_GizmoActive);
+		// Camera input gating. The controller POLLS the mouse, so it must be told
+		// when the cursor isn't really on the 3D view: enable control only while
+		// the viewport is hovered (or an in-progress drag ran off the panel edge),
+		// and yield to the gizmo — hover included, so the grab frame never orbits —
+		// and to the ViewCube corner. All flags are from last frame's ImGui pass.
+		{
+			auto* ws = app.GetWorkspaceLayer();
+			const bool vpHovered = ws && ws->IsViewportHovered();
+			m_Orbit.SetControlEnabled((vpHovered || m_Orbit.IsDragging()) &&
+			                          !m_GizmoActive && !m_GizmoOver && !m_NavCubeHovered);
+		}
 
 		// ---- E1 measurement window (GetAbsoluteTime is real, unscaled seconds) ----
 		const float now = app.GetAbsoluteTime();
@@ -617,7 +639,7 @@ namespace Workspace
 		// tracks the current camera orientation; the S4.6 picking panel renders its
 		// own ID scene. Both leave another FBO bound, so we restore the app viewport
 		// FBO afterwards for the main pass.
-		if (m_NavCube)
+		if (m_NavCube && m_ShowNavCube)
 			m_NavCube->Render(m_Orbit.GetCamera().GetViewMatrix());
 		if (m_ShowPicking)
 			RenderPickPass();
@@ -760,244 +782,339 @@ namespace Workspace
 
 	void Engine3DDemo::OnImGuiRender()
 	{
-		// ---- Transform gizmo (S5.5): drive the selected entity over the viewport.
-		//      Runs once per frame inside the ImGui frame; ImGuizmo draws to the
-		//      foreground list within the viewport rect, on top of the scene image.
-		if (m_EditorMode)
-		{
-			auto& app = Cosmic::Application::Get();
-			const glm::vec2 vpPos  = app.GetViewportPos();
-			const glm::vec2 vpSize = app.GetViewportSize();
+		// In-viewport tools first (gizmo + ViewCube), then the docked panels.
+		// Each panel is its own window bound to an engine dock port in OnAttach —
+		// see WorkspaceLayer::DockWindow.
+		DrawViewportOverlay();
 
-			Cosmic::Gizmo::BeginFrame();
-			Cosmic::Gizmo::SetRect(vpPos.x, vpPos.y, vpSize.x, vpSize.y);
+		DrawCameraPanel();       // "Camera & Views"        (left, top)
+		DrawEditorPanel();       // "Editor Tools"          (left, middle)
+		DrawRenderingPanel();    // "Rendering & Lighting"  (left, bottom)
+		DrawSimulationPanel();   // "Simulation & Timing"   (right, top)
+		DrawFeatureDemosPanel(); // "Feature Demos"         (right, bottom)
+	}
 
-			Cosmic::Entity sel = SelectedEntity();
-			if (sel && vpSize.x > 0.0f && vpSize.y > 0.0f)
-			{
-				auto& t = sel.GetComponent<Cosmic::TransformComponent>();
-				const float snap = m_GizmoSnap ? m_SnapValue : 0.0f;
-				Cosmic::Gizmo::Manipulate(m_Orbit.GetCamera(), t, m_GizmoOp, m_GizmoSpace, snap);
-			}
+	// =========================================================================
+	// Viewport overlay — the transform gizmo (S5.5) and the ViewCube (S5.3)
+	// live ON the 3D image, not in a side panel (the CAD convention). Drawn by
+	// appending to the engine's Viewport window so ImGuizmo hover-tests against
+	// the correct host window (see graphics/Gizmo.h FRAME PROTOCOL).
+	// =========================================================================
 
-			m_GizmoActive = Cosmic::Gizmo::IsUsing();
-			m_GizmoOver   = Cosmic::Gizmo::IsOver();
-		}
-		else
+	void Engine3DDemo::DrawViewportOverlay()
+	{
+		m_NavCubeHovered = false;
+
+		auto& app = Cosmic::Application::Get();
+		auto* ws  = app.GetWorkspaceLayer();
+		if (!ws || (!m_EditorMode && !m_ShowNavCube))
 		{
 			m_GizmoActive = false;
 			m_GizmoOver   = false;
+			return;
 		}
 
-		ImGui::Begin("Project Inspector Top");
+		const glm::vec2 vpPos  = app.GetViewportPos();
+		const glm::vec2 vpSize = app.GetViewportSize();
+		const bool      vpValid = vpSize.x > 0.0f && vpSize.y > 0.0f;
+
+		bool gizmoActive = false;
+		bool gizmoOver   = false;
+
+		if (ws->BeginViewportOverlay() && vpValid)
+		{
+			// ---- Transform gizmo (S5.5) on the selected ECS entity ----
+			if (m_EditorMode)
+			{
+				Cosmic::Gizmo::SetRect(vpPos.x, vpPos.y, vpSize.x, vpSize.y);
+
+				if (Cosmic::Entity sel = SelectedEntity())
+				{
+					auto& t = sel.GetComponent<Cosmic::TransformComponent>();
+					const float snap = m_GizmoSnap ? m_SnapValue : 0.0f;
+					Cosmic::Gizmo::Manipulate(m_Orbit.GetCamera(), t, m_GizmoOp, m_GizmoSpace, snap);
+				}
+
+				gizmoActive = Cosmic::Gizmo::IsUsing();
+				gizmoOver   = Cosmic::Gizmo::IsOver();
+			}
+
+			// ---- ViewCube (S5.3), top-right corner — click a face to snap ----
+			if (m_ShowNavCube && m_NavCube)
+			{
+				const float sz     = static_cast<float>(m_NavCube->GetSize());
+				const float margin = 12.0f;
+				ImGui::SetCursorScreenPos(ImVec2(vpPos.x + vpSize.x - sz - margin,
+				                                 vpPos.y + margin));
+				ImGui::Image((ImTextureID)(intptr_t)m_NavCube->GetTextureID(),
+					{ sz, sz }, ImVec2(0, 1), ImVec2(1, 0));   // flip V (GL bottom-left)
+
+				if (ImGui::IsItemHovered())
+				{
+					// The cube owns this corner: click-to-select and camera drags
+					// both yield (flag read next frame in OnUpdate — one-frame
+					// hover lag is fine).
+					m_NavCubeHovered = true;
+
+					if (ImGui::IsMouseClicked(ImGuiMouseButton_Left))
+					{
+						const ImVec2 imgMin = ImGui::GetItemRectMin();
+						const ImVec2 m      = ImGui::GetMousePos();
+						Cosmic::ViewPreset preset;
+						if (m_NavCube->PickFace((m.x - imgMin.x) / sz, (m.y - imgMin.y) / sz, preset))
+							m_Orbit.SnapView(preset);
+					}
+				}
+			}
+		}
+		ws->EndViewportOverlay();
+
+		m_GizmoActive = gizmoActive;
+		m_GizmoOver   = gizmoOver;
+	}
+
+	// =========================================================================
+	// "Camera & Views" — navigation style, standard views, framing, hotkeys.
+	// =========================================================================
+
+	void Engine3DDemo::DrawCameraPanel()
+	{
+		ImGui::Begin("Camera & Views");
 
 		Cosmic::UI::Fonts::Push("Roboto-Bold", Cosmic::UI::Fonts::SizeHeading);
 		ImGui::TextUnformatted("3D Engine Demo");
 		Cosmic::UI::Fonts::Pop();
-		ImGui::TextDisabled("Phase 4 acceptance: orbit camera + shaded aircraft over a grid");
-		ImGui::Separator();
+		ImGui::TextDisabled("Phases 4-8: 3D foundations + CAD navigation & editing");
 
-		// ---------------- Camera (S1) ----------------
-		if (ImGui::CollapsingHeader("Camera  (LMB orbit / RMB pan / scroll zoom)", ImGuiTreeNodeFlags_DefaultOpen))
+		// ---- Navigation (S1 / S5.1) ----
+		ImGui::SeparatorText("Navigation");
+
+		ImGui::Checkbox("CAD style (S5.1)", &m_CadNav);
+		ImGui::SameLine();
+		ImGui::Checkbox("Inertia", &m_Inertia);
+
+		if (m_CadNav)
+			ImGui::TextWrapped("MMB drag orbits about the point under the cursor. "
+			                   "Ctrl+MMB pans, Shift+MMB dollies, scroll zooms toward the cursor. "
+			                   "LMB stays free for selection.");
+		else
+			ImGui::TextWrapped("LMB drag orbits, RMB drag pans, scroll zooms to the view center.");
+		ImGui::TextDisabled("The cursor must be over the viewport for camera input.");
+
+		ImGui::Spacing();
+		ImGui::Checkbox("Auto-orbit", &m_AutoOrbit);
+		if (m_AutoOrbit)
+			ImGui::SliderFloat("Orbit speed (deg/s)", &m_AutoOrbitSpeed, 1.0f, 60.0f, "%.0f");
+
+		ImGui::Text("Yaw %.1f  Pitch %.1f  Dist %.1f",
+			m_Orbit.GetYaw(), m_Orbit.GetPitch(), m_Orbit.GetDistance());
+
+		if (ImGui::Button("Reset view"))
 		{
-			ImGui::Checkbox("Auto-orbit", &m_AutoOrbit);
-			if (m_AutoOrbit)
-				ImGui::SliderFloat("Orbit speed (deg/s)", &m_AutoOrbitSpeed, 1.0f, 60.0f, "%.0f");
-
-			ImGui::Text("Yaw %.1f  Pitch %.1f  Dist %.1f",
-				m_Orbit.GetYaw(), m_Orbit.GetPitch(), m_Orbit.GetDistance());
-
-			if (ImGui::Button("Reset view"))
-			{
-				m_Orbit.SetTarget({ 0.0f, 4.0f, 0.0f });
-				m_Orbit.SetDistance(18.0f);
-				m_Orbit.SetYawPitch(35.0f, 25.0f);
-			}
+			m_Orbit.SetTarget({ 0.0f, 4.0f, 0.0f });
+			m_Orbit.SetDistance(18.0f);
+			m_Orbit.SetYawPitch(35.0f, 25.0f);
 		}
 
-		// ---------------- CAD Tools (Phase 8 / S5) ----------------
-		if (ImGui::CollapsingHeader("CAD Tools  (nav / views / picking / gizmos, S5)", ImGuiTreeNodeFlags_DefaultOpen))
+		// ---- Standard views (S5.2) + ViewCube toggle (S5.3) ----
+		ImGui::SeparatorText("Standard views");
+
+		auto snapBtn = [&](const char* label, Cosmic::ViewPreset p)
 		{
-			// -- S5.1 navigation style --
-			ImGui::SeparatorText("Navigation (S5.1)");
-			ImGui::Checkbox("CAD style", &m_CadNav);
-			ImGui::SameLine(); ImGui::TextDisabled("(?)");
-			if (ImGui::IsItemHovered())
-				ImGui::SetTooltip("On:  MMB orbit / Ctrl+MMB pan / Shift+MMB dolly, scroll = zoom to cursor.\n"
-				                  "Off: Classic LMB orbit / RMB pan / scroll zoom-to-center.\n"
-				                  "In editor mode, orbit pivots about the surface point under the cursor.");
-			ImGui::SameLine();
-			ImGui::Checkbox("Inertia", &m_Inertia);
+			if (ImGui::Button(label)) m_Orbit.SnapView(p);
+		};
+		snapBtn("Front", Cosmic::ViewPreset::Front); ImGui::SameLine();
+		snapBtn("Back",  Cosmic::ViewPreset::Back);  ImGui::SameLine();
+		snapBtn("Left",  Cosmic::ViewPreset::Left);  ImGui::SameLine();
+		snapBtn("Right", Cosmic::ViewPreset::Right);
+		snapBtn("Top",   Cosmic::ViewPreset::Top);   ImGui::SameLine();
+		snapBtn("Bottom",Cosmic::ViewPreset::Bottom);ImGui::SameLine();
+		snapBtn("Iso",   Cosmic::ViewPreset::Iso);
 
-			// -- S5.2 snap + frame views --
-			ImGui::SeparatorText("Views (S5.2)");
-			auto snapBtn = [&](const char* label, Cosmic::ViewPreset p)
-			{
-				if (ImGui::Button(label)) m_Orbit.SnapView(p);
-			};
-			snapBtn("Front", Cosmic::ViewPreset::Front); ImGui::SameLine();
-			snapBtn("Back",  Cosmic::ViewPreset::Back);  ImGui::SameLine();
-			snapBtn("Left",  Cosmic::ViewPreset::Left);  ImGui::SameLine();
-			snapBtn("Right", Cosmic::ViewPreset::Right);
-			snapBtn("Top",   Cosmic::ViewPreset::Top);   ImGui::SameLine();
-			snapBtn("Bottom",Cosmic::ViewPreset::Bottom);ImGui::SameLine();
-			snapBtn("Iso",   Cosmic::ViewPreset::Iso);
-			if (ImGui::Button("Frame selection (F)"))
-			{
-				glm::vec3 mn, mx;
-				if (ComputeEntityWorldAABB(SelectedEntity(), mn, mx)) m_Orbit.FrameBounds(mn, mx);
-			}
-			ImGui::SameLine();
-			if (ImGui::Button("Frame scene"))
-			{
-				glm::vec3 mn, mx;
-				if (ComputeSceneWorldAABB(mn, mx)) m_Orbit.FrameBounds(mn, mx);
-			}
-			ImGui::TextDisabled("Hotkeys: F frame selection/scene, Home iso, W/E/R gizmo mode.");
-
-			// -- S5.3 nav cube --
-			ImGui::SeparatorText("ViewCube (S5.3)");
-			if (m_NavCube)
-			{
-				const float sz    = static_cast<float>(m_NavCube->GetSize());
-				const float avail = ImGui::GetContentRegionAvail().x;
-				if (avail > sz)
-					ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (avail - sz) * 0.5f);
-
-				ImGui::Image((ImTextureID)(intptr_t)m_NavCube->GetTextureID(),
-					{ sz, sz }, ImVec2(0, 1), ImVec2(1, 0));   // flip V (GL bottom-left)
-
-				if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Left))
-				{
-					const ImVec2 imgMin = ImGui::GetItemRectMin();
-					const ImVec2 m      = ImGui::GetMousePos();
-					const float  u = (m.x - imgMin.x) / sz;
-					const float  v = (m.y - imgMin.y) / sz;
-					Cosmic::ViewPreset p;
-					if (m_NavCube->PickFace(u, v, p))
-						m_Orbit.SnapView(p);
-				}
-				ImGui::TextDisabled("Click a face to snap the view.");
-			}
-
-			// -- S5.4 / S5.5 editor: select + gizmo --
-			ImGui::SeparatorText("Select & Gizmo (S5.4 / S5.5)");
-			ImGui::Checkbox("Editor mode", &m_EditorMode);
-			ImGui::SameLine(); ImGui::TextDisabled("(?)");
-			if (ImGui::IsItemHovered())
-				ImGui::SetTooltip("Renders + picks the ECS scene (the S4.3 entities). LMB a mesh to\n"
-				                  "select it (shared EntitySelection bus); drag the gizmo to transform.");
-
-			{
-				Cosmic::Entity sel = SelectedEntity();
-				if (sel && sel.HasComponent<Cosmic::TagComponent>())
-					ImGui::Text("Selected: %s", sel.GetComponent<Cosmic::TagComponent>().Tag.c_str());
-				else
-					ImGui::TextDisabled("Selected: (none — enable editor mode and click a mesh)");
-			}
-
-			ImGui::BeginDisabled(!m_EditorMode);
-			int op = static_cast<int>(m_GizmoOp);
-			ImGui::TextUnformatted("Gizmo"); ImGui::SameLine();
-			ImGui::RadioButton("Move", &op, 0);   ImGui::SameLine();
-			ImGui::RadioButton("Rotate", &op, 1); ImGui::SameLine();
-			ImGui::RadioButton("Scale", &op, 2);
-			m_GizmoOp = static_cast<Cosmic::Gizmo::Operation>(op);
-
-			int space = static_cast<int>(m_GizmoSpace);
-			ImGui::TextUnformatted("Space"); ImGui::SameLine();
-			ImGui::RadioButton("World", &space, static_cast<int>(Cosmic::Gizmo::Space::World)); ImGui::SameLine();
-			ImGui::RadioButton("Local", &space, static_cast<int>(Cosmic::Gizmo::Space::Local));
-			m_GizmoSpace = static_cast<Cosmic::Gizmo::Space>(space);
-
-			ImGui::Checkbox("Snap", &m_GizmoSnap); ImGui::SameLine();
-			ImGui::SetNextItemWidth(90.0f);
-			ImGui::InputFloat("##snapval", &m_SnapValue, 0.0f, 0.0f, "%.2f");
-			ImGui::EndDisabled();
+		if (ImGui::Button("Frame selection (F)"))
+		{
+			glm::vec3 mn, mx;
+			if (ComputeEntityWorldAABB(SelectedEntity(), mn, mx)) m_Orbit.FrameBounds(mn, mx);
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("Frame scene"))
+		{
+			glm::vec3 mn, mx;
+			if (ComputeSceneWorldAABB(mn, mx)) m_Orbit.FrameBounds(mn, mx);
 		}
 
-		// ---------------- Simulation (E3) ----------------
-		if (ImGui::CollapsingHeader("Simulation  (NED + quaternions, Spatial.h)", ImGuiTreeNodeFlags_DefaultOpen))
+		ImGui::Checkbox("Show ViewCube (S5.3)", &m_ShowNavCube);
+		ImGui::TextDisabled("The cube sits in the viewport's top-right corner;\n"
+		                    "click one of its faces to snap to that view.");
+
+		// ---- Hotkeys (also see the Editor Tools panel) ----
+		ImGui::SeparatorText("Hotkeys");
+		ImGui::BulletText("F        frame selection (or the whole scene)");
+		ImGui::BulletText("Home   snap to the isometric view");
+		ImGui::BulletText("W/E/R  gizmo: move / rotate / scale (editor mode)");
+
+		ImGui::End();
+	}
+
+	// =========================================================================
+	// "Editor Tools" — selection + transform gizmo (S5.4 / S5.5).
+	// =========================================================================
+
+	void Engine3DDemo::DrawEditorPanel()
+	{
+		ImGui::Begin("Editor Tools");
+
+		ImGui::Checkbox("Editor mode", &m_EditorMode);
+		ImGui::SameLine(); ImGui::TextDisabled("(?)");
+		if (ImGui::IsItemHovered())
+			ImGui::SetTooltip("Renders + picks the ECS scene (the S4.3 entities). Selection is the\n"
+			                  "shared EntitySelection bus, so every panel sees the same entity.");
+
+		ImGui::SeparatorText("How to use");
+		ImGui::TextDisabled("1. Enable Editor mode above.");
+		ImGui::TextDisabled("2. Left-click one of the colored meshes in the viewport\n"
+		                    "   (the group left of center) - an orange outline appears.");
+		ImGui::TextDisabled("3. Drag the gizmo's arrows / rings / boxes to transform it.");
+		ImGui::TextDisabled("4. W / E / R (or the buttons below) switch the gizmo mode.");
+		ImGui::TextDisabled("5. Click empty space to deselect.");
+
+		ImGui::SeparatorText("Selection & gizmo");
 		{
-			ImGui::Checkbox("Pause", &m_SimPaused);
-			ImGui::SliderFloat("Speed (m/s)", &m_SpeedMs, 2.0f, 20.0f, "%.1f");
-			ImGui::SliderFloat("Bank (deg)", &m_BankDeg, -45.0f, 45.0f, "%.0f");
-
-			const glm::vec3 euler = Cosmic::Math::EulerZYXFromQuat(m_AttNed);
-			ImGui::Text("NED pos  N %.1f  E %.1f  D %.1f", m_PosNed.x, m_PosNed.y, m_PosNed.z);
-			ImGui::Text("Attitude R %.0f  P %.0f  Y %.0f", euler.x, euler.y, euler.z);
-
-			if (ImGui::Button("Clear trail"))
-				m_Trail.clear();
+			Cosmic::Entity sel = SelectedEntity();
+			if (sel && sel.HasComponent<Cosmic::TagComponent>())
+				ImGui::Text("Selected: %s", sel.GetComponent<Cosmic::TagComponent>().Tag.c_str());
+			else
+				ImGui::TextDisabled("Selected: (none)");
 		}
 
-		// ---------------- Fixed timestep (E1) ----------------
-		if (ImGui::CollapsingHeader("Fixed Timestep  (E1)", ImGuiTreeNodeFlags_DefaultOpen))
+		ImGui::BeginDisabled(!m_EditorMode);
+		int op = static_cast<int>(m_GizmoOp);
+		ImGui::TextUnformatted("Gizmo"); ImGui::SameLine();
+		ImGui::RadioButton("Move", &op, 0);   ImGui::SameLine();
+		ImGui::RadioButton("Rotate", &op, 1); ImGui::SameLine();
+		ImGui::RadioButton("Scale", &op, 2);
+		m_GizmoOp = static_cast<Cosmic::Gizmo::Operation>(op);
+
+		int space = static_cast<int>(m_GizmoSpace);
+		ImGui::TextUnformatted("Space"); ImGui::SameLine();
+		ImGui::RadioButton("World", &space, static_cast<int>(Cosmic::Gizmo::Space::World)); ImGui::SameLine();
+		ImGui::RadioButton("Local", &space, static_cast<int>(Cosmic::Gizmo::Space::Local));
+		m_GizmoSpace = static_cast<Cosmic::Gizmo::Space>(space);
+
+		ImGui::Checkbox("Snap", &m_GizmoSnap); ImGui::SameLine();
+		ImGui::SetNextItemWidth(90.0f);
+		ImGui::InputFloat("##snapval", &m_SnapValue, 0.0f, 0.0f, "%.2f");
+		ImGui::SameLine(); ImGui::TextDisabled("(?)");
+		if (ImGui::IsItemHovered())
+			ImGui::SetTooltip("Snap increment: world units for move/scale, degrees for rotate.");
+		ImGui::EndDisabled();
+
+		ImGui::End();
+	}
+
+	// =========================================================================
+	// "Rendering & Lighting" — draw toggles, scene content, lights.
+	// =========================================================================
+
+	void Engine3DDemo::DrawRenderingPanel()
+	{
+		ImGui::Begin("Rendering & Lighting");
+
+		ImGui::SeparatorText("Overlays");
+		ImGui::Checkbox("Grid", &m_ShowGrid);           ImGui::SameLine();
+		ImGui::Checkbox("Body axes", &m_ShowAxes);      ImGui::SameLine();
+		ImGui::Checkbox("Bounds", &m_ShowWireBox);
+		ImGui::Checkbox("Trail", &m_ShowTrail);         ImGui::SameLine();
+		ImGui::Checkbox("2D overlay", &m_Show2D);
+
+		ImGui::SeparatorText("Scene content");
+		ImGui::BeginDisabled(!m_PadMaterial);
+		ImGui::Checkbox("Material pad (S4.2)", &m_MaterialPad);
+		ImGui::EndDisabled();
+		ImGui::SameLine();
+		ImGui::TextDisabled("(?)");
+		if (ImGui::IsItemHovered())
+			ImGui::SetTooltip("Draws the ground pad through the custom-material path\n"
+			                  "(DemoChecker3D: tinted checker x 2x2 texture, Lambert-lit).");
+
+		ImGui::Checkbox("ECS scene (S4.3)", &m_EcsScene);
+		ImGui::SameLine();
+		ImGui::TextDisabled("(?)");
+		if (ImGui::IsItemHovered())
+			ImGui::SetTooltip("Renders 4 MeshRendererComponent entities via Scene::OnRender3D\n"
+			                  "(off to the left, y=3). One cylinder uses the quaternion path.\n"
+			                  "Editor mode always renders them - they are the pickable set.");
+
+		ImGui::BeginDisabled(!m_DuckModel);
+		ImGui::Checkbox("glTF Duck (S4.4b)", &m_ShowGltf);
+		ImGui::EndDisabled();
+		if (!m_GltfCacheResult.empty())
+			ImGui::TextDisabled("%s", m_GltfCacheResult.c_str());
+
+		ImGui::SeparatorText("Sun & ambient");
+		if (ImGui::SliderFloat3("Light dir", &m_LightDir.x, -1.0f, 1.0f, "%.2f"))
+			Cosmic::Renderer3D::SetLightDirection(m_LightDir);
+		if (ImGui::SliderFloat("Ambient", &m_Ambient, 0.0f, 1.0f, "%.2f"))
+			Cosmic::Renderer3D::SetAmbient(m_Ambient);
+
+		ImGui::SeparatorText("Lighting v1 (S4.5)");
+		ImGui::BeginDisabled(!m_LitMaterial);
+		ImGui::Checkbox("Lit aircraft", &m_LitAircraft);
+		ImGui::EndDisabled();
+		ImGui::TextDisabled("MeshLit material + lights UBO; 'Light dir' above is the sun.");
+
+		if (m_LitAircraft)
 		{
-			auto& app = Cosmic::Application::Get();
-			if (ImGui::SliderFloat("Engine rate (Hz)", &m_FixedHzUi, 30.0f, 480.0f, "%.0f"))
-				app.SetFixedTimestepHz(m_FixedHzUi);
-
-			ImGui::Text("Configured: %.0f Hz", app.GetFixedTimestepHz());
-			ImGui::Text("Measured OnFixedUpdate: %.0f Hz", m_MeasuredFixedHz);
-			ImGui::TextDisabled("240 Hz should read ~4x the 60 Hz default.");
-		}
-
-		// ---------------- Rendering (S1/S2) ----------------
-		if (ImGui::CollapsingHeader("Rendering", ImGuiTreeNodeFlags_DefaultOpen))
-		{
-			ImGui::Checkbox("Grid", &m_ShowGrid);           ImGui::SameLine();
-			ImGui::Checkbox("Body axes", &m_ShowAxes);      ImGui::SameLine();
-			ImGui::Checkbox("Bounds", &m_ShowWireBox);
-			ImGui::Checkbox("Trail", &m_ShowTrail);         ImGui::SameLine();
-			ImGui::Checkbox("2D overlay", &m_Show2D);
-
-			ImGui::BeginDisabled(!m_PadMaterial);
-			ImGui::Checkbox("Material pad (S4.2)", &m_MaterialPad);
-			ImGui::EndDisabled();
-			ImGui::SameLine();
-			ImGui::TextDisabled("(?)");
-			if (ImGui::IsItemHovered())
-				ImGui::SetTooltip("Draws the ground pad through the custom-material path\n"
-				                  "(DemoChecker3D: tinted checker x 2x2 texture, Lambert-lit).");
-
-			ImGui::Checkbox("ECS scene (S4.3)", &m_EcsScene);
-			ImGui::SameLine();
-			ImGui::TextDisabled("(?)");
-			if (ImGui::IsItemHovered())
-				ImGui::SetTooltip("Renders 4 MeshRendererComponent entities via Scene::OnRender3D\n"
-				                  "(off to the left, y=3). One cylinder uses the quaternion path.");
-
-			ImGui::BeginDisabled(!m_DuckModel);
-			ImGui::Checkbox("glTF Duck (S4.4b)", &m_ShowGltf);
-			ImGui::EndDisabled();
-			if (!m_GltfCacheResult.empty())
-				ImGui::TextDisabled("%s", m_GltfCacheResult.c_str());
-
-			if (ImGui::SliderFloat3("Light dir", &m_LightDir.x, -1.0f, 1.0f, "%.2f"))
-				Cosmic::Renderer3D::SetLightDirection(m_LightDir);
-			if (ImGui::SliderFloat("Ambient", &m_Ambient, 0.0f, 1.0f, "%.2f"))
-				Cosmic::Renderer3D::SetAmbient(m_Ambient);
-		}
-
-		// ---------------- Lighting v1 (S4.5) ----------------
-		if (ImGui::CollapsingHeader("Lighting v1  (MeshLit + UBO, S4.5)"))
-		{
-			ImGui::BeginDisabled(!m_LitMaterial);
-			ImGui::Checkbox("Lit aircraft (S4.5)", &m_LitAircraft);
-			ImGui::EndDisabled();
-			ImGui::TextDisabled("Uses 'Light dir' above as the sun direction.");
-
-			ImGui::SeparatorText("Sun");
 			ImGui::ColorEdit3("Sun color", &m_SunColor.x);
 			ImGui::SliderFloat("Sun intensity", &m_SunIntensity, 0.0f, 4.0f, "%.2f");
 			ImGui::SliderFloat("Shininess", &m_Shininess, 1.0f, 128.0f, "%.0f");
-
-			ImGui::SeparatorText("Point lights");
 			ImGui::SliderFloat3("Red pos",  &m_P0Pos.x, -10.0f, 10.0f, "%.1f");
 			ImGui::SliderFloat3("Blue pos", &m_P1Pos.x, -10.0f, 10.0f, "%.1f");
 			ImGui::SliderFloat("Point radius", &m_PointRadius, 1.0f, 30.0f, "%.0f");
 		}
+
+		ImGui::End();
+	}
+
+	// =========================================================================
+	// "Simulation & Timing" — the E3 kinematic sim + the E1 fixed-timestep rig.
+	// =========================================================================
+
+	void Engine3DDemo::DrawSimulationPanel()
+	{
+		ImGui::Begin("Simulation & Timing");
+
+		ImGui::SeparatorText("Aircraft sim (E3 - NED + quaternions)");
+		ImGui::Checkbox("Pause", &m_SimPaused);
+		ImGui::SliderFloat("Speed (m/s)", &m_SpeedMs, 2.0f, 20.0f, "%.1f");
+		ImGui::SliderFloat("Bank (deg)", &m_BankDeg, -45.0f, 45.0f, "%.0f");
+
+		const glm::vec3 euler = Cosmic::Math::EulerZYXFromQuat(m_AttNed);
+		ImGui::Text("NED pos  N %.1f  E %.1f  D %.1f", m_PosNed.x, m_PosNed.y, m_PosNed.z);
+		ImGui::Text("Attitude R %.0f  P %.0f  Y %.0f", euler.x, euler.y, euler.z);
+
+		if (ImGui::Button("Clear trail"))
+			m_Trail.clear();
+
+		ImGui::SeparatorText("Fixed timestep (E1)");
+		auto& app = Cosmic::Application::Get();
+		if (ImGui::SliderFloat("Engine rate (Hz)", &m_FixedHzUi, 30.0f, 480.0f, "%.0f"))
+			app.SetFixedTimestepHz(m_FixedHzUi);
+
+		ImGui::Text("Configured: %.0f Hz", app.GetFixedTimestepHz());
+		ImGui::Text("Measured OnFixedUpdate: %.0f Hz", m_MeasuredFixedHz);
+		ImGui::TextDisabled("240 Hz should read ~4x the 60 Hz default.");
+
+		ImGui::End();
+	}
+
+	// =========================================================================
+	// "Feature Demos" — asset cache, MRT picking, GPU compute acceptance rigs.
+	// =========================================================================
+
+	void Engine3DDemo::DrawFeatureDemosPanel()
+	{
+		ImGui::Begin("Feature Demos");
 
 		// ---------------- Assets (S4.4a) ----------------
 		if (ImGui::CollapsingHeader("Assets  (AssetLibrary cache, S4.4a)"))
@@ -1078,7 +1195,13 @@ namespace Workspace
 
 	void Engine3DDemo::OnEvent(Cosmic::Event& e)
 	{
-		m_Orbit.OnEvent(e);
+		// Mouse events (scroll zoom) are only meant for the 3D view — don't zoom
+		// the camera while the cursor sits over a side panel. Non-mouse events
+		// (window resize → aspect) always pass through.
+		auto* ws = Cosmic::Application::Get().GetWorkspaceLayer();
+		const bool vpHovered = ws && ws->IsViewportHovered();
+		if (!e.IsInCategory(Cosmic::EventCategoryMouse) || vpHovered || m_Orbit.IsDragging())
+			m_Orbit.OnEvent(e);
 	}
 
 } // namespace Workspace

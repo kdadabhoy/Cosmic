@@ -62,6 +62,28 @@ namespace Cosmic
 	/////////////////////////////////////////////////////////////////////////////////
 
 	/**
+	 * GetMouseScreenPosition
+	 *
+	 * Cursor position in OS screen coordinates: client-relative cursor plus the
+	 * window's client-area origin (glfwGetWindowPos reports the client area, not
+	 * the frame). Matches ImGui's io.MousePos space under multi-viewport, so it is
+	 * directly comparable with ImGui window/item rects and GetViewportPos().
+	 */
+	glm::vec2 Input::GetMouseScreenPosition()
+	{
+		auto* windowHandle = Application::Get().GetWindow().GetHandle();
+		double xpos, ypos;
+		glfwGetCursorPos(windowHandle, &xpos, &ypos);
+
+		int wx = 0, wy = 0;
+		glfwGetWindowPos(windowHandle, &wx, &wy);
+
+		return { (float)(xpos + wx), (float)(ypos + wy) };
+	}
+
+	/////////////////////////////////////////////////////////////////////////////////
+
+	/**
 	 * GetMouseX
 	 *
 	 * Helper method to extract only the horizontal component of the cursor position.

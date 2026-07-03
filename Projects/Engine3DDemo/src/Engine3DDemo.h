@@ -22,6 +22,16 @@
 //   2D coexistence: a Renderer2D overlay pass renders on top of the 3D
 //       world every frame (doc 05 contract rule: no 2D regressions).
 //
+// Phase 8 (S5) adds the CAD/editor layer on top: NavStyle bindings +
+// orbit-about-cursor, snap/frame views, the ViewCube and the transform gizmo
+// drawn as a VIEWPORT OVERLAY (WorkspaceLayer::BeginViewportOverlay), and
+// click-to-select through ScenePicker + the shared EntitySelection bus.
+//
+// UI layout: one window per concern, bound to engine dock ports in OnAttach —
+//   left   : "Camera & Views" / "Editor Tools" / "Rendering & Lighting"
+//   right  : "Simulation & Timing" / "Feature Demos"
+//   center : the engine Viewport (+ gizmo/ViewCube overlay)
+//
 // Acceptance line (roadmap Phase 4): "demo layer flies an orbit camera
 // around a shaded placeholder aircraft over a grid."
 // ============================================================================
@@ -50,6 +60,14 @@ namespace Workspace
 		void BuildAircraftMeshes();
 		void DrawAircraft();                  // submits the mesh parts under the sim transform
 		void Draw2DOverlay();                 // proves Renderer2D still works on top
+
+		// ---- ImGui panels (window names = dock-port bindings in OnAttach) ----
+		void DrawViewportOverlay();           // gizmo + ViewCube, on the 3D image
+		void DrawCameraPanel();               // "Camera & Views"
+		void DrawEditorPanel();               // "Editor Tools"
+		void DrawRenderingPanel();            // "Rendering & Lighting"
+		void DrawSimulationPanel();           // "Simulation & Timing"
+		void DrawFeatureDemosPanel();         // "Feature Demos"
 
 	private:
 		// ---- Camera rig (S1) ----
@@ -103,6 +121,8 @@ namespace Workspace
 		Cosmic::Ref<Cosmic::NavigationCube> m_NavCube;   // S5.3 orientation cube
 		Cosmic::Ref<Cosmic::ScenePicker>    m_Picker;    // S5.4 entity-ID picking
 		bool m_EditorMode   = false;   // S5.4/S5.5: render + select + gizmo the ECS scene
+		bool m_ShowNavCube  = true;    // S5.3: ViewCube overlay in the viewport corner
+		bool m_NavCubeHovered = false; // cursor on the ViewCube (previous ImGui frame)
 		bool m_GizmoActive  = false;   // Gizmo::IsUsing() from the previous frame
 		bool m_GizmoOver    = false;   // Gizmo::IsOver() from the previous frame
 		bool m_LmbWasDown   = false;   // click edge-detect for picking
@@ -112,7 +132,6 @@ namespace Workspace
 		Cosmic::Gizmo::Space     m_GizmoSpace = Cosmic::Gizmo::Space::World;
 		bool  m_GizmoSnap  = false;
 		float m_SnapValue  = 0.5f;     // world units (translate/scale) or degrees (rotate)
-		std::string m_SelectionInfo;   // readout of the current selection
 
 		void           RenderEditorIdPass();                                 // S5.4 id pre-pass
 		void           HandleEditorPicking();                                // S5.4 click-to-select

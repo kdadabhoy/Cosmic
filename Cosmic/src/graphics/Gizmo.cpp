@@ -32,15 +32,6 @@ namespace Cosmic
 		}
 	}
 
-	void Gizmo::BeginFrame()
-	{
-		ImGuizmo::BeginFrame();
-		ImGuizmo::SetOrthographic(false);
-		// Draw within the rect on top of the viewport image, independent of which
-		// ImGui window is current when Manipulate runs.
-		ImGuizmo::SetDrawlist(ImGui::GetForegroundDrawList());
-	}
-
 	void Gizmo::SetRect(float x, float y, float width, float height)
 	{
 		ImGuizmo::SetRect(x, y, width, height);
@@ -53,6 +44,15 @@ namespace Cosmic
 	bool Gizmo::Manipulate(const Camera& camera, glm::mat4& model,
 	                       Operation op, Space space, float snap)
 	{
+		// Draw into (and hover-test against) the CURRENT window — the caller is in
+		// the viewport window per the frame protocol. ImGuizmo resolves hover by the
+		// draw list's owner window, so a window-less list (foreground/background)
+		// yields a gizmo that renders but never activates.
+		ImGuizmo::SetDrawlist();
+
+		// GL-style projections carry [3][3] == 1 for orthographic, 0 for perspective.
+		ImGuizmo::SetOrthographic(camera.GetProjectionMatrix()[3][3] > 0.5f);
+
 		const float snapArr[3] = { snap, snap, snap };
 		const float* snapPtr = (snap > 0.0f) ? snapArr : nullptr;
 

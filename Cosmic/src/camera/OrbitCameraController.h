@@ -57,10 +57,12 @@ namespace Cosmic
 		 * FrameBuffer depth read + unproject); return false on a miss (empty space).
 		 * When no probe is set the controller falls back to intersecting the cursor
 		 * ray with the plane through the current target — so CAD nav needs only S1.
-		 *   @param windowMouse  cursor position in WINDOW pixels (Input::GetMousePosition)
+		 *   @param screenMouse  cursor position in SCREEN pixels
+		 *                       (Input::GetMouseScreenPosition — the ImGui rect space,
+		 *                       same space as WorkspaceLayer::GetViewportPos)
 		 *   @param outWorld     receives the hit point on success
 		 */
-		using PivotProbe = std::function<bool(const glm::vec2& windowMouse, glm::vec3& outWorld)>;
+		using PivotProbe = std::function<bool(const glm::vec2& screenMouse, glm::vec3& outWorld)>;
 
 		/////////////////////////////////////////////////////////////////////////////////
 		// Lifecycle & Main Execution Cascade
@@ -131,9 +133,15 @@ namespace Cosmic
 		void  SetPanSpeed(float scale)							{ m_PanSpeed = scale; }
 		void  SetZoomSpeed(float scale)							{ m_ZoomSpeed = scale; }
 
-		// Master enable for mouse control (e.g. disable while another gizmo drags).
+		// Master enable for mouse control (e.g. disable while a gizmo drags or the
+		// cursor is outside the viewport). Disabling mid-drag ends the drag.
 		void  SetControlEnabled(bool enabled)					{ m_ControlEnabled = enabled; }
 		bool  IsControlEnabled() const							{ return m_ControlEnabled; }
+
+		// True while an orbit/pan/dolly mouse drag is in progress. Lets apps keep
+		// control enabled for a drag that started inside the viewport even after
+		// the cursor leaves it (the standard editor feel).
+		bool  IsDragging() const								{ return m_Dragging; }
 
 		/////////////////////////////////////////////////////////////////////////////////
 		// CAD Navigation (S5.1)
@@ -152,7 +160,8 @@ namespace Cosmic
 		void       SetInertiaEnabled(bool enabled)				{ m_InertiaEnabled = enabled; }
 		bool       IsInertiaEnabled() const						{ return m_InertiaEnabled; }
 
-		// The viewport rectangle in WINDOW pixels (content-area origin + size).
+		// The viewport rectangle in SCREEN pixels (WorkspaceLayer::GetViewportPos /
+		// GetViewportSize — ImGui's coordinate space under multi-viewport).
 		// Required for zoom-to-cursor and the ray/target-plane pivot fallback; also
 		// updates the projection aspect (superset of OnResize). Apps that never use
 		// CAD nav can keep calling OnResize instead.
@@ -267,8 +276,8 @@ namespace Cosmic
 		NavStyle   m_NavStyle       = NavStyle::Classic;
 		PivotProbe m_PivotProbe;                       // optional; null ⇒ ray/plane fallback
 		bool       m_InertiaEnabled = false;
-		glm::vec2  m_ViewportPos    = { 0.0f, 0.0f };  // content-area origin, window px
-		glm::vec2  m_ViewportSize   = { 0.0f, 0.0f };  // panel size, window px
+		glm::vec2  m_ViewportPos    = { 0.0f, 0.0f };  // content-area origin, SCREEN px
+		glm::vec2  m_ViewportSize   = { 0.0f, 0.0f };  // panel size, px
 
 		// Which gesture the in-progress drag is performing (latched on the frame the
 		// drag starts so mid-drag modifier changes don't switch modes).

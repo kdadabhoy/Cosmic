@@ -24,7 +24,9 @@ namespace Cosmic
 
 	void OrbitCameraController::OnUpdate(float ts)
 	{
-		const glm::vec2 mouse = Input::GetMousePosition();
+		// SCREEN pixels — the same space as the viewport rect and the pivot probe
+		// (drag deltas are space-invariant, but absolute positions must line up).
+		const glm::vec2 mouse = Input::GetMouseScreenPosition();
 
 		bool userInteracted = false;   // a live drag this frame → cancels pose blends
 
@@ -307,9 +309,9 @@ namespace Cosmic
 		if (m_ViewportSize.x <= 0.0f || m_ViewportSize.y <= 0.0f)
 			return false;
 
-		// Window px → viewport-local [0,1] → NDC [-1,1]. Screen y grows downward,
+		// Screen px → viewport-local [0,1] → NDC [-1,1]. Screen y grows downward,
 		// so it flips to NDC y (up-positive).
-		const glm::vec2 mouse = Input::GetMousePosition();
+		const glm::vec2 mouse = Input::GetMouseScreenPosition();
 		const float u = (mouse.x - m_ViewportPos.x) / m_ViewportSize.x;
 		const float v = (mouse.y - m_ViewportPos.y) / m_ViewportSize.y;
 		const glm::vec2 ndc(u * 2.0f - 1.0f, 1.0f - v * 2.0f);
@@ -337,7 +339,7 @@ namespace Cosmic
 		if (m_PivotProbe)
 		{
 			glm::vec3 hit;
-			if (m_PivotProbe(Input::GetMousePosition(), hit))
+			if (m_PivotProbe(Input::GetMouseScreenPosition(), hit))
 			{
 				outWorld = hit;
 				return true;
