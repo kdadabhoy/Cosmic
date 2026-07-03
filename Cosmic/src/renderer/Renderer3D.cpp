@@ -3,6 +3,7 @@
 
 #include "renderer/Renderer3D.h"
 #include "renderer/RenderCommand.h"
+#include "renderer/BindingPoints.h"
 #include "camera/Camera.h"
 #include "camera/PerspectiveCamera.h"
 #include "graphics/VertexArray.h"
@@ -30,15 +31,16 @@ namespace Cosmic
 		glm::vec4 Color;
 	};
 
-	// std140 mirror of MeshLit.glsl's LightsBlock (binding 0). vec4-only — a bare
-	// vec3 here would silently misalign every following member under std140.
+	// std140 mirror of MeshLit.glsl's LightsBlock (binding: Bindings::LightsUbo).
+	// vec4-only — a bare vec3 here would silently misalign every following member
+	// under std140.
 	struct GpuLightsBlock
 	{
 		glm::vec4 SunDirection_Ambient{ -0.4f, -1.0f, -0.3f, 0.25f };
 		glm::vec4 SunColor_Intensity{ 1.0f, 1.0f, 1.0f, 1.0f };
 		glm::vec4 PointCount{ 0.0f };
-		glm::vec4 PointPos_Radius[16]{};
-		glm::vec4 PointColor_Intensity[16]{};
+		glm::vec4 PointPos_Radius[Renderer3D::kMaxPointLights]{};
+		glm::vec4 PointColor_Intensity[Renderer3D::kMaxPointLights]{};
 	};
 	static_assert(sizeof(GpuLightsBlock) == 560, "GpuLightsBlock must match the std140 LightsBlock (560 bytes).");
 
@@ -114,9 +116,10 @@ namespace Cosmic
 		if (!s_Data.MeshShader)
 			CS_CORE_ERROR("Renderer3D: Failed to load Mesh3D shader!");
 
-		// --- Lighting v1 (S4.5): allocate the binding-0 lights UBO and seed it
-		//     with defaults so lit shaders read a sane block even before SetLights. ---
-		s_Data.LightsUBO = UniformBuffer::Create(sizeof(GpuLightsBlock), 0);
+		// --- Lighting v1 (S4.5): allocate the lights UBO on its registry slot and
+		//     seed it with defaults so lit shaders read a sane block even before
+		//     SetLights. ---
+		s_Data.LightsUBO = UniformBuffer::Create(sizeof(GpuLightsBlock), Bindings::LightsUbo);
 		if (s_Data.LightsUBO)
 		{
 			GpuLightsBlock defaults{};
@@ -429,7 +432,20 @@ namespace Cosmic
 		block.SunDirection_Ambient = glm::vec4(sunDir, glm::clamp(lights.Ambient, 0.0f, 1.0f));
 		block.SunColor_Intensity   = glm::vec4(lights.SunColor, lights.SunIntensity);
 
-		const uint32_t count = static_cast<uint32_t>(std::min<size_t>(lights.Points.size(), 16));
+		if (lights.Points.size() > kMaxPointLights)
+		{
+			// Once per run — this fires every frame in scenes over the cap.
+			static bool s_WarnedTruncation = false;
+			if (!s_WarnedTruncation)
+			{
+				CS_CORE_WARN("Renderer3D::SetLights: {} point lights supplied; only the first {} are uploaded (kMaxPointLights).",
+				             lights.Points.size(), kMaxPointLights);
+				s_WarnedTruncation = true;
+			}
+		}
+
+		const uint32_t count = static_cast<uint32_t>(
+			std::min<size_t>(lights.Points.size(), kMaxPointLights));
 		block.PointCount = glm::vec4(static_cast<float>(count), 0.0f, 0.0f, 0.0f);
 		for (uint32_t i = 0; i < count; ++i)
 		{
@@ -438,6 +454,9 @@ namespace Cosmic
 			block.PointColor_Intensity[i] = glm::vec4(p.Color, p.Intensity);
 		}
 
+		// Re-assert the binding before uploading — cheap insurance in case app
+		// code bound another UBO to the lights slot since Init.
+		s_Data.LightsUBO->Bind();
 		s_Data.LightsUBO->SetData(&block, sizeof(block));
 	}
 

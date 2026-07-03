@@ -60,13 +60,6 @@
 #include <glm/glm.hpp>
 #include "graphics/VertexArray.h"
 
-// <windows.h> defines MemoryBarrier as a macro (winnt.h intrinsic) which would
-// clobber the RendererAPI::MemoryBarrier verb below. This codebase never uses the
-// Win32 barrier, so drop the macro. (S4.7)
-#ifdef MemoryBarrier
-	#undef MemoryBarrier
-#endif
-
 namespace Cosmic
 {
 	class RendererAPI
@@ -91,6 +84,10 @@ namespace Cosmic
 		};
 
 		enum class PrimitiveTopology { Points, Lines, Triangles };
+
+		// Face-culling modes for SetCullMode. None matches the engine default
+		// (culling disabled — 2D sprites may flip winding via FlipX/FlipY).
+		enum class CullMode { None = 0, Back, Front };
 
 	public:
 		virtual ~RendererAPI() = default;
@@ -119,6 +116,12 @@ namespace Cosmic
 		virtual void SetDepthTest(bool enabled) = 0;
 		virtual void SetDepthWrite(bool enabled) = 0;
 
+		// Face culling. Defaults to None at Init() (2D quads must render with
+		// either winding). Same restore contract as the depth verbs: passes that
+		// enable Back/Front culling (shadow maps, opaque 3D) must restore None
+		// before handing the frame back.
+		virtual void SetCullMode(CullMode mode) = 0;
+
 		////////////////////////////////
 		// Submission Commands
 		///////////////////////////////
@@ -137,8 +140,10 @@ namespace Cosmic
 		virtual void DispatchCompute(uint32_t x, uint32_t y, uint32_t z) = 0;
 
 		// Insert a GPU memory barrier so compute writes are visible to the given
-		// consumers before the next draw/dispatch reads them.
-		virtual void MemoryBarrier(GpuBarrier bits) = 0;
+		// consumers before the next draw/dispatch reads them. Named GpuMemoryBarrier
+		// (not MemoryBarrier) because <winnt.h> defines MemoryBarrier as a macro —
+		// the plain name would break any TU that includes windows.h.
+		virtual void GpuMemoryBarrier(GpuBarrier bits) = 0;
 
 		// Attribute-less array draw (e.g. points read from an SSBO by gl_VertexID).
 		// Core GL requires a bound VAO, so the platform layer binds a private empty one.

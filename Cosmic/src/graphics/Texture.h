@@ -57,11 +57,16 @@
  * Post: Returns a reference-counted Texture2D loaded from the disk.
  */
 
-#include "core/Core.h" 
+#include "core/Core.h"
 #include <string>
 
 namespace Cosmic
 {
+	// Engine-side sampling state enums (translated to API values in the platform
+	// layer — no GL tokens in public headers, doc 05 §0 rule 2).
+	enum class TextureFilter { Nearest = 0, Linear };
+	enum class TextureWrap   { Repeat  = 0, ClampToEdge };
+
 	class COSMIC_API Texture
 	{
 	public:
@@ -81,6 +86,15 @@ namespace Cosmic
 		///////////////////////////////
 		virtual void		SetData(void* data, uint32_t size)	= 0;
 		virtual void		Bind(uint32_t slot = 0) const		= 0;
+
+		/**
+		 * @brief Overrides the texture's min/mag filtering and wrap mode.
+		 * Factories create textures with their own defaults (file textures:
+		 * mipmapped linear; procedural: nearest) — call this when a use case
+		 * needs different sampling (e.g. the SDF font atlas wants Linear +
+		 * ClampToEdge).
+		 */
+		virtual void		SetSampling(TextureFilter filter, TextureWrap wrap) = 0;
 
 		////////////////////////////////
 		// Utility & Identification

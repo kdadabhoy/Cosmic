@@ -42,11 +42,13 @@
  * renderers keep separate view-projection state by design (mirrors the
  * Renderer/Renderer2D separation documented in Renderer.h).
  *
+ * SHIPPED EXTENSIONS (Phase 7 / S4): DrawMesh(mesh, transform, Ref<Material>)
+ * material path (S4.2), DrawModel + glTF import (S4.4b), SetLights + the
+ * std140 lights UBO (S4.5, binding: Bindings::LightsUbo), and per-draw
+ * entity IDs on every submission verb for MRT picking (S4.6).
+ *
  * FUTURE (documented slots, not yet implemented):
- *   - DrawMesh(mesh, transform, Ref<Material>) — S4.2 material-driven meshes
- *     via Material::BindFull(); uniform names stay u_Model / u_ViewProjection /
- *     u_CameraPos so Mesh3D.glsl-family shaders keep working.
- *   - WorldToScreen(vec3) for SDF-font labels — S3.
+ *   - WorldToScreen(vec3) for SDF-font labels — S3.5.
  * ============================================================================
  */
 
@@ -128,8 +130,8 @@ namespace Cosmic
 		 * light + ambient floor) and a flat per-draw color.
 		 *
 		 * Immediate: one GPU draw per call — sim scenes are tens of meshes, so
-		 * batching would add complexity for nothing. A material overload
-		 * (Ref<Material>) is the planned S4 extension of this exact slot.
+		 * batching would add complexity for nothing (render queue + sorting is
+		 * S12.2). The material overload below is the custom-shader path.
 		 */
 		static void DrawMesh(const Ref<Mesh>& mesh, const glm::mat4& transform, const glm::vec4& color,
 		                     int entityID = -1);
@@ -173,8 +175,12 @@ namespace Cosmic
 		static float GetAmbient();
 
 		////////////////////////////////
-		// Lighting v1 (S4.5: sun + <= 16 point lights, UBO binding 0)
+		// Lighting v1 (S4.5: sun + <= kMaxPointLights point lights, lights UBO)
 		///////////////////////////////
+
+		/** @brief Point-light capacity of the GPU lights block. Mirrored by the
+		 *  literal 16s in MeshLit.glsl's LightsBlock arrays — change both together. */
+		static constexpr uint32_t kMaxPointLights = 16;
 
 		/** @brief One point light for the S4.5 lights block. */
 		struct PointLightDesc
@@ -192,13 +198,15 @@ namespace Cosmic
 			glm::vec3 SunColor{ 1.0f };
 			float     SunIntensity = 1.0f;
 			float     Ambient      = 0.25f;
-			std::vector<PointLightDesc> Points;              // first 16 uploaded
+			std::vector<PointLightDesc> Points;              // first kMaxPointLights uploaded
 		};
 
 		/**
-		 * @brief Pack + upload the scene lights into the binding-0 UBO immediately.
-		 * Shaders that declare the std140 LightsBlock (see MeshLit.glsl) read it;
-		 * the legacy Lambert path (Mesh3D.glsl) ignores it.
+		 * @brief Pack + upload the scene lights into the lights UBO immediately
+		 * (binding: Bindings::LightsUbo). Shaders that declare the std140
+		 * LightsBlock (see MeshLit.glsl) read it; the legacy Lambert path
+		 * (Mesh3D.glsl) ignores it. Points beyond kMaxPointLights are dropped
+		 * with a once-per-run warning.
 		 */
 		static void SetLights(const SceneLightsDesc& lights);
 	};

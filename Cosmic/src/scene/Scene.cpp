@@ -223,7 +223,9 @@ namespace Cosmic
 			}
 		}
 
-		// Up to 16 point lights (position from the TransformComponent).
+		// Point lights (position from the TransformComponent). All are gathered;
+		// SetLights is the single truncation point — it uploads the first
+		// Renderer3D::kMaxPointLights and warns once when over the cap.
 		{
 			auto ptView = m_Registry.view<TransformComponent, PointLightComponent>();
 			ptView.each([&](auto /*entity*/, const TransformComponent& t, const PointLightComponent& pl)

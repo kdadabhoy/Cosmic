@@ -9,6 +9,9 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_inverse.hpp>
 
+#include <utility>
+#include <vector>
+
 namespace Cosmic
 {
 	namespace
@@ -61,6 +64,9 @@ namespace Cosmic
 
 				if (uvAcc)
 				{
+					// UVs pass through as-authored (glTF: origin top-left). No
+					// textures are imported yet — when S6.2 adds them, decide the
+					// V-flip convention against stb_image's flip-on-load there.
 					float t[2] = { 0.0f, 0.0f };
 					cgltf_accessor_read_float(uvAcc, i, t, 2);
 					vertices[i].TexCoord = glm::vec2(t[0], t[1]);
@@ -84,6 +90,16 @@ namespace Cosmic
 				indices.resize(vertexCount);
 				for (size_t k = 0; k < vertexCount; ++k)
 					indices[k] = static_cast<uint32_t>(k);
+			}
+
+			// A mirrored node transform (negative determinant) reverses triangle
+			// winding when baked into the positions — swap two indices per triangle
+			// so the mesh stays CCW-front-facing (matters once culling is enabled;
+			// inverseTranspose already handles the normals).
+			if (glm::determinant(glm::mat3(world)) < 0.0f)
+			{
+				for (size_t k = 0; k + 2 < indices.size(); k += 3)
+					std::swap(indices[k + 1], indices[k + 2]);
 			}
 
 			// No normals in the file → derive them from the triangles (accumulate
@@ -137,11 +153,34 @@ namespace Cosmic
 
 		auto model = std::make_shared<Model>();
 
-		// Iterate every node; cgltf_node_transform_world folds the full parent
-		// hierarchy into each node's matrix, so a flat loop bakes correctly.
-		for (cgltf_size n = 0; n < data->nodes_count; ++n)
+		// Import the DEFAULT SCENE's node graph (roots + all descendants) — nodes
+		// outside it (other scenes, orphans) are authoring data, not content. Files
+		// with no scene fall back to every node. cgltf_node_transform_world folds
+		// the full parent hierarchy into each node's matrix either way.
+		std::vector<const cgltf_node*> importNodes;
+		if (data->scene && data->scene->nodes_count > 0)
 		{
-			const cgltf_node& node = data->nodes[n];
+			std::vector<const cgltf_node*> stack;
+			for (cgltf_size r = 0; r < data->scene->nodes_count; ++r)
+				stack.push_back(data->scene->nodes[r]);
+			while (!stack.empty())
+			{
+				const cgltf_node* node = stack.back();
+				stack.pop_back();
+				importNodes.push_back(node);
+				for (cgltf_size c = 0; c < node->children_count; ++c)
+					stack.push_back(node->children[c]);
+			}
+		}
+		else
+		{
+			for (cgltf_size n = 0; n < data->nodes_count; ++n)
+				importNodes.push_back(&data->nodes[n]);
+		}
+
+		for (const cgltf_node* nodePtr : importNodes)
+		{
+			const cgltf_node& node = *nodePtr;
 			if (!node.mesh)
 				continue;
 

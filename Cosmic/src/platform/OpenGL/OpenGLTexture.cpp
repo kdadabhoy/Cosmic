@@ -215,6 +215,33 @@ namespace Cosmic
 	/////////////////////////////////////////////////////////////////////////////////
 
 	/**
+	 * SetSampling
+	 * * Translates the engine's filter/wrap enums to GL sampling params. Linear
+	 * uses the non-mipmap minification filter — callers overriding sampling on a
+	 * mipmapped file texture opt out of its mip chain (mip policy is S12.6).
+	 */
+	void OpenGLTexture::SetSampling(TextureFilter filter, TextureWrap wrap)
+	{
+		if (m_RendererID == 0)
+		{
+			CS_CORE_WARN("OpenGLTexture::SetSampling called on a failed/empty texture (path: {0}).", m_Path);
+			return;
+		}
+
+		const GLint glFilter = (filter == TextureFilter::Linear) ? GL_LINEAR : GL_NEAREST;
+		const GLint glWrap   = (wrap == TextureWrap::ClampToEdge) ? GL_CLAMP_TO_EDGE : GL_REPEAT;
+
+		glBindTexture(GL_TEXTURE_2D, m_RendererID);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, glFilter);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, glFilter);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, glWrap);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, glWrap);
+		glBindTexture(GL_TEXTURE_2D, 0);
+	}
+
+	/////////////////////////////////////////////////////////////////////////////////
+
+	/**
 	 * Equality Operator
 	 * * Compares textures based on their internal RendererID.
 	 * * Used by the Batch Renderer to verify if a texture is already bound to a slot.

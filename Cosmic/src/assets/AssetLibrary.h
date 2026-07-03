@@ -53,7 +53,7 @@ namespace Cosmic
 		/** @brief Cached mesh (.obj). Miss loads via Mesh::CreateFromOBJ. */
 		static Ref<Mesh>      GetMesh(const std::string& path);
 
-		/** @brief Cached model (.gltf/.glb). Stub until S4.4b: logs + returns null. */
+		/** @brief Cached model (.gltf/.glb). Miss loads via Model::CreateFromGLTF (S4.4b). */
 		static Ref<Model>     GetModel(const std::string& path);
 
 		/** @brief Release all cached Refs. Call while a GL context is still current. */

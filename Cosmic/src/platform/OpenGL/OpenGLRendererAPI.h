@@ -65,6 +65,7 @@ namespace Cosmic
 		virtual void	Clear() override;
 		virtual void	SetDepthTest(bool enabled) override;
 		virtual void	SetDepthWrite(bool enabled) override;
+		virtual void	SetCullMode(CullMode mode) override;
 
 		////////////////////////////////
 		// Primitive Submission
@@ -80,7 +81,7 @@ namespace Cosmic
 		///////////////////////////////
 
 		virtual void DispatchCompute(uint32_t x, uint32_t y, uint32_t z) override;
-		virtual void MemoryBarrier(GpuBarrier bits) override;
+		virtual void GpuMemoryBarrier(GpuBarrier bits) override;
 		virtual void DrawArrays(PrimitiveTopology topology, uint32_t first, uint32_t count) override;
 
 	private:

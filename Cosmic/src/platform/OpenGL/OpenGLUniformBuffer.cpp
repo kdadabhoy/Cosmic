@@ -5,6 +5,7 @@
 namespace Cosmic
 {
 	OpenGLUniformBuffer::OpenGLUniformBuffer(uint32_t size, uint32_t binding)
+		: m_Binding(binding)
 	{
 		glGenBuffers(1, &m_RendererID);
 		glBindBuffer(GL_UNIFORM_BUFFER, m_RendererID);
@@ -25,5 +26,10 @@ namespace Cosmic
 	{
 		glBindBuffer(GL_UNIFORM_BUFFER, m_RendererID);
 		glBufferSubData(GL_UNIFORM_BUFFER, offset, size, data);
+	}
+
+	void OpenGLUniformBuffer::Bind()
+	{
+		glBindBufferBase(GL_UNIFORM_BUFFER, m_Binding, m_RendererID);
 	}
 }

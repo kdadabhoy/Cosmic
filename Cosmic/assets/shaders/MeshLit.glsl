@@ -46,8 +46,9 @@ uniform int   u_EntityID;    // S4.6: -1 when not picking
 uniform vec4  u_Color;       // material-owned
 uniform float u_Shininess;   // material-owned (Blinn specular exponent)
 
-// Engine-wide scene lights (binding 0). vec4-only std140 layout — see
-// Renderer3D::GpuLightsBlock (identical packing).
+// Engine-wide scene lights (binding 0 = Bindings::LightsUbo). vec4-only std140
+// layout — see Renderer3D::GpuLightsBlock (identical packing). The literal 16s
+// mirror Renderer3D::kMaxPointLights — change both together.
 layout(std140, binding = 0) uniform LightsBlock
 {
     vec4 u_SunDirection_Ambient;     // xyz = dir the sun light TRAVELS, w = ambient

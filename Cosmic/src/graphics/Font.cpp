@@ -1,11 +1,4 @@
 // Font.cpp — see Font.h.
-//
-// windows.h (via the PCH) defines APIENTRY; undef it so glad can define its own
-// cleanly, exactly like OpenGLTexture.cpp does.
-#ifdef APIENTRY
-	#undef APIENTRY
-#endif
-#include <glad/glad.h>
 
 #include "graphics/Font.h"
 #include "utils/FileSystem.h"
@@ -55,17 +48,6 @@ namespace Cosmic
 			f.seekg(0);
 			f.read(reinterpret_cast<char*>(out.data()), n);
 			return (bool)f;
-		}
-
-		// Apply the SDF-friendly sampling state to a freshly created atlas texture.
-		void SetAtlasFiltering(uint32_t rendererID)
-		{
-			glBindTexture(GL_TEXTURE_2D, rendererID);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-			glBindTexture(GL_TEXTURE_2D, 0);
 		}
 
 		// One glyph during baking.
@@ -188,7 +170,8 @@ namespace Cosmic
 			return false;
 		}
 		m_Atlas->SetData(rgba.data(), (uint32_t)rgba.size());
-		SetAtlasFiltering(m_Atlas->GetRendererID());
+		// SDF sampling wants smooth interpolation and no edge bleed.
+		m_Atlas->SetSampling(TextureFilter::Linear, TextureWrap::ClampToEdge);
 
 		// --- Write disk cache (atlas PNG + metrics) ---
 		const std::string base = CacheBase(path, px);
@@ -276,7 +259,7 @@ namespace Cosmic
 		m_Atlas = Texture2D::Create((uint32_t)w, (uint32_t)h);
 		if (!m_Atlas) { stbi_image_free(pixels); return false; }
 		m_Atlas->SetData(pixels, (uint32_t)(w * h * 4));
-		SetAtlasFiltering(m_Atlas->GetRendererID());
+		m_Atlas->SetSampling(TextureFilter::Linear, TextureWrap::ClampToEdge);
 		stbi_image_free(pixels);
 
 		m_Glyphs = std::move(glyphs);

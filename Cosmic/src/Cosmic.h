@@ -33,6 +33,7 @@
 #include "renderer/Renderer3D.h"
 #include "renderer/RenderCommand.h"
 #include "renderer/RenderPass.h"
+#include "renderer/BindingPoints.h"
 #include "graphics/Buffer.h"
 #include "graphics/Shader.h"
 #include "graphics/VertexArray.h"

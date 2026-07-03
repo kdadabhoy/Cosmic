@@ -136,6 +136,11 @@ lighting v1 → MRT framebuffers → compute/SSBO. Strictly ordered inside; each
 > `StorageBuffer` + compute verbs. Every item has an Engine3DDemo toggle. **Remaining — user
 > visual/perf pass:** run Engine3DDemo, exercise each S4.x toggle (material pad, ECS scene, glTF
 > Duck, lighting, picking, 1M-point compute ≥ 60 fps), confirm the 2D overlay still renders.
+> **2026-07-02 (later, same branch):** post-review hardening pass applied — standards/Vulkan
+> portability review passed; behavior-neutral fixes landed (`GpuMemoryBarrier` rename,
+> `SetCullMode` verb, `BindingPoints.h` registry, `Texture::SetSampling` + Font.cpp de-GL,
+> glTF winding/scene fixes, light-cap warning, depth-attachment sampling params). Details:
+> doc 05 §3 "S4 post-review hardening" note.
 > **2026-07-02:** doc 05 §3 rewritten into explicit, code-verified work orders (exact files,
 > signatures, GL facts, step lists, gotchas, per-item acceptance procedures) so each item can be
 > handed to a lower-tier model in one session. Two structural changes: new **S4.0** — the vendored

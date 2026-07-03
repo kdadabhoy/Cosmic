@@ -133,6 +133,24 @@ each item is one PR and one AI session. All signatures/paths below were **verifi
 working tree on 2026-07-02** — re-verify by content (grep) before editing; never trust line
 numbers or assume a quoted API survived intervening PRs.
 
+> **S4 post-review hardening (2026-07-02, same branch).** A standards/Vulkan-portability review
+> of the finished S4 code passed (factory pattern, engine enums, GL confined to the platform
+> layer, std140 discipline all verified) and landed these behavior-neutral fixes:
+> - **`RenderCommand::MemoryBarrier` → `GpuMemoryBarrier`** — winnt.h macro-defines the old name;
+>   the header `#undef`s are gone (they were order-fragile and clobbered a macro apps may use).
+> - **`RenderCommand::SetCullMode(CullMode::None|Back|Front)`** — the §0-rule-1 verb, no caller
+>   yet; default stays None (2D sprites flip winding). S6.4/S12 consume it.
+> - **`renderer/BindingPoints.h`** — UBO/SSBO binding-index registry (`Bindings::LightsUbo = 0`,
+>   `CameraUbo = 1` reserved for S6.1, `AppSsbo0 = 0`); claim slots there first.
+> - **`Texture::SetSampling(TextureFilter, TextureWrap)`** — new verb; `Font.cpp` now uses it,
+>   deleting the last raw `gl*` outside `platform/OpenGL/` (S13.1's audit target, closed early).
+> - **`UniformBuffer::Bind()`** (re-asserts its base binding; `SetLights` calls it before upload),
+>   `Renderer3D::kMaxPointLights` + a once-per-run truncation warning in `SetLights`, glTF import
+>   fixes (mirrored-transform winding flip; default-scene traversal instead of all nodes), and
+>   depth attachments get NEAREST/clamp params so sampling them works.
+> - Deliberately **deferred**: per-frame camera UBO (→ S6.1), async `ReadPixel` (→ S5.4),
+>   command buffers/pipeline objects/render passes/shader reflection (→ S13 gate, unchanged).
+
 ### S4 execution notes *(read once — they apply to every item)*
 
 - **Build/run/test:** `build_all.bat` = full reconfigure + engine + all project DLLs — required
@@ -569,10 +587,11 @@ Unlocks S5.4 picking and all S6 post-processing.
 
 > **✅ code-complete 2026-07-02.** `#type compute` → GL_COMPUTE_SHADER in the shader parser (compute-only
 > program links + binds); `StorageBuffer` SSBO resource; RendererAPI/RenderCommand verbs `DispatchCompute`,
-> `MemoryBarrier(GpuBarrier)`, `DrawArrays(PrimitiveTopology,…)` + lazy empty VAO + `GL_PROGRAM_POINT_SIZE`;
+> `GpuMemoryBarrier(GpuBarrier)`, `DrawArrays(PrimitiveTopology,…)` + lazy empty VAO + `GL_PROGRAM_POINT_SIZE`;
 > `ComputeParticles.glsl` + `ParticlePoints.glsl`; Engine3DDemo "Compute (S4.7)" 1M-point toggle with
-> fps readout. **Gotcha handled:** `<windows.h>` defines a `MemoryBarrier` macro — `#undef`'d in
-> RendererAPI.h/RenderCommand.h. Build + tests green; **user perf pass pending** (1M points ≥ 60 fps).
+> fps readout. **Gotcha:** `<windows.h>` defines a `MemoryBarrier` macro — originally `#undef`'d, then
+> the verb was renamed `GpuMemoryBarrier` in the post-review hardening pass (the `#undef`s are gone).
+> Build + tests green; **user perf pass pending** (1M points ≥ 60 fps).
 
 The infrastructure S9 (FFT water) and S10 (GPU particles) build on. Will not compile before
 S4.0 — `glDispatchCompute` isn't in the old loader.
@@ -601,7 +620,7 @@ S4.0 — `glDispatchCompute` isn't in the old loader.
   enum class GpuBarrier : uint32_t { VertexAttribArray = 1u<<0, ShaderStorage = 1u<<1,
                                      ShaderImage = 1u<<2, All = 0xFFFFFFFFu };
   static void DispatchCompute(uint32_t x, uint32_t y, uint32_t z);
-  static void MemoryBarrier(GpuBarrier bits);
+  static void GpuMemoryBarrier(GpuBarrier bits); // renamed from MemoryBarrier (winnt.h macro)
   enum class PrimitiveTopology { Points, Lines, Triangles };
   static void DrawArrays(PrimitiveTopology topology, uint32_t first, uint32_t count);
   ```
@@ -615,7 +634,7 @@ S4.0 — `glDispatchCompute` isn't in the old loader.
   the same std430 block by `gl_VertexID` (no vertex attributes), sets `gl_PointSize = 2.0`;
   fragment outputs `u_Color`. Per frame: compute shader `Bind` + uniforms → `ssbo->Bind()` →
   `DispatchCompute((N + 255) / 256, 1, 1)` →
-  `MemoryBarrier(VertexAttribArray | ShaderStorage)` → point shader `Bind` + `u_ViewProjection`
+  `GpuMemoryBarrier(VertexAttribArray | ShaderStorage)` → point shader `Bind` + `u_ViewProjection`
   → `DrawArrays(Points, 0, N)`.
 - **Acceptance:** 1M animated points at ≥ 60 fps on the dev GPU (`ImGui::GetIO().Framerate`
   readout in the panel); toggle off restores the normal scene; 2D overlay + `CosmicTests` green.
@@ -646,7 +665,9 @@ S4.0 — `glDispatchCompute` isn't in the old loader.
    *Acceptance:* cube tracks the camera; clicking "Front" animates to the front view.
 4. **S5.4 3D picking & selection outline.** Entity-ID MRT attachment (S4.6) + `ReadPixel` →
    `EntitySelection` (reuses the existing 2D selection bus); hover highlight + selected outline
-   (ID-buffer edge detect in a small post pass — no stencil complexity).
+   (ID-buffer edge detect in a small post pass — no stencil complexity). Note: `ReadPixel` is a
+   synchronous `glReadPixels` (pipeline stall) — fine for click-to-select; if hover picking runs
+   every frame, move the readback to an async PBO round-robin as part of this item.
    *Acceptance:* click selects the exact mesh under the cursor incl. partial occlusion;
    outline renders behind UI.
 5. **S5.5 Transform gizmos.** Vendor **ImGuizmo** (single file, MIT, ImGui-native — matches our
@@ -664,7 +685,11 @@ Ordered; this stage is the prerequisite for anything called "realistic."
 
 1. **S6.1 HDR pipeline.** Scene renders to RGBA16F; final **tonemap pass** (ACES + exposure
    uniform) to the target; UI composites after. Post-pass framework: `PostProcessStack` running
-   fullscreen-triangle passes with ping-pong buffers.
+   fullscreen-triangle passes with ping-pong buffers. **Also fold in here:** the per-frame
+   camera/engine-globals UBO (`Bindings::CameraUbo = 1`, reserved in `renderer/BindingPoints.h`)
+   replacing the per-draw `u_ViewProjection`/`u_CameraPos` loose uniforms — this stage rewrites
+   every shader anyway, so the injection-contract migration is free here and was deliberately
+   NOT done in the S4 hardening pass.
    *Acceptance:* overbright (>1.0) values roll off instead of clipping; exposure slider works.
 2. **S6.2 PBR metallic-roughness.** `PBRMaterial` params/textures: albedo, metallic, roughness,
    normal (needs tangents — extend `MeshVertex` additively per contract rule 3), AO, emissive.
@@ -825,7 +850,10 @@ the profiler HUD screenshot committed.
 ## 12. S13 — RHI hardening + Vulkan gate
 
 1. **S13.1 Conformance audit** — grep-verified: zero `gl*`/`GL_*` outside `platform/OpenGL/`;
-   missing verbs promoted to `RendererAPI`. CI check added.
+   missing verbs promoted to `RendererAPI`. CI check added. (Head start: the S4 hardening pass
+   already closed the last engine-side leak — `Font.cpp` now uses `Texture::SetSampling` — and
+   added the `SetCullMode` verb; remaining known exceptions are the windowing layer (GLFW) and
+   ImGui's vendored GL backend, which a second backend swaps wholesale.)
 2. **S13.2 Frame-lifecycle doc** — one internals doc: resource creation/destruction rules, pass
    ordering, who owns which FBO — the spec a second backend would implement.
 3. **S13.3 Decision gate** — evaluate against §0's reopen conditions with S12 profiler data.

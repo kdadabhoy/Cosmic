@@ -9,7 +9,8 @@
  * StorageBuffer wraps a GPU shader storage buffer object (SSBO) — a large,
  * read-write GPU buffer bound to a std430 binding index and accessed by compute
  * and graphics shaders. It is the storage half of the S4.7 GPU-compute path
- * (FFT water S9, GPU particles S10 build on it).
+ * (FFT water S9, GPU particles S10 build on it). Binding indices are allocated
+ * in renderer/BindingPoints.h — claim a slot there before creating a new block.
  *
  * Factory pattern (RendererAPI-dispatched, like Shader/UniformBuffer).
  *

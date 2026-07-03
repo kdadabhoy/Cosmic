@@ -52,12 +52,6 @@
 #include "graphics/VertexArray.h"
 #include <glm/glm.hpp>
 
-// See RendererAPI.h — keep the Win32 MemoryBarrier macro from clobbering the verb. (S4.7)
-#ifdef MemoryBarrier
-	#undef MemoryBarrier
-#endif
-
-
 namespace Cosmic
 {
 	class COSMIC_API RenderCommand
@@ -140,6 +134,18 @@ namespace Cosmic
 		}
 
 		/**
+		 * @brief Sets the face-culling mode (None by default from Init()).
+		 * None must stay the engine-wide default — 2D sprites flip winding via
+		 * FlipX/FlipY. Passes that enable Back/Front (opaque 3D, shadow maps)
+		 * must restore None before their scope ends, same contract as the depth
+		 * verbs.
+		 */
+		inline static void SetCullMode(RendererAPI::CullMode mode)
+		{
+			s_RendererAPI->SetCullMode(mode);
+		}
+
+		/**
 		 * @brief Executes an indexed draw call.
 		 * This is the standard method for drawing optimized 2D and 3D geometry.
 		 * @param vertexArray The Vertex Array Object containing the vertex and index data.
@@ -182,6 +188,7 @@ namespace Cosmic
 
 		using GpuBarrier        = RendererAPI::GpuBarrier;
 		using PrimitiveTopology = RendererAPI::PrimitiveTopology;
+		using CullMode          = RendererAPI::CullMode;
 
 		/** @brief Dispatch the bound compute program over an x*y*z work-group grid. */
 		inline static void DispatchCompute(uint32_t x, uint32_t y, uint32_t z)
@@ -189,10 +196,11 @@ namespace Cosmic
 			s_RendererAPI->DispatchCompute(x, y, z);
 		}
 
-		/** @brief GPU memory barrier so compute writes are visible to later reads. */
-		inline static void MemoryBarrier(GpuBarrier bits)
+		/** @brief GPU memory barrier so compute writes are visible to later reads.
+		 *  Named GpuMemoryBarrier — <winnt.h> macro-defines MemoryBarrier. */
+		inline static void GpuMemoryBarrier(GpuBarrier bits)
 		{
-			s_RendererAPI->MemoryBarrier(bits);
+			s_RendererAPI->GpuMemoryBarrier(bits);
 		}
 
 		/** @brief Attribute-less array draw (points/lines/tris from gl_VertexID). */

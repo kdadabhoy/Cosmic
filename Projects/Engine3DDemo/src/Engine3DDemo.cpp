@@ -484,7 +484,7 @@ namespace Workspace
 			Cosmic::RenderCommand::DispatchCompute((k_ParticleCount + 255) / 256, 1, 1);
 
 			// 2) Make the compute writes visible to the vertex fetch + SSBO read.
-			Cosmic::RenderCommand::MemoryBarrier(
+			Cosmic::RenderCommand::GpuMemoryBarrier(
 				Cosmic::RenderCommand::GpuBarrier::VertexAttribArray |
 				Cosmic::RenderCommand::GpuBarrier::ShaderStorage);
 
