@@ -83,7 +83,14 @@ Small, header-heavy, unit-tested engine verbs that unblock everything sim-shaped
 > (`Projects/ViperSim/docs/DYNAMICS_DECISION.md`). The formal JSBSim build spike itself is the one
 > outstanding user item; the interface makes running it later cost-free.
 
-### Phase 4 — Tuned hover + energy truth *(doc 04: P2–P3; doc 08: A1–A2)*
+### Phase 4 — Tuned hover + energy truth *(doc 04: P2–P3; doc 08: A1–A2)* — ✅ code complete 2026-07-02
+> **Status:** A1/A2 shipped (miniaudio engine subsystem + template demo + headless-safe tests).
+> `viper-fc` ships at `Projects/ViperSim/viper-fc/` (portable header-only lib + `ViperFcTests` doctest suite);
+> P2 (SimHal/SITL backend, attitude loop, TuningScreen with live gains, step commands +
+> replay-through-FC) and P3 (position hold, sensor noise models, complementary estimator,
+> battery/energy accounting, E7 gamepad flying, EnergyScreen, alert tones) implemented. Gate
+> **G1** is scripted in-app ("Run G1": noise + alternating 5 m/s gusts, auto PASS/FAIL incl. the
+> 230 W ±15% check, auto-flushed recording) — the **user gate run + committed recording remain**.
 - **Do:** P2 (`viper-fc` + SimHal + attitude loop + TuningScreen) → P3 (position hold, sensor
   noise, battery + energy accounting, gamepad flying, EnergyScreen) with audio alert plumbing
   (A1 core playback, A2 loop/alert groups) landing alongside P3's failsafe tones.
@@ -92,7 +99,14 @@ Small, header-heavy, unit-tested engine verbs that unblock everything sim-shaped
 - **Done when:** Gate **G1** — hover stable against noise + 5 m/s gusts; recorded regression
   replay committed.
 
-### Phase 5 — The hard flying: transition & orbit *(doc 04: P4–P5; doc 05: S3)*
+### Phase 5 — The hard flying: transition & orbit *(doc 04: P4–P5; doc 05: S3)* — ✅ code complete 2026-07-02
+> **Status:** P4 (full-envelope aero with prop-wash elevon authority, TECS-lite cruise, transition
+> state machine both directions + TransitionScreen visualizer) and P5 (orbit-on-ROI with
+> ground-course wind rejection, full failsafe supervisor + fault-injection buttons + session
+> checklist, FPV inset = S3.1, trail ribbon = S3.2) implemented. Gates **G2/G3** are scripted
+> in-app with PASS/FAIL reports + auto-flushed recordings; test cards in
+> `Projects/ViperSim/docs/test-cards/`. The **user gate runs (incl. CG/airspeed envelope sweeps
+> for G2) + committed recordings remain.**
 - **Do:** P4 (full-envelope aero + transition state machine, both directions) and P5 (orbit-on-ROI
   + full failsafe set + fault injection), pulling S3 viewport items (FPV inset, ribbon, horizon,
   labels) as P4/P5 need them.
@@ -100,7 +114,13 @@ Small, header-heavy, unit-tested engine verbs that unblock everything sim-shaped
 - **Done when:** Gates **G2** and **G3** pass (doc 04 §4) — the sim-side contract that clears real
   flight testing to proceed per the Viper playbook.
 
-### Phase 6 — Hardware in the loop + rig *(doc 04: P6–P7; optional E4+P8)*
+### Phase 6 — Hardware in the loop + rig *(doc 04: P6–P7; optional E4+P8)* — ✅ software complete 2026-07-02
+> **Status:** P6 software shipped — `HilBackend` (E5 COBS+CRC over the new `SerialLink::Write`,
+> sim-clock-stamped SensorPackets, actuator echo → latency on screen, SITL↔HIL dropdown) +
+> `viper-fc/firmware/` PlatformIO project for the Teensy 4.1 running the identical FC. P7
+> software shipped — `RigOutput` (rate-clamped `RIG,r,p,y` ASCII @ 50 Hz over its own link).
+> **Physical acceptance needs hardware:** flash the Teensy, fly the P4 transition over HIL;
+> wire the gimbal rig and verify servo directions. E4 UDP + P8 MAVLink remain optional/unstarted.
 - **Do:** P6 (Teensy HIL over E5 framing; latency on screen) → P7 (gimbal rig). Optionally E4 UDP
   + P8 (MAVLink → QGroundControl).
 - **Done when:** the P4 transition flies on the physical Teensy; rig mirrors sim attitude.

@@ -3,64 +3,58 @@
 // telemetry_schema.h
 //
 // ============================================================================
-// Viper telemetry / log schema (P0 deliverable).
+// Viper telemetry / log schema (P0 deliverable) — sim-side view.
 // ============================================================================
 //
-// Playbook §2.3: "define the telemetry packet format + log schema early —
-// cheap early, painful to retrofit." This ONE header is the contract shared by:
-//   * SimHal   -> DataRecorder channel registration (this sim)
-//   * TeensyHal -> SD card + downlink (future firmware)
-//   * ground-station decode (future)
+// The PORTABLE half of the contract (FlightMode, FcAlert, TelemetrySnapshot,
+// the fc-entity channel list + row writer) moved into the viper-fc library at
+// P2, exactly as the plan intended ("the same file can later move into the
+// portable viper-fc library"): see viperfc/TelemetrySchema.h. This header
+// keeps the SIM-side pieces — glm-typed truth state, the truth-entity channel
+// list, and the sim's actuator struct — and re-exports the shared types so
+// existing includes keep working.
 //
-// It is intentionally dependency-light (only <cstdint> + glm for vectors) so
-// the same file can later move into the portable viper-fc library and compile
-// on the Teensy. The frame structs mirror the plan's §1 sketch.
-//
-// Two DataRecorder ENTITIES are registered per run so replay can overlay
-// estimate-vs-truth (the estimator's report card, plan §3):
-//   * "truth"  — the simulator's ground-truth rigid-body state
-//   * "fc"     — flight-computer internals (mode, mixer, energy) — stubbed
-//                until viper-fc exists (P2); channels reserved here now.
+// Two DataRecorder entities per run (estimate-vs-truth overlay, plan §3):
+//   * "truth"   — simulator ground truth        (TruthChannels, glm-side)
+//   * "fc"      — flight-computer internals     (viperfc::FcChannelNames)
+//   * "sensors" — raw SensorFrame stream        (SensorChannels; feeds the
+//                 offline replay-through-FC regression path)
 // ============================================================================
+
+#include <viperfc/TelemetrySchema.h>
+#include <viperfc/IHal.h>
 
 #include <cstdint>
 #include <glm/glm.hpp>
-#include <glm/gtc/quaternion.hpp>   // glm::quat (attitude)
+#include <glm/gtc/quaternion.hpp>
 #include <array>
 #include <string>
 #include <vector>
 
 namespace Viper
 {
-	// --- Sensor sample fed INTO the flight computer (SimHal fills this) ------
-	struct GpsFix
-	{
-		bool      valid = false;
-		glm::vec3 posNed{ 0.0f };   // meters, N/E/D
-		glm::vec3 velNed{ 0.0f };   // m/s
-		uint32_t  sats = 0;
-	};
+	// Shared FC types, re-exported under the app namespace.
+	using FlightMode = viperfc::FlightMode;
+	using FcAlert    = viperfc::FcAlert;
 
-	struct SensorFrame
-	{
-		uint64_t  t_us = 0;
-		glm::vec3 gyro_rads{ 0.0f };    // body angular rate
-		glm::vec3 accel_mss{ 0.0f };    // body specific force
-		glm::vec3 mag_uT{ 0.0f };
-		float     baro_pa      = 101325.0f;
-		float     airspeed_pa  = 0.0f;  // pitot differential (unreliable < ~5 m/s)
-		GpsFix    gps;
-		float     vbat_V = 0.0f;
-		float     ibat_A = 0.0f;
-	};
-
-	// --- Actuator command OUT of the flight computer -------------------------
-	// Normalized; a dual-motor tailsitter uses motor[0..1] + servo[0..1].
+	// --- Actuator command applied to the DYNAMICS (sim side) -----------------
+	// Normalized; a dual tailsitter uses motor[0..1] + servo[0..1].
 	struct ActuatorFrame
 	{
 		std::array<float, 4> motor{ { 0, 0, 0, 0 } };  // [0,1]
 		std::array<float, 4> servo{ { 0, 0, 0, 0 } };  // [-1,1]
 	};
+
+	inline ActuatorFrame FromFc(const viperfc::ActuatorFrame& u)
+	{
+		ActuatorFrame out;
+		for (int i = 0; i < 4; ++i)
+		{
+			out.motor[i] = u.motor[i];
+			out.servo[i] = u.servo[i];
+		}
+		return out;
+	}
 
 	// --- Ground-truth rigid-body state (IDynamics::GetTruth) -----------------
 	struct RigidState
@@ -74,13 +68,8 @@ namespace Viper
 		float     beta     = 0.0f;                // sideslip, rad
 	};
 
-	// =========================================================================
-	// Channel schema — the column layout each DataRecorder entity is
-	// registered with. Kept as free functions so SimHal and any future decoder
-	// share ONE source of truth for column order.
-	// =========================================================================
-
-	// Ground-truth entity channels (12).
+	// Ground-truth entity channels (12). ORDER IS LOAD-BEARING: ReplayScreen
+	// indexes these — extend by APPENDING only.
 	inline std::vector<std::string> TruthChannels()
 	{
 		return {
@@ -91,20 +80,56 @@ namespace Viper
 		};
 	}
 
-	// Flight-computer entity channels (reserved for P2; recorded as zeros now).
-	inline std::vector<std::string> FcChannels()
+	// Raw sensor stream (feeds offline replay-through-FC). Order matches
+	// SensorRow() in SimHub.cpp.
+	inline std::vector<std::string> SensorChannels()
 	{
 		return {
-			"mode", "energy_wh", "hover_budget_s",
-			"mix0", "mix1", "mix2", "mix3",
-			"att_err_deg", "vbat_v",
+			"gyro_x", "gyro_y", "gyro_z",
+			"accel_x", "accel_y", "accel_z",
+			"mag_x", "mag_y", "mag_z",
+			"baro_pa", "pitot_pa",
+			"gps_valid",
+			"gps_n", "gps_e", "gps_d",
+			"gps_vn", "gps_ve", "gps_vd",
+			"vbat_v", "ibat_a",
 		};
 	}
 
-	// Enum mirrors the plan's mode machine (§2.4). Kept here so both the sim
-	// and viper-fc agree on the numeric encoding written to telemetry.
-	enum class FlightMode : int32_t
+	constexpr int kSensorChannelCount = 20;
+
+	inline void WriteSensorRow(const viperfc::SensorFrame& f, float* out)
 	{
-		Idle = 0, Hover, Transition, Cruise, Orbit, Rtl, Failsafe,
-	};
+		int i = 0;
+		out[i++] = f.gyro_rads.x;  out[i++] = f.gyro_rads.y;  out[i++] = f.gyro_rads.z;
+		out[i++] = f.accel_mss.x;  out[i++] = f.accel_mss.y;  out[i++] = f.accel_mss.z;
+		out[i++] = f.mag_uT.x;     out[i++] = f.mag_uT.y;     out[i++] = f.mag_uT.z;
+		out[i++] = f.baro_pa;
+		out[i++] = f.airspeed_pa;
+		out[i++] = f.gps.valid ? 1.0f : 0.0f;
+		out[i++] = f.gps.posNed.x; out[i++] = f.gps.posNed.y; out[i++] = f.gps.posNed.z;
+		out[i++] = f.gps.velNed.x; out[i++] = f.gps.velNed.y; out[i++] = f.gps.velNed.z;
+		out[i++] = f.vbat_V;
+		out[i++] = f.ibat_A;
+	}
+
+	inline viperfc::SensorFrame ReadSensorRow(const std::vector<float>& v, float t)
+	{
+		viperfc::SensorFrame f;
+		if (v.size() < kSensorChannelCount)
+			return f;
+		f.t_us = static_cast<uint64_t>(t * 1e6);
+		f.gyro_rads = { v[0], v[1], v[2] };
+		f.accel_mss = { v[3], v[4], v[5] };
+		f.mag_uT    = { v[6], v[7], v[8] };
+		f.baro_pa     = v[9];
+		f.airspeed_pa = v[10];
+		f.gps.valid   = v[11] > 0.5f;
+		f.gps.posNed  = { v[12], v[13], v[14] };
+		f.gps.velNed  = { v[15], v[16], v[17] };
+		f.gps.sats    = f.gps.valid ? 14u : 0u;
+		f.vbat_V = v[18];
+		f.ibat_A = v[19];
+		return f;
+	}
 }

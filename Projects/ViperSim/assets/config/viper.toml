@@ -1,10 +1,12 @@
 # viper.toml — the app-owned airframe file (E10). Numbers flow from the Viper
 # Cost & Weight tracker and sizing calculator; no recompiles to change them.
 # (Plan doc 04 §2.2.) Values marked * are placeholders until bench data lands.
+# Gains under [fc] are the VERSIONED flight configuration (playbook §7): every
+# recording knows exactly what flew.
 
 [meta]
 name = "Viper (dual-motor tailsitter)"
-config_rev = "0.3"
+config_rev = "0.4"
 
 [airframe]
 auw_kg        = 1.49          # all-up weight (NE 2.0 kg)
@@ -17,24 +19,72 @@ body_radius_m = 0.18          # lowest-point offset for ground contact
 count         = 2
 max_thrust_gf = 1490          # per motor *
 tau_s         = 0.05          # first-order motor lag *
+arm_y_m       = 0.35          # lateral offset of each motor *
+disc_area_m2  = 0.092         # TOTAL prop disc area (2 x r=0.121 m) *
 
 [battery]
 capacity_wh   = 100.0
 mass_g        = 500.0
 cells_s       = 4             # 4S nominal 14.8 V
 usable_frac   = 0.85
+r_int         = 0.08          # pack internal resistance (ohm) *
 
-[aero]
-cd0    = 0.035
-clmax  = 1.2                  # replaced by XFLR5 polars (P4)
+[power]                       # electric->thrust chain (E13 maps replace these *)
+eta_hover     = 0.50          # lands on ~230 W static hover
+eta_cruise    = 0.70          # lands on ~106 W @ 20 m/s
+base_load_w   = 6.0           # avionics + servos
+
+[aero]                        # full-envelope whole-wing model (XFLR5 polars replace *)
+cd0             = 0.035
+cl_alpha        = 4.7         # per rad ~ 2πAR/(AR+2)
+stall_alpha_rad = 0.21        # ~12°, linear->flat-plate blend center
+oswald_e        = 0.8
+cm_alpha        = -0.35       # static pitch stability *
+cm_de           = -0.55       # elevon pitch power *
+cl_de           = 0.16        # elevon roll power *
+cg_offset_x_m   = 0.0         # + = CG forward (G2 envelope sweeps)
+
+[sensors.gyro]
+noise      = 0.006            # rad/s white
+bias_walk  = 0.0003
+[sensors.accel]
+noise      = 0.06             # m/s^2
+[sensors.baro]
+noise_pa   = 4.0
+[sensors.mag]
+noise_uT   = 0.6
+[sensors.pitot]
+noise_pa   = 3.0              # unreliable < ~5 m/s by physics — gates transition
+[sensors.gps]
+rate_hz     = 10.0
+latency_s   = 0.15
+pos_noise_m = 0.8
+vel_noise_ms = 0.15
+[sensors]
+seed = 42                     # E15 — replays must reproduce
+
+[fc]                          # viper-fc gains (live-tunable on the Tuning screen)
+rate_hz          = 240.0
+att_kp           = 7.0
+rate_kp_x        = 0.11
+rate_kp_y        = 0.13
+rate_kp_z        = 0.16
+pos_kp           = 0.95
+vel_kp           = 2.2
+cruise_airspeed  = 20.0
+trans_v_blend_lo = 8.0        # ≈ stall — blend starts
+trans_v_blend_hi = 14.0       # blend complete
+orbit_radius_m   = 120.0
 
 [sim]
-perfect_sensors = true        # develop against perfect, harden estimator later (P3)
+perfect_sensors = true        # develop against perfect; G1/G3 force noise on
 substeps        = 8           # physics substeps per engine fixed tick
 ground_agl_m    = 0.0         # ground plane altitude
 ground_k        = 4000.0      # ground contact spring (N/m)
 ground_c        = 350.0       # ground contact damper (N·s/m)
 
 [limits]
-geofence_agl_m = 121.9        # FAA 400 ft
-hover_budget_s = 300          # 5 min cumulative hover cap (enforced in SW, P3+)
+geofence_agl_m    = 121.9     # FAA 400 ft
+geofence_radius_m = 400.0     # horizontal fence from home
+hover_budget_s    = 300       # 5 min cumulative hover cap (ENFORCED, P3+)
+batt_v_qualify_s  = 2.0       # cellV must stay under low/crit this long (IR-sag debounce)

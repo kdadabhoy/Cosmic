@@ -74,7 +74,7 @@ Carried forward from the original plan and extended — everything already shipp
 | --- | --- | --- |
 | S1 | Perspective camera, orbit controller, 3D lines/grid/axes | ✅ done 2026-07-01 |
 | S2 | Meshes + primitives + OBJ + Lambert | ✅ done 2026-07-01 |
-| S3 | Sim-viewport conveniences (FPV inset, ribbon, horizon, labels) | next; driven by ViperSim P4–P5 |
+| S3 | Sim-viewport conveniences (FPV inset, ribbon, horizon, labels) | S3.1 + S3.2 ✅ 2026-07-02 (ViperSim P5); S3.3–S3.5 unpulled |
 | S4 | 3D engine foundations (cameras, materials, scene, glTF, lights, MRT, compute) | planned |
 | S5 | CAD navigation, ViewCube, gizmos, 3D picking | planned — **S5.1 nav is [filler], do any time** |
 | S6 | Visual realism core: HDR, PBR+IBL, shadows, SSAO, bloom, AA | planned |
@@ -98,12 +98,12 @@ interleave freely with the ViperSim phases in the master roadmap.
 `RenderCommand::SetDepthTest/SetDepthWrite`, `FrameBuffer::GetDepthAttachmentRendererID()`.
 Acceptance app: `Projects/Engine3DDemo`. Details: git history of this file.
 
-### S3 — Sim-viewport conveniences *(unchanged; sized when ViperSim P4–P5 need them)*
+### S3 — Sim-viewport conveniences *(pull-as-needed; ViperSim P4–P5 pulled two)*
 
 | Item | Contents |
 | --- | --- |
-| S3.1 FPV inset | second `Renderer3D` pass into its own `FrameBuffer`, shown via `ImGui::Image` |
-| S3.2 Trajectory ribbon | `DrawPolyline` over a ring buffer; fade-by-age color option |
+| S3.1 FPV inset ✅ 2026-07-02 | second `Renderer3D` pass into its own `FrameBuffer`, shown via `ImGui::Image` — shipped app-side in ViperSim's FlightScreen (belly camera; FPV pass renders first, then rebinds the viewport FBO + viewport) |
+| S3.2 Trajectory ribbon ✅ 2026-07-02 | `DrawPolyline` over a ring buffer (ViperSim flight trail); fade-by-age color option still open |
 | S3.3 Horizon/sky gradient | full-screen gradient pass behind the scene (replaced by S7 later) |
 | S3.4 Ground texture | textured ground plane (checker/asphalt) — needs `DrawMesh` + texture path (S4.2 material or a minimal textured-mesh shader) |
 | S3.5 `Renderer3D::WorldToScreen(vec3)` | for SDF-font labels drawn by the 2D pass |

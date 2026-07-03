@@ -4,6 +4,17 @@
 > v1.0, Software & Tools Decision Record, Cost & Weight Tracker — all 2026-07-01). Was
 > `04-uav-sim-app-plan.md`; the architecture survives, the dynamics strategy and numbers are updated.
 >
+> **Status 2026-07-02 — P2–P7 CODE COMPLETE** (roadmap Phases 4–6). `viper-fc/` ships inside the
+> project at `Projects/ViperSim/viper-fc/` (header-only portable lib + doctest suite
+> `ViperFcTests` + PlatformIO Teensy firmware);
+> ViperSim grew the full hover/transition/orbit/failsafe stack, all five screens, SITL↔HIL
+> dropdown, rig output, and scripted gate scenarios with auto PASS/FAIL reports + auto-flushed
+> regression recordings. **Gates G1–G3 remain a user run** (compile, click "Run G1/G2/G3", commit
+> the recordings + fill the test cards in `Projects/ViperSim/docs/test-cards/`); P6/P7 physical
+> acceptance needs the Teensy + rig hardware. Deviations from the letter of the plan: the fc-side
+> telemetry schema moved into `viperfc/TelemetrySchema.h` (the plan predicted the move);
+> `fc_glue/FcBackend.h` names the SITL seam `SitlBackend` with `using SimHal = SitlBackend`.
+>
 > **Goal:** a Cosmic project (`Projects/ViperSim/`) that does for **Viper** what Gazebo+SITL does
 > for ArduPilot: fly the vehicle in software, develop the **same C++ control code that will run on
 > the Teensy 4.1**, replay every flight, then drive the real board (HIL) and a physical rig.
@@ -154,22 +165,21 @@ spreadsheet is a *finding*, not a bug — surface both. Available by P3 with onl
 
 ```
 Projects/ViperSim/
-├── CMakeLists.txt              (template-generated; also builds ../viper-fc + vendored JSBSim)
+├── CMakeLists.txt              (template-generated; also builds viper-fc/ + vendored JSBSim)
 ├── config/viper.toml           (+ polars/, motor maps as data files)
-└── src/
-    ├── ViperSim.h/.cpp         root layer: homescreen tiles → screens (SF_Telem pattern, README §21.5)
-    ├── SimHub.h/.cpp           owns IDynamics, FC instance/bridge, DataRecorder/Player,
-    │                           SerialLink (HIL/rig), mode + fault injection, energy accounting
-    ├── sim/                    JsbsimDynamics / ComposableDynamics, Sensors, Battery, Wind
-    ├── fc_glue/                SimHal, HilBridge (E5 framed serial), RigOutput
-    ├── screens/                Flight (3D viewport + FPV inset + PFD) · Tuning (live gains,
-    │                           step-response plots) · Energy (§2.5) · Transition (state machine
-    │                           visualizer + blend traces) · Replay (DataPlayer + TelemetryPanel)
-    └── ui/                     ADI, HSI, battery bar (ImGui/Renderer2D)
-
-viper-fc/                       (SEPARATE repo/folder — portable; unit-tested with plain doctest)
-├── include/viperfc/*.h  src/*.cpp    estimator, modes, control, mixers, failsafe, IHal, telemetry_schema.h
-└── firmware/                   PlatformIO project (Teensy 4.1) consuming viper-fc + TeensyHal
+├── src/
+│   ├── ViperSim.h/.cpp         root layer: homescreen tiles → screens (SF_Telem pattern, README §21.5)
+│   ├── SimHub.h/.cpp           owns IDynamics, FC instance/bridge, DataRecorder/Player,
+│   │                           SerialLink (HIL/rig), mode + fault injection, energy accounting
+│   ├── sim/                    JsbsimDynamics / ComposableDynamics, Sensors, Battery, Wind
+│   ├── fc_glue/                SimHal, HilBridge (E5 framed serial), RigOutput
+│   ├── screens/                Flight (3D viewport + FPV inset + PFD) · Tuning (live gains,
+│   │                           step-response plots) · Energy (§2.5) · Transition (state machine
+│   │                           visualizer + blend traces) · Replay (DataPlayer + TelemetryPanel)
+│   └── ui/                     ADI, HSI, battery bar (ImGui/Renderer2D)
+└── viper-fc/                   (engine-free portable subfolder — unit-tested with plain doctest)
+    ├── include/viperfc/*.h     estimator, modes, control, mixers, failsafe, IHal, telemetry_schema.h
+    └── firmware/               PlatformIO project (Teensy 4.1) consuming viper-fc + TeensyHal
 ```
 
 Telemetry: register FC internals (`fc.attitude_est`, `fc.mode`, `fc.mix[i]`, `fc.energy_wh`) *and*
@@ -182,12 +192,12 @@ replay is the estimator's report card.
 | --- | --- | --- |
 | **P0** ✅ 2026-07-02 | Skeleton (`Projects/ViperSim`); SimHub; **E10 config loading** (`viper.toml`); **telemetry schema defined** (`fc_glue/telemetry_schema.h`); homescreen tiles → Flight/Replay live + Tuning/Energy/Transition stubs | Boots via `--project ViperSim`; tiles navigate; viper.toml values shown (verified: config resolves to `assets/projects/ViperSim/config/viper.toml`, no crash) |
 | **P1** ✅ 2026-07-02 | `IDynamics` abstraction; **`ComposableDynamics`** (6DOF, E11 RK4) drop-test scene (gravity + ground spring-damper) in the 3D viewport; DataRecorder → replayable session; **dynamics decision recorded** (`Projects/ViperSim/docs/DYNAMICS_DECISION.md`) | Airframe drops, settles at ground, replayable in ReplayScreen. Numeric drop check PASSES (impact 1.10 s vs 1.09 s analytic; peak 10.62 vs 10.68 m/s; rest compression 3.7 mm = mg/k; no tunneling). Decision: ship ComposableDynamics, keep JSBSim behind `IDynamics` (provisional-closed — see record) |
-| **P2** | `viper-fc` skeleton + IHal + SimHal; rate→attitude hover loop, perfect sensors; TuningScreen | 20° roll step: clean response, no divergence; offline replay-through-FC runs |
-| **P3** | Full hover: position hold, battery + energy accounting, sensor noise + complementary filter, gamepad (E7), EnergyScreen; audio alerts (doc 08 A1/A2) | **Gate G1** (playbook S1): hover stable vs noise + 5 m/s gusts; hover-power within ~15% of 230 W model |
-| **P4** | Full-envelope aero tables; cruise (TECS-lite); transition state machine both directions; S3 viewport conveniences as needed | **Gate G2** (playbook S2): scripted VTOL→cruise→VTOL repeatable across CG/airspeed envelope; blend traces recorded |
-| **P5** | Orbit-on-ROI + aircraft-pointing camera; full failsafe set + fault injection; FPV inset (S3.1) | **Gate G3** (playbook S3): every failsafe path exercised; orbit holds ROI centered in gusts; link-kill → RTL → vertical land hands-off |
-| **P6** | HIL bridge (E5): Teensy runs `viper-fc`, sim streams sensors | Same P4 transition flown by the physical Teensy; latency figure on screen |
-| **P7** | Gimbal rig output + rate clamps | Rig mirrors sim attitude; servo directions verified |
+| **P2** ✅ code 2026-07-02 | `viper-fc` skeleton + IHal + SimHal; rate→attitude hover loop, perfect sensors; TuningScreen | 20° roll step: clean response, no divergence; offline replay-through-FC runs — *Tuning screen: step button + replay-through-FC runner; **user acceptance run pending*** |
+| **P3** ✅ code 2026-07-02 | Full hover: position hold, battery + energy accounting, sensor noise + complementary filter, gamepad (E7), EnergyScreen; audio alerts (doc 08 A1/A2) | **Gate G1** (playbook S1) — scripted as the "Run G1" scenario (noise + alternating 5 m/s gusts, auto PASS/FAIL vs max-dev/altitude/230 W ±15%), recording auto-flushed to `regression/g1_hover`; ***user gate run pending*** |
+| **P4** ✅ code 2026-07-02 | Full-envelope aero tables; cruise (TECS-lite); transition state machine both directions; S3 viewport conveniences as needed | **Gate G2** (playbook S2) — scripted round trip in the "Run G2" scenario; CG (`aero.cg_offset_x_m`) + `fc.cruise_airspeed` sweeps re-run it across the envelope; blend/phase traces in the fc entity; ***user gate runs pending*** |
+| **P5** ✅ code 2026-07-02 | Orbit-on-ROI + aircraft-pointing camera; full failsafe set + fault injection; FPV inset (S3.1) | **Gate G3** (playbook S3) — "Run G3" scripts orbit-in-gusts metrics + link-kill → RTL → land hands-off; remaining failsafe paths via fault buttons, tracked by the session checklist; ***user gate run pending*** |
+| **P6** ✅ code 2026-07-02 | HIL bridge (E5): Teensy runs `viper-fc`, sim streams sensors | Same P4 transition flown by the physical Teensy; latency figure on screen — *software complete (HilBackend + `viper-fc/firmware/`); **needs the physical Teensy 4.1*** |
+| **P7** ✅ code 2026-07-02 | Gimbal rig output + rate clamps | Rig mirrors sim attitude; servo directions verified — *software complete (`RigOutput`, ASCII `RIG,r,p,y` @ 50 Hz, E12 rate clamps); **needs the physical rig*** |
 | **P8** (opt) | UDP (E4) + MAVLink heartbeat/attitude subset | QGroundControl shows live attitude/map |
 
 **Gates G1–G3 are the playbook's simulation gates (§5.2)** — they are the *contract between this

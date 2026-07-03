@@ -58,5 +58,14 @@ namespace Workspace
 		// "Sim Toolkit" section of the root inspector panel.
 		// -----------------------------------------------------------------------
 		Cosmic::Ref<Cosmic::Config>   m_Config;   // nullptr when template.toml is absent
+
+		// -----------------------------------------------------------------------
+		// Audio demo state (A1/A2) — click one-shot + a controllable loop, so
+		// every new project sees the Sound/AudioEngine pattern (doc 08).
+		// -----------------------------------------------------------------------
+		Cosmic::Ref<Cosmic::Sound>    m_ClickSound;    // valid asset
+		Cosmic::Ref<Cosmic::Sound>    m_MissingSound;  // degraded-silent demo
+		Cosmic::SoundHandle           m_LoopHandle = Cosmic::InvalidSoundHandle;
+		float                         m_LoopPitch  = 1.0f;
 	};
 }

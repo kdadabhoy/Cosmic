@@ -417,7 +417,10 @@ namespace Cosmic
 		// 6. Dissolve unique-scoped UI systems while graphics contexts are hot
 		m_ImGuiLayer.reset();
 
-		// 7. Flush static engine rendering layers and hardware structures
+		// 7. Flush static engine rendering layers and hardware structures.
+		// Audio goes first: all layer-owned Sound Refs are gone by now (step 5),
+		// and the device graph must close before the window/context teardown.
+		AudioEngine::Shutdown();
 		Renderer::Shutdown();
 
 		// 8. Safely close physical window frames and dismantle the OpenGL core context
@@ -532,6 +535,10 @@ namespace Cosmic
 		// INITIALIZE THE JOB SYSTEM MULTITHREADING POOL FIRST
 		// =====================================================================
 		Cosmic::JobSystem::Get().Initialize();
+
+		// Audio right after the JobSystem (doc 08 A1). Headless-safe: a failed
+		// device init logs a warning and the subsystem becomes a no-op.
+		Cosmic::AudioEngine::Init();
 
 		// 1. Create the window 
 		m_Window = CreateScope<Window>(DEFAULT_WIDTH, DEFAULT_HEIGHT, DEFAULT_WINDOW_TITLE);

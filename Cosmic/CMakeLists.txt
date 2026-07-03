@@ -70,7 +70,7 @@ add_library(Cosmic SHARED ${COSMIC_SOURCES})
 # 4. Engine Configuration and Linking
 # ----------------------------
 target_include_directories(Cosmic PUBLIC src)
-target_include_directories(Cosmic PRIVATE dependencies/stb_image dependencies/stb_truetype dependencies/stb_image_write)
+target_include_directories(Cosmic PRIVATE dependencies/stb_image dependencies/stb_truetype dependencies/stb_image_write dependencies/miniaudio)
 target_compile_definitions(Cosmic PRIVATE COSMIC_BUILD_DLL)
 
 # Distribution build is implied by the Release config — disables the Launcher's

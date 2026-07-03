@@ -3,6 +3,9 @@
 #include "ViperSim.h"
 #include "screens/FlightScreen.h"
 #include "screens/ReplayScreen.h"
+#include "screens/TuningScreen.h"
+#include "screens/EnergyScreen.h"
+#include "screens/TransitionScreen.h"
 
 #include "layers/WorkspaceLayer.h"
 #include "ui/ThemeManager.h"       // accent colour for the homescreen tiles
@@ -20,27 +23,38 @@ namespace Viper
 
 	void ViperSim::OnAttach()
 	{
-		CS_INFO("ViperSim attached — P0 skeleton / P1 drop test.");
+		CS_INFO("ViperSim attached — P0–P7 workbench.");
 		Cosmic::FileSystem::SetActiveProject("ViperSim");
 
-		// SimHub ctor already loaded viper.toml; reload against the active
-		// project VFS now that it's set.
+		// Config load waits for the active-project VFS set just above.
 		m_Hub.LoadConfig();
 
-		m_Flight = std::make_unique<FlightScreen>(m_Hub);
-		m_Replay = std::make_unique<ReplayScreen>(m_Hub);
+		m_Flight     = std::make_unique<FlightScreen>(m_Hub);
+		m_Replay     = std::make_unique<ReplayScreen>(m_Hub);
+		m_Tuning     = std::make_unique<TuningScreen>(m_Hub);
+		m_Energy     = std::make_unique<EnergyScreen>(m_Hub);
+		m_Transition = std::make_unique<TransitionScreen>(m_Hub);
 		m_Flight->OnAttach();
 		m_Replay->OnAttach();
+		m_Tuning->OnAttach();
+		m_Energy->OnAttach();
+		m_Transition->OnAttach();
 
 		SetScreen(SCREEN_HOME);
 	}
 
 	void ViperSim::OnDetach()
 	{
-		if (m_Flight) m_Flight->OnDetach();
-		if (m_Replay) m_Replay->OnDetach();
+		if (m_Flight)     m_Flight->OnDetach();
+		if (m_Replay)     m_Replay->OnDetach();
+		if (m_Tuning)     m_Tuning->OnDetach();
+		if (m_Energy)     m_Energy->OnDetach();
+		if (m_Transition) m_Transition->OnDetach();
 		m_Flight.reset();
 		m_Replay.reset();
+		m_Tuning.reset();
+		m_Energy.reset();
+		m_Transition.reset();
 	}
 
 	void ViperSim::SetScreen(Screen s)
@@ -56,7 +70,12 @@ namespace Viper
 
 	void ViperSim::OnUpdate(float ts)
 	{
-		// Only the 3D screens drive the viewport render pass.
+		// Data screens sample their history every frame regardless of focus so
+		// traces have no gaps; only the focused 3D screen renders the viewport.
+		if (m_Tuning)     m_Tuning->OnUpdate(ts);
+		if (m_Energy)     m_Energy->OnUpdate(ts);
+		if (m_Transition) m_Transition->OnUpdate(ts);
+
 		switch (m_Screen)
 		{
 		case SCREEN_FLIGHT: if (m_Flight) m_Flight->OnUpdate(ts); break;
@@ -67,9 +86,9 @@ namespace Viper
 
 	void ViperSim::OnFixedUpdate(float dt)
 	{
-		// Physics advances only while the Flight screen owns the sim.
-		if (m_Screen == SCREEN_FLIGHT)
-			m_Hub.Step(dt);
+		// The sim runs on ANY screen — flying continues while you tune gains
+		// or watch the Energy screen (shared-hub pattern).
+		m_Hub.Step(dt);
 	}
 
 	// =========================================================================
@@ -135,14 +154,11 @@ namespace Viper
 
 		switch (m_Screen)
 		{
-		case SCREEN_FLIGHT:     if (m_Flight) m_Flight->OnImGuiRender(); break;
-		case SCREEN_REPLAY:     if (m_Replay) m_Replay->OnImGuiRender(); break;
-		case SCREEN_TUNING:     DrawStubScreen("Tuning", "P2",
-			"Live gains + step-response plots land with the viper-fc attitude loop (P2)."); break;
-		case SCREEN_ENERGY:     DrawStubScreen("Energy", "P3",
-			"Hover vs cruise vs orbit power + endurance projections vs the 230 W / 106 W model (P3)."); break;
-		case SCREEN_TRANSITION: DrawStubScreen("Transition", "P4",
-			"VTOL<->cruise state machine visualizer + blend traces (P4)."); break;
+		case SCREEN_FLIGHT:     if (m_Flight)     m_Flight->OnImGuiRender();     break;
+		case SCREEN_REPLAY:     if (m_Replay)     m_Replay->OnImGuiRender();     break;
+		case SCREEN_TUNING:     if (m_Tuning)     m_Tuning->OnImGuiRender();     break;
+		case SCREEN_ENERGY:     if (m_Energy)     m_Energy->OnImGuiRender();     break;
+		case SCREEN_TRANSITION: if (m_Transition) m_Transition->OnImGuiRender(); break;
 		default: break;
 		}
 	}
@@ -208,11 +224,11 @@ namespace Viper
 		// ---- Tile grid (rows of 3, centered; planned screens are dimmed) ----
 		struct TileDef { Screen screen; const char* icon; const char* title; const char* blurb; bool live; };
 		static const TileDef kTiles[] = {
-			{ SCREEN_FLIGHT,     ICON_LC_PLANE_TAKEOFF,      "Flight",     "Drop test - live sim (P1)", true  },
-			{ SCREEN_REPLAY,     ICON_LC_HISTORY,            "Replay",     "Scrub recordings (P1)",     true  },
-			{ SCREEN_TUNING,     ICON_LC_SLIDERS_HORIZONTAL, "Tuning",     "Attitude gains (P2)",       false },
-			{ SCREEN_ENERGY,     ICON_LC_BATTERY_CHARGING,   "Energy",     "Power & endurance (P3)",    false },
-			{ SCREEN_TRANSITION, ICON_LC_REFRESH_CW,         "Transition", "VTOL <-> cruise (P4)",      false },
+			{ SCREEN_FLIGHT,     ICON_LC_PLANE_TAKEOFF,      "Flight",     "Fly it - gates G1-G3, HIL", true },
+			{ SCREEN_REPLAY,     ICON_LC_HISTORY,            "Replay",     "Scrub recordings",          true },
+			{ SCREEN_TUNING,     ICON_LC_SLIDERS_HORIZONTAL, "Tuning",     "Gains + step response",     true },
+			{ SCREEN_ENERGY,     ICON_LC_BATTERY_CHARGING,   "Energy",     "Power & endurance",         true },
+			{ SCREEN_TRANSITION, ICON_LC_REFRESH_CW,         "Transition", "VTOL <-> cruise machine",   true },
 		};
 		const int kCount = static_cast<int>(sizeof(kTiles) / sizeof(kTiles[0]));
 
@@ -264,19 +280,6 @@ namespace Viper
 			if (clicked) SetScreen(t.screen);
 		}
 
-		ImGui::End();
-	}
-
-	void ViperSim::DrawStubScreen(const char* title, const char* phase, const char* body)
-	{
-		// Docked into the central node (see ApplyDockLayout).
-		ImGui::Begin(title);
-		Cosmic::UI::Fonts::Push("Roboto-Bold", Cosmic::UI::Fonts::SizeHeading);
-		ImGui::TextUnformatted(title);
-		Cosmic::UI::Fonts::Pop();
-		ImGui::TextColored({ 1.0f, 0.7f, 0.2f, 1.0f }, "Planned: %s", phase);
-		ImGui::Separator();
-		ImGui::TextWrapped("%s", body);
 		ImGui::End();
 	}
 

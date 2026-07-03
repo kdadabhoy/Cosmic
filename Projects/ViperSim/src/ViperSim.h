@@ -6,9 +6,9 @@
 // ViperSim — UAV simulator & flight-computer workbench (root manager, P0).
 // ============================================================================
 //
-// Homescreen tile menu -> screens (SF_Telem pattern). P0/P1 ship Flight (drop
-// test) + Replay live; Tuning / Energy / Transition are stubbed placeholders
-// that later phases (P2 / P3 / P4) fill in. All screens share ONE SimHub so
+// Homescreen tile menu -> screens (SF_Telem pattern). All five screens are
+// live as of P2–P5: Flight (viewport + FPV inset + gates), Tuning (P2),
+// Energy (P3), Transition (P4), Replay (P1). All screens share ONE SimHub so
 // dynamics/config/recording state persists across switches.
 // ============================================================================
 
@@ -22,6 +22,9 @@ namespace Viper
 {
 	class FlightScreen;
 	class ReplayScreen;
+	class TuningScreen;
+	class EnergyScreen;
+	class TransitionScreen;
 
 	class ViperSim : public Cosmic::Layer
 	{
@@ -42,14 +45,16 @@ namespace Viper
 		void SetScreen(Screen s);
 		void DrawHomescreen();
 		void DrawTopPanel();
-		void DrawStubScreen(const char* title, const char* phase, const char* body);
 		void ApplyDockLayout();
 		int  DockStateKey() const;    // screen -> re-dock trigger (SF_Telem pattern)
 
 		SimHub m_Hub;
 
-		std::unique_ptr<FlightScreen> m_Flight;
-		std::unique_ptr<ReplayScreen> m_Replay;
+		std::unique_ptr<FlightScreen>     m_Flight;
+		std::unique_ptr<ReplayScreen>     m_Replay;
+		std::unique_ptr<TuningScreen>     m_Tuning;
+		std::unique_ptr<EnergyScreen>     m_Energy;
+		std::unique_ptr<TransitionScreen> m_Transition;
 
 		Screen m_Screen      = SCREEN_HOME;
 		int    m_AppliedDock = -1;

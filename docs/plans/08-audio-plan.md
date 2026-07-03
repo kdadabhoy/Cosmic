@@ -4,6 +4,13 @@
 > play one-shots and loops, control volume/pitch, later positional audio. Same design rule as
 > everything else: the engine ships generic verbs (`Play`, `SetVolume`); apps decide *what* sounds
 > mean (low-battery warning, mode-change chime, motor hum).
+>
+> **Status 2026-07-02: A1 + A2 ✅ shipped** (roadmap Phase 4). miniaudio 0.11.21 vendored;
+> `Cosmic/src/audio/AudioEngine.h/.cpp` + `Sound.h` (+ `MiniaudioImpl.cpp` for the one
+> implementation TU); wired into `Application::Initialize/Shutdown`; headless-safe no-op verified
+> by `tests/test_audio.cpp`. Template project plays `project://sounds/click.wav` on a button and
+> demos the missing-file degraded-silent policy + an A2 pitch-controlled loop; ViperSim consumes
+> the Ui/Alerts groups for mode chimes + failsafe tones. A3 (positional) remains future work.
 
 ## Technology choice: **miniaudio** (vendored single header)
 

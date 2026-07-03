@@ -41,6 +41,10 @@ namespace Cosmic
 		void        OnUpdate(float dt);   // advance clock, ~1 Hz port scan, async auto-reconnect
 		std::string Poll();               // returns received bytes (empty if none); updates last-byte time
 
+		// ---- Transmission (binary-safe pass-through to SerialPort::Write) ----
+		bool        Write(const void* data, size_t length) { return m_Port.Write(data, length); }
+		bool        Write(const std::string& data)         { return m_Port.Write(data); }
+
 		// ---- Connection control ----
 		void Connect();      // user-initiated: BeginOpen the selected port + keep trying
 		void Disconnect();   // user-initiated: stop trying and close

@@ -44,6 +44,14 @@ namespace Workspace
 		m_Config = Cosmic::Config::Load(
 			Cosmic::FileSystem::Resolve("project://config/template.toml"));
 
+		// 1c. Audio demo (A1): same client-side Resolve rule as Config above.
+		//     A missing file logs CS_CORE_ERROR and yields a silent degraded
+		//     Sound — the second Create demonstrates that policy on purpose.
+		m_ClickSound   = Cosmic::Sound::Create(
+			Cosmic::FileSystem::Resolve("project://sounds/click.wav"));
+		m_MissingSound = Cosmic::Sound::Create(
+			Cosmic::FileSystem::Resolve("project://sounds/does_not_exist.wav"));
+
 		// 2. Create the shared scene (passed by Ref<> — never duplicated)
 		m_Scene = Cosmic::Scene::Create();
 
@@ -133,6 +141,15 @@ namespace Workspace
 
 		m_SharedMaterial.reset();
 		m_Scene.reset();
+
+		// Audio demo teardown: stop the loop voice, release the assets.
+		if (m_LoopHandle != Cosmic::InvalidSoundHandle)
+		{
+			Cosmic::AudioEngine::Stop(m_LoopHandle);
+			m_LoopHandle = Cosmic::InvalidSoundHandle;
+		}
+		m_ClickSound.reset();
+		m_MissingSound.reset();
 
 		CS_INFO("TemplateProject: Detached and cleaned up.");
 
@@ -306,6 +323,49 @@ namespace Workspace
 			{
 				ImGui::TextDisabled("No gamepad connected (plug one in — values appear live).");
 			}
+		}
+
+		// -------------------------------------------------------------------
+		// Audio demo (A1 one-shot + A2 loop/handle/groups) — doc 08 acceptance:
+		// "template project plays a click on a button press; missing-file path
+		// logs and stays silent."
+		// -------------------------------------------------------------------
+		ImGui::Spacing();
+		ImGui::Separator();
+		if (ImGui::CollapsingHeader("Audio (A1 one-shots / A2 loops)"))
+		{
+			if (!Cosmic::AudioEngine::IsInitialized())
+				ImGui::TextColored({ 1.0f, 0.6f, 0.2f, 1.0f }, "Audio device unavailable (headless-safe no-op).");
+
+			if (ImGui::Button("Click (UI group)"))
+				Cosmic::AudioEngine::Play(m_ClickSound, 1.0f, 1.0f, Cosmic::AudioGroup::Ui);
+			ImGui::SameLine();
+			if (ImGui::Button("Play missing file"))
+				Cosmic::AudioEngine::Play(m_MissingSound);   // silent by policy — error already logged
+			ImGui::SameLine();
+			ImGui::TextDisabled(m_ClickSound && m_ClickSound->IsValid() ? "click.wav loaded" : "click.wav MISSING");
+
+			// A2: looping voice with a live pitch handle (the motor-hum pattern).
+			if (m_LoopHandle == Cosmic::InvalidSoundHandle)
+			{
+				if (ImGui::Button("Start loop"))
+					m_LoopHandle = Cosmic::AudioEngine::PlayLooping(m_ClickSound, 0.6f, m_LoopPitch);
+			}
+			else
+			{
+				if (ImGui::Button("Stop loop"))
+				{
+					Cosmic::AudioEngine::Stop(m_LoopHandle);
+					m_LoopHandle = Cosmic::InvalidSoundHandle;
+				}
+				ImGui::SameLine();
+				if (ImGui::SliderFloat("Pitch", &m_LoopPitch, 0.5f, 2.0f, "%.2fx"))
+					Cosmic::AudioEngine::SetPitch(m_LoopHandle, m_LoopPitch);
+			}
+
+			float master = Cosmic::AudioEngine::GetMasterVolume();
+			if (ImGui::SliderFloat("Master volume", &master, 0.0f, 1.0f, "%.2f"))
+				Cosmic::AudioEngine::SetMasterVolume(master);
 		}
 
 		// Frame stats

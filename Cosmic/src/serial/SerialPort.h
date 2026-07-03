@@ -39,8 +39,9 @@
  * Post: Queries the Windows Registry to return a list of active COM ports
  * (e.g., {"COM3", "COM4"}).
  *
- * Write support: port is opened GENERIC_READ | GENERIC_WRITE. A Write(const std::string&)
- * method is planned but not yet implemented.
+ * Write support: port is opened GENERIC_READ | GENERIC_WRITE. Write(data, len)
+ * performs a blocking overlapped write (bounded by the OS transmit buffer);
+ * safe to call from the main thread alongside the background read thread.
  */
 
 #include "core/Core.h"   // COSMIC_API — export across the engine DLL boundary
@@ -95,6 +96,17 @@ namespace Cosmic
 		///////////////////////////////
 
 		std::string		FlushBuffer();
+
+		////////////////////////////////
+		// Data Transmission
+		///////////////////////////////
+
+		// Write raw bytes (may contain NULs — binary-framing safe). Returns
+		// true when every byte was accepted. Overlapped + waited, so it is a
+		// bounded blocking call; false when the port is closed or the device
+		// dropped mid-write.
+		bool		Write(const void* data, size_t length);
+		bool		Write(const std::string& data) { return Write(data.data(), data.size()); }
 
 		////////////////////////////////
 		// Hardware Discovery

@@ -30,6 +30,14 @@ if(NOT COSMIC_SDK_DIR)
 endif()
 
 # -------------------------------------------------------------------
+# 1b. The portable flight-computer library (viper-fc/, in this project) —
+#     header-only INTERFACE target shared with tests and the Teensy build.
+# -------------------------------------------------------------------
+if(NOT TARGET viperfc)
+    add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/viper-fc" viper-fc-build)
+endif()
+
+# -------------------------------------------------------------------
 # 2. Source Files
 # -------------------------------------------------------------------
 file(GLOB_RECURSE VIPER_SOURCES CONFIGURE_DEPENDS "src/*.cpp" "src/*.h")
@@ -66,6 +74,8 @@ target_include_directories(ViperSim SYSTEM PRIVATE
 # -------------------------------------------------------------------
 # 4. Linking — agnostic (works in-tree or standalone)
 # -------------------------------------------------------------------
+target_link_libraries(ViperSim PRIVATE viperfc)
+
 if(TARGET Cosmic)
     target_link_libraries(ViperSim PRIVATE Cosmic)
 else()

@@ -2,13 +2,18 @@
 
 // FlightScreen.h
 //
-// P1 drop-test viewport: an orbit camera over a grid + ground pad, the airframe
-// (primitive mesh) falling under gravity via SimHub/ComposableDynamics, with
-// live truth readout and Drop/Reset controls. The recorded run is replayable in
-// the Replay screen (P1 acceptance).
+// ============================================================================
+// The Flight screen, grown from the P1 drop-test seat into the full workbench
+// (plan §3): 3D viewport (orbit camera, pad/home/ROI markers, trajectory
+// ribbon) + FPV INSET (S3.1 — second Renderer3D pass into its own FrameBuffer,
+// shown via ImGui::Image) + the flight inspector:
 //
-// This is also the seat the full Flight screen grows into (FPV inset + PFD at
-// P3/P5) — for now it proves the dynamics + recorder are wired end to end.
+//   arm/takeoff/mode buttons · gamepad status (E7) · wind + gusts · fault
+//   injection (kill link, drop GPS, freeze pitot, motor-out, battery-low) ·
+//   SITL <-> HIL backend dropdown with link UI + latency (P6) · gimbal rig
+//   output (P7) · gate demos G1/G2/G3 with PASS/FAIL reports · failsafe
+//   checklist ("every failsafe path exercised") · record/flush.
+// ============================================================================
 
 #include <Cosmic.h>
 #include "SimHub.h"
@@ -24,24 +29,39 @@ namespace Viper
 
 		void OnAttach();
 		void OnDetach();
-		void OnUpdate(float ts);       // camera + 3D render pass
+		void OnUpdate(float ts);       // camera + 3D render passes (FPV first)
 		void OnImGuiRender();          // inspector panel
 		void OnEvent(Cosmic::Event& e);
 
 	private:
 		void BuildMeshes();
-		void RenderScene();
+		void DrawWorld();              // world draws shared by main + FPV passes
+		void RenderFpvPass();
+		void RenderMainPass();
+		void DrawStatusBlock();
+		void DrawFlightControls();
+		void DrawEnvironmentAndFaults();
+		void DrawBackendSection();
+		void DrawGateSection();
 
 		SimHub& m_Hub;
 
 		Cosmic::OrbitCameraController m_Orbit{ 16.0f / 9.0f };
 		glm::vec2 m_ViewportSize{ 0.0f, 0.0f };
 
-		Cosmic::Ref<Cosmic::Mesh> m_Body;   // airframe stand-in (box)
-		Cosmic::Ref<Cosmic::Mesh> m_Pad;    // ground pad (plane)
+		Cosmic::Ref<Cosmic::Mesh> m_Fuselage;
+		Cosmic::Ref<Cosmic::Mesh> m_WingMesh;
+		Cosmic::Ref<Cosmic::Mesh> m_Pad;
 
-		std::vector<glm::vec3> m_Trail;      // render-frame fall path
+		// S3.1 FPV inset — belly camera into a private FBO.
+		Cosmic::Ref<Cosmic::FrameBuffer> m_FpvFbo;
+		Cosmic::PerspectiveCamera        m_FpvCam{ 70.0f, 16.0f / 9.0f, 0.05f, 2000.0f };
+		bool m_FpvEnabled = true;
+
+		std::vector<glm::vec3> m_Trail;
+		bool  m_AutoFollow = true;
+		float m_TakeoffAlt = 10.0f;
 		float m_DropHeight = 6.0f;
-		bool  m_AutoFollow = true;           // keep the camera target on the body
+		glm::vec2 m_RoiField{ 100.0f, 0.0f };
 	};
 }

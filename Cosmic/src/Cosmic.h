@@ -71,6 +71,10 @@
 #include "codes/MouseButtonCodes.h"
 #include "codes/GamepadCodes.h"
 
+// Audio (A-series: docs/plans/08-audio-plan.md — miniaudio-backed)
+#include "audio/AudioEngine.h"
+#include "audio/Sound.h"
+
 // Specialized Utilities
 #include "serial/SerialPort.h"
 #include "serial/SerialLink.h"

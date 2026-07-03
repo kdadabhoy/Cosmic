@@ -222,6 +222,38 @@ namespace Cosmic
 	/////////////////////////////////////////////////////////////////////////////////
 
 	/**
+	 * Write
+	 * * TRANSMISSION: the port was opened FILE_FLAG_OVERLAPPED, so writes must be
+	 * overlapped too. Each call uses its own OVERLAPPED + event and waits for
+	 * completion — bounded by the OS transmit buffer, and safe to run while the
+	 * read thread has its own pending overlapped read on the same handle.
+	 */
+	bool SerialPort::Write(const void* data, size_t length)
+	{
+		if (!m_Connected || m_Handle == INVALID_HANDLE_VALUE || length == 0)
+			return false;
+
+		OVERLAPPED ov = {};
+		ov.hEvent = CreateEvent(nullptr, TRUE, FALSE, nullptr);
+		if (!ov.hEvent)
+			return false;
+
+		DWORD written = 0;
+		BOOL ok = WriteFile(m_Handle, data, static_cast<DWORD>(length), &written, &ov);
+		if (!ok)
+		{
+			if (GetLastError() == ERROR_IO_PENDING)
+				ok = GetOverlappedResult(m_Handle, &ov, &written, TRUE);
+			else
+				CS_CORE_WARN("SerialPort: WriteFile error {0}.", GetLastError());
+		}
+		CloseHandle(ov.hEvent);
+		return ok && written == static_cast<DWORD>(length);
+	}
+
+	/////////////////////////////////////////////////////////////////////////////////
+
+	/**
 	 * CloseReadSession
 	 * * Tears down the read thread + handle only. Signals the stop event (which the
 	 * read thread waits on), so ReadLoop returns immediately even if a read is
