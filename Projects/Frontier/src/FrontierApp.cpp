@@ -99,13 +99,23 @@ namespace Frontier
         if (vpSize.x < 1.0f || vpSize.y < 1.0f)
             return;
 
-        // --- Camera (placeholder orbit rig; F1 replaces with the fly camera).
-        // Control only while the cursor is over the viewport (or mid-drag).
-        m_Orbit.OnResize(vpSize.x, vpSize.y);
-        m_Orbit.SetViewportRect(vpPos, vpSize);
+        // --- Camera: fly (F1, default) or orbit inspect fallback (nav-panel toggle).
+        // Control only while the cursor is over the viewport (or mid-look/drag).
         const bool vpHovered = ws && ws->IsViewportHovered();
-        m_Orbit.SetControlEnabled(vpHovered || m_Orbit.IsDragging());
-        m_Orbit.OnUpdate(ts);
+        if (m_FlyCamera)
+        {
+            m_Fly.OnResize(vpSize.x, vpSize.y);
+            m_Fly.SetViewportRect(vpPos, vpSize);
+            m_Fly.SetControlEnabled(vpHovered || m_Fly.IsLooking());
+            m_Fly.OnUpdate(ts);
+        }
+        else
+        {
+            m_Orbit.OnResize(vpSize.x, vpSize.y);
+            m_Orbit.SetViewportRect(vpPos, vpSize);
+            m_Orbit.SetControlEnabled(vpHovered || m_Orbit.IsDragging());
+            m_Orbit.OnUpdate(ts);
+        }
 
         m_WorldTime += ts;
 
@@ -128,7 +138,7 @@ namespace Frontier
         ctx.ViewportWidth  = vfb->GetWidth();
         ctx.ViewportHeight = vfb->GetHeight();
         ctx.OrbitFallback  = &m_Orbit;
-        // TODO(F1): ctx.Camera   = &m_FlyCamera;
+        ctx.Camera         = m_FlyCamera ? &m_Fly : nullptr;   // null => orbit is active
         // TODO(F2): ctx.Renderer = &m_SceneRenderer;
 
         world.OnUpdate(ctx);
@@ -154,8 +164,15 @@ namespace Frontier
     // =========================================================================
     void FrontierApp::OnEvent(Cosmic::Event& e)
     {
-        if (m_ActiveWorld >= 0)
-            m_Orbit.OnEvent(e);    // scroll zoom + resize (handlers return false)
+        if (m_ActiveWorld < 0)
+            return;
+
+        // Forward scroll (speed/zoom) + resize to the active camera (handlers return
+        // false, so the events still propagate).
+        if (m_FlyCamera)
+            m_Fly.OnEvent(e);
+        else
+            m_Orbit.OnEvent(e);
     }
 
     // =========================================================================
@@ -175,9 +192,11 @@ namespace Frontier
                 m_Attached[index] = true;
             }
 
-            // Aim the placeholder rig from the world's spawn pose (F1 gives the
-            // fly camera the pose directly).
+            // Aim both cameras from the world's spawn pose. The fly camera gets the
+            // pose directly; the orbit fallback frames the same spawn from a target.
             const WorldInfo& info = m_Worlds[index]->GetInfo();
+            m_Fly.SetPose(info.SpawnPosition, info.SpawnYawDeg, info.SpawnPitchDeg);
+
             const glm::vec3 target{ 0.0f, info.SpawnPosition.y * 0.25f, 0.0f };
             m_Orbit.SetTarget(target);
             m_Orbit.SetYawPitch(info.SpawnYawDeg, info.SpawnPitchDeg);
@@ -252,9 +271,25 @@ namespace Frontier
         ImGui::Spacing();
         ImGui::Separator();
         ImGui::SeparatorText("Camera");
-        ImGui::TextWrapped("Placeholder orbit rig: LMB orbit, RMB pan, scroll zoom "
-                           "(over the viewport).");
-        ImGui::TextDisabled("Fly camera (WASD + mouse-look) lands with F1.");
+
+        // Fly / Orbit toggle (fly is the default exploration camera).
+        int mode = m_FlyCamera ? 0 : 1;
+        ImGui::RadioButton("Fly", &mode, 0);
+        ImGui::SameLine();
+        ImGui::RadioButton("Orbit", &mode, 1);
+        m_FlyCamera = (mode == 0);
+
+        if (m_FlyCamera)
+        {
+            ImGui::TextWrapped("Fly: RMB look, WASD move, E/Q up/down, Shift boost, "
+                               "scroll speed (over the viewport).");
+            ImGui::Text("Speed: %.1f m/s", m_Fly.GetMoveSpeed());
+        }
+        else
+        {
+            ImGui::TextWrapped("Orbit inspect: LMB orbit, RMB pan, scroll zoom "
+                               "(over the viewport).");
+        }
 
         ImGui::Spacing();
         ImGui::Separator();

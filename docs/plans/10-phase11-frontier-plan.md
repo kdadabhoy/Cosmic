@@ -80,7 +80,12 @@
 
 ## F1 — `camera/FlyCameraController` (the exploration camera)
 
-**Status:** ☐ not started
+**Status:** ✅ 2026-07-03 — `FlyCameraController` (RMB look + WASD/EQ/Space/LCtrl move,
+LShift boost, scroll speed, exp. velocity smoothing, optional ground-probe clamp) shipped +
+exported; movement math factored into headless static helpers with `tests/test_flycamera.cpp`
+(9 cases). Frontier wired: `WorldContext::Camera`, nav-panel Fly/Orbit toggle (fly default),
+`SetPose` from spawn info, `DrawPlaceholder` renders the active camera. Build + CosmicTests 97/97
+green; Frontier + Engine3DDemo boot clean.
 
 **Files:** NEW `Cosmic/src/camera/FlyCameraController.h/.cpp`; MODIFY `Cosmic/src/Cosmic.h`
 (export next to OrbitCameraController), `Projects/Frontier/src/World.h` +

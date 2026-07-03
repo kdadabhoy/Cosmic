@@ -16,8 +16,9 @@
 // singletons — when an F-item lands, append its pointer here and feed it from
 // FrontierApp::OnUpdate:
 //
-//   TODO(F1): Cosmic::FlyCameraController* Camera — replaces OrbitFallback as
-//             the exploration camera (WASD + mouse-look; ground-probe clamp).
+//   [F1 DONE]: Cosmic::FlyCameraController* Camera — the exploration camera
+//             (WASD + mouse-look; ground-probe clamp). OrbitFallback stays as an
+//             inspect toggle; Camera is null when the nav panel selects orbit.
 //   TODO(F2): Cosmic::SceneRenderer* Renderer — worlds fill a SceneRenderDesc
 //             and call Renderer->Render(desc) instead of hand-rolling passes.
 //   TODO(F3): GPU-profiler results pointer for the HUD panel.
@@ -55,7 +56,12 @@ namespace Frontier
         uint32_t ViewportWidth  = 0;
         uint32_t ViewportHeight = 0;
 
-        // Placeholder-era exploration camera (F1 replaces this with the fly camera).
+        // Exploration camera (F1): WASD + mouse-look, driven by FrontierApp. Null
+        // when the nav-panel toggle selects the orbit inspect fallback instead.
+        Cosmic::FlyCameraController* Camera = nullptr;
+
+        // Orbit inspect fallback — always provided; the active camera when Camera
+        // is null (nav-panel "Fly / Orbit" toggle).
         Cosmic::OrbitCameraController* OrbitFallback = nullptr;
     };
 
@@ -87,10 +93,15 @@ namespace Frontier
          *  call to this. */
         void DrawPlaceholder(WorldContext& ctx, const glm::vec4& tint)
         {
-            if (!ctx.OrbitFallback)
+            // Render with whichever camera the nav-panel toggle selected: the fly
+            // camera when present, else the orbit inspect fallback.
+            const Cosmic::Camera* cam = ctx.Camera        ? &ctx.Camera->GetCamera()
+                                      : ctx.OrbitFallback ? &ctx.OrbitFallback->GetCamera()
+                                                          : nullptr;
+            if (!cam)
                 return;
 
-            Cosmic::Renderer3D::BeginScene(ctx.OrbitFallback->GetCamera());
+            Cosmic::Renderer3D::BeginScene(*cam);
             Cosmic::Renderer3D::DrawGrid(60.0f, 5.0f, { 0.30f, 0.32f, 0.36f, 1.0f });
             Cosmic::Renderer3D::DrawAxes(glm::mat4(1.0f), 4.0f);
 

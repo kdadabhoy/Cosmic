@@ -61,8 +61,11 @@ namespace Frontier
         int   m_AppliedDock = -99;
         float m_WorldTime   = 0.0f;    // resets when a world is entered
 
-        // Placeholder exploration camera (F1 swaps in the fly camera).
+        // Exploration cameras: the fly camera (F1, default) and the orbit inspect
+        // fallback. m_FlyCamera selects which one drives the active world.
+        Cosmic::FlyCameraController   m_Fly{ 16.0f / 9.0f };
         Cosmic::OrbitCameraController m_Orbit{ 16.0f / 9.0f };
+        bool m_FlyCamera = true;       // nav-panel "Fly / Orbit" toggle (fly default)
 
         WorldContext m_LastCtx;        // snapshot for OnPanels
     };
