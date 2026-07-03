@@ -4,6 +4,7 @@
 #include "renderer/Renderer3D.h"
 #include "renderer/RenderCommand.h"
 #include "renderer/BindingPoints.h"
+#include "renderer/CameraUniforms.h"
 #include "camera/Camera.h"
 #include "camera/PerspectiveCamera.h"
 #include "graphics/VertexArray.h"
@@ -74,6 +75,13 @@ namespace Cosmic
 		Ref<UniformBuffer> LightsUBO;
 
 		// =====================================================================
+		// --- Per-frame camera UBO (S6.2): binding-1 CameraBlock ---
+		// Replaces the per-draw loose u_ViewProjection / u_CameraPos uniforms;
+		// uploaded once per BeginScene.
+		// =====================================================================
+		Ref<UniformBuffer> CameraUBO;
+
+		// =====================================================================
 		// --- Per-Scene Camera State (set by BeginScene) ---
 		// =====================================================================
 		glm::mat4 ViewProjection{ 1.0f };
@@ -85,7 +93,36 @@ namespace Cosmic
 		// =====================================================================
 		glm::vec3 LightDirection = glm::normalize(glm::vec3(-0.4f, -1.0f, -0.25f));
 		float     Ambient        = 0.25f;
+
+		// =====================================================================
+		// --- Image-based lighting (S6.3): handles registered by SetIBL ---
+		// Bound to reserved units on every material DrawMesh so PBR materials
+		// sample them; the flat-color Lambert path ignores them.
+		// =====================================================================
+		bool     IblActive        = false;
+		uint32_t IblIrradianceID   = 0;
+		uint32_t IblPrefilterID    = 0;
+		uint32_t IblBrdfLutID      = 0;
+		float    IblPrefilterMaxLod = 0.0f;
+
+		// =====================================================================
+		// --- Directional shadows (S6.4): handles registered by SetShadow ---
+		// =====================================================================
+		bool      ShadowActive = false;
+		uint32_t  ShadowMapID   = 0;
+		glm::mat4 ShadowLightViewProj{ 1.0f };
+		float     ShadowBias   = 0.0015f;
 	};
+
+	// Reserved fragment texture units (well above any material's own textures,
+	// which bind from unit 0 upward — GL guarantees >= 16 units).
+	namespace
+	{
+		constexpr uint32_t kIblIrradianceUnit = 8;
+		constexpr uint32_t kIblPrefilterUnit  = 9;
+		constexpr uint32_t kIblBrdfLutUnit     = 10;
+		constexpr uint32_t kShadowMapUnit      = 11;
+	}
 
 	static Renderer3DData s_Data;
 
@@ -125,6 +162,16 @@ namespace Cosmic
 			GpuLightsBlock defaults{};
 			s_Data.LightsUBO->SetData(&defaults, sizeof(defaults));
 		}
+
+		// --- Per-frame camera UBO (S6.2): allocate on binding 1. Every 3D shader
+		//     reads the CameraBlock here instead of loose u_ViewProjection /
+		//     u_CameraPos uniforms; BeginScene fills it each pass. ---
+		s_Data.CameraUBO = UniformBuffer::Create(sizeof(GpuCameraBlock), Bindings::CameraUbo);
+		if (s_Data.CameraUBO)
+		{
+			GpuCameraBlock defaults{};
+			s_Data.CameraUBO->SetData(&defaults, sizeof(defaults));
+		}
 	}
 
 	void Renderer3D::Shutdown()
@@ -140,6 +187,7 @@ namespace Cosmic
 		s_Data.LineShader.reset();
 		s_Data.MeshShader.reset();
 		s_Data.LightsUBO.reset();
+		s_Data.CameraUBO.reset();
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////
@@ -157,6 +205,19 @@ namespace Cosmic
 
 		s_Data.LineVertexCount     = 0;
 		s_Data.LineVertexBufferPtr = s_Data.LineVertexBufferBase;
+
+		// Upload the per-frame camera UBO (binding 1) once — every 3D shader reads
+		// CameraBlock from here now (S6.2), so no shader needs a per-draw
+		// u_ViewProjection / u_CameraPos setter. Re-Bind() re-asserts the base
+		// binding in case app code bound another UBO to the slot.
+		if (s_Data.CameraUBO)
+		{
+			GpuCameraBlock cam;
+			cam.ViewProjection = viewProjection;
+			cam.CameraPosition = glm::vec4(cameraPos, 1.0f);
+			s_Data.CameraUBO->Bind();
+			s_Data.CameraUBO->SetData(&cam, sizeof(cam));
+		}
 	}
 
 	void Renderer3D::BeginScene(const PerspectiveCamera& camera)
@@ -182,7 +243,7 @@ namespace Cosmic
 		s_Data.LineVertexBuffer->SetData(s_Data.LineVertexBufferBase, dataSize);
 
 		s_Data.LineShader->Bind();
-		s_Data.LineShader->SetMat4("u_ViewProjection", s_Data.ViewProjection);
+		// u_ViewProjection now comes from the binding-1 CameraBlock UBO (S6.2).
 
 		s_Data.LineVertexArray->Bind();
 		RenderCommand::DrawLines(s_Data.LineVertexArray, s_Data.LineVertexCount);
@@ -331,13 +392,27 @@ namespace Cosmic
 		// EndScene and depth-sorts against them correctly. Uniform names below
 		// are the engine-wide mesh shader convention (doc 05 S4.2).
 		s_Data.MeshShader->Bind();
-		s_Data.MeshShader->SetMat4("u_ViewProjection", s_Data.ViewProjection);
+		// u_ViewProjection + u_CameraPos come from the binding-1 CameraBlock UBO (S6.2).
 		s_Data.MeshShader->SetMat4("u_Model", transform);
 		s_Data.MeshShader->SetFloat4("u_Color", color);
-		s_Data.MeshShader->SetFloat3("u_CameraPos", s_Data.CameraPos);
 		s_Data.MeshShader->SetFloat3("u_LightDir", s_Data.LightDirection);
 		s_Data.MeshShader->SetFloat("u_Ambient", s_Data.Ambient);
 		s_Data.MeshShader->SetInt("u_EntityID", entityID);   // S4.6 (silent no-op if undeclared)
+
+		// Directional shadows (S6.4): the flat Lambert path receives them too so a
+		// shadow lands on plain-colored geometry (ground pad, ECS meshes).
+		if (s_Data.ShadowActive)
+		{
+			RenderCommand::BindTextureSlot(kShadowMapUnit, s_Data.ShadowMapID);
+			s_Data.MeshShader->SetInt("u_ShadowMap", (int)kShadowMapUnit);
+			s_Data.MeshShader->SetMat4("u_LightViewProj", s_Data.ShadowLightViewProj);
+			s_Data.MeshShader->SetFloat("u_ShadowBias", s_Data.ShadowBias);
+			s_Data.MeshShader->SetFloat("u_HasShadow", 1.0f);
+		}
+		else
+		{
+			s_Data.MeshShader->SetFloat("u_HasShadow", 0.0f);
+		}
 
 		mesh->GetVertexArray()->Bind();
 		RenderCommand::DrawIndexed(mesh->GetVertexArray(), mesh->GetIndexCount());
@@ -368,13 +443,49 @@ namespace Cosmic
 		//    u_Color is deliberately NOT set here (material-owned).
 		const glm::mat3 normalMatrix = glm::inverseTranspose(glm::mat3(transform));
 
-		shader->SetMat4("u_ViewProjection", s_Data.ViewProjection);
+		// u_ViewProjection + u_CameraPos come from the binding-1 CameraBlock UBO (S6.2);
+		// the per-draw transform/normal/light uniforms stay loose.
 		shader->SetMat4("u_Model", transform);
 		shader->SetMat3("u_NormalMatrix", normalMatrix);
-		shader->SetFloat3("u_CameraPos", s_Data.CameraPos);
 		shader->SetFloat3("u_LightDir", s_Data.LightDirection);
 		shader->SetFloat("u_Ambient", s_Data.Ambient);
 		shader->SetInt("u_EntityID", entityID);   // S4.6 (silent no-op if undeclared)
+
+		// 3) Image-based lighting (S6.3): bind the IBL set to reserved units and
+		//    flip u_HasIBL on. PBR.glsl consumes these; other lit shaders ignore
+		//    them (silent -1 locations). The material's own textures already bound
+		//    to low units in BindFull, so the high IBL units never collide.
+		if (s_Data.IblActive)
+		{
+			RenderCommand::BindTextureCubeSlot(kIblIrradianceUnit, s_Data.IblIrradianceID);
+			RenderCommand::BindTextureCubeSlot(kIblPrefilterUnit,  s_Data.IblPrefilterID);
+			RenderCommand::BindTextureSlot(kIblBrdfLutUnit,        s_Data.IblBrdfLutID);
+			shader->SetInt("u_IrradianceMap",   (int)kIblIrradianceUnit);
+			shader->SetInt("u_PrefilterMap",    (int)kIblPrefilterUnit);
+			shader->SetInt("u_BrdfLut",         (int)kIblBrdfLutUnit);
+			shader->SetFloat("u_PrefilterMaxLod", s_Data.IblPrefilterMaxLod);
+			shader->SetFloat("u_HasIBL", 1.0f);
+		}
+		else
+		{
+			shader->SetFloat("u_HasIBL", 0.0f);
+		}
+
+		// 4) Directional shadows (S6.4): bind the sun's shadow map to its reserved
+		//    unit and hand the lit shader the light matrix + bias. PBR/MeshLit PCF
+		//    the sun term; unlit shaders ignore these uniforms.
+		if (s_Data.ShadowActive)
+		{
+			RenderCommand::BindTextureSlot(kShadowMapUnit, s_Data.ShadowMapID);
+			shader->SetInt("u_ShadowMap", (int)kShadowMapUnit);
+			shader->SetMat4("u_LightViewProj", s_Data.ShadowLightViewProj);
+			shader->SetFloat("u_ShadowBias", s_Data.ShadowBias);
+			shader->SetFloat("u_HasShadow", 1.0f);
+		}
+		else
+		{
+			shader->SetFloat("u_HasShadow", 0.0f);
+		}
 
 		mesh->GetVertexArray()->Bind();
 		RenderCommand::DrawIndexed(mesh->GetVertexArray(), mesh->GetIndexCount());
@@ -385,8 +496,15 @@ namespace Cosmic
 		if (!model)
 			return;
 
+		// S6.2: parts imported with a glTF material draw through their PBR material
+		// (factors + textures); parts without one fall back to the flat base color.
 		for (const ModelPart& part : model->GetParts())
-			DrawMesh(part.Geometry, transform, part.BaseColor, entityID);
+		{
+			if (part.PbrMaterial)
+				DrawMesh(part.Geometry, transform, part.PbrMaterial, entityID);
+			else
+				DrawMesh(part.Geometry, transform, part.BaseColor, entityID);
+		}
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////
@@ -458,6 +576,42 @@ namespace Cosmic
 		// code bound another UBO to the lights slot since Init.
 		s_Data.LightsUBO->Bind();
 		s_Data.LightsUBO->SetData(&block, sizeof(block));
+	}
+
+	/////////////////////////////////////////////////////////////////////////////////
+	// Image-based lighting (S6.3)
+	/////////////////////////////////////////////////////////////////////////////////
+
+	void Renderer3D::SetIBL(uint32_t irradianceCubeID, uint32_t prefilterCubeID,
+	                        uint32_t brdfLutID, float prefilterMaxLod)
+	{
+		s_Data.IblActive          = irradianceCubeID != 0 && prefilterCubeID != 0 && brdfLutID != 0;
+		s_Data.IblIrradianceID    = irradianceCubeID;
+		s_Data.IblPrefilterID     = prefilterCubeID;
+		s_Data.IblBrdfLutID       = brdfLutID;
+		s_Data.IblPrefilterMaxLod = prefilterMaxLod;
+	}
+
+	void Renderer3D::ClearIBL()
+	{
+		s_Data.IblActive = false;
+	}
+
+	/////////////////////////////////////////////////////////////////////////////////
+	// Directional shadows (S6.4)
+	/////////////////////////////////////////////////////////////////////////////////
+
+	void Renderer3D::SetShadow(uint32_t shadowMapID, const glm::mat4& lightViewProj, float bias)
+	{
+		s_Data.ShadowActive        = shadowMapID != 0;
+		s_Data.ShadowMapID         = shadowMapID;
+		s_Data.ShadowLightViewProj = lightViewProj;
+		s_Data.ShadowBias          = bias;
+	}
+
+	void Renderer3D::ClearShadow()
+	{
+		s_Data.ShadowActive = false;
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////

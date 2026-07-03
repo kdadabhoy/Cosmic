@@ -13,7 +13,14 @@ layout(location = 0) in vec3 a_Position;
 layout(location = 1) in vec3 a_Normal;
 layout(location = 2) in vec2 a_TexCoord;
 
-uniform mat4 u_ViewProjection;
+// Per-frame camera (S6.2, binding: Bindings::CameraUbo). Instance-named so the
+// literal "u_ViewProjection" never appears — see CameraUniforms.h for why.
+layout(std140, binding = 1) uniform CameraBlock
+{
+    mat4 ViewProjection;
+    vec4 CameraPosition;   // xyz = camera world pos
+} u_Camera;
+
 uniform mat4 u_Model;
 uniform mat3 u_NormalMatrix;
 
@@ -28,7 +35,7 @@ void main()
     v_WorldNormal = u_NormalMatrix * a_Normal;
     v_TexCoord    = a_TexCoord;
 
-    gl_Position = u_ViewProjection * world;
+    gl_Position = u_Camera.ViewProjection * world;
 }
 
 #type fragment
@@ -41,7 +48,14 @@ in vec3 v_WorldPos;
 in vec3 v_WorldNormal;
 in vec2 v_TexCoord;
 
-uniform vec3  u_CameraPos;   // engine convention
+// Per-frame camera (S6.2, binding 1) — same block as the vertex stage; the
+// fragment needs the camera position for the Blinn specular view vector.
+layout(std140, binding = 1) uniform CameraBlock
+{
+    mat4 ViewProjection;
+    vec4 CameraPosition;   // xyz = camera world pos
+} u_Camera;
+
 uniform int   u_EntityID;    // S4.6: -1 when not picking
 uniform vec4  u_Color;       // material-owned
 uniform float u_Shininess;   // material-owned (Blinn specular exponent)
@@ -58,25 +72,52 @@ layout(std140, binding = 0) uniform LightsBlock
     vec4 u_PointColor_Intensity[16]; // rgb, w = intensity
 };
 
+// --- Directional shadows (S6.4): 3x3 PCF against the sun's shadow map ---
+uniform sampler2D u_ShadowMap;
+uniform mat4      u_LightViewProj;
+uniform float     u_HasShadow;
+uniform float     u_ShadowBias;
+
+float ShadowFactor(vec3 worldPos, vec3 N, vec3 L)
+{
+    vec4 lp   = u_LightViewProj * vec4(worldPos, 1.0);
+    vec3 proj = lp.xyz / lp.w * 0.5 + 0.5;
+    if (proj.z > 1.0 || proj.x < 0.0 || proj.x > 1.0 || proj.y < 0.0 || proj.y > 1.0)
+        return 0.0;
+
+    float bias  = max(u_ShadowBias * (1.0 - dot(N, L)), u_ShadowBias * 0.2);
+    vec2  texel = 1.0 / vec2(textureSize(u_ShadowMap, 0));
+    float shadow = 0.0;
+    for (int x = -1; x <= 1; ++x)
+        for (int y = -1; y <= 1; ++y)
+        {
+            float d = texture(u_ShadowMap, proj.xy + vec2(x, y) * texel).r;
+            shadow += (proj.z - bias > d) ? 1.0 : 0.0;
+        }
+    return shadow / 9.0;
+}
+
 void main()
 {
     vec3  N      = normalize(v_WorldNormal);
-    vec3  V      = normalize(u_CameraPos - v_WorldPos);
+    vec3  V      = normalize(u_Camera.CameraPosition.xyz - v_WorldPos);
     vec3  albedo = u_Color.rgb;
 
     // Ambient floor.
     vec3 result = albedo * u_SunDirection_Ambient.w;
 
     // Directional sun: the block stores the direction the light TRAVELS, so the
-    // vector toward the light is its negation.
+    // vector toward the light is its negation. Shadowed by the S6.4 shadow map.
     vec3  Lsun    = normalize(-u_SunDirection_Ambient.xyz);
     float ndlSun  = max(dot(N, Lsun), 0.0);
     vec3  sunCol  = u_SunColor_Intensity.rgb * u_SunColor_Intensity.w;
-    result += albedo * sunCol * ndlSun;
+    float sunShadow = (u_HasShadow > 0.5) ? ShadowFactor(v_WorldPos, N, Lsun) : 0.0;
+    float sunVis  = 1.0 - sunShadow;
+    result += albedo * sunCol * ndlSun * sunVis;
 
     vec3  Hsun    = normalize(Lsun + V);
     float specSun = (ndlSun > 0.0) ? pow(max(dot(N, Hsun), 0.0), u_Shininess) : 0.0;
-    result += sunCol * specSun;
+    result += sunCol * specSun * sunVis;
 
     // Point lights.
     int count = int(u_PointCount.x);

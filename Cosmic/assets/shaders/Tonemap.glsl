@@ -43,6 +43,29 @@ in vec2 v_TexCoord;
 uniform sampler2D u_Scene;      // HDR scene color (slot 0)
 uniform float     u_Exposure;   // linear exposure multiplier (1.0 = neutral)
 
+// SSAO (S6.5) — modulates the scene before tonemapping. Applied to the whole
+// image (a documented simplification of "ambient only", which needs a depth
+// prepass / forward AO fetch). u_UseAO gates it.
+uniform sampler2D u_AO;
+uniform float     u_UseAO;
+
+// Bloom (S6.6) — additive HDR glow combined in before the ACES curve.
+uniform sampler2D u_Bloom;
+uniform float     u_UseBloom;
+uniform float     u_BloomIntensity;
+
+// Height fog + aerial perspective (S7.2) — depth-based world-space inscatter,
+// reconstructed from the scene depth. Applied before AO/bloom so distant geometry
+// fades into the sky. The far plane (sky) is skipped so the horizon reads clean.
+uniform sampler2D u_Depth;
+uniform float     u_UseFog;
+uniform vec3      u_FogColor;
+uniform float     u_FogDensity;
+uniform float     u_FogHeightFalloff;
+uniform float     u_FogBaseHeight;
+uniform mat4      u_InvViewProj;
+uniform vec3      u_CameraPos;
+
 // Krzysztof Narkowicz's ACES filmic curve fit.
 vec3 ACESFilmic(vec3 x)
 {
@@ -56,8 +79,30 @@ vec3 ACESFilmic(vec3 x)
 
 void main()
 {
-    vec3 hdr    = texture(u_Scene, v_TexCoord).rgb;
+    vec3 hdr = texture(u_Scene, v_TexCoord).rgb;
+
+    if (u_UseFog > 0.5)                                // height fog (S7.2)
+    {
+        float d = texture(u_Depth, v_TexCoord).r;
+        if (d < 0.9999)                               // skip the sky / far plane
+        {
+            vec4 clip  = vec4(v_TexCoord * 2.0 - 1.0, d * 2.0 - 1.0, 1.0);
+            vec4 world = u_InvViewProj * clip;
+            world /= world.w;
+
+            float dist   = length(world.xyz - u_CameraPos);
+            float height = exp(-u_FogHeightFalloff * max(world.y - u_FogBaseHeight, 0.0));
+            float f      = 1.0 - exp(-dist * u_FogDensity * height);
+            hdr = mix(hdr, u_FogColor, clamp(f, 0.0, 1.0));
+        }
+    }
+
+    if (u_UseAO > 0.5)
+        hdr *= texture(u_AO, v_TexCoord).r;           // contact darkening (S6.5)
+    if (u_UseBloom > 0.5)
+        hdr += texture(u_Bloom, v_TexCoord).rgb * u_BloomIntensity;   // additive glow (S6.6)
+
     vec3 mapped = ACESFilmic(hdr * u_Exposure);
-    mapped      = pow(mapped, vec3(1.0 / 2.2));   // linear -> sRGB
+    mapped      = pow(mapped, vec3(1.0 / 2.2));        // linear -> sRGB
     color       = vec4(mapped, 1.0);
 }

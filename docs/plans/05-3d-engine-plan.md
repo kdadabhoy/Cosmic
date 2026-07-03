@@ -93,8 +93,8 @@ Carried forward from the original plan and extended — everything already shipp
 | S3 | Sim-viewport conveniences (FPV inset, ribbon, horizon, labels) | S3.1 + S3.2 ✅ 2026-07-02 (ViperSim P5); S3.3–S3.5 unpulled |
 | S4 | 3D engine foundations (cameras, materials, scene, glTF, lights, MRT, compute) | **S4.0–S4.7 ✅ code-complete 2026-07-02** (full `build_all` + `CosmicTests` 66/66 green; user visual pass of the Engine3DDemo toggles pending) |
 | S5 | CAD navigation, ViewCube, gizmos, 3D picking | **S5.1–S5.5 ✅ code-complete 2026-07-02** (roadmap Phase 8; build + `CosmicTests` 73/73 green; user visual pass pending) |
-| S6 | Visual realism core: HDR, PBR+IBL, shadows, SSAO, bloom, AA | **S6.1 ✅ code-complete 2026-07-02** (HDR float target + `PostProcessStack` + ACES tonemap; roadmap Phase 9, foundation-first); S6.2–S6.7 = explicit work orders in §5, planned |
-| S7 | Sky, atmosphere, fog, time-of-day | planned |
+| S6 | Visual realism core: HDR, PBR+IBL, shadows, SSAO, bloom, AA | **S6.1–S6.7 ✅ code-complete 2026-07-03** (full build + `CosmicTests` 73/73 green; app boots into Engine3DDemo, OpenGL 4.5, all 13 new shaders compile + all post/IBL/shadow FBOs complete with zero error logs; **user visual pass pending**) |
+| S7 | Sky, atmosphere, fog, time-of-day | **S7.1–S7.3 ✅ code-complete 2026-07-03** (analytic sky = the S6.3 procedural environment source; height fog in the tonemap; time-of-day sun scrub drives sky+light+shadows). S7.4 volumetric clouds parked |
 | S8 | Terrain system | planned |
 | S9 | Water system | planned |
 | S10 | GPU particles + volumetrics | planned |
@@ -722,6 +722,41 @@ S4.0 — `glDispatchCompute` isn't in the old loader.
 
 ## 5. S6 — Visual realism core *(roadmap Phase 9 — explicit work orders)*
 
+> **✅ S6.1–S6.7 + S7.1–S7.3 CODE-COMPLETE 2026-07-03 (roadmap Phase 9, branch `phase-7-3d-foundations`).**
+> Full VS-cmake Debug build green (engine + all project DLLs + CosmicApp) and `CosmicTests` **73/73**
+> (103,934 assertions). Smoke-run of `CosmicApp --project Engine3DDemo`: OpenGL 4.5 (RTX 5070 Ti),
+> all 13 new shaders compiled with **zero** "Shader compilation failure"/"Framebuffer is incomplete"
+> logs, the IBL bake + BRDF LUT ran, Duck.glb imported through the new PBR-material path — the whole
+> run produced no warnings or errors. **New engine surface:**
+> - **S6.2 textures** — `MeshVertex` grows a `a_Tangent` (location 3), every factory auto-generates a
+>   TBN (`Mesh::ComputeTangents`); `PBR.glsl` gains albedo/normal/metal-rough/AO/emissive maps (each
+>   `u_HasXMap`-gated) + tangent-space normal mapping; `Texture2D::Create(bytes,size)` decode-from-memory;
+>   glTF import reads the full metallic-roughness material (factors + embedded/external textures) into
+>   `ModelPart` and builds a per-part `Ref<Material>` PBR material; `Renderer3D::DrawModel` uses it.
+> - **S6.3 IBL + skybox** — `graphics/TextureCube` (+ OpenGL impl, render-to-face bake FBO),
+>   `renderer/EnvironmentMap` (procedural analytic sky → env cube → irradiance + prefilter + BRDF LUT,
+>   all sun-driven), `Skybox.glsl` background pass, `PBR.glsl` IBL ambient term; `RenderCommand::BindTextureCubeSlot`;
+>   `Renderer3D::SetIBL/ClearIBL` binds the IBL set on every material draw (reserved units 8–10).
+> - **S6.4 shadows** — depth-only `FrameBuffer`, `renderer/ShadowMap` (fitted ortho light matrix +
+>   depth pass + front-cull), `ShadowDepth.glsl`, 3×3 PCF in `PBR`/`MeshLit`/`Mesh3D` (the flat Lambert
+>   path receives too); `Renderer3D::SetShadow/ClearShadow` (reserved unit 11).
+> - **S6.5/6.6/6.7 + S7.2** — `PostProcessStack` grew SSAO (reconstruct-from-depth, half-res + blur),
+>   bloom (soft-knee threshold + separable Gaussian ping-pong), FXAA (LDR final pass via an intermediate),
+>   and height fog folded into the tonemap; `RenderCommand::GetBoundFramebuffer/BindFramebufferHandle`.
+> - **S7.1/S7.3** — the S6.3 procedural sky IS the analytic sky (sun-driven env source); a time-of-day
+>   clock in the demo scrubs the sun and rebakes the sky + drives the directional light, IBL and shadows.
+>
+> Every item has an Engine3DDemo toggle (in the "Rendering & Lighting" panel). **Documented deviations:**
+> (a) S6.4 ships the single 2k map + PCF tier; 3-split CSM + texel-snapping is the next step (the
+> `ShadowMap` API is CSM-ready). (b) SSAO is composited over the whole image in the tonemap rather than
+> modulating only the ambient term (the "ambient-only" ideal needs a depth prepass / forward AO fetch).
+> (c) Bloom uses a threshold + separable-Gaussian chain instead of the CoD progressive mip up/downsample
+> (quality follow-up). (d) The skybox is drawn background-first with depth test off (a depth-func LEQUAL
+> verb would let it draw after opaque — a small efficiency follow-up). (e) S6.2's full "matches a
+> reference viewer" line still wants a committed **DamagedHelmet**-class glb — Duck exercises the textured
+> PBR import path but has only a base-color map (no normal/MR), so normal mapping wants a normal-mapped
+> asset for the visual pass. **Remaining: user visual pass** of every toggle + a committed screenshot.
+
 Ordered; this stage is the prerequisite for anything called "realistic." **S6.1 is the load-bearing
 foundation — do it (and build) before layering S6.2+; every later item is a fullscreen pass or a
 shader that assumes the HDR float target and the post stack exist.**
@@ -801,6 +836,38 @@ shader that assumes the HDR float target and the post stack exist.**
 
 2. **S6.2 PBR metallic-roughness + camera UBO.** The first "real" material model, and the stage that
    pays off the camera-UBO migration deferred from S6.1.
+   > **✅ code-complete 2026-07-03 (core + texture follow-up).** The texture/normal-map/glTF-import
+   > follow-up flagged below shipped the same day — see the §5 banner. Original core-session notes:
+   > - **Camera UBO (binding 1) — DONE, full migration.** `renderer/CameraUniforms.h`
+   >   (`GpuCameraBlock`, std140, **80 bytes**: `mat4 ViewProjection; vec4 CameraPosition;` —
+   >   time/viewport deferred to their first consumer rather than shipping dead fields, so the size is
+   >   80 not the 96 sketched below). `Renderer3D` owns a UBO at `Bindings::CameraUbo`, packs+uploads
+   >   in `BeginScene`, and **all six loose setters are gone** (grep-verified: no
+   >   `SetMat4("u_ViewProjection")` / `SetFloat3("u_CameraPos")` in `Renderer3D` or the demo compute
+   >   path). All five engine 3D shaders (`Line3D`/`Mesh3D`/`MeshLit`/`DemoChecker3D`/`ParticlePoints`)
+   >   read an **instance-named** block `layout(std140, binding=1) uniform CameraBlock { mat4
+   >   ViewProjection; vec4 CameraPosition; } u_Camera;` accessed as `u_Camera.ViewProjection`. The
+   >   instance name is load-bearing: it keeps the literal `u_ViewProjection` out of the source so
+   >   `OpenGLShader::PreProcess` does NOT inject a colliding loose `uniform mat4 u_ViewProjection;`
+   >   (the same injector that broke the S6.1 tonemap). 2D shaders untouched (Renderer2D ortho, loose
+   >   uniform). Verified: scene renders identically (grid/trail/pad/aircraft/navcube/compute all read
+   >   the UBO).
+   > - **PBR core — DONE (factors only).** `assets/shaders/PBR.glsl`: Cook-Torrance GGX + Smith +
+   >   Schlick, energy-split by metallic, consuming the binding-0 lights block (sun + points) + the
+   >   binding-1 camera block, ambient = the LightsBlock ambient knob × AO (flat stand-in until S6.3
+   >   IBL — no magic constant). Material params `u_Albedo`/`u_Metallic`/`u_Roughness`/`u_AO`/
+   >   `u_Emissive` via the plain `Material`+shader convention (no `PBRMaterial` class). Renders linear
+   >   radiance into the S6.1 HDR target so metallic highlights roll off through the tonemap.
+   >   Engine3DDemo "PBR sphere grid" toggle: a 5×5 grid (roughness across, metallic up) lit by the
+   >   sun + two point lights, albedo colour picker. Verified visually (PrintWindow capture): smooth
+   >   GGX shading + Fresnel edge + specular, no artifacts; metallic gradient is intentionally subtle
+   >   under direct-only lighting (metals need IBL — S6.3).
+   > - **DEFERRED to the S6.2 texture follow-up (own session):** the **tangent** vertex attribute +
+   >   albedo/normal/metal-rough/AO/emissive **textures** (`u_*Map` + `u_HasXMap` gates) + glTF factor/
+   >   texture import into `ModelPart` + a committed **DamagedHelmet**-class sample. The full-acceptance
+   >   "matches a reference viewer" line needs those (DamagedHelmet is defined by its normal/AO maps);
+   >   the factor-only core is a clean, verified milestone toward it. The spec below still describes the
+   >   full item — items marked DONE above are done.
    - **Files:** extend the `Mesh` vertex layout with **tangents** (additive, contract rule 3 — a new
      `MeshVertexTangent` layout / attribute `a_Tangent` at `location = 3`; `CreateFromOBJ`/glTF
      import compute or pass them, primitives generate them); NEW `assets/shaders/PBR.glsl`;

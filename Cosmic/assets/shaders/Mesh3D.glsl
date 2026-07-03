@@ -18,7 +18,14 @@ layout(location = 0) in vec3 a_Position;
 layout(location = 1) in vec3 a_Normal;
 layout(location = 2) in vec2 a_TexCoord;
 
-uniform mat4 u_ViewProjection;
+// Per-frame camera (S6.2, binding: Bindings::CameraUbo). Instance-named so the
+// literal "u_ViewProjection" never appears — see CameraUniforms.h for why.
+layout(std140, binding = 1) uniform CameraBlock
+{
+    mat4 ViewProjection;
+    vec4 CameraPosition;   // xyz = camera world pos
+} u_Camera;
+
 uniform mat4 u_Model;
 
 out vec3 v_WorldNormal;
@@ -36,7 +43,7 @@ void main()
     v_WorldNormal = mat3(transpose(inverse(u_Model))) * a_Normal;
     v_TexCoord = a_TexCoord;
 
-    gl_Position = u_ViewProjection * world;
+    gl_Position = u_Camera.ViewProjection * world;
 }
 
 #type fragment
@@ -51,17 +58,45 @@ in vec2 v_TexCoord;
 
 uniform vec4  u_Color;      // per-draw flat color (Renderer3D::DrawMesh)
 uniform vec3  u_LightDir;   // direction the light TRAVELS (normalized)
-uniform vec3  u_CameraPos;  // reserved for specular in the S4/S5 tiers
 uniform float u_Ambient;    // ambient floor in [0, 1]
 uniform int   u_EntityID;   // S4.6: -1 when not picking
+
+// --- Directional shadows (S6.4): the flat Lambert path receives them too, so a
+//     shadow lands on the plain-colored ground pad / meshes, not just PBR/MeshLit. ---
+uniform sampler2D u_ShadowMap;
+uniform mat4      u_LightViewProj;
+uniform float     u_HasShadow;
+uniform float     u_ShadowBias;
+
+float ShadowFactor(vec3 worldPos, vec3 N, vec3 L)
+{
+    vec4 lp   = u_LightViewProj * vec4(worldPos, 1.0);
+    vec3 proj = lp.xyz / lp.w * 0.5 + 0.5;
+    if (proj.z > 1.0 || proj.x < 0.0 || proj.x > 1.0 || proj.y < 0.0 || proj.y > 1.0)
+        return 0.0;
+
+    float bias  = max(u_ShadowBias * (1.0 - dot(N, L)), u_ShadowBias * 0.2);
+    vec2  texel = 1.0 / vec2(textureSize(u_ShadowMap, 0));
+    float shadow = 0.0;
+    for (int x = -1; x <= 1; ++x)
+        for (int y = -1; y <= 1; ++y)
+        {
+            float d = texture(u_ShadowMap, proj.xy + vec2(x, y) * texel).r;
+            shadow += (proj.z - bias > d) ? 1.0 : 0.0;
+        }
+    return shadow / 9.0;
+}
 
 void main()
 {
     // Lambert: N·L against the direction TO the light, with an ambient floor
     // so unlit faces stay readable (engineering clarity over realism).
     vec3  n   = normalize(v_WorldNormal);
-    float ndl = max(dot(n, -u_LightDir), 0.0);
-    float lit = u_Ambient + (1.0 - u_Ambient) * ndl;
+    vec3  L   = -u_LightDir;
+    float ndl = max(dot(n, L), 0.0);
+
+    float shadow = (u_HasShadow > 0.5) ? ShadowFactor(v_WorldPos, n, L) : 0.0;
+    float lit    = u_Ambient + (1.0 - u_Ambient) * ndl * (1.0 - shadow);
 
     color      = vec4(u_Color.rgb * lit, u_Color.a);
     o_EntityID = u_EntityID;

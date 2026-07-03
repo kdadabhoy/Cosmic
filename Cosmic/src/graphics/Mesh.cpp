@@ -18,6 +18,66 @@
 namespace Cosmic
 {
 	/////////////////////////////////////////////////////////////////////////////////
+	// Tangent generation (S6.2)
+	/////////////////////////////////////////////////////////////////////////////////
+
+	namespace
+	{
+		// Compute a per-vertex tangent basis from positions, UVs and normals using
+		// the standard accumulate-per-triangle then Gram-Schmidt approach (the
+		// spirit of MikkTSpace without the full spec). Meshes with no meaningful
+		// UVs (all-zero, degenerate parameterisation) fall back to an arbitrary
+		// perpendicular so the TBN stays well-formed. Writes MeshVertex::Tangent
+		// (xyz = tangent aligned to +U, w = bitangent handedness sign).
+		void ComputeTangents(std::vector<MeshVertex>& v, const std::vector<uint32_t>& idx)
+		{
+			std::vector<glm::vec3> tan(v.size(), glm::vec3(0.0f));
+			std::vector<glm::vec3> bit(v.size(), glm::vec3(0.0f));
+
+			for (size_t i = 0; i + 2 < idx.size(); i += 3)
+			{
+				const uint32_t i0 = idx[i], i1 = idx[i + 1], i2 = idx[i + 2];
+
+				const glm::vec3 e1 = v[i1].Position - v[i0].Position;
+				const glm::vec3 e2 = v[i2].Position - v[i0].Position;
+				const glm::vec2 d1 = v[i1].TexCoord - v[i0].TexCoord;
+				const glm::vec2 d2 = v[i2].TexCoord - v[i0].TexCoord;
+
+				const float denom = d1.x * d2.y - d2.x * d1.y;
+				if (std::fabs(denom) < 1e-9f)
+					continue;   // degenerate UVs on this triangle — handled by the fallback below
+				const float r = 1.0f / denom;
+
+				const glm::vec3 t = (e1 * d2.y - e2 * d1.y) * r;
+				const glm::vec3 b = (e2 * d1.x - e1 * d2.x) * r;
+
+				tan[i0] += t; tan[i1] += t; tan[i2] += t;
+				bit[i0] += b; bit[i1] += b; bit[i2] += b;
+			}
+
+			for (size_t i = 0; i < v.size(); ++i)
+			{
+				const glm::vec3 n = v[i].Normal;
+				glm::vec3 t = tan[i] - n * glm::dot(n, tan[i]);   // Gram-Schmidt orthogonalise
+
+				if (glm::dot(t, t) < 1e-12f)
+				{
+					// No usable tangent (flat UVs / isolated vertex): pick any axis
+					// not parallel to the normal and build a perpendicular.
+					const glm::vec3 axis = std::fabs(n.x) < 0.9f ? glm::vec3(1, 0, 0) : glm::vec3(0, 1, 0);
+					t = glm::normalize(glm::cross(axis, n));
+					v[i].Tangent = glm::vec4(t, 1.0f);
+					continue;
+				}
+
+				t = glm::normalize(t);
+				const float w = (glm::dot(glm::cross(n, t), bit[i]) < 0.0f) ? -1.0f : 1.0f;
+				v[i].Tangent = glm::vec4(t, w);
+			}
+		}
+	}
+
+	/////////////////////////////////////////////////////////////////////////////////
 	// GPU Upload
 	/////////////////////////////////////////////////////////////////////////////////
 
@@ -38,18 +98,24 @@ namespace Cosmic
 			}
 		}
 
+		// Generate the tangent basis (S6.2) into a working copy — every producer
+		// (primitives / OBJ / glTF) gets a consistent TBN for normal mapping.
+		std::vector<MeshVertex> verts = vertices;
+		ComputeTangents(verts, indices);
+
 		m_VertexArray = VertexArray::Create();
 
 		// Static geometry: upload once through the data-constructor path.
 		auto vertexBuffer = VertexBuffer::Create(
-			const_cast<float*>(reinterpret_cast<const float*>(vertices.data())),
-			static_cast<uint32_t>(vertices.size() * sizeof(MeshVertex)));
+			reinterpret_cast<float*>(verts.data()),
+			static_cast<uint32_t>(verts.size() * sizeof(MeshVertex)));
 
 		// THE canonical mesh layout — every mesh shader declares exactly this.
 		vertexBuffer->SetLayout({
 			{ ShaderDataType::Float3, "a_Position" },
 			{ ShaderDataType::Float3, "a_Normal"   },
-			{ ShaderDataType::Float2, "a_TexCoord" }
+			{ ShaderDataType::Float2, "a_TexCoord" },
+			{ ShaderDataType::Float4, "a_Tangent"  }
 			});
 		m_VertexArray->AddVertexBuffer(vertexBuffer);
 

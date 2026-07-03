@@ -47,6 +47,27 @@ namespace Cosmic
 
 	/////////////////////////////////////////////////////////////////////////////////
 
+	/////////////////////////////////////////////////////////////////////////////////
+
+	/**
+	 * Texture2D::Create (From Memory)
+	 * * Decodes an encoded image (PNG/JPG bytes) already resident in memory —
+	 * the path for glTF/.glb embedded textures (S6.2), which live in a buffer
+	 * view rather than on disk.
+	 */
+	Ref<Texture2D> Texture2D::Create(const uint8_t* data, uint32_t size)
+	{
+		switch (RendererAPI::GetAPI())
+		{
+		case RendererAPI::API::None:    return nullptr;
+		case RendererAPI::API::OpenGL:  return std::static_pointer_cast<Texture2D>(CreateRef<OpenGLTexture>(data, size));
+		}
+
+		return nullptr;
+	}
+
+	/////////////////////////////////////////////////////////////////////////////////
+
 	/**
 	 * Texture::Create
 	 * * A generic convenience wrapper. Since most textures in a 2D engine are

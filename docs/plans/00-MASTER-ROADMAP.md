@@ -174,9 +174,24 @@ phase**), frame/snap views, ViewCube, ImGuizmo transforms, ID-buffer picking + s
 - **Done when:** Engine3DDemo manipulates entities with gizmos; MMB-orbit-about-cursor-point feels
   like SolidWorks at both DPIs.
 
-### Phase 9 — Visual realism core *(doc 05: S6–S7)* — 🚧 foundation started 2026-07-02
-HDR pipeline → PBR + IBL → CSM shadows → SSAO → bloom → AA, then sky/atmosphere/fog/time-of-day.
-> **Status:** scoped **foundation-first**. **S6.1 (HDR pipeline) ✅ code-complete 2026-07-02** on
+### Phase 9 — Visual realism core *(doc 05: S6–S7)* — ✅ code complete 2026-07-03
+HDR pipeline → PBR + IBL → shadows → SSAO → bloom → AA, then sky/atmosphere/fog/time-of-day.
+> **Status (2026-07-03):** **S6.1–S6.7 + S7.1–S7.3 all code-complete** on branch
+> `phase-7-3d-foundations`. Full VS-cmake Debug build green (engine + every project DLL + CosmicApp) and
+> `CosmicTests` **73/73** (103,934 assertions); a smoke-run of `CosmicApp --project Engine3DDemo` booted
+> on OpenGL 4.5 with **zero** shader-compile / framebuffer-incomplete / error logs (all 13 new shaders +
+> the IBL bake + all post/shadow FBOs healthy; Duck.glb now imports through the PBR-material path). New
+> engine surface (details in doc 05 §5 banner): S6.2 tangents + PBR texture maps + glTF material import +
+> `Texture2D` decode-from-memory; S6.3 `TextureCube` + `EnvironmentMap` (procedural-sky IBL bake +
+> skybox) + `Renderer3D::SetIBL`; S6.4 `ShadowMap` (2k directional map + PCF) + `Renderer3D::SetShadow`;
+> S6.5/6.6/6.7 SSAO + bloom + FXAA in `PostProcessStack`; S7.2 height fog (tonemap) + S7.1/S7.3 the
+> analytic sky is the env source, driven by a time-of-day sun scrub. Every item has an Engine3DDemo
+> toggle. **Documented tier deviations:** single shadow map (CSM next), whole-image SSAO composite
+> (ambient-only needs a depth prepass), Gaussian bloom (CoD-progressive is a quality follow-up), skybox
+> drawn background-first (depth-func LEQUAL verb pending). **Remaining — user visual pass** of the toggles
+> + a committed screenshot, and a DamagedHelmet-class glb to close S6.2's "matches a reference viewer".
+> --- history ---
+> Scoped **foundation-first**. **S6.1 (HDR pipeline) ✅ code-complete 2026-07-02** on
 > branch `phase-7-3d-foundations`: `renderer/PostProcessStack` (HDR `{RGBA16F, DEPTH24STENCIL8}`
 > scene target + fullscreen-triangle passes), `assets/shaders/Tonemap.glsl` (ACES + exposure +
 > gamma), new `RenderCommand::BindTextureSlot` verb (sample FBO attachments, §0 rule 1), wired into
@@ -184,9 +199,20 @@ HDR pipeline → PBR + IBL → CSM shadows → SSAO → bloom → AA, then sky/a
 > an HDR toggle + exposure slider. Build + `CosmicTests` 73/73 green. Camera-UBO migration
 > **deferred to S6.2** (rides its shader rewrite — rationale in doc 05 §5). doc 05 §5 was expanded
 > into explicit per-item work orders (S6.2–S6.7) so each is one session; §6 (S7) stays at summary
-> altitude until S6 lands. **Remaining:** user visual pass of the S6.1 toggle, then S6.2 PBR onward.
-- **Do (order):** ~~S6.1 HDR + post stack~~ ✅ → S6.2 PBR + camera UBO → S6.3 IBL + skybox → S6.4
-  CSM shadows → S6.5 SSAO → S6.6 bloom → S6.7 AA → S7.1–S7.3 sky/fog/time-of-day.
+> altitude until S6 lands.
+> **S6.2 🚧 core code-complete 2026-07-03** (same branch): the **camera UBO** (binding 1) fully
+> migrated — `renderer/CameraUniforms.h` + `Renderer3D::BeginScene` upload; all 5 engine 3D shaders
+> read an instance-named `CameraBlock` (`u_Camera.ViewProjection`) and every loose
+> `u_ViewProjection`/`u_CameraPos` setter is gone. **PBR core** — `assets/shaders/PBR.glsl`
+> (Cook-Torrance GGX/Smith/Schlick, metallic-roughness factors, lights UBO + camera UBO, HDR-linear
+> output) + an Engine3DDemo "PBR sphere grid" toggle (roughness × metallic), verified visually.
+> **Deferred to an S6.2 follow-up:** tangents + PBR textures (normal/albedo/MR/AO/emissive maps) +
+> glTF factor/texture import + a DamagedHelmet sample (the full "matches a reference viewer" line).
+> Build + `CosmicTests` 73/73 green. **Remaining:** user visual pass (S6.1 HDR toggle + S6.2 PBR grid).
+- **Do (order):** ~~S6.1 HDR + post stack~~ ✅ → ~~S6.2 PBR + camera UBO~~ ✅ → ~~S6.2 texture
+  follow-up~~ ✅ → ~~S6.3 IBL + skybox~~ ✅ → ~~S6.4 shadows~~ ✅ → ~~S6.5 SSAO~~ ✅ → ~~S6.6 bloom~~ ✅
+  → ~~S6.7 AA~~ ✅ → ~~S7.1–S7.3 sky/fog/time-of-day~~ ✅ *(all code-complete 2026-07-03; CSM,
+  ambient-only SSAO, progressive bloom are documented tier follow-ups)*.
 - **AI tier:** S6.1/S6.6/S6.7 medium; S6.2/S6.3/S6.4 touch raw GL state + math (stronger model or
   your review). Every item has a doc 05 §5 work order + an Engine3DDemo acceptance toggle.
 - **Done when:** glTF reference scene matches a reference viewer; day-night scrub looks plausible;

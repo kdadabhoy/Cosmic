@@ -118,5 +118,13 @@ namespace Cosmic
 		///////////////////////////////
 		static Ref<Texture2D>		Create(uint32_t width, uint32_t height);
 		static Ref<Texture2D>		Create(const std::string& path);
+
+		/**
+		 * @brief Decode an ENCODED image (PNG/JPG bytes) already in memory.
+		 * Pre:  `data` points to `size` bytes of a compressed image file.
+		 * Post: Returns an uploaded, mipmapped Texture2D, or nullptr on decode
+		 *       failure. Used for glTF/.glb embedded images (S6.2) — no temp file.
+		 */
+		static Ref<Texture2D>		Create(const uint8_t* data, uint32_t size);
 	};
 }

@@ -15,10 +15,15 @@
  *   location 0 : vec3 a_Position
  *   location 1 : vec3 a_Normal
  *   location 2 : vec2 a_TexCoord
+ *   location 3 : vec4 a_Tangent   (xyz = tangent, w = handedness sign; S6.2)
  *
  * UVs are part of the layout from day one — even meshes that don't use
  * textures yet carry them, so the layout never has to be retrofitted when
- * materials/texturing arrive (S4).
+ * materials/texturing arrive (S4). Tangents (S6.2) are the additive layout
+ * extension the forward-compat contract (rule 3) anticipated: every factory
+ * generates them automatically (see ComputeTangents in Mesh.cpp) so normal
+ * mapping in PBR.glsl has a consistent TBN basis, and meshes that don't sample
+ * a normal map simply ignore attribute 3.
  *
  * Meshes are factory-created Ref<> resources exactly like Texture2D/Shader:
  *
@@ -42,11 +47,16 @@
 namespace Cosmic
 {
 	// The canonical mesh vertex — matches the attribute layout above.
+	// Tangent (S6.2): xyz is the surface tangent aligned to +U; w is the
+	// bitangent handedness (+1 or -1) so the shader reconstructs
+	// bitangent = w * cross(normal, tangent). Filled by Mesh::Create if left at
+	// its default, so every producer (primitives / OBJ / glTF) gets a basis.
 	struct MeshVertex
 	{
 		glm::vec3 Position;
 		glm::vec3 Normal;
 		glm::vec2 TexCoord;
+		glm::vec4 Tangent{ 1.0f, 0.0f, 0.0f, 1.0f };
 	};
 
 	class COSMIC_API Mesh

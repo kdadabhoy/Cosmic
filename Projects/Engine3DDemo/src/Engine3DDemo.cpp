@@ -74,6 +74,31 @@ namespace Workspace
 			CS_WARN("Engine3DDemo: MeshLit shader failed to load — lit aircraft disabled.");
 		}
 
+		// ---- PBR (S6.2): Cook-Torrance material + a shared sphere for the grid ----
+		m_PbrSphere = Cosmic::Mesh::CreateUVSphere(0.6f, 32, 48);
+		if (auto pbrShader = Cosmic::Shader::Create("assets/shaders/PBR.glsl"))
+		{
+			m_PbrMaterial = Cosmic::Material::Create(pbrShader, "PBR Grid");
+			m_PbrMaterial->Set("u_Albedo",    glm::vec4{ m_PbrAlbedo, 1.0f });
+			m_PbrMaterial->Set("u_AO",        1.0f);
+			m_PbrMaterial->Set("u_Emissive",  glm::vec3{ 0.0f });
+			// u_Metallic / u_Roughness are Set per-sphere in DrawPbrSpheres.
+
+			// Emissive material for the bloom demo (S6.6): a dark surface with a
+			// bright (HDR > 1) orange emission so it glows through the tonemap.
+			m_EmitterMat = Cosmic::Material::Create(
+				Cosmic::Shader::Create("assets/shaders/PBR.glsl"), "Bloom Emitter");
+			m_EmitterMat->Set("u_Albedo",    glm::vec4{ 0.05f, 0.02f, 0.0f, 1.0f });
+			m_EmitterMat->Set("u_Metallic",  0.0f);
+			m_EmitterMat->Set("u_Roughness", 0.6f);
+			m_EmitterMat->Set("u_AO",        1.0f);
+			m_EmitterMat->Set("u_Emissive",  glm::vec3{ 6.0f, 2.4f, 0.6f });
+		}
+		else
+		{
+			CS_WARN("Engine3DDemo: PBR shader failed to load — PBR spheres disabled.");
+		}
+
 		// ---- Compute + SSBO (S4.7): 1M-point compute particle system ----
 		m_ComputeShader = Cosmic::Shader::Create("assets/shaders/ComputeParticles.glsl");
 		m_PointShader   = Cosmic::Shader::Create("assets/shaders/ParticlePoints.glsl");
@@ -104,6 +129,14 @@ namespace Workspace
 			const uint32_t h = vfb->GetHeight() > 0 ? vfb->GetHeight() : 720;
 			m_PostFx.Init(w, h);
 		}
+
+		// ---- IBL + skybox (S6.3): bake the procedural-sky environment once ----
+		m_Environment.Init();
+		m_Environment.SetSunDirection(-m_LightDir);   // "direction TO the sun"
+		m_Environment.Bake();
+
+		// ---- Directional shadows (S6.4): 2k sun shadow map ----
+		m_Shadow.Init(2048);
 
 		// ---- CAD tools (Phase 8 / S5): nav cube + scene picker ----
 		m_NavCube = Cosmic::NavigationCube::Create(140);
@@ -165,6 +198,9 @@ namespace Workspace
 		m_Scene.reset();
 		m_DuckModel.reset();
 		m_LitMaterial.reset();
+		m_PbrSphere.reset();
+		m_PbrMaterial.reset();
+		m_EmitterMat.reset();
 		m_PickFbo.reset();
 		m_ComputeShader.reset();
 		m_PointShader.reset();
@@ -172,6 +208,10 @@ namespace Workspace
 		m_NavCube.reset();
 		m_Picker.reset();
 		m_PostFx.Shutdown();   // release the HDR target + tonemap shader (context still live)
+		m_Environment.Shutdown();     // release IBL cubes + BRDF LUT (S6.3)
+		Cosmic::Renderer3D::ClearIBL();
+		m_Shadow.Shutdown();          // release the shadow map (S6.4)
+		Cosmic::Renderer3D::ClearShadow();
 
 		// Leave the engine tick rate the way we found the machine.
 		Cosmic::Application::Get().SetFixedTimestepHz(60.0f);
@@ -298,6 +338,80 @@ namespace Workspace
 			Cosmic::Renderer3D::DrawWireBox(
 				root * glm::scale(glm::mat4(1.0f), { 3.4f, 1.0f, 3.2f }),
 				{ 1.0f, 0.9f, 0.2f, 1.0f });
+	}
+
+	// =========================================================================
+	// Shadow casters (S6.4) — the aircraft parts + ECS meshes rendered from the
+	// sun's POV into the shadow map. Transforms mirror DrawAircraft's; the ground
+	// pad is a receiver (front-culled during the depth pass anyway), so it is not
+	// cast here.
+	// =========================================================================
+
+	void Engine3DDemo::DrawShadowCasters()
+	{
+		namespace Math = Cosmic::Math;
+
+		const glm::vec3 posR = Math::NedToRender(m_PosNed);
+		const glm::quat attR = Math::NedQuatToRender(m_AttNed);
+		const glm::mat4 root = glm::translate(glm::mat4(1.0f), posR) * glm::mat4_cast(attR);
+		const glm::mat4 alongZ = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), { 1, 0, 0 });
+
+		m_Shadow.DrawCaster(m_Fuselage, root * alongZ);
+		m_Shadow.DrawCaster(m_Nose,
+			root * glm::translate(glm::mat4(1.0f), { 0.0f, 0.0f, -1.5f }) *
+			glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), { 1, 0, 0 }));
+		m_Shadow.DrawCaster(m_Wing,      root * glm::translate(glm::mat4(1.0f), { 0.0f, 0.0f, -0.10f }));
+		m_Shadow.DrawCaster(m_Tailplane, root * glm::translate(glm::mat4(1.0f), { 0.0f, 0.0f,  1.05f }));
+		m_Shadow.DrawCaster(m_Fin,       root * glm::translate(glm::mat4(1.0f), { 0.0f, 0.28f, 1.05f }));
+
+		// ECS meshes (respect CastShadows).
+		if (m_Scene)
+		{
+			auto view = m_Scene->View<Cosmic::TransformComponent, Cosmic::MeshRendererComponent>();
+			for (auto entity : view)
+			{
+				Cosmic::Entity e{ entity, m_Scene.get() };
+				const auto& mr = e.GetComponent<Cosmic::MeshRendererComponent>();
+				if (mr.MeshAsset && mr.CastShadows)
+					m_Shadow.DrawCaster(mr.MeshAsset, e.GetComponent<Cosmic::TransformComponent>().GetTransform());
+			}
+		}
+	}
+
+	// =========================================================================
+	// PBR sphere grid (S6.2) — the classic Cook-Torrance validation scene:
+	// roughness 0->1 across (+x), metallic 0->1 up (+y). One shared sphere +
+	// material; u_Metallic/u_Roughness are re-Set per sphere (Material caches the
+	// values, BindFull re-uploads them each DrawMesh). Lit by the same sun + two
+	// point lights as the aircraft; best viewed with HDR on (S6.1) so the smooth
+	// metallic highlights roll off instead of clipping.
+	// =========================================================================
+
+	void Engine3DDemo::DrawPbrSpheres()
+	{
+		constexpr int   N       = 5;
+		constexpr float spacing = 1.5f;
+		const glm::vec3 origin{ -0.5f * spacing * (N - 1), 5.0f, 0.0f };
+
+		m_PbrMaterial->Set("u_Albedo", glm::vec4{ m_PbrAlbedo, 1.0f });
+
+		for (int row = 0; row < N; ++row)          // metallic 0 (bottom) -> 1 (top)
+		{
+			const float metallic = static_cast<float>(row) / static_cast<float>(N - 1);
+			for (int col = 0; col < N; ++col)      // roughness 0 (left) -> 1 (right)
+			{
+				const float roughness = glm::clamp(
+					static_cast<float>(col) / static_cast<float>(N - 1), 0.05f, 1.0f);
+
+				m_PbrMaterial->Set("u_Metallic",  metallic);
+				m_PbrMaterial->Set("u_Roughness", roughness);
+
+				const glm::vec3 pos = origin +
+					glm::vec3{ col * spacing, row * spacing, 0.0f };
+				Cosmic::Renderer3D::DrawMesh(m_PbrSphere,
+					glm::translate(glm::mat4(1.0f), pos), m_PbrMaterial);
+			}
+		}
 	}
 
 	// =========================================================================
@@ -654,6 +768,60 @@ namespace Workspace
 		if (m_ShowPicking)
 			RenderPickPass();
 
+		// ---- Time-of-day (S7.3): drive the sun from a clock; the sky rebakes and
+		//      the directional light + shadows follow. Sunrise 6h, zenith 12h, set 18h.
+		if (m_TimeOfDay)
+		{
+			constexpr float kPi = 3.14159265358979f;
+			const float f   = (m_TimeHours - 6.0f) / 12.0f;   // daytime parameter
+			const float alt = std::sin(f * kPi) * (kPi * 0.5f);
+			const float azi = f * kPi;                         // east -> west
+			const glm::vec3 toSun = glm::normalize(glm::vec3(
+				std::cos(alt) * std::cos(azi), std::sin(alt), std::cos(alt) * std::sin(azi)));
+			m_LightDir = -toSun;
+			Cosmic::Renderer3D::SetLightDirection(m_LightDir);
+		}
+
+		// Fog color tracks the sun elevation (warm near the horizon, cool at noon,
+		// dark below) — used by the S7.2 height fog and as a plausible aerial tint.
+		{
+			const glm::vec3 toSun = glm::length(m_LightDir) > 1e-4f
+				? -glm::normalize(m_LightDir) : glm::vec3(0.0f, 1.0f, 0.0f);
+			const float e = glm::clamp(toSun.y, -1.0f, 1.0f);
+			const glm::vec3 day{ 0.72f, 0.82f, 0.95f };
+			const glm::vec3 sunset{ 0.85f, 0.60f, 0.45f };
+			const glm::vec3 night{ 0.05f, 0.07f, 0.13f };
+			m_SkyFogColor = e >= 0.0f ? glm::mix(sunset, day, glm::clamp(e, 0.0f, 1.0f))
+			                          : glm::mix(sunset, night, glm::clamp(-e * 3.0f, 0.0f, 1.0f));
+		}
+
+		// ---- IBL + skybox (S6.3): keep the environment synced to the sun and feed
+		//      the IBL set to Renderer3D so PBR materials sample it. Bake() re-runs
+		//      only when the sun moved and leaves the default FBO bound, so the
+		//      render-target selection below re-binds cleanly.
+		m_Environment.SetSunDirection(-m_LightDir);
+		m_Environment.Bake();
+		if (m_UseIBL)
+			m_Environment.PushToRenderer();
+		else
+			Cosmic::Renderer3D::ClearIBL();
+
+		// ---- Shadow depth pass (S6.4): render casters from the sun into the shadow
+		//      map, then hand it to Renderer3D so the lit pass PCF-shadows the sun.
+		//      Leaves the default FBO bound; render-target selection re-binds below.
+		if (m_Shadows)
+		{
+			m_Shadow.SetLight(m_LightDir, { 0.0f, 2.0f, 0.0f }, 24.0f);
+			m_Shadow.BeginDepthPass();
+			DrawShadowCasters();
+			m_Shadow.EndDepthPass();
+			m_Shadow.PushToRenderer(m_ShadowBias);
+		}
+		else
+		{
+			Cosmic::Renderer3D::ClearShadow();
+		}
+
 		// Pick the world-pass render target. With HDR (S6.1) on, the ENTIRE 3D scene
 		// renders into the float scene target and is tonemapped into the viewport FBO
 		// afterwards (before the 2D overlay, contract rule 7). Otherwise render
@@ -679,6 +847,12 @@ namespace Workspace
 		// =====================================================================
 		Cosmic::Renderer3D::BeginScene(m_Orbit.GetCamera());
 
+		// Procedural-sky background (S6.3) — fills the HDR target behind the scene.
+		// Drawn right after BeginScene (which uploads the camera UBO the skybox reads)
+		// and before opaque geometry, which then draws over it.
+		if (m_ShowSkybox)
+			m_Environment.DrawSkybox(m_Orbit.GetCamera().GetViewProjectionMatrix());
+
 		if (m_ShowGrid)
 		{
 			Cosmic::Renderer3D::DrawGrid(24.0f, 1.0f,
@@ -692,7 +866,11 @@ namespace Workspace
 		// on a big flat face). Toggle m_MaterialPad to draw it through the S4.2
 		// custom-material path (DemoChecker3D) instead of the flat Lambert color.
 		{
-			const glm::mat4 padXform = glm::translate(glm::mat4(1.0f), { 0.0f, 0.01f, 0.0f });
+			// Enlarge the ground when shadows are on so the aircraft's ~18 m orbit
+			// casts onto a receiver (the flat Lambert pad now receives shadows, S6.4).
+			const float padScale = m_Shadows ? 10.0f : 1.0f;
+			const glm::mat4 padXform = glm::translate(glm::mat4(1.0f), { 0.0f, 0.01f, 0.0f })
+				* glm::scale(glm::mat4(1.0f), { padScale, 1.0f, padScale });
 			if (m_MaterialPad && m_PadMaterial)
 				Cosmic::Renderer3D::DrawMesh(m_Pad, padXform, m_PadMaterial);
 			else
@@ -707,12 +885,10 @@ namespace Workspace
 			Cosmic::Renderer3D::DrawModel(m_DuckModel,
 				glm::translate(glm::mat4(1.0f), { 5.0f, 0.0f, 0.0f }));
 
-		// Lighting v1 (S4.5): push the sun + two point lights into the binding-0 UBO
-		// before drawing anything through the MeshLit material.
-		if (m_LitAircraft && m_LitMaterial)
+		// Lighting v1 (S4.5) / PBR (S6.2): push the sun + two point lights into the
+		// binding-0 UBO before drawing anything lit (MeshLit aircraft OR PBR spheres).
+		if ((m_LitAircraft && m_LitMaterial) || (m_PbrSpheres && m_PbrMaterial))
 		{
-			m_LitMaterial->Set("u_Shininess", m_Shininess);
-
 			Cosmic::Renderer3D::SceneLightsDesc lights;
 			lights.SunDirection = m_LightDir;
 			lights.SunColor     = m_SunColor;
@@ -725,7 +901,21 @@ namespace Workspace
 			Cosmic::Renderer3D::SetLights(lights);
 		}
 
+		if (m_LitAircraft && m_LitMaterial)
+			m_LitMaterial->Set("u_Shininess", m_Shininess);
+
 		DrawAircraft();
+
+		// PBR metallic-roughness grid (S6.2) — best seen with HDR on so specular
+		// highlights roll off rather than clip.
+		if (m_PbrSpheres && m_PbrMaterial)
+			DrawPbrSpheres();
+
+		// Emissive sphere for the bloom demo (S6.6): an HDR-bright emitter that
+		// blooms through the post chain when bloom is enabled.
+		if (m_Bloom && m_EmitterMat && m_PbrSphere)
+			Cosmic::Renderer3D::DrawMesh(m_PbrSphere,
+				glm::translate(glm::mat4(1.0f), { 3.5f, 1.3f, 3.5f }), m_EmitterMat);
 
 		Cosmic::Renderer3D::EndScene();
 
@@ -757,8 +947,9 @@ namespace Workspace
 				Cosmic::RenderCommand::GpuBarrier::ShaderStorage);
 
 			// 3) Draw the points (no vertex attributes; positions come from the SSBO).
+			//    u_ViewProjection is read from the binding-1 camera UBO (S6.2), still
+			//    holding this frame's main-pass camera — no per-draw setter needed.
 			m_PointShader->Bind();
-			m_PointShader->SetMat4("u_ViewProjection", m_Orbit.GetCamera().GetViewProjectionMatrix());
 			m_PointShader->SetFloat4("u_Color", { 0.55f, 0.85f, 1.0f, 1.0f });
 			Cosmic::RenderCommand::DrawArrays(
 				Cosmic::RenderCommand::PrimitiveTopology::Points, 0, k_ParticleCount);
@@ -772,6 +963,22 @@ namespace Workspace
 		// =====================================================================
 		if (useHdr)
 		{
+			// SSAO + bloom read the HDR scene target just rendered; run them before
+			// re-binding the viewport FBO for the tonemap/FXAA resolve.
+			m_PostFx.SetSSAOEnabled(m_Ssao);
+			m_PostFx.SetSSAOParams(m_SsaoRadius, m_SsaoBias);
+			m_PostFx.SetBloomEnabled(m_Bloom);
+			m_PostFx.SetBloomParams(m_BloomThreshold, m_BloomKnee, m_BloomIntensity);
+			m_PostFx.SetFXAAEnabled(m_Fxaa);
+
+			// Height fog (S7.2): depth-based inscatter toward the sky-tinted color.
+			m_PostFx.SetFogEnabled(m_Fog);
+			m_PostFx.SetFogParams(m_SkyFogColor, m_FogDensity, 0.12f, 0.0f);
+			m_PostFx.SetCamera(m_Orbit.GetCamera().GetViewProjectionMatrix(),
+			                   m_Orbit.GetCamera().GetPosition());
+
+			m_PostFx.RenderEffects(m_Orbit.GetCamera().GetProjectionMatrix());
+
 			auto vfb = app.GetFrameBuffer();
 			vfb->Bind();
 			Cosmic::RenderCommand::SetViewport(0, 0, vfb->GetWidth(), vfb->GetHeight());
@@ -1072,6 +1279,84 @@ namespace Workspace
 		ImGui::EndDisabled();
 		ImGui::TextDisabled("Crank exposure past ~2x: highlights roll off, not clip to white.");
 
+		ImGui::SeparatorText("Environment / IBL (S6.3)");
+		ImGui::Checkbox("Skybox", &m_ShowSkybox);
+		ImGui::SameLine();
+		ImGui::Checkbox("IBL", &m_UseIBL);
+		ImGui::SameLine();
+		ImGui::TextDisabled("(?)");
+		if (ImGui::IsItemHovered())
+			ImGui::SetTooltip("A procedural analytic sky is baked into a cubemap and convolved into\n"
+			                  "diffuse-irradiance + prefiltered-specular maps + a BRDF LUT. PBR\n"
+			                  "materials sample them for image-based ambient; the same sky draws as\n"
+			                  "the background. Drag 'Light dir' below to move the sun and rebake.");
+
+		ImGui::SeparatorText("Sun shadows (S6.4)");
+		ImGui::Checkbox("Shadows", &m_Shadows);
+		ImGui::SameLine();
+		ImGui::TextDisabled("(?)");
+		if (ImGui::IsItemHovered())
+			ImGui::SetTooltip("A 2k depth map is rendered from the sun each frame; the lit shaders\n"
+			                  "3x3-PCF it. The ground enlarges so the aircraft's orbit casts onto it.\n"
+			                  "Front-face culling in the depth pass + a slope bias fight acne.");
+		ImGui::BeginDisabled(!m_Shadows);
+		ImGui::SliderFloat("Shadow bias", &m_ShadowBias, 0.0002f, 0.01f, "%.4f", ImGuiSliderFlags_Logarithmic);
+		ImGui::EndDisabled();
+
+		ImGui::SeparatorText("Post effects (S6.5-6.7)");
+		ImGui::BeginDisabled(!m_Hdr);
+		ImGui::TextDisabled(m_Hdr ? "SSAO + bloom read the HDR target." : "Enable HDR to use post effects.");
+
+		ImGui::Checkbox("SSAO", &m_Ssao);
+		ImGui::SameLine(); ImGui::TextDisabled("(?)");
+		if (ImGui::IsItemHovered())
+			ImGui::SetTooltip("Screen-space ambient occlusion, reconstructed from the scene depth\n"
+			                  "(half-res, 32-sample hemisphere + 4x4 blur). Darkens contact crevices.\n"
+			                  "Applied over the whole image in the tonemap (documented simplification).");
+		if (m_Ssao)
+		{
+			ImGui::SliderFloat("AO radius", &m_SsaoRadius, 0.1f, 2.0f, "%.2f");
+			ImGui::SliderFloat("AO bias",   &m_SsaoBias, 0.0f, 0.1f, "%.3f");
+		}
+
+		ImGui::Checkbox("Bloom", &m_Bloom);
+		ImGui::SameLine(); ImGui::TextDisabled("(?)");
+		if (ImGui::IsItemHovered())
+			ImGui::SetTooltip("Soft-knee threshold + separable Gaussian on the HDR buffer, added\n"
+			                  "back before the ACES curve. Turn it on to see the emissive sphere glow.");
+		if (m_Bloom)
+		{
+			ImGui::SliderFloat("Threshold", &m_BloomThreshold, 0.2f, 4.0f, "%.2f");
+			ImGui::SliderFloat("Intensity", &m_BloomIntensity, 0.0f, 2.0f, "%.2f");
+		}
+
+		ImGui::Checkbox("FXAA", &m_Fxaa);
+		ImGui::SameLine(); ImGui::TextDisabled("(?)");
+		if (ImGui::IsItemHovered())
+			ImGui::SetTooltip("Fast approximate anti-aliasing — the final LDR edge blend. Toggle\n"
+			                  "on/off and watch the grid / mesh edges for reduced crawl.");
+		ImGui::EndDisabled();
+
+		ImGui::SeparatorText("Sky / fog / time-of-day (S7)");
+		ImGui::BeginDisabled(!m_Hdr);
+		ImGui::Checkbox("Height fog", &m_Fog);
+		ImGui::SameLine(); ImGui::TextDisabled("(?)");
+		if (ImGui::IsItemHovered())
+			ImGui::SetTooltip("Depth-based exponential height fog + aerial perspective (S7.2). The\n"
+			                  "fog color tracks the sun elevation. Distant geometry fades into the sky.");
+		if (m_Fog)
+			ImGui::SliderFloat("Fog density", &m_FogDensity, 0.0f, 0.08f, "%.3f");
+
+		ImGui::Checkbox("Time of day", &m_TimeOfDay);
+		ImGui::SameLine(); ImGui::TextDisabled("(?)");
+		if (ImGui::IsItemHovered())
+			ImGui::SetTooltip("Drive the sun from a clock (S7.3): the analytic sky rebakes, and the\n"
+			                  "directional light, IBL and shadows all follow. Scrub for morning ->\n"
+			                  "noon -> sunset. (Overrides the manual Light dir below while enabled.)");
+		if (m_TimeOfDay)
+			ImGui::SliderFloat("Hour", &m_TimeHours, 4.0f, 20.0f, "%.1f h");
+		ImGui::EndDisabled();
+
 		ImGui::SeparatorText("Overlays");
 		ImGui::Checkbox("Grid", &m_ShowGrid);           ImGui::SameLine();
 		ImGui::Checkbox("Body axes", &m_ShowAxes);      ImGui::SameLine();
@@ -1109,17 +1394,31 @@ namespace Workspace
 		if (ImGui::SliderFloat("Ambient", &m_Ambient, 0.0f, 1.0f, "%.2f"))
 			Cosmic::Renderer3D::SetAmbient(m_Ambient);
 
+		ImGui::SeparatorText("PBR (S6.2)");
+		ImGui::BeginDisabled(!m_PbrMaterial);
+		ImGui::Checkbox("PBR sphere grid", &m_PbrSpheres);
+		ImGui::EndDisabled();
+		ImGui::SameLine();
+		ImGui::TextDisabled("(?)");
+		if (ImGui::IsItemHovered())
+			ImGui::SetTooltip("Cook-Torrance metallic-roughness grid: roughness 0->1 across,\n"
+			                  "metallic 0->1 up. Lit by the sun + the two point lights below.\n"
+			                  "Turn HDR on (above) so the metallic highlights roll off, not clip.");
+		if (m_PbrSpheres)
+			ImGui::ColorEdit3("PBR albedo", &m_PbrAlbedo.x);
+
 		ImGui::SeparatorText("Lighting v1 (S4.5)");
 		ImGui::BeginDisabled(!m_LitMaterial);
 		ImGui::Checkbox("Lit aircraft", &m_LitAircraft);
 		ImGui::EndDisabled();
 		ImGui::TextDisabled("MeshLit material + lights UBO; 'Light dir' above is the sun.");
 
-		if (m_LitAircraft)
+		if (m_LitAircraft || m_PbrSpheres)
 		{
 			ImGui::ColorEdit3("Sun color", &m_SunColor.x);
 			ImGui::SliderFloat("Sun intensity", &m_SunIntensity, 0.0f, 4.0f, "%.2f");
-			ImGui::SliderFloat("Shininess", &m_Shininess, 1.0f, 128.0f, "%.0f");
+			if (m_LitAircraft)
+				ImGui::SliderFloat("Shininess", &m_Shininess, 1.0f, 128.0f, "%.0f");
 			ImGui::SliderFloat3("Red pos",  &m_P0Pos.x, -10.0f, 10.0f, "%.1f");
 			ImGui::SliderFloat3("Blue pos", &m_P1Pos.x, -10.0f, 10.0f, "%.1f");
 			ImGui::SliderFloat("Point radius", &m_PointRadius, 1.0f, 30.0f, "%.0f");

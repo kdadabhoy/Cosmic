@@ -140,6 +140,13 @@ namespace Workspace
 		bool           ComputeEntityWorldAABB(Cosmic::Entity e, glm::vec3& mn, glm::vec3& mx) const;
 		bool           ComputeSceneWorldAABB(glm::vec3& mn, glm::vec3& mx) const; // S5.2 frame scene
 
+		// ---- PBR (S6.2) — Cook-Torrance metallic-roughness sphere grid ----
+		Cosmic::Ref<Cosmic::Mesh>     m_PbrSphere;     // shared unit sphere
+		Cosmic::Ref<Cosmic::Material> m_PbrMaterial;   // PBR.glsl material (params re-Set per sphere)
+		bool      m_PbrSpheres = false;                // draw the metallic/roughness grid
+		glm::vec3 m_PbrAlbedo{ 0.95f, 0.78f, 0.35f };  // base color (gold-ish, reads well metallic)
+		void      DrawPbrSpheres();                    // NxN grid: roughness across, metallic down
+
 		// ---- Lighting v1 (S4.5) ----
 		Cosmic::Ref<Cosmic::Material> m_LitMaterial;   // MeshLit.glsl material
 		bool      m_LitAircraft = false;               // draw the aircraft lit (UBO lights)
@@ -172,6 +179,35 @@ namespace Workspace
 		Cosmic::PostProcessStack m_PostFx;      // HDR float scene target + ACES tonemap
 		bool  m_Hdr      = true;                // route the whole 3D scene through HDR
 		float m_Exposure = 1.0f;                // tonemap exposure multiplier (1.0 = neutral)
+
+		// ---- IBL + skybox (S6.3) ----
+		Cosmic::EnvironmentMap m_Environment;   // procedural-sky env + irradiance/prefilter/BRDF
+		bool m_ShowSkybox = true;               // draw the procedural sky as the background
+		bool m_UseIBL     = true;               // PBR materials sample the IBL set
+
+		// ---- Directional shadows (S6.4) ----
+		Cosmic::ShadowMap m_Shadow;             // 2k depth map from the sun
+		bool  m_Shadows    = true;              // depth pass + PCF receive
+		float m_ShadowBias = 0.0015f;
+		void  DrawShadowCasters();              // renders casters into the shadow map
+
+		// ---- Post effects: SSAO / bloom / FXAA (S6.5 / S6.6 / S6.7) ----
+		bool  m_Ssao           = false;
+		float m_SsaoRadius     = 0.6f;
+		float m_SsaoBias       = 0.025f;
+		bool  m_Bloom          = false;
+		float m_BloomThreshold = 1.0f;
+		float m_BloomKnee      = 0.6f;
+		float m_BloomIntensity = 0.7f;
+		bool  m_Fxaa           = true;
+		Cosmic::Ref<Cosmic::Material> m_EmitterMat;   // emissive sphere (bloom demo)
+
+		// ---- Sky / height fog / time-of-day (S7.1 / S7.2 / S7.3) ----
+		bool  m_Fog        = false;
+		float m_FogDensity = 0.012f;
+		bool  m_TimeOfDay  = false;   // drive the sun from a clock (rebakes the sky)
+		float m_TimeHours  = 12.0f;   // 0..24
+		glm::vec3 m_SkyFogColor{ 0.72f, 0.82f, 0.95f };   // derived from the sun each frame
 
 		// ---- Render toggles ----
 		bool  m_ShowGrid    = true;

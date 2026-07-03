@@ -35,10 +35,13 @@
 #include "renderer/RenderPass.h"
 #include "renderer/BindingPoints.h"
 #include "renderer/PostProcessStack.h"   // S6.1 — HDR pipeline (float target + tonemap)
+#include "renderer/EnvironmentMap.h"     // S6.3 — image-based lighting + skybox
+#include "renderer/ShadowMap.h"          // S6.4 — directional sun shadows
 #include "graphics/Buffer.h"
 #include "graphics/Shader.h"
 #include "graphics/VertexArray.h"
 #include "graphics/Texture.h"
+#include "graphics/TextureCube.h"     // S6.3 — cubemap resource (IBL)
 #include "graphics/SubTexture2D.h"
 #include "graphics/FrameBuffer.h"
 #include "graphics/UniformBuffer.h"

@@ -1,6 +1,10 @@
-// Model.cpp — S4.4b glTF 2.0 import via cgltf. See Model.h.
+// Model.cpp — glTF 2.0 import via cgltf (S4.4b geometry; S6.2 PBR materials + textures). See Model.h.
 
 #include "graphics/Model.h"
+#include "graphics/Shader.h"
+#include "graphics/Material.h"
+#include "graphics/Texture.h"
+#include "assets/AssetLibrary.h"
 #include "core/Log.h"
 
 #include "cgltf.h"
@@ -9,6 +13,8 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_inverse.hpp>
 
+#include <filesystem>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -16,6 +22,41 @@ namespace Cosmic
 {
 	namespace
 	{
+		// Decode one glTF image into a Texture2D. Handles glb-embedded images
+		// (buffer view, after cgltf_load_buffers) and external file URIs resolved
+		// relative to the model's directory. base64 image data-URIs are rare in
+		// our samples and are logged + skipped (S6.2 deferral). Cached per import
+		// so a texture shared by several parts uploads once.
+		Ref<Texture2D> LoadGltfImage(const cgltf_image* img, const std::string& baseDir,
+		                             std::unordered_map<const cgltf_image*, Ref<Texture2D>>& cache)
+		{
+			if (!img)
+				return nullptr;
+
+			auto it = cache.find(img);
+			if (it != cache.end())
+				return it->second;
+
+			Ref<Texture2D> tex;
+			if (img->buffer_view && img->buffer_view->buffer && img->buffer_view->buffer->data)
+			{
+				const uint8_t* base = static_cast<const uint8_t*>(img->buffer_view->buffer->data);
+				const uint8_t* ptr  = base + img->buffer_view->offset;
+				tex = Texture2D::Create(ptr, static_cast<uint32_t>(img->buffer_view->size));
+			}
+			else if (img->uri)
+			{
+				std::string uri = img->uri;
+				if (uri.rfind("data:", 0) == 0)
+					CS_CORE_WARN("Model: base64 image data-URI not supported (S6.2 deferral) — skipping.");
+				else
+					tex = Texture2D::Create((std::filesystem::path(baseDir) / uri).string());
+			}
+
+			cache[img] = tex;   // cache even nullptr so a bad image isn't retried per-part
+			return tex;
+		}
+
 		// Find a primitive attribute of a given type (texcoord uses set index 0).
 		const cgltf_accessor* FindAttribute(const cgltf_primitive& prim,
 		                                     cgltf_attribute_type type, cgltf_int setIndex = 0)
@@ -153,6 +194,14 @@ namespace Cosmic
 
 		auto model = std::make_shared<Model>();
 
+		// Shared across parts: the model's directory (for external textures), an
+		// image cache (a texture used by several parts uploads once), and one PBR
+		// shader instance (S6.2). A null shader just leaves PbrMaterial null and the
+		// Lambert base-color path takes over.
+		const std::string baseDir = std::filesystem::path(resolvedPath).parent_path().string();
+		std::unordered_map<const cgltf_image*, Ref<Texture2D>> imageCache;
+		Ref<Shader> pbrShader = AssetLibrary::GetShader("assets/shaders/PBR.glsl");
+
 		// Import the DEFAULT SCENE's node graph (roots + all descendants) — nodes
 		// outside it (other scenes, orphans) are authoring data, not content. Files
 		// with no scene fall back to every node. cgltf_node_transform_world folds
@@ -206,12 +255,56 @@ namespace Cosmic
 				part.Geometry = mesh;
 				part.Name     = node.mesh->name ? node.mesh->name : "";
 
-				if (prim.material && prim.material->has_pbr_metallic_roughness)
+				// --- glTF metallic-roughness material → factors + textures (S6.2) ---
+				const cgltf_material* mat = prim.material;
+				if (mat && mat->has_pbr_metallic_roughness)
 				{
-					const cgltf_float* bc = prim.material->pbr_metallic_roughness.base_color_factor;
-					part.BaseColor = glm::vec4(bc[0], bc[1], bc[2], bc[3]);
+					const cgltf_pbr_metallic_roughness& mr = mat->pbr_metallic_roughness;
+					part.BaseColor = glm::vec4(mr.base_color_factor[0], mr.base_color_factor[1],
+					                           mr.base_color_factor[2], mr.base_color_factor[3]);
+					part.Metallic  = mr.metallic_factor;
+					part.Roughness = mr.roughness_factor;
+
+					part.AlbedoMap     = LoadGltfImage(mr.base_color_texture.texture ?
+					                                   mr.base_color_texture.texture->image : nullptr, baseDir, imageCache);
+					part.MetalRoughMap = LoadGltfImage(mr.metallic_roughness_texture.texture ?
+					                                   mr.metallic_roughness_texture.texture->image : nullptr, baseDir, imageCache);
 				}
-				// else default white.
+				if (mat)
+				{
+					part.Emissive = glm::vec3(mat->emissive_factor[0], mat->emissive_factor[1], mat->emissive_factor[2]);
+					part.NormalMap   = LoadGltfImage(mat->normal_texture.texture ?
+					                                 mat->normal_texture.texture->image : nullptr, baseDir, imageCache);
+					part.AOMap       = LoadGltfImage(mat->occlusion_texture.texture ?
+					                                 mat->occlusion_texture.texture->image : nullptr, baseDir, imageCache);
+					part.EmissiveMap = LoadGltfImage(mat->emissive_texture.texture ?
+					                                 mat->emissive_texture.texture->image : nullptr, baseDir, imageCache);
+				}
+
+				// Build the ready-to-draw PBR material (S6.2). Params mirror PBR.glsl;
+				// each map is gated by a u_HasXMap float so absent maps cost nothing.
+				if (pbrShader)
+				{
+					auto pm = Material::Create(pbrShader, part.Name.empty() ? "glTF Part" : part.Name);
+					pm->Set("u_Albedo",    part.BaseColor);
+					pm->Set("u_Metallic",  part.Metallic);
+					pm->Set("u_Roughness", part.Roughness);
+					pm->Set("u_AO",        1.0f);
+					pm->Set("u_Emissive",  part.Emissive);
+					pm->Set("u_HasIBL",    0.0f);
+
+					auto gate = [&](const char* mapName, const char* hasName, const Ref<Texture2D>& t)
+					{
+						if (t) { pm->Set(mapName, t); pm->Set(hasName, 1.0f); }
+						else   { pm->Set(hasName, 0.0f); }
+					};
+					gate("u_AlbedoMap",     "u_HasAlbedoMap",     part.AlbedoMap);
+					gate("u_NormalMap",     "u_HasNormalMap",     part.NormalMap);
+					gate("u_MetalRoughMap", "u_HasMetalRoughMap", part.MetalRoughMap);
+					gate("u_AOMap",         "u_HasAOMap",         part.AOMap);
+					gate("u_EmissiveMap",   "u_HasEmissiveMap",   part.EmissiveMap);
+					part.PbrMaterial = pm;
+				}
 
 				model->m_Parts.push_back(std::move(part));
 			}

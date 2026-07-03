@@ -12,7 +12,14 @@ layout(location = 0) in vec3 a_Position;
 layout(location = 1) in vec3 a_Normal;
 layout(location = 2) in vec2 a_TexCoord;
 
-uniform mat4 u_ViewProjection;
+// Per-frame camera (S6.2, binding: Bindings::CameraUbo). Instance-named so the
+// literal "u_ViewProjection" never appears — see CameraUniforms.h for why.
+layout(std140, binding = 1) uniform CameraBlock
+{
+    mat4 ViewProjection;
+    vec4 CameraPosition;   // xyz = camera world pos
+} u_Camera;
+
 uniform mat4 u_Model;
 uniform mat3 u_NormalMatrix;   // engine convention (S4.2): transpose(inverse(mat3(model)))
 
@@ -25,7 +32,7 @@ void main()
     v_WorldNormal = u_NormalMatrix * a_Normal;
     v_TexCoord    = a_TexCoord;
 
-    gl_Position = u_ViewProjection * world;
+    gl_Position = u_Camera.ViewProjection * world;
 }
 
 #type fragment

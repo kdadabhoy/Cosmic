@@ -10,12 +10,19 @@ layout(std430, binding = 0) buffer Particles
     vec4 pos[];
 };
 
-uniform mat4 u_ViewProjection;
+// Per-frame camera (S6.2, binding: Bindings::CameraUbo). Uploaded by the last
+// Renderer3D::BeginScene of the frame (the main pass), still current here since
+// the compute-particle draw follows it — no per-draw setter needed.
+layout(std140, binding = 1) uniform CameraBlock
+{
+    mat4 ViewProjection;
+    vec4 CameraPosition;
+} u_Camera;
 
 void main()
 {
     vec3 p = pos[gl_VertexID].xyz;
-    gl_Position  = u_ViewProjection * vec4(p, 1.0);
+    gl_Position  = u_Camera.ViewProjection * vec4(p, 1.0);
     gl_PointSize = 2.0;
 }
 

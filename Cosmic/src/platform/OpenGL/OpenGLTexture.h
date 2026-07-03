@@ -60,6 +60,7 @@ namespace Cosmic
 
 		OpenGLTexture(uint32_t width, uint32_t height);
 		OpenGLTexture(const std::string& path);
+		OpenGLTexture(const uint8_t* encoded, uint32_t size);   // decode from memory (S6.2 glTF)
 		virtual ~OpenGLTexture();
 
 

@@ -34,9 +34,11 @@ namespace Cosmic::Bindings
 	 *  MeshLit.glsl (and any future lit shader). Uploaded by Renderer3D::SetLights. */
 	constexpr uint32_t LightsUbo = 0;
 
-	/** RESERVED (S6.1): per-frame camera/engine-globals block (view-projection,
-	 *  camera position, time, viewport) — replaces the per-draw loose uniforms
-	 *  when the HDR pipeline rewrites the shader set. Do not use before then. */
+	/** Per-frame camera block (S6.2) — GpuCameraBlock ↔ `CameraBlock` (instance
+	 *  name `u_Camera`) in every 3D shader. View-projection + camera position;
+	 *  time/viewport get added with their first consumer (SSAO/fog). Uploaded by
+	 *  Renderer3D::BeginScene, replacing the old per-draw loose u_ViewProjection /
+	 *  u_CameraPos uniforms. */
 	constexpr uint32_t CameraUbo = 1;
 
 	// ------------------------------------------------------------------

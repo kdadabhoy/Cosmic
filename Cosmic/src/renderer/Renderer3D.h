@@ -209,5 +209,31 @@ namespace Cosmic
 		 * with a once-per-run warning.
 		 */
 		static void SetLights(const SceneLightsDesc& lights);
+
+		////////////////////////////////
+		// Image-based lighting (S6.3)
+		///////////////////////////////
+
+		/**
+		 * @brief Register the IBL cubemaps + BRDF LUT (from renderer/EnvironmentMap)
+		 * so every PBR material DrawMesh binds them (to reserved units) and enables
+		 * its IBL ambient term. Pass renderer IDs, not Refs, to keep Renderer3D
+		 * decoupled from EnvironmentMap. ClearIBL() disables it again.
+		 */
+		static void SetIBL(uint32_t irradianceCubeID, uint32_t prefilterCubeID,
+		                   uint32_t brdfLutID, float prefilterMaxLod);
+		static void ClearIBL();
+
+		////////////////////////////////
+		// Directional shadows (S6.4)
+		///////////////////////////////
+
+		/**
+		 * @brief Register the sun's shadow map + light matrix (from renderer/ShadowMap)
+		 * so every lit material DrawMesh samples it (PBR / MeshLit PCF-shadow the sun
+		 * term). Pass the depth-texture renderer ID, not a Ref. ClearShadow() disables it.
+		 */
+		static void SetShadow(uint32_t shadowMapID, const glm::mat4& lightViewProj, float bias);
+		static void ClearShadow();
 	};
 }

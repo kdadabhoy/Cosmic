@@ -186,6 +186,24 @@ namespace Cosmic
 		glBindTexture(GL_TEXTURE_2D, rendererID);
 	}
 
+	void OpenGLRendererAPI::BindTextureCubeSlot(uint32_t slot, uint32_t rendererID)
+	{
+		glActiveTexture(GL_TEXTURE0 + slot);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, rendererID);
+	}
+
+	uint32_t OpenGLRendererAPI::GetBoundFramebuffer() const
+	{
+		GLint id = 0;
+		glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &id);
+		return static_cast<uint32_t>(id);
+	}
+
+	void OpenGLRendererAPI::BindFramebufferHandle(uint32_t id)
+	{
+		glBindFramebuffer(GL_FRAMEBUFFER, id);
+	}
+
 	/////////////////////////////////////////////////////////////////////////////////
 
 
