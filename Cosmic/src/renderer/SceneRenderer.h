@@ -125,12 +125,18 @@ namespace Cosmic
 		                    float FogDensity = 0.02f, FogHeightFalloff = 0.12f, FogBaseHeight = 0.0f;
 		bool GodRays = false; float GodRaysIntensity = 0.6f, GodRaysDensity = 0.04f; // auto-off when !Shadows
 		bool HeatHaze = false; float HeatHazeStrength = 0.02f;
-		// Underwater medium (F6): tonemap fogs + tints the frame when the camera is
-		// below UnderwaterY. The app sets UnderwaterY to the primary water surface.
+		// Underwater medium (F6 + Phase 11 Layer 2): tonemap fogs + tints the frame
+		// when the camera is below UnderwaterY. The app sets UnderwaterY to the primary
+		// water surface. Depth grading (deep color + reference depth) darkens/blue-shifts
+		// as the camera descends; caustics dance on submerged geometry (0 = off).
 		bool Underwater = false; float UnderwaterY = 0.0f;
 		glm::vec3 UnderwaterColor{ 0.05f, 0.18f, 0.22f };
 		float     UnderwaterDensity = 0.08f;
 		glm::vec3 UnderwaterTint{ 0.55f, 0.75f, 0.90f };
+		glm::vec3 UnderwaterDeepColor{ 0.02f, 0.05f, 0.12f };
+		float     UnderwaterDepthReference  = 40.0f;
+		float     UnderwaterCausticStrength = 0.0f;
+		float     UnderwaterCausticScale    = 0.15f;
 		// Lens flare (F7): additive screen-space flare in the composite LDR stage.
 		// The tint is taken from the sun color; the sun screen position is derived
 		// from the frame camera. Auto-uses the detailed-sky when DetailedSky is set.

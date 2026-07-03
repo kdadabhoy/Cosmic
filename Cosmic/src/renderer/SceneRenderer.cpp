@@ -468,10 +468,14 @@ namespace Cosmic
 		m_Post.SetFXAAEnabled(s.FXAA);
 		m_Post.SetFogEnabled(s.Fog);
 		m_Post.SetFogParams(s.FogColor, s.FogDensity, s.FogHeightFalloff, s.FogBaseHeight);
-		// Underwater medium (F6): the tonemap fogs + tints when the camera is below
-		// the waterline (checked shader-side against UnderwaterY).
+		// Underwater medium (F6 + Layer 2): the tonemap fogs + tints when the camera is
+		// below the waterline (checked shader-side against UnderwaterY), depth-graded
+		// toward the deep color + denser with descent, with animated seafloor caustics.
 		m_Post.SetUnderwater(s.Underwater, s.UnderwaterY, s.UnderwaterColor,
 		                     s.UnderwaterDensity, s.UnderwaterTint);
+		m_Post.SetUnderwaterGrading(s.UnderwaterDeepColor, s.UnderwaterDepthReference);
+		m_Post.SetUnderwaterCaustics(s.UnderwaterCausticStrength, s.UnderwaterCausticScale);
+		m_Post.SetTime(desc.TimeSeconds);
 		// Camera for depth reconstruction (fog + god rays + lens flare) — needed by
 		// both RenderEffects and Composite; set once, it persists across both.
 		m_Post.SetCamera(m_ViewProj, desc.CameraPosition);

@@ -379,6 +379,11 @@ namespace Cosmic
 
 		m_Grid->GetVertexArray()->Bind();
 
+		// Render BOTH faces: the surface must be visible from BELOW (the dive look) as
+		// well as above — the fragment shader branches on the view side (Snell's window
+		// + TIR from below). None is the engine default, so nothing to restore.
+		RenderCommand::SetCullMode(RendererAPI::CullMode::None);
+
 		// Depth WRITES stay off: the shader samples the bound target's depth
 		// attachment (depth-fade/foam), and writing depth while sampling it is a
 		// rendering-feedback loop per the GL spec. Depth TEST stays on so terrain

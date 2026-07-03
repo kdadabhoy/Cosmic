@@ -160,6 +160,16 @@ namespace Cosmic
 			m_UnderwaterColor = color; m_UnderwaterDensity = density; m_UnderwaterTint = tint;
 		}
 		bool IsUnderwaterEnabled() const { return m_UnderwaterEnabled; }
+		/** Subnautica-style depth grading: the fog blends from the shallow color toward
+		 *  `deepColor` and gets denser as the camera descends past `depthReference` m. */
+		void SetUnderwaterGrading(const glm::vec3& deepColor, float depthReference)
+		{ m_UnderwaterDeepColor = deepColor; m_UnderwaterDepthRef = depthReference; }
+		/** Animated seafloor caustics on submerged geometry (screen-space, in the
+		 *  underwater block). `strength` 0 = off. Needs SetTime each frame. */
+		void SetUnderwaterCaustics(float strength, float scale)
+		{ m_UnderwaterCausticStrength = strength; m_UnderwaterCausticScale = scale; }
+		/** Seconds clock for animated post effects (underwater caustics). */
+		void SetTime(float seconds) { m_Time = seconds; }
 
 		// ---- Lens flare (S7 / doc 10 F7) ----
 		/**
@@ -255,12 +265,17 @@ namespace Cosmic
 		bool     m_InDistortion      = false;
 		uint32_t m_DistortPrevFbo    = 0;
 
-		// ---- Underwater medium (S9.4-lite / doc 10 F6) ----
+		// ---- Underwater medium (S9.4-lite / doc 10 F6 + Phase 11 Layer 2) ----
 		bool      m_UnderwaterEnabled = false;
 		float     m_WaterlineY        = 0.0f;
 		glm::vec3 m_UnderwaterColor{ 0.05f, 0.18f, 0.22f };
 		float     m_UnderwaterDensity = 0.08f;
 		glm::vec3 m_UnderwaterTint{ 0.55f, 0.75f, 0.90f };
+		glm::vec3 m_UnderwaterDeepColor{ 0.02f, 0.05f, 0.12f };   // deep grade target
+		float     m_UnderwaterDepthRef  = 40.0f;                  // camera depth to reach deep
+		float     m_UnderwaterCausticStrength = 0.0f;             // 0 = no seafloor caustics
+		float     m_UnderwaterCausticScale    = 0.15f;
+		float     m_Time = 0.0f;                                  // animated-effect clock
 
 		// ---- Lens flare (S7 / doc 10 F7) ----
 		Ref<Shader> m_LensFlareShader;               // LensFlare.glsl

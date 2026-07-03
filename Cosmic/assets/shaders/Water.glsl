@@ -216,6 +216,33 @@ void main()
 
     vec3 V = normalize(u_Camera.CameraPosition.xyz - v_WorldPos);
 
+    // --- From BELOW (diving): the surface reads as a rippling ceiling — a Snell's
+    // window of refracted sky toward the zenith, transitioning to total internal
+    // reflection of the murky depths at grazing angles. Above-water shading (Fresnel
+    // + planar reflection + refraction) continues past this early-out. ---
+    if (dot(v_GerstnerNormal, V) < 0.0)
+    {
+        vec3 Nf   = -N;                                              // normal into the water
+        vec3 D    = normalize(v_WorldPos - u_Camera.CameraPosition.xyz);   // view dir, upward
+        vec3 refr = refract(D, Nf, 1.33);                           // water->air; 0 on TIR
+        vec3 Lb   = normalize(-u_SunDirection_Ambient.xyz);
+        vec3 below;
+        if (dot(refr, refr) > 1e-4)                                 // inside Snell's window
+        {
+            below = (u_HasIBL > 0.5) ? textureLod(u_PrefilterMap, refr, 1.0).rgb
+                                     : u_ShallowColor * 2.0;
+            below += u_SunColor_Intensity.rgb * u_SunColor_Intensity.w
+                   * pow(max(dot(refr, Lb), 0.0), 200.0);           // refracted sun
+        }
+        else                                                        // beyond the critical angle
+        {
+            below = u_DeepColor * 1.4;                              // TIR of the depths
+        }
+        color      = vec4(below, 1.0);
+        o_EntityID = u_EntityID;
+        return;
+    }
+
     // --- Depth-based absorption + foam inputs (S9.1: soft shorelines) ---
     float sceneD     = texture(u_SceneDepth, screenUV).r;
     vec3  sceneWorld = WorldFromDepth(screenUV, sceneD);

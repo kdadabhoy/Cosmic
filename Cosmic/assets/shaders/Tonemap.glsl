@@ -82,9 +82,15 @@ uniform vec3      u_CameraPos;
 // work order drives it via PostProcessStack::SetUnderwater.
 uniform float u_UseUnderwater;
 uniform float u_WaterlineY;         // world Y of the liquid surface
-uniform vec3  u_UnderwaterColor;    // distance-fog color of the medium
-uniform float u_UnderwaterDensity;  // 1/m absorption
+uniform vec3  u_UnderwaterColor;    // distance-fog color near the surface (shallow)
+uniform float u_UnderwaterDensity;  // 1/m absorption at the surface
 uniform vec3  u_UnderwaterTint;     // spectral multiplier (e.g. 0.55, 0.75, 0.90)
+// Subnautica-style depth grading + seafloor caustics (Phase 11 Layer 2, doc water notes).
+uniform vec3  u_DeepWaterColor;     // fog color once the camera is UnderwaterDepthRef deep
+uniform float u_UnderwaterDepthRef; // camera depth (m) over which fog reaches the deep color
+uniform float u_CausticStrength;    // animated light webs on submerged geometry (0 = off)
+uniform float u_CausticScale;       // caustic world repeats per meter
+uniform float u_Time;               // seconds (caustic animation)
 
 // Krzysztof Narkowicz's ACES filmic curve fit.
 vec3 ACESFilmic(vec3 x)
@@ -97,6 +103,24 @@ vec3 ACESFilmic(vec3 x)
     return clamp((x * (a * x + b)) / (x * (c * x + d) + e), 0.0, 1.0);
 }
 
+// Cheap self-contained caustic (no texture): the coincidence of two scrolling
+// value-noise fields reads as animated cellular light webs on the seafloor.
+float uwHash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float uwNoise(vec2 p)
+{
+    vec2 i = floor(p), f = fract(p);
+    vec2 u = f * f * (3.0 - 2.0 * f);
+    return mix(mix(uwHash(i),              uwHash(i + vec2(1, 0)), u.x),
+               mix(uwHash(i + vec2(0, 1)), uwHash(i + vec2(1, 1)), u.x), u.y);
+}
+float uwCaustic(vec2 p, float t)
+{
+    float n1 = uwNoise(p + vec2(t * 0.13, t * 0.11));
+    float n2 = uwNoise(p * 1.37 + vec2(-t * 0.09, t * 0.15));
+    float c  = 1.0 - abs(n1 - n2) * 2.0;
+    return pow(clamp(c, 0.0, 1.0), 8.0);
+}
+
 void main()
 {
     // Heat-haze (S10.5): one displaced coordinate feeds every scene-space
@@ -107,19 +131,43 @@ void main()
 
     vec3 hdr = texture(u_Scene, uv).rgb;
 
-    if (u_UseUnderwater > 0.5 && u_CameraPos.y < u_WaterlineY)   // underwater medium (Phase 11)
+    if (u_UseUnderwater > 0.5)                         // underwater medium (Phase 11 Layer 2)
     {
-        float d    = texture(u_Depth, uv).r;
-        float dist = 200.0;                            // sky/far: fully fogged medium
-        if (d < 0.9999)
+        // Ramp across the surface so crossing the waterline isn't a hard pop.
+        float uw = smoothstep(u_WaterlineY + 0.6, u_WaterlineY - 0.6, u_CameraPos.y);
+        if (uw > 0.001)
         {
-            vec4 clip  = vec4(uv * 2.0 - 1.0, d * 2.0 - 1.0, 1.0);
-            vec4 world = u_InvViewProj * clip;
-            world /= world.w;
-            dist = length(world.xyz - u_CameraPos);
+            float d     = texture(u_Depth, uv).r;
+            bool  isGeo = d < 0.9999;
+            vec3  world = u_CameraPos;
+            float dist  = 200.0;                        // sky/far: fully fogged medium
+            if (isGeo)
+            {
+                vec4 clip = vec4(uv * 2.0 - 1.0, d * 2.0 - 1.0, 1.0);
+                vec4 wp   = u_InvViewProj * clip;
+                world     = wp.xyz / wp.w;
+                dist      = length(world - u_CameraPos);
+            }
+
+            // Seafloor caustics: animated webs on submerged geometry, faded with the
+            // lit point's depth and with view distance (they live in the shallows).
+            if (u_CausticStrength > 0.0 && isGeo && world.y < u_WaterlineY)
+            {
+                float caust      = uwCaustic(world.xz * u_CausticScale, u_Time);
+                float depthUnder = u_WaterlineY - world.y;
+                float cfade      = exp(-depthUnder * 0.03) * exp(-dist * u_UnderwaterDensity * 0.6);
+                hdr += hdr * caust * u_CausticStrength * cfade * uw;
+            }
+
+            // Depth-graded fog: denser + bluer the deeper the CAMERA descends.
+            float depthBelow = max(u_WaterlineY - u_CameraPos.y, 0.0);
+            float grade      = clamp(depthBelow / max(u_UnderwaterDepthRef, 1e-3), 0.0, 1.0);
+            float dens       = u_UnderwaterDensity * (1.0 + 2.0 * grade);
+            vec3  fogCol     = mix(u_UnderwaterColor, u_DeepWaterColor, grade);
+            float f          = 1.0 - exp(-dist * max(dens, 1e-4));
+            vec3  fogged     = mix(hdr * u_UnderwaterTint, fogCol, clamp(f, 0.0, 1.0));
+            hdr              = mix(hdr, fogged, uw);
         }
-        float f = 1.0 - exp(-dist * max(u_UnderwaterDensity, 1e-4));
-        hdr = mix(hdr * u_UnderwaterTint, u_UnderwaterColor, clamp(f, 0.0, 1.0));
     }
 
     if (u_UseFog > 0.5)                                // height fog (S7.2)
@@ -142,8 +190,14 @@ void main()
         hdr *= texture(u_AO, uv).r;                   // contact darkening (S6.5)
     if (u_UseBloom > 0.5)
         hdr += texture(u_Bloom, uv).rgb * u_BloomIntensity;   // additive glow (S6.6)
-    if (u_UseShafts > 0.5)
-        hdr += texture(u_Shafts, uv).rgb;             // god rays (S10.3)
+    if (u_UseShafts > 0.5)                            // god rays (S10.3)
+    {
+        vec3 shaft = texture(u_Shafts, uv).rgb;
+        // Underwater the shafts read as light through the water medium, not white sun.
+        if (u_UseUnderwater > 0.5 && u_CameraPos.y < u_WaterlineY)
+            shaft *= u_UnderwaterTint;
+        hdr += shaft;
+    }
 
     vec3 mapped = ACESFilmic(hdr * u_Exposure);
     mapped      = pow(mapped, vec3(1.0 / 2.2));        // linear -> sRGB

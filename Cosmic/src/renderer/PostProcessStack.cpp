@@ -398,6 +398,12 @@ namespace Cosmic
 			m_TonemapShader->SetFloat3("u_UnderwaterColor", m_UnderwaterColor);
 			m_TonemapShader->SetFloat("u_UnderwaterDensity", m_UnderwaterDensity);
 			m_TonemapShader->SetFloat3("u_UnderwaterTint", m_UnderwaterTint);
+			// Depth grading + seafloor caustics (Phase 11 Layer 2).
+			m_TonemapShader->SetFloat3("u_DeepWaterColor", m_UnderwaterDeepColor);
+			m_TonemapShader->SetFloat("u_UnderwaterDepthRef", m_UnderwaterDepthRef);
+			m_TonemapShader->SetFloat("u_CausticStrength", m_UnderwaterCausticStrength);
+			m_TonemapShader->SetFloat("u_CausticScale", m_UnderwaterCausticScale);
+			m_TonemapShader->SetFloat("u_Time", m_Time);
 		}
 		else
 			m_TonemapShader->SetFloat("u_UseUnderwater", 0.0f);

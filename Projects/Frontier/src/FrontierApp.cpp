@@ -9,6 +9,7 @@
 #include "worlds/StormOceanWorld.h"
 
 #include "panels/GpuProfilerPanel.h"   // F3 — GPU-profiler HUD
+#include "common/LoadingScreen.h"      // Detroit-style loading overlay
 
 #include "layers/WorkspaceLayer.h"   // dock-port registration + viewport queries
 #include "ui/ThemeManager.h"         // accent colour for the homescreen tiles
@@ -182,7 +183,24 @@ namespace Frontier
         // clear m_ActiveWorld to -1 (Home) or change it mid-frame — re-check
         // before indexing, or clicking Home dereferences m_Worlds[-1].
         if (m_ActiveWorld >= 0 && m_ActiveWorld < (int)m_Worlds.size())
+        {
             m_Worlds[m_ActiveWorld]->OnPanels(m_LastCtx);
+
+            // Loading overlay (Detroit-style) while the world builds its content on a
+            // background job. Drawn INTO the viewport window (over the rendered image).
+            if (m_Worlds[m_ActiveWorld]->IsLoading())
+            {
+                auto* ws = Cosmic::Application::Get().GetWorkspaceLayer();
+                if (ws && ws->BeginViewportOverlay())
+                    LoadingScreen::Draw(Cosmic::Application::Get().GetViewportPos(),
+                                        Cosmic::Application::Get().GetViewportSize(),
+                                        static_cast<float>(ImGui::GetTime()),
+                                        "GENERATING WORLD",
+                                        m_Worlds[m_ActiveWorld]->GetInfo().Name);
+                if (ws)
+                    ws->EndViewportOverlay();
+            }
+        }
     }
 
     // =========================================================================

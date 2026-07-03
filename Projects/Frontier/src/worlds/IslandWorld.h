@@ -17,6 +17,9 @@
 
 #include "common/HeightfieldComposer.h"   // IslandParams (the island shape)
 
+#include <atomic>
+#include <memory>
+
 namespace Frontier
 {
     class IslandWorld : public World
@@ -28,9 +31,31 @@ namespace Frontier
         void OnDetach() override;
         void OnUpdate(WorldContext& ctx) override;
         void OnPanels(WorldContext& ctx) override;
+        bool IsLoading() const override;
+
+        // Async build result — the heavy terrain (~2049², a few seconds of pure CPU)
+        // and the waters are built on a JobSystem worker so the main thread keeps
+        // pumping frames (the loading overlay animates). Held by shared_ptr so the
+        // job stays valid even if the world is detached mid-load; the job captures a
+        // COPY of IslandParams (never the world) so it is fully self-contained.
+        // Public so the file-local build helper (IslandWorld.cpp) can fill it.
+        struct LoadResult
+        {
+            Cosmic::Ref<Cosmic::Terrain> Terrain;
+            Cosmic::Ref<Cosmic::Water>   Ocean;
+            Cosmic::Ref<Cosmic::Water>   Lake;
+            glm::vec2         LakeCenterWorld{ 0.0f };
+            float             LakeRadiusWorld = 0.0f;
+            float             LakeSurfaceY    = 0.0f;
+            std::atomic<bool> Ready{ false };
+        };
 
     private:
-        // Scene content.
+        std::shared_ptr<LoadResult> m_Load;
+        int m_RevealFrames = 0;     // keep the overlay up a few frames post-build to
+                                    // hide the first-frame GPU/shader-compile hitch
+
+        // Scene content (adopted from m_Load once its CPU build completes).
         Cosmic::Ref<Cosmic::Terrain> m_Terrain;
         Cosmic::Ref<Cosmic::Water>   m_Ocean;
         Cosmic::Ref<Cosmic::Water>   m_Lake;
@@ -50,8 +75,8 @@ namespace Frontier
         float m_TimeHours  = 8.0f;    // 0..24 clock
         float m_PlaySpeed  = 1.0f;    // hours advanced per real second while playing
         bool  m_Playing    = false;
-        float m_Exposure   = 1.0f;
-        bool  m_Underwater = true;    // tint/fog the frame when the camera dives below the sea
+        float m_Exposure         = 1.0f;
+        bool  m_UnderwaterEnabled = true;   // tint/fog/caustics when the camera dives below the sea
     };
 
 } // namespace Frontier

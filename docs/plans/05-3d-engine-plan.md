@@ -1051,6 +1051,12 @@ within 1 cm in tests.
 
 ## 8. S9 — Water system
 
+> **Surface + dive quality pass (2026-07-03):** the Gerstner tier gained a shimmer fix (opt-in
+> procedural-texture mipmaps + `Water.glsl` distance fade) and a Subnautica-style dive (depth-graded
+> underwater fog, screen-space seafloor caustics, god-ray tint, surface-from-below). Anisotropy
+> stays **S12.6**, FFT stays **S9.3**. Full write-up + tuning knobs + the GLAD/Vulkan rationale:
+> [`../design/water-rendering-notes.md`](../design/water-rendering-notes.md).
+>
 > **✅ S9.1–S9.2 CODE-COMPLETE 2026-07-03 (roadmap Phase 10, branch `phase-7-3d-foundations`).**
 > `water/GerstnerWave.h` (pure header math — the single wave-model truth) + `water/Water.h/.cpp`
 > + `assets/shaders/Water.glsl` + `BlitCopy.glsl` + `WaterComponent` (data holder — water is

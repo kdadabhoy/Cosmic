@@ -92,6 +92,11 @@ namespace Frontier
         /** World-specific ImGui panels (docked via FrontierApp's layout). */
         virtual void OnPanels(WorldContext& ctx) { (void)ctx; }
 
+        /** True while the world is still building its content (e.g. a large terrain
+         *  on a background job) — FrontierApp draws the loading overlay over the
+         *  viewport until this returns false. Default: content is ready immediately. */
+        virtual bool IsLoading() const { return false; }
+
     protected:
         /** Shared skeleton visual so every stub world renders SOMETHING
          *  distinctive on day one: grid, axes, and a ring of wire boxes in the
