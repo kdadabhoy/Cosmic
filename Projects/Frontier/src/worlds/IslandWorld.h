@@ -16,9 +16,14 @@
 #include "World.h"
 
 #include "common/HeightfieldComposer.h"   // IslandParams (the island shape)
+#include "common/VolcanoScene.h"          // F12b — lava flows/lake, smoke, embers, haze, rumble
+#include "common/Scatter.h"               // F12c — instanced pine/boulder fields (F5 culled)
+#include "common/Boids.h"                 // F12c — wheeling bird flock
+#include "common/DistanceLoop.h"          // F12c — waterfall babble
 
 #include <atomic>
 #include <memory>
+#include <vector>
 
 namespace Frontier
 {
@@ -65,6 +70,37 @@ namespace Frontier
         glm::vec2    m_LakeCenterWorld{ 0.0f };
         float        m_LakeRadiusWorld = 0.0f;
         float        m_LakeSurfaceY    = 0.0f;
+
+        // --- Volcano + forests + waterfall + wildlife (F12b/c). Built once on the
+        //     main thread the frame the async terrain is adopted (needs a GL context
+        //     for the meshes/emitters; the terrain queries are CPU-ready by then). ---
+        bool m_ContentBuilt = false;
+        void BuildContent();     // one-time GPU/content assembly (IslandWorld.cpp)
+
+        VolcanoScene m_Volcano;                         // F12b
+
+        ScatterField m_Pines;                           // F12c — instanced forests
+        ScatterField m_Boulders;
+
+        // Waterfall + river (WaterFlow.glsl sheets, drawn in the transparent pass).
+        Cosmic::Ref<Cosmic::Mesh>     m_RiverMesh, m_FallMesh;
+        Cosmic::Ref<Cosmic::Material> m_RiverMat,  m_FallMat;
+        Cosmic::Ref<Cosmic::ParticleEmitter> m_Mist, m_Spray;
+        DistanceLoop m_Babble;
+        glm::vec3    m_PlungePool{ 0.0f };
+
+        // Wildlife: a wheeling bird flock + lake fish splash rings + shore fireflies.
+        Boids                                m_Birds;
+        Cosmic::Ref<Cosmic::Mesh>            m_BirdMesh;
+        Cosmic::Ref<Cosmic::Material>        m_BirdMat;
+        Cosmic::Ref<Cosmic::InstanceSet>     m_BirdSet;
+        Cosmic::Ref<Cosmic::ParticleEmitter> m_Splash;      // fish rings (Burst on a timer)
+        Cosmic::Ref<Cosmic::ParticleEmitter> m_Fireflies;   // night only
+        float m_SplashTimer = 3.0f;
+        Cosmic::Random m_Rng{ 0xF15Eu };                    // fish-point picker
+
+        // Snow overlay (F8): dust the high pines/boulders above the snow line.
+        Cosmic::Renderer3D::SnowDesc m_Snow;
 
         // Render policy + per-frame detailed-sky (desc.DetailedSky points at m_Sky,
         // so it must outlive the Render call — a member does).

@@ -893,7 +893,18 @@ primary-reflection handoff unnoticeable.
 
 ## F12b — Island assembly II: the volcano
 
-**Status:** ☐ not started
+**Status:** ✅ 2026-07-03 — NEW header-only `common/LavaFlowBuilder.h` (`TracePath` marches
+actually-downhill — the terrain normal's XZ = −gradient, so the doc's `-=` was a sign slip; +
+`BuildRibbon` UVs U=arclength/width, V∈[0,1] + `BuildLavaDisc` radial disc) and NEW `common/VolcanoScene.h`
+(the shared, reusable volcano assembly — FlowEmissive lava flows + caldera lava lake, bent smoke column,
+additive embers, heat-haze distortion field, flank steam fumaroles, warm pulsing point lights, F10 rumble
+`DistanceLoop`; `Build/Update/Submit/DrawLava/Shutdown` — factored to `common/` so F13 reuses it).
+IslandWorld grew `BuildContent()` (one-time main-thread assembly the frame the async terrain is adopted),
+enabled `Settings.HeatHaze`, and its per-frame `Update`→`Submit`→`DrawOpaque(DrawLava)` wiring. Lava
+materials feed the exact FlowEmissive uniform contract (`u_Heat/u_FlowSpeed/u_EmissiveIntensity/u_EdgeCool/
+u_CoolAlongLength/u_CrackScale/u_RippleAmp/u_NoiseScale/u_CrustColor` + per-frame `u_Time`). Build clean
+(0 warnings), **CosmicTests 116/116**; no engine (`Cosmic/src`) files touched → Engine3DDemo unaffected.
+*(In-world day/night lava money-shot pixel check = user visual pass.)*
 
 **Files (app):** MODIFY `worlds/IslandWorld.cpp`; NEW `common/LavaFlowBuilder.h` (header-only).
 
@@ -923,7 +934,19 @@ volcano" money shot; ≥ 60 fps.
 
 ## F12c — Island assembly III: forests, waterfall + river, wildlife
 
-**Status:** ☐ not started
+**Status:** ✅ 2026-07-03 — NEW header-only `common/ProceduralMeshes.h` (merged-cone `MakePine`,
+noise-displaced flat-shaded `MakeBoulder`, stretched-tetra `MakeBird`), `common/Scatter.h`
+(`Scatter::Generate` = deterministic PCG32 placement with slope/altitude/keep-out rejection + jittered
+tint; `ScatterField` = owns the mesh + PBRInstanced material + full instance list, culls once/frame vs the
+main-camera `Frustum` and draws the survivors via `DrawMeshInstanced` in every pass — F5 policy), and
+`common/Boids.h` (Reynolds flock + orbit pull → oriented per-frame transforms). IslandWorld's `BuildContent`
+scatters ~5 k pines (lake/river/volcano keep-outs) + ~1.5 k boulders, builds a WaterFlow river ribbon (reusing
+`LavaFlowBuilder::BuildRibbon`) + a vertical waterfall sheet with plunge-pool `Mist`+spray + `water` babble
+loop, a 40-bird flock, lake fish `SplashRings` (Burst on a timer), and night-gated shore fireflies; the
+`SetSnow` overlay dusts high pines/boulders (terrain snow unchanged — it ignores the scene `u_Snow*` amount).
+`DrawOpaque` draws lava+forests+birds (instanced); `DrawTransparent` draws the river/fall sheets with
+depth-write off. Build clean (0 warnings), **CosmicTests 116/116**; no engine files touched. *(In-world
+forest/waterfall/wildlife 60-fps pixel + one-draw-per-set profiler check = user visual pass.)*
 
 **Files (app):** MODIFY `worlds/IslandWorld.cpp`; NEW `common/Scatter.h`, `common/Boids.h`,
 `common/ProceduralMeshes.h` (all header-only).
@@ -958,7 +981,16 @@ fish ring the lake, fireflies at dusk; ≥ 60 fps everywhere.
 
 ## F13 — Night Volcano variant
 
-**Status:** ☐ not started
+**Status:** ✅ 2026-07-03 — `NightVolcanoWorld` rebuilt on the shared `common/VolcanoScene.h` (F12b) over
+a small lone-volcano terrain (WorldSize 1024, Resolution 1025, `HeightFunction` = the F11 `IslandHeight`
+composer with range/lake/river zeroed + the volcano re-centred to UV 0.5), built on a `JobSystem` worker
+behind the loading overlay. Night policy: fixed dusk `DayNightCycle::Evaluate(20.5h)` (panel-overridable) →
+moonlit key + `SetNightSky`/`SetMoon` + detailed star/moon sky; exposure 0.9 so the lava carries the frame;
+bloom threshold 1.1; god rays + strong heat haze on; no water. VolcanoScene tuned for the money shot:
+lava lake + 2 flows, ember storm (rate ×3 = 960), a smoke column lit by **3 pulsing point lights**
+(`ColumnLights = 3`), loud proximity rumble; `ClearSnow` each frame so it never inherits the island's
+overlay. Build clean (0 warnings), **CosmicTests 116/116**; no engine files touched → Engine3DDemo
+unaffected. *(Committed-screenshot money-shot + 60-fps check = user visual pass.)*
 
 **Files (app):** MODIFY `worlds/NightVolcanoWorld.cpp` (reuse F12b pieces — factor shared volcano
 builders into `common/` if IslandWorld hasn't already).
