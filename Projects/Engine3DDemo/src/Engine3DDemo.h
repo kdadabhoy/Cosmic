@@ -97,6 +97,30 @@ namespace Workspace
 		int  m_HoveredId   = -1;                        // last ReadPixel result
 		void RenderPickPass();                          // pre-pass into m_PickFbo
 
+		// ---- CAD navigation, ViewCube, picking, gizmos (Phase 8 / S5) ----
+		bool m_CadNav       = false;   // S5.1: CAD (SolidWorks) bindings vs Classic
+		bool m_Inertia      = false;   // S5.1: optional orbit inertia
+		Cosmic::Ref<Cosmic::NavigationCube> m_NavCube;   // S5.3 orientation cube
+		Cosmic::Ref<Cosmic::ScenePicker>    m_Picker;    // S5.4 entity-ID picking
+		bool m_EditorMode   = false;   // S5.4/S5.5: render + select + gizmo the ECS scene
+		bool m_GizmoActive  = false;   // Gizmo::IsUsing() from the previous frame
+		bool m_GizmoOver    = false;   // Gizmo::IsOver() from the previous frame
+		bool m_LmbWasDown   = false;   // click edge-detect for picking
+		bool m_KeyFWasDown  = false;   // 'F' edge-detect (frame selection)
+		bool m_KeyHomeWasDown = false; // 'Home' edge-detect (iso view)
+		Cosmic::Gizmo::Operation m_GizmoOp    = Cosmic::Gizmo::Operation::Translate;
+		Cosmic::Gizmo::Space     m_GizmoSpace = Cosmic::Gizmo::Space::World;
+		bool  m_GizmoSnap  = false;
+		float m_SnapValue  = 0.5f;     // world units (translate/scale) or degrees (rotate)
+		std::string m_SelectionInfo;   // readout of the current selection
+
+		void           RenderEditorIdPass();                                 // S5.4 id pre-pass
+		void           HandleEditorPicking();                                // S5.4 click-to-select
+		void           DrawSelectionOutline();                               // S5.4 outline
+		Cosmic::Entity SelectedEntity() const;                               // from EntitySelection
+		bool           ComputeEntityWorldAABB(Cosmic::Entity e, glm::vec3& mn, glm::vec3& mx) const;
+		bool           ComputeSceneWorldAABB(glm::vec3& mn, glm::vec3& mx) const; // S5.2 frame scene
+
 		// ---- Lighting v1 (S4.5) ----
 		Cosmic::Ref<Cosmic::Material> m_LitMaterial;   // MeshLit.glsl material
 		bool      m_LitAircraft = false;               // draw the aircraft lit (UBO lights)

@@ -18,6 +18,7 @@ add_executable(CosmicTests
     test_audio.cpp
     test_components.cpp
     test_assetlibrary.cpp
+    test_s5_navigation.cpp
 )
 
 target_link_libraries(CosmicTests PRIVATE Cosmic)

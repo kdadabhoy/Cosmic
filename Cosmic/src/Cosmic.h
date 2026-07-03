@@ -46,6 +46,7 @@
 #include "graphics/Mesh.h"
 #include "graphics/Model.h"
 #include "graphics/Font.h"
+#include "graphics/Gizmo.h"           // S5.5 — transform gizmos (ImGuizmo)
 
 // Assets
 #include "assets/AssetLibrary.h"
@@ -55,7 +56,8 @@
 #include "camera/OrthographicCamera.h"
 #include "camera/OrthographicCameraController.h"
 #include "camera/PerspectiveCamera.h"
-#include "camera/OrbitCameraController.h"
+#include "camera/OrbitCameraController.h"   // + NavStyle / ViewPreset (S5.1 / S5.2)
+#include "camera/NavigationCube.h"          // S5.3 — orientation cube widget
 
 // Math (spatial conventions: NED world frame, Y-up render frame, quaternions)
 #include "math/Spatial.h"
@@ -73,6 +75,7 @@
 #include "scene/Components.h"
 #include "scene/System.h"
 #include "scene/ComponentRegistry.h"
+#include "scene/ScenePicker.h"        // S5.4 — entity-ID 3D picking
 
 // Input Mapping
 #include "codes/KeyCodes.h"

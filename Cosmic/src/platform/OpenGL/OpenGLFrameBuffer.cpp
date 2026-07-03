@@ -243,5 +243,17 @@ namespace Cosmic
 		glClearBufferiv(GL_COLOR, (GLint)attachmentIndex, clear);
 	}
 
+	float OpenGLFrameBuffer::ReadDepth(int x, int y)
+	{
+		if (m_DepthAttachmentSpec.TextureFormat == FramebufferTextureFormat::None)
+			return 1.0f;
+
+		// The FBO must already be bound by the caller. Depth reads come from the
+		// depth buffer directly (not a color read-buffer), so no glReadBuffer here.
+		float depth = 1.0f;
+		glReadPixels(x, y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &depth);
+		return depth;
+	}
+
 	/////////////////////////////////////////////////////////////////////////////////
 }

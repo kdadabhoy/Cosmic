@@ -25,6 +25,19 @@ namespace Cosmic
 		: m_VertexCount(static_cast<uint32_t>(vertices.size()))
 		, m_IndexCount(static_cast<uint32_t>(indices.size()))
 	{
+		// Local-space AABB over the vertex positions (S5.2 frame-to-fit, S5.4
+		// selection/picking, S12 culling). Kept CPU-side — cheap at construction,
+		// and the vertex data is not otherwise retained after upload.
+		if (!vertices.empty())
+		{
+			m_LocalMin = m_LocalMax = vertices[0].Position;
+			for (const MeshVertex& v : vertices)
+			{
+				m_LocalMin = glm::min(m_LocalMin, v.Position);
+				m_LocalMax = glm::max(m_LocalMax, v.Position);
+			}
+		}
+
 		m_VertexArray = VertexArray::Create();
 
 		// Static geometry: upload once through the data-constructor path.

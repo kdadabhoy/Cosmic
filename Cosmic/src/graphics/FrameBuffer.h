@@ -163,6 +163,18 @@ namespace Cosmic
 		virtual void ClearAttachment(uint32_t attachmentIndex, int value) = 0;
 
 		////////////////////////////////
+		// Depth Read-back (S5.1 — cursor-pivot navigation)
+		///////////////////////////////
+
+		// Read one window-space depth texel in [0, 1] from the depth attachment.
+		// The FBO must be bound. GL's origin is bottom-left, so the CALLER flips y
+		// (glY = height - 1 - mouseY), same convention as ReadPixel. Returns 1.0
+		// (the far plane — "nothing was drawn here") when there is no depth
+		// attachment or the read misses geometry. Used to reconstruct the world
+		// point under the cursor for orbit-about-cursor / zoom-to-cursor.
+		virtual float ReadDepth(int x, int y) = 0;
+
+		////////////////////////////////
 		// Factory Pattern
 		///////////////////////////////
 		static Ref<FrameBuffer> Create(const FramebufferSpecification& spec);

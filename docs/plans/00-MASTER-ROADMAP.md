@@ -159,9 +159,18 @@ lighting v1 → MRT framebuffers → compute/SSBO. Strictly ordered inside; each
   60 fps at 1M points — each item's acceptance demo shown in Engine3DDemo with the 2D overlay
   intact and `CosmicTests` green.
 
-### Phase 8 — CAD navigation, gizmos, picking *(doc 05: S5)*
+### Phase 8 — CAD navigation, gizmos, picking *(doc 05: S5)* — ✅ code complete 2026-07-02
 SolidWorks-style navigation (S5.1 — **[filler]: only needs S1, safe to pull into any earlier
 phase**), frame/snap views, ViewCube, ImGuizmo transforms, ID-buffer picking + selection outline.
+> **Status:** S5.1–S5.5 all implemented on branch `phase-7-3d-foundations`. Full VS-cmake build
+> green (engine + new ImGuizmo lib + every project DLL + tests); `CosmicTests` **73/73** (103,934
+> assertions) incl. new `tests/test_s5_navigation.cpp`. New engine surface: `NavStyle`/`ViewPreset`
+> CAD bindings + zoom-to-cursor + orbit-about-cursor + snap/frame on `OrbitCameraController`,
+> `camera/NavigationCube`, `scene/ScenePicker` + `FrameBuffer::ReadDepth` + `Mesh` local AABB,
+> `graphics/Gizmo` (vendored ImGuizmo). All exercised in Engine3DDemo's "CAD Tools (S5)" panel +
+> F/Home/W-E-R hotkeys. Selection outline ships as an oriented wire-AABB (documented deviation from
+> the S5.4 ID-edge-detect post pass — that needs the S6.1 post stack; picking is ID-buffer based).
+> **Remaining — user visual/DPI pass** (doc 05 §4 note).
 - **Done when:** Engine3DDemo manipulates entities with gizmos; MMB-orbit-about-cursor-point feels
   like SolidWorks at both DPIs.
 

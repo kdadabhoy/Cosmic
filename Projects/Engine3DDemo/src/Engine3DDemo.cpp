@@ -87,6 +87,25 @@ namespace Workspace
 		}
 		m_PickCam.LookAt({ 0.0f, 1.5f, 16.0f }, { 0.0f, 0.0f, 0.0f });
 
+		// ---- CAD tools (Phase 8 / S5): nav cube + scene picker ----
+		m_NavCube = Cosmic::NavigationCube::Create(140);
+		m_Picker  = Cosmic::ScenePicker::Create();
+
+		// Orbit-about-surface (S5.1): reconstruct the world point under the cursor
+		// from the editor id-pass depth. Only valid in editor mode (that's when the
+		// picker FBO is rendered each frame); otherwise the controller falls back to
+		// its ray/target-plane pivot. Window mouse → viewport-local pixel first.
+		m_Orbit.SetPivotProbe([this](const glm::vec2& windowMouse, glm::vec3& out) -> bool
+		{
+			if (!m_EditorMode || !m_Picker)
+				return false;
+			auto& app = Cosmic::Application::Get();
+			const glm::vec2 vpPos = app.GetViewportPos();
+			const int px = static_cast<int>(windowMouse.x - vpPos.x);
+			const int py = static_cast<int>(windowMouse.y - vpPos.y);
+			return m_Picker->WorldPoint(m_Orbit.GetCamera(), px, py, out);
+		});
+
 		// ---- glTF model (S4.4b): load the Duck through the asset cache ----
 		m_DuckModel = Cosmic::AssetLibrary::GetModel("engine://models/Duck.glb");
 		{
@@ -131,6 +150,8 @@ namespace Workspace
 		m_ComputeShader.reset();
 		m_PointShader.reset();
 		m_ParticleSSBO.reset();
+		m_NavCube.reset();
+		m_Picker.reset();
 
 		// Leave the engine tick rate the way we found the machine.
 		Cosmic::Application::Get().SetFixedTimestepHz(60.0f);
@@ -325,6 +346,145 @@ namespace Workspace
 	}
 
 	// =========================================================================
+	// CAD navigation / picking / gizmos (Phase 8 / S5)
+	// =========================================================================
+
+	void Engine3DDemo::RenderEditorIdPass()
+	{
+		auto& app = Cosmic::Application::Get();
+		auto  fb  = app.GetFrameBuffer();
+
+		// Render the ECS scene's entity IDs (+ depth) into the picker's own MRT FBO.
+		m_Picker->RenderIdPass(*m_Scene, m_Orbit.GetCamera(), fb->GetWidth(), fb->GetHeight());
+
+		// RenderIdPass unbinds to the default framebuffer — restore the app viewport.
+		fb->Bind();
+		Cosmic::RenderCommand::SetViewport(0, 0, fb->GetWidth(), fb->GetHeight());
+	}
+
+	void Engine3DDemo::HandleEditorPicking()
+	{
+		// Edge-detect a left click; skip if a gizmo is (or was just) under the cursor
+		// so grabbing a handle doesn't reselect / clear the selection.
+		const bool lmb     = Cosmic::Input::IsMouseButtonPressed(CS_MOUSE_BUTTON_LEFT);
+		const bool clicked = lmb && !m_LmbWasDown;
+		m_LmbWasDown = lmb;
+
+		if (!clicked || m_GizmoActive || m_GizmoOver || !m_Picker || !m_Scene)
+			return;
+
+		auto& app = Cosmic::Application::Get();
+		const glm::vec2 vpPos  = app.GetViewportPos();
+		const glm::vec2 vpSize = app.GetViewportSize();
+		const glm::vec2 mouse  = Cosmic::Input::GetMousePosition();
+		const int px = static_cast<int>(mouse.x - vpPos.x);
+		const int py = static_cast<int>(mouse.y - vpPos.y);
+		if (px < 0 || py < 0 || px >= static_cast<int>(vpSize.x) || py >= static_cast<int>(vpSize.y))
+			return;   // click landed outside the viewport image
+
+		Cosmic::Entity hit = m_Picker->Pick(*m_Scene, px, py);
+		if (hit)
+		{
+			const std::string name = hit.HasComponent<Cosmic::TagComponent>()
+				? hit.GetComponent<Cosmic::TagComponent>().Tag
+				: std::string("Entity");
+			Cosmic::EntitySelection::Set(hit, name);   // feed the shared selection bus
+			m_SelectionInfo = name;
+		}
+		else
+		{
+			Cosmic::EntitySelection::Clear();
+			m_SelectionInfo.clear();
+		}
+	}
+
+	Cosmic::Entity Engine3DDemo::SelectedEntity() const
+	{
+		Cosmic::Entity e = Cosmic::EntitySelection::GetEntity();
+		if (e && e.HasComponent<Cosmic::TransformComponent>() &&
+		         e.HasComponent<Cosmic::MeshRendererComponent>())
+			return e;
+		return {};
+	}
+
+	bool Engine3DDemo::ComputeEntityWorldAABB(Cosmic::Entity e, glm::vec3& mn, glm::vec3& mx) const
+	{
+		if (!e || !e.HasComponent<Cosmic::TransformComponent>() ||
+		          !e.HasComponent<Cosmic::MeshRendererComponent>())
+			return false;
+
+		const auto& mr = e.GetComponent<Cosmic::MeshRendererComponent>();
+		if (!mr.MeshAsset)
+			return false;
+
+		const glm::vec3 lmin  = mr.MeshAsset->GetLocalMin();
+		const glm::vec3 lmax  = mr.MeshAsset->GetLocalMax();
+		const glm::mat4 model = e.GetComponent<Cosmic::TransformComponent>().GetTransform();
+
+		// World AABB = bounds of the 8 transformed local-AABB corners.
+		for (int i = 0; i < 8; ++i)
+		{
+			const glm::vec3 corner(
+				(i & 1) ? lmax.x : lmin.x,
+				(i & 2) ? lmax.y : lmin.y,
+				(i & 4) ? lmax.z : lmin.z);
+			const glm::vec3 wp = glm::vec3(model * glm::vec4(corner, 1.0f));
+			if (i == 0) { mn = mx = wp; }
+			else        { mn = glm::min(mn, wp); mx = glm::max(mx, wp); }
+		}
+		return true;
+	}
+
+	bool Engine3DDemo::ComputeSceneWorldAABB(glm::vec3& mn, glm::vec3& mx) const
+	{
+		if (!m_Scene)
+			return false;
+
+		bool any = false;
+		auto view = m_Scene->View<Cosmic::TransformComponent, Cosmic::MeshRendererComponent>();
+		for (auto entity : view)
+		{
+			Cosmic::Entity e{ entity, m_Scene.get() };
+			glm::vec3 emn, emx;
+			if (!ComputeEntityWorldAABB(e, emn, emx))
+				continue;
+			if (!any) { mn = emn; mx = emx; any = true; }
+			else      { mn = glm::min(mn, emn); mx = glm::max(mx, emx); }
+		}
+		return any;
+	}
+
+	void Engine3DDemo::DrawSelectionOutline()
+	{
+		Cosmic::Entity e = SelectedEntity();
+		if (!e)
+			return;
+
+		const auto& t  = e.GetComponent<Cosmic::TransformComponent>();
+		const auto& mr = e.GetComponent<Cosmic::MeshRendererComponent>();
+		if (!mr.MeshAsset)
+			return;
+
+		// Map the unit wire cube to the mesh's local AABB, then apply the model
+		// matrix → an oriented box hugging the selected mesh (nicer than a loose
+		// world AABB, and no post/stencil machinery pre-S6). Drawn depth-test-off so
+		// it reads as an always-on-top highlight.
+		const glm::vec3 lmin = mr.MeshAsset->GetLocalMin();
+		const glm::vec3 lmax = mr.MeshAsset->GetLocalMax();
+		const glm::vec3 c    = 0.5f * (lmin + lmax);
+		const glm::vec3 s    = (lmax - lmin) * 1.03f;   // slight inflate to clear the surface
+		const glm::mat4 box  = t.GetTransform()
+			* glm::translate(glm::mat4(1.0f), c)
+			* glm::scale(glm::mat4(1.0f), s);
+
+		Cosmic::RenderCommand::SetDepthTest(false);
+		Cosmic::Renderer3D::BeginScene(m_Orbit.GetCamera());
+		Cosmic::Renderer3D::DrawWireBox(box, { 1.0f, 0.62f, 0.10f, 1.0f });
+		Cosmic::Renderer3D::EndScene();
+		Cosmic::RenderCommand::SetDepthTest(true);      // restore engine default (contract rule 6)
+	}
+
+	// =========================================================================
 	// Simulation (E1 fixed step + E3 quaternion kinematics, all in NED)
 	// =========================================================================
 
@@ -369,15 +529,30 @@ namespace Workspace
 	{
 		auto& app = Cosmic::Application::Get();
 
-		// ---- Viewport/FBO size sync (drives the perspective aspect) ----
+		// ---- Viewport/FBO size sync + CAD nav config (S5.1) ----
 		auto fb = app.GetFrameBuffer();
 		const float w = static_cast<float>(fb->GetWidth());
 		const float h = static_cast<float>(fb->GetHeight());
-		if ((m_ViewportSize.x != w || m_ViewportSize.y != h) && w > 0.0f && h > 0.0f)
+		m_ViewportSize = { w, h };
+		// SetViewportRect updates the aspect AND gives the controller the viewport
+		// origin it needs for zoom-to-cursor / the pivot ray (superset of OnResize).
+		m_Orbit.SetViewportRect(app.GetViewportPos(), app.GetViewportSize());
+		m_Orbit.SetNavigationStyle(m_CadNav ? Cosmic::NavStyle::CAD : Cosmic::NavStyle::Classic);
+		m_Orbit.SetInertiaEnabled(m_Inertia);
+
+		// ---- Editor id pre-pass (S5.4): render the ECS scene's entity IDs (+ depth)
+		//      BEFORE the orbit update so click-picking and orbit-about-surface read
+		//      fresh data, then handle click-to-select. RenderEditorIdPass rebinds the
+		//      app viewport FBO. Uses last frame's camera — a hair behind, fine here.
+		if (m_EditorMode && m_Picker && m_Scene)
 		{
-			m_ViewportSize = { w, h };
-			m_Orbit.OnResize(w, h);
+			RenderEditorIdPass();
+			HandleEditorPicking();
 		}
+
+		// A gizmo drag (LMB) must not also drive the camera — yield while it's active.
+		// (State is from last frame; CAD orbit is MMB, so they rarely collide anyway.)
+		m_Orbit.SetControlEnabled(!m_GizmoActive);
 
 		// ---- E1 measurement window (GetAbsoluteTime is real, unscaled seconds) ----
 		const float now = app.GetAbsoluteTime();
@@ -391,9 +566,42 @@ namespace Workspace
 		}
 
 		// ---- Camera: user drag always wins; auto-orbit adds a slow yaw drift ----
-		if (m_AutoOrbit && !Cosmic::Input::IsMouseButtonPressed(CS_MOUSE_BUTTON_LEFT))
+		// Auto-orbit is disabled in editor mode and while a snap/frame blend runs
+		// (it hard-sets yaw/pitch, which would cancel the animation every frame).
+		if (m_AutoOrbit && !m_EditorMode && !m_Orbit.IsAnimating() &&
+		    !Cosmic::Input::IsMouseButtonPressed(CS_MOUSE_BUTTON_LEFT))
 			m_Orbit.SetYawPitch(m_Orbit.GetYaw() + m_AutoOrbitSpeed * ts, m_Orbit.GetPitch());
 		m_Orbit.OnUpdate(ts);
+
+		// ---- Frame & snap hotkeys (S5.2): F frames selection/scene, Home = iso.
+		//      Ignored while ImGui is capturing the keyboard (e.g. typing in a field).
+		if (!ImGui::GetIO().WantCaptureKeyboard)
+		{
+			const bool fDown = Cosmic::Input::IsKeyPressed(CS_KEY_F);
+			if (fDown && !m_KeyFWasDown)
+			{
+				glm::vec3 mn, mx;
+				if (m_EditorMode && ComputeEntityWorldAABB(SelectedEntity(), mn, mx))
+					m_Orbit.FrameBounds(mn, mx);
+				else if (ComputeSceneWorldAABB(mn, mx))
+					m_Orbit.FrameBounds(mn, mx);
+			}
+			m_KeyFWasDown = fDown;
+
+			const bool homeDown = Cosmic::Input::IsKeyPressed(CS_KEY_HOME);
+			if (homeDown && !m_KeyHomeWasDown)
+				m_Orbit.SnapView(Cosmic::ViewPreset::Iso);
+			m_KeyHomeWasDown = homeDown;
+
+			// W/E/R cycle the gizmo mode (editor mode only). Idempotent set while
+			// held — no edge state needed.
+			if (m_EditorMode)
+			{
+				if (Cosmic::Input::IsKeyPressed(CS_KEY_W)) m_GizmoOp = Cosmic::Gizmo::Operation::Translate;
+				if (Cosmic::Input::IsKeyPressed(CS_KEY_E)) m_GizmoOp = Cosmic::Gizmo::Operation::Rotate;
+				if (Cosmic::Input::IsKeyPressed(CS_KEY_R)) m_GizmoOp = Cosmic::Gizmo::Operation::Scale;
+			}
+		}
 
 		// ---- Trajectory ribbon (render-frame samples, ~20 Hz) ----
 		m_TrailTimer += ts;
@@ -405,10 +613,19 @@ namespace Workspace
 				m_Trail.erase(m_Trail.begin());   // 600 points; fine to shift
 		}
 
-		// Picking pre-pass (S4.6): render the ID scene into m_PickFbo first, then
-		// rebind the app viewport FBO. Runs before the main pass, like the FPV inset.
+		// Off-screen pre-passes (each renders into its own FBO). The nav cube (S5.3)
+		// tracks the current camera orientation; the S4.6 picking panel renders its
+		// own ID scene. Both leave another FBO bound, so we restore the app viewport
+		// FBO afterwards for the main pass.
+		if (m_NavCube)
+			m_NavCube->Render(m_Orbit.GetCamera().GetViewMatrix());
 		if (m_ShowPicking)
 			RenderPickPass();
+		{
+			auto vfb = app.GetFrameBuffer();
+			vfb->Bind();
+			Cosmic::RenderCommand::SetViewport(0, 0, vfb->GetWidth(), vfb->GetHeight());
+		}
 
 		// =====================================================================
 		// 3D pass (S1 + S2) — the viewport FBO is already bound and cleared
@@ -467,8 +684,13 @@ namespace Workspace
 		Cosmic::Renderer3D::EndScene();
 
 		// ECS scene (S4.3): its own 3D pass (OnRender3D owns BeginScene/EndScene).
-		if (m_EcsScene && m_Scene)
+		// Also rendered in editor mode (S5.4/S5.5) so the selectable entities show.
+		if ((m_EcsScene || m_EditorMode) && m_Scene)
 			m_Scene->OnRender3D(m_Orbit.GetCamera());
+
+		// Selection outline (S5.4): oriented AABB of the selected entity, on top.
+		if (m_EditorMode)
+			DrawSelectionOutline();
 
 		// Compute + SSBO (S4.7): update 1M particles on the GPU, then draw them as
 		// attribute-less points reading the same std430 buffer by gl_VertexID.
@@ -538,6 +760,35 @@ namespace Workspace
 
 	void Engine3DDemo::OnImGuiRender()
 	{
+		// ---- Transform gizmo (S5.5): drive the selected entity over the viewport.
+		//      Runs once per frame inside the ImGui frame; ImGuizmo draws to the
+		//      foreground list within the viewport rect, on top of the scene image.
+		if (m_EditorMode)
+		{
+			auto& app = Cosmic::Application::Get();
+			const glm::vec2 vpPos  = app.GetViewportPos();
+			const glm::vec2 vpSize = app.GetViewportSize();
+
+			Cosmic::Gizmo::BeginFrame();
+			Cosmic::Gizmo::SetRect(vpPos.x, vpPos.y, vpSize.x, vpSize.y);
+
+			Cosmic::Entity sel = SelectedEntity();
+			if (sel && vpSize.x > 0.0f && vpSize.y > 0.0f)
+			{
+				auto& t = sel.GetComponent<Cosmic::TransformComponent>();
+				const float snap = m_GizmoSnap ? m_SnapValue : 0.0f;
+				Cosmic::Gizmo::Manipulate(m_Orbit.GetCamera(), t, m_GizmoOp, m_GizmoSpace, snap);
+			}
+
+			m_GizmoActive = Cosmic::Gizmo::IsUsing();
+			m_GizmoOver   = Cosmic::Gizmo::IsOver();
+		}
+		else
+		{
+			m_GizmoActive = false;
+			m_GizmoOver   = false;
+		}
+
 		ImGui::Begin("Project Inspector Top");
 
 		Cosmic::UI::Fonts::Push("Roboto-Bold", Cosmic::UI::Fonts::SizeHeading);
@@ -562,6 +813,107 @@ namespace Workspace
 				m_Orbit.SetDistance(18.0f);
 				m_Orbit.SetYawPitch(35.0f, 25.0f);
 			}
+		}
+
+		// ---------------- CAD Tools (Phase 8 / S5) ----------------
+		if (ImGui::CollapsingHeader("CAD Tools  (nav / views / picking / gizmos, S5)", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			// -- S5.1 navigation style --
+			ImGui::SeparatorText("Navigation (S5.1)");
+			ImGui::Checkbox("CAD style", &m_CadNav);
+			ImGui::SameLine(); ImGui::TextDisabled("(?)");
+			if (ImGui::IsItemHovered())
+				ImGui::SetTooltip("On:  MMB orbit / Ctrl+MMB pan / Shift+MMB dolly, scroll = zoom to cursor.\n"
+				                  "Off: Classic LMB orbit / RMB pan / scroll zoom-to-center.\n"
+				                  "In editor mode, orbit pivots about the surface point under the cursor.");
+			ImGui::SameLine();
+			ImGui::Checkbox("Inertia", &m_Inertia);
+
+			// -- S5.2 snap + frame views --
+			ImGui::SeparatorText("Views (S5.2)");
+			auto snapBtn = [&](const char* label, Cosmic::ViewPreset p)
+			{
+				if (ImGui::Button(label)) m_Orbit.SnapView(p);
+			};
+			snapBtn("Front", Cosmic::ViewPreset::Front); ImGui::SameLine();
+			snapBtn("Back",  Cosmic::ViewPreset::Back);  ImGui::SameLine();
+			snapBtn("Left",  Cosmic::ViewPreset::Left);  ImGui::SameLine();
+			snapBtn("Right", Cosmic::ViewPreset::Right);
+			snapBtn("Top",   Cosmic::ViewPreset::Top);   ImGui::SameLine();
+			snapBtn("Bottom",Cosmic::ViewPreset::Bottom);ImGui::SameLine();
+			snapBtn("Iso",   Cosmic::ViewPreset::Iso);
+			if (ImGui::Button("Frame selection (F)"))
+			{
+				glm::vec3 mn, mx;
+				if (ComputeEntityWorldAABB(SelectedEntity(), mn, mx)) m_Orbit.FrameBounds(mn, mx);
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Frame scene"))
+			{
+				glm::vec3 mn, mx;
+				if (ComputeSceneWorldAABB(mn, mx)) m_Orbit.FrameBounds(mn, mx);
+			}
+			ImGui::TextDisabled("Hotkeys: F frame selection/scene, Home iso, W/E/R gizmo mode.");
+
+			// -- S5.3 nav cube --
+			ImGui::SeparatorText("ViewCube (S5.3)");
+			if (m_NavCube)
+			{
+				const float sz    = static_cast<float>(m_NavCube->GetSize());
+				const float avail = ImGui::GetContentRegionAvail().x;
+				if (avail > sz)
+					ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (avail - sz) * 0.5f);
+
+				ImGui::Image((ImTextureID)(intptr_t)m_NavCube->GetTextureID(),
+					{ sz, sz }, ImVec2(0, 1), ImVec2(1, 0));   // flip V (GL bottom-left)
+
+				if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Left))
+				{
+					const ImVec2 imgMin = ImGui::GetItemRectMin();
+					const ImVec2 m      = ImGui::GetMousePos();
+					const float  u = (m.x - imgMin.x) / sz;
+					const float  v = (m.y - imgMin.y) / sz;
+					Cosmic::ViewPreset p;
+					if (m_NavCube->PickFace(u, v, p))
+						m_Orbit.SnapView(p);
+				}
+				ImGui::TextDisabled("Click a face to snap the view.");
+			}
+
+			// -- S5.4 / S5.5 editor: select + gizmo --
+			ImGui::SeparatorText("Select & Gizmo (S5.4 / S5.5)");
+			ImGui::Checkbox("Editor mode", &m_EditorMode);
+			ImGui::SameLine(); ImGui::TextDisabled("(?)");
+			if (ImGui::IsItemHovered())
+				ImGui::SetTooltip("Renders + picks the ECS scene (the S4.3 entities). LMB a mesh to\n"
+				                  "select it (shared EntitySelection bus); drag the gizmo to transform.");
+
+			{
+				Cosmic::Entity sel = SelectedEntity();
+				if (sel && sel.HasComponent<Cosmic::TagComponent>())
+					ImGui::Text("Selected: %s", sel.GetComponent<Cosmic::TagComponent>().Tag.c_str());
+				else
+					ImGui::TextDisabled("Selected: (none — enable editor mode and click a mesh)");
+			}
+
+			ImGui::BeginDisabled(!m_EditorMode);
+			int op = static_cast<int>(m_GizmoOp);
+			ImGui::TextUnformatted("Gizmo"); ImGui::SameLine();
+			ImGui::RadioButton("Move", &op, 0);   ImGui::SameLine();
+			ImGui::RadioButton("Rotate", &op, 1); ImGui::SameLine();
+			ImGui::RadioButton("Scale", &op, 2);
+			m_GizmoOp = static_cast<Cosmic::Gizmo::Operation>(op);
+
+			int space = static_cast<int>(m_GizmoSpace);
+			ImGui::TextUnformatted("Space"); ImGui::SameLine();
+			ImGui::RadioButton("World", &space, static_cast<int>(Cosmic::Gizmo::Space::World)); ImGui::SameLine();
+			ImGui::RadioButton("Local", &space, static_cast<int>(Cosmic::Gizmo::Space::Local));
+			m_GizmoSpace = static_cast<Cosmic::Gizmo::Space>(space);
+
+			ImGui::Checkbox("Snap", &m_GizmoSnap); ImGui::SameLine();
+			ImGui::SetNextItemWidth(90.0f);
+			ImGui::InputFloat("##snapval", &m_SnapValue, 0.0f, 0.0f, "%.2f");
+			ImGui::EndDisabled();
 		}
 
 		// ---------------- Simulation (E3) ----------------

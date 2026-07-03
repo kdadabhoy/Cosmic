@@ -104,6 +104,23 @@ namespace Cosmic
 		uint32_t                GetVertexCount() const	{ return m_VertexCount; }
 		uint32_t                GetIndexCount() const	{ return m_IndexCount; }
 
+		////////////////////////////////
+		// Local-space Bounds (AABB)
+		///////////////////////////////
+
+		/**
+		 * @brief Axis-aligned bounding box in the mesh's LOCAL space, computed once
+		 * at construction from the vertex positions.
+		 *
+		 * Consumers: frame-to-fit navigation (S5.2), selection outlines and CPU
+		 * picking (S5.4), and frustum culling (S12) — transform the 8 corners by an
+		 * entity's model matrix to get its world AABB. An empty mesh reports a
+		 * degenerate box at the origin (min == max == 0).
+		 */
+		const glm::vec3& GetLocalMin() const	{ return m_LocalMin; }
+		const glm::vec3& GetLocalMax() const	{ return m_LocalMax; }
+		glm::vec3        GetLocalCenter() const	{ return 0.5f * (m_LocalMin + m_LocalMax); }
+
 	public:
 		// Public only so Ref<Mesh> construction via new works inside Create();
 		// client code should always go through the factories above.
@@ -114,5 +131,9 @@ namespace Cosmic
 		Ref<VertexArray> m_VertexArray;
 		uint32_t         m_VertexCount = 0;
 		uint32_t         m_IndexCount  = 0;
+
+		// Local-space bounds (see GetLocalMin/Max). Filled in the constructor.
+		glm::vec3        m_LocalMin{ 0.0f };
+		glm::vec3        m_LocalMax{ 0.0f };
 	};
 }

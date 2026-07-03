@@ -92,7 +92,7 @@ Carried forward from the original plan and extended — everything already shipp
 | S2 | Meshes + primitives + OBJ + Lambert | ✅ done 2026-07-01 |
 | S3 | Sim-viewport conveniences (FPV inset, ribbon, horizon, labels) | S3.1 + S3.2 ✅ 2026-07-02 (ViperSim P5); S3.3–S3.5 unpulled |
 | S4 | 3D engine foundations (cameras, materials, scene, glTF, lights, MRT, compute) | **S4.0–S4.7 ✅ code-complete 2026-07-02** (full `build_all` + `CosmicTests` 66/66 green; user visual pass of the Engine3DDemo toggles pending) |
-| S5 | CAD navigation, ViewCube, gizmos, 3D picking | planned — **S5.1 nav is [filler], do any time** |
+| S5 | CAD navigation, ViewCube, gizmos, 3D picking | **S5.1–S5.5 ✅ code-complete 2026-07-02** (roadmap Phase 8; build + `CosmicTests` 73/73 green; user visual pass pending) |
 | S6 | Visual realism core: HDR, PBR+IBL, shadows, SSAO, bloom, AA | planned |
 | S7 | Sky, atmosphere, fog, time-of-day | planned |
 | S8 | Terrain system | planned |
@@ -643,7 +643,24 @@ S4.0 — `glDispatchCompute` isn't in the old loader.
 
 ## 4. S5 — CAD navigation & editor interaction *(SolidWorks feel; gizmos)*
 
-1. **S5.1 Navigation presets on `OrbitCameraController`** **[filler — only needs S1, do any time]**
+> **✅ S5.1–S5.5 code-complete 2026-07-02 (roadmap Phase 8, branch `phase-7-3d-foundations`).**
+> Full VS-cmake build green (engine + ImGuizmo lib + every project DLL + tests); `CosmicTests`
+> **73/73** (103,934 assertions) incl. the new `tests/test_s5_navigation.cpp` (SnapView poses,
+> frame-to-fit distance, ViewCube face selection — all headless). New engine surface:
+> `NavStyle`/`ViewPreset` + CAD bindings / zoom-to-cursor / orbit-about-cursor / snap+frame on
+> `OrbitCameraController` (S5.1/S5.2), `camera/NavigationCube` (S5.3), `scene/ScenePicker` +
+> `FrameBuffer::ReadDepth` + `Mesh` local AABB (S5.4), `graphics/Gizmo` over vendored ImGuizmo
+> (S5.5). Every item wired into Engine3DDemo under a "CAD Tools (S5)" panel + hotkeys (F / Home /
+> W-E-R). **Remaining — user visual pass:** run Engine3DDemo, toggle CAD nav (MMB orbit about the
+> cursor point, scroll-to-cursor), click the ViewCube faces, enable editor mode → click-select an
+> ECS mesh (outline shows), drag the gizmo (move/rotate/scale + snap), F/Home framing.
+> **Deviation (documented, not silent):** the selection *outline* is an oriented mesh-AABB wire box
+> drawn depth-test-off, not the ID-buffer edge-detect post pass named in S5.4 — the edge-detect
+> variant needs a fullscreen pass that samples an FBO attachment as a texture, which has no clean
+> engine verb until the S6.1 post-process stack. The wire outline is robust, self-contained, and
+> S6.1 can upgrade it. Picking itself *is* ID-buffer based (`ScenePicker` + `ReadPixel`, S4.6 MRT).
+
+1. **S5.1 Navigation presets on `OrbitCameraController`** ✅ **[filler — only needs S1, do any time]**
    `SetNavigationStyle(NavStyle::Classic | NavStyle::CAD)`:
    - **CAD style (SolidWorks bindings):** **MMB drag = orbit**, **Ctrl+MMB = pan**,
      **Shift+MMB = dolly**, **scroll = zoom toward cursor** (not toward center), LMB stays free
@@ -655,22 +672,23 @@ S4.0 — `glDispatchCompute` isn't in the old loader.
    - Existing apps keep `Classic` unless they opt in.
    *Acceptance:* Engine3DDemo toggles styles at runtime; zoom-to-cursor keeps the point under the
    cursor stationary; MMB-orbit pivots about the model surface point.
-2. **S5.2 Frame & view shortcuts.** `F` frames selection (or whole scene bounds) with a smooth
+2. **S5.2 Frame & view shortcuts.** ✅ `F` frames selection (or whole scene bounds) with a smooth
    distance/target blend; `Home` = default iso view; numpad-style snap views
    (Front/Back/Top/Bottom/Left/Right/Iso) as an API (`SnapView(ViewPreset)`).
    *Acceptance:* framing a selected entity fills ~70% of the viewport height at any aspect.
-3. **S5.3 ViewCube / axis triad overlay.** Corner widget showing orientation; clicking a
+3. **S5.3 ViewCube / axis triad overlay.** ✅ Corner widget showing orientation; clicking a
    face/edge/corner calls `SnapView` with an animated transition. Implementation: small
    `Renderer3D` pass with its own tiny viewport + ray-vs-box picking (no ImGui hacks).
    *Acceptance:* cube tracks the camera; clicking "Front" animates to the front view.
-4. **S5.4 3D picking & selection outline.** Entity-ID MRT attachment (S4.6) + `ReadPixel` →
+4. **S5.4 3D picking & selection outline.** ✅ *(outline = geometric wire box; see the deviation
+   note above)* Entity-ID MRT attachment (S4.6) + `ReadPixel` →
    `EntitySelection` (reuses the existing 2D selection bus); hover highlight + selected outline
    (ID-buffer edge detect in a small post pass — no stencil complexity). Note: `ReadPixel` is a
    synchronous `glReadPixels` (pipeline stall) — fine for click-to-select; if hover picking runs
    every frame, move the readback to an async PBO round-robin as part of this item.
    *Acceptance:* click selects the exact mesh under the cursor incl. partial occlusion;
    outline renders behind UI.
-5. **S5.5 Transform gizmos.** Vendor **ImGuizmo** (single file, MIT, ImGui-native — matches our
+5. **S5.5 Transform gizmos.** ✅ Vendor **ImGuizmo** (single file, MIT, ImGui-native — matches our
    stack; hand-rolling parity is weeks of math for no gain). Wrap it:
    `Gizmo::Manipulate(camera, transformComponent, Mode::Translate|Rotate|Scale, Space::Local|World,
    snap)`. Keyboard: `W/E/R` mode cycle (only when viewport hovered & no ImGui text focus).

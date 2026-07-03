@@ -37,6 +37,15 @@ add_library(implot STATIC
 target_include_directories(implot PUBLIC dependencies/implot)
 target_link_libraries(implot PUBLIC imgui)
 
+# ImGuizmo (MIT) — transform gizmos behind the engine's graphics/Gizmo wrapper
+# (S5.5). Only the gizmo TU is vendored; the header stays out of public engine
+# headers, so clients use Cosmic::Gizmo, never ImGuizmo directly.
+add_library(ImGuizmo STATIC
+    dependencies/ImGuizmo/ImGuizmo.cpp
+)
+target_include_directories(ImGuizmo PUBLIC dependencies/ImGuizmo)
+target_link_libraries(ImGuizmo PUBLIC imgui)
+
 add_library(spdlog INTERFACE)
 target_include_directories(spdlog INTERFACE dependencies/spdlog/include)
 
@@ -79,7 +88,7 @@ target_compile_definitions(Cosmic PRIVATE COSMIC_BUILD_DLL)
 target_compile_definitions(Cosmic PRIVATE $<$<CONFIG:Release>:COSMIC_DIST>)
 
 # UPDATED: Linked 'entt' PUBLICLY so all dependent client targets inherit the headers
-target_link_libraries(Cosmic PUBLIC imgui implot glad glm entt glfw OpenGL::GL stb_image stb_truetype stb_image_write spdlog)
+target_link_libraries(Cosmic PUBLIC imgui implot ImGuizmo glad glm entt glfw OpenGL::GL stb_image stb_truetype stb_image_write spdlog)
 target_link_libraries(Cosmic PRIVATE tomlplusplus)
 
 # Borderless custom window chrome uses DWM (drop shadow) on Windows.
