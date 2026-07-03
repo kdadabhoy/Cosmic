@@ -341,11 +341,11 @@ namespace Frontier
             vc.Seed               = m_Island.Seed;
             vc.FlowCount          = 3;
             vc.FlowWidth          = 12.0f;
-            vc.FlowStep           = 8.0f;
-            vc.FlowMaxSteps       = 180;
+            vc.FlowStep           = 5.0f;    // small step = ribbon hugs bumps (no gaps)
+            vc.FlowLift           = 3.0f;    // clear the terrain LOD (no clipping in/out)
+            vc.FlowMaxSteps       = 220;
             vc.EmberRate          = 320.0f;
             vc.SmokeRate          = 45.0f;
-            vc.SmokeScale         = 4.0f;
             vc.FumaroleCount      = 4;
             vc.LightRadius        = 90.0f;
             vc.LightIntensity     = 6.0f;
@@ -651,6 +651,15 @@ namespace Frontier
         ImGui::TextWrapped("Frontier Island — volcano, forests, waterfall + wildlife "
                            "(F12a-c) with Subnautica-style water (surface + dive).");
         ImGui::Separator();
+
+        // Eruption trigger — lava-bomb fountain + ember/smoke surge + glow spike.
+        ImGui::PushStyleColor(ImGuiCol_Button,        ImVec4(0.70f, 0.22f, 0.06f, 1.0f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.90f, 0.32f, 0.10f, 1.0f));
+        if (ImGui::Button(ICON_LC_FLAME "  Trigger eruption", ImVec2(-1, 0)))
+            m_Volcano.TriggerEruption();
+        ImGui::PopStyleColor(2);
+        if (m_Volcano.IsErupting())
+            ImGui::TextColored({ 1.0f, 0.55f, 0.2f, 1.0f }, "  ERUPTING");
 
         ImGui::SeparatorText("Time of day");
         ImGui::SliderFloat("Hour", &m_TimeHours, 0.0f, 24.0f, "%.1f h");

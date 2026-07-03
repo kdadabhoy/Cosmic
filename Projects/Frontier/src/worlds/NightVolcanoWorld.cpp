@@ -138,12 +138,12 @@ namespace Frontier
         vc.SeaLevelY          = 0.0f;
         vc.Seed               = kSeed;
         vc.FlowCount          = 2;                       // lava lake + 2 flows (F13)
-        vc.FlowWidth          = 14.0f;
-        vc.FlowStep           = 8.0f;
-        vc.FlowMaxSteps       = 140;
+        vc.FlowWidth          = 12.0f;
+        vc.FlowStep           = 5.0f;                    // small step = no ribbon gaps
+        vc.FlowLift           = 3.0f;                    // clear the terrain LOD (no clipping)
+        vc.FlowMaxSteps       = 180;
         vc.EmberRate          = 960.0f;                  // ember storm (island x3)
-        vc.SmokeRate          = 60.0f;
-        vc.SmokeScale         = 5.0f;
+        vc.SmokeRate          = 70.0f;
         vc.FumaroleCount      = 3;
         vc.ColumnLights       = 3;                       // 3 pulsing lights up the smoke column
         vc.LightRadius        = 120.0f;
@@ -219,6 +219,15 @@ namespace Frontier
         ImGui::Begin("World Settings");
         ImGui::TextWrapped("Night Volcano — the caldera money shot (F13).");
         ImGui::Separator();
+
+        // Eruption trigger — a lava-bomb fountain + ember/smoke surge + glow spike.
+        ImGui::PushStyleColor(ImGuiCol_Button,        ImVec4(0.70f, 0.22f, 0.06f, 1.0f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.90f, 0.32f, 0.10f, 1.0f));
+        if (ImGui::Button(ICON_LC_FLAME "  TRIGGER ERUPTION", ImVec2(-1, 0)))
+            m_Volcano.TriggerEruption();
+        ImGui::PopStyleColor(2);
+        if (m_Volcano.IsErupting())
+            ImGui::TextColored({ 1.0f, 0.55f, 0.2f, 1.0f }, "  ERUPTING");
 
         ImGui::SeparatorText("Time of day");
         ImGui::SliderFloat("Hour", &m_TimeHours, 0.0f, 24.0f, "%.1f h");

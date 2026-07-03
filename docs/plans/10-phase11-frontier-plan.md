@@ -904,6 +904,13 @@ enabled `Settings.HeatHaze`, and its per-frame `Update`→`Submit`→`DrawOpaque
 materials feed the exact FlowEmissive uniform contract (`u_Heat/u_FlowSpeed/u_EmissiveIntensity/u_EdgeCool/
 u_CoolAlongLength/u_CrackScale/u_RippleAmp/u_NoiseScale/u_CrustColor` + per-frame `u_Time`). Build clean
 (0 warnings), **CosmicTests 116/116**; no engine (`Cosmic/src`) files touched → Engine3DDemo unaffected.
+**Post-visual-pass polish (2026-07-03, user feedback):** (1) lava flows no longer clip in/out of the
+cone — smaller march step (5 m) + a 3 m `FlowLift` clears the coarse-LOD terrain; (2) emitter particle
+SIZE/SPEED now scale with the caldera radius (a 9 cm ember preset was sub-pixel from 500 m — smoke/embers/
+fumaroles now read); embers/fountain are HDR-additive so they bloom; (3) caldera lava-lake emissive dropped
+3.2 (was blowing out to a white blob under bloom); (4) NEW `VolcanoScene::TriggerEruption()` — a burst-only
+lava-bomb fountain (real-gravity arcs) + ember/smoke surge + a decaying glow/light spike, wired to a
+"Trigger eruption" button in both world panels. Smoke-run clean, no GL errors.
 *(In-world day/night lava money-shot pixel check = user visual pass.)*
 
 **Files (app):** MODIFY `worlds/IslandWorld.cpp`; NEW `common/LavaFlowBuilder.h` (header-only).
