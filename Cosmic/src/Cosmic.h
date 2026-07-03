@@ -39,9 +39,11 @@
 #include "renderer/ShadowMap.h"          // S6.4 — directional sun shadows
 #include "renderer/SceneRenderer.h"      // F2  — engine-owned multi-pass frame orchestration
 #include "renderer/InstanceSet.h"        // F5  — per-instance transform pool (instanced draw)
+#include "renderer/CoverageCapture.h"    // F8  — top-down snow/coverage accumulation mask
 #include "terrain/Terrain.h"             // S8  — heightmap terrain (quadtree LOD + queries)
 #include "water/Water.h"                 // S9  — Gerstner water surface + buoyancy queries
 #include "particles/ParticleSystem.h"    // S10 — GPU particles + ribbon trails
+#include "particles/Presets.h"           // F8/F9 — atmospheric particle emitter presets
 #include "graphics/Buffer.h"
 #include "graphics/Shader.h"
 #include "graphics/VertexArray.h"

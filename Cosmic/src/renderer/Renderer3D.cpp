@@ -113,6 +113,12 @@ namespace Cosmic
 		uint32_t  ShadowMapID   = 0;
 		glm::mat4 ShadowLightViewProj{ 1.0f };
 		float     ShadowBias   = 0.0015f;
+
+		// =====================================================================
+		// --- Snow overlay (S11.1 / doc 10 F8): pushed by ApplySceneBindings ---
+		// =====================================================================
+		bool                  SnowActive = false;
+		Renderer3D::SnowDesc  Snow;
 	};
 
 	// Reserved fragment texture units — allocated in renderer/BindingPoints.h
@@ -124,6 +130,7 @@ namespace Cosmic
 		constexpr uint32_t kIblPrefilterUnit  = Bindings::TexUnitIblPrefilter;
 		constexpr uint32_t kIblBrdfLutUnit    = Bindings::TexUnitIblBrdfLut;
 		constexpr uint32_t kShadowMapUnit     = Bindings::TexUnitShadowMap;
+		constexpr uint32_t kSnowMaskUnit      = Bindings::TexUnitSnowMask;
 	}
 
 	static Renderer3DData s_Data;
@@ -507,6 +514,41 @@ namespace Cosmic
 		{
 			shader->SetFloat("u_HasShadow", 0.0f);
 		}
+
+		// Snow overlay (S11.1 / doc 10 F8): scene-wide, pushed to PBR / PBRInstanced /
+		// Terrain (each declares only the u_Snow* it uses; the rest no-op on -1). The
+		// mask sampler gets its reserved unit UNCONDITIONALLY (portability rule); a
+		// mask texture is bound there only when the SnowDesc supplies one. Cleared =
+		// u_SnowEnabled 0 (+ the gates that make it byte-identical to the shipped look).
+		shader->SetInt("u_SnowMaskMap", (int)kSnowMaskUnit);
+		if (s_Data.SnowActive)
+		{
+			const Renderer3D::SnowDesc& sn = s_Data.Snow;
+			shader->SetFloat("u_SnowEnabled", 1.0f);
+			shader->SetFloat("u_SnowAmount", sn.Amount);
+			shader->SetFloat("u_SnowLine", sn.Line);
+			shader->SetFloat("u_SnowBlendH", sn.BlendHalf);
+			shader->SetFloat("u_SnowSlopeSharp", sn.SlopeSharp);
+			shader->SetFloat3("u_SnowColor", sn.Color);
+			shader->SetFloat("u_SnowSparkle", sn.Sparkle);
+			shader->SetFloat("u_SnowOverlayAmount", sn.OverlayAmount);
+
+			const float hasMask = sn.MaskTextureID != 0 ? 1.0f : 0.0f;
+			shader->SetFloat("u_HasSnowMask", hasMask);
+			shader->SetFloat4("u_SnowMaskRect",
+				{ sn.MaskWorldMin.x, sn.MaskWorldMin.y, sn.MaskWorldInvSize.x, sn.MaskWorldInvSize.y });
+			shader->SetFloat2("u_SnowMaskYDecode", sn.MaskYDecode);
+			shader->SetFloat("u_SnowMaskYTol", sn.MaskYTolerance);
+			if (sn.MaskTextureID != 0)
+				RenderCommand::BindTextureSlot(kSnowMaskUnit, sn.MaskTextureID);
+		}
+		else
+		{
+			shader->SetFloat("u_SnowEnabled", 0.0f);
+			shader->SetFloat("u_HasSnowMask", 0.0f);
+			shader->SetFloat("u_SnowOverlayAmount", 0.0f);
+			shader->SetFloat("u_SnowSparkle", 0.0f);
+		}
 	}
 
 	void Renderer3D::DrawMeshInstanced(const Ref<Mesh>& mesh, const Ref<Material>& material,
@@ -665,6 +707,21 @@ namespace Cosmic
 	void Renderer3D::ClearShadow()
 	{
 		s_Data.ShadowActive = false;
+	}
+
+	/////////////////////////////////////////////////////////////////////////////////
+	// Snow overlay (S11.1 / doc 10 F8)
+	/////////////////////////////////////////////////////////////////////////////////
+
+	void Renderer3D::SetSnow(const SnowDesc& desc)
+	{
+		s_Data.Snow       = desc;
+		s_Data.SnowActive = true;
+	}
+
+	void Renderer3D::ClearSnow()
+	{
+		s_Data.SnowActive = false;
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////

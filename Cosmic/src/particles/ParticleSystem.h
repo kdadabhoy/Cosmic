@@ -94,6 +94,11 @@ namespace Cosmic
 
 		float SoftFadeDistance = 0.4f;      // meters; 0 disables soft particles
 
+		// --- Velocity stretch (S11 / doc 10 F9): elongate the billboard along its
+		//     screen-space velocity by this many SECONDS of motion (rain streaks,
+		//     sparks). 0 (default) = the shipped camera-facing quad, byte-identical. ---
+		float StretchByVelocity = 0.0f;
+
 		bool GpuSimulation = true;          // false = CPU fallback path
 	};
 

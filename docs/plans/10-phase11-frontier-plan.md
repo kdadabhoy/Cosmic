@@ -571,7 +571,17 @@ WhitecapStrength, flying the camera underwater tints + fogs the frame; Engine3DD
 
 ## F7 — Sky v2 C++ (detailed sky, moon/night IBL, lens flare)
 
-**Status:** ☐ not started
+**Status:** ✅ 2026-07-03 — Night IBL: `EnvironmentMap::SetNightSky`/`SetMoon` feed `EnvSky.glsl`'s
+`u_NightSky`/`u_MoonDirection`/`u_MoonIntensity` during the bake (defaults keep it byte-identical).
+Detailed sky: new `SkyDetailDesc` + `EnvironmentMap::DrawSkyboxDetailed` (lazy `SkyDetail.glsl`, same
+fullscreen-triangle/depth-off draw as DrawSkybox, fed the stored env sun); `SceneRenderDesc::DetailedSky`
+routes the opaque + reflection passes through it instead of the baked cube. Lens flare:
+`PostProcessStack::SetLensFlare`/`SetLensFlareSun` draw `LensFlare.glsl` additively in Composite's LDR
+stage (after tonemap, before FXAA), sun screen-pos projected from `camPos − sunTravelDir·1e4` through the
+frame VP; `SceneRendererSettings{LensFlare,LensFlareIntensity}` wired in PassPostAndComposite (tint = sun
+color). Build + configure green; **CosmicTests 114/114**; Engine3DDemo renders its full scene 9 s with zero
+GL/shader/framebuffer errors (gates default off → byte-identical); Frontier boots (self-check 8/8, GL 4.5).
+*(In-world detailed-sky/flare pixel check arrives with F12a wiring — user visual pass.)*
 
 **Files:** MODIFY `renderer/EnvironmentMap.h/.cpp`, `renderer/PostProcessStack.h/.cpp`,
 `renderer/SceneRenderer.h/.cpp`. Shaders (already written — READ FIRST): `SkyDetail.glsl`,
@@ -616,7 +626,19 @@ identical.
 
 ## F8 — Snow system (S11.1): overlay push + coverage capture + presets
 
-**Status:** ☐ not started
+**Status:** ✅ 2026-07-03 — `Bindings::TexUnitSnowMask = 12`. `Renderer3D::SnowDesc` + `SetSnow`/`ClearSnow`;
+`ApplySceneBindings` pushes the `u_Snow*` overlay uniforms UNCONDITIONALLY to PBR / PBRInstanced / Terrain
+(mask sampler assigned to unit 12 always — texture bound only when supplied; `u_SnowOverlayAmount` no-ops
+off-terrain) — cleared = byte-identical. NEW `renderer/CoverageCapture` (non-copyable Init/Shutdown):
+top-down ortho depth capture (reuses ShadowDepth/ShadowDepthInstanced with a Y-flipped ortho so the mask
+UV maps world XZ UN-mirrored) + RGBA16F ping-pong mask advanced by `SnowAccum.glsl` (`UpdateCoverage`), with
+`DrawCaster`/`DrawCasterInstanced`/`FillSnowDesc`/`GetMaskTextureID`. SceneRenderer: `ScenePass::TopDownDepth`
++ context routing + `PassCoverage` (after PassShadow; driven by `SceneRenderDesc{Coverage, CoverageAccum/MeltPerSec,
+DeltaTime}`). NEW `particles/Presets.h` (SoftPuff/Snowfall/Embers/SmokeColumn/Mist + F9 Rain/SplashRings) +
+`tests/test_presets.cpp` (7 cases). Deviation: the mask target is RGBA16F (engine has no RG16F — only RG used,
+functionally identical). Build + configure green; **CosmicTests 114/114**; Engine3DDemo (never calls SetSnow)
+renders its full scene zero errors — byte-identical (strict-driver unit-12 sampler path clean). *(In-world
+accumulation visual = user pass w/ F14.)*
 
 **Files:** MODIFY `renderer/BindingPoints.h` (claim `TexUnitSnowMask = 12`),
 `renderer/Renderer3D.h/.cpp` (SetSnow/ClearSnow + ApplySceneBindings push),
@@ -676,7 +698,14 @@ twinkles in sun; ClearSnow restores exactly; Engine3DDemo identical.
 
 ## F9 — Rain bits: velocity stretch + splash preset
 
-**Status:** ☐ not started
+**Status:** ✅ 2026-07-03 — `ParticleEmitterSpec::StretchByVelocity` (seconds; 0 default = the shipped
+camera-facing quad, byte-identical) uploaded as `u_StretchByVelocity` in the shared `RenderInternal` — one
+setter covers both the GPU- and CPU-simulated draw paths. `Presets::Rain(boxExtents, rate)` (box spawn — no
+initial dir, so strong straight-down gravity + drag give near-terminal streaks; StretchByVelocity 0.02, cool
+translucent tint, short life) + `Presets::SplashRings(rate)` (surface ring: tiny life, size ramps up while
+alpha ramps down) in `particles/Presets.h`; invariants covered by `tests/test_presets.cpp`. Build green;
+**CosmicTests 114/114**; Engine3DDemo emitters byte-identical (field default 0). *(Rain-streak/ripple visual
+= user pass w/ F16.)*
 
 **Files:** MODIFY `particles/ParticleSystem.h/.cpp` (spec field + uniform), `particles/Presets.h`
 (Rain + SplashRings). Shader (already written): `ParticleBillboards.glsl`'s
@@ -703,7 +732,14 @@ that lengthen with fall speed; setting the field back to 0 restores round puffs.
 
 ## F10 — Ambience audio (app-side)
 
-**Status:** ☐ not started
+**Status:** ✅ 2026-07-03 — All app-side. NEW `Projects/Frontier/src/common/ProceduralAudio` (`Ensure(name)`:
+a user-dropped `project://sounds/<name>.wav` wins — resolved in the Frontier DLL per the VFS note — else it
+synthesizes `user://frontier/audio/<name>.wav` ONCE via a 16-bit mono 44.1 kHz PCM-WAV writer, then loads it;
+recipes rumble/wind/water = seamless crossfaded loops, thunder = exponential-decay one-shot; results cached by
+name). NEW header-only `common/DistanceLoop` (owns one `PlayLooping` voice started muted; `Update` sets volume =
+`maxVol·clamp(1 − dist/radius, 0, 1)²`; Start/Stop lifecycle; headless-degraded-safe — invalid handle → all
+no-op). Build green (Frontier DLL links; audio path stays headless-safe); **CosmicTests 114/114**; Frontier boots
+clean. *(Rumble-swell-on-approach + regenerate-on-delete audible check = user pass w/ F12b.)*
 
 **Files (ALL app-side):** NEW `Projects/Frontier/src/common/ProceduralAudio.h/.cpp` (WAV synth +
 cache), NEW `Projects/Frontier/src/common/DistanceLoop.h` (header-only).

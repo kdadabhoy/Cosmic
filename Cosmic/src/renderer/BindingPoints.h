@@ -80,8 +80,13 @@ namespace Cosmic::Bindings
 	/** S6.4 — directional sun shadow map (`u_ShadowMap`). */
 	constexpr uint32_t TexUnitShadowMap = 11;
 
+	/** S11.1 (doc 10 F8) — snow coverage mask (`u_SnowMaskMap`; RG = coverage +
+	 *  encoded top-surface Y). Pushed by Renderer3D::SetSnow via ApplySceneBindings
+	 *  to PBR / PBRInstanced / Terrain. Assigned unconditionally (portability rule);
+	 *  a texture is bound here only when the SnowDesc supplies a mask. */
+	constexpr uint32_t TexUnitSnowMask = 12;
+
 	// F2 SceneRenderer claims NO new slots: it orchestrates the existing
 	// Renderer3D / EnvironmentMap / ShadowMap / PostProcessStack passes, which
-	// already own every binding above. (F5 instancing claims SSBO 9 above; F8
-	// snow claims TexUnitSnowMask = 12.)
+	// already own every binding above. (F5 instancing claims SSBO 9 above.)
 }

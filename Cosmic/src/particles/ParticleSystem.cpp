@@ -316,6 +316,10 @@ namespace Cosmic
 		m_DrawShader->SetFloat("u_FlipbookFps", m_Spec.FlipbookFps);
 		m_DrawShader->SetFloat("u_FlipbookBlend", m_Spec.FlipbookBlend ? 1.0f : 0.0f);
 
+		// Velocity stretch (F9): 0 default keeps the shipped camera-facing quad.
+		// Set on the shared draw path so GPU- and CPU-simulated emitters both get it.
+		m_DrawShader->SetFloat("u_StretchByVelocity", m_Spec.StretchByVelocity);
+
 		m_Texture->Bind(0);
 		m_DrawShader->SetInt("u_Texture", 0);
 

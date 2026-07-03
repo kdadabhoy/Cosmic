@@ -22,6 +22,7 @@ add_executable(CosmicTests
     test_phase10_world.cpp
     test_flycamera.cpp
     test_frustum.cpp
+    test_presets.cpp
 )
 
 target_link_libraries(CosmicTests PRIVATE Cosmic)

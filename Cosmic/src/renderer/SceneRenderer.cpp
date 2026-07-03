@@ -4,6 +4,7 @@
 
 #include "renderer/RenderCommand.h"
 #include "renderer/InstanceSet.h"
+#include "renderer/CoverageCapture.h"
 #include "graphics/FrameBuffer.h"
 #include "graphics/Mesh.h"
 #include "graphics/Model.h"
@@ -57,6 +58,12 @@ namespace Cosmic
 				m_Shadow->DrawCaster(mesh, transform);
 			return;
 		}
+		if (Pass == ScenePass::TopDownDepth)
+		{
+			if (m_Coverage && mesh)
+				m_Coverage->DrawCaster(mesh, transform);
+			return;
+		}
 		Renderer3D::DrawMesh(mesh, transform, color, entityID);
 	}
 
@@ -69,17 +76,28 @@ namespace Cosmic
 				m_Shadow->DrawCaster(mesh, transform);      // material ignored for depth
 			return;
 		}
+		if (Pass == ScenePass::TopDownDepth)
+		{
+			if (m_Coverage && mesh)
+				m_Coverage->DrawCaster(mesh, transform);
+			return;
+		}
 		Renderer3D::DrawMesh(mesh, transform, material, entityID);
 	}
 
 	void SceneDrawContext::DrawModel(const Ref<Model>& model, const glm::mat4& transform, int entityID) const
 	{
-		if (Pass == ScenePass::ShadowDepth)
+		if (Pass == ScenePass::ShadowDepth || Pass == ScenePass::TopDownDepth)
 		{
-			if (m_Shadow && model)
+			if (model)
 				for (const auto& part : model->GetParts())
 					if (part.Geometry)
-						m_Shadow->DrawCaster(part.Geometry, transform);
+					{
+						if (Pass == ScenePass::ShadowDepth && m_Shadow)
+							m_Shadow->DrawCaster(part.Geometry, transform);
+						else if (Pass == ScenePass::TopDownDepth && m_Coverage)
+							m_Coverage->DrawCaster(part.Geometry, transform);
+					}
 			return;
 		}
 		Renderer3D::DrawModel(model, transform, entityID);
@@ -92,6 +110,12 @@ namespace Cosmic
 		{
 			if (m_Shadow && mesh)
 				m_Shadow->DrawCasterInstanced(mesh, instances, count);   // material/entityID ignored
+			return;
+		}
+		if (Pass == ScenePass::TopDownDepth)
+		{
+			if (m_Coverage && mesh)
+				m_Coverage->DrawCasterInstanced(mesh, instances, count);
 			return;
 		}
 		Renderer3D::DrawMeshInstanced(mesh, material, instances, count, entityID);
@@ -205,6 +229,7 @@ namespace Cosmic
 		// HUD's rows; they respond live to the Settings toggles (a disabled feature
 		// shrinks or zeroes its zone).
 		RenderCommand::BeginGpuZone("Shadow");         PassShadow(desc);           RenderCommand::EndGpuZone();  // 4
+		RenderCommand::BeginGpuZone("Coverage");       PassCoverage(desc);         RenderCommand::EndGpuZone();  // 4b (F8)
 		RenderCommand::BeginGpuZone("Reflection");     PassReflection(desc);       RenderCommand::EndGpuZone();  // 5
 		RenderCommand::BeginGpuZone("Opaque");         PassOpaqueHDR(desc);        RenderCommand::EndGpuZone();  // 6
 		RenderCommand::BeginGpuZone("Transparents");   PassTransparents(desc);     RenderCommand::EndGpuZone();  // 7
@@ -259,6 +284,48 @@ namespace Cosmic
 		m_Shadow.PushToRenderer(desc.Settings.ShadowBias);
 	}
 
+	// 4b) Top-down snow coverage capture (F8) ----------------------------------
+	void SceneRenderer::PassCoverage(const SceneRenderDesc& desc)
+	{
+		if (!desc.Coverage || !desc.Coverage->IsInitialized())
+			return;
+
+		CoverageCapture& cov = *desc.Coverage;
+		cov.BeginDepthCapture();   // binds the depth FBO + ortho viewport; restores at End
+
+		// App occluders — routed to the coverage's depth draw via TopDownDepth.
+		if (desc.DrawOpaque)
+		{
+			SceneDrawContext ctx;
+			ctx.Pass           = ScenePass::TopDownDepth;
+			ctx.ViewProjection = cov.GetCaptureViewProj();
+			ctx.EyePosition    = desc.CameraPosition;
+			ctx.CameraPosition = desc.CameraPosition;
+			ctx.m_Coverage     = &cov;
+			desc.DrawOpaque(ctx);
+		}
+
+		// ECS meshes occlude too (CastShadows doubles as the "casts coverage" gate).
+		if (desc.EcsScene)
+		{
+			auto view = desc.EcsScene->View<TransformComponent, MeshRendererComponent>();
+			for (auto entity : view)
+			{
+				Entity e{ entity, desc.EcsScene };
+				const auto& mr = e.GetComponent<MeshRendererComponent>();
+				if (mr.MeshAsset && mr.CastShadows)
+					cov.DrawCaster(mr.MeshAsset, e.GetComponent<TransformComponent>().GetTransform());
+			}
+		}
+
+		// Terrain top surface (same depth path, the coverage's top-down ortho matrix).
+		if (desc.TerrainSystem)
+			desc.TerrainSystem->RenderDepth(cov.GetCaptureViewProj(), desc.CameraPosition);
+
+		cov.EndDepthCapture();
+		cov.UpdateCoverage(desc.DeltaTime, desc.CoverageAccumPerSec, desc.CoverageMeltPerSec);
+	}
+
 	// 5) Planar reflection pass (primary water only) ---------------------------
 	void SceneRenderer::PassReflection(const SceneRenderDesc& desc)
 	{
@@ -281,7 +348,12 @@ namespace Cosmic
 		Renderer3D::BeginScene(reflVP, reflCam);
 
 		if (desc.Settings.Skybox)
-			m_Environment.DrawSkybox(reflVP);
+		{
+			if (desc.DetailedSky)
+				m_Environment.DrawSkyboxDetailed(reflVP, *desc.DetailedSky);
+			else
+				m_Environment.DrawSkybox(reflVP);
+		}
 
 		// LOD selection uses the REAL camera position so the reflected terrain
 		// tessellation matches the main view exactly (no seam under the surface).
@@ -312,7 +384,12 @@ namespace Cosmic
 		Renderer3D::BeginScene(m_ViewProj, desc.CameraPosition);
 
 		if (desc.Settings.Skybox)
-			m_Environment.DrawSkybox(m_ViewProj);
+		{
+			if (desc.DetailedSky)
+				m_Environment.DrawSkyboxDetailed(m_ViewProj, *desc.DetailedSky);
+			else
+				m_Environment.DrawSkybox(m_ViewProj);
+		}
 
 		if (desc.TerrainSystem)
 			desc.TerrainSystem->Render(desc.CameraPosition);
@@ -395,9 +472,15 @@ namespace Cosmic
 		// the waterline (checked shader-side against UnderwaterY).
 		m_Post.SetUnderwater(s.Underwater, s.UnderwaterY, s.UnderwaterColor,
 		                     s.UnderwaterDensity, s.UnderwaterTint);
-		// Camera for depth reconstruction (fog + god rays) — needed by both
-		// RenderEffects and Composite; set once, it persists across both.
+		// Camera for depth reconstruction (fog + god rays + lens flare) — needed by
+		// both RenderEffects and Composite; set once, it persists across both.
 		m_Post.SetCamera(m_ViewProj, desc.CameraPosition);
+
+		// Lens flare (F7): additive screen-space flare in Composite's LDR stage. The
+		// tint is the sun color; the sun screen position comes from the camera above
+		// and the sun travel direction (the sun sits opposite it).
+		m_Post.SetLensFlare(s.LensFlare, s.LensFlareIntensity, desc.Lights.SunColor);
+		m_Post.SetLensFlareSun(desc.Lights.SunDirection);
 
 		const bool godRays = s.GodRays && s.Shadows;   // shafts raymarch the shadow map
 		m_Post.SetGodRaysEnabled(godRays);

@@ -63,8 +63,9 @@ namespace Cosmic
 		m_BloomBlurShader      = Shader::Create("assets/shaders/BloomBlur.glsl");
 		m_FxaaShader           = Shader::Create("assets/shaders/Fxaa.glsl");
 		m_GodRaysShader        = Shader::Create("assets/shaders/GodRays.glsl");
+		m_LensFlareShader      = Shader::Create("assets/shaders/LensFlare.glsl");
 		if (!m_SsaoShader || !m_SsaoBlurShader || !m_BloomPrefilterShader || !m_BloomBlurShader ||
-		    !m_FxaaShader || !m_GodRaysShader)
+		    !m_FxaaShader || !m_GodRaysShader || !m_LensFlareShader)
 			CS_CORE_ERROR("PostProcessStack: one or more effect shaders failed to load.");
 
 		// --- Targets ---
@@ -150,6 +151,7 @@ namespace Cosmic
 		m_GodRaysShader.reset();
 		m_ShaftTarget.reset();
 		m_DistortTarget.reset();
+		m_LensFlareShader.reset();
 		m_Initialized = false;
 		m_Width = m_Height = 0;
 	}
@@ -441,6 +443,35 @@ namespace Cosmic
 			m_TonemapShader->SetFloat("u_UseDistort", 0.0f);
 
 		DrawFullscreenTriangle();
+
+		// Lens flare (F7): additive over the tonemapped image, AFTER tonemap and
+		// BEFORE FXAA (so the flare is anti-aliased with the frame). The current
+		// target is the tonemap output — the LDR intermediate when FXAA is on, else
+		// the caller's final target — which is exactly where the flare belongs.
+		if (m_LensFlareEnabled && m_LensFlareShader)
+		{
+			// The sun sits far away OPPOSITE its travel direction; project that world
+			// point through the frame's view-projection (set via SetCamera) to a
+			// screen-space UV. w > 0 == in front of the camera.
+			const glm::vec3 sunWorld = m_CameraPos - m_LensFlareSunDir * 1.0e4f;
+			const glm::vec4 clip     = m_ViewProjection * glm::vec4(sunWorld, 1.0f);
+			const bool      inFront  = clip.w > 0.0f;
+			glm::vec2 sunScreen(0.5f);
+			if (inFront)
+				sunScreen = glm::vec2(clip.x, clip.y) / clip.w * 0.5f + 0.5f;
+
+			RenderCommand::SetBlendMode(RenderCommand::BlendMode::Additive);
+			m_LensFlareShader->Bind();
+			RenderCommand::BindTextureSlot(3, m_SceneHDR->GetDepthAttachmentRendererID());
+			m_LensFlareShader->SetInt("u_Depth", 3);
+			m_LensFlareShader->SetFloat2("u_SunScreenPos", sunScreen);
+			m_LensFlareShader->SetFloat("u_SunInFront", inFront ? 1.0f : 0.0f);
+			m_LensFlareShader->SetFloat("u_Intensity", m_LensFlareIntensity);
+			m_LensFlareShader->SetFloat3("u_Tint", m_LensFlareTint);
+			m_LensFlareShader->SetFloat("u_Aspect", m_Height > 0 ? (float)m_Width / (float)m_Height : 1.0f);
+			DrawFullscreenTriangle();
+			RenderCommand::SetBlendMode(RenderCommand::BlendMode::Alpha);   // restore engine default
+		}
 
 		// FXAA resolve: LDR intermediate → the caller's target.
 		if (fxaa)

@@ -47,6 +47,31 @@ namespace Cosmic
 	class Shader;
 	class Mesh;
 
+	/**
+	 * @brief Per-frame parameters for the DETAILED per-pixel sky background pass
+	 * (SkyDetail.glsl / doc 10 F7). The baked EnvSky cube stays the IBL source
+	 * (lighting); this re-evaluates the same sky analytically at full resolution
+	 * and adds what a low-res cube cannot hold: a limb-darkened sun disc, a hashed
+	 * star field with twinkle, a milky-way band, and a moon whose PHASE falls out
+	 * of lighting its visible hemisphere by the real sun. All values default to the
+	 * shipped-look day palette (moon/stars contribute only at night, gated by the
+	 * shader's own day/night ramp). App policy owns the scenario values.
+	 */
+	struct SkyDetailDesc
+	{
+		float     SkyIntensity      = 1.0f;            // overall HDR multiplier
+		float     SunDiscIntensity  = 40.0f;           // HDR disc radiance (bloom does the rest)
+		float     SunAngularRadius  = 0.00465f;        // radians (~0.53° real sun)
+		glm::vec3 MoonDirection{ 0.0f, 1.0f, 0.0f };   // direction TO the moon
+		float     MoonIntensity     = 0.0f;            // 0 = no moon disc
+		float     MoonAngularRadius = 0.0087f;         // radians (slightly oversized reads better)
+		float     StarIntensity     = 1.0f;
+		float     StarDensity       = 90.0f;           // candidate stars per cube-face axis
+		float     MilkyWayIntensity = 0.35f;
+		glm::vec3 MilkyWayDir{ 0.36f, 0.48f, 0.80f };  // normal of the galactic band's great circle
+		float     Time              = 0.0f;            // seconds (star twinkle)
+	};
+
 	class COSMIC_API EnvironmentMap
 	{
 	public:
@@ -69,6 +94,18 @@ namespace Cosmic
 		/** Overall sky HDR brightness (marks dirty). */
 		void SetSkyIntensity(float intensity);
 
+		/**
+		 * Enable the night tier of the BAKED sky (EnvSky.glsl): the cube darkens
+		 * through twilight as the sun sets and a moon-glow term takes over so the
+		 * IBL convolution yields cool moon-lit ambient. Default off keeps the bake
+		 * byte-identical to the shipped S7 output. Marks the bake dirty.
+		 */
+		void SetNightSky(bool enabled);
+		/** Moon direction (TO the moon, normalized internally) + intensity fed to the
+		 *  night bake's moon-glow term. Marks dirty. (The crisp moon DISC lives in the
+		 *  per-pixel SkyDetail pass, not the bake.) */
+		void SetMoon(const glm::vec3& toMoon, float intensity);
+
 		/** (Re)bake environment → irradiance → prefilter. No-op if not dirty. */
 		void Bake();
 		/** Force the next Bake() to run even if the sun hasn't moved. */
@@ -83,6 +120,17 @@ namespace Cosmic
 		 * off) and the scene draws over it. Reads the binding-1 camera UBO.
 		 */
 		void DrawSkybox(const glm::mat4& viewProjection);
+
+		/**
+		 * Draw the DETAILED analytic sky (SkyDetail.glsl) as the scene background
+		 * INSTEAD of the baked cube — same draw shape as DrawSkybox (fullscreen
+		 * triangle at the far plane, depth test/write off) but re-evaluated per
+		 * pixel: a crisp limb-darkened sun disc, hashed stars with twinkle, a
+		 * milky-way band and a phased moon. Uses the stored env sun direction; the
+		 * rest comes from `sky`. Reads the binding-1 camera UBO. The shader is
+		 * lazy-loaded on first call (most scenes never enable it).
+		 */
+		void DrawSkyboxDetailed(const glm::mat4& viewProjection, const SkyDetailDesc& sky);
 
 		uint32_t GetIrradianceID() const;
 		uint32_t GetPrefilterID() const;
@@ -102,6 +150,7 @@ namespace Cosmic
 		Ref<Shader> m_PrefilterShader;
 		Ref<Shader> m_BrdfShader;
 		Ref<Shader> m_SkyboxShader;
+		Ref<Shader> m_SkyDetailShader;   // SkyDetail.glsl (lazy — detailed sky background, F7)
 
 		Ref<Mesh>   m_Cube;              // unit box for cube-render passes
 
@@ -110,5 +159,10 @@ namespace Cosmic
 		float     m_PrefilterMaxLod = 0.0f;
 		bool      m_Dirty          = true;
 		bool      m_Initialized    = false;
+
+		// --- Night tier of the bake (F7) — defaults keep the bake byte-identical ---
+		bool      m_NightSky       = false;         // EnvSky u_NightSky
+		glm::vec3 m_MoonDir{ 0.0f, 1.0f, 0.0f };    // direction TO the moon
+		float     m_MoonIntensity  = 0.0f;          // EnvSky u_MoonIntensity
 	};
 }

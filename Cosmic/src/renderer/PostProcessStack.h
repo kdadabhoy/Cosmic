@@ -161,6 +161,22 @@ namespace Cosmic
 		}
 		bool IsUnderwaterEnabled() const { return m_UnderwaterEnabled; }
 
+		// ---- Lens flare (S7 / doc 10 F7) ----
+		/**
+		 * Screen-space lens flare (LensFlare.glsl) drawn ADDITIVELY over the
+		 * tonemapped LDR image (after tonemap, before FXAA). `tint` is usually the
+		 * sun color. Occlusion is resolved in-shader from the scene depth around the
+		 * sun's screen position. Gated by `enabled` (default off = the shipped
+		 * output). Also needs SetLensFlareSun each frame + SetCamera (screen-space
+		 * projection of the sun).
+		 */
+		void SetLensFlare(bool enabled, float intensity, const glm::vec3& tint)
+		{ m_LensFlareEnabled = enabled; m_LensFlareIntensity = intensity; m_LensFlareTint = tint; }
+		bool IsLensFlareEnabled() const { return m_LensFlareEnabled; }
+		/** Direction the sunlight TRAVELS (the sun sits opposite). Call each frame the
+		 *  flare is enabled; Composite projects the far sun point through the camera. */
+		void SetLensFlareSun(const glm::vec3& sunTravelDir) { m_LensFlareSunDir = sunTravelDir; }
+
 		uint32_t GetWidth()  const { return m_Width; }
 		uint32_t GetHeight() const { return m_Height; }
 
@@ -245,5 +261,12 @@ namespace Cosmic
 		glm::vec3 m_UnderwaterColor{ 0.05f, 0.18f, 0.22f };
 		float     m_UnderwaterDensity = 0.08f;
 		glm::vec3 m_UnderwaterTint{ 0.55f, 0.75f, 0.90f };
+
+		// ---- Lens flare (S7 / doc 10 F7) ----
+		Ref<Shader> m_LensFlareShader;               // LensFlare.glsl
+		bool        m_LensFlareEnabled   = false;
+		float       m_LensFlareIntensity = 0.35f;
+		glm::vec3   m_LensFlareTint{ 1.0f };
+		glm::vec3   m_LensFlareSunDir{ 0.0f, -1.0f, 0.0f };   // direction the sun light TRAVELS
 	};
 }

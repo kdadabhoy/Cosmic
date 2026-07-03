@@ -65,12 +65,14 @@ namespace Cosmic
 	class ParticleEmitter;
 	class RibbonEmitter;
 	class Scene;
+	class CoverageCapture;
 
 	/**
 	 * @brief Which pass a DrawOpaque invocation is servicing. Switches on this
-	 * MUST keep a default: arm — F8 (snow coverage) appends a top-down depth pass.
+	 * MUST keep a default: arm. TopDownDepth (F8) is the snow-coverage top-down
+	 * depth capture — like ShadowDepth but routed to a CoverageCapture.
 	 */
-	enum class ScenePass : uint8_t { ShadowDepth = 0, Reflection, Main };
+	enum class ScenePass : uint8_t { ShadowDepth = 0, Reflection, Main, TopDownDepth };
 
 	/**
 	 * @brief Handed to SceneRenderDesc::DrawOpaque once per pass. The submit verbs
@@ -87,7 +89,7 @@ namespace Cosmic
 		glm::vec3 EyePosition{ 0.0f };      // this pass's eye (mirrored under Reflection)
 		glm::vec3 CameraPosition{ 0.0f };   // ALWAYS the real camera — LOD decisions use this
 
-		bool IsDepthOnly() const { return Pass == ScenePass::ShadowDepth; }
+		bool IsDepthOnly() const { return Pass == ScenePass::ShadowDepth || Pass == ScenePass::TopDownDepth; }
 
 		void DrawMesh (const Ref<Mesh>& mesh, const glm::mat4& transform,
 		               const glm::vec4& color, int entityID = -1) const;
@@ -102,7 +104,8 @@ namespace Cosmic
 
 	private:
 		friend class SceneRenderer;
-		ShadowMap* m_Shadow = nullptr;      // ShadowDepth routing target
+		ShadowMap*       m_Shadow   = nullptr;   // ShadowDepth routing target
+		CoverageCapture* m_Coverage = nullptr;   // TopDownDepth routing target (F8)
 	};
 
 	/**
@@ -128,7 +131,10 @@ namespace Cosmic
 		glm::vec3 UnderwaterColor{ 0.05f, 0.18f, 0.22f };
 		float     UnderwaterDensity = 0.08f;
 		glm::vec3 UnderwaterTint{ 0.55f, 0.75f, 0.90f };
-		// F7 appends detailed-sky + lens-flare fields.
+		// Lens flare (F7): additive screen-space flare in the composite LDR stage.
+		// The tint is taken from the sun color; the sun screen position is derived
+		// from the frame camera. Auto-uses the detailed-sky when DetailedSky is set.
+		bool  LensFlare = false; float LensFlareIntensity = 0.35f;
 	};
 
 	/**
@@ -151,6 +157,20 @@ namespace Cosmic
 		std::vector<RibbonEmitter*>   Ribbons;
 		std::vector<ParticleEmitter*> DistortionEmitters;     // heat-haze field writers
 		Scene* EcsScene = nullptr;                            // Main only (not Reflection)
+
+		// F7: when set, the opaque + reflection passes draw the DETAILED per-pixel
+		// sky (SkyDetail.glsl) instead of the baked skybox cube. Points at app-owned
+		// storage that must outlive the Render() call.
+		const SkyDetailDesc* DetailedSky = nullptr;
+
+		// F8: when set, a top-down depth capture runs right after the shadow pass —
+		// DrawOpaque is invoked with a ScenePass::TopDownDepth context (routed to the
+		// CoverageCapture), plus terrain depth + ECS casters — then the coverage mask
+		// advances by DeltaTime. The app feeds the resulting mask into a SnowDesc.
+		CoverageCapture* Coverage           = nullptr;
+		float            CoverageAccumPerSec = 0.0f;
+		float            CoverageMeltPerSec  = 0.0f;
+		float            DeltaTime           = 0.0f;   // seconds since last frame
 
 		std::function<void(const SceneDrawContext&)> DrawOpaque;
 		std::function<void(const SceneDrawContext&)> DrawTransparent;  // HDR still bound, after water/particles
@@ -189,6 +209,7 @@ namespace Cosmic
 	private:
 		// One method per pass = F3's GPU-zone hook points.
 		void PassShadow(const SceneRenderDesc& desc);
+		void PassCoverage(const SceneRenderDesc& desc);   // F8 top-down snow capture
 		void PassReflection(const SceneRenderDesc& desc);
 		void PassOpaqueHDR(const SceneRenderDesc& desc);
 		void PassTransparents(const SceneRenderDesc& desc);

@@ -250,6 +250,44 @@ namespace Cosmic
 		static void SetShadow(uint32_t shadowMapID, const glm::mat4& lightViewProj, float bias);
 		static void ClearShadow();
 
+		////////////////////////////////
+		// Snow overlay (S11.1 / doc 10 F8)
+		///////////////////////////////
+
+		/**
+		 * @brief Scene-wide snow overlay parameters (S11.1). Pushed by ApplySceneBindings
+		 * to every PBR / PBRInstanced / Terrain draw (the `u_Snow*` uniforms). App
+		 * policy owns the values — nothing scenario-shaped lives in the engine.
+		 *
+		 * With no mask texture (MaskTextureID == 0) coverage is UNIFORM: snow appears
+		 * on up-facing surfaces above `Line`. A CoverageCapture mask (RG = coverage +
+		 * encoded top-surface Y) restricts it to accumulated, sky-exposed columns so
+		 * sheltered floors stay bare. `OverlayAmount` drives Terrain's mask-gated snow
+		 * BELOW the snow line (blizzard build-up); it is a no-op on non-terrain shaders.
+		 */
+		struct SnowDesc
+		{
+			float     Amount     = 1.0f;   // global coverage scale [0,1]
+			float     Line       = 30.0f;  // world Y where snow fades in
+			float     BlendHalf  = 6.0f;   // altitude blend half-width (m)
+			float     SlopeSharp  = 3.0f;  // N·up exponent (higher = flatter-only)
+			glm::vec3 Color{ 0.93f, 0.95f, 0.98f };
+			float     Sparkle    = 0.5f;   // micro-glint strength (0 = off)
+
+			uint32_t  MaskTextureID = 0;   // 0 = uniform coverage (no mask)
+			glm::vec2 MaskWorldMin{ 0.0f };     // world XZ min corner of the mask rect
+			glm::vec2 MaskWorldInvSize{ 0.0f }; // 1 / world size (x, z)
+			glm::vec2 MaskYDecode{ 0.0f };      // worldY = g * x + y
+			float     MaskYTolerance = 0.5f;    // receiver-vs-top tolerance (m)
+
+			float     OverlayAmount = 0.0f;     // terrain: mask-driven snow below the line
+		};
+
+		/** @brief Enable the scene-wide snow overlay with `desc`. Active until ClearSnow. */
+		static void SetSnow(const SnowDesc& desc);
+		/** @brief Disable the snow overlay (every draw goes back to byte-identical output). */
+		static void ClearSnow();
+
 		/**
 		 * @brief Bind the scene-level lighting resources (S6.3 IBL set + S6.4
 		 * shadow map, reserved units per renderer/BindingPoints.h) and set the

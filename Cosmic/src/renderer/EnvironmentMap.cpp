@@ -111,6 +111,7 @@ namespace Cosmic
 		m_PrefilterShader.reset();
 		m_BrdfShader.reset();
 		m_SkyboxShader.reset();
+		m_SkyDetailShader.reset();
 		m_Cube.reset();
 		m_Initialized = false;
 	}
@@ -132,6 +133,27 @@ namespace Cosmic
 		{
 			m_SkyIntensity = intensity;
 			m_Dirty        = true;
+		}
+	}
+
+	void EnvironmentMap::SetNightSky(bool enabled)
+	{
+		if (enabled != m_NightSky)
+		{
+			m_NightSky = enabled;
+			m_Dirty    = true;
+		}
+	}
+
+	void EnvironmentMap::SetMoon(const glm::vec3& toMoon, float intensity)
+	{
+		const float len = glm::length(toMoon);
+		const glm::vec3 n = len > 1e-6f ? toMoon / len : glm::vec3(0.0f, 1.0f, 0.0f);
+		if (n != m_MoonDir || intensity != m_MoonIntensity)
+		{
+			m_MoonDir       = n;
+			m_MoonIntensity = intensity;
+			m_Dirty         = true;
 		}
 	}
 
@@ -164,6 +186,10 @@ namespace Cosmic
 		m_EnvSkyShader->Bind();
 		m_EnvSkyShader->SetFloat3("u_SunDirection", m_SunDir);
 		m_EnvSkyShader->SetFloat("u_SkyIntensity", m_SkyIntensity);
+		// Night tier (F7): 0 default keeps the shipped day-only palette byte-identical.
+		m_EnvSkyShader->SetFloat("u_NightSky", m_NightSky ? 1.0f : 0.0f);
+		m_EnvSkyShader->SetFloat3("u_MoonDirection", m_MoonDir);
+		m_EnvSkyShader->SetFloat("u_MoonIntensity", m_MoonIntensity);
 		RenderCubeFaces(m_EnvSkyShader, m_EnvCube, 0);
 		m_EnvCube->FinishRender();
 		m_EnvCube->GenerateMips();
@@ -220,6 +246,43 @@ namespace Cosmic
 		RenderCommand::BindTextureCubeSlot(0, m_EnvCube->GetRendererID());
 		m_SkyboxShader->SetInt("u_EnvironmentMap", 0);
 		m_SkyboxShader->SetMat4("u_InvViewProj", glm::inverse(viewProjection));
+		RenderCommand::DrawArrays(RenderCommand::PrimitiveTopology::Triangles, 0, 3);
+
+		RenderCommand::SetDepthTest(true);
+		RenderCommand::SetDepthWrite(true);
+	}
+
+	void EnvironmentMap::DrawSkyboxDetailed(const glm::mat4& viewProjection, const SkyDetailDesc& sky)
+	{
+		if (!m_Initialized)
+			return;
+
+		// Lazy-load the detailed-sky shader on first use (most scenes never enable
+		// it; mirrors the terrain/shadow depth-shader pattern).
+		if (!m_SkyDetailShader)
+			m_SkyDetailShader = Shader::Create("assets/shaders/SkyDetail.glsl");
+		if (!m_SkyDetailShader)
+			return;
+
+		// Background fill, exactly like DrawSkybox: depth test/write off (fullscreen
+		// triangle at the far plane) so the opaque scene overwrites it afterward.
+		RenderCommand::SetDepthTest(false);
+		RenderCommand::SetDepthWrite(false);
+
+		m_SkyDetailShader->Bind();
+		m_SkyDetailShader->SetMat4("u_InvViewProj", glm::inverse(viewProjection));
+		m_SkyDetailShader->SetFloat3("u_SunDirection", m_SunDir);   // env sun policy owns direction
+		m_SkyDetailShader->SetFloat("u_SkyIntensity", sky.SkyIntensity);
+		m_SkyDetailShader->SetFloat("u_Time", sky.Time);
+		m_SkyDetailShader->SetFloat("u_SunDiscIntensity", sky.SunDiscIntensity);
+		m_SkyDetailShader->SetFloat("u_SunAngularRadius", sky.SunAngularRadius);
+		m_SkyDetailShader->SetFloat3("u_MoonDirection", sky.MoonDirection);
+		m_SkyDetailShader->SetFloat("u_MoonIntensity", sky.MoonIntensity);
+		m_SkyDetailShader->SetFloat("u_MoonAngularRadius", sky.MoonAngularRadius);
+		m_SkyDetailShader->SetFloat("u_StarIntensity", sky.StarIntensity);
+		m_SkyDetailShader->SetFloat("u_StarDensity", sky.StarDensity);
+		m_SkyDetailShader->SetFloat("u_MilkyWayIntensity", sky.MilkyWayIntensity);
+		m_SkyDetailShader->SetFloat3("u_MilkyWayDir", sky.MilkyWayDir);
 		RenderCommand::DrawArrays(RenderCommand::PrimitiveTopology::Triangles, 0, 3);
 
 		RenderCommand::SetDepthTest(true);
