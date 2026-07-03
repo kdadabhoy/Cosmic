@@ -91,6 +91,21 @@ uniform float u_TriplanarSharpness;
 
 uniform int u_EntityID;
 
+// --- Phase 11 (S11.1 / doc 10) terrain extras. All default-0 = the shipped S8
+//     look, byte-identical, until the F4/F8 work orders feed them. ---
+uniform float u_WetLine;             // world Y at/below which the surface reads wet
+uniform float u_WetBand;             // fade band above the line (m)
+uniform float u_WetDarken;           // 0 = off; 1 = full wet darkening
+uniform float u_SnowSparkle;         // micro-glint strength on the high (snow) layer
+uniform float u_SnowOverlayAmount;   // mask-driven extra snow below the snow line
+// Coverage mask — same CoverageCapture RG contract as PBR.glsl (R = coverage,
+// G = encoded top-surface Y). Reserved unit 12 (Bindings::TexUnitSnowMask).
+uniform sampler2D u_SnowMaskMap;
+uniform float     u_HasSnowMask;
+uniform vec4      u_SnowMaskRect;    // xy = world min corner, zw = 1 / world size
+uniform vec2      u_SnowMaskYDecode; // worldY = g * x + y
+uniform float     u_SnowMaskYTol;    // receiver-vs-top tolerance (m)
+
 // --- Scene IBL ambient (S6.3) + sun shadow (S6.4), injected by
 //     Renderer3D::ApplySceneBindings on reserved units ---
 uniform samplerCube u_IrradianceMap;
@@ -146,6 +161,24 @@ void main()
     float highW  = smoothstep(u_HighHeight - u_HighBlend,
                               u_HighHeight + u_HighBlend, v_WorldPos.y);
     highW *= 1.0 - slopeW * 0.85;                       // snow slides off steep rock
+
+    // --- Phase 11 coverage mask + accumulation overlay (inert by default:
+    // u_HasSnowMask = 0 -> mask = 1; u_SnowOverlayAmount = 0 -> no overlay) ---
+    float snowMask = 1.0;
+    if (u_HasSnowMask > 0.5)
+    {
+        vec2  muv  = clamp((v_WorldPos.xz - u_SnowMaskRect.xy) * u_SnowMaskRect.zw, 0.0, 1.0);
+        vec2  m    = texture(u_SnowMaskMap, muv).rg;
+        float topY = m.g * u_SnowMaskYDecode.x + u_SnowMaskYDecode.y;
+        float exposed = smoothstep(-u_SnowMaskYTol * 2.0, -u_SnowMaskYTol * 0.5, v_WorldPos.y - topY);
+        snowMask = m.r * exposed;
+    }
+    highW *= mix(1.0, snowMask, u_HasSnowMask);          // accumulation gates the snow band
+    // Accumulated snow spreading below the snow line (blizzard build-up).
+    float overlayW = u_SnowOverlayAmount * snowMask
+                   * pow(clamp(N.y, 0.0, 1.0), 3.0) * (1.0 - slopeW);
+    highW = clamp(max(highW, overlayW), 0.0, 1.0);
+
     float lowW   = (1.0 - smoothstep(u_LowHeight - u_LowBlend,
                                      u_LowHeight + u_LowBlend, v_WorldPos.y))
                  * (1.0 - slopeW);
@@ -159,6 +192,14 @@ void main()
                 + highW  * u_LayerColor2 * Triplanar(u_LayerTex2, v_WorldPos, u_LayerTiling2, N) * 2.0
                 + lowW   * u_LayerColor3 * Triplanar(u_LayerTex3, v_WorldPos, u_LayerTiling3, N) * 2.0;
     // (x2: the shared procedural detail texture is authored mid-gray = 0.5.)
+
+    // --- Phase 11 wetness band: darken at/below the waterline (beach wet-sand,
+    // lakeshores). u_WetDarken = 0 (default) is a no-op. ---
+    if (u_WetDarken > 0.0)
+    {
+        float wetW = 1.0 - smoothstep(u_WetLine, u_WetLine + max(u_WetBand, 1e-3), v_WorldPos.y);
+        albedo *= mix(1.0, 0.45, wetW * u_WetDarken);
+    }
 
     // --- Direct sun (Lambert; shadowed) + point lights ---
     vec3  L      = normalize(-u_SunDirection_Ambient.xyz);
@@ -182,6 +223,21 @@ void main()
         ? texture(u_IrradianceMap, N).rgb
         : vec3(u_SunDirection_Ambient.w);
 
-    color      = vec4(albedo * (direct + ambient), 1.0);
+    vec3 outColor = albedo * (direct + ambient);
+
+    // --- Phase 11 snow sparkle: twinkling micro-glints on the snow layer ---
+    if (u_SnowSparkle > 0.0 && highW > 0.0)
+    {
+        vec3  V       = normalize(u_Camera.CameraPosition.xyz - v_WorldPos);
+        vec3  H       = normalize(V + L);
+        vec2  cell    = floor(v_WorldPos.xz * 24.0);
+        float h       = fract(sin(dot(cell, vec2(127.1, 311.7))) * 43758.5453);
+        float twinkle = smoothstep(0.97, 1.0, fract(h + dot(V, vec3(3.1, 5.2, 7.3))));
+        outColor += u_SunColor_Intensity.rgb * u_SunColor_Intensity.w
+                  * pow(max(dot(N, H), 0.0), 48.0)
+                  * twinkle * u_SnowSparkle * highW * (1.0 - shadow);
+    }
+
+    color      = vec4(outColor, 1.0);
     o_EntityID = u_EntityID;
 }

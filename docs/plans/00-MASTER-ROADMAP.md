@@ -17,6 +17,7 @@
 > | [`06-docs-plan.md`](06-docs-plan.md) | Remaining docs work: §40 refresh, README split, docs index (D-series) |
 > | [`08-audio-plan.md`](08-audio-plan.md) | Audio subsystem (miniaudio): one-shots → loops/groups → positional (A1–A3) |
 > | [`09-windowing-plan.md`](09-windowing-plan.md) | Fullscreen black-screen / snip-overlay / DPI hardening + responsive rendering (W-series) |
+> | [`10-phase11-frontier-plan.md`](10-phase11-frontier-plan.md) | Phase 11 execution: `Projects/Frontier` showcase + engine work orders F1–F17 (SceneRenderer, fly camera, water v2, sky v2, snow, profiler, instancing) |
 > | [`archive/`](archive/) | Completed plans kept as records: bug audit, work orders, readme pass, installer build-out |
 > | [`../installer-guide.md`](../installer-guide.md) | User-facing: build/ship/install a setup exe (not a plan — a guide) |
 > | [`../design/responsive-rendering-and-pause.md`](../design/responsive-rendering-and-pause.md) | Accepted design consumed by Phase 1 (W4) |
@@ -245,12 +246,28 @@ later) → GPU particles, froxel volumetrics, heat haze. Internally reorderable.
 > **Remaining — user visual pass** of the new toggles + committed screenshots.
 - **Done when:** each system's stage acceptance in doc 05 passes.
 
-### Phase 11 — Flagship demos + performance *(doc 05: S11–S12)*
-Snow/lava systems as generic engine features; `Projects/VolcanoDemo`, `WinterDemo`, ocean/lake
-demo as acceptance scenes; then culling, sort keys, instancing, LODs, GPU profiler, texture
-pipeline.
+### Phase 11 — Flagship demos + performance *(doc 05: S11–S12 → executed via doc 10)*
+Snow/lava systems as generic engine features; ~~`Projects/VolcanoDemo`, `WinterDemo`, ocean/lake
+demo as acceptance scenes~~ **(2026-07-03: one app — `Projects/Frontier` with a world framework —
+replaces the three demo apps; documented deviation in doc 05 §10)**; then culling, sort keys,
+instancing, LODs, GPU profiler, texture pipeline.
+> **Status (2026-07-03): planned in full + foundations committed.** Scope decided with the user
+> (seamless island world + four focused variants; water v2, no FFT; all add-ons in). The planning
+> session shipped: 8 NEW engine shaders + 6 gated shader upgrades (all default-off — zero visual
+> change until their C++ lands), the compiling `Projects/Frontier` skeleton (homescreen + world
+> framework + 5 placeholder worlds), and
+> [`10-phase11-frontier-plan.md`](10-phase11-frontier-plan.md) — work orders **F1–F17** with the
+> kickoff prompt for the implementation sessions. Also pulled forward: engine `SceneRenderer`
+> (doc 05 S6.1's named follow-up, design-reviewed against Engine3DDemo's real pass sequence),
+> S12.5 GPU profiler, S12.3-lite instancing + frustum culling. Remaining S12 items stay Phase 12.
+- **Do:** doc 10 work orders in order: F1 fly camera → F2 SceneRenderer (+Frontier wired) → F3
+  GPU profiler → F4 terrain growth → F5 instancing → F6 water v2 → F7 sky v2 → F8 snow → F9 rain
+  → F10 ambience → F11 heightfield → F12a/b/c island → F13–F16 variants → F17 perf pass.
+- **AI tier:** every item has an explicit doc-10 work order (files, signatures, gotchas,
+  acceptance) sized for one Opus session; the shaders are pre-written and are the uniform-contract
+  truth.
 - **Done when:** the volcano/snow/water demos run ≥60 fps at 1080p with profiler evidence — the
-  "realistic volcanoes, water, snow" goal made concrete.
+  "realistic volcanoes, water, snow" goal made concrete (doc 10 F17).
 
 ### Phase 12 — RHI hardening + Vulkan gate *(doc 05: S13; backlog S14)*
 Conformance audit (no GL outside the platform layer), frame-lifecycle spec, then the explicit

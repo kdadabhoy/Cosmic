@@ -12,6 +12,13 @@
 // S6.2 adds TEXTURES + normal mapping: albedo / normal / metal-rough / AO /
 // emissive maps, each gated by a u_HasXMap float, sampled with the a_Tangent
 // (location 3) TBN basis every Mesh now generates.
+//
+// Phase 11 (S11.1 / doc 10) adds the SNOW OVERLAY material feature: a scene-wide
+// world-up + altitude snow blend with sparkle micro-glints and an optional
+// accumulation coverage mask. Entirely gated by u_SnowEnabled (GL default 0 =
+// byte-identical output); Renderer3D::SetSnow pushes the uniforms via
+// ApplySceneBindings (F8). PBRInstanced.glsl carries the identical block —
+// keep the two in sync.
 
 layout(location = 0) in vec3 a_Position;
 layout(location = 1) in vec3 a_Normal;
@@ -103,6 +110,26 @@ uniform mat4      u_LightViewProj;
 uniform float     u_HasShadow;      // 0 = no shadowing
 uniform float     u_ShadowBias;
 
+// --- Snow overlay (S11.1, Phase 11): scene-wide, pushed by Renderer3D::SetSnow
+//     through ApplySceneBindings. u_SnowEnabled's GL default of 0 keeps every
+//     pre-Phase-11 draw byte-identical. The coverage mask (optional) is the
+//     CoverageCapture RG target: R = coverage [0,1], G = encoded top-surface Y
+//     (worldY = G * u_SnowMaskYDecode.x + u_SnowMaskYDecode.y) so receivers
+//     under cover (roof over a floor) reject snow. Reserved unit 12
+//     (Bindings::TexUnitSnowMask). ---
+uniform float     u_SnowEnabled;    // 0 = off (default)
+uniform float     u_SnowAmount;     // global coverage scale [0,1]
+uniform float     u_SnowLine;       // world Y where snow fades in
+uniform float     u_SnowBlendH;     // altitude blend half-width (m)
+uniform float     u_SnowSlopeSharp; // pow() exponent on N·up (higher = flatter-only)
+uniform vec3      u_SnowColor;      // snow albedo (linear)
+uniform float     u_SnowSparkle;    // micro-glint strength (0 = off)
+uniform sampler2D u_SnowMaskMap;    // coverage mask (unit 12)
+uniform float     u_HasSnowMask;    // 0 = uniform coverage
+uniform vec4      u_SnowMaskRect;   // xy = world min corner, zw = 1 / world size
+uniform vec2      u_SnowMaskYDecode;// worldY = g * x + y
+uniform float     u_SnowMaskYTol;   // receiver-vs-top tolerance (m)
+
 const float PI = 3.14159265359;
 
 // Returns 1.0 fully shadowed, 0.0 fully lit (slope-scaled bias + 3x3 PCF).
@@ -186,6 +213,31 @@ vec3 CookTorrance(vec3 N, vec3 V, vec3 L, vec3 radiance,
     return (kD * albedo / PI + specular) * radiance * ndl;
 }
 
+// Snow coverage for this fragment (0 when the feature is off) — shared logic
+// with PBRInstanced.glsl / Terrain.glsl (keep in sync).
+float SnowCover(vec3 N, vec3 worldPos)
+{
+    if (u_SnowEnabled < 0.5)
+        return 0.0;
+
+    float up     = clamp(N.y, 0.0, 1.0);
+    float slopeW = pow(up, max(u_SnowSlopeSharp, 1e-3));
+    float altW   = smoothstep(u_SnowLine - u_SnowBlendH, u_SnowLine + u_SnowBlendH, worldPos.y);
+
+    float mask = 1.0;
+    if (u_HasSnowMask > 0.5)
+    {
+        vec2  muv  = clamp((worldPos.xz - u_SnowMaskRect.xy) * u_SnowMaskRect.zw, 0.0, 1.0);
+        vec2  m    = texture(u_SnowMaskMap, muv).rg;
+        float topY = m.g * u_SnowMaskYDecode.x + u_SnowMaskYDecode.y;
+        // Exposed = at/above the captured top surface; under cover = no snow.
+        float exposed = smoothstep(-u_SnowMaskYTol * 2.0, -u_SnowMaskYTol * 0.5, worldPos.y - topY);
+        mask = m.r * exposed;
+    }
+
+    return clamp(u_SnowAmount * slopeW * altW * mask, 0.0, 1.0);
+}
+
 void main()
 {
     vec2 uv = v_TexCoord;
@@ -227,16 +279,27 @@ void main()
     if (u_HasEmissiveMap > 0.5)
         emissive *= SrgbToLinear(texture(u_EmissiveMap, uv).rgb);
 
+    // --- Snow overlay (S11.1): world-up + altitude blend BEFORE F0 so the
+    // snow's dielectric response feeds the whole BRDF. ---
+    float snowCover = SnowCover(N, v_WorldPos);
+    if (snowCover > 0.0)
+    {
+        albedo   = mix(albedo, u_SnowColor, snowCover);
+        rough    = mix(rough, 0.6, snowCover);
+        metallic = metallic * (1.0 - snowCover);
+    }
+
     vec3 V  = normalize(u_Camera.CameraPosition.xyz - v_WorldPos);
     vec3 F0 = mix(vec3(0.04), albedo, metallic);
 
     // --- Direct lighting: sun (shadowed) + point lights ---
+    vec3  Lsun      = normalize(-u_SunDirection_Ambient.xyz);
+    float sunShadow = (u_HasShadow > 0.5) ? ShadowFactor(v_WorldPos, N, Lsun) : 0.0;
+
     vec3 Lo = vec3(0.0);
     {
-        vec3  L        = normalize(-u_SunDirection_Ambient.xyz);
-        vec3  radiance = u_SunColor_Intensity.rgb * u_SunColor_Intensity.w;
-        float shadow   = (u_HasShadow > 0.5) ? ShadowFactor(v_WorldPos, N, L) : 0.0;
-        Lo += (1.0 - shadow) * CookTorrance(N, V, L, radiance, albedo, metallic, rough, F0);
+        vec3 radiance = u_SunColor_Intensity.rgb * u_SunColor_Intensity.w;
+        Lo += (1.0 - sunShadow) * CookTorrance(N, V, Lsun, radiance, albedo, metallic, rough, F0);
     }
 
     int count = int(u_PointCount.x);
@@ -275,6 +338,18 @@ void main()
     }
 
     vec3 outColor = ambient + Lo + emissive;
+
+    // --- Snow sparkle (S11.1): view-dependent twinkling micro-glints ---
+    if (snowCover > 0.0 && u_SnowSparkle > 0.0)
+    {
+        vec3  Hs      = normalize(V + Lsun);
+        vec2  cell    = floor(v_WorldPos.xz * 24.0);   // ~4 cm glint cells
+        float h       = fract(sin(dot(cell, vec2(127.1, 311.7))) * 43758.5453);
+        float twinkle = smoothstep(0.97, 1.0, fract(h + dot(V, vec3(3.1, 5.2, 7.3))));
+        outColor += u_SunColor_Intensity.rgb * u_SunColor_Intensity.w
+                  * pow(max(dot(N, Hs), 0.0), 48.0)
+                  * twinkle * u_SnowSparkle * snowCover * (1.0 - sunShadow);
+    }
 
     color      = vec4(outColor, albedo4.a);
     o_EntityID = u_EntityID;

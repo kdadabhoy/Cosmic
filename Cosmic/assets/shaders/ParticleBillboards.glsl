@@ -36,6 +36,12 @@ uniform mat4 u_EmitterTransform;
 uniform vec2  u_FlipbookTiles;     // >= (1,1)
 uniform float u_FlipbookFps;       // 0 = static random tile per particle
 
+// Phase 11 (S11 / doc 10): stretch the billboard along its screen-space
+// velocity — rain streaks, sparks. Length grows by speed * this factor
+// (seconds); the quad's V axis follows the motion. GL default 0 = the shipped
+// camera-facing quad, byte-identical.
+uniform float u_StretchByVelocity;
+
 out vec2  v_UV0;
 out vec2  v_UV1;
 out float v_FrameBlend;
@@ -75,6 +81,23 @@ void main()
 
     vec2 ofs   = corners[corner];
     vec3 world = center + (u_CamRight * ofs.x + u_CamUp * ofs.y) * size;
+    if (u_StretchByVelocity > 0.0)
+    {
+        vec3 vel = p.VelLife.xyz;
+        if (u_WorldSpace == 0)
+            vel = mat3(u_EmitterTransform) * vel;
+        vec2  vS    = vec2(dot(vel, u_CamRight), dot(vel, u_CamUp));   // screen-plane velocity
+        float speed = length(vS);
+        if (speed > 1e-3)
+        {
+            vec2 dirS  = vS / speed;
+            vec2 perpS = vec2(-dirS.y, dirS.x);
+            vec3 axisAlong = u_CamRight * dirS.x  + u_CamUp * dirS.y;
+            vec3 axisPerp  = u_CamRight * perpS.x + u_CamUp * perpS.y;
+            float len = size + speed * u_StretchByVelocity;
+            world = center + axisAlong * (ofs.y * len) + axisPerp * (ofs.x * size);
+        }
+    }
 
     // Flipbook frame selection (+ random per-particle offset so a shared sheet
     // doesn't strobe in sync).

@@ -76,6 +76,16 @@ uniform float     u_FogBaseHeight;
 uniform mat4      u_InvViewProj;
 uniform vec3      u_CameraPos;
 
+// Underwater medium (Phase 11 / S9.4-lite, doc 10) — when the camera is below
+// a liquid plane, absorb toward the medium color with distance and tint the
+// image. Gated by u_UseUnderwater (GL default 0 = the shipped output); the F6
+// work order drives it via PostProcessStack::SetUnderwater.
+uniform float u_UseUnderwater;
+uniform float u_WaterlineY;         // world Y of the liquid surface
+uniform vec3  u_UnderwaterColor;    // distance-fog color of the medium
+uniform float u_UnderwaterDensity;  // 1/m absorption
+uniform vec3  u_UnderwaterTint;     // spectral multiplier (e.g. 0.55, 0.75, 0.90)
+
 // Krzysztof Narkowicz's ACES filmic curve fit.
 vec3 ACESFilmic(vec3 x)
 {
@@ -96,6 +106,21 @@ void main()
         uv += texture(u_Distort, v_TexCoord).xy * u_DistortStrength;
 
     vec3 hdr = texture(u_Scene, uv).rgb;
+
+    if (u_UseUnderwater > 0.5 && u_CameraPos.y < u_WaterlineY)   // underwater medium (Phase 11)
+    {
+        float d    = texture(u_Depth, uv).r;
+        float dist = 200.0;                            // sky/far: fully fogged medium
+        if (d < 0.9999)
+        {
+            vec4 clip  = vec4(uv * 2.0 - 1.0, d * 2.0 - 1.0, 1.0);
+            vec4 world = u_InvViewProj * clip;
+            world /= world.w;
+            dist = length(world.xyz - u_CameraPos);
+        }
+        float f = 1.0 - exp(-dist * max(u_UnderwaterDensity, 1e-4));
+        hdr = mix(hdr * u_UnderwaterTint, u_UnderwaterColor, clamp(f, 0.0, 1.0));
+    }
 
     if (u_UseFog > 0.5)                                // height fog (S7.2)
     {

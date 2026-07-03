@@ -1128,6 +1128,21 @@ self-shading; heat shimmer above an emissive surface.
 
 ## 10. S11 — Weather/nature systems + flagship demo apps
 
+> **Phase 11 execution plan created 2026-07-03 →
+> [`10-phase11-frontier-plan.md`](10-phase11-frontier-plan.md) (work orders F1–F17).**
+> **Documented deviations (user-approved):** (a) ONE app — `Projects/Frontier`, a world-framework
+> showcase (homescreen + five worlds: seamless island w/ volcano + snowy range + lake + ocean +
+> waterfall + wildlife, plus Night Volcano / Blizzard Peak / Dawn Mirror Lake / Storm Ocean
+> variants) — replaces the three separate demo apps named in S11.3–S11.5; every S11 acceptance
+> scene exists inside it. (b) S11.1's deformation trails are deferred (no ground actor in a
+> fly-through demo; unlock note added to §13's spirit). (c) Pulled forward into Phase 11: the
+> S6.1(d) `SceneRenderer` promotion, S12.5 GPU profiler, and an S12.3-lite instanced path +
+> frustum culling. (d) Water v2 (8 waves, shore-aware breakers, caustics, whitecaps, sparkle,
+> underwater medium) ships as part of this phase; S9.3 FFT stays parked. The Phase 11 shaders
+> (SkyDetail, FlowEmissive, WaterFlow, PBRInstanced, ShadowDepthInstanced, TerrainDepth,
+> SnowAccum, LensFlare + gated upgrades to Water/EnvSky/PBR/Terrain/Tonemap/ParticleBillboards)
+> are committed up-front and are the uniform-contract truth for the doc-10 work orders.
+
 Engine grows **generic** systems; each flagship scenario is a **`Projects/` demo app** and the
 stage's acceptance test. (Rule 8: the engine never gains a `Volcano` class.)
 
