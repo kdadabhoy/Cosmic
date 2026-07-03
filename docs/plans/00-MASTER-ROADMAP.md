@@ -125,10 +125,26 @@ Small, header-heavy, unit-tested engine verbs that unblock everything sim-shaped
   + P8 (MAVLink → QGroundControl).
 - **Done when:** the P4 transition flies on the physical Teensy; rig mirrors sim attitude.
 
-### Phase 7 — 3D engine foundations *(doc 05: S4.1–S4.7)*
+### Phase 7 — 3D engine foundations *(doc 05: S4.0–S4.7)*
 Unified camera hierarchy → material-driven meshes → 3D scene components → asset cache + glTF →
 lighting v1 → MRT framebuffers → compute/SSBO. Strictly ordered inside; each a PR.
-- **Done when:** ECS scene renders lit glTF meshes; entity-ID readback works; compute demo hits 60 fps.
+> **2026-07-02:** doc 05 §3 rewritten into explicit, code-verified work orders (exact files,
+> signatures, GL facts, step lists, gotchas, per-item acceptance procedures) so each item can be
+> handed to a lower-tier model in one session. Two structural changes: new **S4.0** — the vendored
+> GLAD loader is GL 3.3-era and must be regenerated for 4.5 core (hard-gates only S4.7; S4.5 UBOs
+> and S4.6 MRT work on the current loader) — and **S4.4 split into a/b** (asset cache, then
+> cgltf/Model import).
+> **S4.0 ✅ 2026-07-02:** loader regenerated (glad 0.1.36, GL 4.5 core, no extensions), all 59
+> engine-used GL functions audited present, GL-version startup log added; full build + `CosmicTests`
+> 58/58 green. User visual pass (apps render identically, log shows ≥ 4.5) pending.
+- **Do:** ~~S4.0 (GLAD regen, lowest-risk PR — do first)~~ ✅ → S4.1 camera base → S4.2 material
+  `DrawMesh` → S4.3 scene 3D components (ABI break, `build_all`) → S4.4a asset cache → S4.4b
+  glTF/`Model` → S4.5 lights + UBO → S4.6 MRT + entity-ID readback → S4.7 compute + SSBO.
+- **AI tier:** low/medium with doc 05 §3's work orders — S4.0/S4.1/S4.3/S4.4a are mechanical;
+  S4.6/S4.7 touch raw GL state (follow their gotcha lists; worth your review on those two PRs).
+- **Done when:** ECS scene renders lit glTF meshes; entity-ID readback works; compute demo hits
+  60 fps at 1M points — each item's acceptance demo shown in Engine3DDemo with the 2D overlay
+  intact and `CosmicTests` green.
 
 ### Phase 8 — CAD navigation, gizmos, picking *(doc 05: S5)*
 SolidWorks-style navigation (S5.1 — **[filler]: only needs S1, safe to pull into any earlier

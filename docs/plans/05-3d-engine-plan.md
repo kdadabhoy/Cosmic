@@ -8,12 +8,28 @@
 >
 > Every stage below is broken into PR-sized items with acceptance criteria so a single item can be
 > handed to an AI as one prompt. Items marked **[filler]** are safe to do out of order.
+>
+> **2026-07-02:** §3 (S4 — roadmap Phase 7) expanded into explicit, code-verified work orders
+> (exact files, signatures, step lists, gotchas, acceptance procedures) so each item can be
+> executed by a lower-tier model in one session. Added **S4.0** (GLAD loader regen — see the §0
+> loader note) and split S4.4 into **S4.4a/S4.4b**. Later stages (S5+) stay at their original
+> altitude; give them the same treatment when their phase comes up.
 
 ---
 
 ## 0. Graphics API decision — OpenGL now, Vulkan behind a gate
 
 **DECIDED (2026-07-01): stay on OpenGL 4.5 core through stage S12. No Vulkan rewrite.**
+
+> **Loader reality check (2026-07-02):** the *context* is already 4.5 core
+> (`Window.cpp` hints `GLFW_CONTEXT_VERSION 4.5` + core profile) and shaders compile as
+> `#version 450`, but the vendored GLAD loader (`Cosmic/dependencies/glad/`) is GL 3.3-era: it
+> *does* expose the UBO/MRT entry points S4.5/S4.6 need (`glUniformBlockBinding`,
+> `glBindBufferBase`, `glDrawBuffers`, `glClearBufferiv`), but **not**
+> `glDispatchCompute`/`glMemoryBarrier` or any GL 4.x function. **S4.0** regenerates GLAD for
+> 4.5 core; only **S4.7** is blocked on it. The decision above is unchanged.
+> **Resolved same day:** S4.0 shipped 2026-07-02 — the loader is now GL 4.5 core (glad 0.1.36);
+> the 4.3+ entry points are available.
 
 **Why:** "Realistic volcanoes / water / snow" is a *techniques and content* problem, not an API
 problem. Every technique in this plan (PBR+IBL, CSM shadows, FFT water, GPU particles, volumetric
@@ -75,7 +91,7 @@ Carried forward from the original plan and extended — everything already shipp
 | S1 | Perspective camera, orbit controller, 3D lines/grid/axes | ✅ done 2026-07-01 |
 | S2 | Meshes + primitives + OBJ + Lambert | ✅ done 2026-07-01 |
 | S3 | Sim-viewport conveniences (FPV inset, ribbon, horizon, labels) | S3.1 + S3.2 ✅ 2026-07-02 (ViperSim P5); S3.3–S3.5 unpulled |
-| S4 | 3D engine foundations (cameras, materials, scene, glTF, lights, MRT, compute) | planned |
+| S4 | 3D engine foundations (cameras, materials, scene, glTF, lights, MRT, compute) | **S4.0 ✅ 2026-07-02**; S4.1–S4.7 planned — §3 has explicit work orders (2026-07-02: S4.0 added, S4.4 split into a/b) |
 | S5 | CAD navigation, ViewCube, gizmos, 3D picking | planned — **S5.1 nav is [filler], do any time** |
 | S6 | Visual realism core: HDR, PBR+IBL, shadows, SSAO, bloom, AA | planned |
 | S7 | Sky, atmosphere, fog, time-of-day | planned |
@@ -110,41 +126,450 @@ Acceptance app: `Projects/Engine3DDemo`. Details: git history of this file.
 
 ---
 
-## 3. S4 — 3D engine foundations
+## 3. S4 — 3D engine foundations *(roadmap Phase 7 — explicit work orders)*
 
-Ordered; each item is one PR.
+Ordered (S4.0 is a prerequisite only for S4.7 — do it first anyway, it's the lowest-risk PR);
+each item is one PR and one AI session. All signatures/paths below were **verified against the
+working tree on 2026-07-02** — re-verify by content (grep) before editing; never trust line
+numbers or assume a quoted API survived intervening PRs.
 
-1. **S4.1 Unified camera hierarchy.** `Camera` base (view/projection accessors);
-   `OrthographicCamera`/`PerspectiveCamera` derive; `RenderPass` takes `const Camera&`.
-   Touches every 2D call site — one focused refactor, no behavior change.
-   *Acceptance:* all existing apps compile & render identically.
-2. **S4.2 Material-driven meshes.** `Renderer3D::DrawMesh(mesh, transform, Ref<Material>)` using
-   the existing shader-agnostic `Material` (binding via `Material::BindFull()`); uniform
-   conventions documented (`u_Model`, `u_ViewProjection`, `u_CameraPos`, `u_NormalMatrix`).
-   *Acceptance:* demo draws one mesh with a custom shader material + one Lambert fallback.
-3. **S4.3 3D scene integration.** `TransformComponent::Scale` → `vec3` (ABI break: rebuild project
-   DLLs); optional `RotationQuat` alongside Euler with a documented conversion policy;
-   `MeshRendererComponent { Ref<Mesh>, Ref<Material>, color, castShadows }`;
-   `Scene::OnRender3D(const Camera&)`.
-   *Acceptance:* ECS scene renders meshes; 2D scene rendering unaffected.
-4. **S4.4 Asset cache + glTF import.** `AssetLibrary` keyed by resolved VFS path returning shared
-   `Ref<Texture2D>/Shader/Mesh` (closes the old IMPROVEMENTS §5.1 item); vendor **cgltf** (single
-   header) for glTF 2.0 meshes (positions/normals/uvs/tangents, submesh→material slots). OBJ stays
-   for quick primitives.
-   *Acceptance:* loading the same path twice returns the same `Ref`; a Sketchfab glTF renders.
-5. **S4.5 Lighting v1.** `DirectionalLightComponent`, `PointLightComponent` (N ≤ 16 forward),
-   Blinn-Phong `MeshLit.glsl`, lights uploaded via a **uniform buffer** verb
-   (`UniformBuffer::Create/SetData` — new RendererAPI-backed resource).
-   *Acceptance:* sun + two colored point lights on the Engine3DDemo aircraft.
-6. **S4.6 Multi-attachment framebuffer (MRT).** `FrameBufferSpec` grows N color attachments with
-   formats (RGBA8, RGBA16F, **R32I entity-ID**); `ReadPixel(attachment, x, y)`;
-   `Clear(attachment, value)`.
-   *Acceptance:* scene renders color + entity-ID; reading the ID under the cursor returns the
-   entity. (Unlocks S5.4 picking and all S6 post-processing.)
-7. **S4.7 Compute + storage buffers.** `ComputeShader` (`#type compute` block),
-   `RenderCommand::DispatchCompute(x,y,z)` + memory-barrier verb, `StorageBuffer` (SSBO wrapper).
-   GL 4.5 has all of it; this is the infrastructure S9 (FFT water) and S10 (GPU particles) build on.
-   *Acceptance:* compute shader animates 1M points into a vertex buffer at 60 fps.
+### S4 execution notes *(read once — they apply to every item)*
+
+- **Build/run/test:** `build_all.bat` = full reconfigure + engine + all project DLLs — required
+  whenever an ABI-sensitive header changes (anything in `Cosmic/src/scene/Components.h`, or adding
+  virtuals to a `COSMIC_API` class). `build.bat` = incremental. Outputs land in
+  `build/Runtime/<Config>/`; run `CosmicApp.exe` there and pick **Engine3DDemo** in the launcher.
+  Tests: `build/Runtime/<Config>/CosmicTests.exe` (doctest; headless — no window/GL, so GPU
+  features are accepted via the demo app, not unit tests). Per the working agreement the user
+  compiles and runs; finish the item, then request one build+test pass.
+- **New engine sources need no CMake edit** — `Cosmic/CMakeLists.txt` does
+  `file(GLOB_RECURSE COSMIC_SOURCES "src/*.cpp" "src/*.h" ...)`. New *vendored include dirs* DO:
+  extend the existing line
+  `target_include_directories(Cosmic PRIVATE dependencies/stb_image ... dependencies/miniaudio)`.
+- **New GPU resources copy the factory pattern** (model: `graphics/Shader.h` + `Shader::Create`
+  in `graphics/Shader.cpp`): abstract `class COSMIC_API X` in `graphics/`, concrete `OpenGLX` in
+  `platform/OpenGL/`, static `Create(...)` switching on `RendererAPI::GetAPI()` and returning
+  `nullptr` for `API::None`. **No `gl*`/`GL_*` tokens outside `platform/OpenGL/`** (§0 rule 1).
+  Use `glGen*`/`glBind*` style in the platform layer (matches existing code; DSA `glCreate*`
+  functions are absent from the loader until S4.0 and we don't switch styles after).
+- **Setting a uniform the bound shader doesn't declare is safe and silent** —
+  `OpenGLShader::GetUniformLocation` caches lookups and every `UploadUniform*` no-ops on location
+  `-1`. The engine therefore sets convention uniforms unconditionally; shaders opt in by
+  declaring them.
+- **Every item's acceptance ends the same way:** Engine3DDemo runs, the item's demo works, the
+  demo's **"2D overlay" toggle still renders its HUD correctly** (contract 6), and `CosmicTests`
+  is green.
+
+### S4.0 GLAD 4.5-core loader regeneration **[do first; hard prerequisite only for S4.7]**
+
+> **✅ code complete 2026-07-02.** Generated with the official `glad==0.1.36` Python generator
+> against the current Khronos `gl.xml` (GL 4.5, **core**, no extensions, loader included;
+> `khrplatform.h` fetched from the Khronos EGL registry). Pre-swap audit: all 59 GL functions the
+> engine calls verified present in the new header; zero compatibility-profile symbols
+> (`glBegin`/`glVertex*` absent); `glDispatchCompute`/`glMemoryBarrier` present.
+> `OpenGLContext::Init` now logs the actual context version + renderer (step 3 below). Verified:
+> full Debug build green (engine + all project DLLs + CosmicApp) and `CosmicTests` 58/58
+> (103,881 assertions). **Remaining — user visual pass:** run the launcher, Engine3DDemo, and a
+> ViperSim screen; confirm identical rendering and a startup log line reporting OpenGL ≥ 4.5.
+> To regenerate in the future: `pip install glad==0.1.36`, download `gl.xml` from the
+> KhronosGroup/OpenGL-Registry repo into the CWD, then
+> `python -m glad --generator=c --spec=gl --api="gl=4.5" --profile=core --extensions="" --out-path=out`
+> (do **not** pass `--reproducible` — 0.1.36's packaged spec is broken; the local `gl.xml` is
+> picked up automatically).
+
+The context is already 4.5 core; only the function loader is stale (§0 loader note).
+
+- **Files:** replace `Cosmic/dependencies/glad/include/glad/glad.h`,
+  `include/KHR/khrplatform.h`, `src/glad.c`. CMake unchanged
+  (`add_library(glad STATIC dependencies/glad/src/glad.c)` already exists).
+- **Steps:**
+  1. Generate with the **glad v1** web generator (https://glad.dav1d.de): Language C/C++,
+     Specification OpenGL, gl **4.5** (4.6 also fine), Profile **Core**, no extensions,
+     "Generate a loader" checked. **Do not use glad2** — its entry point is `gladLoadGL(...)`,
+     which would break the existing `gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)` call in
+     `platform/OpenGL/OpenGLContext.cpp` (find it by content).
+  2. Drop the three generated files over the old ones (same directory layout).
+  3. After the load call, log once (add if absent):
+     `CS_CORE_INFO("OpenGL {}.{} — {}", GLVersion.major, GLVersion.minor, (const char*)glGetString(GL_RENDERER));`
+  4. Sanity-grep the new `glad.h` for `glDispatchCompute` and `glMemoryBarrier` — both must exist.
+- **Acceptance:** `build_all.bat`; launcher, Engine3DDemo, and one ViperSim screen render
+  identically to before; startup log reports context ≥ 4.5; `CosmicTests` green.
+
+### S4.1 Unified camera hierarchy
+
+`Camera` interface; both cameras derive; renderer entry points accept the base. **No app-side
+source changes** — all ~20 existing `BeginScene(...)` call sites compile unchanged via upcast
+(the original "touches every 2D call site" wording predates this design).
+
+- **Files:** NEW `Cosmic/src/camera/Camera.h`; MODIFY `camera/OrthographicCamera.h`,
+  `camera/PerspectiveCamera.h`, `renderer/RenderPass.h`, `renderer/Renderer2D.h/.cpp`,
+  `renderer/Renderer3D.h/.cpp`.
+- **Spec — the new base (pure interface, no data members):**
+  ```cpp
+  class COSMIC_API Camera
+  {
+  public:
+      virtual ~Camera() = default;
+      virtual const glm::mat4& GetViewMatrix() const = 0;
+      virtual const glm::mat4& GetProjectionMatrix() const = 0;
+      virtual const glm::mat4& GetViewProjectionMatrix() const = 0;
+      virtual const glm::vec3& GetPosition() const = 0;
+  };
+  ```
+  Both cameras already have all four getters as inline non-virtual methods returning stored
+  members — derive publicly from `Camera` and mark those four `override` (bodies unchanged).
+- **Steps:**
+  1. Add `camera/Camera.h`; derive `OrthographicCamera` and `PerspectiveCamera` from it.
+  2. `RenderPass` ctor: `const OrthographicCamera&` → `const Camera&` (body already only calls
+     `GetViewProjectionMatrix()`).
+  3. `Renderer2D::BeginScene(const OrthographicCamera&)` → `(const Camera&)` in .h and .cpp
+     (the impl only calls `GetViewProjectionMatrix()` — verified).
+  4. `Renderer3D`: add overload `BeginScene(const Camera& c)` forwarding to
+     `BeginScene(c.GetViewProjectionMatrix(), c.GetPosition())`. Keep the existing
+     `PerspectiveCamera` overload (exact match beats base — no ambiguity).
+- **Gotchas:** adding a vtable to exported classes is an **ABI change → `build_all.bat`**;
+  `OrbitCameraController::GetCamera()` and `Scene::OnRender(const OrthographicCamera&)` need no
+  change; do not edit any app/template code.
+- **Acceptance:** `build_all.bat`; launcher (2D), Engine3DDemo (3D + 2D overlay), and a ViperSim
+  screen render identically; `CosmicTests` green.
+
+### S4.2 Material-driven meshes
+
+- **Files:** MODIFY `renderer/Renderer3D.h/.cpp`; NEW `Cosmic/assets/shaders/DemoChecker3D.glsl`;
+  MODIFY `Cosmic/assets/shaders/Mesh3D.glsl` (header comment only);
+  MODIFY `Projects/Engine3DDemo/src/Engine3DDemo.h/.cpp` (acceptance demo).
+- **Spec:**
+  ```cpp
+  static void DrawMesh(const Ref<Mesh>& mesh, const glm::mat4& transform,
+                       const Ref<Material>& material);
+  ```
+  Implementation order matters: `material->BindFull()` first (binds shader, uploads the
+  material's cached floats/vecs, binds textures to sequential slots — see
+  `graphics/Material.cpp`), **then** upload the engine-owned uniforms through
+  `material->GetShader()` so they always win:
+
+  | Uniform | Type | Source | Notes |
+  | --- | --- | --- | --- |
+  | `u_ViewProjection` | mat4 | `s_Data.ViewProjection` | scene-owned |
+  | `u_Model` | mat4 | `transform` param | per-draw |
+  | `u_NormalMatrix` | mat3 | `glm::transpose(glm::inverse(glm::mat3(transform)))` | per-draw; NEW convention — `Mesh3D.glsl` keeps computing its own in-shader (unchanged) |
+  | `u_CameraPos` | vec3 | `s_Data.CameraPos` | scene-owned |
+  | `u_LightDir`, `u_Ambient` | vec3, float | `s_Data` | scene-owned, so Lambert-style materials light correctly |
+
+  All are set unconditionally (silent-ignore rule). `u_Color` is **material-owned** — the
+  material path never sets it; materials call `material->Set("u_Color", ...)`.
+  Then bind the VAO and `RenderCommand::DrawIndexed` exactly like the existing color-overload
+  tail of `DrawMesh` (mirror it; don't refactor the color path).
+- **Acceptance demo:** in Engine3DDemo add a "Material pad (S4.2)" toggle: draw `m_Pad` with a
+  `Material::Create(Shader::Create("assets/shaders/DemoChecker3D.glsl"))` material. The demo
+  shader uses the canonical attribute layout, declares the table's uniforms plus
+  `u_Color`/`u_Tiling` (float)/`u_Texture` (sampler2D), and renders a `v_TexCoord`-derived checker
+  tinted by `u_Color`, modulated by a texture sample and Lambert-lit via `u_LightDir`/`u_Ambient`.
+  Prove `BindFull()`'s texture path without adding an asset: build a 2×2 texture in code —
+  `auto tex = Texture2D::Create(2, 2); uint32_t px[4] = {...}; tex->SetData(px, sizeof(px));`
+  then `material->Set("u_Texture", tex)`.
+- **Acceptance:** pad renders the tinted checker (custom material path) while the aircraft still
+  renders via the Lambert color path; toggling the material off restores the plain pad; 2D
+  overlay + `CosmicTests` green.
+
+### S4.3 3D scene integration
+
+- **Files:** MODIFY `Cosmic/src/scene/Components.h` (**ABI break → `build_all.bat`**),
+  `scene/Scene.h/.cpp`; NEW `tests/test_components.cpp` + add it to the `add_executable` list in
+  `tests/CMakeLists.txt`; Engine3DDemo or template only if you want a visual (acceptance below
+  works via ECS in Engine3DDemo).
+- **Spec — `TransformComponent` changes (keep everything else in the struct as-is):**
+  - `glm::vec2 Scale{1,1}` → `glm::vec3 Scale{1.0f, 1.0f, 1.0f}`; `GetTransform()` ends with
+    `glm::scale(glm::mat4(1.0f), Scale)` (drop the vec2→vec3 promotion).
+  - Add the quaternion option:
+    ```cpp
+    glm::quat RotationQuat{ 1.0f, 0.0f, 0.0f, 0.0f }; // used only when UseQuatRotation
+    bool      UseQuatRotation = false; // Euler degrees stay the default and the 2D path
+    ```
+    `GetTransform()` rotation term becomes
+    `UseQuatRotation ? glm::mat4_cast(RotationQuat) : <existing X·Y·Z rotate product>`.
+    **Conversion policy (documented in the header):** the two representations are independent —
+    no implicit sync on write; helpers deferred until an editor needs them (S14). Include
+    `<glm/gtc/quaternion.hpp>`.
+  - Scale consumers today read `.Scale.x/.y` and compile unchanged (verified:
+    `scene/Scene.cpp` ×2, `telemetry/EntityPicker.h`, template `TemplateTelemetryLayer.cpp` /
+    `TemplateSpriteLayer.cpp`) — re-grep `\.Scale` (excluding `dependencies/`) and fix any
+    vec2-typed copies the compiler flags.
+- **Spec — new component (copy `SpriteRendererComponent`'s shape, incl. default/copy ctors):**
+  ```cpp
+  struct COSMIC_API MeshRendererComponent
+  {
+      Ref<Mesh>     MeshAsset;            // entity skipped when null
+      Ref<Material> MaterialAsset;        // null → Lambert color path
+      glm::vec4     Color{ 1.0f };        // Lambert tint when MaterialAsset is null
+      bool          CastShadows = true;   // consumed from S6.4; stored now so the ABI breaks once
+  };
+  ```
+  Register it with the existing three at the bottom of Components.h:
+  `CS_REGISTER_COMPONENT(Cosmic::MeshRendererComponent)`.
+- **Spec — `Scene::OnRender3D`:**
+  ```cpp
+  void Scene::OnRender3D(const Camera& camera); // include camera/Camera.h in Scene.h
+  ```
+  Body: `Renderer3D::BeginScene(camera)` (S4.1 overload); iterate
+  `m_Registry.view<TransformComponent, MeshRendererComponent>()`; skip null `MeshAsset`;
+  `MaterialAsset ? DrawMesh(mesh, xform, material) : DrawMesh(mesh, xform, color)`;
+  `Renderer3D::EndScene()`. No sorting/culling — that's S12. Does not touch `OnRender` (2D).
+- **Acceptance:** Engine3DDemo gains an "ECS scene (S4.3)" toggle that builds a small `Scene`
+  (3–4 entities: primitives with vec3 scales, one using `UseQuatRotation`) and renders it via
+  `OnRender3D` each frame; 2D scene rendering in the launcher/templates unaffected;
+  `tests/test_components.cpp` proves headlessly that (a) a vec3 scale lands in the matrix
+  diagonal and (b) `UseQuatRotation` with `glm::angleAxis(glm::radians(45.f), vec3(0,1,0))`
+  matches the Euler `{0,45,0}` matrix within 1e-4; `build_all.bat` + all apps run.
+
+### S4.4a Asset cache *(closes IMPROVEMENTS §5.1)*
+
+- **Files:** NEW `Cosmic/src/assets/AssetLibrary.h/.cpp` (GLOB picks the new dir up);
+  MODIFY `core/Application.cpp` (shutdown hook); NEW `tests/test_assetlibrary.cpp` + add to
+  `tests/CMakeLists.txt`.
+- **Spec:**
+  ```cpp
+  class COSMIC_API AssetLibrary
+  {
+  public:
+      static Ref<Texture2D> GetTexture(const std::string& path); // VFS or raw path
+      static Ref<Shader>    GetShader(const std::string& path);
+      static Ref<Mesh>      GetMesh(const std::string& path);    // .obj via Mesh::CreateFromOBJ
+      static Ref<Model>     GetModel(const std::string& path);   // .gltf/.glb — stub until S4.4b:
+                                                                 // forward-declare `class Model;`
+                                                                 // (Ref<T> is fine on an incomplete
+                                                                 // type); stub logs + returns null
+
+      static void           Clear();      // release all cached Refs (needs a live GL context)
+      static std::string    NormalizeKey(const std::string& path); // public for tests
+  };
+  ```
+  - `NormalizeKey` = `std::filesystem::path(FileSystem::Resolve(path)).lexically_normal().generic_string()`
+    — so `engine://models/duck.glb` and `assets/models/../models/duck.glb` share one cache slot.
+    Purely lexical (no disk I/O) → headless-testable.
+  - Cache = one `static std::unordered_map<std::string, Ref<T>>` per type in the .cpp. Hit →
+    return the stored `Ref`. Miss → load (pass the **resolved** path to the factories — they take
+    real disk paths, e.g. `Mesh::CreateFromOBJ` documents this), store, return. Loader returned
+    `nullptr` → `CS_CORE_ERROR` once, **don't cache the failure** (retry next call), return null.
+  - `Clear()` called from `Application` shutdown next to the existing `AudioEngine::Shutdown()`
+    call (find by content) — **before** GL context teardown, else the GPU handles leak with no
+    context to delete them.
+- **Acceptance:** doctest covers `NormalizeKey` equivalences (VFS vs raw, `..` collapse,
+  backslash→forward); Engine3DDemo gains a "cache check (S4.4a)" button that calls
+  `GetMesh("engine://...")` twice and logs PASS iff both `Ref.get()` pointers match;
+  `CosmicTests` green.
+
+### S4.4b glTF import (cgltf) + `Model`
+
+- **Files:** NEW `Cosmic/dependencies/cgltf/cgltf.h` (vendor the single header, MIT); NEW
+  `Cosmic/src/graphics/CgltfImpl.cpp` (the one TU:
+  `#define CGLTF_IMPLEMENTATION` + `#include "cgltf.h"` — mirror `src/audio/MiniaudioImpl.cpp`'s
+  header comment); MODIFY `Cosmic/CMakeLists.txt` (append `dependencies/cgltf` to the
+  `target_include_directories(Cosmic PRIVATE ...)` line); NEW `graphics/Model.h/.cpp`; MODIFY
+  `renderer/Renderer3D.h/.cpp` (`DrawModel`), `assets/AssetLibrary.cpp` (`GetModel` real);
+  NEW committed sample `Cosmic/assets/models/Duck.glb` (a small CC0/Khronos-sample glb,
+  < 200 KB); Engine3DDemo demo toggle.
+- **Spec:**
+  ```cpp
+  struct ModelPart { Ref<Mesh> Geometry; glm::vec4 BaseColor{1.0f}; std::string Name; };
+
+  class COSMIC_API Model
+  {
+  public:
+      static Ref<Model> CreateFromGLTF(const std::string& resolvedPath); // .gltf or .glb
+      const std::vector<ModelPart>& GetParts() const;
+  };
+
+  // Renderer3D convenience: DrawMesh(part.Geometry, transform, part.BaseColor) per part
+  static void DrawModel(const Ref<Model>& model, const glm::mat4& transform);
+  ```
+- **Import recipe (use cgltf's high-level helpers, not raw buffer views):**
+  `cgltf_parse_file` → `cgltf_load_buffers` (handles .glb, external .bin, and base64) → recurse
+  scene nodes; per node get `cgltf_node_transform_world(node, m[16])` and **bake it into the
+  vertices** (positions by the mat4, normals by `transpose(inverse(mat3))`, renormalized) — skip
+  this and multi-node models collapse at the origin. Per triangle primitive
+  (`cgltf_primitive_type_triangles`; warn+skip others): read `POSITION`/`NORMAL`/`TEXCOORD_0`
+  with `cgltf_accessor_read_float`, indices with `cgltf_accessor_read_index` (no indices →
+  identity `0..n-1`); missing normals → flat face normals (same fallback `CreateFromOBJ` uses);
+  missing UVs → `(0,0)`. `BaseColor` = the material's `pbr_metallic_roughness.base_color_factor`
+  (white if absent). Each primitive → `Mesh::Create(vertices, indices)` → one `ModelPart`.
+  `cgltf_free` when done. **Tangents deferred to S6.2** (additive layout change per contract
+  rule 3 — ignore `TANGENT` for now). Axis note: glTF is right-handed +Y-up meters — that *is*
+  the render frame; no NED conversion (`Spatial.h` is for sim state, not assets).
+- **Acceptance:** Engine3DDemo "glTF (S4.4b)" toggle renders
+  `AssetLibrary::GetModel("engine://models/Duck.glb")` upright at sane scale; loading it twice
+  returns the same `Ref` (log PASS); 2D overlay + `CosmicTests` green.
+
+### S4.5 Lighting v1 (Blinn-Phong forward, ≤ 16 point lights, UBO)
+
+- **Files:** NEW `graphics/UniformBuffer.h` + `platform/OpenGL/OpenGLUniformBuffer.h/.cpp`;
+  NEW `Cosmic/assets/shaders/MeshLit.glsl`; MODIFY `renderer/Renderer3D.h/.cpp`,
+  `scene/Components.h` (**ABI → `build_all.bat`**), `scene/Scene.cpp`, Engine3DDemo.
+- **Spec — the new GPU resource (factory pattern, §S4 notes):**
+  ```cpp
+  class COSMIC_API UniformBuffer
+  {
+  public:
+      virtual ~UniformBuffer() = default;
+      virtual void SetData(const void* data, uint32_t size, uint32_t offset = 0) = 0;
+      static Ref<UniformBuffer> Create(uint32_t size, uint32_t binding); // binding = GLSL binding index
+  };
+  ```
+  OpenGL impl: `glGenBuffers` + `glBindBuffer(GL_UNIFORM_BUFFER)` + `glBufferData(..,
+  GL_DYNAMIC_DRAW)` + `glBindBufferBase(GL_UNIFORM_BUFFER, binding, id)` at create;
+  `glBufferSubData` in `SetData`. All present in the current loader.
+- **Spec — the std140 block, binding 0 (reserved engine-wide for lights).** Identical layout in
+  GLSL and C++; **vec4s only** — never `vec3` in a UBO struct, std140 padding will silently skew
+  everything after it:
+  ```glsl
+  layout(std140, binding = 0) uniform LightsBlock {
+      vec4 u_SunDirection_Ambient;     // xyz = dir light TRAVELS (normalized), w = ambient [0,1]
+      vec4 u_SunColor_Intensity;       // rgb, w = intensity
+      vec4 u_PointCount;               // x = active point count (as float)
+      vec4 u_PointPos_Radius[16];      // xyz world pos, w = radius
+      vec4 u_PointColor_Intensity[16]; // rgb, w = intensity
+  };
+  ```
+  C++ mirror = same five members as `glm::vec4`/arrays; `static_assert(sizeof(GpuLightsBlock) == 560)`.
+- **Spec — CPU API on `Renderer3D` (UBO created in `Init` and owned by `s_Data`):**
+  ```cpp
+  struct PointLightDesc  { glm::vec3 Position; float Radius = 10.0f;
+                           glm::vec3 Color{1.0f}; float Intensity = 1.0f; };
+  struct SceneLightsDesc { glm::vec3 SunDirection{-0.4f,-1.0f,-0.3f}; // dir light TRAVELS
+                           glm::vec3 SunColor{1.0f}; float SunIntensity = 1.0f;
+                           float Ambient = 0.25f;
+                           std::vector<PointLightDesc> Points; };    // first 16 uploaded
+  static void SetLights(const SceneLightsDesc& lights); // packs + uploads immediately
+  ```
+  The legacy `SetLightDirection`/`SetAmbient` + Lambert `Mesh3D.glsl` path stays untouched as the
+  no-material fallback.
+- **Spec — components (register with `CS_REGISTER_COMPONENT`):**
+  ```cpp
+  struct COSMIC_API DirectionalLightComponent { glm::vec3 Direction{-0.4f,-1.0f,-0.3f};
+                                                glm::vec3 Color{1.0f}; float Intensity = 1.0f; };
+  struct COSMIC_API PointLightComponent       { glm::vec3 Color{1.0f}; float Intensity = 1.0f;
+                                                float Radius = 10.0f; }; // position ← TransformComponent
+  ```
+  `Scene::OnRender3D` gathers them each call (first directional wins; ambient from
+  `Renderer3D::GetAmbient()`) and calls `SetLights` before drawing.
+- **Spec — `MeshLit.glsl`:** canonical attributes; consumes `u_Model`, `u_ViewProjection`,
+  `u_CameraPos`, and `u_NormalMatrix` (first real consumer of the S4.2 convention — use it, do
+  not recompute in-shader); material-owned uniforms `u_Color` (vec4) and `u_Shininess` (float) —
+  both must be `Set` on the material (no GLSL defaults). Lighting: `ambient + sun N·(-L) +
+  Σ points` with attenuation `att = pow(clamp(1 - pow(d/radius, 4), 0, 1), 2) / (d*d + 1)` and
+  Blinn specular `pow(max(dot(N, H), 0), u_Shininess)`.
+- **Acceptance:** Engine3DDemo "Lighting v1 (S4.5)" toggle draws the aircraft through a
+  `MeshLit` material with sun-direction sliders plus two point lights (red + blue, position
+  sliders) producing visibly colored highlights; toggle off restores the Lambert path;
+  `build_all.bat`; 2D overlay + `CosmicTests` green.
+
+### S4.6 Multi-attachment framebuffer (MRT) + entity-ID readback
+
+Unlocks S5.4 picking and all S6 post-processing.
+
+- **Files:** MODIFY `graphics/FrameBuffer.h`, `platform/OpenGL/OpenGLFrameBuffer.h/.cpp`,
+  `renderer/Renderer3D.h/.cpp`, `scene/Scene.cpp`, `assets/shaders/Mesh3D.glsl` +
+  `MeshLit.glsl` + every other shader `Renderer3D::Init` loads (open `Renderer3D.cpp` and list
+  the `Shader::Create` calls — the line/grid shader must also gain the ID output, writing `-1`,
+  or MRT-bound line draws leave the ID attachment undefined); Engine3DDemo picking panel.
+- **Spec — the grown specification (back-compat is the whole game):**
+  ```cpp
+  enum class FramebufferTextureFormat { None = 0, RGBA8, RGBA16F, RED_INTEGER, DEPTH24STENCIL8 };
+  struct FramebufferTextureSpecification { FramebufferTextureFormat TextureFormat =
+                                           FramebufferTextureFormat::None; /* implicit ctor */ };
+  struct FramebufferAttachmentSpecification
+  { std::vector<FramebufferTextureSpecification> Attachments; /* init-list ctor */ };
+
+  struct FramebufferSpecification
+  {
+      uint32_t Width = 0, Height = 0;
+      uint32_t Samples = 1;            // still reserved
+      bool SwapChainTarget = false;    // still reserved
+      FramebufferAttachmentSpecification Attachments; // EMPTY ⇒ default {RGBA8, DEPTH24STENCIL8}
+  };
+  ```
+  The empty-means-default rule keeps every existing `FrameBuffer::Create` call site (the
+  Application workspace FBO, ViperSim's FPV inset) byte-for-byte identical in behavior.
+- **Spec — API additions:**
+  ```cpp
+  virtual uint32_t GetColorAttachmentRendererID(uint32_t index = 0) const = 0; // default arg keeps ImGui::Image callers compiling
+  virtual int      ReadPixel(uint32_t attachmentIndex, int x, int y) = 0;      // RED_INTEGER attachments; FBO must be bound
+  virtual void     ClearAttachment(uint32_t attachmentIndex, int value) = 0;   // glClearBufferiv; FBO must be bound
+  ```
+- **OpenGL implementation notes (each one is a known faceplant):**
+  - Format mapping: RGBA8 → (`GL_RGBA8`, `GL_RGBA`, `GL_UNSIGNED_BYTE`); RGBA16F →
+    (`GL_RGBA16F`, `GL_RGBA`, `GL_FLOAT`); RED_INTEGER → (`GL_R32I`, `GL_RED_INTEGER`, `GL_INT`).
+  - Integer textures **must use `GL_NEAREST`** filtering or the FBO is incomplete.
+  - With > 1 color attachment, call `glDrawBuffers(n, {GL_COLOR_ATTACHMENT0..n-1})` after
+    attaching; with 0 color attachments call `glDrawBuffer(GL_NONE)` (free prep for S6.4
+    depth-only passes).
+  - `glClear` does **not** reliably clear integer attachments — callers clear the ID attachment
+    with `ClearAttachment(i, -1)` every frame after `Bind()`.
+  - `ReadPixel`: `glReadBuffer(GL_COLOR_ATTACHMENT0 + i)` then
+    `glReadPixels(x, y, 1, 1, GL_RED_INTEGER, GL_INT, &px)`. GL's origin is bottom-left —
+    the *caller* flips: `glY = height - 1 - mouseY`.
+  - Rebuild `Invalidate()` around a vector of attachment IDs; `Resize` keeps flowing through it.
+- **Spec — ID plumbing:** both `DrawMesh` overloads and `DrawModel` gain a trailing
+  `int entityID = -1` parameter (defaulted → source-compatible) uploaded as `SetInt("u_EntityID", ...)`
+  (silent-ignore covers old shaders). Mesh/lit shaders add
+  `layout(location = 1) out int o_EntityID;` written from `uniform int u_EntityID;` — writing an
+  output the bound FBO doesn't have is harmless. `Scene::OnRender3D` passes
+  `(int)(uint32_t)entity`.
+- **Acceptance:** Engine3DDemo "Picking (S4.6)" panel renders the scene into its **own** MRT FBO
+  ({RGBA8, RED_INTEGER, DEPTH24STENCIL8}) as a pre-pass, then re-binds the app viewport FBO +
+  `RenderCommand::SetViewport` — copy the proven inset pattern from ViperSim
+  `FlightScreen.cpp` (S3.1). Panel shows attachment 0 via `ImGui::Image`; hovering shows the
+  `ReadPixel` ID and the matching aircraft-part name (parts submitted with IDs 1..N); empty
+  space reads −1. The app-wide workspace FBO stays on the default spec (whether it grows an ID
+  attachment is S5.4's call). 2D overlay + `CosmicTests` green.
+
+### S4.7 Compute + storage buffers *(requires S4.0)*
+
+The infrastructure S9 (FFT water) and S10 (GPU particles) build on. Will not compile before
+S4.0 — `glDispatchCompute` isn't in the old loader.
+
+- **Files:** NEW `graphics/StorageBuffer.h` + `platform/OpenGL/OpenGLStorageBuffer.h/.cpp`;
+  MODIFY `renderer/RendererAPI.h`, `renderer/RenderCommand.h`,
+  `platform/OpenGL/OpenGLRendererAPI.h/.cpp`, `platform/OpenGL/OpenGLShader.cpp`;
+  NEW `Cosmic/assets/shaders/ComputeParticles.glsl` + `ParticlePoints.glsl`; Engine3DDemo demo.
+- **Spec — compute shaders ride the existing `Shader` class:** extend the `#type` parser
+  (`OpenGLShader.cpp`, `ShaderTypeFromString` + `PreProcess` — find by content) to accept
+  `#type compute` → `GL_COMPUTE_SHADER`; a file containing only a compute stage links a compute
+  program; `Bind()` + uniform setters already work on it. No separate ComputeShader class.
+- **Spec — SSBO wrapper (factory pattern):**
+  ```cpp
+  class COSMIC_API StorageBuffer
+  {
+  public:
+      virtual ~StorageBuffer() = default;
+      virtual void SetData(const void* data, uint32_t size, uint32_t offset = 0) = 0;
+      virtual void Bind() = 0; // re-issues glBindBufferBase(GL_SHADER_STORAGE_BUFFER, binding, id)
+      static Ref<StorageBuffer> Create(uint32_t size, uint32_t binding); // std430 binding index
+  };
+  ```
+- **Spec — new RendererAPI/RenderCommand verbs (engine enums, GL translation in platform layer):**
+  ```cpp
+  enum class GpuBarrier : uint32_t { VertexAttribArray = 1u<<0, ShaderStorage = 1u<<1,
+                                     ShaderImage = 1u<<2, All = 0xFFFFFFFFu };
+  static void DispatchCompute(uint32_t x, uint32_t y, uint32_t z);
+  static void MemoryBarrier(GpuBarrier bits);
+  enum class PrimitiveTopology { Points, Lines, Triangles };
+  static void DrawArrays(PrimitiveTopology topology, uint32_t first, uint32_t count);
+  ```
+  `DrawArrays` exists for attribute-less draws: GL core requires *a* bound VAO, so
+  `OpenGLRendererAPI` lazily creates one empty VAO and binds it inside `DrawArrays`. Also add
+  `glEnable(GL_PROGRAM_POINT_SIZE)` in `OpenGLRendererAPI::Init` (one-time).
+- **Demo recipe (Engine3DDemo "Compute (S4.7)" toggle, N = 1,000,000):**
+  `ComputeParticles.glsl` = `#type compute`, `layout(local_size_x = 256)`,
+  `layout(std430, binding = 0) buffer Particles { vec4 pos[]; }`, uniforms `u_Time`/`u_Count`;
+  guard `gid < u_Count`; write a swirl/orbit position. `ParticlePoints.glsl` = vertex stage reads
+  the same std430 block by `gl_VertexID` (no vertex attributes), sets `gl_PointSize = 2.0`;
+  fragment outputs `u_Color`. Per frame: compute shader `Bind` + uniforms → `ssbo->Bind()` →
+  `DispatchCompute((N + 255) / 256, 1, 1)` →
+  `MemoryBarrier(VertexAttribArray | ShaderStorage)` → point shader `Bind` + `u_ViewProjection`
+  → `DrawArrays(Points, 0, N)`.
+- **Acceptance:** 1M animated points at ≥ 60 fps on the dev GPU (`ImGui::GetIO().Framerate`
+  readout in the panel); toggle off restores the normal scene; 2D overlay + `CosmicTests` green.
 
 ---
 
@@ -379,7 +804,8 @@ the profiler HUD screenshot committed.
 
 ```
 S3   ──────────────► driven by ViperSim P4–P5 (any time after S2)
-S4.1→S4.7 (ordered) ─► S5.4/S5.5 (need S4.6)   S6 (needs S4.2/S4.5/S4.6/S4.7)
+S4.0 ✅ 2026-07-02 [GLAD 4.5 — was hard-gating S4.7]
+S4.1→S4.7 (ordered; S4.4 = a then b) ─► S5.4/S5.5 (need S4.6)   S6 (needs S4.2/S4.5/S4.6/S4.7)
 S5.1–S5.3 [filler] ──► any time after S1
 S6 ─► S7 ─► S8 ─► S9 ─► S10 ─► S11 ─► S12 ─► S13
                  (S8/S9/S10 internally reorderable; S11 needs all three)

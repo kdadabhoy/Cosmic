@@ -1,6 +1,7 @@
 #include <glad/glad.h>
 #include "platform/opengl/OpenGLContext.h"
 #include "core/Core.h"
+#include "core/Log.h"
 #include <GLFW/glfw3.h>
 
 namespace Cosmic
@@ -33,6 +34,11 @@ namespace Cosmic
 		glfwMakeContextCurrent(m_WindowHandle);
 		int status = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
 		CS_CORE_ASSERT(status, "Failed to initialize GLAD — OpenGL function pointers not loaded.");
+
+		// The engine requires 4.5 core (Window.cpp context hints, #version 450 shaders,
+		// S4.7 compute) — log what the driver actually handed us so a mismatch is visible.
+		CS_CORE_INFO("OpenGL {}.{} — {}", GLVersion.major, GLVersion.minor,
+		             reinterpret_cast<const char*>(glGetString(GL_RENDERER)));
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////
