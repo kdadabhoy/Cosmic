@@ -14,12 +14,12 @@ namespace Cosmic
 	 * for creating the engine's "White Texture" (used for solid colors) or
 	 * for textures generated via math or noise algorithms.
 	 */
-	Ref<Texture2D> Texture2D::Create(uint32_t width, uint32_t height)
+	Ref<Texture2D> Texture2D::Create(uint32_t width, uint32_t height, bool mipmapped)
 	{
 		switch (RendererAPI::GetAPI())
 		{
 		case RendererAPI::API::None:    return nullptr;
-		case RendererAPI::API::OpenGL:  return std::static_pointer_cast<Texture2D>(CreateRef<OpenGLTexture>(width, height));
+		case RendererAPI::API::OpenGL:  return std::static_pointer_cast<Texture2D>(CreateRef<OpenGLTexture>(width, height, mipmapped));
 		}
 
 		return nullptr;

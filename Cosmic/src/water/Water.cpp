@@ -131,12 +131,13 @@ namespace Cosmic
 				texels[s + 3] = 255;
 			}
 
-		Ref<Texture2D> tex = Texture2D::Create(kDetailTexSize, kDetailTexSize);
+		// Mipmapped: the detail normals tile ~0.12 repeats/m and are sampled out to
+		// the horizon, so without a mip chain they alias into salt-and-pepper past a
+		// few hundred meters. The mipmapped ctor sets trilinear + repeat and SetData
+		// regenerates the chain, so no SetSampling override is needed here.
+		Ref<Texture2D> tex = Texture2D::Create(kDetailTexSize, kDetailTexSize, /*mipmapped*/ true);
 		if (tex)
-		{
 			tex->SetData(texels.data(), static_cast<uint32_t>(texels.size()));
-			tex->SetSampling(TextureFilter::Linear, TextureWrap::Repeat);
-		}
 		return tex;
 	}
 

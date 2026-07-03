@@ -116,7 +116,15 @@ namespace Cosmic
 		////////////////////////////////
 		// Factory Pattern (Specialized)
 		///////////////////////////////
-		static Ref<Texture2D>		Create(uint32_t width, uint32_t height);
+		/**
+		 * @brief Procedural (empty) texture, filled later via SetData().
+		 * @param mipmapped  When true, allocates a full mip chain with trilinear
+		 *   (GL_LINEAR_MIPMAP_LINEAR) minification and regenerates it on SetData —
+		 *   for tiling maps sampled at distance (e.g. water detail normals) that
+		 *   would otherwise alias under minification. Default false = the legacy
+		 *   single-level GL_LINEAR path (every existing caller is unchanged).
+		 */
+		static Ref<Texture2D>		Create(uint32_t width, uint32_t height, bool mipmapped = false);
 		static Ref<Texture2D>		Create(const std::string& path);
 
 		/**

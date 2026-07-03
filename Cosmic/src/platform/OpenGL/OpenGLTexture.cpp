@@ -23,8 +23,8 @@ namespace Cosmic
 	 * * Useful for creating solid color textures (like the engine's default 1x1 white texture)
 	 * or for textures that will be populated later via SetData().
 	 */
-	OpenGLTexture::OpenGLTexture(uint32_t width, uint32_t height)
-		: m_Width(width), m_Height(height)
+	OpenGLTexture::OpenGLTexture(uint32_t width, uint32_t height, bool mipmapped)
+		: m_Width(width), m_Height(height), m_Mipmapped(mipmapped)
 	{
 		m_InternalFormat = GL_RGBA8;
 		m_DataFormat = GL_RGBA;
@@ -32,15 +32,29 @@ namespace Cosmic
 		glGenTextures(1, &m_RendererID);
 		glBindTexture(GL_TEXTURE_2D, m_RendererID);
 
-		// Default Parameters for procedural textures
-		// We use GL_NEAREST for magnification to keep pixel-art style sharp
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		// Mipmapped procedural textures (e.g. tiling detail maps sampled at
+		// distance) get trilinear minification + linear magnification; the plain
+		// path keeps the legacy GL_LINEAR/GL_NEAREST (pixel-art-friendly) defaults.
+		if (m_Mipmapped)
+		{
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		}
+		else
+		{
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		}
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
 		// Pre-allocate GPU storage without uploading data (nullptr)
 		glTexImage2D(GL_TEXTURE_2D, 0, m_InternalFormat, m_Width, m_Height, 0, m_DataFormat, GL_UNSIGNED_BYTE, nullptr);
+
+		// Generate an initial (empty) mip chain so the texture is mip-complete even
+		// before the first SetData — SetData regenerates it with real content.
+		if (m_Mipmapped)
+			glGenerateMipmap(GL_TEXTURE_2D);
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////
@@ -248,6 +262,11 @@ namespace Cosmic
 
 		glBindTexture(GL_TEXTURE_2D, m_RendererID);
 		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_Width, m_Height, m_DataFormat, GL_UNSIGNED_BYTE, data);
+
+		// Rebuild the mip chain from the freshly-uploaded base level so distance
+		// sampling stays filtered (no-op for non-mipmapped textures).
+		if (m_Mipmapped)
+			glGenerateMipmap(GL_TEXTURE_2D);
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////

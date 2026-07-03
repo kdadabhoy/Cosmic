@@ -194,6 +194,14 @@ void main()
 {
     vec2 screenUV = v_ClipPos.xy / v_ClipPos.w * 0.5 + 0.5;
 
+    // Distance-based detail fade. Mipmapping the detail normals (engine side) fixes
+    // the TEXTURE aliasing, but the tight specular still twinkles at range, so relax
+    // the detail-normal perturbation (and sparkle) toward the smooth Gerstner normal
+    // with distance: near water stays fully rippled, far water reads as a clean
+    // Fresnel reflection of the sky — exactly how real seas look toward the horizon.
+    float camDistXZ  = length(u_Camera.CameraPosition.xz - v_WorldPos.xz);
+    float detailFade = 1.0 - smoothstep(120.0, 2500.0, camDistXZ);
+
     // --- Normal: Gerstner base + two counter-scrolling detail maps. The water
     // plane's tangent frame is world-aligned (T = +X, B = +Z), so the detail
     // xy perturbs world xz directly. ---
@@ -201,9 +209,10 @@ void main()
     vec2 uvB = v_WorldPos.xz * u_DetailTiling * 0.71 - u_Time * u_DetailSpeed * vec2( 0.8, -1.0);
     vec2 detail = (texture(u_DetailA, uvA).xy * 2.0 - 1.0)
                 + (texture(u_DetailB, uvB).xy * 2.0 - 1.0);
-    vec3 N = normalize(vec3(v_GerstnerNormal.x + detail.x * u_DetailStrength,
+    float detailStr = u_DetailStrength * detailFade;
+    vec3 N = normalize(vec3(v_GerstnerNormal.x + detail.x * detailStr,
                             v_GerstnerNormal.y,
-                            v_GerstnerNormal.z + detail.y * u_DetailStrength));
+                            v_GerstnerNormal.z + detail.y * detailStr));
 
     vec3 V = normalize(u_Camera.CameraPosition.xyz - v_WorldPos);
 
@@ -275,7 +284,7 @@ void main()
         float twinkle = smoothstep(0.75, 1.0, sin(phase * 6.28318) * 0.5 + 0.5);
         glint += u_SunColor_Intensity.rgb * u_SunColor_Intensity.w
                * pow(max(dot(N, H), 0.0), u_SpecularPower * 4.0)
-               * twinkle * u_SparkleStrength * (1.0 - shadow);
+               * twinkle * u_SparkleStrength * detailFade * (1.0 - shadow);
     }
 
     // --- Shoreline foam: depth delta + scrolling noise (detail map red) ---

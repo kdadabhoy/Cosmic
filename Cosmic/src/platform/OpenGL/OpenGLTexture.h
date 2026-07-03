@@ -58,7 +58,7 @@ namespace Cosmic
 		// Life Cycle & Initialization
 		///////////////////////////////
 
-		OpenGLTexture(uint32_t width, uint32_t height);
+		OpenGLTexture(uint32_t width, uint32_t height, bool mipmapped = false);
 		OpenGLTexture(const std::string& path);
 		OpenGLTexture(const uint8_t* encoded, uint32_t size);   // decode from memory (S6.2 glTF)
 		virtual ~OpenGLTexture();
@@ -104,5 +104,9 @@ namespace Cosmic
 
 		GLenum				m_InternalFormat;
 		GLenum				m_DataFormat;
+
+		// Procedural textures created mipmapped regenerate their mip chain on
+		// SetData (trilinear minification for distance sampling).
+		bool				m_Mipmapped = false;
 	};
 }
