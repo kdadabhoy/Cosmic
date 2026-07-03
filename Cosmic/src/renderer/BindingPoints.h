@@ -73,4 +73,9 @@ namespace Cosmic::Bindings
 	constexpr uint32_t TexUnitIblBrdfLut = 10;
 	/** S6.4 — directional sun shadow map (`u_ShadowMap`). */
 	constexpr uint32_t TexUnitShadowMap = 11;
+
+	// F2 SceneRenderer claims NO new slots: it orchestrates the existing
+	// Renderer3D / EnvironmentMap / ShadowMap / PostProcessStack passes, which
+	// already own every binding above. (F5 instancing claims SSBO 9; F8 snow
+	// claims TexUnitSnowMask = 12.)
 }

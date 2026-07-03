@@ -81,6 +81,10 @@ namespace Frontier
         m_Worlds.clear();
         m_Attached.clear();
 
+        // Release the SceneRenderer's GPU resources (env/post/shadow) while the
+        // GL context is still live (F2) — worlds released their own above first.
+        m_SceneRenderer.Shutdown();
+
         Cosmic::Log::SetLogDirectory("logs");
         CS_INFO("Frontier: detached.");
     }
@@ -125,6 +129,14 @@ namespace Frontier
         auto vfb = app.GetFrameBuffer();
         if (!vfb)
             return;
+
+        // Engine frame orchestrator (F2): lazily built on the first world entry
+        // with the live viewport size, resized every frame. The world fills a
+        // SceneRenderDesc and calls Renderer->Render(desc) with vfb bound.
+        if (!m_SceneRenderer.IsInitialized())
+            m_SceneRenderer.Init(vfb->GetWidth(), vfb->GetHeight());
+        m_SceneRenderer.SetViewportSize(vfb->GetWidth(), vfb->GetHeight());
+
         vfb->Bind();
         Cosmic::RenderCommand::SetViewport(0, 0, vfb->GetWidth(), vfb->GetHeight());
 
@@ -139,7 +151,7 @@ namespace Frontier
         ctx.ViewportHeight = vfb->GetHeight();
         ctx.OrbitFallback  = &m_Orbit;
         ctx.Camera         = m_FlyCamera ? &m_Fly : nullptr;   // null => orbit is active
-        // TODO(F2): ctx.Renderer = &m_SceneRenderer;
+        ctx.Renderer       = &m_SceneRenderer;
 
         world.OnUpdate(ctx);
         m_LastCtx = ctx;
@@ -158,7 +170,12 @@ namespace Frontier
         }
 
         DrawNavPanel();
-        m_Worlds[m_ActiveWorld]->OnPanels(m_LastCtx);
+
+        // DrawNavPanel's Home / world-switch buttons call SetWorld, which can
+        // clear m_ActiveWorld to -1 (Home) or change it mid-frame — re-check
+        // before indexing, or clicking Home dereferences m_Worlds[-1].
+        if (m_ActiveWorld >= 0 && m_ActiveWorld < (int)m_Worlds.size())
+            m_Worlds[m_ActiveWorld]->OnPanels(m_LastCtx);
     }
 
     // =========================================================================

@@ -13,10 +13,14 @@
 //          river (WaterFlow sheets) + mist, wildlife (boids birds, fish
 //          splash rings, dusk fireflies).
 //
-// SKELETON: renders the shared placeholder until F12a replaces OnUpdate with
-// the SceneRenderer-driven frame (F2).
+// F2 STOPGAP: a first real SceneRenderer-driven scene — procedural fBm island
+// terrain + an ocean-sized water body + a smoke plume + a few monolith shadow
+// casters, sky/IBL/shadows/bloom/fog on, a time-of-day scrub. The F11/F12 orders
+// replace this composed terrain + content.
 
 #include "World.h"
+
+#include <vector>
 
 namespace Frontier
 {
@@ -29,6 +33,21 @@ namespace Frontier
         void OnDetach() override;
         void OnUpdate(WorldContext& ctx) override;
         void OnPanels(WorldContext& ctx) override;
+
+    private:
+        // Scene content (F2 stopgap).
+        Cosmic::Ref<Cosmic::Terrain>         m_Terrain;
+        Cosmic::Ref<Cosmic::Water>           m_Water;
+        Cosmic::Ref<Cosmic::ParticleEmitter> m_Smoke;
+        Cosmic::Ref<Cosmic::Mesh>            m_Rock;   // shared monolith caster mesh
+        std::vector<glm::mat4>               m_RockXforms;
+        glm::vec3                            m_SmokePos{ 0.0f };
+
+        // Render policy (edited by the world panel).
+        Cosmic::SceneRendererSettings m_Settings;
+        float     m_TimeHours = 12.0f;                    // time-of-day scrub (0..24)
+        float     m_Exposure  = 1.0f;
+        glm::vec3 m_LightDir{ -0.4f, -1.0f, -0.3f };      // direction the sun TRAVELS
     };
 
 } // namespace Frontier

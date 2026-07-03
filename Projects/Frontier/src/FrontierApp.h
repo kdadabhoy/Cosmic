@@ -20,10 +20,10 @@
 // SKELETON STATUS (docs/plans/10-phase11-frontier-plan.md): ships with
 // placeholder worlds and an OrbitCameraController stand-in. The work orders
 // replace the stand-ins:
-//   TODO(F1): FlyCameraController becomes the exploration camera (WASD +
-//             mouse-look); the orbit rig stays as an inspect fallback toggle.
-//   TODO(F2): worlds render through the engine SceneRenderer; the root hands
-//             it to them via WorldContext.
+//   [F1 DONE]: FlyCameraController is the exploration camera (WASD + mouse-look);
+//             the orbit rig stays as an inspect fallback toggle.
+//   [F2 DONE]: worlds render through the engine SceneRenderer; the root owns one
+//             and hands it to them via WorldContext (lazy Init on first entry).
 //   TODO(F3): GPU-profiler HUD panel (per-pass ms) docked bottom-right.
 // ============================================================================
 
@@ -66,6 +66,11 @@ namespace Frontier
         Cosmic::FlyCameraController   m_Fly{ 16.0f / 9.0f };
         Cosmic::OrbitCameraController m_Orbit{ 16.0f / 9.0f };
         bool m_FlyCamera = true;       // nav-panel "Fly / Orbit" toggle (fly default)
+
+        // Engine frame orchestrator (F2): shared by every world through
+        // WorldContext::Renderer. Lazily Init'd on the first world entry with the
+        // live viewport size; Shutdown in OnDetach.
+        Cosmic::SceneRenderer m_SceneRenderer;
 
         WorldContext m_LastCtx;        // snapshot for OnPanels
     };

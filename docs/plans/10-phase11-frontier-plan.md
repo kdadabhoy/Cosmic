@@ -160,7 +160,22 @@ untouched.
 
 ## F2 — `renderer/SceneRenderer` + wire Frontier through it
 
-**Status:** ☐ not started
+**Status:** ✅ 2026-07-03 — `renderer/SceneRenderer.h/.cpp` shipped + exported: `ScenePass` /
+`SceneDrawContext` (routed submits: Reflection/Main → Renderer3D, ShadowDepth → ShadowMap::DrawCaster) /
+`SceneRendererSettings` / `SceneRenderDesc` (+`SetCamera` sugar) / non-copyable `SceneRenderer` (owns
+EnvironmentMap + PostProcessStack + ShadowMap; Init/Shutdown/SetViewportSize/Render). `Render()` reproduces
+Engine3DDemo's exact 8-step sequence (capture final FBO → lights → env bake/IBL → shadow → reflection →
+opaque HDR → transparents → post+composite) decomposed into one method per pass (F3 GPU-zone hooks), with
+the private `MatrixCamera` adapter for `Scene::OnRender3D`, the ECS-lights re-assert, and a reentrancy
+guard. `BindingPoints.h` note (no new slots). Frontier wired: `WorldContext::Renderer`, `FrontierApp` owns
+one (lazy Init on first world entry, per-frame SetViewportSize, Shutdown in OnDetach); **IslandWorld**
+replaced its placeholder with a real SceneRenderer scene (fBm island terrain 1025/2048/HS180, ocean-sized
+Water @Y0 w/ planar reflection, smoke plume, monolith shadow casters, sky/IBL/shadows/bloom/fog + a ToD
+scrub, feature toggles in the World Settings panel). Build + configure green; **CosmicTests 97/97**
+(105,730 assertions); Frontier boots clean (Phase 11 shader self-check 8/8, zero errors, GL 4.5);
+Engine3DDemo smoke-run renders its full scene 9 s with zero GL/shader/framebuffer errors (shared engine
+unregressed). *In-world island pixel-check (fly-around + toggle A/B) remains a user visual pass — the
+harness can't grant computer-use to the non-installed dev exe.*
 
 The orchestration promotion. The full design was verified against Engine3DDemo's real pass
 sequence on 2026-07-03 (design review); this work order is its condensed contract.

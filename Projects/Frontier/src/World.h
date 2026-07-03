@@ -19,7 +19,7 @@
 //   [F1 DONE]: Cosmic::FlyCameraController* Camera — the exploration camera
 //             (WASD + mouse-look; ground-probe clamp). OrbitFallback stays as an
 //             inspect toggle; Camera is null when the nav panel selects orbit.
-//   TODO(F2): Cosmic::SceneRenderer* Renderer — worlds fill a SceneRenderDesc
+//   [F2 DONE]: Cosmic::SceneRenderer* Renderer — worlds fill a SceneRenderDesc
 //             and call Renderer->Render(desc) instead of hand-rolling passes.
 //   TODO(F3): GPU-profiler results pointer for the HUD panel.
 //   TODO(F10): ambience audio helper (DistanceLoop registry).
@@ -63,6 +63,11 @@ namespace Frontier
         // Orbit inspect fallback — always provided; the active camera when Camera
         // is null (nav-panel "Fly / Orbit" toggle).
         Cosmic::OrbitCameraController* OrbitFallback = nullptr;
+
+        // Engine frame orchestrator (F2): a world fills a Cosmic::SceneRenderDesc
+        // and calls Renderer->Render(desc) instead of hand-rolling passes. Owned
+        // by FrontierApp; null until the first world entry sizes + inits it.
+        Cosmic::SceneRenderer* Renderer = nullptr;
     };
 
     class World
