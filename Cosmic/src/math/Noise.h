@@ -203,6 +203,34 @@ namespace Cosmic
 			return norm > 0.0f ? sum / norm : 0.0f;
 		}
 
+		// =================================================================
+		// Ridged multifractal — sharp, ridge-like features for mountain
+		// spines (doc 10 F11). Each octave: r = 1 - |Perlin2D|, squared to
+		// sharpen the crest, then weighted by the previous octave's value
+		// (Musgrave's classic ridged multifractal). Normalized by the
+		// amplitude sum so the [0, 1] bound holds for any octave count.
+		// Unlike Fbm2D (which sums SIGNED noise and rounds crests off), the
+		// abs() folds every zero-crossing into a sharp ridgeline.
+		// =================================================================
+
+		float Ridged2D(float x, float y, int octaves = 5,
+		               float lacunarity = 2.0f, float gain = 0.5f) const
+		{
+			float sum = 0.0f, amp = 1.0f, freq = 1.0f, norm = 0.0f, prev = 1.0f;
+			for (int i = 0; i < octaves; ++i)
+			{
+				float r = 1.0f - std::fabs(Perlin2D(x * freq, y * freq));
+				r *= r;          // square: sharpen the ridge crest
+				r *= prev;       // weight by the previous octave (multifractal)
+				sum  += amp * r;
+				norm += amp;
+				prev  = r;
+				amp  *= gain;
+				freq *= lacunarity;
+			}
+			return norm > 0.0f ? std::clamp(sum / norm, 0.0f, 1.0f) : 0.0f;
+		}
+
 	private:
 		// -----------------------------------------------------------------
 		// Lattice plumbing

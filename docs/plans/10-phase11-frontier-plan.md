@@ -775,7 +775,17 @@ real `rumble.wav` into `Projects/Frontier/assets/sounds/` overrides after a rebu
 
 ## F11 — Island heightfield composer (app) + `Noise::Ridged2D` (engine)
 
-**Status:** ☐ not started
+**Status:** ✅ 2026-07-03 — Engine `Noise::Ridged2D` (Musgrave ridged multifractal:
+`(1-|Perlin2D|)²` weighted by the previous octave, amplitude-sum normalized to [0,1]) + 2 doctests
+(range/determinism/decorrelation, plus a sharper-creases-than-Fbm curvature check). App
+`common/HeightfieldComposer.h` (header-only, pure): `IslandParams` (the doc defaults ARE the
+island) + `IslandHeight(p,u,v)` composing base fBm → ridged range (max) → volcano cone+caldera
+(max) → lake basin (subtract, floored) → river polyline (subtract) → coast falloff + sea-floor
+shelf re-bias; `OceanFloor01`/`LakeSurfaceWorldY` helpers; a per-thread seed-cached `Noise` so the
+~4M-texel terrain build reuses one permutation table. Plugged into IslandWorld's terrain
+`HeightFunction` (F12a). Build + configure green; **CosmicTests 116/116**; the auto-entered
+IslandWorld built the 2049² composed terrain and rendered zero GL/shader errors. *(Volcano-SE /
+range-NW / lake / beach-ring shape read = user visual pass.)*
 
 **Files:** MODIFY `Cosmic/src/math/Noise.h` (+ its test file `tests/test_noise.cpp`); NEW
 `Projects/Frontier/src/common/HeightfieldComposer.h` (header-only, pure).
@@ -833,7 +843,23 @@ beach ring) before F12a tunes materials.
 
 ## F12a — Island assembly I: terrain, ocean + lake, sky, time-of-day
 
-**Status:** ☐ not started
+**Status:** ✅ 2026-07-03 — `IslandWorld` rebuilt as the real assembly. Terrain: Resolution 2049,
+WorldSize 4096, HeightScale 900, BaseHeight −80, `HeightFunction = IslandHeight` (F11);
+grass/basalt/snow(HighHeight 380)/sand(LowHeight 2.5) splat + wet band (0.4/1.6/0.8). Waters: ocean
+(6000² @ Y0, 6-wave shoreward swell, ShoreDepthRange 8, caustics 0.6, sparkle 0.4,
+`SetShoreTerrain`, reflection 1024) + alpine lake (sized to the basin at `LakeSurfaceWorldY`, 3
+ripples, caustics 0.9, reflection 512); `PrimaryReflectionWater` switches ocean↔lake by camera
+proximity each frame. NEW `common/DayNightCycle.h` (header-only): sun-from-hour path + warm-
+terminator palette; below the horizon the key light hands off to cool moonlight and the bake goes
+night (`SetNightSky`/`SetMoon`) with a filled `SkyDetailDesc`. Frame fills `SceneRenderDesc`
+(terrain, both waters, `DetailedSky`, lens flare on, camera-following shadow center,
+underwater-when-diving) and calls `renderer.Render`. Panel: ToD hour + play/speed, exposure,
+feature toggles, underwater, fog density. Build + configure green; **CosmicTests 116/116**; the
+auto-entered smoke-run renders terrain + ocean + lake + detailed sky + shadows + bloom + fog + lens
+flare with zero GL/shader/framebuffer errors, and Engine3DDemo renders identically; one-time 2049²
+terrain build ≈ 7 s (lazy, on entry). *(Fly-around 60-fps pixel check — beach breakers/wet sand,
+snow range, distinct lake, crisp sun/flare by day, stars/moon by night, primary-reflection
+handoff — = user visual pass.)*
 
 **Files (app):** MODIFY `worlds/IslandWorld.h/.cpp`; NEW `common/DayNightCycle.h` (header-only).
 

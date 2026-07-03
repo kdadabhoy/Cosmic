@@ -101,4 +101,53 @@ TEST_SUITE("Noise (E14)")
 		// 1-octave fBm reduces to plain Perlin
 		CHECK(n.Fbm2D(0.37f, 0.61f, 1) == doctest::Approx(n.Perlin2D(0.37f, 0.61f)));
 	}
+
+	TEST_CASE("Ridged2D: [0,1] bound, seed determinism, decorrelation")
+	{
+		Cosmic::Noise a(2026), b(2026), c(99);
+
+		int diffs = 0;
+		for (int i = 0; i < 2000; ++i)
+		{
+			const float x = static_cast<float>(i) * 0.0731f - 40.0f;
+			const float y = static_cast<float>(i) * 0.0417f + 12.0f;
+
+			const float r = a.Ridged2D(x, y);
+			REQUIRE(r >= 0.0f);
+			REQUIRE(r <= 1.0f);
+			REQUIRE(r == b.Ridged2D(x, y));                  // same seed => identical
+
+			if (std::abs(r - c.Ridged2D(x, y)) > 1e-6f)
+				++diffs;
+		}
+		CHECK(diffs > 1000);                                 // decorrelates across seeds
+	}
+
+	TEST_CASE("Ridged2D actually ridges: sharper creases than Fbm2D")
+	{
+		Cosmic::Noise n(7);
+
+		// Scan a fine 1D line through both fields. The abs() in ridged noise folds
+		// each zero-crossing into a V-shaped crease (a derivative discontinuity),
+		// so the local curvature (|f(i-1) - 2 f(i) + f(i+1)|) spikes far above the
+		// smooth (C2-ish) fBm surface. Compare peak curvature over the same scan.
+		const float step = 0.01f;
+		const float row  = 0.30f;
+		auto fbm01 = [&](float x) { return 0.5f + 0.5f * n.Fbm2D(x, row, 5); };
+
+		float ridgedMaxCurv = 0.0f, fbmMaxCurv = 0.0f;
+		float rp = n.Ridged2D(-step, row), rc = n.Ridged2D(0.0f, row);
+		float fp = fbm01(-step),           fc = fbm01(0.0f);
+		for (int i = 1; i < 4000; ++i)
+		{
+			const float x  = static_cast<float>(i) * step;
+			const float rn = n.Ridged2D(x, row);
+			const float fn = fbm01(x);
+			ridgedMaxCurv = std::max(ridgedMaxCurv, std::abs(rp - 2.0f * rc + rn));
+			fbmMaxCurv    = std::max(fbmMaxCurv,    std::abs(fp - 2.0f * fc + fn));
+			rp = rc; rc = rn;
+			fp = fc; fc = fn;
+		}
+		CHECK(ridgedMaxCurv > fbmMaxCurv * 1.5f);
+	}
 }
