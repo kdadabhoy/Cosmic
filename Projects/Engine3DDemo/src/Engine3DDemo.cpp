@@ -96,6 +96,15 @@ namespace Workspace
 		}
 		m_PickCam.LookAt({ 0.0f, 1.5f, 16.0f }, { 0.0f, 0.0f, 0.0f });
 
+		// ---- HDR pipeline (S6.1): float scene target + ACES tonemap ----
+		// Seed with the current viewport FBO size; OnUpdate resizes it each frame.
+		{
+			auto vfb = Cosmic::Application::Get().GetFrameBuffer();
+			const uint32_t w = vfb->GetWidth()  > 0 ? vfb->GetWidth()  : 1280;
+			const uint32_t h = vfb->GetHeight() > 0 ? vfb->GetHeight() : 720;
+			m_PostFx.Init(w, h);
+		}
+
 		// ---- CAD tools (Phase 8 / S5): nav cube + scene picker ----
 		m_NavCube = Cosmic::NavigationCube::Create(140);
 		m_Picker  = Cosmic::ScenePicker::Create();
@@ -162,6 +171,7 @@ namespace Workspace
 		m_ParticleSSBO.reset();
 		m_NavCube.reset();
 		m_Picker.reset();
+		m_PostFx.Shutdown();   // release the HDR target + tonemap shader (context still live)
 
 		// Leave the engine tick rate the way we found the machine.
 		Cosmic::Application::Get().SetFixedTimestepHz(60.0f);
@@ -643,15 +653,29 @@ namespace Workspace
 			m_NavCube->Render(m_Orbit.GetCamera().GetViewMatrix());
 		if (m_ShowPicking)
 			RenderPickPass();
+
+		// Pick the world-pass render target. With HDR (S6.1) on, the ENTIRE 3D scene
+		// renders into the float scene target and is tonemapped into the viewport FBO
+		// afterwards (before the 2D overlay, contract rule 7). Otherwise render
+		// straight into the viewport FBO in LDR — the pre-S6 path, for A/B comparison.
+		const bool useHdr = m_Hdr && w > 0.0f && h > 0.0f;
+		if (useHdr)
 		{
+			m_PostFx.SetViewportSize(static_cast<uint32_t>(w), static_cast<uint32_t>(h));
+			m_PostFx.BeginHDR({ 0.1f, 0.1f, 0.1f, 1.0f });   // bind + clear the HDR target
+		}
+		else
+		{
+			// Both pre-passes leave their own FBO bound; restore the viewport FBO.
 			auto vfb = app.GetFrameBuffer();
 			vfb->Bind();
 			Cosmic::RenderCommand::SetViewport(0, 0, vfb->GetWidth(), vfb->GetHeight());
 		}
 
 		// =====================================================================
-		// 3D pass (S1 + S2) — the viewport FBO is already bound and cleared
-		// by the engine's WorkspaceLayer before client layers update.
+		// 3D pass (S1 + S2) — rendering into the HDR target (S6.1) or, with HDR
+		// off, the viewport FBO already bound + cleared by the engine's
+		// WorkspaceLayer before client layers update.
 		// =====================================================================
 		Cosmic::Renderer3D::BeginScene(m_Orbit.GetCamera());
 
@@ -738,6 +762,20 @@ namespace Workspace
 			m_PointShader->SetFloat4("u_Color", { 0.55f, 0.85f, 1.0f, 1.0f });
 			Cosmic::RenderCommand::DrawArrays(
 				Cosmic::RenderCommand::PrimitiveTopology::Points, 0, k_ParticleCount);
+		}
+
+		// =====================================================================
+		// HDR resolve (S6.1) — tonemap the float scene into the viewport FBO so
+		// the 2D overlay composites on top in LDR. Overbright (>1.0) values from
+		// the lit path roll off on the ACES shoulder instead of clipping; the
+		// exposure slider scales the whole scene before the curve.
+		// =====================================================================
+		if (useHdr)
+		{
+			auto vfb = app.GetFrameBuffer();
+			vfb->Bind();
+			Cosmic::RenderCommand::SetViewport(0, 0, vfb->GetWidth(), vfb->GetHeight());
+			m_PostFx.Composite(m_Exposure);
 		}
 
 		// =====================================================================
@@ -1019,6 +1057,20 @@ namespace Workspace
 	void Engine3DDemo::DrawRenderingPanel()
 	{
 		ImGui::Begin("Rendering & Lighting");
+
+		ImGui::SeparatorText("HDR pipeline (S6.1)");
+		ImGui::Checkbox("HDR + tonemap", &m_Hdr);
+		ImGui::SameLine();
+		ImGui::TextDisabled("(?)");
+		if (ImGui::IsItemHovered())
+			ImGui::SetTooltip("Renders the 3D scene into an RGBA16F float target, then a\n"
+			                  "fullscreen ACES tonemap resolves it into the viewport (the 2D\n"
+			                  "overlay composites after). Toggle off to render straight to LDR\n"
+			                  "for an A/B comparison. HDR on looks brighter/filmic (final gamma).");
+		ImGui::BeginDisabled(!m_Hdr);
+		ImGui::SliderFloat("Exposure", &m_Exposure, 0.05f, 8.0f, "%.2f", ImGuiSliderFlags_Logarithmic);
+		ImGui::EndDisabled();
+		ImGui::TextDisabled("Crank exposure past ~2x: highlights roll off, not clip to white.");
 
 		ImGui::SeparatorText("Overlays");
 		ImGui::Checkbox("Grid", &m_ShowGrid);           ImGui::SameLine();

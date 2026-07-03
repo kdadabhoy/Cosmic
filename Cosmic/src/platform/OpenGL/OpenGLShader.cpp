@@ -285,7 +285,13 @@ namespace Cosmic
                 {
                     enginePreamble += "in vec4 v_Color;\n";
                 }
-                if (cleanSearchSource.find("out vec4 color") == std::string::npos)
+                // Inject the conventional location-0 output only when the source
+                // declares NO explicit location-0 output of its own. A shader that
+                // names its output differently (e.g. `out vec4 o_Color`) would
+                // otherwise end up with TWO outputs bound to location 0 — a GLSL
+                // compile error (this silently killed the first S6.1 tonemap pass).
+                if (cleanSearchSource.find("out vec4 color") == std::string::npos &&
+                    cleanSearchSource.find("layout(location = 0) out") == std::string::npos)
                 {
                     enginePreamble += "layout(location = 0) out vec4 color;\n";
                 }

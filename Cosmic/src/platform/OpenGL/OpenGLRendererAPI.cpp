@@ -175,6 +175,18 @@ namespace Cosmic
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////
+	// Texture Binding (S6 — post-process passes)
+	/////////////////////////////////////////////////////////////////////////////////
+
+	void OpenGLRendererAPI::BindTextureSlot(uint32_t slot, uint32_t rendererID)
+	{
+		// glActiveTexture + glBindTexture (not DSA glBindTextureUnit) to match the
+		// engine's existing glGen*/glBind* style (S4 execution notes).
+		glActiveTexture(GL_TEXTURE0 + slot);
+		glBindTexture(GL_TEXTURE_2D, rendererID);
+	}
+
+	/////////////////////////////////////////////////////////////////////////////////
 
 
 }

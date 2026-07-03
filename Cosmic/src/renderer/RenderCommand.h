@@ -209,6 +209,14 @@ namespace Cosmic
 			s_RendererAPI->DrawArrays(topology, first, count);
 		}
 
+		/** @brief Bind a raw 2D texture handle (e.g. a FrameBuffer attachment id) to a
+		 *  sampler unit. Used by post-process passes (S6) to sample FBO attachments
+		 *  that are not Ref<Texture2D>. Set the sampler uniform to the same `slot`. */
+		inline static void BindTextureSlot(uint32_t slot, uint32_t rendererID)
+		{
+			s_RendererAPI->BindTextureSlot(slot, rendererID);
+		}
+
 	private:
 		/**
 		 * @brief Internal pointer to the active API implementation.

@@ -150,6 +150,17 @@ namespace Cosmic
 		virtual void DrawArrays(PrimitiveTopology topology, uint32_t first, uint32_t count) = 0;
 
 		////////////////////////////////
+		// Texture Binding (S6 — post-process passes)
+		///////////////////////////////
+
+		// Bind a raw 2D texture handle (e.g. a FrameBuffer color/depth attachment
+		// rendererID) to a sampler unit. The post-process stack samples FBO
+		// attachments that are not wrapped in a Ref<Texture2D>, so this is the
+		// §0-rule-1 verb for that — no gl* in feature code. A future backend
+		// translates it to a descriptor/image bind.
+		virtual void BindTextureSlot(uint32_t slot, uint32_t rendererID) = 0;
+
+		////////////////////////////////
 		// Global API Accessor
 		///////////////////////////////
 

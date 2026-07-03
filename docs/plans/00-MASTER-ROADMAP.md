@@ -174,8 +174,21 @@ phase**), frame/snap views, ViewCube, ImGuizmo transforms, ID-buffer picking + s
 - **Done when:** Engine3DDemo manipulates entities with gizmos; MMB-orbit-about-cursor-point feels
   like SolidWorks at both DPIs.
 
-### Phase 9 — Visual realism core *(doc 05: S6–S7)*
+### Phase 9 — Visual realism core *(doc 05: S6–S7)* — 🚧 foundation started 2026-07-02
 HDR pipeline → PBR + IBL → CSM shadows → SSAO → bloom → AA, then sky/atmosphere/fog/time-of-day.
+> **Status:** scoped **foundation-first**. **S6.1 (HDR pipeline) ✅ code-complete 2026-07-02** on
+> branch `phase-7-3d-foundations`: `renderer/PostProcessStack` (HDR `{RGBA16F, DEPTH24STENCIL8}`
+> scene target + fullscreen-triangle passes), `assets/shaders/Tonemap.glsl` (ACES + exposure +
+> gamma), new `RenderCommand::BindTextureSlot` verb (sample FBO attachments, §0 rule 1), wired into
+> Engine3DDemo (whole 3D world → HDR target → tonemap → viewport, 2D overlay composites after) with
+> an HDR toggle + exposure slider. Build + `CosmicTests` 73/73 green. Camera-UBO migration
+> **deferred to S6.2** (rides its shader rewrite — rationale in doc 05 §5). doc 05 §5 was expanded
+> into explicit per-item work orders (S6.2–S6.7) so each is one session; §6 (S7) stays at summary
+> altitude until S6 lands. **Remaining:** user visual pass of the S6.1 toggle, then S6.2 PBR onward.
+- **Do (order):** ~~S6.1 HDR + post stack~~ ✅ → S6.2 PBR + camera UBO → S6.3 IBL + skybox → S6.4
+  CSM shadows → S6.5 SSAO → S6.6 bloom → S6.7 AA → S7.1–S7.3 sky/fog/time-of-day.
+- **AI tier:** S6.1/S6.6/S6.7 medium; S6.2/S6.3/S6.4 touch raw GL state + math (stronger model or
+  your review). Every item has a doc 05 §5 work order + an Engine3DDemo acceptance toggle.
 - **Done when:** glTF reference scene matches a reference viewer; day-night scrub looks plausible;
   profiler-free frame still ≥60 fps on the dev GPU.
 

@@ -168,6 +168,11 @@ namespace Workspace
 		float m_WindowStartTime  = -1.0f;   // GetAbsoluteTime() at window start (unscaled)
 		float m_MeasuredFixedHz  = 0.0f;    // last completed window's ticks/second
 
+		// ---- HDR pipeline (S6.1) ----
+		Cosmic::PostProcessStack m_PostFx;      // HDR float scene target + ACES tonemap
+		bool  m_Hdr      = true;                // route the whole 3D scene through HDR
+		float m_Exposure = 1.0f;                // tonemap exposure multiplier (1.0 = neutral)
+
 		// ---- Render toggles ----
 		bool  m_ShowGrid    = true;
 		bool  m_ShowAxes    = true;

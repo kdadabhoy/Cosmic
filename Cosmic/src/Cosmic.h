@@ -34,6 +34,7 @@
 #include "renderer/RenderCommand.h"
 #include "renderer/RenderPass.h"
 #include "renderer/BindingPoints.h"
+#include "renderer/PostProcessStack.h"   // S6.1 — HDR pipeline (float target + tonemap)
 #include "graphics/Buffer.h"
 #include "graphics/Shader.h"
 #include "graphics/VertexArray.h"

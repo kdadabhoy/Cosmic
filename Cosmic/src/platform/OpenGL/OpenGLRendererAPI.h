@@ -84,6 +84,12 @@ namespace Cosmic
 		virtual void GpuMemoryBarrier(GpuBarrier bits) override;
 		virtual void DrawArrays(PrimitiveTopology topology, uint32_t first, uint32_t count) override;
 
+		////////////////////////////////
+		// Texture Binding (S6 — post-process passes)
+		///////////////////////////////
+
+		virtual void BindTextureSlot(uint32_t slot, uint32_t rendererID) override;
+
 	private:
 		// Lazily-created empty VAO for attribute-less DrawArrays (core GL requires
 		// a bound VAO). Created on first DrawArrays call.

@@ -93,7 +93,7 @@ Carried forward from the original plan and extended — everything already shipp
 | S3 | Sim-viewport conveniences (FPV inset, ribbon, horizon, labels) | S3.1 + S3.2 ✅ 2026-07-02 (ViperSim P5); S3.3–S3.5 unpulled |
 | S4 | 3D engine foundations (cameras, materials, scene, glTF, lights, MRT, compute) | **S4.0–S4.7 ✅ code-complete 2026-07-02** (full `build_all` + `CosmicTests` 66/66 green; user visual pass of the Engine3DDemo toggles pending) |
 | S5 | CAD navigation, ViewCube, gizmos, 3D picking | **S5.1–S5.5 ✅ code-complete 2026-07-02** (roadmap Phase 8; build + `CosmicTests` 73/73 green; user visual pass pending) |
-| S6 | Visual realism core: HDR, PBR+IBL, shadows, SSAO, bloom, AA | planned |
+| S6 | Visual realism core: HDR, PBR+IBL, shadows, SSAO, bloom, AA | **S6.1 ✅ code-complete 2026-07-02** (HDR float target + `PostProcessStack` + ACES tonemap; roadmap Phase 9, foundation-first); S6.2–S6.7 = explicit work orders in §5, planned |
 | S7 | Sky, atmosphere, fog, time-of-day | planned |
 | S8 | Terrain system | planned |
 | S9 | Water system | planned |
@@ -720,51 +720,205 @@ S4.0 — `glDispatchCompute` isn't in the old loader.
 
 ---
 
-## 5. S6 — Visual realism core
+## 5. S6 — Visual realism core *(roadmap Phase 9 — explicit work orders)*
 
-Ordered; this stage is the prerequisite for anything called "realistic."
+Ordered; this stage is the prerequisite for anything called "realistic." **S6.1 is the load-bearing
+foundation — do it (and build) before layering S6.2+; every later item is a fullscreen pass or a
+shader that assumes the HDR float target and the post stack exist.**
 
-1. **S6.1 HDR pipeline.** Scene renders to RGBA16F; final **tonemap pass** (ACES + exposure
-   uniform) to the target; UI composites after. Post-pass framework: `PostProcessStack` running
-   fullscreen-triangle passes with ping-pong buffers. **Also fold in here:** the per-frame
-   camera/engine-globals UBO (`Bindings::CameraUbo = 1`, reserved in `renderer/BindingPoints.h`)
-   replacing the per-draw `u_ViewProjection`/`u_CameraPos` loose uniforms — this stage rewrites
-   every shader anyway, so the injection-contract migration is free here and was deliberately
-   NOT done in the S4 hardening pass.
-   *Acceptance:* overbright (>1.0) values roll off instead of clipping; exposure slider works.
-2. **S6.2 PBR metallic-roughness.** `PBRMaterial` params/textures: albedo, metallic, roughness,
-   normal (needs tangents — extend `MeshVertex` additively per contract rule 3), AO, emissive.
-   Cook-Torrance GGX + Schlick Fresnel, matching the glTF 2.0 material model so S4.4 imports map 1:1.
-   *Acceptance:* glTF DamagedHelmet-class sample renders comparably to a reference viewer.
-3. **S6.3 IBL + skybox.** HDRI equirect → cubemap; irradiance convolution + prefiltered specular
-   mip chain + BRDF LUT (offline-at-load via S4.7 compute); skybox pass.
-   *Acceptance:* metallic sphere grid (roughness 0→1) shows correct reflections under an HDRI.
-4. **S6.4 Shadow mapping.** Directional sun: single 2k map + PCF first, then **3-split CSM** with
-   stable texel snapping. `castShadows` on `MeshRendererComponent`; depth-only render path in
-   `Renderer3D`.
-   *Acceptance:* Engine3DDemo aircraft shadows the grid; no shimmer during orbit; slope bias documented.
-5. **S6.5 SSAO.** Half-res hemisphere SSAO + blur, from the depth (+ normal reconstruct or a
-   normals attachment via S4.6).
-   *Acceptance:* contact darkening in crevices; toggleable; < 1.5 ms at 1080p on the dev GPU.
-6. **S6.6 Bloom.** Threshold + downsample chain + upsample (CoD-style) on the HDR buffer.
-   Emissive materials (S6.2) glow — **this is the lava enabler.**
-   *Acceptance:* emissive mesh blooms; no flicker while orbiting.
-7. **S6.7 Anti-aliasing.** FXAA post pass first (cheap, fits the stack); MSAA resolve path for the
-   3D pass as an option (closes the old "reserved spec fields" question); TAA parked until motion
-   vectors exist.
-   *Acceptance:* grid/edge crawl visibly reduced; screenshot comparison committed.
+> **2026-07-02 — foundation-first pass + work-order treatment.** Roadmap Phase 9 was scoped
+> "foundation first": **S6.1 shipped this session** and §5 was expanded from one-line summaries into
+> the explicit work orders below (files, signatures, GL gotchas, acceptance) — the same treatment
+> §3 (S4) got, so each remaining item is one lower-tier session. Later stages (S7+) keep their
+> original altitude until their turn.
+>
+> **Camera UBO deferred S6.1 → S6.2 (decision, not a slip).** The old S6.1 text folded the per-frame
+> camera/engine-globals UBO (`Bindings::CameraUbo = 1`) into S6.1 "because this stage rewrites every
+> shader anyway." A foundation-only pass does **not** rewrite the lit shaders (no PBR yet), so that
+> "free" premise doesn't hold — the migration now rides **S6.2**, where `PBR.glsl` and the migrated
+> `Mesh3D`/`MeshLit` shaders are rewritten and the injection-contract change is genuinely free.
+> `Bindings::CameraUbo = 1` stays reserved; `Renderer3D` keeps setting the loose
+> `u_ViewProjection`/`u_CameraPos` until then.
+
+### S6 execution notes *(read once — they apply to every item)*
+
+- **The post stack is the home for all of S6/S7's fullscreen work.** `renderer/PostProcessStack`
+  (S6.1) owns the HDR scene target and runs fullscreen-triangle passes; bloom (S6.6), SSAO (S6.5),
+  FXAA (S6.7) and fog (S7.2) are passes added to it, not new plumbing. Copy `Composite`'s shape:
+  bind a shader, `RenderCommand::BindTextureSlot(slot, fbo->GetColorAttachmentRendererID(i))`,
+  set uniforms, `PostProcessStack::DrawFullscreenTriangle()`.
+- **Sampling an FBO attachment** (depth for SSAO/fog, color for bloom) uses the S6.1
+  `RenderCommand::BindTextureSlot(slot, rendererID)` verb + a matching `SetInt("u_Sampler", slot)` —
+  never a raw `gl*` bind (§0 rule 1). Depth attachments already carry NEAREST/clamp params (S4
+  hardening), so they sample cleanly.
+- **Shader-preprocessor contract (bit S6.1 — don't repeat it):** `OpenGLShader::PreProcess`
+  pattern-matches fragment sources and *injects* `layout(location = 0) out vec4 color;` (plus
+  `in vec2 v_TexCoord;` / `in vec4 v_Color;`) when the literal strings are absent. Name every post
+  shader's fragment output **`color`** and its varying **`v_TexCoord`** (the engine-wide
+  convention every shipped shader uses) or the injected duplicate location-0 output fails the
+  compile — the program silently binds 0 and the pass draws nothing. The preprocessor now also
+  skips the injection when any explicit `layout(location = 0) out` exists (hardening added
+  2026-07-02), but follow the naming convention anyway.
+- **New GPU resource types** (a `TextureCube` for S6.3, a shadow-map `FrameBuffer` depth spec for
+  S6.4) follow the S4 factory pattern: abstract `graphics/X` + concrete `platform/OpenGL/OpenGLX` +
+  static `Create` switching on `RendererAPI::GetAPI()`; **no GL tokens outside `platform/OpenGL/`.**
+- **Build/run/test** identical to S4: features are accepted **visually in Engine3DDemo** (headless
+  tests can't make a GL context), each behind a toggle in a dock-port panel; end every item with a
+  build + `CosmicTests` green + the 2D overlay still correct (contract 6). `build_all` only when an
+  ABI-sensitive header changes (e.g. a new `MeshRendererComponent`/`TransformComponent` field, or a
+  new vertex layout that touches `Components.h`).
+
+1. **S6.1 HDR pipeline.** ✅ **code-complete 2026-07-02.**
+   - **Shipped:** `renderer/PostProcessStack.h/.cpp` — owns the HDR scene target
+     (`{RGBA16F, DEPTH24STENCIL8}`) and the tonemap shader; `Init/Shutdown/SetViewportSize`,
+     `BeginHDR(clearColor)` (bind + clear the float target), `GetSceneTarget()`,
+     `Composite(exposure)` (fullscreen ACES resolve into the currently-bound LDR target, depth
+     test/write off during and restored to ON/ON after), static `DrawFullscreenTriangle()`
+     (attribute-less `DrawArrays(Triangles,0,3)` over the S4.7 empty VAO). New generic verb
+     `RenderCommand::BindTextureSlot(slot, rendererID)` (+ `RendererAPI`/`OpenGLRendererAPI`) so a
+     post pass can sample an FBO attachment that isn't a `Ref<Texture2D>` — closes the last missing
+     §0-rule-1 primitive for post-processing. New `assets/shaders/Tonemap.glsl`: fullscreen triangle
+     from `gl_VertexID` (no VBO), fragment = `exposure` scale → Narkowicz ACES → linear→sRGB gamma.
+     Added to `Cosmic.h`.
+   - **Engine3DDemo wiring:** the whole 3D world (main pass + ECS `OnRender3D` + selection outline +
+     1M-point compute) renders into the HDR target between `BeginHDR` and the resolve; `Composite`
+     tonemaps into the viewport FBO, then the 2D overlay composites in LDR (contract 7). "HDR +
+     tonemap" toggle (default on) + logarithmic exposure slider in the "Rendering & Lighting" panel.
+   - **Verified:** full VS-cmake Debug build green (engine + all project DLLs + CosmicApp);
+     `CosmicTests` **73/73** (103,934 assertions — GPU-side, no new unit tests per the S6 notes).
+     **User visual pass pending:** toggle HDR off/on (scene looks brighter/filmic on — the documented
+     gamma difference), crank exposure past ~2× and confirm highlights roll off on the ACES shoulder
+     instead of clipping to flat white; 2D overlay intact.
+   - **Documented deviations / deferrals:** (a) camera UBO → S6.2 (see the note above); (b) ping-pong
+     HDR buffers are **not** allocated yet — S6.1 has a single resolve pass, so the second buffer
+     lands with S6.6 bloom (its first consumer); (c) authored colors are still fed to shaders without
+     an sRGB→linear decode, so the final tonemap gamma makes HDR-on brighter than HDR-off — a full
+     sRGB-correctness audit is **S12.6** (noted in `Tonemap.glsl`); (d) `PostProcessStack` is
+     demo-owned (like the FPV inset / pick FBO) — promotion to an engine-global `SceneRenderer` that
+     every 3D app gets for free is an S12-adjacent follow-up.
+   - *Acceptance (met, pending user visual pass):* overbright (>1.0) values roll off instead of
+     clipping; exposure slider works.
+
+2. **S6.2 PBR metallic-roughness + camera UBO.** The first "real" material model, and the stage that
+   pays off the camera-UBO migration deferred from S6.1.
+   - **Files:** extend the `Mesh` vertex layout with **tangents** (additive, contract rule 3 — a new
+     `MeshVertexTangent` layout / attribute `a_Tangent` at `location = 3`; `CreateFromOBJ`/glTF
+     import compute or pass them, primitives generate them); NEW `assets/shaders/PBR.glsl`;
+     NEW `renderer/CameraUniforms.h` (the std140 `CameraBlock` C++ mirror) + upload path in
+     `Renderer3D::BeginScene`; MODIFY `renderer/BindingPoints.h` comment (CameraUbo now live),
+     `assets/shaders/Mesh3D.glsl` + `MeshLit.glsl` + `Line3D.glsl` + `DemoChecker3D.glsl` +
+     `ParticlePoints.glsl` (read `u_ViewProjection`/`u_CameraPos` from the block), Engine3DDemo.
+   - **Camera UBO spec (binding 1, `Bindings::CameraUbo`):** vec4-only std140 like the lights block —
+     `mat4 u_ViewProjection; vec4 u_CameraPos_Time (xyz pos, w time); vec4 u_ViewportSize_pad;`
+     `static_assert(sizeof == 96)`. `Renderer3D::BeginScene` packs + uploads it once per pass and
+     stops setting the loose camera uniforms (material path too). 2D shaders keep their loose
+     `u_ViewProjection` (Renderer2D has its own ortho camera — do **not** put it on binding 1).
+   - **PBR material:** keep the `Material` + shader convention (no new `PBRMaterial` class needed —
+     `MeshLit` proved the pattern); documented parameter names `u_Albedo` (vec4), `u_Metallic`,
+     `u_Roughness`, `u_AO` (floats), `u_Emissive` (vec3) + textures `u_AlbedoMap`, `u_NormalMap`,
+     `u_MetalRoughMap` (glTF packs metallic=B, roughness=G), `u_AOMap`, `u_EmissiveMap`, each gated
+     by a `u_HasXMap` float. Cook-Torrance: GGX NDF + Smith geometry + Schlick Fresnel, energy split
+     by metallic, consuming the binding-0 lights block (sun + points) exactly as `MeshLit` does.
+     Match the glTF 2.0 metallic-roughness model so S4.4b imports map 1:1 (extend `ModelPart`/glTF
+     import to carry the metallic/roughness/emissive factors + texture refs).
+   - **Gotchas:** the tangent layout change touches every `Mesh` factory — regenerate normals+tangents
+     consistently; a mesh with no UVs has no well-defined tangent (fall back to an arbitrary basis).
+     Ambient is a flat term until S6.3 IBL replaces it — don't hardcode a magic ambient into `PBR.glsl`.
+   - *Acceptance:* a glTF DamagedHelmet-class sample (commit a small one, like the S4.4b Duck) renders
+     comparably to a reference viewer under the sun + point lights; the camera UBO drives every 3D
+     shader (grep-verify no `SetMat4("u_ViewProjection")` left in `Renderer3D`); 2D overlay + tests green.
+
+3. **S6.3 IBL + skybox.** Image-based ambient — the big visual jump, and the biggest single item.
+   - **Files:** NEW `graphics/TextureCube.h` + `platform/OpenGL/OpenGLTextureCube.h/.cpp` (factory
+     pattern; `Create(size, format)` for render targets, `CreateFromEquirect(path)` helper);
+     NEW `renderer/EnvironmentMap.h/.cpp` (owns the environment/irradiance/prefilter cubemaps + BRDF
+     LUT and the bake passes); NEW shaders `EquirectToCube.glsl`, `IrradianceConvolve.glsl`,
+     `PrefilterEnv.glsl`, `BrdfLut.glsl`, `Skybox.glsl`; MODIFY `PBR.glsl` (add the IBL ambient term),
+     Engine3DDemo; commit one small `.hdr` equirect under `assets/textures/`.
+   - **Bake recipe (offline-at-load, render-to-cubemap-face — the compute path from S4.7 is optional):**
+     equirect → cube (6 faces, one FBO per face via `glFramebufferTexture2D` to
+     `GL_TEXTURE_CUBE_MAP_POSITIVE_X + i`); irradiance convolution (32³, cosine-weighted hemisphere
+     sum); prefiltered specular (128³ base + 5 roughness mips, GGX importance sample); BRDF LUT
+     (512² RG16F, one fullscreen pass). This needs the FBO layer to attach a **cube face** and to
+     attach a specific **mip level** — add a `FrameBuffer` verb or a small dedicated bake FBO rather
+     than bending the workspace FBO.
+   - **Skybox pass:** draw the environment cube behind the scene — a fullscreen-triangle pass that
+     reconstructs a view ray per pixel and samples the cubemap, depth test `LEQUAL`, drawn after
+     opaque with depth write off (cheaper than a real cube mesh; fits the post stack's fullscreen idiom).
+   - **Gotchas:** cube face winding + the +Y/−Y flip are the classic faceplants — validate against a
+     known-good reference before wiring IBL into `PBR.glsl`; seamless cubemap filtering
+     (`GL_TEXTURE_CUBE_MAP_SEAMLESS`) must be enabled (one-time, in `OpenGLRendererAPI::Init`).
+   - *Acceptance:* a metallic sphere grid (roughness 0→1, an Engine3DDemo toggle) shows plausible
+     reflections + correct roughness blur under the HDRI; skybox renders behind; 2D overlay + tests green.
+
+4. **S6.4 Shadow mapping.** Directional sun shadows.
+   - **Files:** MODIFY `graphics/FrameBuffer.h` (allow a **depth-only** spec — a lone
+     `DEPTH24STENCIL8`, or add a `DEPTH32F` format sampled as a shadow map; the 0-color path already
+     calls `glDrawBuffer(GL_NONE)`); `renderer/Renderer3D` (a **depth-only render path** —
+     `RenderDepthPass(lightViewProj)` iterating the same submissions with a trivial depth shader);
+     `PBR.glsl`/`MeshLit.glsl` (sample the shadow map, PCF); `scene/Scene.cpp` (consume
+     `MeshRendererComponent::CastShadows`, already stored since S4.3); Engine3DDemo. NEW
+     `assets/shaders/ShadowDepth.glsl`.
+   - **Spec:** single 2k map + 3×3 PCF first; then **3-split CSM** (partition the view frustum,
+     one ortho light matrix per split, **stable texel snapping** — round the light-space origin to
+     texel size to kill shimmer during orbit). Slope-scaled depth bias + normal-offset to fight acne;
+     `SetCullMode(Front)` during the depth pass to reduce peter-panning (restore `None` after — the
+     verb exists since S4).
+   - **Gotchas:** the depth pass needs its own viewport = shadow-map size; restore the scene viewport
+     after. Cull-mode + depth-bias must be restored (same contract as the depth verbs). CSM split
+     selection in the fragment shader by view-space depth.
+   - *Acceptance:* Engine3DDemo aircraft shadows the grid; no shimmer while orbiting (texel snapping
+     on); slope-bias value documented in the shader; toggle for map count; 2D overlay + tests green.
+
+5. **S6.5 SSAO.** Contact shadows from depth.
+   - **Files:** the HDR scene target grows a **view-space normal** attachment (MRT: add `RGBA16F`
+     normals at `location = 1` — note this collides with the S4.6 entity-ID output; the HDR scene
+     target is a *different* FBO than the pick FBO, so keep IDs on the pick pass and normals on the
+     scene pass, or reconstruct normals from depth to avoid the attachment entirely — reconstruct-
+     from-depth is the lower-risk first cut); NEW `assets/shaders/Ssao.glsl` + `SsaoBlur.glsl`;
+     MODIFY `PostProcessStack` (an SSAO pass + a half-res AO target + the hemisphere kernel/noise
+     texture), `PBR.glsl` (multiply ambient/IBL by AO), Engine3DDemo.
+   - **Spec:** half-res, 16–32 sample hemisphere kernel oriented by the (reconstructed or sampled)
+     normal, 4×4 rotation-noise tile, range check + bias, then a 4×4 box blur. Composited by
+     modulating the ambient/IBL term (not the direct light).
+   - *Acceptance:* visible contact darkening in crevices (the ECS scene + aircraft); toggle;
+     ≤ 1.5 ms at 1080p on the dev GPU (quote the S12.5 profiler once it exists; eyeball until then);
+     2D overlay + tests green.
+
+6. **S6.6 Bloom.** Threshold + blur chain on the HDR buffer — **the lava/emissive enabler.**
+   - **Files:** MODIFY `PostProcessStack` (allocate the ping-pong / mip-chain HDR buffers deferred
+     from S6.1; a bloom pass inserted **before** `Composite`); NEW `assets/shaders/BloomDown.glsl`,
+     `BloomUp.glsl` (CoD-style progressive down/upsample), and fold the bloom add into `Tonemap.glsl`
+     (or a pre-tonemap combine); Engine3DDemo.
+   - **Spec:** threshold (soft knee) the HDR color, downsample chain (~6 mips), upsample with
+     additive blend, scale by an intensity uniform, add to the scene before the ACES curve. Emissive
+     PBR materials (S6.2 `u_Emissive`) now glow.
+   - *Acceptance:* an emissive mesh (Engine3DDemo toggle) blooms; no flicker while orbiting (stable
+     threshold, no per-frame RNG); exposure + bloom interact sanely; 2D overlay + tests green.
+
+7. **S6.7 Anti-aliasing.** Edge cleanup — the final post pass.
+   - **Files:** NEW `assets/shaders/Fxaa.glsl`; MODIFY `PostProcessStack` (an FXAA pass after tonemap,
+     since FXAA wants LDR/gamma input); optionally wire the long-reserved `FramebufferSpecification::
+     Samples` field for an **MSAA** 3D pass with a resolve blit (closes the "reserved spec fields"
+     question). TAA stays parked (needs motion vectors — no consumer yet).
+   - *Acceptance:* grid/edge crawl visibly reduced (FXAA on vs off); a committed before/after
+     screenshot; MSAA path (if built) resolves without artifacts; 2D overlay + tests green.
 
 ---
 
 ## 6. S7 — Sky, atmosphere & time-of-day
 
+Kept at summary altitude (give it the §5 work-order treatment when Phase 9's S6 items are done and
+S7 is next). All four ride the S6.1 post stack + S6.3 environment plumbing.
+
 1. **S7.1 Procedural sky v1.** Sun-disk + Preetham/Hosek-style analytic sky driven by a sun
-   direction; replaces S3.3's gradient. Sun direction also drives the directional light + IBL
-   ambient approximation (re-capture irradiance on big sun moves, amortized).
+   direction; replaces S3.3's gradient and the S6.3 static HDRI skybox (the analytic sky becomes the
+   environment source). Sun direction also drives the directional light + IBL ambient approximation
+   (re-capture irradiance on big sun moves, amortized — reuse the S6.3 bake passes).
 2. **S7.2 Height fog + aerial perspective.** Exponential height fog with inscatter color from the
-   sky model; applied in the tonemap/post chain (depth-based).
+   sky model; a depth-based fullscreen pass in the S6.1 post chain (reads `GetSceneTarget()` depth).
 3. **S7.3 Time-of-day.** `Environment` scene object: sun elevation/azimuth from time; app-drivable
-   (sim time ↔ visual time). Night = stars/moon texture (cheap).
+   (sim time ↔ visual time — ViperSim could drive it). Night = stars/moon texture (cheap).
 4. **S7.4 (later) Volumetric clouds** — park until a consumer exists; note: raymarched noise
    clouds are S10-adjacent and expensive; revisit after S12 profiling exists.
 
