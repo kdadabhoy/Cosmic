@@ -91,7 +91,7 @@ Carried forward from the original plan and extended — everything already shipp
 | S1 | Perspective camera, orbit controller, 3D lines/grid/axes | ✅ done 2026-07-01 |
 | S2 | Meshes + primitives + OBJ + Lambert | ✅ done 2026-07-01 |
 | S3 | Sim-viewport conveniences (FPV inset, ribbon, horizon, labels) | S3.1 + S3.2 ✅ 2026-07-02 (ViperSim P5); S3.3–S3.5 unpulled |
-| S4 | 3D engine foundations (cameras, materials, scene, glTF, lights, MRT, compute) | **S4.0 ✅ 2026-07-02**; S4.1–S4.7 planned — §3 has explicit work orders (2026-07-02: S4.0 added, S4.4 split into a/b) |
+| S4 | 3D engine foundations (cameras, materials, scene, glTF, lights, MRT, compute) | **S4.0–S4.7 ✅ code-complete 2026-07-02** (full `build_all` + `CosmicTests` 66/66 green; user visual pass of the Engine3DDemo toggles pending) |
 | S5 | CAD navigation, ViewCube, gizmos, 3D picking | planned — **S5.1 nav is [filler], do any time** |
 | S6 | Visual realism core: HDR, PBR+IBL, shadows, SSAO, bloom, AA | planned |
 | S7 | Sky, atmosphere, fog, time-of-day | planned |
@@ -197,6 +197,11 @@ The context is already 4.5 core; only the function loader is stale (§0 loader n
 
 ### S4.1 Unified camera hierarchy
 
+> **✅ code-complete 2026-07-02.** `camera/Camera.h` pure interface added; Orthographic + Perspective
+> derive and mark the four getters `override`; `RenderPass`, `Renderer2D::BeginScene`, and a new
+> `Renderer3D::BeginScene(const Camera&)` overload take the base. No app-side edits. Full build +
+> `CosmicTests` green; all apps compile unchanged.
+
 `Camera` interface; both cameras derive; renderer entry points accept the base. **No app-side
 source changes** — all ~20 existing `BeginScene(...)` call sites compile unchanged via upcast
 (the original "touches every 2D call site" wording predates this design).
@@ -234,6 +239,11 @@ source changes** — all ~20 existing `BeginScene(...)` call sites compile uncha
   screen render identically; `CosmicTests` green.
 
 ### S4.2 Material-driven meshes
+
+> **✅ code-complete 2026-07-02.** `Renderer3D::DrawMesh(mesh, xform, Ref<Material>)` added
+> (BindFull → engine convention uniforms incl. `u_NormalMatrix`); `DemoChecker3D.glsl` +
+> Engine3DDemo "Material pad (S4.2)" toggle (2×2 in-code texture). Build + tests green;
+> **user visual pass pending** (tinted checker renders; toggle off restores plain pad).
 
 - **Files:** MODIFY `renderer/Renderer3D.h/.cpp`; NEW `Cosmic/assets/shaders/DemoChecker3D.glsl`;
   MODIFY `Cosmic/assets/shaders/Mesh3D.glsl` (header comment only);
@@ -273,6 +283,12 @@ source changes** — all ~20 existing `BeginScene(...)` call sites compile uncha
   overlay + `CosmicTests` green.
 
 ### S4.3 3D scene integration
+
+> **✅ code-complete 2026-07-02.** `TransformComponent` now vec3 `Scale` + optional
+> `RotationQuat`/`UseQuatRotation`; new `MeshRendererComponent` (+registered); `Scene::OnRender3D`.
+> Two template vec2→vec3 assignments fixed (`TemplateTelemetryLayer`/`TemplateSpriteLayer`).
+> `tests/test_components.cpp` (vec3 diagonal + quat==Euler) green; Engine3DDemo "ECS scene (S4.3)"
+> toggle. `build_all` + tests green; user visual pass pending.
 
 - **Files:** MODIFY `Cosmic/src/scene/Components.h` (**ABI break → `build_all.bat`**),
   `scene/Scene.h/.cpp`; NEW `tests/test_components.cpp` + add it to the `add_executable` list in
@@ -324,6 +340,11 @@ source changes** — all ~20 existing `BeginScene(...)` call sites compile uncha
 
 ### S4.4a Asset cache *(closes IMPROVEMENTS §5.1)*
 
+> **✅ code-complete 2026-07-02.** `assets/AssetLibrary.h/.cpp` (texture/shader/mesh/model caches,
+> `NormalizeKey`, `Clear()` wired into Application shutdown before GL teardown). `test_assetlibrary.cpp`
+> (VFS≡raw, `..` collapse, backslash, idempotence) green; Engine3DDemo "Cache check" button.
+> Build + tests green.
+
 - **Files:** NEW `Cosmic/src/assets/AssetLibrary.h/.cpp` (GLOB picks the new dir up);
   MODIFY `core/Application.cpp` (shutdown hook); NEW `tests/test_assetlibrary.cpp` + add to
   `tests/CMakeLists.txt`.
@@ -360,6 +381,13 @@ source changes** — all ~20 existing `BeginScene(...)` call sites compile uncha
   `CosmicTests` green.
 
 ### S4.4b glTF import (cgltf) + `Model`
+
+> **✅ code-complete 2026-07-02.** Vendored `cgltf.h` v1.15 (MIT) + `CgltfImpl.cpp`; `graphics/Model.h/.cpp`
+> (`CreateFromGLTF`: world-transform baked into verts, POSITION/NORMAL/TEXCOORD_0 + base-color,
+> flat-normal fallback, non-triangle warn+skip); `Renderer3D::DrawModel`; `AssetLibrary::GetModel` real;
+> committed `assets/models/Duck.glb` (120 KB Khronos sample, copies to runtime VFS); Engine3DDemo
+> "glTF Duck (S4.4b)" toggle + reload-returns-same-Ref check. cgltf include dir added to CMake.
+> Build + tests green; user visual pass pending (Duck renders upright at sane scale).
 
 - **Files:** NEW `Cosmic/dependencies/cgltf/cgltf.h` (vendor the single header, MIT); NEW
   `Cosmic/src/graphics/CgltfImpl.cpp` (the one TU:
@@ -401,6 +429,12 @@ source changes** — all ~20 existing `BeginScene(...)` call sites compile uncha
   returns the same `Ref` (log PASS); 2D overlay + `CosmicTests` green.
 
 ### S4.5 Lighting v1 (Blinn-Phong forward, ≤ 16 point lights, UBO)
+
+> **✅ code-complete 2026-07-02.** `UniformBuffer` resource (OpenGL impl, binding 0); `GpuLightsBlock`
+> (`static_assert(sizeof==560)`); `MeshLit.glsl` (Blinn-Phong, std140 LightsBlock, consumes
+> `u_NormalMatrix`); `Renderer3D::SetLights` + `SceneLightsDesc`/`PointLightDesc`; `Directional`/`PointLightComponent`
+> (+registered); `Scene::OnRender3D` gathers + uploads. Engine3DDemo "Lighting v1 (S4.5)" section
+> (sun + red/blue point lights). Build + tests green; user visual pass pending (colored highlights).
 
 - **Files:** NEW `graphics/UniformBuffer.h` + `platform/OpenGL/OpenGLUniformBuffer.h/.cpp`;
   NEW `Cosmic/assets/shaders/MeshLit.glsl`; MODIFY `renderer/Renderer3D.h/.cpp`,
@@ -465,6 +499,14 @@ source changes** — all ~20 existing `BeginScene(...)` call sites compile uncha
 
 ### S4.6 Multi-attachment framebuffer (MRT) + entity-ID readback
 
+> **✅ code-complete 2026-07-02.** `FramebufferSpecification` grown with an attachment list
+> (empty ⇒ {RGBA8, DEPTH24STENCIL8} back-compat); `FramebufferTextureFormat` enum; RED_INTEGER
+> (GL_NEAREST), `GetColorAttachmentRendererID(index=0)`, `ReadPixel`, `ClearAttachment` (glClearBufferiv),
+> `glDrawBuffers`/`glDrawBuffer(GL_NONE)`. Entity-ID plumbed through both `DrawMesh` overloads + `DrawModel`
+> (`int entityID=-1` → `u_EntityID`); all four Renderer3D shaders (incl. Line3D writing −1) emit
+> `layout(location=1) out int o_EntityID`. Engine3DDemo "Picking (S4.6)" panel (own MRT FBO pre-pass,
+> hover ReadPixel → part name). Build + tests green; user visual pass pending.
+
 Unlocks S5.4 picking and all S6 post-processing.
 
 - **Files:** MODIFY `graphics/FrameBuffer.h`, `platform/OpenGL/OpenGLFrameBuffer.h/.cpp`,
@@ -524,6 +566,13 @@ Unlocks S5.4 picking and all S6 post-processing.
   attachment is S5.4's call). 2D overlay + `CosmicTests` green.
 
 ### S4.7 Compute + storage buffers *(requires S4.0)*
+
+> **✅ code-complete 2026-07-02.** `#type compute` → GL_COMPUTE_SHADER in the shader parser (compute-only
+> program links + binds); `StorageBuffer` SSBO resource; RendererAPI/RenderCommand verbs `DispatchCompute`,
+> `MemoryBarrier(GpuBarrier)`, `DrawArrays(PrimitiveTopology,…)` + lazy empty VAO + `GL_PROGRAM_POINT_SIZE`;
+> `ComputeParticles.glsl` + `ParticlePoints.glsl`; Engine3DDemo "Compute (S4.7)" 1M-point toggle with
+> fps readout. **Gotcha handled:** `<windows.h>` defines a `MemoryBarrier` macro — `#undef`'d in
+> RendererAPI.h/RenderCommand.h. Build + tests green; **user perf pass pending** (1M points ≥ 60 fps).
 
 The infrastructure S9 (FFT water) and S10 (GPU particles) build on. Will not compile before
 S4.0 — `glDispatchCompute` isn't in the old loader.

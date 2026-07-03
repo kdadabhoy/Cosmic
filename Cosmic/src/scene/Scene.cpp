@@ -4,7 +4,9 @@
 #include "scene/Entity.h"
 #include "scene/Components.h"
 #include "renderer/Renderer2D.h"
+#include "renderer/Renderer3D.h"
 #include "camera/OrthographicCamera.h"
+#include "camera/Camera.h"
 #include "jobs/JobSystem.h"
 #include "core/Log.h"
 #include <unordered_map>
@@ -198,4 +200,61 @@ namespace Cosmic
 		Renderer2D::EndScene();
 
 	} // Closes void Scene::OnRender()
+
+	void Scene::OnRender3D(const Camera& camera)
+	{
+		// The scene owns the full 3D pass. Callers must NOT wrap this in their own
+		// BeginScene/EndScene. No sorting/culling here — that is S12.
+
+		// --- Gather scene lights (S4.5) and upload before drawing. ---
+		Renderer3D::SceneLightsDesc lights;
+		lights.Ambient = Renderer3D::GetAmbient();
+
+		// First directional light wins as the sun.
+		{
+			auto dirView = m_Registry.view<DirectionalLightComponent>();
+			for (auto entity : dirView)
+			{
+				const auto& dl = dirView.get<DirectionalLightComponent>(entity);
+				lights.SunDirection = dl.Direction;
+				lights.SunColor     = dl.Color;
+				lights.SunIntensity = dl.Intensity;
+				break;
+			}
+		}
+
+		// Up to 16 point lights (position from the TransformComponent).
+		{
+			auto ptView = m_Registry.view<TransformComponent, PointLightComponent>();
+			ptView.each([&](auto /*entity*/, const TransformComponent& t, const PointLightComponent& pl)
+			{
+				Renderer3D::PointLightDesc d;
+				d.Position  = t.Position;
+				d.Radius    = pl.Radius;
+				d.Color     = pl.Color;
+				d.Intensity = pl.Intensity;
+				lights.Points.push_back(d);
+			});
+		}
+
+		Renderer3D::SetLights(lights);
+
+		Renderer3D::BeginScene(camera);
+
+		auto view = m_Registry.view<TransformComponent, MeshRendererComponent>();
+		view.each([&](auto entity, const TransformComponent& transform, const MeshRendererComponent& mr)
+		{
+			if (!mr.MeshAsset)
+				return;
+
+			const int entityID = (int)(uint32_t)entity;
+			const glm::mat4 xform = transform.GetTransform();
+			if (mr.MaterialAsset)
+				Renderer3D::DrawMesh(mr.MeshAsset, xform, mr.MaterialAsset, entityID);
+			else
+				Renderer3D::DrawMesh(mr.MeshAsset, xform, mr.Color, entityID);
+		});
+
+		Renderer3D::EndScene();
+	}
 } // Closes namespace Cosmic

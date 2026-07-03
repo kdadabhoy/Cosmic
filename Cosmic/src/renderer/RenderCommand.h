@@ -52,6 +52,11 @@
 #include "graphics/VertexArray.h"
 #include <glm/glm.hpp>
 
+// See RendererAPI.h — keep the Win32 MemoryBarrier macro from clobbering the verb. (S4.7)
+#ifdef MemoryBarrier
+	#undef MemoryBarrier
+#endif
+
 
 namespace Cosmic
 {
@@ -169,6 +174,31 @@ namespace Cosmic
 			uint32_t instanceCount)
 		{
 			s_RendererAPI->DrawIndexedInstanced(vertexArray, indexCount, instanceCount);
+		}
+
+		/////////////////////////////////////////////////////////////////////////////////
+		// Compute & attribute-less draw (S4.7)
+		/////////////////////////////////////////////////////////////////////////////////
+
+		using GpuBarrier        = RendererAPI::GpuBarrier;
+		using PrimitiveTopology = RendererAPI::PrimitiveTopology;
+
+		/** @brief Dispatch the bound compute program over an x*y*z work-group grid. */
+		inline static void DispatchCompute(uint32_t x, uint32_t y, uint32_t z)
+		{
+			s_RendererAPI->DispatchCompute(x, y, z);
+		}
+
+		/** @brief GPU memory barrier so compute writes are visible to later reads. */
+		inline static void MemoryBarrier(GpuBarrier bits)
+		{
+			s_RendererAPI->MemoryBarrier(bits);
+		}
+
+		/** @brief Attribute-less array draw (points/lines/tris from gl_VertexID). */
+		inline static void DrawArrays(PrimitiveTopology topology, uint32_t first, uint32_t count)
+		{
+			s_RendererAPI->DrawArrays(topology, first, count);
 		}
 
 	private:

@@ -13,6 +13,7 @@
 namespace Cosmic
 {
 	class Entity;          // Forward declaration
+	class Camera;             // Forward declaration (OnRender3D takes any camera)
 	class OrthographicCamera; // Forward declaration
 	class Material;        // Forward declaration (used only as a bucket key pointer)
 
@@ -60,6 +61,18 @@ namespace Cosmic
 		 *                for this render pass.
 		 */
 		void OnRender(const OrthographicCamera& camera);
+
+		/**
+		 * @brief 3D render pass (S4.3): draws every entity with a
+		 * TransformComponent + MeshRendererComponent via Renderer3D.
+		 *
+		 * Owns its own BeginScene/EndScene — do NOT wrap this call. Entities with a
+		 * null MeshAsset are skipped; a null MaterialAsset uses the Lambert color
+		 * path (Color tint), otherwise the custom-material path. No sorting/culling
+		 * yet (that is S12). Does not touch OnRender (the 2D path) — both can run in
+		 * one frame, 3D world first then 2D overlay.
+		 */
+		void OnRender3D(const Camera& camera);
 
 		/** @brief Allocates and attaches an execution system to the scene lifecycle. */
 		template<typename T, typename... Args>

@@ -53,18 +53,57 @@
  */
 
 #include "core/Core.h"
+#include <vector>
+#include <initializer_list>
 
 namespace Cosmic
 {
 	/**
+	 * FramebufferTextureFormat — engine-side attachment formats (no GL enums in
+	 * public headers; the platform layer translates). RED_INTEGER backs entity-ID
+	 * picking (S4.6); RGBA16F is the HDR target (S6). DEPTH24STENCIL8 is the depth
+	 * attachment. (§0 rule 2 — portability.)
+	 */
+	enum class FramebufferTextureFormat
+	{
+		None = 0,
+		RGBA8,
+		RGBA16F,
+		RED_INTEGER,
+		DEPTH24STENCIL8
+	};
+
+	struct FramebufferTextureSpecification
+	{
+		FramebufferTextureSpecification() = default;
+		// Implicit on purpose so an attachment list can be written as {RGBA8, RED_INTEGER}.
+		FramebufferTextureSpecification(FramebufferTextureFormat format) : TextureFormat(format) {}
+
+		FramebufferTextureFormat TextureFormat = FramebufferTextureFormat::None;
+	};
+
+	struct FramebufferAttachmentSpecification
+	{
+		FramebufferAttachmentSpecification() = default;
+		FramebufferAttachmentSpecification(std::initializer_list<FramebufferTextureSpecification> attachments)
+			: Attachments(attachments) {}
+
+		std::vector<FramebufferTextureSpecification> Attachments;
+	};
+
+	/**
 	 * FramebufferSpecification
 	 * Configuration data for creating a new FrameBuffer.
+	 *
+	 * Attachments EMPTY ⇒ the default {RGBA8, DEPTH24STENCIL8} — so every existing
+	 * call site (workspace FBO, FPV inset) keeps byte-for-byte identical behavior.
 	 */
 	struct FramebufferSpecification
 	{
 		uint32_t Width = 0, Height = 0;
 		uint32_t Samples = 1;             // Reserved — MSAA not yet implemented; always renders single-sample
 		bool SwapChainTarget = false;     // Reserved — not yet implemented
+		FramebufferAttachmentSpecification Attachments;   // empty ⇒ {RGBA8, DEPTH24STENCIL8}
 	};
 
 	///////////////////////////////////////////////
@@ -99,12 +138,29 @@ namespace Cosmic
 		////////////////////////////////
 		// GPU Resource Accessors
 		///////////////////////////////
-		virtual uint32_t GetColorAttachmentRendererID() const = 0;
 
-		// Depth/stencil attachment handle (DEPTH24_STENCIL8 texture — always created
-		// alongside the color attachment). Exposed for 3D work: depth read-back,
-		// debug visualization, and future post-processing passes.
+		// Color attachment texture handle. `index` selects the attachment for MRT
+		// FBOs; the default 0 keeps every single-attachment ImGui::Image caller
+		// source-compatible.
+		virtual uint32_t GetColorAttachmentRendererID(uint32_t index = 0) const = 0;
+
+		// Depth/stencil attachment handle (DEPTH24_STENCIL8 texture). Exposed for 3D
+		// work: depth read-back, debug visualization, and future post-processing.
 		virtual uint32_t GetDepthAttachmentRendererID() const = 0;
+
+		////////////////////////////////
+		// Integer Attachment I/O (S4.6 — entity-ID picking)
+		///////////////////////////////
+
+		// Read one integer texel from a RED_INTEGER attachment. The FBO must be
+		// bound. GL's origin is bottom-left, so the CALLER flips y
+		// (glY = height - 1 - mouseY).
+		virtual int ReadPixel(uint32_t attachmentIndex, int x, int y) = 0;
+
+		// Clear a RED_INTEGER attachment to `value` (glClearBufferiv). glClear does
+		// NOT reliably clear integer attachments, so callers clear the ID attachment
+		// every frame after Bind(). The FBO must be bound.
+		virtual void ClearAttachment(uint32_t attachmentIndex, int value) = 0;
 
 		////////////////////////////////
 		// Factory Pattern

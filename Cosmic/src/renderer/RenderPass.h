@@ -72,7 +72,7 @@
 
 #include "core/Core.h"
 #include "renderer/Renderer2D.h"
-#include "camera/OrthographicCamera.h"
+#include "camera/Camera.h"
 #include <glm/glm.hpp>
 
 namespace Cosmic
@@ -83,11 +83,11 @@ namespace Cosmic
 		/**
 		 * @brief Constructs a scoped render pass targeting the given camera and viewport region.
 		 *
-		 * @param camera         The orthographic camera whose VP matrix drives this pass.
+		 * @param camera         Any camera whose VP matrix drives this pass (2D or 3D).
 		 * @param viewportBounds Pixel-space viewport region { x, y, width, height }.
 		 *                       Defaults to a full-screen pass if width/height are 0.
 		 */
-		RenderPass(const OrthographicCamera& camera, const glm::vec4& viewportBounds)
+		RenderPass(const Camera& camera, const glm::vec4& viewportBounds)
 		{
 			Renderer2D::PushRenderPass(camera.GetViewProjectionMatrix(), viewportBounds);
 		}

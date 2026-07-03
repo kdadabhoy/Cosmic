@@ -421,6 +421,11 @@ namespace Cosmic
 		// Audio goes first: all layer-owned Sound Refs are gone by now (step 5),
 		// and the device graph must close before the window/context teardown.
 		AudioEngine::Shutdown();
+
+		// Release cached assets (S4.4a) while the GL context is still current — the
+		// cached Textures/Shaders/Meshes delete their GPU handles in their dtors.
+		AssetLibrary::Clear();
+
 		Renderer::Shutdown();
 
 		// 8. Safely close physical window frames and dismantle the OpenGL core context

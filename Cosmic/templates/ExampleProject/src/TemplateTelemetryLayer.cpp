@@ -59,7 +59,7 @@ namespace Workspace
             // Scene::CreateEntity already adds TransformComponent.
             auto& transform    = e.GetComponent<Cosmic::TransformComponent>();
             transform.Position = { posDist(rng), posDist(rng), 0.0f };
-            transform.Scale    = { 0.18f, 0.18f };
+            transform.Scale    = { 0.18f, 0.18f, 1.0f };
 
             e.AddComponent<Cosmic::SelectableComponent>();
 

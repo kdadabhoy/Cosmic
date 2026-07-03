@@ -50,12 +50,13 @@
  */
 
 #include "core/Core.h"
+#include "camera/Camera.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 
 namespace Cosmic
 {
-	class COSMIC_API PerspectiveCamera
+	class COSMIC_API PerspectiveCamera : public Camera
 	{
 	public:
 		////////////////////////////////
@@ -82,12 +83,12 @@ namespace Cosmic
 		// Getters (Matrices & State)
 		///////////////////////////////
 
-		const glm::vec3&		GetPosition() const					{ return m_Position; }
+		const glm::vec3&		GetPosition() const override		{ return m_Position; }
 		const glm::quat&		GetOrientation() const				{ return m_Orientation; }
 
-		const glm::mat4&		GetProjectionMatrix() const			{ return m_ProjectionMatrix; }
-		const glm::mat4&		GetViewMatrix() const				{ return m_ViewMatrix; }
-		const glm::mat4&		GetViewProjectionMatrix() const		{ return m_ViewProjectionMatrix; }
+		const glm::mat4&		GetProjectionMatrix() const override		{ return m_ProjectionMatrix; }
+		const glm::mat4&		GetViewMatrix() const override				{ return m_ViewMatrix; }
+		const glm::mat4&		GetViewProjectionMatrix() const override	{ return m_ViewProjectionMatrix; }
 
 		// World-space camera basis (unit vectors). Forward is the LOOK direction
 		// (local -Z rotated into world space), not the +Z axis.

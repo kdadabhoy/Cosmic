@@ -74,5 +74,18 @@ namespace Cosmic
 		virtual void	DrawLines(const Ref<VertexArray>& vertexArray, uint32_t vertexCount) override;
 
 		virtual void DrawIndexedInstanced(const Ref<VertexArray>& vertexArray, uint32_t indexCount, uint32_t instanceCount) override;
+
+		////////////////////////////////
+		// Compute & Attribute-less Draw (S4.7)
+		///////////////////////////////
+
+		virtual void DispatchCompute(uint32_t x, uint32_t y, uint32_t z) override;
+		virtual void MemoryBarrier(GpuBarrier bits) override;
+		virtual void DrawArrays(PrimitiveTopology topology, uint32_t first, uint32_t count) override;
+
+	private:
+		// Lazily-created empty VAO for attribute-less DrawArrays (core GL requires
+		// a bound VAO). Created on first DrawArrays call.
+		uint32_t m_EmptyVAO = 0;
 	};
 }

@@ -18,6 +18,9 @@ namespace Cosmic
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 		glEnable(GL_DEPTH_TEST);
+
+		// Let vertex shaders set gl_PointSize (S4.7 GPU-point rendering).
+		glEnable(GL_PROGRAM_POINT_SIZE);
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////
@@ -115,6 +118,42 @@ namespace Cosmic
 			GL_UNSIGNED_INT,
 			nullptr,
 			static_cast<GLsizei>(instanceCount));
+	}
+
+	/////////////////////////////////////////////////////////////////////////////////
+	// Compute & Attribute-less Draw (S4.7)
+	/////////////////////////////////////////////////////////////////////////////////
+
+	void OpenGLRendererAPI::DispatchCompute(uint32_t x, uint32_t y, uint32_t z)
+	{
+		glDispatchCompute(x, y, z);
+	}
+
+	void OpenGLRendererAPI::MemoryBarrier(GpuBarrier bits)
+	{
+		GLbitfield gl = 0;
+		if (bits & GpuBarrier::VertexAttribArray) gl |= GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT;
+		if (bits & GpuBarrier::ShaderStorage)     gl |= GL_SHADER_STORAGE_BARRIER_BIT;
+		if (bits & GpuBarrier::ShaderImage)       gl |= GL_SHADER_IMAGE_ACCESS_BARRIER_BIT;
+		if (bits == GpuBarrier::All)              gl = GL_ALL_BARRIER_BITS;
+		glMemoryBarrier(gl);
+	}
+
+	void OpenGLRendererAPI::DrawArrays(PrimitiveTopology topology, uint32_t first, uint32_t count)
+	{
+		// Core GL requires a bound VAO even for attribute-less draws.
+		if (m_EmptyVAO == 0)
+			glGenVertexArrays(1, &m_EmptyVAO);
+		glBindVertexArray(m_EmptyVAO);
+
+		GLenum mode = GL_TRIANGLES;
+		switch (topology)
+		{
+		case PrimitiveTopology::Points:    mode = GL_POINTS;    break;
+		case PrimitiveTopology::Lines:     mode = GL_LINES;     break;
+		case PrimitiveTopology::Triangles: mode = GL_TRIANGLES; break;
+		}
+		glDrawArrays(mode, static_cast<GLint>(first), static_cast<GLsizei>(count));
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////

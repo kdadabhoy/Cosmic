@@ -64,11 +64,12 @@
  */
 
 #include "core/Core.h"
+#include "camera/Camera.h"
 #include <glm/glm.hpp>
 
 namespace Cosmic
 {
-	class COSMIC_API OrthographicCamera
+	class COSMIC_API OrthographicCamera : public Camera
 	{
 	public:
 		////////////////////////////////
@@ -88,12 +89,12 @@ namespace Cosmic
 		// Getters (Matrices & State)
 		///////////////////////////////
 
-		const glm::vec3&		GetPosition() const					{ return m_Position; }
+		const glm::vec3&		GetPosition() const override		{ return m_Position; }
 		float					GetRotation() const					{ return m_Rotation; }
 
-		const glm::mat4&		GetProjectionMatrix() const			{ return m_ProjectionMatrix; }
-		const glm::mat4&		GetViewMatrix() const				{ return m_ViewMatrix; }
-		const glm::mat4&		GetViewProjectionMatrix() const		{ return m_ViewProjectionMatrix; }
+		const glm::mat4&		GetProjectionMatrix() const override		{ return m_ProjectionMatrix; }
+		const glm::mat4&		GetViewMatrix() const override				{ return m_ViewMatrix; }
+		const glm::mat4&		GetViewProjectionMatrix() const override	{ return m_ViewProjectionMatrix; }
 
 
 		////////////////////////////////

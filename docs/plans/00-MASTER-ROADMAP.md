@@ -125,9 +125,17 @@ Small, header-heavy, unit-tested engine verbs that unblock everything sim-shaped
   + P8 (MAVLink → QGroundControl).
 - **Done when:** the P4 transition flies on the physical Teensy; rig mirrors sim attitude.
 
-### Phase 7 — 3D engine foundations *(doc 05: S4.0–S4.7)*
+### Phase 7 — 3D engine foundations *(doc 05: S4.0–S4.7)* — ✅ code complete 2026-07-02
 Unified camera hierarchy → material-driven meshes → 3D scene components → asset cache + glTF →
 lighting v1 → MRT framebuffers → compute/SSBO. Strictly ordered inside; each a PR.
+> **Status:** S4.0–S4.7 all implemented on branch `phase-7-3d-foundations`. Full VS-cmake build
+> green (engine + every project DLL + tests), `CosmicTests` 66/66 (103,899 assertions). New engine
+> surface: `camera/Camera` base, material `DrawMesh`, `MeshRendererComponent`/light components +
+> `Scene::OnRender3D`, `AssetLibrary` cache, cgltf `Model`/`DrawModel` (+ committed `Duck.glb`),
+> `UniformBuffer` lights UBO + `MeshLit.glsl`, MRT `FrameBuffer` + entity-ID `ReadPixel`,
+> `StorageBuffer` + compute verbs. Every item has an Engine3DDemo toggle. **Remaining — user
+> visual/perf pass:** run Engine3DDemo, exercise each S4.x toggle (material pad, ECS scene, glTF
+> Duck, lighting, picking, 1M-point compute ≥ 60 fps), confirm the 2D overlay still renders.
 > **2026-07-02:** doc 05 §3 rewritten into explicit, code-verified work orders (exact files,
 > signatures, GL facts, step lists, gotchas, per-item acceptance procedures) so each item can be
 > handed to a lower-tier model in one session. Two structural changes: new **S4.0** — the vendored
@@ -194,6 +202,20 @@ S5.1 CAD nav, S3 items, doc 06 D-items, audio A1: [filler] — pull into any pha
 
 - **Branch per item/phase, PR into `main`** (SF-Improvements pattern). You compile and run —
   the AI writes code (standing preference: don't run `build.bat` unless asked).
+- **Non-interactive build recipe (when an AI *is* asked to build):** do **not** invoke
+  `build_all.bat`/`build.bat` — they end in `pause` and hang, and `cmd /c "...bat < NUL"` fails
+  with "not recognized". Instead drive the VS-bundled `cmake.exe` directly (PowerShell):
+  ```powershell
+  $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+  $vs = & $vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+  $cmake = Join-Path $vs "Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe"
+  & $cmake -S C:\dev\Cosmic -B C:\dev\Cosmic\build -A x64 -DCOSMIC_BUILD_ENGINE_ONLY=OFF   # configure (re-globs new files)
+  & $cmake --build C:\dev\Cosmic\build --config Debug --parallel                          # engine + all projects + tests
+  ```
+  Outputs in `build\Runtime\Debug\`; tests: `build\Runtime\Debug\CosmicTests.exe`. Configure
+  after adding/removing source files (GLOB has no CONFIGURE_DEPENDS). Don't pipe native-exe
+  stderr through `2>&1`/`*>&1` in PowerShell 5.1 (wraps errors, flips the exit code); use
+  `Tee-Object` + `$LASTEXITCODE`.
 - **One work order per AI prompt**; fresh session if the model drifts. Doc 03 and W1/W5/W6-class
   items suit a lower tier; frame-loop, shader, and dynamics work deserve the stronger model or
   your review.

@@ -16,6 +16,8 @@ add_executable(CosmicTests
     test_random.cpp
     test_noise.cpp
     test_audio.cpp
+    test_components.cpp
+    test_assetlibrary.cpp
 )
 
 target_link_libraries(CosmicTests PRIVATE Cosmic)

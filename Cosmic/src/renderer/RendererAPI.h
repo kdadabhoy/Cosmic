@@ -60,6 +60,13 @@
 #include <glm/glm.hpp>
 #include "graphics/VertexArray.h"
 
+// <windows.h> defines MemoryBarrier as a macro (winnt.h intrinsic) which would
+// clobber the RendererAPI::MemoryBarrier verb below. This codebase never uses the
+// Win32 barrier, so drop the macro. (S4.7)
+#ifdef MemoryBarrier
+	#undef MemoryBarrier
+#endif
+
 namespace Cosmic
 {
 	class RendererAPI
@@ -72,6 +79,18 @@ namespace Cosmic
 		{
 			None = 0, OpenGL = 1, DirectX = 2
 		};
+
+		// S4.7 GPU-compute verbs. Engine enums (no GL tokens leak out); the platform
+		// layer translates. GpuBarrier is a bitmask of memory-barrier scopes.
+		enum class GpuBarrier : uint32_t
+		{
+			VertexAttribArray = 1u << 0,
+			ShaderStorage     = 1u << 1,
+			ShaderImage       = 1u << 2,
+			All               = 0xFFFFFFFFu
+		};
+
+		enum class PrimitiveTopology { Points, Lines, Triangles };
 
 	public:
 		virtual ~RendererAPI() = default;
@@ -110,6 +129,22 @@ namespace Cosmic
 		virtual void DrawIndexedInstanced(const Ref<VertexArray>& vertexArray, uint32_t indexCount, uint32_t instanceCount) = 0;
 
 		////////////////////////////////
+		// Compute & Attribute-less Draw (S4.7)
+		///////////////////////////////
+
+		// Dispatch a compute shader over an x*y*z grid of work groups (the bound
+		// program must be a compute program).
+		virtual void DispatchCompute(uint32_t x, uint32_t y, uint32_t z) = 0;
+
+		// Insert a GPU memory barrier so compute writes are visible to the given
+		// consumers before the next draw/dispatch reads them.
+		virtual void MemoryBarrier(GpuBarrier bits) = 0;
+
+		// Attribute-less array draw (e.g. points read from an SSBO by gl_VertexID).
+		// Core GL requires a bound VAO, so the platform layer binds a private empty one.
+		virtual void DrawArrays(PrimitiveTopology topology, uint32_t first, uint32_t count) = 0;
+
+		////////////////////////////////
 		// Global API Accessor
 		///////////////////////////////
 
@@ -118,4 +153,14 @@ namespace Cosmic
 	private:
 		static API s_API;
 	};
+
+	// Bitmask operators for GpuBarrier (enum class needs explicit ones).
+	inline RendererAPI::GpuBarrier operator|(RendererAPI::GpuBarrier a, RendererAPI::GpuBarrier b)
+	{
+		return static_cast<RendererAPI::GpuBarrier>(static_cast<uint32_t>(a) | static_cast<uint32_t>(b));
+	}
+	inline uint32_t operator&(RendererAPI::GpuBarrier a, RendererAPI::GpuBarrier b)
+	{
+		return static_cast<uint32_t>(a) & static_cast<uint32_t>(b);
+	}
 }

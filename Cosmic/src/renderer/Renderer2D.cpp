@@ -619,7 +619,7 @@ namespace Cosmic
 	// Legacy Scene Wrappers (backward-compatible shims over PushRenderPass)
 	/////////////////////////////////////////////////////////////////////////////////
 
-	void Renderer2D::BeginScene(const OrthographicCamera& camera)
+	void Renderer2D::BeginScene(const Camera& camera)
 	{
 		// Derive full-window bounds from the current tracked viewport dimensions
 		glm::vec4 fullWindowBounds = {

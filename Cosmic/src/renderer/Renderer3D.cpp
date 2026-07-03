@@ -3,13 +3,20 @@
 
 #include "renderer/Renderer3D.h"
 #include "renderer/RenderCommand.h"
+#include "camera/Camera.h"
 #include "camera/PerspectiveCamera.h"
 #include "graphics/VertexArray.h"
 #include "graphics/Buffer.h"
 #include "graphics/Shader.h"
+#include "graphics/Material.h"
+#include "graphics/Model.h"
+#include "graphics/UniformBuffer.h"
 #include "core/Log.h"
 
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_inverse.hpp>
+
+#include <algorithm>
 
 namespace Cosmic
 {
@@ -22,6 +29,18 @@ namespace Cosmic
 		glm::vec3 Position;
 		glm::vec4 Color;
 	};
+
+	// std140 mirror of MeshLit.glsl's LightsBlock (binding 0). vec4-only — a bare
+	// vec3 here would silently misalign every following member under std140.
+	struct GpuLightsBlock
+	{
+		glm::vec4 SunDirection_Ambient{ -0.4f, -1.0f, -0.3f, 0.25f };
+		glm::vec4 SunColor_Intensity{ 1.0f, 1.0f, 1.0f, 1.0f };
+		glm::vec4 PointCount{ 0.0f };
+		glm::vec4 PointPos_Radius[16]{};
+		glm::vec4 PointColor_Intensity[16]{};
+	};
+	static_assert(sizeof(GpuLightsBlock) == 560, "GpuLightsBlock must match the std140 LightsBlock (560 bytes).");
 
 	struct Renderer3DData
 	{
@@ -46,6 +65,11 @@ namespace Cosmic
 		// --- Mesh Pipeline ---
 		// =====================================================================
 		Ref<Shader> MeshShader;
+
+		// =====================================================================
+		// --- Lighting v1 (S4.5): binding-0 lights UBO ---
+		// =====================================================================
+		Ref<UniformBuffer> LightsUBO;
 
 		// =====================================================================
 		// --- Per-Scene Camera State (set by BeginScene) ---
@@ -89,6 +113,15 @@ namespace Cosmic
 		s_Data.MeshShader = Shader::Create("assets/shaders/Mesh3D.glsl");
 		if (!s_Data.MeshShader)
 			CS_CORE_ERROR("Renderer3D: Failed to load Mesh3D shader!");
+
+		// --- Lighting v1 (S4.5): allocate the binding-0 lights UBO and seed it
+		//     with defaults so lit shaders read a sane block even before SetLights. ---
+		s_Data.LightsUBO = UniformBuffer::Create(sizeof(GpuLightsBlock), 0);
+		if (s_Data.LightsUBO)
+		{
+			GpuLightsBlock defaults{};
+			s_Data.LightsUBO->SetData(&defaults, sizeof(defaults));
+		}
 	}
 
 	void Renderer3D::Shutdown()
@@ -103,6 +136,7 @@ namespace Cosmic
 		s_Data.LineVertexBuffer.reset();
 		s_Data.LineShader.reset();
 		s_Data.MeshShader.reset();
+		s_Data.LightsUBO.reset();
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////
@@ -123,6 +157,11 @@ namespace Cosmic
 	}
 
 	void Renderer3D::BeginScene(const PerspectiveCamera& camera)
+	{
+		BeginScene(camera.GetViewProjectionMatrix(), camera.GetPosition());
+	}
+
+	void Renderer3D::BeginScene(const Camera& camera)
 	{
 		BeginScene(camera.GetViewProjectionMatrix(), camera.GetPosition());
 	}
@@ -272,7 +311,8 @@ namespace Cosmic
 	// Mesh Submission
 	/////////////////////////////////////////////////////////////////////////////////
 
-	void Renderer3D::DrawMesh(const Ref<Mesh>& mesh, const glm::mat4& transform, const glm::vec4& color)
+	void Renderer3D::DrawMesh(const Ref<Mesh>& mesh, const glm::mat4& transform, const glm::vec4& color,
+	                          int entityID)
 	{
 		if (!mesh)
 			return;
@@ -294,9 +334,56 @@ namespace Cosmic
 		s_Data.MeshShader->SetFloat3("u_CameraPos", s_Data.CameraPos);
 		s_Data.MeshShader->SetFloat3("u_LightDir", s_Data.LightDirection);
 		s_Data.MeshShader->SetFloat("u_Ambient", s_Data.Ambient);
+		s_Data.MeshShader->SetInt("u_EntityID", entityID);   // S4.6 (silent no-op if undeclared)
 
 		mesh->GetVertexArray()->Bind();
 		RenderCommand::DrawIndexed(mesh->GetVertexArray(), mesh->GetIndexCount());
+	}
+
+	void Renderer3D::DrawMesh(const Ref<Mesh>& mesh, const glm::mat4& transform,
+	                          const Ref<Material>& material, int entityID)
+	{
+		if (!mesh || !material)
+			return;
+		if (!s_Data.InScene)
+		{
+			CS_CORE_WARN("Renderer3D::DrawMesh (material) called outside BeginScene/EndScene — ignored.");
+			return;
+		}
+
+		const Ref<Shader>& shader = material->GetShader();
+		if (!shader)
+			return;
+
+		// 1) Bind the material first: activates its shader and uploads its cached
+		//    floats/vecs plus binds textures to sequential slots (Material::BindFull).
+		material->BindFull();
+
+		// 2) Layer the engine-owned convention uniforms on TOP so they always win
+		//    over any stale material value. Set unconditionally — a shader that
+		//    doesn't declare one simply no-ops on location -1 (silent-ignore rule).
+		//    u_Color is deliberately NOT set here (material-owned).
+		const glm::mat3 normalMatrix = glm::inverseTranspose(glm::mat3(transform));
+
+		shader->SetMat4("u_ViewProjection", s_Data.ViewProjection);
+		shader->SetMat4("u_Model", transform);
+		shader->SetMat3("u_NormalMatrix", normalMatrix);
+		shader->SetFloat3("u_CameraPos", s_Data.CameraPos);
+		shader->SetFloat3("u_LightDir", s_Data.LightDirection);
+		shader->SetFloat("u_Ambient", s_Data.Ambient);
+		shader->SetInt("u_EntityID", entityID);   // S4.6 (silent no-op if undeclared)
+
+		mesh->GetVertexArray()->Bind();
+		RenderCommand::DrawIndexed(mesh->GetVertexArray(), mesh->GetIndexCount());
+	}
+
+	void Renderer3D::DrawModel(const Ref<Model>& model, const glm::mat4& transform, int entityID)
+	{
+		if (!model)
+			return;
+
+		for (const ModelPart& part : model->GetParts())
+			DrawMesh(part.Geometry, transform, part.BaseColor, entityID);
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////
@@ -327,6 +414,31 @@ namespace Cosmic
 	float Renderer3D::GetAmbient()
 	{
 		return s_Data.Ambient;
+	}
+
+	void Renderer3D::SetLights(const SceneLightsDesc& lights)
+	{
+		if (!s_Data.LightsUBO)
+			return;
+
+		GpuLightsBlock block;
+
+		const glm::vec3 sunDir = glm::length(lights.SunDirection) > 1e-6f
+			? glm::normalize(lights.SunDirection)
+			: glm::vec3(0.0f, -1.0f, 0.0f);
+		block.SunDirection_Ambient = glm::vec4(sunDir, glm::clamp(lights.Ambient, 0.0f, 1.0f));
+		block.SunColor_Intensity   = glm::vec4(lights.SunColor, lights.SunIntensity);
+
+		const uint32_t count = static_cast<uint32_t>(std::min<size_t>(lights.Points.size(), 16));
+		block.PointCount = glm::vec4(static_cast<float>(count), 0.0f, 0.0f, 0.0f);
+		for (uint32_t i = 0; i < count; ++i)
+		{
+			const PointLightDesc& p = lights.Points[i];
+			block.PointPos_Radius[i]     = glm::vec4(p.Position, p.Radius);
+			block.PointColor_Intensity[i] = glm::vec4(p.Color, p.Intensity);
+		}
+
+		s_Data.LightsUBO->SetData(&block, sizeof(block));
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////

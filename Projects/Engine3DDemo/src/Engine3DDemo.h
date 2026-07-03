@@ -28,6 +28,7 @@
 
 #include <Cosmic.h>
 
+#include <string>
 #include <vector>
 
 namespace Workspace
@@ -67,6 +68,45 @@ namespace Workspace
 		Cosmic::Ref<Cosmic::Mesh> m_Pod;        // wingtip motor pods (cylinder)
 		Cosmic::Ref<Cosmic::Mesh> m_Pad;        // ground pad under the orbit center (plane)
 
+		// ---- Material pad (S4.2) — custom-material render path ----
+		Cosmic::Ref<Cosmic::Material> m_PadMaterial;   // DemoChecker3D material
+
+		// ---- ECS scene (S4.3) — MeshRendererComponent via Scene::OnRender3D ----
+		Cosmic::Ref<Cosmic::Scene> m_Scene;            // small mesh-renderer scene
+		void BuildEcsScene();
+
+		// ---- Asset cache check (S4.4a) ----
+		std::string m_CacheCheckResult;                // last "cache check" outcome
+
+		// ---- glTF model (S4.4b) ----
+		Cosmic::Ref<Cosmic::Model> m_DuckModel;        // engine://models/Duck.glb
+		std::string m_GltfCacheResult;                 // "same Ref on reload" outcome
+
+		// ---- Compute + SSBO (S4.7) ----
+		Cosmic::Ref<Cosmic::Shader>        m_ComputeShader;   // ComputeParticles.glsl
+		Cosmic::Ref<Cosmic::Shader>        m_PointShader;     // ParticlePoints.glsl
+		Cosmic::Ref<Cosmic::StorageBuffer> m_ParticleSSBO;    // std430 particle positions
+		bool  m_ShowCompute  = false;
+		float m_ComputeTime  = 0.0f;
+		static constexpr uint32_t k_ParticleCount = 1000000;  // 1M points
+
+		// ---- Picking / MRT (S4.6) ----
+		Cosmic::Ref<Cosmic::FrameBuffer> m_PickFbo;    // {RGBA8, RED_INTEGER, DEPTH24STENCIL8}
+		Cosmic::PerspectiveCamera m_PickCam{ 45.0f, 1.0f, 0.1f, 100.0f };
+		bool m_ShowPicking = false;
+		int  m_HoveredId   = -1;                        // last ReadPixel result
+		void RenderPickPass();                          // pre-pass into m_PickFbo
+
+		// ---- Lighting v1 (S4.5) ----
+		Cosmic::Ref<Cosmic::Material> m_LitMaterial;   // MeshLit.glsl material
+		bool      m_LitAircraft = false;               // draw the aircraft lit (UBO lights)
+		glm::vec3 m_SunColor{ 1.0f, 0.97f, 0.9f };
+		float     m_SunIntensity = 1.0f;
+		float     m_Shininess    = 48.0f;
+		glm::vec3 m_P0Pos{ -3.0f, 2.5f, 2.0f };        // red point light
+		glm::vec3 m_P1Pos{  3.0f, 2.5f, 2.0f };        // blue point light
+		float     m_PointRadius  = 12.0f;
+
 		// ---- Simulation state (E3: NED frame, quaternion attitude) ----
 		glm::vec3 m_PosNed{ 0.0f, 0.0f, -6.0f };   // N, E, D — 6 m above ground
 		glm::quat m_AttNed{ 1.0f, 0.0f, 0.0f, 0.0f }; // body -> NED
@@ -91,6 +131,9 @@ namespace Workspace
 		bool  m_ShowWireBox = false;
 		bool  m_ShowTrail   = true;
 		bool  m_Show2D      = true;
+		bool  m_MaterialPad = false;   // S4.2: draw the pad via the custom-material path
+		bool  m_EcsScene    = false;   // S4.3: render the ECS mesh scene via OnRender3D
+		bool  m_ShowGltf    = false;   // S4.4b: render the imported glTF Duck model
 		float m_Ambient     = 0.25f;
 		glm::vec3 m_LightDir{ -0.4f, -1.0f, -0.25f };
 	};

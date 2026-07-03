@@ -125,7 +125,7 @@ namespace Workspace
 
 			auto& t = ent.GetComponent<Cosmic::TransformComponent>();
 			t.Position = cfg.homePos;
-			t.Scale = cfg.scale;
+			t.Scale = { cfg.scale.x, cfg.scale.y, 1.0f };   // Scale is vec3 (S4.3); keep Z at unit
 
 			// No SpriteRendererComponent — all rendering is done manually via
 			// SubTexture2D DrawQuad calls inside each RenderPass block in OnUpdate.

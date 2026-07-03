@@ -6,6 +6,7 @@
 // **Needs Header documentation**
 
 #include "core/Core.h"
+#include "camera/Camera.h"
 #include "camera/OrthographicCamera.h"
 #include "graphics/Texture.h"
 #include "graphics/Material.h"
@@ -31,7 +32,7 @@ namespace Cosmic
         // Scene / Pass Control
         /////////////////////////////////////////////////////////////////////////////////
 
-        static void BeginScene(const OrthographicCamera& camera);
+        static void BeginScene(const Camera& camera);
         static void EndScene();
 
         static void PushRenderPass(const glm::mat4& viewProj,

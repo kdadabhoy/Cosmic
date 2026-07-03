@@ -3,9 +3,11 @@
 
 #include "core/Core.h"
 #include "graphics/Material.h"
+#include "graphics/Mesh.h"
 #include "scene/ComponentRegistry.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/quaternion.hpp>
 #include <string>
 
 namespace Cosmic
@@ -28,8 +30,18 @@ namespace Cosmic
     struct COSMIC_API TransformComponent
     {
         glm::vec3 Position{ 0.0f, 0.0f, 0.0f };
-        glm::vec3 Rotation{ 0.0f, 0.0f, 0.0f }; // Z represents 2D roll rotation
-        glm::vec2 Scale{ 1.0f, 1.0f };
+        glm::vec3 Rotation{ 0.0f, 0.0f, 0.0f };       // Euler DEGREES (X, Y, Z); Z is 2D roll
+        glm::vec3 Scale{ 1.0f, 1.0f, 1.0f };          // per-axis scale (was vec2 pre-S4.3)
+
+        // Optional quaternion rotation for full 3D use (S4.3). When UseQuatRotation
+        // is true, GetTransform() uses RotationQuat instead of the Euler product;
+        // Euler degrees remain the default and drive the entire 2D path.
+        //
+        // CONVERSION POLICY: the two representations are INDEPENDENT — writing one
+        // does NOT sync the other. Pick one per entity. Euler<->quat helpers are
+        // deferred until an editor needs them (S14).
+        glm::quat RotationQuat{ 1.0f, 0.0f, 0.0f, 0.0f }; // identity (w, x, y, z)
+        bool      UseQuatRotation = false;
 
         TransformComponent() = default;
         TransformComponent(const TransformComponent&) = default;
@@ -38,21 +50,23 @@ namespace Cosmic
         /**
          * @brief Standard matrix transformation construction convenience helper.
          *
-         * NOTE: GetTransform() applies all three Euler angles (X, Y, Z). However,
-         * Scene::OnRender only passes Rotation.z to DrawRotatedQuad — Rotation.x and
-         * Rotation.y are reserved for future 3D use and are intentionally ignored by
-         * the 2D render path. Entities with non-zero X or Y rotation will therefore
-         * produce different results from GetTransform() vs. what OnRender draws.
+         * NOTE: In Euler mode GetTransform() applies all three Euler angles (X, Y, Z).
+         * However, Scene::OnRender only passes Rotation.z to DrawRotatedQuad —
+         * Rotation.x and Rotation.y are reserved for 3D use and are intentionally
+         * ignored by the 2D render path. Entities with non-zero X or Y rotation
+         * therefore differ between GetTransform() and what OnRender draws.
          */
         glm::mat4 GetTransform() const
         {
-            glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), glm::radians(Rotation.x), { 1, 0, 0 })
-                * glm::rotate(glm::mat4(1.0f), glm::radians(Rotation.y), { 0, 1, 0 })
-                * glm::rotate(glm::mat4(1.0f), glm::radians(Rotation.z), { 0, 0, 1 });
+            const glm::mat4 rotation = UseQuatRotation
+                ? glm::mat4_cast(RotationQuat)
+                : glm::rotate(glm::mat4(1.0f), glm::radians(Rotation.x), { 1, 0, 0 })
+                    * glm::rotate(glm::mat4(1.0f), glm::radians(Rotation.y), { 0, 1, 0 })
+                    * glm::rotate(glm::mat4(1.0f), glm::radians(Rotation.z), { 0, 0, 1 });
 
             return glm::translate(glm::mat4(1.0f), Position)
                 * rotation
-                * glm::scale(glm::mat4(1.0f), glm::vec3(Scale.x, Scale.y, 1.0f));
+                * glm::scale(glm::mat4(1.0f), Scale);
         }
     };
 
@@ -72,6 +86,56 @@ namespace Cosmic
         SpriteRendererComponent(const SpriteRendererComponent&) = default;
         SpriteRendererComponent(const Ref<Material>& material) : ActiveMaterial(material) {}
         SpriteRendererComponent(const glm::vec4& color) : Color(color) {}
+    };
+
+
+    /**
+     * @brief 3D mesh renderer (S4.3). Attach with a TransformComponent to have
+     * Scene::OnRender3D draw the mesh each frame.
+     *
+     * MaterialAsset null  → the Lambert color path (Renderer3D::DrawMesh + Color tint).
+     * MaterialAsset set   → the custom-material path (Renderer3D::DrawMesh + Material).
+     * MeshAsset null      → the entity is skipped.
+     */
+    struct COSMIC_API MeshRendererComponent
+    {
+        Ref<Mesh>     MeshAsset;             // entity skipped when null
+        Ref<Material> MaterialAsset;         // null → Lambert color path
+        glm::vec4     Color{ 1.0f };         // Lambert tint when MaterialAsset is null
+        bool          CastShadows = true;    // consumed from S6.4; stored now so the ABI breaks once
+
+        MeshRendererComponent() = default;
+        MeshRendererComponent(const MeshRendererComponent&) = default;
+        MeshRendererComponent(const Ref<Mesh>& mesh) : MeshAsset(mesh) {}
+    };
+
+
+    /**
+     * @brief Directional (sun) light for lighting v1 (S4.5). Scene::OnRender3D
+     * uses the FIRST directional light it finds as the sun.
+     */
+    struct COSMIC_API DirectionalLightComponent
+    {
+        glm::vec3 Direction{ -0.4f, -1.0f, -0.3f };  // direction the light TRAVELS
+        glm::vec3 Color{ 1.0f };
+        float     Intensity = 1.0f;
+
+        DirectionalLightComponent() = default;
+        DirectionalLightComponent(const DirectionalLightComponent&) = default;
+    };
+
+    /**
+     * @brief Point light for lighting v1 (S4.5). World position comes from the
+     * entity's TransformComponent; up to 16 are uploaded per frame.
+     */
+    struct COSMIC_API PointLightComponent
+    {
+        glm::vec3 Color{ 1.0f };
+        float     Intensity = 1.0f;
+        float     Radius    = 10.0f;
+
+        PointLightComponent() = default;
+        PointLightComponent(const PointLightComponent&) = default;
     };
 }
 
@@ -98,6 +162,9 @@ namespace Cosmic
 CS_REGISTER_COMPONENT(Cosmic::TagComponent)
 CS_REGISTER_COMPONENT(Cosmic::TransformComponent)
 CS_REGISTER_COMPONENT(Cosmic::SpriteRendererComponent)
+CS_REGISTER_COMPONENT(Cosmic::MeshRendererComponent)
+CS_REGISTER_COMPONENT(Cosmic::DirectionalLightComponent)
+CS_REGISTER_COMPONENT(Cosmic::PointLightComponent)
 
 
 

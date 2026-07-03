@@ -47,6 +47,7 @@
  */
 
 #include "graphics/FrameBuffer.h"
+#include <vector>
 
 namespace Cosmic
 {
@@ -82,11 +83,14 @@ namespace Cosmic
 		// Resource Accessors
 		///////////////////////////////
 
-		virtual uint32_t							GetColorAttachmentRendererID() const override		{ return m_ColorAttachment; }
+		virtual uint32_t							GetColorAttachmentRendererID(uint32_t index = 0) const override;
 		virtual uint32_t							GetDepthAttachmentRendererID() const override		{ return m_DepthAttachment; }
 		virtual uint32_t							GetWidth() const override							{ return m_Specification.Width; }
 		virtual uint32_t							GetHeight() const override							{ return m_Specification.Height; }
 		virtual const FramebufferSpecification&		GetSpecification() const override					{ return m_Specification; }
+
+		virtual int									ReadPixel(uint32_t attachmentIndex, int x, int y) override;
+		virtual void								ClearAttachment(uint32_t attachmentIndex, int value) override;
 
 
 	private:
@@ -95,8 +99,13 @@ namespace Cosmic
 		///////////////////////////////
 
 		uint32_t					m_RendererID = 0;
-		uint32_t					m_ColorAttachment = 0;
-		uint32_t					m_DepthAttachment = 0;
+
+		// Sorted attachment specs (parsed from the FramebufferSpecification), and
+		// the live GPU texture handles that mirror them.
+		std::vector<FramebufferTextureSpecification>	m_ColorAttachmentSpecs;
+		FramebufferTextureSpecification					m_DepthAttachmentSpec; // None ⇒ no depth
+		std::vector<uint32_t>							m_ColorAttachments;
+		uint32_t										m_DepthAttachment = 0;
 
 		////////////////////////////////
 		// Configuration State

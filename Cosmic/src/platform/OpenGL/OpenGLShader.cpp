@@ -29,6 +29,7 @@ namespace Cosmic
     {
         if (type == "vertex") return GL_VERTEX_SHADER;
         if (type == "fragment" || type == "pixel") return GL_FRAGMENT_SHADER;
+        if (type == "compute") return GL_COMPUTE_SHADER;   // S4.7 GPU compute stage
 
         CS_CORE_ERROR("Unknown shader type '{0}'!", type);
         return 0;
@@ -364,7 +365,8 @@ namespace Cosmic
         CS_CORE_ERROR("--------------------- PREPROCESSED SHADER DUMP BEGIN ---------------------");
         for (const auto& [stage, sourceText] : shaderSources)
         {
-            std::string stageName = (stage == GL_VERTEX_SHADER) ? "VERTEX SHADER" : "FRAGMENT SHADER";
+            std::string stageName = (stage == GL_VERTEX_SHADER) ? "VERTEX SHADER"
+                : (stage == GL_COMPUTE_SHADER) ? "COMPUTE SHADER" : "FRAGMENT SHADER";
             CS_CORE_ERROR("==================== STAGE: {0} ====================", stageName);
 
             std::stringstream ss(sourceText);
@@ -416,7 +418,8 @@ namespace Cosmic
                 std::vector<GLchar> infoLog(maxLength);
                 glGetShaderInfoLog(shader, maxLength, &maxLength, &infoLog[0]);
 
-                CS_CORE_ERROR("Shader compilation failure in stage: {0}", type == GL_VERTEX_SHADER ? "VERTEX" : "FRAGMENT");
+                CS_CORE_ERROR("Shader compilation failure in stage: {0}",
+                    type == GL_VERTEX_SHADER ? "VERTEX" : (type == GL_COMPUTE_SHADER ? "COMPUTE" : "FRAGMENT"));
                 CS_CORE_ERROR("{0}", infoLog.data());
 
                 // Trigger the source code dump to pinpoint line number issues

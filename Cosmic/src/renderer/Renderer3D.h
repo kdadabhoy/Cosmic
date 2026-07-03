@@ -58,7 +58,10 @@
 
 namespace Cosmic
 {
+	class Camera;
 	class PerspectiveCamera;
+	class Material;
+	class Model;
 
 	class COSMIC_API Renderer3D
 	{
@@ -79,6 +82,7 @@ namespace Cosmic
 		 */
 		static void BeginScene(const glm::mat4& viewProjection, const glm::vec3& cameraPos);
 		static void BeginScene(const PerspectiveCamera& camera);   // sugar on the primitive
+		static void BeginScene(const Camera& camera);              // camera-agnostic sugar (S4.1)
 		static void EndScene();
 
 		////////////////////////////////
@@ -127,7 +131,34 @@ namespace Cosmic
 		 * batching would add complexity for nothing. A material overload
 		 * (Ref<Material>) is the planned S4 extension of this exact slot.
 		 */
-		static void DrawMesh(const Ref<Mesh>& mesh, const glm::mat4& transform, const glm::vec4& color);
+		static void DrawMesh(const Ref<Mesh>& mesh, const glm::mat4& transform, const glm::vec4& color,
+		                     int entityID = -1);
+
+		/**
+		 * @brief Draw a mesh with a custom Material (S4.2 material-driven path).
+		 *
+		 * The material owns its shader and per-material uniforms (u_Color,
+		 * textures, tiling, …); the engine layers the scene/per-draw convention
+		 * uniforms on top so any Material shader lights and transforms correctly:
+		 *
+		 *   u_ViewProjection (mat4) u_Model (mat4) u_NormalMatrix (mat3)
+		 *   u_CameraPos (vec3)      u_LightDir (vec3) u_Ambient (float)
+		 *
+		 * Convention uniforms are uploaded AFTER the material binds, so they always
+		 * win; a shader opts in by declaring the ones it uses (undeclared uniforms
+		 * are silently ignored — OpenGLShader caches location -1). u_Color stays
+		 * material-owned: this path never sets it.
+		 */
+		static void DrawMesh(const Ref<Mesh>& mesh, const glm::mat4& transform,
+		                     const Ref<Material>& material, int entityID = -1);
+
+		/**
+		 * @brief Draw every part of an imported Model (S4.4b) under `transform`,
+		 * each tinted by its glTF base color via the Lambert color path. Part
+		 * geometry already has its glTF world transform baked in — `transform`
+		 * places the whole model.
+		 */
+		static void DrawModel(const Ref<Model>& model, const glm::mat4& transform, int entityID = -1);
 
 		////////////////////////////////
 		// Scene Lighting (S2 scope: one directional light)
@@ -140,5 +171,35 @@ namespace Cosmic
 		/** @brief Ambient floor in [0, 1] — the lit level of a face turned away from the light. */
 		static void  SetAmbient(float ambient);
 		static float GetAmbient();
+
+		////////////////////////////////
+		// Lighting v1 (S4.5: sun + <= 16 point lights, UBO binding 0)
+		///////////////////////////////
+
+		/** @brief One point light for the S4.5 lights block. */
+		struct PointLightDesc
+		{
+			glm::vec3 Position{ 0.0f };
+			float     Radius = 10.0f;
+			glm::vec3 Color{ 1.0f };
+			float     Intensity = 1.0f;
+		};
+
+		/** @brief The full scene lighting description uploaded by SetLights. */
+		struct SceneLightsDesc
+		{
+			glm::vec3 SunDirection{ -0.4f, -1.0f, -0.3f };   // direction the sun light TRAVELS
+			glm::vec3 SunColor{ 1.0f };
+			float     SunIntensity = 1.0f;
+			float     Ambient      = 0.25f;
+			std::vector<PointLightDesc> Points;              // first 16 uploaded
+		};
+
+		/**
+		 * @brief Pack + upload the scene lights into the binding-0 UBO immediately.
+		 * Shaders that declare the std140 LightsBlock (see MeshLit.glsl) read it;
+		 * the legacy Lambert path (Mesh3D.glsl) ignores it.
+		 */
+		static void SetLights(const SceneLightsDesc& lights);
 	};
 }
