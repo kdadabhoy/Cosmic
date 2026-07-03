@@ -1213,6 +1213,13 @@ the profiler HUD screenshot committed.
 
 ## 13. S14 — Game-engine tier backlog *(parking lot; each item lists its unlock)*
 
+> **2026-07-03 — four rows promoted to roadmap Phase 13:** *Scene serialization*, *Editor app*
+> (named **Starforge**, not CosmicEd), *Undo/redo command stack*, and *Scripting* (C++-DLL-first
+> confirmed; Lua mapped + parked) now have full work orders in
+> [`11-phase13-starforge-plan.md`](11-phase13-starforge-plan.md) (E1–E21), with the compiling
+> `Projects/Starforge` skeleton shipped alongside. The remaining rows below stay parked (the
+> Starforge plan §9 restates skeletal animation adjacents, Jolt, decals with their unlocks).
+
 | Item | What | Unlocks when |
 | --- | --- | --- |
 | Skeletal animation | glTF skins/clips, GPU skinning, blend/state machine | a project needs characters |

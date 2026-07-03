@@ -274,6 +274,30 @@ Conformance audit (no GL outside the platform layer), frame-lifecycle spec, then
 stay-GL / go-Vulkan / adopt-RHI decision **made on S12 profiler data**, not vibes. Groom the S14
 game-engine backlog (animation, Jolt gate, editor app, serialization) against real needs.
 
+### Phase 13 — Starforge editor *(doc 11 — promotes the doc 05 S14 backlog)*
+The Cosmic editor: assemble scenes visually (hierarchy/inspector/content browser on the S5
+viewport), reflection-driven serialization + undo, per-entity **C++ scripts in hot-reloaded
+project DLLs** (Lua mapped, parked), parametric primitives + assimp import (FBX/OBJ/STL; STEP
+converter parked), play/pause/step with telemetry recording, and one-click packaging via the
+existing plugin pipeline. Independent of the Phase 12 gate (OpenGL stays) — needs only S4–S10 +
+Phase 11's SceneRenderer; interleave at will.
+> **Status (2026-07-03): planned in full + skeleton shipped.** Scope decided with the user
+> (name Starforge; C++-DLL-first scripting; primitives v1; industry-standard import). The
+> planning session shipped [`11-phase13-starforge-plan.md`](11-phase13-starforge-plan.md)
+> (work orders **E1–E21** + kickoff prompt) and the compiling `Projects/Starforge` skeleton
+> (dock layout, CAD-nav viewport rendering a sandbox scene, Hierarchy/Inspector/Content/Console
+> panels, `TODO(E#)` markers).
+- **Do:** doc 11 work orders in order: E1 reflection → E2 UUID+JSON serializer → E3 hierarchy →
+  E4 camera/environment components → E5 SceneManager → E6 shell → E7 undo → E8 inspector →
+  E9 viewport tools → E10 content browser → E11 script host → E12 hot reload → E13 play mode →
+  E14 prefabs → E15 primitives → E16 assimp import → E17 material/environment editors →
+  E18 world-systems authoring → E19 packaging → E20 telemetry panel → E21 polish + acceptance.
+- **AI tier:** every item has an explicit doc-11 work order (files, spec, gotchas, acceptance)
+  sized for one Opus session; §0's compat gate (shipped apps unchanged) binds every item.
+- **Done when:** the doc 11 E21 acceptance demo runs: new project → import CAD/Blender models →
+  build a scene → write + hot-reload a C++ script → Play with live telemetry plots → package →
+  the shipped exe runs on a clean machine.
+
 ### Continuous — docs & release polish *(doc 06; archived 07 leftovers)*
 D-series (docs index, §40 refresh, README split last) any time; parked release items (CI release
 job, code signing, `--replay` file association) unlock when distribution matters.
@@ -287,6 +311,7 @@ Phase 1 (windowing) ──────────── independent, do first
 Phase 2 (E-toolkit) ─► Phase 3 ─► Phase 4 ─► Phase 5 ─► Phase 6        (Sim/Viper track)
 Phase 7 (S4) ─► Phase 8 (S5) ─► Phase 9 (S6–S7) ─► Phase 10 (S8–S10) ─► Phase 11 ─► Phase 12
    ▲ 3D track: independent of the sim track after Phase 2; interleave at will
+Phase 11 ─► Phase 13 (Starforge editor, doc 11) — independent of the Phase 12 gate
 S5.1 CAD nav, S3 items, doc 06 D-items, audio A1: [filler] — pull into any phase
 ```
 
