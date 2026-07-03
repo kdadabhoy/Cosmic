@@ -4,8 +4,9 @@
 // Skybox — draws the baked environment cube behind the scene (S6.3). A single
 // fullscreen triangle placed at the far plane (z = 1); the fragment reconstructs
 // a world-space view ray from the inverse view-projection and samples the cube.
-// Rendered INTO the HDR scene target after opaque geometry with depth test LEQUAL
-// and depth writes off, so it only fills unwritten (far) pixels.
+// Drawn BACKGROUND-FIRST into the HDR target with depth test/write OFF (see
+// EnvironmentMap::DrawSkybox) — opaque geometry then draws over it. Moving it
+// after opaque with depth-func LEQUAL is the documented efficiency follow-up.
 
 out vec2 v_TexCoord;
 

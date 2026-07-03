@@ -209,6 +209,26 @@ namespace Workspace
 		float m_TimeHours  = 12.0f;   // 0..24
 		glm::vec3 m_SkyFogColor{ 0.72f, 0.82f, 0.95f };   // derived from the sun each frame
 
+		// ---- World systems (Phase 10 / S8–S10) ----
+		Cosmic::Ref<Cosmic::Terrain> m_Terrain;      // S8: procedural island (quadtree LOD)
+		bool  m_ShowTerrain  = false;
+		float m_TerrainProbe = 0.0f;                 // SampleHeight under the aircraft (S8.3 readout)
+
+		Cosmic::Ref<Cosmic::Water> m_Water;          // S9: lake around the island
+		Cosmic::Ref<Cosmic::Mesh>  m_BuoyBox;        // bobbing box driven by SampleHeight (S9.2)
+		bool  m_ShowWater = false;
+		float m_WorldTime = 0.0f;                    // drives waves + particle ages
+
+		Cosmic::Ref<Cosmic::ParticleEmitter> m_Smoke;   // S10.1: alpha-blended flipbook plume
+		Cosmic::Ref<Cosmic::ParticleEmitter> m_Embers;  // S10.1: additive HDR sparks (bloom feed)
+		Cosmic::Ref<Cosmic::ParticleEmitter> m_Haze;    // S10.5: distortion-field emitter
+		Cosmic::Ref<Cosmic::RibbonEmitter>   m_Ribbon;  // S10.2: aircraft trail ribbon
+		bool m_ShowParticles = false;
+		bool m_ShowRibbon    = false;
+		bool m_GodRays       = false;                // S10.3 tier 1 (needs shadows on)
+		bool m_HeatHaze      = false;                // S10.5 (needs particles emitting)
+		void DrawWaterReflectionWorld(const glm::mat4& mirroredViewProj);   // S9.1 mirrored subset
+
 		// ---- Render toggles ----
 		bool  m_ShowGrid    = true;
 		bool  m_ShowAxes    = true;

@@ -89,6 +89,12 @@ namespace Cosmic
 		// (culling disabled — 2D sprites may flip winding via FlipX/FlipY).
 		enum class CullMode { None = 0, Back, Front };
 
+		// Blend equations for SetBlendMode (S10 — particles/effects). Alpha is the
+		// engine default configured at Init (src-alpha over); Additive is the
+		// emissive/particle accumulate mode (src-alpha, one); Off disables blending
+		// (opaque passes that must not read the destination).
+		enum class BlendMode { Alpha = 0, Additive, Off };
+
 	public:
 		virtual ~RendererAPI() = default;
 
@@ -121,6 +127,11 @@ namespace Cosmic
 		// enable Back/Front culling (shadow maps, opaque 3D) must restore None
 		// before handing the frame back.
 		virtual void SetCullMode(CullMode mode) = 0;
+
+		// Blending. Defaults to Alpha at Init() (Renderer2D depends on it). Same
+		// restore contract: passes that switch to Additive/Off (GPU particles,
+		// opaque post passes) must restore Alpha before their scope ends.
+		virtual void SetBlendMode(BlendMode mode) = 0;
 
 		////////////////////////////////
 		// Submission Commands

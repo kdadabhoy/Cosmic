@@ -62,7 +62,9 @@ namespace Cosmic
 		m_BloomPrefilterShader = Shader::Create("assets/shaders/BloomPrefilter.glsl");
 		m_BloomBlurShader      = Shader::Create("assets/shaders/BloomBlur.glsl");
 		m_FxaaShader           = Shader::Create("assets/shaders/Fxaa.glsl");
-		if (!m_SsaoShader || !m_SsaoBlurShader || !m_BloomPrefilterShader || !m_BloomBlurShader || !m_FxaaShader)
+		m_GodRaysShader        = Shader::Create("assets/shaders/GodRays.glsl");
+		if (!m_SsaoShader || !m_SsaoBlurShader || !m_BloomPrefilterShader || !m_BloomBlurShader ||
+		    !m_FxaaShader || !m_GodRaysShader)
 			CS_CORE_ERROR("PostProcessStack: one or more effect shaders failed to load.");
 
 		// --- Targets ---
@@ -74,6 +76,7 @@ namespace Cosmic
 		std::uniform_real_distribution<float> u11(-1.0f, 1.0f);
 
 		m_Kernel.clear();
+		m_KernelNames.clear();
 		for (int i = 0; i < 32; ++i)
 		{
 			glm::vec3 s(u11(rng), u11(rng), u01(rng));   // tangent-space hemisphere (+z)
@@ -81,6 +84,10 @@ namespace Cosmic
 			float t = static_cast<float>(i) / 32.0f;
 			s *= glm::mix(0.1f, 1.0f, t * t);            // cluster samples near the origin
 			m_Kernel.push_back(s);
+
+			char name[32];
+			std::snprintf(name, sizeof(name), "u_Kernel[%d]", i);
+			m_KernelNames.emplace_back(name);
 		}
 
 		uint8_t noise[16 * 4];
@@ -104,11 +111,23 @@ namespace Cosmic
 		const uint32_t hw = std::max(1u, m_Width / 2);
 		const uint32_t hh = std::max(1u, m_Height / 2);
 
-		m_SsaoTarget     = MakeColorFbo(hw, hh, FramebufferTextureFormat::RGBA16F);
-		m_SsaoBlurTarget = MakeColorFbo(hw, hh, FramebufferTextureFormat::RGBA16F);
-		m_BloomA         = MakeColorFbo(hw, hh, FramebufferTextureFormat::RGBA16F);
-		m_BloomB         = MakeColorFbo(hw, hh, FramebufferTextureFormat::RGBA16F);
-		m_LdrTarget      = MakeColorFbo(m_Width, m_Height, FramebufferTextureFormat::RGBA8);
+		// Resize in place after the first allocation — SetViewportSize runs on
+		// every viewport drag, and re-creating five FBOs per frame is exactly the
+		// kind of GPU-object churn a resize storm turns into a hitch.
+		auto ensure = [](Ref<FrameBuffer>& fbo, uint32_t w, uint32_t h, FramebufferTextureFormat fmt)
+		{
+			if (fbo)
+				fbo->Resize(w, h);
+			else
+				fbo = MakeColorFbo(w, h, fmt);
+		};
+		ensure(m_SsaoTarget,     hw, hh,            FramebufferTextureFormat::RGBA16F);
+		ensure(m_SsaoBlurTarget, hw, hh,            FramebufferTextureFormat::RGBA16F);
+		ensure(m_BloomA,         hw, hh,            FramebufferTextureFormat::RGBA16F);
+		ensure(m_BloomB,         hw, hh,            FramebufferTextureFormat::RGBA16F);
+		ensure(m_ShaftTarget,    hw, hh,            FramebufferTextureFormat::RGBA16F);
+		ensure(m_DistortTarget,  hw, hh,            FramebufferTextureFormat::RGBA16F);
+		ensure(m_LdrTarget,      m_Width, m_Height, FramebufferTextureFormat::RGBA8);
 	}
 
 	void PostProcessStack::Shutdown()
@@ -121,12 +140,16 @@ namespace Cosmic
 		m_SsaoBlurTarget.reset();
 		m_NoiseTex.reset();
 		m_Kernel.clear();
+		m_KernelNames.clear();
 		m_BloomPrefilterShader.reset();
 		m_BloomBlurShader.reset();
 		m_BloomA.reset();
 		m_BloomB.reset();
 		m_FxaaShader.reset();
 		m_LdrTarget.reset();
+		m_GodRaysShader.reset();
+		m_ShaftTarget.reset();
+		m_DistortTarget.reset();
 		m_Initialized = false;
 		m_Width = m_Height = 0;
 	}
@@ -160,6 +183,7 @@ namespace Cosmic
 	{
 		m_AoResultID    = 0;
 		m_BloomResultID = 0;
+		m_ShaftResultID = 0;
 		if (!m_Initialized)
 			return;
 
@@ -167,6 +191,8 @@ namespace Cosmic
 			RenderSSAO(projection);
 		if (m_BloomEnabled)
 			RenderBloom();
+		if (m_GodRaysEnabled && m_ShaftShadowMapID != 0)
+			RenderGodRays();
 	}
 
 	void PostProcessStack::RenderSSAO(const glm::mat4& projection)
@@ -197,11 +223,7 @@ namespace Cosmic
 		m_SsaoShader->SetFloat("u_Bias", m_SsaoBias);
 		m_SsaoShader->SetInt("u_KernelSize", static_cast<int>(m_Kernel.size()));
 		for (size_t i = 0; i < m_Kernel.size(); ++i)
-		{
-			char name[32];
-			std::snprintf(name, sizeof(name), "u_Kernel[%zu]", i);
-			m_SsaoShader->SetFloat3(name, m_Kernel[i]);
-		}
+			m_SsaoShader->SetFloat3(m_KernelNames[i], m_Kernel[i]);
 		DrawFullscreenTriangle();
 
 		// --- Blur pass ---
@@ -264,6 +286,63 @@ namespace Cosmic
 		m_BloomResultID = src->GetColorAttachmentRendererID(0);   // last written
 	}
 
+	void PostProcessStack::RenderGodRays()
+	{
+		if (!m_GodRaysShader || !m_ShaftTarget || !m_SceneHDR)
+			return;
+
+		const uint32_t sw = m_ShaftTarget->GetWidth();
+		const uint32_t sh = m_ShaftTarget->GetHeight();
+
+		RenderCommand::SetDepthTest(false);
+		RenderCommand::SetDepthWrite(false);
+
+		m_ShaftTarget->Bind();
+		RenderCommand::SetViewport(0, 0, sw, sh);
+		m_GodRaysShader->Bind();
+		RenderCommand::BindTextureSlot(0, m_SceneHDR->GetDepthAttachmentRendererID());
+		m_GodRaysShader->SetInt("u_Depth", 0);
+		RenderCommand::BindTextureSlot(1, m_ShaftShadowMapID);
+		m_GodRaysShader->SetInt("u_ShadowMap", 1);
+		m_GodRaysShader->SetMat4("u_InvViewProj", glm::inverse(m_ViewProjection));
+		m_GodRaysShader->SetFloat3("u_CameraPos", m_CameraPos);
+		m_GodRaysShader->SetMat4("u_LightViewProj", m_ShaftLightViewProj);
+		m_GodRaysShader->SetFloat3("u_SunDir", m_ShaftSunDir);
+		m_GodRaysShader->SetFloat3("u_SunColor", m_ShaftSunColor * m_ShaftSunIntensity);
+		m_GodRaysShader->SetFloat("u_Intensity", m_GodRaysIntensity);
+		m_GodRaysShader->SetFloat("u_Density", m_GodRaysDensity);
+		DrawFullscreenTriangle();
+
+		RenderCommand::SetDepthTest(true);
+		RenderCommand::SetDepthWrite(true);
+
+		m_ShaftResultID = m_ShaftTarget->GetColorAttachmentRendererID(0);
+	}
+
+	bool PostProcessStack::BeginDistortion()
+	{
+		m_DistortionWritten = false;
+		if (!m_Initialized || !m_HeatHazeEnabled || !m_DistortTarget || m_InDistortion)
+			return false;
+
+		m_DistortPrevFbo = RenderCommand::GetBoundFramebuffer();
+		m_DistortTarget->Bind();
+		RenderCommand::SetViewport(0, 0, m_DistortTarget->GetWidth(), m_DistortTarget->GetHeight());
+		RenderCommand::SetClearColor({ 0.0f, 0.0f, 0.0f, 0.0f });   // zero offset field
+		RenderCommand::Clear();
+		m_InDistortion = true;
+		return true;
+	}
+
+	void PostProcessStack::EndDistortion()
+	{
+		if (!m_InDistortion)
+			return;
+		RenderCommand::BindFramebufferHandle(m_DistortPrevFbo);
+		m_InDistortion      = false;
+		m_DistortionWritten = true;
+	}
+
 	void PostProcessStack::Composite(float exposure)
 	{
 		if (!m_SceneHDR || !m_TonemapShader)
@@ -321,6 +400,27 @@ namespace Cosmic
 		}
 		else
 			m_TonemapShader->SetFloat("u_UseBloom", 0.0f);
+
+		// Sun shafts (S10.3): additive, like bloom.
+		if (m_GodRaysEnabled && m_ShaftResultID)
+		{
+			RenderCommand::BindTextureSlot(4, m_ShaftResultID);
+			m_TonemapShader->SetInt("u_Shafts", 4);
+			m_TonemapShader->SetFloat("u_UseShafts", 1.0f);
+		}
+		else
+			m_TonemapShader->SetFloat("u_UseShafts", 0.0f);
+
+		// Heat-haze (S10.5): displace every scene-space fetch by the offset field.
+		if (m_HeatHazeEnabled && m_DistortionWritten && m_DistortTarget)
+		{
+			RenderCommand::BindTextureSlot(5, m_DistortTarget->GetColorAttachmentRendererID(0));
+			m_TonemapShader->SetInt("u_Distort", 5);
+			m_TonemapShader->SetFloat("u_UseDistort", 1.0f);
+			m_TonemapShader->SetFloat("u_DistortStrength", m_HeatHazeStrength);
+		}
+		else
+			m_TonemapShader->SetFloat("u_UseDistort", 0.0f);
 
 		DrawFullscreenTriangle();
 

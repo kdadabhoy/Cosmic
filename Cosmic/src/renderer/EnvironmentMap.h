@@ -53,6 +53,11 @@ namespace Cosmic
 		EnvironmentMap() = default;
 		~EnvironmentMap();
 
+		// Owns GPU resources with an explicit Init/Shutdown lifecycle — copying
+		// would alias that ownership, so it's disabled (same rule as PostProcessStack).
+		EnvironmentMap(const EnvironmentMap&)            = delete;
+		EnvironmentMap& operator=(const EnvironmentMap&) = delete;
+
 		/** Load shaders, allocate the cubes + BRDF LUT, and bake the LUT (once). */
 		void Init();
 		/** Release all GPU resources (call while the GL context is current). */

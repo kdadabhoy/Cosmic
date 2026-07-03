@@ -18,6 +18,11 @@
  *   S6.5  SSAO (reconstruct-from-depth) + blur         (Ssao/SsaoBlur.glsl)
  *   S6.6  Bloom (soft-knee threshold + Gaussian chain) (BloomPrefilter/BloomBlur)
  *   S6.7  FXAA (final LDR edge blend)                  (Fxaa.glsl)
+ *   S7.2  Height fog (folded into the tonemap)
+ *   S10.3 Sun shafts: shadow-map raymarch god rays     (GodRays.glsl)
+ *         [tier 1 — the froxel fog grid is the documented follow-up]
+ *   S10.5 Heat-haze: a distortion field the app renders (e.g. distortion
+ *         particles) that displaces the tonemap's scene fetch
  *
  * FRAME SHAPE (app-side; mirrors the S3.1 FPV-inset rebind pattern):
  *
@@ -40,6 +45,7 @@
 
 #include <glm/glm.hpp>
 #include <cstdint>
+#include <string>
 #include <vector>
 
 namespace Cosmic
@@ -53,6 +59,11 @@ namespace Cosmic
 	public:
 		PostProcessStack() = default;
 		~PostProcessStack();
+
+		// Owns GPU resources with an explicit Init/Shutdown lifecycle — copying
+		// would alias that ownership (two owners, one Shutdown), so it's disabled.
+		PostProcessStack(const PostProcessStack&)            = delete;
+		PostProcessStack& operator=(const PostProcessStack&) = delete;
 
 		void Init(uint32_t width, uint32_t height);
 		void Shutdown();
@@ -101,9 +112,39 @@ namespace Cosmic
 		bool IsFogEnabled() const        { return m_FogEnabled; }
 		void SetFogParams(const glm::vec3& color, float density, float heightFalloff, float baseHeight)
 		{ m_FogColor = color; m_FogDensity = density; m_FogHeightFalloff = heightFalloff; m_FogBaseHeight = baseHeight; }
-		/** Camera for depth-based fog reconstruction — set before Composite when fog is on. */
+		/** Camera for depth-based reconstruction (fog S7.2 + god rays S10.3) —
+		 *  set before RenderEffects/Composite when either is on. */
 		void SetCamera(const glm::mat4& viewProjection, const glm::vec3& cameraPos)
 		{ m_ViewProjection = viewProjection; m_CameraPos = cameraPos; }
+
+		// ---- Sun shafts / god rays (S10.3 tier 1) ----
+		void SetGodRaysEnabled(bool enabled) { m_GodRaysEnabled = enabled; }
+		bool IsGodRaysEnabled() const        { return m_GodRaysEnabled; }
+		void SetGodRaysParams(float intensity, float density)
+		{ m_GodRaysIntensity = intensity; m_GodRaysDensity = density; }
+		/** The sun's shadow map + light matrix (ShadowMap::GetDepthID / GetLightViewProj)
+		 *  and sun state — required inputs; call each frame god rays are enabled.
+		 *  Also requires SetCamera (world reconstruction). */
+		void SetSunShaftInputs(uint32_t shadowMapID, const glm::mat4& lightViewProj,
+		                       const glm::vec3& sunTravelDir, const glm::vec3& sunColor, float sunIntensity)
+		{
+			m_ShaftShadowMapID = shadowMapID; m_ShaftLightViewProj = lightViewProj;
+			m_ShaftSunDir = sunTravelDir; m_ShaftSunColor = sunColor; m_ShaftSunIntensity = sunIntensity;
+		}
+
+		// ---- Heat-haze distortion (S10.5) ----
+		void SetHeatHazeEnabled(bool enabled) { m_HeatHazeEnabled = enabled; }
+		bool IsHeatHazeEnabled() const        { return m_HeatHazeEnabled; }
+		void SetHeatHazeStrength(float strength) { m_HeatHazeStrength = strength; }
+		/**
+		 * Bind + clear the distortion field target (half-res RG offsets in a float
+		 * texture). Render distortion sources into it — typically a ParticleEmitter
+		 * via RenderDistortion, which accumulates additively — then EndDistortion()
+		 * re-binds the previous framebuffer (caller re-asserts its viewport).
+		 * Returns false when heat haze is disabled or uninitialized (skip the pass).
+		 */
+		bool BeginDistortion();
+		void EndDistortion();
 
 		uint32_t GetWidth()  const { return m_Width; }
 		uint32_t GetHeight() const { return m_Height; }
@@ -115,6 +156,7 @@ namespace Cosmic
 		void ResizeEffects();
 		void RenderSSAO(const glm::mat4& projection);
 		void RenderBloom();
+		void RenderGodRays();
 
 		Ref<FrameBuffer> m_SceneHDR;        // {RGBA16F, DEPTH24STENCIL8}
 		Ref<Shader>      m_TonemapShader;   // Tonemap.glsl
@@ -128,8 +170,9 @@ namespace Cosmic
 		Ref<Shader>            m_SsaoBlurShader;
 		Ref<FrameBuffer>       m_SsaoTarget;       // half-res
 		Ref<FrameBuffer>       m_SsaoBlurTarget;   // half-res
-		Ref<Texture2D>         m_NoiseTex;         // 4x4 rotation noise
-		std::vector<glm::vec3> m_Kernel;           // hemisphere samples
+		Ref<Texture2D>           m_NoiseTex;       // 4x4 rotation noise
+		std::vector<glm::vec3>   m_Kernel;         // hemisphere samples
+		std::vector<std::string> m_KernelNames;    // "u_Kernel[i]" built once (no per-frame formatting)
 		bool     m_SsaoEnabled = false;
 		float    m_SsaoRadius  = 0.5f;
 		float    m_SsaoBias    = 0.025f;
@@ -159,5 +202,26 @@ namespace Cosmic
 		float     m_FogBaseHeight    = 0.0f;
 		glm::mat4 m_ViewProjection{ 1.0f };
 		glm::vec3 m_CameraPos{ 0.0f };
+
+		// ---- Sun shafts (S10.3 tier 1) ----
+		Ref<Shader>      m_GodRaysShader;
+		Ref<FrameBuffer> m_ShaftTarget;             // half-res
+		bool      m_GodRaysEnabled   = false;
+		float     m_GodRaysIntensity = 0.6f;
+		float     m_GodRaysDensity   = 0.04f;
+		uint32_t  m_ShaftShadowMapID = 0;
+		glm::mat4 m_ShaftLightViewProj{ 1.0f };
+		glm::vec3 m_ShaftSunDir{ 0.0f, -1.0f, 0.0f };
+		glm::vec3 m_ShaftSunColor{ 1.0f };
+		float     m_ShaftSunIntensity = 1.0f;
+		uint32_t  m_ShaftResultID    = 0;           // set by RenderGodRays
+
+		// ---- Heat-haze distortion (S10.5) ----
+		Ref<FrameBuffer> m_DistortTarget;           // half-res RG offset field
+		bool     m_HeatHazeEnabled  = false;
+		float    m_HeatHazeStrength = 0.02f;
+		bool     m_DistortionWritten = false;       // a field was rendered this frame
+		bool     m_InDistortion      = false;
+		uint32_t m_DistortPrevFbo    = 0;
 	};
 }

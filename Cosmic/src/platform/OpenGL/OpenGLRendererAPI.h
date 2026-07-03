@@ -66,6 +66,7 @@ namespace Cosmic
 		virtual void	SetDepthTest(bool enabled) override;
 		virtual void	SetDepthWrite(bool enabled) override;
 		virtual void	SetCullMode(CullMode mode) override;
+		virtual void	SetBlendMode(BlendMode mode) override;
 
 		////////////////////////////////
 		// Primitive Submission

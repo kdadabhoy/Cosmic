@@ -95,6 +95,24 @@ namespace Cosmic
 		}
 	}
 
+	void OpenGLRendererAPI::SetBlendMode(BlendMode mode)
+	{
+		switch (mode)
+		{
+		case BlendMode::Alpha:                       // engine default (Init)
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			break;
+		case BlendMode::Additive:
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+			break;
+		case BlendMode::Off:
+			glDisable(GL_BLEND);
+			break;
+		}
+	}
+
 	/////////////////////////////////////////////////////////////////////////////////
 
 	/**

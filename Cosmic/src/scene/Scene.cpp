@@ -5,6 +5,7 @@
 #include "scene/Components.h"
 #include "renderer/Renderer2D.h"
 #include "renderer/Renderer3D.h"
+#include "terrain/Terrain.h"
 #include "camera/OrthographicCamera.h"
 #include "camera/Camera.h"
 #include "jobs/JobSystem.h"
@@ -242,6 +243,18 @@ namespace Cosmic
 		Renderer3D::SetLights(lights);
 
 		Renderer3D::BeginScene(camera);
+
+		// Terrain first (S8.1) — world geometry with its own quadtree LOD around
+		// the pass camera. Water/particle components are app-sequenced (multi-pass
+		// / per-frame-dt needs — see their notes in Components.h).
+		{
+			auto terrainView = m_Registry.view<TerrainComponent>();
+			terrainView.each([&](auto entity, const TerrainComponent& tc)
+			{
+				if (tc.TerrainAsset)
+					tc.TerrainAsset->Render(camera.GetPosition(), (int)(uint32_t)entity);
+			});
+		}
 
 		auto view = m_Registry.view<TransformComponent, MeshRendererComponent>();
 		view.each([&](auto entity, const TransformComponent& transform, const MeshRendererComponent& mr)

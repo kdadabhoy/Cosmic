@@ -64,6 +64,7 @@ namespace Cosmic
 	class PerspectiveCamera;
 	class Material;
 	class Model;
+	class Shader;
 
 	class COSMIC_API Renderer3D
 	{
@@ -235,5 +236,19 @@ namespace Cosmic
 		 */
 		static void SetShadow(uint32_t shadowMapID, const glm::mat4& lightViewProj, float bias);
 		static void ClearShadow();
+
+		/**
+		 * @brief Bind the scene-level lighting resources (S6.3 IBL set + S6.4
+		 * shadow map, reserved units per renderer/BindingPoints.h) and set the
+		 * convention uniforms (u_IrradianceMap/u_PrefilterMap/u_BrdfLut/u_HasIBL,
+		 * u_ShadowMap/u_LightViewProj/u_ShadowBias/u_HasShadow) on `shader`.
+		 *
+		 * DrawMesh's material path calls this automatically; engine systems that
+		 * draw with their OWN shaders (terrain S8, water S9) call it right after
+		 * binding. Sampler units are assigned even when a resource is inactive so
+		 * no sampler is left aliasing another sampler TYPE on unit 0 — that alias
+		 * is a draw-time INVALID_OPERATION on strict GL drivers.
+		 */
+		static void ApplySceneBindings(const Ref<Shader>& shader);
 	};
 }

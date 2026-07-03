@@ -28,12 +28,19 @@
 
 namespace Cosmic
 {
-	enum class TextureCubeFormat { RGB16F = 0, RGBA16F };
+	/**
+	 * RGBA16F is the default and the only format guaranteed COLOR-RENDERABLE by
+	 * the GL spec — the IBL bakes render into cube faces, and three-channel float
+	 * formats (RGB16F) are "texture-only" on some drivers (Intel/AMD/ANGLE), which
+	 * makes BeginRenderToFace's framebuffer incomplete there. Use RGB16F only for
+	 * cubes that are SAMPLED but never rendered into.
+	 */
+	enum class TextureCubeFormat { RGBA16F = 0, RGB16F };
 
 	struct TextureCubeSpecification
 	{
 		uint32_t          Size      = 512;                      // per-face edge length (mip 0)
-		TextureCubeFormat Format    = TextureCubeFormat::RGB16F;
+		TextureCubeFormat Format    = TextureCubeFormat::RGBA16F;
 		bool              Mipmapped = false;                    // allocate a mip chain (prefilter needs it)
 	};
 

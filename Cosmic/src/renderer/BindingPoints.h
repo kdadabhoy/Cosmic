@@ -46,7 +46,31 @@ namespace Cosmic::Bindings
 	// ------------------------------------------------------------------
 
 	/** App/demo-owned scratch slot (e.g. the Engine3DDemo compute-particle pool).
-	 *  The engine never binds SSBOs here; future engine systems (S9 FFT water,
-	 *  S10 GPU particles) will claim numbered slots above the app range. */
+	 *  The engine never binds SSBOs in the app range [0, 7]; engine systems claim
+	 *  numbered slots from 8 upward. */
 	constexpr uint32_t AppSsbo0 = 0;
+
+	/** Engine GPU-particle pool (S10.1) — ParticleSystem's std430 particle SSBO,
+	 *  read/written by ParticleUpdate.glsl (compute) and read by the billboard
+	 *  vertex stage. First slot of the engine SSBO range (8+). */
+	constexpr uint32_t ParticlesSsbo = 8;
+
+	// ------------------------------------------------------------------
+	// Reserved fragment texture units
+	// ------------------------------------------------------------------
+	// Sampler units the ENGINE binds behind every material draw (Renderer3D
+	// injects them after Material::BindFull). Chosen high so a material's own
+	// textures (bound from unit 0 upward) never collide; GL guarantees >= 16
+	// fragment units. Shaders receive these via their sampler uniforms — the
+	// numbers here and the Renderer3D upload are the single source of truth.
+	// A future backend maps this table to a per-frame descriptor set (S13.2).
+
+	/** S6.3 IBL — diffuse irradiance cubemap (`u_IrradianceMap`). */
+	constexpr uint32_t TexUnitIblIrradiance = 8;
+	/** S6.3 IBL — prefiltered specular cubemap (`u_PrefilterMap`). */
+	constexpr uint32_t TexUnitIblPrefilter = 9;
+	/** S6.3 IBL — split-sum BRDF LUT (`u_BrdfLut`). */
+	constexpr uint32_t TexUnitIblBrdfLut = 10;
+	/** S6.4 — directional sun shadow map (`u_ShadowMap`). */
+	constexpr uint32_t TexUnitShadowMap = 11;
 }

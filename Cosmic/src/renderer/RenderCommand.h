@@ -146,6 +146,18 @@ namespace Cosmic
 		}
 
 		/**
+		 * @brief Sets the framebuffer blend mode (Alpha by default from Init()).
+		 * Alpha must stay the engine-wide default — Renderer2D's batches assume
+		 * src-alpha-over. Passes that switch to Additive/Off (GPU particles,
+		 * emissive accumulation) must restore Alpha before their scope ends,
+		 * same contract as the depth/cull verbs.
+		 */
+		inline static void SetBlendMode(RendererAPI::BlendMode mode)
+		{
+			s_RendererAPI->SetBlendMode(mode);
+		}
+
+		/**
 		 * @brief Executes an indexed draw call.
 		 * This is the standard method for drawing optimized 2D and 3D geometry.
 		 * @param vertexArray The Vertex Array Object containing the vertex and index data.
@@ -189,6 +201,7 @@ namespace Cosmic
 		using GpuBarrier        = RendererAPI::GpuBarrier;
 		using PrimitiveTopology = RendererAPI::PrimitiveTopology;
 		using CullMode          = RendererAPI::CullMode;
+		using BlendMode         = RendererAPI::BlendMode;
 
 		/** @brief Dispatch the bound compute program over an x*y*z work-group grid. */
 		inline static void DispatchCompute(uint32_t x, uint32_t y, uint32_t z)

@@ -114,14 +114,15 @@ namespace Cosmic
 		float     ShadowBias   = 0.0015f;
 	};
 
-	// Reserved fragment texture units (well above any material's own textures,
-	// which bind from unit 0 upward — GL guarantees >= 16 units).
+	// Reserved fragment texture units — allocated in renderer/BindingPoints.h
+	// (single source of truth; also the seed for a future backend's descriptor
+	// layout). Local aliases keep the draw-path code short.
 	namespace
 	{
-		constexpr uint32_t kIblIrradianceUnit = 8;
-		constexpr uint32_t kIblPrefilterUnit  = 9;
-		constexpr uint32_t kIblBrdfLutUnit     = 10;
-		constexpr uint32_t kShadowMapUnit      = 11;
+		constexpr uint32_t kIblIrradianceUnit = Bindings::TexUnitIblIrradiance;
+		constexpr uint32_t kIblPrefilterUnit  = Bindings::TexUnitIblPrefilter;
+		constexpr uint32_t kIblBrdfLutUnit    = Bindings::TexUnitIblBrdfLut;
+		constexpr uint32_t kShadowMapUnit     = Bindings::TexUnitShadowMap;
 	}
 
 	static Renderer3DData s_Data;
@@ -400,11 +401,15 @@ namespace Cosmic
 		s_Data.MeshShader->SetInt("u_EntityID", entityID);   // S4.6 (silent no-op if undeclared)
 
 		// Directional shadows (S6.4): the flat Lambert path receives them too so a
-		// shadow lands on plain-colored geometry (ground pad, ECS meshes).
+		// shadow lands on plain-colored geometry (ground pad, ECS meshes). The
+		// sampler uniform is assigned its reserved unit UNCONDITIONALLY — a sampler
+		// left at its default unit 0 can alias a different sampler type there,
+		// which the GL spec makes a draw-time INVALID_OPERATION on strict drivers
+		// even when the branch never samples it (portability contract).
+		s_Data.MeshShader->SetInt("u_ShadowMap", (int)kShadowMapUnit);
 		if (s_Data.ShadowActive)
 		{
 			RenderCommand::BindTextureSlot(kShadowMapUnit, s_Data.ShadowMapID);
-			s_Data.MeshShader->SetInt("u_ShadowMap", (int)kShadowMapUnit);
 			s_Data.MeshShader->SetMat4("u_LightViewProj", s_Data.ShadowLightViewProj);
 			s_Data.MeshShader->SetFloat("u_ShadowBias", s_Data.ShadowBias);
 			s_Data.MeshShader->SetFloat("u_HasShadow", 1.0f);
@@ -451,18 +456,35 @@ namespace Cosmic
 		shader->SetFloat("u_Ambient", s_Data.Ambient);
 		shader->SetInt("u_EntityID", entityID);   // S4.6 (silent no-op if undeclared)
 
-		// 3) Image-based lighting (S6.3): bind the IBL set to reserved units and
-		//    flip u_HasIBL on. PBR.glsl consumes these; other lit shaders ignore
-		//    them (silent -1 locations). The material's own textures already bound
-		//    to low units in BindFull, so the high IBL units never collide.
+		// 3) Scene-level lighting resources (S6.3 IBL + S6.4 shadow) — shared with
+		//    the engine systems that draw their own shaders (terrain/water).
+		ApplySceneBindings(shader);
+
+		mesh->GetVertexArray()->Bind();
+		RenderCommand::DrawIndexed(mesh->GetVertexArray(), mesh->GetIndexCount());
+	}
+
+	void Renderer3D::ApplySceneBindings(const Ref<Shader>& shader)
+	{
+		if (!shader)
+			return;
+
+		// Image-based lighting (S6.3): point the IBL samplers at their reserved
+		// units UNCONDITIONALLY, then bind + enable only when active. Without the
+		// unconditional assignment the samplerCube uniforms sit at their default
+		// unit 0 alongside the shader's sampler2Ds — two sampler TYPES on one
+		// unit is a draw-time INVALID_OPERATION per the GL spec (lenient on
+		// NVIDIA, fatal on Mesa/ANGLE-class drivers). Shaders that don't declare
+		// these uniforms no-op on location -1 (silent-ignore rule). Feature
+		// textures bind to low units, so the high reserved units never collide.
+		shader->SetInt("u_IrradianceMap", (int)kIblIrradianceUnit);
+		shader->SetInt("u_PrefilterMap",  (int)kIblPrefilterUnit);
+		shader->SetInt("u_BrdfLut",       (int)kIblBrdfLutUnit);
 		if (s_Data.IblActive)
 		{
 			RenderCommand::BindTextureCubeSlot(kIblIrradianceUnit, s_Data.IblIrradianceID);
 			RenderCommand::BindTextureCubeSlot(kIblPrefilterUnit,  s_Data.IblPrefilterID);
 			RenderCommand::BindTextureSlot(kIblBrdfLutUnit,        s_Data.IblBrdfLutID);
-			shader->SetInt("u_IrradianceMap",   (int)kIblIrradianceUnit);
-			shader->SetInt("u_PrefilterMap",    (int)kIblPrefilterUnit);
-			shader->SetInt("u_BrdfLut",         (int)kIblBrdfLutUnit);
 			shader->SetFloat("u_PrefilterMaxLod", s_Data.IblPrefilterMaxLod);
 			shader->SetFloat("u_HasIBL", 1.0f);
 		}
@@ -471,13 +493,11 @@ namespace Cosmic
 			shader->SetFloat("u_HasIBL", 0.0f);
 		}
 
-		// 4) Directional shadows (S6.4): bind the sun's shadow map to its reserved
-		//    unit and hand the lit shader the light matrix + bias. PBR/MeshLit PCF
-		//    the sun term; unlit shaders ignore these uniforms.
+		// Directional shadows (S6.4): same unconditional-unit rule as the IBL set.
+		shader->SetInt("u_ShadowMap", (int)kShadowMapUnit);
 		if (s_Data.ShadowActive)
 		{
 			RenderCommand::BindTextureSlot(kShadowMapUnit, s_Data.ShadowMapID);
-			shader->SetInt("u_ShadowMap", (int)kShadowMapUnit);
 			shader->SetMat4("u_LightViewProj", s_Data.ShadowLightViewProj);
 			shader->SetFloat("u_ShadowBias", s_Data.ShadowBias);
 			shader->SetFloat("u_HasShadow", 1.0f);
@@ -486,9 +506,6 @@ namespace Cosmic
 		{
 			shader->SetFloat("u_HasShadow", 0.0f);
 		}
-
-		mesh->GetVertexArray()->Bind();
-		RenderCommand::DrawIndexed(mesh->GetVertexArray(), mesh->GetIndexCount());
 	}
 
 	void Renderer3D::DrawModel(const Ref<Model>& model, const glm::mat4& transform, int entityID)

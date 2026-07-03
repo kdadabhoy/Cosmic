@@ -218,9 +218,31 @@ HDR pipeline → PBR + IBL → shadows → SSAO → bloom → AA, then sky/atmos
 - **Done when:** glTF reference scene matches a reference viewer; day-night scrub looks plausible;
   profiler-free frame still ≥60 fps on the dev GPU.
 
-### Phase 10 — World systems *(doc 05: S8–S10)*
+### Phase 10 — World systems *(doc 05: S8–S10)* — ✅ code complete 2026-07-03
 Terrain (quadtree LOD, splat/triplanar materials, `SampleHeight`) → water Tier 1 (+FFT Tier 2
 later) → GPU particles, froxel volumetrics, heat haze. Internally reorderable.
+> **Status (2026-07-03):** S8.1–S8.3, S9.1–S9.2, S10.1/S10.2/S10.5 + a tier-1 S10.3 all
+> implemented on branch `phase-7-3d-foundations` (same session as the Phase 9 hardening pass —
+> see doc 05 §5 note). New engine surface: `terrain/Terrain` (chunked-quadtree LOD on one shared
+> skirted patch mesh, packed height+normal texture, 4-layer auto-splat + triplanar
+> `Terrain.glsl`, CPU `SampleHeight/SampleNormal` matching the renderer's triangle split),
+> `water/GerstnerWave.h` + `water/Water` (Gerstner grid, planar reflection w/ oblique
+> near-plane clip, refraction grab via `BlitCopy.glsl`, depth-fade + foam + Fresnel + glint
+> `Water.glsl`, CPU buoyancy queries), `particles/ParticleSystem` (`ParticleEmitter`: std430
+> pool on `Bindings::ParticlesSsbo` + `ParticleUpdate.glsl` compute w/ ring-buffer spawning +
+> attribute-less `ParticleBillboards.glsl`, soft particles, flipbooks, CPU-fallback `StepCpu`;
+> `RibbonEmitter` + `Ribbon.glsl`), `PostProcessStack` grew god rays (`GodRays.glsl`,
+> shadow-map raymarch) + a heat-haze distortion field consumed by the tonemap; new
+> `RenderCommand::SetBlendMode` verb; `TerrainComponent`/`WaterComponent`/
+> `ParticleEmitterComponent` registered (Scene::OnRender3D draws terrain). Engine3DDemo grew a
+> "World systems (Phase 10 / S8-S10)" panel section (island + lake + fire-pit smoke/embers +
+> aircraft ribbon + god rays + heat haze). Headless tests in `tests/test_phase10_world.cpp`
+> (terrain query exactness ≤ 1 cm, Gerstner inversion invariants, particle CPU-step contracts).
+> **Documented tier deviations:** S8.4 tessellation/holes parked; S9.3 FFT ocean parked (per
+> plan); S10.1 draws fixed-count quads (indirect-draw + compaction later) with no intra-emitter
+> sort (S12.2); S10.3 ships shadow-map-raymarch light shafts, the froxel grid is the follow-up;
+> S10.4's raymarched volumes ride the flipbook tier (plan's stated first step).
+> **Remaining — user visual pass** of the new toggles + committed screenshots.
 - **Done when:** each system's stage acceptance in doc 05 passes.
 
 ### Phase 11 — Flagship demos + performance *(doc 05: S11–S12)*

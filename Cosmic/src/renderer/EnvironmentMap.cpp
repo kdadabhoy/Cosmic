@@ -22,8 +22,8 @@ namespace Cosmic
 		constexpr uint32_t kPrefilterMips = 5;   // roughness levels baked
 		constexpr uint32_t kBrdfLutSize   = 512;
 
-		// Texture units reserved for IBL (mirrors Renderer3D's IBL binding).
-		// Chosen high so they never collide with a material's own textures (0..N).
+		// (The reserved IBL texture units live in renderer/BindingPoints.h;
+		// Renderer3D binds them — this file only bakes and hands over handles.)
 
 		const glm::mat4 kCaptureProj =
 			glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);

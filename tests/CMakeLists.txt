@@ -19,6 +19,7 @@ add_executable(CosmicTests
     test_components.cpp
     test_assetlibrary.cpp
     test_s5_navigation.cpp
+    test_phase10_world.cpp
 )
 
 target_link_libraries(CosmicTests PRIVATE Cosmic)

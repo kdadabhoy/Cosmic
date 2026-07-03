@@ -22,10 +22,10 @@ namespace Cosmic
 		{
 			switch (fmt)
 			{
-			case TextureCubeFormat::RGBA16F: internalFmt = GL_RGBA16F; dataFmt = GL_RGBA; dataType = GL_FLOAT; break;
-			case TextureCubeFormat::RGB16F:
-			default:                         internalFmt = GL_RGB16F;  dataFmt = GL_RGB;  dataType = GL_FLOAT; break;
-			}
+			case TextureCubeFormat::RGB16F:  internalFmt = GL_RGB16F;  dataFmt = GL_RGB;  dataType = GL_FLOAT; break;
+			case TextureCubeFormat::RGBA16F:                // default: the only spec-guaranteed
+			default:                         internalFmt = GL_RGBA16F; dataFmt = GL_RGBA; dataType = GL_FLOAT; break;
+			}                                               // color-renderable float-cube format
 		}
 	}
 
@@ -83,6 +83,16 @@ namespace Cosmic
 		glBindFramebuffer(GL_FRAMEBUFFER, m_FBO);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
 		                       GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, m_RendererID, static_cast<GLint>(mip));
+
+		// Completeness is driver-dependent (format renderability varies) — check
+		// once per cube so a silent no-op bake becomes a diagnosable log line.
+		if (!m_CheckedComplete)
+		{
+			m_CheckedComplete = true;
+			if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+				CS_CORE_ERROR("OpenGLTextureCube: render-to-face framebuffer is incomplete "
+				              "(format not color-renderable on this driver?) — bake will produce nothing.");
+		}
 
 		const uint32_t mipSize = std::max(1u, m_Size >> mip);
 		glViewport(0, 0, mipSize, mipSize);

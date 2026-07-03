@@ -37,6 +37,9 @@
 #include "renderer/PostProcessStack.h"   // S6.1 — HDR pipeline (float target + tonemap)
 #include "renderer/EnvironmentMap.h"     // S6.3 — image-based lighting + skybox
 #include "renderer/ShadowMap.h"          // S6.4 — directional sun shadows
+#include "terrain/Terrain.h"             // S8  — heightmap terrain (quadtree LOD + queries)
+#include "water/Water.h"                 // S9  — Gerstner water surface + buoyancy queries
+#include "particles/ParticleSystem.h"    // S10 — GPU particles + ribbon trails
 #include "graphics/Buffer.h"
 #include "graphics/Shader.h"
 #include "graphics/VertexArray.h"

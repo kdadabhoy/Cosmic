@@ -138,6 +138,101 @@ namespace Workspace
 		// ---- Directional shadows (S6.4): 2k sun shadow map ----
 		m_Shadow.Init(2048);
 
+		// ---- World systems (Phase 10 / S8–S10). All CPU-side here — the GPU
+		//      resources are lazy-created on each system's first Render. ----
+		{
+			// S8: a procedural island under/around the flight demo. The scene's
+			// pad sits at y = 0; the island rolls from below the lake (-9 m) to
+			// snow-capped hills (+11 m), with the auto-splat bands parameterized
+			// around the -5 m waterline.
+			Cosmic::TerrainSpecification tspec;
+			tspec.Resolution  = 257;
+			tspec.WorldSize   = 256.0f;
+			tspec.HeightScale = 20.0f;
+			tspec.BaseHeight  = -9.0f;
+			tspec.Seed        = 20260703;
+			tspec.Octaves     = 6;
+			tspec.Frequency   = 4.0f;
+			tspec.EdgeFalloff = 0.45f;                       // island: edges sink under the lake
+			tspec.Material.HighHeight = 6.5f;                // snow above ~6.5 m
+			tspec.Material.LowHeight  = -4.2f;               // sand near the waterline
+			tspec.Material.LowBlend   = 0.8f;
+			m_Terrain = Cosmic::Terrain::Create(tspec);
+
+			// S9: the lake filling everything the island falloff sank.
+			Cosmic::WaterSpecification wspec;
+			wspec.Extent        = { 256.0f, 256.0f };
+			wspec.SurfaceHeight = -5.0f;
+			m_Water   = Cosmic::Water::Create(wspec);
+			m_BuoyBox = Cosmic::Mesh::CreateBox({ 1.2f, 0.5f, 0.8f });
+
+			// S10.1: a smoke plume (alpha flipbook) + HDR ember sparks (additive —
+			// they feed bloom) rising from a fire pit at the pad's edge.
+			Cosmic::ParticleEmitterSpec smoke;
+			smoke.MaxParticles = 2048;
+			smoke.SpawnRate    = 55.0f;
+			smoke.Shape        = Cosmic::EmitterShape::Cone;
+			smoke.ShapeRadius  = 0.35f;
+			smoke.ConeAngleDeg = 14.0f;
+			smoke.SpeedMin = 0.8f;  smoke.SpeedMax = 1.6f;
+			smoke.LifeMin  = 2.5f;  smoke.LifeMax  = 4.0f;
+			smoke.Gravity  = { 0.0f, 0.55f, 0.0f };          // buoyant
+			smoke.Drag     = 0.35f;
+			smoke.Wind     = { 0.35f, 0.0f, 0.12f };
+			smoke.SizeStart = 0.45f; smoke.SizeEnd = 1.9f;
+			smoke.ColorStart = { 0.62f, 0.62f, 0.64f, 0.42f };
+			smoke.ColorEnd   = { 0.72f, 0.72f, 0.75f, 0.0f };
+			smoke.FlipbookTilesX = 4; smoke.FlipbookTilesY = 4;
+			smoke.FlipbookFps    = 9.0f;
+			smoke.FlipbookBlend  = true;
+			smoke.SoftFadeDistance = 0.6f;
+			m_Smoke = Cosmic::ParticleEmitter::Create(smoke);
+
+			Cosmic::ParticleEmitterSpec embers;
+			embers.MaxParticles = 1024;
+			embers.SpawnRate    = 90.0f;
+			embers.Shape        = Cosmic::EmitterShape::Cone;
+			embers.ShapeRadius  = 0.25f;
+			embers.ConeAngleDeg = 28.0f;
+			embers.SpeedMin = 2.0f;  embers.SpeedMax = 4.5f;
+			embers.LifeMin  = 0.5f;  embers.LifeMax  = 1.3f;
+			embers.Gravity  = { 0.0f, -4.0f, 0.0f };
+			embers.Drag     = 0.6f;
+			embers.SizeStart = 0.07f; embers.SizeEnd = 0.0f;
+			embers.ColorStart = { 4.0f, 1.6f, 0.35f, 1.0f };  // HDR-hot: blooms
+			embers.ColorEnd   = { 1.0f, 0.15f, 0.02f, 0.0f };
+			embers.Blend = Cosmic::ParticleBlend::Additive;
+			embers.SoftFadeDistance = 0.3f;
+			m_Embers = Cosmic::ParticleEmitter::Create(embers);
+
+			// S10.5: slow fat puffs that write the heat-haze distortion field.
+			Cosmic::ParticleEmitterSpec haze;
+			haze.MaxParticles = 256;
+			haze.SpawnRate    = 18.0f;
+			haze.Shape        = Cosmic::EmitterShape::Cone;
+			haze.ShapeRadius  = 0.30f;
+			haze.ConeAngleDeg = 10.0f;
+			haze.SpeedMin = 0.7f;  haze.SpeedMax = 1.2f;
+			haze.LifeMin  = 1.0f;  haze.LifeMax  = 1.8f;
+			haze.Gravity  = { 0.0f, 0.8f, 0.0f };
+			haze.Drag     = 0.3f;
+			haze.SizeStart = 0.7f; haze.SizeEnd = 1.8f;
+			haze.ColorStart = { 1.0f, 1.0f, 1.0f, 0.30f };
+			haze.ColorEnd   = { 1.0f, 1.0f, 1.0f, 0.0f };
+			haze.SoftFadeDistance = 0.5f;
+			m_Haze = Cosmic::ParticleEmitter::Create(haze);
+
+			// S10.2: a wingtip trail ribbon on the orbiting aircraft.
+			Cosmic::RibbonSpec ribbon;
+			ribbon.MaxPoints     = 96;
+			ribbon.Width         = 0.14f;
+			ribbon.PointLifetime = 1.4f;
+			ribbon.ColorHead     = { 0.45f, 0.9f, 1.0f, 0.85f };
+			ribbon.ColorTail     = { 0.45f, 0.9f, 1.0f, 0.0f };
+			ribbon.Additive      = true;
+			m_Ribbon = Cosmic::RibbonEmitter::Create(ribbon);
+		}
+
 		// ---- CAD tools (Phase 8 / S5): nav cube + scene picker ----
 		m_NavCube = Cosmic::NavigationCube::Create(140);
 		m_Picker  = Cosmic::ScenePicker::Create();
@@ -207,6 +302,13 @@ namespace Workspace
 		m_ParticleSSBO.reset();
 		m_NavCube.reset();
 		m_Picker.reset();
+		m_Terrain.reset();     // Phase 10 world systems (GPU resources inside)
+		m_Water.reset();
+		m_BuoyBox.reset();
+		m_Smoke.reset();
+		m_Embers.reset();
+		m_Haze.reset();
+		m_Ribbon.reset();
 		m_PostFx.Shutdown();   // release the HDR target + tonemap shader (context still live)
 		m_Environment.Shutdown();     // release IBL cubes + BRDF LUT (S6.3)
 		Cosmic::Renderer3D::ClearIBL();
@@ -822,6 +924,58 @@ namespace Workspace
 			Cosmic::Renderer3D::ClearShadow();
 		}
 
+		// ---- World systems (Phase 10): advance particles + capture the water
+		//      reflection. Both run BEFORE the render-target selection — emitter
+		//      Update is FBO-neutral (compute dispatch / SSBO upload) and the
+		//      reflection pass restores the framebuffer it found bound. ----
+		m_WorldTime += ts;
+		{
+			namespace Math = Cosmic::Math;
+			const glm::vec3 posR = Math::NedToRender(m_PosNed);
+			const glm::quat attR = Math::NedQuatToRender(m_AttNed);
+
+			if (m_ShowTerrain && m_Terrain)
+				m_TerrainProbe = m_Terrain->SampleHeight(posR.x, posR.z);   // S8.3 readout
+
+			if (m_ShowParticles)
+			{
+				// Fire pit at the pad's edge: smoke + embers share the spot.
+				const glm::mat4 pit = glm::translate(glm::mat4(1.0f), { -5.0f, 0.15f, -5.0f });
+				if (m_Smoke)  { m_Smoke->SetTransform(pit);  m_Smoke->Update(ts, m_WorldTime);  }
+				if (m_Embers) { m_Embers->SetTransform(pit); m_Embers->Update(ts, m_WorldTime); }
+			}
+			if (m_HeatHaze && m_Haze)
+			{
+				m_Haze->SetTransform(glm::translate(glm::mat4(1.0f), { -5.0f, 0.4f, -5.0f }));
+				m_Haze->Update(ts, m_WorldTime);
+			}
+			if (m_ShowRibbon && m_Ribbon)
+			{
+				// Trail off the tail of the orbiting aircraft.
+				const glm::vec3 tail = posR + attR * glm::vec3(0.0f, 0.05f, 1.3f);
+				if (!m_SimPaused)
+					m_Ribbon->AddPoint(tail, m_WorldTime);
+				m_Ribbon->Update(m_WorldTime);
+			}
+		}
+
+		// S9.1 reflection pass: mirror the camera about the water plane and
+		// re-render the reflection-relevant world subset into the water's target.
+		if (m_ShowWater && m_Water && m_Hdr)
+		{
+			glm::mat4 reflVP;
+			glm::vec3 reflCam;
+			const auto& cam = m_Orbit.GetCamera();
+			if (m_Water->BeginReflection(cam.GetViewMatrix(), cam.GetProjectionMatrix(),
+			                             cam.GetPosition(), reflVP, reflCam))
+			{
+				Cosmic::Renderer3D::BeginScene(reflVP, reflCam);
+				DrawWaterReflectionWorld(reflVP);
+				Cosmic::Renderer3D::EndScene();
+				m_Water->EndReflection();
+			}
+		}
+
 		// Pick the world-pass render target. With HDR (S6.1) on, the ENTIRE 3D scene
 		// renders into the float scene target and is tonemapped into the viewport FBO
 		// afterwards (before the 2D overlay, contract rule 7). Otherwise render
@@ -860,6 +1014,28 @@ namespace Workspace
 				{ 0.32f, 0.34f, 0.38f, 1.0f },   // major
 				5);
 			Cosmic::Renderer3D::DrawAxes(glm::mat4(1.0f), 2.0f);   // world origin tripod
+		}
+
+		// Terrain (S8): quadtree LOD around the camera; receives sun shadows and
+		// IBL ambient through the shared scene bindings.
+		if (m_ShowTerrain && m_Terrain)
+			m_Terrain->Render(m_Orbit.GetCamera().GetPosition());
+
+		// Buoyant box (S9.2): rides the CPU Gerstner query — the acceptance that
+		// SampleHeight and the rendered surface agree.
+		if (m_ShowWater && m_Water && m_BuoyBox)
+		{
+			const float bx = 10.0f, bz = 6.0f;
+			const float by = m_Water->SampleHeight(bx, bz, m_WorldTime);
+			const glm::vec3 n = m_Water->SampleNormal(bx, bz, m_WorldTime);
+			const glm::vec3 axis = glm::cross(glm::vec3(0.0f, 1.0f, 0.0f), n);
+			const float s = glm::length(axis);
+			glm::mat4 tilt(1.0f);
+			if (s > 1e-5f)
+				tilt = glm::rotate(glm::mat4(1.0f), std::atan2(s, n.y), axis / s);
+			Cosmic::Renderer3D::DrawMesh(m_BuoyBox,
+				glm::translate(glm::mat4(1.0f), { bx, by + 0.12f, bz }) * tilt,
+				{ 0.85f, 0.30f, 0.12f, 1.0f });
 		}
 
 		// Landing pad mesh under the orbit center (proves CreatePlane + Lambert
@@ -956,6 +1132,34 @@ namespace Workspace
 		}
 
 		// =====================================================================
+		// World-system surface + transparents (Phase 10) — after ALL opaque
+		// geometry: the water grabs the scene color for refraction and reads the
+		// scene depth for shorelines; particles/ribbons are the transparent tail.
+		// Both need the HDR target's attachments, so they ride the HDR path.
+		// =====================================================================
+		if (useHdr)
+		{
+			const auto& cam        = m_Orbit.GetCamera();
+			const auto& sceneFbo   = m_PostFx.GetSceneTarget();
+			const uint32_t colorID = sceneFbo->GetColorAttachmentRendererID(0);
+			const uint32_t depthID = sceneFbo->GetDepthAttachmentRendererID();
+			const glm::mat4 invVP  = glm::inverse(cam.GetViewProjectionMatrix());
+
+			if (m_ShowWater && m_Water)
+				m_Water->Render(cam.GetPosition(), m_WorldTime, cam.GetViewProjectionMatrix(),
+				                colorID, depthID,
+				                static_cast<uint32_t>(w), static_cast<uint32_t>(h));
+
+			if (m_ShowParticles)
+			{
+				if (m_Smoke)  m_Smoke->Render(cam.GetViewMatrix(), depthID, invVP);
+				if (m_Embers) m_Embers->Render(cam.GetViewMatrix(), depthID, invVP);
+			}
+			if (m_ShowRibbon && m_Ribbon)
+				m_Ribbon->Render(cam.GetViewMatrix(), m_WorldTime);
+		}
+
+		// =====================================================================
 		// HDR resolve (S6.1) — tonemap the float scene into the viewport FBO so
 		// the 2D overlay composites on top in LDR. Overbright (>1.0) values from
 		// the lit path roll off on the ACES shoulder instead of clipping; the
@@ -977,6 +1181,25 @@ namespace Workspace
 			m_PostFx.SetCamera(m_Orbit.GetCamera().GetViewProjectionMatrix(),
 			                   m_Orbit.GetCamera().GetPosition());
 
+			// Sun shafts (S10.3): raymarch the shadow map — needs shadows on.
+			m_PostFx.SetGodRaysEnabled(m_GodRays && m_Shadows);
+			if (m_GodRays && m_Shadows)
+				m_PostFx.SetSunShaftInputs(m_Shadow.GetDepthID(), m_Shadow.GetLightViewProj(),
+				                           m_LightDir, m_SunColor, m_SunIntensity);
+
+			// Heat haze (S10.5): render the distortion emitter into the offset
+			// field the tonemap displaces by. BeginDistortion binds its own target
+			// and EndDistortion restores this one; RenderEffects re-asserts every
+			// viewport it needs afterwards.
+			m_PostFx.SetHeatHazeEnabled(m_HeatHaze);
+			if (m_HeatHaze && m_Haze && m_PostFx.BeginDistortion())
+			{
+				m_Haze->RenderDistortion(m_Orbit.GetCamera().GetViewMatrix(),
+				                         m_PostFx.GetSceneTarget()->GetDepthAttachmentRendererID(),
+				                         glm::inverse(m_Orbit.GetCamera().GetViewProjectionMatrix()));
+				m_PostFx.EndDistortion();
+			}
+
 			m_PostFx.RenderEffects(m_Orbit.GetCamera().GetProjectionMatrix());
 
 			auto vfb = app.GetFrameBuffer();
@@ -990,6 +1213,28 @@ namespace Workspace
 		// =====================================================================
 		if (m_Show2D)
 			Draw2DOverlay();
+	}
+
+	// =========================================================================
+	// S9.1 — the world subset re-rendered into the water's reflection target.
+	// Called inside the mirrored Renderer3D scene (camera UBO = mirrored VP).
+	// A subset by design: sky + terrain + the aircraft read clearly in the
+	// reflection; the rest isn't worth a second full pass at this tier.
+	// =========================================================================
+	void Engine3DDemo::DrawWaterReflectionWorld(const glm::mat4& mirroredViewProj)
+	{
+		if (m_ShowSkybox)
+			m_Environment.DrawSkybox(mirroredViewProj);
+
+		if (m_ShowTerrain && m_Terrain)
+		{
+			// LOD selection uses the REAL camera position so the reflected
+			// terrain tessellation matches the main view exactly (no LOD seam
+			// between a surface and its reflection).
+			m_Terrain->Render(m_Orbit.GetCamera().GetPosition());
+		}
+
+		DrawAircraft();
 	}
 
 	void Engine3DDemo::Draw2DOverlay()
@@ -1356,6 +1601,60 @@ namespace Workspace
 		if (m_TimeOfDay)
 			ImGui::SliderFloat("Hour", &m_TimeHours, 4.0f, 20.0f, "%.1f h");
 		ImGui::EndDisabled();
+
+		ImGui::SeparatorText("World systems (Phase 10 / S8-S10)");
+
+		ImGui::BeginDisabled(!m_Terrain);
+		ImGui::Checkbox("Terrain (S8)", &m_ShowTerrain);
+		ImGui::EndDisabled();
+		ImGui::SameLine(); ImGui::TextDisabled("(?)");
+		if (ImGui::IsItemHovered())
+			ImGui::SetTooltip("256 m procedural island: chunked quadtree LOD with skirts, 4-layer\n"
+			                  "auto-splat (grass/rock/snow/sand by height+slope), triplanar on steep\n"
+			                  "slopes. Receives sun shadows + IBL ambient. Orbit far out and back in\n"
+			                  "to watch patches split/merge.");
+		if (m_ShowTerrain && m_Terrain)
+			ImGui::TextDisabled("patches: %u   SampleHeight@aircraft: %.2f m",
+			                    m_Terrain->GetLastDrawnNodeCount(), m_TerrainProbe);
+
+		ImGui::BeginDisabled(!m_Water || !m_Hdr);
+		ImGui::Checkbox("Water (S9)", &m_ShowWater);
+		ImGui::EndDisabled();
+		ImGui::SameLine(); ImGui::TextDisabled("(?)");
+		if (ImGui::IsItemHovered())
+			ImGui::SetTooltip("Tier-1 lake at y = -5 (turn Terrain on for shorelines): Gerstner swell,\n"
+			                  "planar reflections (mirrored re-render + oblique clip), refraction from\n"
+			                  "a scene-color grab, depth-fade absorption, Fresnel, sun glint, shoreline\n"
+			                  "foam. The orange box bobs via the CPU SampleHeight query (S9.2).\n"
+			                  "Needs HDR on (reads the float scene target).");
+
+		ImGui::BeginDisabled(!m_Smoke || !m_Hdr);
+		ImGui::Checkbox("Particles (S10.1)", &m_ShowParticles);
+		ImGui::EndDisabled();
+		ImGui::SameLine();
+		ImGui::BeginDisabled(!m_Ribbon || !m_Hdr);
+		ImGui::Checkbox("Ribbon (S10.2)", &m_ShowRibbon);
+		ImGui::EndDisabled();
+		ImGui::SameLine(); ImGui::TextDisabled("(?)");
+		if (ImGui::IsItemHovered())
+			ImGui::SetTooltip("GPU compute pool + attribute-less billboards: a soft-particle flipbook\n"
+			                  "smoke plume (alpha) and HDR ember sparks (additive - enable Bloom to see\n"
+			                  "them glow) at the fire pit (-5, 0, -5). Ribbon: additive camera-facing\n"
+			                  "trail off the aircraft tail. Both need HDR (soft particles read scene depth).");
+
+		ImGui::BeginDisabled(!m_Shadows || !m_Hdr);
+		ImGui::Checkbox("God rays (S10.3)", &m_GodRays);
+		ImGui::EndDisabled();
+		ImGui::SameLine();
+		ImGui::BeginDisabled(!m_Haze || !m_Hdr);
+		ImGui::Checkbox("Heat haze (S10.5)", &m_HeatHaze);
+		ImGui::EndDisabled();
+		ImGui::SameLine(); ImGui::TextDisabled("(?)");
+		if (ImGui::IsItemHovered())
+			ImGui::SetTooltip("God rays: raymarched sun shafts against the shadow map (needs Shadows;\n"
+			                  "best looking toward a low sun through the aircraft/terrain - try Time of\n"
+			                  "day ~7h). Heat haze: distortion particles above the fire pit displace the\n"
+			                  "tonemap's scene fetch - the air shimmers.");
 
 		ImGui::SeparatorText("Overlays");
 		ImGui::Checkbox("Grid", &m_ShowGrid);           ImGui::SameLine();

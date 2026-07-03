@@ -137,6 +137,52 @@ namespace Cosmic
         PointLightComponent() = default;
         PointLightComponent(const PointLightComponent&) = default;
     };
+
+
+    class Terrain;
+    class Water;
+    class ParticleEmitter;
+
+    /**
+     * @brief Heightmap terrain (S8.1). Scene::OnRender3D renders it with
+     * quadtree LOD around the pass camera. The Terrain asset itself is placed
+     * by its own specification (world origin/size) — terrain is world geometry,
+     * so the entity's TransformComponent is intentionally not applied.
+     */
+    struct COSMIC_API TerrainComponent
+    {
+        Ref<Terrain> TerrainAsset;           // entity skipped when null
+
+        TerrainComponent() = default;
+        TerrainComponent(const TerrainComponent&) = default;
+    };
+
+    /**
+     * @brief Water surface (S9.1). A data holder: water is a MULTI-PASS effect
+     * (planar reflection re-render + scene-color refraction grab), so the app
+     * (or the future SceneRenderer, S12) sequences Water's passes explicitly —
+     * Scene::OnRender3D cannot re-render the world mid-pass and skips this.
+     */
+    struct COSMIC_API WaterComponent
+    {
+        Ref<Water> WaterAsset;
+
+        WaterComponent() = default;
+        WaterComponent(const WaterComponent&) = default;
+    };
+
+    /**
+     * @brief GPU particle emitter (S10.1). A data holder: emitters need a
+     * per-frame Update(dt) and render with camera + scene-depth arguments the
+     * app owns, so apps drive Update/Render directly (see ParticleEmitter.h).
+     */
+    struct COSMIC_API ParticleEmitterComponent
+    {
+        Ref<ParticleEmitter> Emitter;
+
+        ParticleEmitterComponent() = default;
+        ParticleEmitterComponent(const ParticleEmitterComponent&) = default;
+    };
 }
 
 // ============================================================================
@@ -165,6 +211,9 @@ CS_REGISTER_COMPONENT(Cosmic::SpriteRendererComponent)
 CS_REGISTER_COMPONENT(Cosmic::MeshRendererComponent)
 CS_REGISTER_COMPONENT(Cosmic::DirectionalLightComponent)
 CS_REGISTER_COMPONENT(Cosmic::PointLightComponent)
+CS_REGISTER_COMPONENT(Cosmic::TerrainComponent)
+CS_REGISTER_COMPONENT(Cosmic::WaterComponent)
+CS_REGISTER_COMPONENT(Cosmic::ParticleEmitterComponent)
 
 
 

@@ -45,6 +45,11 @@ namespace Cosmic
 		ShadowMap() = default;
 		~ShadowMap();
 
+		// Owns GPU resources with an explicit Init/Shutdown lifecycle — copying
+		// would alias that ownership, so it's disabled (same rule as PostProcessStack).
+		ShadowMap(const ShadowMap&)            = delete;
+		ShadowMap& operator=(const ShadowMap&) = delete;
+
 		void Init(uint32_t size = 2048);
 		void Shutdown();
 		bool IsInitialized() const { return m_Initialized; }

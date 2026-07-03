@@ -95,9 +95,9 @@ Carried forward from the original plan and extended — everything already shipp
 | S5 | CAD navigation, ViewCube, gizmos, 3D picking | **S5.1–S5.5 ✅ code-complete 2026-07-02** (roadmap Phase 8; build + `CosmicTests` 73/73 green; user visual pass pending) |
 | S6 | Visual realism core: HDR, PBR+IBL, shadows, SSAO, bloom, AA | **S6.1–S6.7 ✅ code-complete 2026-07-03** (full build + `CosmicTests` 73/73 green; app boots into Engine3DDemo, OpenGL 4.5, all 13 new shaders compile + all post/IBL/shadow FBOs complete with zero error logs; **user visual pass pending**) |
 | S7 | Sky, atmosphere, fog, time-of-day | **S7.1–S7.3 ✅ code-complete 2026-07-03** (analytic sky = the S6.3 procedural environment source; height fog in the tonemap; time-of-day sun scrub drives sky+light+shadows). S7.4 volumetric clouds parked |
-| S8 | Terrain system | planned |
-| S9 | Water system | planned |
-| S10 | GPU particles + volumetrics | planned |
+| S8 | Terrain system | **S8.1–S8.3 ✅ code-complete 2026-07-03** (roadmap Phase 10; S8.4 parked; user visual pass pending) |
+| S9 | Water system | **S9.1–S9.2 ✅ code-complete 2026-07-03** (Tier 1; S9.3 FFT + S9.4 parked per plan; user visual pass pending) |
+| S10 | GPU particles + volumetrics | **S10.1/S10.2/S10.5 ✅ + tier-1 S10.3 code-complete 2026-07-03** (froxel grid + true raymarch = follow-ups; user visual pass pending) |
 | S11 | Weather/nature systems + flagship demos (volcano, snow, ocean) | planned |
 | S12 | Performance & scale (culling, sorting, instancing, LOD, profiler) | planned |
 | S13 | RHI hardening + Vulkan decision gate | gate |
@@ -994,7 +994,40 @@ fog hides the grid horizon.
 
 ---
 
+> **2026-07-03 — Phase 9 post-review hardening (standards/portability pass).** Behavior-neutral
+> foundation fixes applied before Phase 10 landed: (a) `TextureCube` default format →
+> **RGBA16F** (RGB16F is not spec-guaranteed color-renderable — the IBL bake could go
+> FBO-incomplete on non-NVIDIA drivers; RGB16F stays for sampled-only cubes) + a one-time
+> completeness check/log in `BeginRenderToFace`; (b) reserved IBL/shadow **sampler units moved
+> into `BindingPoints.h`** (`TexUnitIbl*`/`TexUnitShadowMap`) and the material path's sampler
+> uniforms are now assigned their units **unconditionally** — a samplerCube left at default
+> unit 0 beside a sampler2D is a draw-time `INVALID_OPERATION` on strict GL drivers (lenient
+> on NVIDIA, fatal on Mesa/ANGLE); the shared injection lives in the new
+> `Renderer3D::ApplySceneBindings(shader)` (terrain/water reuse it); (c) `PostProcessStack`
+> resizes its effect FBOs in place instead of recreating five per viewport drag, caches the
+> SSAO kernel uniform names (no per-frame snprintf), and — like `EnvironmentMap`/`ShadowMap` —
+> is now **non-copyable** (GPU-owning Init/Shutdown types); (d) new generic verb
+> **`RenderCommand::SetBlendMode(Alpha|Additive|Off)`** (§0 rule 4 — S10 particles are the
+> first consumer; Alpha stays the engine default, restore contract like the depth/cull verbs);
+> (e) stale comment fixes (Skybox.glsl draw order, EnvironmentMap unit note).
+
 ## 7. S8 — Terrain system *(engine component; the volcano's foundation)*
+
+> **✅ S8.1–S8.3 CODE-COMPLETE 2026-07-03 (roadmap Phase 10, branch `phase-7-3d-foundations`).**
+> `terrain/Terrain.h/.cpp` + `assets/shaders/Terrain.glsl` + `TerrainComponent` (rendered by
+> `Scene::OnRender3D`). Design: CPU heightfield (16-bit image via `stbi_load_16`, or seeded fBm
+> with optional island edge-falloff) is the query truth; the renderer draws ONE shared 32-quad
+> skirted patch mesh per visible quadtree node, displaced in the vertex stage by `texelFetch`
+> from a packed RGBA8 height(hi/lo-byte)+normal(xz) texture — patch vertices land exactly on
+> texels, so no filtering and no crack ambiguity (skirts curtain the LOD seams). S8.2: 4 splat
+> layers (color × texture, procedural detail default), height/slope auto-splat (parameterized
+> thresholds — no scenario constants), triplanar on steep slopes; lit by the LightsBlock +
+> shadow PCF + IBL irradiance via `Renderer3D::ApplySceneBindings`. S8.3: `SampleHeight`
+> interpolates on the SAME +x+z triangle diagonal the patch mesh draws (unit-tested exact at
+> vertices, ≤ 1 cm inside cells — `tests/test_phase10_world.cpp`); `SampleNormal` bilinear.
+> `Create()` is CPU-only (headless-safe); GPU state is lazy. **Deferred:** S8.4 (tessellation,
+> holes) parked per plan; explicit splat-map texture input is a documented hook; terrain does
+> not yet CAST shadows (receives only — CSM revisit).
 
 1. **S8.1 `TerrainComponent` + renderer.** Heightmap-based: source = image (R16) or procedural
    (engine `math/Noise.h` — see doc 03 E14). Chunked quadtree with distance-based LOD and skirt
@@ -1018,6 +1051,21 @@ within 1 cm in tests.
 
 ## 8. S9 — Water system
 
+> **✅ S9.1–S9.2 CODE-COMPLETE 2026-07-03 (roadmap Phase 10, branch `phase-7-3d-foundations`).**
+> `water/GerstnerWave.h` (pure header math — the single wave-model truth) + `water/Water.h/.cpp`
+> + `assets/shaders/Water.glsl` + `BlitCopy.glsl` + `WaterComponent` (data holder — water is
+> multi-pass, the app sequences it; see Components.h note). S9.1 Tier 1: Gerstner-displaced
+> grid (≤ 4 waves, constants precomputed CPU-side so shader == CPU math), dual counter-scrolling
+> procedural detail normal maps, depth-fade absorption + shoreline foam from the scene depth,
+> refraction via a BlitCopy scene-color grab (mandatory copy — no feedback loop), PLANAR
+> reflection: `BeginReflection` mirrors the camera about the plane and clips at the surface with
+> an **oblique near-plane** (Lengyel) — no new render state; winding flip is benign while cull
+> default is None. Fresnel blend + shadowed sun glint; IBL prefilter fallback when no capture.
+> Depth WRITES stay off during the surface draw (it samples the bound depth — spec feedback
+> rule). S9.2: `SampleHeight/SampleNormal` invert the horizontal Gerstner displacement by
+> fixed-point iteration (unit-tested invariants). **Deferred per plan:** S9.3 FFT ocean
+> (post-S12 profiling), S9.4 underwater; SSR remains the alternate reflection path.
+
 Two tiers; Tier 1 is most of the visual payoff for lakes/rivers.
 
 1. **S9.1 `WaterComponent` Tier 1 (lake/river).** Flat plane (or terrain-carved region):
@@ -1039,6 +1087,24 @@ Two tiers; Tier 1 is most of the visual payoff for lakes/rivers.
 ---
 
 ## 9. S10 — GPU particles & volumetrics
+
+> **✅ S10.1/S10.2/S10.5 + tier-1 S10.3 CODE-COMPLETE 2026-07-03 (roadmap Phase 10, branch
+> `phase-7-3d-foundations`).** `particles/ParticleSystem.h/.cpp` + `ParticleUpdate.glsl`
+> (compute) + `ParticleBillboards.glsl` + `Ribbon.glsl` + `ParticleEmitterComponent`. S10.1:
+> std430 pool on the new engine SSBO slot `Bindings::ParticlesSsbo = 8`, RING-BUFFER emission
+> (CPU hands the compute pass a [start,count) spawn window — no free lists/readbacks; dead
+> slots draw as zero-area quads), Point/Sphere/Cone/Box shapes, gravity/drag/wind, linear
+> size+color over life, world/local space, soft particles (depth fade), flipbook w/ crossfade
+> (procedural soft-puff sheet default — also the S10.4 "flipbook-billboard first" tier), Alpha
+> or Additive per emitter via the new `SetBlendMode` verb, and a CPU fallback whose core
+> (`StepCpu`, same PCG hash as the shader) is pure + unit-tested. S10.2: `RibbonEmitter`
+> camera-facing age-faded strip (dynamic VB). S10.5: emitters render into a PostProcessStack
+> distortion field (`BeginDistortion`/`RenderDistortion`); the tonemap displaces every
+> scene-space fetch by it. S10.3 tier 1: `GodRays.glsl` — dithered raymarch against the S6.4
+> shadow map with forward-scattering phase, added like bloom.
+> **Documented deviations:** fixed-count draw (indirect-draw verb + GPU compaction later); no
+> intra-emitter sorting (S12.2 transparent queue); the froxel grid (true S10.3) and the
+> raymarched local volume (true S10.4) are the named follow-ups.
 
 1. **S10.1 GPU particle system.** SSBO pool + compute update (S4.7) + indirect draw; emitter
    component: spawn shape (point/sphere/cone/box), rate/burst, over-lifetime curves (size, color,

@@ -54,6 +54,16 @@ uniform sampler2D u_Bloom;
 uniform float     u_UseBloom;
 uniform float     u_BloomIntensity;
 
+// Sun shafts (S10.3) — raymarched god rays, additive like bloom.
+uniform sampler2D u_Shafts;
+uniform float     u_UseShafts;
+
+// Heat-haze (S10.5) — an RG offset field (distortion particles) that displaces
+// every scene-space fetch below, so haze bends fog/AO/bloom consistently.
+uniform sampler2D u_Distort;
+uniform float     u_UseDistort;
+uniform float     u_DistortStrength;
+
 // Height fog + aerial perspective (S7.2) — depth-based world-space inscatter,
 // reconstructed from the scene depth. Applied before AO/bloom so distant geometry
 // fades into the sky. The far plane (sky) is skipped so the horizon reads clean.
@@ -79,14 +89,20 @@ vec3 ACESFilmic(vec3 x)
 
 void main()
 {
-    vec3 hdr = texture(u_Scene, v_TexCoord).rgb;
+    // Heat-haze (S10.5): one displaced coordinate feeds every scene-space
+    // sample so the distortion stays coherent across fog, AO, bloom and shafts.
+    vec2 uv = v_TexCoord;
+    if (u_UseDistort > 0.5)
+        uv += texture(u_Distort, v_TexCoord).xy * u_DistortStrength;
+
+    vec3 hdr = texture(u_Scene, uv).rgb;
 
     if (u_UseFog > 0.5)                                // height fog (S7.2)
     {
-        float d = texture(u_Depth, v_TexCoord).r;
+        float d = texture(u_Depth, uv).r;
         if (d < 0.9999)                               // skip the sky / far plane
         {
-            vec4 clip  = vec4(v_TexCoord * 2.0 - 1.0, d * 2.0 - 1.0, 1.0);
+            vec4 clip  = vec4(uv * 2.0 - 1.0, d * 2.0 - 1.0, 1.0);
             vec4 world = u_InvViewProj * clip;
             world /= world.w;
 
@@ -98,9 +114,11 @@ void main()
     }
 
     if (u_UseAO > 0.5)
-        hdr *= texture(u_AO, v_TexCoord).r;           // contact darkening (S6.5)
+        hdr *= texture(u_AO, uv).r;                   // contact darkening (S6.5)
     if (u_UseBloom > 0.5)
-        hdr += texture(u_Bloom, v_TexCoord).rgb * u_BloomIntensity;   // additive glow (S6.6)
+        hdr += texture(u_Bloom, uv).rgb * u_BloomIntensity;   // additive glow (S6.6)
+    if (u_UseShafts > 0.5)
+        hdr += texture(u_Shafts, uv).rgb;             // god rays (S10.3)
 
     vec3 mapped = ACESFilmic(hdr * u_Exposure);
     mapped      = pow(mapped, vec3(1.0 / 2.2));        // linear -> sRGB

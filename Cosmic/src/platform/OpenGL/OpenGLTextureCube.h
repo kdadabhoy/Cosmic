@@ -28,9 +28,10 @@ namespace Cosmic
 		uint32_t m_RendererID = 0;
 		uint32_t m_Size       = 0;
 		uint32_t m_MipLevels  = 1;
-		GLenum   m_InternalFormat = GL_RGB16F;
+		GLenum   m_InternalFormat = GL_RGBA16F;
 
 		// Lazily-created FBO used only when this cube is a render target.
 		uint32_t m_FBO = 0;
+		bool     m_CheckedComplete = false;   // one completeness log per cube
 	};
 }
