@@ -98,7 +98,7 @@ Carried forward from the original plan and extended — everything already shipp
 | S8 | Terrain system | **S8.1–S8.3 ✅ code-complete 2026-07-03** (roadmap Phase 10; S8.4 parked; user visual pass pending) |
 | S9 | Water system | **S9.1–S9.2 ✅ code-complete 2026-07-03** (Tier 1; S9.3 FFT + S9.4 parked per plan; user visual pass pending) |
 | S10 | GPU particles + volumetrics | **S10.1/S10.2/S10.5 ✅ + tier-1 S10.3 code-complete 2026-07-03** (froxel grid + true raymarch = follow-ups; user visual pass pending) |
-| S11 | Weather/nature systems + flagship demos (volcano, snow, ocean) | planned |
+| S11 | Weather/nature systems + flagship demos (volcano, snow, ocean) | ✅ code complete 2026-07-03 (via doc 10 F1–F17) |
 | S12 | Performance & scale (culling, sorting, instancing, LOD, profiler) | planned |
 | S13 | RHI hardening + Vulkan decision gate | gate |
 | S14 | Game-engine tier backlog (animation, physics, editor app, …) | parking lot with unlock conditions |
@@ -1134,6 +1134,14 @@ self-shading; heat shimmer above an emissive surface.
 
 ## 10. S11 — Weather/nature systems + flagship demo apps
 
+> **✅ CODE-COMPLETE 2026-07-03 (via doc 10 F1–F17).** All five `Projects/Frontier` worlds are
+> implemented (seamless island + Night Volcano + Blizzard Peak + Dawn Mirror Lake + Storm Ocean);
+> build + configure green, `CosmicTests` 116/116, smoke-runs of every world render with zero
+> GL/shader/framebuffer errors. Deviations below stand as shipped (one app, deferred snow trails,
+> pulled-forward SceneRenderer/profiler/instancing, water v2 not FFT). **Remaining = the user's
+> on-GPU acceptance pass** (≥ 60 fps at 1080p with the F3 profiler HUD + a committed screenshot per
+> world) — doc 10 F17.
+>
 > **Phase 11 execution plan created 2026-07-03 →
 > [`10-phase11-frontier-plan.md`](10-phase11-frontier-plan.md) (work orders F1–F17).**
 > **Documented deviations (user-approved):** (a) ONE app — `Projects/Frontier`, a world-framework

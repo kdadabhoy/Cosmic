@@ -1013,7 +1013,21 @@ loud. Exposure tuned so lava carries the frame (~0.9), bloom threshold ~1.1.
 
 ## F14 — Blizzard Peak variant
 
-**Status:** ☐ not started
+**Status:** ✅ 2026-07-03 — `BlizzardWorld` rebuilt on the shared world stack: async ridged terrain
+(WorldSize 768, `Resolution 1025`, `Ridged2D`-dominant with a flattened central shelf for the cabin)
+behind the loading overlay; a box + gable-roof cabin (PBR wood + two warm emissive window quads) with
+a wide +Z porch eave, ~1.4k instanced snowy pines (F5 culled, cabin keep-out), and **the first live
+`CoverageCapture` consumer** — the F8 top-down mask accumulates over ~45 s (panel Fill-time + Reset),
+the `SetSnow` overlay (mask-driven, `OverlayAmount` ramped by the accumulated fraction) whitens the
+cabin roof + pine tops while the eave-sheltered porch ground stays bare (mask Y-rejection);
+camera-tracking `Presets::Snowfall` box (`StretchByVelocity 0.01`, `Wind 9/0/3`), grey overcast
+detailed sky + dense fog + bright ambient, gusting `wind` loop (raw voice + volume LFO). Bare-rock
+terrain splat (auto-snow disabled) so the accumulation reads. Build + configure green; **CosmicTests
+116/116**; a temp-auto-enter smoke-run built the 1025² @ 768 m terrain and rendered the
+coverage/snow/cabin/pines path with **zero** GL/shader/framebuffer errors, empty stderr, no crash over
+22 s; no engine (`Cosmic/src`) files touched → Engine3DDemo identical. **Gotcha caught by the smoke
+pass:** terrain `Resolution` must be `32*2^k + 1` (769 was rejected → 1025). *(In-world 45-s
+accumulation + sheltered-porch pixel check = user visual pass.)*
 
 **Files (app):** MODIFY `worlds/BlizzardWorld.cpp`.
 
@@ -1032,7 +1046,16 @@ porch floor stays bare (the mask's Y-rejection working); whiteout depth cues fro
 
 ## F15 — Dawn Mirror Lake variant
 
-**Status:** ☐ not started
+**Status:** ✅ 2026-07-03 — `MirrorLakeWorld`: async basin terrain (WorldSize 1024, `Resolution 1025`
+— a central bowl carved into pine slopes + snow peaks) + a calm lake (2 waves, amplitude ≤ 0.02 m,
+`DetailStrength 0.08`, caustics 0.9, sparkle 0.15, `ReflectionResolution 2048`, `SetShoreTerrain`) so
+the planar reflection reads as a true mirror; golden-hour `DayNightCycle` (locked 6.8 h, panel
+scrub/play) + lens flare + god rays through ~2.6k instanced shoreline pines (F5 culled, lake keep-out),
+three drifting `Presets::Mist` banks skimming the surface, timed fish `SplashRings`, water + soft-wind
+ambience (`DistanceLoop`), underwater medium on a dive. Build green; **CosmicTests 116/116**; a
+temp-auto-enter smoke-run built the 1025² @ 1024 m terrain and rendered terrain + water-v2 reflection
+with **zero** GL errors, empty stderr, no crash; no engine files touched. *(Mirror / mist / caustics
+pixel check = user visual pass.)*
 
 **Files (app):** MODIFY `worlds/MirrorLakeWorld.cpp`.
 
@@ -1049,7 +1072,18 @@ mist drifts; the "realistic water" money shot; ≥ 60 fps.
 
 ## F16 — Storm Ocean variant
 
-**Status:** ☐ not started
+**Status:** ✅ 2026-07-03 — `StormOceanWorld` (open water, no terrain) + NEW header-only
+`common/LightningDirector.h`: an 8-wave storm swell (two big primaries λ 60/38 m + six choppy detail
+waves) with `WhitecapStrength 0.8`, `ReflectionResolution 512`, stormy grey-green palette; a
+camera-tracking `Presets::Rain` box (velocity-stretched streaks, F9) + `SplashRings` scattered on the
+nearby surface; a box-hull + cylinder-mast buoy pitching on `SampleHeight`/`SampleNormal`;
+`LightningDirector` fires every 6–18 s → a decaying cold-white flash multiplies the sun (~×6) + the
+detailed-sky (~×3) intensity and schedules a distance-delayed, distance-scaled `thunder` one-shot
+(F10 `AudioEngine::Play`); storm-grey detailed sky + dense fog, underwater tint/fog on a dive, wind +
+rain-hiss ambience; a "Strike now" panel button. Build green; **CosmicTests 116/116**; a
+temp-auto-enter smoke-run (22 s, incl. a fired strike + delayed thunder) rendered
+whitecaps/rain/buoy/flash with **zero** GL errors, empty stderr, no crash; no engine files touched.
+*(Heavy-seas + lightning pixel check = user visual pass.)*
 
 **Files (app):** MODIFY `worlds/StormOceanWorld.cpp`; NEW `common/LightningDirector.h`.
 
@@ -1070,7 +1104,16 @@ convincingly, lightning flashes then thunder rolls late; camera below the surfac
 
 ## F17 — Performance & acceptance pass (closes the phase)
 
-**Status:** ☐ not started
+**Status:** ✅ 2026-07-03 (code + doc portions) — all five worlds build, unit-test **116/116**, and
+temp-auto-enter smoke-run render with **zero** GL/shader/framebuffer errors + no crash (Island,
+Night Volcano, Blizzard, Mirror Lake, Storm Ocean); the F3 per-pass GPU-profiler HUD is docked in
+every world for the on-GPU evidence pass. Perf headroom already lives in the app-side knobs
+(per-world `ReflectionResolution` 512–2048, emitter/instance counts, the feature toggles in each
+World Settings panel). Item banners here + doc 05 §10 + the master-roadmap Phase 11 line updated.
+**Remaining = the user's on-GPU acceptance pass** (the harness can't grant computer-use to the
+non-installed dev exe): run each world at 1080p, confirm ≥ 60 fps with the HUD open, note the top-3
+per-world costs below, and commit a screenshot of each world + the profiler HUD. Remaining S12 items
+(frustum-culling generalization, sort keys, LOD groups, texture pipeline/sRGB audit) roll to Phase 12.
 
 Profiler-evidence pass over all five worlds at 1080p on the dev GPU: every world ≥ 60 fps with
 the HUD open; note the top-3 costs per world in this doc; obvious wins only (reflection

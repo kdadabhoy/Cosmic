@@ -246,12 +246,21 @@ later) → GPU particles, froxel volumetrics, heat haze. Internally reorderable.
 > **Remaining — user visual pass** of the new toggles + committed screenshots.
 - **Done when:** each system's stage acceptance in doc 05 passes.
 
-### Phase 11 — Flagship demos + performance *(doc 05: S11–S12 → executed via doc 10)*
+### Phase 11 — Flagship demos + performance *(doc 05: S11–S12 → executed via doc 10)* — ✅ code complete 2026-07-03
 Snow/lava systems as generic engine features; ~~`Projects/VolcanoDemo`, `WinterDemo`, ocean/lake
 demo as acceptance scenes~~ **(2026-07-03: one app — `Projects/Frontier` with a world framework —
 replaces the three demo apps; documented deviation in doc 05 §10)**; then culling, sort keys,
 instancing, LODs, GPU profiler, texture pipeline.
-> **Status (2026-07-03): planned in full + foundations committed.** Scope decided with the user
+> **Status (2026-07-03): ALL work orders F1–F17 code-complete.** F1–F13 shipped earlier this session
+> (see doc 10 banners); **F14 (Blizzard Peak — first live `CoverageCapture`/snow-accumulation
+> consumer), F15 (Dawn Mirror Lake — water-v2 mirror + mist + caustics), F16 (Storm Ocean — 8-wave
+> whitecap swell + rain + buoy + `common/LightningDirector` flash/thunder), and F17 (perf/acceptance
+> pass) landed 2026-07-03 (UNcommitted — user commits).** Build + configure green, **CosmicTests
+> 116/116**, and a temp-auto-enter smoke-run of all three new worlds rendered with zero
+> GL/shader/framebuffer errors, empty stderr, no crash; no `Cosmic/src` touched → Engine3DDemo
+> identical. **Remaining = the user's on-GPU acceptance pass** (fly each world at 1080p, confirm
+> ≥ 60 fps with the F3 profiler HUD, commit a screenshot per world) — doc 10 F17. --- history ---
+> **Planned in full + foundations committed.** Scope decided with the user
 > (seamless island world + four focused variants; water v2, no FFT; all add-ons in). The planning
 > session shipped: 8 NEW engine shaders + 6 gated shader upgrades (all default-off — zero visual
 > change until their C++ lands), the compiling `Projects/Frontier` skeleton (homescreen + world
