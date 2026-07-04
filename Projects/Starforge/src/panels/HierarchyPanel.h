@@ -1,21 +1,38 @@
 #pragma once
 
-// HierarchyPanel.h — entity list + selection + create/delete.
+// HierarchyPanel.h — entity tree + selection + create/reparent/delete (E3/E8).
 //
-// SKELETON: flat list of every entity with a TagComponent; click selects.
-//   TODO(E3): parent/child tree (RelationshipComponent), drag-drop reparent.
-//   TODO(E7): create/delete go through the CommandStack (undo).
-//   TODO(E8): multi-select, rename-in-place (F2), duplicate, context create
-//             menu (primitives/lights/camera), search filter.
+// Upgraded from the skeleton flat list into an E3 parent/child tree: click /
+// ctrl-click multi-select (via EditorContext, mirrored to the EntitySelection
+// bus), drag-drop reparent, F2 / context-menu rename, a create menu (empties,
+// lights, camera, primitive meshes), duplicate (Ctrl+D), delete, and a search
+// filter. Every mutation routes through the CommandStack (E7).
 
 #include "EditorContext.h"
+
+#include <functional>
+#include <string>
+#include <vector>
 
 namespace Starforge
 {
     class HierarchyPanel
     {
     public:
-        // Draws the "Hierarchy" window. Dock binding happens in StarforgeApp.
         void OnImGuiRender(EditorContext& ctx);
+
+    private:
+        void DrawNode(EditorContext& ctx, Cosmic::Entity e);
+        void DrawCreateMenu(EditorContext& ctx, Cosmic::Entity parent);
+        void DrawContextMenu(EditorContext& ctx, Cosmic::Entity e);
+
+        char        m_Search[128] = { 0 };
+        uint64_t    m_RenameTarget = 0;     // UUID being renamed inline (0 = none)
+        char        m_RenameBuf[256] = { 0 };
+        bool        m_RenameFocus = false;
+
+        // Deferred structural mutations — collected during the draw and run after,
+        // so the tree isn't mutated mid-iteration.
+        std::vector<std::function<void()>> m_Deferred;
     };
 }

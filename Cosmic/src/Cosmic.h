@@ -21,6 +21,7 @@
 #include "core/Timestep.h"
 #include "core/Log.h"
 #include "core/UUID.h"          // E2 — 64-bit stable entity identity
+#include "core/CommandStack.h"  // E7 — generic undo/redo command stack
 
 // Event System
 #include "events/Event.h"
@@ -115,6 +116,7 @@
 #include "utils/FileSystem.h"
 #include "utils/DataExport.h"
 #include "utils/Config.h"        // E10 — TOML config facade
+#include "utils/FileWatcher.h"   // E10 — directory change notifications
 
 // Telemetry, Recording, and Entity Selection
 #include "telemetry/TelemetryChannel.h"

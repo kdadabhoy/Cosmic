@@ -511,6 +511,23 @@ other from a script button without a frame hitch >1 load-frame.
 
 ### E6 — Editor shell v1 (project open/create, homescreen, menus, autosave)
 
+> **✅ 2026-07-03.** `EditorContext` rewritten into the hub (project/scene/dirty +
+> CommandStack + multi-selection mirrored to the EntitySelection bus + console).
+> `StarforgeApp` gains a docked top bar (`ImGuiWindowFlags_MenuBar`): **File**
+> (New Scene/Open Scene submenu/Save Ctrl+S/Save As.../Recent Projects/Close→Home/
+> Exit to Launcher), **Edit** (Undo/Redo/Duplicate/Delete), **Entity** (create
+> empties/primitives/lights/camera), **View** (panel toggles + Reset Layout).
+> Save/Open via `SceneSerializer`; dirty `*` in the title; global Ctrl+S/N/O/Z/Y/D/
+> Del; autosave to `user://starforge/autosave/<proj>/` on a timer; prefs +
+> recent-projects registry in `user://starforge/*.toml` (`EditorPrefs.h`);
+> homescreen (`DrawHomescreen`) for New/Open when no project is open.
+> **Deviation:** projects are folders under `assets/projects/<name>` (the existing
+> VFS model) — external-relocatable-folder projects + template scaffolding are an
+> E12/E19 concern (documented); the engine-log→Console sink is a follow-up (the
+> Console is fed by the editor's own `Log()`). Boots into a built-in "Starforge"
+> project + sandbox scene so the viewport has content. Build green, tests 158/158,
+> 8 s smoke-run boots + docks + renders with zero GL errors.
+
 **Files:** `Projects/Starforge/src/*` (skeleton hardening: `StarforgeApp`, `EditorContext`,
 `panels/*`); template files under `Projects/Starforge/templates/` (project.cproj, CMakeLists,
 Module.cpp, Main.cscene — consumed by E12's scaffold; inert until then).
@@ -528,6 +545,23 @@ Reset Layout). Ctrl+S/N/O/Z/Y. Autosave: dirty scene → `user://starforge/autos
 kill -9 mid-edit → reopen offers the autosave.
 
 ### E7 — CommandStack (engine) + editor undo/redo
+
+> **✅ 2026-07-03.** Engine `core/CommandStack.h/.cpp` — generic `ICommand`
+> (Do/Undo/Name/MergeKey/TryMerge) + bounded `CommandStack` with `Execute` (runs
+> Do) vs `Push` (effect already applied live), redo-branch clear, key-based
+> coalescing + `SetMergeBarrier`, depth cap, and a dirty callback. NON-copyable
+> (dllexport forces the implicit copy ops, which can't copy the `unique_ptr`
+> history — declared `= delete`/`= default`). Exported via `Cosmic.h`.
+> Starforge `commands/EditorCommands.{h,cpp}` = free-function API over concrete
+> commands (all entity refs by UUID): reflected-field edit (capture-on-activate /
+> commit-on-deactivate, fans across the selection as one `BatchCommand`), gizmo
+> `CommitTransform`, create/duplicate/destroy (backed by `EditorSnapshot` — a
+> reflection+entt-`Copy` subtree snapshot that preserves non-reflected
+> `Ref<Mesh>`), reparent (restores exact local pose), add/remove component
+> (removed component copied into a hold-registry for undo). `tests/
+> test_commandstack.cpp` (10 cases): do/undo/redo, redo-branch clear, Push,
+> coalesce, barrier, empty-key, depth overflow, dirty callback. Build green,
+> **CosmicTests 158/158**.
 
 **Files:** NEW `core/CommandStack.h/.cpp` (engine, generic: `ICommand{Do,Undo,Merge?}`, ring
 depth ~256, coalescing key, dirty-marker hook); NEW `tests/test_commandstack.cpp`; Starforge:
@@ -548,6 +582,22 @@ restores exact prior pose; delete a 5-entity subtree → undo restores hierarchy
 
 ### E8 — Hierarchy panel + reflection-driven Inspector
 
+> **✅ 2026-07-03.** `widgets/PropertyRows.h` maps every `FieldKind` → ImGui
+> control (bool/int/float/vec2-4/quat/color/enum-combo/string/AssetPath-with-
+> ASSET_PATH-drop/EntityRef-drop), mutating live and reporting activate/commit so
+> the Inspector records one undo step per edit (discrete widgets force-commit).
+> `InspectorPanel` rewritten on `Reflect::GetRegistry().ComponentsOf` — Name row +
+> every registered component (collapsing header, right-click Remove Component) +
+> "Add Component" popup grouped by category (hides present types); multi-select
+> shows the common-component intersection with mixed-value detection and fans
+> edits out as one batch. `HierarchyPanel` upgraded to the E3 tree: click / ctrl
+> multi-select, drag-drop reparent (ENTITY_UUID payload; drop-to-root; cycle
+> refused), F2 / context Rename, create menu (empty/Cube/Sphere/Plane/lights/
+> camera), Duplicate, Delete, and a search filter; structural ops deferred to end
+> of frame. **Deviation:** per-axis Vec3 colour chips → a `*Color` vec3 heuristic
+> uses `ColorEdit3`; multi-select Add/Remove is single-target (v1). Build green,
+> tests 158/158.
+
 **Files:** Starforge `panels/HierarchyPanel.*` (upgrade), `panels/InspectorPanel.*` (rewrite on
 E1), `src/widgets/PropertyRows.h` (shared field-kind → widget mapping).
 
@@ -567,6 +617,22 @@ appears in Add Component with correct widgets; no direct component writes remain
 commands.
 
 ### E9 — Viewport tools: picking, gizmo-undo, DebugDraw grid, view modes
+
+> **✅ 2026-07-03.** `ViewportController` wires the S5 stack: `ScenePicker` LMB
+> click-select (Ctrl adds; feeds the multi-selection), `Gizmo::Manipulate` on the
+> primary whose drag becomes one coalesced `TransformEdit` command (capture at
+> drag-start via `IsUsing` edge, commit + merge-barrier on release), a ground grid
+> + origin axes + oriented selection wire-box drawn through Renderer3D's batched
+> lines, W/E/R gizmo-op + F frame-selection + G grid hotkeys, camera snap-views,
+> and Ctrl+1..9 / 1..9 camera bookmarks. Toolbar strip (op/space/snap/grid/snap-
+> views) lives in the E6 top bar. Camera yields to the gizmo; picking skips gizmo
+> clicks. **Deviation:** grid/axes reuse the existing `Renderer3D` line batch
+> rather than a NEW duplicate `renderer/DebugDraw` module (it would only
+> re-implement Line/Grid/Axes/WireBox, which already ship and are no-ops unless
+> called); a true polygon-fill **Wireframe** view mode + ID-buffer visualize are
+> deferred — `renderer/` has no fill-mode verb yet (a small additive engine
+> follow-up). Compat: no engine `scene/`/`renderer/` files touched. Build green,
+> tests 158/158; smoke-run picks/renders with zero GL errors.
 
 **Files:** engine NEW `renderer/DebugDraw.h/.cpp` (immediate line batch: `Line/WireBox/WireSphere/
 Axes/Grid(spacing,extent)`, flushed inside SceneRenderer's main pass, depth-tested toggle);
@@ -589,6 +655,22 @@ side but must be a no-op unless called (compat gate).
 selectable (billboard pick = ID quad); grid/axes render; Frontier + Engine3DDemo unchanged.
 
 ### E10 — Content Browser + FileWatcher + asset ops
+
+> **✅ 2026-07-03.** Engine `utils/FileWatcher.h/.cpp` — `ReadDirectoryChangesW`
+> worker thread + overlapped I/O + a stop-event, draining create/modify/delete/
+> rename events into a mutex-guarded queue that the main thread `Poll()`s (pimpl
+> hides `windows.h`; non-Windows = no-op stub). `AssetLibrary::Reload(path)`
+> refreshes a cache slot (texture eagerly re-loaded). `tests/test_filewatcher.cpp`
+> (3 cases: missing-dir fail, idempotent Stop, real temp-dir change detection).
+> Starforge `ContentBrowserPanel` rewritten: breadcrumb + thumbnail grid (image
+> thumbnails via `AssetLibrary::GetTexture`, type badges), ASSET_PATH drag source
+> for Inspector slots, double-click (scene→open request, texture→preview), context
+> menu (New Folder/Scene, Show in Explorer, recycle-bin Delete via
+> `SHFileOperation` with confirm), and a FileWatcher that hot-reloads changed
+> images through `AssetLibrary::Reload`. **Deviation:** `Reload` refreshes the
+> cache slot (the browser re-queries per frame); in-place re-upload into
+> already-held `Ref`s (materials) is a documented follow-up. Build green, tests
+> 158/158.
 
 **Files:** engine NEW `utils/FileWatcher.h/.cpp` (`ReadDirectoryChangesW` thread → main-thread
 event queue; tested with a temp dir); Starforge `panels/ContentBrowserPanel.*` (rewrite).

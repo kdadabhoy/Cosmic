@@ -60,6 +60,17 @@ namespace Cosmic
 		static void           Clear();
 
 		/**
+		 * @brief Drop the cached entry for `path` and, if it was a texture,
+		 * re-load it from disk into the cache (E10 hot reload). Returns true when
+		 * something was evicted. The next GetTexture(path) returns the refreshed
+		 * image — the content browser re-queries per frame so its thumbnail
+		 * updates within one FileWatcher poll. NOTE: Refs already handed out
+		 * (e.g. a material sampling the old texture) keep the previous GPU handle;
+		 * in-place re-upload into existing Refs is a documented follow-up.
+		 */
+		static bool           Reload(const std::string& path);
+
+		/**
 		 * @brief Canonical cache key for a path — FileSystem::Resolve then
 		 * lexically_normal().generic_string(). Public for tests. No disk I/O.
 		 */

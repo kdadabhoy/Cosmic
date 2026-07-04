@@ -1,24 +1,34 @@
 #pragma once
 
-// InspectorPanel.h — component editor for the selected entity.
+// InspectorPanel.h — reflection-driven component editor (E8).
 //
-// SKELETON: hand-coded UI for the built-in components (Tag, Transform,
-// MeshRenderer, DirectionalLight, PointLight) writing directly to components.
-//   TODO(E1+E8): REPLACED WHOLESALE by the reflection-driven inspector —
-//                every registered component (engine, game module, scripts)
-//                auto-generates its UI from TypeRegistry field descriptors.
-//   TODO(E7):    edits become ReflectedFieldEdit commands (undo/redo, coalesced).
-//   TODO(E8):    "Add Component" popup from the registry, remove-component,
-//                multi-select fan-out.
+// Rewritten on the E1 reflection registry: every registered component of the
+// selection auto-generates its UI from field descriptors (PropertyRows). Edits
+// route through the CommandStack (E7) with a single undo step per edit (capture
+// on activate, commit on deactivate-after-edit), fanning out across a
+// multi-selection. "Add/Remove Component" is driven by the registry.
 
 #include "EditorContext.h"
+
+#include <Cosmic.h>
 
 namespace Starforge
 {
     class InspectorPanel
     {
     public:
-        // Draws the "Inspector" window. Dock binding happens in StarforgeApp.
         void OnImGuiRender(EditorContext& ctx);
+
+    private:
+        // Draws one component's fields; records undo on commit. `typeId` keys the
+        // command; `mixedProbe` supplies per-field mixed-value detection.
+        void DrawComponent(EditorContext& ctx, const Cosmic::Reflect::TypeDescriptor& desc);
+        void DrawName(EditorContext& ctx);
+        void DrawAddComponent(EditorContext& ctx);
+
+        // Drag-start value of the item currently being edited (one active item at
+        // a time), captured on IsItemActivated and consumed on commit.
+        Cosmic::Reflect::FieldValue m_ActiveBefore;
+        bool                        m_HasActive = false;
     };
 }

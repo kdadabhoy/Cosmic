@@ -6,48 +6,152 @@
 // Starforge — shared editor state (docs/plans/11-phase13-starforge-plan.md).
 // ============================================================================
 //
-// One instance owned by StarforgeApp, handed to every panel by pointer each
-// frame. Panels NEVER cache engine pointers across frames; they read this.
-//
-// SKELETON STATUS: holds the in-memory sandbox scene + a single-entity
-// selection + a console line buffer. The work orders grow it:
-//   TODO(E6):  open-project state (paths, project.cproj values, dirty tracking,
-//              recent-projects registry) replaces the hard-coded sandbox.
-//   TODO(E7):  a Cosmic::CommandStack lives here; ALL mutations route through it.
-//   TODO(E8):  multi-selection via the EntitySelection bus replaces `Selected`.
-//   TODO(E13): play-state machine (Edit / Play / Paused) + runtime scene handle.
+// One instance owned by StarforgeApp, handed to every panel by reference each
+// frame. Panels NEVER cache engine pointers across frames; they read this. It
+// is the single hub the Stage-B work orders grew the skeleton into:
+//   E6  — open-project + scene path + dirty tracking + console.
+//   E7  — the Cosmic::CommandStack; ALL mutations route through Commands.
+//   E8  — multi-selection (last selected == primary), mirrored to the shared
+//         EntitySelection bus so engine panels stay in sync.
 // ============================================================================
 
 #include <Cosmic.h>
 #include <entt/entt.hpp>
 
+#include <algorithm>
 #include <string>
 #include <vector>
 
 namespace Starforge
 {
+    enum class LogSeverity { Info, Warn, Error };
+
+    struct ConsoleLine
+    {
+        std::string Text;
+        LogSeverity Severity = LogSeverity::Info;
+    };
+
     struct EditorContext
     {
-        // --- Scene ---------------------------------------------------------
-        Cosmic::Ref<Cosmic::Scene> Scene;          // the open (edit-mode) scene
-        std::string SceneName = "Sandbox";         // TODO(E2): becomes the .cscene path
+        // --- Project (E6) --------------------------------------------------
+        bool        ProjectOpen = false;
+        std::string ProjectName;            // VFS active-project folder (FileSystem)
+        std::string ProjectTitle;           // human-readable, for the window title
 
-        // --- Selection (single-entity skeleton; TODO(E8): EntitySelection bus)
-        entt::entity Selected = entt::null;
+        // --- Scene (E2/E6) -------------------------------------------------
+        Cosmic::Ref<Cosmic::Scene> Scene;
+        std::string SceneName    = "Untitled";  // display name (file stem)
+        std::string SceneVfsPath;               // "project://scenes/Foo.cscene" ("" = never saved)
+        bool        Dirty = false;
 
-        bool HasSelection() const
+        // --- Undo/redo (E7) ------------------------------------------------
+        Cosmic::CommandStack Commands;
+
+        // --- Selection (E8) — multi; Selection.back() is the primary ------
+        std::vector<entt::entity> Selection;
+
+        // --- Console (E6) --------------------------------------------------
+        std::vector<ConsoleLine> ConsoleLines;
+
+        // --- Cross-panel requests (consumed by the shell each frame) -------
+        std::string PendingOpenScene;   // "project://..." set by the Content Browser
+
+        // ===================================================================
+        // Dirty tracking
+        // ===================================================================
+        void MarkDirty()  { Dirty = true; }
+        void ClearDirty() { Dirty = false; }
+
+        bool HasScene() const { return static_cast<bool>(Scene); }
+
+        // ===================================================================
+        // Selection helpers
+        // ===================================================================
+        entt::entity Primary() const { return Selection.empty() ? entt::null : Selection.back(); }
+
+        Cosmic::Entity PrimaryEntity()
         {
-            return Scene && Selected != entt::null && Scene->GetRegistry().valid(Selected);
+            const entt::entity e = Primary();
+            if (Scene && e != entt::null && Scene->GetRegistry().valid(e))
+                return Cosmic::Entity(e, Scene.get());
+            return {};
         }
 
-        // --- Console (skeleton ring buffer; TODO(E6): engine log sink feeds this)
-        std::vector<std::string> ConsoleLines;
+        bool HasSelection() const { return !Selection.empty(); }
 
-        void Log(const std::string& line)
+        bool IsSelected(entt::entity e) const
         {
-            ConsoleLines.push_back(line);
-            if (ConsoleLines.size() > 1000)
-                ConsoleLines.erase(ConsoleLines.begin(), ConsoleLines.begin() + 200);
+            return std::find(Selection.begin(), Selection.end(), e) != Selection.end();
+        }
+
+        // Drop any handles the registry no longer considers valid (post-undo /
+        // post-delete). Fires a bus sync only when something actually changed.
+        void ValidateSelection()
+        {
+            if (!Scene) { if (!Selection.empty()) { Selection.clear(); SyncBus(); } return; }
+            auto& reg = Scene->GetRegistry();
+            const size_t before = Selection.size();
+            Selection.erase(std::remove_if(Selection.begin(), Selection.end(),
+                            [&](entt::entity e) { return !reg.valid(e); }),
+                            Selection.end());
+            if (Selection.size() != before)
+                SyncBus();
+        }
+
+        void ClearSelection() { if (!Selection.empty()) { Selection.clear(); SyncBus(); } }
+
+        void SelectOnly(Cosmic::Entity e)
+        {
+            Selection.clear();
+            if (e) Selection.push_back(static_cast<entt::entity>(e));
+            SyncBus();
+        }
+
+        void AddSelect(Cosmic::Entity e)
+        {
+            if (!e) return;
+            const entt::entity h = static_cast<entt::entity>(e);
+            if (!IsSelected(h)) Selection.push_back(h);
+            SyncBus();
+        }
+
+        void ToggleSelect(Cosmic::Entity e)
+        {
+            if (!e) return;
+            const entt::entity h = static_cast<entt::entity>(e);
+            auto it = std::find(Selection.begin(), Selection.end(), h);
+            if (it != Selection.end()) Selection.erase(it);
+            else                       Selection.push_back(h);
+            SyncBus();
+        }
+
+        // ===================================================================
+        // Console
+        // ===================================================================
+        void Log(const std::string& text, LogSeverity sev = LogSeverity::Info)
+        {
+            ConsoleLines.push_back({ text, sev });
+            if (ConsoleLines.size() > 2000)
+                ConsoleLines.erase(ConsoleLines.begin(), ConsoleLines.begin() + 400);
+        }
+
+        // Mirror the primary selection onto the shared bus so engine-side panels
+        // (telemetry, etc.) track the editor's focus. Multi-select is a Starforge
+        // concept; the bus only carries the primary.
+        void SyncBus()
+        {
+            Cosmic::Entity p = PrimaryEntity();
+            if (p)
+            {
+                const std::string name = p.HasComponent<Cosmic::TagComponent>()
+                    ? p.GetComponent<Cosmic::TagComponent>().Tag : std::string("Entity");
+                Cosmic::EntitySelection::Set(p, name);
+            }
+            else
+            {
+                Cosmic::EntitySelection::Clear();
+            }
         }
     };
 }

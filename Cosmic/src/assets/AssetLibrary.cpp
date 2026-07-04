@@ -85,4 +85,27 @@ namespace Cosmic
 		s_Meshes.clear();
 		s_Models.clear();
 	}
+
+	bool AssetLibrary::Reload(const std::string& path)
+	{
+		const std::string key = NormalizeKey(path);
+		bool evicted = false;
+
+		// Texture: evict, then eagerly reload so the refreshed image is ready for
+		// the next GetTexture (E10 hot reload).
+		if (auto it = s_Textures.find(key); it != s_Textures.end())
+		{
+			s_Textures.erase(it);
+			evicted = true;
+			if (Ref<Texture2D> fresh = Texture2D::Create(FileSystem::Resolve(path)))
+				s_Textures.emplace(key, fresh);
+		}
+
+		// Other resource types: just evict so the next Get* reloads on demand.
+		if (auto it = s_Shaders.find(key); it != s_Shaders.end()) { s_Shaders.erase(it); evicted = true; }
+		if (auto it = s_Meshes.find(key);  it != s_Meshes.end())  { s_Meshes.erase(it);  evicted = true; }
+		if (auto it = s_Models.find(key);  it != s_Models.end())  { s_Models.erase(it);  evicted = true; }
+
+		return evicted;
+	}
 }

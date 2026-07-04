@@ -3,34 +3,28 @@
 // StarforgeApp.h
 //
 // ============================================================================
-// Starforge — the Cosmic editor (root layer).
-// Plan: docs/plans/11-phase13-starforge-plan.md (work orders E1–E21).
+// Starforge — the Cosmic editor (root layer). Stage B (E6–E10) build-out.
+// Plan: docs/plans/11-phase13-starforge-plan.md.
 // ============================================================================
 //
-// Assemble Cosmic scenes visually, attach C++ simulation logic (hot-reloaded
-// project DLLs), press Play, record telemetry, package a standalone app.
-//
-// SKELETON STATUS (written with the plan, 2026-07-03): boots a hard-coded
-// sandbox scene into the workspace viewport with CAD orbit navigation and four
-// live-but-minimal panels (Hierarchy / Inspector / Content Browser / Console).
-// Every wiring point for the work orders carries a TODO(E#) marker:
-//   TODO(E2):  File▸Save/Open — SceneSerializer replaces the sandbox scene.
-//   TODO(E5):  scene loads route through SceneManager (async + transitions).
-//   TODO(E6):  homescreen (recent projects) + project open/create + menus +
-//              autosave; FileSystem::SetActiveProject(<open project>).
-//   TODO(E7):  CommandStack; Ctrl+Z/Y.
-//   TODO(E9):  ScenePicker click-select, Gizmo::Manipulate in the viewport
-//              overlay, DebugDraw grid/axes, view modes, camera bookmarks.
-//   TODO(E13): Play/Pause/Step toolbar + runtime scene.
+// Assemble Cosmic scenes visually, with undo/redo, a reflection-driven
+// inspector, a CAD viewport (pick + gizmo + grid), and an asset browser. This
+// layer is the shell: it owns the EditorContext hub, the editor camera, the
+// panels, the viewport tools, the menus, project/scene open-save, and autosave.
+// (Scripting + Play + packaging arrive in Stages C/D — E11+.)
 // ============================================================================
 
 #include <Cosmic.h>
 
 #include "EditorContext.h"
+#include "EditorPrefs.h"
+#include "ViewportController.h"
 #include "panels/HierarchyPanel.h"
 #include "panels/InspectorPanel.h"
 #include "panels/ContentBrowserPanel.h"
 #include "panels/ConsolePanel.h"
+
+#include <string>
 
 namespace Starforge
 {
@@ -47,22 +41,51 @@ namespace Starforge
         virtual void OnEvent(Cosmic::Event& e) override;
 
     private:
-        void BuildSandboxScene();   // TODO(E6): replaced by project open/create
+        // --- Project / scene lifecycle (E6) --------------------------------
+        void OpenProject(const std::string& name);
+        void NewProject(const std::string& name);
+        void CloseProject();
+        void NewScene();
+        void OpenScene(const std::string& vfsPath);
+        bool SaveScene();                 // false if it needs a name (opens Save As)
+        void SaveSceneToVfs(const std::string& vfsPath);
+        void BuildSandboxScene();
+
+        // --- Shell rendering -----------------------------------------------
         void ApplyDockLayout();
+        void DrawTopBar();                // menus + tool strip (docked window)
+        void DrawMenus();
+        void DrawEntityMenu();
+        void DrawHomescreen();
+        void DrawSaveAsPopup();
+
+        // --- Frame helpers -------------------------------------------------
+        void HandleShortcuts();
+        void Autosave(float ts);
+        void UpdateWindowTitle();
+        void RenderViewport(float ts);
 
         EditorContext m_Ctx;
-
-        // Editor camera — CAD navigation (S5: MMB orbit-about-cursor, scroll-to-
-        // cursor, ViewCube-ready). TODO(E9): Fly toggle + bookmarks + speed UI.
         Cosmic::OrbitCameraController m_Camera{ 16.0f / 9.0f };
+        ViewportController m_Viewport;
 
-        // Panels (each draws one dock-port-bound window).
         HierarchyPanel      m_Hierarchy;
         InspectorPanel      m_Inspector;
         ContentBrowserPanel m_Content;
         ConsolePanel        m_Console;
 
-        bool m_DockApplied = false;
-    };
+        Prefs::EditorSettings m_Settings;
 
-} // namespace Starforge
+        bool  m_DockApplied   = false;
+        bool  m_OpenSaveAs    = false;
+        float m_AutosaveTimer = 0.0f;
+
+        // View-menu panel toggles.
+        bool m_ShowHierarchy = true, m_ShowInspector = true,
+             m_ShowContent   = true, m_ShowConsole   = true;
+
+        // Homescreen / dialogs scratch.
+        char m_NewProjectName[128] = "MyProject";
+        char m_SaveAsName[128]     = "Main";
+    };
+}

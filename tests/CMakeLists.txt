@@ -29,6 +29,8 @@ add_executable(CosmicTests
     test_hierarchy.cpp
     test_scene_components.cpp
     test_scenemanager.cpp
+    test_commandstack.cpp
+    test_filewatcher.cpp
 )
 
 target_link_libraries(CosmicTests PRIVATE Cosmic)

@@ -1,29 +1,41 @@
 #pragma once
 
-// ContentBrowserPanel.h — project:// asset browser.
+// ContentBrowserPanel.h — project:// asset browser (E10).
 //
-// SKELETON: read-only folder/file listing of the project's asset root with
-// breadcrumb navigation. Nothing is clickable beyond navigation.
-//   TODO(E10): grid view + type icons + texture thumbnails, drag sources
-//              (AssetPath payload / scene drop), create/rename/delete ops,
-//              FileWatcher-driven refresh + AssetLibrary hot reload.
-//   TODO(E16): OS-file drag-in triggers the assimp import pipeline.
+// Grid + breadcrumb view of the project's asset root with texture thumbnails and
+// type badges, drag sources that feed Inspector AssetPath slots (ASSET_PATH
+// payload), double-click actions (scene→open, texture→preview), a context menu
+// (new folder/scene, show-in-explorer, recycle-bin delete), and a FileWatcher
+// that hot-reloads changed textures through AssetLibrary::Reload so the viewport
+// updates within a poll.
 
 #include "EditorContext.h"
 
 #include <filesystem>
+#include <string>
 
 namespace Starforge
 {
     class ContentBrowserPanel
     {
     public:
-        // Draws the "Content Browser" window. Dock binding happens in StarforgeApp.
+        ~ContentBrowserPanel();
         void OnImGuiRender(EditorContext& ctx);
 
+        // Re-resolve project:// (call when the active project changes).
+        void Reset();
+
     private:
-        std::filesystem::path m_Root;      // resolved project:// asset root
-        std::filesystem::path m_Current;   // current directory (under m_Root)
-        bool m_Resolved = false;
+        void EnsureResolved();
+        std::string VfsPathOf(const std::filesystem::path& p) const;
+
+        std::filesystem::path m_Root;
+        std::filesystem::path m_Current;
+        bool                  m_Resolved   = false;
+        bool                  m_WatchOn     = false;
+        Cosmic::FileWatcher   m_Watcher;
+
+        std::string           m_Preview;        // vfs path of the texture preview popup
+        std::string           m_DeleteTarget;   // disk path pending delete confirmation
     };
 }
