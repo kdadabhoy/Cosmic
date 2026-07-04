@@ -16,6 +16,8 @@
 #include "reflect/TypeRegistry.h"
 
 #include <filesystem>
+#include <fstream>
+#include <sstream>
 #include <string>
 #include <unordered_set>
 
@@ -141,6 +143,54 @@ TEST_CASE("E2: unknown component blocks survive a round-trip verbatim")
     REQUIRE(SceneSerializer::LoadFromString(scene2, save1));
     const std::string save2 = SceneSerializer::SaveToString(scene2);
     CHECK(save1 == save2);
+}
+
+TEST_CASE("E21: Save rotates the previous file to a single .bak (crash-safe)")
+{
+    namespace fs = std::filesystem;
+
+    auto readFile = [](const fs::path& p)
+    {
+        std::ifstream is(p, std::ios::binary);
+        std::stringstream ss; ss << is.rdbuf();
+        return ss.str();
+    };
+
+    const fs::path path = fs::temp_directory_path() / "cosmic_bak_test.cscene";
+    const fs::path bak  = fs::path(path).concat(".bak");
+    std::error_code ec;
+    fs::remove(path, ec);
+    fs::remove(bak, ec);
+
+    // First save: no prior file, so NO backup is produced.
+    Scene s1;
+    s1.CreateEntity("First");
+    const std::string json1 = SceneSerializer::SaveToString(s1);
+    REQUIRE(SceneSerializer::Save(s1, path.string()));
+    CHECK(fs::exists(path));
+    CHECK_FALSE(fs::exists(bak));
+
+    // Second save over the same path: the previous file rotates to .bak, which
+    // must hold the FIRST scene; the live file now holds the SECOND.
+    Scene s2;
+    s2.CreateEntity("Second");
+    const std::string json2 = SceneSerializer::SaveToString(s2);
+    REQUIRE(SceneSerializer::Save(s2, path.string()));
+    REQUIRE(fs::exists(bak));
+    CHECK(readFile(bak)  == json1);
+    CHECK(readFile(path) == json2);
+
+    // Third save keeps exactly ONE backup — .bak now holds the SECOND scene
+    // (not the first), proving the rotation replaces rather than accumulates.
+    Scene s3;
+    s3.CreateEntity("Third");
+    const std::string json3 = SceneSerializer::SaveToString(s3);
+    REQUIRE(SceneSerializer::Save(s3, path.string()));
+    CHECK(readFile(bak)  == json2);
+    CHECK(readFile(path) == json3);
+
+    fs::remove(path, ec);
+    fs::remove(bak, ec);
 }
 
 TEST_CASE("E14: a prefab subtree instantiates with fresh UUIDs and preserved hierarchy")

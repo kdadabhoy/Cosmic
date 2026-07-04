@@ -95,11 +95,13 @@ namespace Starforge
         {
             // Flat filtered list.
             auto view = ctx.Scene->GetRegistry().view<TagComponent>();
+            bool anyMatch = false;
             for (auto handle : view)
             {
                 const auto& tag = view.get<TagComponent>(handle);
                 if (ToLower(tag.Tag).find(filter) == std::string::npos)
                     continue;
+                anyMatch = true;
                 Entity e(handle, ctx.Scene.get());
                 const bool sel = ctx.IsSelected(handle);
                 if (ImGui::Selectable(tag.Tag.c_str(), sel))
@@ -108,6 +110,8 @@ namespace Starforge
                     else                        ctx.SelectOnly(e);
                 }
             }
+            if (!anyMatch)
+                ImGui::TextDisabled("No entities match \"%s\".", m_Search);
         }
         else
         {
@@ -117,6 +121,13 @@ namespace Starforge
             for (auto handle : view)
                 if (IsRoot(*ctx.Scene, handle))
                     roots.push_back(Entity(handle, ctx.Scene.get()));
+            if (roots.empty())
+            {
+                // Empty-state hint (E21): how to put the first entity on screen.
+                ImGui::TextDisabled("Scene is empty.");
+                ImGui::TextDisabled("Click \"+ Create\" above (or use the Entity menu)");
+                ImGui::TextDisabled("to add your first entity.");
+            }
             for (Entity r : roots)
                 DrawNode(ctx, r);
         }

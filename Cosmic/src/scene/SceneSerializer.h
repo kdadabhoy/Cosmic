@@ -28,9 +28,11 @@ namespace Cosmic
     class COSMIC_API SceneSerializer
     {
     public:
-        // File I/O. Save writes atomically (temp file + rename). Load does NOT
-        // clear the scene first — the editor loads into a fresh Scene. Both
-        // return false on I/O or parse failure (and log).
+        // File I/O. Save writes atomically (temp file + rename) and, before
+        // overwriting an existing file, rotates it to "<path>.bak" (one
+        // crash-safe backup kept — E21). Load does NOT clear the scene first —
+        // the editor loads into a fresh Scene. Both return false on I/O or parse
+        // failure (and log).
         static bool Save(Scene& scene, const std::string& path);
         static bool Load(Scene& scene, const std::string& path);
 

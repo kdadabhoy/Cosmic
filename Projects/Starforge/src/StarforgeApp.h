@@ -101,6 +101,11 @@ namespace Starforge
         // --- Polish (E21) --------------------------------------------------
         void DrawStatsWindow();  // entity + Renderer3D draw statistics
         void DrawHelpPopups();   // keyboard-shortcut reference
+        void ApplyEditorTheme(); // register + apply the "Starforge" forge accent
+        void DrawFirstRunPopup();          // one-time offer of the Forge Playground sample
+        bool BuildForgePlayground();       // scaffold + author the sample project
+        void GenerateSampleTake();         // pre-baked telemetry take for the sample
+        bool ForgePlaygroundExists() const;
 
         // --- Frame helpers -------------------------------------------------
         void HandleShortcuts();
@@ -156,6 +161,8 @@ namespace Starforge
         bool m_ShowTelemetry = false;     // E20 (off by default)
         bool m_ShowStats = false;         // E21 statistics window
         bool m_OpenShortcuts = false;     // E21 shortcut reference modal
+        bool m_OpenFirstRun  = false;     // E21 first-run Forge Playground offer
+        std::string m_PrevTheme;          // theme to restore on detach (E21)
 
         // Homescreen / dialogs scratch.
         char m_NewProjectName[128] = "MyProject";

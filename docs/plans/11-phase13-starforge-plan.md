@@ -1151,17 +1151,47 @@ plots during Play, CSV matches fixed-dt sample count exactly, take reloads after
 
 ### E21 — Polish, stats, docs, acceptance demo
 
-> **◑ (partial) 2026-07-04.** Shipped the polish subset: **Statistics** window
-> (View menu — entity/selection counts + `Renderer3D::GetStats()` draw calls /
-> submitted / frustum-culled / drawn / auto-instance batches + FPS), a **Help ▸
-> Keyboard Shortcuts** reference modal, and the user guide
-> [`docs/design/starforge-ui.md`](../design/starforge-ui.md) (covers primitives,
-> import, materials, environment, Play, and the E19 `boot.cfg` packaging flow).
-> Build green, zero warnings, **CosmicTests 180/180**. **Remaining for full E21:**
-> crash-safe `.bak` save rotation, a Starforge accent theme pass, empty-state hints
-> in every panel, the "Forge Playground" first-run sample project, and the recorded
-> end-to-end **phase acceptance demo** (which also needs E18 + E20). README §1.5 got
-> no edit yet (the `boot.cfg` mechanism is documented in the user guide instead).
+> **✅ 2026-07-04.** Completed the polish set on top of the earlier subset
+> (Statistics window + **Help ▸ Keyboard Shortcuts** modal +
+> [`docs/design/starforge-ui.md`](../design/starforge-ui.md)):
+> **(1) Crash-safe `.bak` rotation** — generic engine `SceneSerializer::Save` now
+> rolls the existing file to `<path>.bak` (keep exactly 1 — the last good version)
+> *before* the atomic temp+rename overwrite; a failed copy is logged, non-fatal.
+> New headless `test_scene_serializer.cpp` case proves first-save makes no backup,
+> the second rotates the first version into `.bak`, and a third replaces (not
+> accumulates) it. **(2) Starforge accent theme** — `StarforgeApp::ApplyEditorTheme`
+> clones the engine's data-driven **Sleek Pro** base and repaints the accent
+> molten-orange, `Register`s it as "Starforge" and `Apply`s on `OnAttach`;
+> `OnDetach` restores the theme captured on entry so a sibling app/Launcher shown
+> next *in the same process* is untouched (fresh launches never load Starforge → no
+> registry change → compat gate holds). **(3) Empty-state hints** — audited all
+> seven panels; the Inspector/Content/Environment/Material/WorldSystems/Telemetry
+> already carried "how to start" lines, so added the two gaps: Hierarchy now shows a
+> *Scene is empty → + Create* hint (and a no-search-match line), and the Material
+> panel a *New → Save .cmat → Assign* intro when nothing is loaded.
+> **(4) "Forge Playground" sample** (needed E18+E20 — both ✅) — offered once via a
+> first-run **Welcome** modal (pref `playground_offered`) and a Home button;
+> `BuildForgePlayground` reuses the E12 `ScaffoldProject` path (`ForgePlayground`,
+> no space → clean DLL/target name) then authors a data-only showcase scene
+> (Sun + Environment + recipe **terrain** + **lake** + campfire **emitter** +
+> primitives + a `BouncingBall` **NativeScript** + camera) and `GenerateSampleTake`
+> pre-bakes a 6 s bouncing-ball take through the real `DataRecorder`→scene.bin/CSV
+> path into `user://starforge/takes/ForgePlayground_sample` (headless — no GL), so
+> the Telemetry panel's *Saved takes* browser has something to Load out of the box.
+> **(5) Recorded acceptance demo** — the automated half is green in `CosmicTests`;
+> the on-GPU recording is scripted turnkey in
+> [`docs/design/starforge-acceptance-demo.md`](../design/starforge-acceptance-demo.md)
+> (new project → import → build a scene → write+hot-reload a C++ script → Play with
+> live telemetry → Package → run the shipped exe on a clean path) and is the user's
+> final on-machine step = Phase 13's definition of done.
+> Build green, **zero warnings (all 5 projects), CosmicTests 189/189** (was 188).
+> **Deviations:** (a) the theme is registered app-side (not a `layers/ImGuiThemes.h`
+> built-in) so the engine never gains a Starforge name (plan §0 rule 2); (b) the
+> sample take lives in the global `user://starforge/takes/` (shared by design — it's
+> a sample), and its `BouncingBall` script channels resolve only after **Build
+> Scripts**; (c) the phase-acceptance video is inherently the user's GPU/capture
+> step (like the E18/E19/E20 manual demos). README §1.5 unchanged (boot.cfg is
+> documented in the user guide).
 (only if new scripts/flags appeared — E19's `boot.cfg` counts); update this doc + roadmap
 banners.
 

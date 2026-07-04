@@ -265,6 +265,27 @@ namespace Cosmic
             }
             return true;
         }
+
+        // Crash-safe single-backup rotation (E21): before an existing file is
+        // overwritten, copy it to "<path>.bak" (replacing any previous backup).
+        // Keeps exactly one backup — the last SUCCESSFULLY saved version — so a
+        // crash mid-write (or a bad edit) is always recoverable. No-op on the
+        // first save (nothing to back up). A failed copy is non-fatal: it is
+        // logged and the save proceeds (a save must never be blocked by backup
+        // trouble).
+        void RotateBackup(const std::string& path)
+        {
+            namespace fs = std::filesystem;
+            const fs::path dest = fs::u8path(path);
+            std::error_code ec;
+            if (!fs::exists(dest, ec))
+                return;
+            const fs::path bak = fs::path(dest).concat(".bak");
+            fs::copy_file(dest, bak, fs::copy_options::overwrite_existing, ec);
+            if (ec)
+                CS_CORE_WARN("SceneSerializer: could not roll backup for {0}: {1}",
+                             path, ec.message());
+        }
     }
 
     std::string SceneSerializer::SaveToString(Scene& scene)
@@ -346,6 +367,7 @@ namespace Cosmic
 
     bool SceneSerializer::Save(Scene& scene, const std::string& path)
     {
+        RotateBackup(path);   // E21: keep one crash-safe "<path>.bak"
         return WriteTextAtomic(path, SaveToString(scene));
     }
 

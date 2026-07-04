@@ -308,7 +308,7 @@ game-engine backlog (animation, Jolt gate, editor app, serialization) against re
 > auto-instance ring, LOD swaps at 15/35/90 m) + the Frontier worlds (profiler HUD cull-rate
 > rows), confirm ≥ 60 fps and CPU≪GPU, commit screenshots; then this phase closes.
 
-### Phase 13 — Starforge editor *(doc 11 — promotes the doc 05 S14 backlog)*
+### Phase 13 — Starforge editor *(doc 11 — promotes the doc 05 S14 backlog)* — ✅ code complete 2026-07-04
 The Cosmic editor: assemble scenes visually (hierarchy/inspector/content browser on the S5
 viewport), reflection-driven serialization + undo, per-entity **C++ scripts in hot-reloaded
 project DLLs** (Lua mapped, parked), parametric primitives + assimp import (FBX/OBJ/STL; STEP
@@ -365,9 +365,18 @@ Phase 11's SceneRenderer; interleave at will.
 > right-click, sample once per fixed step into the existing DataRecorder store, live ImPlot
 > scopes + post-Stop scrub, Export CSV via DataExport, takes autosaved/reloaded to
 > `user://starforge/takes/` via DataPlayer) + BouncingBall/PidController sample scripts;
-> CosmicTests 188/188, zero warnings, compat gate satisfied. **All Stage-D work orders done —
-> Phase 13 code-complete except E21's remaining theme pass / "Forge Playground" sample project /
-> recorded end-to-end acceptance demo (which can now be recorded).**
+> CosmicTests 188/188, zero warnings, compat gate satisfied. **E21** polish **completed
+> 2026-07-04** (UNcommitted): crash-safe `.bak` rotation in the generic engine `SceneSerializer::
+> Save` (one backup kept, +headless test), a Starforge molten-orange accent theme (app-side
+> `ThemeManager` clone of Sleek Pro, applied on attach / restored on detach), empty-state "how to
+> start" hints across the panels (Hierarchy + Material gaps closed), the **"Forge Playground"**
+> first-run sample project (reuses the E12 scaffold; authors a terrain/lake/campfire + primitives
+> + a bouncing-ball C++ script scene + a pre-baked telemetry take via the real DataRecorder path),
+> and the turnkey recorded-acceptance script `docs/design/starforge-acceptance-demo.md`.
+> CosmicTests **189/189**, zero warnings (all 5 projects), compat gate satisfied. **Phase 13
+> (E1–E21) CODE-COMPLETE 2026-07-04 (UNcommitted)** — the recorded end-to-end acceptance demo (new
+> project → import → build scene → write+hot-reload a C++ script → Play w/ live telemetry →
+> Package → run the shipped exe on a clean path) is the user's on-GPU definition-of-done step.
 - **Do:** doc 11 work orders in order: E1 reflection → E2 UUID+JSON serializer → E3 hierarchy →
   E4 camera/environment components → E5 SceneManager → E6 shell → E7 undo → E8 inspector →
   E9 viewport tools → E10 content browser → E11 script host → E12 hot reload → E13 play mode →

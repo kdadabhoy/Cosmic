@@ -24,6 +24,7 @@ namespace Starforge::Prefs
     {
         float AutosaveMinutes = 5.0f;
         float CameraSpeed     = 1.0f;
+        bool  PlaygroundOffered = false;   // E21 — first-run sample already offered
     };
 
     inline std::string RecentPath() { return Cosmic::FileSystem::Resolve("user://starforge/projects.toml"); }
@@ -78,6 +79,7 @@ namespace Starforge::Prefs
         {
             s.AutosaveMinutes = cfg->GetFloat("autosave_minutes", s.AutosaveMinutes);
             s.CameraSpeed     = cfg->GetFloat("camera_speed", s.CameraSpeed);
+            s.PlaygroundOffered = cfg->GetBool("playground_offered", s.PlaygroundOffered);
         }
         return s;
     }
@@ -90,6 +92,7 @@ namespace Starforge::Prefs
         f << "# Starforge editor preferences\n";
         f << "autosave_minutes = " << s.AutosaveMinutes << "\n";
         f << "camera_speed = " << s.CameraSpeed << "\n";
+        f << "playground_offered = " << (s.PlaygroundOffered ? "true" : "false") << "\n";
     }
 
     // Existing projects = subfolders of assets/projects/ that carry a project.cproj.

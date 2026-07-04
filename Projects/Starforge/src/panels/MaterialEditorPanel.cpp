@@ -51,6 +51,10 @@ namespace Starforge
                 ImGui::TextDisabled("%s", m_Path.c_str());
             }
 
+            // Empty-state hint (E21): the New -> tune -> Save -> Assign flow.
+            if (m_Path.empty())
+                ImGui::TextDisabled("New material — tune below, Save .cmat, then Assign to a selected mesh.");
+
             ImGui::Separator();
 
             // --- Reflected material fields (auto-UI) -----------------------

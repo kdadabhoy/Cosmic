@@ -55,7 +55,17 @@ namespace Starforge
         m_Camera.SnapView(Cosmic::ViewPreset::Iso, /*animate=*/false);
         m_Viewport.Init();
 
+        // Editor identity: apply the forge accent, remembering the previous theme
+        // so OnDetach restores it (other apps in the same process stay untouched).
+        m_PrevTheme = Cosmic::ThemeManager::CurrentName();
+        ApplyEditorTheme();
+
         m_Settings = Prefs::LoadSettings();
+
+        // First-run: offer the "Forge Playground" sample once (E21). Only when the
+        // sample isn't already present and the user hasn't been asked before.
+        if (!m_Settings.PlaygroundOffered && !ForgePlaygroundExists())
+            m_OpenFirstRun = true;
 
         // Route command-stack activity to the dirty flag (belt-and-suspenders —
         // commands also mark dirty directly).
@@ -85,6 +95,11 @@ namespace Starforge
         m_Ctx.Scene.reset();         // drop the scene while the module is still loaded
         m_EditSceneBackup.reset();
         m_Module.Unload();           // then FreeLibrary
+
+        // Restore the theme we replaced so a sibling app (or the Launcher) shown
+        // next in this process gets its own look, not the forge accent (E21).
+        if (!m_PrevTheme.empty())
+            Cosmic::ThemeManager::Apply(m_PrevTheme);
 
         Cosmic::Log::SetLogDirectory("logs");
         CS_INFO("Starforge: detached.");
@@ -665,6 +680,7 @@ namespace Starforge
         DrawImportModelPopup();
         DrawPackagePopup();
         DrawHelpPopups();
+        DrawFirstRunPopup();
         HandleShortcuts();
         m_Ctx.ValidateSelection();
     }
@@ -918,6 +934,197 @@ namespace Starforge
         }
     }
 
+    // ---- Starforge accent theme (E21) -------------------------------------
+    void StarforgeApp::ApplyEditorTheme()
+    {
+        // Forge accent: start from the engine's data-driven "Sleek Pro" pro-dark
+        // base and repaint just the accent colours molten-orange, so the editor
+        // reads as Starforge without authoring a whole colour table. Registered
+        // (so a Theme Studio picker can see it) and applied; OnDetach restores the
+        // previous theme so sibling apps in the same process stay pristine.
+        Cosmic::Theme t;
+        if (const Cosmic::Theme* base = Cosmic::ThemeManager::Find("Sleek Pro"))
+            t = *base;
+        else
+            t = Cosmic::ThemeManager::CaptureCurrentStyle("Starforge");   // fallback
+        t.name    = "Starforge";
+        t.builtIn = false;
+
+        const ImVec4 forge  = ImVec4(0.95f, 0.48f, 0.16f, 1.00f);   // molten orange
+        const ImVec4 forgeD = ImVec4(0.72f, 0.34f, 0.10f, 1.00f);
+        t.accent = forge;
+
+        ImVec4* c = t.colors;
+        c[ImGuiCol_CheckMark]          = forge;
+        c[ImGuiCol_SliderGrab]         = forgeD;
+        c[ImGuiCol_SliderGrabActive]   = forge;
+        c[ImGuiCol_HeaderHovered]      = ImVec4(forge.x, forge.y, forge.z, 0.22f);
+        c[ImGuiCol_HeaderActive]       = ImVec4(forge.x, forge.y, forge.z, 0.34f);
+        c[ImGuiCol_SeparatorHovered]   = ImVec4(forge.x, forge.y, forge.z, 0.50f);
+        c[ImGuiCol_SeparatorActive]    = forge;
+        c[ImGuiCol_ResizeGripHovered]  = ImVec4(forge.x, forge.y, forge.z, 0.55f);
+        c[ImGuiCol_ResizeGripActive]   = forge;
+        c[ImGuiCol_TabHovered]         = ImVec4(forge.x, forge.y, forge.z, 0.40f);
+        c[ImGuiCol_TabActive]          = ImVec4(0.22f, 0.15f, 0.09f, 1.00f);
+        c[ImGuiCol_TabUnfocusedActive] = ImVec4(0.16f, 0.12f, 0.09f, 1.00f);
+        c[ImGuiCol_DockingPreview]     = ImVec4(forge.x, forge.y, forge.z, 0.30f);
+        c[ImGuiCol_TextSelectedBg]     = ImVec4(forge.x, forge.y, forge.z, 0.28f);
+        c[ImGuiCol_TitleBgActive]      = ImVec4(0.13f, 0.10f, 0.08f, 1.00f);
+        c[ImGuiCol_PlotLines]          = forge;
+        c[ImGuiCol_PlotHistogram]      = forge;
+
+        Cosmic::ThemeManager::Register(t);
+        Cosmic::ThemeManager::Apply("Starforge");
+    }
+
+    // ---- Forge Playground first-run sample (E21) --------------------------
+    bool StarforgeApp::ForgePlaygroundExists() const
+    {
+        std::error_code ec;
+        return fs::exists(fs::path("assets") / "projects" / "ForgePlayground" / "project.cproj", ec);
+    }
+
+    void StarforgeApp::DrawFirstRunPopup()
+    {
+        if (m_OpenFirstRun)
+        {
+            ImGui::OpenPopup("Welcome to Starforge");
+            m_OpenFirstRun = false;
+        }
+        if (ImGui::BeginPopupModal("Welcome to Starforge", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+        {
+            ImGui::TextUnformatted("Welcome to Starforge — where worlds are forged.");
+            ImGui::Spacing();
+            ImGui::TextDisabled("\"Forge Playground\" is a ready-made project that shows the toolset:");
+            ImGui::BulletText("terrain, a lake, and a campfire emitter");
+            ImGui::BulletText("primitives + a bouncing-ball C++ script (Build Scripts to compile)");
+            ImGui::BulletText("a saved telemetry take to load in the Telemetry panel");
+            ImGui::Spacing();
+            ImGui::TextDisabled("Create it now, or start from a blank project any time.");
+            ImGui::Separator();
+
+            if (ImGui::Button("Create Forge Playground", ImVec2(200, 0)))
+            {
+                m_Settings.PlaygroundOffered = true;
+                Prefs::SaveSettings(m_Settings);
+                if (BuildForgePlayground())
+                    OpenProject("ForgePlayground");
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Maybe later", ImVec2(120, 0)))
+            {
+                m_Settings.PlaygroundOffered = true;
+                Prefs::SaveSettings(m_Settings);
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::EndPopup();
+        }
+    }
+
+    bool StarforgeApp::BuildForgePlayground()
+    {
+        using namespace Cosmic;
+        const std::string proj = "ForgePlayground";
+
+        // Reuse the E12 scaffold path (scripts + Module.cpp + CMakeLists +
+        // project.cproj), then replace the template scene with a richer one.
+        if (!ScaffoldProject(proj))
+        {
+            m_Ctx.Log("[Playground] Could not scaffold — templates unavailable.", LogSeverity::Error);
+            return false;
+        }
+        FileSystem::SetActiveProject(proj);
+
+        // Author the showcase scene purely in data (no GL needed here — the
+        // primitive/terrain/water/emitter meshes are built later by the scene's
+        // Sync* passes on first render).
+        Ref<Scene> scene = Scene::Create();
+
+        { Entity e = scene->CreateEntity("Sun");
+          auto& l = e.AddComponent<DirectionalLightComponent>();
+          l.Direction = { -0.32f, -0.85f, -0.45f }; l.Color = { 1.0f, 0.93f, 0.82f }; l.Intensity = 1.15f; }
+
+        { Entity e = scene->CreateEntity("Environment");
+          auto& env = e.AddComponent<EnvironmentComponent>();
+          env.TimeOfDay = 17.5f;                 // warm low-sun look (tune in the Environment panel)
+          env.Fog = true; env.FogDensity = 0.012f; }
+
+        { Entity e = scene->CreateEntity("Terrain");
+          auto& t = e.AddComponent<TerrainComponent>();
+          t.UseRecipe = true; t.WorldSize = 256.0f; t.Resolution = 257;
+          t.HeightScale = 26.0f; t.Frequency = 2.5f; t.EdgeFalloff = 0.65f; }
+
+        { Entity e = scene->CreateEntity("Lake");
+          auto& w = e.AddComponent<WaterComponent>();
+          w.UseRecipe = true; w.Preset = WaterPreset::Lake;
+          w.Extent = { 130.0f, 130.0f }; w.SurfaceHeight = 2.0f; }
+
+        { Entity e = scene->CreateEntity("Campfire");
+          e.GetComponent<TransformComponent>().Position = { 0.0f, 3.0f, 0.0f };
+          e.AddComponent<ParticleEmitterComponent>().UseRecipe = true; }   // default = ember cone
+
+        { Entity e = scene->CreateEntity("Anvil");
+          e.GetComponent<TransformComponent>().Position = { 2.2f, 3.2f, 0.0f };
+          e.AddComponent<PrimitiveMeshComponent>(PrimitiveMeshComponent::Shape::Box).Size = { 1.4f, 0.8f, 0.7f };
+          e.AddComponent<MeshRendererComponent>().Color = { 0.24f, 0.25f, 0.28f, 1.0f }; }
+
+        { Entity e = scene->CreateEntity("Ingot");
+          e.GetComponent<TransformComponent>().Position = { -2.2f, 3.4f, 0.0f };
+          e.AddComponent<PrimitiveMeshComponent>(PrimitiveMeshComponent::Shape::Sphere).Radius = 0.6f;
+          e.AddComponent<MeshRendererComponent>().Color = { 0.95f, 0.52f, 0.16f, 1.0f }; }
+
+        // Telemetry demo: the BouncingBall script (in the scaffolded module) pushes
+        // height/velY channels. ClassName resolves after "Build Scripts" (Ctrl+B).
+        { Entity e = scene->CreateEntity("Bouncing Ball");
+          e.GetComponent<TransformComponent>().Position = { 0.0f, 8.0f, 5.0f };
+          e.AddComponent<PrimitiveMeshComponent>(PrimitiveMeshComponent::Shape::Sphere).Radius = 0.4f;
+          e.AddComponent<MeshRendererComponent>().Color = { 0.90f, 0.90f, 0.95f, 1.0f };
+          e.AddComponent<NativeScriptComponent>("BouncingBall"); }
+
+        { Entity e = scene->CreateEntity("Camera");
+          auto& tr = e.GetComponent<TransformComponent>();
+          tr.Position = { 0.0f, 7.0f, 20.0f }; tr.Rotation = { -12.0f, 0.0f, 0.0f };
+          e.AddComponent<CameraComponent>(); }
+
+        SceneSerializer::Save(*scene, FileSystem::Resolve("project://scenes/Main.cscene"));
+
+        GenerateSampleTake();
+
+        m_Ctx.Log("[Playground] Created the Forge Playground sample project.");
+        return true;
+    }
+
+    void StarforgeApp::GenerateSampleTake()
+    {
+        // Pre-bake a bouncing-ball telemetry take so the Telemetry panel's
+        // "Saved takes" browser has something to Load out of the box. This dogfoods
+        // the same DataRecorder->scene.bin/CSV path a live recording uses (E20), and
+        // is fully headless (no GL / no Play loop).
+        const std::string base = Cosmic::FileSystem::Resolve("user://starforge/takes");
+        std::error_code ec; fs::create_directories(base, ec);
+        const std::string name = "ForgePlayground_sample";
+
+        Cosmic::DataRecorder rec;
+        const uint32_t id = rec.Register("BouncingBall", "BouncingBall", { "height", "velY" });
+        const float dt = 1.0f / 60.0f;
+        rec.ReserveCapacity(static_cast<size_t>(6.0f / dt) + 4);
+
+        float h = 8.0f, v = 0.0f;
+        const float g = -9.81f, restitution = 0.72f;
+        for (int i = 0; i < 360; ++i)   // 6 seconds
+        {
+            v += g * dt;
+            h += v * dt;
+            if (h < 0.4f) { h = 0.4f; v = -v * restitution; }   // floor bounce
+            rec.Tick(dt);
+            rec.Record(id, { h, v });
+        }
+        rec.Flush(base, name, 1.0f / dt);
+        rec.WaitForFlush();
+        m_Ctx.Log("[Playground] Sample telemetry take: user://starforge/takes/" + name);
+    }
+
     void StarforgeApp::DrawEntityMenu()
     {
         auto make = [&](const char* label, std::function<void(Cosmic::Entity)> build)
@@ -987,6 +1194,16 @@ namespace Starforge
         ImGui::SameLine();
         if (ImGui::Button("Create") && m_NewProjectName[0])
             NewProject(m_NewProjectName);
+
+        // First-run sample (E21) — reusable entry point beyond the welcome popup.
+        if (ImGui::Button("Open \"Forge Playground\" sample"))
+        {
+            if (!ForgePlaygroundExists())
+                BuildForgePlayground();
+            OpenProject("ForgePlayground");
+        }
+        ImGui::SameLine();
+        ImGui::TextDisabled("terrain + water + campfire + a C++ script + a telemetry take");
 
         ImGui::Separator();
         ImGui::TextUnformatted("Recent");
