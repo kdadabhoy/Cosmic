@@ -14,6 +14,10 @@
 #include <vector>
 #include <algorithm>
 #include <glm/gtc/matrix_transform.hpp>
+#ifndef GLM_ENABLE_EXPERIMENTAL
+#define GLM_ENABLE_EXPERIMENTAL
+#endif
+#include <glm/gtx/matrix_decompose.hpp>
 
 namespace Cosmic
 {
@@ -23,15 +27,194 @@ namespace Cosmic
 
 	Entity Scene::CreateEntity(const std::string& name)
 	{
+		return CreateEntityWithUUID(UUID(), name);
+	}
+
+	Entity Scene::CreateEntityWithUUID(UUID id, const std::string& name)
+	{
+		if (!id.IsValid())
+			id = UUID();
+
 		Entity entity = { m_Registry.create(), this };
+		entity.AddComponent<IDComponent>(id);
 		entity.AddComponent<TransformComponent>();
 		entity.AddComponent<TagComponent>(name.empty() ? "Entity" : name);
+
+		m_UUIDMap[id] = (entt::entity)entity;
 		return entity;
 	}
 
-	void Scene::DestroyEntity(Entity entity)
+	Entity Scene::FindByUUID(UUID id)
 	{
-		m_Registry.destroy((entt::entity)entity);
+		auto it = m_UUIDMap.find(id);
+		if (it == m_UUIDMap.end() || !m_Registry.valid(it->second))
+			return Entity{};
+		return Entity{ it->second, this };
+	}
+
+	void Scene::DestroyEntity(Entity entity, bool destroyChildren)
+	{
+		if (!entity)
+			return;
+		const entt::entity handle = (entt::entity)entity;
+		if (!m_Registry.valid(handle))
+			return;
+
+		// Read everything we need up front — destroying children below mutates
+		// the RelationshipComponent pool and would dangle a held reference.
+		const UUID myID = m_Registry.all_of<IDComponent>(handle)
+			? m_Registry.get<IDComponent>(handle).ID : UUID(0);
+		UUID parentID(0);
+		std::vector<UUID> kids;
+		if (m_Registry.all_of<RelationshipComponent>(handle))
+		{
+			const auto& rel = m_Registry.get<RelationshipComponent>(handle);
+			parentID = rel.Parent;
+			kids     = rel.Children;
+		}
+
+		// Detach from the parent's Children list.
+		if (parentID.IsValid())
+		{
+			Entity parent = FindByUUID(parentID);
+			if (parent && parent.HasComponent<RelationshipComponent>())
+			{
+				auto& pc = parent.GetComponent<RelationshipComponent>().Children;
+				pc.erase(std::remove(pc.begin(), pc.end(), myID), pc.end());
+			}
+		}
+
+		// Recurse into (or orphan) the children.
+		for (UUID k : kids)
+		{
+			Entity ke = FindByUUID(k);
+			if (!ke)
+				continue;
+			if (destroyChildren)
+				DestroyEntity(ke, true);
+			else if (ke.HasComponent<RelationshipComponent>())
+				ke.GetComponent<RelationshipComponent>().Parent = UUID(0);
+		}
+
+		if (myID.IsValid())
+			m_UUIDMap.erase(myID);
+		m_Registry.destroy(handle);
+	}
+
+	bool Scene::IsAncestor(Entity ancestor, Entity node)
+	{
+		if (!ancestor || !node)
+			return false;
+		const entt::entity ancestorHandle = (entt::entity)ancestor;
+
+		entt::entity cur = (entt::entity)node;
+		while (m_Registry.valid(cur) && m_Registry.all_of<RelationshipComponent>(cur))
+		{
+			const UUID p = m_Registry.get<RelationshipComponent>(cur).Parent;
+			if (!p.IsValid())
+				break;
+			auto it = m_UUIDMap.find(p);
+			if (it == m_UUIDMap.end() || !m_Registry.valid(it->second))
+				break;
+			if (it->second == ancestorHandle)
+				return true;
+			cur = it->second;
+		}
+		return false;
+	}
+
+	glm::mat4 Scene::GetWorldTransform(Entity entity)
+	{
+		if (!entity)
+			return glm::mat4(1.0f);
+		return WorldOf((entt::entity)entity);
+	}
+
+	glm::mat4 Scene::WorldOf(entt::entity handle)
+	{
+		glm::mat4 local(1.0f);
+		if (m_Registry.all_of<TransformComponent>(handle))
+			local = m_Registry.get<TransformComponent>(handle).GetTransform();
+
+		if (m_Registry.all_of<RelationshipComponent>(handle))
+		{
+			const UUID p = m_Registry.get<RelationshipComponent>(handle).Parent;
+			if (p.IsValid())
+			{
+				auto it = m_UUIDMap.find(p);
+				if (it != m_UUIDMap.end() && m_Registry.valid(it->second))
+					return WorldOf(it->second) * local;
+			}
+		}
+		return local;
+	}
+
+	bool Scene::SetParent(Entity child, Entity parent, bool keepWorldPose)
+	{
+		if (!child)
+			return false;
+		if (parent && (parent == child || IsAncestor(child, parent)))
+		{
+			CS_CORE_WARN("Scene::SetParent refused: the operation would create a cycle.");
+			return false;
+		}
+
+		glm::mat4 worldBefore(1.0f);
+		if (keepWorldPose)
+			worldBefore = GetWorldTransform(child);
+
+		const UUID childID = child.GetComponent<IDComponent>().ID;
+
+		// Ensure both endpoints own a RelationshipComponent BEFORE taking any
+		// references — the emplaces may reallocate the pool.
+		if (!child.HasComponent<RelationshipComponent>())
+			child.AddComponent<RelationshipComponent>();
+		if (parent && !parent.HasComponent<RelationshipComponent>())
+			parent.AddComponent<RelationshipComponent>();
+
+		// Detach from the previous parent (read the old id by value first).
+		const UUID oldParentID = child.GetComponent<RelationshipComponent>().Parent;
+		if (oldParentID.IsValid())
+		{
+			Entity oldParent = FindByUUID(oldParentID);
+			if (oldParent && oldParent.HasComponent<RelationshipComponent>())
+			{
+				auto& oc = oldParent.GetComponent<RelationshipComponent>().Children;
+				oc.erase(std::remove(oc.begin(), oc.end(), childID), oc.end());
+			}
+		}
+
+		if (parent)
+		{
+			const UUID parentID = parent.GetComponent<IDComponent>().ID;
+			child.GetComponent<RelationshipComponent>().Parent = parentID;
+			auto& pc = parent.GetComponent<RelationshipComponent>().Children;
+			if (std::find(pc.begin(), pc.end(), childID) == pc.end())
+				pc.push_back(childID);
+		}
+		else
+		{
+			child.GetComponent<RelationshipComponent>().Parent = UUID(0);
+		}
+
+		if (keepWorldPose)
+		{
+			const glm::mat4 parentWorld = parent ? GetWorldTransform(parent) : glm::mat4(1.0f);
+			const glm::mat4 newLocal    = glm::inverse(parentWorld) * worldBefore;
+
+			glm::vec3 scale, translation, skew;
+			glm::vec4 perspective;
+			glm::quat orientation;
+			if (glm::decompose(newLocal, scale, orientation, translation, skew, perspective))
+			{
+				auto& t = child.GetComponent<TransformComponent>();
+				t.Position        = translation;
+				t.Scale           = scale;
+				t.RotationQuat    = orientation;
+				t.UseQuatRotation = true;   // preserve the exact recovered rotation
+			}
+		}
+		return true;
 	}
 
 	void Scene::OnUpdate(float deltaTime)
@@ -258,13 +441,16 @@ namespace Cosmic
 		}
 
 		auto view = m_Registry.view<TransformComponent, MeshRendererComponent>();
-		view.each([&](auto entity, const TransformComponent& transform, const MeshRendererComponent& mr)
+		view.each([&](auto entity, const TransformComponent& /*transform*/, const MeshRendererComponent& mr)
 		{
 			if (!mr.MeshAsset)
 				return;
 
 			const int entityID = (int)(uint32_t)entity;
-			const glm::mat4 xform = transform.GetTransform();
+			// World transform (E3): parent-world x local. Flat entities (no
+			// RelationshipComponent) resolve to their local transform, so every
+			// shipped flat scene renders identically.
+			const glm::mat4 xform = WorldOf(entity);
 			if (mr.MaterialAsset)
 				Renderer3D::DrawMesh(mr.MeshAsset, xform, mr.MaterialAsset, entityID);
 			else
@@ -283,7 +469,7 @@ namespace Cosmic
 					return;
 
 				const int entityID = (int)(uint32_t)entity;
-				const glm::mat4 xform = transform.GetTransform();
+				const glm::mat4 xform = WorldOf(entity);
 				if (lod.MaterialAsset)
 					Renderer3D::DrawMesh(lod.Levels[level].MeshAsset, xform, lod.MaterialAsset, entityID);
 				else

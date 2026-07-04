@@ -54,6 +54,13 @@ target_include_directories(spdlog INTERFACE dependencies/spdlog/include)
 add_library(tomlplusplus INTERFACE)
 target_include_directories(tomlplusplus INTERFACE dependencies/tomlplusplus)
 
+# nlohmann/json (single header, MIT) — JSON scene/prefab/material serialization
+# behind scene/SceneSerializer (E2). PRIVATE: included only in engine .cpp files,
+# so json types never leak into public headers or client DLL compile times. The
+# include root is dependencies/ so the canonical <nlohmann/json.hpp> resolves.
+add_library(nlohmann_json INTERFACE)
+target_include_directories(nlohmann_json INTERFACE dependencies)
+
 add_library(stb_image INTERFACE)
 target_include_directories(stb_image INTERFACE dependencies/stb_image)
 
@@ -92,7 +99,7 @@ target_link_libraries(Cosmic PUBLIC imgui implot glad glm entt glfw OpenGL::GL s
 # PRIVATE deps: no public engine header includes them, so clients never see the
 # include dirs — ImGuizmo stays behind graphics/Gizmo (its symbols aren't
 # dllexported, so leaking the headers would only invite link errors).
-target_link_libraries(Cosmic PRIVATE tomlplusplus ImGuizmo)
+target_link_libraries(Cosmic PRIVATE tomlplusplus ImGuizmo nlohmann_json)
 
 # Borderless custom window chrome uses DWM (drop shadow) on Windows.
 if(WIN32)

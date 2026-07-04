@@ -24,6 +24,11 @@ add_executable(CosmicTests
     test_frustum.cpp
     test_presets.cpp
     test_render_queue.cpp
+    test_reflect.cpp
+    test_scene_serializer.cpp
+    test_hierarchy.cpp
+    test_scene_components.cpp
+    test_scenemanager.cpp
 )
 
 target_link_libraries(CosmicTests PRIVATE Cosmic)

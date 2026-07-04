@@ -315,6 +315,17 @@ one. This is what makes "ship from the editor" free.
 
 ### E1 — Reflection registry (`Cosmic/src/reflect/`)
 
+> **✅ 2026-07-03.** `reflect/TypeDescriptor.h` (FieldKind/FieldValue variant/
+> FieldHints/flags + type-erased Read/Write + entt Add/Has/Remove/Get/Copy
+> thunks) + `reflect/TypeRegistry.h/.cpp` (process-wide leaked singleton
+> `Reflect::GetRegistry()`; fluent `Reflect::Class<T>(name,cat).Field(...).Range/
+> .Color/.AsAssetPath/.EnumValue/.ReadOnly/...`; `ClassIn` variant breaks the
+> singleton-init recursion). All 10 engine components registered via
+> `RegisterEngineTypes`. Exported through `Cosmic.h`. `tests/test_reflect.cpp`
+> (5 cases, 46 assertions): field enumeration, kind deduction + hints/flags,
+> get/set round-trip, entt has/copy/remove + `ComponentsOf`, unknown hash →
+> nullptr. Build green, **CosmicTests 128/128**; no engine behavior touched.
+
 **Files:** NEW `reflect/TypeRegistry.h/.cpp`, `reflect/TypeDescriptor.h`; MODIFY
 `scene/Components.h` (register built-ins at static-init or explicit `RegisterEngineTypes()`),
 `Cosmic.h` (export); NEW `tests/test_reflect.cpp` (+ tests/CMakeLists list).
@@ -344,6 +355,23 @@ round-trips; entt add-by-descriptor creates a live component; unknown hash → n
 
 ### E2 — UUIDs + JSON serialization (`scene/SceneSerializer`)
 
+> **✅ 2026-07-03.** `core/UUID.h/.cpp` (64-bit mt19937_64, never-0, 16-char hex
+> + `std::hash`); `scene/Components.h` gains `IDComponent{UUID}` +
+> `OpaqueComponentsComponent` (verbatim unknown-block store), both
+> `CS_REGISTER_COMPONENT`'d; `Scene::CreateEntity` now emplaces IDComponent, +
+> `CreateEntityWithUUID` / `FindByUUID` (O(1) UUID index kept in sync on
+> destroy). Vendored **nlohmann/json v3.11.3** (MIT, PRIVATE include root
+> `dependencies/`, README pin). `scene/SceneSerializer.h/.cpp` = ONE generic
+> visitor over the E1 registry (Save/Load files w/ atomic temp+rename +
+> SaveToString/LoadFromString for E13 snapshots); schema
+> `{cosmic_scene:1, entities:[{id, components:{Name:{fields}}}]}`; per-FieldKind
+> JSON (vecs as arrays, quat wxyz, EntityRef→hex, enum→int w/ name fallback);
+> unknown blocks preserved; entities emitted UUID-sorted for deterministic
+> diffs. Exported via `Cosmic.h`. `tests/test_scene_serializer.cpp` (4 cases):
+> hex round-trip, 1e6-draw zero-collision, scene+EntityRef round-trip w/
+> identical JSON, opaque-block verbatim survival. Build green, **CosmicTests
+> 132/132**.
+
 **Files:** NEW `core/UUID.h/.cpp`, `scene/SceneSerializer.h/.cpp`; VENDOR
 `Cosmic/dependencies/nlohmann/json.hpp` (+ engine CMake include dir); MODIFY `scene/Scene.h`
 (`CreateEntity` also emplaces `IDComponent`; `FindByUUID`), `scene/Components.h`
@@ -368,6 +396,24 @@ and an EntityRef); UUID collision test over 1e6 draws; headless (no GL — use n
 
 ### E3 — Hierarchy (parent/child + world transforms)
 
+> **✅ 2026-07-03.** `RelationshipComponent{ UUID Parent{0}; vector<UUID> Children }`
+> (structural, not reflected; `CS_REGISTER_COMPONENT`'d — GOTCHA: default Parent
+> MUST be `{0}`, a bare `UUID` default-ctors RANDOM). `Scene`: `SetParent(child,
+> parent, keepWorldPose=true)` (cycle-refusing via `IsAncestor`, keep-pose via
+> `glm::decompose`→quat local, emplace-before-ref to dodge entt pool realloc),
+> `GetWorldTransform` / private recursive `WorldOf` (parent-world × local; flat
+> entities → local, so shipped scenes unchanged), `DestroyEntity(e,
+> destroyChildren=true)` subtree/orphan + parent-list detach, `Entity::
+> GetOrAddComponent`. `OnRender3D` + `SceneRenderer` shadow/coverage casters draw
+> `WorldOf`/`GetWorldTransform` (world==local for flat Frontier/Engine3DDemo).
+> Serializer special-cases hierarchy: parents emit ordered `Relationship.Children`
+> hex array, pass-2 `SetParent(keepWorldPose=false)` rebuild preserves order;
+> flat scenes still byte-identical. `tests/test_hierarchy.cpp` (6 cases):
+> 3-deep world pos, keep-pose reparent (rot+scale, 1e-4), destroy-subtree +
+> orphan, cycle refused, flat compat, serialization w/ child order. Build green,
+> **CosmicTests 138/138**. Compat: touches scene/ + renderer/ → full
+> build/smoke-run batched at end of Stage A.
+
 **Files:** MODIFY `scene/Components.h` (`RelationshipComponent{ UUID Parent; std::vector<UUID>
 Children; }` + registration), `scene/Scene.h/.cpp` (`SetParent(child,parent,keepWorldPose)`,
 `GetWorldTransform(entity)` walking the parent chain, `DestroyEntity` recursion option,
@@ -388,6 +434,23 @@ policy: composition uses `GetTransform()` matrices — never compose Euler angle
 absolute; destroy-with-children; cycle refused. Engine3DDemo renders identically (flat scenes).
 
 ### E4 — CameraComponent + EnvironmentComponent
+
+> **✅ 2026-07-03.** `CameraComponent{Primary, Projection{Persp/Ortho}, FovDeg,
+> Near, Far, OrthoSize}` w/ `GetProjection(aspect)` == glm::perspective/ortho;
+> `EnvironmentComponent` (sun dir/color/intensity, SkyMode enum Procedural/
+> Detailed/HDRI + HdriPath + TimeOfDay, Skybox/IBL/IBLIntensity/Exposure, height
+> fog block, post block bloom/ssao/fxaa/lens-flare) — EVERY field defaults to the
+> matching `SceneRendererSettings`/`SceneRenderDesc` default (enforced by a test).
+> Both `CS_REGISTER_COMPONENT`'d + E1-reflected (enum + AssetPath + ranges). New
+> generic verb `SceneRenderer::ApplyEnvironment(env, desc)` (writes fog/post/
+> exposure into desc.Settings + sun into desc.Lights + drives owned
+> EnvironmentMap sun/sky-intensity); the editor/PlayerLayer call it per frame —
+> **Frontier never does, so its explicit desc path is untouched** (documented
+> deviation: env consumption is a caller-driven verb, not SceneRenderer reaching
+> into the ECS, keeping Render() a pure desc→frame function). `tests/
+> test_scene_components.cpp` (3 cases): projection math, defaults-equality (the
+> compat gate), Camera+Environment serializer round-trip w/ enums. Build green,
+> **CosmicTests 141/141**.
 
 **Files:** MODIFY `scene/Components.h` (+ registrations, + E1 fields), `renderer/SceneRenderer`
 (consume an environment-holder entity when present; explicit setters stay for Frontier),
@@ -410,6 +473,21 @@ uses.
 unchanged; a hand-written .cscene with an Environment block renders sky/fog/post as specified.
 
 ### E5 — SceneManager (async load + transitions)
+
+> **✅ 2026-07-03.** `scene/SceneManager.h/.cpp` — plain engine service (owned +
+> ticked by the frame owner, NOT a singleton; SerialLink pattern). State machine
+> `Idle→FadeOut→Loading→FadeIn→Idle` via `OnUpdate(dt)`; `Request(path|SceneLoader,
+> transition)` (path wraps SceneSerializer into a fresh Scene), sync `Load` for
+> File>Open, `IsLoading/Progress/FadeAlpha/LastLoadSucceeded/GetActiveScene`.
+> Mid-transition Request queues (latest-pending wins); failed loader keeps the
+> current scene. **Documented deviation:** the scene build runs on the MAIN
+> thread during the single Loading frame (GL is main-thread only; the fade hides
+> it) — the JobSystem CPU-prepass split (Frontier `World::IsLoading()` pattern) is
+> the follow-up, and the `SceneLoader` std::function already lets a caller offload
+> its own CPU work. Exported via `Cosmic.h`. `tests/test_scenemanager.cpp` (5
+> cases): fade cycle runs once, no-fade immediate load, mid-transition queuing,
+> alpha/progress bounds, failed-load-keeps-scene. Build green, **CosmicTests
+> 146/146**.
 
 **Files:** NEW `scene/SceneManager.h/.cpp`; MODIFY `Cosmic.h`; NEW `tests/test_scenemanager.cpp`
 (state machine only).

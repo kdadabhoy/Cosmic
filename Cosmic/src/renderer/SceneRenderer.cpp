@@ -183,6 +183,45 @@ namespace Cosmic
 			m_Post.SetViewportSize(width, height);
 	}
 
+	// E4 — map a scene EnvironmentComponent into a per-frame desc. Every field
+	// mirrors a SceneRendererSettings/SceneRenderDesc default, so applying a
+	// default-constructed component is a no-op relative to the engine defaults.
+	void SceneRenderer::ApplyEnvironment(const EnvironmentComponent& env, SceneRenderDesc& desc)
+	{
+		desc.Exposure = env.Exposure;
+
+		auto& s = desc.Settings;
+		s.Skybox           = env.Skybox;
+		s.IBL              = env.IBL;
+		s.Fog              = env.Fog;
+		s.FogColor         = env.FogColor;
+		s.FogDensity       = env.FogDensity;
+		s.FogHeightFalloff = env.FogHeightFalloff;
+		s.FogBaseHeight    = env.FogBaseHeight;
+		s.Bloom            = env.Bloom;
+		s.BloomThreshold   = env.BloomThreshold;
+		s.BloomIntensity   = env.BloomIntensity;
+		s.SSAO             = env.SSAO;
+		s.SsaoRadius       = env.SsaoRadius;
+		s.FXAA             = env.FXAA;
+		s.LensFlare        = env.LensFlare;
+		s.LensFlareIntensity = env.LensFlareIntensity;
+
+		// Sun → the frame's directional light.
+		desc.Lights.SunDirection = env.SunDirection;
+		desc.Lights.SunColor     = env.SunColor;
+		desc.Lights.SunIntensity = env.SunIntensity;
+
+		// Runtime sky/IBL bits on the owned environment (toSun = -travel dir).
+		if (m_Initialized)
+		{
+			const glm::vec3 travel = env.SunDirection;
+			if (glm::dot(travel, travel) > 1e-8f)
+				m_Environment.SetSunDirection(-glm::normalize(travel));
+			m_Environment.SetSkyIntensity(env.IBLIntensity);
+		}
+	}
+
 	// =========================================================================
 	// SceneRenderer — the frame
 	// =========================================================================
@@ -270,7 +309,7 @@ namespace Cosmic
 				Entity e{ entity, desc.EcsScene };
 				const auto& mr = e.GetComponent<MeshRendererComponent>();
 				if (mr.MeshAsset && mr.CastShadows)
-					m_Shadow.DrawCaster(mr.MeshAsset, e.GetComponent<TransformComponent>().GetTransform());
+					m_Shadow.DrawCaster(mr.MeshAsset, desc.EcsScene->GetWorldTransform(e));
 			}
 
 			// LOD groups cast with the SAME level the lit pass selects (real
@@ -286,7 +325,7 @@ namespace Cosmic
 				const int level = LODGroupComponent::SelectLevel(
 					lod.Levels, glm::distance(desc.CameraPosition, t.Position));
 				if (level >= 0 && lod.Levels[level].MeshAsset)
-					m_Shadow.DrawCaster(lod.Levels[level].MeshAsset, t.GetTransform());
+					m_Shadow.DrawCaster(lod.Levels[level].MeshAsset, desc.EcsScene->GetWorldTransform(e));
 			}
 		}
 
@@ -330,7 +369,7 @@ namespace Cosmic
 				Entity e{ entity, desc.EcsScene };
 				const auto& mr = e.GetComponent<MeshRendererComponent>();
 				if (mr.MeshAsset && mr.CastShadows)
-					cov.DrawCaster(mr.MeshAsset, e.GetComponent<TransformComponent>().GetTransform());
+					cov.DrawCaster(mr.MeshAsset, desc.EcsScene->GetWorldTransform(e));
 			}
 
 			// LOD groups occlude with their camera-distance-selected level (S12.4).
@@ -345,7 +384,7 @@ namespace Cosmic
 				const int level = LODGroupComponent::SelectLevel(
 					lod.Levels, glm::distance(desc.CameraPosition, t.Position));
 				if (level >= 0 && lod.Levels[level].MeshAsset)
-					cov.DrawCaster(lod.Levels[level].MeshAsset, t.GetTransform());
+					cov.DrawCaster(lod.Levels[level].MeshAsset, desc.EcsScene->GetWorldTransform(e));
 			}
 		}
 

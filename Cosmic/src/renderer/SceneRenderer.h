@@ -66,6 +66,7 @@ namespace Cosmic
 	class RibbonEmitter;
 	class Scene;
 	class CoverageCapture;
+	struct EnvironmentComponent;   // E4 — ApplyEnvironment maps it into a desc
 
 	/**
 	 * @brief Which pass a DrawOpaque invocation is servicing. Switches on this
@@ -211,6 +212,17 @@ namespace Cosmic
 		EnvironmentMap&   GetEnvironment() { return m_Environment; }   // app drives the sun policy
 		PostProcessStack& GetPostStack()   { return m_Post; }
 		ShadowMap&        GetShadowMap()   { return m_Shadow; }
+
+		/**
+		 * @brief Map a scene's EnvironmentComponent (E4) into a SceneRenderDesc:
+		 * writes exposure + fog + post toggles into desc.Settings, the sun into
+		 * desc.Lights, and drives the owned EnvironmentMap's sun direction + sky
+		 * intensity. The editor/PlayerLayer call this each frame before Render()
+		 * for the scene's single "Environment" entity; Frontier never calls it, so
+		 * its explicit desc.Settings path is untouched. Generic verb — no editor or
+		 * Starforge concepts leak in.
+		 */
+		void ApplyEnvironment(const EnvironmentComponent& env, SceneRenderDesc& desc);
 
 	private:
 		// One method per pass = F3's GPU-zone hook points.

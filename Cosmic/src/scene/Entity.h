@@ -58,6 +58,21 @@ namespace Cosmic
         }
 
         /**
+         * @brief Returns the component, adding a default-constructed one first
+         * if absent. Unlike AddComponent this never warns on an existing
+         * component. NOTE: like any entt emplace, adding a component may
+         * reallocate that type's pool — do not hold references to OTHER
+         * components of the SAME type across this call.
+         */
+        template<typename T, typename... Args>
+        T& GetOrAddComponent(Args&&... args)
+        {
+            if (HasComponent<T>())
+                return GetComponent<T>();
+            return AddComponent<T>(std::forward<Args>(args)...);
+        }
+
+        /**
          * @brief Returns a mutable reference to a component held by this entity.
          *
          * For empty/tag types EnTT's get() returns void (no storage), so we return

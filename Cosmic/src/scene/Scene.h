@@ -2,9 +2,11 @@
 // Scene.h
 
 #include "core/Core.h"
+#include "core/UUID.h"
 #include "scene/System.h"
 #include "jobs/ParallelSystem.h"
 #include <entt/entt.hpp>
+#include <glm/glm.hpp>
 #include <string>
 #include <memory>
 #include <vector>
@@ -30,11 +32,42 @@ namespace Cosmic
 			return std::make_shared<Scene>(std::forward<Args>(args)...);
 		}
 
-		/** @brief Instantiates a blank Entity handle bound to this scene instance. */
+		/** @brief Instantiates a blank Entity handle bound to this scene instance.
+		 *  Emplaces a Transform, a Tag, and an IDComponent with a fresh UUID (E2). */
 		Entity CreateEntity(const std::string& name = "GenericEntity");
 
-		/** @brief Destroys and cleans up internal registry component references. */
-		void DestroyEntity(Entity entity);
+		/** @brief As CreateEntity, but with a caller-supplied UUID — used by the
+		 *  SceneSerializer so loaded entities keep their stable identity. If the
+		 *  UUID is 0/invalid a fresh one is generated. */
+		Entity CreateEntityWithUUID(UUID id, const std::string& name = "GenericEntity");
+
+		/** @brief Resolve a UUID to its Entity handle, or an invalid handle if the
+		 *  scene holds no entity with that id (E2). O(1) via the id index. */
+		Entity FindByUUID(UUID id);
+
+		/** @brief Destroys an entity (E3). By default its whole subtree is
+		 *  destroyed too; pass destroyChildren=false to orphan the children
+		 *  (their Parent link is cleared) instead. Always detaches the entity
+		 *  from its own parent's Children list. Flat entities (no
+		 *  RelationshipComponent) behave exactly as before. */
+		void DestroyEntity(Entity entity, bool destroyChildren = true);
+
+		// --- Hierarchy (E3) ---------------------------------------------------
+
+		/** @brief Re-parent `child` under `parent` (pass an invalid parent to
+		 *  detach to root). When keepWorldPose is true the child's local
+		 *  transform is rewritten so its WORLD pose does not change. Refuses (and
+		 *  warns, returns false) if it would create a cycle. Children order is
+		 *  the append order of SetParent calls. */
+		bool SetParent(Entity child, Entity parent, bool keepWorldPose = true);
+
+		/** @brief World-space transform = parent-world x local, walking the
+		 *  parent chain. For an entity without a RelationshipComponent this is
+		 *  just its local TransformComponent — so flat scenes are unchanged. */
+		glm::mat4 GetWorldTransform(Entity entity);
+
+		/** @brief True if `ancestor` appears anywhere on `node`'s parent chain. */
+		bool IsAncestor(Entity ancestor, Entity node);
 
 		/** @brief Runs ongoing frame logic updates across all registered systems. */
 		void OnUpdate(float deltaTime);
@@ -132,9 +165,17 @@ namespace Cosmic
 		}
 
 	private:
+		/** @brief Recursive world-transform walk keyed by entt handle (E3). */
+		glm::mat4 WorldOf(entt::entity handle);
+
 		entt::registry m_Registry;
 		std::vector<Scope<System>>   m_Systems;
 		std::vector<ParallelSystem*> m_ParallelSystems; // non-owning; owned by m_Systems
+
+		// UUID -> handle index, kept in sync by CreateEntity*/DestroyEntity so
+		// FindByUUID (parent/EntityRef/prefab resolution) is O(1). Entities added
+		// straight to the registry (not via CreateEntity*) aren't indexed.
+		std::unordered_map<UUID, entt::entity> m_UUIDMap;
 
 		// Persistent scratch buffers for OnRender's material-bucket sort. Reused every
 		// frame (cleared, not reallocated) to avoid per-frame heap churn. Inner vectors

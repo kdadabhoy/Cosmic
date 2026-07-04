@@ -315,12 +315,24 @@ project DLLs** (Lua mapped, parked), parametric primitives + assimp import (FBX/
 converter parked), play/pause/step with telemetry recording, and one-click packaging via the
 existing plugin pipeline. Independent of the Phase 12 gate (OpenGL stays) — needs only S4–S10 +
 Phase 11's SceneRenderer; interleave at will.
-> **Status (2026-07-03): planned in full + skeleton shipped.** Scope decided with the user
-> (name Starforge; C++-DLL-first scripting; primitives v1; industry-standard import). The
-> planning session shipped [`11-phase13-starforge-plan.md`](11-phase13-starforge-plan.md)
-> (work orders **E1–E21** + kickoff prompt) and the compiling `Projects/Starforge` skeleton
-> (dock layout, CAD-nav viewport rendering a sandbox scene, Hierarchy/Inspector/Content/Console
-> panels, `TODO(E#)` markers).
+> **Status (2026-07-03): planned in full + skeleton shipped; Stage A (E1–E5) CODE-COMPLETE.**
+> Scope decided with the user (name Starforge; C++-DLL-first scripting; primitives v1;
+> industry-standard import). The planning session shipped
+> [`11-phase13-starforge-plan.md`](11-phase13-starforge-plan.md) (work orders **E1–E21** +
+> kickoff prompt) and the compiling `Projects/Starforge` skeleton (dock layout, CAD-nav
+> viewport rendering a sandbox scene, Hierarchy/Inspector/Content/Console panels, `TODO(E#)`
+> markers).
+> **Stage A engine seams SHIPPED 2026-07-03 (UNcommitted — user commits):** E1 reflection
+> registry (`reflect/TypeDescriptor`+`TypeRegistry`, all 10 engine components registered), E2
+> UUIDs + JSON `SceneSerializer` (vendored nlohmann/json v3.11.3, `IDComponent`, opaque-block
+> preservation), E3 hierarchy (`RelationshipComponent`, `Scene::SetParent`/`GetWorldTransform`/
+> subtree-destroy; `OnRender3D`+`SceneRenderer` casters use world transforms), E4
+> `CameraComponent`+`EnvironmentComponent` (defaults == SceneRenderer defaults; new
+> `SceneRenderer::ApplyEnvironment` verb), E5 `SceneManager` (fade-transition state machine).
+> All engine-side + headless-tested: **CosmicTests 146/146** (was 123), full build green (all 5
+> projects), Engine3DDemo + Frontier boot with zero GL/shader/framebuffer errors → compat gate
+> satisfied (flat scenes render byte-identically; `ApplyEnvironment` uncalled by shipped apps).
+> Each item's ✅ banner is in doc 11. **NEXT = Stage B (E6 editor shell → E10 content browser).**
 - **Do:** doc 11 work orders in order: E1 reflection → E2 UUID+JSON serializer → E3 hierarchy →
   E4 camera/environment components → E5 SceneManager → E6 shell → E7 undo → E8 inspector →
   E9 viewport tools → E10 content browser → E11 script host → E12 hot reload → E13 play mode →

@@ -2,6 +2,7 @@
 // Last Modified: 5/24/2026
 
 #include "core/Core.h"
+#include "core/UUID.h"
 #include "graphics/Material.h"
 #include "graphics/Mesh.h"
 #include "scene/ComponentRegistry.h"
@@ -9,10 +10,60 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace Cosmic
 {
+    /**
+     * @brief Stable 64-bit identity (E2). Scene::CreateEntity emplaces one with
+     * a fresh UUID; the SceneSerializer writes it as the per-entity "id" (not a
+     * component block) and restores it on load so parent/EntityRef/prefab
+     * references survive save/load. Not reflected — identity isn't user-editable.
+     */
+    struct COSMIC_API IDComponent
+    {
+        UUID ID;
+
+        IDComponent() = default;
+        IDComponent(const IDComponent&) = default;
+        IDComponent(UUID id) : ID(id) {}
+    };
+
+    /**
+     * @brief Verbatim store for component blocks whose type was NOT registered
+     * when a scene loaded (E2). Preserved as (name -> serialized JSON text) and
+     * re-emitted unchanged on save, so opening a scene in an editor build that
+     * lacks some game module never silently drops that module's data. Internal:
+     * not reflected, handled directly by the serializer.
+     */
+    struct COSMIC_API OpaqueComponentsComponent
+    {
+        std::vector<std::pair<std::string, std::string>> Blocks;
+
+        OpaqueComponentsComponent() = default;
+        OpaqueComponentsComponent(const OpaqueComponentsComponent&) = default;
+    };
+
+    /**
+     * @brief Parent/child links for scene hierarchy (E3). UUID-based so they
+     * survive serialization (no entt-handle staleness). Present ONLY on entities
+     * that participate in a hierarchy — entities without it behave exactly as
+     * before (the 2D path and every shipped flat scene are untouched). Children
+     * order is authoritative and preserved by the serializer; Parent is the
+     * back-link. Mutate through Scene::SetParent, never by hand (it keeps the two
+     * sides consistent and refuses cycles). Structural, not reflected.
+     */
+    struct COSMIC_API RelationshipComponent
+    {
+        UUID              Parent{ 0 }; // 0 == no parent (a root). MUST default to
+                                       // 0 — a bare UUID default-constructs RANDOM.
+        std::vector<UUID> Children;    // ordered
+
+        RelationshipComponent() = default;
+        RelationshipComponent(const RelationshipComponent&) = default;
+    };
+
     /**
      * @brief Provides every entity with an internal debug name identity tag.
      */
@@ -185,6 +236,87 @@ namespace Cosmic
     };
 
 
+    /**
+     * @brief Scene camera (E4). Play mode renders from the first Primary camera
+     * (falls back to the editor camera + a Console warning when none is Primary).
+     * Position/orientation come from the entity's TransformComponent; this holds
+     * the projection. GetProjection matches glm::perspective / glm::ortho.
+     */
+    struct COSMIC_API CameraComponent
+    {
+        enum class Projection { Perspective = 0, Orthographic = 1 };
+
+        bool       Primary   = true;
+        Projection ProjectionType = Projection::Perspective;
+        float      FovDeg    = 60.0f;    // vertical FOV (perspective)
+        float      Near      = 0.1f;
+        float      Far       = 1000.0f;
+        float      OrthoSize = 10.0f;    // half-height in world units (orthographic)
+
+        CameraComponent() = default;
+        CameraComponent(const CameraComponent&) = default;
+
+        glm::mat4 GetProjection(float aspect) const
+        {
+            if (ProjectionType == Projection::Perspective)
+                return glm::perspective(glm::radians(FovDeg), aspect, Near, Far);
+
+            const float h = OrthoSize;
+            const float w = OrthoSize * aspect;
+            return glm::ortho(-w, w, -h, h, Near, Far);
+        }
+    };
+
+    /**
+     * @brief Scene-level rendering environment (E4). The editor keeps exactly one
+     * entity (named "Environment") carrying this; SceneRenderer::ApplyEnvironment
+     * maps it into a SceneRenderDesc each frame. EVERY field defaults to the
+     * current SceneRenderer default (see SceneRendererSettings), so a scene with
+     * NO EnvironmentComponent — every shipped app — renders exactly as before.
+     * Frontier's programmatic setters are unaffected (it never calls
+     * ApplyEnvironment). The Frontier DayNightCycle recipe is the reference for
+     * TimeOfDay, but the fields here stay engine-generic.
+     */
+    struct COSMIC_API EnvironmentComponent
+    {
+        enum class SkyMode { Procedural = 0, Detailed = 1, HDRI = 2 };
+
+        // Sun — drives the first DirectionalLight / the owned EnvironmentMap.
+        glm::vec3 SunDirection{ -0.4f, -1.0f, -0.3f };  // direction the light TRAVELS
+        glm::vec3 SunColor{ 1.0f };
+        float     SunIntensity = 1.0f;
+
+        // Sky + IBL.
+        SkyMode     Sky = SkyMode::Procedural;
+        std::string HdriPath;                 // used when Sky == HDRI
+        float       TimeOfDay = 12.0f;        // hours 0..24 (sun scrub)
+        bool        Skybox = true;            // == SceneRendererSettings::Skybox
+        bool        IBL = true;               // == SceneRendererSettings::IBL
+        float       IBLIntensity = 1.0f;
+        float       Exposure = 1.0f;          // == SceneRenderDesc::Exposure
+
+        // Height fog (== SceneRendererSettings fog defaults).
+        bool      Fog = false;
+        glm::vec3 FogColor{ 0.70f, 0.80f, 0.92f };
+        float     FogDensity = 0.02f;
+        float     FogHeightFalloff = 0.12f;
+        float     FogBaseHeight = 0.0f;
+
+        // Post (== SceneRendererSettings post defaults).
+        bool  Bloom = false;
+        float BloomThreshold = 1.0f;
+        float BloomIntensity = 0.6f;
+        bool  SSAO = false;
+        float SsaoRadius = 0.5f;
+        bool  FXAA = true;
+        bool  LensFlare = false;
+        float LensFlareIntensity = 0.35f;
+
+        EnvironmentComponent() = default;
+        EnvironmentComponent(const EnvironmentComponent&) = default;
+    };
+
+
     class Terrain;
     class Water;
     class ParticleEmitter;
@@ -251,6 +383,9 @@ namespace Cosmic
 // members, no non-consteval member functions, and no initialisation that could
 // differ between TUs. If those guarantees cannot be met, move the registration
 // to a dedicated .cpp file and add a corresponding extern declaration here.
+CS_REGISTER_COMPONENT(Cosmic::IDComponent)
+CS_REGISTER_COMPONENT(Cosmic::OpaqueComponentsComponent)
+CS_REGISTER_COMPONENT(Cosmic::RelationshipComponent)
 CS_REGISTER_COMPONENT(Cosmic::TagComponent)
 CS_REGISTER_COMPONENT(Cosmic::TransformComponent)
 CS_REGISTER_COMPONENT(Cosmic::SpriteRendererComponent)
@@ -258,6 +393,8 @@ CS_REGISTER_COMPONENT(Cosmic::MeshRendererComponent)
 CS_REGISTER_COMPONENT(Cosmic::LODGroupComponent)
 CS_REGISTER_COMPONENT(Cosmic::DirectionalLightComponent)
 CS_REGISTER_COMPONENT(Cosmic::PointLightComponent)
+CS_REGISTER_COMPONENT(Cosmic::CameraComponent)
+CS_REGISTER_COMPONENT(Cosmic::EnvironmentComponent)
 CS_REGISTER_COMPONENT(Cosmic::TerrainComponent)
 CS_REGISTER_COMPONENT(Cosmic::WaterComponent)
 CS_REGISTER_COMPONENT(Cosmic::ParticleEmitterComponent)

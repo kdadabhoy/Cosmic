@@ -20,6 +20,7 @@
 #include "core/Input.h"
 #include "core/Timestep.h"
 #include "core/Log.h"
+#include "core/UUID.h"          // E2 — 64-bit stable entity identity
 
 // Event System
 #include "events/Event.h"
@@ -89,6 +90,14 @@
 #include "scene/System.h"
 #include "scene/ComponentRegistry.h"
 #include "scene/ScenePicker.h"        // S5.4 — entity-ID 3D picking
+
+// Reflection (E1) — runtime type/field descriptors that drive the editor's
+// inspector, scene serializer, undo stack, and telemetry panel from one
+// registration per component.
+#include "reflect/TypeDescriptor.h"
+#include "reflect/TypeRegistry.h"
+#include "scene/SceneSerializer.h"     // E2 — JSON scene/prefab/material (de)serialization
+#include "scene/SceneManager.h"        // E5 — async scene load + fade transitions
 
 // Input Mapping
 #include "codes/KeyCodes.h"
