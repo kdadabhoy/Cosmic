@@ -35,6 +35,7 @@ add_executable(CosmicTests
     test_commandstack.cpp
     test_filewatcher.cpp
     test_scripthost.cpp
+    test_worldsystems.cpp
 )
 
 target_link_libraries(CosmicTests PRIVATE Cosmic)

@@ -58,7 +58,7 @@ namespace Cosmic
     private:
         void RebindScripts();          // (re)instantiate scripts when the scene swaps
         void UpdateCamera(float aspect);
-        void RenderScene();
+        void RenderScene(float dt);
 
         std::string  m_ProjectName;
         std::string  m_StartupScene = "scenes/Main.cscene";

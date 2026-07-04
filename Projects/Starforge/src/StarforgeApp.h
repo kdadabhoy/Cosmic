@@ -27,6 +27,7 @@
 #include "panels/ConsolePanel.h"
 #include "panels/EnvironmentPanel.h"
 #include "panels/MaterialEditorPanel.h"
+#include "panels/WorldSystemsPanel.h"
 
 #include <string>
 
@@ -134,6 +135,7 @@ namespace Starforge
         ConsolePanel        m_Console;
         EnvironmentPanel    m_Environment;    // E17
         MaterialEditorPanel m_Material;        // E17
+        WorldSystemsPanel   m_WorldSystems;   // E18
 
         Prefs::EditorSettings m_Settings;
 
@@ -148,6 +150,7 @@ namespace Starforge
         bool m_ShowHierarchy = true, m_ShowInspector = true,
              m_ShowContent   = true, m_ShowConsole   = true;
         bool m_ShowEnvironment = false, m_ShowMaterial = false;   // E17 (off by default)
+        bool m_ShowWorldSystems = false;  // E18 (off by default)
         bool m_ShowStats = false;         // E21 statistics window
         bool m_OpenShortcuts = false;     // E21 shortcut reference modal
 

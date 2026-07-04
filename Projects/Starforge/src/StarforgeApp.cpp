@@ -497,6 +497,8 @@ namespace Starforge
                 BuildScripts();
         }
 
+        m_WorldSystems.OnUpdate(m_Ctx);   // E18 — drain the async terrain build
+
         TickPlay(ts);
         RenderViewport(ts);
         Autosave(ts);
@@ -531,6 +533,11 @@ namespace Starforge
         if (m_Ctx.Scene)
         {
             m_Ctx.Scene->OnRender3D(m_Camera.GetCamera());
+            // World-system FX (E18): water + particle live preview, using the
+            // viewport FBO's color/depth for refraction/depth-fade + soft particles.
+            m_Ctx.Scene->OnRenderWorldFX(m_Camera.GetCamera(),
+                vfb->GetColorAttachmentRendererID(0), vfb->GetDepthAttachmentRendererID(),
+                vfb->GetWidth(), vfb->GetHeight(), ts);
             m_Viewport.DrawSceneOverlay(m_Ctx, m_Camera.GetCamera());
         }
     }
@@ -600,6 +607,7 @@ namespace Starforge
             if (m_ShowConsole)     m_Console.OnImGuiRender(m_Ctx);
             if (m_ShowEnvironment) m_Environment.OnImGuiRender(m_Ctx);
             if (m_ShowMaterial)    m_Material.OnImGuiRender(m_Ctx);
+            if (m_ShowWorldSystems) m_WorldSystems.OnImGuiRender(m_Ctx);
             if (m_ShowStats)       DrawStatsWindow();
         }
         else
@@ -817,6 +825,7 @@ namespace Starforge
             ImGui::MenuItem("Console",         nullptr, &m_ShowConsole);
             ImGui::MenuItem("Environment",     nullptr, &m_ShowEnvironment);
             ImGui::MenuItem("Material Editor", nullptr, &m_ShowMaterial);
+            ImGui::MenuItem("World Systems",   nullptr, &m_ShowWorldSystems);
             ImGui::MenuItem("Statistics",      nullptr, &m_ShowStats);
             ImGui::Separator();
             if (ImGui::MenuItem("Reset Layout"))
@@ -930,6 +939,23 @@ namespace Starforge
         {
             make("Directional Light", [](Cosmic::Entity e) { e.AddComponent<Cosmic::DirectionalLightComponent>(); });
             make("Point Light",       [](Cosmic::Entity e) { e.AddComponent<Cosmic::PointLightComponent>(); });
+            ImGui::EndMenu();
+        }
+        // World systems (E18): create the entity with a recipe-authored component;
+        // Scene::SyncWorldSystems builds the asset from the recipe. Opens the panel.
+        if (ImGui::BeginMenu("World"))
+        {
+            auto world = [&](const char* label, std::function<void(Cosmic::Entity)> build)
+            {
+                if (ImGui::MenuItem(label))
+                {
+                    Commands::Create(m_Ctx, label, Cosmic::Entity{}, build);
+                    m_ShowWorldSystems = true;
+                }
+            };
+            world("Terrain",          [](Cosmic::Entity e) { e.AddComponent<Cosmic::TerrainComponent>().UseRecipe = true; });
+            world("Water",            [](Cosmic::Entity e) { e.AddComponent<Cosmic::WaterComponent>().UseRecipe = true; });
+            world("Particle Emitter", [](Cosmic::Entity e) { e.AddComponent<Cosmic::ParticleEmitterComponent>().UseRecipe = true; });
             ImGui::EndMenu();
         }
         make("Camera", [](Cosmic::Entity e) { e.AddComponent<Cosmic::CameraComponent>(); });

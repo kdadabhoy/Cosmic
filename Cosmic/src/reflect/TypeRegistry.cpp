@@ -117,13 +117,82 @@ namespace Cosmic::Reflect
             .Field("LensFlare",          &EnvironmentComponent::LensFlare)
             .Field("LensFlareIntensity", &EnvironmentComponent::LensFlareIntensity).Range(0.0f, 2.0f);
 
-        // World-system holders carry only Ref<> assets (no scalar fields) — they
-        // register as opaque-asset stubs so E8's Inspector shows their presence
-        // and the serializer round-trips the (empty) block. Asset-path fields
-        // arrive with the authoring work orders (E18).
-        ClassIn<TerrainComponent>(r, "Terrain", "World");
-        ClassIn<WaterComponent>(r, "Water", "World");
-        ClassIn<ParticleEmitterComponent>(r, "ParticleEmitter", "World");
+        // World-system authoring recipes (E18). Each holds a Ref<> asset (runtime,
+        // not reflected) plus a reflected recipe that Scene::SyncWorldSystems maps
+        // onto the engine spec structs. UseRecipe is HideInInspector: it serializes
+        // (so a loaded scene rebuilds) but is set by the WorldSystems panel, not a
+        // raw checkbox. BuiltSignature + the Ref are unregistered -> runtime-only.
+        ClassIn<TerrainComponent>(r, "Terrain", "World")
+            .Field("UseRecipe",   &TerrainComponent::UseRecipe).HideInInspector()
+            .Field("WorldSize",   &TerrainComponent::WorldSize).Range(16.0f, 8192.0f)
+            .Field("Resolution",  &TerrainComponent::Resolution).Range(65.0f, 1025.0f).Tooltip("Snapped to 32*2^k + 1 (65..1025) at build")
+            .Field("HeightScale", &TerrainComponent::HeightScale).Range(0.0f, 1000.0f)
+            .Field("BaseHeight",  &TerrainComponent::BaseHeight)
+            .Field("Seed",        &TerrainComponent::Seed)
+            .Field("Octaves",     &TerrainComponent::Octaves).Range(1.0f, 12.0f)
+            .Field("Frequency",   &TerrainComponent::Frequency).Range(0.1f, 32.0f).Tooltip("fBm periods across the terrain")
+            .Field("Lacunarity",  &TerrainComponent::Lacunarity).Range(1.0f, 4.0f)
+            .Field("Gain",        &TerrainComponent::Gain).Range(0.0f, 1.0f)
+            .Field("EdgeFalloff", &TerrainComponent::EdgeFalloff).Range(0.0f, 1.0f).Tooltip("0 = none; else island edge fade")
+            .Field("HeightmapPath", &TerrainComponent::HeightmapPath).AsAssetPath("texture").Tooltip("Grayscale heightmap; empty = procedural fBm")
+            .Field("GrassColor",  &TerrainComponent::GrassColor)
+            .Field("RockColor",   &TerrainComponent::RockColor)
+            .Field("SnowColor",   &TerrainComponent::SnowColor)
+            .Field("SandColor",   &TerrainComponent::SandColor)
+            .Field("GrassTex",    &TerrainComponent::GrassTex).AsAssetPath("texture")
+            .Field("RockTex",     &TerrainComponent::RockTex).AsAssetPath("texture")
+            .Field("SnowTex",     &TerrainComponent::SnowTex).AsAssetPath("texture")
+            .Field("SandTex",     &TerrainComponent::SandTex).AsAssetPath("texture")
+            .Field("SnowHeight",  &TerrainComponent::SnowHeight).Tooltip("World Y where the snow layer fades in")
+            .Field("SnowBlend",   &TerrainComponent::SnowBlend).Range(0.01f, 50.0f);
+
+        ClassIn<WaterComponent>(r, "Water", "World")
+            .Field("UseRecipe", &WaterComponent::UseRecipe).HideInInspector()
+            .Field("Preset",    &WaterComponent::Preset)
+                .EnumValue("Lake", 0).EnumValue("Ocean", 1).EnumValue("Storm", 2)
+            .Field("Center",        &WaterComponent::Center)
+            .Field("Extent",        &WaterComponent::Extent)
+            .Field("SurfaceHeight", &WaterComponent::SurfaceHeight)
+            .Field("GridResolution", &WaterComponent::GridResolution).Range(2.0f, 513.0f)
+            .Field("Amplitude",     &WaterComponent::Amplitude).Range(0.0f, 4.0f).Tooltip("Scales the preset wave heights")
+            .Field("Choppiness",    &WaterComponent::Choppiness).Range(0.0f, 2.0f).Tooltip("Scales the preset wave steepness")
+            .Field("ShallowColor",  &WaterComponent::ShallowColor)
+            .Field("DeepColor",     &WaterComponent::DeepColor)
+            .Field("CausticStrength",  &WaterComponent::CausticStrength).Range(0.0f, 2.0f)
+            .Field("WhitecapStrength", &WaterComponent::WhitecapStrength).Range(0.0f, 2.0f)
+            .Field("SparkleStrength",  &WaterComponent::SparkleStrength).Range(0.0f, 2.0f);
+
+        ClassIn<ParticleEmitterComponent>(r, "ParticleEmitter", "World")
+            .Field("UseRecipe",    &ParticleEmitterComponent::UseRecipe).HideInInspector()
+            .Field("MaxParticles", &ParticleEmitterComponent::MaxParticles).Range(1.0f, 65536.0f)
+            .Field("SpawnRate",    &ParticleEmitterComponent::SpawnRate).Range(0.0f, 5000.0f)
+            .Field("Shape",        &ParticleEmitterComponent::Shape)
+                .EnumValue("Point", 0).EnumValue("Sphere", 1).EnumValue("Cone", 2).EnumValue("Box", 3)
+            .Field("ShapeRadius",  &ParticleEmitterComponent::ShapeRadius).Range(0.0f, 50.0f)
+            .Field("ConeAngleDeg", &ParticleEmitterComponent::ConeAngleDeg).Range(0.0f, 180.0f)
+            .Field("BoxExtents",   &ParticleEmitterComponent::BoxExtents)
+            .Field("SpeedMin",     &ParticleEmitterComponent::SpeedMin).Range(0.0f, 100.0f)
+            .Field("SpeedMax",     &ParticleEmitterComponent::SpeedMax).Range(0.0f, 100.0f)
+            .Field("LifeMin",      &ParticleEmitterComponent::LifeMin).Range(0.01f, 60.0f)
+            .Field("LifeMax",      &ParticleEmitterComponent::LifeMax).Range(0.01f, 60.0f)
+            .Field("Gravity",      &ParticleEmitterComponent::Gravity)
+            .Field("Drag",         &ParticleEmitterComponent::Drag).Range(0.0f, 10.0f)
+            .Field("Wind",         &ParticleEmitterComponent::Wind)
+            .Field("SizeStart",    &ParticleEmitterComponent::SizeStart).Range(0.0f, 50.0f)
+            .Field("SizeEnd",      &ParticleEmitterComponent::SizeEnd).Range(0.0f, 50.0f)
+            .Field("ColorStart",   &ParticleEmitterComponent::ColorStart).Color()
+            .Field("ColorEnd",     &ParticleEmitterComponent::ColorEnd).Color()
+            .Field("Blend",        &ParticleEmitterComponent::Blend)
+                .EnumValue("Alpha", 0).EnumValue("Additive", 1)
+            .Field("Space",        &ParticleEmitterComponent::Space)
+                .EnumValue("World", 0).EnumValue("Local", 1)
+            .Field("TexturePath",  &ParticleEmitterComponent::TexturePath).AsAssetPath("texture").Tooltip("Flipbook/sprite sheet; empty = procedural puff")
+            .Field("FlipbookTilesX", &ParticleEmitterComponent::FlipbookTilesX).Range(1.0f, 16.0f)
+            .Field("FlipbookTilesY", &ParticleEmitterComponent::FlipbookTilesY).Range(1.0f, 16.0f)
+            .Field("FlipbookFps",    &ParticleEmitterComponent::FlipbookFps).Range(0.0f, 60.0f)
+            .Field("FlipbookBlend",  &ParticleEmitterComponent::FlipbookBlend)
+            .Field("SoftFadeDistance",  &ParticleEmitterComponent::SoftFadeDistance).Range(0.0f, 10.0f)
+            .Field("StretchByVelocity", &ParticleEmitterComponent::StretchByVelocity).Range(0.0f, 1.0f);
 
         // Scripting link (E11). ClassName is the only plain reflected field; the
         // dynamic script-field overrides (NativeScriptComponent::Fields) are handled

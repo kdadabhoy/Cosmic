@@ -5,6 +5,7 @@
 #include "core/UUID.h"
 #include "graphics/Material.h"
 #include "graphics/Mesh.h"
+#include "particles/ParticleSystem.h"  // EmitterShape/ParticleBlend/ParticleSpace (E18 emitter recipe)
 #include "scene/ComponentRegistry.h"
 #include "reflect/TypeDescriptor.h"   // Reflect::FieldValue (NativeScriptComponent::Fields)
 #include <glm/glm.hpp>
@@ -378,42 +379,130 @@ namespace Cosmic
     class Water;
     class ParticleEmitter;
 
+    /** Ocean/lake wave-stack preset the WaterComponent recipe seeds from (E18).
+     *  The scalar recipe overrides (amplitude/choppiness/optics) apply on top. */
+    enum class WaterPreset { Lake = 0, Ocean = 1, Storm = 2 };
+
     /**
-     * @brief Heightmap terrain (S8.1). Scene::OnRender3D renders it with
-     * quadtree LOD around the pass camera. The Terrain asset itself is placed
-     * by its own specification (world origin/size) — terrain is world geometry,
-     * so the entity's TransformComponent is intentionally not applied.
+     * @brief Heightmap terrain (S8.1) with an authoring recipe (E18).
+     * Scene::OnRender3D renders TerrainAsset with quadtree LOD around the pass
+     * camera; the asset is placed by its own spec (world origin/size) — terrain
+     * is world geometry, so the entity's TransformComponent is not applied.
+     *
+     * AUTHORING (E18): when UseRecipe is set, Scene::SyncWorldSystems (re)builds
+     * TerrainAsset from the reflected recipe below via TerrainSpecification. The
+     * terrain build is expensive, so the auto-build only runs once (asset null +
+     * never built); the Starforge WorldSystems panel drives explicit rebuilds off
+     * the JobSystem. An entity whose TerrainAsset was set in CODE keeps UseRecipe
+     * false and is never touched (the Frontier compat gate).
      */
     struct COSMIC_API TerrainComponent
     {
-        Ref<Terrain> TerrainAsset;           // entity skipped when null
+        Ref<Terrain> TerrainAsset;           // runtime; entity skipped when null
+
+        // --- Reflected recipe (maps onto TerrainSpecification) ----------------
+        bool        UseRecipe   = false;     // gates SyncWorldSystems regen (compat)
+        float       WorldSize   = 512.0f;    // meters along X and Z
+        int32_t     Resolution  = 513;       // clamped to 32*2^k + 1 at build
+        float       HeightScale = 60.0f;     // world height of a 1.0 sample
+        float       BaseHeight  = 0.0f;      // world Y of a 0.0 sample
+        uint32_t    Seed        = 1337;
+        int32_t     Octaves     = 6;
+        float       Frequency   = 3.0f;      // fBm periods across the terrain
+        float       Lacunarity  = 2.0f;
+        float       Gain        = 0.5f;
+        float       EdgeFalloff = 0.0f;      // 0 = none; else island edge fade (0..1)
+        std::string HeightmapPath;           // AssetPath; empty -> procedural fBm
+        // Auto-splat layer tints (0=grass,1=rock,2=snow,3=sand). *Color -> picker.
+        glm::vec3   GrassColor{ 0.24f, 0.38f, 0.15f };
+        glm::vec3   RockColor { 0.36f, 0.33f, 0.31f };
+        glm::vec3   SnowColor { 0.92f, 0.94f, 0.98f };
+        glm::vec3   SandColor { 0.55f, 0.48f, 0.36f };
+        // Optional splat albedo textures (resolved on the main thread at build).
+        std::string GrassTex, RockTex, SnowTex, SandTex;   // AssetPath
+        float       SnowHeight  = 30.0f;     // world Y where the snow layer fades in
+        float       SnowBlend   = 6.0f;      // smoothstep half-width for the snow band
+
+        // Runtime-only (NOT reflected): hash of the recipe the current asset was
+        // built from. 0 == never built (SyncWorldSystems' one-shot auto-build gate).
+        std::size_t BuiltSignature = 0;
 
         TerrainComponent() = default;
         TerrainComponent(const TerrainComponent&) = default;
     };
 
     /**
-     * @brief Water surface (S9.1). A data holder: water is a MULTI-PASS effect
-     * (planar reflection re-render + scene-color refraction grab), so the app
-     * (or the future SceneRenderer, S12) sequences Water's passes explicitly —
-     * Scene::OnRender3D cannot re-render the world mid-pass and skips this.
+     * @brief Water surface (S9.1) with an authoring recipe (E18). Water is a
+     * MULTI-PASS effect; the SceneRenderer sequences planar reflection, and the
+     * simple Scene::OnRenderWorldFX path (editor/PlayerLayer) draws it with the
+     * cheap IBL-fallback reflection. When UseRecipe is set, Scene::SyncWorldSystems
+     * (re)builds WaterAsset from the recipe (cheap — Water::Create is GL-free);
+     * a code-set WaterAsset keeps UseRecipe false and is never touched.
      */
     struct COSMIC_API WaterComponent
     {
-        Ref<Water> WaterAsset;
+        Ref<Water> WaterAsset;               // runtime
+
+        // --- Reflected recipe (maps onto WaterSpecification) ------------------
+        bool        UseRecipe = false;       // gates SyncWorldSystems regen (compat)
+        WaterPreset Preset = WaterPreset::Lake;   // seeds the wave stack + base optics
+        glm::vec2   Center{ 0.0f };          // world XZ center of the plane
+        glm::vec2   Extent{ 200.0f, 200.0f };// world size along X and Z
+        float       SurfaceHeight = 0.0f;    // world Y of the calm surface
+        int32_t     GridResolution = 129;    // vertices per side of the displaced grid
+        float       Amplitude  = 1.0f;       // multiplies the preset wave amplitudes
+        float       Choppiness = 1.0f;       // multiplies the preset wave steepness
+        glm::vec3   ShallowColor{ 0.10f, 0.42f, 0.45f };
+        glm::vec3   DeepColor{ 0.02f, 0.12f, 0.20f };
+        float       CausticStrength  = 0.0f;
+        float       WhitecapStrength = 0.0f;
+        float       SparkleStrength  = 0.0f;
+
+        std::size_t BuiltSignature = 0;      // runtime; not reflected
 
         WaterComponent() = default;
         WaterComponent(const WaterComponent&) = default;
     };
 
     /**
-     * @brief GPU particle emitter (S10.1). A data holder: emitters need a
-     * per-frame Update(dt) and render with camera + scene-depth arguments the
-     * app owns, so apps drive Update/Render directly (see ParticleEmitter.h).
+     * @brief GPU particle emitter (S10.1) with an authoring recipe (E18).
+     * Scene::OnRenderWorldFX updates + draws the emitter (placed at the entity's
+     * world transform). When UseRecipe is set, Scene::SyncWorldSystems (re)builds
+     * Emitter from the recipe (ParticleEmitter::Create is cheap, GL-lazy). The
+     * recipe's reflected fields ARE the `.cemitter` preset (saved/loaded through
+     * the generic reflected-struct serializer). Default values describe a warm
+     * additive campfire ember cone. A code-set Emitter keeps UseRecipe false.
      */
     struct COSMIC_API ParticleEmitterComponent
     {
-        Ref<ParticleEmitter> Emitter;
+        Ref<ParticleEmitter> Emitter;        // runtime
+
+        // --- Reflected recipe (maps onto ParticleEmitterSpec) -----------------
+        bool          UseRecipe = false;     // gates SyncWorldSystems regen (compat)
+        uint32_t      MaxParticles = 2048;
+        float         SpawnRate    = 60.0f;  // particles / second
+        EmitterShape  Shape        = EmitterShape::Cone;
+        float         ShapeRadius  = 0.5f;   // Sphere / Cone base
+        float         ConeAngleDeg = 20.0f;
+        glm::vec3     BoxExtents{ 1.0f };
+        float         SpeedMin = 1.0f, SpeedMax = 3.0f;
+        float         LifeMin  = 1.0f, LifeMax  = 2.5f;
+        glm::vec3     Gravity{ 0.0f, 1.5f, 0.0f };   // hot air lifts embers
+        float         Drag = 0.6f;
+        glm::vec3     Wind{ 0.4f, 0.0f, 0.0f };
+        float         SizeStart = 0.10f, SizeEnd = 0.02f;
+        glm::vec4     ColorStart{ 1.0f, 0.75f, 0.30f, 1.0f };   // Color
+        glm::vec4     ColorEnd{ 1.0f, 0.25f, 0.05f, 0.0f };     // Color
+        ParticleBlend Blend = ParticleBlend::Additive;
+        ParticleSpace Space = ParticleSpace::World;
+        std::string   TexturePath;           // AssetPath; empty -> procedural puff
+        int32_t       FlipbookTilesX = 1, FlipbookTilesY = 1;
+        float         FlipbookFps = 0.0f;
+        bool          FlipbookBlend = false;
+        float         SoftFadeDistance   = 0.2f;
+        float         StretchByVelocity  = 0.0f;
+
+        std::size_t BuiltSignature = 0;      // runtime; not reflected
 
         ParticleEmitterComponent() = default;
         ParticleEmitterComponent(const ParticleEmitterComponent&) = default;

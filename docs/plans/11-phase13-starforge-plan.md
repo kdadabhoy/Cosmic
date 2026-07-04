@@ -1009,6 +1009,42 @@ environment to a sunset w/ bloom — all undoable, all persisted, Frontier untou
 
 ### E18 — World-systems authoring (terrain / water / particles)
 
+> **✅ 2026-07-04.** Engine: `TerrainComponent`/`WaterComponent`/`ParticleEmitterComponent`
+> gained reflected authoring recipes (a POD subset flattened onto the component — the
+> component's reflected fields ARE the recipe, sidestepping the reflection member-pointer
+> gap) + a `UseRecipe` gate (HideInInspector; serializes but set by the panel) + a runtime
+> `BuiltSignature`. NEW `scene/WorldSystemRecipes.h/.cpp` — GL-free `BuildTerrainSpec`/
+> `BuildWaterSpec`/`BuildEmitterSpec` (+ `*RecipeSignature` hashes + `ClampTerrainResolution`
+> snapping to a valid 32*2^k+1) mapping each recipe onto its engine spec, plus a main-thread
+> `ResolveTerrainSpecAssets` (VFS heightmap + splat `AssetLibrary::GetTexture`) kept out of the
+> pure Build* so the mapping stays headless-testable. NEW `water/Presets.h`
+> (`Presets::Lake/Ocean/StormWater` — the spec assumed it existed; created generic). All recipe
+> fields registered in `TypeRegistry.cpp` (replacing the field-less stubs). `Scene::
+> SyncWorldSystems()` (called at the top of `OnRender3D`, after `SyncPrimitiveMeshes`)
+> (re)builds assets **only when UseRecipe is set** — terrain auto-builds ONCE (null + never
+> built; the panel drives rebuilds off the JobSystem), water/particles rebuild on any
+> signature change (both cheap). NEW `Scene::OnRenderWorldFX()` draws water + particles from
+> the ECS after the opaque pass (IBL-fallback water reflection; particles placed at the entity
+> world transform + animated by an internal clock), wired into Starforge `RenderViewport` +
+> `PlayerLayer::RenderScene` — so the ocean/campfire render in the editor AND the shipped
+> player. Starforge: NEW `panels/WorldSystemsPanel` (reflection-driven fields w/ per-edit undo
+> via `CommitFieldEditFor`, a **Regenerate Terrain** button that offloads the CPU build to the
+> `JobSystem` w/ a background poll, water presets, and `.cemitter` Save/Load through the
+> generic reflected-struct serializer) + an **Entity ▸ World** create menu + a **View ▸ World
+> Systems** toggle (off by default). NEW `tests/test_worldsystems.cpp` (7 cases): resolution
+> clamp, terrain/water/emitter recipe→spec mapping (+ headless `Terrain::Create`/`Water::Create`),
+> SnowBlend floor, `.cemitter` round-trip, signature change detection. Build green, zero
+> warnings (all 5 projects), **CosmicTests 187/187** (was 180); Starforge + Engine3DDemo
+> smoke-runs boot with zero GL/shader/framebuffer errors → compat gate satisfied (shipped apps
+> attach none of these components, so `SyncWorldSystems` is a no-op and `OnRenderWorldFX` is
+> never called for them). **Deviations:** (1) the editor/PlayerLayer water uses the cheap
+> IBL-fallback reflection — full planar reflection stays the SceneRenderer path (per spec:
+> "reflection setup handled by SceneRenderer"); (2) terrain auto-build on scene LOAD is
+> synchronous (a one-time hitch the SceneManager fade covers; the JobSystem async path serves
+> interactive Create/Regenerate); (3) terrain sculpt/splat-paint brushes remain parked (§9 P5);
+> (4) the acceptance's manual **author terrain+ocean+campfire → save → reload → Play** demo is
+> the user's on-machine step (the headless test is the automated half).
+
 **Files:** Starforge `panels/WorldSystemsPanel.*` (+ small per-system editors); engine ONLY IF
 gaps appear while wiring (each must be its own noted deviation).
 

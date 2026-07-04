@@ -7,6 +7,9 @@
 #include "renderer/Renderer3D.h"
 #include "assets/AssetLibrary.h"
 #include "terrain/Terrain.h"
+#include "water/Water.h"
+#include "particles/ParticleSystem.h"
+#include "scene/WorldSystemRecipes.h"
 #include "camera/OrthographicCamera.h"
 #include "camera/Camera.h"
 #include "jobs/JobSystem.h"
@@ -108,6 +111,116 @@ namespace Cosmic
 				mr.MaterialAsset = AssetLibrary::GetMaterial(mr.MaterialPath);
 			}
 		}
+	}
+
+	void Scene::SyncWorldSystems()
+	{
+		// Terrain (E18): auto-build ONCE (asset null + never built) — the build is
+		// expensive, so signature-change rebuilds are the editor's explicit,
+		// JobSystem-offloaded job. UseRecipe gates the whole thing (compat: a
+		// code-set TerrainAsset keeps UseRecipe false and is never touched).
+		{
+			auto view = m_Registry.view<TerrainComponent>();
+			for (auto e : view)
+			{
+				auto& tc = view.get<TerrainComponent>(e);
+				if (!tc.UseRecipe || tc.TerrainAsset || tc.BuiltSignature != 0)
+					continue;
+				TerrainSpecification spec = BuildTerrainSpec(tc);
+				ResolveTerrainSpecAssets(tc, spec);          // main thread (VFS + GL textures)
+				tc.TerrainAsset    = Terrain::Create(spec);  // CPU heightfield (GL-free)
+				tc.BuiltSignature  = TerrainRecipeSignature(tc);
+			}
+		}
+
+		// Water (E18): cheap (Water::Create is GL-free) — rebuild on null OR any
+		// recipe change so Inspector/panel edits apply live.
+		{
+			auto view = m_Registry.view<WaterComponent>();
+			for (auto e : view)
+			{
+				auto& wc = view.get<WaterComponent>(e);
+				if (!wc.UseRecipe)
+					continue;
+				const std::size_t sig = WaterRecipeSignature(wc);
+				if (wc.WaterAsset && wc.BuiltSignature == sig)
+					continue;
+				wc.WaterAsset     = Water::Create(BuildWaterSpec(wc));
+				wc.BuiltSignature = sig;
+			}
+		}
+
+		// Particles (E18): cheap (GPU pool is lazy) — rebuild on null OR any change.
+		{
+			auto view = m_Registry.view<ParticleEmitterComponent>();
+			for (auto e : view)
+			{
+				auto& pc = view.get<ParticleEmitterComponent>(e);
+				if (!pc.UseRecipe)
+					continue;
+				const std::size_t sig = EmitterRecipeSignature(pc);
+				if (pc.Emitter && pc.BuiltSignature == sig)
+					continue;
+				ParticleEmitterSpec spec = BuildEmitterSpec(pc);
+				if (!pc.TexturePath.empty())
+					spec.Texture = AssetLibrary::GetTexture(pc.TexturePath);
+				pc.Emitter        = ParticleEmitter::Create(spec);
+				pc.BuiltSignature = sig;
+			}
+		}
+	}
+
+	void Scene::OnRenderWorldFX(const Camera& camera,
+	                            uint32_t sceneColorID, uint32_t sceneDepthID,
+	                            uint32_t viewportWidth, uint32_t viewportHeight,
+	                            float deltaTime)
+	{
+		m_WorldTime += deltaTime;
+
+		// The first terrain (if any) acts as the shore-attenuation source for water.
+		Ref<Terrain> shore;
+		{
+			auto tView = m_Registry.view<TerrainComponent>();
+			for (auto e : tView)
+				if (Ref<Terrain> t = tView.get<TerrainComponent>(e).TerrainAsset) { shore = t; break; }
+		}
+
+		const glm::mat4 viewProj = camera.GetViewProjectionMatrix();
+		const glm::mat4 view     = camera.GetViewMatrix();
+		const glm::mat4 invVP    = glm::inverse(viewProj);
+
+		// Water + particles draw immediately (not queued); wrap in a scene so the
+		// camera UBO is live (their vertex stages read CameraBlock).
+		Renderer3D::BeginScene(camera);
+
+		{
+			auto view3 = m_Registry.view<WaterComponent>();
+			for (auto e : view3)
+			{
+				auto& wc = view3.get<WaterComponent>(e);
+				if (!wc.WaterAsset)
+					continue;
+				wc.WaterAsset->SetShoreTerrain(shore);
+				wc.WaterAsset->Render(camera.GetPosition(), m_WorldTime, viewProj,
+				                      sceneColorID, sceneDepthID,
+				                      viewportWidth, viewportHeight, (int)(uint32_t)e);
+			}
+		}
+
+		{
+			auto pview = m_Registry.view<TransformComponent, ParticleEmitterComponent>();
+			for (auto e : pview)
+			{
+				auto& pc = pview.get<ParticleEmitterComponent>(e);
+				if (!pc.Emitter)
+					continue;
+				pc.Emitter->SetTransform(WorldOf(e));
+				pc.Emitter->Update(deltaTime, m_WorldTime);
+				pc.Emitter->Render(view, sceneDepthID, invVP);
+			}
+		}
+
+		Renderer3D::EndScene();
 	}
 
 	Entity Scene::CreateEntity(const std::string& name)
@@ -479,6 +592,11 @@ namespace Cosmic
 		// Parametric primitives (E15): (re)build any mesh whose parameters changed
 		// or that is still null after a load, before the draw loop consumes it.
 		SyncPrimitiveMeshes();
+
+		// World-system recipes (E18): (re)build terrain/water/particle assets from
+		// their authoring recipes. No-op for entities without a recipe (UseRecipe
+		// false) — so shipped apps that never attach these components are unaffected.
+		SyncWorldSystems();
 
 		// --- Gather scene lights (S4.5) and upload before drawing. ---
 		Renderer3D::SceneLightsDesc lights;

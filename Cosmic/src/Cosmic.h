@@ -44,6 +44,7 @@
 #include "renderer/CoverageCapture.h"    // F8  — top-down snow/coverage accumulation mask
 #include "terrain/Terrain.h"             // S8  — heightmap terrain (quadtree LOD + queries)
 #include "water/Water.h"                 // S9  — Gerstner water surface + buoyancy queries
+#include "water/Presets.h"               // E18 — ocean/lake/storm water presets
 #include "particles/ParticleSystem.h"    // S10 — GPU particles + ribbon trails
 #include "particles/Presets.h"           // F8/F9 — atmospheric particle emitter presets
 #include "graphics/Buffer.h"
@@ -101,6 +102,7 @@
 #include "reflect/TypeRegistry.h"
 #include "scene/SceneSerializer.h"     // E2 — JSON scene/prefab/material (de)serialization
 #include "scene/SceneManager.h"        // E5 — async scene load + fade transitions
+#include "scene/WorldSystemRecipes.h"  // E18 — terrain/water/particle recipe -> spec mapping
 
 // Scripting (E11) — native C++ scripts compiled into a hot-reloadable project
 // DLL. ScriptableEntity is the base class; ModuleMacros is the registration DSL

@@ -118,6 +118,33 @@ namespace Cosmic
 		 */
 		void SyncPrimitiveMeshes();
 
+		/**
+		 * @brief Regenerate world-system assets from their authoring recipes (E18).
+		 * For every TerrainComponent / WaterComponent / ParticleEmitterComponent
+		 * whose UseRecipe is set, (re)builds the held asset when it is null or the
+		 * recipe-parameter signature changed — terrain only auto-builds once (its
+		 * build is expensive; the editor drives rebuilds off the JobSystem). An
+		 * entity whose asset was set in CODE keeps UseRecipe false and is never
+		 * touched (the shipped-app compat gate). Called automatically at the top of
+		 * OnRender3D; main-thread / GL (uploads assets, resolves AssetPath fields).
+		 */
+		void SyncWorldSystems();
+
+		/**
+		 * @brief Draw the scene's water + particle components (E18) into the
+		 * currently bound target, AFTER OnRender3D has drawn the opaque world.
+		 * Water grabs `sceneColorID`/`sceneDepthID` for refraction/depth-fade (pass
+		 * the bound FBO's attachments + pixel size); particles are updated by
+		 * `deltaTime` and placed at each entity's world transform. Uses the cheap
+		 * IBL-fallback water reflection (planar reflection is a SceneRenderer path).
+		 * Only the editor (Starforge) and PlayerLayer call this — shipped apps that
+		 * sequence water/particles themselves are unaffected. Main-thread / GL.
+		 */
+		void OnRenderWorldFX(const Camera& camera,
+		                     uint32_t sceneColorID, uint32_t sceneDepthID,
+		                     uint32_t viewportWidth, uint32_t viewportHeight,
+		                     float deltaTime);
+
 		/** @brief Allocates and attaches an execution system to the scene lifecycle. */
 		template<typename T, typename... Args>
 		T& AddSystem(Args&&... args)
@@ -178,6 +205,8 @@ namespace Cosmic
 	private:
 		/** @brief Recursive world-transform walk keyed by entt handle (E3). */
 		glm::mat4 WorldOf(entt::entity handle);
+
+		float m_WorldTime = 0.0f;   // accumulated seconds for water/particle animation (E18)
 
 		entt::registry m_Registry;
 		std::vector<Scope<System>>   m_Systems;

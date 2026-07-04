@@ -354,10 +354,13 @@ Phase 11's SceneRenderer; interleave at will.
 > reflected-struct serializer + `AssetLibrary::GetMaterial`/`BuildMaterial`, MeshRenderer material
 > slot, Material Editor + Environment panels), **E19** package & ship (`boot.cfg` no-args boot +
 > Starforge Packager → `dist/<Project>/`), **E21** polish subset (Statistics window + shortcut
-> reference + `docs/design/starforge-ui.md`). **Remaining Stage-D work orders: E18 (world-systems
-> authoring — terrain/water/particle reflected recipes + regenerate) and E20 (telemetry recording
-> panel) — the two heaviest; best as focused follow-up sessions. E21's theme pass / sample project /
-> recorded acceptance demo also remain (the demo needs E18+E20).**
+> reference + `docs/design/starforge-ui.md`). **E18** world-systems authoring **shipped
+> 2026-07-04** (UNcommitted): reflected terrain/water/particle recipes on their components +
+> `scene/WorldSystemRecipes` mapping + `water/Presets.h` + `Scene::SyncWorldSystems` recipe-gated
+> regen (JobSystem terrain rebuild) + `Scene::OnRenderWorldFX` water/particle render (editor +
+> PlayerLayer) + Starforge `WorldSystemsPanel` (+ `.cemitter` save/load); CosmicTests 187/187,
+> compat gate satisfied. **Remaining Stage-D work order: E20 (telemetry recording panel). E21's
+> theme pass / sample project / recorded acceptance demo also remain (the demo needs E20).**
 - **Do:** doc 11 work orders in order: E1 reflection → E2 UUID+JSON serializer → E3 hierarchy →
   E4 camera/environment components → E5 SceneManager → E6 shell → E7 undo → E8 inspector →
   E9 viewport tools → E10 content browser → E11 script host → E12 hot reload → E13 play mode →

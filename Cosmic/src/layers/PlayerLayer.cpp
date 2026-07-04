@@ -102,7 +102,7 @@ namespace Cosmic
         if (!Application::Get().IsPaused())
             m_Scripts.Tick(ts);
 
-        RenderScene();
+        RenderScene(ts);
     }
 
     void PlayerLayer::OnFixedUpdate(float fixedDt)
@@ -138,7 +138,7 @@ namespace Cosmic
                       glm::perspective(glm::radians(60.0f), aspect, 0.1f, 1000.0f), eye);
     }
 
-    void PlayerLayer::RenderScene()
+    void PlayerLayer::RenderScene(float dt)
     {
         auto& app = Application::Get();
         Ref<FrameBuffer> fb = app.GetFrameBuffer();
@@ -153,7 +153,14 @@ namespace Cosmic
         RenderCommand::Clear();
 
         if (m_TrackedScene)
+        {
             m_TrackedScene->OnRender3D(*m_Camera);
+            // Water + particle components (E18) draw after the opaque world, using
+            // this FBO's color/depth for refraction/depth-fade + soft particles.
+            m_TrackedScene->OnRenderWorldFX(*m_Camera,
+                fb->GetColorAttachmentRendererID(0), fb->GetDepthAttachmentRendererID(),
+                fb->GetWidth(), fb->GetHeight(), dt);
+        }
     }
 
     void PlayerLayer::OnImGuiRender()
