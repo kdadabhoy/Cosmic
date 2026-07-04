@@ -20,6 +20,8 @@ namespace Cosmic
 		copy->m_Float3s = source->m_Float3s;
 		copy->m_Float4s = source->m_Float4s;
 		copy->m_Textures = source->m_Textures;
+		copy->m_Transparent      = source->m_Transparent;        // S12.2 queue hint
+		copy->m_InstancingShader = source->m_InstancingShader;   // S12.3 twin
 		return copy;
 	}
 
@@ -74,6 +76,39 @@ namespace Cosmic
 			if (!texture) continue;
 			texture->Bind(slot);
 			m_Shader->SetInt(name, static_cast<int>(slot));
+			++slot;
+		}
+	}
+
+	/**
+	 * BindFullTo
+	 * BindFull(), but onto a caller-supplied shader (the S12.3 instancing twin):
+	 * binds `shader` and streams this material's cached uniforms + texture slots
+	 * to it. The twin shares the material's uniform contract; names it does not
+	 * declare no-op on location -1.
+	 */
+	void Material::BindFullTo(const Ref<Shader>& shader)
+	{
+		if (!shader)
+			return;
+
+		shader->Bind();
+
+		for (auto const& [name, val] : m_Floats)
+			shader->SetFloat(name, val);
+		for (auto const& [name, val] : m_Float2s)
+			shader->SetFloat2(name, val);
+		for (auto const& [name, val] : m_Float3s)
+			shader->SetFloat3(name, val);
+		for (auto const& [name, val] : m_Float4s)
+			shader->SetFloat4(name, val);
+
+		uint32_t slot = 0;
+		for (auto const& [name, texture] : m_Textures)
+		{
+			if (!texture) continue;
+			texture->Bind(slot);
+			shader->SetInt(name, static_cast<int>(slot));
 			++slot;
 		}
 	}

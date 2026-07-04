@@ -75,6 +75,46 @@ namespace Cosmic
          */
         void    BindFull();
 
+        /**
+         * BindFullTo
+         * * BindFull(), but onto `shader` instead of the material's own shader:
+         * binds `shader` and uploads every cached uniform + texture slot to it.
+         * Used by Renderer3D's S12.3 auto-instancing to bind this material's
+         * values onto its instancing twin (see SetInstancingShader) — the twin
+         * declares the same uniform contract, so the cache maps 1:1. Undeclared
+         * names no-op on location -1 (engine-wide silent-ignore rule).
+         */
+        void    BindFullTo(const Ref<Shader>& shader);
+
+        ////////////////////////////////
+        // Render-queue hints (S12.2 / S12.3)
+        ///////////////////////////////
+
+        /**
+         * @brief Mark this material TRANSPARENT (default false = opaque).
+         * Renderer3D's queue draws transparent-material meshes AFTER all opaques,
+         * sorted back-to-front, with depth writes off (depth test stays on) under
+         * the engine's default Alpha blend — the state juggling apps used to do
+         * by hand around DrawMesh. Opaque materials sort for state grouping +
+         * front-to-back instead.
+         */
+        void    SetTransparent(bool transparent)    { m_Transparent = transparent; }
+        bool    IsTransparent() const               { return m_Transparent; }
+
+        /**
+         * @brief Register this material's INSTANCING TWIN — a shader with the
+         * same uniform/texture contract that reads per-instance { mat4 Model;
+         * vec4 Tint; } from the SSBO at Bindings::InstancesSsbo instead of a
+         * per-draw u_Model (e.g. PBR.glsl -> PBRInstanced.glsl). When set,
+         * Renderer3D's queue may collapse runs of identical (mesh, material)
+         * opaque submissions with entityID == -1 into one instanced draw
+         * (S12.3). Transforms should be rigid + uniform scale — the twin
+         * derives normals from mat3(Model) (same documented limitation as
+         * InstanceSet). Null (default) = never auto-instanced.
+         */
+        void                SetInstancingShader(const Ref<Shader>& shader) { m_InstancingShader = shader; }
+        const Ref<Shader>&  GetInstancingShader() const                    { return m_InstancingShader; }
+
         ////////////////////////////////
         // Accessors
         ///////////////////////////////
@@ -96,6 +136,10 @@ namespace Cosmic
     private:
         Ref<Shader>     m_Shader;
         std::string     m_Name;
+
+        // Render-queue hints (S12.2/S12.3). Clone() copies both.
+        bool            m_Transparent = false;
+        Ref<Shader>     m_InstancingShader;
 
         std::unordered_map<std::string, float>          m_Floats;
         std::unordered_map<std::string, glm::vec2>      m_Float2s;

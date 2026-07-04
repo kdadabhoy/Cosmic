@@ -278,10 +278,34 @@ instancing, LODs, GPU profiler, texture pipeline.
 - **Done when:** the volcano/snow/water demos run ≥60 fps at 1080p with profiler evidence — the
   "realistic volcanoes, water, snow" goal made concrete (doc 10 F17).
 
-### Phase 12 — RHI hardening + Vulkan gate *(doc 05: S13; backlog S14)*
+### Phase 12 — RHI hardening + Vulkan gate *(doc 05: S12 remainder + S13; backlog S14)* — ✅ code complete 2026-07-03
 Conformance audit (no GL outside the platform layer), frame-lifecycle spec, then the explicit
 stay-GL / go-Vulkan / adopt-RHI decision **made on S12 profiler data**, not vibes. Groom the S14
 game-engine backlog (animation, Jolt gate, editor app, serialization) against real needs.
+> **Status (2026-07-03): ALL items code-complete on branch `phase-7-3d-foundations`.**
+> **S12 remainder (per Phase 11's carve-out):** Renderer3D mesh submission is now a sorted
+> render queue — S12.1 frustum culling at submit (pass frustum, stats prove cull rate, opt-out
+> verb), S12.2 sort keys (opaque shader→material→mesh→front-to-back; `Material::SetTransparent`
+> = engine-owned back-to-front + depth-write-off, replacing app state juggling), S12.3
+> auto-instancing (runs ≥ 4 of identical mesh/material with a registered
+> `Material::SetInstancingShader` twin + entityID −1 collapse to one instanced draw), S12.4
+> `LODGroupComponent` (distance-switched levels, casts with the lit pass's level, demo entity in
+> Engine3DDemo), S12.6 texture pipeline (mip policy + sRGB audit closed by-design; **BCn parked
+> w/ unlock** — doc 05 §11). **Deferred-submission semantics are a documented breaking change**
+> (material values read at flush → `Material::Clone` for per-draw variation; Engine3DDemo's PBR
+> grid/lit aircraft + IslandWorld's river/waterfall migrated). Pure queue logic is header-only
+> (`renderer/RenderQueue.h`) + headless-tested (`tests/test_render_queue.cpp`).
+> **S13:** S13.1 audit ran CLEAN (all engine+app hits were comments) and is now enforced by
+> `tests/check_gl_conformance.ps1` + a CI step; S13.2 shipped
+> [`docs/design/frame-lifecycle.md`](../design/frame-lifecycle.md) (the second-backend spec:
+> resource rules, binding registry, state contract, pass graph, queue semantics, texture
+> policy); S13.3 evaluated against §0's reopen conditions → **STAY ON OPENGL
+> (provisional-closed)** — no condition is true; formal closure = the user's on-GPU acceptance
+> run confirming CPU frame ≪ GPU frame in the F3 HUD. **S14 groomed** (doc 05 §13): 4 rows
+> promoted to Phase 13, positional-audio + decals annotations updated, nothing newly unlocked.
+> **Remaining — user acceptance pass:** fly Engine3DDemo ("Performance (S12)" section: cull %,
+> auto-instance ring, LOD swaps at 15/35/90 m) + the Frontier worlds (profiler HUD cull-rate
+> rows), confirm ≥ 60 fps and CPU≪GPU, commit screenshots; then this phase closes.
 
 ### Phase 13 — Starforge editor *(doc 11 — promotes the doc 05 S14 backlog)*
 The Cosmic editor: assemble scenes visually (hierarchy/inspector/content browser on the S5

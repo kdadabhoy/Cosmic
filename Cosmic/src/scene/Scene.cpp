@@ -205,7 +205,8 @@ namespace Cosmic
 	void Scene::OnRender3D(const Camera& camera)
 	{
 		// The scene owns the full 3D pass. Callers must NOT wrap this in their own
-		// BeginScene/EndScene. No sorting/culling here — that is S12.
+		// BeginScene/EndScene. Sorting + frustum culling happen inside Renderer3D's
+		// queue (S12.1/S12.2) — this method only decides WHAT to submit.
 
 		// --- Gather scene lights (S4.5) and upload before drawing. ---
 		Renderer3D::SceneLightsDesc lights;
@@ -269,6 +270,26 @@ namespace Cosmic
 			else
 				Renderer3D::DrawMesh(mr.MeshAsset, xform, mr.Color, entityID);
 		});
+
+		// LOD groups (S12.4): one level per entity, picked by camera distance.
+		// Beyond the last level's MaxDistance the entity draws nothing at all.
+		{
+			auto lodView = m_Registry.view<TransformComponent, LODGroupComponent>();
+			lodView.each([&](auto entity, const TransformComponent& transform, const LODGroupComponent& lod)
+			{
+				const float dist = glm::distance(camera.GetPosition(), transform.Position);
+				const int level = LODGroupComponent::SelectLevel(lod.Levels, dist);
+				if (level < 0 || !lod.Levels[level].MeshAsset)
+					return;
+
+				const int entityID = (int)(uint32_t)entity;
+				const glm::mat4 xform = transform.GetTransform();
+				if (lod.MaterialAsset)
+					Renderer3D::DrawMesh(lod.Levels[level].MeshAsset, xform, lod.MaterialAsset, entityID);
+				else
+					Renderer3D::DrawMesh(lod.Levels[level].MeshAsset, xform, lod.Color, entityID);
+			});
+		}
 
 		Renderer3D::EndScene();
 	}

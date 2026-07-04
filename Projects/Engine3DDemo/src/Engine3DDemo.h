@@ -39,6 +39,7 @@
 #include <Cosmic.h>
 
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace Workspace
@@ -142,13 +143,22 @@ namespace Workspace
 
 		// ---- PBR (S6.2) — Cook-Torrance metallic-roughness sphere grid ----
 		Cosmic::Ref<Cosmic::Mesh>     m_PbrSphere;     // shared unit sphere
-		Cosmic::Ref<Cosmic::Material> m_PbrMaterial;   // PBR.glsl material (params re-Set per sphere)
+		Cosmic::Ref<Cosmic::Material> m_PbrMaterial;   // PBR.glsl base material (grid clones derive from it)
+		// One clone per sphere (S12.2: material values are read at queue flush,
+		// so per-draw variation needs distinct Material instances).
+		std::vector<Cosmic::Ref<Cosmic::Material>> m_PbrGridMaterials;
 		bool      m_PbrSpheres = false;                // draw the metallic/roughness grid
 		glm::vec3 m_PbrAlbedo{ 0.95f, 0.78f, 0.35f };  // base color (gold-ish, reads well metallic)
 		void      DrawPbrSpheres();                    // NxN grid: roughness across, metallic down
 
+		// ---- Auto-instancing demo (S12.3) ----
+		Cosmic::Ref<Cosmic::Material> m_AutoInstMaterial;  // shared PBR mat + PBRInstanced twin
+		bool m_AutoInstDemo = false;                       // 48-sphere ring -> 1 instanced draw
+
 		// ---- Lighting v1 (S4.5) ----
 		Cosmic::Ref<Cosmic::Material> m_LitMaterial;   // MeshLit.glsl material
+		// Per-part-color MeshLit clones (S12.2 queue semantics — see DrawAircraft).
+		std::vector<std::pair<glm::vec4, Cosmic::Ref<Cosmic::Material>>> m_LitPartMaterials;
 		bool      m_LitAircraft = false;               // draw the aircraft lit (UBO lights)
 		glm::vec3 m_SunColor{ 1.0f, 0.97f, 0.9f };
 		float     m_SunIntensity = 1.0f;

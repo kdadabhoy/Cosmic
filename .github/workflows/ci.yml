@@ -14,6 +14,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # S13.1 conformance audit (doc 05 §12): no raw gl*/GL_* tokens outside
+      # platform/OpenGL/ — every GPU operation goes through RendererAPI verbs.
+      - name: GL conformance audit
+        shell: pwsh
+        run: ./tests/check_gl_conformance.ps1
+
       - name: Cache CMake build
         uses: actions/cache@v4
         with:

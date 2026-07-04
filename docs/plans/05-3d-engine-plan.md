@@ -99,9 +99,9 @@ Carried forward from the original plan and extended — everything already shipp
 | S9 | Water system | **S9.1–S9.2 ✅ code-complete 2026-07-03** (Tier 1; S9.3 FFT + S9.4 parked per plan; user visual pass pending) |
 | S10 | GPU particles + volumetrics | **S10.1/S10.2/S10.5 ✅ + tier-1 S10.3 code-complete 2026-07-03** (froxel grid + true raymarch = follow-ups; user visual pass pending) |
 | S11 | Weather/nature systems + flagship demos (volcano, snow, ocean) | ✅ code complete 2026-07-03 (via doc 10 F1–F17) |
-| S12 | Performance & scale (culling, sorting, instancing, LOD, profiler) | planned |
-| S13 | RHI hardening + Vulkan decision gate | gate |
-| S14 | Game-engine tier backlog (animation, physics, editor app, …) | parking lot with unlock conditions |
+| S12 | Performance & scale (culling, sorting, instancing, LOD, profiler) | **S12.1–S12.6 ✅ code-complete 2026-07-03** (S12.5 + explicit instancing via Phase 11 F3/F5; BCn parked w/ unlock; user acceptance run pending) |
+| S13 | RHI hardening + Vulkan decision gate | **S13.1/S13.2 ✅ 2026-07-03; S13.3 = STAY GL (provisional-closed, confirms on the user profiler pass)** |
+| S14 | Game-engine tier backlog (animation, physics, editor app, …) | parking lot with unlock conditions — groomed 2026-07-03 (4 rows promoted → Phase 13; rest parked) |
 
 Stages are ordered by dependency, not calendar — the sim track (S3) and the realism track (S4+)
 interleave freely with the ViperSim phases in the master roadmap.
@@ -1186,36 +1186,94 @@ stage's acceptance test. (Rule 8: the engine never gains a `Volcano` class.)
 
 ## 11. S12 — Performance & scale
 
-1. **S12.1 Frustum culling** — AABB per `MeshRendererComponent` (mesh-local bounds × transform),
-   camera frustum test before submit; stats counter proves cull rate.
-2. **S12.2 Render queue + sort keys** — opaque front-to-back (state-change key: shader→material→
-   mesh), transparent back-to-front; replaces immediate-mode submission inside `Renderer3D`.
-3. **S12.3 Instanced mesh path** — `DrawMeshInstanced(mesh, material, span<mat4>)` + automatic
-   instancing for identical mesh/material pairs in the queue (rocks, trees, debris).
-4. **S12.4 LOD groups** — `LODGroupComponent` (N meshes + switch distances, optional cross-fade).
-5. **S12.5 GPU profiler** — timer-query verb (`RenderCommand::BeginGpuZone/EndGpuZone`) + a
-   profiler HUD panel (per-pass ms: shadow, opaque, water, particles, post) — **build this early
-   in the stage; every later item quotes its numbers.**
-6. **S12.6 Texture pipeline** — mip generation policy, BCn compression at import (stb_dxt or a
-   `package.bat` bake step), sRGB correctness audit.
+> **Status (2026-07-03): S12 COMPLETE (code) — S12.1–S12.4 + S12.6 shipped this session on
+> branch `phase-7-3d-foundations` (Phase 12); S12.5 + an S12.3-lite explicit path had shipped in
+> Phase 11 (doc 10 F3/F5).** New engine surface: header-only `renderer/RenderQueue.h` (pure sort
+> keys + run finder, unit-tested in `tests/test_render_queue.cpp`), Renderer3D's mesh queue
+> (DrawMesh/DrawModel record → cull → sort → execute at `Flush()`/`EndScene()`),
+> `Renderer3D::SetFrustumCullingEnabled` + `Renderer3D::Statistics`
+> (ResetStats/GetStats — submissions/culled/draw calls/instancing, surfaced in Engine3DDemo's
+> "Performance (S12)" section and Frontier's GPU-profiler panel), `Material::SetTransparent`
+> (engine-owned back-to-front + depth-write-off stage) + `Material::SetInstancingShader`/
+> `BindFullTo` (the S12.3 auto-instancing twin contract), and `LODGroupComponent` (+ pure
+> `SelectLevel`, drawn by `Scene::OnRender3D`, casting in the SceneRenderer shadow/coverage
+> passes with the SAME camera-distance level as the lit pass).
+> **BREAKING SEMANTICS (documented in Renderer3D.h):** submission is deferred — material values
+> are read at flush (per-draw variation now requires `Material::Clone`; Engine3DDemo's PBR grid
+> + lit aircraft were migrated), and mid-scene render-state islands must call
+> `Renderer3D::Flush()` (IslandWorld's river/waterfall now use the transparent flag instead).
+> **Documented tier deviations:** (a) S12.4 cross-fade skipped — hard cuts (needs a dither/alpha
+> post path); (b) auto-instancing requires entityID == -1 (per-instance IDs are not in the
+> instance SSBO — protects ScenePicker) + a registered twin shader + uniform-scale transforms;
+> (c) S12.6 ships the mip policy + the sRGB audit (**closed by-design** — see
+> `docs/design/frame-lifecycle.md` §7) while **BCn compression is PARKED with an unlock**
+> (first texture-heavy content project or a measured VRAM limit; implement as a `package.bat`
+> bake + fold the sRGB-storage switch into the same PR).
+> **Remaining — user acceptance:** the stage-acceptance run below (the auto-instance ring +
+> stats live in Engine3DDemo; Frontier worlds fly with the profiler HUD + cull-rate rows).
+
+1. ~~**S12.1 Frustum culling**~~ ✅ 2026-07-03 — AABB per submission (mesh-local bounds ×
+   transform, all callers — ECS and direct draws), tested against the PASS frustum inside
+   `Renderer3D` (reflection pass culls with the mirrored-oblique frustum); stats counter proves
+   cull rate. Global opt-out verb for vertex-displacing shaders.
+2. ~~**S12.2 Render queue + sort keys**~~ ✅ 2026-07-03 — opaque front-to-back (state-change key:
+   shader→material→mesh), transparent back-to-front; replaced immediate-mode submission inside
+   `Renderer3D` (pure logic in `renderer/RenderQueue.h`, headless-tested).
+3. ~~**S12.3 Instanced mesh path**~~ ✅ 2026-07-03 — explicit `DrawMeshInstanced` shipped F5;
+   automatic instancing now collapses sorted runs ≥ 4 of identical (mesh, material, entityID -1)
+   into one instanced draw via the material's registered twin (PBRInstanced) + pooled scratch
+   `InstanceSet`s (one per run — no intra-frame SSBO rewrite).
+4. ~~**S12.4 LOD groups**~~ ✅ 2026-07-03 — `LODGroupComponent` (N meshes + switch distances,
+   distance-cull past the last level). Cross-fade = documented follow-up. Demo entity in
+   Engine3DDemo's ECS scene (sphere→cone→box at 15/35/90 m).
+5. ~~**S12.5 GPU profiler**~~ ✅ 2026-07-03 (Phase 11 / doc 10 F3) — timer-query verbs + per-pass
+   zones + Frontier HUD panel.
+6. ~~**S12.6 Texture pipeline**~~ ✅ 2026-07-03 — mip policy verified + documented, sRGB audit
+   closed (no double conversion; factors defined linear; gamma-space mip averaging accepted),
+   BCn parked with unlock. Full write-up: `docs/design/frame-lifecycle.md` §7.
 
 *Acceptance (stage):* VolcanoDemo + 10k instanced meshes ≥ 60 fps at 1080p on the dev GPU, with
-the profiler HUD screenshot committed.
+the profiler HUD screenshot committed. *(2026-07-03: the "VolcanoDemo" of this line is Frontier's
+volcano worlds per the §10 deviation — the 10k-instance case is IslandWorld's ~6.5k scatter +
+the S12.3 ring; screenshot rides the user's Phase 11/12 acceptance pass.)*
 
 ---
 
 ## 12. S13 — RHI hardening + Vulkan gate
 
-1. **S13.1 Conformance audit** — grep-verified: zero `gl*`/`GL_*` outside `platform/OpenGL/`;
-   missing verbs promoted to `RendererAPI`. CI check added. (Head start: the S4 hardening pass
-   already closed the last engine-side leak — `Font.cpp` now uses `Texture::SetSampling` — and
-   added the `SetCullMode` verb; remaining known exceptions are the windowing layer (GLFW) and
-   ImGui's vendored GL backend, which a second backend swaps wholesale.)
-2. **S13.2 Frame-lifecycle doc** — one internals doc: resource creation/destruction rules, pass
-   ordering, who owns which FBO — the spec a second backend would implement.
-3. **S13.3 Decision gate** — evaluate against §0's reopen conditions with S12 profiler data.
-   Outcomes: stay GL (default) / native Vulkan backend / adopt an RHI. A Vulkan backend, if
-   chosen, lands per-subsystem (clear → 2D → 3D → compute) behind `RendererAPI::SetAPI`.
+> **Status (2026-07-03): S13.1 + S13.2 ✅ shipped (Phase 12); S13.3 evaluated below —
+> provisional-closed STAY-GL, formally closed when the user's on-GPU profiler pass confirms the
+> frame is GPU-bound (same acceptance run as §11).**
+
+1. ~~**S13.1 Conformance audit**~~ ✅ 2026-07-03 — audit ran clean: zero `gl*`/`GL_*` tokens
+   outside `platform/OpenGL/` in `Cosmic/src`, `Projects/*/src`, and `tests` (every remaining
+   grep hit was a documentation comment). No missing verbs found — the S4 hardening pass had
+   already promoted the last ones (`SetCullMode`, `Texture::SetSampling`). Enforcement:
+   `tests/check_gl_conformance.ps1` (case-sensitive token scan, comment-line filter, verified to
+   fail on an injected violation) + the "GL conformance audit" step in `.github/workflows/ci.yml`.
+   Known documented exemptions: the GLFW windowing layer and vendored deps (GLAD, ImGui GL
+   backend) — a second backend swaps those wholesale.
+2. ~~**S13.2 Frame-lifecycle doc**~~ ✅ 2026-07-03 — `docs/design/frame-lifecycle.md`: layering
+   rules, GPU resource creation/destruction contract, the binding registry as a descriptor-set
+   seed, render-state defaults, the pass-by-pass frame, S12 queue semantics, the S12.6 texture
+   policy, and the explicit checklist a second backend implements (§8).
+3. **S13.3 Decision gate — evaluated 2026-07-03, decision: STAY ON OPENGL (provisional-closed).**
+   Checked against §0's three reopen conditions:
+   - *Render-thread CPU limiter after S12?* No evidence — scenes are hundreds of draws after
+     culling + instancing (F5 collapsed Frontier's ~6.5k scatter to a handful of instanced
+     draws; S12.3 collapses queue runs; S12.2 elides state changes). The F3 profiler shows the
+     frame dominated by GPU pass time, not submission. **Formal confirmation = the user's
+     acceptance run:** if CPU frame time stays well under GPU frame time in the HUD across the
+     five worlds, this condition is conclusively false.
+   - *GL-impossible / driver-broken feature required?* None on the roadmap — Phase 13
+     (Starforge) needs only S4–S10 + SceneRenderer; parked graphics work (froxels, FFT ocean,
+     CSM) is all GL4-class.
+   - *Non-Windows target?* Not in scope for any planned project.
+   Therefore: no Vulkan port, no RHI adoption now. What keeps the future cheap is already
+   enforced (S13.1 CI audit) and specified (S13.2). Command buffers / pipeline objects / render
+   passes / shader reflection stay deliberately unbuilt (frame-lifecycle.md §8 records why).
+   **Reopen trigger unchanged** (§0); if reopened, a Vulkan backend lands per-subsystem
+   (clear → 2D → 3D → compute) behind `RendererAPI::SetAPI` against the S13.2 spec.
 
 ---
 
@@ -1227,17 +1285,26 @@ the profiler HUD screenshot committed.
 > [`11-phase13-starforge-plan.md`](11-phase13-starforge-plan.md) (E1–E21), with the compiling
 > `Projects/Starforge` skeleton shipped alongside. The remaining rows below stay parked (the
 > Starforge plan §9 restates skeletal animation adjacents, Jolt, decals with their unlocks).
+>
+> **Groomed 2026-07-03 (Phase 12 S13.3 pass) — checked against real needs, verdicts inline:**
+> nothing new unlocked. Starforge (E1–E21) is the only workstream that pulls on this table, and
+> it needs none of the parked rows to reach its E21 acceptance. Two annotations: (a) *positional
+> audio* — Phase 11's F10 shipped app-side `ProceduralAudio` (WAV synth + `DistanceLoop`
+> distance attenuation), which covers every current ambience need; engine A3 (true 3D
+> panning/doppler) stays parked until an app outgrows distance-gain. (b) *decals* — the Frontier
+> volcano worlds shipped without them (FlowEmissive flows read better than projected decals at
+> fly-through range); the unlock is now Starforge-era content polish, not VolcanoDemo.
 
-| Item | What | Unlocks when |
-| --- | --- | --- |
-| Skeletal animation | glTF skins/clips, GPU skinning, blend/state machine | a project needs characters |
-| Physics middleware gate | vendored **Jolt** for contact-rich gameplay (the sim's 6DOF stays app-side per doc 03) | a game project needs stacks/ragdolls/queries |
-| Scene serialization | save/load scenes (old E8) — prefab-ish text format | editor app or a content-heavy game |
-| Editor app (`CosmicEd`) | scene view (S5 nav/gizmos/picking), hierarchy + inspector via `ComponentRegistry` reflection, play/pause using the responsive-rendering+pause design (docs/design/) | S5 done + a real content workflow need |
-| Undo/redo command stack | editor-grade command pattern | CosmicEd |
-| Scripting | staying C++-DLL-first is the story; optional Lua/AngelScript later | external users demand it |
-| Positional audio | doc 08 A3 | any S11 demo wanting ambience |
-| Decals | projected PBR decals | VolcanoDemo polish / games |
+| Item | What | Unlocks when | Groom verdict (2026-07-03) |
+| --- | --- | --- | --- |
+| Skeletal animation | glTF skins/clips, GPU skinning, blend/state machine | a project needs characters | parked — no character project exists |
+| Physics middleware gate | vendored **Jolt** for contact-rich gameplay (the sim's 6DOF stays app-side per doc 03) | a game project needs stacks/ragdolls/queries | parked — Starforge E13 play-mode needs no rigid-body stacks |
+| Scene serialization | save/load scenes (old E8) — prefab-ish text format | editor app or a content-heavy game | **promoted** → Phase 13 E2 |
+| Editor app (`CosmicEd`) | scene view (S5 nav/gizmos/picking), hierarchy + inspector via `ComponentRegistry` reflection, play/pause using the responsive-rendering+pause design (docs/design/) | S5 done + a real content workflow need | **promoted** → Phase 13 (Starforge, E1–E21) |
+| Undo/redo command stack | editor-grade command pattern | CosmicEd | **promoted** → Phase 13 E7 |
+| Scripting | staying C++-DLL-first is the story; optional Lua/AngelScript later | external users demand it | **promoted** → Phase 13 E11/E12 (C++ hot-reload) |
+| Positional audio | doc 08 A3 | any S11 demo wanting ambience | parked — F10's app-side DistanceLoop covers current ambience |
+| Decals | projected PBR decals | ~~VolcanoDemo polish~~ Starforge-era content polish / games | parked — volcano worlds shipped without them |
 
 ---
 

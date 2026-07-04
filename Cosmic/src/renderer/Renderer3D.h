@@ -47,6 +47,33 @@
  * std140 lights UBO (S4.5, binding: Bindings::LightsUbo), and per-draw
  * entity IDs on every submission verb for MRT picking (S4.6).
  *
+ * RENDER QUEUE (Phase 12 / S12.1–S12.3) — mesh submission is DEFERRED:
+ * DrawMesh/DrawModel record into a per-scene queue; Flush()/EndScene() sorts
+ * and executes it. What that means for callers:
+ *
+ *   - FRUSTUM CULLING (S12.1): submissions whose world AABB (mesh local bounds
+ *     x transform) misses the pass frustum are dropped at submit — free wins
+ *     for every caller. SetFrustumCullingEnabled(false) opts out (e.g. a
+ *     vertex-displacing custom shader whose motion can exceed the mesh AABB).
+ *   - SORTING (S12.2): opaques execute grouped by shader -> material -> mesh,
+ *     then front-to-back; TRANSPARENT materials (Material::SetTransparent)
+ *     draw after all opaques, back-to-front, with depth writes off (test on)
+ *     under the default Alpha blend. Submission order within one scene is NO
+ *     LONGER the draw order.
+ *   - VALUE CAPTURE: transform/color/entityID are captured per call; the
+ *     MATERIAL is captured by reference and its values are read at flush —
+ *     mutating one material between draws no longer gives per-draw variation
+ *     (use Material::Clone per variant; see Engine3DDemo's PBR grid). Scene
+ *     state (lights, IBL/shadow/snow sets) is likewise read at flush.
+ *   - STATE ISLANDS: a caller that must draw under custom render state calls
+ *     Flush() while its state is applied, then restores (engine defaults are
+ *     the flush-time contract). Prefer SetTransparent — it removes the manual
+ *     depth-write juggling entirely.
+ *   - AUTO-INSTANCING (S12.3): runs of >= 4 identical (mesh, material) opaque
+ *     submissions with entityID == -1 whose material registered an instancing
+ *     twin (Material::SetInstancingShader, e.g. PBRInstanced.glsl) collapse
+ *     into one hardware-instanced draw. Statistics reports the win.
+ *
  * FUTURE (documented slots, not yet implemented):
  *   - WorldToScreen(vec3) for SDF-font labels — S3.5.
  * ============================================================================
@@ -80,14 +107,26 @@ namespace Cosmic
 
 		/**
 		 * SCENE BOUNDARIES
-		 * BeginScene captures the camera state for this pass and resets the line
-		 * batch. EndScene flushes all batched geometry. The (mat4, vec3) overload
-		 * is the camera-agnostic primitive (contract rule 1).
+		 * BeginScene captures the camera state for this pass, extracts the pass
+		 * frustum (S12.1), and resets the line batch + mesh queue. EndScene
+		 * flushes the mesh queue (sorted — see header note) and then the batched
+		 * lines. The (mat4, vec3) overload is the camera-agnostic primitive
+		 * (contract rule 1).
 		 */
 		static void BeginScene(const glm::mat4& viewProjection, const glm::vec3& cameraPos);
 		static void BeginScene(const PerspectiveCamera& camera);   // sugar on the primitive
 		static void BeginScene(const Camera& camera);              // camera-agnostic sugar (S4.1)
 		static void EndScene();
+
+		/**
+		 * @brief Execute + clear the queued mesh submissions NOW, under the
+		 * CURRENT render state (S12.2 state-island escape hatch — see header
+		 * note). Opaques draw sorted/auto-instanced first, then transparents
+		 * back-to-front with depth writes off (restored to the engine default ON
+		 * afterwards). EndScene calls this automatically; mid-scene calls are
+		 * only needed around custom render state.
+		 */
+		static void Flush();
 
 		////////////////////////////////
 		// Batched Line Primitives
@@ -131,9 +170,9 @@ namespace Cosmic
 		 * @brief Draw a mesh with the built-in Lambert shader (one directional
 		 * light + ambient floor) and a flat per-draw color.
 		 *
-		 * Immediate: one GPU draw per call — sim scenes are tens of meshes, so
-		 * batching would add complexity for nothing (render queue + sorting is
-		 * S12.2). The material overload below is the custom-shader path.
+		 * Queued (S12.2): recorded now — frustum-tested (S12.1), then sorted and
+		 * executed at Flush()/EndScene(). The material overload below is the
+		 * custom-shader path.
 		 */
 		static void DrawMesh(const Ref<Mesh>& mesh, const glm::mat4& transform, const glm::vec4& color,
 		                     int entityID = -1);
@@ -175,6 +214,46 @@ namespace Cosmic
 		 */
 		static void DrawMeshInstanced(const Ref<Mesh>& mesh, const Ref<Material>& material,
 		                              const Ref<InstanceSet>& instances, uint32_t count, int entityID = -1);
+
+		////////////////////////////////
+		// Frustum culling (S12.1)
+		///////////////////////////////
+
+		/**
+		 * @brief Enable/disable the per-submission frustum test (default ON).
+		 * Sticky global — not per scene. Turn OFF only for content whose shader
+		 * moves vertices beyond the mesh's static AABB. Explicit-instanced draws
+		 * (DrawMeshInstanced) are never engine-culled: the app culls those once
+		 * against the MAIN frustum per the F5 policy.
+		 */
+		static void SetFrustumCullingEnabled(bool enabled);
+		static bool IsFrustumCullingEnabled();
+
+		////////////////////////////////
+		// Telemetry (S12 — mirrors Renderer2D::Statistics)
+		///////////////////////////////
+
+		/**
+		 * @brief Frame counters. Apps call ResetStats() once per frame (before
+		 * the first pass) and read GetStats() when presenting — counters
+		 * accumulate across every scene/pass in between, exactly like
+		 * Renderer2D's. The cull + auto-instance counters are the S12.1/S12.3
+		 * acceptance evidence.
+		 */
+		struct Statistics
+		{
+			uint32_t DrawCalls          = 0;  // GPU mesh draws issued (indexed + instanced)
+			uint32_t MeshesSubmitted    = 0;  // DrawMesh / DrawModel-part submissions accepted
+			uint32_t MeshesCulled       = 0;  // dropped by the frustum test (S12.1)
+			uint32_t MeshesDrawn        = 0;  // single-draw submissions executed
+			uint32_t AutoInstanceBatches = 0; // queue runs collapsed to one instanced draw (S12.3)
+			uint32_t AutoInstancedMeshes = 0; // submissions drawn through those batches
+			uint32_t ExplicitInstanceDraws = 0; // DrawMeshInstanced calls (F5 path)
+			uint32_t ExplicitInstances     = 0; // instances drawn by those calls
+		};
+
+		static void       ResetStats();
+		static Statistics GetStats();
 
 		////////////////////////////////
 		// Scene Lighting (S2 scope: one directional light)

@@ -71,6 +71,26 @@ namespace Frontier
             ImGui::EndTable();
         }
 
+        // Renderer3D queue telemetry (S12): frame totals across every pass —
+        // FrontierApp resets the counters at the top of each frame. Cull rate
+        // is the S12.1 acceptance number; the instancing rows show how many
+        // submissions the F5 explicit sets + the S12.3 queue runs collapsed.
+        ImGui::Separator();
+        {
+            const auto stats = Cosmic::Renderer3D::GetStats();
+            ImGui::Text("Meshes: %u submitted, %u culled (%.0f%%)",
+                stats.MeshesSubmitted, stats.MeshesCulled,
+                stats.MeshesSubmitted > 0
+                    ? 100.0f * static_cast<float>(stats.MeshesCulled) / static_cast<float>(stats.MeshesSubmitted)
+                    : 0.0f);
+            ImGui::Text("Mesh draw calls: %u (singles %u)", stats.DrawCalls, stats.MeshesDrawn);
+            ImGui::Text("Instanced: %u draws / %u instances (explicit)",
+                stats.ExplicitInstanceDraws, stats.ExplicitInstances);
+            if (stats.AutoInstanceBatches > 0)
+                ImGui::Text("Auto-instanced: %u meshes in %u draws",
+                    stats.AutoInstancedMeshes, stats.AutoInstanceBatches);
+        }
+
         ImGui::End();
     }
 

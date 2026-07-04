@@ -98,6 +98,10 @@ namespace Frontier
         if (m_ActiveWorld < 0 || m_ActiveWorld >= (int)m_Worlds.size())
             return;
 
+        // S12 telemetry: zero the Renderer3D frame counters before any pass;
+        // the GPU-profiler panel reads the accumulated totals this frame.
+        Cosmic::Renderer3D::ResetStats();
+
         auto& app = Cosmic::Application::Get();
         auto* ws  = app.GetWorkspaceLayer();
 

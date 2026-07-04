@@ -5,6 +5,7 @@
 #include "renderer/RenderCommand.h"
 #include "renderer/BindingPoints.h"
 #include "renderer/CameraUniforms.h"
+#include "renderer/RenderQueue.h"
 #include "camera/Camera.h"
 #include "camera/PerspectiveCamera.h"
 #include "graphics/VertexArray.h"
@@ -13,6 +14,7 @@
 #include "graphics/Material.h"
 #include "graphics/Model.h"
 #include "graphics/UniformBuffer.h"
+#include "math/Frustum.h"
 #include "renderer/InstanceSet.h"
 #include "core/Log.h"
 
@@ -20,6 +22,8 @@
 #include <glm/gtc/matrix_inverse.hpp>
 
 #include <algorithm>
+#include <cfloat>
+#include <vector>
 
 namespace Cosmic
 {
@@ -45,6 +49,19 @@ namespace Cosmic
 		glm::vec4 PointColor_Intensity[Renderer3D::kMaxPointLights]{};
 	};
 	static_assert(sizeof(GpuLightsBlock) == 560, "GpuLightsBlock must match the std140 LightsBlock (560 bytes).");
+
+	// One recorded DrawMesh/DrawModel-part submission (S12.2). Transform/color/
+	// entityID are captured by value; the material by reference (its values are
+	// read at flush — per-draw variation needs Material::Clone, see the header).
+	struct MeshDrawCmd
+	{
+		Ref<Mesh>        MeshRef;
+		Ref<Material>    MaterialRef;   // null = the Lambert color path
+		glm::mat4        Transform{ 1.0f };
+		glm::vec4        Color{ 1.0f };
+		int              EntityID = -1;
+		RenderQueue::Key Key;
+	};
 
 	struct Renderer3DData
 	{
@@ -119,6 +136,28 @@ namespace Cosmic
 		// =====================================================================
 		bool                  SnowActive = false;
 		Renderer3D::SnowDesc  Snow;
+
+		// =====================================================================
+		// --- Mesh render queue (S12.1–S12.3) ---
+		// Submissions recorded per scene, frustum-tested at submit, sorted +
+		// executed at Flush()/EndScene(). Scratch InstanceSets back the S12.3
+		// auto-instanced runs: one set per run (pooled, index reset each
+		// BeginScene) so a run never rewrites an SSBO a just-issued draw still
+		// reads (glBufferSubData would have to sync).
+		// =====================================================================
+		std::vector<MeshDrawCmd> OpaqueQueue;
+		std::vector<MeshDrawCmd> TransparentQueue;
+		uint32_t                 QueueSequence = 0;
+
+		Frustum SceneFrustum;
+		bool    CullingEnabled = true;
+
+		static constexpr uint32_t kAutoInstanceMinRun   = 4;     // below this, singles win
+		static constexpr uint32_t kScratchCapacity      = 1024;  // instances per scratch set
+		std::vector<Ref<InstanceSet>> ScratchPool;
+		uint32_t                      ScratchNext = 0;
+
+		Renderer3D::Statistics Stats;
 	};
 
 	// Reserved fragment texture units — allocated in renderer/BindingPoints.h
@@ -197,6 +236,13 @@ namespace Cosmic
 		s_Data.MeshShader.reset();
 		s_Data.LightsUBO.reset();
 		s_Data.CameraUBO.reset();
+
+		// S12 queue teardown: queued commands hold Ref<Mesh>/Ref<Material>, and
+		// the scratch pool holds SSBOs — all must release before the context dies.
+		s_Data.OpaqueQueue.clear();
+		s_Data.TransparentQueue.clear();
+		s_Data.ScratchPool.clear();
+		s_Data.ScratchNext = 0;
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////
@@ -207,10 +253,23 @@ namespace Cosmic
 	{
 		if (s_Data.InScene)
 			CS_CORE_WARN("Renderer3D::BeginScene called while a scene is already open — missing EndScene?");
+		if (!s_Data.OpaqueQueue.empty() || !s_Data.TransparentQueue.empty())
+		{
+			CS_CORE_WARN("Renderer3D::BeginScene: {} unflushed queued draws discarded — missing EndScene?",
+			             s_Data.OpaqueQueue.size() + s_Data.TransparentQueue.size());
+			s_Data.OpaqueQueue.clear();
+			s_Data.TransparentQueue.clear();
+		}
 
 		s_Data.ViewProjection = viewProjection;
 		s_Data.CameraPos      = cameraPos;
 		s_Data.InScene        = true;
+
+		// S12.1: this pass's cull volume (valid for oblique/mirrored VPs too —
+		// Gribb–Hartmann extraction works on any projective matrix).
+		s_Data.SceneFrustum  = Frustum::FromViewProjection(viewProjection);
+		s_Data.QueueSequence = 0;
+		s_Data.ScratchNext   = 0;   // scratch InstanceSets recycle per scene
 
 		s_Data.LineVertexCount     = 0;
 		s_Data.LineVertexBufferPtr = s_Data.LineVertexBufferBase;
@@ -269,12 +328,14 @@ namespace Cosmic
 			return;
 		}
 
-		FlushLines();
+		Flush();        // S12.2: sorted mesh queue (opaques, then transparents)
+		FlushLines();   // debug lines last, depth-tested against the meshes
 		s_Data.InScene = false;
 
-		// State contract (rule 5): the only GL state this pass may have touched
-		// beyond shader/VAO bindings is none — depth test/write and blending were
-		// left at engine defaults, so Renderer2D's assumptions hold untouched.
+		// State contract (rule 5): everything this pass touched beyond
+		// shader/VAO bindings is restored to engine defaults by the time we
+		// return (the transparent stage restores depth writes), so Renderer2D's
+		// assumptions hold untouched.
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////
@@ -381,8 +442,69 @@ namespace Cosmic
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////
-	// Mesh Submission
+	// Mesh Submission (S12: record -> cull -> sort -> execute at Flush)
 	/////////////////////////////////////////////////////////////////////////////////
+
+	// World-space AABB of a mesh under `transform` (all 8 local corners — exact
+	// and conservative for any affine transform).
+	static void WorldBounds(const Ref<Mesh>& mesh, const glm::mat4& transform,
+	                        glm::vec3& outMin, glm::vec3& outMax)
+	{
+		const glm::vec3 lmin = mesh->GetLocalMin();
+		const glm::vec3 lmax = mesh->GetLocalMax();
+
+		outMin = glm::vec3( FLT_MAX);
+		outMax = glm::vec3(-FLT_MAX);
+		for (int i = 0; i < 8; ++i)
+		{
+			const glm::vec4 corner((i & 4) ? lmax.x : lmin.x,
+			                       (i & 2) ? lmax.y : lmin.y,
+			                       (i & 1) ? lmax.z : lmin.z, 1.0f);
+			const glm::vec3 w = glm::vec3(transform * corner);
+			outMin = glm::min(outMin, w);
+			outMax = glm::max(outMax, w);
+		}
+	}
+
+	// Shared submit path for both DrawMesh overloads: frustum test (S12.1), key
+	// build (S12.2/S12.3), and routing to the opaque or transparent queue.
+	static void SubmitMesh(const Ref<Mesh>& mesh, const glm::mat4& transform,
+	                       const Ref<Material>& material, const glm::vec4& color, int entityID)
+	{
+		s_Data.Stats.MeshesSubmitted++;
+
+		glm::vec3 mn, mx;
+		WorldBounds(mesh, transform, mn, mx);
+		if (s_Data.CullingEnabled && !s_Data.SceneFrustum.IntersectsAABB(mn, mx))
+		{
+			s_Data.Stats.MeshesCulled++;
+			return;
+		}
+
+		const glm::vec3 center = 0.5f * (mn + mx);
+		const glm::vec3 toEye  = center - s_Data.CameraPos;
+		const bool transparent = material && material->IsTransparent();
+
+		MeshDrawCmd cmd;
+		cmd.MeshRef     = mesh;
+		cmd.MaterialRef = material;
+		cmd.Transform   = transform;
+		cmd.Color       = color;
+		cmd.EntityID    = entityID;
+
+		cmd.Key.Shader   = material ? reinterpret_cast<uintptr_t>(material->GetShader().get())
+		                            : reinterpret_cast<uintptr_t>(s_Data.MeshShader.get());
+		cmd.Key.Material = reinterpret_cast<uintptr_t>(material.get());
+		cmd.Key.Mesh     = reinterpret_cast<uintptr_t>(mesh.get());
+		cmd.Key.ViewDepthSq = glm::dot(toEye, toEye);
+		cmd.Key.Sequence    = s_Data.QueueSequence++;
+		// Per-instance entity IDs are not in the instance SSBO — auto-batching a
+		// picked entity would break ID picking, so only anonymous draws qualify.
+		cmd.Key.Instancable = !transparent && material && material->GetInstancingShader()
+		                      && entityID == -1;
+
+		(transparent ? s_Data.TransparentQueue : s_Data.OpaqueQueue).push_back(std::move(cmd));
+	}
 
 	void Renderer3D::DrawMesh(const Ref<Mesh>& mesh, const glm::mat4& transform, const glm::vec4& color,
 	                          int entityID)
@@ -397,38 +519,7 @@ namespace Cosmic
 		if (!s_Data.MeshShader)
 			return;
 
-		// Meshes are opaque and depth-tested; the staged line batch draws at
-		// EndScene and depth-sorts against them correctly. Uniform names below
-		// are the engine-wide mesh shader convention (doc 05 S4.2).
-		s_Data.MeshShader->Bind();
-		// u_ViewProjection + u_CameraPos come from the binding-1 CameraBlock UBO (S6.2).
-		s_Data.MeshShader->SetMat4("u_Model", transform);
-		s_Data.MeshShader->SetFloat4("u_Color", color);
-		s_Data.MeshShader->SetFloat3("u_LightDir", s_Data.LightDirection);
-		s_Data.MeshShader->SetFloat("u_Ambient", s_Data.Ambient);
-		s_Data.MeshShader->SetInt("u_EntityID", entityID);   // S4.6 (silent no-op if undeclared)
-
-		// Directional shadows (S6.4): the flat Lambert path receives them too so a
-		// shadow lands on plain-colored geometry (ground pad, ECS meshes). The
-		// sampler uniform is assigned its reserved unit UNCONDITIONALLY — a sampler
-		// left at its default unit 0 can alias a different sampler type there,
-		// which the GL spec makes a draw-time INVALID_OPERATION on strict drivers
-		// even when the branch never samples it (portability contract).
-		s_Data.MeshShader->SetInt("u_ShadowMap", (int)kShadowMapUnit);
-		if (s_Data.ShadowActive)
-		{
-			RenderCommand::BindTextureSlot(kShadowMapUnit, s_Data.ShadowMapID);
-			s_Data.MeshShader->SetMat4("u_LightViewProj", s_Data.ShadowLightViewProj);
-			s_Data.MeshShader->SetFloat("u_ShadowBias", s_Data.ShadowBias);
-			s_Data.MeshShader->SetFloat("u_HasShadow", 1.0f);
-		}
-		else
-		{
-			s_Data.MeshShader->SetFloat("u_HasShadow", 0.0f);
-		}
-
-		mesh->GetVertexArray()->Bind();
-		RenderCommand::DrawIndexed(mesh->GetVertexArray(), mesh->GetIndexCount());
+		SubmitMesh(mesh, transform, nullptr, color, entityID);
 	}
 
 	void Renderer3D::DrawMesh(const Ref<Mesh>& mesh, const glm::mat4& transform,
@@ -441,35 +532,279 @@ namespace Cosmic
 			CS_CORE_WARN("Renderer3D::DrawMesh (material) called outside BeginScene/EndScene — ignored.");
 			return;
 		}
-
-		const Ref<Shader>& shader = material->GetShader();
-		if (!shader)
+		if (!material->GetShader())
 			return;
 
-		// 1) Bind the material first: activates its shader and uploads its cached
-		//    floats/vecs plus binds textures to sequential slots (Material::BindFull).
-		material->BindFull();
+		SubmitMesh(mesh, transform, material, glm::vec4(1.0f), entityID);
+	}
 
-		// 2) Layer the engine-owned convention uniforms on TOP so they always win
-		//    over any stale material value. Set unconditionally — a shader that
-		//    doesn't declare one simply no-ops on location -1 (silent-ignore rule).
-		//    u_Color is deliberately NOT set here (material-owned).
-		const glm::mat3 normalMatrix = glm::inverseTranspose(glm::mat3(transform));
+	/////////////////////////////////////////////////////////////////////////////////
+	// Queue execution (S12.2 sort + S12.3 auto-instancing)
+	/////////////////////////////////////////////////////////////////////////////////
 
-		// u_ViewProjection + u_CameraPos come from the binding-1 CameraBlock UBO (S6.2);
-		// the per-draw transform/normal/light uniforms stay loose.
-		shader->SetMat4("u_Model", transform);
-		shader->SetMat3("u_NormalMatrix", normalMatrix);
-		shader->SetFloat3("u_LightDir", s_Data.LightDirection);
-		shader->SetFloat("u_Ambient", s_Data.Ambient);
-		shader->SetInt("u_EntityID", entityID);   // S4.6 (silent no-op if undeclared)
+	// Bind block for one (shader, material) state group. The per-scene uniforms
+	// (u_LightDir/u_Ambient) and the scene resource set (IBL/shadow/snow) are
+	// per-BIND now — they are scene constants, so grouped draws share one upload.
+	// Uniform names are the engine-wide mesh shader convention (doc 05 S4.2);
+	// undeclared names no-op on location -1 (silent-ignore rule).
+	static void BindStateGroup(const MeshDrawCmd& cmd)
+	{
+		if (cmd.MaterialRef)
+		{
+			// Material path: material uniforms + textures first, engine-owned
+			// convention uniforms layered on top so they always win.
+			cmd.MaterialRef->BindFull();
+			const Ref<Shader>& shader = cmd.MaterialRef->GetShader();
+			shader->SetFloat3("u_LightDir", s_Data.LightDirection);
+			shader->SetFloat("u_Ambient", s_Data.Ambient);
+			Renderer3D::ApplySceneBindings(shader);
+		}
+		else
+		{
+			// Lambert color path. The flat path receives the sun shadow too so a
+			// shadow lands on plain-colored geometry; the sampler unit is
+			// assigned UNCONDITIONALLY (two sampler types aliasing unit 0 is a
+			// draw-time INVALID_OPERATION on strict drivers — portability rule).
+			s_Data.MeshShader->Bind();
+			s_Data.MeshShader->SetFloat3("u_LightDir", s_Data.LightDirection);
+			s_Data.MeshShader->SetFloat("u_Ambient", s_Data.Ambient);
+			s_Data.MeshShader->SetInt("u_ShadowMap", (int)kShadowMapUnit);
+			if (s_Data.ShadowActive)
+			{
+				RenderCommand::BindTextureSlot(kShadowMapUnit, s_Data.ShadowMapID);
+				s_Data.MeshShader->SetMat4("u_LightViewProj", s_Data.ShadowLightViewProj);
+				s_Data.MeshShader->SetFloat("u_ShadowBias", s_Data.ShadowBias);
+				s_Data.MeshShader->SetFloat("u_HasShadow", 1.0f);
+			}
+			else
+			{
+				s_Data.MeshShader->SetFloat("u_HasShadow", 0.0f);
+			}
+		}
+	}
 
-		// 3) Scene-level lighting resources (S6.3 IBL + S6.4 shadow) — shared with
-		//    the engine systems that draw their own shaders (terrain/water).
-		ApplySceneBindings(shader);
+	// One single (non-instanced) draw from the queue. `boundMesh` elides
+	// redundant VAO binds across consecutive same-mesh draws.
+	static void ExecuteSingle(const MeshDrawCmd& cmd, const Mesh*& boundMesh)
+	{
+		if (cmd.MaterialRef)
+		{
+			const Ref<Shader>& shader = cmd.MaterialRef->GetShader();
+			shader->SetMat4("u_Model", cmd.Transform);
+			shader->SetMat3("u_NormalMatrix", glm::inverseTranspose(glm::mat3(cmd.Transform)));
+			shader->SetInt("u_EntityID", cmd.EntityID);   // S4.6 (silent no-op if undeclared)
+		}
+		else
+		{
+			s_Data.MeshShader->SetMat4("u_Model", cmd.Transform);
+			s_Data.MeshShader->SetFloat4("u_Color", cmd.Color);
+			s_Data.MeshShader->SetInt("u_EntityID", cmd.EntityID);
+		}
 
-		mesh->GetVertexArray()->Bind();
-		RenderCommand::DrawIndexed(mesh->GetVertexArray(), mesh->GetIndexCount());
+		if (cmd.MeshRef.get() != boundMesh)
+		{
+			cmd.MeshRef->GetVertexArray()->Bind();
+			boundMesh = cmd.MeshRef.get();
+		}
+		RenderCommand::DrawIndexed(cmd.MeshRef->GetVertexArray(), cmd.MeshRef->GetIndexCount());
+		s_Data.Stats.DrawCalls++;
+		s_Data.Stats.MeshesDrawn++;
+	}
+
+	// Next scratch InstanceSet from the per-scene pool (lazily grown). Null when
+	// SSBO creation is unavailable (API::None) — callers fall back to singles.
+	static Ref<InstanceSet> AcquireScratchInstances()
+	{
+		if (s_Data.ScratchNext < s_Data.ScratchPool.size())
+			return s_Data.ScratchPool[s_Data.ScratchNext++];
+
+		Ref<InstanceSet> set = InstanceSet::Create(Renderer3DData::kScratchCapacity);
+		if (set)
+		{
+			s_Data.ScratchPool.push_back(set);
+			s_Data.ScratchNext++;
+		}
+		return set;
+	}
+
+	void Renderer3D::Flush()
+	{
+		if (!s_Data.InScene)
+		{
+			if (!s_Data.OpaqueQueue.empty() || !s_Data.TransparentQueue.empty())
+			{
+				CS_CORE_WARN("Renderer3D::Flush called outside a scene — {} queued draws discarded.",
+				             s_Data.OpaqueQueue.size() + s_Data.TransparentQueue.size());
+				s_Data.OpaqueQueue.clear();
+				s_Data.TransparentQueue.clear();
+			}
+			return;
+		}
+
+		// ---- Opaques: sort by state key then front-to-back (S12.2). ----------
+		if (!s_Data.OpaqueQueue.empty())
+		{
+			std::vector<MeshDrawCmd>& q = s_Data.OpaqueQueue;
+			std::sort(q.begin(), q.end(), [](const MeshDrawCmd& a, const MeshDrawCmd& b)
+			{
+				return RenderQueue::OpaqueLess(a.Key, b.Key);
+			});
+
+			// Auto-instancable runs over the sorted order (S12.3).
+			std::vector<RenderQueue::Key> sortedKeys;
+			sortedKeys.reserve(q.size());
+			for (const MeshDrawCmd& cmd : q)
+				sortedKeys.push_back(cmd.Key);
+			const std::vector<RenderQueue::Run> runs =
+				RenderQueue::FindInstancableRuns(sortedKeys, Renderer3DData::kAutoInstanceMinRun);
+
+			const Mesh* boundMesh  = nullptr;
+			uintptr_t boundShader  = 0;
+			uintptr_t boundMat     = 0;
+			bool      stateValid   = false;
+			size_t    nextRun      = 0;
+
+			uint32_t i = 0;
+			const uint32_t n = static_cast<uint32_t>(q.size());
+			while (i < n)
+			{
+				const bool runHere = nextRun < runs.size() && runs[nextRun].First == i;
+				if (runHere)
+				{
+					const RenderQueue::Run& run = runs[nextRun];
+					const MeshDrawCmd& first = q[i];
+					const Ref<Shader>& twin = first.MaterialRef->GetInstancingShader();
+
+					// Twin shader + the material's cached uniforms/textures, the
+					// scene resource set, and the run's mesh VAO — then draw the
+					// run in scratch-capacity chunks. On scratch failure (no SSBO
+					// support) fall back to singles for the remainder of the run.
+					bool instanced = true;
+					std::vector<glm::mat4> models;
+					models.reserve(std::min(run.Count, Renderer3DData::kScratchCapacity));
+
+					first.MaterialRef->BindFullTo(twin);
+					twin->SetInt("u_EntityID", -1);
+					ApplySceneBindings(twin);
+					first.MeshRef->GetVertexArray()->Bind();
+					boundMesh = first.MeshRef.get();
+					stateValid = false;   // twin bind invalidates the single-draw state
+
+					uint32_t done = 0;
+					while (done < run.Count)
+					{
+						const uint32_t chunk = std::min(run.Count - done, Renderer3DData::kScratchCapacity);
+						Ref<InstanceSet> scratch = AcquireScratchInstances();
+						if (!scratch)
+						{
+							instanced = false;
+							break;
+						}
+
+						models.clear();
+						for (uint32_t k = 0; k < chunk; ++k)
+							models.push_back(q[i + done + k].Transform);
+						scratch->SetInstances(models.data(), nullptr, chunk);
+						scratch->Bind();
+						RenderCommand::DrawIndexedInstanced(first.MeshRef->GetVertexArray(),
+						                                    first.MeshRef->GetIndexCount(), chunk);
+						s_Data.Stats.DrawCalls++;
+						s_Data.Stats.AutoInstanceBatches++;
+						s_Data.Stats.AutoInstancedMeshes += chunk;
+						done += chunk;
+					}
+
+					if (!instanced)
+					{
+						// Scratch unavailable: draw what remains of the run singly.
+						for (uint32_t k = done; k < run.Count; ++k)
+						{
+							const MeshDrawCmd& cmd = q[i + k];
+							if (!stateValid || cmd.Key.Shader != boundShader || cmd.Key.Material != boundMat)
+							{
+								BindStateGroup(cmd);
+								boundShader = cmd.Key.Shader;
+								boundMat    = cmd.Key.Material;
+								stateValid  = true;
+							}
+							ExecuteSingle(cmd, boundMesh);
+						}
+					}
+
+					i += run.Count;
+					nextRun++;
+					continue;
+				}
+
+				const MeshDrawCmd& cmd = q[i];
+				if (!stateValid || cmd.Key.Shader != boundShader || cmd.Key.Material != boundMat)
+				{
+					BindStateGroup(cmd);
+					boundShader = cmd.Key.Shader;
+					boundMat    = cmd.Key.Material;
+					stateValid  = true;
+				}
+				ExecuteSingle(cmd, boundMesh);
+				++i;
+			}
+
+			q.clear();
+		}
+
+		// ---- Transparents: back-to-front, depth writes off (S12.2). ----------
+		if (!s_Data.TransparentQueue.empty())
+		{
+			std::vector<MeshDrawCmd>& q = s_Data.TransparentQueue;
+			std::sort(q.begin(), q.end(), [](const MeshDrawCmd& a, const MeshDrawCmd& b)
+			{
+				return RenderQueue::TransparentLess(a.Key, b.Key);
+			});
+
+			RenderCommand::SetDepthWrite(false);
+
+			const Mesh* boundMesh = nullptr;
+			uintptr_t boundShader = 0;
+			uintptr_t boundMat    = 0;
+			bool      stateValid  = false;
+			for (const MeshDrawCmd& cmd : q)
+			{
+				if (!stateValid || cmd.Key.Shader != boundShader || cmd.Key.Material != boundMat)
+				{
+					BindStateGroup(cmd);
+					boundShader = cmd.Key.Shader;
+					boundMat    = cmd.Key.Material;
+					stateValid  = true;
+				}
+				ExecuteSingle(cmd, boundMesh);
+			}
+
+			RenderCommand::SetDepthWrite(true);   // engine default (contract rule 5)
+			q.clear();
+		}
+	}
+
+	/////////////////////////////////////////////////////////////////////////////////
+	// Frustum culling toggle + telemetry (S12.1)
+	/////////////////////////////////////////////////////////////////////////////////
+
+	void Renderer3D::SetFrustumCullingEnabled(bool enabled)
+	{
+		s_Data.CullingEnabled = enabled;
+	}
+
+	bool Renderer3D::IsFrustumCullingEnabled()
+	{
+		return s_Data.CullingEnabled;
+	}
+
+	void Renderer3D::ResetStats()
+	{
+		s_Data.Stats = Statistics{};
+	}
+
+	Renderer3D::Statistics Renderer3D::GetStats()
+	{
+		return s_Data.Stats;
 	}
 
 	void Renderer3D::ApplySceneBindings(const Ref<Shader>& shader)
@@ -584,6 +919,10 @@ namespace Cosmic
 		instances->Bind();
 		mesh->GetVertexArray()->Bind();
 		RenderCommand::DrawIndexedInstanced(mesh->GetVertexArray(), mesh->GetIndexCount(), drawCount);
+
+		s_Data.Stats.DrawCalls++;
+		s_Data.Stats.ExplicitInstanceDraws++;
+		s_Data.Stats.ExplicitInstances += drawCount;
 	}
 
 	void Renderer3D::DrawModel(const Ref<Model>& model, const glm::mat4& transform, int entityID)

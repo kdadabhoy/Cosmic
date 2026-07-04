@@ -404,6 +404,11 @@ namespace Frontier
         // --- Waterfall + river (F12c): WaterFlow sheets drawn in the transparent pass ---
         m_RiverMat = MakeWaterFlowMat("River",     0.25f, 0.55f, 0.35f);
         m_FallMat  = MakeWaterFlowMat("Waterfall", 1.6f,  0.8f,  1.0f);
+        // S12.2: transparent-flagged materials draw after opaques, back-to-front,
+        // with depth writes off — engine-owned, replacing the manual
+        // SetDepthWrite(false/true) island this world used to wrap DrawMesh in.
+        m_RiverMat->SetTransparent(true);
+        m_FallMat->SetTransparent(true);
         {   // River: densified lake→coast polyline, hugging the carved channel.
             std::vector<glm::vec3> path;
             for (size_t i = 0; i + 1 < riverW.size(); ++i)
@@ -614,15 +619,13 @@ namespace Frontier
                 c.DrawMeshInstanced(m_BirdMesh, m_BirdMat, m_BirdSet, m_BirdSet->GetCount());
         };
 
-        // Transparent content: the flowing river + waterfall sheets (depth-write off).
+        // Transparent content: the flowing river + waterfall sheets. Their
+        // materials are flagged Transparent (S12.2), so the queue itself draws
+        // them back-to-front with depth writes off — no manual state juggling.
         desc.DrawTransparent = [this](const Cosmic::SceneDrawContext& c)
         {
-            if (!m_RiverMesh && !m_FallMesh)
-                return;
-            Cosmic::RenderCommand::SetDepthWrite(false);
             if (m_RiverMesh) c.DrawMesh(m_RiverMesh, glm::mat4(1.0f), m_RiverMat);
             if (m_FallMesh)  c.DrawMesh(m_FallMesh,  glm::mat4(1.0f), m_FallMat);
-            Cosmic::RenderCommand::SetDepthWrite(true);
         };
 
         // Both waters, ocean (far/around) first; reflect whichever the camera is near.

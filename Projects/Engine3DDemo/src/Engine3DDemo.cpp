@@ -93,6 +93,19 @@ namespace Workspace
 			m_EmitterMat->Set("u_Roughness", 0.6f);
 			m_EmitterMat->Set("u_AO",        1.0f);
 			m_EmitterMat->Set("u_Emissive",  glm::vec3{ 6.0f, 2.4f, 0.6f });
+
+			// Auto-instancing demo material (S12.3): ONE material shared by many
+			// identical DrawMesh submissions, with the PBRInstanced twin
+			// registered — the render queue collapses the run into a single
+			// instanced draw (watch "Auto-instanced" in Performance (S12)).
+			m_AutoInstMaterial = Cosmic::Material::Clone(m_PbrMaterial, "AutoInst Rocks");
+			m_AutoInstMaterial->Set("u_Albedo",   glm::vec4{ 0.30f, 0.70f, 0.65f, 1.0f });
+			m_AutoInstMaterial->Set("u_Metallic", 0.1f);
+			m_AutoInstMaterial->Set("u_Roughness", 0.55f);
+			if (auto twin = Cosmic::Shader::Create("assets/shaders/PBRInstanced.glsl"))
+				m_AutoInstMaterial->SetInstancingShader(twin);
+			else
+				CS_WARN("Engine3DDemo: PBRInstanced shader failed to load — S12.3 runs fall back to singles.");
 		}
 		else
 		{
@@ -293,9 +306,12 @@ namespace Workspace
 		m_Scene.reset();
 		m_DuckModel.reset();
 		m_LitMaterial.reset();
+		m_LitPartMaterials.clear();
 		m_PbrSphere.reset();
 		m_PbrMaterial.reset();
+		m_PbrGridMaterials.clear();
 		m_EmitterMat.reset();
+		m_AutoInstMaterial.reset();
 		m_PickFbo.reset();
 		m_ComputeShader.reset();
 		m_PointShader.reset();
@@ -371,6 +387,24 @@ namespace Workspace
 		auto& st = spun.GetComponent<Cosmic::TransformComponent>();
 		st.UseQuatRotation = true;
 		st.RotationQuat    = glm::angleAxis(glm::radians(45.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+
+		// LOD group (S12.4): sphere (near) -> cone (mid) -> box (far), hard cuts
+		// at 15 / 35 m, distance-culled past 90 m. Orbit-zoom away from the ECS
+		// scene to watch the swaps; the shape change is deliberately obvious.
+		{
+			Cosmic::Entity e = m_Scene->CreateEntity("ECS LOD group");
+			auto& t = e.GetComponent<Cosmic::TransformComponent>();
+			t.Position = { 3.0f, 3.0f, 0.0f };
+			t.Scale    = { 3.0f, 3.0f, 3.0f };
+
+			auto& lod = e.AddComponent<Cosmic::LODGroupComponent>();
+			lod.Levels = {
+				{ m_Canopy, 15.0f },   // LOD0: UV sphere while close
+				{ m_Nose,   35.0f },   // LOD1: cone at mid range
+				{ m_Wing,   90.0f },   // LOD2: box far out; culled beyond
+			};
+			lod.Color = { 0.78f, 0.42f, 0.85f, 1.0f };
+		}
 	}
 
 	void Engine3DDemo::DrawAircraft()
@@ -390,19 +424,28 @@ namespace Workspace
 		const glm::vec4 dark  { 0.22f, 0.24f, 0.28f, 1.0f };
 		const glm::vec4 glass { 0.35f, 0.62f, 0.80f, 1.0f };
 
+		// Lighting v1 (S4.5) via ONE MeshLit clone per part color: the S12.2
+		// queue reads material values at flush, so re-tinting a shared material
+		// between draws would paint every part the last color (Renderer3D.h
+		// queue-semantics contract). Clones are cached across frames; the
+		// shininess slider pushes into them (see OnUpdate).
+		auto litFor = [&](const glm::vec4& color) -> const Cosmic::Ref<Cosmic::Material>&
+		{
+			for (auto& [c, m] : m_LitPartMaterials)
+				if (c == color)
+					return m;
+			auto clone = Cosmic::Material::Clone(m_LitMaterial, "MeshLit part");
+			clone->Set("u_Color", color);
+			m_LitPartMaterials.emplace_back(color, clone);
+			return m_LitPartMaterials.back().second;
+		};
+
 		auto part = [&](const Cosmic::Ref<Cosmic::Mesh>& mesh, const glm::mat4& local, const glm::vec4& color)
 		{
-			// Lighting v1 (S4.5): route each part through the shared MeshLit material,
-			// re-tinting u_Color per part. Otherwise use the flat Lambert color path.
 			if (m_LitAircraft && m_LitMaterial)
-			{
-				m_LitMaterial->Set("u_Color", color);
-				Cosmic::Renderer3D::DrawMesh(mesh, root * local, m_LitMaterial);
-			}
+				Cosmic::Renderer3D::DrawMesh(mesh, root * local, litFor(color));
 			else
-			{
 				Cosmic::Renderer3D::DrawMesh(mesh, root * local, color);
-			}
 		};
 
 		// Fuselage: engine cylinders stand along +Y — pitch 90° about X lays it along Z.
@@ -482,11 +525,13 @@ namespace Workspace
 
 	// =========================================================================
 	// PBR sphere grid (S6.2) — the classic Cook-Torrance validation scene:
-	// roughness 0->1 across (+x), metallic 0->1 up (+y). One shared sphere +
-	// material; u_Metallic/u_Roughness are re-Set per sphere (Material caches the
-	// values, BindFull re-uploads them each DrawMesh). Lit by the same sun + two
-	// point lights as the aircraft; best viewed with HDR on (S6.1) so the smooth
-	// metallic highlights roll off instead of clipping.
+	// roughness 0->1 across (+x), metallic 0->1 up (+y). One clone of the PBR
+	// material PER SPHERE: Renderer3D's S12.2 queue reads material values at
+	// flush, not at DrawMesh, so mutating one shared material between draws
+	// would render every sphere with the last-set values (the queue-semantics
+	// contract in Renderer3D.h names this exact grid). Clones are built once
+	// and re-tinted when the albedo picker changes. Lit by the same sun + two
+	// point lights as the aircraft; best viewed with HDR on (S6.1).
 	// =========================================================================
 
 	void Engine3DDemo::DrawPbrSpheres()
@@ -495,23 +540,38 @@ namespace Workspace
 		constexpr float spacing = 1.5f;
 		const glm::vec3 origin{ -0.5f * spacing * (N - 1), 5.0f, 0.0f };
 
-		m_PbrMaterial->Set("u_Albedo", glm::vec4{ m_PbrAlbedo, 1.0f });
-
-		for (int row = 0; row < N; ++row)          // metallic 0 (bottom) -> 1 (top)
+		if (m_PbrGridMaterials.size() != static_cast<size_t>(N * N))
 		{
-			const float metallic = static_cast<float>(row) / static_cast<float>(N - 1);
-			for (int col = 0; col < N; ++col)      // roughness 0 (left) -> 1 (right)
+			m_PbrGridMaterials.clear();
+			m_PbrGridMaterials.reserve(N * N);
+			for (int row = 0; row < N; ++row)      // metallic 0 (bottom) -> 1 (top)
 			{
-				const float roughness = glm::clamp(
-					static_cast<float>(col) / static_cast<float>(N - 1), 0.05f, 1.0f);
+				const float metallic = static_cast<float>(row) / static_cast<float>(N - 1);
+				for (int col = 0; col < N; ++col)  // roughness 0 (left) -> 1 (right)
+				{
+					const float roughness = glm::clamp(
+						static_cast<float>(col) / static_cast<float>(N - 1), 0.05f, 1.0f);
 
-				m_PbrMaterial->Set("u_Metallic",  metallic);
-				m_PbrMaterial->Set("u_Roughness", roughness);
+					auto mat = Cosmic::Material::Clone(m_PbrMaterial,
+						"PBR grid r" + std::to_string(row) + "c" + std::to_string(col));
+					mat->Set("u_Metallic",  metallic);
+					mat->Set("u_Roughness", roughness);
+					m_PbrGridMaterials.push_back(mat);
+				}
+			}
+		}
+
+		for (int row = 0; row < N; ++row)
+		{
+			for (int col = 0; col < N; ++col)
+			{
+				auto& mat = m_PbrGridMaterials[row * N + col];
+				mat->Set("u_Albedo", glm::vec4{ m_PbrAlbedo, 1.0f });
 
 				const glm::vec3 pos = origin +
 					glm::vec3{ col * spacing, row * spacing, 0.0f };
 				Cosmic::Renderer3D::DrawMesh(m_PbrSphere,
-					glm::translate(glm::mat4(1.0f), pos), m_PbrMaterial);
+					glm::translate(glm::mat4(1.0f), pos), mat);
 			}
 		}
 	}
@@ -768,6 +828,11 @@ namespace Workspace
 	void Engine3DDemo::OnUpdate(float ts)
 	{
 		auto& app = Cosmic::Application::Get();
+
+		// S12 telemetry: zero the frame counters before the first pass; every
+		// scene this frame (reflection, main, ECS, picking) accumulates into
+		// them and the "Performance (S12)" panel section reads them next.
+		Cosmic::Renderer3D::ResetStats();
 
 		// ---- Viewport/FBO size sync + CAD nav config (S5.1) ----
 		auto fb = app.GetFrameBuffer();
@@ -1078,7 +1143,11 @@ namespace Workspace
 		}
 
 		if (m_LitAircraft && m_LitMaterial)
+		{
 			m_LitMaterial->Set("u_Shininess", m_Shininess);
+			for (auto& [c, m] : m_LitPartMaterials)   // keep the per-part clones live
+				m->Set("u_Shininess", m_Shininess);
+		}
 
 		DrawAircraft();
 
@@ -1092,6 +1161,25 @@ namespace Workspace
 		if (m_Bloom && m_EmitterMat && m_PbrSphere)
 			Cosmic::Renderer3D::DrawMesh(m_PbrSphere,
 				glm::translate(glm::mat4(1.0f), { 3.5f, 1.3f, 3.5f }), m_EmitterMat);
+
+		// Auto-instancing demo (S12.3): 48 identical spheres through ONE shared
+		// material whose PBRInstanced twin is registered — the queue collapses
+		// the run into a single instanced draw (entityID stays -1 by design;
+		// per-instance IDs are not in the instance SSBO).
+		if (m_AutoInstDemo && m_AutoInstMaterial && m_PbrSphere)
+		{
+			constexpr int   kCount  = 48;
+			constexpr float kRadius = 9.0f;
+			for (int i = 0; i < kCount; ++i)
+			{
+				const float a = 6.2831853f * static_cast<float>(i) / kCount;
+				const float r = kRadius + 1.5f * std::sin(a * 3.0f);
+				const glm::vec3 pos{ r * std::cos(a), 0.45f + 0.8f * std::sin(a * 5.0f), r * std::sin(a) };
+				const glm::mat4 xform = glm::translate(glm::mat4(1.0f), pos)
+				                      * glm::scale(glm::mat4(1.0f), glm::vec3(0.55f));
+				Cosmic::Renderer3D::DrawMesh(m_PbrSphere, xform, m_AutoInstMaterial);
+			}
+		}
 
 		Cosmic::Renderer3D::EndScene();
 
@@ -1721,6 +1809,40 @@ namespace Workspace
 			ImGui::SliderFloat3("Red pos",  &m_P0Pos.x, -10.0f, 10.0f, "%.1f");
 			ImGui::SliderFloat3("Blue pos", &m_P1Pos.x, -10.0f, 10.0f, "%.1f");
 			ImGui::SliderFloat("Point radius", &m_PointRadius, 1.0f, 30.0f, "%.0f");
+		}
+
+		// S12 acceptance readout: the cull rate (S12.1) and the queue's
+		// auto-instancing wins (S12.3) across every pass this frame. Toggle
+		// culling and orbit so part of the scene leaves the view — Submitted
+		// stays put, Culled climbs, Draw calls drop.
+		ImGui::SeparatorText("Performance (S12)");
+		{
+			bool culling = Cosmic::Renderer3D::IsFrustumCullingEnabled();
+			if (ImGui::Checkbox("Frustum culling (S12.1)", &culling))
+				Cosmic::Renderer3D::SetFrustumCullingEnabled(culling);
+
+			ImGui::BeginDisabled(!m_AutoInstMaterial);
+			ImGui::Checkbox("Auto-instance ring (S12.3)", &m_AutoInstDemo);
+			ImGui::EndDisabled();
+			if (ImGui::IsItemHovered())
+				ImGui::SetTooltip("48 identical spheres through one shared material with a\n"
+				                  "registered PBRInstanced twin - the queue collapses them\n"
+				                  "into a single instanced draw (see Auto-instanced below).");
+
+			const auto stats = Cosmic::Renderer3D::GetStats();
+			ImGui::Text("Submitted %u   culled %u (%.0f%%)",
+				stats.MeshesSubmitted, stats.MeshesCulled,
+				stats.MeshesSubmitted > 0
+					? 100.0f * static_cast<float>(stats.MeshesCulled) / static_cast<float>(stats.MeshesSubmitted)
+					: 0.0f);
+			ImGui::Text("Mesh draw calls %u (singles %u)", stats.DrawCalls, stats.MeshesDrawn);
+			ImGui::Text("Auto-instanced %u meshes in %u draws",
+				stats.AutoInstancedMeshes, stats.AutoInstanceBatches);
+			if (stats.ExplicitInstanceDraws > 0)
+				ImGui::Text("Explicit instancing %u draws / %u instances",
+					stats.ExplicitInstanceDraws, stats.ExplicitInstances);
+			ImGui::TextDisabled("LOD demo: 'ECS scene' on, zoom out past 15/35 m;\n"
+			                    "the purple entity swaps sphere->cone->box, culls at 90 m.");
 		}
 
 		ImGui::End();

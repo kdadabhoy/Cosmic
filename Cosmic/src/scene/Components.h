@@ -9,6 +9,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <string>
+#include <vector>
 
 namespace Cosmic
 {
@@ -111,6 +112,51 @@ namespace Cosmic
 
 
     /**
+     * @brief Distance-switched level-of-detail mesh set (S12.4). Attach with a
+     * TransformComponent; Scene::OnRender3D draws ONE level per frame — the
+     * first whose MaxDistance covers the camera-to-entity distance. Beyond the
+     * last level the entity is not drawn at all (built-in distance cull).
+     *
+     * Levels are ordered nearest -> farthest (ascending MaxDistance); a level
+     * with a null MeshAsset is skipped for that frame. All levels share the one
+     * MaterialAsset/Color exactly like MeshRendererComponent. In the
+     * SceneRenderer's shadow/coverage depth passes the SAME level is selected
+     * (by the real camera distance), so an entity's caster always matches its
+     * lit mesh. Cross-fade between levels is a documented follow-up (needs a
+     * dither/alpha post path); switches are hard cuts.
+     */
+    struct COSMIC_API LODGroupComponent
+    {
+        struct Level
+        {
+            Ref<Mesh> MeshAsset;          // level skipped when null
+            float     MaxDistance = 25.0f; // draw while cameraDistance <= this (meters)
+        };
+
+        std::vector<Level> Levels;         // nearest -> farthest
+        Ref<Material>      MaterialAsset;  // null -> Lambert color path
+        glm::vec4          Color{ 1.0f };  // Lambert tint when MaterialAsset is null
+        bool               CastShadows = true;
+
+        LODGroupComponent() = default;
+        LODGroupComponent(const LODGroupComponent&) = default;
+
+        /**
+         * @brief Pure level selection (headless unit-tested): index of the first
+         * level whose MaxDistance >= distance, or -1 when the distance is beyond
+         * every level (distance-culled) or there are no levels.
+         */
+        static int SelectLevel(const std::vector<Level>& levels, float distance)
+        {
+            for (size_t i = 0; i < levels.size(); ++i)
+                if (distance <= levels[i].MaxDistance)
+                    return static_cast<int>(i);
+            return -1;
+        }
+    };
+
+
+    /**
      * @brief Directional (sun) light for lighting v1 (S4.5). Scene::OnRender3D
      * uses the FIRST directional light it finds as the sun.
      */
@@ -209,6 +255,7 @@ CS_REGISTER_COMPONENT(Cosmic::TagComponent)
 CS_REGISTER_COMPONENT(Cosmic::TransformComponent)
 CS_REGISTER_COMPONENT(Cosmic::SpriteRendererComponent)
 CS_REGISTER_COMPONENT(Cosmic::MeshRendererComponent)
+CS_REGISTER_COMPONENT(Cosmic::LODGroupComponent)
 CS_REGISTER_COMPONENT(Cosmic::DirectionalLightComponent)
 CS_REGISTER_COMPONENT(Cosmic::PointLightComponent)
 CS_REGISTER_COMPONENT(Cosmic::TerrainComponent)

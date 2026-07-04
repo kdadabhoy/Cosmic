@@ -272,6 +272,22 @@ namespace Cosmic
 				if (mr.MeshAsset && mr.CastShadows)
 					m_Shadow.DrawCaster(mr.MeshAsset, e.GetComponent<TransformComponent>().GetTransform());
 			}
+
+			// LOD groups cast with the SAME level the lit pass selects (real
+			// camera distance) so caster and receiver geometry agree (S12.4).
+			auto lodView = desc.EcsScene->View<TransformComponent, LODGroupComponent>();
+			for (auto entity : lodView)
+			{
+				Entity e{ entity, desc.EcsScene };
+				const auto& lod = e.GetComponent<LODGroupComponent>();
+				if (!lod.CastShadows)
+					continue;
+				const auto& t = e.GetComponent<TransformComponent>();
+				const int level = LODGroupComponent::SelectLevel(
+					lod.Levels, glm::distance(desc.CameraPosition, t.Position));
+				if (level >= 0 && lod.Levels[level].MeshAsset)
+					m_Shadow.DrawCaster(lod.Levels[level].MeshAsset, t.GetTransform());
+			}
 		}
 
 		// Terrain casts too (F4): walks the same LOD cut as the lit pass using the
@@ -315,6 +331,21 @@ namespace Cosmic
 				const auto& mr = e.GetComponent<MeshRendererComponent>();
 				if (mr.MeshAsset && mr.CastShadows)
 					cov.DrawCaster(mr.MeshAsset, e.GetComponent<TransformComponent>().GetTransform());
+			}
+
+			// LOD groups occlude with their camera-distance-selected level (S12.4).
+			auto lodView = desc.EcsScene->View<TransformComponent, LODGroupComponent>();
+			for (auto entity : lodView)
+			{
+				Entity e{ entity, desc.EcsScene };
+				const auto& lod = e.GetComponent<LODGroupComponent>();
+				if (!lod.CastShadows)
+					continue;
+				const auto& t = e.GetComponent<TransformComponent>();
+				const int level = LODGroupComponent::SelectLevel(
+					lod.Levels, glm::distance(desc.CameraPosition, t.Position));
+				if (level >= 0 && lod.Levels[level].MeshAsset)
+					cov.DrawCaster(lod.Levels[level].MeshAsset, t.GetTransform());
 			}
 		}
 
