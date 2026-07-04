@@ -332,7 +332,18 @@ Phase 11's SceneRenderer; interleave at will.
 > All engine-side + headless-tested: **CosmicTests 146/146** (was 123), full build green (all 5
 > projects), Engine3DDemo + Frontier boot with zero GL/shader/framebuffer errors → compat gate
 > satisfied (flat scenes render byte-identically; `ApplyEnvironment` uncalled by shipped apps).
-> Each item's ✅ banner is in doc 11. **NEXT = Stage B (E6 editor shell → E10 content browser).**
+> Each item's ✅ banner is in doc 11.
+> **Stage B (E6–E10) + Stage C (E11–E14) CODE-COMPLETE 2026-07-04 (UNcommitted).** Stage C:
+> E11 engine script host (`scripting/ScriptableEntity`+`ModuleRegistry`+`ScriptHost`+`ModuleMacros`,
+> `NativeScriptComponent`, Inspector script section), E12 hot reload (Starforge `GameModule`+
+> `BuildRunner` + `assets/templates/` scaffold w/ `GAME_HOT_SUFFIX`, Ctrl+B/Auto build),
+> E13 Play/Pause/Step + engine `layers/PlayerLayer` ship path, E14 prefabs (`SceneSerializer::
+> SavePrefab`/`InstantiatePrefab` + `PrefabComponent` + editor hooks). Full build green (all 5
+> projects, zero warnings), **CosmicTests 163/163**, Starforge + Engine3DDemo smoke-runs clean,
+> and a scaffolded `TestRover` project built its module DLL (3 exports verified) + ran standalone
+> via `--project` with its script live — verifying the E11+E12+E13 pipeline end-to-end.
+> **The editor-UI hot-reload cycle + 20-reload leak check are the user's on-machine acceptance
+> step.** **NEXT = Stage D (E15 primitives → E16 assimp → … → E21 acceptance demo).**
 - **Do:** doc 11 work orders in order: E1 reflection → E2 UUID+JSON serializer → E3 hierarchy →
   E4 camera/environment components → E5 SceneManager → E6 shell → E7 undo → E8 inspector →
   E9 viewport tools → E10 content browser → E11 script host → E12 hot reload → E13 play mode →

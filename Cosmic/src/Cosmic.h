@@ -100,6 +100,14 @@
 #include "scene/SceneSerializer.h"     // E2 — JSON scene/prefab/material (de)serialization
 #include "scene/SceneManager.h"        // E5 — async scene load + fade transitions
 
+// Scripting (E11) — native C++ scripts compiled into a hot-reloadable project
+// DLL. ScriptableEntity is the base class; ModuleMacros is the registration DSL
+// (CS_MODULE_BEGIN/CS_SCRIPT/CS_FIELD/...); the ScriptHost drives the lifecycle.
+#include "scripting/ScriptableEntity.h"
+#include "scripting/ModuleRegistry.h"
+#include "scripting/ScriptHost.h"
+#include "scripting/ModuleMacros.h"
+
 // Input Mapping
 #include "codes/KeyCodes.h"
 #include "codes/MouseButtonCodes.h"
@@ -129,6 +137,7 @@
 
 // Layers
 #include "layers/ImGuiLayer.h"
+#include "layers/PlayerLayer.h"       // E13 — standalone scene player (ship path)
 
 // Job System / Multithreading
 #include "jobs/JobSystem.h"

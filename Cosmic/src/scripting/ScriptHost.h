@@ -1,0 +1,75 @@
+#pragma once
+// scripting/ScriptHost.h
+//
+// ============================================================================
+// Cosmic scripting — the per-scene script driver (Phase 13 / E11).
+// ============================================================================
+//
+// Owned by whoever runs a Play session (Starforge's PlayState in the editor, the
+// engine PlayerLayer standalone). Given a runtime Scene it:
+//
+//   Instantiate(scene)  for every entity with a NativeScriptComponent: resolve
+//                       ClassName -> factory -> construct -> inject entity+scene ->
+//                       push the reflected field values -> OnCreate all, then
+//                       OnStart all. Unresolved class names log once and stay inert
+//                       (never a crash).
+//   Tick(ts)/FixedTick(dt)/DispatchEvent(e)  fan the callback to every live
+//                       instance in creation order.
+//   Destroy(scene)      OnDestroy each, delete, null the component's Instance.
+//
+// Field pull-back on Stop is intentionally NOT done — the edit scene is
+// authoritative (§E11). The static Push/PullFields helpers are reused by the
+// editor to seed a script's default field values when it is first assigned.
+//
+// GL-free and headless-testable (no DLL needed — register a script in-exe).
+// ============================================================================
+
+#include "core/Core.h"
+
+#include <entt/entt.hpp>
+
+#include <vector>
+
+namespace Cosmic
+{
+    class Scene;
+    class Event;
+    class ScriptableEntity;
+    struct ScriptDescriptor;
+    struct NativeScriptComponent;
+
+    class COSMIC_API ScriptHost
+    {
+    public:
+        ScriptHost() = default;
+        ~ScriptHost();
+
+        ScriptHost(const ScriptHost&)            = delete;   // owns heap instances
+        ScriptHost& operator=(const ScriptHost&) = delete;
+
+        // Build + start every script in the scene (OnCreate all, then OnStart all).
+        void Instantiate(Scene& scene);
+
+        void Tick(float ts);            // OnUpdate for every live instance
+        void FixedTick(float fixedDt);  // OnFixedUpdate
+        void DispatchEvent(Event& e);   // OnEvent
+
+        // OnDestroy each, delete, null the NativeScriptComponent::Instance pointers.
+        void Destroy();
+
+        bool IsInstantiated() const { return m_Scene != nullptr; }
+        size_t LiveCount()    const { return m_Live.size(); }
+
+        // ---- field <-> instance (also used by the editor) -------------------
+        // Push saved override values from the component into a fresh instance.
+        static void PushFields(const ScriptDescriptor& desc,
+                               const NativeScriptComponent& comp, ScriptableEntity* instance);
+        // Read the instance's current field values back into the component's map.
+        static void PullFields(const ScriptDescriptor& desc,
+                               ScriptableEntity* instance, NativeScriptComponent& comp);
+
+    private:
+        Scene* m_Scene = nullptr;
+        std::vector<entt::entity> m_Live;   // entities with a live instance, creation order
+    };
+}

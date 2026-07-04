@@ -2,6 +2,7 @@
 
 #include "panels/HierarchyPanel.h"
 #include "commands/EditorCommands.h"
+#include "Prefabs.h"
 
 #include <imgui.h>
 
@@ -267,6 +268,33 @@ namespace Starforge
             m_Deferred.push_back([&ctx, id] {
                 if (Entity d = ctx.Scene->FindByUUID(UUID(id))) Commands::Destroy(ctx, d);
             });
+        }
+
+        // --- Prefabs (E14) -------------------------------------------------
+        ImGui::Separator();
+        if (ImGui::MenuItem("Save as Prefab"))
+        {
+            uint64_t id = IdOf(e);
+            m_Deferred.push_back([&ctx, id] {
+                if (Entity r = ctx.Scene->FindByUUID(UUID(id))) Prefabs::SaveAs(ctx, r);
+            });
+        }
+        if (e.HasComponent<PrefabComponent>())
+        {
+            if (ImGui::MenuItem("Apply to Prefab"))
+            {
+                uint64_t id = IdOf(e);
+                m_Deferred.push_back([&ctx, id] {
+                    if (Entity r = ctx.Scene->FindByUUID(UUID(id))) Prefabs::Apply(ctx, r);
+                });
+            }
+            if (ImGui::MenuItem("Revert to Prefab"))
+            {
+                uint64_t id = IdOf(e);
+                m_Deferred.push_back([&ctx, id] {
+                    if (Entity r = ctx.Scene->FindByUUID(UUID(id))) Prefabs::Revert(ctx, r);
+                });
+            }
         }
         ImGui::EndPopup();
     }

@@ -55,7 +55,8 @@ namespace Starforge
         std::vector<ConsoleLine> ConsoleLines;
 
         // --- Cross-panel requests (consumed by the shell each frame) -------
-        std::string PendingOpenScene;   // "project://..." set by the Content Browser
+        std::string PendingOpenScene;         // "project://..." set by the Content Browser
+        std::string PendingInstantiatePrefab; // "project://...cprefab" (E14) — Content Browser
 
         // ===================================================================
         // Dirty tracking

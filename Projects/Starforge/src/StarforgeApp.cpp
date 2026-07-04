@@ -3,6 +3,7 @@
 #include "StarforgeApp.h"
 
 #include "commands/EditorCommands.h"
+#include "Prefabs.h"
 
 #include "layers/WorkspaceLayer.h"
 #include "scene/Scene.h"
@@ -16,10 +17,27 @@
 #include <implot.h>
 
 #include <filesystem>
+#include <fstream>
+#include <sstream>
 #include <string>
 #include <vector>
 
 namespace fs = std::filesystem;
+
+namespace
+{
+    std::string ReplaceAll(std::string s, const std::string& from, const std::string& to)
+    {
+        if (from.empty()) return s;
+        size_t pos = 0;
+        while ((pos = s.find(from, pos)) != std::string::npos)
+        {
+            s.replace(pos, from.size(), to);
+            pos += to.size();
+        }
+        return s;
+    }
+}
 
 namespace Starforge
 {
@@ -59,10 +77,14 @@ namespace Starforge
     // =========================================================================
     void StarforgeApp::OnDetach()
     {
+        StopScene();                 // tear down script instances before scene reset
+        m_SrcWatcher.Stop();
         Prefs::SaveSettings(m_Settings);
         m_Ctx.ClearSelection();
         m_Ctx.Commands.Clear();
-        m_Ctx.Scene.reset();
+        m_Ctx.Scene.reset();         // drop the scene while the module is still loaded
+        m_EditSceneBackup.reset();
+        m_Module.Unload();           // then FreeLibrary
 
         Cosmic::Log::SetLogDirectory("logs");
         CS_INFO("Starforge: detached.");
@@ -111,6 +133,7 @@ namespace Starforge
     void StarforgeApp::OpenProject(const std::string& name)
     {
         if (name.empty()) return;
+        if (IsPlaying()) StopScene();
         Cosmic::FileSystem::SetActiveProject(name);
         m_Ctx.ProjectOpen  = true;
         m_Ctx.ProjectName  = name;
@@ -124,47 +147,178 @@ namespace Starforge
         else
             NewScene();
 
+        // Game module (E12): a fresh open starts with no module loaded. Watch src/
+        // for auto-build, and prompt to build if the project is scaffolded.
+        m_Module.Unload();
+        m_SrcWatcher.Stop();
+        m_SrcWatchOn = false;
+        if (ProjectIsScaffolded())
+        {
+            std::error_code ec;
+            const fs::path src = fs::path(ProjectDir()) / "src";
+            if (fs::exists(src, ec))
+                m_SrcWatchOn = m_SrcWatcher.Watch(src.generic_string(), /*recursive=*/true);
+            m_Ctx.Log("[Project] Scaffolded project — press Ctrl+B to build the game module.");
+        }
+
         m_Ctx.Log("[Project] Opened '" + name + "'.");
+    }
+
+    bool StarforgeApp::ScaffoldProject(const std::string& name)
+    {
+        // Copy the editor's templates/ into assets/projects/<name>/, replacing the
+        // @PROJECT_NAME@ token in every (text) file. The templates ship with the
+        // Starforge DLL and sync to assets/projects/Starforge/templates/.
+        std::error_code ec;
+        const fs::path templates = fs::path("assets") / "projects" / "Starforge" / "templates";
+        if (!fs::exists(templates, ec))
+            return false;
+
+        const fs::path root = fs::path("assets") / "projects" / name;
+        for (auto it = fs::recursive_directory_iterator(templates, ec);
+             it != fs::recursive_directory_iterator(); it.increment(ec))
+        {
+            const fs::path rel = fs::relative(it->path(), templates, ec);
+            const fs::path dst = root / rel;
+            if (it->is_directory(ec)) { fs::create_directories(dst, ec); continue; }
+
+            fs::create_directories(dst.parent_path(), ec);
+            std::ifstream in(it->path(), std::ios::binary);
+            std::stringstream ss; ss << in.rdbuf();
+            const std::string content = ReplaceAll(ss.str(), "@PROJECT_NAME@", name);
+            std::ofstream out(dst, std::ios::binary | std::ios::trunc);
+            out << content;
+        }
+        return true;
     }
 
     void StarforgeApp::NewProject(const std::string& name)
     {
         if (name.empty()) return;
-        std::error_code ec;
-        const fs::path root = fs::path("assets") / "projects" / name;
-        fs::create_directories(root / "scenes", ec);
-        fs::create_directories(root / "assets", ec);
+        if (IsPlaying()) StopScene();
 
-        std::ofstream cproj((root / "project.cproj").string(), std::ios::trunc);
-        if (cproj)
+        if (!ScaffoldProject(name))
         {
-            cproj << "# Cosmic project manifest (Starforge)\n";
-            cproj << "name = \"" << name << "\"\n";
-            cproj << "startup_scene = \"scenes/Main.cscene\"\n";
-            cproj << "fixed_dt_hz = 60\n";
-        }
+            // Fallback (templates unavailable): a minimal project with no game module.
+            std::error_code ec;
+            const fs::path root = fs::path("assets") / "projects" / name;
+            fs::create_directories(root / "scenes", ec);
 
-        // Seed an empty scene so the project opens into something.
-        Cosmic::FileSystem::SetActiveProject(name);
-        Cosmic::Ref<Cosmic::Scene> empty = Cosmic::Scene::Create();
-        Cosmic::Entity sun = empty->CreateEntity("Sun");
-        sun.AddComponent<Cosmic::DirectionalLightComponent>();
-        Cosmic::SceneSerializer::Save(*empty, Cosmic::FileSystem::Resolve("project://scenes/Main.cscene"));
+            std::ofstream cproj((root / "project.cproj").string(), std::ios::trunc);
+            if (cproj)
+            {
+                cproj << "# Cosmic project manifest (Starforge)\n";
+                cproj << "name = \"" << name << "\"\n";
+                cproj << "startup_scene = \"scenes/Main.cscene\"\n";
+                cproj << "fixed_dt_hz = 60\n";
+            }
+            Cosmic::FileSystem::SetActiveProject(name);
+            Cosmic::Ref<Cosmic::Scene> empty = Cosmic::Scene::Create();
+            empty->CreateEntity("Sun").AddComponent<Cosmic::DirectionalLightComponent>();
+            Cosmic::SceneSerializer::Save(*empty, Cosmic::FileSystem::Resolve("project://scenes/Main.cscene"));
+        }
 
         OpenProject(name);
     }
 
     void StarforgeApp::CloseProject()
     {
+        if (IsPlaying()) StopScene();
+        m_Module.Unload();
+        m_SrcWatcher.Stop();
+        m_SrcWatchOn = false;
         m_Ctx.ProjectOpen = false;
         m_Ctx.Scene.reset();
+        m_EditSceneBackup.reset();
         m_Ctx.Commands.Clear();
         m_Ctx.ClearSelection();
         m_Content.Reset();
     }
 
+    // =========================================================================
+    // Game module build & hot reload (E12)
+    // =========================================================================
+    std::string StarforgeApp::ProjectDir() const
+    {
+        std::error_code ec;
+        return fs::absolute(Cosmic::FileSystem::Resolve("project://"), ec).generic_string();
+    }
+
+    std::string StarforgeApp::SdkDir() const
+    {
+#pragma warning(push)
+#pragma warning(disable: 4996)
+        if (const char* env = std::getenv("COSMIC_SDK"))
+            return env;
+#pragma warning(pop)
+        // Dev tree: the editor runs from build/Runtime/<cfg> — the SDK root is 3 up.
+        std::error_code ec;
+        return fs::absolute("../../..", ec).generic_string();
+    }
+
+    bool StarforgeApp::ProjectIsScaffolded() const
+    {
+        std::error_code ec;
+        return m_Ctx.ProjectOpen &&
+               fs::exists(fs::path(ProjectDir()) / "CMakeLists.txt", ec);
+    }
+
+    void StarforgeApp::BuildScripts()
+    {
+        if (!m_Ctx.ProjectOpen || m_Builder.IsBuilding())
+            return;
+        if (IsPlaying())
+        {
+            m_Ctx.Log("[Build] Stop Play before rebuilding scripts.", LogSeverity::Warn);
+            return;
+        }
+        if (!ProjectIsScaffolded())
+        {
+            m_Ctx.Log("[Build] This project has no game module (no CMakeLists.txt). "
+                      "Create a project from the homescreen to scaffold one.", LogSeverity::Warn);
+            return;
+        }
+        ++m_HotCounter;
+        const std::string suffix = "_hot" + std::to_string(m_HotCounter);
+        m_LastBuiltStem = m_Ctx.ProjectName + suffix;
+        m_Ctx.Log("[Build] Building '" + m_Ctx.ProjectName + "' -> " + m_LastBuiltStem + ".dll");
+        m_Builder.Start(ProjectDir(), SdkDir(), suffix);
+    }
+
+    void StarforgeApp::ReloadModule(const std::string& dllStem)
+    {
+        // Preserve edit-scene state across the module swap. Custom (module-owned)
+        // components serialize while the OLD module is still loaded; NativeScript
+        // data is engine-owned and survives regardless.
+        std::string snapshot;
+        if (m_Ctx.Scene)
+            snapshot = Cosmic::SceneSerializer::SaveToString(*m_Ctx.Scene);
+
+        if (IsPlaying()) StopScene();
+        m_Ctx.ClearSelection();
+        m_Ctx.Commands.Clear();
+        // Drop the scene while the OLD module is still loaded so any module-typed
+        // component destructors run against valid code, THEN unload the DLL.
+        m_Ctx.Scene.reset();
+        m_Module.Unload();
+
+        if (!m_Module.Load(m_Ctx.ProjectName, dllStem))
+            m_Ctx.Log("[Module] Load failed — scripts unavailable this session.", LogSeverity::Error);
+
+        // Rebuild the scene (custom components + script classes now resolve).
+        Cosmic::Ref<Cosmic::Scene> fresh = Cosmic::Scene::Create();
+        if (!snapshot.empty())
+            Cosmic::SceneSerializer::LoadFromString(*fresh, snapshot);
+        m_Ctx.Scene = fresh;
+        m_Ctx.ClearDirty();
+        m_Ctx.Log("[Module] Reloaded '" + dllStem + "' (" +
+                  std::to_string(Cosmic::ModuleRegistry::Get().ScriptNames(m_Ctx.ProjectName).size()) +
+                  " script(s)).");
+    }
+
     void StarforgeApp::NewScene()
     {
+        if (IsPlaying()) StopScene();
         m_Ctx.Scene = Cosmic::Scene::Create();
         Cosmic::Entity sun = m_Ctx.Scene->CreateEntity("Sun");
         sun.AddComponent<Cosmic::DirectionalLightComponent>();
@@ -179,6 +333,7 @@ namespace Starforge
 
     void StarforgeApp::OpenScene(const std::string& vfsPath)
     {
+        if (IsPlaying()) StopScene();
         Cosmic::Ref<Cosmic::Scene> fresh = Cosmic::Scene::Create();
         if (!Cosmic::SceneSerializer::Load(*fresh, Cosmic::FileSystem::Resolve(vfsPath)))
         {
@@ -196,7 +351,7 @@ namespace Starforge
 
     bool StarforgeApp::SaveScene()
     {
-        if (!m_Ctx.Scene) return true;
+        if (!m_Ctx.Scene || IsPlaying()) return true;   // never persist the runtime scene
         if (m_Ctx.SceneVfsPath.empty())
             return false;   // needs a name — caller opens Save As
         SaveSceneToVfs(m_Ctx.SceneVfsPath);
@@ -205,7 +360,7 @@ namespace Starforge
 
     void StarforgeApp::SaveSceneToVfs(const std::string& vfsPath)
     {
-        if (!m_Ctx.Scene) return;
+        if (!m_Ctx.Scene || IsPlaying()) return;
         std::error_code ec;
         fs::create_directories(Cosmic::FileSystem::Resolve("project://scenes"), ec);
         const std::string disk = Cosmic::FileSystem::Resolve(vfsPath);
@@ -223,18 +378,126 @@ namespace Starforge
     }
 
     // =========================================================================
+    // Play mode (E13)
+    // =========================================================================
+    void StarforgeApp::PlayScene()
+    {
+        if (!m_Ctx.Scene || IsPlaying())
+            return;
+
+        // E6 failsafe: autosave the edit scene before entering Play.
+        {
+            std::error_code ec;
+            const std::string dir = Cosmic::FileSystem::Resolve("user://starforge/autosave/" + m_Ctx.ProjectName);
+            fs::create_directories(dir, ec);
+            Cosmic::SceneSerializer::Save(*m_Ctx.Scene, dir + "/" + m_Ctx.SceneName + ".cscene");
+        }
+
+        // Snapshot the edit scene to JSON and build a fresh runtime scene from it
+        // (this dogfoods the serializer every Play). The edit scene is kept intact.
+        const std::string snapshot = Cosmic::SceneSerializer::SaveToString(*m_Ctx.Scene);
+        Cosmic::Ref<Cosmic::Scene> runtime = Cosmic::Scene::Create();
+        if (!Cosmic::SceneSerializer::LoadFromString(*runtime, snapshot))
+        {
+            m_Ctx.Log("[Play] Failed to build the runtime scene.", LogSeverity::Error);
+            return;
+        }
+
+        m_EditSceneBackup = m_Ctx.Scene;
+        m_Ctx.Scene       = runtime;
+        m_Ctx.ClearSelection();
+        m_Ctx.Commands.Clear();      // no undo across the play boundary (v1)
+        m_FixedAccum   = 0.0f;
+        m_StepRequested = false;
+
+        m_Scripts.Instantiate(*runtime);
+        m_Play = PlayMode::Playing;
+        m_Ctx.Log("[Play] Started — " + std::to_string(m_Scripts.LiveCount()) + " script(s).");
+    }
+
+    void StarforgeApp::StopScene()
+    {
+        if (!IsPlaying())
+            return;
+        m_Scripts.Destroy();
+        m_Ctx.Scene = m_EditSceneBackup;   // untouched edit scene
+        m_EditSceneBackup.reset();
+        m_Ctx.ClearSelection();
+        m_Ctx.Commands.Clear();
+        m_Play = PlayMode::Edit;
+        m_Ctx.Log("[Play] Stopped — edit scene restored.");
+    }
+
+    void StarforgeApp::TogglePausePlay()
+    {
+        if      (m_Play == PlayMode::Playing) m_Play = PlayMode::Paused;
+        else if (m_Play == PlayMode::Paused)  m_Play = PlayMode::Playing;
+    }
+
+    void StarforgeApp::StepScene()
+    {
+        if (m_Play == PlayMode::Paused)
+            m_StepRequested = true;
+    }
+
+    void StarforgeApp::TickPlay(float ts)
+    {
+        if (m_Play == PlayMode::Playing)
+        {
+            m_Scripts.Tick(ts);
+            m_FixedAccum += ts;
+            int guard = 0;
+            while (m_FixedAccum >= m_FixedDt && guard++ < 8)   // clamp catch-up
+            {
+                m_Scripts.FixedTick(m_FixedDt);
+                m_FixedAccum -= m_FixedDt;
+            }
+        }
+        else if (m_Play == PlayMode::Paused && m_StepRequested)
+        {
+            m_Scripts.FixedTick(m_FixedDt);   // one deterministic step
+            m_StepRequested = false;
+        }
+    }
+
+    // =========================================================================
     // Frame
     // =========================================================================
     void StarforgeApp::OnUpdate(float ts)
     {
-        // Content-browser scene-open request.
+        // Content-browser scene-open request (ignored mid-Play — Stop first).
         if (!m_Ctx.PendingOpenScene.empty())
         {
             const std::string p = m_Ctx.PendingOpenScene;
             m_Ctx.PendingOpenScene.clear();
-            OpenScene(p);
+            if (!IsPlaying())
+                OpenScene(p);
         }
 
+        // Content-browser prefab instantiate request (E14).
+        if (!m_Ctx.PendingInstantiatePrefab.empty())
+        {
+            const std::string p = m_Ctx.PendingInstantiatePrefab;
+            m_Ctx.PendingInstantiatePrefab.clear();
+            if (m_Ctx.Scene && !IsPlaying())
+                Prefabs::Instantiate(m_Ctx, p);
+        }
+
+        // Game-module build pump (E12): stream cmake output, reload on success.
+        m_Builder.Poll(m_Ctx, [this](bool ok)
+        {
+            if (ok) ReloadModule(m_LastBuiltStem);
+            else    m_Ctx.Log("[Build] Failed — see the Console. Keeping the current module.",
+                              LogSeverity::Error);
+        });
+        if (m_SrcWatchOn)
+        {
+            const auto changes = m_SrcWatcher.Poll();   // always drained
+            if (m_AutoBuild && !changes.empty() && !m_Builder.IsBuilding() && !IsPlaying())
+                BuildScripts();
+        }
+
+        TickPlay(ts);
         RenderViewport(ts);
         Autosave(ts);
         UpdateWindowTitle();
@@ -274,6 +537,8 @@ namespace Starforge
 
     void StarforgeApp::Autosave(float ts)
     {
+        if (IsPlaying())            // never autosave the throwaway runtime scene
+            return;
         if (!m_Ctx.Dirty || !m_Ctx.Scene)
             return;
         m_AutosaveTimer += ts;
@@ -345,17 +610,31 @@ namespace Starforge
         {
             const glm::vec2 pos = Cosmic::Application::Get().GetViewportPos();
             ImGui::SetCursorScreenPos(ImVec2(pos.x + 10.0f, pos.y + 8.0f));
-            ImGui::TextDisabled("%s%s  |  %d selected",
+            ImGui::TextDisabled("%s%s  |  %d selected%s",
                                 m_Ctx.SceneName.c_str(), m_Ctx.Dirty ? " *" : "",
-                                (int)m_Ctx.Selection.size());
-            if (m_Ctx.ProjectOpen && m_Ctx.Scene)
+                                (int)m_Ctx.Selection.size(),
+                                IsPlaying() ? (m_Play == PlayMode::Paused ? "  |  PAUSED" : "  |  PLAYING") : "");
+            // The gizmo is an edit tool — hidden while playing (runtime scene).
+            if (m_Ctx.ProjectOpen && m_Ctx.Scene && !IsPlaying())
                 m_Viewport.DrawGizmo(m_Ctx, m_Camera);
         }
         if (ws)
             ws->EndViewportOverlay();
 
+        // Play-mode viewport border tint (the universal "you are live" cue).
+        if (IsPlaying())
+        {
+            const glm::vec2 p = Cosmic::Application::Get().GetViewportPos();
+            const glm::vec2 s = Cosmic::Application::Get().GetViewportSize();
+            const ImU32 col = (m_Play == PlayMode::Paused)
+                ? IM_COL32(255, 200, 50, 255) : IM_COL32(70, 220, 90, 255);
+            ImGui::GetForegroundDrawList()->AddRect(
+                ImVec2(p.x, p.y), ImVec2(p.x + s.x, p.y + s.y), col, 0.0f, 0, 3.0f);
+        }
+
         // Input (ImGui frame is live + fresh here). Gizmo already drawn above, so
-        // picking sees this frame's gizmo state.
+        // picking sees this frame's gizmo state. Picking/selection stay live in Play
+        // so you can inspect runtime entities; only the gizmo is suppressed.
         if (m_Ctx.ProjectOpen && m_Ctx.Scene)
             m_Viewport.OnUpdate(m_Ctx, m_Camera, ImGui::GetIO().DeltaTime);
 
@@ -373,10 +652,78 @@ namespace Starforge
             ImGui::EndMenuBar();
         }
         if (m_Ctx.ProjectOpen && m_Ctx.Scene)
-            m_Viewport.DrawToolbar(m_Ctx, m_Camera);
+        {
+            DrawPlayControls();
+            ImGui::SameLine();
+            DrawBuildControls();
+            // The edit toolbar (gizmo/grid) is hidden while playing to signal the
+            // viewport is showing the live runtime scene, not the editable one.
+            if (!IsPlaying())
+            {
+                ImGui::SameLine();
+                m_Viewport.DrawToolbar(m_Ctx, m_Camera);
+            }
+        }
         else
+        {
             ImGui::TextDisabled("No project open — see the Home panel.");
+        }
         ImGui::End();
+    }
+
+    void StarforgeApp::DrawBuildControls()
+    {
+        const bool scaffolded = ProjectIsScaffolded();
+
+        ImGui::BeginDisabled(!scaffolded || m_Builder.IsBuilding() || IsPlaying());
+        if (ImGui::Button("Build Scripts"))
+            BuildScripts();
+        ImGui::EndDisabled();
+
+        ImGui::SameLine();
+        ImGui::Checkbox("Auto", &m_AutoBuild);
+
+        ImGui::SameLine();
+        const char* txt; ImVec4 col;
+        switch (m_Builder.GetStatus())
+        {
+            case BuildRunner::Status::Building: txt = "building…";  col = ImVec4(1.0f, 0.85f, 0.30f, 1.0f); break;
+            case BuildRunner::Status::Success:  txt = "module ok";  col = ImVec4(0.40f, 1.0f, 0.50f, 1.0f); break;
+            case BuildRunner::Status::Failed:   txt = "build failed"; col = ImVec4(1.0f, 0.42f, 0.42f, 1.0f); break;
+            default:
+                txt = !scaffolded ? "no module"
+                                  : (m_Module.IsLoaded() ? "module loaded" : "not built");
+                col = ImVec4(0.6f, 0.6f, 0.6f, 1.0f);
+                break;
+        }
+        ImGui::TextColored(col, "%s", txt);
+    }
+
+    void StarforgeApp::DrawPlayControls()
+    {
+        const bool paused = (m_Play == PlayMode::Paused);
+        if (!IsPlaying())
+        {
+            if (ImGui::Button("Play"))
+                PlayScene();
+        }
+        else
+        {
+            if (ImGui::Button("Stop"))
+                StopScene();
+            ImGui::SameLine();
+            if (ImGui::Button(paused ? "Resume" : "Pause"))
+                TogglePausePlay();
+            ImGui::SameLine();
+            ImGui::BeginDisabled(!paused);
+            if (ImGui::Button("Step"))
+                StepScene();
+            ImGui::EndDisabled();
+            ImGui::SameLine();
+            ImGui::TextColored(paused ? ImVec4(1.0f, 0.80f, 0.20f, 1.0f)
+                                      : ImVec4(0.30f, 1.0f, 0.42f, 1.0f),
+                               paused ? "PAUSED" : "PLAYING");
+        }
     }
 
     void StarforgeApp::DrawMenus()
@@ -561,6 +908,8 @@ namespace Starforge
             if (!SaveScene()) m_OpenSaveAs = true;
         if (ctrl && ImGui::IsKeyPressed(ImGuiKey_N, false))
             NewScene();
+        if (ctrl && ImGui::IsKeyPressed(ImGuiKey_B, false))
+            BuildScripts();
         if (ctrl && ImGui::IsKeyPressed(ImGuiKey_D, false))
             if (Cosmic::Entity e = m_Ctx.PrimaryEntity()) Commands::Duplicate(m_Ctx, e);
         if (ImGui::IsKeyPressed(ImGuiKey_Delete, false) && m_Ctx.HasSelection() && m_Ctx.Scene)
@@ -579,6 +928,8 @@ namespace Starforge
     void StarforgeApp::OnEvent(Cosmic::Event& e)
     {
         m_Camera.OnEvent(e);
+        if (m_Play == PlayMode::Playing)   // forward input to live scripts
+            m_Scripts.DispatchEvent(e);
     }
 
 } // namespace Starforge

@@ -94,7 +94,10 @@ namespace Starforge
         {
             if (d->TypeId == kTagId)   // shown as the Name row above
                 continue;
-            DrawComponent(ctx, *d);
+            if (d->Name == "NativeScript")   // E11 — bespoke class picker + fields
+                DrawScriptComponent(ctx, *d);
+            else
+                DrawComponent(ctx, *d);
         }
 
         ImGui::Separator();
@@ -164,6 +167,95 @@ namespace Starforge
                         Commands::CommitFieldEdit(ctx, "Edit " + desc.Name + "." + f.Name,
                                                   desc.TypeId, f.Name, before, res.PostValue);
                     m_HasActive = false;
+                }
+            }
+        }
+        ImGui::PopID();
+
+        if (removeRequested && ctx.Selection.size() == 1)
+            Commands::RemoveComponent(ctx, primary, desc.TypeId);
+    }
+
+    namespace
+    {
+        // Populate a component's Fields map with the script's default values by
+        // spinning up a throwaway instance and pulling them back out. Called when a
+        // class is first chosen so the fields display + serialize immediately.
+        void SeedScriptDefaults(NativeScriptComponent& nsc)
+        {
+            nsc.Fields.clear();
+            const ScriptDescriptor* sd = ModuleRegistry::Get().FindScript(nsc.ClassName);
+            if (!sd || !sd->Factory) return;
+            ScriptableEntity* tmp = sd->Factory();
+            ScriptHost::PullFields(*sd, tmp, nsc);
+            delete tmp;
+        }
+    }
+
+    void InspectorPanel::DrawScriptComponent(EditorContext& ctx, const TypeDescriptor& desc)
+    {
+        Entity primary = ctx.PrimaryEntity();
+        auto& reg = ctx.Scene->GetRegistry();
+        auto* nsc = static_cast<NativeScriptComponent*>(desc.Get(reg, (entt::entity)primary));
+        if (!nsc) return;
+
+        ImGui::PushID((int)desc.TypeId);
+        const bool open = ImGui::CollapsingHeader("Native Script", ImGuiTreeNodeFlags_DefaultOpen);
+
+        bool removeRequested = false;
+        if (ImGui::BeginPopupContextItem("script_ctx"))
+        {
+            if (ImGui::MenuItem("Remove Component")) removeRequested = true;
+            ImGui::EndPopup();
+        }
+
+        if (open)
+        {
+            // Class picker from the loaded module's registered scripts.
+            const std::vector<std::string> names = ModuleRegistry::Get().ScriptNames();
+            const char* preview = nsc->ClassName.empty() ? "(none)" : nsc->ClassName.c_str();
+            if (ImGui::BeginCombo("Class", preview))
+            {
+                if (ImGui::Selectable("(none)", nsc->ClassName.empty()))
+                {
+                    if (!nsc->ClassName.empty()) { nsc->ClassName.clear(); nsc->Fields.clear(); ctx.MarkDirty(); }
+                }
+                for (const std::string& n : names)
+                {
+                    const bool sel = (n == nsc->ClassName);
+                    if (ImGui::Selectable(n.c_str(), sel) && n != nsc->ClassName)
+                    {
+                        nsc->ClassName = n;
+                        SeedScriptDefaults(*nsc);
+                        ctx.MarkDirty();
+                    }
+                    if (sel) ImGui::SetItemDefaultFocus();
+                }
+                ImGui::EndCombo();
+            }
+
+            if (names.empty())
+                ImGui::TextDisabled("No scripts registered — build the project's game module (Ctrl+B).");
+
+            const ScriptDescriptor* sd = nsc->ClassName.empty()
+                ? nullptr : ModuleRegistry::Get().FindScript(nsc->ClassName);
+            if (!nsc->ClassName.empty() && !sd)
+                ImGui::TextDisabled("'%s' is not currently loaded.", nsc->ClassName.c_str());
+
+            if (sd)
+            {
+                // Backfill any field the map is missing (e.g. loaded before the
+                // module, or the script gained a field), then draw each one.
+                for (const auto& sf : sd->Fields.Fields)
+                    if (nsc->Fields.find(sf.Name) == nsc->Fields.end())
+                        SeedScriptDefaults(*nsc);
+
+                for (const auto& sf : sd->Fields.Fields)
+                {
+                    auto it = nsc->Fields.find(sf.Name);
+                    if (it == nsc->Fields.end()) continue;
+                    PropertyRows::Result res = PropertyRows::DrawValue(sf, it->second, false);
+                    if (res.Changed || res.Committed) ctx.MarkDirty();
                 }
             }
         }

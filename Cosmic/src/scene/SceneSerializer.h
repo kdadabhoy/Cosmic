@@ -22,6 +22,7 @@
 namespace Cosmic
 {
     class Scene;
+    class Entity;   // E14 — prefab subtree save/instantiate
 
     class COSMIC_API SceneSerializer
     {
@@ -35,5 +36,14 @@ namespace Cosmic
         // In-memory variants — Play-mode snapshot/restore (E13) and tests.
         static std::string SaveToString(Scene& scene);
         static bool        LoadFromString(Scene& scene, const std::string& text);
+
+        // Prefab subtree (E14). SavePrefab writes `root` + its descendants as a
+        // self-contained `.cprefab` (schema { cosmic_prefab, root, entities }).
+        // InstantiatePrefab loads one into `scene` with FRESH UUIDs (so instances
+        // coexist), rebuilds the internal hierarchy, stamps the new root with a
+        // PrefabComponent{sourcePath}, and returns it (an invalid Entity on
+        // failure). The new root has no parent — the caller places it.
+        static bool   SavePrefab(Scene& scene, Entity root, const std::string& path);
+        static Entity InstantiatePrefab(Scene& scene, const std::string& path);
     };
 }

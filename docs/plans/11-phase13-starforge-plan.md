@@ -695,6 +695,30 @@ documented).
 
 ### E11 — Script host (engine `scripting/`)
 
+> **✅ 2026-07-04.** `scripting/ScriptableEntity.h` (header-only base: OnCreate/
+> OnStart/OnUpdate/OnFixedUpdate/OnEvent/OnDestroy + GetEntity/GetScene/
+> GetComponent; ScriptHost-injected entity+scene) + `scripting/ModuleRegistry.h/
+> .cpp` (process-wide singleton `ModuleRegistry::Get()`; `AddScript<T>` factory +
+> reflected field descriptor via a standalone `Reflect::ClassBuilder`; BeginModule/
+> EndModule scoping + `UnregisterModule` for E12; `NoteComponent` for custom types)
+> + `scripting/ScriptHost.h/.cpp` (Instantiate = resolve ClassName→factory→inject→
+> push fields→OnCreate all→OnStart all; Tick/FixedTick/DispatchEvent/Destroy;
+> unknown class = warn + inert; `Push/PullFields` static helpers) +
+> `scripting/ModuleMacros.h` (`CS_MODULE_BEGIN/END` = the two exports,
+> `CS_SCRIPT`/`CS_COMPONENT`/`CS_FIELD`/`CS_END`). `NativeScriptComponent
+> {ClassName, Instance*, Fields map}` added to Components.h + reflected ("ClassName"
+> only; the dynamic Fields map is (de)serialized specially by SceneSerializer using
+> the module's per-script descriptor). Editor: PropertyRows refactored to a reusable
+> `DrawValue(FieldValue&)`; Inspector gained a bespoke NativeScript section (class
+> picker from ModuleRegistry + the script's reflected fields on the override map;
+> script-field edits mark dirty, NOT undoable in v1). `tests/test_scripthost.cpp`
+> (4 cases: full lifecycle + a scripted Transform move via the CS_ macros, field
+> pull, unknown-class safety, NativeScript JSON round-trip). **Deviation:** the
+> macro DSL is a chained form (`CS_SCRIPT(T) CS_FIELD(x).Range(...) CS_END;`) not the
+> plan's comma-sketch — a builder chain can't be comma-joined and MSVC warns C4003
+> on empty variadic args. Build green, **CosmicTests 162/162**; a scaffolded
+> project's module compiled + its script registered + ran (see E12/E13).
+
 **Files:** NEW `scripting/ScriptableEntity.h`, `scripting/ModuleRegistry.h/.cpp`,
 `scripting/ScriptHost.h/.cpp`, `scripting/ModuleMacros.h` (`CS_MODULE_BEGIN/END`, `CS_SCRIPT`,
 `CS_COMPONENT`, `CS_FIELD`); MODIFY `scene/Components.h` (`NativeScriptComponent`), `Scene.h`
@@ -711,6 +735,32 @@ authoritative — documented).
 moves an entity in a scripted tick loop.
 
 ### E12 — Game-module build & hot reload (editor)
+
+> **✅ 2026-07-04.** `Projects/Starforge/assets/templates/` (project.cproj,
+> CMakeLists.txt w/ `GAME_HOT_SUFFIX` + bundled imgui/implot TUs, Module.cpp using
+> the CS_ macros, `scripts/HoverController.h/.cpp` PD-lift sample, a scripted
+> Main.cscene) synced to the runtime as `assets/projects/Starforge/templates/`;
+> `NewProject` scaffolds a copy with `@PROJECT_NAME@` token replacement (falls back
+> to the minimal no-module project if templates are missing). `src/GameModule.h/
+> .cpp` (LoadLibrary + GetProcAddress("CosmicModule_Register") + call; Unload =
+> `ModuleRegistry::UnregisterModule` + FreeLibrary; pimpl'd windows.h) +
+> `src/BuildRunner.h/.cpp` (background std::thread driving VS-bundled cmake
+> configure+build via std::system→temp-log, drained to the Console on the main
+> thread; `FindCMake` globs the VS install; status chip). StarforgeApp: **Build
+> Scripts** (Ctrl+B) → fresh `_hot<N>` suffix build → on success `ReloadModule`
+> (snapshot scene→drop it while the OLD module is still loaded so component dtors
+> run against valid code→Unload→Load new→restore scene); **Auto** toggle watches
+> `src/` via FileWatcher; status chip (building/module ok/failed). Module unloaded
+> on project close/detach. **Verified end-to-end (headless):** a scaffolded
+> `TestRover` project configured + built through the exact BuildRunner commands →
+> `TestRover_hot1.dll` links (caught + fixed a real bug: the template CMake must
+> bundle the imgui/implot TUs, since Cosmic.dll does not re-export ImGui symbols) →
+> dumpbin confirms all three exports (`CosmicModule_Register`, `CreatePluginLayer`,
+> `InitializePluginContexts`); a no-suffix build ran standalone via `--project
+> TestRover` with the script registered + instantiated (E11+E13). **The
+> editor-UI-driven reload cycle + a 20-reload handle-leak check remain the user's
+> on-machine acceptance step** (needs their VS + the SDK tree; the underlying
+> commands are the verified ones above).
 
 **Files:** Starforge `src/GameModule.*` (LoadLibrary/registry lifecycle per §3.3),
 `src/BuildRunner.*` (JobSystem-backgrounded cmake configure+build, streamed to Console panel),
@@ -733,6 +783,29 @@ consecutive reloads leak no handles (Process Explorer check documented).
 
 ### E13 — Play / Pause / Step + PlayerLayer
 
+> **✅ 2026-07-04.** Engine `layers/PlayerLayer.h/.cpp` — the standalone ship path:
+> reads project.cproj (startup scene / fixed-dt Hz / title), `SceneManager::Load`s
+> the startup scene, `ScriptHost::Instantiate`s + ticks it (variable in OnUpdate,
+> fixed in OnFixedUpdate → Application::Pause Feature-B freezes the sim while the
+> frame keeps drawing), renders from the first Primary CameraComponent (fallback
+> view + one-time warning), Esc pause menu (Resume / Quit to Launcher); re-binds
+> scripts on a SceneManager swap. `CreatePluginLayer` (generated) returns one.
+> **Application::Pause Feature-B already existed** (W4) — no engine pause change
+> needed. Starforge PlayState: **Play** snapshots the edit scene to JSON → builds a
+> fresh runtime scene → ScriptHost.Instantiate → renders/ticks THAT (fixed-step
+> accumulator); **Stop** discards the runtime scene + restores the untouched edit
+> scene (byte-identical for free); **Pause** freezes script ticking; **Step**
+> advances one fixed step. Toolbar ▶/⏸/⏭/⏹ + green/amber viewport border tint;
+> events forwarded to scripts; saves + autosave + scene/project switches all guard
+> against Play. **Deviation:** the editor viewport always renders from the EDITOR
+> camera during Play (the "always ejected" v1 default — the Primary-camera path is
+> the PlayerLayer's; eject-toggle is a follow-up); undo is cleared across the Play
+> boundary (runtime edits are discarded on Stop anyway). Rendering uses
+> `Scene::OnRender3D` (the editor viewport's path); the SceneRenderer env/shadow/
+> post upgrade is a shared follow-up for both surfaces. **Verified:** the scaffolded
+> TestRover ran standalone via `--project` at 60 Hz with its script live. Build
+> green, tests 163/163.
+
 **Files:** engine NEW `layers/PlayerLayer.h/.cpp` (§3.4); engine: implement
 `docs/design/responsive-rendering-and-pause.md` Feature B semantics if not yet present
 (`Application::SetPaused` — sim frozen, UI+render live) honoring that doc; Starforge
@@ -751,6 +824,25 @@ pause+step advances deterministic sim exactly one dt (telemetry timestamps prove
 scaffolded template project runs standalone from the Launcher with zero edits.
 
 ### E14 — Prefabs v1
+
+> **✅ 2026-07-04.** Engine `SceneSerializer::SavePrefab(scene, root, path)` /
+> `InstantiatePrefab(scene, path)` — subtree JSON (`{cosmic_prefab, root,
+> entities}`) via a shared per-entity `SerializeEntity` + `LoadEntityComponents`
+> refactor (LoadFromString now uses them too, no behavior change — 163/163);
+> instantiate remaps every UUID fresh (so many instances coexist), rebuilds the
+> internal hierarchy, and stamps the new root with `PrefabComponent{SourcePath}`.
+> `PrefabComponent` added to Components.h + reflected. Starforge `Prefabs.h`
+> (SaveAs → project://prefabs/<Tag>.cprefab, Instantiate = select+dirty w/ VFS
+> SourcePath, Apply = overwrite asset from instance, Revert = re-instantiate in
+> place keeping the root transform); Hierarchy context menu (Save as Prefab +
+> Apply/Revert on instances) + Content Browser double-click / "Instantiate Prefab"
+> (via a new `EditorContext::PendingInstantiatePrefab`, consumed in OnUpdate).
+> `tests/test_scene_serializer.cpp` E14 case: a parent+2-children subtree
+> round-trips through a `.cprefab`, instantiates twice with fresh distinct UUIDs +
+> preserved hierarchy + child local transform + PrefabComponent. **Deviation
+> (as-planned):** no per-field override tracking / no live propagation in v1;
+> prefab instantiate/apply/revert mark dirty but are NOT undoable (documented, like
+> content-browser rename/delete). Build green, tests 163/163.
 
 **Files:** engine: `SceneSerializer` subtree save/instantiate (mostly exists via E2 visitor);
 MODIFY `scene/Components.h` (`PrefabComponent{ std::string SourcePath; }`); Starforge: hierarchy/

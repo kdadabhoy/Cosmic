@@ -105,5 +105,17 @@ namespace Cosmic::Reflect
         ClassIn<TerrainComponent>(r, "Terrain", "World");
         ClassIn<WaterComponent>(r, "Water", "World");
         ClassIn<ParticleEmitterComponent>(r, "ParticleEmitter", "World");
+
+        // Scripting link (E11). ClassName is the only plain reflected field; the
+        // dynamic script-field overrides (NativeScriptComponent::Fields) are handled
+        // out-of-band by the serializer + the Inspector's script section, since they
+        // depend on the ModuleRegistry's per-script descriptor.
+        ClassIn<NativeScriptComponent>(r, "NativeScript", "Scripts")
+            .Field("ClassName", &NativeScriptComponent::ClassName)
+                .Tooltip("Registered C++ script class (ModuleRegistry).");
+
+        // Prefab link (E14) — remembers the source .cprefab of an instantiated subtree.
+        ClassIn<PrefabComponent>(r, "Prefab", "Core")
+            .Field("SourcePath", &PrefabComponent::SourcePath).AsAssetPath("prefab");
     }
 }

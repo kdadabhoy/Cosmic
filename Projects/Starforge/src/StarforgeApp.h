@@ -19,6 +19,8 @@
 #include "EditorContext.h"
 #include "EditorPrefs.h"
 #include "ViewportController.h"
+#include "GameModule.h"
+#include "BuildRunner.h"
 #include "panels/HierarchyPanel.h"
 #include "panels/InspectorPanel.h"
 #include "panels/ContentBrowserPanel.h"
@@ -44,12 +46,37 @@ namespace Starforge
         // --- Project / scene lifecycle (E6) --------------------------------
         void OpenProject(const std::string& name);
         void NewProject(const std::string& name);
+        bool ScaffoldProject(const std::string& name);   // E12 — from templates/
         void CloseProject();
+
+        // --- Game module build & hot reload (E12) --------------------------
+        void        BuildScripts();                      // Ctrl+B — background cmake
+        void        ReloadModule(const std::string& dllStem);
+        void        DrawBuildControls();
+        bool        ProjectIsScaffolded() const;         // has a src/ + CMakeLists.txt
+        std::string ProjectDir() const;                  // absolute assets/projects/<name>
+        std::string SdkDir() const;                      // COSMIC_SDK or dev-tree root
         void NewScene();
         void OpenScene(const std::string& vfsPath);
         bool SaveScene();                 // false if it needs a name (opens Save As)
         void SaveSceneToVfs(const std::string& vfsPath);
         void BuildSandboxScene();
+
+        // --- Play mode (E13) -----------------------------------------------
+        // Play snapshots the edit scene to JSON, builds a fresh runtime scene from
+        // it, instantiates the ScriptHost, and renders/ticks THAT; Stop discards the
+        // runtime scene and restores the untouched edit scene. Pause freezes script
+        // ticking; Step advances exactly one fixed step. The editor viewport always
+        // renders from the editor camera (the "always ejected" v1 default — the
+        // Primary CameraComponent path is the standalone PlayerLayer's job).
+        enum class PlayMode { Edit, Playing, Paused };
+        void PlayScene();
+        void StopScene();
+        void TogglePausePlay();
+        void StepScene();
+        void TickPlay(float ts);
+        void DrawPlayControls();
+        bool IsPlaying() const { return m_Play != PlayMode::Edit; }
 
         // --- Shell rendering -----------------------------------------------
         void ApplyDockLayout();
@@ -68,6 +95,24 @@ namespace Starforge
         EditorContext m_Ctx;
         Cosmic::OrbitCameraController m_Camera{ 16.0f / 9.0f };
         ViewportController m_Viewport;
+
+        // Play-mode state (E13). While playing, m_Ctx.Scene points at the runtime
+        // scene and m_EditSceneBackup holds the untouched edit scene.
+        PlayMode                   m_Play = PlayMode::Edit;
+        Cosmic::Ref<Cosmic::Scene> m_EditSceneBackup;
+        Cosmic::ScriptHost         m_Scripts;
+        float                      m_FixedDt     = 1.0f / 60.0f;
+        float                      m_FixedAccum  = 0.0f;
+        bool                       m_StepRequested = false;
+
+        // Game module / hot reload (E12).
+        GameModule          m_Module;
+        BuildRunner         m_Builder;
+        int                 m_HotCounter = 0;         // -> <project>_hot<N>.dll
+        std::string         m_LastBuiltStem;          // reload target on build success
+        bool                m_AutoBuild = false;      // rebuild on src/ change
+        Cosmic::FileWatcher m_SrcWatcher;
+        bool                m_SrcWatchOn = false;
 
         HierarchyPanel      m_Hierarchy;
         InspectorPanel      m_Inspector;

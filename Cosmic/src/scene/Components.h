@@ -6,15 +6,19 @@
 #include "graphics/Material.h"
 #include "graphics/Mesh.h"
 #include "scene/ComponentRegistry.h"
+#include "reflect/TypeDescriptor.h"   // Reflect::FieldValue (NativeScriptComponent::Fields)
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
 namespace Cosmic
 {
+    class ScriptableEntity;   // scripting/ScriptableEntity.h (E11) — NativeScriptComponent link
+
     /**
      * @brief Stable 64-bit identity (E2). Scene::CreateEntity emplaces one with
      * a fresh UUID; the SceneSerializer writes it as the per-entity "id" (not a
@@ -361,6 +365,46 @@ namespace Cosmic
         ParticleEmitterComponent() = default;
         ParticleEmitterComponent(const ParticleEmitterComponent&) = default;
     };
+
+    /**
+     * @brief Native C++ script link (E11). The scene stores the script's class
+     * NAME (resolved to a factory through ModuleRegistry at Play) plus the
+     * reflected field-override values edited in the Inspector and saved with the
+     * scene. Instance is runtime-only — null in edit mode, owned by the ScriptHost
+     * during Play; it is never copied meaningfully because scripts only ever run in
+     * the throwaway runtime scene. Only ClassName is a plain reflected field; the
+     * Fields map is (de)serialized specially by the SceneSerializer, which consults
+     * the script's descriptor for each field's kind.
+     */
+    struct COSMIC_API NativeScriptComponent
+    {
+        std::string       ClassName;             // registered script class ("" = none)
+        ScriptableEntity* Instance = nullptr;    // runtime-only; owned by ScriptHost
+
+        // name -> boxed override value; authoritative in edit mode, pushed into the
+        // fresh instance at Play. Empty entries fall back to the script's C++ member
+        // defaults. FieldValue is the same boxed type the reflection registry uses.
+        std::unordered_map<std::string, Reflect::FieldValue> Fields;
+
+        NativeScriptComponent() = default;
+        NativeScriptComponent(const NativeScriptComponent&) = default;
+        NativeScriptComponent(const std::string& className) : ClassName(className) {}
+    };
+
+    /**
+     * @brief Marks an entity subtree as an instance of a prefab asset (E14). Stores
+     * the source `.cprefab` VFS path so "Revert to Prefab" can re-instantiate it and
+     * a missing-source load can warn. No per-field override tracking in v1 — an
+     * instance is a plain detached copy that happens to remember where it came from.
+     */
+    struct COSMIC_API PrefabComponent
+    {
+        std::string SourcePath;                  // "project://prefabs/Foo.cprefab"
+
+        PrefabComponent() = default;
+        PrefabComponent(const PrefabComponent&) = default;
+        PrefabComponent(const std::string& path) : SourcePath(path) {}
+    };
 }
 
 // ============================================================================
@@ -398,6 +442,8 @@ CS_REGISTER_COMPONENT(Cosmic::EnvironmentComponent)
 CS_REGISTER_COMPONENT(Cosmic::TerrainComponent)
 CS_REGISTER_COMPONENT(Cosmic::WaterComponent)
 CS_REGISTER_COMPONENT(Cosmic::ParticleEmitterComponent)
+CS_REGISTER_COMPONENT(Cosmic::NativeScriptComponent)
+CS_REGISTER_COMPONENT(Cosmic::PrefabComponent)
 
 
 

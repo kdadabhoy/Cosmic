@@ -15,6 +15,7 @@
 #include "scene/ComponentRegistry.h"
 #include "reflect/TypeRegistry.h"
 
+#include <filesystem>
 #include <string>
 #include <unordered_set>
 
@@ -140,4 +141,58 @@ TEST_CASE("E2: unknown component blocks survive a round-trip verbatim")
     REQUIRE(SceneSerializer::LoadFromString(scene2, save1));
     const std::string save2 = SceneSerializer::SaveToString(scene2);
     CHECK(save1 == save2);
+}
+
+TEST_CASE("E14: a prefab subtree instantiates with fresh UUIDs and preserved hierarchy")
+{
+    namespace fs = std::filesystem;
+
+    Scene scene;
+    Entity parent = scene.CreateEntity("Rover");
+    parent.GetComponent<TransformComponent>().Position = { 1.0f, 0.0f, 0.0f };
+    Entity wheelL = scene.CreateEntity("WheelL");
+    Entity wheelR = scene.CreateEntity("WheelR");
+    scene.SetParent(wheelL, parent, /*keepWorldPose=*/false);
+    scene.SetParent(wheelR, parent, /*keepWorldPose=*/false);
+    wheelL.GetComponent<TransformComponent>().Position = { -1.0f, 0.0f, 0.0f };
+
+    const UUID origParent = parent.GetComponent<IDComponent>().ID;
+
+    const std::string path = (fs::temp_directory_path() / "cosmic_prefab_test.cprefab").string();
+    REQUIRE(SceneSerializer::SavePrefab(scene, parent, path));
+
+    // Instantiate twice into the same scene.
+    Entity a = SceneSerializer::InstantiatePrefab(scene, path);
+    Entity b = SceneSerializer::InstantiatePrefab(scene, path);
+    REQUIRE(a);
+    REQUIRE(b);
+
+    const UUID aID = a.GetComponent<IDComponent>().ID;
+    const UUID bID = b.GetComponent<IDComponent>().ID;
+    CHECK_FALSE(aID == origParent);   // fresh UUIDs, distinct from the source + each other
+    CHECK_FALSE(bID == origParent);
+    CHECK_FALSE(aID == bID);
+
+    // Root identity + prefab link + transform survived.
+    CHECK(a.GetComponent<TagComponent>().Tag == "Rover");
+    REQUIRE(a.HasComponent<PrefabComponent>());
+    CHECK(a.GetComponent<PrefabComponent>().SourcePath == path);
+    CHECK(a.GetComponent<TransformComponent>().Position.x == doctest::Approx(1.0f));
+
+    // Each clone got its own two children.
+    REQUIRE(a.HasComponent<RelationshipComponent>());
+    REQUIRE(b.HasComponent<RelationshipComponent>());
+    CHECK(a.GetComponent<RelationshipComponent>().Children.size() == 2);
+    CHECK(b.GetComponent<RelationshipComponent>().Children.size() == 2);
+
+    // The first child's local transform (WheelL at x=-1) round-tripped, and its
+    // UUID differs from the original scene's WheelL.
+    const UUID childAid = a.GetComponent<RelationshipComponent>().Children[0];
+    Entity childA = scene.FindByUUID(childAid);
+    REQUIRE(childA);
+    CHECK(childA.GetComponent<TransformComponent>().Position.x == doctest::Approx(-1.0f));
+    CHECK_FALSE(childAid == wheelL.GetComponent<IDComponent>().ID);
+
+    std::error_code ec;
+    fs::remove(path, ec);
 }

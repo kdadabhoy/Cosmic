@@ -26,6 +26,12 @@ namespace Starforge
         void DrawName(EditorContext& ctx);
         void DrawAddComponent(EditorContext& ctx);
 
+        // NativeScript (E11) gets a bespoke section: a class picker (ModuleRegistry)
+        // + the chosen script's reflected fields, edited on the component's override
+        // map (there is no live instance in edit mode). Script-field edits mark the
+        // scene dirty but are NOT on the undo stack in v1 (documented).
+        void DrawScriptComponent(EditorContext& ctx, const Cosmic::Reflect::TypeDescriptor& desc);
+
         // Drag-start value of the item currently being edited (one active item at
         // a time), captured on IsItemActivated and consumed on commit.
         Cosmic::Reflect::FieldValue m_ActiveBefore;

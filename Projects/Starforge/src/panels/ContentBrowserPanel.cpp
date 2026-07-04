@@ -43,7 +43,8 @@ namespace Starforge
         {
             return e == ".png" || e == ".jpg" || e == ".jpeg" || e == ".tga" || e == ".bmp";
         }
-        bool IsScene(const std::string& e) { return e == ".cscene"; }
+        bool IsScene(const std::string& e)  { return e == ".cscene"; }
+        bool IsPrefab(const std::string& e) { return e == ".cprefab"; }
 
         const char* Badge(const std::string& e)
         {
@@ -225,14 +226,16 @@ namespace Starforge
             // Double-click actions.
             if (activated)
             {
-                if (IsScene(ext))       ctx.PendingOpenScene = vfs;
-                else if (IsImage(ext))  m_Preview = vfs;
+                if (IsScene(ext))        ctx.PendingOpenScene = vfs;
+                else if (IsPrefab(ext))  ctx.PendingInstantiatePrefab = vfs;   // E14
+                else if (IsImage(ext))   m_Preview = vfs;
             }
 
             // Per-file context menu.
             if (ImGui::BeginPopupContextItem("file_ctx"))
             {
                 if (IsScene(ext) && ImGui::MenuItem("Open Scene")) ctx.PendingOpenScene = vfs;
+                if (IsPrefab(ext) && ImGui::MenuItem("Instantiate Prefab")) ctx.PendingInstantiatePrefab = vfs;
                 if (ImGui::MenuItem("Show in Explorer")) ShowInExplorer(f.path().string());
                 if (ImGui::MenuItem("Delete (Recycle Bin)")) m_DeleteTarget = f.path().string();
                 ImGui::EndPopup();

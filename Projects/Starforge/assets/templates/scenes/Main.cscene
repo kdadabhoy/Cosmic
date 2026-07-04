@@ -1,0 +1,50 @@
+{
+  "cosmic_scene": 1,
+  "entities": [
+    {
+      "id": "0000000000000501",
+      "components": {
+        "Tag": { "Tag": "Hover Cube" },
+        "Transform": {
+          "Position": [0.0, 1.0, 0.0], "Rotation": [0.0, 0.0, 0.0],
+          "Scale": [1.0, 1.0, 1.0], "RotationQuat": [1.0, 0.0, 0.0, 0.0],
+          "UseQuatRotation": false
+        },
+        "MeshRenderer": { "Color": [0.92, 0.45, 0.14, 1.0], "CastShadows": true },
+        "NativeScript": {
+          "ClassName": "HoverController",
+          "Fields": { "TargetAltitude": 5.0, "Kp": 2.0, "Kd": 0.4 }
+        }
+      }
+    },
+    {
+      "id": "0000000000000c01",
+      "components": {
+        "Tag": { "Tag": "Camera" },
+        "Transform": {
+          "Position": [0.0, 4.0, 12.0], "Rotation": [-12.0, 0.0, 0.0],
+          "Scale": [1.0, 1.0, 1.0], "RotationQuat": [1.0, 0.0, 0.0, 0.0],
+          "UseQuatRotation": false
+        },
+        "Camera": {
+          "Primary": true, "ProjectionType": 0,
+          "FovDeg": 60.0, "Near": 0.1, "Far": 1000.0, "OrthoSize": 10.0
+        }
+      }
+    },
+    {
+      "id": "0000000000000d01",
+      "components": {
+        "Tag": { "Tag": "Sun" },
+        "Transform": {
+          "Position": [0.0, 0.0, 0.0], "Rotation": [0.0, 0.0, 0.0],
+          "Scale": [1.0, 1.0, 1.0], "RotationQuat": [1.0, 0.0, 0.0, 0.0],
+          "UseQuatRotation": false
+        },
+        "DirectionalLight": {
+          "Direction": [-0.35, -1.0, -0.45], "Color": [1.0, 1.0, 1.0], "Intensity": 1.1
+        }
+      }
+    }
+  ]
+}
