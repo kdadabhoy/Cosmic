@@ -1,5 +1,12 @@
 # Docs Plan — README Command Reference, Packaging Section, Split
 
+> **⛔ SUPERSEDED 2026-07-03 by [`12-documentation-plan.md`](12-documentation-plan.md)** (full
+> documentation overhaul: README expansion + API reference + system explainers, D5–D36).
+> Disposition of this doc's items: **D1** contract carried forward (and extended to the C++
+> API), **D2** absorbed into new D23, **D3** struck (user decision: README stays one
+> document), **D4** shipped 2026-07-03 (`docs/README.md`). Kept for the record — do not
+> execute items from this file.
+
 > **Rewritten 2026-07-01.** The previous readme plan's corrections (A1–A4) and new sections
 > (B1–B5) are all ✅ done — see [`archive/06-readme-update-plan.md`](archive/06-readme-update-plan.md)
 > for the record. This doc carries the remaining documentation work as paste-ready tasks.

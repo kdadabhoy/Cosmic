@@ -14,7 +14,8 @@
 > | [`03-simulation-engine-plan.md`](03-simulation-engine-plan.md) | Generic sim toolkit: config, integrators, filters, tables, noise, RNG, UDP, gamepad (E-series) |
 > | [`04-viper-sim-plan.md`](04-viper-sim-plan.md) | ViperSim app + portable `viper-fc` flight code (P0–P8, gates G1–G3) |
 > | [`05-3d-engine-plan.md`](05-3d-engine-plan.md) | Full 3D roadmap: foundations → CAD nav/gizmos → PBR → terrain/water/particles → demos → perf → Vulkan gate (S-series) |
-> | [`06-docs-plan.md`](06-docs-plan.md) | Remaining docs work: §40 refresh, README split, docs index (D-series) |
+> | ~~[`06-docs-plan.md`](06-docs-plan.md)~~ | Superseded 2026-07-03 → doc 12 (D1 contract carried forward) |
+> | [`12-documentation-plan.md`](12-documentation-plan.md) | Documentation overhaul: README expansion + diagrams, `docs/reference/` API reference, `docs/systems/` explainers, coverage checker (D5–D36) |
 > | [`08-audio-plan.md`](08-audio-plan.md) | Audio subsystem (miniaudio): one-shots → loops/groups → positional (A1–A3) |
 > | [`09-windowing-plan.md`](09-windowing-plan.md) | Fullscreen black-screen / snip-overlay / DPI hardening + responsive rendering (W-series) |
 > | [`10-phase11-frontier-plan.md`](10-phase11-frontier-plan.md) | Phase 11 execution: `Projects/Frontier` showcase + engine work orders F1–F17 (SceneRenderer, fly camera, water v2, sky v2, snow, profiler, instancing) |
@@ -331,9 +332,15 @@ Phase 11's SceneRenderer; interleave at will.
   build a scene → write + hot-reload a C++ script → Play with live telemetry plots → package →
   the shipped exe runs on a clean machine.
 
-### Continuous — docs & release polish *(doc 06; archived 07 leftovers)*
-D-series (docs index, §40 refresh, README split last) any time; parked release items (CI release
-job, code signing, `--replay` file association) unlock when distribution matters.
+### Continuous — docs & release polish *(doc 12 — supersedes doc 06 2026-07-03; archived 07 leftovers)*
+Documentation overhaul planned in full + scaffolding shipped 2026-07-03: `docs/README.md`
+index, `docs/reference/` (15 API-reference chapter skeletons + manifest + entry format),
+`docs/systems/` (19 explainer skeletons + format), work orders **D5–D36** in
+[`12-documentation-plan.md`](12-documentation-plan.md) (coverage-checker script → reference
+chapters [parallel] → README expansion §6.5–§42.5 + Mermaid diagrams [serial] → system
+explainers → link sweep + enforcement). Run items any time — docs-only, no engine code except
+D5's checker script. Parked release items (CI release job, code signing, `--replay` file
+association) unlock when distribution matters.
 
 ---
 
