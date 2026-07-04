@@ -3,6 +3,7 @@
 
 #include "reflect/TypeRegistry.h"
 #include "scene/Components.h"
+#include "graphics/MaterialAsset.h"   // E17 — .cmat reflected struct
 
 namespace Cosmic::Reflect
 {
@@ -47,7 +48,25 @@ namespace Cosmic::Reflect
         // assets stable project:// paths (E1 gotcha).
         ClassIn<MeshRendererComponent>(r, "MeshRenderer", "Rendering")
             .Field("Color",       &MeshRendererComponent::Color).Color()
-            .Field("CastShadows", &MeshRendererComponent::CastShadows);
+            .Field("CastShadows", &MeshRendererComponent::CastShadows)
+            // Imported/loaded mesh slot (E16) — resolved through AssetLibrary::GetMesh.
+            .Field("MeshPath",    &MeshRendererComponent::MeshPath).AsAssetPath("mesh")
+            // Material slot (E17) — resolved through AssetLibrary::GetMaterial.
+            .Field("MaterialPath", &MeshRendererComponent::MaterialPath).AsAssetPath("material");
+
+        // Parametric primitive (E15). Only the shape + params are reflected; the
+        // built-mesh signature (BuiltSignature) is runtime-only and left out, so a
+        // scene serializes as tiny shape/param text and the mesh is rebuilt on load.
+        ClassIn<PrimitiveMeshComponent>(r, "PrimitiveMesh", "Rendering")
+            .Field("ShapeType", &PrimitiveMeshComponent::ShapeType)
+                .EnumValue("Box", 0).EnumValue("Sphere", 1).EnumValue("Plane", 2)
+                .EnumValue("Cylinder", 3).EnumValue("Cone", 4).EnumValue("Torus", 5)
+            .Field("Size",       &PrimitiveMeshComponent::Size).Tooltip("Box: full extents. Plane: X=width, Z=depth.")
+            .Field("Radius",     &PrimitiveMeshComponent::Radius).Range(0.01f, 100.0f)
+            .Field("Height",     &PrimitiveMeshComponent::Height).Range(0.01f, 100.0f)
+            .Field("TubeRadius", &PrimitiveMeshComponent::TubeRadius).Range(0.01f, 50.0f).Tooltip("Torus tube radius")
+            .Field("Segments",   &PrimitiveMeshComponent::Segments).Range(3.0f, 256.0f).Tooltip("Radial / longitude subdivisions")
+            .Field("Rings",      &PrimitiveMeshComponent::Rings).Range(3.0f, 256.0f).Tooltip("Sphere latitude bands / Torus tube sides");
 
         ClassIn<LODGroupComponent>(r, "LODGroup", "Rendering")
             .Field("Color",       &LODGroupComponent::Color).Color()
@@ -117,5 +136,20 @@ namespace Cosmic::Reflect
         // Prefab link (E14) — remembers the source .cprefab of an instantiated subtree.
         ClassIn<PrefabComponent>(r, "Prefab", "Core")
             .Field("SourcePath", &PrefabComponent::SourcePath).AsAssetPath("prefab");
+
+        // PBR material asset (E17) — the reflected `.cmat` struct (not an entity
+        // component; registered so the Material Editor UI + serialization are generic).
+        ClassIn<MaterialAsset>(r, "Material", "Material")
+            .Field("Albedo",        &MaterialAsset::Albedo).Color()
+            .Field("Metallic",      &MaterialAsset::Metallic).Range(0.0f, 1.0f)
+            .Field("Roughness",     &MaterialAsset::Roughness).Range(0.0f, 1.0f)
+            .Field("AO",            &MaterialAsset::AO).Range(0.0f, 1.0f)
+            .Field("Emissive",      &MaterialAsset::Emissive).Tooltip("Emissive radiance (can exceed 1 for HDR)")
+            .Field("Transparent",   &MaterialAsset::Transparent)
+            .Field("AlbedoMap",     &MaterialAsset::AlbedoMap).AsAssetPath("texture")
+            .Field("NormalMap",     &MaterialAsset::NormalMap).AsAssetPath("texture")
+            .Field("MetalRoughMap", &MaterialAsset::MetalRoughMap).AsAssetPath("texture").Tooltip("glTF pack: roughness=G, metallic=B")
+            .Field("AOMap",         &MaterialAsset::AOMap).AsAssetPath("texture")
+            .Field("EmissiveMap",   &MaterialAsset::EmissiveMap).AsAssetPath("texture");
     }
 }

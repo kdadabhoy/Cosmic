@@ -453,4 +453,69 @@ namespace Cosmic
             rootEntity.GetOrAddComponent<PrefabComponent>().SourcePath = path;
         return rootEntity;
     }
+
+    // -------------------------------------------------------------------------
+    // Generic reflected-struct (de)serialization (E17) — .cmat and friends
+    // -------------------------------------------------------------------------
+    std::string SceneSerializer::SaveReflectedToString(uint32_t typeId, const void* instance)
+    {
+        const TypeDescriptor* d = Reflect::GetRegistry().Find((entt::id_type)typeId);
+        if (!d || !instance)
+            return "{}";
+
+        json j = json::object();
+        j["cosmic_type"] = d->Name;
+        json fields = json::object();
+        for (const auto& f : d->Fields)
+        {
+            if (f.HasFlag(Field_NoSerialize))
+                continue;
+            fields[f.Name] = SerializeValue(f, f.Get(instance));
+        }
+        j["fields"] = std::move(fields);
+        return j.dump(2);
+    }
+
+    bool SceneSerializer::LoadReflectedFromString(uint32_t typeId, void* instance, const std::string& jsonText)
+    {
+        const TypeDescriptor* d = Reflect::GetRegistry().Find((entt::id_type)typeId);
+        if (!d || !instance)
+            return false;
+
+        json j = json::parse(jsonText, nullptr, false);
+        if (j.is_discarded())
+        {
+            CS_CORE_ERROR("SceneSerializer: reflected-struct JSON parse failed.");
+            return false;
+        }
+
+        // Accept either the wrapped { fields:{...} } form or a bare field object.
+        const json& fields = (j.contains("fields") && j["fields"].is_object()) ? j["fields"] : j;
+        for (const auto& f : d->Fields)
+        {
+            if (f.HasFlag(Field_NoSerialize))
+                continue;
+            if (fields.contains(f.Name))
+                f.Set(instance, DeserializeValue(f, fields[f.Name]));
+        }
+        return true;
+    }
+
+    bool SceneSerializer::SaveReflectedToFile(uint32_t typeId, const void* instance, const std::string& path)
+    {
+        return WriteTextAtomic(path, SaveReflectedToString(typeId, instance));
+    }
+
+    bool SceneSerializer::LoadReflectedFromFile(uint32_t typeId, void* instance, const std::string& path)
+    {
+        std::ifstream is(std::filesystem::u8path(path), std::ios::binary);
+        if (!is)
+        {
+            CS_CORE_ERROR("SceneSerializer::LoadReflectedFromFile: cannot open {0}", path);
+            return false;
+        }
+        std::stringstream ss;
+        ss << is.rdbuf();
+        return LoadReflectedFromString(typeId, instance, ss.str());
+    }
 }

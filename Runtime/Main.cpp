@@ -1,6 +1,7 @@
 #include <Cosmic.h>
 #include <windows.h>
 #include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <exception>
 #include <string>
@@ -42,6 +43,26 @@ int main(int argc, char** argv)
 		else
 		{
 			std::cerr << "CosmicApp: unrecognized argument '" << arg << "' (supported: --project <NameOrDll>)" << std::endl;
+		}
+	}
+
+	// Packaged-dist default (E19): with no --project, a "boot.cfg" next to the exe
+	// names the startup project. The Starforge packager writes one so a shipped app
+	// runs straight into its scene on double-click (no Launcher). First non-empty,
+	// non-'#' line is the project name; absent/empty -> the Launcher, as before.
+	if (startupProject.empty())
+	{
+		std::ifstream boot(exeDir / "boot.cfg");
+		std::string line;
+		while (std::getline(boot, line))
+		{
+			const size_t a = line.find_first_not_of(" \t\r\n");
+			if (a == std::string::npos) continue;
+			const size_t b = line.find_last_not_of(" \t\r\n");
+			const std::string trimmed = line.substr(a, b - a + 1);
+			if (trimmed.empty() || trimmed[0] == '#') continue;
+			startupProject = trimmed;
+			break;
 		}
 	}
 

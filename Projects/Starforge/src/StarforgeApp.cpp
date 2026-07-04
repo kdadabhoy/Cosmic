@@ -594,10 +594,13 @@ namespace Starforge
 
         if (m_Ctx.ProjectOpen)
         {
-            if (m_ShowHierarchy) m_Hierarchy.OnImGuiRender(m_Ctx);
-            if (m_ShowInspector) m_Inspector.OnImGuiRender(m_Ctx);
-            if (m_ShowContent)   m_Content.OnImGuiRender(m_Ctx);
-            if (m_ShowConsole)   m_Console.OnImGuiRender(m_Ctx);
+            if (m_ShowHierarchy)   m_Hierarchy.OnImGuiRender(m_Ctx);
+            if (m_ShowInspector)   m_Inspector.OnImGuiRender(m_Ctx);
+            if (m_ShowContent)     m_Content.OnImGuiRender(m_Ctx);
+            if (m_ShowConsole)     m_Console.OnImGuiRender(m_Ctx);
+            if (m_ShowEnvironment) m_Environment.OnImGuiRender(m_Ctx);
+            if (m_ShowMaterial)    m_Material.OnImGuiRender(m_Ctx);
+            if (m_ShowStats)       DrawStatsWindow();
         }
         else
         {
@@ -639,6 +642,9 @@ namespace Starforge
             m_Viewport.OnUpdate(m_Ctx, m_Camera, ImGui::GetIO().DeltaTime);
 
         DrawSaveAsPopup();
+        DrawImportModelPopup();
+        DrawPackagePopup();
+        DrawHelpPopups();
         HandleShortcuts();
         m_Ctx.ValidateSelection();
     }
@@ -754,6 +760,11 @@ namespace Starforge
             if (ImGui::MenuItem("Save As...", nullptr, false, m_Ctx.ProjectOpen))
                 m_OpenSaveAs = true;
             ImGui::Separator();
+            if (ImGui::MenuItem("Import Model...", nullptr, false, m_Ctx.ProjectOpen))
+                m_OpenImportModel = true;
+            if (ImGui::MenuItem("Package...", nullptr, false, m_Ctx.ProjectOpen))
+                m_OpenPackage = true;
+            ImGui::Separator();
             if (ImGui::BeginMenu("Recent Projects"))
             {
                 for (const auto& n : Prefs::LoadRecentProjects())
@@ -804,10 +815,84 @@ namespace Starforge
             ImGui::MenuItem("Inspector",       nullptr, &m_ShowInspector);
             ImGui::MenuItem("Content Browser", nullptr, &m_ShowContent);
             ImGui::MenuItem("Console",         nullptr, &m_ShowConsole);
+            ImGui::MenuItem("Environment",     nullptr, &m_ShowEnvironment);
+            ImGui::MenuItem("Material Editor", nullptr, &m_ShowMaterial);
+            ImGui::MenuItem("Statistics",      nullptr, &m_ShowStats);
             ImGui::Separator();
             if (ImGui::MenuItem("Reset Layout"))
                 if (auto* ws = Cosmic::Application::Get().GetWorkspaceLayer()) ws->ResetLayout();
             ImGui::EndMenu();
+        }
+
+        if (ImGui::BeginMenu("Help"))
+        {
+            if (ImGui::MenuItem("Keyboard Shortcuts")) m_OpenShortcuts = true;
+            ImGui::EndMenu();
+        }
+    }
+
+    void StarforgeApp::DrawStatsWindow()
+    {
+        if (ImGui::Begin("Statistics"))
+        {
+            size_t entities = 0;
+            if (m_Ctx.Scene)
+                for (auto e : m_Ctx.Scene->View<Cosmic::IDComponent>()) { (void)e; ++entities; }
+
+            const Cosmic::Renderer3D::Statistics s = Cosmic::Renderer3D::GetStats();
+            ImGui::Text("Entities:          %zu", entities);
+            ImGui::Text("Selected:          %zu", m_Ctx.Selection.size());
+            ImGui::Separator();
+            ImGui::TextDisabled("Renderer3D (last frame)");
+            ImGui::Text("Draw calls:        %u", s.DrawCalls);
+            ImGui::Text("Meshes submitted:  %u", s.MeshesSubmitted);
+            ImGui::Text("Culled (frustum):  %u", s.MeshesCulled);
+            ImGui::Text("Drawn:             %u", s.MeshesDrawn);
+            ImGui::Text("Auto-inst batches: %u", s.AutoInstanceBatches);
+            ImGui::Separator();
+            ImGui::Text("%.1f FPS  (%.2f ms)", ImGui::GetIO().Framerate,
+                        1000.0f / ImGui::GetIO().Framerate);
+        }
+        ImGui::End();
+    }
+
+    void StarforgeApp::DrawHelpPopups()
+    {
+        if (m_OpenShortcuts)
+        {
+            ImGui::OpenPopup("Keyboard Shortcuts");
+            m_OpenShortcuts = false;
+        }
+        if (ImGui::BeginPopupModal("Keyboard Shortcuts", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+        {
+            struct Row { const char* keys; const char* action; };
+            static const Row rows[] = {
+                { "Ctrl+N",        "New scene" },
+                { "Ctrl+S",        "Save scene" },
+                { "Ctrl+Z / Ctrl+Y", "Undo / Redo" },
+                { "Ctrl+D",        "Duplicate selection" },
+                { "Del",           "Delete selection" },
+                { "Ctrl+B",        "Build scripts (hot reload)" },
+                { "F",             "Frame selection" },
+                { "W / E / R",     "Gizmo: translate / rotate / scale" },
+                { "MMB drag",      "Orbit camera" },
+                { "Ctrl+MMB / scroll", "Pan / zoom" },
+                { "1-9 / Ctrl+1-9","Recall / save camera bookmark" },
+            };
+            if (ImGui::BeginTable("shortcuts", 2, ImGuiTableFlags_SizingStretchProp))
+            {
+                for (const Row& r : rows)
+                {
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn(); ImGui::TextUnformatted(r.keys);
+                    ImGui::TableNextColumn(); ImGui::TextDisabled("%s", r.action);
+                }
+                ImGui::EndTable();
+            }
+            ImGui::Separator();
+            if (ImGui::Button("Close", ImVec2(120, 0)))
+                ImGui::CloseCurrentPopup();
+            ImGui::EndPopup();
         }
     }
 
@@ -820,11 +905,25 @@ namespace Starforge
         };
 
         make("Empty", nullptr);
-        if (ImGui::BeginMenu("Mesh"))
+        if (ImGui::BeginMenu("Primitive"))
         {
-            make("Cube",   [](Cosmic::Entity e) { e.AddComponent<Cosmic::MeshRendererComponent>(Cosmic::Mesh::CreateBox({ 1,1,1 })).Color = { 0.8f,0.8f,0.82f,1 }; });
-            make("Sphere", [](Cosmic::Entity e) { e.AddComponent<Cosmic::MeshRendererComponent>(Cosmic::Mesh::CreateUVSphere(0.5f, 24, 32)).Color = { 0.8f,0.8f,0.82f,1 }; });
-            make("Plane",  [](Cosmic::Entity e) { e.AddComponent<Cosmic::MeshRendererComponent>(Cosmic::Mesh::CreatePlane(10, 10)).Color = { 0.5f,0.5f,0.55f,1 }; });
+            // Parametric primitives (E15): store shape + params, let the scene
+            // render path build the mesh. Live-editable in the Inspector w/ undo.
+            using Shape = Cosmic::PrimitiveMeshComponent::Shape;
+            auto prim = [&](const char* label, Shape shape)
+            {
+                make(label, [shape](Cosmic::Entity e)
+                {
+                    e.AddComponent<Cosmic::PrimitiveMeshComponent>(shape);
+                    e.AddComponent<Cosmic::MeshRendererComponent>().Color = { 0.8f, 0.8f, 0.82f, 1.0f };
+                });
+            };
+            prim("Cube",     Shape::Box);
+            prim("Sphere",   Shape::Sphere);
+            prim("Plane",    Shape::Plane);
+            prim("Cylinder", Shape::Cylinder);
+            prim("Cone",     Shape::Cone);
+            prim("Torus",    Shape::Torus);
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu("Light"))
@@ -891,6 +990,178 @@ namespace Starforge
                 ImGui::CloseCurrentPopup();
             ImGui::EndPopup();
         }
+    }
+
+    void StarforgeApp::DrawImportModelPopup()
+    {
+        if (m_OpenImportModel)
+        {
+            ImGui::OpenPopup("Import Model");
+            m_OpenImportModel = false;
+        }
+
+        if (ImGui::BeginPopupModal("Import Model", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+        {
+            ImGui::TextUnformatted("Source model file (absolute path):");
+            ImGui::SetNextItemWidth(440.0f);
+            ImGui::InputText("##importsrc", m_ImportPath, sizeof(m_ImportPath));
+            ImGui::TextDisabled("Copied into project://models/. OBJ imports now; FBX/STL/DAE/PLY need the assimp backend.");
+
+            const std::string src = m_ImportPath;
+            const std::string ext = Cosmic::MeshImport::Extension(src);
+            const bool exists    = !src.empty() && fs::exists(fs::path(src));
+            const bool supported = Cosmic::MeshImport::Supports(ext);
+            const Cosmic::ImportSettings preset = Cosmic::ImportSettings::DefaultFor(ext);
+
+            if (!src.empty())
+            {
+                if (!exists)
+                    ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.3f, 1.0f), "File not found.");
+                else if (!supported)
+                    ImGui::TextColored(ImVec4(1.0f, 0.8f, 0.2f, 1.0f),
+                                       ".%s needs the assimp backend (this build imports OBJ).", ext.c_str());
+                else
+                    ImGui::Text("Assumed unit scale: x%.4f  (edit the generated .cmeta to change).", preset.Scale);
+            }
+
+            ImGui::Separator();
+            ImGui::BeginDisabled(!(exists && supported));
+            if (ImGui::Button("Import", ImVec2(120, 0)))
+                if (ImportModelFile(src))
+                    ImGui::CloseCurrentPopup();
+            ImGui::EndDisabled();
+            ImGui::SameLine();
+            if (ImGui::Button("Cancel", ImVec2(120, 0)))
+                ImGui::CloseCurrentPopup();
+            ImGui::EndPopup();
+        }
+    }
+
+    bool StarforgeApp::ImportModelFile(const std::string& srcPath)
+    {
+        std::error_code ec;
+        const std::string filename  = fs::path(srcPath).filename().string();
+        const std::string modelsDir = Cosmic::FileSystem::Resolve("project://models");
+        fs::create_directories(modelsDir, ec);
+
+        fs::copy_file(srcPath, fs::path(modelsDir) / filename,
+                      fs::copy_options::overwrite_existing, ec);
+        if (ec)
+        {
+            m_Ctx.Log("[Import] Failed to copy '" + srcPath + "': " + ec.message(), LogSeverity::Error);
+            return false;
+        }
+
+        const std::string vfs = "project://models/" + filename;
+        Cosmic::AssetLibrary::Reload(vfs);   // fresh import: writes the .cmeta preset + applies units
+        Commands::Create(m_Ctx, "Imported " + fs::path(filename).stem().string(), Cosmic::Entity{},
+            [vfs](Cosmic::Entity e) { e.AddComponent<Cosmic::MeshRendererComponent>().MeshPath = vfs; });
+        m_Ctx.Log("[Import] " + vfs + " (scale from .cmeta).");
+        return true;
+    }
+
+    // ---- Package & ship (E19) ---------------------------------------------
+
+    void StarforgeApp::DrawPackagePopup()
+    {
+        if (m_OpenPackage)
+        {
+            ImGui::OpenPopup("Package Project");
+            m_OpenPackage = false;
+        }
+
+        if (ImGui::BeginPopupModal("Package Project", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+        {
+            ImGui::Text("Stage a standalone build of '%s'.", m_Ctx.ProjectName.c_str());
+            ImGui::TextDisabled("Copies CosmicApp.exe (-> %s.exe), Cosmic.dll, the project DLL,", m_Ctx.ProjectName.c_str());
+            ImGui::TextDisabled("its assets, and a boot.cfg so it runs with no Launcher.");
+            ImGui::TextColored(ImVec4(1.0f, 0.8f, 0.2f, 1.0f),
+                               "Uses the CURRENT build config — build Release first for a shipping app.");
+            ImGui::Text("Output: %s/dist/%s", SdkDir().c_str(), m_Ctx.ProjectName.c_str());
+            ImGui::Separator();
+
+            if (ImGui::Button("Package", ImVec2(120, 0)))
+                PackageProject();
+
+            if (!m_LastDistDir.empty())
+            {
+                ImGui::SameLine();
+                ImGui::TextColored(ImVec4(0.3f, 1.0f, 0.42f, 1.0f), "Staged.");
+                ImGui::TextDisabled("%s", m_LastDistDir.c_str());
+            }
+
+            ImGui::Separator();
+            if (ImGui::Button("Close", ImVec2(120, 0)))
+                ImGui::CloseCurrentPopup();
+            ImGui::EndPopup();
+        }
+    }
+
+    void StarforgeApp::PackageProject()
+    {
+        if (!m_Ctx.ProjectOpen)
+            return;
+
+        std::error_code ec;
+        const std::string proj = m_Ctx.ProjectName;
+
+        // The editor runs from build/Runtime/<cfg> (Main.cpp sets CWD to the exe
+        // dir): CosmicApp.exe, Cosmic.dll, <proj>.dll and assets/ all live here.
+        const fs::path runtime = fs::current_path(ec);
+        const fs::path outRoot = fs::path(SdkDir()) / "dist" / proj;
+
+        const fs::path exeSrc    = runtime / "CosmicApp.exe";
+        const fs::path engineDll = runtime / "Cosmic.dll";
+        const fs::path projDll   = runtime / (proj + ".dll");
+        if (!fs::exists(exeSrc, ec) || !fs::exists(engineDll, ec))
+        {
+            m_Ctx.Log("[Package] CosmicApp.exe / Cosmic.dll not next to the editor — cannot package.",
+                      LogSeverity::Error);
+            return;
+        }
+        const bool hasProjectDll = fs::exists(projDll, ec);
+        if (!hasProjectDll)
+            m_Ctx.Log("[Package] No " + proj + ".dll found — build the project (Ctrl+B) for a runnable app.",
+                      LogSeverity::Warn);
+
+        // Fresh output dir.
+        fs::remove_all(outRoot, ec);
+        fs::create_directories(outRoot, ec);
+
+        // Executable (renamed) + engine + project DLLs.
+        fs::copy_file(exeSrc,    outRoot / (proj + ".exe"), fs::copy_options::overwrite_existing, ec);
+        fs::copy_file(engineDll, outRoot / "Cosmic.dll",    fs::copy_options::overwrite_existing, ec);
+        if (hasProjectDll)
+            fs::copy_file(projDll, outRoot / (proj + ".dll"), fs::copy_options::overwrite_existing, ec);
+
+        // Assets: engine assets + ONLY this project's folder (skip other projects).
+        const fs::path assetsSrc = runtime / "assets";
+        const fs::path assetsDst = outRoot / "assets";
+        if (fs::exists(assetsSrc, ec))
+        {
+            fs::create_directories(assetsDst / "projects", ec);
+            for (const auto& entry : fs::directory_iterator(assetsSrc, ec))
+            {
+                if (entry.path().filename() == "projects")
+                    continue;   // handled selectively below
+                fs::copy(entry.path(), assetsDst / entry.path().filename(),
+                         fs::copy_options::recursive | fs::copy_options::overwrite_existing, ec);
+            }
+            const fs::path projAssets = assetsSrc / "projects" / proj;
+            if (fs::exists(projAssets, ec))
+                fs::copy(projAssets, assetsDst / "projects" / proj,
+                         fs::copy_options::recursive | fs::copy_options::overwrite_existing, ec);
+        }
+
+        // boot.cfg — Main.cpp launches this project when run with no --project.
+        {
+            std::ofstream boot(outRoot / "boot.cfg", std::ios::trunc);
+            boot << "# Cosmic packaged app (E19) — the project launched with no --project flag.\n"
+                 << proj << "\n";
+        }
+
+        m_LastDistDir = fs::absolute(outRoot, ec).generic_string();
+        m_Ctx.Log("[Package] Staged '" + proj + "' -> " + m_LastDistDir);
     }
 
     void StarforgeApp::HandleShortcuts()

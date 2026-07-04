@@ -59,6 +59,42 @@ namespace Cosmic
 		glm::vec4 Tangent{ 1.0f, 0.0f, 0.0f, 1.0f };
 	};
 
+	/**
+	 * @brief CPU-side geometry (positions/normals/uvs + indices) with NO GPU
+	 * resources — the headless-testable half of a mesh (E15). Every parametric
+	 * primitive is produced by a pure Mesh::Build* function returning one of
+	 * these; Mesh::Create(MeshData) uploads it. Splitting geometry generation
+	 * from the GPU upload mirrors Terrain (CPU heights vs. GPU texture) so unit
+	 * tests can assert vertex counts / bounds / normals without a GL context,
+	 * and lets importers (E16) hand raw geometry straight to the uploader.
+	 */
+	struct MeshData
+	{
+		std::vector<MeshVertex> Vertices;
+		std::vector<uint32_t>   Indices;
+
+		/**
+		 * @brief Bake a model matrix into the geometry: positions by `transform`,
+		 * normals/tangents by its normal matrix (inverse-transpose), renormalised.
+		 * Used by the importer (E16) to apply CAD unit scale + up-axis conversion
+		 * so a placed model lands at the correct world size regardless of source.
+		 * Inline (header-only) so it links across DLLs without exporting MeshData.
+		 */
+		void ApplyTransform(const glm::mat4& transform)
+		{
+			const glm::mat3 normalMat = glm::transpose(glm::inverse(glm::mat3(transform)));
+			for (MeshVertex& v : Vertices)
+			{
+				v.Position = glm::vec3(transform * glm::vec4(v.Position, 1.0f));
+				v.Normal   = glm::normalize(normalMat * v.Normal);
+				glm::vec3 t = normalMat * glm::vec3(v.Tangent);
+				const float len = glm::length(t);
+				if (len > 1e-8f)
+					v.Tangent = glm::vec4(t / len, v.Tangent.w);
+			}
+		}
+	};
+
 	class COSMIC_API Mesh
 	{
 	public:
@@ -73,6 +109,26 @@ namespace Cosmic
 		 */
 		static Ref<Mesh> Create(const std::vector<MeshVertex>& vertices,
 		                        const std::vector<uint32_t>&   indices);
+
+		/** @brief Upload CPU geometry produced by a Build* function (or an importer). */
+		static Ref<Mesh> Create(const MeshData& data);
+
+		// ---- Parametric geometry (pure, GL-free, headless-testable — E15) ----
+		//
+		// The Build* functions generate CANONICAL primitive geometry on the CPU;
+		// the matching Create* factory just uploads Build*'s result. Tests assert
+		// vertex/index counts, local bounds and normals directly on the MeshData.
+
+		static MeshData BuildBox(const glm::vec3& size = { 1.0f, 1.0f, 1.0f });
+		static MeshData BuildPlane(float width = 1.0f, float depth = 1.0f);
+		static MeshData BuildCylinder(float radius = 0.5f, float height = 1.0f, uint32_t segments = 24);
+		static MeshData BuildCone(float radius = 0.5f, float height = 1.0f, uint32_t segments = 24);
+		static MeshData BuildUVSphere(float radius = 0.5f, uint32_t rings = 16, uint32_t segments = 24);
+		/** @brief Torus in the XZ plane: `radius` = ring (major) radius, `tubeRadius`
+		 *  = tube (minor) radius; `segments` steps around the ring, `sides` around
+		 *  the tube. Outward normals point away from the tube's centre circle. */
+		static MeshData BuildTorus(float radius = 0.5f, float tubeRadius = 0.2f,
+		                           uint32_t segments = 32, uint32_t sides = 16);
 
 		// ---- Primitives (unit-sized, origin-centered, outward normals) ----
 
@@ -91,6 +147,10 @@ namespace Cosmic
 		/** @brief Latitude/longitude sphere: rings = latitude bands, segments = longitude. */
 		static Ref<Mesh> CreateUVSphere(float radius = 0.5f, uint32_t rings = 16, uint32_t segments = 24);
 
+		/** @brief Torus (donut) in the XZ plane; see BuildTorus for the parameters. */
+		static Ref<Mesh> CreateTorus(float radius = 0.5f, float tubeRadius = 0.2f,
+		                             uint32_t segments = 32, uint32_t sides = 16);
+
 		/**
 		 * @brief Load a Wavefront OBJ (positions + normals + uvs, faces triangulated).
 		 *
@@ -105,6 +165,11 @@ namespace Cosmic
 		 * @return The mesh, or nullptr (with a logged error) on parse/IO failure.
 		 */
 		static Ref<Mesh> CreateFromOBJ(const std::string& resolvedPath);
+
+		/** @brief Pure (GL-free) Wavefront OBJ parse → CPU geometry; empty on failure.
+		 *  The importer (E16) uses this so it can transform the geometry before
+		 *  upload; CreateFromOBJ is the thin GPU wrapper over it. */
+		static MeshData BuildFromOBJ(const std::string& resolvedPath);
 
 		////////////////////////////////
 		// Accessors

@@ -10,6 +10,8 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
+#include <cstddef>
+#include <cstdint>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -160,9 +162,60 @@ namespace Cosmic
         glm::vec4     Color{ 1.0f };         // Lambert tint when MaterialAsset is null
         bool          CastShadows = true;    // consumed from S6.4; stored now so the ABI breaks once
 
+        // Imported / loaded mesh reference (E16). When non-empty and MeshAsset is
+        // null (e.g. a freshly loaded scene), Scene::SyncPrimitiveMeshes resolves it
+        // through AssetLibrary::GetMesh (which routes non-glTF single-mesh formats
+        // through MeshImport with their .cmeta). Reflected as an AssetPath("mesh")
+        // slot so the Content Browser can drop onto it. Empty for primitives (their
+        // mesh is built from params) and for meshes assigned directly in code.
+        std::string   MeshPath;
+        bool          MeshPathResolved = false;   // runtime-only; not reflected/serialized
+
+        // Material asset reference (E17). When non-empty and MaterialAsset is null,
+        // Scene::SyncPrimitiveMeshes resolves the `.cmat` through
+        // AssetLibrary::GetMaterial. Reflected as an AssetPath("material") slot.
+        // Empty -> the Lambert Color path (or whatever MaterialAsset was set in code).
+        std::string   MaterialPath;
+        bool          MaterialPathResolved = false;   // runtime-only; not reflected/serialized
+
         MeshRendererComponent() = default;
         MeshRendererComponent(const MeshRendererComponent&) = default;
         MeshRendererComponent(const Ref<Mesh>& mesh) : MeshAsset(mesh) {}
+    };
+
+
+    /**
+     * @brief Parametric primitive (E15). A live-editable box/sphere/plane/cylinder/
+     * cone/torus: the scene stores only the SHAPE + parameters (tiny, diffable
+     * text), and Scene::SyncPrimitiveMeshes rebuilds the sibling
+     * MeshRendererComponent's MeshAsset whenever the parameters change (or after a
+     * load, when the mesh is null). Attach one alongside a MeshRendererComponent —
+     * the create menus add both; the sync auto-adds a MeshRenderer if one is
+     * missing. Editing a param in the Inspector is an ordinary reflected-field edit
+     * (so it is undoable via E7); the rebuild is automatic.
+     */
+    struct COSMIC_API PrimitiveMeshComponent
+    {
+        enum class Shape { Box = 0, Sphere = 1, Plane = 2, Cylinder = 3, Cone = 4, Torus = 5 };
+
+        Shape     ShapeType  = Shape::Box;
+        glm::vec3 Size{ 1.0f, 1.0f, 1.0f };   // Box: full extents. Plane: X=width, Z=depth.
+        float     Radius     = 0.5f;          // Sphere/Cylinder/Cone radius; Torus ring radius.
+        float     Height     = 1.0f;          // Cylinder/Cone height.
+        float     TubeRadius = 0.2f;          // Torus tube radius.
+        int32_t   Segments   = 24;            // Radial / longitude subdivisions.
+        int32_t   Rings      = 16;            // Sphere latitude bands / Torus tube sides.
+
+        // Runtime-only (NOT reflected -> neither serialized nor shown in the
+        // Inspector): a hash of the parameters the current MeshAsset was built
+        // from. SyncPrimitiveMeshes rebuilds when this disagrees with the live
+        // parameters, so any change (Inspector edit, undo, script, hand-edited
+        // scene) regenerates the mesh with no explicit dirty-flag bookkeeping.
+        std::size_t BuiltSignature = 0;
+
+        PrimitiveMeshComponent() = default;
+        PrimitiveMeshComponent(const PrimitiveMeshComponent&) = default;
+        PrimitiveMeshComponent(Shape shape) : ShapeType(shape) {}
     };
 
 
@@ -434,6 +487,7 @@ CS_REGISTER_COMPONENT(Cosmic::TagComponent)
 CS_REGISTER_COMPONENT(Cosmic::TransformComponent)
 CS_REGISTER_COMPONENT(Cosmic::SpriteRendererComponent)
 CS_REGISTER_COMPONENT(Cosmic::MeshRendererComponent)
+CS_REGISTER_COMPONENT(Cosmic::PrimitiveMeshComponent)
 CS_REGISTER_COMPONENT(Cosmic::LODGroupComponent)
 CS_REGISTER_COMPONENT(Cosmic::DirectionalLightComponent)
 CS_REGISTER_COMPONENT(Cosmic::PointLightComponent)

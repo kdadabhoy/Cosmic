@@ -323,6 +323,21 @@ namespace Starforge
             ctx, IdOf(e), typeId, field, before, after, "Edit " + field));
     }
 
+    void Commands::CommitFieldEditFor(EditorContext& ctx, Entity target, const std::string& label,
+                                      entt::id_type typeId, const std::string& field,
+                                      FieldValue before, FieldValue after)
+    {
+        if (!ctx.Scene || !target) return;
+        const TypeDescriptor* d = Reflect::GetRegistry().Find(typeId);
+        if (!d || !d->FindField(field)) return;
+
+        ctx.MarkDirty();
+        // The value was already applied live by the panel widget; Push (not Execute).
+        ctx.Commands.Push(std::make_unique<FieldEditCommand>(
+            ctx, IdOf(target), typeId, field, std::move(before), std::move(after), label));
+        ctx.Commands.SetMergeBarrier();
+    }
+
     void Commands::CommitFieldEdit(EditorContext& ctx, const std::string& label,
                                    entt::id_type typeId, const std::string& field,
                                    FieldValue primaryBefore, FieldValue after)

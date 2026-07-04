@@ -17,6 +17,7 @@
 
 #include "core/Core.h"
 
+#include <cstdint>
 #include <string>
 
 namespace Cosmic
@@ -45,5 +46,15 @@ namespace Cosmic
         // failure). The new root has no parent — the caller places it.
         static bool   SavePrefab(Scene& scene, Entity root, const std::string& path);
         static Entity InstantiatePrefab(Scene& scene, const std::string& path);
+
+        // Generic reflected-struct (de)serialization (E17). Serializes ONE
+        // registered type's reflected fields to/from a JSON object — the visitor
+        // that powers .cscene, applied to a standalone asset like a MaterialAsset
+        // (.cmat) or an emitter recipe (.cemitter, E18). `typeId` is the entt type
+        // hash (entt::type_hash<T>::value()); `instance` points at a live T.
+        static std::string SaveReflectedToString(uint32_t typeId, const void* instance);
+        static bool        LoadReflectedFromString(uint32_t typeId, void* instance, const std::string& jsonText);
+        static bool        SaveReflectedToFile(uint32_t typeId, const void* instance, const std::string& path);
+        static bool        LoadReflectedFromFile(uint32_t typeId, void* instance, const std::string& path);
     };
 }

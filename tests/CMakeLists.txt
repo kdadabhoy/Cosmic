@@ -25,6 +25,9 @@ add_executable(CosmicTests
     test_presets.cpp
     test_render_queue.cpp
     test_reflect.cpp
+    test_primitives.cpp
+    test_meshimport.cpp
+    test_material.cpp
     test_scene_serializer.cpp
     test_hierarchy.cpp
     test_scene_components.cpp

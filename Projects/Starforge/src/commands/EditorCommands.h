@@ -41,6 +41,14 @@ namespace Starforge
                              entt::id_type typeId, const std::string& field,
                              FieldValue primaryBefore, FieldValue after);
 
+        // A reflected-field change ALREADY applied live to a SPECIFIC entity (not
+        // the current selection) — records one undo step. Used by panels that edit
+        // a known entity, e.g. the Environment panel editing the scene's
+        // "Environment" entity. `before` is the value at drag-start.
+        void CommitFieldEditFor(EditorContext& ctx, Cosmic::Entity target, const std::string& label,
+                                entt::id_type typeId, const std::string& field,
+                                FieldValue before, FieldValue after);
+
         // Create a fresh entity (optionally parented), letting `build` add its
         // components. Selects it, records undo, returns it.
         Cosmic::Entity Create(EditorContext& ctx, const std::string& name,

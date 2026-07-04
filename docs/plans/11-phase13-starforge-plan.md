@@ -864,6 +864,33 @@ revert round-trip; scenes referencing a missing prefab load with a placeholder +
 
 ### E15 — Parametric primitives + material assignment
 
+> **✅ 2026-07-04.** Engine: `graphics/Mesh` split into pure GL-free geometry
+> (`MeshData` + `Build{Box,Plane,Cylinder,Cone,UVSphere,Torus}`) with the `Create*`
+> factories now thin uploaders over them (byte-identical output → Engine3DDemo/
+> Frontier unchanged), new `CreateTorus`/`BuildTorus` (XZ donut, outward
+> tube-radial normals) + `Create(const MeshData&)`. NEW `PrimitiveMeshComponent`
+> {Shape enum Box/Sphere/Plane/Cylinder/Cone/Torus + Size/Radius/Height/TubeRadius/
+> Segments/Rings + runtime `BuiltSignature`} in Components.h (+`CS_REGISTER_COMPONENT`
+> + E1 reflection w/ enum + ranges/tooltips). NEW `Scene::SyncPrimitiveMeshes()`
+> (called at the top of `OnRender3D`, so BOTH the editor and PlayerLayer paths get
+> it): rebuilds the sibling `MeshRendererComponent.MeshAsset` whenever a param hash
+> changes or the mesh is null after a load — **no explicit dirty flag** (a param
+> signature compare beats the plan's `bool Dirty`, so Inspector edits/undo/scripts/
+> hand-edited scenes all regenerate automatically; the editor needs no special
+> casing). Primitives serialize by PARAMS only (the mesh is rebuilt on load → tiny,
+> diffable scenes). Starforge: Entity▸Primitive + Hierarchy create menus add all six
+> shapes (PrimitiveMeshComponent + default-tint MeshRenderer); the reflection-driven
+> Inspector edits params live + undoably; whole-component `entt::Copy` in
+> EditorSnapshot keeps each mesh Ref paired with its signature so
+> create/duplicate/destroy undo is correct. `tests/test_primitives.cpp` (7 cases,
+> headless — no GL): per-shape vertex/index counts, local bounds, unit normals,
+> torus radial-normal geometry, deterministic rebuild, degenerate-subdivision
+> clamping. Build green, zero warnings, **CosmicTests 170/170** (+7). **Deviation:**
+> `.cmat` material assignment via the Inspector AssetPath slot is sequenced with E17
+> (it needs `.cmat` + `AssetLibrary::GetMaterial`, which land there) — E15 ships the
+> primitives (the acceptance) and the default-tint MeshRenderer; primitives keep the
+> Lambert color path until a material is assigned.
+
 **Files:** engine MODIFY `graphics/Mesh.h/.cpp` (+`CreateTorus(radius, tubeRadius, segs, sides)`
 — the only missing factory), NEW `scene/Components.h` `PrimitiveMeshComponent{ enum Shape; params…;
 bool Dirty; }` (+E1 registration incl. ranges); Scene render path regenerates the sibling
@@ -880,6 +907,40 @@ material.
 (vertex-count + AABB assertions in a headless test for the factories, incl. torus normals).
 
 ### E16 — assimp import pipeline (Blender/CAD meshes in)
+
+> **✅ (seam) 2026-07-04 — assimp backend gated, OBJ live.** The full import SEAM
+> shipped and works end-to-end for OBJ today; the FBX/STL/DAE/PLY assimp backend is
+> written but compiled behind `COSMIC_WITH_ASSIMP` (off by default). **Rationale:**
+> assimp is a large static lib and vendoring it is a one-time heavyweight step best
+> run where the whole build completes + FBX/STL round-trips can be verified — so the
+> seam ships now (consistent w/ the phase's parked-with-unlock discipline) and the
+> backend is a pure drop-in (vendor assimp + define the macro; a numbered how-to is
+> the header of `MeshImport.cpp`). Engine: NEW `assets/MeshImport.h/.cpp` —
+> `ImportSettings{Scale, UpAxis, FlipUVs, GenerateNormals}` w/ per-extension presets
+> (STL mm×0.001, FBX cm×0.01, else ×1) + `.cmeta` TOML round-trip (write via a
+> hand-formatted string since `Config` is read-only; read via `Config::Parse`) +
+> `LoadOrInitMeta` (seeds+writes the sidecar on first import) + `Import()` (OBJ now,
+> assimp `#ifdef`; bakes unit scale + Z-up→Y-up + UV-flip into the geometry).
+> `graphics/Mesh`: `CreateFromOBJ` refactored into pure `BuildFromOBJ`→`MeshData`
+> (reusing E15's split) + inline `MeshData::ApplyTransform` (positions by the matrix,
+> normals/tangents by its inverse-transpose, renormalised — header-inline so it links
+> across DLLs without exporting `MeshData`). `MeshRendererComponent` gains a reflected
+> `MeshPath` AssetPath("mesh") + runtime `MeshPathResolved`; `Scene::SyncPrimitiveMeshes`
+> now also resolves an unresolved MeshPath through `AssetLibrary::GetMesh` (once,
+> guarded) so imported meshes survive save/reload — **closing the E1 "MeshRenderer
+> needs a stable asset path" gotcha**. `AssetLibrary::GetMesh` routes supported
+> single-mesh formats through MeshImport (units applied via `.cmeta`); glTF stays on
+> the dedicated `Model`/`GetModel` path. Starforge: File▸Import Model… popup (source
+> path → copies into `project://models/`, shows the assumed unit scale, spawns an
+> undoable entity whose MeshRenderer.MeshPath points at it; disabled for formats this
+> build can't import). `tests/test_meshimport.cpp` (7 cases, headless — GL upload is
+> the editor's job): extension parse, unit presets, OBJ-vs-assimp support gating,
+> `.cmeta` round-trip + missing-key fallback, `ApplyTransform` scale+Z-up bake,
+> `BuildFromOBJ` + baked scale. Build green, zero warnings, **CosmicTests 177/177**
+> (+7). **Remaining for full E16 acceptance (FBX/STL at correct world size, multi-mesh
+> → parent+children):** vendor assimp + flip the macro (heavyweight; the user's
+> machine). Native OS file-open dialog + drag-OS-file-into-content-browser import are
+> follow-ups (v1 uses a path field).
 
 **Files:** VENDOR `Cosmic/dependencies/assimp` (static lib, importers trimmed to
 FBX/OBJ/STL/DAE/PLY — glTF stays cgltf; turn OFF exporters/tests in its CMake); engine NEW
@@ -904,6 +965,34 @@ SolidWorks-exported STL (mm) imports at correct meters; re-import after editing 
 updates the placed entities.
 
 ### E17 — Material editor + Environment panel (+ preview rig)
+
+> **✅ 2026-07-04.** Engine: NEW `graphics/MaterialAsset.h` — a reflected PBR
+> material struct (Albedo/Metallic/Roughness/AO/Emissive/Transparent + 5 map
+> AssetPath slots), `CS_REGISTER_COMPONENT`'d + E1-registered ("Material") so the
+> editor UI + `.cmat` (de)serialization are BOTH generic. NEW generic reflected-
+> struct serializer on `SceneSerializer` (`Save/LoadReflectedToString/…ToFile` —
+> the same field visitor as .cscene, applied to a standalone struct; `{cosmic_type,
+> fields}` schema, tolerant of a bare field object). `AssetLibrary` gains
+> `GetMaterial` (cached; loads a `.cmat`→MaterialAsset→builds a live Ref<Material>
+> on the engine PBR shader via `BuildMaterial`, mapping each field onto
+> u_Albedo/u_Metallic/… + u_*Map/u_Has*Map) + `Load/SaveMaterialAsset` typed
+> wrappers. `MeshRendererComponent` gains a reflected `MaterialPath` AssetPath
+> ("material") + runtime `MaterialPathResolved`; the render-prep sync resolves it
+> through `GetMaterial` (once, guarded) — **closes E15's material-assignment
+> deviation**: primitives/imported meshes take a `.cmat` and it survives
+> save/reload. Starforge: NEW `commands/CommitFieldEditFor` (undoable field edit on
+> a SPECIFIC entity, for panels that target a known entity); NEW
+> `panels/EnvironmentPanel` (reflection-driven, find/create the scene's Environment
+> entity, per-edit undo via CommitFieldEditFor) + `panels/MaterialEditorPanel`
+> (New/Save `.cmat`, auto-UI over the MaterialAsset fields, Assign/Load to the
+> selected MeshRenderer); both wired into the shell with View-menu toggles
+> (off by default). `tests/test_material.cpp` (3 cases): full `.cmat` round-trip,
+> unknown-type-id no-op, bare-object load. Build green, zero warnings, **CosmicTests
+> 180/180** (+3). **Deviations:** (1) the dedicated offscreen preview-sphere rig +
+> content-browser mesh/material thumbnails are a documented follow-up — the live
+> viewport is the material preview (assign to an entity to see it); (2) material
+> edits apply live but are NOT undoable in v1 (save + re-assign / re-open),
+> consistent with the content-browser op policy; env edits ARE undoable.
 
 **Files:** Starforge `panels/MaterialEditorPanel.*`, `panels/EnvironmentPanel.*`,
 `src/PreviewRig.*` (tiny offscreen FrameBuffer + SceneRenderer-lite: one mesh, key light, IBL;
@@ -937,6 +1026,24 @@ purely in-editor, save, reload, Play — no code written.
 
 ### E19 — Package & ship
 
+> **✅ 2026-07-04.** Engine: Main.cpp reads a `boot.cfg` next to the exe as the
+> no-args default project when `--project` is absent (first non-empty non-'#' line =
+> project name; missing/empty → the Launcher, unchanged) — the ~10-line change that
+> makes a packaged app double-click straight into its scene. Starforge: File▸Package…
+> dialog + `StarforgeApp::PackageProject()` — stages `dist/<Project>/` from the
+> current build outputs (the editor runs from `build/Runtime/<cfg>`, so
+> `fs::current_path()` has CosmicApp.exe + Cosmic.dll + `<Project>.dll` + assets/):
+> copies `CosmicApp.exe`→`<Project>.exe`, `Cosmic.dll`, the project DLL (warns if not
+> built), the engine assets + ONLY this project's `assets/projects/<Project>` folder,
+> and writes `boot.cfg`. Build green, zero warnings, **CosmicTests 180/180**.
+> **Deviations:** (1) stages the CURRENT build config, not a forced Release rebuild
+> (a banner warns "build Release first for a shipping app") — orchestrating a Release
+> BuildRunner pass + optional zip is a documented follow-up; (2) per-project `.rc`
+> icon + "open dist folder" shell-out are follow-ups (the dialog shows the path).
+> **Acceptance (copy dist to a repo-less/SDK-less path → double-click runs the
+> scene):** the boot.cfg path is code-verified; the clean-machine run is the user's
+> on-machine step.
+
 **Files:** Starforge `src/Packager.*` + Package dialog (menu: File▸Package…); template addition:
 per-project icon slot (parked if .rc plumbing fights back — note it).
 
@@ -968,7 +1075,17 @@ plots during Play, CSV matches fixed-dt sample count exactly, take reloads after
 
 ### E21 — Polish, stats, docs, acceptance demo
 
-**Files:** Starforge misc; `docs/design/starforge-ui.md` (user guide); README §1.5 additions
+> **◑ (partial) 2026-07-04.** Shipped the polish subset: **Statistics** window
+> (View menu — entity/selection counts + `Renderer3D::GetStats()` draw calls /
+> submitted / frustum-culled / drawn / auto-instance batches + FPS), a **Help ▸
+> Keyboard Shortcuts** reference modal, and the user guide
+> [`docs/design/starforge-ui.md`](../design/starforge-ui.md) (covers primitives,
+> import, materials, environment, Play, and the E19 `boot.cfg` packaging flow).
+> Build green, zero warnings, **CosmicTests 180/180**. **Remaining for full E21:**
+> crash-safe `.bak` save rotation, a Starforge accent theme pass, empty-state hints
+> in every panel, the "Forge Playground" first-run sample project, and the recorded
+> end-to-end **phase acceptance demo** (which also needs E18 + E20). README §1.5 got
+> no edit yet (the `boot.cfg` mechanism is documented in the user guide instead).
 (only if new scripts/flags appeared — E19's `boot.cfg` counts); update this doc + roadmap
 banners.
 

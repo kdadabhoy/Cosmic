@@ -107,6 +107,17 @@ namespace Cosmic
 		 */
 		void OnRender3D(const Camera& camera);
 
+		/**
+		 * @brief Prepare mesh assets for rendering (E15/E16). (Re)generates the mesh
+		 * of every entity with a PrimitiveMeshComponent whose parameters changed
+		 * since its last build, and resolves any MeshRendererComponent::MeshPath
+		 * (an imported/loaded asset) to a live MeshAsset via AssetLibrary — both
+		 * cover the freshly-loaded-scene case where meshes are stored by params /
+		 * path only. Called automatically at the top of OnRender3D; safe to call
+		 * manually before a custom render path. Main-thread / GL (uploads meshes).
+		 */
+		void SyncPrimitiveMeshes();
+
 		/** @brief Allocates and attaches an execution system to the scene lifecycle. */
 		template<typename T, typename... Args>
 		T& AddSystem(Args&&... args)

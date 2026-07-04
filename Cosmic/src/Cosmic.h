@@ -56,6 +56,7 @@
 #include "graphics/UniformBuffer.h"
 #include "graphics/StorageBuffer.h"
 #include "graphics/Material.h"
+#include "graphics/MaterialAsset.h"   // E17 — reflected .cmat struct
 #include "graphics/Mesh.h"
 #include "graphics/Model.h"
 #include "graphics/Font.h"
@@ -63,6 +64,7 @@
 
 // Assets
 #include "assets/AssetLibrary.h"
+#include "assets/MeshImport.h"        // E16 — model import (OBJ + gated assimp) + .cmeta
 
 // Camera & Control
 #include "camera/Camera.h"

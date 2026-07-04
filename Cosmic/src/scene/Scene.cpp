@@ -5,6 +5,7 @@
 #include "scene/Components.h"
 #include "renderer/Renderer2D.h"
 #include "renderer/Renderer3D.h"
+#include "assets/AssetLibrary.h"
 #include "terrain/Terrain.h"
 #include "camera/OrthographicCamera.h"
 #include "camera/Camera.h"
@@ -13,6 +14,8 @@
 #include <unordered_map>
 #include <vector>
 #include <algorithm>
+#include <cstddef>
+#include <functional>
 #include <glm/gtc/matrix_transform.hpp>
 #ifndef GLM_ENABLE_EXPERIMENTAL
 #define GLM_ENABLE_EXPERIMENTAL
@@ -21,8 +24,90 @@
 
 namespace Cosmic
 {
+	namespace
+	{
+		// Hash the parameters a PrimitiveMeshComponent's mesh is built from, so the
+		// render-path sync can detect a change without any explicit dirty flag (E15).
+		std::size_t PrimitiveSignature(const PrimitiveMeshComponent& p)
+		{
+			std::size_t h = std::hash<int>{}(static_cast<int>(p.ShapeType));
+			auto mix = [&h](std::size_t v) { h ^= v + 0x9e3779b97f4a7c15ULL + (h << 6) + (h >> 2); };
+			mix(std::hash<float>{}(p.Size.x));
+			mix(std::hash<float>{}(p.Size.y));
+			mix(std::hash<float>{}(p.Size.z));
+			mix(std::hash<float>{}(p.Radius));
+			mix(std::hash<float>{}(p.Height));
+			mix(std::hash<float>{}(p.TubeRadius));
+			mix(std::hash<int>{}(p.Segments));
+			mix(std::hash<int>{}(p.Rings));
+			return h;
+		}
+
+		// Map a primitive spec to a freshly uploaded mesh (main-thread / GL — called
+		// only from Scene::SyncPrimitiveMeshes inside the render pass).
+		Ref<Mesh> BuildPrimitiveMesh(const PrimitiveMeshComponent& p)
+		{
+			const uint32_t seg   = static_cast<uint32_t>(p.Segments < 3 ? 3 : p.Segments);
+			const uint32_t rings = static_cast<uint32_t>(p.Rings    < 3 ? 3 : p.Rings);
+			using Shape = PrimitiveMeshComponent::Shape;
+			switch (p.ShapeType)
+			{
+				case Shape::Box:      return Mesh::CreateBox(p.Size);
+				case Shape::Sphere:   return Mesh::CreateUVSphere(p.Radius, rings, seg);
+				case Shape::Plane:    return Mesh::CreatePlane(p.Size.x, p.Size.z);
+				case Shape::Cylinder: return Mesh::CreateCylinder(p.Radius, p.Height, seg);
+				case Shape::Cone:     return Mesh::CreateCone(p.Radius, p.Height, seg);
+				case Shape::Torus:    return Mesh::CreateTorus(p.Radius, p.TubeRadius, seg, rings);
+			}
+			return nullptr;
+		}
+	}
+
 	Scene::Scene()
 	{
+	}
+
+	void Scene::SyncPrimitiveMeshes()
+	{
+		// Collect first: we get_or_emplace a sibling MeshRenderer below, and adding a
+		// component is cleaner done outside a live view iteration.
+		std::vector<entt::entity> prims;
+		for (auto e : m_Registry.view<PrimitiveMeshComponent>())
+			prims.push_back(e);
+
+		for (auto e : prims)
+		{
+			auto&             prim = m_Registry.get<PrimitiveMeshComponent>(e);
+			auto&             mr   = m_Registry.get_or_emplace<MeshRendererComponent>(e);
+			const std::size_t sig  = PrimitiveSignature(prim);
+			if (mr.MeshAsset && prim.BuiltSignature == sig)
+				continue;
+			if (Ref<Mesh> mesh = BuildPrimitiveMesh(prim))
+			{
+				mr.MeshAsset        = mesh;
+				prim.BuiltSignature = sig;
+			}
+		}
+
+		// Resolve imported/loaded mesh paths (E16): a scene loaded from disk stores
+		// only MeshPath (a project:// asset); turn it into a live MeshAsset once via
+		// the asset cache. Guarded so a missing file logs once, not every frame.
+		auto meshView = m_Registry.view<MeshRendererComponent>();
+		for (auto e : meshView)
+		{
+			auto& mr = meshView.get<MeshRendererComponent>(e);
+			if (!mr.MeshAsset && !mr.MeshPath.empty() && !mr.MeshPathResolved)
+			{
+				mr.MeshPathResolved = true;   // one attempt regardless of outcome
+				mr.MeshAsset = AssetLibrary::GetMesh(mr.MeshPath);
+			}
+			// Material asset path (E17) — same guarded, once-per-session resolution.
+			if (!mr.MaterialAsset && !mr.MaterialPath.empty() && !mr.MaterialPathResolved)
+			{
+				mr.MaterialPathResolved = true;
+				mr.MaterialAsset = AssetLibrary::GetMaterial(mr.MaterialPath);
+			}
+		}
 	}
 
 	Entity Scene::CreateEntity(const std::string& name)
@@ -390,6 +475,10 @@ namespace Cosmic
 		// The scene owns the full 3D pass. Callers must NOT wrap this in their own
 		// BeginScene/EndScene. Sorting + frustum culling happen inside Renderer3D's
 		// queue (S12.1/S12.2) — this method only decides WHAT to submit.
+
+		// Parametric primitives (E15): (re)build any mesh whose parameters changed
+		// or that is still null after a load, before the draw loop consumes it.
+		SyncPrimitiveMeshes();
 
 		// --- Gather scene lights (S4.5) and upload before drawing. ---
 		Renderer3D::SceneLightsDesc lights;

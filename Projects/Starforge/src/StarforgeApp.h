@@ -25,6 +25,8 @@
 #include "panels/InspectorPanel.h"
 #include "panels/ContentBrowserPanel.h"
 #include "panels/ConsolePanel.h"
+#include "panels/EnvironmentPanel.h"
+#include "panels/MaterialEditorPanel.h"
 
 #include <string>
 
@@ -86,6 +88,18 @@ namespace Starforge
         void DrawHomescreen();
         void DrawSaveAsPopup();
 
+        // --- Model import (E16) --------------------------------------------
+        void DrawImportModelPopup();
+        bool ImportModelFile(const std::string& srcPath);   // copy into project://models/ + spawn
+
+        // --- Package & ship (E19) ------------------------------------------
+        void DrawPackagePopup();
+        void PackageProject();   // stage a standalone dist/<Project>/ from the build outputs
+
+        // --- Polish (E21) --------------------------------------------------
+        void DrawStatsWindow();  // entity + Renderer3D draw statistics
+        void DrawHelpPopups();   // keyboard-shortcut reference
+
         // --- Frame helpers -------------------------------------------------
         void HandleShortcuts();
         void Autosave(float ts);
@@ -118,19 +132,28 @@ namespace Starforge
         InspectorPanel      m_Inspector;
         ContentBrowserPanel m_Content;
         ConsolePanel        m_Console;
+        EnvironmentPanel    m_Environment;    // E17
+        MaterialEditorPanel m_Material;        // E17
 
         Prefs::EditorSettings m_Settings;
 
-        bool  m_DockApplied   = false;
-        bool  m_OpenSaveAs    = false;
-        float m_AutosaveTimer = 0.0f;
+        bool  m_DockApplied     = false;
+        bool  m_OpenSaveAs      = false;
+        bool  m_OpenImportModel = false;
+        bool  m_OpenPackage     = false;
+        std::string m_LastDistDir;             // last packaged output (E19)
+        float m_AutosaveTimer   = 0.0f;
 
         // View-menu panel toggles.
         bool m_ShowHierarchy = true, m_ShowInspector = true,
              m_ShowContent   = true, m_ShowConsole   = true;
+        bool m_ShowEnvironment = false, m_ShowMaterial = false;   // E17 (off by default)
+        bool m_ShowStats = false;         // E21 statistics window
+        bool m_OpenShortcuts = false;     // E21 shortcut reference modal
 
         // Homescreen / dialogs scratch.
         char m_NewProjectName[128] = "MyProject";
         char m_SaveAsName[128]     = "Main";
+        char m_ImportPath[512]     = "";
     };
 }

@@ -40,6 +40,8 @@ namespace Cosmic
 	class Shader;
 	class Mesh;
 	class Model; // defined in S4.4b; Ref<Model> is fine on an incomplete type
+	class Material;         // E17
+	struct MaterialAsset;   // E17 — graphics/MaterialAsset.h
 
 	class COSMIC_API AssetLibrary
 	{
@@ -50,11 +52,24 @@ namespace Cosmic
 		/** @brief Cached shader. Miss loads via Shader::Create. */
 		static Ref<Shader>    GetShader(const std::string& path);
 
-		/** @brief Cached mesh (.obj). Miss loads via Mesh::CreateFromOBJ. */
+		/** @brief Cached mesh. Miss imports via MeshImport (OBJ + gated assimp), applying .cmeta. */
 		static Ref<Mesh>      GetMesh(const std::string& path);
 
 		/** @brief Cached model (.gltf/.glb). Miss loads via Model::CreateFromGLTF (S4.4b). */
 		static Ref<Model>     GetModel(const std::string& path);
+
+		/** @brief Cached material (E17). Miss loads the `.cmat` MaterialAsset and
+		 *  binds it to the engine PBR shader (BuildMaterial). */
+		static Ref<Material>  GetMaterial(const std::string& path);
+
+		/** @brief Build a live PBR Ref<Material> from a MaterialAsset (no caching /
+		 *  file I/O) — used for live previews and the Material Editor. */
+		static Ref<Material>  BuildMaterial(const MaterialAsset& asset, const std::string& name);
+
+		/** @brief Load / save a `.cmat` MaterialAsset (paths go through the VFS).
+		 *  Thin typed wrappers over SceneSerializer's reflected-struct (de)serializer. */
+		static bool           LoadMaterialAsset(MaterialAsset& out, const std::string& path);
+		static bool           SaveMaterialAsset(const MaterialAsset& asset, const std::string& path);
 
 		/** @brief Release all cached Refs. Call while a GL context is still current. */
 		static void           Clear();

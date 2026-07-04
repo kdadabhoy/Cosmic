@@ -343,7 +343,21 @@ Phase 11's SceneRenderer; interleave at will.
 > and a scaffolded `TestRover` project built its module DLL (3 exports verified) + ran standalone
 > via `--project` with its script live — verifying the E11+E12+E13 pipeline end-to-end.
 > **The editor-UI hot-reload cycle + 20-reload leak check are the user's on-machine acceptance
-> step.** **NEXT = Stage D (E15 primitives → E16 assimp → … → E21 acceptance demo).**
+> step.**
+> **Stage D (content/rendering/ship tools) IN PROGRESS 2026-07-04 (UNcommitted) — 5 of 7 work
+> orders landed, full build green (all 5 projects, zero warnings), CosmicTests 180/180 (was 163):**
+> **E15** parametric primitives (`MeshData`/`Build*` split + `CreateTorus`, `PrimitiveMeshComponent`,
+> `Scene::SyncPrimitiveMeshes`), **E16** model-import SEAM (`assets/MeshImport` + `.cmeta` + OBJ live;
+> **assimp backend for FBX/STL/DAE/PLY written but gated behind `COSMIC_WITH_ASSIMP`, off by
+> default — the one heavyweight vendor is the user's flip-on step**; closed the MeshRenderer
+> asset-path gotcha), **E17** material + environment authoring (`MaterialAsset` `.cmat` + generic
+> reflected-struct serializer + `AssetLibrary::GetMaterial`/`BuildMaterial`, MeshRenderer material
+> slot, Material Editor + Environment panels), **E19** package & ship (`boot.cfg` no-args boot +
+> Starforge Packager → `dist/<Project>/`), **E21** polish subset (Statistics window + shortcut
+> reference + `docs/design/starforge-ui.md`). **Remaining Stage-D work orders: E18 (world-systems
+> authoring — terrain/water/particle reflected recipes + regenerate) and E20 (telemetry recording
+> panel) — the two heaviest; best as focused follow-up sessions. E21's theme pass / sample project /
+> recorded acceptance demo also remain (the demo needs E18+E20).**
 - **Do:** doc 11 work orders in order: E1 reflection → E2 UUID+JSON serializer → E3 hierarchy →
   E4 camera/environment components → E5 SceneManager → E6 shell → E7 undo → E8 inspector →
   E9 viewport tools → E10 content browser → E11 script host → E12 hot reload → E13 play mode →

@@ -138,11 +138,23 @@ namespace Cosmic
 		return Ref<Mesh>(new Mesh(vertices, indices));
 	}
 
+	Ref<Mesh> Mesh::Create(const MeshData& data)
+	{
+		return Create(data.Vertices, data.Indices);
+	}
+
 	/////////////////////////////////////////////////////////////////////////////////
-	// Primitives
+	// Primitives — pure Build* geometry (GL-free), thin Create* uploaders (E15)
 	/////////////////////////////////////////////////////////////////////////////////
 
-	Ref<Mesh> Mesh::CreateBox(const glm::vec3& size)
+	Ref<Mesh> Mesh::CreateBox(const glm::vec3& size)       { return Create(BuildBox(size)); }
+	Ref<Mesh> Mesh::CreatePlane(float w, float d)          { return Create(BuildPlane(w, d)); }
+	Ref<Mesh> Mesh::CreateCylinder(float r, float h, uint32_t s) { return Create(BuildCylinder(r, h, s)); }
+	Ref<Mesh> Mesh::CreateCone(float r, float h, uint32_t s)     { return Create(BuildCone(r, h, s)); }
+	Ref<Mesh> Mesh::CreateUVSphere(float r, uint32_t ri, uint32_t s) { return Create(BuildUVSphere(r, ri, s)); }
+	Ref<Mesh> Mesh::CreateTorus(float r, float tr, uint32_t s, uint32_t si) { return Create(BuildTorus(r, tr, s, si)); }
+
+	MeshData Mesh::BuildBox(const glm::vec3& size)
 	{
 		const glm::vec3 h = size * 0.5f;
 
@@ -181,10 +193,10 @@ namespace Cosmic
 			indices.insert(indices.end(), { base, base + 1, base + 2,  base, base + 2, base + 3 });
 		}
 
-		return Create(vertices, indices);
+		return { std::move(vertices), std::move(indices) };
 	}
 
-	Ref<Mesh> Mesh::CreatePlane(float width, float depth)
+	MeshData Mesh::BuildPlane(float width, float depth)
 	{
 		const float hw = width * 0.5f;
 		const float hd = depth * 0.5f;
@@ -199,10 +211,10 @@ namespace Cosmic
 		};
 		std::vector<uint32_t> indices = { 0, 1, 2,  0, 2, 3 };
 
-		return Create(vertices, indices);
+		return { std::move(vertices), std::move(indices) };
 	}
 
-	Ref<Mesh> Mesh::CreateCylinder(float radius, float height, uint32_t segments)
+	MeshData Mesh::BuildCylinder(float radius, float height, uint32_t segments)
 	{
 		segments = segments < 3 ? 3 : segments;
 		const float hh  = height * 0.5f;
@@ -253,10 +265,10 @@ namespace Cosmic
 			}
 		}
 
-		return Create(vertices, indices);
+		return { std::move(vertices), std::move(indices) };
 	}
 
-	Ref<Mesh> Mesh::CreateCone(float radius, float height, uint32_t segments)
+	MeshData Mesh::BuildCone(float radius, float height, uint32_t segments)
 	{
 		segments = segments < 3 ? 3 : segments;
 		const float hh  = height * 0.5f;
@@ -304,10 +316,10 @@ namespace Cosmic
 			indices.insert(indices.end(), { centerIdx, r0, r1 }); // CCW from below
 		}
 
-		return Create(vertices, indices);
+		return { std::move(vertices), std::move(indices) };
 	}
 
-	Ref<Mesh> Mesh::CreateUVSphere(float radius, uint32_t rings, uint32_t segments)
+	MeshData Mesh::BuildUVSphere(float radius, uint32_t rings, uint32_t segments)
 	{
 		rings    = rings    < 3 ? 3 : rings;
 		segments = segments < 3 ? 3 : segments;
@@ -348,7 +360,58 @@ namespace Cosmic
 			}
 		}
 
-		return Create(vertices, indices);
+		return { std::move(vertices), std::move(indices) };
+	}
+
+	MeshData Mesh::BuildTorus(float radius, float tubeRadius, uint32_t segments, uint32_t sides)
+	{
+		segments = segments < 3 ? 3 : segments;   // steps around the ring (major circle)
+		sides    = sides    < 3 ? 3 : sides;      // steps around the tube (minor circle)
+		const float tau = glm::two_pi<float>();
+
+		std::vector<MeshVertex> vertices;
+		std::vector<uint32_t>   indices;
+		vertices.reserve((segments + 1) * (sides + 1));
+
+		// u sweeps the ring in the XZ plane; v sweeps the tube cross-section. The
+		// tube centre at angle u is C(u) = radius*(cos u, 0, sin u); a surface point
+		// is C(u) + tubeRadius*(cos v * cos u, sin v, cos v * sin u). The normal is
+		// the unit tube-radial (cos v cos u, sin v, cos v sin u) — it points straight
+		// out from the centre circle, which is what BuildTorus's unit test checks.
+		for (uint32_t i = 0; i <= segments; ++i)
+		{
+			const float u  = tau * static_cast<float>(i) / static_cast<float>(segments);
+			const float cu = std::cos(u), su = std::sin(u);
+
+			for (uint32_t j = 0; j <= sides; ++j)
+			{
+				const float v  = tau * static_cast<float>(j) / static_cast<float>(sides);
+				const float cv = std::cos(v), sv = std::sin(v);
+
+				const glm::vec3 normal(cv * cu, sv, cv * su);
+				const glm::vec3 pos((radius + tubeRadius * cv) * cu,
+				                    tubeRadius * sv,
+				                    (radius + tubeRadius * cv) * su);
+
+				vertices.push_back({ pos, normal,
+				                     { static_cast<float>(i) / static_cast<float>(segments),
+				                       static_cast<float>(j) / static_cast<float>(sides) } });
+			}
+		}
+
+		const uint32_t stride = sides + 1;
+		for (uint32_t i = 0; i < segments; ++i)
+		{
+			for (uint32_t j = 0; j < sides; ++j)
+			{
+				const uint32_t a = i * stride + j;
+				const uint32_t b = a + stride;
+				// CCW seen from outside so the outward normals face the viewer.
+				indices.insert(indices.end(), { a, a + 1, b,  a + 1, b + 1, b });
+			}
+		}
+
+		return { std::move(vertices), std::move(indices) };
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////
@@ -367,13 +430,13 @@ namespace Cosmic
 		}
 	}
 
-	Ref<Mesh> Mesh::CreateFromOBJ(const std::string& resolvedPath)
+	MeshData Mesh::BuildFromOBJ(const std::string& resolvedPath)
 	{
 		std::ifstream file(resolvedPath);
 		if (!file.is_open())
 		{
-			CS_CORE_ERROR("Mesh::CreateFromOBJ: cannot open '{0}'.", resolvedPath);
-			return nullptr;
+			CS_CORE_ERROR("Mesh::BuildFromOBJ: cannot open '{0}'.", resolvedPath);
+			return {};
 		}
 
 		std::vector<glm::vec3> positions;
@@ -437,9 +500,9 @@ namespace Cosmic
 
 					if (fields == 0 || pi == 0)
 					{
-						CS_CORE_ERROR("Mesh::CreateFromOBJ: malformed face token '{0}' ({1}:{2}).",
+						CS_CORE_ERROR("Mesh::BuildFromOBJ: malformed face token '{0}' ({1}:{2}).",
 							token, resolvedPath, lineNo);
-						return nullptr;
+						return {};
 					}
 
 					Corner c;
@@ -449,9 +512,9 @@ namespace Cosmic
 
 					if (c.p == SIZE_MAX)
 					{
-						CS_CORE_ERROR("Mesh::CreateFromOBJ: position index out of range ({0}:{1}).",
+						CS_CORE_ERROR("Mesh::BuildFromOBJ: position index out of range ({0}:{1}).",
 							resolvedPath, lineNo);
-						return nullptr;
+						return {};
 					}
 					corners.push_back(c);
 				}
@@ -494,14 +557,22 @@ namespace Cosmic
 
 		if (vertices.empty())
 		{
-			CS_CORE_ERROR("Mesh::CreateFromOBJ: '{0}' contained no triangle geometry.", resolvedPath);
-			return nullptr;
+			CS_CORE_ERROR("Mesh::BuildFromOBJ: '{0}' contained no triangle geometry.", resolvedPath);
+			return {};
 		}
 
-		CS_CORE_INFO("Mesh::CreateFromOBJ: '{0}' -> {1} vertices, {2} triangles.",
+		CS_CORE_INFO("Mesh::BuildFromOBJ: '{0}' -> {1} vertices, {2} triangles.",
 			resolvedPath, vertices.size(), indices.size() / 3);
 
-		return Create(vertices, indices);
+		return { std::move(vertices), std::move(indices) };
+	}
+
+	Ref<Mesh> Mesh::CreateFromOBJ(const std::string& resolvedPath)
+	{
+		MeshData data = BuildFromOBJ(resolvedPath);
+		if (data.Vertices.empty())
+			return nullptr;   // BuildFromOBJ already logged the reason
+		return Create(data);
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////

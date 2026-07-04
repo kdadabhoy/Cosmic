@@ -48,12 +48,19 @@ namespace Starforge
         void MakeDirLight(Entity e)   { e.AddComponent<DirectionalLightComponent>(); }
         void MakePointLight(Entity e) { e.AddComponent<PointLightComponent>(); }
         void MakeCamera(Entity e)     { e.AddComponent<CameraComponent>(); }
-        void MakeCube(Entity e)
-        { e.AddComponent<MeshRendererComponent>(Mesh::CreateBox({ 1.0f, 1.0f, 1.0f })).Color = { 0.8f, 0.8f, 0.82f, 1.0f }; }
-        void MakeSphere(Entity e)
-        { e.AddComponent<MeshRendererComponent>(Mesh::CreateUVSphere(0.5f, 24, 32)).Color = { 0.8f, 0.8f, 0.82f, 1.0f }; }
-        void MakePlane(Entity e)
-        { e.AddComponent<MeshRendererComponent>(Mesh::CreatePlane(10.0f, 10.0f)).Color = { 0.5f, 0.5f, 0.55f, 1.0f }; }
+        // Parametric primitives (E15): attach shape + params + a default-tint
+        // MeshRenderer; Scene::SyncPrimitiveMeshes builds the mesh at render time.
+        void MakePrimitive(Entity e, PrimitiveMeshComponent::Shape shape)
+        {
+            e.AddComponent<PrimitiveMeshComponent>(shape);
+            e.AddComponent<MeshRendererComponent>().Color = { 0.8f, 0.8f, 0.82f, 1.0f };
+        }
+        void MakeCube(Entity e)     { MakePrimitive(e, PrimitiveMeshComponent::Shape::Box); }
+        void MakeSphere(Entity e)   { MakePrimitive(e, PrimitiveMeshComponent::Shape::Sphere); }
+        void MakePlane(Entity e)    { MakePrimitive(e, PrimitiveMeshComponent::Shape::Plane); }
+        void MakeCylinder(Entity e) { MakePrimitive(e, PrimitiveMeshComponent::Shape::Cylinder); }
+        void MakeCone(Entity e)     { MakePrimitive(e, PrimitiveMeshComponent::Shape::Cone); }
+        void MakeTorus(Entity e)    { MakePrimitive(e, PrimitiveMeshComponent::Shape::Torus); }
     }
 
     void HierarchyPanel::OnImGuiRender(EditorContext& ctx)
@@ -318,11 +325,14 @@ namespace Starforge
         };
 
         emit("Empty", nullptr);
-        if (ImGui::BeginMenu("Mesh"))
+        if (ImGui::BeginMenu("Primitive"))
         {
-            emit("Cube",   &MakeCube);
-            emit("Sphere", &MakeSphere);
-            emit("Plane",  &MakePlane);
+            emit("Cube",     &MakeCube);
+            emit("Sphere",   &MakeSphere);
+            emit("Plane",    &MakePlane);
+            emit("Cylinder", &MakeCylinder);
+            emit("Cone",     &MakeCone);
+            emit("Torus",    &MakeTorus);
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu("Light"))
