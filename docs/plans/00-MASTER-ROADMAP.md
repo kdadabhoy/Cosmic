@@ -359,8 +359,15 @@ Phase 11's SceneRenderer; interleave at will.
 > `scene/WorldSystemRecipes` mapping + `water/Presets.h` + `Scene::SyncWorldSystems` recipe-gated
 > regen (JobSystem terrain rebuild) + `Scene::OnRenderWorldFX` water/particle render (editor +
 > PlayerLayer) + Starforge `WorldSystemsPanel` (+ `.cemitter` save/load); CosmicTests 187/187,
-> compat gate satisfied. **Remaining Stage-D work order: E20 (telemetry recording panel). E21's
-> theme pass / sample project / recorded acceptance demo also remain (the demo needs E20).**
+> compat gate satisfied. **E20** telemetry panel **shipped 2026-07-04** (UNcommitted): generic
+> engine seam (`ITelemetrySink` + `ScriptableEntity::Telemetry().Push` + `ScriptHost::
+> SetTelemetrySink`) + Starforge `TelemetryPanel` (mark reflected numeric fields via Inspector
+> right-click, sample once per fixed step into the existing DataRecorder store, live ImPlot
+> scopes + post-Stop scrub, Export CSV via DataExport, takes autosaved/reloaded to
+> `user://starforge/takes/` via DataPlayer) + BouncingBall/PidController sample scripts;
+> CosmicTests 188/188, zero warnings, compat gate satisfied. **All Stage-D work orders done —
+> Phase 13 code-complete except E21's remaining theme pass / "Forge Playground" sample project /
+> recorded end-to-end acceptance demo (which can now be recorded).**
 - **Do:** doc 11 work orders in order: E1 reflection → E2 UUID+JSON serializer → E3 hierarchy →
   E4 camera/environment components → E5 SceneManager → E6 shell → E7 undo → E8 inspector →
   E9 viewport tools → E10 content browser → E11 script host → E12 hot reload → E13 play mode →

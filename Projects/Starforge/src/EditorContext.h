@@ -18,6 +18,8 @@
 #include <Cosmic.h>
 #include <entt/entt.hpp>
 
+#include "TelemetryRecording.h"
+
 #include <algorithm>
 #include <string>
 #include <vector>
@@ -53,6 +55,12 @@ namespace Starforge
 
         // --- Console (E6) --------------------------------------------------
         std::vector<ConsoleLine> ConsoleLines;
+
+        // --- Telemetry (E20) — reflected fields marked "Recorded" ----------
+        // Keyed by UUID so marks survive the Play snapshot rebuild. Owned here so
+        // both the Inspector (marking) and the TelemetryPanel (capture) share one
+        // list. Script-pushed channels are NOT here — they're discovered at Play.
+        std::vector<Telemetry::RecordedChannel> Recorded;
 
         // --- Cross-panel requests (consumed by the shell each frame) -------
         std::string PendingOpenScene;         // "project://..." set by the Content Browser

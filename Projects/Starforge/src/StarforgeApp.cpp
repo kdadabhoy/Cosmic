@@ -327,6 +327,7 @@ namespace Starforge
         m_Ctx.SceneVfsPath = "";
         m_Ctx.Commands.Clear();
         m_Ctx.ClearSelection();
+        m_Ctx.Recorded.clear();   // telemetry marks are per-UUID (E20)
         m_Ctx.ClearDirty();
         m_Ctx.Log("[Scene] New scene.");
     }
@@ -345,6 +346,7 @@ namespace Starforge
         m_Ctx.SceneName    = fs::path(vfsPath).stem().string();
         m_Ctx.Commands.Clear();
         m_Ctx.ClearSelection();
+        m_Ctx.Recorded.clear();   // telemetry marks are per-UUID (E20)
         m_Ctx.ClearDirty();
         m_Ctx.Log("[Scene] Opened '" + vfsPath + "'.");
     }
@@ -410,7 +412,12 @@ namespace Starforge
         m_FixedAccum   = 0.0f;
         m_StepRequested = false;
 
+        // Route script telemetry pushes to the panel (must be set before Instantiate
+        // so OnCreate/OnStart pushes have a sink), then arm the take (E20).
+        m_Scripts.SetTelemetrySink(&m_Telemetry);
         m_Scripts.Instantiate(*runtime);
+        m_Telemetry.OnPlayStart(m_Ctx, m_FixedDt);
+
         m_Play = PlayMode::Playing;
         m_Ctx.Log("[Play] Started — " + std::to_string(m_Scripts.LiveCount()) + " script(s).");
     }
@@ -419,6 +426,8 @@ namespace Starforge
     {
         if (!IsPlaying())
             return;
+        m_Telemetry.OnPlayStop(m_Ctx);        // flush + keep the take (E20)
+        m_Scripts.SetTelemetrySink(nullptr);
         m_Scripts.Destroy();
         m_Ctx.Scene = m_EditSceneBackup;   // untouched edit scene
         m_EditSceneBackup.reset();
@@ -450,12 +459,14 @@ namespace Starforge
             while (m_FixedAccum >= m_FixedDt && guard++ < 8)   // clamp catch-up
             {
                 m_Scripts.FixedTick(m_FixedDt);
+                m_Telemetry.OnFixedStep(m_Ctx);   // one telemetry sample per fixed step (E20)
                 m_FixedAccum -= m_FixedDt;
             }
         }
         else if (m_Play == PlayMode::Paused && m_StepRequested)
         {
             m_Scripts.FixedTick(m_FixedDt);   // one deterministic step
+            m_Telemetry.OnFixedStep(m_Ctx);
             m_StepRequested = false;
         }
     }
@@ -608,6 +619,7 @@ namespace Starforge
             if (m_ShowEnvironment) m_Environment.OnImGuiRender(m_Ctx);
             if (m_ShowMaterial)    m_Material.OnImGuiRender(m_Ctx);
             if (m_ShowWorldSystems) m_WorldSystems.OnImGuiRender(m_Ctx);
+            if (m_ShowTelemetry)   m_Telemetry.OnImGuiRender(m_Ctx);
             if (m_ShowStats)       DrawStatsWindow();
         }
         else
@@ -826,6 +838,7 @@ namespace Starforge
             ImGui::MenuItem("Environment",     nullptr, &m_ShowEnvironment);
             ImGui::MenuItem("Material Editor", nullptr, &m_ShowMaterial);
             ImGui::MenuItem("World Systems",   nullptr, &m_ShowWorldSystems);
+            ImGui::MenuItem("Telemetry",       nullptr, &m_ShowTelemetry);
             ImGui::MenuItem("Statistics",      nullptr, &m_ShowStats);
             ImGui::Separator();
             if (ImGui::MenuItem("Reset Layout"))

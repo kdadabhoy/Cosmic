@@ -35,6 +35,7 @@ namespace Cosmic
     class Scene;
     class Event;
     class ScriptableEntity;
+    class ITelemetrySink;
     struct ScriptDescriptor;
     struct NativeScriptComponent;
 
@@ -46,6 +47,12 @@ namespace Cosmic
 
         ScriptHost(const ScriptHost&)            = delete;   // owns heap instances
         ScriptHost& operator=(const ScriptHost&) = delete;
+
+        // Telemetry seam (E20): install a generic sink that scripts push to via
+        // ScriptableEntity::Telemetry(). Injected into every instance at
+        // Instantiate; set before Instantiate to also catch OnCreate/OnStart
+        // pushes. Pass nullptr to detach. No-op for scripts that never push.
+        void SetTelemetrySink(ITelemetrySink* sink) { m_Sink = sink; }
 
         // Build + start every script in the scene (OnCreate all, then OnStart all).
         void Instantiate(Scene& scene);
@@ -71,5 +78,6 @@ namespace Cosmic
     private:
         Scene* m_Scene = nullptr;
         std::vector<entt::entity> m_Live;   // entities with a live instance, creation order
+        ITelemetrySink* m_Sink = nullptr;   // E20 — injected into each instance
     };
 }

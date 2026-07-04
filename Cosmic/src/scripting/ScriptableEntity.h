@@ -34,6 +34,25 @@ namespace Cosmic
 {
     class Event;
 
+    // ------------------------------------------------------------------------
+    // ITelemetrySink (E20) — a generic seam for script-emitted telemetry.
+    //
+    // A host (the Starforge editor's telemetry panel, or any sim harness) may
+    // implement this and hand it to the ScriptHost; scripts then push named
+    // scalar channels through ScriptableEntity::Telemetry().Push("name", value)
+    // and the host routes them into its store. The engine stays name-agnostic —
+    // there are no editor/Starforge types here, and the default (no sink) makes
+    // Push a cheap no-op, so shipped apps are unaffected.
+    // ------------------------------------------------------------------------
+    class ITelemetrySink
+    {
+    public:
+        virtual ~ITelemetrySink() = default;
+
+        /** @brief Record one named scalar for `source` during the current step. */
+        virtual void Push(entt::entity source, const char* channel, float value) = 0;
+    };
+
     class COSMIC_API ScriptableEntity
     {
     public:
@@ -60,6 +79,22 @@ namespace Cosmic
         T& AddComponent(Args&&... args) { return GetEntity().AddComponent<T>(std::forward<Args>(args)...); }
 
     protected:
+        // ---- telemetry passthrough (E20) ------------------------------------
+        // A thin handle bound to this script's entity. Push a named scalar to the
+        // host's telemetry store: Telemetry().Push("thrust_N", value). No-op when
+        // no sink is installed (the default outside a recording host).
+        struct TelemetryProxy
+        {
+            ITelemetrySink* Sink = nullptr;
+            entt::entity    Source = entt::null;
+            void Push(const char* channel, float value) const
+            {
+                if (Sink) Sink->Push(Source, channel, value);
+            }
+        };
+        TelemetryProxy Telemetry() const { return { m_TelemetrySink, m_Handle }; }
+
+
         // Override the ones you need — all default to no-ops.
         virtual void OnCreate() {}
         virtual void OnStart() {}
@@ -69,8 +104,9 @@ namespace Cosmic
         virtual void OnDestroy() {}
 
     private:
-        friend class ScriptHost;   // injects m_Scene/m_Handle + drives the callbacks
-        entt::entity m_Handle{ entt::null };
-        Scene*       m_Scene = nullptr;
+        friend class ScriptHost;   // injects m_Scene/m_Handle/m_TelemetrySink + drives callbacks
+        entt::entity    m_Handle{ entt::null };
+        Scene*          m_Scene = nullptr;
+        ITelemetrySink* m_TelemetrySink = nullptr;   // null unless a host installs one
     };
 }

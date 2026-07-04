@@ -3,6 +3,7 @@
 #include "panels/InspectorPanel.h"
 #include "commands/EditorCommands.h"
 #include "widgets/PropertyRows.h"
+#include "TelemetryRecording.h"
 
 #include <imgui.h>
 
@@ -134,6 +135,11 @@ namespace Starforge
         auto& reg = ctx.Scene->GetRegistry();
         void* comp = desc.Get(reg, (entt::entity)primary);
 
+        // Stable UUID for telemetry marks (E20) — single-select only.
+        const uint64_t uuid = (ctx.Selection.size() == 1 && primary &&
+                               primary.HasComponent<Cosmic::IDComponent>())
+            ? (uint64_t)primary.GetComponent<Cosmic::IDComponent>().ID : 0;
+
         ImGui::PushID((int)desc.TypeId);
         const bool open = ImGui::CollapsingHeader(desc.Name.c_str(), ImGuiTreeNodeFlags_DefaultOpen);
 
@@ -158,6 +164,25 @@ namespace Starforge
                     continue;
                 const bool mixed = FieldMixed(ctx, desc.TypeId, f);
                 PropertyRows::Result res = PropertyRows::DrawField(f, comp, mixed);
+
+                // Right-click a numeric field to (un)mark it for telemetry (E20).
+                if (uuid && Telemetry::IsRecordable(f.Kind))
+                {
+                    ImGui::PushID(&f);
+                    if (ImGui::BeginPopupContextItem("rec_ctx"))
+                    {
+                        const bool rec = Telemetry::IsRecorded(ctx, uuid, desc.TypeId, f.Name);
+                        if (ImGui::MenuItem(rec ? "Stop Recording" : "Record for telemetry", nullptr, rec))
+                            Telemetry::ToggleRecorded(ctx, uuid, desc.TypeId, f);
+                        ImGui::EndPopup();
+                    }
+                    ImGui::PopID();
+                    if (Telemetry::IsRecorded(ctx, uuid, desc.TypeId, f.Name))
+                    {
+                        ImGui::SameLine();
+                        ImGui::TextColored(ImVec4(1.0f, 0.35f, 0.35f, 1.0f), "REC");
+                    }
+                }
 
                 if (res.Activated) { m_ActiveBefore = res.PreValue; m_HasActive = true; }
                 if (res.Committed)

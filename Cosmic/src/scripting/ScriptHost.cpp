@@ -69,9 +69,10 @@ namespace Cosmic
             }
 
             ScriptableEntity* inst = desc->Factory();
-            inst->m_Scene  = &scene;
-            inst->m_Handle = e;
-            nsc.Instance   = inst;
+            inst->m_Scene         = &scene;
+            inst->m_Handle        = e;
+            inst->m_TelemetrySink = m_Sink;   // E20 — null unless a host installed one
+            nsc.Instance          = inst;
             PushFields(*desc, nsc, inst);
 
             created.push_back(e);

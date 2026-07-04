@@ -44,6 +44,8 @@ namespace
         void OnFixedUpdate(float dt) override
         {
             GetComponent<TransformComponent>().Position.y += dt;
+            // E20 telemetry seam — no-op unless a host installed a sink.
+            Telemetry().Push("posY", GetComponent<TransformComponent>().Position.y);
         }
         void OnDestroy() override { s_Destroyed = true; }
     };
@@ -137,6 +139,46 @@ TEST_CASE("E11: an unknown script class is inert, not a crash")
 
     host.Tick(0.016f);                 // ticking an inert host is a no-op
     host.Destroy();
+}
+
+TEST_CASE("E20: script telemetry pushes route to an installed sink (and no-op without one)")
+{
+    RegisterMover();
+
+    Ref<Scene> scene = Scene::Create();
+    Entity e = MakeScripted(*scene, "MoverScript");
+
+    // A capturing sink records (entity, channel, value) triples.
+    struct CaptureSink : ITelemetrySink
+    {
+        struct Hit { entt::entity src; std::string ch; float v; };
+        std::vector<Hit> hits;
+        void Push(entt::entity src, const char* ch, float v) override
+        {
+            hits.push_back({ src, ch, v });
+        }
+    } sink;
+
+    ScriptHost host;
+    host.SetTelemetrySink(&sink);
+    host.Instantiate(*scene);
+
+    host.FixedTick(0.1f);   // MoverScript pushes "posY" == Position.y (== 0.1)
+    host.FixedTick(0.1f);   // == 0.2
+
+    REQUIRE(sink.hits.size() == 2);
+    CHECK(sink.hits[0].ch == "posY");
+    CHECK(sink.hits[0].src == (entt::entity)e);
+    CHECK(sink.hits[0].v == doctest::Approx(0.1f));
+    CHECK(sink.hits[1].v == doctest::Approx(0.2f));
+
+    host.Destroy();
+
+    // Without a sink the same script ticks are a harmless no-op (default state).
+    ScriptHost host2;
+    host2.Instantiate(*scene);
+    host2.FixedTick(0.1f);   // must not crash / dereference a null sink
+    host2.Destroy();
 }
 
 TEST_CASE("E11: NativeScript is a reflected component and its fields round-trip through JSON")

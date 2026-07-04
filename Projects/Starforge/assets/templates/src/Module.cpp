@@ -12,11 +12,27 @@
 #include <Cosmic.h>
 
 #include "scripts/HoverController.h"
+#include "scripts/BouncingBall.h"
+#include "scripts/PidController.h"
 
 CS_MODULE_BEGIN(@PROJECT_NAME@)
     CS_SCRIPT(HoverController)
         CS_FIELD(TargetAltitude).Range(0.0f, 100.0f)
         CS_FIELD(Kp)
+        CS_FIELD(Kd)
+    CS_END;
+
+    // Telemetry demos (E20) — push channels sampled per fixed step during Play.
+    CS_SCRIPT(BouncingBall)
+        CS_FIELD(Gravity)
+        CS_FIELD(Restitution).Range(0.0f, 1.0f)
+        CS_FIELD(StartHeight).Range(0.0f, 50.0f)
+    CS_END;
+
+    CS_SCRIPT(PidController)
+        CS_FIELD(Target).Range(0.0f, 50.0f)
+        CS_FIELD(Kp)
+        CS_FIELD(Ki)
         CS_FIELD(Kd)
     CS_END;
 CS_MODULE_END()

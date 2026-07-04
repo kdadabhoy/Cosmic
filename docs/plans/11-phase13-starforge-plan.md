@@ -1095,6 +1095,46 @@ the work order) → optional zip. "Open dist folder" button.
 
 ### E20 — Simulation instrumentation (telemetry panel)
 
+> **✅ 2026-07-04.** Engine seam (thin + name-agnostic): `scripting/ScriptableEntity.h`
+> gains `Cosmic::ITelemetrySink` + a `Telemetry().Push("name", v)` proxy bound to
+> the script's entity + an injected `m_TelemetrySink`; `ScriptHost::
+> SetTelemetrySink` installs it into every instance at Instantiate (null = cheap
+> no-op → shipped apps unchanged). Starforge: `TelemetryRecording.h/.cpp` = the
+> mark model — `RecordedChannel{UUID, typeId, field, comp}` on
+> `EditorContext.Recorded` (UUID-keyed so it survives the Play snapshot) +
+> `IsRecordable/ComponentCount/AxisSuffix` + `IsRecorded/ToggleRecorded/
+> RecordAllFields`; Inspector right-click on any numeric field toggles
+> Record/Stop (+ a red `REC` tag), with "Add from selection" as the drag
+> alternative. `panels/TelemetryPanel.{h,cpp}` IS the `ITelemetrySink`:
+> `OnPlayStart` resolves the marks against the runtime scene (`FindByUUID`);
+> `OnFixedStep` (called once per fixed step by `StarforgeApp::TickPlay`, both the
+> play loop and the paused single-step) reads each reflected value + drains the
+> script-push scratch and `Record`s **exactly one row per fixed step** (so CSV row
+> count == fixed-dt sample count by construction); channels arm lazily after step
+> 1 (discovers the script channels), then the schema is frozen. Live docked ImPlot
+> scopes group by field/channel with **Follow + window** (pause/scroll); **Stop**
+> flushes the take through the existing stack (`DataRecorder` →
+> `user://starforge/takes/<scene>_<ts>/` scene.bin + per-take CSV, `WaitForFlush`
+> so it reloads) and keeps it for scrubbing (`DragLineX` playhead + value readout);
+> `SetAutosave` rolls a crash-failsafe snapshot into the take folder while
+> recording; **Export CSV** re-emits via `DataExport::WriteCSV`; a **Saved-takes**
+> browser reloads any take via `DataPlayer` (columns rebuilt by sampling). Wiring:
+> `StarforgeApp` member + View▸Telemetry (default off) + sink install *before*
+> Instantiate + the three lifecycle calls; marks cleared on New/Open scene. Sample
+> scripts **BouncingBall** (`height`/`velY`) + **PidController** (`error`/`output`)
+> added to the project template + `Module.cpp` so the acceptance runs out of the
+> box. `tests/test_scripthost.cpp` gained an E20 case (sink routing + null-sink
+> no-op). Build green, **zero warnings, all 5 project DLLs**, **CosmicTests
+> 188/188** (187→188), Starforge boot smoke-run clean (dockspace + DLL mount/unmount,
+> zero GL errors). **Deviations (v1, documented):** reuses DataRecorder/DataPlayer/
+> DataExport (no parallel store) via a single `"take"` DataRecorder entity holding
+> all channels (labels made unique + capped ≤31 for the bin's channel-name field);
+> channels freeze at arm so a script channel first pushed *after* step 1 is dropped
+> with a one-time Console warning (push from the first step); "drag a field into
+> the panel" is realized as right-click + "Add from selection"; the kept take is
+> values-only (no scene-state scrub). Compat gate holds — Engine3DDemo/Frontier/
+> SF_Telem/ViperSim build + run identically (they never install a sink).
+
 **Files:** Starforge `panels/TelemetryPanel.*`; engine `scripting/ScriptableEntity` telemetry
 passthrough (thin — the columnar telemetry system + DataRecorder + replay all exist).
 
