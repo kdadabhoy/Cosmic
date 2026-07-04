@@ -6,7 +6,7 @@
 
 **Scope (headers are the truth):** `Cosmic/src/audio/AudioEngine.h`, `audio/Sound.h`.
 
-**Read first:** [`docs/plans/08-audio-plan.md`](../plans/08-audio-plan.md) (A1/A2 shipped;
+**Read first:** [`docs/plans/archive/08-audio-plan.md`](../plans/archive/08-audio-plan.md) (A1/A2 shipped;
 A3 positional is parked — do not document unshipped API); systems explainer
 [audio](../systems/audio.md).
 

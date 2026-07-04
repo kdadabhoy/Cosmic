@@ -8,7 +8,7 @@
 integrators that don't explode, filters that tame noisy sensors, lookup tables for measured
 data, seeded noise and RNG so every run is replayable.
 **Source:** `Cosmic/src/math/*` (Spatial, Integrators, Filters, LookupTable, Noise, Random, Frustum)
-**API Reference:** [../reference/math.md](../reference/math.md) · **Plan record:** [`../plans/03-simulation-engine-plan.md`](../plans/03-simulation-engine-plan.md)
+**API Reference:** [../reference/math.md](../reference/math.md) · **Plan record:** [`../plans/archive/03-simulation-engine-plan.md`](../plans/archive/03-simulation-engine-plan.md)
 
 ## Section plan
 

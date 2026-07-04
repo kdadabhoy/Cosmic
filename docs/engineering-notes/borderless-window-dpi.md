@@ -101,7 +101,7 @@ behaviors are added on the real `HWND` only.
 
 ## Addendum 2026-07-01 — Windowing plan W-series (fullscreen transitions, trace, modal pump)
 
-The windowing plan (`docs/plans/09-windowing-plan.md`) landed on top of this design; the pieces the
+The windowing plan (`docs/plans/archive/09-windowing-plan.md`) landed on top of this design; the pieces the
 next investigation will want:
 
 ### Start any window investigation with the trace

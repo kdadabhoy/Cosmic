@@ -8,7 +8,7 @@
 `math/Filters.h`, `math/LookupTable.h`, `math/Noise.h`, `math/Random.h`.
 (`math/Frustum.h` is documented in [rendering-3d.md](rendering-3d.md).)
 
-**Read first:** [`docs/plans/03-simulation-engine-plan.md`](../plans/03-simulation-engine-plan.md)
+**Read first:** [`docs/plans/archive/03-simulation-engine-plan.md`](../plans/archive/03-simulation-engine-plan.md)
 (E10–E15 acceptance notes are the design record); systems explainer
 [math-sim-toolkit](../systems/math-sim-toolkit.md). These are header-only, unit-tested,
 GL-free — every entry can cite its doctest.

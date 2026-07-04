@@ -4,7 +4,7 @@
 > the whole editor loop end-to-end. Everything below runs on the user's GPU (the
 > automated half — reflection, serialization, `.bak` rotation, recipe→spec
 > mapping, telemetry routing, boot.cfg — is covered by `CosmicTests`). Plan of
-> record: [`docs/plans/11-phase13-starforge-plan.md`](../plans/11-phase13-starforge-plan.md).
+> record: [`docs/plans/archive/11-phase13-starforge-plan.md`](../plans/archive/11-phase13-starforge-plan.md).
 
 The **Forge Playground** sample (offered on first run, or Home ▸ *Open "Forge
 Playground" sample*) is the fast path: it already contains terrain + a lake + a

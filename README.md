@@ -267,7 +267,7 @@ To request additional pre-docked panels beyond the three standard slots, call `W
 
 ## 1.5 Command Reference — Every Command
 
-Every command you can run against this SDK, in one place. All `.bat` scripts run from the **repo root** and pause on completion unless noted. (Contract: any PR that adds or changes a script, flag, or option updates this section — see `docs/plans/06-docs-plan.md` D1.)
+Every command you can run against this SDK, in one place. All `.bat` scripts run from the **repo root** and pause on completion unless noted. (Contract: any PR that adds or changes a script, flag, or option updates this section — see `docs/plans/12-documentation-plan.md` §11 (contract carried from archived doc 06 D1).)
 
 ### Build & setup scripts
 
@@ -4754,7 +4754,7 @@ allocation churn, the texture-slot dedup/lookup, the `DrawLines` bind contract, 
 release guard, and the missing `DrawRotatedQuad(vec2, Material)` overload). The limitations below are
 the ones that remain.
 
-The 2026-07-01 windowing pass (plan doc [`docs/plans/09-windowing-plan.md`](docs/plans/09-windowing-plan.md), W1–W6)
+The 2026-07-01 windowing pass (plan doc [`docs/plans/archive/09-windowing-plan.md`](docs/plans/archive/09-windowing-plan.md), W1–W6)
 shipped: `[WinTrace]` window-event instrumentation (`COSMIC_WINDOW_TRACE=1`), paint-through-transition
 fullscreen toggles (present-at-new-size within the toggle + `SWP_NOCOPYBITS`), the
 `SetFullscreenCompatMode(OversizeByOne)` anti-black-flash mode (**the default since 2026-07-02**, with

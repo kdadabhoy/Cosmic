@@ -1,7 +1,7 @@
 # viper-fc — portable Viper flight computer
 
 The flight code that will fly on the Teensy 4.1, developed and regression-tested inside
-[ViperSim](../) (plan: [`docs/plans/04-viper-sim-plan.md`](../../../docs/plans/04-viper-sim-plan.md)).
+[ViperSim](../) (plan: [`docs/plans/archive/04-viper-sim-plan.md`](../../../docs/plans/archive/04-viper-sim-plan.md)).
 
 - **Header-only C++17**, no `Arduino.h`, no engine, no STL containers in flight code, no heap
   after init. The same files compile in the ViperSim DLL (MSVC), the doctest unit tests, and the

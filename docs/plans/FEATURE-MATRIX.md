@@ -1,0 +1,123 @@
+# Feature Matrix — every missing/parked capability, its phase home, and its unlock
+
+> **Created 2026-07-04. This is a LIVING document** — the single cross-reference the roadmap
+> promises: *every* feature that is not shipped appears here exactly once, with where it will
+> be implemented (or why it is deliberately unplanned). When a feature ships, flip its Status
+> to ✅ + date and leave the row (history is cheap; hunting is not). When a new need appears,
+> add a row BEFORE writing code, and give it a phase home or an explicit "unplanned" verdict.
+>
+> Sibling documents: [`00-MASTER-ROADMAP.md`](00-MASTER-ROADMAP.md) sequences the phases;
+> each `docs/plans/1x-*.md` holds the work orders; `docs/design/modularity-audit.md` covers
+> *architectural* swappability (how to replace a system rather than add one).
+>
+> Legend — Size: S (≤1 session) · M (1–2) · L (3–6) · XL (a phase). Status: ☐ planned ·
+> ⏸ parked (has a phase home, waits for its unlock) · ✖ unplanned (needs a planning session
+> before any code) · ✅ shipped.
+
+## Editor & tooling
+
+| Feature | Today | Phase home | Unlock / trigger | Size | Status |
+| --- | --- | --- | --- | --- | --- |
+| Orbit camera without MMB jump (pose-based pivot) | look-at rig re-aims on press | 14 · doc 13 H1 | now (daily irritation) | M | ☐ |
+| Environment/sky/shadows/post live in editor + player | `Scene::OnRender3D` ignores `EnvironmentComponent` | 14 · doc 13 H2 | now | L | ☐ |
+| Scene lights affect default materials + light billboards | color path ignores lights UBO; lights invisible | 14 · doc 13 H3 | now | M | ☐ |
+| HDRI skies | enum exists, no loader | 14 · doc 13 H4 | now | M | ☐ |
+| Editor chrome: toolbar visible, one menu bar, panel ✕, viewport title | top dock clips toolbar; hard-coded names | 14 · doc 13 H5 | now | M | ☐ |
+| Native file dialogs everywhere | hand-typed paths; 2 ad-hoc usages | 14 · doc 13 H6 | now | M | ☐ |
+| Colored terminal logs; logs in `user://`; engine log in Console panel | pattern uncolored; logs land in content dirs | 14 · doc 13 H7 | now | S | ☐ |
+| ForgePlayground that demos well + scene-camera adoption | content buried in terrain; camera spawns underground | 14 · doc 13 H8 | now | M | ☐ |
+| SystemScript tier (logic over a *class* of entities) | per-entity scripts only | 14 · doc 13 H9 | now (user need #4) | M | ☐ |
+| Editor consistency sweep (labels, glyphs, Add-Component filtering) | assorted rough edges | 14 · doc 13 H10 | now | S | ☐ |
+| Material-edit undo + preview rig + browser thumbnails | live-but-not-undoable; no thumbnails | 20 · doc 19 A4 | first real material-authoring session pain | M | ⏸ |
+| In-place texture/asset hot reload into held Refs | cache-slot swap only | 20 · doc 19 A5 | live-tuning workflow | S | ⏸ |
+| Terrain sculpt/splat brushes | recipe params only | 20 · doc 19 A6 | param terrain stops being enough | L | ⏸ |
+| Prefab overrides v2 (field-level diff/propagation) | whole-instance apply/revert | 20 · doc 19 A7 | content-heavy project | M | ⏸ |
+| Wireframe / entity-ID view modes | no fill-mode verb | 19 · doc 18 R8 | opportunistic (editor QoL) | S | ⏸ |
+| Sequencer / cinematics (keyframes on reflected fields) | none | 21 · doc 20 C6 | trailer/cutscene need | L | ⏸ |
+| Undoable content-browser rename/delete | confirm-dialog only (by design, E10) | — | revisit only if it bites | S | ✖ |
+
+## Platform, shipping, projects
+
+| Feature | Today | Phase home | Unlock / trigger | Size | Status |
+| --- | --- | --- | --- | --- | --- |
+| Projects anywhere on disk (external folders, relocatable) | locked to `assets/projects/<name>` | 16 · doc 15 S1 | now (decision 2026-07-04) | M | ☐ |
+| Dedicated `Starforge.exe` + product homescreen/library | plugin tile + floating Home panel | 16 · doc 15 S2/S3 | now | M | ☐ |
+| Launcher as dev tool (grouping, copy) | flat DLL list | 16 · doc 15 S4 | now | S | ☐ |
+| Packaging v2: Release orchestration, exe icon, title/size, zip, installer, signing hook | current-config staging, no icon | 16 · doc 15 S5 | now | L | ☐ |
+| Per-app `user://` isolation (+ portable mode) | shared root | 16 · doc 15 S6 | now | M | ☐ |
+| Run-standalone button, save-thumbnails, About | — | 16 · doc 15 S7 | now | S | ☐ |
+| Binary asset pak | loose files | 20 · doc 19 A9 | shipped-app size/IO measured to matter | M | ⏸ |
+| Project templates gallery | one template + picker seam | 17 ships the 2D one | a third real template | S | ⏸ |
+| Cloud/team project sync, DB service | registry file over folders | — (doc 15 §3) | multi-machine/team | XL | ✖ |
+| Auto-update channel | — | — (doc 15 §3) | real users | L | ✖ |
+| macOS/Linux | Win32+GL only | — (doc 05 §12 reopen conditions, archived) | a second platform request | XL | ✖ |
+
+## Gameplay systems
+
+| Feature | Today | Phase home | Unlock / trigger | Size | Status |
+| --- | --- | --- | --- | --- | --- |
+| Rigid-body physics, colliders, queries, triggers (Jolt) | none | 15 · doc 14 J1–J5 | now (decision 2026-07-04) | XL | ☐ |
+| Character controller (walk/step/slope) | none | 15 · doc 14 J6 | with physics | M | ☐ |
+| Terrain heightfield collision | none | 15 · doc 14 J7 | with physics | M | ☐ |
+| Physics constraints/joints/ragdolls | — | 15 · doc 14 §3 | articulated-body project | L | ⏸ |
+| Rigid-body water buoyancy | script-applied forces via S9 queries | 15 · doc 14 §3 | floating-dynamics need | M | ⏸ |
+| In-game UI as entities (canvas/button/text/image) | ImGui only (editor chrome) | 17 · doc 16 U1/U2 | now | L | ☐ |
+| Screen-flow node graph (`.cflow` + FlowMachine + panel) | code-only SceneManager | 17 · doc 16 U5/U6 | now (user need #5) | L | ☐ |
+| 2D/pixel authoring (ortho mode, crisp sampling, sorting) | engine 2D exists, editor can't author it | 17 · doc 16 U3 | now (user need #2) | M | ☐ |
+| Sprite animation + tilemaps | none | 17 · doc 16 U4 | now | M | ☐ |
+| Game-view correctness (primary camera, aspect presets, eject) | editor camera always | 17 · doc 16 U7 | now | S | ☐ |
+| Voxel worlds (chunks, meshing, edit, collision, gen) | none | 18 · doc 17 V1–V7 | after 14–17 (user-approved scope) | XL | ☐ |
+| Visual *logic* scripting (blueprints) | — | — (doc 16 §3) | explicit demand post-flow; doctrine is C++ logic | XL | ✖ |
+| Navmesh / AI pathfinding | none | — | first AI-driven project (plan a phase then) | L | ✖ |
+| Networking / multiplayer | none (C1 gives UDP transport) | — | a networked project (plan a phase then) | XL | ✖ |
+| Save-game system | serializer exists; no slot/versioning layer | — | first game needing saves (likely doc 16-adjacent) | M | ✖ |
+| Input rebinding UI | codes + gamepad polling exist | — | first shipped game with options menu | M | ✖ |
+
+## Scripting
+
+| Feature | Today | Phase home | Unlock / trigger | Size | Status |
+| --- | --- | --- | --- | --- | --- |
+| Lua tier L1 (embed, reflection-generated bindings) | mapped in archived doc 11 §4 | 21 · doc 20 C3 | C++ reload latency hurts a real tuning loop, or modding need | L | ⏸ |
+| Lua L2 (live reload in Play, editor integration) | — | 21 · doc 20 C4 | with L1 | M | ⏸ |
+| Lua L3 (interop, budget, doc page) | — | 21 · doc 20 C5 | with L1/L2 | M | ⏸ |
+| Hot reload DURING Play (C++) | edit-mode only (by design, E12) | — | revisit with Lua decision | L | ✖ |
+
+## Rendering & audio quality (tier 2 — the doc 18 menu)
+
+| Feature | Today | Phase home | Unlock / trigger | Size | Status |
+| --- | --- | --- | --- | --- | --- |
+| Cascaded shadow maps | single 2k map + camera-follow workaround | 19 · doc 18 R1 | shadow range complaints | L | ⏸ |
+| Depth prepass + ambient-only SSAO | whole-image composite | 19 · doc 18 R2 | SSAO dirtying lit surfaces | M | ⏸ |
+| Progressive bloom | Gaussian pyramid | 19 · doc 18 R3 | shimmer complaints / cinematic pass | M | ⏸ |
+| Froxel volumetrics | shadow-map raymarch god rays | 19 · doc 18 R4 | local fog volumes / multi-light shafts | L | ⏸ |
+| FFT ocean (water tier 2) | 8-wave Gerstner | 19 · doc 18 R5 | open-ocean scale app | L | ⏸ |
+| Terrain tessellation + holes | quadtree LOD, no holes | 19 · doc 18 R6 | silhouette quality / cave entrances | L | ⏸ |
+| Particle indirect draw + sorting | fixed-count quads, unsorted | 19 · doc 18 R7 | effects-heavy overdraw measured | M | ⏸ |
+| BCn/KTX2 compressed textures | none (audited: not needed yet) | 19 · doc 18 R9 | VRAM/load-time pressure | M | ⏸ |
+| Projected decals | none | 19 · doc 18 R10 | content polish need | M | ⏸ |
+| Skybox LEQUAL depth verb | background-first draw | 19 · doc 18 R11 | pair with any sky work | S | ⏸ |
+| World-system builder registry (swap water/terrain impls) | concrete factories behind data recipes | 19 · doc 18 R12 | a second implementation must coexist | S | ⏸ |
+| Positional/3D audio (panning, doppler, streaming) | distance-gain loops app-side | 21 · doc 20 C2 | true 3D audio need | M | ⏸ |
+| Vulkan / second RHI backend | **stay on OpenGL** (S13.3 provisional-closed) | — | doc 05 §12 reopen conditions (archived): GL perf wall, platform need, or driver pain | XL | ✖ |
+| MSAA (vs FXAA) | FXAA ships | — | perceived AA quality issue on thin geometry | M | ✖ |
+
+## Assets & animation
+
+| Feature | Today | Phase home | Unlock / trigger | Size | Status |
+| --- | --- | --- | --- | --- | --- |
+| assimp backend ON (FBX/STL/DAE/PLY live) | written, gated off (`COSMIC_WITH_ASSIMP`) | 20 · doc 19 A1 | now (anchor of Phase 20) | M | ☐ |
+| Skeletal animation (skins/clips/skinning) | none | 20 · doc 19 A2 | a character project (pull earlier if one appears) | XL | ⏸ |
+| Animation blend trees / state machines | — | — (doc 19 A2 parks it) | after A2 + a real character | L | ✖ |
+| STEP/CAD B-rep import (`step2gltf` tool) | STL path only | 20 · doc 19 A3 | STEP-only workflow appears | L | ⏸ |
+| CSG booleans (manifold) | primitives only | 20 · doc 19 A8 | modeling outgrows primitives | M | ⏸ |
+| Connectivity: UDP sockets | serial only | 21 · doc 20 C1 | UDP telemetry/sim link need | S | ⏸ |
+
+## Standing user-acceptance ledger (not features — recorded here so nothing silently drops)
+
+| Item | Origin |
+| --- | --- |
+| Viper gates G1 (hover w/ gusts — estimator suspect), G2, G3 + committed recordings; Teensy HIL flight; gimbal rig | archived doc 04 (app-side by decision 2026-07-04) |
+| Phase 12 on-GPU perf pass (cull %, auto-instance, LOD swaps; 5 Frontier worlds ≥60 fps, CPU≪GPU) + screenshots | archived doc 05 §"S12" |
+| Phase 13 recorded acceptance demo (new project → import → scene → script → Play/telemetry → package → clean run) | archived doc 11 E21 / `docs/design/starforge-acceptance-demo.md` |
+| W3 DWM compat-mode decision + interactive repro matrix (snip overlay, 125 % laptop) | archived doc 09 §3.5 |
+| Water look tuning (from-below surface, caustics/shafts) | `docs/design/water-rendering-notes.md` |

@@ -5,7 +5,7 @@ The Cosmic-side counterpart to what Gazebo+SITL is for ArduPilot: fly the vehicl
 in software, develop the same C++ control code that will run on the Teensy 4.1
 (the [`viper-fc`](viper-fc/) library), replay every flight, then drive the
 real board (HIL) and a physical rig. Plan:
-[`docs/plans/04-viper-sim-plan.md`](../../docs/plans/04-viper-sim-plan.md).
+[`docs/plans/archive/04-viper-sim-plan.md`](../../docs/plans/archive/04-viper-sim-plan.md).
 
 ## Status
 

@@ -1,6 +1,12 @@
-# Docs Plan v2 — README Overhaul, API Reference, System Explainers (D5–D36)
+# Docs Plan v2 — README Overhaul, API Reference, System Explainers (D5–D40)
 
-> **Created 2026-07-03.** Supersedes [`06-docs-plan.md`](06-docs-plan.md):
+> **Extended 2026-07-04 (roadmap v3):** added §13 (the **Starforge user manual**, D37–D39 —
+> the user's "document explaining all Starforge features") and §14 (**per-phase documentation
+> hooks**, D40 — the standing rule + per-phase checklist that keeps docs current as Phases
+> 14–21 ship). Diagram inventory §4 gained DG-15…DG-18. Doc 06 now lives in
+> [`archive/06-docs-plan.md`](archive/06-docs-plan.md).
+>
+> **Created 2026-07-03.** Supersedes [`archive/06-docs-plan.md`](archive/06-docs-plan.md):
 > - **D1** (§1.5 command-reference contract) — *carried forward unchanged*, and extended by
 >   this plan's API-reference contract (§11).
 > - **D2** (§40 packaging refresh) — *absorbed into D23*.
@@ -165,6 +171,10 @@ tests/check_docs_coverage.ps1      ← NEW (D5) + a ci.yml step
 | DG-12 | flowchart LR | Job system: main-thread frame lanes vs worker pool, submit/wait sync points, GL-stays-on-main rule | README §22, jobs-parallelism | JobSystem.cpp |
 | DG-13 | flowchart LR | Telemetry: device/sim → SerialPort/SerialLink → framing/decode → channels (columnar) → recorder file ⇄ player → panel/plots | README §26, serial-telemetry | telemetry/*, serial/* |
 | DG-14 | flowchart TD | Packaging: source → Release build → cmake --install staging → dist/<App> prune → zip / Inno installer | README §40, build-plugin-packaging | package.bat, CosmicSetup.iss |
+| DG-15 | flowchart TD | Starforge architecture: editor DLL ⇄ engine seams (reflect/serializer/CommandStack/ScriptHost/SceneManager) ⇄ project folder ⇄ game DLL (two exports) | starforge manual §1, systems/build-plugin-packaging | archived doc 11 §2.1 (verify vs code) |
+| DG-16 | sequenceDiagram | Project lifecycle: New → scaffold → edit/save (.cscene) → Build Scripts (hot reload steps 1–5) → Play (snapshot→runtime scene) → Package → standalone boot (boot.cfg → PlayerLayer) | starforge manual §2/§7 | StarforgeApp.cpp, GameModule.cpp, PlayerLayer.cpp |
+| DG-17 | stateDiagram-v2 | FlowMachine: states/transitions/guards/overlay push-pop (once doc 16 U5 ships) | starforge manual flow chapter, reference/ecs or new flow chapter | scene/FlowMachine.h |
+| DG-18 | flowchart LR | Physics tick order: scripts OnFixedUpdate → PhysicsWorld::Step → transform write-back → collision events (once doc 14 J4 ships) | README physics §, systems explainer | scene/Scene.cpp physics hooks |
 
 ---
 
@@ -417,7 +427,77 @@ Three standing rules — copy into any PR checklist:
    if your PR touches a truth source, re-verify its diagrams) + the README section if
    client-visible.
 
-## 12. Kickoff prompt (paste for each implementation session)
+## 13. Phase F — Starforge user manual (D37–D39) *(added 2026-07-04)*
+
+A fourth tier: the **product manual** for Starforge users (people *using* the editor, not
+engine clients — a different reader than all three existing tiers). Home: `docs/starforge/`
+(index + chapters). Format: task-oriented, screenshot-friendly (screenshots are user-captured
+— the text must stand alone without them), every claim verified against the running editor.
+`docs/design/starforge-ui.md` (the Stage-D quick guide) is **absorbed** by D39 and becomes a
+pointer. Chapters marked *(P14+)* document behavior only after the named phase ships — write
+them in the same order the phases land.
+
+### D37 — Manual skeleton + core chapters — M
+```
+NEW docs/starforge/README.md (index + reading order) and chapters:
+ 01-getting-started.md   launch (Launcher today / Starforge.exe after doc 15 S2), homescreen,
+                         open the ForgePlayground sample, first scene tour
+ 02-projects.md          project anatomy (project.cproj, scenes/, src/, assets/), where
+                         projects live (external folders after doc 15 S1), registry, autosave/.bak
+ 03-scenes-entities.md   hierarchy, Inspector (reflection-driven), undo model, prefabs,
+                         camera navigation (post-H1 behavior), viewport tools/gizmos/bookmarks
+Acceptance: a reader who has never seen Starforge reaches an edited+saved scene; every
+hotkey/menu named exists in the build; index links resolve.
+```
+**Status:** ☐
+
+### D38 — Authoring chapters — L
+```
+NEW docs/starforge/: 04-primitives-import.md (parametric shapes, .cmeta units, assimp status),
+05-materials-environment.md (.cmat workflow, environment panel incl. HDRI after H4),
+06-world-systems.md (terrain/water/particle recipes, presets, .cemitter), 07-2d-ui-flow.md
+(P17: sprites, tilemaps, UI entities, flow graph). Each chapter ends "Under the hood" linking
+the matching docs/systems/ explainer (no fact forking, note 7).
+Acceptance: each workflow reproduced start-to-finish from the text alone.
+```
+**Status:** ☐
+
+### D39 — Logic, play, ship chapters + absorb the quick guide — L
+```
+NEW docs/starforge/: 08-scripting.md (C++ scripts, SystemScripts after H9, hot reload,
+telemetry marks; Lua pointer to its matrix row), 09-play-telemetry.md (play/pause/step,
+recording, takes, CSV), 10-packaging.md (Package dialog, icon [P16], installer/zip [P16],
+clean-machine checklist), 11-shortcuts.md (generated from the Help modal's table — keep in
+sync rule), plus DG-15/DG-16 built here. REWRITE docs/design/starforge-ui.md → 5-line pointer
+to the manual. Acceptance: E21's acceptance-demo script can be executed by a new user from
+the manual alone; check_docs_coverage untouched (manual is not API-reference scope).
+```
+**Status:** ☐
+
+## 14. Phase G — per-phase documentation hooks (D40, standing) *(added 2026-07-04)*
+
+**D40 is not one session — it is a standing checklist** executed as the LAST work order of
+every implementation phase (14–21), plus one bookkeeping pass now:
+
+| When phase ships | README (decimal §, note 6) | reference/ chapter rows | systems/ explainer | Manual chapter | Diagrams |
+| --- | --- | --- | --- | --- | --- |
+| 14 (hardening) | update §8.6 (env live in editor), §16.5 (camera feel) | cameras.md (new orbit semantics), core.md (Log sinks), ui.md (chrome verbs), assets-io (FileDialog) | rendering-pipeline (editor path note) | D37/D38 updates | — |
+| 15 (physics) | NEW §9.5 Physics | NEW physics.md chapter + manifest row | NEW physics.md explainer | 08-scripting physics API | DG-18 |
+| 16 (platform) | §40 refresh (packaging v2), §1.5 sweep (new flags/keys) | assets-io (mounts, user:// policy) | build-plugin-packaging update | 01/02/10 updates | DG-14 refresh |
+| 17 (UI/flow/2D) | NEW §10.5 In-game UI & flow; §8 2D notes | NEW ui-runtime rows (or ui.md §) | ecs-scene update | 07 chapter | DG-17 |
+| 18 (voxel) | NEW §8.9 Voxels | NEW voxel.md chapter | NEW voxel explainer | 06 update | — |
+| 19 (rendering menu) | per-item §8.6/§8.8 notes | rendering-pipeline/world-systems rows | terrain/water/particles updates | 05/06 updates | DG-8 refresh |
+| 20 (assets/anim) | §8.5 animation note; import § update | NEW animation rows; assets-io | NEW animation explainer §or doc | 04 update | — |
+| 21 (scripting/conn) | §22.7/§26 updates; Lua § if built | serial-telemetry (UDP), audio (positional) | audio/serial updates | 08 update | — |
+
+Bookkeeping pass now (part of any next docs session): add the table above as tracked rows,
+and extend the §11 upkeep contract with rule 4: **"a phase's final work order runs its D40
+row"** — the per-phase plan docs' kickoff prompts already end with acceptance/banner
+discipline; reviewers enforce the doc row the same way.
+
+**Status (D40 bookkeeping):** ☐
+
+## 15. Kickoff prompt (paste for each implementation session)
 
 > Read `docs/plans/12-documentation-plan.md` §0 fully, then work order **D\<n\>** only. Open
 > the skeleton file(s) named in the item — the skeleton's scope list, checklist, and truth

@@ -8,7 +8,7 @@
 managed loops in named groups, and it all degrades safely to silence on machines with no
 audio device (so tests and headless runs never crash).
 **Source:** `Cosmic/src/audio/AudioEngine.h`, `audio/Sound.h`, `audio/Audio.cpp`, `audio/MiniaudioImpl.cpp`
-**API Reference:** [../reference/audio.md](../reference/audio.md) · **Plan record:** [`../plans/08-audio-plan.md`](../plans/08-audio-plan.md)
+**API Reference:** [../reference/audio.md](../reference/audio.md) · **Plan record:** [`../plans/archive/08-audio-plan.md`](../plans/archive/08-audio-plan.md)
 
 ## Section plan
 

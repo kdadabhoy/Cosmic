@@ -19,5 +19,5 @@ drag/resize/modal loops.
 5. **Design decisions** — link `../design/responsive-rendering-and-pause.md`; W3 DWM compat-mode mechanism (shipped default-off) and the pending user repro matrix (doc 09 §3.5). <!-- TODO(D26) -->
 6. **Limits & future work** — known DPI edges, snip-overlay findings table pointer. <!-- TODO(D26) -->
 
-**Truth sources:** `docs/plans/09-windowing-plan.md` (W-series banners = the record),
+**Truth sources:** `docs/plans/archive/09-windowing-plan.md` (W-series banners = the record),
 `Window.cpp`, README §24.
