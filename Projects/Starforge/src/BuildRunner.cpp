@@ -45,7 +45,29 @@ namespace Starforge
     }
 
     void BuildRunner::Start(const std::string& projectDir, const std::string& sdkDir,
-                            const std::string& hotSuffix)
+                            const std::string& hotSuffix, const std::string& config,
+                            const std::string& gameOutputDir)
+    {
+        const std::string cmake    = FindCMake();
+        const std::string buildDir = projectDir + "/build";
+
+        std::string cfg =
+            "\"" + cmake + "\" -S \"" + projectDir + "\" -B \"" + buildDir +
+            "\" -A x64 -DCOSMIC_SDK_DIR=\"" + sdkDir + "\" -DGAME_HOT_SUFFIX=" + hotSuffix;
+        if (!gameOutputDir.empty())
+            cfg += " -DGAME_OUTPUT_DIR=\"" + gameOutputDir + "\"";
+
+        const std::string bld =
+            "\"" + cmake + "\" --build \"" + buildDir + "\" --config " + config + " --parallel";
+
+        std::vector<BuildStep> steps = {
+            { "[build] configuring " + projectDir, cfg },
+            { "[build] compiling (" + config + ")", bld },
+        };
+        StartSteps(std::move(steps));
+    }
+
+    void BuildRunner::StartSteps(std::vector<BuildStep> steps)
     {
         if (IsBuilding())
             return;
@@ -61,14 +83,12 @@ namespace Starforge
         m_ResultDelivered = false;
         m_Status.store(Status::Building);
 
-        m_Thread = std::thread(&BuildRunner::Run, this, projectDir, sdkDir, hotSuffix);
+        m_Thread = std::thread(&BuildRunner::RunSteps, this, std::move(steps));
     }
 
-    void BuildRunner::Run(std::string projectDir, std::string sdkDir, std::string hotSuffix)
+    void BuildRunner::RunSteps(std::vector<BuildStep> steps)
     {
-        const std::string cmake    = FindCMake();
-        const std::string buildDir = projectDir + "/build";
-        const std::string logFile  = (fs::temp_directory_path() / "starforge_build.log").string();
+        const std::string logFile = (fs::temp_directory_path() / "starforge_build.log").string();
 
         auto push = [&](const std::string& s)
         {
@@ -90,30 +110,22 @@ namespace Starforge
             return std::system(("\"" + cmd + "\"").c_str());
         };
 
-        push("[build] configuring " + projectDir);
-        const std::string cfg =
-            "\"" + cmake + "\" -S \"" + projectDir + "\" -B \"" + buildDir +
-            "\" -A x64 -DCOSMIC_SDK_DIR=\"" + sdkDir + "\" -DGAME_HOT_SUFFIX=" + hotSuffix +
-            " > \"" + logFile + "\" 2>&1";
-        int rc = runCmd(cfg);
-        drainLog();
-        if (rc != 0)
+        for (const BuildStep& step : steps)
         {
-            push("[build] configure FAILED (exit " + std::to_string(rc) + ")");
-            m_Result.store(false);
-            m_Finished.store(true);
-            return;
+            push(step.Label);
+            const int rc = runCmd(step.Command + " > \"" + logFile + "\" 2>&1");
+            drainLog();
+            if (rc != 0)
+            {
+                push("[build] FAILED (exit " + std::to_string(rc) + ")");
+                m_Result.store(false);
+                m_Finished.store(true);
+                return;
+            }
         }
 
-        push("[build] compiling (Debug)");
-        const std::string bld =
-            "\"" + cmake + "\" --build \"" + buildDir + "\" --config Debug --parallel"
-            " > \"" + logFile + "\" 2>&1";
-        rc = runCmd(bld);
-        drainLog();
-
-        m_Result.store(rc == 0);
-        push(rc == 0 ? "[build] SUCCESS" : "[build] FAILED (exit " + std::to_string(rc) + ")");
+        m_Result.store(true);
+        push("[build] SUCCESS");
         m_Finished.store(true);
     }
 

@@ -40,12 +40,12 @@
 
 | Feature | Today | Phase home | Unlock / trigger | Size | Status |
 | --- | --- | --- | --- | --- | --- |
-| Projects anywhere on disk (external folders, relocatable) | locked to `assets/projects/<name>` | 16 · doc 15 S1 | now (decision 2026-07-04) | M | ☐ |
-| Dedicated `Starforge.exe` + product homescreen/library | plugin tile + floating Home panel | 16 · doc 15 S2/S3 | now | M | ☐ |
-| Launcher as dev tool (grouping, copy) | flat DLL list | 16 · doc 15 S4 | now | S | ☐ |
-| Packaging v2: Release orchestration, exe icon, title/size, zip, installer, signing hook | current-config staging, no icon | 16 · doc 15 S5 | now | L | ☐ |
-| Per-app `user://` isolation (+ portable mode) | shared root | 16 · doc 15 S6 | now | M | ☐ |
-| Run-standalone button, save-thumbnails, About | — | 16 · doc 15 S7 | now | S | ☐ |
+| Projects anywhere on disk (external folders, relocatable) | locked to `assets/projects/<name>` | 16 · doc 15 S1 | now (decision 2026-07-04) | M | ✅ 2026-07-05 |
+| Dedicated `Starforge.exe` + product homescreen/library | plugin tile + floating Home panel | 16 · doc 15 S2/S3 | now | M | ✅ 2026-07-05 |
+| Launcher as dev tool (grouping, copy) | flat DLL list | 16 · doc 15 S4 | now | S | ✅ 2026-07-05 |
+| Packaging v2: Release orchestration, exe icon, title/size, zip, installer, signing hook | current-config staging, no icon | 16 · doc 15 S5 | now | L | ✅ 2026-07-05 |
+| Per-app `user://` isolation (+ portable mode) | shared root | 16 · doc 15 S6 | now | M | ✅ 2026-07-05 |
+| Run-standalone button, save-thumbnails, About | — | 16 · doc 15 S7 | now | S | ✅ 2026-07-05 |
 | Binary asset pak | loose files | 20 · doc 19 A9 | shipped-app size/IO measured to matter | M | ⏸ |
 | Project templates gallery | one template + picker seam | 17 ships the 2D one | a third real template | S | ⏸ |
 | Cloud/team project sync, DB service | registry file over folders | — (doc 15 §3) | multi-machine/team | XL | ✖ |

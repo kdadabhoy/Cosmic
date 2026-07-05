@@ -107,7 +107,7 @@ debug draw → samples + determinism proof.
   apps create no `PhysicsWorld`). Remaining = the user's on-GPU acceptance demo + commit
   (see doc 14's STATUS banner).
 
-### Phase 16 — App platform & shipping *(doc 15, S1–S8)* — ☐
+### Phase 16 — App platform & shipping *(doc 15, S1–S8)* — ✅ code-complete 2026-07-05
 External project folders (VFS mounts + registry) → `Starforge.exe` boot → product homescreen
 library → Launcher back to dev tool → packaging v2 (Release orchestration, icon embed,
 title/size, zip, Inno, signing hook, CI release job, `--replay` assoc) → per-app `user://`
@@ -115,6 +115,15 @@ isolation → run-standalone/thumbnails/About → clean-machine acceptance.
 - **AI tier:** S1/S6 stronger model (VFS + data-location compat); S2–S5/S7 medium.
 - **Done when:** doc 15 S8's clean-machine run passes for both a packaged app and packaged
   Starforge itself.
+- **Status 2026-07-05:** all 8 work orders (S1–S8) landed (UNcommitted). Engine gained
+  `FileSystem` PATH-mode mounts + per-app `SetAppIdentity`, `ExeResources` (icon embed),
+  `ImageIO::WritePNG`, `FrameBuffer::ReadPixels`, `Window::SetSize/SetTitle`; PlayerLayer reads
+  `[window]` keys. Editor gained the external-project model (registry v2 + migration,
+  project-local builds + DLL search), the product homescreen library, `Packager` (Release
+  orchestration + icon + zip + installer + sign hook), Project Settings, Run Standalone,
+  thumbnails, About; Starforge self-packages. Launcher reframed as the dev/demo browser.
+  Build green Debug+Release 5 projects zero warnings, `CosmicTests` **219/219**, GL-conformance
+  clean, compat gate held. Remaining = the user's clean-machine acceptance (S8 ledger row) + commit.
 
 ### Phase 17 — UI, screen flow, 2D *(doc 16, U1–U8)* — ☐
 UI entities (canvas/rect/button/text/image + hit-testing) → scene event bus → 2D authoring
@@ -159,6 +168,7 @@ sessions; run any time.
 
 | Item | Origin |
 | --- | --- |
+| Phase 16 clean-machine acceptance (script: `docs/design/app-platform-acceptance.md`): author an external project → package with icon/zip/installer → on a clean VM the app runs with its icon/title, isolates user data to LOCALAPPDATA, `--replay` works; `dist/Starforge` passes the same test | doc 15 S8 |
 | Phase 15 on-GPU physics acceptance: author ground+boxes+character in-editor → Play (stack settles, character walks, telemetry records), package (E19) → shipped exe simulates identically; collider-gizmo + Physics-Debug visual pass | doc 14 J9 |
 | Phase 13 recorded acceptance demo (script: `docs/design/starforge-acceptance-demo.md`) | archive/11 E21 |
 | Phase 12 on-GPU perf pass (cull/instance/LOD evidence; 5 Frontier worlds ≥60 fps, CPU≪GPU) + screenshots | archive/05 §10 |

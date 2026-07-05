@@ -40,10 +40,14 @@ namespace Starforge
 
     struct EditorContext
     {
-        // --- Project (E6) --------------------------------------------------
+        // --- Project (E6 / S1) ---------------------------------------------
         bool        ProjectOpen = false;
         std::string ProjectName;            // VFS active-project folder (FileSystem)
         std::string ProjectTitle;           // human-readable, for the window title
+        // Absolute root of a self-contained external project folder (S1). Empty for
+        // a legacy in-tree project (assets/projects/<ProjectName>); when set, the
+        // FileSystem is in project:// PATH mode and build/ + .starforge/ live here.
+        std::string ProjectPath;
 
         // --- Scene (E2/E6) -------------------------------------------------
         Cosmic::Ref<Cosmic::Scene> Scene;

@@ -216,6 +216,12 @@ namespace Cosmic
         void Maximize();
         void Restore();
         void ToggleMaximize();
+
+        // Runtime window identity (S5): a packaged app opens at its authored title
+        // and size (project.cproj [window] keys, applied by PlayerLayer on attach).
+        // SetSize is a no-op while fullscreen and clamps out absurd values.
+        void SetTitle(const std::string& title);
+        void SetSize(int width, int height);
         // NOTE: named IsWindowMaximized (not IsMaximized) because <windows.h>
         // defines IsMaximized as a macro aliasing IsZoomed.
         bool IsWindowMaximized() const;

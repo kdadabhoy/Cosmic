@@ -18,6 +18,8 @@
 
 #include "EditorContext.h"
 #include "EditorPrefs.h"
+#include "ProjectManifest.h"
+#include "Packager.h"
 #include "ViewportController.h"
 #include "GameModule.h"
 #include "BuildRunner.h"
@@ -35,6 +37,7 @@
 #include <mutex>
 #include <memory>
 #include <utility>
+#include <unordered_map>
 
 namespace Starforge
 {
@@ -51,24 +54,31 @@ namespace Starforge
         virtual void OnEvent(Cosmic::Event& e) override;
 
     private:
-        // --- Project / scene lifecycle (E6) --------------------------------
-        void OpenProject(const std::string& name);
-        void NewProject(const std::string& name);
-        bool ScaffoldProject(const std::string& name);   // E12 — from templates/
+        // --- Project / scene lifecycle (E6 / S1 external folders) ----------
+        void OpenProject(const Prefs::ProjectEntry& entry);   // mount + load + register
+        void OpenProject(const std::string& name);            // legacy in-tree convenience
+        bool OpenProjectPath(const std::string& absoluteRoot);// validate + open an external folder
+        bool NewProjectAt(const std::string& name, const std::string& location);
+        bool ScaffoldProjectTo(const std::string& name, const std::string& destRoot);
+        bool ScaffoldProject(const std::string& name);        // legacy: assets/projects/<name>
+        void MountProject(const Prefs::ProjectEntry& entry);   // FileSystem mount + m_Ctx fields
         void CloseProject();
 
-        // --- Game module build & hot reload (E12) --------------------------
+        // --- Game module build & hot reload (E12 / S1) ---------------------
         void        BuildScripts();                      // Ctrl+B — background cmake
         void        ReloadModule(const std::string& dllStem);
         void        DrawBuildControls();
         bool        ProjectIsScaffolded() const;         // has a src/ + CMakeLists.txt
-        std::string ProjectDir() const;                  // absolute assets/projects/<name>
+        std::string ProjectDir() const;                  // absolute project root (external or in-tree)
+        std::string ProjectContentDir() const;           // where scenes/models/… live on disk
+        std::string ProjectBuildDir() const;             // external "<root>/build" ("" => SDK output)
+        std::string ModuleSearchDir() const;             // external "<root>/build/<cfg>" ("" => app dir)
+        void        CleanStaleHotDlls(const std::string& keepStem);
         std::string SdkDir() const;                      // COSMIC_SDK or dev-tree root
         void NewScene();
         void OpenScene(const std::string& vfsPath);
         bool SaveScene();                 // false if it needs a name (opens Save As)
         void SaveSceneToVfs(const std::string& vfsPath);
-        void BuildSandboxScene();
 
         // --- Play mode (E13) -----------------------------------------------
         // Play snapshots the edit scene to JSON, builds a fresh runtime scene from
@@ -91,16 +101,29 @@ namespace Starforge
         void DrawTopBar();                // menus + tool strip (docked window)
         void DrawMenus();
         void DrawEntityMenu();
-        void DrawHomescreen();
         void DrawSaveAsPopup();
+
+        // --- Product homescreen / project library (S3) ---------------------
+        void DrawHomescreen();
+        void DrawProjectCard(const Prefs::ProjectEntry& e, float cardW);
+        Cosmic::Ref<Cosmic::Texture2D> ThumbFor(const Prefs::ProjectEntry& e);
 
         // --- Model import (E16) --------------------------------------------
         void DrawImportModelPopup();
         bool ImportModelFile(const std::string& srcPath);   // copy into project://models/ + spawn
 
-        // --- Package & ship (E19) ------------------------------------------
+        // --- Package & ship (E19 / S5, S2) ---------------------------------
         void DrawPackagePopup();
-        void PackageProject();   // stage a standalone dist/<Project>/ from the build outputs
+        void DrawProjectSettingsPopup();   // icon + window title/size -> project.cproj
+        void PackageProject();             // orchestrate (Release build ->) stage -> finalize
+        void PackageStarforge();           // S2 — self-package the editor as a product
+        void OnPackageBuildDone(bool ok);  // package-build completion (from BuildRunner Poll)
+        bool BeginPackage(const Prefs::ProjectEntry& target);   // shared by project + Starforge
+
+        // --- Editor conveniences (S7) --------------------------------------
+        void RunStandalone();     // launch the app as if double-clicked
+        void CaptureThumbnail();  // blit the viewport into <root>/.starforge/thumb.png
+        void DrawAboutPopup();
 
         // --- Polish (E21) --------------------------------------------------
         void DrawStatsWindow();  // entity + Renderer3D draw statistics
@@ -147,6 +170,11 @@ namespace Starforge
         Cosmic::FileWatcher m_SrcWatcher;
         bool                m_SrcWatchOn = false;
 
+        // Whether the active build feeds hot reload or the packaging pipeline (S5),
+        // so the shared BuildRunner Poll dispatches correctly.
+        enum class BuildPurpose { HotReload, Package };
+        BuildPurpose        m_BuildPurpose = BuildPurpose::HotReload;
+
         HierarchyPanel      m_Hierarchy;
         InspectorPanel      m_Inspector;
         ContentBrowserPanel m_Content;
@@ -169,8 +197,18 @@ namespace Starforge
         bool  m_OpenSaveAs      = false;
         bool  m_OpenImportModel = false;
         bool  m_OpenPackage     = false;
+        bool  m_OpenProjectSettings = false;   // S5 — icon + window identity editor
+        bool  m_OpenAbout       = false;       // S7 — About dialog
+        bool  m_ThumbRequested  = false;       // S7 — capture thumbnail on the next render
         std::string m_LastDistDir;             // last packaged output (E19)
         float m_AutosaveTimer   = 0.0f;
+
+        // Packaging pipeline state (S5). m_PkgPending is filled before an async
+        // Release build and consumed when it finishes.
+        PackageOptions m_PkgOpt;
+        PackageInputs  m_PkgPending;
+        bool           m_PkgAwaitingBuild = false;
+        char           m_IconPathBuf[512] = "";
 
         // View-menu panel toggles.
         bool m_ShowHierarchy = true, m_ShowInspector = true,
@@ -185,7 +223,14 @@ namespace Starforge
 
         // Homescreen / dialogs scratch.
         char m_NewProjectName[128] = "MyProject";
+        char m_NewProjectLoc[512]  = "";      // S3 — New Project location (folder)
         char m_SaveAsName[128]     = "Main";
         char m_ImportPath[512]     = "";
+        char m_HomeSearch[128]     = "";      // S3 — library filter
+        std::string m_HomeSelected;           // S3 — selected card key (path or name)
+
+        // Thumbnail texture cache (S3): key = absolute thumb path; a null Ref means
+        // "checked, none on disk" so we never re-hit the filesystem per frame.
+        std::unordered_map<std::string, Cosmic::Ref<Cosmic::Texture2D>> m_ThumbCache;
     };
 }

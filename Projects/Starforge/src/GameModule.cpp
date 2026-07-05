@@ -4,6 +4,8 @@
 
 #include <Cosmic.h>   // ModuleRegistry, Log
 
+#include <filesystem>
+
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
@@ -21,15 +23,30 @@ namespace Starforge
         Unload();
     }
 
-    bool GameModule::Load(const std::string& moduleName, const std::string& dllStem)
+    bool GameModule::Load(const std::string& moduleName, const std::string& dllStem,
+                          const std::string& searchDir)
     {
         Unload();
 
+        namespace fs = std::filesystem;
         const std::string dll = dllStem + ".dll";
-        HMODULE h = ::LoadLibraryA(dll.c_str());
+
+        // External project (S1): load "<root>/build/<cfg>/<stem>.dll" by absolute
+        // path. LoadLibrary still resolves the DLL's Cosmic.dll dependency from the
+        // exe dir (always on the loader search path), so no PATH juggling is needed.
+        std::string loadPath = dll;
+        if (!searchDir.empty())
+        {
+            std::error_code ec;
+            const fs::path abs = fs::path(searchDir) / dll;
+            if (fs::exists(abs, ec))
+                loadPath = abs.generic_string();
+        }
+
+        HMODULE h = ::LoadLibraryA(loadPath.c_str());
         if (!h)
         {
-            CS_ERROR("GameModule: LoadLibrary('{0}') failed (err {1}).", dll, (unsigned)::GetLastError());
+            CS_ERROR("GameModule: LoadLibrary('{0}') failed (err {1}).", loadPath, (unsigned)::GetLastError());
             return false;
         }
 

@@ -29,10 +29,16 @@ namespace Starforge
         GameModule(const GameModule&)            = delete;
         GameModule& operator=(const GameModule&) = delete;
 
-        // Load "<dllStem>.dll" from the app directory and run CosmicModule_Register
-        // (which BeginModule(moduleName)-tags its registrations). Returns false and
-        // logs on any failure. Unloads a previous module first.
-        bool Load(const std::string& moduleName, const std::string& dllStem);
+        // Load "<dllStem>.dll" and run CosmicModule_Register (which
+        // BeginModule(moduleName)-tags its registrations). Returns false and logs on
+        // any failure. Unloads a previous module first.
+        //
+        // searchDir (S1): an absolute directory to try FIRST — an external project's
+        // "<root>/build/<cfg>/". Empty ⇒ legacy behavior (load "<stem>.dll" from the
+        // app dir, where in-tree projects and the Launcher already put it). The app
+        // dir is always searched for the DLL's own dependency (Cosmic.dll).
+        bool Load(const std::string& moduleName, const std::string& dllStem,
+                  const std::string& searchDir = "");
 
         // UnregisterModule(moduleName) from the ModuleRegistry, then FreeLibrary.
         void Unload();

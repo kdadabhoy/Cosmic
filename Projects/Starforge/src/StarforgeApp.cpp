@@ -11,11 +11,17 @@
 #include "scene/Components.h"
 #include "scene/SceneSerializer.h"
 #include "graphics/Mesh.h"
+#include "graphics/Texture.h"
+#include "graphics/FrameBuffer.h"
+#include "core/Version.h"
 #include "utils/FileSystem.h"
 
 #include <imgui.h>
 #include <implot.h>
 
+#include <algorithm>
+#include <cctype>
+#include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <sstream>
@@ -101,15 +107,12 @@ namespace Starforge
         // commands also mark dirty directly).
         m_Ctx.Commands.SetDirtyCallback([this] { m_Ctx.MarkDirty(); });
 
-        // Boot straight into the editor's built-in project + a sandbox scene so
-        // the viewport has content. New/Open Project switch via the homescreen.
-        m_Ctx.ProjectOpen  = true;
-        m_Ctx.ProjectName  = "Starforge";
-        m_Ctx.ProjectTitle = "Starforge";
-        BuildSandboxScene();
-        Prefs::AddRecentProject("Starforge");
+        // Boot into the product homescreen (S2/S3): the project library, not a
+        // sandbox. FileSystem stays pointed at the editor's own bundled assets so a
+        // stray project:// read resolves there until a real project opens.
+        m_Ctx.ProjectOpen = false;
 
-        m_Ctx.Log("[Starforge] Editor attached — Stage B (E6-E10).");
+        m_Ctx.Log("[Starforge] Editor attached — open or create a project from the homescreen.");
         m_Ctx.Log("[Starforge] Viewport: MMB orbit | Ctrl+MMB pan | scroll zoom | LMB pick.");
         m_Ctx.Log("[Starforge] W/E/R gizmo | F frame | Ctrl+Z/Y undo | Ctrl+S save.");
     }
@@ -153,57 +156,29 @@ namespace Starforge
     }
 
     // =========================================================================
-    void StarforgeApp::BuildSandboxScene()
+    // Project / scene lifecycle (E6 / S1 external folders)
+    // =========================================================================
+    void StarforgeApp::MountProject(const Prefs::ProjectEntry& e)
     {
-        m_Ctx.Scene = Cosmic::Scene::Create();
-
-        {
-            Cosmic::Entity sun = m_Ctx.Scene->CreateEntity("Sun");
-            auto& light = sun.AddComponent<Cosmic::DirectionalLightComponent>();
-            light.Direction = { -0.35f, -1.0f, -0.45f };
-            light.Intensity = 1.1f;
-        }
-        {
-            Cosmic::Entity ground = m_Ctx.Scene->CreateEntity("Ground");
-            ground.AddComponent<Cosmic::MeshRendererComponent>(
-                Cosmic::Mesh::CreatePlane(24.0f, 24.0f)).Color = { 0.32f, 0.34f, 0.38f, 1.0f };
-        }
-        {
-            Cosmic::Entity cube = m_Ctx.Scene->CreateEntity("Forge Cube");
-            cube.GetComponent<Cosmic::TransformComponent>().Position = { 0.0f, 0.75f, 0.0f };
-            cube.GetComponent<Cosmic::TransformComponent>().Scale    = { 1.5f, 1.5f, 1.5f };
-            cube.AddComponent<Cosmic::MeshRendererComponent>(
-                Cosmic::Mesh::CreateBox({ 1.0f, 1.0f, 1.0f })).Color = { 0.92f, 0.45f, 0.14f, 1.0f };
-        }
-        {
-            Cosmic::Entity orb = m_Ctx.Scene->CreateEntity("Anvil Orb");
-            orb.GetComponent<Cosmic::TransformComponent>().Position = { 2.6f, 0.6f, -1.2f };
-            orb.AddComponent<Cosmic::MeshRendererComponent>(
-                Cosmic::Mesh::CreateUVSphere(0.6f, 24, 32)).Color = { 0.55f, 0.62f, 0.75f, 1.0f };
-        }
-
-        m_Ctx.SceneName    = "Sandbox";
-        m_Ctx.SceneVfsPath = "";
-        m_Ctx.Commands.Clear();
-        m_Ctx.ClearSelection();
-        m_Ctx.ClearDirty();
-        AdoptCameraForScene();          // H8 — frame the sandbox (no camera → frame-all)
-        m_ScriptsNeedBuild = false;     // sandbox has no scripts
+        // NAME mode for legacy in-tree projects (assets/projects/<name>), PATH mode
+        // for self-contained external folders (S1).
+        if (e.Path.empty())
+            Cosmic::FileSystem::SetActiveProject(e.Name);
+        else
+            Cosmic::FileSystem::SetActiveProjectPath(e.Path);
+        m_Ctx.ProjectOpen  = true;
+        m_Ctx.ProjectName  = e.Name;
+        m_Ctx.ProjectTitle = e.Name;
+        m_Ctx.ProjectPath  = e.Path;
     }
 
-    // =========================================================================
-    // Project / scene lifecycle (E6)
-    // =========================================================================
-    void StarforgeApp::OpenProject(const std::string& name)
+    void StarforgeApp::OpenProject(const Prefs::ProjectEntry& e)
     {
-        if (name.empty()) return;
+        if (e.Name.empty()) return;
         if (IsPlaying()) StopScene();
-        Cosmic::FileSystem::SetActiveProject(name);
-        m_Ctx.ProjectOpen  = true;
-        m_Ctx.ProjectName  = name;
-        m_Ctx.ProjectTitle = name;
+
+        MountProject(e);
         m_Content.Reset();
-        Prefs::AddRecentProject(name);
 
         const std::string main = "project://scenes/Main.cscene";
         if (fs::exists(Cosmic::FileSystem::Resolve(main)))
@@ -225,20 +200,47 @@ namespace Starforge
             m_Ctx.Log("[Project] Scaffolded project — press Ctrl+B to build the game module.");
         }
 
-        m_Ctx.Log("[Project] Opened '" + name + "'.");
+        Prefs::TouchProject(e.Name, e.Path);
+        m_Ctx.Log("[Project] Opened '" + e.Name + "'" +
+                  (e.Path.empty() ? " (in-tree)." : (" @ " + e.Path)));
     }
 
-    bool StarforgeApp::ScaffoldProject(const std::string& name)
+    void StarforgeApp::OpenProject(const std::string& name)
     {
-        // Copy the editor's templates/ into assets/projects/<name>/, replacing the
-        // @PROJECT_NAME@ token in every (text) file. The templates ship with the
-        // Starforge DLL and sync to assets/projects/Starforge/templates/.
+        Prefs::ProjectEntry e; e.Name = name; e.Path = "";   // legacy in-tree
+        OpenProject(e);
+    }
+
+    bool StarforgeApp::OpenProjectPath(const std::string& absoluteRoot)
+    {
+        std::error_code ec;
+        const fs::path root = fs::absolute(absoluteRoot, ec);
+        if (!fs::exists(root / "project.cproj", ec))
+        {
+            m_Ctx.Log("[Project] '" + root.generic_string() + "' has no project.cproj.", LogSeverity::Error);
+            return false;
+        }
+        // Read the manifest's declared name through the mount; fall back to the folder.
+        Cosmic::FileSystem::SetActiveProjectPath(root.generic_string());
+        const ProjectManifest man = ProjectManifest::Load("project://project.cproj");
+        Prefs::ProjectEntry e;
+        e.Name = man.Name.empty() ? root.filename().generic_string() : man.Name;
+        e.Path = root.generic_string();
+        OpenProject(e);
+        return true;
+    }
+
+    bool StarforgeApp::ScaffoldProjectTo(const std::string& name, const std::string& destRoot)
+    {
+        // Copy the editor's templates/ into destRoot, replacing @PROJECT_NAME@ in
+        // every (text) file. The templates ship with the Starforge DLL and sync to
+        // assets/projects/Starforge/templates/.
         std::error_code ec;
         const fs::path templates = fs::path("assets") / "projects" / "Starforge" / "templates";
         if (!fs::exists(templates, ec))
             return false;
 
-        const fs::path root = fs::path("assets") / "projects" / name;
+        const fs::path root = destRoot;
         for (auto it = fs::recursive_directory_iterator(templates, ec);
              it != fs::recursive_directory_iterator(); it.increment(ec))
         {
@@ -256,47 +258,51 @@ namespace Starforge
         return true;
     }
 
-    void StarforgeApp::NewProject(const std::string& name)
+    bool StarforgeApp::ScaffoldProject(const std::string& name)
     {
-        if (name.empty()) return;
+        // Legacy in-tree scaffold (ForgePlayground) into assets/projects/<name>.
+        const fs::path root = fs::path("assets") / "projects" / name;
+        return ScaffoldProjectTo(name, root.generic_string());
+    }
+
+    bool StarforgeApp::NewProjectAt(const std::string& name, const std::string& location)
+    {
+        if (name.empty() || location.empty()) return false;
         if (IsPlaying()) StopScene();
 
-        if (!ScaffoldProject(name))
+        std::error_code ec;
+        const fs::path root = fs::path(location) / name;
+        if (fs::exists(root, ec))
         {
-            // Fallback (templates unavailable): a minimal project with no game module.
-            std::error_code ec;
-            const fs::path root = fs::path("assets") / "projects" / name;
-            fs::create_directories(root / "scenes", ec);
-
-            std::ofstream cproj((root / "project.cproj").string(), std::ios::trunc);
-            if (cproj)
-            {
-                cproj << "# Cosmic project manifest (Starforge)\n";
-                cproj << "name = \"" << name << "\"\n";
-                cproj << "startup_scene = \"scenes/Main.cscene\"\n";
-                cproj << "fixed_dt_hz = 60\n";
-            }
-            Cosmic::FileSystem::SetActiveProject(name);
-            Cosmic::Ref<Cosmic::Scene> empty = Cosmic::Scene::Create();
-            empty->CreateEntity("Sun").AddComponent<Cosmic::DirectionalLightComponent>();
-            Cosmic::SceneSerializer::Save(*empty, Cosmic::FileSystem::Resolve("project://scenes/Main.cscene"));
+            m_Ctx.Log("[Project] A folder already exists at '" + root.generic_string() + "'.",
+                      LogSeverity::Error);
+            return false;
         }
-
-        OpenProject(name);
+        if (!ScaffoldProjectTo(name, root.generic_string()))
+        {
+            m_Ctx.Log("[Project] Could not scaffold '" + name + "' — templates unavailable.",
+                      LogSeverity::Error);
+            return false;
+        }
+        return OpenProjectPath(root.generic_string());
     }
 
     void StarforgeApp::CloseProject()
     {
         if (IsPlaying()) StopScene();
         m_Module.Unload();
+        CleanStaleHotDlls("");
         m_SrcWatcher.Stop();
         m_SrcWatchOn = false;
         m_Ctx.ProjectOpen = false;
+        m_Ctx.ProjectPath.clear();
         m_Ctx.Scene.reset();
         m_EditSceneBackup.reset();
         m_Ctx.Commands.Clear();
         m_Ctx.ClearSelection();
         m_Content.Reset();
+        // Back to the editor's own bundled assets for the homescreen.
+        Cosmic::FileSystem::SetActiveProject("Starforge");
     }
 
     // =========================================================================
@@ -305,7 +311,54 @@ namespace Starforge
     std::string StarforgeApp::ProjectDir() const
     {
         std::error_code ec;
+        if (!m_Ctx.ProjectPath.empty())
+            return fs::absolute(m_Ctx.ProjectPath, ec).generic_string();   // external root
         return fs::absolute(Cosmic::FileSystem::Resolve("project://"), ec).generic_string();
+    }
+
+    std::string StarforgeApp::ProjectContentDir() const
+    {
+        // Where the shipped content (scenes/models/…) lives on disk — the project
+        // root in both modes (flat layout).
+        return ProjectDir();
+    }
+
+    std::string StarforgeApp::ProjectBuildDir() const
+    {
+        // External projects build into their own tree; in-tree projects fall back to
+        // the SDK runtime output ("" => the template default).
+        if (m_Ctx.ProjectPath.empty())
+            return "";
+        return (fs::path(m_Ctx.ProjectPath) / "build").generic_string();
+    }
+
+    std::string StarforgeApp::ModuleSearchDir() const
+    {
+        const std::string bd = ProjectBuildDir();
+        if (bd.empty())
+            return "";   // legacy: DLL sits in the app dir
+        return (fs::path(bd) / BuildRunner::kHotConfig).generic_string();
+    }
+
+    void StarforgeApp::CleanStaleHotDlls(const std::string& keepStem)
+    {
+        // Delete <project>_hotN.dll files in the module dir except keepStem — the
+        // loaded one stays locked and its remove() silently fails (that's the point
+        // of the suffix). Scans the external build dir (S1) or the app dir (legacy).
+        std::error_code ec;
+        const std::string dir = ModuleSearchDir().empty()
+            ? fs::current_path(ec).generic_string() : ModuleSearchDir();
+        if (m_Ctx.ProjectName.empty()) return;
+        const std::string prefix = m_Ctx.ProjectName + "_hot";
+        for (const auto& entry : fs::directory_iterator(dir, ec))
+        {
+            if (ec) break;
+            if (entry.path().extension() != ".dll") continue;
+            const std::string stem = entry.path().stem().string();
+            if (stem.rfind(prefix, 0) != 0) continue;      // not a hot dll of this project
+            if (!keepStem.empty() && stem == keepStem) continue;
+            std::error_code rmec; fs::remove(entry.path(), rmec);   // locked => stays
+        }
     }
 
     std::string StarforgeApp::SdkDir() const
@@ -345,8 +398,11 @@ namespace Starforge
         ++m_HotCounter;
         const std::string suffix = "_hot" + std::to_string(m_HotCounter);
         m_LastBuiltStem = m_Ctx.ProjectName + suffix;
+        m_BuildPurpose  = BuildPurpose::HotReload;
         m_Ctx.Log("[Build] Building '" + m_Ctx.ProjectName + "' -> " + m_LastBuiltStem + ".dll");
-        m_Builder.Start(ProjectDir(), SdkDir(), suffix);
+        // External projects emit the DLL into their own build tree (S1); in-tree
+        // projects leave gameOutputDir empty and land in the SDK runtime dir.
+        m_Builder.Start(ProjectDir(), SdkDir(), suffix, BuildRunner::kHotConfig, ProjectBuildDir());
     }
 
     void StarforgeApp::ReloadModule(const std::string& dllStem)
@@ -366,8 +422,9 @@ namespace Starforge
         m_Ctx.Scene.reset();
         m_Module.Unload();
 
-        if (!m_Module.Load(m_Ctx.ProjectName, dllStem))
+        if (!m_Module.Load(m_Ctx.ProjectName, dllStem, ModuleSearchDir()))
             m_Ctx.Log("[Module] Load failed — scripts unavailable this session.", LogSeverity::Error);
+        CleanStaleHotDlls(dllStem);   // sweep older hot DLLs in the module dir (S1)
 
         // Rebuild the scene (custom components + script classes now resolve).
         Cosmic::Ref<Cosmic::Scene> fresh = Cosmic::Scene::Create();
@@ -438,6 +495,7 @@ namespace Starforge
             m_Ctx.SceneVfsPath = vfsPath;
             m_Ctx.SceneName    = fs::path(vfsPath).stem().string();
             m_Ctx.ClearDirty();
+            m_ThumbRequested = true;   // S7 — refresh the library thumbnail on save
             m_Ctx.Log("[Scene] Saved '" + vfsPath + "'.");
         }
         else
@@ -680,12 +738,23 @@ namespace Starforge
                 Prefabs::Instantiate(m_Ctx, p);
         }
 
-        // Game-module build pump (E12): stream cmake output, reload on success.
+        // Build pump (E12/S5): stream cmake output; on completion either hot-reload
+        // the module or run the packaging pipeline, per the build's purpose.
         m_Builder.Poll(m_Ctx, [this](bool ok)
         {
-            if (ok) ReloadModule(m_LastBuiltStem);
-            else    m_Ctx.Log("[Build] Failed — see the Console. Keeping the current module.",
-                              LogSeverity::Error);
+            if (m_BuildPurpose == BuildPurpose::Package)
+            {
+                OnPackageBuildDone(ok);
+            }
+            else if (ok)
+            {
+                ReloadModule(m_LastBuiltStem);
+            }
+            else
+            {
+                m_Ctx.Log("[Build] Failed — see the Console. Keeping the current module.",
+                          LogSeverity::Error);
+            }
         });
         if (m_SrcWatchOn)
         {
@@ -761,6 +830,14 @@ namespace Starforge
             };
 
             m_SceneRenderer.Render(desc);   // PRE/POST: vfb stays the bound target
+        }
+
+        // S7 — thumbnail capture happens here, while the viewport FBO is the bound,
+        // just-composited target (requested by a scene Save).
+        if (m_ThumbRequested && m_Ctx.Scene)
+        {
+            m_ThumbRequested = false;
+            CaptureThumbnail();
         }
     }
 
@@ -855,9 +932,10 @@ namespace Starforge
             DrawHomescreen();
         }
 
-        // Viewport overlay: status chip + transform gizmo.
+        // Viewport overlay: status chip + transform gizmo (only with a project open;
+        // the homescreen fills the viewport region otherwise).
         auto* ws = Cosmic::Application::Get().GetWorkspaceLayer();
-        if (ws && ws->BeginViewportOverlay())
+        if (m_Ctx.ProjectOpen && ws && ws->BeginViewportOverlay())
         {
             const glm::vec2 pos = Cosmic::Application::Get().GetViewportPos();
             ImGui::SetCursorScreenPos(ImVec2(pos.x + 10.0f, pos.y + 8.0f));
@@ -875,10 +953,10 @@ namespace Starforge
                                    "Scripts not built - press Ctrl+B");
             }
             // The gizmo is an edit tool — hidden while playing (runtime scene).
-            if (m_Ctx.ProjectOpen && m_Ctx.Scene && !IsPlaying())
+            if (m_Ctx.Scene && !IsPlaying())
                 m_Viewport.DrawGizmo(m_Ctx, m_Camera);
         }
-        if (ws)
+        if (m_Ctx.ProjectOpen && ws)
             ws->EndViewportOverlay();
 
         // Play-mode viewport border tint (the universal "you are live" cue).
@@ -901,6 +979,8 @@ namespace Starforge
         DrawSaveAsPopup();
         DrawImportModelPopup();
         DrawPackagePopup();
+        DrawProjectSettingsPopup();
+        DrawAboutPopup();
         DrawHelpPopups();
         DrawFirstRunPopup();
         HandleShortcuts();
@@ -920,6 +1000,11 @@ namespace Starforge
             DrawPlayControls();
             ImGui::SameLine();
             DrawBuildControls();
+            ImGui::SameLine();
+            if (ImGui::Button("Run App"))   // S7 — launch as if double-clicked
+                RunStandalone();
+            if (ImGui::IsItemHovered())
+                ImGui::SetTooltip("Run Standalone: the packaged exe if fresh, else the dev exe with this project.");
             // The edit toolbar (gizmo/grid) is hidden while playing to signal the
             // viewport is showing the live runtime scene, not the editable one.
             if (!IsPlaying())
@@ -930,7 +1015,7 @@ namespace Starforge
         }
         else
         {
-            ImGui::TextDisabled("No project open — see the Home panel.");
+            ImGui::TextDisabled("No project open — use the homescreen.");
         }
         ImGui::End();
     }
@@ -1020,13 +1105,23 @@ namespace Starforge
             ImGui::Separator();
             if (ImGui::MenuItem("Import Model...", nullptr, false, m_Ctx.ProjectOpen))
                 m_OpenImportModel = true;
+            if (ImGui::MenuItem("Project Settings...", nullptr, false, m_Ctx.ProjectOpen))
+                m_OpenProjectSettings = true;
+            ImGui::Separator();
             if (ImGui::MenuItem("Package...", nullptr, false, m_Ctx.ProjectOpen))
                 m_OpenPackage = true;
+            if (ImGui::MenuItem("Run Standalone", nullptr, false, m_Ctx.ProjectOpen))
+                RunStandalone();
+            if (ImGui::MenuItem("Package Starforge (self-host)..."))
+                PackageStarforge();
             ImGui::Separator();
             if (ImGui::BeginMenu("Recent Projects"))
             {
-                for (const auto& n : Prefs::LoadRecentProjects())
-                    if (ImGui::MenuItem(n.c_str())) OpenProject(n);
+                const auto recents = Prefs::LoadProjects();
+                if (recents.empty()) ImGui::TextDisabled("(none)");
+                for (const auto& e : recents)
+                    if (ImGui::MenuItem(e.Name.c_str()))
+                        OpenProject(e);
                 ImGui::EndMenu();
             }
             if (ImGui::MenuItem("Close Project (Home)")) CloseProject();
@@ -1092,6 +1187,7 @@ namespace Starforge
         if (ImGui::BeginMenu("Help"))
         {
             if (ImGui::MenuItem("Keyboard Shortcuts")) m_OpenShortcuts = true;
+            if (ImGui::MenuItem("About Starforge"))    m_OpenAbout = true;
             ImGui::EndMenu();
         }
     }
@@ -1443,41 +1539,273 @@ namespace Starforge
         make("Camera", [](Cosmic::Entity e) { e.AddComponent<Cosmic::CameraComponent>(); });
     }
 
+    // ---- Product homescreen: the project library (S3) ---------------------
+    namespace
+    {
+        // Middle-truncate a path so long absolute roots fit on a card.
+        std::string MiddleTruncate(const std::string& s, size_t max = 46)
+        {
+            if (s.size() <= max) return s;
+            const size_t head = max / 2 - 1, tail = max - head - 1;
+            return s.substr(0, head) + "…" + s.substr(s.size() - tail);
+        }
+
+        std::string DefaultProjectsDir()
+        {
+        #pragma warning(push)
+        #pragma warning(disable: 4996)
+            const char* home = std::getenv("USERPROFILE");
+        #pragma warning(pop)
+            fs::path base = home ? fs::path(home) / "Documents" : fs::path(".");
+            return (base / "Starforge Projects").generic_string();
+        }
+    }
+
+    Cosmic::Ref<Cosmic::Texture2D> StarforgeApp::ThumbFor(const Prefs::ProjectEntry& e)
+    {
+        std::error_code ec;
+        const fs::path root = e.Path.empty()
+            ? (fs::path("assets") / "projects" / e.Name)
+            : fs::path(e.Path);
+        const std::string key = fs::absolute(root / ".starforge" / "thumb.png", ec).generic_string();
+
+        auto it = m_ThumbCache.find(key);
+        if (it != m_ThumbCache.end())
+            return it->second;   // may be null ("checked, none")
+
+        Cosmic::Ref<Cosmic::Texture2D> tex;
+        if (fs::exists(key, ec))
+            tex = Cosmic::Texture2D::Create(key);
+        m_ThumbCache[key] = tex;
+        return tex;
+    }
+
+    void StarforgeApp::DrawProjectCard(const Prefs::ProjectEntry& e, float cardW)
+    {
+        const std::string cardKey = e.Path.empty() ? ("name:" + e.Name) : e.Path;
+        std::error_code ec;
+        const bool missing = !e.Path.empty() && !fs::exists(fs::path(e.Path) / "project.cproj", ec);
+        const bool selected = (m_HomeSelected == cardKey);
+
+        ImGui::PushID(cardKey.c_str());
+        if (selected)
+            ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.22f, 0.13f, 0.06f, 1.0f));
+        ImGui::BeginChild("card", ImVec2(cardW, 176.0f), true, ImGuiWindowFlags_NoScrollbar);
+
+        // Thumbnail band (grey placeholder until a save writes one).
+        const ImVec2 tp = ImGui::GetCursorScreenPos();
+        const float thumbH = 88.0f;
+        const ImVec2 avail = ImGui::GetContentRegionAvail();
+        ImDrawList* dl = ImGui::GetWindowDrawList();
+        dl->AddRectFilled(tp, ImVec2(tp.x + avail.x, tp.y + thumbH), IM_COL32(28, 30, 36, 255), 4.0f);
+        if (Cosmic::Ref<Cosmic::Texture2D> thumb = ThumbFor(e))
+            dl->AddImage((ImTextureID)(intptr_t)thumb->GetRendererID(),
+                         tp, ImVec2(tp.x + avail.x, tp.y + thumbH), ImVec2(0, 0), ImVec2(1, 1));
+        else
+            dl->AddText(ImVec2(tp.x + avail.x * 0.5f - 24.0f, tp.y + thumbH * 0.5f - 7.0f),
+                        IM_COL32(120, 120, 130, 255), "no preview");
+        ImGui::Dummy(ImVec2(avail.x, thumbH));
+
+        // Name + pin.
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.95f, 0.85f, 0.70f, 1.0f));
+        ImGui::TextUnformatted(e.Name.c_str());
+        ImGui::PopStyleColor();
+        ImGui::SameLine(ImGui::GetContentRegionAvail().x - 8.0f);
+        if (ImGui::SmallButton(e.Pinned ? "*" : "-"))
+        {
+            Prefs::SetProjectPinned(e.Name, e.Path, !e.Pinned);
+        }
+        if (ImGui::IsItemHovered()) ImGui::SetTooltip(e.Pinned ? "Unpin" : "Pin");
+
+        // Location + metadata.
+        const std::string loc = e.Path.empty() ? ("assets/projects/" + e.Name) : e.Path;
+        ImGui::TextDisabled("%s", MiddleTruncate(loc).c_str());
+        if (missing)
+            ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.35f, 1.0f), "missing on disk");
+        else if (!e.LastOpened.empty())
+            ImGui::TextDisabled("opened %s", e.LastOpened.c_str());
+
+        // Whole-card interaction: click selects, double-click opens.
+        ImGui::EndChild();
+        if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Left))
+            m_HomeSelected = cardKey;
+        if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && !missing)
+            OpenProject(e);
+
+        // Context menu.
+        if (ImGui::BeginPopupContextItem("cardctx"))
+        {
+            if (!missing && ImGui::MenuItem("Open"))
+                OpenProject(e);
+            if (!e.Path.empty() && ImGui::MenuItem("Show in Explorer"))
+                std::system(("explorer \"" + fs::path(e.Path).make_preferred().string() + "\"").c_str());
+            if (missing && ImGui::MenuItem("Locate…"))
+            {
+                if (auto picked = Cosmic::FileDialog::PickFolder("Locate project folder"))
+                {
+                    Prefs::RemoveProject(e.Name, e.Path);
+                    OpenProjectPath(*picked);
+                }
+            }
+            if (ImGui::MenuItem(e.Pinned ? "Unpin" : "Pin"))
+                Prefs::SetProjectPinned(e.Name, e.Path, !e.Pinned);
+            ImGui::Separator();
+            ImGui::TextDisabled("Remove never deletes files");
+            if (ImGui::MenuItem("Remove from list"))
+            {
+                Prefs::RemoveProject(e.Name, e.Path);
+                if (m_HomeSelected == cardKey) m_HomeSelected.clear();
+            }
+            ImGui::EndPopup();
+        }
+
+        if (selected)
+            ImGui::PopStyleColor();
+        ImGui::PopID();
+    }
+
     void StarforgeApp::DrawHomescreen()
     {
-        ImGui::Begin("Home");
-        ImGui::TextUnformatted("Starforge");
-        ImGui::TextDisabled("Where worlds are forged.");
-        ImGui::Separator();
+        // Fill the central viewport region so the top menu bar + window chrome stay
+        // usable (Exit to Launcher, etc.). Fall back to the main viewport work area
+        // if the workspace hasn't reported a region yet.
+        auto& app = Cosmic::Application::Get();
+        const glm::vec2 vpPos  = app.GetViewportPos();
+        const glm::vec2 vpSize = app.GetViewportSize();
+        const ImGuiViewport* mv = ImGui::GetMainViewport();
+        ImVec2 pos  = (vpSize.x > 10.0f && vpSize.y > 10.0f) ? ImVec2(vpPos.x, vpPos.y) : mv->WorkPos;
+        ImVec2 size = (vpSize.x > 10.0f && vpSize.y > 10.0f) ? ImVec2(vpSize.x, vpSize.y) : mv->WorkSize;
+        ImGui::SetNextWindowPos(pos);
+        ImGui::SetNextWindowSize(size);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(28.0f, 22.0f));
+        ImGui::Begin("##StarforgeHome", nullptr,
+                     ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse |
+                     ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
+                     ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus);
+        ImGui::PopStyleVar(2);   // rounding + padding captured at Begin
 
-        ImGui::TextUnformatted("New Project");
-        ImGui::SetNextItemWidth(220.0f);
-        ImGui::InputText("##newproj", m_NewProjectName, sizeof(m_NewProjectName));
+        // Header.
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.95f, 0.55f, 0.18f, 1.0f));
+        ImGui::SetWindowFontScale(1.6f);
+        ImGui::TextUnformatted("STARFORGE");
+        ImGui::SetWindowFontScale(1.0f);
+        ImGui::PopStyleColor();
         ImGui::SameLine();
-        if (ImGui::Button("Create") && m_NewProjectName[0])
-            NewProject(m_NewProjectName);
+        ImGui::AlignTextToFramePadding();
+        ImGui::TextDisabled("  v%s   —   where worlds are forged", COSMIC_VERSION_STRING);
 
-        // First-run sample (E21) — reusable entry point beyond the welcome popup.
-        if (ImGui::Button("Open \"Forge Playground\" sample"))
+        ImGui::Spacing();
+
+        // Primary actions.
+        if (ImGui::Button("New Project", ImVec2(150, 34)))
+        {
+            if (m_NewProjectLoc[0] == '\0')
+                std::snprintf(m_NewProjectLoc, sizeof(m_NewProjectLoc), "%s", DefaultProjectsDir().c_str());
+            ImGui::OpenPopup("New Project");
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Open…", ImVec2(120, 34)))
+        {
+            if (auto picked = Cosmic::FileDialog::PickFolder("Open Project Folder"))
+                OpenProjectPath(*picked);
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Open Sample", ImVec2(140, 34)))
         {
             if (!ForgePlaygroundExists())
                 BuildForgePlayground();
             OpenProject("ForgePlayground");
         }
         ImGui::SameLine();
-        ImGui::TextDisabled("terrain + water + campfire + a C++ script + a telemetry take");
+        ImGui::SetNextItemWidth(240.0f);
+        ImGui::InputTextWithHint("##search", "Search projects…", m_HomeSearch, sizeof(m_HomeSearch));
 
         ImGui::Separator();
-        ImGui::TextUnformatted("Recent");
-        for (const auto& n : Prefs::LoadRecentProjects())
-            if (ImGui::Selectable(n.c_str()))
-                OpenProject(n);
+        ImGui::Spacing();
 
-        ImGui::Separator();
-        ImGui::TextUnformatted("All Projects");
-        for (const auto& n : Prefs::DiscoverProjects())
-            if (ImGui::Selectable((n + "##all").c_str()))
-                OpenProject(n);
+        // Project grid (pinned first, then most-recent). Missing-on-disk still shows
+        // so the user can Locate/Remove it.
+        std::vector<Prefs::ProjectEntry> projects = Prefs::LoadProjects();
+        std::stable_sort(projects.begin(), projects.end(),
+            [](const Prefs::ProjectEntry& a, const Prefs::ProjectEntry& b) { return a.Pinned && !b.Pinned; });
+
+        const std::string filter = m_HomeSearch;
+        auto passes = [&](const Prefs::ProjectEntry& e)
+        {
+            if (filter.empty()) return true;
+            std::string hay = e.Name + " " + e.Path;
+            std::string needle = filter;
+            std::transform(hay.begin(), hay.end(), hay.begin(), ::tolower);
+            std::transform(needle.begin(), needle.end(), needle.begin(), ::tolower);
+            return hay.find(needle) != std::string::npos;
+        };
+
+        ImGui::BeginChild("##grid");
+        const float pad = 12.0f;
+        const float cardW = 240.0f;
+        const float regionW = ImGui::GetContentRegionAvail().x;
+        int cols = (int)((regionW + pad) / (cardW + pad));
+        if (cols < 1) cols = 1;
+
+        bool any = false;
+        int shown = 0;
+        for (const auto& e : projects)
+        {
+            if (!passes(e)) continue;
+            any = true;
+            if (shown % cols != 0) ImGui::SameLine(0.0f, pad);
+            DrawProjectCard(e, cardW);
+            ++shown;
+        }
+        if (!any)
+        {
+            ImGui::Spacing();
+            ImGui::TextDisabled(projects.empty()
+                ? "No projects yet — click New Project, or Open Sample to explore the toolset."
+                : "No projects match your search.");
+        }
+        ImGui::EndChild();
+
+        // ---- New Project modal ----
+        ImGui::SetNextWindowSize(ImVec2(520, 0), ImGuiCond_Always);
+        if (ImGui::BeginPopupModal("New Project", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+        {
+            ImGui::TextUnformatted("Name");
+            ImGui::SetNextItemWidth(-1.0f);
+            ImGui::InputText("##npname", m_NewProjectName, sizeof(m_NewProjectName));
+
+            ImGui::TextUnformatted("Location");
+            ImGui::SetNextItemWidth(-90.0f);
+            ImGui::InputText("##nploc", m_NewProjectLoc, sizeof(m_NewProjectLoc));
+            ImGui::SameLine();
+            if (ImGui::Button("Browse…", ImVec2(80, 0)))
+                if (auto picked = Cosmic::FileDialog::PickFolder("Choose a location for the new project"))
+                    std::snprintf(m_NewProjectLoc, sizeof(m_NewProjectLoc), "%s", picked->c_str());
+
+            // Template picker seam (v1 has the one C++ scaffold template).
+            ImGui::TextUnformatted("Template");
+            static const char* kTemplates[] = { "C++ scaffold (scripts + player)" };
+            static int templateIdx = 0;
+            ImGui::SetNextItemWidth(-1.0f);
+            ImGui::Combo("##nptpl", &templateIdx, kTemplates, IM_ARRAYSIZE(kTemplates));
+
+            if (m_NewProjectName[0] && m_NewProjectLoc[0])
+                ImGui::TextDisabled("Creates: %s/%s/", m_NewProjectLoc, m_NewProjectName);
+
+            ImGui::Separator();
+            ImGui::BeginDisabled(!(m_NewProjectName[0] && m_NewProjectLoc[0]));
+            if (ImGui::Button("Create", ImVec2(120, 0)))
+            {
+                if (NewProjectAt(m_NewProjectName, m_NewProjectLoc))
+                    ImGui::CloseCurrentPopup();
+            }
+            ImGui::EndDisabled();
+            ImGui::SameLine();
+            if (ImGui::Button("Cancel", ImVec2(120, 0)))
+                ImGui::CloseCurrentPopup();
+            ImGui::EndPopup();
+        }
 
         ImGui::End();
     }
@@ -1588,7 +1916,7 @@ namespace Starforge
         return true;
     }
 
-    // ---- Package & ship (E19) ---------------------------------------------
+    // ---- Package & ship (E19 / S5, S2) ------------------------------------
 
     void StarforgeApp::DrawPackagePopup()
     {
@@ -1600,22 +1928,42 @@ namespace Starforge
 
         if (ImGui::BeginPopupModal("Package Project", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
         {
-            ImGui::Text("Stage a standalone build of '%s'.", m_Ctx.ProjectName.c_str());
-            ImGui::TextDisabled("Copies CosmicApp.exe (-> %s.exe), Cosmic.dll, the project DLL,", m_Ctx.ProjectName.c_str());
-            ImGui::TextDisabled("its assets, and a boot.cfg so it runs with no Launcher.");
-            ImGui::TextColored(ImVec4(1.0f, 0.8f, 0.2f, 1.0f),
-                               "Uses the CURRENT build config — build Release first for a shipping app.");
+            ImGui::Text("Ship a standalone build of '%s'.", m_Ctx.ProjectName.c_str());
+            ImGui::TextDisabled("Stages %s.exe + Cosmic.dll + the project DLL + assets + boot.cfg,", m_Ctx.ProjectName.c_str());
+            ImGui::TextDisabled("then embeds the icon and (optionally) zips / builds an installer.");
             ImGui::Text("Output: %s/dist/%s", SdkDir().c_str(), m_Ctx.ProjectName.c_str());
             ImGui::Separator();
 
+            ImGui::Checkbox("Build Release first (recommended for shipping)", &m_PkgOpt.ReleaseBuild);
+            if (!m_PkgOpt.ReleaseBuild)
+                ImGui::TextColored(ImVec4(1.0f, 0.8f, 0.2f, 1.0f), "Packaging the CURRENT (Debug) build.");
+            ImGui::Checkbox("Zip the output", &m_PkgOpt.MakeZip);
+            ImGui::Checkbox("Generate installer script (+ build if Inno on PATH)", &m_PkgOpt.MakeInstaller);
+
+            {
+                const ProjectManifest man = ProjectManifest::Load("project://project.cproj");
+                if (man.Icon.empty())
+                    ImGui::TextDisabled("Icon: none set — see File ▸ Project Settings to add icon.png.");
+                else
+                    ImGui::TextDisabled("Icon: %s", man.Icon.c_str());
+            }
+
+            ImGui::Separator();
+            const bool busy = m_Builder.IsBuilding();
+            ImGui::BeginDisabled(busy);
             if (ImGui::Button("Package", ImVec2(120, 0)))
                 PackageProject();
-
-            if (!m_LastDistDir.empty())
+            ImGui::EndDisabled();
+            ImGui::SameLine();
+            if (busy && m_PkgAwaitingBuild)
+                ImGui::TextColored(ImVec4(1.0f, 0.85f, 0.3f, 1.0f), "building… (see Console)");
+            else if (!m_LastDistDir.empty())
             {
+                ImGui::TextColored(ImVec4(0.3f, 1.0f, 0.42f, 1.0f), "Done:");
                 ImGui::SameLine();
-                ImGui::TextColored(ImVec4(0.3f, 1.0f, 0.42f, 1.0f), "Staged.");
                 ImGui::TextDisabled("%s", m_LastDistDir.c_str());
+                if (ImGui::Button("Show in Explorer", ImVec2(150, 0)))
+                    std::system(("explorer \"" + fs::path(m_LastDistDir).make_preferred().string() + "\"").c_str());
             }
 
             ImGui::Separator();
@@ -1625,71 +1973,331 @@ namespace Starforge
         }
     }
 
+    // Assemble a PackageInputs for `target`, then either kick the async Release
+    // build (staging on success) or stage the current config immediately.
+    bool StarforgeApp::BeginPackage(const Prefs::ProjectEntry& target)
+    {
+        if (m_Builder.IsBuilding())
+        {
+            m_Ctx.Log("[Package] A build is already running — wait for it to finish.", LogSeverity::Warn);
+            return false;
+        }
+
+        std::error_code ec;
+        const std::string proj = target.Name;
+        const std::string sdk  = SdkDir();
+        const bool external    = !target.Path.empty();
+        const bool isStarforge = (proj == "Starforge");
+
+        PackageInputs in;
+        in.ProjectName = proj;
+        in.SdkDir      = sdk;
+        in.OutDistDir  = (fs::path(sdk) / "dist" / proj).generic_string();
+        in.ExeName     = proj + ".exe";
+        in.Version     = COSMIC_VERSION_STRING;
+
+        if (m_PkgOpt.ReleaseBuild)
+            in.RuntimeSourceDir = (fs::path(sdk) / "build" / "Runtime" / "Release").generic_string();
+        else
+            in.RuntimeSourceDir = fs::current_path(ec).generic_string();   // editor's own dir (current config)
+
+        const std::string cfg = m_PkgOpt.ReleaseBuild ? "Release" : BuildRunner::kHotConfig;
+        if (external)
+            in.ProjectDllPath = (fs::path(target.Path) / "build" / cfg / (proj + ".dll")).generic_string();
+        else
+            in.ProjectDllPath = (fs::path(in.RuntimeSourceDir) / (proj + ".dll")).generic_string();
+
+        in.ProjectContentDir = external
+            ? target.Path
+            : (fs::path(in.RuntimeSourceDir) / "assets" / "projects" / proj).generic_string();
+
+        // Icon from the manifest (relative to the project root) or a plain icon.png.
+        {
+            const std::string cprojDisk = (fs::path(in.ProjectContentDir) / "project.cproj").generic_string();
+            const ProjectManifest man = ProjectManifest::Load(cprojDisk);
+            std::string icon = man.Icon.empty() ? "" : (fs::path(in.ProjectContentDir) / man.Icon).generic_string();
+            if (icon.empty() || !fs::exists(icon, ec))
+            {
+                const std::string fallback = (fs::path(in.ProjectContentDir) / "icon.png").generic_string();
+                if (fs::exists(fallback, ec)) icon = fallback;
+            }
+            in.IconPng = (icon.empty() || !fs::exists(icon, ec)) ? "" : icon;
+        }
+
+        m_PkgPending = in;
+
+        if (!m_PkgOpt.ReleaseBuild)
+        {
+            // Fast path: package the current build outputs immediately.
+            if (Packager::Stage(m_Ctx, in))
+            {
+                Packager::Finalize(m_Ctx, in, m_PkgOpt);
+                m_LastDistDir = in.OutDistDir;
+                m_Ctx.Log("[Package] Done -> " + m_LastDistDir);
+            }
+            return true;
+        }
+
+        // Release path: build engine+runtime (if stale) + the project DLL, then stage.
+        const std::string cmake   = BuildRunner::FindCMake();
+        const std::string sdkBuild = (fs::path(sdk) / "build").generic_string();
+        std::vector<BuildStep> steps;
+
+        const fs::path relDir = fs::path(sdk) / "build" / "Runtime" / "Release";
+        const bool sdkReleaseReady = fs::exists(relDir / "Cosmic.dll", ec) &&
+                                     fs::exists(relDir / "CosmicApp.exe", ec) &&
+                                     (!isStarforge || fs::exists(relDir / "Starforge.dll", ec));
+        if (!sdkReleaseReady)
+        {
+            steps.push_back({ "[package] configuring SDK",
+                "\"" + cmake + "\" -S \"" + sdk + "\" -B \"" + sdkBuild + "\" -A x64" });
+            const std::string sdkTargets = isStarforge ? "Cosmic CosmicApp Starforge" : "Cosmic CosmicApp";
+            steps.push_back({ "[package] building engine + runtime (Release)",
+                "\"" + cmake + "\" --build \"" + sdkBuild + "\" --config Release --parallel --target " + sdkTargets });
+        }
+
+        if (external)
+        {
+            const std::string projBuild = (fs::path(target.Path) / "build").generic_string();
+            steps.push_back({ "[package] configuring project",
+                "\"" + cmake + "\" -S \"" + target.Path + "\" -B \"" + projBuild +
+                "\" -A x64 -DCOSMIC_SDK_DIR=\"" + sdk + "\" -DGAME_OUTPUT_DIR=\"" + projBuild + "\"" });
+            steps.push_back({ "[package] building project (Release)",
+                "\"" + cmake + "\" --build \"" + projBuild + "\" --config Release --parallel" });
+        }
+        else if (!isStarforge)
+        {
+            const fs::path inTreeSrc = fs::current_path(ec) / "assets" / "projects" / proj;
+            const std::string projBuild = (inTreeSrc / "build").generic_string();
+            steps.push_back({ "[package] configuring project",
+                "\"" + cmake + "\" -S \"" + inTreeSrc.generic_string() + "\" -B \"" + projBuild +
+                "\" -A x64 -DCOSMIC_SDK_DIR=\"" + sdk + "\"" });
+            steps.push_back({ "[package] building project (Release)",
+                "\"" + cmake + "\" --build \"" + projBuild + "\" --config Release --parallel" });
+        }
+        // Starforge's own DLL rides the SDK build above (via the Starforge target).
+
+        m_BuildPurpose     = BuildPurpose::Package;
+        m_PkgAwaitingBuild = true;
+        m_Builder.StartSteps(std::move(steps));
+        m_Ctx.Log("[Package] Building Release for '" + proj + "'… (see Console)");
+        return true;
+    }
+
     void StarforgeApp::PackageProject()
     {
         if (!m_Ctx.ProjectOpen)
             return;
+        Prefs::ProjectEntry e;
+        e.Name = m_Ctx.ProjectName;
+        e.Path = m_Ctx.ProjectPath;
+        BeginPackage(e);
+    }
 
-        std::error_code ec;
-        const std::string proj = m_Ctx.ProjectName;
+    void StarforgeApp::PackageStarforge()
+    {
+        // S2 — self-package the editor as a product. Starforge is just an in-tree
+        // project named "Starforge" whose DLL + content already live in the tree.
+        Prefs::ProjectEntry e;
+        e.Name = "Starforge";
+        e.Path = "";
+        BeginPackage(e);
+    }
 
-        // The editor runs from build/Runtime/<cfg> (Main.cpp sets CWD to the exe
-        // dir): CosmicApp.exe, Cosmic.dll, <proj>.dll and assets/ all live here.
-        const fs::path runtime = fs::current_path(ec);
-        const fs::path outRoot = fs::path(SdkDir()) / "dist" / proj;
-
-        const fs::path exeSrc    = runtime / "CosmicApp.exe";
-        const fs::path engineDll = runtime / "Cosmic.dll";
-        const fs::path projDll   = runtime / (proj + ".dll");
-        if (!fs::exists(exeSrc, ec) || !fs::exists(engineDll, ec))
+    void StarforgeApp::OnPackageBuildDone(bool ok)
+    {
+        m_BuildPurpose = BuildPurpose::HotReload;   // reset the shared runner's mode
+        if (!m_PkgAwaitingBuild)
+            return;
+        m_PkgAwaitingBuild = false;
+        if (!ok)
         {
-            m_Ctx.Log("[Package] CosmicApp.exe / Cosmic.dll not next to the editor — cannot package.",
+            m_Ctx.Log("[Package] Release build failed — see the Console. Nothing was staged.",
                       LogSeverity::Error);
             return;
         }
-        const bool hasProjectDll = fs::exists(projDll, ec);
-        if (!hasProjectDll)
-            m_Ctx.Log("[Package] No " + proj + ".dll found — build the project (Ctrl+B) for a runnable app.",
-                      LogSeverity::Warn);
-
-        // Fresh output dir.
-        fs::remove_all(outRoot, ec);
-        fs::create_directories(outRoot, ec);
-
-        // Executable (renamed) + engine + project DLLs.
-        fs::copy_file(exeSrc,    outRoot / (proj + ".exe"), fs::copy_options::overwrite_existing, ec);
-        fs::copy_file(engineDll, outRoot / "Cosmic.dll",    fs::copy_options::overwrite_existing, ec);
-        if (hasProjectDll)
-            fs::copy_file(projDll, outRoot / (proj + ".dll"), fs::copy_options::overwrite_existing, ec);
-
-        // Assets: engine assets + ONLY this project's folder (skip other projects).
-        const fs::path assetsSrc = runtime / "assets";
-        const fs::path assetsDst = outRoot / "assets";
-        if (fs::exists(assetsSrc, ec))
+        if (Packager::Stage(m_Ctx, m_PkgPending))
         {
-            fs::create_directories(assetsDst / "projects", ec);
-            for (const auto& entry : fs::directory_iterator(assetsSrc, ec))
+            Packager::Finalize(m_Ctx, m_PkgPending, m_PkgOpt);
+            m_LastDistDir = m_PkgPending.OutDistDir;
+            m_Ctx.Log("[Package] Done -> " + m_LastDistDir);
+        }
+    }
+
+    // ---- Editor conveniences (S7) -----------------------------------------
+
+    void StarforgeApp::RunStandalone()
+    {
+        if (!m_Ctx.ProjectOpen)
+            return;
+        std::error_code ec;
+        fs::path distExe = fs::path(SdkDir()) / "dist" / m_Ctx.ProjectName / (m_Ctx.ProjectName + ".exe");
+        if (fs::exists(distExe, ec))
+        {
+            m_Ctx.Log("[Run] Launching packaged " + m_Ctx.ProjectName + ".exe");
+            std::system(("start \"\" \"" + distExe.make_preferred().string() + "\"").c_str());
+            return;
+        }
+        if (m_Ctx.ProjectPath.empty())
+        {
+            // In-tree project: the dev exe can boot it directly with --project.
+            fs::path devExe = fs::current_path(ec) / "CosmicApp.exe";
+            m_Ctx.Log("[Run] Launching CosmicApp --project " + m_Ctx.ProjectName);
+            std::system(("start \"\" \"" + devExe.make_preferred().string() + "\" --project " + m_Ctx.ProjectName).c_str());
+            return;
+        }
+        // External project without a package: --project can't mount an external
+        // folder yet, so packaging is the path to a runnable standalone.
+        m_Ctx.Log("[Run] Package this external project first (File ▸ Package) to run it standalone.",
+                  LogSeverity::Warn);
+    }
+
+    void StarforgeApp::CaptureThumbnail()
+    {
+        if (!m_Ctx.ProjectOpen)
+            return;
+        auto vfb = Cosmic::Application::Get().GetFrameBuffer();
+        if (!vfb)
+            return;
+        vfb->Bind();
+        std::vector<uint8_t> rgba; uint32_t w = 0, h = 0;
+        if (!vfb->ReadPixels(0, rgba, w, h) || w == 0 || h == 0)
+            return;
+
+        // Downscale (nearest) to a compact, opaque thumbnail.
+        const uint32_t maxW = 480;
+        const uint32_t tw = std::min(w, maxW);
+        const uint32_t th = std::max<uint32_t>(1, (uint32_t)((uint64_t)h * tw / w));
+        std::vector<uint8_t> out((size_t)tw * th * 4);
+        for (uint32_t y = 0; y < th; ++y)
+            for (uint32_t x = 0; x < tw; ++x)
             {
-                if (entry.path().filename() == "projects")
-                    continue;   // handled selectively below
-                fs::copy(entry.path(), assetsDst / entry.path().filename(),
-                         fs::copy_options::recursive | fs::copy_options::overwrite_existing, ec);
+                const uint32_t sx = x * w / tw, sy = y * h / th;
+                const uint8_t* s = rgba.data() + ((size_t)sy * w + sx) * 4;
+                uint8_t* d = out.data() + ((size_t)y * tw + x) * 4;
+                d[0] = s[0]; d[1] = s[1]; d[2] = s[2]; d[3] = 255;
             }
-            const fs::path projAssets = assetsSrc / "projects" / proj;
-            if (fs::exists(projAssets, ec))
-                fs::copy(projAssets, assetsDst / "projects" / proj,
-                         fs::copy_options::recursive | fs::copy_options::overwrite_existing, ec);
-        }
 
-        // boot.cfg — Main.cpp launches this project when run with no --project.
+        std::error_code ec;
+        const fs::path dir = fs::path(ProjectDir()) / ".starforge";
+        fs::create_directories(dir, ec);
+        const fs::path outPath = dir / "thumb.png";
+        Cosmic::ImageIO::WritePNG(outPath.generic_string(), (int)tw, (int)th, 4, out.data());
+        m_ThumbCache.erase(fs::absolute(outPath, ec).generic_string());   // force reload in the library
+    }
+
+    void StarforgeApp::DrawProjectSettingsPopup()
+    {
+        static char title[128] = "";
+        static char scene[128] = "";
+        static int  fixedHz = 60, winW = 0, winH = 0;
+
+        if (m_OpenProjectSettings)
         {
-            std::ofstream boot(outRoot / "boot.cfg", std::ios::trunc);
-            boot << "# Cosmic packaged app (E19) — the project launched with no --project flag.\n"
-                 << proj << "\n";
+            const ProjectManifest man = ProjectManifest::Load("project://project.cproj");
+            std::snprintf(m_IconPathBuf, sizeof(m_IconPathBuf), "%s", man.Icon.c_str());
+            std::snprintf(title, sizeof(title), "%s", man.WindowTitle.empty() ? man.Name.c_str() : man.WindowTitle.c_str());
+            std::snprintf(scene, sizeof(scene), "%s", man.StartupScene.c_str());
+            fixedHz = man.FixedHz; winW = man.WindowWidth; winH = man.WindowHeight;
+            ImGui::OpenPopup("Project Settings");
+            m_OpenProjectSettings = false;
         }
 
-        m_LastDistDir = fs::absolute(outRoot, ec).generic_string();
-        m_Ctx.Log("[Package] Staged '" + proj + "' -> " + m_LastDistDir);
+        ImGui::SetNextWindowSize(ImVec2(520, 0), ImGuiCond_Always);
+        if (ImGui::BeginPopupModal("Project Settings", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+        {
+            ImGui::Text("Project: %s", m_Ctx.ProjectName.c_str());
+            ImGui::Separator();
+
+            ImGui::TextUnformatted("Window title");
+            ImGui::SetNextItemWidth(-1.0f);
+            ImGui::InputText("##pstitle", title, sizeof(title));
+
+            ImGui::TextUnformatted("Window size (0 = engine default)");
+            ImGui::SetNextItemWidth(120.0f); ImGui::InputInt("w##psw", &winW); ImGui::SameLine();
+            ImGui::SetNextItemWidth(120.0f); ImGui::InputInt("h##psh", &winH);
+
+            ImGui::TextUnformatted("Startup scene");
+            ImGui::SetNextItemWidth(-1.0f);
+            ImGui::InputText("##psscene", scene, sizeof(scene));
+
+            ImGui::SetNextItemWidth(120.0f);
+            ImGui::InputInt("Fixed Hz", &fixedHz);
+
+            ImGui::TextUnformatted("App icon (PNG, relative to the project root)");
+            ImGui::SetNextItemWidth(-90.0f);
+            ImGui::InputText("##psicon", m_IconPathBuf, sizeof(m_IconPathBuf));
+            ImGui::SameLine();
+            if (ImGui::Button("Browse…", ImVec2(80, 0)))
+            {
+                Cosmic::FileDialogDesc dlg;
+                dlg.Title   = "Choose an icon";
+                dlg.Filters = { { "PNG images", "*.png" } };
+                if (auto picked = Cosmic::FileDialog::Open(dlg))
+                {
+                    // Copy into the project root as icon.png so the manifest key stays relative.
+                    std::error_code ec;
+                    const fs::path dst = fs::path(ProjectContentDir()) / "icon.png";
+                    fs::copy_file(*picked, dst, fs::copy_options::overwrite_existing, ec);
+                    std::snprintf(m_IconPathBuf, sizeof(m_IconPathBuf), "icon.png");
+                }
+            }
+
+            ImGui::Separator();
+            if (ImGui::Button("Save", ImVec2(120, 0)))
+            {
+                ProjectManifest man;
+                man.Name         = m_Ctx.ProjectName;
+                man.WindowTitle  = title;
+                man.WindowWidth  = winW; man.WindowHeight = winH;
+                man.StartupScene = scene;
+                man.FixedHz      = fixedHz;
+                man.Icon         = m_IconPathBuf;
+                man.Save(Cosmic::FileSystem::Resolve("project://project.cproj"));
+                m_Ctx.Log("[Project] Settings saved to project.cproj.");
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Cancel", ImVec2(120, 0)))
+                ImGui::CloseCurrentPopup();
+            ImGui::EndPopup();
+        }
+    }
+
+    void StarforgeApp::DrawAboutPopup()
+    {
+        if (m_OpenAbout)
+        {
+            ImGui::OpenPopup("About Starforge");
+            m_OpenAbout = false;
+        }
+        if (ImGui::BeginPopupModal("About Starforge", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+        {
+            ImGui::TextColored(ImVec4(0.95f, 0.55f, 0.18f, 1.0f), "Starforge");
+            ImGui::TextDisabled("The Cosmic editor — where worlds are forged.");
+            ImGui::Separator();
+            ImGui::Text("Engine version: %s", COSMIC_VERSION_STRING);
+            if (m_Ctx.ProjectOpen)
+            {
+                ImGui::Separator();
+                ImGui::Text("Project: %s", m_Ctx.ProjectName.c_str());
+                if (!m_Ctx.ProjectPath.empty())
+                    ImGui::TextDisabled("%s", m_Ctx.ProjectPath.c_str());
+                ImGui::Text("Scene: %s", m_Ctx.SceneName.c_str());
+            }
+            ImGui::Separator();
+            if (ImGui::Button("Open Logs Folder", ImVec2(160, 0)))
+            {
+                std::error_code ec;
+                const std::string logs = Cosmic::FileSystem::Resolve("user://logs");
+                fs::create_directories(logs, ec);
+                std::system(("explorer \"" + fs::path(logs).make_preferred().string() + "\"").c_str());
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Close", ImVec2(120, 0)))
+                ImGui::CloseCurrentPopup();
+            ImGui::EndPopup();
+        }
     }
 
     void StarforgeApp::HandleShortcuts()

@@ -28,6 +28,14 @@ namespace Starforge
 {
     struct EditorContext;
 
+    // One labelled shell step (a cmake configure or build). RunSteps redirects each
+    // step's stdout+stderr to a temp log and streams it into the Console.
+    struct BuildStep
+    {
+        std::string Label;     // shown in the Console before the step runs
+        std::string Command;   // full command WITHOUT redirection (RunSteps adds it)
+    };
+
     class BuildRunner
     {
     public:
@@ -39,11 +47,19 @@ namespace Starforge
         BuildRunner(const BuildRunner&)            = delete;
         BuildRunner& operator=(const BuildRunner&) = delete;
 
-        // Kick off a background configure+build of the project at `projectDir`
-        // (the folder holding CMakeLists.txt). `hotSuffix` (e.g. "_hot3") makes the
-        // output DLL unique. No-op while already building.
+        // Kick off a background configure+build of the project at `projectDir` (the
+        // folder holding CMakeLists.txt). `hotSuffix` (e.g. "_hot3") makes the output
+        // DLL unique. `config` selects Debug/Release; `gameOutputDir` (S1), when set,
+        // routes the module DLL to "<gameOutputDir>/<config>/" (an external project's
+        // own build tree) instead of the SDK runtime dir. No-op while already building.
         void Start(const std::string& projectDir, const std::string& sdkDir,
-                   const std::string& hotSuffix);
+                   const std::string& hotSuffix,
+                   const std::string& config = "Debug",
+                   const std::string& gameOutputDir = "");
+
+        // Run an arbitrary sequence of build steps in the background (S5 packaging
+        // pipeline: SDK Release + project Release). Stops on the first failure.
+        void StartSteps(std::vector<BuildStep> steps);
 
         // Main-thread pump: drains captured output into the console and, once the
         // worker finishes, invokes onDone(success) exactly once and joins. Call
@@ -53,11 +69,14 @@ namespace Starforge
         Status GetStatus() const { return m_Status.load(); }
         bool   IsBuilding() const { return m_Status.load() == Status::Building; }
 
+        // The config hot-reload builds (module DLLs load into the running editor).
+        static constexpr const char* kHotConfig = "Debug";
+
         // Locate cmake.exe (VS-bundled, else PATH). "" only if nothing is found.
         static std::string FindCMake();
 
     private:
-        void Run(std::string projectDir, std::string sdkDir, std::string hotSuffix);
+        void RunSteps(std::vector<BuildStep> steps);
 
         std::thread              m_Thread;
         std::atomic<Status>      m_Status{ Status::Idle };

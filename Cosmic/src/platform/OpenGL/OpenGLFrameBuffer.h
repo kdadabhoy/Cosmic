@@ -92,6 +92,8 @@ namespace Cosmic
 		virtual int									ReadPixel(uint32_t attachmentIndex, int x, int y) override;
 		virtual void								ClearAttachment(uint32_t attachmentIndex, int value) override;
 		virtual float								ReadDepth(int x, int y) override;
+		virtual bool								ReadPixels(uint32_t attachmentIndex, std::vector<uint8_t>& outRGBA,
+		                                                       uint32_t& outWidth, uint32_t& outHeight) override;
 
 
 	private:

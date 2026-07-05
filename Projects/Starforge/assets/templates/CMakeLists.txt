@@ -20,6 +20,12 @@ endif()
 # previous DLL never blocks the new build (E12 §3.3).
 set(GAME_HOT_SUFFIX "" CACHE STRING "Unique suffix for hot-reloaded module DLLs")
 
+# Module DLL output root (S1). External project folders anywhere on disk pass
+# -DGAME_OUTPUT_DIR=<projectRoot>/build so the DLL lives in the project's own tree
+# (the editor loads it by absolute path); in-tree projects leave it unset and fall
+# back to the SDK runtime dir, next to Cosmic.dll / CosmicApp.exe.
+set(GAME_OUTPUT_DIR "" CACHE PATH "Output root for the module DLL (<dir>/<CONFIG>)")
+
 # ---- SDK path -----------------------------------------------------------------
 if(NOT COSMIC_SDK_DIR)
     set(COSMIC_SDK_DIR $ENV{COSMIC_SDK})
@@ -74,8 +80,12 @@ else()
 endif()
 target_link_libraries(@PROJECT_NAME@ PRIVATE CosmicCore_Imported)
 
-# The module DLL lands next to Cosmic.dll / CosmicApp.exe so the editor's
-# LoadLibrary + the Launcher both find it.
+# The module DLL lands in GAME_OUTPUT_DIR/<CONFIG> — the SDK runtime dir for
+# in-tree projects (so the editor's LoadLibrary + the Launcher both find it), or
+# the external project's own build/<CONFIG> when GAME_OUTPUT_DIR is passed (S1).
+if(NOT GAME_OUTPUT_DIR)
+    set(GAME_OUTPUT_DIR "${COSMIC_SDK_DIR}/build/Runtime")
+endif()
 set_target_properties(@PROJECT_NAME@ PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${COSMIC_SDK_DIR}/build/Runtime/$<CONFIG>"
-    LIBRARY_OUTPUT_DIRECTORY "${COSMIC_SDK_DIR}/build/Runtime/$<CONFIG>")
+    RUNTIME_OUTPUT_DIRECTORY "${GAME_OUTPUT_DIR}/$<CONFIG>"
+    LIBRARY_OUTPUT_DIRECTORY "${GAME_OUTPUT_DIR}/$<CONFIG>")

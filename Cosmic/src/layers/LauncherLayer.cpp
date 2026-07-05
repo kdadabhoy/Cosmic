@@ -334,10 +334,42 @@ namespace Cosmic
 		const float listH = panelH - 180.0f;
 		ImGui::BeginChild("##ProjectList", { leftW - 4.0f, listH }, true);
 
-		if (m_DiscoveredProjects.empty())
+		// Cosmic Launcher = the developer/demo browser now that Starforge is the
+		// product front door (S4). Starforge gets a distinct primary tile; the
+		// engine demos & tools group beneath it.
+		const bool hasStarforge =
+			std::find(m_DiscoveredProjects.begin(), m_DiscoveredProjects.end(), "Starforge")
+			!= m_DiscoveredProjects.end();
+
+		if (hasStarforge)
+		{
+			ImGui::PushID("Starforge");
+			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.55f, 0.28f, 0.08f, 1.0f));
+			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.72f, 0.38f, 0.12f, 1.0f));
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.45f, 0.22f, 0.06f, 1.0f));
+			ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 5.0f);
+			if (ImGui::Button("Open Starforge  —  build apps", { ImGui::GetContentRegionAvail().x, 48.0f }))
+			{
+				m_SelectedProject = "Starforge";
+				m_TransitionTriggered = true;
+			}
+			ImGui::PopStyleVar();
+			ImGui::PopStyleColor(3);
+			ImGui::PopID();
+			ImGui::Spacing();
+			ImGui::Separator();
+			ImGui::TextDisabled("Engine demos & tools");
+			ImGui::Spacing();
+		}
+
+		size_t demoCount = 0;
+		for (const auto& name : m_DiscoveredProjects)
+			if (name != "Starforge") ++demoCount;
+
+		if (demoCount == 0)
 		{
 			ImGui::Spacing();
-			ImGui::TextDisabled("  No project assemblies found.");
+			ImGui::TextDisabled("  No demo/plugin assemblies found.");
 			ImGui::TextDisabled("  Build a project and place the .dll");
 			ImGui::TextDisabled("  next to CosmicApp.exe.");
 		}
@@ -345,6 +377,7 @@ namespace Cosmic
 		{
 			for (const auto& name : m_DiscoveredProjects)
 			{
+				if (name == "Starforge") continue;   // primary tile above
 				ImGui::PushID(name.c_str());
 
 				// Highlight selected
@@ -398,7 +431,7 @@ namespace Cosmic
 		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.08f, 0.38f, 0.18f, 1.0f));
 		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.12f, 0.52f, 0.26f, 1.0f));
 		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.06f, 0.28f, 0.13f, 1.0f));
-		if (ImGui::Button("+ New Project", { rightW - 4.0f, 40.0f }))
+		if (ImGui::Button("New C++ plugin (advanced)", { rightW - 4.0f, 40.0f }))
 		{
 			// Default target = SDK_ROOT/Projects/
 			fs::path sdkDir = fs::current_path();
@@ -465,7 +498,8 @@ namespace Cosmic
 			static char nameBuf[128] = "MyProject";
 			static std::string errMsg = "";
 
-			ImGui::Text("New Project Wizard");
+			ImGui::Text("New C++ Plugin Project (advanced)");
+			ImGui::TextDisabled("Engine-level plugins (SF_Telem, ViperSim). To BUILD APPS, use Starforge.");
 			ImGui::Separator();
 			ImGui::Spacing();
 

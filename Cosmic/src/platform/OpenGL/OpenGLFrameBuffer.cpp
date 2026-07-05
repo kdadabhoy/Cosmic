@@ -14,6 +14,8 @@
 #include "core/Log.h"
 
 #include <array>
+#include <cstring>
+#include <vector>
 
 namespace Cosmic
 {
@@ -253,6 +255,42 @@ namespace Cosmic
 		float depth = 1.0f;
 		glReadPixels(x, y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &depth);
 		return depth;
+	}
+
+	bool OpenGLFrameBuffer::ReadPixels(uint32_t attachmentIndex, std::vector<uint8_t>& outRGBA,
+	                                   uint32_t& outWidth, uint32_t& outHeight)
+	{
+		if (attachmentIndex >= m_ColorAttachments.size())
+			return false;
+
+		const uint32_t w = m_Specification.Width;
+		const uint32_t h = m_Specification.Height;
+		outWidth  = w;
+		outHeight = h;
+		if (w == 0 || h == 0)
+		{
+			outRGBA.clear();
+			return true;
+		}
+
+		// The FBO must already be bound by the caller.
+		outRGBA.assign(static_cast<size_t>(w) * h * 4, 0);
+		glReadBuffer(GL_COLOR_ATTACHMENT0 + attachmentIndex);
+		glPixelStorei(GL_PACK_ALIGNMENT, 1);
+		glReadPixels(0, 0, (GLsizei)w, (GLsizei)h, GL_RGBA, GL_UNSIGNED_BYTE, outRGBA.data());
+
+		// GL's origin is bottom-left; flip rows so the buffer is top-left origin.
+		const size_t rowBytes = static_cast<size_t>(w) * 4;
+		std::vector<uint8_t> tmp(rowBytes);
+		for (uint32_t y = 0; y < h / 2; ++y)
+		{
+			uint8_t* top = outRGBA.data() + static_cast<size_t>(y) * rowBytes;
+			uint8_t* bot = outRGBA.data() + static_cast<size_t>(h - 1 - y) * rowBytes;
+			std::memcpy(tmp.data(), top, rowBytes);
+			std::memcpy(top, bot, rowBytes);
+			std::memcpy(bot, tmp.data(), rowBytes);
+		}
+		return true;
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////

@@ -53,16 +53,27 @@ namespace Cosmic
 
         m_Camera = CreateScope<PlayerCamera>();
 
-        // Manifest — startup scene + fixed-dt + window title (all optional).
+        // Manifest — startup scene + fixed-dt + window identity (all optional).
         float fixedHz = 60.0f;
         std::string title = m_ProjectName.empty() ? "Cosmic Player" : m_ProjectName;
+        int  winW = 0, winH = 0;   // 0 => keep the current window size
         if (Ref<Config> cfg = Config::Load("project://project.cproj"))
         {
             m_StartupScene = cfg->GetString("startup_scene", m_StartupScene);
             fixedHz        = static_cast<float>(cfg->GetInt("fixed_dt_hz", 60));
-            title          = cfg->GetString("window_title", cfg->GetString("name", title));
+            // [window] title/width/height (S5); fall back to the legacy top-level keys.
+            title = cfg->GetString("window.title", cfg->GetString("window_title", cfg->GetString("name", title)));
+            winW  = static_cast<int>(cfg->GetInt("window.width",  0));
+            winH  = static_cast<int>(cfg->GetInt("window.height", 0));
         }
         Application::Get().SetFixedTimestepHz(fixedHz);
+
+        // Window identity (S5): a shipped app opens with its own name + size, not
+        // "Cosmic Engine" at 1280x720. The custom title bar reads the workspace
+        // project name; the OS/taskbar name comes from the GLFW title.
+        Application::Get().GetWindow().SetTitle(title);
+        if (winW > 0 && winH > 0)
+            Application::Get().GetWindow().SetSize(winW, winH);
         if (auto* ws = Application::Get().GetWorkspaceLayer())
             ws->SetProjectName(title);
 

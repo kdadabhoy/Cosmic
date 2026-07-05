@@ -10,6 +10,8 @@ add_executable(CosmicTests
     test_bufferlayout.cpp
     test_telemetry_roundtrip.cpp
     test_config.cpp
+    test_filesystem_mounts.cpp
+    test_exe_resources.cpp
     test_integrators.cpp
     test_lookuptable.cpp
     test_filters.cpp

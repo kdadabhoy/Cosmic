@@ -1,0 +1,57 @@
+name: Release
+
+# Manual-dispatch release job (Phase 16 / S5 step 7): builds Release and stages a
+# standalone dist/<app> for a named in-tree project, then uploads it as an artifact.
+# Per-app icon embedding / installer compilation is done from Starforge's Package UI
+# (or locally with installer/AppSetup.iss); this job produces the runnable payload.
+
+on:
+  workflow_dispatch:
+    inputs:
+      app_name:
+        description: "Project/plugin to package (its DLL must build in Release, e.g. SF_Telem, Frontier, Starforge)"
+        required: true
+        default: "Starforge"
+
+jobs:
+  package:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure
+        run: cmake -S . -B build -A x64 -DCOSMIC_BUILD_TESTS=OFF
+
+      - name: Build (Release)
+        run: cmake --build build --config Release --parallel
+
+      - name: Stage dist
+        shell: pwsh
+        run: |
+          $app = "${{ github.event.inputs.app_name }}"
+          $rt  = "build/Runtime/Release"
+          $out = "dist/$app"
+          if (-not (Test-Path "$rt/$app.dll")) { throw "Release DLL '$rt/$app.dll' not found — is '$app' an in-tree project?" }
+          Remove-Item -Recurse -Force $out -ErrorAction SilentlyContinue
+          New-Item -ItemType Directory -Force -Path "$out/assets/projects" | Out-Null
+
+          Copy-Item "$rt/CosmicApp.exe" "$out/$app.exe"
+          Copy-Item "$rt/Cosmic.dll"    "$out/Cosmic.dll"
+          Copy-Item "$rt/$app.dll"      "$out/$app.dll"
+
+          # Engine assets minus the projects/ tree, then only this app's content.
+          Get-ChildItem "$rt/assets" -Force | Where-Object { $_.Name -ne "projects" } |
+            ForEach-Object { Copy-Item $_.FullName "$out/assets/" -Recurse -Force }
+          if (Test-Path "$rt/assets/projects/$app") {
+            Copy-Item "$rt/assets/projects/$app" "$out/assets/projects/$app" -Recurse -Force
+          }
+
+          "# Cosmic packaged app (boot.cfg): launched with no --project; sets the S6 user data identity.`n$app" |
+            Set-Content -Encoding ascii "$out/boot.cfg"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ github.event.inputs.app_name }}-dist
+          path: dist/${{ github.event.inputs.app_name }}

@@ -138,6 +138,8 @@
 #include "utils/Config.h"        // E10 — TOML config facade
 #include "utils/FileWatcher.h"   // E10 — directory change notifications
 #include "utils/FileDialog.h"    // H6 — native open/save/folder dialogs
+#include "utils/ExeResources.h"  // S5 — embed an app icon into a packaged exe
+#include "utils/ImageIO.h"       // S7 — write raw pixels to PNG (screenshots/thumbnails)
 
 // Telemetry, Recording, and Entity Selection
 #include "telemetry/TelemetryChannel.h"

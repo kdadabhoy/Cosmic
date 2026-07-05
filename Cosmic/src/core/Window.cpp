@@ -604,6 +604,22 @@ namespace Cosmic
 	void Window::Restore()        { if (m_Handle) glfwRestoreWindow(m_Handle); }
 	void Window::Close()          { if (m_Handle) glfwSetWindowShouldClose(m_Handle, GLFW_TRUE); }
 
+	void Window::SetTitle(const std::string& title)
+	{
+		m_Data.Title = title;
+		if (m_Handle) glfwSetWindowTitle(m_Handle, title.c_str());
+	}
+
+	void Window::SetSize(int width, int height)
+	{
+		// A shipped app opens at its authored size (S5 [window] width/height). No-op
+		// while fullscreen (the cover rect owns the size) or on absurd values; GLFW
+		// fires a resize event so the framebuffer/viewport re-sync as usual.
+		if (!m_Handle || m_Fullscreen) return;
+		if (width < 64 || height < 64 || width > 16384 || height > 16384) return;
+		glfwSetWindowSize(m_Handle, width, height);
+	}
+
 	bool Window::IsWindowMaximized() const
 	{
 		return m_Handle && glfwGetWindowAttrib(m_Handle, GLFW_MAXIMIZED) != 0;

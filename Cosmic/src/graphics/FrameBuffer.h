@@ -54,6 +54,7 @@
 
 #include "core/Core.h"
 #include <vector>
+#include <cstdint>
 #include <initializer_list>
 
 namespace Cosmic
@@ -173,6 +174,18 @@ namespace Cosmic
 		// attachment or the read misses geometry. Used to reconstruct the world
 		// point under the cursor for orbit-about-cursor / zoom-to-cursor.
 		virtual float ReadDepth(int x, int y) = 0;
+
+		////////////////////////////////
+		// Full-image Read-back (S7 — thumbnail / screenshot capture)
+		///////////////////////////////
+
+		// Read a whole color attachment back into 8-bit RGBA, ROW-MAJOR with a
+		// TOP-LEFT origin (GL's bottom-left rows are flipped for you, so the buffer
+		// is ready for stb_image_write). HDR (RGBA16F) attachments are converted +
+		// clamped to 8-bit. The FBO must be bound. Returns false (and leaves outputs
+		// untouched) when the attachment index is out of range.
+		virtual bool ReadPixels(uint32_t attachmentIndex, std::vector<uint8_t>& outRGBA,
+		                        uint32_t& outWidth, uint32_t& outHeight) = 0;
 
 		////////////////////////////////
 		// Factory Pattern
