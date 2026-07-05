@@ -4,6 +4,7 @@
 #include "renderer/RenderCommand.h"
 #include "renderer/Renderer3D.h"
 #include "graphics/TextureCube.h"
+#include "graphics/Texture.h"     // Texture2D::CreateHDR (H4 HDRI source)
 #include "graphics/FrameBuffer.h"
 #include "graphics/Shader.h"
 #include "graphics/Mesh.h"
@@ -112,6 +113,9 @@ namespace Cosmic
 		m_BrdfShader.reset();
 		m_SkyboxShader.reset();
 		m_SkyDetailShader.reset();
+		m_EquirectShader.reset();
+		m_HdriTex.reset();
+		m_HdriPath.clear();
 		m_Cube.reset();
 		m_Initialized = false;
 	}
@@ -157,6 +161,39 @@ namespace Cosmic
 		}
 	}
 
+	void EnvironmentMap::SetHdri(const std::string& resolvedPath)
+	{
+		if (resolvedPath.empty())
+		{
+			ClearHdri();
+			return;
+		}
+		if (resolvedPath == m_HdriPath && m_HdriTex)
+			return;   // already loaded — no-op (called every frame from ApplyEnvironment)
+
+		Ref<Texture2D> tex = Texture2D::CreateHDR(resolvedPath);
+		if (!tex || tex->GetWidth() == 0)
+		{
+			CS_CORE_ERROR("EnvironmentMap::SetHdri: could not load '{0}' — keeping the procedural sky.", resolvedPath);
+			ClearHdri();
+			return;
+		}
+		m_HdriPath = resolvedPath;
+		m_HdriTex  = tex;
+		m_Dirty    = true;
+		CS_CORE_INFO("EnvironmentMap: HDRI source '{0}' ({1}x{2}).", resolvedPath, tex->GetWidth(), tex->GetHeight());
+	}
+
+	void EnvironmentMap::ClearHdri()
+	{
+		if (m_HdriTex || !m_HdriPath.empty())
+		{
+			m_HdriTex.reset();
+			m_HdriPath.clear();
+			m_Dirty = true;   // rebake from the procedural sky
+		}
+	}
+
 	void EnvironmentMap::RenderCubeFaces(const Ref<Shader>& shader, const Ref<TextureCube>& target, uint32_t mip)
 	{
 		const auto views = CaptureViews();
@@ -182,15 +219,39 @@ namespace Cosmic
 		RenderCommand::SetDepthWrite(false);
 		RenderCommand::SetCullMode(RenderCommand::CullMode::None);
 
-		// 1) Procedural sky → environment cube.
-		m_EnvSkyShader->Bind();
-		m_EnvSkyShader->SetFloat3("u_SunDirection", m_SunDir);
-		m_EnvSkyShader->SetFloat("u_SkyIntensity", m_SkyIntensity);
-		// Night tier (F7): 0 default keeps the shipped day-only palette byte-identical.
-		m_EnvSkyShader->SetFloat("u_NightSky", m_NightSky ? 1.0f : 0.0f);
-		m_EnvSkyShader->SetFloat3("u_MoonDirection", m_MoonDir);
-		m_EnvSkyShader->SetFloat("u_MoonIntensity", m_MoonIntensity);
-		RenderCubeFaces(m_EnvSkyShader, m_EnvCube, 0);
+		// 1) Environment cube source: an equirect HDRI when set (H4), else the
+		//    procedural analytic sky. Both feed the identical convolution chain below.
+		if (m_HdriTex)
+		{
+			if (!m_EquirectShader)
+				m_EquirectShader = Shader::Create("assets/shaders/EquirectToCube.glsl");
+
+			if (m_EquirectShader)
+			{
+				m_EquirectShader->Bind();
+				m_HdriTex->Bind(0);
+				m_EquirectShader->SetInt("u_Equirect", 0);
+				m_EquirectShader->SetFloat("u_SkyIntensity", m_SkyIntensity);
+				RenderCubeFaces(m_EquirectShader, m_EnvCube, 0);
+			}
+			else
+			{
+				CS_CORE_ERROR("EnvironmentMap: EquirectToCube shader missing — falling back to procedural.");
+				m_HdriTex.reset(); m_HdriPath.clear();
+			}
+		}
+
+		if (!m_HdriTex)   // procedural sky (also the HDRI fall-through above)
+		{
+			m_EnvSkyShader->Bind();
+			m_EnvSkyShader->SetFloat3("u_SunDirection", m_SunDir);
+			m_EnvSkyShader->SetFloat("u_SkyIntensity", m_SkyIntensity);
+			// Night tier (F7): 0 default keeps the shipped day-only palette byte-identical.
+			m_EnvSkyShader->SetFloat("u_NightSky", m_NightSky ? 1.0f : 0.0f);
+			m_EnvSkyShader->SetFloat3("u_MoonDirection", m_MoonDir);
+			m_EnvSkyShader->SetFloat("u_MoonIntensity", m_MoonIntensity);
+			RenderCubeFaces(m_EnvSkyShader, m_EnvCube, 0);
+		}
 		m_EnvCube->FinishRender();
 		m_EnvCube->GenerateMips();
 

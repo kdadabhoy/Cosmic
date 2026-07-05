@@ -70,9 +70,9 @@ namespace Starforge
         }
     }
 
-    void InspectorPanel::OnImGuiRender(EditorContext& ctx)
+    void InspectorPanel::OnImGuiRender(EditorContext& ctx, bool* pOpen)
     {
-        ImGui::Begin("Inspector");
+        ImGui::Begin("Inspector", pOpen);
 
         if (!ctx.HasSelection() || !ctx.PrimaryEntity())
         {
@@ -303,12 +303,23 @@ namespace Starforge
             Entity primary = ctx.PrimaryEntity();
             auto& reg = ctx.Scene->GetRegistry();
 
+            // Runtime/engine-managed components a user shouldn't hand-add (H10) — hidden
+            // behind a toggle. (Only these that are reflected actually appear here.)
+            static bool s_ShowInternal = false;
+            ImGui::Checkbox("Show internal", &s_ShowInternal);
+            ImGui::Separator();
+            auto isInternal = [](const std::string& n)
+            {
+                return n == "Prefab" || n == "Relationship" || n == "ID" || n == "OpaqueComponents";
+            };
+
             // Group registry entries by category; hide ones already present.
             std::map<std::string, std::vector<const TypeDescriptor*>> byCategory;
             for (const auto& [id, desc] : Reflect::GetRegistry().Types())
             {
                 if (id == kTagId) continue;   // identity/name, not add-able
                 if (desc.Has && desc.Has(reg, (entt::entity)primary)) continue;
+                if (!s_ShowInternal && isInternal(desc.Name)) continue;
                 byCategory[desc.Category.empty() ? "General" : desc.Category].push_back(&desc);
             }
 

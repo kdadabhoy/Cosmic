@@ -260,9 +260,9 @@ namespace Starforge
     // =========================================================================
     // Panel
     // =========================================================================
-    void WorldSystemsPanel::OnImGuiRender(EditorContext& ctx)
+    void WorldSystemsPanel::OnImGuiRender(EditorContext& ctx, bool* pOpen)
     {
-        if (ImGui::Begin("World Systems"))
+        if (ImGui::Begin("World Systems", pOpen))
         {
             if (!ctx.ProjectOpen || !ctx.Scene)
             {

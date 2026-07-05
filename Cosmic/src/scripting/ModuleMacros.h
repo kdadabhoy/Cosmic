@@ -58,6 +58,18 @@
         using CS_ReflectedType = T;                                            \
         ::Cosmic::ModuleRegistry::Get().AddScript<T>(#T)
 
+// Register a SYSTEM class T (a SystemScript subclass, H9). Declare its membership
+// with .Requires<Comps...>()/.WithTag("tag")/.Order(n), then chain CS_FIELD(...) and
+// CS_END. One instance per scene drives every matching entity via OnUpdateAll:
+//
+//   CS_SYSTEM(FlockSystem).Requires<TransformComponent, BoidTag>()
+//       CS_FIELD(Cohesion).Range(0.f, 1.f)
+//   CS_END;
+#define CS_SYSTEM(T)                                                            \
+    {                                                                           \
+        using CS_ReflectedType = T;                                            \
+        ::Cosmic::ModuleRegistry::Get().AddSystem<T>(#T)
+
 // Register a plain custom reflected component T (needs CS_REGISTER_COMPONENT(T)
 // in its own header). It becomes a first-class component: Inspector, serializer,
 // and undo pick it up through the reflection registry. Chain CS_FIELD then CS_END.

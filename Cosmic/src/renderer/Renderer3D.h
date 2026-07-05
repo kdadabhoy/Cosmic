@@ -259,11 +259,15 @@ namespace Cosmic
 		// Scene Lighting (S2 scope: one directional light)
 		///////////////////////////////
 
-		/** @brief Direction the light TRAVELS (normalized internally). Default: (-0.4, -1, -0.25). */
+		/** @brief Direction the light TRAVELS (normalized internally). Default: (-0.4, -1, -0.25).
+		 *  As of H3 this also patches the sun fields of the LightsBlock UBO so the cheap Mesh3D
+		 *  color path (which now reads that block, like MeshLit) stays coherent for callers that
+		 *  use only this legacy setter (Engine3DDemo). Prefer SetLights for full scene lighting. */
 		static void SetLightDirection(const glm::vec3& direction);
 		static const glm::vec3& GetLightDirection();
 
-		/** @brief Ambient floor in [0, 1] — the lit level of a face turned away from the light. */
+		/** @brief Ambient floor in [0, 1] — the lit level of a face turned away from the light.
+		 *  Also mirrored into the LightsBlock UBO (H3; see SetLightDirection). */
 		static void  SetAmbient(float ambient);
 		static float GetAmbient();
 

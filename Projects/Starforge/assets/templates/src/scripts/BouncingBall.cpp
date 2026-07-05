@@ -11,9 +11,9 @@ void BouncingBall::OnFixedUpdate(float dt)
     m_VelY += Gravity * dt;
     t.Position.y += m_VelY * dt;
 
-    if (t.Position.y < 0.0f)              // hit the ground — bounce
+    if (t.Position.y < FloorY)            // hit the ground — bounce
     {
-        t.Position.y = 0.0f;
+        t.Position.y = FloorY;
         m_VelY = -m_VelY * Restitution;
     }
 

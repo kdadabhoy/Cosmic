@@ -13,12 +13,13 @@ class BouncingBall : public Cosmic::ScriptableEntity
 public:
     float Gravity     = -9.81f;   // m/s^2
     float Restitution = 0.8f;     // fraction of speed kept per bounce
-    float StartHeight = 5.0f;     // metres
+    float StartHeight = 5.0f;     // metres ABOVE the floor to drop from
+    float FloorY      = 0.0f;     // world Y of the ground it bounces on
 
 protected:
     void OnStart() override
     {
-        GetComponent<Cosmic::TransformComponent>().Position.y = StartHeight;
+        GetComponent<Cosmic::TransformComponent>().Position.y = FloorY + StartHeight;
         m_VelY = 0.0f;
     }
 

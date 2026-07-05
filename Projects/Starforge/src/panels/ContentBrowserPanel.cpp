@@ -118,9 +118,9 @@ namespace Starforge
         return "project://" + rel.generic_string();
     }
 
-    void ContentBrowserPanel::OnImGuiRender(EditorContext& ctx)
+    void ContentBrowserPanel::OnImGuiRender(EditorContext& ctx, bool* pOpen)
     {
-        ImGui::Begin("Content Browser");
+        ImGui::Begin("Content Browser", pOpen);
         EnsureResolved();
 
         std::error_code ec;

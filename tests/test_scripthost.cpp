@@ -210,3 +210,129 @@ TEST_CASE("E11: NativeScript is a reflected component and its fields round-trip 
     }
     CHECK(found == 1);
 }
+
+// ---------------------------------------------------------------------------
+// H9 — SystemScript tier: one instance drives a *class* of entities
+// ---------------------------------------------------------------------------
+
+namespace
+{
+    // A system that nudges every matching entity along +X by Step each tick. Its
+    // membership is TransformComponent + the "boid" tag. Static observers verify the
+    // per-scene single instance + the live membership count.
+    class FlockSystem : public SystemScript
+    {
+    public:
+        float Step = 1.0f;
+
+        static inline int s_Created   = 0;
+        static inline int s_LastCount = -1;
+        static void Reset() { s_Created = 0; s_LastCount = -1; }
+
+    protected:
+        void OnCreate() override { ++s_Created; }
+        void OnUpdateAll(std::span<Entity> ents, float ts) override
+        {
+            s_LastCount = (int)ents.size();
+            for (Entity e : ents)
+                e.GetComponent<TransformComponent>().Position.x += Step * ts;
+        }
+    };
+
+    void RegisterFlock()
+    {
+        ModuleRegistry::Get().BeginModule("test");
+        CS_SYSTEM(FlockSystem).Requires<TransformComponent>().WithTag("boid")
+            CS_FIELD(Step).Range(0.0f, 10.0f)
+        CS_END;
+        ModuleRegistry::Get().EndModule();
+    }
+
+    // Attach a SystemScriptComponent naming `className` to a fresh holder entity.
+    Entity MakeSystemHolder(Scene& scene, const std::string& className, float stepOverride = -1.0f)
+    {
+        Entity e = scene.CreateEntity("Systems");
+        auto& ssc = e.AddComponent<SystemScriptComponent>();
+        ssc.ClassName = className;
+        if (stepOverride >= 0.0f)
+            ssc.Fields["Step"] = Reflect::FieldValue{ stepOverride };
+        return e;
+    }
+}
+
+TEST_CASE("H9: a system ticks once with its whole matching set and moves them all")
+{
+    FlockSystem::Reset();
+    RegisterFlock();
+
+    Ref<Scene> scene = Scene::Create();
+    MakeSystemHolder(*scene, "FlockSystem", /*stepOverride=*/2.0f);
+
+    std::vector<Entity> boids;
+    for (int i = 0; i < 10; ++i)
+        boids.push_back(scene->CreateEntity("boid"));       // tag == "boid"
+    Entity other = scene->CreateEntity("other");            // NOT a boid
+
+    ScriptHost host;
+    host.Instantiate(*scene);
+    CHECK(FlockSystem::s_Created == 1);                     // one instance per scene
+
+    host.Tick(0.5f);
+    CHECK(FlockSystem::s_LastCount == 10);                  // the whole set, one call
+    for (Entity b : boids)
+        CHECK(b.GetComponent<TransformComponent>().Position.x == doctest::Approx(1.0f));   // 2.0*0.5
+    CHECK(other.GetComponent<TransformComponent>().Position.x == doctest::Approx(0.0f));   // untouched
+
+    host.Destroy();
+}
+
+TEST_CASE("H9: membership is rebuilt each tick as entities spawn and die")
+{
+    FlockSystem::Reset();
+    RegisterFlock();
+
+    Ref<Scene> scene = Scene::Create();
+    MakeSystemHolder(*scene, "FlockSystem");
+
+    std::vector<Entity> boids;
+    for (int i = 0; i < 5; ++i)
+        boids.push_back(scene->CreateEntity("boid"));
+
+    ScriptHost host;
+    host.Instantiate(*scene);
+
+    host.Tick(0.1f);
+    CHECK(FlockSystem::s_LastCount == 5);
+
+    scene->DestroyEntity(boids[0]);
+    scene->DestroyEntity(boids[1]);
+    scene->CreateEntity("boid");            // +1
+
+    host.Tick(0.1f);
+    CHECK(FlockSystem::s_LastCount == 4);   // 5 - 2 + 1
+
+    host.Destroy();
+}
+
+TEST_CASE("H9: SystemScript fields round-trip through the scene serializer")
+{
+    RegisterFlock();
+
+    Ref<Scene> scene = Scene::Create();
+    MakeSystemHolder(*scene, "FlockSystem", /*stepOverride=*/3.25f);
+
+    const std::string text = SceneSerializer::SaveToString(*scene);
+
+    Ref<Scene> loaded = Scene::Create();
+    REQUIRE(SceneSerializer::LoadFromString(*loaded, text));
+
+    int found = 0;
+    for (auto h : loaded->GetRegistry().view<SystemScriptComponent>())
+    {
+        const auto& ssc = loaded->GetRegistry().get<SystemScriptComponent>(h);
+        CHECK(ssc.ClassName == "FlockSystem");
+        CHECK(std::get<float>(ssc.Fields.at("Step")) == doctest::Approx(3.25f));
+        ++found;
+    }
+    CHECK(found == 1);
+}

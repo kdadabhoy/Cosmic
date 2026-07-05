@@ -5,6 +5,7 @@
 #include "scene/Components.h"
 #include "renderer/Renderer2D.h"
 #include "renderer/Renderer3D.h"
+#include "renderer/SceneRenderer.h"   // H2 — BuildRenderDesc fills a SceneRenderDesc
 #include "assets/AssetLibrary.h"
 #include "terrain/Terrain.h"
 #include "water/Water.h"
@@ -19,6 +20,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <functional>
+#include <limits>
 #include <glm/gtc/matrix_transform.hpp>
 #ifndef GLM_ENABLE_EXPERIMENTAL
 #define GLM_ENABLE_EXPERIMENTAL
@@ -63,6 +65,35 @@ namespace Cosmic
 				case Shape::Torus:    return Mesh::CreateTorus(p.Radius, p.TubeRadius, seg, rings);
 			}
 			return nullptr;
+		}
+
+		// Gather the scene's light components into a SceneLightsDesc (S4.5). Shared by
+		// OnRender3D (cheap path) and BuildRenderDesc (H2) so there is one truth for
+		// "what lights a scene has": first DirectionalLight = sun; every PointLight is
+		// pushed (SetLights is the single truncation point at kMaxPointLights).
+		void GatherSceneLights(entt::registry& reg, Renderer3D::SceneLightsDesc& lights)
+		{
+			lights.Ambient = Renderer3D::GetAmbient();
+
+			for (auto entity : reg.view<DirectionalLightComponent>())
+			{
+				const auto& dl = reg.get<DirectionalLightComponent>(entity);
+				lights.SunDirection = dl.Direction;
+				lights.SunColor     = dl.Color;
+				lights.SunIntensity = dl.Intensity;
+				break;   // first directional light wins as the sun
+			}
+
+			reg.view<TransformComponent, PointLightComponent>().each(
+				[&](auto /*entity*/, const TransformComponent& t, const PointLightComponent& pl)
+			{
+				Renderer3D::PointLightDesc d;
+				d.Position  = t.Position;
+				d.Radius    = pl.Radius;
+				d.Color     = pl.Color;
+				d.Intensity = pl.Intensity;
+				lights.Points.push_back(d);
+			});
 		}
 	}
 
@@ -600,37 +631,7 @@ namespace Cosmic
 
 		// --- Gather scene lights (S4.5) and upload before drawing. ---
 		Renderer3D::SceneLightsDesc lights;
-		lights.Ambient = Renderer3D::GetAmbient();
-
-		// First directional light wins as the sun.
-		{
-			auto dirView = m_Registry.view<DirectionalLightComponent>();
-			for (auto entity : dirView)
-			{
-				const auto& dl = dirView.get<DirectionalLightComponent>(entity);
-				lights.SunDirection = dl.Direction;
-				lights.SunColor     = dl.Color;
-				lights.SunIntensity = dl.Intensity;
-				break;
-			}
-		}
-
-		// Point lights (position from the TransformComponent). All are gathered;
-		// SetLights is the single truncation point — it uploads the first
-		// Renderer3D::kMaxPointLights and warns once when over the cap.
-		{
-			auto ptView = m_Registry.view<TransformComponent, PointLightComponent>();
-			ptView.each([&](auto /*entity*/, const TransformComponent& t, const PointLightComponent& pl)
-			{
-				Renderer3D::PointLightDesc d;
-				d.Position  = t.Position;
-				d.Radius    = pl.Radius;
-				d.Color     = pl.Color;
-				d.Intensity = pl.Intensity;
-				lights.Points.push_back(d);
-			});
-		}
-
+		GatherSceneLights(m_Registry, lights);
 		Renderer3D::SetLights(lights);
 
 		Renderer3D::BeginScene(camera);
@@ -647,10 +648,29 @@ namespace Cosmic
 			});
 		}
 
+		// Meshes + LOD groups through the shared submit path (a Main-pass context
+		// into the live scene) — identical draws to the pre-H2 inline loops.
+		SceneDrawContext ctx;
+		ctx.Pass           = ScenePass::Main;
+		ctx.ViewProjection = camera.GetViewProjectionMatrix();
+		ctx.EyePosition    = camera.GetPosition();
+		ctx.CameraPosition = camera.GetPosition();
+		SubmitOpaqueMeshes(ctx);
+
+		Renderer3D::EndScene();
+	}
+
+	// H2 — routed opaque submit shared by OnRender3D and BuildRenderDesc's DrawOpaque.
+	void Scene::SubmitOpaqueMeshes(const SceneDrawContext& ctx)
+	{
+		const bool depthOnly = ctx.IsDepthOnly();   // shadow / coverage passes
+
 		auto view = m_Registry.view<TransformComponent, MeshRendererComponent>();
 		view.each([&](auto entity, const TransformComponent& /*transform*/, const MeshRendererComponent& mr)
 		{
 			if (!mr.MeshAsset)
+				return;
+			if (depthOnly && !mr.CastShadows)
 				return;
 
 			const int entityID = (int)(uint32_t)entity;
@@ -659,31 +679,108 @@ namespace Cosmic
 			// shipped flat scene renders identically.
 			const glm::mat4 xform = WorldOf(entity);
 			if (mr.MaterialAsset)
-				Renderer3D::DrawMesh(mr.MeshAsset, xform, mr.MaterialAsset, entityID);
+				ctx.DrawMesh(mr.MeshAsset, xform, mr.MaterialAsset, entityID);
 			else
-				Renderer3D::DrawMesh(mr.MeshAsset, xform, mr.Color, entityID);
+				ctx.DrawMesh(mr.MeshAsset, xform, mr.Color, entityID);
 		});
 
-		// LOD groups (S12.4): one level per entity, picked by camera distance.
-		// Beyond the last level's MaxDistance the entity draws nothing at all.
+		// LOD groups (S12.4): one level per entity, picked by the REAL camera
+		// distance so a caster (depth pass) matches its lit level exactly.
+		auto lodView = m_Registry.view<TransformComponent, LODGroupComponent>();
+		lodView.each([&](auto entity, const TransformComponent& transform, const LODGroupComponent& lod)
 		{
-			auto lodView = m_Registry.view<TransformComponent, LODGroupComponent>();
-			lodView.each([&](auto entity, const TransformComponent& transform, const LODGroupComponent& lod)
-			{
-				const float dist = glm::distance(camera.GetPosition(), transform.Position);
-				const int level = LODGroupComponent::SelectLevel(lod.Levels, dist);
-				if (level < 0 || !lod.Levels[level].MeshAsset)
-					return;
+			if (depthOnly && !lod.CastShadows)
+				return;
+			const float dist = glm::distance(ctx.CameraPosition, transform.Position);
+			const int level = LODGroupComponent::SelectLevel(lod.Levels, dist);
+			if (level < 0 || !lod.Levels[level].MeshAsset)
+				return;
 
-				const int entityID = (int)(uint32_t)entity;
-				const glm::mat4 xform = WorldOf(entity);
-				if (lod.MaterialAsset)
-					Renderer3D::DrawMesh(lod.Levels[level].MeshAsset, xform, lod.MaterialAsset, entityID);
-				else
-					Renderer3D::DrawMesh(lod.Levels[level].MeshAsset, xform, lod.Color, entityID);
-			});
+			const int entityID = (int)(uint32_t)entity;
+			const glm::mat4 xform = WorldOf(entity);
+			if (lod.MaterialAsset)
+				ctx.DrawMesh(lod.Levels[level].MeshAsset, xform, lod.MaterialAsset, entityID);
+			else
+				ctx.DrawMesh(lod.Levels[level].MeshAsset, xform, lod.Color, entityID);
+		});
+	}
+
+	EnvironmentComponent* Scene::FindEnvironment()
+	{
+		for (auto entity : m_Registry.view<EnvironmentComponent>())
+			return &m_Registry.get<EnvironmentComponent>(entity);
+		return nullptr;
+	}
+
+	// H2 — the ECS → SceneRenderDesc bridge that makes SceneRenderer the editor +
+	// player render path. See the Scene.h contract.
+	void Scene::BuildRenderDesc(const Camera& camera, float deltaTime, SceneRenderDesc& out)
+	{
+		// Same top-of-frame asset syncs OnRender3D runs, so a freshly loaded scene
+		// (meshes stored by params/path, world systems by recipe) is render-ready.
+		SyncPrimitiveMeshes();
+		SyncWorldSystems();
+
+		m_WorldTime += deltaTime;
+
+		out.SetCamera(camera);
+		out.TimeSeconds = m_WorldTime;
+		out.DeltaTime   = deltaTime;
+
+		GatherSceneLights(m_Registry, out.Lights);
+
+		// Terrain: the first built asset drives the Reflection/Main/shadow passes and
+		// doubles as the shore-attenuation source for the water bodies below.
+		Ref<Terrain> shore;
+		for (auto e : m_Registry.view<TerrainComponent>())
+		{
+			if (Ref<Terrain> t = m_Registry.get<TerrainComponent>(e).TerrainAsset)
+			{
+				out.TerrainSystem = t.get();
+				shore             = t;
+				break;
+			}
 		}
 
-		Renderer3D::EndScene();
+		// Water bodies — PrimaryReflectionWater = the one nearest the camera (the only
+		// surface that gets a real planar reflection; the rest use IBL fallback).
+		{
+			const glm::vec3 camPos = camera.GetPosition();
+			float bestDist = std::numeric_limits<float>::max();
+			for (auto e : m_Registry.view<WaterComponent>())
+			{
+				auto& wc = m_Registry.get<WaterComponent>(e);
+				if (!wc.WaterAsset)
+					continue;
+				wc.WaterAsset->SetShoreTerrain(shore);
+				const glm::vec3 surf{ wc.Center.x, wc.SurfaceHeight, wc.Center.y };
+				const float d = glm::distance(camPos, surf);
+				if (d < bestDist)
+				{
+					bestDist = d;
+					out.PrimaryReflectionWater = (int)out.WaterBodies.size();
+				}
+				out.WaterBodies.push_back(wc.WaterAsset.get());
+			}
+			if (out.WaterBodies.empty())
+				out.PrimaryReflectionWater = -1;
+		}
+
+		// Particle emitters — advanced here (SceneRenderer only DRAWS them) and placed
+		// at their entity's world transform.
+		for (auto e : m_Registry.view<TransformComponent, ParticleEmitterComponent>())
+		{
+			auto& pc = m_Registry.get<ParticleEmitterComponent>(e);
+			if (!pc.Emitter)
+				continue;
+			pc.Emitter->SetTransform(WorldOf(e));
+			pc.Emitter->Update(deltaTime, m_WorldTime);
+			out.Emitters.push_back(pc.Emitter.get());
+		}
+
+		// Opaque geometry is submitted per pass (main/reflection/shadow) through the
+		// routed context — so meshes reflect + cast. EcsScene stays null (leaving it
+		// set would double-draw against DrawOpaque + re-draw terrain in the opaque pass).
+		out.DrawOpaque = [this](const SceneDrawContext& c) { SubmitOpaqueMeshes(c); };
 	}
 } // Closes namespace Cosmic

@@ -39,10 +39,12 @@
 
 #include <glm/glm.hpp>
 #include <cstdint>
+#include <string>
 
 namespace Cosmic
 {
 	class TextureCube;
+	class Texture2D;
 	class FrameBuffer;
 	class Shader;
 	class Mesh;
@@ -106,6 +108,19 @@ namespace Cosmic
 		 *  per-pixel SkyDetail pass, not the bake.) */
 		void SetMoon(const glm::vec3& toMoon, float intensity);
 
+		/**
+		 * Use an equirectangular HDR image as the environment source (H4). The cube
+		 * is baked by projecting the .hdr onto the six faces (EquirectToCube.glsl)
+		 * instead of the procedural sky; the irradiance/prefilter chain + skybox are
+		 * unchanged, so HDRI lighting and the background agree. Re-loads only when the
+		 * path changes; a load failure logs and reverts to the procedural sky (never a
+		 * black scene). Pass an empty path (or ClearHdri) to return to procedural.
+		 * The path must be already resolved to a filesystem path by the caller.
+		 */
+		void SetHdri(const std::string& resolvedPath);
+		void ClearHdri();
+		bool HasHdri() const { return m_HdriTex != nullptr; }
+
 		/** (Re)bake environment → irradiance → prefilter. No-op if not dirty. */
 		void Bake();
 		/** Force the next Bake() to run even if the sun hasn't moved. */
@@ -151,6 +166,12 @@ namespace Cosmic
 		Ref<Shader> m_BrdfShader;
 		Ref<Shader> m_SkyboxShader;
 		Ref<Shader> m_SkyDetailShader;   // SkyDetail.glsl (lazy — detailed sky background, F7)
+		Ref<Shader> m_EquirectShader;    // EquirectToCube.glsl (lazy — HDRI source, H4)
+
+		// HDRI source (H4). When m_HdriTex is set, Bake projects it into m_EnvCube
+		// instead of the procedural sky. m_HdriPath guards re-loads.
+		std::string      m_HdriPath;
+		Ref<Texture2D>   m_HdriTex;
 
 		Ref<Mesh>   m_Cube;              // unit box for cube-render passes
 

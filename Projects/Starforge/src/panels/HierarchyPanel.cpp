@@ -63,9 +63,9 @@ namespace Starforge
         void MakeTorus(Entity e)    { MakePrimitive(e, PrimitiveMeshComponent::Shape::Torus); }
     }
 
-    void HierarchyPanel::OnImGuiRender(EditorContext& ctx)
+    void HierarchyPanel::OnImGuiRender(EditorContext& ctx, bool* pOpen)
     {
-        ImGui::Begin("Hierarchy");
+        ImGui::Begin("Hierarchy", pOpen);
 
         if (!ctx.Scene)
         {

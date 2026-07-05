@@ -33,6 +33,9 @@
 namespace Cosmic
 {
     class ScriptableEntity;
+    class SystemScript;                     // scripting/ScriptableEntity.h (H9)
+    class Scene;                            // membership query iterates its registry
+    template<typename> class SystemBuilder; // scripting/ScriptableEntity.h (H9)
 
     // One registered script class: its factory + reflected field list + owner tag.
     struct ScriptDescriptor
@@ -41,6 +44,19 @@ namespace Cosmic
         std::function<ScriptableEntity*()> Factory;
         Reflect::TypeDescriptor            Fields;   // fields only; entt thunks unused
         std::string                        Module;   // owning module ("" = in-exe/engine)
+    };
+
+    // One registered SYSTEM class (H9): factory + fields + a membership query. Collect
+    // appends the entt handles the system should act on (built per tick from the query
+    // declared via SystemBuilder::Requires<>/WithTag). Order sequences multiple systems.
+    struct SystemDescriptor
+    {
+        std::string                    Name;
+        std::function<SystemScript*()> Factory;
+        Reflect::TypeDescriptor        Fields;
+        std::string                    Module;
+        int                            Order = 0;
+        std::function<void(Scene&, std::vector<entt::entity>&)> Collect;
     };
 
     class COSMIC_API ModuleRegistry
@@ -73,6 +89,27 @@ namespace Cosmic
             return Reflect::ClassBuilder<T>(&d.Fields);
         }
 
+        // Register a SYSTEM class T (a SystemScript subclass) with a membership query
+        // (H9). Returns a SystemBuilder bound to the descriptor so the CS_SYSTEM chain
+        // can attach .Requires<...>()/.WithTag(...)/.Order(...) and CS_FIELD(...) hints.
+        // Re-registering the same name overwrites (idempotent reload). The body only
+        // instantiates where called (a module .cpp that includes the full SystemBuilder
+        // via <Cosmic.h>), so ModuleRegistry.h can forward-declare it.
+        template<typename T>
+        SystemBuilder<T> AddSystem(const std::string& name)
+        {
+            SystemDescriptor& d = m_Systems[name];
+            d.Name    = name;
+            d.Module  = m_CurrentModule;
+            d.Factory = []() -> SystemScript* { return static_cast<SystemScript*>(new T()); };
+            d.Fields.TypeId = entt::type_hash<T>::value();
+            d.Fields.Name   = name;
+            d.Fields.Fields.clear();
+            d.Order   = 0;
+            d.Collect = nullptr;
+            return SystemBuilder<T>(&d);
+        }
+
         // Note a custom component type a module registered (CS_COMPONENT). The
         // component itself lives in Reflect::GetRegistry(); this only records the
         // type id for storage stripping on unload.
@@ -82,6 +119,10 @@ namespace Cosmic
         const ScriptDescriptor* FindScript(const std::string& name) const;
         std::vector<std::string> ScriptNames() const;                        // all
         std::vector<std::string> ScriptNames(const std::string& module) const;
+
+        const SystemDescriptor* FindSystem(const std::string& name) const;   // H9
+        std::vector<std::string> SystemNames() const;
+        std::vector<std::string> SystemNames(const std::string& module) const;
 
         // entt type ids of the components a module registered (E12 clears their
         // storage before FreeLibrary so no dangling vtables remain).
@@ -97,6 +138,7 @@ namespace Cosmic
     private:
         std::string m_CurrentModule;                            // active during Begin/EndModule
         std::unordered_map<std::string, ScriptDescriptor> m_Scripts;   // by class name
+        std::unordered_map<std::string, SystemDescriptor> m_Systems;   // by class name (H9)
 
         struct ComponentNote { entt::id_type Id; std::string Name; std::string Module; };
         std::vector<ComponentNote> m_Components;

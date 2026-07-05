@@ -21,6 +21,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <cmath>
 
 namespace fs = std::filesystem;
 
@@ -49,11 +50,40 @@ namespace Starforge
         CS_INFO("Starforge: attaching the Cosmic editor (Phase 13 Stage B).");
 
         Cosmic::FileSystem::SetActiveProject("Starforge");
-        Cosmic::Log::SetLogDirectory(Cosmic::FileSystem::Resolve("project://logs"));
+        // Logs go to the WRITABLE user root, not project://logs (that lives in the
+        // read-only content area, and a packaged app under Program Files can't write
+        // there) — H7.
+        {
+            const std::string logDir = Cosmic::FileSystem::Resolve("user://logs");
+            Cosmic::Log::SetLogDirectory(logDir);
+            CS_INFO("Log files -> {}", logDir);
+        }
+
+        // Mirror the engine log into the Console panel (H7). The sink fires from any
+        // thread → enqueue under a mutex; DrainLogQueue drains on the UI thread.
+        m_LogSink = std::make_shared<Cosmic::CallbackSink>(
+            [this](spdlog::level::level_enum lvl, const std::string& line)
+            {
+                LogSeverity sev = LogSeverity::Info;
+                if (lvl == spdlog::level::warn)      sev = LogSeverity::Warn;
+                else if (lvl >= spdlog::level::err)  sev = LogSeverity::Error;
+                std::lock_guard<std::mutex> lk(m_LogQueueMutex);
+                m_LogQueue.emplace_back(sev, line);
+            });
+        m_LogSink->set_pattern("[%n] %v");   // panel adds its own timestamp column (H10)
+        Cosmic::Log::AddSink(m_LogSink);
 
         m_Camera.SetNavigationStyle(Cosmic::NavStyle::CAD);
         m_Camera.SnapView(Cosmic::ViewPreset::Iso, /*animate=*/false);
         m_Viewport.Init();
+
+        // Orbit-about-surface (H1): pivot on the point under the cursor via a one-off
+        // depth probe. Invoked only when an orbit drag begins; misses fall back to the
+        // controller's ray/target-plane pivot.
+        m_Camera.SetPivotProbe([this](const glm::vec2& screenMouse, glm::vec3& out) -> bool
+        {
+            return m_Viewport.ProbeWorldPoint(m_Ctx, m_Camera.GetCamera(), screenMouse, out);
+        });
 
         // Editor identity: apply the forge accent, remembering the previous theme
         // so OnDetach restores it (other apps in the same process stay untouched).
@@ -87,14 +117,31 @@ namespace Starforge
     // =========================================================================
     void StarforgeApp::OnDetach()
     {
+        // Stop the engine log feeding the (about-to-be-destroyed) Console first (H7).
+        if (m_LogSink)
+        {
+            Cosmic::Log::RemoveSink(m_LogSink);
+            m_LogSink.reset();
+        }
+
         StopScene();                 // tear down script instances before scene reset
         m_SrcWatcher.Stop();
         Prefs::SaveSettings(m_Settings);
+        m_SceneRenderer.Shutdown();  // free GPU subsystems while the GL context is live (H2)
         m_Ctx.ClearSelection();
         m_Ctx.Commands.Clear();
         m_Ctx.Scene.reset();         // drop the scene while the module is still loaded
         m_EditSceneBackup.reset();
         m_Module.Unload();           // then FreeLibrary
+
+        // Restore the engine chrome menus + default viewport title for whatever app
+        // (or the Launcher) runs next in this process (H5).
+        if (auto* ws = Cosmic::Application::Get().GetWorkspaceLayer())
+        {
+            ws->SetChromeMenusVisible(true);
+            ws->SetViewportTitle("Viewport");
+            ws->SetEdgeMinPixels(0.0f, 0.0f, 0.0f, 0.0f);
+        }
 
         // Restore the theme we replaced so a sibling app (or the Launcher) shown
         // next in this process gets its own look, not the forge accent (E21).
@@ -140,6 +187,8 @@ namespace Starforge
         m_Ctx.Commands.Clear();
         m_Ctx.ClearSelection();
         m_Ctx.ClearDirty();
+        AdoptCameraForScene();          // H8 — frame the sandbox (no camera → frame-all)
+        m_ScriptsNeedBuild = false;     // sandbox has no scripts
     }
 
     // =========================================================================
@@ -326,6 +375,7 @@ namespace Starforge
             Cosmic::SceneSerializer::LoadFromString(*fresh, snapshot);
         m_Ctx.Scene = fresh;
         m_Ctx.ClearDirty();
+        CheckScriptsBuilt();   // H8 — classes now resolve; clears the Ctrl+B hint
         m_Ctx.Log("[Module] Reloaded '" + dllStem + "' (" +
                   std::to_string(Cosmic::ModuleRegistry::Get().ScriptNames(m_Ctx.ProjectName).size()) +
                   " script(s)).");
@@ -364,6 +414,8 @@ namespace Starforge
         m_Ctx.Recorded.clear();   // telemetry marks are per-UUID (E20)
         m_Ctx.ClearDirty();
         m_Ctx.Log("[Scene] Opened '" + vfsPath + "'.");
+        AdoptCameraForScene();    // H8 — first frame shows the authored shot, not a void
+        CheckScriptsBuilt();      // H8 — nudge if the scene needs a script build
     }
 
     bool StarforgeApp::SaveScene()
@@ -489,8 +541,104 @@ namespace Starforge
     // =========================================================================
     // Frame
     // =========================================================================
+    void StarforgeApp::DrainLogQueue()
+    {
+        std::vector<std::pair<LogSeverity, std::string>> pending;
+        {
+            std::lock_guard<std::mutex> lk(m_LogQueueMutex);
+            if (m_LogQueue.empty())
+                return;
+            pending.swap(m_LogQueue);
+        }
+        for (auto& [sev, text] : pending)
+            m_Ctx.Log(text, sev);
+    }
+
+    void StarforgeApp::AdoptCameraForScene()
+    {
+        // H8 — kill the "editor camera spawns inside the terrain / void" class of bug:
+        // on scene open, adopt a Primary CameraComponent's pose (so the first frame is
+        // the composed shot the author intended); otherwise frame all entity positions
+        // (mesh assets may not be built until the first render, so use transforms).
+        if (!m_Ctx.Scene)
+            return;
+        auto& reg = m_Ctx.Scene->GetRegistry();
+
+        if (m_Settings.AdoptSceneCamera)
+        {
+            for (auto e : reg.view<Cosmic::CameraComponent, Cosmic::TransformComponent>())
+            {
+                const auto& cam = reg.get<Cosmic::CameraComponent>(e);
+                if (!cam.Primary)
+                    continue;
+                const glm::mat4 world = m_Ctx.Scene->GetWorldTransform(Cosmic::Entity(e, m_Ctx.Scene.get()));
+                const glm::vec3 pos = glm::vec3(world[3]);
+                glm::vec3 fwd = glm::vec3(world * glm::vec4(0.0f, 0.0f, -1.0f, 0.0f));
+                if (glm::length(fwd) < 1e-4f) fwd = { 0.0f, 0.0f, -1.0f };
+                fwd = glm::normalize(fwd);
+
+                const float dist = 10.0f;
+                const glm::vec3 target = pos + fwd * dist;
+                const glm::vec3 off = pos - target;   // = -fwd * dist, length dist
+                const float pitch = glm::degrees(std::asin(glm::clamp(off.y / dist, -1.0f, 1.0f)));
+                const float yaw   = glm::degrees(std::atan2(off.x, off.z));
+                m_Camera.SetTarget(target);
+                m_Camera.SetYawPitch(yaw, pitch);
+                m_Camera.SetDistance(dist);
+                return;
+            }
+        }
+
+        bool any = false;
+        glm::vec3 mn(0.0f), mx(0.0f);
+        for (auto e : reg.view<Cosmic::TransformComponent>())
+        {
+            const glm::vec3 p = reg.get<Cosmic::TransformComponent>(e).Position;
+            if (!any) { mn = mx = p; any = true; }
+            else      { mn = glm::min(mn, p); mx = glm::max(mx, p); }
+        }
+        if (any)
+        {
+            const glm::vec3 pad(2.0f);
+            m_Camera.FrameBounds(mn - pad, mx + pad, /*animate=*/false);
+        }
+    }
+
+    void StarforgeApp::CheckScriptsBuilt()
+    {
+        // H8 — one actionable summary when a scene references script/system classes the
+        // loaded module doesn't provide (build hasn't run). Per-entity warnings still
+        // come from the ScriptHost at Play; this is the single "press Ctrl+B" nudge.
+        m_ScriptsNeedBuild = false;
+        if (!m_Ctx.Scene)
+            return;
+        auto& reg = m_Ctx.Scene->GetRegistry();
+        int unresolved = 0;
+        for (auto e : reg.view<Cosmic::NativeScriptComponent>())
+        {
+            const auto& nsc = reg.get<Cosmic::NativeScriptComponent>(e);
+            if (!nsc.ClassName.empty() && !Cosmic::ModuleRegistry::Get().FindScript(nsc.ClassName))
+                ++unresolved;
+        }
+        for (auto e : reg.view<Cosmic::SystemScriptComponent>())
+        {
+            const auto& ssc = reg.get<Cosmic::SystemScriptComponent>(e);
+            if (!ssc.ClassName.empty() && !Cosmic::ModuleRegistry::Get().FindSystem(ssc.ClassName))
+                ++unresolved;
+        }
+        if (unresolved > 0)
+        {
+            m_ScriptsNeedBuild = true;
+            m_Ctx.Log("[Scripts] " + std::to_string(unresolved) +
+                      " script(s) not built — press Ctrl+B to compile the project module.",
+                      LogSeverity::Warn);
+        }
+    }
+
     void StarforgeApp::OnUpdate(float ts)
     {
+        DrainLogQueue();   // engine-log lines → Console (H7)
+
         // Content-browser scene-open request (ignored mid-Play — Stop first).
         if (!m_Ctx.PendingOpenScene.empty())
         {
@@ -551,20 +699,45 @@ namespace Starforge
         if (!vfb)
             return;
 
+        // H2 — SceneRenderer is THE editor render path: environment/sky/shadows/HDR
+        // + post all live here (and byte-identically in the standalone PlayerLayer).
+        const uint32_t vw = vfb->GetWidth(), vh = vfb->GetHeight();
+        if (!m_SceneRenderer.IsInitialized())
+            m_SceneRenderer.Init(vw, vh);
+        m_SceneRenderer.SetViewportSize(vw, vh);
+
         vfb->Bind();
-        Cosmic::RenderCommand::SetViewport(0, 0, vfb->GetWidth(), vfb->GetHeight());
+        Cosmic::RenderCommand::SetViewport(0, 0, vw, vh);
         Cosmic::RenderCommand::SetClearColor({ 0.086f, 0.098f, 0.129f, 1.0f });
         Cosmic::RenderCommand::Clear();
 
         if (m_Ctx.Scene)
         {
-            m_Ctx.Scene->OnRender3D(m_Camera.GetCamera());
-            // World-system FX (E18): water + particle live preview, using the
-            // viewport FBO's color/depth for refraction/depth-fade + soft particles.
-            m_Ctx.Scene->OnRenderWorldFX(m_Camera.GetCamera(),
-                vfb->GetColorAttachmentRendererID(0), vfb->GetDepthAttachmentRendererID(),
-                vfb->GetWidth(), vfb->GetHeight(), ts);
-            m_Viewport.DrawSceneOverlay(m_Ctx, m_Camera.GetCamera());
+            Cosmic::SceneRenderDesc desc;
+            m_Ctx.Scene->BuildRenderDesc(m_Camera.GetCamera(), ts, desc);
+            desc.Settings.ClearColor = { 0.086f, 0.098f, 0.129f, 1.0f };
+
+            if (auto* env = m_Ctx.Scene->FindEnvironment())
+            {
+                m_SceneRenderer.ApplyEnvironment(*env, desc);
+            }
+            else
+            {
+                // No Environment entity → keep today's flat grey-blue viewport
+                // (no sky/IBL/shadows) so a scene without one looks unchanged.
+                desc.Settings.Skybox  = false;
+                desc.Settings.IBL     = false;
+                desc.Settings.Shadows = false;
+            }
+
+            // Editor overlays (grid/axes/selection) — drawn in HDR with scene depth
+            // still bound so they occlude correctly against the composited world.
+            desc.DrawTransparent = [this](const Cosmic::SceneDrawContext&)
+            {
+                m_Viewport.DrawOverlayContent(m_Ctx);
+            };
+
+            m_SceneRenderer.Render(desc);   // PRE/POST: vfb stays the bound target
         }
     }
 
@@ -596,6 +769,13 @@ namespace Starforge
         if (m_Ctx.ProjectOpen)
             title += "  —  " + m_Ctx.ProjectTitle + " / " + m_Ctx.SceneName + (m_Ctx.Dirty ? " *" : "");
         ws->SetProjectName(title);
+
+        // The central viewport tab shows the scene name + dirty star (H5). The
+        // duplicate corner overlay text is dropped (see OnImGuiRender).
+        if (m_Ctx.ProjectOpen)
+            ws->SetViewportTitle(m_Ctx.SceneName + (m_Ctx.Dirty ? " *" : ""));
+        else
+            ws->SetViewportTitle("Viewport");
     }
 
     // =========================================================================
@@ -607,9 +787,16 @@ namespace Starforge
         if (!ws)
             return;
 
-        ws->SetEdgeRatios(0.19f, 0.22f, 0.06f, 0.26f);
+        // Top edge sized by a PIXEL minimum (H5) so the menu row + the Play/Build/
+        // gizmo toolbar row are always fully visible — not clipped by a small ratio
+        // on a big monitor (the old fixed 6% clipped the toolbar). The "Starforge"
+        // top bar gets NoTabBar so there's no wasted "▼ Starforge" tab header, and
+        // the engine's own File/View chrome menus are hidden (Starforge has its own).
+        ws->SetEdgeRatios(0.19f, 0.22f, 0.08f, 0.26f);
+        ws->SetEdgeMinPixels(/*top*/ 78.0f, /*bottom*/ 0.0f, /*left*/ 0.0f, /*right*/ 0.0f);
+        ws->SetChromeMenusVisible(false);
         ws->ClearDockWindows();
-        ws->DockWindow("Starforge",       Cosmic::DockPort::TopCenter);
+        ws->DockWindow("Starforge",       Cosmic::DockPort::TopCenter, Cosmic::DockFlags::NoTabBar);
         ws->DockWindow("Hierarchy",       Cosmic::DockPort::LeftTop);
         ws->DockWindow("Inspector",       Cosmic::DockPort::RightTop);
         ws->DockWindow("Content Browser", Cosmic::DockPort::BottomCenter);
@@ -627,15 +814,18 @@ namespace Starforge
 
         if (m_Ctx.ProjectOpen)
         {
-            if (m_ShowHierarchy)   m_Hierarchy.OnImGuiRender(m_Ctx);
-            if (m_ShowInspector)   m_Inspector.OnImGuiRender(m_Ctx);
-            if (m_ShowContent)     m_Content.OnImGuiRender(m_Ctx);
-            if (m_ShowConsole)     m_Console.OnImGuiRender(m_Ctx);
-            if (m_ShowEnvironment) m_Environment.OnImGuiRender(m_Ctx);
-            if (m_ShowMaterial)    m_Material.OnImGuiRender(m_Ctx);
-            if (m_ShowWorldSystems) m_WorldSystems.OnImGuiRender(m_Ctx);
-            if (m_ShowTelemetry)   m_Telemetry.OnImGuiRender(m_Ctx);
-            if (m_ShowStats)       DrawStatsWindow();
+            // Pass each panel its visibility bool as p_open (H5) so its ✕ close
+            // button flips the same flag the View-menu checkmark reads — they stay
+            // in sync, and Reset Layout (which never clears these) reopens them.
+            if (m_ShowHierarchy)    m_Hierarchy.OnImGuiRender(m_Ctx, &m_ShowHierarchy);
+            if (m_ShowInspector)    m_Inspector.OnImGuiRender(m_Ctx, &m_ShowInspector);
+            if (m_ShowContent)      m_Content.OnImGuiRender(m_Ctx, &m_ShowContent);
+            if (m_ShowConsole)      m_Console.OnImGuiRender(m_Ctx, &m_ShowConsole);
+            if (m_ShowEnvironment)  m_Environment.OnImGuiRender(m_Ctx, &m_ShowEnvironment);
+            if (m_ShowMaterial)     m_Material.OnImGuiRender(m_Ctx, &m_ShowMaterial);
+            if (m_ShowWorldSystems) m_WorldSystems.OnImGuiRender(m_Ctx, &m_ShowWorldSystems);
+            if (m_ShowTelemetry)    m_Telemetry.OnImGuiRender(m_Ctx, &m_ShowTelemetry);
+            if (m_ShowStats)        DrawStatsWindow();
         }
         else
         {
@@ -648,10 +838,19 @@ namespace Starforge
         {
             const glm::vec2 pos = Cosmic::Application::Get().GetViewportPos();
             ImGui::SetCursorScreenPos(ImVec2(pos.x + 10.0f, pos.y + 8.0f));
-            ImGui::TextDisabled("%s%s  |  %d selected%s",
-                                m_Ctx.SceneName.c_str(), m_Ctx.Dirty ? " *" : "",
+            // Scene name + dirty star now live in the viewport TAB (H5); the corner
+            // overlay keeps just the selection-count chip + play status.
+            ImGui::TextDisabled("%d selected%s",
                                 (int)m_Ctx.Selection.size(),
                                 IsPlaying() ? (m_Play == PlayMode::Paused ? "  |  PAUSED" : "  |  PLAYING") : "");
+
+            // H8 — actionable hint while the scene references unbuilt script classes.
+            if (m_ScriptsNeedBuild && !IsPlaying())
+            {
+                ImGui::SetCursorScreenPos(ImVec2(pos.x + 10.0f, pos.y + 26.0f));
+                ImGui::TextColored(ImVec4(0.95f, 0.78f, 0.25f, 1.0f),
+                                   "Scripts not built - press Ctrl+B");
+            }
             // The gizmo is an edit tool — hidden while playing (runtime scene).
             if (m_Ctx.ProjectOpen && m_Ctx.Scene && !IsPlaying())
                 m_Viewport.DrawGizmo(m_Ctx, m_Camera);
@@ -858,7 +1057,12 @@ namespace Starforge
             ImGui::MenuItem("Statistics",      nullptr, &m_ShowStats);
             ImGui::Separator();
             if (ImGui::MenuItem("Reset Layout"))
+            {
+                // Reopen the core docked panels (a ✕ may have closed them) and rebuild
+                // the dock layout so everything returns to its home port (H5).
+                m_ShowHierarchy = m_ShowInspector = m_ShowContent = m_ShowConsole = true;
                 if (auto* ws = Cosmic::Application::Get().GetWorkspaceLayer()) ws->ResetLayout();
+            }
             ImGui::EndMenu();
         }
 
@@ -871,7 +1075,7 @@ namespace Starforge
 
     void StarforgeApp::DrawStatsWindow()
     {
-        if (ImGui::Begin("Statistics"))
+        if (ImGui::Begin("Statistics", &m_ShowStats))
         {
             size_t entities = 0;
             if (m_Ctx.Scene)
@@ -1048,43 +1252,75 @@ namespace Starforge
         { Entity e = scene->CreateEntity("Environment");
           auto& env = e.AddComponent<EnvironmentComponent>();
           env.TimeOfDay = 17.5f;                 // warm low-sun look (tune in the Environment panel)
-          env.Fog = true; env.FogDensity = 0.012f; }
+          env.Fog = true; env.FogDensity = 0.012f;
+          env.Bloom = true; env.BloomIntensity = 0.5f; }   // values that visibly change when toggled (H8)
 
+        // Build the terrain heightfield NOW (CPU-only, GL-free) so we can author every
+        // object ON its surface via SampleHeight — the fix for the old "content buried
+        // inside the 26 m island / camera underground" bug (H8). The saved scene stores
+        // only the recipe; SyncWorldSystems rebuilds the terrain (with splat textures)
+        // on first render, so this local build is placement math only.
+        Ref<Terrain> terrain;
         { Entity e = scene->CreateEntity("Terrain");
           auto& t = e.AddComponent<TerrainComponent>();
           t.UseRecipe = true; t.WorldSize = 256.0f; t.Resolution = 257;
-          t.HeightScale = 26.0f; t.Frequency = 2.5f; t.EdgeFalloff = 0.65f; }
+          t.HeightScale = 26.0f; t.Frequency = 2.5f; t.EdgeFalloff = 0.65f;
+          terrain = Terrain::Create(BuildTerrainSpec(t)); }
 
+        auto groundAt = [&](float x, float z) { return terrain ? terrain->SampleHeight(x, z) : 0.0f; };
+
+        // The forge sits on a shoulder off the peak; everything is placed relative to it.
+        const float fx = 34.0f, fz = 22.0f;
+        const float fy = groundAt(fx, fz);
+
+        // Lake in the low edge band (EdgeFalloff drops the terrain to ~0 at the rim),
+        // so its surface reads as a real shoreline rather than a plane buried in the hill.
         { Entity e = scene->CreateEntity("Lake");
           auto& w = e.AddComponent<WaterComponent>();
           w.UseRecipe = true; w.Preset = WaterPreset::Lake;
-          w.Extent = { 130.0f, 130.0f }; w.SurfaceHeight = 2.0f; }
+          w.Center = { -72.0f, -72.0f }; w.Extent = { 96.0f, 96.0f }; w.SurfaceHeight = 3.0f; }
 
         { Entity e = scene->CreateEntity("Campfire");
-          e.GetComponent<TransformComponent>().Position = { 0.0f, 3.0f, 0.0f };
+          e.GetComponent<TransformComponent>().Position = { fx, fy, fz };
           e.AddComponent<ParticleEmitterComponent>().UseRecipe = true; }   // default = ember cone
 
         { Entity e = scene->CreateEntity("Anvil");
-          e.GetComponent<TransformComponent>().Position = { 2.2f, 3.2f, 0.0f };
+          e.GetComponent<TransformComponent>().Position = { fx + 2.2f, fy + 0.4f, fz };
           e.AddComponent<PrimitiveMeshComponent>(PrimitiveMeshComponent::Shape::Box).Size = { 1.4f, 0.8f, 0.7f };
           e.AddComponent<MeshRendererComponent>().Color = { 0.24f, 0.25f, 0.28f, 1.0f }; }
 
         { Entity e = scene->CreateEntity("Ingot");
-          e.GetComponent<TransformComponent>().Position = { -2.2f, 3.4f, 0.0f };
+          e.GetComponent<TransformComponent>().Position = { fx - 2.2f, fy + 0.6f, fz };
           e.AddComponent<PrimitiveMeshComponent>(PrimitiveMeshComponent::Shape::Sphere).Radius = 0.6f;
           e.AddComponent<MeshRendererComponent>().Color = { 0.95f, 0.52f, 0.16f, 1.0f }; }
 
-        // Telemetry demo: the BouncingBall script (in the scaffolded module) pushes
-        // height/velY channels. ClassName resolves after "Build Scripts" (Ctrl+B).
+        // Telemetry demo: the BouncingBall script (scaffolded module) pushes height/velY.
+        // FloorY = the terrain height under it, so it bounces ON the ground (H8). ClassName
+        // resolves after Build Scripts (Ctrl+B); until then the Ctrl+B hint shows.
         { Entity e = scene->CreateEntity("Bouncing Ball");
-          e.GetComponent<TransformComponent>().Position = { 0.0f, 8.0f, 5.0f };
+          const float bz = fz + 3.0f;
+          const float by = groundAt(fx, bz);
+          e.GetComponent<TransformComponent>().Position = { fx, by + 6.0f, bz };
           e.AddComponent<PrimitiveMeshComponent>(PrimitiveMeshComponent::Shape::Sphere).Radius = 0.4f;
           e.AddComponent<MeshRendererComponent>().Color = { 0.90f, 0.90f, 0.95f, 1.0f };
-          e.AddComponent<NativeScriptComponent>("BouncingBall"); }
+          auto& ns = e.AddComponent<NativeScriptComponent>("BouncingBall");
+          ns.Fields["FloorY"]      = Reflect::FieldValue{ by };
+          ns.Fields["StartHeight"] = Reflect::FieldValue{ 6.0f }; }
 
+        // A second live script: a HoverController-driven orb settling above the forge.
+        { Entity e = scene->CreateEntity("Hover Orb");
+          const float hy = fy + 4.0f;
+          e.GetComponent<TransformComponent>().Position = { fx + 4.0f, hy, fz - 2.0f };
+          e.AddComponent<PrimitiveMeshComponent>(PrimitiveMeshComponent::Shape::Sphere).Radius = 0.35f;
+          e.AddComponent<MeshRendererComponent>().Color = { 0.45f, 0.70f, 0.95f, 1.0f };
+          auto& ns = e.AddComponent<NativeScriptComponent>("HoverController");
+          ns.Fields["TargetAltitude"] = Reflect::FieldValue{ hy }; }
+
+        // Primary camera framing the forge from over the shoulder — the editor adopts
+        // this pose on open (H8), so the first frame is the composed shot.
         { Entity e = scene->CreateEntity("Camera");
           auto& tr = e.GetComponent<TransformComponent>();
-          tr.Position = { 0.0f, 7.0f, 20.0f }; tr.Rotation = { -12.0f, 0.0f, 0.0f };
+          tr.Position = { fx, fy + 7.0f, fz + 22.0f }; tr.Rotation = { -12.0f, 0.0f, 0.0f };
           e.AddComponent<CameraComponent>(); }
 
         SceneSerializer::Save(*scene, FileSystem::Resolve("project://scenes/Main.cscene"));
@@ -1258,9 +1494,19 @@ namespace Starforge
 
         if (ImGui::BeginPopupModal("Import Model", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
         {
-            ImGui::TextUnformatted("Source model file (absolute path):");
+            ImGui::TextUnformatted("Source model file:");
             ImGui::SetNextItemWidth(440.0f);
             ImGui::InputText("##importsrc", m_ImportPath, sizeof(m_ImportPath));
+            ImGui::SameLine();
+            if (ImGui::Button("Browse..."))   // native file dialog (H6)
+            {
+                Cosmic::FileDialogDesc dlg;
+                dlg.Title   = "Import Model";
+                dlg.Filters = { { "3D models", "*.obj;*.fbx;*.stl;*.dae;*.ply;*.gltf;*.glb" },
+                                { "All files", "*.*" } };
+                if (auto picked = Cosmic::FileDialog::Open(dlg))
+                    std::snprintf(m_ImportPath, sizeof(m_ImportPath), "%s", picked->c_str());
+            }
             ImGui::TextDisabled("Copied into project://models/. OBJ imports now; FBX/STL/DAE/PLY need the assimp backend.");
 
             const std::string src = m_ImportPath;

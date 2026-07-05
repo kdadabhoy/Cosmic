@@ -48,6 +48,30 @@ namespace Cosmic
         return out;
     }
 
+    const SystemDescriptor* ModuleRegistry::FindSystem(const std::string& name) const
+    {
+        auto it = m_Systems.find(name);
+        return it == m_Systems.end() ? nullptr : &it->second;
+    }
+
+    std::vector<std::string> ModuleRegistry::SystemNames() const
+    {
+        std::vector<std::string> out;
+        out.reserve(m_Systems.size());
+        for (const auto& [name, desc] : m_Systems)
+            out.push_back(name);
+        return out;
+    }
+
+    std::vector<std::string> ModuleRegistry::SystemNames(const std::string& module) const
+    {
+        std::vector<std::string> out;
+        for (const auto& [name, desc] : m_Systems)
+            if (desc.Module == module)
+                out.push_back(name);
+        return out;
+    }
+
     std::vector<entt::id_type> ModuleRegistry::ComponentTypeIds(const std::string& module) const
     {
         std::vector<entt::id_type> out;
@@ -62,6 +86,11 @@ namespace Cosmic
         for (auto it = m_Scripts.begin(); it != m_Scripts.end(); )
         {
             if (it->second.Module == module) it = m_Scripts.erase(it);
+            else                             ++it;
+        }
+        for (auto it = m_Systems.begin(); it != m_Systems.end(); )   // H9
+        {
+            if (it->second.Module == module) it = m_Systems.erase(it);
             else                             ++it;
         }
         m_Components.erase(

@@ -18,6 +18,9 @@ namespace Cosmic
 	class Camera;             // Forward declaration (OnRender3D takes any camera)
 	class OrthographicCamera; // Forward declaration
 	class Material;        // Forward declaration (used only as a bucket key pointer)
+	struct SceneRenderDesc;      // renderer/SceneRenderer.h (H2 — BuildRenderDesc fills it)
+	class  SceneDrawContext;     // renderer/SceneRenderer.h (H2 — routed opaque submit)
+	struct EnvironmentComponent; // scene/Components.h (E4 — FindEnvironment returns it)
 
 	class COSMIC_API Scene
 	{
@@ -145,6 +148,29 @@ namespace Cosmic
 		                     uint32_t viewportWidth, uint32_t viewportHeight,
 		                     float deltaTime);
 
+		/**
+		 * @brief Fill a SceneRenderDesc from this scene's ECS (H2) so SceneRenderer —
+		 * the engine's env/sky/shadow/HDR/post orchestrator — becomes THE editor +
+		 * player render path (not just Frontier's). Gathers camera + lights, the first
+		 * built TerrainComponent, all built WaterComponents (PrimaryReflectionWater =
+		 * nearest to the camera), all built ParticleEmitterComponents (advanced by
+		 * deltaTime), and a DrawOpaque callback that submits every MeshRenderer/LODGroup
+		 * routed by pass (so meshes appear in shadows + reflections + main). Runs
+		 * SyncPrimitiveMeshes/SyncWorldSystems first and advances the world clock. The
+		 * CALLER then sets the clear color and, when FindEnvironment() is non-null,
+		 * applies it via SceneRenderer::ApplyEnvironment before Render(). Main-thread/GL.
+		 * Generic — no editor concepts leak in; OnRender3D stays the cheap direct path.
+		 */
+		void BuildRenderDesc(const Camera& camera, float deltaTime, SceneRenderDesc& out);
+
+		/**
+		 * @brief The scene's authored EnvironmentComponent (E4), or nullptr — the
+		 * single "Environment" entity's component. The editor/player feed it to
+		 * SceneRenderer::ApplyEnvironment; a scene without one renders on the engine
+		 * defaults (flat clear, no sky/IBL) exactly like before H2.
+		 */
+		EnvironmentComponent* FindEnvironment();
+
 		/** @brief Allocates and attaches an execution system to the scene lifecycle. */
 		template<typename T, typename... Args>
 		T& AddSystem(Args&&... args)
@@ -205,6 +231,12 @@ namespace Cosmic
 	private:
 		/** @brief Recursive world-transform walk keyed by entt handle (E3). */
 		glm::mat4 WorldOf(entt::entity handle);
+
+		/** @brief Submit every MeshRenderer/LODGroup opaque draw through the routed
+		 *  SceneDrawContext (Main/Reflection → Renderer3D queue; depth passes →
+		 *  shadow/coverage caster, honoring CastShadows). The single truth shared by
+		 *  OnRender3D (a Main-pass context) and BuildRenderDesc's DrawOpaque hook (H2). */
+		void SubmitOpaqueMeshes(const SceneDrawContext& ctx);
 
 		float m_WorldTime = 0.0f;   // accumulated seconds for water/particle animation (E18)
 

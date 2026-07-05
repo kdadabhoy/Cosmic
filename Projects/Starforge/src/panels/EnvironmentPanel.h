@@ -22,7 +22,7 @@ namespace Starforge
     class EnvironmentPanel
     {
     public:
-        void OnImGuiRender(EditorContext& ctx);
+        void OnImGuiRender(EditorContext& ctx, bool* pOpen = nullptr);
 
     private:
         Cosmic::Reflect::FieldValue m_ActiveBefore;   // value at drag-start (undo)

@@ -151,6 +151,48 @@ namespace Cosmic
 	/////////////////////////////////////////////////////////////////////////////////
 
 	/**
+	 * OpenGLTexture Constructor (HDR / floating-point equirectangular) — H4.
+	 * Loads a Radiance .hdr (RGBE) as linear float via stbi_loadf into an RGBA16F
+	 * texture with CLAMP_TO_EDGE + LINEAR sampling (no mips — the equirect→cube bake
+	 * reads mip 0). Flipped on load so the standard spherical-map UV matches the IBL
+	 * cube capture orientation. RGBA16F (not RGB16F) is the portable color-renderable
+	 * source-side choice + avoids a 3-channel-alignment upload quirk on some drivers.
+	 */
+	OpenGLTexture::OpenGLTexture(const std::string& path, bool /*hdr*/)
+		: m_Path(path)
+	{
+		int width = 0, height = 0, channels = 0;
+		stbi_set_flip_vertically_on_load(1);
+		float* data = stbi_loadf(path.c_str(), &width, &height, &channels, 4);   // force RGBA
+
+		if (!data)
+		{
+			CS_CORE_ERROR("OpenGLTexture: failed to load HDR image '{0}'.", path);
+			m_Width = m_Height = 0;
+			m_InternalFormat = GL_RGBA16F;
+			m_DataFormat     = GL_RGBA;
+			return;
+		}
+
+		m_Width  = width;
+		m_Height = height;
+		m_InternalFormat = GL_RGBA16F;
+		m_DataFormat     = GL_RGBA;
+
+		glGenTextures(1, &m_RendererID);
+		glBindTexture(GL_TEXTURE_2D, m_RendererID);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, m_Width, m_Height, 0, GL_RGBA, GL_FLOAT, data);
+
+		stbi_image_free(data);
+	}
+
+	/////////////////////////////////////////////////////////////////////////////////
+
+	/**
 	 * OpenGLTexture Constructor (From Memory)
 	 * * Decodes an encoded image (PNG/JPG) already in memory — the glTF/.glb
 	 * embedded-texture path (S6.2). glTF's UV origin is top-left and matches an

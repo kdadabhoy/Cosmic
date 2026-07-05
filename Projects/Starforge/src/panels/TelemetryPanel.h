@@ -37,7 +37,7 @@ namespace Starforge
     class TelemetryPanel : public Cosmic::ITelemetrySink
     {
     public:
-        void OnImGuiRender(EditorContext& ctx);
+        void OnImGuiRender(EditorContext& ctx, bool* pOpen = nullptr);
 
         // ---- Play lifecycle (driven by StarforgeApp) ------------------------
         void OnPlayStart(EditorContext& ctx, float fixedDt);   // arm: resolve marks, reset take

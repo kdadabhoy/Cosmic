@@ -562,9 +562,9 @@ namespace Starforge
         }
     }
 
-    void TelemetryPanel::OnImGuiRender(EditorContext& ctx)
+    void TelemetryPanel::OnImGuiRender(EditorContext& ctx, bool* pOpen)
     {
-        ImGui::Begin("Telemetry");
+        ImGui::Begin("Telemetry", pOpen);
 
         // --- status + take actions -------------------------------------------
         switch (m_Mode)

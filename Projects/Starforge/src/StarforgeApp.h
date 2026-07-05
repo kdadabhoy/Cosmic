@@ -31,6 +31,10 @@
 #include "panels/TelemetryPanel.h"
 
 #include <string>
+#include <vector>
+#include <mutex>
+#include <memory>
+#include <utility>
 
 namespace Starforge
 {
@@ -112,10 +116,17 @@ namespace Starforge
         void Autosave(float ts);
         void UpdateWindowTitle();
         void RenderViewport(float ts);
+        void DrainLogQueue();       // move engine-log lines onto the UI thread (H7)
+        void AdoptCameraForScene(); // H8 — adopt a Primary camera's pose, else frame-all
+        void CheckScriptsBuilt();   // H8 — warn + hint when a scene references unbuilt scripts
 
         EditorContext m_Ctx;
         Cosmic::OrbitCameraController m_Camera{ 16.0f / 9.0f };
         ViewportController m_Viewport;
+
+        // The engine frame orchestrator (H2): environment/sky/shadows/HDR/post live
+        // in the editor viewport (and, identically, the standalone PlayerLayer).
+        Cosmic::SceneRenderer m_SceneRenderer;
 
         // Play-mode state (E13). While playing, m_Ctx.Scene points at the runtime
         // scene and m_EditSceneBackup holds the untouched edit scene.
@@ -146,6 +157,13 @@ namespace Starforge
 
         Prefs::EditorSettings m_Settings;
 
+        // Engine-log → Console sink (H7). The CallbackSink fires from ANY thread, so
+        // it enqueues under a mutex; DrainLogQueue moves lines onto the UI thread.
+        std::shared_ptr<Cosmic::CallbackSink>            m_LogSink;
+        std::mutex                                       m_LogQueueMutex;
+        std::vector<std::pair<LogSeverity, std::string>> m_LogQueue;
+
+        bool  m_ScriptsNeedBuild = false;   // H8 — scene references classes the module lacks
         bool  m_DockApplied     = false;
         bool  m_OpenSaveAs      = false;
         bool  m_OpenImportModel = false;

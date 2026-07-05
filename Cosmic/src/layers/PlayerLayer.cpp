@@ -78,6 +78,7 @@ namespace Cosmic
     void PlayerLayer::OnDetach()
     {
         m_Scripts.Destroy();
+        m_SceneRenderer.Shutdown();   // free GPU subsystems while the context is live (H2)
         m_TrackedScene.reset();
         m_Camera.reset();
     }
@@ -147,19 +148,36 @@ namespace Cosmic
 
         UpdateCamera(static_cast<float>(fb->GetWidth()) / static_cast<float>(fb->GetHeight()));
 
+        const uint32_t vw = fb->GetWidth(), vh = fb->GetHeight();
+        if (!m_SceneRenderer.IsInitialized())
+            m_SceneRenderer.Init(vw, vh);
+        m_SceneRenderer.SetViewportSize(vw, vh);
+
         fb->Bind();
-        RenderCommand::SetViewport(0, 0, fb->GetWidth(), fb->GetHeight());
+        RenderCommand::SetViewport(0, 0, vw, vh);
         RenderCommand::SetClearColor({ 0.06f, 0.07f, 0.10f, 1.0f });
         RenderCommand::Clear();
 
         if (m_TrackedScene)
         {
-            m_TrackedScene->OnRender3D(*m_Camera);
-            // Water + particle components (E18) draw after the opaque world, using
-            // this FBO's color/depth for refraction/depth-fade + soft particles.
-            m_TrackedScene->OnRenderWorldFX(*m_Camera,
-                fb->GetColorAttachmentRendererID(0), fb->GetDepthAttachmentRendererID(),
-                fb->GetWidth(), fb->GetHeight(), dt);
+            // H2 — render through the SAME SceneRenderer path as the editor viewport,
+            // so a packaged app gets env/sky/shadows/HDR/post identical to Starforge.
+            SceneRenderDesc desc;
+            m_TrackedScene->BuildRenderDesc(*m_Camera, dt, desc);
+            desc.Settings.ClearColor = { 0.06f, 0.07f, 0.10f, 1.0f };
+
+            if (auto* env = m_TrackedScene->FindEnvironment())
+            {
+                m_SceneRenderer.ApplyEnvironment(*env, desc);
+            }
+            else
+            {
+                desc.Settings.Skybox  = false;
+                desc.Settings.IBL     = false;
+                desc.Settings.Shadows = false;
+            }
+
+            m_SceneRenderer.Render(desc);
         }
     }
 

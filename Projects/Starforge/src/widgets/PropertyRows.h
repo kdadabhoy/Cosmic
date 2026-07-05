@@ -19,6 +19,7 @@
 #include <cstdio>
 #include <cstring>
 #include <string>
+#include <vector>
 
 namespace Starforge::PropertyRows
 {
@@ -50,6 +51,37 @@ namespace Starforge::PropertyRows
             r.PostValue = current;
             if (f.Hints.Tooltip.size() && ImGui::IsItemHovered())
                 ImGui::SetTooltip("%s", f.Hints.Tooltip.c_str());
+        }
+
+        // One place mapping an AssetPath's asset-type tag -> a native-dialog filter (H6).
+        inline std::vector<Cosmic::FileFilter> FiltersForAssetType(const std::string& type)
+        {
+            if (type == "mesh")      return { { "3D models", "*.obj;*.fbx;*.stl;*.dae;*.ply;*.gltf;*.glb" }, { "All files", "*.*" } };
+            if (type == "material")  return { { "Cosmic material", "*.cmat" }, { "All files", "*.*" } };
+            if (type == "texture")   return { { "Images", "*.png;*.jpg;*.jpeg;*.tga;*.bmp;*.hdr" }, { "All files", "*.*" } };
+            if (type == "heightmap") return { { "Heightmaps", "*.png;*.r16;*.raw;*.hdr" }, { "All files", "*.*" } };
+            if (type == "hdri")      return { { "HDR images", "*.hdr;*.exr" }, { "All files", "*.*" } };
+            if (type == "prefab")    return { { "Cosmic prefab", "*.cprefab" }, { "All files", "*.*" } };
+            return { { "All files", "*.*" } };
+        }
+
+        // Translate an absolute pick under the active project root to its project://
+        // form (so scenes stay portable); otherwise keep the absolute path (the caller
+        // may copy it in). Cheap string compare on the resolved project root.
+        inline std::string ToProjectRelative(const std::string& absolute)
+        {
+            std::string root = Cosmic::FileSystem::Resolve("project://");
+            for (auto& c : root)     if (c == '\\') c = '/';
+            std::string abs = absolute;
+            for (auto& c : abs)      if (c == '\\') c = '/';
+            if (!root.empty() && abs.size() > root.size() &&
+                abs.compare(0, root.size(), root) == 0)
+            {
+                std::string rel = abs.substr(root.size());
+                while (!rel.empty() && rel.front() == '/') rel.erase(rel.begin());
+                return "project://" + rel;
+            }
+            return absolute;
         }
     }
 
@@ -175,7 +207,15 @@ namespace Starforge::PropertyRows
                 char buf[512];
                 std::snprintf(buf, sizeof(buf), "%s", s.c_str());
                 const bool asset = (f.Kind == FieldKind::AssetPath);
-                if (asset) ImGui::SetNextItemWidth(-60.0f);
+                if (asset)
+                {
+                    // Show the field's display name (H10): asset slots used a hidden
+                    // "##path" id, so multiple slots (e.g. Terrain's 4 splat textures)
+                    // rendered as indistinguishable bare inputs.
+                    ImGui::TextUnformatted(label);
+                    ImGui::SameLine();
+                    ImGui::SetNextItemWidth(-60.0f);
+                }
                 if (ImGui::InputText(asset ? "##path" : label, buf, sizeof(buf)))
                 { value = FieldValue{ std::string(buf) }; r.Changed = true; }
                 if (asset)
@@ -189,6 +229,21 @@ namespace Starforge::PropertyRows
                             r.Changed = true; forceCommit = true;
                         }
                         ImGui::EndDragDropTarget();
+                    }
+                    // "…" native file picker (H6): filter by the slot's asset type;
+                    // a pick under the project root becomes a project:// path.
+                    ImGui::SameLine();
+                    if (ImGui::SmallButton("...##pick"))
+                    {
+                        Cosmic::FileDialogDesc dlg;
+                        dlg.Title      = "Choose asset";
+                        dlg.Filters    = detail::FiltersForAssetType(f.Hints.AssetType);
+                        dlg.InitialDir = "project://";
+                        if (auto picked = Cosmic::FileDialog::Open(dlg))
+                        {
+                            value = FieldValue{ detail::ToProjectRelative(*picked) };
+                            r.Changed = true; forceCommit = true;
+                        }
                     }
                     ImGui::SameLine();
                     ImGui::TextDisabled("%s", f.Hints.AssetType.empty() ? "asset" : f.Hints.AssetType.c_str());

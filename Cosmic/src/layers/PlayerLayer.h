@@ -22,15 +22,16 @@
 //   * offers a minimal Esc pause menu (Resume / Quit to Launcher).
 //
 // This is what makes "ship from the editor" free — the SAME project DLL that the
-// editor hot-reloads is the one the player runs. Rendering uses Scene::OnRender3D
-// (the editor viewport's path); the SceneRenderer env/shadow/post upgrade is a
-// shared follow-up for both surfaces.
+// editor hot-reloads is the one the player runs. Rendering goes through the engine
+// SceneRenderer (H2) — the SAME env/sky/shadow/HDR/post path the editor viewport
+// uses — so a packaged app looks byte-identical to the editor.
 // ============================================================================
 
 #include "core/Core.h"
 #include "core/Layer.h"
 #include "scene/SceneManager.h"
 #include "scripting/ScriptHost.h"
+#include "renderer/SceneRenderer.h"   // H2 — the shared render path
 
 #include <string>
 
@@ -66,6 +67,7 @@ namespace Cosmic
         ScriptHost   m_Scripts;
         Ref<Scene>   m_TrackedScene;    // last scene we instantiated scripts for
         Scope<PlayerCamera> m_Camera;
+        SceneRenderer m_SceneRenderer;  // H2 — env/sky/shadow/HDR/post (== editor)
         bool m_MissingCameraWarned = false;
     };
 }

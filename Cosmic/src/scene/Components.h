@@ -286,7 +286,11 @@ namespace Cosmic
     struct COSMIC_API PointLightComponent
     {
         glm::vec3 Color{ 1.0f };
-        float     Intensity = 1.0f;
+        // Default raised 1 -> 8 (H3): with the windowed inverse-square falloff the
+        // engine uses, intensity 1 at the default 10 m radius is nearly imperceptible
+        // a few metres out — so "drop a point light into a scene" now visibly lights
+        // nearby default-material meshes. Tune down for a subtle fill.
+        float     Intensity = 8.0f;
         float     Radius    = 10.0f;
 
         PointLightComponent() = default;
@@ -534,6 +538,28 @@ namespace Cosmic
     };
 
     /**
+     * @brief SystemScript link (H9) — logic bound to a *class* of entities rather
+     * than one entity. Held on any single entity (scene-level); at Play the ScriptHost
+     * resolves ClassName -> a SystemScript subclass registered with CS_SYSTEM, builds
+     * ONE instance, and each tick calls its OnUpdateAll with the matching entity set
+     * (declared by the system's Requires<>/WithTag query). Mirrors NativeScriptComponent:
+     * ClassName is the only plain reflected field; Fields holds the reflected overrides
+     * ((de)serialized out-of-band via the SystemDescriptor), and Instance is runtime-only.
+     */
+    struct COSMIC_API SystemScriptComponent
+    {
+        std::string ClassName;                  // registered system class ("" = none)
+        void*       Instance = nullptr;         // runtime-only SystemScript*; owned by ScriptHost
+
+        // name -> boxed override value (same as NativeScriptComponent::Fields).
+        std::unordered_map<std::string, Reflect::FieldValue> Fields;
+
+        SystemScriptComponent() = default;
+        SystemScriptComponent(const SystemScriptComponent&) = default;
+        SystemScriptComponent(const std::string& className) : ClassName(className) {}
+    };
+
+    /**
      * @brief Marks an entity subtree as an instance of a prefab asset (E14). Stores
      * the source `.cprefab` VFS path so "Revert to Prefab" can re-instantiate it and
      * a missing-source load can warn. No per-field override tracking in v1 — an
@@ -586,6 +612,7 @@ CS_REGISTER_COMPONENT(Cosmic::TerrainComponent)
 CS_REGISTER_COMPONENT(Cosmic::WaterComponent)
 CS_REGISTER_COMPONENT(Cosmic::ParticleEmitterComponent)
 CS_REGISTER_COMPONENT(Cosmic::NativeScriptComponent)
+CS_REGISTER_COMPONENT(Cosmic::SystemScriptComponent)
 CS_REGISTER_COMPONENT(Cosmic::PrefabComponent)
 
 

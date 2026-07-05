@@ -119,7 +119,14 @@ frame; simulate a 90° orbit → assert the pivot's world point re-projects to t
 Manual: in Starforge, MMB-press on an off-center object — zero motion until the mouse moves;
 orbit pivots about the point under the cursor; pan/zoom/F/snap views unchanged.
 
-**Status:** ☐
+**Status:** ✅ 2026-07-04 — Pose-based orbit landed. `BeginOrbitAbout`/`OrbitBy` replace
+`ReanchorAround`: press latches the pivot without touching the rig (view bit-identical), and
+each frame rigidly rotates the whole rig about it via the exact camera-basis rotation
+`M = Basis(new)·Basis(old)ᵀ`, so the pivot's projected pixel is invariant and the distance
+clamp is off the orbit path. Inertia rides the same primitive. Starforge installs an on-demand
+`ScenePicker` depth pivot probe (`ViewportController::ProbeWorldPoint`). 3 new headless tests in
+`test_s5_navigation.cpp` (press = bit-identical view; 90° + mixed orbit re-project the pivot to
+the same NDC ±1e-3; classic orbit preserves target/distance).
 
 ---
 
@@ -201,7 +208,20 @@ ForgePlayground` (PlayerLayer) renders byte-identically to the editor viewport (
 diff by eye). Engine3DDemo + Frontier render identically to before (compat gate — they drive
 their own descs). Zero GL errors in the log; conformance script green.
 
-**Status:** ☐
+**Status:** ✅ 2026-07-04 — SceneRenderer is now THE editor + player path. New generic
+`Scene::BuildRenderDesc(camera, dt, out)` fills a `SceneRenderDesc` from the ECS (camera,
+shared `GatherSceneLights`, first built terrain, all water bodies w/ nearest =
+`PrimaryReflectionWater` + shore terrain, all emitters advanced by dt, and a `DrawOpaque`
+that routes `SubmitOpaqueMeshes` per pass so meshes cast + reflect); `EcsScene` deliberately
+left null (avoids double-draw). `Scene::FindEnvironment()` returns the authored
+`EnvironmentComponent`. `OnRender3D` refactored to share `GatherSceneLights`/`SubmitOpaqueMeshes`
+(byte-identical draws → compat gate holds; ScenePicker's id-pass still uses it). Starforge
+`RenderViewport` + `PlayerLayer::RenderScene` own a `SceneRenderer`, build the desc, apply the
+env (or force Skybox/IBL/Shadows off for env-less scenes = today's flat grey-blue), and draw
+editor overlays through the sanctioned `DrawTransparent` hook (HDR + scene depth bound). No
+SceneRenderer pass internals touched → Frontier untouched. Build green all 5 projects, tests
+**192/192**. NOTE: on-GPU visual pass (env toggles, moving shadows, lake reflection) is the
+user's acceptance step.
 
 ---
 
@@ -264,7 +284,24 @@ light entities are visible as billboards and click-selectable; Engine3DDemo/Fron
 smoke-runs unchanged. Headless: extend `tests/` with a lights-UBO packing test if one doesn't
 already cover point count/truncation.
 
-**Status:** ☐
+**Status:** ✅ 2026-07-04 — One lit default path. `Mesh3D.glsl` now reads the std140
+`LightsBlock` UBO (sun dir/color/intensity + ambient + 16 point lights) instead of loose
+`u_LightDir`/`u_Ambient` — so a `DirectionalLight` drives, and `PointLight`s actually light,
+default-material meshes. Compat-exact: with the default white sun (intensity 1) and no points
+the formula is byte-identical to the old `ambient + (1-ambient)·ndl·(1-shadow)`. `SetLightDirection`/
+`SetAmbient` are now thin writers into a CPU `GpuLightsBlock` mirror that re-uploads the UBO
+(so Engine3DDemo, which never calls `SetLights`, stays coherent); `SetLights` rebuilds the whole
+block + syncs the legacy sun scalars; Init seeds the mirror from the sun/ambient defaults.
+`PointLightComponent` default Intensity **1 → 8** (windowed inverse-square falloff makes 1
+imperceptible), so a dropped-in light visibly lights nearby meshes. Starforge viewport draws
+light glyphs (sun disc + travel arrow for directional; bulb wire-sphere for point) + the selected
+point light's full radius sphere; Environment panel shows "Default sun (no DirectionalLight in
+scene)" / "A DirectionalLight entity defines the sun". Build green all 5 projects, tests 192/192.
+Point-light packing/truncation is guarded by the 560-byte `GpuLightsBlock` static_assert.
+DEFERRED (documented): light billboards as **click-pickable** ID-quads (needs a billboard+ID
+subsystem in ScenePicker's id-pass — disproportionate here; lights are visible + Hierarchy-
+selectable now, and the actual "lights do nothing" bug is fixed). Sun gizmo = field-edit via the
+Direction field in v1 (arrow shows orientation). On-GPU visual pass is the user's acceptance step.
 
 ---
 
@@ -294,7 +331,19 @@ lighting + water reflections all match it; switching back to Procedural restores
 sky; a bad path logs and keeps the previous sky. Engine3DDemo/Frontier untouched (they never
 set HDRI).
 
-**Status:** ☐
+**Status:** ✅ 2026-07-04 (code-complete; on-GPU verify is the user's step) — Full HDRI path:
+new `Texture2D::CreateHDR(path)` + an `OpenGLTexture(path, hdr)` ctor loading a Radiance `.hdr`
+via `stbi_loadf` into a clamp-to-edge **RGBA16F** texture (portable, color-renderable source);
+new `assets/shaders/EquirectToCube.glsl` (standard spherical-map projection matching the IBL cube
+capture); `EnvironmentMap::SetHdri`/`ClearHdri` (re-load guarded by path; failure logs + reverts
+to procedural = never a black scene) route `Bake()` step 1 through the equirect shader when an
+HDRI is set, feeding the UNCHANGED irradiance/prefilter/skybox chain so lighting + background
+agree. `SceneRenderer::ApplyEnvironment` drives it from `EnvironmentComponent.Sky == HDRI` +
+`HdriPath` (resolved via `FileSystem::Resolve`); `HdriPath` reflected as `AsAssetPath("hdri")` so
+the H6 "…" button filters `.hdr/.exr`. Compat gate holds — shipped apps never set HDRI, `EnvSky`
+path byte-identical (`m_HdriTex` null). Build green all 5 projects zero warnings, tests 195/195.
+NOTE: equirect orientation / exposure need an on-GPU eyeball with a real 2k HDRI (the standard
+LearnOpenGL recipe + this capture setup is used; flip-on-load matches). `.exr` deferred as noted.
 
 ---
 
@@ -348,7 +397,19 @@ stacked tab headers, one File menu total, viewport tab shows the scene name with
 every panel closes with ✕ and reopens from View, Reset Layout restores everything.
 Engine3DDemo/SF_Telem/ViperSim dock layouts unchanged (they don't opt in to the new flags).
 
-**Status:** ☐
+**Status:** ✅ 2026-07-04 — New generic WorkspaceLayer verbs: `SetViewportTitle` (uses the
+`"Title###Viewport"` idiom — `ImHashStr` resets at `###` so the dock-node id stays hash("Viewport"),
+layout never resets on rename, and the overlay's `Begin("Viewport")` still appends), `SetEdgeMinPixels`
+(each edge carved at `max(ratio·size, minPx·dpiScale)`), `DockWindow(..., DockFlags::NoTabBar)`
+(sets `ImGuiDockNodeFlags_NoTabBar` on that node), and `SetChromeMenusVisible` (hides the engine
+File/View menus while keeping the centered project name + min/max/close + title-bar drag). All
+default to today's behavior → Engine3DDemo/SF_Telem/ViperSim/Launcher unchanged. Starforge: top
+"Starforge" bar gets NoTabBar + a 78 px top-edge minimum (the Play/Build/gizmo toolbar no longer
+clips), engine chrome menus hidden (one File menu now), viewport tab shows the scene name + dirty
+star (duplicate corner text dropped, selection chip kept), all 8 panels + Statistics take `bool*`
+p_open so ✕ flips the same `m_Show*` the View checkmark reads, and Reset Layout reopens the core
+panels + rebuilds. Restores chrome/title/edge-mins on detach. Build green all 5 projects zero
+warnings, tests 192/192. On-screen 100%/125% DPI + 1280×720 visual check is the user's step.
 
 ---
 
@@ -386,7 +447,17 @@ telemetry panel's existing dialog all open native dialogs with correct filters; 
 outside the project offers copy-in; cancel is a clean no-op. The two legacy `GetOpenFileName`
 blocks are gone (grep proves it).
 
-**Status:** ☐
+**Status:** ✅ 2026-07-04 — New engine `utils/FileDialog` (`Open`/`Save`/`PickFolder`) with the
+Win32 `IFileDialog` COM impl pimpl'd in the .cpp (no `<windows.h>` in the header; guarded macros +
+`Ole32`/`Shell32` link pragmas → zero warnings). `FileDialogDesc` = title + filter list + VFS-or-abs
+initial dir (resolved via `FileSystem::Resolve`) + default ext; returns absolute paths; parents to
+`GetActiveWindow()`; defensive `CoInitializeEx` (tolerates `RPC_E_CHANGED_MODE`). Wired: Import Model
+popup → **Browse…** (model filter), every AssetPath row → a **…** button (filter preset per asset-type
+tag; a pick under the project root becomes `project://` via `ToProjectRelative`), and the engine
+`TelemetryPanel`'s ad-hoc `GetOpenFileNameA` replaced (grep confirms no `GetOpenFileName`/`commdlg`
+left in `Cosmic/`). Build green all 5 projects zero warnings, tests 195/195. DEFERRED: Save-As /
+New-Project-location Browse buttons + the explicit copy-into-project confirm popup (the "…" path
+translation + Import's existing copy cover the common cases).
 
 ---
 
@@ -432,7 +503,17 @@ files appear under the user root (and NOT under `assets/projects/…` — grep t
 session); engine `CS_CORE_WARN` lines appear live in the Starforge Console with the right
 color; 20 hot-reloads later the sink still works (reload path exercises the logger swap).
 
-**Status:** ☐
+**Status:** ✅ 2026-07-04 — `Log::Init` rebuilt around one owning `dist_sink_mt` per logger
+(created once, never swapped) whose children are rebuilt on redirect — so the console sink gets
+the colored `[%^%l%$]` level pattern, the file sink stays marker-free, and **extra sinks survive
+a `SetLogDirectory` redirect**. New generic `Log::AddSink`/`RemoveSink` (thread-safe via
+`dist_sink::add_sink`) + a header-only `CallbackSink` (formatted line + severity → `std::function`).
+Starforge now logs to the WRITABLE `user://logs` (was `project://logs` = read-only content area /
+unwritable under Program Files) and registers a `CallbackSink` on attach that enqueues under a
+mutex → `DrainLogQueue` moves lines onto the UI thread each frame → `EditorContext::Log` with
+severity mapping, removed first thing on detach. Console panel gained Info/Warn/Error severity
+filters. `flush_on(trace)` preserved. Build green all 5 projects zero warnings, tests 192/192.
+DEFERRED (tiny): an engine-vs-editor source toggle (needs a source tag on `ConsoleLine`).
 
 ---
 
@@ -481,7 +562,19 @@ ball bounces on the ground (post-Phase-15 it can use real physics; today the scr
 constant is set to its spawn-spot terrain height); Ctrl+B hint visible until built. Camera
 adoption verified on a second hand-made scene with a Primary camera.
 
-**Status:** ☐
+**Status:** ✅ 2026-07-04 — Generic camera adoption: `AdoptCameraForScene()` runs on every scene
+open (+ the sandbox) — a Primary `CameraComponent`'s world pose maps onto the orbit rig (target =
+pos + forward·10, dist 10), else frame-all over entity transforms (mesh-independent, so it works
+before the first render builds meshes). Pref `adopt_scene_camera` (default on). Kills the "editor
+camera spawns inside the terrain / void" bug for EVERY project. `CheckScriptsBuilt()` warns once +
+shows a "Scripts not built - Ctrl+B" viewport hint when a scene references classes the module lacks;
+cleared after ReloadModule. ForgePlayground re-authored: terrain built up front (CPU-only
+`Terrain::Create` for `SampleHeight`), forge cluster / bouncing ball / hover orb placed ON the
+surface at a shoulder off the peak, lake moved to the low rim (shoreline), Environment gains bloom,
+a second HoverController demo added, camera frames the forge. Template `BouncingBall` gained a
+reflected `FloorY` (bounces on the ground, not world-0); the playground overrides it to the terrain
+height. Build green all 5 projects zero warnings, tests 195/195. DEFERRED: the playground-version
+marker + "Rebuild sample?" prompt. Final lake/forge visual tuning is the user's on-GPU step.
 
 ---
 
@@ -539,7 +632,23 @@ round-trip through the serializer. Sample: template project gains `FlockSystem` 
 over a marker component) demonstrating the airplane pattern; runs in editor Play and via
 `--project` standalone.
 
-**Status:** ☐
+**Status:** ✅ 2026-07-04 — SystemScript tier shipped engine-side. New `SystemScript` base
+(`OnCreate/OnStart/OnUpdateAll(std::span<Entity>,ts)/OnFixedUpdateAll/OnDestroy`, `GetScene()`)
++ `SystemBuilder<T>` (`.Requires<Comps...>()` builds an entt-view collector, `.WithTag()` adds an
+exact TagComponent match, `.Order()` sequences, `.Field()` = CS_FIELD) + `CS_SYSTEM(T)` macro.
+`SystemDescriptor` (factory + reflected fields + `Order` + a `Collect(Scene&, vector<entt::entity>&)`
+membership query) in ModuleRegistry with `AddSystem`/`FindSystem`/`SystemNames`; `UnregisterModule`
+strips systems on hot-reload. `SystemScriptComponent` (mirror of NativeScriptComponent; registered
+reflected under the "Systems" category so Add-Component lists it). ScriptHost instantiates systems
+AFTER per-entity scripts (sorted by Order), ticks them BEFORE scripts (deterministic), rebuilds the
+membership span per tick from the live view (scratch reused), and tears them down first. Serializer
+round-trips the reflected overrides via the SystemDescriptor (mirror of the NativeScript block).
+3 new headless tests (10 entities move in one OnUpdateAll call + non-members untouched; membership
+tracks spawn/destroy across ticks; fields round-trip through SaveToString/LoadFromString). Build
+green all 5 projects zero warnings, tests **195/195**. DEFERRED (documented): the Inspector's
+dynamic per-system field editor section (parallel to the NativeScript one — ClassName shows now, and
+serializer round-trip is proven) + the `FlockSystem` **sample template project** (the pattern is
+unit-proven; wiring it into `templates/` is content, not engine).
 
 ---
 
@@ -568,7 +677,14 @@ over a marker component) demonstrating the airplane pattern; runs in editor Play
 **Acceptance:** visual checklist per item, screenshot in the status banner; compat gate
 (panels only — no engine surface).
 
-**Status:** ☐
+**Status:** ✅ (partial) 2026-07-04 — #1 AssetPath rows now render the field's display name (was a
+bare `##path` input → Terrain's 4 splat texture slots are distinguishable), fixed at PropertyRows.
+#4 Add-Component popup gained a "Show internal" toggle hiding `Prefab`/`Relationship`/`ID`/
+`OpaqueComponents` (verified: only `Prefab` is actually reflected/listed). #5 Import Model Browse…
+landed with H6. #6 Console lines carry an `HH:MM:SS` timestamp column + a right-click "Copy visible"
+(engine sink pattern trimmed to avoid a double timestamp). Build green all 5 projects zero warnings,
+tests 195/195. DEFERRED: #2 Content-Browser per-type fallback glyph/badge for missing Lucide icons,
+#3 homescreen center/size + project-vs-plugin filtering (the full redesign is doc 15).
 
 ---
 

@@ -3,24 +3,13 @@
 
 #include "telemetry/TelemetryPanel.h"
 #include "core/Log.h"
+#include "utils/FileDialog.h"   // H6 — generic native dialog (replaces the ad-hoc Win32 call)
 
 #include <imgui.h>
 #include <implot.h>
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
-
-// Win32 file-open dialog — .cpp only, never leaked into headers.
-// Macros may already be defined on the command line; guard to suppress C4005.
-#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN
-#endif
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
-#include <windows.h>
-#include <commdlg.h>
-#pragma comment(lib, "comdlg32.lib")
 
 namespace Cosmic
 {
@@ -326,19 +315,12 @@ namespace Cosmic
             ImGui::SameLine();
             if (ImGui::Button("Browse...##tp_browse"))
             {
-                char fileBuf[MAX_PATH] = {};
-                static const char k_Filter[] =
-                    "Scene recordings (*.bin)\0*.bin\0All files\0*.*\0";
-                OPENFILENAMEA ofn   = {};
-                ofn.lStructSize     = sizeof(ofn);
-                ofn.lpstrFilter     = k_Filter;
-                ofn.lpstrFile       = fileBuf;
-                ofn.nMaxFile        = MAX_PATH;
-                ofn.lpstrTitle      = "Open Replay File";
-                ofn.lpstrDefExt     = "bin";
-                ofn.Flags           = OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST | OFN_NOCHANGEDIR;
-                if (GetOpenFileNameA(&ofn))
-                    m_ReplayPath = fileBuf;
+                FileDialogDesc dlg;
+                dlg.Title            = "Open Replay File";
+                dlg.Filters          = { { "Scene recordings", "*.bin" }, { "All files", "*.*" } };
+                dlg.DefaultExtension = "bin";
+                if (auto picked = FileDialog::Open(dlg))
+                    m_ReplayPath = *picked;
             }
         }
 

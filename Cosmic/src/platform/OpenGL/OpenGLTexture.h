@@ -60,6 +60,7 @@ namespace Cosmic
 
 		OpenGLTexture(uint32_t width, uint32_t height, bool mipmapped = false);
 		OpenGLTexture(const std::string& path);
+		OpenGLTexture(const std::string& path, bool hdr);       // HDR equirect → RGBA16F (H4)
 		OpenGLTexture(const uint8_t* encoded, uint32_t size);   // decode from memory (S6.2 glTF)
 		virtual ~OpenGLTexture();
 

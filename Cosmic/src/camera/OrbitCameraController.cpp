@@ -64,13 +64,20 @@ namespace Cosmic
 					                      : DragMode::Dolly;
 					m_OrbitVelocity = { 0.0f, 0.0f };
 
-					// CAD orbit-about-cursor: re-anchor the rig on the point under the
-					// cursor without moving the camera, so the drag pivots there.
-					if (m_NavStyle == NavStyle::CAD && m_DragMode == DragMode::Orbit)
+					// Latch the orbit pivot WITHOUT moving the camera (H1): the rendered
+					// view stays bit-identical on press — no look-at snap. CAD orbits
+					// about the point under the cursor; Classic about the target. The
+					// rigid rotation happens on subsequent frames in OrbitBy.
+					if (m_DragMode == DragMode::Orbit)
 					{
-						glm::vec3 pivot;
-						if (ComputeCursorPivot(pivot))
-							ReanchorAround(pivot);
+						glm::vec3 pivot = m_Target;
+						if (m_NavStyle == NavStyle::CAD)
+						{
+							glm::vec3 hit;
+							if (ComputeCursorPivot(hit))
+								pivot = hit;
+						}
+						BeginOrbitAbout(pivot);
 					}
 				}
 				else
@@ -82,11 +89,12 @@ namespace Cosmic
 					{
 						// Horizontal drag yaws around world +Y, vertical pitches.
 						// Dragging right rotates the scene left — editor-standard.
+						// OrbitBy rigidly rotates the whole rig about the latched pivot,
+						// so the point under the cursor stays put (no distance clamp on
+						// the orbit path — that belongs to zoom).
 						const float dYaw   = -delta.x * m_OrbitSpeed;
 						const float dPitch =  delta.y * m_OrbitSpeed;
-						m_YawDeg   += dYaw;
-						m_PitchDeg += dPitch;
-						m_PitchDeg  = std::clamp(m_PitchDeg, m_MinPitchDeg, m_MaxPitchDeg);
+						OrbitBy(dYaw, dPitch);
 						m_OrbitVelocity = { dYaw, dPitch };
 						break;
 					}
@@ -175,13 +183,12 @@ namespace Cosmic
 			}
 
 			// Optional inertial orbit drift after releasing an orbit drag (off by
-			// default). Decays exponentially; purely cosmetic.
+			// default). Decays exponentially; purely cosmetic. Rides the same rigid
+			// rotation about the last pivot so CAD orbit keeps its center.
 			if (m_InertiaEnabled && !m_Dragging &&
 			    (std::abs(m_OrbitVelocity.x) > 1e-3f || std::abs(m_OrbitVelocity.y) > 1e-3f))
 			{
-				m_YawDeg   += m_OrbitVelocity.x;
-				m_PitchDeg += m_OrbitVelocity.y;
-				m_PitchDeg  = std::clamp(m_PitchDeg, m_MinPitchDeg, m_MaxPitchDeg);
+				OrbitBy(m_OrbitVelocity.x, m_OrbitVelocity.y);
 				m_OrbitVelocity *= std::exp(-ts * 8.0f);
 			}
 		}
@@ -365,23 +372,46 @@ namespace Cosmic
 		return true;
 	}
 
-	void OrbitCameraController::ReanchorAround(const glm::vec3& pivot)
+	glm::mat3 OrbitCameraController::CameraBasis(float yawDeg, float pitchDeg) const
 	{
-		// Re-derive (target, yaw, pitch, distance) so the rig orbits about `pivot`
-		// while leaving the camera exactly where it is.
-		const glm::vec3 camPos = m_Camera.GetPosition();
-		const glm::vec3 off    = camPos - pivot;
-		const float     dist   = glm::length(off);
-		if (dist < 1e-3f)
-			return;   // camera basically at the pivot — keep the current framing
+		// Camera-to-world basis [right | up | -forward] built with the exact
+		// glm::lookAt convention RecalculateCamera relies on (world-up +Y, no roll):
+		//   f = normalize(target - eye) = normalize(-offset);  s = f × up;  u = s × f.
+		// Pitch is clamped shy of ±90° so f is never parallel to +Y (s stays defined).
+		const glm::vec3 off = PoseToOffset(yawDeg, pitchDeg, 1.0f);
+		const glm::vec3 f   = glm::normalize(-off);                 // look direction
+		const glm::vec3 up  = { 0.0f, 1.0f, 0.0f };
+		const glm::vec3 s   = glm::normalize(glm::cross(f, up));    // right
+		const glm::vec3 u   = glm::cross(s, f);                     // true up
+		return glm::mat3(s, u, -f);                                 // columns
+	}
 
-		m_Target   = pivot;
-		m_Distance = m_TargetDistance = std::clamp(dist, m_MinDistance, m_MaxDistance);
+	void OrbitCameraController::OrbitBy(float dYawDeg, float dPitchDeg)
+	{
+		// Pose-based orbit (H1): rotate the ENTIRE rig (target + eye) about m_OrbitPivot
+		// so the pivot's projected pixel is invariant, while the view orientation ends
+		// up exactly at the yaw/pitch the classic rig would produce.
+		//
+		// The eye must transform by M — the camera-basis rotation between the old and
+		// new poses — for the pivot to stay screen-fixed (a rigid rotation of the camera
+		// about a point leaves that point's camera-space coordinates, hence its
+		// projection, unchanged). We then place the target on the new view ray at the
+		// unchanged distance, so Recalculate(LookAt) reproduces this exact pose.
+		const float oldYaw   = m_YawDeg;
+		const float oldPitch = m_PitchDeg;
+		const float newYaw   = oldYaw + dYawDeg;
+		const float newPitch = std::clamp(oldPitch + dPitchDeg, m_MinPitchDeg, m_MaxPitchDeg);
 
-		// Invert PoseToOffset: off = dist * (cosP·sinY, sinP, cosP·cosY).
-		m_PitchDeg = std::clamp(glm::degrees(std::asin(glm::clamp(off.y / dist, -1.0f, 1.0f))),
-		                        m_MinPitchDeg, m_MaxPitchDeg);
-		m_YawDeg   = glm::degrees(std::atan2(off.x, off.z));
+		const glm::vec3 oldOff = PoseToOffset(oldYaw, oldPitch, m_Distance);
+		const glm::vec3 newOff = PoseToOffset(newYaw, newPitch, m_Distance);
+		const glm::vec3 oldEye = m_Target + oldOff;
+
+		const glm::mat3 M = CameraBasis(newYaw, newPitch) * glm::transpose(CameraBasis(oldYaw, oldPitch));
+		const glm::vec3 newEye = m_OrbitPivot + M * (oldEye - m_OrbitPivot);
+
+		m_YawDeg   = newYaw;
+		m_PitchDeg = newPitch;
+		m_Target   = newEye - newOff;   // look-at point on the new view ray at distance m_Distance
 		RecalculateCamera();
 	}
 

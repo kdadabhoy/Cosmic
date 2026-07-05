@@ -28,9 +28,9 @@ namespace Starforge
         }
     }
 
-    void EnvironmentPanel::OnImGuiRender(EditorContext& ctx)
+    void EnvironmentPanel::OnImGuiRender(EditorContext& ctx, bool* pOpen)
     {
-        if (ImGui::Begin("Environment"))
+        if (ImGui::Begin("Environment", pOpen))
         {
             if (!ctx.ProjectOpen || !ctx.Scene)
             {
@@ -51,6 +51,19 @@ namespace Starforge
             }
 
             ImGui::TextDisabled("Sun, sky, time-of-day, fog, IBL and post — drives the renderer.");
+
+            // H3: tell the user WHY the Sun fields here may look inert — if the scene
+            // has a DirectionalLight entity, THAT light defines the sun (this panel's
+            // Sun fields only take effect via the owned sky/IBL); with none, the sun
+            // below is the whole story.
+            bool hasDirLight = false;
+            for (auto h : ctx.Scene->View<DirectionalLightComponent>()) { (void)h; hasDirLight = true; break; }
+            if (hasDirLight)
+                ImGui::TextColored(ImVec4(0.85f, 0.75f, 0.35f, 1.0f),
+                                   "A DirectionalLight entity defines the sun for lit meshes.");
+            else
+                ImGui::TextColored(ImVec4(0.60f, 0.65f, 0.72f, 1.0f),
+                                   "Default sun (no DirectionalLight in scene).");
             ImGui::Separator();
 
             for (const auto& f : desc->Fields)

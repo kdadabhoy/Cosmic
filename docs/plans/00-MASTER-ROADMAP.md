@@ -68,7 +68,7 @@ chrome). Then 15 and 16 are independent of each other (interleave freely); 17 wa
 18 runs last of the feature phases; 19–21 are unlock-driven menus, not marches. Docs (12) run
 continuously; every phase ends with its D40 documentation row.
 
-### Phase 14 — Starforge hardening *(doc 13, H1–H10)* — ☐
+### Phase 14 — Starforge hardening *(doc 13, H1–H10)* — ✅ code-complete 2026-07-04
 Pose-based orbit (no MMB jump) → SceneRenderer as THE scene path (environment/sky/shadows/
 post live in editor + shipped player) → lighting unification (scene lights affect default
 materials; light billboards) → HDRI skies → chrome rebuild (toolbar visible, one menu bar,
@@ -79,6 +79,14 @@ sweep.
   medium; H5/H7/H10 low.
 - **Done when:** every §1 bug row in doc 13 has its repro-based acceptance demonstrated; the
   compat gate held throughout (shipped apps identical).
+- **Status 2026-07-04:** all 10 work orders (H1–H10) landed; build green across 5 projects zero
+  warnings; `CosmicTests` **195/195** (189→195: +3 pose-orbit, +3 SystemScript). Compat gate held
+  (no SceneRenderer pass internals changed; `OnRender3D` byte-identical; shipped apps never opt
+  into new WorkspaceLayer flags / HDRI). Remaining = the user's on-GPU acceptance pass (env-toggle/
+  moving-shadow/lake-reflection visuals, HDRI orientation, chrome at 125% DPI, playground first
+  frame) + a few small documented deferrals (light-billboard picking, Inspector per-system field
+  section + FlockSystem sample project, content-browser fallback glyph, homescreen redesign→doc 15,
+  Save-As/New-Project Browse buttons, `.exr`).
 
 ### Phase 15 — Physics & collision *(doc 14, J1–J9)* — ☐
 Vendor Jolt → PhysicsWorld service → reflected components → Play-session integration →

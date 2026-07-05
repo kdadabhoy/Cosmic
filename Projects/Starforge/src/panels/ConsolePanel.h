@@ -16,9 +16,13 @@ namespace Starforge
     {
     public:
         // Draws the "Console" window. Dock binding happens in StarforgeApp.
-        void OnImGuiRender(EditorContext& ctx);
+        void OnImGuiRender(EditorContext& ctx, bool* pOpen = nullptr);
 
     private:
         bool m_AutoScroll = true;
+        // Severity filter toggles (H7) — engine + editor lines share the panel now.
+        bool m_ShowInfo  = true;
+        bool m_ShowWarn  = true;
+        bool m_ShowError = true;
     };
 }

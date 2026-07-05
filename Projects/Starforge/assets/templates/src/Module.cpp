@@ -27,6 +27,7 @@ CS_MODULE_BEGIN(@PROJECT_NAME@)
         CS_FIELD(Gravity)
         CS_FIELD(Restitution).Range(0.0f, 1.0f)
         CS_FIELD(StartHeight).Range(0.0f, 50.0f)
+        CS_FIELD(FloorY).Range(-50.0f, 50.0f)
     CS_END;
 
     CS_SCRIPT(PidController)

@@ -32,7 +32,7 @@ namespace Starforge
         // Poll the async terrain build every frame (independent of panel
         // visibility) so a Regenerate result lands even if the window is closed.
         void OnUpdate(EditorContext& ctx);
-        void OnImGuiRender(EditorContext& ctx);
+        void OnImGuiRender(EditorContext& ctx, bool* pOpen = nullptr);
 
     private:
         void DrawTerrain(EditorContext& ctx, Cosmic::Entity e);

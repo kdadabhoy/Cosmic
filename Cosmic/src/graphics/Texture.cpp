@@ -47,6 +47,20 @@ namespace Cosmic
 
 	/////////////////////////////////////////////////////////////////////////////////
 
+	/** Texture2D::CreateHDR (Radiance .hdr / RGBE → RGBA16F) — H4 HDRI source. */
+	Ref<Texture2D> Texture2D::CreateHDR(const std::string& path)
+	{
+		switch (RendererAPI::GetAPI())
+		{
+		case RendererAPI::API::None:    return nullptr;
+		case RendererAPI::API::OpenGL:  return std::static_pointer_cast<Texture2D>(CreateRef<OpenGLTexture>(path, /*hdr*/ true));
+		}
+
+		return nullptr;
+	}
+
+	/////////////////////////////////////////////////////////////////////////////////
+
 	/////////////////////////////////////////////////////////////////////////////////
 
 	/**

@@ -112,6 +112,13 @@ namespace Cosmic
 		glm::vec3 LightDirection = glm::normalize(glm::vec3(-0.4f, -1.0f, -0.25f));
 		float     Ambient        = 0.25f;
 
+		// CPU mirror of the LightsBlock UBO (H3). SetLightDirection/SetAmbient patch
+		// the sun fields here and re-upload so the Mesh3D COLOR path — which now reads
+		// this UBO, not loose u_LightDir/u_Ambient uniforms — stays coherent for apps
+		// that only call the legacy sun setters (Engine3DDemo). SetLights rebuilds it
+		// whole. Seeded from LightDirection/Ambient at Init.
+		GpuLightsBlock LightsCPU;
+
 		// =====================================================================
 		// --- Image-based lighting (S6.3): handles registered by SetIBL ---
 		// Bound to reserved units on every material DrawMesh so PBR materials
@@ -207,8 +214,12 @@ namespace Cosmic
 		s_Data.LightsUBO = UniformBuffer::Create(sizeof(GpuLightsBlock), Bindings::LightsUbo);
 		if (s_Data.LightsUBO)
 		{
-			GpuLightsBlock defaults{};
-			s_Data.LightsUBO->SetData(&defaults, sizeof(defaults));
+			// Seed the CPU mirror from the sun/ambient defaults so the color path
+			// (Mesh3D now reads this block) matches the pre-H3 look before any setter.
+			s_Data.LightsCPU.SunDirection_Ambient = glm::vec4(s_Data.LightDirection, s_Data.Ambient);
+			s_Data.LightsCPU.SunColor_Intensity   = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+			s_Data.LightsCPU.PointCount            = glm::vec4(0.0f);
+			s_Data.LightsUBO->SetData(&s_Data.LightsCPU, sizeof(s_Data.LightsCPU));
 		}
 
 		// --- Per-frame camera UBO (S6.2): allocate on binding 1. Every 3D shader
@@ -565,9 +576,9 @@ namespace Cosmic
 			// shadow lands on plain-colored geometry; the sampler unit is
 			// assigned UNCONDITIONALLY (two sampler types aliasing unit 0 is a
 			// draw-time INVALID_OPERATION on strict drivers — portability rule).
+			// Sun/ambient/points now arrive via the LightsBlock UBO (H3), not loose
+			// u_LightDir/u_Ambient uniforms.
 			s_Data.MeshShader->Bind();
-			s_Data.MeshShader->SetFloat3("u_LightDir", s_Data.LightDirection);
-			s_Data.MeshShader->SetFloat("u_Ambient", s_Data.Ambient);
 			s_Data.MeshShader->SetInt("u_ShadowMap", (int)kShadowMapUnit);
 			if (s_Data.ShadowActive)
 			{
@@ -954,6 +965,15 @@ namespace Cosmic
 			return;
 		}
 		s_Data.LightDirection = direction / len;
+
+		// H3: keep the LightsBlock UBO's sun direction coherent — the Mesh3D color
+		// path reads the UBO now, not a per-draw u_LightDir uniform.
+		s_Data.LightsCPU.SunDirection_Ambient = glm::vec4(s_Data.LightDirection, s_Data.Ambient);
+		if (s_Data.LightsUBO)
+		{
+			s_Data.LightsUBO->Bind();
+			s_Data.LightsUBO->SetData(&s_Data.LightsCPU, sizeof(s_Data.LightsCPU));
+		}
 	}
 
 	const glm::vec3& Renderer3D::GetLightDirection()
@@ -964,6 +984,14 @@ namespace Cosmic
 	void Renderer3D::SetAmbient(float ambient)
 	{
 		s_Data.Ambient = glm::clamp(ambient, 0.0f, 1.0f);
+
+		// H3: mirror into the LightsBlock UBO (see SetLightDirection).
+		s_Data.LightsCPU.SunDirection_Ambient.w = s_Data.Ambient;
+		if (s_Data.LightsUBO)
+		{
+			s_Data.LightsUBO->Bind();
+			s_Data.LightsUBO->SetData(&s_Data.LightsCPU, sizeof(s_Data.LightsCPU));
+		}
 	}
 
 	float Renderer3D::GetAmbient()
@@ -983,6 +1011,11 @@ namespace Cosmic
 			: glm::vec3(0.0f, -1.0f, 0.0f);
 		block.SunDirection_Ambient = glm::vec4(sunDir, glm::clamp(lights.Ambient, 0.0f, 1.0f));
 		block.SunColor_Intensity   = glm::vec4(lights.SunColor, lights.SunIntensity);
+
+		// H3: keep the legacy sun mirror coherent — the material path still pushes
+		// s_Data.LightDirection/Ambient as u_LightDir/u_Ambient to older shaders.
+		s_Data.LightDirection = sunDir;
+		s_Data.Ambient        = glm::clamp(lights.Ambient, 0.0f, 1.0f);
 
 		if (lights.Points.size() > kMaxPointLights)
 		{
@@ -1006,10 +1039,14 @@ namespace Cosmic
 			block.PointColor_Intensity[i] = glm::vec4(p.Color, p.Intensity);
 		}
 
+		// Store into the CPU mirror so later SetLightDirection/SetAmbient patches
+		// preserve these points + sun color/intensity (H3).
+		s_Data.LightsCPU = block;
+
 		// Re-assert the binding before uploading — cheap insurance in case app
 		// code bound another UBO to the lights slot since Init.
 		s_Data.LightsUBO->Bind();
-		s_Data.LightsUBO->SetData(&block, sizeof(block));
+		s_Data.LightsUBO->SetData(&s_Data.LightsCPU, sizeof(s_Data.LightsCPU));
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////

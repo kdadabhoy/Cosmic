@@ -128,6 +128,15 @@ namespace Cosmic
 		static Ref<Texture2D>		Create(const std::string& path);
 
 		/**
+		 * @brief Load a floating-point HDR image (Radiance .hdr / RGBE) into a
+		 * linear RGBA16F texture with clamp-to-edge sampling — the equirectangular
+		 * source for HDRI environment lighting (H4). Returns a degraded (0×0, handle
+		 * 0) texture on failure, like Create(path). No mip chain (the equirect→cube
+		 * bake reads mip 0). Windows-first via stb_image's stbi_loadf.
+		 */
+		static Ref<Texture2D>		CreateHDR(const std::string& path);
+
+		/**
 		 * @brief Decode an ENCODED image (PNG/JPG bytes) already in memory.
 		 * Pre:  `data` points to `size` bytes of a compressed image file.
 		 * Post: Returns an uploaded, mipmapped Texture2D, or nullptr on decode

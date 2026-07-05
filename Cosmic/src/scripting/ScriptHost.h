@@ -25,10 +25,12 @@
 // ============================================================================
 
 #include "core/Core.h"
+#include "scene/Entity.h"   // std::vector<Entity> membership scratch (H9)
 
 #include <entt/entt.hpp>
 
 #include <vector>
+#include <span>
 
 namespace Cosmic
 {
@@ -36,7 +38,9 @@ namespace Cosmic
     class Event;
     class ScriptableEntity;
     class ITelemetrySink;
+    class SystemScript;
     struct ScriptDescriptor;
+    struct SystemDescriptor;
     struct NativeScriptComponent;
 
     class COSMIC_API ScriptHost
@@ -79,5 +83,20 @@ namespace Cosmic
         Scene* m_Scene = nullptr;
         std::vector<entt::entity> m_Live;   // entities with a live instance, creation order
         ITelemetrySink* m_Sink = nullptr;   // E20 — injected into each instance
+
+        // SystemScript tier (H9): one instance per SystemScriptComponent, resolved
+        // after per-entity scripts and ticked BEFORE them (deterministic order).
+        struct LiveSystem
+        {
+            SystemScript*           Instance = nullptr;
+            const SystemDescriptor* Desc     = nullptr;
+            entt::entity            Holder   = entt::null;   // the component's entity
+        };
+        std::vector<LiveSystem>   m_Systems;
+        std::vector<entt::entity> m_MemberHandles;   // per-tick scratch (membership query)
+        std::vector<Entity>       m_MemberEntities;  // per-tick scratch (span handed to the system)
+
+        // Rebuild a system's membership span from its query (scratch reused per tick).
+        std::span<Entity> BuildMembership(const LiveSystem& ls);
     };
 }

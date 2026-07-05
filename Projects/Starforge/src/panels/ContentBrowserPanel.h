@@ -20,7 +20,7 @@ namespace Starforge
     {
     public:
         ~ContentBrowserPanel();
-        void OnImGuiRender(EditorContext& ctx);
+        void OnImGuiRender(EditorContext& ctx, bool* pOpen = nullptr);
 
         // Re-resolve project:// (call when the active project changes).
         void Reset();

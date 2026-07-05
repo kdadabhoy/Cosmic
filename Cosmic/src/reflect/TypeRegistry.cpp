@@ -97,7 +97,7 @@ namespace Cosmic::Reflect
             .Field("SunIntensity", &EnvironmentComponent::SunIntensity).Range(0.0f, 10.0f)
             .Field("Sky",          &EnvironmentComponent::Sky)
                 .EnumValue("Procedural", 0).EnumValue("Detailed", 1).EnumValue("HDRI", 2)
-            .Field("HdriPath",     &EnvironmentComponent::HdriPath).AsAssetPath("texture")
+            .Field("HdriPath",     &EnvironmentComponent::HdriPath).AsAssetPath("hdri").Tooltip("Equirectangular .hdr; used when Sky = HDRI")
             .Field("TimeOfDay",    &EnvironmentComponent::TimeOfDay).Range(0.0f, 24.0f)
             .Field("Skybox",       &EnvironmentComponent::Skybox)
             .Field("IBL",          &EnvironmentComponent::IBL)
@@ -201,6 +201,13 @@ namespace Cosmic::Reflect
         ClassIn<NativeScriptComponent>(r, "NativeScript", "Scripts")
             .Field("ClassName", &NativeScriptComponent::ClassName)
                 .Tooltip("Registered C++ script class (ModuleRegistry).");
+
+        // SystemScript link (H9) — logic over a CLASS of entities. Like NativeScript,
+        // ClassName is the only plain field; the reflected overrides are handled
+        // out-of-band by the serializer via the SystemDescriptor.
+        ClassIn<SystemScriptComponent>(r, "SystemScript", "Systems")
+            .Field("ClassName", &SystemScriptComponent::ClassName)
+                .Tooltip("Registered C++ SystemScript class (ModuleRegistry).");
 
         // Prefab link (E14) — remembers the source .cprefab of an instantiated subtree.
         ClassIn<PrefabComponent>(r, "Prefab", "Core")

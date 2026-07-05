@@ -10,9 +10,9 @@ using namespace Cosmic;
 
 namespace Starforge
 {
-    void MaterialEditorPanel::OnImGuiRender(EditorContext& ctx)
+    void MaterialEditorPanel::OnImGuiRender(EditorContext& ctx, bool* pOpen)
     {
-        if (ImGui::Begin("Material Editor"))
+        if (ImGui::Begin("Material Editor", pOpen))
         {
             if (!ctx.ProjectOpen)
             {

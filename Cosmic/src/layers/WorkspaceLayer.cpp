@@ -2,6 +2,7 @@
 #include "core/Window.h"
 #include <imgui.h>
 #include <imgui_internal.h>
+#include <algorithm>
 
 namespace Cosmic
 {
@@ -192,7 +193,12 @@ namespace Cosmic
 		if (m_ShowViewport)
 		{
 			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-			ImGui::Begin("Viewport");
+			// "Title###Viewport": the DISPLAYED tab is m_ViewportTitle (scene name),
+			// but the ImGui id is hash("Viewport") — stable, so renaming per scene
+			// never resets the dock layout. ImHashStr resets at "###", so the overlay
+			// path's Begin("Viewport") appends to the very same window (H5).
+			const std::string vpName = m_ViewportTitle + "###Viewport";
+			ImGui::Begin(vpName.c_str());
 
 			m_ViewportFocused = ImGui::IsWindowFocused();
 			m_ViewportHovered = ImGui::IsWindowHovered();
@@ -266,37 +272,44 @@ namespace Cosmic
 	{
 		if (!ImGui::BeginMenuBar()) return;
 
-		// ---- File menu ----
-		if (ImGui::BeginMenu("File"))
+		// The engine "File / View" chrome menus (H5): hidden when the active app
+		// supplies its own menu bar (Starforge) so the user sees ONE File menu. The
+		// centered project name + min/max/close controls + title-bar drag below are
+		// always drawn, so nothing app-critical is lost.
+		if (m_ShowChromeMenus)
 		{
-			if (ImGui::MenuItem("Return to Launcher", "Alt+F4"))
-				Cosmic::Application::Get().TransitionToLauncher();
+			// ---- File menu ----
+			if (ImGui::BeginMenu("File"))
+			{
+				if (ImGui::MenuItem("Return to Launcher", "Alt+F4"))
+					Cosmic::Application::Get().TransitionToLauncher();
 
-			ImGui::Separator();
+				ImGui::Separator();
 
-			if (ImGui::MenuItem("Exit"))
-				Cosmic::Application::Get().Close();
+				if (ImGui::MenuItem("Exit"))
+					Cosmic::Application::Get().Close();
 
-			ImGui::EndMenu();
-		}
+				ImGui::EndMenu();
+			}
 
-		// ---- View menu ----
-		if (ImGui::BeginMenu("View"))
-		{
-			if (ImGui::MenuItem("Reset Layout"))
-				m_DockspaceInitialized = false; // Re-runs DockBuilder next frame
+			// ---- View menu ----
+			if (ImGui::BeginMenu("View"))
+			{
+				if (ImGui::MenuItem("Reset Layout"))
+					m_DockspaceInitialized = false; // Re-runs DockBuilder next frame
 
-			ImGui::Separator();
+				ImGui::Separator();
 
-			bool showViewport = m_ShowViewport;
-			if (ImGui::MenuItem("Show Viewport", nullptr, &showViewport))
-				SetViewportVisible(showViewport);
+				bool showViewport = m_ShowViewport;
+				if (ImGui::MenuItem("Show Viewport", nullptr, &showViewport))
+					SetViewportVisible(showViewport);
 
-			bool showThemes = m_ShowThemeSelector;
-			if (ImGui::MenuItem("Theme Selector", nullptr, &showThemes))
-				ShowThemeSelector(showThemes, m_ThemeSelectorPort, m_ThemeSelectorWindow.c_str());
+				bool showThemes = m_ShowThemeSelector;
+				if (ImGui::MenuItem("Theme Selector", nullptr, &showThemes))
+					ShowThemeSelector(showThemes, m_ThemeSelectorPort, m_ThemeSelectorWindow.c_str());
 
-			ImGui::EndMenu();
+				ImGui::EndMenu();
+			}
 		}
 
 		// ---- Centered project name ----
@@ -424,17 +437,32 @@ namespace Cosmic
 		const bool useTop    = anyOf(DockPort::TopLeft,    DockPort::TopCenter,    DockPort::TopRight);
 		const bool useBottom = anyOf(DockPort::BottomLeft, DockPort::BottomCenter, DockPort::BottomRight);
 
+		// Effective edge ratio = max(ratio, minPx·dpi / axisSize) so a docked
+		// menu+toolbar row never clips under a small ratio on a big monitor (H5).
+		const float dpi = viewport->DpiScale > 0.0f ? viewport->DpiScale : 1.0f;
+		auto edgeRatio = [&](float ratio, float minPx, float axisSize)
+		{
+			float r = ratio;
+			if (minPx > 0.0f && axisSize > 1.0f)
+				r = std::max(r, (minPx * dpi) / axisSize);
+			return std::min(std::max(r, 0.05f), 0.9f);
+		};
+
+		// portNode[port] = the dock node a port's windows land in (for NoTabBar).
+		ImGuiID portNode[static_cast<int>(DockPort::Center) + 1] = { 0 };
+
 		// Full-height side columns first, then top/bottom rows span the central band.
 		ImGuiID dock_main = dockspaceId;
 		ImGuiID dock_left = 0, dock_right = 0, dock_top = 0, dock_bottom = 0;
-		if (useLeft)   dock_left   = ImGui::DockBuilderSplitNode(dock_main, ImGuiDir_Left,  m_LeftRatio,   nullptr, &dock_main);
-		if (useRight)  dock_right  = ImGui::DockBuilderSplitNode(dock_main, ImGuiDir_Right, m_RightRatio,  nullptr, &dock_main);
-		if (useTop)    dock_top    = ImGui::DockBuilderSplitNode(dock_main, ImGuiDir_Up,    m_TopRatio,    nullptr, &dock_main);
-		if (useBottom) dock_bottom = ImGui::DockBuilderSplitNode(dock_main, ImGuiDir_Down,  m_BottomRatio, nullptr, &dock_main);
+		if (useLeft)   dock_left   = ImGui::DockBuilderSplitNode(dock_main, ImGuiDir_Left,  edgeRatio(m_LeftRatio,   m_LeftMinPx,   viewport->Size.x), nullptr, &dock_main);
+		if (useRight)  dock_right  = ImGui::DockBuilderSplitNode(dock_main, ImGuiDir_Right, edgeRatio(m_RightRatio,  m_RightMinPx,  viewport->Size.x), nullptr, &dock_main);
+		if (useTop)    dock_top    = ImGui::DockBuilderSplitNode(dock_main, ImGuiDir_Up,    edgeRatio(m_TopRatio,    m_TopMinPx,    viewport->Size.y), nullptr, &dock_main);
+		if (useBottom) dock_bottom = ImGui::DockBuilderSplitNode(dock_main, ImGuiDir_Down,  edgeRatio(m_BottomRatio, m_BottomMinPx, viewport->Size.y), nullptr, &dock_main);
 
 		// Central viewport (+ any windows explicitly bound to Center -> tabbed with it).
 		if (m_ShowViewport) ImGui::DockBuilderDockWindow("Viewport", dock_main);
 		dockAll(portWindows[static_cast<int>(DockPort::Center)], dock_main);
+		portNode[static_cast<int>(DockPort::Center)] = dock_main;
 
 		// Carve an edge node into its used sections and dock each section's windows.
 		auto buildEdge = [&](ImGuiID edgeNode, DockPort s0, DockPort s1, DockPort s2, ImGuiDir dir)
@@ -445,13 +473,28 @@ namespace Cosmic
 
 			std::vector<ImGuiID> nodes = SplitIntoSections(edgeNode, static_cast<int>(usedIdx.size()), dir);
 			for (size_t k = 0; k < usedIdx.size(); ++k)
+			{
 				dockAll(portWindows[static_cast<int>(secs[usedIdx[k]])], nodes[k]);
+				portNode[static_cast<int>(secs[usedIdx[k]])] = nodes[k];
+			}
 		};
 
 		if (useLeft)   buildEdge(dock_left,   DockPort::LeftTop,    DockPort::LeftMiddle,   DockPort::LeftBottom,   ImGuiDir_Up);
 		if (useRight)  buildEdge(dock_right,  DockPort::RightTop,   DockPort::RightMiddle,  DockPort::RightBottom,  ImGuiDir_Up);
 		if (useTop)    buildEdge(dock_top,    DockPort::TopLeft,    DockPort::TopCenter,    DockPort::TopRight,     ImGuiDir_Left);
 		if (useBottom) buildEdge(dock_bottom, DockPort::BottomLeft, DockPort::BottomCenter, DockPort::BottomRight,  ImGuiDir_Left);
+
+		// Apply NoTabBar to the nodes whose bound windows requested it (H5). Setting
+		// LocalFlags on the node persists through DockBuilderFinish.
+		for (const auto& b : m_DockBindings)
+		{
+			if (!HasFlag(b.Flags, DockFlags::NoTabBar))
+				continue;
+			const ImGuiID nid = portNode[static_cast<int>(b.Port)];
+			if (nid)
+				if (ImGuiDockNode* n = ImGui::DockBuilderGetNode(nid))
+					n->LocalFlags |= ImGuiDockNodeFlags_NoTabBar;
+		}
 
 		// Escape-hatch custom split requests (RequestExtraDockedPanel), off center.
 		ImGuiID dock_remaining = dock_main;

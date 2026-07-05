@@ -57,9 +57,20 @@ in vec3 v_WorldPos;
 in vec2 v_TexCoord;
 
 uniform vec4  u_Color;      // per-draw flat color (Renderer3D::DrawMesh)
-uniform vec3  u_LightDir;   // direction the light TRAVELS (normalized)
-uniform float u_Ambient;    // ambient floor in [0, 1]
 uniform int   u_EntityID;   // S4.6: -1 when not picking
+
+// Engine-wide scene lights (binding 0 = Bindings::LightsUbo) — SAME std140 block as
+// MeshLit.glsl (H3: the cheap Lambert color path now reads scene lights too, so a
+// DirectionalLight drives it and PointLights actually light default-material meshes).
+// The 16s mirror Renderer3D::kMaxPointLights — change both together.
+layout(std140, binding = 0) uniform LightsBlock
+{
+    vec4 u_SunDirection_Ambient;     // xyz = dir the sun light TRAVELS, w = ambient
+    vec4 u_SunColor_Intensity;       // rgb, w = intensity
+    vec4 u_PointCount;               // x = active point count (as float)
+    vec4 u_PointPos_Radius[16];      // xyz world pos, w = radius
+    vec4 u_PointColor_Intensity[16]; // rgb, w = intensity
+};
 
 // --- Directional shadows (S6.4): the flat Lambert path receives them too, so a
 //     shadow lands on the plain-colored ground pad / meshes, not just PBR/MeshLit. ---
@@ -90,13 +101,39 @@ float ShadowFactor(vec3 worldPos, vec3 N, vec3 L)
 void main()
 {
     // Lambert: N·L against the direction TO the light, with an ambient floor
-    // so unlit faces stay readable (engineering clarity over realism).
-    vec3  n   = normalize(v_WorldNormal);
-    vec3  L   = -u_LightDir;
-    float ndl = max(dot(n, L), 0.0);
+    // so unlit faces stay readable (engineering clarity over realism). Sun dir +
+    // color + ambient now come from the LightsBlock UBO. With the default white sun
+    // (intensity 1) and no point lights this is BYTE-IDENTICAL to the pre-H3 formula
+    // `ambient + (1-ambient)*ndl*(1-shadow)` (sunCol == vec3(1)); a colored/dimmed
+    // DirectionalLight tints it, and point lights add within the same headroom.
+    vec3  n       = normalize(v_WorldNormal);
+    float ambient = u_SunDirection_Ambient.w;
+    vec3  Lsun    = normalize(-u_SunDirection_Ambient.xyz);
+    float ndlSun  = max(dot(n, Lsun), 0.0);
 
-    float shadow = (u_HasShadow > 0.5) ? ShadowFactor(v_WorldPos, n, L) : 0.0;
-    float lit    = u_Ambient + (1.0 - u_Ambient) * ndl * (1.0 - shadow);
+    float shadow  = (u_HasShadow > 0.5) ? ShadowFactor(v_WorldPos, n, Lsun) : 0.0;
+    vec3  sunCol  = u_SunColor_Intensity.rgb * u_SunColor_Intensity.w;
+
+    vec3  lit = vec3(ambient) + (1.0 - ambient) * ndlSun * (1.0 - shadow) * sunCol;
+
+    // Point lights (cheap diffuse only — no specular on the flat path). Same
+    // windowed inverse-square attenuation as MeshLit, folded into the (1-ambient)
+    // headroom so a dropped-in light reads as extra fill without blowing out.
+    int count = int(u_PointCount.x);
+    for (int i = 0; i < count && i < 16; ++i)
+    {
+        vec3  lp     = u_PointPos_Radius[i].xyz;
+        float radius = max(u_PointPos_Radius[i].w, 1e-3);
+        vec3  toL    = lp - v_WorldPos;
+        float dist   = length(toL);
+        vec3  L      = toL / max(dist, 1e-4);
+
+        float ndl = max(dot(n, L), 0.0);
+        float att = pow(clamp(1.0 - pow(dist / radius, 4.0), 0.0, 1.0), 2.0) / (dist * dist + 1.0);
+        vec3  pc  = u_PointColor_Intensity[i].rgb * u_PointColor_Intensity[i].w;
+
+        lit += (1.0 - ambient) * ndl * att * pc;
+    }
 
     color      = vec4(u_Color.rgb * lit, u_Color.a);
     o_EntityID = u_EntityID;

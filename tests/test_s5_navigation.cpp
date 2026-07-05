@@ -119,6 +119,87 @@ TEST_CASE("FrameBounds: frames the bounding sphere of an AABB")
 }
 
 // ---------------------------------------------------------------------------
+// H1 — Pose-based orbit: no jump on press, pivot stays screen-fixed
+// ---------------------------------------------------------------------------
+
+namespace
+{
+	bool Mat4Identical(const glm::mat4& a, const glm::mat4& b)
+	{
+		for (int c = 0; c < 4; ++c)
+			for (int r = 0; r < 4; ++r)
+				if (a[c][r] != b[c][r])   // bit-identical: no tolerance
+					return false;
+		return true;
+	}
+
+	// Project a world point to NDC through a view-projection matrix.
+	glm::vec3 ToNdc(const glm::mat4& vp, const glm::vec3& world)
+	{
+		const glm::vec4 clip = vp * glm::vec4(world, 1.0f);
+		return glm::vec3(clip) / clip.w;
+	}
+}
+
+TEST_CASE("OrbitBy: latching a pivot on press does not move the view")
+{
+	OrbitCameraController orbit(16.0f / 9.0f);
+	orbit.SetTarget({ 0.0f, 0.0f, 0.0f });
+	orbit.SetDistance(10.0f);
+	orbit.SetYawPitch(45.0f, 30.0f);
+
+	const glm::mat4 before = orbit.GetCamera().GetViewMatrix();
+
+	// A pivot 30°+ off the view axis (near the origin but not the target).
+	orbit.BeginOrbitAbout({ 2.0f, 1.0f, 3.0f });
+
+	// No rig state changed: the view matrix is bit-identical to before the press.
+	CHECK(Mat4Identical(before, orbit.GetCamera().GetViewMatrix()));
+}
+
+TEST_CASE("OrbitBy: the pivot re-projects to the same pixel through a 90° orbit")
+{
+	OrbitCameraController orbit(16.0f / 9.0f);
+	orbit.SetTarget({ 0.0f, 0.0f, 0.0f });
+	orbit.SetDistance(10.0f);
+	orbit.SetYawPitch(45.0f, 30.0f);
+
+	const glm::vec3 pivot{ 2.0f, 1.0f, 3.0f };
+	orbit.BeginOrbitAbout(pivot);
+
+	const glm::vec3 ndcBefore = ToNdc(orbit.GetCamera().GetViewProjectionMatrix(), pivot);
+
+	// A full 90° yaw (single exact step) — the pivot's projected NDC must not move.
+	orbit.OrbitBy(90.0f, 0.0f);
+	const glm::vec3 ndcAfter = ToNdc(orbit.GetCamera().GetViewProjectionMatrix(), pivot);
+	CHECK(Vec3Near(ndcBefore, ndcAfter, 1e-3f));
+
+	// The rig actually rotated (yaw advanced by 90°), and the same holds when a
+	// pitch component is mixed in over several smaller steps.
+	CHECK(orbit.GetYaw() == doctest::Approx(135.0f));
+
+	for (int i = 0; i < 10; ++i)
+		orbit.OrbitBy(-4.0f, 3.0f);   // 40° back-yaw + 30° pitch, accumulated
+	const glm::vec3 ndcMixed = ToNdc(orbit.GetCamera().GetViewProjectionMatrix(), pivot);
+	CHECK(Vec3Near(ndcBefore, ndcMixed, 1e-3f));
+}
+
+TEST_CASE("OrbitBy: a classic orbit about the target leaves the target fixed")
+{
+	OrbitCameraController orbit(1.0f);
+	orbit.SetTarget({ 1.0f, 2.0f, -3.0f });
+	orbit.SetDistance(8.0f);
+	orbit.SetYawPitch(10.0f, 15.0f);
+
+	orbit.BeginOrbitAbout(orbit.GetTarget());   // classic: pivot == target
+	orbit.OrbitBy(37.0f, -22.0f);
+
+	// Distance and target are preserved (classic orbit is a pure re-aim about center).
+	CHECK(Vec3Near(orbit.GetTarget(), { 1.0f, 2.0f, -3.0f }));
+	CHECK(orbit.GetDistance() == doctest::Approx(8.0f));
+}
+
+// ---------------------------------------------------------------------------
 // S5.3 — ViewCube face picking (pure ray/AABB math)
 // ---------------------------------------------------------------------------
 

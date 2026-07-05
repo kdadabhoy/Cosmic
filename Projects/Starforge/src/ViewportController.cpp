@@ -7,12 +7,52 @@
 
 #include <imgui.h>
 
+#include <glm/gtc/constants.hpp>
+
 #include <algorithm>
+#include <cmath>
 
 using namespace Cosmic;
 
 namespace Starforge
 {
+    namespace
+    {
+        // Three orthogonal wire circles — a cheap "sphere" for light glyphs / radius.
+        void DrawWireSphere(const glm::vec3& c, float r, const glm::vec4& col, int seg)
+        {
+            const float step = glm::two_pi<float>() / (float)seg;
+            glm::vec3 pxy{}, pxz{}, pyz{};
+            for (int i = 0; i <= seg; ++i)
+            {
+                const float a = i * step, ca = std::cos(a), sa = std::sin(a);
+                const glm::vec3 xy = c + glm::vec3(ca, sa, 0.0f) * r;
+                const glm::vec3 xz = c + glm::vec3(ca, 0.0f, sa) * r;
+                const glm::vec3 yz = c + glm::vec3(0.0f, ca, sa) * r;
+                if (i > 0)
+                {
+                    Renderer3D::DrawLine(pxy, xy, col);
+                    Renderer3D::DrawLine(pxz, xz, col);
+                    Renderer3D::DrawLine(pyz, yz, col);
+                }
+                pxy = xy; pxz = xz; pyz = yz;
+            }
+        }
+
+        // A little sun: a small ring with radiating spokes, drawn at a light's origin.
+        void DrawSunGlyph(const glm::vec3& c, const glm::vec4& col)
+        {
+            const float r = 0.30f;
+            DrawWireSphere(c, r, col, 12);
+            for (int i = 0; i < 8; ++i)
+            {
+                const float a = i * glm::two_pi<float>() / 8.0f;
+                const glm::vec3 d(std::cos(a), std::sin(a), 0.0f);
+                Renderer3D::DrawLine(c + d * (r * 1.3f), c + d * (r * 2.0f), col);
+            }
+        }
+    }
+
     void ViewportController::Init()
     {
         m_Picker = ScenePicker::Create();
@@ -82,10 +122,38 @@ namespace Starforge
         }
     }
 
+    bool ViewportController::ProbeWorldPoint(EditorContext& ctx, const Camera& cam,
+                                             const glm::vec2& screenMouse, glm::vec3& out)
+    {
+        auto& app = Application::Get();
+        const glm::vec2 vpPos  = app.GetViewportPos();
+        const glm::vec2 vpSize = app.GetViewportSize();
+        if (!m_Picker || !ctx.Scene || vpSize.x < 1.0f || vpSize.y < 1.0f)
+            return false;
+
+        const int px = (int)(screenMouse.x - vpPos.x);
+        const int py = (int)(screenMouse.y - vpPos.y);
+        if (px < 0 || py < 0 || px >= (int)vpSize.x || py >= (int)vpSize.y)
+            return false;
+
+        // One self-contained ID pass at the live pose (RenderIdPass restores the
+        // default target). Invoked only on the frame an orbit drag begins — cheap.
+        m_Picker->RenderIdPass(*ctx.Scene, cam, (uint32_t)vpSize.x, (uint32_t)vpSize.y);
+        return m_Picker->WorldPoint(cam, px, py, out);
+    }
+
     void ViewportController::DrawSceneOverlay(EditorContext& ctx, const Camera& cam)
     {
         Renderer3D::BeginScene(cam);
+        DrawOverlayContent(ctx);
+        Renderer3D::EndScene();
+    }
 
+    void ViewportController::DrawOverlayContent(EditorContext& ctx)
+    {
+        // NO BeginScene/EndScene — the caller owns the scene. In the SceneRenderer
+        // path (H2) this runs from the DrawTransparent hook with the HDR target +
+        // scene depth still bound, so grid/selection lines occlude correctly.
         if (m_ShowGrid)
         {
             Renderer3D::DrawGrid(50.0f, 1.0f,
@@ -115,7 +183,44 @@ namespace Starforge
             }
         }
 
-        Renderer3D::EndScene();
+        // Light glyphs (H3): make lights visible objects. Directional lights show a
+        // sun + a travel-direction arrow; point lights show a small bulb glyph, and a
+        // selected one shows its full falloff radius as a translucent wire sphere.
+        if (ctx.Scene)
+        {
+            auto& reg = ctx.Scene->GetRegistry();
+            auto selected = [&](entt::entity h)
+            {
+                for (entt::entity s : ctx.Selection) if (s == h) return true;
+                return false;
+            };
+
+            for (auto e : reg.view<TransformComponent, DirectionalLightComponent>())
+            {
+                const auto& t  = reg.get<TransformComponent>(e);
+                const auto& dl = reg.get<DirectionalLightComponent>(e);
+                const glm::vec4 col(dl.Color, 1.0f);
+                DrawSunGlyph(t.Position, col);
+                const glm::vec3 dir = glm::length(dl.Direction) > 1e-4f
+                    ? glm::normalize(dl.Direction) : glm::vec3(0.0f, -1.0f, 0.0f);
+                const glm::vec3 tip = t.Position + dir * 2.0f;
+                Renderer3D::DrawLine(t.Position, tip, col);
+                // arrowhead: two short back-spokes off the tip
+                const glm::vec3 ref = std::abs(dir.y) < 0.95f ? glm::vec3(0, 1, 0) : glm::vec3(1, 0, 0);
+                const glm::vec3 side = glm::normalize(glm::cross(dir, ref)) * 0.25f;
+                Renderer3D::DrawLine(tip, tip - dir * 0.4f + side, col);
+                Renderer3D::DrawLine(tip, tip - dir * 0.4f - side, col);
+            }
+
+            for (auto e : reg.view<TransformComponent, PointLightComponent>())
+            {
+                const auto& t  = reg.get<TransformComponent>(e);
+                const auto& pl = reg.get<PointLightComponent>(e);
+                DrawWireSphere(t.Position, 0.35f, glm::vec4(pl.Color, 1.0f), 16);
+                if (selected(e))
+                    DrawWireSphere(t.Position, pl.Radius, glm::vec4(pl.Color, 0.5f), 24);
+            }
+        }
     }
 
     void ViewportController::DrawGizmo(EditorContext& ctx, OrbitCameraController& cam)

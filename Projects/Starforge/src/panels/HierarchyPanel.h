@@ -19,7 +19,7 @@ namespace Starforge
     class HierarchyPanel
     {
     public:
-        void OnImGuiRender(EditorContext& ctx);
+        void OnImGuiRender(EditorContext& ctx, bool* pOpen = nullptr);
 
     private:
         void DrawNode(EditorContext& ctx, Cosmic::Entity e);

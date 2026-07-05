@@ -2,16 +2,29 @@
 
 #include "Log.h"
 #include <spdlog/sinks/stdout_color_sinks.h>
-#include <filesystem> 
+#include <filesystem>
 #include <chrono>
 #include <sstream>
 #include <iomanip>
+#include <algorithm>
 
 namespace Cosmic
 {
 	Ref<spdlog::logger> Log::s_CoreLogger;
 	Ref<spdlog::logger> Log::s_ClientLogger;
+	std::shared_ptr<spdlog::sinks::dist_sink_mt> Log::s_CoreDist;
+	std::shared_ptr<spdlog::sinks::dist_sink_mt> Log::s_ClientDist;
+	std::vector<spdlog::sink_ptr> Log::s_ExtraSinks;
 	std::shared_mutex Log::s_LoggerMutex;
+
+	namespace
+	{
+		// Console pattern colors the level token (%^…%$) — spdlog's wincolor sink
+		// paints the Windows console per severity. The FILE pattern stays marker-free
+		// so no escape junk lands in the log files (H7).
+		constexpr const char* kConsolePattern = "[%Y-%m-%d %H:%M:%S.%e] [%n] [%^%l%$] %v";
+		constexpr const char* kFilePattern    = "[%Y-%m-%d %H:%M:%S.%e] [%n] [%l] %v";
+	}
 
 	/////////////////////////////////////////////////////////////////////////////////
 
@@ -45,35 +58,67 @@ namespace Cosmic
 		std::string coreLogPath = logDirectory + "/Cosmic_" + timeStr + ".log";
 		std::string clientLogPath = logDirectory + "/App_" + timeStr + ".log";
 
-		// Note: spdlog's "_mt" suffix guarantees the logging macros themselves are 100% thread safe
-		std::vector<spdlog::sink_ptr> coreSinks;
-		coreSinks.push_back(std::make_shared<spdlog::sinks::stdout_color_sink_mt>());
-		coreSinks.push_back(std::make_shared<spdlog::sinks::basic_file_sink_mt>(coreLogPath, true));
+		// Fresh console (colored level) + file (marker-free) children for this
+		// destination. The "_mt" suffix keeps the sinks themselves thread-safe.
+		auto coreConsole = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+		coreConsole->set_pattern(kConsolePattern);
+		auto coreFile = std::make_shared<spdlog::sinks::basic_file_sink_mt>(coreLogPath, true);
+		coreFile->set_pattern(kFilePattern);
 
-		std::vector<spdlog::sink_ptr> clientSinks;
-		clientSinks.push_back(std::make_shared<spdlog::sinks::stdout_color_sink_mt>());
-		clientSinks.push_back(std::make_shared<spdlog::sinks::basic_file_sink_mt>(clientLogPath, true));
+		auto clientConsole = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+		clientConsole->set_pattern(kConsolePattern);
+		auto clientFile = std::make_shared<spdlog::sinks::basic_file_sink_mt>(clientLogPath, true);
+		clientFile->set_pattern(kFilePattern);
 
-		std::string loggingPattern = "[%Y-%m-%d %H:%M:%S.%e] [%n] [%l] %v";
-		for (auto& sink : coreSinks)   sink->set_pattern(loggingPattern);
-		for (auto& sink : clientSinks) sink->set_pattern(loggingPattern);
-
-		// Allocate temporary pointers first so we don't hold a lock during long sink setups
-		auto coreTmp = std::make_shared<spdlog::logger>("COSMIC", coreSinks.begin(), coreSinks.end());
-		coreTmp->set_level(spdlog::level::trace);
-		coreTmp->flush_on(spdlog::level::trace);
-
-		auto clientTmp = std::make_shared<spdlog::logger>("APP", clientSinks.begin(), clientSinks.end());
-		clientTmp->set_level(spdlog::level::trace);
-		clientTmp->flush_on(spdlog::level::trace);
-
-		// 3. EXCLUSIVE WRITE LOCK: Block all background log macros for a fraction of a millisecond
-		// to safely swap the master logger addresses out from underneath them.
+		// 3. EXCLUSIVE WRITE LOCK: swap the file/console children of the ONE owning
+		// dist-sink per logger. The dist-sinks + loggers are created once and never
+		// swapped, so any extra sink registered via AddSink survives a redirect.
 		{
 			std::unique_lock<std::shared_mutex> lock(s_LoggerMutex);
-			s_CoreLogger = coreTmp;
-			s_ClientLogger = clientTmp;
+
+			const bool first = !s_CoreDist;
+			if (first)
+			{
+				s_CoreDist   = std::make_shared<spdlog::sinks::dist_sink_mt>();
+				s_ClientDist = std::make_shared<spdlog::sinks::dist_sink_mt>();
+
+				s_CoreLogger = std::make_shared<spdlog::logger>("COSMIC", s_CoreDist);
+				s_CoreLogger->set_level(spdlog::level::trace);
+				s_CoreLogger->flush_on(spdlog::level::trace);   // crash-safety (see header)
+
+				s_ClientLogger = std::make_shared<spdlog::logger>("APP", s_ClientDist);
+				s_ClientLogger->set_level(spdlog::level::trace);
+				s_ClientLogger->flush_on(spdlog::level::trace);
+			}
+
+			// Rebuild children: fresh console + file, plus every persistent extra sink.
+			std::vector<spdlog::sink_ptr> coreChildren   { coreConsole,   coreFile   };
+			std::vector<spdlog::sink_ptr> clientChildren { clientConsole, clientFile };
+			for (const auto& s : s_ExtraSinks) { coreChildren.push_back(s); clientChildren.push_back(s); }
+
+			s_CoreDist->set_sinks(std::move(coreChildren));
+			s_ClientDist->set_sinks(std::move(clientChildren));
 		}
+	}
+
+	void Log::AddSink(const spdlog::sink_ptr& sink)
+	{
+		if (!sink)
+			return;
+		std::unique_lock<std::shared_mutex> lock(s_LoggerMutex);
+		if (std::find(s_ExtraSinks.begin(), s_ExtraSinks.end(), sink) != s_ExtraSinks.end())
+			return;
+		s_ExtraSinks.push_back(sink);
+		if (s_CoreDist)   s_CoreDist->add_sink(sink);     // dist_sink add/remove is thread-safe
+		if (s_ClientDist) s_ClientDist->add_sink(sink);
+	}
+
+	void Log::RemoveSink(const spdlog::sink_ptr& sink)
+	{
+		std::unique_lock<std::shared_mutex> lock(s_LoggerMutex);
+		s_ExtraSinks.erase(std::remove(s_ExtraSinks.begin(), s_ExtraSinks.end(), sink), s_ExtraSinks.end());
+		if (s_CoreDist)   s_CoreDist->remove_sink(sink);
+		if (s_ClientDist) s_ClientDist->remove_sink(sink);
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////

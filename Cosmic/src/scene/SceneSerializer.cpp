@@ -149,6 +149,21 @@ namespace Cosmic
                                 nsc->Fields[sf.Name] = DeserializeValue(sf, fj[sf.Name]);
                     }
                 }
+
+                // SystemScript reflected overrides (H9) — same out-of-band path, via
+                // the SystemDescriptor's field list.
+                if (compName == "SystemScript" && compJson.contains("Fields")
+                    && compJson["Fields"].is_object())
+                {
+                    auto* ssc = static_cast<SystemScriptComponent*>(comp);
+                    if (const SystemDescriptor* sd = ModuleRegistry::Get().FindSystem(ssc->ClassName))
+                    {
+                        const json& fj = compJson["Fields"];
+                        for (const auto& sf : sd->Fields.Fields)
+                            if (fj.contains(sf.Name))
+                                ssc->Fields[sf.Name] = DeserializeValue(sf, fj[sf.Name]);
+                    }
+                }
             }
         }
 
@@ -184,6 +199,23 @@ namespace Cosmic
                         {
                             auto it = nsc->Fields.find(sf.Name);
                             if (it != nsc->Fields.end())
+                                fj[sf.Name] = SerializeValue(sf, it->second);
+                        }
+                        if (!fj.empty())
+                            cj["Fields"] = std::move(fj);
+                    }
+                }
+
+                if (d->Name == "SystemScript")   // H9 — mirror of the NativeScript block
+                {
+                    auto* ssc = static_cast<const SystemScriptComponent*>(comp);
+                    if (const SystemDescriptor* sd = ModuleRegistry::Get().FindSystem(ssc->ClassName))
+                    {
+                        json fj = json::object();
+                        for (const auto& sf : sd->Fields.Fields)
+                        {
+                            auto it = ssc->Fields.find(sf.Name);
+                            if (it != ssc->Fields.end())
                                 fj[sf.Name] = SerializeValue(sf, it->second);
                         }
                         if (!fj.empty())

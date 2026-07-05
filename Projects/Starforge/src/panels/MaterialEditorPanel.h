@@ -24,7 +24,7 @@ namespace Starforge
     class MaterialEditorPanel
     {
     public:
-        void OnImGuiRender(EditorContext& ctx);
+        void OnImGuiRender(EditorContext& ctx, bool* pOpen = nullptr);
 
     private:
         Cosmic::MaterialAsset m_Asset;                 // the material being edited

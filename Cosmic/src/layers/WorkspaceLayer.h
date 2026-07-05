@@ -76,11 +76,21 @@ namespace Cosmic
         Center                                     // tabbed with the central Viewport
     };
 
+    // Optional per-window dock-node behavior (H5). NoTabBar strips the "▼ Name"
+    // tab header from the node a window docks into — for chrome-less docks (a top
+    // toolbar, a full-bleed viewport) where the tab row is wasted vertical space.
+    enum class DockFlags : uint32_t { None = 0, NoTabBar = 1u << 0 };
+    inline DockFlags operator|(DockFlags a, DockFlags b)
+    { return static_cast<DockFlags>(static_cast<uint32_t>(a) | static_cast<uint32_t>(b)); }
+    inline bool HasFlag(DockFlags v, DockFlags f)
+    { return (static_cast<uint32_t>(v) & static_cast<uint32_t>(f)) != 0; }
+
     // One window-to-port binding registered by a client layer.
     struct DockBinding
     {
         std::string WindowName; // must match the client's ImGui::Begin("...")
-        DockPort    Port = DockPort::LeftTop;
+        DockPort    Port  = DockPort::LeftTop;
+        DockFlags   Flags = DockFlags::None;
     };
 
     // ---------------------------------------------------------------------------
@@ -168,11 +178,11 @@ namespace Cosmic
         // Inline on purpose: WorkspaceLayer is not COSMIC_API-exported, so this
         // compiles into the client DLL (same pattern as RequestExtraDockedPanel).
         // -----------------------------------------------------------------------
-        void DockWindow(const std::string& windowName, DockPort port)
+        void DockWindow(const std::string& windowName, DockPort port, DockFlags flags = DockFlags::None)
         {
             for (auto& b : m_DockBindings)
-                if (b.WindowName == windowName) { b.Port = port; m_DockspaceInitialized = false; return; }
-            m_DockBindings.push_back({ windowName, port });
+                if (b.WindowName == windowName) { b.Port = port; b.Flags = flags; m_DockspaceInitialized = false; return; }
+            m_DockBindings.push_back({ windowName, port, flags });
             m_DockspaceInitialized = false; // trigger a DockBuilder rebuild
         }
 
@@ -214,6 +224,31 @@ namespace Cosmic
             m_LeftRatio = left; m_RightRatio = right; m_TopRatio = top; m_BottomRatio = bottom;
             m_DockspaceInitialized = false;
         }
+
+        // Per-edge MINIMUM size in DPI-independent pixels (H5). Each edge is carved
+        // at max(ratio·dockspaceSize, minPx·dpiScale), so a docked menu+toolbar row
+        // never clips under a small ratio on a large monitor. 0 = ratio only (default).
+        // Re-runs the builder next frame.
+        void SetEdgeMinPixels(float top, float bottom, float left, float right)
+        {
+            m_TopMinPx = top; m_BottomMinPx = bottom; m_LeftMinPx = left; m_RightMinPx = right;
+            m_DockspaceInitialized = false;
+        }
+
+        // Show/hide the engine "File / View" chrome menus in the host title bar (H5).
+        // An app that supplies its OWN menu bar (Starforge) hides these to avoid a
+        // duplicate "File" menu; the borderless min/max/close controls + the centered
+        // project name + title-bar drag are UNAFFECTED. Restore true on project exit
+        // (the Launcher relies on the chrome menus). Default true = every other app
+        // is unchanged.
+        void SetChromeMenusVisible(bool visible) { m_ShowChromeMenus = visible; }
+        bool AreChromeMenusVisible() const       { return m_ShowChromeMenus; }
+
+        // The central viewport's DISPLAYED title (H5). The dock-node identity stays
+        // "Viewport" via the "Title###Viewport" idiom, so renaming the tab per scene
+        // never resets the layout. Default "Viewport" = every shipped app unchanged.
+        void SetViewportTitle(const std::string& title) { m_ViewportTitle = title.empty() ? "Viewport" : title; }
+        const std::string& GetViewportTitle() const     { return m_ViewportTitle; }
 
         // Layout-persistence policy.
         //   true  (default): re-apply the client-coded layout on EVERY load.
@@ -347,6 +382,13 @@ namespace Cosmic
         float m_RightRatio  = 0.20f;
         float m_TopRatio    = 0.18f;
         float m_BottomRatio = 0.22f;
+
+        // Per-edge minimum pixels (H5, DPI-scaled) — tunable via SetEdgeMinPixels.
+        float m_TopMinPx = 0.0f, m_BottomMinPx = 0.0f, m_LeftMinPx = 0.0f, m_RightMinPx = 0.0f;
+
+        // Chrome menus + viewport title (H5).
+        bool        m_ShowChromeMenus = true;
+        std::string m_ViewportTitle   = "Viewport";
 
         // Layout-persistence policy (see SetApplyCodedLayoutOnLoad).
         bool m_ApplyCodedLayoutOnLoad = true;

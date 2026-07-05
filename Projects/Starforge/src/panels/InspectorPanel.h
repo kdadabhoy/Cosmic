@@ -17,7 +17,7 @@ namespace Starforge
     class InspectorPanel
     {
     public:
-        void OnImGuiRender(EditorContext& ctx);
+        void OnImGuiRender(EditorContext& ctx, bool* pOpen = nullptr);
 
     private:
         // Draws one component's fields; records undo on commit. `typeId` keys the

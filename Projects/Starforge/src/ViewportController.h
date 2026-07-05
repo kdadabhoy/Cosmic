@@ -30,8 +30,14 @@ namespace Starforge
         void OnUpdate(EditorContext& ctx, Cosmic::OrbitCameraController& cam, float ts);
 
         // Grid + axes + selection outline, drawn via Renderer3D into the bound
-        // viewport FBO. Call after Scene::OnRender3D, before unbinding.
+        // viewport FBO. Call after Scene::OnRender3D, before unbinding. Wraps
+        // DrawOverlayContent in its own BeginScene/EndScene.
         void DrawSceneOverlay(EditorContext& ctx, const Cosmic::Camera& cam);
+
+        // The overlay draw calls WITHOUT a BeginScene/EndScene wrap — for the
+        // SceneRenderer DrawTransparent hook (H2), which is already inside a scene
+        // with the HDR target + scene depth bound.
+        void DrawOverlayContent(EditorContext& ctx);
 
         // The gizmo, drawn inside the viewport overlay window (between
         // WorkspaceLayer::BeginViewportOverlay/EndViewportOverlay).
@@ -39,6 +45,14 @@ namespace Starforge
 
         // The tool strip (gizmo mode, snap, grid, snap-views) for the top bar.
         void DrawToolbar(EditorContext& ctx, Cosmic::OrbitCameraController& cam);
+
+        // Depth probe for orbit-about-surface (H1): renders a one-off ID pass at the
+        // current camera pose and reconstructs the world point under the given SCREEN
+        // pixel. StarforgeApp wires this into OrbitCameraController::SetPivotProbe so a
+        // CAD orbit pivots about the actual surface under the cursor (falls back to the
+        // controller's ray/target-plane pivot when it misses geometry).
+        bool ProbeWorldPoint(EditorContext& ctx, const Cosmic::Camera& cam,
+                             const glm::vec2& screenMouse, glm::vec3& out);
 
         // Last-frame gizmo state — StarforgeApp gates the camera on it.
         bool GizmoBusy() const { return m_GizmoActive || m_GizmoOver; }

@@ -155,6 +155,24 @@ namespace Cosmic
 		// Cursor-pivot probe for orbit-about-cursor / zoom-to-cursor (see PivotProbe).
 		void       SetPivotProbe(PivotProbe probe)				{ m_PivotProbe = std::move(probe); }
 
+		/////////////////////////////////////////////////////////////////////////////////
+		// Pose-based orbit (H1 — the Blender/Fusion model)
+		/////////////////////////////////////////////////////////////////////////////////
+
+		// Latch the world-space point the next OrbitBy calls will rotate the whole rig
+		// about. Does NOT touch the rendered view — the camera pose is untouched until
+		// the first OrbitBy, so an MMB press produces zero motion (no look-at snap).
+		// OnUpdate calls this on the first frame of an orbit drag (CAD: point under the
+		// cursor via the pivot probe; Classic: the current target).
+		void       BeginOrbitAbout(const glm::vec3& pivot)		{ m_OrbitPivot = pivot; }
+
+		// Rigidly rotate the camera pose about the latched orbit pivot by the given
+		// yaw/pitch deltas (degrees). The pivot stays fixed on screen (its projected
+		// NDC is invariant); pitch clamps to the configured limits. This is the single
+		// primitive both the orbit drag and inertia drift ride — exposed for headless
+		// tests and scripted camera moves.
+		void       OrbitBy(float dYawDeg, float dPitchDeg);
+
 		// Optional exponential damping on orbit/pan velocities (off by default —
 		// existing feel is unchanged). Purely cosmetic; does not alter end poses.
 		void       SetInertiaEnabled(bool enabled)				{ m_InertiaEnabled = enabled; }
@@ -204,9 +222,10 @@ namespace Cosmic
 		// The spherical mount offset for a pose (mirrors RecalculateCamera exactly).
 		glm::vec3 PoseToOffset(float yawDeg, float pitchDeg, float dist) const;
 
-		// Re-derive (target, yaw, pitch, distance) so the rig orbits about `pivot`
-		// WITHOUT moving the camera — the essence of orbit-about-cursor.
-		void ReanchorAround(const glm::vec3& pivot);
+		// The camera-to-world basis [right | up | -forward] for a pose, built with the
+		// exact glm::lookAt convention RecalculateCamera uses (world-up +Y, zero roll).
+		// OrbitBy compares two of these to move the eye rigidly about the pivot.
+		glm::mat3 CameraBasis(float yawDeg, float pitchDeg) const;
 
 		// World point under the cursor: pivot probe if set + it hits, else the cursor
 		// ray intersected with the plane through the target facing the camera. Returns
@@ -286,6 +305,11 @@ namespace Cosmic
 
 		// Inertial damping velocities (deg/frame-ish); only used when m_InertiaEnabled.
 		glm::vec2  m_OrbitVelocity  = { 0.0f, 0.0f };  // (yaw, pitch)
+
+		// World point the current orbit gesture rotates the rig about (H1). Latched on
+		// the frame the orbit drag starts (Classic: the target; CAD: the point under
+		// the cursor); reused by inertia drift after release.
+		glm::vec3  m_OrbitPivot     = { 0.0f, 0.0f, 0.0f };
 
 		/////////////////////////////////////////////////////////////////////////////////
 		// Pose Animation State (S5.2 — SnapView / Frame blends)

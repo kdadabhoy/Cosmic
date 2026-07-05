@@ -16,6 +16,7 @@
 #include "scene/Scene.h"
 #include "scene/Entity.h"
 #include "scene/Components.h"
+#include "utils/FileSystem.h"   // resolve project:// HdriPath (H4)
 #include "core/Log.h"
 
 #include <glm/glm.hpp>
@@ -219,6 +220,14 @@ namespace Cosmic
 			if (glm::dot(travel, travel) > 1e-8f)
 				m_Environment.SetSunDirection(-glm::normalize(travel));
 			m_Environment.SetSkyIntensity(env.IBLIntensity);
+
+			// H4 — HDRI sky: project an equirect .hdr onto the environment cube. Any
+			// other SkyMode (Procedural / Detailed) uses the analytic sky. A failed
+			// load reverts to procedural inside SetHdri (never a black scene).
+			if (env.Sky == EnvironmentComponent::SkyMode::HDRI && !env.HdriPath.empty())
+				m_Environment.SetHdri(FileSystem::Resolve(env.HdriPath));
+			else
+				m_Environment.ClearHdri();
 		}
 	}
 

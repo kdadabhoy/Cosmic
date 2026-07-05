@@ -23,6 +23,9 @@
 #include <algorithm>
 #include <string>
 #include <vector>
+#include <chrono>
+#include <ctime>
+#include <cstdio>
 
 namespace Starforge
 {
@@ -32,6 +35,7 @@ namespace Starforge
     {
         std::string Text;
         LogSeverity Severity = LogSeverity::Info;
+        std::string Timestamp;   // "HH:MM:SS" wall clock at push (H10)
     };
 
     struct EditorContext
@@ -140,7 +144,17 @@ namespace Starforge
         // ===================================================================
         void Log(const std::string& text, LogSeverity sev = LogSeverity::Info)
         {
-            ConsoleLines.push_back({ text, sev });
+            char ts[16] = { 0 };
+            const auto now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+            std::tm tm{};
+#ifdef _WIN32
+            localtime_s(&tm, &now);
+#else
+            localtime_r(&now, &tm);
+#endif
+            std::snprintf(ts, sizeof(ts), "%02d:%02d:%02d", tm.tm_hour, tm.tm_min, tm.tm_sec);
+
+            ConsoleLines.push_back({ text, sev, ts });
             if (ConsoleLines.size() > 2000)
                 ConsoleLines.erase(ConsoleLines.begin(), ConsoleLines.begin() + 400);
         }

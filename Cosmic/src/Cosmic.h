@@ -129,6 +129,7 @@
 #include "utils/DataExport.h"
 #include "utils/Config.h"        // E10 — TOML config facade
 #include "utils/FileWatcher.h"   // E10 — directory change notifications
+#include "utils/FileDialog.h"    // H6 — native open/save/folder dialogs
 
 // Telemetry, Recording, and Entity Selection
 #include "telemetry/TelemetryChannel.h"
