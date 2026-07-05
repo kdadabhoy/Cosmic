@@ -66,6 +66,8 @@ namespace Cosmic
         if (auto* ws = Application::Get().GetWorkspaceLayer())
             ws->SetProjectName(title);
 
+        m_Physics.Init();   // J4 — one world for the layer; scenes bind/unbind to it
+
         const std::string scenePath = FileSystem::Resolve("project://" + m_StartupScene);
         if (!m_Scenes.Load(scenePath))
             CS_CORE_ERROR("PlayerLayer: could not load startup scene '{0}'.", scenePath);
@@ -77,7 +79,10 @@ namespace Cosmic
 
     void PlayerLayer::OnDetach()
     {
+        if (m_TrackedScene)
+            m_TrackedScene->OnPhysicsStop(m_Physics);
         m_Scripts.Destroy();
+        m_Physics.Shutdown();
         m_SceneRenderer.Shutdown();   // free GPU subsystems while the context is live (H2)
         m_TrackedScene.reset();
         m_Camera.reset();
@@ -88,10 +93,16 @@ namespace Cosmic
         Ref<Scene> active = m_Scenes.GetActiveScene();
         if (active == m_TrackedScene)
             return;
+        if (m_TrackedScene)
+            m_TrackedScene->OnPhysicsStop(m_Physics);   // tear down the old scene's bodies
         m_Scripts.Destroy();          // tear down the old scene's instances first
         m_TrackedScene = active;
         if (m_TrackedScene)
+        {
             m_Scripts.Instantiate(*m_TrackedScene);
+            m_TrackedScene->SyncWorldSystems();          // build recipe terrain etc. first
+            m_TrackedScene->OnPhysicsStart(m_Physics);   // build bodies from components (J4)
+        }
     }
 
     void PlayerLayer::OnUpdate(float ts)
@@ -109,8 +120,14 @@ namespace Cosmic
     void PlayerLayer::OnFixedUpdate(float fixedDt)
     {
         // Application skips this entirely while paused (Feature B) — so the sim
-        // freezes without a guard here.
+        // freezes without a guard here. Tick order contract (J4): scripts'
+        // OnFixedUpdate -> physics step -> collision-event dispatch.
         m_Scripts.FixedTick(fixedDt);
+        if (m_TrackedScene)
+        {
+            m_TrackedScene->OnPhysicsStep(fixedDt);
+            m_TrackedScene->DispatchPhysicsEvents(m_Scripts);
+        }
     }
 
     void PlayerLayer::UpdateCamera(float aspect)

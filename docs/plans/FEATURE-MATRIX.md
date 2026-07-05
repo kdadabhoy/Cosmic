@@ -56,9 +56,9 @@
 
 | Feature | Today | Phase home | Unlock / trigger | Size | Status |
 | --- | --- | --- | --- | --- | --- |
-| Rigid-body physics, colliders, queries, triggers (Jolt) | none | 15 · doc 14 J1–J5 | now (decision 2026-07-04) | XL | ☐ |
-| Character controller (walk/step/slope) | none | 15 · doc 14 J6 | with physics | M | ☐ |
-| Terrain heightfield collision | none | 15 · doc 14 J7 | with physics | M | ☐ |
+| Rigid-body physics, colliders, queries, triggers (Jolt) | **shipped (Jolt v5.5.0, 2026-07-04)** | 15 · doc 14 J1–J5 | now (decision 2026-07-04) | XL | ✅ |
+| Character controller (walk/step/slope) | **shipped (CharacterVirtual, 2026-07-04)** | 15 · doc 14 J6 | with physics | M | ✅ |
+| Terrain heightfield collision | **shipped (HeightFieldShape, ≤2 cm parity, 2026-07-04)** | 15 · doc 14 J7 | with physics | M | ✅ |
 | Physics constraints/joints/ragdolls | — | 15 · doc 14 §3 | articulated-body project | L | ⏸ |
 | Rigid-body water buoyancy | script-applied forces via S9 queries | 15 · doc 14 §3 | floating-dynamics need | M | ⏸ |
 | In-game UI as entities (canvas/button/text/image) | ImGui only (editor chrome) | 17 · doc 16 U1/U2 | now | L | ☐ |

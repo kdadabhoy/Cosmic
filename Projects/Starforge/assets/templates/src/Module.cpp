@@ -14,6 +14,8 @@
 #include "scripts/HoverController.h"
 #include "scripts/BouncingBall.h"
 #include "scripts/PidController.h"
+#include "scripts/WalkController.h"
+#include "scripts/PhysicsBall.h"
 
 CS_MODULE_BEGIN(@PROJECT_NAME@)
     CS_SCRIPT(HoverController)
@@ -35,5 +37,16 @@ CS_MODULE_BEGIN(@PROJECT_NAME@)
         CS_FIELD(Kp)
         CS_FIELD(Ki)
         CS_FIELD(Kd)
+    CS_END;
+
+    // Physics character walker (Phase 15 / J6) — attach with a
+    // CharacterControllerComponent; WASD / left stick walk, Space jumps.
+    CS_SCRIPT(WalkController)
+        CS_FIELD(MoveSpeed).Range(0.0f, 20.0f)
+        CS_FIELD(JumpSpeed).Range(0.0f, 20.0f)
+    CS_END;
+
+    // Telemetry reporter for a dynamic-rigid-body ball (Phase 15 / J9).
+    CS_SCRIPT(PhysicsBall)
     CS_END;
 CS_MODULE_END()

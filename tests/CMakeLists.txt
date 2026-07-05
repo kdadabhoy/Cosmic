@@ -36,6 +36,12 @@ add_executable(CosmicTests
     test_filewatcher.cpp
     test_scripthost.cpp
     test_worldsystems.cpp
+    test_physics_world.cpp
+    test_physics_scene.cpp
+    test_physics_events.cpp
+    test_physics_character.cpp
+    test_physics_terrain.cpp
+    test_physics_determinism.cpp
 )
 
 target_link_libraries(CosmicTests PRIVATE Cosmic)

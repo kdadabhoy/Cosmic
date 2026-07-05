@@ -68,6 +68,8 @@ namespace Starforge
         bool  m_Snap      = false;
         float m_SnapValue = 0.5f;
         bool  m_ShowGrid  = true;
+        bool  m_ShowColliders    = true;    // J8 — collider wireframe gizmos
+        bool  m_ShowPhysicsDebug = false;   // J8 — live Jolt body outlines during Play
 
         bool  m_GizmoActive = false;
         bool  m_GizmoOver   = false;

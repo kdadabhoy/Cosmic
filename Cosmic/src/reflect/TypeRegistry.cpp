@@ -194,6 +194,56 @@ namespace Cosmic::Reflect
             .Field("SoftFadeDistance",  &ParticleEmitterComponent::SoftFadeDistance).Range(0.0f, 10.0f)
             .Field("StretchByVelocity", &ParticleEmitterComponent::StretchByVelocity).Range(0.0f, 1.0f);
 
+        // Physics (J3) — rigid body + colliders + character. Reflected so the
+        // Inspector groups them under "Physics", they serialize, and every field is
+        // undoable for free (E7/E8). Runtime body ids are NOT here (Scene-owned).
+        ClassIn<RigidBodyComponent>(r, "RigidBody", "Physics")
+            .Field("Motion", &RigidBodyComponent::Motion)
+                .EnumValue("Static", 0).EnumValue("Kinematic", 1).EnumValue("Dynamic", 2)
+                .Tooltip("Static = world/ground; Kinematic = script-moved; Dynamic = simulated")
+            .Field("Mass",           &RigidBodyComponent::Mass).Range(0.001f, 10000.0f).Tooltip("kg (dynamic only)")
+            .Field("Friction",       &RigidBodyComponent::Friction).Range(0.0f, 2.0f)
+            .Field("Restitution",    &RigidBodyComponent::Restitution).Range(0.0f, 1.0f).Tooltip("0 = no bounce, 1 = elastic")
+            .Field("LinearDamping",  &RigidBodyComponent::LinearDamping).Range(0.0f, 10.0f)
+            .Field("AngularDamping", &RigidBodyComponent::AngularDamping).Range(0.0f, 10.0f)
+            .Field("GravityFactor",  &RigidBodyComponent::GravityFactor).Range(0.0f, 4.0f).Tooltip("0 = floats, 1 = normal gravity")
+            .Field("CCD",            &RigidBodyComponent::CCD).Tooltip("Continuous collision for fast small bodies")
+            .Field("StartAsleep",    &RigidBodyComponent::StartAsleep)
+            .Field("CollisionCategory", &RigidBodyComponent::CollisionCategory).Tooltip("16-bit category bits this body belongs to")
+            .Field("CollidesWith",      &RigidBodyComponent::CollidesWith).Tooltip("16-bit mask of categories this body collides with");
+
+        ClassIn<BoxColliderComponent>(r, "BoxCollider", "Physics")
+            .Field("HalfExtents", &BoxColliderComponent::HalfExtents).Tooltip("Half-size per axis (pre-scale)")
+            .Field("Offset",      &BoxColliderComponent::Offset)
+            .Field("IsTrigger",   &BoxColliderComponent::IsTrigger).Tooltip("Sensor: overlap events, no contact response");
+
+        ClassIn<SphereColliderComponent>(r, "SphereCollider", "Physics")
+            .Field("Radius",    &SphereColliderComponent::Radius).Range(0.001f, 1000.0f)
+            .Field("Offset",    &SphereColliderComponent::Offset)
+            .Field("IsTrigger", &SphereColliderComponent::IsTrigger);
+
+        ClassIn<CapsuleColliderComponent>(r, "CapsuleCollider", "Physics")
+            .Field("Radius",     &CapsuleColliderComponent::Radius).Range(0.001f, 1000.0f)
+            .Field("HalfHeight", &CapsuleColliderComponent::HalfHeight).Range(0.0f, 1000.0f).Tooltip("Half the cylinder part (excludes the caps)")
+            .Field("Offset",     &CapsuleColliderComponent::Offset)
+            .Field("IsTrigger",  &CapsuleColliderComponent::IsTrigger);
+
+        ClassIn<MeshColliderComponent>(r, "MeshCollider", "Physics")
+            .Field("Convex",    &MeshColliderComponent::Convex).Tooltip("On = convex hull (dynamic-capable); Off = triangle mesh (static/kinematic only)")
+            .Field("IsTrigger", &MeshColliderComponent::IsTrigger);
+
+        // TerrainCollider has no reflected fields (it derives everything from the
+        // sibling TerrainComponent); registered so it serializes + shows in the Add
+        // menu / Inspector as a "Physics" tag.
+        ClassIn<TerrainColliderComponent>(r, "TerrainCollider", "Physics");
+
+        ClassIn<CharacterControllerComponent>(r, "CharacterController", "Physics")
+            .Field("Height",      &CharacterControllerComponent::Height).Range(0.2f, 10.0f)
+            .Field("Radius",      &CharacterControllerComponent::Radius).Range(0.05f, 5.0f)
+            .Field("MaxSlopeDeg", &CharacterControllerComponent::MaxSlopeDeg).Range(0.0f, 89.0f)
+            .Field("StepHeight",  &CharacterControllerComponent::StepHeight).Range(0.0f, 2.0f)
+            .Field("Mass",        &CharacterControllerComponent::Mass).Range(1.0f, 1000.0f);
+
         // Scripting link (E11). ClassName is the only plain reflected field; the
         // dynamic script-field overrides (NativeScriptComponent::Fields) are handled
         // out-of-band by the serializer + the Inspector's script section, since they

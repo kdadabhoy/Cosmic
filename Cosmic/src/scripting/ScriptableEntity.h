@@ -29,9 +29,12 @@
 #include "scene/Scene.h"
 #include "scene/Components.h"            // TagComponent (SystemBuilder::WithTag), H9
 #include "scripting/ModuleRegistry.h"    // SystemDescriptor (SystemBuilder), H9
+#include "physics/ScenePhysics.h"        // J5/J6 — Physics()/Character() script proxies
 
 #include <entt/entt.hpp>
 
+#include <glm/glm.hpp>
+#include <optional>
 #include <span>
 #include <vector>
 #include <string>
@@ -101,6 +104,87 @@ namespace Cosmic
         };
         TelemetryProxy Telemetry() const { return { m_TelemetrySink, m_Handle }; }
 
+        // ---- physics passthrough (J5) ---------------------------------------
+        // A thin handle to this entity's rigid body + the scene's PhysicsWorld. Every
+        // call is optional-safe: a no-op / empty result when no physics session is
+        // active or this entity has no body (so scripts work in edit-only harnesses).
+        struct PhysicsProxy
+        {
+            Scene*       S = nullptr;
+            entt::entity Handle = entt::null;
+
+            PhysicsWorld* World() const
+            {
+                ScenePhysics* sp = S ? S->GetPhysics() : nullptr;
+                return sp ? &sp->World() : nullptr;
+            }
+            PhysicsBody Body() const
+            {
+                ScenePhysics* sp = S ? S->GetPhysics() : nullptr;
+                return sp ? sp->GetBody(Handle) : PhysicsBody{};
+            }
+            uint64_t SelfId() const
+            {
+                if (!S) return 0;
+                if (auto* id = S->GetRegistry().try_get<IDComponent>(Handle)) return id->ID.Value();
+                return 0;
+            }
+
+            void AddForce(const glm::vec3& f)   const { if (auto* w = World()) w->AddForce(Body(), f); }
+            void AddImpulse(const glm::vec3& i)  const { if (auto* w = World()) w->AddImpulse(Body(), i); }
+            void AddTorque(const glm::vec3& t)   const { if (auto* w = World()) w->AddTorque(Body(), t); }
+            void SetVelocity(const glm::vec3& v) const { if (auto* w = World()) w->SetLinearVelocity(Body(), v); }
+            glm::vec3 GetVelocity() const { auto* w = World(); return w ? w->GetLinearVelocity(Body()) : glm::vec3(0.0f); }
+
+            std::optional<RayHit> RayCast(const glm::vec3& origin, const glm::vec3& dir,
+                                          float maxDist, uint16_t mask = 0xFFFF) const
+            {
+                auto* w = World();
+                return w ? w->RayCast(origin, dir, maxDist, mask, SelfId()) : std::nullopt;
+            }
+            std::vector<Entity> OverlapSphere(const glm::vec3& center, float radius, uint16_t mask = 0xFFFF) const
+            {
+                std::vector<Entity> out;
+                auto* w = World();
+                if (!w) return out;
+                std::vector<uint64_t> ids;
+                w->OverlapSphere(center, radius, ids, mask, SelfId());
+                for (uint64_t id : ids)
+                    if (Entity e = S->FindByUUID(UUID(id))) out.push_back(e);
+                return out;
+            }
+            // Convenience: a short down-ray from this entity's world origin (ignoring
+            // self). Pass a distance that clears the collider's bottom. For a proper
+            // walker use Character().IsGrounded() instead.
+            bool IsGrounded(float maxDist = 1.1f) const
+            {
+                auto* w = World();
+                if (!w) return false;
+                const glm::vec3 pos = glm::vec3(S->GetWorldTransform(Entity(Handle, S))[3]);
+                return w->RayCast(pos, glm::vec3(0, -1, 0), maxDist, 0xFFFF, SelfId()).has_value();
+            }
+        };
+        PhysicsProxy Physics() const { return { m_Scene, m_Handle }; }
+
+        // ---- character controller passthrough (J6) --------------------------
+        struct CharacterProxy
+        {
+            Scene*       S = nullptr;
+            entt::entity Handle = entt::null;
+
+            CharacterController* Ctrl() const
+            {
+                ScenePhysics* sp = S ? S->GetPhysics() : nullptr;
+                return sp ? sp->GetCharacter(Handle) : nullptr;
+            }
+            void Move(const glm::vec3& horizontalVelocity) const { if (auto* c = Ctrl()) c->Move(horizontalVelocity); }
+            void Jump(float speed)  const { if (auto* c = Ctrl()) c->Jump(speed); }
+            bool IsGrounded()       const { auto* c = Ctrl(); return c && c->IsGrounded(); }
+            glm::vec3 GetGroundNormal() const { auto* c = Ctrl(); return c ? c->GetGroundNormal() : glm::vec3(0, 1, 0); }
+            glm::vec3 GetVelocity()     const { auto* c = Ctrl(); return c ? c->GetVelocity() : glm::vec3(0.0f); }
+        };
+        CharacterProxy Character() const { return { m_Scene, m_Handle }; }
+
 
         // Override the ones you need — all default to no-ops.
         virtual void OnCreate() {}
@@ -109,6 +193,13 @@ namespace Cosmic
         virtual void OnFixedUpdate(float fixedDt) { (void)fixedDt; }
         virtual void OnEvent(Event& e) { (void)e; }
         virtual void OnDestroy() {}
+
+        // Physics contact callbacks (J5) — fired on the main thread after the fixed
+        // physics step. `other` is the counterpart entity. Default no-ops.
+        virtual void OnCollisionEnter(Entity other) { (void)other; }
+        virtual void OnCollisionExit(Entity other)  { (void)other; }
+        virtual void OnTriggerEnter(Entity other)   { (void)other; }
+        virtual void OnTriggerExit(Entity other)    { (void)other; }
 
     private:
         friend class ScriptHost;   // injects m_Scene/m_Handle/m_TelemetrySink + drives callbacks

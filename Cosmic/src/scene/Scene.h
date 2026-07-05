@@ -21,12 +21,15 @@ namespace Cosmic
 	struct SceneRenderDesc;      // renderer/SceneRenderer.h (H2 — BuildRenderDesc fills it)
 	class  SceneDrawContext;     // renderer/SceneRenderer.h (H2 — routed opaque submit)
 	struct EnvironmentComponent; // scene/Components.h (E4 — FindEnvironment returns it)
+	class  PhysicsWorld;         // physics/PhysicsWorld.h (J4 — a play-session service)
+	class  ScenePhysics;         // physics/ScenePhysics.h (J4 — runtime body binding)
+	class  ScriptHost;           // scripting/ScriptHost.h  (J5 — collision-event dispatch)
 
 	class COSMIC_API Scene
 	{
 	public:
 		Scene();
-		~Scene() = default;
+		~Scene();   // out-of-line: m_Physics is a unique_ptr to a forward-declared type
 
 		/** @brief Static factory helper to match unified engine smart pointer instantiation rules. */
 		template<typename... Args>
@@ -77,6 +80,32 @@ namespace Cosmic
 
 		/** @brief Runs fixed time-step physics/simulation routines across systems. */
 		void OnFixedUpdate(float fixedDeltaTime);
+
+		// --- Physics session (Phase 15 / J4) ---------------------------------
+		// Bodies exist only while a simulation session runs; edit mode holds none.
+		// The PhysicsWorld is owned by the session (Starforge play mode / PlayerLayer)
+		// and passed in. Fixed-step contract (per fixed step, in order):
+		//   scripts OnFixedUpdate -> OnPhysicsStep -> DispatchPhysicsEvents.
+
+		/** @brief Build bodies + character controllers from the scene's components
+		 *  (uses world transforms). Call once when a play session starts. */
+		void OnPhysicsStart(PhysicsWorld& world);
+
+		/** @brief Advance physics one fixed step: push kinematic targets, step the
+		 *  world, write dynamic transforms back, update characters. No-op if no
+		 *  session is active. */
+		void OnPhysicsStep(float fixedDeltaTime);
+
+		/** @brief Drain queued contact events and fire the OnCollision / OnTrigger
+		 *  script callbacks (J5). Call after OnPhysicsStep each fixed step. */
+		void DispatchPhysicsEvents(ScriptHost& scripts);
+
+		/** @brief Destroy every body/character and end the session. */
+		void OnPhysicsStop(PhysicsWorld& world);
+
+		/** @brief The active physics runtime binding, or nullptr in edit mode. Used
+		 *  by ScriptableEntity::Physics()/Character() to reach a body/controller. */
+		ScenePhysics* GetPhysics() { return m_Physics.get(); }
 
 		/**
 		 * @brief Calls BeginScene with the provided camera, dispatches all sprite-bearing
@@ -239,6 +268,8 @@ namespace Cosmic
 		void SubmitOpaqueMeshes(const SceneDrawContext& ctx);
 
 		float m_WorldTime = 0.0f;   // accumulated seconds for water/particle animation (E18)
+
+		std::unique_ptr<ScenePhysics> m_Physics;   // J4 — non-null only during a play session
 
 		entt::registry m_Registry;
 		std::vector<Scope<System>>   m_Systems;

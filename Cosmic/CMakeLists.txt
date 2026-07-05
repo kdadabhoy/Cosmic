@@ -70,6 +70,11 @@ target_include_directories(stb_truetype INTERFACE dependencies/stb_truetype)
 add_library(stb_image_write INTERFACE)
 target_include_directories(stb_image_write INTERFACE dependencies/stb_image_write)
 
+# Jolt Physics (J1, Phase 15) — vendored static lib, MIT. Built from its own
+# curated CMakeLists (dependencies/JoltPhysics/CMakeLists.txt); linked PRIVATE into
+# Cosmic below so the JPH:: types never leak past the engine's physics/ TUs.
+add_subdirectory(dependencies/JoltPhysics)
+
 # ----------------------------
 # 3. Engine Source Files
 # ----------------------------
@@ -98,8 +103,9 @@ target_compile_definitions(Cosmic PRIVATE $<$<CONFIG:Release>:COSMIC_DIST>)
 target_link_libraries(Cosmic PUBLIC imgui implot glad glm entt glfw OpenGL::GL stb_image stb_truetype stb_image_write spdlog)
 # PRIVATE deps: no public engine header includes them, so clients never see the
 # include dirs — ImGuizmo stays behind graphics/Gizmo (its symbols aren't
-# dllexported, so leaking the headers would only invite link errors).
-target_link_libraries(Cosmic PRIVATE tomlplusplus ImGuizmo nlohmann_json)
+# dllexported, so leaking the headers would only invite link errors). Jolt is the
+# same story: only physics/*.cpp include <Jolt/...>, behind the PhysicsWorld pimpl.
+target_link_libraries(Cosmic PRIVATE tomlplusplus ImGuizmo nlohmann_json Jolt)
 
 # Borderless custom window chrome uses DWM (drop shadow) on Windows.
 if(WIN32)

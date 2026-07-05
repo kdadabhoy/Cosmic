@@ -21,6 +21,71 @@
 
 ---
 
+## STATUS — Phase 15 CODE-COMPLETE 2026-07-04 (UNcommitted; user commits)
+
+All nine work orders (J1–J9) landed in one pass. Build green across all 5 projects,
+**zero warnings in engine/project code** (vendored Jolt warnings silenced on its own
+target). `CosmicTests` **213/213** (195 → 213: +6 J2 PhysicsWorld, +3 J3/J4 scene, +2
+J5 events, +4 J6 character, +2 J7 terrain, +1 J9 determinism). GL-conformance clean.
+Compat gate held — Engine3DDemo/Frontier/SF_Telem/ViperSim attach no physics
+components, `PhysicsWorld` is only created inside Starforge play mode / `PlayerLayer`,
+and `Scene::OnPhysics*` are no-ops until `OnPhysicsStart` runs.
+
+Per-item landing notes + deviations (all decided in-line, none change the doctrine):
+- **J1** Jolt **v5.5.0** vendored at `Cosmic/dependencies/JoltPhysics/Jolt` (library
+  subtree only; own curated `CMakeLists.txt`; pin in its README). Linked PRIVATE static
+  into `Cosmic.dll`. **SIMD choice: SSE4.2 defines, `/arch` left at MSVC x64 baseline
+  (SSE2), NOT AVX2** — on MSVC `/arch:AVX2` is a PUBLIC option that would recompile the
+  WHOLE engine for AVX2 (a min-spec bump + a shipped-app codegen change). Documented
+  AVX2 flip-on in the CMake comment. `JPH_CROSS_PLATFORM_DETERMINISTIC` on; asserts +
+  debug renderer Debug-only; asserts/trace routed to the engine log.
+- **J2** `physics/PhysicsWorld` (pimpl, zero JPH in public headers) + `PhysicsTypes.h`
+  + `PhysicsBody.h`. Heap `PhysicsSystem` recreated per `Init` so the editor can
+  play/stop repeatedly. Fine 16-bit category/mask done via `OnContactValidate` + query
+  filters (coarse Static/Dynamic/Trigger/Character object layers drive the broadphase).
+  Temp allocator sized off the settings. Batch body add is a noted follow-up (bodies
+  added individually — fine for hundreds).
+- **J3** `RigidBody` + `Box/Sphere/Capsule/Mesh/Terrain` colliders + `CharacterController`
+  components, reflected + registered + serialized (empty `TerrainCollider` round-trips).
+  **Deviation:** the plan's `uint16 Layer=Dynamic` was folded into the existing
+  `MotionType` (Static/Kinematic/Dynamic drives motion + coarse layer); the reflected
+  filter fields are `CollisionCategory` + `CollidesWith`. Runtime body ids live on the
+  Scene's physics runtime, not the components (components stay pure authored data).
+- **J4** `physics/ScenePhysics` (Scene-owned runtime binding) + `Scene::OnPhysicsStart/
+  Step/Stop`. Tick order contract wired into Starforge `TickPlay` + `PlayerLayer`:
+  scripts `OnFixedUpdate` → `OnPhysicsStep` → `DispatchPhysicsEvents`. Kinematic bodies
+  read transforms via `MoveKinematic`; dynamic write-back uses the quat slot with parent
+  decompose. Determinism proven (bit-match).
+- **J5** `ScriptableEntity::Physics()` + `OnCollision*/OnTrigger*` virtuals; contact
+  listener queues enter/exit (refcounted per body-pair) drained main-thread after Step.
+  **Test-realism note:** frame-exact contact counts jitter during settle/fast-separation
+  (Jolt manifold-internal, true of every solver), so the events test asserts the robust
+  invariants (landing→Enter, separation→Exit, no phantom Exit while resting).
+- **J6** `physics/CharacterController` wrapper (owns gravity/jump/stick-to-floor) over a
+  `CharacterVirtual`; `Character()` proxy; `WalkController` template sample. Headless
+  tests: rest/ground, walk, wall-block (no tunnel at speed), gentle-slope climb.
+- **J7** `TerrainCollider` → `HeightFieldShape` from the terrain's CPU heightfield, built
+  from the even `(n-1)²` grid (Jolt rounds sample count up to the block size; the engine
+  grid is odd `32·2^k+1`). Parity test: 100 random points ≤ 2 cm vs `SampleHeight`.
+  `SyncWorldSystems()` now runs before `OnPhysicsStart` so recipe terrain is built first.
+  Rigid-body buoyancy stays parked (scripts use the S9 water queries + `AddForce`).
+- **J8** collider wireframe gizmos (box/sphere/capsule) + Fit-to-mesh + a `Colliders`/
+  `Physics` viewport toggle; live Jolt debug draw via the Renderer3D line batch
+  (Debug-config only). GL-conformance clean.
+- **J9** `WalkController` + `PhysicsBall` template scripts; ForgePlayground's ball is now
+  a real dynamic sphere resting/bouncing on the terrain collider (PhysicsBall pushes
+  height/velY telemetry); dedicated determinism proof. **Deviation:** ForgePlayground v2
+  serves as the "physics playground scene" rather than a separately hand-authored
+  template `.cscene` (the fragile-JSON path was avoided; the scripts + in-editor
+  authoring cover the sample intent).
+
+**Remaining = the user's on-GPU acceptance (J9 DoD): author ground+boxes+character
+in-editor → Play → stack behaves, character walks, telemetry records; package the
+project (E19) and confirm the shipped exe simulates identically; visual pass on the
+collider gizmos + Physics-Debug toggle (sleeping bodies grey).** Then commit.
+
+---
+
 ## 0. Execution notes
 
 1. Roadmap §"Working agreement" build recipe; engine rules from doc 13 §0 apply verbatim
@@ -82,7 +147,7 @@ keep `JPH_DEBUG_RENDERER` compiled only in Debug config.
 `CosmicTests` links; a smoke test constructs/destroys a `JPH::PhysicsSystem` via
 `PhysicsWorld` headlessly.
 
-**Status:** ☐
+**Status:** ✅ 2026-07-04
 
 ### J2 — PhysicsWorld service
 
@@ -111,7 +176,7 @@ v1 (document; Jolt is internally parallel).
 and sleeps; raycast hits the expected box + entity round-trip; layer mask filters; 10k
 create/destroy cycles leak nothing (Jolt's leak check enabled in Debug).
 
-**Status:** ☐
+**Status:** ✅ 2026-07-04
 
 ### J3 — Components + reflection + serialization
 
@@ -135,7 +200,7 @@ false → `MeshShape` (static/kinematic only — enforce with a Console warning 
 **Acceptance:** components round-trip the serializer (headless test); Inspector shows them
 grouped under a "Physics" category; undo works on every field (free via E7/E8 — verify).
 
-**Status:** ☐
+**Status:** ✅ 2026-07-04
 
 ### J4 — Scene/session integration (Play ↔ bodies)
 
@@ -163,7 +228,7 @@ Pause + Step advances one dt; Stop restores the edit scene untouched (byte-ident
 serializer check — the E13 harness). Headless: two 300-step runs of the same scene produce
 identical positions (determinism, needs J1's flag).
 
-**Status:** ☐
+**Status:** ✅ 2026-07-04
 
 ### J5 — Script API + collision events
 
@@ -185,7 +250,7 @@ amendment).
 separation; trigger volume reports overlap without contact forces; a script raycast selects
 the ground under a moving entity every step.
 
-**Status:** ☐
+**Status:** ✅ 2026-07-04
 
 ### J6 — Character controller
 
@@ -203,7 +268,7 @@ so "walking on the ground" is a copy-paste away.
 **Acceptance:** sample walks up a 30° slope, is blocked at 60°, steps onto a 0.3 m box, can't
 tunnel through walls at high speed; works on terrain (needs J7).
 
-**Status:** ☐
+**Status:** ✅ 2026-07-04
 
 ### J7 — Terrain + water interplay
 
@@ -223,7 +288,7 @@ the Jolt `BuoyancyImpulse` helper as the v2 route.
 **Acceptance:** headless parity test above; in ForgePlayground: dynamic boxes rest on the
 island slopes, the character (J6) walks the shoreline.
 
-**Status:** ☐
+**Status:** ✅ 2026-07-04
 
 ### J8 — Editor authoring + debug draw
 
@@ -237,7 +302,7 @@ sleep/awake, contact points) through the Renderer3D line batch.
 **Acceptance:** collider wireframes match rendered meshes after Fit; debug toggle shows
 sleeping bodies turn grey; no GL calls outside platform (conformance script).
 
-**Status:** ☐
+**Status:** ✅ 2026-07-04
 
 ### J9 — Samples, determinism proof, docs hooks
 
@@ -252,7 +317,7 @@ purely in-editor → Play → stack behaves, character walks, telemetry records 
 value; two headless runs bit-match; package the project (E19) and the shipped exe simulates
 identically.
 
-**Status:** ☐
+**Status:** ✅ 2026-07-04
 
 ---
 

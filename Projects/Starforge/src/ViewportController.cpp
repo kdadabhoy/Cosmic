@@ -4,6 +4,7 @@
 #include "commands/EditorCommands.h"
 
 #include "layers/WorkspaceLayer.h"
+#include "physics/ScenePhysics.h"   // J8 — live physics debug draw during Play
 
 #include <imgui.h>
 
@@ -36,6 +37,48 @@ namespace Starforge
                     Renderer3D::DrawLine(pyz, yz, col);
                 }
                 pxy = xy; pxz = xz; pyz = yz;
+            }
+        }
+
+        // A Y-axis capsule wireframe under `xform` (rings at ±halfHeight, 4 verticals,
+        // and hemispherical cap arcs) — the collider gizmo for CapsuleCollider (J8).
+        void DrawWireCapsule(const glm::mat4& xform, float radius, float halfHeight,
+                             const glm::vec4& col, int seg = 20)
+        {
+            auto P = [&](const glm::vec3& local) { return glm::vec3(xform * glm::vec4(local, 1.0f)); };
+            const float step = glm::two_pi<float>() / (float)seg;
+
+            glm::vec3 topPrev{}, botPrev{};
+            for (int i = 0; i <= seg; ++i)
+            {
+                const float a = i * step, ca = std::cos(a), sa = std::sin(a);
+                const glm::vec3 top = P({ ca * radius,  halfHeight, sa * radius });
+                const glm::vec3 bot = P({ ca * radius, -halfHeight, sa * radius });
+                if (i > 0)
+                {
+                    Renderer3D::DrawLine(topPrev, top, col);
+                    Renderer3D::DrawLine(botPrev, bot, col);
+                }
+                topPrev = top; botPrev = bot;
+                if (i % (seg / 4) == 0)   // 4 vertical body lines
+                    Renderer3D::DrawLine(top, bot, col);
+            }
+
+            // Cap arcs (XY + ZY half-circles at each end).
+            glm::vec3 tpx{}, tpz{}, bpx{}, bpz{};
+            for (int i = 0; i <= seg / 2; ++i)
+            {
+                const float a = i * step, ca = std::cos(a), sa = std::sin(a);
+                const glm::vec3 tx = P({ ca * radius,  halfHeight + sa * radius, 0 });
+                const glm::vec3 tz = P({ 0,            halfHeight + sa * radius, ca * radius });
+                const glm::vec3 bx = P({ ca * radius, -halfHeight - sa * radius, 0 });
+                const glm::vec3 bz = P({ 0,           -halfHeight - sa * radius, ca * radius });
+                if (i > 0)
+                {
+                    Renderer3D::DrawLine(tpx, tx, col); Renderer3D::DrawLine(tpz, tz, col);
+                    Renderer3D::DrawLine(bpx, bx, col); Renderer3D::DrawLine(bpz, bz, col);
+                }
+                tpx = tx; tpz = tz; bpx = bx; bpz = bz;
             }
         }
 
@@ -221,6 +264,54 @@ namespace Starforge
                     DrawWireSphere(t.Position, pl.Radius, glm::vec4(pl.Color, 0.5f), 24);
             }
         }
+
+        // Collider gizmos (J8): a wireframe per collider in the SAME world transform
+        // the runtime bakes (mesh-space geometry x world matrix), so a Fit-to-mesh
+        // box overlays its mesh exactly. Selected entities draw bright; others dim.
+        if (m_ShowColliders && ctx.Scene)
+        {
+            auto& reg = ctx.Scene->GetRegistry();
+            auto selected = [&](entt::entity h)
+            {
+                for (entt::entity s : ctx.Selection) if (s == h) return true;
+                return false;
+            };
+            const glm::vec4 dim { 0.20f, 0.85f, 0.45f, 0.55f };   // resting green
+            const glm::vec4 hot { 0.35f, 1.00f, 0.55f, 1.00f };   // selected
+
+            for (auto e : reg.view<TransformComponent>())
+            {
+                const bool anyCol = reg.any_of<BoxColliderComponent, SphereColliderComponent,
+                                               CapsuleColliderComponent>(e);
+                if (!anyCol) continue;
+                const glm::vec4 col = selected(e) ? hot : dim;
+                const glm::mat4 world = ctx.Scene->GetWorldTransform(Entity(e, ctx.Scene.get()));
+
+                if (const auto* c = reg.try_get<BoxColliderComponent>(e))
+                {
+                    const glm::mat4 m = world
+                        * glm::translate(glm::mat4(1.0f), c->Offset)
+                        * glm::scale(glm::mat4(1.0f), c->HalfExtents * 2.0f);
+                    Renderer3D::DrawWireBox(m, col);
+                }
+                if (const auto* c = reg.try_get<SphereColliderComponent>(e))
+                {
+                    const glm::vec3 center = glm::vec3(world * glm::vec4(c->Offset, 1.0f));
+                    const float sx = glm::length(glm::vec3(world[0]));   // world scale (uniform assumed)
+                    DrawWireSphere(center, c->Radius * sx, col, 24);
+                }
+                if (const auto* c = reg.try_get<CapsuleColliderComponent>(e))
+                {
+                    const glm::mat4 m = world * glm::translate(glm::mat4(1.0f), c->Offset);
+                    DrawWireCapsule(m, c->Radius, c->HalfHeight, col);
+                }
+            }
+        }
+
+        // Live Jolt state during Play (J8): body outlines coloured by sleep state,
+        // contact points. Debug-config only (JPH_DEBUG_RENDERER) — a no-op in Release.
+        if (m_ShowPhysicsDebug && ctx.Scene && ctx.Scene->GetPhysics())
+            ctx.Scene->GetPhysics()->World().DebugDraw();
     }
 
     void ViewportController::DrawGizmo(EditorContext& ctx, OrbitCameraController& cam)
@@ -280,6 +371,8 @@ namespace Starforge
         ImGui::SetNextItemWidth(70.0f);
         ImGui::DragFloat("##snapv", &m_SnapValue, 0.05f, 0.01f, 90.0f, "%.2f"); ImGui::SameLine();
         ImGui::Checkbox("Grid", &m_ShowGrid); ImGui::SameLine();
+        ImGui::Checkbox("Colliders", &m_ShowColliders); ImGui::SameLine();
+        ImGui::Checkbox("Physics", &m_ShowPhysicsDebug); ImGui::SameLine();
 
         ImGui::TextDisabled("|"); ImGui::SameLine();
         if (ImGui::SmallButton("Front")) cam.SnapView(ViewPreset::Front); ImGui::SameLine();

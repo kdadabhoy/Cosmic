@@ -88,7 +88,7 @@ sweep.
   section + FlockSystem sample project, content-browser fallback glyph, homescreen redesign→doc 15,
   Save-As/New-Project Browse buttons, `.exr`).
 
-### Phase 15 — Physics & collision *(doc 14, J1–J9)* — ☐
+### Phase 15 — Physics & collision *(doc 14, J1–J9)* — ✅ code-complete 2026-07-04
 Vendor Jolt → PhysicsWorld service → reflected components → Play-session integration →
 script API + collision events → character controller → terrain collider → editor authoring/
 debug draw → samples + determinism proof.
@@ -96,6 +96,16 @@ debug draw → samples + determinism proof.
   medium.
 - **Done when:** doc 14 J9's recorded acceptance: authored ground/boxes/character scene
   simulates in editor + packaged exe; two headless runs bit-match.
+- **Status 2026-07-04:** all 9 work orders (J1–J9) landed (UNcommitted). **Jolt v5.5.0**
+  vendored PRIVATE-static into `Cosmic.dll`; `PhysicsWorld` pimpl (no JPH in public
+  headers); reflected rigid-body/collider/character components; Scene play-session
+  integration with the documented tick-order contract; script `Physics()`/`Character()`
+  proxies + collision/trigger events; `CharacterVirtual` walker + `WalkController` sample;
+  terrain `HeightFieldShape` (≤2 cm parity); editor collider gizmos + live debug draw;
+  ForgePlayground physics ball + determinism proof. Build green 5 projects, **zero engine
+  warnings**, `CosmicTests` **213/213**, GL-conformance clean, compat gate held (shipped
+  apps create no `PhysicsWorld`). Remaining = the user's on-GPU acceptance demo + commit
+  (see doc 14's STATUS banner).
 
 ### Phase 16 — App platform & shipping *(doc 15, S1–S8)* — ☐
 External project folders (VFS mounts + registry) → `Starforge.exe` boot → product homescreen
@@ -149,6 +159,7 @@ sessions; run any time.
 
 | Item | Origin |
 | --- | --- |
+| Phase 15 on-GPU physics acceptance: author ground+boxes+character in-editor → Play (stack settles, character walks, telemetry records), package (E19) → shipped exe simulates identically; collider-gizmo + Physics-Debug visual pass | doc 14 J9 |
 | Phase 13 recorded acceptance demo (script: `docs/design/starforge-acceptance-demo.md`) | archive/11 E21 |
 | Phase 12 on-GPU perf pass (cull/instance/LOD evidence; 5 Frontier worlds ≥60 fps, CPU≪GPU) + screenshots | archive/05 §10 |
 | Phases 7–10 visual passes wherever still unticked (Engine3DDemo toggles) | archive/05 §3–§9 |

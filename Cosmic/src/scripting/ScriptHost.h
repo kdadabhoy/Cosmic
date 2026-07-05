@@ -65,6 +65,14 @@ namespace Cosmic
         void FixedTick(float fixedDt);  // OnFixedUpdate
         void DispatchEvent(Event& e);   // OnEvent
 
+        // Physics contact dispatch (J5) — invoke the collision/trigger virtual on
+        // the script instance owned by `self` (no-op if it has none). `other` is the
+        // counterpart entity. Called by Scene::DispatchPhysicsEvents after the step.
+        void DispatchCollisionEnter(entt::entity self, Entity other);
+        void DispatchCollisionExit(entt::entity self, Entity other);
+        void DispatchTriggerEnter(entt::entity self, Entity other);
+        void DispatchTriggerExit(entt::entity self, Entity other);
+
         // OnDestroy each, delete, null the NativeScriptComponent::Instance pointers.
         void Destroy();
 

@@ -133,6 +133,7 @@ namespace Starforge
         PlayMode                   m_Play = PlayMode::Edit;
         Cosmic::Ref<Cosmic::Scene> m_EditSceneBackup;
         Cosmic::ScriptHost         m_Scripts;
+        Cosmic::PhysicsWorld       m_Physics;     // J4 — play-session physics (built on Play)
         float                      m_FixedDt     = 1.0f / 60.0f;
         float                      m_FixedAccum  = 0.0f;
         bool                       m_StepRequested = false;

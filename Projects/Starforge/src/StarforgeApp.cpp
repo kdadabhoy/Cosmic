@@ -483,6 +483,14 @@ namespace Starforge
         // so OnCreate/OnStart pushes have a sink), then arm the take (E20).
         m_Scripts.SetTelemetrySink(&m_Telemetry);
         m_Scripts.Instantiate(*runtime);
+
+        // J4 — build physics bodies from the runtime scene's components. Build the
+        // recipe-driven world systems first (terrain heightfield etc.) so a
+        // TerrainCollider has its CPU heightfield ready before OnPhysicsStart.
+        runtime->SyncWorldSystems();
+        m_Physics.Init();
+        runtime->OnPhysicsStart(m_Physics);
+
         m_Telemetry.OnPlayStart(m_Ctx, m_FixedDt);
 
         m_Play = PlayMode::Playing;
@@ -495,6 +503,9 @@ namespace Starforge
             return;
         m_Telemetry.OnPlayStop(m_Ctx);        // flush + keep the take (E20)
         m_Scripts.SetTelemetrySink(nullptr);
+        if (m_Ctx.Scene)
+            m_Ctx.Scene->OnPhysicsStop(m_Physics);   // J4 — destroy bodies before the runtime scene
+        m_Physics.Shutdown();
         m_Scripts.Destroy();
         m_Ctx.Scene = m_EditSceneBackup;   // untouched edit scene
         m_EditSceneBackup.reset();
@@ -525,7 +536,14 @@ namespace Starforge
             int guard = 0;
             while (m_FixedAccum >= m_FixedDt && guard++ < 8)   // clamp catch-up
             {
+                // Tick order contract (J4): scripts OnFixedUpdate -> physics step ->
+                // collision-event dispatch -> telemetry sample.
                 m_Scripts.FixedTick(m_FixedDt);
+                if (m_Ctx.Scene)
+                {
+                    m_Ctx.Scene->OnPhysicsStep(m_FixedDt);
+                    m_Ctx.Scene->DispatchPhysicsEvents(m_Scripts);
+                }
                 m_Telemetry.OnFixedStep(m_Ctx);   // one telemetry sample per fixed step (E20)
                 m_FixedAccum -= m_FixedDt;
             }
@@ -533,6 +551,11 @@ namespace Starforge
         else if (m_Play == PlayMode::Paused && m_StepRequested)
         {
             m_Scripts.FixedTick(m_FixedDt);   // one deterministic step
+            if (m_Ctx.Scene)
+            {
+                m_Ctx.Scene->OnPhysicsStep(m_FixedDt);
+                m_Ctx.Scene->DispatchPhysicsEvents(m_Scripts);
+            }
             m_Telemetry.OnFixedStep(m_Ctx);
             m_StepRequested = false;
         }
@@ -1265,7 +1288,8 @@ namespace Starforge
           auto& t = e.AddComponent<TerrainComponent>();
           t.UseRecipe = true; t.WorldSize = 256.0f; t.Resolution = 257;
           t.HeightScale = 26.0f; t.Frequency = 2.5f; t.EdgeFalloff = 0.65f;
-          terrain = Terrain::Create(BuildTerrainSpec(t)); }
+          terrain = Terrain::Create(BuildTerrainSpec(t));
+          e.AddComponent<TerrainColliderComponent>(); }   // J9 — physics ground
 
         auto groundAt = [&](float x, float z) { return terrain ? terrain->SampleHeight(x, z) : 0.0f; };
 
@@ -1294,18 +1318,20 @@ namespace Starforge
           e.AddComponent<PrimitiveMeshComponent>(PrimitiveMeshComponent::Shape::Sphere).Radius = 0.6f;
           e.AddComponent<MeshRendererComponent>().Color = { 0.95f, 0.52f, 0.16f, 1.0f }; }
 
-        // Telemetry demo: the BouncingBall script (scaffolded module) pushes height/velY.
-        // FloorY = the terrain height under it, so it bounces ON the ground (H8). ClassName
-        // resolves after Build Scripts (Ctrl+B); until then the Ctrl+B hint shows.
-        { Entity e = scene->CreateEntity("Bouncing Ball");
+        // Physics demo (Phase 15 / J9): a REAL dynamic sphere that falls under gravity
+        // and rests/bounces on the terrain collider (TerrainCollider on "Terrain"). The
+        // PhysicsBall script only reads the result and pushes height/velY telemetry, so
+        // the Telemetry panel plots the physical bounce. ClassName resolves after Build
+        // Scripts (Ctrl+B); until then the Ctrl+B hint shows.
+        { Entity e = scene->CreateEntity("Physics Ball");
           const float bz = fz + 3.0f;
           const float by = groundAt(fx, bz);
           e.GetComponent<TransformComponent>().Position = { fx, by + 6.0f, bz };
           e.AddComponent<PrimitiveMeshComponent>(PrimitiveMeshComponent::Shape::Sphere).Radius = 0.4f;
           e.AddComponent<MeshRendererComponent>().Color = { 0.90f, 0.90f, 0.95f, 1.0f };
-          auto& ns = e.AddComponent<NativeScriptComponent>("BouncingBall");
-          ns.Fields["FloorY"]      = Reflect::FieldValue{ by };
-          ns.Fields["StartHeight"] = Reflect::FieldValue{ 6.0f }; }
+          e.AddComponent<RigidBodyComponent>(MotionType::Dynamic).Restitution = 0.55f;
+          e.AddComponent<SphereColliderComponent>().Radius = 0.4f;
+          e.AddComponent<NativeScriptComponent>("PhysicsBall"); }
 
         // A second live script: a HoverController-driven orb settling above the forge.
         { Entity e = scene->CreateEntity("Hover Orb");

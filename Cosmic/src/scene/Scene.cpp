@@ -11,6 +11,8 @@
 #include "water/Water.h"
 #include "particles/ParticleSystem.h"
 #include "scene/WorldSystemRecipes.h"
+#include "physics/ScenePhysics.h"     // J4 — runtime body binding (Scene owns m_Physics)
+#include "physics/PhysicsWorld.h"     // J4 — the play-session physics service
 #include "camera/OrthographicCamera.h"
 #include "camera/Camera.h"
 #include "jobs/JobSystem.h"
@@ -99,6 +101,39 @@ namespace Cosmic
 
 	Scene::Scene()
 	{
+	}
+
+	// Out-of-line so the unique_ptr<ScenePhysics> member can destroy a now-complete type.
+	Scene::~Scene() = default;
+
+	// ------------------------------------------------------------------------
+	// Physics session (Phase 15 / J4)
+	// ------------------------------------------------------------------------
+	void Scene::OnPhysicsStart(PhysicsWorld& world)
+	{
+		m_Physics = std::make_unique<ScenePhysics>(*this, world);
+		m_Physics->BuildBodies();
+	}
+
+	void Scene::OnPhysicsStep(float fixedDeltaTime)
+	{
+		if (m_Physics)
+			m_Physics->Step(fixedDeltaTime);
+	}
+
+	void Scene::DispatchPhysicsEvents(ScriptHost& scripts)
+	{
+		if (m_Physics)
+			m_Physics->DispatchEvents(scripts);
+	}
+
+	void Scene::OnPhysicsStop(PhysicsWorld& /*world*/)
+	{
+		if (m_Physics)
+		{
+			m_Physics->Teardown();
+			m_Physics.reset();
+		}
 	}
 
 	void Scene::SyncPrimitiveMeshes()

@@ -32,6 +32,7 @@
 #include "scene/SceneManager.h"
 #include "scripting/ScriptHost.h"
 #include "renderer/SceneRenderer.h"   // H2 — the shared render path
+#include "physics/PhysicsWorld.h"     // J4 — the play-session physics service
 
 #include <string>
 
@@ -68,6 +69,7 @@ namespace Cosmic
         Ref<Scene>   m_TrackedScene;    // last scene we instantiated scripts for
         Scope<PlayerCamera> m_Camera;
         SceneRenderer m_SceneRenderer;  // H2 — env/sky/shadow/HDR/post (== editor)
+        PhysicsWorld  m_Physics;        // J4 — owned here; scenes bind/unbind to it
         bool m_MissingCameraWarned = false;
     };
 }

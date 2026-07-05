@@ -194,6 +194,39 @@ namespace Starforge
                     m_HasActive = false;
                 }
             }
+
+            // "Fit to mesh" (J8): size a box/sphere collider to the sibling mesh's
+            // local AABB, single-select only (undoable via CommitFieldEdit).
+            if ((desc.Name == "BoxCollider" || desc.Name == "SphereCollider") &&
+                ctx.Selection.size() == 1 && primary &&
+                primary.HasComponent<MeshRendererComponent>() &&
+                primary.GetComponent<MeshRendererComponent>().MeshAsset)
+            {
+                if (ImGui::SmallButton("Fit to mesh"))
+                {
+                    const auto& mesh = *primary.GetComponent<MeshRendererComponent>().MeshAsset;
+                    const glm::vec3 mn = mesh.GetLocalMin(), mx = mesh.GetLocalMax();
+                    const glm::vec3 center = 0.5f * (mn + mx);
+                    const glm::vec3 half   = glm::max((mx - mn) * 0.5f, glm::vec3(0.01f));
+                    if (desc.Name == "BoxCollider")
+                    {
+                        auto* c = static_cast<BoxColliderComponent*>(comp);
+                        Commands::CommitFieldEdit(ctx, "Fit box collider", desc.TypeId, "HalfExtents",
+                                                  FieldValue{ c->HalfExtents }, FieldValue{ half });
+                        Commands::CommitFieldEdit(ctx, "Fit box collider", desc.TypeId, "Offset",
+                                                  FieldValue{ c->Offset }, FieldValue{ center });
+                    }
+                    else
+                    {
+                        auto* c = static_cast<SphereColliderComponent*>(comp);
+                        const float r = glm::max(glm::max(half.x, half.y), half.z);
+                        Commands::CommitFieldEdit(ctx, "Fit sphere collider", desc.TypeId, "Radius",
+                                                  FieldValue{ c->Radius }, FieldValue{ r });
+                        Commands::CommitFieldEdit(ctx, "Fit sphere collider", desc.TypeId, "Offset",
+                                                  FieldValue{ c->Offset }, FieldValue{ center });
+                    }
+                }
+            }
         }
         ImGui::PopID();
 

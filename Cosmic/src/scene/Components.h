@@ -6,6 +6,7 @@
 #include "graphics/Material.h"
 #include "graphics/Mesh.h"
 #include "particles/ParticleSystem.h"  // EmitterShape/ParticleBlend/ParticleSpace (E18 emitter recipe)
+#include "physics/PhysicsTypes.h"      // MotionType (J3 — reflected on RigidBodyComponent)
 #include "scene/ComponentRegistry.h"
 #include "reflect/TypeDescriptor.h"   // Reflect::FieldValue (NativeScriptComponent::Fields)
 #include <glm/glm.hpp>
@@ -512,6 +513,117 @@ namespace Cosmic
         ParticleEmitterComponent(const ParticleEmitterComponent&) = default;
     };
 
+    // ========================================================================
+    // Physics (Phase 15 / J3) — a generic Jolt-backed rigid-body tier. A body is a
+    // RigidBodyComponent + >= 1 collider on the same entity (multiple colliders =>
+    // a compound shape). A collider WITHOUT a RigidBody is an implicit static body
+    // (the ground/world). Bodies exist only while a physics session runs (editor
+    // Play / PlayerLayer); edit mode holds no Jolt objects — these components are
+    // the authored truth, the bodies are derived (Scene::OnPhysicsStart). No runtime
+    // body id lives on the components; the Scene's physics runtime owns that map.
+    // ========================================================================
+
+    /**
+     * @brief Rigid-body settings (J3). Pair with one or more collider components.
+     * Motion drives both the behaviour and the coarse broadphase layer; the 16-bit
+     * CollisionCategory / CollidesWith pair is the fine gameplay filter (two bodies
+     * collide iff each one's category is in the other's mask).
+     */
+    struct COSMIC_API RigidBodyComponent
+    {
+        MotionType Motion = MotionType::Static;
+
+        float Mass           = 1.0f;      // kg (dynamic only)
+        float Friction       = 0.5f;      // 0..1
+        float Restitution    = 0.1f;      // 0 = no bounce, 1 = perfectly elastic
+        float LinearDamping  = 0.05f;
+        float AngularDamping  = 0.05f;
+        float GravityFactor  = 1.0f;      // scales gravity for this body (0 = float)
+        bool  CCD            = false;     // continuous collision for fast small bodies
+        bool  StartAsleep    = false;
+
+        // Fine collision filter (bit category + mask). Defaults collide with all.
+        uint32_t CollisionCategory = 0x0001;   // stored 16-bit; uint32 for reflection
+        uint32_t CollidesWith      = 0xFFFF;
+
+        RigidBodyComponent() = default;
+        RigidBodyComponent(const RigidBodyComponent&) = default;
+        RigidBodyComponent(MotionType m) : Motion(m) {}
+    };
+
+    /** @brief Box collider (J3). HalfExtents are pre-scale; the entity's world scale
+     *  is baked into the shape at build. IsTrigger => a sensor (overlap events, no
+     *  contact response). */
+    struct COSMIC_API BoxColliderComponent
+    {
+        glm::vec3 HalfExtents{ 0.5f, 0.5f, 0.5f };
+        glm::vec3 Offset{ 0.0f };
+        bool      IsTrigger = false;
+
+        BoxColliderComponent() = default;
+        BoxColliderComponent(const BoxColliderComponent&) = default;
+    };
+
+    /** @brief Sphere collider (J3). Non-uniform scale warns once and uses X scale. */
+    struct COSMIC_API SphereColliderComponent
+    {
+        float     Radius = 0.5f;
+        glm::vec3 Offset{ 0.0f };
+        bool      IsTrigger = false;
+
+        SphereColliderComponent() = default;
+        SphereColliderComponent(const SphereColliderComponent&) = default;
+    };
+
+    /** @brief Capsule collider (J3). HalfHeight = half the cylinder part (excludes
+     *  the two hemispherical caps). Y-axis aligned. */
+    struct COSMIC_API CapsuleColliderComponent
+    {
+        float     Radius     = 0.5f;
+        float     HalfHeight = 0.5f;
+        glm::vec3 Offset{ 0.0f };
+        bool      IsTrigger = false;
+
+        CapsuleColliderComponent() = default;
+        CapsuleColliderComponent(const CapsuleColliderComponent&) = default;
+    };
+
+    /** @brief Mesh collider (J3) — uses the sibling MeshRenderer/Primitive mesh.
+     *  Convex=true builds a ConvexHullShape (dynamic-capable); Convex=false builds a
+     *  static/kinematic-only MeshShape (a Console warning fires if used on a dynamic
+     *  body). */
+    struct COSMIC_API MeshColliderComponent
+    {
+        bool Convex    = false;
+        bool IsTrigger = false;
+
+        MeshColliderComponent() = default;
+        MeshColliderComponent(const MeshColliderComponent&) = default;
+    };
+
+    /** @brief Terrain collider (J7) — uses the sibling TerrainComponent's CPU
+     *  heightfield to build a JPH::HeightFieldShape. Terrain is always static. */
+    struct COSMIC_API TerrainColliderComponent
+    {
+        TerrainColliderComponent() = default;
+        TerrainColliderComponent(const TerrainColliderComponent&) = default;
+    };
+
+    /** @brief Character controller (J6) — a kinematic capsule with slope/step
+     *  handling (Jolt CharacterVirtual). Drive it from a script via Character().
+     *  Does not need a RigidBody/collider; it owns its own capsule. */
+    struct COSMIC_API CharacterControllerComponent
+    {
+        float Height      = 1.8f;    // total capsule height incl. caps
+        float Radius      = 0.3f;
+        float MaxSlopeDeg = 45.0f;
+        float StepHeight  = 0.35f;
+        float Mass        = 80.0f;
+
+        CharacterControllerComponent() = default;
+        CharacterControllerComponent(const CharacterControllerComponent&) = default;
+    };
+
     /**
      * @brief Native C++ script link (E11). The scene stores the script's class
      * NAME (resolved to a factory through ModuleRegistry at Play) plus the
@@ -611,6 +723,13 @@ CS_REGISTER_COMPONENT(Cosmic::EnvironmentComponent)
 CS_REGISTER_COMPONENT(Cosmic::TerrainComponent)
 CS_REGISTER_COMPONENT(Cosmic::WaterComponent)
 CS_REGISTER_COMPONENT(Cosmic::ParticleEmitterComponent)
+CS_REGISTER_COMPONENT(Cosmic::RigidBodyComponent)
+CS_REGISTER_COMPONENT(Cosmic::BoxColliderComponent)
+CS_REGISTER_COMPONENT(Cosmic::SphereColliderComponent)
+CS_REGISTER_COMPONENT(Cosmic::CapsuleColliderComponent)
+CS_REGISTER_COMPONENT(Cosmic::MeshColliderComponent)
+CS_REGISTER_COMPONENT(Cosmic::TerrainColliderComponent)
+CS_REGISTER_COMPONENT(Cosmic::CharacterControllerComponent)
 CS_REGISTER_COMPONENT(Cosmic::NativeScriptComponent)
 CS_REGISTER_COMPONENT(Cosmic::SystemScriptComponent)
 CS_REGISTER_COMPONENT(Cosmic::PrefabComponent)

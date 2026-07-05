@@ -191,6 +191,36 @@ namespace Cosmic
                     nsc->Instance->OnEvent(ev);
     }
 
+    // ---- physics contact dispatch (J5) -------------------------------------
+    // ScriptHost is a friend of ScriptableEntity, so it may call the protected
+    // On*Enter/Exit virtuals. Each resolves `self`'s live instance (if any).
+    namespace
+    {
+        ScriptableEntity* InstanceOf(Scene* scene, entt::entity self)
+        {
+            if (!scene || !scene->GetRegistry().valid(self)) return nullptr;
+            auto* nsc = scene->GetRegistry().try_get<NativeScriptComponent>(self);
+            return (nsc && nsc->Instance) ? nsc->Instance : nullptr;
+        }
+    }
+
+    void ScriptHost::DispatchCollisionEnter(entt::entity self, Entity other)
+    {
+        if (auto* inst = InstanceOf(m_Scene, self)) inst->OnCollisionEnter(other);
+    }
+    void ScriptHost::DispatchCollisionExit(entt::entity self, Entity other)
+    {
+        if (auto* inst = InstanceOf(m_Scene, self)) inst->OnCollisionExit(other);
+    }
+    void ScriptHost::DispatchTriggerEnter(entt::entity self, Entity other)
+    {
+        if (auto* inst = InstanceOf(m_Scene, self)) inst->OnTriggerEnter(other);
+    }
+    void ScriptHost::DispatchTriggerExit(entt::entity self, Entity other)
+    {
+        if (auto* inst = InstanceOf(m_Scene, self)) inst->OnTriggerExit(other);
+    }
+
     void ScriptHost::Destroy()
     {
         // Systems first (H9) — they were created last; OnDestroy, delete, null holder.
