@@ -5,10 +5,13 @@
 #include "core/Application.h"
 #include "core/Input.h"
 #include "codes/KeyCodes.h"
+#include "codes/MouseButtonCodes.h"
 #include "layers/WorkspaceLayer.h"
 #include "scene/Scene.h"
 #include "scene/Entity.h"
 #include "scene/Components.h"
+#include "scene/SceneSerializer.h"    // U5 — flow scene loader
+#include "scene/ui/UiSystem.h"        // U1 — in-game UI overlay + interaction
 #include "camera/Camera.h"
 #include "renderer/RenderCommand.h"
 #include "utils/Config.h"
@@ -53,13 +56,15 @@ namespace Cosmic
 
         m_Camera = CreateScope<PlayerCamera>();
 
-        // Manifest — startup scene + fixed-dt + window identity (all optional).
+        // Manifest — startup scene/flow + fixed-dt + window identity (all optional).
         float fixedHz = 60.0f;
         std::string title = m_ProjectName.empty() ? "Cosmic Player" : m_ProjectName;
+        std::string startupFlow;
         int  winW = 0, winH = 0;   // 0 => keep the current window size
         if (Ref<Config> cfg = Config::Load("project://project.cproj"))
         {
             m_StartupScene = cfg->GetString("startup_scene", m_StartupScene);
+            startupFlow    = cfg->GetString("startup_flow", "");   // U5 (empty => single scene)
             fixedHz        = static_cast<float>(cfg->GetInt("fixed_dt_hz", 60));
             // [window] title/width/height (S5); fall back to the legacy top-level keys.
             title = cfg->GetString("window.title", cfg->GetString("window_title", cfg->GetString("name", title)));
@@ -79,17 +84,58 @@ namespace Cosmic
 
         m_Physics.Init();   // J4 — one world for the layer; scenes bind/unbind to it
 
-        const std::string scenePath = FileSystem::Resolve("project://" + m_StartupScene);
-        if (!m_Scenes.Load(scenePath))
-            CS_CORE_ERROR("PlayerLayer: could not load startup scene '{0}'.", scenePath);
-        RebindScripts();
+        // U5 — when a startup flow is named, it OWNS scene selection: its start
+        // state's scene is loaded and adopted. Otherwise the single startup scene
+        // loads exactly as before (shipped-app compat — no flow key => unchanged).
+        if (!startupFlow.empty())
+        {
+            m_Flow.SetSceneLoader([this](const std::string& p) { return LoadSceneFile(p); });
+            FlowAsset asset;
+            std::string err;
+            if (FlowAsset::Load(asset, "project://" + startupFlow, &err))
+            {
+                m_UseFlow = true;
+                m_Flow.Start(asset);
+                if (Ref<Scene> s = m_Flow.ActiveScene())
+                {
+                    m_Scenes.SetActiveScene(s);
+                    RebindScripts();
+                }
+                else
+                    CS_CORE_ERROR("PlayerLayer: startup flow '{0}' produced no active scene.", startupFlow);
+            }
+            else
+                CS_CORE_ERROR("PlayerLayer: failed to load startup flow '{0}': {1}", startupFlow, err);
+        }
 
-        CS_CORE_INFO("PlayerLayer: running project '{0}' (scene '{1}', {2} Hz).",
-                     m_ProjectName, m_StartupScene, fixedHz);
+        if (!m_UseFlow)
+        {
+            const std::string scenePath = FileSystem::Resolve("project://" + m_StartupScene);
+            if (!m_Scenes.Load(scenePath))
+                CS_CORE_ERROR("PlayerLayer: could not load startup scene '{0}'.", scenePath);
+            RebindScripts();
+        }
+
+        CS_CORE_INFO("PlayerLayer: running project '{0}' ({1} '{2}', {3} Hz).",
+                     m_ProjectName, m_UseFlow ? "flow" : "scene",
+                     m_UseFlow ? startupFlow : m_StartupScene, fixedHz);
+    }
+
+    Ref<Scene> PlayerLayer::LoadSceneFile(const std::string& path)
+    {
+        Ref<Scene> s = Scene::Create();
+        const std::string resolved = FileSystem::Resolve(path);
+        if (!SceneSerializer::Load(*s, resolved))
+        {
+            CS_CORE_ERROR("PlayerLayer: flow could not load scene '{0}'.", path);
+            return nullptr;
+        }
+        return s;
     }
 
     void PlayerLayer::OnDetach()
     {
+        m_Flow.Stop();   // U5 — unsubscribe from scene buses before scenes tear down
         if (m_TrackedScene)
             m_TrackedScene->OnPhysicsStop(m_Physics);
         m_Scripts.Destroy();
@@ -118,14 +164,69 @@ namespace Cosmic
 
     void PlayerLayer::OnUpdate(float ts)
     {
+        auto& app = Application::Get();
+
         // Advance any queued scene transition; re-instantiate scripts on a swap.
         m_Scenes.OnUpdate(ts);
         RebindScripts();
 
-        if (!Application::Get().IsPaused())
+        // U1 — UI pointer interaction FIRST, so button signals are on the bus
+        // before the flow drains them this same frame.
+        if (!app.IsPaused())
+            UpdateUI(ts);
+
+        // U5 — advance the screen flow (drains queued signals -> transitions).
+        if (m_UseFlow)
+        {
+            const bool esc = Input::IsKeyPressed(CS_KEY_ESCAPE);
+            if (esc && !m_PrevEscape) m_Flow.FeedSignal("key:Escape");
+            m_PrevEscape = esc;
+
+            m_Flow.OnUpdate(ts);
+            if (m_Flow.QuitRequested())
+            {
+                app.TransitionToLauncher();
+                return;
+            }
+            if (Ref<Scene> fs = m_Flow.ActiveScene(); fs && fs != m_Scenes.GetActiveScene())
+            {
+                m_Scenes.SetActiveScene(fs);
+                RebindScripts();
+            }
+        }
+
+        if (!app.IsPaused())
+        {
             m_Scripts.Tick(ts);
+            if (m_TrackedScene)
+                m_TrackedScene->UpdateSpriteAnimations(ts);   // U4 — flipbook advance
+        }
 
         RenderScene(ts);
+    }
+
+    void PlayerLayer::UpdateUI(float dt)
+    {
+        (void)dt;
+        if (!m_TrackedScene) return;
+
+        Ref<FrameBuffer> fb = Application::Get().GetFrameBuffer();
+        if (!fb || fb->GetWidth() < 1 || fb->GetHeight() < 1) return;
+
+        const UiRect viewport{ { 0.0f, 0.0f },
+                               { (float)fb->GetWidth(), (float)fb->GetHeight() } };
+
+        const glm::vec2 mouse = Input::GetMousePosition();
+        const bool down = Input::IsMouseButtonPressed(CS_MOUSE_BUTTON_LEFT);
+
+        UiPointer p;
+        p.Position     = mouse;
+        p.Down         = down;
+        p.PressedEdge  = down && !m_PrevMouseDown;
+        p.ReleasedEdge = !down && m_PrevMouseDown;
+        m_PrevMouseDown = down;
+
+        UiSystem::Update(*m_TrackedScene, viewport, p);
     }
 
     void PlayerLayer::OnFixedUpdate(float fixedDt)
@@ -194,6 +295,14 @@ namespace Cosmic
             m_TrackedScene->BuildRenderDesc(*m_Camera, dt, desc);
             desc.Settings.ClearColor = { 0.06f, 0.07f, 0.10f, 1.0f };
 
+            // U1 — canvas UI composites after post (LDR bound). No canvas => no-op,
+            // so shipped 3D apps are unaffected.
+            Scene* scenePtr = m_TrackedScene.get();
+            desc.DrawOverlay2D = [scenePtr, vw, vh]()
+            {
+                UiSystem::Render(*scenePtr, UiRect{ { 0.0f, 0.0f }, { (float)vw, (float)vh } });
+            };
+
             if (auto* env = m_TrackedScene->FindEnvironment())
             {
                 m_SceneRenderer.ApplyEnvironment(*env, desc);
@@ -213,7 +322,9 @@ namespace Cosmic
     {
         auto& app = Application::Get();
 
-        if (ImGui::IsKeyPressed(ImGuiKey_Escape, false))
+        // When a screen flow is active it OWNS Escape (key:Escape transitions /
+        // its own pause overlay), so the built-in ImGui pause menu stands down.
+        if (!m_UseFlow && ImGui::IsKeyPressed(ImGuiKey_Escape, false))
             app.TogglePause();
 
         if (!app.IsPaused())

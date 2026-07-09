@@ -44,6 +44,8 @@ add_executable(CosmicTests
     test_physics_character.cpp
     test_physics_terrain.cpp
     test_physics_determinism.cpp
+    test_ui_rects.cpp
+    test_flowmachine.cpp
 )
 
 target_link_libraries(CosmicTests PRIVATE Cosmic)

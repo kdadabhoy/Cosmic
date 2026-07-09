@@ -212,6 +212,64 @@ TEST_CASE("E11: NativeScript is a reflected component and its fields round-trip 
 }
 
 // ---------------------------------------------------------------------------
+// U2 — scene signal bus <-> scripts
+// ---------------------------------------------------------------------------
+
+namespace
+{
+    class SignalScript : public ScriptableEntity
+    {
+    public:
+        static inline int         s_Received = 0;
+        static inline std::string s_Last;
+        static void Reset() { s_Received = 0; s_Last.clear(); }
+
+        void EmitPing() { Signals().Emit("ping"); }   // Signals() is protected -> OK here
+
+    protected:
+        void OnSignal(const std::string& sig, Entity) override { ++s_Received; s_Last = sig; }
+    };
+
+    void RegisterSignalScript()
+    {
+        ModuleRegistry::Get().BeginModule("test");
+        CS_SCRIPT(SignalScript)
+        CS_END;
+        ModuleRegistry::Get().EndModule();
+    }
+}
+
+TEST_CASE("U2: scene signals reach script OnSignal; scripts can emit; route drops on Destroy")
+{
+    SignalScript::Reset();
+    RegisterSignalScript();
+
+    Ref<Scene> scene = Scene::Create();
+    Entity e = scene->CreateEntity("S");
+    e.AddComponent<NativeScriptComponent>().ClassName = "SignalScript";
+
+    ScriptHost host;
+    host.Instantiate(*scene);
+
+    // An external emit (a button, the flow machine) reaches the script.
+    scene->Events().Emit("hello", e);
+    CHECK(SignalScript::s_Received == 1);
+    CHECK(SignalScript::s_Last == "hello");
+
+    // A script emitting broadcasts to every subscriber, itself included.
+    auto* inst = static_cast<SignalScript*>(e.GetComponent<NativeScriptComponent>().Instance);
+    REQUIRE(inst != nullptr);
+    inst->EmitPing();
+    CHECK(SignalScript::s_Received == 2);
+    CHECK(SignalScript::s_Last == "ping");
+
+    // After Destroy the ConnectAny route is gone — emit cannot reach a dead script.
+    host.Destroy();
+    scene->Events().Emit("afterlife", e);
+    CHECK(SignalScript::s_Received == 2);
+}
+
+// ---------------------------------------------------------------------------
 // H9 — SystemScript tier: one instance drives a *class* of entities
 // ---------------------------------------------------------------------------
 

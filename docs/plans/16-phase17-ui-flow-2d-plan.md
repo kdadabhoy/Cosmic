@@ -1,5 +1,39 @@
 # Phase 17 Plan — In-Game UI, Screen Flow, and 2D Game Authoring
 
+> **STATUS 2026-07-08 (UNcommitted) — ENGINE FOUNDATION CODE-COMPLETE.** The
+> headless-testable engine core of Phase 17 landed and is verified: build green
+> across all 5 projects **zero warnings**, `CosmicTests` **241/241** (219→241,
+> +22). What shipped this session:
+> - **U1 (engine + tests):** `scene/ui/UiComponents.h` (Canvas / RectTransform /
+>   UiImage / UiText / UiButton, reflected under "UI") + `scene/ui/UiSystem`
+>   (pure `ResolveRect` / `StepButtonState` / `CanvasScale`, hit-test, `Update`
+>   → EventBus, `Render` via Renderer2D incl. 9-slice/text/tint). Wired into
+>   PlayerLayer (`DrawOverlay2D` + pointer `Update`) AND the Starforge viewport
+>   (overlay render) + Entity▸UI create menu. `tests/test_ui_rects.cpp`.
+>   *Deferred:* editor viewport click-consumption in the ScenePicker path.
+> - **U2 (✅):** `scene/EventBus.h/.cpp` (named + ConnectAny, handle-unsubscribe,
+>   re-entrancy-safe), a Scene member, `ScriptableEntity::Signals()`/`OnSignal`,
+>   ScriptHost ConnectAny routing. Tests in test_ui_rects + test_scripthost.
+> - **U3/U4 (engine slice):** `SpriteRendererComponent` gained `SourceRect` /
+>   `PixelsPerUnit` / `ZOrder` (ABI-appended); NEW `SpriteAnimationComponent`
+>   (flipbook, pure `SelectFrame`/`FrameUV`) + `Scene::UpdateSpriteAnimations`;
+>   Entity▸2D create menu (Sprite / ortho Camera). Tests in test_scene_components.
+>   *Deferred:* 2D editor mode (ortho toggle/pixel grid/painters), Tilemap +
+>   tile painter (needs custom Cells serialization).
+> - **U5 (engine ✅):** `scene/FlowMachine.h/.cpp` — `.cflow` parse/save/validate
+>   (nlohmann), state stack w/ overlay push/pop, signal/key/timer transitions,
+>   reflected-field guards, emit/setField actions, injected scene-loader; wired
+>   into PlayerLayer (`startup_flow` manifest key, compat-gated).
+>   `tests/test_flowmachine.cpp`.
+> - **Build note:** TypeRegistry.cpp now compiles with `/bigobj` (MSVC section
+>   limit hit by the reflection-thunk additions).
+>
+> **REMAINING (editor / on-GPU — not headless-verifiable):** U1 editor click
+> consumption; U3 full 2D authoring mode; U4 Tilemap + painter; **U6** Flow Graph
+> node-editor panel (vendor imgui-node-editor); **U7** game-view correctness; **U8**
+> zero-code app + ForgePong samples + recorded acceptance. The engine surface each
+> needs is now in place.
+
 > **Created 2026-07-04.** Delivers three user asks that share one foundation:
 > 1. **Design app screens in Starforge** — homescreens, menus, HUDs, built from entities.
 > 2. **Visual screen-flow authoring** — "if this button is pressed, navigate to this scene"
@@ -105,7 +139,10 @@ nested) each ±0.5 px; hover/press/release-inside/release-outside state transiti
 canvas with an image + text + 3 buttons renders in editor viewport AND via `--project`,
 hover/press tints work, clicks don't leak to 3D picking.
 
-**Status:** ☐
+**Status:** ◑ engine + tests + PlayerLayer overlay/interaction + editor overlay render +
+Entity▸UI menu DONE (2026-07-08). Headless acceptance (anchor matrix, button transitions,
+EventBus click routing) passes. Remaining: editor-viewport click consumption in the
+ScenePicker path (rendering already lands) + the on-GPU visual pass.
 
 ### U2 — Scene event bus + script hookup
 
@@ -123,7 +160,9 @@ flow, and logic. Telemetry-style no-op when a scene has no subscribers.
 **Acceptance:** headless: button-sim → script `OnSignal` receives; script emit → second
 script receives; destroyed subscriber never fires (handle safety).
 
-**Status:** ☐
+**Status:** ✅ 2026-07-08. `scene/EventBus.h/.cpp` + Scene member + `Signals()`/`OnSignal`
++ ScriptHost ConnectAny routing. Acceptance covered by test_ui_rects (bus + click) and
+test_scripthost (OnSignal reach + emit + route-drops-on-Destroy).
 
 ### U3 — 2D authoring mode in Starforge
 
@@ -152,7 +191,11 @@ existing transparent queue; don't invent a second compositor.
 **Acceptance:** author a small sprite scene (background, 10 sprites, ortho camera) entirely
 in-editor; crisp at 1x/2x/3x zoom (screenshot); plays standalone; 3D scenes unaffected.
 
-**Status:** ☐
+**Status:** ◑ engine slice 2026-07-08: `SpriteRendererComponent` +SourceRect/PixelsPerUnit/
+ZOrder (reflected, serialized), Entity▸2D create menu (Sprite / ortho Camera). Remaining:
+2D editor camera mode (ortho toggle, pan/zoom, pixel grid, unit snapping), pixel-perfect
+sampling preset + "Pixel Art" template, and the generic `Scene::OnRender2D` sprite pass
+inside the main scene.
 
 ### U4 — Sprite animation + tilemap v1
 
@@ -172,7 +215,11 @@ command — the E7 merge-key pattern), not per-cell spam. Big maps: v1 caps Grid
 animated sprite plays in editor Play + standalone at the authored FPS independent of frame
 rate.
 
-**Status:** ☐
+**Status:** ◑ sprite animation 2026-07-08: `SpriteAnimationComponent` (flipbook, reflected +
+serialized) + pure `SelectFrame`/`FrameUV` (tested) + `Scene::UpdateSpriteAnimations`
+(framerate-independent, drives SourceRect); PlayerLayer advances it each tick. Remaining:
+`TilemapComponent` + packed Cells serialization + the tile painter overlay (palette, flood/
+rect fill, undo cell-run commands).
 
 ### U5 — FlowMachine + `.cflow` asset (engine runtime)
 
@@ -216,7 +263,14 @@ The machine itself is scene-agnostic and headless-testable (inject a fake scene-
 with a scripted fake loader proving load calls + order; unknown state/scene = validation error
 list (used by U6). In-app: menu→game→pause→resume works via real buttons.
 
-**Status:** ☐
+**Status:** ✅ engine 2026-07-08. `scene/FlowMachine.h/.cpp` — full `.cflow` parse/save/
+validate, state stack (overlay push/pop), signal/key/timer transitions, reflected-field
+guards, emit/setField actions, injected scene-loader. Wired into PlayerLayer behind the
+`startup_flow` manifest key (compat-gated). **Shipped decision:** overlay push/pop is a
+machine-level STATE STACK; a scene-less overlay reuses the under-scene, the host renders the
+TOP scene — additive under-scene rendering (pause menu over live game) is a v2 follow-up.
+`tests/test_flowmachine.cpp` covers the full run + guards + validation + round-trip. Remaining:
+Starforge play-mode adopting the flow (PlayerLayer path done) + the in-editor menu→game demo.
 
 ### U6 — Flow Graph editor panel
 

@@ -142,10 +142,71 @@ namespace Cosmic
         bool FlipX = false;
         bool FlipY = false;
 
+        // --- 2D authoring (U3, appended to keep the struct's ABI stable) -------
+        // SourceRect is the sampled sub-rectangle of the sprite texture in
+        // NORMALIZED UV {u0, v0, u1, v1} (default = the whole image). A
+        // SpriteAnimationComponent overwrites it per frame. ZOrder sorts within
+        // the 2D pass (ties broken by Position.z); PixelsPerUnit converts a
+        // sprite's pixel size to world units for the ortho 2D camera.
+        glm::vec4 SourceRect{ 0.0f, 0.0f, 1.0f, 1.0f };
+        float     PixelsPerUnit = 100.0f;
+        int32_t   ZOrder = 0;
+
         SpriteRendererComponent() = default;
         SpriteRendererComponent(const SpriteRendererComponent&) = default;
         SpriteRendererComponent(const Ref<Material>& material) : ActiveMaterial(material) {}
         SpriteRendererComponent(const glm::vec4& color) : Color(color) {}
+    };
+
+
+    /**
+     * @brief Flipbook sprite animation (U4). Plays frames from a sprite SHEET by
+     * driving the sibling SpriteRendererComponent::SourceRect. Mirrors the
+     * particle flipbook: a grid of FrameW x FrameH cells; `Frames` cells are
+     * played along `Row` at `FPS`, framerate-independent. Attach with a
+     * SpriteRendererComponent whose ActiveMaterial samples the sheet. Engine-
+     * generic, default-off for shipped apps (no sprite-anim component => untouched).
+     */
+    struct COSMIC_API SpriteAnimationComponent
+    {
+        std::string SheetPath;             // AssetPath("texture") — the sprite sheet
+        int32_t     FrameW  = 16;          // cell width in texels
+        int32_t     FrameH  = 16;          // cell height in texels
+        int32_t     Frames  = 1;           // number of cells to play (along Row)
+        int32_t     Row     = 0;           // 0-based row of the sheet
+        float       FPS     = 8.0f;
+        bool        Playing = true;
+        bool        Loop    = true;
+
+        float       Elapsed = 0.0f;        // runtime-only (not reflected)
+
+        SpriteAnimationComponent() = default;
+        SpriteAnimationComponent(const SpriteAnimationComponent&) = default;
+
+        /** @brief Frame index at `elapsed` seconds (pure, headless-tested). A
+         *  looping clip wraps; a one-shot clamps to the last frame. */
+        static int SelectFrame(float elapsed, float fps, int frames, bool loop)
+        {
+            if (frames <= 1 || fps <= 0.0f) return 0;
+            const int f = (int)(elapsed * fps);
+            if (loop) return ((f % frames) + frames) % frames;
+            return f < 0 ? 0 : (f >= frames ? frames - 1 : f);
+        }
+
+        /** @brief Normalized UV {u0,v0,u1,v1} of `frame` on a texW x texH sheet
+         *  with FrameW x FrameH cells on `row` (pure). V is top-left origin:
+         *  row 0 is the TOP of the sheet. */
+        static glm::vec4 FrameUV(int texW, int texH, int frameW, int frameH,
+                                 int row, int frame)
+        {
+            if (texW <= 0 || texH <= 0 || frameW <= 0 || frameH <= 0)
+                return { 0.0f, 0.0f, 1.0f, 1.0f };
+            const float u0 = (float)(frame * frameW) / (float)texW;
+            const float u1 = (float)((frame + 1) * frameW) / (float)texW;
+            const float v0 = (float)(row * frameH) / (float)texH;
+            const float v1 = (float)((row + 1) * frameH) / (float)texH;
+            return { u0, v0, u1, v1 };
+        }
     };
 
 
@@ -713,6 +774,7 @@ CS_REGISTER_COMPONENT(Cosmic::RelationshipComponent)
 CS_REGISTER_COMPONENT(Cosmic::TagComponent)
 CS_REGISTER_COMPONENT(Cosmic::TransformComponent)
 CS_REGISTER_COMPONENT(Cosmic::SpriteRendererComponent)
+CS_REGISTER_COMPONENT(Cosmic::SpriteAnimationComponent)
 CS_REGISTER_COMPONENT(Cosmic::MeshRendererComponent)
 CS_REGISTER_COMPONENT(Cosmic::PrimitiveMeshComponent)
 CS_REGISTER_COMPONENT(Cosmic::LODGroupComponent)

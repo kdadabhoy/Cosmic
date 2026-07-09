@@ -125,7 +125,7 @@ isolation → run-standalone/thumbnails/About → clean-machine acceptance.
   Build green Debug+Release 5 projects zero warnings, `CosmicTests` **219/219**, GL-conformance
   clean, compat gate held. Remaining = the user's clean-machine acceptance (S8 ledger row) + commit.
 
-### Phase 17 — UI, screen flow, 2D *(doc 16, U1–U8)* — ☐
+### Phase 17 — UI, screen flow, 2D *(doc 16, U1–U8)* — ◑ engine foundation code-complete 2026-07-08
 UI entities (canvas/rect/button/text/image + hit-testing) → scene event bus → 2D authoring
 mode (ortho, pixel-perfect, sorting) → sprite animation + tilemaps → FlowMachine + `.cflow` →
 node-graph editor panel → game-view correctness (primary camera, aspect presets, eject) →
@@ -134,6 +134,14 @@ zero-code two-screen app + "ForgePong" sample.
   rest medium.
 - **Done when:** doc 16 U8: a two-screen app built with zero C++ ships and runs; the 2D
   sample plays packaged.
+- **Status 2026-07-08 (UNcommitted):** engine foundation landed — **U1** UI components +
+  UiSystem (pure layout/hit-test/button + Renderer2D draw, wired into PlayerLayer + Starforge
+  viewport + Entity▸UI menu), **U2** ✅ EventBus + script signals, **U3/U4 engine slice**
+  (SpriteRenderer SourceRect/PPU/ZOrder + SpriteAnimation flipbook + Entity▸2D menu), **U5** ✅
+  FlowMachine + `.cflow` wired into PlayerLayer. Build green 5 projects zero warnings,
+  `CosmicTests` **241/241** (+22). Remaining = editor panels + on-GPU/samples: U1 editor click
+  consumption, U3 full 2D mode, U4 Tilemap+painter, **U6** node-graph panel (vendor
+  imgui-node-editor), **U7** game-view, **U8** zero-code app + ForgePong + recorded acceptance.
 
 ### Phase 18 — Voxel worlds *(doc 17, V1–V7)* — ☐
 Chunk store/palette/serialization → mesher (culled→greedy) → render integration → edit

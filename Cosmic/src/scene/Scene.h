@@ -4,6 +4,7 @@
 #include "core/Core.h"
 #include "core/UUID.h"
 #include "scene/System.h"
+#include "scene/EventBus.h"          // U2 — per-scene signal channel (by value)
 #include "jobs/ParallelSystem.h"
 #include <entt/entt.hpp>
 #include <glm/glm.hpp>
@@ -128,6 +129,16 @@ namespace Cosmic
 		void OnRender(const OrthographicCamera& camera);
 
 		/**
+		 * @brief Advance flipbook sprite animations (U4). For every entity with a
+		 * SpriteAnimationComponent + SpriteRendererComponent, accumulates time and
+		 * writes the current frame's UV into the sprite's SourceRect (resolving the
+		 * sheet through AssetLibrary for its pixel size). Framerate-independent.
+		 * Main-thread (texture resolve). No-op for scenes without sprite animations
+		 * (the compat gate). Call once per variable tick before the 2D render.
+		 */
+		void UpdateSpriteAnimations(float deltaTime);
+
+		/**
 		 * @brief 3D render pass (S4.3): draws every entity with a
 		 * TransformComponent + MeshRendererComponent via Renderer3D.
 		 *
@@ -233,6 +244,12 @@ namespace Cosmic
 		inline entt::registry& GetRegistry() { return m_Registry; }
 		inline const entt::registry& GetRegistry() const { return m_Registry; }
 
+		/** @brief The scene's signal channel (U2). Buttons emit onto it, the
+		 *  FlowMachine + scripts subscribe. Empty by default (no-op for shipped
+		 *  apps that never touch UI/flow). */
+		inline EventBus& Events() { return m_Events; }
+		inline const EventBus& Events() const { return m_Events; }
+
 
 	public:
 		/**
@@ -268,6 +285,8 @@ namespace Cosmic
 		void SubmitOpaqueMeshes(const SceneDrawContext& ctx);
 
 		float m_WorldTime = 0.0f;   // accumulated seconds for water/particle animation (E18)
+
+		EventBus m_Events;          // U2 — per-scene signal channel
 
 		std::unique_ptr<ScenePhysics> m_Physics;   // J4 — non-null only during a play session
 

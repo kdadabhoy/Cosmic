@@ -6,7 +6,9 @@
 #include "scripting/ModuleRegistry.h"
 
 #include "scene/Scene.h"
+#include "scene/Entity.h"
 #include "scene/Components.h"
+#include "scene/EventBus.h"
 #include "core/Log.h"
 
 #include <algorithm>
@@ -132,6 +134,21 @@ namespace Cosmic
 
         for (auto& ls : m_Systems) ls.Instance->OnCreate();
         for (auto& ls : m_Systems) ls.Instance->OnStart();
+
+        // U2 — route every scene signal to each live script's OnSignal. One
+        // ConnectAny listener drives them all; torn down in Destroy.
+        m_SignalHandle = scene.Events().ConnectAny(
+            [this](const std::string& signal, Entity source) { DispatchSignal(signal, source); });
+    }
+
+    void ScriptHost::DispatchSignal(const std::string& signal, Entity source)
+    {
+        if (!m_Scene) return;
+        auto& reg = m_Scene->GetRegistry();
+        for (entt::entity e : m_Live)
+            if (reg.valid(e))
+                if (auto* nsc = reg.try_get<NativeScriptComponent>(e); nsc && nsc->Instance)
+                    nsc->Instance->OnSignal(signal, source);
     }
 
     // Rebuild a system's membership span from its query (H9). Scratch is reused
@@ -223,6 +240,11 @@ namespace Cosmic
 
     void ScriptHost::Destroy()
     {
+        // U2 — drop the signal route before instances are deleted.
+        if (m_Scene && m_SignalHandle)
+            m_Scene->Events().Disconnect(m_SignalHandle);
+        m_SignalHandle = 0;
+
         // Systems first (H9) — they were created last; OnDestroy, delete, null holder.
         for (auto& ls : m_Systems)
         {

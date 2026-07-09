@@ -122,3 +122,67 @@ TEST_CASE("E4: Camera + Environment components round-trip through the serializer
 
     CHECK(save1 == SceneSerializer::SaveToString(scene2));
 }
+
+// ---------------------------------------------------------------------------
+// U4 — flipbook sprite animation frame math (pure)
+// ---------------------------------------------------------------------------
+
+TEST_CASE("U4: SelectFrame wraps when looping and clamps when one-shot")
+{
+    // 4 frames @ 8 fps -> a frame lasts 0.125 s.
+    CHECK(SpriteAnimationComponent::SelectFrame(0.0f,   8.0f, 4, true) == 0);
+    CHECK(SpriteAnimationComponent::SelectFrame(0.20f,  8.0f, 4, true) == 1);
+    CHECK(SpriteAnimationComponent::SelectFrame(0.30f,  8.0f, 4, true) == 2);
+    CHECK(SpriteAnimationComponent::SelectFrame(0.50f,  8.0f, 4, true) == 0);   // wrap
+
+    // One-shot clamps to the last frame.
+    CHECK(SpriteAnimationComponent::SelectFrame(0.50f,  8.0f, 4, false) == 3);
+    CHECK(SpriteAnimationComponent::SelectFrame(10.0f,  8.0f, 4, false) == 3);
+
+    // Degenerate inputs -> frame 0.
+    CHECK(SpriteAnimationComponent::SelectFrame(1.0f, 0.0f, 4, true) == 0);
+    CHECK(SpriteAnimationComponent::SelectFrame(1.0f, 8.0f, 1, true) == 0);
+}
+
+TEST_CASE("U4: FrameUV maps a cell to normalized UV (top-left origin)")
+{
+    // 64x32 sheet, 16x16 cells -> 4 columns x 2 rows.
+    glm::vec4 uv = SpriteAnimationComponent::FrameUV(64, 32, 16, 16, /*row=*/1, /*frame=*/2);
+    CHECK(uv.x == doctest::Approx(0.50f));   // u0 = 2*16/64
+    CHECK(uv.z == doctest::Approx(0.75f));   // u1 = 3*16/64
+    CHECK(uv.y == doctest::Approx(0.50f));   // v0 = 1*16/32
+    CHECK(uv.w == doctest::Approx(1.00f));   // v1 = 2*16/32
+}
+
+TEST_CASE("U4: SpriteAnimation + SourceRect round-trip through the serializer")
+{
+    Scene scene;
+    Entity e = scene.CreateEntity("Sprite");
+    auto& anim = e.AddComponent<SpriteAnimationComponent>();
+    anim.SheetPath = "project://textures/hero.png";
+    anim.FrameW = 24; anim.FrameH = 24; anim.Frames = 6; anim.Row = 2; anim.FPS = 12.0f;
+    auto& sr = e.AddComponent<SpriteRendererComponent>();
+    sr.PixelsPerUnit = 32.0f; sr.ZOrder = 5;
+    sr.SourceRect = { 0.1f, 0.2f, 0.3f, 0.4f };
+
+    const std::string text = SceneSerializer::SaveToString(scene);
+
+    Scene loaded;
+    REQUIRE(SceneSerializer::LoadFromString(loaded, text));
+
+    int found = 0;
+    for (auto h : loaded.GetRegistry().view<SpriteAnimationComponent>())
+    {
+        const auto& a = loaded.GetRegistry().get<SpriteAnimationComponent>(h);
+        CHECK(a.SheetPath == "project://textures/hero.png");
+        CHECK(a.Frames == 6);
+        CHECK(a.Row == 2);
+        CHECK(a.FPS == doctest::Approx(12.0f));
+        const auto& s = loaded.GetRegistry().get<SpriteRendererComponent>(h);
+        CHECK(s.ZOrder == 5);
+        CHECK(s.PixelsPerUnit == doctest::Approx(32.0f));
+        CHECK(s.SourceRect.z == doctest::Approx(0.3f));
+        ++found;
+    }
+    CHECK(found == 1);
+}

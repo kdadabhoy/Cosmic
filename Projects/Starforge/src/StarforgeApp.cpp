@@ -10,6 +10,8 @@
 #include "scene/Entity.h"
 #include "scene/Components.h"
 #include "scene/SceneSerializer.h"
+#include "scene/ui/UiComponents.h"   // U1 — UI entity components
+#include "scene/ui/UiSystem.h"       // U1 — canvas overlay render in the viewport
 #include "graphics/Mesh.h"
 #include "graphics/Texture.h"
 #include "graphics/FrameBuffer.h"
@@ -829,6 +831,15 @@ namespace Starforge
                 m_Viewport.DrawOverlayContent(m_Ctx);
             };
 
+            // U1 — canvas UI composites after post (LDR bound), at the viewport
+            // resolution, so authored HUDs/menus preview in-editor. No canvas => no-op.
+            Cosmic::Scene* scenePtr = m_Ctx.Scene.get();
+            desc.DrawOverlay2D = [scenePtr, vw, vh]()
+            {
+                Cosmic::UiSystem::Render(*scenePtr,
+                    Cosmic::UiRect{ { 0.0f, 0.0f }, { (float)vw, (float)vh } });
+            };
+
             m_SceneRenderer.Render(desc);   // PRE/POST: vfb stays the bound target
         }
 
@@ -1534,6 +1545,41 @@ namespace Starforge
             world("Terrain",          [](Cosmic::Entity e) { e.AddComponent<Cosmic::TerrainComponent>().UseRecipe = true; });
             world("Water",            [](Cosmic::Entity e) { e.AddComponent<Cosmic::WaterComponent>().UseRecipe = true; });
             world("Particle Emitter", [](Cosmic::Entity e) { e.AddComponent<Cosmic::ParticleEmitterComponent>().UseRecipe = true; });
+            ImGui::EndMenu();
+        }
+        // In-game UI (U1). Canvas is a root; Image/Text/Button are parented to the
+        // current selection (so they nest under a selected Canvas) and get a
+        // RectTransform (authoritative under a canvas).
+        if (ImGui::BeginMenu("UI"))
+        {
+            make("Canvas", [](Cosmic::Entity e) { e.AddComponent<Cosmic::CanvasComponent>(); });
+            auto uiChild = [&](const char* label, std::function<void(Cosmic::Entity)> build)
+            {
+                if (ImGui::MenuItem(label))
+                    Commands::Create(m_Ctx, label, m_Ctx.PrimaryEntity(), [build](Cosmic::Entity e)
+                    {
+                        e.AddComponent<Cosmic::RectTransformComponent>();
+                        build(e);
+                    });
+            };
+            uiChild("Image",  [](Cosmic::Entity e) { e.AddComponent<Cosmic::UiImageComponent>(); });
+            uiChild("Text",   [](Cosmic::Entity e) { e.AddComponent<Cosmic::UiTextComponent>(); });
+            uiChild("Button", [](Cosmic::Entity e)
+            {
+                e.AddComponent<Cosmic::UiImageComponent>().Tint = { 0.25f, 0.28f, 0.34f, 1.0f };
+                e.AddComponent<Cosmic::UiButtonComponent>();
+            });
+            ImGui::EndMenu();
+        }
+        // 2D authoring (U3): sprites + an orthographic camera.
+        if (ImGui::BeginMenu("2D"))
+        {
+            make("Sprite", [](Cosmic::Entity e) { e.AddComponent<Cosmic::SpriteRendererComponent>(); });
+            make("Camera (Ortho)", [](Cosmic::Entity e)
+            {
+                auto& c = e.AddComponent<Cosmic::CameraComponent>();
+                c.ProjectionType = Cosmic::CameraComponent::Projection::Orthographic;
+            });
             ImGui::EndMenu();
         }
         make("Camera", [](Cosmic::Entity e) { e.AddComponent<Cosmic::CameraComponent>(); });

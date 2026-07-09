@@ -649,6 +649,34 @@ namespace Cosmic
 
 	} // Closes void Scene::OnRender()
 
+	void Scene::UpdateSpriteAnimations(float deltaTime)
+	{
+		auto view = m_Registry.view<SpriteAnimationComponent, SpriteRendererComponent>();
+		for (auto e : view)
+		{
+			auto& anim   = view.get<SpriteAnimationComponent>(e);
+			auto& sprite = view.get<SpriteRendererComponent>(e);
+
+			if (anim.Playing)
+				anim.Elapsed += deltaTime;
+
+			const int frame = SpriteAnimationComponent::SelectFrame(
+				anim.Elapsed, anim.FPS, anim.Frames, anim.Loop);
+
+			// Resolve the sheet for its pixel size, then map frame -> UV. Skipped
+			// when the sheet is unavailable (e.g. headless / not yet loaded) — the
+			// sprite keeps its last SourceRect.
+			Ref<Texture2D> sheet = anim.SheetPath.empty() ? nullptr
+			                                              : AssetLibrary::GetTexture(anim.SheetPath);
+			if (!sheet || sheet->GetWidth() == 0 || sheet->GetHeight() == 0)
+				continue;
+
+			sprite.SourceRect = SpriteAnimationComponent::FrameUV(
+				(int)sheet->GetWidth(), (int)sheet->GetHeight(),
+				anim.FrameW, anim.FrameH, anim.Row, frame);
+		}
+	}
+
 	void Scene::OnRender3D(const Camera& camera)
 	{
 		// The scene owns the full 3D pass. Callers must NOT wrap this in their own

@@ -94,6 +94,13 @@ target_include_directories(Cosmic PUBLIC src)
 target_include_directories(Cosmic PRIVATE dependencies/stb_image dependencies/stb_truetype dependencies/stb_image_write dependencies/miniaudio dependencies/cgltf)
 target_compile_definitions(Cosmic PRIVATE COSMIC_BUILD_DLL)
 
+# TypeRegistry.cpp instantiates a reflection thunk set per registered component;
+# with the UI + 2D component additions (Phase 17) its object file exceeds MSVC's
+# COFF section limit. /bigobj lifts it (no runtime cost, standard for heavy TUs).
+if(MSVC)
+    target_compile_options(Cosmic PRIVATE /bigobj)
+endif()
+
 # Distribution build is implied by the Release config — disables the Launcher's
 # "New Project" UI. Evaluated per-config, so Debug/RelWithDebInfo stay non-DIST
 # automatically with no sticky cache flag.

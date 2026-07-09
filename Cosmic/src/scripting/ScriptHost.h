@@ -29,6 +29,8 @@
 
 #include <entt/entt.hpp>
 
+#include <cstdint>
+#include <string>
 #include <vector>
 #include <span>
 
@@ -76,6 +78,11 @@ namespace Cosmic
         // OnDestroy each, delete, null the NativeScriptComponent::Instance pointers.
         void Destroy();
 
+        // Route a scene signal to every live script's OnSignal (U2). Wired to the
+        // scene EventBus at Instantiate via ConnectAny; also public so a host can
+        // drive it directly in a test.
+        void DispatchSignal(const std::string& signal, Entity source);
+
         bool IsInstantiated() const { return m_Scene != nullptr; }
         size_t LiveCount()    const { return m_Live.size(); }
 
@@ -91,6 +98,7 @@ namespace Cosmic
         Scene* m_Scene = nullptr;
         std::vector<entt::entity> m_Live;   // entities with a live instance, creation order
         ITelemetrySink* m_Sink = nullptr;   // E20 — injected into each instance
+        uint64_t m_SignalHandle = 0;        // U2 — EventBus ConnectAny handle (0 = none)
 
         // SystemScript tier (H9): one instance per SystemScriptComponent, resolved
         // after per-entity scripts and ticked BEFORE them (deterministic order).

@@ -30,6 +30,7 @@
 #include "core/Core.h"
 #include "core/Layer.h"
 #include "scene/SceneManager.h"
+#include "scene/FlowMachine.h"        // U5 — optional startup screen-flow
 #include "scripting/ScriptHost.h"
 #include "renderer/SceneRenderer.h"   // H2 — the shared render path
 #include "physics/PhysicsWorld.h"     // J4 — the play-session physics service
@@ -61,6 +62,8 @@ namespace Cosmic
         void RebindScripts();          // (re)instantiate scripts when the scene swaps
         void UpdateCamera(float aspect);
         void RenderScene(float dt);
+        void UpdateUI(float dt);       // U1 — pointer interaction -> scene EventBus
+        Ref<Scene> LoadSceneFile(const std::string& path);  // U5 flow loader
 
         std::string  m_ProjectName;
         std::string  m_StartupScene = "scenes/Main.cscene";
@@ -71,5 +74,13 @@ namespace Cosmic
         SceneRenderer m_SceneRenderer;  // H2 — env/sky/shadow/HDR/post (== editor)
         PhysicsWorld  m_Physics;        // J4 — owned here; scenes bind/unbind to it
         bool m_MissingCameraWarned = false;
+
+        // U5 — optional screen-flow. Active only when project.cproj names a
+        // "startup_flow"; otherwise the single-startup-scene path is unchanged.
+        FlowMachine m_Flow;
+        bool        m_UseFlow = false;
+        // U1 — pointer edge tracking for UI interaction / key-signal feed.
+        bool m_PrevMouseDown = false;
+        bool m_PrevEscape    = false;
     };
 }

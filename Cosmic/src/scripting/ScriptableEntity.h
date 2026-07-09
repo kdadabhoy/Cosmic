@@ -185,6 +185,28 @@ namespace Cosmic
         };
         CharacterProxy Character() const { return { m_Scene, m_Handle }; }
 
+        // ---- signal passthrough (U2) ----------------------------------------
+        // The scene EventBus (U1/U5) reached from a script: Signals().Emit("name")
+        // broadcasts a signal (UI + flow + other scripts see it), Signals().Connect
+        // subscribes a lambda to one named signal (unsubscribe with the returned
+        // handle). Prefer overriding OnSignal for a catch-all. No-op with no scene.
+        struct SignalProxy
+        {
+            Scene*       S = nullptr;
+            entt::entity Handle = entt::null;
+
+            void Emit(const std::string& signal) const
+            {
+                if (S) S->Events().Emit(signal, Entity(Handle, S));
+            }
+            EventBus::Handle Connect(const std::string& signal, EventBus::SignalHandler fn) const
+            {
+                return S ? S->Events().Connect(signal, std::move(fn)) : 0;
+            }
+            void Disconnect(EventBus::Handle h) const { if (S) S->Events().Disconnect(h); }
+        };
+        SignalProxy Signals() const { return { m_Scene, m_Handle }; }
+
 
         // Override the ones you need — all default to no-ops.
         virtual void OnCreate() {}
@@ -193,6 +215,11 @@ namespace Cosmic
         virtual void OnFixedUpdate(float fixedDt) { (void)fixedDt; }
         virtual void OnEvent(Event& e) { (void)e; }
         virtual void OnDestroy() {}
+
+        // Signal callback (U2) — a catch-all fired for EVERY signal emitted on the
+        // scene bus (buttons, flow, other scripts, this script). Filter by name.
+        // Same-frame, main-thread. Default no-op.
+        virtual void OnSignal(const std::string& signal, Entity source) { (void)signal; (void)source; }
 
         // Physics contact callbacks (J5) — fired on the main thread after the fixed
         // physics step. `other` is the counterpart entity. Default no-ops.

@@ -3,6 +3,7 @@
 
 #include "reflect/TypeRegistry.h"
 #include "scene/Components.h"
+#include "scene/ui/UiComponents.h"    // U1 — in-game UI entity components
 #include "graphics/MaterialAsset.h"   // E17 — .cmat reflected struct
 
 namespace Cosmic::Reflect
@@ -41,7 +42,22 @@ namespace Cosmic::Reflect
         ClassIn<SpriteRendererComponent>(r, "SpriteRenderer", "Rendering")
             .Field("Color", &SpriteRendererComponent::Color).Color()
             .Field("FlipX", &SpriteRendererComponent::FlipX)
-            .Field("FlipY", &SpriteRendererComponent::FlipY);
+            .Field("FlipY", &SpriteRendererComponent::FlipY)
+            // 2D authoring (U3).
+            .Field("SourceRect",    &SpriteRendererComponent::SourceRect).Tooltip("Sampled sub-rect in normalized UV {u0,v0,u1,v1}")
+            .Field("PixelsPerUnit", &SpriteRendererComponent::PixelsPerUnit).Range(1.0f, 4096.0f)
+            .Field("ZOrder",        &SpriteRendererComponent::ZOrder).Tooltip("Sort order within the 2D pass");
+
+        // Flipbook sprite animation (U4). Elapsed is runtime-only (not reflected).
+        ClassIn<SpriteAnimationComponent>(r, "SpriteAnimation", "Rendering")
+            .Field("SheetPath", &SpriteAnimationComponent::SheetPath).AsAssetPath("texture")
+            .Field("FrameW",    &SpriteAnimationComponent::FrameW).Range(1.0f, 4096.0f)
+            .Field("FrameH",    &SpriteAnimationComponent::FrameH).Range(1.0f, 4096.0f)
+            .Field("Frames",    &SpriteAnimationComponent::Frames).Range(1.0f, 4096.0f)
+            .Field("Row",       &SpriteAnimationComponent::Row).Range(0.0f, 4096.0f)
+            .Field("FPS",       &SpriteAnimationComponent::FPS).Range(0.0f, 120.0f)
+            .Field("Playing",   &SpriteAnimationComponent::Playing)
+            .Field("Loop",      &SpriteAnimationComponent::Loop);
 
         // MeshRenderer v1 reflects the scalar fields only. The Ref<Mesh>/
         // Ref<Material> members surface as AssetPath fields once E16 gives
@@ -262,6 +278,49 @@ namespace Cosmic::Reflect
         // Prefab link (E14) — remembers the source .cprefab of an instantiated subtree.
         ClassIn<PrefabComponent>(r, "Prefab", "Core")
             .Field("SourcePath", &PrefabComponent::SourcePath).AsAssetPath("prefab");
+
+        // In-game UI (U1) — canvas + rect-transform + image/text/button. Engine-
+        // generic; the Inspector groups them under "UI", they serialize + undo for
+        // free. Runtime-only fields (Resolved*, State/Armed) are unregistered.
+        ClassIn<CanvasComponent>(r, "Canvas", "UI")
+            .Field("ScaleMode", &CanvasComponent::ScaleMode)
+                .EnumValue("ConstantPixel", 0).EnumValue("ScaleWithHeight", 1)
+                .Tooltip("ScaleWithHeight multiplies offsets by viewportH/ReferenceHeight")
+            .Field("ReferenceHeight", &CanvasComponent::ReferenceHeight).Range(1.0f, 8192.0f)
+            .Field("SortOrder",       &CanvasComponent::SortOrder).Tooltip("Lower draws first (further back)");
+
+        ClassIn<RectTransformComponent>(r, "RectTransform", "UI")
+            .Field("AnchorMin", &RectTransformComponent::AnchorMin).Tooltip("0..1 of parent rect (top-left)")
+            .Field("AnchorMax", &RectTransformComponent::AnchorMax).Tooltip("0..1 of parent rect (bottom-right)")
+            .Field("OffsetMin", &RectTransformComponent::OffsetMin).Tooltip("Pixels from the min anchor point")
+            .Field("OffsetMax", &RectTransformComponent::OffsetMax).Tooltip("Pixels from the max anchor point")
+            .Field("Pivot",     &RectTransformComponent::Pivot)
+            .Field("ZOrder",    &RectTransformComponent::ZOrder).Tooltip("Draw + hit order within a canvas");
+
+        ClassIn<UiImageComponent>(r, "UiImage", "UI")
+            .Field("TexturePath",    &UiImageComponent::TexturePath).AsAssetPath("texture").Tooltip("Empty = solid Tint quad")
+            .Field("Tint",           &UiImageComponent::Tint).Color()
+            .Field("NineSlice",      &UiImageComponent::NineSlice).Tooltip("l, t, r, b border in texels (0 = plain stretch)")
+            .Field("PreserveAspect", &UiImageComponent::PreserveAspect);
+
+        ClassIn<UiTextComponent>(r, "UiText", "UI")
+            .Field("Text",     &UiTextComponent::Text)
+            .Field("FontPath", &UiTextComponent::FontPath).Tooltip("Font stem or VFS path; empty = default face")
+            .Field("SizePx",   &UiTextComponent::SizePx).Range(1.0f, 512.0f)
+            .Field("Color",    &UiTextComponent::Color).Color()
+            .Field("HAlign",   &UiTextComponent::HAlign)
+                .EnumValue("Left", 0).EnumValue("Center", 1).EnumValue("Right", 2)
+            .Field("VAlign",   &UiTextComponent::VAlign)
+                .EnumValue("Top", 0).EnumValue("Middle", 1).EnumValue("Bottom", 2)
+            .Field("Wrap",     &UiTextComponent::Wrap).Tooltip("Word-wrap is a v2 follow-up; honors explicit newlines");
+
+        ClassIn<UiButtonComponent>(r, "UiButton", "UI")
+            .Field("Signal",       &UiButtonComponent::Signal).Tooltip("Emitted on the scene EventBus on release-inside")
+            .Field("NormalTint",   &UiButtonComponent::NormalTint).Color()
+            .Field("HoverTint",    &UiButtonComponent::HoverTint).Color()
+            .Field("PressedTint",  &UiButtonComponent::PressedTint).Color()
+            .Field("DisabledTint", &UiButtonComponent::DisabledTint).Color()
+            .Field("Interactable", &UiButtonComponent::Interactable);
 
         // PBR material asset (E17) — the reflected `.cmat` struct (not an entity
         // component; registered so the Material Editor UI + serialization are generic).
