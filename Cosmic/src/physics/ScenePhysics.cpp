@@ -9,6 +9,10 @@
 #include "scripting/ScriptHost.h"
 #include "graphics/Mesh.h"
 #include "terrain/Terrain.h"
+#include "voxel/VoxelVolume.h"       // V5 — per-chunk static mesh collision
+#include "voxel/BlockPalette.h"
+#include "voxel/VoxelMesher.h"
+#include "voxel/VoxelRender.h"       // VoxelRenderData::CollisionDirty
 #include "core/Log.h"
 
 #include <glm/gtc/quaternion.hpp>
@@ -261,11 +265,108 @@ namespace Cosmic
             if (body.IsValid())
                 m_Bodies.emplace(e, body);
         }
+
+        // Static collision for any voxel volumes already resident at session start
+        // (a loaded .cvox). Streamed/edited chunks come online via CollisionDirty.
+        BuildVoxelBodies();
+    }
+
+    // --- Voxel collision (V5) -----------------------------------------------
+
+    PhysicsBody ScenePhysics::MakeVoxelChunkBody(entt::entity e, const glm::ivec3& chunk)
+    {
+        auto& reg = m_Scene.GetRegistry();
+        auto* vc = reg.try_get<VoxelVolumeComponent>(e);
+        if (!vc || !vc->Volume || !vc->Palette)
+            return {};
+
+        const MeshData md = VoxelMesher::BuildCollision(*vc->Volume, chunk, *vc->Palette);
+        if (md.Indices.empty())
+            return {};
+
+        // Bake the volume's world placement into the vertices so the static body sits
+        // at the origin (voxel volumes are static world geometry, like terrain).
+        const glm::vec3 origin = vc->Volume->GetOrigin();
+        const float     vs     = vc->Volume->GetVoxelSize();
+
+        CollisionShapeDesc shape;
+        shape.Shape = CollisionShapeDesc::Kind::Mesh;
+        shape.Vertices.reserve(md.Vertices.size());
+        for (const MeshVertex& v : md.Vertices)
+            shape.Vertices.push_back(origin + v.Position * vs);
+        shape.Indices = md.Indices;
+
+        BodyDesc desc;
+        desc.Motion   = MotionType::Static;
+        desc.Position = glm::vec3(0.0f);
+        desc.Rotation = glm::quat(1, 0, 0, 0);
+        desc.Friction = 0.8f;
+        if (const auto* id = reg.try_get<IDComponent>(e))
+            desc.EntityId = id->ID.Value();
+        desc.Shapes.push_back(std::move(shape));
+        return m_World.CreateBody(desc);
+    }
+
+    void ScenePhysics::BuildVoxelBodies()
+    {
+        auto& reg = m_Scene.GetRegistry();
+        for (auto e : reg.view<VoxelVolumeComponent>())
+        {
+            auto& vc = reg.get<VoxelVolumeComponent>(e);
+            if (!vc.Volume || !vc.Palette)
+                continue;
+
+            ChunkBodyMap& bodies = m_VoxelBodies[e];
+            std::vector<glm::ivec3> chunks;
+            vc.Volume->ForEachChunk([&](const glm::ivec3& c) { chunks.push_back(c); });
+            for (const glm::ivec3& c : chunks)
+            {
+                PhysicsBody b = MakeVoxelChunkBody(e, c);
+                if (b.IsValid())
+                    bodies[c] = b;
+            }
+            if (vc.Render)
+                vc.Render->CollisionDirty.clear();   // just built these
+        }
+    }
+
+    void ScenePhysics::RebuildDirtyVoxelChunks()
+    {
+        auto& reg = m_Scene.GetRegistry();
+        for (auto e : reg.view<VoxelVolumeComponent>())
+        {
+            auto& vc = reg.get<VoxelVolumeComponent>(e);
+            if (!vc.Volume || !vc.Palette || !vc.Render || vc.Render->CollisionDirty.empty())
+                continue;
+
+            ChunkBodyMap& bodies = m_VoxelBodies[e];
+            std::vector<glm::ivec3> dirty(vc.Render->CollisionDirty.begin(), vc.Render->CollisionDirty.end());
+            vc.Render->CollisionDirty.clear();
+
+            constexpr size_t kBudget = 8;   // chunk bodies rebuilt per fixed step
+            size_t done = 0;
+            for (const glm::ivec3& c : dirty)
+            {
+                if (done++ >= kBudget) { vc.Render->CollisionDirty.insert(c); continue; }
+                if (auto it = bodies.find(c); it != bodies.end())
+                {
+                    m_World.DestroyBody(it->second);
+                    bodies.erase(it);
+                }
+                PhysicsBody b = MakeVoxelChunkBody(e, c);
+                if (b.IsValid())
+                    bodies[c] = b;
+            }
+        }
     }
 
     void ScenePhysics::Step(float fixedDt)
     {
         auto& reg = m_Scene.GetRegistry();
+
+        // 0) Rebuild collision for any voxel chunks edited/streamed since last step,
+        //    so characters + dynamics walk on the current geometry this step.
+        RebuildDirtyVoxelChunks();
 
         // 1) Push kinematic targets from the (possibly script-moved) transforms.
         for (auto& [e, body] : m_Bodies)
@@ -385,6 +486,11 @@ namespace Cosmic
             if (ctrl.IsValid())
                 m_World.DestroyCharacter(ctrl.GetHandle());
         m_Characters.clear();
+
+        for (auto& [e, chunks] : m_VoxelBodies)
+            for (auto& [c, body] : chunks)
+                m_World.DestroyBody(body);
+        m_VoxelBodies.clear();
     }
 
     PhysicsBody ScenePhysics::GetBody(entt::entity e) const

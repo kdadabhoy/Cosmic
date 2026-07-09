@@ -444,6 +444,9 @@ namespace Cosmic
     class Terrain;
     class Water;
     class ParticleEmitter;
+    class VoxelVolume;         // voxel/VoxelVolume.h (V1) — chunk store
+    class BlockPalette;        // voxel/BlockPalette.h (V1) — block type table
+    struct VoxelRenderData;    // voxel/VoxelRender.h (V3) — runtime GPU chunk meshes
 
     /** Ocean/lake wave-stack preset the WaterComponent recipe seeds from (E18).
      *  The scalar recipe overrides (amplitude/choppiness/optics) apply on top. */
@@ -572,6 +575,59 @@ namespace Cosmic
 
         ParticleEmitterComponent() = default;
         ParticleEmitterComponent(const ParticleEmitterComponent&) = default;
+    };
+
+    /**
+     * @brief Editable chunked voxel volume (Phase 18 / V1–V6). The scene stores a
+     * tiny authoring recipe (palette + `.cvox` sidecar path + placement + a
+     * flattened procedural-generation recipe) — the voxel DATA lives in the
+     * `.cvox`, not the scene JSON (the E15 "params, not meshes" rule at volume
+     * scale). The runtime members (Volume/Palette/Render) are rebuilt by
+     * Scene::SyncVoxelVolumes from those params on load and are NOT reflected.
+     *
+     * Placement: the volume sits at the entity's WORLD transform translation with
+     * VoxelSize metres per voxel. Streaming: when GenEnabled, chunks within
+     * ViewRadius (chunks) of the camera are generated on demand; edits are kept.
+     *
+     * Compat gate: shipped apps attach no VoxelVolumeComponent, so
+     * SyncVoxelVolumes is a no-op for them.
+     */
+    struct COSMIC_API VoxelVolumeComponent
+    {
+        // --- runtime (NOT reflected) -----------------------------------------
+        Ref<VoxelVolume>        Volume;    // chunk store (loaded from VolumePath or generated)
+        Ref<BlockPalette>       Palette;   // block table (loaded from PalettePath or default)
+        Ref<VoxelRenderData>    Render;     // GPU chunk meshes + atlas + streaming state
+
+        // --- reflected authoring recipe --------------------------------------
+        std::string PalettePath;           // AssetPath(.cpal); empty -> default palette
+        std::string VolumePath;            // AssetPath(.cvox); empty -> empty/generated volume
+        float       VoxelSize  = 1.0f;     // metres per voxel
+        int32_t     ViewRadius = 8;        // chunk radius around the camera for streaming
+        bool        Greedy     = true;     // greedy (merged) vs culled render mesh
+
+        // Flattened VoxelGeneratorRecipe (V6) — see voxel/VoxelGenerator.h.
+        bool        GenEnabled    = false;
+        uint32_t    Seed          = 1337;
+        float       SurfaceLevel  = 32.0f; // voxels (world Y) of average ground
+        float       Amplitude     = 24.0f; // +/- voxels of height variation
+        float       Frequency     = 0.010f;
+        int32_t     Octaves       = 5;
+        float       Lacunarity    = 2.0f;
+        float       Gain          = 0.5f;
+        bool        Ridged        = false;
+        float       CaveThreshold = 0.0f;  // 0 = no caves
+        float       CaveFrequency = 0.05f;
+        int32_t     DirtDepth     = 4;
+        float       SandLevel     = -1.0e9f;
+        uint32_t    GrassBlock = 1, DirtBlock = 2, StoneBlock = 3, SandBlock = 4;
+
+        // Runtime (NOT reflected): recipe signature the resident generated chunks
+        // were built from (0 = never generated).
+        std::size_t BuiltGenSignature = 0;
+
+        VoxelVolumeComponent() = default;
+        VoxelVolumeComponent(const VoxelVolumeComponent&) = default;
     };
 
     // ========================================================================
@@ -785,6 +841,7 @@ CS_REGISTER_COMPONENT(Cosmic::EnvironmentComponent)
 CS_REGISTER_COMPONENT(Cosmic::TerrainComponent)
 CS_REGISTER_COMPONENT(Cosmic::WaterComponent)
 CS_REGISTER_COMPONENT(Cosmic::ParticleEmitterComponent)
+CS_REGISTER_COMPONENT(Cosmic::VoxelVolumeComponent)
 CS_REGISTER_COMPONENT(Cosmic::RigidBodyComponent)
 CS_REGISTER_COMPONENT(Cosmic::BoxColliderComponent)
 CS_REGISTER_COMPONENT(Cosmic::SphereColliderComponent)

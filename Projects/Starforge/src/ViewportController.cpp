@@ -5,6 +5,7 @@
 
 #include "layers/WorkspaceLayer.h"
 #include "physics/ScenePhysics.h"   // J8 — live physics debug draw during Play
+#include "voxel/VoxelVolume.h"      // V4 — voxel brush raycast
 
 #include <imgui.h>
 
@@ -136,12 +137,62 @@ namespace Starforge
             }
         }
 
+        // Voxel brush (V4): when editing a selected voxel volume, LMB places the
+        // active block / RMB breaks — one undoable edit per click (raycast the grid).
+        // In the editor's default CAD nav the camera uses MMB, so LMB/RMB are free.
+        bool voxelBrushConsumed = false;
+        if (ctx.VoxelBrush.Editing && vpHover && !m_GizmoActive && !m_GizmoOver &&
+            ctx.Scene && vpSize.x > 1.0f && vpSize.y > 1.0f)
+        {
+            Entity prim = ctx.PrimaryEntity();
+            if (prim && prim.HasComponent<VoxelVolumeComponent>())
+            {
+                voxelBrushConsumed = true;   // suppress select while brushing
+                auto& vc = prim.GetComponent<VoxelVolumeComponent>();
+
+                const bool blmb = Input::IsMouseButtonPressed(CS_MOUSE_BUTTON_LEFT);
+                const bool brmb = Input::IsMouseButtonPressed(CS_MOUSE_BUTTON_RIGHT);
+                const bool placeClick = blmb && !m_VoxelLmbWas;
+                const bool breakClick = brmb && !m_VoxelRmbWas;
+                m_VoxelLmbWas = blmb; m_VoxelRmbWas = brmb;
+
+                if ((placeClick || breakClick) && vc.Volume && vc.Palette)
+                {
+                    const glm::vec2 mouse = Input::GetMouseScreenPosition();
+                    const float lx = mouse.x - vpPos.x, ly = mouse.y - vpPos.y;
+                    if (lx >= 0 && ly >= 0 && lx < vpSize.x && ly < vpSize.y)
+                    {
+                        // Unproject the mouse pixel into a world ray through the camera.
+                        const Camera& c = cam.GetCamera();
+                        const glm::mat4 invVP = glm::inverse(c.GetViewProjectionMatrix());
+                        const float nx = 2.0f * (lx / vpSize.x) - 1.0f;
+                        const float ny = 1.0f - 2.0f * (ly / vpSize.y);
+                        glm::vec4 pn = invVP * glm::vec4(nx, ny, -1.0f, 1.0f); pn /= pn.w;
+                        glm::vec4 pf = invVP * glm::vec4(nx, ny,  1.0f, 1.0f); pf /= pf.w;
+                        const glm::vec3 origin = c.GetPosition();
+                        const glm::vec3 dir = glm::normalize(glm::vec3(pf) - glm::vec3(pn));
+
+                        VoxelRayHit hit = vc.Volume->RayCast(origin, dir, ctx.VoxelBrush.Reach, *vc.Palette);
+                        if (hit.Hit)
+                        {
+                            ctx.VoxelBrush.Stroke++;   // each click = its own undo step
+                            if (placeClick)
+                                Commands::VoxelEdit(ctx, prim, hit.Place, ctx.VoxelBrush.ActiveBlock, ctx.VoxelBrush.Stroke);
+                            else
+                                Commands::VoxelEdit(ctx, prim, hit.Voxel, 0, ctx.VoxelBrush.Stroke);
+                        }
+                    }
+                }
+            }
+        }
+        if (!ctx.VoxelBrush.Editing) { m_VoxelLmbWas = false; m_VoxelRmbWas = false; }
+
         // Click-pick — only on the click frame (an ID pre-pass is not free).
         const bool lmb     = Input::IsMouseButtonPressed(CS_MOUSE_BUTTON_LEFT);
         const bool clicked = lmb && !m_LmbWasDown;
         m_LmbWasDown = lmb;
 
-        if (clicked && vpHover && !m_GizmoActive && !m_GizmoOver &&
+        if (clicked && !voxelBrushConsumed && vpHover && !m_GizmoActive && !m_GizmoOver &&
             m_Picker && ctx.Scene && vpSize.x > 1.0f && vpSize.y > 1.0f)
         {
             const glm::vec2 mouse = Input::GetMouseScreenPosition();

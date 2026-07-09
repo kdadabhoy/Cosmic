@@ -78,6 +78,10 @@ namespace Starforge
 
         bool  m_LmbWasDown = false;
 
+        // Voxel brush press-edge latches (V4): one edit per click.
+        bool  m_VoxelLmbWas = false;
+        bool  m_VoxelRmbWas = false;
+
         struct Bookmark { bool Set = false; float Yaw = 0, Pitch = 0, Dist = 0; glm::vec3 Target{ 0 }; };
         Bookmark m_Bookmarks[9];
     };

@@ -74,6 +74,17 @@ namespace Starforge
         std::string PendingOpenScene;         // "project://..." set by the Content Browser
         std::string PendingInstantiatePrefab; // "project://...cprefab" (E14) — Content Browser
 
+        // --- Voxel brush (Phase 18 / V4) — shared by the Voxels panel + the
+        //     viewport brush. When Editing is on and the primary selection is a
+        //     VoxelVolume, LMB places ActiveBlock / RMB breaks (raycast the grid).
+        struct VoxelBrushState
+        {
+            bool     Editing     = false;   // brush active (LMB/RMB edit instead of pick)
+            uint16_t ActiveBlock = 1;       // block id painted by LMB
+            int      Stroke      = 0;       // increments per mouse-down (undo coalesce key)
+            float    Reach       = 64.0f;   // max edit ray distance (world metres)
+        } VoxelBrush;
+
         // ===================================================================
         // Dirty tracking
         // ===================================================================

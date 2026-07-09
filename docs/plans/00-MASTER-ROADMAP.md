@@ -143,12 +143,22 @@ zero-code two-screen app + "ForgePong" sample.
   consumption, U3 full 2D mode, U4 Tilemap+painter, **U6** node-graph panel (vendor
   imgui-node-editor), **U7** game-view, **U8** zero-code app + ForgePong + recorded acceptance.
 
-### Phase 18 — Voxel worlds *(doc 17, V1–V7)* — ☐
+### Phase 18 — Voxel worlds *(doc 17, V1–V7)* — ◑ engine + editor foundation code-complete 2026-07-08
 Chunk store/palette/serialization → mesher (culled→greedy) → render integration → edit
 tools + script API → Jolt collision → generation/streaming → "ForgeBlocks" sample.
 - **AI tier:** V2/V3/V6 stronger model; most deferrable phase — reorder freely if priorities
   shift.
 - **Done when:** doc 17 V7's recorded demo on a clean path.
+- **Status 2026-07-08 (UNcommitted):** all 7 work orders landed. New `Cosmic/src/voxel/`
+  (`VoxelVolume`/`BlockPalette`/`VoxelMesher`/`VoxelGenerator`/`VoxelRender`), reflected
+  `VoxelVolumeComponent` + `Scene::SyncVoxelVolumes` (JobSystem meshing, streaming gen,
+  S12-queue chunk draws), script `Voxels()` proxy, per-chunk static Jolt `MeshShape`
+  collision in `ScenePhysics`, Starforge Voxels panel + undoable place/break viewport brush +
+  World▸Voxel Volume, template `VoxelDigger` + `BuildForgeBlocks` sample (homescreen "Voxel
+  Sample"). Build green Debug+Release 5 projects **zero warnings**, `CosmicTests` **262/262**
+  (241→262), compat gate held (no shipped app attaches a VoxelVolume). Remaining = the user's
+  on-GPU acceptance + recorded ForgeBlocks demo (V7 DoD) + documented follow-ups (per-vertex AO
+  bake, streaming unload/disk paging = parked "infinite worlds", `.cflow` sample menu).
 
 ### Phase 19 — Rendering quality tier 2 *(doc 18, R1–R12)* — menu, unlock-driven
 CSM · SSAO prepass · progressive bloom · froxels · FFT ocean · terrain tessellation/holes ·

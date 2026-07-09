@@ -4,6 +4,8 @@
 #include "EditorContext.h"
 #include "EditorSnapshot.h"
 
+#include "voxel/VoxelVolume.h"   // V4 — undoable voxel edits
+
 #include <memory>
 #include <vector>
 
@@ -465,5 +467,70 @@ namespace Starforge
         if (!ctx.Scene || !e || !e.HasComponent<TransformComponent>()) return;
         TransformComponent after = e.GetComponent<TransformComponent>();
         ctx.Commands.Push(std::make_unique<TransformEditCommand>(ctx, IdOf(e), before, after));
+    }
+
+    // ----- voxel edits (V4) — a coalesced brush stroke = one undo step -------
+    namespace
+    {
+        class VoxelEditCommand : public ICommand
+        {
+        public:
+            struct Op { glm::ivec3 V; uint16_t Old; uint16_t New; };
+
+            VoxelEditCommand(EditorContext& ctx, uint64_t uuid, int stroke, Op op)
+                : m_Ctx(&ctx), m_Uuid(uuid), m_Stroke(stroke) { m_Ops.push_back(op); }
+
+            void Do() override
+            {
+                if (VoxelVolume* v = Vol())
+                    for (const Op& o : m_Ops) v->Set(o.V, o.New);
+                if (m_Ctx) m_Ctx->MarkDirty();
+            }
+            void Undo() override
+            {
+                if (VoxelVolume* v = Vol())
+                    for (auto it = m_Ops.rbegin(); it != m_Ops.rend(); ++it) v->Set(it->V, it->Old);
+                if (m_Ctx) m_Ctx->MarkDirty();
+            }
+            std::string Name() const override { return "Voxel Edit"; }
+            std::string MergeKey() const override
+            {
+                return "voxel:" + std::to_string(m_Uuid) + ":" + std::to_string(m_Stroke);
+            }
+            bool TryMerge(const ICommand& next) override
+            {
+                const auto* n = dynamic_cast<const VoxelEditCommand*>(&next);
+                if (!n || n->MergeKey() != MergeKey()) return false;
+                m_Ops.insert(m_Ops.end(), n->m_Ops.begin(), n->m_Ops.end());
+                return true;
+            }
+
+        private:
+            VoxelVolume* Vol() const
+            {
+                Entity e = Resolve(*m_Ctx, m_Uuid);
+                if (!e || !e.HasComponent<VoxelVolumeComponent>()) return nullptr;
+                return e.GetComponent<VoxelVolumeComponent>().Volume.get();
+            }
+
+            EditorContext*  m_Ctx;
+            uint64_t        m_Uuid;
+            int             m_Stroke;
+            std::vector<Op> m_Ops;
+        };
+    }
+
+    void Commands::VoxelEdit(EditorContext& ctx, Entity e, const glm::ivec3& voxel,
+                             uint16_t newId, int stroke)
+    {
+        if (!ctx.Scene || !e || !e.HasComponent<VoxelVolumeComponent>()) return;
+        VoxelVolume* vol = e.GetComponent<VoxelVolumeComponent>().Volume.get();
+        if (!vol) return;
+        const uint16_t oldId = vol->Get(voxel);
+        if (oldId == newId) return;
+
+        vol->Set(voxel, newId);   // apply live, then record (Push, not Execute)
+        ctx.Commands.Push(std::make_unique<VoxelEditCommand>(
+            ctx, IdOf(e), stroke, VoxelEditCommand::Op{ voxel, oldId, newId }));
     }
 }

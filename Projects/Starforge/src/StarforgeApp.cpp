@@ -15,6 +15,10 @@
 #include "graphics/Mesh.h"
 #include "graphics/Texture.h"
 #include "graphics/FrameBuffer.h"
+#include "voxel/VoxelVolume.h"       // Phase 18 — ForgeBlocks sample authoring
+#include "voxel/BlockPalette.h"
+#include "voxel/VoxelGenerator.h"
+#include "voxel/VoxelRender.h"
 #include "core/Version.h"
 #include "utils/FileSystem.h"
 
@@ -935,6 +939,7 @@ namespace Starforge
             if (m_ShowEnvironment)  m_Environment.OnImGuiRender(m_Ctx, &m_ShowEnvironment);
             if (m_ShowMaterial)     m_Material.OnImGuiRender(m_Ctx, &m_ShowMaterial);
             if (m_ShowWorldSystems) m_WorldSystems.OnImGuiRender(m_Ctx, &m_ShowWorldSystems);
+            if (m_ShowVoxel)        m_Voxel.OnImGuiRender(m_Ctx, &m_ShowVoxel);
             if (m_ShowTelemetry)    m_Telemetry.OnImGuiRender(m_Ctx, &m_ShowTelemetry);
             if (m_ShowStats)        DrawStatsWindow();
         }
@@ -1182,6 +1187,7 @@ namespace Starforge
             ImGui::MenuItem("Environment",     nullptr, &m_ShowEnvironment);
             ImGui::MenuItem("Material Editor", nullptr, &m_ShowMaterial);
             ImGui::MenuItem("World Systems",   nullptr, &m_ShowWorldSystems);
+            ImGui::MenuItem("Voxels",          nullptr, &m_ShowVoxel);
             ImGui::MenuItem("Telemetry",       nullptr, &m_ShowTelemetry);
             ImGui::MenuItem("Statistics",      nullptr, &m_ShowStats);
             ImGui::Separator();
@@ -1316,6 +1322,107 @@ namespace Starforge
     {
         std::error_code ec;
         return fs::exists(fs::path("assets") / "projects" / "ForgePlayground" / "project.cproj", ec);
+    }
+
+    bool StarforgeApp::ForgeBlocksExists() const
+    {
+        std::error_code ec;
+        return fs::exists(fs::path("assets") / "projects" / "ForgeBlocks" / "project.cproj", ec);
+    }
+
+    bool StarforgeApp::BuildForgeBlocks()
+    {
+        using namespace Cosmic;
+        const std::string proj = "ForgeBlocks";
+
+        // Reuse the C++ scaffold (Module.cpp + scripts incl. WalkController +
+        // VoxelDigger), then replace the template scene with the voxel sample.
+        if (!ScaffoldProject(proj))
+        {
+            m_Ctx.Log("[ForgeBlocks] Could not scaffold — templates unavailable.", LogSeverity::Error);
+            return false;
+        }
+        FileSystem::SetActiveProject(proj);
+
+        // The generated island's recipe (bounded so the whole world is baked to a
+        // .cvox up front → collision is ready the instant Play starts).
+        VoxelGeneratorRecipe recipe;
+        recipe.Seed = 20260708u;
+        recipe.SurfaceLevel = 24.0f;
+        recipe.Amplitude    = 9.0f;
+        recipe.Frequency    = 0.02f;
+        recipe.Octaves      = 5;
+        recipe.CaveThreshold = 0.30f;
+        recipe.CaveFrequency = 0.045f;
+        recipe.DirtDepth    = 4;
+        recipe.SandLevel    = 18.0f;
+
+        // Bake an 8x2x8-chunk island (256 x 64 x 256 voxels) to project://voxels/world.cvox.
+        auto vol = VoxelVolume::Create();
+        vol->SetVoxelSize(1.0f);
+        for (int cx = -4; cx < 4; ++cx)
+            for (int cz = -4; cz < 4; ++cz)
+                for (int cy = 0; cy < 2; ++cy)
+                    VoxelGenerator::GenerateChunk(*vol, { cx, cy, cz }, recipe);
+        std::vector<glm::ivec3> drained; vol->TakeDirtyChunks(drained);   // clear (we saved them)
+        vol->Save("project://voxels/world.cvox");
+
+        Ref<Scene> scene = Scene::Create();
+
+        { Entity e = scene->CreateEntity("Sun");
+          auto& l = e.AddComponent<DirectionalLightComponent>();
+          l.Direction = { -0.4f, -0.82f, -0.45f }; l.Color = { 1.0f, 0.96f, 0.88f }; l.Intensity = 1.1f; }
+
+        { Entity e = scene->CreateEntity("Environment");
+          auto& env = e.AddComponent<EnvironmentComponent>();
+          env.TimeOfDay = 11.0f; env.Fog = true; env.FogDensity = 0.005f; }
+
+        // The voxel world — loads the pre-baked .cvox (GenEnabled off = the island is
+        // the whole bounded world; flip it on in the Voxels panel to stream endlessly).
+        { Entity e = scene->CreateEntity("Voxel World");
+          auto& v = e.AddComponent<VoxelVolumeComponent>();
+          v.VolumePath = "project://voxels/world.cvox";
+          v.GenEnabled = false;
+          // Mirror the bake recipe so a Regenerate in-editor reproduces this island.
+          v.Seed = recipe.Seed; v.SurfaceLevel = recipe.SurfaceLevel; v.Amplitude = recipe.Amplitude;
+          v.Frequency = recipe.Frequency; v.Octaves = recipe.Octaves;
+          v.CaveThreshold = recipe.CaveThreshold; v.CaveFrequency = recipe.CaveFrequency;
+          v.DirtDepth = recipe.DirtDepth; v.SandLevel = recipe.SandLevel; }
+
+        // Player: a character capsule that drops onto the voxel surface + walks
+        // (WalkController, J6). The camera is a child so it follows; the digger on
+        // the camera breaks/places along the view (V4). ClassNames resolve after
+        // Build Scripts (Ctrl+B).
+        Entity player = scene->CreateEntity("Player");
+        {
+            player.GetComponent<TransformComponent>().Position = { 3.0f, 40.0f, 3.0f };
+            auto& cc = player.AddComponent<CharacterControllerComponent>();
+            cc.Height = 1.8f; cc.Radius = 0.35f; cc.StepHeight = 0.6f;   // step up single voxels
+            player.AddComponent<NativeScriptComponent>("WalkController");
+        }
+
+        { Entity cam = scene->CreateEntity("Camera");
+          cam.GetComponent<TransformComponent>().Position = { 0.0f, 1.6f, 0.0f };   // eye height, local
+          cam.AddComponent<CameraComponent>();
+          cam.AddComponent<NativeScriptComponent>("VoxelDigger");
+          scene->SetParent(cam, player, /*keepWorldPose*/ false); }
+
+        // A minimal HUD (U1) so the sample ships with UI too.
+        { Entity canvas = scene->CreateEntity("HUD");
+          canvas.AddComponent<CanvasComponent>();
+          Entity label = scene->CreateEntity("Hint");
+          auto& rt = label.AddComponent<RectTransformComponent>();
+          rt.AnchorMin = { 0.0f, 1.0f }; rt.AnchorMax = { 0.0f, 1.0f };
+          rt.OffsetMin = { 16.0f, -40.0f }; rt.OffsetMax = { 460.0f, -12.0f };
+          auto& txt = label.AddComponent<UiTextComponent>();
+          txt.Text = "ForgeBlocks  |  WASD move  Space jump  LMB dig  RMB place";
+          txt.SizePx = 18.0f; txt.Color = { 0.95f, 0.97f, 1.0f, 1.0f };
+          scene->SetParent(label, canvas, false); }
+
+        SceneSerializer::Save(*scene, FileSystem::Resolve("project://scenes/Main.cscene"));
+
+        m_Ctx.Log("[ForgeBlocks] Created the voxel sample project.");
+        return true;
     }
 
     void StarforgeApp::DrawFirstRunPopup()
@@ -1545,6 +1652,17 @@ namespace Starforge
             world("Terrain",          [](Cosmic::Entity e) { e.AddComponent<Cosmic::TerrainComponent>().UseRecipe = true; });
             world("Water",            [](Cosmic::Entity e) { e.AddComponent<Cosmic::WaterComponent>().UseRecipe = true; });
             world("Particle Emitter", [](Cosmic::Entity e) { e.AddComponent<Cosmic::ParticleEmitterComponent>().UseRecipe = true; });
+            if (ImGui::MenuItem("Voxel Volume"))
+            {
+                // A procedurally-generated voxel world (Phase 18). GenEnabled streams
+                // hilly terrain around the camera; the Voxels panel edits it + picks
+                // blocks. Static collision comes online in Play (per-chunk MeshShape).
+                Commands::Create(m_Ctx, "Voxel Volume", Cosmic::Entity{}, [](Cosmic::Entity e)
+                {
+                    e.AddComponent<Cosmic::VoxelVolumeComponent>().GenEnabled = true;
+                });
+                m_ShowVoxel = true;
+            }
             ImGui::EndMenu();
         }
         // In-game UI (U1). Canvas is a root; Image/Text/Button are parented to the
@@ -1762,6 +1880,13 @@ namespace Starforge
             if (!ForgePlaygroundExists())
                 BuildForgePlayground();
             OpenProject("ForgePlayground");
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Voxel Sample", ImVec2(140, 34)))
+        {
+            if (!ForgeBlocksExists())
+                BuildForgeBlocks();
+            OpenProject("ForgeBlocks");
         }
         ImGui::SameLine();
         ImGui::SetNextItemWidth(240.0f);

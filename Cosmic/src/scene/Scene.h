@@ -174,6 +174,18 @@ namespace Cosmic
 		void SyncWorldSystems();
 
 		/**
+		 * @brief Stream + (re)mesh voxel volumes (Phase 18 / V3–V6). For every
+		 * VoxelVolumeComponent: lazily loads its palette/`.cvox`, places the volume
+		 * at the entity's world transform, (re)builds the procedural atlas when the
+		 * palette changes, procedurally generates ungenerated chunks within
+		 * ViewRadius of `cameraPos` (when GenEnabled), and re-meshes dirty chunks
+		 * (JobSystem workers build MeshData, the main thread uploads a bounded budget
+		 * per call). No-op for scenes without a VoxelVolumeComponent (compat gate).
+		 * Called automatically by OnRender3D / BuildRenderDesc. Main-thread / GL.
+		 */
+		void SyncVoxelVolumes(const glm::vec3& cameraPos);
+
+		/**
 		 * @brief Draw the scene's water + particle components (E18) into the
 		 * currently bound target, AFTER OnRender3D has drawn the opaque world.
 		 * Water grabs `sceneColorID`/`sceneDepthID` for refraction/depth-fade (pass

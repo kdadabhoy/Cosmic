@@ -71,5 +71,12 @@ namespace Starforge
         // TransformComponent captured at drag-start. Coalesces per drag.
         void CommitTransform(EditorContext& ctx, Cosmic::Entity e,
                              const Cosmic::TransformComponent& before);
+
+        // Set one voxel (world voxel coords) on `e`'s VoxelVolume to `newId`,
+        // undoable (V4). Applies immediately; records the old id for undo.
+        // Consecutive edits sharing `stroke` coalesce into one undo step (a brush
+        // drag = one undo). No-op when the id is unchanged or there is no volume.
+        void VoxelEdit(EditorContext& ctx, Cosmic::Entity e,
+                       const glm::ivec3& voxel, uint16_t newId, int stroke);
     }
 }

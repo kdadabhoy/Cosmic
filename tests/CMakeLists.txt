@@ -46,6 +46,8 @@ add_executable(CosmicTests
     test_physics_determinism.cpp
     test_ui_rects.cpp
     test_flowmachine.cpp
+    test_voxel.cpp
+    test_voxel_collision.cpp
 )
 
 target_link_libraries(CosmicTests PRIVATE Cosmic)

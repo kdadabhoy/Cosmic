@@ -30,6 +30,7 @@
 #include "panels/EnvironmentPanel.h"
 #include "panels/MaterialEditorPanel.h"
 #include "panels/WorldSystemsPanel.h"
+#include "panels/VoxelPanel.h"
 #include "panels/TelemetryPanel.h"
 
 #include <string>
@@ -134,6 +135,9 @@ namespace Starforge
         void GenerateSampleTake();         // pre-baked telemetry take for the sample
         bool ForgePlaygroundExists() const;
 
+        bool BuildForgeBlocks();           // Phase 18 — scaffold + author the voxel sample
+        bool ForgeBlocksExists() const;
+
         // --- Frame helpers -------------------------------------------------
         void HandleShortcuts();
         void Autosave(float ts);
@@ -182,6 +186,7 @@ namespace Starforge
         EnvironmentPanel    m_Environment;    // E17
         MaterialEditorPanel m_Material;        // E17
         WorldSystemsPanel   m_WorldSystems;   // E18
+        VoxelPanel          m_Voxel;           // Phase 18
         TelemetryPanel      m_Telemetry;      // E20
 
         Prefs::EditorSettings m_Settings;
@@ -215,6 +220,7 @@ namespace Starforge
              m_ShowContent   = true, m_ShowConsole   = true;
         bool m_ShowEnvironment = false, m_ShowMaterial = false;   // E17 (off by default)
         bool m_ShowWorldSystems = false;  // E18 (off by default)
+        bool m_ShowVoxel = false;         // Phase 18 (off by default)
         bool m_ShowTelemetry = false;     // E20 (off by default)
         bool m_ShowStats = false;         // E21 statistics window
         bool m_OpenShortcuts = false;     // E21 shortcut reference modal

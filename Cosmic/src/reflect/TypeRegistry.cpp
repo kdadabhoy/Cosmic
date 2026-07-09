@@ -210,6 +210,33 @@ namespace Cosmic::Reflect
             .Field("SoftFadeDistance",  &ParticleEmitterComponent::SoftFadeDistance).Range(0.0f, 10.0f)
             .Field("StretchByVelocity", &ParticleEmitterComponent::StretchByVelocity).Range(0.0f, 1.0f);
 
+        // Voxel volume (Phase 18 / V1–V6). Runtime Volume/Palette/Render are
+        // unregistered (runtime-only); the reflected fields are the authoring recipe
+        // (palette + .cvox path + placement + flattened generation params).
+        ClassIn<VoxelVolumeComponent>(r, "VoxelVolume", "World")
+            .Field("PalettePath",  &VoxelVolumeComponent::PalettePath).AsAssetPath("voxel_palette").Tooltip("`.cpal` block table; empty = default palette")
+            .Field("VolumePath",   &VoxelVolumeComponent::VolumePath).AsAssetPath("voxel_volume").Tooltip("`.cvox` sidecar; empty = empty/generated")
+            .Field("VoxelSize",    &VoxelVolumeComponent::VoxelSize).Range(0.05f, 16.0f).Tooltip("Metres per voxel")
+            .Field("ViewRadius",   &VoxelVolumeComponent::ViewRadius).Range(1.0f, 64.0f).Tooltip("Chunk radius streamed around the camera")
+            .Field("Greedy",       &VoxelVolumeComponent::Greedy).Tooltip("Greedy-merged (fast) vs culled (per-face) render mesh")
+            .Field("GenEnabled",   &VoxelVolumeComponent::GenEnabled).Tooltip("Procedurally stream-generate chunks in view")
+            .Field("Seed",         &VoxelVolumeComponent::Seed)
+            .Field("SurfaceLevel", &VoxelVolumeComponent::SurfaceLevel).Tooltip("Average ground height, in voxels (world Y)")
+            .Field("Amplitude",    &VoxelVolumeComponent::Amplitude).Range(0.0f, 512.0f)
+            .Field("Frequency",    &VoxelVolumeComponent::Frequency).Range(0.0001f, 1.0f).Tooltip("Noise frequency, per voxel")
+            .Field("Octaves",      &VoxelVolumeComponent::Octaves).Range(1.0f, 10.0f)
+            .Field("Lacunarity",   &VoxelVolumeComponent::Lacunarity).Range(1.0f, 4.0f)
+            .Field("Gain",         &VoxelVolumeComponent::Gain).Range(0.0f, 1.0f)
+            .Field("Ridged",       &VoxelVolumeComponent::Ridged).Tooltip("Ridged multifractal (mountains) vs fBm hills")
+            .Field("CaveThreshold",&VoxelVolumeComponent::CaveThreshold).Range(0.0f, 1.0f).Tooltip("0 = no caves")
+            .Field("CaveFrequency",&VoxelVolumeComponent::CaveFrequency).Range(0.001f, 1.0f)
+            .Field("DirtDepth",    &VoxelVolumeComponent::DirtDepth).Range(0.0f, 32.0f)
+            .Field("SandLevel",    &VoxelVolumeComponent::SandLevel).Tooltip("Surface at/below this height (voxels) is sand")
+            .Field("GrassBlock",   &VoxelVolumeComponent::GrassBlock)
+            .Field("DirtBlock",    &VoxelVolumeComponent::DirtBlock)
+            .Field("StoneBlock",   &VoxelVolumeComponent::StoneBlock)
+            .Field("SandBlock",    &VoxelVolumeComponent::SandBlock);
+
         // Physics (J3) — rigid body + colliders + character. Reflected so the
         // Inspector groups them under "Physics", they serialize, and every field is
         // undoable for free (E7/E8). Runtime body ids are NOT here (Scene-owned).

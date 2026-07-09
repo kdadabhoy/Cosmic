@@ -24,6 +24,7 @@
 #include "physics/PhysicsBody.h"
 #include "physics/PhysicsTypes.h"
 #include "physics/CharacterController.h"
+#include "voxel/VoxelVolume.h"           // V5 — IVec3Hash for the per-chunk body map
 
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
@@ -70,11 +71,21 @@ namespace Cosmic
         bool BuildBodyDesc(entt::entity e, BodyDesc& out) const;
         void WriteBackWorldPose(entt::entity e, const glm::vec3& worldPos, const glm::quat& worldRot);
 
+        // Voxel collision (V5): one static triangle-mesh body per resident chunk.
+        void        BuildVoxelBodies();
+        void        RebuildDirtyVoxelChunks();
+        PhysicsBody MakeVoxelChunkBody(entt::entity e, const glm::ivec3& chunk);
+
         Scene&        m_Scene;
         PhysicsWorld& m_World;
 
         std::unordered_map<entt::entity, PhysicsBody>          m_Bodies;
         std::unordered_map<entt::entity, CharacterController>  m_Characters;
+
+        // entity -> (chunk coord -> static mesh body).
+        using ChunkBodyMap = std::unordered_map<glm::ivec3, PhysicsBody, IVec3Hash, IVec3Eq>;
+        std::unordered_map<entt::entity, ChunkBodyMap> m_VoxelBodies;
+
         std::vector<ContactEvent> m_EventScratch;
         bool m_WarnedMovingParent = false;
     };

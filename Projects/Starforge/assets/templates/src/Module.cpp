@@ -16,6 +16,7 @@
 #include "scripts/PidController.h"
 #include "scripts/WalkController.h"
 #include "scripts/PhysicsBall.h"
+#include "scripts/VoxelDigger.h"
 
 CS_MODULE_BEGIN(@PROJECT_NAME@)
     CS_SCRIPT(HoverController)
@@ -48,5 +49,12 @@ CS_MODULE_BEGIN(@PROJECT_NAME@)
 
     // Telemetry reporter for a dynamic-rigid-body ball (Phase 15 / J9).
     CS_SCRIPT(PhysicsBall)
+    CS_END;
+
+    // Voxel place/break (Phase 18 / V4) — LMB digs, RMB places along forward.
+    CS_SCRIPT(VoxelDigger)
+        CS_FIELD(Reach).Range(1.0f, 32.0f)
+        CS_FIELD(PlaceBlock).Range(0.0f, 16.0f)
+        CS_FIELD(EyeHeight).Range(0.0f, 4.0f)
     CS_END;
 CS_MODULE_END()

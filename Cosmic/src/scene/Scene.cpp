@@ -11,6 +11,11 @@
 #include "water/Water.h"
 #include "particles/ParticleSystem.h"
 #include "scene/WorldSystemRecipes.h"
+#include "voxel/VoxelVolume.h"        // Phase 18 — voxel chunk store
+#include "voxel/BlockPalette.h"
+#include "voxel/VoxelMesher.h"
+#include "voxel/VoxelGenerator.h"
+#include "voxel/VoxelRender.h"        // VoxelRenderData + atlas/recipe helpers
 #include "physics/ScenePhysics.h"     // J4 — runtime body binding (Scene owns m_Physics)
 #include "physics/PhysicsWorld.h"     // J4 — the play-session physics service
 #include "camera/OrthographicCamera.h"
@@ -232,6 +237,130 @@ namespace Cosmic
 					spec.Texture = AssetLibrary::GetTexture(pc.TexturePath);
 				pc.Emitter        = ParticleEmitter::Create(spec);
 				pc.BuiltSignature = sig;
+			}
+		}
+	}
+
+	void Scene::SyncVoxelVolumes(const glm::vec3& cameraPos)
+	{
+		auto view = m_Registry.view<VoxelVolumeComponent>();
+		for (auto e : view)
+		{
+			auto& vc = view.get<VoxelVolumeComponent>(e);
+
+			// Palette (lazy): from .cpal, else the default block set.
+			if (!vc.Palette)
+			{
+				if (!vc.PalettePath.empty())
+					vc.Palette = BlockPalette::Load(vc.PalettePath);
+				if (!vc.Palette)
+					vc.Palette = BlockPalette::CreateDefault();
+			}
+
+			// Volume (lazy) + placement at the entity's world transform.
+			if (!vc.Volume)
+			{
+				vc.Volume = VoxelVolume::Create();
+				if (!vc.VolumePath.empty())
+					vc.Volume->Load(vc.VolumePath);   // best-effort; empty on miss
+			}
+			vc.Volume->SetVoxelSize(vc.VoxelSize);
+			vc.Volume->SetOrigin(glm::vec3(WorldOf(e)[3]));
+
+			// Runtime render data + procedural atlas (rebuilt when the palette changes).
+			if (!vc.Render)
+				vc.Render = std::make_shared<VoxelRenderData>();
+			VoxelRenderData& rd = *vc.Render;
+			rd.Mode = vc.Greedy ? VoxelMeshMode::Greedy : VoxelMeshMode::Culled;
+
+			const std::size_t palVer = VoxelPaletteVersion(*vc.Palette);
+			if (!rd.AtlasMaterial || rd.AtlasPaletteVersion != palVer)
+			{
+				BuildVoxelAtlas(rd, *vc.Palette);
+				rd.AtlasPaletteVersion = palVer;
+			}
+
+			// Streaming generation (V6): fill ungenerated chunks near the camera,
+			// nearest-first, a small budget per call so the main thread never hitches.
+			VoxelGeneratorRecipe recipe = BuildVoxelRecipe(vc);
+			if (recipe.Enabled)
+			{
+				const std::size_t genSig = VoxelGenerator::Signature(recipe);
+				if (vc.BuiltGenSignature != genSig)
+				{
+					rd.Generated.clear();          // recipe changed -> re-terrain untouched chunks
+					vc.BuiltGenSignature = genSig;
+				}
+
+				const glm::ivec3 camChunk = VoxelVolume::ChunkCoord(vc.Volume->WorldToVoxel(cameraPos));
+				const int R = std::max(1, vc.ViewRadius);
+				constexpr int kGenBudget = 2;
+				int generated = 0;
+
+				static const glm::ivec3 kN[6] =
+					{ {1,0,0},{-1,0,0},{0,1,0},{0,-1,0},{0,0,1},{0,0,-1} };
+
+				for (int r = 0; r <= R && generated < kGenBudget; ++r)
+				{
+					for (int dz = -r; dz <= r && generated < kGenBudget; ++dz)
+					for (int dy = -r; dy <= r && generated < kGenBudget; ++dy)
+					for (int dx = -r; dx <= r && generated < kGenBudget; ++dx)
+					{
+						if (std::max(std::max(std::abs(dx), std::abs(dy)), std::abs(dz)) != r)
+							continue;   // ring shell only
+						const glm::ivec3 cc = camChunk + glm::ivec3(dx, dy, dz);
+						if (rd.Generated.count(cc) || vc.Volume->HasChunk(cc))
+							continue;
+						VoxelGenerator::GenerateChunk(*vc.Volume, cc, recipe);
+						rd.Generated.insert(cc);
+						for (const glm::ivec3& n : kN)
+							if (vc.Volume->HasChunk(cc + n))
+								vc.Volume->MarkChunkDirty(cc + n);
+						++generated;
+					}
+				}
+			}
+
+			// Re-mesh dirty chunks: JobSystem workers build MeshData, the main thread
+			// uploads a bounded budget per call (leftovers requeue as still-dirty).
+			std::vector<glm::ivec3> dirty;
+			vc.Volume->TakeDirtyChunks(dirty);
+			if (dirty.empty())
+				continue;
+
+			constexpr size_t kMeshBudget = 24;
+			if (dirty.size() > kMeshBudget)
+			{
+				for (size_t i = kMeshBudget; i < dirty.size(); ++i)
+					vc.Volume->MarkChunkDirty(dirty[i]);
+				dirty.resize(kMeshBudget);
+			}
+
+			VoxelVolume&        vol  = *vc.Volume;
+			const BlockPalette& pal  = *vc.Palette;
+			const VoxelMeshMode mode = rd.Mode;
+
+			std::vector<MeshData> builtData(dirty.size());
+			JobSystem& js = JobSystem::Get();
+			const bool async = js.IsInitialized();
+			for (size_t i = 0; i < dirty.size(); ++i)
+			{
+				auto work = [&vol, &pal, mode, &builtData, &dirty, i]()
+				{
+					builtData[i] = VoxelMesher::BuildChunk(vol, dirty[i], pal, mode);
+				};
+				if (async) js.Submit(work);
+				else       work();
+			}
+			if (async) js.WaitIdle();
+
+			for (size_t i = 0; i < dirty.size(); ++i)
+			{
+				if (builtData[i].Vertices.empty())
+					rd.ChunkMeshes.erase(dirty[i]);
+				else
+					rd.ChunkMeshes[dirty[i]] = Mesh::Create(builtData[i]);
+				rd.CollisionDirty.insert(dirty[i]);   // physics rebuilds these (V5)
 			}
 		}
 	}
@@ -692,6 +821,10 @@ namespace Cosmic
 		// false) — so shipped apps that never attach these components are unaffected.
 		SyncWorldSystems();
 
+		// Voxel volumes (Phase 18): stream + re-mesh dirty chunks. No-op without a
+		// VoxelVolumeComponent (compat gate).
+		SyncVoxelVolumes(camera.GetPosition());
+
 		// --- Gather scene lights (S4.5) and upload before drawing. ---
 		Renderer3D::SceneLightsDesc lights;
 		GatherSceneLights(m_Registry, lights);
@@ -766,6 +899,24 @@ namespace Cosmic
 			else
 				ctx.DrawMesh(lod.Levels[level].MeshAsset, xform, lod.Color, entityID);
 		});
+
+		// Voxel volumes (Phase 18): draw each uploaded chunk mesh with the shared
+		// atlas material. Chunk positions are absolute voxel coords, so one
+		// translate(Origin)*scale(VoxelSize) transform places the whole volume; the
+		// S12 queue frustum-culls each chunk mesh by its own AABB for free.
+		auto voxView = m_Registry.view<VoxelVolumeComponent>();
+		voxView.each([&](auto entity, VoxelVolumeComponent& vc)
+		{
+			if (!vc.Volume || !vc.Render || !vc.Render->AtlasMaterial)
+				return;
+			const glm::mat4 xform =
+				glm::translate(glm::mat4(1.0f), vc.Volume->GetOrigin()) *
+				glm::scale(glm::mat4(1.0f), glm::vec3(vc.Volume->GetVoxelSize()));
+			const int entityID = (int)(uint32_t)entity;
+			for (const auto& kv : vc.Render->ChunkMeshes)
+				if (kv.second)
+					ctx.DrawMesh(kv.second, xform, vc.Render->AtlasMaterial, entityID);
+		});
 	}
 
 	EnvironmentComponent* Scene::FindEnvironment()
@@ -783,6 +934,7 @@ namespace Cosmic
 		// (meshes stored by params/path, world systems by recipe) is render-ready.
 		SyncPrimitiveMeshes();
 		SyncWorldSystems();
+		SyncVoxelVolumes(camera.GetPosition());
 
 		m_WorldTime += deltaTime;
 
