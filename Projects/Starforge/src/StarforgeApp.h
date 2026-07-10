@@ -207,6 +207,7 @@ namespace Starforge
         bool  m_ThumbRequested  = false;       // S7 — capture thumbnail on the next render
         std::string m_LastDistDir;             // last packaged output (E19)
         float m_AutosaveTimer   = 0.0f;
+        float m_TopBarBottomY   = 0.0f;        // bottom edge of the top bar (homescreen anchor)
 
         // Packaging pipeline state (S5). m_PkgPending is filled before an async
         // Release build and consumed when it finishes.

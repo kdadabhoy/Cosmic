@@ -12,22 +12,23 @@
 >
 > Legend — Size: S (≤1 session) · M (1–2) · L (3–6) · XL (a phase). Status: ☐ planned ·
 > ⏸ parked (has a phase home, waits for its unlock) · ✖ unplanned (needs a planning session
-> before any code) · ✅ shipped.
+> before any code) · ✅ shipped · ◑ partially shipped (dated; the remainder is listed in the
+> phase doc's status banner).
 
 ## Editor & tooling
 
 | Feature | Today | Phase home | Unlock / trigger | Size | Status |
 | --- | --- | --- | --- | --- | --- |
-| Orbit camera without MMB jump (pose-based pivot) | look-at rig re-aims on press | 14 · doc 13 H1 | now (daily irritation) | M | ☐ |
-| Environment/sky/shadows/post live in editor + player | `Scene::OnRender3D` ignores `EnvironmentComponent` | 14 · doc 13 H2 | now | L | ☐ |
-| Scene lights affect default materials + light billboards | color path ignores lights UBO; lights invisible | 14 · doc 13 H3 | now | M | ☐ |
-| HDRI skies | enum exists, no loader | 14 · doc 13 H4 | now | M | ☐ |
-| Editor chrome: toolbar visible, one menu bar, panel ✕, viewport title | top dock clips toolbar; hard-coded names | 14 · doc 13 H5 | now | M | ☐ |
-| Native file dialogs everywhere | hand-typed paths; 2 ad-hoc usages | 14 · doc 13 H6 | now | M | ☐ |
-| Colored terminal logs; logs in `user://`; engine log in Console panel | pattern uncolored; logs land in content dirs | 14 · doc 13 H7 | now | S | ☐ |
-| ForgePlayground that demos well + scene-camera adoption | content buried in terrain; camera spawns underground | 14 · doc 13 H8 | now | M | ☐ |
-| SystemScript tier (logic over a *class* of entities) | per-entity scripts only | 14 · doc 13 H9 | now (user need #4) | M | ☐ |
-| Editor consistency sweep (labels, glyphs, Add-Component filtering) | assorted rough edges | 14 · doc 13 H10 | now | S | ☐ |
+| Orbit camera without MMB jump (pose-based pivot) | look-at rig re-aims on press | 14 · doc 13 H1 | now (daily irritation) | M | ✅ 2026-07-04 |
+| Environment/sky/shadows/post live in editor + player | `Scene::OnRender3D` ignores `EnvironmentComponent` | 14 · doc 13 H2 | now | L | ✅ 2026-07-04 |
+| Scene lights affect default materials + light billboards | color path ignores lights UBO; lights invisible | 14 · doc 13 H3 | now | M | ✅ 2026-07-04 |
+| HDRI skies | enum exists, no loader | 14 · doc 13 H4 | now | M | ✅ 2026-07-04 |
+| Editor chrome: toolbar visible, one menu bar, panel ✕, viewport title | top dock clips toolbar; hard-coded names | 14 · doc 13 H5 | now | M | ✅ 2026-07-04 |
+| Native file dialogs everywhere | hand-typed paths; 2 ad-hoc usages | 14 · doc 13 H6 | now | M | ✅ 2026-07-04 |
+| Colored terminal logs; logs in `user://`; engine log in Console panel | pattern uncolored; logs land in content dirs | 14 · doc 13 H7 | now | S | ✅ 2026-07-04 |
+| ForgePlayground that demos well + scene-camera adoption | content buried in terrain; camera spawns underground | 14 · doc 13 H8 | now | M | ✅ 2026-07-04 |
+| SystemScript tier (logic over a *class* of entities) | per-entity scripts only | 14 · doc 13 H9 | now (user need #4) | M | ✅ 2026-07-04 |
+| Editor consistency sweep (labels, glyphs, Add-Component filtering) | assorted rough edges | 14 · doc 13 H10 | now | S | ✅ 2026-07-04 |
 | Material-edit undo + preview rig + browser thumbnails | live-but-not-undoable; no thumbnails | 20 · doc 19 A4 | first real material-authoring session pain | M | ⏸ |
 | In-place texture/asset hot reload into held Refs | cache-slot swap only | 20 · doc 19 A5 | live-tuning workflow | S | ⏸ |
 | Terrain sculpt/splat brushes | recipe params only | 20 · doc 19 A6 | param terrain stops being enough | L | ⏸ |
@@ -61,12 +62,12 @@
 | Terrain heightfield collision | **shipped (HeightFieldShape, ≤2 cm parity, 2026-07-04)** | 15 · doc 14 J7 | with physics | M | ✅ |
 | Physics constraints/joints/ragdolls | — | 15 · doc 14 §3 | articulated-body project | L | ⏸ |
 | Rigid-body water buoyancy | script-applied forces via S9 queries | 15 · doc 14 §3 | floating-dynamics need | M | ⏸ |
-| In-game UI as entities (canvas/button/text/image) | ImGui only (editor chrome) | 17 · doc 16 U1/U2 | now | L | ☐ |
-| Screen-flow node graph (`.cflow` + FlowMachine + panel) | code-only SceneManager | 17 · doc 16 U5/U6 | now (user need #5) | L | ☐ |
-| 2D/pixel authoring (ortho mode, crisp sampling, sorting) | engine 2D exists, editor can't author it | 17 · doc 16 U3 | now (user need #2) | M | ☐ |
-| Sprite animation + tilemaps | none | 17 · doc 16 U4 | now | M | ☐ |
+| In-game UI as entities (canvas/button/text/image) | ImGui only (editor chrome) | 17 · doc 16 U1/U2 | now | L | ◑ 2026-07-08 (U2 ✅; U1 engine + Entity▸UI menu in, editor click-consume left) |
+| Screen-flow node graph (`.cflow` + FlowMachine + panel) | code-only SceneManager | 17 · doc 16 U5/U6 | now (user need #5) | L | ◑ 2026-07-08 (U5 FlowMachine + `.cflow` ✅; U6 node-graph panel left) |
+| 2D/pixel authoring (ortho mode, crisp sampling, sorting) | engine 2D exists, editor can't author it | 17 · doc 16 U3 | now (user need #2) | M | ◑ 2026-07-08 (engine slice + Entity▸2D menu; full editor 2D mode left) |
+| Sprite animation + tilemaps | none | 17 · doc 16 U4 | now | M | ◑ 2026-07-08 (SpriteAnimation flipbook ✅; tilemap + painter left) |
 | Game-view correctness (primary camera, aspect presets, eject) | editor camera always | 17 · doc 16 U7 | now | S | ☐ |
-| Voxel worlds (chunks, meshing, edit, collision, gen) | none | 18 · doc 17 V1–V7 | after 14–17 (user-approved scope) | XL | ☐ |
+| Voxel worlds (chunks, meshing, edit, collision, gen) | none | 18 · doc 17 V1–V7 | after 14–17 (user-approved scope) | XL | ✅ 2026-07-08 (code + editor; recorded V7 demo stays on the user ledger) |
 | Visual *logic* scripting (blueprints) | — | — (doc 16 §3) | explicit demand post-flow; doctrine is C++ logic | XL | ✖ |
 | Navmesh / AI pathfinding | none | — | first AI-driven project (plan a phase then) | L | ✖ |
 | Networking / multiplayer | none (C1 gives UDP transport) | — | a networked project (plan a phase then) | XL | ✖ |

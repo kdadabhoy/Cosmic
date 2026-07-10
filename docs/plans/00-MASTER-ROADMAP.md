@@ -124,6 +124,12 @@ isolation → run-standalone/thumbnails/About → clean-machine acceptance.
   thumbnails, About; Starforge self-packages. Launcher reframed as the dev/demo browser.
   Build green Debug+Release 5 projects zero warnings, `CosmicTests` **219/219**, GL-conformance
   clean, compat gate held. Remaining = the user's clean-machine acceptance (S8 ledger row) + commit.
+  **2026-07-10:** S3 homescreen defect found + fixed + verified on-GPU — the project-library window
+  rendered permanently behind the dockspace host (`NoBringToFrontOnFocus` back-of-stack semantics;
+  the 07-08 "collapsed viewport" fix was secondary). Full root-cause + verification:
+  [`../engineering-notes/starforge-homescreen-hidden.md`](../engineering-notes/starforge-homescreen-hidden.md).
+  The scene Viewport panel now hides while no project is open (engine verb `SetViewportVisible`,
+  already present, now used); Voxels panel got a first-open size + min-size floor.
 
 ### Phase 17 — UI, screen flow, 2D *(doc 16, U1–U8)* — ◑ engine foundation code-complete 2026-07-08
 UI entities (canvas/rect/button/text/image + hit-testing) → scene event bus → 2D authoring

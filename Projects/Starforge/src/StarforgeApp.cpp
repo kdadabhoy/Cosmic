@@ -115,8 +115,12 @@ namespace Starforge
 
         // Boot into the product homescreen (S2/S3): the project library, not a
         // sandbox. FileSystem stays pointed at the editor's own bundled assets so a
-        // stray project:// read resolves there until a real project opens.
+        // stray project:// read resolves there until a real project opens. The
+        // scene Viewport panel is hidden until a project opens — the homescreen is
+        // a full-window page, not viewport content (MountProject re-shows it).
         m_Ctx.ProjectOpen = false;
+        if (auto* ws = Cosmic::Application::Get().GetWorkspaceLayer())
+            ws->SetViewportVisible(false);
 
         m_Ctx.Log("[Starforge] Editor attached — open or create a project from the homescreen.");
         m_Ctx.Log("[Starforge] Viewport: MMB orbit | Ctrl+MMB pan | scroll zoom | LMB pick.");
@@ -150,6 +154,7 @@ namespace Starforge
             ws->SetChromeMenusVisible(true);
             ws->SetViewportTitle("Viewport");
             ws->SetEdgeMinPixels(0.0f, 0.0f, 0.0f, 0.0f);
+            ws->SetViewportVisible(true);   // homescreen may have hidden it
         }
 
         // Restore the theme we replaced so a sibling app (or the Launcher) shown
@@ -176,6 +181,10 @@ namespace Starforge
         m_Ctx.ProjectName  = e.Name;
         m_Ctx.ProjectTitle = e.Name;
         m_Ctx.ProjectPath  = e.Path;
+        // The scene viewport is only meaningful with a project open; the homescreen
+        // hides it (see OnAttach/CloseProject) so re-show it here.
+        if (auto* ws = Cosmic::Application::Get().GetWorkspaceLayer())
+            ws->SetViewportVisible(true);
     }
 
     void StarforgeApp::OpenProject(const Prefs::ProjectEntry& e)
@@ -307,8 +316,11 @@ namespace Starforge
         m_Ctx.Commands.Clear();
         m_Ctx.ClearSelection();
         m_Content.Reset();
-        // Back to the editor's own bundled assets for the homescreen.
+        // Back to the editor's own bundled assets for the homescreen; the scene
+        // Viewport panel hides with the project (MountProject re-shows it).
         Cosmic::FileSystem::SetActiveProject("Starforge");
+        if (auto* ws = Cosmic::Application::Get().GetWorkspaceLayer())
+            ws->SetViewportVisible(false);
     }
 
     // =========================================================================
@@ -1033,6 +1045,10 @@ namespace Starforge
         {
             ImGui::TextDisabled("No project open — use the homescreen.");
         }
+        // Record the top bar's bottom edge so the homescreen can anchor beneath it
+        // (independent of the collapsible Viewport dock node — see the homescreen fix
+        // in docs/engineering-notes/starforge-homescreen-hidden.md).
+        m_TopBarBottomY = ImGui::GetWindowPos().y + ImGui::GetWindowSize().y;
         ImGui::End();
     }
 
@@ -1830,23 +1846,32 @@ namespace Starforge
 
     void StarforgeApp::DrawHomescreen()
     {
-        // Fill the central viewport region so the top menu bar + window chrome stay
-        // usable (Exit to Launcher, etc.). Fall back to the main viewport work area
-        // if the workspace hasn't reported a region yet.
-        auto& app = Cosmic::Application::Get();
-        const glm::vec2 vpPos  = app.GetViewportPos();
-        const glm::vec2 vpSize = app.GetViewportSize();
+        // Anchor the homescreen from just below the top bar (menu + "Exit to Launcher")
+        // down to the bottom-right of the OS window work area. Deliberately NOT tied to
+        // the editor Viewport dock node's rect: that node can collapse to a thin strip
+        // in some saved layouts, which used to shrink the homescreen to an invisible
+        // sliver (docs/engineering-notes/starforge-homescreen-hidden.md).
         const ImGuiViewport* mv = ImGui::GetMainViewport();
-        ImVec2 pos  = (vpSize.x > 10.0f && vpSize.y > 10.0f) ? ImVec2(vpPos.x, vpPos.y) : mv->WorkPos;
-        ImVec2 size = (vpSize.x > 10.0f && vpSize.y > 10.0f) ? ImVec2(vpSize.x, vpSize.y) : mv->WorkSize;
+        const float topY = (m_TopBarBottomY > mv->WorkPos.y + 1.0f &&
+                            m_TopBarBottomY < mv->WorkPos.y + mv->WorkSize.y)
+                         ? m_TopBarBottomY : mv->WorkPos.y;
+        ImVec2 pos  = ImVec2(mv->WorkPos.x, topY);
+        ImVec2 size = ImVec2(mv->WorkSize.x, mv->WorkPos.y + mv->WorkSize.y - topY);
         ImGui::SetNextWindowPos(pos);
         ImGui::SetNextWindowSize(size);
         ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(28.0f, 22.0f));
+        // No NoBringToFrontOnFocus here: ImGui inserts such windows at the BACK of
+        // the z-stack (g.Windows.push_front) and FocusWindow never raises them, so
+        // the homescreen rendered permanently behind the opaque ##CosmicWorkspace
+        // dock host (created earlier by WorkspaceLayer) — invisible. Without the
+        // flag the window is created/refocused above the dock tree; modals and
+        // popups still stack above it. NoSavedSettings + NoDocking keep the
+        // product screen fully code-positioned, immune to any stale imgui.ini.
         ImGui::Begin("##StarforgeHome", nullptr,
                      ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse |
                      ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
-                     ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus);
+                     ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoSavedSettings);
         ImGui::PopStyleVar(2);   // rounding + padding captured at Begin
 
         // Header.

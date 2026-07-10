@@ -18,6 +18,14 @@ namespace Starforge
     {
         if (pOpen && !*pOpen)
             return;
+        // Floating panel: give the first-ever open a usable size, and floor the
+        // width/height every frame. Without this, the TextWrapped empty-state hint
+        // lets ImGui's auto-size collapse the window to a one-character-wide sliver
+        // (wrap width ~0), which then persists via imgui.ini. Constraints are
+        // ignored while docked, so docking behavior is unchanged.
+        ImGui::SetNextWindowSize(ImVec2(360.0f, 520.0f), ImGuiCond_FirstUseEver);
+        ImGui::SetNextWindowSizeConstraints(ImVec2(280.0f, 240.0f),
+                                            ImVec2(FLT_MAX, FLT_MAX));
         if (!ImGui::Begin("Voxels", pOpen))
         {
             ImGui::End();

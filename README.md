@@ -4738,14 +4738,17 @@ Storing `recordId` on `AgentComponent` means each worker thread reads and record
 
 ## §43 Known Limitations & Roadmap
 
-The engine is production-usable for 2D simulation and telemetry work, but a handful of known rough
-edges are tracked rather than hidden. The living documents below are kept current against the
-source and are the place to look before filing a bug or starting a refactor:
+The engine is production-usable for 2D simulation/telemetry work and, since the Phase 7–18 line
+(2026-07), for 3D worlds: PBR/IBL/shadows/post, terrain/water/particles, Jolt physics, in-game UI +
+screen flow, voxel worlds, and the Starforge editor with packaged standalone shipping. A handful of
+known rough edges are tracked rather than hidden. The living documents below are kept current
+against the source and are the place to look before filing a bug or starting a refactor:
 
 | Document | Purpose |
 | -------- | ------- |
 | [`docs/plans/00-MASTER-ROADMAP.md`](docs/plans/00-MASTER-ROADMAP.md) | The live roadmap — phases, sequencing, and links to every active plan doc. Start here. |
-| [`docs/plans/`](docs/plans/) | Per-workstream plans (3D engine, simulation toolkit, ViperSim, windowing, docs, audio) with PR-sized items and acceptance criteria. |
+| [`docs/plans/`](docs/plans/) | Live per-phase plan docs (docs 12–20: documentation, Phases 14–21) + [`FEATURE-MATRIX.md`](docs/plans/FEATURE-MATRIX.md); completed plans live in [`docs/plans/archive/`](docs/plans/archive/) (the v3 rule: live docs carry only unimplemented work). |
+| [`docs/engineering-notes/`](docs/engineering-notes/) | Root-caused postmortems (DPI chrome, GL teardown, telemetry resync, Starforge homescreen z-order). |
 | [`docs/archive/`](docs/archive/) | Historical analyses (2026-05/06 audits and improvement passes) — superseded, kept for the "why". |
 
 The 2026-06-24 cleanup pass implemented IMPROVEMENTS §1–§4 (statistics counters, the `s_SceneData`
