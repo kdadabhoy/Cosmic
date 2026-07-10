@@ -130,6 +130,10 @@ namespace Cosmic
 	{
 		ImGuiLayer::SetTheme("Sleek Pro");
 
+		// Name the OS window for task switchers / capture tools; the generic
+		// "Cosmic Engine" creation title says nothing about what is running.
+		Cosmic::Application::Get().GetWindow().SetTitle("Cosmic Launcher");
+
 		// Borderless chrome: report our title-bar drag region to the window.
 		Cosmic::Application::Get().GetWindow().SetTitlebarHitTestCallback(
 			[this](int, int) { return m_TitlebarDrag; });

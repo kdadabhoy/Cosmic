@@ -896,6 +896,10 @@ namespace Starforge
         if (m_Ctx.ProjectOpen)
             title += "  —  " + m_Ctx.ProjectTitle + " / " + m_Ctx.SceneName + (m_Ctx.Dirty ? " *" : "");
         ws->SetProjectName(title);
+        // Mirror onto the real Win32 title: the drawn chrome is invisible to task
+        // switchers, screen capture, and desktop-automation tools — they identify
+        // the window by its OS title (same S5 verb packaged apps use; idempotent).
+        Cosmic::Application::Get().GetWindow().SetTitle(title);
 
         // The central viewport tab shows the scene name + dirty star (H5). The
         // duplicate corner overlay text is dropped (see OnImGuiRender).

@@ -129,7 +129,13 @@ isolation → run-standalone/thumbnails/About → clean-machine acceptance.
   the 07-08 "collapsed viewport" fix was secondary). Full root-cause + verification:
   [`../engineering-notes/starforge-homescreen-hidden.md`](../engineering-notes/starforge-homescreen-hidden.md).
   The scene Viewport panel now hides while no project is open (engine verb `SetViewportVisible`,
-  already present, now used); Voxels panel got a first-open size + min-size floor.
+  already present, now used); Voxels panel got a first-open size + min-size floor. Same day,
+  **desktop app identity** landed: dev boots now set the real Win32 window title (Starforge =
+  "Starforge — Project / Scene *", Launcher = "Cosmic Launcher"; `Window::SetTitle` made
+  idempotent), every boot sets a per-app `AppUserModelID` ("Cosmic.<App>") for taskbar
+  grouping/pinning, and the dev tree builds a dedicated **`Starforge.exe`** (target
+  `StarforgeEditor`, compiled-in default project — CLI/boot.cfg still override) with its own
+  VERSIONINFO, completing decision #1's "dedicated Starforge.exe" for the dev loop, not just dist.
 
 ### Phase 17 — UI, screen flow, 2D *(doc 16, U1–U8)* — ◑ engine foundation code-complete 2026-07-08
 UI entities (canvas/rect/button/text/image + hit-testing) → scene event bus → 2D authoring

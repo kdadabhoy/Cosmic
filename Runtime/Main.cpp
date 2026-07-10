@@ -1,11 +1,13 @@
 #include <Cosmic.h>
 #include <windows.h>
+#include <shobjidl.h>   // SetCurrentProcessExplicitAppUserModelID
 #include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <exception>
 #include <string>
 #include <cstdlib>
+#include <cctype>
 
 // Basic Bootloader / Entry Point
 //
@@ -80,6 +82,16 @@ int main(int argc, char** argv)
 		}
 	}
 
+	// Dedicated single-app hosts (e.g. the dev-tree Starforge.exe target) bake a
+	// default project in at compile time. Lowest priority on purpose: an explicit
+	// --project and a boot.cfg next to the exe both override it, so the packaged
+	// mechanics are unchanged. This exists so an app can be a first-class exe on
+	// the desktop (own name/icon/taskbar identity) without the Launcher.
+#ifdef COSMIC_STARTUP_PROJECT
+	if (startupProject.empty())
+		startupProject = COSMIC_STARTUP_PROJECT;
+#endif
+
 	// Per-app user-data isolation (S6): a packaged boot (identity from boot.cfg)
 	// routes "user://" to %LOCALAPPDATA%/<AppName>/ (installed) or "<exe>/user/"
 	// (portable), so two shipped apps never share prefs/logs/takes. Dev boots
@@ -87,6 +99,26 @@ int main(int argc, char** argv)
 	// Must be set BEFORE anything resolves "user://".
 	if (fromBootCfg && !startupProject.empty())
 		Cosmic::FileSystem::SetAppIdentity(startupProject);
+
+	// Windows shell identity (AppUserModelID): each Cosmic app gets its own
+	// taskbar identity (grouping/pinning) instead of every boot stacking as one
+	// anonymous host exe. Derived from the boot decision above — packaged apps
+	// use their app name, dev boots the project name, the bare Launcher its own.
+	// Must be set before any window exists. AUMID rules: < 128 chars, no spaces —
+	// sanitized to ASCII [A-Za-z0-9._-], so the naive widen below is lossless.
+	{
+		std::string name = startupProject.empty()
+			? std::string("Launcher")
+			: std::filesystem::path(startupProject).stem().string();
+		std::string id = "Cosmic." + name;
+		for (char& c : id)
+			if (!(std::isalnum(static_cast<unsigned char>(c)) || c == '.' || c == '_' || c == '-'))
+				c = '-';
+		if (id.size() > 127)
+			id.resize(127);
+		const std::wstring wid(id.begin(), id.end());
+		SetCurrentProcessExplicitAppUserModelID(wid.c_str());
+	}
 
 	// The app is heap-allocated so we can guarantee graceful destruction even if
 	// Run() throws. ~Application() -> Shutdown() releases GPU resources WHILE THE

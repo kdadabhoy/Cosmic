@@ -47,6 +47,7 @@
 | Packaging v2: Release orchestration, exe icon, title/size, zip, installer, signing hook | current-config staging, no icon | 16 · doc 15 S5 | now | L | ✅ 2026-07-05 |
 | Per-app `user://` isolation (+ portable mode) | shared root | 16 · doc 15 S6 | now | M | ✅ 2026-07-05 |
 | Run-standalone button, save-thumbnails, About | — | 16 · doc 15 S7 | now | S | ✅ 2026-07-05 |
+| Desktop app identity: live OS window titles, per-app AppUserModelID, dev-tree `Starforge.exe` (own VERSIONINFO) | static "Cosmic Engine" title; one anonymous host exe | 16 · doc 15 S2/S5 follow-through | now (desktop tools can't identify the window) | S | ✅ 2026-07-10 |
 | Binary asset pak | loose files | 20 · doc 19 A9 | shipped-app size/IO measured to matter | M | ⏸ |
 | Project templates gallery | one template + picker seam | 17 ships the 2D one | a third real template | S | ⏸ |
 | Cloud/team project sync, DB service | registry file over folders | — (doc 15 §3) | multi-machine/team | XL | ✖ |

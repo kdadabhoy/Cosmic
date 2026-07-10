@@ -1,0 +1,45 @@
+// Windows resource script for the dedicated dev-tree Starforge.exe host.
+// Same icon as the generic runtime for now (swap app.ico / point at a dedicated
+// starforge.ico to rebrand — no code changes needed). The VERSIONINFO is what
+// Explorer, Task Manager, and desktop tools show for the process.
+
+#define IDI_ICON1 101
+
+// IDI_ICON1 (lowest numeric ID) is what Explorer/the shell use for the .exe icon.
+// GLFW_ICON is the named resource GLFW looks up to set the live window + taskbar
+// icon automatically (see glfw win32_window.c) — no glfwSetWindowIcon call needed.
+IDI_ICON1 ICON "app.ico"
+GLFW_ICON ICON "app.ico"
+
+// ---------------------------------------------------------------------------
+// VERSIONINFO — shown in Explorer's Properties > Details for Starforge.exe.
+// KEEP IN SYNC with Cosmic/src/core/Version.h (the source of truth) — grep for
+// COSMIC_VERSION when bumping. Resource id 1 == VS_VERSION_INFO.
+// ---------------------------------------------------------------------------
+1 VERSIONINFO
+FILEVERSION     0,9,0,0
+PRODUCTVERSION  0,9,0,0
+FILEFLAGSMASK   0x3fL
+FILEFLAGS       0x0L
+FILEOS          0x40004L      // VOS_NT_WINDOWS32
+FILETYPE        0x1L          // VFT_APP
+FILESUBTYPE     0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"      // U.S. English, Unicode
+        BEGIN
+            VALUE "CompanyName",      "Cosmic Engine"
+            VALUE "FileDescription",  "Starforge — Cosmic Engine Editor"
+            VALUE "FileVersion",      "0.9.0"
+            VALUE "InternalName",     "Starforge"
+            VALUE "OriginalFilename", "Starforge.exe"
+            VALUE "ProductName",      "Starforge"
+            VALUE "ProductVersion",   "0.9.0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END

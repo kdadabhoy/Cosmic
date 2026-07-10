@@ -606,6 +606,8 @@ namespace Cosmic
 
 	void Window::SetTitle(const std::string& title)
 	{
+		if (m_Data.Title == title)
+			return;   // idempotent — callers may sync per-frame (e.g. editor title bars)
 		m_Data.Title = title;
 		if (m_Handle) glfwSetWindowTitle(m_Handle, title.c_str());
 	}
