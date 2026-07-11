@@ -32,11 +32,11 @@
  */
 
 #include "core/Core.h"
+#include "graphics/Texture.h"   // U3 — TextureFilter/TextureWrap for the default-sampling verb
 #include <string>
 
 namespace Cosmic
 {
-	class Texture2D;
 	class Shader;
 	class Mesh;
 	class Model; // defined in S4.4b; Ref<Model> is fine on an incomplete type
@@ -48,6 +48,16 @@ namespace Cosmic
 	public:
 		/** @brief Cached texture (VFS or raw path). Miss loads via Texture2D::Create. */
 		static Ref<Texture2D> GetTexture(const std::string& path);
+
+		/**
+		 * @brief Process-wide default sampling applied to every texture LOADED
+		 * through GetTexture/Reload from this call on (U3 — the pixel-art preset:
+		 * Nearest + ClampToEdge keeps sprites crisp at integer zooms). Set it
+		 * before content loads (project open / player attach); already-cached
+		 * textures keep their sampling. Clear restores the loader default.
+		 */
+		static void SetDefaultTextureSampling(TextureFilter filter, TextureWrap wrap);
+		static void ClearDefaultTextureSampling();
 
 		/** @brief Cached shader. Miss loads via Shader::Create. */
 		static Ref<Shader>    GetShader(const std::string& path);

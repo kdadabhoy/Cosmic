@@ -32,6 +32,11 @@ world size; a SolidWorks STL (mm) at correct meters; `.cmeta` scale edit + reimp
 placed entities; CosmicTests' gated assimp cases enabled and green. **Status:** ☐
 
 ### A2 — Skeletal animation *(origin: doc 05 S14 row "glTF skins/clips, GPU skinning")*
+> **2026-07-11 (v4 roadmap): unlock FIRED** — the Phase 28 flagship (Forge Isle) is the
+> character project. A2 stays the RUNTIME spec of record; the editor superstructure (document
+> host, Animation Editor, sockets, crossfade tier) is Phase 24 (doc 23 M1–M6), which depends
+> on this item. Schedule A1 → A4 → A2.
+
 **Files:** engine `graphics/Model` (glTF skins/clips via cgltf; assimp FBX skins once A1
 lands), NEW `graphics/Skeleton.h` + `AnimationClip.h` (pure sampling — headless-tested),
 `scene/Components.h` `AnimatorComponent{ ClipPath, Speed, Loop, Playing, NormalizedTime }`
@@ -58,6 +63,12 @@ when it fires. **Acceptance:** a reference STEP assembly imports with correct st
 meters, and ≤0.1 mm deflection at default flags. **Status:** ☐
 
 ### A4 — Material & preview UX debt *(origin: E17 deviations)*
+> **2026-07-11 (v4 roadmap): unlock FIRED; scope grows to the shared `PreviewRig` service**
+> (gap analysis §14.3): batch-thumbnail mode (as specced below) PLUS an **interactive** mode
+> (per-document FBO + orbit input) consumed by Phase 23 T7/T11 (browser preview, asset slots)
+> and Phase 24 M1/M3 (asset-editor viewports). Same state-restore acceptance covers both
+> modes. Size M → M/L; still one work order.
+
 Material edits become undoable (route the panel through `CommitFieldEditFor` on a reflected
 MaterialAsset copy — the env panel precedent); the offscreen **preview rig** (tiny FBO +
 SceneRenderer-lite: one mesh, key light, IBL) renders a preview sphere in the Material panel

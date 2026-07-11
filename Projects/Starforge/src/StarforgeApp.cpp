@@ -181,6 +181,19 @@ namespace Starforge
         m_Ctx.ProjectName  = e.Name;
         m_Ctx.ProjectTitle = e.Name;
         m_Ctx.ProjectPath  = e.Path;
+
+        // U3 — pixel-art preset: point-filter textures loaded for this project
+        // (same manifest key the PlayerLayer honors). Cleared for projects
+        // without it so switching projects can't leak the override.
+        const ProjectManifest pm = ProjectManifest::Load("project://project.cproj");
+        if (pm.PixelArt)
+            Cosmic::AssetLibrary::SetDefaultTextureSampling(Cosmic::TextureFilter::Nearest,
+                                                            Cosmic::TextureWrap::ClampToEdge);
+        else
+            Cosmic::AssetLibrary::ClearDefaultTextureSampling();
+
+        // U5/U8 — flow-driven Play offer: remember the manifest's startup flow.
+        m_ManifestFlow = pm.StartupFlow;
         // The scene viewport is only meaningful with a project open; the homescreen
         // hides it (see OnAttach/CloseProject) so re-show it here.
         if (auto* ws = Cosmic::Application::Get().GetWorkspaceLayer())
@@ -316,6 +329,9 @@ namespace Starforge
         m_Ctx.Commands.Clear();
         m_Ctx.ClearSelection();
         m_Content.Reset();
+        m_Mode2D = false;   // view-only state; the next project starts in 3D
+        m_ManifestFlow.clear();   // U5/U8 — flow offer is per-project
+        Cosmic::AssetLibrary::ClearDefaultTextureSampling();   // U3 — drop the pixel-art override
         // Back to the editor's own bundled assets for the homescreen; the scene
         // Viewport panel hides with the project (MountProject re-shows it).
         Cosmic::FileSystem::SetActiveProject("Starforge");
@@ -548,6 +564,57 @@ namespace Starforge
             return;
         }
 
+        // U5/U8 — flow-driven Play: when the manifest names a startup flow (and
+        // the Flow toggle is on), Play boots the .cflow from its start state,
+        // exactly like the shipped player. A state referencing the OPEN scene
+        // loads the live snapshot, so unsaved edits play as seen.
+        m_PlayFlowActive = false;
+        m_PrevEscape     = false;
+        if (m_PlayFlowUse && !m_ManifestFlow.empty())
+        {
+            Cosmic::FlowAsset asset;
+            std::string err;
+            if (Cosmic::FlowAsset::Load(asset, "project://" + m_ManifestFlow, &err))
+            {
+                const std::string openKey = m_Ctx.SceneVfsPath.empty()
+                    ? std::string() : Cosmic::AssetLibrary::NormalizeKey(m_Ctx.SceneVfsPath);
+                m_PlayFlow.SetSceneLoader(
+                    [this, snapshot, openKey](const std::string& path) -> Cosmic::Ref<Cosmic::Scene>
+                {
+                    Cosmic::Ref<Cosmic::Scene> s = Cosmic::Scene::Create();
+                    const bool isOpen = !openKey.empty() &&
+                                        Cosmic::AssetLibrary::NormalizeKey(path) == openKey;
+                    const bool ok = isOpen
+                        ? Cosmic::SceneSerializer::LoadFromString(*s, snapshot)
+                        : Cosmic::SceneSerializer::Load(*s, Cosmic::FileSystem::Resolve(path));
+                    if (!ok)
+                    {
+                        m_Ctx.Log("[Play] Flow could not load scene '" + path + "'.",
+                                  LogSeverity::Error);
+                        return nullptr;
+                    }
+                    return s;
+                });
+                m_PlayFlow.Start(asset);
+                if (Cosmic::Ref<Cosmic::Scene> fs = m_PlayFlow.ActiveScene())
+                {
+                    runtime = fs;
+                    m_PlayFlowActive = true;
+                }
+                else
+                {
+                    m_PlayFlow.Stop();
+                    m_Ctx.Log("[Play] Startup flow produced no scene — playing the open scene.",
+                              LogSeverity::Warn);
+                }
+            }
+            else
+            {
+                m_Ctx.Log("[Play] Startup flow failed to load (" + err +
+                          ") — playing the open scene.", LogSeverity::Warn);
+            }
+        }
+
         m_EditSceneBackup = m_Ctx.Scene;
         m_Ctx.Scene       = runtime;
         m_Ctx.ClearSelection();
@@ -569,6 +636,16 @@ namespace Starforge
 
         m_Telemetry.OnPlayStart(m_Ctx, m_FixedDt);
 
+        // U7 — game-view state per Play session: start in the game camera, read
+        // the manifest window size for the "Project" aspect preset.
+        m_Ejected = false;
+        m_NoPrimaryCamWarned = false;
+        {
+            const ProjectManifest pm = ProjectManifest::Load("project://project.cproj");
+            m_ProjectW = pm.WindowWidth;
+            m_ProjectH = pm.WindowHeight;
+        }
+
         m_Play = PlayMode::Playing;
         m_Ctx.Log("[Play] Started — " + std::to_string(m_Scripts.LiveCount()) + " script(s).");
     }
@@ -577,6 +654,13 @@ namespace Starforge
     {
         if (!IsPlaying())
             return;
+        Cosmic::Application::Get().GetWindow().SetCursorCaptured(false);   // U7
+        m_GameCamActive = false;
+        if (m_PlayFlowActive)   // U5/U8 — unsubscribe from scene buses first
+        {
+            m_PlayFlow.Stop();
+            m_PlayFlowActive = false;
+        }
         m_Telemetry.OnPlayStop(m_Ctx);        // flush + keep the take (E20)
         m_Scripts.SetTelemetrySink(nullptr);
         if (m_Ctx.Scene)
@@ -605,9 +689,51 @@ namespace Starforge
 
     void StarforgeApp::TickPlay(float ts)
     {
+        // U7 — cursor capture for mouse-look: only while actively PLAYING in
+        // the game camera; Esc releases (and unchecks, so it stays released).
+        {
+            if (m_CaptureCursor && Cosmic::Input::IsKeyPressed(CS_KEY_ESCAPE))
+                m_CaptureCursor = false;
+            Cosmic::Application::Get().GetWindow().SetCursorCaptured(
+                m_CaptureCursor && m_Play == PlayMode::Playing && !m_Ejected);
+        }
+
         if (m_Play == PlayMode::Playing)
         {
+            // U5/U8 — advance the screen flow first (drains queued button signals
+            // into transitions, mirrors PlayerLayer). A scene swap rebinds
+            // scripts + physics to the flow's new top scene.
+            if (m_PlayFlowActive)
+            {
+                const bool esc = Cosmic::Input::IsKeyPressed(CS_KEY_ESCAPE);
+                if (esc && !m_PrevEscape)
+                    m_PlayFlow.FeedSignal("key:Escape");
+                m_PrevEscape = esc;
+
+                m_PlayFlow.OnUpdate(ts);
+                if (m_PlayFlow.QuitRequested())
+                {
+                    m_Ctx.Log("[Play] Flow reached @quit — stopping.");
+                    StopScene();
+                    return;
+                }
+                if (Cosmic::Ref<Cosmic::Scene> fs = m_PlayFlow.ActiveScene();
+                    fs && fs != m_Ctx.Scene)
+                {
+                    if (m_Ctx.Scene)
+                        m_Ctx.Scene->OnPhysicsStop(m_Physics);
+                    m_Scripts.Destroy();
+                    m_Ctx.Scene = fs;
+                    m_Ctx.ClearSelection();
+                    m_Scripts.Instantiate(*fs);
+                    fs->SyncWorldSystems();
+                    fs->OnPhysicsStart(m_Physics);
+                }
+            }
+
             m_Scripts.Tick(ts);
+            if (m_Ctx.Scene)
+                m_Ctx.Scene->UpdateSpriteAnimations(ts);   // U4 — flipbooks advance in editor Play
             m_FixedAccum += ts;
             int guard = 0;
             while (m_FixedAccum >= m_FixedDt && guard++ < 8)   // clamp catch-up
@@ -800,11 +926,21 @@ namespace Starforge
             return;
 
         const bool vpHovered = ws && ws->IsViewportHovered();
-        m_Camera.OnResize(vpSize.x, vpSize.y);
-        m_Camera.SetViewportRect(vpPos, vpSize);
-        m_Camera.SetControlEnabled((vpHovered || m_Camera.IsDragging()) && !m_Viewport.GizmoBusy());
-        m_Camera.OnUpdate(ts);
-
+        if (m_Mode2D)
+        {
+            // U3 — the 2D rig drives the viewport (MMB pan / wheel zoom); the
+            // orbit camera keeps its pose for when the user toggles back.
+            m_Camera2D.SetViewportRect(vpPos, vpSize);
+            m_Camera2D.SetControlEnabled((vpHovered || m_Camera2D.IsDragging()) && !m_Viewport.GizmoBusy());
+            m_Camera2D.OnUpdate(ts);
+        }
+        else
+        {
+            m_Camera.OnResize(vpSize.x, vpSize.y);
+            m_Camera.SetViewportRect(vpPos, vpSize);
+            m_Camera.SetControlEnabled((vpHovered || m_Camera.IsDragging()) && !m_Viewport.GizmoBusy());
+            m_Camera.OnUpdate(ts);
+        }
         auto vfb = app.GetFrameBuffer();
         if (!vfb)
             return;
@@ -816,6 +952,72 @@ namespace Starforge
             m_SceneRenderer.Init(vw, vh);
         m_SceneRenderer.SetViewportSize(vw, vh);
 
+        // ---- Game view (U7): primary-camera adoption + letterbox band ------
+        // While PLAYING (not ejected) the viewport shows the primary
+        // CameraComponent's view, exactly like the shipped player; the aspect
+        // preset letterboxes the frame (band centered, bars drawn by the ImGui
+        // overlay) and the projection is NDC-scaled into the band.
+        m_GameCamActive = false;
+        float bx = 0.0f, by = 0.0f, bw = (float)vw, bh = (float)vh;
+        if (IsPlaying() && !m_Ejected && m_Ctx.Scene)
+        {
+            auto& reg = m_Ctx.Scene->GetRegistry();
+            for (auto e : reg.view<Cosmic::CameraComponent, Cosmic::TransformComponent>())
+            {
+                const auto& cc = reg.get<Cosmic::CameraComponent>(e);
+                if (!cc.Primary)
+                    continue;
+
+                // Band from the aspect preset (fit + center; the resolution
+                // preset additionally caps at its exact pixel size).
+                float ar = 0.0f;   // 0 => Free (fill the viewport)
+                switch (m_Aspect)
+                {
+                    case GameAspect::W16H9:      ar = 16.0f / 9.0f; break;
+                    case GameAspect::R1920x1080: ar = 16.0f / 9.0f; break;
+                    case GameAspect::Project:
+                        if (m_ProjectW > 0 && m_ProjectH > 0)
+                            ar = (float)m_ProjectW / (float)m_ProjectH;
+                        break;
+                    default: break;
+                }
+                if (ar > 0.0f)
+                {
+                    if ((float)vw / (float)vh > ar) { bh = (float)vh; bw = bh * ar; }
+                    else                            { bw = (float)vw; bh = bw / ar; }
+                    if (m_Aspect == GameAspect::R1920x1080 && bw > 1920.0f)
+                    {
+                        bw = 1920.0f; bh = 1080.0f;
+                    }
+                    bx = ((float)vw - bw) * 0.5f;
+                    by = ((float)vh - bh) * 0.5f;
+                }
+
+                const glm::mat4 world = m_Ctx.Scene->GetWorldTransform(
+                    Cosmic::Entity(e, m_Ctx.Scene.get()));
+                glm::mat4 proj = cc.GetProjection(bh > 0.0f ? bw / bh : 1.0f);
+                // NDC-scale the band into place (identity when the band fills).
+                proj = glm::scale(glm::mat4(1.0f),
+                                  { bw / (float)vw, bh / (float)vh, 1.0f }) * proj;
+                m_GameCamera.Set(glm::inverse(world), proj, glm::vec3(world[3]));
+                m_GameCamActive = true;
+                break;
+            }
+            if (!m_GameCamActive && !m_NoPrimaryCamWarned)
+            {
+                m_NoPrimaryCamWarned = true;
+                m_Ctx.Log("[Play] No Primary CameraComponent — using the editor camera "
+                          "(a shipped app would warn the same).", LogSeverity::Warn);
+            }
+        }
+        if (!m_GameCamActive) { bx = 0.0f; by = 0.0f; bw = (float)vw; bh = (float)vh; }
+        m_GameBandUv = { bx / (float)vw, by / (float)vh, bw / (float)vw, bh / (float)vh };
+
+        const Cosmic::Camera& activeCam = m_GameCamActive
+            ? static_cast<const Cosmic::Camera&>(m_GameCamera)
+            : (m_Mode2D ? static_cast<const Cosmic::Camera&>(m_Camera2D.GetCamera())
+                        : static_cast<const Cosmic::Camera&>(m_Camera.GetCamera()));
+
         vfb->Bind();
         Cosmic::RenderCommand::SetViewport(0, 0, vw, vh);
         Cosmic::RenderCommand::SetClearColor({ 0.086f, 0.098f, 0.129f, 1.0f });
@@ -824,10 +1026,10 @@ namespace Starforge
         if (m_Ctx.Scene)
         {
             Cosmic::SceneRenderDesc desc;
-            m_Ctx.Scene->BuildRenderDesc(m_Camera.GetCamera(), ts, desc);
+            m_Ctx.Scene->BuildRenderDesc(activeCam, ts, desc);
             desc.Settings.ClearColor = { 0.086f, 0.098f, 0.129f, 1.0f };
 
-            if (auto* env = m_Ctx.Scene->FindEnvironment())
+            if (auto* env = m_Ctx.Scene->FindEnvironment(); env && !m_Mode2D)
             {
                 m_SceneRenderer.ApplyEnvironment(*env, desc);
             }
@@ -835,25 +1037,34 @@ namespace Starforge
             {
                 // No Environment entity → keep today's flat grey-blue viewport
                 // (no sky/IBL/shadows) so a scene without one looks unchanged.
+                // 2D mode forces the same: a skybox under an ortho projection is
+                // degenerate, and the flat backdrop is the 2D authoring surface.
                 desc.Settings.Skybox  = false;
                 desc.Settings.IBL     = false;
                 desc.Settings.Shadows = false;
             }
 
-            // Editor overlays (grid/axes/selection) — drawn in HDR with scene depth
-            // still bound so they occlude correctly against the composited world.
-            desc.DrawTransparent = [this](const Cosmic::SceneDrawContext&)
+            // Editor overlays — drawn in HDR with scene depth still bound so they
+            // occlude correctly. 2D mode swaps the ground grid for the pixel grid;
+            // world-space sprites (U3) draw in BOTH modes, exactly like the player.
+            Cosmic::Scene* scenePtr = m_Ctx.Scene.get();
+            desc.DrawTransparent = [this, scenePtr, vw, vh](const Cosmic::SceneDrawContext& c)
             {
-                m_Viewport.DrawOverlayContent(m_Ctx);
+                if (m_Mode2D) m_Viewport.DrawOverlayContent2D(m_Ctx, m_Camera2D);
+                else          m_Viewport.DrawOverlayContent(m_Ctx);
+                scenePtr->OnRenderSprites(c.ViewProjection, vw, vh);
             };
 
-            // U1 — canvas UI composites after post (LDR bound), at the viewport
-            // resolution, so authored HUDs/menus preview in-editor. No canvas => no-op.
-            Cosmic::Scene* scenePtr = m_Ctx.Scene.get();
-            desc.DrawOverlay2D = [scenePtr, vw, vh]()
+            // U1 — canvas UI composites after post (LDR bound). U7: the canvases
+            // lay out in the letterbox band so authored anchors are truthful
+            // (band == full viewport whenever the game camera is not active).
+            const glm::vec4 bandUv = m_GameBandUv;
+            desc.DrawOverlay2D = [scenePtr, vw, vh, bandUv]()
             {
-                Cosmic::UiSystem::Render(*scenePtr,
-                    Cosmic::UiRect{ { 0.0f, 0.0f }, { (float)vw, (float)vh } });
+                const Cosmic::UiRect band{
+                    { bandUv.x * (float)vw,                       bandUv.y * (float)vh },
+                    { (bandUv.x + bandUv.z) * (float)vw,          (bandUv.y + bandUv.w) * (float)vh } };
+                Cosmic::UiSystem::Render(*scenePtr, band, vw, vh);
             };
 
             m_SceneRenderer.Render(desc);   // PRE/POST: vfb stays the bound target
@@ -956,6 +1167,8 @@ namespace Starforge
             if (m_ShowMaterial)     m_Material.OnImGuiRender(m_Ctx, &m_ShowMaterial);
             if (m_ShowWorldSystems) m_WorldSystems.OnImGuiRender(m_Ctx, &m_ShowWorldSystems);
             if (m_ShowVoxel)        m_Voxel.OnImGuiRender(m_Ctx, &m_ShowVoxel);
+            if (m_ShowTilePalette)  m_TilePalette.OnImGuiRender(m_Ctx, &m_ShowTilePalette);
+            if (m_ShowFlowGraph)    m_FlowGraph.OnImGuiRender(m_Ctx, &m_ShowFlowGraph);
             if (m_ShowTelemetry)    m_Telemetry.OnImGuiRender(m_Ctx, &m_ShowTelemetry);
             if (m_ShowStats)        DrawStatsWindow();
         }
@@ -985,8 +1198,11 @@ namespace Starforge
                                    "Scripts not built - press Ctrl+B");
             }
             // The gizmo is an edit tool — hidden while playing (runtime scene).
+            // 2D mode manipulates through the ortho camera (ImGuizmo auto-detects).
             if (m_Ctx.Scene && !IsPlaying())
-                m_Viewport.DrawGizmo(m_Ctx, m_Camera);
+                m_Viewport.DrawGizmo(m_Ctx, m_Mode2D
+                    ? static_cast<const Cosmic::Camera&>(m_Camera2D.GetCamera())
+                    : static_cast<const Cosmic::Camera&>(m_Camera.GetCamera()));
         }
         if (m_Ctx.ProjectOpen && ws)
             ws->EndViewportOverlay();
@@ -996,6 +1212,25 @@ namespace Starforge
         {
             const glm::vec2 p = Cosmic::Application::Get().GetViewportPos();
             const glm::vec2 s = Cosmic::Application::Get().GetViewportSize();
+
+            // U7 — letterbox bars over the regions outside the game band (the
+            // scene bleeds past the NDC-scaled band; the bars mask it).
+            if (m_GameCamActive &&
+                (m_GameBandUv.x > 0.0001f || m_GameBandUv.y > 0.0001f ||
+                 m_GameBandUv.z < 0.9999f || m_GameBandUv.w < 0.9999f))
+            {
+                ImDrawList* dl = ImGui::GetForegroundDrawList();
+                const ImU32 bar = IM_COL32(8, 9, 12, 255);
+                const float bx0 = p.x + m_GameBandUv.x * s.x;
+                const float by0 = p.y + m_GameBandUv.y * s.y;
+                const float bx1 = bx0 + m_GameBandUv.z * s.x;
+                const float by1 = by0 + m_GameBandUv.w * s.y;
+                if (by0 > p.y)        dl->AddRectFilled({ p.x, p.y },        { p.x + s.x, by0 },       bar);
+                if (by1 < p.y + s.y)  dl->AddRectFilled({ p.x, by1 },        { p.x + s.x, p.y + s.y }, bar);
+                if (bx0 > p.x)        dl->AddRectFilled({ p.x, by0 },        { bx0, by1 },             bar);
+                if (bx1 < p.x + s.x)  dl->AddRectFilled({ bx1, by0 },        { p.x + s.x, by1 },       bar);
+            }
+
             const ImU32 col = (m_Play == PlayMode::Paused)
                 ? IM_COL32(255, 200, 50, 255) : IM_COL32(70, 220, 90, 255);
             ImGui::GetForegroundDrawList()->AddRect(
@@ -1005,8 +1240,18 @@ namespace Starforge
         // Input (ImGui frame is live + fresh here). Gizmo already drawn above, so
         // picking sees this frame's gizmo state. Picking/selection stay live in Play
         // so you can inspect runtime entities; only the gizmo is suppressed.
+        // UI goes live only while actually PLAYING (paused = frozen, like the
+        // PlayerLayer's pause gate; clicks then select-for-inspection instead).
+        // In 2D mode the controller picks sprites by rect and frames in XY —
+        // suspended while the GAME camera drives (U7): its screen mapping, not
+        // the 2D rig's, owns the viewport then, so picking unprojects through
+        // it and the UI pointer uses the letterbox band.
         if (m_Ctx.ProjectOpen && m_Ctx.Scene)
-            m_Viewport.OnUpdate(m_Ctx, m_Camera, ImGui::GetIO().DeltaTime);
+            m_Viewport.OnUpdate(m_Ctx, m_Camera, ImGui::GetIO().DeltaTime,
+                                m_Play == PlayMode::Playing,
+                                (m_Mode2D && !m_GameCamActive) ? &m_Camera2D : nullptr,
+                                m_GameCamActive ? &m_GameCamera : nullptr,
+                                m_GameBandUv);
 
         DrawSaveAsPopup();
         DrawImportModelPopup();
@@ -1041,6 +1286,41 @@ namespace Starforge
             // viewport is showing the live runtime scene, not the editable one.
             if (!IsPlaying())
             {
+                // 2D authoring mode toggle (U3): swaps the viewport to the ortho
+                // XY rig with the pixel grid; entering frames the scene's sprites
+                // and arms 1-unit snapping (the pixel-grid convention).
+                ImGui::SameLine();
+                bool m2 = m_Mode2D;
+                if (ImGui::Checkbox("2D", &m2) && m2 != m_Mode2D)
+                {
+                    m_Mode2D = m2;
+                    if (m_Mode2D)
+                    {
+                        glm::vec2 mn(-8.0f), mx(8.0f);
+                        if (m_Ctx.Scene)
+                        {
+                            bool any = false;
+                            auto view = m_Ctx.Scene->GetRegistry()
+                                .view<Cosmic::TransformComponent, Cosmic::SpriteRendererComponent>();
+                            for (auto e : view)
+                            {
+                                const auto& t = view.get<Cosmic::TransformComponent>(e);
+                                const auto& s = view.get<Cosmic::SpriteRendererComponent>(e);
+                                const glm::vec2 half = Cosmic::SpriteRendererComponent::WorldSize(
+                                    s, { t.Scale.x, t.Scale.y },
+                                    s.Resolved ? (int)s.Resolved->GetWidth() : 0,
+                                    s.Resolved ? (int)s.Resolved->GetHeight() : 0) * 0.5f;
+                                const glm::vec2 p{ t.Position.x, t.Position.y };
+                                if (!any) { mn = p - half; mx = p + half; any = true; }
+                                else      { mn = glm::min(mn, p - half); mx = glm::max(mx, p + half); }
+                            }
+                        }
+                        m_Camera2D.FrameBounds(mn, mx);
+                        m_Viewport.ArmPixelSnap();
+                    }
+                }
+                if (ImGui::IsItemHovered())
+                    ImGui::SetTooltip("2D mode: ortho XY view, MMB pan, wheel zoom, pixel grid.");
                 ImGui::SameLine();
                 m_Viewport.DrawToolbar(m_Ctx, m_Camera);
             }
@@ -1091,6 +1371,17 @@ namespace Starforge
         {
             if (ImGui::Button("Play"))
                 PlayScene();
+            // U5/U8 — the manifest names a startup flow: Play can boot it (the
+            // shipped player's path) or play just the open scene.
+            if (!m_ManifestFlow.empty())
+            {
+                ImGui::SameLine();
+                ImGui::Checkbox("Flow", &m_PlayFlowUse);
+                if (ImGui::IsItemHovered())
+                    ImGui::SetTooltip("Play the project's startup flow (%s) from its start\n"
+                                      "state, like the shipped app. Unchecked: play the open scene.",
+                                      m_ManifestFlow.c_str());
+            }
         }
         else
         {
@@ -1108,6 +1399,29 @@ namespace Starforge
             ImGui::TextColored(paused ? ImVec4(1.0f, 0.80f, 0.20f, 1.0f)
                                       : ImVec4(0.30f, 1.0f, 0.42f, 1.0f),
                                paused ? "PAUSED" : "PLAYING");
+
+            // U7 — game-view controls: eject (fly the editor camera while the
+            // sim runs), aspect preset (letterboxed game frame), cursor capture.
+            ImGui::SameLine();
+            ImGui::TextDisabled("|");
+            ImGui::SameLine();
+            ImGui::Checkbox("Eject", &m_Ejected);
+            if (ImGui::IsItemHovered())
+                ImGui::SetTooltip("Fly the editor camera while the sim runs;\n"
+                                  "re-dock returns to the game camera.");
+            ImGui::SameLine();
+            int aspect = (int)m_Aspect;
+            ImGui::SetNextItemWidth(110.0f);
+            if (ImGui::Combo("##gvaspect", &aspect, "Free\0" "16:9\0" "1920x1080\0" "Project\0"))
+                m_Aspect = (GameAspect)aspect;
+            if (ImGui::IsItemHovered())
+                ImGui::SetTooltip("Game-view aspect: letterboxes the frame so authored\n"
+                                  "UI anchors match the shipped app. Project = the\n"
+                                  "manifest [window] size.");
+            ImGui::SameLine();
+            ImGui::Checkbox("Capture", &m_CaptureCursor);
+            if (ImGui::IsItemHovered())
+                ImGui::SetTooltip("Capture the cursor for mouse-look while playing.\nEsc releases.");
         }
     }
 
@@ -1208,6 +1522,8 @@ namespace Starforge
             ImGui::MenuItem("Material Editor", nullptr, &m_ShowMaterial);
             ImGui::MenuItem("World Systems",   nullptr, &m_ShowWorldSystems);
             ImGui::MenuItem("Voxels",          nullptr, &m_ShowVoxel);
+            ImGui::MenuItem("Tile Palette",    nullptr, &m_ShowTilePalette);
+            ImGui::MenuItem("Flow Graph",      nullptr, &m_ShowFlowGraph);
             ImGui::MenuItem("Telemetry",       nullptr, &m_ShowTelemetry);
             ImGui::MenuItem("Statistics",      nullptr, &m_ShowStats);
             ImGui::Separator();
@@ -1442,6 +1758,416 @@ namespace Starforge
         SceneSerializer::Save(*scene, FileSystem::Resolve("project://scenes/Main.cscene"));
 
         m_Ctx.Log("[ForgeBlocks] Created the voxel sample project.");
+        return true;
+    }
+
+    // ---- Phase 17 / U8 samples ---------------------------------------------
+    namespace
+    {
+        // A titled UI button: image + button + label on ONE entity (UiSystem
+        // draws the image, then the state tint, then the text).
+        Cosmic::Entity MakeUiButton(Cosmic::Ref<Cosmic::Scene>& scene, Cosmic::Entity canvas,
+                                    const char* name, const char* label, const char* signal,
+                                    float centerYFrac, const glm::vec2& size)
+        {
+            using namespace Cosmic;
+            Entity e = scene->CreateEntity(name);
+            auto& rt = e.AddComponent<RectTransformComponent>();
+            rt.AnchorMin = rt.AnchorMax = { 0.5f, centerYFrac };
+            rt.OffsetMin = { -size.x * 0.5f, -size.y * 0.5f };
+            rt.OffsetMax = {  size.x * 0.5f,  size.y * 0.5f };
+            e.AddComponent<UiImageComponent>().Tint = { 0.16f, 0.19f, 0.25f, 0.92f };
+            e.AddComponent<UiButtonComponent>().Signal = signal;
+            auto& txt = e.AddComponent<UiTextComponent>();
+            txt.Text = label;
+            txt.SizePx = 30.0f;
+            scene->SetParent(e, canvas, /*keepWorldPose=*/false);
+            return e;
+        }
+
+        // A centered UI label.
+        Cosmic::Entity MakeUiLabel(Cosmic::Ref<Cosmic::Scene>& scene, Cosmic::Entity canvas,
+                                   const char* name, const char* text, float centerYFrac,
+                                   float sizePx, const glm::vec4& color)
+        {
+            using namespace Cosmic;
+            Entity e = scene->CreateEntity(name);
+            auto& rt = e.AddComponent<RectTransformComponent>();
+            rt.AnchorMin = rt.AnchorMax = { 0.5f, centerYFrac };
+            rt.OffsetMin = { -420.0f, -50.0f };
+            rt.OffsetMax = {  420.0f,  50.0f };
+            auto& txt = e.AddComponent<UiTextComponent>();
+            txt.Text = text;
+            txt.SizePx = sizePx;
+            txt.Color = color;
+            scene->SetParent(e, canvas, /*keepWorldPose=*/false);
+            return e;
+        }
+
+        // A flat-color sprite (U3 sizing: untextured => Transform.Scale is the size).
+        Cosmic::Entity MakeSprite(Cosmic::Ref<Cosmic::Scene>& scene, const char* name,
+                                  const glm::vec3& pos, const glm::vec2& size,
+                                  const glm::vec4& color, int z = 0)
+        {
+            using namespace Cosmic;
+            Entity e = scene->CreateEntity(name);
+            auto& t = e.GetComponent<TransformComponent>();
+            t.Position = pos;
+            t.Scale = { size.x, size.y, 1.0f };
+            auto& s = e.AddComponent<SpriteRendererComponent>();
+            s.Color = color;
+            s.ZOrder = z;
+            return e;
+        }
+    }
+
+    bool StarforgeApp::FlowDemoExists() const
+    {
+        std::error_code ec;
+        return fs::exists(fs::path("assets") / "projects" / "FlowDemo" / "project.cproj", ec);
+    }
+
+    bool StarforgeApp::BuildFlowDemo()
+    {
+        using namespace Cosmic;
+        const std::string proj = "FlowDemo";
+
+        // The ZERO-CODE two-screen app (U8 acceptance #1): every screen and all
+        // navigation is data — scenes + Main.cflow — no scene references any
+        // script. The C++ scaffold only provides the standalone player boot.
+        if (!ScaffoldProject(proj))
+        {
+            m_Ctx.Log("[FlowDemo] Could not scaffold — templates unavailable.", LogSeverity::Error);
+            return false;
+        }
+        FileSystem::SetActiveProject(proj);
+
+        // ---- MainMenu.cscene ----
+        {
+            Ref<Scene> scene = Scene::Create();
+            { Entity cam = scene->CreateEntity("Camera");
+              cam.GetComponent<TransformComponent>().Position = { 0.0f, 2.0f, 10.0f };
+              cam.AddComponent<CameraComponent>(); }
+            { Entity e = scene->CreateEntity("Environment");
+              auto& env = e.AddComponent<EnvironmentComponent>();
+              env.TimeOfDay = 19.0f; }   // dusk backdrop behind the menu
+
+            Entity canvas = scene->CreateEntity("Canvas");
+            canvas.AddComponent<CanvasComponent>();
+            MakeUiLabel(scene, canvas, "Title", "FLOW DEMO", 0.28f, 72.0f,
+                        { 1.0f, 0.86f, 0.45f, 1.0f });
+            MakeUiLabel(scene, canvas, "Sub", "two screens, zero code", 0.38f, 22.0f,
+                        { 0.75f, 0.78f, 0.85f, 1.0f });
+            MakeUiButton(scene, canvas, "PlayButton", "Play",  "play_clicked", 0.55f, { 260.0f, 56.0f });
+            MakeUiButton(scene, canvas, "QuitButton", "Quit",  "quit_clicked", 0.67f, { 260.0f, 56.0f });
+
+            SceneSerializer::Save(*scene, FileSystem::Resolve("project://scenes/MainMenu.cscene"));
+        }
+
+        // ---- Game.cscene ----
+        {
+            Ref<Scene> scene = Scene::Create();
+            { Entity cam = scene->CreateEntity("Camera");
+              cam.GetComponent<TransformComponent>().Position = { 0.0f, 3.5f, 12.0f };
+              cam.AddComponent<CameraComponent>(); }
+            { Entity e = scene->CreateEntity("Sun");
+              auto& l = e.AddComponent<DirectionalLightComponent>();
+              l.Direction = { -0.45f, -0.8f, -0.4f }; l.Intensity = 1.1f; }
+            { Entity e = scene->CreateEntity("Environment");
+              auto& env = e.AddComponent<EnvironmentComponent>();
+              env.TimeOfDay = 11.0f; }
+            { Entity e = scene->CreateEntity("Ground");
+              e.AddComponent<PrimitiveMeshComponent>(PrimitiveMeshComponent::Shape::Plane);
+              e.GetComponent<TransformComponent>().Scale = { 20.0f, 1.0f, 20.0f };
+              e.AddComponent<MeshRendererComponent>().Color = { 0.32f, 0.42f, 0.34f, 1.0f }; }
+            { Entity e = scene->CreateEntity("Monument");
+              e.AddComponent<PrimitiveMeshComponent>(PrimitiveMeshComponent::Shape::Torus);
+              e.GetComponent<TransformComponent>().Position = { 0.0f, 1.6f, 0.0f };
+              e.AddComponent<MeshRendererComponent>().Color = { 0.85f, 0.55f, 0.20f, 1.0f }; }
+
+            Entity canvas = scene->CreateEntity("HUD");
+            canvas.AddComponent<CanvasComponent>();
+            { Entity hint = scene->CreateEntity("Hint");
+              auto& rt = hint.AddComponent<RectTransformComponent>();
+              rt.AnchorMin = { 0.0f, 1.0f }; rt.AnchorMax = { 0.0f, 1.0f };
+              rt.OffsetMin = { 16.0f, -44.0f }; rt.OffsetMax = { 420.0f, -12.0f };
+              auto& txt = hint.AddComponent<UiTextComponent>();
+              txt.Text = "GAME  |  Esc = pause";
+              txt.SizePx = 20.0f;
+              txt.HAlign = UiHAlign::Left;
+              scene->SetParent(hint, canvas, false); }
+
+            SceneSerializer::Save(*scene, FileSystem::Resolve("project://scenes/Game.cscene"));
+        }
+
+        // ---- Pause.cscene (the pushed overlay screen) ----
+        {
+            Ref<Scene> scene = Scene::Create();
+            { Entity cam = scene->CreateEntity("Camera");
+              cam.AddComponent<CameraComponent>(); }
+
+            Entity canvas = scene->CreateEntity("Canvas");
+            canvas.AddComponent<CanvasComponent>();
+            { Entity dim = scene->CreateEntity("Dim");   // full-screen scrim
+              auto& rt = dim.AddComponent<RectTransformComponent>();
+              rt.AnchorMin = { 0.0f, 0.0f }; rt.AnchorMax = { 1.0f, 1.0f };
+              rt.OffsetMin = { 0.0f, 0.0f }; rt.OffsetMax = { 0.0f, 0.0f };
+              rt.ZOrder = -10;
+              dim.AddComponent<UiImageComponent>().Tint = { 0.02f, 0.03f, 0.05f, 0.85f };
+              scene->SetParent(dim, canvas, false); }
+            MakeUiLabel(scene, canvas, "Title", "PAUSED", 0.32f, 56.0f, { 1.0f, 1.0f, 1.0f, 1.0f });
+            MakeUiButton(scene, canvas, "ResumeButton", "Resume", "resume_clicked", 0.52f, { 260.0f, 56.0f });
+            MakeUiButton(scene, canvas, "QuitButton",   "Quit",   "quit_clicked",   0.64f, { 260.0f, 56.0f });
+
+            SceneSerializer::Save(*scene, FileSystem::Resolve("project://scenes/Pause.cscene"));
+        }
+
+        // ---- flows/Main.cflow ----
+        {
+            FlowAsset flow;
+            flow.Start = "MainMenu";
+
+            FlowState menu;
+            menu.Name  = "MainMenu";
+            menu.Scene = "project://scenes/MainMenu.cscene";
+            menu.EditorPos = { 40.0f, 60.0f };
+            menu.Transitions.push_back({ "play_clicked", "Game", "None", false, false, {} });
+            menu.Transitions.push_back({ "quit_clicked", "@quit", "None", false, false, {} });
+            flow.States.push_back(menu);
+
+            FlowState game;
+            game.Name  = "Game";
+            game.Scene = "project://scenes/Game.cscene";
+            game.EditorPos = { 380.0f, 60.0f };
+            game.Transitions.push_back({ "key:Escape", "Pause", "None", /*push=*/true, false, {} });
+            flow.States.push_back(game);
+
+            FlowState pause;
+            pause.Name    = "Pause";
+            pause.Scene   = "project://scenes/Pause.cscene";
+            pause.Overlay = true;
+            pause.EditorPos = { 720.0f, 60.0f };
+            pause.Transitions.push_back({ "resume_clicked", "@pop", "None", false, false, {} });
+            pause.Transitions.push_back({ "quit_clicked",   "@quit", "None", false, false, {} });
+            flow.States.push_back(pause);
+
+            std::error_code ec;
+            fs::create_directories(FileSystem::Resolve("project://flows"), ec);
+            flow.Save("project://flows/Main.cflow");
+        }
+
+        // ---- manifest: boot the flow ----
+        {
+            ProjectManifest pm = ProjectManifest::Load("project://project.cproj");
+            pm.Name         = proj;
+            pm.StartupScene = "scenes/MainMenu.cscene";   // fallback if the flow is removed
+            pm.StartupFlow  = "flows/Main.cflow";
+            pm.WindowTitle  = "Flow Demo";
+            pm.Save(FileSystem::Resolve("project://project.cproj"));
+        }
+
+        m_Ctx.Log("[FlowDemo] Created the zero-code two-screen sample.");
+        return true;
+    }
+
+    bool StarforgeApp::ForgePongExists() const
+    {
+        std::error_code ec;
+        return fs::exists(fs::path("assets") / "projects" / "ForgePong" / "project.cproj", ec);
+    }
+
+    bool StarforgeApp::BuildForgePong()
+    {
+        using namespace Cosmic;
+        const std::string proj = "ForgePong";
+
+        // 2D + UI + flow + scripts together (U8 acceptance #2): sprites and an
+        // ortho camera (U3), a flipbook hit effect (U4), score UiTexts (U1),
+        // menu -> game -> win flow (U5/U6), PaddleController/PongBall scripts.
+        if (!ScaffoldProject(proj))
+        {
+            m_Ctx.Log("[ForgePong] Could not scaffold — templates unavailable.", LogSeverity::Error);
+            return false;
+        }
+        FileSystem::SetActiveProject(proj);
+
+        // ---- textures/hit.png — an 8-frame 16x16 expanding-ring burst sheet ----
+        {
+            const int fw = 16, fh = 16, frames = 8;
+            std::vector<uint8_t> px((size_t)fw * frames * fh * 4, 0);
+            for (int f = 0; f < frames; ++f)
+            {
+                const float radius = 2.0f + 5.5f * (float)f / (float)(frames - 1);
+                const float fade   = 1.0f - (float)f / (float)frames;
+                for (int y = 0; y < fh; ++y)
+                    for (int x = 0; x < fw; ++x)
+                    {
+                        const float dx = (float)x - 7.5f, dy = (float)y - 7.5f;
+                        const float d  = std::sqrt(dx * dx + dy * dy);
+                        const float band = 1.4f - std::abs(d - radius);
+                        if (band <= 0.0f) continue;
+                        const float a = std::min(1.0f, band) * fade;
+                        uint8_t* p = &px[(((size_t)y * fw * frames) + (size_t)(f * fw + x)) * 4];
+                        p[0] = 255; p[1] = 244; p[2] = 200;
+                        p[3] = (uint8_t)(a * 255.0f);
+                    }
+            }
+            std::error_code ec;
+            fs::create_directories(FileSystem::Resolve("project://textures"), ec);
+            ImageIO::WritePNG(FileSystem::Resolve("project://textures/hit.png"),
+                              fw * frames, fh, 4, px.data());
+        }
+
+        // ---- Menu.cscene ----
+        {
+            Ref<Scene> scene = Scene::Create();
+            { Entity cam = scene->CreateEntity("Camera");
+              auto& c = cam.AddComponent<CameraComponent>();
+              c.ProjectionType = CameraComponent::Projection::Orthographic;
+              c.OrthoSize = 5.0f;
+              cam.GetComponent<TransformComponent>().Position = { 0.0f, 0.0f, 10.0f }; }
+
+            Entity canvas = scene->CreateEntity("Canvas");
+            canvas.AddComponent<CanvasComponent>();
+            MakeUiLabel(scene, canvas, "Title", "FORGEPONG", 0.26f, 84.0f,
+                        { 0.95f, 0.98f, 1.0f, 1.0f });
+            MakeUiLabel(scene, canvas, "Sub", "W/S  vs  Up/Down  -  first to 5", 0.38f, 22.0f,
+                        { 0.7f, 0.74f, 0.82f, 1.0f });
+            MakeUiButton(scene, canvas, "PlayButton", "Play", "play_clicked", 0.56f, { 260.0f, 56.0f });
+            MakeUiButton(scene, canvas, "QuitButton", "Quit", "quit_clicked", 0.68f, { 260.0f, 56.0f });
+
+            SceneSerializer::Save(*scene, FileSystem::Resolve("project://scenes/Menu.cscene"));
+        }
+
+        // ---- Game.cscene ----
+        {
+            Ref<Scene> scene = Scene::Create();
+            { Entity cam = scene->CreateEntity("Camera");
+              auto& c = cam.AddComponent<CameraComponent>();
+              c.ProjectionType = CameraComponent::Projection::Orthographic;
+              c.OrthoSize = 5.0f;   // court: 16 x 9 world units at 16:9
+              cam.GetComponent<TransformComponent>().Position = { 0.0f, 0.0f, 10.0f }; }
+
+            // Court dressing (flat-color sprites; U3 sizing = Transform.Scale).
+            MakeSprite(scene, "WallTop",    { 0.0f,  4.5f, 0.0f }, { 16.4f, 0.25f }, { 0.85f, 0.88f, 0.95f, 1.0f });
+            MakeSprite(scene, "WallBottom", { 0.0f, -4.5f, 0.0f }, { 16.4f, 0.25f }, { 0.85f, 0.88f, 0.95f, 1.0f });
+            MakeSprite(scene, "CenterLine", { 0.0f,  0.0f, -0.1f }, { 0.08f, 8.8f }, { 0.35f, 0.38f, 0.46f, 0.6f }, -1);
+
+            { Entity e = MakeSprite(scene, "PaddleL", { -7.4f, 0.0f, 0.0f }, { 0.3f, 1.6f },
+                                    { 0.95f, 0.97f, 1.0f, 1.0f }, 1);
+              e.AddComponent<NativeScriptComponent>("PaddleController"); }
+            { Entity e = MakeSprite(scene, "PaddleR", {  7.4f, 0.0f, 0.0f }, { 0.3f, 1.6f },
+                                    { 0.95f, 0.97f, 1.0f, 1.0f }, 1);
+              auto& nsc = e.AddComponent<NativeScriptComponent>("PaddleController");
+              nsc.Fields["UseArrows"] = Reflect::FieldValue{ true }; }
+            { Entity e = MakeSprite(scene, "Ball", { 0.0f, 0.0f, 0.1f }, { 0.3f, 0.3f },
+                                    { 1.0f, 0.9f, 0.5f, 1.0f }, 2);
+              e.AddComponent<NativeScriptComponent>("PongBall"); }
+
+            // The one-shot hit flipbook (U4): parked offscreen; PongBall places
+            // and restarts it per impact. One sheet frame = 1.2 world units.
+            { Entity e = scene->CreateEntity("HitFx");
+              auto& t = e.GetComponent<TransformComponent>();
+              t.Position = { 0.0f, 1000.0f, 0.2f };
+              t.Scale    = { 1.0f, 1.0f, 1.0f };
+              auto& s = e.AddComponent<SpriteRendererComponent>();
+              s.TexturePath   = "project://textures/hit.png";
+              s.PixelsPerUnit = 13.0f;   // 16 px frame ≈ 1.2 units
+              s.ZOrder = 5;
+              auto& a = e.AddComponent<SpriteAnimationComponent>();
+              a.SheetPath = "project://textures/hit.png";
+              a.FrameW = 16; a.FrameH = 16; a.Frames = 8; a.FPS = 24.0f;
+              a.Loop = false; a.Playing = false; }
+
+            // Score HUD (U1): the PongBall script writes these by Tag.
+            Entity canvas = scene->CreateEntity("HUD");
+            canvas.AddComponent<CanvasComponent>();
+            auto score = [&](const char* tag, float xFrac)
+            {
+                Entity e = scene->CreateEntity(tag);
+                auto& rt = e.AddComponent<RectTransformComponent>();
+                rt.AnchorMin = rt.AnchorMax = { xFrac, 0.0f };
+                rt.OffsetMin = { -60.0f, 18.0f };
+                rt.OffsetMax = {  60.0f, 92.0f };
+                auto& txt = e.AddComponent<UiTextComponent>();
+                txt.Text = "0";
+                txt.SizePx = 56.0f;
+                txt.Color = { 0.9f, 0.93f, 1.0f, 0.9f };
+                scene->SetParent(e, canvas, false);
+            };
+            score("ScoreL", 0.38f);
+            score("ScoreR", 0.62f);
+
+            SceneSerializer::Save(*scene, FileSystem::Resolve("project://scenes/Game.cscene"));
+        }
+
+        // ---- Win.cscene ----
+        {
+            Ref<Scene> scene = Scene::Create();
+            { Entity cam = scene->CreateEntity("Camera");
+              auto& c = cam.AddComponent<CameraComponent>();
+              c.ProjectionType = CameraComponent::Projection::Orthographic;
+              c.OrthoSize = 5.0f;
+              cam.GetComponent<TransformComponent>().Position = { 0.0f, 0.0f, 10.0f }; }
+
+            Entity canvas = scene->CreateEntity("Canvas");
+            canvas.AddComponent<CanvasComponent>();
+            MakeUiLabel(scene, canvas, "Title", "MATCH POINT!", 0.30f, 64.0f,
+                        { 1.0f, 0.85f, 0.4f, 1.0f });
+            MakeUiButton(scene, canvas, "RematchButton", "Rematch", "rematch_clicked", 0.52f, { 280.0f, 56.0f });
+            MakeUiButton(scene, canvas, "MenuButton",    "Menu",    "menu_clicked",    0.64f, { 280.0f, 56.0f });
+
+            SceneSerializer::Save(*scene, FileSystem::Resolve("project://scenes/Win.cscene"));
+        }
+
+        // ---- flows/Main.cflow: menu -> game -> win ----
+        {
+            FlowAsset flow;
+            flow.Start = "Menu";
+
+            FlowState menu;
+            menu.Name  = "Menu";
+            menu.Scene = "project://scenes/Menu.cscene";
+            menu.EditorPos = { 40.0f, 60.0f };
+            menu.Transitions.push_back({ "play_clicked", "Game", "None", false, false, {} });
+            menu.Transitions.push_back({ "quit_clicked", "@quit", "None", false, false, {} });
+            flow.States.push_back(menu);
+
+            FlowState game;
+            game.Name  = "Game";
+            game.Scene = "project://scenes/Game.cscene";
+            game.EditorPos = { 380.0f, 60.0f };
+            game.Transitions.push_back({ "left_wins",  "Win", "None", false, false, {} });
+            game.Transitions.push_back({ "right_wins", "Win", "None", false, false, {} });
+            game.Transitions.push_back({ "key:Escape", "Menu", "None", false, false, {} });
+            flow.States.push_back(game);
+
+            FlowState win;
+            win.Name  = "Win";
+            win.Scene = "project://scenes/Win.cscene";
+            win.EditorPos = { 720.0f, 60.0f };
+            win.Transitions.push_back({ "rematch_clicked", "Game", "None", false, false, {} });
+            win.Transitions.push_back({ "menu_clicked",    "Menu", "None", false, false, {} });
+            flow.States.push_back(win);
+
+            std::error_code ec;
+            fs::create_directories(FileSystem::Resolve("project://flows"), ec);
+            flow.Save("project://flows/Main.cflow");
+        }
+
+        // ---- manifest ----
+        {
+            ProjectManifest pm = ProjectManifest::Load("project://project.cproj");
+            pm.Name         = proj;
+            pm.StartupScene = "scenes/Menu.cscene";
+            pm.StartupFlow  = "flows/Main.cflow";
+            pm.WindowTitle  = "ForgePong";
+            pm.WindowWidth  = 1280;
+            pm.WindowHeight = 720;
+            pm.Save(FileSystem::Resolve("project://project.cproj"));
+        }
+
+        m_Ctx.Log("[ForgePong] Created the 2D pong sample (Build Scripts, then Play).");
         return true;
     }
 
@@ -1709,10 +2435,18 @@ namespace Starforge
             });
             ImGui::EndMenu();
         }
-        // 2D authoring (U3): sprites + an orthographic camera.
+        // 2D authoring (U3/U4): sprites, tilemaps, an orthographic camera.
         if (ImGui::BeginMenu("2D"))
         {
             make("Sprite", [](Cosmic::Entity e) { e.AddComponent<Cosmic::SpriteRendererComponent>(); });
+            if (ImGui::MenuItem("Tilemap"))
+            {
+                Commands::Create(m_Ctx, "Tilemap", Cosmic::Entity{}, [](Cosmic::Entity e)
+                {
+                    e.AddComponent<Cosmic::TilemapComponent>().EnsureCells();
+                });
+                m_ShowTilePalette = true;   // paint tools live in the palette panel
+            }
             make("Camera (Ortho)", [](Cosmic::Entity e)
             {
                 auto& c = e.AddComponent<Cosmic::CameraComponent>();
@@ -1918,6 +2652,26 @@ namespace Starforge
             OpenProject("ForgeBlocks");
         }
         ImGui::SameLine();
+        if (ImGui::Button("Flow Sample", ImVec2(130, 34)))
+        {
+            if (!FlowDemoExists())
+                BuildFlowDemo();
+            OpenProject("FlowDemo");
+        }
+        if (ImGui::IsItemHovered())
+            ImGui::SetTooltip("The zero-code two-screen app: menu -> game -> pause,\n"
+                              "all navigation authored as a .cflow (Phase 17 / U8).");
+        ImGui::SameLine();
+        if (ImGui::Button("Pong Sample", ImVec2(130, 34)))
+        {
+            if (!ForgePongExists())
+                BuildForgePong();
+            OpenProject("ForgePong");
+        }
+        if (ImGui::IsItemHovered())
+            ImGui::SetTooltip("ForgePong: 2D sprites + UI + flow + two tiny scripts\n"
+                              "(Build Scripts, then Play — Phase 17 / U8).");
+        ImGui::SameLine();
         ImGui::SetNextItemWidth(240.0f);
         ImGui::InputTextWithHint("##search", "Search projects…", m_HomeSearch, sizeof(m_HomeSearch));
 
@@ -1983,9 +2737,12 @@ namespace Starforge
                 if (auto picked = Cosmic::FileDialog::PickFolder("Choose a location for the new project"))
                     std::snprintf(m_NewProjectLoc, sizeof(m_NewProjectLoc), "%s", picked->c_str());
 
-            // Template picker seam (v1 has the one C++ scaffold template).
+            // Template picker seam. "Pixel Art" = the same scaffold with the
+            // pixel_art manifest key preset (U3): every texture the project loads
+            // is point-filtered so sprites stay crisp at integer zooms.
             ImGui::TextUnformatted("Template");
-            static const char* kTemplates[] = { "C++ scaffold (scripts + player)" };
+            static const char* kTemplates[] = { "C++ scaffold (scripts + player)",
+                                                "Pixel Art 2D (point-filtered textures)" };
             static int templateIdx = 0;
             ImGui::SetNextItemWidth(-1.0f);
             ImGui::Combo("##nptpl", &templateIdx, kTemplates, IM_ARRAYSIZE(kTemplates));
@@ -1998,7 +2755,19 @@ namespace Starforge
             if (ImGui::Button("Create", ImVec2(120, 0)))
             {
                 if (NewProjectAt(m_NewProjectName, m_NewProjectLoc))
+                {
+                    if (templateIdx == 1)   // Pixel Art preset
+                    {
+                        const std::string mpath = (fs::path(m_NewProjectLoc) / m_NewProjectName
+                                                   / "project.cproj").generic_string();
+                        ProjectManifest pm = ProjectManifest::Load(mpath);
+                        pm.PixelArt = true;
+                        pm.Save(mpath);
+                        Cosmic::AssetLibrary::SetDefaultTextureSampling(
+                            Cosmic::TextureFilter::Nearest, Cosmic::TextureWrap::ClampToEdge);
+                    }
                     ImGui::CloseCurrentPopup();
+                }
             }
             ImGui::EndDisabled();
             ImGui::SameLine();
@@ -2534,7 +3303,8 @@ namespace Starforge
     // =========================================================================
     void StarforgeApp::OnEvent(Cosmic::Event& e)
     {
-        m_Camera.OnEvent(e);
+        if (m_Mode2D) m_Camera2D.OnEvent(e);   // U3 — wheel zoom in 2D mode
+        else          m_Camera.OnEvent(e);
         if (m_Play == PlayMode::Playing)   // forward input to live scripts
             m_Scripts.DispatchEvent(e);
     }

@@ -67,9 +67,10 @@ costs ~10% of today's draw; sorted smoke renders without popping. **Status:** �
 
 ### R8 — Wireframe fill-mode verb + ID-buffer visualize *(origin: E9 deviation)*
 `RenderCommand::SetPolygonMode(Fill|Line)` (platform-layer verb) + Starforge view-mode menu
-entries (Lit / Wireframe / Entity-ID debug). Small. **Unlock:** immediate (editor QoL) — do
-opportunistically. **Acceptance:** all three modes render; conformance script green.
-**Status:** ☐
+entries (Lit / Wireframe / Entity-ID debug). Small. **Unlock:** ~~immediate (editor QoL) — do
+opportunistically~~ **FIRED 2026-07-11** (v4 editor vision) — run with/before Phase 22 K6,
+which places the selector on the viewport header strip (doc 21). **Acceptance:** all three
+modes render; conformance script green. **Status:** ☐
 
 ### R9 — Compressed texture pipeline (BCn/KTX2) *(origin: S12.6 "parked w/ unlock")*
 Offline compress on import (BC7/BC5/BC4 via a vendored encoder), KTX2 container, loader path;

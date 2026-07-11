@@ -139,6 +139,27 @@ namespace Cosmic
 		void UpdateSpriteAnimations(float deltaTime);
 
 		/**
+		 * @brief Generic world-space 2D pass (U3/U4): draws every entity with a
+		 * TransformComponent + SpriteRendererComponent, and every tilemap
+		 * (TransformComponent + TilemapComponent — a camera-rect-culled cell
+		 * walk, one cell = one world unit), through Renderer2D under the given
+		 * view-projection, painter-ordered ascending by (ZOrder, then
+		 * per-sprite key = YSort ? -Position.y : Position.z, then entity id).
+		 * Runs INSIDE the main scene pass — depth test stays ON so 3D geometry
+		 * occludes sprites in 2.5D scenes, depth writes go OFF, straight alpha —
+		 * the same contract as the transparent queue (no second compositor).
+		 * Call from a SceneRenderDesc::DrawTransparent hook (HDR still bound) or
+		 * after OnRender3D. Textures resolve lazily from TexturePath; a sprite
+		 * with neither texture nor material draws its flat Color. Sprites use the
+		 * RAW TransformComponent (position/Rotation.z/scale — no hierarchy
+		 * compounding), matching the legacy 2D path. COMPAT GATE: a scene with no
+		 * sprites returns before any GL call, so existing 3D apps are untouched.
+		 * Main-thread / GL.
+		 */
+		void OnRenderSprites(const glm::mat4& viewProjection,
+		                     uint32_t viewportWidth, uint32_t viewportHeight);
+
+		/**
 		 * @brief 3D render pass (S4.3): draws every entity with a
 		 * TransformComponent + MeshRendererComponent via Renderer3D.
 		 *

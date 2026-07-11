@@ -485,6 +485,7 @@ every implementation phase (14–21), plus one bookkeeping pass now:
 | 15 (physics) | NEW §9.5 Physics | NEW physics.md chapter + manifest row | NEW physics.md explainer | 08-scripting physics API | DG-18 |
 | 16 (platform) | §40 refresh (packaging v2), §1.5 sweep (new flags/keys) | assets-io (mounts, user:// policy) | build-plugin-packaging update | 01/02/10 updates | DG-14 refresh |
 | 17 (UI/flow/2D) | NEW §10.5 In-game UI & flow; §8 2D notes | NEW ui-runtime rows (or ui.md §) | ecs-scene update | 07 chapter | DG-17 |
+| ↳ **DUE 2026-07-11** (Phase 17 U1–U8 ✅). New surface to document: `scene/ui/` UiComponents+UiSystem, EventBus signals, FlowMachine+`.cflow`+Flow Graph panel, 2D mode + `camera/Camera2DController`, SpriteRenderer TexturePath/YSort + `Scene::OnRenderSprites`, Tilemap + Tile Palette painter, game view (primary cam/aspect/eject), manifest keys `startup_flow`/`pixel_art`/`capture_cursor`, `Window::SetCursorCaptured`, `AssetLibrary::SetDefaultTextureSampling`, vendored `imgui-node-editor` (its VENDOR-NOTES.md), FlowDemo/ForgePong samples, `docs/design/ui-flow-2d-acceptance.md`. | | | | |
 | 18 (voxel) | NEW §8.9 Voxels | NEW voxel.md chapter | NEW voxel explainer | 06 update | — |
 | 19 (rendering menu) | per-item §8.6/§8.8 notes | rendering-pipeline/world-systems rows | terrain/water/particles updates | 05/06 updates | DG-8 refresh |
 | 20 (assets/anim) | §8.5 animation note; import § update | NEW animation rows; assets-io | NEW animation explainer §or doc | 04 update | — |

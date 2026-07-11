@@ -88,6 +88,13 @@ Thumbs.db
 .DS_Store
 
 # -------------------------------------------------------
+# Local reference material (never pushed)
+# -------------------------------------------------------
+# Reference-editor screenshots behind docs/design/example-images-gap-analysis.md
+# (third-party editor UI captures — keep local only).
+ExampleImages/
+
+# -------------------------------------------------------
 # 5. Optional: Filters file
 # -------------------------------------------------------
 # If you want to keep Filters in Git, comment out the line below

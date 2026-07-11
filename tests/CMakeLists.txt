@@ -46,6 +46,9 @@ add_executable(CosmicTests
     test_physics_determinism.cpp
     test_ui_rects.cpp
     test_flowmachine.cpp
+    test_camera2d.cpp
+    test_tilemap.cpp
+    test_template_scripts.cpp
     test_voxel.cpp
     test_voxel_collision.cpp
 )

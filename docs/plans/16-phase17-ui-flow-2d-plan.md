@@ -1,6 +1,27 @@
 # Phase 17 Plan — In-Game UI, Screen Flow, and 2D Game Authoring
 
-> **STATUS 2026-07-08 (UNcommitted) — ENGINE FOUNDATION CODE-COMPLETE.** The
+> **STATUS 2026-07-11 (UNcommitted) — PHASE CODE-COMPLETE (U1–U8 all ✅).** The
+> editor/on-GPU remainder landed on top of the 07-08 engine foundation: **U1**
+> editor click-consumption (+ `UiSystem::HitTest` edit-mode UI select), **U3**
+> full 2D authoring mode (NEW engine `camera/Camera2DController`, pixel grid,
+> sprite rect-pick, `Scene::OnRenderSprites` in editor+player, SpriteRenderer
+> `TexturePath`/`YSort`, `pixel_art` sampling preset + New-Project template
+> entry), **U4** Tilemap (engine component + int-array Cells serialization +
+> culled draw + Tile Palette painter with stroke-coalesced undo), **U6** Flow
+> Graph panel (VENDORED `imgui-node-editor` master `021aa0ea` w/ one guarded
+> local patch — see its VENDOR-NOTES.md; generic `widgets/NodeCanvas` kept
+> flow-free for Phase 25), **U7** game view (primary-camera Play, eject,
+> letterboxed aspect presets via a new `UiSystem::Render` band overload,
+> `Window::SetCursorCaptured` + `capture_cursor`, PLUS flow-driven editor Play
+> closing U5's remainder), **U8** staged samples (zero-code **FlowDemo** +
+> **ForgePong**, homescreen-built; template scripts compile-smoked headless).
+> Build green Debug+Release **zero warnings**, `CosmicTests` **272/272**
+> (241→272), GL-conformance clean, compat gate held (no shipped app attaches
+> the new components; the sprite/UI hooks early-out on scenes without them).
+> **REMAINING (user ledger):** the recorded acceptance —
+> [`../design/ui-flow-2d-acceptance.md`](../design/ui-flow-2d-acceptance.md).
+>
+> **STATUS 2026-07-08 — engine foundation code-complete.** The
 > headless-testable engine core of Phase 17 landed and is verified: build green
 > across all 5 projects **zero warnings**, `CosmicTests` **241/241** (219→241,
 > +22). What shipped this session:
@@ -28,11 +49,11 @@
 > - **Build note:** TypeRegistry.cpp now compiles with `/bigobj` (MSVC section
 >   limit hit by the reflection-thunk additions).
 >
-> **REMAINING (editor / on-GPU — not headless-verifiable):** U1 editor click
+> ~~**REMAINING (editor / on-GPU — not headless-verifiable):** U1 editor click
 > consumption; U3 full 2D authoring mode; U4 Tilemap + painter; **U6** Flow Graph
 > node-editor panel (vendor imgui-node-editor); **U7** game-view correctness; **U8**
-> zero-code app + ForgePong samples + recorded acceptance. The engine surface each
-> needs is now in place.
+> zero-code app + ForgePong samples + recorded acceptance.~~ **All landed 2026-07-11**
+> (see the banner above and each item's Status).
 
 > **Created 2026-07-04.** Delivers three user asks that share one foundation:
 > 1. **Design app screens in Starforge** — homescreens, menus, HUDs, built from entities.
@@ -139,10 +160,16 @@ nested) each ±0.5 px; hover/press/release-inside/release-outside state transiti
 canvas with an image + text + 3 buttons renders in editor viewport AND via `--project`,
 hover/press tints work, clicks don't leak to 3D picking.
 
-**Status:** ◑ engine + tests + PlayerLayer overlay/interaction + editor overlay render +
-Entity▸UI menu DONE (2026-07-08). Headless acceptance (anchor matrix, button transitions,
-EventBus click routing) passes. Remaining: editor-viewport click consumption in the
-ScenePicker path (rendering already lands) + the on-GPU visual pass.
+**Status:** ✅ 2026-07-11 (engine + tests + PlayerLayer 2026-07-08; editor click path
+2026-07-11). Editor-viewport click consumption landed in `ViewportController::OnUpdate`:
+while PLAYING the canvas is live in the viewport (`UiSystem::Update` — hover/press tints +
+EventBus signals) and a pointer over interactable UI consumes the click before the
+ScenePicker; while EDITING a click on any UI element SELECTS it via the new engine verb
+`UiSystem::HitTest` (topmost drawable element under a point — the mesh-only ID pass can't
+see rect UI). Paused Play behaves like edit (PlayerLayer's pause gate parity). Headless
+acceptance passes (anchor matrix, button transitions, EventBus click routing, HitTest
+topmost-Z — `test_ui_rects.cpp`, CosmicTests 263/263). The in-app visual pass (tints +
+no-leak click check on GPU) rides the user's phase acceptance (U8 ledger row).
 
 ### U2 — Scene event bus + script hookup
 
@@ -191,11 +218,30 @@ existing transparent queue; don't invent a second compositor.
 **Acceptance:** author a small sprite scene (background, 10 sprites, ortho camera) entirely
 in-editor; crisp at 1x/2x/3x zoom (screenshot); plays standalone; 3D scenes unaffected.
 
-**Status:** ◑ engine slice 2026-07-08: `SpriteRendererComponent` +SourceRect/PixelsPerUnit/
-ZOrder (reflected, serialized), Entity▸2D create menu (Sprite / ortho Camera). Remaining:
-2D editor camera mode (ortho toggle, pan/zoom, pixel grid, unit snapping), pixel-perfect
-sampling preset + "Pixel Art" template, and the generic `Scene::OnRender2D` sprite pass
-inside the main scene.
+**Status:** ✅ 2026-07-11 (engine slice 2026-07-08). Landed this session:
+- **2D editor mode:** toolbar "2D" toggle → NEW engine `camera/Camera2DController` (ortho XY
+  rig looking down −Z, MMB pan, wheel zoom-about-cursor, `FrameBounds`; pure `ScreenToWorld`/
+  `PanBy`/`ZoomAboutPoint` headless-tested in `test_camera2d.cpp`), pixel grid (1-unit minors
+  when ≥6 px, 10-unit majors, XY axes) + sprite wire-rect selection outlines
+  (`DrawOverlayContent2D`), 1-unit snap armed on entry, F frames the XY extent, sprite
+  rect-picking (topmost by ZOrder/key) ahead of the mesh ID pass, gizmo manipulates through
+  the ortho camera (ImGuizmo auto-detects). `OrthographicCamera` gained a near/far
+  `SetProjection` overload; the editor forces Skybox/IBL/Shadows off in 2D mode (a skybox
+  under ortho is degenerate).
+- **Generic sprite pass:** `Scene::OnRenderSprites(viewProjection, w, h)` — painter-sorted
+  (ZOrder, then per-sprite `YSort ? -Y : Z`, then id), transparent-queue contract (depth test
+  ON / write OFF / alpha), runs from the `DrawTransparent` hook in BOTH Starforge and
+  PlayerLayer; a scene with no sprites returns before any GL call (compat gate).
+  `SpriteRendererComponent` gained `TexturePath` (AssetPath, lazy-resolved) + `YSort` +
+  the shared pure sizing rule `WorldSize` (ABI-appended, reflected).
+- **Pixel-perfect preset:** engine `AssetLibrary::SetDefaultTextureSampling(filter, wrap)` /
+  `Clear…` applied at texture load; `pixel_art` manifest key honored by PlayerLayer AND
+  Starforge (set on project open, cleared on close); New Project dialog gained the
+  "Pixel Art 2D (point-filtered textures)" template entry that stamps the key.
+  `ProjectManifest` also gained `StartupFlow` so a settings save no longer drops the U5 key.
+- Editor Play now advances flipbooks (`UpdateSpriteAnimations` in `TickPlay`).
+Build green, `CosmicTests` **267/267**. The authored-scene screenshot pass (crisp at
+1x/2x/3x) rides the user's phase acceptance.
 
 ### U4 — Sprite animation + tilemap v1
 
@@ -215,11 +261,27 @@ command — the E7 merge-key pattern), not per-cell spam. Big maps: v1 caps Grid
 animated sprite plays in editor Play + standalone at the authored FPS independent of frame
 rate.
 
-**Status:** ◑ sprite animation 2026-07-08: `SpriteAnimationComponent` (flipbook, reflected +
-serialized) + pure `SelectFrame`/`FrameUV` (tested) + `Scene::UpdateSpriteAnimations`
-(framerate-independent, drives SourceRect); PlayerLayer advances it each tick. Remaining:
-`TilemapComponent` + packed Cells serialization + the tile painter overlay (palette, flood/
-rect fill, undo cell-run commands).
+**Status:** ✅ 2026-07-11 (sprite animation 2026-07-08). Landed this session:
+- **Engine `TilemapComponent`** (TilesetPath/TileW/TileH/Columns/GridW/GridH/ZOrder +
+  `Cells` vector<uint16>, reflected except Cells; grid clamped 1..1024 via `EnsureCells`;
+  pure 4-connected `FloodFill` shared by the editor + tests). Cells serialize as a plain
+  int array through a named custom block in SceneSerializer (the NativeScript-Fields
+  pattern) — diff-friendly, round-trip + save-of-load byte-stability headless-tested in
+  `test_tilemap.cpp` on the acceptance-size 100×60 map.
+- **Draw**: tilemaps interleave with sprites in `Scene::OnRenderSprites`' painter order
+  (ZOrder, then Z); the cell walk is culled to the camera's world rect (invVP NDC-cube
+  bounds — exact for the 2D ortho camera); one cell = one world unit from the entity's
+  bottom-left; one SubTexture per distinct tile id per draw. Entity rotation/scale ignored
+  (v1, documented in the component header).
+- **Starforge painter**: NEW `panels/TilePalettePanel` (tileset grid picker, tool radios,
+  viewport-paint toggle; View▸Tile Palette; Entity▸2D▸Tilemap creates + opens it),
+  viewport painting in 2D mode (LMB Paint drag = ONE coalesced undo stroke via
+  `Commands::TileEdit` merge keys — the VoxelEdit pattern; Flood + Rect commit as single
+  `TileEditRun` steps; RMB erases), map-bounds/hover-cell/rect-preview overlay lines.
+- *Deferred (noted):* the Inspector sprite-sheet preview row rides Phase 23's Inspector v2
+  (asset-slot previews, doc 22) — the Tile Palette's atlas grid covers tileset preview.
+Build green, `CosmicTests` **270/270**. The interactive paint/undo/save pass on GPU rides
+the user's phase acceptance.
 
 ### U5 — FlowMachine + `.cflow` asset (engine runtime)
 
@@ -269,10 +331,16 @@ guards, emit/setField actions, injected scene-loader. Wired into PlayerLayer beh
 `startup_flow` manifest key (compat-gated). **Shipped decision:** overlay push/pop is a
 machine-level STATE STACK; a scene-less overlay reuses the under-scene, the host renders the
 TOP scene — additive under-scene rendering (pause menu over live game) is a v2 follow-up.
-`tests/test_flowmachine.cpp` covers the full run + guards + validation + round-trip. Remaining:
-Starforge play-mode adopting the flow (PlayerLayer path done) + the in-editor menu→game demo.
+`tests/test_flowmachine.cpp` covers the full run + guards + validation + round-trip.
+**2026-07-11:** Starforge play-mode adopted the flow (see U7's status — the "Flow" Play
+toggle boots the manifest `startup_flow` with scene-swap script/physics rebinding); the
+in-editor menu→game demo rides the user's U8 acceptance recording.
 
 ### U6 — Flow Graph editor panel
+
+> **2026-07-11 (v4 roadmap):** build the canvas internals REUSABLE from day one — Phase 25
+> (doc 24 Q1) extracts them into `widgets/NodeCanvas` for the Story Graph + post-chain
+> editors. Keep node/pin/link plumbing separate from flow-specific node content.
 
 **Files:** VENDOR `Cosmic/dependencies/imgui-node-editor` (thedmd, MIT — **verify it compiles
 against the vendored imgui version first**; fallback: ImNodes [Nelarius, MIT], smaller
@@ -289,7 +357,34 @@ validator): unreachable states + missing scenes render as red badges. Layout per
 **Acceptance:** author the U5 acceptance flow entirely in the panel (no hand-JSON); reopen
 preserves layout; a deleted scene shows red; runtime executes the authored file unchanged.
 
-**Status:** ☐
+**Status:** ✅ 2026-07-11. Landed:
+- **Vendored** `Cosmic/dependencies/imgui-node-editor` (thedmd, MIT, master
+  `021aa0ea` 2026-03-29 — the tag v0.9.3 predates the current-imgui fixes). ONE local
+  patch: `imgui_extra_math.inl`'s `operator*(float, ImVec2)` version-guarded (imgui 1.92.x
+  ships it itself; collided C2084). See the dependency's `VENDOR-NOTES.md`. Compiled into
+  Starforge.dll with warnings off for the vendored TUs (external code); ImGui symbols come
+  from the propagated static imgui in-tree / the bundled sources standalone.
+- **Separable canvas** (the 2026-07-11 v4 note): `widgets/NodeCanvas.h/.cpp` — a generic
+  RAII node/pin/link host (context lifecycle, Begin/End bracket, `QueryEdits` create/delete
+  gestures, selection + node-position API, settings file disabled: the DOCUMENT owns
+  layout). Zero flow knowledge — Phase 25 Q1 extracts it for the Story Graph.
+- **`panels/FlowGraphPanel`** (View▸Flow Graph): open/create `project://flows/*.cflow`,
+  states as nodes (start marker, scene stem, RED badges for missing/unset scenes and
+  unreachable states — BFS from start on top of `FlowAsset::Validate`), transitions as
+  per-row out-pins with links (drag a row pin to retarget; drag the node's "+ link" pin to
+  add a transition; Del deletes links/nodes), built-in `@quit` node (`@pop` shows as a row
+  badge — no dangling edge), side inspector (state rename retargets references, scene
+  picker from `project://scenes`, overlay flag, set-start, onEnter emit/setField actions;
+  transition On picker fed by UiButton signals parsed from the flow's scene JSONs +
+  `key:Escape` + hand-entered, To picker incl. @quit/@pop, push flag, full guard editor),
+  node drags persist into `FlowState::EditorPos` (`"editor":{"pos":…}` — runtime-inert,
+  round-trip now covered in `test_flowmachine.cpp`).
+- **Deviation (documented):** v1 undo is PANEL-LOCAL snapshot Undo/Redo buttons rather
+  than the scene CommandStack — flow edits are file-scoped documents; sharing the scene
+  stack would make viewport Ctrl+Z pop flow edits. Scene-preview thumbnails on nodes are
+  deferred (S7 thumbnails are per-project, not per-scene).
+Build green, `CosmicTests` **271/271**. The in-panel authoring pass (mouse-driven) rides
+the user's phase acceptance with U8.
 
 ### U7 — Game-view correctness (play like it ships)
 
@@ -305,9 +400,35 @@ gets the same via manifest key).
 **Acceptance:** a 16:9-authored menu shows identical proportions in editor Play (letterboxed)
 and packaged fullscreen; eject works and re-docking returns to the game camera.
 
-**Status:** ☐
+**Status:** ✅ 2026-07-11. Landed:
+- **Primary-camera Play:** while playing (not ejected) the viewport renders from the scene's
+  primary `CameraComponent` (`PoseCamera` — the editor twin of PlayerLayer's holder); no
+  primary camera = editor camera + a once-per-session Console warning (mirrors the player).
+  Picking/voxel rays unproject through the ACTIVE render camera (`renderCamOverride`).
+- **Eject toggle** (Play controls): fly the editor camera while the sim runs; unchecking
+  returns to the game camera. Each Play starts docked.
+- **Aspect presets** (Free / 16:9 / 1920×1080 / Project = manifest `[window]` size): the
+  frame is NDC-scaled into a centered letterbox band, bars drawn by the viewport overlay,
+  and the canvas UI lays out INSIDE the band (new engine `UiSystem::Render(scene,
+  canvasRect, targetW, targetH)` overload — anchors identical to the shipped app; the UI
+  pointer uses the same band). Band ratios stored as viewport fractions (DPI-safe).
+- **Cursor capture:** new generic engine verb `Window::SetCursorCaptured(bool)` (GLFW
+  disabled-cursor mode). Editor: "Capture" checkbox, Esc releases + unchecks, Stop/eject
+  release. PlayerLayer: `capture_cursor` manifest key — captured on boot, Esc releases,
+  click recaptures, released on detach.
+- **BONUS (closes U5's remaining line): flow-driven editor Play** — when the manifest names
+  `startup_flow` (and the new "Flow" toggle next to Play is on), Play boots the `.cflow`
+  from its start state exactly like the shipped player: button signals drive transitions,
+  scene swaps rebind scripts+physics, `key:Escape` feeds the flow, `@quit` stops Play. A
+  state referencing the OPEN scene plays the live snapshot (unsaved edits included).
+Build green, `CosmicTests` **271/271**. The 16:9-proportions screenshot comparison
+(editor Play vs packaged) rides the user's phase acceptance.
 
 ### U8 — Phase acceptance: the zero-code app + the 2D sample
+
+> **2026-07-11 (v4 roadmap):** the 2D-sample half may alternatively be satisfied by Forge
+> Isle's tent-game vignette (doc 27 Z6) if that lands first — note it here when it does.
+> The zero-code two-screen app requirement is unchanged either way.
 
 **Files:** template additions; `docs/design/` demo script.
 
@@ -320,7 +441,22 @@ and packaged fullscreen; eject works and re-docking returns to the game camera.
    script (6 lines), score `UiText`, flipbook ball-hit effect, flow (menu→game→win screen).
    Proves 2D + UI + flow + scripts together; packaged and run clean.
 
-**Status:** ☐
+**Status:** ✅ STAGED 2026-07-11 — the recorded demo itself is on the USER's acceptance
+ledger (script: [`../design/ui-flow-2d-acceptance.md`](../design/ui-flow-2d-acceptance.md)).
+What's in the tree:
+- **Zero-code app "FlowDemo"** (homescreen ▸ *Flow Sample*, self-built): MainMenu
+  (canvas/title/Play/Quit) + Game (world + HUD hint) + Pause (scrim overlay) scenes,
+  `flows/Main.cflow` (menu→game on `play_clicked`, Escape→Pause **push**, Resume→`@pop`,
+  Quit→`@quit`), manifest boots the flow — NO scene references a script. Openable in the
+  U6 Flow Graph panel; plays via the U7 "Flow" Play toggle; packages via S5.
+- **"ForgePong"** (homescreen ▸ *Pong Sample*, self-built): 16×9-unit sprite court +
+  ortho primary camera (U3), `PaddleController` (six lines, W/S vs arrows via a reflected
+  field override) + `PongBall` (bounce/steer/speed-up, writes ScoreL/ScoreR `UiText`s,
+  emits `left_wins`/`right_wins`) — both shipped as TEMPLATE scripts (registered in the
+  scaffold `Module.cpp`, compile-smoked headless in `test_template_scripts.cpp`), a
+  procedurally generated 8-frame ring-burst sheet (`ImageIO::WritePNG`) driving the U4
+  flipbook hit effect, menu→game→win `.cflow` with rematch/menu/Escape routes.
+Build green, `CosmicTests` **272/272**.
 
 ---
 

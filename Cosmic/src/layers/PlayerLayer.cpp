@@ -70,6 +70,18 @@ namespace Cosmic
             title = cfg->GetString("window.title", cfg->GetString("window_title", cfg->GetString("name", title)));
             winW  = static_cast<int>(cfg->GetInt("window.width",  0));
             winH  = static_cast<int>(cfg->GetInt("window.height", 0));
+
+            // U3 — pixel-art preset: point-filter every texture this app loads so
+            // sprites stay crisp at integer zooms (set BEFORE any content loads).
+            if (cfg->GetBool("pixel_art", false))
+                AssetLibrary::SetDefaultTextureSampling(TextureFilter::Nearest,
+                                                        TextureWrap::ClampToEdge);
+
+            // U7 — mouse-look apps: capture the cursor from boot. Esc releases;
+            // a click inside the window recaptures (see OnUpdate).
+            m_CaptureCursor = cfg->GetBool("capture_cursor", false);
+            if (m_CaptureCursor)
+                Application::Get().GetWindow().SetCursorCaptured(true);
         }
         Application::Get().SetFixedTimestepHz(fixedHz);
 
@@ -135,6 +147,7 @@ namespace Cosmic
 
     void PlayerLayer::OnDetach()
     {
+        Application::Get().GetWindow().SetCursorCaptured(false);   // U7 — never leak capture
         m_Flow.Stop();   // U5 — unsubscribe from scene buses before scenes tear down
         if (m_TrackedScene)
             m_TrackedScene->OnPhysicsStop(m_Physics);
@@ -165,6 +178,19 @@ namespace Cosmic
     void PlayerLayer::OnUpdate(float ts)
     {
         auto& app = Application::Get();
+
+        // U7 — mouse-look capture lifecycle: Esc releases, a click recaptures.
+        // (The Esc press ALSO reaches the flow below — releasing capture and
+        // opening a pause overlay on the same press is the intended feel.)
+        if (m_CaptureCursor)
+        {
+            auto& win = app.GetWindow();
+            if (Input::IsKeyPressed(CS_KEY_ESCAPE))
+                win.SetCursorCaptured(false);
+            else if (!win.IsCursorCaptured() && !m_PrevMouseDown &&
+                     Input::IsMouseButtonPressed(CS_MOUSE_BUTTON_LEFT))
+                win.SetCursorCaptured(true);
+        }
 
         // Advance any queued scene transition; re-instantiate scripts on a swap.
         m_Scenes.OnUpdate(ts);
@@ -301,6 +327,13 @@ namespace Cosmic
             desc.DrawOverlay2D = [scenePtr, vw, vh]()
             {
                 UiSystem::Render(*scenePtr, UiRect{ { 0.0f, 0.0f }, { (float)vw, (float)vh } });
+            };
+
+            // U3 — world-space sprites draw in the transparent phase (HDR bound,
+            // scene depth live). A scene with no sprites makes no GL calls here.
+            desc.DrawTransparent = [scenePtr, vw, vh](const SceneDrawContext& c)
+            {
+                scenePtr->OnRenderSprites(c.ViewProjection, vw, vh);
             };
 
             if (auto* env = m_TrackedScene->FindEnvironment())

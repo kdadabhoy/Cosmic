@@ -164,6 +164,20 @@ namespace Cosmic
                                 ssc->Fields[sf.Name] = DeserializeValue(sf, fj[sf.Name]);
                     }
                 }
+
+                // Tilemap cells (U4) — a plain int array (custom block; the
+                // vector<uint16> payload is not a reflected field kind).
+                if (compName == "Tilemap" && compJson.contains("Cells")
+                    && compJson["Cells"].is_array())
+                {
+                    auto* tm = static_cast<TilemapComponent*>(comp);
+                    tm->Cells.clear();
+                    tm->Cells.reserve(compJson["Cells"].size());
+                    for (const auto& c : compJson["Cells"])
+                        tm->Cells.push_back(c.is_number()
+                            ? (uint16_t)c.get<uint32_t>() : (uint16_t)0);
+                    tm->EnsureCells();   // clamp grid + size the buffer to GridW*GridH
+                }
             }
         }
 
@@ -221,6 +235,15 @@ namespace Cosmic
                         if (!fj.empty())
                             cj["Fields"] = std::move(fj);
                     }
+                }
+
+                if (d->Name == "Tilemap")   // U4 — Cells as a plain int array
+                {
+                    const auto* tm = static_cast<const TilemapComponent*>(comp);
+                    json cells = json::array();
+                    for (uint16_t c : tm->Cells)
+                        cells.push_back((uint32_t)c);
+                    cj["Cells"] = std::move(cells);
                 }
 
                 comps[d->Name] = cj;

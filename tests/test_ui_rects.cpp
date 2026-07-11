@@ -265,6 +265,30 @@ TEST_CASE("U1: overlapping buttons — topmost ZOrder wins the click")
     CHECK(back == 0);
 }
 
+TEST_CASE("U1: HitTest returns the topmost element under a point (editor select)")
+{
+    Scene s;
+    Entity canvas = s.CreateEntity("Canvas");
+    canvas.AddComponent<CanvasComponent>().ScaleMode = UiScaleMode::ConstantPixel;
+
+    Entity back  = MakeButton(s, canvas, "back",  { 0, 0 },     { 200, 80 }, /*z=*/0);
+    Entity front = MakeButton(s, canvas, "front", { 50, 20 },   { 150, 60 }, /*z=*/10);
+
+    const UiRect vp{ {0, 0}, {800, 600} };
+
+    // Overlap region -> the higher ZOrder element.
+    uint32_t hit = 0;
+    CHECK(UiSystem::HitTest(s, vp, { 100, 40 }, hit));
+    CHECK((entt::entity)hit == (entt::entity)front);
+
+    // Back-only region.
+    CHECK(UiSystem::HitTest(s, vp, { 10, 10 }, hit));
+    CHECK((entt::entity)hit == (entt::entity)back);
+
+    // Empty space -> no hit.
+    CHECK_FALSE(UiSystem::HitTest(s, vp, { 500, 500 }, hit));
+}
+
 // ---------------------------------------------------------------------------
 // EventBus basics (U2 dividend — tested here since U1 rides it)
 // ---------------------------------------------------------------------------

@@ -199,6 +199,24 @@ namespace Cosmic
         return topHit != entt::null;
     }
 
+    bool UiSystem::HitTest(Scene& scene, const UiRect& viewport, const glm::vec2& point,
+                           uint32_t& outEntity)
+    {
+        std::vector<UiElement> elements;
+        CollectElements(scene, viewport, elements);
+
+        // Front-to-back: the list is back-to-front draw order, so walk it reversed.
+        for (auto it = elements.rbegin(); it != elements.rend(); ++it)
+        {
+            if (it->Rect.Contains(point))
+            {
+                outEntity = it->Handle;
+                return true;
+            }
+        }
+        return false;
+    }
+
     // ========================================================================
     // Render (GL)
     // ========================================================================
@@ -359,18 +377,29 @@ namespace Cosmic
 
     void UiSystem::Render(Scene& scene, const UiRect& viewport)
     {
+        // Projection spans the layout rect itself (the classic full-target case).
+        Render(scene, viewport,
+               (uint32_t)std::max(1.0f, viewport.Width()),
+               (uint32_t)std::max(1.0f, viewport.Height()));
+    }
+
+    void UiSystem::Render(Scene& scene, const UiRect& canvasRect,
+                          uint32_t targetW, uint32_t targetH)
+    {
         std::vector<UiElement> elements;
-        CollectElements(scene, viewport, elements);
+        CollectElements(scene, canvasRect, elements);
         if (elements.empty()) return;
 
         auto& reg = scene.GetRegistry();
 
-        const uint32_t w = (uint32_t)std::max(1.0f, viewport.Width());
-        const uint32_t h = (uint32_t)std::max(1.0f, viewport.Height());
+        const uint32_t w = std::max(1u, targetW);
+        const uint32_t h = std::max(1u, targetH);
 
-        // Screen-space ortho: canvas top-left origin, +y DOWN.
-        glm::mat4 proj = glm::ortho(viewport.Min.x, viewport.Max.x, viewport.Max.y, viewport.Min.y,
-                                    -1.0f, 1.0f);
+        // Screen-space ortho over the FULL target (top-left origin, +y DOWN).
+        // Elements were resolved against canvasRect, so their absolute coords
+        // already sit inside the band — the identity pixel mapping places them
+        // there. canvasRect == {0,0,w,h} degenerates to the classic case.
+        glm::mat4 proj = glm::ortho(0.0f, (float)w, (float)h, 0.0f, -1.0f, 1.0f);
 
         // UI is a painter-ordered overlay: no depth test/write, straight alpha.
         RenderCommand::SetDepthTest(false);

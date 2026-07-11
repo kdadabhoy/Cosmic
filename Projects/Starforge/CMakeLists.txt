@@ -38,6 +38,23 @@ endif()
 # -------------------------------------------------------------------
 file(GLOB_RECURSE STARFORGE_SOURCES CONFIGURE_DEPENDS "src/*.cpp" "src/*.h")
 
+# imgui-node-editor (U6 Flow Graph panel) — vendored library sources compiled
+# into the editor DLL, warnings off (external code; see the dependency's
+# VENDOR-NOTES.md). In-tree the ImGui symbols come from the propagated static
+# imgui target; standalone they come from the bundled sources below.
+set(STARFORGE_NODE_EDITOR_SOURCES
+    "${COSMIC_SDK_DIR}/Cosmic/dependencies/imgui-node-editor/imgui_node_editor.cpp"
+    "${COSMIC_SDK_DIR}/Cosmic/dependencies/imgui-node-editor/imgui_node_editor_api.cpp"
+    "${COSMIC_SDK_DIR}/Cosmic/dependencies/imgui-node-editor/imgui_canvas.cpp"
+    "${COSMIC_SDK_DIR}/Cosmic/dependencies/imgui-node-editor/crude_json.cpp"
+)
+if(MSVC)
+    set_source_files_properties(${STARFORGE_NODE_EDITOR_SOURCES} PROPERTIES COMPILE_OPTIONS "/w")
+else()
+    set_source_files_properties(${STARFORGE_NODE_EDITOR_SOURCES} PROPERTIES COMPILE_OPTIONS "-w")
+endif()
+list(APPEND STARFORGE_SOURCES ${STARFORGE_NODE_EDITOR_SOURCES})
+
 # When building standalone (outside the engine root), bundle vendor ImGui/ImPlot sources
 if(NOT TARGET Cosmic)
     list(APPEND STARFORGE_SOURCES
@@ -61,6 +78,8 @@ target_include_directories(Starforge SYSTEM PRIVATE
     ${COSMIC_SDK_DIR}/Cosmic/src
     ${COSMIC_SDK_DIR}/Cosmic/dependencies/imgui
     ${COSMIC_SDK_DIR}/Cosmic/dependencies/implot
+    ${COSMIC_SDK_DIR}/Cosmic/dependencies/imgui-node-editor
+    ${COSMIC_SDK_DIR}/Cosmic/dependencies
     ${COSMIC_SDK_DIR}/Cosmic/dependencies/glm
     ${COSMIC_SDK_DIR}/Cosmic/dependencies/entt/src
     ${COSMIC_SDK_DIR}/Cosmic/dependencies/spdlog/include

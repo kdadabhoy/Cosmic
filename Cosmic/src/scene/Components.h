@@ -152,10 +152,42 @@ namespace Cosmic
         float     PixelsPerUnit = 100.0f;
         int32_t   ZOrder = 0;
 
+        // --- 2D authoring, second slice (U3 full mode; ABI-appended) -----------
+        // TexturePath: authored sprite image (AssetPath("texture")); empty keeps
+        // the legacy behavior (ActiveMaterial if set, else a flat Color quad).
+        // Lazily resolved by Scene::OnRenderSprites (main-thread/GL) into
+        // Resolved. YSort: within one ZOrder, order back-to-front by -Y instead
+        // of Z (per-sprite Y-sort — a lower-on-screen sprite draws in front, the
+        // top-down-game convention). Sized by the texture: worldSize =
+        // (SourceRect texels / PixelsPerUnit) * Transform.Scale.xy.
+        std::string TexturePath;
+        bool        YSort = false;
+
+        // Runtime-only (not reflected): lazily resolved texture + its source path.
+        Ref<Texture2D> Resolved;
+        std::string    ResolvedPath;
+
         SpriteRendererComponent() = default;
         SpriteRendererComponent(const SpriteRendererComponent&) = default;
         SpriteRendererComponent(const Ref<Material>& material) : ActiveMaterial(material) {}
         SpriteRendererComponent(const glm::vec4& color) : Color(color) {}
+
+        /** @brief The U3 sizing rule, shared by the render pass and editor
+         *  picking/outlines (pure). Textured (texW/texH > 0): world size =
+         *  SourceRect texels / PixelsPerUnit x scale; untextured: the scale is
+         *  the size (legacy quad behavior). Unsigned — flips are applied by the
+         *  draw, not here. */
+        static glm::vec2 WorldSize(const SpriteRendererComponent& s,
+                                   const glm::vec2& scale, int texW, int texH)
+        {
+            if (texW > 0 && texH > 0)
+            {
+                const float ppu = (s.PixelsPerUnit > 0.0f) ? s.PixelsPerUnit : 1.0f;
+                return { (s.SourceRect.z - s.SourceRect.x) * (float)texW / ppu * scale.x,
+                         (s.SourceRect.w - s.SourceRect.y) * (float)texH / ppu * scale.y };
+            }
+            return scale;
+        }
     };
 
 
@@ -206,6 +238,101 @@ namespace Cosmic
             const float v0 = (float)(row * frameH) / (float)texH;
             const float v1 = (float)((row + 1) * frameH) / (float)texH;
             return { u0, v0, u1, v1 };
+        }
+    };
+
+
+    /**
+     * @brief Tile-grid renderer (U4). A GridW x GridH map of cells drawn from a
+     * tile ATLAS (TilesetPath, TileW x TileH texel tiles, `Columns` per atlas
+     * row — 0 derives it from the texture width). Cell values: 0 = empty, v > 0
+     * = atlas tile index v-1 (row-major, row 0 at the TOP of the atlas image).
+     *
+     * WORLD MAPPING: one cell = one world unit (the 2D pixel-grid convention);
+     * the entity's Position is the map's BOTTOM-LEFT corner, cells grow +X/+Y.
+     * Entity rotation/scale are ignored in v1 (axis-aligned draw). Drawn inside
+     * Scene::OnRenderSprites' painter order via ZOrder (key = Position.z), so
+     * maps layer with sprites. Cells are serialized by the SceneSerializer as a
+     * plain int array (diff-friendly; compresses fine in git) — a custom block,
+     * not a reflected field. Grid dimensions clamp to 1..1024 (v1 cap); the
+     * visible-cell walk is culled by the camera's world rect each draw.
+     */
+    struct COSMIC_API TilemapComponent
+    {
+        static constexpr int32_t kMaxGrid = 1024;
+
+        std::string TilesetPath;          // AssetPath("texture") — the tile atlas
+        int32_t     TileW   = 16;         // texels per tile in the atlas
+        int32_t     TileH   = 16;
+        int32_t     Columns = 0;          // atlas columns; 0 => texture width / TileW
+        int32_t     GridW   = 32;         // map size in cells (1..kMaxGrid)
+        int32_t     GridH   = 32;
+        int32_t     ZOrder  = 0;          // sort order within the 2D pass
+        std::vector<uint16_t> Cells;      // row-major [y*GridW + x]; y 0 = bottom row
+
+        // Runtime-only (not reflected): lazily resolved atlas + its source path.
+        Ref<Texture2D> Resolved;
+        std::string    ResolvedPath;
+
+        TilemapComponent() = default;
+        TilemapComponent(const TilemapComponent&) = default;
+
+        /** @brief Clamp the grid to 1..kMaxGrid and size Cells to match
+         *  (preserving existing values; new cells are empty). */
+        void EnsureCells()
+        {
+            GridW = GridW < 1 ? 1 : (GridW > kMaxGrid ? kMaxGrid : GridW);
+            GridH = GridH < 1 ? 1 : (GridH > kMaxGrid ? kMaxGrid : GridH);
+            Cells.resize((size_t)GridW * (size_t)GridH, 0);
+        }
+
+        bool InBounds(int x, int y) const
+        {
+            return x >= 0 && y >= 0 && x < GridW && y < GridH;
+        }
+
+        uint16_t At(int x, int y) const
+        {
+            const size_t i = (size_t)y * (size_t)GridW + (size_t)x;
+            return (InBounds(x, y) && i < Cells.size()) ? Cells[i] : (uint16_t)0;
+        }
+
+        /** @brief 4-connected flood fill over a cell buffer (pure; shared by the
+         *  editor's fill tool and tests). Fills the connected region of the
+         *  value at (x,y) with `value`; returns the changed indices (empty when
+         *  out of bounds or the region already holds `value`). */
+        static std::vector<uint32_t> FloodFill(std::vector<uint16_t>& cells,
+                                               int gridW, int gridH,
+                                               int x, int y, uint16_t value)
+        {
+            std::vector<uint32_t> changed;
+            if (x < 0 || y < 0 || x >= gridW || y >= gridH)
+                return changed;
+            const size_t need = (size_t)gridW * (size_t)gridH;
+            if (cells.size() < need)
+                cells.resize(need, 0);
+
+            const uint16_t from = cells[(size_t)y * gridW + x];
+            if (from == value)
+                return changed;
+
+            std::vector<uint32_t> stack{ (uint32_t)(y * gridW + x) };
+            while (!stack.empty())
+            {
+                const uint32_t i = stack.back();
+                stack.pop_back();
+                if (cells[i] != from)
+                    continue;
+                cells[i] = value;
+                changed.push_back(i);
+
+                const int cx = (int)(i % gridW), cy = (int)(i / gridW);
+                if (cx > 0)         stack.push_back(i - 1);
+                if (cx < gridW - 1) stack.push_back(i + 1);
+                if (cy > 0)         stack.push_back(i - (uint32_t)gridW);
+                if (cy < gridH - 1) stack.push_back(i + (uint32_t)gridW);
+            }
+            return changed;
         }
     };
 
@@ -831,6 +958,7 @@ CS_REGISTER_COMPONENT(Cosmic::TagComponent)
 CS_REGISTER_COMPONENT(Cosmic::TransformComponent)
 CS_REGISTER_COMPONENT(Cosmic::SpriteRendererComponent)
 CS_REGISTER_COMPONENT(Cosmic::SpriteAnimationComponent)
+CS_REGISTER_COMPONENT(Cosmic::TilemapComponent)
 CS_REGISTER_COMPONENT(Cosmic::MeshRendererComponent)
 CS_REGISTER_COMPONENT(Cosmic::PrimitiveMeshComponent)
 CS_REGISTER_COMPONENT(Cosmic::LODGroupComponent)

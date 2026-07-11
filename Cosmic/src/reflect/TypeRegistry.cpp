@@ -46,7 +46,20 @@ namespace Cosmic::Reflect
             // 2D authoring (U3).
             .Field("SourceRect",    &SpriteRendererComponent::SourceRect).Tooltip("Sampled sub-rect in normalized UV {u0,v0,u1,v1}")
             .Field("PixelsPerUnit", &SpriteRendererComponent::PixelsPerUnit).Range(1.0f, 4096.0f)
-            .Field("ZOrder",        &SpriteRendererComponent::ZOrder).Tooltip("Sort order within the 2D pass");
+            .Field("ZOrder",        &SpriteRendererComponent::ZOrder).Tooltip("Sort order within the 2D pass")
+            .Field("TexturePath",   &SpriteRendererComponent::TexturePath).AsAssetPath("texture")
+            .Field("YSort",         &SpriteRendererComponent::YSort).Tooltip("Within a ZOrder, order by -Y (lower on screen draws in front) instead of Z");
+
+        // Tile-grid renderer (U4). Cells is NOT reflected — the SceneSerializer
+        // writes it as a plain int array (custom block, diff-friendly).
+        ClassIn<TilemapComponent>(r, "Tilemap", "Rendering")
+            .Field("TilesetPath", &TilemapComponent::TilesetPath).AsAssetPath("texture")
+            .Field("TileW",       &TilemapComponent::TileW).Range(1.0f, 1024.0f).Tooltip("Tile width in atlas texels")
+            .Field("TileH",       &TilemapComponent::TileH).Range(1.0f, 1024.0f).Tooltip("Tile height in atlas texels")
+            .Field("Columns",     &TilemapComponent::Columns).Range(0.0f, 1024.0f).Tooltip("Atlas columns; 0 = texture width / TileW")
+            .Field("GridW",       &TilemapComponent::GridW).Range(1.0f, 1024.0f)
+            .Field("GridH",       &TilemapComponent::GridH).Range(1.0f, 1024.0f)
+            .Field("ZOrder",      &TilemapComponent::ZOrder).Tooltip("Sort order within the 2D pass");
 
         // Flipbook sprite animation (U4). Elapsed is runtime-only (not reflected).
         ClassIn<SpriteAnimationComponent>(r, "SpriteAnimation", "Rendering")

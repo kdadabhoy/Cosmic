@@ -85,6 +85,12 @@ namespace Cosmic
 
 		void					SetProjection(float left, float right, float bottom, float top);
 
+		// Depth-ranged overload (U3): the 4-arg form keeps the legacy -1..1 clip
+		// range; pass explicit near/far when the ortho view must see world depth
+		// (the editor 2D mode looks down +Z at sprites spread across Z/ZOrder).
+		void					SetProjection(float left, float right, float bottom, float top,
+		                                      float nearZ, float farZ);
+
 		////////////////////////////////
 		// Getters (Matrices & State)
 		///////////////////////////////

@@ -44,6 +44,19 @@ namespace Cosmic
 		m_ViewProjectionMatrix = m_ProjectionMatrix * m_ViewMatrix;
 	}
 
+	/**
+	 * SetProjection (depth-ranged overload, U3)
+	 *
+	 * Same as above with an explicit near/far clip range, for ortho views that
+	 * must see real world depth (the editor 2D mode's Z-facing camera).
+	 */
+	void OrthographicCamera::SetProjection(float left, float right, float bottom, float top,
+	                                       float nearZ, float farZ)
+	{
+		m_ProjectionMatrix = glm::ortho(left, right, bottom, top, nearZ, farZ);
+		m_ViewProjectionMatrix = m_ProjectionMatrix * m_ViewMatrix;
+	}
+
 	/////////////////////////////////////////////////////////////////////////////////
 
 	/**

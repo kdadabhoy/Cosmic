@@ -28,6 +28,22 @@ namespace Cosmic
 		std::unordered_map<std::string, Ref<Model>>     s_Models;
 		std::unordered_map<std::string, Ref<Material>>  s_Materials;
 
+		// U3 — optional process-wide default sampling for freshly loaded textures
+		// (the pixel-art preset). Off by default: the loader's own sampling wins.
+		bool          s_SamplingOverride = false;
+		TextureFilter s_SamplingFilter   = TextureFilter::Linear;
+		TextureWrap   s_SamplingWrap     = TextureWrap::Repeat;
+
+		// Create + (optionally) apply the default sampling — the ONE texture
+		// loader GetTexture and Reload share.
+		Ref<Texture2D> LoadTexture(const std::string& resolved)
+		{
+			Ref<Texture2D> tex = Texture2D::Create(resolved);
+			if (tex && s_SamplingOverride)
+				tex->SetSampling(s_SamplingFilter, s_SamplingWrap);
+			return tex;
+		}
+
 		// Shared miss/hit logic: normalize → hit returns stored Ref; miss loads via
 		// `loader` (given the RESOLVED disk path). A null load is logged once and NOT
 		// cached (so a later call can retry), and returns null.
@@ -63,7 +79,19 @@ namespace Cosmic
 	Ref<Texture2D> AssetLibrary::GetTexture(const std::string& path)
 	{
 		return GetOrLoad<Texture2D>(s_Textures, path,
-			[](const std::string& resolved) { return Texture2D::Create(resolved); });
+			[](const std::string& resolved) { return LoadTexture(resolved); });
+	}
+
+	void AssetLibrary::SetDefaultTextureSampling(TextureFilter filter, TextureWrap wrap)
+	{
+		s_SamplingOverride = true;
+		s_SamplingFilter   = filter;
+		s_SamplingWrap     = wrap;
+	}
+
+	void AssetLibrary::ClearDefaultTextureSampling()
+	{
+		s_SamplingOverride = false;
 	}
 
 	Ref<Shader> AssetLibrary::GetShader(const std::string& path)
@@ -166,7 +194,7 @@ namespace Cosmic
 		{
 			s_Textures.erase(it);
 			evicted = true;
-			if (Ref<Texture2D> fresh = Texture2D::Create(FileSystem::Resolve(path)))
+			if (Ref<Texture2D> fresh = LoadTexture(FileSystem::Resolve(path)))
 				s_Textures.emplace(key, fresh);
 		}
 

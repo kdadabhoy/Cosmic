@@ -533,4 +533,103 @@ namespace Starforge
         ctx.Commands.Push(std::make_unique<VoxelEditCommand>(
             ctx, IdOf(e), stroke, VoxelEditCommand::Op{ voxel, oldId, newId }));
     }
+
+    // ----- tilemap edits (U4) — a coalesced paint stroke = one undo step ------
+    namespace
+    {
+        class TileEditCommand : public ICommand
+        {
+        public:
+            struct Op { uint32_t Cell; uint16_t Old; uint16_t New; };
+
+            TileEditCommand(EditorContext& ctx, uint64_t uuid, int stroke,
+                            std::vector<Op> ops, std::string label)
+                : m_Ctx(&ctx), m_Uuid(uuid), m_Stroke(stroke),
+                  m_Ops(std::move(ops)), m_Label(std::move(label)) {}
+
+            void Do() override
+            {
+                if (TilemapComponent* tm = Map())
+                    for (const Op& o : m_Ops)
+                        if (o.Cell < tm->Cells.size()) tm->Cells[o.Cell] = o.New;
+                if (m_Ctx) m_Ctx->MarkDirty();
+            }
+            void Undo() override
+            {
+                if (TilemapComponent* tm = Map())
+                    for (auto it = m_Ops.rbegin(); it != m_Ops.rend(); ++it)
+                        if (it->Cell < tm->Cells.size()) tm->Cells[it->Cell] = it->Old;
+                if (m_Ctx) m_Ctx->MarkDirty();
+            }
+            std::string Name() const override { return m_Label; }
+            std::string MergeKey() const override
+            {
+                // Batch fills use stroke -1: empty key = never coalesced.
+                if (m_Stroke < 0) return {};
+                return "tile:" + std::to_string(m_Uuid) + ":" + std::to_string(m_Stroke);
+            }
+            bool TryMerge(const ICommand& next) override
+            {
+                const auto* n = dynamic_cast<const TileEditCommand*>(&next);
+                if (!n || MergeKey().empty() || n->MergeKey() != MergeKey()) return false;
+                m_Ops.insert(m_Ops.end(), n->m_Ops.begin(), n->m_Ops.end());
+                return true;
+            }
+
+        private:
+            TilemapComponent* Map() const
+            {
+                Entity e = Resolve(*m_Ctx, m_Uuid);
+                if (!e || !e.HasComponent<TilemapComponent>()) return nullptr;
+                TilemapComponent& tm = e.GetComponent<TilemapComponent>();
+                tm.EnsureCells();
+                return &tm;
+            }
+
+            EditorContext*  m_Ctx;
+            uint64_t        m_Uuid;
+            int             m_Stroke;
+            std::vector<Op> m_Ops;
+            std::string     m_Label;
+        };
+    }
+
+    void Commands::TileEdit(EditorContext& ctx, Entity e, int x, int y,
+                            uint16_t value, int stroke)
+    {
+        if (!ctx.Scene || !e || !e.HasComponent<TilemapComponent>()) return;
+        TilemapComponent& tm = e.GetComponent<TilemapComponent>();
+        tm.EnsureCells();
+        if (!tm.InBounds(x, y)) return;
+        const uint32_t cell = (uint32_t)(y * tm.GridW + x);
+        const uint16_t old  = tm.Cells[cell];
+        if (old == value) return;
+
+        tm.Cells[cell] = value;   // apply live, then record (Push, not Execute)
+        ctx.Commands.Push(std::make_unique<TileEditCommand>(
+            ctx, IdOf(e), stroke,
+            std::vector<TileEditCommand::Op>{ { cell, old, value } }, "Paint Tiles"));
+    }
+
+    void Commands::TileEditRun(EditorContext& ctx, Entity e,
+                               const std::vector<std::pair<uint32_t, uint16_t>>& writes,
+                               const char* label)
+    {
+        if (!ctx.Scene || !e || !e.HasComponent<TilemapComponent>() || writes.empty()) return;
+        TilemapComponent& tm = e.GetComponent<TilemapComponent>();
+        tm.EnsureCells();
+
+        std::vector<TileEditCommand::Op> ops;
+        ops.reserve(writes.size());
+        for (const auto& [cell, value] : writes)
+        {
+            if (cell >= tm.Cells.size() || tm.Cells[cell] == value) continue;
+            ops.push_back({ cell, tm.Cells[cell], value });
+            tm.Cells[cell] = value;   // apply live
+        }
+        if (ops.empty()) return;
+
+        ctx.Commands.Push(std::make_unique<TileEditCommand>(
+            ctx, IdOf(e), /*stroke=*/-1, std::move(ops), label ? label : "Fill Tiles"));
+    }
 }

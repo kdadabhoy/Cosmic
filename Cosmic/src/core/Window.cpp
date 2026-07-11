@@ -622,6 +622,17 @@ namespace Cosmic
 		glfwSetWindowSize(m_Handle, width, height);
 	}
 
+	void Window::SetCursorCaptured(bool captured)
+	{
+		// Mouse-look capture (U7): GLFW's disabled-cursor mode hides the cursor,
+		// locks it to the window, and provides unbounded virtual deltas. NORMAL
+		// restores the visible OS cursor. Idempotent.
+		if (!m_Handle || captured == m_CursorCaptured) return;
+		glfwSetInputMode(m_Handle, GLFW_CURSOR,
+		                 captured ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL);
+		m_CursorCaptured = captured;
+	}
+
 	bool Window::IsWindowMaximized() const
 	{
 		return m_Handle && glfwGetWindowAttrib(m_Handle, GLFW_MAXIMIZED) != 0;

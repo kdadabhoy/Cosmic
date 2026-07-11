@@ -82,5 +82,8 @@ namespace Cosmic
         // U1 — pointer edge tracking for UI interaction / key-signal feed.
         bool m_PrevMouseDown = false;
         bool m_PrevEscape    = false;
+        // U7 — mouse-look capture ("capture_cursor" manifest key): captured on
+        // boot, Esc releases, a click inside the window recaptures.
+        bool m_CaptureCursor = false;
     };
 }

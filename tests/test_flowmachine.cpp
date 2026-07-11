@@ -74,6 +74,28 @@ TEST_CASE("U5: .cflow parses, serializes, and round-trips")
     CHECK(b.Find("MainMenu")->OnEnter[0].Signal == "menu_shown");
 }
 
+TEST_CASE("U6: node layout (EditorPos) round-trips the .cflow and is runtime-inert")
+{
+    // The Flow Graph panel persists node positions into each state's
+    // "editor": {"pos": [x,y]} block; the runtime must ignore them entirely.
+    FlowAsset a;
+    REQUIRE(FlowAsset::LoadFromString(a, kFlow, nullptr));
+    a.States[0].EditorPos = {  40.0f,  60.0f };
+    a.States[1].EditorPos = { 340.0f, 260.0f };
+
+    FlowAsset b;
+    std::string err;
+    REQUIRE(FlowAsset::LoadFromString(b, a.SaveToString(), &err));
+    CHECK(b.States[0].EditorPos.x == doctest::Approx(40.0f));
+    CHECK(b.States[0].EditorPos.y == doctest::Approx(60.0f));
+    CHECK(b.States[1].EditorPos.x == doctest::Approx(340.0f));
+    CHECK(b.States[1].EditorPos.y == doctest::Approx(260.0f));
+
+    // Same structure/validation with or without layout: the block is editor-only.
+    CHECK(b.Validate().empty());
+    CHECK(b.States.size() == a.States.size());
+}
+
 TEST_CASE("U5: Validate flags missing start and unknown transition targets")
 {
     FlowAsset a;

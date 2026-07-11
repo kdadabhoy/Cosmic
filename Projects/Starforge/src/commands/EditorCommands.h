@@ -18,6 +18,8 @@
 
 #include <functional>
 #include <string>
+#include <utility>
+#include <vector>
 
 namespace Starforge
 {
@@ -78,5 +80,18 @@ namespace Starforge
         // drag = one undo). No-op when the id is unchanged or there is no volume.
         void VoxelEdit(EditorContext& ctx, Cosmic::Entity e,
                        const glm::ivec3& voxel, uint16_t newId, int stroke);
+
+        // Set one tilemap cell (grid coords) on `e`'s Tilemap to `value`,
+        // undoable (U4). Same stroke-coalescing contract as VoxelEdit: a paint
+        // drag sharing `stroke` is ONE undo step. No-op on unchanged/out-of-map.
+        void TileEdit(EditorContext& ctx, Cosmic::Entity e,
+                      int x, int y, uint16_t value, int stroke);
+
+        // Apply a batch of tilemap cell writes {cellIndex -> value} as ONE undo
+        // step (flood fill / rect fill). Cells already holding the value are
+        // skipped; an empty effective batch records nothing.
+        void TileEditRun(EditorContext& ctx, Cosmic::Entity e,
+                         const std::vector<std::pair<uint32_t, uint16_t>>& writes,
+                         const char* label);
     }
 }

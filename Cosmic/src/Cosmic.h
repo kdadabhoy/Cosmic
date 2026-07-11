@@ -73,6 +73,7 @@
 #include "camera/OrthographicCameraController.h"
 #include "camera/PerspectiveCamera.h"
 #include "camera/OrbitCameraController.h"   // + NavStyle / ViewPreset (S5.1 / S5.2)
+#include "camera/Camera2DController.h"      // U3 — 2D pan/zoom rig (XY plane, MMB pan, wheel zoom)
 #include "camera/FlyCameraController.h"      // F1 — WASD + mouse-look exploration camera
 #include "camera/NavigationCube.h"          // S5.3 — orientation cube widget
 

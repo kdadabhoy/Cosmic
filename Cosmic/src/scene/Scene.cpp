@@ -5,7 +5,9 @@
 #include "scene/Components.h"
 #include "renderer/Renderer2D.h"
 #include "renderer/Renderer3D.h"
+#include "renderer/RenderCommand.h"   // U3 — sprite-pass depth/blend state
 #include "renderer/SceneRenderer.h"   // H2 — BuildRenderDesc fills a SceneRenderDesc
+#include "graphics/SubTexture2D.h"    // U3 — SourceRect sub-rect draws
 #include "assets/AssetLibrary.h"
 #include "terrain/Terrain.h"
 #include "water/Water.h"
@@ -804,6 +806,183 @@ namespace Cosmic
 				(int)sheet->GetWidth(), (int)sheet->GetHeight(),
 				anim.FrameW, anim.FrameH, anim.Row, frame);
 		}
+	}
+
+	void Scene::OnRenderSprites(const glm::mat4& viewProjection,
+	                            uint32_t viewportWidth, uint32_t viewportHeight)
+	{
+		auto view    = m_Registry.view<TransformComponent, SpriteRendererComponent>();
+		auto tmView  = m_Registry.view<TransformComponent, TilemapComponent>();
+		const bool anySprites  = view.begin() != view.end();
+		const bool anyTilemaps = tmView.begin() != tmView.end();
+		if (!anySprites && !anyTilemaps)
+			return;   // compat gate: a scene without 2D content makes NO GL calls here
+
+		// Painter order: ascending ZOrder, then the per-item key (sprite YSort
+		// sorts by -Y so a lower-on-screen sprite draws in front; default =
+		// Position.z, the legacy 2D-path tie-break), then entity id. Tilemaps
+		// interleave with sprites through the same (ZOrder, Z) keys.
+		struct SpriteItem { entt::entity E; int32_t Z; float Key; bool Map; };
+		std::vector<SpriteItem> items;
+		for (auto e : view)
+		{
+			const auto& t = view.get<TransformComponent>(e);
+			const auto& s = view.get<SpriteRendererComponent>(e);
+			items.push_back({ e, s.ZOrder, s.YSort ? -t.Position.y : t.Position.z, false });
+		}
+		for (auto e : tmView)
+		{
+			const auto& t  = tmView.get<TransformComponent>(e);
+			const auto& tm = tmView.get<TilemapComponent>(e);
+			items.push_back({ e, tm.ZOrder, t.Position.z, true });
+		}
+		std::sort(items.begin(), items.end(), [](const SpriteItem& a, const SpriteItem& b)
+		{
+			if (a.Z   != b.Z)   return a.Z   < b.Z;
+			if (a.Key != b.Key) return a.Key < b.Key;
+			return a.E < b.E;
+		});
+
+		// World-space XY bounds of the view frustum (invVP over the NDC cube) —
+		// exact for the ortho 2D camera, conservative for perspective. Culls the
+		// tilemap cell walk to the visible range. Computed once per call.
+		glm::vec2 cullMin(0.0f), cullMax(0.0f);
+		bool haveCull = false;
+		if (anyTilemaps)
+		{
+			const glm::mat4 invVP = glm::inverse(viewProjection);
+			for (int i = 0; i < 8; ++i)
+			{
+				glm::vec4 c = invVP * glm::vec4((i & 1) ? 1.0f : -1.0f,
+				                                (i & 2) ? 1.0f : -1.0f,
+				                                (i & 4) ? 1.0f : -1.0f, 1.0f);
+				if (std::abs(c.w) < 1e-9f) continue;
+				c /= c.w;
+				const glm::vec2 p{ c.x, c.y };
+				if (!haveCull) { cullMin = cullMax = p; haveCull = true; }
+				else           { cullMin = glm::min(cullMin, p); cullMax = glm::max(cullMax, p); }
+			}
+		}
+
+		// Transparent-queue contract: depth test ON (3D occludes sprites in a
+		// 2.5D scene), depth write OFF, straight alpha. Restore write on exit.
+		RenderCommand::SetDepthTest(true);
+		RenderCommand::SetDepthWrite(false);
+		RenderCommand::SetBlendMode(RendererAPI::BlendMode::Alpha);
+
+		Renderer2D::PushRenderPass(viewProjection,
+			{ 0.0f, 0.0f, (float)viewportWidth, (float)viewportHeight });
+
+		for (const SpriteItem& it : items)
+		{
+			if (it.Map)
+			{
+				// ---- tilemap draw: a culled cell walk in one batched pass ------
+				auto& t  = tmView.get<TransformComponent>(it.E);
+				auto& tm = tmView.get<TilemapComponent>(it.E);
+
+				if (tm.TilesetPath != tm.ResolvedPath)
+				{
+					tm.ResolvedPath = tm.TilesetPath;
+					tm.Resolved = tm.TilesetPath.empty() ? nullptr
+					                                     : AssetLibrary::GetTexture(tm.TilesetPath);
+				}
+				if (!tm.Resolved || tm.Resolved->GetWidth() <= 0 || tm.TileW <= 0 || tm.TileH <= 0)
+					continue;
+				tm.EnsureCells();
+
+				const float texW = (float)tm.Resolved->GetWidth();
+				const float texH = (float)tm.Resolved->GetHeight();
+				const int   cols = tm.Columns > 0 ? tm.Columns
+				                                  : std::max(1, (int)(texW / (float)tm.TileW));
+
+				// Visible cell range (one cell = one world unit off Position).
+				int x0 = 0, x1 = tm.GridW - 1, y0 = 0, y1 = tm.GridH - 1;
+				if (haveCull)
+				{
+					x0 = std::max(0,          (int)std::floor(cullMin.x - t.Position.x));
+					x1 = std::min(tm.GridW - 1, (int)std::ceil (cullMax.x - t.Position.x));
+					y0 = std::max(0,          (int)std::floor(cullMin.y - t.Position.y));
+					y1 = std::min(tm.GridH - 1, (int)std::ceil (cullMax.y - t.Position.y));
+				}
+
+				// One SubTexture per distinct tile id used this draw.
+				std::unordered_map<uint16_t, Ref<SubTexture2D>> tiles;
+				for (int cy = y0; cy <= y1; ++cy)
+				{
+					for (int cx = x0; cx <= x1; ++cx)
+					{
+						const uint16_t v = tm.Cells[(size_t)cy * tm.GridW + cx];
+						if (v == 0)
+							continue;
+						Ref<SubTexture2D>& sub = tiles[v];
+						if (!sub)
+						{
+							const int idx = (int)v - 1;
+							const int col = idx % cols, row = idx / cols;
+							const float u0 = col * tm.TileW / texW;
+							const float u1 = (col + 1) * tm.TileW / texW;
+							const float vTop = row * tm.TileH / texH;        // atlas row 0 = top
+							const float vBot = (row + 1) * tm.TileH / texH;
+							sub = CreateRef<SubTexture2D>(tm.Resolved,
+								glm::vec2{ u0, 1.0f - vBot },   // uvMin (bottom-left)
+								glm::vec2{ u1, 1.0f - vTop });  // uvMax (top-right)
+						}
+						Renderer2D::DrawQuad(
+							glm::vec3{ t.Position.x + cx + 0.5f, t.Position.y + cy + 0.5f, t.Position.z },
+							glm::vec2{ 1.0f, 1.0f }, sub);
+					}
+				}
+				continue;
+			}
+
+			auto& t = view.get<TransformComponent>(it.E);
+			auto& s = view.get<SpriteRendererComponent>(it.E);
+
+			// Lazy texture resolve (authored TexturePath; re-resolve on change).
+			if (s.TexturePath != s.ResolvedPath)
+			{
+				s.ResolvedPath = s.TexturePath;
+				s.Resolved = s.TexturePath.empty() ? nullptr
+				                                   : AssetLibrary::GetTexture(s.TexturePath);
+			}
+
+			const float rotZ = glm::radians(t.Rotation.z);
+
+			if (s.Resolved && s.Resolved->GetWidth() > 0)
+			{
+				// Shared U3 sizing rule; flips are negative scale (legacy convention).
+				const glm::vec4 src = s.SourceRect;   // {u0,v0,u1,v1}, V top-left origin
+				glm::vec2 size = SpriteRendererComponent::WorldSize(
+					s, { t.Scale.x, t.Scale.y },
+					(int)s.Resolved->GetWidth(), (int)s.Resolved->GetHeight());
+				size.x *= (s.FlipX ? -1.0f : 1.0f);
+				size.y *= (s.FlipY ? -1.0f : 1.0f);
+
+				// SubTexture2D is bottom-left-origin UV; SourceRect is top-left.
+				auto sub = CreateRef<SubTexture2D>(s.Resolved,
+					glm::vec2{ src.x, 1.0f - src.w },   // uvMin (bottom-left)
+					glm::vec2{ src.z, 1.0f - src.y });  // uvMax (top-right)
+				Renderer2D::DrawRotatedQuad(t.Position, size, rotZ, sub, s.Color);
+			}
+			else if (s.ActiveMaterial)
+			{
+				const glm::vec2 size{ t.Scale.x * (s.FlipX ? -1.0f : 1.0f),
+				                      t.Scale.y * (s.FlipY ? -1.0f : 1.0f) };
+				Renderer2D::DrawRotatedQuad(t.Position, size, rotZ, s.ActiveMaterial);
+			}
+			else
+			{
+				const glm::vec2 size{ t.Scale.x * (s.FlipX ? -1.0f : 1.0f),
+				                      t.Scale.y * (s.FlipY ? -1.0f : 1.0f) };
+				Renderer2D::DrawRotatedQuad(t.Position, size, rotZ, s.Color);
+			}
+		}
+
+		Renderer2D::PopRenderPass();
+
+		// Restore the engine depth-write default (test was already ON).
+		RenderCommand::SetDepthWrite(true);
 	}
 
 	void Scene::OnRender3D(const Camera& camera)

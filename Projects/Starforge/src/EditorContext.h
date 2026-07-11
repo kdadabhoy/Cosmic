@@ -85,6 +85,25 @@ namespace Starforge
             float    Reach       = 64.0f;   // max edit ray distance (world metres)
         } VoxelBrush;
 
+        // --- Tile brush (Phase 17 / U4) — shared by the Tile Palette panel +
+        //     the 2D-mode viewport painter. When Editing is on, 2D mode is
+        //     active, and the primary selection has a Tilemap: LMB applies the
+        //     Tool with Tile / RMB erases. A drag coalesces into ONE undo step
+        //     per stroke (mouse-down → up).
+        struct TileBrushState
+        {
+            enum class ToolKind : int { Paint = 0, Flood = 1, Rect = 2 };
+
+            bool     Editing = false;
+            uint16_t Tile    = 1;           // 1-based atlas tile painted by LMB
+            ToolKind Tool    = ToolKind::Paint;
+            int      Stroke  = 0;           // increments per mouse-down (undo coalesce key)
+
+            // Rect-tool drag state (viewport-owned; cell anchor of the press).
+            bool       RectDragging = false;
+            glm::ivec2 RectAnchor{ 0, 0 };
+        } TileBrush;
+
         // ===================================================================
         // Dirty tracking
         // ===================================================================

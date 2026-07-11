@@ -15,6 +15,7 @@
 // ============================================================================
 
 #include <Cosmic.h>
+#include "scene/FlowMachine.h"   // U5/U8 — flow-driven editor Play
 
 #include "EditorContext.h"
 #include "EditorPrefs.h"
@@ -31,6 +32,8 @@
 #include "panels/MaterialEditorPanel.h"
 #include "panels/WorldSystemsPanel.h"
 #include "panels/VoxelPanel.h"
+#include "panels/TilePalettePanel.h"
+#include "panels/FlowGraphPanel.h"
 #include "panels/TelemetryPanel.h"
 
 #include <string>
@@ -42,6 +45,24 @@
 
 namespace Starforge
 {
+    // Fixed-pose camera fed from the scene's primary CameraComponent during
+    // Play (U7) — the editor twin of PlayerLayer's internal camera holder.
+    class PoseCamera : public Cosmic::Camera
+    {
+    public:
+        void Set(const glm::mat4& view, const glm::mat4& proj, const glm::vec3& pos)
+        {
+            m_View = view; m_Proj = proj; m_ViewProj = proj * view; m_Pos = pos;
+        }
+        const glm::mat4& GetViewMatrix() const override           { return m_View; }
+        const glm::mat4& GetProjectionMatrix() const override     { return m_Proj; }
+        const glm::mat4& GetViewProjectionMatrix() const override { return m_ViewProj; }
+        const glm::vec3& GetPosition() const override             { return m_Pos; }
+    private:
+        glm::mat4 m_View{ 1.0f }, m_Proj{ 1.0f }, m_ViewProj{ 1.0f };
+        glm::vec3 m_Pos{ 0.0f };
+    };
+
     class StarforgeApp : public Cosmic::Layer
     {
     public:
@@ -138,6 +159,14 @@ namespace Starforge
         bool BuildForgeBlocks();           // Phase 18 — scaffold + author the voxel sample
         bool ForgeBlocksExists() const;
 
+        // Phase 17 / U8 samples. FlowDemo = the ZERO-CODE two-screen app
+        // (menu -> game -> pause overlay, all navigation from Main.cflow);
+        // ForgePong = 2D sprites + UI + flow + tiny scripts, playable pong.
+        bool BuildFlowDemo();
+        bool FlowDemoExists() const;
+        bool BuildForgePong();
+        bool ForgePongExists() const;
+
         // --- Frame helpers -------------------------------------------------
         void HandleShortcuts();
         void Autosave(float ts);
@@ -149,6 +178,27 @@ namespace Starforge
 
         EditorContext m_Ctx;
         Cosmic::OrbitCameraController m_Camera{ 16.0f / 9.0f };
+
+        // 2D authoring mode (U3): a Z-facing ortho rig (MMB pan / wheel zoom)
+        // swapped in for the orbit camera by the toolbar "2D" toggle. View-only
+        // state — never serialized; 3D scenes are untouched when it stays off.
+        Cosmic::Camera2DController m_Camera2D{ 16.0f / 9.0f };
+        bool m_Mode2D = false;
+
+        // Game view (U7): during Play the viewport renders from the scene's
+        // primary CameraComponent (like the shipped player); Eject flies the
+        // editor camera while the sim runs; aspect presets letterbox the frame
+        // so authored UI anchors are truthful; cursor capture = mouse-look.
+        enum class GameAspect : int { Free = 0, W16H9, R1920x1080, Project };
+        PoseCamera m_GameCamera;              // fed each frame while playing
+        bool       m_GameCamActive = false;   // primary cam found + not ejected
+        GameAspect m_Aspect  = GameAspect::Free;
+        bool       m_Ejected = false;
+        bool       m_CaptureCursor = false;   // Esc releases (unchecks)
+        bool       m_NoPrimaryCamWarned = false;
+        int        m_ProjectW = 0, m_ProjectH = 0;   // manifest [window] (Project preset)
+        glm::vec4  m_GameBandUv{ 0.0f, 0.0f, 1.0f, 1.0f };   // letterbox band, viewport fractions
+
         ViewportController m_Viewport;
 
         // The engine frame orchestrator (H2): environment/sky/shadows/HDR/post live
@@ -164,6 +214,17 @@ namespace Starforge
         float                      m_FixedDt     = 1.0f / 60.0f;
         float                      m_FixedAccum  = 0.0f;
         bool                       m_StepRequested = false;
+
+        // Flow-driven Play (U5/U8): when the manifest names a startup_flow and
+        // the "Flow" toggle is on, Play runs the .cflow from its start state —
+        // exactly like the shipped player — swapping scenes on transitions. The
+        // open scene, if dirty and referenced by a state, plays from the live
+        // snapshot so what-you-see-is-what-you-play.
+        Cosmic::FlowMachine m_PlayFlow;
+        bool        m_PlayFlowActive = false;   // this Play session runs the flow
+        bool        m_PlayFlowUse    = true;    // toolbar toggle (shown when a flow exists)
+        bool        m_PrevEscape     = false;   // key:Escape edge for the flow
+        std::string m_ManifestFlow;             // manifest startup_flow ("" = none)
 
         // Game module / hot reload (E12).
         GameModule          m_Module;
@@ -187,6 +248,8 @@ namespace Starforge
         MaterialEditorPanel m_Material;        // E17
         WorldSystemsPanel   m_WorldSystems;   // E18
         VoxelPanel          m_Voxel;           // Phase 18
+        TilePalettePanel    m_TilePalette;    // U4
+        FlowGraphPanel      m_FlowGraph;      // U6
         TelemetryPanel      m_Telemetry;      // E20
 
         Prefs::EditorSettings m_Settings;
@@ -222,6 +285,8 @@ namespace Starforge
         bool m_ShowEnvironment = false, m_ShowMaterial = false;   // E17 (off by default)
         bool m_ShowWorldSystems = false;  // E18 (off by default)
         bool m_ShowVoxel = false;         // Phase 18 (off by default)
+        bool m_ShowTilePalette = false;   // U4 (off by default)
+        bool m_ShowFlowGraph = false;     // U6 (off by default)
         bool m_ShowTelemetry = false;     // E20 (off by default)
         bool m_ShowStats = false;         // E21 statistics window
         bool m_OpenShortcuts = false;     // E21 shortcut reference modal

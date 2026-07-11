@@ -222,6 +222,13 @@ namespace Cosmic
         // SetSize is a no-op while fullscreen and clamps out absurd values.
         void SetTitle(const std::string& title);
         void SetSize(int width, int height);
+
+        // Cursor capture for mouse-look (U7): hides the cursor and locks it to
+        // the window (GLFW disabled-cursor mode — deltas keep flowing with no
+        // edge clamping). Idempotent; hosts release on Escape by convention.
+        void SetCursorCaptured(bool captured);
+        bool IsCursorCaptured() const { return m_CursorCaptured; }
+
         // NOTE: named IsWindowMaximized (not IsMaximized) because <windows.h>
         // defines IsMaximized as a macro aliasing IsZoomed.
         bool IsWindowMaximized() const;
@@ -344,6 +351,8 @@ namespace Cosmic
         bool              m_CustomChrome = false;  // true once the WndProc subclass is installed
         TitlebarHitTestFn m_TitlebarHit;           // draggable-region predicate (client px)
         intptr_t          m_OrigWndProc = 0;       // original GLFW WNDPROC, for CallWindowProc
+
+        bool m_CursorCaptured = false;             // U7 — GLFW disabled-cursor mode active
     };
 
 } // namespace Cosmic

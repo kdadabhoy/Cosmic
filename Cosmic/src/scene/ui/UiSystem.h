@@ -98,9 +98,24 @@ namespace Cosmic
          *  interactable button (the caller then skips 3D scene picking). */
         static bool Update(Scene& scene, const UiRect& viewport, const UiPointer& pointer);
 
+        /** @brief Topmost drawable UI element under `point` (any element that
+         *  CollectElements returns, not just buttons — an editor uses this to
+         *  select UI entities the 3D ID-pass picker can't see). Returns false
+         *  when nothing is hit; outEntity is the entt::entity value. Pure. */
+        static bool HitTest(Scene& scene, const UiRect& viewport, const glm::vec2& point,
+                            uint32_t& outEntity);
+
         /** @brief Draw the scene's canvases through Renderer2D in screen space.
          *  PRE: the destination FBO is bound and its GL viewport is the full
          *  target; canvas space is viewport-local with Min at (0,0). Main-thread/GL. */
         static void Render(Scene& scene, const UiRect& viewport);
+
+        /** @brief Letterboxed variant (U7): lay the canvases out in `canvasRect`
+         *  — a sub-rect of the bound target (an aspect-locked game view) — while
+         *  projecting over the full targetW x targetH, so elements land at their
+         *  absolute positions inside the band and authored anchors stay truthful.
+         *  canvasRect == the full target behaves exactly like the 2-arg Render. */
+        static void Render(Scene& scene, const UiRect& canvasRect,
+                           uint32_t targetW, uint32_t targetH);
     };
 }
