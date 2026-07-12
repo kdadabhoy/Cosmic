@@ -24,5 +24,10 @@ namespace Starforge
         bool m_ShowInfo  = true;
         bool m_ShowWarn  = true;
         bool m_ShowError = true;
+        // T16 — per-source chips + text search.
+        bool m_ShowEngine = true;
+        bool m_ShowEditor = true;
+        bool m_ShowGame   = true;
+        char m_Search[128] = { 0 };
     };
 }

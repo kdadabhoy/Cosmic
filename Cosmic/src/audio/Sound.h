@@ -22,6 +22,7 @@
 #include "core/Core.h"
 
 #include <string>
+#include <vector>
 
 namespace Cosmic
 {
@@ -40,6 +41,20 @@ namespace Cosmic
 		bool               IsValid() const;
 		const std::string& GetPath() const;
 		float              GetDuration() const;   // seconds; 0 when degraded
+
+		/**
+		 * @brief Decode this sound's PCM into a mono float envelope for waveform
+		 * preview (T2 / gap §4.4). Fills `out` with up to `maxSamples` signed
+		 * peak-decimated samples in [-1, 1] spanning the WHOLE file (each output
+		 * bucket holds the largest-magnitude sample in its span), so a long song
+		 * still previews cheaply. Returns the number of samples written.
+		 *
+		 * Decodes directly from the file via a standalone decoder, so it is
+		 * DEVICE-INDEPENDENT — it works in a headless/device-less session and does
+		 * not disturb the live playback template. Returns 0 for a missing /
+		 * unreadable file or maxSamples == 0.
+		 */
+		size_t             CopyPcm(std::vector<float>& out, size_t maxSamples) const;
 
 		// Opaque implementation type — public so translation-unit-local code in
 		// Audio.cpp (voice/registry bookkeeping) can name Sound::Impl*.

@@ -3,6 +3,8 @@
 #include "panels/HierarchyPanel.h"
 #include "commands/EditorCommands.h"
 #include "Prefabs.h"
+#include "ui/IconsLucide.h"
+#include "scene/ui/UiComponents.h"   // T14 — UI component icons
 
 #include <imgui.h>
 
@@ -42,6 +44,31 @@ namespace Starforge
             std::transform(s.begin(), s.end(), s.begin(),
                            [](unsigned char c) { return (char)std::tolower(c); });
             return s;
+        }
+
+        // T14 — the row glyph + accent, chosen from an entity's DOMINANT component
+        // (first match wins), colored consistently with the T5 asset-type table.
+        struct EntityIcon { const char* Glyph; ImU32 Color; };
+        EntityIcon IconFor(Entity e)
+        {
+            if (e.HasComponent<CameraComponent>())            return { ICON_LC_CAMERA,   IM_COL32(120, 170, 240, 255) };
+            if (e.HasComponent<DirectionalLightComponent>() ||
+                e.HasComponent<PointLightComponent>())        return { ICON_LC_LIGHTBULB, IM_COL32(240, 200,  90, 255) };
+            if (e.HasComponent<TerrainComponent>())           return { ICON_LC_MOUNTAIN, IM_COL32(150, 175, 110, 255) };
+            if (e.HasComponent<WaterComponent>())             return { ICON_LC_WAVES,    IM_COL32( 80, 180, 200, 255) };
+            if (e.HasComponent<ParticleEmitterComponent>())   return { ICON_LC_SPARKLES, IM_COL32(236,  90, 190, 255) };
+            if (e.HasComponent<VoxelVolumeComponent>())       return { ICON_LC_BLOCKS,   IM_COL32(140, 150, 160, 255) };
+            if (e.HasComponent<CanvasComponent>()      || e.HasComponent<RectTransformComponent>() ||
+                e.HasComponent<UiImageComponent>()     || e.HasComponent<UiTextComponent>() ||
+                e.HasComponent<UiButtonComponent>())          return { ICON_LC_TYPE,     IM_COL32(240, 200,  60, 255) };
+            if (e.HasComponent<TilemapComponent>())           return { ICON_LC_GRID_2X2, IM_COL32(180, 120, 230, 255) };
+            if (e.HasComponent<SpriteRendererComponent>())    return { ICON_LC_IMAGE,    IM_COL32(180, 120, 230, 255) };
+            if (e.HasComponent<MeshRendererComponent>()  ||
+                e.HasComponent<PrimitiveMeshComponent>() ||
+                e.HasComponent<LODGroupComponent>())          return { ICON_LC_BOX,      IM_COL32(120, 190, 100, 255) };
+            if (e.HasComponent<NativeScriptComponent>() ||
+                e.HasComponent<SystemScriptComponent>())      return { ICON_LC_CODE,     IM_COL32(100, 200, 180, 255) };
+            return { ICON_LC_CIRCLE, IM_COL32(150, 150, 155, 255) };   // an empty / transform-only entity
         }
 
         // Attach a light/camera/mesh at spawn — the create-menu builders.
@@ -85,6 +112,13 @@ namespace Starforge
         ImGui::SameLine();
         ImGui::SetNextItemWidth(-1.0f);
         ImGui::InputTextWithHint("##search", "Search", m_Search, sizeof(m_Search));
+
+        // T14 — entity + selected counts in the header.
+        {
+            size_t nEntities = 0;
+            for (auto _ : ctx.Scene->GetRegistry().view<TagComponent>()) { (void)_; ++nEntities; }
+            ImGui::TextDisabled("%zu entities  \xC2\xB7  %zu selected", nEntities, ctx.Selection.size());
+        }
         ImGui::Separator();
 
         const std::string filter = ToLower(m_Search);
@@ -174,6 +208,28 @@ namespace Starforge
 
         ImGui::PushID((int)(uint32_t)(entt::entity)e);
 
+        // T13 — per-row active toggle (own flag) + dim the row when effectively
+        // inactive (own ∧ ancestors). Undoable, targets just this entity.
+        const bool ownActive = e.HasComponent<TagComponent>() ? e.GetComponent<TagComponent>().Active : true;
+        const bool effActive = ctx.Scene->IsActiveInHierarchy((entt::entity)e);
+        if (ImGui::SmallButton(ownActive ? ICON_LC_EYE : ICON_LC_EYE_OFF) && e.HasComponent<TagComponent>())
+        {
+            const bool nv = !ownActive;
+            e.GetComponent<TagComponent>().Active = nv;   // apply, then record (one undo step)
+            Commands::CommitFieldEditFor(ctx, e, nv ? "Show entity" : "Hide entity",
+                entt::type_hash<TagComponent>::value(), "Active", FieldValue{ ownActive }, FieldValue{ nv });
+        }
+        if (ImGui::IsItemHovered()) ImGui::SetTooltip("Toggle active");
+        ImGui::SameLine();
+
+        // T14 — dominant-component glyph (colored) before the name.
+        const EntityIcon icon = IconFor(e);
+        ImGui::TextColored(ImGui::ColorConvertU32ToFloat4(icon.Color), "%s", icon.Glyph);
+        ImGui::SameLine(0, 4);
+
+        if (!effActive)
+            ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled));
+
         bool open = false;
         if (m_RenameTarget == id)
         {
@@ -241,6 +297,9 @@ namespace Starforge
 
             DrawContextMenu(ctx, e);
         }
+
+        if (!effActive)
+            ImGui::PopStyleColor();
 
         if (open)
         {

@@ -42,7 +42,8 @@ namespace Starforge
 
         void SetAll(const LayoutPanels& p, bool hierarchy, bool inspector, bool content,
                     bool console, bool environment, bool material, bool worldSystems,
-                    bool voxel, bool tilePalette, bool flowGraph, bool telemetry, bool stats)
+                    bool voxel, bool tilePalette, bool flowGraph, bool telemetry, bool stats,
+                    bool profiler = false, bool system = false)
         {
             auto set = [](bool* b, bool v) { if (b) *b = v; };
             set(p.Hierarchy, hierarchy);   set(p.Inspector, inspector);
@@ -51,6 +52,7 @@ namespace Starforge
             set(p.WorldSystems, worldSystems); set(p.Voxel, voxel);
             set(p.TilePalette, tilePalette);   set(p.FlowGraph, flowGraph);
             set(p.Telemetry, telemetry);       set(p.Stats, stats);
+            set(p.Profiler, profiler);         set(p.System, system);
         }
 
         // The shared shell scaffold every built-in keeps: the Starforge top bar
@@ -99,13 +101,17 @@ namespace Starforge
         }
         else if (name == "Telemetry")
         {
-            // Scope-forward: the Telemetry panel owns a tall bottom dock.
-            SetAll(p, true, true, false, true, false, false, false, false, false, false, true, false);
+            // Scope-forward / debug: the Telemetry panel owns a tall bottom dock;
+            // the Profiler + System (jobs/resources) tab alongside the Console.
+            SetAll(p, true, true, false, true, false, false, false, false, false, false, true, false,
+                   /*profiler*/ true, /*system*/ true);
             ws->SetEdgeRatios(0.17f, 0.22f, 0.08f, 0.40f);
             ws->DockWindow("Hierarchy", Cosmic::DockPort::LeftTop);
             ws->DockWindow("Inspector", Cosmic::DockPort::RightTop);
             ws->DockWindow("Telemetry", Cosmic::DockPort::BottomCenter);
             ws->DockWindow("Console",   Cosmic::DockPort::BottomRight);
+            ws->DockWindow("Profiler",  Cosmic::DockPort::BottomRight);   // T17 (tabbed)
+            ws->DockWindow("System",    Cosmic::DockPort::BottomRight);   // T18 (tabbed)
         }
         else   // "Level" — the classic editing layout (the coded default).
         {

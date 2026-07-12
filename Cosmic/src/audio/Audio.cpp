@@ -12,6 +12,8 @@
 
 #include "miniaudio.h"
 
+#include <algorithm>
+#include <cmath>
 #include <memory>
 #include <mutex>
 #include <unordered_set>
@@ -112,6 +114,84 @@ namespace Cosmic
 	bool               Sound::IsValid() const     { return m_Impl->valid; }
 	const std::string& Sound::GetPath() const     { return m_Impl->path; }
 	float              Sound::GetDuration() const { return m_Impl->duration; }
+
+	size_t Sound::CopyPcm(std::vector<float>& out, size_t maxSamples) const
+	{
+		out.clear();
+		if (maxSamples == 0 || m_Impl->path.empty())
+			return 0;
+
+		// Decode from the file with a standalone decoder (mono f32, source rate):
+		// device-independent, so this works even when the AudioEngine has no
+		// device, and it never touches the live playback template.
+		ma_decoder_config cfg = ma_decoder_config_init(ma_format_f32, 1, 0);
+		ma_decoder dec;
+		if (ma_decoder_init_file(m_Impl->path.c_str(), &cfg, &dec) != MA_SUCCESS)
+			return 0;
+
+		float block[4096];
+
+		ma_uint64 totalFrames = 0;
+		ma_decoder_get_length_in_pcm_frames(&dec, &totalFrames);
+
+		if (totalFrames > 0)
+		{
+			// Known length: peak-decimate on the fly into <= maxSamples buckets
+			// (O(buckets) memory regardless of song length).
+			const size_t buckets = (size_t)std::min<ma_uint64>((ma_uint64)maxSamples, totalFrames);
+			out.assign(buckets, 0.0f);
+
+			ma_uint64 frameIndex = 0;
+			for (;;)
+			{
+				ma_uint64 got = 0;
+				if (ma_decoder_read_pcm_frames(&dec, block, 4096, &got) != MA_SUCCESS || got == 0)
+					break;
+				for (ma_uint64 i = 0; i < got; ++i, ++frameIndex)
+				{
+					size_t b = (size_t)((frameIndex * buckets) / totalFrames);
+					if (b >= buckets) b = buckets - 1;
+					if (std::fabs(block[i]) > std::fabs(out[b]))
+						out[b] = block[i];
+				}
+			}
+		}
+		else
+		{
+			// Unknown length (rare streaming case): accumulate up to a safety cap,
+			// then peak-decimate the collected samples down to maxSamples.
+			std::vector<float> all;
+			const size_t cap = maxSamples * 64;
+			for (;;)
+			{
+				ma_uint64 got = 0;
+				if (ma_decoder_read_pcm_frames(&dec, block, 4096, &got) != MA_SUCCESS || got == 0)
+					break;
+				all.insert(all.end(), block, block + (size_t)got);
+				if (all.size() >= cap)
+					break;
+			}
+			if (all.size() <= maxSamples)
+			{
+				out = std::move(all);
+			}
+			else
+			{
+				const size_t buckets = maxSamples;
+				out.assign(buckets, 0.0f);
+				for (size_t i = 0; i < all.size(); ++i)
+				{
+					size_t b = (i * buckets) / all.size();
+					if (b >= buckets) b = buckets - 1;
+					if (std::fabs(all[i]) > std::fabs(out[b]))
+						out[b] = all[i];
+				}
+			}
+		}
+
+		ma_decoder_uninit(&dec);
+		return out.size();
+	}
 
 	Ref<Sound> Sound::Create(const std::string& path)
 	{

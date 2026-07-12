@@ -296,6 +296,80 @@ namespace Cosmic
 		return names;
 	}
 
+	namespace
+	{
+		// Rough CPU footprint of a parsed clip set (keyframe channel data) — the
+		// only AssetLibrary cache with a meaningful CPU-side size (T2).
+		uint64_t ClipSetCpuBytes(const std::vector<AnimationClip>& clips)
+		{
+			uint64_t bytes = 0;
+			for (const AnimationClip& c : clips)
+			{
+				bytes += sizeof(AnimationClip);
+				for (const AnimationChannel& ch : c.Channels)
+				{
+					bytes += sizeof(AnimationChannel);
+					bytes += ch.PosTimes.size() * sizeof(float) + ch.PosValues.size() * sizeof(glm::vec3);
+					bytes += ch.RotTimes.size() * sizeof(float) + ch.RotValues.size() * sizeof(glm::quat);
+					bytes += ch.SclTimes.size() * sizeof(float) + ch.SclValues.size() * sizeof(glm::vec3);
+				}
+			}
+			return bytes;
+		}
+	}
+
+	void AssetLibrary::Enumerate(const std::function<void(const AssetEntry&)>& visitor)
+	{
+		if (!visitor)
+			return;
+
+		for (const auto& [key, tex] : s_Textures)
+		{
+			AssetEntry e;
+			e.Path = key; e.Type = AssetType::Texture;
+			e.Refs = tex.use_count();
+			e.GpuBytes = tex ? tex->GetGpuBytes() : 0;
+			visitor(e);
+		}
+		for (const auto& [key, sh] : s_Shaders)
+		{
+			AssetEntry e;
+			e.Path = key; e.Type = AssetType::Shader;
+			e.Refs = sh.use_count();
+			visitor(e);   // shader binary size is not tracked → bytes 0
+		}
+		for (const auto& [key, mesh] : s_Meshes)
+		{
+			AssetEntry e;
+			e.Path = key; e.Type = AssetType::Mesh;
+			e.Refs = mesh.use_count();
+			e.GpuBytes = mesh ? mesh->GetGpuBytes() : 0;
+			visitor(e);
+		}
+		for (const auto& [key, model] : s_Models)
+		{
+			AssetEntry e;
+			e.Path = key; e.Type = AssetType::Model;
+			e.Refs = model.use_count();
+			visitor(e);   // Model bytes roll up in its meshes/textures if separately cached
+		}
+		for (const auto& [key, mat] : s_Materials)
+		{
+			AssetEntry e;
+			e.Path = key; e.Type = AssetType::Material;
+			e.Refs = mat.use_count();
+			visitor(e);   // a material's textures are counted under s_Textures
+		}
+		for (const auto& [key, set] : s_ClipSets)
+		{
+			AssetEntry e;
+			e.Path = key; e.Type = AssetType::AnimationClipSet;
+			e.Refs = set.use_count();
+			e.CpuBytes = set ? ClipSetCpuBytes(*set) : 0;
+			visitor(e);
+		}
+	}
+
 	void AssetLibrary::Clear()
 	{
 		s_Textures.clear();

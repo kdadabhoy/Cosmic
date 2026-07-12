@@ -200,7 +200,13 @@ namespace Cosmic
                 {
                     if (f.HasFlag(Field_NoSerialize))
                         continue;
-                    cj[f.Name] = SerializeValue(f, f.Get(comp));
+                    Reflect::FieldValue fv = f.Get(comp);
+                    // Default-true flags (Enabled/Active) are omitted while true so
+                    // unchanged scenes stay byte-identical (T12/T13 compat).
+                    if (f.HasFlag(Field_OmitIfTrue) &&
+                        std::holds_alternative<bool>(fv) && std::get<bool>(fv))
+                        continue;
+                    cj[f.Name] = SerializeValue(f, fv);
                 }
 
                 if (d->Name == "NativeScript")

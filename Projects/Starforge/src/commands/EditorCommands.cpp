@@ -333,6 +333,12 @@ namespace Starforge
         const TypeDescriptor* d = Reflect::GetRegistry().Find(typeId);
         if (!d || !d->FindField(field)) return;
 
+        // T15 — during Play, the value is already applied live by the widget; edits
+        // are transient (the Stop snapshot-restore discards them), so record NOTHING
+        // (no undo entry, no dirty flag).
+        if (ctx.Playing)
+            return;
+
         ctx.MarkDirty();
         // The value was already applied live by the panel widget; Push (not Execute).
         ctx.Commands.Push(std::make_unique<FieldEditCommand>(
@@ -351,6 +357,20 @@ namespace Starforge
 
         Entity primary = ctx.PrimaryEntity();
         if (!primary) return;
+
+        // T15 — during Play, still fan the value across the selection (so multi-edit
+        // works live) but record NO undo entry and don't dirty the scene: these edits
+        // are transient and vanish on Stop's snapshot-restore.
+        if (ctx.Playing)
+        {
+            for (entt::entity h : ctx.Selection)
+            {
+                if (h == (entt::entity)primary) continue;   // primary already applied by the widget
+                if (void* comp = d->Get(ctx.Scene->GetRegistry(), h))
+                    f->Set(comp, after);
+            }
+            return;
+        }
 
         auto batch = std::make_unique<BatchCommand>(label,
                         "batch:" + std::to_string(typeId) + ":" + field);

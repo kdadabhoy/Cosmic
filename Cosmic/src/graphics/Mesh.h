@@ -205,6 +205,21 @@ namespace Cosmic
 		uint32_t                GetVertexCount() const	{ return m_VertexCount; }
 		uint32_t                GetIndexCount() const	{ return m_IndexCount; }
 
+		/**
+		 * @brief Estimated GPU memory of this mesh's buffers (T2 asset accounting):
+		 * the canonical vertex buffer + the index buffer, plus the parallel skin
+		 * buffer for skinned meshes (A2). A figure for the Resources panel /
+		 * status bar (§13.3 / §1.4), not an exact driver allocation.
+		 */
+		uint64_t GetGpuBytes() const
+		{
+			uint64_t bytes = (uint64_t)m_VertexCount * sizeof(MeshVertex)
+			               + (uint64_t)m_IndexCount  * sizeof(uint32_t);
+			if (m_Skeleton)
+				bytes += (uint64_t)m_VertexCount * sizeof(SkinVertex);
+			return bytes;
+		}
+
 		/** @brief Skinned meshes (A2) carry their joint hierarchy; null otherwise. */
 		bool                    IsSkinned() const       { return (bool)m_Skeleton; }
 		const Ref<Skeleton>&    GetSkeleton() const     { return m_Skeleton; }

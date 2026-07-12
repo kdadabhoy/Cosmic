@@ -105,6 +105,70 @@ TEST_SUITE("Physics / components + scene (J3/J4)")
         }
     }
 
+    TEST_CASE("T12: a disabled collider is not baked (a box falls through a disabled ground)")
+    {
+        // A dynamic box (enabled collider) drops toward a static ground. With the
+        // ground's collider ENABLED the box rests on it; DISABLED, the ground bakes
+        // no shape, so the box falls straight through.
+        auto dropOnto = [](bool groundEnabled) -> float
+        {
+            Scene scene;
+            Entity ground = scene.CreateEntity("Ground");
+            ground.GetComponent<TransformComponent>().Position = { 0, -0.5f, 0 };
+            ground.AddComponent<RigidBodyComponent>(MotionType::Static);
+            auto& gc = ground.AddComponent<BoxColliderComponent>();
+            gc.HalfExtents = { 25, 0.5f, 25 };
+            gc.Enabled = groundEnabled;   // the gate under test
+
+            Entity box = scene.CreateEntity("Box");
+            box.GetComponent<TransformComponent>().Position = { 0, 3.0f, 0 };
+            box.AddComponent<RigidBodyComponent>(MotionType::Dynamic).Restitution = 0.0f;
+            box.AddComponent<BoxColliderComponent>().HalfExtents = { 0.5f, 0.5f, 0.5f };
+
+            PhysicsWorld world;
+            world.Init(DetSettings());
+            scene.OnPhysicsStart(world);
+            for (int i = 0; i < 300; ++i)
+                scene.OnPhysicsStep(1.0f / 60.0f);
+            const float y = scene.GetRegistry().get<TransformComponent>((entt::entity)box).Position.y;
+            scene.OnPhysicsStop(world);
+            return y;
+        };
+
+        CHECK(dropOnto(true)  > 0.3f);    // rests on the ground surface (~0.5)
+        CHECK(dropOnto(false) < -5.0f);   // fell through the un-baked ground
+    }
+
+    TEST_CASE("T13: an inactive entity is not baked (a box falls through an inactive ground)")
+    {
+        auto dropOnto = [](bool groundActive) -> float
+        {
+            Scene scene;
+            Entity ground = scene.CreateEntity("Ground");
+            ground.GetComponent<TransformComponent>().Position = { 0, -0.5f, 0 };
+            ground.GetComponent<TagComponent>().Active = groundActive;   // the gate under test
+            ground.AddComponent<RigidBodyComponent>(MotionType::Static);
+            ground.AddComponent<BoxColliderComponent>().HalfExtents = { 25, 0.5f, 25 };
+
+            Entity box = scene.CreateEntity("Box");
+            box.GetComponent<TransformComponent>().Position = { 0, 3.0f, 0 };
+            box.AddComponent<RigidBodyComponent>(MotionType::Dynamic).Restitution = 0.0f;
+            box.AddComponent<BoxColliderComponent>().HalfExtents = { 0.5f, 0.5f, 0.5f };
+
+            PhysicsWorld world;
+            world.Init(DetSettings());
+            scene.OnPhysicsStart(world);
+            for (int i = 0; i < 300; ++i)
+                scene.OnPhysicsStep(1.0f / 60.0f);
+            const float y = scene.GetRegistry().get<TransformComponent>((entt::entity)box).Position.y;
+            scene.OnPhysicsStop(world);
+            return y;
+        };
+
+        CHECK(dropOnto(true)  > 0.3f);    // active ground: the box rests on it
+        CHECK(dropOnto(false) < -5.0f);   // inactive ground: not baked → box falls through
+    }
+
     TEST_CASE("A dropped stack settles onto the ground through the scene session")
     {
         Scene scene;

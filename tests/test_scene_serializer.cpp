@@ -34,6 +34,68 @@ namespace
 }
 CS_REGISTER_COMPONENT(LinkComponent)
 
+TEST_CASE("T12: default-true Enabled is omitted while true (compat), written + round-tripped when false")
+{
+    auto firstMeshRenderer = [](Scene& s) -> MeshRendererComponent&
+    {
+        auto v = s.GetRegistry().view<MeshRendererComponent>();
+        REQUIRE(v.begin() != v.end());
+        return v.get<MeshRendererComponent>(*v.begin());
+    };
+
+    Scene scene;
+    Entity e = scene.CreateEntity("Mesh");
+    e.AddComponent<MeshRendererComponent>();   // Enabled defaults true
+
+    // Enabled == true → the "Enabled" key is omitted (unchanged scenes stay
+    // byte-identical); a JSON without the key loads back as true (old-scene compat).
+    const std::string jsonTrue = SceneSerializer::SaveToString(scene);
+    CHECK(jsonTrue.find("\"Enabled\"") == std::string::npos);
+
+    Scene loadedTrue;
+    REQUIRE(SceneSerializer::LoadFromString(loadedTrue, jsonTrue));
+    CHECK(firstMeshRenderer(loadedTrue).Enabled == true);
+
+    // Disabling writes the key and round-trips as false.
+    e.GetComponent<MeshRendererComponent>().Enabled = false;
+    const std::string jsonFalse = SceneSerializer::SaveToString(scene);
+    CHECK(jsonFalse.find("\"Enabled\"") != std::string::npos);
+
+    Scene loadedFalse;
+    REQUIRE(SceneSerializer::LoadFromString(loadedFalse, jsonFalse));
+    CHECK(firstMeshRenderer(loadedFalse).Enabled == false);
+}
+
+TEST_CASE("T13: TagComponent::Active is omitted while true (every-entity compat), written when false")
+{
+    auto firstTag = [](Scene& s) -> TagComponent&
+    {
+        auto v = s.GetRegistry().view<TagComponent>();
+        REQUIRE(v.begin() != v.end());
+        return v.get<TagComponent>(*v.begin());
+    };
+
+    Scene scene;
+    Entity e = scene.CreateEntity("E");   // Active defaults true
+
+    // Active is on EVERY entity — omitting it while true is essential so old
+    // scenes stay byte-identical (else every entity would gain "Active": true).
+    const std::string jsonTrue = SceneSerializer::SaveToString(scene);
+    CHECK(jsonTrue.find("\"Active\"") == std::string::npos);
+
+    Scene loadedTrue;
+    REQUIRE(SceneSerializer::LoadFromString(loadedTrue, jsonTrue));
+    CHECK(firstTag(loadedTrue).Active == true);
+
+    e.GetComponent<TagComponent>().Active = false;
+    const std::string jsonFalse = SceneSerializer::SaveToString(scene);
+    CHECK(jsonFalse.find("\"Active\"") != std::string::npos);
+
+    Scene loadedFalse;
+    REQUIRE(SceneSerializer::LoadFromString(loadedFalse, jsonFalse));
+    CHECK(firstTag(loadedFalse).Active == false);
+}
+
 TEST_CASE("E2: UUID hex round-trips and 0 is the null value")
 {
     UUID u;

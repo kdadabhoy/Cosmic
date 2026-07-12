@@ -71,7 +71,8 @@ namespace Starforge
                 if (f.HasFlag(Reflect::Field_HideInInspector))
                     continue;
 
-                PropertyRows::Result res = PropertyRows::DrawField(f, comp, /*mixed*/ false);
+                PropertyRows::SlotContext slot{ &ctx.Preview, &ctx.PendingRevealAsset };
+                PropertyRows::Result res = PropertyRows::DrawField(f, comp, /*mixed*/ false, &slot);
                 if (res.Activated) { m_ActiveBefore = res.PreValue; m_HasActive = true; }
                 if (res.Committed)
                 {

@@ -39,12 +39,12 @@
 | Editor chrome v2 (icon toolbar/centered transport, layout presets, undo UI, status bar) | text-button strip, one layout | 22 · doc 21 K2–K5 | now (editor vision) | M | ✅ 2026-07-11 |
 | Viewport instrument (header strip, per-op snap, fly/possess camera, axis navigator, stats chips, infinite grid) | top-bar toolbar, one snap value, orbit-only | 22 · doc 21 K6–K10 | now | L | ✅ 2026-07-11 |
 | Universal gizmo + selection outline + viewport drag-drop | single-op gizmo, wire-box highlight, Inspector-only drops | 22 · doc 21 K11–K13 | now | M | ✅ 2026-07-11 |
-| Reflection metadata v2 (per-field docs/ranges/units → tooltips + bounded widgets) | name/kind/flags only | 23 · doc 22 T1/T10 | now | M | ☐ |
-| Asset accounting/enumeration + JobSystem introspection panels | none | 23 · doc 22 T2/T18 | now | M | ☐ |
-| Content Browser v2 (tree pane, history, search, rename+retarget, preview/metadata/audio, import, OS drops) | single-pane grid, texture thumbs only | 23 · doc 22 T3–T8 | now | L | ☐ |
-| Inspector v2 (property search, asset-slot widget, component copy/paste/reset/enable, live-Play behavior) | reflected auto-UI w/ undo | 23 · doc 22 T9–T12/T15 | now | L | ☐ |
-| Per-entity Active semantics + Hierarchy icons/toggles | no visibility/active concept | 23 · doc 22 T13/T14 | now | M | ☐ |
-| Console v2 + GPU profiler panel (Starforge port) | basic console; profiler only in Frontier | 23 · doc 22 T16/T17 | now | S | ☐ |
+| Reflection metadata v2 (per-field docs/ranges/units → tooltips + bounded widgets) | name/kind/flags only | 23 · doc 22 T1/T10 | now | M | ✅ 2026-07-12 |
+| Asset accounting/enumeration + JobSystem introspection panels | none | 23 · doc 22 T2/T18 | now | M | ✅ 2026-07-12 |
+| Content Browser v2 (tree pane, history, search, rename+retarget, preview/metadata/audio, import, OS drops) | single-pane grid, texture thumbs only | 23 · doc 22 T3–T8 | now | L | ✅ 2026-07-12 |
+| Inspector v2 (property search, asset-slot widget, component copy/paste/reset/enable, live-Play behavior) | reflected auto-UI w/ undo | 23 · doc 22 T9–T12/T15 | now | L | ✅ 2026-07-12 |
+| Per-entity Active semantics + Hierarchy icons/toggles | no visibility/active concept | 23 · doc 22 T13/T14 | now | M | ✅ 2026-07-12 |
+| Console v2 + GPU profiler panel (Starforge port) | basic console; profiler only in Frontier | 23 · doc 22 T16/T17 | now | S | ✅ 2026-07-12 |
 | Asset-editor document host + reusable Timeline widget | one shared Inspector; no document tabs | 24 · doc 23 M1/M2 | now (anim/story editors sit on it) | L | ☐ |
 | Starforge Animation Editor (skeleton tree, bone-overlay preview, clip scrub, sockets UI) | none | 24 · doc 23 M3 | with doc 19 A2 | L | ☐ |
 | Reusable node canvas + Starforge Story Graph editor + post-chain graph view | doc 16 U6 ships the flow panel | 25 · doc 24 Q1/Q4/Q6 | after U6 + M1 | L | ☐ |

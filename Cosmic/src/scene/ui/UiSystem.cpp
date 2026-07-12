@@ -136,7 +136,11 @@ namespace Cosmic
         struct CanvasEntry { entt::entity Handle; int32_t Order; };
         std::vector<CanvasEntry> canvases;
         for (auto e : reg.view<CanvasComponent>())
+        {
+            if (!scene.IsActiveInHierarchy(e))   // T13 — inactive canvas (or ancestor): skip
+                continue;
             canvases.push_back({ e, reg.get<CanvasComponent>(e).SortOrder });
+        }
 
         std::stable_sort(canvases.begin(), canvases.end(),
                          [](const CanvasEntry& a, const CanvasEntry& b) { return a.Order < b.Order; });

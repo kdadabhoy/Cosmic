@@ -80,22 +80,30 @@ namespace Cosmic
 		// OnRender3D (cheap path) and BuildRenderDesc (H2) so there is one truth for
 		// "what lights a scene has": first DirectionalLight = sun; every PointLight is
 		// pushed (SetLights is the single truncation point at kMaxPointLights).
-		void GatherSceneLights(entt::registry& reg, Renderer3D::SceneLightsDesc& lights)
+		void GatherSceneLights(Scene& scene, entt::registry& reg, Renderer3D::SceneLightsDesc& lights)
 		{
 			lights.Ambient = Renderer3D::GetAmbient();
 
 			for (auto entity : reg.view<DirectionalLightComponent>())
 			{
 				const auto& dl = reg.get<DirectionalLightComponent>(entity);
+				if (!dl.Enabled)                          // T12 — disabled light
+					continue;
+				if (!scene.IsActiveInHierarchy(entity))   // T13 — inactive subtree
+					continue;
 				lights.SunDirection = dl.Direction;
 				lights.SunColor     = dl.Color;
 				lights.SunIntensity = dl.Intensity;
-				break;   // first directional light wins as the sun
+				break;   // first ENABLED + ACTIVE directional light wins as the sun
 			}
 
 			reg.view<TransformComponent, PointLightComponent>().each(
-				[&](auto /*entity*/, const TransformComponent& t, const PointLightComponent& pl)
+				[&](auto entity, const TransformComponent& t, const PointLightComponent& pl)
 			{
+				if (!pl.Enabled)                          // T12
+					return;
+				if (!scene.IsActiveInHierarchy(entity))   // T13
+					return;
 				Renderer3D::PointLightDesc d;
 				d.Position  = t.Position;
 				d.Radius    = pl.Radius;
@@ -213,7 +221,7 @@ namespace Cosmic
 			for (auto e : view)
 			{
 				auto& wc = view.get<WaterComponent>(e);
-				if (!wc.UseRecipe)
+				if (!wc.UseRecipe || !wc.Enabled || !IsActiveInHierarchy(e))   // T12/T13
 					continue;
 				const std::size_t sig = WaterRecipeSignature(wc);
 				if (wc.WaterAsset && wc.BuiltSignature == sig)
@@ -229,7 +237,7 @@ namespace Cosmic
 			for (auto e : view)
 			{
 				auto& pc = view.get<ParticleEmitterComponent>(e);
-				if (!pc.UseRecipe)
+				if (!pc.UseRecipe || !pc.Enabled || !IsActiveInHierarchy(e))   // T12/T13
 					continue;
 				const std::size_t sig = EmitterRecipeSignature(pc);
 				if (pc.Emitter && pc.BuiltSignature == sig)
@@ -395,7 +403,9 @@ namespace Cosmic
 			for (auto e : view3)
 			{
 				auto& wc = view3.get<WaterComponent>(e);
-				if (!wc.WaterAsset)
+				if (!wc.WaterAsset || !wc.Enabled)   // T12
+					continue;
+				if (!IsActiveInHierarchy(e))         // T13
 					continue;
 				wc.WaterAsset->SetShoreTerrain(shore);
 				wc.WaterAsset->Render(camera.GetPosition(), m_WorldTime, viewProj,
@@ -409,7 +419,9 @@ namespace Cosmic
 			for (auto e : pview)
 			{
 				auto& pc = pview.get<ParticleEmitterComponent>(e);
-				if (!pc.Emitter)
+				if (!pc.Emitter || !pc.Enabled)   // T12
+					continue;
+				if (!IsActiveInHierarchy(e))      // T13 — not ticked or drawn
 					continue;
 				pc.Emitter->SetTransform(WorldOf(e));
 				pc.Emitter->Update(deltaTime, m_WorldTime);
@@ -542,6 +554,31 @@ namespace Cosmic
 			}
 		}
 		return local;
+	}
+
+	bool Scene::IsActiveInHierarchy(Entity entity)
+	{
+		return entity ? IsActiveInHierarchy((entt::entity)entity) : false;
+	}
+
+	bool Scene::IsActiveInHierarchy(entt::entity handle)
+	{
+		// Walk up the parent chain (like WorldOf): false if self or any ancestor
+		// is inactive. Guarded against a malformed cycle.
+		entt::entity cur = handle;
+		for (int guard = 0; m_Registry.valid(cur) && guard < 4096; ++guard)
+		{
+			if (const auto* tag = m_Registry.try_get<TagComponent>(cur); tag && !tag->Active)
+				return false;
+			const auto* rel = m_Registry.try_get<RelationshipComponent>(cur);
+			if (!rel || !rel->Parent.IsValid())
+				break;
+			auto it = m_UUIDMap.find(rel->Parent);
+			if (it == m_UUIDMap.end() || !m_Registry.valid(it->second))
+				break;
+			cur = it->second;
+		}
+		return true;
 	}
 
 	bool Scene::SetParent(Entity child, Entity parent, bool keepWorldPose)
@@ -700,6 +737,10 @@ namespace Cosmic
 		// Use EnTT's native .each() layout to cleanly extract entity IDs and references
 		view.each([&](auto entity, const auto& transform, const auto& sprite)
 			{
+				if (!sprite.Enabled)   // T12
+					return;
+				if (!IsActiveInHierarchy(entity))   // T13
+					return;
 				if (sprite.ActiveMaterial)
 				{
 					materialBuckets[sprite.ActiveMaterial.get()].push_back(entity);
@@ -833,12 +874,18 @@ namespace Cosmic
 		{
 			const auto& t = view.get<TransformComponent>(e);
 			const auto& s = view.get<SpriteRendererComponent>(e);
+			if (!s.Enabled)   // T12
+				continue;
+			if (!IsActiveInHierarchy(e))   // T13
+				continue;
 			items.push_back({ e, s.ZOrder, s.YSort ? -t.Position.y : t.Position.z, false });
 		}
 		for (auto e : tmView)
 		{
 			const auto& t  = tmView.get<TransformComponent>(e);
 			const auto& tm = tmView.get<TilemapComponent>(e);
+			if (!IsActiveInHierarchy(e))   // T13
+				continue;
 			items.push_back({ e, tm.ZOrder, t.Position.z, true });
 		}
 		std::sort(items.begin(), items.end(), [](const SpriteItem& a, const SpriteItem& b)
@@ -1011,7 +1058,7 @@ namespace Cosmic
 
 		// --- Gather scene lights (S4.5) and upload before drawing. ---
 		Renderer3D::SceneLightsDesc lights;
-		GatherSceneLights(m_Registry, lights);
+		GatherSceneLights(*this, m_Registry, lights);
 		Renderer3D::SetLights(lights);
 
 		Renderer3D::BeginScene(camera);
@@ -1134,6 +1181,10 @@ namespace Cosmic
 		{
 			if (!mr.MeshAsset)
 				return;
+			if (!mr.Enabled)   // T12 — hidden in every pass (lit + shadow)
+				return;
+			if (!IsActiveInHierarchy(entity))   // T13 — inactive subtree
+				return;
 			if (depthOnly && !mr.CastShadows)
 				return;
 
@@ -1170,6 +1221,8 @@ namespace Cosmic
 		auto lodView = m_Registry.view<TransformComponent, LODGroupComponent>();
 		lodView.each([&](auto entity, const TransformComponent& transform, const LODGroupComponent& lod)
 		{
+			if (!IsActiveInHierarchy(entity))   // T13
+				return;
 			if (depthOnly && !lod.CastShadows)
 				return;
 			const float dist = glm::distance(ctx.CameraPosition, transform.Position);
@@ -1193,6 +1246,8 @@ namespace Cosmic
 		voxView.each([&](auto entity, VoxelVolumeComponent& vc)
 		{
 			if (!vc.Volume || !vc.Render || !vc.Render->AtlasMaterial)
+				return;
+			if (!IsActiveInHierarchy(entity))   // T13
 				return;
 			const glm::mat4 xform =
 				glm::translate(glm::mat4(1.0f), vc.Volume->GetOrigin()) *
@@ -1227,7 +1282,7 @@ namespace Cosmic
 		out.TimeSeconds = m_WorldTime;
 		out.DeltaTime   = deltaTime;
 
-		GatherSceneLights(m_Registry, out.Lights);
+		GatherSceneLights(*this, m_Registry, out.Lights);
 
 		// Terrain: the first built asset drives the Reflection/Main/shadow passes and
 		// doubles as the shore-attenuation source for the water bodies below.

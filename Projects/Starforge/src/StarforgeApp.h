@@ -37,6 +37,8 @@
 #include "panels/TilePalettePanel.h"
 #include "panels/FlowGraphPanel.h"
 #include "panels/TelemetryPanel.h"
+#include "panels/ProfilerPanel.h"
+#include "panels/SystemPanel.h"
 
 #include <string>
 #include <vector>
@@ -280,6 +282,8 @@ namespace Starforge
         TilePalettePanel    m_TilePalette;    // U4
         FlowGraphPanel      m_FlowGraph;      // U6
         TelemetryPanel      m_Telemetry;      // E20
+        ProfilerPanel       m_Profiler;       // T17 — GPU/CPU profiler
+        SystemPanel         m_System;         // T18 — jobs / resources
 
         Prefs::EditorSettings m_Settings;
 
@@ -338,6 +342,8 @@ namespace Starforge
         bool m_ShowFlowGraph = false;     // U6 (off by default)
         bool m_ShowTelemetry = false;     // E20 (off by default)
         bool m_ShowStats = false;         // E21 statistics window
+        bool m_ShowProfiler = false;      // T17 (off by default)
+        bool m_ShowSystem = false;        // T18 (off by default)
         bool m_OpenShortcuts = false;     // E21 shortcut reference modal
         bool m_OpenFirstRun  = false;     // E21 first-run Forge Playground offer
         std::string m_PrevTheme;          // theme to restore on detach (E21)

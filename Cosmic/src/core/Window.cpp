@@ -465,6 +465,20 @@ namespace Cosmic
 				data.EventCallback(e);
 			});
 
+		// OS file drop (T3 / gap §14.5) — GLFW hands us absolute UTF-8 paths.
+		// Generic: dispatched through the same EventCallback; the editor consumes
+		// it (T8), a shipped app may ignore it.
+		glfwSetDropCallback(m_Handle, [](GLFWwindow* win, int count, const char** paths)
+			{
+				auto& data = *static_cast<WindowData*>(glfwGetWindowUserPointer(win));
+				std::vector<std::string> dropped;
+				dropped.reserve(count > 0 ? static_cast<size_t>(count) : 0);
+				for (int i = 0; i < count; ++i)
+					dropped.emplace_back(paths[i] ? paths[i] : "");
+				WindowFileDropEvent e(std::move(dropped));
+				data.EventCallback(e);
+			});
+
 		SetVSync(true);
 
 #ifdef _WIN32

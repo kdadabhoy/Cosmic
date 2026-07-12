@@ -31,9 +31,21 @@ namespace
         bool      Enabled = true;
         std::string Label = "widget";
     };
+
+    // T1 (reflection metadata v2): a type exercising Doc + Units on some fields
+    // and leaving others bare, so the "defaults where not declared" half is
+    // provable in one place.
+    struct MetricComponent
+    {
+        float Angle    = 0.0f;
+        float Distance = 0.0f;
+        float Duration = 0.0f;
+        float Plain    = 0.0f;
+    };
 }
 
 CS_REGISTER_COMPONENT(WidgetComponent)
+CS_REGISTER_COMPONENT(MetricComponent)
 
 TEST_CASE("E1: engine components are registered with their fields")
 {
@@ -95,6 +107,50 @@ TEST_CASE("E1: builder deduces kinds and applies hints/flags")
     CHECK(state->Hints.EnumEntries[1].Value == 1);
 
     CHECK(d->FindField("Label")->HasFlag(Field_ReadOnly));
+}
+
+TEST_CASE("T1: reflection metadata v2 — Doc + Units reported where declared, defaulted where not")
+{
+    using Cosmic::Reflect::FieldUnits;
+
+    Reflect::Class<MetricComponent>("Metric", "Test")
+        .Field("Angle",    &MetricComponent::Angle).Doc("swept angle").Degrees()
+        .Field("Distance", &MetricComponent::Distance).Meters()
+        .Field("Duration", &MetricComponent::Duration).Seconds()
+        .Field("Plain",    &MetricComponent::Plain);   // no Doc, no Units
+
+    const TypeDescriptor* d = GetRegistry().Find<MetricComponent>();
+    REQUIRE(d != nullptr);
+
+    // Declared metadata is reported.
+    const FieldDescriptor* angle = d->FindField("Angle");
+    REQUIRE(angle != nullptr);
+    CHECK(angle->Hints.Units == FieldUnits::Degrees);
+    CHECK(angle->Hints.Tooltip == "swept angle");   // .Doc shares Tooltip storage
+    CHECK(d->FindField("Distance")->Hints.Units == FieldUnits::Meters);
+    CHECK(d->FindField("Duration")->Hints.Units == FieldUnits::Seconds);
+
+    // Absent metadata defaults — a field with no hint call is byte-identical to
+    // pre-T1 behavior (no units, empty doc, no range).
+    const FieldDescriptor* plain = d->FindField("Plain");
+    REQUIRE(plain != nullptr);
+    CHECK(plain->Hints.Units == FieldUnits::None);
+    CHECK(plain->Hints.Tooltip.empty());
+    CHECK_FALSE(plain->Hints.HasRange);
+
+    // Back-filled engine components carry the expected units.
+    const TypeDescriptor* cam = GetRegistry().Find<CameraComponent>();
+    REQUIRE(cam != nullptr);
+    CHECK(cam->FindField("FovDeg")->Hints.Units == FieldUnits::Degrees);
+    CHECK(cam->FindField("Near")->Hints.Units   == FieldUnits::Meters);
+
+    const TypeDescriptor* emitter = GetRegistry().Find<ParticleEmitterComponent>();
+    REQUIRE(emitter != nullptr);
+    CHECK(emitter->FindField("LifeMin")->Hints.Units      == FieldUnits::Seconds);
+    CHECK(emitter->FindField("ConeAngleDeg")->Hints.Units == FieldUnits::Degrees);
+
+    // Untouched fields still default (no silent metadata churn).
+    CHECK(cam->FindField("Primary")->Hints.Units == FieldUnits::None);
 }
 
 TEST_CASE("E1: get/set through descriptors round-trips")

@@ -110,6 +110,7 @@ namespace Starforge
 
         m_Settings = Prefs::LoadSettings();
         m_Viewport.LoadSnapPrefs(m_Settings);   // K6 — per-op snap values persist
+        m_Content.LoadPrefs(m_Settings);        // T4 — content-browser layout persists
 
         // First-run: offer the "Forge Playground" sample once (E21). Only when the
         // sample isn't already present and the user hasn't been asked before.
@@ -149,6 +150,7 @@ namespace Starforge
         m_BrandWatcher.Stop();       // K1 — stop the branding hot-swap watcher
         m_BrandTex.reset();          // release the logo texture while GL is live
         m_Viewport.SaveSnapPrefs(m_Settings);   // K6 — persist per-op snap values
+        m_Content.SavePrefs(m_Settings);        // T4 — persist content-browser layout
         Prefs::SaveSettings(m_Settings);
         m_SceneRenderer.Shutdown();  // free GPU subsystems while the GL context is live (H2)
         m_Ctx.ClearSelection();
@@ -795,7 +797,14 @@ namespace Starforge
             pending.swap(m_LogQueue);
         }
         for (auto& [sev, text] : pending)
-            m_Ctx.Log(text, sev);
+        {
+            // T16 — the sink formats "[<logger>] msg"; the core logger is COSMIC
+            // (Engine), anything else is the client/app logger (Game — e.g. scripts
+            // during Play).
+            const LogSource src = (text.rfind("[COSMIC]", 0) == 0)
+                ? LogSource::Engine : LogSource::Game;
+            m_Ctx.Log(text, sev, src);
+        }
     }
 
     void StarforgeApp::AdoptCameraForScene()
@@ -899,6 +908,15 @@ namespace Starforge
             m_Ctx.PendingInstantiatePrefab.clear();
             if (m_Ctx.Scene && !IsPlaying())
                 Prefabs::Instantiate(m_Ctx, p);
+        }
+
+        // Content-browser model import request (T8): seed + open the E16 modal so
+        // the user can set the .cmeta scale/up-axis before importing.
+        if (!m_Ctx.PendingImportModel.empty())
+        {
+            std::snprintf(m_ImportPath, sizeof(m_ImportPath), "%s", m_Ctx.PendingImportModel.c_str());
+            m_Ctx.PendingImportModel.clear();
+            m_OpenImportModel = true;
         }
 
         // Build pump (E12/S5): stream cmake output; on completion either hot-reload
@@ -1326,6 +1344,8 @@ namespace Starforge
         p.FlowGraph    = &m_ShowFlowGraph;
         p.Telemetry    = &m_ShowTelemetry;
         p.Stats        = &m_ShowStats;
+        p.Profiler     = &m_ShowProfiler;   // T17
+        p.System       = &m_ShowSystem;     // T18
         return p;
     }
 
@@ -1464,6 +1484,8 @@ namespace Starforge
         if (!m_DockApplied)
             ApplyDockLayout();
 
+        m_Ctx.Playing = IsPlaying();   // T15 — mirror play state for the panels
+
         DrawTopBar();
         DrawStatusBar();   // K5 — bottom strip (reserves its band; hides on home)
 
@@ -1475,6 +1497,7 @@ namespace Starforge
             if (m_ShowHierarchy)    m_Hierarchy.OnImGuiRender(m_Ctx, &m_ShowHierarchy);
             if (m_ShowInspector)    m_Inspector.OnImGuiRender(m_Ctx, &m_ShowInspector);
             if (m_ShowContent)      m_Content.OnImGuiRender(m_Ctx, &m_ShowContent);
+            else                    m_Ctx.PendingDroppedFiles.clear();   // T8 — don't accrue drops while the browser is closed
             if (m_ShowConsole)      m_Console.OnImGuiRender(m_Ctx, &m_ShowConsole);
             if (m_ShowEnvironment)  m_Environment.OnImGuiRender(m_Ctx, &m_ShowEnvironment);
             if (m_ShowMaterial)     m_Material.OnImGuiRender(m_Ctx, &m_ShowMaterial);
@@ -1483,6 +1506,8 @@ namespace Starforge
             if (m_ShowTilePalette)  m_TilePalette.OnImGuiRender(m_Ctx, &m_ShowTilePalette);
             if (m_ShowFlowGraph)    m_FlowGraph.OnImGuiRender(m_Ctx, &m_ShowFlowGraph);
             if (m_ShowTelemetry)    m_Telemetry.OnImGuiRender(m_Ctx, &m_ShowTelemetry);
+            if (m_ShowProfiler)     m_Profiler.OnImGuiRender(m_Ctx, &m_ShowProfiler);
+            if (m_ShowSystem)       m_System.OnImGuiRender(m_Ctx, &m_ShowSystem);
             if (m_ShowStats)        DrawStatsWindow();
         }
         else
@@ -2039,6 +2064,8 @@ namespace Starforge
             ImGui::MenuItem("Tile Palette",    nullptr, &m_ShowTilePalette);
             ImGui::MenuItem("Flow Graph",      nullptr, &m_ShowFlowGraph);
             ImGui::MenuItem("Telemetry",       nullptr, &m_ShowTelemetry);
+            ImGui::MenuItem("Profiler",        nullptr, &m_ShowProfiler);   // T17
+            ImGui::MenuItem("System (Jobs/Resources)", nullptr, &m_ShowSystem);   // T18
             ImGui::MenuItem("Statistics",      nullptr, &m_ShowStats);
             ImGui::MenuItem("Viewport Stats Chips", nullptr, &m_Viewport.ShowStatsChips());   // K9
             ImGui::Separator();
@@ -2139,6 +2166,17 @@ namespace Starforge
         ImGui::Text("%zu entities", entities);
         ImGui::SameLine(); ImGui::TextDisabled("|"); ImGui::SameLine();
         ImGui::Text("%zu selected", m_Ctx.Selection.size());
+
+        // Asset-memory chip (T2/T18 — same AssetLibrary::Enumerate source as the
+        // System ▸ Resources panel, so the totals always match).
+        {
+            size_t count = 0; uint64_t cpu = 0, gpu = 0;
+            Cosmic::AssetLibrary::Enumerate([&](const Cosmic::AssetEntry& e)
+            { ++count; cpu += e.CpuBytes; gpu += e.GpuBytes; });
+            ImGui::SameLine(); ImGui::TextDisabled("|"); ImGui::SameLine();
+            ImGui::Text("%zu assets (%.1f MiB CPU / %.1f MiB GPU)",
+                        count, cpu / (1024.0 * 1024.0), gpu / (1024.0 * 1024.0));
+        }
 
         // Build-module state (mirrors the K2 hammer dot).
         {
@@ -4258,6 +4296,22 @@ namespace Starforge
     {
         if (m_Mode2D) m_Camera2D.OnEvent(e);   // U3 — wheel zoom in 2D mode
         else          m_Rig.OnEvent(e);        // K7 — scroll: orbit zoom / fly speed
+
+        // OS file drop (T3/T8): queue the paths for the Content Browser to import
+        // into its current folder next frame. Viewport-spawn-on-OS-drop defers to
+        // K13's in-editor drag rules (documented follow-up).
+        Cosmic::EventDispatcher dispatch(e);
+        dispatch.Dispatch<Cosmic::WindowFileDropEvent>([this](Cosmic::WindowFileDropEvent& drop)
+        {
+            if (!m_Ctx.ProjectOpen) return false;
+            for (const std::string& p : drop.GetPaths())
+            {
+                m_Ctx.PendingDroppedFiles.push_back(p);
+                m_Ctx.Log("[Assets] Dropped: " + p);
+            }
+            return true;
+        });
+
         if (m_Play == PlayMode::Playing)   // forward input to live scripts
             m_Scripts.DispatchEvent(e);
     }

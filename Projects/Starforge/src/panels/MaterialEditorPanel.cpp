@@ -136,7 +136,8 @@ namespace Starforge
             {
                 for (const auto& f : desc->Fields)
                 {
-                    const auto r = PropertyRows::DrawField(f, &m_Asset, /*mixed*/ false);
+                    PropertyRows::SlotContext slot{ &ctx.Preview, &ctx.PendingRevealAsset };
+                    const auto r = PropertyRows::DrawField(f, &m_Asset, /*mixed*/ false, &slot);
                     if (r.Activated)
                     {
                         m_EditField  = f.Name;

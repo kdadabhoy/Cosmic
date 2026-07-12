@@ -44,6 +44,11 @@ namespace Starforge::Prefs
         float SnapMove     = 0.25f;   // metres
         float SnapRotate   = 15.0f;   // degrees
         float SnapScale    = 0.1f;    // scale increment
+
+        // T4/T7 — Content Browser layout.
+        float CbTreeWidth  = 220.0f;  // left folder-tree pane width (px)
+        float CbTileSize   = 84.0f;   // grid cell size (px)
+        bool  CbShowPreview = true;   // T7 — bottom preview/metadata pane visible
     };
 
     // One project-library entry (S1).
@@ -214,6 +219,9 @@ namespace Starforge::Prefs
             s.SnapMove     = cfg->GetFloat("snap_move",   s.SnapMove);
             s.SnapRotate   = cfg->GetFloat("snap_rotate", s.SnapRotate);
             s.SnapScale    = cfg->GetFloat("snap_scale",  s.SnapScale);
+            s.CbTreeWidth  = cfg->GetFloat("cb_tree_width", s.CbTreeWidth);
+            s.CbTileSize   = cfg->GetFloat("cb_tile_size",  s.CbTileSize);
+            s.CbShowPreview = cfg->GetBool("cb_show_preview", s.CbShowPreview);
         }
         return s;
     }
@@ -234,6 +242,9 @@ namespace Starforge::Prefs
         f << "snap_move = "   << s.SnapMove   << "\n";
         f << "snap_rotate = " << s.SnapRotate << "\n";
         f << "snap_scale = "  << s.SnapScale  << "\n";
+        f << "cb_tree_width = "  << s.CbTreeWidth << "\n";
+        f << "cb_tile_size = "   << s.CbTileSize  << "\n";
+        f << "cb_show_preview = " << (s.CbShowPreview ? "true" : "false") << "\n";
     }
 
     // Legacy in-tree discovery = subfolders of assets/projects/ that carry a

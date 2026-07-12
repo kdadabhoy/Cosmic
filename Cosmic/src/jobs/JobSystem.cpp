@@ -135,6 +135,12 @@ namespace Cosmic
     // WaitIdle
     // =========================================================================
 
+    uint32_t JobSystem::GetQueuedCount() const
+    {
+        std::lock_guard<std::mutex> lock(m_QueueMutex);
+        return static_cast<uint32_t>(m_JobQueue.size());
+    }
+
     void JobSystem::WaitIdle()
     {
         std::unique_lock<std::mutex> lock(m_QueueMutex);
@@ -198,6 +204,7 @@ namespace Cosmic
 			if (job)
 			{
 				job();
+				m_CompletedJobs.fetch_add(1, std::memory_order_acq_rel);   // T18 stats
 			}
 
 			// ---------------------------------------------------------------

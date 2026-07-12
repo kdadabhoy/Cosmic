@@ -16,6 +16,8 @@
 #include "events/Event.h"
 #include <sstream>
 #include <string>
+#include <utility>
+#include <vector>
 
 namespace Cosmic
 {
@@ -65,6 +67,41 @@ namespace Cosmic
 
 		EVENT_CLASS_TYPE(WindowClose)
 			EVENT_CLASS_CATEGORY(EventCategoryApplication)
+	};
+
+
+	/////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////
+	/**
+	 * WindowFileDropEvent
+	 * Dispatched when the user drops one or more OS files onto the window (T3 /
+	 * gap analysis §14.5). Carries the dropped absolute paths. This is a GENERIC
+	 * signal with no engine-side consumer — Starforge (T8) routes it to the
+	 * Content Browser, and a shipped app may ignore it entirely.
+	 */
+	class WindowFileDropEvent : public Event
+	{
+	public:
+		explicit WindowFileDropEvent(std::vector<std::string> paths)
+			: m_Paths(std::move(paths))
+		{
+		}
+
+		inline const std::vector<std::string>& GetPaths() const { return m_Paths; }
+
+		std::string ToString() const override
+		{
+			std::stringstream ss;
+			ss << "WindowFileDropEvent: " << m_Paths.size() << " file(s)";
+			if (!m_Paths.empty())
+				ss << " (" << m_Paths.front() << (m_Paths.size() > 1 ? ", …" : "") << ")";
+			return ss.str();
+		}
+
+		EVENT_CLASS_TYPE(WindowFileDrop)
+			EVENT_CLASS_CATEGORY(EventCategoryApplication)
+	private:
+		std::vector<std::string> m_Paths;
 	};
 
 

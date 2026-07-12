@@ -160,6 +160,14 @@ namespace Cosmic
         /** @brief True once Initialize() has been called successfully. */
         bool     IsInitialized()  const { return m_Initialized; }
 
+        // ---- Read-only live stats (T18 — the Jobs panel) --------------------
+        /** @brief Jobs waiting in the queue right now (brief lock). */
+        uint32_t GetQueuedCount() const;
+        /** @brief Jobs currently executing on workers. */
+        uint32_t GetActiveCount() const { return m_ActiveJobs.load(std::memory_order_acquire); }
+        /** @brief Total jobs completed since init (monotonic). */
+        uint64_t GetCompletedCount() const { return m_CompletedJobs.load(std::memory_order_acquire); }
+
     private:
         // Not publicly constructible — access via Get()
         JobSystem()  = default;
@@ -188,11 +196,12 @@ namespace Cosmic
 
         std::vector<std::thread>    m_Workers;         // persistent worker pool
         std::queue<Job>             m_JobQueue;         // pending work
-        std::mutex                  m_QueueMutex;       // guards m_JobQueue
+        mutable std::mutex          m_QueueMutex;       // guards m_JobQueue (mutable: read-only stats)
         std::condition_variable     m_WorkAvailable;    // wakes idle workers
         std::condition_variable     m_AllIdle;          // wakes WaitIdle() caller
         std::atomic<bool>           m_Stopping{ false }; // shutdown signal
         std::atomic<uint32_t>       m_ActiveJobs{ 0 };  // jobs currently executing
+        std::atomic<uint64_t>       m_CompletedJobs{ 0 }; // T18 — monotonic completed count
 
         uint32_t                    m_CoreCount   = 1;
         uint32_t                    m_WorkerCount = 0;

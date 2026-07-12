@@ -43,6 +43,8 @@ namespace Starforge
         bool* FlowGraph    = nullptr;
         bool* Telemetry    = nullptr;
         bool* Stats        = nullptr;
+        bool* Profiler     = nullptr;   // T17
+        bool* System       = nullptr;   // T18
     };
 
     class LayoutPresets

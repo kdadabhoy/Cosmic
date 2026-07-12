@@ -33,6 +33,8 @@
 
 #include "core/Core.h"
 #include "graphics/Texture.h"   // U3 — TextureFilter/TextureWrap for the default-sampling verb
+#include <cstdint>
+#include <functional>
 #include <string>
 #include <vector>
 
@@ -44,6 +46,21 @@ namespace Cosmic
 	class Material;         // E17
 	struct MaterialAsset;   // E17 — graphics/MaterialAsset.h
 	class AnimationClip;    // A2 — graphics/AnimationClip.h
+
+	// The kind of a cached asset, reported by AssetLibrary::Enumerate (T2 / gap §14.2).
+	enum class AssetType { Texture, Shader, Mesh, Model, Material, AnimationClipSet };
+
+	// A read-only snapshot of one cached asset (T2). CpuBytes/GpuBytes are rough
+	// estimates for the Resources panel / status bar, not exact allocations;
+	// types the library does not size-track report 0.
+	struct AssetEntry
+	{
+		std::string Path;                 // normalized cache key
+		AssetType   Type = AssetType::Texture;
+		long        Refs = 0;             // shared_ptr use_count (INCLUDES the library's own ref)
+		uint64_t    CpuBytes = 0;
+		uint64_t    GpuBytes = 0;
+	};
 
 	class COSMIC_API AssetLibrary
 	{
@@ -97,6 +114,16 @@ namespace Cosmic
 		 *  appear as their "Clip_<i>" fallback). Cached with the clips. Used by
 		 *  the editor's clip picker. */
 		static std::vector<std::string> GetAnimationClipNames(const std::string& path);
+
+		/**
+		 * @brief Visit every currently-cached asset (T2 / gap §14.2). Read-only
+		 * introspection — no loads, no eviction, no lifetime change; visitation
+		 * order is unspecified. Each AssetEntry reports the cache key, kind,
+		 * shared-ref count, and estimated CPU/GPU bytes. Consumers: the status
+		 * bar (§1.4), asset-preview metadata (§4.4), the Resources panel (§13.3).
+		 * Main-thread only (like the rest of AssetLibrary).
+		 */
+		static void           Enumerate(const std::function<void(const AssetEntry&)>& visitor);
 
 		/** @brief Release all cached Refs. Call while a GL context is still current. */
 		static void           Clear();

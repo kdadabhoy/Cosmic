@@ -77,6 +77,13 @@ namespace Cosmic
 		/** @brief True if `ancestor` appears anywhere on `node`'s parent chain. */
 		bool IsAncestor(Entity ancestor, Entity node);
 
+		/** @brief Effective-active (T13): the entity's own TagComponent::Active AND
+		 *  every ancestor's. An inactive entity (or one under an inactive ancestor)
+		 *  is not rendered, ticked, or baked. Walks the parent chain like WorldOf;
+		 *  entities without a TagComponent are treated as active. */
+		bool IsActiveInHierarchy(entt::entity handle);
+		bool IsActiveInHierarchy(Entity entity);
+
 		/** @brief Runs ongoing frame logic updates across all registered systems. */
 		void OnUpdate(float deltaTime);
 

@@ -27,11 +27,13 @@ namespace Cosmic::Reflect
     {
         // Idempotent: re-registering just overwrites the same descriptors.
         ClassIn<TagComponent>(r, "Tag", "Core")
-            .Field("Tag", &TagComponent::Tag);
+            .Field("Tag", &TagComponent::Tag)
+            // T13 — per-entity active flag (Hierarchy eye toggle, not an Inspector row).
+            .Field("Active", &TagComponent::Active).HideInInspector().OmitIfTrue();
 
         ClassIn<TransformComponent>(r, "Transform", "Core")
             .Field("Position",       &TransformComponent::Position)
-            .Field("Rotation",       &TransformComponent::Rotation).Tooltip("Euler degrees (X,Y,Z); Z is 2D roll")
+            .Field("Rotation",       &TransformComponent::Rotation).Tooltip("Euler degrees (X,Y,Z); Z is 2D roll").Degrees()
             .Field("Scale",          &TransformComponent::Scale)
             // Quat policy (Components.h): the two rotation representations are
             // INDEPENDENT — writing one does not sync the other. Both are
@@ -48,7 +50,8 @@ namespace Cosmic::Reflect
             .Field("PixelsPerUnit", &SpriteRendererComponent::PixelsPerUnit).Range(1.0f, 4096.0f)
             .Field("ZOrder",        &SpriteRendererComponent::ZOrder).Tooltip("Sort order within the 2D pass")
             .Field("TexturePath",   &SpriteRendererComponent::TexturePath).AsAssetPath("texture")
-            .Field("YSort",         &SpriteRendererComponent::YSort).Tooltip("Within a ZOrder, order by -Y (lower on screen draws in front) instead of Z");
+            .Field("YSort",         &SpriteRendererComponent::YSort).Tooltip("Within a ZOrder, order by -Y (lower on screen draws in front) instead of Z")
+            .Field("Enabled",       &SpriteRendererComponent::Enabled).HideInInspector().OmitIfTrue();
 
         // Tile-grid renderer (U4). Cells is NOT reflected — the SceneSerializer
         // writes it as a plain int array (custom block, diff-friendly).
@@ -81,7 +84,9 @@ namespace Cosmic::Reflect
             // Imported/loaded mesh slot (E16) — resolved through AssetLibrary::GetMesh.
             .Field("MeshPath",    &MeshRendererComponent::MeshPath).AsAssetPath("mesh")
             // Material slot (E17) — resolved through AssetLibrary::GetMaterial.
-            .Field("MaterialPath", &MeshRendererComponent::MaterialPath).AsAssetPath("material");
+            .Field("MaterialPath", &MeshRendererComponent::MaterialPath).AsAssetPath("material")
+            // T12 enable gate — header checkbox, not a field row (omit-if-true keeps scenes compat).
+            .Field("Enabled",     &MeshRendererComponent::Enabled).HideInInspector().OmitIfTrue();
 
         // Skeletal-animation driver (Phase 20 / A2). Only the authored fields are
         // reflected — the resolved clip/skeleton refs and the per-frame palette
@@ -114,20 +119,22 @@ namespace Cosmic::Reflect
         ClassIn<DirectionalLightComponent>(r, "DirectionalLight", "Lighting")
             .Field("Direction", &DirectionalLightComponent::Direction).Tooltip("Direction the light travels")
             .Field("Color",     &DirectionalLightComponent::Color).Color()
-            .Field("Intensity", &DirectionalLightComponent::Intensity).Range(0.0f, 10.0f);
+            .Field("Intensity", &DirectionalLightComponent::Intensity).Range(0.0f, 10.0f)
+            .Field("Enabled",   &DirectionalLightComponent::Enabled).HideInInspector().OmitIfTrue();
 
         ClassIn<PointLightComponent>(r, "PointLight", "Lighting")
             .Field("Color",     &PointLightComponent::Color).Color()
             .Field("Intensity", &PointLightComponent::Intensity).Range(0.0f, 20.0f)
-            .Field("Radius",    &PointLightComponent::Radius).Range(0.0f, 100.0f);
+            .Field("Radius",    &PointLightComponent::Radius).Range(0.0f, 100.0f).Meters()
+            .Field("Enabled",   &PointLightComponent::Enabled).HideInInspector().OmitIfTrue();
 
         ClassIn<CameraComponent>(r, "Camera", "Rendering")
             .Field("Primary",   &CameraComponent::Primary)
             .Field("ProjectionType", &CameraComponent::ProjectionType)
                 .EnumValue("Perspective", 0).EnumValue("Orthographic", 1)
-            .Field("FovDeg",    &CameraComponent::FovDeg).Range(10.0f, 170.0f)
-            .Field("Near",      &CameraComponent::Near).Range(0.001f, 100.0f)
-            .Field("Far",       &CameraComponent::Far).Range(1.0f, 100000.0f)
+            .Field("FovDeg",    &CameraComponent::FovDeg).Range(10.0f, 170.0f).Degrees()
+            .Field("Near",      &CameraComponent::Near).Range(0.001f, 100.0f).Meters()
+            .Field("Far",       &CameraComponent::Far).Range(1.0f, 100000.0f).Meters()
             .Field("OrthoSize", &CameraComponent::OrthoSize).Range(0.1f, 1000.0f);
 
         ClassIn<EnvironmentComponent>(r, "Environment", "Rendering")
@@ -137,7 +144,7 @@ namespace Cosmic::Reflect
             .Field("Sky",          &EnvironmentComponent::Sky)
                 .EnumValue("Procedural", 0).EnumValue("Detailed", 1).EnumValue("HDRI", 2)
             .Field("HdriPath",     &EnvironmentComponent::HdriPath).AsAssetPath("hdri").Tooltip("Equirectangular .hdr; used when Sky = HDRI")
-            .Field("TimeOfDay",    &EnvironmentComponent::TimeOfDay).Range(0.0f, 24.0f)
+            .Field("TimeOfDay",    &EnvironmentComponent::TimeOfDay).Range(0.0f, 24.0f).Doc("Hours (0-24); drives the procedural sun when scrubbed")
             .Field("Skybox",       &EnvironmentComponent::Skybox)
             .Field("IBL",          &EnvironmentComponent::IBL)
             .Field("IBLIntensity", &EnvironmentComponent::IBLIntensity).Range(0.0f, 4.0f)
@@ -146,7 +153,7 @@ namespace Cosmic::Reflect
             .Field("FogColor",         &EnvironmentComponent::FogColor).Color()
             .Field("FogDensity",       &EnvironmentComponent::FogDensity).Range(0.0f, 1.0f)
             .Field("FogHeightFalloff", &EnvironmentComponent::FogHeightFalloff).Range(0.0f, 2.0f)
-            .Field("FogBaseHeight",    &EnvironmentComponent::FogBaseHeight)
+            .Field("FogBaseHeight",    &EnvironmentComponent::FogBaseHeight).Meters()
             .Field("Bloom",            &EnvironmentComponent::Bloom)
             .Field("BloomThreshold",   &EnvironmentComponent::BloomThreshold).Range(0.0f, 8.0f)
             .Field("BloomIntensity",   &EnvironmentComponent::BloomIntensity).Range(0.0f, 4.0f)
@@ -163,10 +170,10 @@ namespace Cosmic::Reflect
         // raw checkbox. BuiltSignature + the Ref are unregistered -> runtime-only.
         ClassIn<TerrainComponent>(r, "Terrain", "World")
             .Field("UseRecipe",   &TerrainComponent::UseRecipe).HideInInspector()
-            .Field("WorldSize",   &TerrainComponent::WorldSize).Range(16.0f, 8192.0f)
+            .Field("WorldSize",   &TerrainComponent::WorldSize).Range(16.0f, 8192.0f).Meters()
             .Field("Resolution",  &TerrainComponent::Resolution).Range(65.0f, 1025.0f).Tooltip("Snapped to 32*2^k + 1 (65..1025) at build")
-            .Field("HeightScale", &TerrainComponent::HeightScale).Range(0.0f, 1000.0f)
-            .Field("BaseHeight",  &TerrainComponent::BaseHeight)
+            .Field("HeightScale", &TerrainComponent::HeightScale).Range(0.0f, 1000.0f).Meters()
+            .Field("BaseHeight",  &TerrainComponent::BaseHeight).Meters()
             .Field("Seed",        &TerrainComponent::Seed)
             .Field("Octaves",     &TerrainComponent::Octaves).Range(1.0f, 12.0f)
             .Field("Frequency",   &TerrainComponent::Frequency).Range(0.1f, 32.0f).Tooltip("fBm periods across the terrain")
@@ -182,8 +189,8 @@ namespace Cosmic::Reflect
             .Field("RockTex",     &TerrainComponent::RockTex).AsAssetPath("texture")
             .Field("SnowTex",     &TerrainComponent::SnowTex).AsAssetPath("texture")
             .Field("SandTex",     &TerrainComponent::SandTex).AsAssetPath("texture")
-            .Field("SnowHeight",  &TerrainComponent::SnowHeight).Tooltip("World Y where the snow layer fades in")
-            .Field("SnowBlend",   &TerrainComponent::SnowBlend).Range(0.01f, 50.0f);
+            .Field("SnowHeight",  &TerrainComponent::SnowHeight).Tooltip("World Y where the snow layer fades in").Meters()
+            .Field("SnowBlend",   &TerrainComponent::SnowBlend).Range(0.01f, 50.0f).Meters();
 
         ClassIn<WaterComponent>(r, "Water", "World")
             .Field("UseRecipe", &WaterComponent::UseRecipe).HideInInspector()
@@ -191,7 +198,7 @@ namespace Cosmic::Reflect
                 .EnumValue("Lake", 0).EnumValue("Ocean", 1).EnumValue("Storm", 2)
             .Field("Center",        &WaterComponent::Center)
             .Field("Extent",        &WaterComponent::Extent)
-            .Field("SurfaceHeight", &WaterComponent::SurfaceHeight)
+            .Field("SurfaceHeight", &WaterComponent::SurfaceHeight).Meters()
             .Field("GridResolution", &WaterComponent::GridResolution).Range(2.0f, 513.0f)
             .Field("Amplitude",     &WaterComponent::Amplitude).Range(0.0f, 4.0f).Tooltip("Scales the preset wave heights")
             .Field("Choppiness",    &WaterComponent::Choppiness).Range(0.0f, 2.0f).Tooltip("Scales the preset wave steepness")
@@ -199,7 +206,8 @@ namespace Cosmic::Reflect
             .Field("DeepColor",     &WaterComponent::DeepColor)
             .Field("CausticStrength",  &WaterComponent::CausticStrength).Range(0.0f, 2.0f)
             .Field("WhitecapStrength", &WaterComponent::WhitecapStrength).Range(0.0f, 2.0f)
-            .Field("SparkleStrength",  &WaterComponent::SparkleStrength).Range(0.0f, 2.0f);
+            .Field("SparkleStrength",  &WaterComponent::SparkleStrength).Range(0.0f, 2.0f)
+            .Field("Enabled",          &WaterComponent::Enabled).HideInInspector().OmitIfTrue();
 
         ClassIn<ParticleEmitterComponent>(r, "ParticleEmitter", "World")
             .Field("UseRecipe",    &ParticleEmitterComponent::UseRecipe).HideInInspector()
@@ -207,13 +215,13 @@ namespace Cosmic::Reflect
             .Field("SpawnRate",    &ParticleEmitterComponent::SpawnRate).Range(0.0f, 5000.0f)
             .Field("Shape",        &ParticleEmitterComponent::Shape)
                 .EnumValue("Point", 0).EnumValue("Sphere", 1).EnumValue("Cone", 2).EnumValue("Box", 3)
-            .Field("ShapeRadius",  &ParticleEmitterComponent::ShapeRadius).Range(0.0f, 50.0f)
-            .Field("ConeAngleDeg", &ParticleEmitterComponent::ConeAngleDeg).Range(0.0f, 180.0f)
+            .Field("ShapeRadius",  &ParticleEmitterComponent::ShapeRadius).Range(0.0f, 50.0f).Meters()
+            .Field("ConeAngleDeg", &ParticleEmitterComponent::ConeAngleDeg).Range(0.0f, 180.0f).Degrees()
             .Field("BoxExtents",   &ParticleEmitterComponent::BoxExtents)
             .Field("SpeedMin",     &ParticleEmitterComponent::SpeedMin).Range(0.0f, 100.0f)
             .Field("SpeedMax",     &ParticleEmitterComponent::SpeedMax).Range(0.0f, 100.0f)
-            .Field("LifeMin",      &ParticleEmitterComponent::LifeMin).Range(0.01f, 60.0f)
-            .Field("LifeMax",      &ParticleEmitterComponent::LifeMax).Range(0.01f, 60.0f)
+            .Field("LifeMin",      &ParticleEmitterComponent::LifeMin).Range(0.01f, 60.0f).Seconds()
+            .Field("LifeMax",      &ParticleEmitterComponent::LifeMax).Range(0.01f, 60.0f).Seconds()
             .Field("Gravity",      &ParticleEmitterComponent::Gravity)
             .Field("Drag",         &ParticleEmitterComponent::Drag).Range(0.0f, 10.0f)
             .Field("Wind",         &ParticleEmitterComponent::Wind)
@@ -230,8 +238,9 @@ namespace Cosmic::Reflect
             .Field("FlipbookTilesY", &ParticleEmitterComponent::FlipbookTilesY).Range(1.0f, 16.0f)
             .Field("FlipbookFps",    &ParticleEmitterComponent::FlipbookFps).Range(0.0f, 60.0f)
             .Field("FlipbookBlend",  &ParticleEmitterComponent::FlipbookBlend)
-            .Field("SoftFadeDistance",  &ParticleEmitterComponent::SoftFadeDistance).Range(0.0f, 10.0f)
-            .Field("StretchByVelocity", &ParticleEmitterComponent::StretchByVelocity).Range(0.0f, 1.0f);
+            .Field("SoftFadeDistance",  &ParticleEmitterComponent::SoftFadeDistance).Range(0.0f, 10.0f).Meters()
+            .Field("StretchByVelocity", &ParticleEmitterComponent::StretchByVelocity).Range(0.0f, 1.0f)
+            .Field("Enabled",           &ParticleEmitterComponent::Enabled).HideInInspector().OmitIfTrue();
 
         // Voxel volume (Phase 18 / V1–V6). Runtime Volume/Palette/Render are
         // unregistered (runtime-only); the reflected fields are the authoring recipe
@@ -239,7 +248,7 @@ namespace Cosmic::Reflect
         ClassIn<VoxelVolumeComponent>(r, "VoxelVolume", "World")
             .Field("PalettePath",  &VoxelVolumeComponent::PalettePath).AsAssetPath("voxel_palette").Tooltip("`.cpal` block table; empty = default palette")
             .Field("VolumePath",   &VoxelVolumeComponent::VolumePath).AsAssetPath("voxel_volume").Tooltip("`.cvox` sidecar; empty = empty/generated")
-            .Field("VoxelSize",    &VoxelVolumeComponent::VoxelSize).Range(0.05f, 16.0f).Tooltip("Metres per voxel")
+            .Field("VoxelSize",    &VoxelVolumeComponent::VoxelSize).Range(0.05f, 16.0f).Tooltip("Metres per voxel").Meters()
             .Field("ViewRadius",   &VoxelVolumeComponent::ViewRadius).Range(1.0f, 64.0f).Tooltip("Chunk radius streamed around the camera")
             .Field("Greedy",       &VoxelVolumeComponent::Greedy).Tooltip("Greedy-merged (fast) vs culled (per-face) render mesh")
             .Field("GenEnabled",   &VoxelVolumeComponent::GenEnabled).Tooltip("Procedurally stream-generate chunks in view")
@@ -281,22 +290,26 @@ namespace Cosmic::Reflect
         ClassIn<BoxColliderComponent>(r, "BoxCollider", "Physics")
             .Field("HalfExtents", &BoxColliderComponent::HalfExtents).Tooltip("Half-size per axis (pre-scale)")
             .Field("Offset",      &BoxColliderComponent::Offset)
-            .Field("IsTrigger",   &BoxColliderComponent::IsTrigger).Tooltip("Sensor: overlap events, no contact response");
+            .Field("IsTrigger",   &BoxColliderComponent::IsTrigger).Tooltip("Sensor: overlap events, no contact response")
+            .Field("Enabled",     &BoxColliderComponent::Enabled).HideInInspector().OmitIfTrue();
 
         ClassIn<SphereColliderComponent>(r, "SphereCollider", "Physics")
-            .Field("Radius",    &SphereColliderComponent::Radius).Range(0.001f, 1000.0f)
+            .Field("Radius",    &SphereColliderComponent::Radius).Range(0.001f, 1000.0f).Meters()
             .Field("Offset",    &SphereColliderComponent::Offset)
-            .Field("IsTrigger", &SphereColliderComponent::IsTrigger);
+            .Field("IsTrigger", &SphereColliderComponent::IsTrigger)
+            .Field("Enabled",   &SphereColliderComponent::Enabled).HideInInspector().OmitIfTrue();
 
         ClassIn<CapsuleColliderComponent>(r, "CapsuleCollider", "Physics")
-            .Field("Radius",     &CapsuleColliderComponent::Radius).Range(0.001f, 1000.0f)
-            .Field("HalfHeight", &CapsuleColliderComponent::HalfHeight).Range(0.0f, 1000.0f).Tooltip("Half the cylinder part (excludes the caps)")
+            .Field("Radius",     &CapsuleColliderComponent::Radius).Range(0.001f, 1000.0f).Meters()
+            .Field("HalfHeight", &CapsuleColliderComponent::HalfHeight).Range(0.0f, 1000.0f).Tooltip("Half the cylinder part (excludes the caps)").Meters()
             .Field("Offset",     &CapsuleColliderComponent::Offset)
-            .Field("IsTrigger",  &CapsuleColliderComponent::IsTrigger);
+            .Field("IsTrigger",  &CapsuleColliderComponent::IsTrigger)
+            .Field("Enabled",    &CapsuleColliderComponent::Enabled).HideInInspector().OmitIfTrue();
 
         ClassIn<MeshColliderComponent>(r, "MeshCollider", "Physics")
             .Field("Convex",    &MeshColliderComponent::Convex).Tooltip("On = convex hull (dynamic-capable); Off = triangle mesh (static/kinematic only)")
-            .Field("IsTrigger", &MeshColliderComponent::IsTrigger);
+            .Field("IsTrigger", &MeshColliderComponent::IsTrigger)
+            .Field("Enabled",   &MeshColliderComponent::Enabled).HideInInspector().OmitIfTrue();
 
         // TerrainCollider has no reflected fields (it derives everything from the
         // sibling TerrainComponent); registered so it serializes + shows in the Add
@@ -304,10 +317,10 @@ namespace Cosmic::Reflect
         ClassIn<TerrainColliderComponent>(r, "TerrainCollider", "Physics");
 
         ClassIn<CharacterControllerComponent>(r, "CharacterController", "Physics")
-            .Field("Height",      &CharacterControllerComponent::Height).Range(0.2f, 10.0f)
-            .Field("Radius",      &CharacterControllerComponent::Radius).Range(0.05f, 5.0f)
-            .Field("MaxSlopeDeg", &CharacterControllerComponent::MaxSlopeDeg).Range(0.0f, 89.0f)
-            .Field("StepHeight",  &CharacterControllerComponent::StepHeight).Range(0.0f, 2.0f)
+            .Field("Height",      &CharacterControllerComponent::Height).Range(0.2f, 10.0f).Meters()
+            .Field("Radius",      &CharacterControllerComponent::Radius).Range(0.05f, 5.0f).Meters()
+            .Field("MaxSlopeDeg", &CharacterControllerComponent::MaxSlopeDeg).Range(0.0f, 89.0f).Degrees()
+            .Field("StepHeight",  &CharacterControllerComponent::StepHeight).Range(0.0f, 2.0f).Meters()
             .Field("Mass",        &CharacterControllerComponent::Mass).Range(1.0f, 1000.0f);
 
         // Scripting link (E11). ClassName is the only plain reflected field; the

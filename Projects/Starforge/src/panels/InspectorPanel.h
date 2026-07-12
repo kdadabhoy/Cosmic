@@ -21,10 +21,16 @@ namespace Starforge
 
     private:
         // Draws one component's fields; records undo on commit. `typeId` keys the
-        // command; `mixedProbe` supplies per-field mixed-value detection.
+        // command; `mixedProbe` supplies per-field mixed-value detection. When a
+        // property search (T9) is active, only matching fields are drawn and the
+        // header is forced open.
         void DrawComponent(EditorContext& ctx, const Cosmic::Reflect::TypeDescriptor& desc);
         void DrawName(EditorContext& ctx);
         void DrawAddComponent(EditorContext& ctx);
+
+        // T9 — is a field/component visible under the current property search?
+        bool SearchActive() const { return m_Search[0] != 0; }
+        bool NameMatches(const std::string& name) const;   // case-insensitive contains
 
         // NativeScript (E11) gets a bespoke section: a class picker (ModuleRegistry)
         // + the chosen script's reflected fields, edited on the component's override
@@ -36,5 +42,8 @@ namespace Starforge
         // a time), captured on IsItemActivated and consumed on commit.
         Cosmic::Reflect::FieldValue m_ActiveBefore;
         bool                        m_HasActive = false;
+
+        // T9 — property search filter (empty = show everything).
+        char m_Search[128] = { 0 };
     };
 }

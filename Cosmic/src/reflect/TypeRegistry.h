@@ -146,6 +146,15 @@ namespace Cosmic::Reflect
         ClassBuilder& Range(float mn, float mx) { L().Hints.HasRange = true; L().Hints.Min = mn; L().Hints.Max = mx; return *this; }
         ClassBuilder& Step(float s)             { L().Hints.Step = s; return *this; }
         ClassBuilder& Tooltip(const std::string& t) { L().Hints.Tooltip = t; return *this; }
+        // Doc is the reflection-metadata-v2 (T1) name for the per-field help text;
+        // it shares storage with Tooltip so existing .Tooltip(...) registrations
+        // and the PropertyRows consumer keep working unchanged.
+        ClassBuilder& Doc(const std::string& d) { L().Hints.Tooltip = d; return *this; }
+        // Physical-unit annotations (T1). One unit per field.
+        ClassBuilder& Units(FieldUnits u)       { L().Hints.Units = u; return *this; }
+        ClassBuilder& Degrees()                 { L().Hints.Units = FieldUnits::Degrees; return *this; }
+        ClassBuilder& Meters()                  { L().Hints.Units = FieldUnits::Meters; return *this; }
+        ClassBuilder& Seconds()                 { L().Hints.Units = FieldUnits::Seconds; return *this; }
         ClassBuilder& Color()                   { if (L().Kind == FieldKind::Vec4) L().Kind = FieldKind::Color; return *this; }
         ClassBuilder& AsAssetPath(const std::string& assetType) { L().Kind = FieldKind::AssetPath; L().Hints.AssetType = assetType; return *this; }
         ClassBuilder& AsEntityRef()             { L().Kind = FieldKind::EntityRef; return *this; }
@@ -153,6 +162,7 @@ namespace Cosmic::Reflect
         ClassBuilder& ReadOnly()                { L().Flags |= Field_ReadOnly; return *this; }
         ClassBuilder& HideInInspector()         { L().Flags |= Field_HideInInspector; return *this; }
         ClassBuilder& NoSerialize()             { L().Flags |= Field_NoSerialize; return *this; }
+        ClassBuilder& OmitIfTrue()              { L().Flags |= Field_OmitIfTrue; return *this; }
 
     private:
         FieldDescriptor& L() { return *m_Last; }

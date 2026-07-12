@@ -178,9 +178,12 @@ namespace Cosmic
                 ls.Instance->OnUpdateAll(BuildMembership(ls), ts);
 
         for (entt::entity e : m_Live)
-            if (reg.valid(e))
-                if (auto* nsc = reg.try_get<NativeScriptComponent>(e); nsc && nsc->Instance)
-                    nsc->Instance->OnUpdate(ts);
+        {
+            if (!reg.valid(e) || !m_Scene->IsActiveInHierarchy(e))   // T13 — inactive: not ticked
+                continue;
+            if (auto* nsc = reg.try_get<NativeScriptComponent>(e); nsc && nsc->Instance)
+                nsc->Instance->OnUpdate(ts);
+        }
     }
 
     void ScriptHost::FixedTick(float fixedDt)
@@ -193,9 +196,12 @@ namespace Cosmic
                 ls.Instance->OnFixedUpdateAll(BuildMembership(ls), fixedDt);
 
         for (entt::entity e : m_Live)
-            if (reg.valid(e))
-                if (auto* nsc = reg.try_get<NativeScriptComponent>(e); nsc && nsc->Instance)
-                    nsc->Instance->OnFixedUpdate(fixedDt);
+        {
+            if (!reg.valid(e) || !m_Scene->IsActiveInHierarchy(e))   // T13
+                continue;
+            if (auto* nsc = reg.try_get<NativeScriptComponent>(e); nsc && nsc->Instance)
+                nsc->Instance->OnFixedUpdate(fixedDt);
+        }
     }
 
     void ScriptHost::DispatchEvent(Event& ev)

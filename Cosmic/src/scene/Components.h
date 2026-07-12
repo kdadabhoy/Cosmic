@@ -81,6 +81,12 @@ namespace Cosmic
     {
         std::string Tag;
 
+        // T13 — per-entity active flag. Effective-active = own ∧ every ancestor's
+        // (Scene::IsActiveInHierarchy). An inactive entity's whole subtree is not
+        // rendered, ticked, or baked. Default true → existing scenes/apps
+        // unchanged (omitted from serialization while true).
+        bool Active = true;
+
         TagComponent() = default;
         TagComponent(const TagComponent&) = default;
         TagComponent(const std::string& tag) : Tag(tag) {}
@@ -164,6 +170,11 @@ namespace Cosmic
         // (SourceRect texels / PixelsPerUnit) * Transform.Scale.xy.
         std::string TexturePath;
         bool        YSort = false;
+
+        // T12 enable gate: when false the 2D pass skips this sprite (editor + Play).
+        // Default true → existing scenes/apps unchanged (omitted from serialization
+        // while true, so unchanged scenes stay byte-identical).
+        bool        Enabled = true;
 
         // Runtime-only (not reflected): lazily resolved texture + its source path.
         Ref<Texture2D> Resolved;
@@ -353,6 +364,7 @@ namespace Cosmic
         Ref<Material> MaterialAsset;         // null → Lambert color path
         glm::vec4     Color{ 1.0f };         // Lambert tint when MaterialAsset is null
         bool          CastShadows = true;    // consumed from S6.4; stored now so the ABI breaks once
+        bool          Enabled = true;        // T12 — false hides the mesh (editor + Play + shadow submit)
 
         // Imported / loaded mesh reference (E16). When non-empty and MeshAsset is
         // null (e.g. a freshly loaded scene), Scene::SyncPrimitiveMeshes resolves it
@@ -499,6 +511,7 @@ namespace Cosmic
         glm::vec3 Direction{ -0.4f, -1.0f, -0.3f };  // direction the light TRAVELS
         glm::vec3 Color{ 1.0f };
         float     Intensity = 1.0f;
+        bool      Enabled = true;            // T12 — false skips this light's collect
 
         DirectionalLightComponent() = default;
         DirectionalLightComponent(const DirectionalLightComponent&) = default;
@@ -517,6 +530,7 @@ namespace Cosmic
         // nearby default-material meshes. Tune down for a subtle fill.
         float     Intensity = 8.0f;
         float     Radius    = 10.0f;
+        bool      Enabled = true;            // T12 — false skips this light's collect
 
         PointLightComponent() = default;
         PointLightComponent(const PointLightComponent&) = default;
@@ -689,6 +703,7 @@ namespace Cosmic
         float       CausticStrength  = 0.0f;
         float       WhitecapStrength = 0.0f;
         float       SparkleStrength  = 0.0f;
+        bool        Enabled = true;          // T12 — false skips SyncWorldSystems + draw
 
         std::size_t BuiltSignature = 0;      // runtime; not reflected
 
@@ -711,6 +726,7 @@ namespace Cosmic
 
         // --- Reflected recipe (maps onto ParticleEmitterSpec) -----------------
         bool          UseRecipe = false;     // gates SyncWorldSystems regen (compat)
+        bool          Enabled = true;        // T12 — false skips SyncWorldSystems + update/draw
         uint32_t      MaxParticles = 2048;
         float         SpawnRate    = 60.0f;  // particles / second
         EmitterShape  Shape        = EmitterShape::Cone;
@@ -839,6 +855,7 @@ namespace Cosmic
         glm::vec3 HalfExtents{ 0.5f, 0.5f, 0.5f };
         glm::vec3 Offset{ 0.0f };
         bool      IsTrigger = false;
+        bool      Enabled = true;            // T12 — false skips the physics bake
 
         BoxColliderComponent() = default;
         BoxColliderComponent(const BoxColliderComponent&) = default;
@@ -850,6 +867,7 @@ namespace Cosmic
         float     Radius = 0.5f;
         glm::vec3 Offset{ 0.0f };
         bool      IsTrigger = false;
+        bool      Enabled = true;            // T12 — false skips the physics bake
 
         SphereColliderComponent() = default;
         SphereColliderComponent(const SphereColliderComponent&) = default;
@@ -863,6 +881,7 @@ namespace Cosmic
         float     HalfHeight = 0.5f;
         glm::vec3 Offset{ 0.0f };
         bool      IsTrigger = false;
+        bool      Enabled = true;            // T12 — false skips the physics bake
 
         CapsuleColliderComponent() = default;
         CapsuleColliderComponent(const CapsuleColliderComponent&) = default;
@@ -876,6 +895,7 @@ namespace Cosmic
     {
         bool Convex    = false;
         bool IsTrigger = false;
+        bool Enabled   = true;               // T12 — false skips the physics bake
 
         MeshColliderComponent() = default;
         MeshColliderComponent(const MeshColliderComponent&) = default;

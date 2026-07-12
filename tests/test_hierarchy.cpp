@@ -32,6 +32,41 @@ static glm::vec3 WorldPos(Scene& s, Entity e)
     return glm::vec3(m[3]);
 }
 
+TEST_CASE("T13: effective-active = own flag AND every ancestor's")
+{
+    Scene s;
+    Entity a = s.CreateEntity("A");
+    Entity b = s.CreateEntity("B");
+    Entity c = s.CreateEntity("C");
+    s.SetParent(b, a, /*keepWorldPose=*/false);
+    s.SetParent(c, b, /*keepWorldPose=*/false);
+
+    // All active by default (old scenes / fresh entities unchanged).
+    CHECK(s.IsActiveInHierarchy(a));
+    CHECK(s.IsActiveInHierarchy(b));
+    CHECK(s.IsActiveInHierarchy(c));
+
+    // Deactivating the middle freezes it + its subtree, not the ancestor.
+    b.GetComponent<TagComponent>().Active = false;
+    CHECK(s.IsActiveInHierarchy(a));
+    CHECK_FALSE(s.IsActiveInHierarchy(b));
+    CHECK_FALSE(s.IsActiveInHierarchy(c));   // inherits from b
+
+    // Reactivate b, deactivate the root: the whole chain is inactive.
+    b.GetComponent<TagComponent>().Active = true;
+    a.GetComponent<TagComponent>().Active = false;
+    CHECK_FALSE(s.IsActiveInHierarchy(a));
+    CHECK_FALSE(s.IsActiveInHierarchy(b));
+    CHECK_FALSE(s.IsActiveInHierarchy(c));
+
+    // A leaf's own flag only affects itself.
+    a.GetComponent<TagComponent>().Active = true;
+    c.GetComponent<TagComponent>().Active = false;
+    CHECK(s.IsActiveInHierarchy(a));
+    CHECK(s.IsActiveInHierarchy(b));
+    CHECK_FALSE(s.IsActiveInHierarchy(c));
+}
+
 TEST_CASE("E3: three-deep chain composes world position")
 {
     Scene s;

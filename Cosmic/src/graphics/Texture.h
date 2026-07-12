@@ -81,6 +81,15 @@ namespace Cosmic
 		virtual uint32_t		GetWidth() const	= 0;
 		virtual uint32_t		GetHeight() const	= 0;
 
+		/**
+		 * @brief Estimated GPU memory footprint in bytes (T2 asset accounting):
+		 * width x height x bytes-per-texel of the base level, plus the mip tail
+		 * when the texture carries a mip chain. A rough figure for the Resources
+		 * panel / status bar (§13.3 / §1.4) — not an exact driver allocation.
+		 * Returns 0 for a degraded (0x0) texture.
+		 */
+		virtual uint64_t		GetGpuBytes() const = 0;
+
 		////////////////////////////////
 		// GPU Data Operations
 		///////////////////////////////

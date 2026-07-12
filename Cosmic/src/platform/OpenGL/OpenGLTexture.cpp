@@ -55,6 +55,7 @@ namespace Cosmic
 		// before the first SetData — SetData regenerates it with real content.
 		if (m_Mipmapped)
 			glGenerateMipmap(GL_TEXTURE_2D);
+		m_HasMips = m_Mipmapped;
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////
@@ -135,6 +136,7 @@ namespace Cosmic
 
 			// Required for the GL_LINEAR_MIPMAP_LINEAR filter to work correctly
 			glGenerateMipmap(GL_TEXTURE_2D);
+			m_HasMips = true;
 
 			stbi_image_free(data);
 		}
@@ -244,8 +246,33 @@ namespace Cosmic
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 		glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, m_Width, m_Height, 0, dataFormat, GL_UNSIGNED_BYTE, data);
 		glGenerateMipmap(GL_TEXTURE_2D);
+		m_HasMips = true;
 
 		stbi_image_free(data);
+	}
+
+	/////////////////////////////////////////////////////////////////////////////////
+
+	uint64_t OpenGLTexture::GetGpuBytes() const
+	{
+		if (m_Width == 0 || m_Height == 0)
+			return 0;
+
+		// Bytes per texel from the GPU internal format.
+		uint32_t bpp = 4;
+		switch (m_InternalFormat)
+		{
+			case GL_R8:      bpp = 1; break;
+			case GL_RG8:     bpp = 2; break;
+			case GL_RGB8:    bpp = 3; break;
+			case GL_RGBA8:   bpp = 4; break;
+			case GL_RGBA16F: bpp = 8; break;
+			default:         bpp = 4; break;
+		}
+
+		const uint64_t base = (uint64_t)m_Width * (uint64_t)m_Height * bpp;
+		// A full mip chain adds ~1/3 more texels (geometric series 1/4 + 1/16 + …).
+		return m_HasMips ? base + base / 3 : base;
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////

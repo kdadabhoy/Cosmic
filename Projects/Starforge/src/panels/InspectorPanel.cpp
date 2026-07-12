@@ -4,10 +4,13 @@
 #include "commands/EditorCommands.h"
 #include "widgets/PropertyRows.h"
 #include "TelemetryRecording.h"
+#include "ui/IconsLucide.h"
+#include "scene/SceneSerializer.h"   // T12 — reflected-struct copy/paste clipboard
 
 #include <imgui.h>
 
 #include <algorithm>
+#include <cctype>
 #include <cstdio>
 #include <cstring>
 #include <map>
@@ -24,6 +27,15 @@ namespace Starforge
     namespace
     {
         const entt::id_type kTagId = entt::type_hash<TagComponent>::value();
+
+        // Case-insensitive substring test (T9 property search).
+        bool ContainsCI(const std::string& hay, const std::string& needle)
+        {
+            if (needle.empty()) return true;
+            auto it = std::search(hay.begin(), hay.end(), needle.begin(), needle.end(),
+                [](char a, char b) { return std::tolower((unsigned char)a) == std::tolower((unsigned char)b); });
+            return it != hay.end();
+        }
 
         // Components common to EVERY selected entity (intersection), sorted by
         // category then name for a stable layout.
@@ -49,6 +61,39 @@ namespace Starforge
             return out;
         }
 
+        // T12 — the component-values clipboard (reflected-JSON, keyed by type name).
+        std::string s_ClipType;
+        std::string s_ClipJson;
+
+        // T12 — copy every reflected field from `src` onto `comp` (the primary),
+        // recording one undoable commit per changed field (fanned to the selection
+        // by CommitFieldEdit). Used by both Paste Values and Reset to Defaults.
+        void ApplyComponentValues(EditorContext& ctx, const TypeDescriptor& desc,
+                                  void* comp, const void* src, const std::string& label)
+        {
+            for (const FieldDescriptor& f : desc.Fields)
+            {
+                if (f.HasFlag(Cosmic::Reflect::Field_NoSerialize))
+                    continue;
+                FieldValue newVal = f.Get(src);
+                FieldValue oldVal = f.Get(comp);
+                if (oldVal == newVal)
+                    continue;
+                f.Set(comp, newVal);   // apply to the primary; CommitFieldEdit fans out + records
+                Commands::CommitFieldEdit(ctx, label, desc.TypeId, f.Name, oldVal, newVal);
+            }
+        }
+
+        // T9 — does the component (its name or any visible field) match the filter?
+        bool ComponentMatchesFilter(const TypeDescriptor& d, const std::string& filter)
+        {
+            if (ContainsCI(d.Name, filter)) return true;
+            for (const FieldDescriptor& f : d.Fields)
+                if (!f.HasFlag(Cosmic::Reflect::Field_HideInInspector) && ContainsCI(f.Name, filter))
+                    return true;
+            return false;
+        }
+
         // Does `field` of type `typeId` differ across the selection?
         bool FieldMixed(EditorContext& ctx, entt::id_type typeId, const FieldDescriptor& f)
         {
@@ -70,6 +115,11 @@ namespace Starforge
         }
     }
 
+    bool InspectorPanel::NameMatches(const std::string& name) const
+    {
+        return ContainsCI(name, m_Search);
+    }
+
     void InspectorPanel::OnImGuiRender(EditorContext& ctx, bool* pOpen)
     {
         ImGui::Begin("Inspector", pOpen);
@@ -81,6 +131,19 @@ namespace Starforge
             return;
         }
 
+        // T15 — live-Play affordance: tint value backgrounds while playing; edits
+        // apply live but push no undo (they die with the Stop snapshot-restore).
+        const bool live = ctx.Playing;
+        if (live)
+        {
+            ImGui::PushStyleColor(ImGuiCol_FrameBg,        ImVec4(0.20f, 0.12f, 0.03f, 1.0f));
+            ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ImVec4(0.28f, 0.17f, 0.05f, 1.0f));
+            ImGui::PushStyleColor(ImGuiCol_FrameBgActive,  ImVec4(0.36f, 0.22f, 0.06f, 1.0f));
+            ImGui::TextColored(ImVec4(1.0f, 0.72f, 0.30f, 1.0f),
+                               ICON_LC_PLAY "  Live — edits are temporary (no undo while playing)");
+            ImGui::Separator();
+        }
+
         if (ctx.Selection.size() > 1)
         {
             ImGui::TextDisabled("%d entities selected — editing common components.",
@@ -89,20 +152,33 @@ namespace Starforge
         }
 
         DrawName(ctx);
+
+        // T9 — property search: narrows to matching fields/components across all
+        // components (incl. script fields); clearing restores the full layout.
+        ImGui::SetNextItemWidth(-1.0f);
+        ImGui::InputTextWithHint("##inspSearch", ICON_LC_SEARCH " Search properties…",
+                                 m_Search, sizeof(m_Search));
         ImGui::Separator();
 
         for (const TypeDescriptor* d : CommonComponents(ctx))
         {
             if (d->TypeId == kTagId)   // shown as the Name row above
                 continue;
-            if (d->Name == "NativeScript")   // E11 — bespoke class picker + fields
+            if (d->Name == "NativeScript")   // E11 — bespoke class picker + fields;
+            {                                //       filters its own dynamic fields (T9)
                 DrawScriptComponent(ctx, *d);
-            else
-                DrawComponent(ctx, *d);
+                continue;
+            }
+            if (SearchActive() && !ComponentMatchesFilter(*d, m_Search))
+                continue;             // no name/field hit — hide the whole component
+            DrawComponent(ctx, *d);
         }
 
         ImGui::Separator();
         DrawAddComponent(ctx);
+
+        if (live)
+            ImGui::PopStyleColor(3);
 
         ImGui::End();
     }
@@ -141,15 +217,63 @@ namespace Starforge
             ? (uint64_t)primary.GetComponent<Cosmic::IDComponent>().ID : 0;
 
         ImGui::PushID((int)desc.TypeId);
+        // T9 — a search auto-opens matching component headers.
+        const bool compNameHit = NameMatches(desc.Name);
+
+        // T12 — a header enable checkbox for any component exposing an "Enabled"
+        // field (drawn before the header so SetNextItemOpen still targets it).
+        const FieldDescriptor* enabledField = desc.FindField("Enabled");
+        if (enabledField && comp)
+        {
+            bool en = std::get<bool>(enabledField->Get(comp));
+            if (ImGui::Checkbox("##enabled", &en))
+            {
+                enabledField->Set(comp, FieldValue{ en });   // apply to primary
+                Commands::CommitFieldEdit(ctx, (en ? "Enable " : "Disable ") + desc.Name,
+                                          desc.TypeId, "Enabled", FieldValue{ !en }, FieldValue{ en });
+            }
+            if (ImGui::IsItemHovered()) ImGui::SetTooltip("Enable / disable this component");
+            ImGui::SameLine();
+        }
+
+        if (SearchActive())
+            ImGui::SetNextItemOpen(true, ImGuiCond_Always);
         const bool open = ImGui::CollapsingHeader(desc.Name.c_str(), ImGuiTreeNodeFlags_DefaultOpen);
 
-        // Remove via header right-click (single-select only — multi remove is a
-        // documented v1 limitation). Transform can't be removed.
+        // Header right-click: copy/paste/reset (T12) + remove. Copy/paste/reset
+        // work on any component (incl. Transform); Remove is gated (Transform
+        // can't be removed) and is single-select only.
         bool removeRequested = false;
         const bool removable = desc.TypeId != entt::type_hash<TransformComponent>::value();
-        if (removable && ImGui::BeginPopupContextItem("comp_ctx"))
+        if (ImGui::BeginPopupContextItem("comp_ctx"))
         {
-            if (ImGui::MenuItem("Remove Component")) removeRequested = true;
+            if (ImGui::MenuItem("Copy Component") && comp)
+            {
+                s_ClipType = desc.Name;
+                s_ClipJson = SceneSerializer::SaveReflectedToString(desc.TypeId, comp);
+            }
+            const bool canPaste = (s_ClipType == desc.Name) && !s_ClipJson.empty();
+            if (ImGui::MenuItem("Paste Values", nullptr, false, canPaste) && comp)
+            {
+                entt::registry tmp;
+                entt::entity   te  = tmp.create();
+                void*          src = desc.Add(tmp, te);
+                if (src && SceneSerializer::LoadReflectedFromString(desc.TypeId, src, s_ClipJson))
+                    ApplyComponentValues(ctx, desc, comp, src, "Paste " + desc.Name);
+            }
+            if (ImGui::MenuItem("Reset to Defaults") && comp)
+            {
+                entt::registry tmp;
+                entt::entity   te  = tmp.create();
+                void*          def = desc.Add(tmp, te);   // default-constructed
+                if (def)
+                    ApplyComponentValues(ctx, desc, comp, def, "Reset " + desc.Name);
+            }
+            if (removable)
+            {
+                ImGui::Separator();
+                if (ImGui::MenuItem("Remove Component")) removeRequested = true;
+            }
             ImGui::EndPopup();
         }
 
@@ -162,8 +286,13 @@ namespace Starforge
             {
                 if (f.HasFlag(Cosmic::Reflect::Field_HideInInspector))
                     continue;
+                // T9 — when searching, show all fields of a name-matched component;
+                // otherwise only the fields whose own name matches.
+                if (SearchActive() && !compNameHit && !NameMatches(f.Name))
+                    continue;
                 const bool mixed = FieldMixed(ctx, desc.TypeId, f);
-                PropertyRows::Result res = PropertyRows::DrawField(f, comp, mixed);
+                PropertyRows::SlotContext slot{ &ctx.Preview, &ctx.PendingRevealAsset };
+                PropertyRows::Result res = PropertyRows::DrawField(f, comp, mixed, &slot);
 
                 // Right-click a numeric field to (un)mark it for telemetry (E20).
                 if (uuid && Telemetry::IsRecordable(f.Kind))
@@ -329,7 +458,24 @@ namespace Starforge
         auto* nsc = static_cast<NativeScriptComponent*>(desc.Get(reg, (entt::entity)primary));
         if (!nsc) return;
 
+        // T9 — the script section matches when "script"/the class name matches, or
+        // any of its dynamic fields do; the header auto-opens under a search.
+        const ScriptDescriptor* sdMatch = nsc->ClassName.empty()
+            ? nullptr : ModuleRegistry::Get().FindScript(nsc->ClassName);
+        const bool sectionHit = NameMatches("Native Script") || NameMatches("script") ||
+                                (!nsc->ClassName.empty() && NameMatches(nsc->ClassName));
+        if (SearchActive() && !sectionHit)
+        {
+            bool anyField = false;
+            if (sdMatch)
+                for (const auto& sf : sdMatch->Fields.Fields)
+                    if (NameMatches(sf.Name)) { anyField = true; break; }
+            if (!anyField) return;   // nothing in this script matches — hide it
+        }
+
         ImGui::PushID((int)desc.TypeId);
+        if (SearchActive())
+            ImGui::SetNextItemOpen(true, ImGuiCond_Always);
         const bool open = ImGui::CollapsingHeader("Native Script", ImGuiTreeNodeFlags_DefaultOpen);
 
         bool removeRequested = false;
@@ -384,7 +530,10 @@ namespace Starforge
                 {
                     auto it = nsc->Fields.find(sf.Name);
                     if (it == nsc->Fields.end()) continue;
-                    PropertyRows::Result res = PropertyRows::DrawValue(sf, it->second, false);
+                    if (SearchActive() && !sectionHit && !NameMatches(sf.Name))
+                        continue;   // T9 — only matching script fields
+                    PropertyRows::SlotContext slot{ &ctx.Preview, &ctx.PendingRevealAsset };
+                    PropertyRows::Result res = PropertyRows::DrawValue(sf, it->second, false, &slot);
                     if (res.Changed || res.Committed) ctx.MarkDirty();
                 }
             }

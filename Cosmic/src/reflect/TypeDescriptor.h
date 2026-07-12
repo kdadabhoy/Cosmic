@@ -52,7 +52,11 @@ namespace Cosmic::Reflect
         Field_None            = 0,
         Field_ReadOnly        = 1u << 0,  // inspector shows it disabled
         Field_HideInInspector = 1u << 1,  // still serialized, just not shown
-        Field_NoSerialize     = 1u << 2   // runtime-only, skipped by the serializer
+        Field_NoSerialize     = 1u << 2,  // runtime-only, skipped by the serializer
+        // Bool convenience (T12/T13): omit from serialization when true, so a
+        // default-true flag (Enabled / Active) leaves unchanged scenes
+        // byte-identical and only writes the key once it is toggled to false.
+        Field_OmitIfTrue      = 1u << 3
     };
 
     struct EnumEntry
@@ -61,14 +65,28 @@ namespace Cosmic::Reflect
         int32_t     Value = 0;
     };
 
-    // Optional UI/serialization hints attached to a field.
+    // Physical unit a numeric field is expressed in (reflection metadata v2,
+    // Phase 23 / T1). Purely a UI/doc-gen hint — the Inspector annotates the row
+    // (° for Degrees, m / s), sliders honour it, and doc-gen can print it. A
+    // field carries exactly one unit, so this is an enum, not a bit mask. None is
+    // the default => today's unitless behaviour, byte-identical.
+    enum class FieldUnits : uint8_t { None = 0, Degrees, Meters, Seconds };
+
+    // Optional UI/serialization hints attached to a field. Every member defaults
+    // to "absent", so a field registered without any hint call behaves exactly as
+    // it did before this struct grew (T1 compat requirement). Hints are NEVER
+    // serialized — they are registration-time metadata only.
     struct FieldHints
     {
         bool  HasRange = false;
         float Min = 0.0f, Max = 0.0f;
         float Step = 0.0f;                 // 0 => widget default
+        // Human-readable documentation for the field (gap analysis §14.1 calls
+        // this "Doc"). Rendered as the row's ⓘ/hover text (T10). Set via either
+        // .Doc(...) (the spec name) or the older .Tooltip(...) alias.
         std::string Tooltip;
         std::string AssetType;             // AssetPath: "mesh" / "texture" / "material" / ...
+        FieldUnits  Units = FieldUnits::None; // numeric fields: ° / m / s annotation
         std::vector<EnumEntry> EnumEntries; // Enum: name <-> value table
     };
 

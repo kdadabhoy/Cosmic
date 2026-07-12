@@ -71,6 +71,7 @@ namespace Cosmic
 
 		virtual uint32_t	GetWidth() const override			{ return m_Width; }
 		virtual uint32_t	GetHeight() const override			{ return m_Height; }
+		virtual uint64_t	GetGpuBytes() const override;
 		virtual uint32_t	GetRendererID() const override		{ return m_RendererID; }
 
 
@@ -109,5 +110,10 @@ namespace Cosmic
 		// Procedural textures created mipmapped regenerate their mip chain on
 		// SetData (trilinear minification for distance sampling).
 		bool				m_Mipmapped = false;
+
+		// Whether a mip chain was actually generated (file + embedded textures
+		// always mip; procedural only when m_Mipmapped; HDR never). Read by
+		// GetGpuBytes to add the ~1/3 mip tail (T2 asset accounting).
+		bool				m_HasMips = false;
 	};
 }

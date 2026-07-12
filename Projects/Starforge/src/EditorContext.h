@@ -32,11 +32,17 @@ namespace Starforge
 {
     enum class LogSeverity { Info, Warn, Error };
 
+    // T16 — where a console line came from (source chips). Engine = the engine
+    // core logger (COSMIC); Game = the client/app logger (scripts at Play);
+    // Editor = the editor's own ctx.Log messages.
+    enum class LogSource { Engine, Editor, Game };
+
     struct ConsoleLine
     {
         std::string Text;
         LogSeverity Severity = LogSeverity::Info;
         std::string Timestamp;   // "HH:MM:SS" wall clock at push (H10)
+        LogSource   Source = LogSource::Editor;
     };
 
     struct EditorContext
@@ -56,6 +62,12 @@ namespace Starforge
         std::string SceneVfsPath;               // "project://scenes/Foo.cscene" ("" = never saved)
         bool        Dirty = false;
 
+        // --- Play state (T15) — the shell mirrors its PlayMode here each frame so
+        //     panels can react (live-value tint) without reaching into StarforgeApp.
+        //     While playing, field edits are transient (they die with the Stop
+        //     snapshot-restore) so they apply live but push NO undo entries.
+        bool        Playing = false;
+
         // --- Undo/redo (E7) ------------------------------------------------
         Cosmic::CommandStack Commands;
 
@@ -74,6 +86,9 @@ namespace Starforge
         // --- Cross-panel requests (consumed by the shell each frame) -------
         std::string PendingOpenScene;         // "project://..." set by the Content Browser
         std::string PendingInstantiatePrefab; // "project://...cprefab" (E14) — Content Browser
+        std::string PendingImportModel;       // (T8) a model DISK path → the shell opens the E16 import modal seeded with it
+        std::vector<std::string> PendingDroppedFiles; // (T8) OS file-drop paths → the Content Browser imports them
+        std::string PendingRevealAsset;       // (T11) a "project://..." asset the Content Browser should reveal + select
 
         // --- Shared preview service (Phase 20 / A4, gap analysis §14.3) ----
         // The batch-thumbnail rig: Content Browser tiles (and Phase 23 asset
@@ -184,7 +199,8 @@ namespace Starforge
         // ===================================================================
         // Console
         // ===================================================================
-        void Log(const std::string& text, LogSeverity sev = LogSeverity::Info)
+        void Log(const std::string& text, LogSeverity sev = LogSeverity::Info,
+                 LogSource src = LogSource::Editor)
         {
             char ts[16] = { 0 };
             const auto now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
@@ -196,9 +212,10 @@ namespace Starforge
 #endif
             std::snprintf(ts, sizeof(ts), "%02d:%02d:%02d", tm.tm_hour, tm.tm_min, tm.tm_sec);
 
-            ConsoleLines.push_back({ text, sev, ts });
-            if (ConsoleLines.size() > 2000)
-                ConsoleLines.erase(ConsoleLines.begin(), ConsoleLines.begin() + 400);
+            ConsoleLines.push_back({ text, sev, ts, src });
+            // Ring-buffer cap (T16) — long sessions stay bounded/responsive.
+            if (ConsoleLines.size() > 4000)
+                ConsoleLines.erase(ConsoleLines.begin(), ConsoleLines.begin() + 800);
         }
 
         // Mirror the primary selection onto the shared bus so engine-side panels

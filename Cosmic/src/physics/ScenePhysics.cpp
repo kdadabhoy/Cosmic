@@ -97,7 +97,7 @@ namespace Cosmic
 
         bool anyTrigger = false;
 
-        if (const auto* c = reg.try_get<BoxColliderComponent>(e))
+        if (const auto* c = reg.try_get<BoxColliderComponent>(e); c && c->Enabled)   // T12
         {
             CollisionShapeDesc d;
             d.Shape = CollisionShapeDesc::Kind::Box;
@@ -107,7 +107,7 @@ namespace Cosmic
             out.Shapes.push_back(std::move(d));
             anyTrigger |= c->IsTrigger;
         }
-        if (const auto* c = reg.try_get<SphereColliderComponent>(e))
+        if (const auto* c = reg.try_get<SphereColliderComponent>(e); c && c->Enabled)   // T12
         {
             CollisionShapeDesc d;
             d.Shape = CollisionShapeDesc::Kind::Sphere;
@@ -117,7 +117,7 @@ namespace Cosmic
             out.Shapes.push_back(std::move(d));
             anyTrigger |= c->IsTrigger;
         }
-        if (const auto* c = reg.try_get<CapsuleColliderComponent>(e))
+        if (const auto* c = reg.try_get<CapsuleColliderComponent>(e); c && c->Enabled)   // T12
         {
             CollisionShapeDesc d;
             d.Shape = CollisionShapeDesc::Kind::Capsule;
@@ -128,7 +128,7 @@ namespace Cosmic
             out.Shapes.push_back(std::move(d));
             anyTrigger |= c->IsTrigger;
         }
-        if (const auto* c = reg.try_get<MeshColliderComponent>(e))
+        if (const auto* c = reg.try_get<MeshColliderComponent>(e); c && c->Enabled)   // T12
         {
             // Mesh geometry: rebuild from a sibling primitive; else fall back to the
             // renderer mesh's local AABB (imported-mesh triangle colliders wait on
@@ -219,6 +219,8 @@ namespace Cosmic
         // Character controllers (own capsule; no rigid body).
         for (auto e : reg.view<CharacterControllerComponent>())
         {
+            if (!m_Scene.IsActiveInHierarchy(e))   // T13 — inactive: not baked
+                continue;
             const auto& cc = reg.get<CharacterControllerComponent>(e);
             glm::mat4 world = m_Scene.GetWorldTransform(Entity(e, &m_Scene));
             glm::vec3 t, s; glm::quat r;
@@ -247,6 +249,8 @@ namespace Cosmic
         {
             if (reg.all_of<CharacterControllerComponent>(e))
                 continue;   // handled above
+            if (!m_Scene.IsActiveInHierarchy(e))   // T13 — inactive: not baked
+                continue;
             const bool hasCollider =
                 reg.any_of<BoxColliderComponent, SphereColliderComponent, CapsuleColliderComponent,
                            MeshColliderComponent, TerrainColliderComponent>(e);

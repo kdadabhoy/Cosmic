@@ -278,7 +278,7 @@ infinite grid → universal gizmo → selection outline → viewport drag-drop.
   `CosmicTests` **276/276**, GL-conformance clean, compat gate held. Remaining = the user's
   on-GPU acceptance (incl. the recorded K1 live icon-swap clip) + commit.
 
-### Phase 23 — Asset workflows, Inspector & Hierarchy v2 *(doc 22, T1–T18)* — after/with 22
+### Phase 23 — Asset workflows, Inspector & Hierarchy v2 *(doc 22, T1–T18)* — ✅ code-complete 2026-07-12
 Reflection metadata v2 → asset accounting → file-drop events → Content Browser v2 (two-pane/
 search/rename+retarget/preview+audio/import) → Inspector v2 (search/tooltips/asset slots/
 component QoL/live-Play) → per-entity Active semantics + Hierarchy icons → Console v2 +
@@ -286,6 +286,15 @@ profiler port + jobs/resources. **Schedule doc 19 A4 (PreviewRig) before/with T7
 - **AI tier:** T1/T12/T13 stronger model (reflection ABI + engine gate semantics); rest medium.
 - **Done when:** T-acceptances pass; old scenes/projects load byte-identical; a full authoring
   session (import → browse → assign → tune → Play) never needs a hand-typed path.
+- **Status 2026-07-12 (UNcommitted):** all 18 work orders (T1–T18) landed in one session. Engine
+  gained only generic/compat-gated surface: reflection metadata v2 (`FieldUnits`/`.Doc()`/
+  `Field_OmitIfTrue`), `AssetLibrary::Enumerate` + `Texture/Mesh::GetGpuBytes` + `Sound::CopyPcm`,
+  `WindowFileDropEvent`, reflected `Enabled` + `TagComponent::Active` with render/world-FX/UiSystem/
+  physics/script gates, `JobSystem` stats. Starforge gained Content Browser v2, Inspector v2,
+  Hierarchy v2, and the utility dock (console/profiler/jobs/resources). Compat gate held (default-
+  true flags omit from serialization → unchanged scenes byte-identical). Build Debug+Release zero
+  warnings, `CosmicTests` **301/301** (+11), GL-conformance clean. Remaining = the user's on-GPU
+  acceptance (doc 22 STATUS list) + commit.
 
 ### Phase 24 — Animation editors & multi-material meshes *(doc 23, M1–M6)* — after A1/A2/A4
 Asset-editor host (document tabs) → reusable Timeline widget → **Starforge Animation Editor**
