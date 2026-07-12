@@ -6,10 +6,53 @@
 
 #include <imgui.h>
 
+#include <memory>
+
 using namespace Cosmic;
 
 namespace Starforge
 {
+    namespace
+    {
+        // A4 — one undoable field edit on the panel's working MaterialAsset
+        // copy. The panel outlives the command stack (StarforgeApp member), so
+        // targeting its asset by pointer is stable; the field is re-resolved by
+        // name on every Do/Undo so registry storage can move freely. If the
+        // user loaded a DIFFERENT material since, undo still edits the panel's
+        // current asset — same "acts on what the panel holds" semantics as the
+        // panel's own widgets.
+        class MaterialFieldEdit final : public ICommand
+        {
+        public:
+            MaterialFieldEdit(MaterialAsset* target, std::string fieldName,
+                              Reflect::FieldValue before, Reflect::FieldValue after)
+                : m_Target(target), m_Field(std::move(fieldName)),
+                  m_Before(std::move(before)), m_After(std::move(after)) {}
+
+            void Do() override   { Apply(m_After); }
+            void Undo() override { Apply(m_Before); }
+            std::string Name() const override { return "Material " + m_Field; }
+
+        private:
+            void Apply(const Reflect::FieldValue& v)
+            {
+                const auto* desc = Reflect::GetRegistry().Find<MaterialAsset>();
+                if (!desc)
+                    return;
+                for (const auto& f : desc->Fields)
+                    if (f.Name == m_Field)
+                    {
+                        f.Set(m_Target, v);
+                        return;
+                    }
+            }
+
+            MaterialAsset*      m_Target;
+            std::string         m_Field;
+            Reflect::FieldValue m_Before, m_After;
+        };
+    }
+
     void MaterialEditorPanel::OnImGuiRender(EditorContext& ctx, bool* pOpen)
     {
         if (ImGui::Begin("Material Editor", pOpen))
@@ -38,6 +81,7 @@ namespace Starforge
                 {
                     m_Path = vfs;
                     AssetLibrary::Reload(vfs);   // drop any cached build so re-resolve picks up edits
+                    ctx.Preview.Invalidate(vfs); // A4 — the browser thumbnail is stale now
                     ctx.Log("[Material] Saved " + vfs);
                 }
                 else
@@ -55,12 +99,59 @@ namespace Starforge
             if (m_Path.empty())
                 ImGui::TextDisabled("New material — tune below, Save .cmat, then Assign to a selected mesh.");
 
+            // --- Live preview sphere (A4 — the rig's interactive mode) -----
+            {
+                const float pw = std::max(96.0f, ImGui::GetContentRegionAvail().x);
+                const float ph = std::min(220.0f, std::max(96.0f, pw * 0.62f));
+                const uint32_t tex = m_Rig.RenderMaterial(m_Asset, (uint32_t)pw, (uint32_t)ph);
+                if (tex)
+                {
+                    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+                    ImGui::ImageButton("##matpreview", (ImTextureID)(intptr_t)tex,
+                                       ImVec2(pw, ph), ImVec2(0, 1), ImVec2(1, 0));
+                    ImGui::PopStyleVar();
+                    if (ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Left, 0.0f))
+                    {
+                        const ImVec2 d = ImGui::GetIO().MouseDelta;
+                        m_Rig.Orbit(d.x, d.y);
+                    }
+                    if (ImGui::IsItemHovered())
+                    {
+                        if (const float wheel = ImGui::GetIO().MouseWheel; wheel != 0.0f)
+                            m_Rig.Zoom(wheel);
+                        if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+                            m_Rig.ResetView();
+                        ImGui::SetTooltip("Drag to orbit, wheel to zoom, double-click to reset.");
+                    }
+                }
+            }
+
             ImGui::Separator();
 
-            // --- Reflected material fields (auto-UI) -----------------------
+            // --- Reflected material fields (auto-UI, undoable — A4) --------
+            // The capture-on-activate / push-on-commit idiom the Inspector uses:
+            // drags mutate m_Asset live, and ONE command lands per completed
+            // edit (Push — the change is already applied).
             if (const auto* desc = Reflect::GetRegistry().Find<MaterialAsset>())
+            {
                 for (const auto& f : desc->Fields)
-                    PropertyRows::DrawField(f, &m_Asset, /*mixed*/ false);
+                {
+                    const auto r = PropertyRows::DrawField(f, &m_Asset, /*mixed*/ false);
+                    if (r.Activated)
+                    {
+                        m_EditField  = f.Name;
+                        m_EditBefore = r.PreValue;
+                    }
+                    if (r.Committed)
+                    {
+                        const Reflect::FieldValue before =
+                            (m_EditField == f.Name) ? m_EditBefore : r.PreValue;
+                        ctx.Commands.Push(std::make_unique<MaterialFieldEdit>(
+                            &m_Asset, f.Name, before, r.PostValue));
+                        m_EditField.clear();
+                    }
+                }
+            }
 
             ImGui::Separator();
 
@@ -89,8 +180,8 @@ namespace Starforge
             }
             ImGui::EndDisabled();
 
-            ImGui::TextDisabled("Edits apply live to the assigned entity (not undoable in v1);");
-            ImGui::TextDisabled("Save then re-assign, or edit the .cmat and re-open the scene.");
+            ImGui::TextDisabled("Edits are undoable (Ctrl+Z) and preview live above;");
+            ImGui::TextDisabled("Save, then Assign (or re-open the scene) to apply to entities.");
         }
         ImGui::End();
     }

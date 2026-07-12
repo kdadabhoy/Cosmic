@@ -115,6 +115,17 @@ namespace Cosmic
         void                SetInstancingShader(const Ref<Shader>& shader) { m_InstancingShader = shader; }
         const Ref<Shader>&  GetInstancingShader() const                    { return m_InstancingShader; }
 
+        /**
+         * @brief Register this material's SKINNED TWIN (Phase 20 / A2) — same
+         * uniform/texture contract, plus the joint palette read from the SSBO
+         * at Bindings::SkinningSsbo and blended by the location-4/5 skin
+         * attributes (e.g. PBR.glsl -> PBRSkinned.glsl). Renderer3D's
+         * DrawMeshSkinned routes through it; a material without one draws the
+         * mesh in bind pose via the regular shader (the compat default).
+         */
+        void                SetSkinnedShader(const Ref<Shader>& shader) { m_SkinnedShader = shader; }
+        const Ref<Shader>&  GetSkinnedShader() const                    { return m_SkinnedShader; }
+
         ////////////////////////////////
         // Accessors
         ///////////////////////////////
@@ -137,9 +148,10 @@ namespace Cosmic
         Ref<Shader>     m_Shader;
         std::string     m_Name;
 
-        // Render-queue hints (S12.2/S12.3). Clone() copies both.
+        // Render-queue hints (S12.2/S12.3/A2). Clone() copies all three.
         bool            m_Transparent = false;
         Ref<Shader>     m_InstancingShader;
+        Ref<Shader>     m_SkinnedShader;
 
         std::unordered_map<std::string, float>          m_Floats;
         std::unordered_map<std::string, glm::vec2>      m_Float2s;

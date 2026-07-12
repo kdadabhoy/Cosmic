@@ -5,6 +5,8 @@
 #include "core/UUID.h"
 #include "graphics/Material.h"
 #include "graphics/Mesh.h"
+#include "graphics/Skeleton.h"       // A2 — AnimatorComponent runtime skeleton ref
+#include "graphics/AnimationClip.h"  // A2 — AnimatorComponent runtime clip ref
 #include "particles/ParticleSystem.h"  // EmitterShape/ParticleBlend/ParticleSpace (E18 emitter recipe)
 #include "physics/PhysicsTypes.h"      // MotionType (J3 — reflected on RigidBodyComponent)
 #include "scene/ComponentRegistry.h"
@@ -451,6 +453,40 @@ namespace Cosmic
                     return static_cast<int>(i);
             return -1;
         }
+    };
+
+
+    /**
+     * @brief Skeletal-animation driver (Phase 20 / A2). Attach next to (or on
+     * an ancestor of) a MeshRenderer whose mesh is SKINNED (Mesh::IsSkinned) —
+     * Scene::UpdateAnimators samples the clip each frame into a joint palette,
+     * and the render submit routes the mesh through the PBRSkinned twin.
+     *
+     * ClipPath addresses one clip inside a model file: "project://models/
+     * Fox.glb#Run" (name) or "...glb#0" (index); a bare file path plays its
+     * first clip. v1 plays ONE clip per Animator (blend trees / state machines
+     * are parked — FEATURE-MATRIX). NormalizedTime [0,1] is the play head: it
+     * tracks playback while Playing, and scrubbing it while paused re-poses
+     * the mesh (the Inspector's scrub bar writes it).
+     */
+    struct COSMIC_API AnimatorComponent
+    {
+        std::string ClipPath;               // "file#clip" (AssetPath("animation"))
+        float       Speed          = 1.0f;  // playback rate multiplier (may be negative)
+        bool        Loop           = true;
+        bool        Playing        = true;
+        float       NormalizedTime = 0.0f;  // [0,1] play head (reflected — scrubbed)
+
+        // --- Runtime (not reflected / serialized) ---
+        Ref<AnimationClip>     ClipRef;          // resolved from ClipPath (guarded)
+        std::string            ResolvedClipPath; // the path ClipRef was resolved from
+        Ref<Skeleton>          SkelRef;          // from the driven skinned mesh
+        std::vector<glm::mat4> Palette;          // this frame's skinning matrices
+        std::vector<glm::mat4> ScratchLocals;    // sampling scratch (avoids realloc)
+        float                  TimeSeconds = 0.0f;
+
+        AnimatorComponent() = default;
+        AnimatorComponent(const AnimatorComponent&) = default;
     };
 
 
@@ -960,6 +996,7 @@ CS_REGISTER_COMPONENT(Cosmic::SpriteRendererComponent)
 CS_REGISTER_COMPONENT(Cosmic::SpriteAnimationComponent)
 CS_REGISTER_COMPONENT(Cosmic::TilemapComponent)
 CS_REGISTER_COMPONENT(Cosmic::MeshRendererComponent)
+CS_REGISTER_COMPONENT(Cosmic::AnimatorComponent)
 CS_REGISTER_COMPONENT(Cosmic::PrimitiveMeshComponent)
 CS_REGISTER_COMPONENT(Cosmic::LODGroupComponent)
 CS_REGISTER_COMPONENT(Cosmic::DirectionalLightComponent)

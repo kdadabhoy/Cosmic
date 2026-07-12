@@ -101,6 +101,13 @@ namespace Cosmic
 		               const Ref<Material>& material, int entityID = -1) const;
 		void DrawModel(const Ref<Model>& model, const glm::mat4& transform, int entityID = -1) const;
 
+		// Skinned submit (Phase 20 / A2): Reflection/Main -> Renderer3D::
+		// DrawMeshSkinned (the PBRSkinned twin); ShadowDepth -> ShadowMap::
+		// DrawCasterSkinned (deforming shadows); TopDownDepth -> the bind pose.
+		void DrawMeshSkinned(const Ref<Mesh>& mesh, const glm::mat4& transform,
+		                     const Ref<Material>& material,
+		                     const glm::mat4* palette, uint32_t jointCount, int entityID = -1) const;
+
 		// Instanced submit (F5): Reflection/Main → Renderer3D::DrawMeshInstanced;
 		// ShadowDepth → ShadowMap::DrawCasterInstanced (material/entityID ignored).
 		void DrawMeshInstanced(const Ref<Mesh>& mesh, const Ref<Material>& material,

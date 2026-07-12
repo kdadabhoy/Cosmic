@@ -83,6 +83,16 @@ namespace Cosmic::Reflect
             // Material slot (E17) — resolved through AssetLibrary::GetMaterial.
             .Field("MaterialPath", &MeshRendererComponent::MaterialPath).AsAssetPath("material");
 
+        // Skeletal-animation driver (Phase 20 / A2). Only the authored fields are
+        // reflected — the resolved clip/skeleton refs and the per-frame palette
+        // are runtime-only. NormalizedTime is the scrubbable play head.
+        ClassIn<AnimatorComponent>(r, "Animator", "Rendering")
+            .Field("ClipPath",       &AnimatorComponent::ClipPath).AsAssetPath("animation")
+            .Field("Speed",          &AnimatorComponent::Speed).Range(-4.0f, 4.0f).Tooltip("Playback rate (negative = reverse)")
+            .Field("Loop",           &AnimatorComponent::Loop)
+            .Field("Playing",        &AnimatorComponent::Playing)
+            .Field("NormalizedTime", &AnimatorComponent::NormalizedTime).Range(0.0f, 1.0f).Tooltip("Play head — scrub while paused");
+
         // Parametric primitive (E15). Only the shape + params are reflected; the
         // built-mesh signature (BuiltSignature) is runtime-only and left out, so a
         // scene serializes as tiny shape/param text and the mesh is rebuilt on load.

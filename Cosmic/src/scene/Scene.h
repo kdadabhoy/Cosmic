@@ -22,6 +22,7 @@ namespace Cosmic
 	struct SceneRenderDesc;      // renderer/SceneRenderer.h (H2 — BuildRenderDesc fills it)
 	class  SceneDrawContext;     // renderer/SceneRenderer.h (H2 — routed opaque submit)
 	struct EnvironmentComponent; // scene/Components.h (E4 — FindEnvironment returns it)
+	struct AnimatorComponent;    // scene/Components.h (A2 — FindAnimatorFor returns it)
 	class  PhysicsWorld;         // physics/PhysicsWorld.h (J4 — a play-session service)
 	class  ScenePhysics;         // physics/ScenePhysics.h (J4 — runtime body binding)
 	class  ScriptHost;           // scripting/ScriptHost.h  (J5 — collision-event dispatch)
@@ -172,6 +173,18 @@ namespace Cosmic
 		void OnRender3D(const Camera& camera);
 
 		/**
+		 * @brief Advance + sample every AnimatorComponent (Phase 20 / A2): resolve
+		 * its ClipPath (guarded, like MeshPath), find the skinned mesh it drives
+		 * (own entity or a descendant's), step the play head (Playing) or honor
+		 * the scrubbed NormalizedTime (paused), and bake the pose into the
+		 * component's skinning Palette for this frame's submits. Called by
+		 * OnUpdate for play sessions; the editor calls it directly per frame in
+		 * edit mode (the A2 "play preview in edit mode"). Pure CPU — safe
+		 * headless. COMPAT GATE: a scene with no Animators returns immediately.
+		 */
+		void UpdateAnimators(float deltaTime);
+
+		/**
 		 * @brief Prepare mesh assets for rendering (E15/E16). (Re)generates the mesh
 		 * of every entity with a PrimitiveMeshComponent whose parameters changed
 		 * since its last build, and resolves any MeshRendererComponent::MeshPath
@@ -316,6 +329,10 @@ namespace Cosmic
 		 *  shadow/coverage caster, honoring CastShadows). The single truth shared by
 		 *  OnRender3D (a Main-pass context) and BuildRenderDesc's DrawOpaque hook (H2). */
 		void SubmitOpaqueMeshes(const SceneDrawContext& ctx);
+
+		// A2 — the Animator driving an entity (own component or nearest
+		// ancestor's); null when none. Used by the skinned submit path.
+		AnimatorComponent* FindAnimatorFor(entt::entity entity);
 
 		float m_WorldTime = 0.0f;   // accumulated seconds for water/particle animation (E18)
 

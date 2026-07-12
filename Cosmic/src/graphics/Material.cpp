@@ -22,6 +22,7 @@ namespace Cosmic
 		copy->m_Textures = source->m_Textures;
 		copy->m_Transparent      = source->m_Transparent;        // S12.2 queue hint
 		copy->m_InstancingShader = source->m_InstancingShader;   // S12.3 twin
+		copy->m_SkinnedShader    = source->m_SkinnedShader;      // A2 twin
 		return copy;
 	}
 

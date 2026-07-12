@@ -29,7 +29,23 @@ finish if stubbed); FBX/OBJ materials map to generated `.cmat` files with textur
 alongside (same — verify/finish). Import dialog drops its "needs the assimp backend" warning.
 **Acceptance (the original E16 line):** a Blender FBX + glTF of the same object at identical
 world size; a SolidWorks STL (mm) at correct meters; `.cmeta` scale edit + reimport updates
-placed entities; CosmicTests' gated assimp cases enabled and green. **Status:** ☐
+placed entities; CosmicTests' gated assimp cases enabled and green. **Status:** ✅ 2026-07-12 —
+assimp v5.4.3 vendored + trimmed (5 importers, exporters/tests off — `dependencies/assimp/
+README-COSMIC.md` has the pin + trim + local patches), `COSMIC_WITH_ASSIMP` default **ON**
+(static, PRIVATE-linked — the Jolt firewall). `MeshImport` gained the rich surface:
+`ImportModelData` (sub-meshes + materials + embedded textures, CPU-only), `ImportData`
+(headless twin of `Import`), and `"<source>#<i>"` sub-mesh paths (`SubmeshPath`/
+`SplitSubmeshPath`; `AssetLibrary::GetMesh` caches each fragment; `Reload` evicts fragments
+with the base). glTF/GLB joined `Supports()` via a cgltf reader (Model.cpp's traversal,
+CPU-only) so `.glb` MeshPath drops work and the import dialog covers every filter format.
+Starforge `ImportModelFile` now: copies source (+ OBJ `mtllib` / glTF `.bin` sidecars),
+writes per-material `.cmat`s (textures copied alongside; embedded blobs extracted;
+assimp's synthetic "DefaultMaterial" skipped so STL keeps the default look), spawns
+multi-mesh sources as parent + `#i` children (ONE undo step via RecordSpawn), and on
+RE-import evicts + clears resolved flags so placed entities pick up `.cmeta` edits.
+Compat: plain fragment-less OBJ stays on the engine parser byte-identically. CosmicTests
+**282/282** (+6: fragment parse, cgltf glTF, gated STL-mm/PLY/DAE/OBJ-multi-material).
+Remaining (user, on-GPU): Blender FBX vs glTF world-size pair + a real SolidWorks STL.
 
 ### A2 — Skeletal animation *(origin: doc 05 S14 row "glTF skins/clips, GPU skinning")*
 > **2026-07-11 (v4 roadmap): unlock FIRED** — the Phase 28 flagship (Forge Isle) is the
@@ -49,7 +65,38 @@ after a character project exists — FEATURE-MATRIX row). Casters: skinned meshe
 shadow pass with skinning applied (twin shader for `ShadowDepth`).
 **Acceptance:** a rigged glTF (e.g. Fox sample) plays correctly vs a reference viewer;
 headless clip-sampling tests (t=0/mid/end, loop wrap); 50 instances ≥60 fps; scrub in editor.
-**Status:** ☐
+**Status:** ✅ 2026-07-12 — runtime complete as specced. NEW `graphics/Skeleton.h/.cpp` (joint
+tree + palette math, order-independent globals, import-correction conjugation `M·G·IB·M⁻¹` so
+`.cmeta`-baked geometry animates at the right size) + `graphics/AnimationClip.h/.cpp` (lerp +
+shortest-arc slerp, loop wrap/clamp, `BakeFixedRate`). `Mesh::CreateSkinned` = second VB at
+locations 4/5 (joints as Float4 — the VAO layer has no integer-attribute path; exact for real
+joint counts) + `Ref<Skeleton>`; a skinned mesh with no animator renders bind pose through the
+static shaders (compat). Skins/clips read by BOTH backends: cgltf (skin 0, LINEAR/STEP/
+CUBICSPLINE-value samplers) and assimp FBX (bone-node closure skeleton, ≤4 strongest weights,
+tick-time channels). SSBO binding **10** claimed (`Bindings::SkinningSsbo`); `PBRSkinned.glsl` +
+`ShadowDepthSkinned.glsl` twins (fragment stays in sync with PBR.glsl — the PBRInstanced
+convention); `Material::SetSkinnedShader` registered by `AssetLibrary::BuildMaterial`.
+`Renderer3D::DrawMeshSkinned` (frame palette staging → ONE SSBO upload at Flush, per-draw
+`u_SkinBase`, padded cull box, never auto-instanced) + `ShadowMap::DrawCasterSkinned` (own
+binding-10 buffer, immediate) + `SceneDrawContext::DrawMeshSkinned` routing. Reflected
+`AnimatorComponent{ClipPath "file#clip", Speed, Loop, Playing, NormalizedTime}`;
+`Scene::UpdateAnimators` (play = `OnUpdate`; edit mode = the editor calls it per frame — the
+play-preview); skinned submit resolves the Animator on self/ancestors (multi-mesh children).
+`AssetLibrary::GetAnimationClip/GetAnimationClipNames` (parse-once clip-set cache; name/index
+fragments). Starforge: Inspector clip-picker combo (names fetched only while open) + the
+reflected NormalizedTime row as the scrub bar; imports with clips auto-attach an Animator on
+the first clip. Tests: **+8 headless** (bind-pose identity palette, unordered joints, import-
+correction, t=0/mid/end + clamp, loop wrap, shortest-arc slerp, fixed-rate bake, hand-written
+skinned glTF through cgltf) + a `COSMIC_FOX_GLB`-gated real-asset smoke — **290/290**.
+**Proven on-GPU (Khronos Fox.glb):** imports with auto-Animator, Survey/Walk/Run all in the
+picker and playing with correct deformation in edit mode, scrub-while-paused re-poses, `.cmeta`
+scale 1→0.02 re-import updated the placed entities to correct meters. Remaining (user ledger):
+Fox vs a reference viewer side-by-side, 50-instance ≥60 fps sweep, skinned-shadow visual.
+**Bonus fix (found by this acceptance): `FileSystem` per-DLL state** — the header-only
+`static inline` VFS state gave EACH DLL its own active project, so in the dedicated `Starforge.exe`
+every ENGINE-side `project://` resolve (AssetLibrary, SceneSerializer) pointed at the editor's
+own assets instead of the open project (latent since the 07-10 dedicated exe). State + bodies
+moved to NEW `utils/FileSystem.cpp` (class now `COSMIC_API`) — one process-wide mount.
 
 ### A3 — STEP converter tool *(origin: doc 11 §9 P1)*
 **Files:** NEW `tools/step2gltf/` — separate CMake exe on OpenCascade (OCCT), NOT linked into
@@ -75,7 +122,21 @@ SceneRenderer-lite: one mesh, key light, IBL) renders a preview sphere in the Ma
 AND generates content-browser thumbnails for meshes/materials (E10's parked half); thumbnails
 cache under `<project>/.starforge/thumbs/`. State-restore contract applies (doc 13 §0.5).
 **Acceptance:** undo works on material edits; browser shows real thumbnails; no GL-state leak
-(scene renders identically after a thumbnail pass — screenshot compare). **Status:** ☐
+(scene renders identically after a thumbnail pass — screenshot compare). **Status:** ✅ 2026-07-12 —
+NEW Starforge `src/PreviewRig.*`: one tiny FBO + a Renderer3D key-light pass (scene IBL rides the
+registered set), §0.5 state restore via `GetBoundFramebuffer`/`BindFramebufferHandle` + explicit
+depth/cull/blend/fill resets. INTERACTIVE mode = `RenderMesh`/`RenderMaterial` + Orbit/Zoom/
+ResetView (per-document instances — the Material Editor owns one; Phases 23/24 instantiate more);
+BATCH mode = `Thumbnail()` + budgeted `PumpThumbnails` (2/frame in `RenderViewport`), PNGs cached
+at `<project>/.starforge/thumbs/<name>-<fnv(mtime+.cmeta)>.png`, invalidated by FileWatcher/
+re-import/.cmat save. The shared batch rig lives on `EditorContext::Preview`; Content Browser
+mesh/.cmat tiles render real thumbnails. Material Editor: live preview sphere (drag-orbit/wheel/
+double-click-reset) + every field edit undoable — a Starforge `MaterialFieldEdit : ICommand` on
+the panel's asset copy (deviation: `CommitFieldEditFor` targets entities; MaterialAsset isn't
+entity-bound). **Acceptance proven on-GPU:** Help ▸ Preview State Self-Test (3-frame capture:
+baseline, control, previews) logged *"State-restore self-test PASSED — scene render byte-identical
+after interactive + thumbnail preview passes (2086x1058)"*; Fox mesh + .cmat browser thumbnails
+rendered; albedo drag → teal sphere → Ctrl+Z → reverted.
 
 ### A5 — In-place asset reload *(origin: E10 deviation "cache-slot refresh only")*
 `AssetLibrary::Reload` re-uploads into the EXISTING GPU object where possible (`Texture2D`

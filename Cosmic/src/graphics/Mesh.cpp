@@ -143,6 +143,36 @@ namespace Cosmic
 		return Create(data.Vertices, data.Indices);
 	}
 
+	Ref<Mesh> Mesh::CreateSkinned(const MeshData& data, const std::vector<SkinVertex>& skin,
+	                              const Ref<Skeleton>& skeleton)
+	{
+		Ref<Mesh> mesh = Create(data.Vertices, data.Indices);
+		if (!mesh)
+			return nullptr;
+
+		if (!skeleton || skin.size() != data.Vertices.size())
+		{
+			CS_CORE_WARN("Mesh::CreateSkinned: {0} skin vertices for {1} positions (skeleton {2}) — "
+			             "uploading as a static mesh.",
+			             skin.size(), data.Vertices.size(), skeleton ? "set" : "null");
+			return mesh;   // static fallback keeps the asset usable
+		}
+
+		// Second vertex buffer: joints/weights at attribute locations 4/5 —
+		// the additive layout extension the canonical-layout contract allows
+		// (static shaders never read locations 4/5).
+		auto skinBuffer = VertexBuffer::Create(
+			reinterpret_cast<float*>(const_cast<SkinVertex*>(skin.data())),
+			static_cast<uint32_t>(skin.size() * sizeof(SkinVertex)));
+		skinBuffer->SetLayout({
+			{ ShaderDataType::Float4, "a_Joints"  },
+			{ ShaderDataType::Float4, "a_Weights" }
+			});
+		mesh->m_VertexArray->AddVertexBuffer(skinBuffer);
+		mesh->m_Skeleton = skeleton;
+		return mesh;
+	}
+
 	/////////////////////////////////////////////////////////////////////////////////
 	// Primitives — pure Build* geometry (GL-free), thin Create* uploaders (E15)
 	/////////////////////////////////////////////////////////////////////////////////

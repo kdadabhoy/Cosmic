@@ -29,7 +29,7 @@
 | ForgePlayground that demos well + scene-camera adoption | content buried in terrain; camera spawns underground | 14 · doc 13 H8 | now | M | ✅ 2026-07-04 |
 | SystemScript tier (logic over a *class* of entities) | per-entity scripts only | 14 · doc 13 H9 | now (user need #4) | M | ✅ 2026-07-04 |
 | Editor consistency sweep (labels, glyphs, Add-Component filtering) | assorted rough edges | 14 · doc 13 H10 | now | S | ✅ 2026-07-04 |
-| Material-edit undo + preview rig + browser thumbnails | live-but-not-undoable; no thumbnails | 20 · doc 19 A4 | **fired 2026-07-11** (editor vision; expands to the shared PreviewRig service, gap §14.3) | M/L | ☐ |
+| Material-edit undo + preview rig + browser thumbnails | live-but-not-undoable; no thumbnails | 20 · doc 19 A4 | **fired 2026-07-11** (editor vision; expands to the shared PreviewRig service, gap §14.3) | M/L | ✅ 2026-07-12 (PreviewRig interactive+batch; self-test proved byte-identical scene render) |
 | In-place texture/asset hot reload into held Refs | cache-slot swap only | 20 · doc 19 A5 | live-tuning workflow | S | ⏸ |
 | Terrain sculpt/splat brushes | recipe params only | 20 · doc 19 A6 | param terrain stops being enough | L | ⏸ |
 | Prefab overrides v2 (field-level diff/propagation) | whole-instance apply/revert | 20 · doc 19 A7 | content-heavy project | M | ⏸ |
@@ -132,8 +132,8 @@
 
 | Feature | Today | Phase home | Unlock / trigger | Size | Status |
 | --- | --- | --- | --- | --- | --- |
-| assimp backend ON (FBX/STL/DAE/PLY live) | written, gated off (`COSMIC_WITH_ASSIMP`) | 20 · doc 19 A1 | now (anchor of Phase 20; feeds Phases 23–24) | M | ☐ |
-| Skeletal animation (skins/clips/skinning) | none | 20 · doc 19 A2 | **fired 2026-07-11** — Forge Isle is the character project; editor superstructure = Phase 24 | XL | ☐ |
+| assimp backend ON (FBX/STL/DAE/PLY live) | written, gated off (`COSMIC_WITH_ASSIMP`) | 20 · doc 19 A1 | now (anchor of Phase 20; feeds Phases 23–24) | M | ✅ 2026-07-12 (assimp v5.4.3 vendored/trimmed, default ON; + glTF via cgltf, multi-mesh `#i` children, materials→`.cmat`) |
+| Skeletal animation (skins/clips/skinning) | none | 20 · doc 19 A2 | **fired 2026-07-11** — Forge Isle is the character project; editor superstructure = Phase 24 | XL | ✅ 2026-07-12 (runtime: Skeleton/Clip sampling, glTF+FBX skins, SSBO-10 GPU skinning + shadow twin, Animator + editor scrub; Fox verified on-GPU) |
 | Animator crossfade tier (script-driven clip switching w/ timed blend) | — | 24 · doc 23 M6 | with A2 (the minimal tier a playable character needs) | S | ☐ |
 | Animation blend trees / state machines (full controller graph + editor) | — | — (doc 23 M6 restates the park) | after Forge Isle ships; editor would ride Phase 25's canvas | L | ✖ |
 | Material slots (multi-material meshes on ONE entity, per-slot override) | one slot; multi-material sources import as child entities | 24 · doc 23 M5 | with A1 (engine-architectural — schedule deliberately) | L | ☐ |
@@ -151,3 +151,4 @@
 | W3 DWM compat-mode decision + interactive repro matrix (snip overlay, 125 % laptop) | archived doc 09 §3.5 |
 | Water look tuning (from-below surface, caustics/shafts) | `docs/design/water-rendering-notes.md` |
 | Phase 17 recorded acceptance (zero-code FlowDemo authored/played/packaged; ForgePong match + package; U1/U3/U4/U7 on-GPU spot checks) | doc 16 U8 / `docs/design/ui-flow-2d-acceptance.md` |
+| Phase 20 remainder: Blender FBX + glTF of one object at identical world size; Fox playback vs a reference viewer; 50 animated instances ≥60 fps; skinned-shadow visual (a lit scene w/ shadows); packaged-app animation run. (Self-run 2026-07-12: Fox import/playback/scrub/clip-switch, `.cmeta` rescale re-import, preview self-test PASSED, thumbnails, material undo.) | doc 19 A1/A2/A4 |

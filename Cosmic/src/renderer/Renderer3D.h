@@ -226,6 +226,20 @@ namespace Cosmic
 		static void DrawModel(const Ref<Model>& model, const glm::mat4& transform, int entityID = -1);
 
 		/**
+		 * @brief Skinned mesh draw (Phase 20 / A2). `palette` holds `jointCount`
+		 * skinning matrices (Skeleton::ComputePalette's output for this pose) —
+		 * COPIED into the frame's palette staging, uploaded once into the SSBO at
+		 * Bindings::SkinningSsbo by Flush, and consumed by the material's SKINNED
+		 * twin (Material::SetSkinnedShader, e.g. PBRSkinned.glsl) at this draw's
+		 * u_SkinBase. Falls back to a static bind-pose draw when the material has
+		 * no twin or the palette is empty (the compat default). Queued like every
+		 * DrawMesh; never auto-instanced. Call between BeginScene/EndScene.
+		 */
+		static void DrawMeshSkinned(const Ref<Mesh>& mesh, const glm::mat4& transform,
+		                            const Ref<Material>& material,
+		                            const glm::mat4* palette, uint32_t jointCount, int entityID = -1);
+
+		/**
 		 * @brief Hardware-instanced mesh draw (S12.3-lite / doc 10 F5). Draws
 		 * `count` copies of `mesh` (clamped to the InstanceSet's uploaded count),
 		 * reading per-instance `{ mat4 Model; vec4 Tint }` from the SSBO bound at

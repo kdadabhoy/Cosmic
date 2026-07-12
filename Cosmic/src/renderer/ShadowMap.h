@@ -39,6 +39,7 @@ namespace Cosmic
 	class Shader;
 	class Mesh;
 	class InstanceSet;
+	class StorageBuffer;   // A2 — skinned-caster palette SSBO
 
 	class COSMIC_API ShadowMap
 	{
@@ -74,6 +75,17 @@ namespace Cosmic
 		 */
 		void DrawCasterInstanced(const Ref<Mesh>& mesh, const Ref<InstanceSet>& instances, uint32_t count);
 
+		/**
+		 * @brief Skinned shadow caster (Phase 20 / A2): the caster's joint
+		 * palette uploads into this map's own binding-10 SSBO (base 0) and the
+		 * mesh draws with ShadowDepthSkinned.glsl, so an animated character's
+		 * shadow deforms with it. Same program-state contract as the instanced
+		 * caster: a following DrawCaster re-binds the plain depth shader. Call
+		 * inside a depth pass.
+		 */
+		void DrawCasterSkinned(const Ref<Mesh>& mesh, const glm::mat4& transform,
+		                       const glm::mat4* palette, uint32_t jointCount);
+
 		void EndDepthPass();
 
 		/** Register the shadow map + light matrix with Renderer3D (lit materials sample it). */
@@ -87,6 +99,9 @@ namespace Cosmic
 		Ref<FrameBuffer> m_Fbo;                   // depth-only
 		Ref<Shader>      m_DepthShader;           // ShadowDepth.glsl
 		Ref<Shader>      m_DepthInstancedShader;  // ShadowDepthInstanced.glsl (lazy; F5)
+		Ref<Shader>      m_DepthSkinnedShader;    // ShadowDepthSkinned.glsl (lazy; A2)
+		Ref<StorageBuffer> m_SkinSsbo;            // per-caster palette (binding 10; lazy; A2)
+		uint32_t         m_SkinSsboCapacity = 0;  // matrices
 		glm::mat4        m_LightViewProj{ 1.0f };
 		uint32_t         m_Size = 2048;
 		bool             m_Initialized = false;

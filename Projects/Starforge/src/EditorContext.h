@@ -19,6 +19,7 @@
 #include <entt/entt.hpp>
 
 #include "TelemetryRecording.h"
+#include "PreviewRig.h"
 
 #include <algorithm>
 #include <string>
@@ -73,6 +74,13 @@ namespace Starforge
         // --- Cross-panel requests (consumed by the shell each frame) -------
         std::string PendingOpenScene;         // "project://..." set by the Content Browser
         std::string PendingInstantiatePrefab; // "project://...cprefab" (E14) — Content Browser
+
+        // --- Shared preview service (Phase 20 / A4, gap analysis §14.3) ----
+        // The batch-thumbnail rig: Content Browser tiles (and Phase 23 asset
+        // slots) request thumbnails here; the shell pumps it once per frame.
+        // Interactive per-document rigs are separate PreviewRig instances
+        // (the Material Editor owns one).
+        PreviewRig Preview;
 
         // --- Voxel brush (Phase 18 / V4) — shared by the Voxels panel + the
         //     viewport brush. When Editing is on and the primary selection is a

@@ -195,6 +195,78 @@ namespace Starforge
                 }
             }
 
+            // Animator clip picker (A2): list the clips inside the model file
+            // this animator drives (own or descendant MeshRenderer), and write
+            // the picked "file#clip" through the undo stack. The scrub bar is
+            // the reflected NormalizedTime row above (Range 0..1); pausing +
+            // dragging it re-poses the mesh live in the viewport.
+            if (desc.Name == "Animator" && ctx.Selection.size() == 1 && primary)
+            {
+                auto* an = static_cast<AnimatorComponent*>(comp);
+
+                // The driven model file: this entity's (or a child's) MeshPath,
+                // sub-mesh fragment stripped.
+                std::string meshSource;
+                {
+                    std::vector<Entity> stack{ primary };
+                    while (!stack.empty() && meshSource.empty())
+                    {
+                        Entity e = stack.back();
+                        stack.pop_back();
+                        if (e.HasComponent<MeshRendererComponent>())
+                        {
+                            const auto& mr = e.GetComponent<MeshRendererComponent>();
+                            if (!mr.MeshPath.empty())
+                            {
+                                std::string base;
+                                int         sub = 0;
+                                meshSource = Cosmic::MeshImport::SplitSubmeshPath(mr.MeshPath, base, sub)
+                                                 ? base : mr.MeshPath;
+                            }
+                        }
+                        if (e.HasComponent<RelationshipComponent>())
+                            for (const Cosmic::UUID& c : e.GetComponent<RelationshipComponent>().Children)
+                                if (Entity child = ctx.Scene->FindByUUID(c))
+                                    stack.push_back(child);
+                    }
+                }
+
+                if (meshSource.empty())
+                {
+                    ImGui::TextDisabled("No mesh with a source path under this entity.");
+                }
+                else
+                {
+                    const size_t hash = an->ClipPath.find_last_of('#');
+                    const std::string current = hash == std::string::npos
+                        ? std::string() : an->ClipPath.substr(hash + 1);
+                    // The clip set loads (cached) only while the combo is open,
+                    // so a broken source can't log per frame.
+                    if (ImGui::BeginCombo("Clip", current.empty() ? "(pick a clip)" : current.c_str()))
+                    {
+                        const std::vector<std::string> names =
+                            Cosmic::AssetLibrary::GetAnimationClipNames(meshSource);
+                        if (names.empty())
+                            ImGui::TextDisabled("No clips in %s", meshSource.c_str());
+                        for (const std::string& name : names)
+                        {
+                            const bool selected = name == current;
+                            if (ImGui::Selectable(name.c_str(), selected))
+                                Commands::SetField(ctx, primary, desc.TypeId, "ClipPath",
+                                                   FieldValue{ meshSource + "#" + name });
+                            if (selected)
+                                ImGui::SetItemDefaultFocus();
+                        }
+                        ImGui::EndCombo();
+                    }
+                    if (an->ClipRef)
+                    {
+                        ImGui::SameLine();
+                        ImGui::TextDisabled("%.2fs", an->ClipRef->Duration);
+                    }
+                }
+            }
+
             // "Fit to mesh" (J8): size a box/sphere collider to the sibling mesh's
             // local AABB, single-select only (undoable via CommitFieldEdit).
             if ((desc.Name == "BoxCollider" || desc.Name == "SphereCollider") &&

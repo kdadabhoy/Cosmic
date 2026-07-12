@@ -89,6 +89,28 @@ namespace Cosmic
 		Renderer3D::DrawMesh(mesh, transform, material, entityID);
 	}
 
+	void SceneDrawContext::DrawMeshSkinned(const Ref<Mesh>& mesh, const glm::mat4& transform,
+	                                       const Ref<Material>& material,
+	                                       const glm::mat4* palette, uint32_t jointCount,
+	                                       int entityID) const
+	{
+		if (Pass == ScenePass::ShadowDepth)
+		{
+			if (m_Shadow && mesh)
+				m_Shadow->DrawCasterSkinned(mesh, transform, palette, jointCount);
+			return;
+		}
+		if (Pass == ScenePass::TopDownDepth)
+		{
+			// Snow-coverage capture reads the bind pose — coverage tolerance is
+			// meters-scale, animation-scale deformation is noise there.
+			if (m_Coverage && mesh)
+				m_Coverage->DrawCaster(mesh, transform);
+			return;
+		}
+		Renderer3D::DrawMeshSkinned(mesh, transform, material, palette, jointCount, entityID);
+	}
+
 	void SceneDrawContext::DrawModel(const Ref<Model>& model, const glm::mat4& transform, int entityID) const
 	{
 		if (Pass == ScenePass::ShadowDepth || Pass == ScenePass::TopDownDepth)

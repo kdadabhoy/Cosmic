@@ -75,6 +75,50 @@ target_include_directories(stb_image_write INTERFACE dependencies/stb_image_writ
 # Cosmic below so the JPH:: types never leak past the engine's physics/ TUs.
 add_subdirectory(dependencies/JoltPhysics)
 
+# assimp (A1, Phase 20) — vendored mesh-import backend, BSD-3-Clause, pinned +
+# trimmed (see dependencies/assimp/README-COSMIC.md). Default ON since A1; the
+# OBJ-only fallback stays one configure flag away. Built through assimp's OWN
+# CMakeLists — its cmake_minimum_required is 3.22, so CMP0077 lets these plain
+# variables override its option() defaults. Static, linked PRIVATE into
+# Cosmic.dll below (the Jolt firewall: only assets/MeshImport.cpp includes
+# assimp headers, so aiScene types never reach game/project DLLs).
+option(COSMIC_WITH_ASSIMP "FBX/STL/DAE/PLY mesh import via vendored assimp" ON)
+if(COSMIC_WITH_ASSIMP)
+    set(ASSIMP_BUILD_ALL_IMPORTERS_BY_DEFAULT OFF)   # importers trimmed to the E16 five
+    set(ASSIMP_BUILD_FBX_IMPORTER ON)
+    set(ASSIMP_BUILD_OBJ_IMPORTER ON)
+    set(ASSIMP_BUILD_STL_IMPORTER ON)
+    set(ASSIMP_BUILD_COLLADA_IMPORTER ON)
+    set(ASSIMP_BUILD_PLY_IMPORTER ON)
+    set(ASSIMP_NO_EXPORT ON)                          # exporters compiled out
+    set(ASSIMP_BUILD_TESTS OFF)
+    set(ASSIMP_BUILD_ASSIMP_TOOLS OFF)
+    set(ASSIMP_BUILD_SAMPLES OFF)
+    set(ASSIMP_BUILD_DOCS OFF)
+    set(ASSIMP_INSTALL OFF)
+    set(ASSIMP_BUILD_ZLIB ON)                         # vendored zlib, no system dep
+    set(ASSIMP_WARNINGS_AS_ERRORS OFF)
+    set(ASSIMP_IGNORE_GIT_HASH ON)                    # vendored tree has no .git
+    set(ASSIMP_BUILD_USE_CCACHE OFF)                  # would set a GLOBAL launcher hook
+    set(ASSIMP_INJECT_DEBUG_POSTFIX OFF)
+    set(BUILD_SHARED_LIBS OFF)
+    # assimp 5.4.3's mkdir custom commands predate CMP0175; OLD keeps the
+    # legacy POST_BUILD assumption without a per-configure warning wall.
+    set(CMAKE_POLICY_DEFAULT_CMP0175 OLD)
+    add_subdirectory(dependencies/assimp)
+    unset(CMAKE_POLICY_DEFAULT_CMP0175)
+    # assimp's dir scope pins C++17; hoist its target to the engine's /std:c++20
+    # so MSVC sees ONE standard flag (the Jolt precedent). /W0 silences the
+    # vendored targets only (the engine's zero-warning bar is for our code) —
+    # spelled /W0, not /w, so the VS generator emits a WarningLevel and MSBuild
+    # doesn't inject its /W1 default next to it (D9025).
+    set_target_properties(assimp PROPERTIES CXX_STANDARD 20)
+    if(MSVC)
+        target_compile_options(assimp PRIVATE /W0)
+        target_compile_options(zlibstatic PRIVATE /W0)
+    endif()
+endif()
+
 # ----------------------------
 # 3. Engine Source Files
 # ----------------------------
@@ -113,6 +157,13 @@ target_link_libraries(Cosmic PUBLIC imgui implot glad glm entt glfw OpenGL::GL s
 # dllexported, so leaking the headers would only invite link errors). Jolt is the
 # same story: only physics/*.cpp include <Jolt/...>, behind the PhysicsWorld pimpl.
 target_link_libraries(Cosmic PRIVATE tomlplusplus ImGuizmo nlohmann_json Jolt)
+
+# assimp backend (A1): PRIVATE link + define — MeshImport.cpp's #ifdef block is
+# the only consumer; MeshImport::AssimpEnabled() reports the gate at runtime.
+if(COSMIC_WITH_ASSIMP)
+    target_link_libraries(Cosmic PRIVATE assimp)
+    target_compile_definitions(Cosmic PRIVATE COSMIC_WITH_ASSIMP)
+endif()
 
 # Borderless custom window chrome uses DWM (drop shadow) on Windows.
 if(WIN32)

@@ -46,6 +46,8 @@
 
 namespace Cosmic
 {
+	class Skeleton;   // graphics/Skeleton.h (A2) — carried by skinned meshes
+
 	// The canonical mesh vertex — matches the attribute layout above.
 	// Tangent (S6.2): xyz is the surface tangent aligned to +U; w is the
 	// bitangent handedness (+1 or -1) so the shader reconstructs
@@ -68,6 +70,18 @@ namespace Cosmic
 	 * tests can assert vertex counts / bounds / normals without a GL context,
 	 * and lets importers (E16) hand raw geometry straight to the uploader.
 	 */
+	// Per-vertex skinning influences (A2) — a PARALLEL array to MeshData's
+	// Vertices, kept out of the canonical MeshVertex so every existing mesh's
+	// layout and memory stay byte-identical. Joints are joint-array indices
+	// stored as floats: the VAO layer's attribute pointers are float-typed, and
+	// float32 is exact for any realistic joint count (< 2^24) — PBRSkinned.glsl
+	// rounds back to int.
+	struct SkinVertex
+	{
+		glm::vec4 Joints{ 0.0f };    // 4 joint indices (as floats)
+		glm::vec4 Weights{ 0.0f };   // matching blend weights (renormalized in-shader)
+	};
+
 	struct MeshData
 	{
 		std::vector<MeshVertex> Vertices;
@@ -112,6 +126,18 @@ namespace Cosmic
 
 		/** @brief Upload CPU geometry produced by a Build* function (or an importer). */
 		static Ref<Mesh> Create(const MeshData& data);
+
+		/**
+		 * @brief Upload SKINNED geometry (A2): the canonical layout plus a second
+		 * vertex buffer carrying joints/weights at attribute locations 4/5
+		 * (PBRSkinned.glsl / ShadowDepthSkinned.glsl read them; static shaders
+		 * simply never enable those attributes' consumption). `skin` must be
+		 * vertex-parallel to `data.Vertices`; `skeleton` rides along for the
+		 * animator's palette math. Falls back to a static mesh (warned) when the
+		 * sizes disagree.
+		 */
+		static Ref<Mesh> CreateSkinned(const MeshData& data, const std::vector<SkinVertex>& skin,
+		                               const Ref<Skeleton>& skeleton);
 
 		// ---- Parametric geometry (pure, GL-free, headless-testable — E15) ----
 		//
@@ -179,6 +205,10 @@ namespace Cosmic
 		uint32_t                GetVertexCount() const	{ return m_VertexCount; }
 		uint32_t                GetIndexCount() const	{ return m_IndexCount; }
 
+		/** @brief Skinned meshes (A2) carry their joint hierarchy; null otherwise. */
+		bool                    IsSkinned() const       { return (bool)m_Skeleton; }
+		const Ref<Skeleton>&    GetSkeleton() const     { return m_Skeleton; }
+
 		////////////////////////////////
 		// Local-space Bounds (AABB)
 		///////////////////////////////
@@ -210,5 +240,9 @@ namespace Cosmic
 		// Local-space bounds (see GetLocalMin/Max). Filled in the constructor.
 		glm::vec3        m_LocalMin{ 0.0f };
 		glm::vec3        m_LocalMax{ 0.0f };
+
+		// A2 — set only by CreateSkinned (bind-pose bounds; the palette can move
+		// geometry outside them — the animator pads culling accordingly).
+		Ref<Skeleton>    m_Skeleton;
 	};
 }

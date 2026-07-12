@@ -34,6 +34,7 @@
 #include "core/Core.h"
 #include "graphics/Texture.h"   // U3 — TextureFilter/TextureWrap for the default-sampling verb
 #include <string>
+#include <vector>
 
 namespace Cosmic
 {
@@ -42,6 +43,7 @@ namespace Cosmic
 	class Model; // defined in S4.4b; Ref<Model> is fine on an incomplete type
 	class Material;         // E17
 	struct MaterialAsset;   // E17 — graphics/MaterialAsset.h
+	class AnimationClip;    // A2 — graphics/AnimationClip.h
 
 	class COSMIC_API AssetLibrary
 	{
@@ -80,6 +82,21 @@ namespace Cosmic
 		 *  Thin typed wrappers over SceneSerializer's reflected-struct (de)serializer. */
 		static bool           LoadMaterialAsset(MaterialAsset& out, const std::string& path);
 		static bool           SaveMaterialAsset(const MaterialAsset& asset, const std::string& path);
+
+		/**
+		 * @brief Cached animation clip (A2). The path addresses one clip inside
+		 * a model file: "models/Fox.glb#Run" (name), "models/Fox.glb#1" (index),
+		 * or a bare file path for its first clip. The whole file's clip set is
+		 * parsed + cached on the first request (CPU-only — no GL), so switching
+		 * clips of one file is free. Null (logged) when the file has no clips
+		 * or the fragment matches none.
+		 */
+		static Ref<AnimationClip> GetAnimationClip(const std::string& path);
+
+		/** @brief The clip names inside a model file, in file order (empty names
+		 *  appear as their "Clip_<i>" fallback). Cached with the clips. Used by
+		 *  the editor's clip picker. */
+		static std::vector<std::string> GetAnimationClipNames(const std::string& path);
 
 		/** @brief Release all cached Refs. Call while a GL context is still current. */
 		static void           Clear();

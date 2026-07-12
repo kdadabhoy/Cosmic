@@ -61,6 +61,13 @@ namespace Cosmic::Bindings
 	 *  + bound by InstanceSet. */
 	constexpr uint32_t InstancesSsbo = 9;
 
+	/** Skinning-matrix palette (Phase 20 / A2) — a std430 mat4 array holding
+	 *  every skinned draw's joint palette for the frame, read by
+	 *  PBRSkinned.glsl and ShadowDepthSkinned.glsl at `u_SkinBase + joint`.
+	 *  Renderer3D uploads the queued draws' palettes at Flush; ShadowMap's
+	 *  immediate caster path uploads per caster at base 0. */
+	constexpr uint32_t SkinningSsbo = 10;
+
 	// ------------------------------------------------------------------
 	// Reserved fragment texture units
 	// ------------------------------------------------------------------

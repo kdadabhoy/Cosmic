@@ -14,6 +14,7 @@
 #include "graphics/Material.h"
 #include "graphics/Model.h"
 #include "graphics/UniformBuffer.h"
+#include "graphics/StorageBuffer.h"   // A2 — the binding-10 skinning palette SSBO
 #include "math/Frustum.h"
 #include "renderer/InstanceSet.h"
 #include "core/Log.h"
@@ -61,6 +62,11 @@ namespace Cosmic
 		glm::vec4        Color{ 1.0f };
 		int              EntityID = -1;
 		RenderQueue::Key Key;
+
+		// A2 — skinned draws: the material's skinned twin + this draw's first
+		// entry in the frame's palette SSBO. SkinBase < 0 = a static draw.
+		Ref<Shader>      SkinShader;
+		int              SkinBase = -1;
 	};
 
 	struct Renderer3DData
@@ -166,6 +172,16 @@ namespace Cosmic
 		static constexpr uint32_t kScratchCapacity      = 1024;  // instances per scratch set
 		std::vector<Ref<InstanceSet>> ScratchPool;
 		uint32_t                      ScratchNext = 0;
+
+		// =====================================================================
+		// --- Skinning palettes (Phase 20 / A2) ---
+		// Every DrawMeshSkinned of the scene appends its palette here; Flush
+		// uploads the whole array into the binding-10 SSBO once, then each
+		// skinned draw indexes it with u_SkinBase. Cleared after Flush.
+		// =====================================================================
+		std::vector<glm::mat4> SkinStaging;
+		Ref<StorageBuffer>     SkinSsbo;
+		uint32_t               SkinSsboCapacity = 0;   // matrices, not bytes
 
 		Renderer3D::Statistics Stats;
 	};
@@ -520,13 +536,25 @@ namespace Cosmic
 
 	// Shared submit path for both DrawMesh overloads: frustum test (S12.1), key
 	// build (S12.2/S12.3), and routing to the opaque or transparent queue.
+	// `skinShader`/`skinBase` are the A2 skinned-draw extension (see
+	// DrawMeshSkinned) — static submits leave them defaulted.
 	static void SubmitMesh(const Ref<Mesh>& mesh, const glm::mat4& transform,
-	                       const Ref<Material>& material, const glm::vec4& color, int entityID)
+	                       const Ref<Material>& material, const glm::vec4& color, int entityID,
+	                       const Ref<Shader>& skinShader = nullptr, int skinBase = -1)
 	{
 		s_Data.Stats.MeshesSubmitted++;
 
 		glm::vec3 mn, mx;
 		WorldBounds(mesh, transform, mn, mx);
+		if (skinBase >= 0)
+		{
+			// A skinned pose can move geometry outside its bind-pose bounds —
+			// pad the cull box by half its extent per side (cheap, conservative
+			// for character-scale motion).
+			const glm::vec3 pad = 0.5f * (mx - mn);
+			mn -= pad;
+			mx += pad;
+		}
 		if (s_Data.CullingEnabled && !s_Data.SceneFrustum.IntersectsAABB(mn, mx))
 		{
 			s_Data.Stats.MeshesCulled++;
@@ -543,17 +571,23 @@ namespace Cosmic
 		cmd.Transform   = transform;
 		cmd.Color       = color;
 		cmd.EntityID    = entityID;
+		cmd.SkinShader  = skinShader;
+		cmd.SkinBase    = skinBase;
 
-		cmd.Key.Shader   = material ? reinterpret_cast<uintptr_t>(material->GetShader().get())
-		                            : reinterpret_cast<uintptr_t>(s_Data.MeshShader.get());
+		// The skinned twin is its own state group (Key.Shader) so skinned draws
+		// sort together and never share a bind with the static path.
+		cmd.Key.Shader   = skinShader ? reinterpret_cast<uintptr_t>(skinShader.get())
+		                 : material   ? reinterpret_cast<uintptr_t>(material->GetShader().get())
+		                              : reinterpret_cast<uintptr_t>(s_Data.MeshShader.get());
 		cmd.Key.Material = reinterpret_cast<uintptr_t>(material.get());
 		cmd.Key.Mesh     = reinterpret_cast<uintptr_t>(mesh.get());
 		cmd.Key.ViewDepthSq = glm::dot(toEye, toEye);
 		cmd.Key.Sequence    = s_Data.QueueSequence++;
 		// Per-instance entity IDs are not in the instance SSBO — auto-batching a
 		// picked entity would break ID picking, so only anonymous draws qualify.
+		// Skinned draws never auto-instance (each has its own palette base).
 		cmd.Key.Instancable = !transparent && material && material->GetInstancingShader()
-		                      && entityID == -1;
+		                      && entityID == -1 && skinBase < 0;
 
 		(transparent ? s_Data.TransparentQueue : s_Data.OpaqueQueue).push_back(std::move(cmd));
 	}
@@ -590,6 +624,32 @@ namespace Cosmic
 		SubmitMesh(mesh, transform, material, glm::vec4(1.0f), entityID);
 	}
 
+	void Renderer3D::DrawMeshSkinned(const Ref<Mesh>& mesh, const glm::mat4& transform,
+	                                 const Ref<Material>& material,
+	                                 const glm::mat4* palette, uint32_t jointCount, int entityID)
+	{
+		if (!mesh || !material)
+			return;
+		if (!s_Data.InScene)
+		{
+			CS_CORE_WARN("Renderer3D::DrawMeshSkinned called outside BeginScene/EndScene — ignored.");
+			return;
+		}
+
+		// No palette or no skinned twin — draw the bind pose through the static
+		// path (the compat fallback; the mesh's extra attributes are inert).
+		const Ref<Shader>& twin = material->GetSkinnedShader();
+		if (!palette || jointCount == 0 || !twin)
+		{
+			SubmitMesh(mesh, transform, material, glm::vec4(1.0f), entityID);
+			return;
+		}
+
+		const int base = (int)s_Data.SkinStaging.size();
+		s_Data.SkinStaging.insert(s_Data.SkinStaging.end(), palette, palette + jointCount);
+		SubmitMesh(mesh, transform, material, glm::vec4(1.0f), entityID, twin, base);
+	}
+
 	/////////////////////////////////////////////////////////////////////////////////
 	// Queue execution (S12.2 sort + S12.3 auto-instancing)
 	/////////////////////////////////////////////////////////////////////////////////
@@ -601,6 +661,17 @@ namespace Cosmic
 	// undeclared names no-op on location -1 (silent-ignore rule).
 	static void BindStateGroup(const MeshDrawCmd& cmd)
 	{
+		if (cmd.SkinShader)
+		{
+			// A2 — skinned state group: the material's cached uniforms/textures
+			// onto the skinned twin, plus the scene resource set. The palette
+			// SSBO was uploaded + bound by Flush; u_SkinBase is per-draw.
+			cmd.MaterialRef->BindFullTo(cmd.SkinShader);
+			cmd.SkinShader->SetFloat3("u_LightDir", s_Data.LightDirection);
+			cmd.SkinShader->SetFloat("u_Ambient", s_Data.Ambient);
+			Renderer3D::ApplySceneBindings(cmd.SkinShader);
+			return;
+		}
 		if (cmd.MaterialRef)
 		{
 			// Material path: material uniforms + textures first, engine-owned
@@ -639,7 +710,15 @@ namespace Cosmic
 	// redundant VAO binds across consecutive same-mesh draws.
 	static void ExecuteSingle(const MeshDrawCmd& cmd, const Mesh*& boundMesh)
 	{
-		if (cmd.MaterialRef)
+		if (cmd.SkinShader)
+		{
+			// A2 — per-draw uniforms on the skinned twin (bound by BindStateGroup).
+			cmd.SkinShader->SetMat4("u_Model", cmd.Transform);
+			cmd.SkinShader->SetMat3("u_NormalMatrix", glm::inverseTranspose(glm::mat3(cmd.Transform)));
+			cmd.SkinShader->SetInt("u_EntityID", cmd.EntityID);
+			cmd.SkinShader->SetInt("u_SkinBase", cmd.SkinBase);
+		}
+		else if (cmd.MaterialRef)
 		{
 			const Ref<Shader>& shader = cmd.MaterialRef->GetShader();
 			shader->SetMat4("u_Model", cmd.Transform);
@@ -689,8 +768,32 @@ namespace Cosmic
 				             s_Data.OpaqueQueue.size() + s_Data.TransparentQueue.size());
 				s_Data.OpaqueQueue.clear();
 				s_Data.TransparentQueue.clear();
+				s_Data.SkinStaging.clear();
 			}
 			return;
+		}
+
+		// ---- Skinning palettes (A2): one upload for every skinned draw of the
+		// scene, then the binding-10 SSBO serves each draw at its u_SkinBase.
+		// The buffer grows geometrically and is recreated only when exceeded.
+		if (!s_Data.SkinStaging.empty())
+		{
+			const uint32_t needed = (uint32_t)s_Data.SkinStaging.size();
+			if (!s_Data.SkinSsbo || s_Data.SkinSsboCapacity < needed)
+			{
+				uint32_t cap = s_Data.SkinSsboCapacity ? s_Data.SkinSsboCapacity : 256;
+				while (cap < needed)
+					cap *= 2;
+				s_Data.SkinSsbo = StorageBuffer::Create(cap * (uint32_t)sizeof(glm::mat4),
+				                                        Bindings::SkinningSsbo);
+				s_Data.SkinSsboCapacity = s_Data.SkinSsbo ? cap : 0;
+			}
+			if (s_Data.SkinSsbo)
+			{
+				s_Data.SkinSsbo->SetData(s_Data.SkinStaging.data(),
+				                         needed * (uint32_t)sizeof(glm::mat4));
+				s_Data.SkinSsbo->Bind();
+			}
 		}
 
 		// ---- Opaques: sort by state key then front-to-back (S12.2). ----------
@@ -833,6 +936,10 @@ namespace Cosmic
 			RenderCommand::SetDepthWrite(true);   // engine default (contract rule 5)
 			q.clear();
 		}
+
+		// A2 — this scene's palettes are consumed (the SSBO keeps the data for
+		// the just-issued draws; the staging restarts for the next scene).
+		s_Data.SkinStaging.clear();
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////

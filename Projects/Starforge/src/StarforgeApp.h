@@ -312,6 +312,12 @@ namespace Starforge
         bool  m_OpenAbout       = false;       // S7 — About dialog
         bool  m_ThumbRequested  = false;       // S7 — capture thumbnail on the next render
         std::string m_LastDistDir;             // last packaged output (E19)
+
+        // A4 — Help ▸ Preview State Self-Test (0 = idle; 1/2/3 = the capture
+        // frames: baseline A, control B + preview passes, verdict C).
+        int                  m_PreviewSelfTest = 0;
+        std::vector<uint8_t> m_SelfTestPixels;
+        uint32_t             m_SelfTestW = 0, m_SelfTestH = 0;
         float m_AutosaveTimer   = 0.0f;
         float m_TopBarBottomY   = 0.0f;        // bottom edge of the top bar (homescreen anchor)
 

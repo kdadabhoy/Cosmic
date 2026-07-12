@@ -614,6 +614,11 @@ namespace Cosmic
 
 	void Scene::OnUpdate(float deltaTime)
 	{
+		// A2 — advance + sample skeletal animators for this play frame (the
+		// editor calls UpdateAnimators itself in edit mode, where OnUpdate
+		// never runs).
+		UpdateAnimators(deltaTime);
+
 		// PASS A — Sequential systems (main thread)
 		for (auto& system : m_Systems)
 			system->OnUpdate(*this, deltaTime);
@@ -1035,6 +1040,90 @@ namespace Cosmic
 		Renderer3D::EndScene();
 	}
 
+	// A2 — the Animator driving `entity`: its own component, or the nearest
+	// ancestor's (multi-mesh imports hang child MeshRenderers under one
+	// animated parent). Null when none.
+	AnimatorComponent* Scene::FindAnimatorFor(entt::entity entity)
+	{
+		entt::entity cur = entity;
+		for (int depth = 0; depth < 64 && cur != entt::null; ++depth)
+		{
+			if (auto* an = m_Registry.try_get<AnimatorComponent>(cur))
+				return an;
+			auto* rel = m_Registry.try_get<RelationshipComponent>(cur);
+			if (!rel || (uint64_t)rel->Parent == 0)
+				break;
+			Entity parent = FindByUUID(rel->Parent);
+			cur = parent ? (entt::entity)parent : entt::null;
+		}
+		return nullptr;
+	}
+
+	void Scene::UpdateAnimators(float deltaTime)
+	{
+		// The skeleton an animator drives: its own entity's (or a descendant's)
+		// skinned mesh — multi-mesh imports parent the pieces under the animator.
+		auto findSkeleton = [this](entt::entity root) -> Ref<Skeleton>
+		{
+			std::vector<entt::entity> stack{ root };
+			while (!stack.empty())
+			{
+				const entt::entity e = stack.back();
+				stack.pop_back();
+				if (auto* mr = m_Registry.try_get<MeshRendererComponent>(e))
+					if (mr->MeshAsset && mr->MeshAsset->IsSkinned())
+						return mr->MeshAsset->GetSkeleton();
+				if (auto* rel = m_Registry.try_get<RelationshipComponent>(e))
+					for (const UUID& c : rel->Children)
+						if (Entity child = FindByUUID(c))
+							stack.push_back((entt::entity)child);
+			}
+			return nullptr;
+		};
+
+		auto view = m_Registry.view<AnimatorComponent>();
+		for (auto e : view)
+		{
+			auto& an = view.get<AnimatorComponent>(e);
+
+			// Resolve the clip when the path changes (guarded, like MeshPath).
+			if (an.ClipPath != an.ResolvedClipPath)
+			{
+				an.ResolvedClipPath = an.ClipPath;
+				an.ClipRef = an.ClipPath.empty() ? nullptr
+				                                 : AssetLibrary::GetAnimationClip(an.ClipPath);
+				an.TimeSeconds = 0.0f;
+			}
+
+			if (!an.SkelRef)
+				an.SkelRef = findSkeleton(e);   // meshes may resolve a frame later — retried
+
+			if (!an.ClipRef || !an.SkelRef || an.SkelRef->JointCount() == 0)
+			{
+				an.Palette.clear();
+				continue;
+			}
+
+			const float duration = an.ClipRef->Duration;
+			if (an.Playing)
+			{
+				an.TimeSeconds += deltaTime * an.Speed;
+				if (!an.Loop && duration > 0.0f)
+					an.TimeSeconds = glm::clamp(an.TimeSeconds, 0.0f, duration);
+				an.NormalizedTime = duration > 0.0f
+					? an.ClipRef->ResolveTime(an.TimeSeconds, an.Loop) / duration : 0.0f;
+			}
+			else
+			{
+				// Paused: the (scrubbed) play head is authoritative.
+				an.TimeSeconds = an.NormalizedTime * duration;
+			}
+
+			an.ClipRef->Sample(*an.SkelRef, an.TimeSeconds, an.Loop, an.ScratchLocals);
+			an.SkelRef->ComputePalette(an.ScratchLocals, an.Palette);
+		}
+	}
+
 	// H2 — routed opaque submit shared by OnRender3D and BuildRenderDesc's DrawOpaque.
 	void Scene::SubmitOpaqueMeshes(const SceneDrawContext& ctx)
 	{
@@ -1053,6 +1142,23 @@ namespace Cosmic
 			// RelationshipComponent) resolve to their local transform, so every
 			// shipped flat scene renders identically.
 			const glm::mat4 xform = WorldOf(entity);
+
+			// A2 — a skinned mesh with a live Animator palette routes through
+			// the skinned path (lit + shadow twins). Everything else — skinned
+			// meshes with no/paused-out animator included — draws statically
+			// (bind pose), which is the pre-A2 behavior exactly.
+			if (mr.MeshAsset->IsSkinned() && mr.MaterialAsset)
+			{
+				if (AnimatorComponent* an = FindAnimatorFor(entity);
+				    an && !an->Palette.empty() &&
+				    an->Palette.size() == mr.MeshAsset->GetSkeleton()->JointCount())
+				{
+					ctx.DrawMeshSkinned(mr.MeshAsset, xform, mr.MaterialAsset,
+					                    an->Palette.data(), (uint32_t)an->Palette.size(), entityID);
+					return;
+				}
+			}
+
 			if (mr.MaterialAsset)
 				ctx.DrawMesh(mr.MeshAsset, xform, mr.MaterialAsset, entityID);
 			else

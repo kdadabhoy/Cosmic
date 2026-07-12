@@ -46,6 +46,14 @@ namespace Starforge
         bool IsScene(const std::string& e)  { return e == ".cscene"; }
         bool IsPrefab(const std::string& e) { return e == ".cprefab"; }
 
+        // A4 — tiles the PreviewRig can thumbnail (meshes + materials).
+        bool IsThumbable(const std::string& e)
+        {
+            if (e == ".cmat")
+                return true;
+            return !e.empty() && PreviewRig::IsMeshExtension(e.substr(1));
+        }
+
         const char* Badge(const std::string& e)
         {
             if (IsScene(e))                      return "SCN";
@@ -138,8 +146,12 @@ namespace Starforge
         {
             const std::string vfs = "project://" + c.Path;
             if (c.Kind == Cosmic::FileChangeKind::Modified || c.Kind == Cosmic::FileChangeKind::Added)
+            {
                 if (IsImage(Ext(c.Path)))
                     Cosmic::AssetLibrary::Reload(vfs);
+                if (IsThumbable(Ext(c.Path)))
+                    ctx.Preview.Invalidate(vfs);   // A4 — stale thumbnail
+            }
         }
 
         // --- Breadcrumb ----------------------------------------------------
@@ -208,6 +220,17 @@ namespace Starforge
                     activated = ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left);
                 }
                 else ImGui::Button("IMG", ImVec2(cell, cell));
+            }
+            else if (IsThumbable(ext) && !vfs.empty())
+            {
+                // A4 — real mesh/material thumbnails from the shared PreviewRig
+                // (rendered a few per frame by the shell's pump; badge until then).
+                if (auto tex = ctx.Preview.Thumbnail(vfs))
+                    ImGui::ImageButton("thumb", (ImTextureID)(intptr_t)tex->GetRendererID(),
+                                       ImVec2(cell, cell), ImVec2(0, 1), ImVec2(1, 0));
+                else
+                    ImGui::Button(Badge(ext), ImVec2(cell, cell));
+                activated = ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left);
             }
             else
             {

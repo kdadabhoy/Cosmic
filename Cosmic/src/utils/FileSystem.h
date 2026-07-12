@@ -1,7 +1,7 @@
 #pragma once
 
 // FileSystem.h
-// Last Modified 7/5/2026
+// Last Modified 7/12/2026
 
 /**
  * General Description:
@@ -24,6 +24,15 @@
  * The last setter wins; SetActiveProject clears any absolute mount so a legacy
  * project always resolves the legacy way.
  *
+ * PROCESS-WIDE STATE (Phase 20 / A1 fix): the mount state lives in the ENGINE
+ * DLL (FileSystem.cpp) and every module — engine, editor, game DLLs — calls the
+ * exported functions, so there is exactly ONE active project per process. The
+ * class used to be header-only with `static inline` members, which gave every
+ * DLL its own copy: the editor's SetActiveProject never reached engine-compiled
+ * code (AssetLibrary, SceneSerializer), so in the dedicated Starforge.exe every
+ * engine-side "project://" resolve pointed at the editor's own bundled assets
+ * instead of the open project. Application::LoadProjectDLL's set-from-DLL-stem
+ * step remains as a harmless default; client setters now override it for real.
  *
  * Public Function Prototypes (Pre and Post Conditions):
  *
@@ -44,6 +53,8 @@
  * appending an "assets/" subdir only when one exists (probed once here).
  */
 
+#include "core/Core.h"
+
 #include <string>
 #include <filesystem>
 #include <fstream>
@@ -51,7 +62,7 @@
 
 namespace Cosmic
 {
-	class FileSystem
+	class COSMIC_API FileSystem
 	{
 	public:
 		////////////////////////////////
@@ -70,38 +81,7 @@ namespace Cosmic
 		 *                   portable-vs-installed mapping. ALWAYS route writes here —
 		 *                   an installed app's exe dir (Program Files) is read-only.
 		 */
-		static std::string Resolve(const std::string& path)
-		{
-			if (path.find("engine://") == 0)
-			{
-				return (std::filesystem::path("assets") / path.substr(9)).generic_string();
-			}
-
-			if (path.find("project://") == 0)
-			{
-				const std::string rel = path.substr(10);
-
-				// PATH mode (S1): a self-contained project folder anywhere on disk.
-				if (!s_ActiveProjectPath.empty())
-				{
-					std::filesystem::path base = s_ActiveProjectPath;
-					if (s_ProjectHasAssetsSubdir)
-						base /= "assets";
-					return (base / rel).generic_string();
-				}
-
-				// NAME mode (legacy): assets/projects/<name>/ — matches the CMake
-				// POST_BUILD directory structure for in-tree plugin projects.
-				return (std::filesystem::path("assets") / "projects" / s_ActiveProjectName / rel).generic_string();
-			}
-
-			if (path.find("user://") == 0)
-			{
-				return (std::filesystem::path(GetUserDataRoot()) / path.substr(7)).generic_string();
-			}
-
-			return path; // Fallback for raw paths
-		}
+		static std::string Resolve(const std::string& path);
 
 		////////////////////////////////
 		// User Data Root
@@ -115,8 +95,8 @@ namespace Cosmic
 		 * Dev boots (the Launcher, `--project`) leave the identity empty and keep
 		 * the current shared root. Must be set before the first GetUserDataRoot().
 		 */
-		static void SetAppIdentity(const std::string& name) { s_AppIdentity = name; }
-		static const std::string& AppIdentity() { return s_AppIdentity; }
+		static void SetAppIdentity(const std::string& name);
+		static const std::string& AppIdentity();
 
 		/**
 		 * GetUserDataRoot
@@ -134,65 +114,7 @@ namespace Cosmic
 		 *   %LOCALAPPDATA%/<AppName>/. Falls back to the system temp dir if
 		 *   LOCALAPPDATA is unset.
 		 */
-		static const std::string& GetUserDataRoot()
-		{
-			static const std::string root = []() -> std::string
-			{
-				namespace fs = std::filesystem;
-
-				// Writability probe in the working directory (== exe dir).
-				const bool exeDirWritable = []() -> bool
-				{
-					const fs::path probe = fs::path(".") / ".cosmic_write_probe";
-					std::ofstream test(probe);
-					if (!test.is_open())
-						return false;
-					test.close();
-					std::error_code ec;
-					fs::remove(probe, ec);
-					return true;
-				}();
-
-				// Packaged app (identity set): isolate per-app.
-				if (!s_AppIdentity.empty())
-				{
-					std::error_code ec;
-					const bool portableFlag = fs::exists(fs::path(".") / "portable.txt", ec);
-					if (portableFlag || exeDirWritable)
-					{
-						fs::path portableRoot = fs::path(".") / "user";
-						fs::create_directories(portableRoot, ec);
-						return portableRoot.generic_string();
-					}
-
-				#pragma warning(push)
-				#pragma warning(disable: 4996) // std::getenv is fine here; no CRT state is retained
-					const char* localAppData = std::getenv("LOCALAPPDATA");
-				#pragma warning(pop)
-
-					fs::path dataRoot = localAppData ? (fs::path(localAppData) / s_AppIdentity)
-					                                 : (fs::temp_directory_path() / s_AppIdentity);
-					fs::create_directories(dataRoot, ec);
-					return dataRoot.generic_string();
-				}
-
-				// Dev / shared root (historical behavior, unchanged).
-				if (exeDirWritable)
-					return std::string(".");
-
-			#pragma warning(push)
-			#pragma warning(disable: 4996)
-				const char* localAppData = std::getenv("LOCALAPPDATA");
-			#pragma warning(pop)
-
-				fs::path dataRoot = localAppData ? (fs::path(localAppData) / "Cosmic")
-				                                 : (fs::temp_directory_path() / "Cosmic");
-				std::error_code ec;
-				fs::create_directories(dataRoot, ec);
-				return dataRoot.generic_string();
-			}();
-			return root;
-		}
+		static const std::string& GetUserDataRoot();
 
 		////////////////////////////////
 		// Project Management
@@ -201,41 +123,17 @@ namespace Cosmic
 		// NAME mode. Not thread-safe: must only be called from the main thread before
 		// any worker calls Resolve with a project:// path. If background asset loading
 		// is introduced, protect this with a shared_mutex.
-		static void SetActiveProject(const std::string& name)
-		{
-			s_ActiveProjectName    = name;
-			s_ActiveProjectPath.clear();          // drop any absolute PATH mount
-			s_ProjectHasAssetsSubdir = false;
-		}
+		static void SetActiveProject(const std::string& name);
 
 		// PATH mode (S1). Mounts a self-contained project folder at `absoluteRoot`.
 		// Probes ONCE for an "assets/" subdir: present -> project:// resolves under
 		// <root>/assets/; absent -> under <root>/ (the flat layout the Starforge
 		// scaffold writes, where scenes/ sits at the project root). Same threading
 		// contract as SetActiveProject (main-thread only).
-		static void SetActiveProjectPath(const std::string& absoluteRoot)
-		{
-			namespace fs = std::filesystem;
-			std::error_code ec;
-			s_ActiveProjectPath      = fs::path(absoluteRoot).generic_string();
-			s_ProjectHasAssetsSubdir = fs::exists(fs::path(absoluteRoot) / "assets", ec);
-		}
+		static void SetActiveProjectPath(const std::string& absoluteRoot);
 
 		// The current absolute PATH-mode root ("" in NAME mode). Lets an app write a
 		// sibling folder (build/, .starforge/) next to a project without re-deriving it.
-		static const std::string& ActiveProjectPath() { return s_ActiveProjectPath; }
-
-	private:
-		////////////////////////////////
-		// Internal State
-		///////////////////////////////
-
-		// Not thread-safe: the setters must only be called from the main thread,
-		// and no worker thread may call Resolve with a project:// path concurrently.
-		// If background asset loading is introduced, protect this with a shared_mutex.
-		static inline std::string		s_ActiveProjectName		= "";
-		static inline std::string		s_ActiveProjectPath		= "";     // "" => NAME mode
-		static inline bool				s_ProjectHasAssetsSubdir = false;
-		static inline std::string		s_AppIdentity			= "";     // "" => dev/shared user root
+		static const std::string& ActiveProjectPath();
 	};
 }

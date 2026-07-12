@@ -222,6 +222,9 @@ namespace Starforge
 
         MountProject(e);
         m_Content.Reset();
+        // A4 — thumbnail disk cache lives with the project's other editor state.
+        m_Ctx.Preview.SetCacheDirectory(
+            (fs::path(ProjectDir()) / ".starforge" / "thumbs").generic_string());
 
         const std::string main = "project://scenes/Main.cscene";
         if (fs::exists(Cosmic::FileSystem::Resolve(main)))
@@ -344,6 +347,7 @@ namespace Starforge
         m_Ctx.Commands.Clear();
         m_Ctx.ClearSelection();
         m_Content.Reset();
+        m_Ctx.Preview.SetCacheDirectory("");   // A4 — thumbnails are per-project
         m_Mode2D = false;   // view-only state; the next project starts in 3D
         m_ManifestFlow.clear();   // U5/U8 — flow offer is per-project
         Cosmic::AssetLibrary::ClearDefaultTextureSampling();   // U3 — drop the pixel-art override
@@ -1085,6 +1089,12 @@ namespace Starforge
 
         if (m_Ctx.Scene)
         {
+            // A2 — play preview in edit mode: animators sample every frame here
+            // (during Play the runtime scene's OnUpdate already did, and this
+            // renders the SAME scene object — so gate on the mode).
+            if (!IsPlaying())
+                m_Ctx.Scene->UpdateAnimators(ts);
+
             Cosmic::SceneRenderDesc desc;
             m_Ctx.Scene->BuildRenderDesc(activeCam, ts, desc);
             desc.Settings.ClearColor = { 0.086f, 0.098f, 0.129f, 1.0f };
@@ -1166,6 +1176,76 @@ namespace Starforge
         {
             m_ThumbRequested = false;
             CaptureThumbnail();
+        }
+
+        // A4 — budgeted asset-thumbnail generation (Content Browser requests).
+        // Runs with the frame composited; every rig pass restores the bound
+        // FBO + render-state defaults (doc 13 §0.5), which the self-test below
+        // exists to prove.
+        m_Ctx.Preview.PumpThumbnails(2);
+
+        // A4 acceptance — Help ▸ Preview State Self-Test. Three frames on a
+        // static scene: capture A (control baseline), capture B (must equal A —
+        // proves the scene itself is deterministic), then run every PreviewRig
+        // path and capture C (must equal B — proves the preview passes leak no
+        // GL state into the scene render).
+        if (m_PreviewSelfTest > 0 && m_Ctx.Scene)
+        {
+            std::vector<uint8_t> pix;
+            uint32_t w = 0, h = 0;
+            vfb->Bind();
+            const bool read = vfb->ReadPixels(0, pix, w, h);
+            if (!read)
+            {
+                m_PreviewSelfTest = 0;
+                m_Ctx.Log("[Preview] Self-test aborted — viewport read-back failed.",
+                          LogSeverity::Error);
+            }
+            else if (m_PreviewSelfTest == 1)         // frame A: baseline
+            {
+                m_SelfTestPixels = std::move(pix);
+                m_SelfTestW = w; m_SelfTestH = h;
+                m_PreviewSelfTest = 2;
+            }
+            else if (m_PreviewSelfTest == 2)         // frame B: control, then previews
+            {
+                if (w != m_SelfTestW || h != m_SelfTestH || pix != m_SelfTestPixels)
+                {
+                    m_PreviewSelfTest = 0;
+                    m_SelfTestPixels.clear();
+                    m_Ctx.Log("[Preview] Self-test INCONCLUSIVE — the scene is not static "
+                              "(frames differ before any preview ran). Retry without moving "
+                              "the camera, in a scene without animated water/particles/sky.",
+                              LogSeverity::Warn);
+                }
+                else
+                {
+                    // Hammer every preview path between the two compared frames.
+                    Cosmic::MaterialAsset probe;
+                    probe.Albedo    = { 0.85f, 0.30f, 0.10f, 1.0f };
+                    probe.Metallic  = 0.7f;
+                    probe.Roughness = 0.25f;
+                    m_Ctx.Preview.RenderMaterial(probe, 220, 160);
+                    m_Ctx.Preview.Orbit(24.0f, -10.0f);
+                    m_Ctx.Preview.RenderMaterial(probe, 128, 128);
+                    m_Ctx.Preview.PumpThumbnails(8);
+                    m_SelfTestPixels = std::move(pix);
+                    m_PreviewSelfTest = 3;
+                }
+            }
+            else                                      // frame C: the verdict
+            {
+                m_PreviewSelfTest = 0;
+                if (w == m_SelfTestW && h == m_SelfTestH && pix == m_SelfTestPixels)
+                    m_Ctx.Log("[Preview] State-restore self-test PASSED — scene render "
+                              "byte-identical after interactive + thumbnail preview passes ("
+                              + std::to_string(w) + "x" + std::to_string(h) + ").");
+                else
+                    m_Ctx.Log("[Preview] State-restore self-test FAILED — the preview pass "
+                              "leaked GL state into the scene render.", LogSeverity::Error);
+                m_SelfTestPixels.clear();
+                m_SelfTestPixels.shrink_to_fit();
+            }
         }
     }
 
@@ -1996,6 +2076,15 @@ namespace Starforge
         {
             if (ImGui::MenuItem("Keyboard Shortcuts")) m_OpenShortcuts = true;
             if (ImGui::MenuItem("About Starforge"))    m_OpenAbout = true;
+            ImGui::Separator();
+            // A4 acceptance — proves the doc 13 §0.5 state-restore contract:
+            // the viewport must render byte-identically after preview passes.
+            if (ImGui::MenuItem("Preview State Self-Test", nullptr, false,
+                                m_Ctx.ProjectOpen && m_PreviewSelfTest == 0))
+            {
+                m_PreviewSelfTest = 1;
+                m_Ctx.Log("[Preview] Self-test armed — keep the camera still for 3 frames.");
+            }
             ImGui::EndMenu();
         }
     }
@@ -3437,7 +3526,11 @@ namespace Starforge
                 if (auto picked = Cosmic::FileDialog::Open(dlg))
                     std::snprintf(m_ImportPath, sizeof(m_ImportPath), "%s", picked->c_str());
             }
-            ImGui::TextDisabled("Copied into project://models/. OBJ imports now; FBX/STL/DAE/PLY need the assimp backend.");
+            if (Cosmic::MeshImport::AssimpEnabled())
+                ImGui::TextDisabled("Copied into project://models/. Multi-mesh sources spawn a parent with\n"
+                                    "child meshes; source materials become .cmat files (textures copied alongside).");
+            else
+                ImGui::TextDisabled("Copied into project://models/. OBJ/glTF import in this build; FBX/STL/DAE/PLY need the assimp backend.");
 
             const std::string src = m_ImportPath;
             const std::string ext = Cosmic::MeshImport::Extension(src);
@@ -3451,7 +3544,7 @@ namespace Starforge
                     ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.3f, 1.0f), "File not found.");
                 else if (!supported)
                     ImGui::TextColored(ImVec4(1.0f, 0.8f, 0.2f, 1.0f),
-                                       ".%s needs the assimp backend (this build imports OBJ).", ext.c_str());
+                                       ".%s needs the assimp backend (this build imports OBJ/glTF).", ext.c_str());
                 else
                     ImGui::Text("Assumed unit scale: x%.4f  (edit the generated .cmeta to change).", preset.Scale);
             }
@@ -3469,26 +3562,272 @@ namespace Starforge
         }
     }
 
+    namespace
+    {
+        // File-name-safe slug for generated .cmat / texture names.
+        std::string SanitizeAssetName(const std::string& in)
+        {
+            std::string out;
+            out.reserve(in.size());
+            for (char c : in)
+                out += (std::isalnum((unsigned char)c) || c == '-' || c == '_') ? c : '_';
+            while (!out.empty() && out.back() == '_')
+                out.pop_back();
+            return out;
+        }
+
+        // Materialize one texture reference from an imported model into
+        // project://models/: embedded blobs ("*<i>") are written out; file
+        // references are copied from the ORIGINAL source directory (relative
+        // refs — and, for the absolute-path mess FBX exporters leave behind,
+        // a filename-only fallback). Returns the project:// path, "" if the
+        // texture could not be found (warned).
+        std::string StageImportedTexture(EditorContext& ctx, const Cosmic::ImportedModelDesc& desc,
+                                         const std::string& ref, const fs::path& srcDir,
+                                         const fs::path& modelsDir, const std::string& modelStem)
+        {
+            if (ref.empty())
+                return {};
+
+            std::error_code ec;
+            if (ref[0] == '*')   // embedded texture
+            {
+                const int idx = std::atoi(ref.c_str() + 1);
+                if (idx < 0 || idx >= (int)desc.EmbeddedTextures.size())
+                    return {};
+                const Cosmic::ImportedTextureDesc& t = desc.EmbeddedTextures[(size_t)idx];
+                std::string name = SanitizeAssetName(modelStem + "_" + t.Name);
+                if (t.Height == 0)
+                {
+                    name += "." + (t.FormatHint.empty() ? std::string("png") : t.FormatHint);
+                    std::ofstream out(modelsDir / name, std::ios::binary | std::ios::trunc);
+                    if (!out.good())
+                        return {};
+                    out.write(reinterpret_cast<const char*>(t.Bytes.data()), (std::streamsize)t.Bytes.size());
+                }
+                else
+                {
+                    name += ".png";
+                    if (!Cosmic::ImageIO::WritePNG((modelsDir / name).string(),
+                                                   (int)t.Width, (int)t.Height, 4, t.Bytes.data()))
+                        return {};
+                }
+                return "project://models/" + name;
+            }
+
+            // File reference: absolute, source-relative, or filename-in-source-dir.
+            fs::path refPath = fs::path(ref).make_preferred();
+            fs::path found;
+            if (refPath.is_absolute() && fs::exists(refPath, ec))
+                found = refPath;
+            else if (fs::exists(srcDir / refPath, ec))
+                found = srcDir / refPath;
+            else if (fs::exists(srcDir / refPath.filename(), ec))
+                found = srcDir / refPath.filename();
+            if (found.empty())
+            {
+                ctx.Log("[Import] Texture '" + ref + "' not found next to the source — skipped.",
+                        LogSeverity::Warn);
+                return {};
+            }
+
+            const std::string name = found.filename().string();
+            fs::copy_file(found, modelsDir / name, fs::copy_options::overwrite_existing, ec);
+            if (ec)
+            {
+                ctx.Log("[Import] Failed to copy texture '" + found.string() + "': " + ec.message(),
+                        LogSeverity::Warn);
+                return {};
+            }
+            return "project://models/" + name;
+        }
+
+        // Copy the sidecar files a copied source still needs to parse or shade:
+        // OBJ "mtllib" material libraries and glTF external ".bin" buffers.
+        void StageSourceSidecars(const fs::path& src, const fs::path& modelsDir, const std::string& extLower)
+        {
+            std::error_code ec;
+            if (extLower == "obj")
+            {
+                std::ifstream in(src);
+                std::string   line;
+                while (std::getline(in, line))
+                {
+                    if (line.rfind("mtllib", 0) != 0)
+                        continue;
+                    std::string name = line.substr(6);
+                    name.erase(0, name.find_first_not_of(" \t"));
+                    while (!name.empty() && (name.back() == '\r' || name.back() == ' ' || name.back() == '\t'))
+                        name.pop_back();
+                    if (name.empty())
+                        continue;
+                    const fs::path mtl = src.parent_path() / name;
+                    if (fs::exists(mtl, ec))
+                        fs::copy_file(mtl, modelsDir / mtl.filename(), fs::copy_options::overwrite_existing, ec);
+                }
+            }
+            else if (extLower == "gltf")
+            {
+                // .gltf buffers live in sibling .bin files; copy them so the
+                // copied .gltf stays parseable. (.glb is self-contained.)
+                for (const auto& entry : fs::directory_iterator(src.parent_path(), ec))
+                    if (entry.is_regular_file(ec) && entry.path().extension() == ".bin")
+                        fs::copy_file(entry.path(), modelsDir / entry.path().filename(),
+                                      fs::copy_options::overwrite_existing, ec);
+            }
+        }
+    }
+
     bool StarforgeApp::ImportModelFile(const std::string& srcPath)
     {
         std::error_code ec;
-        const std::string filename  = fs::path(srcPath).filename().string();
-        const std::string modelsDir = Cosmic::FileSystem::Resolve("project://models");
+        const fs::path    src       = fs::path(srcPath);
+        const std::string filename  = src.filename().string();
+        const std::string stem      = src.stem().string();
+        const std::string ext       = Cosmic::MeshImport::Extension(filename);
+        const fs::path    modelsDir = fs::path(Cosmic::FileSystem::Resolve("project://models"));
         fs::create_directories(modelsDir, ec);
 
-        fs::copy_file(srcPath, fs::path(modelsDir) / filename,
-                      fs::copy_options::overwrite_existing, ec);
+        fs::copy_file(src, modelsDir / filename, fs::copy_options::overwrite_existing, ec);
         if (ec)
         {
             m_Ctx.Log("[Import] Failed to copy '" + srcPath + "': " + ec.message(), LogSeverity::Error);
             return false;
         }
+        StageSourceSidecars(src, modelsDir, ext);
 
-        const std::string vfs = "project://models/" + filename;
-        Cosmic::AssetLibrary::Reload(vfs);   // fresh import: writes the .cmeta preset + applies units
-        Commands::Create(m_Ctx, "Imported " + fs::path(filename).stem().string(), Cosmic::Entity{},
-            [vfs](Cosmic::Entity e) { e.AddComponent<Cosmic::MeshRendererComponent>().MeshPath = vfs; });
-        m_Ctx.Log("[Import] " + vfs + " (scale from .cmeta).");
+        const std::string vfs      = "project://models/" + filename;
+        const std::string resolved = Cosmic::FileSystem::Resolve(vfs);
+
+        // Settings truth: the .cmeta next to the COPY (seeded from the extension
+        // preset on first import, kept across re-imports so scale edits stick).
+        const Cosmic::ImportSettings settings = Cosmic::MeshImport::LoadOrInitMeta(resolved);
+
+        // Describe the source: sub-meshes + materials + embedded textures (A1).
+        Cosmic::ImportedModelDesc desc;
+        if (!Cosmic::MeshImport::ImportModelData(desc, resolved, settings) || desc.Meshes.empty())
+        {
+            m_Ctx.Log("[Import] '" + vfs + "' produced no importable meshes (see log).",
+                      LogSeverity::Error);
+            return false;
+        }
+
+        // Source materials -> generated .cmat files, textures staged alongside.
+        // assimp's synthetic "DefaultMaterial" (STL and friends) is skipped so
+        // plain CAD parts keep the engine's default Lambert look (E16 spec).
+        std::vector<std::string> matVfs(desc.Materials.size());
+        for (size_t i = 0; i < desc.Materials.size(); ++i)
+        {
+            const Cosmic::ImportedMaterialDesc& m = desc.Materials[i];
+            const bool referenced = std::any_of(desc.Meshes.begin(), desc.Meshes.end(),
+                [&](const Cosmic::ImportedMeshDesc& sm) { return sm.MaterialIndex == (int)i; });
+            if (!referenced || m.Name == "DefaultMaterial")
+                continue;
+
+            Cosmic::MaterialAsset a;
+            a.Albedo      = m.Albedo;
+            a.Metallic    = m.Metallic;
+            a.Roughness   = m.Roughness;
+            a.Emissive    = m.Emissive;
+            a.Transparent = m.Opacity < 0.999f;
+            a.AlbedoMap     = StageImportedTexture(m_Ctx, desc, m.AlbedoMap,     src.parent_path(), modelsDir, stem);
+            a.NormalMap     = StageImportedTexture(m_Ctx, desc, m.NormalMap,     src.parent_path(), modelsDir, stem);
+            a.MetalRoughMap = StageImportedTexture(m_Ctx, desc, m.MetalRoughMap, src.parent_path(), modelsDir, stem);
+            a.AOMap         = StageImportedTexture(m_Ctx, desc, m.AOMap,         src.parent_path(), modelsDir, stem);
+            a.EmissiveMap   = StageImportedTexture(m_Ctx, desc, m.EmissiveMap,   src.parent_path(), modelsDir, stem);
+
+            const std::string matName = SanitizeAssetName(
+                stem + "_" + (m.Name.empty() ? "mat" + std::to_string(i) : m.Name));
+            const std::string cmat = "project://models/" + matName + ".cmat";
+            if (Cosmic::AssetLibrary::SaveMaterialAsset(a, cmat))
+            {
+                Cosmic::AssetLibrary::Reload(cmat);   // refresh if a re-import overwrote it
+                matVfs[i] = cmat;
+            }
+        }
+
+        // Evict the model (and every "#N" sub-mesh) so a RE-import reloads with
+        // fresh geometry/.cmeta units, then let already-placed entities pick the
+        // change up: clear their resolved asset so the scene sync re-resolves.
+        Cosmic::AssetLibrary::Reload(vfs);
+        {
+            auto view = m_Ctx.Scene->GetRegistry().view<Cosmic::MeshRendererComponent>();
+            for (auto e : view)
+            {
+                auto& mr = view.get<Cosmic::MeshRendererComponent>(e);
+                const bool sameModel = mr.MeshPath == vfs ||
+                    (mr.MeshPath.rfind(vfs + "#", 0) == 0);
+                if (sameModel)
+                {
+                    mr.MeshAsset        = nullptr;
+                    mr.MeshPathResolved = false;
+                }
+                if (!mr.MaterialPath.empty() &&
+                    std::find(matVfs.begin(), matVfs.end(), mr.MaterialPath) != matVfs.end())
+                {
+                    mr.MaterialAsset        = nullptr;
+                    mr.MaterialPathResolved = false;
+                }
+            }
+        }
+
+        // A4 — regenerate browser thumbnails for everything this import touched.
+        m_Ctx.Preview.Invalidate(vfs);
+        for (const std::string& m : matVfs)
+            if (!m.empty())
+                m_Ctx.Preview.Invalidate(m);
+
+        const auto materialFor = [&](const Cosmic::ImportedMeshDesc& sm) -> std::string
+        {
+            return (sm.MaterialIndex >= 0 && sm.MaterialIndex < (int)matVfs.size())
+                       ? matVfs[(size_t)sm.MaterialIndex] : std::string();
+        };
+
+        // A2 — a rigged source spawns ready to play: an Animator pointed at the
+        // file's first clip (the Inspector's clip picker switches it).
+        const std::string firstClip = desc.Clips.empty()
+            ? std::string() : vfs + "#" + desc.Clips[0].Name;
+
+        if (desc.Meshes.size() == 1)
+        {
+            // Single mesh: one entity on the plain path (for OBJ that is the
+            // engine's own parser — the pre-A1 byte-identical route).
+            const std::string mat = materialFor(desc.Meshes[0]);
+            Commands::Create(m_Ctx, "Imported " + stem, Cosmic::Entity{},
+                [vfs, mat, firstClip](Cosmic::Entity e)
+                {
+                    auto& mr = e.AddComponent<Cosmic::MeshRendererComponent>();
+                    mr.MeshPath     = vfs;
+                    mr.MaterialPath = mat;
+                    if (!firstClip.empty())
+                        e.AddComponent<Cosmic::AnimatorComponent>().ClipPath = firstClip;
+                });
+        }
+        else
+        {
+            // Multi-mesh: parent + one child per sub-mesh (E16 hierarchy),
+            // recorded as ONE undo step (the K13 RecordSpawn pattern).
+            Cosmic::Entity root = m_Ctx.Scene->CreateEntity(stem);
+            if (!firstClip.empty())
+                root.AddComponent<Cosmic::AnimatorComponent>().ClipPath = firstClip;
+            for (size_t i = 0; i < desc.Meshes.size(); ++i)
+            {
+                const Cosmic::ImportedMeshDesc& sm = desc.Meshes[i];
+                Cosmic::Entity child = m_Ctx.Scene->CreateEntity(
+                    sm.Name.empty() ? "Mesh_" + std::to_string(i) : sm.Name);
+                auto& mr = child.AddComponent<Cosmic::MeshRendererComponent>();
+                mr.MeshPath     = Cosmic::MeshImport::SubmeshPath(vfs, (int)i);
+                mr.MaterialPath = materialFor(sm);
+                m_Ctx.Scene->SetParent(child, root);
+            }
+            Commands::RecordSpawn(m_Ctx, root, "Imported " + stem);
+        }
+
+        const size_t cmatCount = (size_t)std::count_if(matVfs.begin(), matVfs.end(),
+                                                       [](const std::string& s) { return !s.empty(); });
+        m_Ctx.Log("[Import] " + vfs + " — " + std::to_string(desc.Meshes.size()) + " mesh(es), " +
+                  std::to_string(cmatCount) + " material(s), scale x" +
+                  std::to_string(settings.Scale) + " (edit the .cmeta + re-import to change).");
         return true;
     }
 

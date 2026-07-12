@@ -216,13 +216,35 @@ Engine3DDemo toggle.
   which places the view-mode selector on the viewport strip. R11 pairs naturally with
   Phase 27 X1 if scheduled together.
 
-### Phase 20 — Asset pipeline & animation *(doc 19, A1–A9)* — A1/A2/A4 now, rest unlock-driven
+### Phase 20 — Asset pipeline & animation *(doc 19, A1–A9)* — fired trio ✅ 2026-07-12; rest unlock-driven
 **A1 (assimp ON) is the anchor — schedule it with Phase 14–16 era work.** Then: skeletal
 animation · STEP tool · material-undo/preview-rig/thumbnails · in-place reload · terrain
 brushes · prefab overrides v2 · CSG · asset pak.
 - **2026-07-11:** **A2 and A4 unlocks fired** (editor vision + the Forge Isle character
   project). A4 expands to the shared **PreviewRig** service (gap analysis §14.3 — interactive
   mode consumed by Phases 23/24). Recommended order: A1 → A4 → A2, feeding Phases 23–24.
+- **Status 2026-07-12 (UNcommitted):** the fired trio **A1 → A4 → A2 landed** in one session.
+  **A1:** assimp **v5.4.3** vendored + trimmed (5 importers, exporters/tests off —
+  `dependencies/assimp/README-COSMIC.md`), `COSMIC_WITH_ASSIMP` default **ON** (static,
+  PRIVATE — the Jolt firewall); `MeshImport` grew the rich surface (`ImportModelData`,
+  headless `ImportData`, `"file#i"` sub-mesh paths) + a cgltf glTF/GLB reader; the editor
+  import writes per-material `.cmat`s (textures + embedded blobs staged), spawns multi-mesh
+  parents + `#i` children in ONE undo step, and re-import propagates `.cmeta` edits to placed
+  entities. **A4:** Starforge `PreviewRig` service — interactive (Material panel sphere w/
+  orbit; per-document instances for Phases 23/24) + batch thumbnails (browser mesh/.cmat
+  tiles; `<project>/.starforge/thumbs/` cache); material edits undoable; the doc-13 §0.5
+  state-restore contract proven in-editor by **Help ▸ Preview State Self-Test** (scene render
+  byte-identical after preview passes). **A2 (runtime):** `Skeleton`/`AnimationClip` pure
+  sampling, glTF (cgltf) + FBX (assimp) skins/clips, skinning palettes in SSBO binding 10 w/
+  `PBRSkinned`/`ShadowDepthSkinned` twins, reflected `AnimatorComponent` + Inspector clip
+  picker/scrub + edit-mode play preview — **Khronos Fox verified on-GPU** (Survey/Walk/Run
+  playing, scrub, `.cmeta` rescale). Editor superstructure stays Phase 24. **Bonus fix:**
+  `FileSystem`'s header-only per-DLL VFS state (engine-side `project://` resolves broke in the
+  dedicated Starforge.exe) moved into the engine DLL (NEW `utils/FileSystem.cpp`). Build green
+  Debug+Release zero warnings, `CosmicTests` **290/290** (276→290), GL-conformance clean,
+  compat gate held (plain OBJ path byte-identical; skinned draws require an Animator + palette;
+  no shipped scene has one). Remaining = the user's ledger items (Blender FBX↔glTF size pair,
+  Fox vs reference viewer, 50-instance ≥60 fps, skinned-shadow visual) + commit.
 
 ### Phase 21 — Scripting & connectivity *(doc 20, C1–C6)* — unlock-driven
 UDP sockets · positional audio · Lua L1–L3 (unlock: reload latency hurts a real tuning loop

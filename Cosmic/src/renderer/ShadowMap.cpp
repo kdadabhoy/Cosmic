@@ -4,9 +4,11 @@
 #include "renderer/RenderCommand.h"
 #include "renderer/Renderer3D.h"
 #include "renderer/InstanceSet.h"
+#include "renderer/BindingPoints.h"   // A2 — SkinningSsbo
 #include "graphics/FrameBuffer.h"
 #include "graphics/Shader.h"
 #include "graphics/Mesh.h"
+#include "graphics/StorageBuffer.h"   // A2 — skinned-caster palette
 #include "core/Log.h"
 
 #include <glm/gtc/matrix_transform.hpp>
@@ -46,6 +48,9 @@ namespace Cosmic
 		m_Fbo.reset();
 		m_DepthShader.reset();
 		m_DepthInstancedShader.reset();
+		m_DepthSkinnedShader.reset();
+		m_SkinSsbo.reset();
+		m_SkinSsboCapacity = 0;
 		m_Initialized = false;
 	}
 
@@ -94,6 +99,56 @@ namespace Cosmic
 		// u_LightViewProj (set in BeginDepthPass) is restored by the rebind.
 		m_DepthShader->Bind();
 		m_DepthShader->SetMat4("u_Model", transform);
+		mesh->GetVertexArray()->Bind();
+		RenderCommand::DrawIndexed(mesh->GetVertexArray(), mesh->GetIndexCount());
+	}
+
+	void ShadowMap::DrawCasterSkinned(const Ref<Mesh>& mesh, const glm::mat4& transform,
+	                                  const glm::mat4* palette, uint32_t jointCount)
+	{
+		if (!m_Initialized || !mesh)
+			return;
+		if (!palette || jointCount == 0)
+		{
+			DrawCaster(mesh, transform);   // bind-pose fallback
+			return;
+		}
+
+		if (!m_DepthSkinnedShader)
+		{
+			m_DepthSkinnedShader = Shader::Create("assets/shaders/ShadowDepthSkinned.glsl");
+			if (!m_DepthSkinnedShader)
+			{
+				CS_CORE_ERROR("ShadowMap: ShadowDepthSkinned shader failed to load — skinned casters draw bind pose.");
+				DrawCaster(mesh, transform);
+				return;
+			}
+		}
+
+		// Per-caster palette upload at base 0. This map owns its own binding-10
+		// buffer; the lit pass's Renderer3D upload happens later in the frame
+		// and re-binds the slot, so the two never fight.
+		if (!m_SkinSsbo || m_SkinSsboCapacity < jointCount)
+		{
+			uint32_t cap = m_SkinSsboCapacity ? m_SkinSsboCapacity : 128;
+			while (cap < jointCount)
+				cap *= 2;
+			m_SkinSsbo = StorageBuffer::Create(cap * (uint32_t)sizeof(glm::mat4), Bindings::SkinningSsbo);
+			m_SkinSsboCapacity = m_SkinSsbo ? cap : 0;
+		}
+		if (!m_SkinSsbo)
+		{
+			DrawCaster(mesh, transform);
+			return;
+		}
+		m_SkinSsbo->SetData(palette, jointCount * (uint32_t)sizeof(glm::mat4));
+		m_SkinSsbo->Bind();
+
+		m_DepthSkinnedShader->Bind();
+		m_DepthSkinnedShader->SetMat4("u_LightViewProj", m_LightViewProj);
+		m_DepthSkinnedShader->SetMat4("u_Model", transform);
+		m_DepthSkinnedShader->SetInt("u_SkinBase", 0);
+
 		mesh->GetVertexArray()->Bind();
 		RenderCommand::DrawIndexed(mesh->GetVertexArray(), mesh->GetIndexCount());
 	}
