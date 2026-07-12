@@ -49,14 +49,32 @@ namespace Cosmic
 		// dialogs used elsewhere may have done it) per the H6 gotcha.
 		struct ComInit
 		{
-			bool Owned = false;
+			bool Owned        = false;
+			bool WrongApartment = false;  // thread is already MTA — modal dialogs would deadlock
 			ComInit()
 			{
 				const HRESULT hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
-				Owned = SUCCEEDED(hr);   // RPC_E_CHANGED_MODE => already inited differently; do NOT uninit
+				Owned          = SUCCEEDED(hr);           // S_OK / S_FALSE — same mode, do uninit
+				WrongApartment = (hr == RPC_E_CHANGED_MODE);
 			}
 			~ComInit() { if (Owned) CoUninitialize(); }
 		};
+
+		// IFileDialog is an STA object: created from an MTA thread it lands on a COM
+		// host-STA thread, and the marshalled Show() deadlocks against the owner
+		// window's (non-pumping, blocked) thread. Refuse loudly instead of hanging —
+		// this fires only if something re-initializes the UI thread as MTA before us
+		// (miniaudio's default did exactly that; see MA_COINIT_VALUE in
+		// audio/MiniaudioImpl.cpp).
+		bool GuardApartment(const ComInit& com, const char* who)
+		{
+			if (!com.WrongApartment)
+				return true;
+			CS_CORE_ERROR("{}: calling thread is in the COM multithreaded apartment (MTA) — "
+			              "a modal IFileDialog would deadlock here. Keep the UI thread STA "
+			              "(check MA_COINIT_VALUE / any CoInitializeEx before this call).", who);
+			return false;
+		}
 
 		// Resolve a VFS-or-absolute initial dir to an absolute filesystem path.
 		std::wstring ResolveInitialDir(const std::string& dir)
@@ -132,6 +150,8 @@ namespace Cosmic
 	std::optional<std::string> FileDialog::Open(const FileDialogDesc& desc)
 	{
 		ComInit com;
+		if (!GuardApartment(com, "FileDialog::Open"))
+			return std::nullopt;
 		IFileOpenDialog* dialog = nullptr;
 		if (FAILED(CoCreateInstance(CLSID_FileOpenDialog, nullptr, CLSCTX_INPROC_SERVER,
 		                            IID_PPV_ARGS(&dialog))) || !dialog)
@@ -150,6 +170,8 @@ namespace Cosmic
 	std::optional<std::string> FileDialog::Save(const FileDialogDesc& desc)
 	{
 		ComInit com;
+		if (!GuardApartment(com, "FileDialog::Save"))
+			return std::nullopt;
 		IFileSaveDialog* dialog = nullptr;
 		if (FAILED(CoCreateInstance(CLSID_FileSaveDialog, nullptr, CLSCTX_INPROC_SERVER,
 		                            IID_PPV_ARGS(&dialog))) || !dialog)
@@ -168,6 +190,8 @@ namespace Cosmic
 	std::optional<std::string> FileDialog::PickFolder(const std::string& title, const std::string& initialDir)
 	{
 		ComInit com;
+		if (!GuardApartment(com, "FileDialog::PickFolder"))
+			return std::nullopt;
 		IFileOpenDialog* dialog = nullptr;
 		if (FAILED(CoCreateInstance(CLSID_FileOpenDialog, nullptr, CLSCTX_INPROC_SERVER,
 		                            IID_PPV_ARGS(&dialog))) || !dialog)

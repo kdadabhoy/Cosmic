@@ -4,12 +4,14 @@
 #include "telemetry/TelemetryPanel.h"
 #include "core/Log.h"
 #include "utils/FileDialog.h"   // H6 — generic native dialog (replaces the ad-hoc Win32 call)
+#include "utils/FileSystem.h"   // VFS resolve for the Browse start folder
 
 #include <imgui.h>
 #include <implot.h>
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
+#include <filesystem>
 
 namespace Cosmic
 {
@@ -319,6 +321,23 @@ namespace Cosmic
                 dlg.Title            = "Open Replay File";
                 dlg.Filters          = { { "Scene recordings", "*.bin" }, { "All files", "*.*" } };
                 dlg.DefaultExtension = "bin";
+
+                // Start where the path field points (the app's recording folder via
+                // SetReplayPath, or the folder of the last picked file). The shell
+                // needs an absolute path; skip when the folder doesn't exist yet.
+                {
+                    namespace fs = std::filesystem;
+                    std::string dir = m_ReplayPath;
+                    if (dir.find("://") != std::string::npos)
+                        dir = FileSystem::Resolve(dir);
+                    std::error_code ec;
+                    fs::path start(dir);
+                    if (!fs::is_directory(start, ec))
+                        start = start.parent_path();
+                    if (!start.empty() && fs::is_directory(start, ec))
+                        dlg.InitialDir = fs::absolute(start, ec).string();
+                }
+
                 if (auto picked = FileDialog::Open(dlg))
                     m_ReplayPath = *picked;
             }
