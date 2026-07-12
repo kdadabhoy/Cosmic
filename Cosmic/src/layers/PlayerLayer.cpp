@@ -16,6 +16,7 @@
 #include "renderer/RenderCommand.h"
 #include "utils/Config.h"
 #include "utils/FileSystem.h"
+#include "utils/Branding.h"   // K1 — runtime app icon (manifest-aware)
 #include "core/Log.h"
 
 #include <imgui.h>
@@ -60,12 +61,14 @@ namespace Cosmic
         float fixedHz = 60.0f;
         std::string title = m_ProjectName.empty() ? "Cosmic Player" : m_ProjectName;
         std::string startupFlow;
+        std::string manifestIcon;   // K1 — the S5 `icon` key (project-root relative)
         int  winW = 0, winH = 0;   // 0 => keep the current window size
         if (Ref<Config> cfg = Config::Load("project://project.cproj"))
         {
             m_StartupScene = cfg->GetString("startup_scene", m_StartupScene);
             startupFlow    = cfg->GetString("startup_flow", "");   // U5 (empty => single scene)
             fixedHz        = static_cast<float>(cfg->GetInt("fixed_dt_hz", 60));
+            manifestIcon   = cfg->GetString("icon", "");
             // [window] title/width/height (S5); fall back to the legacy top-level keys.
             title = cfg->GetString("window.title", cfg->GetString("window_title", cfg->GetString("name", title)));
             winW  = static_cast<int>(cfg->GetInt("window.width",  0));
@@ -93,6 +96,18 @@ namespace Cosmic
             Application::Get().GetWindow().SetSize(winW, winH);
         if (auto* ws = Application::Get().GetWorkspaceLayer())
             ws->SetProjectName(title);
+
+        // Runtime app icon (K1): re-resolve now that the project is mounted, so a
+        // packaged app's taskbar shows the project icon at runtime (manifest
+        // `icon` key / project://icon.png), not just on the exe file. The exe-dir
+        // and user:// candidates keep priority (the documented order).
+        {
+            const std::string icon = Branding::ResolveProcessIcon(
+                manifestIcon.empty() ? std::string() : ("project://" + manifestIcon),
+                /*includeProjectIcon=*/true);
+            if (!icon.empty())
+                Application::Get().GetWindow().SetIcon(icon);
+        }
 
         m_Physics.Init();   // J4 — one world for the layer; scenes bind/unbind to it
 

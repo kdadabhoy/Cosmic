@@ -6,15 +6,18 @@
 // (feeding the multi-selection), ImGuizmo transform manipulation whose drags
 // become coalesced TransformEdit undo commands, a ground grid + origin axes +
 // selection outline drawn through Renderer3D's batched lines, camera snap views,
-// frame-selection, and camera bookmarks. Owned + driven by StarforgeApp.
+// frame-selection, camera bookmarks, and the view modes (R8: Lit / Unlit /
+// Wireframe via the engine's SetPolygonMode-backed SceneRendererSettings flag /
+// Entity-ID flat-color debug view). Owned + driven by StarforgeApp.
 //
-// DEVIATION (documented): a true polygon-fill "Wireframe" view mode needs an
-// engine polygon-mode verb that does not exist yet (renderer/ has no fill-mode
-// API); that + ID-buffer visualize are a small additive engine follow-up. The
-// grid/axes here reuse the existing Renderer3D line batch rather than a new,
-// duplicate renderer/DebugDraw module (which would only re-implement it).
+// (The old deviation note about a missing polygon-mode verb is closed — doc 18
+// R8 shipped RenderCommand::SetPolygonMode + these view modes, 2026-07-11.)
+// The grid/axes here reuse the existing Renderer3D line batch rather than a
+// new, duplicate renderer/DebugDraw module (which would only re-implement it).
 
 #include "EditorContext.h"
+#include "EditorCameraRig.h"
+#include "EditorPrefs.h"
 
 #include <Cosmic.h>
 
@@ -23,6 +26,13 @@ namespace Starforge
     class ViewportController
     {
     public:
+        // Viewport view mode (doc 18 R8; the selector lives on the K6 strip +
+        // View menu). Lit = the full SceneRenderer path; Unlit = lights/IBL/
+        // shadows neutralized (flat albedo); Wireframe = the engine
+        // SceneRendererSettings::Wireframe line rasterization; EntityID = every
+        // mesh flat-colored by a hash of its entity id (the ID-buffer visualize).
+        enum class ViewMode : int { Lit = 0, Unlit, Wireframe, EntityID };
+
         void Init();
 
         // Input: gizmo hotkeys (W/E/R/F), camera bookmarks, UI interaction (U1),
@@ -39,7 +49,7 @@ namespace Starforge
         // — picking must unproject through it; `uiBandUv` = the letterbox band
         // as viewport fractions {x,y,w,h} ((0,0,1,1) = full) — the canvas UI is
         // laid out inside it, so pointer hit-testing uses the same rect.
-        void OnUpdate(EditorContext& ctx, Cosmic::OrbitCameraController& cam, float ts,
+        void OnUpdate(EditorContext& ctx, EditorCameraRig& rig, float ts,
                       bool playing, Cosmic::Camera2DController* cam2d = nullptr,
                       const Cosmic::Camera* renderCamOverride = nullptr,
                       const glm::vec4& uiBandUv = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
@@ -60,16 +70,65 @@ namespace Starforge
         void DrawOverlayContent2D(EditorContext& ctx, const Cosmic::Camera2DController& cam);
 
         // The gizmo, drawn inside the viewport overlay window (between
-        // WorkspaceLayer::BeginViewportOverlay/EndViewportOverlay). Takes the
-        // ACTIVE render camera — ImGuizmo detects ortho vs perspective itself.
+        // WorkspaceLayer::BeginViewportOverlay/EndViewportOverlay), AFTER
+        // DrawViewportOverlays (it yields while a strip widget is hovered or
+        // active). Takes the ACTIVE render camera — ImGuizmo detects ortho vs
+        // perspective itself.
         void DrawGizmo(EditorContext& ctx, const Cosmic::Camera& cam);
 
-        // Arm 1-unit snapping (the 2D pixel-grid convention) — called by the
-        // shell when 2D mode turns on.
-        void ArmPixelSnap() { m_Snap = true; m_SnapValue = 1.0f; }
+        // Arm 1-unit MOVE snapping (the 2D pixel-grid convention) — called by
+        // the shell when 2D mode turns on.
+        void ArmPixelSnap() { m_SnapMoveOn = true; m_SnapMove = 1.0f; }
 
-        // The tool strip (gizmo mode, snap, grid, snap-views) for the top bar.
-        void DrawToolbar(EditorContext& ctx, Cosmic::OrbitCameraController& cam);
+        // K6 — the in-viewport header strip (translucent, top-left): gizmo op
+        // icons incl. Universal (K11), World/Local, three per-operation snap
+        // chips, grid/collider/physics toggles, the R8 view-mode dropdown, and
+        // the K7 camera dropdown (+ fly speed while flying). Also draws the K8
+        // axis navigator (bottom-left) and the K9 stats chips (bottom-right).
+        // Call between BeginViewportOverlay/EndViewportOverlay, BEFORE DrawGizmo.
+        // Hidden while playing (same rule as the old toolbar); 2D mode hides the
+        // 3D-only pieces (camera dropdown, nav cube).
+        void DrawViewportOverlays(EditorContext& ctx, EditorCameraRig& rig,
+                                  bool playing, bool mode2D);
+
+        // K8 — render the navigation cube's offscreen pass for this frame's
+        // camera. Call from RenderViewport BEFORE binding the viewport FBO (the
+        // cube binds + unbinds its own target).
+        void PrerenderNavCube(const Cosmic::Camera& cam, bool playing, bool mode2D);
+
+        // K6 — snap prefs round-trip (EditorPrefs persistence).
+        void LoadSnapPrefs(const Prefs::EditorSettings& s);
+        void SaveSnapPrefs(Prefs::EditorSettings& s) const;
+
+        // K9 — stats-chip row toggle (View menu).
+        bool& ShowStatsChips() { return m_ShowStatsChips; }
+
+        // K12 — when the SceneRenderer outline pass is on this frame, the mesh
+        // wire boxes stand down (lights/colliders keep their glyphs; the boxes
+        // return automatically in the bypass view modes where the pass is off).
+        void SetOutlinePassActive(bool active) { m_OutlinePassActive = active; }
+
+        // K13 — drag-and-drop into the viewport: accepts the Content Browser's
+        // ASSET_PATH payload over the whole viewport rect. Meshes/prefabs spawn
+        // at the probed world point under the cursor (fallback: 10 m along the
+        // camera ray); a .cmat assigns the ID-picked entity's MaterialPath; an
+        // image assigns a hit SpriteRenderer's TexturePath. Every drop is ONE
+        // undo step; drops are refused while playing or mid-gizmo-drag. Call
+        // between BeginViewportOverlay/EndViewportOverlay. `cam2d` non-null =
+        // 2D mode (drop points land on the XY plane at z = 0).
+        void UpdateViewportDragDrop(EditorContext& ctx, const Cosmic::Camera& renderCam,
+                                    Cosmic::Camera2DController* cam2d, bool playing);
+
+        // View mode (R8). StarforgeApp::RenderViewport routes on it each frame.
+        ViewMode GetViewMode() const          { return m_ViewMode; }
+        void     SetViewMode(ViewMode m)      { m_ViewMode = m; }
+
+        // The Entity-ID debug view (R8): draws every mesh (MeshRenderer, LOD
+        // groups, voxel chunks) flat-colored by a hash of its entt id — the
+        // human-readable form of the picker's integer ID buffer. Owns its own
+        // BeginScene/EndScene; call with the viewport FBO bound + cleared
+        // INSTEAD of the SceneRenderer path.
+        void DrawEntityIdView(EditorContext& ctx, const Cosmic::Camera& cam);
 
         // Depth probe for orbit-about-surface (H1): renders a one-off ID pass at the
         // current camera pose and reconstructs the world point under the given SCREEN
@@ -83,10 +142,17 @@ namespace Starforge
         bool GizmoBusy() const { return m_GizmoActive || m_GizmoOver; }
 
     private:
-        void FrameSelection(EditorContext& ctx, Cosmic::OrbitCameraController& cam);
+        void FrameSelection(EditorContext& ctx, EditorCameraRig& rig);
         bool SelectionBounds(EditorContext& ctx, glm::vec3& mn, glm::vec3& mx) const;
 
         Cosmic::Ref<Cosmic::ScenePicker> m_Picker;
+
+        // K8 — engine navigation cube (bottom-left overlay).
+        Cosmic::Ref<Cosmic::NavigationCube> m_NavCube;
+        bool m_NavCubeFresh = false;   // rendered this frame (2D/play skip it)
+
+        bool m_ShowStatsChips = true;  // K9 — chip row toggle (View menu)
+        bool m_OutlinePassActive = false;   // K12 — wire boxes yield to the pass
 
         // U3 — the 2D rig while 2D mode is active (set by OnUpdate each frame,
         // null in 3D mode). FrameSelection + the toolbar Frame button route
@@ -95,8 +161,17 @@ namespace Starforge
 
         Cosmic::Gizmo::Operation m_Op    = Cosmic::Gizmo::Operation::Translate;
         Cosmic::Gizmo::Space     m_Space = Cosmic::Gizmo::Space::World;
-        bool  m_Snap      = false;
-        float m_SnapValue = 0.5f;
+        ViewMode                 m_ViewMode = ViewMode::Lit;   // R8 view modes
+
+        // K6 — per-operation snapping (persisted via EditorPrefs). Universal
+        // uses the MOVE snap (ImGuizmo takes one snap per call — documented).
+        bool  m_SnapMoveOn   = false;
+        bool  m_SnapRotateOn = false;
+        bool  m_SnapScaleOn  = false;
+        float m_SnapMove     = 0.25f;   // m
+        float m_SnapRotate   = 15.0f;   // deg
+        float m_SnapScale    = 0.1f;
+
         bool  m_ShowGrid  = true;
         bool  m_ShowColliders    = true;    // J8 — collider wireframe gizmos
         bool  m_ShowPhysicsDebug = false;   // J8 — live Jolt body outlines during Play

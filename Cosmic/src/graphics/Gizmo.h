@@ -54,7 +54,12 @@ namespace Cosmic
 	class COSMIC_API Gizmo
 	{
 	public:
-		enum class Operation { Translate, Rotate, Scale };
+		// Universal (K11) combines translate arrows + rotate rings + universal
+		// scale handles in ONE gizmo (ImGuizmo TRANSLATE|ROTATE|SCALEU). ImGuizmo
+		// takes a single snap value per call, so under Universal the caller's
+		// snap applies to the MOVE handles (rotate/scale drag unsnapped) — pass
+		// the move increment there.
+		enum class Operation { Translate, Rotate, Scale, Universal };
 		enum class Space     { Local, World };
 
 		/** @brief The screen-space rect (ImGui screen px) the gizmo draws + hit-tests within. */

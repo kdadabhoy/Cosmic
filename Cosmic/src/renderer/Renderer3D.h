@@ -162,6 +162,28 @@ namespace Cosmic
 		/** @brief Unit cube (±0.5) wireframe under `transform` — AABBs, bounds, zones. */
 		static void DrawWireBox(const glm::mat4& transform, const glm::vec4& color);
 
+		/**
+		 * @brief Infinite editor grid (K10): a single fullscreen-triangle draw
+		 * whose fragment shader ray-casts the pixel onto the y = Height plane —
+		 * no extent, decade cell switching with distance, fwidth-antialiased
+		 * lines, axis highlighting, and a camera-height-scaled distance fade.
+		 * FadeDistance 0 = auto. Draws IMMEDIATELY (not queued) with depth test
+		 * ON / depth write OFF (restored) under the default alpha blend, so
+		 * scene geometry occludes it and it occludes nothing. Call between
+		 * BeginScene/EndScene. Default-off by nature — nothing draws unless an
+		 * app calls it (DrawGrid is untouched; compat gate holds).
+		 */
+		struct InfiniteGridDesc
+		{
+			float     Height = 0.0f;
+			glm::vec4 MinorColor{ 0.30f, 0.32f, 0.36f, 0.55f };
+			glm::vec4 MajorColor{ 0.45f, 0.47f, 0.52f, 0.85f };
+			glm::vec4 AxisXColor{ 0.86f, 0.24f, 0.24f, 0.95f };   // z == 0 line
+			glm::vec4 AxisZColor{ 0.25f, 0.45f, 0.90f, 0.95f };   // x == 0 line
+			float     FadeDistance = 0.0f;                        // 0 = auto
+		};
+		static void DrawInfiniteGrid(const InfiniteGridDesc& desc = {});
+
 		////////////////////////////////
 		// Mesh Submission (Lambert)
 		///////////////////////////////

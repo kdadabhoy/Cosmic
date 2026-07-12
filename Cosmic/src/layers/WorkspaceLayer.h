@@ -235,6 +235,16 @@ namespace Cosmic
             m_DockspaceInitialized = false;
         }
 
+        // Reserve a horizontal band at the BOTTOM of the OS window, below the
+        // dockspace (K5 — status bars). The dock host shrinks by `px` so docked
+        // panels never underlap whatever the client draws in the freed band (the
+        // client owns that drawing — position at viewport bottom). 0 (default)
+        // = the historical full-height host, byte-identical for every app that
+        // never calls this. Pass a font-derived height so DPI scaling follows
+        // the UI scale for free.
+        void  SetBottomInsetPixels(float px) { m_BottomInsetPx = px < 0.0f ? 0.0f : px; }
+        float GetBottomInsetPixels() const   { return m_BottomInsetPx; }
+
         // Show/hide the engine "File / View" chrome menus in the host title bar (H5).
         // An app that supplies its OWN menu bar (Starforge) hides these to avoid a
         // duplicate "File" menu; the borderless min/max/close controls + the centered
@@ -385,6 +395,9 @@ namespace Cosmic
 
         // Per-edge minimum pixels (H5, DPI-scaled) — tunable via SetEdgeMinPixels.
         float m_TopMinPx = 0.0f, m_BottomMinPx = 0.0f, m_LeftMinPx = 0.0f, m_RightMinPx = 0.0f;
+
+        // Bottom band reserved below the dock host (K5) — see SetBottomInsetPixels.
+        float m_BottomInsetPx = 0.0f;
 
         // Chrome menus + viewport title (H5).
         bool        m_ShowChromeMenus = true;

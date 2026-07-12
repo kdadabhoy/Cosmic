@@ -34,6 +34,7 @@
 
 #include <glm/glm.hpp>
 #include <cstdint>
+#include <vector>
 
 namespace Cosmic
 {
@@ -52,8 +53,14 @@ namespace Cosmic
 		 * @brief Render `scene`'s entity IDs (and color, harmlessly) into the internal
 		 * MRT FBO at (width, height). Resizes the FBO on demand. Clears the ID
 		 * attachment to -1 first so empty space reads as "no entity".
+		 *
+		 * `only` (K12 — the selection-outline mask): when non-null, ONLY those
+		 * entities render (MeshRenderer / LODGroup levels / voxel chunks — the same
+		 * shapes the full pass draws), so the ID attachment becomes a selection
+		 * mask (-1 outside, entity ids inside). Null = the historical full pass.
 		 */
-		void RenderIdPass(Scene& scene, const Camera& camera, uint32_t width, uint32_t height);
+		void RenderIdPass(Scene& scene, const Camera& camera, uint32_t width, uint32_t height,
+		                  const std::vector<entt::entity>* only = nullptr);
 
 		/**
 		 * @brief The Entity under a viewport pixel — x from the LEFT, y from the TOP
@@ -74,6 +81,8 @@ namespace Cosmic
 
 		/** @brief Color attachment handle (for an optional debug ImGui::Image view). */
 		uint32_t GetColorTextureID() const;
+		/** @brief RED_INTEGER id attachment handle (K12 — the outline pass samples it). */
+		uint32_t GetIdTextureID() const;
 		uint32_t GetWidth() const;
 		uint32_t GetHeight() const;
 

@@ -74,6 +74,17 @@ namespace Starforge
         void CommitTransform(EditorContext& ctx, Cosmic::Entity e,
                              const Cosmic::TransformComponent& before);
 
+        // Record an ALREADY-instantiated subtree as ONE undoable create step
+        // (K13 viewport drops: the prefab was spawned + positioned live first,
+        // so the snapshot — and therefore redo — carries the drop point).
+        void RecordSpawn(EditorContext& ctx, Cosmic::Entity root, const std::string& label);
+
+        // Assign a .cmat to `e`'s MeshRenderer as ONE undo step (K13 material
+        // drops). Applies now: sets MaterialPath AND resolves MaterialAsset
+        // through AssetLibrary (undo restores both — the plain reflected string
+        // write would leave the resolved asset stale).
+        void AssignMaterial(EditorContext& ctx, Cosmic::Entity e, const std::string& vfsPath);
+
         // Set one voxel (world voxel coords) on `e`'s VoxelVolume to `newId`,
         // undoable (V4). Applies immediately; records the old id for undo.
         // Consecutive edits sharing `stroke` coalesce into one undo step (a brush

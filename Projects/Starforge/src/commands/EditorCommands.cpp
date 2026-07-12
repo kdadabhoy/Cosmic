@@ -397,6 +397,58 @@ namespace Starforge
         return e;
     }
 
+    void Commands::RecordSpawn(EditorContext& ctx, Entity root, const std::string& label)
+    {
+        if (!ctx.Scene || !root) return;
+        ctx.SelectOnly(root);
+        ctx.MarkDirty();
+        Snapshot snap = Snapshot::Capture(*ctx.Scene, root);
+        ctx.Commands.Push(std::make_unique<RestoreCommand>(
+            ctx, std::move(snap), IdOf(root), label));
+    }
+
+    namespace
+    {
+        // K13 — material drop: path + resolved asset move together so undo/redo
+        // are visually exact (the string-only reflected write leaves the old
+        // Ref<MaterialAsset> live).
+        class AssignMaterialCommand : public ICommand
+        {
+        public:
+            AssignMaterialCommand(EditorContext& ctx, uint64_t uuid,
+                                  std::string before, std::string after)
+                : m_Ctx(&ctx), m_Uuid(uuid), m_Before(std::move(before)), m_After(std::move(after)) {}
+
+            void Do() override   { Apply(m_After); }
+            void Undo() override { Apply(m_Before); }
+            std::string Name() const override { return "Assign Material"; }
+
+        private:
+            void Apply(const std::string& path)
+            {
+                Entity e = Resolve(*m_Ctx, m_Uuid);
+                if (!e || !e.HasComponent<MeshRendererComponent>()) return;
+                auto& mr = e.GetComponent<MeshRendererComponent>();
+                mr.MaterialPath         = path;
+                mr.MaterialAsset        = path.empty() ? nullptr : AssetLibrary::GetMaterial(path);
+                mr.MaterialPathResolved = true;   // the sync must not overwrite this
+                m_Ctx->MarkDirty();
+            }
+
+            EditorContext* m_Ctx;
+            uint64_t       m_Uuid;
+            std::string    m_Before, m_After;
+        };
+    }
+
+    void Commands::AssignMaterial(EditorContext& ctx, Entity e, const std::string& vfsPath)
+    {
+        if (!ctx.Scene || !e || !e.HasComponent<MeshRendererComponent>()) return;
+        const std::string before = e.GetComponent<MeshRendererComponent>().MaterialPath;
+        if (before == vfsPath) return;
+        ctx.Commands.Execute(std::make_unique<AssignMaterialCommand>(ctx, IdOf(e), before, vfsPath));
+    }
+
     Entity Commands::Duplicate(EditorContext& ctx, Entity src)
     {
         if (!ctx.Scene || !src) return {};

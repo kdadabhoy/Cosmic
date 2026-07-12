@@ -107,6 +107,11 @@ namespace Cosmic
 		// (opaque passes that must not read the destination).
 		enum class BlendMode { Alpha = 0, Additive, Off };
 
+		// Triangle rasterization fill for SetPolygonMode (R8 — wireframe view
+		// modes). Fill is the engine default from Init(); Line rasterizes triangle
+		// edges only (debug/wireframe passes).
+		enum class PolygonMode { Fill = 0, Line };
+
 	public:
 		virtual ~RendererAPI() = default;
 
@@ -144,6 +149,13 @@ namespace Cosmic
 		// restore contract: passes that switch to Additive/Off (GPU particles,
 		// opaque post passes) must restore Alpha before their scope ends.
 		virtual void SetBlendMode(BlendMode mode) = 0;
+
+		// Triangle fill mode (R8). Defaults to Fill at Init(). Same restore
+		// contract as the other state verbs: a pass that switches to Line
+		// (wireframe debug view) must restore Fill before its scope ends —
+		// fullscreen post/composite triangles rasterized as lines are a blank
+		// frame, not an error the driver reports.
+		virtual void SetPolygonMode(PolygonMode mode) = 0;
 
 		////////////////////////////////
 		// Submission Commands

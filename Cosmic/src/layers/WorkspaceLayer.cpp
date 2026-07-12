@@ -134,8 +134,12 @@ namespace Cosmic
 		// STEP 1 — Full-screen transparent host window
 		// ------------------------------------------------------------------
 		ImGuiViewport* viewport = ImGui::GetMainViewport();
+		// K5 — an optional bottom band (status bars) is carved out of the host so
+		// docked panels never underlap it. 0 by default = the historical host.
+		ImVec2 hostSize = viewport->Size;
+		hostSize.y = std::max(1.0f, hostSize.y - m_BottomInsetPx);
 		ImGui::SetNextWindowPos(viewport->Pos);
-		ImGui::SetNextWindowSize(viewport->Size);
+		ImGui::SetNextWindowSize(hostSize);
 		ImGui::SetNextWindowViewport(viewport->ID);
 
 		// In fullscreen the custom title bar / menu bar is hidden so content fills

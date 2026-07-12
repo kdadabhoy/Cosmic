@@ -231,7 +231,7 @@ or modding need — user decision 2026-07-04 keeps C++-first) · sequencer/cinem
   (sequencer) reuses Phase 24's Timeline widget — both stay unlock-driven, but expect the
   flagship to fire them.
 
-### Phase 22 — Editor shell, viewport & branding *(doc 21, K1–K13)* — now, parallel-safe
+### Phase 22 — Editor shell, viewport & branding *(doc 21, K1–K13)* — ✅ code-complete 2026-07-11
 Drop-a-PNG branding (window/taskbar icon + top-bar logo, hot-swap, no code — user request) →
 product toolbar w/ centered transport → layout presets → undo UI → status bar → viewport
 header strip + per-op snapping → fly/possess camera rig → axis navigator → stats chips →
@@ -239,6 +239,22 @@ infinite grid → universal gizmo → selection outline → viewport drag-drop.
 - **AI tier:** K12 stronger model (post-pass + state-restore); K1/K7 medium; the rest low/medium.
 - **Done when:** every K-item's acceptance demonstrated; shipped apps byte-identical (compat
   gate); the K1 icon swap works live in a recorded clip.
+- **Status 2026-07-11:** doc 18 **R8** (prerequisite: `SetPolygonMode` verb +
+  Lit/Unlit/Wireframe/Entity-ID view modes) plus **all 13 work orders (K1–K13) landed**
+  (UNcommitted). Engine gained only generic default-off/call-only verbs (`Window::SetIcon`
+  16/32/48/256 via ImageIO + `utils/Branding` resolution order, `SceneRendererSettings::
+  Wireframe`/`Outline*` + `SceneRenderDesc::SelectedEntities` + the filtered `ScenePicker`
+  id pass, `Renderer3D::DrawInfiniteGrid`, `Gizmo::Operation::Universal`,
+  `WorkspaceLayer::SetBottomInsetPixels`, `CommandStack::UndoNameAt/RedoNameAt`,
+  `Bindings::TexUnitOutlineMask=13`); Starforge gained the product toolbar (measured centered
+  icon transport + undo badges/history), layout presets (`LayoutPresets`, per-project
+  persistence), the status bar, the viewport instrument (header strip w/ per-op snapping,
+  `EditorCameraRig` orbit/fly/possess, NavigationCube adoption, stats chips, infinite grid),
+  the post-composite selection outline, viewport drag-drop (single-undo spawns/assigns), and
+  the drop-a-file branding pipeline with FileWatcher hot-swap + a default molten-orange
+  `branding/icon.png` staged next to the exe. Build green Debug+Release zero warnings,
+  `CosmicTests` **276/276**, GL-conformance clean, compat gate held. Remaining = the user's
+  on-GPU acceptance (incl. the recorded K1 live icon-swap clip) + commit.
 
 ### Phase 23 — Asset workflows, Inspector & Hierarchy v2 *(doc 22, T1–T18)* — after/with 22
 Reflection metadata v2 → asset accounting → file-drop events → Content Browser v2 (two-pane/
@@ -358,7 +374,7 @@ Phases 14–18: ✅ code-complete foundation (14 hardening, 15 physics, 16 platf
 
 v4 march (2026-07-11):
 Phase 17 remainder ✅ (U1c/U3/U4/U6/U7/U8 landed 2026-07-11) ──► Phases 25, 27(2D), 28 unblocked
-Phase 22 (shell/viewport/branding) ──► parallel-safe NOW (R8 from doc 18 rides K6)
+Phase 22 ✅ code-complete 2026-07-11 (R8 + K1–K13; user acceptance + commit pending)
 doc 19: A1 (assimp) ──► A4 (PreviewRig) ──► A2 (skeletal runtime)
 Phase 23 (workflows; wants A4) ──► Phase 24 (anim editors; wants A1/A2/A4)
 Phase 24 M1 (doc host) + doc 16 U6 ──► Phase 25 (graphs/story)

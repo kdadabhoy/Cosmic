@@ -48,6 +48,7 @@
 #include "renderer/ShadowMap.h"        // owned by value
 
 #include <glm/glm.hpp>
+#include <entt/entt.hpp>               // K12 — SceneRenderDesc::SelectedEntities handles
 
 #include <cstdint>
 #include <functional>
@@ -65,6 +66,8 @@ namespace Cosmic
 	class ParticleEmitter;
 	class RibbonEmitter;
 	class Scene;
+	class ScenePicker;             // K12 — the outline pass's id-mask renderer
+	class Shader;
 	class CoverageCapture;
 	struct EnvironmentComponent;   // E4 — ApplyEnvironment maps it into a desc
 
@@ -142,6 +145,20 @@ namespace Cosmic
 		// The tint is taken from the sun color; the sun screen position is derived
 		// from the frame camera. Auto-uses the detailed-sky when DetailedSky is set.
 		bool  LensFlare = false; float LensFlareIntensity = 0.35f;
+		// Wireframe (R8): rasterize the geometry passes (opaque + transparents)
+		// with PolygonMode::Line and skip the skybox draw (a full-screen cube's 12
+		// edges are noise, not information) — the standard editor debug view. Post
+		// passes always run with Fill restored. Default off = byte-identical.
+		bool Wireframe = false;
+		// Selection outline (K12): after the composite, entities listed in
+		// SceneRenderDesc::SelectedEntities render into an id-mask FBO (a
+		// selection-filtered ScenePicker pass) and a fullscreen edge-detect
+		// composites a crisp silhouette ring over the LDR frame. Editor-facing
+		// but generic (any host can outline any entity set). Default off =
+		// byte-identical; requires desc.EcsScene + a non-empty selection.
+		bool      OutlineEnabled = false;
+		glm::vec3 OutlineColor{ 1.0f, 0.62f, 0.11f };
+		float     OutlineWidthPx = 2.0f;
 	};
 
 	/**
@@ -178,6 +195,11 @@ namespace Cosmic
 		float            CoverageAccumPerSec = 0.0f;
 		float            CoverageMeltPerSec  = 0.0f;
 		float            DeltaTime           = 0.0f;   // seconds since last frame
+
+		// K12 — the entities the outline pass silhouettes (only read when
+		// Settings.OutlineEnabled and EcsScene are set). Points at caller-owned
+		// storage that must outlive the Render() call (the editor's selection).
+		const std::vector<entt::entity>* SelectedEntities = nullptr;
 
 		std::function<void(const SceneDrawContext&)> DrawOpaque;
 		std::function<void(const SceneDrawContext&)> DrawTransparent;  // HDR still bound, after water/particles
@@ -232,10 +254,17 @@ namespace Cosmic
 		void PassOpaqueHDR(const SceneRenderDesc& desc);
 		void PassTransparents(const SceneRenderDesc& desc);
 		void PassPostAndComposite(const SceneRenderDesc& desc);
+		void PassOutline(const SceneRenderDesc& desc);    // K12 (LDR bound, after composite)
 
 		EnvironmentMap   m_Environment;
 		PostProcessStack m_Post;
 		ShadowMap        m_Shadow;
+
+		// K12 — lazily created on the first outlined frame; zero cost while the
+		// setting stays off (the compat default).
+		Ref<ScenePicker> m_OutlineMask;
+		Ref<Shader>      m_OutlineShader;
+		bool             m_OutlineShaderTried = false;
 
 		uint32_t m_Width  = 0;
 		uint32_t m_Height = 0;

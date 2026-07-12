@@ -33,12 +33,12 @@
 | In-place texture/asset hot reload into held Refs | cache-slot swap only | 20 · doc 19 A5 | live-tuning workflow | S | ⏸ |
 | Terrain sculpt/splat brushes | recipe params only | 20 · doc 19 A6 | param terrain stops being enough | L | ⏸ |
 | Prefab overrides v2 (field-level diff/propagation) | whole-instance apply/revert | 20 · doc 19 A7 | content-heavy project | M | ⏸ |
-| Wireframe / entity-ID view modes | no fill-mode verb | 19 · doc 18 R8 | **fired 2026-07-11** (rides Phase 22 K6's viewport strip) | S | ☐ |
+| Wireframe / entity-ID view modes | no fill-mode verb | 19 · doc 18 R8 | **fired 2026-07-11** (rides Phase 22 K6's viewport strip) | S | ✅ 2026-07-11 |
 | Sequencer / cinematics (keyframes on reflected fields) | none | 21 · doc 20 C6 | trailer/cutscene need (reuses Phase 24 M2's Timeline widget; Forge Isle may fire it) | L | ⏸ |
-| Drop-a-file branding: window/taskbar icon + top-bar logo, hot-swap | GLFW default icon in dev; exe-embed only at package time | 22 · doc 21 K1 | now (user request 2026-07-11) | M | ☐ |
-| Editor chrome v2 (icon toolbar/centered transport, layout presets, undo UI, status bar) | text-button strip, one layout | 22 · doc 21 K2–K5 | now (editor vision) | M | ☐ |
-| Viewport instrument (header strip, per-op snap, fly/possess camera, axis navigator, stats chips, infinite grid) | top-bar toolbar, one snap value, orbit-only | 22 · doc 21 K6–K10 | now | L | ☐ |
-| Universal gizmo + selection outline + viewport drag-drop | single-op gizmo, wire-box highlight, Inspector-only drops | 22 · doc 21 K11–K13 | now | M | ☐ |
+| Drop-a-file branding: window/taskbar icon + top-bar logo, hot-swap | GLFW default icon in dev; exe-embed only at package time | 22 · doc 21 K1 | now (user request 2026-07-11) | M | ✅ 2026-07-11 |
+| Editor chrome v2 (icon toolbar/centered transport, layout presets, undo UI, status bar) | text-button strip, one layout | 22 · doc 21 K2–K5 | now (editor vision) | M | ✅ 2026-07-11 |
+| Viewport instrument (header strip, per-op snap, fly/possess camera, axis navigator, stats chips, infinite grid) | top-bar toolbar, one snap value, orbit-only | 22 · doc 21 K6–K10 | now | L | ✅ 2026-07-11 |
+| Universal gizmo + selection outline + viewport drag-drop | single-op gizmo, wire-box highlight, Inspector-only drops | 22 · doc 21 K11–K13 | now | M | ✅ 2026-07-11 |
 | Reflection metadata v2 (per-field docs/ranges/units → tooltips + bounded widgets) | name/kind/flags only | 23 · doc 22 T1/T10 | now | M | ☐ |
 | Asset accounting/enumeration + JobSystem introspection panels | none | 23 · doc 22 T2/T18 | now | M | ☐ |
 | Content Browser v2 (tree pane, history, search, rename+retarget, preview/metadata/audio, import, OS drops) | single-pane grid, texture thumbs only | 23 · doc 22 T3–T8 | now | L | ☐ |

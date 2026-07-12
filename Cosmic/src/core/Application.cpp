@@ -2,6 +2,7 @@
 #include "core/Application.h"
 #include "core/Version.h"
 #include "utils/FileSystem.h"
+#include "utils/Branding.h"    // K1 — boot app-icon resolution
 #include "renderer/Renderer.h"
 #include "renderer/RenderCommand.h"
 #include "core/Timestep.h"
@@ -545,9 +546,20 @@ namespace Cosmic
 		// device init logs a warning and the subsystem becomes a no-op.
 		Cosmic::AudioEngine::Init();
 
-		// 1. Create the window 
+		// 1. Create the window
 		m_Window = CreateScope<Window>(DEFAULT_WIDTH, DEFAULT_HEIGHT, DEFAULT_WINDOW_TITLE);
 		m_Window->SetEventCallback([this](Event& e) { OnEvent(e); });
+
+		// 1b. Drop-a-file branding (K1): every host boots with the conventional
+		//     app icon when one exists (<exe>/branding/icon.png -> user://
+		//     override). Hosts with a mounted project re-resolve with the
+		//     manifest icon on attach (PlayerLayer); no file -> the platform
+		//     default icon, exactly as before.
+		{
+			const std::string icon = Branding::ResolveProcessIcon();
+			if (!icon.empty())
+				m_Window->SetIcon(icon);
+		}
 
 		// --- THE CRITICAL HAZEL FIX ---
 		// Explicitly lock your frame present scheduling onto your primary monitor refresh rate on boot!

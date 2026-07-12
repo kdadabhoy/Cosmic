@@ -19,10 +19,11 @@ namespace Cosmic
 		{
 			switch (op)
 			{
-			case Gizmo::Operation::Rotate: return ImGuizmo::ROTATE;
-			case Gizmo::Operation::Scale:  return ImGuizmo::SCALE;
+			case Gizmo::Operation::Rotate:    return ImGuizmo::ROTATE;
+			case Gizmo::Operation::Scale:     return ImGuizmo::SCALE;
+			case Gizmo::Operation::Universal: return ImGuizmo::UNIVERSAL;   // K11
 			case Gizmo::Operation::Translate:
-			default:                       return ImGuizmo::TRANSLATE;
+			default:                          return ImGuizmo::TRANSLATE;
 			}
 		}
 

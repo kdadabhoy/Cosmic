@@ -21,6 +21,8 @@
 #include "voxel/VoxelRender.h"
 #include "core/Version.h"
 #include "utils/FileSystem.h"
+#include "utils/Branding.h"          // K1 — drop-a-file branding resolution
+#include "ui/IconsLucide.h"          // K2 — icon toolbar glyphs
 
 #include <imgui.h>
 #include <implot.h>
@@ -85,16 +87,15 @@ namespace Starforge
         m_LogSink->set_pattern("[%n] %v");   // panel adds its own timestamp column (H10)
         Cosmic::Log::AddSink(m_LogSink);
 
-        m_Camera.SetNavigationStyle(Cosmic::NavStyle::CAD);
-        m_Camera.SnapView(Cosmic::ViewPreset::Iso, /*animate=*/false);
+        m_Rig.Orbit().SnapView(Cosmic::ViewPreset::Iso, /*animate=*/false);
         m_Viewport.Init();
 
         // Orbit-about-surface (H1): pivot on the point under the cursor via a one-off
         // depth probe. Invoked only when an orbit drag begins; misses fall back to the
         // controller's ray/target-plane pivot.
-        m_Camera.SetPivotProbe([this](const glm::vec2& screenMouse, glm::vec3& out) -> bool
+        m_Rig.Orbit().SetPivotProbe([this](const glm::vec2& screenMouse, glm::vec3& out) -> bool
         {
-            return m_Viewport.ProbeWorldPoint(m_Ctx, m_Camera.GetCamera(), screenMouse, out);
+            return m_Viewport.ProbeWorldPoint(m_Ctx, m_Rig.Orbit().GetCamera(), screenMouse, out);
         });
 
         // Editor identity: apply the forge accent, remembering the previous theme
@@ -102,7 +103,13 @@ namespace Starforge
         m_PrevTheme = Cosmic::ThemeManager::CurrentName();
         ApplyEditorTheme();
 
+        // Drop-a-file branding (K1): window/taskbar icon + top-bar logo from
+        // branding/icon.png (user:// override wins next) — then hot-swapped
+        // whenever the file changes on disk.
+        ApplyBrand();
+
         m_Settings = Prefs::LoadSettings();
+        m_Viewport.LoadSnapPrefs(m_Settings);   // K6 — per-op snap values persist
 
         // First-run: offer the "Forge Playground" sample once (E21). Only when the
         // sample isn't already present and the user hasn't been asked before.
@@ -139,6 +146,9 @@ namespace Starforge
 
         StopScene();                 // tear down script instances before scene reset
         m_SrcWatcher.Stop();
+        m_BrandWatcher.Stop();       // K1 — stop the branding hot-swap watcher
+        m_BrandTex.reset();          // release the logo texture while GL is live
+        m_Viewport.SaveSnapPrefs(m_Settings);   // K6 — persist per-op snap values
         Prefs::SaveSettings(m_Settings);
         m_SceneRenderer.Shutdown();  // free GPU subsystems while the GL context is live (H2)
         m_Ctx.ClearSelection();
@@ -154,6 +164,7 @@ namespace Starforge
             ws->SetChromeMenusVisible(true);
             ws->SetViewportTitle("Viewport");
             ws->SetEdgeMinPixels(0.0f, 0.0f, 0.0f, 0.0f);
+            ws->SetBottomInsetPixels(0.0f);   // K5 — release the status-bar band
             ws->SetViewportVisible(true);   // homescreen may have hidden it
         }
 
@@ -198,6 +209,10 @@ namespace Starforge
         // hides it (see OnAttach/CloseProject) so re-show it here.
         if (auto* ws = Cosmic::Application::Get().GetWorkspaceLayer())
             ws->SetViewportVisible(true);
+
+        // K3 — restore this project's active workspace layout (Level when unset).
+        const std::string preset = LayoutPresets::LoadActive(ProjectLayoutKey());
+        ApplyLayoutPreset(preset.empty() ? "Level" : preset);
     }
 
     void StarforgeApp::OpenProject(const Prefs::ProjectEntry& e)
@@ -807,9 +822,8 @@ namespace Starforge
                 const glm::vec3 off = pos - target;   // = -fwd * dist, length dist
                 const float pitch = glm::degrees(std::asin(glm::clamp(off.y / dist, -1.0f, 1.0f)));
                 const float yaw   = glm::degrees(std::atan2(off.x, off.z));
-                m_Camera.SetTarget(target);
-                m_Camera.SetYawPitch(yaw, pitch);
-                m_Camera.SetDistance(dist);
+                m_Rig.SetMode(EditorCameraRig::Mode::Orbit);   // scene open = CAD default
+                m_Rig.RecallPose(target, yaw, pitch, dist);
                 return;
             }
         }
@@ -825,7 +839,8 @@ namespace Starforge
         if (any)
         {
             const glm::vec3 pad(2.0f);
-            m_Camera.FrameBounds(mn - pad, mx + pad, /*animate=*/false);
+            m_Rig.SetMode(EditorCameraRig::Mode::Orbit);   // scene open = CAD default
+            m_Rig.FrameBounds(mn - pad, mx + pad, /*animate=*/false);
         }
     }
 
@@ -909,6 +924,30 @@ namespace Starforge
 
         m_WorldSystems.OnUpdate(m_Ctx);   // E18 — drain the async terrain build
 
+        // K1 — branding hot-swap: a change to the resolved icon.png re-applies the
+        // window/taskbar icon + top-bar logo, debounced past the file copy.
+        if (m_BrandWatcher.IsWatching())
+        {
+            for (const auto& c : m_BrandWatcher.Poll())
+            {
+                if (c.Path.find("icon.png") != std::string::npos)
+                {
+                    m_BrandDebounce = 0.35f;
+                    m_BrandRetried  = false;
+                    break;
+                }
+            }
+        }
+        if (m_BrandDebounce >= 0.0f)
+        {
+            m_BrandDebounce -= ts;
+            if (m_BrandDebounce < 0.0f)
+            {
+                m_BrandDebounce = -1.0f;
+                ApplyBrand();
+            }
+        }
+
         TickPlay(ts);
         RenderViewport(ts);
         Autosave(ts);
@@ -936,14 +975,22 @@ namespace Starforge
         }
         else
         {
-            m_Camera.OnResize(vpSize.x, vpSize.y);
-            m_Camera.SetViewportRect(vpPos, vpSize);
-            m_Camera.SetControlEnabled((vpHovered || m_Camera.IsDragging()) && !m_Viewport.GizmoBusy());
-            m_Camera.OnUpdate(ts);
+            // K7 — the camera rig drives the 3D viewport: Orbit by default,
+            // RMB-hold = temporary Fly (WASD+QE, scroll = speed), Possess =
+            // read-only render from a scene camera. Pose hand-offs are seamless.
+            const bool controlOk = (vpHovered || m_Rig.Orbit().IsDragging() ||
+                                    m_Rig.Fly().IsLooking()) && !m_Viewport.GizmoBusy();
+            const bool allowTempFly = !IsPlaying() && vpHovered && !m_Viewport.GizmoBusy();
+            m_Rig.OnUpdate(m_Ctx, ts, vpPos, vpSize, controlOk, allowTempFly);
         }
         auto vfb = app.GetFrameBuffer();
         if (!vfb)
             return;
+
+        // K8 — the navigation cube's offscreen pass runs OUTSIDE the main scene
+        // (its own FBO; skipped in Play/2D where the widget is hidden).
+        if (m_Ctx.Scene && !m_GameCamActive)
+            m_Viewport.PrerenderNavCube(m_Rig.ActiveCamera(), IsPlaying(), m_Mode2D);
 
         // H2 — SceneRenderer is THE editor render path: environment/sky/shadows/HDR
         // + post all live here (and byte-identically in the standalone PlayerLayer).
@@ -1016,12 +1063,25 @@ namespace Starforge
         const Cosmic::Camera& activeCam = m_GameCamActive
             ? static_cast<const Cosmic::Camera&>(m_GameCamera)
             : (m_Mode2D ? static_cast<const Cosmic::Camera&>(m_Camera2D.GetCamera())
-                        : static_cast<const Cosmic::Camera&>(m_Camera.GetCamera()));
+                        : m_Rig.ActiveCamera());
 
         vfb->Bind();
         Cosmic::RenderCommand::SetViewport(0, 0, vw, vh);
         Cosmic::RenderCommand::SetClearColor({ 0.086f, 0.098f, 0.129f, 1.0f });
         Cosmic::RenderCommand::Clear();
+
+        // R8 — Entity-ID debug view: flat hash-colored meshes instead of the
+        // SceneRenderer frame (sprites/UI/water are not entity meshes and are
+        // deliberately absent from it). Picking still works — the picker runs
+        // its own ID pass.
+        const ViewportController::ViewMode viewMode = m_Viewport.GetViewMode();
+        if (m_Ctx.Scene && viewMode == ViewportController::ViewMode::EntityID)
+        {
+            m_Viewport.SetOutlinePassActive(false);   // wire boxes carry selection here
+            m_Viewport.DrawEntityIdView(m_Ctx, activeCam);
+            if (m_ThumbRequested) { m_ThumbRequested = false; CaptureThumbnail(); }
+            return;
+        }
 
         if (m_Ctx.Scene)
         {
@@ -1043,6 +1103,36 @@ namespace Starforge
                 desc.Settings.IBL     = false;
                 desc.Settings.Shadows = false;
             }
+
+            // R8 — view-mode overrides, applied after the environment so they win.
+            if (viewMode == ViewportController::ViewMode::Wireframe)
+            {
+                // Pure geometry read: lines over the clear color, no lighting fx.
+                desc.Settings.Wireframe = true;
+                desc.Settings.Shadows   = false;
+                desc.Settings.SSAO      = false;
+                desc.Settings.Bloom     = false;
+                desc.Settings.GodRays   = false;
+                desc.Settings.LensFlare = false;
+            }
+            else if (viewMode == ViewportController::ViewMode::Unlit)
+            {
+                // Flat albedo: no sun/points/IBL/shadows; ambient floor at 1 lights
+                // every face fully. The sky stays (it is emissive by definition).
+                desc.Settings.IBL     = false;
+                desc.Settings.Shadows = false;
+                desc.Settings.SSAO    = false;
+                desc.Lights.SunIntensity = 0.0f;
+                desc.Lights.Points.clear();
+                desc.Lights.Ambient      = 1.0f;
+            }
+
+            // K12 — selection outline: the post-composite silhouette ring replaces
+            // the mesh wire boxes (which stay as the fallback for un-meshed
+            // selections — lights, colliders — and for the bypass view modes).
+            desc.Settings.OutlineEnabled = true;
+            desc.SelectedEntities        = &m_Ctx.Selection;
+            m_Viewport.SetOutlinePassActive(true);
 
             // Editor overlays — drawn in HDR with scene depth still bound so they
             // occlude correctly. 2D mode swaps the ground grid for the pixel grid;
@@ -1130,29 +1220,172 @@ namespace Starforge
             return;
 
         // Top edge sized by a PIXEL minimum (H5) so the menu row + the Play/Build/
-        // gizmo toolbar row are always fully visible — not clipped by a small ratio
-        // on a big monitor (the old fixed 6% clipped the toolbar). The "Starforge"
-        // top bar gets NoTabBar so there's no wasted "▼ Starforge" tab header, and
-        // the engine's own File/View chrome menus are hidden (Starforge has its own).
-        ws->SetEdgeRatios(0.19f, 0.22f, 0.08f, 0.26f);
-        ws->SetEdgeMinPixels(/*top*/ 78.0f, /*bottom*/ 0.0f, /*left*/ 0.0f, /*right*/ 0.0f);
+        // gizmo toolbar row are always fully visible; the engine's own File/View
+        // chrome menus are hidden (Starforge has its own). The dock tree itself is
+        // now a LAYOUT PRESET (K3) — the coded default is the "Level" built-in.
         ws->SetChromeMenusVisible(false);
-        ws->ClearDockWindows();
-        ws->DockWindow("Starforge",       Cosmic::DockPort::TopCenter, Cosmic::DockFlags::NoTabBar);
-        ws->DockWindow("Hierarchy",       Cosmic::DockPort::LeftTop);
-        ws->DockWindow("Inspector",       Cosmic::DockPort::RightTop);
-        ws->DockWindow("Content Browser", Cosmic::DockPort::BottomCenter);
-        ws->DockWindow("Console",         Cosmic::DockPort::BottomRight);
+        ApplyLayoutPreset(m_ActivePreset.empty() ? "Level" : m_ActivePreset);
 
         m_DockApplied = true;
     }
 
+    // ---- Workspace layout presets (K3) --------------------------------------
+
+    LayoutPanels StarforgeApp::PanelSet()
+    {
+        LayoutPanels p;
+        p.Hierarchy    = &m_ShowHierarchy;
+        p.Inspector    = &m_ShowInspector;
+        p.Content      = &m_ShowContent;
+        p.Console      = &m_ShowConsole;
+        p.Environment  = &m_ShowEnvironment;
+        p.Material     = &m_ShowMaterial;
+        p.WorldSystems = &m_ShowWorldSystems;
+        p.Voxel        = &m_ShowVoxel;
+        p.TilePalette  = &m_ShowTilePalette;
+        p.FlowGraph    = &m_ShowFlowGraph;
+        p.Telemetry    = &m_ShowTelemetry;
+        p.Stats        = &m_ShowStats;
+        return p;
+    }
+
+    std::string StarforgeApp::ProjectLayoutKey() const
+    {
+        if (!m_Ctx.ProjectOpen) return {};
+        return m_Ctx.ProjectPath.empty() ? m_Ctx.ProjectName : m_Ctx.ProjectPath;
+    }
+
+    void StarforgeApp::ApplyLayoutPreset(const std::string& name)
+    {
+        const LayoutPanels panels = PanelSet();
+        if (LayoutPresets::IsBuiltIn(name) || name.empty())
+        {
+            LayoutPresets::ApplyBuiltIn(name.empty() ? "Level" : name, panels);
+            m_ActivePreset = name.empty() ? "Level" : name;
+        }
+        else
+        {
+            // User snapshot: visibility applies now; the ini blob loads at the
+            // TOP of the next ImGui frame (windows re-dock as they resubmit).
+            std::string ini;
+            if (!LayoutPresets::LoadUser(name, panels, ini))
+            {
+                m_Ctx.Log("[Layout] Preset '" + name + "' could not be loaded — using Level.",
+                          LogSeverity::Warn);
+                LayoutPresets::ApplyBuiltIn("Level", panels);
+                m_ActivePreset = "Level";
+            }
+            else
+            {
+                m_PendingLayoutIni = std::move(ini);
+                m_ActivePreset     = name;
+            }
+        }
+        LayoutPresets::SaveActive(ProjectLayoutKey(), m_ActivePreset);
+    }
+
+    void StarforgeApp::DrawLayoutPresetPicker(float squareSize)
+    {
+        // A compact dropdown (the reference editors' layout tabs, folded into one
+        // control for width budget): built-ins, user presets, save/delete.
+        (void)squareSize;
+        const std::string label = std::string(ICON_LC_LAYOUT) + " " + m_ActivePreset;
+        ImGui::SetNextItemWidth(ImGui::CalcTextSize(label.c_str()).x + 34.0f);
+        if (ImGui::BeginCombo("##k3layout", label.c_str(), ImGuiComboFlags_HeightLargest))
+        {
+            for (const auto& n : LayoutPresets::BuiltIns())
+                if (ImGui::Selectable(n.c_str(), n == m_ActivePreset))
+                    ApplyLayoutPreset(n);
+
+            const auto user = LayoutPresets::UserPresets();
+            if (!user.empty())
+            {
+                ImGui::Separator();
+                for (const auto& n : user)
+                {
+                    if (ImGui::Selectable((n + "##user").c_str(), n == m_ActivePreset))
+                        ApplyLayoutPreset(n);
+                    if (ImGui::BeginPopupContextItem((n + "##ctx").c_str()))
+                    {
+                        if (ImGui::MenuItem(("Delete '" + n + "'").c_str()))
+                        {
+                            LayoutPresets::DeleteUser(n);
+                            if (m_ActivePreset == n)
+                                ApplyLayoutPreset("Level");
+                        }
+                        ImGui::EndPopup();
+                    }
+                }
+            }
+
+            ImGui::Separator();
+            if (ImGui::Selectable("Save layout as…"))
+                m_OpenSaveLayout = true;
+            ImGui::EndCombo();
+        }
+        if (ImGui::IsItemHovered())
+            ImGui::SetTooltip("Workspace layout preset (right-click a custom preset to delete).\n"
+                              "The active preset is remembered per project.");
+    }
+
+    void StarforgeApp::DrawSaveLayoutPopup()
+    {
+        if (m_OpenSaveLayout)
+        {
+            ImGui::OpenPopup("Save Layout As");
+            m_OpenSaveLayout = false;
+        }
+        if (ImGui::BeginPopupModal("Save Layout As", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+        {
+            ImGui::TextUnformatted("Save the current window arrangement as a preset:");
+            ImGui::SetNextItemWidth(260.0f);
+            ImGui::InputText("##k3name", m_LayoutNameBuf, sizeof(m_LayoutNameBuf));
+            ImGui::TextDisabled("Letters, digits, space, - and _ (a filename).");
+
+            const std::string name = m_LayoutNameBuf;
+            const bool clash = LayoutPresets::IsBuiltIn(name);
+            if (clash)
+                ImGui::TextColored(ImVec4(1.0f, 0.6f, 0.3f, 1.0f),
+                                   "That name is a built-in preset.");
+            ImGui::BeginDisabled(name.empty() || clash);
+            if (ImGui::Button("Save", ImVec2(120, 0)))
+            {
+                if (LayoutPresets::SaveUser(name, PanelSet()))
+                {
+                    m_ActivePreset = name;
+                    LayoutPresets::SaveActive(ProjectLayoutKey(), m_ActivePreset);
+                    m_Ctx.Log("[Layout] Saved preset '" + name + "'.");
+                    ImGui::CloseCurrentPopup();
+                }
+                else
+                {
+                    m_Ctx.Log("[Layout] Could not save '" + name + "' (bad name or unwritable folder).",
+                              LogSeverity::Error);
+                }
+            }
+            ImGui::EndDisabled();
+            ImGui::SameLine();
+            if (ImGui::Button("Cancel", ImVec2(120, 0)))
+                ImGui::CloseCurrentPopup();
+            ImGui::EndPopup();
+        }
+    }
+
     void StarforgeApp::OnImGuiRender()
     {
+        // K3 — a user layout preset loads its ini snapshot at the top of the
+        // frame; windows re-dock by name as they resubmit (ImGui ApplyAll).
+        if (!m_PendingLayoutIni.empty())
+        {
+            ImGui::LoadIniSettingsFromMemory(m_PendingLayoutIni.c_str(), m_PendingLayoutIni.size());
+            m_PendingLayoutIni.clear();
+        }
+
         if (!m_DockApplied)
             ApplyDockLayout();
 
         DrawTopBar();
+        DrawStatusBar();   // K5 — bottom strip (reserves its band; hides on home)
 
         if (m_Ctx.ProjectOpen)
         {
@@ -1177,32 +1410,42 @@ namespace Starforge
             DrawHomescreen();
         }
 
-        // Viewport overlay: status chip + transform gizmo (only with a project open;
-        // the homescreen fills the viewport region otherwise).
+        // Viewport overlay: the K6 header strip + K8 nav cube + K9 stats chips,
+        // then the transform gizmo (only with a project open; the homescreen
+        // fills the viewport region otherwise).
         auto* ws = Cosmic::Application::Get().GetWorkspaceLayer();
         if (m_Ctx.ProjectOpen && ws && ws->BeginViewportOverlay())
         {
             const glm::vec2 pos = Cosmic::Application::Get().GetViewportPos();
-            ImGui::SetCursorScreenPos(ImVec2(pos.x + 10.0f, pos.y + 8.0f));
-            // Scene name + dirty star now live in the viewport TAB (H5); the corner
-            // overlay keeps just the selection-count chip + play status.
-            ImGui::TextDisabled("%d selected%s",
-                                (int)m_Ctx.Selection.size(),
-                                IsPlaying() ? (m_Play == PlayMode::Paused ? "  |  PAUSED" : "  |  PLAYING") : "");
+
+            // K6/K8/K9 — the viewport instrument (strip hides while playing).
+            if (m_Ctx.Scene)
+                m_Viewport.DrawViewportOverlays(m_Ctx, m_Rig, IsPlaying(), m_Mode2D);
+
+            // K13 — Content-Browser drops onto the viewport (spawn at the hit
+            // point / assign material / assign sprite image; single undo each).
+            if (m_Ctx.Scene)
+                m_Viewport.UpdateViewportDragDrop(
+                    m_Ctx,
+                    m_Mode2D ? static_cast<const Cosmic::Camera&>(m_Camera2D.GetCamera())
+                             : m_Rig.ActiveCamera(),
+                    m_Mode2D ? &m_Camera2D : nullptr,
+                    IsPlaying());
 
             // H8 — actionable hint while the scene references unbuilt script classes.
             if (m_ScriptsNeedBuild && !IsPlaying())
             {
-                ImGui::SetCursorScreenPos(ImVec2(pos.x + 10.0f, pos.y + 26.0f));
+                ImGui::SetCursorScreenPos(ImVec2(pos.x + 10.0f, pos.y + 44.0f));
                 ImGui::TextColored(ImVec4(0.95f, 0.78f, 0.25f, 1.0f),
                                    "Scripts not built - press Ctrl+B");
             }
             // The gizmo is an edit tool — hidden while playing (runtime scene).
-            // 2D mode manipulates through the ortho camera (ImGuizmo auto-detects).
+            // 2D mode manipulates through the ortho camera (ImGuizmo auto-detects);
+            // 3D uses the rig's active camera so Fly/Possess manipulate correctly.
             if (m_Ctx.Scene && !IsPlaying())
                 m_Viewport.DrawGizmo(m_Ctx, m_Mode2D
                     ? static_cast<const Cosmic::Camera&>(m_Camera2D.GetCamera())
-                    : static_cast<const Cosmic::Camera&>(m_Camera.GetCamera()));
+                    : m_Rig.ActiveCamera());
         }
         if (m_Ctx.ProjectOpen && ws)
             ws->EndViewportOverlay();
@@ -1247,7 +1490,7 @@ namespace Starforge
         // the 2D rig's, owns the viewport then, so picking unprojects through
         // it and the UI pointer uses the letterbox band.
         if (m_Ctx.ProjectOpen && m_Ctx.Scene)
-            m_Viewport.OnUpdate(m_Ctx, m_Camera, ImGui::GetIO().DeltaTime,
+            m_Viewport.OnUpdate(m_Ctx, m_Rig, ImGui::GetIO().DeltaTime,
                                 m_Play == PlayMode::Playing,
                                 (m_Mode2D && !m_GameCamActive) ? &m_Camera2D : nullptr,
                                 m_GameCamActive ? &m_GameCamera : nullptr,
@@ -1260,8 +1503,37 @@ namespace Starforge
         DrawAboutPopup();
         DrawHelpPopups();
         DrawFirstRunPopup();
+        DrawSaveLayoutPopup();   // K3
         HandleShortcuts();
         m_Ctx.ValidateSelection();
+    }
+
+    namespace
+    {
+        // K2 — square icon button with a tooltip; `active` renders accent-toggled,
+        // `tint` colors the glyph (play-state coloring). Returns clicked.
+        bool IconButton(const char* icon, const char* id, const char* tip,
+                        float size, bool enabled = true, bool active = false,
+                        const ImVec4* tint = nullptr)
+        {
+            ImGui::PushID(id);
+            if (active)
+            {
+                const ImVec4 acc = ImGui::GetStyleColorVec4(ImGuiCol_CheckMark);
+                ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(acc.x, acc.y, acc.z, 0.30f));
+                ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(acc.x, acc.y, acc.z, 0.42f));
+            }
+            if (tint) ImGui::PushStyleColor(ImGuiCol_Text, *tint);
+            ImGui::BeginDisabled(!enabled);
+            const bool clicked = ImGui::Button(icon, ImVec2(size, size));
+            ImGui::EndDisabled();
+            if (tint) ImGui::PopStyleColor();
+            if (active) ImGui::PopStyleColor(2);
+            if (tip && ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
+                ImGui::SetTooltip("%s", tip);
+            ImGui::PopID();
+            return clicked;
+        }
     }
 
     void StarforgeApp::DrawTopBar()
@@ -1269,31 +1541,41 @@ namespace Starforge
         ImGui::Begin("Starforge", nullptr, ImGuiWindowFlags_MenuBar);
         if (ImGui::BeginMenuBar())
         {
+            // K1 — the brand logo leads the menu bar (same file as the window icon).
+            if (m_BrandTex)
+            {
+                DrawBrandLogo(ImGui::GetFrameHeight() - 6.0f);
+                ImGui::Spacing();
+            }
             DrawMenus();
             ImGui::EndMenuBar();
         }
         if (m_Ctx.ProjectOpen && m_Ctx.Scene)
         {
-            DrawPlayControls();
+            // K2 — product toolbar: three measured groups. Left = file/tool icons,
+            // center = the transport (measured + centered), right = Run/Package
+            // (+ the U7 game-view controls while playing, + K3's layout tabs).
+            const ImGuiStyle& style = ImGui::GetStyle();
+            const float sq = ImGui::GetFrameHeight() + 4.0f;   // square icon buttons
+            const float sp = style.ItemSpacing.x;
+
+            // ---- LEFT: file/tool icons -----------------------------------
+            ImGui::BeginGroup();
+            if (IconButton(ICON_LC_SAVE, "k2save", "Save scene (Ctrl+S)", sq))
+                if (!SaveScene()) m_OpenSaveAs = true;
             ImGui::SameLine();
-            DrawBuildControls();
-            ImGui::SameLine();
-            if (ImGui::Button("Run App"))   // S7 — launch as if double-clicked
-                RunStandalone();
-            if (ImGui::IsItemHovered())
-                ImGui::SetTooltip("Run Standalone: the packaged exe if fresh, else the dev exe with this project.");
-            // The edit toolbar (gizmo/grid) is hidden while playing to signal the
-            // viewport is showing the live runtime scene, not the editable one.
+            DrawBuildControls();   // hammer + status dot + auto toggle
             if (!IsPlaying())
             {
                 // 2D authoring mode toggle (U3): swaps the viewport to the ortho
                 // XY rig with the pixel grid; entering frames the scene's sprites
                 // and arms 1-unit snapping (the pixel-grid convention).
                 ImGui::SameLine();
-                bool m2 = m_Mode2D;
-                if (ImGui::Checkbox("2D", &m2) && m2 != m_Mode2D)
+                if (IconButton("2D", "k2mode2d",
+                               "2D mode: ortho XY view, MMB pan, wheel zoom, pixel grid.",
+                               sq, true, m_Mode2D))
                 {
-                    m_Mode2D = m2;
+                    m_Mode2D = !m_Mode2D;
                     if (m_Mode2D)
                     {
                         glm::vec2 mn(-8.0f), mx(8.0f);
@@ -1319,11 +1601,59 @@ namespace Starforge
                         m_Viewport.ArmPixelSnap();
                     }
                 }
-                if (ImGui::IsItemHovered())
-                    ImGui::SetTooltip("2D mode: ortho XY view, MMB pan, wheel zoom, pixel grid.");
-                ImGui::SameLine();
-                m_Viewport.DrawToolbar(m_Ctx, m_Camera);
+                // (K6 relocated the gizmo/snap/grid strip onto the viewport
+                // overlay — the transport is now exactly centered at any width.)
             }
+            ImGui::EndGroup();
+            const float leftEnd = ImGui::GetItemRectMax().x - ImGui::GetWindowPos().x;
+
+            // ---- CENTER: transport (measured, truly centered) -------------
+            const bool showFlow = !m_ManifestFlow.empty();
+            const float flowW      = showFlow
+                ? (ImGui::GetFrameHeight() + style.ItemInnerSpacing.x + ImGui::CalcTextSize("Flow").x + sp)
+                : 0.0f;
+            const float undoW      = 2.0f * sq + 3.0f * sp + ImGui::CalcTextSize("|").x;   // K4 pair + divider
+            const float transportW = undoW + flowW + 5.0f * sq + 4.0f * sp;   // Play Pause Step Stop Eject
+            const float avail      = ImGui::GetWindowContentRegionMax().x;
+            float cx = (avail - transportW) * 0.5f;
+            cx = std::max(cx, leftEnd + 2.0f * sp);   // never overlap the left group
+            ImGui::SameLine();
+            ImGui::SetCursorPosX(cx);
+            DrawPlayControls();
+
+            // ---- RIGHT: layout preset + Run App / Package (+ play controls) ---
+            const std::string presetLabel = std::string(ICON_LC_LAYOUT) + " " + m_ActivePreset;
+            const float presetW = ImGui::CalcTextSize(presetLabel.c_str()).x + 34.0f;
+            float rightW = presetW + sp + 2.0f * sq + sp;        // picker + rocket + package
+            if (IsPlaying())
+                rightW += 110.0f + sp + sq + sp;                 // aspect combo + capture
+            ImGui::SameLine();
+            ImGui::SetCursorPosX(std::max(ImGui::GetCursorPosX(), avail - rightW));
+            DrawLayoutPresetPicker(sq);                          // K3
+            ImGui::SameLine();
+            if (IsPlaying())
+            {
+                int aspect = (int)m_Aspect;
+                ImGui::SetNextItemWidth(110.0f);
+                if (ImGui::Combo("##gvaspect", &aspect, "Free\0" "16:9\0" "1920x1080\0" "Project\0"))
+                    m_Aspect = (GameAspect)aspect;
+                if (ImGui::IsItemHovered())
+                    ImGui::SetTooltip("Game-view aspect: letterboxes the frame so authored\n"
+                                      "UI anchors match the shipped app. Project = the\n"
+                                      "manifest [window] size.");
+                ImGui::SameLine();
+                if (IconButton(ICON_LC_CROSSHAIR, "k2capture",
+                               "Capture the cursor for mouse-look while playing.\nEsc releases.",
+                               sq, true, m_CaptureCursor))
+                    m_CaptureCursor = !m_CaptureCursor;
+                ImGui::SameLine();
+            }
+            if (IconButton(ICON_LC_ROCKET, "k2run",
+                           "Run Standalone: the packaged exe if fresh,\nelse the dev exe with this project.", sq))
+                RunStandalone();
+            ImGui::SameLine();
+            if (IconButton(ICON_LC_PACKAGE, "k2package", "Package the project for shipping...", sq))
+                m_OpenPackage = true;
         }
         else
         {
@@ -1338,91 +1668,183 @@ namespace Starforge
 
     void StarforgeApp::DrawBuildControls()
     {
-        const bool scaffolded = ProjectIsScaffolded();
+        // K2 — Build Scripts as a hammer icon; the status text is now a colored
+        // dot on the button's corner + tooltip; "Auto" is a compact toggle.
+        const bool  scaffolded = ProjectIsScaffolded();
+        const float sq = ImGui::GetFrameHeight() + 4.0f;
 
-        ImGui::BeginDisabled(!scaffolded || m_Builder.IsBuilding() || IsPlaying());
-        if (ImGui::Button("Build Scripts"))
-            BuildScripts();
-        ImGui::EndDisabled();
-
-        ImGui::SameLine();
-        ImGui::Checkbox("Auto", &m_AutoBuild);
-
-        ImGui::SameLine();
         const char* txt; ImVec4 col;
         switch (m_Builder.GetStatus())
         {
-            case BuildRunner::Status::Building: txt = "building…";  col = ImVec4(1.0f, 0.85f, 0.30f, 1.0f); break;
-            case BuildRunner::Status::Success:  txt = "module ok";  col = ImVec4(0.40f, 1.0f, 0.50f, 1.0f); break;
+            case BuildRunner::Status::Building: txt = "building…";    col = ImVec4(1.0f, 0.85f, 0.30f, 1.0f); break;
+            case BuildRunner::Status::Success:  txt = "module ok";    col = ImVec4(0.40f, 1.0f, 0.50f, 1.0f); break;
             case BuildRunner::Status::Failed:   txt = "build failed"; col = ImVec4(1.0f, 0.42f, 0.42f, 1.0f); break;
             default:
                 txt = !scaffolded ? "no module"
                                   : (m_Module.IsLoaded() ? "module loaded" : "not built");
-                col = ImVec4(0.6f, 0.6f, 0.6f, 1.0f);
+                col = !scaffolded ? ImVec4(0.45f, 0.45f, 0.45f, 1.0f)
+                                  : (m_Module.IsLoaded() ? ImVec4(0.40f, 1.0f, 0.50f, 1.0f)
+                                                         : ImVec4(0.6f, 0.6f, 0.6f, 1.0f));
                 break;
         }
-        ImGui::TextColored(col, "%s", txt);
+
+        char tip[160];
+        std::snprintf(tip, sizeof(tip), "Build Scripts (Ctrl+B) — %s", txt);
+        if (IconButton(ICON_LC_HAMMER, "k2build", tip, sq,
+                       scaffolded && !m_Builder.IsBuilding() && !IsPlaying()))
+            BuildScripts();
+
+        // Status dot on the hammer's top-right corner.
+        {
+            const ImVec2 mx = ImGui::GetItemRectMax();
+            ImGui::GetWindowDrawList()->AddCircleFilled(
+                ImVec2(mx.x - 5.0f, ImGui::GetItemRectMin().y + 5.0f), 3.5f,
+                ImGui::GetColorU32(col));
+        }
+
+        ImGui::SameLine();
+        if (IconButton(ICON_LC_ZAP, "k2auto",
+                       "Auto-build: rebuild the game module whenever src/ changes.",
+                       sq, true, m_AutoBuild))
+            m_AutoBuild = !m_AutoBuild;
     }
 
     void StarforgeApp::DrawPlayControls()
     {
-        const bool paused = (m_Play == PlayMode::Paused);
-        if (!IsPlaying())
+        // K2 — the centered transport: [Flow] Play · Pause · Step · Stop · Eject
+        // as fixed square icon slots (the bar never reflows on state changes).
+        // The caller (DrawTopBar) has already positioned the cursor; the group
+        // width is measured there. Play-state coloring: Play glows green while
+        // playing, Pause amber while paused (plus the viewport border tint).
+        const bool  playing = IsPlaying();
+        const bool  paused  = (m_Play == PlayMode::Paused);
+        const float sq = ImGui::GetFrameHeight() + 4.0f;
+
+        // K4 — undo/redo with count badges + a click-to-undo-N history popup,
+        // riding just left of the transport (the 2211 idiom). Left-click = one
+        // step; hover lists the last ~10 command names; right-click opens the
+        // history popup where clicking entry i jumps back/forward i+1 steps.
+        auto historyButton = [&](bool isUndo)
         {
-            if (ImGui::Button("Play"))
-                PlayScene();
-            // U5/U8 — the manifest names a startup flow: Play can boot it (the
-            // shipped player's path) or play just the open scene.
-            if (!m_ManifestFlow.empty())
+            Cosmic::CommandStack& cmds = m_Ctx.Commands;
+            const size_t count   = isUndo ? cmds.UndoCount() : cmds.RedoCount();
+            const bool   enabled = count > 0;
+            const char*  icon    = isUndo ? ICON_LC_UNDO : ICON_LC_REDO;
+            const char*  id      = isUndo ? "k4undo" : "k4redo";
+
+            ImGui::PushID(id);
+            ImGui::BeginDisabled(!enabled);
+            if (ImGui::Button(icon, ImVec2(sq, sq)))
             {
-                ImGui::SameLine();
-                ImGui::Checkbox("Flow", &m_PlayFlowUse);
-                if (ImGui::IsItemHovered())
-                    ImGui::SetTooltip("Play the project's startup flow (%s) from its start\n"
-                                      "state, like the shipped app. Unchecked: play the open scene.",
-                                      m_ManifestFlow.c_str());
+                if (isUndo) cmds.Undo(); else cmds.Redo();
+            }
+            ImGui::EndDisabled();
+
+            // Count badge on the button's top-right corner.
+            if (count > 0)
+            {
+                char badge[16];
+                std::snprintf(badge, sizeof(badge), "%zu", count > 99 ? (size_t)99 : count);
+                const ImVec2 mx = ImGui::GetItemRectMax();
+                const ImVec2 ts = ImGui::CalcTextSize(badge);
+                ImGui::GetWindowDrawList()->AddText(
+                    ImVec2(mx.x - ts.x * 0.72f - 2.0f, ImGui::GetItemRectMin().y - 1.0f),
+                    ImGui::GetColorU32(ImGuiCol_CheckMark), badge);
+            }
+
+            // Hover: the last ~10 command names (0 = what this button applies).
+            if (enabled && ImGui::IsItemHovered())
+            {
+                ImGui::BeginTooltip();
+                ImGui::TextUnformatted(isUndo ? "Undo (Ctrl+Z) — right-click for history"
+                                              : "Redo (Ctrl+Y) — right-click for history");
+                ImGui::Separator();
+                const size_t n = std::min<size_t>(count, 10);
+                for (size_t i = 0; i < n; ++i)
+                    ImGui::Text("%zu. %s", i + 1,
+                                (isUndo ? cmds.UndoNameAt(i) : cmds.RedoNameAt(i)).c_str());
+                if (count > n)
+                    ImGui::TextDisabled("… %zu more", count - n);
+                ImGui::EndTooltip();
+            }
+
+            // Right-click history popup: clicking entry i applies i+1 steps.
+            if (ImGui::BeginPopupContextItem("k4history"))
+            {
+                const size_t n = std::min<size_t>(count, 10);
+                for (size_t i = 0; i < n; ++i)
+                {
+                    const std::string name = isUndo ? cmds.UndoNameAt(i) : cmds.RedoNameAt(i);
+                    char row[192];
+                    std::snprintf(row, sizeof(row), "%s %zu step%s to \"%s\"",
+                                  isUndo ? "Undo" : "Redo", i + 1, i ? "s" : "", name.c_str());
+                    if (ImGui::Selectable(row))
+                        for (size_t k = 0; k <= i; ++k)
+                        {
+                            if (isUndo) cmds.Undo(); else cmds.Redo();
+                        }
+                }
+                ImGui::EndPopup();
+            }
+            ImGui::PopID();
+        };
+        historyButton(true);
+        ImGui::SameLine();
+        historyButton(false);
+        ImGui::SameLine();
+        ImGui::TextDisabled("|");
+        ImGui::SameLine();
+
+        // U5/U8 — the manifest names a startup flow: Play can boot it (the
+        // shipped player's path) or play just the open scene.
+        if (!m_ManifestFlow.empty())
+        {
+            ImGui::BeginDisabled(playing);
+            ImGui::Checkbox("Flow", &m_PlayFlowUse);
+            ImGui::EndDisabled();
+            if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
+                ImGui::SetTooltip("Play the project's startup flow (%s) from its start\n"
+                                  "state, like the shipped app. Unchecked: play the open scene.",
+                                  m_ManifestFlow.c_str());
+            ImGui::SameLine();
+        }
+
+        const ImVec4 green(0.30f, 1.00f, 0.42f, 1.0f);
+        const ImVec4 amber(1.00f, 0.80f, 0.20f, 1.0f);
+
+        // Play / Resume.
+        {
+            const ImVec4* tint = playing ? (paused ? nullptr : &green) : nullptr;
+            if (IconButton(ICON_LC_PLAY, "k2play",
+                           playing ? (paused ? "Resume" : "Playing")
+                                   : "Play the scene",
+                           sq, !playing || paused, playing && !paused, tint))
+            {
+                if (!playing) PlayScene();
+                else          TogglePausePlay();   // resume from pause
             }
         }
-        else
-        {
-            if (ImGui::Button("Stop"))
-                StopScene();
-            ImGui::SameLine();
-            if (ImGui::Button(paused ? "Resume" : "Pause"))
-                TogglePausePlay();
-            ImGui::SameLine();
-            ImGui::BeginDisabled(!paused);
-            if (ImGui::Button("Step"))
-                StepScene();
-            ImGui::EndDisabled();
-            ImGui::SameLine();
-            ImGui::TextColored(paused ? ImVec4(1.0f, 0.80f, 0.20f, 1.0f)
-                                      : ImVec4(0.30f, 1.0f, 0.42f, 1.0f),
-                               paused ? "PAUSED" : "PLAYING");
-
-            // U7 — game-view controls: eject (fly the editor camera while the
-            // sim runs), aspect preset (letterboxed game frame), cursor capture.
-            ImGui::SameLine();
-            ImGui::TextDisabled("|");
-            ImGui::SameLine();
-            ImGui::Checkbox("Eject", &m_Ejected);
-            if (ImGui::IsItemHovered())
-                ImGui::SetTooltip("Fly the editor camera while the sim runs;\n"
-                                  "re-dock returns to the game camera.");
-            ImGui::SameLine();
-            int aspect = (int)m_Aspect;
-            ImGui::SetNextItemWidth(110.0f);
-            if (ImGui::Combo("##gvaspect", &aspect, "Free\0" "16:9\0" "1920x1080\0" "Project\0"))
-                m_Aspect = (GameAspect)aspect;
-            if (ImGui::IsItemHovered())
-                ImGui::SetTooltip("Game-view aspect: letterboxes the frame so authored\n"
-                                  "UI anchors match the shipped app. Project = the\n"
-                                  "manifest [window] size.");
-            ImGui::SameLine();
-            ImGui::Checkbox("Capture", &m_CaptureCursor);
-            if (ImGui::IsItemHovered())
-                ImGui::SetTooltip("Capture the cursor for mouse-look while playing.\nEsc releases.");
-        }
+        ImGui::SameLine();
+        if (IconButton(ICON_LC_PAUSE, "k2pause",
+                       paused ? "Paused" : "Pause the simulation",
+                       sq, playing && !paused, paused, paused ? &amber : nullptr))
+            TogglePausePlay();
+        ImGui::SameLine();
+        if (IconButton(ICON_LC_STEP_FORWARD, "k2step",
+                       "Step one fixed update (while paused)", sq, paused))
+            StepScene();
+        ImGui::SameLine();
+        if (IconButton(ICON_LC_SQUARE, "k2stop", "Stop and restore the edit scene",
+                       sq, playing))
+            StopScene();
+        ImGui::SameLine();
+        // U7 eject — a live toggle while playing (the doc's reserved slot landed
+        // with Phase 17 the same day this bar was rebuilt).
+        if (IconButton(ICON_LC_ARROW_UP_FROM_LINE, "k2eject",
+                       "Eject: fly the editor camera while the sim runs;\n"
+                       "re-dock returns to the game camera.",
+                       sq, playing, m_Ejected))
+            m_Ejected = !m_Ejected;
     }
 
     void StarforgeApp::DrawMenus()
@@ -1514,6 +1936,18 @@ namespace Starforge
 
         if (ImGui::BeginMenu("View"))
         {
+            // R8 — viewport view modes (also on the viewport header strip, K6).
+            if (ImGui::BeginMenu("View Mode", m_Ctx.ProjectOpen))
+            {
+                using VM = ViewportController::ViewMode;
+                const VM cur = m_Viewport.GetViewMode();
+                if (ImGui::MenuItem("Lit",       nullptr, cur == VM::Lit))       m_Viewport.SetViewMode(VM::Lit);
+                if (ImGui::MenuItem("Unlit",     nullptr, cur == VM::Unlit))     m_Viewport.SetViewMode(VM::Unlit);
+                if (ImGui::MenuItem("Wireframe", nullptr, cur == VM::Wireframe)) m_Viewport.SetViewMode(VM::Wireframe);
+                if (ImGui::MenuItem("Entity ID", nullptr, cur == VM::EntityID))  m_Viewport.SetViewMode(VM::EntityID);
+                ImGui::EndMenu();
+            }
+            ImGui::Separator();
             ImGui::MenuItem("Hierarchy",       nullptr, &m_ShowHierarchy);
             ImGui::MenuItem("Inspector",       nullptr, &m_ShowInspector);
             ImGui::MenuItem("Content Browser", nullptr, &m_ShowContent);
@@ -1526,13 +1960,34 @@ namespace Starforge
             ImGui::MenuItem("Flow Graph",      nullptr, &m_ShowFlowGraph);
             ImGui::MenuItem("Telemetry",       nullptr, &m_ShowTelemetry);
             ImGui::MenuItem("Statistics",      nullptr, &m_ShowStats);
+            ImGui::MenuItem("Viewport Stats Chips", nullptr, &m_Viewport.ShowStatsChips());   // K9
             ImGui::Separator();
+            // K3 — the layout presets, mirrored from the top-bar picker.
+            if (ImGui::BeginMenu("Layout"))
+            {
+                for (const auto& n : LayoutPresets::BuiltIns())
+                    if (ImGui::MenuItem(n.c_str(), nullptr, n == m_ActivePreset))
+                        ApplyLayoutPreset(n);
+                const auto user = LayoutPresets::UserPresets();
+                if (!user.empty())
+                {
+                    ImGui::Separator();
+                    for (const auto& n : user)
+                        if (ImGui::MenuItem(n.c_str(), nullptr, n == m_ActivePreset))
+                            ApplyLayoutPreset(n);
+                }
+                ImGui::Separator();
+                if (ImGui::MenuItem("Save layout as…"))
+                    m_OpenSaveLayout = true;
+                ImGui::EndMenu();
+            }
             if (ImGui::MenuItem("Reset Layout"))
             {
-                // Reopen the core docked panels (a ✕ may have closed them) and rebuild
-                // the dock layout so everything returns to its home port (H5).
-                m_ShowHierarchy = m_ShowInspector = m_ShowContent = m_ShowConsole = true;
-                if (auto* ws = Cosmic::Application::Get().GetWorkspaceLayer()) ws->ResetLayout();
+                // Re-apply the ACTIVE preset from scratch (a ✕ may have closed core
+                // panels or docks were dragged apart): built-ins rebuild their coded
+                // dock tree, user presets reload their ini snapshot (K3; the H5
+                // behavior — reopen + rebuild — is what the Level preset does).
+                ApplyLayoutPreset(m_ActivePreset);
             }
             ImGui::EndMenu();
         }
@@ -1543,6 +1998,89 @@ namespace Starforge
             if (ImGui::MenuItem("About Starforge"))    m_OpenAbout = true;
             ImGui::EndMenu();
         }
+    }
+
+    void StarforgeApp::DrawStatusBar()
+    {
+        auto* ws = Cosmic::Application::Get().GetWorkspaceLayer();
+        if (!ws)
+            return;
+
+        // Homescreen: no strip, no reserved band.
+        if (!m_Ctx.ProjectOpen)
+        {
+            ws->SetBottomInsetPixels(0.0f);
+            return;
+        }
+
+        const float h = ImGui::GetFrameHeight() + 2.0f;   // font-derived => DPI-safe
+        ws->SetBottomInsetPixels(h);
+
+        const ImGuiViewport* vp = ImGui::GetMainViewport();
+        ImGui::SetNextWindowPos(ImVec2(vp->Pos.x, vp->Pos.y + vp->Size.y - h));
+        ImGui::SetNextWindowSize(ImVec2(vp->Size.x, h));
+        ImGui::SetNextWindowViewport(vp->ID);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(10.0f, 2.0f));
+        ImGui::Begin("##StarforgeStatus", nullptr,
+                     ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove |
+                     ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoSavedSettings |
+                     ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav |
+                     ImGuiWindowFlags_NoScrollbar);
+        ImGui::PopStyleVar(3);
+
+        // Play state (colored) — the strip's anchor cue.
+        const bool paused = (m_Play == PlayMode::Paused);
+        if (IsPlaying())
+            ImGui::TextColored(paused ? ImVec4(1.0f, 0.80f, 0.20f, 1.0f)
+                                      : ImVec4(0.30f, 1.0f, 0.42f, 1.0f),
+                               paused ? ICON_LC_PAUSE " PAUSED" : ICON_LC_PLAY " PLAYING");
+        else
+            ImGui::TextDisabled(ICON_LC_PENCIL_RULER " EDIT");
+
+        ImGui::SameLine(); ImGui::TextDisabled("|"); ImGui::SameLine();
+        ImGui::Text("%.0f FPS (%.2f ms)", ImGui::GetIO().Framerate,
+                    1000.0f / std::max(1.0f, ImGui::GetIO().Framerate));
+
+        size_t entities = 0;
+        if (m_Ctx.Scene)
+            for (auto e : m_Ctx.Scene->View<Cosmic::IDComponent>()) { (void)e; ++entities; }
+        ImGui::SameLine(); ImGui::TextDisabled("|"); ImGui::SameLine();
+        ImGui::Text("%zu entities", entities);
+        ImGui::SameLine(); ImGui::TextDisabled("|"); ImGui::SameLine();
+        ImGui::Text("%zu selected", m_Ctx.Selection.size());
+
+        // Build-module state (mirrors the K2 hammer dot).
+        {
+            const char* txt; ImVec4 col;
+            switch (m_Builder.GetStatus())
+            {
+                case BuildRunner::Status::Building: txt = "building…";    col = ImVec4(1.0f, 0.85f, 0.30f, 1.0f); break;
+                case BuildRunner::Status::Success:  txt = "module ok";    col = ImVec4(0.40f, 1.0f, 0.50f, 1.0f); break;
+                case BuildRunner::Status::Failed:   txt = "build failed"; col = ImVec4(1.0f, 0.42f, 0.42f, 1.0f); break;
+                default:
+                    txt = !ProjectIsScaffolded() ? "no module"
+                                                 : (m_Module.IsLoaded() ? "module loaded" : "not built");
+                    col = ImVec4(0.6f, 0.6f, 0.6f, 1.0f);
+                    break;
+            }
+            ImGui::SameLine(); ImGui::TextDisabled("|"); ImGui::SameLine();
+            ImGui::TextColored(col, ICON_LC_HAMMER " %s", txt);
+        }
+
+        // Right side: scene identity now; Phase 23 T2's asset-memory chip takes
+        // this slot ("assets: N (X MiB CPU / Y MiB GPU)") once accounting exists.
+        {
+            const std::string right = m_Ctx.ProjectTitle + " / " + m_Ctx.SceneName
+                                    + (m_Ctx.Dirty ? " *" : "");
+            const float w = ImGui::CalcTextSize(right.c_str()).x;
+            ImGui::SameLine(std::max(ImGui::GetCursorPosX() + 20.0f,
+                                     ImGui::GetWindowContentRegionMax().x - w));
+            ImGui::TextDisabled("%s", right.c_str());
+        }
+
+        ImGui::End();
     }
 
     void StarforgeApp::DrawStatsWindow()
@@ -1651,6 +2189,70 @@ namespace Starforge
 
         Cosmic::ThemeManager::Register(t);
         Cosmic::ThemeManager::Apply("Starforge");
+    }
+
+    // ---- Drop-a-file branding (K1) -----------------------------------------
+    void StarforgeApp::ApplyBrand()
+    {
+        auto& win = Cosmic::Application::Get().GetWindow();
+
+        // The editor's own brand: <exe>/branding/icon.png -> user:// override.
+        // (Project icons brand the PLAYER/packaged app, not the editor window.)
+        const std::string icon = Cosmic::Branding::ResolveProcessIcon();
+
+        if (!icon.empty())
+        {
+            if (win.SetIcon(icon))
+            {
+                m_BrandTex     = Cosmic::Texture2D::Create(icon);
+                m_BrandPath    = icon;
+                m_BrandRetried = false;
+            }
+            else if (!m_BrandRetried)
+            {
+                // Likely a half-written file mid-copy (hot-swap race): keep the
+                // current brand and try exactly once more shortly.
+                m_BrandRetried  = true;
+                m_BrandDebounce = 0.5f;
+            }
+        }
+        else
+        {
+            // No branding file anywhere -> the platform default, cleanly.
+            win.ClearIcon();
+            m_BrandTex.reset();
+            m_BrandPath.clear();
+            m_BrandRetried = false;
+        }
+
+        // Aim the hot-swap watcher at the resolved file's folder (or the exe-dir
+        // convention folder while nothing resolves, so dropping a FIRST icon is
+        // still caught). Re-armed only when the target changes.
+        std::string dir = !m_BrandPath.empty()
+            ? fs::path(m_BrandPath).parent_path().generic_string()
+            : (fs::path(Cosmic::Branding::ExecutableDir()) / "branding").generic_string();
+        if (dir != m_BrandWatchDir)
+        {
+            m_BrandWatchDir = dir;
+            m_BrandWatcher.Stop();
+            std::error_code ec;
+            if (fs::exists(dir, ec))
+                m_BrandWatcher.Watch(dir, /*recursive=*/false);
+        }
+    }
+
+    void StarforgeApp::DrawBrandLogo(float height)
+    {
+        if (!m_BrandTex || height <= 0.0f)
+            return;
+        // Engine textures load V-flipped for GL UVs — draw with the standard
+        // flipped UV pair (the Content Browser preview convention).
+        ImGui::Image((ImTextureID)(intptr_t)m_BrandTex->GetRendererID(),
+                     ImVec2(height, height), ImVec2(0, 1), ImVec2(1, 0));
+        if (ImGui::IsItemHovered())
+            ImGui::SetTooltip("Starforge %s\nRe-brand by replacing %s (no restart needed).",
+                              COSMIC_VERSION_STRING,
+                              m_BrandPath.empty() ? "branding/icon.png" : m_BrandPath.c_str());
     }
 
     // ---- Forge Playground first-run sample (E21) --------------------------
@@ -2612,7 +3214,12 @@ namespace Starforge
                      ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoSavedSettings);
         ImGui::PopStyleVar(2);   // rounding + padding captured at Begin
 
-        // Header.
+        // Header (K1: the brand mark leads it — same file as the window icon).
+        if (m_BrandTex)
+        {
+            DrawBrandLogo(40.0f);
+            ImGui::SameLine();
+        }
         ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.95f, 0.55f, 0.18f, 1.0f));
         ImGui::SetWindowFontScale(1.6f);
         ImGui::TextUnformatted("STARFORGE");
@@ -3242,8 +3849,15 @@ namespace Starforge
         }
         if (ImGui::BeginPopupModal("About Starforge", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
         {
+            if (m_BrandTex)   // K1 — the same brand mark as the window icon
+            {
+                DrawBrandLogo(48.0f);
+                ImGui::SameLine();
+            }
+            ImGui::BeginGroup();
             ImGui::TextColored(ImVec4(0.95f, 0.55f, 0.18f, 1.0f), "Starforge");
             ImGui::TextDisabled("The Cosmic editor — where worlds are forged.");
+            ImGui::EndGroup();
             ImGui::Separator();
             ImGui::Text("Engine version: %s", COSMIC_VERSION_STRING);
             if (m_Ctx.ProjectOpen)
@@ -3304,7 +3918,7 @@ namespace Starforge
     void StarforgeApp::OnEvent(Cosmic::Event& e)
     {
         if (m_Mode2D) m_Camera2D.OnEvent(e);   // U3 — wheel zoom in 2D mode
-        else          m_Camera.OnEvent(e);
+        else          m_Rig.OnEvent(e);        // K7 — scroll: orbit zoom / fly speed
         if (m_Play == PlayMode::Playing)   // forward input to live scripts
             m_Scripts.DispatchEvent(e);
     }

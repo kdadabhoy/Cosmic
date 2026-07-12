@@ -132,3 +132,19 @@ if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/assets")
         COMMENT "Syncing Starforge assets to VFS output directory..."
     )
 endif()
+
+# -------------------------------------------------------------------
+# 7. Drop-a-file branding (Phase 22 / K1): the default molten-orange mark ships
+#    NEXT TO THE EXE as branding/icon.png — the first hit of the runtime icon
+#    resolution order (utils/Branding), so the mechanism is visibly live out of
+#    the box. Replace the copied file (or the source here) to re-brand; a
+#    running editor hot-swaps it without a restart.
+# -------------------------------------------------------------------
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/branding/icon.png")
+    add_custom_command(TARGET Starforge POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${CMAKE_CURRENT_SOURCE_DIR}/branding/icon.png"
+            "${COSMIC_SDK_DIR}/build/Runtime/$<CONFIG>/branding/icon.png"
+        COMMENT "Staging the Starforge branding icon next to the runtime..."
+    )
+endif()

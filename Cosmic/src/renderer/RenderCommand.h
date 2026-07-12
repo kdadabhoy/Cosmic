@@ -158,6 +158,18 @@ namespace Cosmic
 		}
 
 		/**
+		 * @brief Sets the triangle rasterization fill mode (Fill by default from
+		 * Init()). Line renders triangle edges only — the wireframe debug view
+		 * (R8). Changers must restore Fill before their scope ends (fullscreen
+		 * post passes drawn as lines produce a blank frame), same contract as the
+		 * depth/cull/blend verbs.
+		 */
+		inline static void SetPolygonMode(RendererAPI::PolygonMode mode)
+		{
+			s_RendererAPI->SetPolygonMode(mode);
+		}
+
+		/**
 		 * @brief Executes an indexed draw call.
 		 * This is the standard method for drawing optimized 2D and 3D geometry.
 		 * @param vertexArray The Vertex Array Object containing the vertex and index data.
@@ -202,6 +214,7 @@ namespace Cosmic
 		using PrimitiveTopology = RendererAPI::PrimitiveTopology;
 		using CullMode          = RendererAPI::CullMode;
 		using BlendMode         = RendererAPI::BlendMode;
+		using PolygonMode       = RendererAPI::PolygonMode;
 
 		/** @brief Dispatch the bound compute program over an x*y*z work-group grid. */
 		inline static void DispatchCompute(uint32_t x, uint32_t y, uint32_t z)

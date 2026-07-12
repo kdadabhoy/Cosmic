@@ -36,11 +36,14 @@
 #include "platform/opengl/OpenGLContext.h"
 #include "codes/KeyCodes.h"
 #include "core/Log.h"
+#include "utils/ImageIO.h"   // K1 — SetIcon decode + resize
 
 // 1. Standard library dependencies
 #include <iostream>
 #include <cstdlib>    // std::getenv (COSMIC_WINDOW_TRACE, non-Windows path)
 #include <algorithm>  // std::min / std::clamp (restore-rect clamping)
+#include <iterator>   // std::size (SetIcon level table)
+#include <vector>
 
 // 2. Platform Specific Windows block
 #ifdef _WIN32
@@ -620,6 +623,43 @@ namespace Cosmic
 		if (!m_Handle || m_Fullscreen) return;
 		if (width < 64 || height < 64 || width > 16384 || height > 16384) return;
 		glfwSetWindowSize(m_Handle, width, height);
+	}
+
+	bool Window::SetIcon(const std::string& imagePath)
+	{
+		// K1 drop-a-file branding: decode + build the standard icon sizes and hand
+		// them to GLFW (live window + taskbar). GLFW wants tightly-packed RGBA8
+		// with a top-left origin — exactly what ImageIO::ReadPixels returns.
+		if (!m_Handle || imagePath.empty())
+			return false;
+
+		int srcW = 0, srcH = 0;
+		std::vector<uint8_t> src;
+		if (!ImageIO::ReadPixels(imagePath, srcW, srcH, src))
+			return false;   // keep the current icon — hot-swaps can catch partial writes
+
+		static constexpr int kSizes[] = { 16, 32, 48, 256 };
+		constexpr int kLevels = static_cast<int>(std::size(kSizes));
+		std::vector<uint8_t> pixels[kLevels];
+		GLFWimage images[kLevels];
+		for (int i = 0; i < kLevels; ++i)
+		{
+			const int s = kSizes[i];
+			pixels[i].resize(static_cast<size_t>(s) * s * 4);
+			ImageIO::ResizeRgba(src.data(), srcW, srcH, pixels[i].data(), s, s);
+			images[i].width  = s;
+			images[i].height = s;
+			images[i].pixels = pixels[i].data();
+		}
+
+		glfwSetWindowIcon(m_Handle, kLevels, images);
+		return true;
+	}
+
+	void Window::ClearIcon()
+	{
+		if (m_Handle)
+			glfwSetWindowIcon(m_Handle, 0, nullptr);   // platform default (exe icon)
 	}
 
 	void Window::SetCursorCaptured(bool captured)

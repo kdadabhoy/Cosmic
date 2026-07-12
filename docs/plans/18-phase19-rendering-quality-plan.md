@@ -70,7 +70,13 @@ costs ~10% of today's draw; sorted smoke renders without popping. **Status:** �
 entries (Lit / Wireframe / Entity-ID debug). Small. **Unlock:** ~~immediate (editor QoL) — do
 opportunistically~~ **FIRED 2026-07-11** (v4 editor vision) — run with/before Phase 22 K6,
 which places the selector on the viewport header strip (doc 21). **Acceptance:** all three
-modes render; conformance script green. **Status:** ☐
+modes render; conformance script green. **Status:** ✅ 2026-07-11 — `RendererAPI::PolygonMode`
++ `RenderCommand::SetPolygonMode` (GL: `glPolygonMode`), `SceneRendererSettings::Wireframe`
+(default-off; geometry passes rasterize Line, skybox skipped, Fill restored before post),
+Starforge `ViewportController::ViewMode{Lit, Unlit, Wireframe, EntityID}` + View ▸ View Mode
+menu (Unlit = lights neutralized + ambient 1; Entity-ID = flat golden-ratio hash colors per
+entity incl. LOD/voxel chunks — the human-readable ID buffer). K6 (doc 21) puts the same
+state on the viewport strip. Build green, tests 272/272, conformance clean.
 
 ### R9 — Compressed texture pipeline (BCn/KTX2) *(origin: S12.6 "parked w/ unlock")*
 Offline compress on import (BC7/BC5/BC4 via a vendored encoder), KTX2 container, loader path;

@@ -5,10 +5,12 @@
 #include "renderer/RenderCommand.h"
 #include "renderer/InstanceSet.h"
 #include "renderer/CoverageCapture.h"
+#include "renderer/BindingPoints.h"
 #include "graphics/FrameBuffer.h"
 #include "graphics/Mesh.h"
 #include "graphics/Model.h"
 #include "graphics/Material.h"
+#include "graphics/Shader.h"
 #include "camera/Camera.h"
 #include "terrain/Terrain.h"
 #include "water/Water.h"
@@ -16,6 +18,7 @@
 #include "scene/Scene.h"
 #include "scene/Entity.h"
 #include "scene/Components.h"
+#include "scene/ScenePicker.h"  // K12 — the outline id-mask pass
 #include "utils/FileSystem.h"   // resolve project:// HdriPath (H4)
 #include "core/Log.h"
 
@@ -170,6 +173,11 @@ namespace Cosmic
 		Renderer3D::ClearIBL();
 		m_Shadow.Shutdown();
 		Renderer3D::ClearShadow();
+
+		// K12 — release the outline resources while the context is live.
+		m_OutlineMask.reset();
+		m_OutlineShader.reset();
+		m_OutlineShaderTried = false;
 
 		m_Initialized = false;
 	}
@@ -460,9 +468,15 @@ namespace Cosmic
 		m_Post.SetViewportSize(m_Width, m_Height);
 		m_Post.BeginHDR(desc.Settings.ClearColor);
 
+		// Wireframe view (R8): geometry rasterizes as lines; the skybox is skipped
+		// (see SceneRendererSettings). Fill is restored before this pass returns —
+		// the post/composite fullscreen triangles must never rasterize as lines.
+		if (desc.Settings.Wireframe)
+			RenderCommand::SetPolygonMode(RendererAPI::PolygonMode::Line);
+
 		Renderer3D::BeginScene(m_ViewProj, desc.CameraPosition);
 
-		if (desc.Settings.Skybox)
+		if (desc.Settings.Skybox && !desc.Settings.Wireframe)
 		{
 			if (desc.DetailedSky)
 				m_Environment.DrawSkyboxDetailed(m_ViewProj, *desc.DetailedSky);
@@ -494,6 +508,9 @@ namespace Cosmic
 			desc.EcsScene->OnRender3D(cam);
 			Renderer3D::SetLights(desc.Lights);
 		}
+
+		if (desc.Settings.Wireframe)
+			RenderCommand::SetPolygonMode(RendererAPI::PolygonMode::Fill);
 	}
 
 	// 7) Transparents (HDR still bound) ---------------------------------------
@@ -502,6 +519,12 @@ namespace Cosmic
 		const Ref<FrameBuffer>& sceneFbo = m_Post.GetSceneTarget();
 		if (!sceneFbo)
 			return;
+
+		// Wireframe view (R8): water/particle/app-transparent triangles rasterize
+		// as lines too; Fill is restored before the pass returns (refraction grabs
+		// are blits — polygon mode does not affect them).
+		if (desc.Settings.Wireframe)
+			RenderCommand::SetPolygonMode(RendererAPI::PolygonMode::Line);
 
 		const uint32_t colorID = sceneFbo->GetColorAttachmentRendererID(0);
 		const uint32_t depthID = sceneFbo->GetDepthAttachmentRendererID();
@@ -533,6 +556,9 @@ namespace Cosmic
 			desc.DrawTransparent(ctx);
 			Renderer3D::EndScene();
 		}
+
+		if (desc.Settings.Wireframe)
+			RenderCommand::SetPolygonMode(RendererAPI::PolygonMode::Fill);
 	}
 
 	// 8) Post + composite ------------------------------------------------------
@@ -592,7 +618,60 @@ namespace Cosmic
 		RenderCommand::SetViewport(0, 0, m_Width, m_Height);
 		m_Post.Composite(desc.Exposure);
 
+		// K12 — the selection outline rides over the composited LDR image, under
+		// the 2D/UI overlay (UI must never be outlined over).
+		if (desc.Settings.OutlineEnabled && desc.EcsScene &&
+		    desc.SelectedEntities && !desc.SelectedEntities->empty())
+		{
+			RenderCommand::BeginGpuZone("Outline");
+			PassOutline(desc);
+			RenderCommand::EndGpuZone();
+		}
+
 		if (desc.DrawOverlay2D)
 			desc.DrawOverlay2D();
+	}
+
+	// 8b) Selection outline (K12) ----------------------------------------------
+	void SceneRenderer::PassOutline(const SceneRenderDesc& desc)
+	{
+		// Lazy resources: zero cost until the first outlined frame.
+		if (!m_OutlineShaderTried)
+		{
+			m_OutlineShaderTried = true;
+			m_OutlineShader = Shader::Create("assets/shaders/Outline.glsl");
+			if (!m_OutlineShader)
+				CS_CORE_WARN("SceneRenderer: Outline shader unavailable — selection outline disabled.");
+		}
+		if (!m_OutlineShader)
+			return;
+		if (!m_OutlineMask)
+			m_OutlineMask = ScenePicker::Create();
+		if (!m_OutlineMask)
+			return;
+
+		// 1) Selection-filtered id pass into the mask FBO (self-contained: it
+		//    binds + unbinds its own target; we restore ours right after).
+		MatrixCamera cam(desc.View, desc.Projection, m_ViewProj, desc.CameraPosition);
+		m_OutlineMask->RenderIdPass(*desc.EcsScene, cam, m_Width, m_Height,
+		                            desc.SelectedEntities);
+
+		RenderCommand::BindFramebufferHandle(m_FinalFbo);
+		RenderCommand::SetViewport(0, 0, m_Width, m_Height);
+
+		// 2) Fullscreen edge-detect composite over the LDR frame. Depth test off
+		//    for the composite (restored — the state contract); default alpha
+		//    blend is exactly what the ring wants.
+		m_OutlineShader->Bind();
+		RenderCommand::BindTextureSlot(Bindings::TexUnitOutlineMask, m_OutlineMask->GetIdTextureID());
+		m_OutlineShader->SetInt("u_IdMask", (int)Bindings::TexUnitOutlineMask);
+		m_OutlineShader->SetFloat4("u_Color", glm::vec4(desc.Settings.OutlineColor, 1.0f));
+		m_OutlineShader->SetFloat("u_WidthPx", desc.Settings.OutlineWidthPx);
+		m_OutlineShader->SetFloat2("u_TexelSize", glm::vec2(1.0f / (float)m_Width,
+		                                                    1.0f / (float)m_Height));
+
+		RenderCommand::SetDepthTest(false);
+		RenderCommand::DrawArrays(RendererAPI::PrimitiveTopology::Triangles, 0, 3);
+		RenderCommand::SetDepthTest(true);
 	}
 }

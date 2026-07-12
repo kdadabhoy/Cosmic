@@ -3,9 +3,14 @@
 
 #include "scene/ScenePicker.h"
 #include "scene/Scene.h"
+#include "scene/Components.h"
 #include "renderer/Renderer3D.h"
 #include "renderer/RenderCommand.h"
 #include "camera/Camera.h"
+#include "voxel/VoxelVolume.h"
+#include "voxel/VoxelRender.h"
+
+#include <glm/gtc/matrix_transform.hpp>
 
 #include <cmath>
 
@@ -29,7 +34,8 @@ namespace Cosmic
 		m_Fbo = FrameBuffer::Create(spec);
 	}
 
-	void ScenePicker::RenderIdPass(Scene& scene, const Camera& camera, uint32_t width, uint32_t height)
+	void ScenePicker::RenderIdPass(Scene& scene, const Camera& camera, uint32_t width, uint32_t height,
+	                               const std::vector<entt::entity>* only)
 	{
 		if (!m_Fbo || width == 0 || height == 0)
 			return;
@@ -43,9 +49,60 @@ namespace Cosmic
 		RenderCommand::Clear();
 		m_Fbo->ClearAttachment(1, -1);   // glClear does not touch integer attachments
 
-		// OnRender3D writes each entity's id into attachment 1 (u_EntityID → o_EntityID,
-		// S4.6). Color lands in attachment 0 and is only used for the debug view.
-		scene.OnRender3D(camera);
+		if (!only)
+		{
+			// OnRender3D writes each entity's id into attachment 1 (u_EntityID →
+			// o_EntityID, S4.6). Color lands in attachment 0 (debug view only).
+			scene.OnRender3D(camera);
+		}
+		else
+		{
+			// K12 — selection-filtered pass: draw ONLY the given entities (the
+			// same shapes the full pass covers) so the ID attachment becomes a
+			// selection mask for the outline pass. Flat color path — the color
+			// attachment is irrelevant here; only the ids matter.
+			auto& reg = scene.GetRegistry();
+			Renderer3D::BeginScene(camera);
+			for (entt::entity h : *only)
+			{
+				Entity e(h, &scene);
+				if (!e || !e.HasComponent<TransformComponent>())
+					continue;
+				const int id = (int)(uint32_t)h;
+
+				if (e.HasComponent<MeshRendererComponent>())
+				{
+					const auto& mr = e.GetComponent<MeshRendererComponent>();
+					if (mr.MeshAsset)
+						Renderer3D::DrawMesh(mr.MeshAsset, scene.GetWorldTransform(e),
+						                     glm::vec4(1.0f), id);
+				}
+				if (e.HasComponent<LODGroupComponent>())
+				{
+					const auto& lod = reg.get<LODGroupComponent>(h);
+					const auto& t   = reg.get<TransformComponent>(h);
+					const int level = LODGroupComponent::SelectLevel(
+						lod.Levels, glm::distance(camera.GetPosition(), t.Position));
+					if (level >= 0 && lod.Levels[level].MeshAsset)
+						Renderer3D::DrawMesh(lod.Levels[level].MeshAsset,
+						                     scene.GetWorldTransform(e), glm::vec4(1.0f), id);
+				}
+				if (e.HasComponent<VoxelVolumeComponent>())
+				{
+					const auto& vc = reg.get<VoxelVolumeComponent>(h);
+					if (vc.Volume && vc.Render)
+					{
+						const glm::mat4 xf =
+							glm::translate(glm::mat4(1.0f), vc.Volume->GetOrigin()) *
+							glm::scale(glm::mat4(1.0f), glm::vec3(vc.Volume->GetVoxelSize()));
+						for (const auto& kv : vc.Render->ChunkMeshes)
+							if (kv.second)
+								Renderer3D::DrawMesh(kv.second, xf, glm::vec4(1.0f), id);
+					}
+				}
+			}
+			Renderer3D::EndScene();
+		}
 
 		m_Fbo->Unbind();
 	}
@@ -111,6 +168,7 @@ namespace Cosmic
 	}
 
 	uint32_t ScenePicker::GetColorTextureID() const { return m_Fbo ? m_Fbo->GetColorAttachmentRendererID(0) : 0; }
+	uint32_t ScenePicker::GetIdTextureID() const    { return m_Fbo ? m_Fbo->GetColorAttachmentRendererID(1) : 0; }
 	uint32_t ScenePicker::GetWidth() const          { return m_Fbo ? m_Fbo->GetWidth()  : 0; }
 	uint32_t ScenePicker::GetHeight() const         { return m_Fbo ? m_Fbo->GetHeight() : 0; }
 }

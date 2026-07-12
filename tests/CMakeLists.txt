@@ -51,6 +51,7 @@ add_executable(CosmicTests
     test_template_scripts.cpp
     test_voxel.cpp
     test_voxel_collision.cpp
+    test_branding.cpp
 )
 
 target_link_libraries(CosmicTests PRIVATE Cosmic)

@@ -115,6 +115,17 @@ namespace Cosmic
         size_t UndoCount() const { return m_Undo.size(); }
         size_t RedoCount() const { return m_Redo.size(); }
 
+        // Label of the i-th most recent undoable/redoable command (0 = what the
+        // next Undo/Redo applies). Read-only — history UIs (K4). "" out of range.
+        std::string UndoNameAt(size_t i) const
+        {
+            return i < m_Undo.size() ? m_Undo[m_Undo.size() - 1 - i]->Name() : std::string{};
+        }
+        std::string RedoNameAt(size_t i) const
+        {
+            return i < m_Redo.size() ? m_Redo[m_Redo.size() - 1 - i]->Name() : std::string{};
+        }
+
         // Drop the whole history (project close / new scene). Does NOT fire the
         // dirty callback.
         void Clear();

@@ -490,6 +490,8 @@ every implementation phase (14–21), plus one bookkeeping pass now:
 | 19 (rendering menu) | per-item §8.6/§8.8 notes | rendering-pipeline/world-systems rows | terrain/water/particles updates | 05/06 updates | DG-8 refresh |
 | 20 (assets/anim) | §8.5 animation note; import § update | NEW animation rows; assets-io | NEW animation explainer §or doc | 04 update | — |
 | 21 (scripting/conn) | §22.7/§26 updates; Lua § if built | serial-telemetry (UDP), audio (positional) | audio/serial updates | 08 update | — |
+| 22 (editor shell/branding) | §16.5 camera-rig update (fly/possess); §43 Starforge notes (chrome v2) | core.md (`Window::SetIcon/ClearIcon`, `CommandStack::UndoNameAt/RedoNameAt`), rendering rows (`SetPolygonMode`, `SceneRendererSettings::Wireframe/Outline*`, `Renderer3D::DrawInfiniteGrid`), assets-io (`ImageIO::ReadPixels/ResizeRgba`, `utils/Branding` resolution order), ui.md (`WorkspaceLayer::SetBottomInsetPixels`), scene rows (`ScenePicker` filtered `RenderIdPass` + `GetIdTextureID`) | rendering-pipeline (outline pass 8b note) | D37/D38: branding how-to (drop a PNG at `branding/icon.png`), layout presets, viewport strip/per-op snap, camera modes, view modes, viewport drag-drop | — |
+| ↳ **DUE 2026-07-11** (Phase 22 R8 + K1–K13 ✅ code-complete; row queued for the next docs session). | | | | |
 
 Bookkeeping pass now (part of any next docs session): add the table above as tracked rows,
 and extend the §11 upkeep contract with rule 4: **"a phase's final work order runs its D40

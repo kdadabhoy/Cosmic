@@ -87,6 +87,9 @@ namespace Cosmic
 		// =====================================================================
 		Ref<Shader> MeshShader;
 
+		// K10 — infinite editor grid (one fullscreen-triangle immediate draw).
+		Ref<Shader> InfiniteGridShader;
+
 		// =====================================================================
 		// --- Lighting v1 (S4.5): binding-0 lights UBO ---
 		// =====================================================================
@@ -208,6 +211,11 @@ namespace Cosmic
 		if (!s_Data.MeshShader)
 			CS_CORE_ERROR("Renderer3D: Failed to load Mesh3D shader!");
 
+		// --- Infinite grid (K10) — optional verb; a missing shader only disables it ---
+		s_Data.InfiniteGridShader = Shader::Create("assets/shaders/InfiniteGrid.glsl");
+		if (!s_Data.InfiniteGridShader)
+			CS_CORE_WARN("Renderer3D: InfiniteGrid shader unavailable — DrawInfiniteGrid is a no-op.");
+
 		// --- Lighting v1 (S4.5): allocate the lights UBO on its registry slot and
 		//     seed it with defaults so lit shaders read a sane block even before
 		//     SetLights. ---
@@ -245,6 +253,7 @@ namespace Cosmic
 		s_Data.LineVertexBuffer.reset();
 		s_Data.LineShader.reset();
 		s_Data.MeshShader.reset();
+		s_Data.InfiniteGridShader.reset();
 		s_Data.LightsUBO.reset();
 		s_Data.CameraUBO.reset();
 
@@ -414,6 +423,38 @@ namespace Cosmic
 			DrawLine({ -extent, 0.0f, d }, { extent, 0.0f, d }, c);
 			DrawLine({ d, 0.0f, -extent }, { d, 0.0f, extent }, c);
 		}
+	}
+
+	void Renderer3D::DrawInfiniteGrid(const InfiniteGridDesc& desc)
+	{
+		// K10 — one attribute-less fullscreen triangle; the fragment shader
+		// ray-casts each pixel onto the plane. IMMEDIATE (not queued): depth
+		// test stays ON (scene geometry occludes the grid via the exported
+		// fragment depth), depth WRITE goes off for the draw and is restored
+		// (the grid must never occlude scene content).
+		if (!s_Data.InScene)
+		{
+			CS_CORE_WARN("Renderer3D::DrawInfiniteGrid called outside BeginScene/EndScene — ignored.");
+			return;
+		}
+		if (!s_Data.InfiniteGridShader)
+			return;
+
+		auto& sh = s_Data.InfiniteGridShader;
+		sh->Bind();
+		sh->SetMat4("u_ViewProj",    s_Data.ViewProjection);
+		sh->SetMat4("u_InvViewProj", glm::inverse(s_Data.ViewProjection));
+		sh->SetFloat3("u_CameraPos", s_Data.CameraPos);
+		sh->SetFloat("u_Height",     desc.Height);
+		sh->SetFloat4("u_MinorColor", desc.MinorColor);
+		sh->SetFloat4("u_MajorColor", desc.MajorColor);
+		sh->SetFloat4("u_AxisXColor", desc.AxisXColor);
+		sh->SetFloat4("u_AxisZColor", desc.AxisZColor);
+		sh->SetFloat("u_FadeDistance", desc.FadeDistance);
+
+		RenderCommand::SetDepthWrite(false);
+		RenderCommand::DrawArrays(RendererAPI::PrimitiveTopology::Triangles, 0, 3);
+		RenderCommand::SetDepthWrite(true);
 	}
 
 	void Renderer3D::DrawAxes(const glm::mat4& transform, float size)

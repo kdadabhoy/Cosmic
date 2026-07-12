@@ -2,18 +2,28 @@
 
 #include "ViewportController.h"
 #include "commands/EditorCommands.h"
+#include "Prefabs.h"                // K13 — viewport prefab drops
 
 #include "layers/WorkspaceLayer.h"
 #include "physics/ScenePhysics.h"   // J8 — live physics debug draw during Play
 #include "scene/ui/UiSystem.h"      // U1 — canvas UI interaction + hit-test
 #include "voxel/VoxelVolume.h"      // V4 — voxel brush raycast
+#include "voxel/VoxelRender.h"      // R8 — entity-ID view draws voxel chunk meshes
+
+#include "ui/IconsLucide.h"         // K6 — strip glyphs
 
 #include <imgui.h>
+#include <imgui_internal.h>         // K13 — BeginDragDropTargetCustom (viewport rect)
 
 #include <glm/gtc/constants.hpp>
 
 #include <algorithm>
+#include <cctype>
 #include <cmath>
+#include <cstdio>
+#include <filesystem>
+
+namespace fs = std::filesystem;
 
 using namespace Cosmic;
 
@@ -84,6 +94,26 @@ namespace Starforge
             }
         }
 
+        // Entity-ID view (R8): a stable, well-separated flat color per entity id.
+        // Golden-ratio hue spread + a small hash-driven value wobble so neighbors
+        // in creation order never share a hue.
+        glm::vec4 IdColor(uint32_t id)
+        {
+            const float h = std::fmod((float)id * 0.61803398875f, 1.0f) * 6.0f;
+            const float v = 0.75f + 0.20f * std::fmod((float)id * 0.2971f, 1.0f);
+            const float c = v * 0.85f;                       // s = 0.85
+            const float x = c * (1.0f - std::abs(std::fmod(h, 2.0f) - 1.0f));
+            const float m = v - c;
+            glm::vec3 rgb(0.0f);
+            if      (h < 1.0f) rgb = { c, x, 0 };
+            else if (h < 2.0f) rgb = { x, c, 0 };
+            else if (h < 3.0f) rgb = { 0, c, x };
+            else if (h < 4.0f) rgb = { 0, x, c };
+            else if (h < 5.0f) rgb = { x, 0, c };
+            else               rgb = { c, 0, x };
+            return glm::vec4(rgb + m, 1.0f);
+        }
+
         // A little sun: a small ring with radiating spokes, drawn at a light's origin.
         void DrawSunGlyph(const glm::vec3& c, const glm::vec4& col)
         {
@@ -103,7 +133,7 @@ namespace Starforge
         m_Picker = ScenePicker::Create();
     }
 
-    void ViewportController::OnUpdate(EditorContext& ctx, OrbitCameraController& cam, float ts,
+    void ViewportController::OnUpdate(EditorContext& ctx, EditorCameraRig& rig, float ts,
                                       bool playing, Camera2DController* cam2d,
                                       const Camera* renderCamOverride, const glm::vec4& uiBandUv)
     {
@@ -117,34 +147,38 @@ namespace Starforge
 
         // The camera every pick/probe below sees: the viewport's ACTUAL render
         // camera — the Play game camera when overridden (U7), else the 2D rig
-        // in 2D mode, else the orbit camera.
+        // in 2D mode, else the rig's active camera (orbit / fly / possess, K7).
         const Camera& renderCam = renderCamOverride ? *renderCamOverride
             : (cam2d ? static_cast<const Camera&>(cam2d->GetCamera())
-                     : static_cast<const Camera&>(cam.GetCamera()));
+                     : rig.ActiveCamera());
 
         ImGuiIO& io = ImGui::GetIO();
-        const bool canKey = vpHover && !io.WantTextInput && !io.WantCaptureKeyboard;
+        // Gizmo hotkeys yield while a fly-look drag is on (WASD/QE are MOVEMENT
+        // there; W must not flip the gizmo to Translate mid-flight).
+        const bool canKey = vpHover && !io.WantTextInput && !io.WantCaptureKeyboard &&
+                            !rig.IsFlying();
 
         if (canKey)
         {
             if (ImGui::IsKeyPressed(ImGuiKey_W, false)) m_Op = Gizmo::Operation::Translate;
             if (ImGui::IsKeyPressed(ImGuiKey_E, false)) m_Op = Gizmo::Operation::Rotate;
             if (ImGui::IsKeyPressed(ImGuiKey_R, false)) m_Op = Gizmo::Operation::Scale;
-            if (ImGui::IsKeyPressed(ImGuiKey_F, false)) FrameSelection(ctx, cam);
+            if (ImGui::IsKeyPressed(ImGuiKey_Q, false)) m_Op = Gizmo::Operation::Universal;   // K11
+            if (ImGui::IsKeyPressed(ImGuiKey_F, false)) FrameSelection(ctx, rig);
             if (ImGui::IsKeyPressed(ImGuiKey_G, false)) m_ShowGrid = !m_ShowGrid;
 
-            // Camera bookmarks: Ctrl+1..9 save, 1..9 recall.
+            // Camera bookmarks: Ctrl+1..9 save, 1..9 recall (seamless in every
+            // rig mode — RecallPose re-seeds the fly pose when flying).
             for (int i = 0; i < 9; ++i)
             {
                 if (!ImGui::IsKeyPressed((ImGuiKey)(ImGuiKey_1 + i), false)) continue;
+                auto& orbit = rig.Orbit();
                 if (io.KeyCtrl)
-                    m_Bookmarks[i] = { true, cam.GetYaw(), cam.GetPitch(), cam.GetDistance(), cam.GetTarget() };
+                    m_Bookmarks[i] = { true, orbit.GetYaw(), orbit.GetPitch(),
+                                       orbit.GetDistance(), orbit.GetTarget() };
                 else if (m_Bookmarks[i].Set)
-                {
-                    cam.SetTarget(m_Bookmarks[i].Target);
-                    cam.SetYawPitch(m_Bookmarks[i].Yaw, m_Bookmarks[i].Pitch);
-                    cam.SetDistance(m_Bookmarks[i].Dist);
-                }
+                    rig.RecallPose(m_Bookmarks[i].Target, m_Bookmarks[i].Yaw,
+                                   m_Bookmarks[i].Pitch, m_Bookmarks[i].Dist);
             }
         }
 
@@ -443,6 +477,65 @@ namespace Starforge
         Renderer3D::EndScene();
     }
 
+    void ViewportController::DrawEntityIdView(EditorContext& ctx, const Camera& cam)
+    {
+        if (!ctx.Scene)
+            return;
+
+        // Meshes stored by params/path must be live before we can draw them —
+        // the same top-of-frame syncs BuildRenderDesc runs.
+        ctx.Scene->SyncPrimitiveMeshes();
+        ctx.Scene->SyncVoxelVolumes(cam.GetPosition());
+
+        // Flat shading: lift the Lambert ambient floor to 1 so the per-draw color
+        // IS the pixel (restored after — sticky global).
+        const float prevAmbient = Renderer3D::GetAmbient();
+        Renderer3D::SetAmbient(1.0f);
+
+        Renderer3D::BeginScene(cam);
+
+        auto& reg = ctx.Scene->GetRegistry();
+
+        for (auto e : reg.view<TransformComponent, MeshRendererComponent>())
+        {
+            const auto& mr = reg.get<MeshRendererComponent>(e);
+            if (!mr.MeshAsset) continue;
+            const glm::mat4 xf = ctx.Scene->GetWorldTransform(Entity(e, ctx.Scene.get()));
+            Renderer3D::DrawMesh(mr.MeshAsset, xf, IdColor((uint32_t)e), (int)(uint32_t)e);
+        }
+
+        // LOD groups: same camera-distance level the lit pass would pick (S12.4).
+        for (auto e : reg.view<TransformComponent, LODGroupComponent>())
+        {
+            const auto& t   = reg.get<TransformComponent>(e);
+            const auto& lod = reg.get<LODGroupComponent>(e);
+            const int level = LODGroupComponent::SelectLevel(
+                lod.Levels, glm::distance(cam.GetPosition(), t.Position));
+            if (level < 0 || !lod.Levels[level].MeshAsset) continue;
+            const glm::mat4 xf = ctx.Scene->GetWorldTransform(Entity(e, ctx.Scene.get()));
+            Renderer3D::DrawMesh(lod.Levels[level].MeshAsset, xf, IdColor((uint32_t)e), (int)(uint32_t)e);
+        }
+
+        // Voxel volumes: every uploaded chunk mesh in the volume's color.
+        for (auto e : reg.view<VoxelVolumeComponent>())
+        {
+            const auto& vc = reg.get<VoxelVolumeComponent>(e);
+            if (!vc.Volume || !vc.Render) continue;
+            const glm::mat4 xf =
+                glm::translate(glm::mat4(1.0f), vc.Volume->GetOrigin()) *
+                glm::scale(glm::mat4(1.0f), glm::vec3(vc.Volume->GetVoxelSize()));
+            for (const auto& kv : vc.Render->ChunkMeshes)
+                if (kv.second)
+                    Renderer3D::DrawMesh(kv.second, xf, IdColor((uint32_t)e), (int)(uint32_t)e);
+        }
+
+        // Grid + selection wire boxes stay useful in the debug view.
+        DrawOverlayContent(ctx);
+
+        Renderer3D::EndScene();
+        Renderer3D::SetAmbient(prevAmbient);
+    }
+
     void ViewportController::DrawOverlayContent2D(EditorContext& ctx, const Camera2DController& cam)
     {
         // NO BeginScene/EndScene — same contract as DrawOverlayContent. Lines
@@ -552,14 +645,17 @@ namespace Starforge
         // scene depth still bound, so grid/selection lines occlude correctly.
         if (m_ShowGrid)
         {
-            Renderer3D::DrawGrid(50.0f, 1.0f,
-                                 glm::vec4(0.30f, 0.32f, 0.36f, 0.5f),
-                                 glm::vec4(0.45f, 0.47f, 0.52f, 0.8f), 10);
+            // K10 — the infinite grid (ray-plane fragment shader, decade steps,
+            // distance fade) replaces the fixed 50 m DrawGrid; the axis tripod
+            // stays for the Y direction the plane can't show.
+            Renderer3D::DrawInfiniteGrid({});
             Renderer3D::DrawAxes(glm::mat4(1.0f), 2.0f);
         }
 
-        // Selection outline: an oriented wire box around each selected mesh.
-        if (ctx.Scene)
+        // Selection wire boxes — the FALLBACK when the K12 outline pass is off
+        // (bypass view modes); the silhouette ring owns meshed selections
+        // otherwise. Lights/colliders below keep their glyphs either way.
+        if (ctx.Scene && !m_OutlinePassActive)
         {
             for (entt::entity h : ctx.Selection)
             {
@@ -674,6 +770,19 @@ namespace Starforge
         const glm::vec2 vpSize = app.GetViewportSize();
         if (vpSize.x < 1.0f || vpSize.y < 1.0f) { m_GizmoActive = m_GizmoOver = false; return; }
 
+        // Strip etiquette (K6): the overlay widgets draw first in this window —
+        // while one is hovered/active (a snap chip drag, a dropdown), the gizmo
+        // must not also grab the mouse. Skipping Manipulate mid-drag is safe:
+        // ImGuizmo's own drag holds no ImGui ActiveId, so this never interrupts
+        // a gizmo drag in progress.
+        if ((ImGui::IsAnyItemHovered() || ImGui::IsAnyItemActive()) && !Gizmo::IsUsing())
+        {
+            m_GizmoActive = false;
+            m_GizmoOver   = false;
+            m_GizmoWasUsing = false;
+            return;
+        }
+
         Gizmo::SetRect(vpPos.x, vpPos.y, vpSize.x, vpSize.y);
 
         Entity sel = ctx.PrimaryEntity();
@@ -681,7 +790,17 @@ namespace Starforge
         {
             auto& t = sel.GetComponent<TransformComponent>();
             const TransformComponent beforeThisFrame = t;   // pre-manipulate pose
-            const float snap = m_Snap ? m_SnapValue : 0.0f;
+
+            // K6 — per-operation snap; Universal rides the MOVE snap (ImGuizmo
+            // accepts a single snap value per call — documented limitation).
+            float snap = 0.0f;
+            switch (m_Op)
+            {
+                case Gizmo::Operation::Rotate:    snap = m_SnapRotateOn ? m_SnapRotate : 0.0f; break;
+                case Gizmo::Operation::Scale:     snap = m_SnapScaleOn  ? m_SnapScale  : 0.0f; break;
+                case Gizmo::Operation::Universal:
+                case Gizmo::Operation::Translate: snap = m_SnapMoveOn   ? m_SnapMove   : 0.0f; break;
+            }
             Gizmo::Manipulate(cam, t, m_Op, m_Space, snap);
 
             const bool usingNow = Gizmo::IsUsing();
@@ -703,35 +822,421 @@ namespace Starforge
         m_GizmoOver   = Gizmo::IsOver();
     }
 
-    void ViewportController::DrawToolbar(EditorContext& ctx, OrbitCameraController& cam)
+    void ViewportController::LoadSnapPrefs(const Prefs::EditorSettings& s)
     {
-        (void)ctx;
-        int op = (int)m_Op;
-        ImGui::TextDisabled("Tool:"); ImGui::SameLine();
-        ImGui::RadioButton("Move", &op, 0);   ImGui::SameLine();
-        ImGui::RadioButton("Rotate", &op, 1); ImGui::SameLine();
-        ImGui::RadioButton("Scale", &op, 2);  ImGui::SameLine();
-        m_Op = (Gizmo::Operation)op;
+        m_SnapMoveOn   = s.SnapMoveOn;
+        m_SnapRotateOn = s.SnapRotateOn;
+        m_SnapScaleOn  = s.SnapScaleOn;
+        m_SnapMove     = s.SnapMove;
+        m_SnapRotate   = s.SnapRotate;
+        m_SnapScale    = s.SnapScale;
+    }
 
-        ImGui::TextDisabled("|"); ImGui::SameLine();
-        int space = (int)m_Space;
-        ImGui::RadioButton("World", &space, (int)Gizmo::Space::World); ImGui::SameLine();
-        ImGui::RadioButton("Local", &space, (int)Gizmo::Space::Local); ImGui::SameLine();
-        m_Space = (Gizmo::Space)space;
+    void ViewportController::SaveSnapPrefs(Prefs::EditorSettings& s) const
+    {
+        s.SnapMoveOn   = m_SnapMoveOn;
+        s.SnapRotateOn = m_SnapRotateOn;
+        s.SnapScaleOn  = m_SnapScaleOn;
+        s.SnapMove     = m_SnapMove;
+        s.SnapRotate   = m_SnapRotate;
+        s.SnapScale    = m_SnapScale;
+    }
 
-        ImGui::TextDisabled("|"); ImGui::SameLine();
-        ImGui::Checkbox("Snap", &m_Snap); ImGui::SameLine();
-        ImGui::SetNextItemWidth(70.0f);
-        ImGui::DragFloat("##snapv", &m_SnapValue, 0.05f, 0.01f, 90.0f, "%.2f"); ImGui::SameLine();
-        ImGui::Checkbox("Grid", &m_ShowGrid); ImGui::SameLine();
-        ImGui::Checkbox("Colliders", &m_ShowColliders); ImGui::SameLine();
-        ImGui::Checkbox("Physics", &m_ShowPhysicsDebug); ImGui::SameLine();
+    void ViewportController::PrerenderNavCube(const Camera& cam, bool playing, bool mode2D)
+    {
+        // K8 — the cube pre-pass renders into its own FBO (outside the main
+        // scene); skipped where the widget is hidden (Play / 2D mode).
+        m_NavCubeFresh = false;
+        if (playing || mode2D)
+            return;
+        if (!m_NavCube)
+            m_NavCube = NavigationCube::Create(120);
+        m_NavCube->Render(cam.GetViewMatrix());
+        m_NavCubeFresh = true;
+    }
 
-        ImGui::TextDisabled("|"); ImGui::SameLine();
-        if (ImGui::SmallButton("Front")) cam.SnapView(ViewPreset::Front); ImGui::SameLine();
-        if (ImGui::SmallButton("Top"))   cam.SnapView(ViewPreset::Top);   ImGui::SameLine();
-        if (ImGui::SmallButton("Iso"))   cam.SnapView(ViewPreset::Iso);   ImGui::SameLine();
-        if (ImGui::SmallButton("Frame")) FrameSelection(ctx, cam);
+    void ViewportController::DrawViewportOverlays(EditorContext& ctx, EditorCameraRig& rig,
+                                                  bool playing, bool mode2D)
+    {
+        auto& app = Application::Get();
+        const glm::vec2 vpPos  = app.GetViewportPos();
+        const glm::vec2 vpSize = app.GetViewportSize();
+        if (vpSize.x < 40.0f || vpSize.y < 40.0f)
+            return;
+
+        const ImGuiStyle& style = ImGui::GetStyle();
+        const float sq = ImGui::GetFrameHeight();
+
+        // ---- K6: the header strip (hidden while playing, like the old bar) ----
+        if (!playing)
+        {
+            ImGui::SetCursorScreenPos(ImVec2(vpPos.x + 8.0f, vpPos.y + 8.0f));
+            ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.06f, 0.07f, 0.09f, 0.72f));
+            ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 6.0f);
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(6.0f, 4.0f));
+            ImGui::BeginChild("##k6strip", ImVec2(0, sq + 12.0f),
+                              ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AlwaysUseWindowPadding,
+                              ImGuiWindowFlags_NoScrollbar);
+
+            auto opButton = [&](const char* icon, Gizmo::Operation op, const char* tip)
+            {
+                const bool active = m_Op == op;
+                if (active)
+                {
+                    const ImVec4 acc = ImGui::GetStyleColorVec4(ImGuiCol_CheckMark);
+                    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(acc.x, acc.y, acc.z, 0.32f));
+                }
+                if (ImGui::Button(icon, ImVec2(sq, sq)))
+                    m_Op = op;
+                if (active)
+                    ImGui::PopStyleColor();
+                if (ImGui::IsItemHovered())
+                    ImGui::SetTooltip("%s", tip);
+                ImGui::SameLine(0.0f, 3.0f);
+            };
+            opButton(ICON_LC_MOVE_3D,   Gizmo::Operation::Translate, "Move (W)");
+            opButton(ICON_LC_ROTATE_3D, Gizmo::Operation::Rotate,    "Rotate (E)");
+            opButton(ICON_LC_SCALE_3D,  Gizmo::Operation::Scale,     "Scale (R)");
+            opButton(ICON_LC_MAXIMIZE,  Gizmo::Operation::Universal,
+                     "Universal (Q): move + rotate + scale in one gizmo.\n"
+                     "Snapping uses the MOVE increment.");
+
+            // World/Local.
+            {
+                const bool world = m_Space == Gizmo::Space::World;
+                if (ImGui::Button(world ? ICON_LC_GLOBE : ICON_LC_BOX, ImVec2(sq, sq)))
+                    m_Space = world ? Gizmo::Space::Local : Gizmo::Space::World;
+                if (ImGui::IsItemHovered())
+                    ImGui::SetTooltip(world ? "Gizmo space: World (click for Local)"
+                                            : "Gizmo space: Local (click for World)");
+                ImGui::SameLine(0.0f, 8.0f);
+            }
+
+            // Three per-operation snap chips: toggle + editable value (2208's
+            // "10 | 15° | 0.25" row).
+            auto snapChip = [&](const char* icon, bool& on, float& value,
+                                const char* fmt, float speed, float mn, float mx,
+                                const char* tip)
+            {
+                ImGui::PushID(icon);
+                if (on)
+                {
+                    const ImVec4 acc = ImGui::GetStyleColorVec4(ImGuiCol_CheckMark);
+                    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(acc.x, acc.y, acc.z, 0.32f));
+                }
+                if (ImGui::Button(icon, ImVec2(sq, sq)))
+                    on = !on;
+                if (on)
+                    ImGui::PopStyleColor();
+                if (ImGui::IsItemHovered())
+                    ImGui::SetTooltip("%s", tip);
+                ImGui::SameLine(0.0f, 2.0f);
+                ImGui::SetNextItemWidth(52.0f);
+                ImGui::BeginDisabled(!on);
+                ImGui::DragFloat("##v", &value, speed, mn, mx, fmt);
+                ImGui::EndDisabled();
+                if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
+                    ImGui::SetTooltip("%s", tip);
+                ImGui::PopID();
+                ImGui::SameLine(0.0f, 6.0f);
+            };
+            snapChip(ICON_LC_MOVE,      m_SnapMoveOn,   m_SnapMove,   "%.2f",  0.05f, 0.01f, 100.0f,
+                     "Move snap (m) — also the Universal gizmo's snap");
+            snapChip(ICON_LC_ROTATE_CW, m_SnapRotateOn, m_SnapRotate, "%.0f°", 1.0f,  1.0f,  90.0f,
+                     "Rotate snap (degrees)");
+            snapChip(ICON_LC_SCALING,   m_SnapScaleOn,  m_SnapScale,  "%.2f",  0.01f, 0.01f, 10.0f,
+                     "Scale snap (increment)");
+
+            // View toggles.
+            auto toggle = [&](const char* icon, bool& on, const char* tip)
+            {
+                if (on)
+                {
+                    const ImVec4 acc = ImGui::GetStyleColorVec4(ImGuiCol_CheckMark);
+                    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(acc.x, acc.y, acc.z, 0.32f));
+                }
+                if (ImGui::Button(icon, ImVec2(sq, sq)))
+                    on = !on;
+                if (on)
+                    ImGui::PopStyleColor();
+                if (ImGui::IsItemHovered())
+                    ImGui::SetTooltip("%s", tip);
+                ImGui::SameLine(0.0f, 3.0f);
+            };
+            toggle(ICON_LC_GRID_3X3, m_ShowGrid,         "Grid (G)");
+            toggle(ICON_LC_BOXES,    m_ShowColliders,    "Collider gizmos (J8)");
+            toggle(ICON_LC_ACTIVITY, m_ShowPhysicsDebug, "Live physics debug draw during Play (J8)");
+            ImGui::SameLine(0.0f, 8.0f);
+
+            // R8 — view-mode dropdown (Lit · Unlit · Wireframe · Entity ID).
+            {
+                static const char* kModes[] = { "Lit", "Unlit", "Wireframe", "Entity ID" };
+                int vm = (int)m_ViewMode;
+                ImGui::SetNextItemWidth(96.0f);
+                if (ImGui::Combo("##k6viewmode", &vm, kModes, 4))
+                    m_ViewMode = (ViewMode)vm;
+                if (ImGui::IsItemHovered())
+                    ImGui::SetTooltip("View mode (R8): Unlit = flat albedo, Wireframe = line\n"
+                                      "rasterization, Entity ID = flat per-entity hash colors.");
+                ImGui::SameLine(0.0f, 8.0f);
+            }
+
+            // K7 — camera dropdown: Free (Orbit) / Free (Fly) / cameras by Tag.
+            if (!mode2D)
+            {
+                std::string label = "Free (Orbit)";
+                if (rig.GetMode() == EditorCameraRig::Mode::Fly)     label = "Free (Fly)";
+                if (rig.GetMode() == EditorCameraRig::Mode::Possess) label = "Possessed";
+                if (rig.GetMode() == EditorCameraRig::Mode::Possess && ctx.Scene)
+                    if (Entity e = ctx.Scene->FindByUUID(rig.PossessedEntity());
+                        e && e.HasComponent<TagComponent>())
+                        label = e.GetComponent<TagComponent>().Tag;
+
+                ImGui::SetNextItemWidth(140.0f);
+                if (ImGui::BeginCombo("##k6camera", (ICON_LC_CAMERA + (" " + label)).c_str()))
+                {
+                    if (ImGui::Selectable("Free (Orbit)", rig.GetMode() == EditorCameraRig::Mode::Orbit))
+                        rig.SetMode(EditorCameraRig::Mode::Orbit);
+                    if (ImGui::Selectable("Free (Fly)", rig.GetMode() == EditorCameraRig::Mode::Fly))
+                        rig.SetMode(EditorCameraRig::Mode::Fly);
+                    if (ctx.Scene)
+                    {
+                        bool sep = false;
+                        auto view = ctx.Scene->GetRegistry()
+                            .view<CameraComponent, TransformComponent>();
+                        for (auto e : view)
+                        {
+                            Entity ent(e, ctx.Scene.get());
+                            if (!ent.HasComponent<IDComponent>()) continue;
+                            if (!sep) { ImGui::Separator(); sep = true; }
+                            const std::string tag = ent.HasComponent<TagComponent>()
+                                ? ent.GetComponent<TagComponent>().Tag : std::string("Camera");
+                            const UUID id = ent.GetComponent<IDComponent>().ID;
+                            const bool selected = rig.GetMode() == EditorCameraRig::Mode::Possess &&
+                                                  (uint64_t)rig.PossessedEntity() == (uint64_t)id;
+                            if (ImGui::Selectable((tag + "##" + std::to_string((uint64_t)id)).c_str(), selected))
+                                rig.Possess(id);
+                        }
+                    }
+                    ImGui::EndCombo();
+                }
+                if (ImGui::IsItemHovered())
+                    ImGui::SetTooltip("Viewport camera (K7). RMB-hold in the viewport = temporary\n"
+                                      "fly (WASD+QE, LShift boost, scroll = speed). Possess renders\n"
+                                      "a scene camera's pose read-only.");
+
+                // Fly speed chip (scroll adjusts it while flying).
+                if (rig.IsFlying())
+                {
+                    ImGui::SameLine(0.0f, 6.0f);
+                    ImGui::AlignTextToFramePadding();
+                    ImGui::TextDisabled(ICON_LC_GAUGE " %.0f m/s", rig.Fly().GetMoveSpeed());
+                }
+                ImGui::SameLine(0.0f, 8.0f);
+            }
+
+            // Frame selection (the old toolbar's Frame; Front/Top/Iso now live
+            // on the K8 cube).
+            if (ImGui::Button(ICON_LC_FOCUS, ImVec2(sq, sq)))
+                FrameSelection(ctx, rig);
+            if (ImGui::IsItemHovered())
+                ImGui::SetTooltip("Frame selection (F)");
+
+            ImGui::EndChild();
+            ImGui::PopStyleVar(2);
+            ImGui::PopStyleColor();
+        }
+
+        // ---- K8: axis navigator (bottom-left; hidden in 2D/Play) --------------
+        if (m_NavCubeFresh && m_NavCube && !playing && !mode2D)
+        {
+            const float cube = (float)m_NavCube->GetSize();
+            const ImVec2 pos(vpPos.x + 10.0f, vpPos.y + vpSize.y - cube - 10.0f);
+            ImGui::SetCursorScreenPos(pos);
+            ImGui::Image((ImTextureID)(intptr_t)m_NavCube->GetTextureID(),
+                         ImVec2(cube, cube), ImVec2(0, 1), ImVec2(1, 0));
+            if (ImGui::IsItemHovered())
+            {
+                ImGui::SetTooltip("Click a face to snap the view");
+                if (ImGui::IsMouseClicked(ImGuiMouseButton_Left))
+                {
+                    const ImVec2 mouse = ImGui::GetMousePos();
+                    const float u = (mouse.x - pos.x) / cube;
+                    const float v = (mouse.y - pos.y) / cube;
+                    ViewPreset preset;
+                    if (m_NavCube->PickFace(u, v, preset))
+                        rig.SnapView(preset);
+                }
+            }
+        }
+
+        // ---- K9: stats chips (bottom-right; View-menu toggle) -----------------
+        if (m_ShowStatsChips)
+        {
+            const Renderer3D::Statistics s = Renderer3D::GetStats();
+            const float dist = rig.Orbit().GetDistance();
+            char text[256];
+            std::snprintf(text, sizeof(text),
+                          "%dx%d   " ICON_LC_BOXES " %u draws  %u submitted  %u culled  %u instanced   "
+                          ICON_LC_RULER " %.1f m   %.2f ms",
+                          (int)vpSize.x, (int)vpSize.y,
+                          s.DrawCalls, s.MeshesSubmitted, s.MeshesCulled,
+                          s.AutoInstancedMeshes + s.ExplicitInstances,
+                          dist, 1000.0f / std::max(1.0f, ImGui::GetIO().Framerate));
+            const ImVec2 ts = ImGui::CalcTextSize(text);
+            const ImVec2 pad(8.0f, 4.0f);
+            const ImVec2 p0(vpPos.x + vpSize.x - ts.x - pad.x * 2.0f - 10.0f,
+                            vpPos.y + vpSize.y - ts.y - pad.y * 2.0f - 10.0f);
+            ImDrawList* dl = ImGui::GetWindowDrawList();
+            dl->AddRectFilled(p0, ImVec2(p0.x + ts.x + pad.x * 2.0f, p0.y + ts.y + pad.y * 2.0f),
+                              IM_COL32(15, 17, 23, 185), 6.0f);
+            dl->AddText(ImVec2(p0.x + pad.x, p0.y + pad.y),
+                        ImGui::GetColorU32(ImGuiCol_Text), text);
+        }
+    }
+
+    void ViewportController::UpdateViewportDragDrop(EditorContext& ctx, const Camera& renderCam,
+                                                    Camera2DController* cam2d, bool playing)
+    {
+        // Drops are an EDIT operation: refused while playing (runtime scene) and
+        // while a gizmo drag is active (no accidental spawns mid-manipulation).
+        if (playing || !ctx.Scene || m_GizmoActive)
+            return;
+
+        auto& app = Application::Get();
+        const glm::vec2 vpPos  = app.GetViewportPos();
+        const glm::vec2 vpSize = app.GetViewportSize();
+        if (vpSize.x < 1.0f || vpSize.y < 1.0f)
+            return;
+
+        const ImRect rect(ImVec2(vpPos.x, vpPos.y),
+                          ImVec2(vpPos.x + vpSize.x, vpPos.y + vpSize.y));
+        if (!ImGui::BeginDragDropTargetCustom(rect, ImGui::GetID("##k13viewport_drop")))
+            return;
+
+        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ASSET_PATH"))
+        {
+            const std::string vfs((const char*)payload->Data);
+            std::string ext = fs::path(vfs).extension().string();
+            std::transform(ext.begin(), ext.end(), ext.begin(),
+                           [](unsigned char c) { return (char)std::tolower(c); });
+            const std::string stem = fs::path(vfs).stem().string();
+
+            const glm::vec2 mouse = Input::GetMouseScreenPosition();
+            const float px = mouse.x - vpPos.x, py = mouse.y - vpPos.y;
+
+            // The drop's world point: 2D mode = the XY plane point under the
+            // cursor; 3D = the ID-pass depth probe, falling back to 10 m along
+            // the camera ray through the cursor when it misses geometry.
+            glm::vec3 dropPoint(0.0f);
+            if (cam2d)
+            {
+                const glm::vec2 w = Camera2DController::ScreenToWorld(
+                    mouse, vpPos, vpSize, cam2d->GetFocus(), cam2d->GetZoom());
+                dropPoint = { w.x, w.y, 0.0f };
+            }
+            else if (!ProbeWorldPoint(ctx, renderCam, mouse, dropPoint))
+            {
+                const glm::mat4 invVP = glm::inverse(renderCam.GetViewProjectionMatrix());
+                const float nx = 2.0f * (px / vpSize.x) - 1.0f;
+                const float ny = 1.0f - 2.0f * (py / vpSize.y);
+                glm::vec4 pn = invVP * glm::vec4(nx, ny, -1.0f, 1.0f); pn /= pn.w;
+                glm::vec4 pf = invVP * glm::vec4(nx, ny,  1.0f, 1.0f); pf /= pf.w;
+                dropPoint = glm::vec3(pn) + glm::normalize(glm::vec3(pf) - glm::vec3(pn)) * 10.0f;
+            }
+
+            // The entity under the cursor (material/image assignment targets).
+            auto pickUnderCursor = [&]() -> Entity
+            {
+                if (!m_Picker || px < 0 || py < 0 || px >= vpSize.x || py >= vpSize.y)
+                    return {};
+                m_Picker->RenderIdPass(*ctx.Scene, renderCam,
+                                       (uint32_t)vpSize.x, (uint32_t)vpSize.y);
+                return m_Picker->Pick(*ctx.Scene, (int)px, (int)py);
+            };
+
+            static const char* kMeshExts[] = { ".obj", ".gltf", ".glb", ".fbx", ".stl", ".dae", ".ply" };
+            static const char* kImageExts[] = { ".png", ".jpg", ".jpeg", ".tga", ".bmp" };
+            const bool isMesh  = std::any_of(std::begin(kMeshExts),  std::end(kMeshExts),
+                                             [&](const char* e) { return ext == e; });
+            const bool isImage = std::any_of(std::begin(kImageExts), std::end(kImageExts),
+                                             [&](const char* e) { return ext == e; });
+
+            if (ext == ".cprefab")
+            {
+                // Instantiate live, place at the drop point, record ONE create
+                // step (the snapshot carries the position, so redo lands there).
+                Entity root = Prefabs::Instantiate(ctx, vfs);
+                if (root && root.HasComponent<TransformComponent>())
+                    root.GetComponent<TransformComponent>().Position = dropPoint;
+                if (root)
+                    Commands::RecordSpawn(ctx, root, "Drop Prefab " + stem);
+            }
+            else if (isMesh)
+            {
+                Commands::Create(ctx, stem, Entity{}, [&](Entity e)
+                {
+                    e.GetComponent<TransformComponent>().Position = dropPoint;
+                    e.AddComponent<MeshRendererComponent>().MeshPath = vfs;   // sync resolves
+                });
+                ctx.Log("[Drop] Spawned '" + stem + "' from " + vfs + ".");
+            }
+            else if (ext == ".cmat")
+            {
+                Entity hit = pickUnderCursor();
+                if (hit && hit.HasComponent<MeshRendererComponent>())
+                {
+                    Commands::AssignMaterial(ctx, hit, vfs);
+                    ctx.Log("[Drop] Assigned material '" + vfs + "'.");
+                }
+                else
+                    ctx.Log("[Drop] No mesh under the cursor for '" + vfs + "'.",
+                            LogSeverity::Warn);
+            }
+            else if (isImage)
+            {
+                // 2D-first: prefer the topmost sprite under the cursor's world
+                // XY point in 2D mode; otherwise the ID-picked entity.
+                Entity target;
+                if (cam2d)
+                {
+                    auto view = ctx.Scene->GetRegistry()
+                        .view<TransformComponent, SpriteRendererComponent>();
+                    for (auto e : view)
+                    {
+                        const auto& t = view.get<TransformComponent>(e);
+                        const auto& s = view.get<SpriteRendererComponent>(e);
+                        const glm::vec2 half = SpriteRendererComponent::WorldSize(
+                            s, { t.Scale.x, t.Scale.y },
+                            s.Resolved ? (int)s.Resolved->GetWidth() : 0,
+                            s.Resolved ? (int)s.Resolved->GetHeight() : 0) * 0.5f;
+                        if (std::abs(dropPoint.x - t.Position.x) <= std::abs(half.x) &&
+                            std::abs(dropPoint.y - t.Position.y) <= std::abs(half.y))
+                            target = Entity(e, ctx.Scene.get());
+                    }
+                }
+                if (!target)
+                    target = pickUnderCursor();
+
+                if (target && target.HasComponent<SpriteRendererComponent>())
+                {
+                    Commands::SetField(ctx, target,
+                                       entt::type_hash<SpriteRendererComponent>::value(),
+                                       "TexturePath",
+                                       Cosmic::Reflect::FieldValue{ vfs });
+                    ctx.Log("[Drop] Assigned sprite image '" + vfs + "'.");
+                }
+                else
+                    ctx.Log("[Drop] No SpriteRenderer under the cursor for '" + vfs + "'.",
+                            LogSeverity::Warn);
+            }
+            else
+            {
+                ctx.Log("[Drop] '" + ext + "' has no viewport drop action (use the Inspector slots).",
+                        LogSeverity::Warn);
+            }
+        }
+        ImGui::EndDragDropTarget();
     }
 
     bool ViewportController::SelectionBounds(EditorContext& ctx, glm::vec3& mn, glm::vec3& mx) const
@@ -791,7 +1296,7 @@ namespace Starforge
         return any;
     }
 
-    void ViewportController::FrameSelection(EditorContext& ctx, OrbitCameraController& cam)
+    void ViewportController::FrameSelection(EditorContext& ctx, EditorCameraRig& rig)
     {
         glm::vec3 mn, mx;
         if (!SelectionBounds(ctx, mn, mx))
@@ -799,6 +1304,6 @@ namespace Starforge
         if (m_Cam2D)   // U3 — 2D mode frames the XY extent on the 2D rig
             m_Cam2D->FrameBounds({ mn.x, mn.y }, { mx.x, mx.y });
         else
-            cam.FrameBounds(mn, mx);
+            rig.FrameBounds(mn, mx);   // K7 — seamless in fly mode too
     }
 }

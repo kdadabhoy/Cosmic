@@ -36,6 +36,14 @@ namespace Starforge::Prefs
         float CameraSpeed     = 1.0f;
         bool  PlaygroundOffered = false;   // E21 — first-run sample already offered
         bool  AdoptSceneCamera  = true;    // H8 — on open, adopt a Primary camera's pose
+
+        // K6 — per-operation snapping (the viewport strip chips).
+        bool  SnapMoveOn   = false;
+        bool  SnapRotateOn = false;
+        bool  SnapScaleOn  = false;
+        float SnapMove     = 0.25f;   // metres
+        float SnapRotate   = 15.0f;   // degrees
+        float SnapScale    = 0.1f;    // scale increment
     };
 
     // One project-library entry (S1).
@@ -200,6 +208,12 @@ namespace Starforge::Prefs
             s.CameraSpeed     = cfg->GetFloat("camera_speed", s.CameraSpeed);
             s.PlaygroundOffered = cfg->GetBool("playground_offered", s.PlaygroundOffered);
             s.AdoptSceneCamera  = cfg->GetBool("adopt_scene_camera", s.AdoptSceneCamera);
+            s.SnapMoveOn   = cfg->GetBool("snap_move_on",   s.SnapMoveOn);
+            s.SnapRotateOn = cfg->GetBool("snap_rotate_on", s.SnapRotateOn);
+            s.SnapScaleOn  = cfg->GetBool("snap_scale_on",  s.SnapScaleOn);
+            s.SnapMove     = cfg->GetFloat("snap_move",   s.SnapMove);
+            s.SnapRotate   = cfg->GetFloat("snap_rotate", s.SnapRotate);
+            s.SnapScale    = cfg->GetFloat("snap_scale",  s.SnapScale);
         }
         return s;
     }
@@ -214,6 +228,12 @@ namespace Starforge::Prefs
         f << "camera_speed = " << s.CameraSpeed << "\n";
         f << "playground_offered = " << (s.PlaygroundOffered ? "true" : "false") << "\n";
         f << "adopt_scene_camera = " << (s.AdoptSceneCamera ? "true" : "false") << "\n";
+        f << "snap_move_on = "   << (s.SnapMoveOn   ? "true" : "false") << "\n";
+        f << "snap_rotate_on = " << (s.SnapRotateOn ? "true" : "false") << "\n";
+        f << "snap_scale_on = "  << (s.SnapScaleOn  ? "true" : "false") << "\n";
+        f << "snap_move = "   << s.SnapMove   << "\n";
+        f << "snap_rotate = " << s.SnapRotate << "\n";
+        f << "snap_scale = "  << s.SnapScale  << "\n";
     }
 
     // Legacy in-tree discovery = subfolders of assets/projects/ that carry a

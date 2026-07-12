@@ -223,6 +223,15 @@ namespace Cosmic
         void SetTitle(const std::string& title);
         void SetSize(int width, int height);
 
+        // Runtime window/taskbar icon from an image file (K1 drop-a-file
+        // branding). Decodes via utils/ImageIO (PNG/JPG/BMP/TGA), builds the
+        // standard 16/32/48/256 px levels, and applies them to the live window +
+        // taskbar. On a decode failure the CURRENT icon is kept (a half-written
+        // file during a hot-swap must not blank the brand) and false returns.
+        // ClearIcon restores the platform default (the exe icon / GLFW logo).
+        bool SetIcon(const std::string& imagePath);
+        void ClearIcon();
+
         // Cursor capture for mouse-look (U7): hides the cursor and locks it to
         // the window (GLFW disabled-cursor mode — deltas keep flowing with no
         // edge clamping). Idempotent; hosts release on Escape by convention.

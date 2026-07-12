@@ -113,6 +113,13 @@ namespace Cosmic
 		}
 	}
 
+	void OpenGLRendererAPI::SetPolygonMode(PolygonMode mode)
+	{
+		// Core profile accepts GL_FRONT_AND_BACK only (per-face fill modes are a
+		// compatibility-profile relic).
+		glPolygonMode(GL_FRONT_AND_BACK, mode == PolygonMode::Line ? GL_LINE : GL_FILL);
+	}
+
 	/////////////////////////////////////////////////////////////////////////////////
 
 	/**

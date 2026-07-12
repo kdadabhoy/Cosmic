@@ -19,6 +19,8 @@
 
 #include "EditorContext.h"
 #include "EditorPrefs.h"
+#include "EditorCameraRig.h"
+#include "LayoutPresets.h"
 #include "ProjectManifest.h"
 #include "Packager.h"
 #include "ViewportController.h"
@@ -125,6 +127,13 @@ namespace Starforge
         void DrawEntityMenu();
         void DrawSaveAsPopup();
 
+        // --- Workspace layout presets (K3) -----------------------------------
+        LayoutPanels PanelSet();                            // the View-menu bools
+        void ApplyLayoutPreset(const std::string& name);    // built-in or user
+        void DrawLayoutPresetPicker(float squareSize);      // top-bar dropdown
+        void DrawSaveLayoutPopup();
+        std::string ProjectLayoutKey() const;               // path, or name (legacy)
+
         // --- Product homescreen / project library (S3) ---------------------
         void DrawHomescreen();
         void DrawProjectCard(const Prefs::ProjectEntry& e, float cardW);
@@ -146,6 +155,23 @@ namespace Starforge
         void RunStandalone();     // launch the app as if double-clicked
         void CaptureThumbnail();  // blit the viewport into <root>/.starforge/thumb.png
         void DrawAboutPopup();
+
+        // --- Drop-a-file branding (K1) --------------------------------------
+        // Resolve the branding/icon.png convention (utils/Branding), apply it to
+        // the live window/taskbar icon, (re)load the top-bar logo texture, and
+        // aim the hot-swap watcher at the resolved file's folder. Called on
+        // attach and whenever the watcher reports the file changed — replacing
+        // the PNG on disk re-brands the running editor, no restart.
+        void ApplyBrand();
+        void DrawBrandLogo(float height);   // logo image (top bar / homescreen / About)
+
+        // --- Status bar (K5) -------------------------------------------------
+        // A NoDecoration strip pinned in the band the workspace reserves under
+        // the dockspace (WorkspaceLayer::SetBottomInsetPixels — panels never
+        // underlap it). Hidden on the homescreen. FPS/ms, entity + selected
+        // counts, build-module state, play state; Phase 23 T2's asset-memory
+        // chip gets the reserved right-side slot.
+        void DrawStatusBar();
 
         // --- Polish (E21) --------------------------------------------------
         void DrawStatsWindow();  // entity + Renderer3D draw statistics
@@ -177,7 +203,10 @@ namespace Starforge
         void CheckScriptsBuilt();   // H8 — warn + hint when a scene references unbuilt scripts
 
         EditorContext m_Ctx;
-        Cosmic::OrbitCameraController m_Camera{ 16.0f / 9.0f };
+
+        // K7 — the editor camera rig: Orbit (CAD default) + Fly (RMB-hold /
+        // explicit) + Possess (render a CameraComponent's pose read-only).
+        EditorCameraRig m_Rig;
 
         // 2D authoring mode (U3): a Z-facing ortho rig (MMB pan / wheel zoom)
         // swapped in for the orbit camera by the toolbar "2D" toggle. View-only
@@ -259,6 +288,20 @@ namespace Starforge
         std::shared_ptr<Cosmic::CallbackSink>            m_LogSink;
         std::mutex                                       m_LogQueueMutex;
         std::vector<std::pair<LogSeverity, std::string>> m_LogQueue;
+
+        // Workspace layout presets (K3).
+        std::string m_ActivePreset = "Level";
+        std::string m_PendingLayoutIni;      // ImGui ini blob to load next frame
+        bool        m_OpenSaveLayout = false;
+        char        m_LayoutNameBuf[64] = "My Layout";
+
+        // Drop-a-file branding state (K1).
+        Cosmic::Ref<Cosmic::Texture2D> m_BrandTex;      // top-bar logo (the resolved icon)
+        Cosmic::FileWatcher m_BrandWatcher;             // hot-swap: resolved file's folder
+        std::string m_BrandWatchDir;
+        std::string m_BrandPath;                        // resolved icon ("" = engine default)
+        float       m_BrandDebounce = -1.0f;            // >= 0: seconds until re-apply
+        bool        m_BrandRetried  = false;            // one retry after a failed decode
 
         bool  m_ScriptsNeedBuild = false;   // H8 — scene references classes the module lacks
         bool  m_DockApplied     = false;

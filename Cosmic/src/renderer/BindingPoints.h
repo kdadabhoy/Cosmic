@@ -86,7 +86,12 @@ namespace Cosmic::Bindings
 	 *  a texture is bound here only when the SnowDesc supplies a mask. */
 	constexpr uint32_t TexUnitSnowMask = 12;
 
-	// F2 SceneRenderer claims NO new slots: it orchestrates the existing
+	/** K12 — the selection-outline id mask (`u_IdMask`, isampler2D): the
+	 *  ScenePicker's RED_INTEGER attachment, bound by SceneRenderer::PassOutline
+	 *  for the Outline.glsl composite only. */
+	constexpr uint32_t TexUnitOutlineMask = 13;
+
+	// F2 SceneRenderer claims NO other slots: it orchestrates the existing
 	// Renderer3D / EnvironmentMap / ShadowMap / PostProcessStack passes, which
 	// already own every binding above. (F5 instancing claims SSBO 9 above.)
 }
