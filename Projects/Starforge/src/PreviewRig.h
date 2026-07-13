@@ -70,6 +70,30 @@ namespace Starforge
         uint32_t RenderMaterial(const Cosmic::MaterialAsset& asset,
                                 uint32_t width, uint32_t height);
 
+        // ---- Skeletal preview (Phase 24 / M3) --------------------------------
+        // Render a skinned `mesh` at the pose given by `palette` (null/empty →
+        // bind pose / static) into the rig's FBO, optionally with a bone overlay
+        // drawn ON TOP of the mesh: joint crosses + parent lines from
+        // `jointModels` (baked-space per-joint transforms, i.e.
+        // ImportCorrection·global), `parents` the joint parent indices, `selected`
+        // the highlighted joint (its inbound bone + an inspect-only axis tripod).
+        // `material` null → the rig's neutral default (carries the skinned twin).
+        // Returns the color-attachment id; caches the view-projection for
+        // ProjectPoint. All args except `mesh` may be null/empty.
+        uint32_t RenderSkeletal(const Cosmic::Ref<Cosmic::Mesh>& mesh,
+                                const Cosmic::Ref<Cosmic::Material>& material,
+                                const glm::mat4* palette, uint32_t jointCount,
+                                const std::vector<glm::mat4>* jointModels,
+                                const std::vector<int>* parents,
+                                int selected, bool showBones,
+                                uint32_t width, uint32_t height);
+
+        // Project a baked-space model point (e.g. a joint origin) into pixel
+        // coords of the LAST RenderSkeletal image (top-left origin, w×h, matching
+        // the flipped-V ImGui::Image draw). Returns false if behind the camera.
+        bool ProjectPoint(const glm::vec3& modelPoint, uint32_t width, uint32_t height,
+                          glm::vec2& outPx) const;
+
         // Orbit input for the interactive image (pixel drag deltas / wheel).
         void Orbit(float dxPixels, float dyPixels);
         void Zoom(float wheelSteps);
@@ -116,6 +140,9 @@ namespace Starforge
         float m_Yaw   = 0.6109f;    // 35 deg
         float m_Pitch = -0.3491f;   // -20 deg
         float m_Zoom  = 1.0f;
+
+        // Last skeletal-preview view-projection (for ProjectPoint / joint picking).
+        glm::mat4 m_LastViewProj{ 1.0f };
 
         // Thumbnail service state.
         std::string                     m_CacheDir;

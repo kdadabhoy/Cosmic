@@ -45,9 +45,9 @@
 | Inspector v2 (property search, asset-slot widget, component copy/paste/reset/enable, live-Play behavior) | reflected auto-UI w/ undo | 23 · doc 22 T9–T12/T15 | now | L | ✅ 2026-07-12 |
 | Per-entity Active semantics + Hierarchy icons/toggles | no visibility/active concept | 23 · doc 22 T13/T14 | now | M | ✅ 2026-07-12 |
 | Console v2 + GPU profiler panel (Starforge port) | basic console; profiler only in Frontier | 23 · doc 22 T16/T17 | now | S | ✅ 2026-07-12 |
-| Asset-editor document host + reusable Timeline widget | one shared Inspector; no document tabs | 24 · doc 23 M1/M2 | now (anim/story editors sit on it) | L | ☐ |
-| Starforge Animation Editor (skeleton tree, bone-overlay preview, clip scrub, sockets UI) | none | 24 · doc 23 M3 | with doc 19 A2 | L | ☐ |
-| Reusable node canvas + Starforge Story Graph editor + post-chain graph view | doc 16 U6 ships the flow panel | 25 · doc 24 Q1/Q4/Q6 | after U6 + M1 | L | ☐ |
+| Asset-editor document host + reusable Timeline widget | one shared Inspector; no document tabs | 24 · doc 23 M1/M2 | now (anim/story editors sit on it) | L | ✅ 2026-07-12 (AssetEditorHost tabbed docs + IAssetEditor; pure-transport Timeline widget, display+scrub) |
+| Starforge Animation Editor (skeleton tree, bone-overlay preview, clip scrub, sockets UI) | none | 24 · doc 23 M3 | with doc 19 A2 | L | ✅ 2026-07-12 (skeleton tree + PreviewRig::RenderSkeletal bone overlay + joint pick + clip timeline; inspect-only) |
+| Reusable node canvas + Starforge Story Graph editor + post-chain graph view | doc 16 U6 ships the flow panel | 25 · doc 24 Q1/Q4/Q6 | after U6 + M1 | L | ✅ 2026-07-12 (flow editor rehosted as an M1 `FlowEditor` document on `NodeCanvas`; `StoryEditor` doc w/ rich nodes + Play preview; `PostChainEditor` read-only-topology view w/ undo-identical field edits) |
 | Undoable content-browser rename/delete | confirm-dialog only (by design, E10; rename itself ships in 23 · T6) | — | revisit only if it bites | S | ✖ |
 
 ## Platform, shipping, projects
@@ -84,9 +84,9 @@
 | Voxel worlds (chunks, meshing, edit, collision, gen) | none | 18 · doc 17 V1–V7 | after 14–17 (user-approved scope) | XL | ✅ 2026-07-08 (code + editor; recorded V7 demo stays on the user ledger) |
 | Visual *logic* scripting (blueprints) | — | — (doc 16 §3) | explicit demand post-flow; doctrine is C++ logic | XL | ✖ |
 | Navmesh / AI pathfinding (Recast/Detour, bake + `.cnav`, crowd agents, script `Nav()`) | none | 26 · doc 25 N1–N5 | **now — verdict flipped 2026-07-11** (editor vision + Forge Isle AI) | XL | ☐ |
-| Flow variables (typed blackboard on `.cflow`: groups, defaults, guards/actions/`Flow().GetVar`) | guards read reflected entity fields only | 25 · doc 24 Q2 | now (editor vision) | M | ☐ |
-| Story graphs (`.cstory` dialogue runtime: speaker/portrait/audio/options w/ guards + once; zero-code UI binding) | none | 25 · doc 24 Q3/Q4 | now (editor vision) | L | ☐ |
-| Joint sockets (attach entities to animated joints) | none | 24 · doc 23 M4 | with doc 19 A2 | M | ☐ |
+| Flow variables (typed blackboard on `.cflow`: groups, defaults, guards/actions/`Flow().GetVar`) | guards read reflected entity fields only | 25 · doc 24 Q2 | now (editor vision) | M | ✅ 2026-07-12 (FlowAsset::Variables Bool/Number/String/Enum, variable guards + setVar actions, `Flow()` script proxy, versioned `.cflow` — v1 loads unchanged; headless-tested) |
+| Story graphs (`.cstory` dialogue runtime: speaker/portrait/audio/options w/ guards + once; zero-code UI binding) | none | 25 · doc 24 Q3/Q4 | now (editor vision) | L | ✅ 2026-07-12 (GL-free `StoryGraph`/`StoryRunner` — nodes/options/guards/Once/signals + shared `EvaluateFlowGuard`; `StoryUiBinding` stock template; `StoryEditor` document; headless-tested) |
+| Joint sockets (attach entities to animated joints) | none | 24 · doc 23 M4 | with doc 19 A2 | M | ✅ 2026-07-12 (reflected SocketComponent + GetWorldTransform composition through the pose palette; headless-tested) |
 | 2D lighting (radial lights + ambient darkness over Renderer2D) | 2D is unlit | 27 · doc 26 X5 | now (2D game parity) | M/L | ☐ |
 | World-anchored UI (nameplates/prompts/health bars via UiWorldAnchor) | screen-space canvas only | 27 · doc 26 X6 | now | S/M | ☐ |
 | Render-to-texture verb (+ UiImage runtime texture; minimap building block) | offscreen passes are internal-only | 27 · doc 26 X7 | now | M | ☐ |
@@ -122,7 +122,7 @@
 | Positional/3D audio (panning, doppler, streaming) | distance-gain loops app-side | 21 · doc 20 C2 | true 3D audio need (Forge Isle polish may fire it) | M | ⏸ |
 | Physical-atmosphere sky (turbidity/Rayleigh/Mie, IBL-matched) | artistic gradient/detailed/HDRI modes | 27 · doc 26 X1 | now (editor vision) | L | ☐ |
 | Environment polish (sun elevation/azimuth widget, ambient intensity, exposed gamma, sun angular size) | raw vec3 sun; gamma fixed 2.2 | 27 · doc 26 X2 | now | S | ☐ |
-| Vignette post pass (tonemap-folded, default off) | none | 25 · doc 24 Q5 | now | S | ☐ |
+| Vignette post pass (tonemap-folded, default off) | none | 25 · doc 24 Q5 | now | S | ✅ 2026-07-12 (folded into `Tonemap.glsl`, gated on `u_VignetteAmount>0` ⇒ byte-identical off; `EnvironmentComponent` fields + Engine3DDemo toggle; conformance green) |
 | Particle curl-noise turbulence + live noise preview + bounds clamp | recipe forces only (gravity/drag/wind) | 27 · doc 26 X3/X4 | now (CPU/GPU twins stay in lockstep) | M | ☐ |
 | Arbitrary post-FX pass-graph executor | fixed verified chain (Q6 ships a graph *view* of it) | — | ✖ decision #13 2026-07-11 — revisit only with a real compositing need | XL | ✖ |
 | Vulkan / second RHI backend | **stay on OpenGL** (S13.3 provisional-closed) | — | doc 05 §12 reopen conditions (archived): GL perf wall, platform need, or driver pain | XL | ✖ |
@@ -134,9 +134,9 @@
 | --- | --- | --- | --- | --- | --- |
 | assimp backend ON (FBX/STL/DAE/PLY live) | written, gated off (`COSMIC_WITH_ASSIMP`) | 20 · doc 19 A1 | now (anchor of Phase 20; feeds Phases 23–24) | M | ✅ 2026-07-12 (assimp v5.4.3 vendored/trimmed, default ON; + glTF via cgltf, multi-mesh `#i` children, materials→`.cmat`) |
 | Skeletal animation (skins/clips/skinning) | none | 20 · doc 19 A2 | **fired 2026-07-11** — Forge Isle is the character project; editor superstructure = Phase 24 | XL | ✅ 2026-07-12 (runtime: Skeleton/Clip sampling, glTF+FBX skins, SSBO-10 GPU skinning + shadow twin, Animator + editor scrub; Fox verified on-GPU) |
-| Animator crossfade tier (script-driven clip switching w/ timed blend) | — | 24 · doc 23 M6 | with A2 (the minimal tier a playable character needs) | S | ☐ |
+| Animator crossfade tier (script-driven clip switching w/ timed blend) | — | 24 · doc 23 M6 | with A2 (the minimal tier a playable character needs) | S | ✅ 2026-07-12 (AnimationClip::BlendLocals pose blend + Animator CrossfadeTo + Animator() script proxy; headless-tested) |
 | Animation blend trees / state machines (full controller graph + editor) | — | — (doc 23 M6 restates the park) | after Forge Isle ships; editor would ride Phase 25's canvas | L | ✖ |
-| Material slots (multi-material meshes on ONE entity, per-slot override) | one slot; multi-material sources import as child entities | 24 · doc 23 M5 | with A1 (engine-architectural — schedule deliberately) | L | ☐ |
+| Material slots (multi-material meshes on ONE entity, per-slot override) | one slot; multi-material sources import as child entities | 24 · doc 23 M5 | with A1 (engine-architectural — schedule deliberately) | L | ✅ 2026-07-12 (Mesh submesh ranges + MeshRenderer MaterialPaths + per-submesh queue entries; empty-vector legacy compat, serializer-tested) |
 | STEP/CAD B-rep import (`step2gltf` tool) | STL path only | 20 · doc 19 A3 | STEP-only workflow appears | L | ⏸ |
 | CSG booleans (manifold) | primitives only | 20 · doc 19 A8 | modeling outgrows primitives | M | ⏸ |
 | Connectivity: UDP sockets | serial only | 21 · doc 20 C1 | UDP telemetry/sim link need | S | ⏸ |

@@ -19,8 +19,11 @@ namespace Starforge
 {
     // What a double-click on the tile does. The panel maps these onto its
     // existing cross-panel requests (open routing stays unchanged for the three
-    // that already had behavior: Scene, Prefab, Texture).
-    enum class AssetOpen { None, Scene, Prefab, Texture, Model, Material };
+    // that already had behavior: Scene, Prefab, Texture). AnimationEditor is the
+    // Phase 24 / M1 open-in-editor action — it routes to the AssetEditorHost, not
+    // a cross-panel request, so it lives in the `Editor` column below.
+    enum class AssetOpen { None, Scene, Prefab, Texture, Model, Material,
+                           AnimationEditor, FlowEditor, StoryEditor };
 
     struct AssetTypeInfo
     {
@@ -28,6 +31,11 @@ namespace Starforge
         ImU32       Color = IM_COL32(150, 150, 155, 255);
         const char* Name  = "File";
         AssetOpen   Open  = AssetOpen::None;
+        // Open-in-editor action column (M1 / gap §8.1): when != None, the Content
+        // Browser offers "Open in <editor>" (context menu + double-click) routing
+        // the asset to the AssetEditorHost. Distinct from Open so a type can both
+        // spawn on drag AND open as a document (rigged models do both).
+        AssetOpen   Editor = AssetOpen::None;
     };
 
     // Identity for a lower-case extension WITH the dot (e.g. ".cmat"). Unknown

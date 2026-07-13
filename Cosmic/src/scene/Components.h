@@ -382,6 +382,18 @@ namespace Cosmic
         std::string   MaterialPath;
         bool          MaterialPathResolved = false;   // runtime-only; not reflected/serialized
 
+        // M5 — per-submesh material SLOTS for a multi-material mesh (indexed by the
+        // mesh's Submesh::MaterialIndex; several submeshes may share a slot). EMPTY
+        // ⇒ the legacy single MaterialAsset/MaterialPath path draws the whole mesh,
+        // BYTE-IDENTICAL — this is the compat gate. Not reflected (a vector<string>
+        // is not a reflectable FieldKind): the SceneSerializer special-cases the
+        // "MaterialPaths" array and the Inspector draws a bespoke "Materials" list.
+        // A slot whose path is empty / unresolved falls back to MaterialAsset (else
+        // the Lambert Color) for that range.
+        std::vector<std::string>   MaterialPaths;
+        std::vector<Ref<Material>> MaterialAssets;          // runtime-resolved, parallel to MaterialPaths
+        bool                       MaterialPathsResolved = false;   // runtime-only
+
         MeshRendererComponent() = default;
         MeshRendererComponent(const MeshRendererComponent&) = default;
         MeshRendererComponent(const Ref<Mesh>& mesh) : MeshAsset(mesh) {}
@@ -497,8 +509,90 @@ namespace Cosmic
         std::vector<glm::mat4> ScratchLocals;    // sampling scratch (avoids realloc)
         float                  TimeSeconds = 0.0f;
 
+        // M4 — per-joint BAKED-space model transforms (ImportCorrection · global),
+        // published every frame by Scene::UpdateAnimators from the current pose
+        // (or the bind pose when no clip is resolved). SocketComponent reads these
+        // to follow a joint, and the editor's bone overlay draws from them. Empty
+        // when the animator has no skeleton yet. NOT the skinning palette — these
+        // are the joint frames themselves (no inverse-bind), so a child placed at
+        // JointModelMatrices[j] sits ON the joint.
+        std::vector<glm::mat4> ScratchGlobals;      // ComputeGlobals scratch (avoids realloc)
+        std::vector<glm::mat4> JointModelMatrices;  // baked-space joint frames (sockets/overlay)
+
+        // --- Crossfade tier (M6) — script-driven timed blend to a NEXT clip. The
+        // full controller graph stays parked; this is the minimal tier a playable
+        // character needs (idle↔walk↔run). NextClipPath set ⇒ Scene::UpdateAnimators
+        // resolves NextClipRef, advances both heads, pose-blends the two sampled
+        // LOCALS (AnimationClip::BlendLocals) by FadeElapsed/FadeDuration, and
+        // PROMOTES the next clip to current when the fade completes. All runtime.
+        std::string            NextClipPath;         // target "file#clip" ("" = no crossfade)
+        std::string            ResolvedNextClipPath; // guard for NextClipRef resolution
+        Ref<AnimationClip>     NextClipRef;          // resolved from NextClipPath
+        float                  NextTimeSeconds = 0.0f;
+        float                  FadeDuration    = 0.0f;   // total fade seconds (0 = no fade)
+        float                  FadeElapsed     = 0.0f;   // seconds into the current fade
+        std::vector<glm::mat4> ScratchLocalsB;           // second-clip sampling scratch
+
+        /**
+         * @brief Start a timed crossfade to `clipPath` ("file#clip") over
+         * `seconds`. `seconds` <= 0 (or the same clip) switches immediately.
+         * Re-targets an in-flight fade. Only sets intent — Scene::UpdateAnimators
+         * resolves the clip (it owns the AssetLibrary) and runs the blend.
+         */
+        void CrossfadeTo(const std::string& clipPath, float seconds)
+        {
+            if (clipPath.empty() || clipPath == ClipPath)
+            {
+                // Already playing it (or cleared) — cancel any pending fade.
+                NextClipPath.clear();
+                FadeDuration = FadeElapsed = 0.0f;
+                return;
+            }
+            if (seconds <= 0.0f)
+            {
+                ClipPath = clipPath;          // hard switch (UpdateAnimators re-resolves ClipRef)
+                NormalizedTime = 0.0f;
+                NextClipPath.clear();
+                FadeDuration = FadeElapsed = 0.0f;
+                return;
+            }
+            NextClipPath = clipPath;          // UpdateAnimators resolves + blends
+            FadeDuration = seconds;
+            FadeElapsed  = 0.0f;
+        }
+
         AnimatorComponent() = default;
         AnimatorComponent(const AnimatorComponent&) = default;
+    };
+
+
+    /**
+     * @brief Attach an entity to a joint of an animated ancestor (Phase 24 / M4,
+     * gap §8.3). When an entity carries a SocketComponent and an ancestor in its
+     * parent chain has an AnimatorComponent whose skeleton contains a joint named
+     * `Joint`, Scene::GetWorldTransform composes:
+     *
+     *     socketWorld = ancestorWorld · jointFrame · (T(Position)·R(Rotation)·S(Scale))
+     *
+     * where `jointFrame` is the animator's published baked-space joint transform
+     * (AnimatorComponent::JointModelMatrices). The entity then follows the joint
+     * every frame — render, physics attach points, and scripts all read the
+     * composed transform. The entity's own TransformComponent local is ignored
+     * while the socket resolves (the offset lives here). If no ancestor animates,
+     * or the joint name is unknown, the entity falls back to its normal
+     * parent-relative transform (compat: entities WITHOUT the component are
+     * untouched, and a socket whose rig hasn't posed yet behaves as an ordinary
+     * child until the animator publishes joints).
+     */
+    struct COSMIC_API SocketComponent
+    {
+        std::string Joint;                          // target joint NAME (e.g. "hand.r")
+        glm::vec3   Position{ 0.0f, 0.0f, 0.0f };   // offset from the joint (metres)
+        glm::quat   Rotation{ 1.0f, 0.0f, 0.0f, 0.0f };  // offset rotation (w, x, y, z)
+        glm::vec3   Scale{ 1.0f, 1.0f, 1.0f };      // offset scale
+
+        SocketComponent() = default;
+        SocketComponent(const SocketComponent&) = default;
     };
 
 
@@ -612,6 +706,15 @@ namespace Cosmic
         bool  FXAA = true;
         bool  LensFlare = false;
         float LensFlareIntensity = 0.35f;
+
+        // Vignette (Q5, gap §9.4a) — post-tonemap edge darkening. Default OFF ⇒
+        // byte-identical output (compat). Amount is the blend strength; Radius/
+        // Feather shape the falloff; Color is the edge colour (black by default).
+        bool      Vignette = false;
+        float     VignetteAmount  = 0.35f;
+        float     VignetteRadius  = 0.9f;
+        float     VignetteFeather = 0.4f;
+        glm::vec3 VignetteColor{ 0.0f, 0.0f, 0.0f };
 
         EnvironmentComponent() = default;
         EnvironmentComponent(const EnvironmentComponent&) = default;
@@ -1017,6 +1120,7 @@ CS_REGISTER_COMPONENT(Cosmic::SpriteAnimationComponent)
 CS_REGISTER_COMPONENT(Cosmic::TilemapComponent)
 CS_REGISTER_COMPONENT(Cosmic::MeshRendererComponent)
 CS_REGISTER_COMPONENT(Cosmic::AnimatorComponent)
+CS_REGISTER_COMPONENT(Cosmic::SocketComponent)
 CS_REGISTER_COMPONENT(Cosmic::PrimitiveMeshComponent)
 CS_REGISTER_COMPONENT(Cosmic::LODGroupComponent)
 CS_REGISTER_COMPONENT(Cosmic::DirectionalLightComponent)

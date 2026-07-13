@@ -82,10 +82,26 @@ namespace Cosmic
 		glm::vec4 Weights{ 0.0f };   // matching blend weights (renormalized in-shader)
 	};
 
+	// A contiguous index range of a mesh sharing one material slot (Phase 24 /
+	// M5). An EMPTY submesh list means a single implicit submesh over the whole
+	// mesh with slot 0 — today's behaviour, byte-identical. MaterialIndex selects
+	// a slot in MeshRendererComponent::MaterialPaths (multiple submeshes may share
+	// a slot). Populated by the importer for multi-part sources; primitives / OBJ
+	// leave it empty.
+	struct Submesh
+	{
+		uint32_t IndexOffset   = 0;   // first index into the mesh's index buffer
+		uint32_t IndexCount    = 0;   // number of indices in this range
+		uint32_t MaterialIndex = 0;   // material slot this range draws with
+	};
+
 	struct MeshData
 	{
 		std::vector<MeshVertex> Vertices;
 		std::vector<uint32_t>   Indices;
+
+		// Optional per-material index ranges (M5). Empty ⇒ single-material mesh.
+		std::vector<Submesh>    Submeshes;
 
 		/**
 		 * @brief Bake a model matrix into the geometry: positions by `transform`,
@@ -205,6 +221,13 @@ namespace Cosmic
 		uint32_t                GetVertexCount() const	{ return m_VertexCount; }
 		uint32_t                GetIndexCount() const	{ return m_IndexCount; }
 
+		// M5 — per-material submesh ranges (empty ⇒ single-material whole mesh).
+		const std::vector<Submesh>& GetSubmeshes() const { return m_Submeshes; }
+		bool                        HasSubmeshes() const { return !m_Submeshes.empty(); }
+		// Number of material slots this mesh addresses (max MaterialIndex + 1), or
+		// 0 when it carries no submesh table. The Inspector's Materials list length.
+		uint32_t                    GetMaterialSlotCount() const;
+
 		/**
 		 * @brief Estimated GPU memory of this mesh's buffers (T2 asset accounting):
 		 * the canonical vertex buffer + the index buffer, plus the parallel skin
@@ -259,5 +282,9 @@ namespace Cosmic
 		// A2 — set only by CreateSkinned (bind-pose bounds; the palette can move
 		// geometry outside them — the animator pads culling accordingly).
 		Ref<Skeleton>    m_Skeleton;
+
+		// M5 — per-material index ranges (empty for single-material meshes). Set
+		// by Create(MeshData)/CreateSkinned from MeshData::Submeshes.
+		std::vector<Submesh> m_Submeshes;
 	};
 }

@@ -222,3 +222,134 @@ TEST_CASE("U5: a guard reads a reflected field and blocks/allows the transition"
         CHECK(fm.CurrentState() == "Menu");
     }
 }
+
+// ===========================================================================
+// Q2 — flow variables (typed blackboard)
+// ===========================================================================
+
+TEST_CASE("Q2: a variable-gated transition fires only after three increments")
+{
+    // Score starts at 0; entering Room adds 1 (a setVar action); the guarded
+    // "leave" transition needs Score >= 3. Scene-less states (variable guards
+    // need no scene).
+    const char* flow = R"({
+      "cosmic_flow": 2, "start": "Room",
+      "variables": [ { "name": "Score", "type": "number", "default": 0 } ],
+      "states": [
+        { "name": "Room",
+          "onEnter": [ { "setVar": { "var": "Score", "add": true, "value": 1 } } ],
+          "transitions": [
+            { "on": "leave", "to": "Exit", "if": { "var": "Score", "op": ">=", "value": 3 } },
+            { "on": "loop",  "to": "Room" } ] },
+        { "name": "Exit", "transitions": [] }
+      ]
+    })";
+
+    FlowAsset a;
+    std::string err;
+    REQUIRE(FlowAsset::LoadFromString(a, flow, &err));
+    CHECK(err.empty());
+    REQUIRE(a.Variables.size() == 1);
+    CHECK(a.Variables[0].Name == "Score");
+    CHECK(a.Variables[0].Default.ValueKind == FlowValue::Kind::Number);
+
+    FlowMachine fm;
+    fm.Start(a);
+    CHECK(fm.CurrentState() == "Room");
+    CHECK(fm.GetVar("Score").Number == doctest::Approx(1.0));   // onEnter ran once
+
+    // Score = 1 < 3 -> "leave" blocked.
+    fm.FeedSignal("leave");
+    fm.OnUpdate(0.0f);
+    CHECK(fm.CurrentState() == "Room");
+
+    // Re-enter Room twice via "loop" -> Score climbs to 3.
+    fm.FeedSignal("loop"); fm.OnUpdate(0.0f);
+    CHECK(fm.GetVar("Score").Number == doctest::Approx(2.0));
+    fm.FeedSignal("loop"); fm.OnUpdate(0.0f);
+    CHECK(fm.GetVar("Score").Number == doctest::Approx(3.0));
+
+    // Score = 3 >= 3 -> "leave" now fires.
+    fm.FeedSignal("leave");
+    fm.OnUpdate(0.0f);
+    CHECK(fm.CurrentState() == "Exit");
+}
+
+TEST_CASE("Q2: runtime SetVar/GetVar drives a variable guard (the Flow() proxy path)")
+{
+    const char* flow = R"({
+      "cosmic_flow": 2, "start": "A",
+      "variables": [ { "name": "Score", "type": "number", "default": 0 } ],
+      "states": [
+        { "name": "A", "transitions": [
+            { "on": "go", "to": "B", "if": { "var": "Score", "op": ">=", "value": 3 } } ] },
+        { "name": "B", "transitions": [] }
+      ]
+    })";
+    FlowAsset a;
+    REQUIRE(FlowAsset::LoadFromString(a, flow, nullptr));
+
+    FlowMachine fm;
+    fm.Start(a);
+    fm.FeedSignal("go"); fm.OnUpdate(0.0f);
+    CHECK(fm.CurrentState() == "A");   // Score 0
+
+    // Three script-style increments (what Flow().AddNumber does under the hood).
+    for (int i = 0; i < 3; ++i)
+        fm.SetVar("Score", FlowValue::MakeNumber(fm.GetVar("Score").Number + 1.0));
+    CHECK(fm.GetVar("Score").Number == doctest::Approx(3.0));
+
+    fm.FeedSignal("go"); fm.OnUpdate(0.0f);
+    CHECK(fm.CurrentState() == "B");
+
+    // A missing variable => the guard is false (unknown var never crashes).
+    CHECK(fm.GetVar("Nope").Bool == false);
+}
+
+TEST_CASE("Q2: old v1 .cflow loads unchanged (no variables, stays v1 on save)")
+{
+    FlowAsset a;
+    REQUIRE(FlowAsset::LoadFromString(a, kFlow, nullptr));
+    CHECK(a.Version == 1);
+    CHECK(a.Variables.empty());
+
+    // A variable-free flow re-saves at v1 with no "variables" block (byte-compat).
+    const std::string out = a.SaveToString();
+    CHECK(out.find("\"cosmic_flow\": 1") != std::string::npos);
+    CHECK(out.find("variables") == std::string::npos);
+    CHECK(out.find("setVar") == std::string::npos);
+}
+
+TEST_CASE("Q2: variables + enum + setVar round-trip through the serializer")
+{
+    FlowAsset a;
+    a.Start = "S";
+    FlowVariable score;  score.Name = "Score"; score.Group = "Player"; score.Default = FlowValue::MakeNumber(2.0);
+    FlowVariable mood;   mood.Name = "Mood"; mood.Default = FlowValue::MakeEnum("Calm"); mood.EnumOptions = { "Calm", "Angry" };
+    a.Variables = { score, mood };
+
+    FlowState s; s.Name = "S";
+    FlowAction inc; inc.ActionType = FlowAction::Type::SetVar; inc.Var = "Score"; inc.VarAdd = true; inc.Value = FlowValue::MakeNumber(1.0);
+    s.OnEnter.push_back(inc);
+    FlowTransition t; t.On = "x"; t.To = "S"; t.HasGuard = true;
+    t.Guard.Var = "Mood"; t.Guard.Op = "=="; t.Guard.Value = FlowValue::MakeString("Angry");
+    s.Transitions.push_back(t);
+    a.States.push_back(s);
+
+    const std::string json = a.SaveToString();
+    CHECK(json.find("\"cosmic_flow\": 2") != std::string::npos);
+
+    FlowAsset b;
+    REQUIRE(FlowAsset::LoadFromString(b, json, nullptr));
+    REQUIRE(b.Variables.size() == 2);
+    CHECK(b.Variables[0].Name == "Score");
+    CHECK(b.Variables[0].Group == "Player");
+    CHECK(b.Variables[0].Default.Number == doctest::Approx(2.0));
+    CHECK(b.Variables[1].Default.ValueKind == FlowValue::Kind::Enum);
+    REQUIRE(b.Variables[1].EnumOptions.size() == 2);
+    CHECK(b.Variables[1].EnumOptions[1] == "Angry");
+    REQUIRE(b.States.size() == 1);
+    CHECK(b.States[0].OnEnter[0].ActionType == FlowAction::Type::SetVar);
+    CHECK(b.States[0].OnEnter[0].VarAdd == true);
+    CHECK(b.States[0].Transitions[0].Guard.Var == "Mood");
+}

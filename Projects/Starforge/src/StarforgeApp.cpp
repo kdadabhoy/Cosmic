@@ -4,6 +4,9 @@
 
 #include "commands/EditorCommands.h"
 #include "Prefabs.h"
+#include "editors/AnimationEditor.h"   // M3 — the AssetEditorHost factory target
+#include "editors/FlowEditor.h"        // Q1 — flow document factory target
+#include "editors/StoryEditor.h"       // Q4 — story document factory target
 
 #include "layers/WorkspaceLayer.h"
 #include "scene/Scene.h"
@@ -910,6 +913,28 @@ namespace Starforge
                 Prefabs::Instantiate(m_Ctx, p);
         }
 
+        // Content-browser "Open in Animation Editor" request (M1/M3): open (or
+        // re-focus) a document for the rigged model in the AssetEditorHost.
+        if (!m_Ctx.PendingOpenAnimEditor.empty())
+        {
+            const std::string p = m_Ctx.PendingOpenAnimEditor;
+            m_Ctx.PendingOpenAnimEditor.clear();
+            m_Editors.Open(p, [p]() { return std::make_unique<AnimationEditor>(p); }, &m_ShowEditors);
+        }
+
+        // Content-browser graph-document request (Q1/Q4): open (or re-focus) a
+        // .cflow / .cstory document in the AssetEditorHost, dispatched by extension.
+        if (!m_Ctx.PendingOpenDocument.empty())
+        {
+            const std::string p = m_Ctx.PendingOpenDocument;
+            m_Ctx.PendingOpenDocument.clear();
+            const std::string ext = fs::path(p).extension().string();
+            if (ext == ".cflow")
+                m_Editors.Open(p, [p]() { return std::make_unique<FlowEditor>(p); }, &m_ShowEditors);
+            else if (ext == ".cstory")
+                m_Editors.Open(p, [p]() { return std::make_unique<StoryEditor>(p); }, &m_ShowEditors);
+        }
+
         // Content-browser model import request (T8): seed + open the E16 modal so
         // the user can set the .cmeta scale/up-axis before importing.
         if (!m_Ctx.PendingImportModel.empty())
@@ -945,6 +970,7 @@ namespace Starforge
         }
 
         m_WorldSystems.OnUpdate(m_Ctx);   // E18 — drain the async terrain build
+        m_Editors.OnUpdate(m_Ctx, ts);    // M1 — advance open document playback (Animation Editor scrub/play)
 
         // K1 — branding hot-swap: a change to the resolved icon.png re-applies the
         // window/taskbar icon + top-bar logo, debounced past the file copy.
@@ -1341,11 +1367,11 @@ namespace Starforge
         p.WorldSystems = &m_ShowWorldSystems;
         p.Voxel        = &m_ShowVoxel;
         p.TilePalette  = &m_ShowTilePalette;
-        p.FlowGraph    = &m_ShowFlowGraph;
         p.Telemetry    = &m_ShowTelemetry;
         p.Stats        = &m_ShowStats;
         p.Profiler     = &m_ShowProfiler;   // T17
         p.System       = &m_ShowSystem;     // T18
+        p.Editors      = &m_ShowEditors;    // M1
         return p;
     }
 
@@ -1504,10 +1530,15 @@ namespace Starforge
             if (m_ShowWorldSystems) m_WorldSystems.OnImGuiRender(m_Ctx, &m_ShowWorldSystems);
             if (m_ShowVoxel)        m_Voxel.OnImGuiRender(m_Ctx, &m_ShowVoxel);
             if (m_ShowTilePalette)  m_TilePalette.OnImGuiRender(m_Ctx, &m_ShowTilePalette);
-            if (m_ShowFlowGraph)    m_FlowGraph.OnImGuiRender(m_Ctx, &m_ShowFlowGraph);
             if (m_ShowTelemetry)    m_Telemetry.OnImGuiRender(m_Ctx, &m_ShowTelemetry);
             if (m_ShowProfiler)     m_Profiler.OnImGuiRender(m_Ctx, &m_ShowProfiler);
             if (m_ShowSystem)       m_System.OnImGuiRender(m_Ctx, &m_ShowSystem);
+            if (m_ShowPostChain)    m_PostChain.OnImGuiRender(m_Ctx, &m_ShowPostChain);   // Q6
+            // M1 — the asset-editor document host stays visible while any document
+            // is open even if the panel bool was toggled off (closing docs is the
+            // tab ✕, not the panel ✕); auto-shown when a document opens.
+            if (m_ShowEditors || m_Editors.AnyOpen())
+                m_Editors.OnImGuiRender(m_Ctx, &m_ShowEditors);
             if (m_ShowStats)        DrawStatsWindow();
         }
         else
@@ -2058,11 +2089,12 @@ namespace Starforge
             ImGui::MenuItem("Content Browser", nullptr, &m_ShowContent);
             ImGui::MenuItem("Console",         nullptr, &m_ShowConsole);
             ImGui::MenuItem("Environment",     nullptr, &m_ShowEnvironment);
+            ImGui::MenuItem("Post Chain",      nullptr, &m_ShowPostChain);   // Q6
             ImGui::MenuItem("Material Editor", nullptr, &m_ShowMaterial);
             ImGui::MenuItem("World Systems",   nullptr, &m_ShowWorldSystems);
             ImGui::MenuItem("Voxels",          nullptr, &m_ShowVoxel);
             ImGui::MenuItem("Tile Palette",    nullptr, &m_ShowTilePalette);
-            ImGui::MenuItem("Flow Graph",      nullptr, &m_ShowFlowGraph);
+            ImGui::MenuItem("Editors (Animation / Flow / Story)", nullptr, &m_ShowEditors);   // M1 host (Q1/Q4 docs)
             ImGui::MenuItem("Telemetry",       nullptr, &m_ShowTelemetry);
             ImGui::MenuItem("Profiler",        nullptr, &m_ShowProfiler);   // T17
             ImGui::MenuItem("System (Jobs/Resources)", nullptr, &m_ShowSystem);   // T18

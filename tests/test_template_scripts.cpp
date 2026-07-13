@@ -10,6 +10,7 @@
 
 #include "../Projects/Starforge/assets/templates/src/scripts/PaddleController.h"
 #include "../Projects/Starforge/assets/templates/src/scripts/PongBall.h"
+#include "../Projects/Starforge/assets/templates/src/scripts/StoryUiBinding.h"   // Q3
 
 TEST_CASE("U8: ForgePong template scripts compile and expose their tuned fields")
 {
@@ -23,4 +24,12 @@ TEST_CASE("U8: ForgePong template scripts compile and expose their tuned fields"
     CHECK(ball.Speed > 0.0f);
     CHECK(ball.SpeedUp >= 1.0f);
     CHECK(ball.CourtHalfW > ball.CourtHalfH);   // a pong court is wide
+}
+
+TEST_CASE("Q3: the stock Story Graph UI binding template compiles")
+{
+    StoryUiBinding b;
+    CHECK(StoryUiBinding::MaxOptions == 4);
+    CHECK(b.TextTag == "StoryText");
+    CHECK(b.OptionTagPrefix == "StoryOption");
 }

@@ -85,6 +85,14 @@ namespace Starforge
         // write would leave the resolved asset stale).
         void AssignMaterial(EditorContext& ctx, Cosmic::Entity e, const std::string& vfsPath);
 
+        // Set one material SLOT (M5) of `e`'s MeshRenderer::MaterialPaths to a
+        // `.cmat` (or "" to clear), undoable. Resizes the vector to fit `slot`;
+        // trailing empty slots are trimmed so an all-empty vector stays ABSENT
+        // from serialization (the compat gate). Resets MaterialPathsResolved so
+        // SyncPrimitiveMeshes rebuilds MaterialAssets.
+        void SetMaterialSlot(EditorContext& ctx, Cosmic::Entity e, size_t slot,
+                             const std::string& vfsPath);
+
         // Set one voxel (world voxel coords) on `e`'s VoxelVolume to `newId`,
         // undoable (V4). Applies immediately; records the old id for undo.
         // Consecutive edits sharing `stroke` coalesce into one undo step (a brush

@@ -89,6 +89,8 @@ namespace Starforge
         std::string PendingImportModel;       // (T8) a model DISK path → the shell opens the E16 import modal seeded with it
         std::vector<std::string> PendingDroppedFiles; // (T8) OS file-drop paths → the Content Browser imports them
         std::string PendingRevealAsset;       // (T11) a "project://..." asset the Content Browser should reveal + select
+        std::string PendingOpenAnimEditor;    // (M1) a rigged-model "project://..." to open in the Animation Editor document
+        std::string PendingOpenDocument;      // (Q1/Q4) a graph asset "project://..." (.cflow/.cstory) to open in the AssetEditorHost
 
         // --- Shared preview service (Phase 20 / A4, gap analysis §14.3) ----
         // The batch-thumbnail rig: Content Browser tiles (and Phase 23 asset

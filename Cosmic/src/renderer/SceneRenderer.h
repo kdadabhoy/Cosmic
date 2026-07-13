@@ -101,6 +101,15 @@ namespace Cosmic
 		               const Ref<Material>& material, int entityID = -1) const;
 		void DrawModel(const Ref<Model>& model, const glm::mat4& transform, int entityID = -1) const;
 
+		// Per-submesh LIT submit (M5): one material slot's index range through the
+		// Renderer3D queue. Depth passes never call this — the Scene draws the
+		// whole mesh once for shadow/coverage (materials don't affect depth), so a
+		// multi-material caster stays byte-identical to a single-material one.
+		// `material` null ⇒ the Lambert `color` path for that range.
+		void DrawMeshRange(const Ref<Mesh>& mesh, const glm::mat4& transform,
+		                   const Ref<Material>& material, const glm::vec4& color,
+		                   uint32_t indexOffset, uint32_t indexCount, int entityID = -1) const;
+
 		// Skinned submit (Phase 20 / A2): Reflection/Main -> Renderer3D::
 		// DrawMeshSkinned (the PBRSkinned twin); ShadowDepth -> ShadowMap::
 		// DrawCasterSkinned (deforming shadows); TopDownDepth -> the bind pose.
@@ -152,6 +161,10 @@ namespace Cosmic
 		// The tint is taken from the sun color; the sun screen position is derived
 		// from the frame camera. Auto-uses the detailed-sky when DetailedSky is set.
 		bool  LensFlare = false; float LensFlareIntensity = 0.35f;
+		// Vignette (Q5): post-tonemap edge darkening folded into the tonemap pass.
+		// Default off ⇒ byte-identical (the shader skips the block at amount 0).
+		bool      Vignette = false; float VignetteAmount = 0.35f, VignetteRadius = 0.9f, VignetteFeather = 0.4f;
+		glm::vec3 VignetteColor{ 0.0f };
 		// Wireframe (R8): rasterize the geometry passes (opaque + transparents)
 		// with PolygonMode::Line and skip the skybox draw (a full-screen cube's 12
 		// edges are noise, not information) — the standard editor debug view. Post

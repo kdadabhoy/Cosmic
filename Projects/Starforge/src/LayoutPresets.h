@@ -45,12 +45,13 @@ namespace Starforge
         bool* Stats        = nullptr;
         bool* Profiler     = nullptr;   // T17
         bool* System       = nullptr;   // T18
+        bool* Editors      = nullptr;   // M1 — asset-editor documents
     };
 
     class LayoutPresets
     {
     public:
-        static const std::vector<std::string>& BuiltIns();   // { Level, Assets, Telemetry }
+        static const std::vector<std::string>& BuiltIns();   // { Level, Assets, Animation, Telemetry }
         static bool IsBuiltIn(const std::string& name);
 
         // Apply a built-in: writes the visibility set and re-binds the engine dock

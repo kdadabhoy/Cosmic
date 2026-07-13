@@ -1079,14 +1079,26 @@ namespace Cosmic
 
             for (ImportedMeshDesc& sm : desc.Meshes)
             {
-                const uint32_t base = (uint32_t)data.Vertices.size();
+                const uint32_t base     = (uint32_t)data.Vertices.size();
+                const uint32_t idxStart = (uint32_t)data.Indices.size();
                 data.Vertices.insert(data.Vertices.end(),
                                      sm.Geometry.Vertices.begin(), sm.Geometry.Vertices.end());
                 for (uint32_t idx : sm.Geometry.Indices)
                     data.Indices.push_back(base + idx);
                 if (allSkinned)
                     skin.insert(skin.end(), sm.Skin.begin(), sm.Skin.end());
+
+                // M5 — one submesh range per part, carrying its material slot, so a
+                // merged multi-material model can render its slots on ONE entity.
+                data.Submeshes.push_back({ idxStart,
+                                           (uint32_t)sm.Geometry.Indices.size(),
+                                           (uint32_t)std::max(0, sm.MaterialIndex) });
             }
+
+            // A single-part merge is a plain single-material mesh — drop the table
+            // so its render path stays byte-identical (the compat gate).
+            if (data.Submeshes.size() < 2)
+                data.Submeshes.clear();
         }
 
         if (data.Vertices.empty())

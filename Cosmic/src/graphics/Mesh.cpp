@@ -8,6 +8,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/constants.hpp>
 
+#include <algorithm>
 #include <cmath>
 #include <cstdint>
 #include <cstdio>
@@ -140,7 +141,18 @@ namespace Cosmic
 
 	Ref<Mesh> Mesh::Create(const MeshData& data)
 	{
-		return Create(data.Vertices, data.Indices);
+		Ref<Mesh> mesh = Create(data.Vertices, data.Indices);
+		if (mesh)
+			mesh->m_Submeshes = data.Submeshes;   // M5 — per-material ranges (empty = single)
+		return mesh;
+	}
+
+	uint32_t Mesh::GetMaterialSlotCount() const
+	{
+		uint32_t slots = 0;
+		for (const Submesh& s : m_Submeshes)
+			slots = std::max(slots, s.MaterialIndex + 1);
+		return slots;
 	}
 
 	Ref<Mesh> Mesh::CreateSkinned(const MeshData& data, const std::vector<SkinVertex>& skin,
@@ -149,6 +161,8 @@ namespace Cosmic
 		Ref<Mesh> mesh = Create(data.Vertices, data.Indices);
 		if (!mesh)
 			return nullptr;
+
+		mesh->m_Submeshes = data.Submeshes;   // M5 — per-material ranges (empty = single)
 
 		if (!skeleton || skin.size() != data.Vertices.size())
 		{

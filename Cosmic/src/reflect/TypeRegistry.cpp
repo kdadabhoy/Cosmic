@@ -98,6 +98,15 @@ namespace Cosmic::Reflect
             .Field("Playing",        &AnimatorComponent::Playing)
             .Field("NormalizedTime", &AnimatorComponent::NormalizedTime).Range(0.0f, 1.0f).Tooltip("Play head — scrub while paused");
 
+        // Joint socket (M4) — attach this entity to a named joint of an animated
+        // ancestor. All fields are ordinary reflected kinds, so the serializer +
+        // Inspector auto-UI cover it with no special-casing (undo via CommitFieldEdit).
+        ClassIn<SocketComponent>(r, "Socket", "Rendering")
+            .Field("Joint",    &SocketComponent::Joint).Tooltip("Target joint name on an animated ancestor (e.g. hand.r)")
+            .Field("Position", &SocketComponent::Position).Meters()
+            .Field("Rotation", &SocketComponent::Rotation)
+            .Field("Scale",    &SocketComponent::Scale);
+
         // Parametric primitive (E15). Only the shape + params are reflected; the
         // built-mesh signature (BuiltSignature) is runtime-only and left out, so a
         // scene serializes as tiny shape/param text and the mesh is rebuilt on load.
@@ -161,7 +170,12 @@ namespace Cosmic::Reflect
             .Field("SsaoRadius",       &EnvironmentComponent::SsaoRadius).Range(0.0f, 4.0f)
             .Field("FXAA",             &EnvironmentComponent::FXAA)
             .Field("LensFlare",          &EnvironmentComponent::LensFlare)
-            .Field("LensFlareIntensity", &EnvironmentComponent::LensFlareIntensity).Range(0.0f, 2.0f);
+            .Field("LensFlareIntensity", &EnvironmentComponent::LensFlareIntensity).Range(0.0f, 2.0f)
+            .Field("Vignette",         &EnvironmentComponent::Vignette).Doc("Post-tonemap edge darkening (Q5); off = byte-identical")
+            .Field("VignetteAmount",   &EnvironmentComponent::VignetteAmount).Range(0.0f, 1.0f)
+            .Field("VignetteRadius",   &EnvironmentComponent::VignetteRadius).Range(0.0f, 1.5f)
+            .Field("VignetteFeather",  &EnvironmentComponent::VignetteFeather).Range(0.0f, 1.0f)
+            .Field("VignetteColor",    &EnvironmentComponent::VignetteColor).Color();
 
         // World-system authoring recipes (E18). Each holds a Ref<> asset (runtime,
         // not reflected) plus a reflected recipe that Scene::SyncWorldSystems maps

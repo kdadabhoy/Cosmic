@@ -1,7 +1,9 @@
-// panels/FlowGraphPanel.cpp — see header.
+// editors/FlowEditor.cpp — see FlowEditor.h. Rehost of U6's Flow Graph panel as
+// an M1 document (Phase 25 / Q1). Behaviour is unchanged from U6.
 
-#include "panels/FlowGraphPanel.h"
+#include "editors/FlowEditor.h"
 #include "EditorContext.h"
+#include "widgets/VariablesPanel.h"   // Q2 — shared blackboard editor
 
 #include <imgui.h>
 #include <nlohmann/json.hpp>
@@ -19,14 +21,12 @@ namespace Starforge
 {
     namespace
     {
-        // Filename stem of a VFS/disk path ("project://scenes/Main.cscene" -> "Main").
         std::string StemOf(const std::string& path)
         {
             if (path.empty()) return {};
             return fs::path(path).stem().string();
         }
 
-        // List files with `ext` under a VFS folder ("project://flows"), as VFS paths.
         std::vector<std::string> ListVfs(const std::string& vfsDir, const char* ext)
         {
             std::vector<std::string> out;
@@ -47,66 +47,37 @@ namespace Starforge
             std::error_code ec;
             return !vfsPath.empty() && fs::exists(FileSystem::Resolve(vfsPath), ec);
         }
-
-        const char* kOps[] = { "==", "!=", "<", ">", "<=", ">=" };
     }
 
     // ========================================================================
     // Document lifecycle
     // ========================================================================
 
-    bool FlowGraphPanel::Open(EditorContext& ctx, const std::string& vfsPath)
+    FlowEditor::FlowEditor(std::string vfsPath)
+        : m_Path(std::move(vfsPath))
     {
-        FlowAsset asset;
         std::string err;
-        if (!FlowAsset::Load(asset, vfsPath, &err))
+        if (FlowAsset::Load(m_Asset, m_Path, &err))
         {
-            ctx.Log("[Flow] Could not open '" + vfsPath + "': " + err, LogSeverity::Error);
-            return false;
+            m_Loaded   = true;
+            m_SelState = m_Asset.States.empty() ? -1 : 0;
+            m_PlaceNodes = true;
+            Revalidate();
+            ScanKnownSignals();
         }
-        m_Asset  = std::move(asset);
-        m_Path   = vfsPath;
-        m_Loaded = true;
-        m_Dirty  = false;
-        m_SelState = m_Asset.States.empty() ? -1 : 0;
-        m_SelTrans = -1;
-        m_UndoStack.clear();
-        m_RedoStack.clear();
-        m_PlaceNodes = true;
-        Revalidate();
-        ScanKnownSignals();
-        ctx.Log("[Flow] Opened " + vfsPath);
-        return true;
     }
 
-    void FlowGraphPanel::NewFlow(EditorContext& ctx, const std::string& name)
+    std::string FlowEditor::Title() const
     {
-        // Scaffold: one start state, laid out at the origin. Scene stays empty
-        // (red badge) until the author assigns one.
-        FlowAsset asset;
-        asset.Start = "MainMenu";
-        FlowState s;
-        s.Name = "MainMenu";
-        s.EditorPos = { 0.0f, 0.0f };
-        asset.States.push_back(s);
-
-        std::error_code ec;
-        fs::create_directories(FileSystem::Resolve("project://flows"), ec);
-        const std::string vfsPath = "project://flows/" + name + ".cflow";
-        if (!asset.Save(vfsPath))
-        {
-            ctx.Log("[Flow] Could not create '" + vfsPath + "'.", LogSeverity::Error);
-            return;
-        }
-        Open(ctx, vfsPath);
-        m_Canvas.CenterOnContent();
+        std::string t = StemOf(m_Path);
+        return t.empty() ? std::string("Flow") : t;
     }
 
-    bool FlowGraphPanel::SaveFlow(EditorContext& ctx)
+    bool FlowEditor::SaveFlow(EditorContext& ctx)
     {
         if (!m_Loaded || m_Path.empty())
             return false;
-        Revalidate();   // save proceeds even with problems; the panel lists them
+        Revalidate();
         if (!m_Asset.Save(m_Path))
         {
             ctx.Log("[Flow] Save FAILED for " + m_Path, LogSeverity::Error);
@@ -118,7 +89,7 @@ namespace Starforge
         return true;
     }
 
-    void FlowGraphPanel::Revalidate()
+    void FlowEditor::Revalidate()
     {
         m_Problems = m_Asset.Validate();
         m_MissingScene.clear();
@@ -127,8 +98,6 @@ namespace Starforge
         for (int i = 0; i < (int)m_Asset.States.size(); ++i)
         {
             const FlowState& s = m_Asset.States[i];
-            // An overlay state may reuse the under-scene (empty Scene is legal
-            // for overlays); anything else needs a resolvable file.
             const bool sceneOk = s.Scene.empty() ? s.Overlay : VfsExists(s.Scene);
             if (!sceneOk)
             {
@@ -138,7 +107,6 @@ namespace Starforge
             }
         }
 
-        // Reachability: BFS over transition targets from the start state.
         std::unordered_set<std::string> reachable;
         std::vector<const FlowState*> queue;
         if (const FlowState* start = m_Asset.Find(m_Asset.Start))
@@ -172,11 +140,8 @@ namespace Starforge
         }
     }
 
-    void FlowGraphPanel::ScanKnownSignals()
+    void FlowEditor::ScanKnownSignals()
     {
-        // Event-picker source: every UiButton Signal in the scenes this flow
-        // references (parsed straight from the .cscene JSON — no scene load),
-        // plus every On already authored (hand-entered names survive).
         std::unordered_set<std::string> found;
         for (const FlowState& s : m_Asset.States)
         {
@@ -197,12 +162,12 @@ namespace Starforge
                     found.insert(comps["UiButton"]["Signal"].get<std::string>());
             }
         }
-        found.insert("key:Escape");   // the standard pause binding is always offered
+        found.insert("key:Escape");
         m_KnownSignals.assign(found.begin(), found.end());
         std::sort(m_KnownSignals.begin(), m_KnownSignals.end());
     }
 
-    void FlowGraphPanel::Snapshot()
+    void FlowEditor::Snapshot()
     {
         m_UndoStack.push_back(m_Asset.SaveToString());
         if (m_UndoStack.size() > 64)
@@ -211,7 +176,7 @@ namespace Starforge
         m_Dirty = true;
     }
 
-    void FlowGraphPanel::ApplySnapshot(const std::string& json)
+    void FlowEditor::ApplySnapshot(const std::string& json)
     {
         FlowAsset asset;
         if (!FlowAsset::LoadFromString(asset, json))
@@ -220,101 +185,53 @@ namespace Starforge
         m_SelState = std::min(m_SelState, (int)m_Asset.States.size() - 1);
         m_SelTrans = -1;
         m_Dirty = true;
-        m_PlaceNodes = true;   // positions may have changed with the snapshot
+        m_PlaceNodes = true;
         Revalidate();
     }
 
     // ========================================================================
-    // Panel
+    // Document body (no outer Begin/End — the AssetEditorHost owns the tab)
     // ========================================================================
 
-    void FlowGraphPanel::OnImGuiRender(EditorContext& ctx, bool* pOpen)
+    void FlowEditor::OnImGuiRender(EditorContext& ctx)
     {
-        if (!ImGui::Begin("Flow Graph", pOpen))
+        if (!m_Loaded)
         {
-            ImGui::End();
-            return;
-        }
-
-        if (!ctx.ProjectOpen)
-        {
-            ImGui::TextDisabled("Open a project to author screen flows.");
-            ImGui::End();
+            ImGui::TextColored(ImVec4(0.95f, 0.5f, 0.4f, 1.0f),
+                               "Could not open flow: %s", m_Path.c_str());
             return;
         }
 
         DrawToolbar(ctx);
         ImGui::Separator();
 
-        if (!m_Loaded)
-        {
-            ImGui::TextWrapped("No flow open. Pick one above, or create a new one — a "
-                               ".cflow drives menu/game/pause navigation with zero code "
-                               "(set it as the project's startup flow to ship it).");
-            ImGui::End();
-            return;
-        }
-
-        // Canvas left, inspector right.
         const float inspectorW = 330.0f;
+        const float varsW = m_ShowVars ? 240.0f : 0.0f;
         ImGui::BeginChild("flow_canvas_region",
-                          ImVec2(ImGui::GetContentRegionAvail().x - inspectorW - 8.0f, 0.0f),
+                          ImVec2(ImGui::GetContentRegionAvail().x - inspectorW - varsW - 8.0f, 0.0f),
                           ImGuiChildFlags_None);
         DrawCanvas(ctx);
         ImGui::EndChild();
 
-        ImGui::SameLine();
+        if (m_ShowVars)
+        {
+            ImGui::SameLine();
+            ImGui::BeginChild("flow_vars_region", ImVec2(varsW, 0.0f), ImGuiChildFlags_Borders);
+            DrawVariablesPanel(ctx);
+            ImGui::EndChild();
+        }
 
-        ImGui::BeginChild("flow_inspector_region", ImVec2(inspectorW, 0.0f),
-                          ImGuiChildFlags_Borders);
+        ImGui::SameLine();
+        ImGui::BeginChild("flow_inspector_region", ImVec2(inspectorW, 0.0f), ImGuiChildFlags_Borders);
         DrawInspector(ctx);
         ImGui::EndChild();
-
-        ImGui::End();
     }
 
-    void FlowGraphPanel::DrawToolbar(EditorContext& ctx)
+    void FlowEditor::DrawToolbar(EditorContext& ctx)
     {
-        // Flow picker.
-        const std::vector<std::string> flows = ListVfs("project://flows", ".cflow");
-        const std::string current = m_Loaded ? StemOf(m_Path) : std::string("<none>");
-        ImGui::SetNextItemWidth(180.0f);
-        if (ImGui::BeginCombo("##flowpick", (current + (m_Dirty ? " *" : "")).c_str()))
-        {
-            for (const std::string& f : flows)
-            {
-                const bool sel = (f == m_Path);
-                if (ImGui::Selectable((StemOf(f) + "##" + f).c_str(), sel) && !sel)
-                    Open(ctx, f);
-            }
-            if (flows.empty())
-                ImGui::TextDisabled("no flows yet");
-            ImGui::EndCombo();
-        }
-
-        ImGui::SameLine();
-        if (ImGui::Button("New"))
-            ImGui::OpenPopup("flow_new");
-        if (ImGui::BeginPopup("flow_new"))
-        {
-            ImGui::TextUnformatted("Flow name");
-            ImGui::SetNextItemWidth(180.0f);
-            ImGui::InputText("##nfname", m_NewFlowName, sizeof(m_NewFlowName));
-            if (ImGui::Button("Create##flow") && m_NewFlowName[0])
-            {
-                NewFlow(ctx, m_NewFlowName);
-                ImGui::CloseCurrentPopup();
-            }
-            ImGui::EndPopup();
-        }
-
-        ImGui::SameLine();
-        ImGui::BeginDisabled(!m_Loaded);
         if (ImGui::Button("Save"))
             SaveFlow(ctx);
 
-        // Panel-local snapshot undo (documented v1: buttons, not Ctrl+Z — the
-        // scene CommandStack keeps exclusive ownership of the keyboard).
         ImGui::SameLine();
         ImGui::BeginDisabled(m_UndoStack.empty());
         if (ImGui::Button("Undo"))
@@ -336,7 +253,6 @@ namespace Starforge
         }
         ImGui::EndDisabled();
 
-        // Add state.
         ImGui::SameLine();
         if (ImGui::Button("+ State"))
             ImGui::OpenPopup("flow_new_state");
@@ -366,30 +282,26 @@ namespace Starforge
             ImGui::EndDisabled();
             ImGui::EndPopup();
         }
-        ImGui::EndDisabled();   // !m_Loaded
 
-        // Validation summary.
         ImGui::SameLine();
-        if (m_Loaded)
-        {
-            if (m_Problems.empty())
-                ImGui::TextColored(ImVec4(0.35f, 0.9f, 0.45f, 1.0f), "valid");
-            else
-                ImGui::TextColored(ImVec4(1.0f, 0.45f, 0.35f, 1.0f), "%d problem(s)",
-                                   (int)m_Problems.size());
-        }
+        ImGui::Checkbox("Variables", &m_ShowVars);   // Q2
+
+        ImGui::SameLine();
+        if (m_Problems.empty())
+            ImGui::TextColored(ImVec4(0.35f, 0.9f, 0.45f, 1.0f), "valid");
+        else
+            ImGui::TextColored(ImVec4(1.0f, 0.45f, 0.35f, 1.0f), "%d problem(s)",
+                               (int)m_Problems.size());
     }
 
     // ========================================================================
     // Canvas
     // ========================================================================
 
-    void FlowGraphPanel::DrawCanvas(EditorContext& ctx)
+    void FlowEditor::DrawCanvas(EditorContext& ctx)
     {
         m_Canvas.Begin("flow_graph");
 
-        // First frame after load/undo: push authored positions into the canvas.
-        // Fresh docs (all EditorPos zero) get a simple grid so nodes don't stack.
         if (m_PlaceNodes)
         {
             bool allZero = !m_Asset.States.empty();
@@ -403,7 +315,6 @@ namespace Starforge
                     : m_Asset.States[i].EditorPos;
                 m_Canvas.SetNodePosition(NodeId(i), ImVec2(p.x, p.y));
             }
-            // The @quit node parks right of the rightmost state.
             float maxX = 0.0f, minY = 40.0f;
             for (const FlowState& s : m_Asset.States)
                 maxX = std::max(maxX, s.EditorPos.x);
@@ -414,14 +325,12 @@ namespace Starforge
         const ImVec4 red(1.0f, 0.42f, 0.35f, 1.0f);
         const ImVec4 dim(0.62f, 0.66f, 0.72f, 1.0f);
 
-        // ---- state nodes ----------------------------------------------------
         for (int i = 0; i < (int)m_Asset.States.size(); ++i)
         {
             FlowState& s = m_Asset.States[i];
             ed::BeginNode(NodeId(i));
             ImGui::PushID((int)NodeId(i));
 
-            // Header: in-pin | name (+start marker).
             ed::BeginPin(InPin(i), ed::PinKind::Input);
             ImGui::TextUnformatted("->");
             ed::EndPin();
@@ -434,7 +343,6 @@ namespace Starforge
             ImGui::TextUnformatted(s.Name.c_str());
             if (s.Overlay) { ImGui::SameLine(); ImGui::TextColored(dim, "(overlay)"); }
 
-            // Scene line (red when unresolvable).
             const bool missing = m_MissingScene.count(i) != 0;
             ImGui::TextColored(missing ? red : dim, "%s",
                                s.Scene.empty() ? (s.Overlay ? "(under-scene)" : "(no scene)")
@@ -442,7 +350,6 @@ namespace Starforge
             if (m_Unreachable.count(i))
                 ImGui::TextColored(red, "unreachable");
 
-            // Transition rows, each with its own out pin.
             for (int t = 0; t < (int)s.Transitions.size(); ++t)
             {
                 const FlowTransition& tr = s.Transitions[t];
@@ -459,7 +366,6 @@ namespace Starforge
                 ed::EndPin();
             }
 
-            // The "add transition" source pin.
             ed::BeginPin(AddPin(i), ed::PinKind::Output);
             ImGui::TextDisabled("+ link");
             ed::EndPin();
@@ -468,7 +374,6 @@ namespace Starforge
             ed::EndNode();
         }
 
-        // ---- the built-in @quit node ---------------------------------------
         {
             ed::BeginNode(kQuitNode);
             ed::BeginPin(kQuitInPin, ed::PinKind::Input);
@@ -480,7 +385,6 @@ namespace Starforge
             ed::EndNode();
         }
 
-        // ---- links ----------------------------------------------------------
         for (int i = 0; i < (int)m_Asset.States.size(); ++i)
         {
             const FlowState& s = m_Asset.States[i];
@@ -493,7 +397,7 @@ namespace Starforge
                              ImVec4(0.9f, 0.5f, 0.4f, 1.0f));
                     continue;
                 }
-                if (to.empty() || to[0] == '@')   // @pop draws no edge (badge on the row)
+                if (to.empty() || to[0] == '@')
                     continue;
                 for (int j = 0; j < (int)m_Asset.States.size(); ++j)
                 {
@@ -504,13 +408,11 @@ namespace Starforge
             }
         }
 
-        // ---- interactions ----------------------------------------------------
         NodeCanvas::Edits edits;
         m_Canvas.QueryEdits(edits);
 
         for (const NodeCanvas::NewLink& l : edits.Created)
         {
-            // Normalize gesture direction: out/add pin on one side, in pin on the other.
             uintptr_t src = l.StartPin, dst = l.EndPin;
             if (IsInPin(src)) std::swap(src, dst);
             if (!(IsOutPin(src) || IsAddPin(src)) || !IsInPin(dst))
@@ -552,8 +454,6 @@ namespace Starforge
             }
         }
 
-        // Deletions: links remove transitions; nodes remove states. Collect
-        // first (ids reference pre-edit indices), apply back-to-front.
         if (!edits.DeletedLinks.empty() || !edits.DeletedNodes.empty())
         {
             Snapshot();
@@ -582,11 +482,10 @@ namespace Starforge
             m_SelState = m_Asset.States.empty() ? -1
                         : std::min(m_SelState, (int)m_Asset.States.size() - 1);
             m_SelTrans = -1;
-            m_PlaceNodes = true;   // indices shifted — re-pin positions from data
+            m_PlaceNodes = true;
             Revalidate();
         }
 
-        // Node click focuses the inspector; node drags persist into EditorPos.
         if (uintptr_t sel = m_Canvas.SelectedNode(); sel != 0 && IsStateNode(sel))
         {
             if (m_SelState != StateOfNode(sel))
@@ -602,7 +501,7 @@ namespace Starforge
             if (std::abs(p.x - stored.x) > 0.5f || std::abs(p.y - stored.y) > 0.5f)
             {
                 stored = { p.x, p.y };
-                m_Dirty = true;   // layout-only change: dirty, but no undo snapshot
+                m_Dirty = true;
             }
         }
 
@@ -614,9 +513,8 @@ namespace Starforge
     // Inspector
     // ========================================================================
 
-    void FlowGraphPanel::DrawInspector(EditorContext& ctx)
+    void FlowEditor::DrawInspector(EditorContext& ctx)
     {
-        // Problems first — the red badges' text form.
         if (!m_Problems.empty())
         {
             ImGui::TextColored(ImVec4(1.0f, 0.45f, 0.35f, 1.0f), "Problems");
@@ -640,13 +538,12 @@ namespace Starforge
         }
     }
 
-    void FlowGraphPanel::DrawStateInspector(EditorContext& ctx, int stateIdx)
+    void FlowEditor::DrawStateInspector(EditorContext& ctx, int stateIdx)
     {
         FlowState& s = m_Asset.States[stateIdx];
 
         ImGui::TextDisabled("State");
 
-        // Rename (retargets every transition that referenced the old name).
         char name[96];
         std::snprintf(name, sizeof(name), "%s", s.Name.c_str());
         if (ImGui::InputText("Name", name, sizeof(name), ImGuiInputTextFlags_EnterReturnsTrue) &&
@@ -662,7 +559,6 @@ namespace Starforge
             Revalidate();
         }
 
-        // Scene picker.
         const std::vector<std::string> scenes = ListVfs("project://scenes", ".cscene");
         const std::string sceneLabel = s.Scene.empty() ? "(none)" : StemOf(s.Scene);
         if (ImGui::BeginCombo("Scene", sceneLabel.c_str()))
@@ -714,10 +610,9 @@ namespace Starforge
             m_SelTrans = -1;
             m_PlaceNodes = true;
             Revalidate();
-            return;   // `s` is gone
+            return;
         }
 
-        // onEnter actions (v1: emit / setField).
         ImGui::Separator();
         ImGui::TextDisabled("On Enter");
         int killAction = -1;
@@ -727,7 +622,7 @@ namespace Starforge
             ImGui::PushID(a + 100);
             int type = (int)act.ActionType;
             ImGui::SetNextItemWidth(90.0f);
-            if (ImGui::Combo("##atype", &type, "emit\0setField\0"))
+            if (ImGui::Combo("##atype", &type, "emit\0setField\0setVar\0"))
             {
                 Snapshot();
                 act.ActionType = (FlowAction::Type)type;
@@ -744,6 +639,29 @@ namespace Starforge
                     Snapshot();
                     act.Signal = sig;
                 }
+            }
+            else if (act.ActionType == FlowAction::Type::SetVar)   // Q2
+            {
+                char vn[64];
+                std::snprintf(vn, sizeof(vn), "%s", act.Var.c_str());
+                ImGui::SetNextItemWidth(80.0f);
+                if (ImGui::InputTextWithHint("##avar", "var", vn, sizeof(vn),
+                                             ImGuiInputTextFlags_EnterReturnsTrue))
+                { Snapshot(); act.Var = vn; }
+                if (ImGui::BeginDragDropTarget())
+                {
+                    if (const ImGuiPayload* p = ImGui::AcceptDragDropPayload("FLOW_VAR"))
+                    { Snapshot(); act.Var = std::string(static_cast<const char*>(p->Data)); }
+                    ImGui::EndDragDropTarget();
+                }
+                ImGui::SameLine();
+                bool add = act.VarAdd;
+                if (ImGui::Checkbox("+=", &add)) { Snapshot(); act.VarAdd = add; }
+                ImGui::SameLine();
+                double d = act.Value.Number;
+                ImGui::SetNextItemWidth(60.0f);
+                if (ImGui::InputDouble("##avval", &d, 0, 0, "%.2f", ImGuiInputTextFlags_EnterReturnsTrue))
+                { Snapshot(); act.Value = FlowValue::MakeNumber(d); }
             }
             else
             {
@@ -768,8 +686,18 @@ namespace Starforge
             act.Signal = "state_entered";
             s.OnEnter.push_back(act);
         }
+        ImGui::SameLine();
+        if (ImGui::SmallButton("+ setVar action"))   // Q2
+        {
+            Snapshot();
+            FlowAction act;
+            act.ActionType = FlowAction::Type::SetVar;
+            act.Var    = m_Asset.Variables.empty() ? std::string("Var") : m_Asset.Variables.front().Name;
+            act.VarAdd = true;
+            act.Value  = FlowValue::MakeNumber(1.0);
+            s.OnEnter.push_back(act);
+        }
 
-        // Transition list (row click selects for the transition inspector).
         ImGui::Separator();
         ImGui::TextDisabled("Transitions");
         for (int t = 0; t < (int)s.Transitions.size(); ++t)
@@ -792,15 +720,13 @@ namespace Starforge
         (void)ctx;
     }
 
-    void FlowGraphPanel::DrawTransitionInspector(EditorContext& ctx, int stateIdx, int transIdx)
+    void FlowEditor::DrawTransitionInspector(EditorContext& ctx, int stateIdx, int transIdx)
     {
         FlowState& s = m_Asset.States[stateIdx];
         FlowTransition& tr = s.Transitions[transIdx];
 
         ImGui::TextDisabled("Transition");
 
-        // Event picker: known signals (buttons of the flow's scenes + authored)
-        // in a combo, plus free-text entry for hand-written names.
         if (ImGui::BeginCombo("On", tr.On.c_str()))
         {
             for (const std::string& sig : m_KnownSignals)
@@ -823,7 +749,6 @@ namespace Starforge
         }
         ImGui::TextDisabled("signals, key:<Name>, or timer:<seconds>");
 
-        // Target picker: states + the built-in @quit / @pop.
         if (ImGui::BeginCombo("To", tr.To.c_str()))
         {
             for (const FlowState& target : m_Asset.States)
@@ -858,7 +783,6 @@ namespace Starforge
             tr.Push = push;
         }
 
-        // Guard.
         bool hasGuard = tr.HasGuard;
         if (ImGui::Checkbox("Guard (if)", &hasGuard))
         {
@@ -867,61 +791,7 @@ namespace Starforge
         }
         if (tr.HasGuard)
         {
-            FlowGuard& g = tr.Guard;
-            char buf[96];
-
-            std::snprintf(buf, sizeof(buf), "%s", g.Entity.c_str());
-            if (ImGui::InputText("Entity (Tag)", buf, sizeof(buf), ImGuiInputTextFlags_EnterReturnsTrue))
-            { Snapshot(); g.Entity = buf; }
-
-            std::snprintf(buf, sizeof(buf), "%s", g.Component.c_str());
-            if (ImGui::InputText("Component", buf, sizeof(buf), ImGuiInputTextFlags_EnterReturnsTrue))
-            { Snapshot(); g.Component = buf; }
-
-            std::snprintf(buf, sizeof(buf), "%s", g.Field.c_str());
-            if (ImGui::InputText("Field", buf, sizeof(buf), ImGuiInputTextFlags_EnterReturnsTrue))
-            { Snapshot(); g.Field = buf; }
-
-            int op = 0;
-            for (int i = 0; i < 6; ++i)
-                if (g.Op == kOps[i]) { op = i; break; }
-            if (ImGui::Combo("Op", &op, "==\0!=\0<\0>\0<=\0>=\0"))
-            {
-                Snapshot();
-                g.Op = kOps[op];
-            }
-
-            int kind = (int)g.Value.ValueKind;
-            if (ImGui::Combo("Value type", &kind, "bool\0number\0string\0"))
-            {
-                Snapshot();
-                g.Value.ValueKind = (FlowValue::Kind)kind;
-            }
-            switch (g.Value.ValueKind)
-            {
-            case FlowValue::Kind::Bool:
-            {
-                bool b = g.Value.Bool;
-                if (ImGui::Checkbox("Value", &b)) { Snapshot(); g.Value.Bool = b; }
-                break;
-            }
-            case FlowValue::Kind::Number:
-            {
-                double d = g.Value.Number;
-                if (ImGui::InputDouble("Value", &d, 0, 0, "%.4f",
-                                       ImGuiInputTextFlags_EnterReturnsTrue))
-                { Snapshot(); g.Value.Number = d; }
-                break;
-            }
-            case FlowValue::Kind::String:
-            {
-                std::snprintf(buf, sizeof(buf), "%s", g.Value.String.c_str());
-                if (ImGui::InputText("Value", buf, sizeof(buf),
-                                     ImGuiInputTextFlags_EnterReturnsTrue))
-                { Snapshot(); g.Value.String = buf; }
-                break;
-            }
-            }
+            DrawFlowGuardFields("trguard", tr.Guard, [this]() { Snapshot(); });
         }
 
         if (ImGui::Button("Delete Transition"))
@@ -932,5 +802,11 @@ namespace Starforge
             Revalidate();
         }
         (void)ctx;
+    }
+
+    // Q2 — the typed-variables blackboard (shared widget; snapshots for undo).
+    void FlowEditor::DrawVariablesPanel(EditorContext& /*ctx*/)
+    {
+        DrawFlowVariablesPanel("flowvars", m_Asset.Variables, [this]() { Snapshot(); });
     }
 }

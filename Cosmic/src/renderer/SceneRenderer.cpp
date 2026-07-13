@@ -89,6 +89,21 @@ namespace Cosmic
 		Renderer3D::DrawMesh(mesh, transform, material, entityID);
 	}
 
+	void SceneDrawContext::DrawMeshRange(const Ref<Mesh>& mesh, const glm::mat4& transform,
+	                                     const Ref<Material>& material, const glm::vec4& color,
+	                                     uint32_t indexOffset, uint32_t indexCount, int entityID) const
+	{
+		// Lit passes only — the Scene routes multi-material meshes' shadow/coverage
+		// as a single whole-mesh caster (see SubmitOpaqueMeshes), so a range never
+		// reaches a depth pass. Guard anyway.
+		if (IsDepthOnly() || !mesh)
+			return;
+		if (material)
+			Renderer3D::DrawMesh(mesh, transform, material, entityID, indexOffset, indexCount);
+		else
+			Renderer3D::DrawMesh(mesh, transform, color, entityID, indexOffset, indexCount);
+	}
+
 	void SceneDrawContext::DrawMeshSkinned(const Ref<Mesh>& mesh, const glm::mat4& transform,
 	                                       const Ref<Material>& material,
 	                                       const glm::mat4* palette, uint32_t jointCount,
@@ -237,6 +252,11 @@ namespace Cosmic
 		s.FXAA             = env.FXAA;
 		s.LensFlare        = env.LensFlare;
 		s.LensFlareIntensity = env.LensFlareIntensity;
+		s.Vignette         = env.Vignette;             // Q5
+		s.VignetteAmount   = env.VignetteAmount;
+		s.VignetteRadius   = env.VignetteRadius;
+		s.VignetteFeather  = env.VignetteFeather;
+		s.VignetteColor    = env.VignetteColor;
 
 		// Sun → the frame's directional light.
 		desc.Lights.SunDirection = env.SunDirection;
@@ -593,6 +613,8 @@ namespace Cosmic
 		m_Post.SetBloomEnabled(s.Bloom);
 		m_Post.SetBloomParams(s.BloomThreshold, s.BloomKnee, s.BloomIntensity);
 		m_Post.SetFXAAEnabled(s.FXAA);
+		m_Post.SetVignetteEnabled(s.Vignette);   // Q5
+		m_Post.SetVignetteParams(s.VignetteAmount, s.VignetteRadius, s.VignetteFeather, s.VignetteColor);
 		m_Post.SetFogEnabled(s.Fog);
 		m_Post.SetFogParams(s.FogColor, s.FogDensity, s.FogHeightFalloff, s.FogBaseHeight);
 		// Underwater medium (F6 + Layer 2): the tonemap fogs + tints when the camera is

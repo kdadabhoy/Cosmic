@@ -10,6 +10,7 @@
 #include "scene/Entity.h"
 #include "scene/SceneSerializer.h"
 #include "scene/FlowMachine.h"
+#include "scene/StoryGraph.h"
 #include "voxel/BlockPalette.h"
 #include "core/Log.h"
 
@@ -31,14 +32,20 @@ namespace Starforge
                 t[".cprefab"]  = { ICON_LC_BOXES,        IM_COL32( 38, 166, 154, 255), "Prefab",    AssetOpen::Prefab };
                 t[".cmat"]     = { ICON_LC_CIRCLE,       IM_COL32(255, 138,  61, 255), "Material",  AssetOpen::Material };
                 t[".cemitter"] = { ICON_LC_SPARKLES,     IM_COL32(236,  90, 190, 255), "Emitter",   AssetOpen::None };
-                t[".cflow"]    = { ICON_LC_WORKFLOW,     IM_COL32(240, 200,  60, 255), "Flow",      AssetOpen::None };
+                t[".cflow"]    = { ICON_LC_WORKFLOW,     IM_COL32(240, 200,  60, 255), "Flow",      AssetOpen::None, AssetOpen::FlowEditor };
+                t[".cstory"]   = { ICON_LC_MESSAGES_SQUARE, IM_COL32(150, 120, 230, 255), "Story",  AssetOpen::None, AssetOpen::StoryEditor };
                 t[".cpal"]     = { ICON_LC_SWATCH_BOOK,  IM_COL32(170, 120,  80, 255), "Palette",   AssetOpen::None };
                 t[".cvox"]     = { ICON_LC_BLOCKS,       IM_COL32(140, 150, 160, 255), "Volume",    AssetOpen::None };
                 t[".cmeta"]    = { ICON_LC_SETTINGS,     IM_COL32(130, 130, 135, 255), "Meta",      AssetOpen::None };
 
-                // Meshes / models.
-                const AssetTypeInfo mesh = { ICON_LC_BOX, IM_COL32(120, 190, 100, 255), "Mesh", AssetOpen::Model };
-                for (const char* e : { ".obj", ".fbx", ".gltf", ".glb", ".stl", ".dae", ".ply" })
+                // Meshes / models. Rigged formats also open in the Animation
+                // Editor (M1) — the editor reports "no skeleton" for static ones.
+                const AssetTypeInfo mesh    = { ICON_LC_BOX, IM_COL32(120, 190, 100, 255), "Mesh", AssetOpen::Model };
+                const AssetTypeInfo riggable = { ICON_LC_BOX, IM_COL32(120, 190, 100, 255), "Mesh", AssetOpen::Model,
+                                                 AssetOpen::AnimationEditor };
+                for (const char* e : { ".gltf", ".glb", ".fbx", ".dae" })   // formats that can carry skins/clips
+                    t[e] = riggable;
+                for (const char* e : { ".obj", ".stl", ".ply" })            // static-only formats
                     t[e] = mesh;
 
                 // Images / textures.
@@ -100,6 +107,7 @@ namespace Starforge
             { "Material", ".cmat",    ICON_LC_CIRCLE },
             { "Emitter",  ".cemitter", ICON_LC_SPARKLES },
             { "Flow",     ".cflow",   ICON_LC_WORKFLOW },
+            { "Story",    ".cstory",  ICON_LC_MESSAGES_SQUARE },
             { "Palette",  ".cpal",    ICON_LC_SWATCH_BOOK },
             { "Scene",    ".cscene",  ICON_LC_CLAPPERBOARD },
             { "Prefab",   ".cprefab", ICON_LC_BOXES },
@@ -129,6 +137,23 @@ namespace Starforge
             s.Name = "Start";
             flow.States.push_back(std::move(s));
             return flow.Save(resolvedDiskPath);
+        }
+        if (extLower == ".cstory")
+        {
+            // One "Start" node with a single "@end" option so the default story
+            // validates, opens in the Story Graph editor, and previews.
+            Cosmic::StoryGraph story;
+            story.Start = "Start";
+            Cosmic::StoryNode n;
+            n.Name    = "Start";
+            n.Speaker = "Narrator";
+            n.Text    = "Once upon a time…";
+            Cosmic::StoryOption opt;
+            opt.Text = "The end";
+            opt.Next = "@end";
+            n.Options.push_back(std::move(opt));
+            story.Nodes.push_back(std::move(n));
+            return story.Save(resolvedDiskPath);
         }
         if (extLower == ".cpal")
         {

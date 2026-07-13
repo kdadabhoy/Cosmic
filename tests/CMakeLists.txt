@@ -30,6 +30,9 @@ add_executable(CosmicTests
     test_primitives.cpp
     test_meshimport.cpp
     test_animation.cpp
+    test_sockets.cpp
+    test_crossfade.cpp
+    test_material_slots.cpp
     test_material.cpp
     test_scene_serializer.cpp
     test_hierarchy.cpp
@@ -47,6 +50,7 @@ add_executable(CosmicTests
     test_physics_determinism.cpp
     test_ui_rects.cpp
     test_flowmachine.cpp
+    test_story.cpp
     test_camera2d.cpp
     test_tilemap.cpp
     test_template_scripts.cpp

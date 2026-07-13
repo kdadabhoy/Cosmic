@@ -3,6 +3,7 @@
 #include "graphics/AnimationClip.h"
 
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/quaternion.hpp>
 
 #include <algorithm>
 #include <cmath>
@@ -144,5 +145,47 @@ namespace Cosmic
             baked.Channels.push_back(std::move(b));
         }
         return baked;
+    }
+
+    void AnimationClip::BlendLocals(const std::vector<glm::mat4>& a,
+                                    const std::vector<glm::mat4>& b,
+                                    float w, std::vector<glm::mat4>& out)
+    {
+        const size_t n = std::min(a.size(), b.size());
+        // out may alias a — resize AFTER reading is not needed since we only read
+        // a[j]/b[j] before writing out[j]; a resize that grows keeps [0,n) intact.
+        if (out.size() < n)
+            out.resize(n);
+
+        // Decompose a rigid-ish local (T·R·S) into its parts. Scale = column
+        // lengths; rotation = quat of the scale-normalized 3×3.
+        auto decompose = [](const glm::mat4& m, glm::vec3& t, glm::quat& q, glm::vec3& s)
+        {
+            t = glm::vec3(m[3]);
+            s = glm::vec3(glm::length(glm::vec3(m[0])),
+                          glm::length(glm::vec3(m[1])),
+                          glm::length(glm::vec3(m[2])));
+            glm::mat3 r(m);
+            if (s.x > 1e-8f) r[0] /= s.x;
+            if (s.y > 1e-8f) r[1] /= s.y;
+            if (s.z > 1e-8f) r[2] /= s.z;
+            q = glm::quat_cast(r);
+        };
+
+        for (size_t j = 0; j < n; ++j)
+        {
+            glm::vec3 ta, sa, tb, sb;
+            glm::quat qa, qb;
+            decompose(a[j], ta, qa, sa);
+            decompose(b[j], tb, qb, sb);
+
+            const glm::vec3 t = glm::mix(ta, tb, w);
+            const glm::vec3 s = glm::mix(sa, sb, w);
+            const glm::quat q = SlerpShortest(qa, qb, w);
+
+            out[j] = glm::translate(glm::mat4(1.0f), t)
+                   * glm::mat4_cast(q)
+                   * glm::scale(glm::mat4(1.0f), s);
+        }
     }
 }

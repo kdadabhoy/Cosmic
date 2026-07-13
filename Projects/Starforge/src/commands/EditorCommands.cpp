@@ -469,6 +469,57 @@ namespace Starforge
         ctx.Commands.Execute(std::make_unique<AssignMaterialCommand>(ctx, IdOf(e), before, vfsPath));
     }
 
+    namespace
+    {
+        // M5 — captures the whole MaterialPaths vector before/after (a slot edit is
+        // rare, the vector tiny) so undo restores it exactly; clears the resolved
+        // flag so the next SyncPrimitiveMeshes rebuilds MaterialAssets.
+        class MaterialSlotCommand : public ICommand
+        {
+        public:
+            MaterialSlotCommand(EditorContext& ctx, uint64_t uuid,
+                                std::vector<std::string> before, std::vector<std::string> after)
+                : m_Ctx(&ctx), m_Uuid(uuid), m_Before(std::move(before)), m_After(std::move(after)) {}
+
+            void Do() override   { Apply(m_After); }
+            void Undo() override { Apply(m_Before); }
+            std::string Name() const override { return "Edit Material Slot"; }
+
+        private:
+            void Apply(const std::vector<std::string>& paths)
+            {
+                Entity e = Resolve(*m_Ctx, m_Uuid);
+                if (!e || !e.HasComponent<MeshRendererComponent>()) return;
+                auto& mr = e.GetComponent<MeshRendererComponent>();
+                mr.MaterialPaths          = paths;
+                mr.MaterialPathsResolved  = false;   // re-resolve on the next sync
+                m_Ctx->MarkDirty();
+            }
+
+            EditorContext*           m_Ctx;
+            uint64_t                 m_Uuid;
+            std::vector<std::string> m_Before, m_After;
+        };
+    }
+
+    void Commands::SetMaterialSlot(EditorContext& ctx, Entity e, size_t slot,
+                                   const std::string& vfsPath)
+    {
+        if (!ctx.Scene || !e || !e.HasComponent<MeshRendererComponent>()) return;
+        std::vector<std::string> before = e.GetComponent<MeshRendererComponent>().MaterialPaths;
+        std::vector<std::string> after  = before;
+        if (after.size() <= slot)
+            after.resize(slot + 1);
+        if (after[slot] == vfsPath)
+            return;   // no-op
+        after[slot] = vfsPath;
+        // Trailing-empty trim: an all-empty vector serializes as absent (compat).
+        while (!after.empty() && after.back().empty())
+            after.pop_back();
+        ctx.Commands.Execute(std::make_unique<MaterialSlotCommand>(
+            ctx, IdOf(e), std::move(before), std::move(after)));
+    }
+
     Entity Commands::Duplicate(EditorContext& ctx, Entity src)
     {
         if (!ctx.Scene || !src) return {};

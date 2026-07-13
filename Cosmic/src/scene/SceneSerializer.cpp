@@ -178,6 +178,19 @@ namespace Cosmic
                             ? (uint16_t)c.get<uint32_t>() : (uint16_t)0);
                     tm->EnsureCells();   // clamp grid + size the buffer to GridW*GridH
                 }
+
+                // MeshRenderer material slots (M5) — a plain string array (the
+                // vector<string> payload is not a reflected field kind). Absent ⇒
+                // the vector stays empty ⇒ the legacy single-material path.
+                if (compName == "MeshRenderer" && compJson.contains("MaterialPaths")
+                    && compJson["MaterialPaths"].is_array())
+                {
+                    auto* mr = static_cast<MeshRendererComponent*>(comp);
+                    mr->MaterialPaths.clear();
+                    for (const auto& p : compJson["MaterialPaths"])
+                        mr->MaterialPaths.push_back(p.is_string() ? p.get<std::string>()
+                                                                  : std::string());
+                }
             }
         }
 
@@ -250,6 +263,20 @@ namespace Cosmic
                     for (uint16_t c : tm->Cells)
                         cells.push_back((uint32_t)c);
                     cj["Cells"] = std::move(cells);
+                }
+
+                if (d->Name == "MeshRenderer")   // M5 — material slots as a string array
+                {
+                    const auto* mr = static_cast<const MeshRendererComponent*>(comp);
+                    // EMPTY ⇒ write nothing, so single-material scenes stay
+                    // byte-identical (the compat gate).
+                    if (!mr->MaterialPaths.empty())
+                    {
+                        json arr = json::array();
+                        for (const std::string& p : mr->MaterialPaths)
+                            arr.push_back(p);
+                        cj["MaterialPaths"] = std::move(arr);
+                    }
                 }
 
                 comps[d->Name] = cj;

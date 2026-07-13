@@ -28,6 +28,7 @@
 #include "scene/Entity.h"
 #include "scene/Scene.h"
 #include "scene/Components.h"            // TagComponent (SystemBuilder::WithTag), H9
+#include "scene/FlowMachine.h"           // Q2 — Flow() variable proxy (FlowMachine/FlowValue)
 #include "scripting/ModuleRegistry.h"    // SystemDescriptor (SystemBuilder), H9
 #include "physics/ScenePhysics.h"        // J5/J6 — Physics()/Character() script proxies
 #include "voxel/VoxelVolume.h"           // V4 — Voxels() script proxy
@@ -209,6 +210,35 @@ namespace Cosmic
         };
         SignalProxy Signals() const { return { m_Scene, m_Handle }; }
 
+        // ---- flow-variable passthrough (Q2) ---------------------------------
+        // Read/write the blackboard of the FlowMachine currently driving this
+        // scene (the flow points its top scene here). No-ops / defaults when no
+        // flow is running. Typed helpers wrap GetVar/SetVar for script ergonomics.
+        struct FlowProxy
+        {
+            Scene* S = nullptr;
+            FlowMachine* Machine() const { return S ? S->ActiveFlow() : nullptr; }
+
+            FlowValue GetVar(const std::string& name) const
+            {
+                FlowMachine* m = Machine();
+                return m ? m->GetVar(name) : FlowValue::MakeBool(false);
+            }
+            void SetVar(const std::string& name, const FlowValue& v) const
+            {
+                if (FlowMachine* m = Machine()) m->SetVar(name, v);
+            }
+
+            double GetNumber(const std::string& n) const { return GetVar(n).Number; }
+            void   SetNumber(const std::string& n, double v) const { SetVar(n, FlowValue::MakeNumber(v)); }
+            void   AddNumber(const std::string& n, double d) const { SetNumber(n, GetNumber(n) + d); }
+            bool   GetBool(const std::string& n) const { return GetVar(n).Bool; }
+            void   SetBool(const std::string& n, bool v) const { SetVar(n, FlowValue::MakeBool(v)); }
+            std::string GetString(const std::string& n) const { return GetVar(n).String; }
+            void   SetString(const std::string& n, const std::string& v) const { SetVar(n, FlowValue::MakeString(v)); }
+        };
+        FlowProxy Flow() const { return { m_Scene }; }
+
         // ---- voxel passthrough (V4) -----------------------------------------
         // A thin handle to a voxel world: this entity's VoxelVolumeComponent if it
         // has one, else the scene's first. Get/Set are in WORLD VOXEL coordinates;
@@ -263,6 +293,36 @@ namespace Cosmic
             }
         };
         VoxelProxy Voxels() const { return { m_Scene, m_Handle }; }
+
+        // ---- animator passthrough (M6) --------------------------------------
+        // Script control of THIS entity's AnimatorComponent: a timed CROSSFADE to
+        // another clip (idle↔walk↔run), a hard Play, pause/resume, and a fade
+        // query. No-ops when the entity has no Animator. The full controller graph
+        // stays parked — this is the minimal playable-character tier.
+        struct AnimatorProxy
+        {
+            Scene*       S = nullptr;
+            entt::entity Handle = entt::null;
+
+            AnimatorComponent* Comp() const
+            {
+                return S ? S->GetRegistry().try_get<AnimatorComponent>(Handle) : nullptr;
+            }
+
+            /** @brief Timed blend to `clipPath` ("file#clip") over `seconds` (<=0 =
+             *  hard switch). Re-targets an in-flight fade. */
+            void CrossfadeTo(const std::string& clipPath, float seconds) const
+            {
+                if (auto* an = Comp()) an->CrossfadeTo(clipPath, seconds);
+            }
+            /** @brief Switch to `clipPath` immediately (no fade). */
+            void Play(const std::string& clipPath) const { CrossfadeTo(clipPath, 0.0f); }
+            void SetPlaying(bool playing) const { if (auto* an = Comp()) an->Playing = playing; }
+            /** @brief True while a crossfade is pending or in flight. */
+            bool IsCrossfading() const { auto* an = Comp(); return an && !an->NextClipPath.empty(); }
+            std::string CurrentClip() const { auto* an = Comp(); return an ? an->ClipPath : std::string(); }
+        };
+        AnimatorProxy Animator() const { return { m_Scene, m_Handle }; }
 
 
         // Override the ones you need — all default to no-ops.

@@ -107,6 +107,14 @@ namespace Cosmic
 		void SetFXAAEnabled(bool enabled) { m_FxaaEnabled = enabled; }
 		bool IsFXAAEnabled() const        { return m_FxaaEnabled; }
 
+		// ---- Vignette (Phase 25 / Q5) — folded into the tonemap pass ----
+		// Post-tonemap edge darkening toward `color`. Default off ⇒ the tonemap
+		// receives u_VignetteAmount 0 and skips the block (byte-identical output).
+		void SetVignetteEnabled(bool enabled) { m_VignetteEnabled = enabled; }
+		bool IsVignetteEnabled() const        { return m_VignetteEnabled; }
+		void SetVignetteParams(float amount, float radius, float feather, const glm::vec3& color)
+		{ m_VignetteAmount = amount; m_VignetteRadius = radius; m_VignetteFeather = feather; m_VignetteColor = color; }
+
 		// ---- Height fog (S7.2) ----
 		void SetFogEnabled(bool enabled) { m_FogEnabled = enabled; }
 		bool IsFogEnabled() const        { return m_FogEnabled; }
@@ -234,6 +242,13 @@ namespace Cosmic
 		Ref<Shader>      m_FxaaShader;
 		Ref<FrameBuffer> m_LdrTarget;              // full-res tonemap output when FXAA on
 		bool             m_FxaaEnabled = false;
+
+		// ---- Vignette (Q5) ----
+		bool      m_VignetteEnabled = false;
+		float     m_VignetteAmount  = 0.35f;
+		float     m_VignetteRadius  = 0.9f;
+		float     m_VignetteFeather = 0.4f;
+		glm::vec3 m_VignetteColor{ 0.0f };
 
 		// ---- Height fog (S7.2) ----
 		bool      m_FogEnabled       = false;

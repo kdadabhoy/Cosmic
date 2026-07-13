@@ -393,6 +393,69 @@ namespace Starforge
                         ImGui::SameLine();
                         ImGui::TextDisabled("%.2fs", an->ClipRef->Duration);
                     }
+
+                    // M6 — crossfade readout (script-driven via Animator().CrossfadeTo;
+                    // no authoring here — the full controller graph stays parked).
+                    if (!an->NextClipPath.empty() && an->FadeDuration > 0.0f)
+                    {
+                        const size_t h = an->NextClipPath.find_last_of('#');
+                        const std::string next = h == std::string::npos
+                            ? an->NextClipPath : an->NextClipPath.substr(h + 1);
+                        const float w = std::clamp(an->FadeElapsed / an->FadeDuration, 0.0f, 1.0f);
+                        ImGui::TextDisabled(ICON_LC_SHARE_2 " Crossfading → %s", next.c_str());
+                        ImGui::ProgressBar(w, ImVec2(-1.0f, 0.0f));
+                    }
+                }
+            }
+
+            // Material slots (M5): a multi-material mesh (its Mesh carries >= 2
+            // material slots) gets a "Materials" list — one asset slot per material
+            // index. EMPTY MaterialPaths ⇒ the legacy single MaterialPath row above
+            // drives the whole mesh (compat). Drops/clears are undoable.
+            if (desc.Name == "MeshRenderer" && ctx.Selection.size() == 1 && primary)
+            {
+                auto* mr = static_cast<MeshRendererComponent*>(comp);
+                const uint32_t meshSlots = mr->MeshAsset ? mr->MeshAsset->GetMaterialSlotCount() : 0u;
+                const size_t slotCount = std::max((size_t)meshSlots, mr->MaterialPaths.size());
+                if (slotCount >= 2)
+                {
+                    auto stemOf = [](const std::string& p) -> std::string
+                    {
+                        const size_t s = p.find_last_of("/\\");
+                        return s == std::string::npos ? p : p.substr(s + 1);
+                    };
+
+                    ImGui::SeparatorText("Materials");
+                    for (size_t i = 0; i < slotCount; ++i)
+                    {
+                        ImGui::PushID((int)(4096 + i));
+                        const std::string cur = i < mr->MaterialPaths.size()
+                            ? mr->MaterialPaths[i] : std::string();
+
+                        ImGui::Text("Slot %d", (int)i);
+                        ImGui::SameLine(72.0f);
+                        const std::string shown = cur.empty() ? std::string("(drop a .cmat)")
+                                                              : stemOf(cur);
+                        ImGui::Button(shown.c_str(), ImVec2(-28.0f, 0.0f));
+                        if (ImGui::BeginDragDropTarget())
+                        {
+                            if (const ImGuiPayload* p = ImGui::AcceptDragDropPayload("ASSET_PATH"))
+                            {
+                                const std::string dropped(static_cast<const char*>(p->Data));
+                                if (dropped.size() > 5 &&
+                                    dropped.compare(dropped.size() - 5, 5, ".cmat") == 0)
+                                    Commands::SetMaterialSlot(ctx, primary, i, dropped);
+                            }
+                            ImGui::EndDragDropTarget();
+                        }
+                        if (!cur.empty() && ImGui::IsItemHovered())
+                            ImGui::SetTooltip("%s", cur.c_str());
+                        ImGui::SameLine();
+                        if (ImGui::SmallButton("x"))
+                            Commands::SetMaterialSlot(ctx, primary, i, std::string());
+                        ImGui::PopID();
+                    }
+                    ImGui::TextDisabled("Per-submesh override; an empty slot uses the material above.");
                 }
             }
 

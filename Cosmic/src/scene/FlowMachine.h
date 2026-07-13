@@ -35,6 +35,7 @@
 #include <cstdint>
 #include <functional>
 #include <string>
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
@@ -42,10 +43,13 @@ namespace Cosmic
 {
     class Scene;
 
-    /** @brief A typed literal for a guard comparison / setField value. */
+    /** @brief A typed literal for a guard comparison / setField / variable value.
+     *  Enum (Q2) is an "enum of strings": the value lives in `String` (the picked
+     *  option) and compares exactly like a String — the allowed options live on
+     *  the FlowVariable declaration, not here. */
     struct FlowValue
     {
-        enum class Kind : int32_t { Bool, Number, String } ValueKind = Kind::Bool;
+        enum class Kind : int32_t { Bool, Number, String, Enum } ValueKind = Kind::Bool;
         bool        Bool   = false;
         double      Number = 0.0;
         std::string String;
@@ -53,14 +57,32 @@ namespace Cosmic
         static FlowValue MakeBool(bool b)          { FlowValue v; v.ValueKind = Kind::Bool;   v.Bool = b;    return v; }
         static FlowValue MakeNumber(double n)      { FlowValue v; v.ValueKind = Kind::Number; v.Number = n;  return v; }
         static FlowValue MakeString(std::string s) { FlowValue v; v.ValueKind = Kind::String; v.String = std::move(s); return v; }
+        static FlowValue MakeEnum(std::string s)   { FlowValue v; v.ValueKind = Kind::Enum;   v.String = std::move(s); return v; }
     };
 
-    /** @brief A guard on a transition: find `Entity` (by Tag) in the ACTIVE scene,
-     *  read `Component`.`Field` (E1 reflection), compare with `Value` under `Op`
-     *  ("==","!=","<",">","<=",">="). A missing entity/field => the guard is false
-     *  (one Console warning). */
+    /** @brief A typed-blackboard variable (Q2 / gap §9.2). Declared on the
+     *  FlowAsset; the FlowMachine holds a runtime value per variable (seeded from
+     *  Default on Start). Guards may compare a variable, actions may set one, and
+     *  scripts read/write via Flow().GetVar/SetVar. `Group` is an optional UI
+     *  grouping label ("Player"/"World"); `EnumOptions` lists the allowed strings
+     *  for a Kind::Enum variable. */
+    struct FlowVariable
+    {
+        std::string              Name;
+        std::string              Group;
+        FlowValue                Default;      // ValueKind fixes the variable's type
+        std::vector<std::string> EnumOptions;  // Kind::Enum only
+    };
+
+    /** @brief A guard on a transition. Two sources (Q2):
+     *   - VARIABLE: when `Var` is non-empty, compare the flow variable `Var`
+     *     against `Value` under `Op`. A missing variable => false (one warning).
+     *   - FIELD (v1): otherwise find `Entity` (by Tag) in the ACTIVE scene, read
+     *     `Component`.`Field` (E1 reflection), compare with `Value` under `Op`.
+     *  Ops: "==","!=","<",">","<=",">=". */
     struct FlowGuard
     {
+        std::string Var;          // Q2 — variable name (non-empty ⇒ variable guard)
         std::string Entity;
         std::string Component;
         std::string Field;
@@ -68,13 +90,17 @@ namespace Cosmic
         FlowValue   Value;
     };
 
-    /** @brief A state action (v1: emit a signal, or set a reflected field). */
+    /** @brief A state action: emit a signal, set a reflected field, or set a flow
+     *  variable (Q2). SetVar writes `Var`: `VarAdd` adds `Value.Number` to the
+     *  current value (numeric increment), else it assigns `Value`. */
     struct FlowAction
     {
-        enum class Type : int32_t { Emit, SetField } ActionType = Type::Emit;
+        enum class Type : int32_t { Emit, SetField, SetVar } ActionType = Type::Emit;
         std::string Signal;                       // Emit
         std::string Entity, Component, Field;     // SetField target (Entity by Tag)
-        FlowValue   Value;                        // SetField value
+        std::string Var;                          // SetVar target (Q2)
+        bool        VarAdd = false;               // SetVar: add vs assign (Q2)
+        FlowValue   Value;                        // SetField / SetVar value
     };
 
     /** @brief One transition out of a state. `On` is a signal name, "key:<Name>",
@@ -101,12 +127,15 @@ namespace Cosmic
         glm::vec2                   EditorPos{ 0.0f };   // node-graph position (U6)
     };
 
-    /** @brief A parsed `.cflow` document. */
+    /** @brief A parsed `.cflow` document. Version 2 (Q2) adds the `Variables`
+     *  blackboard + variable guards/setVar actions; v1 files load unchanged (the
+     *  new keys are optional) and variable-free flows still save as v1. */
     struct COSMIC_API FlowAsset
     {
-        int                    Version = 1;
-        std::string            Start;
-        std::vector<FlowState> States;
+        int                       Version = 1;
+        std::string               Start;
+        std::vector<FlowState>    States;
+        std::vector<FlowVariable> Variables;   // Q2 — the typed blackboard
 
         const FlowState* Find(const std::string& name) const;
 
@@ -124,6 +153,17 @@ namespace Cosmic
         // checked by the editor (needs the VFS). Empty vector == valid.
         std::vector<std::string> Validate() const;
     };
+
+    /** @brief Evaluate a FlowGuard — shared by FlowMachine and the Q3 StoryRunner
+     *  so both honour variables + reflected-field guards identically. A VARIABLE
+     *  guard (guard.Var non-empty) compares `lookupVar(guard.Var)` (null ⇒ false);
+     *  a FIELD guard reads `Entity.Component.Field` from `scene` (null scene ⇒
+     *  false). `warn` (optional) receives a human message on each failure reason —
+     *  callers own any dedup. GL-free. */
+    COSMIC_API bool EvaluateFlowGuard(
+        const FlowGuard& guard, Scene* scene,
+        const std::function<bool(const std::string&, FlowValue&)>& lookupVar,
+        const std::function<void(const std::string&)>& warn = {});
 
     class COSMIC_API FlowMachine
     {
@@ -158,6 +198,15 @@ namespace Cosmic
         Ref<Scene>         ActiveScene()   const;              // top scene (null if none)
         size_t             StackDepth()    const { return m_Stack.size(); }
 
+        // --- Flow variables (Q2) — the runtime blackboard --------------------
+        // Seeded from the asset's FlowVariable defaults on Start. GetVar returns a
+        // false Bool for an unknown name; SetVar creates the entry if missing (so
+        // a script may introduce ad-hoc scratch state). Read/written by guards,
+        // setVar actions, and the Flow() script proxy.
+        FlowValue GetVar(const std::string& name) const;
+        void      SetVar(const std::string& name, const FlowValue& value);
+        bool      HasVar(const std::string& name) const;
+
     private:
         struct Frame { std::string StateName; Ref<Scene> ActiveScene; };
 
@@ -174,6 +223,7 @@ namespace Cosmic
         FlowAsset   m_Asset;
         SceneLoader m_Loader;
         std::vector<Frame> m_Stack;
+        std::unordered_map<std::string, FlowValue> m_Vars;   // Q2 — runtime blackboard
         std::vector<std::string> m_Pending;   // queued signals
         float m_Elapsed = 0.0f;               // time in the current top state
         bool  m_Running = false;

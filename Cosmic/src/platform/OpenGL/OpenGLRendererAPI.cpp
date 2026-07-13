@@ -130,10 +130,16 @@ namespace Cosmic
 	 * only half of a large pre-allocated vertex buffer before needing to flush.
 	 * * Note: We use GL_UNSIGNED_INT, matching our IndexBuffer implementation.
 	 */
-	void OpenGLRendererAPI::DrawIndexed(const Ref<VertexArray>& vertexArray, uint32_t indexCount)
+	void OpenGLRendererAPI::DrawIndexed(const Ref<VertexArray>& vertexArray, uint32_t indexCount,
+	                                   uint32_t indexOffset)
 	{
 		uint32_t count = indexCount != 0 ? indexCount : vertexArray->GetIndexBuffer()->GetCount();
-		glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, nullptr);
+		// indexOffset is in ELEMENTS; the index buffer is 32-bit (GL_UNSIGNED_INT),
+		// so the byte offset is offset * 4. offset 0 ⇒ nullptr, byte-identical to
+		// the prior whole-mesh draw.
+		const void* byteOffset = reinterpret_cast<const void*>(
+			static_cast<uintptr_t>(indexOffset) * sizeof(uint32_t));
+		glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, byteOffset);
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////

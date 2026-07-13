@@ -161,7 +161,11 @@ namespace Cosmic
 		// Submission Commands
 		///////////////////////////////
 
-		virtual void DrawIndexed(const Ref<VertexArray>& vertexArray, uint32_t indexCount = 0) = 0;
+		// indexOffset (M5): first index to draw, in ELEMENTS (multiplied by the
+		// 32-bit index size internally). Default 0 ⇒ byte-identical to the prior
+		// signature. Lets a caller draw one submesh range of a mesh.
+		virtual void DrawIndexed(const Ref<VertexArray>& vertexArray, uint32_t indexCount = 0,
+		                         uint32_t indexOffset = 0) = 0;
 		virtual void DrawLines(const Ref<VertexArray>& vertexArray, uint32_t vertexCount) = 0;
 
 		virtual void DrawIndexedInstanced(const Ref<VertexArray>& vertexArray, uint32_t indexCount, uint32_t instanceCount) = 0;

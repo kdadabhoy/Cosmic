@@ -1263,6 +1263,10 @@ namespace Workspace
 			m_PostFx.SetBloomParams(m_BloomThreshold, m_BloomKnee, m_BloomIntensity);
 			m_PostFx.SetFXAAEnabled(m_Fxaa);
 
+			// Vignette (Q5): folded into the tonemap; off = byte-identical.
+			m_PostFx.SetVignetteEnabled(m_Vignette);
+			m_PostFx.SetVignetteParams(m_VignetteAmount, 0.85f, 0.35f, glm::vec3(0.0f));
+
 			// Height fog (S7.2): depth-based inscatter toward the sky-tinted color.
 			m_PostFx.SetFogEnabled(m_Fog);
 			m_PostFx.SetFogParams(m_SkyFogColor, m_FogDensity, 0.12f, 0.0f);
@@ -1669,6 +1673,10 @@ namespace Workspace
 			ImGui::SetTooltip("Fast approximate anti-aliasing — the final LDR edge blend. Toggle\n"
 			                  "on/off and watch the grid / mesh edges for reduced crawl.");
 		ImGui::EndDisabled();
+
+		ImGui::Checkbox("Vignette", &m_Vignette);   // Q5 (post-tonemap; off = byte-identical)
+		if (m_Vignette)
+			ImGui::SliderFloat("Vignette amount", &m_VignetteAmount, 0.0f, 1.0f, "%.2f");
 
 		ImGui::SeparatorText("Sky / fog / time-of-day (S7)");
 		ImGui::BeginDisabled(!m_Hdr);

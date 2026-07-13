@@ -677,7 +677,15 @@ namespace Starforge
                     case AssetOpen::Scene:   ctx.PendingOpenScene = vfs; break;
                     case AssetOpen::Prefab:  ctx.PendingInstantiatePrefab = vfs; break;   // E14
                     case AssetOpen::Texture: m_Preview = vfs; break;
-                    default: break;   // Model / Material / None — no double-click action yet
+                    default:
+                        // M1 — a rigged model double-click opens the Animation Editor.
+                        if (info.Editor == AssetOpen::AnimationEditor)
+                            ctx.PendingOpenAnimEditor = vfs;
+                        // Q1/Q4 — graph documents (.cflow / .cstory) open in the host.
+                        else if (info.Editor == AssetOpen::FlowEditor ||
+                                 info.Editor == AssetOpen::StoryEditor)
+                            ctx.PendingOpenDocument = vfs;
+                        break;
                 }
             }
 
@@ -685,6 +693,12 @@ namespace Starforge
             {
                 if (info.Open == AssetOpen::Scene && ImGui::MenuItem("Open Scene")) ctx.PendingOpenScene = vfs;
                 if (info.Open == AssetOpen::Prefab && ImGui::MenuItem("Instantiate Prefab")) ctx.PendingInstantiatePrefab = vfs;
+                if (info.Editor == AssetOpen::AnimationEditor && ImGui::MenuItem("Open in Animation Editor"))
+                    ctx.PendingOpenAnimEditor = vfs;   // M1 — route to the AssetEditorHost
+                if (info.Editor == AssetOpen::FlowEditor && ImGui::MenuItem("Open in Flow Editor"))
+                    ctx.PendingOpenDocument = vfs;     // Q1
+                if (info.Editor == AssetOpen::StoryEditor && ImGui::MenuItem("Open in Story Graph Editor"))
+                    ctx.PendingOpenDocument = vfs;     // Q4
                 if (ImGui::MenuItem("Rename")) BeginRename(path);
                 if (ImGui::MenuItem("Show in Explorer")) ShowInExplorer(path.string());
                 if (ImGui::MenuItem("Delete (Recycle Bin)")) m_DeleteTarget = path.string();

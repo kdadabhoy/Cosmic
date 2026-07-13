@@ -185,6 +185,117 @@ namespace Starforge
         return Draw(mesh, material, lambertColor, w, h);
     }
 
+    uint32_t PreviewRig::RenderSkeletal(const Ref<Mesh>& mesh, const Ref<Material>& material,
+                                        const glm::mat4* palette, uint32_t jointCount,
+                                        const std::vector<glm::mat4>* jointModels,
+                                        const std::vector<int>* parents,
+                                        int selected, bool showBones,
+                                        uint32_t w, uint32_t h)
+    {
+        if (!mesh || w == 0 || h == 0)
+            return 0;
+        EnsureResources();
+        if (!m_Fbo)
+            return 0;
+
+        // §0.5 state-restore contract: remember what we replace, restore after.
+        const uint32_t prevFbo = RenderCommand::GetBoundFramebuffer();
+
+        if (m_Fbo->GetWidth() != w || m_Fbo->GetHeight() != h)
+            m_Fbo->Resize(w, h);
+        m_Fbo->Bind();
+        RenderCommand::SetViewport(0, 0, w, h);
+        RenderCommand::SetClearColor({ 0.118f, 0.129f, 0.157f, 1.0f });
+        RenderCommand::Clear();
+
+        // Frame the mesh's bind-pose bounds with the rig's orbit camera (the pose
+        // can push geometry outside; the framing on bind bounds is close enough).
+        const glm::vec3 center = mesh->GetLocalCenter();
+        const float radius = std::max(0.01f,
+            0.5f * glm::length(mesh->GetLocalMax() - mesh->GetLocalMin()));
+        const float dist = radius * 2.4f * m_Zoom;
+
+        const glm::vec3 offset{
+            dist * std::cos(m_Pitch) * std::sin(m_Yaw),
+            dist * std::sin(-m_Pitch),
+            dist * std::cos(m_Pitch) * std::cos(m_Yaw) };
+        const glm::vec3 eye = center + offset;
+
+        const glm::mat4 view = glm::lookAt(eye, center, { 0.0f, 1.0f, 0.0f });
+        const glm::mat4 proj = glm::perspective(glm::radians(38.0f), (float)w / (float)h,
+                                                std::max(0.005f, dist - radius * 2.5f),
+                                                dist + radius * 2.5f);
+        m_LastViewProj = proj * view;
+
+        const glm::vec3 fwd   = glm::normalize(center - eye);
+        const glm::vec3 right = glm::normalize(glm::cross(fwd, glm::vec3(0, 1, 0)));
+        const glm::vec3 up    = glm::cross(right, fwd);
+        Renderer3D::SceneLightsDesc lights;
+        lights.SunDirection = glm::normalize(fwd - 0.55f * up - 0.35f * right);
+        lights.SunIntensity = 1.1f;
+        lights.Ambient      = 0.30f;
+        Renderer3D::SetLights(lights);
+
+        const Ref<Material>& mat = material ? material : m_DefaultMaterial;
+
+        Renderer3D::BeginScene(m_LastViewProj, eye);
+        if (palette && jointCount > 0 && mesh->IsSkinned())
+            Renderer3D::DrawMeshSkinned(mesh, glm::mat4(1.0f), mat, palette, jointCount);
+        else
+            Renderer3D::DrawMesh(mesh, glm::mat4(1.0f), mat);   // bind pose / static
+        Renderer3D::Flush();   // draw the mesh now (depth ON — the engine default)
+
+        // Bone overlay ON TOP of the mesh (depth test off for the line flush).
+        if (showBones && jointModels && !jointModels->empty())
+        {
+            const glm::vec4 boneCol{ 0.35f, 0.85f, 1.0f, 1.0f };
+            const glm::vec4 selCol { 1.0f, 0.75f, 0.20f, 1.0f };
+            const float cross = radius * 0.02f + 0.01f;
+            const auto& JM = *jointModels;
+            for (size_t j = 0; j < JM.size(); ++j)
+            {
+                const glm::vec3 p = glm::vec3(JM[j][3]);
+                const int par = (parents && j < parents->size()) ? (*parents)[j] : -1;
+                const bool onSel = ((int)j == selected) ||
+                                   (par == selected && selected >= 0);
+                const glm::vec4 col = onSel ? selCol : boneCol;
+                if (par >= 0 && (size_t)par < JM.size())
+                    Renderer3D::DrawLine(glm::vec3(JM[par][3]), p, col);
+                Renderer3D::DrawLine(p - glm::vec3(cross, 0, 0), p + glm::vec3(cross, 0, 0), col);
+                Renderer3D::DrawLine(p - glm::vec3(0, cross, 0), p + glm::vec3(0, cross, 0), col);
+                Renderer3D::DrawLine(p - glm::vec3(0, 0, cross), p + glm::vec3(0, 0, cross), col);
+            }
+            if (selected >= 0 && (size_t)selected < JM.size())
+                Renderer3D::DrawAxes(JM[selected], radius * 0.15f + 0.05f);   // inspect-only tripod
+        }
+        RenderCommand::SetDepthTest(false);   // overlay lines draw over the mesh
+        Renderer3D::EndScene();
+
+        // Restore the replaced framebuffer + engine render-state defaults (§0.5).
+        RenderCommand::BindFramebufferHandle(prevFbo);
+        RenderCommand::SetDepthTest(true);
+        RenderCommand::SetDepthWrite(true);
+        RenderCommand::SetCullMode(RenderCommand::CullMode::None);
+        RenderCommand::SetBlendMode(RenderCommand::BlendMode::Alpha);
+        RenderCommand::SetPolygonMode(RenderCommand::PolygonMode::Fill);
+
+        return m_Fbo->GetColorAttachmentRendererID(0);
+    }
+
+    bool PreviewRig::ProjectPoint(const glm::vec3& p, uint32_t w, uint32_t h,
+                                  glm::vec2& outPx) const
+    {
+        const glm::vec4 clip = m_LastViewProj * glm::vec4(p, 1.0f);
+        if (clip.w <= 1e-5f)
+            return false;   // behind the camera
+        const glm::vec3 ndc = glm::vec3(clip) / clip.w;
+        // The image is drawn flipped-V (uv0=(0,1), uv1=(1,0)) so ndc.y=+1 is the
+        // image's top row (py=0).
+        outPx.x = (ndc.x * 0.5f + 0.5f) * (float)w;
+        outPx.y = (0.5f - 0.5f * ndc.y) * (float)h;
+        return true;
+    }
+
     uint32_t PreviewRig::RenderMaterial(const MaterialAsset& asset, uint32_t w, uint32_t h)
     {
         EnsureResources();

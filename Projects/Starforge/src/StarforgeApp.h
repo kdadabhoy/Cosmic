@@ -35,10 +35,11 @@
 #include "panels/WorldSystemsPanel.h"
 #include "panels/VoxelPanel.h"
 #include "panels/TilePalettePanel.h"
-#include "panels/FlowGraphPanel.h"
 #include "panels/TelemetryPanel.h"
 #include "panels/ProfilerPanel.h"
 #include "panels/SystemPanel.h"
+#include "editors/AssetEditorHost.h"   // M1 — tabbed asset-editor documents
+#include "editors/PostChainEditor.h"   // Q6 — post-chain graph view (panel)
 
 #include <string>
 #include <vector>
@@ -280,10 +281,11 @@ namespace Starforge
         WorldSystemsPanel   m_WorldSystems;   // E18
         VoxelPanel          m_Voxel;           // Phase 18
         TilePalettePanel    m_TilePalette;    // U4
-        FlowGraphPanel      m_FlowGraph;      // U6
         TelemetryPanel      m_Telemetry;      // E20
         ProfilerPanel       m_Profiler;       // T17 — GPU/CPU profiler
         SystemPanel         m_System;         // T18 — jobs / resources
+        AssetEditorHost     m_Editors;        // M1 — tabbed document host (Animation Editor, …)
+        PostChainEditor     m_PostChain;      // Q6 — post-chain graph view
 
         Prefs::EditorSettings m_Settings;
 
@@ -339,11 +341,12 @@ namespace Starforge
         bool m_ShowWorldSystems = false;  // E18 (off by default)
         bool m_ShowVoxel = false;         // Phase 18 (off by default)
         bool m_ShowTilePalette = false;   // U4 (off by default)
-        bool m_ShowFlowGraph = false;     // U6 (off by default)
         bool m_ShowTelemetry = false;     // E20 (off by default)
         bool m_ShowStats = false;         // E21 statistics window
         bool m_ShowProfiler = false;      // T17 (off by default)
         bool m_ShowSystem = false;        // T18 (off by default)
+        bool m_ShowEditors = false;       // M1 asset-editor documents (auto-shown when a doc opens)
+        bool m_ShowPostChain = false;     // Q6 post-chain graph view (off by default)
         bool m_OpenShortcuts = false;     // E21 shortcut reference modal
         bool m_OpenFirstRun  = false;     // E21 first-run Forge Playground offer
         std::string m_PrevTheme;          // theme to restore on detach (E21)

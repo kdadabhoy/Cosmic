@@ -368,6 +368,18 @@ namespace Cosmic
 		m_TonemapShader->SetInt("u_Scene", 0);
 		m_TonemapShader->SetFloat("u_Exposure", exposure);
 
+		// Vignette (Q5): amount 0 when disabled ⇒ the shader skips the block, so
+		// the shipped output stays byte-identical.
+		if (m_VignetteEnabled)
+		{
+			m_TonemapShader->SetFloat("u_VignetteAmount", m_VignetteAmount);
+			m_TonemapShader->SetFloat("u_VignetteRadius", m_VignetteRadius);
+			m_TonemapShader->SetFloat("u_VignetteFeather", m_VignetteFeather);
+			m_TonemapShader->SetFloat3("u_VignetteColor", m_VignetteColor);
+		}
+		else
+			m_TonemapShader->SetFloat("u_VignetteAmount", 0.0f);
+
 		// Height fog (S7.2): reconstructs world position from the scene depth.
 		if (m_FogEnabled)
 		{

@@ -296,7 +296,7 @@ profiler port + jobs/resources. **Schedule doc 19 A4 (PreviewRig) before/with T7
   warnings, `CosmicTests` **301/301** (+11), GL-conformance clean. Remaining = the user's on-GPU
   acceptance (doc 22 STATUS list) + commit.
 
-### Phase 24 — Animation editors & multi-material meshes *(doc 23, M1–M6)* — after A1/A2/A4
+### Phase 24 — Animation editors & multi-material meshes *(doc 23, M1–M6)* — ✅ code-complete 2026-07-12
 Asset-editor host (document tabs) → reusable Timeline widget → **Starforge Animation Editor**
 (skeleton tree, bone-overlay preview, clip scrub) → joint sockets → material slots →
 Animator crossfade tier. Runtime stays doc 19 A2; full controller graphs stay parked.
@@ -304,14 +304,55 @@ Animator crossfade tier. Runtime stays doc 19 A2; full controller graphs stay pa
   M1/M3 medium.
 - **Done when:** a rigged character imports, previews, sockets a prop, and crossfades in a
   recorded editor session; non-skinned scenes byte-identical throughout.
+- **Status 2026-07-12 (UNcommitted):** all 6 work orders (M1–M6) landed in one session.
+  **M1** Starforge `AssetEditorHost` (tabbed `IAssetEditor` documents: dirty dots, save prompts,
+  one-per-path re-focus) + `AssetTypes` open-in-editor column + an "Animation" layout preset;
+  **M2** reusable `widgets/Timeline` (pure `TimelineState` transport — loop-wrap / scrub-while-
+  paused; ruler zoom/pan, key ticks; display+scrub only, C6 reuses it); **M3** `editors/
+  AnimationEditor` (skeleton tree + `PreviewRig::RenderSkeletal` bone overlay + `ProjectPoint`
+  joint pick + clip timeline scrub driving A2 sampling; inspect-only); **M4** reflected engine
+  `SocketComponent` + `Scene::GetWorldTransform` composition through a new per-frame
+  `AnimatorComponent::JointModelMatrices` (baked-space joint frames, bind-pose fallback), serializer
+  + Inspector free via reflection; **M5** the one engine-architectural item — `Mesh` submesh ranges
+  (`Submesh`/`GetSubmeshes`/`GetMaterialSlotCount`), `MeshRendererComponent::MaterialPaths` (empty-
+  vector legacy compat), `RendererAPI::DrawIndexed` index offset + `Renderer3D` per-submesh queue
+  entries + `SceneDrawContext::DrawMeshRange` (depth passes draw whole-mesh casters), serializer
+  special-case + Inspector Materials list (`Commands::SetMaterialSlot`); **M6** Animator crossfade
+  tier — `AnimationClip::BlendLocals` pose blend + `AnimatorComponent::CrossfadeTo` + `Scene::
+  UpdateAnimators` two-pose blend/promote + `ScriptableEntity::AnimatorProxy` (`Animator()`) +
+  Inspector fade readout (full controller graph STAYS parked). Engine surface stayed generic +
+  compat-gated (single-material + non-skinned scenes byte-identical: empty `MaterialPaths` writes no
+  key + `DrawIndexed(count,0)` is the same GL call; `Palette` empty without a clip = the pre-M4
+  static draw). Build **Debug+Release zero warnings**, `CosmicTests` **314/314** (301→314: +6 sockets,
+  +3 material slots, +4 crossfade, +1 covered by existing suites), GL-conformance clean. Remaining =
+  the user's on-GPU acceptance (open the Fox in the Animation Editor + scrub, socket a prop to a
+  `hand` joint, script-crossfade walk→run, 2-material model both slots, 50-instance ≥60 fps) + commit.
 
-### Phase 25 — Node graphs, flow variables & story *(doc 24, Q1–Q6)* — after U6 + M1
+### Phase 25 — Node graphs, flow variables & story *(doc 24, Q1–Q6)* — ✅ code-complete 2026-07-12
 Reusable node canvas → flow variables (typed blackboard) → **Starforge Story Graph**
 (`.cstory` runtime + editor w/ Play preview) → vignette pass → post-chain graph view (view of
 the fixed chain — an arbitrary pass-graph executor is explicitly out of scope).
 - **AI tier:** Q2/Q3 stronger model (runtime semantics, versioned serialization); rest medium.
 - **Done when:** a branching, variable-gated dialogue authors entirely in-editor and runs
   zero-code via the stock binding; post edits through the graph view match panel edits.
+- **Status 2026-07-12 (UNcommitted):** all 6 work orders (Q1–Q6) landed in one session.
+  **Q1** rehosted U6's flow panel as an M1 document `editors/FlowEditor` on the reusable
+  `widgets/NodeCanvas` (two flows open independently; old singleton panel + wiring removed); **Q2**
+  engine flow variables — `FlowAsset::Variables` (Bool/Number/String/Enum blackboard), `FlowGuard::Var`
+  + `FlowAction::SetVar`, `FlowMachine` runtime store + `Get/SetVar`, `ScriptableEntity::Flow()` proxy
+  (via `Scene::ActiveFlow`), versioned `.cflow` (v1 loads unchanged) + a Variables editor panel;
+  **Q3** GL-free `scene/StoryGraph` (`StoryGraph`/`StoryRunner`: nodes/options/guards/Once/signals,
+  shared `EvaluateFlowGuard`, `.cstory` serializer) + the stock `StoryUiBinding` template; **Q4**
+  `editors/StoryEditor` document (rich nodes, edit-node panel, Q2 variables panel, in-panel Play
+  preview) + shared `widgets/VariablesPanel`; **Q5** vignette folded into `Tonemap.glsl` (default off
+  ⇒ byte-identical) + `EnvironmentComponent` fields + Engine3DDemo toggle; **Q6** `editors/
+  PostChainEditor` read-only-topology view binding the same reflected env fields through the identical
+  `CommitFieldEditFor("Env "+field)` path (undo-identical; NO arbitrary pass-graph executor, decision
+  #13). Graph runtimes GL-free + headless-tested; `.cflow`/`.cstory` versioned + forward-loadable;
+  compat gate held (variable-free flows re-save v1; vignette-off byte-identical). Build Debug+Release
+  **zero warnings**, `CosmicTests` **323/323** (314→323: +4 flow variables, +4 story, +1 template
+  smoke), GL-conformance clean. Remaining = the user's on-GPU acceptance (author + Play a branching
+  guarded dialogue zero-code; two flows side by side; vignette A/B; graph-vs-panel undo parity) + commit.
 
 ### Phase 26 — Navigation & AI *(doc 25, N1–N5)* — any time after 15; before Z4
 Vendor Recast/Detour (Jolt pattern) → `NavMeshComponent` + collision-sourced bake + `.cnav` →

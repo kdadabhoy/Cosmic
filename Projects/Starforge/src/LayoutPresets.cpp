@@ -43,7 +43,7 @@ namespace Starforge
         void SetAll(const LayoutPanels& p, bool hierarchy, bool inspector, bool content,
                     bool console, bool environment, bool material, bool worldSystems,
                     bool voxel, bool tilePalette, bool flowGraph, bool telemetry, bool stats,
-                    bool profiler = false, bool system = false)
+                    bool profiler = false, bool system = false, bool editors = false)
         {
             auto set = [](bool* b, bool v) { if (b) *b = v; };
             set(p.Hierarchy, hierarchy);   set(p.Inspector, inspector);
@@ -53,6 +53,7 @@ namespace Starforge
             set(p.TilePalette, tilePalette);   set(p.FlowGraph, flowGraph);
             set(p.Telemetry, telemetry);       set(p.Stats, stats);
             set(p.Profiler, profiler);         set(p.System, system);
+            set(p.Editors, editors);
         }
 
         // The shared shell scaffold every built-in keeps: the Starforge top bar
@@ -66,7 +67,7 @@ namespace Starforge
 
     const std::vector<std::string>& LayoutPresets::BuiltIns()
     {
-        static const std::vector<std::string> names = { "Level", "Assets", "Telemetry" };
+        static const std::vector<std::string> names = { "Level", "Assets", "Animation", "Telemetry" };
         return names;
     }
 
@@ -97,6 +98,20 @@ namespace Starforge
             ws->DockWindow("Inspector",       Cosmic::DockPort::RightTop);
             ws->DockWindow("Material Editor", Cosmic::DockPort::RightTop);   // tab
             ws->DockWindow("Content Browser", Cosmic::DockPort::BottomCenter);
+            ws->DockWindow("Console",         Cosmic::DockPort::BottomRight);
+        }
+        else if (name == "Animation")
+        {
+            // Document-forward (M1/M3): the Animation Editor owns a tall bottom
+            // dock; Hierarchy left, Inspector right (socket/joint details), the
+            // Content Browser tabs beside the editor for picking rigged models.
+            SetAll(p, true, true, true, true, false, false, false, false, false, false, false, false,
+                   /*profiler*/ false, /*system*/ false, /*editors*/ true);
+            ws->SetEdgeRatios(0.16f, 0.22f, 0.08f, 0.48f);
+            ws->DockWindow("Hierarchy",       Cosmic::DockPort::LeftTop);
+            ws->DockWindow("Inspector",       Cosmic::DockPort::RightTop);
+            ws->DockWindow("Editors",         Cosmic::DockPort::BottomCenter);
+            ws->DockWindow("Content Browser", Cosmic::DockPort::BottomCenter);   // tab
             ws->DockWindow("Console",         Cosmic::DockPort::BottomRight);
         }
         else if (name == "Telemetry")
@@ -168,7 +183,8 @@ namespace Starforge
           << " tilepalette="  << v(p.TilePalette)
           << " flowgraph="    << v(p.FlowGraph)
           << " telemetry="    << v(p.Telemetry)
-          << " stats="        << v(p.Stats) << "\n";
+          << " stats="        << v(p.Stats)
+          << " editors="      << v(p.Editors) << "\n";
 
         size_t iniSize = 0;
         const char* ini = ImGui::SaveIniSettingsToMemory(&iniSize);
@@ -213,6 +229,7 @@ namespace Starforge
                     flag("flowgraph",     p.FlowGraph);
                     flag("telemetry",     p.Telemetry);
                     flag("stats",         p.Stats);
+                    flag("editors",       p.Editors);
                 }
                 continue;
             }

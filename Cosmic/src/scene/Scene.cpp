@@ -31,6 +31,7 @@
 #include <functional>
 #include <limits>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/quaternion.hpp>   // M4 — glm::mat4_cast for the socket offset
 #ifndef GLM_ENABLE_EXPERIMENTAL
 #define GLM_ENABLE_EXPERIMENTAL
 #endif
@@ -190,6 +191,18 @@ namespace Cosmic
 			{
 				mr.MaterialPathResolved = true;
 				mr.MaterialAsset = AssetLibrary::GetMaterial(mr.MaterialPath);
+			}
+
+			// M5 — resolve per-submesh material slots (guarded; the editor resets
+			// the flag when a slot path changes). Empty paths resolve to null so a
+			// slot falls back to the legacy material / colour at draw time.
+			if (!mr.MaterialPaths.empty() && !mr.MaterialPathsResolved)
+			{
+				mr.MaterialPathsResolved = true;
+				mr.MaterialAssets.clear();
+				mr.MaterialAssets.reserve(mr.MaterialPaths.size());
+				for (const std::string& p : mr.MaterialPaths)
+					mr.MaterialAssets.push_back(p.empty() ? nullptr : AssetLibrary::GetMaterial(p));
 			}
 		}
 	}
@@ -539,6 +552,43 @@ namespace Cosmic
 
 	glm::mat4 Scene::WorldOf(entt::entity handle)
 	{
+		// Socket override (M4): an entity with a SocketComponent follows a named
+		// joint of the NEAREST animated ancestor whose skeleton has that joint —
+		// socketWorld = ancestorWorld · jointFrame · offset. It bypasses the
+		// normal parent-relative local (the offset lives on the component). Falls
+		// through to the ordinary path when no ancestor animates the joint yet, so
+		// a socket behaves as a plain child until its rig poses (compat).
+		if (const SocketComponent* sock = m_Registry.try_get<SocketComponent>(handle))
+		{
+			entt::entity cur = handle;
+			for (int guard = 0; m_Registry.valid(cur) && guard < 4096; ++guard)
+			{
+				const auto* rel = m_Registry.try_get<RelationshipComponent>(cur);
+				if (!rel || !rel->Parent.IsValid())
+					break;
+				auto it = m_UUIDMap.find(rel->Parent);
+				if (it == m_UUIDMap.end() || !m_Registry.valid(it->second))
+					break;
+				const entt::entity parent = it->second;
+
+				if (const auto* an = m_Registry.try_get<AnimatorComponent>(parent);
+				    an && an->SkelRef && !an->JointModelMatrices.empty())
+				{
+					const int j = an->SkelRef->Find(sock->Joint);
+					if (j >= 0 && (size_t)j < an->JointModelMatrices.size())
+					{
+						const glm::mat4 offset =
+							glm::translate(glm::mat4(1.0f), sock->Position) *
+							glm::mat4_cast(sock->Rotation) *
+							glm::scale(glm::mat4(1.0f), sock->Scale);
+						return WorldOf(parent) * an->JointModelMatrices[(size_t)j] * offset;
+					}
+				}
+				cur = parent;
+			}
+			// Unresolved — fall through to the ordinary transform below.
+		}
+
 		glm::mat4 local(1.0f);
 		if (m_Registry.all_of<TransformComponent>(handle))
 			local = m_Registry.get<TransformComponent>(handle).GetTransform();
@@ -1145,29 +1195,94 @@ namespace Cosmic
 			if (!an.SkelRef)
 				an.SkelRef = findSkeleton(e);   // meshes may resolve a frame later — retried
 
-			if (!an.ClipRef || !an.SkelRef || an.SkelRef->JointCount() == 0)
+			if (!an.SkelRef || an.SkelRef->JointCount() == 0)
 			{
 				an.Palette.clear();
+				an.JointModelMatrices.clear();   // M4 — no rig, no joints to socket to
 				continue;
 			}
 
-			const float duration = an.ClipRef->Duration;
-			if (an.Playing)
+			// Pose locals: a resolved clip samples the play head; a rig with no
+			// clip holds its bind pose (so sockets still track it). The DRAW path
+			// only ever consumes Palette, which stays empty without a clip — the
+			// pre-M4 static bind-pose draw, byte-identical.
+			if (an.ClipRef)
 			{
-				an.TimeSeconds += deltaTime * an.Speed;
-				if (!an.Loop && duration > 0.0f)
-					an.TimeSeconds = glm::clamp(an.TimeSeconds, 0.0f, duration);
-				an.NormalizedTime = duration > 0.0f
-					? an.ClipRef->ResolveTime(an.TimeSeconds, an.Loop) / duration : 0.0f;
+				const float duration = an.ClipRef->Duration;
+				if (an.Playing)
+				{
+					an.TimeSeconds += deltaTime * an.Speed;
+					if (!an.Loop && duration > 0.0f)
+						an.TimeSeconds = glm::clamp(an.TimeSeconds, 0.0f, duration);
+					an.NormalizedTime = duration > 0.0f
+						? an.ClipRef->ResolveTime(an.TimeSeconds, an.Loop) / duration : 0.0f;
+				}
+				else
+				{
+					// Paused: the (scrubbed) play head is authoritative.
+					an.TimeSeconds = an.NormalizedTime * duration;
+				}
+
+				// M6 — resolve the crossfade target when it changes (guarded).
+				if (an.NextClipPath != an.ResolvedNextClipPath)
+				{
+					an.ResolvedNextClipPath = an.NextClipPath;
+					an.NextClipRef = an.NextClipPath.empty() ? nullptr
+					                                         : AssetLibrary::GetAnimationClip(an.NextClipPath);
+					an.NextTimeSeconds = 0.0f;
+					an.FadeElapsed     = 0.0f;
+				}
+
+				if (an.NextClipRef && an.FadeDuration > 0.0f)
+				{
+					// Crossfade: advance the next head + the fade (while playing),
+					// then pose-blend the two sampled poses at the fade weight.
+					if (an.Playing)
+					{
+						an.NextTimeSeconds += deltaTime * an.Speed;
+						an.FadeElapsed     += deltaTime;
+					}
+					const float w = glm::clamp(an.FadeElapsed / an.FadeDuration, 0.0f, 1.0f);
+					if (w >= 1.0f)
+					{
+						// Fade complete — promote the next clip to current.
+						an.ClipRef          = an.NextClipRef;
+						an.ClipPath         = an.NextClipPath;
+						an.ResolvedClipPath = an.NextClipPath;
+						an.TimeSeconds      = an.NextTimeSeconds;
+						an.NextClipRef      = nullptr;
+						an.NextClipPath.clear();
+						an.ResolvedNextClipPath.clear();
+						an.FadeDuration = an.FadeElapsed = 0.0f;
+						an.ClipRef->Sample(*an.SkelRef, an.TimeSeconds, an.Loop, an.ScratchLocals);
+					}
+					else
+					{
+						an.ClipRef->Sample(*an.SkelRef, an.TimeSeconds, an.Loop, an.ScratchLocals);
+						an.NextClipRef->Sample(*an.SkelRef, an.NextTimeSeconds, an.Loop, an.ScratchLocalsB);
+						AnimationClip::BlendLocals(an.ScratchLocals, an.ScratchLocalsB, w, an.ScratchLocals);
+					}
+				}
+				else
+				{
+					an.ClipRef->Sample(*an.SkelRef, an.TimeSeconds, an.Loop, an.ScratchLocals);
+				}
+
+				an.SkelRef->ComputePalette(an.ScratchLocals, an.Palette);
 			}
 			else
 			{
-				// Paused: the (scrubbed) play head is authoritative.
-				an.TimeSeconds = an.NormalizedTime * duration;
+				an.Palette.clear();                             // no clip → static bind-pose draw (compat)
+				an.SkelRef->GetBindLocals(an.ScratchLocals);    // expose the bind pose to sockets
 			}
 
-			an.ClipRef->Sample(*an.SkelRef, an.TimeSeconds, an.Loop, an.ScratchLocals);
-			an.SkelRef->ComputePalette(an.ScratchLocals, an.Palette);
+			// M4 — publish per-joint BAKED-space model frames for sockets + the
+			// editor bone overlay: ImportCorrection · global (no inverse-bind), so
+			// a child placed at JointModelMatrices[j] sits ON joint j.
+			an.SkelRef->ComputeGlobals(an.ScratchLocals, an.ScratchGlobals);
+			an.JointModelMatrices.resize(an.ScratchGlobals.size());
+			for (size_t j = 0; j < an.ScratchGlobals.size(); ++j)
+				an.JointModelMatrices[j] = an.SkelRef->ImportCorrection * an.ScratchGlobals[j];
 		}
 	}
 
@@ -1208,6 +1323,34 @@ namespace Cosmic
 					                    an->Palette.data(), (uint32_t)an->Palette.size(), entityID);
 					return;
 				}
+			}
+
+			// M5 — multi-material meshes: one lit draw per submesh with its slot
+			// material (the queue still sorts/culls each). EMPTY MaterialAssets (or
+			// a mesh with no submesh table) skips this entirely and the legacy
+			// single-material path below runs — byte-identical. Skinned meshes stay
+			// on the single-material skinned path (multi-material skinned deferred).
+			if (!mr.MeshAsset->IsSkinned() && !mr.MaterialAssets.empty() &&
+			    mr.MeshAsset->HasSubmeshes())
+			{
+				if (depthOnly)
+				{
+					// Shadow / coverage: one whole-mesh caster — depth ignores the
+					// material split, so this matches a single-material caster.
+					ctx.DrawMesh(mr.MeshAsset, xform, mr.Color, entityID);
+				}
+				else
+				{
+					for (const Submesh& sm : mr.MeshAsset->GetSubmeshes())
+					{
+						Ref<Material> slot = (sm.MaterialIndex < mr.MaterialAssets.size())
+							? mr.MaterialAssets[sm.MaterialIndex] : nullptr;
+						if (!slot) slot = mr.MaterialAsset;   // legacy fallback (may be null → colour)
+						ctx.DrawMeshRange(mr.MeshAsset, xform, slot, mr.Color,
+						                  sm.IndexOffset, sm.IndexCount, entityID);
+					}
+				}
+				return;
 			}
 
 			if (mr.MaterialAsset)

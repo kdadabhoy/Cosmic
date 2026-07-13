@@ -70,5 +70,16 @@ namespace Cosmic
          * 2/hz, … Duration). Returns the baked clip; the source is untouched.
          */
         AnimationClip BakeFixedRate(float hz) const;
+
+        /**
+         * @brief Pose-space blend of two per-joint LOCAL transform sets (Phase 24 /
+         * M6 crossfade): `out[j] = blend(a[j], b[j], w)` decomposed into TRS —
+         * translation/scale mix linearly, rotation slerps the shortest arc — then
+         * recomposed. w in [0,1]: 0 ⇒ a, 1 ⇒ b. `a` and `b` come from Sample() on
+         * the SAME skeleton (matching sizes). `out` may alias `a`. Pure / headless.
+         */
+        static void BlendLocals(const std::vector<glm::mat4>& a,
+                                const std::vector<glm::mat4>& b,
+                                float w, std::vector<glm::mat4>& out);
     };
 }

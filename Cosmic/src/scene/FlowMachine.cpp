@@ -43,8 +43,36 @@ namespace Cosmic
                 case FlowValue::Kind::Bool:   return json(v.Bool);
                 case FlowValue::Kind::Number: return json(v.Number);
                 case FlowValue::Kind::String: return json(v.String);
+                case FlowValue::Kind::Enum:   return json(v.String);   // an enum serializes as its option string
             }
             return json(false);
+        }
+
+        // Q2 — compare two FlowValues (variable guards). Enum compares like String.
+        bool CompareFlowValues(const FlowValue& lhs, const FlowValue& rhs, const std::string& op)
+        {
+            const bool lhsStr = lhs.ValueKind == FlowValue::Kind::String || lhs.ValueKind == FlowValue::Kind::Enum;
+            const bool rhsStr = rhs.ValueKind == FlowValue::Kind::String || rhs.ValueKind == FlowValue::Kind::Enum;
+            if (lhsStr || rhsStr)
+            {
+                if (op == "==") return lhs.String == rhs.String;
+                if (op == "!=") return lhs.String != rhs.String;
+                return false;
+            }
+            if (lhs.ValueKind == FlowValue::Kind::Bool && rhs.ValueKind == FlowValue::Kind::Bool)
+            {
+                if (op == "==") return lhs.Bool == rhs.Bool;
+                if (op == "!=") return lhs.Bool != rhs.Bool;
+                return false;
+            }
+            const double l = lhs.Number, r = rhs.Number;   // numeric (Bool coerces to 0/1 via Number=0 default)
+            if (op == "==") return std::abs(l - r) < 1e-6;
+            if (op == "!=") return std::abs(l - r) >= 1e-6;
+            if (op == "<")  return l <  r;
+            if (op == ">")  return l >  r;
+            if (op == "<=") return l <= r;
+            if (op == ">=") return l >= r;
+            return false;
         }
     }
 
@@ -101,6 +129,14 @@ namespace Cosmic
                             a.Field     = sf.value("field", std::string());
                             if (sf.contains("value")) a.Value = ParseValue(sf["value"]);
                         }
+                        else if (ja.contains("setVar") && ja["setVar"].is_object())   // Q2
+                        {
+                            const auto& sv = ja["setVar"];
+                            a.ActionType = FlowAction::Type::SetVar;
+                            a.Var    = sv.value("var", std::string());
+                            a.VarAdd = sv.value("add", false);
+                            if (sv.contains("value")) a.Value = ParseValue(sv["value"]);
+                        }
                         else continue;
                         s.OnEnter.push_back(std::move(a));
                     }
@@ -119,6 +155,7 @@ namespace Cosmic
                         {
                             const auto& g = jt["if"];
                             t.HasGuard        = true;
+                            t.Guard.Var       = g.value("var", std::string());   // Q2 — variable guard
                             t.Guard.Entity    = g.value("entity", std::string());
                             t.Guard.Component = g.value("component", std::string());
                             t.Guard.Field     = g.value("field", std::string());
@@ -140,13 +177,54 @@ namespace Cosmic
                 out.States.push_back(std::move(s));
             }
         }
+
+        // Q2 — typed-variables blackboard (optional; absent in v1 files).
+        if (j.contains("variables") && j["variables"].is_array())
+        {
+            for (const auto& jv : j["variables"])
+            {
+                FlowVariable var;
+                var.Name  = jv.value("name", std::string());
+                var.Group = jv.value("group", std::string());
+                if (var.Name.empty()) continue;
+
+                if (jv.contains("options") && jv["options"].is_array())
+                    for (const auto& o : jv["options"])
+                        if (o.is_string()) var.EnumOptions.push_back(o.get<std::string>());
+
+                const std::string type = jv.value("type", std::string("bool"));
+                const json jd = jv.contains("default") ? jv["default"] : json();
+                if (type == "number")
+                    var.Default = FlowValue::MakeNumber(jd.is_number() ? jd.get<double>() : 0.0);
+                else if (type == "string")
+                    var.Default = FlowValue::MakeString(jd.is_string() ? jd.get<std::string>() : std::string());
+                else if (type == "enum")
+                    var.Default = FlowValue::MakeEnum(jd.is_string() ? jd.get<std::string>()
+                                    : (var.EnumOptions.empty() ? std::string() : var.EnumOptions.front()));
+                else
+                    var.Default = FlowValue::MakeBool(jd.is_boolean() ? jd.get<bool>() : false);
+
+                out.Variables.push_back(std::move(var));
+            }
+        }
         return true;
     }
 
     std::string FlowAsset::SaveToString() const
     {
+        // Q2 — bump to v2 only when a v2 feature is present, so variable-free
+        // flows re-save at their original version (compat gate: byte-stable).
+        bool usesV2 = !Variables.empty();
+        for (const FlowState& s : States)
+        {
+            for (const FlowTransition& t : s.Transitions)
+                if (t.HasGuard && !t.Guard.Var.empty()) usesV2 = true;
+            for (const FlowAction& a : s.OnEnter)
+                if (a.ActionType == FlowAction::Type::SetVar) usesV2 = true;
+        }
+
         json j;
-        j["cosmic_flow"] = Version;
+        j["cosmic_flow"] = usesV2 ? 2 : Version;
         j["start"]       = Start;
         json jstates = json::array();
         for (const auto& s : States)
@@ -163,6 +241,10 @@ namespace Cosmic
                 {
                     if (a.ActionType == FlowAction::Type::Emit)
                         ja.push_back({ { "emit", a.Signal } });
+                    else if (a.ActionType == FlowAction::Type::SetVar)   // Q2
+                        ja.push_back({ { "setVar", {
+                            { "var", a.Var }, { "add", a.VarAdd },
+                            { "value", ValueToJson(a.Value) } } } });
                     else
                         ja.push_back({ { "setField", {
                             { "entity", a.Entity }, { "component", a.Component },
@@ -180,9 +262,15 @@ namespace Cosmic
                 if (t.Transition != "None") o["transition"] = t.Transition;
                 if (t.Push) o["push"] = true;
                 if (t.HasGuard)
-                    o["if"] = { { "entity", t.Guard.Entity }, { "component", t.Guard.Component },
-                                { "field", t.Guard.Field }, { "op", t.Guard.Op },
-                                { "value", ValueToJson(t.Guard.Value) } };
+                {
+                    if (!t.Guard.Var.empty())   // Q2 — variable guard
+                        o["if"] = { { "var", t.Guard.Var }, { "op", t.Guard.Op },
+                                    { "value", ValueToJson(t.Guard.Value) } };
+                    else
+                        o["if"] = { { "entity", t.Guard.Entity }, { "component", t.Guard.Component },
+                                    { "field", t.Guard.Field }, { "op", t.Guard.Op },
+                                    { "value", ValueToJson(t.Guard.Value) } };
+                }
                 jt.push_back(std::move(o));
             }
             js["transitions"] = std::move(jt);
@@ -191,6 +279,31 @@ namespace Cosmic
             jstates.push_back(std::move(js));
         }
         j["states"] = std::move(jstates);
+
+        // Q2 — variables blackboard (only when present, so v1 flows stay v1).
+        if (!Variables.empty())
+        {
+            json jvars = json::array();
+            for (const FlowVariable& var : Variables)
+            {
+                json jv;
+                jv["name"] = var.Name;
+                if (!var.Group.empty()) jv["group"] = var.Group;
+                switch (var.Default.ValueKind)
+                {
+                    case FlowValue::Kind::Number: jv["type"] = "number"; break;
+                    case FlowValue::Kind::String: jv["type"] = "string"; break;
+                    case FlowValue::Kind::Enum:   jv["type"] = "enum";   break;
+                    default:                      jv["type"] = "bool";   break;
+                }
+                jv["default"] = ValueToJson(var.Default);
+                if (var.Default.ValueKind == FlowValue::Kind::Enum && !var.EnumOptions.empty())
+                    jv["options"] = var.EnumOptions;
+                jvars.push_back(std::move(jv));
+            }
+            j["variables"] = std::move(jvars);
+        }
+
         return j.dump(2);
     }
 
@@ -360,6 +473,11 @@ namespace Cosmic
         m_Running = true;
         m_Elapsed = 0.0f;
 
+        // Q2 — seed the runtime blackboard from the asset's variable defaults.
+        m_Vars.clear();
+        for (const FlowVariable& v : m_Asset.Variables)
+            m_Vars[v.Name] = v.Default;
+
         const FlowState* s = m_Asset.Find(m_Asset.Start);
         if (!s)
         {
@@ -375,8 +493,27 @@ namespace Cosmic
         UnsubscribeActiveBus();
         m_Stack.clear();
         m_Pending.clear();
+        m_Vars.clear();   // Q2 — the blackboard is per-run
         m_Running = false;
         m_Elapsed = 0.0f;
+    }
+
+    // ---- Flow variables (Q2) -----------------------------------------------
+
+    FlowValue FlowMachine::GetVar(const std::string& name) const
+    {
+        auto it = m_Vars.find(name);
+        return it != m_Vars.end() ? it->second : FlowValue::MakeBool(false);
+    }
+
+    void FlowMachine::SetVar(const std::string& name, const FlowValue& value)
+    {
+        if (!name.empty()) m_Vars[name] = value;
+    }
+
+    bool FlowMachine::HasVar(const std::string& name) const
+    {
+        return m_Vars.find(name) != m_Vars.end();
     }
 
     void FlowMachine::FeedSignal(const std::string& signal)
@@ -408,12 +545,15 @@ namespace Cosmic
         m_BusScene  = scene.get();
         m_BusHandle = scene->Events().ConnectAny(
             [this](const std::string& sig, Entity) { FeedSignal(sig); });
+        m_BusScene->SetActiveFlow(this);   // Q2 — scripts reach the blackboard via Flow()
     }
 
     void FlowMachine::UnsubscribeActiveBus()
     {
         if (m_BusScene && m_BusHandle)
             m_BusScene->Events().Disconnect(m_BusHandle);
+        if (m_BusScene)
+            m_BusScene->SetActiveFlow(nullptr);   // Q2
         m_BusScene  = nullptr;
         m_BusHandle = 0;
     }
@@ -463,6 +603,13 @@ namespace Cosmic
                 if (scene) scene->Events().Emit(a.Signal, Entity());
                 else       FeedSignal(a.Signal);   // no scene: still drive the flow
             }
+            else if (a.ActionType == FlowAction::Type::SetVar)   // Q2
+            {
+                if (a.VarAdd)
+                    m_Vars[a.Var] = FlowValue::MakeNumber(GetVar(a.Var).Number + a.Value.Number);
+                else
+                    m_Vars[a.Var] = a.Value;
+            }
             else // SetField
             {
                 if (scene) WriteFieldValue(*scene, a.Entity, a.Component, a.Field, a.Value);
@@ -470,26 +617,51 @@ namespace Cosmic
         }
     }
 
+    // Shared guard evaluator (Q2/Q3) — see FlowMachine.h.
+    bool EvaluateFlowGuard(const FlowGuard& guard, Scene* scene,
+                           const std::function<bool(const std::string&, FlowValue&)>& lookupVar,
+                           const std::function<void(const std::string&)>& warn)
+    {
+        auto w = [&](const std::string& key) { if (warn) warn(key); };
+
+        // Variable guard: compare a blackboard variable (no scene needed).
+        if (!guard.Var.empty())
+        {
+            FlowValue v;
+            if (!lookupVar || !lookupVar(guard.Var, v)) { w("no variable '" + guard.Var + "'"); return false; }
+            return CompareFlowValues(v, guard.Value, guard.Op);
+        }
+
+        // Field guard: read Entity.Component.Field from the active scene.
+        if (!scene) { w("no active scene"); return false; }
+        entt::entity e = FindTag(*scene, guard.Entity);
+        if (e == entt::null) { w("no entity tagged '" + guard.Entity + "'"); return false; }
+        const auto* desc = Reflect::GetRegistry().FindByName(guard.Component);
+        if (!desc) { w("unknown component '" + guard.Component + "'"); return false; }
+        void* inst = desc->Get(scene->GetRegistry(), e);
+        if (!inst) { w(guard.Entity + " has no " + guard.Component); return false; }
+        const auto* fd = desc->FindField(guard.Field);
+        if (!fd) { w(guard.Component + " has no field '" + guard.Field + "'"); return false; }
+
+        return CompareValue(fd->Get(inst), guard.Value, guard.Op);
+    }
+
     bool FlowMachine::EvalGuard(const FlowGuard& guard) const
     {
-        Ref<Scene> scene = m_Stack.empty() ? nullptr : m_Stack.back().ActiveScene;
+        Scene* scene = m_Stack.empty() ? nullptr : m_Stack.back().ActiveScene.get();
+        auto lookup = [this](const std::string& n, FlowValue& out) -> bool
+        {
+            auto it = m_Vars.find(n);
+            if (it == m_Vars.end()) return false;
+            out = it->second;
+            return true;
+        };
         auto warnOnce = [this](const std::string& key)
         {
             if (m_GuardWarned.insert(key).second)
                 CS_CORE_WARN("flow guard: {0}", key);
         };
-        if (!scene) { warnOnce("no active scene"); return false; }
-
-        entt::entity e = FindTag(*scene, guard.Entity);
-        if (e == entt::null) { warnOnce("no entity tagged '" + guard.Entity + "'"); return false; }
-        const auto* desc = Reflect::GetRegistry().FindByName(guard.Component);
-        if (!desc) { warnOnce("unknown component '" + guard.Component + "'"); return false; }
-        void* inst = desc->Get(scene->GetRegistry(), e);
-        if (!inst) { warnOnce(guard.Entity + " has no " + guard.Component); return false; }
-        const auto* fd = desc->FindField(guard.Field);
-        if (!fd) { warnOnce(guard.Component + " has no field '" + guard.Field + "'"); return false; }
-
-        return CompareValue(fd->Get(inst), guard.Value, guard.Op);
+        return EvaluateFlowGuard(guard, scene, lookup, warnOnce);
     }
 
     bool FlowMachine::TryFireSignal(const std::string& signal)

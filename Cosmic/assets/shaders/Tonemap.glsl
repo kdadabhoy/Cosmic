@@ -43,6 +43,14 @@ in vec2 v_TexCoord;
 uniform sampler2D u_Scene;      // HDR scene color (slot 0)
 uniform float     u_Exposure;   // linear exposure multiplier (1.0 = neutral)
 
+// Vignette (Phase 25 / Q5) — post-tonemap edge darkening toward u_VignetteColor.
+// u_VignetteAmount 0 (the GL/engine default) skips the block entirely, so the
+// shipped output is byte-identical. Applied on the final LDR image.
+uniform float u_VignetteAmount;   // 0 = off
+uniform float u_VignetteRadius;   // normalized distance where darkening reaches full
+uniform float u_VignetteFeather;  // falloff softness
+uniform vec3  u_VignetteColor;    // edge color (usually black)
+
 // SSAO (S6.5) — modulates the scene before tonemapping. Applied to the whole
 // image (a documented simplification of "ambient only", which needs a depth
 // prepass / forward AO fetch). u_UseAO gates it.
@@ -201,5 +209,15 @@ void main()
 
     vec3 mapped = ACESFilmic(hdr * u_Exposure);
     mapped      = pow(mapped, vec3(1.0 / 2.2));        // linear -> sRGB
-    color       = vec4(mapped, 1.0);
+
+    if (u_VignetteAmount > 0.0)                        // Q5 vignette (post-tonemap)
+    {
+        float d     = distance(v_TexCoord, vec2(0.5)) * 1.41421356;   // 0 center → ~1 corner
+        float inner = u_VignetteRadius - max(u_VignetteFeather, 1e-3);
+        float v     = 1.0 - smoothstep(inner, u_VignetteRadius, d);    // 1 center → 0 edge
+        float f     = mix(1.0, v, clamp(u_VignetteAmount, 0.0, 1.0));
+        mapped      = mix(u_VignetteColor, mapped, f);
+    }
+
+    color = vec4(mapped, 1.0);
 }

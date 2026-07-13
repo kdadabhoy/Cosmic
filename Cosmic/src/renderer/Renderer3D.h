@@ -196,8 +196,12 @@ namespace Cosmic
 		 * executed at Flush()/EndScene(). The material overload below is the
 		 * custom-shader path.
 		 */
+		// indexOffset/indexCount (M5): draw only one submesh range (elements) of
+		// the mesh. Default 0/0 ⇒ the whole mesh, byte-identical to before. The
+		// per-submesh path submits one queue entry per slot so sort/cull still
+		// apply; ranged draws never auto-instance.
 		static void DrawMesh(const Ref<Mesh>& mesh, const glm::mat4& transform, const glm::vec4& color,
-		                     int entityID = -1);
+		                     int entityID = -1, uint32_t indexOffset = 0, uint32_t indexCount = 0);
 
 		/**
 		 * @brief Draw a mesh with a custom Material (S4.2 material-driven path).
@@ -215,7 +219,8 @@ namespace Cosmic
 		 * material-owned: this path never sets it.
 		 */
 		static void DrawMesh(const Ref<Mesh>& mesh, const glm::mat4& transform,
-		                     const Ref<Material>& material, int entityID = -1);
+		                     const Ref<Material>& material, int entityID = -1,
+		                     uint32_t indexOffset = 0, uint32_t indexCount = 0);
 
 		/**
 		 * @brief Draw every part of an imported Model (S4.4b) under `transform`,

@@ -210,6 +210,8 @@ namespace Workspace
 		float m_BloomKnee      = 0.6f;
 		float m_BloomIntensity = 0.7f;
 		bool  m_Fxaa           = true;
+		bool  m_Vignette       = false;               // Q5 — post-tonemap edge darkening
+		float m_VignetteAmount = 0.4f;
 		Cosmic::Ref<Cosmic::Material> m_EmitterMat;   // emissive sphere (bloom demo)
 
 		// ---- Sky / height fog / time-of-day (S7.1 / S7.2 / S7.3) ----

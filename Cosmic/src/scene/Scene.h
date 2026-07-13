@@ -26,6 +26,7 @@ namespace Cosmic
 	class  PhysicsWorld;         // physics/PhysicsWorld.h (J4 — a play-session service)
 	class  ScenePhysics;         // physics/ScenePhysics.h (J4 — runtime body binding)
 	class  ScriptHost;           // scripting/ScriptHost.h  (J5 — collision-event dispatch)
+	class  FlowMachine;          // scene/FlowMachine.h     (Q2 — Flow() variable proxy link)
 
 	class COSMIC_API Scene
 	{
@@ -303,6 +304,13 @@ namespace Cosmic
 		inline EventBus& Events() { return m_Events; }
 		inline const EventBus& Events() const { return m_Events; }
 
+		/** @brief The FlowMachine currently driving this scene, or null (Q2). A
+		 *  running FlowMachine points its top scene here so scripts can reach the
+		 *  flow blackboard via Flow().GetVar/SetVar; cleared when the flow moves on
+		 *  or stops. Not owned. */
+		inline void         SetActiveFlow(FlowMachine* flow) { m_ActiveFlow = flow; }
+		inline FlowMachine* ActiveFlow() const { return m_ActiveFlow; }
+
 
 	public:
 		/**
@@ -344,6 +352,7 @@ namespace Cosmic
 		float m_WorldTime = 0.0f;   // accumulated seconds for water/particle animation (E18)
 
 		EventBus m_Events;          // U2 — per-scene signal channel
+		FlowMachine* m_ActiveFlow = nullptr;   // Q2 — the flow driving this scene (not owned)
 
 		std::unique_ptr<ScenePhysics> m_Physics;   // J4 — non-null only during a play session
 

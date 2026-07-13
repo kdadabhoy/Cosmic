@@ -175,9 +175,10 @@ namespace Cosmic
 		 * @param vertexArray The Vertex Array Object containing the vertex and index data.
 		 * @param count The number of indices to draw. If 0, uses the VAO's internal index buffer count.
 		 */
-		inline static void DrawIndexed(const Ref<VertexArray>& vertexArray, uint32_t count = 0)
+		inline static void DrawIndexed(const Ref<VertexArray>& vertexArray, uint32_t count = 0,
+		                               uint32_t indexOffset = 0)
 		{
-			s_RendererAPI->DrawIndexed(vertexArray, count);
+			s_RendererAPI->DrawIndexed(vertexArray, count, indexOffset);
 		}
 
 		/**

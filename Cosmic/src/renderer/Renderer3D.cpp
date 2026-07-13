@@ -67,6 +67,11 @@ namespace Cosmic
 		// entry in the frame's palette SSBO. SkinBase < 0 = a static draw.
 		Ref<Shader>      SkinShader;
 		int              SkinBase = -1;
+
+		// M5 — submesh index range (elements). IndexCount 0 = the whole mesh
+		// (byte-identical to every pre-M5 draw); non-zero draws one material slot.
+		uint32_t         IndexOffset = 0;
+		uint32_t         IndexCount  = 0;
 	};
 
 	struct Renderer3DData
@@ -540,7 +545,8 @@ namespace Cosmic
 	// DrawMeshSkinned) — static submits leave them defaulted.
 	static void SubmitMesh(const Ref<Mesh>& mesh, const glm::mat4& transform,
 	                       const Ref<Material>& material, const glm::vec4& color, int entityID,
-	                       const Ref<Shader>& skinShader = nullptr, int skinBase = -1)
+	                       const Ref<Shader>& skinShader = nullptr, int skinBase = -1,
+	                       uint32_t indexOffset = 0, uint32_t indexCount = 0)
 	{
 		s_Data.Stats.MeshesSubmitted++;
 
@@ -573,6 +579,8 @@ namespace Cosmic
 		cmd.EntityID    = entityID;
 		cmd.SkinShader  = skinShader;
 		cmd.SkinBase    = skinBase;
+		cmd.IndexOffset = indexOffset;   // M5 — submesh range (0/0 = whole mesh)
+		cmd.IndexCount  = indexCount;
 
 		// The skinned twin is its own state group (Key.Shader) so skinned draws
 		// sort together and never share a bind with the static path.
@@ -585,15 +593,17 @@ namespace Cosmic
 		cmd.Key.Sequence    = s_Data.QueueSequence++;
 		// Per-instance entity IDs are not in the instance SSBO — auto-batching a
 		// picked entity would break ID picking, so only anonymous draws qualify.
-		// Skinned draws never auto-instance (each has its own palette base).
+		// Skinned draws never auto-instance (each has its own palette base). M5
+		// submesh ranges never auto-instance (the instanced path draws the whole
+		// index buffer — a range would be lost).
 		cmd.Key.Instancable = !transparent && material && material->GetInstancingShader()
-		                      && entityID == -1 && skinBase < 0;
+		                      && entityID == -1 && skinBase < 0 && indexCount == 0;
 
 		(transparent ? s_Data.TransparentQueue : s_Data.OpaqueQueue).push_back(std::move(cmd));
 	}
 
 	void Renderer3D::DrawMesh(const Ref<Mesh>& mesh, const glm::mat4& transform, const glm::vec4& color,
-	                          int entityID)
+	                          int entityID, uint32_t indexOffset, uint32_t indexCount)
 	{
 		if (!mesh)
 			return;
@@ -605,11 +615,12 @@ namespace Cosmic
 		if (!s_Data.MeshShader)
 			return;
 
-		SubmitMesh(mesh, transform, nullptr, color, entityID);
+		SubmitMesh(mesh, transform, nullptr, color, entityID, nullptr, -1, indexOffset, indexCount);
 	}
 
 	void Renderer3D::DrawMesh(const Ref<Mesh>& mesh, const glm::mat4& transform,
-	                          const Ref<Material>& material, int entityID)
+	                          const Ref<Material>& material, int entityID,
+	                          uint32_t indexOffset, uint32_t indexCount)
 	{
 		if (!mesh || !material)
 			return;
@@ -621,7 +632,7 @@ namespace Cosmic
 		if (!material->GetShader())
 			return;
 
-		SubmitMesh(mesh, transform, material, glm::vec4(1.0f), entityID);
+		SubmitMesh(mesh, transform, material, glm::vec4(1.0f), entityID, nullptr, -1, indexOffset, indexCount);
 	}
 
 	void Renderer3D::DrawMeshSkinned(const Ref<Mesh>& mesh, const glm::mat4& transform,
@@ -737,7 +748,11 @@ namespace Cosmic
 			cmd.MeshRef->GetVertexArray()->Bind();
 			boundMesh = cmd.MeshRef.get();
 		}
-		RenderCommand::DrawIndexed(cmd.MeshRef->GetVertexArray(), cmd.MeshRef->GetIndexCount());
+		// M5 — a submesh range draws IndexCount indices from IndexOffset; the
+		// whole-mesh default (IndexCount 0, IndexOffset 0) is byte-identical.
+		const uint32_t drawCount = cmd.IndexCount != 0 ? cmd.IndexCount
+		                                               : cmd.MeshRef->GetIndexCount();
+		RenderCommand::DrawIndexed(cmd.MeshRef->GetVertexArray(), drawCount, cmd.IndexOffset);
 		s_Data.Stats.DrawCalls++;
 		s_Data.Stats.MeshesDrawn++;
 	}
