@@ -106,6 +106,7 @@ uniform samplerCube u_PrefilterMap;
 uniform sampler2D   u_BrdfLut;
 uniform float       u_HasIBL;
 uniform float       u_PrefilterMaxLod;
+uniform float       u_AmbientIntensity;  // X2 — scales the ambient term (default 1.0 = identity)
 
 uniform sampler2D u_ShadowMap;
 uniform mat4      u_LightViewProj;
@@ -306,6 +307,8 @@ void main()
     {
         ambient = u_SunDirection_Ambient.w * albedo * ao;
     }
+
+    ambient *= u_AmbientIntensity;                     // X2 (default 1.0 = byte-identical)
 
     vec3 outColor = ambient + Lo + emissive;
 

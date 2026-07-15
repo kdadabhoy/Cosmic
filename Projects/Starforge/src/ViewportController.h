@@ -18,6 +18,7 @@
 #include "EditorContext.h"
 #include "EditorCameraRig.h"
 #include "EditorPrefs.h"
+#include "nav/NavTypes.h"            // N3 — NavDebugTri (nav-overlay draw scratch)
 
 #include <Cosmic.h>
 
@@ -175,6 +176,8 @@ namespace Starforge
         bool  m_ShowGrid  = true;
         bool  m_ShowColliders    = true;    // J8 — collider wireframe gizmos
         bool  m_ShowPhysicsDebug = false;   // J8 — live Jolt body outlines during Play
+        bool  m_ShowNavMesh      = true;    // N3 — translucent nav-poly overlay (respects AlwaysRenderHelper + selection)
+        std::vector<Cosmic::NavDebugTri> m_NavTriScratch;   // N3 — reused per-frame nav-poly draw buffer
 
         bool  m_GizmoActive = false;
         bool  m_GizmoOver   = false;

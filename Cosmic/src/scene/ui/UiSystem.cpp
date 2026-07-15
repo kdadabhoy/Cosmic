@@ -39,6 +39,19 @@ namespace Cosmic
         return rect.Min + rect.Size() * pivot;
     }
 
+    bool UiSystem::ProjectToCanvas(const glm::vec3& worldPos, const glm::mat4& viewProj,
+                                   const UiRect& canvasRect, glm::vec2& outPoint)
+    {
+        const glm::vec4 clip = viewProj * glm::vec4(worldPos, 1.0f);
+        if (clip.w <= 1e-6f)
+            return false;                             // behind the camera / on the plane
+        const glm::vec3 ndc = glm::vec3(clip) / clip.w;   // [-1,1]^3
+        const float u = ndc.x * 0.5f + 0.5f;          // 0 left  -> 1 right
+        const float v = 1.0f - (ndc.y * 0.5f + 0.5f); // 0 top   -> 1 bottom (+y DOWN)
+        outPoint = canvasRect.Min + glm::vec2(u, v) * canvasRect.Size();
+        return true;
+    }
+
     float UiSystem::CanvasScale(const CanvasComponent& canvas, const UiRect& viewport)
     {
         if (canvas.ScaleMode == UiScaleMode::ConstantPixel) return 1.0f;
@@ -84,7 +97,8 @@ namespace Cosmic
     {
         void VisitUi(Scene& scene, entt::entity node, const UiRect& parentRect,
                      bool isCanvasRoot, float scale, int32_t canvasOrder,
-                     int32_t& seq, std::vector<UiElement>& out)
+                     int32_t& seq, std::vector<UiElement>& out,
+                     const UiRect& canvasRect, const glm::mat4* cameraVP)
         {
             auto& reg = scene.GetRegistry();
 
@@ -92,10 +106,35 @@ namespace Cosmic
             int32_t z = 0;
             if (!isCanvasRoot)
             {
+                // X6 — world-anchored: project the tracked world point into canvas
+                // space and use it (plus ScreenOffset) as a zero-size parent origin,
+                // so the RectTransform's offsets size the box around it. Behind the
+                // camera / off-screen ⇒ hide this element AND its subtree.
+                UiRect effectiveParent = parentRect;
+                if (auto* anchor = reg.try_get<UiWorldAnchorComponent>(node); anchor && cameraVP)
+                {
+                    glm::vec3 worldPos = anchor->WorldOffset;
+                    if (anchor->TargetEntity != 0)
+                        if (Entity target = scene.FindByUUID(UUID(anchor->TargetEntity)))
+                            worldPos += glm::vec3(scene.GetWorldTransform(target)[3]);
+
+                    glm::vec2 pt;
+                    if (!UiSystem::ProjectToCanvas(worldPos, *cameraVP, canvasRect, pt))
+                        return;                              // behind camera -> hidden
+                    pt += anchor->ScreenOffset;
+                    if (anchor->HideWhenOffscreen && !canvasRect.Contains(pt))
+                        return;                              // off-screen -> hidden
+                    effectiveParent = UiRect{ pt, pt };      // zero-size origin at the point
+                }
+
                 if (auto* rt = reg.try_get<RectTransformComponent>(node))
                 {
-                    rect = UiSystem::ResolveRect(parentRect, *rt, scale);
+                    rect = UiSystem::ResolveRect(effectiveParent, *rt, scale);
                     z = rt->ZOrder;
+                }
+                else
+                {
+                    rect = effectiveParent;
                 }
             }
 
@@ -121,14 +160,15 @@ namespace Cosmic
                     Entity child = scene.FindByUUID(childId);
                     if (!child) continue;
                     VisitUi(scene, static_cast<entt::entity>(child), rect, false,
-                            scale, canvasOrder, seq, out);
+                            scale, canvasOrder, seq, out, canvasRect, cameraVP);
                 }
             }
         }
     }
 
     void UiSystem::CollectElements(Scene& scene, const UiRect& viewport,
-                                   std::vector<UiElement>& out)
+                                   std::vector<UiElement>& out,
+                                   const glm::mat4* cameraViewProj)
     {
         out.clear();
         auto& reg = scene.GetRegistry();
@@ -150,7 +190,8 @@ namespace Cosmic
         {
             const CanvasComponent& canvas = reg.get<CanvasComponent>(c.Handle);
             const float scale = CanvasScale(canvas, viewport);
-            VisitUi(scene, c.Handle, viewport, /*isCanvasRoot*/ true, scale, c.Order, seq, out);
+            VisitUi(scene, c.Handle, viewport, /*isCanvasRoot*/ true, scale, c.Order, seq, out,
+                    viewport, cameraViewProj);
         }
 
         // Back-to-front draw order: ascending CanvasOrder, then ZOrder, then Seq.
@@ -166,10 +207,11 @@ namespace Cosmic
     // Update (interaction)
     // ========================================================================
 
-    bool UiSystem::Update(Scene& scene, const UiRect& viewport, const UiPointer& pointer)
+    bool UiSystem::Update(Scene& scene, const UiRect& viewport, const UiPointer& pointer,
+                          const glm::mat4* cameraViewProj)
     {
         std::vector<UiElement> elements;
-        CollectElements(scene, viewport, elements);
+        CollectElements(scene, viewport, elements, cameraViewProj);
 
         auto& reg = scene.GetRegistry();
 
@@ -204,10 +246,10 @@ namespace Cosmic
     }
 
     bool UiSystem::HitTest(Scene& scene, const UiRect& viewport, const glm::vec2& point,
-                           uint32_t& outEntity)
+                           uint32_t& outEntity, const glm::mat4* cameraViewProj)
     {
         std::vector<UiElement> elements;
-        CollectElements(scene, viewport, elements);
+        CollectElements(scene, viewport, elements, cameraViewProj);
 
         // Front-to-back: the list is back-to-front draw order, so walk it reversed.
         for (auto it = elements.rbegin(); it != elements.rend(); ++it)
@@ -379,19 +421,21 @@ namespace Cosmic
         }
     }
 
-    void UiSystem::Render(Scene& scene, const UiRect& viewport)
+    void UiSystem::Render(Scene& scene, const UiRect& viewport, const glm::mat4* cameraViewProj)
     {
         // Projection spans the layout rect itself (the classic full-target case).
         Render(scene, viewport,
                (uint32_t)std::max(1.0f, viewport.Width()),
-               (uint32_t)std::max(1.0f, viewport.Height()));
+               (uint32_t)std::max(1.0f, viewport.Height()),
+               cameraViewProj);
     }
 
     void UiSystem::Render(Scene& scene, const UiRect& canvasRect,
-                          uint32_t targetW, uint32_t targetH)
+                          uint32_t targetW, uint32_t targetH,
+                          const glm::mat4* cameraViewProj)
     {
         std::vector<UiElement> elements;
-        CollectElements(scene, canvasRect, elements);
+        CollectElements(scene, canvasRect, elements, cameraViewProj);
         if (elements.empty()) return;
 
         auto& reg = scene.GetRegistry();
@@ -431,7 +475,10 @@ namespace Cosmic
                         default:                      tint *= btn->NormalTint;   break;
                     }
                 }
-                DrawImageQuad(el.Rect, img->Resolved, tint, img->NineSlice,
+                // X7 — a script-supplied RuntimeTexture (e.g. a RenderToTexture
+                // minimap) wins over the path-loaded image.
+                const Ref<Texture2D>& tex = img->RuntimeTexture ? img->RuntimeTexture : img->Resolved;
+                DrawImageQuad(el.Rect, tex, tint, img->NineSlice,
                               img->PreserveAspect, el.Scale);
             }
 

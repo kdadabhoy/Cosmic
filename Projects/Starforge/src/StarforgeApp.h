@@ -16,6 +16,7 @@
 
 #include <Cosmic.h>
 #include "scene/FlowMachine.h"   // U5/U8 — flow-driven editor Play
+#include "scene/SceneNav.h"      // N3 — NavBakeJob (async navmesh bake tracking)
 
 #include "EditorContext.h"
 #include "EditorPrefs.h"
@@ -120,6 +121,7 @@ namespace Starforge
         void TogglePausePlay();
         void StepScene();
         void TickPlay(float ts);
+        void TickNavMeshes(float ts);   // N3 — drive async navmesh (re)bakes + sidecar save (edit mode)
         void DrawPlayControls();
         bool IsPlaying() const { return m_Play != PlayMode::Edit; }
 
@@ -243,6 +245,11 @@ namespace Starforge
         Cosmic::Ref<Cosmic::Scene> m_EditSceneBackup;
         Cosmic::ScriptHost         m_Scripts;
         Cosmic::PhysicsWorld       m_Physics;     // J4 — play-session physics (built on Play)
+
+        // N3 — in-flight async navmesh bakes, keyed by the navmesh entity's UUID
+        // (survives handle churn). Polled each edit-mode frame in TickNavMeshes.
+        std::unordered_map<uint64_t, Cosmic::NavBakeJob> m_NavBakes;
+        float m_NavAutoTimer = 0.0f;   // throttle for the AutoGenerate signature scan
         float                      m_FixedDt     = 1.0f / 60.0f;
         float                      m_FixedAccum  = 0.0f;
         bool                       m_StepRequested = false;

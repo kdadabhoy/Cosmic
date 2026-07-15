@@ -104,8 +104,9 @@ namespace Cosmic
 		// Blend equations for SetBlendMode (S10 — particles/effects). Alpha is the
 		// engine default configured at Init (src-alpha over); Additive is the
 		// emissive/particle accumulate mode (src-alpha, one); Off disables blending
-		// (opaque passes that must not read the destination).
-		enum class BlendMode { Alpha = 0, Additive, Off };
+		// (opaque passes that must not read the destination). Multiply (X5) is
+		// dst*src (GL_DST_COLOR, GL_ZERO) — the 2D light buffer darkening composite.
+		enum class BlendMode { Alpha = 0, Additive, Off, Multiply };
 
 		// Triangle rasterization fill for SetPolygonMode (R8 — wireframe view
 		// modes). Fill is the engine default from Init(); Line rasterizes triangle

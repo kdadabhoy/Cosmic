@@ -69,6 +69,7 @@ namespace Cosmic
 	class ScenePicker;             // K12 — the outline pass's id-mask renderer
 	class Shader;
 	class CoverageCapture;
+	class FrameBuffer;             // X7 — RenderToTexture target
 	struct EnvironmentComponent;   // E4 — ApplyEnvironment maps it into a desc
 
 	/**
@@ -137,6 +138,10 @@ namespace Cosmic
 		bool Skybox = true; bool IBL = true; bool Shadows = true; bool WaterReflections = true;
 		bool TerrainCastsShadows = true;                      // consumed from F4
 		glm::vec4 ClearColor{ 0.1f, 0.1f, 0.1f, 1.0f };
+		// Environment polish (X2): AmbientIntensity scales the PBR ambient/IBL term;
+		// Gamma is the tonemap output gamma. Defaults reproduce the shipped frame
+		// (1.0 = unscaled ambient; 2.2 = the hardcoded sRGB curve) → byte-identical.
+		float AmbientIntensity = 1.0f; float Gamma = 2.2f;
 		glm::vec3 ShadowCenter{ 0.0f }; float ShadowRadius = 50.0f; float ShadowBias = 0.0015f;
 		bool SSAO = false;  float SsaoRadius = 0.5f, SsaoBias = 0.025f;
 		bool Bloom = false; float BloomThreshold = 1.0f, BloomKnee = 0.6f, BloomIntensity = 0.6f;
@@ -250,6 +255,20 @@ namespace Cosmic
 		 * and are refused.
 		 */
 		void Render(const SceneRenderDesc& desc);
+
+		/**
+		 * @brief Render one frame straight into an offscreen `target` framebuffer
+		 * instead of the bound viewport (X7 / gap §12.3) — the stable public verb
+		 * behind minimaps, security cameras, portals, RTT thumbnails. Binds
+		 * `target`, resizes this renderer's post stack to it, runs the normal
+		 * Render() (so env/sky/shadows/post all apply), then RE-BINDS whatever
+		 * framebuffer was bound on entry — the A4 state-restore contract, so the
+		 * main viewport renders identically afterward. Headless / uninitialized /
+		 * null-target ⇒ a safe no-op. Use a DEDICATED SceneRenderer sized to the
+		 * target to avoid resizing the main post stack each frame. Minimap/
+		 * fog-of-war LOGIC stays app-side (this ships only the generic verb).
+		 */
+		void RenderToTexture(const SceneRenderDesc& desc, const Ref<FrameBuffer>& target);
 
 		EnvironmentMap&   GetEnvironment() { return m_Environment; }   // app drives the sun policy
 		PostProcessStack& GetPostStack()   { return m_Post; }

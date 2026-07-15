@@ -312,6 +312,12 @@ namespace Cosmic
 		static void  SetAmbient(float ambient);
 		static float GetAmbient();
 
+		/** @brief Scene ambient-intensity multiplier (X2). Scales the PBR ambient/IBL
+		 *  term via ApplySceneBindings' u_AmbientIntensity. 1.0 (default) is identity —
+		 *  shipped apps that never call this render byte-identically. */
+		static void  SetAmbientIntensity(float intensity);
+		static float GetAmbientIntensity();
+
 		////////////////////////////////
 		// Lighting v1 (S4.5: sun + <= kMaxPointLights point lights, lights UBO)
 		///////////////////////////////

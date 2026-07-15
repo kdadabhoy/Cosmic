@@ -83,13 +83,13 @@
 | Game-view correctness (primary camera, aspect presets, eject) | editor camera always | 17 · doc 16 U7 | now | S | ✅ 2026-07-11 (primary-camera Play + eject + letterboxed aspect presets + cursor capture) |
 | Voxel worlds (chunks, meshing, edit, collision, gen) | none | 18 · doc 17 V1–V7 | after 14–17 (user-approved scope) | XL | ✅ 2026-07-08 (code + editor; recorded V7 demo stays on the user ledger) |
 | Visual *logic* scripting (blueprints) | — | — (doc 16 §3) | explicit demand post-flow; doctrine is C++ logic | XL | ✖ |
-| Navmesh / AI pathfinding (Recast/Detour, bake + `.cnav`, crowd agents, script `Nav()`) | none | 26 · doc 25 N1–N5 | **now — verdict flipped 2026-07-11** (editor vision + Forge Isle AI) | XL | ☐ |
+| Navmesh / AI pathfinding (Recast/Detour, bake + `.cnav`, crowd agents, script `Nav()`) | none | 26 · doc 25 N1–N5 | **now — verdict flipped 2026-07-11** (editor vision + Forge Isle AI) | XL | ✅ 2026-07-14 (recastnavigation v1.6.0 PRIVATE-static behind `nav/NavWorld` pimpl; `NavMeshComponent` recipe + collision-sourced bake + `.cnav` sidecar; `NavAgentComponent` + DetourCrowd stepped in the play tick; script `Nav()` proxy + `nav.arrived` signal; nav-critter sample; headless bake/path/crowd + two-run bit-match determinism — `CosmicTests` 339/339; on-GPU recorded demo stays on the user ledger) |
 | Flow variables (typed blackboard on `.cflow`: groups, defaults, guards/actions/`Flow().GetVar`) | guards read reflected entity fields only | 25 · doc 24 Q2 | now (editor vision) | M | ✅ 2026-07-12 (FlowAsset::Variables Bool/Number/String/Enum, variable guards + setVar actions, `Flow()` script proxy, versioned `.cflow` — v1 loads unchanged; headless-tested) |
 | Story graphs (`.cstory` dialogue runtime: speaker/portrait/audio/options w/ guards + once; zero-code UI binding) | none | 25 · doc 24 Q3/Q4 | now (editor vision) | L | ✅ 2026-07-12 (GL-free `StoryGraph`/`StoryRunner` — nodes/options/guards/Once/signals + shared `EvaluateFlowGuard`; `StoryUiBinding` stock template; `StoryEditor` document; headless-tested) |
 | Joint sockets (attach entities to animated joints) | none | 24 · doc 23 M4 | with doc 19 A2 | M | ✅ 2026-07-12 (reflected SocketComponent + GetWorldTransform composition through the pose palette; headless-tested) |
-| 2D lighting (radial lights + ambient darkness over Renderer2D) | 2D is unlit | 27 · doc 26 X5 | now (2D game parity) | M/L | ☐ |
-| World-anchored UI (nameplates/prompts/health bars via UiWorldAnchor) | screen-space canvas only | 27 · doc 26 X6 | now | S/M | ☐ |
-| Render-to-texture verb (+ UiImage runtime texture; minimap building block) | offscreen passes are internal-only | 27 · doc 26 X7 | now | M | ☐ |
+| 2D lighting (radial lights + ambient darkness over Renderer2D) | 2D is unlit | 27 · doc 26 X5 | now (2D game parity) | M/L | ✅ 2026-07-14 |
+| World-anchored UI (nameplates/prompts/health bars via UiWorldAnchor) | screen-space canvas only | 27 · doc 26 X6 | now | S/M | ✅ 2026-07-14 |
+| Render-to-texture verb (+ UiImage runtime texture; minimap building block) | offscreen passes are internal-only | 27 · doc 26 X7 | now | M | ✅ 2026-07-14 |
 | Flagship showcase app (**Forge Isle**: character/AI/story/2D vignette/branding, packaged + trailer) | samples only (Playground/Pong/Blocks) | 28 · doc 27 Z1–Z7 | last — the capstone (decision #12, 2026-07-11) | XL | ☐ |
 | Networking / multiplayer | none (C1 gives UDP transport) | — | a networked project (plan a phase then) | XL | ✖ |
 | Save-game system | serializer exists; no slot/versioning layer | — | first game needing saves (likely doc 16-adjacent) | M | ✖ |
@@ -120,10 +120,10 @@
 | Skybox LEQUAL depth verb | background-first draw | 19 · doc 18 R11 | pair with any sky work | S | ⏸ |
 | World-system builder registry (swap water/terrain impls) | concrete factories behind data recipes | 19 · doc 18 R12 | a second implementation must coexist | S | ⏸ |
 | Positional/3D audio (panning, doppler, streaming) | distance-gain loops app-side | 21 · doc 20 C2 | true 3D audio need (Forge Isle polish may fire it) | M | ⏸ |
-| Physical-atmosphere sky (turbidity/Rayleigh/Mie, IBL-matched) | artistic gradient/detailed/HDRI modes | 27 · doc 26 X1 | now (editor vision) | L | ☐ |
-| Environment polish (sun elevation/azimuth widget, ambient intensity, exposed gamma, sun angular size) | raw vec3 sun; gamma fixed 2.2 | 27 · doc 26 X2 | now | S | ☐ |
+| Physical-atmosphere sky (turbidity/Rayleigh/Mie, IBL-matched) | artistic gradient/detailed/HDRI modes | 27 · doc 26 X1 | now (editor vision) | L | ✅ 2026-07-14 |
+| Environment polish (sun elevation/azimuth widget, ambient intensity, exposed gamma, sun angular size) | raw vec3 sun; gamma fixed 2.2 | 27 · doc 26 X2 | now | S | ✅ 2026-07-14 |
 | Vignette post pass (tonemap-folded, default off) | none | 25 · doc 24 Q5 | now | S | ✅ 2026-07-12 (folded into `Tonemap.glsl`, gated on `u_VignetteAmount>0` ⇒ byte-identical off; `EnvironmentComponent` fields + Engine3DDemo toggle; conformance green) |
-| Particle curl-noise turbulence + live noise preview + bounds clamp | recipe forces only (gravity/drag/wind) | 27 · doc 26 X3/X4 | now (CPU/GPU twins stay in lockstep) | M | ☐ |
+| Particle curl-noise turbulence + live noise preview + bounds clamp | recipe forces only (gravity/drag/wind) | 27 · doc 26 X3/X4 | now (CPU/GPU twins stay in lockstep) | M | ✅ 2026-07-14 |
 | Arbitrary post-FX pass-graph executor | fixed verified chain (Q6 ships a graph *view* of it) | — | ✖ decision #13 2026-07-11 — revisit only with a real compositing need | XL | ✖ |
 | Vulkan / second RHI backend | **stay on OpenGL** (S13.3 provisional-closed) | — | doc 05 §12 reopen conditions (archived): GL perf wall, platform need, or driver pain | XL | ✖ |
 | MSAA (vs FXAA) | FXAA ships | — | perceived AA quality issue on thin geometry | M | ✖ |

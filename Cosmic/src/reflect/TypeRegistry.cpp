@@ -64,6 +64,14 @@ namespace Cosmic::Reflect
             .Field("GridH",       &TilemapComponent::GridH).Range(1.0f, 1024.0f)
             .Field("ZOrder",      &TilemapComponent::ZOrder).Tooltip("Sort order within the 2D pass");
 
+        // 2D point light (X5). Additive radial light multiplied over the 2D output.
+        ClassIn<Light2DComponent>(r, "Light2D", "Rendering")
+            .Field("Color",     &Light2DComponent::Color).Color()
+            .Field("Radius",    &Light2DComponent::Radius).Range(0.0f, 100.0f).Meters().Doc("World-unit reach of the light")
+            .Field("Intensity", &Light2DComponent::Intensity).Range(0.0f, 20.0f).Doc("HDR brightness at the center")
+            .Field("Falloff",   &Light2DComponent::Falloff).Range(0.1f, 8.0f).Doc("Radial falloff exponent (higher = tighter)")
+            .Field("Enabled",   &Light2DComponent::Enabled).OmitIfTrue();
+
         // Flipbook sprite animation (U4). Elapsed is runtime-only (not reflected).
         ClassIn<SpriteAnimationComponent>(r, "SpriteAnimation", "Rendering")
             .Field("SheetPath", &SpriteAnimationComponent::SheetPath).AsAssetPath("texture")
@@ -151,13 +159,21 @@ namespace Cosmic::Reflect
             .Field("SunColor",     &EnvironmentComponent::SunColor).Color()
             .Field("SunIntensity", &EnvironmentComponent::SunIntensity).Range(0.0f, 10.0f)
             .Field("Sky",          &EnvironmentComponent::Sky)
-                .EnumValue("Procedural", 0).EnumValue("Detailed", 1).EnumValue("HDRI", 2)
+                .EnumValue("Procedural", 0).EnumValue("Detailed", 1).EnumValue("HDRI", 2).EnumValue("Physical", 3)
             .Field("HdriPath",     &EnvironmentComponent::HdriPath).AsAssetPath("hdri").Tooltip("Equirectangular .hdr; used when Sky = HDRI")
+            .Field("Turbidity",     &EnvironmentComponent::Turbidity).Range(1.0f, 10.0f).Doc("Physical sky haze: scales Mie density (used when Sky = Physical)")
+            .Field("RayleighScale", &EnvironmentComponent::RayleighScale).Range(0.0f, 4.0f).Doc("Physical sky: scales Rayleigh (blue) scattering")
+            .Field("MieScale",      &EnvironmentComponent::MieScale).Range(0.0f, 4.0f).Doc("Physical sky: scales Mie (white haze / sun halo) scattering")
+            .Field("MieG",          &EnvironmentComponent::MieG).Range(0.0f, 0.99f).Doc("Physical sky: Mie phase asymmetry (sun-halo tightness)")
             .Field("TimeOfDay",    &EnvironmentComponent::TimeOfDay).Range(0.0f, 24.0f).Doc("Hours (0-24); drives the procedural sun when scrubbed")
             .Field("Skybox",       &EnvironmentComponent::Skybox)
             .Field("IBL",          &EnvironmentComponent::IBL)
             .Field("IBLIntensity", &EnvironmentComponent::IBLIntensity).Range(0.0f, 4.0f)
             .Field("Exposure",     &EnvironmentComponent::Exposure).Range(0.0f, 8.0f)
+            .Field("AmbientIntensity", &EnvironmentComponent::AmbientIntensity).Range(0.0f, 4.0f).Doc("Scales the ambient/IBL lighting term (1 = unchanged)")
+            .Field("Gamma",            &EnvironmentComponent::Gamma).Range(1.0f, 3.0f).Doc("Tonemap output gamma (2.2 = the shipped sRGB curve)")
+            .Field("SunAngularSize",   &EnvironmentComponent::SunAngularSize).Range(0.1f, 10.0f).Doc("Sun-disc diameter in degrees (Detailed/Physical sky). Real sun ~0.53")
+            .Field("Ambient2D",        &EnvironmentComponent::Ambient2D).Color().Doc("2D lighting ambient (X5); white = no darkening (byte-identical)")
             .Field("Fog",              &EnvironmentComponent::Fog)
             .Field("FogColor",         &EnvironmentComponent::FogColor).Color()
             .Field("FogDensity",       &EnvironmentComponent::FogDensity).Range(0.0f, 1.0f)
@@ -254,6 +270,12 @@ namespace Cosmic::Reflect
             .Field("FlipbookBlend",  &ParticleEmitterComponent::FlipbookBlend)
             .Field("SoftFadeDistance",  &ParticleEmitterComponent::SoftFadeDistance).Range(0.0f, 10.0f).Meters()
             .Field("StretchByVelocity", &ParticleEmitterComponent::StretchByVelocity).Range(0.0f, 1.0f)
+            .Field("NoiseEnabled",      &ParticleEmitterComponent::NoiseEnabled).Doc("Curl-noise turbulence (X3); off = byte-identical")
+            .Field("NoiseStrength",     &ParticleEmitterComponent::NoiseStrength).Range(0.0f, 20.0f).Doc("Curl-noise acceleration scale")
+            .Field("NoiseFrequency",    &ParticleEmitterComponent::NoiseFrequency).Range(0.01f, 4.0f).Doc("Curl-noise spatial frequency")
+            .Field("NoiseOctaves",      &ParticleEmitterComponent::NoiseOctaves).Range(1.0f, 4.0f).Doc("Curl-noise fBm octaves (1..4)")
+            .Field("BoundsExtents",     &ParticleEmitterComponent::BoundsExtents).Doc("Local-space clamp half-extents (X4); all-0 = off")
+            .Field("BoundsWrap",        &ParticleEmitterComponent::BoundsWrap).Doc("Past the bounds: false = kill, true = wrap")
             .Field("Enabled",           &ParticleEmitterComponent::Enabled).HideInInspector().OmitIfTrue();
 
         // Voxel volume (Phase 18 / V1–V6). Runtime Volume/Palette/Render are
@@ -337,6 +359,42 @@ namespace Cosmic::Reflect
             .Field("StepHeight",  &CharacterControllerComponent::StepHeight).Range(0.0f, 2.0f).Meters()
             .Field("Mass",        &CharacterControllerComponent::Mass).Range(1.0f, 1000.0f);
 
+        // Navigation (N2) — the Recast bake recipe. Runtime Nav/BuiltSignature are
+        // unregistered (runtime-only); the built navmesh rides a `.cnav` sidecar, not
+        // the scene JSON. Reflected so the Inspector auto-UIs it + every field undoes
+        // for free; the N3 "Regenerate now" button is added out-of-band (per-component).
+        ClassIn<NavMeshComponent>(r, "NavMesh", "Navigation")
+            .Field("SidecarPath",  &NavMeshComponent::SidecarPath).AsAssetPath("navmesh").Tooltip("`.cnav` sidecar; empty = derived beside the scene")
+            .Field("SourceMode",   &NavMeshComponent::SourceMode)
+                .EnumValue("From children", 0).EnumValue("Whole scene", 1)
+                .Tooltip("From children = bake only this entity's descendants; Whole scene = every collidable entity")
+            .Field("AutoGenerate", &NavMeshComponent::AutoGenerate).Tooltip("Rebake automatically when the recipe or source geometry changes")
+            .Field("AlwaysRenderHelper", &NavMeshComponent::AlwaysRenderHelper).Tooltip("Draw the translucent nav overlay even when this entity isn't selected")
+            .Field("CellSize",     &NavMeshComponent::CellSize).Range(0.05f, 4.0f).Tooltip("XZ rasterization voxel size").Meters()
+            .Field("CellHeight",   &NavMeshComponent::CellHeight).Range(0.05f, 4.0f).Tooltip("Y rasterization voxel size").Meters()
+            .Field("AgentRadius",  &NavMeshComponent::AgentRadius).Range(0.0f, 10.0f).Tooltip("Walkable surface is eroded by the agent radius").Meters()
+            .Field("AgentHeight",  &NavMeshComponent::AgentHeight).Range(0.1f, 20.0f).Tooltip("Vertical clearance an agent needs").Meters()
+            .Field("AgentMaxClimb",&NavMeshComponent::AgentMaxClimb).Range(0.0f, 10.0f).Tooltip("Max height an agent auto-steps up (stairs/ledges)").Meters()
+            .Field("AgentMaxSlope",&NavMeshComponent::AgentMaxSlope).Range(0.0f, 89.0f).Tooltip("Max walkable slope").Degrees()
+            .Field("RegionMinSize",   &NavMeshComponent::RegionMinSize).Range(0.0f, 150.0f).Tooltip("Discard walkable regions smaller than this (voxels)")
+            .Field("RegionMergeSize", &NavMeshComponent::RegionMergeSize).Range(0.0f, 150.0f).Tooltip("Merge regions smaller than this into neighbors (voxels)")
+            .Field("EdgeMaxLen",   &NavMeshComponent::EdgeMaxLen).Range(0.0f, 50.0f).Tooltip("Max contour edge length").Meters()
+            .Field("EdgeMaxError", &NavMeshComponent::EdgeMaxError).Range(0.1f, 3.0f).Tooltip("Contour simplification error (voxels)")
+            .Field("DetailSampleDist",     &NavMeshComponent::DetailSampleDist).Range(0.0f, 16.0f).Tooltip("Detail-mesh sample spacing (× CellSize)")
+            .Field("DetailSampleMaxError", &NavMeshComponent::DetailSampleMaxError).Range(0.0f, 16.0f).Tooltip("Detail-mesh max error (× CellHeight)")
+            .Field("VertsPerPoly", &NavMeshComponent::VertsPerPoly).Range(3.0f, 6.0f).Tooltip("Max vertices per navmesh polygon")
+            .Field("TileSize",     &NavMeshComponent::TileSize).Range(0.0f, 256.0f).Tooltip("Tiled build hint (voxels); 0 = single-tile solo build (v1)");
+
+        // Nav agent (N4) — DetourCrowd tuning. Steered over the baked navmesh during
+        // Play; scripts drive it via Nav().SetTarget. Reflected/serialized/undoable.
+        ClassIn<NavAgentComponent>(r, "NavAgent", "Navigation")
+            .Field("Radius",   &NavAgentComponent::Radius).Range(0.05f, 5.0f).Tooltip("Agent footprint radius").Meters()
+            .Field("Height",   &NavAgentComponent::Height).Range(0.1f, 20.0f).Tooltip("Agent height").Meters()
+            .Field("MaxSpeed", &NavAgentComponent::MaxSpeed).Range(0.0f, 50.0f).Tooltip("Max movement speed (m/s)")
+            .Field("MaxAccel", &NavAgentComponent::MaxAccel).Range(0.0f, 100.0f).Tooltip("Max acceleration (m/s^2)")
+            .Field("StoppingDistance", &NavAgentComponent::StoppingDistance).Range(0.0f, 10.0f).Tooltip("Arrival tolerance; emits nav.arrived within this of the target").Meters()
+            .Field("AutoRepath", &NavAgentComponent::AutoRepath).Tooltip("Re-plan the path when it is invalidated (crowd default)");
+
         // Scripting link (E11). ClassName is the only plain reflected field; the
         // dynamic script-field overrides (NativeScriptComponent::Fields) are handled
         // out-of-band by the serializer + the Inspector's script section, since they
@@ -398,6 +456,13 @@ namespace Cosmic::Reflect
             .Field("PressedTint",  &UiButtonComponent::PressedTint).Color()
             .Field("DisabledTint", &UiButtonComponent::DisabledTint).Color()
             .Field("Interactable", &UiButtonComponent::Interactable);
+
+        // World-anchored UI (X6): pin an element to a world position (nameplates).
+        ClassIn<UiWorldAnchorComponent>(r, "UiWorldAnchor", "UI")
+            .Field("TargetEntity",      &UiWorldAnchorComponent::TargetEntity).Tooltip("World entity to track (empty = absolute point)")
+            .Field("WorldOffset",       &UiWorldAnchorComponent::WorldOffset).Doc("Added to the target's world position")
+            .Field("ScreenOffset",      &UiWorldAnchorComponent::ScreenOffset).Doc("Canvas-pixel nudge after projection")
+            .Field("HideWhenOffscreen", &UiWorldAnchorComponent::HideWhenOffscreen);
 
         // PBR material asset (E17) — the reflected `.cmat` struct (not an entity
         // component; registered so the Material Editor UI + serialization are generic).

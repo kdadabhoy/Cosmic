@@ -257,6 +257,8 @@ namespace Cosmic
 		s.VignetteRadius   = env.VignetteRadius;
 		s.VignetteFeather  = env.VignetteFeather;
 		s.VignetteColor    = env.VignetteColor;
+		s.AmbientIntensity = env.AmbientIntensity;     // X2 (default 1.0 = identical)
+		s.Gamma            = env.Gamma;                // X2 (default 2.2 = identical)
 
 		// Sun → the frame's directional light.
 		desc.Lights.SunDirection = env.SunDirection;
@@ -272,12 +274,23 @@ namespace Cosmic
 			m_Environment.SetSkyIntensity(env.IBLIntensity);
 
 			// H4 — HDRI sky: project an equirect .hdr onto the environment cube. Any
-			// other SkyMode (Procedural / Detailed) uses the analytic sky. A failed
-			// load reverts to procedural inside SetHdri (never a black scene).
+			// other SkyMode (Procedural / Detailed / Physical) uses the analytic sky.
+			// A failed load reverts to procedural inside SetHdri (never a black scene).
 			if (env.Sky == EnvironmentComponent::SkyMode::HDRI && !env.HdriPath.empty())
 				m_Environment.SetHdri(FileSystem::Resolve(env.HdriPath));
 			else
 				m_Environment.ClearHdri();
+
+			// X1 — physical atmosphere: active only for SkyMode::Physical. Disabled
+			// for every other mode keeps their bake byte-identical (the compat gate).
+			PhysicalSkyDesc phys;
+			phys.Enabled        = (env.Sky == EnvironmentComponent::SkyMode::Physical);
+			phys.Turbidity      = env.Turbidity;
+			phys.RayleighScale  = env.RayleighScale;
+			phys.MieScale       = env.MieScale;
+			phys.MieG           = env.MieG;
+			phys.SunAngularSize = env.SunAngularSize;
+			m_Environment.SetPhysicalSky(phys);
 		}
 	}
 
@@ -311,6 +324,7 @@ namespace Cosmic
 		//    the transparent tail) reads the same lights UBO.
 		Renderer3D::SetLightDirection(desc.Lights.SunDirection);
 		Renderer3D::SetAmbient(desc.Lights.Ambient);
+		Renderer3D::SetAmbientIntensity(desc.Settings.AmbientIntensity);   // X2 (default 1.0)
 		Renderer3D::SetLights(desc.Lights);
 
 		// 3) Environment: bake when the skybox OR IBL needs the cube (dirty-flag
@@ -334,6 +348,31 @@ namespace Cosmic
 		RenderCommand::BeginGpuZone("Post+Composite"); PassPostAndComposite(desc); RenderCommand::EndGpuZone();  // 8
 
 		m_InRender = false;          // 9
+	}
+
+	// X7 — offscreen render-to-texture verb ------------------------------------
+	void SceneRenderer::RenderToTexture(const SceneRenderDesc& desc, const Ref<FrameBuffer>& target)
+	{
+		if (!m_Initialized || !target)
+			return;                                  // headless / null ⇒ safe no-op
+		const uint32_t w = target->GetWidth();
+		const uint32_t h = target->GetHeight();
+		if (w == 0 || h == 0)
+			return;
+
+		// Remember the caller's target so the main viewport is restored on exit
+		// (the A4 contract). Render() itself captures whatever is bound as its
+		// final FBO, so we bind `target` first.
+		const uint32_t prevFbo = RenderCommand::GetBoundFramebuffer();
+
+		if (m_Width != w || m_Height != h)
+			SetViewportSize(w, h);                   // size this renderer's post stack to the target
+
+		target->Bind();
+		RenderCommand::SetViewport(0, 0, w, h);
+		Render(desc);                                // env/sky/shadows/post all apply, composites into target
+
+		RenderCommand::BindFramebufferHandle(prevFbo);
 	}
 
 	// 4) Shadow depth pass -----------------------------------------------------
@@ -615,6 +654,7 @@ namespace Cosmic
 		m_Post.SetFXAAEnabled(s.FXAA);
 		m_Post.SetVignetteEnabled(s.Vignette);   // Q5
 		m_Post.SetVignetteParams(s.VignetteAmount, s.VignetteRadius, s.VignetteFeather, s.VignetteColor);
+		m_Post.SetGamma(s.Gamma);                // X2 (default 2.2 = byte-identical)
 		m_Post.SetFogEnabled(s.Fog);
 		m_Post.SetFogParams(s.FogColor, s.FogDensity, s.FogHeightFalloff, s.FogBaseHeight);
 		// Underwater medium (F6 + Layer 2): the tonemap fogs + tints when the camera is

@@ -42,6 +42,7 @@ in vec2 v_TexCoord;
 
 uniform sampler2D u_Scene;      // HDR scene color (slot 0)
 uniform float     u_Exposure;   // linear exposure multiplier (1.0 = neutral)
+uniform float     u_Gamma;      // output gamma (X2) — 2.2 = the shipped sRGB curve
 
 // Vignette (Phase 25 / Q5) — post-tonemap edge darkening toward u_VignetteColor.
 // u_VignetteAmount 0 (the GL/engine default) skips the block entirely, so the
@@ -208,7 +209,7 @@ void main()
     }
 
     vec3 mapped = ACESFilmic(hdr * u_Exposure);
-    mapped      = pow(mapped, vec3(1.0 / 2.2));        // linear -> sRGB
+    mapped      = pow(mapped, vec3(1.0 / max(u_Gamma, 0.01)));   // linear -> sRGB (X2: u_Gamma, default 2.2)
 
     if (u_VignetteAmount > 0.0)                        // Q5 vignette (post-tonemap)
     {

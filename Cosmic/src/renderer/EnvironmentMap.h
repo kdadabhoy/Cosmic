@@ -74,6 +74,25 @@ namespace Cosmic
 		float     Time              = 0.0f;            // seconds (star twinkle)
 	};
 
+	/**
+	 * @brief Physical-atmosphere parameters for the BAKED sky (X1 / gap §7.2).
+	 * When Enabled, EnvSky.glsl evaluates an analytic Rayleigh+Mie single-
+	 * scattering model instead of the artistic gradient, and the result bakes
+	 * into the environment cube — so the skybox background AND the IBL that
+	 * convolves the same cube both come from the physical sky (they always
+	 * agree). Disabled (the default) keeps the shipped procedural bake
+	 * byte-identical. Direction/intensity come from the existing sun setters.
+	 */
+	struct PhysicalSkyDesc
+	{
+		bool  Enabled        = false;
+		float Turbidity      = 2.5f;   // scales Mie density (haze)
+		float RayleighScale  = 1.0f;
+		float MieScale       = 1.0f;
+		float MieG           = 0.80f;  // Mie phase asymmetry (0..0.99)
+		float SunAngularSize = 0.53f;  // sun-disc DIAMETER in degrees (X2; real sun ~0.53)
+	};
+
 	class COSMIC_API EnvironmentMap
 	{
 	public:
@@ -107,6 +126,10 @@ namespace Cosmic
 		 *  night bake's moon-glow term. Marks dirty. (The crisp moon DISC lives in the
 		 *  per-pixel SkyDetail pass, not the bake.) */
 		void SetMoon(const glm::vec3& toMoon, float intensity);
+
+		/** Physical-atmosphere sky for the bake (X1). Default-disabled leaves the
+		 *  procedural bake byte-identical. Marks dirty only when a value changes. */
+		void SetPhysicalSky(const PhysicalSkyDesc& desc);
 
 		/**
 		 * Use an equirectangular HDR image as the environment source (H4). The cube
@@ -185,5 +208,8 @@ namespace Cosmic
 		bool      m_NightSky       = false;         // EnvSky u_NightSky
 		glm::vec3 m_MoonDir{ 0.0f, 1.0f, 0.0f };    // direction TO the moon
 		float     m_MoonIntensity  = 0.0f;          // EnvSky u_MoonIntensity
+
+		// --- Physical atmosphere (X1) — default disabled keeps the bake identical ---
+		PhysicalSkyDesc m_Physical;                 // EnvSky u_SkyMode + scattering params
 	};
 }

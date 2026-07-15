@@ -62,6 +62,14 @@ namespace Cosmic
 
         PhysicsWorld& World() { return m_World; }
 
+        /** @brief Build a BodyDesc (collider shapes + world pose) for `e` from
+         *  `scene`, edit-mode safe (reads components + assets only; creates no Jolt
+         *  objects). Returns false when the entity carries no collider shape. This is
+         *  the scene's collision-view enumeration — shared by the play-session body
+         *  build (BuildBodyDesc wraps it) and the N2 navmesh bake (SceneNav gathers
+         *  triangles through it, the "honest physics source" of the navmesh). */
+        static bool BuildColliderDesc(Scene& scene, entt::entity e, BodyDesc& out);
+
         /** @brief The body bound to `entity`, or an invalid handle. */
         PhysicsBody GetBody(entt::entity entity) const;
         /** @brief The character controller bound to `entity`, or nullptr. */

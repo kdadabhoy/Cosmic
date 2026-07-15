@@ -49,6 +49,11 @@ namespace Starforge
         // Kick a background terrain build (JobSystem) for the entity's recipe.
         void StartTerrainBuild(EditorContext& ctx, Cosmic::Entity e);
 
+        // X4 — CPU-render a 128² curl-magnitude slice of ParticleEmitter::CurlNoise
+        // (the exact field the sim uses) into m_NoisePreview, debounced on edits.
+        void DrawNoisePreview(const Cosmic::ParticleEmitterComponent& pc);
+        void RebuildNoisePreview(float frequency, int octaves);
+
         // Per-edit undo capture (one active drag at a time across all sections).
         Cosmic::Reflect::FieldValue m_ActiveBefore;
         bool                        m_HasActive = false;
@@ -62,5 +67,11 @@ namespace Starforge
         std::size_t                                   m_BuildSignature = 0;
 
         char m_EmitterName[128] = "campfire";
+
+        // X4 — live curl-noise preview thumbnail + its debounce cache.
+        Cosmic::Ref<Cosmic::Texture2D> m_NoisePreview;
+        float m_NoisePrevFreq    = -1.0f;
+        int   m_NoisePrevOctaves = -1;
+        float m_NoiseDebounce    = 0.0f;   // seconds until a pending rebuild fires
     };
 }

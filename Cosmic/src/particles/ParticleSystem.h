@@ -99,6 +99,22 @@ namespace Cosmic
 		//     sparks). 0 (default) = the shipped camera-facing quad, byte-identical. ---
 		float StretchByVelocity = 0.0f;
 
+		// --- Curl-noise turbulence (X3 / gap §11.1). A divergence-free curl of a
+		//     3D value-noise field adds a swirling acceleration each step. Applied
+		//     IDENTICALLY by StepCpu and ParticleUpdate.glsl (shared PcgHash). Off
+		//     (the default) skips the term entirely, so output is byte-identical. ---
+		bool  NoiseEnabled   = false;
+		float NoiseStrength  = 3.0f;    // acceleration scale of the curl field
+		float NoiseFrequency = 0.4f;    // spatial frequency (world units^-1)
+		int   NoiseOctaves   = 2;       // fBm octaves (clamped 1..4)
+
+		// --- Local-space bounds (X4 / gap §11.3). Half-extents about the emitter
+		//     origin; an axis with extent <= 0 is unbounded. All axes <= 0 (the
+		//     default) disables the clamp entirely ⇒ byte-identical. Particles past
+		//     the box are killed (BoundsWrap = false) or wrapped to the far side. ---
+		glm::vec3 BoundsExtents{ 0.0f };
+		bool      BoundsWrap = false;
+
 		bool GpuSimulation = true;          // false = CPU fallback path
 	};
 
@@ -128,6 +144,16 @@ namespace Cosmic
 
 		/** @brief Queue `count` extra spawns for the next Update. */
 		void Burst(uint32_t count) { m_BurstBudget += count; }
+
+		/** @brief Live-tune the curl-noise turbulence (X3). Both the compute and CPU
+		 *  paths read the spec each Update, so this takes effect next frame. */
+		void SetTurbulence(bool enabled, float strength, float frequency, int octaves)
+		{
+			m_Spec.NoiseEnabled   = enabled;
+			m_Spec.NoiseStrength  = strength;
+			m_Spec.NoiseFrequency = frequency;
+			m_Spec.NoiseOctaves   = octaves;
+		}
 
 		/** @brief Advance the pool one frame (compute dispatch, or the CPU step +
 		 *  upload on the fallback path). Needs a live GL context. */
@@ -165,6 +191,15 @@ namespace Cosmic
 		static void StepCpu(std::vector<GpuParticle>& particles, const ParticleEmitterSpec& spec,
 		                    const glm::mat4& transform, float dt,
 		                    uint32_t spawnStart, uint32_t spawnCount, uint32_t frameSeed);
+
+		/**
+		 * @brief The curl-noise turbulence field (X3), exposed for headless tests
+		 * and the editor's live preview (X4). Returns the curl of a 3D value-noise
+		 * potential at `pos`; divergence-free by construction. This is the EXACT
+		 * function StepCpu integrates and ParticleUpdate.glsl mirrors — the same
+		 * PcgHash + constants, so the CPU preview matches the GPU sim. Deterministic.
+		 */
+		static glm::vec3 CurlNoise(const glm::vec3& pos, float frequency, int octaves);
 
 	public:
 		// Public only so Ref construction works inside Create().

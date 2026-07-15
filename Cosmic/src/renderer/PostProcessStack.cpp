@@ -367,6 +367,7 @@ namespace Cosmic
 		RenderCommand::BindTextureSlot(0, m_SceneHDR->GetColorAttachmentRendererID(0));
 		m_TonemapShader->SetInt("u_Scene", 0);
 		m_TonemapShader->SetFloat("u_Exposure", exposure);
+		m_TonemapShader->SetFloat("u_Gamma", m_Gamma);   // X2 (default 2.2 = shipped curve)
 
 		// Vignette (Q5): amount 0 when disabled ⇒ the shader skips the block, so
 		// the shipped output stays byte-identical.

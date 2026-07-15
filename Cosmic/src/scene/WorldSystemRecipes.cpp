@@ -194,6 +194,13 @@ namespace Cosmic
 		s.FlipbookBlend  = c.FlipbookBlend;
 		s.SoftFadeDistance  = std::max(c.SoftFadeDistance, 0.0f);
 		s.StretchByVelocity = std::max(c.StretchByVelocity, 0.0f);
+		// Curl-noise turbulence (X3): octaves clamped 1..4 to match the sim clamp.
+		s.NoiseEnabled   = c.NoiseEnabled;
+		s.NoiseStrength  = c.NoiseStrength;
+		s.NoiseFrequency = c.NoiseFrequency;
+		s.NoiseOctaves   = c.NoiseOctaves < 1 ? 1 : (c.NoiseOctaves > 4 ? 4 : c.NoiseOctaves);
+		s.BoundsExtents  = glm::max(c.BoundsExtents, glm::vec3(0.0f));   // X4 (negative = unbounded)
+		s.BoundsWrap     = c.BoundsWrap;
 		// spec.Texture left null — caller resolves TexturePath (GL) before Create.
 		return s;
 	}
@@ -222,6 +229,12 @@ namespace Cosmic
 		HashI(h, c.FlipbookBlend ? 1 : 0);
 		HashF(h, c.SoftFadeDistance);
 		HashF(h, c.StretchByVelocity);
+		HashI(h, c.NoiseEnabled ? 1 : 0);
+		HashF(h, c.NoiseStrength);
+		HashF(h, c.NoiseFrequency);
+		HashI(h, c.NoiseOctaves);
+		HashV3(h, c.BoundsExtents);
+		HashI(h, c.BoundsWrap ? 1 : 0);
 		return h;
 	}
 }

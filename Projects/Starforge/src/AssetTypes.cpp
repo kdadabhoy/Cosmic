@@ -36,6 +36,7 @@ namespace Starforge
                 t[".cstory"]   = { ICON_LC_MESSAGES_SQUARE, IM_COL32(150, 120, 230, 255), "Story",  AssetOpen::None, AssetOpen::StoryEditor };
                 t[".cpal"]     = { ICON_LC_SWATCH_BOOK,  IM_COL32(170, 120,  80, 255), "Palette",   AssetOpen::None };
                 t[".cvox"]     = { ICON_LC_BLOCKS,       IM_COL32(140, 150, 160, 255), "Volume",    AssetOpen::None };
+                t[".cnav"]     = { ICON_LC_WAYPOINTS,    IM_COL32( 90, 200, 160, 255), "NavMesh",   AssetOpen::None };
                 t[".cmeta"]    = { ICON_LC_SETTINGS,     IM_COL32(130, 130, 135, 255), "Meta",      AssetOpen::None };
 
                 // Meshes / models. Rigged formats also open in the Animation

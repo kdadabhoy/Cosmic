@@ -1,5 +1,6 @@
 #include "renderer/Renderer.h"
 #include "renderer/Renderer3D.h"
+#include "renderer/Light2DRenderer.h"   // X5 — release the 2D light FBO/shaders
 #include <glm/gtc/matrix_transform.hpp>
 
 namespace Cosmic
@@ -32,6 +33,7 @@ namespace Cosmic
 	{
 		Renderer2D::Shutdown();
 		Renderer3D::Shutdown();
+		Light2DRenderer::Shutdown();   // X5 — free while the GL context is live
 	}
 
 	/**

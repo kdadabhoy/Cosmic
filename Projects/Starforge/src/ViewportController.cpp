@@ -9,6 +9,7 @@
 #include "scene/ui/UiSystem.h"      // U1 — canvas UI interaction + hit-test
 #include "voxel/VoxelVolume.h"      // V4 — voxel brush raycast
 #include "voxel/VoxelRender.h"      // R8 — entity-ID view draws voxel chunk meshes
+#include "nav/NavWorld.h"           // N3 — nav-poly overlay (GetDebugTriangles)
 
 #include "ui/IconsLucide.h"         // K6 — strip glyphs
 
@@ -712,6 +713,30 @@ namespace Starforge
                 if (selected(e))
                     DrawWireSphere(t.Position, pl.Radius, glm::vec4(pl.Color, 0.5f), 24);
             }
+
+            // X5 — 2D lights: a center cross glyph + a flat radius RING in the XY
+            // plane (they live in the 2D plane, so a sphere would read wrong).
+            for (auto e : reg.view<TransformComponent, Light2DComponent>())
+            {
+                const auto& t  = reg.get<TransformComponent>(e);
+                const auto& lc = reg.get<Light2DComponent>(e);
+                const bool sel = selected(e);
+                const glm::vec4 col(lc.Color, sel ? 1.0f : 0.6f);
+                Renderer3D::DrawLine(t.Position - glm::vec3(0.2f, 0.0f, 0.0f),
+                                     t.Position + glm::vec3(0.2f, 0.0f, 0.0f), col);
+                Renderer3D::DrawLine(t.Position - glm::vec3(0.0f, 0.2f, 0.0f),
+                                     t.Position + glm::vec3(0.0f, 0.2f, 0.0f), col);
+                const int   seg = 32;
+                const float r   = lc.Radius;
+                glm::vec3   prev = t.Position + glm::vec3(r, 0.0f, 0.0f);
+                for (int i = 1; i <= seg; ++i)
+                {
+                    const float a = (float)i / (float)seg * 6.2831853f;
+                    const glm::vec3 cur = t.Position + glm::vec3(std::cos(a) * r, std::sin(a) * r, 0.0f);
+                    Renderer3D::DrawLine(prev, cur, glm::vec4(lc.Color, sel ? 0.7f : 0.35f));
+                    prev = cur;
+                }
+            }
         }
 
         // Collider gizmos (J8): a wireframe per collider in the SAME world transform
@@ -761,6 +786,42 @@ namespace Starforge
         // contact points. Debug-config only (JPH_DEBUG_RENDERER) — a no-op in Release.
         if (m_ShowPhysicsDebug && ctx.Scene && ctx.Scene->GetPhysics())
             ctx.Scene->GetPhysics()->World().DebugDraw();
+
+        // Navmesh overlay (N3): the walkable poly soup as a translucent wireframe
+        // (the J8 line-batch precedent — Renderer3D has no filled-tri primitive). A
+        // navmesh draws when SELECTED (bright) or when its AlwaysRenderHelper is set
+        // (dim); the strip toggle (m_ShowNavMesh) is the master switch.
+        if (m_ShowNavMesh && ctx.Scene)
+        {
+            auto& reg = ctx.Scene->GetRegistry();
+            auto selected = [&](entt::entity h)
+            {
+                for (entt::entity s : ctx.Selection) if (s == h) return true;
+                return false;
+            };
+            const glm::vec4 dim { 0.20f, 0.85f, 0.55f, 0.35f };   // resting teal-green
+            const glm::vec4 hot { 0.40f, 1.00f, 0.70f, 0.95f };   // selected
+
+            for (auto e : reg.view<NavMeshComponent>())
+            {
+                const auto& nm = reg.get<NavMeshComponent>(e);
+                if (!nm.Nav || !nm.Nav->IsBuilt())
+                    continue;
+                const bool sel = selected(e);
+                if (!sel && !nm.AlwaysRenderHelper)
+                    continue;
+                const glm::vec4 col = sel ? hot : dim;
+
+                m_NavTriScratch.clear();
+                nm.Nav->GetDebugTriangles(m_NavTriScratch);
+                for (const Cosmic::NavDebugTri& tri : m_NavTriScratch)
+                {
+                    Renderer3D::DrawLine(tri.A, tri.B, col);
+                    Renderer3D::DrawLine(tri.B, tri.C, col);
+                    Renderer3D::DrawLine(tri.C, tri.A, col);
+                }
+            }
+        }
     }
 
     void ViewportController::DrawGizmo(EditorContext& ctx, const Camera& cam)
@@ -966,6 +1027,7 @@ namespace Starforge
             toggle(ICON_LC_GRID_3X3, m_ShowGrid,         "Grid (G)");
             toggle(ICON_LC_BOXES,    m_ShowColliders,    "Collider gizmos (J8)");
             toggle(ICON_LC_ACTIVITY, m_ShowPhysicsDebug, "Live physics debug draw during Play (J8)");
+            toggle(ICON_LC_WAYPOINTS, m_ShowNavMesh,     "Nav-mesh overlay (N3): walkable polys of selected /\nAlways-render-helper navmeshes");
             ImGui::SameLine(0.0f, 8.0f);
 
             // R8 — view-mode dropdown (Lit · Unlit · Wireframe · Entity ID).

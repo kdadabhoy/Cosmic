@@ -186,3 +186,48 @@ TEST_CASE("U4: SpriteAnimation + SourceRect round-trip through the serializer")
     }
     CHECK(found == 1);
 }
+
+TEST_CASE("X5: Light2DComponent defaults + serializer round-trip")
+{
+    // Defaults are the warm campfire light; Enabled defaults true (omitted while true).
+    Light2DComponent def;
+    CHECK(def.Enabled);
+    CHECK(def.Radius    == doctest::Approx(4.0f));
+    CHECK(def.Intensity == doctest::Approx(1.5f));
+    CHECK(def.Falloff   == doctest::Approx(2.0f));
+
+    Scene scene;
+    Entity e = scene.CreateEntity("Light");
+    auto& lc = e.AddComponent<Light2DComponent>();
+    lc.Color = { 0.2f, 0.4f, 1.0f };
+    lc.Radius = 7.5f; lc.Intensity = 3.0f; lc.Falloff = 1.25f;
+
+    const std::string text = SceneSerializer::SaveToString(scene);
+
+    Scene loaded;
+    REQUIRE(SceneSerializer::LoadFromString(loaded, text));
+    int found = 0;
+    for (auto h : loaded.GetRegistry().view<Light2DComponent>())
+    {
+        const auto& l = loaded.GetRegistry().get<Light2DComponent>(h);
+        CHECK(l.Color.b   == doctest::Approx(1.0f));
+        CHECK(l.Radius    == doctest::Approx(7.5f));
+        CHECK(l.Intensity == doctest::Approx(3.0f));
+        CHECK(l.Falloff   == doctest::Approx(1.25f));
+        CHECK(l.Enabled);
+        ++found;
+    }
+    CHECK(found == 1);
+}
+
+TEST_CASE("X7: SceneRenderer::RenderToTexture is a safe no-op headless")
+{
+    // Uninitialized (no GL context) + null target ⇒ early return, no GL calls,
+    // nothing allocated — the "headless-safe no-op without GL" acceptance.
+    SceneRenderer sr;
+    REQUIRE(!sr.IsInitialized());
+    SceneRenderDesc desc;
+    sr.RenderToTexture(desc, nullptr);
+    sr.RenderToTexture(desc, Ref<FrameBuffer>{});
+    CHECK(!sr.IsInitialized());
+}

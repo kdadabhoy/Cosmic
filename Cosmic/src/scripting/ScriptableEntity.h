@@ -33,6 +33,8 @@
 #include "physics/ScenePhysics.h"        // J5/J6 — Physics()/Character() script proxies
 #include "voxel/VoxelVolume.h"           // V4 — Voxels() script proxy
 #include "voxel/BlockPalette.h"
+#include "scene/SceneNav.h"              // N4 — Nav() script proxy (SceneNavRuntime)
+#include "nav/NavWorld.h"                // N4 — Nav() queries (FindPath/Raycast/...)
 
 #include <entt/entt.hpp>
 
@@ -323,6 +325,41 @@ namespace Cosmic
             std::string CurrentClip() const { auto* an = Comp(); return an ? an->ClipPath : std::string(); }
         };
         AnimatorProxy Animator() const { return { m_Scene, m_Handle }; }
+
+        // ---- navigation passthrough (N4) ------------------------------------
+        // Steer this entity's NavAgent over the scene's baked navmesh, and run
+        // navmesh queries usable by any script (agent or not — e.g. a SystemScript
+        // computing patrol waypoints). All calls are safe no-ops / empty results
+        // when no play session or navmesh is active. Arrival fires as the
+        // `nav.arrived` signal on the scene EventBus (catch it in OnSignal).
+        struct NavProxy
+        {
+            Scene*       S = nullptr;
+            entt::entity Handle = entt::null;
+
+            SceneNavRuntime* Runtime() const { return S ? S->GetNav() : nullptr; }
+            NavWorld*        World()   const { auto* r = Runtime(); return r ? r->Nav() : nullptr; }
+
+            // Agent control (this entity's NavAgent).
+            void SetTarget(const glm::vec3& worldPos) const { if (auto* r = Runtime()) r->SetTarget(Handle, worldPos); }
+            void Stop()          const { if (auto* r = Runtime()) r->Stop(Handle); }
+            bool HasAgent()      const { auto* r = Runtime(); return r && r->HasAgent(Handle); }
+            bool HasArrived()    const { auto* r = Runtime(); return r && r->HasArrived(Handle); }
+            glm::vec3 Position() const { auto* r = Runtime(); return r ? r->AgentPosition(Handle) : glm::vec3(0.0f); }
+            glm::vec3 Velocity() const { auto* r = Runtime(); return r ? r->AgentVelocity(Handle) : glm::vec3(0.0f); }
+
+            // Navmesh queries (const — no agent required).
+            NavPath   FindPath(const glm::vec3& a, const glm::vec3& b) const { auto* w = World(); return w ? w->FindPath(a, b) : NavPath{}; }
+            NavRayHit Raycast(const glm::vec3& a, const glm::vec3& b)   const { auto* w = World(); return w ? w->Raycast(a, b) : NavRayHit{}; }
+            std::optional<glm::vec3> NearestPoint(const glm::vec3& p)   const { auto* w = World(); return w ? w->NearestPoint(p) : std::nullopt; }
+            /** @brief Deterministic random navmesh point within `radius` of `center`;
+             *  `rngState` is a caller-owned xorshift seed (reproducible). */
+            std::optional<glm::vec3> RandomPointAround(const glm::vec3& center, float radius, uint32_t& rngState) const
+            {
+                auto* w = World(); return w ? w->RandomPointAround(center, radius, rngState) : std::nullopt;
+            }
+        };
+        NavProxy Nav() const { return { m_Scene, m_Handle }; }
 
 
         // Override the ones you need — all default to no-ops.

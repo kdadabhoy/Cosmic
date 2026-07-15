@@ -165,7 +165,10 @@ namespace Cosmic
         Application::Get().GetWindow().SetCursorCaptured(false);   // U7 — never leak capture
         m_Flow.Stop();   // U5 — unsubscribe from scene buses before scenes tear down
         if (m_TrackedScene)
+        {
+            m_TrackedScene->OnNavStop();                 // N4 — release the crowd first
             m_TrackedScene->OnPhysicsStop(m_Physics);
+        }
         m_Scripts.Destroy();
         m_Physics.Shutdown();
         m_SceneRenderer.Shutdown();   // free GPU subsystems while the context is live (H2)
@@ -179,7 +182,10 @@ namespace Cosmic
         if (active == m_TrackedScene)
             return;
         if (m_TrackedScene)
-            m_TrackedScene->OnPhysicsStop(m_Physics);   // tear down the old scene's bodies
+        {
+            m_TrackedScene->OnNavStop();                 // N4 — release the old scene's crowd
+            m_TrackedScene->OnPhysicsStop(m_Physics);    // tear down the old scene's bodies
+        }
         m_Scripts.Destroy();          // tear down the old scene's instances first
         m_TrackedScene = active;
         if (m_TrackedScene)
@@ -187,6 +193,7 @@ namespace Cosmic
             m_Scripts.Instantiate(*m_TrackedScene);
             m_TrackedScene->SyncWorldSystems();          // build recipe terrain etc. first
             m_TrackedScene->OnPhysicsStart(m_Physics);   // build bodies from components (J4)
+            m_TrackedScene->OnNavStart();                // bind the crowd to the navmesh (N4)
         }
     }
 
@@ -279,6 +286,7 @@ namespace Cosmic
         if (m_TrackedScene)
         {
             m_TrackedScene->OnPhysicsStep(fixedDt);
+            m_TrackedScene->OnNavStep(fixedDt);          // N4 — advance the crowd (post-physics)
             m_TrackedScene->DispatchPhysicsEvents(m_Scripts);
         }
     }
@@ -339,9 +347,10 @@ namespace Cosmic
             // U1 — canvas UI composites after post (LDR bound). No canvas => no-op,
             // so shipped 3D apps are unaffected.
             Scene* scenePtr = m_TrackedScene.get();
-            desc.DrawOverlay2D = [scenePtr, vw, vh]()
+            const glm::mat4 camVP = desc.Projection * desc.View;   // X6 — world-anchor projector
+            desc.DrawOverlay2D = [scenePtr, vw, vh, camVP]()
             {
-                UiSystem::Render(*scenePtr, UiRect{ { 0.0f, 0.0f }, { (float)vw, (float)vh } });
+                UiSystem::Render(*scenePtr, UiRect{ { 0.0f, 0.0f }, { (float)vw, (float)vh } }, &camVP);
             };
 
             // U3 — world-space sprites draw in the transparent phase (HDR bound,
@@ -349,6 +358,8 @@ namespace Cosmic
             desc.DrawTransparent = [scenePtr, vw, vh](const SceneDrawContext& c)
             {
                 scenePtr->OnRenderSprites(c.ViewProjection, vw, vh);
+                // X5 — 2D lights multiply over the sprite output (no-op without lights).
+                scenePtr->OnRender2DLights(c.ViewProjection, vw, vh);
             };
 
             if (auto* env = m_TrackedScene->FindEnvironment())

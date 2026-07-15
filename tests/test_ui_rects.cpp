@@ -16,6 +16,7 @@
 #include "scene/ui/UiSystem.h"
 
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 using namespace Cosmic;
 
@@ -310,4 +311,84 @@ TEST_CASE("U2: EventBus disconnect stops delivery; ConnectAny sees every signal"
     s.Events().Emit("ping", e);
     CHECK(named == 1);   // named listener gone
     CHECK(any == 2);     // any-listener still fires
+}
+
+// ---------------------------------------------------------------------------
+// X6 — world-anchored UI: ProjectToCanvas + CollectElements projection
+// ---------------------------------------------------------------------------
+
+static glm::mat4 TestCameraVP()
+{
+    // Camera at (0,0,5) looking down -z; 60° vertical FOV, 1:1 aspect.
+    const glm::mat4 view = glm::lookAt(glm::vec3(0, 0, 5), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+    const glm::mat4 proj = glm::perspective(glm::radians(60.0f), 1.0f, 0.1f, 100.0f);
+    return proj * view;
+}
+
+TEST_CASE("X6: ProjectToCanvas maps world points to canvas (top-left, +y down)")
+{
+    const glm::mat4 vp = TestCameraVP();
+    const UiRect canvas{ { 0, 0 }, { 800, 600 } };
+    glm::vec2 p;
+
+    // On-axis origin -> canvas center.
+    REQUIRE(UiSystem::ProjectToCanvas({ 0, 0, 0 }, vp, canvas, p));
+    CHECK(Near(p.x, 400.0f));
+    CHECK(Near(p.y, 300.0f));
+
+    // Above the axis -> UPPER half (+y is DOWN in canvas space).
+    REQUIRE(UiSystem::ProjectToCanvas({ 0, 1, 0 }, vp, canvas, p));
+    CHECK(p.y < 300.0f);
+    CHECK(Near(p.x, 400.0f));
+
+    // Right of the axis -> RIGHT half.
+    REQUIRE(UiSystem::ProjectToCanvas({ 1, 0, 0 }, vp, canvas, p));
+    CHECK(p.x > 400.0f);
+    CHECK(Near(p.y, 300.0f));
+}
+
+TEST_CASE("X6: ProjectToCanvas reports behind-camera points as hidden")
+{
+    const glm::mat4 vp = TestCameraVP();
+    const UiRect canvas{ { 0, 0 }, { 800, 600 } };
+    glm::vec2 p;
+    // (0,0,10) is 5 units BEHIND the eye at z=5 -> not projectable.
+    CHECK_FALSE(UiSystem::ProjectToCanvas({ 0, 0, 10 }, vp, canvas, p));
+}
+
+TEST_CASE("X6: CollectElements positions a world-anchored element at the projected point")
+{
+    Scene scene;
+    const glm::mat4 vp = TestCameraVP();
+    const UiRect viewport{ { 0, 0 }, { 800, 600 } };
+
+    // A tracked world entity at the origin.
+    Entity world = scene.CreateEntity("Unit");
+    const uint64_t worldId = (uint64_t)world.GetComponent<IDComponent>().ID;
+
+    // Canvas + a world-anchored nameplate child (100x20 centered on the anchor).
+    Entity canvas = scene.CreateEntity("Canvas");
+    canvas.AddComponent<CanvasComponent>().ScaleMode = UiScaleMode::ConstantPixel;
+    Entity plate = scene.CreateEntity("Nameplate");
+    auto& rt = plate.AddComponent<RectTransformComponent>();
+    rt.AnchorMin = rt.AnchorMax = { 0, 0 };
+    rt.OffsetMin = { -50, -10 };
+    rt.OffsetMax = {  50,  10 };
+    plate.AddComponent<UiImageComponent>();
+    auto& anchor = plate.AddComponent<UiWorldAnchorComponent>();
+    anchor.TargetEntity = worldId;
+    scene.SetParent(plate, canvas, /*keepWorldPose=*/false);
+
+    std::vector<UiElement> out;
+    UiSystem::CollectElements(scene, viewport, out, &vp);
+    REQUIRE(out.size() == 1);
+    // Origin projects to (400,300); the 100x20 box centers there.
+    CHECK(Near(out[0].Rect.Center().x, 400.0f));
+    CHECK(Near(out[0].Rect.Center().y, 300.0f));
+    CHECK(Near(out[0].Rect.Width(), 100.0f));
+
+    // Move the tracked entity behind the camera -> the nameplate is hidden.
+    world.GetComponent<TransformComponent>().Position = { 0, 0, 10 };
+    UiSystem::CollectElements(scene, viewport, out, &vp);
+    CHECK(out.empty());
 }

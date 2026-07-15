@@ -5,10 +5,17 @@
 #include "commands/EditorCommands.h"
 #include "widgets/PropertyRows.h"
 
-#include <imgui.h>
+#include "particles/ParticleSystem.h"   // X4 — ParticleEmitter::CurlNoise
+#include "graphics/Texture.h"           // X4 — Texture2D preview upload
 
+#include <imgui.h>
+#include <glm/glm.hpp>
+
+#include <algorithm>
+#include <cstdint>
 #include <filesystem>
 #include <string>
+#include <vector>
 
 using namespace Cosmic;
 using Cosmic::Reflect::FieldValue;
@@ -220,6 +227,9 @@ namespace Starforge
         ImGui::TextDisabled("Live preview updates in the viewport. Changes apply live.");
         DrawReflected(ctx, e, DescOf<ParticleEmitterComponent>(), "Emitter");
 
+        // X4 — live curl-noise preview (the same field the sim integrates).
+        DrawNoisePreview(e.GetComponent<ParticleEmitterComponent>());
+
         ImGui::Separator();
         ImGui::SetNextItemWidth(160.0f);
         ImGui::InputText("##emittername", m_EmitterName, sizeof(m_EmitterName));
@@ -256,6 +266,84 @@ namespace Starforge
         ImGui::SameLine();
         if (ImGui::Button("Remove##emitter"))
             Commands::RemoveComponent(ctx, e, tid);
+    }
+
+    // =========================================================================
+    // X4 — live curl-noise preview thumbnail
+    // =========================================================================
+    void WorldSystemsPanel::DrawNoisePreview(const ParticleEmitterComponent& pc)
+    {
+        if (!pc.NoiseEnabled)
+        {
+            m_NoisePreview.reset();          // free the texture while the module is off
+            m_NoisePrevFreq = -1.0f;
+            return;
+        }
+
+        const float freq = pc.NoiseFrequency;
+        const int   oct  = pc.NoiseOctaves < 1 ? 1 : (pc.NoiseOctaves > 4 ? 4 : pc.NoiseOctaves);
+
+        // Debounce: arm a short timer on any param change; rebuild when it fires
+        // (or immediately on first show). Keeps slider drags from re-rendering 128².
+        if (freq != m_NoisePrevFreq || oct != m_NoisePrevOctaves)
+        {
+            m_NoisePrevFreq    = freq;
+            m_NoisePrevOctaves = oct;
+            m_NoiseDebounce    = 0.12f;
+        }
+        if (!m_NoisePreview)
+            RebuildNoisePreview(freq, oct);
+        else if (m_NoiseDebounce > 0.0f)
+        {
+            m_NoiseDebounce -= ImGui::GetIO().DeltaTime;
+            if (m_NoiseDebounce <= 0.0f)
+                RebuildNoisePreview(freq, oct);
+        }
+
+        if (m_NoisePreview)
+        {
+            ImGui::TextDisabled("Curl-noise field  (|curl|, z = 0 slice)");
+            ImGui::Image((ImTextureID)(intptr_t)m_NoisePreview->GetRendererID(), ImVec2(128.0f, 128.0f));
+        }
+    }
+
+    void WorldSystemsPanel::RebuildNoisePreview(float frequency, int octaves)
+    {
+        constexpr int   N = 128;
+        constexpr float R = 8.0f;   // world half-size sampled (a few noise wavelengths)
+
+        // Pass 1: sample |curl| over the slice and track the max for normalization.
+        std::vector<float> mag(N * N);
+        float maxMag = 1e-4f;
+        for (int y = 0; y < N; ++y)
+            for (int x = 0; x < N; ++x)
+            {
+                const float wx = ((float)x / (N - 1) * 2.0f - 1.0f) * R;
+                const float wy = ((float)y / (N - 1) * 2.0f - 1.0f) * R;
+                const glm::vec3 c = Cosmic::ParticleEmitter::CurlNoise({ wx, wy, 0.0f }, frequency, octaves);
+                const float m = glm::length(c);
+                mag[y * N + x] = m;
+                maxMag = std::max(maxMag, m);
+            }
+
+        // Pass 2: normalize -> a dark → ember-orange → white heat ramp (the 2216 feel).
+        std::vector<uint8_t> px(N * N * 4);
+        for (int i = 0; i < N * N; ++i)
+        {
+            const float t = std::clamp(mag[i] / maxMag, 0.0f, 1.0f);
+            glm::vec3 col = glm::mix(glm::vec3(0.03f, 0.04f, 0.10f), glm::vec3(0.95f, 0.55f, 0.15f),
+                                     std::clamp(t * 1.4f, 0.0f, 1.0f));
+            col = glm::mix(col, glm::vec3(1.0f), std::clamp((t - 0.7f) / 0.3f, 0.0f, 1.0f));
+            px[i * 4 + 0] = (uint8_t)(std::clamp(col.r, 0.0f, 1.0f) * 255.0f);
+            px[i * 4 + 1] = (uint8_t)(std::clamp(col.g, 0.0f, 1.0f) * 255.0f);
+            px[i * 4 + 2] = (uint8_t)(std::clamp(col.b, 0.0f, 1.0f) * 255.0f);
+            px[i * 4 + 3] = 255;
+        }
+
+        if (!m_NoisePreview)
+            m_NoisePreview = Texture2D::Create(N, N);
+        if (m_NoisePreview)
+            m_NoisePreview->SetData(px.data(), (uint32_t)px.size());
     }
 
     // =========================================================================

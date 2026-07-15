@@ -12,6 +12,9 @@ if(MSVC)
     add_compile_options(/utf-8)
     add_compile_options(/external:W0)
     add_compile_options(/external:templates-)
+    # StarforgeApp.cpp is a very large translation unit; it crossed the COFF
+    # /2^16-section limit (C1128) as Phase 27 grew the Entity menu + viewport.
+    add_compile_options(/bigobj)
 else()
     add_compile_options(-Wall -Wextra)
 endif()
@@ -49,7 +52,10 @@ set(STARFORGE_NODE_EDITOR_SOURCES
     "${COSMIC_SDK_DIR}/Cosmic/dependencies/imgui-node-editor/crude_json.cpp"
 )
 if(MSVC)
-    set_source_files_properties(${STARFORGE_NODE_EDITOR_SOURCES} PROPERTIES COMPILE_OPTIONS "/w")
+    # /W0 (not /w): both silence the vendored sources, but /w "overrides" cl's
+    # implicit /W1 and emits command-line warning D9025 on a full rebuild — /W0
+    # sets the level cleanly with no notice.
+    set_source_files_properties(${STARFORGE_NODE_EDITOR_SOURCES} PROPERTIES COMPILE_OPTIONS "/W0")
 else()
     set_source_files_properties(${STARFORGE_NODE_EDITOR_SOURCES} PROPERTIES COMPILE_OPTIONS "-w")
 endif()

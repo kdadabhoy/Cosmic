@@ -967,7 +967,11 @@ namespace Workspace
 		//      only when the sun moved and leaves the default FBO bound, so the
 		//      render-target selection below re-binds cleanly.
 		m_Environment.SetSunDirection(-m_LightDir);
+		// X1/X2 — physical atmosphere (+ sun-disc size): disabled leaves the procedural bake identical.
+		m_Environment.SetPhysicalSky({ m_PhysicalSky, m_Turbidity, m_RayleighScale, m_MieScale, m_MieG, m_SunAngularSize });
 		m_Environment.Bake();
+		// X2 — ambient-intensity multiplier (1.0 = the shipped ambient term).
+		Cosmic::Renderer3D::SetAmbientIntensity(m_AmbientIntensity);
 		if (m_UseIBL)
 			m_Environment.PushToRenderer();
 		else
@@ -1007,7 +1011,13 @@ namespace Workspace
 				// Fire pit at the pad's edge: smoke + embers share the spot.
 				const glm::mat4 pit = glm::translate(glm::mat4(1.0f), { -5.0f, 0.15f, -5.0f });
 				if (m_Smoke)  { m_Smoke->SetTransform(pit);  m_Smoke->Update(ts, m_WorldTime);  }
-				if (m_Embers) { m_Embers->SetTransform(pit); m_Embers->Update(ts, m_WorldTime); }
+				if (m_Embers)
+				{
+					// X3 — swirl the ember cone with curl noise when enabled.
+					m_Embers->SetTurbulence(m_EmberNoise, m_EmberNoiseStrength, 0.5f, 2);
+					m_Embers->SetTransform(pit);
+					m_Embers->Update(ts, m_WorldTime);
+				}
 			}
 			if (m_HeatHaze && m_Haze)
 			{
@@ -1297,6 +1307,7 @@ namespace Workspace
 			auto vfb = app.GetFrameBuffer();
 			vfb->Bind();
 			Cosmic::RenderCommand::SetViewport(0, 0, vfb->GetWidth(), vfb->GetHeight());
+			m_PostFx.SetGamma(m_Gamma);          // X2 (default 2.2 = byte-identical)
 			m_PostFx.Composite(m_Exposure);
 		}
 
@@ -1613,6 +1624,11 @@ namespace Workspace
 			                  "for an A/B comparison. HDR on looks brighter/filmic (final gamma).");
 		ImGui::BeginDisabled(!m_Hdr);
 		ImGui::SliderFloat("Exposure", &m_Exposure, 0.05f, 8.0f, "%.2f", ImGuiSliderFlags_Logarithmic);
+		ImGui::SliderFloat("Gamma", &m_Gamma, 1.0f, 3.0f, "%.2f");   // X2 (2.2 = shipped curve)
+		ImGui::SameLine(); ImGui::TextDisabled("(?)");
+		if (ImGui::IsItemHovered())
+			ImGui::SetTooltip("Tonemap output gamma (X2), previously hardcoded at 2.2. 2.2 is\n"
+			                  "byte-identical to the shipped curve; lower brightens mid-tones.");
 		ImGui::EndDisabled();
 		ImGui::TextDisabled("Crank exposure past ~2x: highlights roll off, not clip to white.");
 
@@ -1627,6 +1643,11 @@ namespace Workspace
 			                  "diffuse-irradiance + prefiltered-specular maps + a BRDF LUT. PBR\n"
 			                  "materials sample them for image-based ambient; the same sky draws as\n"
 			                  "the background. Drag 'Light dir' below to move the sun and rebake.");
+		ImGui::SliderFloat("Ambient intensity", &m_AmbientIntensity, 0.0f, 4.0f, "%.2f");   // X2
+		ImGui::SameLine(); ImGui::TextDisabled("(?)");
+		if (ImGui::IsItemHovered())
+			ImGui::SetTooltip("X2 — scales the PBR ambient/IBL term (1.0 = the shipped level,\n"
+			                  "byte-identical). Drop toward 0 for a moodier, contact-lit look.");
 
 		ImGui::SeparatorText("Sun shadows (S6.4)");
 		ImGui::Checkbox("Shadows", &m_Shadows);
@@ -1679,6 +1700,24 @@ namespace Workspace
 			ImGui::SliderFloat("Vignette amount", &m_VignetteAmount, 0.0f, 1.0f, "%.2f");
 
 		ImGui::SeparatorText("Sky / fog / time-of-day (S7)");
+
+		ImGui::Checkbox("Physical atmosphere (X1)", &m_PhysicalSky);
+		ImGui::SameLine(); ImGui::TextDisabled("(?)");
+		if (ImGui::IsItemHovered())
+			ImGui::SetTooltip("SkyMode::Physical — an analytic Rayleigh+Mie single-scattering sky\n"
+			                  "baked into the SAME cube the skybox and IBL read, so lighting always\n"
+			                  "matches the visible sky. Raise Turbidity to haze the horizon; scrub\n"
+			                  "Time of day to watch the dawn/noon/dusk color ramp. Off = the shipped\n"
+			                  "procedural bake, byte-identical.");
+		if (m_PhysicalSky)
+		{
+			ImGui::SliderFloat("Turbidity",  &m_Turbidity,      1.0f, 10.0f, "%.1f");
+			ImGui::SliderFloat("Rayleigh",   &m_RayleighScale,  0.0f, 4.0f,  "%.2f");
+			ImGui::SliderFloat("Mie",        &m_MieScale,       0.0f, 4.0f,  "%.2f");
+			ImGui::SliderFloat("Mie G",      &m_MieG,           0.0f, 0.99f, "%.2f");
+			ImGui::SliderFloat("Sun size",   &m_SunAngularSize, 0.1f, 10.0f, "%.2f deg");   // X2
+		}
+
 		ImGui::BeginDisabled(!m_Hdr);
 		ImGui::Checkbox("Height fog", &m_Fog);
 		ImGui::SameLine(); ImGui::TextDisabled("(?)");
@@ -1737,6 +1776,17 @@ namespace Workspace
 			                  "smoke plume (alpha) and HDR ember sparks (additive - enable Bloom to see\n"
 			                  "them glow) at the fire pit (-5, 0, -5). Ribbon: additive camera-facing\n"
 			                  "trail off the aircraft tail. Both need HDR (soft particles read scene depth).");
+
+		ImGui::BeginDisabled(!m_Embers || !m_Hdr || !m_ShowParticles);
+		ImGui::Checkbox("Ember curl noise (X3)", &m_EmberNoise);
+		ImGui::SameLine(); ImGui::TextDisabled("(?)");
+		if (ImGui::IsItemHovered())
+			ImGui::SetTooltip("X3 - a divergence-free curl of a 3D value-noise field adds a swirling\n"
+			                  "acceleration to the ember cone (same term on the GPU compute path and\n"
+			                  "the unit-tested CPU mirror). Off = the shipped straight-rising sparks.");
+		if (m_EmberNoise)
+			ImGui::SliderFloat("Noise strength##ember", &m_EmberNoiseStrength, 0.0f, 20.0f, "%.1f");
+		ImGui::EndDisabled();
 
 		ImGui::BeginDisabled(!m_Shadows || !m_Hdr);
 		ImGui::Checkbox("God rays (S10.3)", &m_GodRays);

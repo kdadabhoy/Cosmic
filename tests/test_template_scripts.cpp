@@ -11,6 +11,7 @@
 #include "../Projects/Starforge/assets/templates/src/scripts/PaddleController.h"
 #include "../Projects/Starforge/assets/templates/src/scripts/PongBall.h"
 #include "../Projects/Starforge/assets/templates/src/scripts/StoryUiBinding.h"   // Q3
+#include "../Projects/Starforge/assets/templates/src/scripts/NavCritter.h"       // N5
 
 TEST_CASE("U8: ForgePong template scripts compile and expose their tuned fields")
 {
@@ -32,4 +33,11 @@ TEST_CASE("Q3: the stock Story Graph UI binding template compiles")
     CHECK(StoryUiBinding::MaxOptions == 4);
     CHECK(b.TextTag == "StoryText");
     CHECK(b.OptionTagPrefix == "StoryOption");
+}
+
+TEST_CASE("N5: the NavCritter sample system script compiles and exposes its fields")
+{
+    NavCritter critter;
+    CHECK(critter.ChaseRadius > 0.0f);
+    CHECK(critter.PatrolRadius > 0.0f);
 }

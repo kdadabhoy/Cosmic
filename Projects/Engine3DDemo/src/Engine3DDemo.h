@@ -195,6 +195,18 @@ namespace Workspace
 		bool m_ShowSkybox = true;               // draw the procedural sky as the background
 		bool m_UseIBL     = true;               // PBR materials sample the IBL set
 
+		// ---- Physical atmosphere sky (X1) — off keeps the procedural bake identical ----
+		bool  m_PhysicalSky    = false;         // SkyMode::Physical: analytic Rayleigh+Mie scattering
+		float m_Turbidity      = 2.5f;          // haze (scales Mie density)
+		float m_RayleighScale  = 1.0f;
+		float m_MieScale       = 1.0f;
+		float m_MieG           = 0.80f;         // sun-halo tightness
+		float m_SunAngularSize = 0.53f;         // X2 — sun-disc diameter in degrees (physical)
+
+		// ---- Environment polish (X2) — defaults keep frames byte-identical ----
+		float m_AmbientIntensity = 1.0f;        // scales the PBR ambient/IBL term
+		float m_Gamma            = 2.2f;        // tonemap output gamma
+
 		// ---- Directional shadows (S6.4) ----
 		Cosmic::ShadowMap m_Shadow;             // 2k depth map from the sun
 		bool  m_Shadows    = true;              // depth pass + PCF receive
@@ -237,6 +249,9 @@ namespace Workspace
 		Cosmic::Ref<Cosmic::RibbonEmitter>   m_Ribbon;  // S10.2: aircraft trail ribbon
 		bool m_ShowParticles = false;
 		bool m_ShowRibbon    = false;
+		// X3 — curl-noise turbulence on the ember cone (off keeps the shipped look).
+		bool  m_EmberNoise    = false;
+		float m_EmberNoiseStrength = 6.0f;
 		bool m_GodRays       = false;                // S10.3 tier 1 (needs shadows on)
 		bool m_HeatHaze      = false;                // S10.5 (needs particles emitting)
 		void DrawWaterReflectionWorld(const glm::mat4& mirroredViewProj);   // S9.1 mirrored subset

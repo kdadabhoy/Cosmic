@@ -125,6 +125,7 @@ namespace Cosmic
 		// =====================================================================
 		glm::vec3 LightDirection = glm::normalize(glm::vec3(-0.4f, -1.0f, -0.25f));
 		float     Ambient        = 0.25f;
+		float     AmbientIntensity = 1.0f;   // X2 — scales the PBR ambient/IBL term (1 = identity)
 
 		// CPU mirror of the LightsBlock UBO (H3). SetLightDirection/SetAmbient patch
 		// the sun fields here and re-upload so the Mesh3D COLOR path — which now reads
@@ -986,6 +987,10 @@ namespace Cosmic
 		if (!shader)
 			return;
 
+		// Ambient-intensity multiplier (X2): scales the PBR ambient/IBL term.
+		// Shaders that don't declare it no-op on location -1; 1.0 = identity.
+		shader->SetFloat("u_AmbientIntensity", s_Data.AmbientIntensity);
+
 		// Image-based lighting (S6.3): point the IBL samplers at their reserved
 		// units UNCONDITIONALLY, then bind + enable only when active. Without the
 		// unconditional assignment the samplerCube uniforms sit at their default
@@ -1160,6 +1165,18 @@ namespace Cosmic
 	float Renderer3D::GetAmbient()
 	{
 		return s_Data.Ambient;
+	}
+
+	void Renderer3D::SetAmbientIntensity(float intensity)
+	{
+		// Applied to the PBR ambient/IBL term in ApplySceneBindings. Non-negative;
+		// 1.0 (the default) is identity so untouched scenes stay byte-identical.
+		s_Data.AmbientIntensity = intensity < 0.0f ? 0.0f : intensity;
+	}
+
+	float Renderer3D::GetAmbientIntensity()
+	{
+		return s_Data.AmbientIntensity;
 	}
 
 	void Renderer3D::SetLights(const SceneLightsDesc& lights)

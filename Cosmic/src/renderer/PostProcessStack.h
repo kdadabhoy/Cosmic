@@ -115,6 +115,10 @@ namespace Cosmic
 		void SetVignetteParams(float amount, float radius, float feather, const glm::vec3& color)
 		{ m_VignetteAmount = amount; m_VignetteRadius = radius; m_VignetteFeather = feather; m_VignetteColor = color; }
 
+		// Output gamma (X2) — the tonemap's linear->sRGB exponent. Default 2.2
+		// reproduces the previously-hardcoded curve (byte-identical).
+		void SetGamma(float gamma) { m_Gamma = gamma; }
+
 		// ---- Height fog (S7.2) ----
 		void SetFogEnabled(bool enabled) { m_FogEnabled = enabled; }
 		bool IsFogEnabled() const        { return m_FogEnabled; }
@@ -249,6 +253,7 @@ namespace Cosmic
 		float     m_VignetteRadius  = 0.9f;
 		float     m_VignetteFeather = 0.4f;
 		glm::vec3 m_VignetteColor{ 0.0f };
+		float     m_Gamma           = 2.2f;   // X2 — tonemap output gamma
 
 		// ---- Height fog (S7.2) ----
 		bool      m_FogEnabled       = false;

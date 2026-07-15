@@ -43,6 +43,17 @@ uniform float u_Drag;
 uniform int   u_WorldSpace;      // 1 = spawn through the emitter transform
 uniform mat4  u_EmitterTransform;
 
+// Curl-noise turbulence (X3) — mirror of ParticleEmitter::CurlNoise.
+uniform int   u_NoiseEnabled;    // 1 = add the curl force
+uniform float u_NoiseStrength;
+uniform float u_NoiseFrequency;
+uniform int   u_NoiseOctaves;    // already clamped 1..4 on upload
+
+// Local-space bounds (X4) — half-extents about the emitter origin; <=0 axis =
+// unbounded; all <=0 = off (byte-identical). Kill (0) or wrap (1) past the box.
+uniform vec3  u_BoundsExtents;
+uniform int   u_BoundsWrap;
+
 const float PI = 3.14159265358979;
 
 uint PcgHash(uint v)
@@ -50,6 +61,69 @@ uint PcgHash(uint v)
     v = v * 747796405u + 2891336453u;
     v = ((v >> ((v >> 28u) + 4u)) ^ v) * 277803737u;
     return (v >> 22u) ^ v;
+}
+
+// --- Curl-noise turbulence (X3). EXACT mirror of the CPU CurlNoise in
+//     ParticleSystem.cpp: PcgHash-based value noise, the SAME four magic
+//     constants + epsilon, so the GPU sim and the CPU preview agree. ---
+float ValueLattice(int xi, int yi, int zi, uint seed)
+{
+    uint h = uint(xi) * 0x8DA6B343u
+           ^ uint(yi) * 0xD8163841u
+           ^ uint(zi) * 0xCB1AB31Fu
+           ^ seed     * 0x165667B1u;
+    return float(PcgHash(h)) * (1.0 / 4294967296.0);   // [0,1)
+}
+
+float ValueNoise3(vec3 p, uint seed)
+{
+    vec3  fp = floor(p);
+    ivec3 ic = ivec3(fp);
+    vec3  t  = p - fp;
+    vec3  w  = t * t * (3.0 - 2.0 * t);
+
+    float c000 = ValueLattice(ic.x,     ic.y,     ic.z,     seed);
+    float c100 = ValueLattice(ic.x + 1, ic.y,     ic.z,     seed);
+    float c010 = ValueLattice(ic.x,     ic.y + 1, ic.z,     seed);
+    float c110 = ValueLattice(ic.x + 1, ic.y + 1, ic.z,     seed);
+    float c001 = ValueLattice(ic.x,     ic.y,     ic.z + 1, seed);
+    float c101 = ValueLattice(ic.x + 1, ic.y,     ic.z + 1, seed);
+    float c011 = ValueLattice(ic.x,     ic.y + 1, ic.z + 1, seed);
+    float c111 = ValueLattice(ic.x + 1, ic.y + 1, ic.z + 1, seed);
+
+    float x00 = c000 + (c100 - c000) * w.x;
+    float x10 = c010 + (c110 - c010) * w.x;
+    float x01 = c001 + (c101 - c001) * w.x;
+    float x11 = c011 + (c111 - c011) * w.x;
+    float y0  = x00 + (x10 - x00) * w.y;
+    float y1  = x01 + (x11 - x01) * w.y;
+    return y0 + (y1 - y0) * w.z;
+}
+
+vec3 CurlPotential(vec3 q, int octaves)
+{
+    vec3  sum  = vec3(0.0);
+    float amp  = 1.0;
+    float freq = 1.0;
+    for (int o = 0; o < octaves; ++o)
+    {
+        vec3 qo = q * freq;
+        sum += amp * vec3(ValueNoise3(qo, 0u), ValueNoise3(qo, 1u), ValueNoise3(qo, 2u));
+        amp  *= 0.5;
+        freq *= 2.0;
+    }
+    return sum;
+}
+
+vec3 CurlNoise(vec3 pos, float frequency, int octaves)
+{
+    vec3  q = pos * frequency;
+    float e = 0.1;   // == kCurlEpsilon in ParticleSystem.cpp
+    vec3 dx = CurlPotential(q + vec3(e, 0.0, 0.0), octaves) - CurlPotential(q - vec3(e, 0.0, 0.0), octaves);
+    vec3 dy = CurlPotential(q + vec3(0.0, e, 0.0), octaves) - CurlPotential(q - vec3(0.0, e, 0.0), octaves);
+    vec3 dz = CurlPotential(q + vec3(0.0, 0.0, e), octaves) - CurlPotential(q - vec3(0.0, 0.0, e), octaves);
+    float inv = 1.0 / (2.0 * e);
+    return vec3(dy.z - dz.y, dz.x - dx.z, dx.y - dy.x) * inv;
 }
 
 uint  g_State;
@@ -125,10 +199,39 @@ void main()
         // --- Integrate a live particle ---
         vec3 vel = particles[slot].VelLife.xyz;
         vel += (u_Gravity + u_Wind) * u_Dt;
+        // Curl-noise turbulence (X3) — identical term in StepCpu. Disabled ⇒
+        // skipped, so the shipped integration stays byte-identical.
+        if (u_NoiseEnabled == 1)
+            vel += CurlNoise(particles[slot].PosAge.xyz, u_NoiseFrequency, u_NoiseOctaves)
+                 * u_NoiseStrength * u_Dt;
         vel *= max(1.0 - u_Drag * u_Dt, 0.0);
 
-        particles[slot].PosAge  = vec4(particles[slot].PosAge.xyz + vel * u_Dt,
-                                       particles[slot].PosAge.w + u_Dt);
+        vec3  newPos = particles[slot].PosAge.xyz + vel * u_Dt;
+        float newAge = particles[slot].PosAge.w + u_Dt;
+
+        // X4 — optional local-space bounds (kill or wrap). All-zero extents skip
+        // this block, so the shipped integration stays byte-identical.
+        vec3 ext = u_BoundsExtents;
+        if (ext.x > 0.0 || ext.y > 0.0 || ext.z > 0.0)
+        {
+            vec3 org = (u_WorldSpace == 1) ? u_EmitterTransform[3].xyz : vec3(0.0);
+            vec3 rel = newPos - org;
+            if (u_BoundsWrap == 1)
+            {
+                if (ext.x > 0.0) rel.x -= 2.0 * ext.x * floor((rel.x + ext.x) / (2.0 * ext.x));
+                if (ext.y > 0.0) rel.y -= 2.0 * ext.y * floor((rel.y + ext.y) / (2.0 * ext.y));
+                if (ext.z > 0.0) rel.z -= 2.0 * ext.z * floor((rel.z + ext.z) / (2.0 * ext.z));
+                newPos = org + rel;
+            }
+            else if ((ext.x > 0.0 && abs(rel.x) > ext.x) ||
+                     (ext.y > 0.0 && abs(rel.y) > ext.y) ||
+                     (ext.z > 0.0 && abs(rel.z) > ext.z))
+            {
+                newAge = particles[slot].VelLife.w;   // age >= life ⇒ dead
+            }
+        }
+
+        particles[slot].PosAge  = vec4(newPos, newAge);
         particles[slot].VelLife = vec4(vel, particles[slot].VelLife.w);
     }
 }

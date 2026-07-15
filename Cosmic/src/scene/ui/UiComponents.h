@@ -122,6 +122,12 @@ namespace Cosmic
         Ref<Texture2D> Resolved;
         std::string    ResolvedPath;
 
+        // Runtime texture slot (X7 / gap §12.3): when set, UiSystem draws THIS
+        // instead of the path-loaded texture — the injection point for a
+        // SceneRenderer::RenderToTexture result (a live minimap, security-camera
+        // feed, portal). Set from a script/app each frame; not serialized.
+        Ref<Texture2D> RuntimeTexture;
+
         UiImageComponent() = default;
         UiImageComponent(const UiImageComponent&) = default;
     };
@@ -151,6 +157,28 @@ namespace Cosmic
 
         UiTextComponent() = default;
         UiTextComponent(const UiTextComponent&) = default;
+    };
+
+    /**
+     * @brief World-anchored UI (X6 / gap §12.2). Attach to a UI element to pin it
+     * to a WORLD position instead of a parent-relative anchor: before layout,
+     * UiSystem projects (target entity's world position + WorldOffset) through the
+     * active camera into canvas space and treats that point (plus ScreenOffset) as
+     * the element's origin — the RectTransform's offsets then size the box around
+     * it. Nameplates, health bars, interaction prompts. Works for 2D and 3D
+     * cameras. Behind the camera (or off-screen when HideWhenOffscreen) the element
+     * and its subtree are hidden. TargetEntity == 0 uses WorldOffset as an absolute
+     * world point. Compat: no component ⇒ the normal parent-relative layout.
+     */
+    struct COSMIC_API UiWorldAnchorComponent
+    {
+        uint64_t  TargetEntity = 0;        // UUID of the tracked world entity (0 = absolute point)
+        glm::vec3 WorldOffset{ 0.0f };     // added to the target's world position
+        glm::vec2 ScreenOffset{ 0.0f };    // canvas-pixel nudge after projection (e.g. lift above the head)
+        bool      HideWhenOffscreen = true;
+
+        UiWorldAnchorComponent() = default;
+        UiWorldAnchorComponent(const UiWorldAnchorComponent&) = default;
     };
 
     /** @brief Live button interaction state (runtime-only). */
@@ -188,3 +216,4 @@ CS_REGISTER_COMPONENT(Cosmic::RectTransformComponent)
 CS_REGISTER_COMPONENT(Cosmic::UiImageComponent)
 CS_REGISTER_COMPONENT(Cosmic::UiTextComponent)
 CS_REGISTER_COMPONENT(Cosmic::UiButtonComponent)
+CS_REGISTER_COMPONENT(Cosmic::UiWorldAnchorComponent)

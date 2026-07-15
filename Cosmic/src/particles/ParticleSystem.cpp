@@ -51,6 +51,69 @@ namespace Cosmic
 			const float r   = std::sqrt(std::max(1.0f - z * z, 0.0f));
 			return { r * std::cos(phi), z, r * std::sin(phi) };
 		}
+
+		// =====================================================================
+		// Curl-noise turbulence (X3). Value noise on the SAME integer PcgHash the
+		// spawn path already shares with ParticleUpdate.glsl — no permutation
+		// table to upload, so the CPU field and the GPU field agree. The four
+		// magic constants + the epsilon below are DUPLICATED VERBATIM in
+		// ParticleUpdate.glsl: change both together or the sim and the X4 preview
+		// (which calls ParticleEmitter::CurlNoise) will disagree with the GPU.
+		// =====================================================================
+		constexpr float kCurlEpsilon = 0.1f;   // finite-difference step (noise space)
+
+		float ValueLattice(int xi, int yi, int zi, uint32_t seed)
+		{
+			uint32_t h = static_cast<uint32_t>(xi) * 0x8DA6B343u
+			           ^ static_cast<uint32_t>(yi) * 0xD8163841u
+			           ^ static_cast<uint32_t>(zi) * 0xCB1AB31Fu
+			           ^ seed * 0x165667B1u;
+			return static_cast<float>(PcgHash(h)) * (1.0f / 4294967296.0f);   // [0,1)
+		}
+
+		// Trilinear value noise with smoothstep weights. Written with explicit
+		// a + (b-a)*t lerps to mirror the GLSL exactly (no mix() form ambiguity).
+		float ValueNoise3(const glm::vec3& p, uint32_t seed)
+		{
+			const float fx = std::floor(p.x), fy = std::floor(p.y), fz = std::floor(p.z);
+			const int   xi = static_cast<int>(fx), yi = static_cast<int>(fy), zi = static_cast<int>(fz);
+			const float tx = p.x - fx, ty = p.y - fy, tz = p.z - fz;
+			const float wx = tx * tx * (3.0f - 2.0f * tx);
+			const float wy = ty * ty * (3.0f - 2.0f * ty);
+			const float wz = tz * tz * (3.0f - 2.0f * tz);
+
+			const float c000 = ValueLattice(xi,     yi,     zi,     seed);
+			const float c100 = ValueLattice(xi + 1, yi,     zi,     seed);
+			const float c010 = ValueLattice(xi,     yi + 1, zi,     seed);
+			const float c110 = ValueLattice(xi + 1, yi + 1, zi,     seed);
+			const float c001 = ValueLattice(xi,     yi,     zi + 1, seed);
+			const float c101 = ValueLattice(xi + 1, yi,     zi + 1, seed);
+			const float c011 = ValueLattice(xi,     yi + 1, zi + 1, seed);
+			const float c111 = ValueLattice(xi + 1, yi + 1, zi + 1, seed);
+
+			const float x00 = c000 + (c100 - c000) * wx;
+			const float x10 = c010 + (c110 - c010) * wx;
+			const float x01 = c001 + (c101 - c001) * wx;
+			const float x11 = c011 + (c111 - c011) * wx;
+			const float y0  = x00 + (x10 - x00) * wy;
+			const float y1  = x01 + (x11 - x01) * wy;
+			return y0 + (y1 - y0) * wz;
+		}
+
+		// The vector potential: three decorrelated fBm value-noise fields.
+		glm::vec3 CurlPotential(const glm::vec3& q, int octaves)
+		{
+			glm::vec3 sum(0.0f);
+			float amp = 1.0f, freq = 1.0f;
+			for (int o = 0; o < octaves; ++o)
+			{
+				const glm::vec3 qo = q * freq;
+				sum += amp * glm::vec3(ValueNoise3(qo, 0u), ValueNoise3(qo, 1u), ValueNoise3(qo, 2u));
+				amp  *= 0.5f;
+				freq *= 2.0f;
+			}
+			return sum;
+		}
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////
@@ -132,12 +195,62 @@ namespace Cosmic
 				// --- Integrate a live particle ---
 				glm::vec3 vel(p.VelLife);
 				vel += (spec.Gravity + spec.Wind) * dt;
+				// Curl-noise turbulence (X3) — identical term in ParticleUpdate.glsl.
+				// Skipped when disabled, so the shipped integration is byte-identical.
+				if (spec.NoiseEnabled)
+					vel += CurlNoise(glm::vec3(p.PosAge), spec.NoiseFrequency, spec.NoiseOctaves)
+					     * spec.NoiseStrength * dt;
 				vel *= std::max(1.0f - spec.Drag * dt, 0.0f);
 
-				p.PosAge   = glm::vec4(glm::vec3(p.PosAge) + vel * dt, p.PosAge.w + dt);
+				glm::vec3 newPos = glm::vec3(p.PosAge) + vel * dt;
+				const float newAge = p.PosAge.w + dt;
+
+				// X4 — optional local-space bounds (kill or wrap). All-zero extents
+				// skip the whole block, so the shipped path stays byte-identical.
+				const glm::vec3& ext = spec.BoundsExtents;
+				if (ext.x > 0.0f || ext.y > 0.0f || ext.z > 0.0f)
+				{
+					const glm::vec3 org = spec.Space == ParticleSpace::World ? origin : glm::vec3(0.0f);
+					glm::vec3 rel = newPos - org;
+					if (spec.BoundsWrap)
+					{
+						if (ext.x > 0.0f) rel.x -= 2.0f * ext.x * std::floor((rel.x + ext.x) / (2.0f * ext.x));
+						if (ext.y > 0.0f) rel.y -= 2.0f * ext.y * std::floor((rel.y + ext.y) / (2.0f * ext.y));
+						if (ext.z > 0.0f) rel.z -= 2.0f * ext.z * std::floor((rel.z + ext.z) / (2.0f * ext.z));
+						newPos = org + rel;
+					}
+					else if ((ext.x > 0.0f && std::fabs(rel.x) > ext.x) ||
+					         (ext.y > 0.0f && std::fabs(rel.y) > ext.y) ||
+					         (ext.z > 0.0f && std::fabs(rel.z) > ext.z))
+					{
+						p.PosAge  = glm::vec4(newPos, p.VelLife.w);   // age >= life ⇒ dead
+						p.VelLife = glm::vec4(vel, p.VelLife.w);
+						continue;
+					}
+				}
+
+				p.PosAge   = glm::vec4(newPos, newAge);
 				p.VelLife  = glm::vec4(vel, p.VelLife.w);
 			}
 		}
+	}
+
+	glm::vec3 ParticleEmitter::CurlNoise(const glm::vec3& pos, float frequency, int octaves)
+	{
+		const int oct = octaves < 1 ? 1 : (octaves > 4 ? 4 : octaves);   // mirror the shader clamp
+		const glm::vec3 q = pos * frequency;
+		const float e = kCurlEpsilon;
+
+		const glm::vec3 dx = CurlPotential(q + glm::vec3(e, 0.0f, 0.0f), oct)
+		                   - CurlPotential(q - glm::vec3(e, 0.0f, 0.0f), oct);
+		const glm::vec3 dy = CurlPotential(q + glm::vec3(0.0f, e, 0.0f), oct)
+		                   - CurlPotential(q - glm::vec3(0.0f, e, 0.0f), oct);
+		const glm::vec3 dz = CurlPotential(q + glm::vec3(0.0f, 0.0f, e), oct)
+		                   - CurlPotential(q - glm::vec3(0.0f, 0.0f, e), oct);
+
+		const float inv = 1.0f / (2.0f * e);
+		// curl = (dPz/dy - dPy/dz, dPx/dz - dPz/dx, dPy/dx - dPx/dy)
+		return glm::vec3(dy.z - dz.y, dz.x - dx.z, dx.y - dy.x) * inv;
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////
@@ -265,6 +378,15 @@ namespace Cosmic
 			m_UpdateShader->SetFloat("u_Drag", m_Spec.Drag);
 			m_UpdateShader->SetInt("u_WorldSpace", m_Spec.Space == ParticleSpace::World ? 1 : 0);
 			m_UpdateShader->SetMat4("u_EmitterTransform", m_Transform);
+			// Curl-noise turbulence (X3) — clamp octaves to match CurlNoise's clamp.
+			m_UpdateShader->SetInt("u_NoiseEnabled", m_Spec.NoiseEnabled ? 1 : 0);
+			m_UpdateShader->SetFloat("u_NoiseStrength", m_Spec.NoiseStrength);
+			m_UpdateShader->SetFloat("u_NoiseFrequency", m_Spec.NoiseFrequency);
+			m_UpdateShader->SetInt("u_NoiseOctaves",
+				m_Spec.NoiseOctaves < 1 ? 1 : (m_Spec.NoiseOctaves > 4 ? 4 : m_Spec.NoiseOctaves));
+			// Local-space bounds (X4). All-zero extents = clamp off (byte-identical).
+			m_UpdateShader->SetFloat3("u_BoundsExtents", m_Spec.BoundsExtents);
+			m_UpdateShader->SetInt("u_BoundsWrap", m_Spec.BoundsWrap ? 1 : 0);
 
 			m_Pool->Bind();
 			RenderCommand::DispatchCompute((m_Spec.MaxParticles + kComputeGroupSize - 1) / kComputeGroupSize, 1, 1);

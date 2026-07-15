@@ -354,21 +354,59 @@ the fixed chain — an arbitrary pass-graph executor is explicitly out of scope)
   smoke), GL-conformance clean. Remaining = the user's on-GPU acceptance (author + Play a branching
   guarded dialogue zero-code; two flows side by side; vignette A/B; graph-vs-panel undo parity) + commit.
 
-### Phase 26 — Navigation & AI *(doc 25, N1–N5)* — any time after 15; before Z4
+### Phase 26 — Navigation & AI *(doc 25, N1–N5)* — ✅ code-complete 2026-07-14
 Vendor Recast/Detour (Jolt pattern) → `NavMeshComponent` + collision-sourced bake + `.cnav` →
 editor authoring/debug draw + Regenerate → `NavAgentComponent` + crowd + script `Nav()` →
 patrol/chase sample. Flips FEATURE-MATRIX's former ✖ navmesh verdict.
 - **AI tier:** N1/N2/N4 stronger model (vendoring, bake correctness, tick-order/determinism);
   N3/N5 medium.
 - **Done when:** N5's recorded bake→Play→package demo; headless path/determinism tests green.
+- **Status 2026-07-14 (UNcommitted):** all 5 work orders (N1–N5) landed in one session.
+  **N1** vendored **recastnavigation v1.6.0** (commit `6dc1667`; Recast+Detour+DetourCrowd+
+  DetourTileCache only, demo/tools/DebugUtils/Tests trimmed, Zlib) PRIVATE-static into `Cosmic.dll`
+  behind the `nav/NavWorld` pimpl (single-tile solo bake → Detour navmesh/query/crowd; zero rc*/dt*
+  in any public header — the Jolt firewall). **N2** reflected `NavMeshComponent` recipe +
+  `scene/SceneNav` collision-sourced bake (colliders via the factored `ScenePhysics::BuildColliderDesc`
+  enumeration + terrain heightfield + voxel chunks; FromChildren filter; FNV-1a `BuiltSignature` regen
+  gate; one-shot JobSystem async `BeginBake`/`FinishBake`; `.cnav` sidecar). **N3** editor authoring —
+  Entity ▸ World ▸ Nav Mesh, Inspector Regenerate-now button (J8 precedent) driving `StarforgeApp::
+  TickNavMeshes`, translucent nav-poly overlay + K6 strip toggle, `.cnav` AssetTypes row. **N4**
+  reflected `NavAgentComponent` + `SceneNavRuntime` DetourCrowd stepped **after `OnPhysicsStep`,
+  before `DispatchPhysicsEvents`** (doc 14 J4 contract amended) in Starforge + PlayerLayer; script
+  `Nav()` proxy + `nav.arrived` EventBus signal. **N5** ForgePlayground nav-critter arena (baked at
+  author time) + template `NavCritter` SystemScript. Build green Debug+Release zero warnings,
+  `CosmicTests` **339/339** (323→339: +5 N1, +5 N2, +4 N4, +2 N5), GL-conformance clean, compat gate
+  held (no shipped app attaches nav components; OnNavStart no-ops without a NavAgent/NavMesh; every new
+  reflected field default-omits or is compat-gated). Remaining = the user's on-GPU acceptance (bake →
+  Play → critters navigate ramps + avoid each other → packaged exe identical) + commit.
 
-### Phase 27 — World rendering & 2D game parity *(doc 26, X1–X7)* — after 17's U3/U4 for 2D
+### Phase 27 — World rendering & 2D game parity *(doc 26, X1–X7)* — ✅ code-complete 2026-07-14
 Physical-atmosphere sky → environment polish (sun-angle widget, ambient, gamma, sun size,
 settings nav) → particle curl noise + live preview + bounds → 2D lights → world-anchored UI →
 render-to-texture verb.
 - **AI tier:** X1/X5 stronger model (scattering + IBL parity; 2D composite path); rest medium.
 - **Done when:** each item's toggle demo recorded; default-off items leave every existing
   scene byte-identical (conformance + screenshot compare).
+- **Status 2026-07-14 (UNcommitted):** all 7 work orders (X1–X7) landed in one session. Engine
+  gained only generic default-off/identical-by-default surface: **X1** `SkyMode::Physical` —
+  analytic Rayleigh+Mie single-scattering in `EnvSky.glsl` behind `u_SkyMode` (default 0 =
+  byte-identical), baked into the SAME cube the skybox + IBL read (lighting matches the visible
+  sky by construction) via `EnvironmentMap::SetPhysicalSky`; **X2** `AmbientIntensity`/`Gamma`
+  (Tonemap `u_Gamma`, default 2.2 = the folded constant)/`SunAngularSize` on `EnvironmentComponent`
+  + the exact-round-trip Elevation/Azimuth widget + Project Settings left-nav; **X3** particle
+  curl-noise turbulence — a divergence-free curl of `PcgHash` value noise added IDENTICALLY to the
+  compute shader and the unit-tested `StepCpu` mirror (`ParticleEmitter::CurlNoise`), off =
+  byte-identical; **X4** the WorldSystems 128² live curl-magnitude preview + optional local-space
+  `BoundsExtents` kill/wrap; **X5** `Light2DComponent` + `renderer/Light2DRenderer` (additive radial
+  lights into a half-res HDR buffer, multiplied over the 2D output via new `BlendMode::Multiply`;
+  no lights + white `Ambient2D` early-returns ⇒ byte-identical) + Entity ▸ 2D ▸ Light + radius-ring
+  gizmo; **X6** `UiWorldAnchorComponent` + pure `UiSystem::ProjectToCanvas` (behind-camera/off-screen
+  hide), camera VP threaded as an optional pointer (default nullptr = unchanged); **X7**
+  `SceneRenderer::RenderToTexture` (A4 state-restore) + `UiImageComponent::RuntimeTexture`.
+  Build **Debug+Release zero warnings**, `CosmicTests` **352/352** (339→352), GL-conformance clean,
+  compat gate held. Two build-system fixes (Starforge `/bigobj`; vendored node-editor `/w`→`/W0`).
+  Remaining = the user's on-GPU acceptance (turbidity sweep, campfire darkness scene, nameplate
+  tracking, live minimap) + commit.
 
 ### Phase 28 — Flagship showcase: **Forge Isle** *(doc 27, Z1–Z7)* — LAST; Z1 may start early
 Design/greybox → playable character → living world (day/night, water, particles, voxel dig

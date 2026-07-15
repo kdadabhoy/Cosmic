@@ -75,6 +75,13 @@ target_include_directories(stb_image_write INTERFACE dependencies/stb_image_writ
 # Cosmic below so the JPH:: types never leak past the engine's physics/ TUs.
 add_subdirectory(dependencies/JoltPhysics)
 
+# Recast & Detour navigation (N1, Phase 26) — vendored static lib, Zlib. Built
+# from its own curated CMakeLists (dependencies/recastnavigation/CMakeLists.txt);
+# linked PRIVATE into Cosmic below so the Recast/Detour types never leak past the
+# engine's nav/ TUs (the Jolt firewall — only nav/*.cpp include <Recast.h> etc.,
+# behind the NavWorld pimpl).
+add_subdirectory(dependencies/recastnavigation)
+
 # assimp (A1, Phase 20) — vendored mesh-import backend, BSD-3-Clause, pinned +
 # trimmed (see dependencies/assimp/README-COSMIC.md). Default ON since A1; the
 # OBJ-only fallback stays one configure flag away. Built through assimp's OWN
@@ -156,7 +163,9 @@ target_link_libraries(Cosmic PUBLIC imgui implot glad glm entt glfw OpenGL::GL s
 # include dirs — ImGuizmo stays behind graphics/Gizmo (its symbols aren't
 # dllexported, so leaking the headers would only invite link errors). Jolt is the
 # same story: only physics/*.cpp include <Jolt/...>, behind the PhysicsWorld pimpl.
-target_link_libraries(Cosmic PRIVATE tomlplusplus ImGuizmo nlohmann_json Jolt)
+# RecastNavigation likewise: only nav/*.cpp include <Recast.h>/<Detour...>, behind
+# the NavWorld pimpl.
+target_link_libraries(Cosmic PRIVATE tomlplusplus ImGuizmo nlohmann_json Jolt RecastNavigation)
 
 # assimp backend (A1): PRIVATE link + define — MeshImport.cpp's #ifdef block is
 # the only consumer; MeshImport::AssimpEnabled() reports the gate at runtime.

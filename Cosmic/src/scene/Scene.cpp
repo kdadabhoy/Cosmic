@@ -4,6 +4,7 @@
 #include "scene/Entity.h"
 #include "scene/Components.h"
 #include "renderer/Renderer2D.h"
+#include "renderer/Light2DRenderer.h"   // X5 — 2D lighting composite
 #include "renderer/Renderer3D.h"
 #include "renderer/RenderCommand.h"   // U3 — sprite-pass depth/blend state
 #include "renderer/SceneRenderer.h"   // H2 — BuildRenderDesc fills a SceneRenderDesc
@@ -20,6 +21,7 @@
 #include "voxel/VoxelRender.h"        // VoxelRenderData + atlas/recipe helpers
 #include "physics/ScenePhysics.h"     // J4 — runtime body binding (Scene owns m_Physics)
 #include "physics/PhysicsWorld.h"     // J4 — the play-session physics service
+#include "scene/SceneNav.h"           // N2 — navmesh sidecar load (SyncNavMeshes)
 #include "camera/OrthographicCamera.h"
 #include "camera/Camera.h"
 #include "jobs/JobSystem.h"
@@ -149,6 +151,34 @@ namespace Cosmic
 		{
 			m_Physics->Teardown();
 			m_Physics.reset();
+		}
+	}
+
+	// --- Nav session (N4) — mirrors the physics session ----------------------
+	void Scene::OnNavStart()
+	{
+		// Compat gate: only spin up the runtime when there's something to do (an
+		// agent to steer, or a navmesh worth binding for script queries).
+		auto agents = m_Registry.view<NavAgentComponent>();
+		auto meshes = m_Registry.view<NavMeshComponent>();
+		if (agents.begin() == agents.end() && meshes.begin() == meshes.end())
+			return;
+		m_NavRuntime = std::make_unique<SceneNavRuntime>(*this);
+		m_NavRuntime->BuildAgents();
+	}
+
+	void Scene::OnNavStep(float fixedDeltaTime)
+	{
+		if (m_NavRuntime)
+			m_NavRuntime->Step(fixedDeltaTime);
+	}
+
+	void Scene::OnNavStop()
+	{
+		if (m_NavRuntime)
+		{
+			m_NavRuntime->Teardown();
+			m_NavRuntime.reset();
 		}
 	}
 
@@ -385,6 +415,18 @@ namespace Cosmic
 					rd.ChunkMeshes[dirty[i]] = Mesh::Create(builtData[i]);
 				rd.CollisionDirty.insert(dirty[i]);   // physics rebuilds these (V5)
 			}
+		}
+	}
+
+	void Scene::SyncNavMeshes()
+	{
+		auto view = m_Registry.view<NavMeshComponent>();
+		for (auto e : view)
+		{
+			auto& nm = view.get<NavMeshComponent>(e);
+			if (nm.Nav || nm.SidecarPath.empty())
+				continue;   // already loaded, or nothing on disk to load (bake produces it)
+			SceneNav::LoadSidecar(nm, nm.SidecarPath);   // best-effort; a stale/missing sidecar just stays unbaked
 		}
 	}
 
@@ -1087,6 +1129,36 @@ namespace Cosmic
 		RenderCommand::SetDepthWrite(true);
 	}
 
+	void Scene::OnRender2DLights(const glm::mat4& viewProjection,
+	                             uint32_t viewportWidth, uint32_t viewportHeight)
+	{
+		// Ambient from the environment (default white = no darkening).
+		glm::vec3 ambient(1.0f);
+		if (EnvironmentComponent* env = FindEnvironment())
+			ambient = env->Ambient2D;
+
+		// Collect the active 2D lights (raw TransformComponent XY, like the sprite pass).
+		std::vector<Light2DRenderer::Light> lights;
+		auto view = m_Registry.view<TransformComponent, Light2DComponent>();
+		for (auto e : view)
+		{
+			const auto& lc = view.get<Light2DComponent>(e);
+			if (!lc.Enabled)                // T12-style gate
+				continue;
+			if (!IsActiveInHierarchy(e))    // T13
+				continue;
+			const auto& t = view.get<TransformComponent>(e);
+			lights.push_back({ { t.Position.x, t.Position.y }, lc.Radius, lc.Color, lc.Intensity, lc.Falloff });
+		}
+
+		// Compat gate: no lights + white ambient ⇒ the multiply is identity, so
+		// skip the pass entirely and make NO GL calls (2D output byte-identical).
+		if (lights.empty() && ambient == glm::vec3(1.0f))
+			return;
+
+		Light2DRenderer::Composite(lights, ambient, viewProjection, viewportWidth, viewportHeight);
+	}
+
 	void Scene::OnRender3D(const Camera& camera)
 	{
 		// The scene owns the full 3D pass. Callers must NOT wrap this in their own
@@ -1105,6 +1177,10 @@ namespace Cosmic
 		// Voxel volumes (Phase 18): stream + re-mesh dirty chunks. No-op without a
 		// VoxelVolumeComponent (compat gate).
 		SyncVoxelVolumes(camera.GetPosition());
+
+		// Navmeshes (Phase 26): lazily load `.cnav` sidecars. No-op without a
+		// NavMeshComponent (compat gate).
+		SyncNavMeshes();
 
 		// --- Gather scene lights (S4.5) and upload before drawing. ---
 		Renderer3D::SceneLightsDesc lights;
@@ -1418,6 +1494,7 @@ namespace Cosmic
 		SyncPrimitiveMeshes();
 		SyncWorldSystems();
 		SyncVoxelVolumes(camera.GetPosition());
+		SyncNavMeshes();
 
 		m_WorldTime += deltaTime;
 

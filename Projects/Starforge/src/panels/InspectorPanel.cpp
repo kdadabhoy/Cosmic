@@ -6,6 +6,7 @@
 #include "TelemetryRecording.h"
 #include "ui/IconsLucide.h"
 #include "scene/SceneSerializer.h"   // T12 — reflected-struct copy/paste clipboard
+#include "nav/NavWorld.h"            // N3 — NavMeshComponent::Nav->IsBuilt() for the Regenerate row
 
 #include <imgui.h>
 
@@ -490,6 +491,25 @@ namespace Starforge
                                                   FieldValue{ c->Offset }, FieldValue{ center });
                     }
                 }
+            }
+
+            // "Regenerate now" (N3): rebuild this navmesh from the current recipe +
+            // scene geometry. The bake runs async on the shell (the WorldSystems
+            // precedent) — we just post the request by entity UUID; recipe field
+            // edits above already undo via the generic CommitFieldEdit loop.
+            if (desc.Name == "NavMesh" && ctx.Selection.size() == 1 && primary)
+            {
+                auto* nm = static_cast<NavMeshComponent*>(comp);
+                ImGui::BeginDisabled(nm->Baking);
+                if (ImGui::SmallButton(nm->Baking ? "Baking..." : "Regenerate now") &&
+                    primary.HasComponent<IDComponent>())
+                    ctx.PendingNavBake = primary.GetComponent<IDComponent>().ID.Value();
+                ImGui::EndDisabled();
+                ImGui::SameLine();
+                if (nm->Nav && nm->Nav->IsBuilt())
+                    ImGui::TextDisabled("Baked");
+                else
+                    ImGui::TextColored(ImVec4(0.95f, 0.80f, 0.30f, 1.0f), "Not baked");
             }
         }
         ImGui::PopID();

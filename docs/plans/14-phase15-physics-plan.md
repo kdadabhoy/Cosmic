@@ -223,6 +223,13 @@ bodies parented under moving parents (unsupported v1).
 otherwise). Editor pause/single-step (E13) must step physics exactly once per Step press —
 route through the same `TickPlay` accumulator the scripts use.
 
+> **Tick-order amendment 2026-07-14 (Phase 26 / N4):** the nav crowd steps inside this
+> same fixed step. `Scene::OnNavStep` runs **after** `OnPhysicsStep` and **before**
+> `DispatchPhysicsEvents`, so the full contract is now:
+> **scripts `OnFixedUpdate` → `OnPhysicsStep` → `OnNavStep` → `DispatchPhysicsEvents`.**
+> Agent transforms write back like physics bodies; `nav.arrived` emits on the scene
+> EventBus during the nav step. Wired identically in Starforge `TickPlay` and `PlayerLayer`.
+
 **Acceptance:** a scene with a ground box + 5 dynamic boxes: Play → they fall/stack/sleep;
 Pause + Step advances one dt; Stop restores the edit scene untouched (byte-identical
 serializer check — the E13 harness). Headless: two 300-step runs of the same scene produce

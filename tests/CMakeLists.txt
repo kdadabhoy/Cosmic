@@ -25,6 +25,7 @@ add_executable(CosmicTests
     test_flycamera.cpp
     test_frustum.cpp
     test_presets.cpp
+    test_particle_noise.cpp
     test_render_queue.cpp
     test_reflect.cpp
     test_primitives.cpp
@@ -48,6 +49,9 @@ add_executable(CosmicTests
     test_physics_character.cpp
     test_physics_terrain.cpp
     test_physics_determinism.cpp
+    test_nav_world.cpp
+    test_nav_bake.cpp
+    test_nav_agents.cpp
     test_ui_rects.cpp
     test_flowmachine.cpp
     test_story.cpp

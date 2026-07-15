@@ -76,6 +76,13 @@ namespace Cosmic
         /** @brief The rect's pivot point in canvas space (rotation reference). */
         static glm::vec2 PivotPoint(const UiRect& rect, const glm::vec2& pivot);
 
+        /** @brief Project a WORLD point through `viewProj` into canvas space
+         *  (top-left origin, +y DOWN, within `canvasRect`). Returns false when the
+         *  point is BEHIND the camera (clip.w <= 0). The X6 world-anchor projector —
+         *  pure + headless-tested, works for 2D (ortho) and 3D (perspective) VPs. */
+        static bool ProjectToCanvas(const glm::vec3& worldPos, const glm::mat4& viewProj,
+                                    const UiRect& canvasRect, glm::vec2& outPoint);
+
         /** @brief Canvas pixel-scale factor for a viewport (1.0 for ConstantPixel). */
         static float CanvasScale(const CanvasComponent& canvas, const UiRect& viewport);
 
@@ -91,24 +98,27 @@ namespace Cosmic
          *  ordered list (ascending CanvasOrder, ZOrder, Seq). Pure over the scene
          *  data (no GL). Empty when the scene has no CanvasComponent. */
         static void CollectElements(Scene& scene, const UiRect& viewport,
-                                    std::vector<UiElement>& out);
+                                    std::vector<UiElement>& out,
+                                    const glm::mat4* cameraViewProj = nullptr);
 
         /** @brief Advance button states from the pointer and emit signals on the
          *  scene EventBus (U2). Returns true when the pointer is over an
          *  interactable button (the caller then skips 3D scene picking). */
-        static bool Update(Scene& scene, const UiRect& viewport, const UiPointer& pointer);
+        static bool Update(Scene& scene, const UiRect& viewport, const UiPointer& pointer,
+                           const glm::mat4* cameraViewProj = nullptr);
 
         /** @brief Topmost drawable UI element under `point` (any element that
          *  CollectElements returns, not just buttons — an editor uses this to
          *  select UI entities the 3D ID-pass picker can't see). Returns false
          *  when nothing is hit; outEntity is the entt::entity value. Pure. */
         static bool HitTest(Scene& scene, const UiRect& viewport, const glm::vec2& point,
-                            uint32_t& outEntity);
+                            uint32_t& outEntity, const glm::mat4* cameraViewProj = nullptr);
 
         /** @brief Draw the scene's canvases through Renderer2D in screen space.
          *  PRE: the destination FBO is bound and its GL viewport is the full
          *  target; canvas space is viewport-local with Min at (0,0). Main-thread/GL. */
-        static void Render(Scene& scene, const UiRect& viewport);
+        static void Render(Scene& scene, const UiRect& viewport,
+                           const glm::mat4* cameraViewProj = nullptr);
 
         /** @brief Letterboxed variant (U7): lay the canvases out in `canvasRect`
          *  — a sub-rect of the bound target (an aspect-locked game view) — while
@@ -116,6 +126,7 @@ namespace Cosmic
          *  absolute positions inside the band and authored anchors stay truthful.
          *  canvasRect == the full target behaves exactly like the 2-arg Render. */
         static void Render(Scene& scene, const UiRect& canvasRect,
-                           uint32_t targetW, uint32_t targetH);
+                           uint32_t targetW, uint32_t targetH,
+                           const glm::mat4* cameraViewProj = nullptr);
     };
 }

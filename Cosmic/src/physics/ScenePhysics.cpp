@@ -61,12 +61,20 @@ namespace Cosmic
 
     ScenePhysics::~ScenePhysics() { Teardown(); }
 
-    // Collect the collider shapes on `e` into `out` (world scale baked in).
+    // Collect the collider shapes on `e` into `out` (world scale baked in). Thin
+    // member wrapper over the static enumeration (the play-session build path).
     bool ScenePhysics::BuildBodyDesc(entt::entity e, BodyDesc& out) const
     {
-        auto& reg = m_Scene.GetRegistry();
+        return BuildColliderDesc(m_Scene, e, out);
+    }
 
-        glm::mat4 world = m_Scene.GetWorldTransform(Entity(e, &m_Scene));
+    // The scene's collision-view enumeration (edit-mode safe, static). Shared by the
+    // play-session body build above and the N2 navmesh bake (SceneNav).
+    bool ScenePhysics::BuildColliderDesc(Scene& scene, entt::entity e, BodyDesc& out)
+    {
+        auto& reg = scene.GetRegistry();
+
+        glm::mat4 world = scene.GetWorldTransform(Entity(e, &scene));
         glm::vec3 t, s; glm::quat r;
         DecomposeTRS(world, t, r, s);
         out.Position = t;

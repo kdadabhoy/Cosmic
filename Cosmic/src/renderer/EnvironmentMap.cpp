@@ -161,6 +161,20 @@ namespace Cosmic
 		}
 	}
 
+	void EnvironmentMap::SetPhysicalSky(const PhysicalSkyDesc& desc)
+	{
+		if (desc.Enabled        != m_Physical.Enabled       ||
+		    desc.Turbidity      != m_Physical.Turbidity     ||
+		    desc.RayleighScale  != m_Physical.RayleighScale ||
+		    desc.MieScale       != m_Physical.MieScale       ||
+		    desc.MieG           != m_Physical.MieG           ||
+		    desc.SunAngularSize != m_Physical.SunAngularSize)
+		{
+			m_Physical = desc;
+			m_Dirty    = true;
+		}
+	}
+
 	void EnvironmentMap::SetHdri(const std::string& resolvedPath)
 	{
 		if (resolvedPath.empty())
@@ -250,6 +264,16 @@ namespace Cosmic
 			m_EnvSkyShader->SetFloat("u_NightSky", m_NightSky ? 1.0f : 0.0f);
 			m_EnvSkyShader->SetFloat3("u_MoonDirection", m_MoonDir);
 			m_EnvSkyShader->SetFloat("u_MoonIntensity", m_MoonIntensity);
+			// Physical atmosphere (X1): u_SkyMode 0 = the shipped gradient (byte-identical),
+			// 1 = analytic Rayleigh+Mie scattering. Params ignored when disabled.
+			m_EnvSkyShader->SetFloat("u_SkyMode",       m_Physical.Enabled ? 1.0f : 0.0f);
+			m_EnvSkyShader->SetFloat("u_Turbidity",     m_Physical.Turbidity);
+			m_EnvSkyShader->SetFloat("u_RayleighScale", m_Physical.RayleighScale);
+			m_EnvSkyShader->SetFloat("u_MieScale",      m_Physical.MieScale);
+			m_EnvSkyShader->SetFloat("u_MieG",          m_Physical.MieG);
+			// Sun-disc RADIUS in radians from the authored DIAMETER in degrees (X2).
+			m_EnvSkyShader->SetFloat("u_SunAngularRadius",
+			                         glm::radians(m_Physical.SunAngularSize) * 0.5f);
 			RenderCubeFaces(m_EnvSkyShader, m_EnvCube, 0);
 		}
 		m_EnvCube->FinishRender();

@@ -349,6 +349,27 @@ namespace Cosmic
         }
     };
 
+    /**
+     * @brief 2D point light (X5 / gap §12.1) — an additive radial light for the 2D
+     * sprite path. Scene::OnRender2DLights accumulates every active Light2DComponent
+     * into a half-res HDR buffer (cleared to Ambient2D) and MULTIPLIES it over the
+     * 2D output, so the scene darkens between lights. The light sits at its entity's
+     * TransformComponent XY. With NO lights and a WHITE Ambient2D the multiply is
+     * identity ⇒ the 2D output is byte-identical (compat). Normal-mapped 2D lights
+     * are explicitly out of scope v1.
+     */
+    struct COSMIC_API Light2DComponent
+    {
+        glm::vec3 Color{ 1.0f, 0.85f, 0.6f };   // warm default (campfire)
+        float     Radius    = 4.0f;             // world-unit reach
+        float     Intensity = 1.5f;             // HDR brightness at the center
+        float     Falloff   = 2.0f;             // radial falloff exponent (higher = tighter)
+        bool      Enabled   = true;             // T12-style gate: false = skip
+
+        Light2DComponent() = default;
+        Light2DComponent(const Light2DComponent&) = default;
+    };
+
 
     /**
      * @brief 3D mesh renderer (S4.3). Attach with a TransformComponent to have
@@ -674,7 +695,7 @@ namespace Cosmic
      */
     struct COSMIC_API EnvironmentComponent
     {
-        enum class SkyMode { Procedural = 0, Detailed = 1, HDRI = 2 };
+        enum class SkyMode { Procedural = 0, Detailed = 1, HDRI = 2, Physical = 3 };
 
         // Sun — drives the first DirectionalLight / the owned EnvironmentMap.
         glm::vec3 SunDirection{ -0.4f, -1.0f, -0.3f };  // direction the light TRAVELS
@@ -684,11 +705,31 @@ namespace Cosmic
         // Sky + IBL.
         SkyMode     Sky = SkyMode::Procedural;
         std::string HdriPath;                 // used when Sky == HDRI
+
+        // Physical atmosphere (X1, gap §7.2) — analytic Rayleigh+Mie single
+        // scattering, active ONLY when Sky == Physical. It bakes into the same
+        // environment cube the skybox + IBL read, so lighting always matches the
+        // visual sky. Values below are ignored by every other mode, so their
+        // presence keeps Procedural/Detailed/HDRI output byte-identical.
+        float     Turbidity     = 2.5f;   // haze: scales Mie density (1 = pristine, 10 = smoggy)
+        float     RayleighScale = 1.0f;   // scales Rayleigh (blue) scattering
+        float     MieScale      = 1.0f;   // scales Mie (white haze / sun halo) scattering
+        float     MieG          = 0.80f;  // Mie phase asymmetry (sun-halo tightness), 0..0.99
         float       TimeOfDay = 12.0f;        // hours 0..24 (sun scrub)
         bool        Skybox = true;            // == SceneRendererSettings::Skybox
         bool        IBL = true;               // == SceneRendererSettings::IBL
         float       IBLIntensity = 1.0f;
         float       Exposure = 1.0f;          // == SceneRenderDesc::Exposure
+
+        // Environment polish (X2, gap §7.3/§7.4) — defaults keep frames identical.
+        float       AmbientIntensity = 1.0f;  // scales the IBL/flat ambient term (1 = today)
+        float       Gamma            = 2.2f;  // tonemap output gamma (2.2 = the shipped curve)
+        float       SunAngularSize   = 0.53f; // sun-disc DIAMETER in degrees (Detailed/Physical)
+
+        // 2D lighting ambient (X5, gap §12.1) — the base level the Light2D buffer is
+        // cleared to and MULTIPLIED over the 2D output. WHITE (default) = no darkening
+        // ⇒ 2D scenes without lights are byte-identical; darken it for night scenes.
+        glm::vec3   Ambient2D{ 1.0f };
 
         // Height fog (== SceneRendererSettings fog defaults).
         bool      Fog = false;
@@ -727,6 +768,7 @@ namespace Cosmic
     class VoxelVolume;         // voxel/VoxelVolume.h (V1) — chunk store
     class BlockPalette;        // voxel/BlockPalette.h (V1) — block type table
     struct VoxelRenderData;    // voxel/VoxelRender.h (V3) — runtime GPU chunk meshes
+    class NavWorld;            // nav/NavWorld.h (N1) — baked navmesh runtime (Recast-free pimpl)
 
     /** Ocean/lake wave-stack preset the WaterComponent recipe seeds from (E18).
      *  The scalar recipe overrides (amplitude/choppiness/optics) apply on top. */
@@ -852,6 +894,16 @@ namespace Cosmic
         bool          FlipbookBlend = false;
         float         SoftFadeDistance   = 0.2f;
         float         StretchByVelocity  = 0.0f;
+
+        // --- Curl-noise turbulence (X3 / gap §11.1). Off = byte-identical. ---
+        bool          NoiseEnabled   = false;
+        float         NoiseStrength  = 3.0f;
+        float         NoiseFrequency = 0.4f;
+        int32_t       NoiseOctaves   = 2;    // clamped 1..4 at build
+
+        // --- Local-space bounds (X4 / gap §11.3). All-zero = off (byte-identical). ---
+        glm::vec3     BoundsExtents{ 0.0f }; // half-extents; 0 axis = unbounded
+        bool          BoundsWrap = false;    // false = kill past bounds, true = wrap
 
         std::size_t BuiltSignature = 0;      // runtime; not reflected
 
@@ -1027,6 +1079,82 @@ namespace Cosmic
         CharacterControllerComponent(const CharacterControllerComponent&) = default;
     };
 
+    // ========================================================================
+    // Navigation (Phase 26 / N2) — a Recast/Detour navmesh authored on an entity.
+    // The scene stores only the reflected BAKE RECIPE (below); the built navmesh is
+    // big binary that rides a `.cnav` sidecar (the `.cvox` rule), rebuilt/loaded by
+    // SceneNav from the recipe. The runtime NavWorld is not reflected. Bake geometry
+    // is the collision view of the scene (colliders / terrain heightfield / voxel
+    // chunks), filtered to the entity's children when SourceMode == FromChildren.
+    //
+    // Compat gate: shipped apps attach no NavMeshComponent, so Scene::SyncNavMeshes
+    // is a strict no-op for them.
+    // ========================================================================
+
+    /** How a navmesh bake gathers its source geometry (mirrors 2215's "Mode").
+     *  FromChildren = only this entity's descendants (the level parented under the
+     *  navmesh object); WholeScene = every collidable entity in the scene. */
+    enum class NavSourceMode : int32_t { FromChildren = 0, WholeScene = 1 };
+
+    struct COSMIC_API NavMeshComponent
+    {
+        // --- runtime (NOT reflected) -----------------------------------------
+        Ref<NavWorld> Nav;                 // baked navmesh (loaded from .cnav or baked); null = none
+        std::size_t   BuiltSignature = 0;  // recipe+geometry signature the current Nav was built from (0 = none)
+        bool          Baking = false;      // an async bake is in flight (editor owns the job)
+
+        // --- reflected bake recipe (mirrors NavBuildDesc) --------------------
+        std::string SidecarPath;           // AssetPath(.cnav); empty -> derived beside the scene
+
+        float CellSize   = 0.30f;          // xz rasterization voxel size (m)
+        float CellHeight = 0.20f;          // y rasterization voxel size (m)
+        float AgentRadius   = 0.6f;        // walkable area eroded by this (m)
+        float AgentHeight   = 2.0f;        // vertical clearance (m)
+        float AgentMaxClimb = 0.9f;        // max auto-step height (m)
+        float AgentMaxSlope = 45.0f;       // max walkable slope (deg)
+        float RegionMinSize   = 8.0f;      // min region (voxels; area = size^2)
+        float RegionMergeSize = 20.0f;     // merge regions smaller than this (voxels)
+        float EdgeMaxLen   = 12.0f;        // max contour edge (m)
+        float EdgeMaxError = 1.3f;         // contour simplification (voxels)
+        float DetailSampleDist     = 6.0f; // detail sample spacing (x CellSize)
+        float DetailSampleMaxError = 1.0f; // detail max error (x CellHeight)
+        int32_t VertsPerPoly = 6;          // max verts per navmesh poly (3..6)
+        float   TileSize     = 0.0f;       // tiled build hint (voxels; 0 = solo, v1)
+
+        // --- authoring -------------------------------------------------------
+        NavSourceMode SourceMode = NavSourceMode::FromChildren;
+        bool AutoGenerate      = false;    // rebake when the recipe/geometry signature changes
+        bool AlwaysRenderHelper = false;   // draw the nav overlay even when not selected
+
+        NavMeshComponent() = default;
+        NavMeshComponent(const NavMeshComponent&) = default;
+    };
+
+    /**
+     * @brief A navigation agent (Phase 26 / N4). Steered by DetourCrowd over the
+     * scene's baked navmesh while a play session runs — the crowd exists only during
+     * Play (the physics-body lifetime rule), and the agent's transform is written
+     * back each fixed step like a physics body. Scripts drive it through Nav():
+     * SetTarget / Stop, and receive `nav.arrived` on the scene EventBus when it
+     * reaches within StoppingDistance. The runtime agent id lives in the Scene's nav
+     * runtime, not here (this component stays pure authored data).
+     *
+     * Compat gate: shipped apps attach no NavAgentComponent, so the nav runtime is
+     * a no-op for them.
+     */
+    struct COSMIC_API NavAgentComponent
+    {
+        float Radius   = 0.4f;    // agent footprint radius (m)
+        float Height   = 1.8f;    // agent height (m)
+        float MaxSpeed = 3.5f;    // m/s
+        float MaxAccel = 8.0f;    // m/s^2
+        float StoppingDistance = 0.4f;   // arrival tolerance (m) -> emits nav.arrived
+        bool  AutoRepath = true;  // re-plan when the path is invalidated (crowd default)
+
+        NavAgentComponent() = default;
+        NavAgentComponent(const NavAgentComponent&) = default;
+    };
+
     /**
      * @brief Native C++ script link (E11). The scene stores the script's class
      * NAME (resolved to a factory through ModuleRegistry at Play) plus the
@@ -1118,6 +1246,7 @@ CS_REGISTER_COMPONENT(Cosmic::TransformComponent)
 CS_REGISTER_COMPONENT(Cosmic::SpriteRendererComponent)
 CS_REGISTER_COMPONENT(Cosmic::SpriteAnimationComponent)
 CS_REGISTER_COMPONENT(Cosmic::TilemapComponent)
+CS_REGISTER_COMPONENT(Cosmic::Light2DComponent)
 CS_REGISTER_COMPONENT(Cosmic::MeshRendererComponent)
 CS_REGISTER_COMPONENT(Cosmic::AnimatorComponent)
 CS_REGISTER_COMPONENT(Cosmic::SocketComponent)
@@ -1138,6 +1267,8 @@ CS_REGISTER_COMPONENT(Cosmic::CapsuleColliderComponent)
 CS_REGISTER_COMPONENT(Cosmic::MeshColliderComponent)
 CS_REGISTER_COMPONENT(Cosmic::TerrainColliderComponent)
 CS_REGISTER_COMPONENT(Cosmic::CharacterControllerComponent)
+CS_REGISTER_COMPONENT(Cosmic::NavMeshComponent)
+CS_REGISTER_COMPONENT(Cosmic::NavAgentComponent)
 CS_REGISTER_COMPONENT(Cosmic::NativeScriptComponent)
 CS_REGISTER_COMPONENT(Cosmic::SystemScriptComponent)
 CS_REGISTER_COMPONENT(Cosmic::PrefabComponent)

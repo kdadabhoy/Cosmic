@@ -113,6 +113,7 @@ uniform samplerCube u_PrefilterMap;   // unused here; declared so the reserved
 uniform sampler2D   u_BrdfLut;        // units stay type-consistent
 uniform float       u_HasIBL;
 uniform float       u_PrefilterMaxLod;
+uniform float       u_AmbientIntensity;  // X2 — scales the ambient term (default 1.0 = identity)
 
 uniform sampler2D u_ShadowMap;
 uniform mat4      u_LightViewProj;
@@ -222,6 +223,7 @@ void main()
     vec3 ambient = (u_HasIBL > 0.5)
         ? texture(u_IrradianceMap, N).rgb
         : vec3(u_SunDirection_Ambient.w);
+    ambient *= u_AmbientIntensity;                     // X2 (default 1.0 = byte-identical)
 
     vec3 outColor = albedo * (direct + ambient);
 

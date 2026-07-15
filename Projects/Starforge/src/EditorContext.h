@@ -91,6 +91,7 @@ namespace Starforge
         std::string PendingRevealAsset;       // (T11) a "project://..." asset the Content Browser should reveal + select
         std::string PendingOpenAnimEditor;    // (M1) a rigged-model "project://..." to open in the Animation Editor document
         std::string PendingOpenDocument;      // (Q1/Q4) a graph asset "project://..." (.cflow/.cstory) to open in the AssetEditorHost
+        uint64_t    PendingNavBake = 0;        // (N3) a NavMeshComponent entity's UUID the shell should (async) rebake this frame
 
         // --- Shared preview service (Phase 20 / A4, gap analysis §14.3) ----
         // The batch-thumbnail rig: Content Browser tiles (and Phase 23 asset

@@ -110,6 +110,10 @@ namespace Cosmic
 		case BlendMode::Off:
 			glDisable(GL_BLEND);
 			break;
+		case BlendMode::Multiply:                    // X5 — 2D light buffer: dst * src
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_DST_COLOR, GL_ZERO);
+			break;
 		}
 	}
 

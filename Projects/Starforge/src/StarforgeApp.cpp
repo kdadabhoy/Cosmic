@@ -13,6 +13,8 @@
 #include "scene/Entity.h"
 #include "scene/Components.h"
 #include "scene/SceneSerializer.h"
+#include "scene/SceneNav.h"          // N3 — async navmesh bake orchestration
+#include "nav/NavWorld.h"            // N3 — NavMeshComponent::Nav->IsBuilt()
 #include "scene/ui/UiComponents.h"   // U1 — UI entity components
 #include "scene/ui/UiSystem.h"       // U1 — canvas overlay render in the viewport
 #include "graphics/Mesh.h"
@@ -657,6 +659,7 @@ namespace Starforge
         runtime->SyncWorldSystems();
         m_Physics.Init();
         runtime->OnPhysicsStart(m_Physics);
+        runtime->OnNavStart();   // N4 — bind the DetourCrowd to the baked navmesh
 
         m_Telemetry.OnPlayStart(m_Ctx, m_FixedDt);
 
@@ -688,7 +691,10 @@ namespace Starforge
         m_Telemetry.OnPlayStop(m_Ctx);        // flush + keep the take (E20)
         m_Scripts.SetTelemetrySink(nullptr);
         if (m_Ctx.Scene)
+        {
+            m_Ctx.Scene->OnNavStop();                // N4 — release the crowd before the runtime scene
             m_Ctx.Scene->OnPhysicsStop(m_Physics);   // J4 — destroy bodies before the runtime scene
+        }
         m_Physics.Shutdown();
         m_Scripts.Destroy();
         m_Ctx.Scene = m_EditSceneBackup;   // untouched edit scene
@@ -745,13 +751,17 @@ namespace Starforge
                     fs && fs != m_Ctx.Scene)
                 {
                     if (m_Ctx.Scene)
+                    {
+                        m_Ctx.Scene->OnNavStop();
                         m_Ctx.Scene->OnPhysicsStop(m_Physics);
+                    }
                     m_Scripts.Destroy();
                     m_Ctx.Scene = fs;
                     m_Ctx.ClearSelection();
                     m_Scripts.Instantiate(*fs);
                     fs->SyncWorldSystems();
                     fs->OnPhysicsStart(m_Physics);
+                    fs->OnNavStart();
                 }
             }
 
@@ -762,12 +772,13 @@ namespace Starforge
             int guard = 0;
             while (m_FixedAccum >= m_FixedDt && guard++ < 8)   // clamp catch-up
             {
-                // Tick order contract (J4): scripts OnFixedUpdate -> physics step ->
-                // collision-event dispatch -> telemetry sample.
+                // Tick order contract (J4 + N4): scripts OnFixedUpdate -> physics step
+                // -> nav step -> collision-event dispatch -> telemetry sample.
                 m_Scripts.FixedTick(m_FixedDt);
                 if (m_Ctx.Scene)
                 {
                     m_Ctx.Scene->OnPhysicsStep(m_FixedDt);
+                    m_Ctx.Scene->OnNavStep(m_FixedDt);
                     m_Ctx.Scene->DispatchPhysicsEvents(m_Scripts);
                 }
                 m_Telemetry.OnFixedStep(m_Ctx);   // one telemetry sample per fixed step (E20)
@@ -780,10 +791,94 @@ namespace Starforge
             if (m_Ctx.Scene)
             {
                 m_Ctx.Scene->OnPhysicsStep(m_FixedDt);
+                m_Ctx.Scene->OnNavStep(m_FixedDt);
                 m_Ctx.Scene->DispatchPhysicsEvents(m_Scripts);
             }
             m_Telemetry.OnFixedStep(m_Ctx);
             m_StepRequested = false;
+        }
+    }
+
+    // =========================================================================
+    // Navmesh (N3) — async bake orchestration (edit mode). The WorldSystems
+    // terrain-build pattern: an Inspector "Regenerate now" (PendingNavBake) or an
+    // AutoGenerate signature drift starts a one-shot JobSystem bake; we poll it here
+    // and install + persist the `.cnav` sidecar when it lands. No frame stall.
+    // =========================================================================
+    void StarforgeApp::TickNavMeshes(float ts)
+    {
+        if (!m_Ctx.Scene) return;
+        Cosmic::Scene& scene = *m_Ctx.Scene;
+        auto& reg = scene.GetRegistry();
+
+        const bool editMode = !IsPlaying();
+
+        // 1) Explicit "Regenerate now" request from the Inspector (by entity UUID).
+        if (m_Ctx.PendingNavBake != 0)
+        {
+            const uint64_t id = m_Ctx.PendingNavBake;
+            m_Ctx.PendingNavBake = 0;
+            if (editMode)
+            {
+                Cosmic::Entity e = scene.FindByUUID(Cosmic::UUID(id));
+                if (e && e.HasComponent<Cosmic::NavMeshComponent>() && !m_NavBakes.count(id))
+                {
+                    m_NavBakes[id] = Cosmic::SceneNav::BeginBake(scene, (entt::entity)e);
+                    m_Ctx.Log("[Nav] Baking navmesh in the background...");
+                }
+            }
+        }
+
+        // 2) AutoGenerate: rebake when the recipe/geometry signature drifts. Throttled
+        //    (the gather is O(scene) — no per-frame cost when nothing changed).
+        m_NavAutoTimer -= ts;
+        if (editMode && m_NavAutoTimer <= 0.0f)
+        {
+            m_NavAutoTimer = 0.5f;
+            for (auto e : reg.view<Cosmic::NavMeshComponent>())
+            {
+                auto& nm = reg.get<Cosmic::NavMeshComponent>(e);
+                if (!nm.AutoGenerate || nm.Baking) continue;
+                const uint64_t id = reg.get<Cosmic::IDComponent>(e).ID.Value();
+                if (m_NavBakes.count(id)) continue;
+                std::vector<float> v; std::vector<int> t;
+                Cosmic::SceneNav::GatherGeometry(scene, e, v, t);
+                if (Cosmic::SceneNav::Signature(nm, v, t) != nm.BuiltSignature)
+                    m_NavBakes[id] = Cosmic::SceneNav::BeginBake(scene, e);
+            }
+        }
+
+        // 3) Poll in-flight bakes; install + save the sidecar when done.
+        for (auto it = m_NavBakes.begin(); it != m_NavBakes.end(); )
+        {
+            const uint64_t id = it->first;
+            Cosmic::Entity e = scene.FindByUUID(Cosmic::UUID(id));
+            if (!e || !e.HasComponent<Cosmic::NavMeshComponent>())
+            {
+                it = m_NavBakes.erase(it);   // entity gone (undo/delete) — drop the job
+                continue;
+            }
+            if (!it->second.IsDone()) { ++it; continue; }
+
+            Cosmic::SceneNav::FinishBake(scene, (entt::entity)e, it->second);
+            auto& nm = e.GetComponent<Cosmic::NavMeshComponent>();
+            if (nm.Nav && nm.Nav->IsBuilt())
+            {
+                // Persist a `.cnav` sidecar beside the scene (once saved), and set the
+                // SidecarPath so it serializes + reloads next session (SyncNavMeshes).
+                if (nm.SidecarPath.empty() && !m_Ctx.SceneVfsPath.empty())
+                    nm.SidecarPath = Cosmic::SceneNav::SidecarPathFor(nm, m_Ctx.SceneVfsPath);
+                if (!nm.SidecarPath.empty())
+                    Cosmic::SceneNav::SaveSidecar(nm, nm.SidecarPath);
+                m_Ctx.MarkDirty();
+                m_Ctx.Log("[Nav] Navmesh baked.");
+            }
+            else
+            {
+                m_Ctx.Log("[Nav] Bake produced no walkable surface (check colliders / recipe).",
+                          LogSeverity::Warn);
+            }
+            it = m_NavBakes.erase(it);
         }
     }
 
@@ -971,6 +1066,7 @@ namespace Starforge
 
         m_WorldSystems.OnUpdate(m_Ctx);   // E18 — drain the async terrain build
         m_Editors.OnUpdate(m_Ctx, ts);    // M1 — advance open document playback (Animation Editor scrub/play)
+        TickNavMeshes(ts);                // N3 — drain async navmesh (re)bakes + AutoGenerate
 
         // K1 — branding hot-swap: a change to the resolved icon.png re-applies the
         // window/taskbar icon + top-bar logo, debounced past the file copy.
@@ -1197,18 +1293,21 @@ namespace Starforge
                 if (m_Mode2D) m_Viewport.DrawOverlayContent2D(m_Ctx, m_Camera2D);
                 else          m_Viewport.DrawOverlayContent(m_Ctx);
                 scenePtr->OnRenderSprites(c.ViewProjection, vw, vh);
+                // X5 — 2D lights multiply over the sprite output (no-op without lights).
+                scenePtr->OnRender2DLights(c.ViewProjection, vw, vh);
             };
 
             // U1 — canvas UI composites after post (LDR bound). U7: the canvases
             // lay out in the letterbox band so authored anchors are truthful
             // (band == full viewport whenever the game camera is not active).
             const glm::vec4 bandUv = m_GameBandUv;
-            desc.DrawOverlay2D = [scenePtr, vw, vh, bandUv]()
+            const glm::mat4 camVP = desc.Projection * desc.View;   // X6 — world-anchor projector
+            desc.DrawOverlay2D = [scenePtr, vw, vh, bandUv, camVP]()
             {
                 const Cosmic::UiRect band{
                     { bandUv.x * (float)vw,                       bandUv.y * (float)vh },
                     { (bandUv.x + bandUv.z) * (float)vw,          (bandUv.y + bandUv.w) * (float)vh } };
-                Cosmic::UiSystem::Render(*scenePtr, band, vw, vh);
+                Cosmic::UiSystem::Render(*scenePtr, band, vw, vh, &camVP);
             };
 
             m_SceneRenderer.Render(desc);   // PRE/POST: vfb stays the bound target
@@ -3063,6 +3162,74 @@ namespace Starforge
           auto& ns = e.AddComponent<NativeScriptComponent>("HoverController");
           ns.Fields["TargetAltitude"] = Reflect::FieldValue{ hy }; }
 
+        // --- Nav critters (Phase 26 / N5) -----------------------------------
+        // A small walkable arena (parented UNDER the NavMesh, SourceMode = From
+        // children so the 256 m terrain isn't rasterized) with a ramp up to a
+        // platform. Three "Critter" NavAgents patrol it and avoid each other, and
+        // chase the "Player" character when it comes near — driven by the NavCritter
+        // SystemScript (H9). Baked here at author time into a `.cnav` sidecar, so the
+        // sample plays + packages without a manual Regenerate (Ctrl+B builds the
+        // scripts first, then Play).
+        {
+            const float cx = fx - 20.0f, cz = fz + 4.0f;
+            const float cy = groundAt(cx, cz) + 0.4f;
+
+            Entity nav = scene->CreateEntity("Nav Mesh");
+            auto& nm = nav.AddComponent<NavMeshComponent>();
+            nm.SourceMode = NavSourceMode::FromChildren;
+            nm.AlwaysRenderHelper = true;
+            nm.CellSize = 0.15f; nm.AgentRadius = 0.4f; nm.AgentHeight = 1.6f; nm.AgentMaxClimb = 0.5f;
+
+            auto plate = [&](const char* name, glm::vec3 p, glm::vec3 he, glm::vec3 euler)
+            {
+                Entity e = scene->CreateEntity(name);
+                auto& tr = e.GetComponent<TransformComponent>();
+                tr.Position = p; tr.Rotation = euler;
+                e.AddComponent<PrimitiveMeshComponent>(PrimitiveMeshComponent::Shape::Box).Size = he * 2.0f;
+                e.AddComponent<MeshRendererComponent>().Color = { 0.30f, 0.33f, 0.38f, 1.0f };
+                e.AddComponent<BoxColliderComponent>().HalfExtents = he;   // static (no RigidBody) — nav + physics ground
+                scene->SetParent(e, nav, false);
+            };
+            plate("Arena Floor",    { cx, cy, cz },                     { 9.0f, 0.25f, 7.0f }, {   0.0f, 0, 0 });
+            plate("Arena Ramp",     { cx, cy + 0.75f, cz + 8.4f },      { 3.0f, 0.20f, 2.4f }, { -18.0f, 0, 0 });
+            plate("Arena Platform", { cx, cy + 1.55f, cz + 11.6f },     { 3.0f, 0.25f, 2.6f }, {   0.0f, 0, 0 });
+
+            auto critter = [&](glm::vec3 p, glm::vec4 color)
+            {
+                Entity e = scene->CreateEntity("Critter");   // name == Tag "Critter" (WithTag match)
+                e.GetComponent<TransformComponent>().Position = p;
+                e.AddComponent<PrimitiveMeshComponent>(PrimitiveMeshComponent::Shape::Box).Size = { 0.6f, 0.9f, 0.6f };
+                e.AddComponent<MeshRendererComponent>().Color = color;
+                auto& ac = e.AddComponent<NavAgentComponent>();
+                ac.Radius = 0.4f; ac.Height = 1.6f; ac.MaxSpeed = 3.0f; ac.StoppingDistance = 0.5f;
+            };
+            critter({ cx - 5.0f, cy + 0.5f, cz - 3.0f }, { 0.85f, 0.35f, 0.30f, 1.0f });
+            critter({ cx + 0.0f, cy + 0.5f, cz + 2.0f }, { 0.35f, 0.75f, 0.45f, 1.0f });
+            critter({ cx + 5.0f, cy + 0.5f, cz - 2.0f }, { 0.45f, 0.55f, 0.90f, 1.0f });
+
+            // The player character the critters chase (WASD / left stick at Play).
+            { Entity e = scene->CreateEntity("Player");
+              e.GetComponent<TransformComponent>().Position = { cx, cy + 1.2f, cz - 6.0f };
+              auto& pm = e.AddComponent<PrimitiveMeshComponent>(PrimitiveMeshComponent::Shape::Cylinder);
+              pm.Radius = 0.35f; pm.Height = 1.6f;
+              e.AddComponent<MeshRendererComponent>().Color = { 0.95f, 0.85f, 0.35f, 1.0f };
+              e.AddComponent<CharacterControllerComponent>();
+              e.AddComponent<NativeScriptComponent>("WalkController"); }
+
+            // The class-of-critters system script holder (H9).
+            { Entity e = scene->CreateEntity("Critter AI");
+              e.AddComponent<SystemScriptComponent>().ClassName = "NavCritter"; }
+
+            // Bake the navmesh now (GL-free — box colliders) and persist the sidecar.
+            if (SceneNav::BakeSync(*scene, (entt::entity)nav))
+            {
+                auto& baked = nav.GetComponent<NavMeshComponent>();
+                baked.SidecarPath = "project://scenes/Main.cnav";
+                SceneNav::SaveSidecar(baked, baked.SidecarPath);
+                m_Ctx.Log("[Playground] Baked the nav-critter arena (3 agents).");
+            }
+        }
+
         // Primary camera framing the forge from over the shoulder — the editor adopts
         // this pose on open (H8), so the first frame is the composed shot.
         { Entity e = scene->CreateEntity("Camera");
@@ -3170,6 +3337,16 @@ namespace Starforge
                 });
                 m_ShowVoxel = true;
             }
+            // Navmesh (N3): an empty marker carrying the bake recipe. Parent the level
+            // geometry under it (SourceMode = From children), then hit "Regenerate now"
+            // in the Inspector. The recipe + button author it (no dedicated panel).
+            if (ImGui::MenuItem("Nav Mesh"))
+            {
+                Commands::Create(m_Ctx, "Nav Mesh", Cosmic::Entity{}, [](Cosmic::Entity e)
+                {
+                    e.AddComponent<Cosmic::NavMeshComponent>();
+                });
+            }
             ImGui::EndMenu();
         }
         // In-game UI (U1). Canvas is a root; Image/Text/Button are parented to the
@@ -3208,6 +3385,7 @@ namespace Starforge
                 });
                 m_ShowTilePalette = true;   // paint tools live in the palette panel
             }
+            make("Light", [](Cosmic::Entity e) { e.AddComponent<Cosmic::Light2DComponent>(); });   // X5
             make("Camera (Ortho)", [](Cosmic::Entity e)
             {
                 auto& c = e.AddComponent<Cosmic::CameraComponent>();
@@ -4188,46 +4366,87 @@ namespace Starforge
             m_OpenProjectSettings = false;
         }
 
-        ImGui::SetNextWindowSize(ImVec2(520, 0), ImGuiCond_Always);
-        if (ImGui::BeginPopupModal("Project Settings", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+        // X2 — the popup is organized into a left-nav (General · Window · Packaging ·
+        // Physics defaults). Consolidation only: every control below already existed;
+        // the Packaging/Physics pages surface where those settings live (no new state).
+        static int section = 0;
+        ImGui::SetNextWindowSize(ImVec2(640, 420), ImGuiCond_Always);
+        if (ImGui::BeginPopupModal("Project Settings", nullptr, ImGuiWindowFlags_NoResize))
         {
             ImGui::Text("Project: %s", m_Ctx.ProjectName.c_str());
             ImGui::Separator();
 
-            ImGui::TextUnformatted("Window title");
-            ImGui::SetNextItemWidth(-1.0f);
-            ImGui::InputText("##pstitle", title, sizeof(title));
+            const char* sections[] = { "General", "Window", "Packaging", "Physics defaults" };
+            ImGui::BeginChild("##ps_nav", ImVec2(150, -ImGui::GetFrameHeightWithSpacing()), true);
+            for (int i = 0; i < IM_ARRAYSIZE(sections); ++i)
+                if (ImGui::Selectable(sections[i], section == i))
+                    section = i;
+            ImGui::EndChild();
 
-            ImGui::TextUnformatted("Window size (0 = engine default)");
-            ImGui::SetNextItemWidth(120.0f); ImGui::InputInt("w##psw", &winW); ImGui::SameLine();
-            ImGui::SetNextItemWidth(120.0f); ImGui::InputInt("h##psh", &winH);
-
-            ImGui::TextUnformatted("Startup scene");
-            ImGui::SetNextItemWidth(-1.0f);
-            ImGui::InputText("##psscene", scene, sizeof(scene));
-
-            ImGui::SetNextItemWidth(120.0f);
-            ImGui::InputInt("Fixed Hz", &fixedHz);
-
-            ImGui::TextUnformatted("App icon (PNG, relative to the project root)");
-            ImGui::SetNextItemWidth(-90.0f);
-            ImGui::InputText("##psicon", m_IconPathBuf, sizeof(m_IconPathBuf));
             ImGui::SameLine();
-            if (ImGui::Button("Browse…", ImVec2(80, 0)))
+            ImGui::BeginChild("##ps_body", ImVec2(0, -ImGui::GetFrameHeightWithSpacing()), false);
+
+            if (section == 0)   // General
             {
-                Cosmic::FileDialogDesc dlg;
-                dlg.Title   = "Choose an icon";
-                dlg.Filters = { { "PNG images", "*.png" } };
-                if (auto picked = Cosmic::FileDialog::Open(dlg))
+                ImGui::SeparatorText("General");
+                ImGui::TextUnformatted("Startup scene");
+                ImGui::SetNextItemWidth(-1.0f);
+                ImGui::InputText("##psscene", scene, sizeof(scene));
+
+                ImGui::Spacing();
+                ImGui::SetNextItemWidth(120.0f);
+                ImGui::InputInt("Fixed Hz", &fixedHz);
+                ImGui::SameLine(); ImGui::TextDisabled("(?)");
+                if (ImGui::IsItemHovered())
+                    ImGui::SetTooltip("Fixed-timestep rate for the play/game loop.");
+            }
+            else if (section == 1)   // Window
+            {
+                ImGui::SeparatorText("Window");
+                ImGui::TextUnformatted("Window title");
+                ImGui::SetNextItemWidth(-1.0f);
+                ImGui::InputText("##pstitle", title, sizeof(title));
+
+                ImGui::TextUnformatted("Window size (0 = engine default)");
+                ImGui::SetNextItemWidth(120.0f); ImGui::InputInt("w##psw", &winW); ImGui::SameLine();
+                ImGui::SetNextItemWidth(120.0f); ImGui::InputInt("h##psh", &winH);
+
+                ImGui::Spacing();
+                ImGui::TextUnformatted("App icon (PNG, relative to the project root)");
+                ImGui::SetNextItemWidth(-90.0f);
+                ImGui::InputText("##psicon", m_IconPathBuf, sizeof(m_IconPathBuf));
+                ImGui::SameLine();
+                if (ImGui::Button("Browse…", ImVec2(80, 0)))
                 {
-                    // Copy into the project root as icon.png so the manifest key stays relative.
-                    std::error_code ec;
-                    const fs::path dst = fs::path(ProjectContentDir()) / "icon.png";
-                    fs::copy_file(*picked, dst, fs::copy_options::overwrite_existing, ec);
-                    std::snprintf(m_IconPathBuf, sizeof(m_IconPathBuf), "icon.png");
+                    Cosmic::FileDialogDesc dlg;
+                    dlg.Title   = "Choose an icon";
+                    dlg.Filters = { { "PNG images", "*.png" } };
+                    if (auto picked = Cosmic::FileDialog::Open(dlg))
+                    {
+                        // Copy into the project root as icon.png so the manifest key stays relative.
+                        std::error_code ec;
+                        const fs::path dst = fs::path(ProjectContentDir()) / "icon.png";
+                        fs::copy_file(*picked, dst, fs::copy_options::overwrite_existing, ec);
+                        std::snprintf(m_IconPathBuf, sizeof(m_IconPathBuf), "icon.png");
+                    }
                 }
             }
+            else if (section == 2)   // Packaging
+            {
+                ImGui::SeparatorText("Packaging");
+                ImGui::TextWrapped("Build a shippable app (Release exe, embedded icon, zip/installer) "
+                                   "from File \xE2\x96\xB8 Package\xE2\x80\xA6. The exe icon is embedded "
+                                   "from the same App icon set under Window.");
+            }
+            else                     // Physics defaults
+            {
+                ImGui::SeparatorText("Physics defaults");
+                ImGui::TextWrapped("Physics gravity and solver settings are authored per scene on the "
+                                   "PhysicsWorld (Play session). There are no project-wide physics "
+                                   "defaults to set here yet.");
+            }
 
+            ImGui::EndChild();
             ImGui::Separator();
             if (ImGui::Button("Save", ImVec2(120, 0)))
             {

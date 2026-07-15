@@ -25,6 +25,7 @@ namespace Cosmic
 	struct AnimatorComponent;    // scene/Components.h (A2 — FindAnimatorFor returns it)
 	class  PhysicsWorld;         // physics/PhysicsWorld.h (J4 — a play-session service)
 	class  ScenePhysics;         // physics/ScenePhysics.h (J4 — runtime body binding)
+	class  SceneNavRuntime;      // scene/SceneNav.h        (N4 — play-session agent/crowd binding)
 	class  ScriptHost;           // scripting/ScriptHost.h  (J5 — collision-event dispatch)
 	class  FlowMachine;          // scene/FlowMachine.h     (Q2 — Flow() variable proxy link)
 
@@ -117,6 +118,27 @@ namespace Cosmic
 		 *  by ScriptableEntity::Physics()/Character() to reach a body/controller. */
 		ScenePhysics* GetPhysics() { return m_Physics.get(); }
 
+		// --- Nav session (Phase 26 / N4) -------------------------------------
+		// Agents exist only while a play session runs (the physics-body lifetime
+		// rule). Tick-order contract (per fixed step, in order):
+		//   scripts OnFixedUpdate -> OnPhysicsStep -> OnNavStep -> DispatchPhysicsEvents.
+
+		/** @brief Bind the primary baked navmesh + DetourCrowd and create an agent per
+		 *  NavAgentComponent. Call once when a play session starts. No-op if the scene
+		 *  has no NavAgentComponent and no NavMeshComponent (the compat gate). */
+		void OnNavStart();
+
+		/** @brief Advance the crowd one fixed step: step agents, write transforms back,
+		 *  emit nav.arrived. No-op if no session/navmesh is active. */
+		void OnNavStep(float fixedDeltaTime);
+
+		/** @brief Release the crowd + agents and end the nav session. */
+		void OnNavStop();
+
+		/** @brief The active nav runtime binding, or nullptr in edit mode. Used by
+		 *  ScriptableEntity::Nav() to reach the agent + navmesh queries. */
+		SceneNavRuntime* GetNav() { return m_NavRuntime.get(); }
+
 		/**
 		 * @brief Calls BeginScene with the provided camera, dispatches all sprite-bearing
 		 * entities to Renderer2D (grouped by material bucket to minimise draw call overhead),
@@ -167,6 +189,18 @@ namespace Cosmic
 		 */
 		void OnRenderSprites(const glm::mat4& viewProjection,
 		                     uint32_t viewportWidth, uint32_t viewportHeight);
+
+		/**
+		 * @brief 2D lighting composite (X5 / gap §12.1): accumulate every active
+		 * Light2DComponent into a half-res HDR buffer (cleared to the environment's
+		 * Ambient2D, default white) and MULTIPLY it over the bound target, darkening
+		 * the 2D scene between lights. Call right AFTER OnRenderSprites, same target.
+		 * COMPAT GATE: no lights + white ambient returns before any GL call, so 2D
+		 * scenes without lights are byte-identical. Uses the RAW TransformComponent
+		 * XY (the legacy 2D-path convention). Main-thread / GL.
+		 */
+		void OnRender2DLights(const glm::mat4& viewProjection,
+		                      uint32_t viewportWidth, uint32_t viewportHeight);
 
 		/**
 		 * @brief 3D render pass (S4.3): draws every entity with a
@@ -226,6 +260,16 @@ namespace Cosmic
 		 * Called automatically by OnRender3D / BuildRenderDesc. Main-thread / GL.
 		 */
 		void SyncVoxelVolumes(const glm::vec3& cameraPos);
+
+		/**
+		 * @brief Lazily load each NavMeshComponent's `.cnav` sidecar into its runtime
+		 * NavWorld (Phase 26 / N2) so the navmesh is query-ready for debug draw and
+		 * for the Play crowd. Loads only when the component has a SidecarPath and no
+		 * Nav yet — baking itself is driven by the editor / SceneNav (not this call).
+		 * No-op for scenes without a NavMeshComponent (the compat gate). Called at the
+		 * top of OnRender3D / BuildRenderDesc. Main-thread (file I/O).
+		 */
+		void SyncNavMeshes();
 
 		/**
 		 * @brief Draw the scene's water + particle components (E18) into the
@@ -354,7 +398,8 @@ namespace Cosmic
 		EventBus m_Events;          // U2 — per-scene signal channel
 		FlowMachine* m_ActiveFlow = nullptr;   // Q2 — the flow driving this scene (not owned)
 
-		std::unique_ptr<ScenePhysics> m_Physics;   // J4 — non-null only during a play session
+		std::unique_ptr<ScenePhysics>    m_Physics;      // J4 — non-null only during a play session
+		std::unique_ptr<SceneNavRuntime> m_NavRuntime;   // N4 — non-null only during a play session
 
 		entt::registry m_Registry;
 		std::vector<Scope<System>>   m_Systems;

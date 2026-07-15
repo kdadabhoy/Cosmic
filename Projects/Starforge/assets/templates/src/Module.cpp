@@ -19,6 +19,7 @@
 #include "scripts/VoxelDigger.h"
 #include "scripts/PaddleController.h"
 #include "scripts/PongBall.h"
+#include "scripts/NavCritter.h"
 
 CS_MODULE_BEGIN(@PROJECT_NAME@)
     CS_SCRIPT(HoverController)
@@ -73,5 +74,12 @@ CS_MODULE_BEGIN(@PROJECT_NAME@)
         CS_FIELD(CourtHalfW).Range(1.0f, 32.0f)
         CS_FIELD(CourtHalfH).Range(1.0f, 32.0f)
         CS_FIELD(WinScore).Range(1.0f, 99.0f)
+    CS_END;
+
+    // Nav AI (Phase 26 / N5) — one system drives every "Critter" NavAgent: patrol a
+    // waypoint loop around spawn, chase the "Player" when near.
+    CS_SYSTEM(NavCritter).Requires<Cosmic::NavAgentComponent>().WithTag("Critter")
+        CS_FIELD(ChaseRadius).Range(0.0f, 40.0f)
+        CS_FIELD(PatrolRadius).Range(1.0f, 40.0f)
     CS_END;
 CS_MODULE_END()

@@ -103,6 +103,7 @@ uniform samplerCube u_PrefilterMap;     // prefiltered specular (mip = roughness
 uniform sampler2D   u_BrdfLut;          // split-sum BRDF integration LUT
 uniform float       u_HasIBL;           // 0 = flat ambient, 1 = IBL ambient
 uniform float       u_PrefilterMaxLod;  // highest prefilter mip index
+uniform float       u_AmbientIntensity; // X2 — scales the ambient term (default 1.0 = identity)
 
 // --- Directional shadows (S6.4): 3x3 PCF against the sun's shadow map ---
 uniform sampler2D u_ShadowMap;
@@ -336,6 +337,8 @@ void main()
     {
         ambient = u_SunDirection_Ambient.w * albedo * ao;
     }
+
+    ambient *= u_AmbientIntensity;                     // X2 (default 1.0 = byte-identical)
 
     vec3 outColor = ambient + Lo + emissive;
 
