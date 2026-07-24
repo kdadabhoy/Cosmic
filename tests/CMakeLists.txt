@@ -62,6 +62,7 @@ add_executable(CosmicTests
     test_voxel_collision.cpp
     test_branding.cpp
     test_events.cpp
+    test_forgeisle_content.cpp
 )
 
 target_link_libraries(CosmicTests PRIVATE Cosmic)

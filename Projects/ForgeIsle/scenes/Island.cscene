@@ -1,0 +1,725 @@
+{
+  "cosmic_scene": 1,
+  "entities": [
+    {
+      "id": "0000000000f20001",
+      "components": {
+        "Tag": { "Tag": "Environment" },
+        "Transform": {
+          "Position": [0.0, 0.0, 0.0], "Rotation": [0.0, 0.0, 0.0],
+          "Scale": [1.0, 1.0, 1.0], "RotationQuat": [1.0, 0.0, 0.0, 0.0],
+          "UseQuatRotation": false
+        },
+        "Environment": {
+          "Sky": 3,
+          "SunDirection": [-0.38, -0.46, -0.55],
+          "SunColor": [1.0, 0.93, 0.82],
+          "SunIntensity": 1.15,
+          "TimeOfDay": 8.5,
+          "Turbidity": 3.0,
+          "Skybox": true, "IBL": true, "IBLIntensity": 1.0,
+          "Exposure": 1.1,
+          "Fog": true, "FogColor": [0.66, 0.66, 0.62], "FogDensity": 0.0032,
+          "FogHeightFalloff": 0.06,
+          "Bloom": true, "BloomThreshold": 1.2, "BloomIntensity": 0.5,
+          "SSAO": true, "SsaoRadius": 0.6,
+          "FXAA": true
+        }
+      }
+    },
+    {
+      "id": "0000000000f20002",
+      "components": {
+        "Tag": { "Tag": "Sun" },
+        "Transform": {
+          "Position": [0.0, 0.0, 0.0], "Rotation": [0.0, 0.0, 0.0],
+          "Scale": [1.0, 1.0, 1.0], "RotationQuat": [1.0, 0.0, 0.0, 0.0],
+          "UseQuatRotation": false
+        },
+        "DirectionalLight": {
+          "Direction": [-0.38, -0.46, -0.55],
+          "Color": [1.0, 0.93, 0.82],
+          "Intensity": 1.15
+        }
+      }
+    },
+    {
+      "id": "0000000000f20003",
+      "components": {
+        "Tag": { "Tag": "Island Terrain" },
+        "Transform": {
+          "Position": [0.0, 0.0, 0.0], "Rotation": [0.0, 0.0, 0.0],
+          "Scale": [1.0, 1.0, 1.0], "RotationQuat": [1.0, 0.0, 0.0, 0.0],
+          "UseQuatRotation": false
+        },
+        "Terrain": {
+          "UseRecipe": true,
+          "WorldSize": 512.0, "Resolution": 513,
+          "HeightScale": 22.0, "BaseHeight": -6.0,
+          "Seed": 20260714, "Octaves": 6, "Frequency": 2.6,
+          "Lacunarity": 2.0, "Gain": 0.5,
+          "EdgeFalloff": 0.42,
+          "GrassColor": [0.30, 0.36, 0.20],
+          "RockColor": [0.33, 0.29, 0.28],
+          "SnowColor": [0.55, 0.53, 0.55],
+          "SandColor": [0.60, 0.53, 0.40],
+          "SnowHeight": 12.0, "SnowBlend": 3.0
+        },
+        "TerrainCollider": {}
+      }
+    },
+    {
+      "id": "0000000000f20004",
+      "components": {
+        "Tag": { "Tag": "Ocean" },
+        "Transform": {
+          "Position": [0.0, 0.0, 0.0], "Rotation": [0.0, 0.0, 0.0],
+          "Scale": [1.0, 1.0, 1.0], "RotationQuat": [1.0, 0.0, 0.0, 0.0],
+          "UseQuatRotation": false
+        },
+        "Water": {
+          "UseRecipe": true, "Preset": 1,
+          "Center": [0.0, 0.0], "Extent": [1600.0, 1600.0],
+          "SurfaceHeight": 0.0, "GridResolution": 257,
+          "Amplitude": 1.0, "Choppiness": 1.0,
+          "ShallowColor": [0.10, 0.32, 0.34], "DeepColor": [0.02, 0.09, 0.15],
+          "WhitecapStrength": 0.55, "SparkleStrength": 0.5
+        }
+      }
+    },
+
+    {
+      "id": "0000000000f20010",
+      "components": {
+        "Tag": { "Tag": "Player" },
+        "Transform": {
+          "Position": [0.0, 2.2, 205.0], "Rotation": [0.0, 180.0, 0.0],
+          "Scale": [1.0, 1.0, 1.0], "RotationQuat": [1.0, 0.0, 0.0, 0.0],
+          "UseQuatRotation": false
+        },
+        "CharacterController": {
+          "Height": 1.8, "Radius": 0.35, "MaxSlopeDeg": 55.0,
+          "StepHeight": 0.5, "Mass": 78.0
+        },
+        "NativeScript": {
+          "ClassName": "PlayerController",
+          "Fields": { "MoveSpeed": 4.5, "RunMultiplier": 1.8, "JumpSpeed": 6.0, "LookSensitivity": 0.12 }
+        },
+        "Relationship": { "Children": ["0000000000f20011"] }
+      }
+    },
+    {
+      "id": "0000000000f20011",
+      "components": {
+        "Tag": { "Tag": "PlayerCamera" },
+        "Transform": {
+          "Position": [0.0, 1.65, 0.0], "Rotation": [0.0, 0.0, 0.0],
+          "Scale": [1.0, 1.0, 1.0], "RotationQuat": [1.0, 0.0, 0.0, 0.0],
+          "UseQuatRotation": false
+        },
+        "Camera": {
+          "Primary": true, "ProjectionType": 0,
+          "FovDeg": 70.0, "Near": 0.1, "Far": 3000.0, "OrthoSize": 10.0
+        }
+      }
+    },
+
+    {
+      "id": "0000000000f20020",
+      "components": {
+        "Tag": { "Tag": "Camp Fire Pit" },
+        "Transform": {
+          "Position": [55.0, 6.2, 150.0], "Rotation": [0.0, 0.0, 0.0],
+          "Scale": [1.0, 1.0, 1.0], "RotationQuat": [1.0, 0.0, 0.0, 0.0],
+          "UseQuatRotation": false
+        },
+        "PrimitiveMesh": { "ShapeType": 3, "Radius": 1.2, "Height": 0.5, "Segments": 20 },
+        "MeshRenderer": { "Color": [0.30, 0.26, 0.24, 1.0], "CastShadows": true },
+        "BoxCollider": { "HalfExtents": [1.2, 0.25, 1.2] }
+      }
+    },
+    {
+      "id": "0000000000f20021",
+      "components": {
+        "Tag": { "Tag": "Hermit Tent" },
+        "Transform": {
+          "Position": [61.0, 7.5, 143.0], "Rotation": [0.0, 25.0, 0.0],
+          "Scale": [1.0, 1.0, 1.0], "RotationQuat": [1.0, 0.0, 0.0, 0.0],
+          "UseQuatRotation": false
+        },
+        "PrimitiveMesh": { "ShapeType": 4, "Radius": 2.4, "Height": 3.2, "Segments": 10 },
+        "MeshRenderer": { "Color": [0.42, 0.30, 0.18, 1.0], "CastShadows": true },
+        "BoxCollider": { "HalfExtents": [1.8, 1.6, 1.8] }
+      }
+    },
+    {
+      "id": "0000000000f20022",
+      "components": {
+        "Tag": { "Tag": "Camp Log A" },
+        "Transform": {
+          "Position": [52.5, 6.2, 147.5], "Rotation": [0.0, 30.0, 0.0],
+          "Scale": [1.0, 1.0, 1.0], "RotationQuat": [1.0, 0.0, 0.0, 0.0],
+          "UseQuatRotation": false
+        },
+        "PrimitiveMesh": { "ShapeType": 0, "Size": [2.2, 0.45, 0.5] },
+        "MeshRenderer": { "Color": [0.36, 0.25, 0.15, 1.0], "CastShadows": true },
+        "BoxCollider": { "HalfExtents": [1.1, 0.225, 0.25] }
+      }
+    },
+    {
+      "id": "0000000000f20023",
+      "components": {
+        "Tag": { "Tag": "Camp Log B" },
+        "Transform": {
+          "Position": [57.8, 6.2, 152.8], "Rotation": [0.0, -40.0, 0.0],
+          "Scale": [1.0, 1.0, 1.0], "RotationQuat": [1.0, 0.0, 0.0, 0.0],
+          "UseQuatRotation": false
+        },
+        "PrimitiveMesh": { "ShapeType": 0, "Size": [2.2, 0.45, 0.5] },
+        "MeshRenderer": { "Color": [0.36, 0.25, 0.15, 1.0], "CastShadows": true },
+        "BoxCollider": { "HalfExtents": [1.1, 0.225, 0.25] }
+      }
+    },
+    {
+      "id": "0000000000f20024",
+      "components": {
+        "Tag": { "Tag": "Hermit Stand-in" },
+        "Transform": {
+          "Position": [56.5, 6.85, 148.0], "Rotation": [0.0, -20.0, 0.0],
+          "Scale": [1.0, 1.0, 1.0], "RotationQuat": [1.0, 0.0, 0.0, 0.0],
+          "UseQuatRotation": false
+        },
+        "PrimitiveMesh": { "ShapeType": 3, "Radius": 0.35, "Height": 1.7, "Segments": 12 },
+        "MeshRenderer": { "Color": [0.55, 0.45, 0.60, 1.0], "CastShadows": true },
+        "BoxCollider": { "HalfExtents": [0.35, 0.85, 0.35] }
+      }
+    },
+
+    {
+      "id": "0000000000f20030",
+      "components": {
+        "Tag": { "Tag": "Ruin Plaza" },
+        "Transform": {
+          "Position": [-150.0, 4.4, 55.0], "Rotation": [0.0, 0.0, 0.0],
+          "Scale": [1.0, 1.0, 1.0], "RotationQuat": [1.0, 0.0, 0.0, 0.0],
+          "UseQuatRotation": false
+        },
+        "PrimitiveMesh": { "ShapeType": 0, "Size": [26.0, 8.0, 26.0] },
+        "MeshRenderer": { "Color": [0.72, 0.67, 0.57, 1.0], "CastShadows": true },
+        "BoxCollider": { "HalfExtents": [13.0, 4.0, 13.0] }
+      }
+    },
+    {
+      "id": "0000000000f20031",
+      "components": {
+        "Tag": { "Tag": "Ruin Ramp" },
+        "Transform": {
+          "Position": [-129.3, 6.55, 61.0], "Rotation": [0.0, 0.0, -15.0],
+          "Scale": [1.0, 1.0, 1.0], "RotationQuat": [1.0, 0.0, 0.0, 0.0],
+          "UseQuatRotation": false
+        },
+        "PrimitiveMesh": { "ShapeType": 0, "Size": [16.0, 0.7, 6.0] },
+        "MeshRenderer": { "Color": [0.68, 0.63, 0.54, 1.0], "CastShadows": true },
+        "BoxCollider": { "HalfExtents": [8.0, 0.35, 3.0] }
+      }
+    },
+    {
+      "id": "0000000000f20032",
+      "components": {
+        "Tag": { "Tag": "Ruin Column A" },
+        "Transform": {
+          "Position": [-158.0, 11.2, 47.0], "Rotation": [0.0, 0.0, 0.0],
+          "Scale": [1.0, 1.0, 1.0], "RotationQuat": [1.0, 0.0, 0.0, 0.0],
+          "UseQuatRotation": false
+        },
+        "PrimitiveMesh": { "ShapeType": 3, "Radius": 0.7, "Height": 5.6, "Segments": 14 },
+        "MeshRenderer": { "Color": [0.75, 0.70, 0.60, 1.0], "CastShadows": true },
+        "BoxCollider": { "HalfExtents": [0.7, 2.8, 0.7] }
+      }
+    },
+    {
+      "id": "0000000000f20033",
+      "components": {
+        "Tag": { "Tag": "Ruin Column B" },
+        "Transform": {
+          "Position": [-154.0, 11.2, 42.5], "Rotation": [0.0, 0.0, 0.0],
+          "Scale": [1.0, 1.0, 1.0], "RotationQuat": [1.0, 0.0, 0.0, 0.0],
+          "UseQuatRotation": false
+        },
+        "PrimitiveMesh": { "ShapeType": 3, "Radius": 0.7, "Height": 5.6, "Segments": 14 },
+        "MeshRenderer": { "Color": [0.75, 0.70, 0.60, 1.0], "CastShadows": true },
+        "BoxCollider": { "HalfExtents": [0.7, 2.8, 0.7] }
+      }
+    },
+    {
+      "id": "0000000000f20034",
+      "components": {
+        "Tag": { "Tag": "Ruin Column C (fallen)" },
+        "Transform": {
+          "Position": [-146.0, 9.1, 49.0], "Rotation": [0.0, 35.0, 90.0],
+          "Scale": [1.0, 1.0, 1.0], "RotationQuat": [1.0, 0.0, 0.0, 0.0],
+          "UseQuatRotation": false
+        },
+        "PrimitiveMesh": { "ShapeType": 3, "Radius": 0.7, "Height": 5.6, "Segments": 14 },
+        "MeshRenderer": { "Color": [0.70, 0.65, 0.55, 1.0], "CastShadows": true },
+        "BoxCollider": { "HalfExtents": [0.7, 2.8, 0.7] }
+      }
+    },
+    {
+      "id": "0000000000f20035",
+      "components": {
+        "Tag": { "Tag": "Ruin Crate A" },
+        "Transform": {
+          "Position": [-149.0, 8.9, 55.0], "Rotation": [0.0, 12.0, 0.0],
+          "Scale": [1.0, 1.0, 1.0], "RotationQuat": [1.0, 0.0, 0.0, 0.0],
+          "UseQuatRotation": false
+        },
+        "PrimitiveMesh": { "ShapeType": 0, "Size": [0.9, 0.9, 0.9] },
+        "MeshRenderer": { "Color": [0.55, 0.42, 0.26, 1.0], "CastShadows": true },
+        "RigidBody": { "Motion": 2, "Mass": 18.0, "Friction": 0.55, "Restitution": 0.05 },
+        "BoxCollider": { "HalfExtents": [0.45, 0.45, 0.45] }
+      }
+    },
+    {
+      "id": "0000000000f20036",
+      "components": {
+        "Tag": { "Tag": "Ruin Crate B" },
+        "Transform": {
+          "Position": [-148.6, 9.85, 55.2], "Rotation": [0.0, -8.0, 0.0],
+          "Scale": [1.0, 1.0, 1.0], "RotationQuat": [1.0, 0.0, 0.0, 0.0],
+          "UseQuatRotation": false
+        },
+        "PrimitiveMesh": { "ShapeType": 0, "Size": [0.9, 0.9, 0.9] },
+        "MeshRenderer": { "Color": [0.52, 0.40, 0.24, 1.0], "CastShadows": true },
+        "RigidBody": { "Motion": 2, "Mass": 18.0, "Friction": 0.55, "Restitution": 0.05 },
+        "BoxCollider": { "HalfExtents": [0.45, 0.45, 0.45] }
+      }
+    },
+    {
+      "id": "0000000000f20037",
+      "components": {
+        "Tag": { "Tag": "Ruin Crate C" },
+        "Transform": {
+          "Position": [-151.2, 8.9, 53.8], "Rotation": [0.0, 40.0, 0.0],
+          "Scale": [1.0, 1.0, 1.0], "RotationQuat": [1.0, 0.0, 0.0, 0.0],
+          "UseQuatRotation": false
+        },
+        "PrimitiveMesh": { "ShapeType": 0, "Size": [0.9, 0.9, 0.9] },
+        "MeshRenderer": { "Color": [0.57, 0.44, 0.28, 1.0], "CastShadows": true },
+        "RigidBody": { "Motion": 2, "Mass": 18.0, "Friction": 0.55, "Restitution": 0.05 },
+        "BoxCollider": { "HalfExtents": [0.45, 0.45, 0.45] }
+      }
+    },
+    {
+      "id": "0000000000f20038",
+      "components": {
+        "Tag": { "Tag": "Beacon 1 Pedestal" },
+        "Transform": {
+          "Position": [-157.0, 8.9, 60.5], "Rotation": [0.0, 0.0, 0.0],
+          "Scale": [1.0, 1.0, 1.0], "RotationQuat": [1.0, 0.0, 0.0, 0.0],
+          "UseQuatRotation": false
+        },
+        "PrimitiveMesh": { "ShapeType": 3, "Radius": 1.4, "Height": 1.0, "Segments": 18 },
+        "MeshRenderer": { "Color": [0.35, 0.37, 0.40, 1.0], "CastShadows": true },
+        "BoxCollider": { "HalfExtents": [1.4, 0.5, 1.4] }
+      }
+    },
+    {
+      "id": "0000000000f20039",
+      "components": {
+        "Tag": { "Tag": "Beacon 1 Brazier" },
+        "Transform": {
+          "Position": [-157.0, 10.0, 60.5], "Rotation": [180.0, 0.0, 0.0],
+          "Scale": [1.0, 1.0, 1.0], "RotationQuat": [1.0, 0.0, 0.0, 0.0],
+          "UseQuatRotation": false
+        },
+        "PrimitiveMesh": { "ShapeType": 4, "Radius": 1.0, "Height": 1.2, "Segments": 16 },
+        "MeshRenderer": { "Color": [0.45, 0.14, 0.09, 1.0], "CastShadows": true }
+      }
+    },
+    {
+      "id": "0000000000f2003a",
+      "components": {
+        "Tag": { "Tag": "Beacon 1 Mast" },
+        "Transform": {
+          "Position": [-157.0, 12.9, 60.5], "Rotation": [0.0, 0.0, 0.0],
+          "Scale": [1.0, 1.0, 1.0], "RotationQuat": [1.0, 0.0, 0.0, 0.0],
+          "UseQuatRotation": false
+        },
+        "PrimitiveMesh": { "ShapeType": 3, "Radius": 0.15, "Height": 7.0, "Segments": 8 },
+        "MeshRenderer": { "Color": [0.30, 0.31, 0.34, 1.0], "CastShadows": true }
+      }
+    },
+
+    {
+      "id": "0000000000f20040",
+      "components": {
+        "Tag": { "Tag": "Canyon Wall West" },
+        "Transform": {
+          "Position": [-25.0, 8.0, -120.0], "Rotation": [0.0, 17.0, 0.0],
+          "Scale": [1.0, 1.0, 1.0], "RotationQuat": [1.0, 0.0, 0.0, 0.0],
+          "UseQuatRotation": false
+        },
+        "PrimitiveMesh": { "ShapeType": 0, "Size": [3.5, 16.0, 130.0] },
+        "MeshRenderer": { "Color": [0.30, 0.26, 0.25, 1.0], "CastShadows": true },
+        "BoxCollider": { "HalfExtents": [1.75, 8.0, 65.0] }
+      }
+    },
+    {
+      "id": "0000000000f20041",
+      "components": {
+        "Tag": { "Tag": "Canyon Wall East" },
+        "Transform": {
+          "Position": [7.0, 8.0, -118.0], "Rotation": [0.0, 12.0, 0.0],
+          "Scale": [1.0, 1.0, 1.0], "RotationQuat": [1.0, 0.0, 0.0, 0.0],
+          "UseQuatRotation": false
+        },
+        "PrimitiveMesh": { "ShapeType": 0, "Size": [3.5, 16.0, 130.0] },
+        "MeshRenderer": { "Color": [0.28, 0.24, 0.23, 1.0], "CastShadows": true },
+        "BoxCollider": { "HalfExtents": [1.75, 8.0, 65.0] }
+      }
+    },
+    {
+      "id": "0000000000f20042",
+      "components": {
+        "Tag": { "Tag": "Canyon Arch Rock" },
+        "Transform": {
+          "Position": [-9.0, 12.5, -132.0], "Rotation": [0.0, 15.0, 0.0],
+          "Scale": [1.0, 1.0, 1.0], "RotationQuat": [1.0, 0.0, 0.0, 0.0],
+          "UseQuatRotation": false
+        },
+        "PrimitiveMesh": { "ShapeType": 0, "Size": [26.0, 2.5, 6.0] },
+        "MeshRenderer": { "Color": [0.26, 0.22, 0.21, 1.0], "CastShadows": true },
+        "BoxCollider": { "HalfExtents": [13.0, 1.25, 3.0] }
+      }
+    },
+    {
+      "id": "0000000000f20043",
+      "components": {
+        "Tag": { "Tag": "Beacon 2 Platform" },
+        "Transform": {
+          "Position": [-30.0, 2.0, -192.0], "Rotation": [0.0, 0.0, 0.0],
+          "Scale": [1.0, 1.0, 1.0], "RotationQuat": [1.0, 0.0, 0.0, 0.0],
+          "UseQuatRotation": false
+        },
+        "PrimitiveMesh": { "ShapeType": 0, "Size": [12.0, 6.0, 12.0] },
+        "MeshRenderer": { "Color": [0.33, 0.30, 0.28, 1.0], "CastShadows": true },
+        "BoxCollider": { "HalfExtents": [6.0, 3.0, 6.0] }
+      }
+    },
+    {
+      "id": "0000000000f20044",
+      "components": {
+        "Tag": { "Tag": "Beacon 2 Ramp" },
+        "Transform": {
+          "Position": [-30.0, 4.35, -182.0], "Rotation": [6.0, 0.0, 0.0],
+          "Scale": [1.0, 1.0, 1.0], "RotationQuat": [1.0, 0.0, 0.0, 0.0],
+          "UseQuatRotation": false
+        },
+        "PrimitiveMesh": { "ShapeType": 0, "Size": [5.0, 0.7, 14.0] },
+        "MeshRenderer": { "Color": [0.36, 0.33, 0.30, 1.0], "CastShadows": true },
+        "BoxCollider": { "HalfExtents": [2.5, 0.35, 7.0] }
+      }
+    },
+    {
+      "id": "0000000000f20045",
+      "components": {
+        "Tag": { "Tag": "Beacon 2 Pedestal" },
+        "Transform": {
+          "Position": [-30.0, 5.5, -194.0], "Rotation": [0.0, 0.0, 0.0],
+          "Scale": [1.0, 1.0, 1.0], "RotationQuat": [1.0, 0.0, 0.0, 0.0],
+          "UseQuatRotation": false
+        },
+        "PrimitiveMesh": { "ShapeType": 3, "Radius": 1.4, "Height": 1.0, "Segments": 18 },
+        "MeshRenderer": { "Color": [0.35, 0.37, 0.40, 1.0], "CastShadows": true },
+        "BoxCollider": { "HalfExtents": [1.4, 0.5, 1.4] }
+      }
+    },
+    {
+      "id": "0000000000f20046",
+      "components": {
+        "Tag": { "Tag": "Beacon 2 Brazier" },
+        "Transform": {
+          "Position": [-30.0, 6.6, -194.0], "Rotation": [180.0, 0.0, 0.0],
+          "Scale": [1.0, 1.0, 1.0], "RotationQuat": [1.0, 0.0, 0.0, 0.0],
+          "UseQuatRotation": false
+        },
+        "PrimitiveMesh": { "ShapeType": 4, "Radius": 1.0, "Height": 1.2, "Segments": 16 },
+        "MeshRenderer": { "Color": [0.45, 0.14, 0.09, 1.0], "CastShadows": true }
+      }
+    },
+    {
+      "id": "0000000000f20047",
+      "components": {
+        "Tag": { "Tag": "Beacon 2 Mast" },
+        "Transform": {
+          "Position": [-30.0, 9.5, -194.0], "Rotation": [0.0, 0.0, 0.0],
+          "Scale": [1.0, 1.0, 1.0], "RotationQuat": [1.0, 0.0, 0.0, 0.0],
+          "UseQuatRotation": false
+        },
+        "PrimitiveMesh": { "ShapeType": 3, "Radius": 0.15, "Height": 7.0, "Segments": 8 },
+        "MeshRenderer": { "Color": [0.30, 0.31, 0.34, 1.0], "CastShadows": true }
+      }
+    },
+
+    {
+      "id": "0000000000f20050",
+      "components": {
+        "Tag": { "Tag": "Quarry Rim North" },
+        "Transform": {
+          "Position": [150.0, 5.5, -55.0], "Rotation": [0.0, 0.0, 0.0],
+          "Scale": [1.0, 1.0, 1.0], "RotationQuat": [1.0, 0.0, 0.0, 0.0],
+          "UseQuatRotation": false
+        },
+        "PrimitiveMesh": { "ShapeType": 0, "Size": [34.0, 9.0, 4.0] },
+        "MeshRenderer": { "Color": [0.42, 0.35, 0.28, 1.0], "CastShadows": true },
+        "BoxCollider": { "HalfExtents": [17.0, 4.5, 2.0] }
+      }
+    },
+    {
+      "id": "0000000000f20051",
+      "components": {
+        "Tag": { "Tag": "Quarry Rim East" },
+        "Transform": {
+          "Position": [167.0, 5.5, -40.0], "Rotation": [0.0, 0.0, 0.0],
+          "Scale": [1.0, 1.0, 1.0], "RotationQuat": [1.0, 0.0, 0.0, 0.0],
+          "UseQuatRotation": false
+        },
+        "PrimitiveMesh": { "ShapeType": 0, "Size": [4.0, 9.0, 34.0] },
+        "MeshRenderer": { "Color": [0.42, 0.35, 0.28, 1.0], "CastShadows": true },
+        "BoxCollider": { "HalfExtents": [2.0, 4.5, 17.0] }
+      }
+    },
+    {
+      "id": "0000000000f20052",
+      "components": {
+        "Tag": { "Tag": "Quarry Rim South West" },
+        "Transform": {
+          "Position": [140.0, 5.5, -25.0], "Rotation": [0.0, 0.0, 0.0],
+          "Scale": [1.0, 1.0, 1.0], "RotationQuat": [1.0, 0.0, 0.0, 0.0],
+          "UseQuatRotation": false
+        },
+        "PrimitiveMesh": { "ShapeType": 0, "Size": [14.0, 9.0, 4.0] },
+        "MeshRenderer": { "Color": [0.42, 0.35, 0.28, 1.0], "CastShadows": true },
+        "BoxCollider": { "HalfExtents": [7.0, 4.5, 2.0] }
+      }
+    },
+    {
+      "id": "0000000000f2005a",
+      "components": {
+        "Tag": { "Tag": "Quarry Rim South East" },
+        "Transform": {
+          "Position": [161.0, 5.5, -25.0], "Rotation": [0.0, 0.0, 0.0],
+          "Scale": [1.0, 1.0, 1.0], "RotationQuat": [1.0, 0.0, 0.0, 0.0],
+          "UseQuatRotation": false
+        },
+        "PrimitiveMesh": { "ShapeType": 0, "Size": [12.0, 9.0, 4.0] },
+        "MeshRenderer": { "Color": [0.42, 0.35, 0.28, 1.0], "CastShadows": true },
+        "BoxCollider": { "HalfExtents": [6.0, 4.5, 2.0] }
+      }
+    },
+    {
+      "id": "0000000000f20053",
+      "components": {
+        "Tag": { "Tag": "Quarry Dig Face" },
+        "Transform": {
+          "Position": [133.0, 5.5, -40.0], "Rotation": [0.0, 0.0, 0.0],
+          "Scale": [1.0, 1.0, 1.0], "RotationQuat": [1.0, 0.0, 0.0, 0.0],
+          "UseQuatRotation": false
+        },
+        "PrimitiveMesh": { "ShapeType": 0, "Size": [4.0, 9.0, 26.0] },
+        "MeshRenderer": { "Color": [0.32, 0.24, 0.18, 1.0], "CastShadows": true },
+        "BoxCollider": { "HalfExtents": [2.0, 4.5, 13.0] }
+      }
+    },
+    {
+      "id": "0000000000f20054",
+      "components": {
+        "Tag": { "Tag": "Quarry Ramp" },
+        "Transform": {
+          "Position": [150.0, 2.8, -31.5], "Rotation": [-10.0, 0.0, 0.0],
+          "Scale": [1.0, 1.0, 1.0], "RotationQuat": [1.0, 0.0, 0.0, 0.0],
+          "UseQuatRotation": false
+        },
+        "PrimitiveMesh": { "ShapeType": 0, "Size": [6.0, 0.7, 16.0] },
+        "MeshRenderer": { "Color": [0.46, 0.39, 0.31, 1.0], "CastShadows": true },
+        "BoxCollider": { "HalfExtents": [3.0, 0.35, 8.0] }
+      }
+    },
+    {
+      "id": "0000000000f20055",
+      "components": {
+        "Tag": { "Tag": "Quarry Floor" },
+        "Transform": {
+          "Position": [150.0, 0.2, -40.0], "Rotation": [0.0, 0.0, 0.0],
+          "Scale": [1.0, 1.0, 1.0], "RotationQuat": [1.0, 0.0, 0.0, 0.0],
+          "UseQuatRotation": false
+        },
+        "PrimitiveMesh": { "ShapeType": 0, "Size": [30.0, 2.0, 26.0] },
+        "MeshRenderer": { "Color": [0.38, 0.30, 0.23, 1.0], "CastShadows": false },
+        "BoxCollider": { "HalfExtents": [15.0, 1.0, 13.0] }
+      }
+    },
+    {
+      "id": "0000000000f20056",
+      "components": {
+        "Tag": { "Tag": "Dig Site Marker" },
+        "Transform": {
+          "Position": [137.0, 2.1, -40.0], "Rotation": [0.0, 0.0, 0.0],
+          "Scale": [1.0, 1.0, 1.0], "RotationQuat": [1.0, 0.0, 0.0, 0.0],
+          "UseQuatRotation": false
+        },
+        "PrimitiveMesh": { "ShapeType": 4, "Radius": 0.8, "Height": 1.8, "Segments": 12 },
+        "MeshRenderer": { "Color": [0.85, 0.55, 0.15, 1.0], "CastShadows": true }
+      }
+    },
+    {
+      "id": "0000000000f20057",
+      "components": {
+        "Tag": { "Tag": "Beacon 3 Pedestal" },
+        "Transform": {
+          "Position": [158.0, 1.7, -47.0], "Rotation": [0.0, 0.0, 0.0],
+          "Scale": [1.0, 1.0, 1.0], "RotationQuat": [1.0, 0.0, 0.0, 0.0],
+          "UseQuatRotation": false
+        },
+        "PrimitiveMesh": { "ShapeType": 3, "Radius": 1.4, "Height": 1.0, "Segments": 18 },
+        "MeshRenderer": { "Color": [0.35, 0.37, 0.40, 1.0], "CastShadows": true },
+        "BoxCollider": { "HalfExtents": [1.4, 0.5, 1.4] }
+      }
+    },
+    {
+      "id": "0000000000f20058",
+      "components": {
+        "Tag": { "Tag": "Beacon 3 Brazier" },
+        "Transform": {
+          "Position": [158.0, 2.8, -47.0], "Rotation": [180.0, 0.0, 0.0],
+          "Scale": [1.0, 1.0, 1.0], "RotationQuat": [1.0, 0.0, 0.0, 0.0],
+          "UseQuatRotation": false
+        },
+        "PrimitiveMesh": { "ShapeType": 4, "Radius": 1.0, "Height": 1.2, "Segments": 16 },
+        "MeshRenderer": { "Color": [0.45, 0.14, 0.09, 1.0], "CastShadows": true }
+      }
+    },
+    {
+      "id": "0000000000f20059",
+      "components": {
+        "Tag": { "Tag": "Beacon 3 Mast" },
+        "Transform": {
+          "Position": [158.0, 5.7, -47.0], "Rotation": [0.0, 0.0, 0.0],
+          "Scale": [1.0, 1.0, 1.0], "RotationQuat": [1.0, 0.0, 0.0, 0.0],
+          "UseQuatRotation": false
+        },
+        "PrimitiveMesh": { "ShapeType": 3, "Radius": 0.15, "Height": 7.0, "Segments": 8 },
+        "MeshRenderer": { "Color": [0.30, 0.31, 0.34, 1.0], "CastShadows": true }
+      }
+    },
+
+    {
+      "id": "0000000000f20060",
+      "components": {
+        "Tag": { "Tag": "Great Forge Plinth" },
+        "Transform": {
+          "Position": [0.0, 8.9, -20.0], "Rotation": [0.0, 0.0, 0.0],
+          "Scale": [1.0, 1.0, 1.0], "RotationQuat": [1.0, 0.0, 0.0, 0.0],
+          "UseQuatRotation": false
+        },
+        "PrimitiveMesh": { "ShapeType": 3, "Radius": 6.0, "Height": 4.0, "Segments": 28 },
+        "MeshRenderer": { "Color": [0.24, 0.23, 0.25, 1.0], "CastShadows": true },
+        "BoxCollider": { "HalfExtents": [5.0, 2.0, 5.0] }
+      }
+    },
+    {
+      "id": "0000000000f20061",
+      "components": {
+        "Tag": { "Tag": "Great Forge Ring" },
+        "Transform": {
+          "Position": [0.0, 12.2, -20.0], "Rotation": [90.0, 0.0, 0.0],
+          "Scale": [1.0, 1.0, 1.0], "RotationQuat": [1.0, 0.0, 0.0, 0.0],
+          "UseQuatRotation": false
+        },
+        "PrimitiveMesh": { "ShapeType": 5, "Radius": 3.5, "TubeRadius": 0.8, "Segments": 40, "Rings": 18 },
+        "MeshRenderer": { "Color": [0.85, 0.42, 0.13, 1.0], "CastShadows": true }
+      }
+    },
+    {
+      "id": "0000000000f20062",
+      "components": {
+        "Tag": { "Tag": "Great Forge Chimney" },
+        "Transform": {
+          "Position": [0.0, 13.4, -20.0], "Rotation": [0.0, 0.0, 0.0],
+          "Scale": [1.0, 1.0, 1.0], "RotationQuat": [1.0, 0.0, 0.0, 0.0],
+          "UseQuatRotation": false
+        },
+        "PrimitiveMesh": { "ShapeType": 4, "Radius": 2.2, "Height": 5.0, "Segments": 20 },
+        "MeshRenderer": { "Color": [0.20, 0.19, 0.21, 1.0], "CastShadows": true }
+      }
+    },
+    {
+      "id": "0000000000f20063",
+      "components": {
+        "Tag": { "Tag": "Summit Ramp" },
+        "Transform": {
+          "Position": [0.0, 10.2, -5.2], "Rotation": [7.0, 0.0, 0.0],
+          "Scale": [1.0, 1.0, 1.0], "RotationQuat": [1.0, 0.0, 0.0, 0.0],
+          "UseQuatRotation": false
+        },
+        "PrimitiveMesh": { "ShapeType": 0, "Size": [6.0, 0.7, 18.0] },
+        "MeshRenderer": { "Color": [0.30, 0.29, 0.31, 1.0], "CastShadows": true },
+        "BoxCollider": { "HalfExtents": [3.0, 0.35, 9.0] }
+      }
+    },
+
+    {
+      "id": "0000000000f20070",
+      "components": {
+        "Tag": { "Tag": "HUD" },
+        "Transform": {
+          "Position": [0.0, 0.0, 0.0], "Rotation": [0.0, 0.0, 0.0],
+          "Scale": [1.0, 1.0, 1.0], "RotationQuat": [1.0, 0.0, 0.0, 0.0],
+          "UseQuatRotation": false
+        },
+        "Canvas": { "ScaleMode": 1, "ReferenceHeight": 900.0, "SortOrder": 0 },
+        "Relationship": { "Children": ["0000000000f20071", "0000000000f20072"] }
+      }
+    },
+    {
+      "id": "0000000000f20071",
+      "components": {
+        "Tag": { "Tag": "HUD Hint" },
+        "Transform": {
+          "Position": [0.0, 0.0, 0.0], "Rotation": [0.0, 0.0, 0.0],
+          "Scale": [1.0, 1.0, 1.0], "RotationQuat": [1.0, 0.0, 0.0, 0.0],
+          "UseQuatRotation": false
+        },
+        "RectTransform": {
+          "AnchorMin": [0.0, 1.0], "AnchorMax": [0.0, 1.0],
+          "OffsetMin": [16.0, -44.0], "OffsetMax": [760.0, -12.0]
+        },
+        "UiText": {
+          "Text": "Forge Isle greybox  |  WASD move  Shift run  Space jump  |  look: click to capture (Esc frees) or hold RMB",
+          "SizePx": 17.0, "Color": [0.95, 0.97, 1.0, 0.9]
+        }
+      }
+    },
+    {
+      "id": "0000000000f20072",
+      "components": {
+        "Tag": { "Tag": "HUD Route" },
+        "Transform": {
+          "Position": [0.0, 0.0, 0.0], "Rotation": [0.0, 0.0, 0.0],
+          "Scale": [1.0, 1.0, 1.0], "RotationQuat": [1.0, 0.0, 0.0, 0.0],
+          "UseQuatRotation": false
+        },
+        "RectTransform": {
+          "AnchorMin": [1.0, 1.0], "AnchorMax": [1.0, 1.0],
+          "OffsetMin": [-560.0, -44.0], "OffsetMax": [-16.0, -12.0]
+        },
+        "UiText": {
+          "Text": "Route: Beach - Camp - Ruin (W) - Canyon (N) - Quarry (E) - Summit",
+          "SizePx": 17.0, "Color": [1.0, 0.86, 0.62, 0.9],
+          "HAlign": 2
+        }
+      }
+    }
+  ]
+}

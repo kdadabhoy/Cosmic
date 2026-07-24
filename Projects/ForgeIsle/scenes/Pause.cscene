@@ -1,0 +1,107 @@
+{
+  "cosmic_scene": 1,
+  "entities": [
+    {
+      "id": "0000000000f30001",
+      "components": {
+        "Tag": { "Tag": "Pause Camera" },
+        "Transform": {
+          "Position": [0.0, 1.0, 5.0], "Rotation": [0.0, 0.0, 0.0],
+          "Scale": [1.0, 1.0, 1.0], "RotationQuat": [1.0, 0.0, 0.0, 0.0],
+          "UseQuatRotation": false
+        },
+        "Camera": {
+          "Primary": true, "ProjectionType": 0,
+          "FovDeg": 60.0, "Near": 0.1, "Far": 100.0, "OrthoSize": 10.0
+        }
+      }
+    },
+    {
+      "id": "0000000000f30010",
+      "components": {
+        "Tag": { "Tag": "Pause Canvas" },
+        "Transform": {
+          "Position": [0.0, 0.0, 0.0], "Rotation": [0.0, 0.0, 0.0],
+          "Scale": [1.0, 1.0, 1.0], "RotationQuat": [1.0, 0.0, 0.0, 0.0],
+          "UseQuatRotation": false
+        },
+        "Canvas": { "ScaleMode": 1, "ReferenceHeight": 900.0, "SortOrder": 0 },
+        "Relationship": {
+          "Children": ["0000000000f30011", "0000000000f30012", "0000000000f30013", "0000000000f30014"]
+        }
+      }
+    },
+    {
+      "id": "0000000000f30011",
+      "components": {
+        "Tag": { "Tag": "Backdrop" },
+        "Transform": {
+          "Position": [0.0, 0.0, 0.0], "Rotation": [0.0, 0.0, 0.0],
+          "Scale": [1.0, 1.0, 1.0], "RotationQuat": [1.0, 0.0, 0.0, 0.0],
+          "UseQuatRotation": false
+        },
+        "RectTransform": {
+          "AnchorMin": [0.0, 0.0], "AnchorMax": [1.0, 1.0],
+          "OffsetMin": [0.0, 0.0], "OffsetMax": [0.0, 0.0]
+        },
+        "UiImage": { "Tint": [0.05, 0.06, 0.09, 1.0] }
+      }
+    },
+    {
+      "id": "0000000000f30012",
+      "components": {
+        "Tag": { "Tag": "Paused Label" },
+        "Transform": {
+          "Position": [0.0, 0.0, 0.0], "Rotation": [0.0, 0.0, 0.0],
+          "Scale": [1.0, 1.0, 1.0], "RotationQuat": [1.0, 0.0, 0.0, 0.0],
+          "UseQuatRotation": false
+        },
+        "RectTransform": {
+          "AnchorMin": [0.5, 0.34], "AnchorMax": [0.5, 0.34],
+          "OffsetMin": [-300.0, -50.0], "OffsetMax": [300.0, 50.0]
+        },
+        "UiText": {
+          "Text": "PAUSED",
+          "SizePx": 64.0, "Color": [0.95, 0.90, 0.80, 1.0],
+          "HAlign": 1, "VAlign": 1
+        }
+      }
+    },
+    {
+      "id": "0000000000f30013",
+      "components": {
+        "Tag": { "Tag": "Resume Button" },
+        "Transform": {
+          "Position": [0.0, 0.0, 0.0], "Rotation": [0.0, 0.0, 0.0],
+          "Scale": [1.0, 1.0, 1.0], "RotationQuat": [1.0, 0.0, 0.0, 0.0],
+          "UseQuatRotation": false
+        },
+        "RectTransform": {
+          "AnchorMin": [0.5, 0.52], "AnchorMax": [0.5, 0.52],
+          "OffsetMin": [-150.0, -32.0], "OffsetMax": [150.0, 32.0]
+        },
+        "UiImage": { "Tint": [0.16, 0.19, 0.25, 0.95] },
+        "UiButton": { "Signal": "resume" },
+        "UiText": { "Text": "Resume", "SizePx": 30.0, "HAlign": 1, "VAlign": 1 }
+      }
+    },
+    {
+      "id": "0000000000f30014",
+      "components": {
+        "Tag": { "Tag": "Quit To Title Button" },
+        "Transform": {
+          "Position": [0.0, 0.0, 0.0], "Rotation": [0.0, 0.0, 0.0],
+          "Scale": [1.0, 1.0, 1.0], "RotationQuat": [1.0, 0.0, 0.0, 0.0],
+          "UseQuatRotation": false
+        },
+        "RectTransform": {
+          "AnchorMin": [0.5, 0.62], "AnchorMax": [0.5, 0.62],
+          "OffsetMin": [-150.0, -32.0], "OffsetMax": [150.0, 32.0]
+        },
+        "UiImage": { "Tint": [0.14, 0.15, 0.19, 0.95] },
+        "UiButton": { "Signal": "quit_title" },
+        "UiText": { "Text": "Quit to Title", "SizePx": 30.0, "HAlign": 1, "VAlign": 1 }
+      }
+    }
+  ]
+}

@@ -42,7 +42,23 @@ island terrain recipe, blockout ruins/canyon/dig-site/camp, scene-camera walkthr
 **Spec:** the feature→moment matrix is the contract — every phase 14–27 capability maps to a
 specific on-island moment (physics ruin = Jolt stack + character; beacons = flow variables;
 tent game = 2D stack; …). **Acceptance:** the matrix has no unmapped capability; greybox walks
-end-to-end with the U7 game view; design doc reviewed by the user. **Status:** ☐
+end-to-end with the U7 game view; design doc reviewed by the user. **Status:** ◑ STAGED
+2026-07-14 — `docs/design/forge-isle.md` written (beat map B0–B7, 3+3 scene/graph list, §4
+license-clean asset list w/ the 5-row user-supplied "needed assets" table, §5 feature→moment
+matrix covering EVERY Phase 14–27 work order [P]/[E] with phases 19/21 named out-of-matrix
+except fired R8, §6 trailer script, §7 engineering constraints from the same-day pre-flight
+review, §8 Z-scope map). `Projects/ForgeIsle` scaffolded as a dual-mode external project
+(ViperSim CMake pattern: root auto-detect + Starforge Ctrl+B standalone; manifest with
+`startup_flow`; `PlayerController` v0 capsule walker w/ mouse-look; CREDITS.md). Greybox
+authored: `Island.cscene` (513² physical-sky island terrain recipe + TerrainCollider + ocean
+recipe, camp/ruin/canyon/quarry/summit blockouts, 3 dynamic ruin crates, 3 beacon markers,
+player + HUD), `Title.cscene` + `Pause.cscene` (zero-code canvases), `flows/Main.cflow`
+(Title→Island→push-Pause spine + Q2 quest variables). NEW gated `tests/test_forgeisle_content.cpp`
+(3 cases): scenes carry their contract entities, flow validates + scene paths exist + pause is a
+push-with-own-scene, and the route is walkable on the EXACT recipe terrain (BuildTerrainSpec →
+SampleHeight: 11 site anchors in ±0.8 m windows + 6 route legs above water at ≤3.2 m/4 m grade).
+REMAINING for ✅: **the user's design-doc review (this doc's gate) + the on-GPU game-view
+walkthrough**.
 
 ### Z2 — Playable character *(waits on: A1/A2, Phase 24 M4/M6)*
 **Files:** ForgeIsle content: a rigged CC0/self-made character (glTF) + idle/walk/run/jump/

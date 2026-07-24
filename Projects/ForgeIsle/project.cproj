@@ -1,0 +1,11 @@
+# Cosmic project manifest — Forge Isle (Phase 28 flagship, doc 27 / Z-series).
+# Consumed by the standalone PlayerLayer (E13/S5) and Starforge (E12/S1).
+name          = "Forge Isle"
+startup_scene = "scenes/Island.cscene"
+startup_flow  = "flows/Main.cflow"
+fixed_dt_hz   = 60
+
+[window]
+title  = "Forge Isle"
+width  = 1600
+height = 900

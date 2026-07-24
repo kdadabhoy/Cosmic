@@ -247,7 +247,11 @@ namespace Cosmic
         {
             m_Scripts.Tick(ts);
             if (m_TrackedScene)
+            {
                 m_TrackedScene->UpdateSpriteAnimations(ts);   // U4 — flipbook advance
+                m_TrackedScene->UpdateAnimators(ts);          // A2/M6 — skeletal animators +
+                                                              // crossfades (paused ⇒ frozen)
+            }
         }
 
         RenderScene(ts);

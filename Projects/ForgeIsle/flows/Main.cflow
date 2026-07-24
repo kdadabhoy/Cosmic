@@ -1,0 +1,39 @@
+{
+  "cosmic_flow": 2,
+  "start": "Title",
+  "states": [
+    {
+      "name": "Title",
+      "scene": "project://scenes/Title.cscene",
+      "transitions": [
+        { "on": "start", "to": "Island" },
+        { "on": "quit", "to": "@quit" }
+      ],
+      "editor": { "pos": [-260.0, 0.0] }
+    },
+    {
+      "name": "Island",
+      "scene": "project://scenes/Island.cscene",
+      "transitions": [
+        { "on": "key:Escape", "to": "Pause", "push": true }
+      ],
+      "editor": { "pos": [60.0, 0.0] }
+    },
+    {
+      "name": "Pause",
+      "scene": "project://scenes/Pause.cscene",
+      "overlay": true,
+      "transitions": [
+        { "on": "resume", "to": "@pop" },
+        { "on": "key:Escape", "to": "@pop" },
+        { "on": "quit_title", "to": "Title" }
+      ],
+      "editor": { "pos": [60.0, 220.0] }
+    }
+  ],
+  "variables": [
+    { "name": "MetHermit", "group": "Quest", "type": "bool", "default": false },
+    { "name": "BeaconsLit", "group": "Quest", "type": "number", "default": 0.0 },
+    { "name": "TentWins", "group": "Tent", "type": "number", "default": 0.0 }
+  ]
+}

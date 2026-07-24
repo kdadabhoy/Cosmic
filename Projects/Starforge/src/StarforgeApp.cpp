@@ -767,7 +767,13 @@ namespace Starforge
 
             m_Scripts.Tick(ts);
             if (m_Ctx.Scene)
+            {
                 m_Ctx.Scene->UpdateSpriteAnimations(ts);   // U4 — flipbooks advance in editor Play
+                m_Ctx.Scene->UpdateAnimators(ts);          // A2/M6 — skeletal animators + crossfades
+                                                           // advance in Play (after scripts, so a
+                                                           // CrossfadeTo lands the same frame;
+                                                           // Paused ⇒ not called ⇒ pose frozen)
+            }
             m_FixedAccum += ts;
             int guard = 0;
             while (m_FixedAccum >= m_FixedDt && guard++ < 8)   // clamp catch-up
@@ -1230,8 +1236,8 @@ namespace Starforge
         if (m_Ctx.Scene)
         {
             // A2 — play preview in edit mode: animators sample every frame here
-            // (during Play the runtime scene's OnUpdate already did, and this
-            // renders the SAME scene object — so gate on the mode).
+            // (during Play, TickPlay advanced them this frame and this renders
+            // the SAME scene object — so gate on the mode; Paused ⇒ frozen pose).
             if (!IsPlaying())
                 m_Ctx.Scene->UpdateAnimators(ts);
 

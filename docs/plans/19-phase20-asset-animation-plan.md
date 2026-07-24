@@ -82,6 +82,13 @@ binding-10 buffer, immediate) + `SceneDrawContext::DrawMeshSkinned` routing. Ref
 `AnimatorComponent{ClipPath "file#clip", Speed, Loop, Playing, NormalizedTime}`;
 `Scene::UpdateAnimators` (play = `OnUpdate`; edit mode = the editor calls it per frame — the
 play-preview); skinned submit resolves the Animator on self/ancestors (multi-mesh children).
+**Fix 2026-07-14 (Phase 28 pre-flight review):** the "play = `OnUpdate`" assumption was dead
+code — nothing in the Play paths ever calls `Scene::OnUpdate`, so animators (and M6 crossfades)
+FROZE during editor Play and in every packaged app; only the edit-mode preview worked (which is
+where the Fox acceptance ran). `StarforgeApp::TickPlay` + `PlayerLayer::OnUpdate` now call
+`Scene::UpdateAnimators(ts)` explicitly next to `UpdateSpriteAnimations` (after scripts tick, so
+a `CrossfadeTo` lands the same frame; pause ⇒ not called ⇒ pose frozen, matching the M6 test's
+contract).
 `AssetLibrary::GetAnimationClip/GetAnimationClipNames` (parse-once clip-set cache; name/index
 fragments). Starforge: Inspector clip-picker combo (names fetched only while open) + the
 reflected NormalizedTime row as the scrub bar; imports with clips auto-attach an Animator on

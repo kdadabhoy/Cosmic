@@ -1,0 +1,200 @@
+{
+  "cosmic_scene": 1,
+  "entities": [
+    {
+      "id": "0000000000f10001",
+      "components": {
+        "Tag": { "Tag": "Environment" },
+        "Transform": {
+          "Position": [0.0, 0.0, 0.0], "Rotation": [0.0, 0.0, 0.0],
+          "Scale": [1.0, 1.0, 1.0], "RotationQuat": [1.0, 0.0, 0.0, 0.0],
+          "UseQuatRotation": false
+        },
+        "Environment": {
+          "Sky": 3,
+          "SunDirection": [-0.25, -0.16, -0.95],
+          "SunColor": [1.0, 0.82, 0.62],
+          "SunIntensity": 1.05,
+          "TimeOfDay": 6.6,
+          "Turbidity": 3.4,
+          "Skybox": true, "IBL": true, "IBLIntensity": 1.0,
+          "Exposure": 1.1,
+          "Fog": true, "FogColor": [0.75, 0.62, 0.52], "FogDensity": 0.004,
+          "Bloom": true, "BloomThreshold": 1.15, "BloomIntensity": 0.55,
+          "FXAA": true
+        }
+      }
+    },
+    {
+      "id": "0000000000f10002",
+      "components": {
+        "Tag": { "Tag": "Sun" },
+        "Transform": {
+          "Position": [0.0, 0.0, 0.0], "Rotation": [0.0, 0.0, 0.0],
+          "Scale": [1.0, 1.0, 1.0], "RotationQuat": [1.0, 0.0, 0.0, 0.0],
+          "UseQuatRotation": false
+        },
+        "DirectionalLight": {
+          "Direction": [-0.25, -0.16, -0.95],
+          "Color": [1.0, 0.82, 0.62],
+          "Intensity": 1.05
+        }
+      }
+    },
+    {
+      "id": "0000000000f10003",
+      "components": {
+        "Tag": { "Tag": "Vista Camera" },
+        "Transform": {
+          "Position": [0.0, 7.0, 55.0], "Rotation": [-3.0, 0.0, 0.0],
+          "Scale": [1.0, 1.0, 1.0], "RotationQuat": [1.0, 0.0, 0.0, 0.0],
+          "UseQuatRotation": false
+        },
+        "Camera": {
+          "Primary": true, "ProjectionType": 0,
+          "FovDeg": 55.0, "Near": 0.1, "Far": 4000.0, "OrthoSize": 10.0
+        }
+      }
+    },
+    {
+      "id": "0000000000f10004",
+      "components": {
+        "Tag": { "Tag": "Ocean" },
+        "Transform": {
+          "Position": [0.0, 0.0, 0.0], "Rotation": [0.0, 0.0, 0.0],
+          "Scale": [1.0, 1.0, 1.0], "RotationQuat": [1.0, 0.0, 0.0, 0.0],
+          "UseQuatRotation": false
+        },
+        "Water": {
+          "UseRecipe": true, "Preset": 1,
+          "Center": [0.0, -400.0], "Extent": [2400.0, 2000.0],
+          "SurfaceHeight": 0.0, "GridResolution": 257,
+          "Amplitude": 1.0, "Choppiness": 1.0,
+          "ShallowColor": [0.10, 0.30, 0.34], "DeepColor": [0.02, 0.08, 0.14],
+          "WhitecapStrength": 0.55, "SparkleStrength": 0.6
+        }
+      }
+    },
+    {
+      "id": "0000000000f10005",
+      "components": {
+        "Tag": { "Tag": "Isle Silhouette" },
+        "Transform": {
+          "Position": [-60.0, -4.0, -520.0], "Rotation": [0.0, 12.0, 0.0],
+          "Scale": [1.0, 1.0, 1.0], "RotationQuat": [1.0, 0.0, 0.0, 0.0],
+          "UseQuatRotation": false
+        },
+        "PrimitiveMesh": {
+          "ShapeType": 4, "Radius": 130.0, "Height": 85.0, "Segments": 48
+        },
+        "MeshRenderer": { "Color": [0.16, 0.13, 0.14, 1.0], "CastShadows": false }
+      }
+    },
+    {
+      "id": "0000000000f10006",
+      "components": {
+        "Tag": { "Tag": "Isle Shoulder" },
+        "Transform": {
+          "Position": [95.0, -6.0, -470.0], "Rotation": [0.0, -8.0, 0.0],
+          "Scale": [1.0, 1.0, 1.0], "RotationQuat": [1.0, 0.0, 0.0, 0.0],
+          "UseQuatRotation": false
+        },
+        "PrimitiveMesh": {
+          "ShapeType": 4, "Radius": 70.0, "Height": 38.0, "Segments": 40
+        },
+        "MeshRenderer": { "Color": [0.18, 0.15, 0.15, 1.0], "CastShadows": false }
+      }
+    },
+    {
+      "id": "0000000000f10010",
+      "components": {
+        "Tag": { "Tag": "Title Canvas" },
+        "Transform": {
+          "Position": [0.0, 0.0, 0.0], "Rotation": [0.0, 0.0, 0.0],
+          "Scale": [1.0, 1.0, 1.0], "RotationQuat": [1.0, 0.0, 0.0, 0.0],
+          "UseQuatRotation": false
+        },
+        "Canvas": { "ScaleMode": 1, "ReferenceHeight": 900.0, "SortOrder": 0 },
+        "Relationship": {
+          "Children": ["0000000000f10011", "0000000000f10012", "0000000000f10013", "0000000000f10014"]
+        }
+      }
+    },
+    {
+      "id": "0000000000f10011",
+      "components": {
+        "Tag": { "Tag": "Title Label" },
+        "Transform": {
+          "Position": [0.0, 0.0, 0.0], "Rotation": [0.0, 0.0, 0.0],
+          "Scale": [1.0, 1.0, 1.0], "RotationQuat": [1.0, 0.0, 0.0, 0.0],
+          "UseQuatRotation": false
+        },
+        "RectTransform": {
+          "AnchorMin": [0.5, 0.30], "AnchorMax": [0.5, 0.30],
+          "OffsetMin": [-420.0, -70.0], "OffsetMax": [420.0, 70.0]
+        },
+        "UiText": {
+          "Text": "FORGE ISLE",
+          "SizePx": 96.0, "Color": [1.0, 0.86, 0.62, 1.0],
+          "HAlign": 1, "VAlign": 1
+        }
+      }
+    },
+    {
+      "id": "0000000000f10012",
+      "components": {
+        "Tag": { "Tag": "Subtitle" },
+        "Transform": {
+          "Position": [0.0, 0.0, 0.0], "Rotation": [0.0, 0.0, 0.0],
+          "Scale": [1.0, 1.0, 1.0], "RotationQuat": [1.0, 0.0, 0.0, 0.0],
+          "UseQuatRotation": false
+        },
+        "RectTransform": {
+          "AnchorMin": [0.5, 0.385], "AnchorMax": [0.5, 0.385],
+          "OffsetMin": [-420.0, -22.0], "OffsetMax": [420.0, 22.0]
+        },
+        "UiText": {
+          "Text": "a Starforge showcase",
+          "SizePx": 24.0, "Color": [0.85, 0.88, 0.95, 0.85],
+          "HAlign": 1, "VAlign": 1
+        }
+      }
+    },
+    {
+      "id": "0000000000f10013",
+      "components": {
+        "Tag": { "Tag": "Start Button" },
+        "Transform": {
+          "Position": [0.0, 0.0, 0.0], "Rotation": [0.0, 0.0, 0.0],
+          "Scale": [1.0, 1.0, 1.0], "RotationQuat": [1.0, 0.0, 0.0, 0.0],
+          "UseQuatRotation": false
+        },
+        "RectTransform": {
+          "AnchorMin": [0.5, 0.60], "AnchorMax": [0.5, 0.60],
+          "OffsetMin": [-150.0, -32.0], "OffsetMax": [150.0, 32.0]
+        },
+        "UiImage": { "Tint": [0.16, 0.19, 0.25, 0.92] },
+        "UiButton": { "Signal": "start" },
+        "UiText": { "Text": "Set Ashore", "SizePx": 30.0, "HAlign": 1, "VAlign": 1 }
+      }
+    },
+    {
+      "id": "0000000000f10014",
+      "components": {
+        "Tag": { "Tag": "Quit Button" },
+        "Transform": {
+          "Position": [0.0, 0.0, 0.0], "Rotation": [0.0, 0.0, 0.0],
+          "Scale": [1.0, 1.0, 1.0], "RotationQuat": [1.0, 0.0, 0.0, 0.0],
+          "UseQuatRotation": false
+        },
+        "RectTransform": {
+          "AnchorMin": [0.5, 0.70], "AnchorMax": [0.5, 0.70],
+          "OffsetMin": [-150.0, -32.0], "OffsetMax": [150.0, 32.0]
+        },
+        "UiImage": { "Tint": [0.14, 0.15, 0.19, 0.92] },
+        "UiButton": { "Signal": "quit" },
+        "UiText": { "Text": "Quit", "SizePx": 30.0, "HAlign": 1, "VAlign": 1 }
+      }
+    }
+  ]
+}
