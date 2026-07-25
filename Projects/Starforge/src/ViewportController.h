@@ -89,6 +89,19 @@ namespace Starforge
         // draws the collider overlay (§6.4). Both produce the same picture.
         void DrawOverlayContent2D(EditorContext& ctx, const Cosmic::Camera2DController& cam);
 
+#ifdef COSMIC_2D_ONLY
+        // W7 / §6.4 — the 2D collider overlay: Box/Sphere/Capsule projected onto
+        // XY with Renderer2D, so 2D physics is visually debuggable now that
+        // PhysicsWorld::DebugDraw is a no-op without Renderer3D. Honours the same
+        // m_ShowColliders strip toggle and selected-bright / resting-dim palette.
+        //
+        // Call it AFTER Scene::OnRenderSprites — a collider usually sits exactly
+        // on its sprite, so drawing it with the rest of the overlay (which runs
+        // BEFORE the sprites, so the grid stays under the art) would bury it.
+        // It opens its own render pass, so it stands alone in the hook.
+        void DrawColliderOverlay2D(EditorContext& ctx, const Cosmic::Camera2DController& cam);
+#endif
+
         // The gizmo, drawn inside the viewport overlay window (between
         // WorkspaceLayer::BeginViewportOverlay/EndViewportOverlay), AFTER
         // DrawViewportOverlays (it yields while a strip widget is hovered or
@@ -168,17 +181,6 @@ namespace Starforge
     private:
         void FrameSelection(EditorContext& ctx, EditorCameraRig& rig);
         bool SelectionBounds(EditorContext& ctx, glm::vec3& mn, glm::vec3& mx) const;
-
-#ifdef COSMIC_2D_ONLY
-        // W7 / §6.4 — the 2D collider overlay. With Renderer3D gone,
-        // PhysicsWorld::DebugDraw is a no-op and the J8 collider wireframes have
-        // no line batch, so 2D physics would be invisible. This draws each
-        // Box/Sphere/Capsule collider PROJECTED ONTO XY (the sprite plane) with
-        // Renderer2D::DrawRect/DrawLine, honouring the same m_ShowColliders
-        // strip toggle and the same selected-bright / resting-dim palette.
-        // Called from DrawOverlayContent2D, inside its render pass.
-        void DrawColliderOverlay2D(EditorContext& ctx);
-#endif
 
 #ifndef COSMIC_2D_ONLY
         Cosmic::Ref<Cosmic::ScenePicker> m_Picker;

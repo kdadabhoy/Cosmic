@@ -1210,6 +1210,21 @@ namespace Starforge
             m_SceneRenderer.Init(vw, vh);
         m_SceneRenderer.SetViewportSize(vw, vh);
 
+#ifdef COSMIC_2D_ONLY
+        // W7 — the 2D stats chip + Profiler read Renderer2D's batch counters,
+        // which are OPT-IN (Renderer2D::StatsEnabled defaults false) and are
+        // never reset by the engine. Arm them once and zero them per frame, so
+        // the chip shows this frame's batch cost instead of a flat zero.
+        // (Renderer3D's counters are always-on but Starforge never resets them,
+        // so the 3D chip shows lifetime totals — a separate, pre-existing quirk
+        // left alone here to keep the 3D build behaviour-identical.)
+        {
+            static bool s_Stats2DArmed = false;
+            if (!s_Stats2DArmed) { Cosmic::Renderer2D::SetStatsStatus(true); s_Stats2DArmed = true; }
+            Cosmic::Renderer2D::ResetStats();
+        }
+#endif
+
         // ---- Game view (U7): primary-camera adoption + letterbox band ------
         // While PLAYING (not ejected) the viewport shows the primary
         // CameraComponent's view, exactly like the shipped player; the aspect
@@ -1374,13 +1389,20 @@ namespace Starforge
                 else          m_Viewport.DrawOverlayContent(m_Ctx);
 #else
                 // 2D mode is the only mode here, and the overlay is the
-                // Renderer2D twin (pixel grid + sprite selection + tile visuals
-                // + the W7 collider overlay). See ViewportController.cpp.
+                // Renderer2D twin (pixel grid + sprite selection + tile
+                // visuals + 2D light glyphs). See ViewportController.cpp.
                 m_Viewport.DrawOverlayContent2D(m_Ctx, m_Camera2D);
 #endif
                 scenePtr->OnRenderSprites(c.ViewProjection, vw, vh);
                 // X5 — 2D lights multiply over the sprite output (no-op without lights).
                 scenePtr->OnRender2DLights(c.ViewProjection, vw, vh);
+#ifdef COSMIC_2D_ONLY
+                // W7 — the collider overlay draws LAST, over the sprites: a
+                // collider normally sits exactly on its sprite, so drawing it
+                // with the rest of the overlay (which has to stay under the art)
+                // buried it completely. Found in the on-GPU pass.
+                m_Viewport.DrawColliderOverlay2D(m_Ctx, m_Camera2D);
+#endif
             };
 
             // U1 — canvas UI composites after post (LDR bound). U7: the canvases
@@ -2286,10 +2308,17 @@ namespace Starforge
             {
                 using VM = ViewportController::ViewMode;
                 const VM cur = m_Viewport.GetViewMode();
+                // W7 — Unlit neutralizes 3D lights and Entity ID renders the
+                // mesh ID pass; neither exists in the 2D build. This list must
+                // match the viewport strip's dropdown (ViewportController.cpp).
                 if (ImGui::MenuItem("Lit",       nullptr, cur == VM::Lit))       m_Viewport.SetViewMode(VM::Lit);
+#ifndef COSMIC_2D_ONLY
                 if (ImGui::MenuItem("Unlit",     nullptr, cur == VM::Unlit))     m_Viewport.SetViewMode(VM::Unlit);
+#endif
                 if (ImGui::MenuItem("Wireframe", nullptr, cur == VM::Wireframe)) m_Viewport.SetViewMode(VM::Wireframe);
+#ifndef COSMIC_2D_ONLY
                 if (ImGui::MenuItem("Entity ID", nullptr, cur == VM::EntityID))  m_Viewport.SetViewMode(VM::EntityID);
+#endif
                 ImGui::EndMenu();
             }
             ImGui::Separator();

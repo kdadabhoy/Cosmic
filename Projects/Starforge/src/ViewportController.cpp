@@ -840,8 +840,6 @@ namespace Starforge
             }
         }
 
-        DrawColliderOverlay2D(ctx);
-
         Renderer2D::PopRenderPass();   // flushes the overlay batch
         RenderCommand::SetDepthWrite(true);
     }
@@ -851,10 +849,27 @@ namespace Starforge
     // XY footprint, a sphere its great circle, a capsule the classic stadium
     // (two side lines + two end arcs) of the Y-axis capsule the runtime builds.
     // Same toggle (m_ShowColliders) and same palette as the 3D gizmos.
-    void ViewportController::DrawColliderOverlay2D(EditorContext& ctx)
+    //
+    // Its own pass, called AFTER the sprites (see the header): a collider
+    // normally sits exactly on the sprite it belongs to, so drawing it with the
+    // rest of the overlay — which must stay UNDER the art, or the grid would
+    // paint over it — left the wireframe buried and invisible.
+    void ViewportController::DrawColliderOverlay2D(EditorContext& ctx,
+                                                   const Camera2DController& cam)
     {
         if (!m_ShowColliders || !ctx.Scene)
             return;
+
+        const glm::vec2 vpSize = Application::Get().GetViewportSize();
+        if (vpSize.x < 1.0f || vpSize.y < 1.0f)
+            return;
+
+        RenderCommand::SetDepthTest(true);
+        RenderCommand::SetDepthWrite(false);
+        RenderCommand::SetBlendMode(RendererAPI::BlendMode::Alpha);
+
+        Renderer2D::PushRenderPass(cam.GetCamera().GetViewProjectionMatrix(),
+                                   { 0.0f, 0.0f, vpSize.x, vpSize.y });
 
         auto& reg = ctx.Scene->GetRegistry();
         auto selected = [&](entt::entity h)
@@ -916,8 +931,11 @@ namespace Starforge
                 }
             }
         }
+
+        Renderer2D::PopRenderPass();   // flushes the collider batch
+        RenderCommand::SetDepthWrite(true);
     }
-#endif   // COSMIC_2D_ONLY — DrawOverlayContent2D
+#endif   // COSMIC_2D_ONLY — DrawOverlayContent2D + DrawColliderOverlay2D
 
 #ifndef COSMIC_2D_ONLY
     void ViewportController::DrawOverlayContent(EditorContext& ctx)
@@ -1295,14 +1313,21 @@ namespace Starforge
             // View toggles.
             auto toggle = [&](const char* icon, bool& on, const char* tip)
             {
-                if (on)
+                // PRE-EXISTING BUG, fixed here (found by the W7 on-GPU pass):
+                // the pop used to be guarded on `on` AFTER the button had
+                // already flipped it, so EVERY click on a chip left ImGui's
+                // style-colour stack unbalanced by one — an assert + abort() in
+                // Debug, silent corruption in Release. Latch the pushed state
+                // instead of re-reading the flag.
+                const bool pushed = on;
+                if (pushed)
                 {
                     const ImVec4 acc = ImGui::GetStyleColorVec4(ImGuiCol_CheckMark);
                     ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(acc.x, acc.y, acc.z, 0.32f));
                 }
                 if (ImGui::Button(icon, ImVec2(sq, sq)))
                     on = !on;
-                if (on)
+                if (pushed)
                     ImGui::PopStyleColor();
                 if (ImGui::IsItemHovered())
                     ImGui::SetTooltip("%s", tip);
