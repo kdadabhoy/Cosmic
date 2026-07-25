@@ -17,8 +17,9 @@ option(COSMIC_2D_ONLY "Build the 2D-only engine (excludes all 3D subsystems)" OF
 
 # Jolt ships on BOTH configurations (Phase 29 decision 3) — physics is dimension
 # agnostic, so 2D keeps rigid bodies, box/sphere/capsule colliders and the
-# character controller. OFF leaves the null backend plus whatever an app registers
-# through IPhysicsBackend (W3); it is not a supported configuration until then.
+# character controller. OFF is a supported configuration since W3: it drops
+# physics/backends/JoltBackend.cpp and leaves the null backend plus whatever an app
+# registers through IPhysicsBackend (physics/PhysicsBackend.h).
 option(COSMIC_WITH_JOLT "Build the Jolt physics backend" ON)
 
 # ----------------------------
@@ -200,6 +201,14 @@ if(COSMIC_2D_ONLY)
     list(FILTER COSMIC_SOURCES EXCLUDE REGEX "/src/assets/MeshImport\\.cpp$")
 endif()
 
+# physics/backends/ (W3) — the Jolt backend is the only TU that includes
+# <Jolt/...>, so COSMIC_WITH_JOLT=OFF drops it and leaves the null backend plus
+# whatever an app registers through IPhysicsBackend. Orthogonal to COSMIC_2D_ONLY:
+# both engine configurations ship Jolt by default (decision 3).
+if(NOT COSMIC_WITH_JOLT)
+    list(FILTER COSMIC_SOURCES EXCLUDE REGEX "/src/physics/backends/JoltBackend\\.cpp$")
+endif()
+
 add_library(Cosmic SHARED ${COSMIC_SOURCES})
 
 # ----------------------------
@@ -242,8 +251,9 @@ target_link_libraries(Cosmic PRIVATE tomlplusplus ImGuizmo nlohmann_json
     $<$<BOOL:${COSMIC_WITH_JOLT}>:Jolt>
     $<$<NOT:$<BOOL:${COSMIC_2D_ONLY}>>:RecastNavigation>)
 
-# Compile-time counterpart of the option: consumed by physics/ from W3 on, where
-# the Jolt backend registers itself with PhysicsBackendRegistry only when built.
+# Compile-time counterpart of the option: PhysicsBackend.cpp calls
+# RegisterJoltPhysicsBackend() and defaults the registry to "jolt" only when this
+# is defined; without it the default is "null".
 if(COSMIC_WITH_JOLT)
     target_compile_definitions(Cosmic PRIVATE COSMIC_WITH_JOLT)
 endif()

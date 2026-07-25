@@ -22,6 +22,7 @@
 #include <glm/gtc/quaternion.hpp>
 
 #include <cstdint>
+#include <string>
 #include <vector>
 
 namespace Cosmic
@@ -152,9 +153,16 @@ namespace Cosmic
         uint32_t  MaxBodyPairs         = 65536;
         uint32_t  MaxContactConstraints = 20480;
 
-        // Worker threads for Jolt's own pool. -1 => auto (min(hw-1, 4)); 0 =>
+        // Worker threads for the backend's own pool. -1 => auto (min(hw-1, 4)); 0 =>
         // single-threaded (the determinism proof pins this so two runs bit-match).
+        // A third-party backend either honours 0 or documents that it ignores it.
         int32_t ThreadCount = -1;
+
+        // Which IPhysicsBackend this world runs on (Phase 29 W3, ABI-appended).
+        // Empty => PhysicsBackendRegistry::Default(), which is "jolt" unless an app
+        // called SetDefault. An unregistered name logs and falls back to "null";
+        // see physics/PhysicsBackend.h for how to register your own.
+        std::string Backend;
     };
 
     // ------------------------------------------------------------------------

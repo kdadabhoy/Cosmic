@@ -7,12 +7,14 @@
 #include "scene/Entity.h"
 #include "scene/Components.h"
 #include "scripting/ScriptHost.h"
-#include "graphics/Mesh.h"
+#ifndef COSMIC_2D_ONLY
+#include "graphics/Mesh.h"           // mesh-collider geometry rebuild
 #include "terrain/Terrain.h"
 #include "voxel/VoxelVolume.h"       // V5 — per-chunk static mesh collision
 #include "voxel/BlockPalette.h"
 #include "voxel/VoxelMesher.h"
 #include "voxel/VoxelRender.h"       // VoxelRenderData::CollisionDirty
+#endif
 #include "core/Log.h"
 
 #include <glm/gtc/quaternion.hpp>
@@ -39,6 +41,7 @@ namespace Cosmic
         r = glm::normalize(glm::quat_cast(rot));
     }
 
+#ifndef COSMIC_2D_ONLY
     // Rebuild CPU geometry for a parametric primitive (the mesh itself keeps no CPU
     // copy after GPU upload, so a mesh collider on a primitive regenerates it here).
     static MeshData PrimitiveMeshData(const PrimitiveMeshComponent& p)
@@ -55,6 +58,7 @@ namespace Cosmic
         }
         return {};
     }
+#endif // !COSMIC_2D_ONLY
 
     ScenePhysics::ScenePhysics(Scene& scene, PhysicsWorld& world)
         : m_Scene(scene), m_World(world) {}
@@ -136,6 +140,9 @@ namespace Cosmic
             out.Shapes.push_back(std::move(d));
             anyTrigger |= c->IsTrigger;
         }
+#ifndef COSMIC_2D_ONLY
+        // MeshCollider and TerrainCollider are 3D-only (plan doc 28 §6.4); 2D keeps
+        // the dimension-agnostic subset — RigidBody + Box/Sphere/Capsule + character.
         if (const auto* c = reg.try_get<MeshColliderComponent>(e); c && c->Enabled)   // T12
         {
             // Mesh geometry: rebuild from a sibling primitive; else fall back to the
@@ -211,6 +218,7 @@ namespace Cosmic
                 CS_CORE_WARN("TerrainCollider (entity {0}) has no built TerrainComponent — skipped.", uint32_t(e));
             }
         }
+#endif // !COSMIC_2D_ONLY
 
         out.IsTrigger = anyTrigger;
         out.EntityId  = 0;
@@ -259,9 +267,16 @@ namespace Cosmic
                 continue;   // handled above
             if (!m_Scene.IsActiveInHierarchy(e))   // T13 — inactive: not baked
                 continue;
+            // any_of is an OR, so the 3D half splits off without changing the 3D
+            // result. Both 3D-only names go together: with the MeshCollider branch of
+            // BuildColliderDesc fenced above, keeping MeshColliderComponent here would
+            // pass the probe and then produce no shapes.
             const bool hasCollider =
-                reg.any_of<BoxColliderComponent, SphereColliderComponent, CapsuleColliderComponent,
-                           MeshColliderComponent, TerrainColliderComponent>(e);
+                reg.any_of<BoxColliderComponent, SphereColliderComponent, CapsuleColliderComponent>(e)
+#ifndef COSMIC_2D_ONLY
+                || reg.any_of<MeshColliderComponent, TerrainColliderComponent>(e)
+#endif
+                ;
             const bool hasBody = reg.all_of<RigidBodyComponent>(e);
             if (!hasCollider && !hasBody)
                 continue;
@@ -278,12 +293,15 @@ namespace Cosmic
                 m_Bodies.emplace(e, body);
         }
 
+#ifndef COSMIC_2D_ONLY
         // Static collision for any voxel volumes already resident at session start
         // (a loaded .cvox). Streamed/edited chunks come online via CollisionDirty.
         BuildVoxelBodies();
+#endif
     }
 
-    // --- Voxel collision (V5) -----------------------------------------------
+    // --- Voxel collision (V5) — 3D-only (plan doc 28 §6.4) -------------------
+#ifndef COSMIC_2D_ONLY
 
     PhysicsBody ScenePhysics::MakeVoxelChunkBody(entt::entity e, const glm::ivec3& chunk)
     {
@@ -372,13 +390,17 @@ namespace Cosmic
         }
     }
 
+#endif // !COSMIC_2D_ONLY
+
     void ScenePhysics::Step(float fixedDt)
     {
         auto& reg = m_Scene.GetRegistry();
 
+#ifndef COSMIC_2D_ONLY
         // 0) Rebuild collision for any voxel chunks edited/streamed since last step,
         //    so characters + dynamics walk on the current geometry this step.
         RebuildDirtyVoxelChunks();
+#endif
 
         // 1) Push kinematic targets from the (possibly script-moved) transforms.
         for (auto& [e, body] : m_Bodies)
@@ -399,7 +421,11 @@ namespace Cosmic
         {
             const auto* rb = reg.try_get<RigidBodyComponent>(e);
             if (!rb || rb->Motion != MotionType::Dynamic) continue;
-            glm::vec3 p; glm::quat q;
+            // Seeded, not left indeterminate: GetBodyTransform leaves its out-params
+            // untouched when it has nothing to report, which a pluggable backend (W3)
+            // may legitimately do. Jolt always writes both for a live body, so with
+            // the default backend these are dead stores and behaviour is unchanged.
+            glm::vec3 p(0.0f); glm::quat q(1, 0, 0, 0);
             m_World.GetBodyTransform(body, p, q);
             WriteBackWorldPose(e, p, q);
         }
@@ -499,10 +525,12 @@ namespace Cosmic
                 m_World.DestroyCharacter(ctrl.GetHandle());
         m_Characters.clear();
 
+#ifndef COSMIC_2D_ONLY
         for (auto& [e, chunks] : m_VoxelBodies)
             for (auto& [c, body] : chunks)
                 m_World.DestroyBody(body);
         m_VoxelBodies.clear();
+#endif
     }
 
     PhysicsBody ScenePhysics::GetBody(entt::entity e) const

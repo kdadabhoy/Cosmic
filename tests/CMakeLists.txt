@@ -49,6 +49,9 @@ add_executable(CosmicTests
     test_physics_character.cpp
     test_physics_terrain.cpp
     test_physics_determinism.cpp
+    # Phase 29 W3 — the pluggable backend seam and the 2D physics contract.
+    test_physics_backend.cpp
+    test_physics_2d.cpp
     test_nav_world.cpp
     test_nav_bake.cpp
     test_nav_agents.cpp

@@ -113,11 +113,14 @@
 #include "scripting/ScriptHost.h"
 #include "scripting/ModuleMacros.h"
 
-// Physics (Phase 15 / J1-J9) — generic Jolt-backed rigid-body / query / character
-// tier. PhysicsWorld is the service; PhysicsTypes/PhysicsBody are the Jolt-free
-// value types scripts + apps pass. Jolt itself never appears in these headers.
+// Physics (Phase 15 / J1-J9) — generic rigid-body / query / character tier, Jolt
+// backed by default. PhysicsWorld is the service; PhysicsTypes/PhysicsBody are the
+// backend-free value types scripts + apps pass. Jolt itself never appears in these
+// headers. PhysicsBackend.h is the Phase 29 W3 seam: implement IPhysicsBackend and
+// register it to run an app on your own physics.
 #include "physics/PhysicsTypes.h"
 #include "physics/PhysicsBody.h"
+#include "physics/PhysicsBackend.h"
 #include "physics/PhysicsWorld.h"
 #include "physics/CharacterController.h"   // J6 — CharacterVirtual ergonomic wrapper
 

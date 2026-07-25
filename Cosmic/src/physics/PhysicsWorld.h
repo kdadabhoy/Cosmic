@@ -5,11 +5,18 @@
 // Cosmic physics — the engine rigid-body / query / character service (Phase 15).
 // ============================================================================
 //
-// Wraps ONE Jolt PhysicsSystem behind a pimpl so no JPH:: type ever appears in a
-// public header (the compile-time firewall; Jolt is linked PRIVATE into the DLL).
+// A DISPATCHER over one IPhysicsBackend (Phase 29 W3) — the RenderCommand ->
+// RendererAPI idiom. The backend is resolved by name at Init from
+// PhysicsBackendRegistry, so an app can register and select its own physics
+// implementation (physics/PhysicsBackend.h) without a single call site moving.
+// The default backend is Jolt, which keeps the old pimpl property: no JPH:: type
+// ever appears in a public header (the compile-time firewall; Jolt is linked
+// PRIVATE into the DLL). This class stays CONCRETE and by-value constructible —
+// PlayerLayer and StarforgeApp hold it by value.
+//
 // Owned by whoever runs a simulation session — the Starforge editor's play mode
 // and the standalone PlayerLayer (the SerialLink/SceneManager ownership pattern).
-// Bodies exist only while a session runs; edit mode holds no Jolt objects.
+// Bodies exist only while a session runs; edit mode holds no backend objects.
 //
 // FIXED-STEP CONTRACT (J4): Step() is called exactly on the engine fixed timestep,
 // once per accumulated fixed-dt, AFTER scripts' OnFixedUpdate and BEFORE transform
@@ -40,6 +47,7 @@
 namespace Cosmic
 {
     class Renderer3DDebugSink;   // fwd (J8) — not used publicly here
+    class IPhysicsBackend;       // fwd (W3) — physics/PhysicsBackend.h
 
     class COSMIC_API PhysicsWorld
     {
@@ -130,13 +138,13 @@ namespace Cosmic
          *  Debug-config only (needs JPH_DEBUG_RENDERER); a no-op in Release. */
         void DebugDraw() const;
 
-    public:
-        // Opaque — the full definition (all JPH:: state) lives in PhysicsWorld.cpp.
-        // Public only so the .cpp's file-local contact-listener / query filters can
-        // name the type; clients see an incomplete type and can do nothing with it.
-        struct Impl;
-
     private:
-        std::unique_ptr<Impl> m_Impl;   // all JPH:: state lives here
+        // The pluggable backend (Phase 29 W3). Every method above is a one-line
+        // forward to this; Init resolves it by name through PhysicsBackendRegistry
+        // (PhysicsSettings::Backend, or the registry default). Incomplete here on
+        // purpose — the same compile-time firewall the old pimpl gave us, so
+        // including PhysicsWorld.h still pulls in no backend headers and no Jolt.
+        // Null between construction and Init, and again after Shutdown.
+        std::unique_ptr<IPhysicsBackend> m_Backend;
     };
 }
