@@ -100,6 +100,11 @@ namespace Starforge
                 ImGui::TextDisabled("New material — tune below, Save .cmat, then Assign to a selected mesh.");
 
             // --- Live preview sphere (A4 — the rig's interactive mode) -----
+            // W7: the preview draws a lit UV sphere through Renderer3D, so the
+            // 2D build has no sphere. The reflected field editor below — which
+            // IS the material authoring surface, and matters in 2D because a
+            // SpriteRenderer can carry a material — is untouched.
+#ifndef COSMIC_2D_ONLY
             {
                 const float pw = std::max(96.0f, ImGui::GetContentRegionAvail().x);
                 const float ph = std::min(220.0f, std::max(96.0f, pw * 0.62f));
@@ -127,6 +132,7 @@ namespace Starforge
             }
 
             ImGui::Separator();
+#endif   // COSMIC_2D_ONLY — the preview sphere
 
             // --- Reflected material fields (auto-UI, undoable — A4) --------
             // The capture-on-activate / push-on-commit idiom the Inspector uses:
@@ -157,6 +163,9 @@ namespace Starforge
             ImGui::Separator();
 
             // --- Assign / load to the selected MeshRenderer ----------------
+            // MeshRenderer is 3D-only; a 2D material is assigned from the
+            // Inspector's SpriteRenderer material slot instead.
+#ifndef COSMIC_2D_ONLY
             Entity sel = ctx.PrimaryEntity();
             const bool hasMesh = sel && sel.HasComponent<MeshRendererComponent>();
 
@@ -183,6 +192,10 @@ namespace Starforge
 
             ImGui::TextDisabled("Edits are undoable (Ctrl+Z) and preview live above;");
             ImGui::TextDisabled("Save, then Assign (or re-open the scene) to apply to entities.");
+#else
+            ImGui::TextDisabled("Edits are undoable (Ctrl+Z). Save the .cmat, then assign it");
+            ImGui::TextDisabled("from a SpriteRenderer's material slot in the Inspector.");
+#endif
         }
         ImGui::End();
     }

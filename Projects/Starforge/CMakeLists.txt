@@ -41,6 +41,20 @@ endif()
 # -------------------------------------------------------------------
 file(GLOB_RECURSE STARFORGE_SOURCES CONFIGURE_DEPENDS "src/*.cpp" "src/*.h")
 
+# Phase 29 / W7 — the 2D editor's TU exclusions (plan doc 28 §8.5). Three files
+# are 3D end-to-end: the Voxels panel (VoxelVolume brush + palette), the World
+# Systems panel (terrain/water/particle recipes) and the Animation Editor
+# (Skeleton + AnimationClip + PreviewRig::RenderSkeletal). Every OTHER Starforge
+# file stays in both configurations and carries in-file #ifndef COSMIC_2D_ONLY
+# fences instead. The option is redeclared here (a no-op once the root
+# CMakeLists' cache entry exists) so this directory still configures standalone.
+option(COSMIC_2D_ONLY "Build the 2D-only engine (excludes all 3D subsystems)" OFF)
+if(COSMIC_2D_ONLY)
+    list(FILTER STARFORGE_SOURCES EXCLUDE REGEX "src/panels/VoxelPanel\\.(cpp|h)$")
+    list(FILTER STARFORGE_SOURCES EXCLUDE REGEX "src/panels/WorldSystemsPanel\\.(cpp|h)$")
+    list(FILTER STARFORGE_SOURCES EXCLUDE REGEX "src/editors/AnimationEditor\\.(cpp|h)$")
+endif()
+
 # imgui-node-editor (U6 Flow Graph panel) — vendored library sources compiled
 # into the editor DLL, warnings off (external code; see the dependency's
 # VENDOR-NOTES.md). In-tree the ImGui symbols come from the propagated static

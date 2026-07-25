@@ -14,7 +14,9 @@
 #include "scene/SceneSerializer.h"
 #include "scene/FlowMachine.h"
 #include "scene/StoryGraph.h"
-#include "voxel/BlockPalette.h"
+#ifndef COSMIC_2D_ONLY
+#include "voxel/BlockPalette.h"      // the .cpal default writer
+#endif
 #include "core/Log.h"
 
 #include <entt/entt.hpp>
@@ -34,13 +36,21 @@ namespace Starforge
                 t[".cscene"]   = { ICON_LC_CLAPPERBOARD, IM_COL32( 66, 133, 244, 255), "Scene",     AssetOpen::Scene };
                 t[".cprefab"]  = { ICON_LC_BOXES,        IM_COL32( 38, 166, 154, 255), "Prefab",    AssetOpen::Prefab };
                 t[".cmat"]     = { ICON_LC_CIRCLE,       IM_COL32(255, 138,  61, 255), "Material",  AssetOpen::Material };
-                t[".cemitter"] = { ICON_LC_SPARKLES,     IM_COL32(236,  90, 190, 255), "Emitter",   AssetOpen::None };
                 t[".cflow"]    = { ICON_LC_WORKFLOW,     IM_COL32(240, 200,  60, 255), "Flow",      AssetOpen::None, AssetOpen::FlowEditor };
                 t[".cstory"]   = { ICON_LC_MESSAGES_SQUARE, IM_COL32(150, 120, 230, 255), "Story",  AssetOpen::None, AssetOpen::StoryEditor };
+                t[".cmeta"]    = { ICON_LC_SETTINGS,     IM_COL32(130, 130, 135, 255), "Meta",      AssetOpen::None };
+
+                // W7 — the 3D asset families. A row here is what makes a file
+                // legible AND droppable in the Content Browser, so a 2D build
+                // that cannot load these formats must not advertise them: the
+                // browser falls through to its generic-file tile instead.
+                // (AssetOpen keeps all its enumerators — the Model /
+                // AnimationEditor values are simply never produced here.)
+#ifndef COSMIC_2D_ONLY
+                t[".cemitter"] = { ICON_LC_SPARKLES,     IM_COL32(236,  90, 190, 255), "Emitter",   AssetOpen::None };
                 t[".cpal"]     = { ICON_LC_SWATCH_BOOK,  IM_COL32(170, 120,  80, 255), "Palette",   AssetOpen::None };
                 t[".cvox"]     = { ICON_LC_BLOCKS,       IM_COL32(140, 150, 160, 255), "Volume",    AssetOpen::None };
                 t[".cnav"]     = { ICON_LC_WAYPOINTS,    IM_COL32( 90, 200, 160, 255), "NavMesh",   AssetOpen::None };
-                t[".cmeta"]    = { ICON_LC_SETTINGS,     IM_COL32(130, 130, 135, 255), "Meta",      AssetOpen::None };
 
                 // Meshes / models. Rigged formats also open in the Animation
                 // Editor (M1) — the editor reports "no skeleton" for static ones.
@@ -51,16 +61,19 @@ namespace Starforge
                     t[e] = riggable;
                 for (const char* e : { ".obj", ".stl", ".ply" })            // static-only formats
                     t[e] = mesh;
+#endif
 
                 // Images / textures.
                 const AssetTypeInfo image = { ICON_LC_IMAGE, IM_COL32(180, 120, 230, 255), "Texture", AssetOpen::Texture };
                 for (const char* e : { ".png", ".jpg", ".jpeg", ".tga", ".bmp" })
                     t[e] = image;
 
-                // HDR environment maps.
+                // HDR environment maps (the IBL source — 3D only).
+#ifndef COSMIC_2D_ONLY
                 const AssetTypeInfo hdr = { ICON_LC_SUN, IM_COL32(240, 180, 70, 255), "HDRI", AssetOpen::None };
                 t[".hdr"] = hdr;
                 t[".exr"] = hdr;
+#endif
 
                 // Audio.
                 const AssetTypeInfo audio = { ICON_LC_FILE_AUDIO, IM_COL32(230, 110, 140, 255), "Audio", AssetOpen::None };
@@ -72,7 +85,10 @@ namespace Starforge
             return table;
         }
 
-        // Default emitter (a loadable .cemitter recipe preset).
+        // Default emitter (a loadable .cemitter recipe preset). Particles are
+        // excluded from the 2D build (plan decision 5), so the .cemitter row is
+        // gone from the registry above and this writer goes with it.
+#ifndef COSMIC_2D_ONLY
         bool WriteDefaultEmitter(const std::string& path)
         {
             Cosmic::ParticleEmitterComponent def;
@@ -80,6 +96,7 @@ namespace Starforge
             const uint32_t tid = entt::type_hash<Cosmic::ParticleEmitterComponent>::value();
             return Cosmic::SceneSerializer::SaveReflectedToFile(tid, &def, path);
         }
+#endif
 
         bool WriteDefaultPrefab(const std::string& path)
         {
@@ -107,12 +124,19 @@ namespace Starforge
 
     const std::vector<CreatableType>& CreatableTypes()
     {
+        // W7 — the Content Browser's "Create" menu. Emitter (particles) and
+        // Palette (voxel blocks) are 3D-only, so the 2D build cannot offer to
+        // create a file it has no way to author or load.
         static const std::vector<CreatableType> types = {
             { "Material", ".cmat",    ICON_LC_CIRCLE },
+#ifndef COSMIC_2D_ONLY
             { "Emitter",  ".cemitter", ICON_LC_SPARKLES },
+#endif
             { "Flow",     ".cflow",   ICON_LC_WORKFLOW },
             { "Story",    ".cstory",  ICON_LC_MESSAGES_SQUARE },
+#ifndef COSMIC_2D_ONLY
             { "Palette",  ".cpal",    ICON_LC_SWATCH_BOOK },
+#endif
             { "Scene",    ".cscene",  ICON_LC_CLAPPERBOARD },
             { "Prefab",   ".cprefab", ICON_LC_BOXES },
         };
@@ -130,8 +154,10 @@ namespace Starforge
             return WriteDefaultPrefab(resolvedDiskPath);
         if (extLower == ".cmat")
             return Cosmic::AssetLibrary::SaveMaterialAsset(Cosmic::MaterialAsset{}, resolvedDiskPath);
+#ifndef COSMIC_2D_ONLY
         if (extLower == ".cemitter")
             return WriteDefaultEmitter(resolvedDiskPath);
+#endif
         if (extLower == ".cflow")
         {
             // One "Start" state so the default flow validates + is editable.
@@ -159,11 +185,13 @@ namespace Starforge
             story.Nodes.push_back(std::move(n));
             return story.Save(resolvedDiskPath);
         }
+#ifndef COSMIC_2D_ONLY
         if (extLower == ".cpal")
         {
             Cosmic::Ref<Cosmic::BlockPalette> pal = Cosmic::BlockPalette::CreateDefault();
             return pal && pal->Save(resolvedDiskPath);
         }
+#endif
         return false;   // not a creatable type
     }
 }

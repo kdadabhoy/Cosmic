@@ -79,6 +79,10 @@ namespace Starforge
         // so the snapshot — and therefore redo — carries the drop point).
         void RecordSpawn(EditorContext& ctx, Cosmic::Entity root, const std::string& label);
 
+        // W7 — the three 3D-component commands. MeshRenderer and VoxelVolume do
+        // not exist in the 2D build, so declaration and definition fence
+        // together: a stray 2D caller is a compile error, not a link error.
+#ifndef COSMIC_2D_ONLY
         // Assign a .cmat to `e`'s MeshRenderer as ONE undo step (K13 material
         // drops). Applies now: sets MaterialPath AND resolves MaterialAsset
         // through AssetLibrary (undo restores both — the plain reflected string
@@ -99,6 +103,7 @@ namespace Starforge
         // drag = one undo). No-op when the id is unchanged or there is no volume.
         void VoxelEdit(EditorContext& ctx, Cosmic::Entity e,
                        const glm::ivec3& voxel, uint16_t newId, int stroke);
+#endif   // COSMIC_2D_ONLY — AssignMaterial / SetMaterialSlot / VoxelEdit
 
         // Set one tilemap cell (grid coords) on `e`'s Tilemap to `value`,
         // undoable (U4). Same stroke-coalescing contract as VoxelEdit: a paint

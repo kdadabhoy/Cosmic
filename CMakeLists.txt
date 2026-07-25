@@ -90,17 +90,18 @@ endif()
 # them; the 3D configuration skips nothing. Overridable by hand for either mode
 # (-DCOSMIC_SKIP_PROJECTS="Foo;Bar").
 #
-# Two additions the plan's §4 table does not list, both found in W6:
+# One addition the plan's §4 table does not list, found in W6:
 #   ViperSim   — its FlightScreen/ReplayScreen draw the airframe, pad, grid, axes
 #                and trail with DIRECT Renderer3D calls, so the 2D engine cannot
 #                link it. Decision 4 ("ViperSim works on both branches") would
 #                need a 2D rewrite of those two screens; that is out of W6's
 #                scope and is called out in the phase report.
-#   Starforge  — W7 is the work order that gates the editor. Until it lands the
-#                2D scan skips it so the 2D tree BUILDS at every phase boundary
-#                (§0's absolute rule). *** W7: DELETE Starforge FROM THIS LIST. ***
+#
+# Starforge came OFF this list in W7 — the editor is now gated for both
+# configurations (§8.5) and builds in 2D with its 3D panels, menus and overlays
+# fenced out. Projects/Starforge/CMakeLists.txt drops the three 3D-only TUs.
 set(COSMIC_SKIP_PROJECTS_3D "")
-set(COSMIC_SKIP_PROJECTS_2D "Frontier;Engine3DDemo;ForgeIsle;ViperSim;Starforge")
+set(COSMIC_SKIP_PROJECTS_2D "Frontier;Engine3DDemo;ForgeIsle;ViperSim")
 if(COSMIC_2D_ONLY)
     set(SKIP_DEFAULT "${COSMIC_SKIP_PROJECTS_2D}")
     set(SKIP_OTHER   "${COSMIC_SKIP_PROJECTS_3D}")
@@ -110,14 +111,21 @@ else()
 endif()
 set(COSMIC_SKIP_PROJECTS "${SKIP_DEFAULT}" CACHE STRING
     "Semicolon-separated Projects/ subdirectory names the scanner skips")
-# The cache is sticky, but this default is mode-derived: a tree reconfigured with
-# the other value of COSMIC_2D_ONLY would keep the previous mode's list, and a 3D
-# build would then silently skip its three 3D projects. Re-derive it whenever the
-# stored value is exactly the other mode's default — a hand-customised list is left
-# alone.
-if(NOT SKIP_OTHER STREQUAL SKIP_DEFAULT AND COSMIC_SKIP_PROJECTS STREQUAL "${SKIP_OTHER}")
+# The cache is sticky, but this default is mode-derived, so a stored value can go
+# stale two ways: flipping COSMIC_2D_ONLY in an existing tree (the list is now the
+# OTHER mode's), or editing a default here (W7 took Starforge off the 2D list —
+# an already-configured 2D tree would have gone on skipping the editor silently).
+# COSMIC_SKIP_PROJECTS_APPLIED remembers the default this tree last derived, so
+# both cases are detectable and a HAND-EDITED list is still left alone.
+set(COSMIC_SKIP_PROJECTS_APPLIED "${SKIP_DEFAULT}" CACHE INTERNAL
+    "The mode default COSMIC_SKIP_PROJECTS was last derived from")
+if(NOT COSMIC_SKIP_PROJECTS STREQUAL "${SKIP_DEFAULT}" AND
+   (COSMIC_SKIP_PROJECTS STREQUAL "${SKIP_OTHER}" OR
+    COSMIC_SKIP_PROJECTS STREQUAL "${COSMIC_SKIP_PROJECTS_APPLIED}"))
     set_property(CACHE COSMIC_SKIP_PROJECTS PROPERTY VALUE "${SKIP_DEFAULT}")
 endif()
+set(COSMIC_SKIP_PROJECTS_APPLIED "${SKIP_DEFAULT}" CACHE INTERNAL
+    "The mode default COSMIC_SKIP_PROJECTS was last derived from" FORCE)
 
 # AUTOMATED GAME PROJECT SCANNER
 if(NOT COSMIC_BUILD_ENGINE_ONLY)

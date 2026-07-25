@@ -34,6 +34,15 @@
 // Lighting note: the pass uploads its own key-light SceneLightsDesc into the
 // global lights UBO; the viewport re-uploads scene lights every frame, so the
 // mutation never outlives the frame that requested the preview.
+//
+// THE 2D CONFIGURATION (Phase 29 / W7). Every RENDER path here is 3D — the pass
+// draws a Mesh through Renderer3D, and the thumbnail sources are model files
+// (AssetLibrary::GetMesh) and .cmat spheres. All of it fences out. The CLASS
+// stays because EditorContext owns one by value and the Material Editor owns
+// another, and IsMeshExtension stays because the Content Browser's tile logic
+// asks it. What survives is the request/cache plumbing: Thumbnail() still
+// queues, PumpThumbnails() still drains, and Generate() reports failure — so a
+// 2D build shows the Content Browser's generic tiles, never a stale render.
 // ============================================================================
 
 #include <Cosmic.h>
@@ -56,6 +65,7 @@ namespace Starforge
         PreviewRig(const PreviewRig&)            = delete;
         PreviewRig& operator=(const PreviewRig&) = delete;
 
+#ifndef COSMIC_2D_ONLY
         // ---- Interactive mode ------------------------------------------------
         // Draw into the rig's FBO at (width, height) with the rig's orbit
         // camera; returns the color-attachment texture id (0 on failure). The
@@ -93,6 +103,7 @@ namespace Starforge
         // the flipped-V ImGui::Image draw). Returns false if behind the camera.
         bool ProjectPoint(const glm::vec3& modelPoint, uint32_t width, uint32_t height,
                           glm::vec2& outPx) const;
+#endif   // COSMIC_2D_ONLY — every interactive render path
 
         // Orbit input for the interactive image (pixel drag deltas / wheel).
         void Orbit(float dxPixels, float dyPixels);
@@ -124,9 +135,11 @@ namespace Starforge
 
     private:
         void        EnsureResources();
+#ifndef COSMIC_2D_ONLY
         uint32_t    Draw(const Cosmic::Ref<Cosmic::Mesh>& mesh,
                          const Cosmic::Ref<Cosmic::Material>& material,
                          const glm::vec4& color, uint32_t w, uint32_t h);
+#endif
         bool        Generate(const std::string& vfs);
         std::string CacheFileFor(const std::string& vfs) const;   // "" = uncacheable
 

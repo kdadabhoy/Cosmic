@@ -79,8 +79,11 @@ namespace Starforge
         }
 
         // CPU-side render breakdown: Renderer3D queue telemetry (S12).
+        // W7 — the 2D build has no mesh queue to report on; the Renderer2D batch
+        // counters are the equivalent read there.
         ImGui::Separator();
         {
+#ifndef COSMIC_2D_ONLY
             const auto stats = Cosmic::Renderer3D::GetStats();
             ImGui::Text("Meshes: %u submitted, %u culled (%.0f%%)",
                 stats.MeshesSubmitted, stats.MeshesCulled,
@@ -93,6 +96,13 @@ namespace Starforge
             if (stats.AutoInstanceBatches > 0)
                 ImGui::Text("Auto-instanced: %u meshes in %u draws",
                     stats.AutoInstancedMeshes, stats.AutoInstanceBatches);
+#else
+            const auto stats = Cosmic::Renderer2D::GetStats();
+            ImGui::Text("Quads: %u, circles: %u, lines: %u",
+                stats.QuadCount, stats.CircleCount, stats.LineCount);
+            ImGui::Text("Batch draw calls: %u", stats.DrawCalls);
+            ImGui::Text("Vertices: %u", stats.GetTotalVertexCount());
+#endif
         }
 
         ImGui::End();

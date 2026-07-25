@@ -5,11 +5,15 @@
 #include "Prefabs.h"                // K13 — viewport prefab drops
 
 #include "layers/WorkspaceLayer.h"
+// STAYS in both configurations (plan §8.5): ScenePhysics is dimension-agnostic
+// and the W7 2D collider overlay reads the very same collider components.
 #include "physics/ScenePhysics.h"   // J8 — live physics debug draw during Play
 #include "scene/ui/UiSystem.h"      // U1 — canvas UI interaction + hit-test
+#ifndef COSMIC_2D_ONLY
 #include "voxel/VoxelVolume.h"      // V4 — voxel brush raycast
 #include "voxel/VoxelRender.h"      // R8 — entity-ID view draws voxel chunk meshes
 #include "nav/NavWorld.h"           // N3 — nav-poly overlay (GetDebugTriangles)
+#endif
 
 #include "ui/IconsLucide.h"         // K6 — strip glyphs
 
@@ -32,6 +36,7 @@ namespace Starforge
 {
     namespace
     {
+#ifndef COSMIC_2D_ONLY
         // Three orthogonal wire circles — a cheap "sphere" for light glyphs / radius.
         void DrawWireSphere(const glm::vec3& c, float r, const glm::vec4& col, int seg)
         {
@@ -127,11 +132,39 @@ namespace Starforge
                 Renderer3D::DrawLine(c + d * (r * 1.3f), c + d * (r * 2.0f), col);
             }
         }
+#else
+        // ---- 2D overlay primitives (W7) --------------------------------------
+        // Renderer2D::DrawRect takes a CENTER + size; DrawLine takes two points.
+        // Everything here draws on the sprite plane at the given z.
+        void Rect2D(const glm::vec2& center, const glm::vec2& size, float z,
+                    const glm::vec4& col)
+        {
+            Renderer2D::DrawRect({ center.x, center.y, z }, size, col);
+        }
+
+        // A closed polyline through `seg` samples of an ellipse — the 2D stand-in
+        // for the 3D wire sphere (Renderer2D has no wire-circle primitive; its
+        // DrawCircle is a filled disc).
+        void WireEllipse2D(const glm::vec2& c, float rx, float ry, float z,
+                           const glm::vec4& col, int seg = 32)
+        {
+            glm::vec3 prev{ c.x + rx, c.y, z };
+            for (int i = 1; i <= seg; ++i)
+            {
+                const float a = (float)i / (float)seg * glm::two_pi<float>();
+                const glm::vec3 cur{ c.x + std::cos(a) * rx, c.y + std::sin(a) * ry, z };
+                Renderer2D::DrawLine(prev, cur, col);
+                prev = cur;
+            }
+        }
+#endif
     }
 
     void ViewportController::Init()
     {
+#ifndef COSMIC_2D_ONLY
         m_Picker = ScenePicker::Create();
+#endif
     }
 
     void ViewportController::OnUpdate(EditorContext& ctx, EditorCameraRig& rig, float ts,
@@ -187,6 +220,7 @@ namespace Starforge
         // active block / RMB breaks — one undoable edit per click (raycast the grid).
         // In the editor's default CAD nav the camera uses MMB, so LMB/RMB are free.
         bool voxelBrushConsumed = false;
+#ifndef COSMIC_2D_ONLY
         if (ctx.VoxelBrush.Editing && vpHover && !m_GizmoActive && !m_GizmoOver &&
             ctx.Scene && vpSize.x > 1.0f && vpSize.y > 1.0f)
         {
@@ -234,6 +268,7 @@ namespace Starforge
             }
         }
         if (!ctx.VoxelBrush.Editing) { m_VoxelLmbWas = false; m_VoxelRmbWas = false; }
+#endif   // COSMIC_2D_ONLY — the voxel brush
 
         // Tile painter (U4): Tile Palette "Paint" on + 2D mode + a Tilemap on the
         // primary selection. LMB applies the tool (Paint drag = one undo stroke,
@@ -426,6 +461,9 @@ namespace Starforge
         }
 
         // Click-pick — only on the click frame (an ID pre-pass is not free).
+        // 3D only: the picker renders a mesh ID pass. In the 2D build the sprite
+        // rect-pick above IS the pick path, and a miss clears the selection.
+#ifndef COSMIC_2D_ONLY
         if (clicked && !voxelBrushConsumed && !tileBrushConsumed && !uiConsumed && !spriteConsumed &&
             vpHover && !m_GizmoActive && !m_GizmoOver &&
             m_Picker && ctx.Scene && vpSize.x > 1.0f && vpSize.y > 1.0f)
@@ -449,8 +487,20 @@ namespace Starforge
                 }
             }
         }
+#else
+        // 2D: a click on empty space (no sprite, no UI, no tile stroke) clears
+        // the selection — the same "click-away deselects" contract the ID pass
+        // provides in the 3D build.
+        if (clicked && !tileBrushConsumed && !uiConsumed && !spriteConsumed &&
+            vpHover && !m_GizmoActive && !m_GizmoOver && !io.KeyCtrl && ctx.Scene)
+        {
+            ctx.ClearSelection();
+        }
+        (void)voxelBrushConsumed;
+#endif
     }
 
+#ifndef COSMIC_2D_ONLY
     bool ViewportController::ProbeWorldPoint(EditorContext& ctx, const Camera& cam,
                                              const glm::vec2& screenMouse, glm::vec3& out)
     {
@@ -536,7 +586,9 @@ namespace Starforge
         Renderer3D::EndScene();
         Renderer3D::SetAmbient(prevAmbient);
     }
+#endif   // COSMIC_2D_ONLY — ProbeWorldPoint + DrawSceneOverlay + DrawEntityIdView
 
+#ifndef COSMIC_2D_ONLY
     void ViewportController::DrawOverlayContent2D(EditorContext& ctx, const Camera2DController& cam)
     {
         // NO BeginScene/EndScene — same contract as DrawOverlayContent. Lines
@@ -638,7 +690,236 @@ namespace Starforge
             }
         }
     }
+#else   // COSMIC_2D_ONLY
+    // =========================================================================
+    // The 2D authoring overlay, on Renderer2D (W7).
+    //
+    // Same picture as the 3D twin above — pixel grid, XY axes, sprite selection
+    // rects, tile-painter visuals — plus the §6.4 collider overlay. The only
+    // structural difference is the render pass: the 3D build inherits the
+    // caller's Renderer3D scene, but a 2D frame's DrawTransparent hook has no
+    // open batch (SceneRenderer's Renderer3D::BeginScene/EndScene pair fenced
+    // out in W6), so this opens its own PushRenderPass. That is the same verb
+    // Scene::OnRenderSprites uses two calls later in the same hook, with the
+    // same view-projection and viewport bounds — it nests cleanly, and Pop
+    // flushes the lines before the sprites batch.
+    // =========================================================================
+    void ViewportController::DrawOverlayContent2D(EditorContext& ctx, const Camera2DController& cam)
+    {
+        glm::vec2 mn, mx;
+        cam.VisibleRect(mn, mx);
 
+        const glm::vec2 vpSize = Application::Get().GetViewportSize();
+        if (vpSize.x < 1.0f || vpSize.y < 1.0f)
+            return;
+
+        // Transparent-queue contract, matching OnRenderSprites: depth test ON
+        // (so overlay lines sit correctly against sprite depth), writes OFF,
+        // straight alpha. The engine default is depth-write ON, so restore it.
+        RenderCommand::SetDepthTest(true);
+        RenderCommand::SetDepthWrite(false);
+        RenderCommand::SetBlendMode(RendererAPI::BlendMode::Alpha);
+
+        Renderer2D::PushRenderPass(cam.GetCamera().GetViewProjectionMatrix(),
+                                   { 0.0f, 0.0f, vpSize.x, vpSize.y });
+
+        if (m_ShowGrid)
+        {
+            const float pxPerUnit = (cam.GetZoom() > 0.0f)
+                ? (vpSize.y / (2.0f * cam.GetZoom()))
+                : 0.0f;
+
+            const glm::vec4 minor(0.30f, 0.32f, 0.36f, 0.35f);
+            const glm::vec4 major(0.45f, 0.47f, 0.52f, 0.7f);
+
+            // 1-unit minors only when they resolve (>= ~6 px apart); 10-unit majors.
+            auto drawLines = [&](float step, const glm::vec4& col)
+            {
+                const float x0 = std::floor(mn.x / step) * step;
+                const float y0 = std::floor(mn.y / step) * step;
+                for (float x = x0; x <= mx.x; x += step)
+                    Renderer2D::DrawLine({ x, mn.y, 0.0f }, { x, mx.y, 0.0f }, col);
+                for (float y = y0; y <= mx.y; y += step)
+                    Renderer2D::DrawLine({ mn.x, y, 0.0f }, { mx.x, y, 0.0f }, col);
+            };
+            if (pxPerUnit >= 6.0f)          drawLines(1.0f,  minor);
+            if (pxPerUnit * 10.0f >= 6.0f)  drawLines(10.0f, major);
+
+            // XY axes through the origin (X red, Y green — matches the 3D axes).
+            Renderer2D::DrawLine({ mn.x, 0.0f, 0.0f }, { mx.x, 0.0f, 0.0f }, { 0.86f, 0.24f, 0.24f, 0.9f });
+            Renderer2D::DrawLine({ 0.0f, mn.y, 0.0f }, { 0.0f, mx.y, 0.0f }, { 0.35f, 0.80f, 0.30f, 0.9f });
+        }
+
+        // Selection outlines: a wire rect around each selected sprite. This is
+        // the ONLY selection affordance in the 2D build — the K12 outline pass
+        // rides on ScenePicker and fenced out with it.
+        if (ctx.Scene)
+        {
+            const glm::vec4 sel(1.0f, 0.62f, 0.11f, 1.0f);
+            for (entt::entity h : ctx.Selection)
+            {
+                Entity e(h, ctx.Scene.get());
+                if (!e || !e.HasComponent<TransformComponent>() ||
+                    !e.HasComponent<SpriteRendererComponent>())
+                    continue;
+                const auto& t = e.GetComponent<TransformComponent>();
+                const auto& s = e.GetComponent<SpriteRendererComponent>();
+                const glm::vec2 half = SpriteRendererComponent::WorldSize(
+                    s, { t.Scale.x, t.Scale.y },
+                    s.Resolved ? (int)s.Resolved->GetWidth() : 0,
+                    s.Resolved ? (int)s.Resolved->GetHeight() : 0) * 0.5f * 1.03f;
+                Rect2D({ t.Position.x, t.Position.y },
+                       { std::abs(half.x) * 2.0f, std::abs(half.y) * 2.0f },
+                       t.Position.z, sel);
+            }
+        }
+
+        // Tile painter visuals (U4): map bounds of the selected tilemap, the
+        // hovered cell, and the pending rect-fill preview.
+        if (ctx.Scene)
+        {
+            Entity prim = ctx.PrimaryEntity();
+            if (prim && prim.HasComponent<TilemapComponent>() &&
+                prim.HasComponent<TransformComponent>())
+            {
+                auto& tm = prim.GetComponent<TilemapComponent>();
+                tm.EnsureCells();
+                const auto& t = prim.GetComponent<TransformComponent>();
+                const glm::vec3 o = t.Position;
+
+                // Same (x0,y0)-(x1,y1) corner convention as the 3D twin, mapped
+                // onto DrawRect's centre+size form.
+                auto rect = [&](float x0, float y0, float x1, float y1, const glm::vec4& col)
+                {
+                    Rect2D({ o.x + 0.5f * (x0 + x1), o.y + 0.5f * (y0 + y1) },
+                           { x1 - x0, y1 - y0 }, o.z, col);
+                };
+
+                rect(0.0f, 0.0f, (float)tm.GridW, (float)tm.GridH,
+                     { 0.35f, 0.65f, 0.95f, 0.8f });   // map bounds
+
+                if (ctx.TileBrush.Editing)
+                {
+                    const glm::vec4 hot{ 1.0f, 0.85f, 0.25f, 0.9f };
+                    if (tm.InBounds(m_TileLastCell.x, m_TileLastCell.y))
+                        rect((float)m_TileLastCell.x,        (float)m_TileLastCell.y,
+                             (float)m_TileLastCell.x + 1.0f, (float)m_TileLastCell.y + 1.0f, hot);
+
+                    if (ctx.TileBrush.RectDragging)
+                    {
+                        const glm::ivec2 a = ctx.TileBrush.RectAnchor, b = m_TileLastCell;
+                        rect((float)std::min(a.x, b.x),        (float)std::min(a.y, b.y),
+                             (float)std::max(a.x, b.x) + 1.0f, (float)std::max(a.y, b.y) + 1.0f, hot);
+                    }
+                }
+            }
+        }
+
+        // X5 — 2D light glyphs: the centre cross + radius ring the 3D overlay
+        // draws for Light2DComponent, re-expressed on the 2D batch.
+        if (ctx.Scene)
+        {
+            auto& reg = ctx.Scene->GetRegistry();
+            auto selected = [&](entt::entity h)
+            {
+                for (entt::entity s : ctx.Selection) if (s == h) return true;
+                return false;
+            };
+            for (auto e : reg.view<TransformComponent, Light2DComponent>())
+            {
+                const auto& t  = reg.get<TransformComponent>(e);
+                const auto& lc = reg.get<Light2DComponent>(e);
+                const bool sel = selected(e);
+                const glm::vec4 col(lc.Color, sel ? 1.0f : 0.6f);
+                Renderer2D::DrawLine(t.Position - glm::vec3(0.2f, 0.0f, 0.0f),
+                                     t.Position + glm::vec3(0.2f, 0.0f, 0.0f), col);
+                Renderer2D::DrawLine(t.Position - glm::vec3(0.0f, 0.2f, 0.0f),
+                                     t.Position + glm::vec3(0.0f, 0.2f, 0.0f), col);
+                WireEllipse2D({ t.Position.x, t.Position.y }, lc.Radius, lc.Radius,
+                              t.Position.z, glm::vec4(lc.Color, sel ? 0.7f : 0.35f));
+            }
+        }
+
+        DrawColliderOverlay2D(ctx);
+
+        Renderer2D::PopRenderPass();   // flushes the overlay batch
+        RenderCommand::SetDepthWrite(true);
+    }
+
+    // §6.4 — colliders projected onto XY. Each shape is drawn in the SAME world
+    // transform ScenePhysics bakes it with, then flattened: a box becomes its
+    // XY footprint, a sphere its great circle, a capsule the classic stadium
+    // (two side lines + two end arcs) of the Y-axis capsule the runtime builds.
+    // Same toggle (m_ShowColliders) and same palette as the 3D gizmos.
+    void ViewportController::DrawColliderOverlay2D(EditorContext& ctx)
+    {
+        if (!m_ShowColliders || !ctx.Scene)
+            return;
+
+        auto& reg = ctx.Scene->GetRegistry();
+        auto selected = [&](entt::entity h)
+        {
+            for (entt::entity s : ctx.Selection) if (s == h) return true;
+            return false;
+        };
+        const glm::vec4 dim { 0.20f, 0.85f, 0.45f, 0.55f };   // resting green
+        const glm::vec4 hot { 0.35f, 1.00f, 0.55f, 1.00f };   // selected
+
+        for (auto e : reg.view<TransformComponent>())
+        {
+            const bool anyCol = reg.any_of<BoxColliderComponent, SphereColliderComponent,
+                                           CapsuleColliderComponent>(e);
+            if (!anyCol) continue;
+            const glm::vec4 col = selected(e) ? hot : dim;
+            const glm::mat4 world = ctx.Scene->GetWorldTransform(Entity(e, ctx.Scene.get()));
+
+            // World scale per axis (the 2D rig has no rotation about X/Y, so the
+            // axis lengths are the honest footprint scale).
+            const float sx = glm::length(glm::vec3(world[0]));
+            const float sy = glm::length(glm::vec3(world[1]));
+
+            if (const auto* c = reg.try_get<BoxColliderComponent>(e))
+            {
+                const glm::vec3 ctr = glm::vec3(world * glm::vec4(c->Offset, 1.0f));
+                Rect2D({ ctr.x, ctr.y },
+                       { c->HalfExtents.x * 2.0f * sx, c->HalfExtents.y * 2.0f * sy },
+                       ctr.z, col);
+            }
+            if (const auto* c = reg.try_get<SphereColliderComponent>(e))
+            {
+                const glm::vec3 ctr = glm::vec3(world * glm::vec4(c->Offset, 1.0f));
+                WireEllipse2D({ ctr.x, ctr.y }, c->Radius * sx, c->Radius * sy, ctr.z, col, 32);
+            }
+            if (const auto* c = reg.try_get<CapsuleColliderComponent>(e))
+            {
+                const glm::vec3 ctr = glm::vec3(world * glm::vec4(c->Offset, 1.0f));
+                const float r  = c->Radius * sx;
+                const float hh = c->HalfHeight * sy;
+                const float z  = ctr.z;
+
+                // Straight sides.
+                Renderer2D::DrawLine({ ctr.x - r, ctr.y - hh, z }, { ctr.x - r, ctr.y + hh, z }, col);
+                Renderer2D::DrawLine({ ctr.x + r, ctr.y - hh, z }, { ctr.x + r, ctr.y + hh, z }, col);
+
+                // Hemispherical caps: half-circles about the two end centres.
+                const int seg = 16;
+                glm::vec3 prevTop{ ctr.x + r, ctr.y + hh, z };
+                glm::vec3 prevBot{ ctr.x - r, ctr.y - hh, z };
+                for (int i = 1; i <= seg; ++i)
+                {
+                    const float a = (float)i / (float)seg * glm::pi<float>();
+                    const glm::vec3 top{ ctr.x + std::cos(a) * r, ctr.y + hh + std::sin(a) * r, z };
+                    const glm::vec3 bot{ ctr.x - std::cos(a) * r, ctr.y - hh - std::sin(a) * r, z };
+                    Renderer2D::DrawLine(prevTop, top, col);
+                    Renderer2D::DrawLine(prevBot, bot, col);
+                    prevTop = top; prevBot = bot;
+                }
+            }
+        }
+    }
+#endif   // COSMIC_2D_ONLY — DrawOverlayContent2D
+
+#ifndef COSMIC_2D_ONLY
     void ViewportController::DrawOverlayContent(EditorContext& ctx)
     {
         // NO BeginScene/EndScene — the caller owns the scene. In the SceneRenderer
@@ -823,6 +1104,7 @@ namespace Starforge
             }
         }
     }
+#endif   // COSMIC_2D_ONLY — DrawOverlayContent (the 3D overlay)
 
     void ViewportController::DrawGizmo(EditorContext& ctx, const Camera& cam)
     {
@@ -903,6 +1185,7 @@ namespace Starforge
         s.SnapScale    = m_SnapScale;
     }
 
+#ifndef COSMIC_2D_ONLY
     void ViewportController::PrerenderNavCube(const Camera& cam, bool playing, bool mode2D)
     {
         // K8 — the cube pre-pass renders into its own FBO (outside the main
@@ -915,6 +1198,7 @@ namespace Starforge
         m_NavCube->Render(cam.GetViewMatrix());
         m_NavCubeFresh = true;
     }
+#endif
 
     void ViewportController::DrawViewportOverlays(EditorContext& ctx, EditorCameraRig& rig,
                                                   bool playing, bool mode2D)
@@ -1025,18 +1309,43 @@ namespace Starforge
                 ImGui::SameLine(0.0f, 3.0f);
             };
             toggle(ICON_LC_GRID_3X3, m_ShowGrid,         "Grid (G)");
+#ifndef COSMIC_2D_ONLY
             toggle(ICON_LC_BOXES,    m_ShowColliders,    "Collider gizmos (J8)");
             toggle(ICON_LC_ACTIVITY, m_ShowPhysicsDebug, "Live physics debug draw during Play (J8)");
             toggle(ICON_LC_WAYPOINTS, m_ShowNavMesh,     "Nav-mesh overlay (N3): walkable polys of selected /\nAlways-render-helper navmeshes");
+#else
+            // W7 — the collider chip drives the Renderer2D collider overlay
+            // (§6.4). The physics-debug and nav chips have nothing behind them
+            // in a 2D build (Jolt's debug renderer needs Renderer3D; there is
+            // no navmesh), so they are absent rather than dead.
+            toggle(ICON_LC_BOXES,    m_ShowColliders,
+                   "Collider overlay (J8/W7): Box/Sphere/Capsule projected onto XY");
+#endif
             ImGui::SameLine(0.0f, 8.0f);
 
             // R8 — view-mode dropdown (Lit · Unlit · Wireframe · Entity ID).
+            // The 2D build keeps Lit and Wireframe only: Unlit neutralizes 3D
+            // lights and Entity ID renders the mesh ID pass, neither of which
+            // exists there.
             {
+#ifndef COSMIC_2D_ONLY
                 static const char* kModes[] = { "Lit", "Unlit", "Wireframe", "Entity ID" };
+                const int kModeCount = 4;
+#else
+                static const char* kModes[] = { "Lit", "Wireframe" };
+                const int kModeCount = 2;
+#endif
                 int vm = (int)m_ViewMode;
+#ifdef COSMIC_2D_ONLY
+                vm = (m_ViewMode == ViewMode::Wireframe) ? 1 : 0;
+#endif
                 ImGui::SetNextItemWidth(96.0f);
-                if (ImGui::Combo("##k6viewmode", &vm, kModes, 4))
+                if (ImGui::Combo("##k6viewmode", &vm, kModes, kModeCount))
+#ifndef COSMIC_2D_ONLY
                     m_ViewMode = (ViewMode)vm;
+#else
+                    m_ViewMode = (vm == 1) ? ViewMode::Wireframe : ViewMode::Lit;
+#endif
                 if (ImGui::IsItemHovered())
                     ImGui::SetTooltip("View mode (R8): Unlit = flat albedo, Wireframe = line\n"
                                       "rasterization, Entity ID = flat per-entity hash colors.");
@@ -1110,6 +1419,7 @@ namespace Starforge
         }
 
         // ---- K8: axis navigator (bottom-left; hidden in 2D/Play) --------------
+#ifndef COSMIC_2D_ONLY
         if (m_NavCubeFresh && m_NavCube && !playing && !mode2D)
         {
             const float cube = (float)m_NavCube->GetSize();
@@ -1131,13 +1441,15 @@ namespace Starforge
                 }
             }
         }
+#endif   // COSMIC_2D_ONLY — the K8 nav cube
 
         // ---- K9: stats chips (bottom-right; View-menu toggle) -----------------
         if (m_ShowStatsChips)
         {
+            char text[256];
+#ifndef COSMIC_2D_ONLY
             const Renderer3D::Statistics s = Renderer3D::GetStats();
             const float dist = rig.Orbit().GetDistance();
-            char text[256];
             std::snprintf(text, sizeof(text),
                           "%dx%d   " ICON_LC_BOXES " %u draws  %u submitted  %u culled  %u instanced   "
                           ICON_LC_RULER " %.1f m   %.2f ms",
@@ -1145,6 +1457,18 @@ namespace Starforge
                           s.DrawCalls, s.MeshesSubmitted, s.MeshesCulled,
                           s.AutoInstancedMeshes + s.ExplicitInstances,
                           dist, 1000.0f / std::max(1.0f, ImGui::GetIO().Framerate));
+#else
+            // W7 — the 2D chip row reads the Renderer2D batch instead, and the
+            // "distance" slot becomes the 2D rig's zoom (its scale readout).
+            const Renderer2D::Statistics s = Renderer2D::GetStats();
+            const float zoom = m_Cam2D ? m_Cam2D->GetZoom() : 0.0f;
+            std::snprintf(text, sizeof(text),
+                          "%dx%d   " ICON_LC_BOXES " %u draws  %u quads  %u lines   "
+                          ICON_LC_RULER " %.1f u   %.2f ms",
+                          (int)vpSize.x, (int)vpSize.y,
+                          s.DrawCalls, s.QuadCount, s.LineCount,
+                          zoom, 1000.0f / std::max(1.0f, ImGui::GetIO().Framerate));
+#endif
             const ImVec2 ts = ImGui::CalcTextSize(text);
             const ImVec2 pad(8.0f, 4.0f);
             const ImVec2 p0(vpPos.x + vpSize.x - ts.x - pad.x * 2.0f - 10.0f,
@@ -1197,7 +1521,11 @@ namespace Starforge
                     mouse, vpPos, vpSize, cam2d->GetFocus(), cam2d->GetZoom());
                 dropPoint = { w.x, w.y, 0.0f };
             }
+#ifndef COSMIC_2D_ONLY
             else if (!ProbeWorldPoint(ctx, renderCam, mouse, dropPoint))
+#else
+            else   // no depth probe without the picker — always the camera-ray fallback
+#endif
             {
                 const glm::mat4 invVP = glm::inverse(renderCam.GetViewProjectionMatrix());
                 const float nx = 2.0f * (px / vpSize.x) - 1.0f;
@@ -1208,19 +1536,29 @@ namespace Starforge
             }
 
             // The entity under the cursor (material/image assignment targets).
+            // 3D: the ID pass. 2D: nothing — the sprite rect walk below is the
+            // only hit-test, and it covers every 2D drop target.
             auto pickUnderCursor = [&]() -> Entity
             {
+#ifndef COSMIC_2D_ONLY
                 if (!m_Picker || px < 0 || py < 0 || px >= vpSize.x || py >= vpSize.y)
                     return {};
                 m_Picker->RenderIdPass(*ctx.Scene, renderCam,
                                        (uint32_t)vpSize.x, (uint32_t)vpSize.y);
                 return m_Picker->Pick(*ctx.Scene, (int)px, (int)py);
+#else
+                return {};
+#endif
             };
 
+#ifndef COSMIC_2D_ONLY
             static const char* kMeshExts[] = { ".obj", ".gltf", ".glb", ".fbx", ".stl", ".dae", ".ply" };
+#endif
             static const char* kImageExts[] = { ".png", ".jpg", ".jpeg", ".tga", ".bmp" };
+#ifndef COSMIC_2D_ONLY
             const bool isMesh  = std::any_of(std::begin(kMeshExts),  std::end(kMeshExts),
                                              [&](const char* e) { return ext == e; });
+#endif
             const bool isImage = std::any_of(std::begin(kImageExts), std::end(kImageExts),
                                              [&](const char* e) { return ext == e; });
 
@@ -1234,6 +1572,7 @@ namespace Starforge
                 if (root)
                     Commands::RecordSpawn(ctx, root, "Drop Prefab " + stem);
             }
+#ifndef COSMIC_2D_ONLY
             else if (isMesh)
             {
                 Commands::Create(ctx, stem, Entity{}, [&](Entity e)
@@ -1255,6 +1594,7 @@ namespace Starforge
                     ctx.Log("[Drop] No mesh under the cursor for '" + vfs + "'.",
                             LogSeverity::Warn);
             }
+#endif
             else if (isImage)
             {
                 // 2D-first: prefer the topmost sprite under the cursor's world
@@ -1313,6 +1653,7 @@ namespace Starforge
         auto consider = [&](Entity e)
         {
             if (!e) return;
+#ifndef COSMIC_2D_ONLY
             if (e.HasComponent<MeshRendererComponent>())
             {
                 const auto& mr = e.GetComponent<MeshRendererComponent>();
@@ -1328,6 +1669,7 @@ namespace Starforge
                     }
                 }
             }
+#endif
             // Sprites (U3): their world rect from the shared sizing rule, so F
             // frames a 2D scene the same way it frames meshes.
             if (e.HasComponent<TransformComponent>() && e.HasComponent<SpriteRendererComponent>())
@@ -1350,8 +1692,10 @@ namespace Starforge
         }
         else
         {
+#ifndef COSMIC_2D_ONLY
             for (auto h : ctx.Scene->View<TransformComponent, MeshRendererComponent>())
                 consider(Entity(h, ctx.Scene.get()));
+#endif
             for (auto h : ctx.Scene->View<TransformComponent, SpriteRendererComponent>())
                 consider(Entity(h, ctx.Scene.get()));
         }

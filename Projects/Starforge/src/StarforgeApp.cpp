@@ -4,7 +4,9 @@
 
 #include "commands/EditorCommands.h"
 #include "Prefabs.h"
+#ifndef COSMIC_2D_ONLY
 #include "editors/AnimationEditor.h"   // M3 — the AssetEditorHost factory target
+#endif
 #include "editors/FlowEditor.h"        // Q1 — flow document factory target
 #include "editors/StoryEditor.h"       // Q4 — story document factory target
 
@@ -13,17 +15,21 @@
 #include "scene/Entity.h"
 #include "scene/Components.h"
 #include "scene/SceneSerializer.h"
+#ifndef COSMIC_2D_ONLY
 #include "scene/SceneNav.h"          // N3 — async navmesh bake orchestration
 #include "nav/NavWorld.h"            // N3 — NavMeshComponent::Nav->IsBuilt()
+#endif
 #include "scene/ui/UiComponents.h"   // U1 — UI entity components
 #include "scene/ui/UiSystem.h"       // U1 — canvas overlay render in the viewport
 #include "graphics/Mesh.h"
 #include "graphics/Texture.h"
 #include "graphics/FrameBuffer.h"
+#ifndef COSMIC_2D_ONLY
 #include "voxel/VoxelVolume.h"       // Phase 18 — ForgeBlocks sample authoring
 #include "voxel/BlockPalette.h"
 #include "voxel/VoxelGenerator.h"
 #include "voxel/VoxelRender.h"
+#endif
 #include "core/Version.h"
 #include "utils/FileSystem.h"
 #include "utils/Branding.h"          // K1 — drop-a-file branding resolution
@@ -97,11 +103,15 @@ namespace Starforge
 
         // Orbit-about-surface (H1): pivot on the point under the cursor via a one-off
         // depth probe. Invoked only when an orbit drag begins; misses fall back to the
-        // controller's ray/target-plane pivot.
+        // controller's ray/target-plane pivot. The probe is a ScenePicker ID pass —
+        // 3D only; the 2D build never orbits (it authors on the 2D rig), so the
+        // controller keeps its ray/target-plane pivot unconditionally there.
+#ifndef COSMIC_2D_ONLY
         m_Rig.Orbit().SetPivotProbe([this](const glm::vec2& screenMouse, glm::vec3& out) -> bool
         {
             return m_Viewport.ProbeWorldPoint(m_Ctx, m_Rig.Orbit().GetCamera(), screenMouse, out);
         });
+#endif
 
         // Editor identity: apply the forge accent, remembering the previous theme
         // so OnDetach restores it (other apps in the same process stay untouched).
@@ -119,8 +129,13 @@ namespace Starforge
 
         // First-run: offer the "Forge Playground" sample once (E21). Only when the
         // sample isn't already present and the user hasn't been asked before.
+#ifndef COSMIC_2D_ONLY
         if (!m_Settings.PlaygroundOffered && !ForgePlaygroundExists())
             m_OpenFirstRun = true;
+#else
+        if (!m_Settings.PlaygroundOffered && !ForgePongExists())
+            m_OpenFirstRun = true;   // W7 — the 2D build offers ForgePong instead
+#endif
 
         // Route command-stack activity to the dirty flag (belt-and-suspenders —
         // commands also mark dirty directly).
@@ -355,7 +370,9 @@ namespace Starforge
         m_Ctx.ClearSelection();
         m_Content.Reset();
         m_Ctx.Preview.SetCacheDirectory("");   // A4 — thumbnails are per-project
+#ifndef COSMIC_2D_ONLY
         m_Mode2D = false;   // view-only state; the next project starts in 3D
+#endif   // W7: the 2D build has no 3D mode to fall back to — m_Mode2D stays on
         m_ManifestFlow.clear();   // U5/U8 — flow offer is per-project
         Cosmic::AssetLibrary::ClearDefaultTextureSampling();   // U3 — drop the pixel-art override
         // Back to the editor's own bundled assets for the homescreen; the scene
@@ -502,8 +519,13 @@ namespace Starforge
     {
         if (IsPlaying()) StopScene();
         m_Ctx.Scene = Cosmic::Scene::Create();
+        // A new 3D scene opens with a sun so meshes are lit on the first frame.
+        // A new 2D scene has no sun to open with — sprites are unlit, and the
+        // Environment's Ambient2D is what a Light2D multiplies against.
+#ifndef COSMIC_2D_ONLY
         Cosmic::Entity sun = m_Ctx.Scene->CreateEntity("Sun");
         sun.AddComponent<Cosmic::DirectionalLightComponent>();
+#endif
 
         m_Ctx.SceneName    = "Untitled";
         m_Ctx.SceneVfsPath = "";
@@ -656,10 +678,16 @@ namespace Starforge
         // J4 — build physics bodies from the runtime scene's components. Build the
         // recipe-driven world systems first (terrain heightfield etc.) so a
         // TerrainCollider has its CPU heightfield ready before OnPhysicsStart.
+        // W7: the world-system build and the nav bind are 3D; PHYSICS IS NOT —
+        // Init/OnPhysicsStart run identically on both engines.
+#ifndef COSMIC_2D_ONLY
         runtime->SyncWorldSystems();
+#endif
         m_Physics.Init();
         runtime->OnPhysicsStart(m_Physics);
+#ifndef COSMIC_2D_ONLY
         runtime->OnNavStart();   // N4 — bind the DetourCrowd to the baked navmesh
+#endif
 
         m_Telemetry.OnPlayStart(m_Ctx, m_FixedDt);
 
@@ -692,7 +720,9 @@ namespace Starforge
         m_Scripts.SetTelemetrySink(nullptr);
         if (m_Ctx.Scene)
         {
+#ifndef COSMIC_2D_ONLY
             m_Ctx.Scene->OnNavStop();                // N4 — release the crowd before the runtime scene
+#endif
             m_Ctx.Scene->OnPhysicsStop(m_Physics);   // J4 — destroy bodies before the runtime scene
         }
         m_Physics.Shutdown();
@@ -752,16 +782,22 @@ namespace Starforge
                 {
                     if (m_Ctx.Scene)
                     {
+#ifndef COSMIC_2D_ONLY
                         m_Ctx.Scene->OnNavStop();
+#endif
                         m_Ctx.Scene->OnPhysicsStop(m_Physics);
                     }
                     m_Scripts.Destroy();
                     m_Ctx.Scene = fs;
                     m_Ctx.ClearSelection();
                     m_Scripts.Instantiate(*fs);
+#ifndef COSMIC_2D_ONLY
                     fs->SyncWorldSystems();
+#endif
                     fs->OnPhysicsStart(m_Physics);
+#ifndef COSMIC_2D_ONLY
                     fs->OnNavStart();
+#endif
                 }
             }
 
@@ -769,10 +805,12 @@ namespace Starforge
             if (m_Ctx.Scene)
             {
                 m_Ctx.Scene->UpdateSpriteAnimations(ts);   // U4 — flipbooks advance in editor Play
+#ifndef COSMIC_2D_ONLY
                 m_Ctx.Scene->UpdateAnimators(ts);          // A2/M6 — skeletal animators + crossfades
                                                            // advance in Play (after scripts, so a
                                                            // CrossfadeTo lands the same frame;
                                                            // Paused ⇒ not called ⇒ pose frozen)
+#endif
             }
             m_FixedAccum += ts;
             int guard = 0;
@@ -784,7 +822,9 @@ namespace Starforge
                 if (m_Ctx.Scene)
                 {
                     m_Ctx.Scene->OnPhysicsStep(m_FixedDt);
+#ifndef COSMIC_2D_ONLY
                     m_Ctx.Scene->OnNavStep(m_FixedDt);
+#endif
                     m_Ctx.Scene->DispatchPhysicsEvents(m_Scripts);
                 }
                 m_Telemetry.OnFixedStep(m_Ctx);   // one telemetry sample per fixed step (E20)
@@ -797,7 +837,9 @@ namespace Starforge
             if (m_Ctx.Scene)
             {
                 m_Ctx.Scene->OnPhysicsStep(m_FixedDt);
+#ifndef COSMIC_2D_ONLY
                 m_Ctx.Scene->OnNavStep(m_FixedDt);
+#endif
                 m_Ctx.Scene->DispatchPhysicsEvents(m_Scripts);
             }
             m_Telemetry.OnFixedStep(m_Ctx);
@@ -805,6 +847,7 @@ namespace Starforge
         }
     }
 
+#ifndef COSMIC_2D_ONLY
     // =========================================================================
     // Navmesh (N3) — async bake orchestration (edit mode). The WorldSystems
     // terrain-build pattern: an Inspector "Regenerate now" (PendingNavBake) or an
@@ -887,6 +930,7 @@ namespace Starforge
             it = m_NavBakes.erase(it);
         }
     }
+#endif   // COSMIC_2D_ONLY — TickNavMeshes
 
     // =========================================================================
     // Frame
@@ -1016,12 +1060,19 @@ namespace Starforge
 
         // Content-browser "Open in Animation Editor" request (M1/M3): open (or
         // re-focus) a document for the rigged model in the AssetEditorHost.
+        // W7: the 2D build has no AnimationEditor TU. AssetTypes never tags a
+        // file with AssetOpen::AnimationEditor there, so this request is never
+        // raised — the clear() below keeps a hand-set path from wedging.
+#ifndef COSMIC_2D_ONLY
         if (!m_Ctx.PendingOpenAnimEditor.empty())
         {
             const std::string p = m_Ctx.PendingOpenAnimEditor;
             m_Ctx.PendingOpenAnimEditor.clear();
             m_Editors.Open(p, [p]() { return std::make_unique<AnimationEditor>(p); }, &m_ShowEditors);
         }
+#else
+        m_Ctx.PendingOpenAnimEditor.clear();
+#endif
 
         // Content-browser graph-document request (Q1/Q4): open (or re-focus) a
         // .cflow / .cstory document in the AssetEditorHost, dispatched by extension.
@@ -1037,12 +1088,15 @@ namespace Starforge
         }
 
         // Content-browser model import request (T8): seed + open the E16 modal so
-        // the user can set the .cmeta scale/up-axis before importing.
+        // the user can set the .cmeta scale/up-axis before importing. 3D-only —
+        // MeshImport is out of the 2D build (§4), so the request is dropped.
         if (!m_Ctx.PendingImportModel.empty())
         {
+#ifndef COSMIC_2D_ONLY
             std::snprintf(m_ImportPath, sizeof(m_ImportPath), "%s", m_Ctx.PendingImportModel.c_str());
-            m_Ctx.PendingImportModel.clear();
             m_OpenImportModel = true;
+#endif
+            m_Ctx.PendingImportModel.clear();
         }
 
         // Build pump (E12/S5): stream cmake output; on completion either hot-reload
@@ -1070,9 +1124,13 @@ namespace Starforge
                 BuildScripts();
         }
 
+#ifndef COSMIC_2D_ONLY
         m_WorldSystems.OnUpdate(m_Ctx);   // E18 — drain the async terrain build
+#endif
         m_Editors.OnUpdate(m_Ctx, ts);    // M1 — advance open document playback (Animation Editor scrub/play)
+#ifndef COSMIC_2D_ONLY
         TickNavMeshes(ts);                // N3 — drain async navmesh (re)bakes + AutoGenerate
+#endif
 
         // K1 — branding hot-swap: a change to the resolved icon.png re-applies the
         // window/taskbar icon + top-bar logo, debounced past the file copy.
@@ -1138,9 +1196,12 @@ namespace Starforge
             return;
 
         // K8 — the navigation cube's offscreen pass runs OUTSIDE the main scene
-        // (its own FBO; skipped in Play/2D where the widget is hidden).
+        // (its own FBO; skipped in Play/2D where the widget is hidden). The cube
+        // draws with direct Renderer3D calls, so the 2D build has no widget.
+#ifndef COSMIC_2D_ONLY
         if (m_Ctx.Scene && !m_GameCamActive)
             m_Viewport.PrerenderNavCube(m_Rig.ActiveCamera(), IsPlaying(), m_Mode2D);
+#endif
 
         // H2 — SceneRenderer is THE editor render path: environment/sky/shadows/HDR
         // + post all live here (and byte-identically in the standalone PlayerLayer).
@@ -1225,6 +1286,7 @@ namespace Starforge
         // deliberately absent from it). Picking still works — the picker runs
         // its own ID pass.
         const ViewportController::ViewMode viewMode = m_Viewport.GetViewMode();
+#ifndef COSMIC_2D_ONLY
         if (m_Ctx.Scene && viewMode == ViewportController::ViewMode::EntityID)
         {
             m_Viewport.SetOutlinePassActive(false);   // wire boxes carry selection here
@@ -1232,14 +1294,17 @@ namespace Starforge
             if (m_ThumbRequested) { m_ThumbRequested = false; CaptureThumbnail(); }
             return;
         }
+#endif
 
         if (m_Ctx.Scene)
         {
+#ifndef COSMIC_2D_ONLY
             // A2 — play preview in edit mode: animators sample every frame here
             // (during Play, TickPlay advanced them this frame and this renders
             // the SAME scene object — so gate on the mode; Paused ⇒ frozen pose).
             if (!IsPlaying())
                 m_Ctx.Scene->UpdateAnimators(ts);
+#endif
 
             Cosmic::SceneRenderDesc desc;
             m_Ctx.Scene->BuildRenderDesc(activeCam, ts, desc);
@@ -1271,6 +1336,7 @@ namespace Starforge
                 desc.Settings.GodRays   = false;
                 desc.Settings.LensFlare = false;
             }
+#ifndef COSMIC_2D_ONLY
             else if (viewMode == ViewportController::ViewMode::Unlit)
             {
                 // Flat albedo: no sun/points/IBL/shadows; ambient floor at 1 lights
@@ -1282,13 +1348,20 @@ namespace Starforge
                 desc.Lights.Points.clear();
                 desc.Lights.Ambient      = 1.0f;
             }
+#endif
 
             // K12 — selection outline: the post-composite silhouette ring replaces
             // the mesh wire boxes (which stay as the fallback for un-meshed
             // selections — lights, colliders — and for the bypass view modes).
+            // The outline pass rides on ScenePicker, which is 3D-only; the 2D
+            // build keeps the wire-rect selection the 2D overlay already draws.
+#ifndef COSMIC_2D_ONLY
             desc.Settings.OutlineEnabled = true;
             desc.SelectedEntities        = &m_Ctx.Selection;
             m_Viewport.SetOutlinePassActive(true);
+#else
+            m_Viewport.SetOutlinePassActive(false);
+#endif
 
             // Editor overlays — drawn in HDR with scene depth still bound so they
             // occlude correctly. 2D mode swaps the ground grid for the pixel grid;
@@ -1296,8 +1369,15 @@ namespace Starforge
             Cosmic::Scene* scenePtr = m_Ctx.Scene.get();
             desc.DrawTransparent = [this, scenePtr, vw, vh](const Cosmic::SceneDrawContext& c)
             {
+#ifndef COSMIC_2D_ONLY
                 if (m_Mode2D) m_Viewport.DrawOverlayContent2D(m_Ctx, m_Camera2D);
                 else          m_Viewport.DrawOverlayContent(m_Ctx);
+#else
+                // 2D mode is the only mode here, and the overlay is the
+                // Renderer2D twin (pixel grid + sprite selection + tile visuals
+                // + the W7 collider overlay). See ViewportController.cpp.
+                m_Viewport.DrawOverlayContent2D(m_Ctx, m_Camera2D);
+#endif
                 scenePtr->OnRenderSprites(c.ViewProjection, vw, vh);
                 // X5 — 2D lights multiply over the sprite output (no-op without lights).
                 scenePtr->OnRender2DLights(c.ViewProjection, vw, vh);
@@ -1338,6 +1418,9 @@ namespace Starforge
         // proves the scene itself is deterministic), then run every PreviewRig
         // path and capture C (must equal B — proves the preview passes leak no
         // GL state into the scene render).
+        // W7: the 2D build has no preview pass to leak state, so there is
+        // nothing for this to prove — the test and its Help item both fence.
+#ifndef COSMIC_2D_ONLY
         if (m_PreviewSelfTest > 0 && m_Ctx.Scene)
         {
             std::vector<uint8_t> pix;
@@ -1396,6 +1479,7 @@ namespace Starforge
                 m_SelfTestPixels.shrink_to_fit();
             }
         }
+#endif   // COSMIC_2D_ONLY — the A4 preview state self-test
     }
 
     void StarforgeApp::Autosave(float ts)
@@ -1632,8 +1716,10 @@ namespace Starforge
             if (m_ShowConsole)      m_Console.OnImGuiRender(m_Ctx, &m_ShowConsole);
             if (m_ShowEnvironment)  m_Environment.OnImGuiRender(m_Ctx, &m_ShowEnvironment);
             if (m_ShowMaterial)     m_Material.OnImGuiRender(m_Ctx, &m_ShowMaterial);
+#ifndef COSMIC_2D_ONLY
             if (m_ShowWorldSystems) m_WorldSystems.OnImGuiRender(m_Ctx, &m_ShowWorldSystems);
             if (m_ShowVoxel)        m_Voxel.OnImGuiRender(m_Ctx, &m_ShowVoxel);
+#endif
             if (m_ShowTilePalette)  m_TilePalette.OnImGuiRender(m_Ctx, &m_ShowTilePalette);
             if (m_ShowTelemetry)    m_Telemetry.OnImGuiRender(m_Ctx, &m_ShowTelemetry);
             if (m_ShowProfiler)     m_Profiler.OnImGuiRender(m_Ctx, &m_ShowProfiler);
@@ -1738,7 +1824,9 @@ namespace Starforge
                                 m_GameBandUv);
 
         DrawSaveAsPopup();
+#ifndef COSMIC_2D_ONLY
         DrawImportModelPopup();
+#endif
         DrawPackagePopup();
         DrawProjectSettingsPopup();
         DrawAboutPopup();
@@ -1812,11 +1900,25 @@ namespace Starforge
                 // XY rig with the pixel grid; entering frames the scene's sprites
                 // and arms 1-unit snapping (the pixel-grid convention).
                 ImGui::SameLine();
-                if (IconButton("2D", "k2mode2d",
+                // W7 — in the 2D configuration the chip is PINNED ON: it still
+                // shows (so the viewport's mode is legible, and clicking it
+                // re-frames the sprites) but it never toggles off, because
+                // there is no 3D rig to fall back to.
+#ifdef COSMIC_2D_ONLY
+                const bool toggled2D = IconButton("2D", "k2mode2d",
+                               "2D mode (the only mode in this build): ortho XY view,\n"
+                               "MMB pan, wheel zoom, pixel grid. Click to re-frame.",
+                               sq, true, /*active*/ true);
+#else
+                const bool toggled2D = IconButton("2D", "k2mode2d",
                                "2D mode: ortho XY view, MMB pan, wheel zoom, pixel grid.",
-                               sq, true, m_Mode2D))
+                               sq, true, m_Mode2D);
+#endif
+                if (toggled2D)
                 {
+#ifndef COSMIC_2D_ONLY
                     m_Mode2D = !m_Mode2D;
+#endif
                     if (m_Mode2D)
                     {
                         glm::vec2 mn(-8.0f), mx(8.0f);
@@ -2116,8 +2218,10 @@ namespace Starforge
             if (ImGui::MenuItem("Save As...", nullptr, false, m_Ctx.ProjectOpen))
                 m_OpenSaveAs = true;
             ImGui::Separator();
+#ifndef COSMIC_2D_ONLY
             if (ImGui::MenuItem("Import Model...", nullptr, false, m_Ctx.ProjectOpen))
                 m_OpenImportModel = true;
+#endif
             if (ImGui::MenuItem("Project Settings...", nullptr, false, m_Ctx.ProjectOpen))
                 m_OpenProjectSettings = true;
             ImGui::Separator();
@@ -2196,10 +2300,16 @@ namespace Starforge
             ImGui::MenuItem("Environment",     nullptr, &m_ShowEnvironment);
             ImGui::MenuItem("Post Chain",      nullptr, &m_ShowPostChain);   // Q6
             ImGui::MenuItem("Material Editor", nullptr, &m_ShowMaterial);
+#ifndef COSMIC_2D_ONLY
             ImGui::MenuItem("World Systems",   nullptr, &m_ShowWorldSystems);
             ImGui::MenuItem("Voxels",          nullptr, &m_ShowVoxel);
+#endif
             ImGui::MenuItem("Tile Palette",    nullptr, &m_ShowTilePalette);
+#ifndef COSMIC_2D_ONLY
             ImGui::MenuItem("Editors (Animation / Flow / Story)", nullptr, &m_ShowEditors);   // M1 host (Q1/Q4 docs)
+#else
+            ImGui::MenuItem("Editors (Flow / Story)", nullptr, &m_ShowEditors);   // M1 host (Q1/Q4 docs)
+#endif
             ImGui::MenuItem("Telemetry",       nullptr, &m_ShowTelemetry);
             ImGui::MenuItem("Profiler",        nullptr, &m_ShowProfiler);   // T17
             ImGui::MenuItem("System (Jobs/Resources)", nullptr, &m_ShowSystem);   // T18
@@ -2240,6 +2350,7 @@ namespace Starforge
         {
             if (ImGui::MenuItem("Keyboard Shortcuts")) m_OpenShortcuts = true;
             if (ImGui::MenuItem("About Starforge"))    m_OpenAbout = true;
+#ifndef COSMIC_2D_ONLY
             ImGui::Separator();
             // A4 acceptance — proves the doc 13 §0.5 state-restore contract:
             // the viewport must render byte-identically after preview passes.
@@ -2249,6 +2360,7 @@ namespace Starforge
                 m_PreviewSelfTest = 1;
                 m_Ctx.Log("[Preview] Self-test armed — keep the camera still for 3 frames.");
             }
+#endif
             ImGui::EndMenu();
         }
     }
@@ -2355,16 +2467,27 @@ namespace Starforge
             if (m_Ctx.Scene)
                 for (auto e : m_Ctx.Scene->View<Cosmic::IDComponent>()) { (void)e; ++entities; }
 
-            const Cosmic::Renderer3D::Statistics s = Cosmic::Renderer3D::GetStats();
             ImGui::Text("Entities:          %zu", entities);
             ImGui::Text("Selected:          %zu", m_Ctx.Selection.size());
             ImGui::Separator();
+            // W7 — the Renderer3D queue telemetry has no 2D counterpart; the
+            // Renderer2D batch stats are the 2D build's row set instead.
+#ifndef COSMIC_2D_ONLY
+            const Cosmic::Renderer3D::Statistics s = Cosmic::Renderer3D::GetStats();
             ImGui::TextDisabled("Renderer3D (last frame)");
             ImGui::Text("Draw calls:        %u", s.DrawCalls);
             ImGui::Text("Meshes submitted:  %u", s.MeshesSubmitted);
             ImGui::Text("Culled (frustum):  %u", s.MeshesCulled);
             ImGui::Text("Drawn:             %u", s.MeshesDrawn);
             ImGui::Text("Auto-inst batches: %u", s.AutoInstanceBatches);
+#else
+            const Cosmic::Renderer2D::Statistics s = Cosmic::Renderer2D::GetStats();
+            ImGui::TextDisabled("Renderer2D (last frame)");
+            ImGui::Text("Draw calls:        %u", s.DrawCalls);
+            ImGui::Text("Quads:             %u", s.QuadCount);
+            ImGui::Text("Circles:           %u", s.CircleCount);
+            ImGui::Text("Lines:             %u", s.LineCount);
+#endif
             ImGui::Separator();
             ImGui::Text("%.1f FPS  (%.2f ms)", ImGui::GetIO().Framerate,
                         1000.0f / ImGui::GetIO().Framerate);
@@ -2520,12 +2643,15 @@ namespace Starforge
     }
 
     // ---- Forge Playground first-run sample (E21) --------------------------
+#ifndef COSMIC_2D_ONLY
     bool StarforgeApp::ForgePlaygroundExists() const
     {
         std::error_code ec;
         return fs::exists(fs::path("assets") / "projects" / "ForgePlayground" / "project.cproj", ec);
     }
+#endif
 
+#ifndef COSMIC_2D_ONLY
     bool StarforgeApp::ForgeBlocksExists() const
     {
         std::error_code ec;
@@ -2626,6 +2752,7 @@ namespace Starforge
         m_Ctx.Log("[ForgeBlocks] Created the voxel sample project.");
         return true;
     }
+#endif   // COSMIC_2D_ONLY — the ForgeBlocks voxel sample
 
     // ---- Phase 17 / U8 samples ---------------------------------------------
     namespace
@@ -2734,14 +2861,29 @@ namespace Starforge
         {
             Ref<Scene> scene = Scene::Create();
             { Entity cam = scene->CreateEntity("Camera");
+#ifndef COSMIC_2D_ONLY
               cam.GetComponent<TransformComponent>().Position = { 0.0f, 3.5f, 12.0f };
-              cam.AddComponent<CameraComponent>(); }
+              cam.AddComponent<CameraComponent>();
+#else
+              // 2D: an ortho rig on the sprite plane, the ForgePong convention.
+              cam.GetComponent<TransformComponent>().Position = { 0.0f, 0.0f, 10.0f };
+              auto& cc = cam.AddComponent<CameraComponent>();
+              cc.ProjectionType = CameraComponent::Projection::Orthographic;
+              cc.OrthoSize = 5.0f;
+#endif
+            }
+            // W7 — FlowDemo ships on BOTH engines (its subject is the flow, not
+            // the dressing). The Game screen's scenery swaps: lit primitives on
+            // 3D, untextured flat-colour sprites in the SAME palette on 2D.
+#ifndef COSMIC_2D_ONLY
             { Entity e = scene->CreateEntity("Sun");
               auto& l = e.AddComponent<DirectionalLightComponent>();
               l.Direction = { -0.45f, -0.8f, -0.4f }; l.Intensity = 1.1f; }
+#endif
             { Entity e = scene->CreateEntity("Environment");
               auto& env = e.AddComponent<EnvironmentComponent>();
               env.TimeOfDay = 11.0f; }
+#ifndef COSMIC_2D_ONLY
             { Entity e = scene->CreateEntity("Ground");
               e.AddComponent<PrimitiveMeshComponent>(PrimitiveMeshComponent::Shape::Plane);
               e.GetComponent<TransformComponent>().Scale = { 20.0f, 1.0f, 20.0f };
@@ -2750,6 +2892,17 @@ namespace Starforge
               e.AddComponent<PrimitiveMeshComponent>(PrimitiveMeshComponent::Shape::Torus);
               e.GetComponent<TransformComponent>().Position = { 0.0f, 1.6f, 0.0f };
               e.AddComponent<MeshRendererComponent>().Color = { 0.85f, 0.55f, 0.20f, 1.0f }; }
+#else
+            { Entity e = scene->CreateEntity("Ground");
+              auto& t = e.GetComponent<TransformComponent>();
+              t.Position = { 0.0f, -2.5f, 0.0f }; t.Scale = { 20.0f, 1.0f, 1.0f };
+              auto& s = e.AddComponent<SpriteRendererComponent>();
+              s.Color = { 0.32f, 0.42f, 0.34f, 1.0f }; s.ZOrder = -1; }
+            { Entity e = scene->CreateEntity("Monument");
+              auto& t = e.GetComponent<TransformComponent>();
+              t.Position = { 0.0f, -0.4f, 0.0f }; t.Scale = { 2.4f, 2.4f, 1.0f };
+              e.AddComponent<SpriteRendererComponent>().Color = { 0.85f, 0.55f, 0.20f, 1.0f }; }
+#endif
 
             Entity canvas = scene->CreateEntity("HUD");
             canvas.AddComponent<CanvasComponent>();
@@ -3048,6 +3201,10 @@ namespace Starforge
         {
             ImGui::TextUnformatted("Welcome to Starforge — where worlds are forged.");
             ImGui::Spacing();
+            // W7 — Forge Playground is the 3D showcase (terrain/water/particles/
+            // nav). The 2D engine offers ForgePong instead, which is its own
+            // flagship sample and is entirely 2D.
+#ifndef COSMIC_2D_ONLY
             ImGui::TextDisabled("\"Forge Playground\" is a ready-made project that shows the toolset:");
             ImGui::BulletText("terrain, a lake, and a campfire emitter");
             ImGui::BulletText("primitives + a bouncing-ball C++ script (Build Scripts to compile)");
@@ -3064,6 +3221,24 @@ namespace Starforge
                     OpenProject("ForgePlayground");
                 ImGui::CloseCurrentPopup();
             }
+#else
+            ImGui::TextDisabled("\"ForgePong\" is a ready-made project that shows the toolset:");
+            ImGui::BulletText("sprites + an ortho 2D camera, and a flipbook hit effect");
+            ImGui::BulletText("canvas UI score + a menu -> game -> win flow graph");
+            ImGui::BulletText("paddle + ball C++ scripts (Build Scripts to compile)");
+            ImGui::Spacing();
+            ImGui::TextDisabled("Create it now, or start from a blank project any time.");
+            ImGui::Separator();
+
+            if (ImGui::Button("Create ForgePong", ImVec2(200, 0)))
+            {
+                m_Settings.PlaygroundOffered = true;
+                Prefs::SaveSettings(m_Settings);
+                if (BuildForgePong())
+                    OpenProject("ForgePong");
+                ImGui::CloseCurrentPopup();
+            }
+#endif
             ImGui::SameLine();
             if (ImGui::Button("Maybe later", ImVec2(120, 0)))
             {
@@ -3075,6 +3250,7 @@ namespace Starforge
         }
     }
 
+#ifndef COSMIC_2D_ONLY
     bool StarforgeApp::BuildForgePlayground()
     {
         using namespace Cosmic;
@@ -3250,6 +3426,7 @@ namespace Starforge
         m_Ctx.Log("[Playground] Created the Forge Playground sample project.");
         return true;
     }
+#endif   // COSMIC_2D_ONLY — the Forge Playground 3D showcase
 
     void StarforgeApp::GenerateSampleTake()
     {
@@ -3290,6 +3467,12 @@ namespace Starforge
         };
 
         make("Empty", nullptr);
+        // W7 — the three 3D creation menus (Primitive / Light / World) build
+        // MeshRenderer, DirectionalLight, Terrain, Water, ParticleEmitter,
+        // VoxelVolume and NavMesh components, none of which the 2D build has.
+        // The 2D authoring menus (Sprite, Tilemap, 2D Light, UI, Camera) below
+        // are shared and untouched.
+#ifndef COSMIC_2D_ONLY
         if (ImGui::BeginMenu("Primitive"))
         {
             // Parametric primitives (E15): store shape + params, let the scene
@@ -3355,6 +3538,7 @@ namespace Starforge
             }
             ImGui::EndMenu();
         }
+#endif   // COSMIC_2D_ONLY — Primitive / Light / World creation menus
         // In-game UI (U1). Canvas is a root; Image/Text/Button are parented to the
         // current selection (so they nest under a selected Canvas) and get a
         // RectTransform (authoritative under a canvas).
@@ -3587,6 +3771,9 @@ namespace Starforge
             if (auto picked = Cosmic::FileDialog::PickFolder("Open Project Folder"))
                 OpenProjectPath(*picked);
         }
+        // W7 — the two 3D showcases (Forge Playground, ForgeBlocks) have no 2D
+        // build; Flow Sample and Pong Sample below ship on both engines.
+#ifndef COSMIC_2D_ONLY
         ImGui::SameLine();
         if (ImGui::Button("Open Sample", ImVec2(140, 34)))
         {
@@ -3601,6 +3788,7 @@ namespace Starforge
                 BuildForgeBlocks();
             OpenProject("ForgeBlocks");
         }
+#endif
         ImGui::SameLine();
         if (ImGui::Button("Flow Sample", ImVec2(130, 34)))
         {
@@ -3757,6 +3945,11 @@ namespace Starforge
         }
     }
 
+    // ---- Model import (E16) — 3D only -------------------------------------
+    // MeshImport (and assimp behind it) is excluded from the 2D configuration,
+    // and the spawn path authors MeshRenderer/Animator components that do not
+    // exist there. The whole importer — modal, texture staging, spawn — fences.
+#ifndef COSMIC_2D_ONLY
     void StarforgeApp::DrawImportModelPopup()
     {
         if (m_OpenImportModel)
@@ -4084,6 +4277,7 @@ namespace Starforge
                   std::to_string(settings.Scale) + " (edit the .cmeta + re-import to change).");
         return true;
     }
+#endif   // COSMIC_2D_ONLY — the E16 model importer
 
     // ---- Package & ship (E19 / S5, S2) ------------------------------------
 

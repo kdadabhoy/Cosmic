@@ -6,7 +6,9 @@
 #include "TelemetryRecording.h"
 #include "ui/IconsLucide.h"
 #include "scene/SceneSerializer.h"   // T12 — reflected-struct copy/paste clipboard
+#ifndef COSMIC_2D_ONLY
 #include "nav/NavWorld.h"            // N3 — NavMeshComponent::Nav->IsBuilt() for the Regenerate row
+#endif
 
 #include <imgui.h>
 
@@ -325,6 +327,13 @@ namespace Starforge
                 }
             }
 
+            // W7 — the 3D per-component extras. Each keys off a component name
+            // that only the 3D registry produces (Animator, MeshRenderer,
+            // NavMesh) or reads a 3D asset, so none can ever fire in the 2D
+            // build; they fence out because they would not COMPILE there.
+            // The generic reflected-field loop above is untouched, so every 2D
+            // component keeps its full Inspector.
+#ifndef COSMIC_2D_ONLY
             // Animator clip picker (A2): list the clips inside the model file
             // this animator drives (own or descendant MeshRenderer), and write
             // the picked "file#clip" through the undo stack. The scrub bar is
@@ -511,6 +520,7 @@ namespace Starforge
                 else
                     ImGui::TextColored(ImVec4(0.95f, 0.80f, 0.30f, 1.0f), "Not baked");
             }
+#endif   // COSMIC_2D_ONLY — Animator clips / material slots / Fit-to-mesh / nav bake
         }
         ImGui::PopID();
 

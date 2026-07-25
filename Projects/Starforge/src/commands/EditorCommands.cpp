@@ -4,7 +4,9 @@
 #include "EditorContext.h"
 #include "EditorSnapshot.h"
 
+#ifndef COSMIC_2D_ONLY
 #include "voxel/VoxelVolume.h"   // V4 — undoable voxel edits
+#endif
 
 #include <memory>
 #include <vector>
@@ -427,6 +429,11 @@ namespace Starforge
             ctx, std::move(snap), IdOf(root), label));
     }
 
+    // ----- MeshRenderer material commands (K13 / M5) — 3D only --------------
+    // Both operate on MeshRendererComponent, which the 2D build does not have.
+    // A 2D material assignment is a reflected SpriteRenderer field write and
+    // already goes through the generic Commands::SetField path.
+#ifndef COSMIC_2D_ONLY
     namespace
     {
         // K13 — material drop: path + resolved asset move together so undo/redo
@@ -519,6 +526,7 @@ namespace Starforge
         ctx.Commands.Execute(std::make_unique<MaterialSlotCommand>(
             ctx, IdOf(e), std::move(before), std::move(after)));
     }
+#endif   // COSMIC_2D_ONLY — AssignMaterial + SetMaterialSlot
 
     Entity Commands::Duplicate(EditorContext& ctx, Entity src)
     {
@@ -593,6 +601,7 @@ namespace Starforge
     }
 
     // ----- voxel edits (V4) — a coalesced brush stroke = one undo step -------
+#ifndef COSMIC_2D_ONLY
     namespace
     {
         class VoxelEditCommand : public ICommand
@@ -656,6 +665,7 @@ namespace Starforge
         ctx.Commands.Push(std::make_unique<VoxelEditCommand>(
             ctx, IdOf(e), stroke, VoxelEditCommand::Op{ voxel, oldId, newId }));
     }
+#endif   // COSMIC_2D_ONLY — VoxelEdit
 
     // ----- tilemap edits (U4) — a coalesced paint stroke = one undo step ------
     namespace

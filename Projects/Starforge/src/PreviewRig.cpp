@@ -74,6 +74,7 @@ namespace Starforge
 
     void PreviewRig::EnsureResources()
     {
+#ifndef COSMIC_2D_ONLY
         if (!m_Fbo)
         {
             FramebufferSpecification spec;
@@ -92,6 +93,7 @@ namespace Starforge
             neutral.Roughness = 0.55f;
             m_DefaultMaterial = AssetLibrary::BuildMaterial(neutral, "PreviewDefault");
         }
+#endif   // W7 — the 2D build renders no previews, so it allocates no target
     }
 
     void PreviewRig::Orbit(float dx, float dy)
@@ -112,6 +114,7 @@ namespace Starforge
         m_Zoom  = 1.0f;
     }
 
+#ifndef COSMIC_2D_ONLY
     uint32_t PreviewRig::Draw(const Ref<Mesh>& mesh, const Ref<Material>& material,
                               const glm::vec4& color, uint32_t w, uint32_t h)
     {
@@ -311,6 +314,7 @@ namespace Starforge
         }
         return Draw(m_Sphere, m_LiveMaterial, glm::vec4(1.0f), w, h);
     }
+#endif   // COSMIC_2D_ONLY — Draw / RenderMesh / RenderSkeletal / ProjectPoint / RenderMaterial
 
     // ---- Batch thumbnails ---------------------------------------------------
 
@@ -372,6 +376,13 @@ namespace Starforge
 
     bool PreviewRig::Generate(const std::string& vfs)
     {
+#ifdef COSMIC_2D_ONLY
+        // W7 — both thumbnail sources (a .cmat sphere and a model file) need the
+        // 3D pass. Report failure so the caller caches the miss ONCE and the
+        // Content Browser draws its generic tile from then on.
+        (void)vfs;
+        return false;
+#else
         EnsureResources();
 
         const std::string cacheFile = CacheFileFor(vfs);
@@ -453,5 +464,6 @@ namespace Starforge
 
         m_Ready[vfs] = tex;
         return true;
+#endif   // COSMIC_2D_ONLY
     }
 }
