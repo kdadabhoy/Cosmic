@@ -202,6 +202,12 @@ TEST_CASE("OrbitBy: a classic orbit about the target leaves the target fixed")
 // ---------------------------------------------------------------------------
 // S5.3 — ViewCube face picking (pure ray/AABB math)
 // ---------------------------------------------------------------------------
+// W6 — the OrbitCameraController half above is dimension agnostic and stays in
+// both suites; NavigationCube does not. Its Render() draws the orientation gizmo
+// through Renderer3D, so §4.2's audit dropped camera/NavigationCube.* from the 2D
+// engine and this picker has no implementation to link against there.
+
+#ifndef COSMIC_2D_ONLY
 
 TEST_CASE("NavigationCube: a centered click selects the face nearest the camera")
 {
@@ -229,3 +235,5 @@ TEST_CASE("NavigationCube: a click off the cube misses")
 	ViewPreset p = ViewPreset::Iso;
 	CHECK(NavigationCube::PickFaceFromViewProjection(vp, 0.0f, 0.5f, p) == false);
 }
+
+#endif   // COSMIC_2D_ONLY

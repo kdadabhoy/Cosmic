@@ -195,7 +195,9 @@ namespace Cosmic
         if (m_TrackedScene)
         {
             m_Scripts.Instantiate(*m_TrackedScene);
+#ifndef COSMIC_2D_ONLY
             m_TrackedScene->SyncWorldSystems();          // build recipe terrain etc. first
+#endif
             m_TrackedScene->OnPhysicsStart(m_Physics);   // build bodies from components (J4)
 #ifndef COSMIC_2D_ONLY
             m_TrackedScene->OnNavStart();                // bind the crowd to the navmesh (N4)

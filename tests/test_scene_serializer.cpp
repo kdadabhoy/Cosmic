@@ -15,6 +15,23 @@
 #include "scene/Components3D.h"
 #endif
 #include "scene/SceneSerializer.h"
+
+// W6 — the serializer invariants below (T12's omit-while-true `Enabled`, E2's
+// EntityRef + byte-identical re-save) are engine-wide, not 3D-specific: they only
+// need SOME reflected renderable and SOME reflected light to hang off. Naming the
+// carriers here keeps both suites running the same assertions instead of fencing
+// the cases away. Both 2D stand-ins carry the identical reflected contract —
+// `Color`.Color() and `Enabled`.OmitIfTrue() (reflect/TypeRegistry.cpp).
+namespace
+{
+#ifndef COSMIC_2D_ONLY
+    using RenderableComponent = Cosmic::MeshRendererComponent;
+    using SceneLightComponent = Cosmic::DirectionalLightComponent;
+#else
+    using RenderableComponent = Cosmic::SpriteRendererComponent;
+    using SceneLightComponent = Cosmic::Light2DComponent;
+#endif
+}
 #include "scene/ComponentRegistry.h"
 #include "reflect/TypeRegistry.h"
 
@@ -39,16 +56,16 @@ CS_REGISTER_COMPONENT(LinkComponent)
 
 TEST_CASE("T12: default-true Enabled is omitted while true (compat), written + round-tripped when false")
 {
-    auto firstMeshRenderer = [](Scene& s) -> MeshRendererComponent&
+    auto firstMeshRenderer = [](Scene& s) -> RenderableComponent&
     {
-        auto v = s.GetRegistry().view<MeshRendererComponent>();
+        auto v = s.GetRegistry().view<RenderableComponent>();
         REQUIRE(v.begin() != v.end());
-        return v.get<MeshRendererComponent>(*v.begin());
+        return v.get<RenderableComponent>(*v.begin());
     };
 
     Scene scene;
     Entity e = scene.CreateEntity("Mesh");
-    e.AddComponent<MeshRendererComponent>();   // Enabled defaults true
+    e.AddComponent<RenderableComponent>();   // Enabled defaults true
 
     // Enabled == true → the "Enabled" key is omitted (unchanged scenes stay
     // byte-identical); a JSON without the key loads back as true (old-scene compat).
@@ -60,7 +77,7 @@ TEST_CASE("T12: default-true Enabled is omitted while true (compat), written + r
     CHECK(firstMeshRenderer(loadedTrue).Enabled == true);
 
     // Disabling writes the key and round-trips as false.
-    e.GetComponent<MeshRendererComponent>().Enabled = false;
+    e.GetComponent<RenderableComponent>().Enabled = false;
     const std::string jsonFalse = SceneSerializer::SaveToString(scene);
     CHECK(jsonFalse.find("\"Enabled\"") != std::string::npos);
 
@@ -133,11 +150,11 @@ TEST_CASE("E2: scene round-trips with a stable EntityRef and identical JSON")
     Scene scene;
     Entity a = scene.CreateEntity("Alpha");
     a.GetComponent<TransformComponent>().Position = { 1.0f, 2.0f, 3.0f };
-    auto& mr = a.AddComponent<MeshRendererComponent>();   // null mesh ref (headless)
+    auto& mr = a.AddComponent<RenderableComponent>();   // null mesh/texture ref (headless)
     mr.Color = { 0.2f, 0.4f, 0.8f, 1.0f };
 
     Entity b = scene.CreateEntity("Beta");
-    b.AddComponent<DirectionalLightComponent>().Intensity = 2.5f;
+    b.AddComponent<SceneLightComponent>().Intensity = 2.5f;
 
     const UUID aID = a.GetComponent<IDComponent>().ID;
     const UUID bID = b.GetComponent<IDComponent>().ID;
@@ -160,9 +177,9 @@ TEST_CASE("E2: scene round-trips with a stable EntityRef and identical JSON")
     REQUIRE(b2);
     CHECK(a2.GetComponent<TagComponent>().Tag == "Alpha");
     CHECK(a2.GetComponent<TransformComponent>().Position.y == doctest::Approx(2.0f));
-    CHECK(a2.GetComponent<MeshRendererComponent>().Color.z == doctest::Approx(0.8f));
+    CHECK(a2.GetComponent<RenderableComponent>().Color.z == doctest::Approx(0.8f));
     CHECK(a2.GetComponent<LinkComponent>().Target == bID.Value());
-    CHECK(b2.GetComponent<DirectionalLightComponent>().Intensity == doctest::Approx(2.5f));
+    CHECK(b2.GetComponent<SceneLightComponent>().Intensity == doctest::Approx(2.5f));
 
     // save -> load -> save is byte-identical.
     const std::string save2 = SceneSerializer::SaveToString(scene2);

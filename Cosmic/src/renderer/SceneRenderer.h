@@ -38,14 +38,32 @@
  *
  * Engine3DDemo is deliberately NOT migrated — it stays the low-level acceptance
  * rig that proves the primitives this class sequences.
+ *
+ * THE 2D CONFIGURATION (Phase 29 / W6). 2D does NOT get a second compositor: it
+ * flows through this same class, so the pass contract in
+ * docs/design/frame-lifecycle.md §5 is preserved verbatim on both engines. What
+ * survives under COSMIC_2D_ONLY is the spine —
+ *
+ *   BeginHDR (PassOpaqueHDR) -> sprites + 2D lights via DrawTransparent
+ *   (PassTransparents) -> tonemap/FXAA/bloom/vignette (PassPostAndComposite)
+ *   -> DrawOverlay2D for canvas UI
+ *
+ * — and what fences out is everything that needs a 3D subsystem: the light
+ * gather, terrain/water/particles/ribbons, the sky + IBL environment, the shadow
+ * and coverage depth passes, the planar reflection, the routed opaque submit and
+ * the ScenePicker selection outline. See §7.6 of the plan doc for the table.
  * ============================================================================
  */
 
 #include "core/Core.h"
+#ifndef COSMIC_2D_ONLY
 #include "renderer/Renderer3D.h"       // SceneRenderDesc holds Renderer3D::SceneLightsDesc by value
 #include "renderer/EnvironmentMap.h"   // owned by value
-#include "renderer/PostProcessStack.h" // owned by value
+#endif
+#include "renderer/PostProcessStack.h" // owned by value (the 2D post chain too)
+#ifndef COSMIC_2D_ONLY
 #include "renderer/ShadowMap.h"        // owned by value
+#endif
 
 #include <glm/glm.hpp>
 #include <entt/entt.hpp>               // K12 — SceneRenderDesc::SelectedEntities handles
@@ -96,6 +114,11 @@ namespace Cosmic
 
 		bool IsDepthOnly() const { return Pass == ScenePass::ShadowDepth || Pass == ScenePass::TopDownDepth; }
 
+#ifndef COSMIC_2D_ONLY
+		// W6 — every submit verb routes to Renderer3D / ShadowMap / CoverageCapture,
+		// none of which exist in the 2D configuration. The context ITSELF stays: it
+		// is what DrawTransparent receives, and 2D reads ViewProjection off it to
+		// draw sprites.
 		void DrawMesh (const Ref<Mesh>& mesh, const glm::mat4& transform,
 		               const glm::vec4& color, int entityID = -1) const;
 		void DrawMesh (const Ref<Mesh>& mesh, const glm::mat4& transform,
@@ -122,11 +145,14 @@ namespace Cosmic
 		// ShadowDepth → ShadowMap::DrawCasterInstanced (material/entityID ignored).
 		void DrawMeshInstanced(const Ref<Mesh>& mesh, const Ref<Material>& material,
 		                       const Ref<InstanceSet>& instances, uint32_t count, int entityID = -1) const;
+#endif   // COSMIC_2D_ONLY
 
 	private:
 		friend class SceneRenderer;
+#ifndef COSMIC_2D_ONLY
 		ShadowMap*       m_Shadow   = nullptr;   // ShadowDepth routing target
 		CoverageCapture* m_Coverage = nullptr;   // TopDownDepth routing target (F8)
+#endif
 	};
 
 	/**
@@ -195,18 +221,23 @@ namespace Cosmic
 		glm::mat4 View{ 1.0f }; glm::mat4 Projection{ 1.0f }; glm::vec3 CameraPosition{ 0.0f };
 		void SetCamera(const Camera& camera);                 // sugar filling the three above
 
+#ifndef COSMIC_2D_ONLY
 		Renderer3D::SceneLightsDesc Lights;
+#endif
 		float TimeSeconds = 0.0f; float Exposure = 1.0f;
 		SceneRendererSettings Settings;
 
+#ifndef COSMIC_2D_ONLY
 		Terrain* TerrainSystem = nullptr;                     // Reflection + Main (+ shadow via F4)
 		std::vector<Water*>           WaterBodies;            // app submits far -> near
 		int                           PrimaryReflectionWater = 0;   // index; -1 = IBL-only for all
 		std::vector<ParticleEmitter*> Emitters;
 		std::vector<RibbonEmitter*>   Ribbons;
 		std::vector<ParticleEmitter*> DistortionEmitters;     // heat-haze field writers
+#endif
 		Scene* EcsScene = nullptr;                            // Main only (not Reflection)
 
+#ifndef COSMIC_2D_ONLY
 		// F7: when set, the opaque + reflection passes draw the DETAILED per-pixel
 		// sky (SkyDetail.glsl) instead of the baked skybox cube. Points at app-owned
 		// storage that must outlive the Render() call.
@@ -219,14 +250,21 @@ namespace Cosmic
 		CoverageCapture* Coverage           = nullptr;
 		float            CoverageAccumPerSec = 0.0f;
 		float            CoverageMeltPerSec  = 0.0f;
+#endif
+		// DeltaTime is NOT fenced (§7.6 left the call at implementation): it is the
+		// frame delta, not a coverage parameter. BuildRenderDesc writes it on both
+		// engines and the render-test fixtures set it, so a 2D build has to be able
+		// to name it — only the coverage pass above ever READS it.
 		float            DeltaTime           = 0.0f;   // seconds since last frame
 
+#ifndef COSMIC_2D_ONLY
 		// K12 — the entities the outline pass silhouettes (only read when
 		// Settings.OutlineEnabled and EcsScene are set). Points at caller-owned
 		// storage that must outlive the Render() call (the editor's selection).
 		const std::vector<entt::entity>* SelectedEntities = nullptr;
 
 		std::function<void(const SceneDrawContext&)> DrawOpaque;
+#endif
 		std::function<void(const SceneDrawContext&)> DrawTransparent;  // HDR still bound, after water/particles
 		std::function<void()>                        DrawOverlay2D;    // after Composite (LDR bound)
 	};
@@ -270,9 +308,13 @@ namespace Cosmic
 		 */
 		void RenderToTexture(const SceneRenderDesc& desc, const Ref<FrameBuffer>& target);
 
+#ifndef COSMIC_2D_ONLY
 		EnvironmentMap&   GetEnvironment() { return m_Environment; }   // app drives the sun policy
+#endif
 		PostProcessStack& GetPostStack()   { return m_Post; }
+#ifndef COSMIC_2D_ONLY
 		ShadowMap&        GetShadowMap()   { return m_Shadow; }
+#endif
 
 		/**
 		 * @brief Map a scene's EnvironmentComponent (E4) into a SceneRenderDesc:
@@ -282,28 +324,38 @@ namespace Cosmic
 		 * for the scene's single "Environment" entity; Frontier never calls it, so
 		 * its explicit desc.Settings path is untouched. Generic verb — no editor or
 		 * Starforge concepts leak in.
+		 *
+		 * In the 2D configuration it maps the exposure + post-chain fields only —
+		 * the sun, sky and IBL halves have nowhere to land.
 		 */
 		void ApplyEnvironment(const EnvironmentComponent& env, SceneRenderDesc& desc);
 
 	private:
 		// One method per pass = F3's GPU-zone hook points.
+#ifndef COSMIC_2D_ONLY
 		void PassShadow(const SceneRenderDesc& desc);
 		void PassCoverage(const SceneRenderDesc& desc);   // F8 top-down snow capture
 		void PassReflection(const SceneRenderDesc& desc);
+#endif
 		void PassOpaqueHDR(const SceneRenderDesc& desc);
 		void PassTransparents(const SceneRenderDesc& desc);
 		void PassPostAndComposite(const SceneRenderDesc& desc);
+#ifndef COSMIC_2D_ONLY
 		void PassOutline(const SceneRenderDesc& desc);    // K12 (LDR bound, after composite)
 
 		EnvironmentMap   m_Environment;
+#endif
 		PostProcessStack m_Post;
+#ifndef COSMIC_2D_ONLY
 		ShadowMap        m_Shadow;
 
 		// K12 — lazily created on the first outlined frame; zero cost while the
-		// setting stays off (the compat default).
+		// setting stays off (the compat default). ScenePicker is 3D-only, so the
+		// 2D build has no outline path at all — sprites never had one.
 		Ref<ScenePicker> m_OutlineMask;
 		Ref<Shader>      m_OutlineShader;
 		bool             m_OutlineShaderTried = false;
+#endif
 
 		uint32_t m_Width  = 0;
 		uint32_t m_Height = 0;

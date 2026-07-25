@@ -9,6 +9,11 @@
 #include "scene/Components3D.h"
 #endif
 #include "renderer/Renderer2D.h"
+#ifdef COSMIC_2D_ONLY
+// W6 — only the 2D configuration defines BuildRenderDesc here (the 3D one is in
+// Scene3D.cpp, which this build excludes), and it needs SceneRenderDesc complete.
+#include "renderer/SceneRenderer.h"
+#endif
 #include "renderer/Light2DRenderer.h"   // X5 — 2D lighting composite
 #include "renderer/RenderCommand.h"   // U3 — sprite-pass depth/blend state
 #include "graphics/SubTexture2D.h"    // U3 — SourceRect sub-rect draws
@@ -767,5 +772,27 @@ namespace Cosmic
 			return &m_Registry.get<EnvironmentComponent>(entity);
 		return nullptr;
 	}
+
+#ifdef COSMIC_2D_ONLY
+	// W6 — the 2D twin of BuildRenderDesc. The 3D definition lives in Scene3D.cpp,
+	// which the 2D configuration never compiles; this is the residue of it that a
+	// 2D scene can actually fill. Everything it drops is a 3D gather with nothing
+	// to gather: the four asset syncs (primitive meshes / world systems / voxel
+	// volumes / navmeshes), the scene-light walk, terrain, water, particle
+	// emitters, and the routed DrawOpaque submit hook. The clock advance and the
+	// camera + time fields below are what SceneRenderer's surviving passes read, so
+	// PlayerLayer, Starforge and the scene2d golden drive the 2D frame through the
+	// SAME call they use on the 3D engine — no call-site fences anywhere.
+	//
+	// EcsScene stays null here for the same reason it does in the 3D twin.
+	void Scene::BuildRenderDesc(const Camera& camera, float deltaTime, SceneRenderDesc& out)
+	{
+		m_WorldTime += deltaTime;
+
+		out.SetCamera(camera);
+		out.TimeSeconds = m_WorldTime;
+		out.DeltaTime   = deltaTime;
+	}
+#endif   // COSMIC_2D_ONLY
 
 } // Closes namespace Cosmic

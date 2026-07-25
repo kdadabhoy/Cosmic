@@ -321,6 +321,11 @@ namespace Cosmic
 		 * CALLER then sets the clear color and, when FindEnvironment() is non-null,
 		 * applies it via SceneRenderer::ApplyEnvironment before Render(). Main-thread/GL.
 		 * Generic — no editor concepts leak in; OnRender3D stays the cheap direct path.
+		 *
+		 * W6 — defined TWICE, once per engine configuration: the 3D gather above in
+		 * scene/Scene3D.cpp, and a 2D twin in Scene.cpp that advances the world clock
+		 * and fills camera + time (there is no 3D content to gather). The declaration
+		 * is deliberately unfenced so every caller is configuration-agnostic.
 		 */
 		void BuildRenderDesc(const Camera& camera, float deltaTime, SceneRenderDesc& out);
 

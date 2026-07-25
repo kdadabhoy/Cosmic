@@ -59,6 +59,7 @@ TEST_CASE("NormalizeKey: is deterministic (idempotent on its own output)")
 
 namespace
 {
+#ifndef COSMIC_2D_ONLY
     // A proven skinned glTF (mirrors test_animation.cpp's fixture) with a "Lift"
     // clip — imports headlessly via cgltf, so it exercises the clip-set cache.
     std::string WriteClipGltf(const std::filesystem::path& dir)
@@ -128,6 +129,7 @@ namespace
         }
         return (dir / "rig.gltf").string();
     }
+#endif   // COSMIC_2D_ONLY
 
     // Append a value little-endian to a byte vector.
     template<typename T>
@@ -163,6 +165,12 @@ namespace
     }
 }
 
+#ifndef COSMIC_2D_ONLY
+// W6 — the ONE cache entry this test can populate headlessly is the animation
+// clip set (see the file header), and clips are a 3D asset family: the 2D engine
+// ships no MeshImport, no AnimationClip and therefore no AssetLibrary clip verbs.
+// Everything else Enumerate reports needs a GL context, so there is no 2D
+// substitute to write here — the golden harness covers the 2D asset paths.
 TEST_CASE("T2: AssetLibrary::Enumerate reports cached assets with plausible sizes")
 {
     namespace fs = std::filesystem;
@@ -200,6 +208,7 @@ TEST_CASE("T2: AssetLibrary::Enumerate reports cached assets with plausible size
     AssetLibrary::Clear();
     fs::remove_all(dir);
 }
+#endif   // COSMIC_2D_ONLY
 
 TEST_CASE("T2: Sound::CopyPcm decodes a peak-decimated mono envelope")
 {

@@ -5,11 +5,14 @@
 #include "graphics/Texture.h"
 #include "graphics/Shader.h"
 #include "graphics/Mesh.h"
-#include "graphics/Model.h"
 #include "graphics/Material.h"
 #include "graphics/MaterialAsset.h"
+#ifndef COSMIC_2D_ONLY
+// W6 — the three backends behind the 3D asset family (see AssetLibrary.h).
+#include "graphics/Model.h"
 #include "graphics/AnimationClip.h"
 #include "assets/MeshImport.h"
+#endif
 #include "scene/SceneSerializer.h"
 #include "utils/FileSystem.h"
 #include "core/Log.h"
@@ -27,13 +30,17 @@ namespace Cosmic
 		// One cache per resource type. File-local statics — the .cpp owns all state.
 		std::unordered_map<std::string, Ref<Texture2D>> s_Textures;
 		std::unordered_map<std::string, Ref<Shader>>    s_Shaders;
+#ifndef COSMIC_2D_ONLY
 		std::unordered_map<std::string, Ref<Mesh>>      s_Meshes;
 		std::unordered_map<std::string, Ref<Model>>     s_Models;
+#endif
 		std::unordered_map<std::string, Ref<Material>>  s_Materials;
 
+#ifndef COSMIC_2D_ONLY
 		// A2 — a model file's whole clip set, keyed by the BASE path (no
 		// fragment); GetAnimationClip aliases Refs into the vector's elements.
 		std::unordered_map<std::string, Ref<std::vector<AnimationClip>>> s_ClipSets;
+#endif
 
 		// U3 — optional process-wide default sampling for freshly loaded textures
 		// (the pixel-art preset). Off by default: the loader's own sampling wins.
@@ -107,6 +114,7 @@ namespace Cosmic
 			[](const std::string& resolved) { return Shader::Create(resolved); });
 	}
 
+#ifndef COSMIC_2D_ONLY
 	Ref<Mesh> AssetLibrary::GetMesh(const std::string& path)
 	{
 		// Sub-mesh fragment ("models/gun.fbx#2" — A1 multi-mesh children): the
@@ -144,6 +152,7 @@ namespace Cosmic
 		return GetOrLoad<Model>(s_Models, path,
 			[](const std::string& resolved) { return Model::CreateFromGLTF(resolved); });
 	}
+#endif   // COSMIC_2D_ONLY — GetMesh + GetModel
 
 	Ref<Material> AssetLibrary::BuildMaterial(const MaterialAsset& a, const std::string& name)
 	{
@@ -204,6 +213,7 @@ namespace Cosmic
 			});
 	}
 
+#ifndef COSMIC_2D_ONLY
 	namespace
 	{
 		// The cached clip set of a model file (parse-once). Null on parse
@@ -317,6 +327,7 @@ namespace Cosmic
 			return bytes;
 		}
 	}
+#endif   // COSMIC_2D_ONLY — the clip-set cache and everything that reads it
 
 	void AssetLibrary::Enumerate(const std::function<void(const AssetEntry&)>& visitor)
 	{
@@ -338,6 +349,7 @@ namespace Cosmic
 			e.Refs = sh.use_count();
 			visitor(e);   // shader binary size is not tracked → bytes 0
 		}
+#ifndef COSMIC_2D_ONLY
 		for (const auto& [key, mesh] : s_Meshes)
 		{
 			AssetEntry e;
@@ -353,6 +365,7 @@ namespace Cosmic
 			e.Refs = model.use_count();
 			visitor(e);   // Model bytes roll up in its meshes/textures if separately cached
 		}
+#endif
 		for (const auto& [key, mat] : s_Materials)
 		{
 			AssetEntry e;
@@ -360,6 +373,7 @@ namespace Cosmic
 			e.Refs = mat.use_count();
 			visitor(e);   // a material's textures are counted under s_Textures
 		}
+#ifndef COSMIC_2D_ONLY
 		for (const auto& [key, set] : s_ClipSets)
 		{
 			AssetEntry e;
@@ -368,16 +382,21 @@ namespace Cosmic
 			e.CpuBytes = set ? ClipSetCpuBytes(*set) : 0;
 			visitor(e);
 		}
+#endif
 	}
 
 	void AssetLibrary::Clear()
 	{
 		s_Textures.clear();
 		s_Shaders.clear();
+#ifndef COSMIC_2D_ONLY
 		s_Meshes.clear();
 		s_Models.clear();
+#endif
 		s_Materials.clear();
+#ifndef COSMIC_2D_ONLY
 		s_ClipSets.clear();
+#endif
 	}
 
 	bool AssetLibrary::Reload(const std::string& path)
@@ -397,10 +416,13 @@ namespace Cosmic
 
 		// Other resource types: just evict so the next Get* reloads on demand.
 		if (auto it = s_Shaders.find(key);   it != s_Shaders.end())   { s_Shaders.erase(it);   evicted = true; }
+#ifndef COSMIC_2D_ONLY
 		if (auto it = s_Meshes.find(key);    it != s_Meshes.end())    { s_Meshes.erase(it);    evicted = true; }
 		if (auto it = s_Models.find(key);    it != s_Models.end())    { s_Models.erase(it);    evicted = true; }
+#endif
 		if (auto it = s_Materials.find(key); it != s_Materials.end()) { s_Materials.erase(it); evicted = true; }
 
+#ifndef COSMIC_2D_ONLY
 		// Sub-mesh entries ("<key>#N" — A1) share the base file: evict them with
 		// it so a reimport refreshes every child of a multi-mesh source.
 		for (auto it = s_Meshes.begin(); it != s_Meshes.end(); )
@@ -421,6 +443,7 @@ namespace Cosmic
 			s_ClipSets.erase(it);
 			evicted = true;
 		}
+#endif
 
 		return evicted;
 	}

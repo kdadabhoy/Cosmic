@@ -71,6 +71,11 @@ TEST_SUITE("FileSystem project mounts (S1)")
         fs::remove_all(root, ec);
     }
 
+#ifndef COSMIC_2D_ONLY
+    // W6 — MeshRendererComponent::MeshPath is the project:// carrier this asserts
+    // on, and it is a 3D component. The rule it pins (the serializer never writes
+    // an absolute root) is engine-wide, and the 2D suite covers it through
+    // test_scene_serializer's sprite/tilemap round-trips.
     TEST_CASE("scene paths stay project:// (no absolute-root leak)")
     {
         const fs::path root = fs::temp_directory_path() / "cosmic_mount_scene";
@@ -86,4 +91,5 @@ TEST_SUITE("FileSystem project mounts (S1)")
         CHECK(s.find(root.generic_string()) == std::string::npos);   // no absolute leak
         fs::remove_all(root, ec);
     }
+#endif   // COSMIC_2D_ONLY
 }

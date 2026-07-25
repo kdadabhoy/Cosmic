@@ -3,25 +3,31 @@
 #include "renderer/SceneRenderer.h"
 
 #include "renderer/RenderCommand.h"
+#ifndef COSMIC_2D_ONLY
 #include "renderer/InstanceSet.h"
 #include "renderer/CoverageCapture.h"
+#endif
 #include "renderer/BindingPoints.h"
 #include "graphics/FrameBuffer.h"
 #include "graphics/Mesh.h"
+#ifndef COSMIC_2D_ONLY
 #include "graphics/Model.h"
+#endif
 #include "graphics/Material.h"
 #include "graphics/Shader.h"
 #include "camera/Camera.h"
+#ifndef COSMIC_2D_ONLY
 #include "terrain/Terrain.h"
 #include "water/Water.h"
 #include "particles/ParticleSystem.h"
+#endif
 #include "scene/Scene.h"
 #include "scene/Entity.h"
 #include "scene/Components.h"
 #ifndef COSMIC_2D_ONLY
 #include "scene/Components3D.h"   // W4 — the 3D passes read mesh/light/terrain/water/particle components
+#include "scene/ScenePicker.h"    // K12 — the outline id-mask pass
 #endif
-#include "scene/ScenePicker.h"  // K12 — the outline id-mask pass
 #include "utils/FileSystem.h"   // resolve project:// HdriPath (H4)
 #include "core/Log.h"
 
@@ -29,11 +35,14 @@
 
 namespace Cosmic
 {
+#ifndef COSMIC_2D_ONLY
 	namespace
 	{
 		// Minimal Camera adapter so Scene::OnRender3D (which takes const Camera&)
 		// can be driven from the frame's loose matrices. Camera getters return
 		// const&, so the four values are cached as members (Camera.h contract).
+		// W6 — its only two callers (the ECS leg of PassOpaqueHDR and PassOutline)
+		// are 3D, so the adapter goes with them.
 		class MatrixCamera : public Camera
 		{
 		public:
@@ -164,6 +173,7 @@ namespace Cosmic
 		}
 		Renderer3D::DrawMeshInstanced(mesh, material, instances, count, entityID);
 	}
+#endif   // COSMIC_2D_ONLY — MatrixCamera + every routed submit verb
 
 	// =========================================================================
 	// SceneRenderDesc
@@ -197,8 +207,12 @@ namespace Cosmic
 		m_Height = height > 0 ? height : 1;
 
 		m_Post.Init(m_Width, m_Height);
+#ifndef COSMIC_2D_ONLY
 		m_Environment.Init();
 		m_Shadow.Init(shadowMapSize);
+#else
+		(void)shadowMapSize;   // no sky/IBL cube and no shadow map in a 2D build
+#endif
 
 		m_Initialized = true;
 	}
@@ -209,6 +223,7 @@ namespace Cosmic
 			return;
 
 		m_Post.Shutdown();
+#ifndef COSMIC_2D_ONLY
 		m_Environment.Shutdown();
 		Renderer3D::ClearIBL();
 		m_Shadow.Shutdown();
@@ -218,6 +233,7 @@ namespace Cosmic
 		m_OutlineMask.reset();
 		m_OutlineShader.reset();
 		m_OutlineShaderTried = false;
+#endif
 
 		m_Initialized = false;
 	}
@@ -263,6 +279,7 @@ namespace Cosmic
 		s.AmbientIntensity = env.AmbientIntensity;     // X2 (default 1.0 = identical)
 		s.Gamma            = env.Gamma;                // X2 (default 2.2 = identical)
 
+#ifndef COSMIC_2D_ONLY
 		// Sun → the frame's directional light.
 		desc.Lights.SunDirection = env.SunDirection;
 		desc.Lights.SunColor     = env.SunColor;
@@ -295,6 +312,7 @@ namespace Cosmic
 			phys.SunAngularSize = env.SunAngularSize;
 			m_Environment.SetPhysicalSky(phys);
 		}
+#endif   // COSMIC_2D_ONLY — no sun light, no sky cube, no IBL to drive
 	}
 
 	// =========================================================================
@@ -323,6 +341,7 @@ namespace Cosmic
 		m_ViewProj    = desc.Projection * desc.View;
 		m_InvViewProj = glm::inverse(m_ViewProj);
 
+#ifndef COSMIC_2D_ONLY
 		// 2) Lights: upload once up front so every pass (reflection terrain, opaque,
 		//    the transparent tail) reads the same lights UBO.
 		Renderer3D::SetLightDirection(desc.Lights.SunDirection);
@@ -339,13 +358,18 @@ namespace Cosmic
 			m_Environment.PushToRenderer();
 		else
 			Renderer3D::ClearIBL();
+#endif
 
 		// Each pass runs inside a GPU timer zone (F3). Zone names are the profiler
 		// HUD's rows; they respond live to the Settings toggles (a disabled feature
-		// shrinks or zeroes its zone).
+		// shrinks or zeroes its zone). Steps 4–5 have no 2D counterpart — 2D content
+		// casts no shadows, accumulates no coverage and reflects nothing — so the 2D
+		// frame is Opaque (an HDR clear) -> Transparents (sprites) -> Post.
+#ifndef COSMIC_2D_ONLY
 		RenderCommand::BeginGpuZone("Shadow");         PassShadow(desc);           RenderCommand::EndGpuZone();  // 4
 		RenderCommand::BeginGpuZone("Coverage");       PassCoverage(desc);         RenderCommand::EndGpuZone();  // 4b (F8)
 		RenderCommand::BeginGpuZone("Reflection");     PassReflection(desc);       RenderCommand::EndGpuZone();  // 5
+#endif
 		RenderCommand::BeginGpuZone("Opaque");         PassOpaqueHDR(desc);        RenderCommand::EndGpuZone();  // 6
 		RenderCommand::BeginGpuZone("Transparents");   PassTransparents(desc);     RenderCommand::EndGpuZone();  // 7
 		RenderCommand::BeginGpuZone("Post+Composite"); PassPostAndComposite(desc); RenderCommand::EndGpuZone();  // 8
@@ -378,6 +402,7 @@ namespace Cosmic
 		RenderCommand::BindFramebufferHandle(prevFbo);
 	}
 
+#ifndef COSMIC_2D_ONLY
 	// 4) Shadow depth pass -----------------------------------------------------
 	void SceneRenderer::PassShadow(const SceneRenderDesc& desc)
 	{
@@ -545,6 +570,7 @@ namespace Cosmic
 		water->EndReflection();
 		// The following opaque pass (BeginHDR) re-asserts the viewport.
 	}
+#endif   // COSMIC_2D_ONLY — PassShadow + PassCoverage + PassReflection
 
 	// 6) Opaque HDR pass -------------------------------------------------------
 	void SceneRenderer::PassOpaqueHDR(const SceneRenderDesc& desc)
@@ -558,6 +584,10 @@ namespace Cosmic
 		if (desc.Settings.Wireframe)
 			RenderCommand::SetPolygonMode(RendererAPI::PolygonMode::Line);
 
+		// W6 — everything from here to the wireframe restore is 3D. A 2D frame's
+		// opaque pass is exactly the HDR bind + clear above: sprites are transparent
+		// geometry and draw in the next pass.
+#ifndef COSMIC_2D_ONLY
 		Renderer3D::BeginScene(m_ViewProj, desc.CameraPosition);
 
 		if (desc.Settings.Skybox && !desc.Settings.Wireframe)
@@ -592,6 +622,7 @@ namespace Cosmic
 			desc.EcsScene->OnRender3D(cam);
 			Renderer3D::SetLights(desc.Lights);
 		}
+#endif   // COSMIC_2D_ONLY
 
 		if (desc.Settings.Wireframe)
 			RenderCommand::SetPolygonMode(RendererAPI::PolygonMode::Fill);
@@ -610,6 +641,7 @@ namespace Cosmic
 		if (desc.Settings.Wireframe)
 			RenderCommand::SetPolygonMode(RendererAPI::PolygonMode::Line);
 
+#ifndef COSMIC_2D_ONLY
 		const uint32_t colorID = sceneFbo->GetColorAttachmentRendererID(0);
 		const uint32_t depthID = sceneFbo->GetDepthAttachmentRendererID();
 
@@ -626,19 +658,29 @@ namespace Cosmic
 		for (RibbonEmitter* r : desc.Ribbons)
 			if (r)
 				r->Render(desc.View, desc.TimeSeconds);
+#endif
 
 		// App transparent geometry — wrapped in a scene so ctx.DrawMesh routes to
 		// a live Renderer3D (the camera UBO is restored to the main camera here).
+		// THIS is the 2D sprite path: PlayerLayer, Starforge and the scene2d golden
+		// all draw OnRenderSprites + OnRender2DLights from this hook with the HDR
+		// target still bound. Only the Renderer3D scope fences out — Renderer2D
+		// opens its own scene, and an empty 3D queue flushes nothing, so dropping
+		// the pair leaves the sprite pixels untouched.
 		if (desc.DrawTransparent)
 		{
+#ifndef COSMIC_2D_ONLY
 			Renderer3D::BeginScene(m_ViewProj, desc.CameraPosition);
+#endif
 			SceneDrawContext ctx;
 			ctx.Pass           = ScenePass::Main;
 			ctx.ViewProjection = m_ViewProj;
 			ctx.EyePosition    = desc.CameraPosition;
 			ctx.CameraPosition = desc.CameraPosition;
 			desc.DrawTransparent(ctx);
+#ifndef COSMIC_2D_ONLY
 			Renderer3D::EndScene();
+#endif
 		}
 
 		if (desc.Settings.Wireframe)
@@ -674,21 +716,34 @@ namespace Cosmic
 
 		// Lens flare (F7): additive screen-space flare in Composite's LDR stage. The
 		// tint is the sun color; the sun screen position comes from the camera above
-		// and the sun travel direction (the sun sits opposite it).
+		// and the sun travel direction (the sun sits opposite it). Both the flare and
+		// the god-ray shafts are SUN effects with no 2D meaning, and the shafts also
+		// raymarch the shadow map — so they fence out together. Not calling the
+		// setters is byte-identical to calling them disabled (PostProcessStack's
+		// m_LensFlareEnabled / god-rays default to off).
+#ifndef COSMIC_2D_ONLY
 		m_Post.SetLensFlare(s.LensFlare, s.LensFlareIntensity, desc.Lights.SunColor);
 		m_Post.SetLensFlareSun(desc.Lights.SunDirection);
 
 		const bool godRays = s.GodRays && s.Shadows;   // shafts raymarch the shadow map
+#else
+		const bool godRays = false;                    // no shadow map to raymarch
+#endif
 		m_Post.SetGodRaysEnabled(godRays);
 		m_Post.SetGodRaysParams(s.GodRaysIntensity, s.GodRaysDensity);
+#ifndef COSMIC_2D_ONLY
 		if (godRays)
 			m_Post.SetSunShaftInputs(m_Shadow.GetDepthID(), m_Shadow.GetLightViewProj(),
 			                         desc.Lights.SunDirection, desc.Lights.SunColor, desc.Lights.SunIntensity);
+#endif
 
 		// Heat-haze distortion field (S10.5): distortion emitters write it; the
-		// tonemap displaces the scene fetch by it.
+		// tonemap displaces the scene fetch by it. The toggles stay (the tonemap
+		// reads them on both engines); only the emitter write-back is 3D, and with
+		// no emitters the 3D build skips the block too.
 		m_Post.SetHeatHazeEnabled(s.HeatHaze);
 		m_Post.SetHeatHazeStrength(s.HeatHazeStrength);
+#ifndef COSMIC_2D_ONLY
 		if (s.HeatHaze && !desc.DistortionEmitters.empty() && m_Post.BeginDistortion())
 		{
 			const uint32_t depthID = m_Post.GetSceneTarget()->GetDepthAttachmentRendererID();
@@ -697,6 +752,7 @@ namespace Cosmic
 					e->RenderDistortion(desc.View, depthID, m_InvViewProj);
 			m_Post.EndDistortion();
 		}
+#endif
 
 		m_Post.RenderEffects(desc.Projection);
 
@@ -705,8 +761,11 @@ namespace Cosmic
 		RenderCommand::SetViewport(0, 0, m_Width, m_Height);
 		m_Post.Composite(desc.Exposure);
 
+#ifndef COSMIC_2D_ONLY
 		// K12 — the selection outline rides over the composited LDR image, under
-		// the 2D/UI overlay (UI must never be outlined over).
+		// the 2D/UI overlay (UI must never be outlined over). ScenePicker is 3D-only
+		// and sprites have never had an outline path, so a 2D build simply has no
+		// outline stage — the scene2d golden is what proves that costs no pixels.
 		if (desc.Settings.OutlineEnabled && desc.EcsScene &&
 		    desc.SelectedEntities && !desc.SelectedEntities->empty())
 		{
@@ -714,11 +773,13 @@ namespace Cosmic
 			PassOutline(desc);
 			RenderCommand::EndGpuZone();
 		}
+#endif
 
 		if (desc.DrawOverlay2D)
 			desc.DrawOverlay2D();
 	}
 
+#ifndef COSMIC_2D_ONLY
 	// 8b) Selection outline (K12) ----------------------------------------------
 	void SceneRenderer::PassOutline(const SceneRenderDesc& desc)
 	{
@@ -761,4 +822,5 @@ namespace Cosmic
 		RenderCommand::DrawArrays(RendererAPI::PrimitiveTopology::Triangles, 0, 3);
 		RenderCommand::SetDepthTest(true);
 	}
+#endif   // COSMIC_2D_ONLY — PassOutline
 }

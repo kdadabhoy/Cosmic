@@ -89,8 +89,18 @@ endif()
 # flagships and cannot build against the 2D engine, so the 2D configuration skips
 # them; the 3D configuration skips nothing. Overridable by hand for either mode
 # (-DCOSMIC_SKIP_PROJECTS="Foo;Bar").
+#
+# Two additions the plan's §4 table does not list, both found in W6:
+#   ViperSim   — its FlightScreen/ReplayScreen draw the airframe, pad, grid, axes
+#                and trail with DIRECT Renderer3D calls, so the 2D engine cannot
+#                link it. Decision 4 ("ViperSim works on both branches") would
+#                need a 2D rewrite of those two screens; that is out of W6's
+#                scope and is called out in the phase report.
+#   Starforge  — W7 is the work order that gates the editor. Until it lands the
+#                2D scan skips it so the 2D tree BUILDS at every phase boundary
+#                (§0's absolute rule). *** W7: DELETE Starforge FROM THIS LIST. ***
 set(COSMIC_SKIP_PROJECTS_3D "")
-set(COSMIC_SKIP_PROJECTS_2D "Frontier;Engine3DDemo;ForgeIsle")
+set(COSMIC_SKIP_PROJECTS_2D "Frontier;Engine3DDemo;ForgeIsle;ViperSim;Starforge")
 if(COSMIC_2D_ONLY)
     set(SKIP_DEFAULT "${COSMIC_SKIP_PROJECTS_2D}")
     set(SKIP_OTHER   "${COSMIC_SKIP_PROJECTS_3D}")

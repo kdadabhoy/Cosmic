@@ -189,6 +189,14 @@ if(COSMIC_2D_ONLY)
     # Font, Gizmo, Texture and Shader are generic GPU infrastructure and stay.
     list(FILTER COSMIC_SOURCES EXCLUDE REGEX "/src/graphics/(Model|Skeleton|AnimationClip|CgltfImpl)\\.")
 
+    # camera/ — the §4.2 audit-at-implementation set, settled in W6. Camera,
+    # PerspectiveCamera, OrthographicCamera, Camera2D, OrbitCameraController and
+    # FlyCameraController are all 3D-free and stay. NavigationCube does NOT: its
+    # Render() draws the orientation gizmo with direct Renderer3D BeginScene /
+    # DrawMesh / DrawWireBox / DrawAxes calls, and a 2D viewport has no use for a
+    # 3D orientation cube anyway.
+    list(FILTER COSMIC_SOURCES EXCLUDE REGEX "/src/camera/NavigationCube\\.")
+
     # scene/ — the 3D half of the scene layer. Scene.cpp, SceneSerializer and the
     # ECS core stay; Scene3D.cpp and Components3D.h are the W4/W5 split products.
     list(FILTER COSMIC_SOURCES EXCLUDE REGEX "/src/scene/(Scene3D|Components3D|SceneNav|ScenePicker|WorldSystemRecipes)\\.")

@@ -81,11 +81,18 @@ namespace Cosmic
 		/** @brief Cached shader. Miss loads via Shader::Create. */
 		static Ref<Shader>    GetShader(const std::string& path);
 
+#ifndef COSMIC_2D_ONLY
+		// W6 — the 3D asset family. §4 keeps AssetLibrary itself in the 2D build
+		// (textures, shaders and materials are what a 2D game loads) but drops its
+		// backends: MeshImport.cpp, graphics/Model.* and graphics/AnimationClip.*
+		// are all excluded, so these four verbs have nothing left to call.
+
 		/** @brief Cached mesh. Miss imports via MeshImport (OBJ + gated assimp), applying .cmeta. */
 		static Ref<Mesh>      GetMesh(const std::string& path);
 
 		/** @brief Cached model (.gltf/.glb). Miss loads via Model::CreateFromGLTF (S4.4b). */
 		static Ref<Model>     GetModel(const std::string& path);
+#endif
 
 		/** @brief Cached material (E17). Miss loads the `.cmat` MaterialAsset and
 		 *  binds it to the engine PBR shader (BuildMaterial). */
@@ -100,6 +107,7 @@ namespace Cosmic
 		static bool           LoadMaterialAsset(MaterialAsset& out, const std::string& path);
 		static bool           SaveMaterialAsset(const MaterialAsset& asset, const std::string& path);
 
+#ifndef COSMIC_2D_ONLY
 		/**
 		 * @brief Cached animation clip (A2). The path addresses one clip inside
 		 * a model file: "models/Fox.glb#Run" (name), "models/Fox.glb#1" (index),
@@ -114,6 +122,7 @@ namespace Cosmic
 		 *  appear as their "Clip_<i>" fallback). Cached with the clips. Used by
 		 *  the editor's clip picker. */
 		static std::vector<std::string> GetAnimationClipNames(const std::string& path);
+#endif   // COSMIC_2D_ONLY
 
 		/**
 		 * @brief Visit every currently-cached asset (T2 / gap §14.2). Read-only
