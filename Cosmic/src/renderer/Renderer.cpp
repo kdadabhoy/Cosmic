@@ -1,5 +1,7 @@
 #include "renderer/Renderer.h"
-#include "renderer/Renderer3D.h"
+#ifndef COSMIC_2D_ONLY
+#include "renderer/Renderer3D.h"        // W5 — dropped from a 2D build (CMakeLists step 3)
+#endif
 #include "renderer/Light2DRenderer.h"   // X5 — release the 2D light FBO/shaders
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -22,7 +24,9 @@ namespace Cosmic
 	{
 		RenderCommand::Init();
 		Renderer2D::Init();
+#ifndef COSMIC_2D_ONLY
 		Renderer3D::Init();
+#endif
 	}
 
 	/**
@@ -32,7 +36,9 @@ namespace Cosmic
 	void Renderer::Shutdown()
 	{
 		Renderer2D::Shutdown();
+#ifndef COSMIC_2D_ONLY
 		Renderer3D::Shutdown();
+#endif
 		Light2DRenderer::Shutdown();   // X5 — free while the GL context is live
 	}
 

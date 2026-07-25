@@ -118,10 +118,13 @@ namespace Cosmic
 		 *  by ScriptableEntity::Physics()/Character() to reach a body/controller. */
 		ScenePhysics* GetPhysics() { return m_Physics.get(); }
 
+#ifndef COSMIC_2D_ONLY
 		// --- Nav session (Phase 26 / N4) -------------------------------------
 		// Agents exist only while a play session runs (the physics-body lifetime
 		// rule). Tick-order contract (per fixed step, in order):
 		//   scripts OnFixedUpdate -> OnPhysicsStep -> OnNavStep -> DispatchPhysicsEvents.
+		// W5 — defined in scene/Scene3D.cpp; navigation is 3D only. The physics
+		// session above is NOT fenced: physics is dimension agnostic (§4.1).
 
 		/** @brief Bind the primary baked navmesh + DetourCrowd and create an agent per
 		 *  NavAgentComponent. Call once when a play session starts. No-op if the scene
@@ -138,6 +141,7 @@ namespace Cosmic
 		/** @brief The active nav runtime binding, or nullptr in edit mode. Used by
 		 *  ScriptableEntity::Nav() to reach the agent + navmesh queries. */
 		SceneNavRuntime* GetNav() { return m_NavRuntime.get(); }
+#endif   // COSMIC_2D_ONLY
 
 		/**
 		 * @brief Calls BeginScene with the provided camera, dispatches all sprite-bearing
@@ -402,6 +406,9 @@ namespace Cosmic
 		/** @brief Recursive world-transform walk keyed by entt handle (E3). */
 		glm::mat4 WorldOf(entt::entity handle);
 
+#ifndef COSMIC_2D_ONLY
+		// W5 — both are defined in scene/Scene3D.cpp (mesh + skeletal submit).
+
 		/** @brief Submit every MeshRenderer/LODGroup opaque draw through the routed
 		 *  SceneDrawContext (Main/Reflection → Renderer3D queue; depth passes →
 		 *  shadow/coverage caster, honoring CastShadows). The single truth shared by
@@ -411,6 +418,7 @@ namespace Cosmic
 		// A2 — the Animator driving an entity (own component or nearest
 		// ancestor's); null when none. Used by the skinned submit path.
 		AnimatorComponent* FindAnimatorFor(entt::entity entity);
+#endif   // COSMIC_2D_ONLY
 
 		float m_WorldTime = 0.0f;   // accumulated seconds for water/particle animation (E18)
 
@@ -418,7 +426,9 @@ namespace Cosmic
 		FlowMachine* m_ActiveFlow = nullptr;   // Q2 — the flow driving this scene (not owned)
 
 		std::unique_ptr<ScenePhysics>    m_Physics;      // J4 — non-null only during a play session
+#ifndef COSMIC_2D_ONLY
 		std::unique_ptr<SceneNavRuntime> m_NavRuntime;   // N4 — non-null only during a play session
+#endif
 
 		entt::registry m_Registry;
 		std::vector<Scope<System>>   m_Systems;

@@ -33,11 +33,13 @@
 #endif
 #include "scene/FlowMachine.h"           // Q2 — Flow() variable proxy (FlowMachine/FlowValue)
 #include "scripting/ModuleRegistry.h"    // SystemDescriptor (SystemBuilder), H9
-#include "physics/ScenePhysics.h"        // J5/J6 — Physics()/Character() script proxies
+#include "physics/ScenePhysics.h"        // J5/J6 — Physics()/Character() script proxies (NOT fenced: physics is shared)
+#ifndef COSMIC_2D_ONLY
 #include "voxel/VoxelVolume.h"           // V4 — Voxels() script proxy
 #include "voxel/BlockPalette.h"
 #include "scene/SceneNav.h"              // N4 — Nav() script proxy (SceneNavRuntime)
 #include "nav/NavWorld.h"                // N4 — Nav() queries (FindPath/Raycast/...)
+#endif
 
 #include <entt/entt.hpp>
 
@@ -244,6 +246,11 @@ namespace Cosmic
         };
         FlowProxy Flow() const { return { m_Scene }; }
 
+#ifndef COSMIC_2D_ONLY
+        // W5 — the three 3D-world script proxies: voxels, skeletal animation and
+        // navigation. Physics()/Character()/Flow()/Signals()/Telemetry() above are
+        // dimension agnostic and stay in every configuration.
+
         // ---- voxel passthrough (V4) -----------------------------------------
         // A thin handle to a voxel world: this entity's VoxelVolumeComponent if it
         // has one, else the scene's first. Get/Set are in WORLD VOXEL coordinates;
@@ -363,6 +370,7 @@ namespace Cosmic
             }
         };
         NavProxy Nav() const { return { m_Scene, m_Handle }; }
+#endif   // COSMIC_2D_ONLY
 
 
         // Override the ones you need — all default to no-ops.

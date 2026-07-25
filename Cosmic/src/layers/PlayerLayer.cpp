@@ -166,7 +166,9 @@ namespace Cosmic
         m_Flow.Stop();   // U5 — unsubscribe from scene buses before scenes tear down
         if (m_TrackedScene)
         {
+#ifndef COSMIC_2D_ONLY
             m_TrackedScene->OnNavStop();                 // N4 — release the crowd first
+#endif
             m_TrackedScene->OnPhysicsStop(m_Physics);
         }
         m_Scripts.Destroy();
@@ -183,7 +185,9 @@ namespace Cosmic
             return;
         if (m_TrackedScene)
         {
+#ifndef COSMIC_2D_ONLY
             m_TrackedScene->OnNavStop();                 // N4 — release the old scene's crowd
+#endif
             m_TrackedScene->OnPhysicsStop(m_Physics);    // tear down the old scene's bodies
         }
         m_Scripts.Destroy();          // tear down the old scene's instances first
@@ -193,7 +197,9 @@ namespace Cosmic
             m_Scripts.Instantiate(*m_TrackedScene);
             m_TrackedScene->SyncWorldSystems();          // build recipe terrain etc. first
             m_TrackedScene->OnPhysicsStart(m_Physics);   // build bodies from components (J4)
+#ifndef COSMIC_2D_ONLY
             m_TrackedScene->OnNavStart();                // bind the crowd to the navmesh (N4)
+#endif
         }
     }
 
@@ -249,8 +255,10 @@ namespace Cosmic
             if (m_TrackedScene)
             {
                 m_TrackedScene->UpdateSpriteAnimations(ts);   // U4 — flipbook advance
+#ifndef COSMIC_2D_ONLY
                 m_TrackedScene->UpdateAnimators(ts);          // A2/M6 — skeletal animators +
                                                               // crossfades (paused ⇒ frozen)
+#endif
             }
         }
 
@@ -290,7 +298,9 @@ namespace Cosmic
         if (m_TrackedScene)
         {
             m_TrackedScene->OnPhysicsStep(fixedDt);
+#ifndef COSMIC_2D_ONLY
             m_TrackedScene->OnNavStep(fixedDt);          // N4 — advance the crowd (post-physics)
+#endif
             m_TrackedScene->DispatchPhysicsEvents(m_Scripts);
         }
     }
