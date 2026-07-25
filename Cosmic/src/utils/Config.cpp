@@ -13,6 +13,7 @@
 #define TOML_EXCEPTIONS 0
 #include <toml.hpp>
 
+#include <filesystem>
 #include <memory>
 #include <string>
 #include <vector>
@@ -63,6 +64,21 @@ namespace Cosmic
 	Ref<Config> Config::Load(const std::string& path)
 	{
 		const std::string resolved = FileSystem::Resolve(path);
+
+		// An absent file is a NORMAL outcome, not an error. Every caller treats a
+		// null return as "not configured", and the editor probes several optional
+		// files on a fresh profile (starforge/layouts/active.toml, editor.toml,
+		// projects.toml). Checking first also keeps the message honest: with
+		// TOML_EXCEPTIONS 0, toml++ folds "cannot open the file" into the same
+		// parse_result as a syntax error, so a file that was never there used to
+		// be reported as CS_CORE_ERROR "failed to parse '…' (line 0, column 0)".
+		// A file that EXISTS but is malformed is still a genuine error below.
+		std::error_code ec;
+		if (!std::filesystem::is_regular_file(resolved, ec))
+		{
+			CS_CORE_TRACE("Config: no file at '{0}'.", resolved);
+			return nullptr;
+		}
 
 		toml::parse_result result = toml::parse_file(resolved);
 		if (!result)
