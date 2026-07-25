@@ -170,6 +170,25 @@ namespace Cosmic
 		void UpdateSpriteAnimations(float deltaTime);
 
 		/**
+		 * @brief One entry of the 2D painter list built by BuildSpriteDrawList.
+		 * `E` is the entity, `Z` its ZOrder, `Key` the within-layer sort key
+		 * (sprites: YSort ? -Position.y : Position.z; tilemaps: Position.z) and
+		 * `Map` distinguishes a tilemap from a sprite.
+		 */
+		struct SpriteDrawItem { entt::entity E; int32_t Z; float Key; bool Map; };
+
+		/**
+		 * @brief The painter-ordered 2D draw list: every enabled, effectively-active
+		 * sprite and tilemap, sorted ascending by (ZOrder, per-item key, entity id).
+		 * Sprites sort by -Position.y when YSort is set (lower on screen draws in
+		 * front), otherwise by Position.z (the legacy 2D-path tie-break); tilemaps
+		 * interleave with sprites through the same keys. Pure CPU — no GL, no
+		 * asset resolution — so it is headless-testable; OnRenderSprites calls it
+		 * to decide draw order and this is the only place that order is decided.
+		 */
+		std::vector<SpriteDrawItem> BuildSpriteDrawList();
+
+		/**
 		 * @brief Generic world-space 2D pass (U3/U4): draws every entity with a
 		 * TransformComponent + SpriteRendererComponent, and every tilemap
 		 * (TransformComponent + TilemapComponent — a camera-rect-culled cell

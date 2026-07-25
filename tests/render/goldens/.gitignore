@@ -1,0 +1,11 @@
+# Golden-image references are COMMITTED — everything here is tracked except the
+# diagnostics a failing run drops next to them:
+#
+#   <name>.actual.png   the frame that was captured instead of the golden
+#   <name>.diff.png     magenta where the two exceed the tolerance
+#
+# Both are regenerated on every failure and must never be committed (a stale
+# .actual.png next to a passing golden is pure confusion). See tests/render/
+# GoldenImage.cpp and plan doc 28 §9.5.
+*.actual.png
+*.diff.png

@@ -946,22 +946,16 @@ namespace Cosmic
 		}
 	}
 
-	void Scene::OnRenderSprites(const glm::mat4& viewProjection,
-	                            uint32_t viewportWidth, uint32_t viewportHeight)
+	// Painter order: ascending ZOrder, then the per-item key (sprite YSort
+	// sorts by -Y so a lower-on-screen sprite draws in front; default =
+	// Position.z, the legacy 2D-path tie-break), then entity id. Tilemaps
+	// interleave with sprites through the same (ZOrder, Z) keys.
+	std::vector<Scene::SpriteDrawItem> Scene::BuildSpriteDrawList()
 	{
-		auto view    = m_Registry.view<TransformComponent, SpriteRendererComponent>();
-		auto tmView  = m_Registry.view<TransformComponent, TilemapComponent>();
-		const bool anySprites  = view.begin() != view.end();
-		const bool anyTilemaps = tmView.begin() != tmView.end();
-		if (!anySprites && !anyTilemaps)
-			return;   // compat gate: a scene without 2D content makes NO GL calls here
+		auto view   = m_Registry.view<TransformComponent, SpriteRendererComponent>();
+		auto tmView = m_Registry.view<TransformComponent, TilemapComponent>();
 
-		// Painter order: ascending ZOrder, then the per-item key (sprite YSort
-		// sorts by -Y so a lower-on-screen sprite draws in front; default =
-		// Position.z, the legacy 2D-path tie-break), then entity id. Tilemaps
-		// interleave with sprites through the same (ZOrder, Z) keys.
-		struct SpriteItem { entt::entity E; int32_t Z; float Key; bool Map; };
-		std::vector<SpriteItem> items;
+		std::vector<SpriteDrawItem> items;
 		for (auto e : view)
 		{
 			const auto& t = view.get<TransformComponent>(e);
@@ -980,12 +974,26 @@ namespace Cosmic
 				continue;
 			items.push_back({ e, tm.ZOrder, t.Position.z, true });
 		}
-		std::sort(items.begin(), items.end(), [](const SpriteItem& a, const SpriteItem& b)
+		std::sort(items.begin(), items.end(), [](const SpriteDrawItem& a, const SpriteDrawItem& b)
 		{
 			if (a.Z   != b.Z)   return a.Z   < b.Z;
 			if (a.Key != b.Key) return a.Key < b.Key;
 			return a.E < b.E;
 		});
+		return items;
+	}
+
+	void Scene::OnRenderSprites(const glm::mat4& viewProjection,
+	                            uint32_t viewportWidth, uint32_t viewportHeight)
+	{
+		auto view    = m_Registry.view<TransformComponent, SpriteRendererComponent>();
+		auto tmView  = m_Registry.view<TransformComponent, TilemapComponent>();
+		const bool anySprites  = view.begin() != view.end();
+		const bool anyTilemaps = tmView.begin() != tmView.end();
+		if (!anySprites && !anyTilemaps)
+			return;   // compat gate: a scene without 2D content makes NO GL calls here
+
+		const std::vector<SpriteDrawItem> items = BuildSpriteDrawList();
 
 		// World-space XY bounds of the view frustum (invVP over the NDC cube) —
 		// exact for the ortho 2D camera, conservative for perspective. Culls the
@@ -1017,7 +1025,7 @@ namespace Cosmic
 		Renderer2D::PushRenderPass(viewProjection,
 			{ 0.0f, 0.0f, (float)viewportWidth, (float)viewportHeight });
 
-		for (const SpriteItem& it : items)
+		for (const SpriteDrawItem& it : items)
 		{
 			if (it.Map)
 			{

@@ -63,6 +63,18 @@ add_executable(CosmicTests
     test_branding.cpp
     test_events.cpp
     test_forgeisle_content.cpp
+    # Phase 29 W2 — the regression net the engine split is built on top of.
+    # 2D invariants (plan doc 28 §9.2):
+    test_sprite_order.cpp
+    test_light2d.cpp
+    test_sprite_animation.cpp
+    test_tilemap_extra.cpp
+    test_ui_anchor.cpp
+    test_timeline_state.cpp
+    test_scene2d_determinism.cpp
+    # 3D partition baselines, captured against the UN-split code (§9.3):
+    test_render_desc.cpp
+    test_components3d_registry.cpp
 )
 
 target_link_libraries(CosmicTests PRIVATE Cosmic)

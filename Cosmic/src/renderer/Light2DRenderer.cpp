@@ -58,13 +58,21 @@ namespace Cosmic
 	{
 		if (targetW == 0 || targetH == 0)
 			return;
+
+		// Capture the caller's target BEFORE Ensure(). Ensure is what creates the
+		// half-res light buffer (and resizes it when the viewport changes), and
+		// FrameBuffer creation/resize ends by unbinding to the DEFAULT framebuffer
+		// — so reading the binding afterwards yields 0 on exactly those frames and
+		// step 2's multiply lands on the window instead of the caller's target.
+		// That made the 2D light pass silently skip the first frame after startup
+		// and the first frame after every viewport resize.
+		const uint32_t prevFbo = RenderCommand::GetBoundFramebuffer();
+
 		const uint32_t halfW = (targetW + 1) / 2;
 		const uint32_t halfH = (targetH + 1) / 2;
 		if (!Ensure(halfW, halfH))
 			return;   // headless / shader load failure — leave the scene untouched
 		State& s = S();
-
-		const uint32_t prevFbo = RenderCommand::GetBoundFramebuffer();
 
 		// 1) Accumulate the lights into the half-res buffer, cleared to ambient.
 		s.Fbo->Bind();

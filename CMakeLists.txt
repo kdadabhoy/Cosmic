@@ -73,6 +73,18 @@ if(COSMIC_BUILD_TESTS)
     add_subdirectory(tests)
 endif()
 
+# Golden-image render tests (tests/render/). OFF by default and NEVER in CI: the
+# target opens a real window and compares GPU output against committed PNGs, so
+# it needs a GPU and its results are driver-specific. Runs under BOTH engine
+# configurations (Phase 29 §9.5) — the 2D goldens are shared, the 3D ones are
+# gated inside the target. Built by hand:
+#   cmake -S . -B build -A x64 -DCOSMIC_BUILD_RENDER_TESTS=ON
+option(COSMIC_BUILD_RENDER_TESTS "Build the CosmicRenderTests golden-image target (needs a real GPU; local only)" OFF)
+if(COSMIC_BUILD_RENDER_TESTS)
+    enable_testing()
+    add_subdirectory(tests/render)
+endif()
+
 # Projects the scanner ignores. Frontier, Engine3DDemo and ForgeIsle are 3D
 # flagships and cannot build against the 2D engine, so the 2D configuration skips
 # them; the 3D configuration skips nothing. Overridable by hand for either mode
