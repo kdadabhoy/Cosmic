@@ -2,10 +2,11 @@
 SETLOCAL EnableDelayedExpansion
 CLS
 echo ======================================================
-echo            Cosmic Engine - Full Universal Build
+echo      Cosmic Engine - Full Universal Build (2D ONLY)
 echo ======================================================
+echo [MODE] 2D-only engine
 
-:: Accept optional config argument: build_all.bat [Debug|Release]
+:: Accept optional config argument: build_all_2d.bat [Debug|Release]
 set BUILD_CONFIG=%1
 if "%BUILD_CONFIG%"=="" set BUILD_CONFIG=Debug
 
@@ -24,35 +25,24 @@ if defined VS_PATH (
     echo [INFO] Visual Studio not detected. Relying on system default CMake generator...
 )
 
-:: This is a clean build: the cache is deleted, so the engine configuration has to
-:: be read out first and handed back to the fresh configure. The mode is preserved,
-:: never changed — build_2d.bat / build_all_2d.bat / build_3d.bat set it.
-set ENGINE_MODE=full 3D engine
-set MODE_FLAG=
-if exist build\CMakeCache.txt (
-    findstr /C:"COSMIC_2D_ONLY:BOOL=ON" build\CMakeCache.txt >nul 2>&1
-    if not errorlevel 1 (
-        set ENGINE_MODE=2D-only engine
-        set MODE_FLAG=-DCOSMIC_2D_ONLY=ON
-    )
-)
-echo [MODE] !ENGINE_MODE!
-
 if exist build rmdir /s /q build
 mkdir build
 cd build
 
-echo [STAGE 1] Configuring Global Solution Tree...
+:: Clean configure in 2D mode. The three 3D game projects (Frontier, Engine3DDemo,
+:: ForgeIsle) drop out of the project scanner, and assimp + recastnavigation are
+:: never configured — see docs/plans/28-phase29-engine-split-plan.md §4.
+echo [STAGE 1] Configuring Global Solution Tree (2D-only engine)...
 if defined VS_PATH (
-    cmake .. -A x64 -DCOSMIC_BUILD_ENGINE_ONLY=OFF !MODE_FLAG!
+    cmake .. -A x64 -DCOSMIC_BUILD_ENGINE_ONLY=OFF -DCOSMIC_2D_ONLY=ON
 ) else (
-    cmake .. -DCOSMIC_BUILD_ENGINE_ONLY=OFF !MODE_FLAG!
+    cmake .. -DCOSMIC_BUILD_ENGINE_ONLY=OFF -DCOSMIC_2D_ONLY=ON
 )
 
-echo [STAGE 2] Building Engine Host and All Client Projects...
+echo [STAGE 2] Building Engine Host and All 2D Client Projects...
 cmake --build . --config %BUILD_CONFIG% --parallel
 
 echo.
-echo SUCCESS: Full System Context Built! (%BUILD_CONFIG%)
+echo SUCCESS: Full 2D System Context Built! (%BUILD_CONFIG%)
 pause
 ENDLOCAL

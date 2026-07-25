@@ -38,6 +38,15 @@ if not exist build (
     )
 )
 
+:: Report which engine configuration the cache holds — read only, never forced
+:: (build_2d.bat / build_3d.bat are the mode setters).
+set ENGINE_MODE=full 3D engine
+if exist build\CMakeCache.txt (
+    findstr /C:"COSMIC_2D_ONLY:BOOL=ON" build\CMakeCache.txt >nul 2>&1
+    if not errorlevel 1 set ENGINE_MODE=2D-only engine
+)
+echo [MODE] !ENGINE_MODE!
+
 cd build
 
 if "!NEEDS_CONFIGURE!"=="1" (

@@ -36,6 +36,17 @@ if not exist build (
     )
 )
 
+:: 3. Report which engine configuration the cache holds. COSMIC_2D_ONLY is read,
+::    never written: the CMake cache is sticky, so a tree configured 2D (via
+::    build_2d.bat, or the engine-2d worktree) stays 2D and this script is its fast
+::    incremental build. Use build_2d.bat / build_3d.bat to change modes.
+set ENGINE_MODE=full 3D engine
+if exist build\CMakeCache.txt (
+    findstr /C:"COSMIC_2D_ONLY:BOOL=ON" build\CMakeCache.txt >nul 2>&1
+    if not errorlevel 1 set ENGINE_MODE=2D-only engine
+)
+echo [MODE] !ENGINE_MODE!
+
 cd build
 
 if "!NEEDS_CONFIGURE!"=="1" (
@@ -46,7 +57,7 @@ if "!NEEDS_CONFIGURE!"=="1" (
     )
 )
 
-:: 3. Incremental build — CMake re-runs configure automatically if CMakeLists.txt changed.
+:: 4. Incremental build — CMake re-runs configure automatically if CMakeLists.txt changed.
 cmake --build . --config %BUILD_CONFIG% --parallel
 
 echo.

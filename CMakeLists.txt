@@ -41,6 +41,15 @@ endif()
 
 option(COSMIC_BUILD_ENGINE_ONLY "Build only the core engine components" OFF)
 
+# Phase 29 engine split — the two engine configurations. Declared here, ahead of
+# add_subdirectory(Cosmic), so the flags are in the cache before anything reads
+# them: the engine's source partition, the test target and the project scanner
+# below all key off COSMIC_2D_ONLY. Cosmic/CMakeLists.txt declares the same two
+# options (a no-op once these cache entries exist) so that directory still
+# configures on its own. See docs/plans/28-phase29-engine-split-plan.md.
+option(COSMIC_2D_ONLY "Build the 2D-only engine (excludes all 3D subsystems)" OFF)
+option(COSMIC_WITH_JOLT "Build the Jolt physics backend" ON)
+
 # Distribution is no longer a separate cache flag — it is implied by the Release
 # configuration (see Cosmic/CMakeLists.txt, where COSMIC_DIST is defined via a
 # per-config generator expression). Any Release build is a distribution build.
@@ -64,14 +73,46 @@ if(COSMIC_BUILD_TESTS)
     add_subdirectory(tests)
 endif()
 
+# Projects the scanner ignores. Frontier, Engine3DDemo and ForgeIsle are 3D
+# flagships and cannot build against the 2D engine, so the 2D configuration skips
+# them; the 3D configuration skips nothing. Overridable by hand for either mode
+# (-DCOSMIC_SKIP_PROJECTS="Foo;Bar").
+set(COSMIC_SKIP_PROJECTS_3D "")
+set(COSMIC_SKIP_PROJECTS_2D "Frontier;Engine3DDemo;ForgeIsle")
+if(COSMIC_2D_ONLY)
+    set(SKIP_DEFAULT "${COSMIC_SKIP_PROJECTS_2D}")
+    set(SKIP_OTHER   "${COSMIC_SKIP_PROJECTS_3D}")
+else()
+    set(SKIP_DEFAULT "${COSMIC_SKIP_PROJECTS_3D}")
+    set(SKIP_OTHER   "${COSMIC_SKIP_PROJECTS_2D}")
+endif()
+set(COSMIC_SKIP_PROJECTS "${SKIP_DEFAULT}" CACHE STRING
+    "Semicolon-separated Projects/ subdirectory names the scanner skips")
+# The cache is sticky, but this default is mode-derived: a tree reconfigured with
+# the other value of COSMIC_2D_ONLY would keep the previous mode's list, and a 3D
+# build would then silently skip its three 3D projects. Re-derive it whenever the
+# stored value is exactly the other mode's default — a hand-customised list is left
+# alone.
+if(NOT SKIP_OTHER STREQUAL SKIP_DEFAULT AND COSMIC_SKIP_PROJECTS STREQUAL "${SKIP_OTHER}")
+    set_property(CACHE COSMIC_SKIP_PROJECTS PROPERTY VALUE "${SKIP_DEFAULT}")
+endif()
+
 # AUTOMATED GAME PROJECT SCANNER
 if(NOT COSMIC_BUILD_ENGINE_ONLY)
     file(GLOB PROJECT_SUBDIRS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}/Projects" "Projects/*")
 
+    if(COSMIC_SKIP_PROJECTS)
+        message(STATUS "--> Skipping game projects: ${COSMIC_SKIP_PROJECTS}")
+    endif()
+
     foreach(SUBDIR ${PROJECT_SUBDIRS})
         set(FULL_PATH "${CMAKE_CURRENT_SOURCE_DIR}/Projects/${SUBDIR}")
 
-        if(IS_DIRECTORY "${FULL_PATH}" AND EXISTS "${FULL_PATH}/CMakeLists.txt")
+        # A skipped project drops out of the scan entirely, including the install
+        # rules below — those name the target after the directory, so a project that
+        # is never added must never be installed either.
+        if(IS_DIRECTORY "${FULL_PATH}" AND EXISTS "${FULL_PATH}/CMakeLists.txt"
+           AND NOT "${SUBDIR}" IN_LIST COSMIC_SKIP_PROJECTS)
             message(STATUS "--> Auto-detected game project: ${SUBDIR}")
             add_subdirectory("Projects/${SUBDIR}")
 

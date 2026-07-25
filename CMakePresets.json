@@ -1,0 +1,39 @@
+{
+  "version": 3,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 21,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "generator": "Visual Studio 18 2026",
+      "architecture": "x64",
+      "binaryDir": "${sourceDir}/build",
+      "description": "Shared settings. binaryDir is always <source>/build: COSMIC_SDK_DIR is the SOURCE dir and every target writes to ${COSMIC_SDK_DIR}/build/Runtime/$<CONFIG>, so a second binary dir in the same source tree would clobber the first one's Cosmic.dll. Use a git worktree for the other configuration, not a second build folder.",
+      "cacheVariables": {
+        "COSMIC_BUILD_ENGINE_ONLY": "OFF"
+      }
+    },
+    {
+      "name": "default",
+      "inherits": "base",
+      "displayName": "Cosmic — full 3D engine",
+      "description": "The 3D trunk configuration: every subsystem, every game project, Jolt + Recast + assimp.",
+      "cacheVariables": {
+        "COSMIC_2D_ONLY": "OFF"
+      }
+    },
+    {
+      "name": "2d",
+      "inherits": "base",
+      "displayName": "Cosmic — 2D-only engine",
+      "description": "The pure-2D configuration: no terrain/voxel/water/nav/particles, no 3D renderer passes, no assimp or Recast, and the three 3D game projects skipped. Jolt stays. See docs/plans/28-phase29-engine-split-plan.md §4.",
+      "cacheVariables": {
+        "COSMIC_2D_ONLY": "ON"
+      }
+    }
+  ]
+}

@@ -2,6 +2,26 @@ cmake_minimum_required(VERSION 3.21)
 project(Cosmic LANGUAGES C CXX)
 
 # ----------------------------
+# 1. Engine configuration flags
+# ----------------------------
+# COSMIC_2D_ONLY (Phase 29) — the pure-2D engine configuration. It drops every 3D
+# subsystem: the terrain/voxel/water/nav/particles source trees, the 3D renderer
+# passes, model + skeletal-animation loading, and the assimp and recastnavigation
+# vendored dependencies (which are not even configured). See §4 of
+# docs/plans/28-phase29-engine-split-plan.md for the authoritative exclusion table.
+#
+# Both options are also declared in the root CMakeLists.txt (which forwards them to
+# the project scanner); option() is a no-op when the cache entry already exists, so
+# declaring them here as well keeps this directory configurable standalone.
+option(COSMIC_2D_ONLY "Build the 2D-only engine (excludes all 3D subsystems)" OFF)
+
+# Jolt ships on BOTH configurations (Phase 29 decision 3) — physics is dimension
+# agnostic, so 2D keeps rigid bodies, box/sphere/capsule colliders and the
+# character controller. OFF leaves the null backend plus whatever an app registers
+# through IPhysicsBackend (W3); it is not a supported configuration until then.
+option(COSMIC_WITH_JOLT "Build the Jolt physics backend" ON)
+
+# ----------------------------
 # 2. External Dependencies
 # ----------------------------
 find_package(OpenGL REQUIRED)
@@ -73,14 +93,20 @@ target_include_directories(stb_image_write INTERFACE dependencies/stb_image_writ
 # Jolt Physics (J1, Phase 15) — vendored static lib, MIT. Built from its own
 # curated CMakeLists (dependencies/JoltPhysics/CMakeLists.txt); linked PRIVATE into
 # Cosmic below so the JPH:: types never leak past the engine's physics/ TUs.
-add_subdirectory(dependencies/JoltPhysics)
+# Configured on both engine configurations (Phase 29 decision 3).
+if(COSMIC_WITH_JOLT)
+    add_subdirectory(dependencies/JoltPhysics)
+endif()
 
 # Recast & Detour navigation (N1, Phase 26) — vendored static lib, Zlib. Built
 # from its own curated CMakeLists (dependencies/recastnavigation/CMakeLists.txt);
 # linked PRIVATE into Cosmic below so the Recast/Detour types never leak past the
 # engine's nav/ TUs (the Jolt firewall — only nav/*.cpp include <Recast.h> etc.,
-# behind the NavWorld pimpl).
-add_subdirectory(dependencies/recastnavigation)
+# behind the NavWorld pimpl). Navigation is 3D-only, so the 2D configuration never
+# configures it — 26 TUs, and src/nav/ + scene/SceneNav.* go with it.
+if(NOT COSMIC_2D_ONLY)
+    add_subdirectory(dependencies/recastnavigation)
+endif()
 
 # assimp (A1, Phase 20) — vendored mesh-import backend, BSD-3-Clause, pinned +
 # trimmed (see dependencies/assimp/README-COSMIC.md). Default ON since A1; the
@@ -89,8 +115,10 @@ add_subdirectory(dependencies/recastnavigation)
 # variables override its option() defaults. Static, linked PRIVATE into
 # Cosmic.dll below (the Jolt firewall: only assets/MeshImport.cpp includes
 # assimp headers, so aiScene types never reach game/project DLLs).
+# The 2D configuration never configures it either (159 TUs — the dominant term in
+# the 2D build-time win); assets/MeshImport.cpp is excluded there in step 3.
 option(COSMIC_WITH_ASSIMP "FBX/STL/DAE/PLY mesh import via vendored assimp" ON)
-if(COSMIC_WITH_ASSIMP)
+if(COSMIC_WITH_ASSIMP AND NOT COSMIC_2D_ONLY)
     set(ASSIMP_BUILD_ALL_IMPORTERS_BY_DEFAULT OFF)   # importers trimmed to the E16 five
     set(ASSIMP_BUILD_FBX_IMPORTER ON)
     set(ASSIMP_BUILD_OBJ_IMPORTER ON)
@@ -136,6 +164,42 @@ file(GLOB_RECURSE COSMIC_SOURCES
     "dependencies/stb_truetype/*.cpp"
     "dependencies/stb_image_write/*.cpp"
 )
+
+# The 2D partition (Phase 29 §4). GLOB_RECURSE yields absolute paths, so every
+# pattern is anchored on its src/ subdirectory. One list(FILTER) per row of the §4
+# table, in table order, so the two stay auditable against each other.
+#
+# Several targets do not exist yet — Scene3D.cpp, Components3D.h and
+# TypeRegistry3D.cpp arrive in W4/W5. A pattern that matches nothing is harmless,
+# and writing them now means those phases add files without editing this block.
+# Note the GLOB has no CONFIGURE_DEPENDS: adding or removing an engine source file
+# needs an explicit reconfigure, not just a rebuild.
+if(COSMIC_2D_ONLY)
+    # Whole 3D subsystem trees.
+    list(FILTER COSMIC_SOURCES EXCLUDE REGEX "/src/(terrain|voxel|water|nav|particles)/")
+
+    # renderer/ — the 3D passes and the GPU resources only they own. Renderer,
+    # Renderer2D, RenderCommand, RendererAPI, RenderPass, RenderQueue,
+    # PostProcessStack, Light2DRenderer and SceneRenderer all stay: 2D composites
+    # through the same HDR → tonemap → overlay spine.
+    list(FILTER COSMIC_SOURCES EXCLUDE REGEX "/src/renderer/(Renderer3D|EnvironmentMap|ShadowMap|CoverageCapture|InstanceSet)\\.")
+
+    # graphics/ — model loading and skeletal animation. Mesh, Material, Buffer,
+    # Font, Gizmo, Texture and Shader are generic GPU infrastructure and stay.
+    list(FILTER COSMIC_SOURCES EXCLUDE REGEX "/src/graphics/(Model|Skeleton|AnimationClip|CgltfImpl)\\.")
+
+    # scene/ — the 3D half of the scene layer. Scene.cpp, SceneSerializer and the
+    # ECS core stay; Scene3D.cpp and Components3D.h are the W4/W5 split products.
+    list(FILTER COSMIC_SOURCES EXCLUDE REGEX "/src/scene/(Scene3D|Components3D|SceneNav|ScenePicker|WorldSystemRecipes)\\.")
+
+    # reflect/ — the 3D component registrations (W4). TypeRegistry.cpp stays.
+    list(FILTER COSMIC_SOURCES EXCLUDE REGEX "/src/reflect/TypeRegistry3D\\.")
+
+    # assets/ — mesh import. AssetLibrary stays; the header stays visible so the
+    # fences that reference it read the same on both configurations.
+    list(FILTER COSMIC_SOURCES EXCLUDE REGEX "/src/assets/MeshImport\\.cpp$")
+endif()
+
 add_library(Cosmic SHARED ${COSMIC_SOURCES})
 
 # ----------------------------
@@ -144,6 +208,13 @@ add_library(Cosmic SHARED ${COSMIC_SOURCES})
 target_include_directories(Cosmic PUBLIC src)
 target_include_directories(Cosmic PRIVATE dependencies/stb_image dependencies/stb_truetype dependencies/stb_image_write dependencies/miniaudio dependencies/cgltf)
 target_compile_definitions(Cosmic PRIVATE COSMIC_BUILD_DLL)
+
+# COSMIC_2D_ONLY is PUBLIC, unlike every other engine define: Starforge, the game
+# projects and CosmicTests all compile against public headers that carry the
+# partition fences (Cosmic.h, Components.h, SceneRenderer.h), so the flag has to
+# resolve identically in every consumer or the ABI silently diverges. Empty (not
+# defined at all) in the 3D configuration.
+target_compile_definitions(Cosmic PUBLIC $<$<BOOL:${COSMIC_2D_ONLY}>:COSMIC_2D_ONLY>)
 
 # TypeRegistry.cpp instantiates a reflection thunk set per registered component;
 # with the UI + 2D component additions (Phase 17) its object file exceeds MSVC's
@@ -164,12 +235,25 @@ target_link_libraries(Cosmic PUBLIC imgui implot glad glm entt glfw OpenGL::GL s
 # dllexported, so leaking the headers would only invite link errors). Jolt is the
 # same story: only physics/*.cpp include <Jolt/...>, behind the PhysicsWorld pimpl.
 # RecastNavigation likewise: only nav/*.cpp include <Recast.h>/<Detour...>, behind
-# the NavWorld pimpl.
-target_link_libraries(Cosmic PRIVATE tomlplusplus ImGuizmo nlohmann_json Jolt RecastNavigation)
+# the NavWorld pimpl. Both are generator-expression gated so the link list follows
+# the same conditions as the add_subdirectory calls above — an unconfigured target
+# name would otherwise reach the linker as a bare library.
+target_link_libraries(Cosmic PRIVATE tomlplusplus ImGuizmo nlohmann_json
+    $<$<BOOL:${COSMIC_WITH_JOLT}>:Jolt>
+    $<$<NOT:$<BOOL:${COSMIC_2D_ONLY}>>:RecastNavigation>)
+
+# Compile-time counterpart of the option: consumed by physics/ from W3 on, where
+# the Jolt backend registers itself with PhysicsBackendRegistry only when built.
+if(COSMIC_WITH_JOLT)
+    target_compile_definitions(Cosmic PRIVATE COSMIC_WITH_JOLT)
+endif()
 
 # assimp backend (A1): PRIVATE link + define — MeshImport.cpp's #ifdef block is
-# the only consumer; MeshImport::AssimpEnabled() reports the gate at runtime.
-if(COSMIC_WITH_ASSIMP)
+# the only consumer; MeshImport::AssimpEnabled() reports the gate at runtime. The
+# condition must match the add_subdirectory above exactly: in the 2D configuration
+# the target does not exist, and a bare "assimp" here would reach the linker as
+# assimp.lib.
+if(COSMIC_WITH_ASSIMP AND NOT COSMIC_2D_ONLY)
     target_link_libraries(Cosmic PRIVATE assimp)
     target_compile_definitions(Cosmic PRIVATE COSMIC_WITH_ASSIMP)
 endif()
