@@ -23,6 +23,16 @@ build/
 *.lib
 # Intermediate folders
 obj/
+# ...but NOT assimp's OBJ importer. These artifact patterns are unanchored, so
+# they match at any depth, and git's core.ignorecase is on by default on Windows
+# — so `obj/` silently swallowed dependencies/assimp/code/AssetLib/Obj/ and its
+# ten sources never got committed. Local builds kept working (the files are on
+# disk); a fresh clone failed at CMake generate with "Cannot find source file:
+# AssetLib/Obj/ObjFileData.h", which is exactly how CI broke. A parent directory
+# that is excluded cannot have its children re-included, so this negation has to
+# name the directory itself. Vendored third-party source is never build output:
+# check `git check-ignore -v` before adding another artifact pattern here.
+!dependencies/assimp/code/AssetLib/Obj/
 # Output directories used by VS
 bin/
 lib/
