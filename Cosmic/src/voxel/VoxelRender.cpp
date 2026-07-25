@@ -4,6 +4,7 @@
 #include "voxel/VoxelRender.h"
 #include "voxel/BlockPalette.h"
 #include "scene/Components.h"
+#include "scene/Components3D.h"   // W4 — BuildVoxelRecipe(const VoxelVolumeComponent&)
 #include "assets/AssetLibrary.h"
 #include "graphics/Material.h"
 #include "graphics/Texture.h"

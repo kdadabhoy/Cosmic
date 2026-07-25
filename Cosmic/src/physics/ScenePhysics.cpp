@@ -6,6 +6,9 @@
 #include "scene/Scene.h"
 #include "scene/Entity.h"
 #include "scene/Components.h"
+#ifndef COSMIC_2D_ONLY
+#include "scene/Components3D.h"   // W4 — MeshCollider/TerrainCollider + the terrain & voxel shape branches
+#endif
 #include "scripting/ScriptHost.h"
 #ifndef COSMIC_2D_ONLY
 #include "graphics/Mesh.h"           // mesh-collider geometry rebuild

@@ -32,14 +32,22 @@
 // Rendering & Graphics
 #include "renderer/Renderer.h"
 #include "renderer/Renderer2D.h"
+#ifndef COSMIC_2D_ONLY
 #include "renderer/Renderer3D.h"
+#endif
 #include "renderer/RenderCommand.h"
 #include "renderer/RenderPass.h"
 #include "renderer/BindingPoints.h"
 #include "renderer/PostProcessStack.h"   // S6.1 — HDR pipeline (float target + tonemap)
+// The 3D renderer's own GPU resources (Phase 29 W4). SceneRenderer stays OUTSIDE
+// the fence deliberately: 2D composites through the same HDR -> tonemap -> overlay
+// spine in both engine configurations (plan doc 28 §7.6).
+#ifndef COSMIC_2D_ONLY
 #include "renderer/EnvironmentMap.h"     // S6.3 — image-based lighting + skybox
 #include "renderer/ShadowMap.h"          // S6.4 — directional sun shadows
+#endif
 #include "renderer/SceneRenderer.h"      // F2  — engine-owned multi-pass frame orchestration
+#ifndef COSMIC_2D_ONLY
 #include "renderer/InstanceSet.h"        // F5  — per-instance transform pool (instanced draw)
 #include "renderer/CoverageCapture.h"    // F8  — top-down snow/coverage accumulation mask
 #include "terrain/Terrain.h"             // S8  — heightmap terrain (quadtree LOD + queries)
@@ -47,6 +55,7 @@
 #include "water/Presets.h"               // E18 — ocean/lake/storm water presets
 #include "particles/ParticleSystem.h"    // S10 — GPU particles + ribbon trails
 #include "particles/Presets.h"           // F8/F9 — atmospheric particle emitter presets
+#endif
 #include "graphics/Buffer.h"
 #include "graphics/Shader.h"
 #include "graphics/VertexArray.h"
@@ -59,13 +68,17 @@
 #include "graphics/Material.h"
 #include "graphics/MaterialAsset.h"   // E17 — reflected .cmat struct
 #include "graphics/Mesh.h"
-#include "graphics/Model.h"
+#ifndef COSMIC_2D_ONLY
+#include "graphics/Model.h"           // W4 — model loading (Skeleton/AnimationClip ride Components3D.h)
+#endif
 #include "graphics/Font.h"
 #include "graphics/Gizmo.h"           // S5.5 — transform gizmos (ImGuizmo)
 
 // Assets
 #include "assets/AssetLibrary.h"
+#ifndef COSMIC_2D_ONLY
 #include "assets/MeshImport.h"        // E16 — model import (OBJ + gated assimp) + .cmeta
+#endif
 
 // Camera & Control
 #include "camera/Camera.h"
@@ -92,9 +105,18 @@
 #include "scene/Scene.h"
 #include "scene/Entity.h"
 #include "scene/Components.h"
+// The 3D component half (Phase 29 W4) — meshes, skeletal animation, the 3D lights,
+// terrain/water/particles/voxels, the geometry-derived colliders and navigation.
+// Pulled in here so a 3D project including <Cosmic.h> still sees every component
+// exactly as it did before the split; a 2D project never compiles the header.
+#ifndef COSMIC_2D_ONLY
+#include "scene/Components3D.h"
+#endif
 #include "scene/System.h"
 #include "scene/ComponentRegistry.h"
+#ifndef COSMIC_2D_ONLY
 #include "scene/ScenePicker.h"        // S5.4 — entity-ID 3D picking
+#endif
 
 // Reflection (E1) — runtime type/field descriptors that drive the editor's
 // inspector, scene serializer, undo stack, and telemetry panel from one
@@ -103,7 +125,9 @@
 #include "reflect/TypeRegistry.h"
 #include "scene/SceneSerializer.h"     // E2 — JSON scene/prefab/material (de)serialization
 #include "scene/SceneManager.h"        // E5 — async scene load + fade transitions
+#ifndef COSMIC_2D_ONLY
 #include "scene/WorldSystemRecipes.h"  // E18 — terrain/water/particle recipe -> spec mapping
+#endif
 
 // Scripting (E11) — native C++ scripts compiled into a hot-reloadable project
 // DLL. ScriptableEntity is the base class; ModuleMacros is the registration DSL

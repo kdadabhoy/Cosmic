@@ -108,6 +108,15 @@ namespace Cosmic::Reflect
     // on first use; exposed for tests / explicit ordering).
     COSMIC_API void RegisterEngineTypes(TypeRegistry& registry);
 
+#ifndef COSMIC_2D_ONLY
+    // The 3D half of that set (Phase 29 W4) — meshes, skeletal animation, the 3D
+    // lights, terrain/water/particles/voxels, the geometry-derived colliders and
+    // navigation. Defined in reflect/TypeRegistry3D.cpp, which the 2D engine
+    // configuration does not compile, and called by RegisterEngineTypes behind
+    // this same fence. Not a second entry point: call RegisterEngineTypes.
+    COSMIC_API void RegisterEngine3DTypes(TypeRegistry& registry);
+#endif
+
     // ------------------------------------------------------------------------
     // ClassBuilder — fluent registration for one component type T.
     // ------------------------------------------------------------------------

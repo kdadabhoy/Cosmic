@@ -3,6 +3,9 @@
 #include "scene/Scene.h"
 #include "scene/Entity.h"
 #include "scene/Components.h"
+#ifndef COSMIC_2D_ONLY
+#include "scene/Components3D.h"   // W4 — the 3D half moves out to Scene3D.cpp in W5
+#endif
 #include "renderer/Renderer2D.h"
 #include "renderer/Light2DRenderer.h"   // X5 — 2D lighting composite
 #include "renderer/Renderer3D.h"

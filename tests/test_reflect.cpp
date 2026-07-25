@@ -8,6 +8,9 @@
 
 #include "reflect/TypeRegistry.h"
 #include "scene/Components.h"
+#ifndef COSMIC_2D_ONLY
+#include "scene/Components3D.h"
+#endif
 #include "scene/ComponentRegistry.h"
 
 #include <entt/entt.hpp>

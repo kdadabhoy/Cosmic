@@ -28,6 +28,9 @@
 #include "scene/Entity.h"
 #include "scene/Scene.h"
 #include "scene/Components.h"            // TagComponent (SystemBuilder::WithTag), H9
+#ifndef COSMIC_2D_ONLY
+#include "scene/Components3D.h"          // W4 — Voxels()/Animator() proxy component types
+#endif
 #include "scene/FlowMachine.h"           // Q2 — Flow() variable proxy (FlowMachine/FlowValue)
 #include "scripting/ModuleRegistry.h"    // SystemDescriptor (SystemBuilder), H9
 #include "physics/ScenePhysics.h"        // J5/J6 — Physics()/Character() script proxies

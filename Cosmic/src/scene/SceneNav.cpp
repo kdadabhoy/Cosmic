@@ -4,6 +4,7 @@
 #include "scene/Scene.h"
 #include "scene/Entity.h"
 #include "scene/Components.h"
+#include "scene/Components3D.h"   // W4 — NavMeshComponent / NavAgentComponent
 #include "physics/ScenePhysics.h"     // BuildColliderDesc — the collision-view enumeration
 #include "physics/PhysicsTypes.h"     // BodyDesc / CollisionShapeDesc
 #include "nav/NavWorld.h"

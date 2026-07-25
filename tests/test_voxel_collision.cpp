@@ -9,6 +9,9 @@
 #include "scene/Scene.h"
 #include "scene/Entity.h"
 #include "scene/Components.h"
+#ifndef COSMIC_2D_ONLY
+#include "scene/Components3D.h"
+#endif
 #include "physics/PhysicsWorld.h"
 #include "physics/ScenePhysics.h"
 #include "voxel/VoxelVolume.h"

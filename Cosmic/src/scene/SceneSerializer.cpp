@@ -5,6 +5,9 @@
 #include "scene/Scene.h"
 #include "scene/Entity.h"
 #include "scene/Components.h"
+#ifndef COSMIC_2D_ONLY
+#include "scene/Components3D.h"         // W4 — the two MeshRenderer material-slot blocks
+#endif
 #include "reflect/TypeRegistry.h"
 #include "scripting/ModuleRegistry.h"   // E11 — typed NativeScript field (de)serialization
 #include "core/Log.h"
@@ -182,6 +185,12 @@ namespace Cosmic
                 // MeshRenderer material slots (M5) — a plain string array (the
                 // vector<string> payload is not a reflected field kind). Absent ⇒
                 // the vector stays empty ⇒ the legacy single-material path.
+                //
+                // 3D-only (W4), and lossless when it is compiled out: a 2D build has
+                // no "MeshRenderer" registration at all, so the whole block never
+                // reaches here — it lands in OpaqueComponentsComponent verbatim
+                // (MaterialPaths and all) and is re-emitted unchanged on save.
+#ifndef COSMIC_2D_ONLY
                 if (compName == "MeshRenderer" && compJson.contains("MaterialPaths")
                     && compJson["MaterialPaths"].is_array())
                 {
@@ -191,6 +200,7 @@ namespace Cosmic
                         mr->MaterialPaths.push_back(p.is_string() ? p.get<std::string>()
                                                                   : std::string());
                 }
+#endif
             }
         }
 
@@ -265,6 +275,10 @@ namespace Cosmic
                     cj["Cells"] = std::move(cells);
                 }
 
+                // 3D-only (W4) — the save-side twin of the load block above. A 2D
+                // build never walks a MeshRenderer descriptor here (there is none),
+                // so the slots ride out through OpaqueComponentsComponent instead.
+#ifndef COSMIC_2D_ONLY
                 if (d->Name == "MeshRenderer")   // M5 — material slots as a string array
                 {
                     const auto* mr = static_cast<const MeshRendererComponent*>(comp);
@@ -278,6 +292,7 @@ namespace Cosmic
                         cj["MaterialPaths"] = std::move(arr);
                     }
                 }
+#endif
 
                 comps[d->Name] = cj;
             }

@@ -8,6 +8,9 @@
 #include "doctest.h"
 
 #include "scene/Components.h"
+#ifndef COSMIC_2D_ONLY
+#include "scene/Components3D.h"
+#endif
 #include "scene/WorldSystemRecipes.h"
 #include "scene/SceneSerializer.h"
 #include "terrain/Terrain.h"

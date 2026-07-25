@@ -4,6 +4,7 @@
 #include "scene/ScenePicker.h"
 #include "scene/Scene.h"
 #include "scene/Components.h"
+#include "scene/Components3D.h"   // W4 — mesh + primitive pick geometry
 #include "renderer/Renderer3D.h"
 #include "renderer/RenderCommand.h"
 #include "camera/Camera.h"

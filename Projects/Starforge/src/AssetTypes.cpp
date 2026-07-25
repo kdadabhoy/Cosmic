@@ -6,6 +6,9 @@
 #include "assets/AssetLibrary.h"
 #include "graphics/MaterialAsset.h"
 #include "scene/Components.h"
+#ifndef COSMIC_2D_ONLY
+#include "scene/Components3D.h"       // W4 — the .cemitter default writer
+#endif
 #include "scene/Scene.h"
 #include "scene/Entity.h"
 #include "scene/SceneSerializer.h"

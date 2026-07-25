@@ -23,6 +23,7 @@
 
 #include "core/Core.h"
 #include "scene/Components.h"
+#include "scene/Components3D.h"   // W4 — Terrain/Water/ParticleEmitter recipe sources
 #include "terrain/Terrain.h"
 #include "water/Water.h"
 #include "particles/ParticleSystem.h"

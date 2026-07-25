@@ -18,6 +18,9 @@
 #include "scene/Scene.h"
 #include "scene/Entity.h"
 #include "scene/Components.h"
+#ifndef COSMIC_2D_ONLY
+#include "scene/Components3D.h"   // W4 — the 3D passes read mesh/light/terrain/water/particle components
+#endif
 #include "scene/ScenePicker.h"  // K12 — the outline id-mask pass
 #include "utils/FileSystem.h"   // resolve project:// HdriPath (H4)
 #include "core/Log.h"
