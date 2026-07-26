@@ -8,7 +8,15 @@
 entirely on the GPU — a compute shader moves them each frame, a ring buffer recycles dead
 ones, and the vertex shader invents billboard corners with no vertex buffer at all.
 **Source:** `Cosmic/src/particles/ParticleSystem.*`, `particles/Presets.h`, `Cosmic/assets/shaders/Particle*.glsl`, `Ribbon.glsl`
-**API Reference:** [../reference/world-systems.md](../reference/world-systems.md)
+**API Reference:** [../reference/world-systems.md](../reference/world-systems.md) · **Guide:** [`../guide/world-systems.md`](../guide/world-systems.md)
+
+> **The guide chapter landed first (D55).** [`../guide/world-systems.md`](../guide/world-systems.md)
+> already carries the seven presets, the full spec walkthrough, curl-noise turbulence with its
+> CPU/GPU-identical guarantee, local-space bounds and wrapping, ribbons, the `.cemitter` format, and
+> the ownership split that catches everyone — `SceneRenderer` **draws** emitters but never
+> `Update`s them. D31 should *summarise and link* those and spend its own words on §1–§2's model and
+> §6's documented tier deviations (fixed `MaxParticles` draw, no intra-emitter sort).
+> **3D-configuration only** — see [`build-2d-3d-split.md`](build-2d-3d-split.md).
 
 ## Section plan
 

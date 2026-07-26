@@ -9,7 +9,17 @@ keeps exclusive ownership of the GPU; parallel ECS systems declare what they rea
 so the scheduler can overlap them safely, and double buffers let readers see last frame's
 data while writers build the next.
 **Source:** `Cosmic/src/jobs/*` (JobSystem, ParallelSystem, ParallelFor, SystemQuery, ComponentArray, DoubleBuffer)
-**API Reference:** [../reference/jobs.md](../reference/jobs.md) · **Guide:** root README §22, §39
+**API Reference:** [../reference/jobs.md](../reference/jobs.md) ·
+**Guide:** [`../guide/jobs-and-parallelism.md`](../guide/jobs-and-parallelism.md) (root README §22
+is now an overview pointing there; §39 is still live Part II material)
+
+> **Don't re-derive the client surface.** The guide chapter (D59) already documents, from source,
+> the pool and its lifecycle, `ParallelFor`'s sync/async split and capture rules, the four-pass
+> `ParallelSystem` tick, `SystemQuery` staging, `ComponentArray`'s page-0 limit, `DoubleBuffer`, the
+> T18 counters — and the full main-thread-only table. This explainer covers *why*: own pool vs
+> `std::async`, the barrier-per-frame choice, pool sizing. **DG-12 is built** in
+> [that chapter](../guide/jobs-and-parallelism.md#dg-12--where-the-work-actually-runs); reuse it
+> rather than authoring a second one.
 
 ## Section plan
 
@@ -20,5 +30,7 @@ data while writers build the next.
 5. **Design decisions** — own pool vs std::async; where the 20-agent telemetry template fits as a stress exemplar. <!-- TODO(D33) -->
 6. **Limits & future work.** <!-- TODO(D33) -->
 
-**Truth sources:** README §22/§39 (migrating here), `JobSystem.cpp`, Frontier
-`World::IsLoading()` + `common/LoadingScreen.h` usage.
+**Truth sources:** [`../guide/jobs-and-parallelism.md`](../guide/jobs-and-parallelism.md) (the
+source-verified client surface), README §39 (implementation notes still to migrate here),
+`JobSystem.cpp`, `Scene.cpp` (the four-pass tick), Frontier `IslandWorld::IsLoading()` +
+`common/LoadingScreen.h` usage.

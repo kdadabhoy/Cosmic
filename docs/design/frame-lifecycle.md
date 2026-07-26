@@ -9,7 +9,10 @@
 > Companion references: `Cosmic/src/renderer/BindingPoints.h` (the binding
 > registry — the seed of a future descriptor-set layout), doc 05 §0 (the API
 > decision + binding rules), `docs/design/water-rendering-notes.md` (water pass
-> internals), README §10 (`#type` shader contract) and §24 (teardown ordering).
+> internals), [`docs/guide/materials-and-shaders.md`](../guide/materials-and-shaders.md)
+> (the `#type` shader contract — formerly README §10) and
+> [`../guide/project-anatomy.md`](../guide/project-anatomy.md#teardown-ordering-for-gpu-resources)
+> (teardown ordering — formerly README §24).
 
 ---
 
@@ -55,7 +58,8 @@ follow:
 
 1. Never drop the last `Ref` to a resource the current frame has already
    recorded a draw with (in practice: release in `OnDetach`, not mid-frame).
-2. **Teardown ordering (README §24):** all engine/app `Ref`s must release while
+2. **Teardown ordering ([`../guide/project-anatomy.md`](../guide/project-anatomy.md#teardown-ordering-for-gpu-resources)):**
+   all engine/app `Ref`s must release while
    the context is still current — `Application` shuts layers down before the
    window dies. `OpenGL*` destructors guard with `HasCurrentContext()` as a
    last resort, but correctness relies on ordered shutdown, not the guard.

@@ -10,10 +10,16 @@
 `graphics/Model.h`, `renderer/InstanceSet.h`, `math/Frustum.h` (+ the *documented semantics*
 of `renderer/RenderQueue.h` even though clients don't include it directly).
 
-**Read first:** systems explainer [rendering-3d](../systems/rendering-3d.md);
+**Read first:** the guide chapter [`../guide/rendering-3d.md`](../guide/rendering-3d.md) — **written
+D54, and until this skeleton is filled it is the client-facing source of truth** for the whole
+scope above, including the material-read-at-flush rule, the auto-instancing preconditions and the
+statistics counters. Then the systems explainer [rendering-3d](../systems/rendering-3d.md);
 [`docs/design/frame-lifecycle.md`](../design/frame-lifecycle.md) (pass/state contract);
 Phase 12 banner in [`docs/plans/00-MASTER-ROADMAP.md`](../plans/00-MASTER-ROADMAP.md) for the
 queue semantics that MUST be reflected in every mutating entry.
+
+**D10 must not re-derive the guide's material.** Link it for usage and worked examples; this tier
+carries signatures, parameters, return/failure behaviour and per-entry notes.
 
 ## Coverage checklist *(starting point — headers are authoritative)*
 
@@ -32,7 +38,7 @@ queue semantics that MUST be reflected in every mutating entry.
 
 ## Sections to write
 
-1. "One frame through the queue" intro (submit → cull → sort → instance → flush) with a Mermaid flowchart — shared source with README §3D. <!-- TODO(D10) -->
+1. "One frame through the queue" intro (submit → cull → sort → instance → flush) — reuse **DG-7**, already built in [`../guide/rendering-3d.md`](../guide/rendering-3d.md#dg-7--what-one-submission-actually-does) (D54), rather than drawing a second flowchart. <!-- TODO(D10) -->
 2. Entries per checklist. <!-- TODO(D10) -->
 3. Light submission (directional/point via ECS components vs direct API — verify against `Renderer3D.h` which of the two the client uses). <!-- TODO(D10) -->
 

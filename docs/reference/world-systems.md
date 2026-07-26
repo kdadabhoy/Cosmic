@@ -7,10 +7,23 @@
 **Scope (headers are the truth):** `Cosmic/src/terrain/Terrain.h`, `water/Water.h`,
 `water/GerstnerWave.h`, `particles/ParticleSystem.h`, `particles/Presets.h`.
 
-**Read first:** systems explainers [terrain](../systems/terrain.md),
-[water](../systems/water.md), [particles](../systems/particles.md);
+> **Two headers in this domain have no manifest row and therefore no chapter** (found by D55):
+> `scene/WorldSystemRecipes.h` — the E18 recipe→spec layer *every* scene-authored terrain, water
+> body and emitter goes through, including `ClampTerrainResolution` — and `water/Presets.h`, even
+> though `particles/Presets.h` is listed. D12 should claim both, and D5 should add the rows.
+
+**Read first:** the guide chapter [`../guide/world-systems.md`](../guide/world-systems.md) —
+**written D55, and until this skeleton is filled it is the client-facing source of truth** for the
+whole scope above plus the two unlisted headers: the recipe model, the resolution rule and its two
+different limits, the async-build pattern, the reflection handoff and the particle presets. Then the
+systems explainers [terrain](../systems/terrain.md), [water](../systems/water.md),
+[particles](../systems/particles.md); and
 [`docs/design/water-rendering-notes.md`](../design/water-rendering-notes.md). Usage
-exemplars: `Projects/Frontier` (all five worlds), Engine3DDemo "World systems" panel.
+exemplars: `Projects/Frontier` (all five worlds), Engine3DDemo "World systems" panel,
+`Projects/ForgeIsle/scenes/Island.cscene` (the recipe route).
+
+**D12 must not re-derive the guide's material.** Link it for usage and worked examples; this tier
+carries signatures, parameters, return/failure behaviour and per-entry notes.
 
 ## Coverage checklist *(starting point — headers are authoritative)*
 

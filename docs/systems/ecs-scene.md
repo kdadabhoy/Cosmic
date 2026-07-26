@@ -8,7 +8,7 @@
 arrays (entt), and "systems" — including the engine's own `Scene::OnRender3D` — iterate
 those arrays to make things happen.
 **Source:** `Cosmic/src/scene/*` (Scene, Scene3D, Entity, Components, Components3D, System, ComponentRegistry, ScenePicker) + `reflect/TypeRegistry*.cpp`
-**API Reference:** [../reference/ecs.md](../reference/ecs.md), [../reference/physics.md](../reference/physics.md) · **Guide:** root README §15, §23
+**API Reference:** [../reference/ecs.md](../reference/ecs.md), [../reference/physics.md](../reference/physics.md) · **Guide:** [../guide/entities-and-components.md](../guide/entities-and-components.md), [../guide/scenes-and-serialization.md](../guide/scenes-and-serialization.md)
 
 > **Build note (Phase 29) — the scene layer is split down the middle.** Write this into §4 when
 > D31 runs; the shape is:
@@ -36,4 +36,10 @@ those arrays to make things happen.
 6. **Limits & future work** — serialization/UUIDs land with Starforge E2 (link doc 11). <!-- TODO(D31) -->
 
 **Truth sources:** `Scene.cpp` (OnRender3D is the automatic-draw contract), `Components.h`
-(enumerate honestly), README §15/§23 (migrating here).
+(enumerate honestly), `SceneSerializer.cpp` (the generic reflection visitor).
+
+**Do not re-derive the component catalogue here.** D49 wrote it in
+[`../guide/entities-and-components.md`](../guide/entities-and-components.md) — all 34 components
+with fields, units, defaults and consumers, plus the `Active`/`Enabled` gates and the
+automatic-draw contract. This explainer covers *mechanism* (registry, views, type ids, the file
+partition, `OpaqueComponentsComponent`) and links there for the catalogue.

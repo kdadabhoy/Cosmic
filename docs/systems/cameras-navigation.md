@@ -8,7 +8,8 @@
 pan/zoom, SolidWorks-style orbit (zoom-to-cursor, orbit-about-cursor, snap views, ViewCube),
 and a WASD fly camera — plus ID-buffer picking and ImGuizmo transform gizmos.
 **Source:** `Cosmic/src/camera/*`, `scene/ScenePicker.*`, `graphics/Gizmo.*`
-**API Reference:** [../reference/cameras.md](../reference/cameras.md) · **Guide:** root README §16
+**API Reference:** [../reference/cameras.md](../reference/cameras.md) ·
+**Guide:** [../guide/cameras.md](../guide/cameras.md)
 
 ## Section plan
 

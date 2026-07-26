@@ -8,7 +8,15 @@
 that keeps triangle density near the camera — heights come from a texture, materials paint
 themselves by slope and altitude, and the CPU can query the exact rendered height anywhere.
 **Source:** `Cosmic/src/terrain/Terrain.*`, `Cosmic/assets/shaders/Terrain*.glsl`
-**API Reference:** [../reference/world-systems.md](../reference/world-systems.md) · **Guide exemplar:** `Projects/Frontier` (2049² island, F11 heightfield composer)
+**API Reference:** [../reference/world-systems.md](../reference/world-systems.md) · **Guide:** [`../guide/world-systems.md`](../guide/world-systems.md) · **Guide exemplar:** `Projects/Frontier` (2049² island, F11 heightfield composer)
+
+> **The guide chapter landed first (D55).** [`../guide/world-systems.md`](../guide/world-systems.md)
+> already carries the `32·2^k + 1` rule (and the *narrower* editor clamp that snaps silently to
+> `{65, 129, 257, 513, 1025}`), the three height sources, the CPU-query contract, the E18 recipe
+> model and what it cannot express — recipe terrain is always centred on the world origin — and the
+> full async-build/loading-screen pattern. D30 should *summarise and link* those and spend its own
+> words on §1–§2's plain-language model and §5's rationale (skirts over stitching, why the patch is
+> 32 quads). **3D-configuration only** — see [`build-2d-3d-split.md`](build-2d-3d-split.md).
 
 ## Section plan
 

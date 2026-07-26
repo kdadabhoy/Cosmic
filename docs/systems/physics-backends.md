@@ -4,7 +4,7 @@
 `IPhysicsBackend` resolved by name at `Init`, so an app can register and select its own physics
 implementation without a single call site moving.
 **Source:** `Cosmic/src/physics/` (`PhysicsBackend.{h,cpp}`, `PhysicsWorld.{h,cpp}`, `PhysicsTypes.h`, `PhysicsBody.h`, `CharacterController.h`, `ScenePhysics.{h,cpp}`, `backends/JoltBackend.cpp`, `backends/NullBackend.cpp`)
-**API Reference:** [../reference/physics.md](../reference/physics.md) · **Guide:** root README §15 (ECS), §23 (scenes)
+**API Reference:** [../reference/physics.md](../reference/physics.md) · **Guide:** [../guide/physics.md](../guide/physics.md) (authoring physics in a scene, and swapping the backend at a usage level), [../guide/entities-and-components.md](../guide/entities-and-components.md) (the physics component tier), [../guide/scripting.md](../guide/scripting.md) (the `Physics()` / `Character()` script proxies)
 
 > Written by work order **D42** (Phase 29 W10, 2026-07-25). Design record:
 > [`../plans/28-phase29-engine-split-plan.md`](../plans/28-phase29-engine-split-plan.md) §6.
@@ -464,6 +464,8 @@ against it.
 ---
 
 *See also:* [`../reference/physics.md`](../reference/physics.md) (per-call reference) ·
+[`../guide/physics.md`](../guide/physics.md) (the guide chapter — authoring physics, and the
+usage-level view of swapping a backend) ·
 [`build-2d-3d-split.md`](build-2d-3d-split.md) (why physics is shared by both engine
 configurations) · [`../design/modularity-audit.md`](../design/modularity-audit.md) §G3 ·
 [`../plans/28-phase29-engine-split-plan.md`](../plans/28-phase29-engine-split-plan.md) §6.

@@ -8,7 +8,7 @@
 integrators that don't explode, filters that tame noisy sensors, lookup tables for measured
 data, seeded noise and RNG so every run is replayable.
 **Source:** `Cosmic/src/math/*` (Spatial, Integrators, Filters, LookupTable, Noise, Random, Frustum)
-**API Reference:** [../reference/math.md](../reference/math.md) · **Plan record:** [`../plans/archive/03-simulation-engine-plan.md`](../plans/archive/03-simulation-engine-plan.md)
+**API Reference:** [../reference/math.md](../reference/math.md) · **Guide:** [../guide/sim-math-toolkit.md](../guide/sim-math-toolkit.md) (D58) · **Plan record:** [`../plans/archive/03-simulation-engine-plan.md`](../plans/archive/03-simulation-engine-plan.md)
 
 ## Section plan
 
@@ -22,3 +22,15 @@ data, seeded noise and RNG so every run is replayable.
 **Truth sources:** the headers themselves + `tests/` doctests (doc 03 lists acceptance per
 E-item). Gotcha to preserve: `doctest::Approx.epsilon` is RELATIVE — worked examples in docs
 should quote absolute-tolerance comparisons for world coordinates.
+
+> **Don't re-derive the usage material.** [`../guide/sim-math-toolkit.md`](../guide/sim-math-toolkit.md)
+> (D58) already covers the when-to-use table, per-header behaviour and failure modes, the shared
+> filter contract, and the determinism box — including the honest split between what is bit-exact
+> (PCG32's integer stream, pinned against the canonical reference vector), what is deterministic
+> under IEEE-754 (every `Noise` sampler — arithmetic only), and what rests on libm
+> (`Random::Gaussian`, `LowPassFilter`'s `exp`, `Biquad`'s coefficient setup).
+> This explainer owns the *why*: the header-only/GL-free testability split, engine-verbs-not-domain-
+> logic, and the shown-not-told RK4-vs-Euler comparison. **Also worth an honest note:**
+> `LookupTable1D`/`2D`, `LowPassFilter`, `Derivative`, `MovingAverage`, `Biquad`, `Washout` and
+> `IntegrateSemiImplicitEuler` have **no in-tree consumers outside their doctests** — tested, not
+> yet battle-worn.

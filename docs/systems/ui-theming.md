@@ -9,7 +9,15 @@ dockable ports, a data-driven theme system (with a live Theme Studio), a font/ic
 (Roboto + Lucide), and reusable widgets — all shared across the DLL boundary via synced
 contexts.
 **Source:** `Cosmic/src/layers/ImGuiLayer.*`, `layers/WorkspaceLayer.*`, `layers/LauncherLayer.*`, `Cosmic/src/ui/*`
-**API Reference:** [../reference/ui.md](../reference/ui.md) · **Guide:** root README §28, §29, §24
+**API Reference:** [../reference/ui.md](../reference/ui.md) · **Guide:**
+[../guide/editor-ui-and-theming.md](../guide/editor-ui-and-theming.md) (and
+[../guide/windowing-and-viewport.md](../guide/windowing-and-viewport.md) for the window the shell
+lives in)
+
+> **Don't re-derive the client-facing material.** D60 wrote the docking model, the `DockPort` map,
+> the never-store-a-dock-node-id rule, `SetBottomInsetPixels`, the viewport-overlay contract, the
+> theme data model + `.ctheme` format + Theme Studio flow, and the font/icon pipeline from source.
+> This explainer covers *why* and *how it works inside*; link the guide for usage.
 
 ## Section plan
 
@@ -20,5 +28,8 @@ contexts.
 5. **Design decisions** — WS-series modernization record (data-driven themes, port docking, borderless chrome — link memory/plan records in `docs/plans/archive/` if present). <!-- TODO(D34) -->
 6. **Limits & future work.** <!-- TODO(D34) -->
 
-**Truth sources:** `WorkspaceLayer.cpp` (dock building), `ThemeManager.cpp`, README §24/§28/§29
-(client-facing bits stay in README; internals migrate here).
+**Truth sources:** `WorkspaceLayer.cpp` (dock building), `ThemeManager.cpp`, `Fonts.cpp`,
+`ImGuiLayer.cpp`, and the guide chapter
+[../guide/editor-ui-and-theming.md](../guide/editor-ui-and-theming.md) (client-facing usage lives
+there; internals belong here). README §27/§28/§28.5 and the docking half of §29 are **retired** —
+their bodies are now overviews pointing at the guide.

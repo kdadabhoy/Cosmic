@@ -1,6 +1,68 @@
-# Cosmic Engine — Part I: Client Developer Guide
+# Cosmic Engine
 
-> **How to use this document:** This is the complete client-facing reference for building projects with Cosmic. It covers every API you'll interact with, from the minimal project skeleton to the parallel job system. All code is verified against the current source.
+> **How to use this document:** This is the **overview** — what Cosmic is, how to build it, and a
+> tour of every subsystem with enough detail to get oriented and reach for the right thing. Each
+> section links to its full chapter in [`docs/guide/`](docs/guide/README.md). The
+> [Command Reference (§1.5)](#15-command-reference--every-command) and
+> [The Two Engine Configurations (§1.6)](#16-the-two-engine-configurations) live here in full.
+
+## 📚 Documentation map
+
+```
+README.md ....................... you are here — overview, §1.5 commands, §1.6 configurations
+docs/
+├── guide/ ...................... "how do I build things with Cosmic"  → per-topic chapters
+├── reference/ .................. "what exactly does this call do"     → per-call API lookup
+├── systems/ .................... "how does it work and why"           → subsystem explainers
+├── design/ ..................... decisions of record, specs, audits
+├── plans/ ...................... roadmap, phase plans, feature matrix
+└── installer-guide.md .......... build → ship → install a setup exe
+```
+
+| Tier | Start here | Answers |
+| --- | --- | --- |
+| 📖 **Guide** | [`docs/guide/README.md`](docs/guide/README.md) | *"How do I do X in my project?"* — task-oriented chapters with worked examples |
+| 🔎 **API Reference** | [`docs/reference/README.md`](docs/reference/README.md) | *"What exactly does this call do?"* — one entry per command: signature, behavior, failure modes, pitfalls |
+| ⚙️ **System Explainers** | [`docs/systems/README.md`](docs/systems/README.md) | *"How does this actually work, and why is it built that way?"* — plain-English first, then implementation |
+| 🧭 **Design & Plans** | [`docs/design/`](docs/design/README.md) · [`docs/plans/00-MASTER-ROADMAP.md`](docs/plans/00-MASTER-ROADMAP.md) | Decisions of record, the roadmap, and every phase's work orders |
+| 🗂️ **Docs index** | [`docs/README.md`](docs/README.md) | The map of the whole documentation set |
+
+**Most-asked pages:** [Getting Started](docs/guide/getting-started.md) ·
+[Project Anatomy](docs/guide/project-anatomy.md) ·
+[Command Reference](#15-command-reference--every-command) ·
+[The Two Engine Configurations](#16-the-two-engine-configurations) ·
+[2D Rendering](docs/guide/rendering-2d.md) ·
+[3D Rendering](docs/guide/rendering-3d.md) ·
+[Lighting & Environment](docs/guide/lighting-and-environment.md) ·
+[World Systems](docs/guide/world-systems.md) ·
+[Animation](docs/guide/animation.md) ·
+[Voxels](docs/guide/voxels.md) ·
+[Sprites & Tilemaps](docs/guide/sprites-and-tilemaps.md) ·
+[In-Game UI](docs/guide/game-ui.md) ·
+[Cameras & Navigation](docs/guide/cameras.md) ·
+[Materials & Shaders](docs/guide/materials-and-shaders.md) ·
+[Entities & Components](docs/guide/entities-and-components.md) ·
+[Scenes & Serialization](docs/guide/scenes-and-serialization.md) ·
+[Scripting](docs/guide/scripting.md) ·
+[Flow & Story](docs/guide/flow-and-story.md) ·
+[Logging & Diagnostics](docs/guide/logging-and-diagnostics.md) ·
+[Physics](docs/guide/physics.md) ·
+[Navigation & AI](docs/guide/navigation-and-ai.md) ·
+[Assets & the VFS](docs/guide/assets-and-vfs.md) ·
+[Audio](docs/guide/audio.md) ·
+[Simulation Math](docs/guide/sim-math-toolkit.md) ·
+[Serial & Telemetry](docs/guide/serial-and-telemetry.md) ·
+[Jobs & Parallelism](docs/guide/jobs-and-parallelism.md) ·
+[Windowing & the Viewport](docs/guide/windowing-and-viewport.md) ·
+[Editor UI & Theming](docs/guide/editor-ui-and-theming.md) ·
+[Building & Shipping](docs/guide/building-and-shipping.md)
+
+> **The guide tier is complete.** All 29 chapters are written; every Part I section below is now an
+> overview with a link to its chapter. This file stays the **overview** — plus
+> [§1.5](#15-command-reference--every-command) and
+> [§1.6](#16-the-two-engine-configurations), which live here in full. Part II's engine internals
+> are moving to [`docs/systems/`](docs/systems/README.md) next; see
+> [§42.5](#425-where-the-rest-of-part-ii-lives--the-systems-directory) for what is there today.
 
 ---
 
@@ -8,37 +70,72 @@
 
 ### Part 1: Client Developer Guide
 
-1. [Getting Started](#1-getting-started)
+1. [Getting Started](#1-getting-started) — overview; full chapter:
+   [`docs/guide/getting-started.md`](docs/guide/getting-started.md)
    - [1.5 Command Reference — Every Command](#15-command-reference--every-command)
    - [1.6 The Two Engine Configurations](#16-the-two-engine-configurations)
-2. [Memory Management](#2-memory-management)
-3. [Application Lifecycle](#3-application-lifecycle)
-4. [The Layer System](#4-the-layer-system)
-5. [The Event System](#5-the-event-system)
-6. [Input Polling](#6-input-polling)
-7. [Time & Timeline System](#7-time--timeline-system)
-8. [2D Rendering API](#8-2d-rendering-api)
-9. [Materials and Shaders](#9-materials-and-shaders)
-10. [The Shader Contract](#10-the-shader-contract)
-11. [Sprite Sheets and SubTexture2D](#11-sprite-sheets-and-subtexture2d)
-12. [SDF Circles](#12-sdf-circles)
-13. [Instanced Rendering](#13-instanced-rendering)
-14. [RenderPass and Multi-Camera Rendering](#14-renderpass-and-multi-camera-rendering)
-15. [Entity Component System](#15-entity-component-system)
-16. [Camera System](#16-camera-system)
-17. [Virtual File System](#17-virtual-file-system)
-18. [Framebuffer](#18-framebuffer)
-19. [Logging](#19-logging)
-20. [Serial Communication](#20-serial-communication)
-21. [The Template Project](#21-the-template-project)
-22. [Job System & Parallel Pipeline](#22-job-system--parallel-pipeline)
-23. [Scene System](#23-scene-system)
-24. [Window System](#24-window-system)
-25. [Complete API Reference Tables](#25-complete-api-reference-tables)
-26. [Telemetry System](#26-telemetry-system)
-27. [Fonts and Text Rendering](#27-fonts-and-text-rendering)
-28. [ImGui Overlay & Image Helpers](#28-imgui-overlay--image-helpers)
-29. [Viewport Visibility & Center Docking](#29-viewport-visibility--center-docking)
+2. [Memory Management](#2-memory-management) — overview; full chapter:
+   [`docs/guide/project-anatomy.md`](docs/guide/project-anatomy.md)
+3. [Application Lifecycle](#3-application-lifecycle) — overview; full chapter:
+   [`docs/guide/project-anatomy.md`](docs/guide/project-anatomy.md)
+4. [The Layer System](#4-the-layer-system) — overview; full chapter:
+   [`docs/guide/project-anatomy.md`](docs/guide/project-anatomy.md)
+5. [The Event System](#5-the-event-system) — overview; full chapter:
+   [`docs/guide/events-and-input.md`](docs/guide/events-and-input.md)
+6. [Input Polling](#6-input-polling) — overview; full chapter:
+   [`docs/guide/events-and-input.md`](docs/guide/events-and-input.md)
+7. [Time & Timeline System](#7-time--timeline-system) — overview; full chapter:
+   [`docs/guide/time-and-ticks.md`](docs/guide/time-and-ticks.md)
+8. [2D Rendering API](#8-2d-rendering-api) — overview; full chapter:
+   [`docs/guide/rendering-2d.md`](docs/guide/rendering-2d.md)
+9. [Materials and Shaders](#9-materials-and-shaders) — overview; full chapter:
+   [`docs/guide/materials-and-shaders.md`](docs/guide/materials-and-shaders.md)
+10. [The Shader Contract](#10-the-shader-contract) — overview; full chapter:
+    [`docs/guide/materials-and-shaders.md`](docs/guide/materials-and-shaders.md)
+11. [Sprite Sheets and SubTexture2D](#11-sprite-sheets-and-subtexture2d) — overview; full chapter:
+    [`docs/guide/rendering-2d.md`](docs/guide/rendering-2d.md)
+12. [SDF Circles](#12-sdf-circles) — overview; full chapter:
+    [`docs/guide/rendering-2d.md`](docs/guide/rendering-2d.md)
+13. [Instanced Rendering](#13-instanced-rendering) — overview; full chapter:
+    [`docs/guide/rendering-2d.md`](docs/guide/rendering-2d.md)
+14. [RenderPass and Multi-Camera Rendering](#14-renderpass-and-multi-camera-rendering) — overview;
+    full chapter: [`docs/guide/rendering-2d.md`](docs/guide/rendering-2d.md)
+15. [Entity Component System](#15-entity-component-system) — overview; full chapter:
+    [`docs/guide/entities-and-components.md`](docs/guide/entities-and-components.md)
+16. [Camera System](#16-camera-system) — overview; full chapter:
+    [`docs/guide/cameras.md`](docs/guide/cameras.md)
+17. [Virtual File System](#17-virtual-file-system) — overview; full chapter:
+    [`docs/guide/assets-and-vfs.md`](docs/guide/assets-and-vfs.md)
+18. [Framebuffer](#18-framebuffer) — overview; full chapter:
+    [`docs/guide/materials-and-shaders.md`](docs/guide/materials-and-shaders.md)
+19. [Logging](#19-logging) — overview; full chapter:
+    [`docs/guide/logging-and-diagnostics.md`](docs/guide/logging-and-diagnostics.md)
+20. [Serial Communication](#20-serial-communication) — overview; full chapter:
+    [`docs/guide/serial-and-telemetry.md`](docs/guide/serial-and-telemetry.md)
+    - [20.5 SerialLink — Managed Connections](#205-seriallink--managed-connections) — retired
+    - [20.6 Binary Framing — COBS + CRC16](#206-binary-framing--cobs--crc16) — retired
+21. [The Template Project](#21-the-template-project) — retired; see
+    [`docs/guide/getting-started.md`](docs/guide/getting-started.md) and
+    [`docs/guide/project-anatomy.md`](docs/guide/project-anatomy.md). §21.5 is still live.
+22. [Job System & Parallel Pipeline](#22-job-system--parallel-pipeline) — overview; full chapter:
+    [`docs/guide/jobs-and-parallelism.md`](docs/guide/jobs-and-parallelism.md)
+23. [Scene System](#23-scene-system) — overview; full chapter:
+    [`docs/guide/scenes-and-serialization.md`](docs/guide/scenes-and-serialization.md)
+24. [Window System](#24-window-system) — overview; full chapter:
+    [`docs/guide/windowing-and-viewport.md`](docs/guide/windowing-and-viewport.md)
+25. [Complete API Reference Tables](#25-complete-api-reference-tables) — retired; the API surface
+    lives in [`docs/reference/`](docs/reference/README.md)
+26. [Telemetry System](#26-telemetry-system) — overview; full chapter:
+    [`docs/guide/serial-and-telemetry.md`](docs/guide/serial-and-telemetry.md)
+27. [Fonts and Text Rendering](#27-fonts-and-text-rendering) — overview; full chapters:
+    [`docs/guide/editor-ui-and-theming.md`](docs/guide/editor-ui-and-theming.md) (UI text) and
+    [`docs/guide/rendering-2d.md`](docs/guide/rendering-2d.md) (world-space text)
+28. [ImGui Overlay & Image Helpers](#28-imgui-overlay--image-helpers) — overview; full chapter:
+    [`docs/guide/editor-ui-and-theming.md`](docs/guide/editor-ui-and-theming.md)
+    - [28.5 Themes, Icons & Fonts](#285-themes-icons--fonts) — retired
+29. [Viewport Visibility & Center Docking](#29-viewport-visibility--center-docking) — overview; full
+    chapters: [`docs/guide/windowing-and-viewport.md`](docs/guide/windowing-and-viewport.md) and
+    [`docs/guide/editor-ui-and-theming.md`](docs/guide/editor-ui-and-theming.md)
 
 ---
 
@@ -54,10 +151,13 @@
 37. [Shader Preprocessing System](#37-shader-preprocessing-system)
 38. [RenderPass Stack — Implementation Details](#38-renderpass-stack--implementation-details)
 39. [Parallel Pipeline Architecture](#39-parallel-pipeline-architecture)
-40. [Build System](#40-build-system)
+40. [Build System](#40-build-system) — overview; full chapter:
+    [`docs/guide/building-and-shipping.md`](docs/guide/building-and-shipping.md)
 41. [Event System — Implementation Details](#41-event-system--implementation-details)
 42. [Telemetry System — Implementation Details](#42-telemetry-system--implementation-details)
-43. [Known Limitations & Roadmap](#43-known-limitations--roadmap)
+    - [42.5 Where the rest of Part II lives — the systems directory](#425-where-the-rest-of-part-ii-lives--the-systems-directory)
+43. [Known Limitations & Roadmap](#43-known-limitations--roadmap) — pointer to the roadmap and the
+    feature matrix
 
 ---
 
@@ -69,206 +169,41 @@
 
 ### What is Cosmic?
 
-Cosmic is a C++20, OpenGL-backed 2D game and simulation engine. It runs on Windows x64 and is built around a **plugin model** — your project compiles into a `.dll` that the engine loads at runtime. This means you can iterate on your project code without recompiling the engine itself.
+Cosmic is a **C++20 engine for 2D and 3D real-time applications**, built on **OpenGL 4.5 core
+profile** and targeting **Windows x64** only. It compiles to one shared library, `Cosmic.dll`; your
+own code compiles to a **separate DLL that a host executable loads at runtime**. That plugin
+boundary is the organising idea of the SDK — you rebuild your project in seconds without touching
+the engine, the editor can hot-reload it while it runs, and the same DLL is what a packaged app
+ships.
 
-The entry point for any project is a `Layer` class. You subclass it, implement the hooks you care about, and export it from your DLL.
+The engine builds in **two configurations from one source tree**: the full 3D engine, and a
+pure-2D engine that never compiles terrain, voxels, water, navigation, particles or `Renderer3D`
+(see [§1.6](#16-the-two-engine-configurations)). Both ship physics, sprites and tilemaps, canvas
+UI, flow and story graphs, the asset/VFS stack, audio, jobs, and the Starforge editor.
 
-### First-Time Setup
+Alongside the game-engine surface it carries what a **simulation** needs and a game engine usually
+does not: a TOML config facade, fixed-step integrators and filters, lookup tables, deterministic
+PCG32 RNG, a serial-port service, and a columnar telemetry recorder with replay. That is why
+`SF_Telem` and `ViperSim` live in the same tree as `ForgePong`.
 
-Before building anything for the first time, run the setup script from the SDK root. This registers the `COSMIC_SDK_DIR` environment variable that all project CMakeLists files rely on:
+Two executables run it. `Starforge.exe` opens the **editor** — the front door for making
+something. `CosmicApp.exe` is the generic host: it boots a **Launcher** that lists every plugin DLL
+it can find, or goes straight into one with `--project <Name>`.
 
-```
-setup.bat
-```
-
-You only need to do this once per machine. If you skip it, CMake will not be able to find the engine headers and the build will fail with missing-include errors.
-
-### Building
-
-After setup, you have two main build scripts:
-
-| Script                | When to use                                                                                                                         |
-| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `build_all.bat`       | Full CMake reconfigure + compile of the engine and all projects. Use after cloning or adding a new project.                         |
-| `build.bat` | Incremental build — skips CMake reconfigure. Use for iterating on your project code when you haven't changed the project structure. |
-| `build_engine.bat`    | Builds the engine host only, skipping all project DLLs. Useful when validating engine changes in isolation.                         |
-
-Outputs land in `build/Runtime/Debug/`. The engine executable and all project DLLs are placed here so the launcher can discover them.
-
-### Creating a New Project from the Launcher
-
-The easiest way to start a new project is from inside the engine itself. Launch the engine executable, and the Launcher screen gives you a **New Project** button. Fill in your project name and the target directory (a git repo of your choosing, for example), and the launcher will:
-
-1. Copy the full `ExampleProject` template into your chosen directory.
-2. Rename all files and class names to match your project name.
-3. Generate a correct `CMakeLists.txt` wired to your local SDK path.
-4. Generate a `build.bat` inside the project directory.
-
-After generation, run `build_all.bat` once from the SDK root to register and compile the new project. Subsequent iterations can use `build.bat` (root-level incremental) or the project's own `build.bat`.
-
-### Project Structure
-
-```
-YourSDKRoot/
-├── Cosmic/                     ← Engine source, assets, and dependencies
-│   └── templates/
-│       └── ExampleProject/     ← The template the launcher copies from
-├── Runtime/                    ← Engine host executable (Main.cpp)
-├── Projects/                   ← Your project folders live here (CMake scans this automatically)
-├── docs/                       ← Engine documentation
-├── build_all.bat               ← Full CMake reconfigure + build engine + all projects
-├── build.bat                   ← Incremental build (no CMake reconfigure)
-├── build_engine.bat            ← Engine only
-├── setup.bat                   ← First-time environment variable setup (run once)
-└── build/
-    └── Runtime/
-        └── Debug/              ← All compiled outputs land here
-```
-
-Any subdirectory placed under `Projects/` that contains a `CMakeLists.txt` is picked up automatically — you do not need to edit the root `CMakeLists.txt` to register a new project.
-
-### Why Client Layers Don't Go on the Engine LayerStack
-
-When you build a project, your code lives inside a `.dll`. The engine executable and your DLL are two separate modules with separate memory spaces. This creates a fundamental constraint: **the engine must control the lifetime of all objects it allocates**, and your DLL must control the lifetime of objects it allocates.
-
-For this reason, the DLL boundary is crossed at exactly two points:
-
-1. **`CreatePluginLayer()`** — your DLL allocates a `Layer*` and hands it to the engine.
-2. **`OnAttach()`/`OnDetach()`** — the engine calls into your DLL code to set up and tear down resources.
-
-The engine takes ownership of the `Layer*` returned by `CreatePluginLayer()`. It stores it, calls its hooks, and `delete`s it when the DLL is unloaded — in the correct order, before `FreeLibrary` is called so the destructor runs while DLL code is still mapped.
-
-**You must never:**
-
-- Push child layers onto `Application`'s `LayerStack` from inside your DLL. The engine would take ownership of a DLL-allocated object and `delete` it after `FreeLibrary` — executing the destructor against unmapped memory and crashing.
-- `delete` any layer pointer yourself. The engine owns and destroys everything returned from `CreatePluginLayer()`.
-- Call `app.PushLayer()` / `app.PushOverlay()` with child layers you intend to drive manually.
-
-The correct pattern for multi-mode projects is the **Composite Layer Pattern**: the root layer the engine knows about owns all child layers internally as `std::shared_ptr<Layer>` inside an `std::vector`. Child layers are driven manually by the root layer's hooks — never registered with the engine. See [Section 21 — The Template Project](#21-the-template-project) and [Section 4 — The Layer System](#4-the-layer-system) for the complete pattern.
-
-### Minimal Project Skeleton
-
-The fastest way to start is to use the Launcher's New Project generator. If you prefer to set up manually, copy `Cosmic/templates/ExampleProject/` and rename it. The template ships with a working build script, shader, and three demo layers. Below is the minimal structure to understand what every new project needs.
-
-**YourProject.h**
-
-```cpp
-#pragma once
-#include <Cosmic.h>
-
-namespace Workspace
-{
-    class YourProject : public Cosmic::Layer
-    {
-    public:
-        YourProject();
-        virtual ~YourProject() override = default;
-
-        virtual void OnAttach()                          override;
-        virtual void OnDetach()                          override;
-        virtual void OnUpdate(float ts)                  override;
-        virtual void OnFixedUpdate(float deltaFixedTime) override;
-        virtual void OnImGuiRender()                     override;
-        virtual void OnEvent(Cosmic::Event& e)           override;
-
-    private:
-        Cosmic::OrthographicCameraController m_Camera { 1280.f / 720.f };
-    };
-}
-```
-
-**YourProject.cpp**
-
-```cpp
-#include "YourProject.h"
-#include <imgui.h>
-
-namespace Workspace
-{
-    YourProject::YourProject() : Cosmic::Layer("YourProject")
-    {
-        Cosmic::FileSystem::SetActiveProject("YourProject");
-    }
-
-    void YourProject::OnAttach()  { /* load textures, create scenes */ }
-    void YourProject::OnDetach()  { /* reset Ref<> handles, free GPU resources */ }
-
-    void YourProject::OnUpdate(float ts)
-    {
-        m_Camera.OnUpdate(ts);
-        Cosmic::Renderer2D::BeginScene(m_Camera.GetCamera());
-        Cosmic::Renderer2D::DrawQuad({0.f, 0.f, 0.f}, {1.f, 1.f}, {1.f, 0.f, 0.f, 1.f});
-        Cosmic::Renderer2D::EndScene();
-    }
-
-    void YourProject::OnFixedUpdate(float dt) { /* physics, serial polling */ }
-
-    void YourProject::OnImGuiRender()
-    {
-        ImGui::Begin("Project Inspector");
-        ImGui::Text("Hello, Cosmic!");
-        ImGui::End();
-    }
-
-    void YourProject::OnEvent(Cosmic::Event& e) { m_Camera.OnEvent(e); }
-}
-
-// ============================================================
-// REQUIRED: DLL export entry points — do not rename or remove
-// ============================================================
-extern "C"
-{
-    __declspec(dllexport) void InitializePluginContexts(Cosmic::HostContext context)
-    {
-        ImGui::SetCurrentContext(context.ImGuiCtx);
-        ImPlot::SetCurrentContext(context.ImPlotCtx);
-    }
-
-    __declspec(dllexport) Cosmic::Layer* CreatePluginLayer()
-    {
-        return new Workspace::YourProject();
-    }
-}
-```
-
-Build with `build.bat` (inside your project directory), then launch the engine. Your project will appear in the Launcher. The engine calls `InitializePluginContexts` first to synchronize the ImGui/ImPlot context pointers across the DLL boundary — omitting this causes an immediate crash on any `ImGui::Begin` call.
-
-### ImGui Panel Naming Convention
-
-The workspace shell (`WorkspaceLayer`) reserves three **pre-docked slots** in the Project Inspector sidebar. Name your panels to match these exact strings and they will automatically appear in the correct position without any extra docking configuration:
-
-| Window name                  | Position                        | Best used for                                              |
-| ---------------------------- | ------------------------------- | ---------------------------------------------------------- |
-| `"Project Inspector Top"`    | Top section of the left sidebar | Mode selector, global controls (time scale, primary state) |
-| `"Project Inspector"`        | Middle section                  | Per-mode parameters, object properties                     |
-| `"Project Inspector Bottom"` | Bottom section                  | Stats, telemetry, debug toggles                            |
-
-```cpp
-// Root manager — mode selector and global controls
-ImGui::Begin("Project Inspector Top");
-ImGui::Text("Active Mode: %s", m_Modes[m_ActiveModeIndex]->GetName().c_str());
-ImGui::End();
-
-// Active mode's detail panel
-ImGui::Begin("Project Inspector");
-ImGui::SliderFloat("Speed", &m_Speed, 0.f, 10.f);
-ImGui::End();
-
-// Stats panel
-ImGui::Begin("Project Inspector Bottom");
-ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
-ImGui::End();
-```
-
-You only need to use the slots you actually want — unused slots are simply absent from the layout. Any window name that doesn't match one of the three reserved strings creates a **floating panel** that the user can dock manually.
-
-To request additional pre-docked panels beyond the three standard slots, call `WorkspaceLayer::RequestExtraDockedPanel()` from `OnAttach` — see [Section 24 — Window System](#24-window-system).
+**→ Full chapter: [`docs/guide/getting-started.md`](docs/guide/getting-started.md)** — first-time
+setup, building, both kinds of project you can create, the tree layout, the minimal plugin
+skeleton, the VFS, and the two build configurations, with the pitfalls each one has.
 
 ---
 
 ## 1.5 Command Reference — Every Command
 
-Every command you can run against this SDK, in one place. All `.bat` scripts run from the **repo root** and pause on completion unless noted. (Contract: any PR that adds or changes a script, flag, or option updates this section — see `docs/plans/12-documentation-plan.md` §11 (contract carried from archived doc 06 D1).)
+Every command you can run against this SDK, in one place. All `.bat` scripts run from the **repo root** and pause on completion — except `package_installer.bat`, which does not. (Contract: any PR that adds or changes a script, flag, or option updates this section — see `docs/plans/12-documentation-plan.md` §11 (contract carried from archived doc 06 D1).)
+
+> **This is the list; the depth is one click away.**
+> [`docs/guide/building-and-shipping.md`](docs/guide/building-and-shipping.md) explains what each
+> script does to your build tree, what turning each option off actually removes, and the whole
+> packaging/installer pipeline.
 
 ### Build & setup scripts
 
@@ -308,15 +243,21 @@ build_3d.bat Release         :: switch it back to the full 3D engine, then build
 
 Environment switch: set `COSMIC_NOPAUSE=1` to suppress `package.bat`'s final pause (used when chained from `package_installer.bat`).
 
-### Running the engine — `CosmicApp.exe`
+### Running the engine — `CosmicApp.exe` and `Starforge.exe`
 
 | Command | What it does |
 | --- | --- |
 | `CosmicApp.exe` | Boots into the **Launcher** (project picker / New Project UI). |
 | `CosmicApp.exe --project <NameOrDll>` | Boots **directly into that project**, skipping the Launcher. Accepts a bare name (`SF_Telem`), a DLL name (`SF_Telem.dll`), or an absolute path. Resolution order: `projects\<name>.dll` next to the exe, then the exe dir, then absolute. A missing DLL logs an error and falls back to the Launcher — never a dead exe. |
 | `CosmicApp.exe --project=<NameOrDll>` | Same flag, `=` form. |
+| `CosmicApp.exe --replay <file>` | Stores the path in the `COSMIC_REPLAY_FILE` environment variable for the running app to read on boot. Registered as a file association by the Starforge-generated installer. **Nothing in the engine or any shipped app reads that variable today** — the flag parses and has no effect. |
+| `Starforge.exe` | The dev-tree editor host: the same `Main.cpp` with `COSMIC_STARTUP_PROJECT="Starforge"` compiled in, plus its own VERSIONINFO and taskbar identity. `--project` and a `boot.cfg` both override the baked-in default. Not produced by `cmake --install`, so it exists only in the dev tree. |
 
-Any other argument prints `unrecognized argument` to stderr and is ignored. Dev-tree example:
+Any other argument prints `unrecognized argument` to stderr and is ignored. Two non-flag inputs also
+steer the boot: a **`boot.cfg`** next to the exe (first non-empty, non-`#` line = the project name)
+is used when no `--project` is given and is the **only** thing that switches `user://` to per-app
+isolation; and a compiled-in `COSMIC_STARTUP_PROJECT` is the lowest-priority fallback. Dev-tree
+example:
 
 ```bat
 build\Runtime\Debug\CosmicApp.exe --project SF_Telem
@@ -357,7 +298,7 @@ cmake --preset 2d
 
 | Key | Effect |
 | --- | --- |
-| `F11` | Toggle borderless-windowed fullscreen (see [Section 24](#24-window-system)). Projects can intercept/replace this via `Window::SetFullscreenHotkeyOverride` — see §24. |
+| `F11` | Toggle borderless-windowed fullscreen. Projects can intercept/replace this via `Window::SetFullscreenHotkeyOverride` — see [`docs/guide/windowing-and-viewport.md`](docs/guide/windowing-and-viewport.md#bind-your-own-fullscreen-key). |
 
 All other shortcuts are app-defined (check the project's own docs/panels).
 
@@ -417,1706 +358,655 @@ carry-over workflow — are in
 
 ## 2. Memory Management
 
-Cosmic wraps standard C++ smart pointers into two named aliases to enforce explicit ownership rules.
+`Core.h` gives the standard smart pointers names that state intent, and nothing more.
+**`Scope<T>`** is `std::unique_ptr<T>` — exactly one owner, built with `CreateScope<T>(args…)`.
+**`Ref<T>`** is `std::shared_ptr<T>` — shared, released when the last holder lets go, built with
+`CreateRef<T>(args…)` or, better, the type's own factory (`Texture2D::Create`, `Material::Create`,
+`Scene::Create`, `FrameBuffer::Create`) which does the resource work a bare `CreateRef` cannot.
 
-| Alias      | Underlying Type      | Rule                                                                                                        |
-| ---------- | -------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `Scope<T>` | `std::unique_ptr<T>` | **Single owner.** One system holds and destroys this. Use for windows, layers, dedicated sub-modules.       |
-| `Ref<T>`   | `std::shared_ptr<T>` | **Shared owner.** Destroyed when the last holder releases it. Use for textures, shaders, materials, scenes. |
+Sharing a `Ref<T>` across the DLL boundary is safe because **every module in the process shares one
+allocator**: the engine is built as one `Cosmic.dll` and nothing in the build overrides CMake's MSVC
+default of the dynamic CRT, so the engine and every project DLL allocate from the same heap and see
+one `shared_ptr` control block per resource. Break that — statically link the engine, or force `/MT`
+in one target — and releasing a shared resource from both sides double-frees, usually silently,
+usually during shutdown.
 
-Always use the factory helpers — never construct a smart pointer directly from `new`:
+The one deliberate exception is the raw `Layer*` returned by `CreatePluginLayer()`. The engine takes
+ownership of it and destroys it before `FreeLibrary` unmaps your code. **Never `delete` it, and never
+push your own child layers onto the engine's `LayerStack`** — the engine would run their destructors
+against unmapped memory. Release GPU-backed `Ref<>` handles in `OnDetach()`, while the OpenGL context
+is still alive.
 
-```cpp
-// Single-owner creation
-Scope<MySystem> sys = Cosmic::CreateScope<MySystem>(arg1, arg2);
-
-// Shared resource creation
-Ref<Cosmic::Texture2D> tex      = Cosmic::Texture2D::Create("assets/sprite.png");
-Ref<Cosmic::Scene>     scene    = Cosmic::Scene::Create();
-Ref<Cosmic::Material>  material = Cosmic::Material::Create(shader, "MyMaterial");
-```
-
-### Why this matters across DLL boundaries
-
-When your project compiles as a separate `.dll`, both sides share the same `Ref<T>` reference count as long as they link against the same `Cosmic.dll`. Raw `Layer*` pointers are intentionally used at DLL entry points because they cross compilation boundaries — the engine takes full ownership and is responsible for `delete`.
-
-> **Rule:** Never `delete` a layer pointer yourself. The engine owns and destroys everything returned from `CreatePluginLayer()`.
-
-> **Critical — shared `Cosmic.dll` requirement:** The `Ref<T>` (`std::shared_ptr<T>`) safety model only holds when all DLLs (engine + your project) link dynamically against the same `Cosmic.dll`. This ensures a single shared allocator and a single `shared_ptr` control block per resource. If your project accidentally statically links the engine (e.g. via a CMake misconfiguration), each side gets its own allocator, and releasing a shared `Ref<Texture2D>` or `Ref<Material>` from both sides will double-free and crash — often silently during shutdown. Always verify your project links `Cosmic.lib` (the import library for `Cosmic.dll`), not a static `.lib` build of the engine.
+**→ Full chapter: [`docs/guide/project-anatomy.md`](docs/guide/project-anatomy.md)** — the
+shared-allocator rule with the CMake facts behind it, the ownership contract at the plugin boundary,
+teardown ordering, and the composite-layer pattern.
 
 ---
 
 ## 3. Application Lifecycle
 
-The `Application` singleton drives the entire engine. You interact with it through `Cosmic::Application::Get()`.
+`Application` is the engine's root object and its only real singleton, reached through
+`Cosmic::Application::Get()`. Its constructor boots everything — logging first, then the job pool,
+audio, the window, the renderer, the main framebuffer, the ImGui overlay, and finally either the
+Launcher or the startup project — and its destructor tears all of that down in a deliberately staged
+order so that GPU and audio resources are released while their contexts are still alive. Note that
+`s_Instance` is assigned *before* `Initialize()` runs, because subsystems started there call back
+through `Get()`; the cost is that `Get()` from a static initializer, before the object exists,
+dereferences null.
 
-> **Singleton ordering note:** `s_Instance` is assigned at the top of the `Application` constructor, before `Initialize()` runs. This is intentional — subsystems called during `Initialize()` (notably `ImGuiLayer::OnAttach()`) reach back through `Application::Get()` to access the window. Moving the assignment to after `Initialize()` returns would leave `s_Instance` null during those callbacks and crash. The tradeoff is that a caller who invokes `Application::Get()` from a static initializer or very early constructor — before the `Application` object is constructed at all — will receive a null dereference. The correct long-term fix is to pass subsystem references (e.g. `Window&`) explicitly into `OnAttach()` rather than routing through the singleton, but that requires a broader refactor.
+Each frame runs `PollEvents`, then a fixed pass (`OnFixedUpdate`, zero to fifteen times, clamped
+against the spiral of death), then a variable pass (`UpdateLayerTime` + `OnUpdate` — which is also
+where **all drawing** happens in this engine), then the ImGui pass and `SwapBuffers`. Use
+`OnFixedUpdate` for physics, integrators and serial I/O; never issue draw calls from it. `Pause()` is
+a first-class state distinct from `SetTimeScale(0)`: it skips the fixed pass entirely so there is no
+catch-up burst on `Resume()`, runs the variable pass with `dt = 0` so the scene stays on screen, and
+leaves ImGui fully interactive.
 
-### The Frame Loop
+The bottom of the loop is **the Safe Zone** — the one point per frame where no `LayerStack` iteration
+is active. Every structural change lands there: mounting and unmounting project DLLs, and pushing,
+popping or deleting layers. `TransitionFromLauncherToWorkspace()` and `TransitionToLauncher()` only
+set a flag, which is what makes them safe to call from any hook.
 
-Every frame executes four sequential passes:
-
-```
-PollEvents()
-    │
-    ▼
-Pass 1A — Fixed Timestep (60 Hz, deterministic)
-    for each layer: layer->OnFixedUpdate(scaledFixedDelta)
-    │
-    ▼
-Pass 1B — Variable Timestep (frame-rate dependent)
-    for each layer: layer->UpdateLayerTime(scaledDelta)
-                    layer->OnUpdate(scaledDelta)
-    │
-    ▼
-Pass 2 — ImGui Render
-    for each layer: layer->OnImGuiRender()
-    │
-    ▼
-SwapBuffers()
-    │
-    ▼
-THE SAFE ZONE
-    (no iterators active — DLL transitions, push/pop/delete layers here)
-```
-
-**Fixed vs. Variable Timestep:** Use `OnFixedUpdate` for physics, collision, and serial I/O — anything that breaks under inconsistent frame timing. Use `OnUpdate` for animation, visual state, and camera movement. Never issue draw calls from `OnFixedUpdate`.
-
-**Spiral-of-Death Protection:** If a single frame takes longer than 250ms (e.g., during a debugger pause), the fixed timestep accumulator is clamped so the engine won't attempt to simulate hundreds of ticks to catch up.
-
-### Application Control API
-
-```cpp
-Cosmic::Application& app = Cosmic::Application::Get();
-
-// Time control
-app.UseFixedTimeStep(true);       // enable or disable the 60Hz physics pass
-app.SetTimeScale(0.5f);           // 0.5 = half speed
-app.SetTimeScale(0.0f);           // pause
-app.SetTimeScale(-1.0f);          // rewind
-float scale = app.GetTimeScale(); // read the current global time scale
-float t     = app.GetAbsoluteTime(); // raw engine uptime in seconds (unaffected by scale)
-
-// Window
-app.GetWindow().GetWidth();
-app.GetWindow().GetHeight();
-
-// Viewport bounds — pixel coordinates matching glfwGetCursorPos space.
-// Returns the top-left and size of the rendered image content area inside the
-// "Viewport" ImGui panel (excludes the inspector sidebar and ImGui title bars).
-// Use these instead of GetWindow().GetWidth/Height() for accurate mouse picking.
-glm::vec2 vpPos  = app.GetViewportPos();   // top-left of image content
-glm::vec2 vpSize = app.GetViewportSize();  // width/height of image content
-
-// Transitions (queued for the Safe Zone — safe to call from anywhere)
-app.TransitionFromLauncherToWorkspace("MyProject.dll");
-app.TransitionToLauncher();
-
-// Framebuffer (the main render target)
-Ref<Cosmic::FrameBuffer> fb = app.GetFrameBuffer();
-
-// Workspace shell access
-Cosmic::WorkspaceLayer* ws = app.GetWorkspaceLayer(); // nullptr before transition
-
-// Minimize behaviour — default is true (all passes skipped while minimized).
-// Set false for simulations or headless servers that must keep ticking regardless.
-app.SetPauseOnMinimize(false);
-bool pauses = app.GetPauseOnMinimize();
-
-// First-class pause — freezes simulation/animation while the scene keeps
-// rendering and ImGui stays interactive. Orthogonal to TimeScale: Resume()
-// never touches the user's scale. See §7 "Pause vs. TimeScale(0)".
-// The engine binds no hotkey — the client does (e.g. Escape in OnEvent):
-app.Pause();
-app.Resume();
-app.TogglePause();
-bool paused = app.IsPaused();
-
-// Responsive drag/resize — keep rendering while the user drags the title bar
-// or a resize border (default ON). Opt out for minimal/low-power tools; the
-// window then freezes while dragged (the old behavior).
-app.SetRenderWhileDragging(false);
-bool live = app.IsRenderWhileDragging();
-
-// Shutdown
-app.Close(); // sets m_Running = false, exits the loop cleanly
-```
+**→ Full chapter: [`docs/guide/project-anatomy.md`](docs/guide/project-anatomy.md)** — construction
+and shutdown step by step, the full control API, diagram **DG-3** (one frame end to end), diagram
+**DG-11** (the Launcher ⇄ Workspace state machine), and the Safe Zone handshake. Time in depth:
+[§7](#7-time--timeline-system).
 
 ---
 
 ## 4. The Layer System
 
-A `Layer` is the fundamental building block of any Cosmic project. Every game world, simulation mode, editor panel, and UI overlay is a `Layer`. The `LayerStack` manages their update and event dispatch order.
+A `Layer` is the engine's one polymorphic unit of work — a game world, a simulation mode, a tool
+panel, a UI overlay. You override only the hooks you need: `OnAttach`/`OnDetach` for setup and
+release, `OnUpdate(dt)` for animation, cameras and drawing, `OnFixedUpdate(dt)` for deterministic
+simulation, `OnImGuiRender()` for UI, and `OnEvent(Event&)` for one-shot reactions. `Layer` also
+declares `OnRender()`; **nothing calls it** — issue draw calls from `OnUpdate`. Every layer carries
+its own scalable local clock (`GetLocalTime`, `SetTimeScale`), so one mode can run in slow motion
+independently of the global scale.
 
-### Layer Hooks
+The `LayerStack` keeps layers below overlays: `PushLayer` inserts at the layer/overlay boundary,
+`PushOverlay` appends. Update and render walk bottom-to-top so overlays draw last; events walk
+top-to-bottom so overlays see them first — which is how ImGui eats a click before the world does.
+The stack **borrows** raw pointers and never owns them; `Application` owns every layer on it and is
+responsible for `delete`.
 
-Override only what you need:
+That ownership rule is why a project DLL **must not push its own layers**. For anything with multiple
+modes, use the **composite-layer pattern**: a root manager layer holds its children in a
+`std::vector<std::shared_ptr<Layer>>` and forwards its own hooks to them. `OnAttach`/`OnDetach` and
+window-category events fan out to all children; input and the per-frame hooks go to the active one.
+`Cosmic/templates/ExampleProject/` is the working example.
 
-```cpp
-class MyLayer : public Cosmic::Layer
-{
-public:
-    MyLayer() : Layer("MyLayer") {}
+Two engine layers are client-reachable. **`PlayerLayer`** (exported) runs a Starforge-made project
+with no editor — manifest, startup scene, scripts, physics and the shared `SceneRenderer` — and is
+what `CS_MODULE_END` returns for you. **`WorkspaceLayer`** (the editor shell) is reachable through
+its inline members: `DockWindow`, `SetViewportVisible`, `SetBottomInsetPixels`,
+`BeginViewportOverlay` and friends.
 
-    // Called once when pushed onto the LayerStack.
-    // Load textures, initialize scenes, allocate GPU resources here.
-    void OnAttach() override { ... }
-
-    // Called once when popped from the LayerStack or on engine shutdown.
-    // Reset Ref<> handles, close files, release resources here.
-    void OnDetach() override { ... }
-
-    // Variable timestep — called once per frame.
-    // Use for rendering, camera updates, animation.
-    void OnUpdate(float deltaTime) override { ... }
-
-    // Fixed timestep — called at 60 Hz regardless of frame rate.
-    // Use for physics, collision detection, serial polling.
-    void OnFixedUpdate(float deltaFixedTime) override { ... }
-
-    // Traditional world-space draw commands (alternative rendering path).
-    void OnRender() override { ... }
-
-    // Separate pass for ImGui UI calls.
-    void OnImGuiRender() override { ... }
-
-    // Receives events from the top of the stack downward.
-    void OnEvent(Cosmic::Event& e) override { ... }
-};
-```
-
-### LayerStack Ordering
-
-```
-Index:  [0]    [1]    ...   [N-1]  [N]
-        ┌──────────────────────────────┐
-        │  Layer  Layer  ...  Overlay  │
-        └──────────────────────────────┘
-                              ▲
-                    m_LayerInsertIndex
-
-Update / Render order:   Left → Right  (layer 0 first, overlays last)
-Event propagation:       Right → Left  (overlays see events first)
-```
-
-Overlays (pushed with `PushOverlay`) always sit on top of regular layers and receive events before them. This is how ImGui intercepts mouse clicks before the game world does.
-
-```cpp
-// Call inside Application::Initialize or from the Safe Zone
-app.PushLayer(new MyGameLayer());
-app.PushOverlay(new MyDebugOverlay()); // always on top
-```
-
-> **Memory ownership:** `Application` owns all layer pointers and is responsible for `delete`. Never delete a layer pointer registered in the stack.
-
-### Composite Layer Pattern
-
-For multi-mode projects, the recommended pattern is a **root manager layer** that owns a `std::vector<std::shared_ptr<Layer>>` of child layers internally. The children are **never pushed onto the engine's `LayerStack`** — the root layer drives them manually by forwarding its hooks. This keeps the engine's iteration clean and gives you precise control over which mode runs. See [Section 21 — The Template Project](#21-the-template-project) for a complete example.
+**→ Full chapter: [`docs/guide/project-anatomy.md`](docs/guide/project-anatomy.md)** — every hook and
+when it fires, stack ordering, the two client-reachable engine layers and exactly what is reachable
+on each, the composite-layer pattern in full, and owning your own services.
 
 ---
 
 ## 5. The Event System
 
-The event system is **reactive and propagating**. When the OS fires a hardware signal — a key press, a mouse click, a window resize — the engine packages it into a typed `Event` object and walks it down the `LayerStack` from top to bottom. Any layer can mark an event as "handled" (`e.Handled = true`) to stop it from reaching layers below.
+Events are Cosmic's **push** channel. A GLFW callback — fired inside `Window::PollEvents()` at the
+top of each frame, before any update runs — wraps the signal in a typed `Event` object, and
+`Application::OnEvent` walks it through the `LayerStack` in **reverse** order so overlays see it
+first. Any handler can set `e.Handled = true` to stop it there. Inside a layer, `EventDispatcher`
+routes by type: `dispatcher.Dispatch<KeyPressedEvent>(lambda)`, where the lambda returns `bool` and
+**`true` is the only thing that consumes an event** — `Handled` is never cleared once set.
 
-This is distinct from [Input Polling (Section 6)](#6-input-polling), which queries the current hardware state on demand. Use events for one-shot reactions ("the user just pressed Escape"), use polling for continuous per-frame checks ("is W held down right now?").
+Two stops on that path surprise people. `Window::HandleFullscreenHotkey` runs *before* any `Event`
+object exists, so **`F11` is consumed for fullscreen** and never reaches a handler unless you
+register `SetFullscreenHotkeyOverride`. And `Application::OnWindowClose` returns `true`, so
+**`WindowCloseEvent` never reaches any layer** — window close cannot be vetoed from client code.
+`WindowResizeEvent`, by contrast, is handled *and* keeps propagating, so every layer gets a chance to
+re-derive its projection. Further down, `ImGuiLayer` marks mouse and keyboard events handled whenever
+ImGui wants the input — except while the Viewport panel is hovered or focused, where `WorkspaceLayer`
+turns that blocking off so raw input reaches your layer.
 
-### How Events Flow Through the Stack
+Each event carries a category bitmask (`EventCategoryApplication`, `Input`, `Keyboard`, `Mouse`,
+`MouseButton`) for filtering whole families at once — note that resize, close and **file drop** are
+`Application` only, never `Input`. The concrete types are `WindowResizeEvent`, `WindowCloseEvent`,
+`WindowFileDropEvent`, `KeyPressed`/`KeyReleased`/`KeyTypedEvent`, `MouseMoved`, `MouseScrolled` and
+the two `MouseButton` events. Events carry no modifier bits; poll `CS_KEY_LEFT_CONTROL` for chords.
 
-```
-OS Hardware Signal
-        │
-        ▼
-Application::OnEvent(e)
-        │
-        ├── WindowCloseEvent  ──► Application::OnWindowClose()   (consumed here)
-        ├── WindowResizeEvent ──► Application::OnWindowResize()  (still propagates!)
-        │
-        ▼  rbegin() → rend()  (TOP OF STACK FIRST)
-┌───────────────────┐
-│   ImGuiLayer      │  ← receives events first (it's an overlay)
-│  (overlay)        │    blocks mouse/keyboard only when m_BlockEvents=true
-│                   │    WorkspaceLayer sets BlockEvents(false) while the
-│                   │    Viewport panel is hovered, so clicks in the 3D view
-│                   │    pass through to your layer unmodified
-└────────┬──────────┘
-         │ e.Handled == true? → STOP
-         ▼
-┌───────────────────┐
-│  WorkspaceLayer   │  ← forwards to your DLL layer
-│  (layer)          │
-└────────┬──────────┘
-         │ e.Handled == true? → STOP
-         ▼
-┌───────────────────┐
-│  Your Layer       │  ← your OnEvent() runs here
-│  (inside DLL)     │
-└───────────────────┘
-```
-
-### Handling Events in Your Layer
-
-Override `OnEvent` and use `EventDispatcher` to route specific event types to dedicated handler functions. The preferred style uses lambdas — they capture `this` explicitly and avoid the macro boilerplate:
-
-```cpp
-void MyLayer::OnEvent(Cosmic::Event& e)
-{
-    Cosmic::EventDispatcher dispatcher(e);
-
-    // Preferred: lambda style
-    dispatcher.Dispatch<Cosmic::KeyPressedEvent>(
-        [this](Cosmic::KeyPressedEvent& event) { return OnKeyPressed(event); });
-
-    dispatcher.Dispatch<Cosmic::MouseButtonPressedEvent>(
-        [this](Cosmic::MouseButtonPressedEvent& event) { return OnMouseClicked(event); });
-
-    dispatcher.Dispatch<Cosmic::WindowResizeEvent>(
-        [this](Cosmic::WindowResizeEvent& event) { return OnWindowResize(event); });
-}
-
-// Handler signature: takes the specific event type, returns bool.
-// true  = consumed (stops propagating to layers below)
-// false = not consumed (passes through to lower layers)
-bool MyLayer::OnKeyPressed(Cosmic::KeyPressedEvent& e)
-{
-    if (e.GetKeyCode() == CS_KEY_ESCAPE)
-    {
-        TogglePauseMenu();
-        return true;
-    }
-    return false;
-}
-
-bool MyLayer::OnWindowResize(Cosmic::WindowResizeEvent& e)
-{
-    m_Camera.OnResize((float)e.GetWidth(), (float)e.GetHeight());
-    return false; // don't consume — other layers also need resize
-}
-```
-
-The legacy macro form `CS_BIND_EVENT_FN(fn)` expands to `std::bind(&fn, this, std::placeholders::_1)` and is defined in `Core.h`. It still compiles and produces correct behavior; prefer lambdas in new code.
-
-### Forwarding Events to Sub-Systems
-
-If your layer owns sub-systems that need events (like a camera controller), forward the event to them first:
-
-```cpp
-void MyLayer::OnEvent(Cosmic::Event& e)
-{
-    m_CameraController.OnEvent(e);
-    if (e.Handled) return;
-
-    Cosmic::EventDispatcher dispatcher(e);
-    dispatcher.Dispatch<Cosmic::KeyPressedEvent>(
-        [this](Cosmic::KeyPressedEvent& event) { return OnKeyPressed(event); });
-}
-```
-
-Application events (window resize) must always be forwarded to **all** sub-layers, not just the active one, so that inactive cameras don't accumulate stale projection matrices:
-
-```cpp
-void MyRootLayer::OnEvent(Cosmic::Event& e)
-{
-    if (e.IsInCategory(Cosmic::EventCategoryApplication))
-    {
-        for (auto& mode : m_Modes)
-            mode->OnEvent(e);
-        return;
-    }
-
-    // Input events go only to the active mode
-    if (e.Handled) return;
-    m_Modes[m_ActiveModeIndex]->OnEvent(e);
-}
-```
-
-### Common Event Patterns
-
-**Jump on Space, ignore held repeats:**
-
-```cpp
-bool MyLayer::OnKeyPressed(Cosmic::KeyPressedEvent& e)
-{
-    // GetRepeatCount() > 0 means the key is being held, not freshly pressed
-    if (e.GetKeyCode() == CS_KEY_SPACE && e.GetRepeatCount() == 0)
-    {
-        Jump();
-        return true;
-    }
-    return false;
-}
-```
-
-**Guard input against paused or reversed timelines:**
-
-```cpp
-bool MyLayer::OnKeyPressed(Cosmic::KeyPressedEvent& e)
-{
-    if (e.GetRepeatCount() > 0) return false;
-
-    if (Cosmic::Application::Get().GetTimeScale() <= 0.0f)
-    {
-        if (e.GetKeyCode() == CS_KEY_R) { Reset(); return true; }
-        return false;
-    }
-
-    if (e.GetKeyCode() == CS_KEY_SPACE) { Jump(); return true; }
-    return false;
-}
-```
-
-### Event Type Quick Reference
-
-| Event Class                | Useful Accessors                   | Notes                                     |
-| -------------------------- | ---------------------------------- | ----------------------------------------- |
-| `KeyPressedEvent`          | `GetKeyCode()`, `GetRepeatCount()` | `RepeatCount > 0` = key held              |
-| `KeyReleasedEvent`         | `GetKeyCode()`                     | Fired once on key release                 |
-| `KeyTypedEvent`            | `GetKeyCode()`                     | Character input for text fields           |
-| `MouseButtonPressedEvent`  | `GetMouseButton()`                 | Use `CS_MOUSE_BUTTON_LEFT/RIGHT/MIDDLE`   |
-| `MouseButtonReleasedEvent` | `GetMouseButton()`                 |                                           |
-| `MouseMovedEvent`          | `GetX()`, `GetY()`                 | Screen-space coordinates, top-left origin |
-| `MouseScrolledEvent`       | `GetXOffset()`, `GetYOffset()`     | Y is typically ±1.0 per scroll tick       |
-| `WindowResizeEvent`        | `GetWidth()`, `GetHeight()`        | Pixel dimensions of the new window size   |
-| `WindowCloseEvent`         | —                                  | Consumed by `Application` before layers   |
-
-### Category Filtering
-
-```cpp
-void MyLayer::OnEvent(Cosmic::Event& e)
-{
-    // Block all input during a cutscene
-    if (m_CutscenePlaying && e.IsInCategory(Cosmic::EventCategoryInput))
-    {
-        e.Handled = true;
-        return;
-    }
-}
-```
-
-| Category Constant          | Covers                          |
-| -------------------------- | ------------------------------- |
-| `EventCategoryApplication` | Window resize, close, tick      |
-| `EventCategoryInput`       | All keyboard + all mouse        |
-| `EventCategoryKeyboard`    | Key press, release, typed       |
-| `EventCategoryMouse`       | Mouse move, scroll, button      |
-| `EventCategoryMouseButton` | Mouse button press/release only |
+**→ Full chapter: [`docs/guide/events-and-input.md`](docs/guide/events-and-input.md)** — diagram
+**DG-4** (the whole propagation path), the `EventDispatcher` contract, the full event catalogue with
+the traps in it (`KeyTypedEvent` carries a Unicode codepoint, not a key code; `GetRepeatCount()` is a
+flag, not a counter), handling `WindowFileDropEvent`, and how events reach scripts.
 
 ---
 
 ## 6. Input Polling
 
-For continuous per-frame input (movement, camera pan), use the static `Input` class instead of the event system.
+`Input` is the **pull** channel: static queries that ask the hardware what is true *right now*. Use
+it for anything continuous — walking, camera pan, throttle — and use events for anything one-shot.
+The surface is small: `IsKeyPressed`, `IsMouseButtonPressed`, `GetMousePosition`/`GetMouseX`/
+`GetMouseY`, `GetMouseScreenPosition`, and the gamepad calls. There is no polled scroll wheel; scroll
+exists only as a `MouseScrolledEvent` delta you accumulate yourself.
 
-```cpp
-void MyLayer::OnUpdate(float ts)
-{
-    if (Cosmic::Input::IsKeyPressed(CS_KEY_W))
-        m_Position.y += m_Speed * ts;
-    if (Cosmic::Input::IsKeyPressed(CS_KEY_S))
-        m_Position.y -= m_Speed * ts;
-    if (Cosmic::Input::IsKeyPressed(CS_KEY_A))
-        m_Position.x -= m_Speed * ts;
-    if (Cosmic::Input::IsKeyPressed(CS_KEY_D))
-        m_Position.x += m_Speed * ts;
+The critical detail is that **there are two mouse coordinate spaces**. `GetMousePosition()` is
+window-client pixels; `GetMouseScreenPosition()` is OS screen pixels, which is the space ImGui uses
+under multi-viewport and therefore the space `Application::GetViewportPos()/GetViewportSize()` live
+in. Compare like with like, or picking is off by the window's desktop position — a bug that hides
+perfectly when the window is maximized at the top-left of the primary monitor.
 
-    if (Cosmic::Input::IsMouseButtonPressed(CS_MOUSE_BUTTON_LEFT))
-        SpawnEntityAt(Cosmic::Input::GetMousePosition());
+**Gamepads have been supported since Phase 2** and are pure polling — no events, no connect
+notifications, no initialization. `IsGamepadConnected`, `GetGamepadAxis`, `IsGamepadButtonPressed`,
+`GetGamepadAxisCount`, `GetGamepadButtonCount` and `GetGamepadName` all take an optional slot
+(`CS_GAMEPAD_1`…`CS_GAMEPAD_LAST`) and are safe on a disconnected slot. Mapped pads use the
+standardized `CS_GAMEPAD_AXIS_*` / `CS_GAMEPAD_BUTTON_*` layout; unmapped devices — RC transmitters
+in USB-joystick mode, sim yokes — fall back to raw indices through the same calls. **The engine
+applies no deadzone**, and triggers report `-1` released to `+1` pressed.
 
-    glm::vec2 cursor = Cosmic::Input::GetMousePosition(); // screen-space (x, y)
-    float mouseX     = Cosmic::Input::GetMouseX();
-    float mouseY     = Cosmic::Input::GetMouseY();
-}
-```
+One thing polling deliberately does *not* do: respect ImGui. `Input` talks straight to GLFW, so a
+polled `CS_KEY_W` keeps walking your character while the user types into a text field. Gate it on
+`ImGui::GetIO().WantCaptureKeyboard`, or move the binding to an event.
 
-### When to Use Input vs. Events
-
-| Use `Input::`                             | Use `OnEvent`                                   |
-| ----------------------------------------- | ----------------------------------------------- |
-| Continuous hold checks (movement, camera) | Single-press reactions (menu toggle, fire once) |
-| Per-frame polling loops                   | State change notifications                      |
-| "Is this key held right now?"             | "Did the user just press Escape?"               |
-
-### Key Code Constants
-
-| Constant                 | Value   | Constant                | Value   |
-| ------------------------ | ------- | ----------------------- | ------- |
-| `CS_KEY_SPACE`           | 32      | `CS_KEY_ESCAPE`         | 256     |
-| `CS_KEY_A`–`CS_KEY_Z`    | 65–90   | `CS_KEY_ENTER`          | 257     |
-| `CS_KEY_0`–`CS_KEY_9`    | 48–57   | `CS_KEY_TAB`            | 258     |
-| `CS_KEY_RIGHT`           | 262     | `CS_KEY_BACKSPACE`      | 259     |
-| `CS_KEY_LEFT`            | 263     | `CS_KEY_LEFT_SHIFT`     | 340     |
-| `CS_KEY_DOWN`            | 264     | `CS_KEY_LEFT_CONTROL`   | 341     |
-| `CS_KEY_UP`              | 265     | `CS_KEY_LEFT_ALT`       | 342     |
-| `CS_KEY_F1`–`CS_KEY_F12` | 290–301 | `CS_KEY_Q` / `CS_KEY_E` | 81 / 69 |
-
-### Mouse Button Constants
-
-| Constant                 | Alias               | Button              |
-| ------------------------ | ------------------- | ------------------- |
-| `CS_MOUSE_BUTTON_LEFT`   | `CS_MOUSE_BUTTON_1` | Primary action      |
-| `CS_MOUSE_BUTTON_RIGHT`  | `CS_MOUSE_BUTTON_2` | Secondary / context |
-| `CS_MOUSE_BUTTON_MIDDLE` | `CS_MOUSE_BUTTON_3` | Pan / zoom          |
+**→ Full chapter: [`docs/guide/events-and-input.md`](docs/guide/events-and-input.md)** — the
+complete keyboard, mouse and **gamepad** code tables generated from `codes/`, both deadzone idioms
+used in the tree, the coordinate-space worked example, and a keyboard-plus-stick walker.
 
 ---
 
 ## 7. Time & Timeline System
 
-Cosmic has a two-level time architecture: a **global application timeline** controlled by `Application`, and a **per-layer local timeline** each layer owns independently. Understanding both is essential for simulations that respond correctly to pause, slow-motion, and rewind.
+Cosmic runs **two update rates in one frame**. The variable pass (`OnUpdate(float ts)`) tracks the
+display and is also where **all drawing** happens. The fixed pass (`OnFixedUpdate(float dt)`) drains
+an accumulator at `GetFixedTimestepHz()` — 60 Hz by default, clamped to `[1, 1000]` — and runs zero
+to fifteen times per frame, the cap coming from a 0.25 s spiral-of-death clamp on the frame time.
+Physics, integrators, control loops and serial polling belong in the fixed pass; cameras, animation
+and every draw call belong in the variable one.
 
-### The Global Time Scale
+`SetTimeScale(s)` multiplies the variable delta and the rate at which the fixed accumulator fills —
+but **not the magnitude of `dt`**, which stays exactly `1/FixedHz` so that fixed-step simulation
+stays stable. A negative scale does not rewind physics: the accumulator runs backwards, the drain
+loop never fires, and the debt has to be repaid before fixed updates resume. Rewind works for
+visuals, which read `GetLocalTime()`.
 
-`Application::SetTimeScale` multiplies every delta time the engine passes to layers:
+`Pause()` is a first-class state, orthogonal to the scale, and the distinction is the subtle part.
+`Pause()` skips the fixed pass entirely and freezes the accumulator, so there is **no catch-up burst
+on `Resume()`**, and it preserves whatever speed the user had chosen — `SetTimeScale(0)` destroys it.
+Both leave the variable pass running with `ts = 0` (so the scene stays on screen, frozen) and ImGui
+fully interactive. `GetAbsoluteTime()` keeps advancing through all of it; `GetLocalTime()` does not.
+The engine binds no pause hotkey.
 
-```cpp
-Cosmic::Application::Get().SetTimeScale(1.0f);   // normal
-Cosmic::Application::Get().SetTimeScale(0.5f);   // half speed
-Cosmic::Application::Get().SetTimeScale(0.0f);   // pause
-Cosmic::Application::Get().SetTimeScale(-1.0f);  // rewind
-float scale = Cosmic::Application::Get().GetTimeScale();
-```
+Every `Layer` also owns a local clock and its own scale, advanced for you as
+`m_LocalTime += ts × layerScale` before `OnUpdate`. `GetLocalTime()` is therefore the right source
+for shader `u_Time` and particle age — it already carries both scales. One asymmetry to know:
+layers on the engine `LayerStack` receive a globally-scaled `ts` only, while a **plugin layer**
+receives `ts` and `dt` already multiplied by its own scale, because `WorkspaceLayer` applies it when
+forwarding. Do not multiply again there.
 
-`GetAbsoluteTime()` is always monotonically increasing — it accumulates raw wall-clock time and is unaffected by `TimeScale`. Use it for profiling, session duration, or any clock that must not pause or rewind. Shaders reading `u_Time` receive this raw value. For a time value that does rewind with negative scale, use `GetLocalTime()` from within a layer.
-
-### Pause vs. `TimeScale(0)`
-
-`SetTimeScale(0.0f)` remains the low-level soft-pause: layers still receive `OnUpdate` with a zero delta, but it overwrites whatever scale the user had set. `Application::Pause()` is the ergonomic, queryable, **scale-preserving** first-class version intended for end-user pause:
-
-| | Paused behavior | Why |
-| --- | --- | --- |
-| `OnFixedUpdate` (fixed pass) | **Skipped** — accumulator frozen | Pure logic/physics; no catch-up burst on `Resume()` |
-| `OnUpdate` (variable pass) | Called with **dt = 0** | `OnUpdate` issues draw calls — the scene keeps rendering, frozen |
-| ImGui + present | Runs normally | Pause menus animate and stay clickable |
-| `GetAbsoluteTime()` | Keeps advancing | Scale-independent uptime — e.g. a live "PAUSED" clock |
-| `GetLocalTime()` | Frozen (advances by 0) | Shader/animation time driven by it freezes — the visual "pause" |
-
-Both can coexist; `Pause()` wins (forces dt = 0) regardless of the current scale, and `Resume()` restores exactly the scale the user had. Effects reading `u_Time` / `GetAbsoluteTime()` keep moving while paused — intended. The engine binds no pause hotkey; the client does (`TogglePause()` from an `OnEvent` key handler).
-
-### Per-Layer Local Time
-
-Every `Layer` has its own local timeline accumulator. The engine calls `layer->UpdateLayerTime(scaledDelta)` once per frame before `OnUpdate`, which does:
-
-```
-m_LocalTime += scaledDelta × m_LocalTimeScale
-```
-
-Call these helpers inside your layer body directly:
-
-```cpp
-float t  = GetLocalTime();    // accumulated (global scale × layer scale) time in seconds
-float s  = GetTimeScale();    // this layer's own scale multiplier (default 1.0)
-SetLocalTime(0.0f);           // reset (e.g. on level restart)
-SetTimeScale(0.5f);           // slow this layer independently of the global scale
-```
-
-> **Critical:** `GetLocalTime()` is an **instance method** on the base `Layer` class. Always call it as `GetLocalTime()` inside your derived class body — never as `Cosmic::Layer::GetLocalTime()`. The latter form performs static scope resolution and will either fail to compile or invoke the wrong context.
-
-### What ts and dt Actually Contain
-
-Understanding the two-level time architecture is essential before using `SetTimeScale`:
-
-| Source | Contains | Use for |
-| --- | --- | --- |
-| `ts` in `OnUpdate(float ts)` | `rawDelta × globalTimeScale` — **global scale only** | Movement, camera, any per-frame delta |
-| `dt` in `OnFixedUpdate(float dt)` | `(1/60) × globalTimeScale` — **global scale only** | Physics, collision, fixed-step integration |
-| `GetLocalTime()` | accumulated `rawDelta × globalScale × layerScale` — **both scales** | Shader `u_Time`, particle age, any accumulated value |
-
-`ts` and `dt` do **not** automatically include the layer's own scale. The engine only applies the layer scale when accumulating `GetLocalTime()` internally. This has two practical consequences:
-
-**1. For shaders and accumulated values — always use `GetLocalTime()`.** It is already double-scaled with no extra work required. Setting the layer scale to 0.5 will immediately halve the rate at which `GetLocalTime()` grows, and your shader animation slows down automatically.
-
-**2. For movement and physics inside a standalone layer — apply the layer scale manually if you want per-layer time control:**
-
-```cpp
-// Standalone layer that supports its own independent SetTimeScale():
-void MyLayer::OnUpdate(float ts)
-{
-    // ts is global-scaled only. Multiply by GetTimeScale() to also apply the layer scale.
-    const float localTs = ts * GetTimeScale();
-
-    m_Camera.OnUpdate(localTs);          // camera pan speed respects layer scale
-    m_MySystem.Tick(localTs);            // system tick respects layer scale
-    // GetLocalTime() for shaders is already correct — don't touch it
-}
-
-void MyLayer::OnFixedUpdate(float dt)
-{
-    const float localDt = dt * GetTimeScale();
-    if (localDt <= 0.0f) return;         // pause / rewind guard still works
-    m_Body.Position += m_Velocity * localDt;
-}
-```
-
-If your layer is driven by a **root manager layer** (the Composite Layer Pattern), the root manager should apply the scale once before dispatching — see [Section 21](#21-the-template-project). Child layers then receive a pre-scaled delta and use `ts`/`dt` directly without multiplying again.
-
-If your layer is pushed directly onto the engine's `LayerStack` and you never call `SetTimeScale()` on it, `GetTimeScale()` always returns `1.0` and the multiplication is a no-op — skip it.
-
-### How to Feed Time to Shaders
-
-```cpp
-void MyLayer::OnUpdate(float ts)
-{
-    if (m_Material)
-        m_Material->Set("u_Time", GetLocalTime());
-
-    Cosmic::Renderer2D::BeginScene(m_Camera.GetCamera());
-    Cosmic::Renderer2D::DrawQuad({0.f, 0.f, 0.f}, {2.f, 2.f}, m_Material);
-    Cosmic::Renderer2D::EndScene();
-}
-```
-
-Because `GetLocalTime()` is pre-scaled by both the global `TimeScale` and this layer's own scale, your shaders automatically respond to pause and rewind without any extra code.
-
-### Fixed vs. Variable Timestep — Dual-Rate Simulation Matrix
-
-| Aspect              | `OnUpdate(float ts)`                         | `OnFixedUpdate(float dt)`                       |
-| ------------------- | -------------------------------------------- | ----------------------------------------------- |
-| **Purpose**         | Visual updates, animation, camera            | Physics, collision, deterministic simulation    |
-| **Rate**            | Variable — depends on monitor refresh rate   | Fixed at 60 Hz regardless of frame rate         |
-| **Input**           | Globally-scaled variable delta — `rawDelta × globalScale` | Globally-scaled fixed interval — `(1/60) × globalScale` |
-| **Rendering calls** | Yes — call `BeginScene`/`EndScene` here      | No — never issue draw calls here                |
-| **Shader uniforms** | Yes — update `u_Time`, `u_Color` etc. here   | No — GPU state should not be touched here       |
-| **Anti-pattern**    | Running collision math that breaks at 144Hz  | Running sprite rotation or lerp animations      |
-| **Timeline guards** | Use `GetLocalTime()` for shaders; `ts * GetTimeScale()` only if the layer needs its own independent scale | Guard `dt <= 0.0f` to detect pause and rewind |
-
-### Timeline Guards in Fixed Update
-
-When `TimeScale` is zero (paused) or negative (rewinding), `OnFixedUpdate` receives a zero or negative delta. Always guard against this:
-
-```cpp
-void MyLayer::OnFixedUpdate(float dt)
-{
-    if (dt == 0.0f) return; // paused — freeze simulation
-
-    if (dt < 0.0f)
-    {
-        // Optional rewind behavior
-        for (auto& obs : m_Obstacles)
-        {
-            auto& t = obs.GetComponent<Cosmic::TransformComponent>();
-            t.Position.x += m_Speed * std::abs(dt); // move backwards
-        }
-        return;
-    }
-
-    // Normal forward simulation
-    m_Score += dt * 10.0f;
-}
-```
-
-### Common Time Pitfalls
-
-**Manual time accumulation:** Writing `m_Time += ts;` inside your layer accumulates time yourself instead of using the engine's built-in clock. The problem is that `ts` does not include the layer's own scale — your manual counter only gets the global scale. Use `GetLocalTime()` instead: it is accumulated automatically with both the global scale and the layer's own scale applied, and it rewinds correctly when `TimeScale` is negative.
-
-**Animating in `OnFixedUpdate`:** Sprite rotation, camera lerp, and uniform uploads driven from `OnFixedUpdate` produce micro-stuttering at high refresh rates because they only update 60 times per second. Move visual updates to `OnUpdate`.
-
-**Unit confusion:** `ts` and `dt` are always in **seconds**. Multiplying a velocity (m/s) by `ts` gives correct displacement. For display values in milliseconds, compute `ts * 1000.f` explicitly.
+**→ Full chapter: [`docs/guide/time-and-ticks.md`](docs/guide/time-and-ticks.md)** — diagram
+**DG-10** (the time waterfall), the four clocks, the pause-versus-`TimeScale(0)` table, the
+per-layer/plugin-layer differences, and the physics fixed-step contract. Internals for now live in
+[§32](#32-top-down-time-propagation-waterfall).
 
 ---
 
 ## 8. 2D Rendering API
 
-`Renderer2D` is the primary drawing interface. It batches geometry internally to minimize GPU draw calls.
+`Renderer2D` is the 2D drawing surface, and it is a **batching** renderer: a `DrawQuad` call writes
+four vertices into a CPU-side array and talks to no GPU at all. Geometry reaches the driver when a
+batch *flushes* — at the end of a pass, when a limit fills, or when some piece of GPU state has to
+change. Wrap work in `BeginScene(camera)` / `EndScene()`, or in a scoped `RenderPass`, and the
+renderer collapses thousands of sprites into a handful of draw calls. Quads come in sixteen
+overloads (flat colour, texture, sprite-sheet tile, or a full `Material`, each with `vec2`/`vec3`
+positions and a rotated twin); alongside them sit SDF circles and rings, lines and wireframe boxes,
+world-space SDF text through `Cosmic::Font`, and two hardware-instanced paths for tens of thousands
+of identical objects.
 
-### Frame Structure
+The batch limits are fixed at compile time — 10,000 quads, 10,000 lines, 10,000 circles, 10,000
+glyphs, 31 distinct textures per batch, 20,000 instances per instanced chunk — and **hitting one is
+never an error**: the renderer flushes and carries on, so the only visible effect is an extra draw
+call. Batches also break on state changes that are easy to trigger by accident, the expensive one
+being a material switch: alternating materials costs one draw call per quad. Draw order deserves a
+warning of its own — within a single flush the renderer always emits quads, then lines, then
+circles, then text, regardless of the order you called them in.
 
-Every render pass must be wrapped in `BeginScene` / `EndScene`:
+Two counters-worth of instrumentation ships with it, and **`Renderer2D`'s statistics are off by
+default** (`StatsEnabled` is `false` and nothing in the engine arms it), with `ResetStats()` likewise
+left to the caller. Since Phase 27/29 the 2D output no longer reaches the backbuffer directly:
+sprites draw in `SceneRenderer`'s transparent phase with an HDR target bound, pass through tonemap
+and the post chain, and canvas UI composites after that in LDR — the same spine the 3D path uses, in
+both engine configurations.
 
-```cpp
-void MyLayer::OnUpdate(float ts)
-{
-    Cosmic::Renderer2D::BeginScene(m_Camera.GetCamera());
-
-    // --- all draw calls go here ---
-
-    Cosmic::Renderer2D::EndScene(); // flushes all batched geometry to GPU
-}
-```
-
-### Flat Color Quads
-
-Both `vec2` and `vec3` position overloads are available. The `vec2` overloads insert `z = 0.0f` automatically:
-
-```cpp
-// vec3 position — explicit z-layering (higher z = in front)
-Cosmic::Renderer2D::DrawQuad({0.f, 0.f, 0.0f}, {1.f, 1.f}, {1.f, 0.f, 0.f, 1.f}); // red
-Cosmic::Renderer2D::DrawQuad({0.f, 0.f, 0.5f}, {1.f, 1.f}, {0.f, 1.f, 0.f, 1.f}); // green, in front
-
-// vec2 position — z inserted as 0
-Cosmic::Renderer2D::DrawQuad({0.f, 0.f}, {1.f, 1.f}, {0.f, 0.f, 1.f, 1.f}); // blue
-```
-
-### Textured Quads
-
-> **Load failure behavior:** `Texture2D::Create` always returns a non-null `Ref` — on failure it returns a degraded object with zero width, zero height, and a zero GPU handle. Calling `Bind` on such a texture emits a core warning and binds nothing (the slot renders black). Always check whether the file exists before calling `Create`; the engine does not throw or return `nullptr` on a missing file.
-
-```cpp
-Ref<Cosmic::Texture2D> tex = Cosmic::Texture2D::Create("assets/sprite.png");
-
-Cosmic::Renderer2D::DrawQuad({0.f, 0.f, 0.f}, {1.f, 1.f}, tex);
-Cosmic::Renderer2D::DrawQuad({0.f, 0.f, 0.f}, {1.f, 1.f}, tex, 2.0f);                            // 2× UV tiling
-Cosmic::Renderer2D::DrawQuad({0.f, 0.f, 0.f}, {1.f, 1.f}, tex, 1.0f, {1.f, 0.5f, 0.5f, 1.f});  // tint
-
-// vec2 convenience overloads
-Cosmic::Renderer2D::DrawQuad({0.f, 1.f}, {1.f, 1.f}, tex);
-Cosmic::Renderer2D::DrawQuad({0.f, 1.f}, {1.f, 1.f}, tex, 2.0f, {1.f, 1.f, 1.f, 1.f});
-```
-
-### Material Quads (Shader-Driven)
-
-```cpp
-auto shader   = Cosmic::Shader::Create(Cosmic::FileSystem::Resolve("project://shaders/Fire.glsl"));
-auto material = Cosmic::Material::Create(shader, "FireMaterial");
-material->Set("u_Color", glm::vec4(1.f, 0.5f, 0.2f, 1.f));
-
-void MyLayer::OnUpdate(float ts)
-{
-    material->Set("u_Time", GetLocalTime());
-
-    Cosmic::Renderer2D::BeginScene(m_Camera.GetCamera());
-    Cosmic::Renderer2D::DrawQuad({0.f, 0.f, 0.f}, {2.f, 2.f}, material);  // vec3
-    Cosmic::Renderer2D::DrawQuad({0.f, 0.f},       {2.f, 2.f}, material);  // vec2 convenience
-    Cosmic::Renderer2D::EndScene();
-}
-```
-
-### Rotated Quads
-
-Rotation is always in **radians**:
-
-```cpp
-// Color
-Cosmic::Renderer2D::DrawRotatedQuad({0.f, 0.f, 0.f}, {1.f, 1.f}, glm::radians(45.f), {1.f, 1.f, 0.f, 1.f});
-Cosmic::Renderer2D::DrawRotatedQuad({0.f, 0.f},       {1.f, 1.f}, glm::radians(45.f), {1.f, 1.f, 0.f, 1.f});
-
-// Texture
-Cosmic::Renderer2D::DrawRotatedQuad({0.f, 0.f, 0.f}, {1.f, 1.f}, rotation, tex);
-Cosmic::Renderer2D::DrawRotatedQuad({0.f, 0.f},       {1.f, 1.f}, rotation, tex);
-
-// Material (vec3 only)
-Cosmic::Renderer2D::DrawRotatedQuad({0.f, 0.f, 0.f}, {1.f, 1.f}, rotation, material);
-```
-
-### Debug Geometry
-
-```cpp
-Cosmic::Renderer2D::DrawLine({-1.f, 0.f, 0.f}, {1.f, 0.f, 0.f}, {1.f, 1.f, 0.f, 1.f});
-Cosmic::Renderer2D::DrawRect({0.f, 0.f, 0.f}, {2.f, 1.f}, {0.f, 1.f, 1.f, 1.f}); // wireframe rectangle
-```
-
-### Performance Statistics
-
-```cpp
-Cosmic::Renderer2D::ResetStats();
-
-Cosmic::Renderer2D::Statistics stats = Cosmic::Renderer2D::GetStats();
-ImGui::Text("Draw Calls: %d", stats.DrawCalls);
-ImGui::Text("Quads:      %d", stats.QuadCount);   // batched + instanced quads only
-ImGui::Text("Circles:    %d", stats.CircleCount); // batched + instanced circles only
-ImGui::Text("Lines:      %d", stats.LineCount);
-ImGui::Text("Vertices:   %d", stats.GetTotalVertexCount());
-ImGui::Text("Indices:    %d", stats.GetTotalIndexCount());
-
-Cosmic::Renderer2D::SetStatsStatus(false); // disable stat recording when not needed
-```
+**→ Full chapter: [`docs/guide/rendering-2d.md`](docs/guide/rendering-2d.md)** — every overload with
+its failure behaviour, sprite sheets, circles, lines, text, the instanced paths and when they
+actually win, multi-camera `RenderPass`, the stats counters, **the complete batch-limit and
+flush-behaviour tables cited to `Renderer2D.cpp`**, and the `SceneRenderer` compositing spine
+including `BlendMode::Multiply`. Internals live in
+[§36](#36-batch-rendering-deep-dive) and [§38](#38-renderpass-stack--implementation-details).
 
 ---
 
 ## 9. Materials and Shaders
 
-A **Shader** is a GPU program. A **Material** is a shader plus a named set of parameter values (uniforms). Materials let multiple objects share the same shader program with different visual properties.
+A **`Shader`** is a compiled GPU program built from a single `.glsl` file containing every stage; a
+**`Material`** is that shader plus a named cache of uniform values. The split lets many objects
+share one compiled program and still look different. `Shader::Create` is the engine's one factory
+that returns **`nullptr`** on failure — it does not resolve VFS paths either, so route shader loads
+through `AssetLibrary::GetShader`, which resolves, caches by normalised path, and deliberately does
+not cache failures.
 
-### Loading a Shader
+`Material::Set` takes floats, `vec2`/`vec3`/`vec4` and textures, and **validates nothing**: a name
+the shader does not declare resolves to location `-1` at upload and is dropped in silence. That
+permissiveness is what lets one material feed a shader and its instancing and skinned twins, and it
+is also why a mistyped uniform name fails without a single log line. Getters have asymmetric
+defaults worth remembering — `GetVector4` returns opaque white on a miss, on purpose, so a missing
+tint brightens rather than erases; every other getter returns zero or null.
 
-Always resolve paths through the VFS before passing them to `Shader::Create`:
+The rule that catches people is **when** values are uploaded. `Renderer3D` captures the material *by
+reference* and reads its values at flush, so mutating one material between two draws gives both
+draws the last value rather than per-draw variation — `Material::Clone` per variant is the supported
+answer, spelled out with migration examples in
+[`docs/guide/rendering-3d.md`](docs/guide/rendering-3d.md#the-one-rule-that-breaks-migrated-code-material-values-are-read-at-flush).
+`Renderer2D` is a partial exception: `u_Color` and `u_Texture` are read at submit and baked into
+vertex data, while the rest of the cache uploads once at flush.
 
-```cpp
-std::string path   = Cosmic::FileSystem::Resolve("project://shaders/MyShader.glsl");
-Ref<Cosmic::Shader> shader = Cosmic::Shader::Create(path);
-// Shader::Create returns nullptr on compilation or link failure — always null-check before use.
-if (!shader) { CS_ERROR("Failed to load shader: {}", path); return; }
-```
-
-### Creating and Configuring a Material
-
-```cpp
-Ref<Cosmic::Material> material = Cosmic::Material::Create(shader, "MyMaterial");
-
-// Set uniforms into the material's cache
-material->Set("u_Color",    glm::vec4(1.f, 0.5f, 0.2f, 1.f));
-material->Set("u_Roughness", 0.4f);
-material->Set("u_Offset",   glm::vec2(0.1f, 0.0f));
-
-// Bind a texture
-Ref<Cosmic::Texture2D> tex = Cosmic::Texture2D::Create("assets/noise.png");
-material->Set("u_NoiseTex", tex);
-```
-
-### Reading Cached Uniform Values
-
-```cpp
-float         roughness = material->GetFloat("u_Roughness");
-glm::vec2     offset    = material->GetVector2("u_Offset");
-glm::vec4     color     = material->GetVector4("u_Color"); // missing key returns glm::vec4(1.0f) — opaque white, not zero
-Ref<Cosmic::Texture2D> tex = material->GetTexture("u_NoiseTex");
-
-// Check presence before reading
-if (material->HasFloat("u_Roughness"))  { ... }
-if (material->HasFloat2("u_Offset"))    { ... }
-if (material->HasFloat3("u_Dir"))       { ... }
-if (material->HasFloat4("u_Color"))     { ... }
-if (material->HasTexture("u_NoiseTex")) { ... }
-```
-
-### Cloning a Material
-
-`Clone` deep-copies all cached uniform values into a new material instance. Both materials share the same compiled `Ref<Shader>` — the shader is not duplicated:
-
-```cpp
-Ref<Cosmic::Material> clone = Cosmic::Material::Clone(material, "MyMaterial_Red");
-clone->Set("u_Color", glm::vec4(1.f, 0.f, 0.f, 1.f)); // independent from source
-```
-
-### Updating Material Uniforms Per Frame
-
-```cpp
-void MyLayer::OnUpdate(float ts)
-{
-    material->Set("u_Time",  GetLocalTime());
-    material->Set("u_Color", m_CurrentColor);
-
-    Cosmic::Renderer2D::BeginScene(m_Camera.GetCamera());
-    Cosmic::Renderer2D::DrawQuad({0.f, 0.f, 0.f}, {2.f, 2.f}, material);
-    Cosmic::Renderer2D::EndScene();
-}
-```
+**→ Full chapter:
+[`docs/guide/materials-and-shaders.md`](docs/guide/materials-and-shaders.md)** — loading, the three
+bind verbs (`Bind` / `BindFull` / `BindFullTo`) and when each is right, `Clone` and the
+render-queue hints, `.cmat` assets, per-submesh material slots, and framebuffers.
 
 ---
 
 ## 10. The Shader Contract
 
-Understanding how the shader preprocessor works lets you write shaders that compile predictably every time.
+What reaches the GLSL compiler is not what you wrote. `OpenGLShader::PreProcess` splits a file at
+`#type` directives (`vertex`, `fragment`/`pixel`, `compute`), then rewrites each stage before
+compiling it. A file with a fragment block but no vertex block gets a generated batch-layout vertex
+shader; a file with no `#type` at all but containing `mainImage` or `iTime` is wrapped as a
+Shadertoy-style fragment shader with `iTime` and `iResolution` aliased. Anything else is a hard
+error and `Shader::Create` returns `nullptr` — with the **fully preprocessed, line-numbered source
+dumped to the log**, which is what you want to read, because GLSL's line numbers refer to that text
+and not to your file.
 
-### The Three Processing Paths
+Three engine uniforms are injected per stage when a stage mentions one without declaring it:
+`u_ViewProjection` (**vertex stage only**), `u_Time`, and `u_ViewportSize`, each triggered by a small
+set of compatibility spellings. A fragment stage additionally gets `v_TexCoord`, `v_Color` and a
+location-0 output injected if it declares none. Comments are stripped from a working copy before
+that scan, so a commented-out declaration does *not* suppress injection — it produces a duplicate.
+Declaring the uniform explicitly opts out cleanly, and is the habit to build.
 
-When `Shader::Create(filepath)` is called, the preprocessor reads the file and routes it down one of three paths:
+Two things the contract does **not** give you. There is **no `#include`, import or snippet system** —
+no shader in the tree uses one, and shared GLSL is duplicated today. And **nothing feeds `u_Time`
+for a client material**: the preprocessor declares it and four engine subsystems set it on their own
+shaders, but there is no global upload, so a shader that reads `u_Time` needs
+`material->Set("u_Time", GetLocalTime())`. What *is* wired for you is `u_Textures[]` — the sampler
+index array is uploaded automatically at link time.
 
-**Path 1 — Full multi-stage file**
+Any shader drawing batched 2D geometry must match `Renderer2D`'s vertex attribute layout exactly
+(`a_Position`, `a_Color`, `a_TexCoord`, `a_TexIndex`, `a_TilingFactor` at locations 0–4). Those
+pointers are configured once at engine init and never change, so a mismatch misreads vertex data
+with no runtime error at all.
 
-The file contains at least one `#type vertex` and one `#type fragment` directive. The preprocessor splits at these boundaries, handles each block independently, and injects any missing engine uniforms per-stage. This is the correct path for every shader you write from scratch.
-
-**Path 2 — Fragment-only file**
-
-The file contains `#type fragment` but no `#type vertex`. A complete boilerplate vertex shader is generated and prepended automatically. Your fragment block is compiled with the same uniform injection rules. Use this for quick fragment-stage experiments where you're comfortable with the standard vertex pass-through.
-
-The auto-generated vertex shader provides these varyings to your fragment stage:
-
-```glsl
-out vec4 v_Color;
-out vec2 v_TexCoord;
-```
-
-**Path 3 — Shadertoy-style file**
-
-The file contains no `#type` directives but has `mainImage` or `iTime` in the source. A full vertex shader is generated and your source is wrapped in a fragment stage with these compatibility aliases injected:
-
-```glsl
-#define iTime       u_Time
-#define iResolution vec3(u_ViewportSize, 1.0)
-```
-
-`iMouse` is **not** injected. If your Shadertoy shader uses it, declare `uniform vec4 iMouse = vec4(0.0);` yourself.
-
-If the file has no `#type` tags and no Shadertoy signatures, the preprocessor logs a critical error and `Shader::Create` returns `nullptr`.
-
-### Auto-Injected Uniforms
-
-Three engine uniforms are candidates for injection, evaluated per-stage. Injection only fires when a uniform is referenced in a stage's source but not already declared in it:
-
-| Uniform            | Type    | Trigger Keywords                                                | Stage       |
-| ------------------ | ------- | --------------------------------------------------------------- | ----------- |
-| `u_ViewProjection` | `mat4`  | `u_ViewProjection`                                              | Vertex only |
-| `u_Time`           | `float` | `u_Time`, `iTime`, `TIME`, `_Time`                              | Any stage   |
-| `u_ViewportSize`   | `vec2`  | `u_ViewportSize`, `iResolution`, `BUFFER_SIZE`, `_ScreenParams` | Any stage   |
-
-**To bypass injection entirely:** Declare the uniform explicitly in your source. The preprocessor sees the `uniform` keyword on that line and skips injection. Your source is compiled verbatim after the `#type` split.
-
-**Comment safety:** Block comments (`/* */`) and line comments (`//`) are stripped from a working copy before the scan. A commented-out declaration does **not** count as a declaration — the preprocessor will still inject a live one if the name appears in live code.
-
-### The Canonical Boilerplate
-
-Copy this as the starting point for any new shader. It declares everything explicitly and matches the `Renderer2D` batch vertex attribute layout:
-
-```glsl
-#type vertex
-#version 450 core
-
-// Renderer2D batch layout — do not reorder or rename.
-// The VAO attribute pointers are fixed at engine init time.
-layout(location = 0) in vec3  a_Position;
-layout(location = 1) in vec4  a_Color;
-layout(location = 2) in vec2  a_TexCoord;
-layout(location = 3) in float a_TexIndex;
-layout(location = 4) in float a_TilingFactor;
-
-uniform mat4 u_ViewProjection; // declared explicitly — no injection
-
-out vec4  v_Color;
-out vec2  v_TexCoord;
-out float v_TexIndex;
-out float v_TilingFactor;
-
-void main()
-{
-    v_Color        = a_Color;
-    v_TexCoord     = a_TexCoord;
-    v_TexIndex     = a_TexIndex;
-    v_TilingFactor = a_TilingFactor;
-    gl_Position    = u_ViewProjection * vec4(a_Position, 1.0);
-}
-
-
-#type fragment
-#version 450 core
-
-layout(location = 0) out vec4 color;
-
-in vec4  v_Color;
-in vec2  v_TexCoord;
-in float v_TexIndex;
-in float v_TilingFactor;
-
-// Declare every engine uniform you use — preprocessor skips injection for these.
-uniform float       u_Time;
-uniform vec2        u_ViewportSize;
-uniform vec4        u_Color;
-
-// Required if you sample textures routed through the Renderer2D batch system.
-uniform sampler2D u_Textures[32];
-
-void main()
-{
-    color = texture(u_Textures[int(v_TexIndex)], v_TexCoord * v_TilingFactor) * v_Color * u_Color;
-}
-```
-
-### Vertex Attribute Layout Contract
-
-Any shader rendering geometry through `Renderer2D` must match the layout above exactly. The VAO attribute pointers are configured once at engine init and never change. If your vertex shader uses different locations or types, vertex data will be silently misread — there is no runtime error.
+**→ Full chapter:
+[`docs/guide/materials-and-shaders.md`](docs/guide/materials-and-shaders.md)** — the three routing
+paths, the injection table with every trigger keyword, the canonical boilerplate, and compute
+shaders. Internals live in [§37](#37-shader-preprocessing-system).
 
 ---
 
 ## 11. Sprite Sheets and SubTexture2D
 
-`SubTexture2D` extracts a UV-bounded tile from a parent texture atlas, allowing you to draw individual sprites from a single sprite sheet without creating separate texture objects per tile.
+`SubTexture2D` is a UV rectangle plus a reference to a parent atlas. It creates **no GPU object**,
+which is the whole point: every tile cut from one sheet shares one texture and therefore one batch
+slot, so a tilemap drawn from a single atlas costs one draw call rather than one per tile.
 
-### Creating SubTextures from a Grid Atlas
+`SubTexture2D::CreateFromCoords(texture, coords, cellSize, spriteSize)` cuts a tile from a regular
+grid. `coords` is `(column, row)` indexed **from the bottom-left** — GL's texture origin, not an
+image editor's — and `spriteSize` (default `{1,1}`) spans multiple cells for a larger sprite. The
+coordinates are floats, so fractional offsets are legal. If you already have normalised UVs, the
+constructor is public and takes `min`/`max` directly. `GetTexCoords()` hands back the four corners
+counter-clockwise from bottom-left, matching the quad winding, which is why a sub-texture quad needs
+no extra transform.
 
-```cpp
-Ref<Cosmic::Texture2D> atlas = Cosmic::Texture2D::Create("assets/sprites/sheet.png");
+Every `DrawQuad`/`DrawRotatedQuad` position/rotation form accepts a `Ref<SubTexture2D>` with an
+optional tint. There is deliberately **no tiling factor** on this path — tiling an atlas tile would
+bleed into its neighbours. One sharp edge: unlike the plain-texture overload, which warns and falls
+back to white on a null `Ref`, the sub-texture overloads dereference immediately.
 
-// CreateFromCoords(texture, gridCoords, cellSizePixels, spriteSizeInCells = {1,1})
-// gridCoords = (column, row) zero-indexed from bottom-left
-Ref<Cosmic::SubTexture2D> tile  = Cosmic::SubTexture2D::CreateFromCoords(atlas, {2, 0}, {64, 64});
-Ref<Cosmic::SubTexture2D> big   = Cosmic::SubTexture2D::CreateFromCoords(atlas, {4, 1}, {64, 64}, {2, 2}); // 2×2 tile
-```
-
-**UV math performed by `CreateFromCoords`:**
-
-```
-min.x = (coords.x * cellSize.x) / textureWidth
-min.y = (coords.y * cellSize.y) / textureHeight
-max.x = ((coords.x + spriteSize.x) * cellSize.x) / textureWidth
-max.y = ((coords.y + spriteSize.y) * cellSize.y) / textureHeight
-```
-
-### Creating SubTextures from Raw UV Coordinates
-
-If you already know the normalized UV bounds:
-
-```cpp
-// SubTexture2D(texture, min, max) — both in normalized [0,1] texture space
-Ref<Cosmic::SubTexture2D> tile = Cosmic::CreateRef<Cosmic::SubTexture2D>(atlas, glm::vec2{0.0f, 0.0f}, glm::vec2{0.25f, 0.25f});
-```
-
-### Drawing SubTextures
-
-```cpp
-// vec3 overloads
-Cosmic::Renderer2D::DrawQuad({0.f, 0.f, 0.f}, {1.f, 1.f}, tile);
-Cosmic::Renderer2D::DrawQuad({0.f, 0.f, 0.f}, {1.f, 1.f}, tile, {1.f, 1.f, 1.f, 1.f}); // tint
-
-// vec2 convenience
-Cosmic::Renderer2D::DrawQuad({0.f, 0.f}, {1.f, 1.f}, tile);
-
-// Rotated
-Cosmic::Renderer2D::DrawRotatedQuad({0.f, 0.f, 0.f}, {1.f, 1.f}, glm::radians(45.f), tile);
-Cosmic::Renderer2D::DrawRotatedQuad({0.f, 0.f},       {1.f, 1.f}, glm::radians(45.f), tile);
-```
-
-### SubTexture2D API
-
-| Function / Constructor | Parameters                                                          | Description                                                                        |
-| ---------------------- | ------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| `CreateFromCoords`     | `Ref<Texture2D>, vec2 coords, vec2 cellSize, vec2 spriteSize={1,1}` | Static factory. `coords` is (column, row) in grid units from the bottom-left.      |
-| `SubTexture2D`         | `Ref<Texture2D>, vec2 min, vec2 max`                                | Direct UV-range constructor. `min`/`max` in normalized [0,1] texture space.        |
-| `GetTexture()`         | —                                                                   | Returns `const Ref<Texture2D>&` — the parent atlas.                                |
-| `GetTexCoords()`       | —                                                                   | Returns `const glm::vec2*` — pointer to the 4-element UV corner array (CCW order). |
-
-**UV corner order** (counter-clockwise, matching stb_image vertical flip):
-
-| Index | Corner       |
-| ----- | ------------ |
-| 0     | Bottom-Left  |
-| 1     | Bottom-Right |
-| 2     | Top-Right    |
-| 3     | Top-Left     |
+**→ Full chapter: [`docs/guide/rendering-2d.md`](docs/guide/rendering-2d.md#draw-a-sprite-from-a-sprite-sheet)**
+— the UV maths, the per-frame-versus-cached trade-off, and a worked animation example. For the
+component-driven path — `SpriteRendererComponent`, flipbook animation, tilemaps, 2D lights and the
+2D camera rig — see
+**[`docs/guide/sprites-and-tilemaps.md`](docs/guide/sprites-and-tilemaps.md)**.
 
 ---
 
 ## 12. SDF Circles
 
-`DrawCircle` uses a Signed Distance Field approach to render resolution-independent circles with configurable thickness and anti-aliased edges. The geometry is a quad; the circle is computed in the fragment shader.
+`Renderer2D::DrawCircle` rasterises a quad and evaluates a signed distance field in the fragment
+shader, so the edge stays smooth at any camera zoom instead of degrading into a polygon fan. Circles
+have their own batch, separate from quads, and their own shader (`Circle.glsl`).
 
-```cpp
-// Solid disk (thickness = 1.0 = full fill)
-Cosmic::Renderer2D::DrawCircle(
-    {0.f, 0.f, 0.f},           // position (vec3)
-    {2.f, 2.f},                 // size (world units — controls the bounding quad)
-    {0.2f, 0.8f, 1.f, 1.f},    // color (RGBA)
-    1.0f,                       // thickness (1.0 = solid disk)
-    0.005f                      // fade (AA edge softness)
-);
+`size` is the **bounding quad's** full width and height, so a circle of world radius `r` needs
+`{ 2r, 2r }` — and a non-uniform size gives an ellipse. `thickness` is the ring wall as a fraction
+of the radius, `1.0` meaning a filled disc and small values a thin ring; `fade` is the anti-aliased
+edge width, `0.005` reading crisp and larger values reading as glow. Note the asymmetry between the
+overloads: `thickness` and `fade` have defaults only on the `vec2` form, and the `vec3` form
+requires both.
 
-// Hollow ring
-Cosmic::Renderer2D::DrawCircle(
-    {0.f, 0.f, 0.f},
-    {2.f, 2.f},
-    {1.f, 0.5f, 0.f, 0.9f},
-    0.05f,                      // thickness < 1.0 = ring; 0.05 = thin wall
-    0.005f
-);
+Both forms take an optional `Ref<Shader>` that replaces the built-in SDF shader for that call. The
+renderer tracks the active circle shader and **breaks the batch whenever it changes**, so
+alternating two custom shaders costs one draw call per circle; a null shader — including a `Ref`
+dropped during a hot reload — falls back to the engine default rather than crashing.
 
-// vec2 overload (z = 0 inserted automatically) — thickness and fade have defaults
-Cosmic::Renderer2D::DrawCircle({0.f, 2.f}, {1.f, 1.f}, {1.f, 1.f, 1.f, 1.f});
-// equivalent to thickness=1.0, fade=0.005
-```
-
-### Thickness and Fade Reference
-
-| `thickness` | Visual result                          |
-| ----------- | -------------------------------------- |
-| `1.0`       | Solid filled disk                      |
-| `0.5`       | Half-thickness ring (50% outer radius) |
-| `0.1`       | Narrow ring                            |
-| `0.01`      | Very thin ring / orbit indicator       |
-
-| `fade`  | Visual result                      |
-| ------- | ---------------------------------- |
-| `0.005` | Default — crisp, anti-aliased edge |
-| `0.05`  | Soft glow edge                     |
-| `0.2`   | Very blurry / neon glow effect     |
-
-### Custom Circle Shader
-
-All `DrawCircle` overloads accept an optional `Ref<Shader>` override parameter. Pass a custom shader to replace the built-in SDF circle shader for that draw call:
-
-```cpp
-Cosmic::Renderer2D::DrawCircle(
-    {0.f, 0.f, 0.f}, {2.f, 2.f}, {1.f, 1.f, 1.f, 1.f},
-    1.0f, 0.005f,
-    myCustomCircleShader  // optional — nullptr uses the built-in
-);
-```
+**→ Full chapter:
+[`docs/guide/rendering-2d.md`](docs/guide/rendering-2d.md#draw-circles-and-rings)** — the parameter
+reference, the batch limit and its flush behaviour, and the instanced circle path for large counts.
 
 ---
 
 ## 13. Instanced Rendering
 
-For large numbers of identical-geometry objects (particles, grids, crowds), Cosmic provides two instanced draw paths that submit all data in a single GPU draw call. These are more efficient than batched `DrawQuad`/`DrawCircle` calls when the count exceeds a few hundred objects.
+`DrawInstancedQuads` and `DrawInstancedCircles` bypass batching entirely: you fill a flat array of
+plain structs, the renderer streams it into a per-instance vertex buffer, and one
+`glDrawElementsInstanced` draws all of it. `InstanceQuadData` is exactly 60 bytes — `static_assert`ed
+against `QuadInstance.glsl`'s attribute stride — and carries position, scale, colour, a UV rect for
+atlas tiles, a texture slot index and a tiling factor. `InstanceCircleData` is 44 bytes: position,
+scale, colour, thickness, fade. Both calls are safe at any count; they stream in 20,000-instance
+chunks and issue one draw per chunk.
 
-### Instanced Quads
+They are **not** a draw-call rescue for a few thousand sprites — the batcher already collapses those
+into one call. Instancing wins when the data is already in an array (no per-object call, no vertex
+expansion), when you need per-instance shader attributes a batched quad cannot express, or when
+counts run into the tens of thousands. It loses at small counts, because both entry points call an
+unconditional flush up front for pipeline isolation: fifty instances flush everything pending and
+then add a draw call of their own. It also loses when you need per-object textures — the instanced
+path binds only the white texture to slot 0, so any non-zero `TexIndex` samples whatever a previous
+batch left bound unless you bind it yourself.
 
-```cpp
-// Build the instance array (typically in OnUpdate or a compute step)
-std::vector<Cosmic::Renderer2D::InstanceQuadData> instances;
-instances.reserve(count);
-
-for (int i = 0; i < count; ++i)
-{
-    Cosmic::Renderer2D::InstanceQuadData inst;
-    inst.Position      = { x, y, 0.f };   // world-space centre
-    inst.Scale         = { 0.1f, 0.1f };  // full width and height
-    inst.Color         = { r, g, b, 1.f };
-    inst.TexCoordOffset = { 0.f, 0.f };   // {0,0} for solid color
-    inst.TexCoordScale  = { 1.f, 1.f };   // {1,1} for solid color
-    inst.TexIndex      = 0.f;             // 0 = white texture fallback
-    inst.TilingFactor  = 1.f;
-    instances.push_back(inst);
-}
-
-// Single GPU draw call for the entire array
-Cosmic::Renderer2D::DrawInstancedQuads(instances.data(), (uint32_t)instances.size());
-
-// Optional custom shader
-Cosmic::Renderer2D::DrawInstancedQuads(instances.data(), (uint32_t)instances.size(), myShader);
-```
-
-`InstanceQuadData` is exactly 60 bytes (15 floats), matching the attribute stride in `QuadInstance.glsl`. Call `DrawInstancedQuads` inside a `BeginScene`/`EndScene` block — it flushes any pending batched geometry before submitting the instanced draw.
-
-### Instanced Circles
-
-```cpp
-std::vector<Cosmic::Renderer2D::InstanceCircleData> circles;
-circles.reserve(count);
-
-for (int i = 0; i < count; ++i)
-{
-    Cosmic::Renderer2D::InstanceCircleData c;
-    c.Position  = { x, y, 0.f };
-    c.Scale     = { radius * 2.f, radius * 2.f };
-    c.Color     = { r, g, b, 1.f };
-    c.Thickness = 1.0f;
-    c.Fade      = 0.005f;
-    circles.push_back(c);
-}
-
-Cosmic::Renderer2D::DrawInstancedCircles(circles.data(), (uint32_t)circles.size());
-Cosmic::Renderer2D::DrawInstancedCircles(circles.data(), (uint32_t)circles.size(), myShader);
-```
+**→ Full chapter:
+[`docs/guide/rendering-2d.md`](docs/guide/rendering-2d.md#draw-thousands-of-things-at-once)** — the
+full struct layouts, a worked example from the template project's benchmark layer, and the
+when-it-wins/when-it-loses breakdown.
 
 ---
 
 ## 14. RenderPass and Multi-Camera Rendering
 
-`RenderPass` is an RAII scoping mechanism for isolated camera contexts. On construction it flushes any pending geometry and pushes a new viewport/VP-matrix pair onto `Renderer2D`'s internal stack. On destruction it flushes remaining geometry and pops the stack, restoring the prior pass state.
+`Renderer2D` keeps one view-projection matrix and one viewport at a time, so two cameras drawing in
+the same frame would overwrite each other's state. `RenderPass` is the RAII fix: construction
+flushes anything pending and pushes a new matrix + viewport pair onto an internal stack; destruction
+flushes and pops, restoring the previous pass. Scope one per camera and any number of cameras render
+sequentially — a world view, a minimap, a rear-view inset — with no manual state tracking.
 
-### Simple Sequential Multi-Camera
+The constructor takes **any `Camera`**, 2D or 3D, since only `GetViewProjectionMatrix()` is read.
+Viewport bounds are `{ x, y, width, height }` in pixels from the **bottom-left**, the GL convention.
+Targeting a framebuffer is just a matter of binding one around the scope. `RenderPass` is
+non-copyable and non-movable by design, so one scope owns one stack entry, and every push resets
+every batch counter, so geometry can never leak across a pass boundary.
 
-```cpp
-void MyLayer::OnUpdate(float ts)
-{
-    // Pass 1: main world view — full window
-    {
-        Cosmic::RenderPass mainPass(m_MainCamera.GetCamera(), {0, 0, 1280, 720});
-        Cosmic::Renderer2D::DrawQuad(...);
-        // ... more draw calls ...
-    } // ← auto-flushes and restores on scope exit
+`Renderer2D::PushRenderPass` / `PopRenderPass` are available for manual control — which is what
+`Scene::OnRenderSprites` uses, having a matrix but no `Camera` object. Prefer the RAII wrapper in
+ordinary code: a mismatched pop is `pop_back()` on an empty stack, and the assertion that would
+catch it is compiled out in every configuration.
 
-    // Pass 2: minimap — a small corner region
-    {
-        Cosmic::RenderPass minimapPass(m_OverviewCamera.GetCamera(), {900, 500, 380, 220});
-        Cosmic::Renderer2D::DrawQuad(...);
-    }
-}
-```
-
-### With an Explicit Framebuffer Target
-
-```cpp
-m_SideFramebuffer->Bind();
-{
-    Cosmic::RenderPass sidePass(m_SideCamera.GetCamera(), {0, 0, fboW, fboH});
-    Cosmic::Renderer2D::DrawQuad(...);
-} // flushes to m_SideFramebuffer
-m_SideFramebuffer->Unbind();
-```
-
-### Rules
-
-- `RenderPass` is **non-copyable and non-movable**. Each instance must be owned by exactly one scope.
-- Do not nest two `RenderPass` instances targeting the same viewport bounds.
-- The viewport bounds `vec4` is `{x_offset, y_offset, width, height}` in pixels, measured from the **bottom-left** (OpenGL convention).
-- You can also call `Renderer2D::PushRenderPass` / `PopRenderPass` directly if you need manual control.
-
-**Viewport bounds convention for a 1280×720 window split into quadrants:**
-
-| Quadrant     | Bounds `{x, y, w, h}`  |
-| ------------ | ---------------------- |
-| Top-left     | `{0, 360, 640, 360}`   |
-| Top-right    | `{640, 360, 640, 360}` |
-| Bottom-left  | `{0, 0, 640, 360}`     |
-| Bottom-right | `{640, 0, 640, 360}`   |
+**→ Full chapter:
+[`docs/guide/rendering-2d.md`](docs/guide/rendering-2d.md#render-more-than-one-camera)** — worked
+multi-camera and render-to-framebuffer examples, the quadrant bounds table, and how passes interact
+with batch flushing. Internals live in [§38](#38-renderpass-stack--implementation-details).
 
 ---
 
 ## 15. Entity Component System
 
-Cosmic uses [EnTT](https://github.com/skypjack/entt) for its ECS. Entities are lightweight handles wrapping an `entt::entity` integer and a pointer to their owning `Scene`. Components are plain structs with no required base class. The `Scene` owns the registry and is the factory for creating entities.
+> **Full chapter: [`docs/guide/entities-and-components.md`](docs/guide/entities-and-components.md)** —
+> the entity handle, the **complete catalogue of all 34 built-in components** (fields, units,
+> defaults and which pass reads each one), hierarchy, the `Active`/`Enabled` gates, queries,
+> the `System` tier, and what the engine draws automatically.
 
-### Creating Entities
+A scene is a table: an **entity** is a row with no columns of its own, a **component type** is a
+column that exists only for the rows that opted into it. Cosmic uses
+[EnTT](https://github.com/skypjack/entt) underneath. `Cosmic::Entity` is a 16-byte value type — an
+`entt::entity` integer plus a `Scene*` — with `AddComponent` / `GetOrAddComponent` / `GetComponent` /
+`HasComponent` / `RemoveComponent` forwarding into the scene's registry. `Scene` owns the registry
+and is the only correct factory: `CreateEntity` emplaces an `IDComponent` (a fresh UUID), a
+`TransformComponent` and a `TagComponent`, and indexes the UUID so hierarchy and prefab references
+can resolve it later.
 
-```cpp
-Ref<Cosmic::Scene> m_Scene = Cosmic::Scene::Create();
+The reason the catalogue matters more than the API is that **most of the engine is driven by
+components you never call into**. Attach a `PointLightComponent` and the 3D pass lights with it;
+attach a `TerrainComponent` with a recipe and the render path builds the terrain on first use;
+attach a `RigidBodyComponent` and a collider and a Jolt body appears when Play starts. 19 components
+ship in every configuration — identity and transform, the 2D renderables, camera and environment,
+the scripts, and the whole dimension-agnostic physics tier — and 15 more exist only in the 3D build
+(meshes and LODs, skeletal animation, the 3D lights, terrain/water/particles/voxels, the two
+geometry-derived colliders, navigation). A 2D build cannot even name the second group; scenes that
+contain them survive a round-trip regardless, because unregistered component blocks are preserved
+verbatim.
 
-// CreateEntity always auto-adds TransformComponent and TagComponent
-Cosmic::Entity player = m_Scene->CreateEntity("Player");
-Cosmic::Entity enemy  = m_Scene->CreateEntity("Enemy");
-Cosmic::Entity bullet = m_Scene->CreateEntity(); // tag defaults to "GenericEntity"
-```
+Two independent switches turn things off: the per-entity `TagComponent::Active` flag, which
+`Scene::IsActiveInHierarchy` combines with every ancestor's and which suppresses rendering, physics
+baking and script ticks for a whole subtree; and per-component `Enabled` flags that disable one
+feature in place. Hierarchy is opt-in via `RelationshipComponent` (UUID-based, cycle-refusing,
+composed by `Scene::GetWorldTransform`) — and note that the 2D sprite and tilemap passes
+deliberately use the raw transform rather than the composed one.
 
-### Adding and Reading Components
-
-```cpp
-// AddComponent constructs in-place — asserts if the component already exists
-auto& sprite = player.AddComponent<Cosmic::SpriteRendererComponent>(myMaterial);
-auto& body   = player.AddComponent<MyRigidBodyComponent>(1.0f, 0.3f);
-
-// GetComponent returns a mutable reference — asserts if the component is absent
-auto& transform = player.GetComponent<Cosmic::TransformComponent>();
-transform.Position   = { 2.0f, 0.5f, 0.0f };
-transform.Rotation.z = 45.0f;   // Z-axis rotation in DEGREES
-transform.Scale      = { 1.0f, 1.0f };
-
-// Check before access when existence is uncertain
-if (player.HasComponent<MyRigidBodyComponent>())
-{
-    auto& rb = player.GetComponent<MyRigidBodyComponent>();
-    rb.Velocity = { 3.0f, 0.0f };
-}
-
-// Remove a component
-player.RemoveComponent<MyRigidBodyComponent>();
-
-// Entity handle boolean — true when the handle is valid, scene-bound, and the
-// underlying registry slot is still alive. Returns false after DestroyEntity.
-if (player) { /* handle is valid */ }
-```
-
-> **Dangling-handle warning:** `Entity` is a lightweight value type. Any copy of a handle held after `Scene::DestroyEntity(e)` becomes invalid — `operator bool` returns `false` and all `GetComponent`/`HasComponent` calls will assert. Always discard `Entity` handles after calling `DestroyEntity`, and do not cache handles across frames without re-validating with `if (handle)` each frame.
-
-### Built-in Components
-
-**`TransformComponent`**
-
-```cpp
-struct TransformComponent {
-    glm::vec3 Position { 0.f, 0.f, 0.f };
-    glm::vec3 Rotation { 0.f, 0.f, 0.f }; // Z = 2D roll rotation in DEGREES
-    glm::vec2 Scale    { 1.f, 1.f };
-
-    glm::mat4 GetTransform() const; // full TRS matrix for shader upload
-};
-```
-
-**`SpriteRendererComponent`**
-
-```cpp
-struct SpriteRendererComponent {
-    Ref<Material> ActiveMaterial;                   // shader-driven rendering
-    glm::vec4     Color { 1.f, 1.f, 1.f, 1.f };   // flat-color fallback / tint
-    bool FlipX = false;
-    bool FlipY = false;
-};
-```
-
-**`TagComponent`**
-
-```cpp
-struct TagComponent { std::string Tag; };
-```
-
-### Querying Entities
-
-Use `Scene::View<Components...>()` to iterate entities that have all the listed component types:
-
-```cpp
-// Iterate all entities with both TransformComponent and SpriteRendererComponent
-for (auto [entity, transform, sprite] : m_Scene->View<Cosmic::TransformComponent, Cosmic::SpriteRendererComponent>().each())
-{
-    transform.Position.x += speed * ts;
-}
-```
-
-### Registering Custom Components Across DLL Boundaries
-
-EnTT normally assigns type IDs using sequential static counters. Across a DLL boundary the engine and the client DLL have separate data segments, so the same component type can get different IDs on each side — breaking component storage. The `CS_REGISTER_COMPONENT` macro fixes this by forcing a stable compile-time string hash:
-
-```cpp
-// In your component header file — once per component type
-#include <scene/ComponentRegistry.h>
-
-struct MyPhysicsBody { ... };
-
-CS_REGISTER_COMPONENT(Workspace::MyPhysicsBody)
-```
-
-Omitting this macro for any component type that crosses the DLL boundary will cause silent data corruption. Built-in engine components (`TagComponent`, `TransformComponent`, `SpriteRendererComponent`) are already registered in `Components.h`.
+Custom components are plain structs. Any component type that crosses the project-DLL boundary
+**must** carry `CS_REGISTER_COMPONENT(Type)` at global scope in its header — EnTT's default
+sequential type ids differ between the engine's data segment and yours, which silently corrupts
+component storage. Reflecting the type additionally buys an Inspector row per field, `.cscene`
+round-tripping and undo/redo. Both are covered in the chapter, along with `System` /
+`ParallelSystem` / `SystemQuery` and the automatic-draw contract.
 
 ---
 
 ## 16. Camera System
 
-### OrthographicCameraController
+> **Overview.** Full chapter: [`docs/guide/cameras.md`](docs/guide/cameras.md).
 
-`OrthographicCameraController` is the high-level camera wrapper. It handles WASD panning, smooth scroll-wheel zoom interpolation, and aspect-ratio correction on window resize.
+`Camera` is a pure interface with four getters — view, projection, view-projection, position — and
+no data of its own. `Renderer2D::BeginScene`, `Renderer3D::BeginScene` and `RenderPass` all take
+`const Camera&` and call only those four, so any camera works anywhere, including one you write
+yourself. Two concrete cameras implement it: `OrthographicCamera` (bounds, Z-rotation, an optional
+explicit depth range) and `PerspectiveCamera` (vertical FOV, aspect, near/far, a quaternion pose,
+and `LookAt`). Both cache their matrices; the getters just expose the cache.
 
-```cpp
-// Construction
-Cosmic::OrthographicCameraController m_Camera { 1280.f / 720.f };           // no rotation
-Cosmic::OrthographicCameraController m_Camera { 1280.f / 720.f, true };     // enable Q/E rotation
+On top sit four **controllers**, each owning a camera plus its input handling.
+`Camera2DController` is the modern 2D rig — MMB pan, scroll zoom-about-cursor, a `Focus` point and
+a `Zoom` half-height, with pure `ScreenToWorld` / `PanBy` / `ZoomAboutPoint` statics.
+`OrthographicCameraController` is the original keyboard rig: WASD pan scaled by zoom, smooth
+scroll-wheel zoom, remappable bindings, optional Q/E roll. `OrbitCameraController` rides a
+spherical mount around a target and is the editor camera — two binding schemes (`NavStyle::Classic`
+and SolidWorks-style `NavStyle::CAD` with orbit-about-cursor and zoom-toward-cursor), seven
+`ViewPreset` snap views, and animated `FrameBounds` / `FrameSphere`. `FlyCameraController` flies the
+camera itself: RMB mouse-look, WASD/QE movement, Shift boost, scroll-to-change-speed, and an
+optional ground clamp. All four share one contract — poll in `OnUpdate(ts)`, dispatch in
+`OnEvent(e)`, never consume an event, and take absolute mouse positions in
+`Input::GetMouseScreenPosition()` space.
 
-// Per-frame update (must be called from OnUpdate)
-m_Camera.OnUpdate(ts);
+Around the cameras sits the viewport-navigation tier. `NavigationCube` renders an orientation cube
+into its own framebuffer and turns a click on a face into a `ViewPreset`. `ScenePicker` turns a
+viewport pixel into the `Entity` under it by reading the entity-ID MRT attachment that
+`Scene::OnRender3D` already writes — x from the left, y from the top, GL's flip handled internally —
+and can reconstruct the world point under the cursor, which is what feeds `OrbitCameraController`'s
+CAD pivot probe. `Gizmo` wraps vendored ImGuizmo behind engine-only enums for translate / rotate /
+scale / universal manipulation, with `IsUsing()` and `IsOver()` as the etiquette hooks a camera and
+a click-to-select path must both respect. **`NavigationCube` and `ScenePicker` are 3D-configuration
+only** (see [§1.6](#16-the-two-engine-configurations)); everything else, `Gizmo` included, ships in
+both.
 
-// Event forwarding (must be called from OnEvent)
-m_Camera.OnEvent(e);
-
-// Window resize (call from OnWindowResize handler)
-m_Camera.OnResize((float)e.GetWidth(), (float)e.GetHeight());
-
-// Pass to Renderer2D
-Cosmic::Renderer2D::BeginScene(m_Camera.GetCamera());
-
-// Get/set position
-const glm::vec3& pos = m_Camera.GetPosition();
-m_Camera.SetPosition({0.f, 0.f, 0.f});
-
-// Zoom
-// Two zoom methods — choose based on whether you want instant or animated:
-//   SetZoomLevel      — hard-snaps both current and target zoom instantly, no interpolation.
-//                       Use for initialization, teleports, or ImGui slider driven overrides.
-//   SetTargetZoomLevel — sets only the target; OnUpdate's asymptotic blend animates toward it.
-//                       Use when focusing on a game object or responding to a game event smoothly.
-float z = m_Camera.GetZoomLevel();
-m_Camera.SetZoomLevel(2.0f);           // hard snap — bypasses interpolation entirely
-m_Camera.SetTargetZoomLevel(2.0f);     // smooth animated zoom toward 2.0 over subsequent frames
-m_Camera.SetZoomLimits(0.25f, 10.0f); // clamp scroll range (these are the defaults)
-m_Camera.SetZoomSpeed(0.25f);          // world units per scroll tick (default)
-
-// Pan speed (scales with zoom so panning feels consistent at any zoom level)
-m_Camera.SetTranslationSpeed(5.0f);   // default
-m_Camera.GetTranslationSpeed();
-
-// Rotation (only active when rotation=true was passed to the constructor)
-m_Camera.SetRotationSpeed(180.0f);    // degrees per second (default)
-m_Camera.GetRotationSpeed();
-
-// Pan bounds
-m_Camera.SetPositionLimits(-50.f, 50.f, -30.f, 30.f); // minX, maxX, minY, maxY
-
-// Disable keyboard panning for scripted cameras / cutscenes
-m_Camera.SetManualMovementEnabled(false);
-m_Camera.IsManualMovementEnabled();
-
-// Custom key bindings
-Cosmic::OrthographicCameraController::CameraKeyBindings bindings;
-bindings.MoveLeft  = CS_KEY_LEFT;
-bindings.MoveRight = CS_KEY_RIGHT;
-bindings.MoveUp    = CS_KEY_UP;
-bindings.MoveDown  = CS_KEY_DOWN;
-m_Camera.SetKeyBindings(bindings);
-```
-
-### OrthographicCamera (Low-Level)
-
-If you need direct matrix control, bypass the controller and use `OrthographicCamera` directly:
-
-```cpp
-Cosmic::OrthographicCamera cam(-8.f, 8.f, -4.5f, 4.5f); // left, right, bottom, top
-
-cam.SetPosition({1.f, 0.f, 0.f});
-cam.SetRotation(45.f); // Z-axis rotation in degrees
-
-const glm::mat4& vp  = cam.GetViewProjectionMatrix();
-const glm::mat4& v   = cam.GetViewMatrix();
-const glm::mat4& p   = cam.GetProjectionMatrix();
-const glm::vec3& pos = cam.GetPosition();
-float rot            = cam.GetRotation();
-
-// Update frustum bounds (e.g. after resize)
-cam.SetProjection(-aspect, aspect, -1.f, 1.f);
-```
-
-> **Implementation note:** `UpdateViewMatrix` uses the closed-form inverse for a translate+rotate
-> transform (`transpose(R) * T(-pos)`) rather than `glm::inverse()`. For a pure Z-rotation camera,
-> `transpose(R) == inverse(R)` because rotation matrices have orthonormal columns. This eliminates
-> the general-purpose Cramer's rule path (~80 ops) in favour of roughly 10 multiplications,
-> called on every `SetPosition` / `SetRotation` mutation.
+The chapter covers all of it with worked examples — the per-controller tuning surfaces and their
+failure modes, the CAD navigation flow end to end, the picking coordinate contract, gizmo hotkeys
+and undo coalescing, and rendering from a scene `CameraComponent`.
 
 ---
 
 ## 17. Virtual File System
 
-`FileSystem` is a static utility that translates URI-style paths into physical disk paths. It keeps asset references independent of absolute disk locations.
+> **Overview.** Full chapter: [`docs/guide/assets-and-vfs.md`](docs/guide/assets-and-vfs.md).
 
-### Protocol Prefixes
+`FileSystem::Resolve` is a pure string transform — no disk I/O, no failure mode — that turns a
+URI-style path into a real one. Three schemes: `engine://x` → `assets/x` for engine-owned read-only
+content, `project://x` → your project's own content, and `user://x` → **the only writable root**,
+where logs, preferences, saves, recordings and screenshots belong. Anything with no recognised
+scheme comes back unchanged, which is what makes `Resolve` safe to call on an already-resolved
+path. Results are always forward-slashed and drop straight into `std::ifstream`, `Shader::Create`
+and `Texture2D::Create` — neither of which resolves VFS paths itself.
 
-| Prefix       | Resolves to                              | Use for                       |
-| ------------ | ---------------------------------------- | ----------------------------- |
-| `engine://`  | `assets/{path}`                          | Engine-owned shaders, sprites |
-| `project://` | `assets/projects/{activeProject}/{path}` | Your project's own assets     |
-| _(none)_     | Returned unchanged (raw path fallback)   | Absolute or already-resolved  |
+`project://` mounts two ways and the last setter wins. `SetActiveProject("Name")` is NAME mode, the
+in-tree `assets/projects/<name>/` layout that shipped plugin apps use; `SetActiveProjectPath(root)`
+is PATH mode, a self-contained project folder anywhere on disk, probing once at mount time for an
+`assets/` subdirectory. The mount state lives in the engine DLL, so there is exactly one active
+project per process — the old "resolve in your own DLL because the state is per-DLL" rule that
+several samples still teach was fixed in Phase 20 and no longer applies. Both setters are
+main-thread only.
 
-### Setting the Active Project
+`user://` is where the interesting behaviour is, and none of it existed when this section was first
+written. A **packaged** boot — one whose startup project came from a `boot.cfg` next to the exe —
+calls `FileSystem::SetAppIdentity`, and `user://` then isolates per app: `<exe>/user/` when the exe
+directory is writable or a `portable.txt` sits beside it, `%LOCALAPPDATA%/<AppName>/` when it is
+installed somewhere read-only. Boots without an identity (the Launcher, `--project`, a dedicated
+`COSMIC_STARTUP_PROJECT` exe) keep the historical shared root: `.` in a writable working directory,
+`%LOCALAPPDATA%/Cosmic/` otherwise. The root is decided **once, at first use**, so the identity has
+to be set before anything resolves `user://` — which is why it happens in `Runtime/Main.cpp` before
+`Application` is constructed. Every boot logs where it landed.
 
-Call this once in your root layer's constructor or `OnAttach`. It sets the `project://` prefix for all subsequent `Resolve` calls from this DLL:
-
-```cpp
-YourProject::YourProject() : Cosmic::Layer("YourProject")
-{
-    Cosmic::FileSystem::SetActiveProject("YourProject");
-}
-```
-
-The name must match the project subfolder under `assets/projects/`.
-
-### Resolving Paths
-
-```cpp
-std::string shaderPath = Cosmic::FileSystem::Resolve("project://shaders/Fire.glsl");
-// → "assets/projects/YourProject/shaders/Fire.glsl"
-
-std::string engineTex = Cosmic::FileSystem::Resolve("engine://textures/white.png");
-// → "assets/textures/white.png"
-
-auto shader  = Cosmic::Shader::Create(shaderPath);
-auto texture = Cosmic::Texture2D::Create(shaderPath); // same pattern
-```
-
-> **Path separator normalization:** `Resolve` uses `std::filesystem::path` internally and always returns forward-slash-separated paths on all platforms. Mixed separators in the suffix (e.g. `engine://shaders\\MyShader.glsl`) are normalized automatically. The result is accepted directly by `std::ifstream`, `Shader::Create`, and `Texture2D::Create`.
-
-> **Thread-safety:** `SetActiveProject` is not thread-safe. It must only be called from the main thread. No worker thread may call `Resolve` with a `project://` path concurrently with a `SetActiveProject` call. If background asset loading is introduced, guard both with a `shared_mutex`.
-
-### Log Directory Relocation
-
-The log system can be redirected into your project's asset folder at attach time:
-
-```cpp
-void YourProject::OnAttach()
-{
-    Cosmic::FileSystem::SetActiveProject("YourProject");
-    std::string logPath = Cosmic::FileSystem::Resolve("project://logs");
-    Cosmic::Log::SetLogDirectory(logPath);
-}
-
-void YourProject::OnDetach()
-{
-    // Restore engine default on exit
-    Cosmic::Log::SetLogDirectory("logs");
-}
-```
+The chapter covers all of that with resolved examples for dev-tree versus packaged layouts, plus
+everything stacked on top: the `AssetLibrary` cache and exactly what each verb does on a miss (the
+conventions differ on purpose — a failed texture is *cached* as a degraded object, a failed shader
+is not), model and texture import with the `.cmeta` unit sidecar, TOML configuration through
+`Config`, and the utility surface — `FileDialog`, `FileWatcher`, `ImageIO` and `DataExport`.
 
 ---
 
 ## 18. Framebuffer
 
-### Why Framebuffers Exist
+A framebuffer object is a GPU render target that behaves like a virtual screen: bind one and every
+draw call lands in its textures instead of the display surface, after which those textures can be
+sampled, read back, or shown inside an ImGui panel. That last case is why the editor needs them at
+all — the shell draws its UI into the back buffer, so the scene has to render somewhere else and
+composite in as an image.
 
-By default, every OpenGL draw call writes pixels directly to the screen's back buffer — the surface that gets swapped to the monitor at the end of each frame. This is the fastest path for full-screen rendering, but it creates a problem when you want to display your scene _inside_ a UI panel rather than directly on the screen.
+You rarely create one for the main view. `WorkspaceLayer` owns the viewport FBO and binds it before
+calling your layer, and `Application::Get().GetFrameBuffer()` returns that object when you need its
+size. Create your own for **secondary** targets: minimaps, portals, thumbnails, render-to-texture
+effects, post-processing.
 
-Cosmic's workspace shell renders the entire engine UI (the sidebar, toolbar, and viewport panels) using ImGui, which itself draws into the screen's back buffer. If your scene also draws into the back buffer at the same time, the two sets of draw calls fight over the same pixels with no way to composite them correctly.
+`FramebufferSpecification` carries width, height and an attachment list; an **empty** list means the
+default `{ RGBA8, DEPTH24STENCIL8 }`, so every existing call site keeps its behaviour. Available
+formats are `RGBA8`, `RGBA16F` (the HDR target), `RED_INTEGER` (entity-ID picking) and
+`DEPTH24STENCIL8`. Naming more than one colour format gives you MRT — the engine calls
+`glDrawBuffers` for you, up to a ceiling of eight. `Samples` and `SwapChainTarget` are **reserved
+and unimplemented**: MSAA does nothing.
 
-The solution is a **Framebuffer Object (FBO)** — a GPU-resident render target that acts like a virtual screen. Instead of writing pixels to the display surface, you redirect all your draw calls into an FBO. The FBO's color output is stored as a regular GPU texture. Once rendering is complete, ImGui can display that texture as an image inside any panel — the scene becomes just a `ImGui::Image` call, composited correctly over the rest of the UI.
+Read-back has four verbs, all requiring the FBO to be bound, and two different coordinate
+conventions that are easy to mix up. `ReadPixel` (integer attachments) and `ReadDepth` take **GL
+coordinates**, so the caller flips Y; `ReadPixels` returns a whole attachment as 8-bit RGBA with a
+**top-left origin**, ready for `stb_image_write`. Integer attachments need `ClearAttachment` each
+frame — `glClear` does not reliably clear them.
 
-```
-Without FBO:                     With FBO:
-Your draw calls  ──────────►  Back buffer (screen)     Your draw calls  ────►  FBO texture
-ImGui draw calls ──────────►  Back buffer (screen)     ImGui draw calls ────►  Back buffer
-                                                            └── ImGui::Image(fbo_texture) ──► Back buffer
-```
-
-This is exactly what Cosmic's `WorkspaceLayer` does: it creates a main FBO at startup, calls your layer's `OnUpdate` with the FBO bound, then takes the FBO's color texture and displays it inside the viewport panel using `ImGui::Image`. From your layer's perspective, you just issue draw calls normally — you don't need to manage the main FBO yourself.
-
-You only need to create your own FBOs when you want **secondary render targets**: a minimap, a portal view, a render-to-texture effect, or a post-processing pass that composites multiple scenes.
-
-### Creating a Framebuffer
-
-```cpp
-Cosmic::FramebufferSpecification spec;
-spec.Width          = 1280;
-spec.Height         = 720;
-spec.Samples        = 1;           // Reserved — MSAA not yet implemented; leave at 1
-spec.SwapChainTarget = false;      // Reserved — not yet implemented; leave at false
-
-Ref<Cosmic::FrameBuffer> fbo = Cosmic::FrameBuffer::Create(spec);
-```
-
-### Using a Framebuffer
-
-```cpp
-// Redirect rendering into the FBO
-m_Fbo->Bind();
-
-Cosmic::Renderer2D::BeginScene(m_Camera.GetCamera());
-// ... draw calls ...
-Cosmic::Renderer2D::EndScene();
-
-// Restore the default (screen) framebuffer
-m_Fbo->Unbind();
-
-// Handle window resize
-void MyLayer::OnWindowResize(Cosmic::WindowResizeEvent& e)
-{
-    m_Fbo->Resize(e.GetWidth(), e.GetHeight());
-}
-```
-
-### Displaying in ImGui
-
-```cpp
-void MyLayer::OnImGuiRender()
-{
-    ImGui::Begin("Viewport");
-
-    // GetColorAttachmentRendererID() returns the OpenGL texture handle
-    uint32_t texID = m_Fbo->GetColorAttachmentRendererID();
-    ImVec2   size  = ImGui::GetContentRegionAvail();
-    ImGui::Image((void*)(intptr_t)texID, size, ImVec2{0,1}, ImVec2{1,0}); // flip Y
-
-    ImGui::End();
-}
-```
-
-### Accessing the Engine's Main Framebuffer
-
-```cpp
-Ref<Cosmic::FrameBuffer> engineFbo = Cosmic::Application::Get().GetFrameBuffer();
-uint32_t w = engineFbo->GetWidth();
-uint32_t h = engineFbo->GetHeight();
-const Cosmic::FramebufferSpecification& spec = engineFbo->GetSpecification();
-```
+**→ Full chapter:
+[`docs/guide/materials-and-shaders.md`](docs/guide/materials-and-shaders.md#render-into-a-texture)**
+— creating and resizing targets, the MRT shader-side contract, every read-back verb with its
+conventions and failure behaviour, and displaying an attachment in ImGui.
 
 ---
 
 ## 19. Logging
 
-Cosmic wraps spdlog into a set of format-string macros. Use the `CS_` prefix in all client code. Engine-internal code uses `CS_CORE_`.
+Cosmic wraps spdlog into two logger families. **Use `CS_TRACE` / `CS_INFO` / `CS_WARN` / `CS_ERROR` /
+`CS_CRITICAL` in your project** — they write to the `APP` logger and `App_<timestamp>.log`. Engine
+internals use the `CS_CORE_*` twins, which write to `COSMIC` and `Cosmic_<timestamp>.log`. Keeping
+the two apart is what makes the editor Console's source filter and a one-file support request work.
+All of them take `{fmt}` format strings — `{}`, indexed `{0}`, and full specs like `{:.2f}`.
 
-```cpp
-CS_TRACE("Entering state: {}", stateName);
-CS_INFO("Entity spawned at ({:.2f}, {:.2f})", x, y);
-CS_WARN("Shader path not found: {}", path);
-CS_ERROR("Failed to load texture: {}", filename);
-CS_CRITICAL("Out of GPU memory — aborting.");
-```
+`Application`'s constructor initializes logging as its second statement, into
+`user://logs` — the writable user-data root, so an installed app under *Program Files* still gets its
+logs. Both loggers are thread-safe (safe from `JobSystem` workers) and configured
+`flush_on(trace)`, so no line is lost to a crash. There is **no runtime level filter and no
+rotation**: every message is written and flushed, and each launch leaves one more pair of files
+behind. A `CS_TRACE` on a per-frame path really does write sixty lines a second.
 
-All macros accept spdlog-style format strings (equivalent to `{fmt}`). Positional `{0}`, `{1}` syntax and format specifiers like `{:.2f}` (two decimal places) are both supported.
+Two things bite people. First, the colored console sink only has somewhere to go in **Debug** —
+Release links `/SUBSYSTEM:WINDOWS`, so the log file and any in-app console are your only output.
+Second, `Log::AddSink` with a `CallbackSink` is how you mirror the log into your own UI (this is
+exactly how Starforge's Console panel works), and the matching `Log::RemoveSink` in `OnDetach` is
+**mandatory** — the sink list outlives your DLL.
 
-| Macro         | Level    | When to use                                      |
-| ------------- | -------- | ------------------------------------------------ |
-| `CS_TRACE`    | Trace    | High-frequency per-frame diagnostics             |
-| `CS_INFO`     | Info     | Normal lifecycle events (attach, load, connect)  |
-| `CS_WARN`     | Warning  | Recoverable issues (missing file, fallback used) |
-| `CS_ERROR`    | Error    | Non-fatal failures                               |
-| `CS_CRITICAL` | Critical | Unrecoverable failures                           |
-
-The logger is thread-safe and protected by a shared mutex, so it can be called from job worker threads (e.g., inside a `ParallelSystem`).
+**→ Full chapter:
+[`docs/guide/logging-and-diagnostics.md`](docs/guide/logging-and-diagnostics.md)** — the loggers and
+sinks in full, log-file locations, the editor Console panel, the 2D/3D renderer statistics counters
+(both have a real gotcha), the per-pass GPU profiler, and why the `CS_ASSERT` macros do nothing in
+any configuration.
 
 ---
 
 ## 20. Serial Communication
 
-`Cosmic::SerialPort` provides thread-safe RS-232 serial communication on Windows. A background thread continuously polls the hardware port and accumulates data in a mutex-protected buffer.
+> **Full chapter: [`docs/guide/serial-and-telemetry.md`](docs/guide/serial-and-telemetry.md)** —
+> `SerialPort` and the async connect, `SerialLink` as an owner-ticked service, COBS + CRC16 framing,
+> telemetry channels, columnar recording, replay, the panel, and entity selection. The two
+> subsections below (**§20.5**, **§20.6**) are retired into that chapter along with this one.
 
-```cpp
-Cosmic::SerialPort port;
+Cosmic talks to hardware over a COM port through two layers. `Cosmic::SerialPort` is the raw
+transport: a Win32 handle opened 8N1 with overlapped I/O, plus a background thread that accumulates
+received bytes into a mutex-protected buffer you drain with `FlushBuffer()`. `Cosmic::SerialLink`
+sits on top and owns everything an application actually needs around that — the discovered-port
+list, the selected port and baud, connect intent, an auto-reconnect policy, staleness tracking, and
+a drop-in connection UI. Reach for `SerialLink` unless you have a specific reason not to.
 
-// Discover available ports
-std::vector<std::string> ports = Cosmic::SerialPort::GetAvailablePorts();
-// → {"COM3", "COM7", ...}
+The one rule worth carrying out of this section: **connecting is asynchronous.** `CreateFileA` on an
+unreachable Bluetooth SPP port blocks for 10–20 seconds, and calling the blocking `SerialPort::Open`
+from the render thread froze early apps solid — repeatedly, because the auto-reconnect retry kept
+re-freezing them. `SerialLink` always goes through `SerialPort::BeginOpen`, which runs the blocking
+call on a one-shot worker; you poll `GetState()` for `Idle`/`Connecting`/`Open`/`Failed`. `Write` is
+implemented and exported on both classes, is binary-safe, and is a bounded blocking overlapped write
+that is safe to call while the read thread has its own pending read on the same handle.
 
-// Open — configures 8N1, spawns the background read thread
-if (port.Open("COM3", 115200))
-    CS_INFO("Connected to COM3");
+The engine ships transport and framing, never a protocol. `serial/Framing.h` provides the binary
+option: COBS byte stuffing so a single `0x00` unambiguously terminates each frame, plus a
+CRC16-CCITT-FALSE appended big-endian before encoding. That header is deliberately freestanding — no
+engine includes, no STL beyond `<stdint.h>`, no heap, never throws — so the *same file* compiles on
+a Teensy or Arduino toolchain and becomes the shared wire contract for hardware-in-the-loop work.
+`Projects/ViperSim/src/fc_glue/HilBridge.h` and its flight-computer firmware are the worked example.
+The alternative is plain ASCII line framing, which is what `Projects/SF_Telem` uses.
 
-// Poll from OnFixedUpdate — deterministic rate matches serial timing
-void MyLayer::OnFixedUpdate(float dt) override
-{
-    if (!port.IsOpen()) return;
-    std::string data = port.FlushBuffer(); // thread-safe; clears the buffer
-    if (!data.empty())
-        ParseTelemetry(data);
-}
-
-// Disconnect — signals the read thread to stop and joins it
-port.Close();
-```
-
-> **Windows only.** `SerialPort` uses Win32 APIs (`CreateFile`, OVERLAPPED I/O, Registry enumeration). It will not compile on Linux/macOS without a platform implementation.
-
-> **Device disconnect handling.** `ReadLoop` now treats any `ReadFile` error other than `ERROR_TIMEOUT` (e.g., a USB pull or I/O fault) as a fatal disconnect: it logs a warning, sets `m_Connected` to `false`, and exits. Callers polling `IsOpen()` will observe the disconnection automatically without needing to call `Close()`.
-
-> **Write support (planned).** The port is opened with `GENERIC_READ | GENERIC_WRITE`. A `Write(const std::string&)` method is planned but not yet implemented or exposed in the API.
-
-> **Bounded `Close()`.** `Close()` calls `CancelIoEx` before joining the read thread, so any in-flight `ReadFile` call is unblocked immediately. Destruction is bounded and does not stall the caller for a full timeout interval (up to 50 ms).
-
-> **Job system compatibility.** The serial read thread is a raw `std::thread` created by `Open()` — it is entirely separate from the job system's worker pool. The job system consuming all of its threads has no effect on the serial thread, which keeps running and filling its buffer regardless. The safe integration point is `OnFixedUpdate`: by the time that hook fires, the parallel job pass for that frame has not yet dispatched, so any component state you write from `FlushBuffer()` data is already settled before job workers read it. This ordering is automatic — no extra synchronization is required.
+`SerialPort` is Windows-only: `CreateFileA` with `FILE_FLAG_OVERLAPPED`, `WaitForMultipleObjects`,
+and a registry walk of `HARDWARE\DEVICEMAP\SERIALCOMM` for discovery. Everything downstream of it —
+framing, recording, replay, the panel — is portable C++.
 
 ### §20.5 SerialLink — Managed Connections
 
-`SerialPort` is the raw transport. Every real app then needs the same plumbing on top of it: a discovered-ports list, a selected port + baud, connect/disconnect intent, auto-reconnect when the device drops, and a connection UI. `Cosmic::SerialLink` (`serial/SerialLink.h`) packages all of that so each app doesn't rebuild it.
-
-**Why it exists:** connecting to an unreachable Bluetooth SPP port blocks `CreateFileA` for 10–20 seconds. Early apps called the blocking `SerialPort::Open` from the render thread and froze (and, via the auto-reconnect retry, kept re-freezing). `SerialLink` always connects through the asynchronous `SerialPort::BeginOpen`, which runs the blocking call on a one-shot worker thread — the UI stays live while the port state is `Connecting`.
-
-> **Never call the blocking `SerialPort::Open` on the render thread for Bluetooth ports.** Use `SerialLink`, or at minimum `BeginOpen` + `GetState()` polling.
-
-| Member | Description |
-| ------ | ----------- |
-| `OnUpdate(float dt)` | Per-frame drive: advances the internal clock, re-scans ports ~1 Hz, runs the async auto-reconnect policy |
-| `Poll()` | Drains received bytes (`std::string`, empty if none) and updates last-byte tracking — parse them with your own protocol |
-| `Connect()` / `Disconnect()` | User-initiated intent: begin async connect on the selected port / stop trying and close |
-| `Shutdown()` | Teardown for app exit or return-to-launcher — clears reconnect intent |
-| `IsOpen()` / `GetState()` | Port status (`SerialPort::State`: `Idle`, `Connecting`, `Open`, `Failed`) |
-| `IsReceiving()` | `true` when open **and** a byte arrived less than 1 s ago — drives "link healthy" indicators |
-| `SecondsSinceLastByte()` | Staleness metric for your own timeout logic |
-| `ConsumeJustConnected()` | One-shot `true` after each fresh (re)connect — reset your RX accumulator there |
-| `DrawConnectionUI()` | Renders the Refresh / COM combo / Baud combo / Auto-reconnect / status widgets. No `Begin`/`End` — drop it inside your own window |
-
-**Usage pattern** (how `Projects/SF_Telem/src/TelemHub.h` wires it — the root layer owns the link so one connection survives screen switches):
-
-```cpp
-// Root layer owns the link and drives it every frame
-Cosmic::SerialLink m_Link;
-
-void Root::OnUpdate(float ts)
-{
-    m_Link.OnUpdate(ts);                       // port scan + async auto-reconnect
-
-    if (m_Link.ConsumeJustConnected())
-        m_RxAccumulator.clear();               // stale half-frame from the old session
-
-    std::string chunk = m_Link.Poll();         // drain bytes; parse them yourself
-    if (!chunk.empty())
-        ParseProtocol(m_RxAccumulator, chunk);
-}
-
-void Root::OnImGuiRender()
-{
-    ImGui::Begin("Connection");
-    m_Link.DrawConnectionUI();                 // shared connect UI, app adds extras around it
-    ImGui::End();
-}
-
-void Root::OnDetach() { m_Link.Shutdown(); }
-```
-
-Auto-reconnect is on by default: while the user *wants* a connection (`Connect()` was clicked and `Disconnect()` wasn't), the link retries the selected port every 3 seconds of silence. `SerialLink` never parses bytes — protocol framing/decoding is app code (see `Projects/SF_Telem/src/Telemetry.h` for an ASCII example and §20.6 below for binary framing).
+> Retired into [`docs/guide/serial-and-telemetry.md`](docs/guide/serial-and-telemetry.md#connect-to-a-device).
+> The full member table, the auto-reconnect policy (including the case where it silently reselects a
+> different COM port), and the owner-ticked wiring pattern live there.
 
 ### §20.6 Binary Framing — COBS + CRC16
 
-For binary links (hardware-in-the-loop, flight computers), `serial/Framing.h` provides a dependency-free frame codec: **COBS byte stuffing** (so a single `0x00` delimiter terminates every frame unambiguously) plus **CRC16-CCITT** integrity. The header is deliberately freestanding — no engine includes, no STL beyond `<stdint.h>`, no heap — so the *same file* compiles on an embedded target (Teensy/Arduino) as the shared wire contract.
-
-```cpp
-#include "serial/Framing.h"
-
-// Sender: payload -> COBS(payload + CRC16) + 0x00 delimiter.
-// Worst-case output: length + 2 (CRC) + ~1 byte COBS overhead per 254 + 1 delimiter.
-uint8_t frame[64];
-size_t n = Cosmic::Framing::EncodeFrame(payload, payloadLen, frame, sizeof(frame)); // 0 = buffer too small
-
-// Receiver: accumulate bytes; on each 0x00 delimiter, decode the bytes since the previous one
-size_t decoded = Cosmic::Framing::DecodeFrame(rx, rxLen, out, sizeof(out)); // 0 = corrupt/short — drop
-```
+> Retired into [`docs/guide/serial-and-telemetry.md`](docs/guide/serial-and-telemetry.md#frame-a-binary-protocol).
+> The wire format, the buffer-sizing helpers, the receive loop, and the failure conventions (every
+> codec function reports failure as `0` and logs nothing) live there.
 
 ---
 
 ## 21. The Template Project
 
-The Template Project (`Cosmic/templates/ExampleProject/`) is the canonical reference implementation for building multi-mode projects with Cosmic. It demonstrates the correct patterns for time management, material-driven rendering, ECS integration, parallel physics, and the composite layer architecture.
+> **Retired without a successor section.** Creating a project and its folder layout are covered by
+> **[`docs/guide/getting-started.md`](docs/guide/getting-started.md)**; the composite-layer
+> architecture the template demonstrates is covered by
+> **[`docs/guide/project-anatomy.md`](docs/guide/project-anatomy.md#the-composite-layer-pattern)**.
+> §21.5 below is **not** retired — it is still the live description of the multi-screen app shape.
 
-### Generating a Project from the Launcher
+`Cosmic/templates/ExampleProject/` is the in-tree reference implementation of a multi-mode project:
+a root manager layer (`TemplateProject`) owning five child mode layers — rendering, sprites, an
+instanced-render benchmark, telemetry and a theme showcase — plus `Components.h` (custom components
+with `CS_REGISTER_COMPONENT`), `AgentSystem.h` (the tree's only live `ParallelSystem`) and
+`BallPhysicsSystem.h`. It is worth reading whole; it is the shape most tool-style Cosmic apps grow
+into, and the two chapters above explain the patterns it uses rather than restating its file list
+here.
 
-The recommended way to create a new project based on this template is through the engine's Launcher screen. Click **New Project**, enter your project name and target directory, and the Launcher copies the full template, renames every file and class, and generates a wired `CMakeLists.txt` and `build.bat` for you. Run `build_all.bat` once afterward to register and compile the new project.
-
-You can also copy `Cosmic/templates/ExampleProject/` manually and rename things yourself — the Launcher just automates that process.
-
-### Project Structure
-
-```
-ExampleProject/
-├── src/
-│   ├── TemplateProject.h / .cpp          ← Root manager layer (DLL entry point)
-│   ├── TemplateRenderLayer.h / .cpp      ← Material + camera demo
-│   ├── TemplateSpriteLayer.h / .cpp      ← Sprite sheet + ECS demo
-│   ├── TemplateRenderBenchmarkLayer.h / .cpp  ← Instanced rendering stress test
-│   ├── BallPhysicsSystem.h               ← Parallel physics (ParallelSystem example)
-│   └── Components.h                      ← Custom component definitions + CS_REGISTER_COMPONENT
-├── assets/
-│   ├── shaders/                          ← Project-specific GLSL files
-│   └── sprites/                          ← Sprite sheets
-├── CMakeLists.txt
-└── build.bat
-```
-
-### Composite Layer Architecture
-
-`TemplateProject` is a root manager `Layer` that owns a `std::vector<std::shared_ptr<Layer>> m_Modes`. The three child layers are **never pushed onto the engine's `LayerStack`** — they are driven exclusively by the root layer's hooks:
-
-```cpp
-// In TemplateProject::OnUpdate
-auto& activeMode = m_Modes[m_ActiveModeIndex];
-
-// Drive the mode's local clock. ts is globally-scaled; UpdateLayerTime multiplies
-// it again by the mode's own scale so GetLocalTime() reflects both.
-activeMode->UpdateLayerTime(ts);
-
-if (m_SharedMaterial)
-    m_SharedMaterial->Set("u_Time", activeMode->GetLocalTime());
-
-// Pass a fully-scaled delta (global × layer) to the child layer so that movement,
-// camera, and any sub-system ticks inside it respond to the Layer TimeScale slider
-// without each child needing to re-apply GetTimeScale() manually.
-activeMode->OnUpdate(ts * activeMode->GetTimeScale());
-
-// In TemplateProject::OnFixedUpdate
-auto& active = m_Modes[m_ActiveModeIndex];
-// Same principle: apply layer scale here so physics also slows/pauses independently.
-// Child layers guard dt <= 0 to detect pause and rewind; they do not call GetTimeScale() again.
-active->OnFixedUpdate(deltaFixedTime * active->GetTimeScale());
-
-// In TemplateProject::OnEvent — resize goes to ALL modes; input goes only to active
-if (e.IsInCategory(Cosmic::EventCategoryApplication))
-{
-    for (auto& mode : m_Modes)
-        mode->OnEvent(e);
-    return;
-}
-m_Modes[m_ActiveModeIndex]->OnEvent(e);
-```
-
-> **The Double-Tick Trap:** Do **not** push child layers onto `Application`'s `LayerStack` while also driving them manually from the root layer. Doing so causes every hook (`OnUpdate`, `OnFixedUpdate`, `OnEvent`) to fire twice per frame — once from the engine stack and once from your manual forward call. This produces double-speed simulation, double rendering, and subtly corrupted accumulated times.
-
-### Global Time Scale Control
-
-The Inspector panel exposes a `TimeScale` slider that modifies the host engine's global time directly:
-
-```cpp
-float hostScale = Cosmic::Application::Get().GetTimeScale();
-if (ImGui::SliderFloat("Global TimeScale", &hostScale, -2.0f, 3.0f, "%.2fx"))
-    Cosmic::Application::Get().SetTimeScale(hostScale);
-```
-
-Setting this to zero pauses all modes simultaneously. Setting it negative reverses time — the shared material's `u_Time` scrubs backward automatically because it's driven by `GetLocalTime()`, which reflects both the global and per-layer scale. The per-layer **Layer TimeScale** slider controls only the active mode, independently of the global scale.
-
-### Shared Material Pattern
-
-A single `Ref<Material>` (`m_SharedMaterial`) is created once in `OnAttach`, passed by `Ref<>` to child layers that need it, and updated from the root layer:
-
-```cpp
-// OnAttach
-auto shader     = Cosmic::Shader::Create(Cosmic::FileSystem::Resolve("project://shaders/TemplateShader.glsl"));
-m_SharedMaterial = Cosmic::Material::Create(shader, "TemplateMaterial");
-m_SharedMaterial->Set("u_Color", glm::vec4(1.f, 0.6f, 0.2f, 1.f));
-
-// OnUpdate — time from the active mode's local clock
-if (m_SharedMaterial)
-    m_SharedMaterial->Set("u_Time", m_Modes[m_ActiveModeIndex]->GetLocalTime());
-```
-
-Because the material is a `Ref<>`, all child layers holding it automatically see the updated `u_Time` uniform without any additional plumbing.
-
-### Adding Your Own Mode
-
-1. Create a class inheriting `Cosmic::Layer`.
-2. Implement `OnAttach`, `OnDetach`, `OnUpdate`, `OnFixedUpdate`, `OnImGuiRender`, `OnEvent`.
-3. In the root layer's `OnAttach`, add it to the modes vector:
-
-```cpp
-m_Modes.push_back(std::make_shared<MyNewMode>(m_Scene, m_SharedMaterial));
-m_Modes.back()->OnAttach();
-```
-
-4. **Do not** push it onto `Application`'s `LayerStack`.
+The one rule the template exists to teach is the composite-layer discipline: **the child layers are
+never pushed onto the engine's `LayerStack`.** The root drives them from its own hooks, forwarding
+application-category events to every child and input only to the active one. Pushing a
+DLL-allocated layer onto the stack crashes on unload, and driving a stacked child manually as well
+produces the double-tick trap (§33) — double-speed simulation and corrupted accumulated time.
 
 ### §21.5 Real-World Pattern: Homescreen + Screens
 
@@ -2151,1168 +1041,272 @@ Start from the template's composite pattern, then graduate to this shape the mom
 
 ## 22. Job System & Parallel Pipeline
 
-### Why Parallelism?
+> **Full chapter: [`docs/guide/jobs-and-parallelism.md`](docs/guide/jobs-and-parallelism.md)** —
+> the worker pool, `ParallelFor` and its async twins, the `ParallelSystem` four-pass tick,
+> `SystemQuery` staging, `ComponentArray`, `DoubleBuffer`, the live job counters, and the
+> threading contract that governs all of it.
 
-Modern CPUs have many cores — a typical development machine has 8–16 logical processors. A serial simulation loop uses exactly one of them. The other 7–15 cores sit idle while your physics, collision, and AI updates grind through thousands of entities one at a time.
+A serial simulation loop uses one core. `Cosmic::JobSystem` is the engine's answer: a persistent
+pool of worker threads, sized to *logical cores minus one* so the main thread keeps a slot, created
+once during `Application::Initialize` — before audio, before the window, before the GL context —
+and joined first thing in `Application::Shutdown`, before the project DLL is unloaded. You never
+initialise or shut it down yourself. `Submit(job)` enqueues any `void()` callable from any thread;
+`WaitIdle()` blocks until the queue is empty and no job is still executing.
 
-This matters most for particle systems, physics simulations, and agent AI where you have many independent entities that all need the same per-frame update. Consider a simulation with 50,000 physics balls. Each ball's velocity and position for this frame depends only on its own state from last frame — not on any other ball's current-frame position. That independence is the key: if no ball's update needs to wait for another ball's result, all 50,000 can be computed simultaneously across all available cores.
+Above the pool sit three layers of convenience. `ParallelFor` splits an index range or a typed span
+into contiguous per-worker chunks and waits before returning, so it reads like an ordinary loop; its
+`…Async` twins submit without waiting. `ParallelSystem` wires that into the ECS as four passes the
+`Scene` runs in order — sequential systems, then stage + prepare, then a submit-only parallel pass
+closed by a **single** `WaitIdle` barrier shared by every system, then merge + commit. `SystemQuery`
+(`ReadWriteQuery<T>` / `ReadOnlyQuery<T>`) removes the plumbing entirely: declare one as a member,
+pass `this`, and the engine snapshots the component pool before the parallel pass and writes results
+back after the merge.
 
-The cost of that parallelism is **coordination**: you need to guarantee that workers read from a stable copy of the data (not from a buffer another worker is currently writing), collect all results after the workers finish, and write them back in a thread-safe way. Cosmic's parallel pipeline handles all of that bookkeeping for you through the `ParallelSystem` + `SystemQuery` abstraction.
+**The contract is the part that matters, and it comes down to one fact:** there is exactly one
+OpenGL context and one ImGui context, both bound to the main thread and never rebound. So a worker
+may not touch GL, `Renderer2D`/`Renderer3D`/`SceneRenderer`, `AssetLibrary` (which has no locking at
+all), ImGui, or the EnTT registry. What it *may* do is pure CPU work — and the engine's own async
+paths all take the same shape: build CPU data on a worker, upload on the main thread after the
+barrier. `Scene::SyncVoxelVolumes` meshes chunks that way, `SceneNav::BeginBake` bakes navmeshes
+that way, and Frontier builds a whole island world that way behind an `IsLoading()` poll.
 
-### The Four Passes — Why Each Exists
+One thing the guide chapter states that this section never did: **nothing in the engine calls
+`Scene::OnUpdate` or `Scene::OnFixedUpdate`**, so a registered `System` or `ParallelSystem` never
+runs unless the scene's owner ticks the scene itself. See
+[`docs/guide/jobs-and-parallelism.md`](docs/guide/jobs-and-parallelism.md#register-the-system--and-tick-the-scene).
 
-`Scene` ticks systems through a guaranteed four-pass pipeline each frame. Understanding why each pass is separate is more important than memorizing its name:
-
-**Pass A — Sequential Systems (`System::OnUpdate` / `System::OnFixedUpdate`)**
-
-Some logic fundamentally cannot run in parallel: spawning or destroying entities modifies the registry's internal data structures; logic that reads one entity's component while writing another's has data races; systems with strict ordering dependencies (A must run before B) break if interleaved. Pass A is the safe, single-threaded space for all of that. Run your spawners, your state machines, your serial game logic here. Nothing in this pass can conflict with anything else because it is strictly ordered and single-threaded.
-
-**Pass B — Parallel Prepare (`ParallelSystem::OnFixedPrepare`)**
-
-Before worker threads can process component data, the engine needs a **stable snapshot** of that data — a copy that won't change while workers are running. Pass B runs on the main thread and the engine automatically calls `Stage()` on all registered `SystemQuery` members before your `OnPrepare` override runs. By the time `OnPrepare` executes, your queries hold a frozen copy of the registry data. Use this pass for per-tick setup that needs to happen before the parallel work: recording start timestamps for profiling, computing derived constants the workers will read (e.g., pre-scaling gravity by `dt`), or validating that there's work to do.
-
-**Pass C — Parallel Execute (`ParallelSystem::OnFixedParallelExecute`)**
-
-This is where the actual parallel work happens. All systems have their staged data ready. Each `ParallelSystem` submits jobs to the thread pool and returns immediately — it does **not** wait for its jobs to finish before returning. After every system has submitted its work, the Scene calls a single `JobSystem::WaitIdle()` barrier. This means different systems' worker jobs can overlap in time, maximizing core utilization. Inside this pass you must only read from staged query data and write to staged output buffers — never touch the EnTT registry, never create or destroy entities.
-
-**Pass D — Parallel Merge (`ParallelSystem::OnFixedMerge`)**
-
-`WaitIdle()` has returned — every worker job is done. This pass runs on the main thread and is the place to collect results: sync computed positions back to `TransformComponent`, resolve collisions that were detected in parallel, create or destroy entities based on the simulation output. After your `OnMerge` override returns, the engine automatically calls `Commit()` on all `ReadWriteQuery` members, writing the staged component data back to the live registry. Structural changes (create/destroy) are safe here because you're back on the main thread with no workers running.
-
-```
-FRAME TICK:
-  │
-  ├── PASS A  (main thread, sequential)
-  │   Serial systems: OnUpdate / OnFixedUpdate
-  │   Safe for: entity create/destroy, ordered logic, registry writes
-  │
-  ├── PASS B  (main thread, sequential)
-  │   [engine stages all SystemQuery snapshots]
-  │   ParallelSystems: OnFixedPrepare
-  │   Safe for: per-tick setup, profiling start, constant pre-computation
-  │
-  ├── PASS C  (worker threads, concurrent)
-  │   ParallelSystems: OnFixedParallelExecute  ← submit jobs, return immediately
-  │   [Scene calls JobSystem::WaitIdle() once after ALL systems submit]
-  │   Safe for: read staged data, write staged output — no registry access
-  │
-  └── PASS D  (main thread, sequential)
-      ParallelSystems: OnFixedMerge
-      [engine commits all ReadWriteQuery results to registry]
-      Safe for: sync results to transform/render components, entity create/destroy
-```
-
-Variable-rate equivalents (`OnPrepare`, `OnParallelExecute`, `OnMerge`) follow the same pattern and run inside `Scene::OnUpdate`.
-
-### The Three Abstraction Levels
-
-```
-JobSystem             ← raw thread pool; submit arbitrary callables
-ParallelFor           ← distribute an index range or typed array across all workers
-ParallelSystem        ← structured 4-pass parallel integration within the ECS
-  └── SystemQuery<T>  ← automatic component staging/commit for ParallelSystem
-```
-
-### JobSystem — Raw Thread Pool
-
-```cpp
-Cosmic::JobSystem& js = Cosmic::JobSystem::Get();
-
-// Submit independent work units
-for (auto& chunk : chunks)
-    js.Submit([&chunk]{ ProcessChunk(chunk); });
-
-// Block the calling thread until all enqueued jobs are complete
-js.WaitIdle();
-
-// Query the number of worker threads
-uint32_t workers = js.GetWorkerCount(); // = logical cores - 1
-```
-
-The pool is created once at engine init and the threads persist until shutdown. Use it for ad-hoc parallelism outside of the ECS (e.g., asset streaming, data preprocessing).
-
-### ParallelFor — Index Range Distribution
-
-`ParallelFor` splits a range across all worker threads and synchronizes before returning. Use it for standalone parallel work that doesn't belong inside an ECS system:
-
-```cpp
-// Synchronous — submits AND calls WaitIdle before returning. Safe to use anywhere.
-Cosmic::ParallelFor(entityCount, [&transforms, dt](size_t begin, size_t end)
-{
-    for (size_t i = begin; i < end; ++i)
-        transforms[i].x += velocities[i].x * dt;
-});
-
-// Typed array variant
-Cosmic::ParallelForEach(transforms.data(), transforms.size(),
-    [dt](TransformData* begin, TransformData* end)
-    {
-        for (auto* t = begin; t != end; ++t)
-            t->Position.x += t->Velocity.x * dt;
-    });
-
-// Element + index variant (useful when you need the entity ID alongside the component)
-Cosmic::ParallelForEachIndexed(bodies.data(), bodies.size(),
-    [](PhysicsBody& body, size_t i)
-    {
-        ApplyGravity(body, 9.8f);
-    });
-```
-
-**Async variants** (`ParallelForAsync`, `ParallelForEachAsync`, `ParallelForEachIndexedAsync`) submit jobs without calling `WaitIdle`. Use these exclusively inside `ParallelSystem::OnParallelExecute` — the `Scene` issues a single `WaitIdle` barrier after all systems submit, maximizing overlap.
-
-### ParallelSystem — Structured ECS Parallel Integration
-
-Subclass `ParallelSystem` when your simulation logic can be expressed as a per-entity transformation that runs in parallel on component data. The Scene ticks all parallel systems through a guaranteed four-pass pipeline each frame:
-
-```
-PASS A — Sequential Systems (main thread)
-    for each System* s  → s->OnUpdate(scene, dt)
-    for each System* s  → s->OnFixedUpdate(scene, dt)
-
-PASS B — Parallel Prepare (main thread, single-threaded)
-    for each ParallelSystem* ps → [stage queries] → ps->OnPrepare(scene, dt)
-
-PASS C — Parallel Execute (worker threads simultaneously)
-    for each ParallelSystem* ps → ps->OnParallelExecute(scene, dt)
-    JobSystem::WaitIdle()   ← main thread blocks here
-
-PASS D — Parallel Merge (main thread, single-threaded)
-    for each ParallelSystem* ps → ps->OnMerge(scene, dt)
-    [commit queries]
-```
-
-Fixed-step equivalents (`OnFixedPrepare`, `OnFixedParallelExecute`, `OnFixedMerge`) run through the same pipeline inside the fixed timestep pass.
-
-**Key rules:**
-
-- Inside `OnParallelExecute`: use only the **Async** `ParallelFor` variants. The synchronous variants call `WaitIdle` internally and serialize all systems against each other.
-- Do **not** call `JobSystem::WaitIdle()` yourself from `OnParallelExecute` — the Scene calls it once after all systems have submitted.
-- Do **not** modify the EnTT registry from a worker thread. Read from staged data; write to staged output buffers.
-- Structural changes (create/destroy entities) must happen in `OnMerge` after `WaitIdle`, never in `OnParallelExecute`.
-
-### SystemQuery — Automatic Component Staging
-
-`ReadWriteQuery<T>` and `ReadOnlyQuery<T>` are the primary data-access API for `ParallelSystem` subclasses. Declare them as member variables and pass `this` — the engine stages and commits them automatically around the parallel passes. No manual snapshot or writeback code is needed.
-
-```cpp
-class BallPhysicsSystem : public Cosmic::ParallelSystem
-{
-    // Declare as member — pass `this` to self-register with this system.
-    // Stage (snapshot from registry) happens before OnFixedPrepare.
-    // Commit (write results back) happens after OnFixedMerge.
-    Cosmic::ReadWriteQuery<PhysicsBody> m_Bodies{ this };
-
-public:
-    float Gravity = -9.8f;
-    float Damping = 0.85f;
-
-    void OnFixedParallelExecute(Cosmic::Scene& scene, float fixedDt) override
-    {
-        if (m_Bodies.IsEmpty()) return;
-
-        const float gravity = Gravity;
-        const float damping = Damping;
-        const float dt      = fixedDt;
-
-        // ForEachAsync captures by value — safe across thread lifetime
-        m_Bodies.ForEachAsync([gravity, damping, dt](PhysicsBody& body)
-        {
-            body.Velocity.y += gravity * dt;
-            body.Velocity   *= glm::clamp(1.0f - damping * dt, 0.0f, 1.0f);
-            body.Position   += body.Velocity * dt;
-        });
-        // Do NOT call WaitIdle here — the Scene does it after all systems submit
-    }
-
-    void OnFixedMerge(Cosmic::Scene& scene, float fixedDt) override
-    {
-        // All jobs are done. Sync computed positions to TransformComponent.
-        auto& reg = scene.GetRegistry();
-        m_Bodies.ForEachWithEntity([&reg](PhysicsBody& body, entt::entity entity)
-        {
-            if (!reg.valid(entity)) return;
-            auto& t   = reg.get<Cosmic::TransformComponent>(entity);
-            t.Position = { body.Position.x, body.Position.y, t.Position.z };
-        });
-        // Engine commits m_Bodies → PhysicsBody registry AFTER this returns
-    }
-};
-```
-
-**Register with the Scene:**
-
-```cpp
-m_Scene->AddSystem<BallPhysicsSystem>();
-
-// Or capture a reference to configure it after creation
-auto& phys = m_Scene->AddSystem<BallPhysicsSystem>();
-phys.Gravity = -15.f;
-phys.Damping = 0.9f;
-```
-
-### ReadOnlyQuery — Stable Cross-Entity Snapshots
-
-Use `ReadOnlyQuery<T>` when your algorithm needs to read the whole component dataset (including elements being written by other workers) without race conditions — e.g., collision detection, flocking, or influence fields:
-
-```cpp
-class CollisionSystem : public Cosmic::ParallelSystem
-{
-    Cosmic::ReadOnlyQuery<PhysicsBody>  m_ReadBodies{ this };  // stable snapshot
-    Cosmic::ReadWriteQuery<PhysicsBody> m_WriteBodies{ this }; // output
-
-    void OnFixedParallelExecute(Cosmic::Scene& scene, float dt) override
-    {
-        const PhysicsBody* stable = m_ReadBodies.Data();
-        size_t count = m_WriteBodies.Count();
-
-        m_WriteBodies.DispatchAsync([stable, count, dt](PhysicsBody* begin, PhysicsBody* end)
-        {
-            for (auto* body = begin; body != end; ++body)
-            {
-                // Safe: reads from stable snapshot, writes to separate output
-                for (size_t j = 0; j < count; ++j)
-                    ResolveCollision(*body, stable[j]);
-            }
-        });
-    }
-};
-```
-
-### SystemQuery API Summary
-
-| Method                    | Available In        | Description                                                     |
-| ------------------------- | ------------------- | --------------------------------------------------------------- |
-| `ForEachAsync(func)`      | OnParallelExecute   | Submit parallel per-element jobs — `func(T& item)`              |
-| `DispatchAsync(func)`     | OnParallelExecute   | Submit parallel range jobs — `func(T* begin, T* end)`           |
-| `ForEach(func)`           | OnPrepare / OnMerge | Sequential iteration — `func(T& item)`                          |
-| `ForEachWithEntity(func)` | OnMerge             | Sequential with entity handle — `func(T& item, entt::entity e)` |
-| `Data()`                  | Any phase           | Raw pointer to the staged array                                 |
-| `Count()`                 | Any phase           | Number of staged elements                                       |
-| `IsEmpty()`               | Any phase           | True if no components of type T exist in the scene              |
-| `operator[](i)`           | Any phase           | Indexed access to a staged element                              |
-| `EntityAt(i)`             | Any phase           | Entity handle for element at index `i`                          |
+Part II's [§39 Parallel Pipeline Architecture](#39-parallel-pipeline-architecture) covers the
+implementation side.
 
 ---
 
 ## 23. Scene System
 
-`Scene` owns the EnTT registry and is the central coordinator for entities, components, and systems.
+> **Full chapter: [`docs/guide/scenes-and-serialization.md`](docs/guide/scenes-and-serialization.md)** —
+> creating and loading scenes, the `.cscene` format and the reflection registry that generates it,
+> UUIDs and `EntityRef` fields, **prefabs**, `SceneManager` async load + fade transitions,
+> `CommandStack` undo/redo, and the guarantee that a build which does not know a component type
+> still loses nothing when it opens and re-saves a scene.
 
-### Creating and Using a Scene
+`Scene` owns the EnTT registry and is the coordinator for entities, components and systems. It is
+created with `Scene::Create()` and passed around as a `Ref<Scene>`, because everything that holds
+one — the editor, `SceneManager`, a running screen flow — shares ownership. `CreateEntity(name)` is
+the only correct factory: it emplaces an `IDComponent` carrying a fresh 64-bit `UUID`, a
+`TransformComponent` and a `TagComponent`, and indexes the UUID so `FindByUUID` is O(1). An entity
+made directly on the registry has no UUID and is invisible to serialization entirely.
 
-```cpp
-Ref<Cosmic::Scene> m_Scene = Cosmic::Scene::Create();
+Scenes persist as **`.cscene` JSON**, and nothing writes that file by hand. One generic visitor
+walks the reflection registry (`Reflect::GetRegistry()`, owned by the engine DLL and shared by every
+DLL in the process): each registered component's reflected fields are read and written with zero
+per-component code, which is why adding a field to a component — or a whole new component type in
+your game DLL — serializes for free. The same machinery produces `.cprefab` subtrees and standalone
+reflected assets such as `.cmat`. A component block whose type this build does not know is kept
+verbatim in an `OpaqueComponentsComponent` and re-emitted unchanged on save, which is what lets the
+2D and 3D configurations share project files without data loss.
 
-// Tick systems from your layer hooks
-void MyLayer::OnUpdate(float ts)
-{
-    m_Scene->OnUpdate(ts);         // runs all sequential system OnUpdate passes
-    m_Scene->OnRender(m_Camera.GetCamera()); // draws all SpriteRendererComponent entities
-}
+Around that sit three services you own and tick yourself, none of them singletons: `SceneSerializer`
+(save/load, atomic write plus one rotating `.bak`), `SceneManager` (a fade-out → load → fade-in
+state machine that hides the single main-thread load frame), and `CommandStack` (a bounded,
+coalescing undo/redo history that knows nothing about scenes — Starforge's editor commands
+subclass its `ICommand` and reference entities by UUID so undo survives a delete/recreate).
 
-void MyLayer::OnFixedUpdate(float dt)
-{
-    m_Scene->OnFixedUpdate(dt);    // sequential + parallel fixed-step passes
-}
-```
-
-### Registering Systems
-
-```cpp
-// Sequential system — single-threaded, pointer-based ECS logic
-class SpawnSystem : public Cosmic::System
-{
-public:
-    void OnUpdate(Cosmic::Scene& scene, float dt) override
-    {
-        // use scene.View<...>() to iterate entities
-    }
-};
-
-m_Scene->AddSystem<SpawnSystem>();
-
-// Parallel system — see Section 22 for the full API
-m_Scene->AddSystem<BallPhysicsSystem>();
-
-// Get a reference to an already-registered system.
-// WARNING — O(n): GetSystem<T> performs a dynamic_cast loop over all registered
-// systems. Do NOT call this per-frame. Cache the result in OnAttach and reuse it.
-BallPhysicsSystem* phys = m_Scene->GetSystem<BallPhysicsSystem>(); // call once, in OnAttach
-if (phys) phys->Gravity = -15.f;
-
-// Remove all systems (e.g. on level unload)
-m_Scene->RemoveAllSystems();
-```
-
-### Scene::OnRender
-
-`OnRender` handles the full render pass autonomously — it calls `BeginScene` with the provided camera, iterates all entities that have both `TransformComponent` and `SpriteRendererComponent`, groups them by material bucket to minimize draw calls, sorts each bucket by ascending `Position.z` for correct depth order, then calls `EndScene`. Do **not** wrap a `Scene::OnRender` call inside your own `BeginScene`/`EndScene` pair.
-
-> **Performance note — per-bucket z-sort:** Entities within each material bucket are sorted by `Position.z` every frame using `std::sort` (O(n log n) per bucket). For typical bucket sizes this cost is negligible. If you have thousands of sprites sharing a single material, the sort can become measurable. Two mitigations to consider if profiling reveals it as a hotspot: (1) a **dirty flag** — skip the sort in frames where no z-values changed; (2) a **pre-sorted container** (e.g. `std::multiset`) maintained incrementally rather than rebuilt each frame.
-
-```cpp
-// Correct
-m_Scene->OnRender(m_Camera.GetCamera());
-
-// Wrong — double BeginScene/EndScene
-Cosmic::Renderer2D::BeginScene(m_Camera.GetCamera());
-m_Scene->OnRender(m_Camera.GetCamera()); // ← don't do this
-Cosmic::Renderer2D::EndScene();
-```
-
-### Direct Registry Access
-
-For advanced usage that doesn't fit `View<>`, access the underlying EnTT registry directly:
-
-```cpp
-entt::registry& reg = m_Scene->GetRegistry();
-
-// Delete an entity
-m_Scene->DestroyEntity(entity);
-```
+Note that `Scene::OnUpdate` / `OnFixedUpdate` — the registered-`System` tick — have **no callers in
+the engine**. `PlayerLayer` and Starforge tick `ScriptHost`, sprite animations and animators
+directly. If you register a `System`, tick the scene from your own layer.
 
 ---
 
 ## 24. Window System
 
-`Window` is accessed through `Application::Get().GetWindow()`. It abstracts GLFW and provides the surface for rendering, event callbacks, and fullscreen control.
+> **Full chapter: [`docs/guide/windowing-and-viewport.md`](docs/guide/windowing-and-viewport.md)** —
+> the whole `Window` surface, borderless custom chrome and drawing your own title bar, DPI, borderless
+> fullscreen and `SetFullscreenHotkeyOverride`, the render-while-dragging contract, `SetIcon` and
+> drop-a-file branding, and viewport space with its screen-pixel mouse contract.
 
-### Basic Queries
+`Window` is reached through `Application::Get().GetWindow()`. It wraps one GLFW window and its
+OpenGL 4.5 core context, translates OS messages into engine events, and owns fullscreen. The
+everyday surface is small — `GetWidth`/`GetHeight`, `SetTitle`, `SetSize`, `SetVSync`,
+`Minimize`/`Maximize`/`Restore`, `SetFullscreen` — and most apps touch none of it, because the
+defaults are already the intended behaviour.
 
-```cpp
-Cosmic::Window& win = Cosmic::Application::Get().GetWindow();
+Three of those defaults are load-bearing and worth knowing before you go looking for a setting.
+**Fullscreen is borderless-windowed** (`F11`): the window's style bits are stripped and it is
+stretched over the monitor with no display-mode switch, so Alt-Tab, capture overlays and
+multi-monitor cursor movement keep working; the cover rect is deliberately 1 px taller than the
+monitor to stop DWM promoting the window to independent flip. **Borderless custom chrome is on by
+default on Windows**: the OS title bar is gone, the app draws its own and reports its draggable
+region through `SetTitlebarHitTestCallback`, while Windows still supplies native resize, Aero Snap
+and the drop shadow. And **dragging or resizing the window does not freeze rendering** — a
+`WM_TIMER` pumped inside the Win32 modal loop keeps running full engine frames, everything except
+`PollEvents` and the Safe Zone. That last one is client-toggleable with
+`Application::SetRenderWhileDragging(false)`; its design record is
+[`docs/design/responsive-rendering-and-pause.md`](docs/design/responsive-rendering-and-pause.md).
 
-uint32_t w = win.GetWidth();
-uint32_t h = win.GetHeight();
+The other half of this topic is **viewport space**. A project running in the workspace shell does not
+draw to the backbuffer — it draws into `Application::GetFrameBuffer()`, which the shell displays as
+an image inside the Viewport panel. `Application::GetViewportPos()` / `GetViewportSize()` give that
+panel's rectangle in **desktop pixels**, which is the space `Input::GetMouseScreenPosition()` lives
+in — *not* the window-client space of `Input::GetMousePosition()`. Getting that pair wrong is the
+single most common source of "picking is off by exactly the title-bar height".
 
-win.SetVSync(true);   // enable vertical sync
-win.SetVSync(false);  // disable
-
-GLFWwindow* handle = win.GetHandle(); // raw GLFW handle for API-specific calls
-```
-
-### Fullscreen
-
-Fullscreen is implemented as **borderless-windowed fullscreen** — the window's style bits are stripped and it is stretched to cover the target monitor without switching display modes. This keeps Alt+Tab functional and avoids DWM interaction issues.
-
-```cpp
-win.SetFullscreen(true);   // go fullscreen on the current monitor
-win.SetFullscreen(false);  // restore windowed mode
-bool fs = win.IsFullscreen();
-```
-
-Transition details (2026-07-01, windowing plan W2/W5):
-
-- **Paint-through-transition:** immediately after the fullscreen `SetWindowPos`, the engine renders and presents one frame at the new size within the same toggle (the resize event is dispatched synchronously), so DWM never shows a stale windowed-size buffer. Both `SetWindowPos` calls also pass `SWP_NOCOPYBITS` so old client pixels are never blitted into the new rect.
-- **Maximize round-trip:** entering fullscreen from a maximized window saves the maximize state and the *normal* (restored) rect; exiting restores maximized properly instead of a floating window with the maximized rect.
-- **Stale-rect protection:** on exit the saved rect is clamped to the nearest monitor's work area (covers monitor unplugged / resolution changed while fullscreen), and `WM_DISPLAYCHANGE` / `WM_DPICHANGED` while fullscreen re-assert the monitor cover.
-- **Compat mode (W3, default since 2026-07-02):** the fullscreen cover rect is sized 1 px taller than the monitor (`FullscreenCompatMode::OversizeByOne`) so DWM never promotes the window to independent-flip "fullscreen optimizations" — the fix for black/torn frames when a capture overlay (Win+Shift+S) appears over fullscreen, since the forced flip→composed demotion glitches the GL present path and GL has no API to opt out of the promotion heuristic. The taskbar still hides and the extra row is off-screen; the only cost is composed-present latency a tools engine doesn't need. A/B without a rebuild via the env var `COSMIC_FULLSCREEN_COMPAT=exact|oversize`, or live via `win.SetFullscreenCompatMode(...)`. Rationale: [`docs/engineering-notes/borderless-window-dpi.md`](docs/engineering-notes/borderless-window-dpi.md).
-
-### Window Trace (debugging window/DWM issues)
-
-Set the environment variable `COSMIC_WINDOW_TRACE=1` (or call `Cosmic::Window::SetTraceEnabled(true)`) to log every window-state transition with millisecond timestamps: `WM_WINDOWPOSCHANGED` (rect + flags), `WM_SIZE` / `WM_DPICHANGED`, focus changes, `WM_SYSCOMMAND`, `WM_DISPLAYCHANGE`, modal move/size loop enter/exit, every fullscreen step (saved rect, style bits, cover rect), and `SwapBuffers` calls slower than 25 ms (occlusion-throttle signature). Lines are tagged `[WinTrace]` in the log.
-
-### Responsive Drag/Resize
-
-Dragging the title bar or a resize border does **not** freeze rendering: a `WM_TIMER` pumped inside the Win32 modal move/size loop keeps running full engine frames (fixed-step logic, animation, ImGui, serial polling) while the drag is in progress. Default **on**; clients opt out with `Application::SetRenderWhileDragging(false)` (see §3), which restores the old freeze-while-dragging behavior. Design rationale: [`docs/design/responsive-rendering-and-pause.md`](docs/design/responsive-rendering-and-pause.md).
-
-The default engine hotkey is **F11**. Client DLLs can override this with a custom key combination:
-
-```cpp
-// In OnAttach — register a custom hotkey (e.g. Alt+Enter)
-auto& win = Cosmic::Application::Get().GetWindow();
-win.SetFullscreenHotkeyOverride([](int key, int action, int mods) -> bool
-{
-    // key=257 (ENTER), action=1 (PRESS), mods=0x0002 (ALT)
-    if (key == 257 && action == 1 && (mods & 0x0002))
-    {
-        auto& app = Cosmic::Application::Get();
-        app.GetWindow().SetFullscreen(!app.GetWindow().IsFullscreen());
-        return true; // consumed — prevents the engine's F11 handler from firing
-    }
-    return false; // not our combo — let the engine handle it
-});
-
-// In OnDetach — always clear before DLL unload
-win.ClearFullscreenHotkeyOverride();
-```
-
-> Always call `ClearFullscreenHotkeyOverride()` from `OnDetach`. The callback captures a lambda that lives inside the DLL — if the DLL is unloaded before the engine clears the callback, the next keypress will invoke a dangling function pointer and crash.
-
-### OpenGL Version Requirement
-
-The engine requires **OpenGL 4.5** or higher. The GLFW context hint is set to 4.5 at window creation time, so the driver will refuse context creation and `glfwCreateWindow` will return null on hardware that does not support OpenGL 4.5. If that happens, a `CS_CORE_CRITICAL` log message is emitted and the constructor returns early without creating a graphics context.
-
-### GLFW Single-Window Constraint
-
-`glfwTerminate()` is called inside `Window::~Window()`. This is safe for the current single-window architecture, but it is a global operation — it destroys all remaining GLFW resources, not just those of the window being destructed. If a second `Window` instance is ever introduced, the first window's destructor will terminate GLFW and invalidate the second window's handles, crashing on the next `glfwPollEvents` call. The correct long-term fix is to move `glfwTerminate()` to `Application::Shutdown()`, balanced against the single `glfwInit()` call in `Window::Window()`. Until then, only one `Window` instance may exist at a time.
-
-### Borderless Custom Chrome (Custom Title Bar)
-
-On Windows the engine ships with **borderless custom chrome** enabled by default (`Window::SetCustomChrome(true)`, called from the constructor). The application **draws its own title bar** — the rocket + "Cosmic Engine" caption and the minimize / maximize / close buttons in the launcher — and reports its draggable region back to the window via `SetTitlebarHitTestCallback()` so dragging that strip performs a native window move.
-
-The implementation follows the Windows Terminal / Chromium pattern of **decoupling what the windowing framework models from what Windows actually renders**:
-
-- **GLFW models the window as borderless.** It is created with `GLFW_DECORATED = GLFW_FALSE`. This matters because GLFW computes *every* window rectangle (creation, DPI changes, min/max, programmatic resize) with `AdjustWindowRectExForDpi(getWindowStyle(), dpi)` using its **own** notion of the style. For a *decorated* window that adds a **DPI-scaled** caption + resize frame — so if GLFW believed the window were decorated while we stripped the frame only visually, its geometry would carry a phantom frame that grows with monitor scale. Borderless ⇒ that adjustment is **zero frame at every DPI**, so GLFW's client model always matches the real client.
-- **The real Win32 window keeps the full style.** `EnableCustomChromeWin32()` re-adds `WS_OVERLAPPEDWINDOW` via `SetWindowLong` so Windows still provides native **resize, Aero Snap, min/max animations**, and (with `DwmExtendFrameIntoClientArea`) the **drop shadow**. GLFW never reads `GetWindowLong` for its math, so these bits are invisible to it.
-- **The frame is removed visually**, not structurally, by a WndProc subclass: `WM_NCCALCSIZE` makes the client area span the whole window and `WM_NCHITTEST` re-implements the resize borders + the client-drawn caption drag region.
-- **The window is created hidden** (`GLFW_VISIBLE = GLFW_FALSE`) and shown with `glfwShowWindow()` only after the chrome is applied, so the first painted frame already has the settled frameless client (no first-show DPI race). `Application::Initialize()` then calls `SynchronizeRenderingState()` once to drive the true framebuffer size through `OnWindowResize` (FBO resize + `glViewport`). ImGui's `io.DisplaySize`/`io.DisplayFramebufferScale` are owned exclusively by the GLFW backend each frame — nothing re-assigns them after layout.
-
-> **Historical note (resolved):** Earlier builds created the window **decorated** and stripped the frame only via `WM_NCCALCSIZE`. At 100% scaling this was invisible, but on a HiDPI laptop (e.g. 125%) GLFW's decorated-frame DPI math left a persistent ~caption-height mismatch: the custom title bar was clipped off the top and **every click landed with a vertical offset**, until a fullscreen toggle (F11 in/out) forced a manual `SetWindowPos` that overrode GLFW's geometry. The fix was to make GLFW model the window as borderless (above), so the title bar and mouse mapping are correct on the first frame at any DPI. If a click offset ever returns, suspect the window is being modeled as decorated again, or a stray `io.DisplaySize` write between `Begin()` and `Render()`. See [`docs/engineering-notes/borderless-window-dpi.md`](docs/engineering-notes/borderless-window-dpi.md) for the full trace.
-
-Note that `Input::GetMousePosition()` still returns coordinates in GLFW window space (top-left origin) — see [Section 6](#6-input-polling) and the picking notes below; that contract is unchanged by custom chrome.
-
-### GPU Resource Teardown & Context Lifetime
-
-GPU resources must be released **while the OpenGL context is still current**. Issuing `glDelete*` after the context is gone faults inside `opengl32.dll` (an access violation on close).
-
-- `Renderer2D` holds its GPU handles (vertex arrays, buffers, shaders, and the 1×1 white texture) in a file-scope `static s_Data`. `Renderer2D::Shutdown()` resets every one of those `Ref<>`s explicitly, and `Application::Shutdown()` calls it **before** the window/context is destroyed — so the normal exit path frees everything cleanly.
-- As a safety net, all OpenGL resource destructors — `OpenGLTexture`, `OpenGLShader`, `OpenGLFrameBuffer`, `OpenGLVertexArray`, and the vertex/index buffers — guard their `glDelete*` calls behind `OpenGLContext::HasCurrentContext()` (a thin wrapper over `glfwGetCurrentContext()`). If an abnormal/abort exit tears down the context before graceful shutdown runs, these destructors become no-ops instead of crashing; the driver has already reclaimed the GPU memory with the context, so nothing leaks.
-- `main()` wraps `Run()` in a try/catch so that an exception escaping the frame loop still reaches `delete app` (graceful shutdown with the context alive) and is logged, rather than `std::terminate`.
-
-> **Client-dev rule:** reset your own `Ref<>` GPU handles (textures, shaders, materials, framebuffers) in `OnDetach()` so they free while the context is live — see [Section 4](#4-the-layer-system). The destructor guard is a crash safety net for teardown ordering, **not** a license to leak resources during normal operation.
-
-### Extra Pre-Docked Inspector Panels
-
-Request additional pre-docked panels from `OnAttach` before the first ImGui frame:
-
-```cpp
-void YourProject::OnAttach()
-{
-    auto* ws = Cosmic::Application::Get().GetWorkspaceLayer();
-    if (ws)
-    {
-        ws->RequestExtraDockedPanel({
-            "Timeline",         // must match the ImGui::Begin("...") call in your layer
-            ImGuiDir_Down,      // direction to split from the main viewport
-            0.25f               // fraction of the viewport area to give to this panel
-        });
-    }
-}
-```
+Two debugging levers: `COSMIC_WINDOW_TRACE=1` logs every window-state transition with millisecond
+timestamps (and any `SwapBuffers` slower than 25 ms), and `COSMIC_FULLSCREEN_COMPAT=exact|oversize`
+A/Bs the fullscreen sizing strategy without a rebuild. Background on the HiDPI work:
+[`docs/engineering-notes/borderless-window-dpi.md`](docs/engineering-notes/borderless-window-dpi.md).
 
 ---
 
 ## 25. Complete API Reference Tables
 
-### Renderer2D
+> **Retired.** This section used to hold hand-maintained signature tables for `Renderer2D`,
+> `Material`, `Shader`, `Texture2D`, `FrameBuffer`, `Input`, `Scene` and `Window`. That is exactly
+> what [`docs/reference/`](docs/reference/README.md) is for, entry by entry — signature,
+> behaviour, failure modes, worked example, pitfalls — with an upkeep contract that binds any PR
+> touching public API. **The heading and number stay** (README section numbers are frozen), but the
+> API surface is no longer maintained in two places.
 
-| Function               | Parameters                                                                               | Description                                                    |
-| ---------------------- | ---------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
-| `BeginScene`           | `const OrthographicCamera&`                                                              | Start a batch pass; cache VP matrix, reset buffers             |
-| `EndScene`             | —                                                                                        | Flush all batched geometry to GPU                              |
-| `PushRenderPass`       | `const glm::mat4& viewProj, const glm::vec4& viewportBounds`                             | Flush pending geometry; push new VP matrix + viewport          |
-| `PopRenderPass`        | —                                                                                        | Flush; pop current pass; restore prior pass state              |
-| `Flush`                | —                                                                                        | Submit all staged quads, lines, and circles to GPU immediately |
-| `SetViewportSize`      | `uint32_t width, uint32_t height`                                                        | Update `u_ViewportSize` uniform source                         |
-| `DrawQuad`             | `vec2/vec3 pos, vec2 size, vec4 color`                                                   | Flat-color quad; `vec2` inserts z=0                            |
-| `DrawQuad`             | `vec2/vec3 pos, vec2 size, Ref<Texture>, float tiling=1, vec4 tint=white`                | Textured quad                                                  |
-| `DrawQuad`             | `vec2/vec3 pos, vec2 size, Ref<Material>`                                                | Material/shader-driven quad                                    |
-| `DrawQuad`             | `vec2/vec3 pos, vec2 size, Ref<SubTexture2D>, vec4 tint=white`                           | Sprite-atlas tile                                              |
-| `DrawRotatedQuad`      | `vec2/vec3 pos, vec2 size, float rot, vec4 color`                                        | Rotated flat quad (rot in radians)                             |
-| `DrawRotatedQuad`      | `vec2/vec3 pos, vec2 size, float rot, Ref<Texture>, float tiling=1, vec4 tint=white`     | Rotated textured quad                                          |
-| `DrawRotatedQuad`      | `vec3 pos, vec2 size, float rot, Ref<Material>`                                          | Rotated material quad (vec3 only)                              |
-| `DrawRotatedQuad`      | `vec2/vec3 pos, vec2 size, float rot, Ref<SubTexture2D>, vec4 tint=white`                | Rotated sprite-atlas tile                                      |
-| `DrawCircle`           | `vec3 pos, vec2 size, vec4 color, float thickness, float fade, Ref<Shader>=nullptr`      | SDF circle; explicit thickness+fade required for vec3 overload |
-| `DrawCircle`           | `vec2 pos, vec2 size, vec4 color, float thickness=1, float fade=0.005, Ref<Shader>=null` | SDF circle; z=0; thickness+fade have defaults                  |
-| `DrawLine`             | `vec3 p0, vec3 p1, vec4 color`                                                           | Line segment between two world-space points                    |
-| `DrawRect`             | `vec3 pos, vec2 size, vec4 color`                                                        | Wireframe rectangle (4 lines)                                  |
-| `DrawInstancedQuads`   | `const InstanceQuadData* instances, uint32_t count, Ref<Shader>=nullptr`                 | Single GPU instanced draw call for N quads                     |
-| `DrawInstancedCircles` | `const InstanceCircleData* instances, uint32_t count, Ref<Shader>=nullptr`               | Single GPU instanced draw call for N circles                   |
-| `ResetStats`           | —                                                                                        | Clear draw call and geometry counters                          |
-| `GetStats`             | —                                                                                        | Returns `Statistics` struct                                    |
-| `SetStatsStatus`       | `bool enabled`                                                                           | Toggle stats recording                                         |
+| Looking for | Go to |
+| --- | --- |
+| The formal per-call lookup | [`docs/reference/README.md`](docs/reference/README.md) — chaptered by domain, with a coverage manifest mapping every public header to its chapter |
+| How to *use* a subsystem | [`docs/guide/README.md`](docs/guide/README.md) — one task-oriented chapter per topic |
+| Why it works that way | [`docs/systems/README.md`](docs/systems/README.md) — subsystem explainers |
+| Commands, flags, CMake options, hotkeys | [§1.5](#15-command-reference--every-command) — still canonical, still here |
 
-**`Statistics` struct:**
-
-| Field                   | Type       | Description                         |
-| ----------------------- | ---------- | ----------------------------------- |
-| `DrawCalls`             | `uint32_t` | Number of GPU draw calls this frame |
-| `QuadCount`             | `uint32_t` | Number of batched quads submitted   |
-| `LineCount`             | `uint32_t` | Number of batched lines submitted   |
-| `GetTotalVertexCount()` | `uint32_t` | `QuadCount * 4 + LineCount * 2`     |
-| `GetTotalIndexCount()`  | `uint32_t` | `QuadCount * 6`                     |
-
----
-
-### Material
-
-| Function           | Parameters                   | Description                                                 |
-| ------------------ | ---------------------------- | ----------------------------------------------------------- |
-| `Material::Create` | `Ref<Shader>, string name`   | Factory — creates a new material                            |
-| `Clone`            | `Ref<Material>, string name` | Deep-copy all uniform caches; shares the same `Ref<Shader>` |
-| `Set`              | `string name, float`         | Set a scalar float uniform                                  |
-| `Set`              | `string name, vec2`          | Set a 2-component vector uniform                            |
-| `Set`              | `string name, vec3`          | Set a 3-component vector uniform                            |
-| `Set`              | `string name, vec4`          | Set a 4-component vector uniform                            |
-| `Set`              | `string name, Ref<Texture>`  | Bind a texture to a named slot                              |
-| `GetFloat`         | `string name`                | Retrieve cached float (0.0 if missing)                      |
-| `GetVector2`       | `string name`                | Retrieve cached vec2 (zero if missing)                      |
-| `GetVector3`       | `string name`                | Retrieve cached vec3 (zero if missing)                      |
-| `GetVector4`       | `string name`                | Retrieve cached vec4 (**`glm::vec4(1.0f)` — white — if missing**, not zero) |
-| `GetTexture`       | `string name`                | Retrieve cached texture (`nullptr` if missing)              |
-| `Bind`             | —                            | Bind shader and upload all cached uniforms                  |
-| `GetShader`        | —                            | Returns the underlying `Ref<Shader>`                        |
-| `GetName`          | —                            | Returns the material's debug name string                    |
-| `HasFloat`         | `string name`                | True if the float uniform is set                            |
-| `HasFloat2`        | `string name`                | True if the vec2 uniform is set                             |
-| `HasFloat3`        | `string name`                | True if the vec3 uniform is set                             |
-| `HasFloat4`        | `string name`                | True if the vec4 uniform is set                             |
-| `HasTexture`       | `string name`                | True if the texture slot is set                             |
-
----
-
-### Shader
-
-| Function         | Parameters                     | Description                          |
-| ---------------- | ------------------------------ | ------------------------------------ |
-| `Shader::Create` | `string filepath`              | Load and compile from a `.glsl` file; returns `nullptr` on compilation or link failure — always null-check the result |
-| `Bind`           | —                              | Activate in the GPU pipeline         |
-| `Unbind`         | —                              | Deactivate                           |
-| `SetInt`         | `string, int`                  | Upload integer uniform               |
-| `SetIntArray`    | `string, int*, uint32_t count` | Upload integer array uniform         |
-| `SetFloat`       | `string, float`                | Upload float uniform                 |
-| `SetFloat2`      | `string, vec2`                 | Upload 2-component float uniform     |
-| `SetFloat3`      | `string, vec3`                 | Upload 3-component float uniform     |
-| `SetFloat4`      | `string, vec4`                 | Upload 4-component float uniform     |
-| `SetMat3`        | `string, mat3`                 | Upload 3×3 matrix uniform            |
-| `SetMat4`        | `string, mat4`                 | Upload 4×4 matrix uniform            |
-
----
-
-### SubTexture2D
-
-| Function / Constructor | Parameters                                                          | Description                                                                        |
-| ---------------------- | ------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| `CreateFromCoords`     | `Ref<Texture2D>, vec2 coords, vec2 cellSize, vec2 spriteSize={1,1}` | Static factory. `coords` is (column, row) in grid units from bottom-left.          |
-| `SubTexture2D`         | `Ref<Texture2D>, vec2 min, vec2 max`                                | Direct UV-range constructor. `min`/`max` in normalized [0,1] texture space.        |
-| `GetTexture()`         | —                                                                   | Returns `const Ref<Texture2D>&` — the parent atlas.                                |
-| `GetTexCoords()`       | —                                                                   | Returns `const glm::vec2*` — pointer to the 4-element UV corner array (CCW order). |
-
----
-
-### OrthographicCameraController
-
-| Function                       | Parameters                                       | Description                                                                                 |
-| ------------------------------ | ------------------------------------------------ | ------------------------------------------------------------------------------------------- |
-| `OrthographicCameraController` | `float aspectRatio, bool rotation=false`         | Constructor. Enables Q/E rotation support if `rotation=true`.                               |
-| `OnUpdate`                     | `float ts`                                       | Poll WASD input, advance zoom interpolation, update camera transform. Call from `OnUpdate`. |
-| `OnEvent`                      | `Event&`                                         | Route `MouseScrolledEvent` to zoom, `WindowResizeEvent` to `OnResize`.                      |
-| `OnResize`                     | `float width, float height`                      | Recalculate aspect ratio and projection. Call when the render target changes size.          |
-| `GetCamera`                    | —                                                | Returns `OrthographicCamera&` for `BeginScene` or `RenderPass`.                             |
-| `GetZoomLevel`                 | —                                                | Current interpolated zoom scalar.                                                           |
-| `SetZoomLevel`                 | `float level`                                    | Hard-snap zoom, bypassing interpolation.                                                    |
-| `SetZoomLimits`                | `float min, float max`                           | Clamp the scroll-wheel zoom range. Default: 0.25–10.0.                                      |
-| `SetZoomSpeed`                 | `float speed`                                    | World units per scroll tick. Default: 0.25.                                                 |
-| `GetZoomSpeed`                 | —                                                | Returns current zoom speed.                                                                 |
-| `SetTranslationSpeed`          | `float speed`                                    | Pan speed in world units/second. Scales with zoom level. Default: 5.0.                      |
-| `GetTranslationSpeed`          | —                                                | Returns current translation speed.                                                          |
-| `SetRotationSpeed`             | `float speed`                                    | Degrees/second for Q/E rotation. Only active when `rotation=true`. Default: 180.0.          |
-| `GetRotationSpeed`             | —                                                | Returns current rotation speed.                                                             |
-| `SetPositionLimits`            | `float minX, float maxX, float minY, float maxY` | Hard-clamp pan bounds in world space. Default: ±1000 on both axes.                          |
-| `SetPosition`                  | `const glm::vec3& position`                      | Directly set world position, bypassing keyboard input.                                      |
-| `GetPosition`                  | —                                                | Returns `const glm::vec3&` — current camera world position.                                 |
-| `SetManualMovementEnabled`     | `bool enabled`                                   | Enable/disable WASD panning. Disable for code-driven cameras. Default: true.                |
-| `IsManualMovementEnabled`      | —                                                | Returns true if keyboard panning is active.                                                 |
-| `SetKeyBindings`               | `const CameraKeyBindings& bindings`              | Replace the default WASD+QE key mapping.                                                    |
-| `GetKeyBindings`               | —                                                | Returns a mutable reference to the active key bindings.                                     |
-
----
-
-### Layer Timeline API
-
-| Function                    | Description                                                            |
-| --------------------------- | ---------------------------------------------------------------------- |
-| `GetLocalTime()`            | Returns the accumulated scaled time for this layer (seconds).          |
-| `SetLocalTime(float)`       | Directly set the time accumulator (e.g. for level reset).              |
-| `GetTimeScale()`            | Returns this layer's local time scale multiplier.                      |
-| `SetTimeScale(float)`       | Set the layer's local scale (0=paused, 0.5=half speed, -1=rewind).     |
-| `UpdateLayerTime(float dt)` | Called by the engine each frame. Do not call manually in normal usage. |
-
----
-
-### Application
-
-| Function                                        | Description                                                      |
-| ----------------------------------------------- | ---------------------------------------------------------------- |
-| `Application::Get()`                            | Static singleton accessor.                                       |
-| `GetWindow()`                                   | Returns `Window&`.                                               |
-| `GetFrameBuffer()`                              | Returns `Ref<FrameBuffer>` — the main render target.             |
-| `GetWorkspaceLayer()`                           | Returns `WorkspaceLayer*` (nullptr before a DLL transition).     |
-| `PushLayer(Layer*)`                             | Add a layer to the stack.                                        |
-| `PushOverlay(Layer*)`                           | Add an overlay (always above layers) to the stack.               |
-| `TransitionFromLauncherToWorkspace(string dll)` | Queue a DLL load transition for the Safe Zone.                   |
-| `TransitionToLauncher()`                        | Queue a return to the Launcher for the Safe Zone.                |
-| `UseFixedTimeStep(bool)`                        | Enable/disable the 60Hz fixed update pass.                       |
-| `SetTimeScale(float)`                           | Set the global time scale multiplier.                            |
-| `GetTimeScale()`                                | Returns the current global time scale.                           |
-| `GetAbsoluteTime()`                             | Returns raw engine uptime in seconds (unaffected by time scale). |
-| `Close()`                                       | Signal the engine to exit the run loop cleanly.                  |
-
----
-
-### FrameBuffer
-
-| Function                       | Parameters                        | Description                                                            |
-| ------------------------------ | --------------------------------- | ---------------------------------------------------------------------- |
-| `FrameBuffer::Create`          | `const FramebufferSpecification&` | Factory — creates a platform-specific FBO instance.                    |
-| `Bind`                         | —                                 | Redirect subsequent draw calls to this FBO.                            |
-| `Unbind`                       | —                                 | Restore the default screen framebuffer.                                |
-| `Resize`                       | `uint32_t width, uint32_t height` | Reallocate GPU textures at new dimensions.                             |
-| `GetWidth`                     | —                                 | Returns current FBO width in pixels.                                   |
-| `GetHeight`                    | —                                 | Returns current FBO height in pixels.                                  |
-| `GetColorAttachmentRendererID` | —                                 | Returns the OpenGL texture ID for the color buffer (for ImGui::Image). |
-| `GetSpecification`             | —                                 | Returns `const FramebufferSpecification&`.                             |
-
-**`FramebufferSpecification` fields:**
-
-| Field             | Type       | Default | Description                                        |
-| ----------------- | ---------- | ------- | -------------------------------------------------- |
-| `Width`           | `uint32_t` | 0       | Width in pixels.                                   |
-| `Height`          | `uint32_t` | 0       | Height in pixels.                                  |
-| `Samples`         | `uint32_t` | 1       | MSAA sample count (1 = no MSAA).                   |
-| `SwapChainTarget` | `bool`     | false   | True if targeting the system back buffer directly. |
-
----
-
-### Scene
-
-| Function                              | Description                                                                                                  |
-| ------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| `Scene::Create()`                     | Static factory — returns `Ref<Scene>`.                                                                       |
-| `CreateEntity(string name)`           | Instantiate entity with `TransformComponent` + `TagComponent`. Default tag = `"GenericEntity"`.              |
-| `DestroyEntity(Entity)`               | Remove entity and all its components from the registry.                                                      |
-| `OnUpdate(float dt)`                  | Tick all sequential system `OnUpdate` passes + parallel prepare/execute/merge passes.                        |
-| `OnFixedUpdate(float dt)`             | Tick all sequential system `OnFixedUpdate` passes + parallel fixed-step passes.                              |
-| `OnRender(const OrthographicCamera&)` | Full render pass — `BeginScene`, draw all `SpriteRendererComponent` entities by material bucket, `EndScene`. |
-| `AddSystem<T>(args...)`               | Allocate and attach a system. Returns `T&`. Automatically registers `ParallelSystem`s.                       |
-| `GetSystem<T>()`                      | Returns `T*` if a system of that type is registered, `nullptr` otherwise.                                    |
-| `RemoveAllSystems()`                  | Clear all registered systems.                                                                                |
-| `View<Components...>()`               | Returns an EnTT view for iterating entities with all listed component types.                                 |
-| `GetRegistry()`                       | Returns `entt::registry&` for direct registry access.                                                        |
-
----
-
-### Window
-
-| Function                          | Description                                                                                       |
-| --------------------------------- | ------------------------------------------------------------------------------------------------- |
-| `GetWidth()`                      | Current window client-area width in pixels.                                                       |
-| `GetHeight()`                     | Current window client-area height in pixels.                                                      |
-| `SetVSync(bool)`                  | Enable/disable vertical synchronization.                                                          |
-| `GetHandle()`                     | Returns `GLFWwindow*` for API-specific calls.                                                     |
-| `SetFullscreen(bool)`             | Toggle borderless-windowed fullscreen on the current monitor.                                     |
-| `IsFullscreen()`                  | Returns the current fullscreen state.                                                             |
-| `SetFullscreenHotkeyOverride(fn)` | Register a callback `(int key, int action, int mods) -> bool` to intercept key events before F11. |
-| `ClearFullscreenHotkeyOverride()` | Remove the registered callback. Call from `OnDetach` before DLL unload.                           |
+Several reference chapters are still skeletons awaiting their work order; until one lands, the
+matching **guide** chapter is the client-facing source and says so in its header block. The guide
+index marks which is which.
 
 ---
 
 ## 26. Telemetry System
 
-Five subsystems work together to record, export, and replay per-entity float-channel data. The complete working reference is [`TemplateTelemetryLayer`](Cosmic/templates/ExampleProject/src/TemplateTelemetryLayer.cpp), which wires all five for 20 simulated agents.
-
-| Subsystem | File | Role |
-| --------- | ---- | ---- |
-| `DataRecorder` | `telemetry/DataRecorder.h/.cpp` | Thread-safe multi-entity capture |
-| `DataPlayer` | `telemetry/DataPlayer.h/.cpp` | Binary playback with seek and interpolation |
-| `TelemetryPanel` | `telemetry/TelemetryPanel.h/.cpp` | ImGui/ImPlot UI; owns the replay lifecycle |
-| `EntitySelection` | `telemetry/EntitySelection.h/.cpp` | Global "which entity is selected" service |
-| `EntityPicker` | `telemetry/EntityPicker.h` | Left-click → world-space AABB hit test |
-
-### Recording
-
-**Step 1 — Register entities** (main-thread only, before any parallel jobs):
-
-```cpp
-// Returns a stable uint32_t ID. Store it on the component that will call Record.
-uint32_t id = m_Recorder.Register(
-    "Agent_00", "Agent",
-    { "PosX", "PosY", "Speed", "Heading", "Power" }
-);
-```
-
-**Step 2 — Pre-allocate buffers** (once, after all `Register` calls):
-
-```cpp
-// 5 minutes at 60 Hz — zero heap allocation in the hot path after this call.
-m_Recorder.ReserveCapacity(static_cast<size_t>(60.0f * 300.0f));
-```
-
-**Step 3 — Record each tick** (thread-safe; call from `OnFixedParallelExecute` or the main thread):
-
-```cpp
-recorder->Record(agent.recordId, {
-    agent.position.x, agent.position.y,
-    vLen, agent.heading, agent.power
-});
-```
-
-**Step 4 — Advance the recorder clock** (once per fixed tick while recording is active):
-
-```cpp
-void MyLayer::OnFixedUpdate(float dt)
-{
-    if (m_Recording)
-        m_Recorder.Tick(dt);
-}
-```
-
-**Step 5 — Stop and export** (non-blocking; background thread writes the files):
-
-```cpp
-m_Recording = false;
-m_Recorder.Flush("logs", "my_session", 60.0f);
-// Poll IsFlushing() each frame, or call WaitForFlush() before shutdown.
-```
-
-Output layout:
-```
-logs/my_session/
-├── scene.bin      ← all entities, v1 binary
-├── Agent_00.csv
-├── Agent_01.csv
-...
-```
-
-If `sessionName` is empty, Flush uses an ISO-8601 timestamp for the folder name.
-
-> **Between recording sessions:** Call `m_Recorder.Clear()` to drop all frames without losing registrations or reserved capacity. Re-calling `Register` is not required.
-
-### Autosave (Crash Failsafe)
-
-Long recording sessions shouldn't be lost to a crash or power pull. `SetAutosave` makes the recorder periodically flush a rolling snapshot while recording:
-
-```cpp
-// When recording starts:
-m_Recorder.SetAutosave(
-    "recordings/MyApp/_autosave",  // fixed base folder for the rolling snapshot
-    m_SessionName,                 // fixed session name — REUSED, not timestamped
-    5.0f,                          // flush interval in seconds of recorded time
-    60.0f);                        // sample rate written into the file header
-
-// When recording stops (before the final manual Flush):
-m_Recorder.DisableAutosave();
-```
-
-**How it works:** every `intervalSec` of recorded time, `Tick()` triggers the same non-blocking background `Flush()` you'd call manually — the main thread never stalls. If a flush is still in progress when the next interval elapses, that tick is skipped rather than queued. Because the session name is fixed and non-empty, each snapshot **overwrites the same folder** instead of spawning a new timestamped folder per tick.
-
-**Recovery after a crash:** the autosave folder contains a complete, loadable session at most `intervalSec` old — open it with the replay Load dialog (or `DataPlayer::Load`) like any other recording. SF_Telem uses `recordings/SF_Telem/_autosave` with a 5-second interval; adopt the same `_autosave` naming convention so users can tell rolling snapshots from deliberately saved sessions.
-
-> `DisableAutosave()` only stops the periodic flushing — files already written stay on disk until the next autosaved session overwrites them.
-
-### Replay
-
-```cpp
-Cosmic::DataPlayer m_Player;
-
-// Directory: loads scene.bin if present, else every *.bin in the folder.
-// A single .bin path loads just that file.
-if (m_Player.Load("logs/my_session"))
-{
-    m_Player.SetSpeed(1.0f);   // negative = reverse
-    m_Player.Play();
-}
-
-// Drive from OnUpdate
-m_Player.Tick(ts);
-
-// Query the interpolated state for any entity at the current playhead
-Cosmic::TelemetryFrame frame;
-if (m_Player.GetFrame("Agent_00", frame))
-{
-    float x = frame.values[0]; // PosX
-    float y = frame.values[1]; // PosY
-}
-
-// Sample a historical position without moving the playhead
-Cosmic::TelemetryFrame historical;
-m_Player.SampleAt("Agent_00", 12.5f, historical);
-```
-
-### Making Entities Selectable
-
-Add the empty `SelectableComponent` tag to any entity you want `EntityPicker` to test:
-
-```cpp
-entity.AddComponent<Cosmic::SelectableComponent>();
-CS_REGISTER_COMPONENT(Workspace::MyComponent) // required for any component crossing the DLL boundary
-```
-
-No fields, no configuration. Adding the tag is the only requirement.
-
-### Entity Picking on Left-Click
-
-`Input::GetMousePosition()` returns coordinates in GLFW window space — (0,0) at the top-left of the OS window. The rendered image lives inside the "Viewport" ImGui panel, which is offset from the window origin by the inspector sidebar and title bars. You must subtract the viewport content origin and use the viewport size (not the full window size) before calling `ScreenToWorld`, or every pick will land at the wrong world coordinate.
-
-Use `Application::GetViewportPos()` and `Application::GetViewportSize()` to get the correct bounds:
-
-```cpp
-void MyLayer::OnEvent(Cosmic::Event& e)
-{
-    Cosmic::EventDispatcher dispatcher(e);
-    dispatcher.Dispatch<Cosmic::MouseButtonPressedEvent>(
-        [this](Cosmic::MouseButtonPressedEvent& ev) -> bool
-        {
-            if (ev.GetMouseButton() != CS_MOUSE_BUTTON_LEFT) return false;
-
-            // Respect the panel's picking toggle (checkbox in the telemetry panel).
-            if (!m_Panel.IsPickingEnabled()) return false;
-
-            // Skip picking during replay — live entity handles are invalid.
-            if (m_Panel.GetMode() == Cosmic::TelemetryPanel::Mode::Replay)
-                return false;
-
-            auto& app        = Cosmic::Application::Get();
-            glm::vec2 vpPos  = app.GetViewportPos();   // top-left of rendered image
-            glm::vec2 vpSize = app.GetViewportSize();  // size of rendered image
-
-            // Subtract the viewport origin so (0,0) = top-left of the image.
-            glm::vec2 mousePos = Cosmic::Input::GetMousePosition() - vpPos;
-
-            // Reject clicks that landed on a panel border or title bar.
-            if (mousePos.x < 0.0f || mousePos.y < 0.0f ||
-                mousePos.x > vpSize.x || mousePos.y > vpSize.y)
-                return false;
-
-            glm::vec2 worldPos = Cosmic::EntityPicker::ScreenToWorld(
-                m_Camera.GetCamera(), mousePos, vpSize);
-
-            Cosmic::Entity hit = Cosmic::EntityPicker::Pick(m_Scene, worldPos);
-            if (hit)
-            {
-                const std::string& name = hit.GetComponent<Cosmic::TagComponent>().Tag;
-                Cosmic::EntitySelection::Set(hit, name, "Agent");
-                ev.Handled = true;
-                return true;
-            }
-            return false;
-        });
-}
-```
-
-`Pick` iterates only entities with both `TransformComponent` and `SelectableComponent`. It tests the 2D AABB (`Position ± Scale/2`) and returns the first hit, or an invalid `Entity{}` if nothing was hit.
-
-#### Picking Toggle
-
-`TelemetryPanel` renders a **"Click to Select"** checkbox in its panel UI. Check `m_Panel.IsPickingEnabled()` at the top of your click handler (as shown above) to respect it. This lets users disable viewport clicking without modifying any code — useful when the camera's own drag-pan conflicts with selection.
-
-#### Filtering Which Entities Are Selectable
-
-`Pick` accepts an optional second argument: a `std::function<bool(Entity)>` predicate. Return `false` from the predicate to reject an otherwise-hit entity. This lets different systems define their own selectability rules without removing `SelectableComponent`:
-
-```cpp
-// Only select entities tagged "Agent"
-Cosmic::Entity hit = Cosmic::EntityPicker::Pick(m_Scene, worldPos,
-    [](Cosmic::Entity e) {
-        return e.GetComponent<Cosmic::TagComponent>().Tag.starts_with("Agent");
-    });
-
-// Only select unlocked entities
-Cosmic::Entity hit = Cosmic::EntityPicker::Pick(m_Scene, worldPos,
-    [](Cosmic::Entity e) {
-        return !e.GetComponent<MyLockComponent>().Locked;
-    });
-```
-
-Passing `nullptr` (or omitting the argument) accepts all entities that have `SelectableComponent`.
-
-### EntitySelection — Subscribing to Selection Changes
-
-```cpp
-// Subscribe — returns a handle you must store.
-m_SubHandle = Cosmic::EntitySelection::OnChanged(
-    [this](const std::string& name, const std::string& tag)
-    {
-        m_SelectedName = name;
-        RebuildCharts(name, tag);
-    });
-
-// Always unsubscribe in the destructor to prevent dangling captures.
-MySystem::~MySystem()
-{
-    Cosmic::EntitySelection::Unsubscribe(m_SubHandle);
-}
-```
-
-Read the current selection from any thread:
-
-```cpp
-std::string name = Cosmic::EntitySelection::GetName();
-std::string tag  = Cosmic::EntitySelection::GetTag();
-bool        has  = Cosmic::EntitySelection::HasSelection();
-
-// Live handle — invalid during replay (SetByName was called, not Set).
-Cosmic::Entity e = Cosmic::EntitySelection::GetEntity();
-if (e) { /* valid live handle */ }
-```
-
-### Wiring TelemetryPanel
-
-Set up in `OnAttach`. Both data sources are attached regardless of the starting mode:
-
-```cpp
-// Panel starts in Live mode automatically when a non-null recorder is attached.
-m_Panel.SetRecorder(&m_Recorder);
-m_Panel.SetPlayer(&m_Player);
-
-// Register a custom inspector for entities whose tag matches "Agent".
-// Priority: entity name inspector > tag inspector > auto raw-value fallback.
-m_Panel.RegisterTagInspector("Agent",
-    [](const std::string& name, const Cosmic::TelemetryFrame& f)
-    {
-        if (f.values.size() >= 5)
-        {
-            ImGui::Text("Position : (%.2f, %.2f)", f.values[0], f.values[1]);
-            ImGui::Text("Speed    : %.3f u/s",     f.values[2]);
-            ImGui::Text("Heading  : %.2f rad",     f.values[3]);
-            ImGui::Text("Power    : %.3f",         f.values[4]);
-        }
-    });
-```
-
-Drive from layer hooks:
-
-```cpp
-void MyLayer::OnUpdate(float ts)
-{
-    // Advances player clock (replay) and pushes the current frame into ring buffers.
-    m_Panel.OnUpdate(ts);
-}
-
-void MyLayer::OnImGuiRender()
-{
-    // Transport controls are decoupled from the chart panel — embed them anywhere.
-    ImGui::Begin("Project Inspector Top");
-    m_Panel.DrawTransportControls(); // no-op when no recording is loaded
-    ImGui::End();
-
-    // Replay loader, entity selector, ImPlot charts, inspector.
-    ImGui::Begin("Telemetry");
-    m_Panel.OnImGuiRender();
-    ImGui::End();
-}
-```
-
-### Mode Transitions
-
-| Mode | Active when | Data source |
-| ---- | ----------- | ----------- |
-| `Mode::None` | No sources attached | — |
-| `Mode::Live` | `SetRecorder()` called, or `SetMode(Mode::Live)` explicit | `DataRecorder` |
-| `Mode::Replay` | User clicks Load in the panel and file loads successfully | `DataPlayer` |
-
-Gate simulation on mode to prevent the physics pass from running during replay:
-
-```cpp
-void MyLayer::OnFixedUpdate(float dt)
-{
-    const float localDt = dt * GetTimeScale();
-    if (localDt <= 0.0f) return;
-
-    // Simulation only runs in Live mode — player drives positions in Replay mode.
-    if (m_Panel.GetMode() != Cosmic::TelemetryPanel::Mode::Replay)
-        m_Scene->OnFixedUpdate(localDt);
-
-    if (m_Recording)
-        m_Recorder.Tick(localDt);
-}
-```
-
-Override `TransformComponent` positions from player data during replay so entities move with the playhead:
-
-```cpp
-// In OnUpdate, after m_Panel.OnUpdate(ts):
-if (m_Panel.GetMode() == Cosmic::TelemetryPanel::Mode::Replay && m_Player.IsLoaded())
-{
-    auto view = m_Scene->View<Cosmic::TagComponent, Cosmic::TransformComponent>();
-    for (auto rawE : view)
-    {
-        const std::string& entityName = view.get<Cosmic::TagComponent>(rawE).Tag;
-        Cosmic::TelemetryFrame frame;
-        if (m_Player.GetFrame(entityName, frame) && frame.values.size() >= 2)
-        {
-            auto& t = view.get<Cosmic::TransformComponent>(rawE);
-            t.Position.x = frame.values[0];
-            t.Position.y = frame.values[1];
-        }
-    }
-}
-```
-
-### DataRecorder API Summary
-
-| Function | Thread | Description |
-| -------- | ------ | ----------- |
-| `Register(name, tag, channels)` | Main only | Register entity; returns stable `uint32_t` ID. Must complete before any `Record` calls. |
-| `ReserveCapacity(frames)` | Main only | Pre-allocate columnar storage. Eliminates all hot-path allocations. |
-| `Record(id, {values...})` | Any | Per-entity lock held <1 µs. Zero-alloc after `ReserveCapacity`. |
-| `Tick(dt)` | Main | Advance elapsed-time counter. Call once per fixed tick while recording. |
-| `GetCurrentFrame(name, out)` | Any | Latest recorded frame for display (copy, safe after lock). |
-| `GetRecordedDuration()` | Any | Total simulated time recorded, in seconds. |
-| `Flush(folder, session, rate)` | Main | Non-blocking snapshot + background write to `scene.bin` + CSVs. |
-| `WaitForFlush()` | Main | Block until background write thread has finished. |
-| `IsFlushing()` | Any | True while background thread is active. |
-| `Clear()` | Main | Drop all frames; keep registrations and reserved capacity. Resets elapsed time to zero. |
-
-### DataPlayer API Summary
-
-| Function | Description |
-| -------- | ----------- |
-| `Load(folderOrPath)` | Load directory (prefers `scene.bin`) or single `.bin`. Returns `true` on success. |
-| `Unload()` | Clear all data and reset playback state. |
-| `Play()` / `Pause()` | Start/stop advancing the playhead on `Tick`. |
-| `SetSpeed(float)` | Playback multiplier. Negative values play in reverse. |
-| `SetPosition(seconds)` | Seek to an arbitrary timestamp. |
-| `GetPosition()` / `GetDuration()` | Current playhead position and total recording duration in seconds. |
-| `Tick(dt)` | Advance by `dt × speed`. Auto-stops at both endpoints. No-op when paused or not loaded. |
-| `GetFrame(name, out)` | Linearly interpolated frame at the current playhead position. |
-| `SampleAt(name, seconds, out)` | Interpolated frame at an arbitrary position without moving the playhead. |
-| `IsLoaded()` / `IsPlaying()` | State queries. |
-| `GetSampleRate()` | Sample rate from the file header (Hz). Returns 60 if not loaded. |
+> **Full chapter: [`docs/guide/serial-and-telemetry.md`](docs/guide/serial-and-telemetry.md)** —
+> defining channels, recording from worker threads, the autosave failsafe, the v1 binary format
+> read off the writer, replay with interpolation and scrubbing, the panel's three draw entry
+> points, and the entity-selection service behind the plots. The serial transport those bytes
+> arrive on is **§20**, retired into the same chapter.
+
+Five components record, export and replay per-entity float-channel data. `DataRecorder` is the
+capture side: register each entity once with a fixed channel list, get a stable `uint32_t` ID back,
+then call `Record(id, values)` every tick — from any thread. Storage is columnar
+(`columns[channel][frame]`), each entity carries its own mutex, and after one `ReserveCapacity` call
+the hot path performs no allocation at all, which is what makes recording from a `ParallelSystem`'s
+workers a normal thing to do rather than a stunt. `DataPlayer` reads the files back and answers
+"what was this entity doing at time *t*" with a binary search plus linear interpolation, so
+scrubbing and reverse playback work regardless of the recorded rate. `TelemetryPanel` bridges either
+source to ImGui/ImPlot and tracks an explicit `Mode` (`None`/`Live`/`Replay`) so the source is never
+ambiguous. `EntitySelection` is the process-wide "which entity is selected" service the panel
+subscribes to, and `EntityPicker` turns a viewport click into a hit against any entity carrying the
+empty `SelectableComponent` tag.
+
+`Flush` snapshots every entity under its lock and writes on a background thread, producing
+`<session>/scene.bin` plus one CSV per entity. `SetAutosave` makes `Tick` roll that same
+non-blocking write to a fixed folder every few seconds of recorded time, so a hard crash costs at
+most one interval — the session name is forced non-empty precisely so each snapshot overwrites one
+folder rather than spawning a new one. Every row in the binary file carries its own simulation
+timestamp, which is why a recording made under a non-unit time scale replays at its authored speed.
+
+Two things to know before you go looking. The binary format is **v1**, and it is the only version
+the loader accepts — but `DataRecorder.cpp` still carries a comment calling the write "v3 format",
+three lines above `const uint32_t version = 1u;`. Read the writer, not the comment. And neither
+`DataRecorder::Flush` nor `DataPlayer::Load` resolves VFS paths: hand them a raw filesystem path, or
+wrap it in `Cosmic::FileSystem::Resolve` yourself.
+
+Part II's [§42 Telemetry System — Implementation Details](#42-telemetry-system--implementation-details)
+covers the internals.
 
 ---
 
 ## 27. Fonts and Text Rendering
 
-Cosmic has **two** text systems, both fed by the same `.ttf`/`.otf` files dropped
-into a fonts folder — `engine://fonts` (bundled with the engine) or
-`project://fonts` (per-project faces):
+> **Full chapters:** UI text →
+> [`docs/guide/editor-ui-and-theming.md`](docs/guide/editor-ui-and-theming.md#fonts-and-lucide-icons) ·
+> world-space text →
+> [`docs/guide/rendering-2d.md`](docs/guide/rendering-2d.md#draw-world-space-text)
 
-- **UI text** — `Cosmic::UI::Fonts` registers fonts into ImGui's own glyph atlas,
-  for panels, overlays and HUDs.
-- **World-space text** — `Cosmic::Font` + `Renderer2D::DrawString` draw text inside
-  the 2D scene (it scales/rotates with the camera) using a cached SDF atlas.
+Cosmic has **two** text systems, and they are fed by the same `.ttf`/`.otf` files dropped into a
+fonts folder — `engine://fonts` (bundled with the engine) or `project://fonts` (per-project faces).
+The engine ships **Roboto** Regular / Medium / Bold, plus the **Lucide** icon font.
 
-The engine bundles **Roboto** Regular / Medium / Bold in `Cosmic/assets/fonts/`.
+**UI text** goes through `Cosmic::UI::Fonts`, which registers every face into ImGui's own glyph atlas
+at startup and hands back `ImFont*` handles by file stem — `Fonts::Push("Roboto-Bold",
+Fonts::SizeHeading)` / `Fonts::Pop()`, with a 13 / 16 / 22 / 32 px size ladder. Roboto is the
+**global default**, so a panel that pushes nothing already renders in it, and Lucide is merged into
+every face so `ICON_LC_*` glyphs work inline in any label.
 
-### UI fonts (ImGui)
+**World-space text** goes through `Cosmic::Font` + `Renderer2D::DrawString`, which bakes a font into
+a single-channel **signed distance field** atlas (cached to disk after the first bake) so text stays
+crisp at any camera zoom. It lives in the scene: it scales and rotates with the camera, batches
+alongside quads, and is what a game's score readout or a world label should use.
 
-At startup the engine scans the fonts folders and registers every face. ImGui's
-built-in font stays the global default (so existing layouts don't shift); custom
-faces are opt-in:
-
-```cpp
-ImFont* bold = Cosmic::UI::Fonts::Get("Roboto-Bold", 26.0f); // by file stem
-Cosmic::UI::Fonts::Push("Roboto-Bold", 26.0f);
-ImGui::Text("Big bold value");
-Cosmic::UI::Fonts::Pop();
-```
-
-ImGui 1.92 renders any size from a single face, so `Get(name, sizePx)` selects by
-name and the size is applied at draw time.
-
-### World-space text (SDF)
-
-`Cosmic::Font` bakes a TTF/OTF into a single-channel **signed distance field** glyph
-atlas (via stb_truetype) so text stays crisp at any zoom. The bake is cached to
-`assets/cache/fonts/` and reused on later runs (re-baked only if the source font
-is newer):
-
-```cpp
-auto font = Cosmic::Font::Get("Roboto-Bold");   // library lookup (or Font::Create("path.ttf"))
-Renderer2D::BeginScene(camera);
-Renderer2D::DrawString("RPM 10445", font, { x, y }, 0.5f, { 1,1,1,1 }); // position + world height
-Renderer2D::EndScene();
-```
-
-| API | Description |
-|-----|-------------|
-| `Font::Create(path, atlasPx = 64)` | Bake (or load from cache) a font from disk. |
-| `Font::Get(name)` / `Font::Default()` | Library lookup by file stem; lazily scans the fonts folders. |
-| `Renderer2D::DrawString(text, font, transform, color, kerning, lineSpacing)` | Draw under an arbitrary transform (glyph metrics are in em units). |
-| `Renderer2D::DrawString(text, font, position, size, color, …)` | Convenience: 2D position + world-space height, no rotation. |
-
-Text is a dedicated batch flushed alongside quads/circles/lines; `\n`, kerning and
-line spacing are supported, and the SDF shader (`assets/shaders/Text.glsl`)
-anti-aliases edges with `fwidth`.
+Both are covered in full by the chapters above — the ImGui side in the editor-UI chapter, the SDF
+side in the 2D rendering chapter.
 
 ---
 
 ## 28. ImGui Overlay & Image Helpers
 
-`Cosmic::UI` (header-only, `ui/Overlay.h`) provides reusable ImGui drawing helpers
-for image overlays and free-form text — ideal for dashboards that annotate a photo
-or diagram with live values:
+> **Full chapter: [`docs/guide/editor-ui-and-theming.md`](docs/guide/editor-ui-and-theming.md)** —
+> `ImGuiLayer`, the docking model and every `DockPort`, the never-store-a-dock-node-id rule,
+> `SetBottomInsetPixels`, viewport overlays, `ThemeManager` and the Theme Studio, fonts and Lucide
+> icons, the `Widgets` kit, `PlotStyle`, and the `Overlay` helpers summarised here.
 
-```cpp
-Cosmic::UI::Rect r = Cosmic::UI::ImageFitted(texture);            // aspect-fit image; returns its rect
-ImDrawList* dl = ImGui::GetWindowDrawList();
-Cosmic::UI::ReadoutBox(dl, r.At(0.5f, 0.2f), "RPM", "10445");     // white box at a normalized point
-Cosmic::UI::Text(dl, r.At(0.1f, 0.9f), IM_COL32_WHITE, "label");  // standalone text primitive
-```
+> **This section is the EDITOR/tool UI system, not the game's.** Everything here is ImGui —
+> immediate-mode calls drawn over the window, themed by `ThemeManager`, for panels a *developer*
+> sees. A game's menus, HUD and dialogue boxes are built from **scene entities** instead
+> (`CanvasComponent`, `RectTransformComponent`, `UiImage`/`UiText`/`UiButton`), which serialize,
+> undo, prefab and ship inside the packaged app; that system has its own chapter,
+> **[`docs/guide/game-ui.md`](docs/guide/game-ui.md)**. The two are unrelated and easy to confuse —
+> if a player sees it, it belongs there; if a developer sees it, it belongs here.
 
-| Helper | Description |
-|--------|-------------|
-| `ImageFitted(tex, region)` | Draw a texture aspect-fitted (letterboxed) into a region; returns the on-screen `Rect`. |
-| `Rect::At(nx, ny)` | Map a normalized [0,1] coordinate to a screen pixel inside the rect — trivial overlay positioning. |
-| `Text(dl, pos, color, text, font, sizePx, align)` | Draw a string with a chosen UI font + alignment. |
-| `TextThick(...)` | Font-agnostic faux-bold fallback. |
-| `ReadoutBox(dl, pos, label, value, style)` | A framed label-over-value box (uses `Text` internally). |
-| `ImageWindow(title, tex, &open, caption, firstSize)` | A resizable floating window showing a texture aspect-fitted — a generic "pop-out" for reference images (e.g. a board pinout); optional `caption` is wrapped below the image (a legend), and a hint shows when `tex` is null. |
+`Cosmic::UI` (`ui/Overlay.h`, header-only so it compiles into whichever module includes it) provides
+reusable ImGui drawing primitives for image overlays and free-form text — the shape a dashboard
+needs when it annotates a photo or a diagram with live values. `ImageFitted(tex)` letterboxes a
+texture into a region and returns its on-screen `Rect`; `Rect::At(nx, ny)` maps a normalized `[0,1]`
+coordinate inside that rect to a screen pixel, which makes hand-tuned overlay positions trivial;
+`Text` / `TextThick` draw a string in a chosen face with nine-way alignment; `ReadoutBox` is a
+framed label-over-value box built on top of `Text`, and `ImageWindow` is a floating pop-out for a
+reference image.
 
-`ReadoutStyle` exposes the fill/border/label/value colors, fonts, sizes, padding,
-rounding and anchor — so the box is just one consumer of the text primitive.
+Alongside them sits the rest of the editor-UI tier: the reusable `Widgets` kit (`StatCard`,
+`ToggleSwitch`, `SectionHeader`, `IconButton`, `AccentButton`, `ThemeSelector`, `WindowControls`),
+`PlotStyle` for keeping ImPlot charts in step with the active theme, and the `WorkspaceLayer`
+docking surface that hosts all of it.
 
 ### §28.5 Themes, Icons & Fonts
 
-The engine's look is **data-driven**: a `Cosmic::Theme` (`ui/Theme.h`) is plain data — a name, an accent color, a *complete* `ImGuiCol_` color table, and the structural style knobs (rounding/padding/borders). Because every theme carries the full color array, applying one deterministically replaces the previous look; there is no "set a subset and hope" residue when switching at runtime.
+> **Retired — see
+> [`docs/guide/editor-ui-and-theming.md` § Themes](docs/guide/editor-ui-and-theming.md#themes) and
+> [§ Fonts and Lucide icons](docs/guide/editor-ui-and-theming.md#fonts-and-lucide-icons).**
 
-**Why a registry:** themes live in `Cosmic::ThemeManager` (`ui/ThemeManager.h`), whose storage is inside the engine DLL — so the engine and every client project share ONE registry across the DLL boundary. A theme registered by your app shows up in the engine's picker, and vice versa.
+The engine's look is **data-driven**: a `Cosmic::Theme` is plain data — a name, an accent colour, a
+*complete* `ImGuiCol_` table and the structural style knobs — so applying one deterministically
+replaces the previous look rather than layering a subset over it. `Cosmic::ThemeManager` owns the
+registry, and because its storage lives in the engine DLL there is exactly **one** registry shared by
+the engine and every project: a theme your app registers appears in the engine's picker, and vice
+versa. Eleven themes ship built in (Sleek Pro is the default), `.ctheme` text files under
+`project://themes` are loaded at project mount, and the template project's **Theme Studio** layer is
+a working live editor — tweak with preview, then save as a new named theme.
 
-| `ThemeManager` member | Description |
-| --------------------- | ----------- |
-| `Init()` | Registers the built-ins + loads user themes from `project://themes`. Called by the engine; safe to re-call (no-op) |
-| `Apply(name)` | Switch theme by name — writes the full color table + style into ImGui and syncs the ImPlot style. `false` if unknown |
-| `ApplyTheme(theme)` | Apply a `Theme` object directly without registering (live preview while editing) |
-| `Register(theme)` | Add or replace a theme; the name is its stable identity |
-| `All()` / `Find(name)` / `CurrentName()` | Enumerate / look up / query the applied theme |
-| `Accent()` | The applied theme's semantic accent color — use it for custom widgets/plots so they track the theme |
-| `CaptureCurrentStyle(name)` | Snapshot the live ImGui style into a new named `Theme` |
-| `SaveToFile` / `LoadFromFile` / `LoadFolder` | Simple text `.ctheme` persistence (resolve `project://themes/...` with `FileSystem::Resolve` first) |
-
-**Built-in themes** (registration order = picker order): Sleek Pro *(engine default)*, Neon HUD, Clean Flat, Cosmic Emerald, Deep Embedded, Dracula Dark, Solarized Ash, Cyberpunk Neon, Retro Terminal, Corporate Light, Default Dark.
-
-**Selecting and persisting a theme from a project:**
-
-```cpp
-// Apply at startup (OnAttach) — or let the user pick:
-Cosmic::ThemeManager::Apply("Deep Embedded");
-
-// Ready-made picker widget (accent swatch + name per row), drop into any window:
-Cosmic::UI::ThemeSelector();
-
-// Or ask the engine to host the picker as a dockable panel:
-Cosmic::Application::Get().GetWorkspaceLayer()->ShowThemeSelector(true, Cosmic::DockPort::RightTop);
-```
-
-**Authoring a theme** — two workflows:
-
-1. **Theme Studio** (the template's `TemplateThemeShowcaseLayer`): a live gallery + editor panel. Pick a base theme, tweak colors/style knobs with live preview (`ApplyTheme` under the hood), then save — it lands in `project://themes/<name>.ctheme` and is registered immediately.
-2. **In code:** build a `Theme` in a `BuildMyTheme()` function (see `layers/ImGuiThemes.h` for the seeded-builder pattern), then `ThemeManager::Register(t)` at startup.
-
-**Icons — Lucide.** The Lucide icon font is merged into every registered text face at `Fonts::Init()`, so `ICON_LC_*` glyphs (from `ui/IconsLucide.h`) render inline in any label:
-
-```cpp
-ImGui::Button(ICON_LC_ROCKET "  Launch");
-if (Cosmic::UI::Fonts::HasIcons()) { /* icon font found + merged */ }
-```
-
-**Fonts — Roboto by default.** `Cosmic::UI::Fonts` (`ui/Fonts.h`) scans the engine + project font folders at startup and registers every face; a regular face (Roboto) becomes the default UI font. Use the standard size ladder for a consistent hierarchy:
-
-```cpp
-Cosmic::UI::Fonts::Push("Roboto-Bold", Cosmic::UI::Fonts::SizeHeading); // 13/16/22/32 px ladder
-ImGui::TextUnformatted("Section Title");
-Cosmic::UI::Fonts::Pop();
-```
+Fonts and icons follow the same drop-a-file idea. Every `.ttf`/`.otf` under `engine://fonts` or
+`project://fonts` is registered by file stem, **Roboto becomes the global UI default**, and the
+**Lucide** icon font is merged into every face so `ICON_LC_*` glyphs render inline in any label —
+`ImGui::Button(ICON_LC_ROCKET "  Launch")`.
 
 ---
 
 ## 29. Viewport Visibility & Center Docking
 
-A screen with no 3D scene can hide the central Viewport panel, and client windows
-can dock into the central area:
+> **Full chapters:** viewport visibility and the screen-pixel mouse contract →
+> [`docs/guide/windowing-and-viewport.md`](docs/guide/windowing-and-viewport.md#work-in-viewport-space) ·
+> the docking model and every `DockPort` →
+> [`docs/guide/editor-ui-and-theming.md`](docs/guide/editor-ui-and-theming.md#dock-a-panel-into-a-port)
+
+A screen with no 3D scene should not show an empty Viewport tab. `WorkspaceLayer::SetViewportVisible(false)`
+stops the central Viewport being drawn *and* docked, and `DockPort::Center` binds a client window
+into the node it vacated — multiple windows bound to `Center` become tabs, with the Viewport among
+them when it is visible. Both calls re-run the dock builder on the next frame, so flipping them per
+screen is the intended pattern; Frontier, SF_Telem and ViperSim all do it.
 
 ```cpp
 auto* ws = Cosmic::Application::Get().GetWorkspaceLayer();
@@ -3320,13 +1314,11 @@ ws->SetViewportVisible(false);                          // remove the empty View
 ws->DockWindow("Dashboard", Cosmic::DockPort::Center);  // own the central node
 ```
 
-- **`DockPort::Center`** — docks a window tabbed with the central Viewport (or, when
-  the viewport is hidden, in its place). Multiple Center windows tab together.
-- **`SetViewportVisible(bool)`** — when `false`, the Viewport is neither drawn nor
-  docked, leaving the central node for whatever you bind to `Center`. Re-runs the
-  dock builder.
-
-See [Section 24 — Window System](#24-window-system) for the full dock-port API.
+When the viewport *is* visible, `Application::GetViewportPos()` / `GetViewportSize()` give the
+rendered image's rectangle in **desktop pixels** — the space `Input::GetMouseScreenPosition()` lives
+in, not the window-client space of `Input::GetMousePosition()`. Subtracting the origin from the
+screen mouse position is the whole contract every picker, gizmo and world↔screen conversion depends
+on.
 
 ---
 
@@ -3338,81 +1330,198 @@ See [Section 24 — Window System](#24-window-system) for the full dock-port API
 
 ## §30 Source File Map
 
+> **Verified against the tree at Phase 29.** Directories are listed with the files a contributor
+> reaches for first, not exhaustively — `Cosmic/src/` is the truth. Entries marked **3D** are
+> excluded from the 2D engine build; see [the partition](#the-2d-partition) below and
+> [`docs/systems/build-2d-3d-split.md`](docs/systems/build-2d-3d-split.md).
+
 ```
-Cosmic/
-├── src/
-│   ├── Cosmic.h                        Single-include public API
-│   ├── core/
-│   │   ├── Application.h / .cpp        Main loop, DLL loading, time system
-│   │   ├── Core.h                      Ref<T>, Scope<T>, BIT(), macros
-│   │   ├── Layer.h                     Layer base class + timeline API
-│   │   ├── LayerStack.h / .cpp         Ordered layer container
-│   │   ├── Log.h / .cpp                spdlog wrappers, CS_* macros
-│   │   ├── Input.h / .cpp              Platform-agnostic polling
-│   │   └── Window.h                    Abstract window + fullscreen API
-│   ├── events/
-│   │   ├── Event.h                     EventType, EventCategory, EventDispatcher
-│   │   ├── ApplicationEvent.h          WindowResize, WindowClose
-│   │   ├── KeyEvent.h                  KeyPressed, KeyReleased, KeyTyped
-│   │   └── MouseEvent.h                MouseMoved, MouseScrolled, MouseButton*
-│   ├── renderer/
-│   │   ├── Renderer2D.h / .cpp         Batch renderer, instanced draw calls
-│   │   ├── RenderCommand.h             Static forwarder → RendererAPI
-│   │   ├── RendererAPI.h               Abstract GPU commands
-│   │   └── RenderPass.h                RAII camera/viewport scope
-│   ├── graphics/
-│   │   ├── Buffer.h / .cpp             VertexBuffer, IndexBuffer, BufferLayout
-│   │   ├── VertexArray.h / .cpp        VAO abstraction
-│   │   ├── Shader.h / .cpp             Abstract shader + factory
-│   │   ├── Texture.h / .cpp            2D texture + factory
-│   │   ├── SubTexture2D.h / .cpp       Atlas sub-region helper
-│   │   ├── Material.h / .cpp           Typed uniform bag
-│   │   └── FrameBuffer.h / .cpp        Offscreen FBO
-│   ├── scene/
-│   │   ├── Scene.h / .cpp              EnTT registry, system dispatch
-│   │   ├── Entity.h                    Lightweight EnTT handle
-│   │   ├── Components.h                TransformComponent, SpriteRendererComponent, TagComponent
-│   │   ├── System.h                    Serial system base
-│   │   └── ComponentRegistry.h         CS_REGISTER_COMPONENT macro
-│   ├── jobs/
-│   │   ├── JobSystem.h / .cpp          Thread pool singleton
-│   │   ├── ParallelSystem.h            4-pass parallel system base
-│   │   ├── SystemQuery.h               ReadWriteQuery<T>, ReadOnlyQuery<T>
-│   │   ├── ParallelFor.h               6 free-function parallel helpers
-│   │   ├── DoubleBuffer.h              Read/write double-buffer
-│   │   └── ComponentArray.h            ComponentArray<T>, FlatComponentArray<T>
-│   ├── camera/
-│   │   ├── OrthographicCamera.h / .cpp Low-level camera matrices
-│   │   └── OrthographicCameraController.h  WASD + zoom controller
-│   ├── layers/
-│   │   ├── ImGuiLayer.h / .cpp         ImGui/ImPlot initialization
-│   │   └── WorkspaceLayer.h / .cpp     Docked panel shell, DLL bridge
-│   ├── platform/
-│   │   └── OpenGL/
-│   │       ├── OpenGLRendererAPI.h/.cpp    glDraw* calls
-│   │       ├── OpenGLShader.h/.cpp         GLSL compilation, uniform cache
-│   │       ├── OpenGLBuffer.h/.cpp         VBO/IBO
-│   │       ├── OpenGLVertexArray.h/.cpp    VAO + attrib pointers
-│   │       ├── OpenGLTexture.h/.cpp        stb_image, GL texture objects
-│   │       └── OpenGLFrameBuffer.h/.cpp    FBO + color attachment
-│   ├── serial/
-│   │   └── SerialPort.h / .cpp         Windows HANDLE-based COM port
-│   └── utils/
-│       └── FileSystem.h / .cpp         VFS: engine:// and project://
-└── templates/
-    └── ExampleProject/                 Canonical client template
-        └── src/
-            ├── TemplateProject.h/.cpp  Root manager layer
-            ├── TemplateRenderLayer.*   Shader/material demo layer
-            ├── TemplateSpriteLayer.*   ECS sprite demo layer
-            ├── TemplateRenderBenchmarkLayer.*  Instanced rendering benchmark
-            ├── BallPhysicsSystem.h     ParallelSystem example
-            └── Components.h           PhysicsBody component definition
+Cosmic/src/
+├── Cosmic.h                          Single-include public API (the manifest of client surface)
+├── CosmicPCH.h                       Precompiled header — force-included, never #include'd
+├── core/
+│   ├── Application.h/.cpp            Main loop, DLL load/unload, time system, the Safe Zone
+│   ├── Window.h/.cpp                 GLFW window, borderless chrome, DPI, fullscreen
+│   ├── Layer.h  LayerStack.h/.cpp    Layer base + timeline API; ordered container
+│   ├── Input.h/.cpp                  Keyboard/mouse/gamepad polling
+│   ├── Log.h/.cpp                    spdlog wrappers, CS_* / CS_CORE_* macros
+│   ├── CommandStack.h/.cpp           Undo/redo (editor + any client)
+│   ├── UUID.h/.cpp   Timestep.h      Stable ids; the frame delta wrapper
+│   ├── Core.h                        Ref<T>, Scope<T>, COSMIC_API, BIT(), assert macros
+│   └── Version.h                     COSMIC_VERSION_* — the version source of truth
+├── events/                           Event.h (+ dispatcher), Application/Key/Mouse events
+├── codes/                            KeyCodes.h, MouseButtonCodes.h, GamepadCodes.h
+├── renderer/
+│   ├── Renderer2D.h/.cpp             Batch renderer: quads, circles, lines, text, instancing
+│   ├── Renderer3D.h/.cpp         3D  Sorted queue: submit → cull → sort → auto-instance → flush
+│   ├── SceneRenderer.h/.cpp          The pass graph / compositor (runs on BOTH configurations)
+│   ├── PostProcessStack.h/.cpp       Tonemap, FXAA, bloom, vignette, god rays
+│   ├── Light2DRenderer.h/.cpp        Half-res 2D light buffer, composited in the HDR phase
+│   ├── ShadowMap.*  EnvironmentMap.*  CoverageCapture.*  InstanceSet.*                      3D
+│   ├── RenderCommand.h/.cpp          Static forwarder → RendererAPI
+│   ├── RendererAPI.h/.cpp            Abstract GPU verbs (draw, state, compute, GPU zones)
+│   ├── RenderPass.h  RenderQueue.h   RAII camera/viewport scope; the sort-key queue
+│   └── BindingPoints.h  CameraUniforms.h   UBO/SSBO slot registry; shared camera block
+├── graphics/
+│   ├── Shader.*  Texture.*  TextureCube.*  Material.*  MaterialAsset.h
+│   ├── Buffer.*  VertexArray.*  UniformBuffer.*  StorageBuffer.*  FrameBuffer.*
+│   ├── Mesh.*  SubTexture2D.*  Font.*  Gizmo.*  GraphicsContext.h
+│   └── Model.*  Skeleton.*  AnimationClip.*  CgltfImpl.cpp                                  3D
+├── scene/
+│   ├── Scene.h/.cpp                  entt registry, hierarchy, system dispatch, 4-pass pipeline
+│   ├── Scene3D.cpp               3D  the 3D half of Scene (split out in Phase 29 W5)
+│   ├── Entity.h  System.h  ComponentRegistry.h  SelectableComponent.h
+│   ├── Components.h                  Transform/Tag/ID/Sprite/Camera/2D/UI/physics components
+│   ├── Components3D.h            3D  mesh renderer, lights, environment, animator, world systems
+│   ├── SceneSerializer.*             .cscene / .cprefab JSON, opaque-field preservation
+│   ├── SceneManager.*                Async scene load/swap
+│   ├── EventBus.*                    Signals between entities, scripts and UI
+│   ├── FlowMachine.*  StoryGraph.*   .cflow screen flow; .cstory dialogue
+│   ├── WorldSystemRecipes.*      3D  scene-authored terrain/water/emitter → spec
+│   ├── SceneNav.*  ScenePicker.*  3D  navmesh bake + .cnav; 3D viewport picking
+│   └── ui/                           UiComponents.h, UiSystem.* — in-game canvas UI
+├── reflect/                          TypeDescriptor.h, TypeRegistry.* (+ TypeRegistry3D.cpp 3D)
+├── scripting/                        ScriptableEntity.h, ScriptHost.*, ModuleRegistry.*,
+│                                     ModuleMacros.h — CS_SCRIPT/CS_SYSTEM + the eight proxies
+├── physics/
+│   ├── PhysicsWorld.*                Dispatcher over IPhysicsBackend (pimpl)
+│   ├── PhysicsBackend.*              Backend registry; default "jolt" or "null"
+│   ├── PhysicsBody.h  PhysicsTypes.h  CharacterController.h
+│   ├── ScenePhysics.*                Component → collider desc, scene stepping
+│   └── backends/                     JoltBackend.cpp, NullBackend.cpp, BuiltinBackends.h
+├── camera/                           Camera.h, Perspective/Orthographic, Camera2DController,
+│                                     Orbit/Fly/OrthographicCameraController, NavigationCube 3D
+├── nav/                          3D  NavWorld.* (Recast/Detour behind a pimpl), NavTypes.h
+├── terrain/                      3D  Terrain.* — heightmap composition, quadtree LOD
+├── water/                        3D  Water.*, GerstnerWave.h, Presets.h
+├── particles/                    3D  ParticleSystem.* (GPU compute), Presets.h
+├── voxel/                        3D  VoxelVolume, BlockPalette, VoxelMesher/Generator/Render
+├── jobs/                             JobSystem.*, ParallelSystem.h, SystemQuery.h,
+│                                     ParallelFor.h, DoubleBuffer.h, ComponentArray.h
+├── math/                             Spatial.h, Integrators.h, Filters.h, LookupTable.h,
+│                                     Noise.h, Random.h, Frustum.h  (header-only)
+├── assets/                           AssetLibrary.* (cache) + MeshImport.* 3D (assimp/cgltf)
+├── audio/                            AudioEngine.h, Sound.h, Audio.cpp, MiniaudioImpl.cpp
+├── serial/                           SerialPort.*, SerialLink.*, Framing.h (COBS + CRC16)
+├── telemetry/                        TelemetryChannel.h, DataRecorder.*, DataPlayer.*,
+│                                     TelemetryPanel.*, EntitySelection.*, EntityPicker.h
+├── ui/                               Fonts.*, ThemeManager.*, Theme.h, Widgets.*, PlotStyle.*,
+│                                     Overlay.h, IconsLucide.h   (editor-side ImGui helpers)
+├── layers/                           ImGuiLayer.*, ImGuiThemes.h, WorkspaceLayer.*,
+│                                     LauncherLayer.*, PlayerLayer.*
+├── utils/                            FileSystem.* (VFS), Config.* (TOML), DataExport.*,
+│                                     FileWatcher.*, FileDialog.*, ImageIO.*, ExeResources.*,
+│                                     Branding.*
+└── platform/OpenGL/                  OpenGLContext, RendererAPI, Shader, Buffer, VertexArray,
+                                      Texture, TextureCube, FrameBuffer, Uniform/StorageBuffer
+
+Runtime/          Main.cpp (bootloader) + CosmicApp.rc / Starforge.rc / CosmicApp.manifest
+Cosmic/templates/ExampleProject/     The canonical C++ plugin template the Launcher scaffolds
+Projects/         Starforge (editor), SF_Telem, Frontier, Engine3DDemo, ForgeIsle, ViperSim
+tests/            CosmicTests (headless doctest) + tests/render/ (golden images, opt-in)
 ```
+
+### DG-2 — the core object model
+
+Ownership as the code actually holds it: `Application` owns everything, and `LayerStack` is a
+**non-owning** borrow container — which is why every `PopLayer` is paired with a `delete` at the
+same site.
+
+```mermaid
+classDiagram
+    class Application {
+        -Scope~Window~ m_Window
+        -Scope~ImGuiLayer~ m_ImGuiLayer
+        -WorkspaceLayer m_WorkspaceLayer
+        -Layer m_ActivePluginLayer
+        -LayerStack m_LayerStack
+        -HMODULE m_ProjectDLL
+        +Run()
+        +GetViewportPos()
+        +GetWorkspaceLayer()
+    }
+    class LayerStack {
+        -vector~Layer~ m_Layers
+        +PushLayer(Layer)
+        +PopLayer(Layer)
+    }
+    class Layer {
+        <<abstract>>
+        +OnAttach()
+        +OnDetach()
+        +OnUpdate(float)
+        +OnFixedUpdate(float)
+        +OnImGuiRender()
+        +OnEvent(Event&)
+        +SetTimeScale(float)
+    }
+    class Window {
+        +SetTitle(string)
+        +SetFullscreen(bool)
+        +SetIcon(path)
+        +SetFullscreenHotkeyOverride(fn)
+    }
+    class ImGuiLayer
+    class WorkspaceLayer {
+        -Layer m_ViewportLayer
+        +DockWindow(name, DockPort)
+        +SetViewportVisible(bool)
+        +SetViewportLayer(Layer)
+    }
+    class LauncherLayer
+    class PlayerLayer
+
+    Application "1" *-- "1" Window : owns
+    Application "1" *-- "1" ImGuiLayer : owns
+    Application "1" *-- "1" WorkspaceLayer : owns
+    Application "1" *-- "1" LayerStack : owns
+    Application "1" o-- "0..1" Layer : plugin layer, owns
+    LayerStack "1" o-- "*" Layer : borrows
+    Layer <|-- ImGuiLayer
+    Layer <|-- WorkspaceLayer
+    Layer <|-- LauncherLayer
+    Layer <|-- PlayerLayer
+    WorkspaceLayer "1" o-- "0..1" Layer : hosts, does not own
+```
+
+**The plugin layer is never on the `LayerStack`.** `WorkspaceLayer::SetViewportLayer` calls its
+`OnAttach` and forwards every hook by hand; only the shell layers are pushed. A project DLL must
+therefore never call `Application::PushLayer` with its own objects — see
+[`docs/guide/project-anatomy.md`](docs/guide/project-anatomy.md).
+
+### The 2D partition
+
+Since Phase 29 the same source tree builds **two engines**. The 2D configuration is produced by
+`list(FILTER … EXCLUDE REGEX …)` calls in `Cosmic/CMakeLists.txt` (lines 178–210) — one per row of
+the partition table, in table order, so the two stay auditable against each other. Nothing is
+deleted and no file differs between the branches; the difference is entirely which files reach the
+compiler.
+
+| Excluded in the 2D build | What goes |
+| --- | --- |
+| Whole subsystem trees | `terrain/`, `voxel/`, `water/`, `nav/`, `particles/` |
+| `renderer/` | `Renderer3D`, `EnvironmentMap`, `ShadowMap`, `CoverageCapture`, `InstanceSet` |
+| `graphics/` | `Model`, `Skeleton`, `AnimationClip`, `CgltfImpl` |
+| `camera/` | `NavigationCube` (its `Render()` issues direct `Renderer3D` calls) |
+| `scene/` | `Scene3D`, `Components3D`, `SceneNav`, `ScenePicker`, `WorldSystemRecipes` |
+| `reflect/` | `TypeRegistry3D` |
+| `assets/` | `MeshImport.cpp` (the header stays, so the fences read the same on both) |
+| Vendored | **assimp** (159 TUs) and **recastnavigation** (26) are never configured |
+
+`physics/` is **shared and unfenced** — Jolt ships on both configurations. `SceneRenderer` and
+`PostProcessStack` ship on both too: a 2D frame runs the same HDR → tonemap → overlay spine. The
+authoritative exclusion table, the classification rule for new code, and the recorded build times
+are in [`docs/systems/build-2d-3d-split.md`](docs/systems/build-2d-3d-split.md); the client-facing
+summary is [§1.6](#16-the-two-engine-configurations).
 
 ---
 
 ## §31 Hot-Reloadable DLL Architecture
+
+> **Diagram DG-5 — the full plugin-DLL lifecycle** (discovery → load → run → unload) is built in
+> [`docs/guide/project-anatomy.md`](docs/guide/project-anatomy.md#dg-5--the-plugin-dll-lifecycle),
+> which also carries the verified step-by-step client view. The sequences below are the
+> engine-internal detail.
 
 ### Overview
 
@@ -3473,14 +1582,19 @@ All steps occur inside the **Safe Zone** — the end of a frame loop iteration a
 ### Unload Sequence (`Application::UnloadProjectDLL`)
 
 ```
-WorkspaceLayer::ClearViewportLayer()
+WorkspaceLayer::ClearViewportLayer()               ← Application.cpp:785
   └─ layer->OnDetach()                            ← GPU resources freed here
-Window::ClearFullscreenHotkeyOverride()            ← lambda lifetime ends
-delete m_ActivePluginLayer                         ← destructor runs in DLL code
-FreeLibrary(hModule)                               ← DLL code unmapped after delete
+delete m_ActivePluginLayer                         ← :791  destructor runs in DLL code
+Window::ClearFullscreenHotkeyOverride()            ← :797  lambda lifetime ends
+FileSystem::SetActiveProject("")                   ← :805  project:// mount dropped
+FreeLibrary(hModule)                               ← :808  DLL code unmapped after delete
 ```
 
 **Critical ordering:** `delete` must happen **before** `FreeLibrary`. The destructor body lives in DLL code. Freeing the library first would unmap that code, causing an access violation when the destructor executes.
+
+`ClearFullscreenHotkeyOverride` running here is belt-and-braces for the plugin path — but it is the
+**only** protection for Starforge's game-module hot reload, which does not route through
+`UnloadProjectDLL`. Clearing the override in your own `OnDetach` is still the rule.
 
 ### Component Type ID Stability
 
@@ -3703,22 +1817,68 @@ public:
     enum class API { None = 0, OpenGL = 1, DirectX = 2 };
 
     virtual void Init() = 0;
-    virtual void SetClearColor(const glm::vec4&) = 0;
+    virtual void SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height) = 0;
+    virtual void SetClearColor(const glm::vec4& color) = 0;
     virtual void Clear() = 0;
-    virtual void DrawIndexed(Ref<VertexArray>, uint32_t indexCount = 0) = 0;
-    virtual void DrawLines(Ref<VertexArray>, uint32_t vertexCount) = 0;
-    virtual void DrawIndexedInstanced(Ref<VertexArray>, uint32_t indexCount, uint32_t instanceCount) = 0;
-    virtual void SetLineWidth(float) = 0;
+
+    // Pipeline state — engine enums, translated by the platform layer
+    virtual void SetDepthTest(bool enabled) = 0;
+    virtual void SetDepthWrite(bool enabled) = 0;
+    virtual void SetCullMode(CullMode mode) = 0;
+    virtual void SetBlendMode(BlendMode mode) = 0;
+    virtual void SetPolygonMode(PolygonMode mode) = 0;
+    virtual void SetLineWidth(float width) = 0;
+
+    // Draw
+    virtual void DrawIndexed(const Ref<VertexArray>& va, uint32_t indexCount = 0, uint32_t indexOffset = 0) = 0;
+    virtual void DrawLines(const Ref<VertexArray>& va, uint32_t vertexCount) = 0;
+    virtual void DrawIndexedInstanced(const Ref<VertexArray>& va, uint32_t indexCount, uint32_t instanceCount) = 0;
+    virtual void DrawArrays(PrimitiveTopology topology, uint32_t first, uint32_t count) = 0;
+
+    // Compute + binding + GPU timing
+    virtual void DispatchCompute(uint32_t x, uint32_t y, uint32_t z) = 0;
+    virtual void GpuMemoryBarrier(GpuBarrier bits) = 0;
+    virtual void BindTextureSlot(uint32_t slot, uint32_t rendererID) = 0;
+    virtual void BindTextureCubeSlot(uint32_t slot, uint32_t rendererID) = 0;
+    virtual uint32_t GetBoundFramebuffer() const = 0;
+    virtual void     BindFramebufferHandle(uint32_t id) = 0;
+    virtual void BeginGpuZone(const char* name) = 0;
+    virtual void EndGpuZone() = 0;
+    virtual const std::vector<GpuZoneResult>& GetGpuZoneResults() const = 0;
 
     static API GetAPI();
 };
 ```
 
-`DrawIndexedInstanced` was added for the instanced rendering path (`DrawInstancedQuads` / `DrawInstancedCircles`).
+The interface grew well past "draw a triangle": pipeline state (depth/cull/blend/polygon) so no call
+site touches a GL enum, `DispatchCompute` + `GpuMemoryBarrier` for the compute-shader particle
+system, explicit texture-slot and framebuffer-handle binds for the pass graph, and GPU timer zones
+behind `BeginGpuZone`/`EndGpuZone`. `DrawIndexed` also gained an `indexOffset` for per-submesh
+material slots. The full signatures are in `renderer/RendererAPI.h`, which is the truth for this
+table.
 
 ### OpenGL Context Initialization and GLAD
 
-`OpenGLContext::Init()` calls `gladLoadGLLoader` to load all OpenGL function pointers from the driver. If GLAD fails (the driver does not support the requested OpenGL version, or returns null proc addresses), `Init()` fires a `CS_CORE_ASSERT` and terminates immediately. Every GL call made through GLAD function pointers (`glDrawElements`, `glGenVertexArrays`, etc.) is a null-pointer dereference if GLAD did not load successfully — there is no recoverable fallback. This means the engine requires a driver and GPU that support at least OpenGL 4.5.
+The engine requests **OpenGL 4.5 core** at window creation — `Window.cpp:327-329` sets
+`GLFW_CONTEXT_VERSION_MAJOR 4`, `MINOR 5` and `GLFW_OPENGL_CORE_PROFILE`. The loader matches
+exactly: `dependencies/glad` is glad 0.1.36 generated with `--api="gl=4.5" --profile="core"`, so
+`GLAD_GL_VERSION_4_5` is the highest version symbol it defines. **The engine neither uses nor can
+detect anything above 4.5**, and a driver that offers 4.6 is used as a 4.5 context. 4.5 is a hard
+floor, not a preference.
+
+`OpenGLContext::Init()` calls `gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)` to fill in every
+function pointer, then logs the version and renderer string it actually got — that log line is the
+reliable way to find out what a user's machine gave you.
+
+> **The failure path is not what it looks like.** `OpenGLContext.cpp:36` guards the load with
+> `CS_CORE_ASSERT(status, …)`, and **that macro is compiled out in every configuration** —
+> `Core.h` gates it on `GLCORE_DEBUG || CS_DEBUG`, and neither symbol is defined by any target in
+> this tree. So a failed load does not abort; it continues with null function pointers and
+> access-violates on the first real GL call. `Window`'s constructor has the same shape (it logs
+> `CS_CORE_CRITICAL` and returns early on a context failure, leaving a null handle behind an assert
+> that never fires). There is no recoverable fallback either way — a machine without OpenGL 4.5
+> crashes rather than degrading — but it crashes later and less legibly than this section used to
+> claim.
 
 ### `DrawLines` VAO Binding
 
@@ -3727,6 +1887,16 @@ public:
 Note: `DrawIndexed` and `DrawIndexedInstanced` do **not** bind the vertex array internally; callers are responsible for binding before those calls. `DrawLines` is the exception because its parameter was previously unused (a latent bug), and the fix adds the bind for robustness.
 
 ### Frame Lifecycle
+
+> **This sketch is the 2D-only shape and predates the pass graph.** It is still correct for a
+> project that renders through `Renderer2D` into the workspace framebuffer, which is why it is kept
+> — but a scene rendered through `SceneRenderer` runs shadow, coverage, reflection/refraction, main
+> HDR, water, particles and the post chain before the image reaches that ImGui blit. The
+> authoritative pass contract is [`docs/design/frame-lifecycle.md`](docs/design/frame-lifecycle.md),
+> the diagram is **DG-8** in
+> [`docs/guide/lighting-and-environment.md`](docs/guide/lighting-and-environment.md#dg-8--the-pass-graph),
+> and the host-side frame sequence is **DG-3** in
+> [`docs/guide/project-anatomy.md`](docs/guide/project-anatomy.md#dg-3--the-frame-sequence).
 
 ```
 Application::Run() each frame:
@@ -3750,6 +1920,87 @@ Application::Run() each frame:
 ---
 
 ## §35 Hardware Abstraction Architecture
+
+### DG-6 — the renderer stack
+
+Everything above `RenderCommand` is backend-agnostic; everything below it is the OpenGL
+implementation. `RenderCommand` is a pure static forwarder holding one `RendererAPI*`, which is the
+single swap point a future backend would replace.
+
+```mermaid
+classDiagram
+    direction TB
+    class Renderer2D {
+        <<static>>
+        +DrawQuad()
+        +DrawCircle()
+        +DrawLine()
+        +DrawText()
+        +Flush()
+    }
+    class Renderer3D {
+        <<static — 3D build only>>
+        +DrawMesh()
+        +Flush()
+        -RenderQueue m_Queue
+    }
+    class SceneRenderer {
+        +Render(SceneRenderDesc)
+        -PostProcessStack m_Post
+    }
+    class RenderCommand {
+        <<static forwarder>>
+        -RendererAPI s_RendererAPI
+    }
+    class RendererAPI {
+        <<abstract>>
+        +Init()
+        +DrawIndexed()
+        +DispatchCompute()
+        +SetBlendMode()
+    }
+    class OpenGLRendererAPI
+    class OpenGLContext
+
+    class VertexArray {
+        <<abstract>>
+    }
+    class Shader {
+        <<abstract>>
+    }
+    class Texture2D {
+        <<abstract>>
+    }
+    class Material {
+        +Set(name, value)
+        +Bind()
+    }
+    class Mesh
+    class OpenGLVertexArray
+    class OpenGLShader
+    class OpenGLTexture2D
+
+    SceneRenderer ..> Renderer3D : routes opaque/transparent
+    SceneRenderer ..> Renderer2D : sprites + overlay
+    Renderer2D ..> RenderCommand
+    Renderer3D ..> RenderCommand
+    RenderCommand o-- RendererAPI : one static pointer
+    RendererAPI <|-- OpenGLRendererAPI
+    OpenGLRendererAPI ..> OpenGLContext : needs a current context
+
+    Material o-- Shader : holds a Ref
+    Material o-- Texture2D : named slots
+    Mesh o-- VertexArray
+    VertexArray <|-- OpenGLVertexArray
+    Shader <|-- OpenGLShader
+    Texture2D <|-- OpenGLTexture2D
+```
+
+Two things the diagram encodes that are easy to get wrong. **`SceneRenderer` ships in both engine
+configurations** — a 2D frame runs the same HDR → tonemap → overlay spine; what the 2D build drops
+is `Renderer3D` and the resources only it owns. And **resources are abstract-with-one-backend**:
+`Shader::Create` / `Texture2D::Create` are factories returning the OpenGL subclass, which is why
+client code never names an `OpenGL*` type.
 
 ### Buffer Layout System
 
@@ -4164,241 +2415,54 @@ Chunk size: `max(minChunkSize, ceil(totalCount / workerCount))`. This ensures at
 
 ## §40 Build System
 
-### `CMakeLists.txt` Structure
-
-```cmake
-cmake_minimum_required(VERSION 3.21)
-project(CosmicRoot LANGUAGES C CXX)
-
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-```
-
-MSVC compiler flags applied globally:
-
-```cmake
-add_compile_options(/utf-8 /std:c++20)
-```
-
-Platform definitions:
-
-```cmake
-add_compile_definitions(WIN32_LEAN_AND_MEAN NOMINMAX)
-```
-
-`WIN32_LEAN_AND_MEAN` suppresses rarely-used Windows headers. `NOMINMAX` prevents the Windows SDK from defining `min`/`max` macros that conflict with `std::min`/`std::max`.
-
-### SDK Path Cache Variable
-
-```cmake
-set(COSMIC_SDK_DIR "" CACHE PATH "Path to Cosmic SDK installation")
-```
-
-Client project `CMakeLists.txt` files use `COSMIC_SDK_DIR` to locate engine headers and import libraries. If unset, the build system falls back to in-tree paths (for development builds where the engine and projects share a repository).
-
-### Engine-Only Mode
-
-```cmake
-option(COSMIC_BUILD_ENGINE_ONLY "Build only the engine, skip all Projects/" OFF)
-```
-
-When `ON`, the automated project scanner (below) is skipped. Used in CI to validate the engine compiles without client code.
-
-### Automated Project Scanner
-
-```cmake
-file(GLOB PROJECT_SUBDIRS RELATIVE "${CMAKE_SOURCE_DIR}" "Projects/*")
-
-foreach(SUBDIR ${PROJECT_SUBDIRS})
-    if(EXISTS "${CMAKE_SOURCE_DIR}/${SUBDIR}/CMakeLists.txt")
-        add_subdirectory(${SUBDIR})
-    endif()
-endforeach()
-```
-
-Any directory placed under `Projects/` with a `CMakeLists.txt` is automatically included in the build. No manual registration in the root `CMakeLists.txt` is required — dropping a new project folder into `Projects/` is sufficient.
-
-### Client Project `CMakeLists.txt` Template
-
-A minimal client project CMake file:
-
-```cmake
-project(MyProject LANGUAGES CXX)
-
-add_library(MyProject SHARED
-    src/MyProject.cpp
-    src/MyRenderLayer.cpp
-)
-
-target_include_directories(MyProject PRIVATE
-    ${COSMIC_SDK_DIR}/include
-    src/
-)
-
-target_link_libraries(MyProject PRIVATE
-    CosmicEngine
-    opengl32
-)
-
-set_target_properties(MyProject PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Projects/MyProject"
-)
-```
-
-The `SHARED` keyword produces a `.dll`. The output directory convention places the DLL where the engine launcher expects to find it.
-
-### Build Scripts
-
-There are five batch files in the SDK root and inside each project. Here is what each one does and when to use it.
-
----
-
-#### `setup.bat` — run once per machine
-
-Permanently registers the `COSMIC_SDK` environment variable pointing at the SDK root using `setx`. This is required before any project `build.bat` can locate the engine headers and import library. Run it once after cloning. Restart any open terminals afterward for the variable to take effect.
-
----
-
-#### `build_all.bat` — clean full rebuild
-
-```bat
-build_all.bat [Debug|Release]     :: defaults to Debug
-```
-
-Deletes the entire `build/` directory, re-runs CMake configure from scratch, then builds the engine and every project under `Projects/`. Use this when:
-- You have just cloned the repo for the first time
-- A `CMakeLists.txt` has changed in a way that left the cache stale
-- You want a guaranteed clean state (CI, release packaging)
-
-Because it deletes `build/`, **all incremental state is lost** — the next compile is a full rebuild of everything. Do not use this for day-to-day iteration.
-
----
-
-#### `build.bat` — incremental full build
-
-```bat
-build.bat [Debug|Release]     :: defaults to Debug
-```
-
-The script you will use most often. Calls `cmake --build` directly without re-running configure. CMake automatically re-runs configure if any `CMakeLists.txt` has changed. Use this for iterating on engine source or any project when you want to rebuild everything in one step.
-
-On first run (no `build/` directory yet), it detects the missing cache and runs a full configure automatically before building — so it is safe to run even on a fresh clone.
-
-It also detects if the cache was left in engine-only mode by a prior `build_engine.bat` run (`COSMIC_BUILD_ENGINE_ONLY=ON`) and re-configures with `OFF` before building, so switching between the two scripts never produces a silently wrong build.
-
----
-
-#### `build_engine.bat` — engine-only incremental build
-
-```bat
-build_engine.bat [Debug|Release]     :: defaults to Debug
-```
-
-Runs `cmake --build` targeting only the `Cosmic` and `CosmicApp` targets. Project DLLs under `Projects/` are skipped entirely. Use this when you are making changes to the engine itself and want the fastest possible turnaround.
-
-Like `build.bat`, it handles the first-run case automatically. It also detects if the cache was left in full-build mode by a prior `build.bat` run (`COSMIC_BUILD_ENGINE_ONLY=OFF`) and re-configures with `ON` before building.
-
----
-
-#### `Projects/<name>/build.bat` — single project build
-
-```bat
-build.bat [Debug|Release]     :: defaults to Debug
-```
-
-Builds one project DLL in isolation without touching the engine. It has its own `build/` subdirectory and its own CMake cache, separate from the root build tree. Configure only runs on first use (when `CMakeCache.txt` does not yet exist) — subsequent runs go straight to `cmake --build`. Use this when:
-- You are iterating on a single project and do not need to rebuild anything else
-- Your project lives outside the SDK repo (standalone workflow)
-
-The script reads `COSMIC_SDK` to locate the engine headers and import library. If the variable is not set, it falls back to the hardcoded path written by the Launcher at project generation time.
-
----
-
-#### When to use which script
-
-| Situation | Script |
-| --- | --- |
-| First clone / clean slate needed | `build_all.bat` |
-| Changing engine source, rebuild everything | `build.bat` |
-| Changing engine source only | `build_engine.bat` |
-| Changing one project | `Projects/<name>/build.bat` |
-| Optimized Release build, run in place | Any script with `Release` argument, or `build_all_release.bat` |
-| Producing a shippable distributable folder | `package.bat` |
-
-### Debug vs Release
-
-All scripts default to `Debug`. To build Release, either double-click `build_all_release.bat` or pass `Release` as the first argument to any script from a terminal:
-
-```bat
-build.bat Release
-build_all.bat Release
-build_engine.bat Release
-```
-
-**Release is always a distribution build.** The distribution behaviour — the Launcher's "New Project" UI is disabled, no console window opens, and the compiler optimizes with `/O2` — is now keyed directly off the Release configuration via a CMake generator expression (`$<$<CONFIG:Release>:COSMIC_DIST>` in `Cosmic/CMakeLists.txt`, plus the `/SUBSYSTEM:WINDOWS` link in `Runtime/CMakeLists.txt`). There is no separate `COSMIC_DIST` cache flag to set or accidentally leave on — Debug always gives you the full dev launcher with a console, Release always gives you the locked-down distribution build, and switching between them never requires a manual reconfigure. If you want an optimized build that still has the dev launcher (e.g. for profiling), use the `RelWithDebInfo` configuration, which stays non-distribution.
-
-### Packaging a distributable — `package.bat`
-
-`build_all_release.bat` builds Release binaries in place under `build/Runtime/Release/`, mixed in with import libraries (`.lib`), export files (`.exp`), and CMake artifacts. To produce a **clean, self-contained folder you can hand to someone else**, run:
-
-```bat
-package.bat
-```
-
-It does a clean Release configure + build, then stages everything via CMake's `install()` rules into `dist/Cosmic/` and zips it to `dist/Cosmic.zip`. The staged folder contains only what the app needs to run:
-
-```
-dist/Cosmic/
-├── CosmicApp.exe              ← carries the embedded app icon (Runtime/app.ico)
-├── Cosmic.dll                ← core engine + CRT stay next to the exe (implicit deps,
-├── msvcp140.dll                 loaded before any of our code runs, so they can't be
-├── vcruntime140.dll             relocated to a subfolder)
-├── vcruntime140_1.dll
-├── assets/
-│   ├── ...                    ← engine core assets
-│   └── projects/<YourProject>/ ← per-project assets (VFS layout)
-├── logs/                      ← created at runtime next to the exe
-└── projects/
-    └── <YourProject>.dll      ← every built project DLL (launcher scans here)
-```
-
-The launcher discovers project DLLs in `projects/` *and* next to the exe, so the flat
-dev-build layout (`build/Runtime/<config>/`) keeps working unchanged. No `.lib`, `.exp`,
-`.pdb`, or CMake files are copied into `dist/`. Because only the Release CRT is
-redistributable, packaging always builds Release.
-
-The `.zip` is produced with PowerShell's `Compress-Archive` (reliable on Windows 10/11);
-if that step fails, the staged `dist/Cosmic/` folder is still complete and usable.
-
-To rebrand the app icon, replace `Runtime/app.ico` and rebuild — it is compiled into the
-exe via `Runtime/CosmicApp.rc` (which also feeds the live window/taskbar icon through GLFW).
-
-#### What actually changes between the two
-
-**Debug** — what you use during development:
-- Full debug symbols (`.pdb` files) — the debugger can show you exact line numbers, variable values, and call stacks
-- No optimizations — code runs slower but executes predictably; the compiler does not reorder, inline, or eliminate anything, so stepping through code in a debugger behaves exactly as written
-- `assert()` and `CS_CORE_ASSERT` are active — contract violations crash immediately with a message rather than silently corrupting state
-
-**Release** — what you use for distribution or performance measurement:
-- Full compiler optimizations (`/O2` on MSVC) — the compiler can inline functions, reorder instructions, eliminate dead code, and vectorize loops. Typically 2–5× faster than Debug for compute-heavy code
-- No debug symbols by default — stack traces in a crash are less readable
-- `assert()` and `CS_CORE_ASSERT` are compiled out — a failing assert silently does nothing
-
-#### The important rule: never benchmark in Debug
-
-If you are measuring frame time, job throughput, or serial throughput, always run Release. Debug builds can be 5–10× slower than Release for hot loops due to the lack of optimization and the overhead of iterator debug checks in the MSVC standard library. A result that looks slow in Debug may be perfectly fine in Release.
-
-#### Outputs land in separate directories
-
-Both configurations build into the same `build/Runtime/` tree but in separate subdirectories:
-
-```
-build/Runtime/Debug/      ← Debug DLLs and exe
-build/Runtime/Release/    ← Release DLLs and exe
-```
-
-They do not overwrite each other, so you can keep both around and switch by launching the exe from the appropriate folder.
+> **Full chapter:** [`docs/guide/building-and-shipping.md`](docs/guide/building-and-shipping.md) —
+> every CMake option and what turning it off removes, what each of the ten `.bat` scripts actually
+> does, the packaging pipeline, the installer, the exe icon and `VERSIONINFO`, and what a shipped
+> folder really contains. The canonical command list stays in
+> [§1.5](#15-command-reference--every-command); the configuration comparison in
+> [§1.6](#16-the-two-engine-configurations).
+
+Three `CMakeLists.txt` files carry the whole build. The **root** one sets the global compiler
+posture (`/utf-8 /std:c++20`, and `/MP` at directory scope so every target — engine, projects,
+tests and vendored dependencies alike — compiles its translation units across all cores), declares
+the configuration options, pulls in the redistributable CRT via
+`InstallRequiredSystemLibraries`, and runs the **project scanner**: any directory under `Projects/`
+with a `CMakeLists.txt` is added automatically, along with a matching pair of `install()` rules, so
+dropping in a new project needs no registration anywhere. **`Cosmic/`** builds the engine DLL —
+vendored dependencies, the source glob and its 2D partition filters, the link lists, and the two
+install rules that put `Cosmic.dll` and the engine assets into a package. **`Runtime/`** builds the
+two host executables, `CosmicApp.exe` and `Starforge.exe`, from the same `Main.cpp`; they differ
+only in a compiled-in `COSMIC_STARTUP_PROJECT`, a resource script and a taskbar identity.
+
+Two flags shape what gets built. **`COSMIC_2D_ONLY`** selects the engine configuration — it filters
+the source glob, skips the assimp and recastnavigation dependencies entirely, and changes the
+project skip-list; it is the only engine define exported `PUBLIC`, because public headers carry
+`#ifndef COSMIC_2D_ONLY` fences that must resolve identically in the engine and in every consumer.
+**`COSMIC_BUILD_ENGINE_ONLY`** skips the project scanner. Everything else — `COSMIC_WITH_JOLT`,
+`COSMIC_WITH_ASSIMP`, `COSMIC_BUILD_TESTS`, `COSMIC_BUILD_RENDER_TESTS`, `COSMIC_SKIP_PROJECTS` — is
+a narrower switch on one subsystem or target.
+
+**Release is the distribution build**, decided per-configuration by generator expression rather than
+by a cache flag that could be left stale: `$<$<CONFIG:Release>:COSMIC_DIST>` compiles out the
+Launcher's project-generator UI, and `/SUBSYSTEM:WINDOWS` + `/ENTRY:mainCRTStartup` mean no console
+window opens. Release still emits PDBs (`/Zi` with `/DEBUG /OPT:REF /OPT:ICF`) so a shipped crash
+dump can be symbolised — they are simply never packaged. `RelWithDebInfo` is the escape hatch when
+you want optimised code with the dev Launcher and a console.
+
+Every target writes to one flat directory per configuration,
+`${COSMIC_SDK_DIR}/build/Runtime/$<CONFIG>`, with engine and project assets synced in beside it by
+`POST_BUILD` copies. That is what makes a freshly built project DLL immediately visible to the
+Launcher — and also why two binary directories in one source tree clobber each other's
+`Cosmic.dll`, so the second engine configuration belongs in a git worktree rather than a second
+`build/` folder.
+
+Packaging is a separate mechanism from the dev tree: `cmake --install` runs the four `install()`
+rules into `dist/<Name>/`, `package.bat <App>` prunes that down to a single app, and
+`package_installer.bat <App>` compiles an Inno Setup script into a per-user setup exe. Anything
+outside those four rules — import libraries, PDBs, `CosmicTests.exe`, `Starforge.exe`, Starforge's
+`branding/` folder — exists only in the dev tree. The full pipeline, including a verified listing of
+what a staged folder contains, is in the chapter above; the end-to-end ship-and-install walkthrough
+is [`docs/installer-guide.md`](docs/installer-guide.md).
 
 ### Precompiled Headers
 
@@ -4423,18 +2487,6 @@ The PCH only contains headers that are **stable** — headers you will never edi
 #### glad ordering note
 
 `<glad/glad.h>` is intentionally excluded from the PCH. Glad must be included before any code that would pull in `<GL/gl.h>` from the system SDK. The PCH force-includes `<windows.h>` first, but `<windows.h>` with `WIN32_LEAN_AND_MEAN` does not include `<GL/gl.h>`, so there is no conflict. Files that use glad (`OpenGLBuffer.cpp`, `OpenGLVertexArray.cpp`, etc.) continue to list `#include <glad/glad.h>` as their first explicit include and this remains correct.
-
-#### Build scripts
-
-All three build scripts accept an optional configuration argument (default: `Debug`):
-
-```bat
-build_all.bat Release           :: clean reconfigure + Release build
-build.bat Release               :: incremental Release build
-build_engine.bat                :: engine-only Debug build
-```
-
-`build.bat` does not invoke `cmake ..` — it calls `cmake --build` directly. CMake re-runs configure automatically when any `CMakeLists.txt` changes, so the explicit configure step is unnecessary for day-to-day iteration and only costs time.
 
 ---
 
@@ -4814,62 +2866,74 @@ Storing `recordId` on `AgentComponent` means each worker thread reads and record
 
 ---
 
-## §43 Known Limitations & Roadmap
+## §42.5 Where the rest of Part II lives — the systems directory
 
-The engine is production-usable for 2D simulation/telemetry work and, since the Phase 7–18 line
-(2026-07), for 3D worlds: PBR/IBL/shadows/post, terrain/water/particles, Jolt physics, in-game UI +
-screen flow, voxel worlds, and the Starforge editor with packaged standalone shipping. A handful of
-known rough edges are tracked rather than hidden. The living documents below are kept current
-against the source and are the place to look before filing a bug or starting a refactor:
+Part II above is the older half of the internals documentation: it goes deep on the pieces that
+existed when it was written (the DLL model, the time waterfall, the OpenGL abstraction, batching,
+shader preprocessing, the parallel pipeline, the build system, events, telemetry). Everything since
+— and eventually this material too — belongs in [`docs/systems/`](docs/systems/README.md), one
+document per subsystem, each following a fixed shape: plain-English overview a non-graphics
+programmer can follow, then mental model, then the source-grounded implementation.
 
-| Document | Purpose |
-| -------- | ------- |
-| [`docs/plans/00-MASTER-ROADMAP.md`](docs/plans/00-MASTER-ROADMAP.md) | The live roadmap — phases, sequencing, and links to every active plan doc. Start here. |
-| [`docs/plans/`](docs/plans/) | Live per-phase plan docs (docs 12–20: documentation, Phases 14–21) + [`FEATURE-MATRIX.md`](docs/plans/FEATURE-MATRIX.md); completed plans live in [`docs/plans/archive/`](docs/plans/archive/) (the v3 rule: live docs carry only unimplemented work). |
-| [`docs/engineering-notes/`](docs/engineering-notes/) | Root-caused postmortems (DPI chrome, GL teardown, telemetry resync, Starforge homescreen z-order). |
-| [`docs/archive/`](docs/archive/) | Historical analyses (2026-05/06 audits and improvement passes) — superseded, kept for the "why". |
+**Read [`architecture-overview.md`](docs/systems/architecture-overview.md) first** — it is the map;
+everything else is a territory. Twenty-one documents:
 
-The 2026-06-24 cleanup pass implemented IMPROVEMENTS §1–§4 (statistics counters, the `s_SceneData`
-leak, grayscale-texture upload, the `PauseOnMinimize` doc, the instanced-sampler upload, `Scene::OnRender`
-allocation churn, the texture-slot dedup/lookup, the `DrawLines` bind contract, the `ComponentArray`
-release guard, and the missing `DrawRotatedQuad(vec2, Material)` overload). The limitations below are
-the ones that remain.
+| Document | Covers |
+| --- | --- |
+| [`architecture-overview.md`](docs/systems/architecture-overview.md) | The whole engine: module map, the DLL plugin model, one frame end to end |
+| [`core-runtime.md`](docs/systems/core-runtime.md) | `Application` lifecycle, frame loop, layer stack, time & timeline, the Safe Zone |
+| [`windowing.md`](docs/systems/windowing.md) | Win32 window, borderless chrome, DPI, fullscreen, responsive drag/resize |
+| [`events-input.md`](docs/systems/events-input.md) | Event objects, propagation and the `Handled` short-circuit, polling, gamepad |
+| [`ecs-scene.md`](docs/systems/ecs-scene.md) | The entt-backed entity/component model, systems, scene render hooks |
+| [`cameras-navigation.md`](docs/systems/cameras-navigation.md) | Camera hierarchy, orbit/fly controllers, CAD-style navigation, the nav cube, picking, gizmos |
+| [`rendering-2d.md`](docs/systems/rendering-2d.md) | Batching, texture slots, SDF circles, instancing, text |
+| [`rendering-3d.md`](docs/systems/rendering-3d.md) | The sorted queue: submit → cull → sort → auto-instance → flush; transparency; LOD |
+| [`rendering-pipeline.md`](docs/systems/rendering-pipeline.md) | `SceneRenderer`'s pass graph, HDR, PBR + IBL, shadows, SSAO/bloom/FXAA, sky and time of day |
+| [`terrain.md`](docs/systems/terrain.md) | Heightmap composition, quadtree LOD, splat/triplanar materials, CPU height queries |
+| [`water.md`](docs/systems/water.md) | Gerstner waves, planar reflection/refraction, underwater rendering, buoyancy |
+| [`particles.md`](docs/systems/particles.md) | GPU particle pools, compute-shader simulation, billboards and ribbons, presets |
+| [`physics-backends.md`](docs/systems/physics-backends.md) | `PhysicsWorld` as a dispatcher over `IPhysicsBackend`; the registry; writing your own |
+| [`assets-vfs.md`](docs/systems/assets-vfs.md) | The asset cache, model import, the `engine://` / `project://` / `user://` schemes, shader preprocessing |
+| [`audio.md`](docs/systems/audio.md) | The miniaudio backend, one-shots, loops and groups |
+| [`math-sim-toolkit.md`](docs/systems/math-sim-toolkit.md) | Spatial frames (NED vs Y-up), integrators, filters, lookup tables, noise, deterministic RNG |
+| [`jobs-parallelism.md`](docs/systems/jobs-parallelism.md) | The worker pool, parallel ECS systems, double buffering |
+| [`serial-telemetry.md`](docs/systems/serial-telemetry.md) | Serial ports and links, COBS framing, columnar recording, replay |
+| [`ui-theming.md`](docs/systems/ui-theming.md) | ImGui integration, the docking model, the theme manager, fonts and icons, widgets |
+| [`build-plugin-packaging.md`](docs/systems/build-plugin-packaging.md) | CMake layout, hot-reloadable project DLLs, the packaging/installer pipeline |
+| [`build-2d-3d-split.md`](docs/systems/build-2d-3d-split.md) | `COSMIC_2D_ONLY`: what each configuration excludes, the classification rule for new code, presets and scripts, recorded build times, the carry-over workflow |
 
-The 2026-07-01 windowing pass (plan doc [`docs/plans/archive/09-windowing-plan.md`](docs/plans/archive/09-windowing-plan.md), W1–W6)
-shipped: `[WinTrace]` window-event instrumentation (`COSMIC_WINDOW_TRACE=1`), paint-through-transition
-fullscreen toggles (present-at-new-size within the toggle + `SWP_NOCOPYBITS`), the
-`SetFullscreenCompatMode(OversizeByOne)` anti-black-flash mode (**the default since 2026-07-02**, with
-`COSMIC_FULLSCREEN_COMPAT=exact|oversize` as the A/B override — see §24),
-**responsive rendering during window drag/resize** (default on; `SetRenderWhileDragging(false)` opts out),
-a first-class **`Pause()`/`Resume()`** API (sim frozen, UI+render live — see §7), and window-state
-hardening (maximize↔fullscreen round-trip, stale-rect clamping, display-change re-assertion).
-
-The 2026-06-26 stability pass fixed two laptop-/DPI-sensitive defects (see [Section 24](#24-window-system) and
-[`docs/engineering-notes/`](docs/engineering-notes/)):
-(1) **borderless title bar missing + mouse-click offset at HiDPI** (reproduced on a 125% laptop; absent at
-100%). Root cause: the window was created **decorated**, so GLFW's DPI geometry math added a phantom,
-scale-dependent caption/frame that the visual `WM_NCCALCSIZE` strip had removed. Fix: create the window with
-`GLFW_DECORATED=FALSE` (GLFW models it borderless ⇒ zero-frame math at any DPI) while re-adding
-`WS_OVERLAPPEDWINDOW` to the real window for native resize/snap/animations/shadow, and create-hidden then
-`glfwShowWindow()` after chrome is applied. (Supporting hygiene: the GLFW backend now owns
-`io.DisplaySize`/`DisplayFramebufferScale`, and `Application::Initialize()` calls `SynchronizeRenderingState()`
-once at startup.) (2) **`glDeleteTextures` access violation on close** — the static `Renderer2D` white texture
-was freed at process exit with no current GL context whenever an abort bypassed graceful shutdown. Fix: all
-OpenGL resource destructors guard `glDelete*` behind `OpenGLContext::HasCurrentContext()`, and `main()` now
-wraps `Run()` in try/catch so graceful shutdown always runs.
-
-**Known limitations to be aware of as a client developer:**
-
-- **`ComponentArray<T>` is single-page.** It is only valid below EnTT's page size (~1024 entities). Past
-  that it now logs an error and returns an **empty** view in every build (no more silent UB), so prefer
-  `FlatComponentArray<T>` for large pools (IMPROVEMENTS §4.1).
-- **`Renderer::Submit` does not share a camera with `Renderer2D`.** Treat it as a low-level custom-shader
-  escape hatch; do not mix it with `Renderer2D::DrawQuad` in the same frame expecting one camera
-  (IMPROVEMENTS §3.2).
-- **No automatic depth sort within a `Renderer2D` batch.** Geometry rasterizes in submission order;
-  with alpha blending you control layering by draw order. (`Scene::OnRender` does sort sprites by
-  `Position.z` per material bucket.)
-- **`FramebufferSpecification::Samples` / `SwapChainTarget` are reserved.** Setting them has no effect
-  yet — there is no MSAA path (IMPROVEMENTS §5.4).
+> **Most of those are still skeletons.** Only `build-2d-3d-split.md` and `physics-backends.md` are
+> written; the rest carry a `STATUS: SKELETON` banner until their work order lands. **The Status
+> column in [`docs/systems/README.md`](docs/systems/README.md) is the only reliable signal** — do
+> not assume a linked document is populated. Where an explainer is still a skeleton, the matching
+> [guide chapter](docs/guide/README.md) is written and is the client-facing source.
 
 ---
+
+## §43 Known Limitations & Roadmap
+
+> **This section is a pointer, not a list.** It used to hand-maintain a mixture of shipped-work
+> announcements, postmortem summaries and open limitations, which meant it went stale the moment a
+> phase landed and duplicated documents that are kept current by contract. Two living documents own
+> that material now:
+
+| Document | What it is authoritative for |
+| --- | --- |
+| [`docs/plans/00-MASTER-ROADMAP.md`](docs/plans/00-MASTER-ROADMAP.md) | **The roadmap.** Phase order, what each phase contains, what is done and what is next, and a link to every live plan doc. Start here. |
+| [`docs/plans/FEATURE-MATRIX.md`](docs/plans/FEATURE-MATRIX.md) | **Every missing, partial or parked feature** → the phase that owns it → what unlocks it. This is the "known limitations" list, kept current by the per-phase documentation hook. |
+
+Supporting material, unchanged in purpose:
+
+| Document | Purpose |
+| --- | --- |
+| [`docs/plans/`](docs/plans/) | Live per-phase plan docs with PR-sized work orders and acceptance checks. Completed plans move to [`docs/plans/archive/`](docs/plans/archive/) — the rule is that a *live* doc contains only unimplemented work. |
+| [`docs/engineering-notes/`](docs/engineering-notes/) | Root-caused postmortems (borderless-window DPI, GL teardown, telemetry resync, the Starforge homescreen z-order). Why a bug happened and what fixed it. |
+| [`docs/design/`](docs/design/) | Accepted design documents and specs of record — [`frame-lifecycle.md`](docs/design/frame-lifecycle.md), [`responsive-rendering-and-pause.md`](docs/design/responsive-rendering-and-pause.md), [`water-rendering-notes.md`](docs/design/water-rendering-notes.md). |
+| [`docs/archive/`](docs/archive/) | Historical analyses (2026-05/06 audits and improvement passes) — superseded, kept for the "why". |
+
+**Where limitations are actually recorded now.** Each guide chapter carries a `Pitfalls` section
+written symptom-first, and the ones that are engine defects rather than usage mistakes are recorded
+there with what they do and what would fix them. That is deliberate: a limitation is most useful
+next to the API it limits, not in a list at the bottom of the README. The
+[guide index](docs/guide/README.md) is the entry point.
+

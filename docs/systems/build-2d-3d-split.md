@@ -4,7 +4,7 @@
 never compiles terrain, voxels, water, navigation, particles or the 3D renderer — selected by a
 single CMake flag, with **byte-identical tracked files on both branches**.
 **Source:** root `CMakeLists.txt`, `Cosmic/CMakeLists.txt`, `CMakePresets.json`, `build_2d.bat` / `build_3d.bat` / `build_all_2d.bat`, `Projects/Starforge/CMakeLists.txt`, `tests/CMakeLists.txt`
-**API Reference:** README [§1.5](../../README.md#15-command-reference--every-command) (the command contract) · **Guide:** root README [§1.6](../../README.md#16-the-two-engine-configurations), §40
+**API Reference:** README [§1.5](../../README.md#15-command-reference--every-command) (the command contract) · **Guide:** [`../guide/building-and-shipping.md`](../guide/building-and-shipping.md), root README [§1.6](../../README.md#16-the-two-engine-configurations)
 
 > Written by work order **D41** (Phase 29 W10, 2026-07-25). The design record and the full
 > work-order history are in [`../plans/28-phase29-engine-split-plan.md`](../plans/28-phase29-engine-split-plan.md);
@@ -439,6 +439,13 @@ rounded-up number would have buried.
   this writing.
 - **`NavigationCube` is 3D-only.** A 2D viewport arguably wants no orientation widget at all, but if
   one is ever wanted it needs a Renderer2D implementation.
+- **`NavigationCube`'s include in `Cosmic.h` is not fenced** (found by D53). Every other 3D-only
+  header the umbrella pulls in — `graphics/Model.h`, `assets/MeshImport.h`, `scene/Components3D.h`,
+  `scene/ScenePicker.h` — sits inside `#ifndef COSMIC_2D_ONLY`; `camera/NavigationCube.h`
+  (`Cosmic.h:91`) does not. Its dependencies (`FrameBuffer.h`, `Mesh.h`,
+  `OrbitCameraController.h`) all survive the 2D filter, so the header compiles cleanly and a
+  `NavigationCube::Create(...)` call fails at **link** time with an unresolved external instead of
+  at compile time with a clear message. One-line fix; a Phase 30 candidate.
 - **No CI leg for the 2D configuration.** Verified locally, every phase.
 - **Incremental build times were never recorded.** Only clean builds are measured here; the
   header-partition win (`Components.h` no longer dragging `Skeleton.h` / `AnimationClip.h` /

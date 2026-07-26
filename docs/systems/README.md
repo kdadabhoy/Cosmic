@@ -4,7 +4,8 @@
 > non-graphics-programmer can follow**, then descends into the technical implementation.
 > These answer *"how does it work and why is it built that way"* — for *"what does this call
 > do"* see the [API Reference](../reference/README.md); for *"how do I use it in my project"*
-> see the root [Developer Guide](../../README.md).
+> see the [Developer Guide](../guide/README.md) (complete since 2026-07-26 — where a document
+> below is still a skeleton, the matching guide chapter is the written source).
 
 ## The documents
 
@@ -49,7 +50,7 @@ else is a territory.
 
 **One-liner:** <the system in one sentence>
 **Source:** `Cosmic/src/<dir>/…` (+ shaders/assets if any)
-**API Reference:** ../reference/<chapter>.md · **Guide:** root README §<n>
+**API Reference:** ../reference/<chapter>.md · **Guide:** ../guide/<chapter>.md
 
 ## 1. Overview — what and why            ← NO jargon; a smart non-programmer can follow
 ## 2. Mental model                        ← the one analogy/diagram that makes it click

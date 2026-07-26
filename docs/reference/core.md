@@ -10,8 +10,21 @@
 `Cosmic/src/Cosmic.h` *(plugin exports: `CreatePluginLayer`, `InitializePluginContexts`,
 `HostContext`)*.
 
-**Read first:** root README §1 (getting started), §3 (application lifecycle), §4 (layers),
-§7 (time) — this chapter is the formal lookup behind those guides.
+**Read first:** [`../guide/getting-started.md`](../guide/getting-started.md), then
+[`../guide/project-anatomy.md`](../guide/project-anatomy.md) (application lifecycle, layers,
+ownership) and [`../guide/time-and-ticks.md`](../guide/time-and-ticks.md) (the timeline, pause,
+fixed vs variable) — this chapter is the formal lookup behind those guides. For everything under
+`core/Window.h`, plus `Application`'s window-facing members (`GetViewportPos`/`GetViewportSize`,
+`SetRenderWhileDragging`, `SetPauseOnMinimize`), the client-facing source is
+[`../guide/windowing-and-viewport.md`](../guide/windowing-and-viewport.md) (D60) — it replaced root
+README §24, so don't re-derive it here.
+
+> **Two `Application.h` doc-comment corrections D60 verified against source**, worth folding into
+> the entries: `GetViewportPos`/`GetViewportSize` are documented at `Application.h:93` as *"GLFW
+> window-space pixels"*, but the value comes from `ImGui::GetCursorScreenPos()` and is in **ImGui
+> screen (desktop) pixels** — `WorkspaceLayer.h:271-278` has it right, and this is the space
+> `Input::GetMouseScreenPosition()` lives in. And `SetPauseOnMinimize` defaults to **`false`**
+> (D47's finding), which the header states correctly and the old README §3 did not.
 
 ## Coverage checklist *(starting point — the headers are authoritative, not this list)*
 
@@ -26,8 +39,8 @@
 ## Sections to write
 
 1. Class intro blocks + entries per the checklist. <!-- TODO(D6) -->
-2. A short "lifecycle map" callout linking the frame-loop diagram in the root README. <!-- TODO(D6) -->
-3. Failure behaviors pinned per call (e.g. `Application::Get()` before construction = null deref — documented singleton-ordering note in README §3). <!-- TODO(D6) -->
+2. A short "lifecycle map" callout linking the frame-loop diagram **DG-3** in [`../guide/project-anatomy.md`](../guide/project-anatomy.md#dg-3--the-frame-sequence). <!-- TODO(D6) -->
+3. Failure behaviors pinned per call (e.g. `Application::Get()` before construction = null deref — documented singleton-ordering note in [`../guide/project-anatomy.md`](../guide/project-anatomy.md#construction-order)). <!-- TODO(D6) -->
 
 ---
 *Changelog: (append `YYYY-MM-DD — what changed` lines here as the API evolves).*

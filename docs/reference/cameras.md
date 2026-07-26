@@ -7,10 +7,24 @@
 **Scope (headers are the truth):** `Cosmic/src/camera/Camera.h`,
 `camera/OrthographicCamera.h`, `camera/OrthographicCameraController.h`,
 `camera/PerspectiveCamera.h`, `camera/OrbitCameraController.h` (+ `NavStyle`/`ViewPreset`),
-`camera/FlyCameraController.h`, `camera/NavigationCube.h`, `graphics/Gizmo.h`.
+`camera/FlyCameraController.h`, `camera/NavigationCube.h`, `graphics/Gizmo.h`,
+**`camera/Camera2DController.h`** — the 2D pan/zoom rig, which D52 found was the only controller
+missing from the manifest in
+[reference/README.md](README.md#coverage-manifest--every-public-header-maps-to-a-chapter); add its
+row when D5 runs.
 
-**Read first:** root README §16 (camera system); systems explainer
-[cameras-navigation](../systems/cameras-navigation.md).
+**Read first:** the guide chapter [`../guide/cameras.md`](../guide/cameras.md) — written from source
+by D53, it covers every class in scope here (README §16, which used to cover only
+`OrthographicCamera` + its controller, is now an overview pointing at it). Systems explainer:
+[cameras-navigation](../systems/cameras-navigation.md). For `Camera2DController` specifically —
+focus/zoom conventions, `ScreenToWorld`, `PanBy`, `ZoomAboutPoint`, `FrameBounds` — see
+[`../guide/cameras.md`](../guide/cameras.md#set-up-a-2d-panzoom-view) and, for the authoring context,
+[`../guide/sprites-and-tilemaps.md`](../guide/sprites-and-tilemaps.md#drive-the-2d-camera).
+
+**Configuration note for D14:** `NavigationCube` is **3D-only** (`Cosmic/CMakeLists.txt:198`) and so
+is `ScenePicker` (`:202`), but `Cosmic.h` fences only the `ScenePicker` include — a 2D build
+compiles a `NavigationCube` call and fails at link time. Mark the 3D-only rows with the manifest's
+³ᴰ marker.
 
 ## Coverage checklist *(starting point — headers are authoritative)*
 

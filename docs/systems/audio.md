@@ -8,7 +8,7 @@
 managed loops in named groups, and it all degrades safely to silence on machines with no
 audio device (so tests and headless runs never crash).
 **Source:** `Cosmic/src/audio/AudioEngine.h`, `audio/Sound.h`, `audio/Audio.cpp`, `audio/MiniaudioImpl.cpp`
-**API Reference:** [../reference/audio.md](../reference/audio.md) · **Plan record:** [`../plans/archive/08-audio-plan.md`](../plans/archive/08-audio-plan.md)
+**API Reference:** [../reference/audio.md](../reference/audio.md) · **Guide:** [../guide/audio.md](../guide/audio.md) (D58) · **Plan record:** [`../plans/archive/08-audio-plan.md`](../plans/archive/08-audio-plan.md)
 
 ## Section plan
 
@@ -20,3 +20,12 @@ audio device (so tests and headless runs never crash).
 6. **Limits & future work** — positional/3D audio (A3, parked until a consumer exists). <!-- TODO(D32) -->
 
 **Truth sources:** doc 08 (A1/A2 banners), `AudioEngine.h`, the headless-safe doctests.
+
+> **Section 4 must carry the `MA_COINIT_VALUE` story** — `audio/MiniaudioImpl.cpp:9-24` pins the
+> main thread to the COM **STA** because `ma_context_init` calls `CoInitializeEx` on the calling
+> thread and miniaudio's default is `COINIT_MULTITHREADED`, which deadlocked every native
+> `IFileDialog` in the app for two weeks while audio kept working perfectly. It is written up
+> client-side in [`../guide/audio.md`](../guide/audio.md#the-com-apartment-gotcha); this explainer
+> owns the *why it is safe* half (WASAPI is apartment-agnostic; its device thread `CoInitialize`s
+> itself) and the two tripwires (`tests/test_audio.cpp`'s apartment check and `FileDialog`'s
+> `GuardApartment`).

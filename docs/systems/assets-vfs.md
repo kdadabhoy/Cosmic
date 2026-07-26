@@ -8,7 +8,7 @@
 in the dev tree or a packaged install; `AssetLibrary` caches what's loaded; glTF models come
 in through cgltf with PBR materials attached.
 **Source:** `Cosmic/src/utils/FileSystem.h`, `assets/AssetLibrary.*`, `graphics/Model.*` + `CgltfImpl.cpp`, `graphics/Shader.cpp` (preprocessor)
-**API Reference:** [../reference/assets-io.md](../reference/assets-io.md) · **Guide:** root README §17, §37
+**API Reference:** [../reference/assets-io.md](../reference/assets-io.md) · **Guide:** [../guide/assets-and-vfs.md](../guide/assets-and-vfs.md) (D58), root README §37
 
 ## Section plan
 
@@ -19,5 +19,15 @@ in through cgltf with PBR materials attached.
 5. **Design decisions** — loose files over pack formats (Starforge anti-goal), cgltf now + assimp later (doc 11 E16). <!-- TODO(D32) -->
 6. **Limits & future work.** <!-- TODO(D32) -->
 
-**Truth sources:** `FileSystem.h` (it's header-only — read it whole), `Runtime/Main.cpp`
-(CWD/exe-relative rules), README §17/§37 (migrating here), doc 05 §11 S12.6 note.
+**Truth sources:** `FileSystem.{h,cpp}` (**no longer header-only** — the mount state moved into the
+engine DLL in Phase 20 / A1, which retires the old "resolve in the calling DLL" rule; read both
+files), `Runtime/Main.cpp` (CWD/exe-relative rules, `boot.cfg` → `SetAppIdentity`), README §37
+(migrating here), doc 05 §11 S12.6 note.
+
+> **Don't re-derive the client-facing material.** [`../guide/assets-and-vfs.md`](../guide/assets-and-vfs.md)
+> (D58) already documents the scheme table with dev-vs-packaged resolved examples, both
+> `project://` mount modes, the full `user://` root decision (per-app isolation + portable mode,
+> S6), the `AssetLibrary` per-type miss policy, `.cmeta` import settings and the `utils/` surface.
+> This explainer should cover the *internals and rationale* — the cgltf/assimp import path, shader
+> preprocessing, texture decode, mip/sRGB policy, loose-files-over-pack-formats — and link the
+> guide for usage.

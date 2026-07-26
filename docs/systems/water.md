@@ -8,7 +8,16 @@
 GPU, so boats float correctly), shaded with a mirrored render of the world above and a
 grabbed copy of the world below — plus a full underwater mode when the camera dives.
 **Source:** `Cosmic/src/water/GerstnerWave.h`, `water/Water.*`, `Cosmic/assets/shaders/Water*.glsl`
-**API Reference:** [../reference/world-systems.md](../reference/world-systems.md) · **Design record:** [`../design/water-rendering-notes.md`](../design/water-rendering-notes.md)
+**API Reference:** [../reference/world-systems.md](../reference/world-systems.md) · **Guide:** [`../guide/world-systems.md`](../guide/world-systems.md) · **Design record:** [`../design/water-rendering-notes.md`](../design/water-rendering-notes.md)
+
+> **The guide chapter landed first (D55).** [`../guide/world-systems.md`](../guide/world-systems.md)
+> already carries the three `WaterPreset` characters, the reflection handoff (one planar reflection
+> per frame, `PrimaryReflectionWater`, far→near draw order, the `BeginReflection`/`EndReflection`
+> contract), shore awareness, the buoyancy queries and the pointer to where the underwater medium
+> actually lives — the post chain, not `Water`. D30 should *summarise and link* those. Note that the
+> recipe exposes roughly half of `WaterSpecification`; the rest comes from the preset, which makes
+> `water/Presets.h` the real authoring surface and worth explaining in §4. **3D-configuration only**
+> — see [`build-2d-3d-split.md`](build-2d-3d-split.md).
 
 ## Section plan
 

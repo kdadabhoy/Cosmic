@@ -8,7 +8,14 @@
 frustum, sorts by a packed key (shader → material → mesh → depth), collapses identical runs
 into instanced draws, and only then touches the GPU.
 **Source:** `Cosmic/src/renderer/Renderer3D.*`, `renderer/RenderQueue.h`, `renderer/InstanceSet.*`, `math/Frustum.h`
-**API Reference:** [../reference/rendering-3d.md](../reference/rendering-3d.md) · **Design spec:** [`../design/frame-lifecycle.md`](../design/frame-lifecycle.md)
+**API Reference:** [../reference/rendering-3d.md](../reference/rendering-3d.md) · **Guide:** [`../guide/rendering-3d.md`](../guide/rendering-3d.md) · **Design spec:** [`../design/frame-lifecycle.md`](../design/frame-lifecycle.md)
+
+> **The guide chapter landed first (D54).** [`../guide/rendering-3d.md`](../guide/rendering-3d.md)
+> already carries **DG-7**, the cull/sort/instance walkthrough, the material-read-at-flush rule with
+> its migration examples, the auto-instancing preconditions and the statistics counters — all from
+> source, with line references. D28 should *summarise and link* those, and spend its own words on the
+> §5 rationale (why cull at submit, why this key order, why engine-owned transparency) and the §6
+> limits, which the guide deliberately does not cover.
 
 > **Build note (Phase 29):** everything in this document is **3D-configuration only**.
 > `renderer/Renderer3D.*`, `InstanceSet.*`, `EnvironmentMap.*`, `ShadowMap.*` and

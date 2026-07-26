@@ -8,8 +8,9 @@
 `events/KeyEvent.h`, `events/MouseEvent.h`, `core/Input.h`, `codes/KeyCodes.h`,
 `codes/MouseButtonCodes.h`, `codes/GamepadCodes.h`.
 
-**Read first:** root README §5 (event system), §6 (input polling) — reactive events vs.
-on-demand polling is the organizing distinction of this chapter.
+**Read first:** [`../guide/events-and-input.md`](../guide/events-and-input.md) — reactive events vs.
+on-demand polling is the organizing distinction of this chapter, and the guide already carries the
+full `CS_KEY_*` / `CS_MOUSE_BUTTON_*` / `CS_GAMEPAD_*` tables and diagram **DG-4**.
 
 ## Coverage checklist *(starting point — headers are authoritative)*
 
@@ -22,7 +23,7 @@ on-demand polling is the organizing distinction of this chapter.
 ## Sections to write
 
 1. Event class hierarchy mini-diagram (Mermaid `classDiagram`). <!-- TODO(D7) -->
-2. Entries per checklist; each event entry states *when the engine fires it* and *whether it propagates after Application handles it* (resize does, close doesn't — README §5 flow). <!-- TODO(D7) -->
+2. Entries per checklist; each event entry states *when the engine fires it* and *whether it propagates after Application handles it* (resize does, close doesn't — see [the guide's propagation section](../guide/events-and-input.md#how-an-event-reaches-your-code)). <!-- TODO(D7) -->
 3. Gamepad section: polling model, connection handling, deadzone defaults. <!-- TODO(D7) -->
 
 ---

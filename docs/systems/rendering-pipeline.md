@@ -9,7 +9,23 @@
 with PBR + image-based lighting, water, particles, then a post chain (SSAO, bloom, god rays,
 FXAA, tonemap) that turns raw HDR light into the final image.
 **Source:** `Cosmic/src/renderer/SceneRenderer.*`, `PostProcessStack.*`, `EnvironmentMap.h`, `ShadowMap.*`, `CoverageCapture.*` + `Cosmic/assets/shaders/*`
-**API Reference:** [../reference/rendering-pipeline.md](../reference/rendering-pipeline.md) · **Design spec:** [`../design/frame-lifecycle.md`](../design/frame-lifecycle.md)
+**API Reference:** [../reference/rendering-pipeline.md](../reference/rendering-pipeline.md) · **Guide:** [`../guide/lighting-and-environment.md`](../guide/lighting-and-environment.md) · **Design spec:** [`../design/frame-lifecycle.md`](../design/frame-lifecycle.md)
+
+> **The guide chapter landed first (D55).**
+> [`../guide/lighting-and-environment.md`](../guide/lighting-and-environment.md) already carries
+> **DG-8** (so §2 below reuses it rather than rebuilding it), the per-pass enable/skip table, the
+> reserved-sampler-unit contract, all four sky modes, the shadow-fit knobs and every post toggle with
+> its preconditions — all from source, with line references. D29 should *summarise and link* those
+> and spend its own words on §4's theory (PBR in one honest page; what the IBL split-sum actually
+> integrates) and §5's rationale, which the guide deliberately does not cover.
+
+> **Build note (Phase 29):** the configuration story here is **per class**, not per document.
+> `SceneRenderer` and `PostProcessStack` ship in **both** engine builds — a 2D frame runs the same
+> compositor spine (`BeginHDR` → sprites via `DrawTransparent` → tonemap/FXAA/bloom/vignette →
+> `DrawOverlay2D`), which is what preserves `frame-lifecycle.md` §5 verbatim on both engines.
+> `EnvironmentMap`, `ShadowMap` and `CoverageCapture` are excluded outright, and inside
+> `SceneRenderer.h` the fence runs *through* `SceneRenderDesc`. See
+> [`build-2d-3d-split.md`](build-2d-3d-split.md).
 
 ## Section plan
 

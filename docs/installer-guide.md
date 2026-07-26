@@ -4,7 +4,8 @@
 > it). Covers the whole path: dev tree → `dist/` folder → `<App>-Setup-<version>.exe` → installed
 > desktop app. How the pieces were designed is in
 > [`plans/archive/07-installer-packaging-plan.md`](plans/archive/07-installer-packaging-plan.md);
-> the underlying build docs are README §40.
+> the build side — every CMake option, what each script does, the install rules and what a staged
+> folder actually contains — is [`guide/building-and-shipping.md`](guide/building-and-shipping.md).
 
 ---
 
@@ -56,15 +57,31 @@ name, which is true for all current projects).
 
 ## 4. Where user data lives
 
-The engine's `user://` mount decides at boot:
+The engine's `user://` mount decides once at boot, from two inputs: whether an **app identity** was
+set, and whether the **exe directory is writable** (probed by creating and deleting
+`.cosmic_write_probe` next to the exe). Only a `boot.cfg` sets the identity — `--project` does not.
 
-| Situation | Data location |
-| --- | --- |
-| Installed build (exe dir not writable) | `%LOCALAPPDATA%\Cosmic\<ProjectName>\` — logs, recordings, settings |
-| Dev tree / unzipped folder (exe dir writable) | next to the exe, exactly like today's dev workflow ("portable mode") |
+| Identity | Exe dir writable | `user://` resolves to |
+| --- | --- | --- |
+| set (`boot.cfg`) | yes | `<exe dir>\user\` |
+| set (`boot.cfg`) | no | `%LOCALAPPDATA%\<AppName>\` |
+| not set (`--project`, Launcher) | yes | `<exe dir>` itself |
+| not set | no | `%LOCALAPPDATA%\Cosmic\` |
 
-Uninstalling **leaves `%LOCALAPPDATA%\Cosmic` behind on purpose** — recordings are user data.
-Delete that folder manually for a truly clean removal.
+**Two consequences worth knowing, because the script comments claim otherwise.** A
+`package_installer.bat` app is launched by its shortcut with `--project <App>`, so it gets **no
+per-app isolation** — its `user://` is the shared `Cosmic` root, not `%LOCALAPPDATA%\Cosmic\<App>`.
+And a per-user install directory (`%LOCALAPPDATA%\Programs\<App>`) **is writable by the installing
+user**, so in practice the probe succeeds and an installed app runs in *portable* mode with its data
+next to the exe. `CosmicSetup.iss`'s header comment ("goes to `%LOCALAPPDATA%\Cosmic` … NOT into
+`{app}`") describes the intent, not the behaviour.
+
+Don't reason about the table — **read the boot log**. The engine prints `user:// root -> <path>`
+immediately at startup. (In a Release build that line is in the log file; there is no console.)
+
+Uninstalling leaves any `%LOCALAPPDATA%` folder behind on purpose — recordings are user data. Files
+the app wrote *inside* the install folder were not installed by Inno, so they can survive the
+uninstall too; delete the folder manually for a truly clean removal.
 
 ## 5. Updating an installed app
 
@@ -96,5 +113,6 @@ step 6 for the parked CI-release idea).
 1. Run the setup exe → desktop icon appears.
 2. Double-click → boots **straight into the app** (no launcher).
 3. Exercise one real workflow (e.g. SF_Telem: connect / record / stop).
-4. Confirm files appeared under `%LOCALAPPDATA%\Cosmic\<Project>\` and **zero** write errors in the log.
+4. Read the `user:// root -> …` line from the log, confirm files appeared there, and check for
+   **zero** write errors.
 5. Uninstall from Settings → app folder gone, user data still present.

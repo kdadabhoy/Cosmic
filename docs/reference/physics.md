@@ -8,9 +8,14 @@
 `physics/PhysicsWorld.h`, `physics/PhysicsBackend.h`, `physics/CharacterController.h`,
 `physics/ScenePhysics.h`.
 
-**Read first:** systems explainer [physics-backends](../systems/physics-backends.md) (why
-`PhysicsWorld` is a dispatcher, and how to write your own simulator); root README §15 (ECS), §23
-(scenes).
+**Read first:** guide chapter [`../guide/physics.md`](../guide/physics.md) — the task-oriented half
+("make a crate fall", "make a character climb stairs", "make a trigger fire once"); systems
+explainer [physics-backends](../systems/physics-backends.md) (why `PhysicsWorld` is a dispatcher,
+and how to write your own simulator);
+[`../guide/entities-and-components.md`](../guide/entities-and-components.md) (the physics component
+tier — bodies, colliders, the character controller);
+[`../guide/scripting.md`](../guide/scripting.md) (the `Physics()` / `Character()` proxies in
+context, and the fixed-step tick order a script sees).
 
 **The one rule that governs everything here:** physics advances on the **fixed** timestep, in this
 order, every step:
@@ -212,7 +217,7 @@ the sibling collider components at play-start.
   `(A.Category & B.CollidesWith) && (B.Category & A.CollidesWith)`. Setting only one side does
   nothing.
 - **`EntityId` is the query round-trip.** Whatever you put here comes back in
-  [`RayHit::EntityId`](#rayhit) and in [`ContactEvent`](#contactevent). `0` means "no entity". In a
+  [`RayHit::EntityId`](#rayhit) and in [`ContactEvent`](#contactkind--contactevent). `0` means "no entity". In a
   scene it is the entity's `IDComponent` UUID.
 - `IsTrigger` bodies report `TriggerEnter`/`TriggerExit` and apply no contact response — things fall
   straight through them.
@@ -1399,7 +1404,8 @@ between two frames (or none). Do not assume one per frame.
 
 ---
 
-*See also:* [physics-backends](../systems/physics-backends.md) (systems explainer) ·
+*See also:* [`../guide/physics.md`](../guide/physics.md) (the task-oriented guide chapter) ·
+[physics-backends](../systems/physics-backends.md) (systems explainer) ·
 [ecs.md](ecs.md) (`RigidBodyComponent`, `BoxColliderComponent`, `SphereColliderComponent`,
 `CapsuleColliderComponent`, `CharacterControllerComponent`) ·
 [build-2d-3d-split](../systems/build-2d-3d-split.md) (physics is shared by both configurations).

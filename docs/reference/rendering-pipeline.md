@@ -8,10 +8,23 @@
 `renderer/PostProcessStack.h`, `renderer/EnvironmentMap.h`, `renderer/ShadowMap.h`,
 `renderer/CoverageCapture.h`.
 
-**Read first:** [`docs/design/frame-lifecycle.md`](../design/frame-lifecycle.md) — the pass
-graph this chapter's API drives; systems explainer
-[rendering-pipeline](../systems/rendering-pipeline.md). Real-world usage exemplars:
-`Projects/Frontier` worlds (F2/F12–F16) and `Projects/Engine3DDemo`.
+**Read first:** the guide chapter
+[`../guide/lighting-and-environment.md`](../guide/lighting-and-environment.md) — **written D55, and
+until this skeleton is filled it is the client-facing source of truth** for the whole scope above:
+it carries **DG-8**, the per-pass enable/skip table, the lights + IBL contract, all four sky modes
+and every post toggle with its preconditions. Then
+[`docs/design/frame-lifecycle.md`](../design/frame-lifecycle.md) — the pass graph this chapter's API
+drives — and the systems explainer [rendering-pipeline](../systems/rendering-pipeline.md).
+Real-world usage exemplars: `Projects/Frontier` worlds (F2/F12–F16) and `Projects/Engine3DDemo`.
+
+**D11 must not re-derive the guide's material.** Link it for usage and worked examples; this tier
+carries signatures, parameters, return/failure behaviour and per-entry notes. Two configuration
+notes the manifest already encodes and D11 must preserve: `SceneRenderer.h` and
+`PostProcessStack.h` ship in **both** engine builds (a 2D frame runs the same compositor spine),
+while `EnvironmentMap.h`, `ShadowMap.h` and `CoverageCapture.h` are ³ᴰ. Inside `SceneRenderer.h`
+itself the split is per member — `desc.Lights`, `DrawOpaque`, the terrain/water/particle lists and
+`DetailedSky` are fenced; `DrawTransparent`, `DrawOverlay2D`, `DeltaTime` and the post-chain
+settings are not.
 
 ## Coverage checklist *(starting point — headers are authoritative)*
 

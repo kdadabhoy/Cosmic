@@ -7,7 +7,7 @@
 **One-liner:** every `DrawQuad` appends vertices to a CPU-side batch; `EndScene` uploads the
 batch and draws thousands of sprites in a handful of GPU calls.
 **Source:** `Cosmic/src/renderer/Renderer2D.*`, `graphics/SubTexture2D.*`, `graphics/Font.*`
-**API Reference:** [../reference/rendering-2d.md](../reference/rendering-2d.md) · **Guide:** root README §8, §11–§14
+**API Reference:** [../reference/rendering-2d.md](../reference/rendering-2d.md) · **Guide:** [../guide/rendering-2d.md](../guide/rendering-2d.md) (the draw API), [../guide/sprites-and-tilemaps.md](../guide/sprites-and-tilemaps.md) (the component-driven 2D path, 2D lights, the 2D camera rig), [../guide/game-ui.md](../guide/game-ui.md) (canvas UI)
 
 > **Build note (Phase 29):** `Renderer2D` and its neighbours (`Light2DRenderer`,
 > `Camera2DController`, tilemaps, canvas UI) are **shared** — they compile in both engine

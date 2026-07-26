@@ -7,8 +7,19 @@
 **Scope (headers are the truth):** `Cosmic/src/jobs/JobSystem.h`, `jobs/ParallelSystem.h`,
 `jobs/ParallelFor.h`, `jobs/SystemQuery.h`, `jobs/ComponentArray.h`, `jobs/DoubleBuffer.h`.
 
-**Read first:** root README §22 (job system & parallel pipeline), §39 (parallel pipeline
-architecture); systems explainer [jobs-parallelism](../systems/jobs-parallelism.md).
+**Read first:** the guide chapter
+[`../guide/jobs-and-parallelism.md`](../guide/jobs-and-parallelism.md) (D59) — written from source,
+covering every header in this scope plus the threading contract. Root README §22 is now an overview
+that points at it; §39 (parallel pipeline architecture) is still live Part II material. Systems
+explainer: [jobs-parallelism](../systems/jobs-parallelism.md) (skeleton — D33).
+
+> **D59 corrections to carry into the entries.** `ComponentArray<T>::From` maps **page 0 only** and
+> returns an **empty view** (logging an error) when the pool spans more than one EnTT page — that
+> guard now runs in every configuration, so the failure mode is "the loop silently does nothing".
+> `ReadWriteQuery::Commit`'s structural-change guard is `CS_CORE_ASSERT` on a member behind
+> `#ifdef CS_ENABLE_ASSERTS`, and **neither exists in any build** — the rule is real, nothing
+> enforces it. And **nothing in the engine calls `Scene::OnUpdate` or `Scene::OnFixedUpdate`**, so a
+> registered `System`/`ParallelSystem` never runs unless the scene's owner ticks the scene.
 
 ## Coverage checklist *(starting point — headers are authoritative)*
 

@@ -90,11 +90,36 @@ script `tests/check_docs_coverage.ps1` (work order D5) diffs `Cosmic.h` against 
 > The other 3D-fenced `Cosmic.h` includes already have manifest rows under their own chapters:
 > `renderer/Renderer3D.h`, `renderer/EnvironmentMap.h`, `renderer/ShadowMap.h`,
 > `renderer/InstanceSet.h`, `renderer/CoverageCapture.h`, `terrain/Terrain.h`, `water/Water.h`,
-> `particles/ParticleSystem.h`, `particles/Presets.h`, `graphics/Model.h`. Three fenced headers
+> `particles/ParticleSystem.h`, `particles/Presets.h`, `graphics/Model.h` — **D54 added the missing
+> ³ᴰ marker to all ten**, which the table listed unmarked, i.e. as present in both configurations.
+> Note that `graphics/Mesh.h` and `math/Frustum.h` are correctly unmarked: both are unfenced in
+> `Cosmic.h` and compile in a 2D tree, even though nothing there draws a mesh. Three fenced headers
 > **have no row yet** — `water/Presets.h`, `assets/MeshImport.h`, `scene/WorldSystemRecipes.h` — a
 > pre-existing gap that predates the split and that D5's checker will surface; they belong in
 > [world-systems.md](world-systems.md), [assets-io.md](assets-io.md) and
-> [world-systems.md](world-systems.md) respectively when those chapters are written.
+> [world-systems.md](world-systems.md) respectively when those chapters are written. **Two of the
+> three are now covered client-side** by the guide chapter
+> [`../guide/world-systems.md`](../guide/world-systems.md) (D55) — the `WaterPreset` set and the
+> whole E18 recipe→spec layer, including `ClampTerrainResolution`'s editor-only `{65 … 1025}` clamp.
+> The rows are still owed.
+>
+> **`physics/ScenePhysics.h` has no row either, and that one is an outright oversight** (found by
+> D57). Its five siblings are all listed above, [physics.md](physics.md)'s scope block names it, and
+> the chapter documents every one of its methods — but `Cosmic.h` reaches it through
+> `scripting/ScriptableEntity.h` rather than by a direct include, so a `Cosmic.h`-include table
+> never saw it. `ScenePhysics::BuildColliderDesc` is deliberately public and static (the navmesh
+> bake's "honest physics source"), so this is unambiguously client surface. Add the row pointing at
+> [physics.md](physics.md); no chapter work is needed. The same D57 pass found `nav/NavWorld.h`,
+> `nav/NavTypes.h` and `scene/SceneNav.h` unlisted with **no chapter at all** — those are a genuine
+> coverage gap, and [`../guide/navigation-and-ai.md`](../guide/navigation-and-ai.md) is the
+> client-facing source for them until it closes.
+>
+> **³ᴰ⁺ marks the one header that is 3D-only in a *different* way** (found by D53).
+> `camera/NavigationCube.h` is included by `Cosmic.h` **unfenced**, so it compiles in a 2D tree —
+> but `NavigationCube.cpp` is filtered out of the 2D build (`Cosmic/CMakeLists.txt:198`), so calling
+> it fails at **link** time rather than at compile time. Its symbols are 3D-only exactly like a ³ᴰ
+> header's; only the diagnostic differs. D5's checker must not treat "inside a fence" as the sole
+> test for 3D-only, and fencing the include is the one-line fix.
 
 | Header (under `Cosmic/src/`) | Chapter |
 | --- | --- |
@@ -127,20 +152,20 @@ script `tests/check_docs_coverage.ps1` (work order D5) diffs `Cosmic.h` against 
 | `renderer/RenderPass.h` | [rendering-2d.md](rendering-2d.md) |
 | `graphics/SubTexture2D.h` | [rendering-2d.md](rendering-2d.md) |
 | `graphics/Font.h` | [rendering-2d.md](rendering-2d.md) |
-| `renderer/Renderer3D.h` | [rendering-3d.md](rendering-3d.md) |
+| `renderer/Renderer3D.h` ³ᴰ | [rendering-3d.md](rendering-3d.md) |
 | `graphics/Mesh.h` | [rendering-3d.md](rendering-3d.md) |
-| `graphics/Model.h` | [rendering-3d.md](rendering-3d.md) |
-| `renderer/InstanceSet.h` | [rendering-3d.md](rendering-3d.md) |
+| `graphics/Model.h` ³ᴰ | [rendering-3d.md](rendering-3d.md) |
+| `renderer/InstanceSet.h` ³ᴰ | [rendering-3d.md](rendering-3d.md) |
 | `math/Frustum.h` | [rendering-3d.md](rendering-3d.md) |
 | `renderer/SceneRenderer.h` | [rendering-pipeline.md](rendering-pipeline.md) |
 | `renderer/PostProcessStack.h` | [rendering-pipeline.md](rendering-pipeline.md) |
-| `renderer/EnvironmentMap.h` | [rendering-pipeline.md](rendering-pipeline.md) |
-| `renderer/ShadowMap.h` | [rendering-pipeline.md](rendering-pipeline.md) |
-| `renderer/CoverageCapture.h` | [rendering-pipeline.md](rendering-pipeline.md) |
-| `terrain/Terrain.h` | [world-systems.md](world-systems.md) |
-| `water/Water.h` | [world-systems.md](world-systems.md) |
-| `particles/ParticleSystem.h` | [world-systems.md](world-systems.md) |
-| `particles/Presets.h` | [world-systems.md](world-systems.md) |
+| `renderer/EnvironmentMap.h` ³ᴰ | [rendering-pipeline.md](rendering-pipeline.md) |
+| `renderer/ShadowMap.h` ³ᴰ | [rendering-pipeline.md](rendering-pipeline.md) |
+| `renderer/CoverageCapture.h` ³ᴰ | [rendering-pipeline.md](rendering-pipeline.md) |
+| `terrain/Terrain.h` ³ᴰ | [world-systems.md](world-systems.md) |
+| `water/Water.h` ³ᴰ | [world-systems.md](world-systems.md) |
+| `particles/ParticleSystem.h` ³ᴰ | [world-systems.md](world-systems.md) |
+| `particles/Presets.h` ³ᴰ | [world-systems.md](world-systems.md) |
 | `scene/Scene.h` | [ecs.md](ecs.md) |
 | `scene/Entity.h` | [ecs.md](ecs.md) |
 | `scene/Components.h` | [ecs.md](ecs.md) |
@@ -160,7 +185,7 @@ script `tests/check_docs_coverage.ps1` (work order D5) diffs `Cosmic.h` against 
 | `camera/PerspectiveCamera.h` | [cameras.md](cameras.md) |
 | `camera/OrbitCameraController.h` | [cameras.md](cameras.md) |
 | `camera/FlyCameraController.h` | [cameras.md](cameras.md) |
-| `camera/NavigationCube.h` | [cameras.md](cameras.md) |
+| `camera/NavigationCube.h` ³ᴰ⁺ | [cameras.md](cameras.md) |
 | `graphics/Gizmo.h` | [cameras.md](cameras.md) |
 | `math/Spatial.h` | [math.md](math.md) |
 | `math/Integrators.h` | [math.md](math.md) |

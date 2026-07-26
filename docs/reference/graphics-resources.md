@@ -9,9 +9,12 @@
 `graphics/VertexArray.h`, `graphics/UniformBuffer.h`, `graphics/StorageBuffer.h`,
 `renderer/RenderCommand.h`, `renderer/BindingPoints.h`, `renderer/Renderer.h`.
 
-**Read first:** root README §9 (materials & shaders), §10 (shader contract), §18
-(framebuffer); systems explainer [rendering-3d](../systems/rendering-3d.md) for how these
-resources flow through a frame.
+**Read first:** the client guide chapter
+[`../guide/materials-and-shaders.md`](../guide/materials-and-shaders.md) — it covers loading
+shaders, `Material` and its cached-uniform model, the shader-preprocessor contract, `.cmat`
+assets, material slots and framebuffers, and **replaces root README §9/§10/§18** (whose bodies are
+now overviews pointing here). Then the systems explainer
+[rendering-3d](../systems/rendering-3d.md) for how these resources flow through a frame.
 
 ## Coverage checklist *(starting point — headers are authoritative)*
 
@@ -29,7 +32,7 @@ resources flow through a frame.
 
 ## Sections to write
 
-1. Resource ownership rules up front: `Ref<>` factories, **GPU-owning classes are non-copyable**, same-`Cosmic.dll` requirement (README §2). <!-- TODO(D8) -->
+1. Resource ownership rules up front: `Ref<>` factories, **GPU-owning classes are non-copyable**, same-`Cosmic.dll` requirement ([`../guide/project-anatomy.md`](../guide/project-anatomy.md#ref-scope-and-the-shared-allocator-rule)). <!-- TODO(D8) -->
 2. Entries per checklist. <!-- TODO(D8) -->
 3. `BindingPoints` table — this is the *binding contract* other chapters link to. <!-- TODO(D8) -->
 

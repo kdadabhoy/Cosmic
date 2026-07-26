@@ -177,7 +177,7 @@ it never collides with rewind, `TimeScale < 0`). When paused, for each frame ins
 | PASS 1A — fixed `OnFixedUpdate` | **Skipped** (accumulator not advanced) | Pure logic/physics; nothing to draw, safe to freeze |
 | PASS 1B — `UpdateLayerTime` + `OnUpdate` | **Called with effective dt = 0** | `OnUpdate` issues draw calls; dt=0 freezes motion but keeps the scene rendering |
 | PASS 2 — ImGui + `SwapBuffers` | **Runs normally** | Pause menu animates and stays clickable; frame is presented |
-| `m_AbsoluteTime` (wall-clock uptime) | **Keeps advancing** | It's scale-independent uptime (README §7); used for profiling/session time |
+| `m_AbsoluteTime` (wall-clock uptime) | **Keeps advancing** | It's scale-independent uptime ([`../guide/time-and-ticks.md`](../guide/time-and-ticks.md)); used for profiling/session time |
 | `GetLocalTime()` (scaled, per-layer) | **Frozen** (advances by 0) | Shader `u_Time`/animation driven by it freeze — the visual "pause" |
 
 Net effect: motion, physics, and `GetLocalTime()`-driven shaders freeze; the scene is still drawn (frozen);

@@ -9,10 +9,26 @@
 `telemetry/DataPlayer.h`, `telemetry/TelemetryPanel.h`, `telemetry/EntitySelection.h`,
 `telemetry/EntityPicker.h`.
 
-**Read first:** root README §20 (serial), §26 (telemetry); systems explainer
-[serial-telemetry](../systems/serial-telemetry.md). Usage exemplars: `Projects/SF_Telem`,
-ViperSim HIL backend. **Docstring warning:** some telemetry docstrings reference a "v3"
-binary format — the code writes **v1**; document what the code does, not stale comments.
+**Read first:** the guide chapter
+[`../guide/serial-and-telemetry.md`](../guide/serial-and-telemetry.md) (D59) — it is written from
+source and covers every header in this scope, including the v1 binary format read off the writer.
+Root README §20 and §26 are now overviews that point at it. Systems explainer:
+[serial-telemetry](../systems/serial-telemetry.md) (skeleton — D33). Usage exemplars:
+`Projects/SF_Telem` (ASCII protocol, recording, replay, the panel), ViperSim's HIL backend (COBS
+framing over `SerialLink`).
+
+> **Docstring warning, narrowed by D59.** The header docstrings have been corrected — `DataRecorder.h`
+> and `DataPlayer.h` both say v1 now. **One stale comment survives:** `DataRecorder.cpp:257` labels
+> the write `v3 format with per-entity sample_count`, three lines above `const uint32_t version = 1u;`.
+> Document what the code does.
+
+> **D59 corrections to carry into the entries.** `SerialPort::Write` **is** implemented and exported
+> (the old README §20 called it "planned"). `DataRecorder::Flush` and `DataPlayer::Load` do **not**
+> resolve VFS paths — same trap as `SceneManager::Load` and `Shader::Create`. `--replay <file>` sets
+> `COSMIC_REPLAY_FILE` and **nothing in the tree reads it**; the installer associates `.cham`, which
+> `DataPlayer::Load` would reject anyway (it accepts a directory or `.bin` only).
+> `EntityPicker.h`'s file-header overview says the hit test is an axis-aligned box while `Pick`'s own
+> docstring and the code rotate the query point by `Rotation.z` — the docstring and the code are right.
 
 ## Coverage checklist *(starting point — headers are authoritative)*
 
