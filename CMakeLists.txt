@@ -10,6 +10,23 @@ if(MSVC)
     # /std:c++20 forces MSVC to activate concepts, <bit>, and <compare> templates
     add_compile_options(/utf-8 /std:c++20)
 
+    # /MP — compile the translation units WITHIN each target across all cores.
+    # This sits at the root directory scope, ahead of every add_subdirectory, so
+    # it reaches the engine, the game projects, the tests and the vendored
+    # dependencies alike. Until Phase 29 W8 measured it, /MP appeared exactly
+    # once in the whole build — inside assimp's own CMakeLists — so assimp was
+    # the only thing using more than one core and everything else compiled
+    # strictly serially. `cmake --build --parallel` does not cover this: on the
+    # Visual Studio generator it gives MSBuild parallel PROJECTS, not parallel
+    # FILES, and this build is a deep dependency chain of few projects.
+    # Measured effect on a clean Release build (16 logical cores) in §5.3 of
+    # docs/plans/28-phase29-engine-split-plan.md. assimp keeps its own /MP; a
+    # repeated /MP is accepted silently by cl.
+    #
+    # Do NOT express this as -DCMAKE_CXX_FLAGS=/MP: that REPLACES CMake's MSVC
+    # defaults (/DWIN32 /D_WINDOWS /EHsc), which silently disables exceptions.
+    add_compile_options(/MP)
+
     # Release ships console-less (/SUBSYSTEM:WINDOWS), so emit PDBs and keep them
     # linked for symbolizing crash dumps. /DEBUG would normally disable the linker
     # optimizations /O2 expects, so restore them with /OPT:REF and /OPT:ICF. The

@@ -183,38 +183,70 @@ W8 captures the 2D number, both written into `docs/systems/build-2d-3d-split.md`
 measurement lands materially short, report it and evaluate `COSMIC_WITH_JOLT=OFF` (another 133
 TUs) rather than quietly accepting it.
 
-### 5.3 Recorded result (W8, 2026-07-25) — the target was MISSED, and why
+### 5.3 Recorded result — the split MISSED its target, and `/MP` is why
 
-**Measured: ≈20% off the clean Release build, against a 40–55% target.** Reported rather than
-quietly accepted, per the rule above. The shortfall is **not** the file partition failing to
-exclude what it claimed — the 2D tree configures **50 `.vcxproj` targets against the 3D tree's
-78**, and neither assimp nor Recast is configured. The excluded work is genuinely gone.
+**The partition alone came in at ≈20–25% off a clean Release build, against a 40–55% target.**
+Reported rather than quietly accepted, per the rule above. The shortfall is **not** the file
+partition failing to exclude what it claimed — the 2D tree configures **50 `.vcxproj` targets
+against the 3D tree's 78**, neither assimp nor Recast is configured, and the TU count drops
+572→347 (−39%). The excluded work is genuinely gone; wall time simply did not track TU count.
 
-**Root cause: `/MP` (MSBuild multi-processor compilation) exists in exactly one place in the
-build — assimp's own `CMakeLists.txt`.** Every other target, the engine included, compiles its
-translation units **serially**. So the 3D baseline was inflated by assimp being the only
-component allowed to use the whole machine, and removing it removed the one parallel target while
-leaving the serial remainder untouched. The partition's win is real but it is measured against a
-baseline that was mostly single-threaded.
+**Root cause: `/MP` (multi-processor compilation) existed in exactly one place in the whole
+build — `Cosmic/dependencies/assimp/CMakeLists.txt:301`.** Every other target, the engine
+included, compiled its translation units **strictly serially**. `cmake --build --parallel` does
+not compensate: on the Visual Studio generator it gives MSBuild parallel *projects*, not
+parallel *files*, and this build is a deep dependency chain of relatively few projects. So the
+3D baseline was inflated by assimp being the only component allowed to use the whole machine,
+and the split removed *the cheapest TUs per unit of wall-clock* while leaving every serial
+bottleneck (Jolt 133, Cosmic ~100, Starforge, CosmicTests) intact.
 
-**Two independent numbers, both worth having:**
+**`/MP` has since been made global** — one `add_compile_options(/MP)` at MSVC scope in the root
+`CMakeLists.txt`, ahead of every `add_subdirectory`, so it reaches the engine, the projects, the
+tests and the vendored dependencies alike.
 
-| Change | Effect on clean Release build |
+#### The measured numbers
+
+Clean Release build (deleted `build/`, configure + build), 16 logical cores, same machine, same
+session, measured on the **post-W9 tree**. Both configurations 0-warn, suites green.
+
+| Configuration | without `/MP` | with `/MP` | cut |
+|---|---|---|---|
+| 3D (`C:\dev\Cosmic`) | 546.4 s | **169.4 s** | **−69.0%** |
+| 2D (`C:\dev\Cosmic-2D`) | 411.7 s | **123.1 s** | **−70.1%** |
+
+Derived from the same four runs:
+
+| Comparison | Result |
 |---|---|
-| 2D partition alone (as shipped in W8) | **≈20%** faster |
-| Global `/MP` alone (3D config, no partition) | **≈72%** faster |
-| 2D partition measured *on top of* global `/MP` | **≈36%** faster |
+| The 2D partition alone, no `/MP` (546.4 → 411.7) | **−24.7%** — the honest "split only" number |
+| The 2D partition measured on top of `/MP` (169.4 → 123.1) | **−27.3%** |
+| `/MP` alone, 3D (546.4 → 169.4) | **−69.0%** |
 
-**The lever, in priority order.** Adding `/MP` globally is worth ~3.5× more than the entire
-engine split and is a two-line change; it belongs on the trunk regardless of Phase 29 and is
-**not** done as part of this plan. `COSMIC_WITH_JOLT=OFF` (§12/W8's suggested next lever, 133
-TUs) remains available but is second — it costs a feature, `/MP` costs nothing. Once `/MP` is
-global, the partition's honest standalone number is the **36%** row, which lands just under the
-planned band.
+**`/MP` is worth roughly 2.8× the entire engine split, and costs no functionality.** That is the
+headline finding of the build-time work, and it is independent of Phase 29 — the build was
+simply never parallel.
 
-**D41 must use this table, not the §5.1 estimate**, and must state the `/MP` caveat — a reader
-who sees "20%" without it will conclude the partition underdelivered when the real finding is
-that the build was never parallel to begin with.
+**Why the split's number moved between W8 and now.** W8 measured the partition at −20.3% and the
+partition-on-top-of-`/MP` at −36.4% (169.9 → 108.1). Re-measured after W9, the second figure is
+−27.3% instead. The 3D `/MP` build is unchanged (169.9 → 169.4) but the 2D one grew 108.1 →
+123.1. The reason is that with `/MP` the build is governed by the **critical path**, not total
+work: in 3D, assimp and Jolt still dominate and W9's five new doctest-heavy test TUs disappear
+into parallel slack, whereas in 2D assimp is gone, `CosmicTests` sits much closer to the
+critical path, and those same TUs land on it directly. Expect the 2D figure to stay sensitive to
+test-suite growth in a way the 3D figure is not.
+
+**Other levers, for the record.** `COSMIC_WITH_JOLT=OFF` measured 387.7 → 284.0 s (−27%) on the
+pre-`/MP` 2D tree, and `/MP` + Jolt-off together reached 97.1 s. Jolt-off costs a feature, so it
+stays available rather than adopted.
+
+**Gotcha, hit once during this work:** do **not** express the flag as
+`-DCMAKE_CXX_FLAGS=/MP`. That *replaces* CMake's MSVC defaults (`/DWIN32 /D_WINDOWS /EHsc`),
+silently disabling exceptions, which surfaces as 222 doctest static-assert failures rather than
+anything that mentions flags. Use `add_compile_options`, which appends.
+
+**D41 must use these tables, not the §5.1 estimate**, and must state the `/MP` finding — a
+reader who sees "20%" without it will conclude the partition underdelivered, when the real
+finding is that the build was never parallel to begin with.
 
 ### 5.2 The `.bat` design
 
@@ -1670,7 +1702,7 @@ untouched apart from the W0 fast-forward, which is pure history alignment.
 | `CosmicRenderTests` vs W2 baselines | 2D + 3D goldens byte-match | 2D goldens byte-match |
 | Editor boots | both modes intact | 2D mode; 3D panels/menus absent; tile painting, Light2D, Flow/Story editors, ForgePong + FlowDemo in Play, collider overlay visible |
 | SF_Telem | builds, launches, connects, records, replays | same |
-| Clean-build wall time | baseline (W2) | **≈20% lower as shipped; ≈36% with global `/MP`** — target missed, see §5.3 |
+| Clean-build wall time | 546.4 s → **169.4 s** with global `/MP` | 411.7 s → **123.1 s**; the split itself is **−24.7%**, short of target — see §5.3 |
 | `COSMIC_WITH_JOLT=OFF` | configures and builds on the Null backend alone | same |
 | Cross-build data safety | `test_crossbuild_scene` passes both directions | same |
 
