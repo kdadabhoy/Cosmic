@@ -207,12 +207,21 @@ GLFW `action`/`mods` values reach client code, so you must spell them out: `GLFW
 > your code is unloaded by another route, such as Starforge's game-module hot reload, which does
 > not go through `UnloadProjectDLL`.
 
-### F11 is not an event
+### The F11 press is not an event
 
 `Window::HandleFullscreenHotkey` runs **inside the GLFW key callback**, before any `Event` object
-is constructed (`Window.cpp:444-459`). An `F11` press is consumed there and never reaches
-`Application::OnEvent`, so no `EventDispatcher` will ever see it, and `Input::IsKeyPressed(CS_KEY_F11)`
-is the only way to observe the physical key. See
+is constructed (`Window.cpp:444-459`). It consumes the key only when it returns `true`, and the
+built-in branch returns `true` for exactly `key == CS_KEY_F11 && action == GLFW_PRESS`
+(`Window.cpp:1113`).
+
+So the precise contract is narrower than "F11 is not an event": **the fresh press** never reaches
+`Application::OnEvent`, while **auto-repeat still delivers `KeyPressedEvent(F11, 1)` and the release
+still delivers `KeyReleasedEvent(F11)`**. A handler that does not test the action will therefore see
+a release with no matching press. `Input::IsKeyPressed(CS_KEY_F11)` observes the physical key
+regardless.
+
+A registered override is offered **press, release and repeat**, so an override that does not test
+`action == GLFW_PRESS` toggles fullscreen twice per keystroke. See
 [`events-and-input.md`](events-and-input.md) for the rest of the event path.
 
 ---

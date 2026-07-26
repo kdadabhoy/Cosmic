@@ -154,8 +154,9 @@ flowchart TD
 **1. `Window::HandleFullscreenHotkey` — before the event system exists.** The key callback offers
 every keystroke to a registered override first, then to the built-in **F11 toggles fullscreen**
 handler. If either consumes the key, **no `Event` object is constructed at all** — your layer never
-sees it, and neither does ImGui. This is why `F11` never reaches a client handler unless you take it
-over:
+sees it, and neither does ImGui. The built-in handler consumes **only `F11` on `GLFW_PRESS`**
+(`Window.cpp:1113`), so the fresh press never becomes an event while auto-repeat and release still
+do. Take the key over entirely if you want all three:
 
 ```cpp
 // Take over F11 (or steal any key at the very top of the pipeline).
@@ -350,7 +351,7 @@ headers, so a project needs no extra include.
 
 | Class | Accessors | Fired when | Categories |
 | --- | --- | --- | --- |
-| `WindowResizeEvent` | `GetWidth()`, `GetHeight()` → `uint32_t` | the OS window changes size, and once synthetically at boot from `SynchronizeRenderingState` | Application |
+| `WindowResizeEvent` | `GetWidth()`, `GetHeight()` → `uint32_t` | the OS window changes size. **A minimize delivers `0 × 0` to your layer** — `Application::OnWindowResize` sets `m_Minimized` and returns `false` *without* resizing the framebuffer, so the event still walks the stack. Guard against divide-by-zero | Application |
 | `WindowCloseEvent` | — | the window's close button / `Alt+F4`. **Consumed by `Application`; layers never see it** | Application |
 | `WindowFileDropEvent` | `GetPaths()` → `const std::vector<std::string>&` | files are dropped on the window; paths are absolute UTF-8 | Application |
 | `KeyPressedEvent` | `GetKeyCode()`, `GetRepeatCount()` | key press **and** OS auto-repeat | Keyboard, Input |
@@ -672,7 +673,11 @@ digit rows.
 | `CS_KEY_HOME` | 268 | | | |
 | `CS_KEY_END` | 269 | | | |
 
-> **`CS_KEY_F11` never arrives as an event** — `Window` consumes it to toggle fullscreen. See
+> **Only the `CS_KEY_F11` *press* is swallowed** — `Window::HandleFullscreenHotkey`
+> (`Window.cpp:1113`) returns `true` for `key == CS_KEY_F11 && action == GLFW_PRESS` and nothing
+> else, and the key callback builds no event only when it returns `true`. So auto-repeat still
+> delivers `KeyPressedEvent(F11, 1)` and the release still delivers `KeyReleasedEvent(F11)`. A
+> handler keyed on release, or one that does not check `GetRepeatCount()`, *will* fire. See
 > [the propagation path](#what-each-stop-does).
 
 ### Keyboard — keypad and modifiers
@@ -788,8 +793,12 @@ menu opens.
 focused text field does. Move the binding to a polled check, or use `BlockEvents(false)` while your
 mode is active.
 
-**"My `F11` handler never fires."** `Window::HandleFullscreenHotkey` consumes `F11` before any
-`Event` is built. Register a `SetFullscreenHotkeyOverride` if you want it.
+**"My `F11` press handler never fires — but the release one does."** `Window::HandleFullscreenHotkey`
+consumes F11 before an `Event` is built, but **only on `GLFW_PRESS`** (`Window.cpp:1113`). Repeat and
+release fall through and become real events, so a handler that does not test the action sees a
+release with no matching press. Register a `SetFullscreenHotkeyOverride` to take the key over
+entirely — and note the override itself is called for press, release **and** repeat, so an override
+that does not test `action == GLFW_PRESS` toggles fullscreen twice per keystroke.
 
 **"I can't cancel window close."** You can't. `Application::OnWindowClose` returns `true`, so
 `WindowCloseEvent` is `Handled` before the layer walk begins. Drive confirmation from your own UI and
