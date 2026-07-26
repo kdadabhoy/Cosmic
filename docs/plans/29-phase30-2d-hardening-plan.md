@@ -87,8 +87,12 @@ the limits themselves are written down.*
 - **3D:** `CosmicTests` **513/513**, `CosmicRenderTests` 14/14, Debug + Release 0-warn,
   `check_gl_conformance.ps1` clean.
 - **2D:** `CosmicTests` **340/340**, 6/6 render cases, Debug + Release 0-warn, conformance clean.
-- `engine-2d` is at `dce7e85`, **3 commits behind `main`** (`451b926` W9, `e5d7d29` `/MP`,
-  `3066e6a` W10). **P0 carries these across before anything else.**
+- ~~`engine-2d` is at `dce7e85`, **3 commits behind `main`**~~ — **DONE 2026-07-26, ahead of Phase
+  30.** `engine-2d` was fast-forwarded to `2378ff1` and pushed, so **`main` and `engine-2d` are now
+  identical and both are on the remote.** The carry brought W9 (`451b926`), global `/MP`
+  (`e5d7d29`), Phase 29 W10 docs (`3066e6a`), the whole Phase C guide tier (`9e9af32`) and the
+  gitignore fix (`2378ff1`). The merge was verified conflict-free before running. **P0's carry step
+  is therefore already satisfied — P0 starts at the re-baseline.**
 - Worktree `C:\dev\Cosmic-2D` on `engine-2d`, configured with `cmake --preset 2d`.
 - `tests/CMakeLists.txt` hand-lists a shared tier and an `if(NOT COSMIC_2D_ONLY)` 3D tier.
 - `tests/render/` holds `render_main.cpp` (window + renderer bootstrap, `--update-goldens`),
@@ -336,12 +340,17 @@ Each section is self-contained. The **📋 PROMPT** block is what you paste into
 **Goal.** Get `engine-2d` current, confirm the starting numbers, and produce the written inventory
 of every documented 2D limit that the rest of the phase tests against.
 
-**Preconditions.** Phase 29 complete. `main` = `3066e6a` or later.
+**Preconditions.** Phase 29 complete. `main` = `3066e6a` or later. **Deliverable 1 below is already
+done** (2026-07-26).
 
 **Deliverables.**
-1. `engine-2d` carrying `451b926`, `e5d7d29`, `3066e6a` (§13 — the user pushes; ask before any git
-   write).
-2. Both suites re-run and recorded.
+1. ~~`engine-2d` carrying `451b926`, `e5d7d29`, `3066e6a`~~ — **DONE 2026-07-26.** `engine-2d` was
+   fast-forwarded to `2378ff1` (also picking up `9e9af32`, the Phase C guide tier) and pushed; the
+   two branches are now identical. Nothing to carry. **Verify it is still true** (`git rev-list
+   --left-right --count main...engine-2d` → `0 0`) and move on.
+2. Both suites re-run and recorded. **This is now P0's real starting point**, and it matters more
+   than before: the carry brought `/MP` and five new test files into `engine-2d`, and those have
+   never been built there.
 3. `docs/design/2d-hardening-notes.md` created with a **limits inventory**: every constant in
    `Renderer2D.cpp`, `TilemapComponent::kMaxGrid`, any UI/canvas bound, any camera clamp — each
    with its file, its value, and whether a test currently reaches it (almost all: no).
@@ -355,10 +364,16 @@ every row cites a real file; nothing is guessed.
 Execute work order P0 from docs/plans/29-phase30-2d-hardening-plan.md in C:\dev\Cosmic.
 Read §0, §2, §5 and §12/P0.
 
-1. engine-2d is 3 commits behind main (451b926, e5d7d29, 3066e6a). Carry them across per §13 of
-   docs/plans/28-phase29-engine-split-plan.md. ASK ME before running any git write command —
-   Phase 29's local-commit exception does NOT carry over to this phase.
-2. Build and run both configurations with the §6 recipe. Record the exact test counts.
+1. The branch carry is ALREADY DONE (2026-07-26) — engine-2d was fast-forwarded to 2378ff1 and
+   pushed, so main and engine-2d are identical. Just VERIFY with
+   `git rev-list --left-right --count main...engine-2d` (expect "0 0") and move on. Do NOT run any
+   git write command without asking — Phase 29's local-commit exception does not carry over.
+2. Build and run BOTH configurations with the §6 recipe and record the exact test counts. Note that
+   engine-2d has never been built since the carry: it gained global /MP and five new test files
+   (test_crossbuild_scene, test_serial_lifecycle, test_sftelem_hub, test_sftelem_protocol,
+   test_telemetry_robustness), so the 2D count WILL differ from the 340/340 baseline in §2 — that
+   is expected, and establishing the new number is the point of this step. The 2D tree needs a
+   reconfigure for /MP to take effect (build_2d.bat, or cmake --preset 2d).
 3. Create docs/design/2d-hardening-notes.md with a "Limits inventory" table: every hard limit in
    the 2D stack, its file:symbol, its value, and whether any existing test reaches it. Read the
    sources — do not copy the values out of this plan, verify them.

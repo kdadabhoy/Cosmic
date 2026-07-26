@@ -286,6 +286,61 @@ only, exit 0); deleting a manifest row makes it exit 1; ci.yml step added and YA
 ```
 **Status:** ☐
 
+**📋 PROMPT — D5**
+
+```
+Execute work order D5 from docs/plans/12-documentation-plan.md in C:\dev\Cosmic.
+Read §0 (execution notes) and §5 in full first. This is the enforcement tooling every other
+documentation work order depends on — do it before D6-D18 and D25-D34.
+
+WHY THIS MATTERS (read before writing code): Phase C proved the manifest cannot be maintained by
+hand. EVERY work order from D52 to D60 found at least one public header with no manifest row, in
+FIVE distinct flavours. Your script has to catch all five:
+  1. Unlisted outright (e.g. the whole scripting/ and reflect/ tiers).
+  2. Reachable only TRANSITIVELY through another header — graphics/Skeleton.h and
+     graphics/AnimationClip.h arrive via scene/Components3D.h; voxel/VoxelVolume.h and
+     voxel/BlockPalette.h plus nav/NavWorld.h, nav/NavTypes.h and scene/SceneNav.h arrive via
+     scripting/ScriptableEntity.h. A one-level scan of Cosmic.h will MISS these.
+  3. Reachable only by EXPLICIT include, never from Cosmic.h at all — utils/Branding.h is
+     COSMIC_API-exported, unit-tested, and called from a project DLL at
+     Projects/Starforge/src/StarforgeApp.cpp:2617. Also voxel/VoxelMesher.h, VoxelGenerator.h,
+     VoxelRender.h.
+  4. MIS-ROUTED — scene/ScenePicker.h has a row but points at reference/ecs.md, while the chapter
+     that actually covers it is guide/cameras.md. Also physics/ScenePhysics.h: no row at all, yet
+     reference/physics.md's scope block already names it and its five siblings all have rows.
+  5. Included by Cosmic.h DIRECTLY AND UNFENCED with simply no row — utils/FileWatcher.h,
+     utils/FileDialog.h, utils/ImageIO.h, utils/ExeResources.h (Cosmic.h:167-170). These four are
+     exactly what a Cosmic.h-include table is FOR, which is the strongest argument for the script.
+The running list lives in docs/guide/README.md's "Not covered by any reference chapter yet" note
+and in each Dnn findings block in §7. Read them; do not re-derive the list by hand.
+
+BUILD IT:
+1. NEW tests/check_docs_coverage.ps1, per §5's behaviour spec (steps 1-5). Read
+   tests/check_gl_conformance.ps1 FIRST for the repo's PowerShell conventions and copy its output
+   format. PowerShell 5.1 only: no ternary, no ??, no -AsHashtable, no && chains; read with
+   -Raw -Encoding UTF8.
+2. CRITICAL: parse Cosmic.h WITH its #ifndef COSMIC_2D_ONLY fences. A naive parse reports every 3D
+   header as missing when run in a 2D tree. And "inside a fence" is NOT the test for 3D-only —
+   camera/NavigationCube.h is UNFENCED but its .cpp is filtered out of the 2D build, so it compiles
+   and fails at LINK time. Classify by the CMake list(FILTER) block in Cosmic/CMakeLists.txt
+   (lines ~178-210), not by the fence.
+3. Decide and document how you handle flavours 2 and 3. Following transitive includes is the
+   honest fix; if you scope this pass to direct includes only, then flavour-3 headers need an
+   explicit allowlist in the script and you must say so in the acceptance note. Do not silently
+   ignore them.
+4. EDIT .github/workflows/ci.yml — one step, mirroring the existing check_gl_conformance.ps1
+   step's placement and style. YAML must stay valid.
+
+ACCEPTANCE: runs clean on the current tree (every chapter still carries STATUS: SKELETON except
+reference/physics.md, so skeletons WARN and exit stays 0); deleting a manifest row makes it exit 1;
+it reports all five flavours above against today's tree. PROVE IT IS NON-VACUOUS the way Phase 29 W9
+did — delete a row, run it, record the observed failure, restore.
+
+Then update: §5's Status to ✅ + date, docs/reference/README.md's manifest with every row the script
+finds missing (that is the point of running it), and doc 12 §7's guide-index note if it closes gaps.
+Report what it found. No git write commands — leave edits in the working tree.
+```
+
 ---
 
 ## 6. Phase B — API Reference chapters (D6–D18)
@@ -320,6 +375,236 @@ traps; this is the loop):
 
 All of Phase B is **parallel-safe across items** (distinct files); the only shared file is
 `reference/README.md` — touch ONLY your chapter's Status cell.
+
+### 📋 Copy-paste prompts (D6 → D18)
+
+**Standing preamble — every D6–D18 prompt inherits it.** Restated in the shared block below rather
+than in all thirteen.
+
+```
+STANDING RULES for any D6-D18 reference chapter (read once, they apply to every item):
+
+1. Read docs/plans/12-documentation-plan.md §0 and §6, then your chapter's skeleton file. The
+   skeleton's scope list, coverage checklist and named traps are binding — but HEADERS ARE TRUTH.
+   A checklist row naming an API you cannot find means the checklist is wrong; fix the row.
+2. Read every scope header END TO END and enumerate the real public surface: COSMIC_API classes and
+   structs, free functions, macros, enums. Then read the .cpp, then the tests. Never write from a
+   comment — DataRecorder.cpp:257 still says "v3 format" three lines above `version = 1u`.
+3. Use the mandatory entry template from
+   docs/reference/README.md#entry-format-mandatory--copy-this-shape. Signatures copied VERBATIM
+   from the header, never paraphrased.
+4. **THE GUIDE TIER IS WRITTEN AND IS NOT YOURS TO REPEAT.** All 29 chapters in docs/guide/ landed
+   in Phase C (D46-D61), written from source. Your chapter is the formal per-call lookup BEHIND the
+   guide chapter: signature, exact behaviour, failure mode, pitfalls. The guide owns usage, idiom
+   and worked walkthroughs. Most skeletons already carry a "Read first / don't re-derive" note
+   naming their guide chapter — follow it, link it, and do not fork it.
+5. State the failure mode for every call that can fail. Cosmic's conventions vary ON PURPOSE:
+   Shader::Create returns nullptr; Texture2D::Create returns a DEGRADED non-null 0x0 object that is
+   then CACHED by AssetLibrary until Reload; some calls log and continue. Say which, every time.
+6. State the build configuration where it matters (README §1.6). "3D only" is PER HEADER, not per
+   chapter — the manifest marks fenced headers with ³ᴰ.
+7. Diagrams: §4 assigns them, and THIRTEEN ARE ALREADY BUILT (DG-1 through DG-14 except DG-15/16).
+   Reuse by link; never redraw. Only build one if §4 assigns it to YOUR chapter and it is unbuilt.
+8. Bookkeeping (execution note 8): delete the STATUS: SKELETON banner, flip your row in
+   docs/reference/README.md from "SKELETON — D#" to "✅ YYYY-MM-DD" (touch ONLY your row — the file
+   is shared), and set your item's status in doc 12 §6 with a one-line result.
+9. Run tests/check_docs_coverage.ps1 if D5 has landed — removing your banner turns on strict mode,
+   so every COSMIC_API class name in your scope headers must appear in your chapter text.
+10. Report: what the chapter covers · what you found that contradicts the skeleton, a comment or a
+    header docstring · what you deliberately left out and why · anything unverifiable. Add any
+    engine defect you find to §7's findings log as a Phase 30 candidate, with its file:line.
+11. No git write commands. Leave edits in the working tree.
+```
+
+Then one line per item:
+
+```
+Execute work order D6 from docs/plans/12-documentation-plan.md. Apply the D6-D18 standing rules.
+Chapter: docs/reference/core.md. Scope: core/Application.h, core/Layer.h, core/LayerStack.h,
+core/Window.h, core/Log.h, core/Core.h, core/Timestep.h, core/CommandStack.h, core/UUID.h and the
+plugin-export boundary in Cosmic.h. Condense README §7's Pause-vs-TimeScale table into per-entry
+form. TWO HEADER DOC-COMMENTS ARE WRONG AND D60 VERIFIED BOTH: Application.h:93 documents
+GetViewportPos/GetViewportSize as "GLFW window-space pixels" but the value is
+ImGui::GetCursorScreenPos() recorded in WorkspaceLayer.cpp:214-215, i.e. ImGui SCREEN (desktop)
+pixels — the space Input::GetMouseScreenPosition() lives in; and SetPauseOnMinimize defaults to
+FALSE. Also: CS_ASSERT/CS_CORE_ASSERT are compiled out in EVERY configuration (gated on
+GLCORE_DEBUG||CS_DEBUG, neither defined anywhere), so document no guard as enforced. Guide
+chapters: project-anatomy.md, time-and-ticks.md, windowing-and-viewport.md, logging-and-diagnostics.md.
+```
+
+```
+Execute work order D7 from docs/plans/12-documentation-plan.md. Apply the D6-D18 standing rules.
+Chapter: docs/reference/events-input.md. Scope: events/*.h (Event, ApplicationEvent, KeyEvent,
+MouseEvent), core/Input.h, codes/KeyCodes.h, codes/MouseButtonCodes.h, codes/GamepadCodes.h.
+Render the three code headers as full tables — that is the chapter's centerpiece. Pin the mouse-space
+contract exactly: GetMousePosition() is WINDOW-CLIENT relative, GetMouseScreenPosition() is desktop
+space, and Input.h:57-63 says the two "only match by luck when the window sits at the desktop
+origin". There are NO CS_MOD_*/CS_ACTION_* constants — the fullscreen hotkey override is the one
+place raw GLFW action/mods reach client code, and GLFW_MOD_CONTROL is 0x0002 while GLFW_MOD_ALT is
+0x0004. WindowCloseEvent is marked Handled before the layer walk, so there is no client veto.
+Guide chapter: events-and-input.md (DG-4 built there — reuse).
+```
+
+```
+Execute work order D8 from docs/plans/12-documentation-plan.md. Apply the D6-D18 standing rules.
+Chapter: docs/reference/graphics-resources.md. Scope: graphics/Shader.h, Texture.h, TextureCube.h,
+Material.h, MaterialAsset.h, Buffer.h, VertexArray.h, UniformBuffer.h, StorageBuffer.h,
+FrameBuffer.h, SubTexture2D.h, Font.h, Gizmo.h, renderer/BindingPoints.h. THE BINDINGPOINTS TABLE IS
+LOAD-BEARING — other chapters link it, so it lives here once, in full. State Material::Clone and the
+material-read-at-flush semantics HERE once and link them from rendering-2d/3d. Failure modes differ
+per factory and that difference is the chapter's most useful content: Shader::Create returns nullptr,
+Texture2D::Create returns a degraded non-null 0x0 object. Note that Shader::Create does NOT resolve
+VFS paths. FramebufferSpecification::Samples and SwapChainTarget are RESERVED and have no effect.
+Guide chapter: materials-and-shaders.md.
+```
+
+```
+Execute work order D9 from docs/plans/12-documentation-plan.md. Apply the D6-D18 standing rules.
+Chapter: docs/reference/rendering-2d.md. Scope: renderer/Renderer2D.h, RenderPass.h,
+renderer/Light2DRenderer.h. EVERY DrawQuad/DrawRotatedQuad/DrawCircle OVERLOAD GETS ITS OWN ENTRY —
+that is the OpenGL-man-page style the user asked for; do not collapse them into one entry with a
+parameter table. Document every batch limit with its flush behaviour (MaxQuads/MaxLines/MaxCircles/
+MaxTextQuads = 10000, MaxTextureSlots = 32, MaxInstancedQuads/MaxInstancedCircles = 20000). Two traps
+to state plainly: Renderer2D::StatsEnabled defaults FALSE so stats read zero unless SetStatsStatus(true)
+was called, and Flush() is public but does not reset counters, so a client call draws twice.
+DrawInstancedQuads never populates the texture-slot table. Guide chapter: rendering-2d.md.
+```
+
+```
+Execute work order D10 from docs/plans/12-documentation-plan.md. Apply the D6-D18 standing rules.
+Chapter: docs/reference/rendering-3d.md. XL — SPLIT INTO TWO SESSIONS if needed (submission + queue
+semantics first, then Mesh/Model/InstanceSet/Frustum). Use a stronger model: the deferred-flush
+semantics must be EXACTLY right. Scope: renderer/Renderer3D.h, RenderQueue.h, renderer/InstanceSet.h,
+graphics/Mesh.h, graphics/Model.h, math/Frustum.h. THE CENTRAL FACT is material-read-at-flush:
+material state is read when the queue flushes, not when you submit, so mutating a shared Material
+between submit and flush retroactively changes earlier draws — Material::Clone is the fix. Note the
+configuration split is PER HEADER: Renderer3D, InstanceSet and Model are filtered out of the 2D build
+AND fenced in Cosmic.h; graphics/Mesh.h and header-only math/Frustum.h are unfenced and compile in a
+2D tree. Nothing in the engine calls Renderer3D::ResetStats, so unreset counters read as lifetime
+totals. DG-7 is ALREADY BUILT in guide/rendering-3d.md — reuse it, do not redraw.
+```
+
+```
+Execute work order D11 from docs/plans/12-documentation-plan.md. Apply the D6-D18 standing rules.
+Chapter: docs/reference/rendering-pipeline.md. Scope: renderer/SceneRenderer.h,
+renderer/PostProcessStack.h, renderer/EnvironmentMap.h, renderer/ShadowMap.h,
+renderer/CoverageCapture.h, renderer/CameraUniforms.h. Enumerate SceneRenderer's REAL header surface;
+the skeleton deliberately does not guess it. THE CONFIGURATION STORY IS SUBTLE AND D55 GOT IT RIGHT:
+SceneRenderer and PostProcessStack ship in BOTH configurations — a 2D frame runs the same
+BeginHDR -> DrawTransparent -> tonemap/FXAA/bloom/vignette -> DrawOverlay2D spine, which is why
+docs/design/frame-lifecycle.md §5 holds verbatim on both engines. What fences out is EnvironmentMap,
+ShadowMap, CoverageCapture, desc.Lights, the routed DrawOpaque and the world-content half of
+SceneRenderDesc. BuildRenderDesc ignores WaterComponent::Enabled and ParticleEmitterComponent::Enabled
+— a real defect, log it. Summarize and LINK frame-lifecycle.md; never restate the spec (note 7).
+DG-8 is ALREADY BUILT in guide/lighting-and-environment.md — reuse.
+```
+
+```
+Execute work order D12 from docs/plans/12-documentation-plan.md. Apply the D6-D18 standing rules.
+Chapter: docs/reference/world-systems.md. Scope: terrain/Terrain.h, water/Water.h,
+water/GerstnerWave.h, water/Presets.h, particles/ParticleSystem.h, particles/Presets.h,
+scene/WorldSystemRecipes.h. Pin the Terrain resolution rule (32·2^k+1) and the SampleHeight
+tolerance with their TEST citations, not prose assertions. NOTE TWO MANIFEST GAPS D55 FOUND that
+this chapter should close: scene/WorldSystemRecipes.h (the E18 recipe->spec layer every
+scene-authored terrain, water body and emitter goes through) and water/Presets.h have NO manifest
+row — particles/Presets.h does. Terrain::Create and Water::Create are pure CPU; GL is allocated
+lazily in EnsureGpuResources on first render, which is what makes async world building possible.
+All 3D-only. Guide chapter: world-systems.md (the only other documentation of these subsystems).
+```
+
+```
+Execute work order D13 from docs/plans/12-documentation-plan.md. Apply the D6-D18 standing rules.
+Chapter: docs/reference/ecs.md. Scope: scene/Scene.h, Entity.h, Components.h, Components3D.h,
+System.h, ComponentRegistry.h, SelectableComponent.h, scene/ScenePicker.h. THE COMPONENTS.H
+FIELD-BY-FIELD TABLE IS THE CENTERPIECE. Two things to get right: there is NO Entity::GetUUID() —
+use GetComponent<IDComponent>().ID.Value(); and Scene::OnUpdate/OnFixedUpdate HAVE NO ENGINE CALLER
+(the only in-tree callers are TemplateTelemetryLayer.cpp:305,313), so the entire four-pass pipeline
+inside them only runs if a project calls it — state that as a boxed warning, not a footnote.
+ScenePicker.h IS in the manifest but MIS-ROUTED here; the chapter that covers it is guide/cameras.md
+— re-point the row. Guide chapter: entities-and-components.md (DG-9 built there — reuse).
+```
+
+```
+Execute work order D14 from docs/plans/12-documentation-plan.md. Apply the D6-D18 standing rules.
+Chapter: docs/reference/cameras.md. Scope: camera/Camera.h, PerspectiveCamera.h,
+OrthographicCamera.h, OrthographicCameraController.h, OrbitCameraController.h,
+FlyCameraController.h, Camera2DController.h, NavigationCube.h. Hotkey tables from
+OrbitCameraController plus the Engine3DDemo bindings. Camera2DController.h has NO MANIFEST ROW (D52)
+— it is the only controller of the six missing; add it. CONFIGURATION: every camera and controller
+ships in BOTH builds, but NavigationCube and ScenePicker are filtered out of the 2D build and they
+fail DIFFERENTLY — ScenePicker's include is fenced in Cosmic.h, NavigationCube's is not, so the
+latter compiles and fails at LINK time. Say so. Guide chapter: cameras.md.
+```
+
+```
+Execute work order D15 from docs/plans/12-documentation-plan.md. Apply the D6-D18 standing rules.
+Chapter: docs/reference/math.md. Scope: math/Spatial.h, Integrators.h, Filters.h, LookupTable.h,
+Noise.h, Random.h, Frustum.h — all header-only, all unfenced, both configurations. Cite the doctest
+per header rather than asserting behaviour. Include a DETERMINISM box: which helpers are
+reproducible across runs and platforms and which are not, and that fuzz/sim work must seed
+explicitly and never use random_device. Note the doctest gotcha for anyone verifying: doctest's
+Approx is RELATIVE, not absolute. Guide chapter: sim-math-toolkit.md (currently the only written
+documentation of this tier — systems/math-sim-toolkit.md is still a skeleton).
+```
+
+```
+Execute work order D16 from docs/plans/12-documentation-plan.md. Apply the D6-D18 standing rules.
+Chapters: docs/reference/assets-io.md AND docs/reference/audio.md — two small chapters, one session.
+Scope: assets/AssetLibrary.h, assets/MeshImport.h, utils/FileSystem.h, utils/Config.h,
+utils/DataExport.h, utils/FileWatcher.h, utils/FileDialog.h, utils/ImageIO.h, utils/ExeResources.h,
+utils/Branding.h; audio/AudioEngine.h, audio/Sound.h. THE LAST FIVE UTILS HEADERS HAVE NO MANIFEST
+ROW — FileWatcher/FileDialog/ImageIO/ExeResources are included by Cosmic.h DIRECTLY AND UNFENCED
+(lines 167-170) and Branding.h is COSMIC_API-exported but not in Cosmic.h at all. Add all five.
+Verify the VFS dev-vs-packaged path examples against Runtime/Main.cpp AND FileSystem.cpp: the
+user:// root depends on BOTH whether SetAppIdentity ran (only boot.cfg sets it — never --project)
+and a live writability probe of the exe dir. THE OLD "DLL-side resolution rule" IS OBSOLETE — the
+mount moved into the engine DLL in Phase 20/A1, so there is one active project per PROCESS; four
+in-tree comments still teach the old rule, do not carry it forward. A failed texture load is CACHED
+as a degraded object; failed shaders/meshes/materials are not. AssetLibrary has NO LOCKING of any
+kind and constructs GPU resources in its getters, so it is strictly main-thread. Config's getters
+log NOTHING on a type mismatch despite Config.h:64-65 promising they do. .ogg is listed in
+Starforge's audio row but miniaudio has no Vorbis decoder compiled in. Guide chapters:
+assets-and-vfs.md, audio.md, building-and-shipping.md (owns ExeResources).
+```
+
+```
+Execute work order D17 from docs/plans/12-documentation-plan.md. Apply the D6-D18 standing rules.
+Chapters: docs/reference/serial-telemetry.md AND docs/reference/jobs.md — L, two chapters. Scope:
+serial/SerialPort.h, SerialLink.h, Framing.h; telemetry/TelemetryChannel.h, DataRecorder.h,
+DataPlayer.h, TelemetryPanel.h, EntitySelection.h, EntityPicker.h; jobs/JobSystem.h,
+ParallelSystem.h, SystemQuery.h, ParallelFor.h, DoubleBuffer.h, ComponentArray.h. ALL FIFTEEN HAVE
+CORRECT MANIFEST ROWS (D59 verified) — no gap work here. THREADING CONTRACTS ARE THE HARD PART;
+verify against the .cpp, never the comment. Facts D59 established: JobSystem::WaitIdle() is a GLOBAL
+barrier, not per-caller, which is why ParallelSystem::OnParallelExecute forbids it and why
+ParallelFor (which calls it internally) inherits the hazard. ParallelForAsync runs SYNCHRONOUSLY
+below minChunkSize (default 64) or on a single-worker machine, so a by-reference capture is safe
+there and dangles above it — the static_assert only catches move-only functors. ComponentArray<T>::From
+returns an EMPTY view once the pool spans more than one EnTT page; FlatComponentArray<T> is the fix.
+ReadWriteQuery::Commit's structural-change guard does not exist in any build. DataRecorder::Flush and
+DataPlayer::Load do NOT resolve VFS paths — Flush("user://takes") silently creates a literal "user:"
+directory. SerialPort::Write IS implemented (SerialPort.cpp:231), contrary to the old README.
+SerialLink's 3-second auto-reconnect can silently switch you to a DIFFERENT COM port. Framing::
+EncodeFrame drops an oversized frame in total silence. DG-12 and DG-13 are ALREADY BUILT in the guide
+— reuse. Guide chapters: jobs-and-parallelism.md, serial-and-telemetry.md.
+```
+
+```
+Execute work order D18 from docs/plans/12-documentation-plan.md. Apply the D6-D18 standing rules.
+Chapter: docs/reference/ui.md. Scope: ui/Fonts.h, ThemeManager.h, Theme.h, Widgets.h, PlotStyle.h,
+Overlay.h, IconsLucide.h, layers/ImGuiLayer.h, layers/ImGuiThemes.h, layers/WorkspaceLayer.h. The
+DockPort table plus the NEVER-PERSIST-DOCK-NODE-IDS rule. layers/ImGuiThemes.h HAS NO MANIFEST ROW
+(D60) — it is the home of enum class ImGuiTheme, the parameter type of the exported
+ImGuiLayer::SetTheme / Cosmic::SetImGuiTheme overloads, plus GetBuiltInThemes() and NameForTheme();
+add it. WorkspaceLayer is NOT COSMIC_API-exported — only its INLINE members are reachable from a
+project DLL (DockWindow, SetViewportVisible, SetBottomInsetPixels, BeginViewportOverlay);
+SetViewportLayer/ClearViewportLayer and the hook overrides are engine-internal and will not link.
+Say so per entry. SetEdgeRatios(left,right,top,bottom) and SetEdgeMinPixels(top,bottom,left,right)
+take their edges in DIFFERENT ORDERS. ShowThemeSelector's DockPort parameter is DEAD. Fonts::Get
+IGNORES its sizePx argument entirely (selection is by name; size applies at draw time) and falls
+back to the default face for an unknown name. Fonts::Init assigns io.FontDefault = Roboto-Regular,
+so custom faces are the DEFAULT, not opt-in. ThemeManager::SaveToFile/LoadFromFile/LoadFolder all
+take RESOLVED DISK PATHS, not VFS paths. Guide chapter: editor-ui-and-theming.md.
+```
 
 ---
 
@@ -2345,6 +2630,200 @@ Pairs within an item share a session; different items are parallel-safe EXCEPT t
 Part II conversions — if run in parallel, coordinate on README (or defer the README
 conversion of the later item).
 
+> **What D61 already did to Part II (2026-07-26) — read before absorbing anything.** Three of the
+> sections in the *Absorbs* column above have already changed and the table's expectations are
+> partly stale. **§40 was retired**: its how-to went to `guide/building-and-shipping.md` and its
+> heading now carries a six-paragraph architecture overview, so **D34 has no §40 body to migrate** —
+> it inherits an overview to deepen, not prose to move. **§30 was rewritten** against the current
+> tree (the old map listed 12 of 25 directories) and gained **DG-2** plus a *2D partition* section,
+> so **D25 absorbs a correct, current §30**. **§34's** `RendererAPI` listing and GLAD paragraph were
+> corrected and **§35 gained DG-6**, so **D29 inherits accurate text** — the old §34 claimed a
+> compiled-out assert would terminate on GLAD failure, and listed 7 virtuals against a real ~25.
+> **§31's** unload ordering was fixed against `Application.cpp`. **§43 is now a pointer** to the
+> roadmap and FEATURE-MATRIX, not a hand-maintained list. **New §42.5** indexes all 21 systems
+> documents — when you finish an explainer, its row there needs no change (it is a directory, not a
+> status board), but **D25's §5 directory table and D36 must stay consistent with it**.
+
+### 📋 Copy-paste prompts (D25 → D34)
+
+**Standing preamble — every D25–D34 prompt inherits it.**
+
+```
+STANDING RULES for any D25-D34 system explainer (read once, they apply to every item):
+
+1. Read docs/plans/12-documentation-plan.md §0 and §8, then your explainer's skeleton. The skeleton
+   carries its section plan, assigned diagrams and truth sources — follow it. Headers are truth.
+2. Use the mandatory shape from
+   docs/systems/README.md#document-format-mandatory--every-explainer-uses-this-shape:
+   1 Overview, 2 Mental model, 3 How it works step by step, 4 Technical implementation,
+   5 Design decisions and trade-offs, 6 Limits and future work.
+3. **THE PLAIN-LANGUAGE BAR IS THE POINT OF THIS TIER AND IT IS WHAT RUSHED SESSIONS DROP.**
+   §1-§3 must survive the "smart friend test": a reader who has never written a shader follows them.
+   Define every term at first use ("a framebuffer — an off-screen image the GPU draws into").
+   §4 onward may assume C++ literacy.
+4. **THE GUIDE TIER IS WRITTEN. DO NOT RE-DERIVE IT.** All 29 chapters in docs/guide/ landed in
+   Phase C, written from source, and most skeletons already carry a "Read first / don't re-derive"
+   note naming yours. The division is: the GUIDE is the outside of the API (how do I use this, what
+   fails, what are the pitfalls); the EXPLAINER is the inside (how does it actually work, what is
+   the data layout, why THIS design, what was rejected). Link the guide chapter; never restate it.
+5. Where a design doc exists (docs/design/frame-lifecycle.md, water-rendering-notes.md,
+   responsive-rendering-and-pause.md) the explainer SUMMARIZES AND LINKS — it never forks the spec
+   (note 7).
+6. §4 must be source-grounded: real files, real class names, real binding points. Quote key
+   constants WITH the file they come from so a reader can verify.
+7. Diagrams: at least one Mermaid per document. THIRTEEN ARE ALREADY BUILT (DG-1..DG-14 except
+   DG-15/16) — §4's table says where each lives. REUSE BY LINK; never redraw. Build only one §4
+   assigns to you and marks unbuilt.
+8. If your item has an "Absorbs README Part II" entry: convert that README section to a faithful
+   2-3 paragraph summary + a "Full internals:" link IN THE SAME WORK ORDER, carrying every fact
+   into the explainer. Anything dropped must be verified stale and noted. HEADINGS AND NUMBERS STAY
+   (note 6, frozen numbering). Read the D61 banner above §8's prompts first — several Part II
+   sections already changed.
+9. Bookkeeping (note 8): delete the STATUS: SKELETON banner, flip your row in docs/systems/README.md
+   to "✅ WRITTEN — D#" (touch ONLY your row), set your item's status in doc 12 §8.
+10. Report: what it covers · what you found that contradicts the skeleton or a source comment ·
+    what you left out and why · anything unverifiable. Log engine defects into §7 as Phase 30
+    candidates with file:line.
+11. No git write commands. Leave edits in the working tree.
+```
+
+Then one line per item:
+
+```
+Execute work order D25 from docs/plans/12-documentation-plan.md. Apply the D25-D34 standing rules.
+Explainer: docs/systems/architecture-overview.md. DO THIS ITEM FIRST — it is the map everything else
+is a territory of — but write its §5 directory table LAST, against the docs that have actually
+shipped, and revisit its cross-links in D36. Absorbs README §30 (source map), which D61 already
+rewrote against the current tree and which now carries DG-2 and a 2D-partition section: absorb the
+CURRENT text, not the archaeology the skeleton may still describe. Reuse DG-1 (built in
+guide/getting-started.md) and DG-2 (built in README §30). Cover: the module map, the host-exe /
+engine-DLL / project-DLL split, and one frame end to end. Note the engine now builds in TWO
+configurations and link systems/build-2d-3d-split.md rather than restating the exclusion table.
+```
+
+```
+Execute work order D26 from docs/plans/12-documentation-plan.md. Apply the D25-D34 standing rules.
+Explainers: docs/systems/core-runtime.md AND docs/systems/windowing.md — one session. Absorbs README
+§32 (time waterfall) and §33 (the double-tick trap). WARNING ON §32: its accumulator code sketch is
+STALE — the spiral-of-death clamp is on the FRAME TIME, not the accumulator (D48 verified). Reuse
+DG-3, DG-10, DG-11 (all built in guide/project-anatomy.md and guide/time-and-ticks.md) and DG-5
+(the plugin-DLL lifecycle, built in project-anatomy.md). Facts to carry: Application::Run's
+structure and the s_Instance ordering constraint that makes Get() work during Initialize;
+LayerStack insert-index mechanics; transition queueing into the Safe Zone; the GLFW SINGLE-WINDOW
+CONSTRAINT carried here from the retired README §24 — glfwTerminate() is called from ~Window
+(Window.cpp:565-570), a GLOBAL teardown that is safe only because the engine is single-window.
+Window's constructor logs CS_CORE_CRITICAL and returns EARLY on a context failure, leaving a null
+handle behind an assert compiled out everywhere. Guide chapters: project-anatomy.md,
+time-and-ticks.md, windowing-and-viewport.md.
+```
+
+```
+Execute work order D27 from docs/plans/12-documentation-plan.md. Apply the D25-D34 standing rules.
+Explainers: docs/systems/events-input.md AND docs/systems/cameras-navigation.md — one session.
+Absorbs README §41 (event system implementation). Reuse DG-4 (built in guide/events-and-input.md).
+Cover the event type/category bitmask machinery, EventDispatcher mechanics, and WHY blocking is
+conditional (BlockEvents(false) while the viewport is hovered) — that conditionality is the part
+a reader cannot infer. Gamepad polling internals and key-repeat semantics. For cameras-navigation:
+the camera hierarchy, orbit/fly controllers, the CAD-style navigation model, the ViewCube, picking
+and gizmos — and note this document is about CAMERA navigation, NOT pathfinding; navmesh navigation
+has NO systems explainer at all and guide/navigation-and-ai.md is its only documentation.
+Guide chapters: events-and-input.md, cameras.md.
+```
+
+```
+Execute work order D28 from docs/plans/12-documentation-plan.md. Apply the D25-D34 standing rules.
+Explainers: docs/systems/rendering-2d.md AND docs/systems/rendering-3d.md — one session, L, use a
+stronger model for rendering-3d. Absorbs README §36 (batch rendering deep dive) and §38 (RenderPass
+implementation — put it wherever it fits, likely rendering-2d). Reuse DG-6 (built in README §35) and
+DG-7 (built in guide/rendering-3d.md). For 2D: buffer sizes, the texture-slot limit, the SDF circle
+path, the line path, when the instanced path wins, text/atlas rendering, RenderPass interaction,
+stats counters. For 3D: the sorted queue end to end, and the material-read-at-flush semantics that
+guide/rendering-3d.md documents from the outside — explain WHY the queue defers, which is the design
+decision behind the pitfall. Both must state the configuration split and link build-2d-3d-split.md.
+```
+
+```
+Execute work order D29 from docs/plans/12-documentation-plan.md. Apply the D25-D34 standing rules.
+Explainer: docs/systems/rendering-pipeline.md. XL — MAY SPLIT (passes/post first, then PBR-IBL-shadow
+theory). Use a stronger model. Absorbs README §34 and §35 — but D61 already CORRECTED §34's
+RendererAPI listing and GLAD paragraph and BUILT DG-6 into §35, so absorb the corrected text and
+KEEP DG-6 in the README, moving only the prose. THE PBR SECTION MUST EXPLAIN, NOT NAME-DROP: a
+reader who does not know what a BRDF is should finish §3 understanding roughly why the split-sum
+approximation exists. Reuse DG-8 (built in guide/lighting-and-environment.md). Summarize and LINK
+docs/design/frame-lifecycle.md — never restate it. State clearly that SceneRenderer and
+PostProcessStack ship in BOTH configurations and only the world-content half fences out.
+```
+
+```
+Execute work order D30 from docs/plans/12-documentation-plan.md. Apply the D25-D34 standing rules.
+Explainers: docs/systems/terrain.md AND docs/systems/water.md — one session, L. Absorbs no README
+section. Terrain: heightmap composition, quadtree LOD, splat/triplanar materials, CPU height queries,
+and the 32·2^k+1 resolution rule with its reason. Water: Gerstner waves, planar reflection and
+refraction, underwater rendering, buoyancy — and SUMMARIZE AND LINK docs/design/water-rendering-notes.md
+rather than forking it (note 7). Both are 3D-only; say so and link build-2d-3d-split.md. Terrain::Create
+and Water::Create are pure CPU with GL allocated lazily in EnsureGpuResources on first render — that
+is the design decision that makes async world building possible, so it belongs in §5. Guide chapter:
+world-systems.md (currently the only documentation of either subsystem).
+```
+
+```
+Execute work order D31 from docs/plans/12-documentation-plan.md. Apply the D25-D34 standing rules.
+Explainers: docs/systems/particles.md AND docs/systems/ecs-scene.md — one session, M. Absorbs no
+README section. Particles: GPU pools, compute-shader simulation, billboards and ribbons, presets, and
+the curl-noise path that must stay in lockstep between the compute shader and its StepCpu twin —
+explain why a CPU twin exists at all. ECS: the entt-backed model, components, systems, scene render
+hooks. Reuse DG-9 (built in guide/entities-and-components.md). THE LOAD-BEARING FACT for ecs-scene:
+Scene::OnUpdate/OnFixedUpdate have NO ENGINE CALLER — the whole four-pass pipeline lives inside two
+methods only a project calls (TemplateTelemetryLayer.cpp:305,313 are the only in-tree callers). That
+is a design decision that needs explaining in §5, not a footnote. Particles are 3D-only; the ECS is not.
+```
+
+```
+Execute work order D32 from docs/plans/12-documentation-plan.md. Apply the D25-D34 standing rules.
+Explainers: docs/systems/assets-vfs.md AND audio.md AND math-sim-toolkit.md — three small, one
+session, M. Absorbs README §37 (shader preprocessing). Cover: AssetLibrary cache keys and lifetime,
+the model import path (cgltf/assimp, tangents, PBR factor and texture import, winding fixes), the
+#type shader-block preprocessing (mine §37), texture decode-from-memory, and the mip/sRGB policy.
+THE VFS SECTION IS THE ONE TO GET RIGHT: three schemes, two project:// mount modes (NAME vs PATH,
+last-setter-wins), and the user:// resolution that depends on BOTH SetAppIdentity (set only by
+boot.cfg) and a live writability probe. THE OLD "DLL-side resolution rule" IS OBSOLETE — the mount
+moved into the engine DLL in Phase 20/A1; four in-tree comments still teach it, do not carry it
+forward. AssetLibrary has NO LOCKING and constructs GPU resources in its getters, so it is strictly
+main-thread — that is a design decision worth §5 treatment. Guide chapters: assets-and-vfs.md,
+audio.md, sim-math-toolkit.md — all three are currently the ONLY documentation of their subsystems.
+```
+
+```
+Execute work order D33 from docs/plans/12-documentation-plan.md. Apply the D25-D34 standing rules.
+Explainers: docs/systems/jobs-parallelism.md AND serial-telemetry.md — one session, L. Absorbs
+README §39 (parallel pipeline architecture) and §42 (telemetry implementation). Reuse DG-12 and
+DG-13 (both built in the guide tier). Jobs: the worker pool (logical cores minus 1, floored at 1,
+no override), the four-pass parallel ECS model, double buffering, and WHY WaitIdle is a GLOBAL
+barrier rather than per-caller — that is the design decision behind ParallelSystem's prohibition.
+Explain the ParallelForAsync serial fast path as a design trade-off: below minChunkSize it runs
+synchronously, which makes by-reference captures safe there and dangling above it. Telemetry:
+columnar channel storage, the v1 binary format (the headers are clean now; only DataRecorder.cpp:257
+still says "v3"), recording, replay. Both chapters' guide counterparts are currently the only written
+documentation of these subsystems.
+```
+
+```
+Execute work order D34 from docs/plans/12-documentation-plan.md. Apply the D25-D34 standing rules.
+Explainers: docs/systems/ui-theming.md AND build-plugin-packaging.md — one session, L. Absorbs
+README §31 (hot-reloadable DLL architecture). **§40 IS ALREADY RETIRED — D61 moved its how-to to
+guide/building-and-shipping.md and left a six-paragraph architecture overview in place, so there is
+NO §40 body to migrate.** Read build-plugin-packaging.md's "Read first" note before starting: the
+guide chapter already carries the per-option consequences, the four install() rules, DG-14, a
+verified staged-folder listing, the boot order and the user:// table. YOUR job is mechanism and
+rationale: COSMIC_API export/import, the shared-allocator requirement across the DLL boundary, the
+engine GLOB without CONFIGURE_DEPENDS vs project globs with it, why COSMIC_2D_ONLY is the only
+PUBLIC define, the mode-derived skip-list with its COSMIC_SKIP_PROJECTS_APPLIED staleness guard,
+and /MP (parallel FILES, where cmake --build --parallel gives parallel PROJECTS). Reuse DG-5 and
+DG-14. Two verified defects belong in §6: GLFW_INSTALL defaults ON so every dist ships
+include/GLFW + lib/glfw3.lib, and build_all_release.bat does not preserve the engine mode.
+For ui-theming: ImGui integration, the docking model, ThemeManager, fonts/icons, widgets.
+```
+
 ---
 
 ## 9. Phase E — integration & enforcement (D35–D36)
@@ -2372,6 +2851,59 @@ reference + manifest). (5) Mark this plan's header ✅ complete with date.
 Acceptance: check_docs_coverage.ps1 exit 0 strict; roadmap + indexes consistent.
 ```
 **Status:** ☐
+
+### 📋 Copy-paste prompts (D35, D36)
+
+```
+Execute work order D35 from docs/plans/12-documentation-plan.md in C:\dev\Cosmic.
+Read §0 and §9 first. This runs AFTER D6-D18 and D25-D34 are written.
+
+1. LINK + ANCHOR SWEEP across README.md and docs/**/*.md. Write a script rather than eyeballing it;
+   D61 used a PowerShell pass that resolves relative paths and checks #anchors against the target
+   file's headings, using GitHub's slug rule: lowercase, spaces -> "-", strip punctuation, and note
+   that an em-dash surrounded by spaces yields TWO hyphens (that is why
+   "#15-command-reference--every-command" is correct). Getting the slug rule wrong produces a wall
+   of false positives — validate your checker against known-good anchors first.
+   Also grep the whole repo for "README.md#" and "README §" — code comments, plan docs and
+   engineering notes cite section anchors.
+   As of D61 the live tree is clean except TWO INTENTIONAL placeholders inside
+   docs/reference/README.md's entry-format template fence (#relatedcommand and ../systems/foo.md);
+   your checker should either skip fenced blocks or allowlist those two.
+2. Root CosmicUML.png is referenced nowhere (verified 2026-07-03 — RE-VERIFY, do not assume).
+   Move it to docs/archive/CosmicUML.png with a one-line note in docs/archive/ saying it is
+   superseded by DG-2, which D61 built in README §30. FLAG THE MOVE in your summary for user
+   approval — do not treat a file move as routine.
+3. Confirm every DG-1..DG-14 landed where §4 assigns it and fix strays. Current state: DG-1, DG-3,
+   DG-4, DG-5, DG-9, DG-10, DG-11 in guide/; DG-7, DG-8, DG-12, DG-13, DG-14 in guide/; DG-2 in
+   README §30 and DG-6 in README §35. DG-15 and DG-16 belong to D39 and may not exist yet.
+4. Verify every chapter's Status cell in all three tier indexes matches reality on disk.
+
+ACCEPTANCE: zero dead relative links and anchors — paste the checker output into the status banner.
+Report per §0. No git write commands; leave edits in the working tree.
+```
+
+```
+Execute work order D36 from docs/plans/12-documentation-plan.md in C:\dev\Cosmic.
+Read §0 and §9 first. This is the LAST documentation work order — run it only when every
+STATUS: SKELETON banner is gone.
+
+1. Confirm no STATUS: SKELETON banner remains anywhere in docs/, then run
+   tests/check_docs_coverage.ps1 — with every banner removed it is now FULLY STRICT, so the
+   class-name check applies to every chapter. Fix to green. Expect this to surface real gaps: strict
+   mode was never exercised during Phase B because every chapter was skeleton-bannered as it landed.
+2. Verify both tier indexes (docs/reference/README.md, docs/systems/README.md) show all-✅ Status
+   columns, and that docs/README.md's Status TABLE (D61 replaced the prose paragraph with a
+   per-tier table) is rewritten to steady state — no "in progress" rows.
+3. Update docs/plans/00-MASTER-ROADMAP.md's "Continuous — docs" row: point it at this doc rather
+   than doc 06, and add the phase-complete note.
+4. Put the §11 PR checklist — now FOUR rules, D61 added the guide-tier one — where contributors
+   will see it. README §1.5's preamble is the precedent; extend its contract sentence to name the
+   API reference, the manifest and the guide.
+5. Mark this plan's header ✅ complete with the date, and reconcile §10's outstanding count to zero.
+
+ACCEPTANCE: check_docs_coverage.ps1 exits 0 in strict mode; roadmap, both tier indexes and
+docs/README.md are mutually consistent. Report per §0. No git write commands.
+```
 
 ---
 
@@ -2484,6 +3016,89 @@ the manual alone; check_docs_coverage untouched (manual is not API-reference sco
 ```
 **Status:** ☐
 
+### 📋 Copy-paste prompts (D37 → D39)
+
+**Standing preamble — every D37–D39 prompt inherits it.**
+
+```
+STANDING RULES for the Starforge manual (D37-D39):
+
+1. Read docs/plans/12-documentation-plan.md §0 and §13 first. Home is docs/starforge/.
+2. **THE READER IS DIFFERENT FROM EVERY OTHER TIER.** This is a PRODUCT MANUAL for people USING
+   the editor — not engine clients. No C++ unless the chapter is about scripting. Never assume the
+   reader has built the engine or read a header.
+3. **VERIFY EVERY CLAIM AGAINST THE RUNNING EDITOR**, not against source and not against a plan doc.
+   Every menu path, hotkey and panel name you write must exist in the build you are looking at.
+   §5 of docs/plans/29-phase30-2d-hardening-plan.md establishes that driving the user's machine is
+   authorized; use it — launch Starforge.exe and check.
+4. Screenshots are USER-CAPTURED. The text must stand alone and make sense with none present.
+   Leave an explicit marker where one belongs; never describe an image you have not seen.
+5. Task-oriented, in the order a user hits things. Section titles are things a user wants to DO.
+6. Each chapter ends with an "Under the hood" line linking the matching docs/systems/ explainer or
+   docs/guide/ chapter. NO FACT FORKING (note 7) — the manual says what to click; the other tiers
+   say how it works.
+7. Chapters marked (P14+) document behaviour only after that phase ships. If the feature is not in
+   the build in front of you, do not document it — note the gap instead.
+8. Bookkeeping: index links resolve, and set the item's Status in doc 12 §13.
+9. Report per §0. No git write commands; leave edits in the working tree.
+```
+
+Then one line per item:
+
+```
+Execute work order D37 from docs/plans/12-documentation-plan.md. Apply the D37-D39 standing rules.
+NEW docs/starforge/README.md (index + reading order) plus three chapters:
+  01-getting-started.md  launching (Starforge.exe is a real dev-tree exe now — its own icon,
+                         VERSIONINFO and taskbar identity, with COSMIC_STARTUP_PROJECT baked in;
+                         note it is NOT produced by cmake --install, so it exists only in a dev
+                         tree), the homescreen, opening the ForgePlayground sample, a first tour.
+  02-projects.md         project anatomy (project.cproj, scenes/, src/, assets/), where projects
+                         live, the registry, autosave and .bak.
+  03-scenes-entities.md  the hierarchy, the reflection-driven Inspector, the undo model, prefabs,
+                         camera navigation, viewport tools/gizmos/bookmarks.
+KNOWN ISSUE TO VERIFY AND DOCUMENT OR AVOID: every viewport-strip toggle chip abort()s a Debug
+build (unbalanced ImGui style stack, reproduced in both configurations). Do not send a reader into
+a crash without warning. Also: the homescreen re-parses projects.toml EVERY FRAME
+(StarforgeApp.cpp:3850) — not user-facing, but do not promise a large project list is cheap.
+ACCEPTANCE: a reader who has never seen Starforge reaches an edited and saved scene; every hotkey
+and menu path named exists in the build; index links resolve.
+```
+
+```
+Execute work order D38 from docs/plans/12-documentation-plan.md. Apply the D37-D39 standing rules.
+NEW docs/starforge/: 04-primitives-import.md (parametric shapes, .cmeta units, assimp import status —
+FBX/OBJ/STL/DAE/PLY are the five compiled importers, and MeshImport::AssimpEnabled() reports the gate
+at runtime), 05-materials-environment.md (the .cmat workflow, the environment panel, HDRI),
+06-world-systems.md (terrain/water/particle recipes, presets, .cemitter — note the terrain resolution
+rule is 32·2^k+1 and the editor will reject other values), 07-2d-ui-flow.md (sprites, tilemaps, UI
+entities, the flow graph).
+WATCH FOR: .ogg appears in Starforge's AssetTypes audio row but miniaudio has NO Vorbis decoder
+compiled in, so an .ogg previews as SILENCE — either document that or get it fixed first, but do not
+tell a user it works. Terrain/water/particles are 3D-only: in a 2D-configured editor those panels are
+fenced out, so say which chapters apply to which configuration.
+ACCEPTANCE: each workflow is reproducible start to finish from the text alone.
+```
+
+```
+Execute work order D39 from docs/plans/12-documentation-plan.md. Apply the D37-D39 standing rules.
+NEW docs/starforge/: 08-scripting.md (C++ scripts, SystemScripts, hot reload, telemetry marks),
+09-play-telemetry.md (play/pause/step, recording, takes, CSV export), 10-packaging.md (the Package
+dialog, icon embedding, installer and zip, the clean-machine checklist), 11-shortcuts.md (generated
+from the Help modal's table, with a keep-in-sync rule). BUILD DG-15 and DG-16 here.
+REWRITE docs/design/starforge-ui.md into a 5-line pointer to the manual.
+FOR 10-packaging.md: docs/guide/building-and-shipping.md already documents the packaging pipeline
+from the developer side, including the two INDEPENDENT packagers and how they differ — Starforge's
+in-editor Packager renames the exe, writes boot.cfg, re-embeds the icon via ExeResources::SetIcon
+and GENERATES its own .iss, while package_installer.bat uses the checked-in CosmicSetup.iss and
+passes --project instead. Link that chapter; document the DIALOG. Three things a user will hit:
+Inno is found only via `where iscc` on PATH from the editor (the .bat probes Program Files too);
+the generated installer registers a .cham file association THAT CANNOT WORK (nothing reads
+COSMIC_REPLAY_FILE and the engine never writes .cham); and PackageInputs::Version is hard-coded
+"0.9.0", unconnected to Version.h.
+ACCEPTANCE: E21's acceptance-demo script is executable by a new user from the manual alone;
+check_docs_coverage.ps1 is untouched (the manual is not API-reference scope).
+```
+
 ## 14. Phase G — per-phase documentation hooks (D40, standing) *(added 2026-07-04)*
 
 **D40 is not one session — it is a standing checklist** executed as the LAST work order of
@@ -2556,6 +3171,31 @@ Its own W10 work order wrote the documentation, planned in
 **Standing consequence for every future docs item:** the engine now has two configurations. A
 reference entry for a symbol that only exists in one of them must say so — the convention used
 throughout D41–D43 is a plain sentence naming the configuration, not a new badge vocabulary.
+
+## 15.5 Where every copy-paste prompt lives *(added 2026-07-26, D61)*
+
+Every remaining work order has a ready prompt. **29 documentation work orders** here, plus
+**10 more** for Phase 30 in [`29-phase30-2d-hardening-plan.md`](29-phase30-2d-hardening-plan.md).
+
+| Phase | Items | Prompts | Parallel? |
+| --- | --- | --- | --- |
+| **A** — enforcement tooling | **D5** | [§5](#5-phase-a--enforcement-tooling) | **Run this first** |
+| **B** — API reference | D6–D18 (13) | [§6](#6-phase-b--api-reference-chapters-d6d18) | ✅ fully parallel |
+| ~~C~~ — guide tier | ~~D46–D61 (16)~~ | [§7](#7-phase-c--the-guide-tier-written-from-scratch-d46d61-serial) | ✅ **complete 2026-07-26** |
+| **D** — system explainers | D25–D34 (10) | [§8](#8-phase-d--system-explainers-d25d34) | ✅ parallel except README conversions |
+| **E** — integration & finale | D35, D36 | [§9](#9-phase-e--integration--enforcement-d35d36) | ❌ last, in order |
+| **F** — Starforge manual | D37–D39 (3) | [§13](#13-phase-f--starforge-user-manual-d37d39-added-2026-07-04) | ✅ independent |
+| **G** — per-phase hooks | D40 | [§14](#14-phase-g--per-phase-documentation-hooks-d40-standing-added-2026-07-04) | standing rule |
+
+**Suggested order.** D5 alone first — it is one small session and it is what stops the manifest
+drifting again. Then **D6–D18 and D25–D34 fan out together** (different files; the only shared ones
+are the two tier indexes, where you touch only your own row). D35 → D36 last, in that order. D37–D39
+can run any time. Phase 30 (P0–P9) follows the user's *documentation before testing* directive.
+
+Each phase's prompt block opens with a **standing-rules preamble** that every item in that phase
+inherits, then one short prompt per item — don't paste an item prompt without its preamble.
+
+---
 
 ## 16. Kickoff prompt (paste for each implementation session)
 
