@@ -50,6 +50,13 @@ x86/
 *.tlog
 *.csv
 
+# Runtime log output. `*.log` above already covers the files; this ignores the
+# DIRECTORIES so anything else that lands in one (crash dumps, .txt, .json)
+# can't be committed by accident. The engine writes to user://logs, which in a
+# dev tree resolves to the exe's own directory — so a `logs/` folder appears
+# wherever the app was launched from, which is why these turn up under src/ too.
+logs/
+
 # -------------------------------------------------------
 # 3. Visual Studio & IDE Specific Files
 # -------------------------------------------------------
