@@ -326,7 +326,16 @@ namespace Workspace
         // a previous session can't corrupt the first frame of the new one.
         if (m_Link->ConsumeJustConnected()) m_RxAccumulator.clear();
 
-        std::string chunk = m_Link->Poll();
+        IngestChunk(m_Link->Poll());
+    }
+
+    // Everything below the serial read: line framing, tag routing, decode and stats.
+    // Split out of PumpSerial so the protocol half can be driven from a test without
+    // a COM port (test_sftelem_hub.cpp) — PumpSerial keeps the two I/O calls and
+    // nothing else. Behaviour is unchanged: an empty chunk still returns before the
+    // accumulator is touched, so the 4 KB purge below is skipped on idle frames.
+    void TelemHub::IngestChunk(const std::string& chunk)
+    {
         if (chunk.empty()) return;
         m_RxAccumulator += chunk;
 

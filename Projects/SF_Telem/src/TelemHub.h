@@ -80,6 +80,18 @@ namespace Workspace
         void OnUpdate(float ts);     // clock, serial pump, panel, model, rings, flush
         void RecordFixed(float dt);  // continuous capture (call from OnFixedUpdate)
 
+        // Feed received bytes straight into the framing + decode path, bypassing the
+        // serial read. This is the pure half of PumpSerial() — chunks may split mid
+        // line and are reassembled across calls. Public so the protocol path can be
+        // exercised headlessly without a COM port; the app itself always goes through
+        // OnUpdate() -> PumpSerial().
+        void IngestChunk(const std::string& chunk);
+
+        // ---- Frame counters (parse health) ----
+        uint64_t GoodFrames() const { return m_GoodFrames; }
+        uint64_t BadFrames()  const { return m_BadFrames; }
+        uint64_t PacketCount(int id) const { return m_PacketCount[id]; }
+
         // ---- Presence / mode ----
         bool HasData(int id)  const { return m_HasData[id]; }
         bool Stale(int id)    const;

@@ -10,6 +10,13 @@
 
 #include <Cosmic.h>
 
+#ifdef _WIN32
+// objbase.h explicitly: the engine builds with WIN32_LEAN_AND_MEAN, which strips
+// it out of windows.h, and the apartment test below needs CoInitializeEx.
+#include <windows.h>
+#include <objbase.h>
+#endif
+
 TEST_CASE("AudioEngine: headless-safe lifecycle and no-op surface")
 {
     // Init must never crash or block, even with no audio device.
@@ -58,3 +65,37 @@ TEST_CASE("Sound::Create failure policy — degraded silent object, never null")
     REQUIRE(late != nullptr);
     CHECK_FALSE(late->IsValid());
 }
+
+#ifdef _WIN32
+
+// W9 (plan doc 28 §9.6) — pins the MA_COINIT_VALUE fix in
+// audio/MiniaudioImpl.cpp:23. ma_context_init calls CoInitializeEx on the
+// CALLING thread, and miniaudio's default is COINIT_MULTITHREADED. A thread's
+// COM apartment is set by whoever gets there first and cannot be changed
+// afterwards, so booting audio used to drop the main thread into the MTA — and
+// every native modal opened later (IFileDialog::Show behind the telemetry replay
+// Browse button, and in fact EVERY native dialog in the app) deadlocked against
+// a thread that could no longer pump messages.
+//
+// The regression is silent from the audio side: audio keeps working perfectly.
+// It only shows up as a frozen UI, which is why it survived from 7/02 until it
+// was tracked down. This test is the tripwire — it asks COM what apartment the
+// thread ended up in, which is exactly the question the file dialog asks.
+TEST_CASE("AudioEngine::Init leaves the calling thread in the STA (file-dialog safety)")
+{
+    // Runs on doctest's main thread, the same role Application::Initialize plays.
+    Cosmic::AudioEngine::Init();
+
+    // RPC_E_CHANGED_MODE is COM's "this thread is already in the OTHER
+    // apartment" — the precise failure the fix exists to prevent. S_OK means we
+    // just entered STA, S_FALSE means we were already in it; both are correct.
+    const long hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+    CHECK(hr != RPC_E_CHANGED_MODE);
+
+    if (hr == S_OK || hr == S_FALSE)
+        CoUninitialize();   // balance only the reference this test added
+
+    Cosmic::AudioEngine::Shutdown();
+}
+
+#endif // _WIN32

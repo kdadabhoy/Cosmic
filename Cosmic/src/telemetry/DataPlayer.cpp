@@ -84,14 +84,45 @@ namespace Cosmic
         return true;
     }
 
+    // Hard ceilings on the counts read out of a file header. Nothing the engine
+    // records comes close (SF_Telem records 3 entities x 9 channels), so these
+    // only ever fire on corruption — but without them a corrupt 0xFFFFFFFF
+    // reaches std::vector's allocator, and there is no try/catch on this path:
+    // bad_alloc would be an uncaught exception and kill the process.
+    static constexpr uint32_t k_MaxEntities = 4096u;
+    static constexpr uint32_t k_MaxChannels = 1024u;
+
+    // Per-entity descriptor: name[64] + tag[64] + channel_count + sample_count.
+    static constexpr uint64_t k_EntityDescriptorBytes = 64 + 64 + 4 + 4;
+
     bool DataPlayer::LoadBinaryFile(const std::string& filepath)
     {
-        std::ifstream file(filepath, std::ios::binary);
+        // Opened at the end so the size is available up front: every count in the
+        // header is validated against the bytes that could actually follow it, which
+        // is a far tighter bound than the hard caps alone.
+        std::ifstream file(filepath, std::ios::binary | std::ios::ate);
         if (!file.is_open())
         {
             CS_CORE_ERROR("DataPlayer::LoadBinaryFile: Cannot open '{}'.", filepath);
             return false;
         }
+
+        const std::streamoff fileSize = file.tellg();
+        file.seekg(0, std::ios::beg);
+        if (fileSize < 0)
+        {
+            CS_CORE_ERROR("DataPlayer::LoadBinaryFile: Cannot size '{}'.", filepath);
+            return false;
+        }
+
+        // Bytes left after everything consumed so far. Signed streamoff widened to
+        // uint64 only once it is known non-negative.
+        const auto remaining = [&file, fileSize]() -> uint64_t
+        {
+            const std::streamoff pos = file.tellg();
+            if (pos < 0 || pos > fileSize) return 0u;
+            return static_cast<uint64_t>(fileSize - pos);
+        };
 
         char magic[4] = {};
         file.read(magic, 4);
@@ -121,8 +152,24 @@ namespace Cosmic
                 return false;
             }
 
+            // The descriptor table alone needs entityCount * 136 bytes, before a
+            // single channel name or data row. Anything larger than the file can
+            // hold is corruption, not a big recording.
+            if (entityCount > k_MaxEntities ||
+                static_cast<uint64_t>(entityCount) * k_EntityDescriptorBytes > remaining())
+            {
+                CS_CORE_ERROR("DataPlayer: Implausible entity count {} in '{}' ({} bytes left). "
+                              "File is corrupt.", entityCount, filepath, remaining());
+                return false;
+            }
+
             std::vector<PlayerEntityData> entities(entityCount);
             std::vector<uint32_t>         sampleCounts(entityCount, 0u);
+
+            // Running total of every entity's data block. Each entity is checked
+            // against the whole file below, so this catches the case where no single
+            // count is absurd but their sum is.
+            uint64_t declaredDataBytes = 0;
 
             for (uint32_t e = 0; e < entityCount; ++e)
             {
@@ -134,6 +181,35 @@ namespace Cosmic
                 uint32_t chCount = 0;
                 file.read(reinterpret_cast<char*>(&chCount),          sizeof(chCount));
                 file.read(reinterpret_cast<char*>(&sampleCounts[e]),  sizeof(sampleCounts[e]));
+
+                if (!file.good())
+                {
+                    CS_CORE_ERROR("DataPlayer: Truncated entity descriptor {} in '{}'.", e, filepath);
+                    return false;
+                }
+
+                // Channel names (32 bytes each) follow immediately, so they are
+                // bounded by what is left right now.
+                if (chCount > k_MaxChannels ||
+                    static_cast<uint64_t>(chCount) * 32u > remaining())
+                {
+                    CS_CORE_ERROR("DataPlayer: Implausible channel count {} for entity {} in '{}' "
+                                  "({} bytes left). File is corrupt.",
+                                  chCount, e, filepath, remaining());
+                    return false;
+                }
+
+                // The data blocks come after the whole descriptor table, so the tight
+                // bound is the file size rather than what is left at this point.
+                const uint64_t rowBytes = (static_cast<uint64_t>(chCount) + 1u) * sizeof(float);
+                declaredDataBytes += static_cast<uint64_t>(sampleCounts[e]) * rowBytes;
+                if (declaredDataBytes > static_cast<uint64_t>(fileSize))
+                {
+                    CS_CORE_ERROR("DataPlayer: Entity {} in '{}' declares {} samples x {} channels — "
+                                  "more data than the {}-byte file holds. File is corrupt.",
+                                  e, filepath, sampleCounts[e], chCount, fileSize);
+                    return false;
+                }
 
                 entities[e].info.channels.reserve(chCount);
                 for (uint32_t c = 0; c < chCount; ++c)
@@ -164,9 +240,16 @@ namespace Cosmic
                 }
             }
 
-            if (!file.good() && !file.eof())
+            // A short read sets failbit AND eofbit, so the old `!good() && !eof()`
+            // was false exactly when the file was truncated — the one case it was
+            // meant to catch — and the loader returned success with the missing rows
+            // silently left zero-filled. Reading a complete file leaves the stream
+            // good (istream::read only sets eofbit when a read runs off the end), so
+            // !good() is the correct test and valid files are unaffected.
+            if (!file.good())
             {
-                CS_CORE_ERROR("DataPlayer: Read error in v1 file '{}'.", filepath);
+                CS_CORE_ERROR("DataPlayer: Truncated or unreadable v1 data in '{}' — "
+                              "the declared frames are not all present.", filepath);
                 return false;
             }
 

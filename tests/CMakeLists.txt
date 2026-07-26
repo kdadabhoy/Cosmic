@@ -60,6 +60,23 @@ set(COSMIC_TEST_SOURCES
     test_ui_anchor.cpp
     test_timeline_state.cpp
     test_scene2d_determinism.cpp
+    # Phase 29 W9 — telemetry / serial / SF_Telem hardening (plan doc 28 §9.6).
+    # All shared tier: the telemetry and serial stacks are dimension agnostic,
+    # and SF_Telem ships on both branches (decision 4), so these run in both
+    # suites. test_crossbuild_scene carries in-file COSMIC_2D_ONLY fences —
+    # it asserts VERBATIM preservation of 3D blocks on the 2D engine and real
+    # component loading on the 3D one.
+    test_telemetry_robustness.cpp
+    test_serial_lifecycle.cpp
+    test_sftelem_protocol.cpp
+    test_sftelem_hub.cpp
+    test_crossbuild_scene.cpp
+    # W9 refactored TelemHub::PumpSerial's pure half into the public
+    # IngestChunk, so the framing/routing path can be driven without a COM port.
+    # Compiling the real TU (rather than a test copy) is the point: the thing
+    # under test is the code SF_Telem actually ships. imgui/implot are PUBLIC on
+    # the Cosmic target, so this links without a GL context ever being created.
+    ../Projects/SF_Telem/src/TelemHub.cpp
 )
 
 # 3D-only tier (§9.1). These name terrain / voxel / nav / mesh / skeletal / 3D
