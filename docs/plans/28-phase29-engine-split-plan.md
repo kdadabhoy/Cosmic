@@ -1,10 +1,20 @@
 # Phase 29 Plan — Engine Split: pure-2D build, `engine-2d` branch, pluggable physics
 
-> **STATUS 2026-07-24 — ☐ PLANNED, nothing implemented.** This document is the complete,
-> self-contained work order set for splitting Cosmic into two build configurations (full 3D and
-> pure 2D), cutting the `engine-2d` branch, giving physics a swappable backend seam, and
-> hard-testing **both** engines. Every file:line anchor below was verified against `HEAD`
-> (`30150b3`) on 2026-07-24.
+> **STATUS 2026-07-25 — ✅ COMPLETE. W0–W10 all landed.** Both engine configurations build clean
+> Debug + Release with zero warnings, `engine-2d` is cut and worktree'd, physics is pluggable, and
+> the documentation (D41–D45) is written. Final state: **3D 513/513 tests + 14/14 goldens,
+> 2D 340/340 tests + 6/6 goldens**, GL conformance clean in both, SF_Telem building and running on
+> both. Per-work-order status is in [§11](#11-phase-table); **everywhere the implementation
+> diverged from this plan is recorded in [§16 Deviations](#16-deviations--where-implementation-diverged-from-the-plan)**
+> — read that before trusting any pre-implementation section here.
+>
+> **The one headline the plan did not predict:** the build-time win came overwhelmingly from
+> enabling `/MP`, not from the partition. See [§5.3](#53-recorded-result--the-split-missed-its-target-and-mp-is-why).
+>
+> This document is the complete, self-contained work order set for splitting Cosmic into two build
+> configurations (full 3D and pure 2D), cutting the `engine-2d` branch, giving physics a swappable
+> backend seam, and hard-testing **both** engines. Every file:line anchor below was verified against
+> `HEAD` (`30150b3`) on 2026-07-24 and has since drifted — find targets by content, not line number.
 >
 > **Created 2026-07-24** from a user request: *"I want a Pure 2D engine branch and the extended
 > 3D branch… all the current 2D features implemented in this 3D branch should also go into the
@@ -818,18 +828,23 @@ loopback; com0com hardware-in-the-loop scripts.
 
 ## 10. Documentation work orders (D41–D45) — written in W10
 
+> **✅ ALL WRITTEN 2026-07-25 (W10).** D41–D43 shipped as complete documents rather than the
+> D5–D40 skeleton shape — see [§16 D-13](#d-13--d41d43-are-complete-documents-not-skeletons).
+> D41 uses the recorded numbers from [§5.3](#53-recorded-result--the-split-missed-its-target-and-mp-is-why),
+> not the §5.1 estimate, and states the `/MP` finding as required.
+
 Planned now, written only after the separation is verified working on-GPU.
 
 **New documents**
 
 | ID | Document | Contents |
 |---|---|---|
-| **D41** | `docs/systems/build-2d-3d-split.md` | What the flag excludes and why; the classification rule for new code ("which side does this file belong on?"); `build.bat` / `build_2d.bat` / presets / worktree layout; **the recorded build-time numbers from W2 and W8**; the branch and carry-over workflow. |
-| **D42** | `docs/systems/physics-backends.md` | `IPhysicsBackend`, the registry, `PhysicsSettings::Backend`; the fixed-step contract a backend must honour; `ThreadCount`/determinism expectations; `RayHit::EntityId` round-trip; a worked example lifted from `test_physics_backend.cpp`. |
-| **D43** | `docs/reference/physics.md` | The per-call reference for `PhysicsWorld` / `PhysicsTypes` / `PhysicsBody` / `CharacterController` / `ScenePhysics` — currently **missing entirely** from `docs/reference/`. Follows `docs/reference/README.md`'s entry format. |
-| **D44** | This document, updated | Status banners, ✅-with-date lines, and a deviation section recording every place implementation diverged from the plan. |
+| **D41** ✅ | [`docs/systems/build-2d-3d-split.md`](../systems/build-2d-3d-split.md) | What the flag excludes and why; the classification rule for new code ("which side does this file belong on?"); `build.bat` / `build_2d.bat` / presets / worktree layout; **the recorded build-time numbers from W2 and W8**; the branch and carry-over workflow. |
+| **D42** ✅ | [`docs/systems/physics-backends.md`](../systems/physics-backends.md) | `IPhysicsBackend`, the registry, `PhysicsSettings::Backend`; the fixed-step contract a backend must honour; `ThreadCount`/determinism expectations; `RayHit::EntityId` round-trip; a worked example lifted from `test_physics_backend.cpp`. |
+| **D43** ✅ | [`docs/reference/physics.md`](../reference/physics.md) | The per-call reference for `PhysicsWorld` / `PhysicsTypes` / `PhysicsBody` / `CharacterController` / `ScenePhysics` — currently **missing entirely** from `docs/reference/`. Follows `docs/reference/README.md`'s entry format. |
+| **D44** ✅ | This document, updated | Status banners, ✅-with-date lines, and a deviation section recording every place implementation diverged from the plan → [§11](#11-phase-table), [§16](#16-deviations--where-implementation-diverged-from-the-plan), [§17](#17-follow-ups-leaving-this-phase). |
 
-**Updated documents (D45)**
+**Updated documents (D45)** — ✅ all landed 2026-07-25
 
 - `docs/plans/00-MASTER-ROADMAP.md` — Phase 29 entry, doc-index row (doc 28), and a
   working-agreement line: *every change must leave both configurations green*.
@@ -850,21 +865,37 @@ Planned now, written only after the separation is verified working on-GPU.
 
 ## 11. Phase table
 
-| WO | Phase | Content | Size |
-|---|---|---|---|
-| **W0** | 0 | Git prep — fast-forward `main`, create `feature/engine-split` | S |
-| **W1** | 1 | Build flags, presets, skip-list, dependency conditionals, `.bat` set | S |
-| **W2** | 2 | **Safety net first** — render harness, 2D **and** 3D goldens, `BuildSpriteDrawList`, the 2D invariant suites, the 3D baseline suites, **3D build-time baseline** | XL |
-| **W3** | 3 | Pluggable physics backend | M–L |
-| **W4** | 4 | Component partition + reflection split + serializer + umbrella fences | L |
-| **W5** | 5 | `Scene.cpp` → `Scene3D.cpp` + the remaining engine fences | L |
-| **W6** | 6 | `SceneRenderer` partition — **the 2D config compiles for the first time** | L |
-| **W7** | 7 | Starforge gating — the 2D editor boots | M–L |
-| **W8** | 8 | Cut `engine-2d`, worktree, **record the build-time numbers** | S–M |
-| **W9** | 9 | Telemetry/serial/SF_Telem hardening + fuzz campaign + cross-build test | L |
-| **W10** | 10 | Documentation (D41–D45) | M–L |
+| WO | Phase | Content | Size | Status | Commit |
+|---|---|---|---|---|---|
+| **W0** | 0 | Git prep — fast-forward `main`, create `feature/engine-split` | S | ✅ 2026-07-25 | — (branch ops) |
+| **W1** | 1 | Build flags, presets, skip-list, dependency conditionals, `.bat` set | S | ✅ 2026-07-25 | `06d9ee5` |
+| **W2** | 2 | **Safety net first** — render harness, 2D **and** 3D goldens, `BuildSpriteDrawList`, the 2D invariant suites, the 3D baseline suites, **3D build-time baseline** | XL | ✅ 2026-07-25 | `55fa25e` |
+| **W3** | 3 | Pluggable physics backend | M–L | ✅ 2026-07-25 | `cb4a3c3` |
+| **W4** | 4 | Component partition + reflection split + serializer + umbrella fences | L | ✅ 2026-07-25 | `7022c03` |
+| **W5** | 5 | `Scene.cpp` → `Scene3D.cpp` + the remaining engine fences | L | ✅ 2026-07-25 | `dc36fc9` |
+| **W6** | 6 | `SceneRenderer` partition — **the 2D config compiles for the first time** | L | ✅ 2026-07-25 | `acf1a8c` |
+| **W7** | 7 | Starforge gating — the 2D editor boots | M–L | ✅ 2026-07-25 | `35a02b6` (+ on-GPU follow-up `cccab7a`) |
+| **W8** | 8 | Cut `engine-2d`, worktree, **record the build-time numbers** | S–M | ✅ 2026-07-25 | — (branch + worktree; numbers landed in `451b926` / `e5d7d29`) |
+| **W9** | 9 | Telemetry/serial/SF_Telem hardening + fuzz campaign + cross-build test | L | ✅ 2026-07-25 | `451b926` |
+| **W10** | 10 | Documentation (D41–D45) | M–L | ✅ 2026-07-25 | this commit |
 
-Every phase leaves **both** flag states green and ends with one commit.
+Every phase left **both** flag states green and ended with one commit.
+
+**Per-work-order results.**
+
+| WO | What actually landed | Tests at the end |
+|---|---|---|
+| **W0** | `main` fast-forwarded onto `phase-7-3d-foundations`; `feature/engine-split` opened. | 355/355 (3D) |
+| **W1** | `COSMIC_2D_ONLY` + `COSMIC_WITH_JOLT` options, `CMakePresets.json` (`default` / `2d`), the mode-derived skip-list, dependency conditionals, and the six `.bat` scripts (3 mode echoes + `build_2d` / `build_3d` / `build_all_2d`). | 355/355 |
+| **W2** | `CosmicRenderTests` + `GoldenImage`, 14 goldens, `Scene::BuildSpriteDrawList` extraction, 9 new suites, **3D clean-build baseline 497.1 s**. Found and fixed a real `Light2DRenderer` first-frame bug (see [§16](#16-deviations--where-implementation-diverged-from-the-plan)). | 355 → **435/435** |
+| **W3** | `IPhysicsBackend` + `PhysicsBackendRegistry`, `JoltBackend.cpp`, `NullBackend.cpp`, `PhysicsSettings::Backend`, the §6.4 physics fences, `COSMIC_WITH_JOLT=OFF` verified. Fixed a latent uninitialised-locals read in `ScenePhysics::Step`. | 435 → **444/444** |
+| **W4** | `Components3D.h` (15 components moved verbatim), `TypeRegistry3D.cpp`, the two serializer fences, the `Cosmic.h` umbrella fences. **SF_Telem needed zero source changes.** | 444/444 |
+| **W5** | `Scene3D.cpp` (798 lines, byte-identical to the pre-split text), the `Scene.h` / `ScriptableEntity.h` / `Renderer.cpp` / `PlayerLayer.cpp` fences. | 444/444 |
+| **W6** | `SceneRenderer` partition, `BuildRenderDesc`'s 2D twin, the `AssetLibrary` 3D-family fences, the `tests/CMakeLists.txt` two-tier split. **The 2D configuration built and passed for the first time.** | 3D 444/444 · **2D 271/271** |
+| **W7** | Starforge off the 2D skip-list, 3 TUs `list(FILTER)`-excluded, in-file fences across ~10 editor files, `m_Mode2D` pinned on, a Renderer2D twin of `DrawOverlayContent2D`, and the new `DrawColliderOverlay2D`. Follow-up `cccab7a` fixed 4 issues found on-GPU. | 3D 444/444 + 14/14 goldens · 2D 271/271 + 6/6 goldens |
+| **W8** | `main` fast-forwarded, `engine-2d` cut, `../Cosmic-2D` worktree created and building on the `2d` preset. Build times measured — **and the `/MP` finding surfaced**. | unchanged |
+| **W9** | Both `DataPlayer::LoadBinaryFile` crash bugs fixed (**and proved non-vacuous by reverting the file**), `TelemHub::PumpSerial` split at its I/O seam into the public `IngestChunk`, 5 new shared-tier suites. | 3D **513/513** · 2D **340/340** |
+| **W10** | D41–D45: two new systems explainers, a new reference chapter, this document's status + deviation record, and the index/pointer updates. | unchanged |
 
 ---
 
@@ -911,6 +942,9 @@ powershell -ExecutionPolicy Bypass -File C:\dev\Cosmic\tests\check_gl_conformanc
 
 ### W0 — Git prep: `main` becomes the 3D trunk
 
+> **✅ DONE 2026-07-25.** `main` fast-forwarded onto `phase-7-3d-foundations`;
+> `feature/engine-split` opened from it. No deviations.
+
 **Goal.** Make `main` the 3D trunk by fast-forwarding it onto the real work, then open a working
 branch so the whole refactor is one `git branch -D` away from being abandoned cleanly.
 
@@ -951,6 +985,10 @@ git push origin main
 ---
 
 ### W1 — Build flags, presets, skip-list, `.bat` scripts
+
+> **✅ DONE 2026-07-25 — `06d9ee5`.** Flags, presets, dependency conditionals and all six `.bat`
+> scripts landed as specified. Starforge was *temporarily* added to the 2D skip-list (W7 removes
+> it); the skip-list also gained a staleness guard — see [§16](#16-deviations--where-implementation-diverged-from-the-plan) D-6.
 
 **Goal.** Land all the build-system machinery with **zero source edits**, so the 3D build is
 provably unaffected and the flag exists for later phases to use. The 2D configuration is **not**
@@ -1013,6 +1051,11 @@ push) and report.
 ---
 
 ### W2 — The safety net (do this before touching any source)
+
+> **✅ DONE 2026-07-25 — `55fa25e`.** 14 goldens, 9 new suites, 355 → 435 cases, `BuildSpriteDrawList`
+> extracted as pure code motion. **3D clean-build baseline: 497.1 s.** The harness immediately paid
+> for itself by exposing a real `Light2DRenderer` first-frame bug — a *behaviour change* in a phase
+> whose DoD forbade them, recorded in [§16](#16-deviations--where-implementation-diverged-from-the-plan) D-2.
 
 **Goal.** Build the regression net *before* the refactor, so every later phase has an objective
 pass/fail. This is the largest phase and the one that makes the rest safe.
@@ -1078,6 +1121,13 @@ is considered good. They are the reference for the whole refactor.
 ---
 
 ### W3 — Pluggable physics backend
+
+> **✅ DONE 2026-07-25 — `cb4a3c3`.** Shipped as designed: `PhysicsWorld`'s public API did not change
+> by one character. Additions the plan did not name: `physics/backends/BuiltinBackends.h`, a fence on
+> `MeshColliderComponent` in the collider probe, and a fix for a latent uninitialised-locals read in
+> `ScenePhysics::Step` ([§16](#16-deviations--where-implementation-diverged-from-the-plan) D-3).
+> Documented in [`docs/systems/physics-backends.md`](../systems/physics-backends.md) and
+> [`docs/reference/physics.md`](../reference/physics.md).
 
 **Goal.** Give physics a swappable backend without changing `PhysicsWorld`'s public API or any
 call site — the deliverable capability behind decision 3.
@@ -1153,6 +1203,11 @@ Verify with the §12 recipe + CosmicRenderTests (3D goldens must be unchanged). 
 
 ### W4 — Component partition, reflection split, umbrella fences
 
+> **✅ DONE 2026-07-25 — `7022c03`.** 19 components stayed, 15 moved; the moved text is byte-identical
+> to the pre-split text. **SF_Telem needed zero source changes** — the umbrella fences were the whole
+> fix, as predicted. `test_components3d_registry`'s 38-row baseline passed unchanged, which is what
+> proves the move was address-only.
+
 **Goal.** Make every component classifiable, split the reflection registration, and fence the
 umbrella header — after which SF_Telem's 3D coupling is gone.
 
@@ -1223,6 +1278,11 @@ Verify with the §12 recipe. Commit locally (no Claude trailer, no push) and rep
 ---
 
 ### W5 — `Scene.cpp` → `Scene3D.cpp` and the remaining engine fences
+
+> **✅ DONE 2026-07-25 — `dc36fc9`.** 798 lines moved, verified byte-identical line-for-line against
+> the parent commit. One addition to the work order: `WorldOf`'s M4 socket block needed a fence and a
+> `Components3D.h` include that §7.3 did not mention
+> ([§16](#16-deviations--where-implementation-diverged-from-the-plan) D-7).
 
 **Goal.** Finish the engine-side partition so that only `SceneRenderer` still mixes the two
 worlds.
@@ -1300,6 +1360,13 @@ Verify with the §12 recipe. Commit locally (no Claude trailer, no push) and rep
 
 ### W6 — `SceneRenderer` partition — the 2D build comes alive
 
+> **✅ DONE 2026-07-25 — `acf1a8c`.** The 2D configuration configured, built and passed **271/271**
+> plus all 6 of its goldens for the first time. 2D still flows *through* `SceneRenderer` — no second
+> compositor exists. Two exclusions the §4 table does not list were settled here:
+> `camera/NavigationCube` (3D-only) and `Projects/ViperSim` (2D skip-list — **this contradicts
+> decision 4**; see [§16](#16-deviations--where-implementation-diverged-from-the-plan) D-4 and D-5).
+> `SceneRenderDesc::DeltaTime` was the one §7.6 "check at implementation" call: **not** fenced.
+
 **Goal.** Partition the render spine so the 2D configuration compiles and links for the first
 time, with the 3D build pixel-identical.
 
@@ -1370,6 +1437,13 @@ Commit locally (no Claude trailer, no push) and report both suites' counts.
 
 ### W7 — Starforge gating: the 2D editor boots
 
+> **✅ DONE 2026-07-25 — `35a02b6`, plus on-GPU follow-up `cccab7a`.** The 2D editor boots and
+> authors. **§8.5's claim that `HierarchyPanel` and `EnvironmentPanel` are 3D-free was wrong** — both
+> needed fences ([§16](#16-deviations--where-implementation-diverged-from-the-plan) D-8). The 2D
+> overlay work was larger than §6.4's "new, small": a full Renderer2D twin of `DrawOverlayContent2D`
+> *plus* `DrawColliderOverlay2D` (D-9). The on-GPU pass then found four issues — three W7's own, one
+> pre-existing crash affecting **both** configurations (D-10).
+
 **Goal.** Make the editor usable in the 2D configuration — 3D panels and menus absent, 2D
 authoring intact, colliders visible.
 
@@ -1432,6 +1506,14 @@ ForgePong and FlowDemo run in Play, collider overlay draws).
 
 ### W8 — Cut `engine-2d`, set up the worktree, record the numbers
 
+> **✅ DONE 2026-07-25.** `main` fast-forwarded, `engine-2d` cut and pushed, `../Cosmic-2D` worktree
+> created and building on the `2d` preset. **The build-time gate was missed and reported as such** —
+> the partition measured −20.3 %, not the 40–55 % target. Investigating that surfaced the far larger
+> `/MP` finding, which landed separately as `e5d7d29`. Full numbers in
+> [§5.3](#53-recorded-result--the-split-missed-its-target-and-mp-is-why);
+> [§16](#16-deviations--where-implementation-diverged-from-the-plan) D-1. Incremental-build timings
+> were not recorded (D-11).
+
 **Goal.** Land the refactor on `main`, create the 2D branch, and prove the build-time claim.
 
 **Preconditions.** W7 green and your on-GPU smoke passed.
@@ -1488,6 +1570,14 @@ Then, in `C:\dev\Cosmic-2D`, run `build.bat` yourself and confirm it reports 2D 
 ---
 
 ### W9 — Telemetry, serial and SF_Telem hardening + fuzz campaign
+
+> **✅ DONE 2026-07-25 — `451b926`.** Both `DataPlayer::LoadBinaryFile` bugs fixed and **proved
+> non-vacuous by reverting the file** (absurd counts threw `bad allocation` — an uncaught exception in
+> production; truncated files returned `true`). The **primary** `TelemHub` path was taken, not the
+> `FrameAssembler.h` fallback: `PumpSerial` split at its I/O seam into the public `IngestChunk`, and
+> `TelemHub.cpp` compiled into `CosmicTests`. Two §9.6 behaviours are ImGui-only and are stated in the
+> test files rather than worked around ([§16](#16-deviations--where-implementation-diverged-from-the-plan) D-12).
+> 3D 513/513, 2D 340/340.
 
 **Goal.** Fix the two confirmed `DataPlayer` crash bugs and build the robustness suite around the
 telemetry/serial stack that SF_Telem depends on.
@@ -1575,6 +1665,14 @@ connect to a port, record, replay.
 ---
 
 ### W10 — Documentation
+
+> **✅ DONE 2026-07-25.** D41 [`systems/build-2d-3d-split.md`](../systems/build-2d-3d-split.md),
+> D42 [`systems/physics-backends.md`](../systems/physics-backends.md),
+> D43 [`reference/physics.md`](../reference/physics.md), D44 this document's status banner,
+> per-work-order lines and [§16](#16-deviations--where-implementation-diverged-from-the-plan), and
+> the D45 updates. D41 uses the recorded numbers, not the §5.1 estimate, and states the `/MP`
+> finding. D41–D43 are written as **complete** documents rather than the D5–D40 skeleton shape
+> ([§16](#16-deviations--where-implementation-diverged-from-the-plan) D-13).
 
 **Goal.** Write the documentation planned in §10, now that the separation is verified working.
 
@@ -1694,19 +1792,287 @@ untouched apart from the W0 fast-forward, which is pure history alignment.
 
 ## 15. Acceptance matrix
 
-| Gate | 3D config (`main`) | 2D config (`engine-2d` / `2d` preset) |
+**All gates met (2026-07-25).** Predicted values are struck where the shipped result differs; see
+[§16](#16-deviations--where-implementation-diverged-from-the-plan).
+
+| Gate | 3D config (`main`) | 2D config (`engine-2d` / `2d` preset) | Result |
+|---|---|---|---|
+| Configure + build Debug **and** Release, zero warnings | every phase | from W6 | ✅ |
+| `CosmicTests.exe --reporters=console --no-intro` | ~~355 + new cases~~ → **513/513** | ~~~270–290~~ → **340/340** | ✅ (above estimate — D-14) |
+| `tests/check_gl_conformance.ps1` | clean | clean | ✅ |
+| `CosmicRenderTests` vs W2 baselines | 14/14, 2D + 3D goldens byte-match | 6/6, 2D goldens byte-match | ✅ |
+| Editor boots | both modes intact | 2D mode; 3D panels/menus absent; tile painting, Light2D, Flow/Story editors, ForgePong + FlowDemo in Play, collider overlay visible | ✅ after the on-GPU pass (D-10) |
+| SF_Telem | builds, launches, connects, records, replays | same | ✅ **zero source changes** |
+| Clean-build wall time | 546.4 s → **169.4 s** with global `/MP` | 411.7 s → **123.1 s** | ⚠️ the split itself is **−24.7 %**, short of the 40–55 % target — §5.3, D-1 |
+| `COSMIC_WITH_JOLT=OFF` | configures and builds on the Null backend alone | same | ✅ |
+| Cross-build data safety | `test_crossbuild_scene` passes both directions | same | ✅ |
+| Decision 4 — tooling apps on both branches | — | SF_Telem ✅ · **ViperSim ✖** | ⚠️ open follow-up — D-5 |
+
+---
+
+## 16. Deviations — where implementation diverged from the plan
+
+Written in W10 (D44). This section is the honest record: **everywhere the shipped result differs
+from what the pre-implementation sections above say, and why.** Sections §1–§15 were written before
+the work; where they disagree with this section, **this section is right**.
+
+Nothing here was hidden at the time — every item was reported in its phase's commit message or its
+report. This is the consolidation.
+
+### D-1 — The build-time gate was missed, and the real finding was elsewhere
+
+**Plan:** §5.1 targeted "≈40–55 % off a clean build", with an explicit instruction to report a
+material shortfall rather than accept it quietly.
+
+**Shipped:** the partition alone measured **−20.3 %** at W8, **−24.7 %** when re-measured after W9.
+Roughly half the target.
+
+**Why:** the plan's model — "fewer TUs ⇒ proportionally less wall time" — was wrong, because `/MP`
+existed in exactly one place in the entire build (assimp's own `CMakeLists.txt`). Every other
+target, the engine included, compiled its translation units **strictly serially**, so the split
+removed the *cheapest TUs per unit of wall-clock* while leaving every serial bottleneck intact.
+
+**What was done:** reported, then investigated rather than accepted. Global `/MP` landed as its own
+commit (`e5d7d29`, deliberately separate from the phase) and cut clean Release builds by
+**−69.0 % (3D)** and **−70.1 % (2D)** — roughly **2.8× the entire engine split**, at zero cost to
+functionality. Full tables in [§5.3](#53-recorded-result--the-split-missed-its-target-and-mp-is-why).
+
+**Honest reading:** the split's build-time justification underdelivered. Its *other* justifications —
+a genuinely smaller shipped DLL, an honest 2D/3D boundary, a classification rule for new code — all
+held. And the miss is what surfaced a much larger, entirely independent win.
+
+**Also of note:** `/MP` is a change to the build outside this phase's stated scope. It is recorded
+here, and in the root `CMakeLists.txt` comment, rather than being folded silently into a W-commit.
+
+### D-2 — W2 fixed a real bug in a phase whose DoD said "no behaviour change"
+
+**Plan:** W2's DoD — "No 3D pixel or behaviour change is permitted."
+
+**Shipped:** a genuine **2D** behaviour change. `Light2DRenderer::Composite` captured the caller's
+framebuffer *after* `Ensure()` created or resized the half-res light buffer — and framebuffer
+creation ends by unbinding to the default one, so `prevFbo` read 0 and the multiply landed on the
+window. **The 2D light pass silently did nothing on the first frame after startup and after every
+viewport resize**, self-healing the next frame, which is exactly why it survived Phase 27 X5.
+
+**Why it was fixed here:** the golden-image harness found it while capturing the `light2d` golden.
+Capturing a golden of known-broken output would have baselined the bug into the whole refactor.
+
+**Verification:** with the workaround removed, a first frame now reproduces the warmed-up frame
+byte-for-byte, and all 14 goldens are unchanged. The DoD's *intent* — no **3D** change — held.
+
+### D-3 — W3 additions the §6.2 design did not name
+
+Three, all small, all reported:
+
+- **`physics/backends/BuiltinBackends.h`** — a private header declaring `RegisterNullPhysicsBackend`
+  / `RegisterJoltPhysicsBackend`, so `PhysicsBackend.cpp` can call them without knowing anything
+  else about either backend. §6.2 named only `PhysicsBackend.h`, `JoltBackend.cpp` and
+  `NullBackend.cpp`.
+- **`MeshColliderComponent` fenced in the collider probe.** §6.4's table names only
+  `TerrainColliderComponent` — but the same section makes both 3D-only, and leaving `MeshCollider`
+  in the `any_of` probe would have passed entities whose shape branch is fenced away. `any_of` is an
+  OR, so the 3D result is unchanged.
+- **A latent bug fixed:** `ScenePhysics::Step` read `GetBodyTransform`'s out-parameters from
+  *uninitialised* locals. Jolt always writes both for a live body, so it never bit — but the new
+  contract explicitly *permits* a backend to leave them alone, which would have written garbage into
+  the transform. Now seeded. This is a case of the seam exposing an existing latent defect.
+
+### D-4 — `camera/NavigationCube` is 3D-only (§4.2 guessed otherwise)
+
+**Plan:** §4.2 listed `camera/NavigationCube` in the "audit-at-implementation set — likely kept in
+2D".
+
+**Shipped:** excluded. Its `Render()` draws the orientation gizmo with direct `Renderer3D`
+`BeginScene` / `DrawMesh` / `DrawWireBox` / `DrawAxes` calls, and a 2D viewport has no use for a 3D
+orientation cube anyway. The rest of the §4.2 set — `PerspectiveCamera`, `OrbitCameraController`,
+`FlyCameraController`, `graphics/Gizmo`, `math/Frustum`, `CosmicPCH.h` — audited clean and stayed.
+
+### D-5 — ViperSim does **not** ship on the 2D branch (contradicts decision 4)
+
+**Plan:** decision 4 — *"SF_Telem, ViperSim and the tooling apps live on both branches, working."*
+
+**Shipped:** `Projects/ViperSim` is on the 2D scanner skip-list. Its `FlightScreen` and
+`ReplayScreen` draw the airframe, pad, grid, axes and trail with **direct `Renderer3D` calls**, so
+the 2D engine cannot link it.
+
+**Why not fixed:** honouring decision 4 needs a 2D rewrite of those two screens — real work with a
+real design question (what does a tailsitter attitude display look like in 2D?), not a fence. That
+was out of W6's scope and would have been out of any later work order's scope too.
+
+**Status: an open, scoped follow-up.** SF_Telem — the decision's actual canary, and the one the
+umbrella-fence design was aimed at — ships on both branches with **zero source changes**, which is
+the part of decision 4 that mattered most.
+
+### D-6 — The skip-list needed a staleness guard the plan did not anticipate
+
+**Plan:** §8.5 and W1 describe a mode-derived `COSMIC_SKIP_PROJECTS` default.
+
+**Shipped:** that, plus an internal `COSMIC_SKIP_PROJECTS_APPLIED` cache entry.
+
+**Why:** the CMake cache is sticky, but the *default* is mode-derived, so a stored value can go
+stale two ways — flipping `COSMIC_2D_ONLY` in an existing tree, or **editing the default in the
+CMakeLists**. W7 did exactly the second thing (it took Starforge off the 2D list), and without the
+guard an already-configured 2D tree would have gone on silently skipping the editor. The marker
+remembers what the tree last derived, so both cases are detectable while a genuinely hand-customised
+list is still left alone.
+
+**Known limit:** a 2D build directory configured *before* `35a02b6` predates the marker and needs
+one explicit reconfigure.
+
+### D-7 — `Scene::WorldOf` had a 3D dependency §7.3 did not list
+
+**Plan:** §7.3 lists `WorldOf` among the functions that stay in `Scene.cpp`, with no caveat.
+
+**Shipped:** it stays — but its M4 socket override reads `SocketComponent` and `AnimatorComponent`,
+both of which moved to `Components3D.h`. That block is fenced and `Scene.cpp` keeps a fenced
+`Components3D.h` include for it, so a 2D `WorldOf` resolves to the pre-M4 ordinary-transform path.
+(`Scene.cpp` keeps a second fenced include, `SceneNav.h`, because `~Scene` destroys the
+`m_NavRuntime` `unique_ptr` and needs a complete type.)
+
+### D-8 — §8.5's "Hierarchy and Environment panels are 3D-free" was wrong
+
+**Plan:** §8.5 stated both panels were verified 3D-free and needed no fences.
+
+**Shipped:** both needed them.
+
+- **`HierarchyPanel`** probes nine `Components3D.h` types — `DirectionalLight`, `PointLight`,
+  `Terrain`, `Water`, `ParticleEmitter`, `VoxelVolume`, `MeshRenderer`, `PrimitiveMesh`,
+  `LODGroup` — for its icon rows and create-menu builders. Only those fence; the panel gained
+  Sprite / 2D Light entries and a Light2D icon row, and its hierarchy, reorder, rename and search
+  behaviour is untouched.
+- **`EnvironmentPanel`** probes `DirectionalLightComponent` for one H3 advisory line. That single
+  probe fences. The reflected field list — `Ambient2D` included — is untouched, exactly as §8.5
+  required.
+
+**Why the plan was wrong:** the §8.5 audit checked *includes*, not *component-name usage*. Both
+panels reach their 3D types through `Cosmic.h`. The 3D build compiling both paths continuously is
+what turned this into a compile error rather than a silent behaviour change — the mitigation in
+risk 5 working as designed.
+
+### D-9 — The 2D overlay work was bigger than "new, small"
+
+**Plan:** §6.4 — *"2D collider overlay (new, small): add a Renderer2D collider overlay in
+`ViewportController`."*
+
+**Shipped:** two things, not one.
+
+1. **A full Renderer2D twin of `DrawOverlayContent2D`**, which §6.4 did not anticipate at all. It
+   was needed because W6 fenced `SceneRenderer`'s `Renderer3D::BeginScene`/`EndScene` pair, so a 2D
+   frame's `DrawTransparent` hook arrives with **no open batch** — the twin opens its own
+   `PushRenderPass`.
+2. **`DrawColliderOverlay2D`** itself — Box/Sphere/Capsule drawn in the same world transform
+   `ScenePhysics` bakes them with, then flattened onto XY (a box becomes its footprint, a sphere its
+   great circle, a capsule the stadium of the Y-axis capsule the runtime builds).
+
+The first pass also got the **draw order wrong** — see D-10.
+
+### D-10 — The on-GPU pass found four issues, one of them pre-existing and severe
+
+Landed as `cccab7a`. Three were W7's own:
+
+1. **The 2D collider overlay was drawn but invisible.** A collider normally sits exactly on the
+   sprite it belongs to, and the overlay ran *inside* `DrawOverlayContent2D` — which must draw
+   *before* the sprites or the pixel grid paints over the art. So the wireframe was painted first
+   and the sprite covered it. It only showed up if you gave the collider a large `Offset`, which is
+   how it was found. Now a public verb that opens its own pass, called **after** `OnRenderSprites`
+   and `OnRender2DLights`.
+2. **View ▸ View Mode still offered Unlit and Entity ID in 2D.** The viewport strip's dropdown was
+   gated; the menu submenu that mirrors it was missed. Cosmetic (both paths are fenced, so selecting
+   either was a no-op) — but the menu claimed a capability the build does not have.
+3. **The 2D viewport stats chip always read zero.** `Renderer2D::StatsEnabled` **defaults to false**
+   and nothing in the tree ever called `SetStatsStatus`, so the chip and the Profiler row W7 added
+   were reading a permanently-zero struct. Starforge now arms them once and resets per frame in the
+   2D build.
+
+The fourth was **not a W7 regression** — verified by reproducing it identically in the 3D build and
+confirming the lambda is byte-identical before and after `35a02b6`:
+
+4. **Every viewport-strip toggle chip `abort()`ed the Debug build.** `DrawViewportOverlays`' `toggle`
+   helper pushed a style colour when its flag was true *on entry*, then popped when the flag was
+   true *on exit* — but the button had already flipped it in between. Every click left ImGui's
+   style-colour stack unbalanced by one: an assert + `abort()` in Debug, silent style corruption in
+   Release. Clicking Grid, Colliders, Physics Debug or Nav Mesh killed the editor **in both
+   configurations**. Fixed by latching the pushed state; called out separately in the commit so it
+   can be reverted independently of the W7 work.
+
+**Reading:** items 1 and 3 are the clearest argument in the whole phase for the on-GPU pass being
+non-optional. Both are invisible to a headless suite, both would have shipped, and item 4 had been
+live in the editor since before this phase started.
+
+### D-11 — Incremental build times were never recorded
+
+**Plan:** W8's prompt asked for "an incremental build in each after touching
+`Cosmic/src/scene/Components.h`", and §5.1 argues the header partition is the *incremental* win.
+
+**Shipped:** only clean-build numbers. The header-partition argument in §5.1 — `Components.h` no
+longer dragging `Skeleton.h` / `AnimationClip.h` / `ParticleSystem.h` into every consumer — is
+therefore **argued but not measured**. Noted as a limit in
+[`docs/systems/build-2d-3d-split.md`](../systems/build-2d-3d-split.md) §6.
+
+### D-12 — Two §9.6 behaviours are not headlessly reachable
+
+**Plan:** §9.6 lists `TelemHub`'s dirty-recording flush on shutdown and `SerialLink`'s
+connected-state paths among the behaviours to cover.
+
+**Shipped:** neither is covered. Both are set only by ImGui code, and reaching them headlessly would
+have meant adding production API purely to make a test possible — which trades a real design for a
+coverage number. **Stated in the test files rather than worked around**, and deliberately left
+uncovered.
+
+The related fallback in W9's gotchas did **not** fire: headless `TelemHub` construction proved safe,
+so the **primary** path was taken (`PumpSerial` split into the public `IngestChunk`, `TelemHub.cpp`
+compiled into `CosmicTests`) rather than the `FrameAssembler.h` extraction.
+
+### D-13 — D41–D43 are complete documents, not skeletons
+
+**Plan:** §10 specifies contents for D41–D43 but not their depth. Every existing file in
+`docs/systems/` and `docs/reference/` is currently a **SKELETON** awaiting its D25–D34 / D6–D18 work
+order.
+
+**Shipped:** D41, D42 and D43 are written out in full, following their destinations' mandatory format
+contracts. Writing skeletons for material that was fresh in hand — and that nothing else in the docs
+plan covers — would have meant discarding it and re-deriving it later.
+
+**Consequence:** `docs/reference/physics.md` is the first *written* chapter in a directory of
+skeletons, and `docs/systems/` now mixes two states. Both index tables carry an explicit Status
+column, so the difference is visible rather than confusing.
+
+### D-14 — Test counts landed above the plan's estimate
+
+**Plan:** §15's acceptance matrix predicted "355 + new cases" for 3D and "~270–290" for 2D.
+
+**Shipped:** **3D 513/513** (355 → 435 in W2 → 444 in W3 → 513 in W9) and **2D 340/340**. The 2D
+figure landed above the predicted band because W9's five new suites are all shared-tier — the
+telemetry and serial stacks are dimension-agnostic and SF_Telem ships on both branches.
+
+**Second-order effect:** because `/MP` makes the 2D build critical-path-bound and `CosmicTests` sits
+close to that path in 2D, this test growth is directly why the split's on-top-of-`/MP` figure moved
+from −36.4 % to −27.3 % between W8 and the final measurement.
+
+### D-15 — Two unrelated fixes landed on `main` inside the phase window
+
+Neither is Phase 29 work; both are recorded so the commit range reads honestly.
+
+- **`d56adfc`** — CI fix: `.gitignore` was swallowing assimp's OBJ importer sources, so a fresh
+  clone could not build the 3D configuration.
+- **`dce7e85`** — `Config` no longer reports a *missing* file as a parse error.
+
+---
+
+## 17. Follow-ups leaving this phase
+
+| # | Item | Where it is recorded |
 |---|---|---|
-| Configure + build Debug **and** Release, zero warnings | every phase | from W6 |
-| `CosmicTests.exe --reporters=console --no-intro` | 355 + new cases, all pass | ~270–290, all pass |
-| `tests/check_gl_conformance.ps1` | clean | clean |
-| `CosmicRenderTests` vs W2 baselines | 2D + 3D goldens byte-match | 2D goldens byte-match |
-| Editor boots | both modes intact | 2D mode; 3D panels/menus absent; tile painting, Light2D, Flow/Story editors, ForgePong + FlowDemo in Play, collider overlay visible |
-| SF_Telem | builds, launches, connects, records, replays | same |
-| Clean-build wall time | 546.4 s → **169.4 s** with global `/MP` | 411.7 s → **123.1 s**; the split itself is **−24.7%**, short of target — see §5.3 |
-| `COSMIC_WITH_JOLT=OFF` | configures and builds on the Null backend alone | same |
-| Cross-build data safety | `test_crossbuild_scene` passes both directions | same |
+| 1 | **ViperSim on the 2D branch** — rewrite `FlightScreen` / `ReplayScreen` against Renderer2D, then remove it from `COSMIC_SKIP_PROJECTS_2D`. | [§16 D-5](#d-5--vipersim-does-not-ship-on-the-2d-branch-contradicts-decision-4), `FEATURE-MATRIX.md` |
+| 2 | **2D-native particles** — excluded in v1; `ParticleEmitterComponent` round-trips opaquely so scenes are safe. | decision 5, `FEATURE-MATRIX.md` (⏸) |
+| 3 | **No CI leg for the 2D configuration** — decision 6 kept GitHub Actions untouched. Verified locally every phase. | decision 6 |
+| 4 | **Incremental build times unmeasured.** | [§16 D-11](#d-11--incremental-build-times-were-never-recorded) |
+| 5 | **The 3D viewport stats chip shows lifetime totals**, not per-frame — Renderer3D's counters are always-on but Starforge never resets them. Pre-existing; deliberately left alone so the 3D build stayed behaviour-identical. | `cccab7a` |
+| 6 | **Starforge's homescreen re-parses `projects.toml` every frame** (~178/s; 1.4 MB of log per 95 s). Found while driving the editor; unrelated to the split. | `StarforgeApp.cpp`, homescreen draw |
 
 ---
 
 *Changelog:*
 *2026-07-24 — created; W0–W10 planned, nothing implemented.*
+*2026-07-25 — W0–W9 implemented and landed; §5.3 added with the recorded build times and the `/MP` finding.*
+*2026-07-25 — W10 (D44): status banner, per-work-order status lines and results, §16 deviation record, §17 follow-ups. **Phase 29 complete.***

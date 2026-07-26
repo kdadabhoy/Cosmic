@@ -8,6 +8,11 @@
 > exact files that would change for each swap. Actionable gaps are filed as phase work orders
 > (docs 13/18) — this document records the analysis and the **swap cookbook**; it is a design
 > record like `frame-lifecycle.md`, not a plan doc.
+>
+> **Resolution log** (findings are never rewritten — resolutions are appended under them):
+> **G1** ✅ doc 13 H3 · **G2** ✅ doc 13 H2 · **G5** ✅ doc 13 H4 ·
+> **G3 ✅ CLOSED 2026-07-25** by Phase 29 W3's physics backend registry — the first real instance
+> of the registry-keyed-factory shape this audit recommended. See §G3 and the physics row in §4.
 
 ## 1. Verdict in one paragraph
 
@@ -68,6 +73,44 @@ a builder registry keyed on the recipe (`RegisterWaterBuilder(name, fn)`; recipe
 until a second implementation exists (S14 discipline). The recipe layer already guarantees
 scenes won't change shape when it happens.
 
+> **✅ RESOLVED 2026-07-25 — Phase 29 W3 (doc 28 §6), commit `cb4a3c3`.**
+>
+> The finding above stands exactly as written; what changed is that the shape it prescribed now
+> exists in the engine, in **physics** rather than in the world-system triad. The recommendation
+> was "a registry-keyed factory, once a second implementation is real". A second implementation
+> became real when the user asked to be able to write their own physics for a single app, so the
+> pattern was built there first:
+>
+> - **`physics/PhysicsBackend.h`** — `IPhysicsBackend` (one simulation implementation, expressed
+>   purely in `PhysicsTypes.h` vocabulary: glm + PODs, no Jolt, no GL, no entt) plus
+>   **`PhysicsBackendRegistry`**: `Register(name, factory)` / `Has` / `Names` / `SetDefault` /
+>   `Default` / `Create`. The map is a function-local static, so there is no static-init-order
+>   question across the DLL boundary, and built-in registration is an explicit call rather than a
+>   file-scope registrar.
+> - **Selection is per world**, through `PhysicsSettings::Backend` (empty ⇒ the registry default) —
+>   which is precisely the `Implementation`-string-on-the-recipe idea this finding proposed, applied
+>   to the settings struct instead of a component.
+> - **`PhysicsWorld` did not become abstract.** It stayed concrete and by-value constructible and
+>   became a **dispatcher** over the interface — the `RenderCommand` → `RendererAPI` idiom §2 already
+>   credits. Its public API did not change by one character, so no call site moved and no gameplay
+>   script changed. That is the part worth copying: the seam cost zero churn above it.
+> - Two backends ship (`"jolt"`, `"null"`), `COSMIC_WITH_JOLT=OFF` is a supported configuration, and
+>   `tests/test_physics_backend.cpp` is a complete third-party backend under 150 lines — driven
+>   through `PhysicsWorld → ScenePhysics → ScriptHost` with its own counters, so a silent fallback to
+>   Jolt cannot pass.
+>
+> **What this does and does not settle.** It settles the *pattern* question: the audit's advice was
+> right, the shape works, and it costs nothing above the seam. It does **not** implement R12 — the
+> world-system builder registry for water/terrain/particles is still parked in
+> `FEATURE-MATRIX.md` with its original unlock ("a second implementation must coexist"). What it now
+> has is a working in-tree precedent to copy rather than a design to invent. **Also still open:
+> coexistence.** Physics selects *one* backend per `PhysicsWorld`; two simulators side by side in one
+> scene is not supported, so "replaceable, not coexistable" is resolved only in the replaceability
+> direction — which is the direction the requirement actually asked for.
+>
+> Documented in [`../systems/physics-backends.md`](../systems/physics-backends.md) and
+> [`../reference/physics.md`](../reference/physics.md).
+
 ### G4 — PostProcessStack is a fixed pipeline with toggles
 Pass order (SSAO→bloom→FXAA→tonemap/fog/god-rays/haze/flare) is compiled in; apps toggle but
 cannot insert. This is the *right* v1 shape (order is a correctness contract — see
@@ -103,6 +146,7 @@ context appears. **No work filed.**
 | **Light behavior/BRDF** | after H3: the lights UBO block + the BRDF section of `MeshLit/PBR` (+ `Mesh3D` Lambert) | ECS components, editor UI, scene files |
 | **Post effect chain** | add a pass inside `PostProcessStack` + a `SceneRendererSettings` toggle | apps (defaults off), frame order contract |
 | **Sky source** | after H4: add a source to `EnvironmentMap` (bake-to-cube contract) | IBL consumers (they read the cube, not the source) |
+| **The physics simulator** *(shipped 2026-07-25 — the registry exists; this is the only row that needs no engine edit at all)* | implement `IPhysicsBackend` (`physics/PhysicsBackend.h`) in **your own project**, then two lines in your layer's `OnAttach`: `PhysicsBackendRegistry::Register("mine", factory)` + either `SetDefault("mine")` or `PhysicsSettings::Backend = "mine"`. Honour the four contracts: fixed step, `DrainContactEvents` moves-and-clears, `ThreadCount == 0` ⇒ deterministic (or say you ignore it), `RayHit::EntityId` round-trips `BodyDesc::EntityId` | **the entire engine.** `PhysicsWorld`'s public API, every call site, `ScenePhysics`, the components, the inspector, the serializer, saved scenes, gameplay scripts. A backend that only cares about XY simply ignores Z |
 | **The whole graphics backend** | `platform/<NewAPI>/` implementing `RendererAPI` + resource classes, per `frame-lifecycle.md` | everything above the RHI (that's the point of the S13 audit) |
 
 ## 5. Recommendations summary

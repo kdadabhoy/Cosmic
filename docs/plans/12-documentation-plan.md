@@ -1,5 +1,11 @@
-# Docs Plan v2 — README Overhaul, API Reference, System Explainers (D5–D40)
+# Docs Plan v2 — README Overhaul, API Reference, System Explainers (D5–D45)
 
+> **Extended 2026-07-25 (Phase 29):** added §15 (**the engine split**, D41–D45) — two new system
+> explainers, the previously-missing physics reference chapter, the Phase 29 plan doc's own status
+> and deviation record, and the index/pointer updates. **All five are ✅ written**, and D41–D43 are
+> complete documents rather than skeletons (see §15). Numbering runs from **D41** because the
+> pre-existing work orders end at D40. The kickoff prompt is now §16.
+>
 > **Extended 2026-07-04 (roadmap v3):** added §13 (the **Starforge user manual**, D37–D39 —
 > the user's "document explaining all Starforge features") and §14 (**per-phase documentation
 > hooks**, D40 — the standing rule + per-phase checklist that keeps docs current as Phases
@@ -503,6 +509,8 @@ every implementation phase (14–21), plus one bookkeeping pass now:
 | 27 (world rendering/2D parity) | §7 sky/environment note (physical sky + polish knobs), §12-style 2D-lighting note | rendering rows (`SkyMode::Physical` + `EnvironmentMap::{PhysicalSkyDesc,SetPhysicalSky}`, `Renderer3D::SetAmbientIntensity` + `SceneRendererSettings::{AmbientIntensity,Gamma}`, `RendererAPI::BlendMode::Multiply`, `renderer/Light2DRenderer`, `SceneRenderer::RenderToTexture`), scene rows (`EnvironmentComponent` X1/X2 fields + `Ambient2D`, `ParticleEmitterSpec`/component curl-noise + bounds + `ParticleEmitter::{CurlNoise,SetTurbulence}`, `Light2DComponent`, `UiWorldAnchorComponent` + `UiSystem::ProjectToCanvas`, `UiImageComponent::RuntimeTexture`) | rendering-pipeline (physical sky + 2D light composite); particles (curl noise CPU/GPU lockstep) | D37/D38: sun Elevation/Azimuth widget, Project Settings left-nav, live curl-noise preview, Entity ▸ 2D ▸ Light + radius-ring gizmo | — |
 | ↳ **DUE 2026-07-14** (Phase 27 X1–X7 ✅ code-complete; row queued for the next docs session). New surface to document: `EnvSky.glsl` physical branch (`u_SkyMode`), `Tonemap.glsl` `u_Gamma`, PBR-family `u_AmbientIntensity`, `Light2D.glsl`, `ParticleUpdate.glsl` curl-noise + bounds mirror; `EnvironmentPanel` sun-angle widget, `StarforgeApp::DrawProjectSettingsPopup` left-nav, `WorldSystemsPanel::{DrawNoisePreview,RebuildNoisePreview}`, Entity ▸ 2D ▸ Light + `ViewportController` Light2D ring; the Starforge `/bigobj` + node-editor `/W0` CMake notes. | | | | |
 
+| 29 (engine split / pluggable physics) | §1.5 gains `build_2d.bat` / `build_3d.bat` / `build_all_2d.bat` + `-DCOSMIC_2D_ONLY` / `-DCOSMIC_WITH_JOLT`; NEW §1.6 "The two engine configurations" | NEW [physics.md](../reference/physics.md) chapter (`PhysicsWorld`/`PhysicsTypes`/`PhysicsBody`/`CharacterController`/`ScenePhysics`/`PhysicsBackendRegistry` + the script proxies); manifest rows for the five physics headers | NEW [build-2d-3d-split.md](../systems/build-2d-3d-split.md) + [physics-backends.md](../systems/physics-backends.md); pointer updates in ecs-scene / rendering-2d / rendering-3d / build-plugin-packaging | — (no new editor surface; the 2D editor is the same editor with 3D fenced) | ✅ **done as doc 28 W10 (D41–D45), 2026-07-25** |
+
 Bookkeeping pass now (part of any next docs session): add the table above as tracked rows,
 and extend the §11 upkeep contract with rule 4: **"a phase's final work order runs its D40
 row"** — the per-phase plan docs' kickoff prompts already end with acceptance/banner
@@ -510,7 +518,42 @@ discipline; reviewers enforce the doc row the same way.
 
 **Status (D40 bookkeeping):** ☐
 
-## 15. Kickoff prompt (paste for each implementation session)
+---
+
+## 15. Phase H — the engine split (D41–D45) *(added 2026-07-25)*
+
+Phase 29 (doc 28) split Cosmic into two build configurations and gave physics a swappable backend.
+Its own W10 work order wrote the documentation, planned in
+[`28-phase29-engine-split-plan.md`](28-phase29-engine-split-plan.md) §10 and registered here.
+
+**All five ✅ complete 2026-07-25.**
+
+| ID | Document | Contents | Status |
+| --- | --- | --- | --- |
+| **D41** | NEW [`../systems/build-2d-3d-split.md`](../systems/build-2d-3d-split.md) | What `COSMIC_2D_ONLY` excludes and why; the **classification rule for new code**; `build.bat` / `build_2d.bat` / `build_3d.bat` / presets / the worktree layout; the **recorded** build times (not the estimate) and the `/MP` finding; the branch and carry-over workflow. | ✅ 2026-07-25 |
+| **D42** | NEW [`../systems/physics-backends.md`](../systems/physics-backends.md) | `IPhysicsBackend`, `PhysicsBackendRegistry`, `PhysicsSettings::Backend`; the fixed-step contract; `ThreadCount`/determinism; the `RayHit::EntityId` round-trip; a worked example lifted from `tests/test_physics_backend.cpp`. | ✅ 2026-07-25 |
+| **D43** | NEW [`../reference/physics.md`](../reference/physics.md) | The per-call reference for `PhysicsWorld` / `PhysicsTypes` / `PhysicsBody` / `CharacterController` / `ScenePhysics` / the registry / the script proxies — a chapter that **did not exist** before. | ✅ 2026-07-25 |
+| **D44** | [`28-phase29-engine-split-plan.md`](28-phase29-engine-split-plan.md) | Status banner, per-work-order ✅ lines with dates and results (§11), the **honest deviation record** (§16, 15 entries) and the follow-ups leaving the phase (§17). | ✅ 2026-07-25 |
+| **D45** | Index/pointer updates | `00-MASTER-ROADMAP.md` (Phase 29 entry, doc 28 row, the *both configurations green* working-agreement rule), `FEATURE-MATRIX.md` (5 new rows incl. the ⏸ 2D-native particles), this document (§15), `../design/modularity-audit.md` (**G3 closed** + a physics row in the §4 cookbook), `../systems/build-plugin-packaging.md`, `../systems/{ecs-scene,rendering-2d,rendering-3d,README}.md`, `../reference/README.md`, root `README.md` (§1.5 + a new §1.6). | ✅ 2026-07-25 |
+
+**Two deliberate departures from this plan's conventions**, recorded so a later session does not
+"fix" them:
+
+1. **D41–D43 are complete documents, not skeletons.** Every other file in `docs/systems/` and
+   `docs/reference/` is a SKELETON awaiting its D6–D18 / D25–D34 work order. Writing skeletons for
+   material that was fresh in hand — and that no other work order covers — would have meant
+   discarding it and re-deriving it later. Both index tables carry a **Status** column, so the
+   mixed state is visible rather than confusing. (Doc 28 §16 D-13.)
+2. **`docs/reference/physics.md` is not in the D5 coverage manifest's original scope.** The physics
+   headers *are* included by `Cosmic.h` (`PhysicsTypes.h`, `PhysicsBody.h`, `PhysicsBackend.h`,
+   `PhysicsWorld.h`, `CharacterController.h`) but had no manifest row, so the D5 checker would have
+   flagged them the moment it ran. D45 adds the rows.
+
+**Standing consequence for every future docs item:** the engine now has two configurations. A
+reference entry for a symbol that only exists in one of them must say so — the convention used
+throughout D41–D43 is a plain sentence naming the configuration, not a new badge vocabulary.
+
+## 16. Kickoff prompt (paste for each implementation session)
 
 > Read `docs/plans/12-documentation-plan.md` §0 fully, then work order **D\<n\>** only. Open
 > the skeleton file(s) named in the item — the skeleton's scope list, checklist, and truth

@@ -10,6 +10,7 @@
 
 1. [Getting Started](#1-getting-started)
    - [1.5 Command Reference — Every Command](#15-command-reference--every-command)
+   - [1.6 The Two Engine Configurations](#16-the-two-engine-configurations)
 2. [Memory Management](#2-memory-management)
 3. [Application Lifecycle](#3-application-lifecycle)
 4. [The Layer System](#4-the-layer-system)
@@ -278,13 +279,23 @@ Every command you can run against this SDK, in one place. All `.bat` scripts run
 | `build_all.bat [Debug\|Release]` | **Clean** rebuild: deletes `build/`, reconfigures, builds everything. Default `Debug`. |
 | `build_all_release.bat` | Clean rebuild pinned to `Release`. Release *is* the distribution configuration (console-less subsystem, launcher New-Project UI disabled, `/O2`) — there is no separate dist flag. |
 | `build_engine.bat [Debug\|Release]` | Engine-only incremental build (`Cosmic` + `CosmicApp` targets, configured with `COSMIC_BUILD_ENGINE_ONLY=ON`). Fastest loop for engine-core work; skips all project DLLs. |
+| `build_2d.bat [Debug\|Release]` | **Switches this tree to the 2D-only engine** and builds it. Reconfigures with `-DCOSMIC_2D_ONLY=ON` whenever the cache is absent or says OFF. The cache is sticky, so afterwards plain `build.bat` keeps building 2D in this tree. See [§1.6](#16-the-two-engine-configurations). |
+| `build_3d.bat [Debug\|Release]` | The symmetric setter: switches this tree back to the **full 3D engine** (`-DCOSMIC_2D_ONLY=OFF`) and builds it. |
+| `build_all_2d.bat [Debug\|Release]` | **Clean** rebuild in 2D-only mode (mirrors `build_all.bat`). |
+
+`build.bat`, `build_all.bat` and `build_engine.bat` are **mode-preserving**: they read
+`COSMIC_2D_ONLY` out of `build\CMakeCache.txt` and echo `[MODE] 2D-only engine` or
+`[MODE] full 3D engine`, but never change it. Only `build_2d.bat` / `build_3d.bat` /
+`build_all_2d.bat` set the mode.
 
 Examples:
 
 ```bat
-build.bat                    :: incremental Debug — the everyday command
+build.bat                    :: incremental Debug in whatever mode this tree is — the everyday command
 build.bat Release            :: incremental Release
 build_engine.bat Debug       :: engine core only
+build_2d.bat                 :: switch this tree to the 2D engine, then build Debug
+build_3d.bat Release         :: switch it back to the full 3D engine, then build Release
 ```
 
 ### Packaging & installer scripts
@@ -325,7 +336,22 @@ build\Runtime\Debug\CosmicApp.exe --project SF_Telem
 | --- | --- | --- |
 | `-DCOSMIC_BUILD_ENGINE_ONLY=ON\|OFF` | `OFF` | `ON` skips the `Projects/` scanner (engine + runtime only). The build scripts flip this automatically. |
 | `-DCOSMIC_BUILD_TESTS=ON\|OFF` | `ON` | Build the `CosmicTests` target. Never installed/packaged either way. |
+| `-DCOSMIC_2D_ONLY=ON\|OFF` | `OFF` | `ON` builds the **2D-only engine**: no terrain/voxel/water/nav/particles, no 3D renderer passes, no model or skeletal loading, and assimp + recastnavigation are not even configured. Set by `build_2d.bat` / `build_3d.bat` or the `2d` / `default` presets. [§1.6](#16-the-two-engine-configurations) |
+| `-DCOSMIC_WITH_JOLT=ON\|OFF` | `ON` | Build the Jolt physics backend. `OFF` is supported: it drops `physics/backends/JoltBackend.cpp` and leaves the null backend plus whatever an app registers through `IPhysicsBackend`. Orthogonal to `COSMIC_2D_ONLY` — Jolt ships on both configurations. |
+| `-DCOSMIC_WITH_ASSIMP=ON\|OFF` | `ON` | FBX/STL/DAE/PLY import via vendored assimp. Ignored in the 2D configuration, which never configures assimp at all. |
+| `-DCOSMIC_BUILD_RENDER_TESTS=ON\|OFF` | `OFF` | Build `CosmicRenderTests`, the golden-image target. Needs a real GPU and is driver-specific, so it is local-only and never runs in CI. |
+| `-DCOSMIC_SKIP_PROJECTS="A;B"` | mode-derived | Semicolon-separated `Projects/` directory names the scanner skips. Defaults to nothing in 3D and `Frontier;Engine3DDemo;ForgeIsle;ViperSim` in 2D; a hand-set value is left alone. |
 | `-DCOSMIC_SDK_DIR=<path>` | repo root (cache) | Where project builds look for the engine; standalone project configures fall back to the `COSMIC_SDK` env var from `setup.bat`. |
+
+CMake presets are available for the two engine configurations:
+
+```bash
+cmake --preset default
+```
+
+```bash
+cmake --preset 2d
+```
 
 ### In-app global hotkeys
 
@@ -334,6 +360,58 @@ build\Runtime\Debug\CosmicApp.exe --project SF_Telem
 | `F11` | Toggle borderless-windowed fullscreen (see [Section 24](#24-window-system)). Projects can intercept/replace this via `Window::SetFullscreenHotkeyOverride` — see §24. |
 
 All other shortcuts are app-defined (check the project's own docs/panels).
+
+---
+
+## 1.6 The Two Engine Configurations
+
+Cosmic builds as **two engines from one source tree**, selected by a single CMake flag.
+
+| | **Full 3D engine** | **2D-only engine** |
+| --- | --- | --- |
+| Flag | `COSMIC_2D_ONLY=OFF` (default) | `COSMIC_2D_ONLY=ON` |
+| Branch | **`main`** — the trunk | **`engine-2d`** |
+| Working tree | `C:\dev\Cosmic` | `C:\dev\Cosmic-2D` (a git worktree) |
+| Preset / script | `cmake --preset default` · `build_3d.bat` | `cmake --preset 2d` · `build_2d.bat` |
+| Ships | everything | everything **except** the 3D subsystems below |
+| CI | GitHub Actions watches this | none — verified locally |
+
+**What the 2D configuration leaves out:** the terrain, voxel, water, navigation and particle
+source trees; `Renderer3D` and the GPU resources only it owns (shadow maps, the IBL environment
+cube, coverage capture, the instancing pool); model loading and skeletal animation; the 3D half of
+the scene layer (`Components3D.h`, `Scene3D.cpp`, `TypeRegistry3D.cpp`, `ScenePicker`); the
+`Frontier`, `Engine3DDemo`, `ForgeIsle` and `ViperSim` projects; and — the big one for build times
+— the **assimp** and **recastnavigation** vendored dependencies, which are not even configured.
+
+**What it keeps:** sprites, sprite animation, tilemaps, 2D lights, canvas UI, flow and story
+graphs, the 2D camera rig, the whole asset/VFS/audio/serial/telemetry/jobs/UI stack, the Starforge
+editor (in 2D mode), SF_Telem — and **all of physics**. Rigid bodies, box/sphere/capsule colliders
+and the character controller are dimension-agnostic and ship in both; only mesh and terrain-
+heightfield colliders are 3D-only.
+
+**Both branches carry byte-identical tracked files.** Nothing is deleted on `engine-2d` — the
+difference is entirely the build cache and which preset you pick. Carrying a change across is
+copying the same file to the same path (or `git merge`, which is near-conflict-free by
+construction). Anything that *must* differ between the branches is a design bug.
+
+To work on both at once, use the worktree rather than a second build folder — `COSMIC_SDK_DIR` is
+source-relative, so two binary directories in one source tree would clobber each other's
+`Cosmic.dll`:
+
+```bash
+git worktree add ../Cosmic-2D engine-2d
+```
+
+**Writing code that works in both.** A file that names anything under `terrain/`, `voxel/`,
+`water/`, `nav/`, `particles/`, `Renderer3D`, `ShadowMap`, `EnvironmentMap`, `Model` or `Skeleton`
+is 3D-only and belongs in the exclusion list; everything else is shared. In shared code, guard 3D
+references with `#ifndef COSMIC_2D_ONLY` — the macro is defined **publicly** on the `Cosmic`
+target, so your project sees exactly the same value the engine was built with. Prefer excluding a
+whole file over fencing one; a file the 2D build never compiles costs nothing.
+
+Full details — the exclusion table, the classification rule, the recorded build times, and the
+carry-over workflow — are in
+[`docs/systems/build-2d-3d-split.md`](docs/systems/build-2d-3d-split.md).
 
 ---
 

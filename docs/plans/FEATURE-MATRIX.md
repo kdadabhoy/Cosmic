@@ -48,6 +48,7 @@
 | Asset-editor document host + reusable Timeline widget | one shared Inspector; no document tabs | 24 · doc 23 M1/M2 | now (anim/story editors sit on it) | L | ✅ 2026-07-12 (AssetEditorHost tabbed docs + IAssetEditor; pure-transport Timeline widget, display+scrub) |
 | Starforge Animation Editor (skeleton tree, bone-overlay preview, clip scrub, sockets UI) | none | 24 · doc 23 M3 | with doc 19 A2 | L | ✅ 2026-07-12 (skeleton tree + PreviewRig::RenderSkeletal bone overlay + joint pick + clip timeline; inspect-only) |
 | Reusable node canvas + Starforge Story Graph editor + post-chain graph view | doc 16 U6 ships the flow panel | 25 · doc 24 Q1/Q4/Q6 | after U6 + M1 | L | ✅ 2026-07-12 (flow editor rehosted as an M1 `FlowEditor` document on `NodeCanvas`; `StoryEditor` doc w/ rich nodes + Play preview; `PostChainEditor` read-only-topology view w/ undo-identical field edits) |
+| **2D collider debug overlay** (Box/Sphere/Capsule flattened onto XY via `Renderer2D`, same `m_ShowColliders` chip) | `PhysicsWorld::DebugDraw` draws through `Renderer3D`, so 2D physics was invisible | 29 · doc 28 W7 §6.4 | with the 2D engine build (physics ships on both configurations) | S | ✅ 2026-07-25 (`ViewportController::DrawColliderOverlay2D`, drawn AFTER the sprites + 2D lights — the on-GPU pass caught it painting underneath them; reads components not the backend, so a custom physics backend gets it free) |
 | Undoable content-browser rename/delete | confirm-dialog only (by design, E10; rename itself ships in 23 · T6) | — | revisit only if it bites | S | ✖ |
 
 ## Platform, shipping, projects
@@ -61,6 +62,10 @@
 | Per-app `user://` isolation (+ portable mode) | shared root | 16 · doc 15 S6 | now | M | ✅ 2026-07-05 |
 | Run-standalone button, save-thumbnails, About | — | 16 · doc 15 S7 | now | S | ✅ 2026-07-05 |
 | Desktop app identity: live OS window titles, per-app AppUserModelID, dev-tree `Starforge.exe` (own VERSIONINFO) | static "Cosmic Engine" title; one anonymous host exe | 16 · doc 15 S2/S5 follow-through | now (desktop tools can't identify the window) | S | ✅ 2026-07-10 |
+| **Pure-2D engine build configuration** (`COSMIC_2D_ONLY`; no terrain/voxel/water/nav/particles/3D-renderer, no assimp or Recast configured; `engine-2d` branch + worktree) | one engine, 3D-only; a 2D game dragged the whole 3D stack through the compiler and into the DLL | 29 · doc 28 W1–W8 | now (user request 2026-07-24) | XL | ✅ 2026-07-25 (572→347 TUs, 78→50 targets; Starforge boots and authors in 2D; SF_Telem on both branches with zero source changes; 3D 513/513 + 14/14 goldens, 2D 340/340 + 6/6. Clean-build cut is **−24.7 %**, short of the 40–55 % target — doc 28 §5.3) |
+| **Global `/MP` (parallel translation-unit compilation)** | `/MP` existed in exactly ONE place — assimp's own CMakeLists; every other target compiled serially | 29 · doc 28 §5.3 | found while measuring the split's build-time gate | S | ✅ 2026-07-25 (one `add_compile_options(/MP)` at MSVC scope in the root CMakeLists: clean Release **3D 546.4→169.4 s (−69.0 %)**, **2D 411.7→123.1 s (−70.1 %)** — ~2.8× the entire engine split, at no cost to functionality) |
+| **ViperSim on the 2D branch** | 2D skip-list — `FlightScreen`/`ReplayScreen` draw the airframe, pad, grid, axes and trail with direct `Renderer3D` calls | 29 · doc 28 §17 #1 | needs a Renderer2D rewrite of those two screens; contradicts doc 28's own decision 4 | M | ⏸ |
+| **CI leg for the 2D configuration** | GitHub Actions watches `main` with the 3D config only (doc 28 decision 6 kept workflows untouched); 2D is verified locally every phase | 29 · doc 28 §17 #3 | 2D regressions start slipping through, or `engine-2d` gains its own contributors | S | ⏸ |
 | Binary asset pak | loose files | 20 · doc 19 A9 | shipped-app size/IO measured to matter | M | ⏸ |
 | Project templates gallery | one template + picker seam | 17 ships the 2D one | a third real template | S | ⏸ |
 | Cloud/team project sync, DB service | registry file over folders | — (doc 15 §3) | multi-machine/team | XL | ✖ |
@@ -74,6 +79,7 @@
 | Rigid-body physics, colliders, queries, triggers (Jolt) | **shipped (Jolt v5.5.0, 2026-07-04)** | 15 · doc 14 J1–J5 | now (decision 2026-07-04) | XL | ✅ |
 | Character controller (walk/step/slope) | **shipped (CharacterVirtual, 2026-07-04)** | 15 · doc 14 J6 | with physics | M | ✅ |
 | Terrain heightfield collision | **shipped (HeightFieldShape, ≤2 cm parity, 2026-07-04)** | 15 · doc 14 J7 | with physics | M | ✅ |
+| **Pluggable physics backend** (`IPhysicsBackend` + `PhysicsBackendRegistry`; `PhysicsSettings::Backend`; write your own simulator for a single app) | Jolt hard-wired behind `PhysicsWorld`'s pimpl — replaceable only by editing the engine | 29 · doc 28 W3 | now (user request 2026-07-24: *"I must be able to write my own physics later on"*) | M/L | ✅ 2026-07-25 (`PhysicsWorld` became a dispatcher — its public API did not change by one character, so no call site moved and no gameplay script changed; Jolt + null built in, `COSMIC_WITH_JOLT=OFF` supported; contracts + a complete <150-line worked backend in `tests/test_physics_backend.cpp`; closes `modularity-audit.md` **G3**) |
 | Physics constraints/joints/ragdolls | — | 15 · doc 14 §3 | articulated-body project | L | ⏸ |
 | Rigid-body water buoyancy | script-applied forces via S9 queries | 15 · doc 14 §3 | floating-dynamics need | M | ⏸ |
 | In-game UI as entities (canvas/button/text/image) | ImGui only (editor chrome) | 17 · doc 16 U1/U2 | now | L | ✅ 2026-07-11 (editor click-consume + `UiSystem::HitTest` select; engine/tests 2026-07-08) |
@@ -115,6 +121,7 @@
 | FFT ocean (water tier 2) | 8-wave Gerstner | 19 · doc 18 R5 | open-ocean scale app | L | ⏸ |
 | Terrain tessellation + holes | quadtree LOD, no holes | 19 · doc 18 R6 | silhouette quality / cave entrances | L | ⏸ |
 | Particle indirect draw + sorting | fixed-count quads, unsorted | 19 · doc 18 R7 | effects-heavy overdraw measured | M | ⏸ |
+| **2D-native particles** (a sprite/Renderer2D emitter path for the 2D engine build) | `src/particles/` is GPU-compute + 3D billboards/ribbons and is **excluded** from the 2D configuration (doc 28 decision 5). `ParticleEmitterComponent` still round-trips **opaquely**, so authored scenes are safe either way | 29 · doc 28 §4 / §17 #2 | a 2D project that actually needs effects — v1 deliberately shipped without it | M | ⏸ |
 | BCn/KTX2 compressed textures | none (audited: not needed yet) | 19 · doc 18 R9 | VRAM/load-time pressure | M | ⏸ |
 | Projected decals | none | 19 · doc 18 R10 | content polish need | M | ⏸ |
 | Skybox LEQUAL depth verb | background-first draw | 19 · doc 18 R11 | pair with any sky work | S | ⏸ |

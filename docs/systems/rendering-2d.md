@@ -9,6 +9,15 @@ batch and draws thousands of sprites in a handful of GPU calls.
 **Source:** `Cosmic/src/renderer/Renderer2D.*`, `graphics/SubTexture2D.*`, `graphics/Font.*`
 **API Reference:** [../reference/rendering-2d.md](../reference/rendering-2d.md) · **Guide:** root README §8, §11–§14
 
+> **Build note (Phase 29):** `Renderer2D` and its neighbours (`Light2DRenderer`,
+> `Camera2DController`, tilemaps, canvas UI) are **shared** — they compile in both engine
+> configurations, and everything here is true of both. The 2D-only build additionally has
+> `Renderer3D` absent entirely, which changes two things worth knowing about: a 2D frame's
+> `SceneRenderDesc::DrawTransparent` hook arrives with **no open batch** (so a caller must open its
+> own `PushRenderPass`), and physics debug draw — which goes through `Renderer3D`'s line batch — is
+> a no-op, replaced by Starforge's `ViewportController::DrawColliderOverlay2D`. See
+> [`build-2d-3d-split.md`](build-2d-3d-split.md).
+
 ## Section plan
 
 1. **Overview** — why batching exists (draw calls are expensive; the postal-truck analogy: one truck, many letters). <!-- TODO(D28) -->

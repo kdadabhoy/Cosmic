@@ -32,6 +32,15 @@ else is a territory.
 | [Serial & Telemetry](serial-telemetry.md) | Serial ports/links, COBS framing, columnar recording, replay | SKELETON — D33 |
 | [UI & Theming](ui-theming.md) | ImGui integration, docking model, theme manager, fonts/icons, widgets | SKELETON — D34 |
 | [Build System & Plugin Architecture](build-plugin-packaging.md) | CMake layout, hot-reloadable project DLLs, packaging/installer pipeline | SKELETON — D34 |
+| [**The 2D / 3D Build Split**](build-2d-3d-split.md) | `COSMIC_2D_ONLY`: what each configuration excludes, the classification rule for new code, presets + `.bat` scripts + the worktree layout, the recorded build times, the `main` / `engine-2d` carry-over workflow | **✅ WRITTEN — D41** |
+| [**Pluggable Physics Backends**](physics-backends.md) | `PhysicsWorld` as a dispatcher over `IPhysicsBackend`; the registry; the contracts a backend must honour; writing your own | **✅ WRITTEN — D42** |
+
+> **Two things to know about this table.** (1) Most rows are still skeletons awaiting their D25–D34
+> work order; the two written rows came out of Phase 29 W10 and are complete documents. The Status
+> column is the only reliable signal of which is which. (2) **The engine has two build
+> configurations since Phase 29.** Any explainer that describes 3D-only machinery should say so and
+> link [`build-2d-3d-split.md`](build-2d-3d-split.md) rather than restating the exclusion rules —
+> `rendering-2d.md`, `rendering-3d.md` and `ecs-scene.md` already carry that build note.
 
 ## Document format (mandatory — every explainer uses this shape)
 

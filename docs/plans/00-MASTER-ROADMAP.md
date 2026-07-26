@@ -43,6 +43,7 @@
 > | [`25-phase26-navigation-ai-plan.md`](25-phase26-navigation-ai-plan.md) | Phase 26: Recast/Detour navmesh (Jolt vendoring pattern), scene bake + `.cnav`, agents/crowd + script `Nav()`, editor authoring/debug draw (N1–N5) |
 > | [`26-phase27-world-2d-plan.md`](26-phase27-world-2d-plan.md) | Phase 27: physical sky, environment polish, particle curl noise + preview, 2D lights, world-anchored UI, render-to-texture verb (X1–X7) |
 > | [`27-phase28-flagship-sample-plan.md`](27-phase28-flagship-sample-plan.md) | Phase 28: **Forge Isle** — the flagship showcase app + trailer/clean-machine acceptance (Z1–Z7) |
+> | [`28-phase29-engine-split-plan.md`](28-phase29-engine-split-plan.md) | Phase 29 (✅ complete): **engine split** — the pure-2D build configuration, the `engine-2d` branch, the pluggable physics backend, hard-testing both engines (W0–W10) |
 > | [`FEATURE-MATRIX.md`](FEATURE-MATRIX.md) | **Living index**: every missing/parked feature → phase home → unlock → size; plus the user acceptance ledger |
 > | [`archive/`](archive/) | Completed plans (docs 01–11) kept as records, each with carried-forward pointers |
 > | [`../design/modularity-audit.md`](../design/modularity-audit.md) | 2026-07-04 seam-by-seam swappability audit + the "how to swap X" cookbook |
@@ -417,10 +418,31 @@ acceptance. **App-side only — engine gaps found here get filed in their owning
 - **Done when:** doc 27 Z7's DoD — clean-machine install runs start-to-finale ≥60 fps/1080p
   with its own branding, and the Z1 feature→moment matrix is demonstrated on a recording.
 
-### Continuous — documentation *(doc 12, D5–D40)*
+### Phase 29 — Engine split: pure-2D build, `engine-2d`, pluggable physics *(doc 28, W0–W10)* — ✅ complete 2026-07-25
+Partition the chokepoint files on the trunk (`Components.h` → `Components3D.h`, `Scene.cpp` →
+`Scene3D.cpp`, `TypeRegistry.cpp` → `TypeRegistry3D.cpp`, the `SceneRenderer` spine) until every
+translation unit is classifiable shared / 2D / 3D → then `COSMIC_2D_ONLY=ON` excludes the 3D set via
+CMake `list(FILTER)` plus fences in the handful of shared public headers. `main` is the 3D trunk;
+**`engine-2d`** is cut from it and holds **byte-identical tracked files**, built from the
+`C:\dev\Cosmic-2D` worktree. Physics gains a swappable backend (`IPhysicsBackend` +
+`PhysicsBackendRegistry`) so an app can run on its own simulator; Jolt ships on both branches.
+- **Shipped:** 3D **513/513** tests + 14/14 goldens · 2D **340/340** + 6/6 · Debug + Release zero
+  warnings and GL conformance clean in both · Starforge boots and authors in 2D mode · SF_Telem
+  works on both branches **with zero source changes**.
+- **Build time:** the partition alone cut a clean Release build **−24.7 %**, short of the 40–55 %
+  target — reported, not rounded up. Investigating the shortfall found that `/MP` existed in exactly
+  one place in the whole build, so everything but assimp compiled serially. **Global `/MP` cut clean
+  builds −69.0 % (3D) / −70.1 % (2D) — roughly 2.8× the entire split, at no cost to functionality.**
+- **Open follow-ups:** ViperSim does not build against the 2D engine (contradicts the phase's own
+  decision 4); no 2D-native particles; no CI leg for the 2D configuration. Doc 28 §17 lists them all.
+- **Standing consequence:** every change from here on must leave **both** configurations green — see
+  the working agreement below.
+
+### Continuous — documentation *(doc 12, D5–D45)*
 Coverage checker → reference chapters (parallel) → README expansion → system explainers →
 **Starforge manual (D37–D39)** → link sweep → per-phase hooks (D40 standing rule). Docs-only
-sessions; run any time.
+sessions; run any time. **D41–D45 (Phase 29 W10) are written** — the two-configuration explainer,
+the physics-backend explainer, and the first fully-written reference chapter.
 
 ---
 
@@ -492,10 +514,24 @@ Phase 26 (nav; wants 15) ──► parallel-safe any time; before Z4
 Phase 27 (world/2D; wants U3/U4 for 2D items) ──► before Z3/Z6
 Everything above ──► Phase 28 (Forge Isle; Z1 greybox may start after 17)
 Phases 19/21: unlock-driven menus      docs (12): continuous, parallel-safe
+
+Phase 29 ✅ 2026-07-25 (engine split) — depended on nothing, blocks nothing. Pure
+              refactor + tooling. From here on, every change must leave BOTH the
+              3D (main) and 2D (engine-2d) configurations green.
 ```
 
 ## Working agreement (how these plans get executed)
 
+- **Every change must leave BOTH engine configurations green** *(standing rule since Phase 29,
+  2026-07-25)*. Nothing lands with the 3D build broken, and nothing lands with the 2D build broken.
+  "Green" means: configure + build Debug **and** Release with zero warnings, `CosmicTests` all pass,
+  and `tests/check_gl_conformance.ps1` is clean — **in each configuration**. The 3D tree is
+  `C:\dev\Cosmic` (`main`); the 2D tree is the `C:\dev\Cosmic-2D` worktree (`engine-2d`, `2d`
+  preset). Both branches carry byte-identical tracked files, so anything that *must* differ between
+  them is a design bug — fix it with a flag, not a divergent file. New source files get classified
+  shared / 2D / 3D **when they are added**, per
+  [`../systems/build-2d-3d-split.md`](../systems/build-2d-3d-split.md) §4.4. CI still watches `main`
+  with the 3D configuration only, so the 2D leg is a local responsibility.
 - **Branch per item/phase, PR into `main`.** You compile and run — the AI writes code
   (standing preference: don't run `build.bat` unless asked; a full build+test pass at the end
   of a work batch is expected).

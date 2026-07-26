@@ -10,6 +10,14 @@ into instanced draws, and only then touches the GPU.
 **Source:** `Cosmic/src/renderer/Renderer3D.*`, `renderer/RenderQueue.h`, `renderer/InstanceSet.*`, `math/Frustum.h`
 **API Reference:** [../reference/rendering-3d.md](../reference/rendering-3d.md) · **Design spec:** [`../design/frame-lifecycle.md`](../design/frame-lifecycle.md)
 
+> **Build note (Phase 29):** everything in this document is **3D-configuration only**.
+> `renderer/Renderer3D.*`, `InstanceSet.*`, `EnvironmentMap.*`, `ShadowMap.*` and
+> `CoverageCapture.*` are excluded from the 2D engine build, as are the 15 3D components that now
+> live in `scene/Components3D.h`, the 3D scene half in `scene/Scene3D.cpp` and their reflection
+> registrations in `reflect/TypeRegistry3D.cpp`. `SceneRenderer` is **shared** — 2D composites
+> through the same HDR → tonemap → overlay spine, with the 3D passes fenced individually. See
+> [`build-2d-3d-split.md`](build-2d-3d-split.md).
+
 ## Section plan
 
 1. **Overview** — immediate vs deferred submission; why sorting saves the GPU from thrashing (the restaurant-kitchen analogy: cook all burgers together). <!-- TODO(D28) -->

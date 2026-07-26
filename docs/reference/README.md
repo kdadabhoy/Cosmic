@@ -21,6 +21,7 @@
 | [Frame Pipeline](rendering-pipeline.md) | `SceneRenderer` pass orchestration, `PostProcessStack`, `EnvironmentMap` (IBL/sky), `ShadowMap`, `CoverageCapture` | SKELETON — D11 |
 | [World Systems](world-systems.md) | `Terrain`, `Water` + `GerstnerWave`, `ParticleEmitter`/`RibbonEmitter` + `Presets` | SKELETON — D12 |
 | [Entity Component System](ecs.md) | `Scene`, `Entity`, every component, `System`, `ComponentRegistry`, `ScenePicker` | SKELETON — D13 |
+| [**Physics**](physics.md) | `PhysicsWorld`, `PhysicsTypes` value types, `PhysicsBody`/`CharacterHandle`, `CharacterController`, `ScenePhysics`, `PhysicsBackendRegistry`, the `Physics()`/`Character()` script proxies | **✅ WRITTEN — D43** |
 | [Cameras & Navigation](cameras.md) | Camera classes, orthographic/orbit/fly controllers, `NavStyle`/`ViewPreset`, `NavigationCube`, `Gizmo` | SKELETON — D14 |
 | [Math & Simulation Toolkit](math.md) | `Spatial`, `Integrators`, `Filters`, `LookupTable`, `Noise`, `Random` | SKELETON — D15 |
 | [Assets, Files & Config](assets-io.md) | `AssetLibrary`, `FileSystem` VFS, `Config` (TOML), `DataExport` | SKELETON — D16 |
@@ -78,6 +79,23 @@ This table is the enforcement backbone: **every** header included by `Cosmic/src
 must appear here, and every listed symbol must have an entry in its chapter. The checker
 script `tests/check_docs_coverage.ps1` (work order D5) diffs `Cosmic.h` against this table.
 
+> **³ᴰ marks a header `Cosmic.h` includes only in the 3D configuration** (inside an
+> `#ifndef COSMIC_2D_ONLY` fence). Its symbols do not exist in the 2D engine build, and a chapter
+> entry for one should say so. Everything unmarked is present in **both** configurations — including
+> the whole `physics/` block: physics is dimension-agnostic and ships on both branches. When D5's
+> checker is written it must parse `Cosmic.h` **with the fences**, not as flat text, or it will
+> report the ³ᴰ headers as missing from a 2D tree. Background:
+> [`../systems/build-2d-3d-split.md`](../systems/build-2d-3d-split.md).
+>
+> The other 3D-fenced `Cosmic.h` includes already have manifest rows under their own chapters:
+> `renderer/Renderer3D.h`, `renderer/EnvironmentMap.h`, `renderer/ShadowMap.h`,
+> `renderer/InstanceSet.h`, `renderer/CoverageCapture.h`, `terrain/Terrain.h`, `water/Water.h`,
+> `particles/ParticleSystem.h`, `particles/Presets.h`, `graphics/Model.h`. Three fenced headers
+> **have no row yet** — `water/Presets.h`, `assets/MeshImport.h`, `scene/WorldSystemRecipes.h` — a
+> pre-existing gap that predates the split and that D5's checker will surface; they belong in
+> [world-systems.md](world-systems.md), [assets-io.md](assets-io.md) and
+> [world-systems.md](world-systems.md) respectively when those chapters are written.
+
 | Header (under `Cosmic/src/`) | Chapter |
 | --- | --- |
 | `core/Core.h` | [core.md](core.md) |
@@ -126,10 +144,16 @@ script `tests/check_docs_coverage.ps1` (work order D5) diffs `Cosmic.h` against 
 | `scene/Scene.h` | [ecs.md](ecs.md) |
 | `scene/Entity.h` | [ecs.md](ecs.md) |
 | `scene/Components.h` | [ecs.md](ecs.md) |
+| `scene/Components3D.h` ³ᴰ | [ecs.md](ecs.md) |
 | `scene/System.h` | [ecs.md](ecs.md) |
 | `scene/ComponentRegistry.h` | [ecs.md](ecs.md) |
-| `scene/ScenePicker.h` | [ecs.md](ecs.md) |
+| `scene/ScenePicker.h` ³ᴰ | [ecs.md](ecs.md) |
 | `scene/SelectableComponent.h` | [ecs.md](ecs.md) |
+| `physics/PhysicsTypes.h` | [physics.md](physics.md) |
+| `physics/PhysicsBody.h` | [physics.md](physics.md) |
+| `physics/PhysicsBackend.h` | [physics.md](physics.md) |
+| `physics/PhysicsWorld.h` | [physics.md](physics.md) |
+| `physics/CharacterController.h` | [physics.md](physics.md) |
 | `camera/Camera.h` | [cameras.md](cameras.md) |
 | `camera/OrthographicCamera.h` | [cameras.md](cameras.md) |
 | `camera/OrthographicCameraController.h` | [cameras.md](cameras.md) |
