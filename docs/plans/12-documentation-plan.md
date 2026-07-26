@@ -3192,8 +3192,69 @@ drifting again. Then **D6–D18 and D25–D34 fan out together** (different file
 are the two tier indexes, where you touch only your own row). D35 → D36 last, in that order. D37–D39
 can run any time. Phase 30 (P0–P9) follows the user's *documentation before testing* directive.
 
+**Running these concurrently?** See [§15.6](#156-running-the-remaining-work-in-parallel-added-2026-07-26-d61)
+for the wave structure and the one rule that makes it safe: an agent writes **only its own chapter**
+and reports shared-file edits for a serial integration pass. 23 of the 29 items are parallel-safe;
+D35/D36 must be last and in order, and D37–D39 need the running editor so they are attended work.
+
 Each phase's prompt block opens with a **standing-rules preamble** that every item in that phase
 inherits, then one short prompt per item — don't paste an item prompt without its preamble.
+
+---
+
+## 15.6 Running the remaining work in parallel *(added 2026-07-26, D61)*
+
+Phase C had to be serial — every one of its 16 items edited the README ToC and overview. **Phases B
+and D do not have that constraint**, and 23 of the 29 remaining work orders can run concurrently if
+you respect one rule.
+
+### The one rule: agents write their own chapter and nothing else
+
+Every parallel item touches exactly **one** new or skeleton file. What it must *not* touch is the
+shared state:
+
+| Shared file | Who wants to write it | Why it collides |
+| --- | --- | --- |
+| `docs/reference/README.md` | all 13 Phase B items | the Status column + the coverage manifest |
+| `docs/systems/README.md` | all 10 Phase D items | the Status column |
+| `README.md` | D25, D26, D27, D28, D29, D32, D33, D34 | Part II section conversions |
+| `docs/plans/12-documentation-plan.md` | every item | its own status banner + the §7 findings log |
+
+Concurrent edits to these clobber each other — last writer wins and the loser's row silently
+vanishes. So: **each agent writes only its chapter, deletes only its own `STATUS: SKELETON` banner,
+and REPORTS the shared-file edits it needs.** A serial **integration pass** then applies every
+reported change at once. That pass is cheap (it is table rows and status cells) and it is the only
+place the shared files are ever written.
+
+The README Part II conversions in Phase D are the sharpest case: eight items want to edit `README.md`.
+Defer all of them to the integration pass, or run those items' conversions serially afterwards.
+
+### Wave structure
+
+| Wave | Items | Concurrency | Notes |
+| --- | --- | --- | --- |
+| **0** | **D5** | alone | The checker. Run it first and *act on its output* — it tells the Phase B waves which manifest rows are missing, which is information they otherwise each rediscover by hand. |
+| **1** | D7, D13, D14, D15 | 4 | M-sized, well-specified, each has a written guide counterpart to lean on. Good shakedown wave. |
+| **2** | D6, D8, D9, D16, D18 | 5 | D8's BindingPoints table is load-bearing for D9/D11 — land D8 before or with them. |
+| **3** | D12, D17 + D10, D11 | 4 | **D10 and D11 are XL and want a stronger model or your review** — the deferred-flush and pass-graph semantics must be exactly right. Consider running these two attended rather than fanned out. |
+| **4** | D25 first, then D26–D33 | 1 then 8 | D25 (architecture-overview) is the map — do it first for orientation, but write its §5 directory table last. **D29 is XL** (the PBR material must explain, not name-drop). |
+| **5** | D34 | 1 | Depends on nothing, but its `build-plugin-packaging` half pairs with D25's module map. |
+| **6** | D35 → D36 | serial | Must be last and in order: D35 sweeps links, D36 runs the checker in full strict mode. |
+| **—** | D37–D39 | **not parallel-safe** | The Starforge manual requires **driving the running editor** to verify menus and hotkeys. That is an attended, one-at-a-time activity, not a fan-out. |
+
+### What parallelism does not buy you
+
+**Verification quality does not parallelise.** Phase C's value was not 29 documents — it was the
+~60 verified engine defects in §7's findings log, each found by someone reading a header end to end
+and noticing it disagreed with the code. A fanned-out pass produces text faster and *looks*
+complete; it will not notice that `Application.h:93`'s doc comment contradicts
+`WorkspaceLayer.cpp:214`. Budget review time accordingly, and give the XL items (D10, D11, D29) a
+stronger model or a human read.
+
+**Two failure modes to watch for in agent output**, both seen in this codebase's history:
+comfortable paraphrase of a header comment instead of the code it contradicts, and a confident claim
+with no file:line behind it. Rule 2 of every standing block exists for exactly this. Spot-check by
+picking three claims per chapter and grepping for their citation.
 
 ---
 
