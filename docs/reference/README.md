@@ -16,7 +16,7 @@
 | [Core Runtime](core.md) | `Application`, `Layer`, `Log`, `Timestep`, `Window` client surface, `Ref`/`Scope`, plugin exports | SKELETON — D6 |
 | [**Events & Input**](events-input.md) | `Event` hierarchy, `EventDispatcher`, `Input` polling, key/mouse/gamepad codes | **✅ WRITTEN — D7 · 2026-07-26** |
 | [Graphics Resources](graphics-resources.md) | `Shader`, `Material`, `Texture2D`, `TextureCube`, `FrameBuffer`, vertex/index/uniform/storage buffers, `RenderCommand`, `BindingPoints`, `Renderer` init | SKELETON — D8 |
-| [2D Rendering](rendering-2d.md) | `Renderer2D` draw API, `RenderPass` multi-camera, `SubTexture2D`, `Font` text | SKELETON — D9 |
+| [**2D Rendering**](rendering-2d.md) | `Renderer2D` draw API, `RenderPass` multi-camera, `SubTexture2D`, `Font` text, `Light2DRenderer` | **✅ WRITTEN — D9 · 2026-07-26** |
 | [3D Rendering](rendering-3d.md) | `Renderer3D` (submit/cull/sort/instancing/transparency/LOD), `Mesh`, `Model`, `InstanceSet` — `Frustum` moved to [math.md](math.md) by D15 | SKELETON — D10 |
 | [Frame Pipeline](rendering-pipeline.md) | `SceneRenderer` pass orchestration, `PostProcessStack`, `EnvironmentMap` (IBL/sky), `ShadowMap`, `CoverageCapture` | SKELETON — D11 |
 | [World Systems](world-systems.md) | `Terrain`, `Water` + `GerstnerWave`, `ParticleEmitter`/`RibbonEmitter` + `Presets` | SKELETON — D12 |
@@ -93,26 +93,30 @@ script `tests/check_docs_coverage.ps1` (work order D5) diffs `Cosmic.h` against 
 > `particles/ParticleSystem.h`, `particles/Presets.h`, `graphics/Model.h` — **D54 added the missing
 > ³ᴰ marker to all ten**, which the table listed unmarked, i.e. as present in both configurations.
 > Note that `graphics/Mesh.h` and `math/Frustum.h` are correctly unmarked: both are unfenced in
-> `Cosmic.h` and compile in a 2D tree, even though nothing there draws a mesh. Three fenced headers
-> **have no row yet** — `water/Presets.h`, `assets/MeshImport.h`, `scene/WorldSystemRecipes.h` — a
-> pre-existing gap that predates the split and that D5's checker will surface; they belong in
-> [world-systems.md](world-systems.md), [assets-io.md](assets-io.md) and
-> [world-systems.md](world-systems.md) respectively when those chapters are written. **Two of the
-> three are now covered client-side** by the guide chapter
-> [`../guide/world-systems.md`](../guide/world-systems.md) (D55) — the `WaterPreset` set and the
-> whole E18 recipe→spec layer, including `ClampTerrainResolution`'s editor-only `{65 … 1025}` clamp.
-> The rows are still owed.
+> `Cosmic.h` and compile in a 2D tree, even though nothing there draws a mesh.
 >
-> **`physics/ScenePhysics.h` has no row either, and that one is an outright oversight** (found by
-> D57). Its five siblings are all listed above, [physics.md](physics.md)'s scope block names it, and
-> the chapter documents every one of its methods — but `Cosmic.h` reaches it through
-> `scripting/ScriptableEntity.h` rather than by a direct include, so a `Cosmic.h`-include table
-> never saw it. `ScenePhysics::BuildColliderDesc` is deliberately public and static (the navmesh
-> bake's "honest physics source"), so this is unambiguously client surface. Add the row pointing at
-> [physics.md](physics.md); no chapter work is needed. The same D57 pass found `nav/NavWorld.h`,
-> `nav/NavTypes.h` and `scene/SceneNav.h` unlisted with **no chapter at all** — those are a genuine
-> coverage gap, and [`../guide/navigation-and-ai.md`](../guide/navigation-and-ai.md) is the
-> client-facing source for them until it closes.
+> **The hand-maintained gap list that used to live here is retired (D61, 2026-07-26).** It named
+> `water/Presets.h`, `assets/MeshImport.h`, `scene/WorldSystemRecipes.h`, `physics/ScenePhysics.h`,
+> `nav/NavWorld.h`, `nav/NavTypes.h` and `scene/SceneNav.h` as known-missing. **All of them now have
+> rows**, along with 35 others: `tests/check_docs_coverage.ps1` found **42** unlisted headers against
+> a public surface of **147**, so this table had been covering 71 %. Five of the 42 had never been
+> spotted by hand at all — `graphics/MaterialAsset.h`, `layers/PlayerLayer.h`, `water/GerstnerWave.h`,
+> `renderer/RenderQueue.h` and `core/Version.h` — and four of those are named in a chapter's own
+> scope in doc 12, which is exactly the drift a script catches and a person does not.
+>
+> **Do not maintain a gap list here again.** Run the checker; it is wired into CI and it prints
+> ready-made rows for anything missing. It classifies each header by *how* it is reachable (direct
+> include, transitive closure, or an explicit `#include` from `Projects/**` or `tests/**`) and
+> derives 3D-only status from the CMake `list(FILTER)` block as well as the `Cosmic.h` fences —
+> which is why it correctly flags `voxel/VoxelMesher.h` and its two siblings, all of them
+> **unfenced**.
+>
+> **Rows may point outside this tier.** Roughly twenty headers have no reference chapter yet and are
+> routed to the `docs/guide/` chapter that actually documents them — the whole `scripting/` and
+> `reflect/` tiers, the `voxel/` and `nav/` blocks, `scene/ui/`, and the flow/story headers. Strict
+> mode is a reference-tier contract and is skipped for those targets. **The `scripting/` tier having
+> no reference chapter at all is a chapter-sized hole, not a row fix**, and it needs a decision
+> before D36 can reach a green strict-mode run.
 >
 > **³ᴰ⁺ marks the one header that is 3D-only in a *different* way** (found by D53).
 > `camera/NavigationCube.h` is included by `Cosmic.h` **unfenced**, so it compiles in a 2D tree —

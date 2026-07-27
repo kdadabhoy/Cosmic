@@ -369,7 +369,7 @@ traps; this is the loop):
 | **D6** | `reference/core.md` | M. Application/Layer/Window/Log/plugin boundary. Include the Pause-vs-TimeScale table (README §7) condensed per-entry. | ☐ |
 | **D7** | `reference/events-input.md` | M. Full code tables (KeyCodes/MouseButtonCodes/GamepadCodes headers → tables). | ✅ 2026-07-26 |
 | **D8** | `reference/graphics-resources.md` | L. The BindingPoints registry table is load-bearing — other chapters link it. Material Clone/flush semantics stated here once, linked elsewhere. | ☐ |
-| **D9** | `reference/rendering-2d.md` | M. Every DrawQuad overload individually (that's the OpenGL-doc style the user asked for). | ☐ |
+| **D9** | `reference/rendering-2d.md` | M. Every DrawQuad overload individually (that's the OpenGL-doc style the user asked for). | ✅ 2026-07-26 |
 | **D10** | `reference/rendering-3d.md` | **XL — may split into two sessions** (submission+queue semantics, then Mesh/Model/InstanceSet/Frustum). Stronger model recommended: the deferred-flush semantics must be *exactly* right. DG-7. | ☐ |
 | **D11** | `reference/rendering-pipeline.md` | L. Enumerate SceneRenderer's real header surface — the skeleton deliberately doesn't guess it. DG-8 (shared with systems doc — build once here, reuse). | ☐ |
 | **D12** | `reference/world-systems.md` | L. Pin the Terrain `32·2^k+1` resolution rule and the SampleHeight ≤1 cm guarantee with test citations. | ☐ |
