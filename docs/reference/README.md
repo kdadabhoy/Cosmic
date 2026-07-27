@@ -14,16 +14,16 @@
 | Chapter | Covers | Status |
 | --- | --- | --- |
 | [Core Runtime](core.md) | `Application`, `Layer`, `Log`, `Timestep`, `Window` client surface, `Ref`/`Scope`, plugin exports | SKELETON — D6 |
-| [Events & Input](events-input.md) | `Event` hierarchy, `EventDispatcher`, `Input` polling, key/mouse/gamepad codes | SKELETON — D7 |
+| [**Events & Input**](events-input.md) | `Event` hierarchy, `EventDispatcher`, `Input` polling, key/mouse/gamepad codes | **✅ WRITTEN — D7 · 2026-07-26** |
 | [Graphics Resources](graphics-resources.md) | `Shader`, `Material`, `Texture2D`, `TextureCube`, `FrameBuffer`, vertex/index/uniform/storage buffers, `RenderCommand`, `BindingPoints`, `Renderer` init | SKELETON — D8 |
 | [2D Rendering](rendering-2d.md) | `Renderer2D` draw API, `RenderPass` multi-camera, `SubTexture2D`, `Font` text | SKELETON — D9 |
-| [3D Rendering](rendering-3d.md) | `Renderer3D` (submit/cull/sort/instancing/transparency/LOD), `Mesh`, `Model`, `InstanceSet`, `Frustum` | SKELETON — D10 |
+| [3D Rendering](rendering-3d.md) | `Renderer3D` (submit/cull/sort/instancing/transparency/LOD), `Mesh`, `Model`, `InstanceSet` — `Frustum` moved to [math.md](math.md) by D15 | SKELETON — D10 |
 | [Frame Pipeline](rendering-pipeline.md) | `SceneRenderer` pass orchestration, `PostProcessStack`, `EnvironmentMap` (IBL/sky), `ShadowMap`, `CoverageCapture` | SKELETON — D11 |
 | [World Systems](world-systems.md) | `Terrain`, `Water` + `GerstnerWave`, `ParticleEmitter`/`RibbonEmitter` + `Presets` | SKELETON — D12 |
-| [Entity Component System](ecs.md) | `Scene`, `Entity`, every component, `System`, `ComponentRegistry`, `ScenePicker` | SKELETON — D13 |
-| [**Physics**](physics.md) | `PhysicsWorld`, `PhysicsTypes` value types, `PhysicsBody`/`CharacterHandle`, `CharacterController`, `ScenePhysics`, `PhysicsBackendRegistry`, the `Physics()`/`Character()` script proxies | **✅ WRITTEN — D43** |
-| [Cameras & Navigation](cameras.md) | Camera classes, orthographic/orbit/fly controllers, `NavStyle`/`ViewPreset`, `NavigationCube`, `Gizmo` | SKELETON — D14 |
-| [Math & Simulation Toolkit](math.md) | `Spatial`, `Integrators`, `Filters`, `LookupTable`, `Noise`, `Random` | SKELETON — D15 |
+| [**Entity Component System**](ecs.md) | `Scene`, `Entity`, all 34 components field-by-field (with their reflected names + Inspector ranges), `System`, `ComponentRegistry`, `SelectableComponent` | **✅ WRITTEN — D13 · 2026-07-26** |
+| [**Physics**](physics.md) | `PhysicsWorld`, `PhysicsTypes` value types, `PhysicsBody`/`CharacterHandle`, `CharacterController`, `ScenePhysics`, `PhysicsBackendRegistry`, the `Physics()`/`Character()` script proxies | **✅ WRITTEN — D43 · 2026-07-25** |
+| [**Cameras & Navigation**](cameras.md) | Camera classes, orthographic/orbit/fly controllers, `NavStyle`/`ViewPreset`, `NavigationCube`, `Gizmo`, `ScenePicker` | **✅ WRITTEN — D14 · 2026-07-26** |
+| [**Math & Simulation Toolkit**](math.md) | `Spatial`, `Integrators`, `Filters`, `LookupTable`, `Noise`, `Random`, `Frustum` | **✅ WRITTEN — D15 · 2026-07-26** |
 | [Assets, Files & Config](assets-io.md) | `AssetLibrary`, `FileSystem` VFS, `Config` (TOML), `DataExport` | SKELETON — D16 |
 | [Audio](audio.md) | `AudioEngine`, `Sound` | SKELETON — D16 |
 | [Serial & Telemetry](serial-telemetry.md) | `SerialPort`, `SerialLink`, `Framing`, `TelemetryChannel`, `DataRecorder`/`DataPlayer`, `TelemetryPanel`, entity selection | SKELETON — D17 |
@@ -148,15 +148,18 @@ script `tests/check_docs_coverage.ps1` (work order D5) diffs `Cosmic.h` against 
 | `graphics/UniformBuffer.h` | [graphics-resources.md](graphics-resources.md) |
 | `graphics/StorageBuffer.h` | [graphics-resources.md](graphics-resources.md) |
 | `graphics/Material.h` | [graphics-resources.md](graphics-resources.md) |
+| `graphics/MaterialAsset.h` | [graphics-resources.md](graphics-resources.md) |
 | `renderer/Renderer2D.h` | [rendering-2d.md](rendering-2d.md) |
 | `renderer/RenderPass.h` | [rendering-2d.md](rendering-2d.md) |
 | `graphics/SubTexture2D.h` | [rendering-2d.md](rendering-2d.md) |
 | `graphics/Font.h` | [rendering-2d.md](rendering-2d.md) |
+| `renderer/Light2DRenderer.h` | [rendering-2d.md](rendering-2d.md) |
 | `renderer/Renderer3D.h` ³ᴰ | [rendering-3d.md](rendering-3d.md) |
 | `graphics/Mesh.h` | [rendering-3d.md](rendering-3d.md) |
 | `graphics/Model.h` ³ᴰ | [rendering-3d.md](rendering-3d.md) |
 | `renderer/InstanceSet.h` ³ᴰ | [rendering-3d.md](rendering-3d.md) |
-| `math/Frustum.h` | [rendering-3d.md](rendering-3d.md) |
+| `renderer/RenderQueue.h` | [rendering-3d.md](rendering-3d.md) |
+| `math/Frustum.h` | [math.md](math.md) |
 | `renderer/SceneRenderer.h` | [rendering-pipeline.md](rendering-pipeline.md) |
 | `renderer/PostProcessStack.h` | [rendering-pipeline.md](rendering-pipeline.md) |
 | `renderer/EnvironmentMap.h` ³ᴰ | [rendering-pipeline.md](rendering-pipeline.md) |
@@ -166,25 +169,32 @@ script `tests/check_docs_coverage.ps1` (work order D5) diffs `Cosmic.h` against 
 | `water/Water.h` ³ᴰ | [world-systems.md](world-systems.md) |
 | `particles/ParticleSystem.h` ³ᴰ | [world-systems.md](world-systems.md) |
 | `particles/Presets.h` ³ᴰ | [world-systems.md](world-systems.md) |
+| `water/Presets.h` ³ᴰ | [world-systems.md](world-systems.md) |
+| `water/GerstnerWave.h` ³ᴰ | [world-systems.md](world-systems.md) |
+| `scene/WorldSystemRecipes.h` ³ᴰ | [world-systems.md](world-systems.md) |
 | `scene/Scene.h` | [ecs.md](ecs.md) |
 | `scene/Entity.h` | [ecs.md](ecs.md) |
 | `scene/Components.h` | [ecs.md](ecs.md) |
 | `scene/Components3D.h` ³ᴰ | [ecs.md](ecs.md) |
 | `scene/System.h` | [ecs.md](ecs.md) |
 | `scene/ComponentRegistry.h` | [ecs.md](ecs.md) |
-| `scene/ScenePicker.h` ³ᴰ | [ecs.md](ecs.md) |
+| `scene/ScenePicker.h` ³ᴰ | [cameras.md](cameras.md) |
 | `scene/SelectableComponent.h` | [ecs.md](ecs.md) |
+| `scene/SceneSerializer.h` | [ecs.md](ecs.md) |
+| `scene/SceneManager.h` | [ecs.md](ecs.md) |
 | `physics/PhysicsTypes.h` | [physics.md](physics.md) |
 | `physics/PhysicsBody.h` | [physics.md](physics.md) |
 | `physics/PhysicsBackend.h` | [physics.md](physics.md) |
 | `physics/PhysicsWorld.h` | [physics.md](physics.md) |
 | `physics/CharacterController.h` | [physics.md](physics.md) |
+| `physics/ScenePhysics.h` | [physics.md](physics.md) |
 | `camera/Camera.h` | [cameras.md](cameras.md) |
 | `camera/OrthographicCamera.h` | [cameras.md](cameras.md) |
 | `camera/OrthographicCameraController.h` | [cameras.md](cameras.md) |
 | `camera/PerspectiveCamera.h` | [cameras.md](cameras.md) |
 | `camera/OrbitCameraController.h` | [cameras.md](cameras.md) |
 | `camera/FlyCameraController.h` | [cameras.md](cameras.md) |
+| `camera/Camera2DController.h` | [cameras.md](cameras.md) |
 | `camera/NavigationCube.h` ³ᴰ⁺ | [cameras.md](cameras.md) |
 | `graphics/Gizmo.h` | [cameras.md](cameras.md) |
 | `math/Spatial.h` | [math.md](math.md) |
@@ -197,6 +207,12 @@ script `tests/check_docs_coverage.ps1` (work order D5) diffs `Cosmic.h` against 
 | `utils/FileSystem.h` | [assets-io.md](assets-io.md) |
 | `utils/Config.h` | [assets-io.md](assets-io.md) |
 | `utils/DataExport.h` | [assets-io.md](assets-io.md) |
+| `assets/MeshImport.h` ³ᴰ | [assets-io.md](assets-io.md) |
+| `utils/FileWatcher.h` | [assets-io.md](assets-io.md) |
+| `utils/FileDialog.h` | [assets-io.md](assets-io.md) |
+| `utils/ImageIO.h` | [assets-io.md](assets-io.md) |
+| `utils/ExeResources.h` | [assets-io.md](assets-io.md) |
+| `utils/Branding.h` | [assets-io.md](assets-io.md) |
 | `audio/AudioEngine.h` | [audio.md](audio.md) |
 | `audio/Sound.h` | [audio.md](audio.md) |
 | `serial/SerialPort.h` | [serial-telemetry.md](serial-telemetry.md) |
@@ -222,7 +238,33 @@ script `tests/check_docs_coverage.ps1` (work order D5) diffs `Cosmic.h` against 
 | `ui/IconsLucide.h` | [ui.md](ui.md) |
 | `ui/Widgets.h` | [ui.md](ui.md) |
 | `ui/PlotStyle.h` | [ui.md](ui.md) |
+| `layers/ImGuiThemes.h` | [ui.md](ui.md) |
 | `Cosmic.h` (plugin exports, `HostContext`, `SetImGuiTheme`) | [core.md](core.md) + [ui.md](ui.md) |
+| `core/CommandStack.h` | [core.md](core.md) |
+| `core/UUID.h` | [core.md](core.md) |
+| `core/Version.h` | [core.md](core.md) |
+| `layers/PlayerLayer.h` | [core.md](core.md) |
+| `graphics/Skeleton.h` ³ᴰ | [../guide/animation.md](../guide/animation.md) |
+| `graphics/AnimationClip.h` ³ᴰ | [../guide/animation.md](../guide/animation.md) |
+| `nav/NavWorld.h` ³ᴰ | [../guide/navigation-and-ai.md](../guide/navigation-and-ai.md) |
+| `nav/NavTypes.h` ³ᴰ | [../guide/navigation-and-ai.md](../guide/navigation-and-ai.md) |
+| `scene/SceneNav.h` ³ᴰ | [../guide/navigation-and-ai.md](../guide/navigation-and-ai.md) |
+| `voxel/VoxelVolume.h` ³ᴰ | [../guide/voxels.md](../guide/voxels.md) |
+| `voxel/BlockPalette.h` ³ᴰ | [../guide/voxels.md](../guide/voxels.md) |
+| `voxel/VoxelMesher.h` ³ᴰ⁺ | [../guide/voxels.md](../guide/voxels.md) |
+| `voxel/VoxelGenerator.h` ³ᴰ⁺ | [../guide/voxels.md](../guide/voxels.md) |
+| `voxel/VoxelRender.h` ³ᴰ⁺ | [../guide/voxels.md](../guide/voxels.md) |
+| `scene/EventBus.h` | [../guide/flow-and-story.md](../guide/flow-and-story.md) |
+| `scene/FlowMachine.h` | [../guide/flow-and-story.md](../guide/flow-and-story.md) |
+| `scene/StoryGraph.h` | [../guide/flow-and-story.md](../guide/flow-and-story.md) |
+| `scene/ui/UiComponents.h` | [../guide/game-ui.md](../guide/game-ui.md) |
+| `scene/ui/UiSystem.h` | [../guide/game-ui.md](../guide/game-ui.md) |
+| `reflect/TypeDescriptor.h` | [../guide/scenes-and-serialization.md](../guide/scenes-and-serialization.md) |
+| `reflect/TypeRegistry.h` | [../guide/scenes-and-serialization.md](../guide/scenes-and-serialization.md) |
+| `scripting/ScriptableEntity.h` | [../guide/scripting.md](../guide/scripting.md) |
+| `scripting/ScriptHost.h` | [../guide/scripting.md](../guide/scripting.md) |
+| `scripting/ModuleRegistry.h` | [../guide/scripting.md](../guide/scripting.md) |
+| `scripting/ModuleMacros.h` | [../guide/scripting.md](../guide/scripting.md) |
 
 *Not in `Cosmic.h` but client-reachable, documented anyway:* `core/Window.h` (via
 `Application::GetWindow()`) → [core.md](core.md); `layers/WorkspaceLayer.h` (via

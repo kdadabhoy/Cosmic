@@ -83,11 +83,18 @@
    from everywhere else. Where a design doc exists (`frame-lifecycle.md`,
    `water-rendering-notes.md`, `responsive-rendering-and-pause.md`) the explainer summarizes
    and links — it never restates the spec in full.
-8. **Skeleton bookkeeping:** when you fill a skeleton, delete its `STATUS: SKELETON` banner,
-   flip its row in the tier index (`reference/README.md` or `systems/README.md`) from
-   `SKELETON — D#` to `✅ YYYY-MM-DD`, and update the item's status banner in THIS file
+8. **Skeleton bookkeeping:** when you fill a skeleton, replace its `STATUS: SKELETON` banner with
+   `> **STATUS: WRITTEN** — work order **D<n>** (YYYY-MM-DD) in …`, flip its row in the tier index
+   (`reference/README.md` or `systems/README.md`) from `SKELETON — D#` to
+   **`✅ WRITTEN — D<n> · YYYY-MM-DD`**, and update the item's status banner in THIS file
    (✅ + date + one-line result). Tick checklist boxes as you cover them; a box you
    deliberately don't cover gets a one-line reason instead of a tick.
+
+   > **Format settled 2026-07-26 (D61 integration).** The rule above and the one written row
+   > (`✅ WRITTEN — D43`) had drifted apart, and the first parallel wave produced four different
+   > guesses. The forms in **bold** above are now canonical and every written row uses them —
+   > they carry both the work order (provenance) and the date (staleness), which is why neither
+   > half was dropped. Don't re-litigate it per chapter.
 9. **Plain-language bar for explainers:** §1–§3 of every systems doc must survive the
    "smart friend test" (a reader who has never written a shader follows it). Define every
    term at first use. This is the requirement rushed sessions miss — it's the point of the
@@ -284,7 +291,7 @@ don't force-fit the table format.
 Acceptance: script runs clean on the current tree (all chapters are skeletons → warnings
 only, exit 0); deleting a manifest row makes it exit 1; ci.yml step added and YAML-valid.
 ```
-**Status:** ☐
+**Status:** ✅ 2026-07-26 — script + CI step landed; 42 unlisted headers found (147 public vs 102 rows), all 42 routed and applied, checker now exits 0. Non-vacuity proven by 7 mutation experiments.
 
 **📋 PROMPT — D5**
 
@@ -357,21 +364,21 @@ traps; this is the loop):
 4. Build any diagram assigned to the chapter (§4). Bookkeeping per note 8. Run D5's script —
    your chapter must pass strict mode (banner removed → class-name check applies).
 
-| Item | Chapter (skeleton) | Size / notes |
-| --- | --- | --- |
-| **D6** | `reference/core.md` | M. Application/Layer/Window/Log/plugin boundary. Include the Pause-vs-TimeScale table (README §7) condensed per-entry. |
-| **D7** | `reference/events-input.md` | M. Full code tables (KeyCodes/MouseButtonCodes/GamepadCodes headers → tables). |
-| **D8** | `reference/graphics-resources.md` | L. The BindingPoints registry table is load-bearing — other chapters link it. Material Clone/flush semantics stated here once, linked elsewhere. |
-| **D9** | `reference/rendering-2d.md` | M. Every DrawQuad overload individually (that's the OpenGL-doc style the user asked for). |
-| **D10** | `reference/rendering-3d.md` | **XL — may split into two sessions** (submission+queue semantics, then Mesh/Model/InstanceSet/Frustum). Stronger model recommended: the deferred-flush semantics must be *exactly* right. DG-7. |
-| **D11** | `reference/rendering-pipeline.md` | L. Enumerate SceneRenderer's real header surface — the skeleton deliberately doesn't guess it. DG-8 (shared with systems doc — build once here, reuse). |
-| **D12** | `reference/world-systems.md` | L. Pin the Terrain `32·2^k+1` resolution rule and the SampleHeight ≤1 cm guarantee with test citations. |
-| **D13** | `reference/ecs.md` | M. The Components.h field-by-field table is the centerpiece. |
-| **D14** | `reference/cameras.md` | M. Hotkey tables from OrbitCameraController + Engine3DDemo bindings. |
-| **D15** | `reference/math.md` | M. Cite doctests per header; determinism box. |
-| **D16** | `reference/assets-io.md` + `reference/audio.md` | M (two small chapters, one session). VFS dev-vs-packaged path examples verified against Runtime/Main.cpp. |
-| **D17** | `reference/serial-telemetry.md` + `reference/jobs.md` | L (two chapters). Threading contracts are the hard part — verify against .cpps, not comments ("v3" docstrings are stale; code writes v1). DG-13 optional here or in D33. |
-| **D18** | `reference/ui.md` | M. DockPort table + the never-persist-dock-node-ids rule. |
+| Item | Chapter (skeleton) | Size / notes | Status |
+| --- | --- | --- | --- |
+| **D6** | `reference/core.md` | M. Application/Layer/Window/Log/plugin boundary. Include the Pause-vs-TimeScale table (README §7) condensed per-entry. | ☐ |
+| **D7** | `reference/events-input.md` | M. Full code tables (KeyCodes/MouseButtonCodes/GamepadCodes headers → tables). | ✅ 2026-07-26 |
+| **D8** | `reference/graphics-resources.md` | L. The BindingPoints registry table is load-bearing — other chapters link it. Material Clone/flush semantics stated here once, linked elsewhere. | ☐ |
+| **D9** | `reference/rendering-2d.md` | M. Every DrawQuad overload individually (that's the OpenGL-doc style the user asked for). | ☐ |
+| **D10** | `reference/rendering-3d.md` | **XL — may split into two sessions** (submission+queue semantics, then Mesh/Model/InstanceSet/Frustum). Stronger model recommended: the deferred-flush semantics must be *exactly* right. DG-7. | ☐ |
+| **D11** | `reference/rendering-pipeline.md` | L. Enumerate SceneRenderer's real header surface — the skeleton deliberately doesn't guess it. DG-8 (shared with systems doc — build once here, reuse). | ☐ |
+| **D12** | `reference/world-systems.md` | L. Pin the Terrain `32·2^k+1` resolution rule and the SampleHeight ≤1 cm guarantee with test citations. | ☐ |
+| **D13** | `reference/ecs.md` | M. The Components.h field-by-field table is the centerpiece. | ✅ 2026-07-26 |
+| **D14** | `reference/cameras.md` | M. Hotkey tables from OrbitCameraController + Engine3DDemo bindings. | ✅ 2026-07-26 |
+| **D15** | `reference/math.md` | M. Cite doctests per header; determinism box. | ✅ 2026-07-26 |
+| **D16** | `reference/assets-io.md` + `reference/audio.md` | M (two small chapters, one session). VFS dev-vs-packaged path examples verified against Runtime/Main.cpp. | ☐ |
+| **D17** | `reference/serial-telemetry.md` + `reference/jobs.md` | L (two chapters). Threading contracts are the hard part — verify against .cpps, not comments ("v3" docstrings are stale; code writes v1). DG-13 optional here or in D33. | ☐ |
+| **D18** | `reference/ui.md` | M. DockPort table + the never-persist-dock-node-ids rule. | ☐ |
 
 All of Phase B is **parallel-safe across items** (distinct files); the only shared file is
 `reference/README.md` — touch ONLY your chapter's Status cell.
@@ -1326,10 +1333,18 @@ updated. **Findings that matter to D55–D61 — and to Phase 30:**
   preamble. **Fixed here** — all ten now carry ³ᴰ, continuing D53's ³ᴰ⁺ work, and D5's checker can
   now trust the column. `graphics/Mesh.h` and `math/Frustum.h` are correctly left unmarked: both are
   **unfenced** in `Cosmic.h` and compile in a 2D tree.
-- **`renderer/RenderQueue.h`'s absence from the manifest is NOT a gap.** The manifest is a
+- ~~**`renderer/RenderQueue.h`'s absence from the manifest is NOT a gap.** The manifest is a
   `Cosmic.h`-include table (D5 diffs it against that header), and `RenderQueue.h` is not included by
-  `Cosmic.h` — clients never include it directly. Noted so a future sweep does not "fix" a non-gap;
-  its semantics are documented in the guide chapter and belong in D10's entries.
+  `Cosmic.h` — clients never include it directly.~~ **OVERRULED 2026-07-26 by D5's actual
+  implementation.** The manifest's own heading is *"every public header maps to a chapter"*, and the
+  `Cosmic.h`-include-table reading is precisely what let **42** headers accumulate with no row —
+  five of which (`graphics/MaterialAsset.h`, `layers/PlayerLayer.h`, `water/GerstnerWave.h`,
+  `renderer/RenderQueue.h`, `core/Version.h`) nobody had noticed by hand at all, and four of which
+  are named in a chapter's own scope in this document. D5 establishes reachability by **evidence**
+  rather than by one header's include list: direct include, transitive closure through public
+  headers, or an explicit `#include` from `Projects/**` or `tests/**`. `RenderQueue.h` qualifies via
+  the last route and now has a row pointing at `rendering-3d.md`, where D10 will document it.
+  The lesson generalises — **a rule that defines the gap out of existence will always report zero.**
 - Smaller, all verified: `DrawMeshInstanced` and `DrawInfiniteGrid` are **immediate**, not queued
   (`:1091-1100`, `:450`), so neither participates in opaque sorting; `Renderer3D::BeginScene` does
   **not** touch the GL viewport, unlike `Renderer2D::BeginScene` (D51's 1280×720 trap has no 3D
@@ -2194,6 +2209,163 @@ pointers: `installer-guide.md`, `systems/build-plugin-packaging.md`,
   install rule anywhere in the tree, so it can never reach a package; and `CMakePresets.json`'s two
   presets deliberately share one `binaryDir` because `COSMIC_SDK_DIR` is the *source* directory —
   the worktree, not a second build folder, is the supported way to hold both configurations.
+
+### Phase B wave 1 — D7, D13, D14, D15 ✅ 2026-07-26 (run in parallel)
+
+**First parallel wave of the effort**, run under the §15.6 rule: each agent wrote only its own
+chapter and reported shared-file edits for this serial integration pass. Four chapters, 8,242 lines:
+`events-input.md` (2,139), `cameras.md` (2,217), `ecs.md` (2,066), `math.md` (1,824). No collisions —
+the rule worked. Integration applied: four index Status rows, three manifest changes, the settled
+status format (execution note 8), and the findings below.
+
+**The wave's most valuable output was catching errors in Phase C's own published guide**, which is
+the argument for running the reference tier at all rather than treating the guide as sufficient.
+Both were verified against source before anything was changed, and both were wrong:
+
+- **`F11` does not "never become an event".** Three places said so (`guide/events-and-input.md` ×3,
+  `guide/windowing-and-viewport.md` ×2 including a section heading, README §5's overview).
+  `Window::HandleFullscreenHotkey` returns `true` — suppressing the event — for exactly
+  `key == CS_KEY_F11 && action == GLFW_PRESS` (`Window.cpp:1113`), and the key callback
+  (`Window.cpp:444-459`) builds an event whenever it returns `false`. **Auto-repeat still delivers
+  `KeyPressedEvent(F11, 1)` and release still delivers `KeyReleasedEvent(F11)`** — only the fresh
+  press is swallowed, so a handler that does not test the action sees a release with no matching
+  press. Note this compounds with D60's separate finding that an *override* is offered press,
+  release and repeat: the two together are why a naive override toggles twice per keystroke.
+  Fixed in `a65bdc6`.
+- **`WindowResizeEvent` is not "fired once synthetically at boot".** `SynchronizeRenderingState`
+  (`Application.cpp:829-833`) constructs the event and calls `OnWindowResize(e)` **directly**, never
+  `OnEvent(e)`, so it never enters the event system and no layer, script or ImGui code sees it. The
+  client-relevant fact is the opposite one: **a minimize delivers a real `0 × 0` event to every
+  layer**, because `OnWindowResize` sets `m_Minimized` and returns `false` *without* resizing the
+  framebuffer (`Application.cpp:650-654`), so the event keeps propagating. Divide-by-zero guarding
+  is the layer's job. Fixed in `a65bdc6`.
+
+**D5's checker landed in the same wave and immediately superseded the hand-maintained gap list.**
+The real numbers: **147 public headers, 102 manifest rows — the manifest covered 71 %**, leaving
+**42 unlisted**, against §10's estimate of ~20. It classifies each by *how* it is reachable, which
+is what the five-flavour taxonomy was approximating by hand: `included directly by Cosmic.h:167`,
+`reachable from Cosmic.h via scripting/ScriptableEntity.h [3D-only: fenced]`, `not reachable from
+Cosmic.h; explicitly included by StarforgeApp.cpp`, and — the case that would defeat a fence-based
+implementation — `[3D-only: CMake 2D filter drops its .cpp]` for the
+`VoxelMesher`/`VoxelGenerator`/`VoxelRender` trio, which are **unfenced**. **All 42 rows were
+applied in this integration pass and the checker now exits 0** (144 rows; the remaining output is
+skeleton warnings, which is the designed warn-only path). **D16 and D18 should work from its output,
+not from the prose list in `reference/README.md`'s preamble, which is now the lesser source.**
+
+**Five gaps nobody had found by hand**, and four of them are named in a chapter's own scope in this
+very document — which is the drift D5 exists to catch: `graphics/MaterialAsset.h` (D8's scope),
+`layers/PlayerLayer.h`, `water/GerstnerWave.h` (D12's scope, and `world-systems.md`'s own blurb
+already claims it), `renderer/RenderQueue.h` (D10's scope) and `core/Version.h`. Equally worth
+recording, because it bounds how much of the old gap list was noise: **zero stale rows and zero
+2D/3D marker mismatches** — all 16 existing ³ᴰ/³ᴰ⁺ markers verify correctly against both the
+`Cosmic.h` fences *and* the CMake filter.
+
+**The checker was proven non-vacuous by seven mutation experiments**, not by assertion (the §0 rule
+carried from Phase 29 W9). Deleting a row → 43 unlisted; pointing a row at a nonexistent header →
+`1 stale row`; three deliberate marker errors → all three named individually; flipping a chapter's
+banner to WRITTEN → the warning becomes a `strict-mode gap`; stripping one `COSMIC_API` name from
+the written `physics.md` → named exactly; a 3-cell row → `1 malformed row`, **a check added only
+because the first stale-row attempt was silently skipped, i.e. a real blind spot found and closed
+mid-implementation**; a row pointing at a nonexistent chapter → `1 missing chapter file`. The run was
+done in a sandbox of junctions plus a real copy of `docs/reference/`, precisely so the shared file
+other agents were writing never had to be mutated.
+
+**The largest single gap it confirms: the whole `scripting/` tier has no reference chapter at all.**
+`ScriptableEntity.h`, `ScriptHost.h`, `ModuleRegistry.h` and `ModuleMacros.h` are all included by
+`Cosmic.h` directly and unfenced (lines 135-138) and none has a manifest row or a chapter to route
+to — `guide/scripting.md` is the only documentation anywhere. `reflect/TypeDescriptor.h` and
+`TypeRegistry.h` (lines 124-125) are the same story. That is a chapter-sized hole, not a row fix,
+and it needs a decision before D36 can reach a green strict-mode run.
+
+**Three routing conflicts, all resolved in this pass** — each one is a header two chapters both
+claimed, which is exactly the failure the "report, don't edit" rule exists to surface:
+`math/Frustum.h` was manifest-routed to `rendering-3d.md` but D15 wrote the canonical entries
+(re-pointed to `math.md`, and D10's Covers cell now says so); `scene/ScenePicker.h` was routed to
+`ecs.md` but belongs with the cameras (re-pointed to `cameras.md`, which D14 wrote — D13 correctly
+left a stub rather than absorbing it); `camera/Camera2DController.h` had no row at all (added).
+`graphics/Gizmo.h` remains routed to `cameras.md` and is now written there — **D8 must link it, not
+duplicate it.**
+
+**Phase 30 candidates — new, each verified at file:line:**
+
+- **Seven `Scene` members are 3D-only but declared UNFENCED, so a 2D build fails at LINK, not
+  compile.** `Scene.h:238` `OnRender3D`, `:250` `UpdateAnimators`, `:261` `SyncPrimitiveMeshes`,
+  `:273` `SyncWorldSystems`, `:285` `SyncVoxelVolumes`, `:295` `SyncNavMeshes`, `:307`
+  `OnRenderWorldFX` — all defined only in `Scene3D.cpp`, which `Cosmic/CMakeLists.txt:202` filters
+  out of the 2D build. The nav-session block (`Scene.h:121-144`) and the private
+  `SubmitOpaqueMeshes`/`FindAnimatorFor` (`:414-426`) *are* fenced and fail cleanly, which shows the
+  omission is an oversight rather than a convention. Same ³ᴰ⁺ class as `camera/NavigationCube.h`
+  (D53) but seven symbols inside the engine's most-used class. Independently re-verified during
+  integration. One-line fix each.
+- **`ScriptHost::DispatchEvent` omits the `IsActiveInHierarchy` check** that `Tick`
+  (`ScriptHost.cpp:182`) and `FixedTick` (`:200`) both apply — `:207-215` tests only `reg.valid(e)`.
+  **A deactivated entity's script still receives `OnEvent`.** Re-verified during integration.
+- **`OnRenderSprites`' compat gate tests entity *existence*, not visibility** (`Scene.cpp:590-593`):
+  a scene whose sprites are all `Enabled = false` still enters the pass, changes depth/blend state
+  and pushes an empty `Renderer2D` pass every frame. Directly relevant to Phase 30's 2D stress work.
+- **`UpdateSpriteAnimations` ignores `Enabled` and `IsActiveInHierarchy`** (`Scene.cpp:520-546`) — a
+  hidden sprite's flipbook still advances and still overwrites the sibling's `SourceRect`.
+- **`FindEnvironment` returns the first `EnvironmentComponent` in registry view order**, not the
+  entity named `"Environment"` (`Scene.cpp:769-774`) — with two, the winner can change across a
+  save/load.
+- **`CreateEntityWithUUID` silently overwrites the id index on a duplicate UUID** (`Scene.cpp:99`),
+  orphaning the older entity from `FindByUUID` while it still lives in the registry. No warning.
+- **`Camera2DController` pan is silently dead without `SetViewportRect`** — `OnResize` sets only the
+  aspect, and `PanBy` needs the viewport *height*, gets 0, and returns the focus unchanged. Zoom
+  still works, centred. The likeliest "my 2D camera won't pan" report, and a 2D-config issue.
+- **Ctrl beats Shift in CAD mode:** `pan = mmb && ctrl` carries no `!shift`, so **Ctrl+Shift+MMB
+  pans** where the header docstring implies three disjoint gestures.
+- **`Derivative::Reset(value)`'s argument is dead** (`Filters.h:89-94`) — it leaves
+  `m_Primed = false`, so the next `Update` overwrites the seeded value and returns 0. Every other
+  filter's `Reset` sets `m_Primed = true`. `Derivative` also has **no test anywhere** and no in-tree
+  consumer.
+- **`Biquad` yields `NaN` on a zero cutoff** (`SetLowPass(0, fs)` makes `Reset`'s DC-gain term
+  divide 0/0), and **`FixedSubstepper::Run` adds `dt` to the residual before its `h <= 0` guard**
+  (`Integrators.h:79-82`), so a negative `dt` silently corrupts the sim clock.
+- **The noise lattice wraps every 256 integer units** (`Noise.h:250-256`) — undocumented, untested.
+- **`NextUInt32(0)` and `RangeInt(max <= min)` consume no draw** — a determinism trap for seeded
+  streams, which matters because Phase 30's fuzz campaigns build on exactly these.
+
+**Stale source comments found (the class D46/D51/D56/D59 kept hitting):** `Input.h:26-27` documents
+`GetMousePosition()` as returning *"screen coordinates"* while `Input.h:59-64` correctly calls it
+window-client-relative — **the header contradicts itself**, which is the most plausible origin of
+the recurring picking bug. `Components.h:511` documents `RigidBodyComponent::Friction` as `0..1`
+while the reflected slider is `.Range(0.0f, 2.0f)` (`TypeRegistry.cpp:142`) — re-verified during
+integration. `LookupTable.h:95-96` still teaches the retired "resolves against the CALLING DLL's
+active project" VFS rule (one of the four relics D58 named).
+
+**Two guide overstatements to fix when their chapters are next touched** (not urgent, not yet
+fixed): `guide/entities-and-components.md:969-975` lists `SelectableComponent` among components that
+"show up in the Inspector" — it has no `Reflect::Class` registration in either registry and is not
+`COSMIC_API`-exported, so it never appears there and never reaches a `.cscene`. And
+`guide/sim-math-toolkit.md`'s claim that `Derivative::Reset` "seeds the previous sample" is wrong
+per the dead-argument finding above.
+
+**Skeleton checklists are drifting and should be treated as suspect, not authority** — three of four
+agents found theirs stale. `ecs.md`'s listed `MeshRendererComponent`, the lights, `TerrainComponent`,
+`WaterComponent`, `ParticleEmitterComponent` and `LODGroupComponent` as living in `Components.h`; all
+15 moved to `Components3D.h` in Phase 29 W4. `events-input.md`'s named `AppTickEvent`/`AppUpdateEvent`/
+`AppRenderEvent`, a Hazel-lineage assumption — no such types exist, and it omitted the real third
+application event, `WindowFileDropEvent`. `math.md`'s implied a tested `Derivative`. Execution note 2
+already says headers win; these are the concrete cases.
+
+**Smaller, all verified:** `Entity::GetComponent` on a missing type is Debug-abort / Release-UB while
+`RemoveComponent` is a safe no-op (EnTT's tolerant `registry::remove`), and a double `AddComponent`
+warns *and discards the ctor args*; `Scene::CreateEntity`'s parameter default is `"GenericEntity"`
+but passing `""` yields `"Entity"` (`Scene.cpp:97`); `Event::IsInCategory` **cannot take an OR** —
+`a | b` on an unscoped enum yields `int` with no implicit conversion back, so it fails to compile;
+the engine installs no `glfwSetErrorCallback`, so an out-of-range key/button code reads as "not
+pressed" forever and every gamepad call returns `0.0f`/`false`/`""` silently — a wrong axis index is
+indistinguishable from a centred stick; the mouse-button callback discards GLFW's `mods`
+(`Window.cpp:415`), so modifier bits are genuinely unavailable from a button event;
+`FlyCameraController`'s far plane is **5000** against `OrbitCameraController`'s **1000**, documented
+nowhere, so swapping rigs changes distant visibility; `NavigationCube::Render` and
+`ScenePicker::RenderIdPass` leave **`glClearColor`** changed as well as the viewport;
+`OrbitCameraController::SetTarget` does not cancel a pose blend while `SetDistance`/`SetYawPitch` do;
+`OrbitBy` without `BeginOrbitAbout` rotates about the world origin; `test_frustum.cpp` sits in the
+**3D-only** test tier (`tests/CMakeLists.txt:85-89`) even though `math/Frustum.h` is unfenced and
+compiles in a 2D build, so that header has **zero coverage in the 2D configuration**; and doctest's
+`Approx` is **relative**, so `test_spatial.cpp:60`'s `epsilon(0.01)` on `90.0f` is really ±0.91°.
 
 ---
 

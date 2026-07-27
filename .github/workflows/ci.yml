@@ -20,6 +20,15 @@ jobs:
         shell: pwsh
         run: ./tests/check_gl_conformance.ps1
 
+      # API reference coverage audit (doc 12 work order D5): every public header
+      # has a row in docs/reference/README.md's coverage manifest, no row points
+      # at a header that no longer exists, the 2D/3D markers match the build, and
+      # a chapter that has lost its STATUS: SKELETON banner names every
+      # COSMIC_API class its headers declare.
+      - name: API reference coverage audit
+        shell: pwsh
+        run: ./tests/check_docs_coverage.ps1
+
       - name: Cache CMake build
         uses: actions/cache@v4
         with:
