@@ -385,233 +385,282 @@ All of Phase B is **parallel-safe across items** (distinct files); the only shar
 
 ### 📋 Copy-paste prompts (D6 → D18)
 
-**Standing preamble — every D6–D18 prompt inherits it.** Restated in the shared block below rather
-than in all thirteen.
+> **CURRENT AS OF 2026-07-26.** Six chapters are written — `physics.md` (D43), `events-input.md`
+> (D7), `ecs.md` (D13), `cameras.md` (D14), `math.md` (D15), `rendering-2d.md` (D9). **Eight remain:
+> D6, D8, D10, D11, D12, D16, D17, D18.** Only those eight have prompts below; the finished ones are
+> recorded in the item table above. Three scopes **expanded** in the D61 integration pass and the
+> prompts say so — do not work from the pre-integration scope.
+
+**Standing preamble — every remaining D6–D18 prompt inherits it.**
 
 ```
 STANDING RULES for any D6-D18 reference chapter (read once, they apply to every item):
 
-1. Read docs/plans/12-documentation-plan.md §0 and §6, then your chapter's skeleton file. The
-   skeleton's scope list, coverage checklist and named traps are binding — but HEADERS ARE TRUTH.
-   A checklist row naming an API you cannot find means the checklist is wrong; fix the row.
-2. Read every scope header END TO END and enumerate the real public surface: COSMIC_API classes and
-   structs, free functions, macros, enums. Then read the .cpp, then the tests. Never write from a
-   comment — DataRecorder.cpp:257 still says "v3 format" three lines above `version = 1u`.
+1. Read docs/plans/12-documentation-plan.md §0 and §6, then your chapter's skeleton. The skeleton's
+   scope list and named traps are a STARTING POINT — three of the four wave-1 agents found theirs
+   materially stale (ecs.md listed six components that moved to Components3D.h in Phase 29;
+   events-input.md named three Hazel-lineage event types that do not exist). HEADERS ARE TRUTH.
+   Fix the checklist row; never invent the API.
+2. Read every scope header END TO END, then the .cpp, then the tests. Never write from a comment —
+   DataRecorder.cpp:257 still says "v3 format" three lines above `version = 1u`, and Input.h
+   contradicts itself about mouse space within forty lines.
 3. Use the mandatory entry template from
-   docs/reference/README.md#entry-format-mandatory--copy-this-shape. Signatures copied VERBATIM
-   from the header, never paraphrased.
-4. **THE GUIDE TIER IS WRITTEN AND IS NOT YOURS TO REPEAT.** All 29 chapters in docs/guide/ landed
-   in Phase C (D46-D61), written from source. Your chapter is the formal per-call lookup BEHIND the
-   guide chapter: signature, exact behaviour, failure mode, pitfalls. The guide owns usage, idiom
-   and worked walkthroughs. Most skeletons already carry a "Read first / don't re-derive" note
-   naming their guide chapter — follow it, link it, and do not fork it.
-5. State the failure mode for every call that can fail. Cosmic's conventions vary ON PURPOSE:
-   Shader::Create returns nullptr; Texture2D::Create returns a DEGRADED non-null 0x0 object that is
-   then CACHED by AssetLibrary until Reload; some calls log and continue. Say which, every time.
-6. State the build configuration where it matters (README §1.6). "3D only" is PER HEADER, not per
-   chapter — the manifest marks fenced headers with ³ᴰ.
-7. Diagrams: §4 assigns them, and THIRTEEN ARE ALREADY BUILT (DG-1 through DG-14 except DG-15/16).
-   Reuse by link; never redraw. Only build one if §4 assigns it to YOUR chapter and it is unbuilt.
-8. Bookkeeping (execution note 8): delete the STATUS: SKELETON banner, flip your row in
-   docs/reference/README.md from "SKELETON — D#" to "✅ YYYY-MM-DD" (touch ONLY your row — the file
-   is shared), and set your item's status in doc 12 §6 with a one-line result.
-9. Run tests/check_docs_coverage.ps1 if D5 has landed — removing your banner turns on strict mode,
-   so every COSMIC_API class name in your scope headers must appear in your chapter text.
-10. Report: what the chapter covers · what you found that contradicts the skeleton, a comment or a
-    header docstring · what you deliberately left out and why · anything unverifiable. Add any
-    engine defect you find to §7's findings log as a Phase 30 candidate, with its file:line.
-11. No git write commands. Leave edits in the working tree.
+   docs/reference/README.md#entry-format-mandatory--copy-this-shape. Signatures VERBATIM.
+4. **THE GUIDE TIER IS WRITTEN (all 29 chapters) AND IS NOT YOURS TO REPEAT.** Your chapter is the
+   formal per-call lookup BEHIND the guide chapter: signature, exact behaviour, failure mode,
+   pitfalls. The guide owns usage, idiom and worked walkthroughs. Link it; never fork it.
+   **Six REFERENCE chapters are also written now** — link those too rather than restating shared
+   material (BindingPoints and Material::Clone live in graphics-resources.md; Frustum in math.md;
+   ScenePicker and Gizmo in cameras.md).
+5. State the failure mode for every call that can fail. The conventions vary ON PURPOSE:
+   Shader::Create returns nullptr; Texture2D::Create returns a DEGRADED non-null 0x0 object which
+   AssetLibrary then CACHES until Reload; some calls log and continue. Say which, every time.
+6. State the build configuration where it matters (README §1.6). "3D only" is PER HEADER, and there
+   are two flavours: ³ᴰ (fenced in Cosmic.h — clean compile error in a 2D tree) and ³ᴰ⁺ (unfenced
+   but its .cpp is dropped by the CMake filter — compiles, fails at LINK).
+7. **CS_ASSERT / CS_CORE_ASSERT are compiled out in EVERY configuration** (gated on
+   GLCORE_DEBUG || CS_DEBUG, neither defined by any target). Never document a guard as enforced.
+8. Diagrams: §4 assigns them and THIRTEEN ARE BUILT. Reuse by link; never redraw.
+9. **VERIFY YOUR OWN WORK — the checker exists now.** Run `tests/check_docs_coverage.ps1`
+   (read-only, PowerShell). Removing your STATUS: SKELETON banner turns on STRICT MODE for your
+   chapter: every COSMIC_API class declared in your scope headers must appear in your text. Your
+   chapter must not introduce a strict-mode gap, and the script must still exit 0.
+10. Bookkeeping: replace the banner with
+    `> **STATUS: WRITTEN** - work order **D<n>** (YYYY-MM-DD) in ...` and REPORT (do not apply) the
+    index row `**✅ WRITTEN — D<n> · YYYY-MM-DD**`. **The manifest is COMPLETE (144 rows, checker
+    green) — you should not need to add rows.** If the checker says otherwise, report it.
+11. **Do NOT edit docs/reference/README.md, docs/plans/12-documentation-plan.md, or any tier index.**
+    Other agents run concurrently; those four files are the collision surface (§15.6). Report the
+    edits you need and they are applied in a serial integration pass.
+12. Report: what the chapter covers · what contradicts the skeleton, a header docstring or a source
+    comment · what you deliberately left out and why · anything unverifiable · the checker's exit
+    code and strict-mode result · the index row needed · engine defects as Phase 30 candidates with
+    file:line.
+13. No git write commands. Do not build the engine. Leave edits in the working tree.
 ```
 
-Then one line per item:
+Then one prompt per remaining item:
 
 ```
 Execute work order D6 from docs/plans/12-documentation-plan.md. Apply the D6-D18 standing rules.
-Chapter: docs/reference/core.md. Scope: core/Application.h, core/Layer.h, core/LayerStack.h,
-core/Window.h, core/Log.h, core/Core.h, core/Timestep.h, core/CommandStack.h, core/UUID.h and the
-plugin-export boundary in Cosmic.h. Condense README §7's Pause-vs-TimeScale table into per-entry
-form. TWO HEADER DOC-COMMENTS ARE WRONG AND D60 VERIFIED BOTH: Application.h:93 documents
-GetViewportPos/GetViewportSize as "GLFW window-space pixels" but the value is
-ImGui::GetCursorScreenPos() recorded in WorkspaceLayer.cpp:214-215, i.e. ImGui SCREEN (desktop)
-pixels — the space Input::GetMouseScreenPosition() lives in; and SetPauseOnMinimize defaults to
-FALSE. Also: CS_ASSERT/CS_CORE_ASSERT are compiled out in EVERY configuration (gated on
-GLCORE_DEBUG||CS_DEBUG, neither defined anywhere), so document no guard as enforced. Guide
-chapters: project-anatomy.md, time-and-ticks.md, windowing-and-viewport.md, logging-and-diagnostics.md.
-```
-
-```
-Execute work order D7 from docs/plans/12-documentation-plan.md. Apply the D6-D18 standing rules.
-Chapter: docs/reference/events-input.md. Scope: events/*.h (Event, ApplicationEvent, KeyEvent,
-MouseEvent), core/Input.h, codes/KeyCodes.h, codes/MouseButtonCodes.h, codes/GamepadCodes.h.
-Render the three code headers as full tables — that is the chapter's centerpiece. Pin the mouse-space
-contract exactly: GetMousePosition() is WINDOW-CLIENT relative, GetMouseScreenPosition() is desktop
-space, and Input.h:57-63 says the two "only match by luck when the window sits at the desktop
-origin". There are NO CS_MOD_*/CS_ACTION_* constants — the fullscreen hotkey override is the one
-place raw GLFW action/mods reach client code, and GLFW_MOD_CONTROL is 0x0002 while GLFW_MOD_ALT is
-0x0004. WindowCloseEvent is marked Handled before the layer walk, so there is no client veto.
-Guide chapter: events-and-input.md (DG-4 built there — reuse).
+Chapter: docs/reference/core.md. Guide chapters: project-anatomy.md, time-and-ticks.md,
+windowing-and-viewport.md, logging-and-diagnostics.md.
+SCOPE EXPANDED by the D61 integration — four headers were routed here and the checker names four
+COSMIC_API types your chapter must cover: ICommand, CommandStack, UUID, PlayerLayer.
+Full scope: core/Application.h, Layer.h, LayerStack.h, Window.h, Log.h, Core.h, Timestep.h,
+CommandStack.h, UUID.h, Version.h, layers/PlayerLayer.h, plus the plugin-export boundary in Cosmic.h.
+Condense README §7's Pause-vs-TimeScale table into per-entry form.
+FACTS: Application.h:93 is WRONG - GetViewportPos/GetViewportSize are ImGui SCREEN (desktop) pixels
+from ImGui::GetCursorScreenPos() (WorkspaceLayer.cpp:214-215), not "GLFW window-space";
+WorkspaceLayer.h:271-278 has it right and this stale comment is the likeliest origin of a recurring
+picking bug. SetPauseOnMinimize defaults FALSE. Layer::OnRender() is declared but NEVER called.
+Layer::OnUpdate takes float, not Timestep (Layer.h:97). A plugin layer is never on the LayerStack -
+WorkspaceLayer::SetViewportLayer forwards every hook by hand. WorkspaceLayer is NOT COSMIC_API-
+exported, so only its inline members link from a project DLL (the class itself is D18's). Release
+links /SUBSYSTEM:WINDOWS so there is no console at all. JobSystem::Initialize is the FIRST statement
+in Application::Initialize and Shutdown the first in Application::Shutdown, which is what guarantees
+no job outlives the game DLL.
 ```
 
 ```
 Execute work order D8 from docs/plans/12-documentation-plan.md. Apply the D6-D18 standing rules.
-Chapter: docs/reference/graphics-resources.md. Scope: graphics/Shader.h, Texture.h, TextureCube.h,
-Material.h, MaterialAsset.h, Buffer.h, VertexArray.h, UniformBuffer.h, StorageBuffer.h,
-FrameBuffer.h, SubTexture2D.h, Font.h, Gizmo.h, renderer/BindingPoints.h. THE BINDINGPOINTS TABLE IS
-LOAD-BEARING — other chapters link it, so it lives here once, in full. State Material::Clone and the
-material-read-at-flush semantics HERE once and link them from rendering-2d/3d. Failure modes differ
-per factory and that difference is the chapter's most useful content: Shader::Create returns nullptr,
-Texture2D::Create returns a degraded non-null 0x0 object. Note that Shader::Create does NOT resolve
-VFS paths. FramebufferSpecification::Samples and SwapChainTarget are RESERVED and have no effect.
-Guide chapter: materials-and-shaders.md.
-```
-
-```
-Execute work order D9 from docs/plans/12-documentation-plan.md. Apply the D6-D18 standing rules.
-Chapter: docs/reference/rendering-2d.md. Scope: renderer/Renderer2D.h, RenderPass.h,
-renderer/Light2DRenderer.h. EVERY DrawQuad/DrawRotatedQuad/DrawCircle OVERLOAD GETS ITS OWN ENTRY —
-that is the OpenGL-man-page style the user asked for; do not collapse them into one entry with a
-parameter table. Document every batch limit with its flush behaviour (MaxQuads/MaxLines/MaxCircles/
-MaxTextQuads = 10000, MaxTextureSlots = 32, MaxInstancedQuads/MaxInstancedCircles = 20000). Two traps
-to state plainly: Renderer2D::StatsEnabled defaults FALSE so stats read zero unless SetStatsStatus(true)
-was called, and Flush() is public but does not reset counters, so a client call draws twice.
-DrawInstancedQuads never populates the texture-slot table. Guide chapter: rendering-2d.md.
+Chapter: docs/reference/graphics-resources.md. Guide chapter: materials-and-shaders.md.
+SCOPE EXPANDED: graphics/MaterialAsset.h is now routed here and the checker names MaterialAsset as
+uncovered. Full scope: graphics/Shader.h, Texture.h, TextureCube.h, Material.h, MaterialAsset.h,
+Buffer.h, VertexArray.h, UniformBuffer.h, StorageBuffer.h, FrameBuffer.h, renderer/Renderer.h,
+RenderCommand.h, BindingPoints.h.
+THIS CHAPTER IS LOAD-BEARING FOR TWO OTHERS. (1) The BindingPoints registry table lives HERE in
+full, once - D9's written chapter and D11 both link it, so make it complete and give it a stable
+anchor. (2) State Material::Clone and the material-read-at-flush semantics HERE once: material state
+is read when the queue FLUSHES, not when you submit, so mutating a shared Material between submit
+and flush retroactively changes earlier draws. Clone is the fix.
+FACTS: the per-factory failure conventions are this chapter's most useful content - Shader::Create
+returns nullptr, Texture2D::Create returns a degraded non-null 0x0 object that AssetLibrary then
+CACHES until Reload (failed shaders/meshes/materials are correctly NOT cached). Shader::Create does
+NOT resolve VFS paths. FramebufferSpecification::Samples and SwapChainTarget are RESERVED - no MSAA
+path exists. BuildMaterial sets u_Has<X>Map = 1 for a MISSING .cmat texture because the degraded
+texture is non-null. OpenGLFrameBuffer's 9th-attachment guard is a compiled-out assert over real UB.
+Verify and state that OpenGLShader::m_RendererID has no initialiser.
+graphics/Gizmo.h is NOT yours - D14 wrote it in cameras.md. Link, do not duplicate.
 ```
 
 ```
 Execute work order D10 from docs/plans/12-documentation-plan.md. Apply the D6-D18 standing rules.
-Chapter: docs/reference/rendering-3d.md. XL — SPLIT INTO TWO SESSIONS if needed (submission + queue
-semantics first, then Mesh/Model/InstanceSet/Frustum). Use a stronger model: the deferred-flush
-semantics must be EXACTLY right. Scope: renderer/Renderer3D.h, RenderQueue.h, renderer/InstanceSet.h,
-graphics/Mesh.h, graphics/Model.h, math/Frustum.h. THE CENTRAL FACT is material-read-at-flush:
-material state is read when the queue flushes, not when you submit, so mutating a shared Material
-between submit and flush retroactively changes earlier draws — Material::Clone is the fix. Note the
-configuration split is PER HEADER: Renderer3D, InstanceSet and Model are filtered out of the 2D build
-AND fenced in Cosmic.h; graphics/Mesh.h and header-only math/Frustum.h are unfenced and compile in a
-2D tree. Nothing in the engine calls Renderer3D::ResetStats, so unreset counters read as lifetime
-totals. DG-7 is ALREADY BUILT in guide/rendering-3d.md — reuse it, do not redraw.
+Chapter: docs/reference/rendering-3d.md. Guide chapter: rendering-3d.md.
+**XL - SPLIT INTO TWO SESSIONS if needed** (submission + queue semantics first, then
+Mesh/Model/InstanceSet). **Use a stronger model or review this one yourself**: the deferred-flush
+semantics must be EXACTLY right and they are the chapter's reason to exist.
+Scope: renderer/Renderer3D.h, renderer/RenderQueue.h, renderer/InstanceSet.h, graphics/Mesh.h,
+graphics/Model.h. NOTE math/Frustum.h is NO LONGER yours - D15 wrote the canonical entries in
+math.md and the manifest was re-pointed. Link it.
+RenderQueue.h gained a manifest row in the D61 pass; D54's earlier ruling that its absence "is not a
+gap" was overruled - see §7.
+FACTS: material-read-at-flush is the central fact (see D8, which owns the canonical statement -
+link it). The configuration split is PER HEADER: Renderer3D, InstanceSet and Model are filtered out
+of the 2D build AND fenced in Cosmic.h; graphics/Mesh.h is unfenced and compiles in a 2D tree - there
+is simply nothing there that draws a mesh. Nothing in the engine calls Renderer3D::ResetStats, so
+unreset counters read as lifetime totals. DrawMeshInstanced and DrawInfiniteGrid are IMMEDIATE, not
+queued, so neither participates in opaque sorting. Renderer3D::BeginScene does NOT touch the GL
+viewport, unlike Renderer2D::BeginScene. DG-7 is built in the guide - reuse it.
 ```
 
 ```
 Execute work order D11 from docs/plans/12-documentation-plan.md. Apply the D6-D18 standing rules.
-Chapter: docs/reference/rendering-pipeline.md. Scope: renderer/SceneRenderer.h,
-renderer/PostProcessStack.h, renderer/EnvironmentMap.h, renderer/ShadowMap.h,
-renderer/CoverageCapture.h, renderer/CameraUniforms.h. Enumerate SceneRenderer's REAL header surface;
-the skeleton deliberately does not guess it. THE CONFIGURATION STORY IS SUBTLE AND D55 GOT IT RIGHT:
-SceneRenderer and PostProcessStack ship in BOTH configurations — a 2D frame runs the same
-BeginHDR -> DrawTransparent -> tonemap/FXAA/bloom/vignette -> DrawOverlay2D spine, which is why
-docs/design/frame-lifecycle.md §5 holds verbatim on both engines. What fences out is EnvironmentMap,
-ShadowMap, CoverageCapture, desc.Lights, the routed DrawOpaque and the world-content half of
-SceneRenderDesc. BuildRenderDesc ignores WaterComponent::Enabled and ParticleEmitterComponent::Enabled
-— a real defect, log it. Summarize and LINK frame-lifecycle.md; never restate the spec (note 7).
-DG-8 is ALREADY BUILT in guide/lighting-and-environment.md — reuse.
+Chapter: docs/reference/rendering-pipeline.md. Guide chapter: lighting-and-environment.md.
+Scope: renderer/SceneRenderer.h, PostProcessStack.h, EnvironmentMap.h, ShadowMap.h,
+CoverageCapture.h, CameraUniforms.h. Enumerate SceneRenderer's REAL header surface; the skeleton
+deliberately does not guess it. The checker names SceneDrawContext and SceneRenderDesc as uncovered.
+THE CONFIGURATION STORY IS THE SUBTLE PART and D55 got it right: SceneRenderer and PostProcessStack
+ship in BOTH configurations - a 2D frame runs the same BeginHDR -> DrawTransparent -> tonemap/FXAA/
+bloom/vignette -> DrawOverlay2D spine, which is why docs/design/frame-lifecycle.md §5 holds verbatim
+on both engines. What fences out is EnvironmentMap, ShadowMap, CoverageCapture, desc.Lights, the
+routed DrawOpaque and the world-content half of SceneRenderDesc. Do not call the chapter flatly 3D.
+Summarize and LINK frame-lifecycle.md; never restate the spec (note 7).
+DEFECT to verify and log: BuildRenderDesc ignores WaterComponent::Enabled and
+ParticleEmitterComponent::Enabled (Scene3D.cpp:822, :843) and the terrain gates at :804-812.
+Link D8's BindingPoints table rather than restating it. DG-8 is built in the guide - reuse.
 ```
 
 ```
 Execute work order D12 from docs/plans/12-documentation-plan.md. Apply the D6-D18 standing rules.
-Chapter: docs/reference/world-systems.md. Scope: terrain/Terrain.h, water/Water.h,
-water/GerstnerWave.h, water/Presets.h, particles/ParticleSystem.h, particles/Presets.h,
-scene/WorldSystemRecipes.h. Pin the Terrain resolution rule (32·2^k+1) and the SampleHeight
-tolerance with their TEST citations, not prose assertions. NOTE TWO MANIFEST GAPS D55 FOUND that
-this chapter should close: scene/WorldSystemRecipes.h (the E18 recipe->spec layer every
-scene-authored terrain, water body and emitter goes through) and water/Presets.h have NO manifest
-row — particles/Presets.h does. Terrain::Create and Water::Create are pure CPU; GL is allocated
-lazily in EnsureGpuResources on first render, which is what makes async world building possible.
-All 3D-only. Guide chapter: world-systems.md (the only other documentation of these subsystems).
-```
-
-```
-Execute work order D13 from docs/plans/12-documentation-plan.md. Apply the D6-D18 standing rules.
-Chapter: docs/reference/ecs.md. Scope: scene/Scene.h, Entity.h, Components.h, Components3D.h,
-System.h, ComponentRegistry.h, SelectableComponent.h, scene/ScenePicker.h. THE COMPONENTS.H
-FIELD-BY-FIELD TABLE IS THE CENTERPIECE. Two things to get right: there is NO Entity::GetUUID() —
-use GetComponent<IDComponent>().ID.Value(); and Scene::OnUpdate/OnFixedUpdate HAVE NO ENGINE CALLER
-(the only in-tree callers are TemplateTelemetryLayer.cpp:305,313), so the entire four-pass pipeline
-inside them only runs if a project calls it — state that as a boxed warning, not a footnote.
-ScenePicker.h IS in the manifest but MIS-ROUTED here; the chapter that covers it is guide/cameras.md
-— re-point the row. Guide chapter: entities-and-components.md (DG-9 built there — reuse).
-```
-
-```
-Execute work order D14 from docs/plans/12-documentation-plan.md. Apply the D6-D18 standing rules.
-Chapter: docs/reference/cameras.md. Scope: camera/Camera.h, PerspectiveCamera.h,
-OrthographicCamera.h, OrthographicCameraController.h, OrbitCameraController.h,
-FlyCameraController.h, Camera2DController.h, NavigationCube.h. Hotkey tables from
-OrbitCameraController plus the Engine3DDemo bindings. Camera2DController.h has NO MANIFEST ROW (D52)
-— it is the only controller of the six missing; add it. CONFIGURATION: every camera and controller
-ships in BOTH builds, but NavigationCube and ScenePicker are filtered out of the 2D build and they
-fail DIFFERENTLY — ScenePicker's include is fenced in Cosmic.h, NavigationCube's is not, so the
-latter compiles and fails at LINK time. Say so. Guide chapter: cameras.md.
-```
-
-```
-Execute work order D15 from docs/plans/12-documentation-plan.md. Apply the D6-D18 standing rules.
-Chapter: docs/reference/math.md. Scope: math/Spatial.h, Integrators.h, Filters.h, LookupTable.h,
-Noise.h, Random.h, Frustum.h — all header-only, all unfenced, both configurations. Cite the doctest
-per header rather than asserting behaviour. Include a DETERMINISM box: which helpers are
-reproducible across runs and platforms and which are not, and that fuzz/sim work must seed
-explicitly and never use random_device. Note the doctest gotcha for anyone verifying: doctest's
-Approx is RELATIVE, not absolute. Guide chapter: sim-math-toolkit.md (currently the only written
-documentation of this tier — systems/math-sim-toolkit.md is still a skeleton).
+Chapter: docs/reference/world-systems.md. Guide chapter: world-systems.md (currently the ONLY
+documentation of these subsystems - systems/terrain.md and systems/water.md are still skeletons).
+SCOPE EXPANDED: water/Presets.h, water/GerstnerWave.h and scene/WorldSystemRecipes.h were routed
+here in the D61 pass. Full scope: terrain/Terrain.h, water/Water.h, GerstnerWave.h, Presets.h,
+particles/ParticleSystem.h, particles/Presets.h, scene/WorldSystemRecipes.h.
+Pin the Terrain resolution rule (32·2^k+1) and the SampleHeight tolerance with their TEST citations,
+not prose assertions. WorldSystemRecipes is the E18 recipe->spec layer every scene-authored terrain,
+water body and emitter goes through, including ClampTerrainResolution's editor-only {65 ... 1025}
+clamp - it is client surface, not an internal detail.
+FACTS: Terrain::Create and Water::Create are pure CPU; GL is allocated lazily in EnsureGpuResources
+on first render, which is the entire basis of the async world-build pattern. All 3D-only.
+Summarize and LINK docs/design/water-rendering-notes.md rather than forking it.
 ```
 
 ```
 Execute work order D16 from docs/plans/12-documentation-plan.md. Apply the D6-D18 standing rules.
-Chapters: docs/reference/assets-io.md AND docs/reference/audio.md — two small chapters, one session.
-Scope: assets/AssetLibrary.h, assets/MeshImport.h, utils/FileSystem.h, utils/Config.h,
-utils/DataExport.h, utils/FileWatcher.h, utils/FileDialog.h, utils/ImageIO.h, utils/ExeResources.h,
-utils/Branding.h; audio/AudioEngine.h, audio/Sound.h. THE LAST FIVE UTILS HEADERS HAVE NO MANIFEST
-ROW — FileWatcher/FileDialog/ImageIO/ExeResources are included by Cosmic.h DIRECTLY AND UNFENCED
-(lines 167-170) and Branding.h is COSMIC_API-exported but not in Cosmic.h at all. Add all five.
-Verify the VFS dev-vs-packaged path examples against Runtime/Main.cpp AND FileSystem.cpp: the
-user:// root depends on BOTH whether SetAppIdentity ran (only boot.cfg sets it — never --project)
-and a live writability probe of the exe dir. THE OLD "DLL-side resolution rule" IS OBSOLETE — the
-mount moved into the engine DLL in Phase 20/A1, so there is one active project per PROCESS; four
-in-tree comments still teach the old rule, do not carry it forward. A failed texture load is CACHED
-as a degraded object; failed shaders/meshes/materials are not. AssetLibrary has NO LOCKING of any
-kind and constructs GPU resources in its getters, so it is strictly main-thread. Config's getters
-log NOTHING on a type mismatch despite Config.h:64-65 promising they do. .ogg is listed in
-Starforge's audio row but miniaudio has no Vorbis decoder compiled in. Guide chapters:
-assets-and-vfs.md, audio.md, building-and-shipping.md (owns ExeResources).
+TWO chapters, one session: docs/reference/assets-io.md AND docs/reference/audio.md.
+Guide chapters: assets-and-vfs.md, audio.md, building-and-shipping.md.
+SCOPE EXPANDED SUBSTANTIALLY - six headers routed here in the D61 pass. Full assets-io scope:
+assets/AssetLibrary.h, assets/MeshImport.h ³ᴰ, utils/FileSystem.h, Config.h, DataExport.h,
+FileWatcher.h, FileDialog.h, ImageIO.h, ExeResources.h, Branding.h. Audio: audio/AudioEngine.h,
+audio/Sound.h. The checker names ImportSettings (MeshImport.h) as uncovered.
+THE user:// RESOLUTION IS THE ONE TO PIN. GetUserDataRoot() branches on TWO inputs: whether
+SetAppIdentity ran, and a LIVE WRITABILITY PROBE of the exe directory (it creates and deletes
+.cosmic_write_probe). SetAppIdentity is called ONLY from the boot.cfg path (Runtime/Main.cpp:100-101)
+- never from --project. Four outcomes; get all four right. The guide documents this from the outside;
+you pin the mechanism.
+THE "DLL-side resolution rule" IS OBSOLETE - the mount moved into the engine DLL in Phase 20/A1, so
+there is ONE active project per PROCESS. Four in-tree comments still teach it (TemplateProject.cpp,
+SimHub.cpp, Sound.h, LookupTable.h) - report them, do not carry it forward.
+FACTS: a failed texture load is CACHED as a degraded object while failed shaders/meshes/materials
+are not - document the per-type miss policy. AssetLibrary has NO LOCKING of any kind and constructs
+GPU resources in its getters, so it is strictly main-thread; state it as a contract. Config's getters
+log NOTHING on a type mismatch despite Config.h:64-65 promising they do. DataExport does not resolve
+VFS paths. .ogg is in Starforge's AssetTypes audio row but miniaudio has NO Vorbis decoder compiled
+in, so it previews as SILENCE. Branding::ResolveIcon probes four roots first-hit-wins and is pure
+filesystem probing (headless-testable). ExeResources::SetIcon uses UpdateResource and must run
+BEFORE signing. Configuration splits INSIDE AssetLibrary: GetMesh/GetModel/GetAnimationClip/
+GetAnimationClipNames are fenced; the class itself ships in both. Document audio's headless
+behaviour explicitly.
 ```
 
 ```
 Execute work order D17 from docs/plans/12-documentation-plan.md. Apply the D6-D18 standing rules.
-Chapters: docs/reference/serial-telemetry.md AND docs/reference/jobs.md — L, two chapters. Scope:
-serial/SerialPort.h, SerialLink.h, Framing.h; telemetry/TelemetryChannel.h, DataRecorder.h,
-DataPlayer.h, TelemetryPanel.h, EntitySelection.h, EntityPicker.h; jobs/JobSystem.h,
-ParallelSystem.h, SystemQuery.h, ParallelFor.h, DoubleBuffer.h, ComponentArray.h. ALL FIFTEEN HAVE
-CORRECT MANIFEST ROWS (D59 verified) — no gap work here. THREADING CONTRACTS ARE THE HARD PART;
-verify against the .cpp, never the comment. Facts D59 established: JobSystem::WaitIdle() is a GLOBAL
-barrier, not per-caller, which is why ParallelSystem::OnParallelExecute forbids it and why
-ParallelFor (which calls it internally) inherits the hazard. ParallelForAsync runs SYNCHRONOUSLY
-below minChunkSize (default 64) or on a single-worker machine, so a by-reference capture is safe
-there and dangles above it — the static_assert only catches move-only functors. ComponentArray<T>::From
-returns an EMPTY view once the pool spans more than one EnTT page; FlatComponentArray<T> is the fix.
-ReadWriteQuery::Commit's structural-change guard does not exist in any build. DataRecorder::Flush and
-DataPlayer::Load do NOT resolve VFS paths — Flush("user://takes") silently creates a literal "user:"
+TWO chapters, one session: docs/reference/serial-telemetry.md AND docs/reference/jobs.md.
+Guide chapters: serial-and-telemetry.md, jobs-and-parallelism.md (both currently the only written
+documentation of their subsystems). Scope: serial/SerialPort.h, SerialLink.h, Framing.h;
+telemetry/TelemetryChannel.h, DataRecorder.h, DataPlayer.h, TelemetryPanel.h, EntitySelection.h,
+EntityPicker.h; jobs/JobSystem.h, ParallelSystem.h, SystemQuery.h, ParallelFor.h, DoubleBuffer.h,
+ComponentArray.h. All fifteen have correct manifest rows (D59 verified) - no gap work. The checker
+names ISystemQuery (jobs/ParallelSystem.h) as uncovered.
+THREADING CONTRACTS ARE THE HARD PART; verify against the .cpp, never the comment.
+FACTS: JobSystem::WaitIdle() is a GLOBAL barrier, not per-caller - it waits on the whole process
+queue, which is why ParallelSystem::OnParallelExecute forbids it and why ParallelFor (which calls it
+internally) inherits the hazard. ParallelForAsync runs SYNCHRONOUSLY below minChunkSize (default 64)
+or on a single-worker machine, so a by-reference capture is safe there and dangles above it - the
+static_assert only catches move-only functors, so a COPYABLE lambda holding [&local] is accepted and
+dangles. ComponentArray<T>::From returns an EMPTY view once the pool spans more than one EnTT page
+(it maps page 0 only) and now logs in every configuration; FlatComponentArray<T> is the fix.
+ReadWriteQuery::Commit's structural-change guard does not exist in ANY build. DataRecorder::Flush and
+DataPlayer::Load do NOT resolve VFS paths - Flush("user://takes") silently creates a literal "user:"
 directory. SerialPort::Write IS implemented (SerialPort.cpp:231), contrary to the old README.
 SerialLink's 3-second auto-reconnect can silently switch you to a DIFFERENT COM port. Framing::
-EncodeFrame drops an oversized frame in total silence. DG-12 and DG-13 are ALREADY BUILT in the guide
-— reuse. Guide chapters: jobs-and-parallelism.md, serial-and-telemetry.md.
+EncodeFrame drops an oversized frame in TOTAL SILENCE. Only DataRecorder.cpp:257 still says "v3";
+the headers are clean and the format is v1. DG-12 and DG-13 are built in the guide - reuse.
 ```
 
 ```
 Execute work order D18 from docs/plans/12-documentation-plan.md. Apply the D6-D18 standing rules.
-Chapter: docs/reference/ui.md. Scope: ui/Fonts.h, ThemeManager.h, Theme.h, Widgets.h, PlotStyle.h,
-Overlay.h, IconsLucide.h, layers/ImGuiLayer.h, layers/ImGuiThemes.h, layers/WorkspaceLayer.h. The
-DockPort table plus the NEVER-PERSIST-DOCK-NODE-IDS rule. layers/ImGuiThemes.h HAS NO MANIFEST ROW
-(D60) — it is the home of enum class ImGuiTheme, the parameter type of the exported
-ImGuiLayer::SetTheme / Cosmic::SetImGuiTheme overloads, plus GetBuiltInThemes() and NameForTheme();
-add it. WorkspaceLayer is NOT COSMIC_API-exported — only its INLINE members are reachable from a
-project DLL (DockWindow, SetViewportVisible, SetBottomInsetPixels, BeginViewportOverlay);
-SetViewportLayer/ClearViewportLayer and the hook overrides are engine-internal and will not link.
-Say so per entry. SetEdgeRatios(left,right,top,bottom) and SetEdgeMinPixels(top,bottom,left,right)
-take their edges in DIFFERENT ORDERS. ShowThemeSelector's DockPort parameter is DEAD. Fonts::Get
-IGNORES its sizePx argument entirely (selection is by name; size applies at draw time) and falls
-back to the default face for an unknown name. Fonts::Init assigns io.FontDefault = Roboto-Regular,
-so custom faces are the DEFAULT, not opt-in. ThemeManager::SaveToFile/LoadFromFile/LoadFolder all
-take RESOLVED DISK PATHS, not VFS paths. Guide chapter: editor-ui-and-theming.md.
+Chapter: docs/reference/ui.md. Guide chapters: editor-ui-and-theming.md, windowing-and-viewport.md.
+SCOPE EXPANDED: layers/ImGuiThemes.h routed here in the D61 pass, and the checker names HostContext
+(declared in Cosmic.h) as uncovered - it is the two-pointer ImGui/ImPlot context struct every plugin
+DLL receives. Full scope: ui/Fonts.h, ThemeManager.h, Theme.h, Widgets.h, PlotStyle.h, Overlay.h,
+IconsLucide.h, layers/ImGuiLayer.h, ImGuiThemes.h, WorkspaceLayer.h.
+CENTREPIECES: the DockPort table and the never-persist-dock-node-ids rule.
+FACTS: WorkspaceLayer is NOT COSMIC_API-exported - only its INLINE members reach a project DLL
+(DockWindow, SetViewportVisible, SetBottomInsetPixels, BeginViewportOverlay); SetViewportLayer,
+ClearViewportLayer and the hook overrides are engine-internal and WILL NOT LINK. State it per entry;
+it is the chapter's most practically important fact. SetEdgeRatios(left,right,top,bottom) and
+SetEdgeMinPixels(top,bottom,left,right) take their edges in DIFFERENT ORDERS. ShowThemeSelector's
+DockPort parameter is DEAD (WorkspaceLayer.cpp:240-246). Fonts::Get IGNORES its sizePx argument
+entirely and falls back to the default face for an unknown name, never returning null after Init().
+Fonts::Init assigns io.FontDefault = Roboto-Regular (Fonts.cpp:156-157), so custom faces are the
+DEFAULT, not opt-in - README §27 had this inverted. ThemeManager::SaveToFile/LoadFromFile/LoadFolder
+all take RESOLVED DISK PATHS. BuildDockspace splits left->right->top->bottom, so side columns are
+full-height; the edge ratio clamps to [0.05, 0.9] and the pixel minimum is multiplied by DpiScale.
+DockFlags::NoTabBar applies to the NODE, so it affects every window sharing that port.
+SetBottomInsetPixels is the one setter that does NOT queue a dock rebuild, which is why calling it
+every frame is correct. The legacy "Project Inspector Top/Mid/Bottom" path fires only at ZERO
+DockWindow bindings, and PlayerLayer registers none - so EVERY packaged player-driven app builds the
+legacy fixed 22% three-tier sidebar with windows it never opens (D47's claim that the TEMPLATE relies
+on it was wrong; the template registers four bindings). io.IniFilename points at user://imgui.ini
+held in a static std::string because ImGui borrows the pointer.
+KNOWN CRASH to state: every viewport-strip toggle chip abort()s a Debug build via an unbalanced
+ImGui style stack, reproduced in both configurations.
 ```
+
+### D62 — `reference/scripting.md` + the reflection routing decision — M *(added 2026-07-26, D61)*
+
+**Why this exists.** D5's checker surfaced a hole no row can fill: the **entire `scripting/` tier has
+no reference chapter**. `ScriptableEntity.h`, `ScriptHost.h`, `ModuleRegistry.h` and `ModuleMacros.h`
+are all included by `Cosmic.h` **directly and unfenced** (lines 135–138), and `reflect/TypeDescriptor.h`
+and `TypeRegistry.h` the same (124–125). Six public headers, no chapter. As a stopgap the D61
+integration routed their manifest rows at the *guide* chapters that document them, which keeps the
+checker green — but **strict mode is skipped for off-tier targets, so those six headers are
+unenforced**, and `docs/guide/scripting.md` is the only documentation of a tier that includes the
+`CS_SCRIPT`/`CS_SYSTEM` macros and all eight script proxies.
+
+**This blocks D36**, which cannot claim a meaningful green strict-mode run while six public headers
+route outside the tier.
+
+```
+Execute work order D62 from docs/plans/12-documentation-plan.md in C:\dev\Cosmic.
+Read §0, §6's standing rules, and this item.
+
+DECIDE FIRST, and record the decision in this file with its rationale — the two options are not
+equivalent and the choice is yours to make explicit:
+  (a) WRITE docs/reference/scripting.md covering scripting/ScriptableEntity.h, ScriptHost.h,
+      ModuleRegistry.h, ModuleMacros.h — and either fold reflect/ in as a second half or give it
+      its own chapter. Re-point the six manifest rows at it. Strict mode then covers them.
+  (b) RULE the tier guide-only, i.e. formally accept that some public headers are documented by the
+      guide alone. Then say so in reference/README.md's manifest preamble as a POLICY rather than a
+      gap, and amend D36's acceptance so "green strict mode" does not silently mean "we routed the
+      hard ones elsewhere".
+Option (a) is the honest default; (b) is defensible only if you are prepared to state it in public.
+
+IF (a): the tier's public surface is the CS_SCRIPT / CS_SYSTEM registration macros, ScriptableEntity
+and its lifecycle hooks, ScriptHost's Tick/FixedTick/DispatchEvent, ModuleRegistry, and ALL EIGHT
+proxies — Physics(), Character(), Flow(), Signals(), Telemetry(), Nav(), Animator(), Voxels().
+docs/guide/scripting.md (D50) is the client-facing source and is written from source — link it, do
+not re-derive it.
+KNOWN DEFECT to document and log as a Phase 30 candidate: ScriptHost::DispatchEvent
+(ScriptHost.cpp:207-215) omits the IsActiveInHierarchy check that Tick (:182) and FixedTick (:200)
+both apply, so a DEACTIVATED entity's script still receives OnEvent. Verified 2026-07-26.
+NOTE ModuleMacros.h's own comment says "two exports" where the macros expand to THREE (D46).
+Run tests/check_docs_coverage.ps1; it must still exit 0. Report per §6 rule 12. No git writes.
+```
+**Status:** ☐
 
 ---
 
@@ -3060,9 +3109,15 @@ Read §0 and §9 first. This is the LAST documentation work order — run it onl
 STATUS: SKELETON banner is gone.
 
 1. Confirm no STATUS: SKELETON banner remains anywhere in docs/, then run
-   tests/check_docs_coverage.ps1 — with every banner removed it is now FULLY STRICT, so the
-   class-name check applies to every chapter. Fix to green. Expect this to surface real gaps: strict
-   mode was never exercised during Phase B because every chapter was skeleton-bannered as it landed.
+   tests/check_docs_coverage.ps1 — with every banner removed it is FULLY STRICT, so the class-name
+   check applies to every chapter. Fix to green.
+   **READ THIS BEFORE CLAIMING GREEN.** Strict mode is a REFERENCE-TIER contract and is deliberately
+   SKIPPED for manifest rows that point at a ../guide/ chapter. About twenty headers are routed that
+   way — the whole scripting/ and reflect/ tiers, the voxel/ and nav/ blocks, scene/ui/, and the
+   flow/story headers. A green run therefore does NOT by itself mean every public header is
+   enforced. **D62 must be resolved first** (write reference/scripting.md, or formally rule the tier
+   guide-only and say so in the manifest preamble). If D62 chose (b), state in your acceptance note
+   exactly how many headers are guide-routed and unenforced, so "green" is not read as "complete".
 2. Verify both tier indexes (docs/reference/README.md, docs/systems/README.md) show all-✅ Status
    columns, and that docs/README.md's Status TABLE (D61 replaced the prose paragraph with a
    per-tier table) is rewritten to steady state — no "in progress" rows.
@@ -3346,23 +3401,38 @@ throughout D41–D43 is a plain sentence naming the configuration, not a new bad
 
 ## 15.5 Where every copy-paste prompt lives *(added 2026-07-26, D61)*
 
-Every remaining work order has a ready prompt. **29 documentation work orders** here, plus
-**10 more** for Phase 30 in [`29-phase30-2d-hardening-plan.md`](29-phase30-2d-hardening-plan.md).
+Every remaining work order has a ready prompt. **22 documentation work orders left** here (of the 30
+this plan now tracks — D5 and six Phase B chapters are done, and **D62 is new**), plus **10 more**
+for Phase 30 in [`29-phase30-2d-hardening-plan.md`](29-phase30-2d-hardening-plan.md).
 
-| Phase | Items | Prompts | Parallel? |
+> **Updated 2026-07-26.** D5 and six Phase B chapters are done; the counts below are what is LEFT.
+> Phase B's prompts were rewritten against the post-D5 state — three scopes expanded and every item
+> now verifies itself with the checker.
+
+| Phase | Items left | Prompts | Parallel? |
 | --- | --- | --- | --- |
-| **A** — enforcement tooling | **D5** | [§5](#5-phase-a--enforcement-tooling) | **Run this first** |
-| **B** — API reference | D6–D18 (13) | [§6](#6-phase-b--api-reference-chapters-d6d18) | ✅ fully parallel |
+| ~~**A**~~ — enforcement tooling | ~~D5~~ | [§5](#5-phase-a--enforcement-tooling) | ✅ **done 2026-07-26** |
+| **B** — API reference | **8 left** (D6, D8, D10, D11, D12, D16, D17, D18) | [§6](#6-phase-b--api-reference-chapters-d6d18) | ✅ fully parallel |
+| **B+** — the tier D5 exposed | **D62** (scripting/reflect) | [§6](#d62--referencescriptingmd--the-reflection-routing-decision--m-added-2026-07-26-d61) | ✅ independent — **blocks D36** |
 | ~~C~~ — guide tier | ~~D46–D61 (16)~~ | [§7](#7-phase-c--the-guide-tier-written-from-scratch-d46d61-serial) | ✅ **complete 2026-07-26** |
 | **D** — system explainers | D25–D34 (10) | [§8](#8-phase-d--system-explainers-d25d34) | ✅ parallel except README conversions |
 | **E** — integration & finale | D35, D36 | [§9](#9-phase-e--integration--enforcement-d35d36) | ❌ last, in order |
 | **F** — Starforge manual | D37–D39 (3) | [§13](#13-phase-f--starforge-user-manual-d37d39-added-2026-07-04) | ✅ independent |
 | **G** — per-phase hooks | D40 | [§14](#14-phase-g--per-phase-documentation-hooks-d40-standing-added-2026-07-04) | standing rule |
 
-**Suggested order.** D5 alone first — it is one small session and it is what stops the manifest
-drifting again. Then **D6–D18 and D25–D34 fan out together** (different files; the only shared ones
-are the two tier indexes, where you touch only your own row). D35 → D36 last, in that order. D37–D39
-can run any time. Phase 30 (P0–P9) follows the user's *documentation before testing* directive.
+**Suggested order, updated 2026-07-26.** D5 is done, so **the eight remaining Phase B items and all
+ten Phase D explainers fan out together** — different files; the only shared ones are the two tier
+indexes and README Part II, which the §15.6 rule keeps out of agents' hands entirely. Run **D62**
+somewhere in there; it is independent but **blocks D36**. Keep **D10, D11 and D29 attended** (XL, and
+the semantics must be exact). D35 → D36 last, in that order. D37–D39 need the running editor, so they
+are attended and can run any time. Phase 30 (P0–P9) follows the *documentation before testing*
+directive.
+
+**Wave sizing, learned the hard way (2026-07-26).** Five concurrent agents exhausted a session
+mid-wave: one chapter landed, four produced nothing, and one reported *failed* while having actually
+written its chapter in full. **Prefer waves of two or three**, and after any interruption **check
+disk before believing a notification** — `git status` plus a `STATUS: SKELETON` grep tells you what
+really landed, and a chapter that ends without its changelog line is truncated.
 
 **Running these concurrently?** See [§15.6](#156-running-the-remaining-work-in-parallel-added-2026-07-26-d61)
 for the wave structure and the one rule that makes it safe: an agent writes **only its own chapter**
