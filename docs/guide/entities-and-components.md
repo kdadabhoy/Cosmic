@@ -966,8 +966,10 @@ bodies — and the transform is written back each fixed step like a body. **Read
 
 ### Components declared outside these two headers
 
-Two more families are real components and will show up in the Inspector, but they are not part of
-the 34 and are covered by other chapters:
+Two more families are real components not part of the 34 and covered by other chapters. **Only the
+first shows up in the Inspector** — the UI components are registered in `reflect/TypeRegistry.cpp`;
+`SelectableComponent` is **not registered anywhere and is not `COSMIC_API`-exported**, so it never
+appears in the Inspector and never reaches a `.cscene`. It is a pure runtime tag:
 
 | Component | Header | Configuration | Covered in |
 | --- | --- | --- | --- |

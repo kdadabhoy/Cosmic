@@ -186,7 +186,8 @@ void ComposableDynamics::Step(const ActuatorFrame& u, float dt)
 
 Every filter in `Filters.h` shares one contract:
 
-- `Reset(value)` re-seeds the internal state.
+- `Reset(value)` re-seeds the internal state — **except `Derivative`, whose argument is silently
+  discarded** (see [below](#derivative--a-rate-you-can-actually-use)).
 - `Update(sample, dt)` advances by `dt` seconds and returns the filtered value.
 - `GetValue()` peeks at the current output without advancing.
 - **`dt <= 0` returns the current output unchanged** — a paused frame does not corrupt the state.
@@ -217,8 +218,15 @@ float rate = d.Update(position, dt);  // returns 0.0f on the very first call
 ```
 
 A raw finite difference through a first-order LPF, so sensor noise does not explode into the rate.
-The default smoothing tau is `0.02 s`. `Reset(value)` seeds the previous sample and zeroes the
-filtered output.
+The default smoothing tau is `0.02 s`.
+
+> **`Derivative::Reset(value)`'s argument does nothing.** It assigns `m_PrevSample = value` but then
+> sets `m_Primed = false` (`Filters.h:89-94`), and the next `Update` re-primes by overwriting
+> `m_PrevSample` with the incoming sample. So the seed is discarded and the first `Update` after a
+> reset returns `0` regardless of what you passed. Every *other* filter's `Reset` sets
+> `m_Primed = true` and honours the value — `Derivative` is the odd one out. Pass nothing and expect
+> a zero first sample. (`Derivative` also has **no test anywhere** and no in-tree consumer, which is
+> presumably why this survived.)
 
 ### `RateLimiter` — the slew clamp
 
