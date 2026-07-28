@@ -10,7 +10,7 @@ slots**, and framebuffers including MRT and pixel read-back.
 `platform/OpenGL/OpenGLFrameBuffer.cpp`, `assets/AssetLibrary.{h,cpp}`, `graphics/Mesh.h`,
 `scene/Components3D.h`, `renderer/BindingPoints.h`
 **API Reference:** [../reference/graphics-resources.md](../reference/graphics-resources.md)
-*(skeleton — D8; it will own the per-call signatures and the full `BindingPoints` table)* ·
+*(per-call signatures and the full [`BindingPoints` table](../reference/graphics-resources.md#bindingpoints))* ·
 **How it works:** [../systems/rendering-2d.md](../systems/rendering-2d.md) ·
 [../systems/rendering-3d.md](../systems/rendering-3d.md)
 **Configuration:** **both.** `Shader`, `Material`, `FrameBuffer` and the preprocessor are shared and

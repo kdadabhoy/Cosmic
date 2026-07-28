@@ -12,9 +12,8 @@ and docking into its place.
 `layers/PlayerLayer.cpp`, `utils/Branding.{h,cpp}`, `utils/ImageIO.h`, `Runtime/CosmicApp.manifest`,
 `Runtime/CMakeLists.txt`, `Projects/Starforge/src/ViewportController.cpp`,
 `Projects/Engine3DDemo/src/Engine3DDemo.cpp`
-**API Reference:** [`../reference/core.md`](../reference/core.md) *(skeleton — D6; `core/Window.h` is
-listed there)* and [`../reference/ui.md`](../reference/ui.md) *(skeleton — D18; `WorkspaceLayer` is
-listed there)*.
+**API Reference:** [`../reference/core.md`](../reference/core.md) *(`core/Window.h` is listed there)*
+and [`../reference/ui.md`](../reference/ui.md) *(`WorkspaceLayer` is listed there)*.
 **How it works:** [`../systems/windowing.md`](../systems/windowing.md) *(skeleton — D26)*
 **Configuration:** **both.** Nothing in this chapter is fenced by `COSMIC_2D_ONLY` — the window,
 the chrome, fullscreen, the modal pump and the workspace viewport are identical in the 2D and 3D
@@ -601,5 +600,5 @@ outlived its DLL. Clear it in `OnDetach`.
   the decision record for the modal frame pump and first-class pause.
 - [`../engineering-notes/borderless-window-dpi.md`](../engineering-notes/borderless-window-dpi.md) —
   the HiDPI title-bar/click-offset investigation, plus the W-series fullscreen addendum.
-- [`../reference/core.md`](../reference/core.md) — per-call `Window` entries *(skeleton — D6)*.
+- [`../reference/core.md`](../reference/core.md) — per-call `Window` entries.
 - [`../systems/windowing.md`](../systems/windowing.md) — internals *(skeleton — D26)*.

@@ -18,9 +18,10 @@ flush trigger, failure mode. Systems explainer:
 [rendering-2d](../systems/rendering-2d.md) *(skeleton — D28)*.
 
 **Owned elsewhere, linked not restated:** the reserved GL binding registry
-(`renderer/BindingPoints.h`), `Material::Clone`, and the material read-at-flush semantics all live
-in [graphics-resources.md](graphics-resources.md) *(skeleton — D8; the `BindingPoints` table and a
-`#materialclone` anchor are **owed** by that work order and are not linkable yet)*. `Texture2D`,
+(`renderer/BindingPoints.h`), [`Material::Clone`](graphics-resources.md#materialclone), and the
+material read-at-flush semantics all live in
+[graphics-resources.md](graphics-resources.md) — the
+[`BindingPoints` table](graphics-resources.md#bindingpoints) is the canonical registry. `Texture2D`,
 `Shader` and `Material` factories and their failure modes are also D8's.
 
 ---
@@ -556,7 +557,7 @@ Cosmic::Renderer2D::DrawQuad({ 0.0f, 0.0f, 0.0f }, { 2.0f, 2.0f }, material);
 - **`u_Color` varies per quad; every other uniform does not.** Two quads sharing one material in one
   batch get their own colours (already in the vertex data) but both see the *last* value set for any
   other uniform, because the rest is read at flush. `Material::Clone` is the fix — the semantics are
-  stated once in [graphics-resources.md](graphics-resources.md) *(D8; anchor owed)*.
+  stated once in [graphics-resources.md](graphics-resources.md#materialclone).
 - **Interleaving material and non-material quads costs one draw call per quad**, because the
   material identity check fires on every call in both directions. Sort your draw list by material.
 - `a_TilingFactor` is hard-set to `1.0f`; the material path has no tiling parameter.

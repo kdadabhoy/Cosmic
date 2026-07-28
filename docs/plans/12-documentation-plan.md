@@ -366,9 +366,9 @@ traps; this is the loop):
 
 | Item | Chapter (skeleton) | Size / notes | Status |
 | --- | --- | --- | --- |
-| **D6** | `reference/core.md` | M. Application/Layer/Window/Log/plugin boundary. Include the Pause-vs-TimeScale table (README §7) condensed per-entry. | ☐ |
+| **D6** | `reference/core.md` | M. Application/Layer/Window/Log/plugin boundary. Include the Pause-vs-TimeScale table (README §7) condensed per-entry. | ✅ 2026-07-26 |
 | **D7** | `reference/events-input.md` | M. Full code tables (KeyCodes/MouseButtonCodes/GamepadCodes headers → tables). | ✅ 2026-07-26 |
-| **D8** | `reference/graphics-resources.md` | L. The BindingPoints registry table is load-bearing — other chapters link it. Material Clone/flush semantics stated here once, linked elsewhere. | ☐ |
+| **D8** | `reference/graphics-resources.md` | L. The BindingPoints registry table is load-bearing — other chapters link it. Material Clone/flush semantics stated here once, linked elsewhere. | ✅ 2026-07-26 |
 | **D9** | `reference/rendering-2d.md` | M. Every DrawQuad overload individually (that's the OpenGL-doc style the user asked for). | ✅ 2026-07-26 |
 | **D10** | `reference/rendering-3d.md` | **XL — may split into two sessions** (submission+queue semantics, then Mesh/Model/InstanceSet/Frustum). Stronger model recommended: the deferred-flush semantics must be *exactly* right. DG-7. | ☐ |
 | **D11** | `reference/rendering-pipeline.md` | L. Enumerate SceneRenderer's real header surface — the skeleton deliberately doesn't guess it. DG-8 (shared with systems doc — build once here, reuse). | ☐ |
@@ -378,18 +378,19 @@ traps; this is the loop):
 | **D15** | `reference/math.md` | M. Cite doctests per header; determinism box. | ✅ 2026-07-26 |
 | **D16** | `reference/assets-io.md` + `reference/audio.md` | M (two small chapters, one session). VFS dev-vs-packaged path examples verified against Runtime/Main.cpp. | ☐ |
 | **D17** | `reference/serial-telemetry.md` + `reference/jobs.md` | L (two chapters). Threading contracts are the hard part — verify against .cpps, not comments ("v3" docstrings are stale; code writes v1). DG-13 optional here or in D33. | ☐ |
-| **D18** | `reference/ui.md` | M. DockPort table + the never-persist-dock-node-ids rule. | ☐ |
+| **D18** | `reference/ui.md` | M. DockPort table + the never-persist-dock-node-ids rule. | ✅ 2026-07-26 |
 
 All of Phase B is **parallel-safe across items** (distinct files); the only shared file is
 `reference/README.md` — touch ONLY your chapter's Status cell.
 
 ### 📋 Copy-paste prompts (D6 → D18)
 
-> **CURRENT AS OF 2026-07-26.** Six chapters are written — `physics.md` (D43), `events-input.md`
-> (D7), `ecs.md` (D13), `cameras.md` (D14), `math.md` (D15), `rendering-2d.md` (D9). **Eight remain:
-> D6, D8, D10, D11, D12, D16, D17, D18.** Only those eight have prompts below; the finished ones are
-> recorded in the item table above. Three scopes **expanded** in the D61 integration pass and the
-> prompts say so — do not work from the pre-integration scope.
+> **CURRENT AS OF 2026-07-26 (after wave B1).** Nine chapters are written — `physics.md` (D43),
+> `events-input.md` (D7), `ecs.md` (D13), `cameras.md` (D14), `math.md` (D15), `rendering-2d.md`
+> (D9), and wave B1's `core.md` (D6), `graphics-resources.md` (D8), `ui.md` (D18). **Five remain:
+> D10, D11, D12, D16, D17.** Only those five have prompts below; the finished ones are recorded in
+> the item table above. Their scopes were **expanded** in the D61 integration pass and the prompts
+> say so — do not work from the pre-integration scope.
 
 **Standing preamble — every remaining D6–D18 prompt inherits it.**
 
@@ -440,49 +441,6 @@ STANDING RULES for any D6-D18 reference chapter (read once, they apply to every 
 ```
 
 Then one prompt per remaining item:
-
-```
-Execute work order D6 from docs/plans/12-documentation-plan.md. Apply the D6-D18 standing rules.
-Chapter: docs/reference/core.md. Guide chapters: project-anatomy.md, time-and-ticks.md,
-windowing-and-viewport.md, logging-and-diagnostics.md.
-SCOPE EXPANDED by the D61 integration — four headers were routed here and the checker names four
-COSMIC_API types your chapter must cover: ICommand, CommandStack, UUID, PlayerLayer.
-Full scope: core/Application.h, Layer.h, LayerStack.h, Window.h, Log.h, Core.h, Timestep.h,
-CommandStack.h, UUID.h, Version.h, layers/PlayerLayer.h, plus the plugin-export boundary in Cosmic.h.
-Condense README §7's Pause-vs-TimeScale table into per-entry form.
-FACTS: Application.h:93 is WRONG - GetViewportPos/GetViewportSize are ImGui SCREEN (desktop) pixels
-from ImGui::GetCursorScreenPos() (WorkspaceLayer.cpp:214-215), not "GLFW window-space";
-WorkspaceLayer.h:271-278 has it right and this stale comment is the likeliest origin of a recurring
-picking bug. SetPauseOnMinimize defaults FALSE. Layer::OnRender() is declared but NEVER called.
-Layer::OnUpdate takes float, not Timestep (Layer.h:97). A plugin layer is never on the LayerStack -
-WorkspaceLayer::SetViewportLayer forwards every hook by hand. WorkspaceLayer is NOT COSMIC_API-
-exported, so only its inline members link from a project DLL (the class itself is D18's). Release
-links /SUBSYSTEM:WINDOWS so there is no console at all. JobSystem::Initialize is the FIRST statement
-in Application::Initialize and Shutdown the first in Application::Shutdown, which is what guarantees
-no job outlives the game DLL.
-```
-
-```
-Execute work order D8 from docs/plans/12-documentation-plan.md. Apply the D6-D18 standing rules.
-Chapter: docs/reference/graphics-resources.md. Guide chapter: materials-and-shaders.md.
-SCOPE EXPANDED: graphics/MaterialAsset.h is now routed here and the checker names MaterialAsset as
-uncovered. Full scope: graphics/Shader.h, Texture.h, TextureCube.h, Material.h, MaterialAsset.h,
-Buffer.h, VertexArray.h, UniformBuffer.h, StorageBuffer.h, FrameBuffer.h, renderer/Renderer.h,
-RenderCommand.h, BindingPoints.h.
-THIS CHAPTER IS LOAD-BEARING FOR TWO OTHERS. (1) The BindingPoints registry table lives HERE in
-full, once - D9's written chapter and D11 both link it, so make it complete and give it a stable
-anchor. (2) State Material::Clone and the material-read-at-flush semantics HERE once: material state
-is read when the queue FLUSHES, not when you submit, so mutating a shared Material between submit
-and flush retroactively changes earlier draws. Clone is the fix.
-FACTS: the per-factory failure conventions are this chapter's most useful content - Shader::Create
-returns nullptr, Texture2D::Create returns a degraded non-null 0x0 object that AssetLibrary then
-CACHES until Reload (failed shaders/meshes/materials are correctly NOT cached). Shader::Create does
-NOT resolve VFS paths. FramebufferSpecification::Samples and SwapChainTarget are RESERVED - no MSAA
-path exists. BuildMaterial sets u_Has<X>Map = 1 for a MISSING .cmat texture because the degraded
-texture is non-null. OpenGLFrameBuffer's 9th-attachment guard is a compiled-out assert over real UB.
-Verify and state that OpenGLShader::m_RendererID has no initialiser.
-graphics/Gizmo.h is NOT yours - D14 wrote it in cameras.md. Link, do not duplicate.
-```
 
 ```
 Execute work order D10 from docs/plans/12-documentation-plan.md. Apply the D6-D18 standing rules.
@@ -588,36 +546,6 @@ directory. SerialPort::Write IS implemented (SerialPort.cpp:231), contrary to th
 SerialLink's 3-second auto-reconnect can silently switch you to a DIFFERENT COM port. Framing::
 EncodeFrame drops an oversized frame in TOTAL SILENCE. Only DataRecorder.cpp:257 still says "v3";
 the headers are clean and the format is v1. DG-12 and DG-13 are built in the guide - reuse.
-```
-
-```
-Execute work order D18 from docs/plans/12-documentation-plan.md. Apply the D6-D18 standing rules.
-Chapter: docs/reference/ui.md. Guide chapters: editor-ui-and-theming.md, windowing-and-viewport.md.
-SCOPE EXPANDED: layers/ImGuiThemes.h routed here in the D61 pass, and the checker names HostContext
-(declared in Cosmic.h) as uncovered - it is the two-pointer ImGui/ImPlot context struct every plugin
-DLL receives. Full scope: ui/Fonts.h, ThemeManager.h, Theme.h, Widgets.h, PlotStyle.h, Overlay.h,
-IconsLucide.h, layers/ImGuiLayer.h, ImGuiThemes.h, WorkspaceLayer.h.
-CENTREPIECES: the DockPort table and the never-persist-dock-node-ids rule.
-FACTS: WorkspaceLayer is NOT COSMIC_API-exported - only its INLINE members reach a project DLL
-(DockWindow, SetViewportVisible, SetBottomInsetPixels, BeginViewportOverlay); SetViewportLayer,
-ClearViewportLayer and the hook overrides are engine-internal and WILL NOT LINK. State it per entry;
-it is the chapter's most practically important fact. SetEdgeRatios(left,right,top,bottom) and
-SetEdgeMinPixels(top,bottom,left,right) take their edges in DIFFERENT ORDERS. ShowThemeSelector's
-DockPort parameter is DEAD (WorkspaceLayer.cpp:240-246). Fonts::Get IGNORES its sizePx argument
-entirely and falls back to the default face for an unknown name, never returning null after Init().
-Fonts::Init assigns io.FontDefault = Roboto-Regular (Fonts.cpp:156-157), so custom faces are the
-DEFAULT, not opt-in - README §27 had this inverted. ThemeManager::SaveToFile/LoadFromFile/LoadFolder
-all take RESOLVED DISK PATHS. BuildDockspace splits left->right->top->bottom, so side columns are
-full-height; the edge ratio clamps to [0.05, 0.9] and the pixel minimum is multiplied by DpiScale.
-DockFlags::NoTabBar applies to the NODE, so it affects every window sharing that port.
-SetBottomInsetPixels is the one setter that does NOT queue a dock rebuild, which is why calling it
-every frame is correct. The legacy "Project Inspector Top/Mid/Bottom" path fires only at ZERO
-DockWindow bindings, and PlayerLayer registers none - so EVERY packaged player-driven app builds the
-legacy fixed 22% three-tier sidebar with windows it never opens (D47's claim that the TEMPLATE relies
-on it was wrong; the template registers four bindings). io.IniFilename points at user://imgui.ini
-held in a static std::string because ImGui borrows the pointer.
-KNOWN CRASH to state: every viewport-strip toggle chip abort()s a Debug build via an unbalanced
-ImGui style stack, reproduced in both configurations.
 ```
 
 ### D62 — `reference/scripting.md` + the reflection routing decision — M *(added 2026-07-26, D61)*
@@ -2418,6 +2346,115 @@ compiles in a 2D build, so that header has **zero coverage in the 2D configurati
 
 ---
 
+### Phase B wave B1 — D6, D8, D18 ✅ 2026-07-26 (run in parallel)
+
+Three chapters, 8,559 lines: `core.md` (3,773), `ui.md` (2,417), `graphics-resources.md` (2,369).
+Phase B is now **9 of 14 written**; D10, D11, D12, D16 and D17 remain. No collisions — the §15.6
+rule held again. Integration applied three index Status rows, six broken anchors, five stale
+`(skeleton — D#)` markers, and the findings below. **The manifest needed no changes** (144 rows,
+still green), which is the first wave that required none — D5's Wave-0 output did its job.
+
+> **The wave's operational lesson, and it is worth more than the chapters: a "failed" or "killed"
+> agent notification is not evidence that nothing landed.** All three agents reported failure or
+> were killed mid-run; **two had already written their chapters in full**, changelog line and all
+> (`ui.md` 109 KB, `graphics-resources.md` 113 KB). Only D6 genuinely produced nothing. §15.5
+> already said *check disk before believing a notification* after the five-agent wave — this run
+> confirms it a second time and promotes it from advice to procedure: **`git status` plus a
+> `STATUS: SKELETON` grep is the only authority on what landed.** Re-running the two "failed"
+> chapters would have destroyed ~220 KB of correct, verified work.
+
+**Wave sizing held up.** Three concurrent agents against §15.5's "prefer waves of two or three" —
+the one that died irrecoverably was re-run alone and completed. Keep waves at three.
+
+**Verification was done by spot-check, per §15.6's closing rule** — three-plus load-bearing claims
+per chapter, each re-derived from source by the integrator rather than trusted. **All twelve
+passed**, including every claim in D8's and D18's chapters, whose authors died before reporting and
+so had no report to grade. That is the strongest evidence yet that the rule-2 discipline works: the
+text was verifiable *without* its author.
+
+**Phase 30 candidates — new, each verified at file:line during integration:**
+
+- **The Phase 29 W7 style-stack crash fix is only HALF applied, and the unfixed half is the one
+  users click.** `Projects/Starforge/src/ViewportController.cpp:1285-1293` still has the original
+  `if (on) Push… / Button flips on / if (on) Pop…` imbalance, while the *same file* at `:1318-1326`
+  carries the corrected `const bool pushed = on;` latch **with a comment describing the exact bug**.
+  So the *view toggles* are safe and the *three snap chips* still unbalance ImGui's colour stack by
+  one on every click — `IM_ASSERT` + `abort()` in Debug, silent corruption in Release. Outside the
+  `COSMIC_2D_ONLY` fence, so both configurations. This supersedes the Phase 29 memory that the
+  viewport-strip crash was closed. **Fix is a two-line copy of the lambda 30 lines below it.**
+- **`OpenGLFrameBuffer`'s 9th colour attachment is a real stack-buffer overrun**, not a theoretical
+  one: `std::array<GLenum, 8> buffers{}` is written in a loop bounded by the *actual* attachment
+  count (`OpenGLFrameBuffer.cpp:161-165`), guarded only by a `CS_CORE_ASSERT` that is compiled out
+  in every configuration (execution rule 7). Nothing in-tree does this; a project could.
+- **`ThemeManager::LoadFromFile` has no exception handling of any kind** — `std::stof` at
+  `ThemeManager.cpp:257` parses every `style.*` value, and there is no `try`/`catch` anywhere in the
+  file (verified: the only `try` substring in it is inside the word *regis**try***). One
+  hand-edited line (`style.FrameRounding=abc`) throws `std::invalid_argument` out through
+  `LoadFolder` → `Application::LoadProjectDLL` (`Application.cpp:762`), i.e. **a corrupt `.ctheme`
+  crashes project mount.**
+- **`UUID.cpp:12-14` documents a thread guard that does not exist.** The comment says the generator
+  is *"Guarded so concurrent CreateEntity calls from worker threads (JobSystem) can't corrupt the
+  generator state"*; there is no mutex, no atomic and no `thread_local` in the file. `Engine()` and
+  `Dist()` are plain function-local statics — C++ guarantees thread-safe *initialisation* only, not
+  thread-safe *use*. Concurrent `UUID()` is a data race on `std::mt19937_64`. Either add the mutex
+  the comment promises or delete the sentence; today it actively invites the bug.
+- **A plugin layer's `OnFixedUpdate` is time-scaled but a stacked layer's is not.**
+  `WorkspaceLayer::OnFixedUpdate` multiplies the fixed step by the client layer's own
+  `GetTimeScale()` (`WorkspaceLayer.cpp:110-111`), while `Application` passes `signedFixedDelta`
+  unscaled to every stacked layer (`Application.cpp:225`). **The same layer class therefore gets a
+  variable-magnitude "fixed" step depending only on where it is mounted**, which defeats the point
+  of a fixed step. Relevant to any project layer that sets a local scale.
+- **`OpenGLShader::m_RendererID` has no initialiser** (`OpenGLShader.h:123`) while `IsValid()`
+  (`:75`) reads it and the destructor passes it to `glDeleteProgram` (`:71`). On the compile-fail
+  (`:438`) and link-fail (`:465`) paths `Compile` returns before `m_RendererID = program` (`:468`),
+  so **`Shader::Create`'s own validity guard can read uninitialised memory**. Fresh heap is usually
+  zero so the correct `nullptr` is returned anyway, but the path is formally UB. One-word fix.
+- **`BufferLayout` accepts `Mat3`/`Mat4` elements that GL cannot honour** —
+  `OpenGLVertexArray.cpp:89-96` passes `GetComponentCount()` (9 or 16) straight to
+  `glVertexAttribPointer`, which accepts only 1–4, raising `GL_INVALID_VALUE`. A matrix attribute
+  must be four consecutive `Float4`s. Nothing in-tree uses them; treat the enumerators as reserved.
+  `Bool` has the same class of problem — it sizes to 1 byte where `GL_BOOL` attributes are 4.
+- **`core/Timestep.h` has zero `#include`s** yet uses `COSMIC_API` at `:36`, so it is not
+  self-contained: `#include "core/Timestep.h"` as the first engine include in a translation unit is
+  a hard compile error. It only works in-tree because `Cosmic.h:17` and `Application.h:27` pull in
+  `Core.h` first.
+
+**Stale source comments and doc-comment contradictions found (the class that keeps recurring):**
+`Application.h:93`'s *"GLFW window-space pixels"* is confirmed wrong for a third time — the value is
+`ImGui::GetCursorScreenPos()` (`WorkspaceLayer.cpp:213-214`), i.e. ImGui screen pixels, and
+`WorkspaceLayer.h:271-278` states it correctly. `Layer.h:42-43` presents `OnRender()` as lifecycle
+step 6 when it has **zero call sites engine-wide**. `Application.cpp:188`'s *"Skip execution passes
+while minimized (default)"* implies default-on, contradicting `Application.h:142-143`
+(`SetPauseOnMinimize` defaults **false**). `WorkspaceLayer.h:196-207` describes `ShowThemeSelector`
+as a dockable panel while the comment three lines below it and `.cpp:240-246` both say floating,
+never docked — and its `DockPort` parameter is dead. `PlotStyle.h:9-11` promises a line weight that
+`PlotStyle.cpp:19-20` stopped setting (both lines commented out, *"apparently doesnt work anymore"*).
+**`Version.h:9-11`'s KEEP-IN-SYNC list omits `Runtime/Starforge.rc`**, which carries its own
+hard-coded `FILEVERSION 0,9,0,0` (`:20`) and `"FileVersion", "0.9.0"` (`:34`) — a version bump
+following the list will silently ship a stale Starforge version resource.
+
+**Smaller, all verified:** `FramebufferSpecification::Samples` and `SwapChainTarget` are genuinely
+reserved — **zero references in `OpenGLFrameBuffer.cpp`**, so there is no MSAA path to configure;
+zero colour attachments is legal and selects `glDrawBuffer(GL_NONE)`, the depth-only shadow path.
+`Application::Shutdown` is public with no re-entry guard while `~Application` also calls it, and
+`s_Instance` is never cleared, so `Get()` after `delete` returns a dangling reference.
+`ShaderDataTypeSize` is a file-static free function in a header, so every TU gets its own copy.
+`ImGuiLayer::OnMouseButtonPressed` (`ImGuiLayer.cpp:158-159`) is redundant with the
+`EventCategoryMouse` line two lines above it. **Six broken anchors shipped in the two unreported
+chapters** — D8 linked a nonexistent `README.md#35-rendering-architecture` (DG-6 actually lives
+under `## §35 Hardware Abstraction Architecture` at `README.md:1924`), and D18 had a `luicide`
+typo plus three anchors missing the `/ Sibling` half of their heading. **A link sweep is not
+optional after a wave**; D35 should assume every wave leaves some.
+
+**Two cross-chapter debts from wave 1 are now paid:** `rendering-2d.md` recorded a
+`#materialclone` anchor as *"owed"* by D8 — it exists, along with `#bindingpoints`, and both of
+D9's forward references now resolve. Five `(skeleton — D6/D8/D18)` markers across `rendering-2d.md`
+and three guide chapters were cleared in the same pass. **This is a standing integration chore: a
+finished chapter leaves stale "skeleton" pointers in every document that linked ahead to it**, and
+grepping `skeleton — D<n>` for the completed item is the cheap way to find them.
+
+---
+
 ### 📋 Copy-paste prompts (D46 → D61)
 
 **Prompt 1 / D46 — README overview + `getting-started.md`**
@@ -3401,18 +3438,19 @@ throughout D41–D43 is a plain sentence naming the configuration, not a new bad
 
 ## 15.5 Where every copy-paste prompt lives *(added 2026-07-26, D61)*
 
-Every remaining work order has a ready prompt. **22 documentation work orders left** here (of the 30
-this plan now tracks — D5 and six Phase B chapters are done, and **D62 is new**), plus **10 more**
+Every remaining work order has a ready prompt. **19 documentation work orders left** here (of the 30
+this plan now tracks — D5 and nine Phase B chapters are done, and **D62 is new**), plus **10 more**
 for Phase 30 in [`29-phase30-2d-hardening-plan.md`](29-phase30-2d-hardening-plan.md).
 
-> **Updated 2026-07-26.** D5 and six Phase B chapters are done; the counts below are what is LEFT.
-> Phase B's prompts were rewritten against the post-D5 state — three scopes expanded and every item
-> now verifies itself with the checker.
+> **Updated 2026-07-26 (after wave B1).** D5 and **nine** Phase B chapters are done; the counts
+> below are what is LEFT. Phase B's prompts were rewritten against the post-D5 state — every
+> remaining item verifies itself with the checker, and the finished items' prompts have been
+> removed rather than left to rot.
 
 | Phase | Items left | Prompts | Parallel? |
 | --- | --- | --- | --- |
 | ~~**A**~~ — enforcement tooling | ~~D5~~ | [§5](#5-phase-a--enforcement-tooling) | ✅ **done 2026-07-26** |
-| **B** — API reference | **8 left** (D6, D8, D10, D11, D12, D16, D17, D18) | [§6](#6-phase-b--api-reference-chapters-d6d18) | ✅ fully parallel |
+| **B** — API reference | **5 left** (D10, D11, D12, D16, D17) | [§6](#6-phase-b--api-reference-chapters-d6d18) | ✅ fully parallel |
 | **B+** — the tier D5 exposed | **D62** (scripting/reflect) | [§6](#d62--referencescriptingmd--the-reflection-routing-decision--m-added-2026-07-26-d61) | ✅ independent — **blocks D36** |
 | ~~C~~ — guide tier | ~~D46–D61 (16)~~ | [§7](#7-phase-c--the-guide-tier-written-from-scratch-d46d61-serial) | ✅ **complete 2026-07-26** |
 | **D** — system explainers | D25–D34 (10) | [§8](#8-phase-d--system-explainers-d25d34) | ✅ parallel except README conversions |
@@ -3420,19 +3458,25 @@ for Phase 30 in [`29-phase30-2d-hardening-plan.md`](29-phase30-2d-hardening-plan
 | **F** — Starforge manual | D37–D39 (3) | [§13](#13-phase-f--starforge-user-manual-d37d39-added-2026-07-04) | ✅ independent |
 | **G** — per-phase hooks | D40 | [§14](#14-phase-g--per-phase-documentation-hooks-d40-standing-added-2026-07-04) | standing rule |
 
-**Suggested order, updated 2026-07-26.** D5 is done, so **the eight remaining Phase B items and all
-ten Phase D explainers fan out together** — different files; the only shared ones are the two tier
-indexes and README Part II, which the §15.6 rule keeps out of agents' hands entirely. Run **D62**
+**Suggested order, updated 2026-07-26 (after wave B1).** D5 is done, so **the five remaining Phase B
+items and all ten Phase D explainers fan out together** — different files; the only shared ones are
+the two tier indexes and README Part II, which the §15.6 rule keeps out of agents' hands. Run **D62**
 somewhere in there; it is independent but **blocks D36**. Keep **D10, D11 and D29 attended** (XL, and
 the semantics must be exact). D35 → D36 last, in that order. D37–D39 need the running editor, so they
 are attended and can run any time. Phase 30 (P0–P9) follows the *documentation before testing*
 directive.
 
-**Wave sizing, learned the hard way (2026-07-26).** Five concurrent agents exhausted a session
-mid-wave: one chapter landed, four produced nothing, and one reported *failed* while having actually
-written its chapter in full. **Prefer waves of two or three**, and after any interruption **check
-disk before believing a notification** — `git status` plus a `STATUS: SKELETON` grep tells you what
-really landed, and a chapter that ends without its changelog line is truncated.
+**Wave sizing, learned the hard way (2026-07-26, confirmed twice).** Five concurrent agents
+exhausted a session mid-wave: one chapter landed, four produced nothing, and one reported *failed*
+while having actually written its chapter in full. **Prefer waves of two or three** — wave B1 ran
+three and lost only one, which was then re-run alone and completed.
+
+> **PROCEDURE, not advice: check disk before believing a notification.** In wave B1 *all three*
+> agents reported failure or were killed, and **two had already written their chapters in full** —
+> 220 KB of verified work that a naive re-run would have overwritten. A completion notification is
+> evidence about the *agent*, never about the *filesystem*. Run `git status` plus a
+> `STATUS: SKELETON` grep and trust only that; a chapter that ends without its changelog line is
+> truncated. This has now cost real work twice.
 
 **Running these concurrently?** See [§15.6](#156-running-the-remaining-work-in-parallel-added-2026-07-26-d61)
 for the wave structure and the one rule that makes it safe: an agent writes **only its own chapter**
@@ -3477,8 +3521,8 @@ Defer all of them to the integration pass, or run those items' conversions seria
 | --- | --- | --- | --- |
 | **0** | **D5** | alone | The checker. Run it first and *act on its output* — it tells the Phase B waves which manifest rows are missing, which is information they otherwise each rediscover by hand. |
 | **1** | D7, D13, D14, D15 | 4 | M-sized, well-specified, each has a written guide counterpart to lean on. Good shakedown wave. |
-| **2** | D6, D8, D9, D16, D18 | 5 | D8's BindingPoints table is load-bearing for D9/D11 — land D8 before or with them. |
-| **3** | D12, D17 + D10, D11 | 4 | **D10 and D11 are XL and want a stronger model or your review** — the deferred-flush and pass-graph semantics must be exactly right. Consider running these two attended rather than fanned out. |
+| ~~**2**~~ | ~~D6, D8, D9, D16, D18~~ | — | ✅ **D9 done in wave 1; D6, D8, D18 done in wave B1** (2026-07-26). D16 slips to wave 3. D8's `BindingPoints` table and `#materialclone` anchor now exist, so D11 can link them. |
+| **3** | D12, D16, D17 + D10, D11 | 3 then 2 | **D10 and D11 are XL and want a stronger model or your review** — the deferred-flush and pass-graph semantics must be exactly right. Run these two attended rather than fanned out. D11 can now link D8's [`BindingPoints`](../reference/graphics-resources.md#bindingpoints) table instead of rediscovering it. |
 | **4** | D25 first, then D26–D33 | 1 then 8 | D25 (architecture-overview) is the map — do it first for orientation, but write its §5 directory table last. **D29 is XL** (the PBR material must explain, not name-drop). |
 | **5** | D34 | 1 | Depends on nothing, but its `build-plugin-packaging` half pairs with D25's module map. |
 | **6** | D35 → D36 | serial | Must be last and in order: D35 sweeps links, D36 runs the checker in full strict mode. |

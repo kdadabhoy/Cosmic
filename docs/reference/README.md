@@ -13,9 +13,9 @@
 
 | Chapter | Covers | Status |
 | --- | --- | --- |
-| [Core Runtime](core.md) | `Application`, `Layer`, `Log`, `Timestep`, `Window` client surface, `Ref`/`Scope`, plugin exports | SKELETON — D6 |
+| [**Core Runtime**](core.md) | `Application`, `Layer`, `LayerStack`, `Window`, `Log`, `Timestep`, `UUID`, `CommandStack`, `PlayerLayer`, `Ref`/`Scope`, plugin exports | **✅ WRITTEN — D6 · 2026-07-26** |
 | [**Events & Input**](events-input.md) | `Event` hierarchy, `EventDispatcher`, `Input` polling, key/mouse/gamepad codes | **✅ WRITTEN — D7 · 2026-07-26** |
-| [Graphics Resources](graphics-resources.md) | `Shader`, `Material`, `Texture2D`, `TextureCube`, `FrameBuffer`, vertex/index/uniform/storage buffers, `RenderCommand`, `BindingPoints`, `Renderer` init | SKELETON — D8 |
+| [**Graphics Resources**](graphics-resources.md) | `Shader`, `Material`, `MaterialAsset`, `Texture2D`, `TextureCube`, `FrameBuffer`, vertex/index/uniform/storage buffers, `RenderCommand`, [`BindingPoints`](graphics-resources.md#bindingpoints), `Renderer` init | **✅ WRITTEN — D8 · 2026-07-26** |
 | [**2D Rendering**](rendering-2d.md) | `Renderer2D` draw API, `RenderPass` multi-camera, `SubTexture2D`, `Font` text, `Light2DRenderer` | **✅ WRITTEN — D9 · 2026-07-26** |
 | [3D Rendering](rendering-3d.md) | `Renderer3D` (submit/cull/sort/instancing/transparency/LOD), `Mesh`, `Model`, `InstanceSet` — `Frustum` moved to [math.md](math.md) by D15 | SKELETON — D10 |
 | [Frame Pipeline](rendering-pipeline.md) | `SceneRenderer` pass orchestration, `PostProcessStack`, `EnvironmentMap` (IBL/sky), `ShadowMap`, `CoverageCapture` | SKELETON — D11 |
@@ -28,7 +28,7 @@
 | [Audio](audio.md) | `AudioEngine`, `Sound` | SKELETON — D16 |
 | [Serial & Telemetry](serial-telemetry.md) | `SerialPort`, `SerialLink`, `Framing`, `TelemetryChannel`, `DataRecorder`/`DataPlayer`, `TelemetryPanel`, entity selection | SKELETON — D17 |
 | [Jobs & Parallelism](jobs.md) | `JobSystem`, `ParallelSystem`, `ParallelFor`, `SystemQuery`, `ComponentArray`, `DoubleBuffer` | SKELETON — D17 |
-| [UI & Theming](ui.md) | `ImGuiLayer`, `WorkspaceLayer` docking surface, `ThemeManager`, `Fonts`, `Overlay`, `Widgets`, `PlotStyle`, Lucide icons | SKELETON — D18 |
+| [**UI & Theming**](ui.md) | `ImGuiLayer`, `HostContext`, `WorkspaceLayer` docking surface, `ThemeManager`, `ImGuiThemes`, `Fonts`, `Overlay`, `Widgets`, `PlotStyle`, Lucide icons | **✅ WRITTEN — D18 · 2026-07-26** |
 
 ## Entry format (mandatory — copy this shape)
 

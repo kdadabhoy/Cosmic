@@ -12,7 +12,7 @@ you before your first `ImGui::Begin`, the workspace docking model and port-mode
 `ui/Overlay.h`, `ui/IconsLucide.h`, `Cosmic.h`,
 `Cosmic/templates/ExampleProject/src/TemplateThemeShowcaseLayer.cpp`,
 `Projects/Starforge/src/{LayoutPresets,StarforgeApp}.cpp`, `Projects/SF_Telem/src/SF_Telem.cpp`
-**API Reference:** [`../reference/ui.md`](../reference/ui.md) *(skeleton — D18)*
+**API Reference:** [`../reference/ui.md`](../reference/ui.md)
 **How it works:** [`../systems/ui-theming.md`](../systems/ui-theming.md) *(skeleton — D34)*
 **Configuration:** **both.** Every header here is unfenced and compiles in the 2D and 3D engine
 builds ([`../systems/build-2d-3d-split.md`](../systems/build-2d-3d-split.md)).
@@ -608,5 +608,5 @@ popout; the port argument is vestigial.
   `PlotStyle` themes.
 - [`cameras.md`](cameras.md) — `Gizmo`'s frame protocol, which `BeginViewportOverlay` exists to
   satisfy.
-- [`../reference/ui.md`](../reference/ui.md) — per-call entries *(skeleton — D18)*.
+- [`../reference/ui.md`](../reference/ui.md) — per-call entries.
 - [`../systems/ui-theming.md`](../systems/ui-theming.md) — internals *(skeleton — D34)*.
