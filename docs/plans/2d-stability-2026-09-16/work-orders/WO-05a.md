@@ -1,6 +1,6 @@
 # WO-05a — Reproduce the reported COM crash early
 
-**Gate:** feeds G3 · **Depends on:** WO-02 only · **Acceptance:** feeds T03/T04 (diagnosis, not the full matrix) · **Status:** not started
+**Gate:** feeds G3 · **Depends on:** WO-02 only · **Acceptance:** feeds T03/T04 (diagnosis, not the full matrix) · **Status:** DONE 2026-09-17 — diagnosis delivered (KI-4); live BT/virtual-COM repro ENVIRONMENT_BLOCKED; seam spec handed to WO-04. Evidence: `../evidence/WO-05a/` + `tests/test_serial_shutdown_race.cpp`.
 
 New work order from the review. Your #1 reported pain is the COM close/link-loss crash. This spike
 **reproduces and diagnoses it before the full acceptance runner (WO-04) exists**, so the runner is

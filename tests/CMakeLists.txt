@@ -68,6 +68,10 @@ set(COSMIC_TEST_SOURCES
     # component loading on the 3D one.
     test_telemetry_robustness.cpp
     test_serial_lifecycle.cpp
+    # WO-05a (2D stability) — the reported COM close/link-loss crash: the reachable
+    # ownership-chain teardown guard + reserved ENVIRONMENT_BLOCKED seats for the
+    # connected-state repros WO-05 lights up once the WO-04 transport seam exists.
+    test_serial_shutdown_race.cpp
     test_sftelem_protocol.cpp
     test_sftelem_hub.cpp
     test_crossbuild_scene.cpp
