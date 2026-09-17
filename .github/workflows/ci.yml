@@ -6,9 +6,18 @@ on:
   pull_request:
     branches: [ main ]
 
+# 2D stability trunk PR gate (WO-03). Every configure here is the 2D engine
+# (-DCOSMIC_2D_ONLY=ON); the root CMakeLists also rejects OFF, so CI can never
+# build or test a 3D/mixed tree. GPU golden-image tests are NOT here — they need
+# a real GPU and live in gpu-qualification.yml (scheduled / dispatched, on a
+# self-hosted GPU runner), so this job stays non-blocking on GPU hardware.
 jobs:
   build-and-test:
     runs-on: windows-latest
+
+    env:
+      COSMIC_MODE: 2d          # build-mode token, folded into the cache key below
+      COSMIC_ARCH: x64
 
     steps:
       - name: Checkout
@@ -29,23 +38,102 @@ jobs:
         shell: pwsh
         run: ./tests/check_docs_coverage.ps1
 
+      # Toolchain identity for the cache key. The compiler version changes with the
+      # windows-latest image, and a cache restored across a compiler bump can hand
+      # the build stale, ABI-incompatible objects — so it becomes part of the key.
+      - name: Resolve toolchain id
+        id: toolchain
+        shell: pwsh
+        run: |
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          $ver = (& $vswhere -latest -products * -property installationVersion).Trim()
+          if (-not $ver) { $ver = "unknown" }
+          Write-Output "ver=$ver" >> $env:GITHUB_OUTPUT
+          Write-Output "MSVC toolset: $ver"
+
+      # Mode-aware build cache (WO-03 / KI-3). The old key hashed only the
+      # CMakeLists files, so flipping the build mode could restore a stale
+      # opposite-mode build/ directory. The key now carries the 2D/3D MODE token,
+      # the architecture and the MSVC toolchain version alongside the CMake file
+      # hashes, so a different mode / arch / compiler can never collide on one
+      # cache entry. The restore-keys prefix is likewise mode+arch+toolchain
+      # scoped so a partial restore can only reuse a SAME-mode build.
       - name: Cache CMake build
         uses: actions/cache@v4
         with:
           path: build
-          key: cmake-build-${{ runner.os }}-${{ hashFiles('CMakeLists.txt', 'Cosmic/CMakeLists.txt', 'Runtime/CMakeLists.txt', 'tests/CMakeLists.txt') }}
+          key: cmake-build-${{ runner.os }}-${{ env.COSMIC_MODE }}-${{ env.COSMIC_ARCH }}-msvc${{ steps.toolchain.outputs.ver }}-${{ hashFiles('CMakeLists.txt', 'Cosmic/CMakeLists.txt', 'Runtime/CMakeLists.txt', 'tests/CMakeLists.txt', 'Projects/Starforge/CMakeLists.txt', 'CMakePresets.json', '.github/workflows/ci.yml') }}
           restore-keys: |
-            cmake-build-${{ runner.os }}-
+            cmake-build-${{ runner.os }}-${{ env.COSMIC_MODE }}-${{ env.COSMIC_ARCH }}-msvc${{ steps.toolchain.outputs.ver }}-
 
-      - name: Configure
-        run: cmake -S . -B build -A x64 -DCOSMIC_BUILD_TESTS=ON
+      - name: Configure (2D-only engine)
+        run: cmake -S . -B build -A ${{ env.COSMIC_ARCH }} -DCOSMIC_2D_ONLY=ON -DCOSMIC_BUILD_TESTS=ON
+
+      # Guard: prove the configured tree really is 2D before spending a build on it.
+      # If a stale cache or a bad flag left COSMIC_2D_ONLY OFF, the root CMakeLists
+      # would already have failed the configure — this is a cheap belt-and-suspenders
+      # assertion that the cache we are about to build carries the 2D contract.
+      - name: Assert 2D mode in cache
+        shell: pwsh
+        run: |
+          $hit = Select-String -Path build/CMakeCache.txt -Pattern '^COSMIC_2D_ONLY:BOOL=ON$' -Quiet
+          if (-not $hit) { throw "CMakeCache does not carry COSMIC_2D_ONLY=ON — refusing to build a non-2D tree." }
+          Write-Output "Confirmed: build/CMakeCache.txt has COSMIC_2D_ONLY:BOOL=ON"
+
+      - name: Build (Debug)
+        run: cmake --build build --config Debug --parallel
 
       - name: Build (Release)
         run: cmake --build build --config Release --parallel
 
-      - name: Run unit tests
-        working-directory: build/Runtime/Release
-        run: ./CosmicTests.exe --reporters=console --no-intro
+      # Test-discovery guard (WO-03 / B05): a green process exit is NOT enough —
+      # a suite that silently filtered down to zero cases, or a renamed/missing
+      # executable, must fail CI. `--count` prints the number of matching test
+      # cases; we require it to clear a floor well below the known ~340 so an
+      # empty or degenerate suite is caught while normal suite growth is not.
+      - name: Test discovery check
+        shell: pwsh
+        working-directory: build/Runtime
+        run: |
+          $floor = 300
+          foreach ($cfg in @('Debug','Release')) {
+            $exe = "$cfg/CosmicTests.exe"
+            if (-not (Test-Path $exe)) { throw "Expected test binary '$exe' not found (renamed or not built?)." }
+            $out = & $exe --count --no-intro 2>&1 | Out-String
+            $m = [regex]::Match($out, 'test cases[^0-9]*([0-9]+)')
+            if (-not $m.Success) { throw "Could not read a test-case count from $cfg CosmicTests --count output:`n$out" }
+            $n = [int]$m.Groups[1].Value
+            Write-Output "$cfg CosmicTests discovered $n test cases (floor $floor)."
+            if ($n -lt $floor) { throw "$cfg test suite has $n cases, below the floor of $floor — suite empty, over-filtered or renamed." }
+          }
 
-      # Packaging is intentionally not part of CI yet — see
-      # docs/plans/07-installer-packaging-plan.md step 6 for the release job.
+      # doctest's console reporter, teed to a log file so the run stays visible in
+      # the Actions console AND lands as an uploadable report. $LASTEXITCODE is the
+      # real gate — a nonzero exit fails the step even though Tee-Object succeeds.
+      - name: Run unit tests (Debug)
+        shell: pwsh
+        working-directory: build/Runtime/Debug
+        run: |
+          & ./CosmicTests.exe --reporters=console --no-intro 2>&1 | Tee-Object -FilePath ../../../test-results-debug.txt
+          if ($LASTEXITCODE -ne 0) { throw "Debug unit tests failed (exit $LASTEXITCODE)." }
+
+      - name: Run unit tests (Release)
+        shell: pwsh
+        working-directory: build/Runtime/Release
+        run: |
+          & ./CosmicTests.exe --reporters=console --no-intro 2>&1 | Tee-Object -FilePath ../../../test-results-release.txt
+          if ($LASTEXITCODE -ne 0) { throw "Release unit tests failed (exit $LASTEXITCODE)." }
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cosmic-2d-test-reports
+          path: |
+            test-results-debug.txt
+            test-results-release.txt
+          if-no-files-found: warn
+
+      # Packaging is intentionally not part of this PR gate — see release.yml for
+      # the manual-dispatch 2D distributable job and docs/plans/07-installer-
+      # packaging-plan.md step 6.

@@ -1,0 +1,56 @@
+name: GPU qualification (2D)
+
+# WO-03: GPU golden-image qualification for the 2D engine. This job opens a real
+# window and compares GPU output against committed PNGs, so it needs an actual
+# GPU + display and CANNOT run on GitHub-hosted runners. It is deliberately NOT
+# part of the PR gate (ci.yml): it runs on a schedule and on manual dispatch, on
+# a self-hosted runner that carries the `gpu` label (the D-GPU target: Windows
+# 10/11 x64, OpenGL 4.5 core, NVIDIA incl. RTX 50-series). Until such a runner is
+# registered this workflow simply has nothing to pick it up — that is the intended
+# "established but non-blocking" state; no hosted runner will ever run it because
+# the labels below don't match one.
+
+on:
+  workflow_dispatch:
+  schedule:
+    # 06:00 UTC on Mondays — a weekly GPU regression sweep, off the PR path.
+    - cron: '0 6 * * 1'
+
+jobs:
+  gpu-render-goldens:
+    # Requires a self-hosted Windows runner with a real GPU, labelled `gpu`.
+    runs-on: [self-hosted, windows, gpu]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure (2D-only engine + render tests)
+        run: cmake -S . -B build -A x64 -DCOSMIC_2D_ONLY=ON -DCOSMIC_BUILD_RENDER_TESTS=ON
+
+      - name: Assert 2D mode in cache
+        shell: pwsh
+        run: |
+          $hit = Select-String -Path build/CMakeCache.txt -Pattern '^COSMIC_2D_ONLY:BOOL=ON$' -Quiet
+          if (-not $hit) { throw "Refused: build/CMakeCache.txt is not COSMIC_2D_ONLY=ON." }
+
+      - name: Build (Release)
+        run: cmake --build build --config Release --parallel
+
+      # The golden-image target compares GPU output against the committed 2D PNGs.
+      # A missing GPU/display must surface as a failure here, never a phantom pass
+      # (honest-gates rule) — so this job only ever runs where a GPU exists.
+      - name: Run golden-image render tests
+        working-directory: build/Runtime/Release
+        run: ./CosmicRenderTests.exe --reporters=console --no-intro
+
+      # On a mismatch the harness writes <name>.actual.png / <name>.diff.png next to
+      # the committed goldens (COSMIC_GOLDEN_DIR = tests/render/goldens), so upload
+      # that directory to inspect any regression.
+      - name: Upload render goldens and diffs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cosmic-2d-render-goldens
+          path: tests/render/goldens
+          if-no-files-found: warn

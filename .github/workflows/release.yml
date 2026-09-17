@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
     inputs:
       app_name:
-        description: "Project/plugin to package (its DLL must build in Release, e.g. SF_Telem, Frontier, Starforge)"
+        description: "Project/plugin to package (its DLL must build in Release, e.g. SF_Telem or Starforge — the 2D-only trunk ships these)"
         required: true
         default: "Starforge"
 
@@ -20,8 +20,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Configure
-        run: cmake -S . -B build -A x64 -DCOSMIC_BUILD_TESTS=OFF
+      # Explicit 2D configure (WO-03). Combined with the root CMakeLists rejecting
+      # COSMIC_2D_ONLY=OFF, a release run cannot produce a 3D or mixed distributable:
+      # editing this flag to OFF fails the configure outright, and the assertion
+      # below re-checks the generated cache before any staging happens.
+      - name: Configure (2D-only engine)
+        run: cmake -S . -B build -A x64 -DCOSMIC_2D_ONLY=ON -DCOSMIC_BUILD_TESTS=OFF
+
+      - name: Assert 2D mode in cache
+        shell: pwsh
+        run: |
+          $hit = Select-String -Path build/CMakeCache.txt -Pattern '^COSMIC_2D_ONLY:BOOL=ON$' -Quiet
+          if (-not $hit) { throw "Release refused: build/CMakeCache.txt is not COSMIC_2D_ONLY=ON — will not stage a non-2D distributable." }
+          Write-Output "Confirmed: staging a 2D-only distributable (COSMIC_2D_ONLY:BOOL=ON)."
 
       - name: Build (Release)
         run: cmake --build build --config Release --parallel
