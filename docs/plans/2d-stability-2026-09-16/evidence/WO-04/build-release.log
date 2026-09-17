@@ -1,0 +1,26 @@
+MSBuild version 18.7.8+1ac568fee for .NET Framework
+
+  Checking File Globs
+  glfw.vcxproj -> C:\dev\Cosmic\build\Cosmic\dependencies\glfw\src\Release\glfw3.lib
+  imgui.vcxproj -> C:\dev\Cosmic\build\Cosmic\Release\imgui.lib
+  ImGuizmo.vcxproj -> C:\dev\Cosmic\build\Cosmic\Release\ImGuizmo.lib
+  Jolt.vcxproj -> C:\dev\Cosmic\build\Cosmic\dependencies\JoltPhysics\Release\Jolt.lib
+  glad.vcxproj -> C:\dev\Cosmic\build\Cosmic\Release\glad.lib
+  implot.vcxproj -> C:\dev\Cosmic\build\Cosmic\Release\implot.lib
+  Application.cpp
+  PlayerLayer.cpp
+  WorkspaceLayer.cpp
+  SerialLink.cpp
+  SerialPort.cpp
+  Win32SerialTransport.cpp
+     Creating library C:/dev/Cosmic/build/Runtime/Release/Cosmic.lib and object C:/dev/Cosmic/build/Runtime/Release/Cosmic.exp
+  Cosmic.vcxproj -> C:\dev\Cosmic\build\Runtime\Release\Cosmic.dll
+  Syncing Cosmic Engine core assets to output directory...
+  test_audio.cpp
+  test_template_scripts.cpp
+  test_serial_lifecycle.cpp
+  test_serial_shutdown_race.cpp
+  test_serial_seam.cpp
+  test_sftelem_hub.cpp
+  TelemHub.cpp
+  CosmicTests.vcxproj -> C:\dev\Cosmic\build\Runtime\Release\CosmicTests.exe

@@ -1,0 +1,4 @@
+Placeholder golden for the acceptance runner's before/after golden-hash check (H03).
+The runner hashes every file under this directory before and after a run and flags any
+change, proving acceptance mode never regenerates a golden. Real image goldens for the
+G-tier render cases (R01-R07) are authored by their own work orders.

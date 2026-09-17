@@ -1,0 +1,347 @@
+﻿{
+    "manifest":  "selftest",
+    "profile":  "all",
+    "tier_filter":  [
+
+                    ],
+    "config":  "Release",
+    "mode":  "2D",
+    "generated_utc":  "2026-09-17T19:07:01.5052546Z",
+    "git":  {
+                "commit":  "cdee06d4d595f362a1cb93e4137417aaa29657f6",
+                "dirty":  true,
+                "dirty_diff_sha256":  "d7fb5420a6265c5df9ddc5e3916416cc63ed19068969cd3b941ffdc895b33013"
+            },
+    "environment":  {
+                        "os_caption":  "Microsoft Windows 11 Education",
+                        "os_version":  "10.0.26200",
+                        "os_build":  "26200",
+                        "os_display":  "26200.9457",
+                        "cpu_name":  "AMD Ryzen 7 7800X3D 8-Core Processor",
+                        "cpu_cores":  8,
+                        "cpu_threads":  16,
+                        "cpu_addr_width":  64,
+                        "cpu_isa_floor":  "SSE4.2 (D-CPU); see evidence/WO-02/cpu-isa-probe.txt",
+                        "ram_bytes":  33462239232,
+                        "ram_gib":  31.2,
+                        "gpus":  [
+                                     {
+                                         "name":  "NVIDIA GeForce RTX 5070 Ti",
+                                         "driver":  "32.0.16.1692",
+                                         "driver_date":  "\/Date(1788480000000)\/"
+                                     },
+                                     {
+                                         "name":  "AMD Radeon(TM) Graphics",
+                                         "driver":  "32.0.21045.5002",
+                                         "driver_date":  "\/Date(1786924800000)\/"
+                                     }
+                                 ],
+                        "opengl_version":  null,
+                        "powershell":  "5.1.26100.9444",
+                        "hostname":  "DESKTOP-SEOA4BT"
+                    },
+    "capabilities":  {
+                         "windows":  true,
+                         "cpu-sse42":  true,
+                         "gpu-gl":  false,
+                         "serial-device":  false,
+                         "editor-ui":  false
+                     },
+    "forced_unavailable":  [
+                               "gpu-gl"
+                           ],
+    "bin_dir":  "C:\\dev\\Cosmic\\build\\Runtime\\Release",
+    "run_temp":  "C:\\Users\\Kaden\\AppData\\Local\\Temp\\cosmic-accept-27f82e96331c4dafb6f585982f8ef29f",
+    "golden_dir":  "C:\\dev\\Cosmic\\tests\\acceptance\\goldens",
+    "golden_before":  {
+                          ".gitkeep-golden.txt":  "8e92944b7b4e999a32148948af2a13498ece10d56133c62c5c84431f2d335118"
+                      },
+    "golden_after":  {
+                         ".gitkeep-golden.txt":  "8e92944b7b4e999a32148948af2a13498ece10d56133c62c5c84431f2d335118"
+                     },
+    "golden_mutated":  false,
+    "acceptance_mode":  true,
+    "counts":  {
+                   "total":  11,
+                   "passed":  3,
+                   "failed":  6,
+                   "blocked":  2
+               },
+    "self_test":  {
+                      "enabled":  true,
+                      "failures":  [
+
+                                   ]
+                  },
+    "cases":  [
+                  {
+                      "id":  "H01a-intentional-nonzero-exit",
+                      "tier":  "W",
+                      "description":  "A child that exits nonzero must be FAILED, not a graceful pass.",
+                      "requires":  [
+
+                                   ],
+                      "transport":  "none",
+                      "seed":  null,
+                      "start_utc":  "2026-09-17T19:06:45.3387727Z",
+                      "deadline_sec":  15,
+                      "exercised":  "fixture",
+                      "fixture":  "C:\\dev\\Cosmic\\tests\\acceptance\\fixtures\\exit-nonzero.ps1",
+                      "fixture_sha256":  "c83b42369ebc79605fac4d2dff7c7329097cce4bc886d67a50ea35da8fdfaa3b",
+                      "command":  "powershell -NoProfile -ExecutionPolicy Bypass -File C:\\dev\\Cosmic\\tests\\acceptance\\fixtures\\exit-nonzero.ps1",
+                      "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-04\\acceptance-selftest\\H01a-intentional-nonzero-exit.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-04\\acceptance-selftest\\H01a-intentional-nonzero-exit.err.log",
+                      "pid":  17276,
+                      "exit_code":  7,
+                      "crash":  false,
+                      "stderr_tail":  "C:\\dev\\Cosmic\\tests\\acceptance\\fixtures\\exit-nonzero.ps1 : acceptance-selftest: simulated failure detail on stderr\n    + CategoryInfo          : NotSpecified: (:) [Write-Error], WriteErrorException\n    + FullyQualifiedErrorId : Microsoft.PowerShell.Commands.WriteErrorException,exit-nonzero.ps1\n ",
+                      "verdict":  "FAILED",
+                      "detail":  "nonzero-exit: exit 7, expected 0",
+                      "duration_sec":  0.253,
+                      "end_utc":  "2026-09-17T19:06:45.5979968Z",
+                      "expect_verdict":  "FAILED",
+                      "selftest_ok":  true
+                  },
+                  {
+                      "id":  "H01b-crashing-fixture",
+                      "tier":  "W",
+                      "description":  "A crashing child (FailFast) must be FAILED with crash evidence and logs preserved.",
+                      "requires":  [
+
+                                   ],
+                      "transport":  "none",
+                      "seed":  null,
+                      "start_utc":  "2026-09-17T19:06:45.6024220Z",
+                      "deadline_sec":  15,
+                      "exercised":  "fixture",
+                      "fixture":  "C:\\dev\\Cosmic\\tests\\acceptance\\fixtures\\crash.ps1",
+                      "fixture_sha256":  "9f5070dfd861941101a578f5bb514381a1501cb45597e3dfe7e90b3da7f5318f",
+                      "command":  "powershell -NoProfile -ExecutionPolicy Bypass -File C:\\dev\\Cosmic\\tests\\acceptance\\fixtures\\crash.ps1",
+                      "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-04\\acceptance-selftest\\H01b-crashing-fixture.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-04\\acceptance-selftest\\H01b-crashing-fixture.err.log",
+                      "pid":  9116,
+                      "exit_code":  -2146232797,
+                      "crash":  true,
+                      "verdict":  "FAILED",
+                      "detail":  "crash: exit -2146232797, expected 0",
+                      "duration_sec":  12.013,
+                      "end_utc":  "2026-09-17T19:06:57.6147308Z",
+                      "expect_verdict":  "FAILED",
+                      "selftest_ok":  true
+                  },
+                  {
+                      "id":  "H01c-passing-fixture",
+                      "tier":  "W",
+                      "description":  "A cleanly-succeeding child must be PASSED.",
+                      "requires":  [
+
+                                   ],
+                      "transport":  "none",
+                      "seed":  null,
+                      "start_utc":  "2026-09-17T19:06:57.6167324Z",
+                      "deadline_sec":  15,
+                      "exercised":  "fixture",
+                      "fixture":  "C:\\dev\\Cosmic\\tests\\acceptance\\fixtures\\pass.ps1",
+                      "fixture_sha256":  "b9a6a17ed9ca8dbcfe1a7bb91ead8e620cc7f8d5a8078ce0db0e7bd0bbac205f",
+                      "command":  "powershell -NoProfile -ExecutionPolicy Bypass -File C:\\dev\\Cosmic\\tests\\acceptance\\fixtures\\pass.ps1",
+                      "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-04\\acceptance-selftest\\H01c-passing-fixture.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-04\\acceptance-selftest\\H01c-passing-fixture.err.log",
+                      "pid":  2284,
+                      "exit_code":  0,
+                      "crash":  false,
+                      "verdict":  "PASSED",
+                      "detail":  "exit 0 as expected",
+                      "duration_sec":  0.194,
+                      "end_utc":  "2026-09-17T19:06:57.8105569Z",
+                      "expect_verdict":  "PASSED",
+                      "selftest_ok":  true
+                  },
+                  {
+                      "id":  "H02-hanging-child-times-out",
+                      "tier":  "W",
+                      "description":  "A child that hangs past its deadline must TIMEOUT; only its tree is killed and the parent survives.",
+                      "requires":  [
+
+                                   ],
+                      "transport":  "none",
+                      "seed":  null,
+                      "start_utc":  "2026-09-17T19:06:57.8115564Z",
+                      "deadline_sec":  2,
+                      "exercised":  "fixture",
+                      "fixture":  "C:\\dev\\Cosmic\\tests\\acceptance\\fixtures\\hang.ps1",
+                      "fixture_sha256":  "88e31461770be556bd56802b5401aa5e0a5fdbaf435f505fb3dd04ae530bbd33",
+                      "command":  "powershell -NoProfile -ExecutionPolicy Bypass -File C:\\dev\\Cosmic\\tests\\acceptance\\fixtures\\hang.ps1",
+                      "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-04\\acceptance-selftest\\H02-hanging-child-times-out.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-04\\acceptance-selftest\\H02-hanging-child-times-out.err.log",
+                      "pid":  400,
+                      "timed_out":  true,
+                      "child_alive_after_kill":  false,
+                      "parent_alive":  true,
+                      "verdict":  "TIMEOUT",
+                      "detail":  "exceeded per-case deadline of 2s; child tree killed, parent survived",
+                      "duration_sec":  2.075,
+                      "end_utc":  "2026-09-17T19:06:59.8867930Z",
+                      "expect_verdict":  "TIMEOUT",
+                      "selftest_ok":  true
+                  },
+                  {
+                      "id":  "H03-missing-fixture",
+                      "tier":  "U",
+                      "description":  "A declared fixture that does not exist must be MISSING (never a pass).",
+                      "requires":  [
+
+                                   ],
+                      "transport":  "none",
+                      "seed":  null,
+                      "start_utc":  "2026-09-17T19:06:59.8882346Z",
+                      "deadline_sec":  15,
+                      "exercised":  "production",
+                      "fixture":  "C:\\dev\\Cosmic\\tests\\acceptance\\fixtures\\does-not-exist.ps1",
+                      "verdict":  "MISSING",
+                      "detail":  "missing fixture: C:\\dev\\Cosmic\\tests\\acceptance\\fixtures\\does-not-exist.ps1",
+                      "duration_sec":  0.001,
+                      "end_utc":  "2026-09-17T19:06:59.8892393Z",
+                      "expect_verdict":  "MISSING",
+                      "selftest_ok":  true
+                  },
+                  {
+                      "id":  "H03-missing-test-zero-count",
+                      "tier":  "U",
+                      "description":  "A filter that matches zero tests must be a FAILURE (minTests unmet), even though the process exits 0.",
+                      "requires":  [
+
+                                   ],
+                      "transport":  "none",
+                      "seed":  null,
+                      "start_utc":  "2026-09-17T19:06:59.8912388Z",
+                      "deadline_sec":  60,
+                      "exercised":  "production",
+                      "command":  "C:\\dev\\Cosmic\\build\\Runtime\\Release\\CosmicTests.exe --test-case=__no_such_test_zzz__ --no-intro=true",
+                      "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-04\\acceptance-selftest\\H03-missing-test-zero-count.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-04\\acceptance-selftest\\H03-missing-test-zero-count.err.log",
+                      "pid":  5316,
+                      "exit_code":  0,
+                      "crash":  false,
+                      "tests_passed":  0,
+                      "tests_expected_min":  1,
+                      "verdict":  "FAILED",
+                      "detail":  "expected \u003e= 1 tests, got 0 (exit 0, wanted 0)",
+                      "duration_sec":  0.042,
+                      "end_utc":  "2026-09-17T19:06:59.9322374Z",
+                      "expect_verdict":  "FAILED",
+                      "selftest_ok":  true
+                  },
+                  {
+                      "id":  "H03-missing-golden",
+                      "tier":  "G",
+                      "description":  "A declared-but-missing golden must be MISSING; acceptance mode never regenerates it.",
+                      "requires":  [
+
+                                   ],
+                      "transport":  "none",
+                      "seed":  null,
+                      "start_utc":  "2026-09-17T19:06:59.9343635Z",
+                      "deadline_sec":  15,
+                      "exercised":  "production",
+                      "golden":  "C:\\dev\\Cosmic\\tests\\acceptance\\goldens\\does-not-exist.png",
+                      "verdict":  "MISSING",
+                      "detail":  "missing golden: C:\\dev\\Cosmic\\tests\\acceptance\\goldens\\does-not-exist.png (acceptance mode never regenerates goldens)",
+                      "duration_sec":  0.001,
+                      "end_utc":  "2026-09-17T19:06:59.9353644Z",
+                      "expect_verdict":  "MISSING",
+                      "selftest_ok":  true
+                  },
+                  {
+                      "id":  "H04-serial-hardware-blocked",
+                      "tier":  "W",
+                      "description":  "A case needing real serial hardware is ENVIRONMENT_BLOCKED (no usable COM per campaign) â€” never a phantom pass.",
+                      "requires":  [
+                                       "serial-device"
+                                   ],
+                      "transport":  "none",
+                      "seed":  null,
+                      "start_utc":  "2026-09-17T19:06:59.9363638Z",
+                      "deadline_sec":  60,
+                      "exercised":  "production",
+                      "verdict":  "ENVIRONMENT_BLOCKED",
+                      "detail":  "missing capability: serial-device",
+                      "duration_sec":  0.001,
+                      "end_utc":  "2026-09-17T19:06:59.9373636Z",
+                      "expect_verdict":  "ENVIRONMENT_BLOCKED",
+                      "selftest_ok":  true
+                  },
+                  {
+                      "id":  "H04-gpu-blocked",
+                      "tier":  "G",
+                      "description":  "A case needing a GPU/GL context is ENVIRONMENT_BLOCKED when that capability is absent (self-test forces gpu-gl off to exercise the branch).",
+                      "requires":  [
+                                       "gpu-gl"
+                                   ],
+                      "transport":  "none",
+                      "seed":  null,
+                      "start_utc":  "2026-09-17T19:06:59.9383666Z",
+                      "deadline_sec":  60,
+                      "exercised":  "production",
+                      "verdict":  "ENVIRONMENT_BLOCKED",
+                      "detail":  "missing capability: gpu-gl",
+                      "duration_sec":  0,
+                      "end_utc":  "2026-09-17T19:06:59.9393682Z",
+                      "expect_verdict":  "ENVIRONMENT_BLOCKED",
+                      "selftest_ok":  true
+                  },
+                  {
+                      "id":  "H04-fake-transport-runs",
+                      "tier":  "W",
+                      "description":  "The fake serial transport case still RUNS (no hardware) and identifies itself as fake in evidence.",
+                      "requires":  [
+
+                                   ],
+                      "transport":  "fake",
+                      "seed":  null,
+                      "start_utc":  "2026-09-17T19:06:59.9413701Z",
+                      "deadline_sec":  60,
+                      "exercised":  "fake-transport",
+                      "command":  "C:\\dev\\Cosmic\\build\\Runtime\\Release\\CosmicTests.exe \"--test-case=WO-04 seam*\" --no-intro=true",
+                      "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-04\\acceptance-selftest\\H04-fake-transport-runs.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-04\\acceptance-selftest\\H04-fake-transport-runs.err.log",
+                      "pid":  3252,
+                      "exit_code":  0,
+                      "crash":  false,
+                      "tests_passed":  5,
+                      "tests_expected_min":  5,
+                      "verdict":  "PASSED",
+                      "detail":  "exit 0 as expected",
+                      "duration_sec":  1.513,
+                      "end_utc":  "2026-09-17T19:07:01.4542572Z",
+                      "expect_verdict":  "PASSED",
+                      "selftest_ok":  true
+                  },
+                  {
+                      "id":  "Hnormal-minimal-pass",
+                      "tier":  "U",
+                      "description":  "A normal minimal case passes end to end through the runner.",
+                      "requires":  [
+
+                                   ],
+                      "transport":  "none",
+                      "seed":  0,
+                      "start_utc":  "2026-09-17T19:07:01.4562581Z",
+                      "deadline_sec":  60,
+                      "exercised":  "production",
+                      "command":  "C:\\dev\\Cosmic\\build\\Runtime\\Release\\CosmicTests.exe \"--test-case=WO-04 seam: an injected transport replaces port discovery\" --no-intro=true",
+                      "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-04\\acceptance-selftest\\Hnormal-minimal-pass.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-04\\acceptance-selftest\\Hnormal-minimal-pass.err.log",
+                      "pid":  17836,
+                      "exit_code":  0,
+                      "crash":  false,
+                      "tests_passed":  1,
+                      "tests_expected_min":  1,
+                      "verdict":  "PASSED",
+                      "detail":  "exit 0 as expected",
+                      "duration_sec":  0.037,
+                      "end_utc":  "2026-09-17T19:07:01.4932559Z",
+                      "expect_verdict":  "PASSED",
+                      "selftest_ok":  true
+                  }
+              ]
+}

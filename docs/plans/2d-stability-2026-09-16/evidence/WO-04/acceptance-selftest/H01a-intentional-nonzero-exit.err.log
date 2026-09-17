@@ -1,0 +1,4 @@
+C:\dev\Cosmic\tests\acceptance\fixtures\exit-nonzero.ps1 : acceptance-selftest: simulated failure detail on stderr
+    + CategoryInfo          : NotSpecified: (:) [Write-Error], WriteErrorException
+    + FullyQualifiedErrorId : Microsoft.PowerShell.Commands.WriteErrorException,exit-nonzero.ps1
+ 

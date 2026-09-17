@@ -45,12 +45,14 @@
  */
 
 #include "core/Core.h"   // COSMIC_API — export across the engine DLL boundary
+#include "serial/ISerialTransport.h"   // the OS-boundary seam (WO-04)
 
 #include <string>
 #include <vector>
 #include <mutex>
 #include <thread>
 #include <atomic>
+#include <memory>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -73,6 +75,14 @@ namespace Cosmic
 		///////////////////////////////
 
 		SerialPort();
+
+		// Test-only seam (WO-04): run the REAL connection state machine (threads,
+		// m_Abandon, the stop event, every State transition) over an injected
+		// transport, so the connected-state paths are reachable without hardware.
+		// Production never uses this — the default constructor installs the shipping
+		// Win32 transport. See transport-seam-spec.md.
+		explicit SerialPort(std::unique_ptr<ISerialTransport> transport);
+
 		~SerialPort();
 
 		////////////////////////////////
@@ -114,6 +124,11 @@ namespace Cosmic
 
 		static std::vector<std::string>		 GetAvailablePorts();
 
+		// Instance discovery through this port's transport — the seam SerialLink uses
+		// so an injected fake can offer a test port list. Identical to the static
+		// GetAvailablePorts() for the default Win32 transport.
+		std::vector<std::string>			 ListPorts();
+
 	private:
 		////////////////////////////////
 		// Internal Threading
@@ -145,13 +160,23 @@ namespace Cosmic
 		std::string				m_DataBuffer;
 
 		////////////////////////////////
+		// Transport (OS boundary)
+		///////////////////////////////
+
+		// The four OS calls (open/read/write/close) + port discovery, behind the
+		// WO-04 seam. Defaults to Win32SerialTransport (the shipping path); a test
+		// injects a fake. Never null after construction.
+		std::unique_ptr<ISerialTransport> m_Transport;
+
+		////////////////////////////////
 		// Platform Handle
 		///////////////////////////////
 
 #ifdef _WIN32
-		HANDLE		m_Handle;
 		// Manual-reset event signalled by Close() to wake the overlapped read
-		// thread instantly, so join() can never hang on a stalled port.
+		// thread instantly, so join() can never hang on a stalled port. This is
+		// synchronization owned by the state machine, NOT transport — it stays here
+		// and is passed into the transport's Open/Read as an opaque handle.
 		HANDLE		m_StopEvent = nullptr;
 #endif
 	};

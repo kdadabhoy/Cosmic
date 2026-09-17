@@ -1,12 +1,21 @@
 #include "SerialPort.h"
+#include "serial/Win32SerialTransport.h"
+
 #include <windows.h>
 #include <string.h>
 #include <iostream>
+#include <utility>
 #include "core/Log.h"
 
 namespace Cosmic
 {
-	SerialPort::SerialPort() : m_Handle(INVALID_HANDLE_VALUE) {}
+	// Default: the shipping Win32 transport. This is the only path production takes.
+	SerialPort::SerialPort()
+		: m_Transport(std::make_unique<Win32SerialTransport>()) {}
+
+	// Test-only seam: run the real state machine over an injected transport.
+	SerialPort::SerialPort(std::unique_ptr<ISerialTransport> transport)
+		: m_Transport(std::move(transport)) {}
 
 	SerialPort::~SerialPort() { Close(); }
 
@@ -91,42 +100,17 @@ namespace Cosmic
 	 */
 	bool SerialPort::DoOpen(const std::string& portName, uint32_t baudRate)
 	{
-		std::string fullPath = "\\\\.\\" + portName;
-		// Opened with GENERIC_WRITE to support future command transmission (not yet exposed in the API).
-		// FILE_FLAG_OVERLAPPED: reads are asynchronous so the read thread can wait on
-		// our stop event and bail out the moment Close() is called — CancelIoEx alone
-		// is unreliable on Bluetooth SPP ports and could hang the join() on shutdown.
-		m_Handle = CreateFileA(fullPath.c_str(), GENERIC_READ | GENERIC_WRITE, 0, NULL,
-		                       OPEN_EXISTING, FILE_FLAG_OVERLAPPED, NULL);
-
-		if (m_Handle == INVALID_HANDLE_VALUE) return false;
-
-		DCB dcbSerialParams = { 0 };
-		dcbSerialParams.DCBlength = sizeof(dcbSerialParams);
-		if (!GetCommState(m_Handle, &dcbSerialParams))
-		{
-			CloseHandle(m_Handle); m_Handle = INVALID_HANDLE_VALUE; return false;
-		}
-
-		dcbSerialParams.BaudRate = baudRate;
-		dcbSerialParams.ByteSize = 8;
-		dcbSerialParams.StopBits = ONESTOPBIT;
-		dcbSerialParams.Parity = NOPARITY;
-		if (!SetCommState(m_Handle, &dcbSerialParams))
-		{
-			CloseHandle(m_Handle); m_Handle = INVALID_HANDLE_VALUE; return false;
-		}
-
-		// Return shortly after data arrives (10 ms inter-byte gap) or after a 100 ms
-		// idle window — the overlapped wait below is what actually drives latency and
-		// cancellation, so these just keep a pending read from lingering forever.
-		COMMTIMEOUTS timeouts = { 0 };
-		timeouts.ReadIntervalTimeout = 10;
-		timeouts.ReadTotalTimeoutConstant = 100;
-		timeouts.ReadTotalTimeoutMultiplier = 0;
-		SetCommTimeouts(m_Handle, &timeouts);
-
+		// Create the stop event (synchronization owned by the state machine) BEFORE the
+		// open, so a transport that honours cancellation (the test seam) can observe it
+		// while inside a blocking open. The Win32 transport ignores it — CreateFileA
+		// cannot be cancelled, which is KI-4 — so shipping behaviour is unchanged.
 		m_StopEvent = CreateEvent(nullptr, TRUE, FALSE, nullptr); // manual-reset, unsignalled
+
+		if (!m_Transport->Open(portName, baudRate, m_StopEvent))
+		{
+			if (m_StopEvent) { CloseHandle(m_StopEvent); m_StopEvent = nullptr; }
+			return false;
+		}
 
 		m_Connected = true;
 		m_ReadThread = std::thread(&SerialPort::ReadLoop, this);
@@ -148,59 +132,31 @@ namespace Cosmic
 		int core = GetCurrentProcessorNumber();
 		CS_CORE_INFO("[SERIAL THREAD] Started with ID: {0} on Core: {1}", winThreadId, core);
 
-		char  buf[256];
-		OVERLAPPED ov = {};
-		ov.hEvent = CreateEvent(nullptr, TRUE, FALSE, nullptr); // manual-reset
+		char buf[256];
 
+		// The loop and buffer-append (state machine + data bridge) stay here; the
+		// overlapped ReadFile + wait-on-stop is the transport's job now.
 		while (m_Connected)
 		{
-			DWORD read = 0;
-			ResetEvent(ov.hEvent);
+			ReadResult r = m_Transport->Read(buf, sizeof(buf), m_StopEvent);
 
-			BOOL ok = ReadFile(m_Handle, buf, sizeof(buf), &read, &ov);
-			if (!ok)
+			if (r.status == ReadResult::Status::Aborted) // stop requested — exit
+				break;
+
+			if (r.status == ReadResult::Status::Dropped) // the device is gone
 			{
-				const DWORD err = GetLastError();
-				if (err == ERROR_IO_PENDING)
-				{
-					// Wait until the read completes OR Close() signals stop.
-					HANDLE waits[2] = { m_StopEvent, ov.hEvent };
-					const DWORD w = WaitForMultipleObjects(2, waits, FALSE, INFINITE);
-					if (w == WAIT_OBJECT_0) // stop requested — abort the pending read and exit
-					{
-						CancelIoEx(m_Handle, &ov);
-						GetOverlappedResult(m_Handle, &ov, &read, TRUE); // drain before buf/ov die
-						break;
-					}
-					if (!GetOverlappedResult(m_Handle, &ov, &read, FALSE))
-					{
-						const DWORD e2 = GetLastError();
-						if (e2 != ERROR_OPERATION_ABORTED)
-						{
-							CS_CORE_WARN("SerialPort: read error {0} — device disconnected.", e2);
-							m_Connected = false;
-							m_State.store(State::Failed);
-							break;
-						}
-					}
-				}
-				else // immediate failure — the device is gone
-				{
-					CS_CORE_WARN("SerialPort: ReadFile error {0} — device disconnected.", err);
-					m_Connected = false;
-					m_State.store(State::Failed);
-					break;
-				}
+				m_Connected = false;
+				m_State.store(State::Failed);
+				break;
 			}
 
-			if (read > 0)
+			if (r.bytes > 0)
 			{
 				std::lock_guard<std::mutex> lock(m_BufferMutex);
-				m_DataBuffer.append(buf, read); // exact bytes (may contain embedded NULs)
+				m_DataBuffer.append(buf, r.bytes); // exact bytes (may contain embedded NULs)
 			}
 		}
 
-		CloseHandle(ov.hEvent);
 		CS_CORE_INFO("[SERIAL THREAD] Shutting down.");
 	}
 
@@ -230,25 +186,12 @@ namespace Cosmic
 	 */
 	bool SerialPort::Write(const void* data, size_t length)
 	{
-		if (!m_Connected || m_Handle == INVALID_HANDLE_VALUE || length == 0)
+		// Guard on connected-state here (unchanged contract); the transport performs
+		// the actual overlapped write.
+		if (!m_Connected || length == 0)
 			return false;
 
-		OVERLAPPED ov = {};
-		ov.hEvent = CreateEvent(nullptr, TRUE, FALSE, nullptr);
-		if (!ov.hEvent)
-			return false;
-
-		DWORD written = 0;
-		BOOL ok = WriteFile(m_Handle, data, static_cast<DWORD>(length), &written, &ov);
-		if (!ok)
-		{
-			if (GetLastError() == ERROR_IO_PENDING)
-				ok = GetOverlappedResult(m_Handle, &ov, &written, TRUE);
-			else
-				CS_CORE_WARN("SerialPort: WriteFile error {0}.", GetLastError());
-		}
-		CloseHandle(ov.hEvent);
-		return ok && written == static_cast<DWORD>(length);
+		return m_Transport->Write(data, length);
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////
@@ -265,16 +208,15 @@ namespace Cosmic
 		m_Connected = false;
 		if (m_StopEvent)
 			SetEvent(m_StopEvent);          // wake the read thread instantly
-		if (m_Handle != INVALID_HANDLE_VALUE)
-			CancelIoEx(m_Handle, nullptr);  // belt-and-suspenders for the pending read
 		if (m_ReadThread.joinable())
 			m_ReadThread.join();
 
-		if (m_Handle != INVALID_HANDLE_VALUE)
-		{
-			CloseHandle(m_Handle);
-			m_Handle = INVALID_HANDLE_VALUE;
-		}
+		// Release the device only after the reader has joined, so CloseHandle can never
+		// race a pending read. (The transport also CancelIoEx's here — redundant on the
+		// reachable path since the stop event already woke the reader, but kept as the
+		// device-release primitive.)
+		m_Transport->Close();
+
 		if (m_StopEvent)
 		{
 			CloseHandle(m_StopEvent);
@@ -310,33 +252,23 @@ namespace Cosmic
 	 */
 	std::vector<std::string> SerialPort::GetAvailablePorts()
 	{
-		std::vector<std::string> ports;
-		HKEY hKey;
+		// The registry scan lives in the Win32 transport now (single implementation).
+		// This static keeps the long-standing public API and is what a caller without a
+		// SerialPort instance uses.
+		return Win32SerialTransport{}.List();
+	}
 
-		if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, "HARDWARE\\DEVICEMAP\\SERIALCOMM", 0, KEY_READ, &hKey) == ERROR_SUCCESS)
-		{
-			char valueName[256];
-			BYTE valueData[256];
-			DWORD nameSize, dataSize, type;
-			DWORD index = 0;
+	/////////////////////////////////////////////////////////////////////////////////
 
-			while (true)
-			{
-				nameSize = sizeof(valueName);
-				dataSize = sizeof(valueData);
-
-				LSTATUS status = RegEnumValueA(hKey, index, valueName, &nameSize, NULL, &type, valueData, &dataSize);
-
-				if (status == ERROR_SUCCESS)
-				{
-					ports.push_back(std::string((char*)valueData, strnlen((char*)valueData, dataSize)));
-					index++;
-				}
-				else break;
-			}
-			RegCloseKey(hKey);
-		}
-
-		return ports;
+	/**
+	 * ListPorts
+	 * * Instance discovery through this port's transport. For the default Win32
+	 * transport this is identical to GetAvailablePorts(); for an injected fake it
+	 * returns the test-set list, which is how SerialLink::RefreshPorts can select a
+	 * fake port without hardware.
+	 */
+	std::vector<std::string> SerialPort::ListPorts()
+	{
+		return m_Transport->List();
 	}
 }

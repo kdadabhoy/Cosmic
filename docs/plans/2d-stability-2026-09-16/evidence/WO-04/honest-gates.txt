@@ -1,0 +1,10 @@
+# WO-04 acceptance runner - honest-gate proofs
+
+## update-goldens refused in acceptance mode (expect exit 3)
+[FATAL] -UpdateGoldens cannot be enabled in acceptance mode (goldens are read-only here).
+exit: refused (3)
+
+## zero cases selected = FAILURE (expect exit 2)
+selected 0 case(s) of 11
+[FATAL] Zero cases selected for this profile/tier - a filtered suite with no expected tests is a FAILURE, not an empty pass.
+exit: failure (2)

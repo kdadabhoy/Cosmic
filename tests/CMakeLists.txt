@@ -72,6 +72,10 @@ set(COSMIC_TEST_SOURCES
     # ownership-chain teardown guard + reserved ENVIRONMENT_BLOCKED seats for the
     # connected-state repros WO-05 lights up once the WO-04 transport seam exists.
     test_serial_shutdown_race.cpp
+    # WO-04 (2D stability) — the injectable transport seam's own coverage: drives the
+    # real SerialPort/SerialLink state machine over FakeSerialTransport (tests/ only),
+    # reaching the connected state and making KI-4's teardown join observable.
+    test_serial_seam.cpp
     test_sftelem_protocol.cpp
     test_sftelem_hub.cpp
     test_crossbuild_scene.cpp

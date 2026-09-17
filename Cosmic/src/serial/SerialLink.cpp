@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <cmath>
 #include <string>
+#include <utility>
 
 namespace Cosmic
 {
@@ -15,12 +16,19 @@ namespace Cosmic
 		const ImVec4 kYellow(1.00f, 0.80f, 0.20f, 1.0f);  // open-no-data / connecting / retrying
 	}
 
+	// Test-only seam (WO-04): forward the injected transport into the owned SerialPort.
+	SerialLink::SerialLink(std::unique_ptr<ISerialTransport> transport)
+		: m_Port(std::move(transport)) {}
+
 	// =========================================================================
 	// Port discovery
 	// =========================================================================
 	void SerialLink::RefreshPorts()
 	{
-		m_Ports = SerialPort::GetAvailablePorts();
+		// Discover through the owned port's transport (the seam), NOT the static
+		// registry scan, so an injected fake can offer a test port list. Identical to
+		// SerialPort::GetAvailablePorts() for the default Win32 transport.
+		m_Ports = m_Port.ListPorts();
 		if (m_Ports.empty()) { m_Selected.clear(); return; }
 		if (std::find(m_Ports.begin(), m_Ports.end(), m_Selected) == m_Ports.end())
 			m_Selected = m_Ports.front();

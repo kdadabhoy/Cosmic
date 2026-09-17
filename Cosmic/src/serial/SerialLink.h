@@ -26,9 +26,11 @@
 
 #include "core/Core.h"   // COSMIC_API
 #include "serial/SerialPort.h"
+#include "serial/ISerialTransport.h"   // the OS-boundary seam (WO-04)
 
 #include <string>
 #include <vector>
+#include <memory>
 
 namespace Cosmic
 {
@@ -36,6 +38,12 @@ namespace Cosmic
 	{
 	public:
 		SerialLink() = default;
+
+		// Test-only seam (WO-04): forward an injected transport into the owned
+		// SerialPort so auto-reconnect / connected-state paths (the reconnect
+		// BeginOpen, ConsumeJustConnected, drop→Failed→retry) can be driven without
+		// hardware. Production uses the default constructor (Win32 transport).
+		explicit SerialLink(std::unique_ptr<ISerialTransport> transport);
 
 		// ---- Per-frame drive ----
 		void        OnUpdate(float dt);   // advance clock, ~1 Hz port scan, async auto-reconnect

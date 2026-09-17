@@ -1,0 +1,34 @@
+=== Cosmic 2D acceptance runner (WO-04) ===
+manifest=selftest  profile=all  config=Release  mode=2D
+bin=C:\dev\Cosmic\build\Runtime\Release
+commit=cdee06d4d595f362a1cb93e4137417aaa29657f6 dirty=True
+forced-unavailable capabilities (self-test): gpu-gl
+selected 11 case(s) of 11
+  [RUN ] H01a-intentional-nonzero-exit (W)
+  [FAILED] H01a-intentional-nonzero-exit - nonzero-exit: exit 7, expected 0
+  [RUN ] H01b-crashing-fixture (W)
+  [FAILED] H01b-crashing-fixture - crash: exit -2146232797, expected 0
+  [RUN ] H01c-passing-fixture (W)
+  [PASSED] H01c-passing-fixture - exit 0 as expected
+  [RUN ] H02-hanging-child-times-out (W)
+  [TIMEOUT] H02-hanging-child-times-out - exceeded per-case deadline of 2s; child tree killed, parent survived
+  [RUN ] H03-missing-fixture (U)
+  [MISSING] H03-missing-fixture - missing fixture: C:\dev\Cosmic\tests\acceptance\fixtures\does-not-exist.ps1
+  [RUN ] H03-missing-test-zero-count (U)
+  [FAILED] H03-missing-test-zero-count - expected >= 1 tests, got 0 (exit 0, wanted 0)
+  [RUN ] H03-missing-golden (G)
+  [MISSING] H03-missing-golden - missing golden: C:\dev\Cosmic\tests\acceptance\goldens\does-not-exist.png (acceptance mode never regenerates goldens)
+  [RUN ] H04-serial-hardware-blocked (W)
+  [ENVIRONMENT_BLOCKED] H04-serial-hardware-blocked - missing capability: serial-device
+  [RUN ] H04-gpu-blocked (G)
+  [ENVIRONMENT_BLOCKED] H04-gpu-blocked - missing capability: gpu-gl
+  [RUN ] H04-fake-transport-runs (W)
+  [PASSED] H04-fake-transport-runs - exit 0 as expected
+  [RUN ] Hnormal-minimal-pass (U)
+  [PASSED] Hnormal-minimal-pass - exit 0 as expected
+
+=== SUMMARY: 3 passed / 6 failed / 2 env-blocked (of 11) ===
+evidence: C:\dev\Cosmic\docs\plans\2d-stability-2026-09-16\evidence\WO-04\acceptance-selftest\results.json
+junit:    C:\dev\Cosmic\docs\plans\2d-stability-2026-09-16\evidence\WO-04\acceptance-selftest\results.junit.xml
+[SELF-TEST OK] every case was classified exactly as expected.
+per-run artifacts preserved: C:\Users\Kaden\AppData\Local\Temp\cosmic-accept-27f82e96331c4dafb6f585982f8ef29f

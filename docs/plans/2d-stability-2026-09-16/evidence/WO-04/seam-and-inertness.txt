@@ -1,0 +1,50 @@
+# WO-04 seam smoke + inertness raw evidence
+# commit base: cdee06d4d595f362a1cb93e4137417aaa29657f6  (working tree dirty: WO-04 changes uncommitted at capture)
+
+## Debug: full suite
+[doctest] test cases:    348 |    348 passed | 0 failed | 2 skipped
+[doctest] assertions: 116620 | 116620 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## Debug: WO-04 seam cases (durations)
+0.000167 s: WO-04 seam: the default SerialPort transport is Win32 (shipping path)
+0.000107 s: WO-04 seam: an injected transport replaces port discovery
+0.020098 s: WO-04 seam (a): a fake port opens, receives, and delivers the exact bytes
+0.236936 s: WO-04 seam (b): a mid-session drop drives State::Failed, then auto-reconnect re-opens
+1.200576 s: WO-04 seam (c): teardown while a reconnect worker blocks in Open exposes KI-4 (observable, not fixed)
+[doctest] test cases:  5 |  5 passed | 0 failed | 345 skipped
+[doctest] Status: SUCCESS!
+
+## Release: full suite
+[doctest] test cases:    348 |    348 passed | 0 failed | 2 skipped
+[doctest] assertions: 116617 | 116617 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## Release: WO-04 seam cases (durations)
+0.000072 s: WO-04 seam: the default SerialPort transport is Win32 (shipping path)
+0.000021 s: WO-04 seam: an injected transport replaces port discovery
+0.034148 s: WO-04 seam (a): a fake port opens, receives, and delivers the exact bytes
+0.236898 s: WO-04 seam (b): a mid-session drop drives State::Failed, then auto-reconnect re-opens
+1.201991 s: WO-04 seam (c): teardown while a reconnect worker blocks in Open exposes KI-4 (observable, not fixed)
+[doctest] test cases:  5 |  5 passed | 0 failed | 345 skipped
+[doctest] Status: SUCCESS!
+
+## Inertness: test_serial_lifecycle against the Win32 default (Release)
+[doctest] test cases:  16 |  16 passed | 0 failed | 334 skipped
+[doctest] assertions: 855 | 855 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## Inertness: WO-05a seats untouched (Release) - 3 reachable pass, 2 ENV-BLOCKED skipped
+[doctest] test cases:   3 |   3 passed | 0 failed | 347 skipped
+[doctest] assertions: 115 | 115 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## Inertness: FakeSerialTransport symbols in shipping Cosmic.dll (Release)
+fake exports: 0  (0 = does not ship)
+fake strings: 0
+0  (0 = does not ship)
+
+## Inertness: FakeSerialTransport source references (tests/ only)
+  tests/FakeSerialTransport.h
+  tests/test_serial_seam.cpp
+  tests/test_serial_shutdown_race.cpp

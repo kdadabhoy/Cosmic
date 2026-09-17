@@ -1,0 +1,12 @@
+[2026-09-17 12:06:59.972] [COSMIC] [info] [SERIAL THREAD] Started with ID: 8096 on Core: 2
+[2026-09-17 12:06:59.999] [COSMIC] [info] [SERIAL THREAD] Shutting down.
+[2026-09-17 12:06:59.999] [COSMIC] [info] [SERIAL THREAD] Started with ID: 13128 on Core: 3
+[2026-09-17 12:07:00.031] [COSMIC] [info] [SERIAL THREAD] Shutting down.
+[2026-09-17 12:07:00.219] [COSMIC] [info] [SERIAL THREAD] Started with ID: 13844 on Core: 11
+[2026-09-17 12:07:00.234] [COSMIC] [info] [SERIAL THREAD] Shutting down.
+[2026-09-17 12:07:01.447] [COSMIC] [info] [SERIAL THREAD] Started with ID: 10300 on Core: 7
+[2026-09-17 12:07:01.448] [COSMIC] [info] [SERIAL THREAD] Shutting down.
+===============================================================================
+[doctest] test cases:  5 |  5 passed | 0 failed | 345 skipped
+[doctest] assertions: 29 | 29 passed | 0 failed |
+[doctest] Status: SUCCESS!
