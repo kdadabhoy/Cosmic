@@ -1,0 +1,917 @@
+﻿[2026-09-17 00:29:24.341] [COSMIC] [info] AudioEngine initialized (48000 Hz, 2 channels).
+[2026-09-17 00:29:24.346] [COSMIC] [error] Sound::Create: failed to load 'does/not/exist_t2.wav' (miniaudio result -7) — degraded silent sound.
+[2026-09-17 00:29:24.358] [COSMIC] [trace] AudioEngine shut down.
+[2026-09-17 00:29:24.369] [COSMIC] [info] AudioEngine initialized (48000 Hz, 2 channels).
+[2026-09-17 00:29:24.377] [COSMIC] [trace] AudioEngine shut down.
+[2026-09-17 00:29:24.389] [COSMIC] [info] AudioEngine initialized (48000 Hz, 2 channels).
+[2026-09-17 00:29:24.389] [COSMIC] [error] Sound::Create: failed to load 'does/not/exist_ever.wav' (miniaudio result -7) — degraded silent sound.
+[2026-09-17 00:29:24.397] [COSMIC] [trace] AudioEngine shut down.
+[2026-09-17 00:29:24.397] [COSMIC] [warning] Sound::Create('also/missing.mp3'): audio engine unavailable — sound will be silent.
+[2026-09-17 00:29:24.408] [COSMIC] [info] AudioEngine initialized (48000 Hz, 2 channels).
+[2026-09-17 00:29:24.418] [COSMIC] [trace] AudioEngine shut down.
+[2026-09-17 00:29:24.434] [COSMIC] [warning] ImageIO::ReadPixels: could not decode 'C:/Users/Kaden/AppData/Local/Temp/cosmic_branding_test/missing.png'.
+[2026-09-17 00:29:24.438] [COSMIC] [error] Config: failed to parse bad.toml: Error while parsing key-value pair: expected '=', saw 'i' (line 1, column 6)
+[2026-09-17 00:29:24.476] [COSMIC] [info] ExeResources::SetIcon: embedded icon from 'C:\Users\Kaden\AppData\Local\Temp\cosmic_icontest.png' into 'C:\Users\Kaden\AppData\Local\Temp\cosmic_icontest.exe'.
+[2026-09-17 00:29:24.480] [COSMIC] [warning] FileWatcher: cannot open directory 'this/path/does/not/exist/hopefully' (error 3).
+[2026-09-17 00:29:24.555] [COSMIC] [warning] Scene::SetParent refused: the operation would create a cycle.
+[2026-09-17 00:29:24.555] [COSMIC] [warning] Scene::SetParent refused: the operation would create a cycle.
+[2026-09-17 00:29:24.560] [COSMIC] [error] LookupTable2D: invalid shape (2x2 breaks, 3 values) — table left empty.
+[2026-09-17 00:29:24.575] [COSMIC] [error] DataExport::LoadCSV: 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\lc_ragged.csv' line 2: 1 cells, expected 2.
+[2026-09-17 00:29:24.722] [COSMIC] [error] PhysicsWorld: unknown physics backend "definitely-not-registered" — falling back to "null". Register it with PhysicsBackendRegistry::Register before starting a session.
+[2026-09-17 00:29:24.953] [COSMIC] [warning] RigidBody on entity 0 has no collider — no body created.
+[2026-09-17 00:29:26.221] [COSMIC] [error] SceneManager: scene load failed — keeping the current scene.
+[2026-09-17 00:29:26.223] [COSMIC] [warning] ScriptHost: unknown script class 'NoSuchScript' — entity kept inert.
+[2026-09-17 00:29:26.385] [COSMIC] [warning] SerialPort::Open: an asynchronous connect is already in flight — ignored.
+[2026-09-17 00:29:33.591] [COSMIC] [error] DataPlayer::LoadBinaryFile: Bad magic in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_empty\empty.bin'. Not a CSMC file.
+[2026-09-17 00:29:33.591] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_empty\empty.bin'.
+[2026-09-17 00:29:33.598] [COSMIC] [error] DataPlayer::LoadBinaryFile: Bad magic in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_magic\bad.bin'. Not a CSMC file.
+[2026-09-17 00:29:33.598] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_magic\bad.bin'.
+[2026-09-17 00:29:33.600] [COSMIC] [error] DataPlayer::LoadBinaryFile: Bad magic in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_magic\stub.bin'. Not a CSMC file.
+[2026-09-17 00:29:33.600] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_magic\stub.bin'.
+[2026-09-17 00:29:33.608] [COSMIC] [error] DataPlayer: Unknown binary version 0 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_version\v0.bin'.
+[2026-09-17 00:29:33.608] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_version\v0.bin'.
+[2026-09-17 00:29:33.657] [COSMIC] [error] DataPlayer: Unknown binary version 2 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_version\v2.bin'.
+[2026-09-17 00:29:33.658] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_version\v2.bin'.
+[2026-09-17 00:29:33.665] [COSMIC] [error] DataPlayer: Unknown binary version 3 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_version\v3.bin'.
+[2026-09-17 00:29:33.665] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_version\v3.bin'.
+[2026-09-17 00:29:33.670] [COSMIC] [error] DataPlayer: Unknown binary version 4294967295 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_version\v4294967295.bin'.
+[2026-09-17 00:29:33.670] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_version\v4294967295.bin'.
+[2026-09-17 00:29:33.677] [COSMIC] [error] DataPlayer: Implausible entity count 4294967295 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_counts\entities.bin' (0 bytes left). File is corrupt.
+[2026-09-17 00:29:33.677] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_counts\entities.bin'.
+[2026-09-17 00:29:33.685] [COSMIC] [error] DataPlayer: Implausible entity count 4096 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_counts\entities_capped.bin' (0 bytes left). File is corrupt.
+[2026-09-17 00:29:33.685] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_counts\entities_capped.bin'.
+[2026-09-17 00:29:33.693] [COSMIC] [error] DataPlayer: Implausible channel count 4294967295 for entity 0 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_counts\channels.bin' (0 bytes left). File is corrupt.
+[2026-09-17 00:29:33.693] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_counts\channels.bin'.
+[2026-09-17 00:29:33.699] [COSMIC] [error] DataPlayer: Entity 0 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_counts\samples.bin' declares 4294967295 samples x 2 channels — more data than the 216-byte file holds. File is corrupt.
+[2026-09-17 00:29:33.699] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_counts\samples.bin'.
+[2026-09-17 00:29:33.709] [COSMIC] [error] DataPlayer: Entity 0 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_counts\aggregate.bin' declares 200000 samples x 2 channels — more data than the 12816-byte file holds. File is corrupt.
+[2026-09-17 00:29:33.709] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_counts\aggregate.bin'.
+[2026-09-17 00:29:33.710] [COSMIC] [info] DataRecorder: Starting background flush of 2 entities → 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate/real'.
+[2026-09-17 00:29:33.911] [COSMIC] [info] DataExport::WriteCSV: wrote 40 rows to 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate/real/EntityA.csv'.
+[2026-09-17 00:29:33.912] [COSMIC] [info] DataExport::WriteCSV: wrote 40 rows to 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate/real/EntityB.csv'.
+[2026-09-17 00:29:33.912] [COSMIC] [info] DataRecorder: Flush complete — 2 entities → 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\real'.
+[2026-09-17 00:29:34.042] [COSMIC] [info] DataPlayer: Loaded 2 entities, duration = 0.67s from 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\full.bin'.
+[2026-09-17 00:29:34.043] [COSMIC] [error] DataPlayer::LoadBinaryFile: Bad magic in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'. Not a CSMC file.
+[2026-09-17 00:29:34.043] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.048] [COSMIC] [error] DataPlayer: Truncated v1 header in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.048] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.052] [COSMIC] [error] DataPlayer: Truncated v1 header in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.052] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.056] [COSMIC] [error] DataPlayer: Implausible entity count 2 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' (5 bytes left). File is corrupt.
+[2026-09-17 00:29:34.056] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.061] [COSMIC] [error] DataPlayer: Implausible entity count 2 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' (12 bytes left). File is corrupt.
+[2026-09-17 00:29:34.061] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.065] [COSMIC] [error] DataPlayer: Implausible entity count 2 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' (19 bytes left). File is corrupt.
+[2026-09-17 00:29:34.065] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.070] [COSMIC] [error] DataPlayer: Implausible entity count 2 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' (26 bytes left). File is corrupt.
+[2026-09-17 00:29:34.070] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.075] [COSMIC] [error] DataPlayer: Implausible entity count 2 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' (33 bytes left). File is corrupt.
+[2026-09-17 00:29:34.075] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.080] [COSMIC] [error] DataPlayer: Implausible entity count 2 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' (40 bytes left). File is corrupt.
+[2026-09-17 00:29:34.080] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.085] [COSMIC] [error] DataPlayer: Implausible entity count 2 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' (47 bytes left). File is corrupt.
+[2026-09-17 00:29:34.085] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.090] [COSMIC] [error] DataPlayer: Implausible entity count 2 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' (54 bytes left). File is corrupt.
+[2026-09-17 00:29:34.090] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.094] [COSMIC] [error] DataPlayer: Implausible entity count 2 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' (61 bytes left). File is corrupt.
+[2026-09-17 00:29:34.094] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.099] [COSMIC] [error] DataPlayer: Implausible entity count 2 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' (68 bytes left). File is corrupt.
+[2026-09-17 00:29:34.099] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.104] [COSMIC] [error] DataPlayer: Implausible entity count 2 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' (75 bytes left). File is corrupt.
+[2026-09-17 00:29:34.104] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.108] [COSMIC] [error] DataPlayer: Implausible entity count 2 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' (82 bytes left). File is corrupt.
+[2026-09-17 00:29:34.108] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.113] [COSMIC] [error] DataPlayer: Implausible entity count 2 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' (89 bytes left). File is corrupt.
+[2026-09-17 00:29:34.113] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.119] [COSMIC] [error] DataPlayer: Implausible entity count 2 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' (96 bytes left). File is corrupt.
+[2026-09-17 00:29:34.119] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.123] [COSMIC] [error] DataPlayer: Implausible entity count 2 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' (103 bytes left). File is corrupt.
+[2026-09-17 00:29:34.123] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.145] [COSMIC] [error] DataPlayer: Implausible entity count 2 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' (110 bytes left). File is corrupt.
+[2026-09-17 00:29:34.145] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.150] [COSMIC] [error] DataPlayer: Implausible entity count 2 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' (117 bytes left). File is corrupt.
+[2026-09-17 00:29:34.150] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.157] [COSMIC] [error] DataPlayer: Implausible entity count 2 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' (124 bytes left). File is corrupt.
+[2026-09-17 00:29:34.157] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.161] [COSMIC] [error] DataPlayer: Implausible entity count 2 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' (131 bytes left). File is corrupt.
+[2026-09-17 00:29:34.161] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.167] [COSMIC] [error] DataPlayer: Implausible entity count 2 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' (138 bytes left). File is corrupt.
+[2026-09-17 00:29:34.167] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.171] [COSMIC] [error] DataPlayer: Implausible entity count 2 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' (145 bytes left). File is corrupt.
+[2026-09-17 00:29:34.171] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.176] [COSMIC] [error] DataPlayer: Implausible entity count 2 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' (152 bytes left). File is corrupt.
+[2026-09-17 00:29:34.176] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.181] [COSMIC] [error] DataPlayer: Implausible entity count 2 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' (159 bytes left). File is corrupt.
+[2026-09-17 00:29:34.181] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.186] [COSMIC] [error] DataPlayer: Implausible entity count 2 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' (166 bytes left). File is corrupt.
+[2026-09-17 00:29:34.186] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.190] [COSMIC] [error] DataPlayer: Implausible entity count 2 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' (173 bytes left). File is corrupt.
+[2026-09-17 00:29:34.190] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.196] [COSMIC] [error] DataPlayer: Implausible entity count 2 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' (180 bytes left). File is corrupt.
+[2026-09-17 00:29:34.196] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.200] [COSMIC] [error] DataPlayer: Implausible entity count 2 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' (187 bytes left). File is corrupt.
+[2026-09-17 00:29:34.201] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.205] [COSMIC] [error] DataPlayer: Implausible entity count 2 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' (194 bytes left). File is corrupt.
+[2026-09-17 00:29:34.205] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.210] [COSMIC] [error] DataPlayer: Implausible entity count 2 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' (201 bytes left). File is corrupt.
+[2026-09-17 00:29:34.210] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.215] [COSMIC] [error] DataPlayer: Implausible entity count 2 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' (208 bytes left). File is corrupt.
+[2026-09-17 00:29:34.215] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.220] [COSMIC] [error] DataPlayer: Implausible entity count 2 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' (215 bytes left). File is corrupt.
+[2026-09-17 00:29:34.220] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.226] [COSMIC] [error] DataPlayer: Implausible entity count 2 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' (222 bytes left). File is corrupt.
+[2026-09-17 00:29:34.226] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.231] [COSMIC] [error] DataPlayer: Implausible entity count 2 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' (229 bytes left). File is corrupt.
+[2026-09-17 00:29:34.231] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.237] [COSMIC] [error] DataPlayer: Implausible entity count 2 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' (236 bytes left). File is corrupt.
+[2026-09-17 00:29:34.237] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.241] [COSMIC] [error] DataPlayer: Implausible entity count 2 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' (243 bytes left). File is corrupt.
+[2026-09-17 00:29:34.241] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.246] [COSMIC] [error] DataPlayer: Implausible entity count 2 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' (250 bytes left). File is corrupt.
+[2026-09-17 00:29:34.246] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.252] [COSMIC] [error] DataPlayer: Implausible entity count 2 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' (257 bytes left). File is corrupt.
+[2026-09-17 00:29:34.252] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.256] [COSMIC] [error] DataPlayer: Implausible entity count 2 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' (264 bytes left). File is corrupt.
+[2026-09-17 00:29:34.256] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.262] [COSMIC] [error] DataPlayer: Implausible entity count 2 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' (271 bytes left). File is corrupt.
+[2026-09-17 00:29:34.262] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.266] [COSMIC] [error] DataPlayer: Entity 0 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 3 channels — more data than the 294-byte file holds. File is corrupt.
+[2026-09-17 00:29:34.266] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.271] [COSMIC] [error] DataPlayer: Entity 0 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 3 channels — more data than the 301-byte file holds. File is corrupt.
+[2026-09-17 00:29:34.271] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.276] [COSMIC] [error] DataPlayer: Entity 0 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 3 channels — more data than the 308-byte file holds. File is corrupt.
+[2026-09-17 00:29:34.277] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.281] [COSMIC] [error] DataPlayer: Entity 0 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 3 channels — more data than the 315-byte file holds. File is corrupt.
+[2026-09-17 00:29:34.281] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.286] [COSMIC] [error] DataPlayer: Entity 0 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 3 channels — more data than the 322-byte file holds. File is corrupt.
+[2026-09-17 00:29:34.286] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.290] [COSMIC] [error] DataPlayer: Entity 0 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 3 channels — more data than the 329-byte file holds. File is corrupt.
+[2026-09-17 00:29:34.290] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.294] [COSMIC] [error] DataPlayer: Entity 0 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 3 channels — more data than the 336-byte file holds. File is corrupt.
+[2026-09-17 00:29:34.294] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.299] [COSMIC] [error] DataPlayer: Entity 0 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 3 channels — more data than the 343-byte file holds. File is corrupt.
+[2026-09-17 00:29:34.300] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.304] [COSMIC] [error] DataPlayer: Entity 0 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 3 channels — more data than the 350-byte file holds. File is corrupt.
+[2026-09-17 00:29:34.304] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.308] [COSMIC] [error] DataPlayer: Entity 0 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 3 channels — more data than the 357-byte file holds. File is corrupt.
+[2026-09-17 00:29:34.308] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.314] [COSMIC] [error] DataPlayer: Entity 0 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 3 channels — more data than the 364-byte file holds. File is corrupt.
+[2026-09-17 00:29:34.314] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.318] [COSMIC] [error] DataPlayer: Entity 0 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 3 channels — more data than the 371-byte file holds. File is corrupt.
+[2026-09-17 00:29:34.318] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.323] [COSMIC] [error] DataPlayer: Entity 0 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 3 channels — more data than the 378-byte file holds. File is corrupt.
+[2026-09-17 00:29:34.323] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.327] [COSMIC] [error] DataPlayer: Entity 0 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 3 channels — more data than the 385-byte file holds. File is corrupt.
+[2026-09-17 00:29:34.327] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.333] [COSMIC] [error] DataPlayer: Entity 0 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 3 channels — more data than the 392-byte file holds. File is corrupt.
+[2026-09-17 00:29:34.333] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.338] [COSMIC] [error] DataPlayer: Entity 0 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 3 channels — more data than the 399-byte file holds. File is corrupt.
+[2026-09-17 00:29:34.338] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.343] [COSMIC] [error] DataPlayer: Entity 0 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 3 channels — more data than the 406-byte file holds. File is corrupt.
+[2026-09-17 00:29:34.343] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.348] [COSMIC] [error] DataPlayer: Entity 0 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 3 channels — more data than the 413-byte file holds. File is corrupt.
+[2026-09-17 00:29:34.348] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.354] [COSMIC] [error] DataPlayer: Entity 0 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 3 channels — more data than the 420-byte file holds. File is corrupt.
+[2026-09-17 00:29:34.354] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.359] [COSMIC] [error] DataPlayer: Entity 0 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 3 channels — more data than the 427-byte file holds. File is corrupt.
+[2026-09-17 00:29:34.359] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.363] [COSMIC] [error] DataPlayer: Entity 0 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 3 channels — more data than the 434-byte file holds. File is corrupt.
+[2026-09-17 00:29:34.363] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.369] [COSMIC] [error] DataPlayer: Entity 0 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 3 channels — more data than the 441-byte file holds. File is corrupt.
+[2026-09-17 00:29:34.369] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.373] [COSMIC] [error] DataPlayer: Entity 0 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 3 channels — more data than the 448-byte file holds. File is corrupt.
+[2026-09-17 00:29:34.373] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.378] [COSMIC] [error] DataPlayer: Entity 0 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 3 channels — more data than the 455-byte file holds. File is corrupt.
+[2026-09-17 00:29:34.378] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.383] [COSMIC] [error] DataPlayer: Entity 0 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 3 channels — more data than the 462-byte file holds. File is corrupt.
+[2026-09-17 00:29:34.383] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.388] [COSMIC] [error] DataPlayer: Entity 0 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 3 channels — more data than the 469-byte file holds. File is corrupt.
+[2026-09-17 00:29:34.388] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.393] [COSMIC] [error] DataPlayer: Entity 0 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 3 channels — more data than the 476-byte file holds. File is corrupt.
+[2026-09-17 00:29:34.394] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.437] [COSMIC] [error] DataPlayer: Entity 0 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 3 channels — more data than the 483-byte file holds. File is corrupt.
+[2026-09-17 00:29:34.437] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.445] [COSMIC] [error] DataPlayer: Entity 0 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 3 channels — more data than the 490-byte file holds. File is corrupt.
+[2026-09-17 00:29:34.445] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.454] [COSMIC] [error] DataPlayer: Entity 0 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 3 channels — more data than the 497-byte file holds. File is corrupt.
+[2026-09-17 00:29:34.454] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.463] [COSMIC] [error] DataPlayer: Entity 0 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 3 channels — more data than the 504-byte file holds. File is corrupt.
+[2026-09-17 00:29:34.463] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.472] [COSMIC] [error] DataPlayer: Entity 0 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 3 channels — more data than the 511-byte file holds. File is corrupt.
+[2026-09-17 00:29:34.473] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.478] [COSMIC] [error] DataPlayer: Entity 0 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 3 channels — more data than the 518-byte file holds. File is corrupt.
+[2026-09-17 00:29:34.478] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.483] [COSMIC] [error] DataPlayer: Entity 0 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 3 channels — more data than the 525-byte file holds. File is corrupt.
+[2026-09-17 00:29:34.483] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.489] [COSMIC] [error] DataPlayer: Entity 0 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 3 channels — more data than the 532-byte file holds. File is corrupt.
+[2026-09-17 00:29:34.489] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.495] [COSMIC] [error] DataPlayer: Entity 0 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 3 channels — more data than the 539-byte file holds. File is corrupt.
+[2026-09-17 00:29:34.495] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.499] [COSMIC] [error] DataPlayer: Entity 0 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 3 channels — more data than the 546-byte file holds. File is corrupt.
+[2026-09-17 00:29:34.499] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.505] [COSMIC] [error] DataPlayer: Entity 0 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 3 channels — more data than the 553-byte file holds. File is corrupt.
+[2026-09-17 00:29:34.505] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.509] [COSMIC] [error] DataPlayer: Entity 0 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 3 channels — more data than the 560-byte file holds. File is corrupt.
+[2026-09-17 00:29:34.510] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.514] [COSMIC] [error] DataPlayer: Entity 0 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 3 channels — more data than the 567-byte file holds. File is corrupt.
+[2026-09-17 00:29:34.514] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.520] [COSMIC] [error] DataPlayer: Entity 0 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 3 channels — more data than the 574-byte file holds. File is corrupt.
+[2026-09-17 00:29:34.521] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.526] [COSMIC] [error] DataPlayer: Entity 0 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 3 channels — more data than the 581-byte file holds. File is corrupt.
+[2026-09-17 00:29:34.526] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.532] [COSMIC] [error] DataPlayer: Entity 0 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 3 channels — more data than the 588-byte file holds. File is corrupt.
+[2026-09-17 00:29:34.532] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.538] [COSMIC] [error] DataPlayer: Entity 0 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 3 channels — more data than the 595-byte file holds. File is corrupt.
+[2026-09-17 00:29:34.538] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.576] [COSMIC] [error] DataPlayer: Entity 0 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 3 channels — more data than the 602-byte file holds. File is corrupt.
+[2026-09-17 00:29:34.576] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.610] [COSMIC] [error] DataPlayer: Entity 0 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 3 channels — more data than the 609-byte file holds. File is corrupt.
+[2026-09-17 00:29:34.610] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.654] [COSMIC] [error] DataPlayer: Entity 0 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 3 channels — more data than the 616-byte file holds. File is corrupt.
+[2026-09-17 00:29:34.654] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.709] [COSMIC] [error] DataPlayer: Entity 0 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 3 channels — more data than the 623-byte file holds. File is corrupt.
+[2026-09-17 00:29:34.709] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.734] [COSMIC] [error] DataPlayer: Entity 0 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 3 channels — more data than the 630-byte file holds. File is corrupt.
+[2026-09-17 00:29:34.734] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.761] [COSMIC] [error] DataPlayer: Entity 0 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 3 channels — more data than the 637-byte file holds. File is corrupt.
+[2026-09-17 00:29:34.762] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.781] [COSMIC] [error] DataPlayer: Entity 1 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 1 channels — more data than the 644-byte file holds. File is corrupt.
+[2026-09-17 00:29:34.781] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.812] [COSMIC] [error] DataPlayer: Entity 1 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 1 channels — more data than the 651-byte file holds. File is corrupt.
+[2026-09-17 00:29:34.812] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.850] [COSMIC] [error] DataPlayer: Entity 1 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 1 channels — more data than the 658-byte file holds. File is corrupt.
+[2026-09-17 00:29:34.850] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:34.912] [COSMIC] [error] DataPlayer: Entity 1 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 1 channels — more data than the 665-byte file holds. File is corrupt.
+[2026-09-17 00:29:34.912] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:35.059] [COSMIC] [error] DataPlayer: Entity 1 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 1 channels — more data than the 672-byte file holds. File is corrupt.
+[2026-09-17 00:29:35.059] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:35.271] [COSMIC] [error] DataPlayer: Entity 1 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 1 channels — more data than the 679-byte file holds. File is corrupt.
+[2026-09-17 00:29:35.271] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:35.540] [COSMIC] [error] DataPlayer: Entity 1 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 1 channels — more data than the 686-byte file holds. File is corrupt.
+[2026-09-17 00:29:35.540] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:35.661] [COSMIC] [error] DataPlayer: Entity 1 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 1 channels — more data than the 693-byte file holds. File is corrupt.
+[2026-09-17 00:29:35.661] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:35.924] [COSMIC] [error] DataPlayer: Entity 1 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 1 channels — more data than the 700-byte file holds. File is corrupt.
+[2026-09-17 00:29:35.924] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:36.170] [COSMIC] [error] DataPlayer: Entity 1 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 1 channels — more data than the 707-byte file holds. File is corrupt.
+[2026-09-17 00:29:36.170] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:36.178] [COSMIC] [error] DataPlayer: Entity 1 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 1 channels — more data than the 714-byte file holds. File is corrupt.
+[2026-09-17 00:29:36.179] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:36.184] [COSMIC] [error] DataPlayer: Entity 1 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 1 channels — more data than the 721-byte file holds. File is corrupt.
+[2026-09-17 00:29:36.184] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:36.308] [COSMIC] [error] DataPlayer: Entity 1 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 1 channels — more data than the 728-byte file holds. File is corrupt.
+[2026-09-17 00:29:36.308] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:36.428] [COSMIC] [error] DataPlayer: Entity 1 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 1 channels — more data than the 735-byte file holds. File is corrupt.
+[2026-09-17 00:29:36.428] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:36.434] [COSMIC] [error] DataPlayer: Entity 1 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 1 channels — more data than the 742-byte file holds. File is corrupt.
+[2026-09-17 00:29:36.434] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:36.448] [COSMIC] [error] DataPlayer: Entity 1 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 1 channels — more data than the 749-byte file holds. File is corrupt.
+[2026-09-17 00:29:36.448] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:36.667] [COSMIC] [error] DataPlayer: Entity 1 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 1 channels — more data than the 756-byte file holds. File is corrupt.
+[2026-09-17 00:29:36.667] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:36.672] [COSMIC] [error] DataPlayer: Entity 1 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 1 channels — more data than the 763-byte file holds. File is corrupt.
+[2026-09-17 00:29:36.673] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:36.903] [COSMIC] [error] DataPlayer: Entity 1 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 1 channels — more data than the 770-byte file holds. File is corrupt.
+[2026-09-17 00:29:36.903] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:37.184] [COSMIC] [error] DataPlayer: Entity 1 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 1 channels — more data than the 777-byte file holds. File is corrupt.
+[2026-09-17 00:29:37.184] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:37.190] [COSMIC] [error] DataPlayer: Entity 1 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 1 channels — more data than the 784-byte file holds. File is corrupt.
+[2026-09-17 00:29:37.190] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:37.195] [COSMIC] [error] DataPlayer: Entity 1 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 1 channels — more data than the 791-byte file holds. File is corrupt.
+[2026-09-17 00:29:37.195] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:37.314] [COSMIC] [error] DataPlayer: Entity 1 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 1 channels — more data than the 798-byte file holds. File is corrupt.
+[2026-09-17 00:29:37.314] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:37.320] [COSMIC] [error] DataPlayer: Entity 1 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 1 channels — more data than the 805-byte file holds. File is corrupt.
+[2026-09-17 00:29:37.320] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:37.453] [COSMIC] [error] DataPlayer: Entity 1 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 1 channels — more data than the 812-byte file holds. File is corrupt.
+[2026-09-17 00:29:37.453] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:37.691] [COSMIC] [error] DataPlayer: Entity 1 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 1 channels — more data than the 819-byte file holds. File is corrupt.
+[2026-09-17 00:29:37.691] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:37.695] [COSMIC] [error] DataPlayer: Entity 1 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 1 channels — more data than the 826-byte file holds. File is corrupt.
+[2026-09-17 00:29:37.696] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:37.700] [COSMIC] [error] DataPlayer: Entity 1 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 1 channels — more data than the 833-byte file holds. File is corrupt.
+[2026-09-17 00:29:37.700] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:37.815] [COSMIC] [error] DataPlayer: Entity 1 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 1 channels — more data than the 840-byte file holds. File is corrupt.
+[2026-09-17 00:29:37.816] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:37.820] [COSMIC] [error] DataPlayer: Entity 1 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 1 channels — more data than the 847-byte file holds. File is corrupt.
+[2026-09-17 00:29:37.820] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:37.923] [COSMIC] [error] DataPlayer: Entity 1 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 1 channels — more data than the 854-byte file holds. File is corrupt.
+[2026-09-17 00:29:37.923] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:37.931] [COSMIC] [error] DataPlayer: Entity 1 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 1 channels — more data than the 861-byte file holds. File is corrupt.
+[2026-09-17 00:29:37.931] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:38.134] [COSMIC] [error] DataPlayer: Entity 1 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 1 channels — more data than the 868-byte file holds. File is corrupt.
+[2026-09-17 00:29:38.134] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:38.391] [COSMIC] [error] DataPlayer: Entity 1 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 1 channels — more data than the 875-byte file holds. File is corrupt.
+[2026-09-17 00:29:38.391] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:38.655] [COSMIC] [error] DataPlayer: Entity 1 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 1 channels — more data than the 882-byte file holds. File is corrupt.
+[2026-09-17 00:29:38.655] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:39.024] [COSMIC] [error] DataPlayer: Entity 1 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 1 channels — more data than the 889-byte file holds. File is corrupt.
+[2026-09-17 00:29:39.024] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:39.278] [COSMIC] [error] DataPlayer: Entity 1 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 1 channels — more data than the 896-byte file holds. File is corrupt.
+[2026-09-17 00:29:39.278] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:39.505] [COSMIC] [error] DataPlayer: Entity 1 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 1 channels — more data than the 903-byte file holds. File is corrupt.
+[2026-09-17 00:29:39.507] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:39.753] [COSMIC] [error] DataPlayer: Entity 1 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 1 channels — more data than the 910-byte file holds. File is corrupt.
+[2026-09-17 00:29:39.753] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:39.996] [COSMIC] [error] DataPlayer: Entity 1 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 1 channels — more data than the 917-byte file holds. File is corrupt.
+[2026-09-17 00:29:39.996] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:40.224] [COSMIC] [error] DataPlayer: Entity 1 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 1 channels — more data than the 924-byte file holds. File is corrupt.
+[2026-09-17 00:29:40.224] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:40.344] [COSMIC] [error] DataPlayer: Entity 1 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 1 channels — more data than the 931-byte file holds. File is corrupt.
+[2026-09-17 00:29:40.344] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:40.473] [COSMIC] [error] DataPlayer: Entity 1 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 1 channels — more data than the 938-byte file holds. File is corrupt.
+[2026-09-17 00:29:40.473] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:40.752] [COSMIC] [error] DataPlayer: Entity 1 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 1 channels — more data than the 945-byte file holds. File is corrupt.
+[2026-09-17 00:29:40.753] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:40.887] [COSMIC] [error] DataPlayer: Entity 1 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 1 channels — more data than the 952-byte file holds. File is corrupt.
+[2026-09-17 00:29:40.887] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:41.007] [COSMIC] [error] DataPlayer: Entity 1 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' declares 40 samples x 1 channels — more data than the 959-byte file holds. File is corrupt.
+[2026-09-17 00:29:41.007] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:41.264] [COSMIC] [error] DataPlayer: Truncated or unreadable v1 data in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' — the declared frames are not all present.
+[2026-09-17 00:29:41.265] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:41.489] [COSMIC] [error] DataPlayer: Truncated or unreadable v1 data in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' — the declared frames are not all present.
+[2026-09-17 00:29:41.489] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:41.587] [COSMIC] [error] DataPlayer: Truncated or unreadable v1 data in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' — the declared frames are not all present.
+[2026-09-17 00:29:41.587] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:41.770] [COSMIC] [error] DataPlayer: Truncated or unreadable v1 data in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' — the declared frames are not all present.
+[2026-09-17 00:29:41.770] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:41.776] [COSMIC] [error] DataPlayer: Truncated or unreadable v1 data in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' — the declared frames are not all present.
+[2026-09-17 00:29:41.776] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:41.908] [COSMIC] [error] DataPlayer: Truncated or unreadable v1 data in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' — the declared frames are not all present.
+[2026-09-17 00:29:41.908] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:41.914] [COSMIC] [error] DataPlayer: Truncated or unreadable v1 data in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' — the declared frames are not all present.
+[2026-09-17 00:29:41.914] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:41.920] [COSMIC] [error] DataPlayer: Truncated or unreadable v1 data in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' — the declared frames are not all present.
+[2026-09-17 00:29:41.920] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:41.925] [COSMIC] [error] DataPlayer: Truncated or unreadable v1 data in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' — the declared frames are not all present.
+[2026-09-17 00:29:41.925] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:42.031] [COSMIC] [error] DataPlayer: Truncated or unreadable v1 data in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' — the declared frames are not all present.
+[2026-09-17 00:29:42.031] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:42.079] [COSMIC] [error] DataPlayer: Truncated or unreadable v1 data in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' — the declared frames are not all present.
+[2026-09-17 00:29:42.079] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:42.158] [COSMIC] [error] DataPlayer: Truncated or unreadable v1 data in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' — the declared frames are not all present.
+[2026-09-17 00:29:42.158] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:42.295] [COSMIC] [error] DataPlayer: Truncated or unreadable v1 data in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' — the declared frames are not all present.
+[2026-09-17 00:29:42.295] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:42.407] [COSMIC] [error] DataPlayer: Truncated or unreadable v1 data in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' — the declared frames are not all present.
+[2026-09-17 00:29:42.407] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:42.543] [COSMIC] [error] DataPlayer: Truncated or unreadable v1 data in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' — the declared frames are not all present.
+[2026-09-17 00:29:42.543] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:42.679] [COSMIC] [error] DataPlayer: Truncated or unreadable v1 data in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' — the declared frames are not all present.
+[2026-09-17 00:29:42.679] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:42.685] [COSMIC] [error] DataPlayer: Truncated or unreadable v1 data in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' — the declared frames are not all present.
+[2026-09-17 00:29:42.685] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:42.862] [COSMIC] [error] DataPlayer: Truncated or unreadable v1 data in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' — the declared frames are not all present.
+[2026-09-17 00:29:42.862] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:42.869] [COSMIC] [error] DataPlayer: Truncated or unreadable v1 data in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' — the declared frames are not all present.
+[2026-09-17 00:29:42.870] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:43.063] [COSMIC] [error] DataPlayer: Truncated or unreadable v1 data in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' — the declared frames are not all present.
+[2026-09-17 00:29:43.063] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:43.264] [COSMIC] [error] DataPlayer: Truncated or unreadable v1 data in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' — the declared frames are not all present.
+[2026-09-17 00:29:43.264] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:43.366] [COSMIC] [error] DataPlayer: Truncated or unreadable v1 data in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' — the declared frames are not all present.
+[2026-09-17 00:29:43.366] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:43.537] [COSMIC] [error] DataPlayer: Truncated or unreadable v1 data in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' — the declared frames are not all present.
+[2026-09-17 00:29:43.538] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:43.708] [COSMIC] [error] DataPlayer: Truncated or unreadable v1 data in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' — the declared frames are not all present.
+[2026-09-17 00:29:43.708] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:43.780] [COSMIC] [error] DataPlayer: Truncated or unreadable v1 data in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' — the declared frames are not all present.
+[2026-09-17 00:29:43.780] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:43.822] [COSMIC] [error] DataPlayer: Truncated or unreadable v1 data in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' — the declared frames are not all present.
+[2026-09-17 00:29:43.822] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:43.918] [COSMIC] [error] DataPlayer: Truncated or unreadable v1 data in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' — the declared frames are not all present.
+[2026-09-17 00:29:43.918] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:44.051] [COSMIC] [error] DataPlayer: Truncated or unreadable v1 data in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' — the declared frames are not all present.
+[2026-09-17 00:29:44.051] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:44.170] [COSMIC] [error] DataPlayer: Truncated or unreadable v1 data in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' — the declared frames are not all present.
+[2026-09-17 00:29:44.170] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:44.272] [COSMIC] [error] DataPlayer: Truncated or unreadable v1 data in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' — the declared frames are not all present.
+[2026-09-17 00:29:44.272] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:44.440] [COSMIC] [error] DataPlayer: Truncated or unreadable v1 data in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' — the declared frames are not all present.
+[2026-09-17 00:29:44.440] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:44.582] [COSMIC] [error] DataPlayer: Truncated or unreadable v1 data in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' — the declared frames are not all present.
+[2026-09-17 00:29:44.582] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:44.687] [COSMIC] [error] DataPlayer: Truncated or unreadable v1 data in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' — the declared frames are not all present.
+[2026-09-17 00:29:44.688] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:44.810] [COSMIC] [error] DataPlayer: Truncated or unreadable v1 data in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' — the declared frames are not all present.
+[2026-09-17 00:29:44.810] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:44.815] [COSMIC] [error] DataPlayer: Truncated or unreadable v1 data in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' — the declared frames are not all present.
+[2026-09-17 00:29:44.816] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:44.938] [COSMIC] [error] DataPlayer: Truncated or unreadable v1 data in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' — the declared frames are not all present.
+[2026-09-17 00:29:44.938] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:45.158] [COSMIC] [error] DataPlayer: Truncated or unreadable v1 data in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' — the declared frames are not all present.
+[2026-09-17 00:29:45.158] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:45.374] [COSMIC] [error] DataPlayer: Truncated or unreadable v1 data in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' — the declared frames are not all present.
+[2026-09-17 00:29:45.374] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:45.583] [COSMIC] [error] DataPlayer: Truncated or unreadable v1 data in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' — the declared frames are not all present.
+[2026-09-17 00:29:45.583] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:45.688] [COSMIC] [error] DataPlayer: Truncated or unreadable v1 data in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' — the declared frames are not all present.
+[2026-09-17 00:29:45.688] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:45.694] [COSMIC] [error] DataPlayer: Truncated or unreadable v1 data in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' — the declared frames are not all present.
+[2026-09-17 00:29:45.694] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:45.700] [COSMIC] [error] DataPlayer: Truncated or unreadable v1 data in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' — the declared frames are not all present.
+[2026-09-17 00:29:45.700] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:45.914] [COSMIC] [error] DataPlayer: Truncated or unreadable v1 data in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' — the declared frames are not all present.
+[2026-09-17 00:29:45.914] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:45.919] [COSMIC] [error] DataPlayer: Truncated or unreadable v1 data in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' — the declared frames are not all present.
+[2026-09-17 00:29:45.919] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:45.925] [COSMIC] [error] DataPlayer: Truncated or unreadable v1 data in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' — the declared frames are not all present.
+[2026-09-17 00:29:45.925] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:46.149] [COSMIC] [error] DataPlayer: Truncated or unreadable v1 data in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' — the declared frames are not all present.
+[2026-09-17 00:29:46.149] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:46.337] [COSMIC] [error] DataPlayer: Truncated or unreadable v1 data in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' — the declared frames are not all present.
+[2026-09-17 00:29:46.337] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:46.521] [COSMIC] [error] DataPlayer: Truncated or unreadable v1 data in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' — the declared frames are not all present.
+[2026-09-17 00:29:46.522] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:46.619] [COSMIC] [error] DataPlayer: Truncated or unreadable v1 data in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' — the declared frames are not all present.
+[2026-09-17 00:29:46.620] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:46.626] [COSMIC] [error] DataPlayer: Truncated or unreadable v1 data in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' — the declared frames are not all present.
+[2026-09-17 00:29:46.626] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:46.717] [COSMIC] [error] DataPlayer: Truncated or unreadable v1 data in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' — the declared frames are not all present.
+[2026-09-17 00:29:46.717] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:46.869] [COSMIC] [error] DataPlayer: Truncated or unreadable v1 data in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' — the declared frames are not all present.
+[2026-09-17 00:29:46.869] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:46.957] [COSMIC] [error] DataPlayer: Truncated or unreadable v1 data in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' — the declared frames are not all present.
+[2026-09-17 00:29:46.957] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:47.124] [COSMIC] [error] DataPlayer: Truncated or unreadable v1 data in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' — the declared frames are not all present.
+[2026-09-17 00:29:47.125] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:47.314] [COSMIC] [error] DataPlayer: Truncated or unreadable v1 data in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' — the declared frames are not all present.
+[2026-09-17 00:29:47.314] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:47.320] [COSMIC] [error] DataPlayer: Truncated or unreadable v1 data in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' — the declared frames are not all present.
+[2026-09-17 00:29:47.320] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:47.436] [COSMIC] [error] DataPlayer: Truncated or unreadable v1 data in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' — the declared frames are not all present.
+[2026-09-17 00:29:47.437] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:47.552] [COSMIC] [error] DataPlayer: Truncated or unreadable v1 data in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' — the declared frames are not all present.
+[2026-09-17 00:29:47.552] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:47.594] [COSMIC] [error] DataPlayer: Truncated or unreadable v1 data in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' — the declared frames are not all present.
+[2026-09-17 00:29:47.594] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:47.674] [COSMIC] [error] DataPlayer: Truncated or unreadable v1 data in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' — the declared frames are not all present.
+[2026-09-17 00:29:47.674] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:47.714] [COSMIC] [error] DataPlayer: Truncated or unreadable v1 data in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' — the declared frames are not all present.
+[2026-09-17 00:29:47.714] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:47.715] [COSMIC] [error] DataPlayer: Truncated or unreadable v1 data in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin' — the declared frames are not all present.
+[2026-09-17 00:29:47.715] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_truncate\cut.bin'.
+[2026-09-17 00:29:47.718] [COSMIC] [info] DataRecorder: Starting background flush of 2 entities → 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_trailing/real'.
+[2026-09-17 00:29:47.762] [COSMIC] [info] DataExport::WriteCSV: wrote 20 rows to 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_trailing/real/EntityA.csv'.
+[2026-09-17 00:29:47.763] [COSMIC] [info] DataExport::WriteCSV: wrote 20 rows to 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_trailing/real/EntityB.csv'.
+[2026-09-17 00:29:47.763] [COSMIC] [info] DataRecorder: Flush complete — 2 entities → 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_trailing\real'.
+[2026-09-17 00:29:47.832] [COSMIC] [info] DataPlayer: Loaded 2 entities, duration = 0.33s from 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_trailing\trailing.bin'.
+[2026-09-17 00:29:47.903] [COSMIC] [error] DataPlayer::LoadBinaryFile: Bad magic in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'. Not a CSMC file.
+[2026-09-17 00:29:47.904] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:47.948] [COSMIC] [error] DataPlayer: Implausible entity count 3460479688 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (1784 bytes left). File is corrupt.
+[2026-09-17 00:29:47.948] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:47.993] [COSMIC] [error] DataPlayer: Implausible entity count 3563384520 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (1431 bytes left). File is corrupt.
+[2026-09-17 00:29:47.993] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:48.023] [COSMIC] [error] DataPlayer::LoadBinaryFile: Bad magic in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'. Not a CSMC file.
+[2026-09-17 00:29:48.023] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:48.092] [COSMIC] [error] DataPlayer: Implausible entity count 2162520334 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (965 bytes left). File is corrupt.
+[2026-09-17 00:29:48.092] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:48.113] [COSMIC] [error] DataPlayer: Implausible entity count 2419645954 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (662 bytes left). File is corrupt.
+[2026-09-17 00:29:48.113] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:48.136] [COSMIC] [error] DataPlayer::LoadBinaryFile: Bad magic in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'. Not a CSMC file.
+[2026-09-17 00:29:48.136] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:48.208] [COSMIC] [error] DataPlayer: Implausible entity count 3217578806 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (1656 bytes left). File is corrupt.
+[2026-09-17 00:29:48.208] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:48.273] [COSMIC] [error] DataPlayer: Implausible entity count 1619953830 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (884 bytes left). File is corrupt.
+[2026-09-17 00:29:48.273] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:48.295] [COSMIC] [error] DataPlayer::LoadBinaryFile: Bad magic in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'. Not a CSMC file.
+[2026-09-17 00:29:48.296] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:48.347] [COSMIC] [error] DataPlayer: Implausible entity count 1926755480 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (1960 bytes left). File is corrupt.
+[2026-09-17 00:29:48.347] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:48.384] [COSMIC] [error] DataPlayer: Implausible entity count 2858227167 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (130 bytes left). File is corrupt.
+[2026-09-17 00:29:48.384] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:48.435] [COSMIC] [error] DataPlayer::LoadBinaryFile: Bad magic in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'. Not a CSMC file.
+[2026-09-17 00:29:48.435] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:48.448] [COSMIC] [error] DataPlayer: Implausible entity count 62332569 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (121 bytes left). File is corrupt.
+[2026-09-17 00:29:48.448] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:48.478] [COSMIC] [error] DataPlayer: Implausible entity count 2424817770 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (1696 bytes left). File is corrupt.
+[2026-09-17 00:29:48.478] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:48.493] [COSMIC] [error] DataPlayer::LoadBinaryFile: Bad magic in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'. Not a CSMC file.
+[2026-09-17 00:29:48.494] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:48.535] [COSMIC] [error] DataPlayer: Implausible entity count 1920314873 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (1100 bytes left). File is corrupt.
+[2026-09-17 00:29:48.535] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:48.575] [COSMIC] [error] DataPlayer: Implausible entity count 1603758130 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (1355 bytes left). File is corrupt.
+[2026-09-17 00:29:48.575] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:48.612] [COSMIC] [error] DataPlayer::LoadBinaryFile: Bad magic in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'. Not a CSMC file.
+[2026-09-17 00:29:48.612] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:48.632] [COSMIC] [error] DataPlayer: Implausible entity count 384288165 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (1657 bytes left). File is corrupt.
+[2026-09-17 00:29:48.632] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:48.648] [COSMIC] [error] DataPlayer: Implausible entity count 2536380373 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (1949 bytes left). File is corrupt.
+[2026-09-17 00:29:48.648] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:48.666] [COSMIC] [error] DataPlayer::LoadBinaryFile: Bad magic in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'. Not a CSMC file.
+[2026-09-17 00:29:48.666] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:48.678] [COSMIC] [error] DataPlayer: Implausible entity count 1914040766 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (1832 bytes left). File is corrupt.
+[2026-09-17 00:29:48.678] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:48.684] [COSMIC] [error] DataPlayer: Implausible entity count 1825366390 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (30 bytes left). File is corrupt.
+[2026-09-17 00:29:48.684] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:48.690] [COSMIC] [error] DataPlayer::LoadBinaryFile: Bad magic in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'. Not a CSMC file.
+[2026-09-17 00:29:48.691] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:48.696] [COSMIC] [error] DataPlayer: Implausible entity count 296685782 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (1114 bytes left). File is corrupt.
+[2026-09-17 00:29:48.697] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:48.702] [COSMIC] [error] DataPlayer: Implausible entity count 2126555699 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (4 bytes left). File is corrupt.
+[2026-09-17 00:29:48.702] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:48.709] [COSMIC] [error] DataPlayer::LoadBinaryFile: Bad magic in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'. Not a CSMC file.
+[2026-09-17 00:29:48.709] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:48.717] [COSMIC] [error] DataPlayer: Implausible entity count 450625147 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (1837 bytes left). File is corrupt.
+[2026-09-17 00:29:48.717] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:48.723] [COSMIC] [error] DataPlayer: Implausible entity count 56660872 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (307 bytes left). File is corrupt.
+[2026-09-17 00:29:48.723] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:48.737] [COSMIC] [error] DataPlayer::LoadBinaryFile: Bad magic in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'. Not a CSMC file.
+[2026-09-17 00:29:48.737] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:48.743] [COSMIC] [error] DataPlayer: Implausible entity count 972198357 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (1231 bytes left). File is corrupt.
+[2026-09-17 00:29:48.743] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:48.748] [COSMIC] [error] DataPlayer: Implausible entity count 3498487284 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (406 bytes left). File is corrupt.
+[2026-09-17 00:29:48.749] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:48.755] [COSMIC] [error] DataPlayer::LoadBinaryFile: Bad magic in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'. Not a CSMC file.
+[2026-09-17 00:29:48.755] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:48.760] [COSMIC] [error] DataPlayer: Implausible entity count 2253830950 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (1514 bytes left). File is corrupt.
+[2026-09-17 00:29:48.760] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:48.765] [COSMIC] [error] DataPlayer: Implausible entity count 3467849212 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (543 bytes left). File is corrupt.
+[2026-09-17 00:29:48.765] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:48.772] [COSMIC] [error] DataPlayer::LoadBinaryFile: Bad magic in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'. Not a CSMC file.
+[2026-09-17 00:29:48.772] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:48.778] [COSMIC] [error] DataPlayer: Implausible entity count 1693503109 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (1531 bytes left). File is corrupt.
+[2026-09-17 00:29:48.778] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:48.782] [COSMIC] [error] DataPlayer: Implausible entity count 2956865923 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (1078 bytes left). File is corrupt.
+[2026-09-17 00:29:48.782] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:48.796] [COSMIC] [error] DataPlayer::LoadBinaryFile: Bad magic in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'. Not a CSMC file.
+[2026-09-17 00:29:48.796] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:48.802] [COSMIC] [error] DataPlayer: Implausible entity count 1610475782 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (1227 bytes left). File is corrupt.
+[2026-09-17 00:29:48.802] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:48.808] [COSMIC] [error] DataPlayer: Implausible entity count 3145880906 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (1228 bytes left). File is corrupt.
+[2026-09-17 00:29:48.808] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:48.815] [COSMIC] [error] DataPlayer::LoadBinaryFile: Bad magic in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'. Not a CSMC file.
+[2026-09-17 00:29:48.815] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:48.821] [COSMIC] [error] DataPlayer: Implausible entity count 606924724 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (1876 bytes left). File is corrupt.
+[2026-09-17 00:29:48.821] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:48.827] [COSMIC] [error] DataPlayer: Implausible entity count 660189659 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (1567 bytes left). File is corrupt.
+[2026-09-17 00:29:48.827] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:48.831] [COSMIC] [error] DataPlayer::LoadBinaryFile: Bad magic in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'. Not a CSMC file.
+[2026-09-17 00:29:48.832] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:48.837] [COSMIC] [error] DataPlayer: Implausible entity count 1691213490 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (837 bytes left). File is corrupt.
+[2026-09-17 00:29:48.837] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:48.842] [COSMIC] [error] DataPlayer: Implausible entity count 4261581833 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (321 bytes left). File is corrupt.
+[2026-09-17 00:29:48.842] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:48.847] [COSMIC] [error] DataPlayer::LoadBinaryFile: Bad magic in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'. Not a CSMC file.
+[2026-09-17 00:29:48.847] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:48.853] [COSMIC] [error] DataPlayer: Implausible entity count 1497216589 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (1255 bytes left). File is corrupt.
+[2026-09-17 00:29:48.853] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:48.858] [COSMIC] [error] DataPlayer: Implausible entity count 7973862 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (807 bytes left). File is corrupt.
+[2026-09-17 00:29:48.859] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:48.866] [COSMIC] [error] DataPlayer::LoadBinaryFile: Bad magic in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'. Not a CSMC file.
+[2026-09-17 00:29:48.866] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:48.873] [COSMIC] [error] DataPlayer: Implausible entity count 750516566 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (242 bytes left). File is corrupt.
+[2026-09-17 00:29:48.873] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:48.879] [COSMIC] [error] DataPlayer: Implausible entity count 191878900 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (846 bytes left). File is corrupt.
+[2026-09-17 00:29:48.879] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:48.885] [COSMIC] [error] DataPlayer::LoadBinaryFile: Bad magic in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'. Not a CSMC file.
+[2026-09-17 00:29:48.885] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:48.892] [COSMIC] [error] DataPlayer: Implausible entity count 2589543003 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (489 bytes left). File is corrupt.
+[2026-09-17 00:29:48.892] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:48.897] [COSMIC] [error] DataPlayer: Implausible entity count 1862913323 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (1166 bytes left). File is corrupt.
+[2026-09-17 00:29:48.897] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:48.903] [COSMIC] [error] DataPlayer::LoadBinaryFile: Bad magic in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'. Not a CSMC file.
+[2026-09-17 00:29:48.903] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:48.909] [COSMIC] [error] DataPlayer: Implausible entity count 2351686603 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (1194 bytes left). File is corrupt.
+[2026-09-17 00:29:48.909] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:48.914] [COSMIC] [error] DataPlayer: Implausible entity count 900184245 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (774 bytes left). File is corrupt.
+[2026-09-17 00:29:48.914] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:48.921] [COSMIC] [error] DataPlayer::LoadBinaryFile: Bad magic in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'. Not a CSMC file.
+[2026-09-17 00:29:48.921] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:48.926] [COSMIC] [error] DataPlayer: Implausible entity count 4094238938 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (1753 bytes left). File is corrupt.
+[2026-09-17 00:29:48.926] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:48.930] [COSMIC] [error] DataPlayer: Implausible entity count 2369313384 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (688 bytes left). File is corrupt.
+[2026-09-17 00:29:48.930] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:48.937] [COSMIC] [error] DataPlayer::LoadBinaryFile: Bad magic in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'. Not a CSMC file.
+[2026-09-17 00:29:48.937] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:48.941] [COSMIC] [error] DataPlayer: Implausible entity count 3757254415 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (1147 bytes left). File is corrupt.
+[2026-09-17 00:29:48.941] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:48.947] [COSMIC] [error] DataPlayer: Implausible entity count 3638797716 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (703 bytes left). File is corrupt.
+[2026-09-17 00:29:48.947] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:48.953] [COSMIC] [error] DataPlayer::LoadBinaryFile: Bad magic in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'. Not a CSMC file.
+[2026-09-17 00:29:48.953] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:48.959] [COSMIC] [error] DataPlayer: Implausible entity count 1749593200 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (983 bytes left). File is corrupt.
+[2026-09-17 00:29:48.959] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:48.964] [COSMIC] [error] DataPlayer: Implausible entity count 3796839568 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (1031 bytes left). File is corrupt.
+[2026-09-17 00:29:48.964] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:48.969] [COSMIC] [error] DataPlayer::LoadBinaryFile: Bad magic in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'. Not a CSMC file.
+[2026-09-17 00:29:48.969] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:48.974] [COSMIC] [error] DataPlayer: Implausible entity count 2314192518 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (673 bytes left). File is corrupt.
+[2026-09-17 00:29:48.974] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:48.982] [COSMIC] [error] DataPlayer: Implausible entity count 3853685348 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (405 bytes left). File is corrupt.
+[2026-09-17 00:29:48.982] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:48.987] [COSMIC] [error] DataPlayer::LoadBinaryFile: Bad magic in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'. Not a CSMC file.
+[2026-09-17 00:29:48.988] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:48.994] [COSMIC] [error] DataPlayer: Implausible entity count 3134484502 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (341 bytes left). File is corrupt.
+[2026-09-17 00:29:48.995] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.001] [COSMIC] [error] DataPlayer: Implausible entity count 3684379974 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (902 bytes left). File is corrupt.
+[2026-09-17 00:29:49.001] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.006] [COSMIC] [error] DataPlayer::LoadBinaryFile: Bad magic in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'. Not a CSMC file.
+[2026-09-17 00:29:49.006] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.014] [COSMIC] [error] DataPlayer: Implausible entity count 2831804646 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (804 bytes left). File is corrupt.
+[2026-09-17 00:29:49.014] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.020] [COSMIC] [error] DataPlayer: Implausible entity count 3663713226 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (1625 bytes left). File is corrupt.
+[2026-09-17 00:29:49.020] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.025] [COSMIC] [error] DataPlayer::LoadBinaryFile: Bad magic in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'. Not a CSMC file.
+[2026-09-17 00:29:49.025] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.031] [COSMIC] [error] DataPlayer: Implausible entity count 758323831 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (110 bytes left). File is corrupt.
+[2026-09-17 00:29:49.031] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.036] [COSMIC] [error] DataPlayer: Implausible entity count 4273592850 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (542 bytes left). File is corrupt.
+[2026-09-17 00:29:49.036] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.041] [COSMIC] [error] DataPlayer::LoadBinaryFile: Bad magic in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'. Not a CSMC file.
+[2026-09-17 00:29:49.041] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.047] [COSMIC] [error] DataPlayer: Implausible entity count 1485913472 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (11 bytes left). File is corrupt.
+[2026-09-17 00:29:49.047] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.066] [COSMIC] [error] DataPlayer: Implausible entity count 4083695156 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (830 bytes left). File is corrupt.
+[2026-09-17 00:29:49.066] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.088] [COSMIC] [error] DataPlayer::LoadBinaryFile: Bad magic in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'. Not a CSMC file.
+[2026-09-17 00:29:49.088] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.095] [COSMIC] [error] DataPlayer: Implausible entity count 3198463540 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (719 bytes left). File is corrupt.
+[2026-09-17 00:29:49.095] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.101] [COSMIC] [error] DataPlayer: Implausible entity count 3874191753 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (1376 bytes left). File is corrupt.
+[2026-09-17 00:29:49.101] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.107] [COSMIC] [error] DataPlayer::LoadBinaryFile: Bad magic in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'. Not a CSMC file.
+[2026-09-17 00:29:49.107] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.111] [COSMIC] [error] DataPlayer: Implausible entity count 3451108228 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (724 bytes left). File is corrupt.
+[2026-09-17 00:29:49.111] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.118] [COSMIC] [error] DataPlayer: Implausible entity count 3260111270 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (451 bytes left). File is corrupt.
+[2026-09-17 00:29:49.118] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.124] [COSMIC] [error] DataPlayer::LoadBinaryFile: Bad magic in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'. Not a CSMC file.
+[2026-09-17 00:29:49.124] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.129] [COSMIC] [error] DataPlayer: Implausible entity count 493743375 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (1463 bytes left). File is corrupt.
+[2026-09-17 00:29:49.129] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.134] [COSMIC] [error] DataPlayer: Implausible entity count 3391567978 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (672 bytes left). File is corrupt.
+[2026-09-17 00:29:49.135] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.141] [COSMIC] [error] DataPlayer::LoadBinaryFile: Bad magic in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'. Not a CSMC file.
+[2026-09-17 00:29:49.141] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.146] [COSMIC] [error] DataPlayer: Implausible entity count 2137814512 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (41 bytes left). File is corrupt.
+[2026-09-17 00:29:49.146] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.151] [COSMIC] [error] DataPlayer: Implausible entity count 846411760 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (1463 bytes left). File is corrupt.
+[2026-09-17 00:29:49.151] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.157] [COSMIC] [error] DataPlayer::LoadBinaryFile: Bad magic in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'. Not a CSMC file.
+[2026-09-17 00:29:49.157] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.163] [COSMIC] [error] DataPlayer: Implausible entity count 3867261743 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (1967 bytes left). File is corrupt.
+[2026-09-17 00:29:49.163] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.168] [COSMIC] [error] DataPlayer: Implausible entity count 193540357 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (1114 bytes left). File is corrupt.
+[2026-09-17 00:29:49.168] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.174] [COSMIC] [error] DataPlayer::LoadBinaryFile: Bad magic in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'. Not a CSMC file.
+[2026-09-17 00:29:49.174] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.180] [COSMIC] [error] DataPlayer: Implausible entity count 1870016431 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (794 bytes left). File is corrupt.
+[2026-09-17 00:29:49.180] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.185] [COSMIC] [error] DataPlayer: Implausible entity count 769186598 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (304 bytes left). File is corrupt.
+[2026-09-17 00:29:49.185] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.190] [COSMIC] [error] DataPlayer::LoadBinaryFile: Bad magic in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'. Not a CSMC file.
+[2026-09-17 00:29:49.190] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.195] [COSMIC] [error] DataPlayer: Implausible entity count 2341510003 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (1214 bytes left). File is corrupt.
+[2026-09-17 00:29:49.196] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.200] [COSMIC] [error] DataPlayer: Implausible entity count 2412436732 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (1961 bytes left). File is corrupt.
+[2026-09-17 00:29:49.201] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.206] [COSMIC] [error] DataPlayer::LoadBinaryFile: Bad magic in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'. Not a CSMC file.
+[2026-09-17 00:29:49.206] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.215] [COSMIC] [error] DataPlayer: Implausible entity count 2428103368 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (1161 bytes left). File is corrupt.
+[2026-09-17 00:29:49.216] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.220] [COSMIC] [error] DataPlayer: Implausible entity count 2368008723 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (1482 bytes left). File is corrupt.
+[2026-09-17 00:29:49.220] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.226] [COSMIC] [error] DataPlayer::LoadBinaryFile: Bad magic in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'. Not a CSMC file.
+[2026-09-17 00:29:49.226] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.247] [COSMIC] [error] DataPlayer: Implausible entity count 3989551220 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (1910 bytes left). File is corrupt.
+[2026-09-17 00:29:49.247] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.256] [COSMIC] [error] DataPlayer: Implausible entity count 4162115505 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (1586 bytes left). File is corrupt.
+[2026-09-17 00:29:49.256] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.262] [COSMIC] [error] DataPlayer::LoadBinaryFile: Bad magic in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'. Not a CSMC file.
+[2026-09-17 00:29:49.262] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.290] [COSMIC] [error] DataPlayer: Implausible entity count 3138660994 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (704 bytes left). File is corrupt.
+[2026-09-17 00:29:49.290] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.326] [COSMIC] [error] DataPlayer: Implausible entity count 1050362335 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (362 bytes left). File is corrupt.
+[2026-09-17 00:29:49.326] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.331] [COSMIC] [error] DataPlayer::LoadBinaryFile: Bad magic in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'. Not a CSMC file.
+[2026-09-17 00:29:49.331] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.338] [COSMIC] [error] DataPlayer: Implausible entity count 449697539 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (1231 bytes left). File is corrupt.
+[2026-09-17 00:29:49.338] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.342] [COSMIC] [error] DataPlayer: Implausible entity count 1572545109 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (872 bytes left). File is corrupt.
+[2026-09-17 00:29:49.342] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.368] [COSMIC] [error] DataPlayer::LoadBinaryFile: Bad magic in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'. Not a CSMC file.
+[2026-09-17 00:29:49.368] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.397] [COSMIC] [error] DataPlayer: Implausible entity count 1663577837 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (1137 bytes left). File is corrupt.
+[2026-09-17 00:29:49.397] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.410] [COSMIC] [error] DataPlayer: Implausible entity count 259452824 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (12 bytes left). File is corrupt.
+[2026-09-17 00:29:49.410] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.443] [COSMIC] [error] DataPlayer::LoadBinaryFile: Bad magic in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'. Not a CSMC file.
+[2026-09-17 00:29:49.443] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.461] [COSMIC] [error] DataPlayer: Implausible entity count 531887105 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (1614 bytes left). File is corrupt.
+[2026-09-17 00:29:49.470] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.475] [COSMIC] [error] DataPlayer: Implausible entity count 1044260841 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (215 bytes left). File is corrupt.
+[2026-09-17 00:29:49.475] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.479] [COSMIC] [error] DataPlayer::LoadBinaryFile: Bad magic in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'. Not a CSMC file.
+[2026-09-17 00:29:49.479] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.485] [COSMIC] [error] DataPlayer: Implausible entity count 3593809761 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (735 bytes left). File is corrupt.
+[2026-09-17 00:29:49.486] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.490] [COSMIC] [error] DataPlayer: Implausible entity count 3728810256 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (679 bytes left). File is corrupt.
+[2026-09-17 00:29:49.490] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.495] [COSMIC] [error] DataPlayer::LoadBinaryFile: Bad magic in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'. Not a CSMC file.
+[2026-09-17 00:29:49.495] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.500] [COSMIC] [error] DataPlayer: Implausible entity count 2429628367 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (734 bytes left). File is corrupt.
+[2026-09-17 00:29:49.500] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.504] [COSMIC] [error] DataPlayer: Implausible entity count 1871854701 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (724 bytes left). File is corrupt.
+[2026-09-17 00:29:49.504] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.510] [COSMIC] [error] DataPlayer::LoadBinaryFile: Bad magic in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'. Not a CSMC file.
+[2026-09-17 00:29:49.510] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.514] [COSMIC] [error] DataPlayer: Implausible entity count 637944434 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (582 bytes left). File is corrupt.
+[2026-09-17 00:29:49.514] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.519] [COSMIC] [error] DataPlayer: Implausible entity count 1597168146 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (1574 bytes left). File is corrupt.
+[2026-09-17 00:29:49.519] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.524] [COSMIC] [error] DataPlayer::LoadBinaryFile: Bad magic in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'. Not a CSMC file.
+[2026-09-17 00:29:49.524] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.528] [COSMIC] [error] DataPlayer: Implausible entity count 938857696 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (415 bytes left). File is corrupt.
+[2026-09-17 00:29:49.528] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.533] [COSMIC] [error] DataPlayer: Implausible entity count 63777921 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (957 bytes left). File is corrupt.
+[2026-09-17 00:29:49.533] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.538] [COSMIC] [error] DataPlayer::LoadBinaryFile: Bad magic in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'. Not a CSMC file.
+[2026-09-17 00:29:49.538] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.542] [COSMIC] [error] DataPlayer: Implausible entity count 1752653251 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (1221 bytes left). File is corrupt.
+[2026-09-17 00:29:49.543] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.547] [COSMIC] [error] DataPlayer: Implausible entity count 2445485545 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (1790 bytes left). File is corrupt.
+[2026-09-17 00:29:49.547] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.554] [COSMIC] [error] DataPlayer::LoadBinaryFile: Bad magic in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'. Not a CSMC file.
+[2026-09-17 00:29:49.554] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.559] [COSMIC] [error] DataPlayer: Implausible entity count 4088567291 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (227 bytes left). File is corrupt.
+[2026-09-17 00:29:49.559] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.573] [COSMIC] [error] DataPlayer: Implausible entity count 2253329422 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (1135 bytes left). File is corrupt.
+[2026-09-17 00:29:49.573] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.577] [COSMIC] [error] DataPlayer::LoadBinaryFile: Bad magic in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'. Not a CSMC file.
+[2026-09-17 00:29:49.577] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.582] [COSMIC] [error] DataPlayer: Implausible entity count 2018993938 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (1338 bytes left). File is corrupt.
+[2026-09-17 00:29:49.582] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.587] [COSMIC] [error] DataPlayer: Implausible entity count 3780314756 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (1012 bytes left). File is corrupt.
+[2026-09-17 00:29:49.587] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.592] [COSMIC] [error] DataPlayer::LoadBinaryFile: Bad magic in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'. Not a CSMC file.
+[2026-09-17 00:29:49.592] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.597] [COSMIC] [error] DataPlayer: Implausible entity count 1008532268 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (1244 bytes left). File is corrupt.
+[2026-09-17 00:29:49.597] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.602] [COSMIC] [error] DataPlayer: Implausible entity count 533663454 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (265 bytes left). File is corrupt.
+[2026-09-17 00:29:49.602] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.607] [COSMIC] [error] DataPlayer::LoadBinaryFile: Bad magic in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'. Not a CSMC file.
+[2026-09-17 00:29:49.607] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.625] [COSMIC] [error] DataPlayer: Implausible entity count 3101146329 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (1884 bytes left). File is corrupt.
+[2026-09-17 00:29:49.625] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.631] [COSMIC] [error] DataPlayer: Implausible entity count 3455609384 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (52 bytes left). File is corrupt.
+[2026-09-17 00:29:49.631] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.635] [COSMIC] [error] DataPlayer::LoadBinaryFile: Bad magic in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'. Not a CSMC file.
+[2026-09-17 00:29:49.635] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.641] [COSMIC] [error] DataPlayer: Implausible entity count 3166330714 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (518 bytes left). File is corrupt.
+[2026-09-17 00:29:49.641] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.647] [COSMIC] [error] DataPlayer: Implausible entity count 2053589940 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (1696 bytes left). File is corrupt.
+[2026-09-17 00:29:49.647] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.652] [COSMIC] [error] DataPlayer::LoadBinaryFile: Bad magic in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'. Not a CSMC file.
+[2026-09-17 00:29:49.652] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.657] [COSMIC] [error] DataPlayer: Implausible entity count 3493647547 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (1043 bytes left). File is corrupt.
+[2026-09-17 00:29:49.657] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.661] [COSMIC] [error] DataPlayer: Implausible entity count 3925278379 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (1808 bytes left). File is corrupt.
+[2026-09-17 00:29:49.661] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.667] [COSMIC] [error] DataPlayer::LoadBinaryFile: Bad magic in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'. Not a CSMC file.
+[2026-09-17 00:29:49.667] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.672] [COSMIC] [error] DataPlayer: Implausible entity count 500600924 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (1194 bytes left). File is corrupt.
+[2026-09-17 00:29:49.672] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.677] [COSMIC] [error] DataPlayer: Implausible entity count 2780855055 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (952 bytes left). File is corrupt.
+[2026-09-17 00:29:49.677] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.681] [COSMIC] [error] DataPlayer::LoadBinaryFile: Bad magic in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'. Not a CSMC file.
+[2026-09-17 00:29:49.681] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.688] [COSMIC] [error] DataPlayer: Implausible entity count 2559365795 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (1254 bytes left). File is corrupt.
+[2026-09-17 00:29:49.688] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.693] [COSMIC] [error] DataPlayer: Implausible entity count 1081993740 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (402 bytes left). File is corrupt.
+[2026-09-17 00:29:49.693] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.698] [COSMIC] [error] DataPlayer::LoadBinaryFile: Bad magic in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'. Not a CSMC file.
+[2026-09-17 00:29:49.698] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.702] [COSMIC] [error] DataPlayer: Implausible entity count 1363319094 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (369 bytes left). File is corrupt.
+[2026-09-17 00:29:49.702] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.707] [COSMIC] [error] DataPlayer: Implausible entity count 3872397064 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (1974 bytes left). File is corrupt.
+[2026-09-17 00:29:49.707] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.712] [COSMIC] [error] DataPlayer::LoadBinaryFile: Bad magic in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'. Not a CSMC file.
+[2026-09-17 00:29:49.712] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.717] [COSMIC] [error] DataPlayer: Implausible entity count 1980779037 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (736 bytes left). File is corrupt.
+[2026-09-17 00:29:49.717] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.722] [COSMIC] [error] DataPlayer: Implausible entity count 3784869671 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (1203 bytes left). File is corrupt.
+[2026-09-17 00:29:49.722] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.727] [COSMIC] [error] DataPlayer::LoadBinaryFile: Bad magic in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'. Not a CSMC file.
+[2026-09-17 00:29:49.727] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.732] [COSMIC] [error] DataPlayer: Implausible entity count 3383327762 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (216 bytes left). File is corrupt.
+[2026-09-17 00:29:49.732] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.736] [COSMIC] [error] DataPlayer: Implausible entity count 1755583177 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (1345 bytes left). File is corrupt.
+[2026-09-17 00:29:49.736] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.741] [COSMIC] [error] DataPlayer::LoadBinaryFile: Bad magic in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'. Not a CSMC file.
+[2026-09-17 00:29:49.741] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.747] [COSMIC] [error] DataPlayer: Implausible entity count 539371267 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (1883 bytes left). File is corrupt.
+[2026-09-17 00:29:49.747] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.751] [COSMIC] [error] DataPlayer: Implausible entity count 3530808501 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (1775 bytes left). File is corrupt.
+[2026-09-17 00:29:49.751] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.755] [COSMIC] [error] DataPlayer::LoadBinaryFile: Bad magic in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'. Not a CSMC file.
+[2026-09-17 00:29:49.755] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.760] [COSMIC] [error] DataPlayer: Implausible entity count 1640057776 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (398 bytes left). File is corrupt.
+[2026-09-17 00:29:49.760] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.764] [COSMIC] [error] DataPlayer: Implausible entity count 1459889442 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (798 bytes left). File is corrupt.
+[2026-09-17 00:29:49.764] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.769] [COSMIC] [error] DataPlayer::LoadBinaryFile: Bad magic in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'. Not a CSMC file.
+[2026-09-17 00:29:49.769] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.774] [COSMIC] [error] DataPlayer: Implausible entity count 3595358564 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (1748 bytes left). File is corrupt.
+[2026-09-17 00:29:49.774] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.778] [COSMIC] [error] DataPlayer: Implausible entity count 566450727 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (1725 bytes left). File is corrupt.
+[2026-09-17 00:29:49.778] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.782] [COSMIC] [error] DataPlayer::LoadBinaryFile: Bad magic in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'. Not a CSMC file.
+[2026-09-17 00:29:49.782] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.786] [COSMIC] [error] DataPlayer: Implausible entity count 474346069 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (20 bytes left). File is corrupt.
+[2026-09-17 00:29:49.786] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.791] [COSMIC] [error] DataPlayer: Implausible entity count 3566639828 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (1106 bytes left). File is corrupt.
+[2026-09-17 00:29:49.791] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.797] [COSMIC] [error] DataPlayer::LoadBinaryFile: Bad magic in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'. Not a CSMC file.
+[2026-09-17 00:29:49.797] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.802] [COSMIC] [error] DataPlayer: Implausible entity count 1321795567 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (1430 bytes left). File is corrupt.
+[2026-09-17 00:29:49.802] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.807] [COSMIC] [error] DataPlayer: Implausible entity count 1893205716 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (577 bytes left). File is corrupt.
+[2026-09-17 00:29:49.807] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.811] [COSMIC] [error] DataPlayer::LoadBinaryFile: Bad magic in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'. Not a CSMC file.
+[2026-09-17 00:29:49.811] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.815] [COSMIC] [error] DataPlayer: Implausible entity count 2099090337 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (66 bytes left). File is corrupt.
+[2026-09-17 00:29:49.815] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.821] [COSMIC] [error] DataPlayer: Implausible entity count 2372896476 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (1147 bytes left). File is corrupt.
+[2026-09-17 00:29:49.821] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.825] [COSMIC] [error] DataPlayer::LoadBinaryFile: Bad magic in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'. Not a CSMC file.
+[2026-09-17 00:29:49.825] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.829] [COSMIC] [error] DataPlayer: Implausible entity count 2864859050 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (357 bytes left). File is corrupt.
+[2026-09-17 00:29:49.829] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.834] [COSMIC] [error] DataPlayer: Implausible entity count 3583785227 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (1853 bytes left). File is corrupt.
+[2026-09-17 00:29:49.834] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.837] [COSMIC] [error] DataPlayer::LoadBinaryFile: Bad magic in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'. Not a CSMC file.
+[2026-09-17 00:29:49.838] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.843] [COSMIC] [error] DataPlayer: Implausible entity count 4227223292 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (1849 bytes left). File is corrupt.
+[2026-09-17 00:29:49.843] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.847] [COSMIC] [error] DataPlayer: Implausible entity count 885252985 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (410 bytes left). File is corrupt.
+[2026-09-17 00:29:49.847] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.853] [COSMIC] [error] DataPlayer::LoadBinaryFile: Bad magic in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'. Not a CSMC file.
+[2026-09-17 00:29:49.853] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.858] [COSMIC] [error] DataPlayer: Implausible entity count 2433821303 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (1932 bytes left). File is corrupt.
+[2026-09-17 00:29:49.858] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.862] [COSMIC] [error] DataPlayer: Implausible entity count 2943410957 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (1903 bytes left). File is corrupt.
+[2026-09-17 00:29:49.862] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.868] [COSMIC] [error] DataPlayer::LoadBinaryFile: Bad magic in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'. Not a CSMC file.
+[2026-09-17 00:29:49.868] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.873] [COSMIC] [error] DataPlayer: Implausible entity count 3603824264 in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin' (440 bytes left). File is corrupt.
+[2026-09-17 00:29:49.873] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_fuzz\fuzz.bin'.
+[2026-09-17 00:29:49.875] [COSMIC] [info] DataRecorder: Starting background flush of 1 entities → 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_autosave/_autosave'.
+[2026-09-17 00:29:49.877] [COSMIC] [info] DataExport::WriteCSV: wrote 2 rows to 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_autosave/_autosave/Rolling.csv'.
+[2026-09-17 00:29:49.877] [COSMIC] [info] DataRecorder: Flush complete — 1 entities → 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_autosave\_autosave'.
+[2026-09-17 00:29:49.877] [COSMIC] [info] DataRecorder: Starting background flush of 1 entities → 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_autosave/_autosave'.
+[2026-09-17 00:29:49.881] [COSMIC] [info] DataExport::WriteCSV: wrote 22 rows to 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_autosave/_autosave/Rolling.csv'.
+[2026-09-17 00:29:49.881] [COSMIC] [info] DataRecorder: Flush complete — 1 entities → 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_autosave\_autosave'.
+[2026-09-17 00:29:49.886] [COSMIC] [info] DataPlayer: Loaded 1 entities, duration = 1.05s from 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_autosave\_autosave\scene.bin'.
+[2026-09-17 00:29:49.888] [COSMIC] [info] DataRecorder: Starting background flush of 4 entities → 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_concurrent/concurrent'.
+[2026-09-17 00:29:49.892] [COSMIC] [info] DataExport::WriteCSV: wrote 1 rows to 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_concurrent/concurrent/Worker0.csv'.
+[2026-09-17 00:29:49.897] [COSMIC] [info] DataExport::WriteCSV: wrote 0 rows to 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_concurrent/concurrent/Worker1.csv'.
+[2026-09-17 00:29:49.897] [COSMIC] [info] DataExport::WriteCSV: wrote 0 rows to 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_concurrent/concurrent/Worker2.csv'.
+[2026-09-17 00:29:49.898] [COSMIC] [info] DataExport::WriteCSV: wrote 0 rows to 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_concurrent/concurrent/Worker3.csv'.
+[2026-09-17 00:29:49.898] [COSMIC] [info] DataRecorder: Flush complete — 4 entities → 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_concurrent\concurrent'.
+[2026-09-17 00:29:49.930] [COSMIC] [info] DataPlayer: Loaded 4 entities, duration = 0.00s from 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_concurrent\concurrent\scene.bin'.
+[2026-09-17 00:29:49.936] [COSMIC] [info] DataRecorder: Starting background flush of 1 entities → 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_doubleflush/first'.
+[2026-09-17 00:29:49.937] [COSMIC] [warning] DataRecorder::Flush: a flush is already in progress — ignoring.
+[2026-09-17 00:29:49.971] [COSMIC] [info] DataExport::WriteCSV: wrote 4000 rows to 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_doubleflush/first/Twice.csv'.
+[2026-09-17 00:29:49.971] [COSMIC] [info] DataRecorder: Flush complete — 1 entities → 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_doubleflush\first'.
+[2026-09-17 00:29:49.971] [COSMIC] [info] DataRecorder: Starting background flush of 1 entities → 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_doubleflush/third'.
+[2026-09-17 00:29:50.007] [COSMIC] [info] DataExport::WriteCSV: wrote 4000 rows to 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_doubleflush/third/Twice.csv'.
+[2026-09-17 00:29:50.007] [COSMIC] [info] DataRecorder: Flush complete — 1 entities → 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_doubleflush\third'.
+[2026-09-17 00:29:50.011] [COSMIC] [info] DataPlayer: Loaded 1 entities, duration = 66.67s from 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_doubleflush\third\scene.bin'.
+[2026-09-17 00:29:50.011] [COSMIC] [info] DataRecorder: Starting background flush of 1 entities → 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_doubleflush/third'.
+[2026-09-17 00:29:50.047] [COSMIC] [info] DataExport::WriteCSV: wrote 4000 rows to 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_doubleflush/third/Twice.csv'.
+[2026-09-17 00:29:50.047] [COSMIC] [info] DataRecorder: Flush complete — 1 entities → 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_doubleflush\third'.
+[2026-09-17 00:29:50.050] [COSMIC] [info] DataPlayer: Loaded 1 entities, duration = 66.67s from 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_doubleflush\third\scene.bin'.
+[2026-09-17 00:29:50.081] [COSMIC] [info] DataRecorder: Starting background flush of 1 entities → 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_dtor/dtor'.
+[2026-09-17 00:29:50.409] [COSMIC] [info] DataExport::WriteCSV: wrote 20000 rows to 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_dtor/dtor/Dying.csv'.
+[2026-09-17 00:29:50.409] [COSMIC] [info] DataRecorder: Flush complete — 1 entities → 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_dtor\dtor'.
+[2026-09-17 00:29:50.420] [COSMIC] [info] DataPlayer: Loaded 1 entities, duration = 333.30s from 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\robust_dtor\dtor\scene.bin'.
+[2026-09-17 00:29:50.426] [COSMIC] [info] DataRecorder: Starting background flush of 2 entities → 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\roundtrip/session'.
+[2026-09-17 00:29:50.428] [COSMIC] [info] DataExport::WriteCSV: wrote 100 rows to 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\roundtrip/session/EntityA.csv'.
+[2026-09-17 00:29:50.429] [COSMIC] [info] DataExport::WriteCSV: wrote 100 rows to 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\roundtrip/session/EntityB.csv'.
+[2026-09-17 00:29:50.429] [COSMIC] [info] DataRecorder: Flush complete — 2 entities → 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\roundtrip\session'.
+[2026-09-17 00:29:50.431] [COSMIC] [info] DataPlayer: Loaded 2 entities, duration = 1.67s from 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\roundtrip\session'.
+[2026-09-17 00:29:50.433] [COSMIC] [info] DataRecorder: Starting background flush of 1 entities → 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\fallback/session'.
+[2026-09-17 00:29:50.435] [COSMIC] [info] DataExport::WriteCSV: wrote 30 rows to 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\fallback/session/SoloEntity.csv'.
+[2026-09-17 00:29:50.435] [COSMIC] [info] DataRecorder: Flush complete — 1 entities → 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\fallback\session'.
+[2026-09-17 00:29:50.442] [COSMIC] [info] DataPlayer: Loaded 1 entities, duration = 0.50s from 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\fallback\legacy'.
+[2026-09-17 00:29:50.444] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\Users\Kaden\AppData\Local\Temp\cosmic_tests\empty'.
+===============================================================================
+C:\dev\Cosmic\tests\test_physics_2d.cpp(173):
+TEST SUITE: Physics / 2D plane (W3)
+TEST CASE:  The depth axis never drifts over 600 steps
+
+C:\dev\Cosmic\tests\test_physics_2d.cpp(195): MESSAGE: drop-only: max |z| = 0.000587754 m, max out-of-plane |q| = 8.71855e-05
+
+C:\dev\Cosmic\tests\test_physics_2d.cpp(196): MESSAGE: sliding:   max |z| = 0.00205322 m, max out-of-plane |q| = 7.71662e-05
+
+===============================================================================
+C:\dev\Cosmic\tests\test_serial_lifecycle.cpp(326):
+TEST CASE:  SerialLink::Shutdown and Disconnect clear the reconnect intent
+
+C:\dev\Cosmic\tests\test_serial_lifecycle.cpp(343): MESSAGE: Serial hardware present - skipping the no-port Connect() case so the suite never opens a real device.
+
+===============================================================================
+[doctest] test cases:    340 |    340 passed | 0 failed | 0 skipped
+[doctest] assertions: 116476 | 116476 passed | 0 failed |
+[doctest] Status: SUCCESS!

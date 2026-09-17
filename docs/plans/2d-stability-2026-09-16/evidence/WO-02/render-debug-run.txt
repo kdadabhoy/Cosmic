@@ -1,0 +1,11 @@
+﻿[2026-09-17 00:31:46.832] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[2026-09-17 00:31:46.842] [COSMIC] [info] Window: borderless custom chrome enabled.
+[2026-09-17 00:31:46.844] [COSMIC] [trace] Initializing Renderer2D...
+[2026-09-17 00:31:46.846] [COSMIC] [info] Shader [Texture]: Automatically mapped 'u_Textures' to 32 hardware slots.
+[2026-09-17 00:31:46.848] [COSMIC] [info] Shader [QuadInstance]: Automatically mapped 'u_Textures' to 32 hardware slots.
+[2026-09-17 00:31:46.848] [COSMIC] [info] Renderer2D initialized successfully.
+===============================================================================
+[doctest] test cases:  6 |  6 passed | 0 failed | 0 skipped
+[doctest] assertions: 29 | 29 passed | 0 failed |
+[doctest] Status: SUCCESS!
+[2026-09-17 00:31:47.016] [COSMIC] [trace] Shutting down Renderer2D

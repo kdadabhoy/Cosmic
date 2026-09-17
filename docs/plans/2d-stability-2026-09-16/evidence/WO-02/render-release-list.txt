@@ -1,0 +1,17 @@
+﻿[2026-09-17 00:32:24.392] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[2026-09-17 00:32:24.402] [COSMIC] [info] Window: borderless custom chrome enabled.
+[2026-09-17 00:32:24.403] [COSMIC] [trace] Initializing Renderer2D...
+[2026-09-17 00:32:24.405] [COSMIC] [info] Shader [Texture]: Automatically mapped 'u_Textures' to 32 hardware slots.
+[2026-09-17 00:32:24.409] [COSMIC] [info] Shader [QuadInstance]: Automatically mapped 'u_Textures' to 32 hardware slots.
+[2026-09-17 00:32:24.409] [COSMIC] [info] Renderer2D initialized successfully.
+[2026-09-17 00:32:24.409] [COSMIC] [trace] Shutting down Renderer2D
+[doctest] listing all test case names
+===============================================================================
+sprites — painter order, textures, flips, rotation, gates
+tilemap — the culled cell walk at a map edge
+light2d — the lit frame
+light2d A/B — no lights + white ambient is BYTE-identical to skipping the pass
+ui — canvas layout with nested anchors, panels and buttons
+scene2d — a full 2D-mode frame through SceneRenderer::RenderToTexture
+===============================================================================
+[doctest] unskipped test cases passing the current filters: 6
