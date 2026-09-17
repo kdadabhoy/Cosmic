@@ -503,7 +503,7 @@ namespace Cosmic
 			static std::string errMsg = "";
 
 			ImGui::Text("New C++ Plugin Project (advanced)");
-			ImGui::TextDisabled("Engine-level plugins (SF_Telem, ViperSim). To BUILD APPS, use Starforge.");
+			ImGui::TextDisabled("Engine-level plugins (e.g. SF_Telem). To BUILD APPS, use Starforge.");
 			ImGui::Separator();
 			ImGui::Spacing();
 

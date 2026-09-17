@@ -18,6 +18,18 @@ if(WIN32)
     add_definitions(-DNOMINMAX)
 endif()
 
+# Engine build mode — MUST match the Cosmic SDK this plugin links against
+# (WO-03 / 2D stability trunk). The engine's PUBLIC headers (Cosmic.h,
+# Components.h, SceneRenderer.h, ...) carry `#ifndef COSMIC_2D_ONLY` fences and
+# Cosmic.dll is compiled with COSMIC_2D_ONLY defined on this trunk, so a plugin
+# TU that does NOT define it sees the 3D side of those fences and the interface
+# (and ABI) silently diverges across the plugin boundary. This SDK ships the
+# 2D-only engine, so the option defaults ON; BuildRunner's hot-reload configure
+# also passes -DCOSMIC_2D_ONLY=ON explicitly. In-tree (TARGET Cosmic) the define
+# also propagates PUBLIC from the engine target — defining it here too is an
+# identical, harmless duplicate.
+option(COSMIC_2D_ONLY "Match the 2D-only Cosmic SDK this plugin links against" ON)
+
 # -------------------------------------------------------------------
 # 1. SDK Path Resolution
 # -------------------------------------------------------------------
@@ -47,6 +59,11 @@ if(NOT TARGET Cosmic)
 endif()
 
 add_library(TemplateProject SHARED ${TEMPLATE_SOURCES})
+
+# Stamp the engine build mode onto every plugin TU (see the option above).
+if(COSMIC_2D_ONLY)
+    target_compile_definitions(TemplateProject PRIVATE COSMIC_2D_ONLY)
+endif()
 
 # -------------------------------------------------------------------
 # 3. Include Paths

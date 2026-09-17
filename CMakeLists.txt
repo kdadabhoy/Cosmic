@@ -64,8 +64,28 @@ option(COSMIC_BUILD_ENGINE_ONLY "Build only the core engine components" OFF)
 # below all key off COSMIC_2D_ONLY. Cosmic/CMakeLists.txt declares the same two
 # options (a no-op once these cache entries exist) so that directory still
 # configures on its own. See docs/plans/28-phase29-engine-split-plan.md.
-option(COSMIC_2D_ONLY "Build the 2D-only engine (excludes all 3D subsystems)" OFF)
+option(COSMIC_2D_ONLY "Build the 2D-only engine (excludes all 3D subsystems)" ON)
 option(COSMIC_WITH_JOLT "Build the Jolt physics backend" ON)
+
+# 2D stability trunk enforcement (WO-03, KI-3). `main` is the 2D-only trunk: the
+# ONLY supported shipping configuration here is COSMIC_2D_ONLY=ON, which is why
+# the option now defaults ON. Reject an explicit OFF (from a stale cache carried
+# over from an old 3D configure, a copied 3D command line, or a script default)
+# at CONFIGURE time — before any target is generated — so no build/CI/release/
+# package path on this branch can ever silently produce a 3D or mixed binary.
+# This guard is the enforcement point every entry point funnels through; the
+# per-script -DCOSMIC_2D_ONLY=ON flags are explicitness on top of it, not the
+# gate. The full 3D engine lives on the `engine-3d` branch (and the frozen
+# `cosmic-pre-2d-2026-09-16` tag), where OFF stays supported and this guard is
+# absent. Do not weaken this to a warning: a warning still generates a 3D tree.
+if(NOT COSMIC_2D_ONLY)
+    message(FATAL_ERROR
+        "COSMIC_2D_ONLY=OFF is not supported on this branch.\n"
+        "  main is the 2D-only stability trunk — it builds and ships the 2D engine only.\n"
+        "  A stale build/ cache from a previous 3D configure is the usual cause: delete the\n"
+        "  build directory and reconfigure (it will default to the 2D engine).\n"
+        "  For a full 3D build, check out the 'engine-3d' branch, where 3D is supported.")
+endif()
 
 # Distribution is no longer a separate cache flag — it is implied by the Release
 # configuration (see Cosmic/CMakeLists.txt, where COSMIC_DIST is defined via a

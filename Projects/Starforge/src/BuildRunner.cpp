@@ -51,9 +51,15 @@ namespace Starforge
         const std::string cmake    = FindCMake();
         const std::string buildDir = projectDir + "/build";
 
+        // -DCOSMIC_2D_ONLY=ON — this SDK ships the 2D-only engine (WO-03 / 2D
+        // stability trunk), so a hot-reloaded game plugin MUST compile against the
+        // engine's public headers with the same fence, or the plugin-boundary
+        // interface diverges. Explicit here so the mode never depends on the
+        // project CMakeLists' default.
         std::string cfg =
             "\"" + cmake + "\" -S \"" + projectDir + "\" -B \"" + buildDir +
-            "\" -A x64 -DCOSMIC_SDK_DIR=\"" + sdkDir + "\" -DGAME_HOT_SUFFIX=" + hotSuffix;
+            "\" -A x64 -DCOSMIC_SDK_DIR=\"" + sdkDir + "\" -DGAME_HOT_SUFFIX=" + hotSuffix +
+            " -DCOSMIC_2D_ONLY=ON";
         if (!gameOutputDir.empty())
             cfg += " -DGAME_OUTPUT_DIR=\"" + gameOutputDir + "\"";
 

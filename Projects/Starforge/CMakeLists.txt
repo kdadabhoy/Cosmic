@@ -48,7 +48,9 @@ file(GLOB_RECURSE STARFORGE_SOURCES CONFIGURE_DEPENDS "src/*.cpp" "src/*.h")
 # file stays in both configurations and carries in-file #ifndef COSMIC_2D_ONLY
 # fences instead. The option is redeclared here (a no-op once the root
 # CMakeLists' cache entry exists) so this directory still configures standalone.
-option(COSMIC_2D_ONLY "Build the 2D-only engine (excludes all 3D subsystems)" OFF)
+# Defaults ON on the 2D stability trunk (WO-03) so a standalone Starforge
+# configure matches the 2D engine; engine-3d keeps this OFF.
+option(COSMIC_2D_ONLY "Build the 2D-only engine (excludes all 3D subsystems)" ON)
 if(COSMIC_2D_ONLY)
     list(FILTER STARFORGE_SOURCES EXCLUDE REGEX "src/panels/VoxelPanel\\.(cpp|h)$")
     list(FILTER STARFORGE_SOURCES EXCLUDE REGEX "src/panels/WorldSystemsPanel\\.(cpp|h)$")

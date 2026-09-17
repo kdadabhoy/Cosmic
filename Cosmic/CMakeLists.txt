@@ -13,7 +13,11 @@ project(Cosmic LANGUAGES C CXX)
 # Both options are also declared in the root CMakeLists.txt (which forwards them to
 # the project scanner); option() is a no-op when the cache entry already exists, so
 # declaring them here as well keeps this directory configurable standalone.
-option(COSMIC_2D_ONLY "Build the 2D-only engine (excludes all 3D subsystems)" OFF)
+# Defaults ON on the 2D stability trunk (WO-03): the root CMakeLists' cache entry
+# governs an in-tree build, but this default makes a standalone `cmake -S Cosmic`
+# configure select the 2D engine too. The hard OFF-rejection lives in the root
+# CMakeLists (the enforcement point); engine-3d keeps this OFF.
+option(COSMIC_2D_ONLY "Build the 2D-only engine (excludes all 3D subsystems)" ON)
 
 # Jolt ships on BOTH configurations (Phase 29 decision 3) — physics is dimension
 # agnostic, so 2D keeps rigid bodies, box/sphere/capsule colliders and the
