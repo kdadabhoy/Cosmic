@@ -1,60 +1,21 @@
 @echo off
-SETLOCAL EnableDelayedExpansion
+SETLOCAL
 CLS
 echo ======================================================
-echo      Cosmic Engine - Incremental Build (FULL 3D)
+echo      Cosmic Engine - FULL 3D build is not on this branch
 echo ======================================================
-echo [MODE] full 3D engine
-
-:: Accept optional config argument: build_3d.bat [Debug|Release]
-set BUILD_CONFIG=%1
-if "%BUILD_CONFIG%"=="" set BUILD_CONFIG=Debug
-
-:: 1. MSVC Environment Setup (if available)
-set "VS_PATH="
-if exist "%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" (
-    for /f "usebackq tokens=*" %%i in (`"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath`) do (set "VS_PATH=%%i")
-)
-
-if defined VS_PATH (
-    if exist "!VS_PATH!\Common7\Tools\VsDevCmd.bat" (
-        call "!VS_PATH!\Common7\Tools\VsDevCmd.bat" -arch=x64 >nul 2>&1
-    )
-)
-
-:: 2. This script is the 3D mode SETTER — the way back from build_2d.bat. Only
-::    reconfigures when the cache is absent or currently 2D-only.
-set NEEDS_CONFIGURE=0
-if not exist build (
-    mkdir build
-    set NEEDS_CONFIGURE=1
-) else (
-    if not exist build\CMakeCache.txt (
-        echo [INFO] No CMake cache — configuring for the full 3D engine...
-        set NEEDS_CONFIGURE=1
-    ) else (
-        findstr /C:"COSMIC_2D_ONLY:BOOL=ON" build\CMakeCache.txt >nul 2>&1
-        if not errorlevel 1 (
-            echo [INFO] Cache has COSMIC_2D_ONLY=ON — reconfiguring for the full 3D engine...
-            set NEEDS_CONFIGURE=1
-        )
-    )
-)
-
-cd build
-
-if "!NEEDS_CONFIGURE!"=="1" (
-    if defined VS_PATH (
-        cmake .. -A x64 -DCOSMIC_BUILD_ENGINE_ONLY=OFF -DCOSMIC_2D_ONLY=OFF
-    ) else (
-        cmake .. -DCOSMIC_BUILD_ENGINE_ONLY=OFF -DCOSMIC_2D_ONLY=OFF
-    )
-)
-
-:: 3. Incremental build — CMake re-runs configure automatically if CMakeLists.txt changed.
-cmake --build . --config %BUILD_CONFIG% --parallel
-
 echo.
-echo [DONE] Incremental Build Complete! (full 3D, %BUILD_CONFIG%)
+echo This is the 2D-only stability trunk (main). The full 3D engine — terrain,
+echo voxel, water, navigation, the 3D renderer passes, model/assimp import and
+echo the 3D sample projects — lives on the 'engine-3d' branch and the frozen
+echo 'cosmic-pre-2d-2026-09-16' tag.
+echo.
+echo A 3D configure (-DCOSMIC_2D_ONLY=OFF) is REJECTED at configure time on this
+echo branch by design (WO-03), so this script no longer attempts one.
+echo.
+echo   To build 3D:      git switch engine-3d ^&^& build_all.bat
+echo   To build 2D here: build_2d.bat   (or just build.bat / build_all.bat)
+echo.
 pause
 ENDLOCAL
+exit /b 1

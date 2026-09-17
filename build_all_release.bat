@@ -26,13 +26,14 @@ if exist build rmdir /s /q build
 mkdir build
 cd build
 
-echo [STAGE 1] Configuring Global Solution Tree...
+echo [STAGE 1] Configuring Global Solution Tree (2D-only engine)...
 :: Distribution behaviour (no console, launcher New Project UI disabled, /O2) is
 :: implied by the Release config now — no -DCOSMIC_DIST flag needed.
+:: -DCOSMIC_2D_ONLY=ON — the 2D-only stability trunk (WO-03); OFF is rejected.
 if defined VS_PATH (
-    cmake .. -A x64 -DCOSMIC_BUILD_ENGINE_ONLY=OFF
+    cmake .. -A x64 -DCOSMIC_BUILD_ENGINE_ONLY=OFF -DCOSMIC_2D_ONLY=ON
 ) else (
-    cmake .. -DCOSMIC_BUILD_ENGINE_ONLY=OFF
+    cmake .. -DCOSMIC_BUILD_ENGINE_ONLY=OFF -DCOSMIC_2D_ONLY=ON
 )
 if errorlevel 1 (
     echo.

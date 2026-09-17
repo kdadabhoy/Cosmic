@@ -49,11 +49,14 @@ if exist build rmdir /s /q build
 mkdir build
 cd build
 
-echo [STAGE 1] Configuring (Release)...
+:: -DCOSMIC_2D_ONLY=ON — this trunk packages the 2D-only engine (WO-03). The root
+:: CMakeLists also rejects OFF, so a stale build\ cache can't smuggle a 3D binary
+:: into the distributable; the explicit flag makes the intent visible here too.
+echo [STAGE 1] Configuring (Release, 2D-only engine)...
 if defined VS_PATH (
-    cmake .. -A x64 -DCOSMIC_BUILD_ENGINE_ONLY=OFF
+    cmake .. -A x64 -DCOSMIC_BUILD_ENGINE_ONLY=OFF -DCOSMIC_2D_ONLY=ON
 ) else (
-    cmake .. -DCOSMIC_BUILD_ENGINE_ONLY=OFF
+    cmake .. -DCOSMIC_BUILD_ENGINE_ONLY=OFF -DCOSMIC_2D_ONLY=ON
 )
 if errorlevel 1 (
     echo.

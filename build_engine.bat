@@ -38,22 +38,17 @@ if not exist build (
     )
 )
 
-:: Report which engine configuration the cache holds — read only, never forced
-:: (build_2d.bat / build_3d.bat are the mode setters).
-set ENGINE_MODE=full 3D engine
-if exist build\CMakeCache.txt (
-    findstr /C:"COSMIC_2D_ONLY:BOOL=ON" build\CMakeCache.txt >nul 2>&1
-    if not errorlevel 1 set ENGINE_MODE=2D-only engine
-)
-echo [MODE] !ENGINE_MODE!
+:: The 2D-only stability trunk (WO-03): the engine core builds in 2D mode. A fresh
+:: configure passes -DCOSMIC_2D_ONLY=ON explicitly; the root CMakeLists rejects OFF.
+echo [MODE] 2D-only engine
 
 cd build
 
 if "!NEEDS_CONFIGURE!"=="1" (
     if defined VS_PATH (
-        cmake .. -A x64 -DCOSMIC_BUILD_ENGINE_ONLY=ON
+        cmake .. -A x64 -DCOSMIC_BUILD_ENGINE_ONLY=ON -DCOSMIC_2D_ONLY=ON
     ) else (
-        cmake .. -DCOSMIC_BUILD_ENGINE_ONLY=ON
+        cmake .. -DCOSMIC_BUILD_ENGINE_ONLY=ON -DCOSMIC_2D_ONLY=ON
     )
 )
 
