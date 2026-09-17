@@ -102,23 +102,19 @@ if(COSMIC_BUILD_RENDER_TESTS)
     add_subdirectory(tests/render)
 endif()
 
-# Projects the scanner ignores. Frontier, Engine3DDemo and ForgeIsle are 3D
-# flagships and cannot build against the 2D engine, so the 2D configuration skips
-# them; the 3D configuration skips nothing. Overridable by hand for either mode
-# (-DCOSMIC_SKIP_PROJECTS="Foo;Bar").
+# Projects the scanner ignores. The 3D flagship projects that could not build
+# against the 2D engine — Frontier, Engine3DDemo, ForgeIsle and ViperSim — were
+# REMOVED from this 2D-only trunk (2026-09-17): they are for 3D demonstration only
+# and are preserved on the `engine-3d` branch and the `cosmic-pre-2d-2026-09-16`
+# tag (the frozen full-tree snapshot). The two remaining projects, SF_Telem and
+# Starforge, both build in 2D, so nothing is skipped in either mode now. The skip
+# machinery is retained (still hand-overridable via -DCOSMIC_SKIP_PROJECTS="Foo;Bar")
+# but both mode defaults are empty.
 #
-# One addition the plan's §4 table does not list, found in W6:
-#   ViperSim   — its FlightScreen/ReplayScreen draw the airframe, pad, grid, axes
-#                and trail with DIRECT Renderer3D calls, so the 2D engine cannot
-#                link it. Decision 4 ("ViperSim works on both branches") would
-#                need a 2D rewrite of those two screens; that is out of W6's
-#                scope and is called out in the phase report.
-#
-# Starforge came OFF this list in W7 — the editor is now gated for both
-# configurations (§8.5) and builds in 2D with its 3D panels, menus and overlays
-# fenced out. Projects/Starforge/CMakeLists.txt drops the three 3D-only TUs.
+# Starforge builds in 2D with its 3D panels, menus and overlays fenced out (Phase 29
+# W7, §8.5); Projects/Starforge/CMakeLists.txt drops the three 3D-only TUs.
 set(COSMIC_SKIP_PROJECTS_3D "")
-set(COSMIC_SKIP_PROJECTS_2D "Frontier;Engine3DDemo;ForgeIsle;ViperSim")
+set(COSMIC_SKIP_PROJECTS_2D "")
 if(COSMIC_2D_ONLY)
     set(SKIP_DEFAULT "${COSMIC_SKIP_PROJECTS_2D}")
     set(SKIP_OTHER   "${COSMIC_SKIP_PROJECTS_3D}")

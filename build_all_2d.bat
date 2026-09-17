@@ -29,9 +29,10 @@ if exist build rmdir /s /q build
 mkdir build
 cd build
 
-:: Clean configure in 2D mode. The three 3D game projects (Frontier, Engine3DDemo,
-:: ForgeIsle) drop out of the project scanner, and assimp + recastnavigation are
-:: never configured — see docs/plans/28-phase29-engine-split-plan.md §4.
+:: Clean configure in 2D mode. The 3D flagship projects (Frontier, Engine3DDemo,
+:: ForgeIsle, ViperSim) were removed from this 2D trunk (they live on engine-3d),
+:: so only SF_Telem + Starforge remain; assimp + recastnavigation are never
+:: configured — see docs/plans/28-phase29-engine-split-plan.md §4.
 echo [STAGE 1] Configuring Global Solution Tree (2D-only engine)...
 if defined VS_PATH (
     cmake .. -A x64 -DCOSMIC_BUILD_ENGINE_ONLY=OFF -DCOSMIC_2D_ONLY=ON
