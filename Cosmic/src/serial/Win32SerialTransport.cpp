@@ -22,7 +22,7 @@ namespace Cosmic
 	// CreateFileA -> DCB (8N1) -> COMMTIMEOUTS, exactly as the old SerialPort::DoOpen.
 	// `stopEvent` is ignored: CreateFileA cannot be cancelled mid-call, which is the
 	// root of KI-4 (the exit soft-hang). A fake honours it; the real transport cannot.
-	bool Win32SerialTransport::Open(const std::string& portName, std::uint32_t baudRate, void* /*stopEvent*/)
+	bool Win32SerialTransport::Open(const std::string& portName, std::uint32_t baudRate, void* stopEvent)
 	{
 		std::string fullPath = "\\\\.\\" + portName;
 		// Opened with GENERIC_WRITE to support command transmission. FILE_FLAG_OVERLAPPED:
@@ -33,6 +33,11 @@ namespace Cosmic
 		                       OPEN_EXISTING, FILE_FLAG_OVERLAPPED, NULL);
 
 		if (m_Handle == INVALID_HANDLE_VALUE) return false;
+		if (WaitForSingleObject(static_cast<HANDLE>(stopEvent), 0) == WAIT_OBJECT_0)
+		{
+			Close();
+			return false;
+		}
 
 		DCB dcbSerialParams = { 0 };
 		dcbSerialParams.DCBlength = sizeof(dcbSerialParams);
@@ -63,6 +68,7 @@ namespace Cosmic
 		// (the old ReadLoop created it once per session too); manual-reset.
 		m_ReadOv = {};
 		m_ReadOv.hEvent = CreateEvent(nullptr, TRUE, FALSE, nullptr);
+		if (!m_ReadOv.hEvent) { Close(); return false; }
 		return true;
 	}
 
@@ -118,7 +124,7 @@ namespace Cosmic
 	/////////////////////////////////////////////////////////////////////////////////
 
 	// Overlapped WriteFile — the body of the old SerialPort::Write.
-	bool Win32SerialTransport::Write(const void* data, std::size_t length)
+	bool Win32SerialTransport::Write(const void* data, std::size_t length, void* stopEvent)
 	{
 		if (m_Handle == INVALID_HANDLE_VALUE || length == 0)
 			return false;
@@ -133,7 +139,17 @@ namespace Cosmic
 		if (!ok)
 		{
 			if (GetLastError() == ERROR_IO_PENDING)
-				ok = GetOverlappedResult(m_Handle, &ov, &written, TRUE);
+			{
+				HANDLE waits[] = { static_cast<HANDLE>(stopEvent), ov.hEvent };
+				const DWORD wait = WaitForMultipleObjects(2, waits, FALSE, 1000);
+				if (wait != WAIT_OBJECT_0 + 1)
+				{
+					CancelIoEx(m_Handle, &ov);
+					GetOverlappedResult(m_Handle, &ov, &written, TRUE);
+					ok = FALSE;
+				}
+				else ok = GetOverlappedResult(m_Handle, &ov, &written, FALSE);
+			}
 			else
 				CS_CORE_WARN("SerialPort: WriteFile error {0}.", GetLastError());
 		}

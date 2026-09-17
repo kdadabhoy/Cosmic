@@ -38,11 +38,13 @@ namespace Cosmic
 			// Manual-reset: signalled by PushBytes / SignalDrop, reset by Read once the
 			// state it announced has been consumed.
 			m_DataEvent = CreateEvent(nullptr, TRUE, FALSE, nullptr);
+			m_OpenEntered = CreateEvent(nullptr, TRUE, FALSE, nullptr);
 		}
 
 		~FakeSerialTransport() override
 		{
 			if (m_DataEvent) { CloseHandle(m_DataEvent); m_DataEvent = nullptr; }
+			CloseHandle(m_OpenEntered);
 		}
 
 		// ---- Test controls -------------------------------------------------------
@@ -82,6 +84,7 @@ namespace Cosmic
 		// ---- Observers -----------------------------------------------------------
 
 		int OpenCount()  const { return m_OpenCount.load(); }
+		bool WaitOpenEntered(DWORD ms = 2000) const { return WaitForSingleObject(m_OpenEntered, ms) == WAIT_OBJECT_0; }
 		int CloseCount() const { return m_CloseCount.load(); }
 		std::string Written() const
 		{
@@ -94,6 +97,7 @@ namespace Cosmic
 		bool Open(const std::string& /*portName*/, std::uint32_t /*baudRate*/, void* stopEvent) override
 		{
 			m_OpenCount.fetch_add(1);
+			SetEvent(m_OpenEntered);
 
 			const int blockMs = m_OpenBlockMs.load();
 			if (blockMs > 0)
@@ -151,7 +155,7 @@ namespace Cosmic
 			}
 		}
 
-		bool Write(const void* data, std::size_t length) override
+		bool Write(const void* data, std::size_t length, void* /*stopEvent*/) override
 		{
 			std::lock_guard<std::mutex> lock(m_Mutex);
 			m_Written.append(static_cast<const char*>(data), length);
@@ -187,5 +191,6 @@ namespace Cosmic
 		std::atomic<int>  m_CloseCount { 0 };
 
 		HANDLE m_DataEvent = nullptr; // signalled by PushBytes / SignalDrop
+		HANDLE m_OpenEntered = nullptr;
 	};
 }

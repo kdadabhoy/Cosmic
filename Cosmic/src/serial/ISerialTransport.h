@@ -73,7 +73,7 @@ namespace Cosmic
 
 		// Bounded blocking write (overlapped WriteFile on Win32). True only when every
 		// byte was accepted.
-		virtual bool Write(const void* data, std::size_t length) = 0;
+		virtual bool Write(const void* data, std::size_t length, void* stopEvent) = 0;
 
 		// Release the device and unblock any pending Read (CancelIoEx + CloseHandle on
 		// Win32). Safe to call when never opened.

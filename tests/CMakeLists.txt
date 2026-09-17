@@ -85,6 +85,14 @@ set(COSMIC_TEST_SOURCES
     # under test is the code SF_Telem actually ships. imgui/implot are PUBLIC on
     # the Cosmic target, so this links without a GL context ever being created.
     ../Projects/SF_Telem/src/TelemHub.cpp
+    ../Projects/SF_Telem/src/SF_Telem.cpp
+    ../Projects/SF_Telem/src/TestingManager.cpp
+    ../Projects/SF_Telem/src/TestHub.cpp
+    ../Projects/SF_Telem/src/TestLayers.cpp
+    ../Projects/SF_Telem/src/MainLayer.cpp
+    ../Projects/SF_Telem/src/ReplayLayer.cpp
+    ../Projects/SF_Telem/src/DrivetrainLayer.cpp
+    ../Projects/SF_Telem/src/DashboardView.cpp
 )
 
 # 3D-only tier (§9.1). These name terrain / voxel / nav / mesh / skeletal / 3D

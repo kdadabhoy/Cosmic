@@ -171,7 +171,7 @@ TEST_CASE("WO-04 seam (b): a mid-session drop drives State::Failed, then auto-re
 //     observable under test (WO-04 makes it TESTABLE; WO-05 FIXES it)
 // =============================================================================
 
-TEST_CASE("WO-04 seam (c): teardown while a reconnect worker blocks in Open exposes KI-4 (observable, not fixed)")
+TEST_CASE("WO-04 seam (c): teardown cancels a blocked Open (WO-05 regression)")
 {
 	auto fake = std::make_unique<FakeSerialTransport>();
 	FakeSerialTransport* f = fake.get();
@@ -184,7 +184,7 @@ TEST_CASE("WO-04 seam (c): teardown while a reconnect worker blocks in Open expo
 
 	link.Connect();   // BeginOpen → worker enters fake.Open and blocks ~1200 ms
 	REQUIRE(WaitUntil([&] { return link.GetState() == SerialPort::State::Connecting; }, 2000));
-	std::this_thread::sleep_for(std::chrono::milliseconds(50));  // ensure the worker is inside Open
+	REQUIRE(f->WaitOpenEntered());
 
 	// Teardown mirrors the reported chain (SF_Telem::OnDetach → SerialLink::Shutdown →
 	// SerialPort::Close → join). Today Close joins the worker WITHOUT cancelling the
@@ -195,8 +195,7 @@ TEST_CASE("WO-04 seam (c): teardown while a reconnect worker blocks in Open expo
 	const long long teardownMs = MillisSince(start);
 
 	CAPTURE(teardownMs);
-	CHECK(teardownMs >= 800);    // the join waited on the blocked open → KI-4 is observable
-	CHECK(teardownMs < 5000);    // bounded soft-hang, not an infinite deadlock
+	CHECK(teardownMs <= 2000);
 	CHECK(link.GetState() == SerialPort::State::Idle);  // still tears down cleanly
 	CHECK(f->CloseCount() >= 1);
 }

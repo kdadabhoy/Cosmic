@@ -1,274 +1,187 @@
 #include "SerialPort.h"
 #include "serial/Win32SerialTransport.h"
-
-#include <windows.h>
-#include <string.h>
-#include <iostream>
+#include <stdexcept>
 #include <utility>
-#include "core/Log.h"
 
 namespace Cosmic
 {
-	// Default: the shipping Win32 transport. This is the only path production takes.
-	SerialPort::SerialPort()
-		: m_Transport(std::make_unique<Win32SerialTransport>()) {}
+    // A stalled open never borrows SerialPort or app/plugin objects. Its worker
+    // owns this block and the transport through late-result cleanup.
+    struct SerialPort::OpenJob
+    {
+        HANDLE stop = CreateEvent(nullptr, TRUE, FALSE, nullptr);
+        HANDLE done = CreateEvent(nullptr, TRUE, FALSE, nullptr);
+        std::mutex mutex;
+        bool abandoned = false;
+        bool success = false;
+        ~OpenJob() { if (stop) CloseHandle(stop); if (done) CloseHandle(done); }
+    };
 
-	// Test-only seam: run the real state machine over an injected transport.
-	SerialPort::SerialPort(std::unique_ptr<ISerialTransport> transport)
-		: m_Transport(std::move(transport)) {}
+    SerialPort::SerialPort() : m_Transport(std::make_shared<Win32SerialTransport>()) {}
+    SerialPort::SerialPort(std::unique_ptr<ISerialTransport> transport)
+        : m_Transport(std::move(transport))
+    {
+        if (!m_Transport) throw std::invalid_argument("SerialPort requires a transport");
+    }
+    SerialPort::~SerialPort() { Close(); }
 
-	SerialPort::~SerialPort() { Close(); }
+    bool SerialPort::IsOpen() const
+    {
+        const_cast<SerialPort*>(this)->AdoptOpen();
+        return m_Connected.load();
+    }
+    SerialPort::State SerialPort::GetState() const
+    {
+        const_cast<SerialPort*>(this)->AdoptOpen();
+        return m_State.load();
+    }
 
-	/////////////////////////////////////////////////////////////////////////////////
+    void SerialPort::AdoptOpen()
+    {
+        if (m_State.load() != State::Connecting || !m_OpenJob ||
+            WaitForSingleObject(m_OpenJob->done, 0) != WAIT_OBJECT_0) return;
+        if (m_ConnectThread.joinable()) m_ConnectThread.join();
+        // Only the owner publishes sessions and creates readers. No worker tail
+        // can overwrite the reader's Failed state (H2/H3).
+        if (!m_OpenJob->success) { m_State.store(State::Failed); return; }
+        m_StopEvent = m_OpenJob->stop;
+        m_Connected.store(true);
+        m_State.store(State::Open);
+        m_ReadThread = std::thread(&SerialPort::ReadLoop, this);
+    }
 
-	/**
-	 * Open
-	 * * THE HARDWARE HANDSHAKE:
-	 * 1. Opens the COM port via CreateFileA (OVERLAPPED so reads can be cancelled
-	 * deterministically). The "\\\\.\\" prefix supports port numbers above COM9.
-	 * 2. Configures the Device Control Block (DCB) for 8N1.
-	 * 3. Creates a manual-reset stop event the read thread waits on alongside the
-	 * pending read, so Close() can wake it instantly even on a stalled port.
-	 */
-	bool SerialPort::Open(const std::string& portName, uint32_t baudRate)
-	{
-		// Refuse to race an in-flight asynchronous connect: BeginOpen's worker may be
-		// inside DoOpen right now, and running a second DoOpen here would have both
-		// threads writing m_Handle concurrently. (BeginOpen has the same guard.)
-		if (m_State.load() == State::Connecting)
-		{
-			CS_CORE_WARN("SerialPort::Open: an asynchronous connect is already in flight — ignored.");
-			return false;
-		}
+    bool SerialPort::Open(const std::string& portName, uint32_t baudRate)
+    {
+        // Lifecycle/status calls are owner-thread only. Write is the supported
+        // concurrent operation. Open remains intentionally blocking.
+        if (GetState() == State::Connecting) return false;
+        BeginOpen(portName, baudRate);
+        if (m_State.load() != State::Connecting) return false;
+        WaitForSingleObject(m_OpenJob->done, INFINITE);
+        AdoptOpen();
+        return m_Connected.load();
+    }
 
-		// Synchronous (blocking) open. Tear down any previous read session first —
-		// after an auto-disconnect (device unplugged) m_Connected is already false
-		// but the read thread is still joinable and m_Handle is still valid, so
-		// skipping this would leak the handle and then std::terminate() when we
-		// reassign m_ReadThread below. CloseReadSession() is safe to call when idle.
-		CloseReadSession();
+    void SerialPort::BeginOpen(const std::string& portName, uint32_t baudRate)
+    {
+        if (GetState() == State::Connecting) return;
+        // A cancelled non-cooperative driver still owns this transport. Never
+        // stack a worker or reuse its handle before late cleanup finishes.
+        if (m_OpenJob && WaitForSingleObject(m_OpenJob->done, 0) != WAIT_OBJECT_0) return;
+        if (m_ConnectThread.joinable()) m_ConnectThread.join();
+        CloseReadSession();
+        m_OpenJob = std::make_shared<OpenJob>();
+        if (!m_OpenJob->stop || !m_OpenJob->done) { m_State.store(State::Failed); return; }
+        m_StopEvent = m_OpenJob->stop;
+        m_State.store(State::Connecting);
+        auto job = m_OpenJob;
+        auto transport = m_Transport;
+        m_ConnectThread = std::thread([job, transport, portName, baudRate]()
+        {
+            bool ok = false;
+            try
+            {
+                if (WaitForSingleObject(job->stop, 0) != WAIT_OBJECT_0)
+                    ok = transport->Open(portName, baudRate, job->stop);
+            }
+            catch (...) { ok = false; }
+            {
+                std::lock_guard<std::mutex> lock(job->mutex);
+                if (job->abandoned || !ok)
+                {
+                    ok = false;
+                }
+                job->success = ok;
+            }
+            if (!ok) transport->Close();
+            SetEvent(job->done);
+        });
+    }
 
-		m_Abandon.store(false);
-		m_State.store(State::Connecting);
-		const bool ok = DoOpen(portName, baudRate);
-		m_State.store(ok ? State::Open : State::Failed);
-		return ok;
-	}
+    void SerialPort::ReadLoop()
+    {
+        char buf[256];
+        while (m_Connected.load())
+        {
+            const ReadResult r = m_Transport->Read(buf, sizeof(buf), m_StopEvent);
+            if (r.status == ReadResult::Status::Aborted) break;
+            if (r.status == ReadResult::Status::Dropped)
+            {
+                m_Connected.store(false);
+                m_State.store(State::Failed);
+                break;
+            }
+            if (r.bytes > 0)
+            {
+                std::lock_guard<std::mutex> lock(m_BufferMutex);
+                m_DataBuffer.append(buf, r.bytes);
+            }
+        }
+    }
 
-	/////////////////////////////////////////////////////////////////////////////////
+    std::string SerialPort::FlushBuffer()
+    {
+        std::lock_guard<std::mutex> lock(m_BufferMutex);
+        std::string result;
+        result.swap(m_DataBuffer);
+        return result;
+    }
 
-	/**
-	 * BeginOpen
-	 * * NON-BLOCKING CONNECT: CreateFileA on an unreachable Bluetooth SPP port can
-	 * block for 10-20 s before failing. Running it on the main/render thread froze
-	 * the UI (and, via the 3 s auto-reconnect retry, kept refreezing it). BeginOpen
-	 * moves the blocking open onto a one-shot worker thread so the UI stays live;
-	 * callers poll GetState().
-	 */
-	void SerialPort::BeginOpen(const std::string& portName, uint32_t baudRate)
-	{
-		// Never stack connect attempts — one in-flight worker at a time.
-		if (m_State.load() == State::Connecting) return;
+    bool SerialPort::Write(const void* data, size_t length)
+    {
+        // An app-owned writer may run while the owner closes. Stop is signalled
+        // first; the device/event remain alive until this lock is released.
+        std::lock_guard<std::mutex> lock(m_WriteMutex);
+        if (!m_Connected.load() || !data || length == 0) return false;
+        return m_Transport->Write(data, length, m_StopEvent);
+    }
 
-		// We are not Connecting, so the previous worker (if any) has finished:
-		// joining it here cannot block.
-		if (m_ConnectThread.joinable()) m_ConnectThread.join();
+    void SerialPort::CloseReadSession()
+    {
+        m_Connected.store(false);
+        if (m_StopEvent) SetEvent(m_StopEvent);
+        if (m_ReadThread.joinable()) m_ReadThread.join();
+        std::lock_guard<std::mutex> writeLock(m_WriteMutex);
+        m_Transport->Close();
+        m_StopEvent = nullptr; // event lifetime belongs to OpenJob
+        std::lock_guard<std::mutex> bufferLock(m_BufferMutex);
+        m_DataBuffer.clear(); // partial bytes never survive reconnect
+    }
 
-		// Drop any current session synchronously — fast, the read thread wakes on
-		// the stop event. Only the CreateFileA below is slow, and it runs off-thread.
-		CloseReadSession();
+    void SerialPort::Close()
+    {
+        if (m_OpenJob)
+        {
+            {
+                std::lock_guard<std::mutex> lock(m_OpenJob->mutex);
+                m_OpenJob->abandoned = true;
+                SetEvent(m_OpenJob->stop); // cancellation BEFORE waiting (H1)
+            }
+            if (m_ConnectThread.joinable())
+            {
+                // Repeat to cover Close just before CreateFile enters the kernel.
+                const ULONGLONG deadline = GetTickCount64() + 500;
+                while (WaitForSingleObject(m_OpenJob->done, 5) == WAIT_TIMEOUT &&
+                       GetTickCount64() < deadline)
+                    CancelSynchronousIo(m_ConnectThread.native_handle());
+                if (WaitForSingleObject(m_OpenJob->done, 0) == WAIT_OBJECT_0)
+                    m_ConnectThread.join();
+                else
+                    m_ConnectThread.detach(); // owns ONLY job + transport; never this
+            }
+            if (WaitForSingleObject(m_OpenJob->done, 0) != WAIT_OBJECT_0)
+            {
+                // No reader exists. Late cleanup belongs exclusively to the open
+                // worker; no app/plugin callback is reachable from it.
+                m_StopEvent = nullptr;
+                m_State.store(State::Idle);
+                return;
+            }
+        }
+        CloseReadSession();
+        m_State.store(State::Idle);
+    }
 
-		m_Abandon.store(false);
-		m_State.store(State::Connecting);
-		m_ConnectThread = std::thread([this, portName, baudRate]()
-		{
-			const bool ok = DoOpen(portName, baudRate);
-			m_State.store(ok ? State::Open : State::Failed);
-			// If Close() was requested while we were blocked in CreateFileA, tear the
-			// freshly-opened session back down so nothing leaks.
-			if (ok && m_Abandon.load())
-				CloseReadSession();
-		});
-	}
-
-	/////////////////////////////////////////////////////////////////////////////////
-
-	/**
-	 * DoOpen
-	 * * The actual blocking open. Assumes any previous read session was already torn
-	 * down by the caller (Open/BeginOpen call CloseReadSession first).
-	 */
-	bool SerialPort::DoOpen(const std::string& portName, uint32_t baudRate)
-	{
-		// Create the stop event (synchronization owned by the state machine) BEFORE the
-		// open, so a transport that honours cancellation (the test seam) can observe it
-		// while inside a blocking open. The Win32 transport ignores it — CreateFileA
-		// cannot be cancelled, which is KI-4 — so shipping behaviour is unchanged.
-		m_StopEvent = CreateEvent(nullptr, TRUE, FALSE, nullptr); // manual-reset, unsignalled
-
-		if (!m_Transport->Open(portName, baudRate, m_StopEvent))
-		{
-			if (m_StopEvent) { CloseHandle(m_StopEvent); m_StopEvent = nullptr; }
-			return false;
-		}
-
-		m_Connected = true;
-		m_ReadThread = std::thread(&SerialPort::ReadLoop, this);
-		return true;
-	}
-
-	/////////////////////////////////////////////////////////////////////////////////
-
-	/**
-	 * ReadLoop
-	 * * ASYNC INGESTION: runs on its own thread. Issues an overlapped ReadFile and
-	 * waits on BOTH the read-completion event and the stop event, so a Close() can
-	 * abort a pending read instantly — no matter how wedged the port is. Data is
-	 * appended to the thread-safe buffer.
-	 */
-	void SerialPort::ReadLoop()
-	{
-		DWORD winThreadId = GetCurrentThreadId();
-		int core = GetCurrentProcessorNumber();
-		CS_CORE_INFO("[SERIAL THREAD] Started with ID: {0} on Core: {1}", winThreadId, core);
-
-		char buf[256];
-
-		// The loop and buffer-append (state machine + data bridge) stay here; the
-		// overlapped ReadFile + wait-on-stop is the transport's job now.
-		while (m_Connected)
-		{
-			ReadResult r = m_Transport->Read(buf, sizeof(buf), m_StopEvent);
-
-			if (r.status == ReadResult::Status::Aborted) // stop requested — exit
-				break;
-
-			if (r.status == ReadResult::Status::Dropped) // the device is gone
-			{
-				m_Connected = false;
-				m_State.store(State::Failed);
-				break;
-			}
-
-			if (r.bytes > 0)
-			{
-				std::lock_guard<std::mutex> lock(m_BufferMutex);
-				m_DataBuffer.append(buf, r.bytes); // exact bytes (may contain embedded NULs)
-			}
-		}
-
-		CS_CORE_INFO("[SERIAL THREAD] Shutting down.");
-	}
-
-	/////////////////////////////////////////////////////////////////////////////////
-
-	/**
-	 * FlushBuffer
-	 * * BRIDGE TO MAIN THREAD: Safely extracts all data collected by the
-	 * background thread and clears the source buffer in one atomic-like operation.
-	 */
-	std::string SerialPort::FlushBuffer()
-	{
-		std::lock_guard<std::mutex> lock(m_BufferMutex);
-		std::string temp = m_DataBuffer;
-		m_DataBuffer.clear();
-		return temp;
-	}
-
-	/////////////////////////////////////////////////////////////////////////////////
-
-	/**
-	 * Write
-	 * * TRANSMISSION: the port was opened FILE_FLAG_OVERLAPPED, so writes must be
-	 * overlapped too. Each call uses its own OVERLAPPED + event and waits for
-	 * completion — bounded by the OS transmit buffer, and safe to run while the
-	 * read thread has its own pending overlapped read on the same handle.
-	 */
-	bool SerialPort::Write(const void* data, size_t length)
-	{
-		// Guard on connected-state here (unchanged contract); the transport performs
-		// the actual overlapped write.
-		if (!m_Connected || length == 0)
-			return false;
-
-		return m_Transport->Write(data, length);
-	}
-
-	/////////////////////////////////////////////////////////////////////////////////
-
-	/**
-	 * CloseReadSession
-	 * * Tears down the read thread + handle only. Signals the stop event (which the
-	 * read thread waits on), so ReadLoop returns immediately even if a read is
-	 * pending on a stalled port — join() is therefore prompt. Does NOT touch the
-	 * connect thread, so the connect worker can call it safely (no self-join).
-	 */
-	void SerialPort::CloseReadSession()
-	{
-		m_Connected = false;
-		if (m_StopEvent)
-			SetEvent(m_StopEvent);          // wake the read thread instantly
-		if (m_ReadThread.joinable())
-			m_ReadThread.join();
-
-		// Release the device only after the reader has joined, so CloseHandle can never
-		// race a pending read. (The transport also CancelIoEx's here — redundant on the
-		// reachable path since the stop event already woke the reader, but kept as the
-		// device-release primitive.)
-		m_Transport->Close();
-
-		if (m_StopEvent)
-		{
-			CloseHandle(m_StopEvent);
-			m_StopEvent = nullptr;
-		}
-	}
-
-	/////////////////////////////////////////////////////////////////////////////////
-
-	/**
-	 * Close
-	 * * CLEAN SHUTDOWN: joins any in-flight connect worker, then tears down the read
-	 * session. m_Abandon tells a worker still blocked in CreateFileA to self-close
-	 * the moment it returns, so the connect join here stays bounded even against a
-	 * dead Bluetooth port. Safe to call when already idle, and from the destructor.
-	 */
-	void SerialPort::Close()
-	{
-		m_Abandon.store(true);
-		if (m_ConnectThread.joinable())
-			m_ConnectThread.join();
-		CloseReadSession();
-		m_State.store(State::Idle);
-	}
-
-	/////////////////////////////////////////////////////////////////////////////////
-
-	/**
-	 * GetAvailablePorts
-	 * * REGISTRY DISCOVERY: Windows does not have a simple "ListPorts" function.
-	 * This method parses the Windows Registry at 'SERIALCOMM' to find
-	 * which hardware communication ports are currently recognized by the OS.
-	 */
-	std::vector<std::string> SerialPort::GetAvailablePorts()
-	{
-		// The registry scan lives in the Win32 transport now (single implementation).
-		// This static keeps the long-standing public API and is what a caller without a
-		// SerialPort instance uses.
-		return Win32SerialTransport{}.List();
-	}
-
-	/////////////////////////////////////////////////////////////////////////////////
-
-	/**
-	 * ListPorts
-	 * * Instance discovery through this port's transport. For the default Win32
-	 * transport this is identical to GetAvailablePorts(); for an injected fake it
-	 * returns the test-set list, which is how SerialLink::RefreshPorts can select a
-	 * fake port without hardware.
-	 */
-	std::vector<std::string> SerialPort::ListPorts()
-	{
-		return m_Transport->List();
-	}
+    std::vector<std::string> SerialPort::GetAvailablePorts() { return Win32SerialTransport{}.List(); }
+    std::vector<std::string> SerialPort::ListPorts() { return m_Transport->List(); }
 }

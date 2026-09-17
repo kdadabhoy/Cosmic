@@ -1,0 +1,13 @@
+{
+  "manifest": "wo05-repro",
+  "cases": [{
+    "id": "T03-H1-root-close-delayed-open",
+    "description": "Actual SF_Telem root teardown while its shared connection opens; 2-second close budget.",
+    "tier": "U", "profiles": ["pr"], "transport": "fake",
+    "requires": ["windows"],
+    "command": "{BIN}\\CosmicTests.exe",
+    "args": ["--test-case=WO-05a H1:*", "--no-colors"],
+    "expectExit": 0, "minTests": 1, "deadlineSec": 15,
+    "fixture": "../../tests/test_serial_shutdown_race.cpp", "seed": 5
+  }]
+}

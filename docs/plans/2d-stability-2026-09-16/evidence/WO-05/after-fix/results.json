@@ -1,0 +1,105 @@
+﻿{
+    "manifest":  "wo05-repro",
+    "profile":  "all",
+    "tier_filter":  [
+
+                    ],
+    "config":  "Debug",
+    "mode":  "2D",
+    "generated_utc":  "2026-09-17T19:36:10.4961057Z",
+    "git":  {
+                "commit":  "0e71e0c3f2cc0aa6ca998302c8fcb93fce2e8bf7",
+                "dirty":  true,
+                "dirty_diff_sha256":  null
+            },
+    "environment":  {
+                        "os_caption":  "Microsoft Windows 11 Education",
+                        "os_version":  "10.0.26200",
+                        "os_build":  "26200",
+                        "os_display":  "26200.9457",
+                        "cpu_name":  "AMD Ryzen 7 7800X3D 8-Core Processor",
+                        "cpu_cores":  8,
+                        "cpu_threads":  16,
+                        "cpu_addr_width":  64,
+                        "cpu_isa_floor":  "SSE4.2 (D-CPU); see evidence/WO-02/cpu-isa-probe.txt",
+                        "ram_bytes":  33462239232,
+                        "ram_gib":  31.2,
+                        "gpus":  [
+                                     {
+                                         "name":  "NVIDIA GeForce RTX 5070 Ti",
+                                         "driver":  "32.0.16.1692",
+                                         "driver_date":  "\/Date(1788480000000)\/"
+                                     },
+                                     {
+                                         "name":  "AMD Radeon(TM) Graphics",
+                                         "driver":  "32.0.21045.5002",
+                                         "driver_date":  "\/Date(1786924800000)\/"
+                                     }
+                                 ],
+                        "opengl_version":  null,
+                        "powershell":  "5.1.26100.9444",
+                        "hostname":  "DESKTOP-SEOA4BT"
+                    },
+    "capabilities":  {
+                         "windows":  true,
+                         "cpu-sse42":  true,
+                         "gpu-gl":  true,
+                         "serial-device":  false,
+                         "editor-ui":  false
+                     },
+    "forced_unavailable":  [
+
+                           ],
+    "bin_dir":  "C:\\dev\\Cosmic\\build\\Runtime\\Debug",
+    "run_temp":  "C:\\dev\\Cosmic\\build\\wo05-temp\\cosmic-accept-0887f0c36ced42daa656680b1db1ab22",
+    "golden_dir":  "C:\\dev\\Cosmic\\tests\\acceptance\\goldens",
+    "golden_before":  {
+                          ".gitkeep-golden.txt":  "8e92944b7b4e999a32148948af2a13498ece10d56133c62c5c84431f2d335118"
+                      },
+    "golden_after":  {
+                         ".gitkeep-golden.txt":  "8e92944b7b4e999a32148948af2a13498ece10d56133c62c5c84431f2d335118"
+                     },
+    "golden_mutated":  false,
+    "acceptance_mode":  true,
+    "counts":  {
+                   "total":  1,
+                   "passed":  1,
+                   "failed":  0,
+                   "blocked":  0
+               },
+    "self_test":  {
+                      "enabled":  false,
+                      "failures":  [
+
+                                   ]
+                  },
+    "cases":  [
+                  {
+                      "id":  "T03-H1-root-close-delayed-open",
+                      "tier":  "U",
+                      "description":  "Actual SF_Telem root teardown while its shared connection opens; 2-second close budget.",
+                      "requires":  [
+                                       "windows"
+                                   ],
+                      "transport":  "fake",
+                      "seed":  5,
+                      "start_utc":  "2026-09-17T19:36:10.3430743Z",
+                      "deadline_sec":  15,
+                      "exercised":  "fake-transport",
+                      "fixture":  "C:\\dev\\Cosmic\\tests\\acceptance\\..\\..\\tests\\test_serial_shutdown_race.cpp",
+                      "fixture_sha256":  "21067a28b87fe2fe0c5f3fee4254035bca9f975b8863d7c93e8b614864be4778",
+                      "command":  "C:\\dev\\Cosmic\\build\\Runtime\\Debug\\CosmicTests.exe \"--test-case=WO-05a H1:*\" --no-colors",
+                      "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-05\\after-fix\\T03-H1-root-close-delayed-open.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-05\\after-fix\\T03-H1-root-close-delayed-open.err.log",
+                      "pid":  12120,
+                      "exit_code":  0,
+                      "crash":  false,
+                      "tests_passed":  1,
+                      "tests_expected_min":  1,
+                      "verdict":  "PASSED",
+                      "detail":  "exit 0 as expected",
+                      "duration_sec":  0.135,
+                      "end_utc":  "2026-09-17T19:36:10.4841067Z"
+                  }
+              ]
+}

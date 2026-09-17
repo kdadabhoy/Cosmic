@@ -38,6 +38,7 @@ namespace Workspace
     {
     public:
         SF_Telem();
+        explicit SF_Telem(std::unique_ptr<Cosmic::ISerialTransport> transport);
         virtual ~SF_Telem() override = default;
 
         virtual void OnAttach()                override;
@@ -49,8 +50,13 @@ namespace Workspace
 
         enum Screen { SCREEN_HOME = 0, SCREEN_MAIN, SCREEN_TESTING, SCREEN_ANALYSIS, SCREEN_REPLAY, SCREEN_COUNT };
 
-    private:
+        // The same service wiring used by OnAttach, without creating GPU assets.
+        void InitializeServices();
         void SetScreen(Screen s);
+        Cosmic::SerialLink& Link() { return m_Link; }
+        TelemHub& Hub() { return m_TelemHub; }
+
+    private:
         void DrawHomescreen();
         void DrawTopPanel();          // Home + screen tabs + screen-specific controls
         void ApplyDockLayout();
@@ -70,6 +76,7 @@ namespace Workspace
         std::shared_ptr<ReplayLayer>     m_Replay;
 
         Screen m_Screen     = SCREEN_HOME;
+        bool m_ServicesInitialized = false;
         int    m_AppliedDock = -1;
 
         bool m_PolesAsPairs = false;  // Decode Constants: enter motor count as poles vs. pairs

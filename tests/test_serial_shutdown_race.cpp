@@ -30,6 +30,8 @@
 
 #include "serial/SerialPort.h"
 #include "serial/SerialLink.h"
+#include "FakeSerialTransport.h"
+#include "../Projects/SF_Telem/src/SF_Telem.h"
 
 #include <chrono>
 #include <string>
@@ -126,17 +128,23 @@ TEST_CASE("WO-05a: SerialLink pumped without Connect never opens a port (KI-2 bo
 // Reserved failing reproductions — ENVIRONMENT_BLOCKED (skipped, never a pass)
 // =============================================================================
 
-TEST_CASE("WO-05a H1: exit hang - close while a reconnect worker blocks in CreateFileA"
-          * doctest::skip())
+TEST_CASE("WO-05a H1: exit hang - close while a reconnect worker blocks in CreateFileA")
 {
-    // ENVIRONMENT_BLOCKED. Missing prerequisite: a port whose open BLOCKS
-    // (a Bluetooth SPP device) OR the WO-04 transport seam's SetOpenBlockMs().
-    // Expected FAIL today: with a blocking open, SerialPort::Close()'s join()
-    // (SerialPort.cpp:298) stalls for the full open timeout because m_Abandon is
-    // only read AFTER DoOpen returns (SerialPort.cpp:80-82). See repro-sequence.md.
-    // After the WO-05 fix this must return within the abort budget (sub-second).
-    MESSAGE("SKIPPED (ENVIRONMENT_BLOCKED): needs a Bluetooth/virtual COM or the WO-04 seam "
-            "(FakeSerialTransport::SetOpenBlockMs). See evidence/WO-05a/transport-seam-spec.md.");
+    auto fake = std::make_unique<FakeSerialTransport>();
+    auto* f = fake.get();
+    f->SetAvailablePorts({ "COM_FAKE" });
+    f->SetOpenBlockMs(2500);
+    auto root = std::make_unique<Workspace::SF_Telem>(std::move(fake));
+    root->InitializeServices();
+    root->OnUpdate(0.0f);
+    root->Link().Connect();
+    REQUIRE(f->WaitOpenEntered());
+    const auto start = Clock::now();
+    root->OnDetach();
+    CHECK(MillisSince(start) <= 2000);
+    CHECK(root->Link().GetState() == SerialPort::State::Idle);
+    CHECK_FALSE(root->Link().WantConnection());
+
 }
 
 TEST_CASE("WO-05a H3: connected-state drop - lose an open port then close"
@@ -150,3 +158,4 @@ TEST_CASE("WO-05a H3: connected-state drop - lose an open port then close"
     MESSAGE("SKIPPED (ENVIRONMENT_BLOCKED): needs a virtual COM or the WO-04 seam. "
             "See evidence/WO-05a/hazard-analysis.md (H3) and transport-seam-spec.md.");
 }
+

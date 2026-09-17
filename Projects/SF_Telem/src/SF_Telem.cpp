@@ -53,6 +53,17 @@ namespace Workspace
 
     SF_Telem::SF_Telem() : Cosmic::Layer("SF_Telem") {}
 
+    SF_Telem::SF_Telem(std::unique_ptr<Cosmic::ISerialTransport> transport)
+        : Cosmic::Layer("SF_Telem"), m_Link(std::move(transport)) {}
+
+    void SF_Telem::InitializeServices()
+    {
+        if (m_ServicesInitialized) return;
+        m_TelemHub.Init(&m_Link);
+        m_Testing.Init(&m_Link);
+        m_ServicesInitialized = true;
+    }
+
     // =========================================================================
     void SF_Telem::OnAttach()
     {
@@ -62,8 +73,7 @@ namespace Workspace
         Cosmic::Log::SetLogDirectory(Cosmic::FileSystem::Resolve("project://logs"));
 
         // One shared connection feeds every screen.
-        m_TelemHub.Init(&m_Link);
-        m_Testing.Init(&m_Link);
+        InitializeServices();
 
         m_Main     = std::make_shared<MainLayer>(&m_TelemHub);
         m_Analysis = std::make_shared<DrivetrainLayer>();
@@ -83,6 +93,7 @@ namespace Workspace
     // =========================================================================
     void SF_Telem::OnDetach()
     {
+        m_Link.Shutdown();          // cancel reconnect before screen/export teardown
         if (m_Main)     m_Main->OnDetach();
         if (m_Analysis) m_Analysis->OnDetach();
         if (m_Replay)   m_Replay->OnDetach();
@@ -90,7 +101,6 @@ namespace Workspace
 
         m_Testing.Shutdown();
         m_TelemHub.Shutdown();
-        m_Link.Shutdown();          // root owns the shared connection
 
         Cosmic::Log::SetLogDirectory("logs");
         CS_INFO("SF_Telem: Detached.");

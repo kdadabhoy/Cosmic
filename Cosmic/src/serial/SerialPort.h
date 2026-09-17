@@ -98,8 +98,8 @@ namespace Cosmic
 		void		BeginOpen(const std::string& portName, uint32_t baudRate = 115200);
 
 		void		Close();
-		bool		IsOpen() const															{ return m_Connected; }
-		State		GetState() const														{ return m_State.load(); }
+		bool IsOpen() const;
+		State GetState() const;
 
 		////////////////////////////////
 		// Data Retrieval
@@ -139,7 +139,7 @@ namespace Cosmic
 		// Core open work: CreateFileA -> DCB/timeouts -> start read thread. Does NOT
 		// tear down a previous session (callers must CloseReadSession first) and does
 		// NOT touch the connect thread (so the worker can call it without self-join).
-		bool		DoOpen(const std::string& portName, uint32_t baudRate);
+		void AdoptOpen();
 
 		// Tear down only the read session (thread + handle + stop event). Unlike
 		// Close() this does not join the connect thread, so it is safe to call from
@@ -153,10 +153,12 @@ namespace Cosmic
 
 		std::atomic<bool>		m_Connected			{ false };
 		std::atomic<State>		m_State				{ State::Idle };
-		std::atomic<bool>		m_Abandon			{ false };  // set by Close() so an in-flight connect self-closes
+		struct OpenJob;
+		std::shared_ptr<OpenJob> m_OpenJob;
 		std::thread				m_ReadThread;
 		std::thread				m_ConnectThread;
 		std::mutex				m_BufferMutex;
+		std::mutex m_WriteMutex;
 		std::string				m_DataBuffer;
 
 		////////////////////////////////
@@ -166,7 +168,7 @@ namespace Cosmic
 		// The four OS calls (open/read/write/close) + port discovery, behind the
 		// WO-04 seam. Defaults to Win32SerialTransport (the shipping path); a test
 		// injects a fake. Never null after construction.
-		std::unique_ptr<ISerialTransport> m_Transport;
+		std::shared_ptr<ISerialTransport> m_Transport;
 
 		////////////////////////////////
 		// Platform Handle

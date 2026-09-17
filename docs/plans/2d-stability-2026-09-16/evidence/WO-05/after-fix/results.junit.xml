@@ -1,0 +1,8 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="wo05-repro" tests="1" failures="0" skipped="0">
+  <testsuite name="all" tests="1" failures="0" skipped="0">
+    <testcase name="T03-H1-root-close-delayed-open" classname="wo05-repro.U" time="0">
+    </testcase>
+  </testsuite>
+</testsuites>
+

@@ -23,7 +23,7 @@ namespace Cosmic
 
 		bool Open(const std::string& portName, std::uint32_t baudRate, void* stopEvent) override;
 		ReadResult Read(char* buf, std::size_t cap, void* stopEvent) override;
-		bool Write(const void* data, std::size_t length) override;
+		bool Write(const void* data, std::size_t length, void* stopEvent) override;
 		void Close() override;
 		std::vector<std::string> List() override;
 
