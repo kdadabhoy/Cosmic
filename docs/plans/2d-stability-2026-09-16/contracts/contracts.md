@@ -1,23 +1,31 @@
 # Cosmic 2D — draft contracts
 
 Status: WO-00 decision record, 2026-09-16. Gate G0.
+Contract *shape* ratified by Kaden 2026-09-17 (all 7 open questions answered — see
+"Ratified answers" at the end). Numeric thresholds remain provisional until WO-02.
 Revalidated at HEAD `72b47771c869666f3a645a47bfbfae917d3167f2`.
 
-Each contract below is a **draft**. Every one carries the marker
-**"draft — ratified with WO-02 measurements"**: the deadlines, budgets and tolerances are proposed
-requirements, not measured facts, until WO-02 establishes a baseline on a named reference machine
-(see [`numeric-bar-policy.md`](numeric-bar-policy.md)). WO-00 fixes the *shape* of each contract
-(what is promised, who owns it, what invalidates it); WO-02 fills the numbers; the owning WO
+Each contract's **policy shape is now ratified**; each still carries the marker
+**"numbers ratified/calibrated with WO-02 measurements"**: the deadlines, budgets and tolerances are
+proposed requirements, not measured facts, until WO-02 establishes a baseline on a named reference
+machine (see [`numeric-bar-policy.md`](numeric-bar-policy.md)). WO-00 fixes the *shape* of each
+contract (what is promised, who owns it, what invalidates it); WO-02 fills the numbers; the owning WO
 implements and proves it.
 
-Open questions that need Kaden are marked **[Kaden]** inline and collected at the end.
+`[Kaden]` markers below are now **resolved** with Kaden's 2026-09-17 answers, inline and collected at
+the end.
 
 ---
 
 ## 1. Bounded serial close / cancel
 
-*Draft — ratified with WO-02 measurements. Owner: WO-05 (contract), WO-04 (seam). Covers T03/T04,
-KI-2.*
+*Shape ratified (Kaden 2026-09-17); numbers calibrated with WO-02 measurements. Owner: WO-05
+(contract), WO-04 (seam). Covers T03/T04, KI-2.*
+
+> **Ratified (Kaden 2026-09-17):** "whatever makes the most sense — this is a real-world app, assume
+> dropping and reconnecting." Resolution below: a bounded **cancellation-based** close (never a
+> synchronous wait on a stalled OS open), with the auto-reconnect loop stopped before teardown and the
+> late handle cleaned exactly once by the worker that owns it.
 
 **Promise.** Every serial lifecycle operation (open, delayed/stalled open, pending read, in-flight
 write, link loss, reconnect, close) reaches an **observable completion or failure state within a
@@ -34,17 +42,29 @@ detached worker that still references a destroyed object.
 - Overlapped I/O storage must outlive its OS operation's completion; a late open/read result is
   cleaned exactly once.
 
-**Deadlines (proposed, measurement-derived — see numeric-bar-policy).**
-- Normal close with an idle / open / stalled port and no large pending export: process/app exits
-  within **2 s**; no post-unload callback. **[Kaden]** Is 2 s the accepted normal-close deadline
-  given a live SPP `CreateFileA` stall, or does a stalled-open close return earlier and clean the
-  late handle once, asynchronously? The test must **not** extend the deadline to the known 10–20 s
-  Bluetooth stall and then call shutdown "bounded."
-- Delayed-connect cancellation: UI stays responsive; completion/cleanup is bounded; no unsafe
+**Ratified deadlines / policy (numbers provisional until WO-02).**
+- **Normal close** (idle / open / streaming port, no OS call stalled, no large pending export):
+  app/process exits within **2 s**; the connection worker is joined; **no post-unload callback**.
+- **Stalled-open close** (worker blocked inside `CreateFileA`, e.g. a Bluetooth SPP port that can sit
+  there 10–20 s): `Close` **signals cancellation** (the stop event + the abandon flag) and returns
+  within the same **2 s** app/UI budget — it **does not** synchronously wait out the 10–20 s stall.
+  The connection worker, when `CreateFileA` finally returns, observes the abandon flag and **closes
+  the handle it owns exactly once**. The 2 s deadline is **never** extended to the OS stall and then
+  called "bounded." *Ownership rule:* the cancellation control block the worker reads (the atomic
+  abandon flag, the stop event, and the handle the worker created) **must outlive the worker**; the
+  owner may not free that block until the worker has exited. WO-05 chooses the concrete mechanism (a
+  shared-owned control block, or a bounded join whose deadline is honoured because the process is
+  exiting) — it may **not** "fix" shutdown by detaching a thread that still dereferences a destroyed
+  `SerialPort`.
+- **Drop / link-loss while streaming** (the real-world case Kaden called out): the state transitions
+  to *disconnected* **observably**; `SerialLink` auto-reconnect may re-arm; but teardown **first clears
+  the reconnect intent** (`m_WantConnection = false`) so there is **no delayed resurrection**, and there
+  is **never more than one connection worker** at a time.
+- **Delayed-connect cancellation:** UI stays responsive; completion/cleanup is bounded; no unsafe
   detached worker.
-- Close with a pending recording export: an explicit saving/cancel/error state stays responsive;
-  successful completion within **30 s** for the declared 2-hour fixture, *or* an explicit failure
-  that does **not** claim data was saved.
+- **Close with a pending recording export:** an explicit saving/cancel/error state stays responsive;
+  successful completion within **30 s** for the declared 2-hour fixture, *or* an explicit failure that
+  does **not** claim data was saved.
 
 **Invalidated by / re-opened when:** WO-05a reproduces the reported close-after-open or
 link-loss-while-open crash (then this contract gains the exact reproduced sequence), or WO-02
@@ -54,8 +74,11 @@ measures a normal-close time that forces a different deadline.
 
 ## 2. Recording durability + max session / retention policy
 
-*Draft — ratified with WO-02 measurements. Owner: WO-06 (contract), corroborated in S01. Covers
-D03/D04/D05.*
+*Shape ratified (Kaden 2026-09-17); numbers calibrated with WO-02 measurements. Owner: WO-06
+(contract), corroborated in S01. Covers D03/D04/D05.*
+
+> **Ratified (Kaden 2026-09-17):** "pick whatever for now — these are variable and easily changed
+> later." Provisional defaults chosen below; they are tunable constants, not a format decision.
 
 **Promise.** A recording either completes to a **valid, loadable** file or fails with an explicit
 error; the **last committed snapshot always remains loadable**; no invalid/partial file is ever
@@ -76,10 +99,17 @@ reported as a valid full recording.
 - 60-Hz recording for 2 h ⇒ 432,000 stored samples/entity; raw float history ≈
   `Σ 4·sample_count·(1+channel_count)` bytes, plus vector-capacity / metadata / simultaneous-snapshot
   / CSV-double overhead.
-- A **supported maximum session length / data volume**, an explicit **stop-or-rotate** policy, and
-  recoverable limit behaviour must be documented. **No infinite-recording promise.** **[Kaden]** What
-  is the supported maximum session length / data volume, and is the over-limit behaviour stop, rotate,
-  or reject?
+- A **supported maximum session length / data volume**, an explicit over-limit policy, and
+  recoverable limit behaviour must be documented. **No infinite-recording promise.**
+  **Ratified provisional defaults (tunable, per Kaden):**
+  - Supported maximum session length = **2 h** (aligned with the S01 soak fixture; 60-Hz ⇒ 432,000
+    samples/entity).
+  - Over-limit behaviour = **stop-and-finalize** (the default): on reaching the limit, finalize and
+    close the current recording cleanly, stop recording, and surface a clear "recording limit reached"
+    state. **No silent truncation, no unbounded growth.** (Rotate-to-new-file is a later option if a
+    consumer needs continuous capture; not built now.)
+  - These two values are **easily-changed constants**, not a format or compatibility decision — WO-06
+    exposes them as named limits and WO-02 may adjust them from the measured memory profile.
 - Provisional process private-bytes ceiling for the 2-hour recording: **2 GiB** (with
   capacity/snapshot/CSV-temporary growth accounted separately).
 
@@ -90,11 +120,12 @@ loss window) or the 2-hour memory profile (sets the real ceiling).
 
 ## 3. Restricted numeric CSV grammar
 
-*Draft — ratified with WO-02 measurements. Owner: WO-06. Covers D06.*
+*Shape ratified (Kaden 2026-09-17: "recommended is fine"); numbers calibrated with WO-02. Owner:
+WO-06. Covers D06.*
 
-**Promise.** Cosmic's CSV is a **restricted numeric** format, **not** a general quoted-CSV parser
-(unless Kaden separately chooses general CSV import). Finite numeric values round-trip; invalid
-input is **rejected with a useful result**, never coerced into a successful dataset.
+**Promise.** Cosmic's CSV is a **restricted numeric** format, **not** a general quoted-CSV parser.
+Finite numeric values round-trip; invalid input is **rejected with a useful result**, never coerced
+into a successful dataset. (General CSV import is **not** adopted this milestone.)
 
 **Grammar (draft).**
 - Rows must be exactly rectangular. Ragged rows (too few / too many columns) are **rejected** — this
@@ -109,9 +140,11 @@ input is **rejected with a useful result**, never coerced into a successful data
   paths, quoted commas/newlines each get an **explicit** supported-or-rejected verdict.
 - NaN / Inf / overflow / underflow and locale changes have a chosen finite-data policy, asserted
   consistently.
-- **[Kaden]** Confirm the format stays restricted-numeric (recommended), and confirm signed-zero
-  preservation is required (declared) vs not. A generic reader is **not** a MATLAB/JPL/Horizons
-  importer — a real consumer schema needs its own fixture/adapter.
+- **Ratified (Kaden 2026-09-17):** format stays **restricted-numeric**. **Signed-zero preservation is
+  NOT a declared guarantee** this milestone (whatever `double` `max_digits10` formatting naturally
+  yields is what you get; tests assert finite-value bit round-trip, not `+0`/`-0` distinction). A
+  generic reader is **not** a MATLAB/JPL/Horizons importer — a real consumer schema needs its own
+  fixture/adapter.
 
 **Invalidated by / re-opened when:** Kaden opts into general CSV import (a scope change, not a bug),
 or a consumer schema is adopted.
@@ -120,7 +153,11 @@ or a consumer schema is adopted.
 
 ## 4. Runtime-plugin vs editor-module reload state
 
-*Draft — ratified with WO-02 measurements. Owner: WO-07. Covers L01–L04, M1.*
+*Shape ratified (Kaden 2026-09-17); numbers calibrated with WO-02. Owner: WO-07. Covers L01–L04, M1.*
+
+> **Ratified (Kaden 2026-09-17):** "whatever makes sense — keep in mind the editor now only needs to
+> support 2D." So the editor-reload contract is scoped to **2D module content**; there is no 3D
+> component-preservation obligation beyond the forward-compat unknown-block passthrough (C05).
 
 **Promise.** The two DLL lifecycles have **different, explicit** state contracts. Neither promises
 preservation of arbitrary running C++ state.
@@ -138,9 +175,10 @@ preservation of arbitrary running C++ state.
   until its objects die; registry entries neither accumulate nor vanish incorrectly.
 - Running `Starforge.exe --project` exercises only the runtime-host override — it is **not** proof of
   the editor game-module lifecycle.
-- **[Kaden]** Confirm "clears selection/undo, stops Play, preserves serialized scene" is the intended
-  editor-reload contract (recommended, matches source), i.e. no promise to preserve live undo history
-  or in-flight Play state across a reload.
+- **Ratified (Kaden 2026-09-17):** "clears selection/undo, stops Play, preserves serialized scene" is
+  the intended editor-reload contract — **no** promise to preserve live undo history or in-flight Play
+  state across a reload. Scoped to 2D content (the editor is 2D-only now); unknown/forward-compat
+  blocks still survive load/save via C05.
 
 **Invalidated by / re-opened when:** a reload path is proven to leak an owned resource or invoke a
 stale callback (becomes a KI), or the editor-reload rule is changed by decision.
@@ -149,12 +187,19 @@ stale callback (becomes a KI), or the editor-reload rule is changed by decision.
 
 ## 5. Numeric precision — float telemetry vs double scientific source
 
-*Draft — ratified with WO-02 measurements. Owner: WO-10 (contract), consumer deferral per D-9km.
-Covers N03/N04, X01.*
+*Shape ratified (Kaden 2026-09-17: keep float for now); numbers calibrated with WO-02. Owner: WO-10
+(contract), consumer deferral per D-9km. Covers N03/N04, X01.*
+
+> **⚑ RATIFIED NOTE (Kaden 2026-09-17): keep the float representation for now.** Telemetry, the
+> recorder history, and the plot/display path stay `float` for this milestone. The `double`
+> scientific-source consumer contract (units / epoch / conversion tolerance for real to-9km data) is
+> **deliberately deferred** per **D-9km** and is to be revisited when real to-9km data exists — it is
+> **not** a gap to close now. This deferral is recorded here on purpose so a later reader does not
+> mistake the float representation for an oversight.
 
 **Promise.** The telemetry / recorder / display representation is **`float`**; scientific source
-data for an analysis consumer is kept **`double`** and converted to local relative coordinates
-before float rendering. The engine is **not** migrated to double during this milestone.
+data for an analysis consumer (when one arrives) is kept **`double`** and converted to local relative
+coordinates before float rendering. The engine is **not** migrated to double during this milestone.
 
 **Source facts.**
 - `TelemetryChannel::values`, `DataRecorder` history (`DataRecorder.h:224-225`) and the plot buffers
@@ -170,10 +215,10 @@ before float rendering. The engine is **not** migrated to double during this mil
   `abs(error) ≤ 1e-6 + 1e-5·abs(expected)` — **not** applied to bit-exact storage assertions.
 - Analytic references (RK4 `1e-4` relative, oscillator `2e-3`, energy `< 1.10·initial`) keep their
   existing bounds; independent `double` reference values are added where a consumer needs them.
-- **[Kaden]** Confirm the milestone keeps float display/telemetry and **defers** the consumer's
-  double-precision units/epoch/tolerance contract to when real to-9km data exists (per D-9km).
-  Define units / time-origin / conversion tolerance is a *pre-integration* obligation for that
-  consumer, not this milestone.
+- **Ratified (Kaden 2026-09-17):** the milestone **keeps float display/telemetry** and **defers** the
+  consumer's double-precision units/epoch/tolerance contract to when real to-9km data exists (per
+  D-9km). Defining units / time-origin / conversion tolerance is a *pre-integration* obligation for
+  that consumer, not this milestone.
 
 **Invalidated by / re-opened when:** a real to-9km schema arrives and defines its own precision/units
 contract (D-9km revisit).
@@ -200,27 +245,26 @@ Jolt/physics, shared math and shared cameras stay** (B04 carve-out; see
 [`support-matrix.md`](support-matrix.md) retained-dependency note). No blanket "no 3D-looking symbol"
 rule.
 
-**[Kaden]** Ratify the *hard configure-time rejection* of OFF on the trunk (recommended) vs a softer
-warning-only default. This is the one enforcement-strictness decision WO-03 needs signed off.
+**Ratified (Kaden 2026-09-17: "recommended is fine"):** the trunk uses **hard configure-time
+rejection** of `-DCOSMIC_2D_ONLY=OFF` — a `message(FATAL_ERROR ...)` at configure, not a warning —
+so no default entry point, stale cache, or script override can silently ship 3D. OFF is retained only
+on `engine-3d`. WO-03 implements this.
 
 ---
 
-## Open contract questions for Kaden (collected)
+## Ratified answers (Kaden, 2026-09-17)
 
-1. **Serial close deadline** (§1): is **2 s** the accepted normal-close deadline given a live SPP
-   `CreateFileA` stall, or may a stalled-open close return earlier and clean the late handle once,
-   asynchronously?
-2. **Recording max session** (§2): supported maximum session length / data volume, and over-limit
-   behaviour = stop, rotate, or reject?
-3. **CSV grammar** (§3): keep restricted-numeric (recommended) vs adopt general CSV import; and is
-   signed-zero preservation required?
-4. **Editor-reload contract** (§4): confirm clears selection/undo + stops Play + preserves serialized
-   scene as the intended rule (no live-state preservation promise)?
-5. **Numeric precision deferral** (§5): confirm float telemetry stays and the consumer double
-   units/epoch/tolerance contract is deferred per D-9km?
-6. **2D-only enforcement strictness** (§6): hard configure-time rejection of OFF on the trunk
-   (recommended) vs warning-only default?
-7. **Soak minimum**: confirm **2 h** is the accepted minimum soak (S01/S02), explicitly *not* an
-   unlimited-recording guarantee.
+All 7 open questions are resolved. The numeric thresholds remain provisional until WO-02 measures a
+baseline on a named reference machine; the *decisions* below are settled.
 
-Numbers in §1–§5 are provisional until WO-02 measures a baseline on a named reference machine.
+| # | Question | Ratified answer |
+| --- | --- | --- |
+| 1 | Serial close deadline (§1) | **Bounded cancellation-based close.** Normal/streaming/drop close ≤ 2 s; a **stalled-open** close signals cancel and returns in the 2 s budget (never waits out the 10–20 s SPP stall); the worker cleans the late handle once; auto-reconnect intent is cleared before teardown; ≤ 1 connection worker. Real-world drop/reconnect is the assumed case. |
+| 2 | Recording max session / over-limit (§2) | **Provisional, tunable:** max session **2 h**; over-limit = **stop-and-finalize** (clean close + "limit reached" state, no silent truncation). Easily changed later; WO-02 may adjust from the memory profile. |
+| 3 | CSV grammar (§3) | **Keep restricted-numeric** (recommended). No general CSV import this milestone. Signed-zero preservation **not** a declared guarantee. |
+| 4 | Editor-reload contract (§4) | **Confirmed:** clears selection/undo, stops Play, preserves serialized scene; **no** live-state promise. Scoped to **2D** content (editor is 2D-only now); forward-compat unknown blocks still survive via C05. |
+| 5 | Numeric precision (§5) | **Keep float** telemetry/display for now (noted ⚑ in §5). Consumer double units/epoch/tolerance contract **deferred** per D-9km. |
+| 6 | 2D-only enforcement (§6) | **Hard configure-time rejection** of OFF on the trunk (recommended); OFF only on `engine-3d`. |
+| 7 | Soak minimum | **2 h** is the accepted minimum continuous-run reliability soak (S01/S02) — a floor, **not** an unlimited-recording guarantee. ("Soak" = run the app under a nominal load for a long fixed span and check for leaks, drift, and slow crashes.) |
+
+Numbers in §1–§5 stay provisional until WO-02 measures a baseline on a named reference machine.

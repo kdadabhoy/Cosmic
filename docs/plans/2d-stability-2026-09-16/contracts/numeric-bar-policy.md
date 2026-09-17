@@ -68,12 +68,12 @@ Standard deadlines are *limits, not sleeps*, extended only through a reviewed co
 by measurement: U case 10 s; small W/G/I scenario 60 s; 50-rebuild campaign 30 min; serial 35 min for
 a 30-min run; soak 140 min for a 120-min session. A timeout is FAILED, never a graceful pass.
 
-### To-be-ratified ceilings (decision, measurement-informed — set in WO-00/02)
+### Ratified / to-be-ratified ceilings (decision, measurement-informed — set in WO-00/02)
 
-- Supported UI hierarchy **depth** ceiling and supported **light** ceiling (C03) — flagged in the
-  retained-feature register as `known-limitation`; the numeric ceilings are Kaden/WO-02 decisions.
-- Supported maximum recording **session length / data volume** and stop/rotate policy
-  ([`contracts.md`](contracts.md) §2).
+- **Ratified (Kaden 2026-09-17):** supported maximum recording **session length = 2 h**, over-limit
+  policy = **stop-and-finalize** (tunable; [`contracts.md`](contracts.md) §2).
+- Still open (WO-00/02 decisions): supported UI hierarchy **depth** ceiling and supported **light**
+  ceiling (C03) — flagged in the retained-feature register as `known-limitation`.
 
 ### Consumer-derived (deferred by D-9km — none required this milestone)
 
