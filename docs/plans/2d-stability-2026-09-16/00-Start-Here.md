@@ -33,7 +33,7 @@ Proposed numeric budgets are draft requirements, not measured results. Ratify/ca
 
 Still needed: exact qualification hardware/drivers and Windows builds, attached serial/ESP32 availability, a real SF-Stable recording if available, and to-9km's input schema/units/precision/data volume. Lack of these does not block synthetic test design, but it prevents claiming actual device or downstream-project qualification.
 
-Proposed snapshot name: engine-3d. Proposed candidate branch: codex/2d-stability. The current recommendation is to reject COSMIC_2D_ONLY=OFF on the supported trunk while retaining the full tree on the parked branch.
+Snapshot: `engine-3d` (created and pushed) + the `cosmic-pre-2d-2026-09-16` tag. **The campaign is main-only** (Kaden 2026-09-17) — no `codex/2d-stability` candidate branch or second worktree; all WO work happens on `main`. Ratified: reject `COSMIC_2D_ONLY=OFF` on the supported trunk (hard configure error) while retaining the full tree on the parked `engine-3d` branch.
 
 The next planning action is to review WO-00's contracts and the provisional bars, especially the bounded serial-close policy and recording-retention/durability behavior. Implementation begins only when Kaden asks to proceed.
 

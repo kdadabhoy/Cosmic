@@ -38,6 +38,12 @@ These are settled. A work order may not reopen them; it may only record new evid
   **`kdadabhoy <kdadabhoy28@gmail.com>`** with **no `Co-Authored-By: Claude`, no AI trailer, no
   "Generated with" line** — nothing that identifies an AI author may reach GitHub. The AI **never
   pushes** and **never promotes `main`**; Kaden runs every `git push`. Commit locally only.
+- **D-WORKFLOW — main-only (2026-09-17).** The whole campaign runs directly on **`main`**: each WO
+  makes its changes on `main`, commits locally, and Kaden pushes. There is **no `codex/2d-stability`
+  candidate branch and no second worktree.** Preservation/rollback is `engine-3d` (pushed) + the
+  `cosmic-pre-2d-2026-09-16` tag. This **supersedes** the candidate-worktree/ff-only-merge model in
+  `../04-Migration-Runbook.md` §3/§7; a session must not reintroduce it. Accepted tradeoff: `main` is
+  briefly half-migrated during WO-03..WO-12.
 
 ## Milestone boundary
 
@@ -56,9 +62,11 @@ later-additions backlog. This packet delivers **stability of the current 2D surf
    the WO cites, and the actual toolchain before editing. Preserve unrelated work — in particular
    the untracked root file `Cosmic - 2D Trunk Consolidation & Acceptance Plan.md` (never stage,
    move, or overwrite it).
-3. **Right worktree.** Once WO-01 exists, work in the authorized candidate worktree
-   (`codex/2d-stability`). **Never build, edit, or move `engine-3d`** — it is the frozen full-tree
-   snapshot.
+3. **Main-only (D-WORKFLOW).** Do all WO work directly on `main`, committed locally; Kaden pushes.
+   There is **no `codex/2d-stability` candidate branch and no second worktree** (Kaden's 2026-09-17
+   decision — supersedes the runbook §3/§7 candidate model). **Never build, edit, or move `engine-3d`
+   or the `cosmic-pre-2d-2026-09-16` tag** — they are the frozen full-tree snapshot and its provenance
+   pin (the sole rollback point).
 4. **Explicit 2D mode.** Configure with `-DCOSMIC_2D_ONLY=ON` for every build/test in this
    campaign unless the WO says otherwise. Record the effective cache/compile definitions.
 5. **Production path in tests.** Drive real application commands and state transitions. A fake
@@ -66,7 +74,7 @@ later-additions backlog. This packet delivers **stability of the current 2D surf
    reimplement the parser, the connection state machine, or build a second simulated app. No
    private-field mutation to force a state.
 6. **Failing-before, passing-after.** For every fixed defect, record a failing reproduction before
-   the fix and the passing result after it, on an isolated patch/worktree — never a destructive
+   the fix and the passing result after it, on an isolated patch/stash — never a destructive
    reset over user changes.
 7. **Honest gates.** Do not regenerate goldens, loosen a tolerance, broaden scope, or retry-until-
    green to hide a failure. A missing GPU/COM/Windows/UI capability is `ENVIRONMENT_BLOCKED` with
@@ -100,7 +108,7 @@ disposition. Missing equipment or a skipped test is never logged as a pass.
 ```
 WO-00  ratify contracts + known-issue register + numeric-bar policy
   │
-WO-01  preserve provenance (engine-3d exists locally; push + tag + candidate worktree)
+WO-01  preserve provenance (engine-3d pushed + cosmic-pre-2d tag; main-only, NO candidate worktree)
   │
 WO-02  fresh 2D baseline + measured numbers the later gates calibrate against
   │

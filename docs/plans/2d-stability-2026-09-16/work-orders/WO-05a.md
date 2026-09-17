@@ -11,7 +11,7 @@ It does **not** ship the fix — that lands in WO-05 with the regression.
 
 ~~~text
 Execute only WO-05a from the Cosmic 2D stability packet. Read work-orders/README.md and finding
-F2/F3 in ../05... context. Work in codex/2d-stability, COSMIC_2D_ONLY=ON. Goal: REPRODUCE, then
+F2/F3 in ../05... context. Work on main (main-only campaign), COSMIC_2D_ONLY=ON. Goal: REPRODUCE, then
 DIAGNOSE — do not land a fix here.
 
 Target the reported symptoms: (a) close the app window while a COM port is opening/open, and

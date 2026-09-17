@@ -44,10 +44,10 @@ No new feature addition is needed to declare the existing-feature stability mile
 
 1. Read the latest user instructions, applicable repository instructions, this packet, and the named work order. Treat historical docs as context. Report conflicts rather than silently following obsolete prompts.
 2. Revalidate commit, clean/dirty status, source anchors and actual toolchain. Preserve unrelated work, including the original untracked plan.
-3. Work on the authorized candidate branch/worktree. Do not change or build the frozen 3D branch for this campaign.
+3. Work on `main` (main-only campaign — no candidate branch or second worktree, per Kaden 2026-09-17). Do not change or build the frozen `engine-3d` snapshot for this campaign.
 4. Stay within the named work order. Small necessary refactors are allowed only with a clear ownership/testability reason; avoid broad rewrites, dependency upgrades and incidental formatting.
 5. Use production functions and state transitions in tests. A fake transport controls byte delivery and OS outcomes; it must not reimplement the parser or the connection state machine.
-6. For each fixed defect, record a failing reproduction before the fix and a passing result after it. Use an isolated test patch/worktree for counterfactual checks; never destructive reset/checkout over user changes.
+6. For each fixed defect, record a failing reproduction before the fix and a passing result after it. Use an isolated test patch/stash for counterfactual checks; never destructive reset/checkout over user changes.
 7. Register new test sources explicitly. Reconfigure after source-list changes. Preserve required test identities so accidentally excluding a suite cannot produce “green.”
 8. Fail on nonzero exit, timeout, missing expected test, crash dump, assertion, unapproved skip, missing golden, or wrong build mode. Do not retry until green, increase tolerance to hide a defect, or regenerate goldens to bless a regression.
 9. Produce evidence identified by commit, diff hash, environment, fixture hash, seed, exact command and exit code. Mark planned, not-run, passed, failed and environment-blocked distinctly.
@@ -88,13 +88,13 @@ DoD: no required feature lacks an oracle, test owner/order and known execution e
 
 Follow the migration runbook; re-query branch heads, pin approved full SHAs, create engine-3d from the approved original main without editing its tree, and verify its identity. Preserve every existing branch. Record an immutable snapshot identifier (an annotated tag is recommended if authorized).
 
-Create only the authorized isolated candidate/baseline worktrees. Never assume C:\dev\Cosmic-2D already exists. No cherry-picks are needed for the reviewed branch state.
+The campaign is main-only: no candidate/baseline worktree is created (preservation is `engine-3d` + the `cosmic-pre-2d-2026-09-16` tag). No cherry-picks are needed for the reviewed branch state.
 
 DoD: B01 evidence; a documented rollback/reference point exists before supported defaults change. This work order proves preservation, not 3D runtime stability.
 
 ### WO-02 — Establish a fresh 2D baseline
 
-Inspect README, tests/CMakeLists.txt, render harness, existing Phase 29 results and Phase 30 P0. Use a fresh isolated source worktree and explicit COSMIC_2D_ONLY=ON. Build and run Debug and Release units, then the current GPU suite on an available qualified GPU.
+Inspect README, tests/CMakeLists.txt, render harness, existing Phase 29 results and Phase 30 P0. Build on `main` with explicit COSMIC_2D_ONLY=ON. Build and run Debug and Release units, then the current GPU suite on an available qualified GPU.
 
 Capture exact CMake/compiler/SDK/dependency versions, CMakeCache, test names and counts, warnings, GL renderer/version/driver, Windows build, CPU features, RAM, and reference machine identity. Run GL-conformance and documentation-coverage audits. Do not regenerate goldens.
 
@@ -233,8 +233,8 @@ Read 01-Repository-Review.md, 02-Stability-Work-Orders.md, the relevant acceptan
 IDs in 03-Acceptance-Test-Catalog.md, current repository instructions, and the
 latest user decisions. Revalidate the current SHA and source anchors.
 
-Report prerequisite failures before editing. Work only in the authorized candidate
-worktree. Preserve SF-Stable behavior and later fixes, keep the 3D snapshot parked,
+Report prerequisite failures before editing. Work on main (main-only campaign).
+Preserve SF-Stable behavior and later fixes, keep the 3D snapshot parked,
 and follow the work order's allowed scope. Use the production path in tests.
 
 For every fixed bug, record a failing reproduction and the passing regression.

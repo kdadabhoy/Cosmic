@@ -104,7 +104,7 @@ These commits are provenance, not instructions to cherry-pick them again.
 
 4. **main is not currently a enforced 2D shipping configuration.** Default CMake options and the default preset select 3D. ci.yml and release.yml do not set COSMIC_2D_ONLY. package.bat discards the build cache and configures without the flag. A locally selected 2D cache does not fix clean builds or packaging.
 
-5. **Two build directories do not isolate outputs.** CMake writes DLLs to COSMIC_SDK_DIR/build/Runtime/<Config>. Use separate source worktrees for reference and candidate builds. Do not assume a different -B directory prevents mixed binaries.
+5. **Two build directories do not isolate outputs.** CMake writes DLLs to COSMIC_SDK_DIR/build/Runtime/<Config>. Under the main-only workflow you build on `main`; use a separate throwaway checkout only if you must build the old SF-Stable reference at the same time. Do not assume a different -B directory prevents mixed binaries.
 
 6. **CSV's contract is narrower than the brief.** DataExport.cpp rejects ragged rows; tests/test_lookuptable.cpp asserts that rejection. It writes max_digits10 but has no general quoted-field parser. Test blank cells, numeric-looking headers, overflow, locale and output write failures explicitly.
 
@@ -136,6 +136,6 @@ The parked 3D branch has no test requirement under this plan. Its commit/tree id
 - Availability of the ESP32, Bluetooth SPP/USB devices, and a captured known-good recording: not supplied. Synthetic fixtures can proceed; actual device qualification remains pending until available.
 - No exact repeatable crash sequence or crash dump was supplied beyond COM opening/closing/link loss. Start with the lifecycle matrix rather than assuming one root cause.
 - to-9km data formats, units, maximum series size, required precision and intended session duration: not yet inspected. Use the synthetic fixture in the test catalog, then replace/add real consumer fixtures before claiming consumer qualification.
-- Proposed snapshot name: engine-3d. Proposed migration branch: codex/2d-stability. Names are planning defaults.
+- Snapshot: engine-3d (created and pushed) + the cosmic-pre-2d-2026-09-16 tag. Migration is main-only (Kaden 2026-09-17) — no codex/2d-stability candidate branch or second worktree.
 - Proposed support: Windows x64, the instruction set required by the shipped dependencies, OpenGL 4.5 core, >=16 GB RAM. Exact hardware performance qualification stays explicit.
 - A two-hour uninterrupted session is the initial minimum soak; it is not an unlimited recording guarantee.

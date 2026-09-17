@@ -1,9 +1,15 @@
 # Cosmic 2D branch migration and verification runbook
 
-Status: planning only. These commands have NOT been run.
+Status: planning reference. Preservation (§2) is DONE; the campaign is MAIN-ONLY.
 Execute mutations only after Kaden authorizes implementation/migration. Retain all existing branches.
 
-This runbook assumes WO-00 has approved the proposed engine-3d snapshot name and codex/2d-stability candidate name. Source preservation is separate from testing the parked 3D engine.
+> **WORKFLOW UPDATE (Kaden 2026-09-17): MAIN-ONLY.** All WO work happens directly on `main` (commit
+> locally; Kaden pushes). There is **no `codex/2d-stability` candidate branch and no second worktree**.
+> §3's candidate/baseline worktrees and §7's ff-only merge are **superseded** by the rewritten §3/§7
+> below. Preservation is `engine-3d` (pushed) + the `cosmic-pre-2d-2026-09-16` tag.
+
+This runbook assumes WO-00 approved the `engine-3d` snapshot name. Source preservation is separate
+from testing the parked 3D engine.
 
 ## 1. Revalidate the starting state
 
@@ -34,6 +40,11 @@ The untracked root copy of the original plan belongs to the user. Do not remove 
 
 ## 2. Preserve current full source before changing supported defaults
 
+> **DONE (2026-09-17):** `engine-3d @ 0e8894b` is created and **pushed to origin**; the annotated tag
+> `cosmic-pre-2d-2026-09-16` is created on `0e8894b` (peels to `0e8894b`). Kaden pushes the tag with
+> `git push origin refs/tags/cosmic-pre-2d-2026-09-16`. The commands below are the reference for how
+> that was done.
+
 After explicit migration authorization, and only if the chosen names do not already exist:
 
 ~~~powershell
@@ -62,25 +73,25 @@ git ls-remote origin refs/heads/engine-3d refs/tags/cosmic-pre-2d-2026-09-16 're
 
 The annotated tag's own object SHA differs from the commit; verify its peeled ^{} commit. Do not force push or delete any branch. Verify the snapshot is durably recorded before promoting main.
 
-## 3. Isolate outputs using separate source worktrees
+## 3. Build isolation (main-only)
 
-Use new, unused directories; inspect existing paths and worktrees first. Never clean an existing directory as a shortcut.
+The campaign is main-only: build the 2D engine directly on `main` (all WO work lives there). **No
+candidate/baseline worktree is created.**
 
-~~~powershell
-git worktree add --detach C:\dev\Cosmic-2D-Baseline $snapshotSha
-git worktree add -b codex/2d-stability C:\dev\Cosmic-2D-Stability $snapshotSha
-~~~
-
-Optional old-SF runtime comparison, when its build/fixture is needed:
+One caveat from the review still applies: Cosmic's build output is source-relative (DLLs land under
+`COSMIC_SDK_DIR/build/Runtime/<Config>`), so a different `-B` directory alone does **not** prevent
+mixed binaries. You therefore only need a *separate throwaway checkout* if you want to build the
+**old SF-Stable reference** at the same time as `main` (e.g. the WO-02 baseline comparison):
 
 ~~~powershell
 $sfSha = 'fa6ed9fe6910f8a30e5e15561bd2a9b6b8b5d66e'
 git worktree add --detach C:\dev\Cosmic-SF-Reference $sfSha
 ~~~
 
-The baseline worktree builds the current snapshot in 2D mode. It does not develop or qualify 3D. Build SF-Stable using the instructions and capabilities of that older commit; do not copy candidate DLLs into its runtime folder.
-
-Do not put baseline and candidate into two -B directories sharing a source root. The current output directories are anchored under COSMIC_SDK_DIR/build/Runtime and would mix binaries.
+Build SF-Stable using the instructions and capabilities of that older commit; do not copy `main`
+DLLs into its runtime folder. Remove the throwaway worktree when the comparison is done. If you do
+not need a simultaneous old-reference build, build sequentially on `main` and skip the extra checkout
+entirely.
 
 ## 4. Current verification commands
 
@@ -101,7 +112,7 @@ function Invoke-Checked {
 }
 
 $cmake = (Get-Command cmake.exe -ErrorAction Stop).Source
-$root = 'C:\dev\Cosmic-2D-Baseline'
+$root = 'C:\dev\Cosmic'
 $build = Join-Path $root 'build'
 
 Invoke-Checked $cmake @(
@@ -161,11 +172,11 @@ Invoke-Checked (Join-Path $build 'Runtime\Release\CosmicRenderTests.exe') @('--r
 
 Acceptance must first ensure COSMIC_UPDATE_GOLDENS is unset/false, forbid --update-goldens, and compare tracked golden hashes before/after. The current missing-golden path writes a file and fails: the file's appearance is not approval of a new reference image.
 
-Apply equivalent commands to the candidate root. Do not use the pausing interactive build batch files as unattended runners. Additional harness/profile commands become valid only once WO-04 implements and documents them.
+Run these on `main` (main-only). Do not use the pausing interactive build batch files as unattended runners. Additional harness/profile commands become valid only once WO-04 implements and documents them.
 
-## 5. Make controlled changes on the candidate
+## 5. Make controlled changes on main
 
-Follow WO-03 through WO-12, with small reviewed changes and failure evidence. There is no prescribed cherry-pick: every known donor is already in main.
+Follow WO-03 through WO-12 on `main`, with small reviewed changes and failure evidence, committed locally (Kaden pushes). There is no prescribed cherry-pick: every known donor is already in main.
 
 Keep a ledger:
 - Exact files and behavior changed.
@@ -176,40 +187,41 @@ Keep a ledger:
 
 Do not merge SF-Stable over main or copy its entire serial/telemetry directories. Do not require engine-2d to follow future commits. It remains a preserved historical branch.
 
-## 6. Qualify the final candidate
+## 6. Qualify the final commit
 
-Run WO-13 after the final candidate changes. Keep results tied to an exact commit/diff, not merely to a branch name. At least the user-reported COM regressions must have real Windows corroboration, and both Windows 10/11 must have recorded qualification.
+Run WO-13 after the final changes land on `main`. Keep results tied to an exact commit/diff, not merely to a branch name. At least the user-reported COM regressions must have real Windows corroboration, and both Windows 10/11 must have recorded qualification.
 
-CI for the candidate/PR must explicitly test the 2D mode. Local-only GPU/serial evidence can gate a release through a reviewed report when no dedicated runner exists; missing evidence cannot be relabeled green.
+CI on `main` must explicitly test the 2D mode. Local-only GPU/serial evidence can gate a release through a reviewed report when no dedicated runner exists; missing evidence cannot be relabeled green.
 
 Do not publish or install onto the user's production SF setup as part of the disposable clean-machine qualification.
 
-## 7. Promote main only when separately authorized
+## 7. Ship the qualified main commit only when separately authorized
 
-Revalidate local/remote main and working-tree status. If main changed since the pinned base, integrate the new changes into the candidate, review the resulting diff and rerun affected gates; a history change cannot reuse stale candidate evidence silently.
-
-With a committed, approved fast-forward candidate and clean applicable tracked work:
+Main-only: there is **no candidate branch to merge**. The WO work already lives on `main` and is
+pushed as Kaden goes. "Promotion" for this campaign is simply the milestone hand-off: once WO-13
+qualifies `main` at a pinned SHA, Kaden pushes `main` at that SHA (if any local commits remain
+unpushed) and verifies the required 2D CI passes on that exact commit.
 
 ~~~powershell
 Set-Location C:\dev\Cosmic
-git switch main
-git merge --ff-only codex/2d-stability
-git rev-parse main
-~~~
-
-If ff-only fails, stop and inspect the divergence. Do not reset main or force a merge. Push only when explicitly authorized:
-
-~~~powershell
-git push origin refs/heads/main
+git rev-parse main            # the qualified SHA from WO-13
+git status --short            # clean tracked tree
+git push origin refs/heads/main   # Kaden only; skip if already pushed
 git ls-remote --heads origin
 ~~~
 
-Verify the pushed SHA, required 2D CI, preserved branch SHAs, package hashes and final documentation. Release publication remains a separate action.
+The AI never runs the push. Do not reset `main`, rewrite history, or move `engine-3d`. Verify the
+pushed SHA, required 2D CI, preserved branch SHAs, package hashes and final documentation. Release
+publication remains a separate action.
 
 ## 8. Recovery
 
-Before promotion, keep main untouched and repair or pause the candidate. No branch deletion is required.
+Because work is on `main`, keep `engine-3d` (and the `cosmic-pre-2d-2026-09-16` tag) untouched as the
+rollback point, and repair on `main` with a reviewed revert/fix commit rather than a history rewrite.
 
-After promotion, prefer deploying the previous qualified 2D artifact and making a reviewed revert/fix commit on main. Do not rewrite history or move the engine-3d snapshot. If no stable 2D artifact exists yet, keep the known-working SF reference available while investigating; do not claim it qualifies all new engine functionality.
+If a qualified 2D artifact exists, prefer deploying the previous qualified artifact while
+investigating. Do not rewrite history or move the engine-3d snapshot. If no stable 2D artifact exists
+yet, keep the known-working SF reference available while investigating; do not claim it qualifies all
+new engine functionality.
 
-Retain the snapshot, SF-Stable, old branch refs and acceptance artifacts. Worktree cleanup is optional later and must check for user changes and resolved paths before any removal.
+Retain the snapshot, SF-Stable, old branch refs, the provenance tag and acceptance artifacts.

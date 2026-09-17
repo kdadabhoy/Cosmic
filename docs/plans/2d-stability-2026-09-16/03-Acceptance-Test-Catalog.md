@@ -87,7 +87,7 @@ Expected values must not be calculated by the same routine under test. Use check
 
 | ID | Tier/profile | Procedure and oracle |
 | --- | --- | --- |
-| B01 | W/release | Verify every pre-existing branch remains; engine-3d equals the approved original main commit/tree; snapshot and candidate are distinct. No 3D build required. |
+| B01 | W/release | Verify every pre-existing branch remains; engine-3d equals the approved original main commit/tree; the `engine-3d` snapshot (`0e8894b`) is a distinct commit from the working `main`. Main-only campaign (no candidate branch). No 3D build required. |
 | B02 | U,G/baseline | Fresh 2D Debug/Release builds; list and run existing units and render cases; capture warnings, configured targets and exact results. Existing failures remain visible. |
 | B03 | W/pr | Fresh default configure, explicit 2D preset and stale OFF cache through each supported entry point. Result must be ON or reject the unsupported request clearly. No implicit full-engine rebuild. |
 | B04 | W/pr | Inspect generated target/source graph and link/package manifests: designated terrain/voxel/water/nav/old 3D-particle/Renderer3D/model/assimp/Recast paths absent. Shared Jolt/physics/cameras explicitly allowed. Consumer compile definitions match. |
