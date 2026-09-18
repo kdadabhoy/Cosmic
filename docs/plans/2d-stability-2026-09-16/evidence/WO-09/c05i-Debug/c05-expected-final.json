@@ -1,0 +1,10 @@
+{
+  "scene": "C:/dev/Cosmic/build/wo09-accept-temp/cosmic-accept-a2b91d7b17db435098e718faef116060/temp/c05/C05Life/scenes/Main.cscene",
+  "present": { "sprite": "0bff4649505e4ff1", "canvas": "109d80b2efde069b", "button": "3bab20519ad439b4", "lamp": "d8cdf49a124749b7", "imported": "3da8f006303c70dd", "importedChild": "31dba7aa4efa95dd" },
+  "absent": [ "c1dc7226b23e2564" ],
+  "sprite": { "Tag": "C05Sprite", "Position": [3, 4, 0], "ZOrder": 7, "TexturePath": "project://textures/c05.png", "FlipX": true },
+  "lamp": { "Radius": 3.5 },
+  "button": { "Signal": "c05_play" },
+  "imported": { "FutureThing": { "Text": "survives every build", "Flag": true, "Deep": [1, 2, 3] }, "MeshRenderer": { "MeshPath": "assets/models/crate.obj", "CastShadows": false } },
+  "importedChild": { "DirectionalLight": { "Intensity": 3.5 }, "Light2D": { "Radius": 2.5 } }
+}

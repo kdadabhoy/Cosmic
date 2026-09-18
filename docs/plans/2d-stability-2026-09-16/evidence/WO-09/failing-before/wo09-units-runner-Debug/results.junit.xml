@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="wo09-units" tests="8" failures="5" skipped="0">
+  <testsuite name="all" tests="8" failures="5" skipped="0">
+    <testcase name="C01-U" classname="wo09-units.U" time="0">
+      <failure type="FAILED" message="expected &gt;= 8 tests, got 6 (exit 1, wanted 0)"></failure>
+    </testcase>
+    <testcase name="C02-U" classname="wo09-units.U" time="0">
+    </testcase>
+    <testcase name="C03-U" classname="wo09-units.U" time="0">
+      <failure type="FAILED" message="expected &gt;= 6 tests, got 4 (exit 1, wanted 0)"></failure>
+    </testcase>
+    <testcase name="C04" classname="wo09-units.U" time="0">
+      <failure type="FAILED" message="expected &gt;= 8 tests, got -1 (exit 1, wanted 0)"></failure>
+    </testcase>
+    <testcase name="C05-U" classname="wo09-units.U" time="0">
+      <failure type="FAILED" message="expected &gt;= 7 tests, got 2 (exit 1, wanted 0)"></failure>
+    </testcase>
+    <testcase name="C05-XB" classname="wo09-units.U" time="0">
+    </testcase>
+    <testcase name="C06-U" classname="wo09-units.U" time="0">
+      <failure type="FAILED" message="expected &gt;= 7 tests, got 4 (exit 1, wanted 0)"></failure>
+    </testcase>
+    <testcase name="C06-AUDIO" classname="wo09-units.W" time="0">
+    </testcase>
+  </testsuite>
+</testsuites>
+

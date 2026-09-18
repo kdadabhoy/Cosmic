@@ -1,0 +1,35 @@
+﻿{
+    "id":  "retained-wo08-gpu",
+    "tier":  "G",
+    "description":  "WO-09 retained-wo08-gpu via CosmicRenderTests.exe",
+    "requires":  [
+                     "windows",
+                     "gpu-gl"
+                 ],
+    "transport":  "none",
+    "seed":  null,
+    "start_utc":  "2026-09-18T20:52:01.6704924Z",
+    "deadline_sec":  900,
+    "exercised":  "production",
+    "command":  "C:\\dev\\Cosmic\\build\\Runtime\\Release\\CosmicRenderTests.exe --reporters=console --no-intro --no-colors --test-suite=WO-08*",
+    "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-09\\retained-wo08-Release\\retained-wo08-gpu.out.log",
+    "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-09\\retained-wo08-Release\\retained-wo08-gpu.err.log",
+    "pid":  9108,
+    "exit_code":  0,
+    "crash":  false,
+    "tests_passed":  22,
+    "tests_expected_min":  22,
+    "verdict":  "PASSED",
+    "detail":  "exit 0 as expected",
+    "duration_sec":  2.672,
+    "end_utc":  "2026-09-18T20:52:04.3510689Z",
+    "golden_mutated":  false,
+    "golden_mutations":  [
+
+                         ],
+    "golden_diagnostics":  [
+
+                           ],
+    "golden_sha256_before":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-09\\retained-wo08-Release\\goldens-sha256-before.txt",
+    "golden_sha256_after":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-09\\retained-wo08-Release\\goldens-sha256-after.txt"
+}

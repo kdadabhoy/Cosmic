@@ -1,0 +1,8 @@
+# WO-09 C03 hierarchy depth ladder (Release) — exit 0 = every walker survived; 0xC00000FD = stack overflow
+depth=64 exit=0x00000000 seconds=0.03
+depth=256 exit=0x00000000 seconds=0.03
+depth=1024 exit=0x00000000 seconds=0.06
+depth=4095 exit=0x00000000 seconds=0.27
+depth=4096 exit=0x00000000 seconds=0.28
+depth=4097 exit=0x00000000 seconds=0.27
+depth=8192 exit=0x00000000 seconds=0.62

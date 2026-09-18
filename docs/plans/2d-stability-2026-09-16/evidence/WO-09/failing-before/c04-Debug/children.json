@@ -1,0 +1,33 @@
+﻿{
+    "id":  "C04",
+    "tier":  "U",
+    "description":  "WO-09 C04 via CosmicTests.exe",
+    "requires":  [
+                     "windows"
+                 ],
+    "transport":  "none",
+    "seed":  null,
+    "start_utc":  "2026-09-18T19:52:38.1633630Z",
+    "deadline_sec":  300,
+    "exercised":  "production",
+    "command":  "C:\\dev\\Cosmic\\build\\Runtime\\Debug\\CosmicTests.exe --reporters=console --no-intro --no-colors \"--test-suite=WO-09 C04 graphs (headless)\"",
+    "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-09\\c04-Debug\\C04.out.log",
+    "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-09\\c04-Debug\\C04.err.log",
+    "pid":  7576,
+    "timed_out":  true,
+    "child_alive_after_kill":  false,
+    "parent_alive":  true,
+    "verdict":  "TIMEOUT",
+    "detail":  "exceeded per-case deadline of 300s; child tree killed, parent survived",
+    "duration_sec":  300.112,
+    "end_utc":  "2026-09-18T19:57:38.2830508Z",
+    "golden_mutated":  false,
+    "golden_mutations":  [
+
+                         ],
+    "golden_diagnostics":  [
+
+                           ],
+    "golden_sha256_before":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-09\\c04-Debug\\goldens-sha256-before.txt",
+    "golden_sha256_after":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-09\\c04-Debug\\goldens-sha256-after.txt"
+}

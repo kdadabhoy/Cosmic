@@ -1,0 +1,62 @@
+==================== wo09-gpu / Release ====================
+  [PASSED] C01-G - exit 0 as expected
+  [PASSED] C02-G - exit 0 as expected
+  [PASSED] C03-G - exit 0 as expected
+--- C01-G.out.log ---
+[doctest] test cases:      3 |      3 passed | 0 failed | 36 skipped
+[doctest] assertions: 538880 | 538880 passed | 0 failed |
+--- C02-G.out.log ---
+C02 GPU: 1024x1024 map built in 2.4331 ms
+C02 GPU view '10x5.6 cells': oracle strict=157 enclosed=180 drawn quads=180 draws=1 (0.3632 ms)
+C02 GPU view '200x112 cells': oracle strict=53818 enclosed=54237 drawn quads=54237 draws=6 (3.4594 ms)
+C02 GPU view 'corner overlap': oracle strict=114 enclosed=121 drawn quads=121 draws=1 (0.0088 ms)
+C02 GPU view 'whole map + margin': oracle strict=786432 enclosed=786432 drawn quads=786432 draws=79 (45.9048 ms)
+C02 GPU view 'fully outside': oracle strict=0 enclosed=0 drawn quads=0 draws=0 (0.0076 ms)
+C02 GPU view 'just outside right': oracle strict=0 enclosed=0 drawn quads=0 draws=0 (0.0008 ms)
+C02 GPU view 'extreme zoom-out': oracle strict=786432 enclosed=786432 drawn quads=786432 draws=79 (38.2469 ms)
+C02 GPU camera edge: oracle strict=653 enclosed=707 widened=740 drawn=740
+[doctest] test cases:      3 |      3 passed | 0 failed | 36 skipped
+[doctest] assertions: 369709 | 369709 passed | 0 failed |
+--- C03-G.out.log ---
+C03 GPU: 2,001 controls rendered in 1.0613 ms, 1 draw call(s)
+C03 GPU: an inverted UI rect PAINTS its mirrored quad (pinned)
+C03 GPU lights ceiling ladder: 1 lights at 320x180 = 0.15232 ms per frame (5-frame mean incl. sprites + composite + FinishGpu)
+C03 GPU lights ceiling ladder: 10 lights at 320x180 = 0.16262 ms per frame (5-frame mean incl. sprites + composite + FinishGpu)
+C03 GPU lights ceiling ladder: 100 lights at 320x180 = 0.1841 ms per frame (5-frame mean incl. sprites + composite + FinishGpu)
+C03 GPU lights ceiling ladder: 1000 lights at 320x180 = 0.5172 ms per frame (5-frame mean incl. sprites + composite + FinishGpu)
+C03 GPU lights ceiling ladder: 100 lights at 1920x1080 (r=120) = 2.041 ms per frame
+C03 GPU lights ceiling ladder: 1000 lights at 1920x1080 (r=120) = 2.2466 ms per frame
+[doctest] test cases:      3 |      3 passed | 0 failed | 36 skipped
+[doctest] assertions: 697582 | 697582 passed | 0 failed |
+
+==================== wo09-gpu / Debug ====================
+  [PASSED] C01-G - exit 0 as expected
+  [PASSED] C02-G - exit 0 as expected
+  [PASSED] C03-G - exit 0 as expected
+--- C01-G.out.log ---
+[doctest] test cases:      3 |      3 passed | 0 failed | 36 skipped
+[doctest] assertions: 538880 | 538880 passed | 0 failed |
+--- C02-G.out.log ---
+C02 GPU: 1024x1024 map built in 11.3476 ms
+C02 GPU view '10x5.6 cells': oracle strict=157 enclosed=180 drawn quads=180 draws=1 (0.8002 ms)
+C02 GPU view '200x112 cells': oracle strict=53818 enclosed=54237 drawn quads=54237 draws=6 (106.497 ms)
+C02 GPU view 'corner overlap': oracle strict=114 enclosed=121 drawn quads=121 draws=1 (0.2733 ms)
+C02 GPU view 'whole map + margin': oracle strict=786432 enclosed=786432 drawn quads=786432 draws=79 (1515.02 ms)
+C02 GPU view 'fully outside': oracle strict=0 enclosed=0 drawn quads=0 draws=0 (0.0491 ms)
+C02 GPU view 'just outside right': oracle strict=0 enclosed=0 drawn quads=0 draws=0 (0.0134 ms)
+C02 GPU view 'extreme zoom-out': oracle strict=786432 enclosed=786432 drawn quads=786432 draws=79 (1504.97 ms)
+C02 GPU camera edge: oracle strict=653 enclosed=707 widened=740 drawn=740
+[doctest] test cases:      3 |      3 passed | 0 failed | 36 skipped
+[doctest] assertions: 369709 | 369709 passed | 0 failed |
+--- C03-G.out.log ---
+C03 GPU: 2,001 controls rendered in 9.4723 ms, 1 draw call(s)
+C03 GPU: an inverted UI rect PAINTS its mirrored quad (pinned)
+C03 GPU lights ceiling ladder: 1 lights at 320x180 = 0.23094 ms per frame (5-frame mean incl. sprites + composite + FinishGpu)
+C03 GPU lights ceiling ladder: 10 lights at 320x180 = 0.27392 ms per frame (5-frame mean incl. sprites + composite + FinishGpu)
+C03 GPU lights ceiling ladder: 100 lights at 320x180 = 0.57564 ms per frame (5-frame mean incl. sprites + composite + FinishGpu)
+C03 GPU lights ceiling ladder: 1000 lights at 320x180 = 3.65868 ms per frame (5-frame mean incl. sprites + composite + FinishGpu)
+C03 GPU lights ceiling ladder: 100 lights at 1920x1080 (r=120) = 2.75154 ms per frame
+C03 GPU lights ceiling ladder: 1000 lights at 1920x1080 (r=120) = 5.83074 ms per frame
+[doctest] test cases:      3 |      3 passed | 0 failed | 36 skipped
+[doctest] assertions: 697582 | 697582 passed | 0 failed |
+

@@ -1,0 +1,44 @@
+==================== wo09-retained / Release ====================
+  [PASSED] retained-units - exit 0 as expected
+  [PASSED] retained-goldens - exit 0 as expected
+  [PASSED] retained-wo08-gpu - exit 0 as expected
+--- retained-goldens.out.log ---
+[doctest] test cases:  6 |  6 passed | 0 failed | 33 skipped
+[doctest] assertions: 29 | 29 passed | 0 failed |
+--- retained-units.out.log ---
+drop-only: max |z| = 0.000587754 m, max out-of-plane |q| = 8.71855e-05
+sliding:   max |z| = 0.00205322 m, max out-of-plane |q| = 7.71662e-05
+Serial hardware present - skipping the no-port Connect() case so the suite never opens a real device.
+R04 ScreenToWorld round trip: 51840 samples, worst 0.0425752 px (bar 0.5)
+R04 projection-vs-model worst 0.00109183 px
+R04 zoom-about-cursor: 1550 pairs asserted inside the envelope, 370 outside it measured only (worst 127.803 px)
+R04 outside-envelope sample (zoom 0.01, focus 1000): round-trip error 1.4723 px
+[doctest] test cases:      401 |      401 passed | 0 failed | 51 skipped
+[doctest] assertions: 23250930 | 23250930 passed | 0 failed |
+--- retained-wo08-gpu.out.log ---
+R05 live engine GPU objects after 200 cycles: fbo=3 att=6 tex=30 buf=11 vao=6 prog=6
+[doctest] test cases:       22 |       22 passed | 0 failed | 17 skipped
+[doctest] assertions: 21121754 | 21121754 passed | 0 failed |
+
+==================== wo09-retained / Debug ====================
+  [PASSED] retained-units - exit 0 as expected
+  [PASSED] retained-goldens - exit 0 as expected
+  [PASSED] retained-wo08-gpu - exit 0 as expected
+--- retained-goldens.out.log ---
+[doctest] test cases:  6 |  6 passed | 0 failed | 33 skipped
+[doctest] assertions: 29 | 29 passed | 0 failed |
+--- retained-units.out.log ---
+drop-only: max |z| = 0.000587754 m, max out-of-plane |q| = 8.71855e-05
+sliding:   max |z| = 0.00205322 m, max out-of-plane |q| = 7.71662e-05
+Serial hardware present - skipping the no-port Connect() case so the suite never opens a real device.
+R04 ScreenToWorld round trip: 51840 samples, worst 0.0425752 px (bar 0.5)
+R04 projection-vs-model worst 0.00109183 px
+R04 zoom-about-cursor: 1550 pairs asserted inside the envelope, 370 outside it measured only (worst 127.803 px)
+R04 outside-envelope sample (zoom 0.01, focus 1000): round-trip error 1.4723 px
+[doctest] test cases:      401 |      401 passed | 0 failed | 51 skipped
+[doctest] assertions: 23181090 | 23181090 passed | 0 failed |
+--- retained-wo08-gpu.out.log ---
+R05 live engine GPU objects after 200 cycles: fbo=3 att=6 tex=30 buf=11 vao=6 prog=6
+[doctest] test cases:       22 |       22 passed | 0 failed | 17 skipped
+[doctest] assertions: 21121754 | 21121754 passed | 0 failed |
+

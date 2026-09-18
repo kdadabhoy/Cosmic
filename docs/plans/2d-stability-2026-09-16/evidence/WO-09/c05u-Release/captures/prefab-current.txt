@@ -1,0 +1,125 @@
+# prefab seed=151368943 case=1999
+{
+  "cosmic_prefab": 1,
+  "entities": [
+    {
+      "components": {
+        "Relationship": {
+          "Children": [
+            "e8ea33db5f515bc4"
+          ]
+ on": {
+          "FPS": 12.0,
+          "FrameH": 16,
+          "FrameW": 16,
+          "Frames": 4,
+          "Loop": true,
+     ¸    "Playing": true,
+          "Row": 0,
+          "SheetPath": "project://textures/hero.png"
+        },
+        "SpriteRenderer": {
+          "Color": [
+            1.0,
+            0.5,
+            0.25,
+            1.0
+          ],
+          "FlipX": true,
+          "FlipY": false,
+          "PixelsPerUnit": 100.0,
+          "SourceRect": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "TexturePath": "project://textures/hero.png",
+          "YSort": false,
+          "ZOrder": 2
+        },
+        "Tag": {
+          "Tag": "Hero"
+        },
+        "Transform": {
+          "Position": [
+            1.5,
+            -2.0,
+            0.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "UseQuatRotation": false
+        }
+      },
+      "id": "1d843f680ef71a18"
+    },
+    {
+      "components": {
+        "SpriteRenderer": {
+          "Color": [
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "FlipX": false,
+          "FlipY": false,
+          "PixelsPerUnit": 100.0,
+          "SourceRect": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "TexturePath": "",
+        alse,
+          "ZOrder": 0
+        },
+        "Tag": {
+          "Tag": "HeroShadow"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "UseQuatRotation": false
+        }
+      },
+      "id": "e8ea33db5f515bc4"
+    }
+  ],
+  "root": "1d843f680ef71a18"
+}

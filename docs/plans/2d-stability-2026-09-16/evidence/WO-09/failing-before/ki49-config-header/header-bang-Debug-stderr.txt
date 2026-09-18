@@ -1,0 +1,1 @@
+Assertion failed: is_bare_key_character(*cp) || is_string_delimiter(*cp), file C:\dev\Cosmic\Cosmic\dependencies\tomlplusplus\toml.hpp, line 15481

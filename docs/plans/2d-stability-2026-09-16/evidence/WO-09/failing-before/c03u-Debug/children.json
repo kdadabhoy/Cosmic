@@ -1,0 +1,34 @@
+﻿{
+    "id":  "C03-U",
+    "tier":  "U",
+    "description":  "WO-09 C03-U via CosmicTests.exe",
+    "requires":  [
+                     "windows"
+                 ],
+    "transport":  "none",
+    "seed":  null,
+    "start_utc":  "2026-09-18T19:50:11.4077171Z",
+    "deadline_sec":  600,
+    "exercised":  "production",
+    "command":  "C:\\dev\\Cosmic\\build\\Runtime\\Debug\\CosmicTests.exe --reporters=console --no-intro --no-colors \"--test-suite=WO-09 C03 UI (headless)\"",
+    "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-09\\c03u-Debug\\C03-U.out.log",
+    "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-09\\c03u-Debug\\C03-U.err.log",
+    "pid":  25308,
+    "exit_code":  1,
+    "crash":  false,
+    "tests_passed":  4,
+    "tests_expected_min":  6,
+    "verdict":  "FAILED",
+    "detail":  "expected \u003e= 6 tests, got 4 (exit 1, wanted 0)",
+    "duration_sec":  146.243,
+    "end_utc":  "2026-09-18T19:52:37.6590044Z",
+    "golden_mutated":  false,
+    "golden_mutations":  [
+
+                         ],
+    "golden_diagnostics":  [
+
+                           ],
+    "golden_sha256_before":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-09\\c03u-Debug\\goldens-sha256-before.txt",
+    "golden_sha256_after":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-09\\c03u-Debug\\goldens-sha256-after.txt"
+}

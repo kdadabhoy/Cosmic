@@ -1,0 +1,59 @@
+[Starforge] Editor attached — open or create a project from the homescreen.
+[Starforge] Viewport: MMB orbit | Ctrl+MMB pan | scroll zoom | LMB pick.
+[Starforge] W/E/R gizmo | F frame | Ctrl+Z/Y undo | Ctrl+S save.
+[COSMIC] WorkspaceLayer project name set to: 'Starforge'
+
+[COSMIC] Successfully loaded and mounted project DLL Layer!
+
+[COSMIC] WorkspaceLayer: Dockspace built (legacy 3-tier left sidebar).
+
+[COSMIC] WorkspaceLayer: Dockspace built (port mode L=true R=true T=true B=true).
+
+[Scene] Opened 'project://scenes/Main.cscene'.
+[Scripts] 1 script(s) not built — press Ctrl+B to compile the project module.
+[Project] Scaffolded project — press Ctrl+B to build the game module.
+[Project] Opened 'C05Life' @ C:/dev/Cosmic/build/wo09-accept-temp/cosmic-accept-87da26ebddae455dad2ef30dae0257fa/temp/c05/C05Life
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/wo09-accept-temp/cosmic-accept-87da26ebddae455dad2ef30dae0257fa/temp/c05/C05Life/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/wo09-accept-temp/cosmic-accept-87da26ebddae455dad2ef30dae0257fa/temp/c05/C05Life/project.cproj'.
+
+[COSMIC] Config: no file at './starforge/layouts/active.toml'.
+
+[COSMIC] Config: no file at './starforge/layouts/active.toml'.
+
+[COSMIC] WorkspaceLayer: Dockspace built (port mode L=true R=true T=true B=true).
+
+[COSMIC] Font: baked 'lucide' (1024x71, 95 glyphs)
+
+[COSMIC] Font: baked 'Roboto-Bold' (1024x257, 95 glyphs)
+
+[COSMIC] Font: baked 'Roboto-Medium' (1024x255, 95 glyphs)
+
+[COSMIC] Font: baked 'Roboto-Regular' (1024x256, 95 glyphs)
+
+[COSMIC] Font: library initialised (4 font(s))
+
+[Scene] Saved 'project://scenes/Main.cscene'.
+[Scene] Opened 'project://scenes/Main.cscene'.
+[Scripts] 1 script(s) not built — press Ctrl+B to compile the project module.
+[Project] Scaffolded project — press Ctrl+B to build the game module.
+[Project] Opened 'C05Life' @ C:/dev/Cosmic/build/wo09-accept-temp/cosmic-accept-87da26ebddae455dad2ef30dae0257fa/temp/c05/C05Life
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/wo09-accept-temp/cosmic-accept-87da26ebddae455dad2ef30dae0257fa/temp/c05/C05Life/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/wo09-accept-temp/cosmic-accept-87da26ebddae455dad2ef30dae0257fa/temp/c05/C05Life/project.cproj'.
+
+[COSMIC] Config: loaded './starforge/layouts/active.toml'.
+
+[COSMIC] Config: loaded './starforge/layouts/active.toml'.
+
+[COSMIC] Config: loaded './starforge/projects.toml'.
+
+[COSMIC] WorkspaceLayer: Dockspace built (port mode L=true R=true T=true B=true).
+
+[Play] Started — 0 script(s).
+[COSMIC] ScriptHost: unknown script class 'HoverController' — entity kept inert.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/wo09-accept-temp/cosmic-accept-87da26ebddae455dad2ef30dae0257fa/temp/c05/C05Life/project.cproj'.
+
+[Play] Stopped — edit scene restored.
+[Scene] Saved 'project://scenes/Main.cscene'.

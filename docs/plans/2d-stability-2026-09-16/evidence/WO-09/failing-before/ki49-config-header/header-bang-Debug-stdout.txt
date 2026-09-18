@@ -1,0 +1,12 @@
+[2026-09-18 13:31:49.478] [COSMIC] [error] SceneSerializer::InstantiatePrefab: document nests 5004 levels deep (limit 512) — rejected.
+===============================================================================
+C:\dev\Cosmic\tests\test_wo09_c05_json.cpp(422):
+TEST SUITE: WO-09 C05 JSON (headless)
+TEST CASE:  WO-09 C05: committed F-CORRUPT fixtures — every .cscene / .cprefab / .cmat / .toml under tests/fixtures/wo09/corrupt is handled
+
+C:\dev\Cosmic\tests\test_wo09_c05_json.cpp(422): FATAL ERROR: test case CRASHED: SIGABRT - Abort (abnormal termination) signal
+
+===============================================================================
+[doctest] test cases: 1 | 0 passed | 1 failed | 451 skipped
+[doctest] assertions: 3 | 3 passed | 0 failed |
+[doctest] Status: FAILURE!

@@ -1,0 +1,148 @@
+==================== wo09-units / Release ====================
+  [PASSED] C01-U - exit 0 as expected
+  [PASSED] C02-U - exit 0 as expected
+  [PASSED] C03-U - exit 0 as expected
+  [PASSED] C04 - exit 0 as expected
+  [PASSED] C05-U - exit 0 as expected
+  [PASSED] C05-XB - exit 0 as expected
+  [PASSED] C06-U - exit 0 as expected
+  [PASSED] C06-AUDIO - exit 0 as expected
+--- C01-U.out.log ---
+C01 BuildSpriteDrawList(10,000) = 0.8796 ms
+C01 BuildSpriteDrawList(20,000 incl. 5,000 tilemaps) = 1.7172 ms
+C01 tie-break pinned: equal (ZOrder, key) items draw in ascending entt handle order; a recycled entity (higher version) draws on top of every never-recycled one.
+C01 nonfinite keys, seed 1: 0 positions off the reference order; 0 of 4919 adjacent finite same-layer pairs are inverted
+C01 nonfinite keys, seed 2: 0 positions off the reference order; 0 of 5075 adjacent finite same-layer pairs are inverted
+C01 nonfinite keys, seed 3: 0 positions off the reference order; 0 of 4921 adjacent finite same-layer pairs are inverted
+C01 nonfinite keys, seed 4: 0 positions off the reference order; 0 of 5111 adjacent finite same-layer pairs are inverted
+C01 nonfinite keys, seed 5: 0 positions off the reference order; 0 of 4972 adjacent finite same-layer pairs are inverted
+C01 nonfinite keys, seed 6: 0 positions off the reference order; 0 of 4992 adjacent finite same-layer pairs are inverted
+C01 nonfinite keys, seed 7: 0 positions off the reference order; 0 of 4970 adjacent finite same-layer pairs are inverted
+C01 nonfinite keys, seed 8: 0 positions off the reference order; 0 of 4989 adjacent finite same-layer pairs are inverted
+C01 activity-propagation depth ceiling pinned: 4,096 nodes incl. self = 4,095 ancestors (Scene::IsActiveInHierarchy guard)
+[doctest] test cases:    8 |    8 passed | 0 failed | 444 skipped
+[doctest] assertions: 4643 | 4643 passed | 0 failed |
+--- C02-U.out.log ---
+C02 EnsureCells(1024x1024) = 0.2516 ms; buffer = 2097152 bytes (2 MiB of cells)
+C02 1,048,576-cell map: save 110.106 ms (16044050 bytes), load 118.696 ms
+[doctest] test cases:   5 |   5 passed | 0 failed | 447 skipped
+[doctest] assertions: 159 | 159 passed | 0 failed |
+--- C03-U.out.log ---
+C03 2,001 controls: CollectElements 0.2626 ms, Update 0.2656 ms per frame
+C03 depth ladder: depth=64 exit=0x00000000 seconds=0.03
+C03 depth ladder: depth=256 exit=0x00000000 seconds=0.03
+C03 depth ladder: depth=1024 exit=0x00000000 seconds=0.06
+C03 depth ladder: depth=4095 exit=0x00000000 seconds=0.27
+C03 depth ladder: depth=4096 exit=0x00000000 seconds=0.28
+C03 depth ladder: depth=4097 exit=0x00000000 seconds=0.27
+C03 depth ladder: depth=8192 exit=0x00000000 seconds=0.62
+C03 depth ladder: deepest surviving rung = 8192, first failing rung = 0
+C03 cycles: every walker returned in 2.7015 ms
+[doctest] test cases:  6 |  6 passed | 0 failed | 446 skipped
+[doctest] assertions: 83 | 83 passed | 0 failed |
+--- C04.out.log ---
+C04 EventBus: 5,000-listener emit = 5.2132 ms (each call re-checks liveness)
+C04 flow ping-pong: one OnUpdate hit the cascade guard in 3.3263 ms
+C04 flow push cycle: stack depth after one OnUpdate = 100002
+C04 flow double-emit self-loop: one OnUpdate = 9.4004 ms (queue grows by one per iteration to the guard)
+C04 fuzz flow:  seed 0x0904F10A cases=2000 accepted=373 rejected=1627 max=1.38 ms (case 556)
+C04 fuzz story: seed 0x09045708 cases=2000 accepted=410 rejected=1590 max=1.5906 ms (case 516)
+C04 corrupt fixtures: 4 .cflow + 3 .cstory handled
+[doctest] test cases:    8 |    8 passed | 0 failed | 444 skipped
+[doctest] assertions: 1094 | 1094 passed | 0 failed |
+--- C05-U.out.log ---
+C05 truncation ladder: 11321 prefixes, rejected=11321 accepted=0 max=0.2404 ms
+C05 float-overflow Position from JSON 1e300 loads as (inf, -inf, 0) ƒ?" pinned
+C05 100,000-deep nesting: rejected in 0.2195 ms
+C05 duplicate UUID: 2 entities created, the map resolved to 'first', after destroying the other the id still resolves
+C05 fuzz scene:    seed 0x0905C4E5 cases=2000 accepted=1053 rejected=947 max=1.915 ms (case 1176)
+C05 fuzz prefab:   seed 0x0905B4EF cases=2000 accepted=978 rejected=1022 max=21.251 ms (case 674)
+C05 fuzz material: seed 0x0905CA47 cases=2000 accepted=1061 rejected=939 max=1.5624 ms (case 1166)
+C05 fuzz config:   seed 0x090570A1 cases=2000 accepted=215 rejected=1785 max=0.0957 ms (case 896)
+C05 corrupt fixtures: 1 scene, 1 prefab, 1 material, 3 config handled
+[doctest] test cases:   7 |   7 passed | 0 failed | 445 skipped
+[doctest] assertions: 125 | 125 passed | 0 failed |
+--- C05-XB.out.log ---
+[doctest] test cases:  3 |  3 passed | 0 failed | 449 skipped
+[doctest] assertions: 44 | 44 passed | 0 failed |
+--- C06-AUDIO.out.log ---
+[doctest] test cases:  1 |  1 passed | 0 failed | 451 skipped
+[doctest] assertions: 18 | 18 passed | 0 failed |
+--- C06-U.out.log ---
+[doctest] test cases:  6 |  6 passed | 0 failed | 446 skipped
+[doctest] assertions: 86 | 86 passed | 0 failed |
+
+==================== wo09-units / Debug ====================
+  [PASSED] C01-U - exit 0 as expected
+  [PASSED] C02-U - exit 0 as expected
+  [PASSED] C03-U - exit 0 as expected
+  [PASSED] C04 - exit 0 as expected
+  [PASSED] C05-U - exit 0 as expected
+  [PASSED] C05-XB - exit 0 as expected
+  [PASSED] C06-U - exit 0 as expected
+  [PASSED] C06-AUDIO - exit 0 as expected
+--- C01-U.out.log ---
+C01 BuildSpriteDrawList(10,000) = 10.985 ms
+C01 BuildSpriteDrawList(20,000 incl. 5,000 tilemaps) = 21.6697 ms
+C01 tie-break pinned: equal (ZOrder, key) items draw in ascending entt handle order; a recycled entity (higher version) draws on top of every never-recycled one.
+C01 nonfinite keys, seed 1: 0 positions off the reference order; 0 of 4919 adjacent finite same-layer pairs are inverted
+C01 nonfinite keys, seed 2: 0 positions off the reference order; 0 of 5075 adjacent finite same-layer pairs are inverted
+C01 nonfinite keys, seed 3: 0 positions off the reference order; 0 of 4921 adjacent finite same-layer pairs are inverted
+C01 nonfinite keys, seed 4: 0 positions off the reference order; 0 of 5111 adjacent finite same-layer pairs are inverted
+C01 nonfinite keys, seed 5: 0 positions off the reference order; 0 of 4972 adjacent finite same-layer pairs are inverted
+C01 nonfinite keys, seed 6: 0 positions off the reference order; 0 of 4992 adjacent finite same-layer pairs are inverted
+C01 nonfinite keys, seed 7: 0 positions off the reference order; 0 of 4970 adjacent finite same-layer pairs are inverted
+C01 nonfinite keys, seed 8: 0 positions off the reference order; 0 of 4989 adjacent finite same-layer pairs are inverted
+C01 activity-propagation depth ceiling pinned: 4,096 nodes incl. self = 4,095 ancestors (Scene::IsActiveInHierarchy guard)
+[doctest] test cases:    8 |    8 passed | 0 failed | 444 skipped
+[doctest] assertions: 4643 | 4643 passed | 0 failed |
+--- C02-U.out.log ---
+C02 EnsureCells(1024x1024) = 0.2577 ms; buffer = 2097152 bytes (2 MiB of cells)
+C02 1,048,576-cell map: save 1327.38 ms (16044050 bytes), load 2157.32 ms
+[doctest] test cases:   5 |   5 passed | 0 failed | 447 skipped
+[doctest] assertions: 159 | 159 passed | 0 failed |
+--- C03-U.out.log ---
+C03 2,001 controls: CollectElements 4.728 ms, Update 5.0041 ms per frame
+C03 depth ladder: depth=64 exit=0x00000000 seconds=0.06
+C03 depth ladder: depth=256 exit=0x00000000 seconds=0.12
+C03 depth ladder: depth=1024 exit=0x00000000 seconds=0.65
+C03 depth ladder: depth=4095 exit=0x00000000 seconds=6.26
+C03 depth ladder: depth=4096 exit=0x00000000 seconds=6.04
+C03 depth ladder: depth=4097 exit=0x00000000 seconds=6.00
+C03 depth ladder: depth=8192 exit=0x00000000 seconds=16.07
+C03 depth ladder: deepest surviving rung = 8192, first failing rung = 0
+C03 cycles: every walker returned in 58.1413 ms
+[doctest] test cases:  6 |  6 passed | 0 failed | 446 skipped
+[doctest] assertions: 83 | 83 passed | 0 failed |
+--- C04.out.log ---
+C04 EventBus: 5,000-listener emit = 11.3262 ms (each call re-checks liveness)
+C04 flow ping-pong: one OnUpdate hit the cascade guard in 150.46 ms
+C04 flow push cycle: stack depth after one OnUpdate = 100002
+C04 flow double-emit self-loop: one OnUpdate = 210.135 ms (queue grows by one per iteration to the guard)
+C04 fuzz flow:  seed 0x0904F10A cases=2000 accepted=373 rejected=1627 max=16.9773 ms (case 1954)
+C04 fuzz story: seed 0x09045708 cases=2000 accepted=410 rejected=1590 max=21.3344 ms (case 516)
+C04 corrupt fixtures: 4 .cflow + 3 .cstory handled
+[doctest] test cases:    8 |    8 passed | 0 failed | 444 skipped
+[doctest] assertions: 1094 | 1094 passed | 0 failed |
+--- C05-U.out.log ---
+C05 truncation ladder: 11321 prefixes, rejected=11321 accepted=0 max=3.259 ms
+C05 float-overflow Position from JSON 1e300 loads as (inf, -inf, 0) ƒ?" pinned
+C05 100,000-deep nesting: rejected in 0.3452 ms
+C05 duplicate UUID: 2 entities created, the map resolved to 'first', after destroying the other the id still resolves
+C05 fuzz scene:    seed 0x0905C4E5 cases=2000 accepted=1047 rejected=953 max=26.164 ms (case 158)
+C05 fuzz prefab:   seed 0x0905B4EF cases=2000 accepted=978 rejected=1022 max=32.8541 ms (case 674)
+C05 fuzz material: seed 0x0905CA47 cases=2000 accepted=1061 rejected=939 max=20.2341 ms (case 1212)
+C05 fuzz config:   seed 0x090570A1 cases=2000 accepted=215 rejected=1785 max=0.2808 ms (case 523)
+C05 corrupt fixtures: 1 scene, 1 prefab, 1 material, 3 config handled
+[doctest] test cases:   7 |   7 passed | 0 failed | 445 skipped
+[doctest] assertions: 125 | 125 passed | 0 failed |
+--- C05-XB.out.log ---
+[doctest] test cases:  3 |  3 passed | 0 failed | 449 skipped
+[doctest] assertions: 44 | 44 passed | 0 failed |
+--- C06-AUDIO.out.log ---
+[doctest] test cases:  1 |  1 passed | 0 failed | 451 skipped
+[doctest] assertions: 18 | 18 passed | 0 failed |
+--- C06-U.out.log ---
+[doctest] test cases:  6 |  6 passed | 0 failed | 446 skipped
+[doctest] assertions: 86 | 86 passed | 0 failed |
+

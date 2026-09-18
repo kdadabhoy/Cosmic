@@ -1,0 +1,8 @@
+  C:\dev\Cosmic\tests\test_wo09_c05_json.cpp(217): MESSAGE: C05 truncation ladder: 11321 prefixes, rejected=11321 accepted=0 max=3.7307 ms
+  C:\dev\Cosmic\tests\test_wo09_c05_json.cpp(253): MESSAGE: C05 float-overflow Position from JSON 1e300 loads as (inf, -inf, 0) ƒ?" pinned
+  C:\dev\Cosmic\tests\test_wo09_c05_json.cpp(287): MESSAGE: C05 100,000-deep nesting: rejected in 0.3635 ms
+  C:\dev\Cosmic\tests\test_wo09_c05_json.cpp(351): MESSAGE: C05 duplicate UUID: 2 entities created, the map resolved to 'first', after destroying the other the id still resolves
+  C:\dev\Cosmic\tests\test_wo09_c05_json.cpp(383): FATAL ERROR: test case CRASHED: SIGABRT - Abort (abnormal termination) signal
+  [doctest] test cases:  6 |  5 passed | 1 failed | 446 skipped
+  [doctest] assertions: 82 | 82 passed | 0 failed |
+C05-U FAILED: expected >= 7 tests, got 5 (exit 1, wanted 0)

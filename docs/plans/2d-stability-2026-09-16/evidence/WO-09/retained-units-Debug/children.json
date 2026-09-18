@@ -1,0 +1,34 @@
+﻿{
+    "id":  "retained-units",
+    "tier":  "U",
+    "description":  "WO-09 retained-units via CosmicTests.exe",
+    "requires":  [
+                     "windows"
+                 ],
+    "transport":  "none",
+    "seed":  null,
+    "start_utc":  "2026-09-18T20:54:31.2816394Z",
+    "deadline_sec":  1800,
+    "exercised":  "production",
+    "command":  "C:\\dev\\Cosmic\\build\\Runtime\\Debug\\CosmicTests.exe --reporters=console --no-intro --no-colors \"--test-case-exclude=WO-09 *\"",
+    "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-09\\retained-units-Debug\\retained-units.out.log",
+    "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-09\\retained-units-Debug\\retained-units.err.log",
+    "pid":  14768,
+    "exit_code":  0,
+    "crash":  false,
+    "tests_passed":  401,
+    "tests_expected_min":  401,
+    "verdict":  "PASSED",
+    "detail":  "exit 0 as expected",
+    "duration_sec":  208.083,
+    "end_utc":  "2026-09-18T20:57:59.3717272Z",
+    "golden_mutated":  false,
+    "golden_mutations":  [
+
+                         ],
+    "golden_diagnostics":  [
+
+                           ],
+    "golden_sha256_before":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-09\\retained-units-Debug\\goldens-sha256-before.txt",
+    "golden_sha256_after":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-09\\retained-units-Debug\\goldens-sha256-after.txt"
+}

@@ -1,0 +1,37 @@
+{
+  "work_order": "WO-09",
+  "case": "C05 real-project lifecycle",
+  "config": "Release",
+  "path": "NewProjectAt -> Commands::Create/AddComponent/SetField/TileEdit -> ImageIO + InstantiatePrefab/RecordSpawn -> SaveScene -> CloseProject/OpenProjectPath -> PlayScene/StopScene -> Commands::Destroy + Undo/Redo -> SaveScene",
+  "project": "C:/dev/Cosmic/build/wo09-accept-temp/cosmic-accept-87da26ebddae455dad2ef30dae0257fa/temp/c05/C05Life",
+  "failed_checks": 0,
+  "total_seconds": 0.404877,
+  "verdict": "PASS",
+  "steps": [
+    { "step": "create project", "ms": 61.995300 },
+    { "step": "create content", "ms": 0.451800 },
+    { "step": "import asset + prefab", "ms": 1.311100 },
+    { "step": "save", "ms": 2.905100 },
+    { "step": "close + reopen", "ms": 2.929000 },
+    { "step": "play", "ms": 3.209800 },
+    { "step": "stop after 30 frames", "ms": 0.342800 },
+    { "step": "undo / redo", "ms": 0.060900 },
+    { "step": "delete + save", "ms": 7.147200 }
+  ],
+  "checks_failed": [
+  ],
+  "log": [
+    "armed: result=C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-09\\c05i-Release\\c05-result.json projectRoot=C:\\dev\\Cosmic\\build\\wo09-accept-temp\\cosmic-accept-87da26ebddae455dad2ef30dae0257fa\\temp\\c05 prefab=C:\\dev\\Cosmic\\tests\\fixtures\\wo09\\content\\prefabs\\Imported.cprefab",
+    "create project done in 62.0 ms",
+    "project at C:/dev/Cosmic/build/wo09-accept-temp/cosmic-accept-87da26ebddae455dad2ef30dae0257fa/temp/c05/C05Life, scene project://scenes/Main.cscene, 3 template entities",
+    "create content done in 0.5 ms",
+    "import asset + prefab done in 1.3 ms",
+    "save done in 2.9 ms",
+    "close + reopen done in 2.9 ms",
+    "play done in 3.2 ms",
+    "stop after 30 frames done in 0.3 ms",
+    "undo / redo done in 0.1 ms",
+    "final scene: 9719 bytes, reloads in 0.30 ms",
+    "delete + save done in 7.1 ms"
+  ]
+}

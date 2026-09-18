@@ -1,0 +1,2 @@
+20:LINK : fatal error LNK1201: error writing to program database 'C:\dev\Cosmic\build\Runtime\Release\Starforge.pdb'; check for insufficient disk space, invalid path, or insufficient privilege [C:\dev\Cosmic\build\Projects\Starforge\Starforge.vcxproj]
+24:  StarforgeEditor.vcxproj -> C:\dev\Cosmic\build\Runtime\Release\Starforge.exe

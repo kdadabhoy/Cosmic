@@ -1,0 +1,26 @@
+# material seed=151374407 case=1999
+{
+  "cosmic_type": "Material",
+  "fields": {
+    "AO": 1.0,
+    "AOMap": "",
+    "Albedo": [
+      0.800000011920929,
+      0.800000011920929,
+      0.800000011920929,
+      1.0
+    ],
+    "AlbedoMap": "",
+    "Em—ssive": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "EmissiveMap": "",
+    "MetalRoughMap": "",
+    "Metallic": 0.0,
+    "NormalMap": "",
+    "Roughness": 0.5,
+    "Transparent": false
+  }
+}

@@ -1,0 +1,582 @@
+# scene seed=151373029 case=1999
+{
+  "cosmic_scene": 1,
+  "entities": [
+    {
+      "components": {
+        "Environment": {
+          "Ambient2D": [
+            0.20000000298023224,
+            0.20000000298023224,
+            0.30000001192092896
+          ],
+          "AmbientIntensity": 1.0,
+          "Bloom": false,
+          "BloomIntensity": 0.6000000238418579,
+          "BloomThreshold": 1.0,
+          "Exposure": 1.0,
+          "FXAA": true,
+          "Fog": false,
+          "FogBaseHeight": 0.0,
+          "FogColor": [
+            0.699999988079071,
+            0.800000011920929,
+            0.9200000166893005
+          ],
+          "FogDensity": 0.019999999552965164,
+          "FogHeightFalloff": 0.11999999731779099,
+          "Gamma": 2.200000047683716,
+          "HdriPath": "",
+          "IBL": true,
+          "IBLIntensity": 1.0,
+          "LensFlare": false,
+          "LensFlareIntensity": 0.3499999940395355,
+          "MieG": 0.800000011920929,
+          "MieScale": 1.0,
+          "RayleighScale": 1.0,
+          "SSAO": false,
+          "Sky": 0,
+          "Skybox": true,
+          "SsaoRadius": 0.5,
+          "SunAngularSize": 0.5299999713897705,
+          "SunColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "SunDirection": [
+            -0.4000000059604645,
+            -1.0,
+            -0.30000001192092896
+          ],
+          "SunIntensity": 1.0,
+          "TimeOfDay": 12.0,
+          "Turbidity": 2.5,
+          "Vignette": false,
+          "VignetteAmount": 0.3499999940395355,
+          "VignetteColor": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "VignetteFeather": 0.4000000059604645,
+          "VignetteRadius": 0.8999999761581421
+        },
+        "Tag": {
+          "Tag": "Environment"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "UseQuatRotation": false
+        }
+      },
+      "id": "12f5f7515df68b67"
+    },
+    {
+      "components": {
+        "Light2D": {
+          "Color": [
+            1.0,
+            0.8500000238418579,
+            0.6000000238418579
+          ],
+          "Falloff": 2.0,
+          "Intensity": 1.5,
+          "Radius": 3.0
+        },
+        "Tag": {
+          "Tag": "Lamp"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Rotation,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "UseQuatRotation": false
+        }
+      },
+      "id": "1834f41d722aa829"
+    },
+    {
+      "components": {
+        "Relationship": {
+          "Children": [
+            "e8ea33db5f515bc4"
+          ]
+        },
+        "SpriteAnimation": {
+          "FPS": 12.0,
+          "FrameH": 16,
+          "FrameW": 16,
+          "Frames": 4,
+          "Loop": true,
+          "Playing": true,
+          "Row": 0,
+          "SheetPath": "project://textures/hero.png"
+        },
+        "SpriteRenderer": {
+          "Color": [
+            1.0,
+            0.5,
+            0.25,
+            1.0
+          ],
+          "FlipX": true,
+          "FlipY": false,
+          "PixelsPerUnit": 100.0,
+          "SourceRect": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "TexturePath": "project://textures/hero.png",
+          "YSort": false,
+          "ZOrder": 2
+        },
+        "Tag": {
+          "Tag": "Hero"
+        },
+        "Transform": {
+          "Position": [
+            1.5,
+            -2.0,
+            0.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "UseQuatRotation": false
+        }
+      },
+      "id": "1d843f680ef71a18"
+    },
+    {
+      "components": {
+        "Tag": {
+          "Tag": "Ground"
+        },
+        "Tilemap": {
+          "Cells": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            0,
+            1,
+            2,
+            3,
+            4,
+            0,
+            1,
+            2,
+            3,
+            4,
+            0,
+            1,
+            2,
+            3,
+            4,
+            0,
+            1,
+            2,
+            3,
+            4,
+            0,
+            1,
+            2,
+            3,
+            4,
+            0,
+            1
+          ],
+          "Columns": 0,
+          "GridH": 4,
+          "GridW": 8,
+          "TileH": 16,
+          "TileW": 16,
+          "TilesetPath": "",
+          "ZOrder": 0
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "UseQuatRotation": false
+        }
+      },
+      "id": "1e4f535b3d5ed9c5"
+    },
+    {
+      "components": {
+        "Tag": {
+          "Tag": "Camera"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            0.0,
+            10.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "UseQuatRotation": false
+        }
+      },
+      "id": "216595b467a2dfc5"
+    },
+    {
+      "components": {
+        "NativeScript": {
+          "ClassName": "NotARegisteredClass",
+          "Fields": {
+            "Speed": 3.5
+          }
+        },
+        "Tag": {
+          "Tag": "Scripted"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "UseQuatRotation": false
+        }
+      },
+      "id": "27af832983344301"
+    },
+    {
+      "components": {
+        "FutureThing": {
+          "a": [
+            1,
+            2,
+            {
+              "b": null
+            }
+          ],
+          "s": "x"
+        },
+        "Tag": {
+          "Tag": "Future"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "UseQuatRotation": false
+        }
+      },
+      "id": "5c9a9c40622f80d4"
+    },
+    {
+      "components": {
+        "RectTransform": {
+          "AnchorMax": [
+            0.0,
+            0.0
+          ],
+          "AnchorMin": [
+            0.0,
+            0.0
+          ],
+          "OffsetMax": [
+            100.0,
+            40.0
+          ],
+          "OffsetMin": [
+            0.0,
+            0.0
+          ],
+          "Pivot": [
+            0.5,
+            0.5
+          ],
+          "ZOrder": 0
+        },
+        "Tag": {
+          "Tag": "Play"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "UseQuatRotation": false
+        },
+        "UiButton": {
+          "DisabledTint": [
+            0.5,
+            0.5,
+            0.5,
+            0.6000000238418579
+          ],
+          "HoverTint": [
+            1.149999976158142,
+            1.149999976158142,
+            1.149999976158142,
+            1.0
+          ],
+          "Interactable": true,
+          "NormalTint": [
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "PressedTint": [
+            0.800000011920929,
+            0.800000011920929,
+            0.800000011920929,
+            1.0
+          ],
+          "Signal": "play"
+        },
+        "UiText": {
+          "Color": [
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "FontPath": "",
+          "HAlign": 1,
+          "SizePx": 32.0,
+          "Text": "Play",
+          "VAlign": 1,
+          "Wrap": false
+        }
+      },
+      "id": "a8e1c91ec9e1175b"
+    },
+    {
+      "components": {
+        "Canvas": {
+          "ReferenceHeight": 1080.0,
+          "ScaleMode": 1,
+          "SortOrder": 0
+        },
+        "Relationship": {
+          "Children": [
+            "a8e1c91ec9e1175b"
+          ]
+        },
+        "Tag": {
+          "Tag": "Canvas"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "UseQuatRotation": false
+        }
+      },
+      "id": "e23dc0cbb80e84ec"
+    },
+    {
+      "components": {
+        "SpriteRenderer": {
+          "Color": [
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "FlipX": false,
+          "FlipY": false,
+          "PixelsPerUnit": 100.0,
+          "SourceRect": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "TexturePath": "",
+          "YSort": false,
+          "ZOrder": 0
+        },
+        "Tag": {
+          "Tag": "HeroShadow"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "UseQuatRotation": false
+        }
+      },
+      "id": "e8ea33db5f515bc4"
+    }
+  ]
+}

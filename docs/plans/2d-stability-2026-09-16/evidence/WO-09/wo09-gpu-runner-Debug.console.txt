@@ -1,0 +1,16 @@
+=== Cosmic 2D acceptance runner (WO-04) ===
+manifest=wo09-gpu  profile=all  config=Debug  mode=2D
+bin=C:\dev\Cosmic\build\Runtime\Debug
+commit=3ef69810c89318ffa044b3f18627862dfb033c3b dirty=True
+selected 3 case(s) of 3
+  [RUN ] C01-G (G)
+  [PASSED] C01-G - exit 0 as expected
+  [RUN ] C02-G (G)
+  [PASSED] C02-G - exit 0 as expected
+  [RUN ] C03-G (G)
+  [PASSED] C03-G - exit 0 as expected
+
+=== SUMMARY: 3 passed / 0 failed / 0 env-blocked (of 3) ===
+evidence: C:\dev\Cosmic\docs\plans\2d-stability-2026-09-16\evidence\WO-09\wo09-gpu-runner-Debug\results.json
+junit:    C:\dev\Cosmic\docs\plans\2d-stability-2026-09-16\evidence\WO-09\wo09-gpu-runner-Debug\results.junit.xml
+per-run artifacts preserved: C:\dev\Cosmic\build\wo09-accept-temp\cosmic-accept-f1992cf9c44d44f49dd76c215689425b

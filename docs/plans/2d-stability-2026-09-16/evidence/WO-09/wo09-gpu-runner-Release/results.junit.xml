@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="wo09-gpu" tests="3" failures="0" skipped="0">
+  <testsuite name="all" tests="3" failures="0" skipped="0">
+    <testcase name="C01-G" classname="wo09-gpu.G" time="0">
+    </testcase>
+    <testcase name="C02-G" classname="wo09-gpu.G" time="0">
+    </testcase>
+    <testcase name="C03-G" classname="wo09-gpu.G" time="0">
+    </testcase>
+  </testsuite>
+</testsuites>
+

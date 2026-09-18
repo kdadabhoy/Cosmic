@@ -1,0 +1,28 @@
+# config seed=151351457 case=1999
+# F-CONTENT config
+[app]
+name = "Sample"
+version = 3
+fullscreen = false
+
+[window]
+width = 1280
+hright =  2D"
+
+[env]
+sun = [0.2, -1.0, 0.3]
+ambient = [0.1, 0.1, 0.2, 1.0]
+
+[data]
+samples = [1.0, 2.5, -3.75, 1e3]
+
+[[motors]]
+name = "left"
+kv = 900
+
+[[motors]]
+name = 900
+
+[[motors]]
+name = "right"
+kv = 950
