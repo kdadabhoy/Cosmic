@@ -1,0 +1,25 @@
+﻿WO-07 revalidation of the earlier host cases (KI-1, L01, L03) after the L02/L04 engine changes - acceptance-runner summary (2026-09-18).
+(results.json + results.junit.xml per case under revalidation-<cfg>/<case>/; the original 2026-09-17 evidence dirs were left untouched.)
+
+=== Debug ===
+ki1  KI-1     verdict=PASSED  (exit 0 as expected)
+        KI1_SELFTEST_RESULT=PASS config=Debug registered=4/4 imbalance=0
+      [doctest] test cases: 1 | 1 passed | 0 failed
+l01  L01      verdict=PASSED  (exit 0 as expected)
+      reload cycles completed=100
+      fresh launch/close cycles completed=10
+      [doctest] test cases: 110 | 110 passed | 0 failed
+l03  L03      verdict=PASSED  (exit 0 as expected)
+      [doctest] test cases: 15 | 15 passed | 0 failed
+
+=== Release ===
+ki1  KI-1     verdict=PASSED  (exit 0 as expected)
+        KI1_SELFTEST_RESULT=PASS config=Release registered=4/4 imbalance=0
+      [doctest] test cases: 1 | 1 passed | 0 failed
+l01  L01      verdict=PASSED  (exit 0 as expected)
+      reload cycles completed=100
+      fresh launch/close cycles completed=10
+      [doctest] test cases: 110 | 110 passed | 0 failed
+l03  L03      verdict=PASSED  (exit 0 as expected)
+      [doctest] test cases: 15 | 15 passed | 0 failed
+

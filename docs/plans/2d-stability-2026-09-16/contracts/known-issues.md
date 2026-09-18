@@ -372,7 +372,7 @@ evidence is under `evidence/WO-07/l02/`; each entry names its file.
 - Failing-before: `evidence/WO-07/l02/scaffold-template-failing-before-Debug.txt`.
 - Regression: L02 harness cycle 0 (the initial build of the real scaffold) via
   `tests/acceptance/manifests/wo07-l02.manifest.json`.
-- Disposition: fix landed (WO-07 local commit) — the scaffold CMakeLists gains the same
+- Disposition: fix landed (WO-07 local commit `3e1c2be`) — the scaffold CMakeLists gains the same
   `option(COSMIC_2D_ONLY …)` + `target_compile_definitions` block the runtime template carries since
   WO-03, and the two 3D-only samples are fenced (`#ifndef COSMIC_2D_ONLY`) in `Module.cpp` and in
   their own headers. Passing-after: the L02 runner evidence (`l02-Debug/`, `l02-Release/`).
@@ -389,7 +389,7 @@ evidence is under `evidence/WO-07/l02/`; each entry names its file.
 - Failing-before: `evidence/WO-07/l02/failing-before-Debug-registry-accumulation-play-leak.result.json`
   (`descriptor 'L02Component' has 10 fields, expected 5` … 15 … 20 across cycles 1–3).
 - Regression: L02 harness — descriptor field list must equal the variant exactly after every reload.
-- Disposition: fix landed (WO-07 local commit): `ClassIn` starts from a fresh field list, and
+- Disposition: fix landed (WO-07 local commit `3e1c2be`): `ClassIn` starts from a fresh field list, and
   `ModuleRegistry::UnregisterModule` removes the module's component descriptors (KI-29).
 
 ### KI-28 — A module reload during Play bakes runtime state into the edit scene
@@ -406,7 +406,7 @@ evidence is under `evidence/WO-07/l02/`; each entry names its file.
 - Failing-before: same result file as KI-27 — `edit-scene Position [2732,8,9] != [7,8,9] (runtime
   state leaked into the edit scene)` (cycle 2; the L02Script drifts x by 1 per frame during the build).
 - Regression: L02 harness cycles with `cycle % 5 == 2` (Play started during the build).
-- Disposition: fix landed (WO-07 local commit): `ReloadModule` stops Play **before** snapshotting,
+- Disposition: fix landed (WO-07 local commit `3e1c2be`): `ReloadModule` stops Play **before** snapshotting,
   so the snapshot is always the edit scene.
 
 ### KI-29 — Registry entries of an unloaded module stay live and are invoked after FreeLibrary
@@ -433,7 +433,7 @@ evidence is under `evidence/WO-07/l02/`; each entry names its file.
 - Regression: L02 harness load-failure cycle (the custom blocks must survive **opaquely** per C05 and
   no stale descriptor may remain); L04 host case "module-registered types are gone before
   FreeLibrary" for the runtime-plugin path.
-- Disposition: fix landed (WO-07 local commit): `TypeRegistry::Remove`, `UnregisterModule` removes
+- Disposition: fix landed (WO-07 local commit `3e1c2be`): `TypeRegistry::Remove`, `UnregisterModule` removes
   the module's component descriptors (before `FreeLibrary`, so the thunks are destroyed while their
   code is mapped), and `PlayerLayer::OnDetach` unregisters its own module. A failed load now leaves
   the scene's custom blocks as opaque (forward-compat) blocks that re-resolve on the next good load.
@@ -457,7 +457,7 @@ evidence is under `evidence/WO-07/l02/`; each entry names its file.
 - Regression: L02 harness — the probe's `L02Script` overrides (Rate=3.5, Loops=5) must survive the
   failed-load cycle and every later reload; `test_scene_serializer.cpp` round-trip with an
   unregistered class (headless).
-- Disposition: fix landed (WO-07 local commit): unresolved `Fields` are kept verbatim on the
+- Disposition: fix landed (WO-07 local commit `3e1c2be`): unresolved `Fields` are kept verbatim on the
   component (`PendingFields`) and re-emitted on save while the class is unregistered — the same
   forward-compat rule as opaque component blocks — and resolve on the next load that has the class.
 
@@ -475,7 +475,7 @@ evidence is under `evidence/WO-07/l02/`; each entry names its file.
   3.5`, `script Loops = 2, expected 5`; the out-of-process oracle confirms the saved scene).
 - Regression: L02 harness cycles with `cycle % 5 == 3` (probe selected while a build runs, so the
   Inspector draws it across the reload) after a script-field addition (V5 at cycle 21).
-- Disposition: fix landed (WO-07 local commit): the backfill seeds **only the missing** fields.
+- Disposition: fix landed (WO-07 local commit `3e1c2be`): the backfill seeds **only the missing** fields.
 
 ### KI-32 — EntitySelection invokes a listener that was unsubscribed during the dispatch
 - Status: Confirmed defect (stale-callback class). Owner WO: WO-07 (L04, "callback disconnect
@@ -492,7 +492,7 @@ evidence is under `evidence/WO-07/l02/`; each entry names its file.
 - Regression: `test_wo07_l04.cpp` (`esRemovedMidDispatchFired == 0`, driven by
   `WO07TeardownFixture`), plus the headless `test_events.cpp` case
   `WO-07 L04: EntitySelection does not invoke a listener unsubscribed during dispatch`.
-- Disposition: fix landed (WO-07 local commit): `Notify` snapshots the handles and, for each,
+- Disposition: fix landed (WO-07 local commit `6d2e741`): `Notify` snapshots the handles and, for each,
   re-fetches the callback under the mutex only if it is still subscribed — the EventBus rule.
 
 ### KI-33 — UnloadProjectDLL frees the plugin while its job is still queued or in flight
@@ -508,7 +508,7 @@ evidence is under `evidence/WO-07/l02/`; each entry names its file.
 - Failing-before: `evidence/WO-07/l04/failing-before-Debug-job-runs-into-unmapped-plugin.txt`.
 - Regression: `test_wo07_l04.cpp` mode 2 (`seqJobDone < seqAfterUnload`, `jobActiveAfterUnload == 0`),
   10 children per config through `wo07-l04.manifest.json`.
-- Disposition: fix landed (WO-07 local commit): `UnloadProjectDLL` waits for the JobSystem to go
+- Disposition: fix landed (WO-07 local commit `6d2e741`): `UnloadProjectDLL` waits for the JobSystem to go
   idle (`WaitIdle`, only while the pool is initialized) after `OnDetach`/delete and BEFORE
   `FreeLibrary`, so plugin-submitted work always completes against mapped code. A job that never
   completes still hangs the transition exactly as it already hangs `JobSystem::Shutdown` at exit —
@@ -529,7 +529,7 @@ evidence is under `evidence/WO-07/l02/`; each entry names its file.
 - Failing-before: `evidence/WO-07/l02/failing-before-Release-debug-module-in-release-editor.txt`
   (runner case L02 Release: exit `-1073741819` in cycle 0; `build/Debug/L02Reload_hot1.dll` built).
 - Regression: L02 through `wo07-l02.manifest.json` in **Release** (the whole 52-build campaign).
-- Disposition: fix landed (WO-07 local commit): `kHotConfig` now follows the editor's own build
+- Disposition: fix landed (WO-07 local commit `3e1c2be`): `kHotConfig` now follows the editor's own build
   configuration (`NDEBUG` → "Release", else "Debug") — the only configuration whose CRT and STL
   layouts match the process a hot module is mapped into; the module search dir and the
   non-release package pairing follow automatically.
