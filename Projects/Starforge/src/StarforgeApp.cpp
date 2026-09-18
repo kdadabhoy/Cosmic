@@ -158,6 +158,7 @@ namespace Starforge
         L02SelfTestInit();   // WO-07: arm the L02 module-reload harness when its env is set
         L05SelfTestInit();   // WO-07: arm the L05 editor UI-cycle harness when its env is set
         C05SelfTestInit();   // WO-09: arm the C05 project-lifecycle harness when its env is set
+        X01SelfTestInit();   // WO-10: arm the X01 external-project package harness when its env is set
     }
 
     // =========================================================================
@@ -204,6 +205,7 @@ namespace Starforge
         L02SelfTestShutdown();   // WO-07: free the L02 harness (no-op when never armed)
         L05SelfTestShutdown();   // WO-07: free the L05 harness (no-op when never armed)
         C05SelfTestShutdown();   // WO-09: free the C05 harness (no-op when never armed)
+        X01SelfTestShutdown();   // WO-10: free the X01 harness (no-op when never armed)
 
         Cosmic::Log::SetLogDirectory("logs");
         CS_INFO("Starforge: detached.");
@@ -1148,6 +1150,7 @@ namespace Starforge
         L02SelfTestTick();   // WO-07: no-op unless the L02 reload harness is armed
         L05SelfTestTick();   // WO-07: no-op unless the L05 editor harness is armed
         C05SelfTestTick();   // WO-09: no-op unless the C05 lifecycle harness is armed
+        X01SelfTestTick();   // WO-10: no-op unless the X01 package harness is armed
 
 #ifndef COSMIC_2D_ONLY
         m_WorldSystems.OnUpdate(m_Ctx);   // E18 — drain the async terrain build

@@ -1,0 +1,51 @@
+{
+  "manifest": "wo10-drift",
+  "cases": [
+    {
+      "id": "N02-drift-2h",
+      "description": "N02 drift-2h: 432,000 frames of exactly 1/60 s (two nominal hours) through the production scheduler over the injected clock: the fixed tick count vs the integer-tick/double reference (the proposed '<= one 60-Hz step over 2 h' bar - measurement, not gating) and the stored-float accumulators' (plugin local time, uptime) observed error, reported in captures/n02-drift-2h.txt.",
+      "tier": "W",
+      "profiles": [
+        "nightly",
+        "release"
+      ],
+      "requires": [
+        "windows",
+        "gpu-gl"
+      ],
+      "command": "powershell",
+      "workingDir": "{BIN}",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "{ACCEPTANCE}\\fixtures\\Run-WO10Case.ps1",
+        "-Bin",
+        "{BIN}",
+        "-CaseId",
+        "N02-drift-2h",
+        "-TestCase",
+        "WO-10 N02 host*",
+        "-NoSkip",
+        "-IsolateCwd",
+        "-Tier",
+        "W",
+        "-Requires",
+        "windows,gpu-gl",
+        "-Env",
+        "COSMIC_WO10_RUNG=drift-2h",
+        "-MinTests",
+        "1",
+        "-DeadlineSec",
+        "3000",
+        "-Output",
+        "{REPO}\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-10\\n02-drift-2h-{CONFIG}"
+      ],
+      "expectExit": 0,
+      "minTests": 1,
+      "deadlineSec": 3300,
+      "fixture": "../../tests/WO10ClockFixture.cpp"
+    }
+  ]
+}

@@ -379,6 +379,18 @@ namespace Starforge
         void C05SelfTestTick();
         void C05SelfTestShutdown();
 
+        // WO-10 (2D stability) — X01 package harness. Gated ON only when
+        // COSMIC_X01_PACKAGE=<result-file> (+ COSMIC_X01_PROJECT=<external root>) is
+        // set. Opens an EXTERNAL project and packages it through the real File >
+        // Package path (PackageProject -> BeginPackage -> BuildRunner -> Packager),
+        // verifies the staged payload and writes a JSON result + the editor console
+        // for the runner wrapper. Defined in X01PackageSelfTest.cpp.
+        struct X01PackageSelfTest;
+        X01PackageSelfTest* m_X01 = nullptr;
+        void X01SelfTestInit();
+        void X01SelfTestTick();
+        void X01SelfTestShutdown();
+
         // WO-07 (2D stability) — L05 editor scripted UI cycles. Gated ON only when
         // COSMIC_L05_SELFTEST=<result-file> is set. Drives the real viewport-strip chips
         // (mouse events at the probed rects), layout presets, viewport show/hide, Play,

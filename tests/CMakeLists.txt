@@ -103,6 +103,15 @@ set(COSMIC_TEST_SOURCES
     test_wo09_c04_graphs.cpp
     test_wo09_c05_json.cpp
     test_wo09_c06_services.cpp
+    # WO-10 (2D stability) — clocks and numerics. N01/N02 host cases drive the REAL
+    # Application scheduler over the injected IFrameClock (tests/FakeFrameClock.h)
+    # with the WO10ClockFixture plugin; skipped by default, one runner child per rung.
+    # N02's headless half, N03 (analytic integrators + the F-TRAJECTORY double vs
+    # float path) and N04 (PCG / determinism) run in the ordinary suite.
+    test_wo10_n01_dispatch.cpp
+    test_wo10_n02_clock.cpp
+    test_wo10_n03_numerics.cpp
+    test_wo10_n04_determinism.cpp
     test_wo05_matrix.cpp
     test_wo05_kiss.cpp
     test_wo05_host.cpp
@@ -231,6 +240,15 @@ set_target_properties(WO07UiCyclesFixture PROPERTIES RUNTIME_OUTPUT_DIRECTORY
     "${COSMIC_SDK_DIR}/build/Runtime/$<CONFIG>")
 add_dependencies(CosmicTests WO07UiCyclesFixture)
 
+# WO-10 N01/N02 — the clock-probe runtime plugin: a real project DLL hosted by the
+# real WorkspaceLayer that records what the production dispatch hands a plugin
+# layer (OnFixedUpdate / OnUpdate / local time) into the exe-owned WO10ClockReport.
+add_library(WO10ClockFixture SHARED WO10ClockFixture.cpp)
+target_link_libraries(WO10ClockFixture PRIVATE Cosmic)
+set_target_properties(WO10ClockFixture PROPERTIES RUNTIME_OUTPUT_DIRECTORY
+    "${COSMIC_SDK_DIR}/build/Runtime/$<CONFIG>")
+add_dependencies(CosmicTests WO10ClockFixture)
+
 target_link_libraries(CosmicTests PRIVATE Cosmic)
 target_include_directories(CosmicTests PRIVATE "${COSMIC_SDK_DIR}/Cosmic/dependencies/doctest")
 # WO-09 — the fuzzer (tests/wo09_fuzz.h) mutates documents through nlohmann::json,
@@ -243,6 +261,14 @@ target_compile_definitions(CosmicTests PRIVATE DOCTEST_CONFIG_USE_STD_HEADERS)
 target_compile_definitions(CosmicTests PRIVATE COSMIC_WO06_FIXTURES="${CMAKE_CURRENT_SOURCE_DIR}/acceptance/fixtures/wo06")
 # WO-09 — the F-CONTENT project + F-CORRUPT regression fixtures (source tree, committed).
 target_compile_definitions(CosmicTests PRIVATE COSMIC_WO09_FIXTURES="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/wo09")
+# WO-10 — the independent generators/oracles (tests/fixtures/wo10) and the analysis
+# sample's committed F-TRAJECTORY reference CSV (Projects/AnalysisSample/data).
+target_compile_definitions(CosmicTests PRIVATE COSMIC_WO10_FIXTURES="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/wo10")
+target_compile_definitions(CosmicTests PRIVATE COSMIC_ANALYSIS_SAMPLE_DATA="${COSMIC_SDK_DIR}/Projects/AnalysisSample/data")
+# The analysis sample's fixture definitions (F-TRAJECTORY / F-SERIES-LARGE generators
+# + the LocalFrame conversion) are header-only; N03/X01 evaluate them against the
+# catalog equations independently of the sample.
+target_include_directories(CosmicTests PRIVATE "${COSMIC_SDK_DIR}/Projects/AnalysisSample/src")
 
 # Land next to Cosmic.dll so the exe runs without PATH games.
 set_target_properties(CosmicTests PROPERTIES

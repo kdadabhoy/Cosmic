@@ -1,0 +1,7 @@
+# Cosmic project manifest — AnalysisSample (WO-10 / X01 analysis reference project).
+# A plain runtime plugin (no scene): the packaged exe boots straight into the
+# analysis layer. fixed_dt_hz is read by the standalone PlayerLayer path only.
+name          = "AnalysisSample"
+startup_scene = ""
+fixed_dt_hz   = 60
+window_title  = "Cosmic Analysis Sample (X01)"

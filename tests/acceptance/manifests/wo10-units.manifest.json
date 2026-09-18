@@ -1,0 +1,234 @@
+{
+  "manifest": "wo10-units",
+  "cases": [
+    {
+      "id": "N02-U",
+      "description": "N02 headless: KI-16 - DataRecorder's time accumulator over 432,000 ticks of 1/60 (duration and every stored timestamp within one float ulp of i/60); negative replay - DataPlayer speed -1 over a v1 recording of F-TRAJECTORY plays backwards to 0, auto-stops, SampleAt agrees with the double equations at exact and midpoint times, NaN/inf speed and NaN seek ignored; the stored-float accumulator arithmetic at 2 h and 24 h uptime measured against a double sum (reported).",
+      "tier": "U",
+      "profiles": [
+        "pr",
+        "nightly",
+        "release"
+      ],
+      "requires": [
+        "windows"
+      ],
+      "command": "powershell",
+      "workingDir": "{BIN}",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "{ACCEPTANCE}\\fixtures\\Run-WO10Case.ps1",
+        "-Bin",
+        "{BIN}",
+        "-CaseId",
+        "N02-U",
+        "-TestSuite",
+        "WO-10 N02 clock (headless)",
+        "-MinTests",
+        "3",
+        "-DeadlineSec",
+        "120",
+        "-Output",
+        "{REPO}\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-10\\n02u-{CONFIG}"
+      ],
+      "expectExit": 0,
+      "minTests": 3,
+      "deadlineSec": 180,
+      "fixture": "../../tests/test_wo10_n02_clock.cpp"
+    },
+    {
+      "id": "N03",
+      "description": "N03 numerics at the catalog's exact parameters: RK4 projectile dt=1/480 for 1 s within 1e-4 relative (+ the double-state reference), mass-spring-damper 2,000 steps at 1/1000 within 2e-3 of the analytic envelope, RK4 halving-step error ratio in 10..24, semi-implicit Euler energy < 1.10x initial over 10 s; F-TRAJECTORY generator == catalog equations, the committed reference CSV round-trips bit-exactly, SI units (g, apex, zero-crossing, range); the FLOAT telemetry path (DataRecorder -> v1 -> DataPlayer::SampleAt) vs the double reference within the default float bar with the observed error reported; the 1e11 origin offset subtracted in double before float display (exact to the double ulp at 1e11) vs the naive float path (hundreds of metres off).",
+      "tier": "U",
+      "profiles": [
+        "pr",
+        "nightly",
+        "release"
+      ],
+      "requires": [
+        "windows"
+      ],
+      "command": "powershell",
+      "workingDir": "{BIN}",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "{ACCEPTANCE}\\fixtures\\Run-WO10Case.ps1",
+        "-Bin",
+        "{BIN}",
+        "-CaseId",
+        "N03",
+        "-TestSuite",
+        "WO-10 N03 numerics",
+        "-MinTests",
+        "7",
+        "-DeadlineSec",
+        "120",
+        "-Output",
+        "{REPO}\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-10\\n03-{CONFIG}"
+      ],
+      "expectExit": 0,
+      "minTests": 7,
+      "deadlineSec": 180,
+      "fixture": "../../Projects/AnalysisSample/data/trajectory.csv"
+    },
+    {
+      "id": "N04",
+      "description": "N04 determinism: the canonical PCG32 vector (seed 42, stream 54); 1,000,000 outputs from the same seed/stream agree word for word and FNV-1a-64 to the INDEPENDENT Python oracle (tests/fixtures/wo10/pcg32_oracle.py); seeded Gaussian + transcendental streams pinned under the declared same-toolchain scope. Same-build reproducibility: the wrapper runs the suite in TWO processes and byte-compares the 1,000,000-word stream and both 100,000-sample streams they wrote.",
+      "tier": "U",
+      "profiles": [
+        "pr",
+        "nightly",
+        "release"
+      ],
+      "requires": [
+        "windows"
+      ],
+      "command": "powershell",
+      "workingDir": "{BIN}",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "{ACCEPTANCE}\\fixtures\\Run-WO10Case.ps1",
+        "-Bin",
+        "{BIN}",
+        "-CaseId",
+        "N04",
+        "-TestSuite",
+        "WO-10 N04 determinism",
+        "-MinTests",
+        "3",
+        "-DeadlineSec",
+        "120",
+        "-CompareRuns",
+        "-Output",
+        "{REPO}\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-10\\n04-{CONFIG}"
+      ],
+      "expectExit": 0,
+      "minTests": 3,
+      "deadlineSec": 300,
+      "fixture": "../../tests/fixtures/wo10/pcg32_oracle.py"
+    },
+    {
+      "id": "N04-FILTERS",
+      "description": "N04 retained: the Filters (E12) suite stays green (deterministic filter responses).",
+      "tier": "U",
+      "profiles": [
+        "pr",
+        "nightly",
+        "release"
+      ],
+      "requires": [
+        "windows"
+      ],
+      "command": "powershell",
+      "workingDir": "{BIN}",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "{ACCEPTANCE}\\fixtures\\Run-WO10Case.ps1",
+        "-Bin",
+        "{BIN}",
+        "-CaseId",
+        "N04-FILTERS",
+        "-TestSuite",
+        "Filters (E12)",
+        "-MinTests",
+        "1",
+        "-DeadlineSec",
+        "60",
+        "-Output",
+        "{REPO}\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-10\\n04-filters-{CONFIG}"
+      ],
+      "expectExit": 0,
+      "minTests": 1,
+      "deadlineSec": 120,
+      "fixture": "../../tests/test_filters.cpp"
+    },
+    {
+      "id": "N04-LOOKUP",
+      "description": "N04 retained: the LookupTable (E13) suite stays green (restricted numeric CSV reader incl. ragged/non-numeric rejection).",
+      "tier": "U",
+      "profiles": [
+        "pr",
+        "nightly",
+        "release"
+      ],
+      "requires": [
+        "windows"
+      ],
+      "command": "powershell",
+      "workingDir": "{BIN}",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "{ACCEPTANCE}\\fixtures\\Run-WO10Case.ps1",
+        "-Bin",
+        "{BIN}",
+        "-CaseId",
+        "N04-LOOKUP",
+        "-TestSuite",
+        "LookupTable (E13)",
+        "-MinTests",
+        "1",
+        "-DeadlineSec",
+        "60",
+        "-Output",
+        "{REPO}\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-10\\n04-lookup-{CONFIG}"
+      ],
+      "expectExit": 0,
+      "minTests": 1,
+      "deadlineSec": 120,
+      "fixture": "../../tests/test_lookuptable.cpp"
+    },
+    {
+      "id": "N04-SCENE",
+      "description": "N04 retained: the 2D scene determinism (W2) suite stays green (same seed/input sequence => identical scene state).",
+      "tier": "U",
+      "profiles": [
+        "pr",
+        "nightly",
+        "release"
+      ],
+      "requires": [
+        "windows"
+      ],
+      "command": "powershell",
+      "workingDir": "{BIN}",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "{ACCEPTANCE}\\fixtures\\Run-WO10Case.ps1",
+        "-Bin",
+        "{BIN}",
+        "-CaseId",
+        "N04-SCENE",
+        "-TestSuite",
+        "2D scene determinism (W2)",
+        "-MinTests",
+        "1",
+        "-DeadlineSec",
+        "60",
+        "-Output",
+        "{REPO}\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-10\\n04-scene-{CONFIG}"
+      ],
+      "expectExit": 0,
+      "minTests": 1,
+      "deadlineSec": 120,
+      "fixture": "../../tests/test_scene2d_determinism.cpp"
+    }
+  ]
+}

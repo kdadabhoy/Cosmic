@@ -1,0 +1,35 @@
+{
+  "manifest": "wo10-sample",
+  "cases": [
+    {
+      "id": "X01",
+      "description": "X01 analysis sample (compatibility specimen, D-9km): Projects/AnalysisSample is copied OUTSIDE the SDK source tree (build/wo10-sample-external), packaged through the REAL editor path (Starforge.exe + X01PackageSelfTest: OpenProjectPath -> PackageProject -> BuildRunner cmake configure + Release build of the external project against COSMIC_SDK -> Packager::Stage/Finalize -> dist/AnalysisSample with the renamed exe, Cosmic.dll, the project DLL, assets/projects/AnalysisSample/data/trajectory.csv, boot.cfg), then the STAGED AnalysisSample.exe is run from a different working directory with its in-app harness (X01SelfTest: F-TRAJECTORY 1,201 double rows == equations, F-SERIES-LARGE 100,000 x 8 generated from the metadata's equations + seed with extrema/discontinuity markers, the v1 recording written by DataRecorder and played by DataPlayer, play -> pause -> scrub at exact and midpoint times with the float marker / double plot / equations agreeing, the 1e11 world origin subtracted in double before float display, a PNG exported from the viewport framebuffer with the marker pixel from the projection). The wrapper's OUT-OF-PROCESS oracle re-evaluates the equations in double for every reported scrub, decodes the PNG and checks the marker colour at the pixel it derives itself, recomputes the analytic series extrema and hashes the packaged trajectory.csv against the committed fixture. Four verdicts: package, packaged run, numeric oracle, image+series oracle. In the Debug configuration the DEBUG editor packages the sample; the packager's default (File > Package) builds the project Release and stages from the Release runtime, so the packaged app under test is the Release build in both configurations.",
+      "tier": "I",
+      "profiles": [
+        "gpu",
+        "release"
+      ],
+      "requires": [
+        "windows",
+        "gpu-gl"
+      ],
+      "command": "powershell",
+      "workingDir": "{BIN}",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "{ACCEPTANCE}\\fixtures\\Run-WO10Sample.ps1",
+        "-Bin",
+        "{BIN}",
+        "-Output",
+        "{REPO}\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-10\\x01-{CONFIG}"
+      ],
+      "expectExit": 0,
+      "minTests": 4,
+      "deadlineSec": 1500,
+      "fixture": "../../Projects/AnalysisSample/data/trajectory.csv"
+    }
+  ]
+}
