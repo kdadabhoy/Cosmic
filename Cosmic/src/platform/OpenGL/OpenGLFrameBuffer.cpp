@@ -11,6 +11,7 @@
 #include <glad/glad.h>
 #include "platform/OpenGL/OpenGLFrameBuffer.h"
 #include "platform/OpenGL/OpenGLContext.h"
+#include "graphics/GpuObjectStats.h"
 #include "core/Log.h"
 
 #include <array>
@@ -100,6 +101,7 @@ namespace Cosmic
 				m_ColorAttachmentSpecs.push_back(a);
 		}
 
+		GpuObjectStats::Created(GpuObjectStats::Kind::Framebuffer);
 		Invalidate();
 	}
 
@@ -107,6 +109,12 @@ namespace Cosmic
 
 	OpenGLFrameBuffer::~OpenGLFrameBuffer()
 	{
+		// Observation bookkeeping (GpuObjectStats): the object is gone whether or not
+		// the GL delete below can still run.
+		GpuObjectStats::Destroyed(GpuObjectStats::Kind::Framebuffer);
+		GpuObjectStats::Destroyed(GpuObjectStats::Kind::FramebufferAttachment,
+		                          (uint32_t)m_ColorAttachments.size() + (m_DepthAttachment ? 1u : 0u));
+
 		// Skip GL deletes if the context is already gone (abort/teardown order).
 		if (!OpenGLContext::HasCurrentContext())
 			return;
@@ -126,6 +134,9 @@ namespace Cosmic
 
 		if (m_RendererID)
 		{
+			GpuObjectStats::Destroyed(GpuObjectStats::Kind::FramebufferAttachment,
+			                          (uint32_t)m_ColorAttachments.size() + (m_DepthAttachment ? 1u : 0u));
+
 			glDeleteFramebuffers(1, &m_RendererID);
 			if (!m_ColorAttachments.empty())
 				glDeleteTextures((GLsizei)m_ColorAttachments.size(), m_ColorAttachments.data());
@@ -143,6 +154,7 @@ namespace Cosmic
 		{
 			m_ColorAttachments.resize(m_ColorAttachmentSpecs.size());
 			glGenTextures((GLsizei)m_ColorAttachments.size(), m_ColorAttachments.data());
+			GpuObjectStats::Created(GpuObjectStats::Kind::FramebufferAttachment, (uint32_t)m_ColorAttachments.size());
 			for (size_t i = 0; i < m_ColorAttachments.size(); ++i)
 				AttachColorTexture(m_ColorAttachments[i], m_ColorAttachmentSpecs[i].TextureFormat,
 				                   m_Specification.Width, m_Specification.Height, (uint32_t)i);
@@ -152,6 +164,7 @@ namespace Cosmic
 		if (m_DepthAttachmentSpec.TextureFormat != FramebufferTextureFormat::None)
 		{
 			glGenTextures(1, &m_DepthAttachment);
+			GpuObjectStats::Created(GpuObjectStats::Kind::FramebufferAttachment);
 			AttachDepthTexture(m_DepthAttachment, m_Specification.Width, m_Specification.Height);
 		}
 

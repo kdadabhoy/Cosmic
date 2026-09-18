@@ -110,6 +110,9 @@ namespace Cosmic
 		virtual void GpuFrameMark() override;
 		virtual const std::vector<GpuZoneResult>& GetGpuZoneResults() const override;
 
+		// WO-08 R07 timing fence: glFinish.
+		virtual void FinishGpu() override;
+
 	private:
 		// Lazily-created empty VAO for attribute-less DrawArrays (core GL requires
 		// a bound VAO). Created on first DrawArrays call.

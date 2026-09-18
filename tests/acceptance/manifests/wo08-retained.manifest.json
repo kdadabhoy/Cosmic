@@ -1,0 +1,37 @@
+{
+  "manifest": "wo08-retained",
+  "cases": [
+    {
+      "id": "retained-units",
+      "description": "The retained headless suite exactly as WO-07 left it (388 cases: every pre-WO-08 test, WO-08 cases excluded by name), rerun after the WO-08 engine changes (Renderer2D material bucket + observation counters, Circle shaders, UiSystem image UVs, Camera2DController input policy, RendererAPI::FinishGpu, GpuObjectStats hooks).",
+      "tier": "U",
+      "profiles": ["retained", "pr", "release"],
+      "requires": ["windows"],
+      "command": "{BIN}\\CosmicTests.exe",
+      "args": ["--test-case-exclude=WO-08 *", "--no-colors"],
+      "expectExit": 0,
+      "minTests": 388,
+      "deadlineSec": 1800,
+      "fixture": "../../tests/test_wo07_l04.cpp"
+    },
+    {
+      "id": "retained-goldens",
+      "description": "The six pre-WO-08 2D golden cases (sprites, tilemap, light2d, light2d A/B, ui, scene2d) through the wrapper's before/after SHA-256 of tests/render/goldens: the 14 original goldens must be byte-unchanged and no .actual/.diff diagnostics may appear.",
+      "tier": "G",
+      "profiles": ["retained", "gpu", "release"],
+      "requires": ["windows", "gpu-gl"],
+      "command": "powershell",
+      "workingDir": "{BIN}",
+      "args": [
+        "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
+        "{ACCEPTANCE}\\fixtures\\Run-WO08Render.ps1",
+        "-Bin", "{BIN}", "-CaseId", "retained-goldens", "-Suite", "2D goldens", "-MinTests", "6", "-DeadlineSec", "120",
+        "-Output", "{REPO}\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-08\\retained-goldens-{CONFIG}"
+      ],
+      "expectExit": 0,
+      "minTests": 6,
+      "deadlineSec": 180,
+      "golden": "{REPO}\\tests\\render\\goldens\\sprites.png"
+    }
+  ]
+}

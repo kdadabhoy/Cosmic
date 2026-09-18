@@ -1,0 +1,25 @@
+{
+  "manifest": "wo08-r07",
+  "cases": [
+    {
+      "id": "R07",
+      "description": "Named-machine performance qualification (Q): 10,000 instanced circles and, separately, 10,000 instanced quads into an offscreen 1920x1080 RGBA8 target, one DrawInstanced* per frame, 10-s warmup + 60-s sample each, timing that includes a RenderCommand::FinishGpu() completion fence per frame and NO read-back in the timed region (vsync off; no present). Records mean/p50/p95/p99/max complete-frame ms, CPU-submit ms, GPU timer-zone ms, draw counts and the machine; bar p95 <= 16.67 ms, p99 <= 33.33 ms. Correctness is asserted separately (1 instance draw/frame, 10,000 instances, non-blank frame). Applies to the named configuration only.",
+      "tier": "Q",
+      "profiles": ["release"],
+      "requires": ["windows", "gpu-gl"],
+      "command": "powershell",
+      "workingDir": "{BIN}",
+      "args": [
+        "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
+        "{ACCEPTANCE}\\fixtures\\Run-WO08Render.ps1",
+        "-Bin", "{BIN}", "-CaseId", "R07", "-Suite", "WO-08 R07", "-MinTests", "2", "-DeadlineSec", "600", "-NoSkip",
+        "-PerfOut", "{REPO}\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-08\\r07-{CONFIG}\\perf",
+        "-Output", "{REPO}\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-08\\r07-{CONFIG}"
+      ],
+      "expectExit": 0,
+      "minTests": 2,
+      "deadlineSec": 660,
+      "fixture": "../../tests/render/render_wo08_perf.cpp"
+    }
+  ]
+}

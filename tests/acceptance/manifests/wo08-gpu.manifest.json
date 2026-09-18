@@ -1,0 +1,121 @@
+{
+  "manifest": "wo08-gpu",
+  "cases": [
+    {
+      "id": "R01",
+      "description": "Primitives + SDF text (F-2D): flat/alpha/rotated/textured/tiled/atlas quads, SDF disc/ring/ellipse, dashed lines + rect, a Material quad, the per-flush primitive grouping sentinel; Roboto-Regular SDF text at two sizes, multi-line, kerning, and the '?' fallback (in-process A/B). Two reviewed 320x180 goldens (wo08_primitives, wo08_text) PLUS exact interior-colour sentinels and per-glyph ROIs; armed Renderer2D stats pin 4 draws / 2 flushes and the glyph count.",
+      "tier": "G",
+      "profiles": ["gpu", "release"],
+      "requires": ["windows", "gpu-gl"],
+      "command": "powershell",
+      "workingDir": "{BIN}",
+      "args": [
+        "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
+        "{ACCEPTANCE}\\fixtures\\Run-WO08Render.ps1",
+        "-Bin", "{BIN}", "-CaseId", "R01", "-Suite", "WO-08 R01", "-MinTests", "2", "-DeadlineSec", "120",
+        "-Output", "{REPO}\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-08\\r01-{CONFIG}"
+      ],
+      "expectExit": 0,
+      "minTests": 2,
+      "deadlineSec": 180,
+      "fixture": "../../tests/render/render_wo08_primitives.cpp",
+      "golden": "{REPO}\\tests\\render\\goldens\\wo08_primitives.png"
+    },
+    {
+      "id": "R02",
+      "description": "Batch boundaries: quads / SDF circles / lines / glyphs at 0, 1, 9,999, 10,000, 10,001 and 20,001 (limit 10,000), one string crossing MaxTextQuads mid-string, texture-slot rollover at 30/31/32/33/62/63/64 distinct non-white textures (slot 0 reserved => 31 per batch), material and custom-circle-shader transitions, and 100-of-each interleaved plus an instanced call mid-batch. Index-coded grid cells prove nothing dropped/duplicated/shifted; armed stats assert the ACTUAL flush/draw counts.",
+      "tier": "G",
+      "profiles": ["gpu", "nightly", "release"],
+      "requires": ["windows", "gpu-gl"],
+      "command": "powershell",
+      "workingDir": "{BIN}",
+      "args": [
+        "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
+        "{ACCEPTANCE}\\fixtures\\Run-WO08Render.ps1",
+        "-Bin", "{BIN}", "-CaseId", "R02", "-Suite", "WO-08 R02", "-MinTests", "7", "-DeadlineSec", "300",
+        "-Output", "{REPO}\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-08\\r02-{CONFIG}"
+      ],
+      "expectExit": 0,
+      "minTests": 7,
+      "deadlineSec": 360,
+      "fixture": "../../tests/render/fixtures/wo08/wo08_tint_quad.glsl"
+    },
+    {
+      "id": "R03",
+      "description": "Real 2D instancing: DrawInstancedCircles / DrawInstancedQuads at 0, 1, 19,999, 20,000, 20,001, 40,001 and 10,000 on the default and a custom (tinted) shader, with batched draws before and after; expects exactly ceil(N/20,000) instance draws (10,000 => 1), every instance in its index-coded cell, and default shader/material state afterwards. Includes the NEW 2D golden instancing2d (320x180) - distinct from the 3D instancing.png.",
+      "tier": "G",
+      "profiles": ["gpu", "nightly", "release"],
+      "requires": ["windows", "gpu-gl"],
+      "command": "powershell",
+      "workingDir": "{BIN}",
+      "args": [
+        "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
+        "{ACCEPTANCE}\\fixtures\\Run-WO08Render.ps1",
+        "-Bin", "{BIN}", "-CaseId", "R03", "-Suite", "WO-08 R03", "-MinTests", "5", "-DeadlineSec", "300",
+        "-Output", "{REPO}\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-08\\r03-{CONFIG}"
+      ],
+      "expectExit": 0,
+      "minTests": 5,
+      "deadlineSec": 360,
+      "fixture": "../../tests/render/fixtures/wo08/wo08_tint_quad_instance.glsl",
+      "golden": "{REPO}\\tests\\render\\goldens\\instancing2d.png"
+    },
+    {
+      "id": "R04-G",
+      "description": "Camera on a real target: a pass viewport OFFSET inside a larger target (world lands where the pinhole model predicts, nothing outside), 100/125/150/200 % DPI target sizes (positions and marker sizes scale exactly), the odd 641x359 target (single centre pixel + four corner pixels), and a viewport resized through 1x1 / 641x359 / 320x180 / 3x3 / 1920x1080 / 1x1 / 2x1080 / 640x360 with a Camera2DController supplying the matrices (no NaN, no resize crash). The headless half is in wo08-units.",
+      "tier": "G",
+      "profiles": ["gpu", "pr", "release"],
+      "requires": ["windows", "gpu-gl"],
+      "command": "powershell",
+      "workingDir": "{BIN}",
+      "args": [
+        "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
+        "{ACCEPTANCE}\\fixtures\\Run-WO08Render.ps1",
+        "-Bin", "{BIN}", "-CaseId", "R04-G", "-Suite", "WO-08 R04", "-MinTests", "4", "-DeadlineSec", "120",
+        "-Output", "{REPO}\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-08\\r04g-{CONFIG}"
+      ],
+      "expectExit": 0,
+      "minTests": 4,
+      "deadlineSec": 180,
+      "fixture": "../../tests/render/render_wo08_camera.cpp"
+    },
+    {
+      "id": "R05",
+      "description": "RTT: two distinct targets (64x48, 48x64) with corner + orientation markers captured (top-left read-back) and shown 1:1 through UiImage::RuntimeTexture (documented FboTexture adapter) upright, on the plain AND 9-slice image paths; render passes nested three deep with an offset viewport; camera/viewport restoration by where later geometry lands, FBO restoration after SceneRenderer::RenderToTexture, blend and depth restoration after the UI pass; no source->target feedback (byte-identical re-captures); 200 create/render/resize/resize/destroy cycles leave the engine's live GPU object counts (GpuObjectStats) unchanged.",
+      "tier": "G",
+      "profiles": ["gpu", "release"],
+      "requires": ["windows", "gpu-gl"],
+      "command": "powershell",
+      "workingDir": "{BIN}",
+      "args": [
+        "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
+        "{ACCEPTANCE}\\fixtures\\Run-WO08Render.ps1",
+        "-Bin", "{BIN}", "-CaseId", "R05", "-Suite", "WO-08 R05", "-MinTests", "2", "-DeadlineSec", "300",
+        "-Output", "{REPO}\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-08\\r05-{CONFIG}"
+      ],
+      "expectExit": 0,
+      "minTests": 2,
+      "deadlineSec": 360,
+      "fixture": "../../tests/render/render_wo08_rtt.cpp"
+    },
+    {
+      "id": "R06-G",
+      "description": "GPU read-back: a 641x359 RGBA8 target reads back 641x359x4 top-left-origin bytes with the corner markers at their indices, the row stride exact, alpha as the blend equation left it (half-alpha over an alpha-zero clear => 128,128,128,64), an out-of-range attachment failing without touching outputs, the capture round-tripping through the CPU PNG path byte for byte and agreeing with the harness Capture(); an RGBA16F target converts + clamps (2.0 -> 255, 0.25 -> 64, -1.0 -> 0, alpha 0.75 -> 191). The CPU half is in wo08-units.",
+      "tier": "G",
+      "profiles": ["gpu", "pr", "release"],
+      "requires": ["windows", "gpu-gl"],
+      "command": "powershell",
+      "workingDir": "{BIN}",
+      "args": [
+        "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
+        "{ACCEPTANCE}\\fixtures\\Run-WO08Render.ps1",
+        "-Bin", "{BIN}", "-CaseId", "R06-G", "-Suite", "WO-08 R06", "-MinTests", "2", "-DeadlineSec", "120",
+        "-Output", "{REPO}\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-08\\r06g-{CONFIG}"
+      ],
+      "expectExit": 0,
+      "minTests": 2,
+      "deadlineSec": 180,
+      "fixture": "../../tests/render/render_wo08_capture.cpp"
+    }
+  ]
+}

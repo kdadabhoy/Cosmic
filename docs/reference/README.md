@@ -149,6 +149,7 @@ script `tests/check_docs_coverage.ps1` (work order D5) diffs `Cosmic.h` against 
 | `graphics/Texture.h` | [graphics-resources.md](graphics-resources.md) |
 | `graphics/TextureCube.h` | [graphics-resources.md](graphics-resources.md) |
 | `graphics/FrameBuffer.h` | [graphics-resources.md](graphics-resources.md) |
+| `graphics/GpuObjectStats.h` | [graphics-resources.md](graphics-resources.md) |
 | `graphics/UniformBuffer.h` | [graphics-resources.md](graphics-resources.md) |
 | `graphics/StorageBuffer.h` | [graphics-resources.md](graphics-resources.md) |
 | `graphics/Material.h` | [graphics-resources.md](graphics-resources.md) |

@@ -9,6 +9,7 @@
 
 #include "platform/opengl/OpenGLShader.h"
 #include "platform/opengl/OpenGLContext.h"
+#include "graphics/GpuObjectStats.h"
 #include <vector>
 #include <glm/gtc/type_ptr.hpp>
 #include "core/Log.h"
@@ -67,6 +68,8 @@ namespace Cosmic
         // Skip the GL delete if the context is already gone (abort/teardown order) —
         // see OpenGLContext::HasCurrentContext(). The driver reclaims the program with
         // the context, so this leaks nothing.
+        if (m_RendererID != 0)
+            GpuObjectStats::Destroyed(GpuObjectStats::Kind::Shader);
         if (OpenGLContext::HasCurrentContext())
             glDeleteProgram(m_RendererID);
     }
@@ -466,6 +469,7 @@ namespace Cosmic
         }
 
         m_RendererID = program;
+        GpuObjectStats::Created(GpuObjectStats::Kind::Shader);
 
         // =========================================================================
         // ENGINE CORE AUTOMATION: Dynamic Sampler Array Initialization

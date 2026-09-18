@@ -20,7 +20,21 @@ add_executable(CosmicRenderTests
     GoldenImage.cpp
     render_2d.cpp
     render_3d.cpp
+    # WO-08 (2D stability) — the renderer / camera / capture safety net, R01–R07.
+    # Shared helpers in wo08_common.h; custom-shader fixtures under fixtures/wo08.
+    render_wo08_primitives.cpp
+    render_wo08_batches.cpp
+    render_wo08_instancing.cpp
+    render_wo08_camera.cpp
+    render_wo08_rtt.cpp
+    render_wo08_capture.cpp
+    render_wo08_perf.cpp
 )
+
+# WO-08 custom-shader fixtures (tint variants of the batch/instanced shaders) live
+# in the SOURCE tree; baked in as an absolute path like the golden dir.
+target_compile_definitions(CosmicRenderTests PRIVATE
+    COSMIC_WO08_FIXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/wo08")
 
 target_link_libraries(CosmicRenderTests PRIVATE Cosmic)
 target_include_directories(CosmicRenderTests PRIVATE

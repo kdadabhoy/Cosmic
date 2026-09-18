@@ -88,6 +88,11 @@ set(COSMIC_TEST_SOURCES
     test_wo07_p01.cpp
     # WO-07 L05 — 200 scripted SF_Telem UI cycles with per-action stack balance (WO07UiCyclesFixture).
     test_wo07_l05.cpp
+    # WO-08 (2D stability) — the headless halves of R04 (Camera2DController pan/zoom
+    # anchors, DPI/offsets, zoom range, nonfinite policy, 641x359, changing viewport)
+    # and R06 (CPU PNG encode/decode against an independent hand-built PNG oracle).
+    test_wo08_camera.cpp
+    test_wo08_png.cpp
     test_wo05_matrix.cpp
     test_wo05_kiss.cpp
     test_wo05_host.cpp

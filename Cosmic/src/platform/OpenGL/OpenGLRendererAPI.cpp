@@ -357,6 +357,13 @@ namespace Cosmic
 		return m_ZoneResults;
 	}
 
+	void OpenGLRendererAPI::FinishGpu()
+	{
+		// A full pipeline drain: returns once every command issued so far has
+		// executed. Measurement/teardown verb only (see RendererAPI.h).
+		glFinish();
+	}
+
 	/////////////////////////////////////////////////////////////////////////////////
 
 

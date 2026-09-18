@@ -293,6 +293,13 @@ namespace Cosmic
 			return s_RendererAPI->GetGpuZoneResults();
 		}
 
+		/** @brief Block until every issued GPU command has completed. Measurement /
+		 *  teardown only (WO-08 R07 timing fence) — never inside a frame loop. */
+		inline static void FinishGpu()
+		{
+			s_RendererAPI->FinishGpu();
+		}
+
 	private:
 		/**
 		 * @brief Internal pointer to the active API implementation.

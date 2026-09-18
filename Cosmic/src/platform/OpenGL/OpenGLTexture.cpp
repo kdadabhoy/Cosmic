@@ -9,6 +9,7 @@
 
 #include "platform/opengl/OpenGLTexture.h"
 #include "platform/opengl/OpenGLContext.h"
+#include "graphics/GpuObjectStats.h"
 #include <stb_image.h>
 #include "core/Log.h"
 
@@ -30,6 +31,7 @@ namespace Cosmic
 		m_DataFormat = GL_RGBA;
 
 		glGenTextures(1, &m_RendererID);
+		GpuObjectStats::Created(GpuObjectStats::Kind::Texture);
 		glBindTexture(GL_TEXTURE_2D, m_RendererID);
 
 		// Mipmapped procedural textures (e.g. tiling detail maps sampled at
@@ -122,6 +124,7 @@ namespace Cosmic
 			m_DataFormat = dataFormat;
 
 			glGenTextures(1, &m_RendererID);
+			GpuObjectStats::Created(GpuObjectStats::Kind::Texture);
 			glBindTexture(GL_TEXTURE_2D, m_RendererID);
 
 			// Setup Filtering - Using Linear Mipmap for smoother scaling at distances
@@ -182,6 +185,7 @@ namespace Cosmic
 		m_DataFormat     = GL_RGBA;
 
 		glGenTextures(1, &m_RendererID);
+		GpuObjectStats::Created(GpuObjectStats::Kind::Texture);
 		glBindTexture(GL_TEXTURE_2D, m_RendererID);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -239,6 +243,7 @@ namespace Cosmic
 		m_DataFormat     = dataFormat;
 
 		glGenTextures(1, &m_RendererID);
+		GpuObjectStats::Created(GpuObjectStats::Kind::Texture);
 		glBindTexture(GL_TEXTURE_2D, m_RendererID);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -288,6 +293,8 @@ namespace Cosmic
 		// or static destruction at process exit), glDeleteTextures would fault inside
 		// opengl32.dll. The driver already reclaimed the GPU memory when the context
 		// died, so skipping the call here leaks nothing.
+		if (m_RendererID != 0)
+			GpuObjectStats::Destroyed(GpuObjectStats::Kind::Texture);
 		if (m_RendererID != 0 && OpenGLContext::HasCurrentContext())
 			glDeleteTextures(1, &m_RendererID);
 	}

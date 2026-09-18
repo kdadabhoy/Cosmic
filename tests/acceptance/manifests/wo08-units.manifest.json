@@ -1,0 +1,31 @@
+{
+  "manifest": "wo08-units",
+  "cases": [
+    {
+      "id": "R04-U",
+      "description": "Camera2DController headless: ScreenToWorld round trips (51,840 samples) and the controller's own projection against an independent pinhole model, zoom-about-cursor anchor drift and PanBy under 100/125/150/200 % DPI viewports with and without screen offsets and the 641x359 target, all <= 0.5 px inside the declared local envelope (|focus| <= 1000*zoom, |world-focus| <= 4*zoom*max(aspect,1)); zoom range 0.01..10,000 (zero/negative clamp); the nonfinite input policy (NaN/inf zoom, focus, size, rect, bounds, scroll all rejected, projection stays finite); FrameBounds degenerate boxes; a changing viewport incl. 0x0.",
+      "tier": "U",
+      "profiles": ["pr", "release"],
+      "requires": ["windows"],
+      "command": "{BIN}\\CosmicTests.exe",
+      "args": ["--test-case=WO-08 R04*", "--no-colors"],
+      "expectExit": 0,
+      "minTests": 8,
+      "deadlineSec": 120,
+      "fixture": "../../tests/test_wo08_camera.cpp"
+    },
+    {
+      "id": "R06-U",
+      "description": "CPU PNG encode/decode: an exact 7x5 4-corner RGBA fixture (alpha 255/128/64/0 corners, RGB kept under alpha 0) round-trips WritePNG -> ReadPixels byte for byte; the file's signature/IHDR (width, height, bit depth 8, colour type 6, CRC) is checked by parsing the bytes; decode orientation is proven against a PNG the test builds by hand (stored-deflate + adler32 + crc32); invalid args (null data, zero/negative dims, 0/5 channels), a missing directory, an empty path, a missing file, a non-image file and a truncated PNG all fail leaving outputs untouched; ResizeRgba copy / box average / bilinear / degenerate no-ops.",
+      "tier": "U",
+      "profiles": ["pr", "release"],
+      "requires": ["windows"],
+      "command": "{BIN}\\CosmicTests.exe",
+      "args": ["--test-case=WO-08 R06*", "--no-colors"],
+      "expectExit": 0,
+      "minTests": 4,
+      "deadlineSec": 120,
+      "fixture": "../../tests/test_wo08_png.cpp"
+    }
+  ]
+}

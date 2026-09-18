@@ -2158,6 +2158,67 @@ Cosmic::RenderCommand::EndGpuZone();
   returning the last non-empty frame.
 - `name` is copied into a `std::string` per zone per frame. Keep zones coarse.
 
+### `RenderCommand::FinishGpu`
+
+```cpp
+inline static void FinishGpu();
+```
+
+**What it does** — blocks the calling thread until every GPU command issued so far has completed
+(`glFinish` on the OpenGL backend). Added by WO-08 as the R07 timing fence: a "complete frame" time
+that includes the GPU finishing, without a pixel read-back standing in for the wait.
+
+**Notes & pitfalls**
+- **Never inside a production frame loop** — it serializes CPU and GPU and throws away the whole
+  pipelining the swap chain gives you. Measurement harnesses and teardown only.
+- It says nothing about presentation; it is not a vsync.
+
+---
+
+## `GpuObjectStats`
+
+Declared in `Cosmic/src/graphics/GpuObjectStats.h`. Live counts of the GPU objects the **engine**
+owns, by class, maintained at the platform layer's create/delete sites (WO-08 R05 observation probe).
+
+```cpp
+struct GpuObjectCounts
+{
+    uint32_t Framebuffers, FramebufferAttachments, Textures, Buffers, VertexArrays, Shaders;
+    uint32_t Total() const;
+    bool operator==(const GpuObjectCounts&) const;   // and !=
+};
+
+class GpuObjectStats
+{
+public:
+    enum class Kind { Framebuffer, FramebufferAttachment, Texture, Buffer, VertexArray, Shader };
+    static GpuObjectCounts Live();                            // snapshot
+    static void Created(Kind kind, uint32_t n = 1);           // platform-layer hooks
+    static void Destroyed(Kind kind, uint32_t n = 1);
+};
+```
+
+**What it does** — `Live()` answers "how many framebuffers / attachment textures / `Texture2D`s /
+vertex+index buffers / VAOs / linked programs does the engine hold right now?" from engine
+bookkeeping, not from driver name reuse. `FramebufferAttachments` counts the colour + depth textures a
+`FrameBuffer` allocates for itself (`Resize` replaces them — the count does not grow). The counters
+are atomics; a destructor that skips its GL delete because the context is already gone still
+decrements (the object is gone either way).
+
+**Example**
+
+```cpp
+const Cosmic::GpuObjectCounts before = Cosmic::GpuObjectStats::Live();
+// … create / resize / destroy targets …
+CHECK(Cosmic::GpuObjectStats::Live() == before);   // nothing retained
+```
+
+**Notes & pitfalls**
+- Pure telemetry: no engine code reads it back into a decision, and `Created` / `Destroyed` are for
+  the platform layer only — a client must not call them.
+- Not every GPU object class is counted (cube maps, uniform/storage buffers and GPU timer queries are
+  not); the six classes are the ones a 2D scene creates and destroys per frame.
+
 ---
 
 ## `Renderer`

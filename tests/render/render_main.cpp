@@ -91,6 +91,12 @@ int main(int argc, char** argv)
     // and Show()s it later), so nothing pops up over the user's desktop.
     auto window = std::make_unique<Cosmic::Window>(640, 360, "CosmicRenderTests");
 
+    // No frame is ever presented here (every suite renders offscreen), so vsync
+    // has nothing to throttle; it is switched off anyway so the R07 performance
+    // record (WO-08) can state "vsync off" as a fact of the harness, not an
+    // assumption.
+    window->SetVSync(false);
+
     // Renderer::Init()'s body, spelled out. The Renderer facade is the one
     // renderer class without COSMIC_API, so it is not callable across the DLL
     // boundary; its three subsystem calls all are. Spelling them out is also

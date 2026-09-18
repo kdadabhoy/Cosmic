@@ -226,6 +226,13 @@ namespace Cosmic
 		virtual void GpuFrameMark() = 0;
 		virtual const std::vector<GpuZoneResult>& GetGpuZoneResults() const = 0;
 
+		// Block the calling thread until every previously issued GPU command has
+		// completed (glFinish). A measurement/teardown verb for harnesses that must
+		// time a COMPLETE frame (WO-08 R07) without a readback standing in for the
+		// fence; never call it inside a production frame loop — it serializes CPU
+		// and GPU. A None/DirectX backend maps it to its own fence wait.
+		virtual void FinishGpu() = 0;
+
 		////////////////////////////////
 		// Global API Accessor
 		///////////////////////////////

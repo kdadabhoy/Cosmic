@@ -1,6 +1,7 @@
 #include <glad/glad.h>
 #include "platform/opengl/OpenGLBuffer.h"
 #include "platform/opengl/OpenGLContext.h"
+#include "graphics/GpuObjectStats.h"
 
 namespace Cosmic
 {
@@ -15,6 +16,7 @@ namespace Cosmic
 	OpenGLVertexBuffer::OpenGLVertexBuffer(uint32_t size)
 	{
 		glGenBuffers(1, &m_RendererID);
+		GpuObjectStats::Created(GpuObjectStats::Kind::Buffer);
 		glBindBuffer(GL_ARRAY_BUFFER, m_RendererID);
 		glBufferData(GL_ARRAY_BUFFER, size, nullptr, GL_DYNAMIC_DRAW);
 	}
@@ -30,6 +32,7 @@ namespace Cosmic
 	OpenGLVertexBuffer::OpenGLVertexBuffer(float* vertices, uint32_t size)
 	{
 		glGenBuffers(1, &m_RendererID);
+		GpuObjectStats::Created(GpuObjectStats::Kind::Buffer);
 		glBindBuffer(GL_ARRAY_BUFFER, m_RendererID);
 		glBufferData(GL_ARRAY_BUFFER, size, vertices, GL_STATIC_DRAW);
 	}
@@ -45,6 +48,7 @@ namespace Cosmic
 		// Skip the GL delete if the context is already gone (abort/teardown order) —
 		// see OpenGLContext::HasCurrentContext(). The driver reclaims the buffer with
 		// the context, so this leaks nothing.
+		GpuObjectStats::Destroyed(GpuObjectStats::Kind::Buffer);
 		if (OpenGLContext::HasCurrentContext())
 			glDeleteBuffers(1, &m_RendererID);
 	}
@@ -97,6 +101,7 @@ namespace Cosmic
 		: m_Count(count)
 	{
 		glGenBuffers(1, &m_RendererID);
+		GpuObjectStats::Created(GpuObjectStats::Kind::Buffer);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_RendererID);
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, count * sizeof(uint32_t), indices, GL_STATIC_DRAW);
 	}
@@ -112,6 +117,7 @@ namespace Cosmic
 		// Skip the GL delete if the context is already gone (abort/teardown order) —
 		// see OpenGLContext::HasCurrentContext(). The driver reclaims the buffer with
 		// the context, so this leaks nothing.
+		GpuObjectStats::Destroyed(GpuObjectStats::Kind::Buffer);
 		if (OpenGLContext::HasCurrentContext())
 			glDeleteBuffers(1, &m_RendererID);
 	}

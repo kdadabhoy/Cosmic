@@ -621,12 +621,13 @@ in an editor also `&& !Gizmo::IsUsing() && !Gizmo::IsOver()`.
 ### `Camera2DController::SetFocus` / `GetFocus`
 
 ```cpp
-void             SetFocus(const glm::vec2& xy) { m_Focus = xy; Recalculate(); }
+void             SetFocus(const glm::vec2& xy);
 const glm::vec2& GetFocus() const              { return m_Focus; }
 ```
 
 **What it does** — the view centre in world XY. Setting it rebuilds immediately. **No clamping** —
-this rig has no position limits.
+this rig has no position limits — but a **NaN or infinite focus is rejected** (no-op, the previous
+focus stays): see the input policy under `SetZoom`.
 
 ### `Camera2DController::SetZoom` / `GetZoom` / `GetAspect`
 
@@ -647,6 +648,13 @@ cam.SetZoom(6.0f);   // 12 world units of visible height, whatever the aspect
 
 **Notes & pitfalls**
 - Out-of-range values are clamped, not rejected — `GetZoom()` after `SetZoom(0.0f)` reads `0.01`.
+- **Input policy (WO-08 R04, KI-38).** A **NaN or ±inf** zoom, focus, `OnResize` size,
+  `SetViewportRect` rect, `FrameBounds` box, constructor aspect or scroll amount is **rejected**:
+  the call is a no-op and the last valid state stays, so the view-projection is always finite. (Before
+  the fix `SetZoom(NaN)` stored NaN — `std::clamp` passes it through — and the viewport went blank
+  until a finite zoom arrived.) Zero/negative sizes are ignored as before. The static helpers
+  (`ScreenToWorld` / `PanBy` / `ZoomAboutPoint`) return `focus` unchanged for a non-finite input, a
+  zero viewport height or a non-positive zoom.
 
 ### `Camera2DController::VisibleRect`
 

@@ -1055,6 +1055,12 @@ struct Statistics
     uint32_t CircleCount = 0;
     uint32_t LineCount = 0;
 
+    // WO-08 observation counters (pure telemetry; the historical four keep their meaning).
+    uint32_t Flushes = 0;             // Flush() invocations (auto + explicit); each may issue 0..4 draws
+    uint32_t InstanceDrawCalls = 0;   // DrawIndexedInstanced chunks issued by the two instanced pipelines
+    uint32_t InstanceCount = 0;       // instances streamed to the GPU across those chunks
+    uint32_t GlyphCount = 0;          // visible SDF glyph quads emitted by DrawString
+
     uint32_t GetTotalVertexCount() const { return QuadCount * 4 + CircleCount * 4 + LineCount * 2; }
     // Quads and SDF circles each emit 6 indices (two triangles). Lines are
     // non-indexed (glDrawArrays) and therefore contribute nothing here.
@@ -1071,6 +1077,10 @@ until something calls `ResetStats()`** — and nothing in the engine does.
 | `QuadCount` | one per quad from any quad overload, **one per visible text glyph**, `+batchSize` per instanced-quad chunk |
 | `CircleCount` | one per batched circle, `+batchSize` per instanced-circle chunk |
 | `LineCount` | one per `DrawLine` — so a `DrawRect` is 4 |
+| `Flushes` | one per `Flush()` call — the automatic ones at a batch limit / texture-slot rollover / material or circle-shader change / instanced call, and the pass push/pop ones. A flush can be **empty** (entering a Material bucket from an empty default bucket flushes nothing but still counts), so `Flushes >= ` the number of batches drawn |
+| `InstanceDrawCalls` | one per instanced chunk (`ceil(N / 20,000)` per `DrawInstancedCircles` / `DrawInstancedQuads` call) — the same chunks also tick `DrawCalls` |
+| `InstanceCount` | `+batchSize` per instanced chunk, i.e. the instances actually streamed |
+| `GlyphCount` | one per **visible** glyph quad from `DrawString` (whitespace advances the pen without counting; an unknown byte counts once as its `'?'` fallback). `QuadCount` still counts glyphs too, unchanged |
 
 `GetTotalIndexCount()` deliberately excludes lines because they go through `glDrawArrays`.
 
