@@ -1,0 +1,22 @@
+﻿WO-07 L05 - 200 scripted UI cycles (SF_Telem host + editor host), acceptance-runner summary.
+(Exact action logs: l05-runner-<cfg>/l05-actions.txt and l05-editor-runner-<cfg>/l05-editor-actions.txt; screenshots l05-*shot-*.png; all committed.)
+
+=== Debug ===
+  WO07 L05: cycles=200 actions=2080 failed=0 screens=1000 mismatch=0 serial[closed=67 open=67 lost=66] replay[load=200 unload=200] dialogs[opened=20 cancelled=20] window[min=40 restore=40 resize=40 fullscreen=16 undock=40 redock=40] shots=6 oracle[errors=0 leaks=0 drift=0 layer=0]
+  action log: 2082 lines, 0 failed actions, screenshots: 6
+[doctest] test cases: 1 | 1 passed | 0 failed
+  L05_EDITOR_RESULT=PASS config=Debug cycles=200 actions=2240 failed=0 clicks=1200/1200 presets=200 plays=20 errors=0 leaks=0 strip=0 chip=0
+  action log: 2242 lines, 0 failed actions, screenshots: 6
+[doctest] test cases: 1 | 1 passed | 0 failed
+
+=== Release ===
+  WO07 L05: cycles=200 actions=2080 failed=0 screens=1000 mismatch=0 serial[closed=67 open=67 lost=66] replay[load=200 unload=200] dialogs[opened=20 cancelled=20] window[min=40 restore=40 resize=40 fullscreen=16 undock=40 redock=40] shots=6 oracle[errors=0 leaks=0 drift=0 layer=0]
+  action log: 2082 lines, 0 failed actions, screenshots: 6
+[doctest] test cases: 1 | 1 passed | 0 failed
+  L05_EDITOR_RESULT=PASS config=Release cycles=200 actions=2240 failed=0 clicks=1200/1200 presets=200 plays=20 errors=0 leaks=0 strip=0 chip=0
+  action log: 2242 lines, 0 failed actions, screenshots: 6
+[doctest] test cases: 1 | 1 passed | 0 failed
+
+=== runner verdicts ===
+Debug   L05-sftelem=PASSED L05-editor=PASSED
+Release   L05-sftelem=PASSED L05-editor=PASSED

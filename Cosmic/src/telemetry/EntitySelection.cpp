@@ -3,6 +3,8 @@
 
 #include "telemetry/EntitySelection.h"
 
+#include <algorithm>   // std::find_if (Unsubscribe / Notify liveness check)
+
 namespace Cosmic
 {
     // =========================================================================
@@ -109,16 +111,34 @@ namespace Cosmic
 
     void EntitySelection::Notify(const std::string& name, const std::string& tag)
     {
-        // Snapshot so new subscriptions registered inside a callback don't invalidate
-        // the iterator, and so the mutex is not held while callbacks execute.
-        std::vector<Subscription> snapshot;
+        // Snapshot the HANDLES so new subscriptions registered inside a callback
+        // don't invalidate the iterator, and so the mutex is not held while callbacks
+        // execute. Then re-fetch each callback under the mutex right before calling
+        // it: a listener that an earlier callback of this same dispatch unsubscribed
+        // (typically because its owner was torn down) must NOT fire — the rule the
+        // per-scene EventBus already follows (WO-07 / KI-32; the old code copied the
+        // callbacks themselves and invoked removed ones).
+        std::vector<SubscriptionHandle> handles;
         {
             std::lock_guard<std::mutex> lock(s_Mutex);
-            snapshot = s_Callbacks;
+            handles.reserve(s_Callbacks.size());
+            for (const auto& sub : s_Callbacks)
+                handles.push_back(sub.id);
         }
 
-        for (auto& sub : snapshot)
-            sub.cb(name, tag);
+        for (SubscriptionHandle id : handles)
+        {
+            std::function<void(const std::string&, const std::string&)> cb;
+            {
+                std::lock_guard<std::mutex> lock(s_Mutex);
+                auto it = std::find_if(s_Callbacks.begin(), s_Callbacks.end(),
+                    [id](const Subscription& s) { return s.id == id; });
+                if (it == s_Callbacks.end())
+                    continue;   // unsubscribed since the snapshot — do not fire
+                cb = it->cb;
+            }
+            cb(name, tag);
+        }
     }
 
 } // namespace Cosmic

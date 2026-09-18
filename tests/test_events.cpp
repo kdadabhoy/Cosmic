@@ -54,3 +54,36 @@ TEST_CASE("T3: WindowFileDropEvent dispatches through EventDispatcher to the dro
     CHECK(droppedFired);
     CHECK(e.Handled);   // the matching handler returned true
 }
+
+// WO-07 L04 (2D stability, KI-32): a listener removed from INSIDE a dispatch must not
+// fire in that same dispatch (the EventBus rule). Listener A unsubscribes B; the
+// dispatch that A runs in must not reach B. Headless twin of the L04 host probe.
+#include "telemetry/EntitySelection.h"
+
+TEST_CASE("WO-07 L04: EntitySelection does not invoke a listener unsubscribed during dispatch")
+{
+    using Cosmic::EntitySelection;
+    int aFired = 0, bFired = 0, cFired = 0;
+    EntitySelection::SubscriptionHandle b = 0;
+    auto a = EntitySelection::OnChanged([&](const std::string&, const std::string&)
+    {
+        ++aFired;
+        if (b) { EntitySelection::Unsubscribe(b); b = 0; }   // remove B mid-dispatch
+    });
+    b = EntitySelection::OnChanged([&](const std::string&, const std::string&) { ++bFired; });
+    auto c = EntitySelection::OnChanged([&](const std::string&, const std::string&) { ++cFired; });
+
+    EntitySelection::SetByName("wo07-l04-probe");
+    CHECK(aFired == 1);
+    CHECK(bFired == 0);   // removed before its turn: must not fire
+    CHECK(cFired == 1);   // later listeners still fire (non-vacuous)
+
+    EntitySelection::SetByName("wo07-l04-probe-2");
+    CHECK(aFired == 2);
+    CHECK(bFired == 0);
+    CHECK(cFired == 2);
+
+    EntitySelection::Unsubscribe(a);
+    EntitySelection::Unsubscribe(c);
+    EntitySelection::Clear();
+}

@@ -1,0 +1,15 @@
+WO-07 L04 failing-before (Debug, engine at HEAD fe3d807 + WO-07 L02 fixes; EntitySelection unchanged).
+CosmicTests.exe --test-case="WO-07 L04 host: teardown during live background activity" --no-skip=true, COSMIC_WO07_L04_CASE=0
+Captured 2026-09-18 02:31 on DESKTOP-SEOA4BT.
+
+The fixture's listener A unsubscribes listener B from INSIDE an EntitySelection dispatch (3 probe
+dispatches while live); B fired in every one of those dispatches after being removed:
+
+C:\dev\Cosmic\tests\test_wo07_l04.cpp(277): ERROR: CHECK( rep.esRemovedMidDispatchFired == 0 ) is NOT correct!
+  values: CHECK( {?} == 0 )
+WO07 L04 mode=0 detachMs=7 serialCloseMs=7 bytesPushed=3 duringDetach=0 live[sel=10 sink=13 hotkey=9 bus=9 watch=16 serialBytes=78] esProbe=3 esStale=3 busStale=0 threads base=29 warm=33 post=30 handles base=505 warm=520 post=510 close=0ms
+
+(esProbe=3 dispatches, esStale=3 removed-listener invocations; busStale=0 — the per-scene EventBus
+re-checks liveness before each call and is correct. The second failed CHECK in this run,
+postThreads == baselineThreads, was the harness's own mode-0 releaser thread still alive and is
+fixed in the harness, not the engine.)

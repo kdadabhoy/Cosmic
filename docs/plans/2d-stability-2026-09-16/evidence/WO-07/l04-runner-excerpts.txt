@@ -1,0 +1,32 @@
+﻿WO-07 L04 - teardown during live background activity, acceptance-runner summary.
+(Per-child records are in l04-runner-<cfg>/children.json (committed); the gitignored .out.log files hold the raw stdout.)
+
+=== Debug (l04-Debug/L04.out.log) ===
+reload (mode 0) cycles completed=20
+close (mode 1) cycles completed=10
+careless (mode 2) cycles completed=10
+module registry cycles completed=10
+[doctest] test cases: 50 | 50 passed | 0 failed
+
+--- one child of each kind (Debug; from l04-runner-Debug/*.out.log) ---
+WO07 L04 mode=0 detachMs=0 serialCloseMs=0 bytesPushed=59753 duringDetach=208 live[sel=20 sink=23 hotkey=19 bus=19 watch=36 serialBytes=1469022] esProbe=6 esStale=0 busStale=0 threads base=29 warm=32 post=29 handles base=522 warm=537 post=527 close=0ms
+WO07 L04 mode=1 detachMs=0 serialCloseMs=0 bytesPushed=389933 duringDetach=149 live[sel=21 sink=26 hotkey=20 bus=20 watch=38 serialBytes=1457634] esProbe=7 esStale=0 busStale=0 threads base=29 warm=33 post=0 handles base=523 warm=538 post=0 close=250ms
+WO07 L04 mode=2 detachMs=0 serialCloseMs=0 bytesPushed=61462 duringDetach=181 live[sel=20 sink=23 hotkey=19 bus=19 watch=36 serialBytes=1460130] esProbe=6 esStale=0 busStale=0 threads base=29 warm=33 post=29 handles base=523 warm=538 post=528 close=0ms
+WO07 L04 module registry: frames=17 cleanAfterFirst=1 reloaded=1 cleanAfterSecond=1
+
+=== Release (l04-Release/L04.out.log) ===
+reload (mode 0) cycles completed=20
+close (mode 1) cycles completed=10
+careless (mode 2) cycles completed=10
+module registry cycles completed=10
+[doctest] test cases: 50 | 50 passed | 0 failed
+
+--- one child of each kind (Release; from l04-runner-Release/*.out.log) ---
+WO07 L04 mode=0 detachMs=0 serialCloseMs=0 bytesPushed=88432 duringDetach=234 live[sel=20 sink=23 hotkey=19 bus=19 watch=36 serialBytes=1500326] esProbe=6 esStale=0 busStale=0 threads base=29 warm=32 post=29 handles base=522 warm=537 post=527 close=0ms
+WO07 L04 mode=1 detachMs=0 serialCloseMs=0 bytesPushed=403554 duringDetach=130 live[sel=21 sink=26 hotkey=20 bus=20 watch=38 serialBytes=1523024] esProbe=7 esStale=0 busStale=0 threads base=29 warm=33 post=0 handles base=523 warm=538 post=0 close=234ms
+WO07 L04 mode=2 detachMs=0 serialCloseMs=0 bytesPushed=63797 duringDetach=174 live[sel=20 sink=23 hotkey=19 bus=19 watch=36 serialBytes=1475704] esProbe=6 esStale=0 busStale=0 threads base=29 warm=33 post=29 handles base=523 warm=538 post=528 close=0ms
+WO07 L04 module registry: frames=17 cleanAfterFirst=1 reloaded=1 cleanAfterSecond=1
+
+=== runner verdicts ===
+Debug   L04=PASSED
+Release   L04=PASSED

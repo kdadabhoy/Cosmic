@@ -1,0 +1,25 @@
+{
+  "manifest": "wo07-l04",
+  "cases": [
+    {
+      "id": "L04",
+      "description": "Teardown during live background activity (runtime plugin): 20 reloads requested from inside a selection dispatch while a job is blocked on an exe-owned barrier, the file watcher is delivering, serial bytes stream in over the fake transport and selection/log/hotkey/EventBus listeners fire every frame (then a quiescence window keeps every path firing); 10 WM_CLOSE-while-job-blocked closes (2 s bar); 10 careless-plugin unloads (job released only after detach; the engine must not let the worker run into freed code); 10 real CS_MODULE load/unload/load/unload cycles hosted by PlayerLayer with the registry asserted clean after each unload. Each child asserts ordering, no invocation into unloaded code, listener-removed-mid-dispatch never fires, owned resources balanced and scenario threads back to the warmed baseline.",
+      "tier": "G",
+      "profiles": ["gpu", "nightly", "release"],
+      "requires": ["windows", "gpu-gl"],
+      "command": "powershell",
+      "workingDir": "{BIN}",
+      "args": [
+        "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
+        "{ACCEPTANCE}\\fixtures\\Run-WO07Teardown.ps1",
+        "-Bin", "{BIN}",
+        "-Output", "{REPO}\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-07\\l04-runner-{CONFIG}",
+        "-ReloadCount", "20", "-CloseCount", "10", "-CarelessCount", "10", "-ModuleCount", "10"
+      ],
+      "expectExit": 0,
+      "minTests": 50,
+      "deadlineSec": 1200,
+      "fixture": "../../tests/WO07TeardownFixture.cpp"
+    }
+  ]
+}

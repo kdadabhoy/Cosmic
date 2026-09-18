@@ -797,6 +797,20 @@ namespace Cosmic
 			m_Window->ClearFullscreenHotkeyOverride();
 		}
 
+		// 2b. Let every job finish BEFORE the image goes away (WO-07 / KI-33). A job
+		//     the plugin submitted is a callable whose code lives in the plugin DLL;
+		//     the JobSystem has no cancellation, so anything still queued — or still
+		//     blocked inside the DLL because the plugin did not join it in OnDetach —
+		//     would resume in unmapped memory after FreeLibrary. The full-shutdown
+		//     path already drains the pool before it gets here (JobSystem::Shutdown
+		//     runs first); this makes the reload / return-to-launcher path equally
+		//     safe. Only while the pool is up: after Shutdown there are no workers
+		//     and nothing can run.
+		if (JobSystem::Get().IsInitialized())
+		{
+			JobSystem::Get().WaitIdle();
+		}
+
 		// 3. Clear the ENGINE's active-project binding (set at load step 5). Project
 		//    themes/fonts loaded at mount stay REGISTERED — the registries are
 		//    additive by design: Register() replaces by name on the next mount, and

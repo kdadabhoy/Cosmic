@@ -1,0 +1,10 @@
+WO-07 L04 failing-before (Debug, Application::UnloadProjectDLL at HEAD fe3d807 — no job drain before FreeLibrary).
+CosmicTests.exe --test-case="WO-07 L04 host: teardown during live background activity" --no-skip=true, COSMIC_WO07_L04_CASE=2
+(careless plugin: OnDetach does NOT join its in-flight job; the exe releases the job's barrier 300 ms after detach)
+Captured 2026-09-18 02:34 on DESKTOP-SEOA4BT.
+
+exit=-1073741819 (0xC0000005 ACCESS VIOLATION)
+[COSMIC] [warning] WorkspaceLayer: Clearing client layer: WO07 L04 teardown
+[COSMIC] [info] Project DLL safely unmounted and unloaded.      <- FreeLibrary with the plugin's job still blocked on a worker
+[doctest] test cases: 1 | 0 passed | 1 failed | 393 skipped     <- the worker resumed in the unmapped image and the process died
+[doctest] assertions: 1 | 1 passed | 0 failed |

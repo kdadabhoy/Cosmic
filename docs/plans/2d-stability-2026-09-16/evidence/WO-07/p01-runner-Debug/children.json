@@ -1,0 +1,80 @@
+﻿[
+    {
+        "id":  "p01-i0",
+        "tier":  "G",
+        "description":  "P01 ImPlot known data under 50 in-process plugin reloads (adopted contexts)",
+        "requires":  [
+                         "windows",
+                         "gpu-gl"
+                     ],
+        "transport":  "none",
+        "seed":  null,
+        "start_utc":  "2026-09-18T09:47:28.9877653Z",
+        "deadline_sec":  120,
+        "exercised":  "production",
+        "command":  "C:\\dev\\Cosmic\\build\\Runtime\\Debug\\CosmicTests.exe \"--test-case=WO-07 P01 host*\" --no-skip=true --no-colors",
+        "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-07\\p01-runner-Debug\\p01-i0.out.log",
+        "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-07\\p01-runner-Debug\\p01-i0.err.log",
+        "pid":  26364,
+        "exit_code":  0,
+        "crash":  false,
+        "tests_passed":  1,
+        "tests_expected_min":  1,
+        "verdict":  "PASSED",
+        "detail":  "exit 0 as expected",
+        "duration_sec":  2.598,
+        "end_utc":  "2026-09-18T09:47:31.5939992Z"
+    },
+    {
+        "id":  "p01-i1",
+        "tier":  "G",
+        "description":  "P01 ImPlot known data under 50 in-process plugin reloads (adopted contexts)",
+        "requires":  [
+                         "windows",
+                         "gpu-gl"
+                     ],
+        "transport":  "none",
+        "seed":  null,
+        "start_utc":  "2026-09-18T09:47:31.6209779Z",
+        "deadline_sec":  120,
+        "exercised":  "production",
+        "command":  "C:\\dev\\Cosmic\\build\\Runtime\\Debug\\CosmicTests.exe \"--test-case=WO-07 P01 host*\" --no-skip=true --no-colors",
+        "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-07\\p01-runner-Debug\\p01-i1.out.log",
+        "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-07\\p01-runner-Debug\\p01-i1.err.log",
+        "pid":  5060,
+        "exit_code":  0,
+        "crash":  false,
+        "tests_passed":  1,
+        "tests_expected_min":  1,
+        "verdict":  "PASSED",
+        "detail":  "exit 0 as expected",
+        "duration_sec":  2.549,
+        "end_utc":  "2026-09-18T09:47:34.1699267Z"
+    },
+    {
+        "id":  "p01-i2",
+        "tier":  "G",
+        "description":  "P01 ImPlot known data under 50 in-process plugin reloads (adopted contexts)",
+        "requires":  [
+                         "windows",
+                         "gpu-gl"
+                     ],
+        "transport":  "none",
+        "seed":  null,
+        "start_utc":  "2026-09-18T09:47:34.1819297Z",
+        "deadline_sec":  120,
+        "exercised":  "production",
+        "command":  "C:\\dev\\Cosmic\\build\\Runtime\\Debug\\CosmicTests.exe \"--test-case=WO-07 P01 host*\" --no-skip=true --no-colors",
+        "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-07\\p01-runner-Debug\\p01-i2.out.log",
+        "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-07\\p01-runner-Debug\\p01-i2.err.log",
+        "pid":  12856,
+        "exit_code":  0,
+        "crash":  false,
+        "tests_passed":  1,
+        "tests_expected_min":  1,
+        "verdict":  "PASSED",
+        "detail":  "exit 0 as expected",
+        "duration_sec":  2.564,
+        "end_utc":  "2026-09-18T09:47:36.7461904Z"
+    }
+]

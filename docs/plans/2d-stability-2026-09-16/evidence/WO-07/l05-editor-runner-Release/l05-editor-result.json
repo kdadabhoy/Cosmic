@@ -1,0 +1,23 @@
+{
+  "work_order": "WO-07",
+  "case": "L05 editor scripted UI cycles",
+  "config": "Release",
+  "cycles_planned": 200,
+  "cycles_done": 200,
+  "actions": 2240,
+  "actions_failed": 0,
+  "chip_clicks": 1200,
+  "chip_clicks_registered": 1200,
+  "layout_presets": 200,
+  "viewport_toggles": 400,
+  "play_sessions": 20,
+  "minimizes": 40,
+  "resizes": 40,
+  "fullscreen_toggles": 16,
+  "screenshots": 6,
+  "oracle": { "recovered_errors": 0, "end_frame_leaks": 0, "context_drift": 0, "strip_imbalance": 0, "chip_color_delta": 0 },
+  "harness_failures": 0,
+  "verdict": "PASS",
+  "failed_actions": [
+  ]
+}

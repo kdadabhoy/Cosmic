@@ -81,6 +81,13 @@ set(COSMIC_TEST_SOURCES
     # WO-07 (2D stability) — L01 runtime-plugin (F-LIFETIME) teardown host. Skipped
     # by default (needs a real Application/window/GL); the WO-04 runner launches it.
     test_wo07_host.cpp
+    # WO-07 L04 — teardown during live background activity (WO07TeardownFixture) and
+    # the runtime-path registry lifecycle (WO07ModuleFixture). Skipped by default.
+    test_wo07_l04.cpp
+    # WO-07 P01 — ImPlot lifetime + known data under 50 plugin reloads (WO07PlotFixture).
+    test_wo07_p01.cpp
+    # WO-07 L05 — 200 scripted SF_Telem UI cycles with per-action stack balance (WO07UiCyclesFixture).
+    test_wo07_l05.cpp
     test_wo05_matrix.cpp
     test_wo05_kiss.cpp
     test_wo05_host.cpp
@@ -176,6 +183,38 @@ add_library(WO07NoExport SHARED WO07NoExport.cpp)
 set_target_properties(WO07NoExport PROPERTIES RUNTIME_OUTPUT_DIRECTORY
     "${COSMIC_SDK_DIR}/build/Runtime/$<CONFIG>")
 add_dependencies(CosmicTests WO07NoExport)
+
+# WO-07 L04 — the teardown-during-live-activity plugin (job blocked on an exe-owned
+# barrier, file watcher, serial over FakeSerialTransport, selection/log/hotkey
+# listeners, EventBus, GPU objects) and a REAL CS_MODULE game module hosted by the
+# real PlayerLayer (registry lifecycle across repeated loads).
+add_library(WO07TeardownFixture SHARED WO07TeardownFixture.cpp)
+target_link_libraries(WO07TeardownFixture PRIVATE Cosmic)
+set_target_properties(WO07TeardownFixture PROPERTIES RUNTIME_OUTPUT_DIRECTORY
+    "${COSMIC_SDK_DIR}/build/Runtime/$<CONFIG>")
+add_dependencies(CosmicTests WO07TeardownFixture)
+add_library(WO07ModuleFixture SHARED WO07ModuleFixture.cpp)
+target_link_libraries(WO07ModuleFixture PRIVATE Cosmic)
+set_target_properties(WO07ModuleFixture PROPERTIES RUNTIME_OUTPUT_DIRECTORY
+    "${COSMIC_SDK_DIR}/build/Runtime/$<CONFIG>")
+add_dependencies(CosmicTests WO07ModuleFixture)
+
+# WO-07 P01 — the ImPlot known-data plugin (adopts the host contexts; plots the known
+# series and inspects limits, drawn geometry and presented pixels).
+add_library(WO07PlotFixture SHARED WO07PlotFixture.cpp)
+target_link_libraries(WO07PlotFixture PRIVATE Cosmic)
+set_target_properties(WO07PlotFixture PROPERTIES RUNTIME_OUTPUT_DIRECTORY
+    "${COSMIC_SDK_DIR}/build/Runtime/$<CONFIG>")
+add_dependencies(CosmicTests WO07PlotFixture)
+
+# WO-07 L05 — the real SF_Telem root over the fake transport, scripted through its real
+# Navigation / Replay buttons with the per-action ImGui balance oracle (WO07UiOracle.h).
+add_library(WO07UiCyclesFixture SHARED WO07UiCyclesFixture.cpp ${WO05_SF_SOURCES})
+target_link_libraries(WO07UiCyclesFixture PRIVATE Cosmic)
+target_compile_definitions(WO07UiCyclesFixture PRIVATE COSMIC_WO05_HOST_FIXTURE)
+set_target_properties(WO07UiCyclesFixture PROPERTIES RUNTIME_OUTPUT_DIRECTORY
+    "${COSMIC_SDK_DIR}/build/Runtime/$<CONFIG>")
+add_dependencies(CosmicTests WO07UiCyclesFixture)
 
 target_link_libraries(CosmicTests PRIVATE Cosmic)
 target_include_directories(CosmicTests PRIVATE "${COSMIC_SDK_DIR}/Cosmic/dependencies/doctest")

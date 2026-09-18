@@ -53,6 +53,7 @@ namespace Workspace
         // The same service wiring used by OnAttach, without creating GPU assets.
         void InitializeServices();
         void SetScreen(Screen s);
+        Screen CurrentScreen() const { return m_Screen; }   // read-only (WO-07 L05 oracle)
         Cosmic::SerialLink& Link() { return m_Link; }
         TelemHub& Hub() { return m_TelemHub; }
 

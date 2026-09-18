@@ -1,0 +1,45 @@
+{
+  "manifest": "wo07-l05",
+  "cases": [
+    {
+      "id": "L05-sftelem",
+      "description": "200 scripted UI cycles over the real SF_Telem root (over the fake serial transport) with a per-action Dear ImGui balance oracle: serial closed/open/lost through the production chain, the REAL Navigation buttons and homescreen tile (ImGui item activation), replay open + the REAL Unload button, the REAL Browse button opening the native IFileDialog cancelled by a helper thread, minimize/restore, resize, F11 fullscreen (real hotkey) both ways, and undocking a docked window through ImGui's own undock path. After EVERY action: zero recovered ImGui errors, zero end-of-frame stack leaks, zero context/font drift, per-layer depths balanced. Exact action log + screenshots saved.",
+      "tier": "I",
+      "profiles": ["gpu", "release"],
+      "requires": ["windows", "gpu-gl"],
+      "command": "powershell",
+      "workingDir": "{BIN}",
+      "args": [
+        "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
+        "{ACCEPTANCE}\\fixtures\\Run-WO07UiCycles.ps1",
+        "-Bin", "{BIN}",
+        "-Output", "{REPO}\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-07\\l05-runner-{CONFIG}",
+        "-Cycles", "200"
+      ],
+      "expectExit": 0,
+      "minTests": 1,
+      "deadlineSec": 900,
+      "fixture": "../../tests/WO07UiCyclesFixture.cpp"
+    },
+    {
+      "id": "L05-editor",
+      "description": "200 scripted UI cycles in the real Starforge editor: every viewport-strip chip (snap Move/Rotate/Scale, Grid, Colliders, World/Local) clicked through Dear ImGui mouse events at the probed rects and confirmed to toggle, built-in layout presets (dock/undock churn), viewport hide/show, Play start/stop, minimize/restore, resize and F11 fullscreen (real hotkey). After EVERY action: zero recovered ImGui errors, zero end-of-frame leaks, zero context drift, strip and per-chip colour-stack deltas zero (the KI-1 mechanism). Action log + screenshots saved.",
+      "tier": "I",
+      "profiles": ["gpu", "release"],
+      "requires": ["windows", "gpu-gl"],
+      "command": "powershell",
+      "workingDir": "{BIN}",
+      "args": [
+        "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
+        "{ACCEPTANCE}\\fixtures\\Run-L05EditorSelfTest.ps1",
+        "-Bin", "{BIN}",
+        "-Output", "{REPO}\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-07\\l05-editor-runner-{CONFIG}",
+        "-Cycles", "200"
+      ],
+      "expectExit": 0,
+      "minTests": 1,
+      "deadlineSec": 900,
+      "fixture": "../../Projects/Starforge/src/L05EditorSelfTest.cpp"
+    }
+  ]
+}

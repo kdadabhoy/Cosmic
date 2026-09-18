@@ -1,0 +1,26 @@
+﻿{
+    "id":  "l05-sftelem",
+    "tier":  "I",
+    "description":  "L05 200 scripted SF_Telem UI cycles with per-action ImGui stack balance",
+    "requires":  [
+                     "windows",
+                     "gpu-gl"
+                 ],
+    "transport":  "none",
+    "seed":  null,
+    "start_utc":  "2026-09-18T10:03:24.6175603Z",
+    "deadline_sec":  720,
+    "exercised":  "production",
+    "command":  "C:\\dev\\Cosmic\\build\\Runtime\\Debug\\CosmicTests.exe \"--test-case=WO-07 L05 host*\" --no-skip=true --no-colors",
+    "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-07\\l05-runner-Debug\\l05-sftelem.out.log",
+    "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-07\\l05-runner-Debug\\l05-sftelem.err.log",
+    "pid":  18392,
+    "exit_code":  0,
+    "crash":  false,
+    "tests_passed":  1,
+    "tests_expected_min":  1,
+    "verdict":  "PASSED",
+    "detail":  "exit 0 as expected",
+    "duration_sec":  14.082,
+    "end_utc":  "2026-09-18T10:03:38.7076265Z"
+}

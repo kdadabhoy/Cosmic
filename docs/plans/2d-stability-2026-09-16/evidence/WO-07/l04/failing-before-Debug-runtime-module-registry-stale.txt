@@ -1,0 +1,18 @@
+WO-07 L04 failing-before (Debug): runtime-path registry lifecycle with PlayerLayer.cpp restored to HEAD fe3d807 (no UnregisterModule on detach).
+Counterfactual Cosmic.dll sha256: 0DD1C41AA9BC9C2B4656193599805C984983B5ED3222FE16F50C8DD705A65A08
+CosmicTests.exe --test-case="WO-07 L04 host: module registry*" --no-skip=true. Captured 2026-09-18 02:35 on DESKTOP-SEOA4BT.
+
+C:\dev\Cosmic\tests\test_wo07_l04.cpp(381): ERROR: CHECK( cleanAfterFirst ) is NOT correct!
+  values: CHECK( false )
+C:\dev\Cosmic\tests\test_wo07_l04.cpp(383): ERROR: CHECK( cleanAfterSecond ) is NOT correct!
+  values: CHECK( false )
+C:\dev\Cosmic\tests\test_wo07_l04.cpp(384): ERROR: CHECK( Cosmic::ModuleRegistry::Get().FindScript("WO07ModScript") == nullptr ) is NOT correct!
+  values: CHECK( 000001FFCECFAA38 == nullptr )
+C:\dev\Cosmic\tests\test_wo07_l04.cpp(385): ERROR: CHECK( Cosmic::Reflect::GetRegistry().FindByName("WO07ModComponent") == nullptr ) is NOT correct!
+  values: CHECK( 000001FFD20A7BA8 == nullptr )
+WO07 L04 module registry: frames=70 cleanAfterFirst=0 reloaded=1 cleanAfterSecond=0
+[doctest] assertions: 7 | 3 passed | 4 failed |
+
+Restoration: PlayerLayer.cpp fix re-applied (sha256 C5B7FEF6684A4D88565CF7362EBC46F3138DD86B99A74D0D91DDCB1B8121A401), full Debug rebuild;
+restored Cosmic.dll sha256 FD35F14FED19EEA70630E46CFF2749C736E65D7FBD2FD19A3218444D64A23F02 (differs from the counterfactual binary above).
+Passing-after (same command): WO07 L04 module registry: frames=17 cleanAfterFirst=1 reloaded=1 cleanAfterSecond=1 / assertions: 7 | 7 passed | 0 failed

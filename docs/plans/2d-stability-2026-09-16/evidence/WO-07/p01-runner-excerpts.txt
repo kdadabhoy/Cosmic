@@ -1,0 +1,20 @@
+﻿WO-07 P01 - ImPlot lifetime + known data, acceptance-runner summary.
+(Per-child records: p01-runner-<cfg>/children.json (committed); raw stdout in the gitignored .out.log files.)
+
+=== Debug (p01-Debug/P01.out.log) ===
+  WO07 P01: cycles=50 framesPlotted=700 inspected=550 reopens=50 themes=50 fit X=[0.000000,10.000000] Y=[0.000000,127.464516] legend=3 verts=43146 pixel[checked=500 match=500 mismatch=0 occluded=0 (nohwnd=0 notvisible=0 otherwin=0 noproc=0 glerr=0x0) last=(255,89,26)] errors=0 stack=0
+  WO07 P01: cycles=50 framesPlotted=700 inspected=550 reopens=50 themes=50 fit X=[0.000000,10.000000] Y=[0.000000,127.464516] legend=3 verts=43146 pixel[checked=500 match=500 mismatch=0 occluded=0 (nohwnd=0 notvisible=0 otherwin=0 noproc=0 glerr=0x0) last=(255,89,26)] errors=0 stack=0
+  WO07 P01: cycles=50 framesPlotted=700 inspected=550 reopens=50 themes=50 fit X=[0.000000,10.000000] Y=[0.000000,127.464516] legend=3 verts=43146 pixel[checked=500 match=500 mismatch=0 occluded=0 (nohwnd=0 notvisible=0 otherwin=0 noproc=0 glerr=0x0) last=(255,89,26)] errors=0 stack=0
+P01 launches completed=3 (50 in-process reload/reopen cycles each)
+[doctest] test cases: 3 | 3 passed | 0 failed
+
+=== Release (p01-Release/P01.out.log) ===
+  WO07 P01: cycles=50 framesPlotted=700 inspected=550 reopens=50 themes=50 fit X=[0.000000,10.000000] Y=[0.000000,127.464516] legend=3 verts=43146 pixel[checked=500 match=500 mismatch=0 occluded=0 (nohwnd=0 notvisible=0 otherwin=0 noproc=0 glerr=0x0) last=(255,89,26)] errors=0 stack=0
+  WO07 P01: cycles=50 framesPlotted=700 inspected=550 reopens=50 themes=50 fit X=[0.000000,10.000000] Y=[0.000000,127.464516] legend=3 verts=43146 pixel[checked=500 match=500 mismatch=0 occluded=0 (nohwnd=0 notvisible=0 otherwin=0 noproc=0 glerr=0x0) last=(255,89,26)] errors=0 stack=0
+  WO07 P01: cycles=50 framesPlotted=700 inspected=550 reopens=50 themes=50 fit X=[0.000000,10.000000] Y=[0.000000,127.464516] legend=3 verts=43146 pixel[checked=500 match=500 mismatch=0 occluded=0 (nohwnd=0 notvisible=0 otherwin=0 noproc=0 glerr=0x0) last=(255,89,26)] errors=0 stack=0
+P01 launches completed=3 (50 in-process reload/reopen cycles each)
+[doctest] test cases: 3 | 3 passed | 0 failed
+
+=== runner verdicts ===
+Debug   P01=PASSED
+Release   P01=PASSED

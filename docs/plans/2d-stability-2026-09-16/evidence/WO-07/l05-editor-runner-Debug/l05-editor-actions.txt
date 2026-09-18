@@ -1,0 +1,2242 @@
+# WO-07 L05 Starforge editor scripted UI cycles — one line per judged action
+cycle=0 frame=18 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=0 frame=24 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=0 frame=30 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=0 frame=36 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=0 frame=42 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=0 frame=48 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=0 frame=52 action=layout:preset Level C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=0 frame=56 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=0 frame=61 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=0 frame=65 action=window:minimize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=0 frame=72 action=window:restore C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=1 frame=79 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=1 frame=85 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=1 frame=91 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=1 frame=97 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=1 frame=103 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=1 frame=109 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=1 frame=113 action=layout:preset Assets C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=1 frame=117 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=1 frame=122 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=1 frame=129 action=window:resize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=1 frame=133 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=2 frame=140 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=2 frame=146 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=2 frame=152 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=2 frame=158 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=2 frame=164 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=2 frame=170 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=2 frame=174 action=layout:preset Animation C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=2 frame=178 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=2 frame=183 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=2 frame=187 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=2 frame=191 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=3 frame=198 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=3 frame=204 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=3 frame=210 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=3 frame=216 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=3 frame=222 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=3 frame=228 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=3 frame=232 action=layout:preset Telemetry C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=3 frame=236 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=3 frame=241 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=3 frame=250 action=window:F11 fullscreen (real hotkey) C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=3 frame=259 action=window:F11 fullscreen back (real hotkey) C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=4 frame=266 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=4 frame=272 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=4 frame=278 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=4 frame=284 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=4 frame=290 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=4 frame=296 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=4 frame=300 action=layout:preset Level C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=4 frame=304 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=4 frame=309 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=4 frame=314 action=play:start C0 S0 F0 P0 chips=0 errors=0 result=ok
+cycle=4 frame=319 action=play:stop C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=4 frame=323 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=4 frame=327 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=5 frame=334 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=5 frame=340 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=5 frame=346 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=5 frame=352 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=5 frame=358 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=5 frame=364 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=5 frame=368 action=layout:preset Assets C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=5 frame=372 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=5 frame=377 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=5 frame=381 action=window:minimize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=5 frame=388 action=window:restore C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=6 frame=395 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=6 frame=401 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=6 frame=407 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=6 frame=413 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=6 frame=419 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=6 frame=425 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=6 frame=429 action=layout:preset Animation C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=6 frame=433 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=6 frame=438 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=6 frame=445 action=window:resize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=6 frame=449 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=7 frame=456 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=7 frame=462 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=7 frame=468 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=7 frame=474 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=7 frame=480 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=7 frame=486 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=7 frame=490 action=layout:preset Telemetry C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=7 frame=494 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=7 frame=499 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=7 frame=503 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=7 frame=507 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=8 frame=514 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=8 frame=520 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=8 frame=526 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=8 frame=532 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=8 frame=538 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=8 frame=544 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=8 frame=548 action=layout:preset Level C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=8 frame=552 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=8 frame=557 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=8 frame=561 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=8 frame=565 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=9 frame=572 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=9 frame=578 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=9 frame=584 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=9 frame=590 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=9 frame=596 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=9 frame=602 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=9 frame=606 action=layout:preset Assets C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=9 frame=610 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=9 frame=615 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=9 frame=619 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=9 frame=623 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=10 frame=630 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=10 frame=636 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=10 frame=642 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=10 frame=648 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=10 frame=654 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=10 frame=660 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=10 frame=664 action=layout:preset Animation C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=10 frame=668 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=10 frame=673 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=10 frame=677 action=window:minimize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=10 frame=684 action=window:restore C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=11 frame=691 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=11 frame=697 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=11 frame=703 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=11 frame=709 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=11 frame=715 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=11 frame=721 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=11 frame=725 action=layout:preset Telemetry C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=11 frame=729 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=11 frame=734 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=11 frame=741 action=window:resize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=11 frame=745 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=12 frame=752 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=12 frame=758 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=12 frame=764 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=12 frame=770 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=12 frame=776 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=12 frame=782 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=12 frame=786 action=layout:preset Level C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=12 frame=790 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=12 frame=795 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=12 frame=799 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=12 frame=803 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=13 frame=810 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=13 frame=816 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=13 frame=822 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=13 frame=828 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=13 frame=834 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=13 frame=840 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=13 frame=844 action=layout:preset Assets C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=13 frame=848 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=13 frame=853 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=13 frame=857 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=13 frame=861 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=14 frame=868 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=14 frame=874 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=14 frame=880 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=14 frame=886 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=14 frame=892 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=14 frame=898 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=14 frame=902 action=layout:preset Animation C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=14 frame=906 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=14 frame=911 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=14 frame=916 action=play:start C0 S0 F0 P0 chips=0 errors=0 result=ok
+cycle=14 frame=921 action=play:stop C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=14 frame=925 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=14 frame=929 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=15 frame=936 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=15 frame=942 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=15 frame=948 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=15 frame=954 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=15 frame=960 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=15 frame=966 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=15 frame=970 action=layout:preset Telemetry C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=15 frame=974 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=15 frame=979 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=15 frame=983 action=window:minimize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=15 frame=990 action=window:restore C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=16 frame=997 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=16 frame=1003 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=16 frame=1009 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=16 frame=1015 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=16 frame=1021 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=16 frame=1027 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=16 frame=1031 action=layout:preset Level C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=16 frame=1035 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=16 frame=1040 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=16 frame=1047 action=window:resize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=16 frame=1051 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=17 frame=1058 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=17 frame=1064 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=17 frame=1070 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=17 frame=1076 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=17 frame=1082 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=17 frame=1088 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=17 frame=1092 action=layout:preset Assets C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=17 frame=1096 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=17 frame=1101 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=17 frame=1105 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=17 frame=1109 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=18 frame=1116 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=18 frame=1122 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=18 frame=1128 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=18 frame=1134 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=18 frame=1140 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=18 frame=1146 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=18 frame=1150 action=layout:preset Animation C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=18 frame=1154 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=18 frame=1159 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=18 frame=1163 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=18 frame=1167 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=19 frame=1174 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=19 frame=1180 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=19 frame=1186 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=19 frame=1192 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=19 frame=1198 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=19 frame=1204 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=19 frame=1208 action=layout:preset Telemetry C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=19 frame=1212 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=19 frame=1217 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=19 frame=1221 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=19 frame=1225 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=20 frame=1232 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=20 frame=1238 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=20 frame=1244 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=20 frame=1250 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=20 frame=1256 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=20 frame=1262 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=20 frame=1266 action=layout:preset Level C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=20 frame=1270 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=20 frame=1275 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=20 frame=1279 action=window:minimize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=20 frame=1286 action=window:restore C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=21 frame=1293 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=21 frame=1299 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=21 frame=1305 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=21 frame=1311 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=21 frame=1317 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=21 frame=1323 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=21 frame=1327 action=layout:preset Assets C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=21 frame=1331 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=21 frame=1336 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=21 frame=1343 action=window:resize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=21 frame=1347 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=22 frame=1354 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=22 frame=1360 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=22 frame=1366 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=22 frame=1372 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=22 frame=1378 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=22 frame=1384 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=22 frame=1388 action=layout:preset Animation C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=22 frame=1392 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=22 frame=1397 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=22 frame=1401 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=22 frame=1405 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=23 frame=1412 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=23 frame=1418 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=23 frame=1424 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=23 frame=1430 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=23 frame=1436 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=23 frame=1442 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=23 frame=1446 action=layout:preset Telemetry C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=23 frame=1450 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=23 frame=1455 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=23 frame=1459 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=23 frame=1463 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=24 frame=1470 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=24 frame=1476 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=24 frame=1482 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=24 frame=1488 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=24 frame=1494 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=24 frame=1500 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=24 frame=1504 action=layout:preset Level C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=24 frame=1508 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=24 frame=1513 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=24 frame=1518 action=play:start C0 S0 F0 P0 chips=0 errors=0 result=ok
+cycle=24 frame=1523 action=play:stop C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=24 frame=1527 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=24 frame=1531 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=25 frame=1538 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=25 frame=1544 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=25 frame=1550 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=25 frame=1556 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=25 frame=1562 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=25 frame=1568 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=25 frame=1572 action=layout:preset Assets C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=25 frame=1576 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=25 frame=1581 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=25 frame=1585 action=window:minimize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=25 frame=1592 action=window:restore C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=26 frame=1599 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=26 frame=1605 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=26 frame=1611 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=26 frame=1617 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=26 frame=1623 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=26 frame=1629 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=26 frame=1633 action=layout:preset Animation C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=26 frame=1637 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=26 frame=1642 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=26 frame=1649 action=window:resize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=26 frame=1653 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=27 frame=1660 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=27 frame=1666 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=27 frame=1672 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=27 frame=1678 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=27 frame=1684 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=27 frame=1690 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=27 frame=1694 action=layout:preset Telemetry C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=27 frame=1698 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=27 frame=1703 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=27 frame=1707 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=27 frame=1711 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=28 frame=1718 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=28 frame=1724 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=28 frame=1730 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=28 frame=1736 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=28 frame=1742 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=28 frame=1748 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=28 frame=1752 action=layout:preset Level C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=28 frame=1756 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=28 frame=1761 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=28 frame=1770 action=window:F11 fullscreen (real hotkey) C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=28 frame=1779 action=window:F11 fullscreen back (real hotkey) C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=29 frame=1786 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=29 frame=1792 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=29 frame=1798 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=29 frame=1804 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=29 frame=1810 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=29 frame=1816 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=29 frame=1820 action=layout:preset Assets C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=29 frame=1824 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=29 frame=1829 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=29 frame=1833 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=29 frame=1837 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=30 frame=1844 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=30 frame=1850 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=30 frame=1856 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=30 frame=1862 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=30 frame=1868 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=30 frame=1874 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=30 frame=1878 action=layout:preset Animation C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=30 frame=1882 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=30 frame=1887 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=30 frame=1891 action=window:minimize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=30 frame=1898 action=window:restore C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=31 frame=1905 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=31 frame=1911 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=31 frame=1917 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=31 frame=1923 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=31 frame=1929 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=31 frame=1935 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=31 frame=1939 action=layout:preset Telemetry C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=31 frame=1943 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=31 frame=1948 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=31 frame=1955 action=window:resize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=31 frame=1959 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=32 frame=1966 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=32 frame=1972 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=32 frame=1978 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=32 frame=1984 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=32 frame=1990 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=32 frame=1996 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=32 frame=2000 action=layout:preset Level C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=32 frame=2004 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=32 frame=2009 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=32 frame=2013 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=32 frame=2017 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=33 frame=2024 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=33 frame=2030 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=33 frame=2036 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=33 frame=2042 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=33 frame=2048 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=33 frame=2054 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=33 frame=2058 action=layout:preset Assets C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=33 frame=2062 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=33 frame=2067 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=33 frame=2071 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=33 frame=2075 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=34 frame=2082 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=34 frame=2088 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=34 frame=2094 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=34 frame=2100 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=34 frame=2106 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=34 frame=2112 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=34 frame=2116 action=layout:preset Animation C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=34 frame=2120 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=34 frame=2125 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=34 frame=2130 action=play:start C0 S0 F0 P0 chips=0 errors=0 result=ok
+cycle=34 frame=2135 action=play:stop C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=34 frame=2139 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=34 frame=2143 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=35 frame=2150 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=35 frame=2156 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=35 frame=2162 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=35 frame=2168 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=35 frame=2174 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=35 frame=2180 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=35 frame=2184 action=layout:preset Telemetry C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=35 frame=2188 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=35 frame=2193 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=35 frame=2197 action=window:minimize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=35 frame=2204 action=window:restore C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=36 frame=2211 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=36 frame=2217 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=36 frame=2223 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=36 frame=2229 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=36 frame=2235 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=36 frame=2241 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=36 frame=2245 action=layout:preset Level C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=36 frame=2249 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=36 frame=2254 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=36 frame=2261 action=window:resize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=36 frame=2265 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=37 frame=2272 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=37 frame=2278 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=37 frame=2284 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=37 frame=2290 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=37 frame=2296 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=37 frame=2302 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=37 frame=2306 action=layout:preset Assets C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=37 frame=2310 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=37 frame=2315 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=37 frame=2319 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=37 frame=2323 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=38 frame=2330 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=38 frame=2336 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=38 frame=2342 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=38 frame=2348 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=38 frame=2354 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=38 frame=2360 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=38 frame=2364 action=layout:preset Animation C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=38 frame=2368 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=38 frame=2373 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=38 frame=2377 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=38 frame=2381 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=39 frame=2388 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=39 frame=2394 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=39 frame=2400 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=39 frame=2406 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=39 frame=2412 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=39 frame=2418 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=39 frame=2422 action=layout:preset Telemetry C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=39 frame=2426 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=39 frame=2431 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=39 frame=2435 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=39 frame=2439 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=40 frame=2446 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=40 frame=2452 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=40 frame=2458 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=40 frame=2464 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=40 frame=2470 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=40 frame=2476 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=40 frame=2480 action=layout:preset Level C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=40 frame=2484 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=40 frame=2489 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=40 frame=2493 action=window:minimize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=40 frame=2500 action=window:restore C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=41 frame=2507 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=41 frame=2513 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=41 frame=2519 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=41 frame=2525 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=41 frame=2531 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=41 frame=2537 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=41 frame=2541 action=layout:preset Assets C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=41 frame=2545 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=41 frame=2550 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=41 frame=2557 action=window:resize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=41 frame=2561 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=42 frame=2568 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=42 frame=2574 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=42 frame=2580 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=42 frame=2586 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=42 frame=2592 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=42 frame=2598 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=42 frame=2602 action=layout:preset Animation C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=42 frame=2606 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=42 frame=2611 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=42 frame=2615 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=42 frame=2619 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=43 frame=2626 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=43 frame=2632 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=43 frame=2638 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=43 frame=2644 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=43 frame=2650 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=43 frame=2656 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=43 frame=2660 action=layout:preset Telemetry C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=43 frame=2664 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=43 frame=2669 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=43 frame=2673 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=43 frame=2677 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=44 frame=2684 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=44 frame=2690 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=44 frame=2696 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=44 frame=2702 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=44 frame=2708 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=44 frame=2714 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=44 frame=2718 action=layout:preset Level C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=44 frame=2722 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=44 frame=2727 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=44 frame=2732 action=play:start C0 S0 F0 P0 chips=0 errors=0 result=ok
+cycle=44 frame=2737 action=play:stop C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=44 frame=2741 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=44 frame=2745 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=45 frame=2752 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=45 frame=2758 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=45 frame=2764 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=45 frame=2770 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=45 frame=2776 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=45 frame=2782 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=45 frame=2786 action=layout:preset Assets C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=45 frame=2790 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=45 frame=2795 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=45 frame=2799 action=window:minimize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=45 frame=2806 action=window:restore C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=46 frame=2813 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=46 frame=2819 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=46 frame=2825 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=46 frame=2831 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=46 frame=2837 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=46 frame=2843 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=46 frame=2847 action=layout:preset Animation C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=46 frame=2851 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=46 frame=2856 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=46 frame=2863 action=window:resize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=46 frame=2867 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=47 frame=2874 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=47 frame=2880 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=47 frame=2886 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=47 frame=2892 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=47 frame=2898 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=47 frame=2904 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=47 frame=2908 action=layout:preset Telemetry C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=47 frame=2912 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=47 frame=2917 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=47 frame=2921 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=47 frame=2925 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=48 frame=2932 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=48 frame=2938 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=48 frame=2944 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=48 frame=2950 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=48 frame=2956 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=48 frame=2962 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=48 frame=2966 action=layout:preset Level C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=48 frame=2970 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=48 frame=2975 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=48 frame=2979 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=48 frame=2983 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=49 frame=2990 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=49 frame=2996 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=49 frame=3002 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=49 frame=3008 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=49 frame=3014 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=49 frame=3020 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=49 frame=3024 action=layout:preset Assets C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=49 frame=3028 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=49 frame=3033 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=49 frame=3037 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=49 frame=3041 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=50 frame=3048 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=50 frame=3054 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=50 frame=3060 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=50 frame=3066 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=50 frame=3072 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=50 frame=3078 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=50 frame=3082 action=layout:preset Animation C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=50 frame=3086 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=50 frame=3091 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=50 frame=3095 action=window:minimize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=50 frame=3102 action=window:restore C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=51 frame=3109 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=51 frame=3115 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=51 frame=3121 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=51 frame=3127 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=51 frame=3133 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=51 frame=3139 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=51 frame=3143 action=layout:preset Telemetry C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=51 frame=3147 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=51 frame=3152 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=51 frame=3159 action=window:resize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=51 frame=3163 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=52 frame=3170 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=52 frame=3176 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=52 frame=3182 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=52 frame=3188 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=52 frame=3194 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=52 frame=3200 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=52 frame=3204 action=layout:preset Level C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=52 frame=3208 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=52 frame=3213 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=52 frame=3217 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=52 frame=3221 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=53 frame=3228 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=53 frame=3234 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=53 frame=3240 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=53 frame=3246 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=53 frame=3252 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=53 frame=3258 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=53 frame=3262 action=layout:preset Assets C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=53 frame=3266 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=53 frame=3271 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=53 frame=3280 action=window:F11 fullscreen (real hotkey) C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=53 frame=3289 action=window:F11 fullscreen back (real hotkey) C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=54 frame=3296 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=54 frame=3302 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=54 frame=3308 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=54 frame=3314 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=54 frame=3320 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=54 frame=3326 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=54 frame=3330 action=layout:preset Animation C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=54 frame=3334 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=54 frame=3339 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=54 frame=3344 action=play:start C0 S0 F0 P0 chips=0 errors=0 result=ok
+cycle=54 frame=3349 action=play:stop C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=54 frame=3353 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=54 frame=3357 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=55 frame=3364 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=55 frame=3370 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=55 frame=3376 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=55 frame=3382 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=55 frame=3388 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=55 frame=3394 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=55 frame=3398 action=layout:preset Telemetry C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=55 frame=3402 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=55 frame=3407 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=55 frame=3411 action=window:minimize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=55 frame=3418 action=window:restore C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=56 frame=3425 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=56 frame=3431 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=56 frame=3437 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=56 frame=3443 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=56 frame=3449 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=56 frame=3455 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=56 frame=3459 action=layout:preset Level C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=56 frame=3463 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=56 frame=3468 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=56 frame=3475 action=window:resize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=56 frame=3479 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=57 frame=3486 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=57 frame=3492 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=57 frame=3498 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=57 frame=3504 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=57 frame=3510 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=57 frame=3516 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=57 frame=3520 action=layout:preset Assets C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=57 frame=3524 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=57 frame=3529 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=57 frame=3533 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=57 frame=3537 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=58 frame=3544 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=58 frame=3550 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=58 frame=3556 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=58 frame=3562 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=58 frame=3568 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=58 frame=3574 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=58 frame=3578 action=layout:preset Animation C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=58 frame=3582 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=58 frame=3587 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=58 frame=3591 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=58 frame=3595 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=59 frame=3602 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=59 frame=3608 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=59 frame=3614 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=59 frame=3620 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=59 frame=3626 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=59 frame=3632 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=59 frame=3636 action=layout:preset Telemetry C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=59 frame=3640 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=59 frame=3645 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=59 frame=3649 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=59 frame=3653 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=60 frame=3660 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=60 frame=3666 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=60 frame=3672 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=60 frame=3678 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=60 frame=3684 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=60 frame=3690 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=60 frame=3694 action=layout:preset Level C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=60 frame=3698 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=60 frame=3703 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=60 frame=3707 action=window:minimize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=60 frame=3714 action=window:restore C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=61 frame=3721 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=61 frame=3727 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=61 frame=3733 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=61 frame=3739 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=61 frame=3745 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=61 frame=3751 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=61 frame=3755 action=layout:preset Assets C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=61 frame=3759 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=61 frame=3764 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=61 frame=3771 action=window:resize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=61 frame=3775 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=62 frame=3782 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=62 frame=3788 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=62 frame=3794 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=62 frame=3800 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=62 frame=3806 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=62 frame=3812 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=62 frame=3816 action=layout:preset Animation C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=62 frame=3820 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=62 frame=3825 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=62 frame=3829 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=62 frame=3833 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=63 frame=3840 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=63 frame=3846 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=63 frame=3852 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=63 frame=3858 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=63 frame=3864 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=63 frame=3870 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=63 frame=3874 action=layout:preset Telemetry C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=63 frame=3878 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=63 frame=3883 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=63 frame=3887 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=63 frame=3891 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=64 frame=3898 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=64 frame=3904 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=64 frame=3910 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=64 frame=3916 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=64 frame=3922 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=64 frame=3928 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=64 frame=3932 action=layout:preset Level C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=64 frame=3936 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=64 frame=3941 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=64 frame=3946 action=play:start C0 S0 F0 P0 chips=0 errors=0 result=ok
+cycle=64 frame=3951 action=play:stop C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=64 frame=3955 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=64 frame=3959 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=65 frame=3966 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=65 frame=3972 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=65 frame=3978 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=65 frame=3984 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=65 frame=3990 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=65 frame=3996 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=65 frame=4000 action=layout:preset Assets C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=65 frame=4004 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=65 frame=4009 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=65 frame=4013 action=window:minimize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=65 frame=4020 action=window:restore C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=66 frame=4027 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=66 frame=4033 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=66 frame=4039 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=66 frame=4045 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=66 frame=4051 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=66 frame=4057 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=66 frame=4061 action=layout:preset Animation C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=66 frame=4065 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=66 frame=4070 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=66 frame=4077 action=window:resize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=66 frame=4081 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=67 frame=4088 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=67 frame=4094 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=67 frame=4100 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=67 frame=4106 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=67 frame=4112 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=67 frame=4118 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=67 frame=4122 action=layout:preset Telemetry C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=67 frame=4126 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=67 frame=4131 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=67 frame=4135 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=67 frame=4139 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=68 frame=4146 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=68 frame=4152 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=68 frame=4158 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=68 frame=4164 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=68 frame=4170 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=68 frame=4176 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=68 frame=4180 action=layout:preset Level C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=68 frame=4184 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=68 frame=4189 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=68 frame=4193 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=68 frame=4197 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=69 frame=4204 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=69 frame=4210 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=69 frame=4216 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=69 frame=4222 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=69 frame=4228 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=69 frame=4234 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=69 frame=4238 action=layout:preset Assets C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=69 frame=4242 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=69 frame=4247 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=69 frame=4251 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=69 frame=4255 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=70 frame=4262 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=70 frame=4268 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=70 frame=4274 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=70 frame=4280 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=70 frame=4286 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=70 frame=4292 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=70 frame=4296 action=layout:preset Animation C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=70 frame=4300 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=70 frame=4305 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=70 frame=4309 action=window:minimize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=70 frame=4316 action=window:restore C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=71 frame=4323 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=71 frame=4329 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=71 frame=4335 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=71 frame=4341 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=71 frame=4347 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=71 frame=4353 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=71 frame=4357 action=layout:preset Telemetry C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=71 frame=4361 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=71 frame=4366 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=71 frame=4373 action=window:resize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=71 frame=4377 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=72 frame=4384 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=72 frame=4390 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=72 frame=4396 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=72 frame=4402 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=72 frame=4408 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=72 frame=4414 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=72 frame=4418 action=layout:preset Level C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=72 frame=4422 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=72 frame=4427 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=72 frame=4431 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=72 frame=4435 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=73 frame=4442 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=73 frame=4448 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=73 frame=4454 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=73 frame=4460 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=73 frame=4466 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=73 frame=4472 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=73 frame=4476 action=layout:preset Assets C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=73 frame=4480 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=73 frame=4485 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=73 frame=4489 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=73 frame=4493 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=74 frame=4500 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=74 frame=4506 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=74 frame=4512 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=74 frame=4518 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=74 frame=4524 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=74 frame=4530 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=74 frame=4534 action=layout:preset Animation C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=74 frame=4538 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=74 frame=4543 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=74 frame=4548 action=play:start C0 S0 F0 P0 chips=0 errors=0 result=ok
+cycle=74 frame=4553 action=play:stop C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=74 frame=4557 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=74 frame=4561 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=75 frame=4568 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=75 frame=4574 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=75 frame=4580 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=75 frame=4586 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=75 frame=4592 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=75 frame=4598 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=75 frame=4602 action=layout:preset Telemetry C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=75 frame=4606 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=75 frame=4611 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=75 frame=4615 action=window:minimize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=75 frame=4622 action=window:restore C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=76 frame=4629 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=76 frame=4635 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=76 frame=4641 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=76 frame=4647 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=76 frame=4653 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=76 frame=4659 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=76 frame=4663 action=layout:preset Level C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=76 frame=4667 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=76 frame=4672 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=76 frame=4679 action=window:resize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=76 frame=4683 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=77 frame=4690 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=77 frame=4696 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=77 frame=4702 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=77 frame=4708 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=77 frame=4714 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=77 frame=4720 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=77 frame=4724 action=layout:preset Assets C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=77 frame=4728 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=77 frame=4733 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=77 frame=4737 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=77 frame=4741 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=78 frame=4748 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=78 frame=4754 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=78 frame=4760 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=78 frame=4766 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=78 frame=4772 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=78 frame=4778 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=78 frame=4782 action=layout:preset Animation C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=78 frame=4786 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=78 frame=4791 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=78 frame=4800 action=window:F11 fullscreen (real hotkey) C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=78 frame=4809 action=window:F11 fullscreen back (real hotkey) C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=79 frame=4816 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=79 frame=4822 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=79 frame=4828 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=79 frame=4834 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=79 frame=4840 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=79 frame=4846 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=79 frame=4850 action=layout:preset Telemetry C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=79 frame=4854 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=79 frame=4859 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=79 frame=4863 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=79 frame=4867 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=80 frame=4874 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=80 frame=4880 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=80 frame=4886 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=80 frame=4892 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=80 frame=4898 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=80 frame=4904 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=80 frame=4908 action=layout:preset Level C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=80 frame=4912 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=80 frame=4917 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=80 frame=4921 action=window:minimize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=80 frame=4928 action=window:restore C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=81 frame=4935 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=81 frame=4941 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=81 frame=4947 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=81 frame=4953 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=81 frame=4959 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=81 frame=4965 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=81 frame=4969 action=layout:preset Assets C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=81 frame=4973 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=81 frame=4978 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=81 frame=4985 action=window:resize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=81 frame=4989 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=82 frame=4996 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=82 frame=5002 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=82 frame=5008 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=82 frame=5014 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=82 frame=5020 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=82 frame=5026 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=82 frame=5030 action=layout:preset Animation C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=82 frame=5034 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=82 frame=5039 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=82 frame=5043 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=82 frame=5047 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=83 frame=5054 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=83 frame=5060 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=83 frame=5066 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=83 frame=5072 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=83 frame=5078 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=83 frame=5084 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=83 frame=5088 action=layout:preset Telemetry C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=83 frame=5092 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=83 frame=5097 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=83 frame=5101 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=83 frame=5105 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=84 frame=5112 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=84 frame=5118 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=84 frame=5124 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=84 frame=5130 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=84 frame=5136 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=84 frame=5142 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=84 frame=5146 action=layout:preset Level C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=84 frame=5150 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=84 frame=5155 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=84 frame=5160 action=play:start C0 S0 F0 P0 chips=0 errors=0 result=ok
+cycle=84 frame=5165 action=play:stop C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=84 frame=5169 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=84 frame=5173 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=85 frame=5180 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=85 frame=5186 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=85 frame=5192 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=85 frame=5198 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=85 frame=5204 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=85 frame=5210 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=85 frame=5214 action=layout:preset Assets C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=85 frame=5218 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=85 frame=5223 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=85 frame=5227 action=window:minimize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=85 frame=5234 action=window:restore C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=86 frame=5241 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=86 frame=5247 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=86 frame=5253 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=86 frame=5259 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=86 frame=5265 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=86 frame=5271 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=86 frame=5275 action=layout:preset Animation C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=86 frame=5279 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=86 frame=5284 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=86 frame=5291 action=window:resize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=86 frame=5295 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=87 frame=5302 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=87 frame=5308 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=87 frame=5314 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=87 frame=5320 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=87 frame=5326 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=87 frame=5332 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=87 frame=5336 action=layout:preset Telemetry C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=87 frame=5340 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=87 frame=5345 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=87 frame=5349 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=87 frame=5353 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=88 frame=5360 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=88 frame=5366 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=88 frame=5372 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=88 frame=5378 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=88 frame=5384 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=88 frame=5390 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=88 frame=5394 action=layout:preset Level C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=88 frame=5398 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=88 frame=5403 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=88 frame=5407 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=88 frame=5411 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=89 frame=5418 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=89 frame=5424 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=89 frame=5430 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=89 frame=5436 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=89 frame=5442 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=89 frame=5448 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=89 frame=5452 action=layout:preset Assets C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=89 frame=5456 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=89 frame=5461 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=89 frame=5465 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=89 frame=5469 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=90 frame=5476 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=90 frame=5482 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=90 frame=5488 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=90 frame=5494 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=90 frame=5500 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=90 frame=5506 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=90 frame=5510 action=layout:preset Animation C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=90 frame=5514 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=90 frame=5519 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=90 frame=5523 action=window:minimize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=90 frame=5530 action=window:restore C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=91 frame=5537 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=91 frame=5543 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=91 frame=5549 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=91 frame=5555 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=91 frame=5561 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=91 frame=5567 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=91 frame=5571 action=layout:preset Telemetry C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=91 frame=5575 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=91 frame=5580 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=91 frame=5587 action=window:resize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=91 frame=5591 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=92 frame=5598 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=92 frame=5604 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=92 frame=5610 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=92 frame=5616 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=92 frame=5622 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=92 frame=5628 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=92 frame=5632 action=layout:preset Level C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=92 frame=5636 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=92 frame=5641 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=92 frame=5645 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=92 frame=5649 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=93 frame=5656 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=93 frame=5662 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=93 frame=5668 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=93 frame=5674 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=93 frame=5680 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=93 frame=5686 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=93 frame=5690 action=layout:preset Assets C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=93 frame=5694 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=93 frame=5699 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=93 frame=5703 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=93 frame=5707 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=94 frame=5714 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=94 frame=5720 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=94 frame=5726 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=94 frame=5732 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=94 frame=5738 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=94 frame=5744 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=94 frame=5748 action=layout:preset Animation C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=94 frame=5752 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=94 frame=5757 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=94 frame=5762 action=play:start C0 S0 F0 P0 chips=0 errors=0 result=ok
+cycle=94 frame=5767 action=play:stop C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=94 frame=5771 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=94 frame=5775 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=95 frame=5782 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=95 frame=5788 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=95 frame=5794 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=95 frame=5800 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=95 frame=5806 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=95 frame=5812 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=95 frame=5816 action=layout:preset Telemetry C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=95 frame=5820 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=95 frame=5825 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=95 frame=5829 action=window:minimize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=95 frame=5836 action=window:restore C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=96 frame=5843 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=96 frame=5849 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=96 frame=5855 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=96 frame=5861 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=96 frame=5867 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=96 frame=5873 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=96 frame=5877 action=layout:preset Level C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=96 frame=5881 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=96 frame=5886 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=96 frame=5893 action=window:resize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=96 frame=5897 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=97 frame=5904 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=97 frame=5910 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=97 frame=5916 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=97 frame=5922 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=97 frame=5928 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=97 frame=5934 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=97 frame=5938 action=layout:preset Assets C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=97 frame=5942 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=97 frame=5947 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=97 frame=5951 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=97 frame=5955 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=98 frame=5962 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=98 frame=5968 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=98 frame=5974 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=98 frame=5980 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=98 frame=5986 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=98 frame=5992 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=98 frame=5996 action=layout:preset Animation C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=98 frame=6000 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=98 frame=6005 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=98 frame=6009 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=98 frame=6013 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=99 frame=6020 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=99 frame=6026 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=99 frame=6032 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=99 frame=6038 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=99 frame=6044 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=99 frame=6050 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=99 frame=6054 action=layout:preset Telemetry C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=99 frame=6058 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=99 frame=6063 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=99 frame=6067 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=99 frame=6071 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=100 frame=6078 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=100 frame=6084 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=100 frame=6090 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=100 frame=6096 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=100 frame=6102 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=100 frame=6108 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=100 frame=6112 action=layout:preset Level C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=100 frame=6116 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=100 frame=6121 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=100 frame=6125 action=window:minimize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=100 frame=6132 action=window:restore C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=101 frame=6139 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=101 frame=6145 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=101 frame=6151 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=101 frame=6157 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=101 frame=6163 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=101 frame=6169 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=101 frame=6173 action=layout:preset Assets C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=101 frame=6177 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=101 frame=6182 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=101 frame=6189 action=window:resize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=101 frame=6193 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=102 frame=6200 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=102 frame=6206 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=102 frame=6212 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=102 frame=6218 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=102 frame=6224 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=102 frame=6230 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=102 frame=6234 action=layout:preset Animation C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=102 frame=6238 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=102 frame=6243 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=102 frame=6247 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=102 frame=6251 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=103 frame=6258 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=103 frame=6264 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=103 frame=6270 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=103 frame=6276 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=103 frame=6282 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=103 frame=6288 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=103 frame=6292 action=layout:preset Telemetry C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=103 frame=6296 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=103 frame=6301 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=103 frame=6310 action=window:F11 fullscreen (real hotkey) C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=103 frame=6319 action=window:F11 fullscreen back (real hotkey) C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=104 frame=6326 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=104 frame=6332 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=104 frame=6338 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=104 frame=6344 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=104 frame=6350 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=104 frame=6356 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=104 frame=6360 action=layout:preset Level C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=104 frame=6364 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=104 frame=6369 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=104 frame=6374 action=play:start C0 S0 F0 P0 chips=0 errors=0 result=ok
+cycle=104 frame=6379 action=play:stop C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=104 frame=6383 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=104 frame=6387 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=105 frame=6394 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=105 frame=6400 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=105 frame=6406 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=105 frame=6412 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=105 frame=6418 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=105 frame=6424 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=105 frame=6428 action=layout:preset Assets C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=105 frame=6432 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=105 frame=6437 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=105 frame=6441 action=window:minimize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=105 frame=6448 action=window:restore C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=106 frame=6455 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=106 frame=6461 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=106 frame=6467 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=106 frame=6473 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=106 frame=6479 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=106 frame=6485 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=106 frame=6489 action=layout:preset Animation C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=106 frame=6493 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=106 frame=6498 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=106 frame=6505 action=window:resize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=106 frame=6509 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=107 frame=6516 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=107 frame=6522 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=107 frame=6528 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=107 frame=6534 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=107 frame=6540 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=107 frame=6546 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=107 frame=6550 action=layout:preset Telemetry C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=107 frame=6554 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=107 frame=6559 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=107 frame=6563 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=107 frame=6567 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=108 frame=6574 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=108 frame=6580 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=108 frame=6586 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=108 frame=6592 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=108 frame=6598 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=108 frame=6604 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=108 frame=6608 action=layout:preset Level C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=108 frame=6612 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=108 frame=6617 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=108 frame=6621 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=108 frame=6625 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=109 frame=6632 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=109 frame=6638 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=109 frame=6644 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=109 frame=6650 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=109 frame=6656 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=109 frame=6662 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=109 frame=6666 action=layout:preset Assets C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=109 frame=6670 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=109 frame=6675 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=109 frame=6679 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=109 frame=6683 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=110 frame=6690 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=110 frame=6696 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=110 frame=6702 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=110 frame=6708 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=110 frame=6714 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=110 frame=6720 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=110 frame=6724 action=layout:preset Animation C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=110 frame=6728 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=110 frame=6733 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=110 frame=6737 action=window:minimize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=110 frame=6744 action=window:restore C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=111 frame=6751 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=111 frame=6757 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=111 frame=6763 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=111 frame=6769 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=111 frame=6775 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=111 frame=6781 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=111 frame=6785 action=layout:preset Telemetry C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=111 frame=6789 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=111 frame=6794 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=111 frame=6801 action=window:resize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=111 frame=6805 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=112 frame=6812 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=112 frame=6818 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=112 frame=6824 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=112 frame=6830 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=112 frame=6836 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=112 frame=6842 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=112 frame=6846 action=layout:preset Level C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=112 frame=6850 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=112 frame=6855 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=112 frame=6859 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=112 frame=6863 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=113 frame=6870 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=113 frame=6876 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=113 frame=6882 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=113 frame=6888 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=113 frame=6894 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=113 frame=6900 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=113 frame=6904 action=layout:preset Assets C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=113 frame=6908 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=113 frame=6913 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=113 frame=6917 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=113 frame=6921 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=114 frame=6928 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=114 frame=6934 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=114 frame=6940 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=114 frame=6946 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=114 frame=6952 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=114 frame=6958 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=114 frame=6962 action=layout:preset Animation C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=114 frame=6966 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=114 frame=6971 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=114 frame=6976 action=play:start C0 S0 F0 P0 chips=0 errors=0 result=ok
+cycle=114 frame=6981 action=play:stop C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=114 frame=6985 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=114 frame=6989 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=115 frame=6996 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=115 frame=7002 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=115 frame=7008 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=115 frame=7014 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=115 frame=7020 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=115 frame=7026 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=115 frame=7030 action=layout:preset Telemetry C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=115 frame=7034 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=115 frame=7039 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=115 frame=7043 action=window:minimize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=115 frame=7050 action=window:restore C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=116 frame=7057 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=116 frame=7063 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=116 frame=7069 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=116 frame=7075 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=116 frame=7081 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=116 frame=7087 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=116 frame=7091 action=layout:preset Level C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=116 frame=7095 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=116 frame=7100 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=116 frame=7107 action=window:resize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=116 frame=7111 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=117 frame=7118 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=117 frame=7124 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=117 frame=7130 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=117 frame=7136 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=117 frame=7142 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=117 frame=7148 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=117 frame=7152 action=layout:preset Assets C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=117 frame=7156 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=117 frame=7161 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=117 frame=7165 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=117 frame=7169 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=118 frame=7176 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=118 frame=7182 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=118 frame=7188 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=118 frame=7194 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=118 frame=7200 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=118 frame=7206 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=118 frame=7210 action=layout:preset Animation C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=118 frame=7214 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=118 frame=7219 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=118 frame=7223 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=118 frame=7227 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=119 frame=7234 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=119 frame=7240 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=119 frame=7246 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=119 frame=7252 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=119 frame=7258 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=119 frame=7264 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=119 frame=7268 action=layout:preset Telemetry C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=119 frame=7272 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=119 frame=7277 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=119 frame=7281 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=119 frame=7285 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=120 frame=7292 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=120 frame=7298 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=120 frame=7304 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=120 frame=7310 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=120 frame=7316 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=120 frame=7322 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=120 frame=7326 action=layout:preset Level C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=120 frame=7330 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=120 frame=7335 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=120 frame=7339 action=window:minimize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=120 frame=7346 action=window:restore C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=121 frame=7353 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=121 frame=7359 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=121 frame=7365 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=121 frame=7371 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=121 frame=7377 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=121 frame=7383 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=121 frame=7387 action=layout:preset Assets C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=121 frame=7391 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=121 frame=7396 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=121 frame=7403 action=window:resize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=121 frame=7407 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=122 frame=7414 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=122 frame=7420 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=122 frame=7426 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=122 frame=7432 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=122 frame=7438 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=122 frame=7444 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=122 frame=7448 action=layout:preset Animation C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=122 frame=7452 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=122 frame=7457 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=122 frame=7461 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=122 frame=7465 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=123 frame=7472 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=123 frame=7478 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=123 frame=7484 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=123 frame=7490 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=123 frame=7496 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=123 frame=7502 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=123 frame=7506 action=layout:preset Telemetry C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=123 frame=7510 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=123 frame=7515 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=123 frame=7519 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=123 frame=7523 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=124 frame=7530 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=124 frame=7536 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=124 frame=7542 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=124 frame=7548 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=124 frame=7554 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=124 frame=7560 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=124 frame=7564 action=layout:preset Level C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=124 frame=7568 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=124 frame=7573 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=124 frame=7578 action=play:start C0 S0 F0 P0 chips=0 errors=0 result=ok
+cycle=124 frame=7583 action=play:stop C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=124 frame=7587 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=124 frame=7591 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=125 frame=7598 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=125 frame=7604 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=125 frame=7610 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=125 frame=7616 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=125 frame=7622 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=125 frame=7628 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=125 frame=7632 action=layout:preset Assets C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=125 frame=7636 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=125 frame=7641 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=125 frame=7645 action=window:minimize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=125 frame=7652 action=window:restore C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=126 frame=7659 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=126 frame=7665 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=126 frame=7671 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=126 frame=7677 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=126 frame=7683 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=126 frame=7689 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=126 frame=7693 action=layout:preset Animation C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=126 frame=7697 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=126 frame=7702 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=126 frame=7709 action=window:resize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=126 frame=7713 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=127 frame=7720 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=127 frame=7726 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=127 frame=7732 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=127 frame=7738 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=127 frame=7744 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=127 frame=7750 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=127 frame=7754 action=layout:preset Telemetry C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=127 frame=7758 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=127 frame=7763 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=127 frame=7767 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=127 frame=7771 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=128 frame=7778 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=128 frame=7784 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=128 frame=7790 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=128 frame=7796 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=128 frame=7802 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=128 frame=7808 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=128 frame=7812 action=layout:preset Level C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=128 frame=7816 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=128 frame=7821 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=128 frame=7830 action=window:F11 fullscreen (real hotkey) C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=128 frame=7839 action=window:F11 fullscreen back (real hotkey) C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=129 frame=7846 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=129 frame=7852 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=129 frame=7858 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=129 frame=7864 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=129 frame=7870 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=129 frame=7876 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=129 frame=7880 action=layout:preset Assets C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=129 frame=7884 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=129 frame=7889 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=129 frame=7893 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=129 frame=7897 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=130 frame=7904 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=130 frame=7910 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=130 frame=7916 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=130 frame=7922 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=130 frame=7928 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=130 frame=7934 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=130 frame=7938 action=layout:preset Animation C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=130 frame=7942 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=130 frame=7947 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=130 frame=7951 action=window:minimize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=130 frame=7958 action=window:restore C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=131 frame=7965 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=131 frame=7971 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=131 frame=7977 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=131 frame=7983 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=131 frame=7989 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=131 frame=7995 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=131 frame=7999 action=layout:preset Telemetry C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=131 frame=8003 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=131 frame=8008 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=131 frame=8015 action=window:resize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=131 frame=8019 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=132 frame=8026 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=132 frame=8032 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=132 frame=8038 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=132 frame=8044 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=132 frame=8050 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=132 frame=8056 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=132 frame=8060 action=layout:preset Level C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=132 frame=8064 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=132 frame=8069 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=132 frame=8073 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=132 frame=8077 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=133 frame=8084 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=133 frame=8090 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=133 frame=8096 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=133 frame=8102 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=133 frame=8108 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=133 frame=8114 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=133 frame=8118 action=layout:preset Assets C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=133 frame=8122 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=133 frame=8127 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=133 frame=8131 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=133 frame=8135 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=134 frame=8142 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=134 frame=8148 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=134 frame=8154 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=134 frame=8160 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=134 frame=8166 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=134 frame=8172 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=134 frame=8176 action=layout:preset Animation C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=134 frame=8180 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=134 frame=8185 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=134 frame=8190 action=play:start C0 S0 F0 P0 chips=0 errors=0 result=ok
+cycle=134 frame=8195 action=play:stop C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=134 frame=8199 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=134 frame=8203 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=135 frame=8210 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=135 frame=8216 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=135 frame=8222 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=135 frame=8228 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=135 frame=8234 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=135 frame=8240 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=135 frame=8244 action=layout:preset Telemetry C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=135 frame=8248 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=135 frame=8253 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=135 frame=8257 action=window:minimize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=135 frame=8264 action=window:restore C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=136 frame=8271 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=136 frame=8277 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=136 frame=8283 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=136 frame=8289 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=136 frame=8295 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=136 frame=8301 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=136 frame=8305 action=layout:preset Level C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=136 frame=8309 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=136 frame=8314 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=136 frame=8321 action=window:resize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=136 frame=8325 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=137 frame=8332 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=137 frame=8338 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=137 frame=8344 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=137 frame=8350 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=137 frame=8356 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=137 frame=8362 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=137 frame=8366 action=layout:preset Assets C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=137 frame=8370 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=137 frame=8375 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=137 frame=8379 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=137 frame=8383 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=138 frame=8390 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=138 frame=8396 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=138 frame=8402 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=138 frame=8408 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=138 frame=8414 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=138 frame=8420 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=138 frame=8424 action=layout:preset Animation C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=138 frame=8428 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=138 frame=8433 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=138 frame=8437 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=138 frame=8441 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=139 frame=8448 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=139 frame=8454 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=139 frame=8460 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=139 frame=8466 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=139 frame=8472 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=139 frame=8478 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=139 frame=8482 action=layout:preset Telemetry C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=139 frame=8486 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=139 frame=8491 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=139 frame=8495 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=139 frame=8499 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=140 frame=8506 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=140 frame=8512 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=140 frame=8518 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=140 frame=8524 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=140 frame=8530 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=140 frame=8536 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=140 frame=8540 action=layout:preset Level C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=140 frame=8544 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=140 frame=8549 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=140 frame=8553 action=window:minimize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=140 frame=8560 action=window:restore C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=141 frame=8567 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=141 frame=8573 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=141 frame=8579 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=141 frame=8585 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=141 frame=8591 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=141 frame=8597 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=141 frame=8601 action=layout:preset Assets C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=141 frame=8605 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=141 frame=8610 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=141 frame=8617 action=window:resize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=141 frame=8621 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=142 frame=8628 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=142 frame=8634 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=142 frame=8640 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=142 frame=8646 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=142 frame=8652 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=142 frame=8658 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=142 frame=8662 action=layout:preset Animation C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=142 frame=8666 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=142 frame=8671 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=142 frame=8675 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=142 frame=8679 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=143 frame=8686 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=143 frame=8692 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=143 frame=8698 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=143 frame=8704 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=143 frame=8710 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=143 frame=8716 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=143 frame=8720 action=layout:preset Telemetry C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=143 frame=8724 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=143 frame=8729 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=143 frame=8733 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=143 frame=8737 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=144 frame=8744 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=144 frame=8750 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=144 frame=8756 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=144 frame=8762 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=144 frame=8768 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=144 frame=8774 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=144 frame=8778 action=layout:preset Level C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=144 frame=8782 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=144 frame=8787 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=144 frame=8792 action=play:start C0 S0 F0 P0 chips=0 errors=0 result=ok
+cycle=144 frame=8797 action=play:stop C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=144 frame=8801 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=144 frame=8805 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=145 frame=8812 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=145 frame=8818 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=145 frame=8824 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=145 frame=8830 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=145 frame=8836 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=145 frame=8842 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=145 frame=8846 action=layout:preset Assets C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=145 frame=8850 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=145 frame=8855 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=145 frame=8859 action=window:minimize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=145 frame=8866 action=window:restore C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=146 frame=8873 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=146 frame=8879 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=146 frame=8885 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=146 frame=8891 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=146 frame=8897 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=146 frame=8903 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=146 frame=8907 action=layout:preset Animation C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=146 frame=8911 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=146 frame=8916 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=146 frame=8923 action=window:resize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=146 frame=8927 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=147 frame=8934 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=147 frame=8940 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=147 frame=8946 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=147 frame=8952 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=147 frame=8958 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=147 frame=8964 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=147 frame=8968 action=layout:preset Telemetry C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=147 frame=8972 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=147 frame=8977 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=147 frame=8981 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=147 frame=8985 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=148 frame=8992 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=148 frame=8998 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=148 frame=9004 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=148 frame=9010 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=148 frame=9016 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=148 frame=9022 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=148 frame=9026 action=layout:preset Level C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=148 frame=9030 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=148 frame=9035 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=148 frame=9039 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=148 frame=9043 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=149 frame=9050 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=149 frame=9056 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=149 frame=9062 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=149 frame=9068 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=149 frame=9074 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=149 frame=9080 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=149 frame=9084 action=layout:preset Assets C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=149 frame=9088 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=149 frame=9093 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=149 frame=9097 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=149 frame=9101 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=150 frame=9108 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=150 frame=9114 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=150 frame=9120 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=150 frame=9126 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=150 frame=9132 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=150 frame=9138 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=150 frame=9142 action=layout:preset Animation C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=150 frame=9146 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=150 frame=9151 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=150 frame=9155 action=window:minimize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=150 frame=9162 action=window:restore C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=151 frame=9169 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=151 frame=9175 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=151 frame=9181 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=151 frame=9187 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=151 frame=9193 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=151 frame=9199 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=151 frame=9203 action=layout:preset Telemetry C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=151 frame=9207 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=151 frame=9212 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=151 frame=9219 action=window:resize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=151 frame=9223 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=152 frame=9230 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=152 frame=9236 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=152 frame=9242 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=152 frame=9248 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=152 frame=9254 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=152 frame=9260 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=152 frame=9264 action=layout:preset Level C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=152 frame=9268 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=152 frame=9273 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=152 frame=9277 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=152 frame=9281 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=153 frame=9288 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=153 frame=9294 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=153 frame=9300 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=153 frame=9306 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=153 frame=9312 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=153 frame=9318 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=153 frame=9322 action=layout:preset Assets C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=153 frame=9326 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=153 frame=9331 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=153 frame=9340 action=window:F11 fullscreen (real hotkey) C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=153 frame=9349 action=window:F11 fullscreen back (real hotkey) C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=154 frame=9356 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=154 frame=9362 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=154 frame=9368 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=154 frame=9374 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=154 frame=9380 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=154 frame=9386 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=154 frame=9390 action=layout:preset Animation C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=154 frame=9394 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=154 frame=9399 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=154 frame=9404 action=play:start C0 S0 F0 P0 chips=0 errors=0 result=ok
+cycle=154 frame=9409 action=play:stop C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=154 frame=9413 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=154 frame=9417 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=155 frame=9424 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=155 frame=9430 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=155 frame=9436 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=155 frame=9442 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=155 frame=9448 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=155 frame=9454 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=155 frame=9458 action=layout:preset Telemetry C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=155 frame=9462 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=155 frame=9467 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=155 frame=9471 action=window:minimize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=155 frame=9478 action=window:restore C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=156 frame=9485 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=156 frame=9491 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=156 frame=9497 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=156 frame=9503 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=156 frame=9509 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=156 frame=9515 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=156 frame=9519 action=layout:preset Level C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=156 frame=9523 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=156 frame=9528 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=156 frame=9535 action=window:resize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=156 frame=9539 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=157 frame=9546 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=157 frame=9552 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=157 frame=9558 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=157 frame=9564 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=157 frame=9570 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=157 frame=9576 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=157 frame=9580 action=layout:preset Assets C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=157 frame=9584 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=157 frame=9589 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=157 frame=9593 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=157 frame=9597 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=158 frame=9604 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=158 frame=9610 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=158 frame=9616 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=158 frame=9622 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=158 frame=9628 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=158 frame=9634 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=158 frame=9638 action=layout:preset Animation C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=158 frame=9642 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=158 frame=9647 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=158 frame=9651 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=158 frame=9655 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=159 frame=9662 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=159 frame=9668 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=159 frame=9674 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=159 frame=9680 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=159 frame=9686 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=159 frame=9692 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=159 frame=9696 action=layout:preset Telemetry C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=159 frame=9700 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=159 frame=9705 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=159 frame=9709 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=159 frame=9713 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=160 frame=9720 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=160 frame=9726 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=160 frame=9732 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=160 frame=9738 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=160 frame=9744 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=160 frame=9750 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=160 frame=9754 action=layout:preset Level C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=160 frame=9758 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=160 frame=9763 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=160 frame=9767 action=window:minimize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=160 frame=9774 action=window:restore C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=161 frame=9781 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=161 frame=9787 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=161 frame=9793 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=161 frame=9799 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=161 frame=9805 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=161 frame=9811 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=161 frame=9815 action=layout:preset Assets C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=161 frame=9819 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=161 frame=9824 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=161 frame=9831 action=window:resize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=161 frame=9835 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=162 frame=9842 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=162 frame=9848 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=162 frame=9854 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=162 frame=9860 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=162 frame=9866 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=162 frame=9872 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=162 frame=9876 action=layout:preset Animation C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=162 frame=9880 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=162 frame=9885 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=162 frame=9889 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=162 frame=9893 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=163 frame=9900 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=163 frame=9906 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=163 frame=9912 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=163 frame=9918 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=163 frame=9924 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=163 frame=9930 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=163 frame=9934 action=layout:preset Telemetry C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=163 frame=9938 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=163 frame=9943 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=163 frame=9947 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=163 frame=9951 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=164 frame=9958 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=164 frame=9964 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=164 frame=9970 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=164 frame=9976 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=164 frame=9982 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=164 frame=9988 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=164 frame=9992 action=layout:preset Level C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=164 frame=9996 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=164 frame=10001 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=164 frame=10006 action=play:start C0 S0 F0 P0 chips=0 errors=0 result=ok
+cycle=164 frame=10011 action=play:stop C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=164 frame=10015 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=164 frame=10019 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=165 frame=10026 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=165 frame=10032 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=165 frame=10038 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=165 frame=10044 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=165 frame=10050 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=165 frame=10056 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=165 frame=10060 action=layout:preset Assets C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=165 frame=10064 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=165 frame=10069 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=165 frame=10073 action=window:minimize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=165 frame=10080 action=window:restore C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=166 frame=10087 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=166 frame=10093 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=166 frame=10099 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=166 frame=10105 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=166 frame=10111 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=166 frame=10117 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=166 frame=10121 action=layout:preset Animation C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=166 frame=10125 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=166 frame=10130 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=166 frame=10137 action=window:resize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=166 frame=10141 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=167 frame=10148 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=167 frame=10154 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=167 frame=10160 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=167 frame=10166 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=167 frame=10172 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=167 frame=10178 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=167 frame=10182 action=layout:preset Telemetry C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=167 frame=10186 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=167 frame=10191 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=167 frame=10195 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=167 frame=10199 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=168 frame=10206 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=168 frame=10212 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=168 frame=10218 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=168 frame=10224 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=168 frame=10230 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=168 frame=10236 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=168 frame=10240 action=layout:preset Level C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=168 frame=10244 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=168 frame=10249 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=168 frame=10253 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=168 frame=10257 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=169 frame=10264 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=169 frame=10270 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=169 frame=10276 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=169 frame=10282 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=169 frame=10288 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=169 frame=10294 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=169 frame=10298 action=layout:preset Assets C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=169 frame=10302 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=169 frame=10307 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=169 frame=10311 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=169 frame=10315 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=170 frame=10322 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=170 frame=10328 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=170 frame=10334 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=170 frame=10340 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=170 frame=10346 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=170 frame=10352 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=170 frame=10356 action=layout:preset Animation C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=170 frame=10360 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=170 frame=10365 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=170 frame=10369 action=window:minimize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=170 frame=10376 action=window:restore C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=171 frame=10383 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=171 frame=10389 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=171 frame=10395 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=171 frame=10401 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=171 frame=10407 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=171 frame=10413 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=171 frame=10417 action=layout:preset Telemetry C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=171 frame=10421 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=171 frame=10426 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=171 frame=10433 action=window:resize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=171 frame=10437 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=172 frame=10444 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=172 frame=10450 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=172 frame=10456 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=172 frame=10462 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=172 frame=10468 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=172 frame=10474 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=172 frame=10478 action=layout:preset Level C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=172 frame=10482 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=172 frame=10487 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=172 frame=10491 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=172 frame=10495 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=173 frame=10502 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=173 frame=10508 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=173 frame=10514 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=173 frame=10520 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=173 frame=10526 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=173 frame=10532 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=173 frame=10536 action=layout:preset Assets C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=173 frame=10540 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=173 frame=10545 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=173 frame=10549 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=173 frame=10553 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=174 frame=10560 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=174 frame=10566 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=174 frame=10572 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=174 frame=10578 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=174 frame=10584 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=174 frame=10590 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=174 frame=10594 action=layout:preset Animation C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=174 frame=10598 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=174 frame=10603 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=174 frame=10608 action=play:start C0 S0 F0 P0 chips=0 errors=0 result=ok
+cycle=174 frame=10613 action=play:stop C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=174 frame=10617 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=174 frame=10621 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=175 frame=10628 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=175 frame=10634 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=175 frame=10640 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=175 frame=10646 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=175 frame=10652 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=175 frame=10658 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=175 frame=10662 action=layout:preset Telemetry C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=175 frame=10666 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=175 frame=10671 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=175 frame=10675 action=window:minimize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=175 frame=10682 action=window:restore C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=176 frame=10689 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=176 frame=10695 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=176 frame=10701 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=176 frame=10707 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=176 frame=10713 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=176 frame=10719 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=176 frame=10723 action=layout:preset Level C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=176 frame=10727 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=176 frame=10732 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=176 frame=10739 action=window:resize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=176 frame=10743 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=177 frame=10750 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=177 frame=10756 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=177 frame=10762 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=177 frame=10768 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=177 frame=10774 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=177 frame=10780 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=177 frame=10784 action=layout:preset Assets C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=177 frame=10788 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=177 frame=10793 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=177 frame=10797 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=177 frame=10801 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=178 frame=10808 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=178 frame=10814 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=178 frame=10820 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=178 frame=10826 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=178 frame=10832 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=178 frame=10838 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=178 frame=10842 action=layout:preset Animation C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=178 frame=10846 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=178 frame=10851 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=178 frame=10860 action=window:F11 fullscreen (real hotkey) C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=178 frame=10869 action=window:F11 fullscreen back (real hotkey) C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=179 frame=10876 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=179 frame=10882 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=179 frame=10888 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=179 frame=10894 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=179 frame=10900 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=179 frame=10906 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=179 frame=10910 action=layout:preset Telemetry C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=179 frame=10914 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=179 frame=10919 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=179 frame=10923 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=179 frame=10927 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=180 frame=10934 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=180 frame=10940 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=180 frame=10946 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=180 frame=10952 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=180 frame=10958 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=180 frame=10964 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=180 frame=10968 action=layout:preset Level C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=180 frame=10972 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=180 frame=10977 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=180 frame=10981 action=window:minimize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=180 frame=10988 action=window:restore C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=181 frame=10995 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=181 frame=11001 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=181 frame=11007 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=181 frame=11013 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=181 frame=11019 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=181 frame=11025 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=181 frame=11029 action=layout:preset Assets C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=181 frame=11033 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=181 frame=11038 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=181 frame=11045 action=window:resize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=181 frame=11049 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=182 frame=11056 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=182 frame=11062 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=182 frame=11068 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=182 frame=11074 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=182 frame=11080 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=182 frame=11086 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=182 frame=11090 action=layout:preset Animation C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=182 frame=11094 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=182 frame=11099 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=182 frame=11103 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=182 frame=11107 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=183 frame=11114 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=183 frame=11120 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=183 frame=11126 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=183 frame=11132 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=183 frame=11138 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=183 frame=11144 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=183 frame=11148 action=layout:preset Telemetry C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=183 frame=11152 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=183 frame=11157 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=183 frame=11161 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=183 frame=11165 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=184 frame=11172 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=184 frame=11178 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=184 frame=11184 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=184 frame=11190 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=184 frame=11196 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=184 frame=11202 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=184 frame=11206 action=layout:preset Level C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=184 frame=11210 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=184 frame=11215 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=184 frame=11220 action=play:start C0 S0 F0 P0 chips=0 errors=0 result=ok
+cycle=184 frame=11225 action=play:stop C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=184 frame=11229 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=184 frame=11233 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=185 frame=11240 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=185 frame=11246 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=185 frame=11252 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=185 frame=11258 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=185 frame=11264 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=185 frame=11270 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=185 frame=11274 action=layout:preset Assets C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=185 frame=11278 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=185 frame=11283 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=185 frame=11287 action=window:minimize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=185 frame=11294 action=window:restore C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=186 frame=11301 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=186 frame=11307 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=186 frame=11313 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=186 frame=11319 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=186 frame=11325 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=186 frame=11331 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=186 frame=11335 action=layout:preset Animation C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=186 frame=11339 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=186 frame=11344 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=186 frame=11351 action=window:resize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=186 frame=11355 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=187 frame=11362 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=187 frame=11368 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=187 frame=11374 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=187 frame=11380 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=187 frame=11386 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=187 frame=11392 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=187 frame=11396 action=layout:preset Telemetry C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=187 frame=11400 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=187 frame=11405 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=187 frame=11409 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=187 frame=11413 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=188 frame=11420 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=188 frame=11426 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=188 frame=11432 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=188 frame=11438 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=188 frame=11444 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=188 frame=11450 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=188 frame=11454 action=layout:preset Level C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=188 frame=11458 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=188 frame=11463 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=188 frame=11467 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=188 frame=11471 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=189 frame=11478 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=189 frame=11484 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=189 frame=11490 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=189 frame=11496 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=189 frame=11502 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=189 frame=11508 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=189 frame=11512 action=layout:preset Assets C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=189 frame=11516 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=189 frame=11521 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=189 frame=11525 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=189 frame=11529 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=190 frame=11536 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=190 frame=11542 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=190 frame=11548 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=190 frame=11554 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=190 frame=11560 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=190 frame=11566 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=190 frame=11570 action=layout:preset Animation C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=190 frame=11574 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=190 frame=11579 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=190 frame=11583 action=window:minimize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=190 frame=11590 action=window:restore C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=191 frame=11597 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=191 frame=11603 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=191 frame=11609 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=191 frame=11615 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=191 frame=11621 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=191 frame=11627 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=191 frame=11631 action=layout:preset Telemetry C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=191 frame=11635 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=191 frame=11640 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=191 frame=11647 action=window:resize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=191 frame=11651 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=192 frame=11658 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=192 frame=11664 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=192 frame=11670 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=192 frame=11676 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=192 frame=11682 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=192 frame=11688 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=192 frame=11692 action=layout:preset Level C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=192 frame=11696 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=192 frame=11701 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=192 frame=11705 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=192 frame=11709 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=193 frame=11716 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=193 frame=11722 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=193 frame=11728 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=193 frame=11734 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=193 frame=11740 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=193 frame=11746 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=193 frame=11750 action=layout:preset Assets C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=193 frame=11754 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=193 frame=11759 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=193 frame=11763 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=193 frame=11767 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=194 frame=11774 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=194 frame=11780 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=194 frame=11786 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=194 frame=11792 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=194 frame=11798 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=194 frame=11804 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=194 frame=11808 action=layout:preset Animation C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=194 frame=11812 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=194 frame=11817 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=194 frame=11822 action=play:start C0 S0 F0 P0 chips=0 errors=0 result=ok
+cycle=194 frame=11827 action=play:stop C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=194 frame=11831 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=194 frame=11835 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=195 frame=11842 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=195 frame=11848 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=195 frame=11854 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=195 frame=11860 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=195 frame=11866 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=195 frame=11872 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=195 frame=11876 action=layout:preset Telemetry C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=195 frame=11880 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=195 frame=11885 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=195 frame=11889 action=window:minimize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=195 frame=11896 action=window:restore C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=196 frame=11903 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=196 frame=11909 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=196 frame=11915 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=196 frame=11921 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=196 frame=11927 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=196 frame=11933 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=196 frame=11937 action=layout:preset Level C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=196 frame=11941 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=196 frame=11946 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=196 frame=11953 action=window:resize C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=196 frame=11957 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=197 frame=11964 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=197 frame=11970 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=197 frame=11976 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=197 frame=11982 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=197 frame=11988 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=197 frame=11994 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=197 frame=11998 action=layout:preset Assets C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=197 frame=12002 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=197 frame=12007 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=197 frame=12011 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=197 frame=12015 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=198 frame=12022 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=198 frame=12028 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=198 frame=12034 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=198 frame=12040 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=198 frame=12046 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=198 frame=12052 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=198 frame=12056 action=layout:preset Animation C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=198 frame=12060 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=198 frame=12065 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=198 frame=12069 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=198 frame=12073 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=199 frame=12080 action=click:Scale snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=199 frame=12086 action=click:Move snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=199 frame=12092 action=click:Rotate snap chip C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=199 frame=12098 action=click:Grid toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=199 frame=12104 action=click:Collider toggle C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=199 frame=12110 action=click:World/Local button C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=199 frame=12114 action=layout:preset Telemetry C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=199 frame=12118 action=viewport:hide C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=199 frame=12123 action=viewport:show C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=199 frame=12127 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+cycle=199 frame=12131 action=window:no-op C0 S0 F0 P0 chips=6 errors=0 result=ok
+# done: cycles=200 actions=2240 failed=0

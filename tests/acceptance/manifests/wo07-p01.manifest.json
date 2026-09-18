@@ -1,0 +1,25 @@
+{
+  "manifest": "wo07-p01",
+  "cases": [
+    {
+      "id": "P01",
+      "description": "ImPlot lifetime + known data: a real runtime plugin adopting the host's ImGui/ImPlot contexts plots F-TRAJECTORY time-series, XY, scatter, shaded band, a 3-series legend, a log10 axis, the nonfinite (NaN/Inf skipped) policy and empty series under the themed UI, across 50 in-process reload/reopen cycles per launch (3 fresh launches). Asserts adopted contexts stable + non-null, fitted limits == known ranges, nonfinite samples never move them, log/linear spacing, legend entries, drawn vertices with the series colours at known samples, ImGui stack balance, zero recovered ImGui errors, and a front-buffer pixel probe of the presented image at a known sample.",
+      "tier": "G",
+      "profiles": ["gpu", "release"],
+      "requires": ["windows", "gpu-gl"],
+      "command": "powershell",
+      "workingDir": "{BIN}",
+      "args": [
+        "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
+        "{ACCEPTANCE}\\fixtures\\Run-WO07Plots.ps1",
+        "-Bin", "{BIN}",
+        "-Output", "{REPO}\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-07\\p01-runner-{CONFIG}",
+        "-Launches", "3"
+      ],
+      "expectExit": 0,
+      "minTests": 3,
+      "deadlineSec": 600,
+      "fixture": "../../tests/WO07PlotFixture.cpp"
+    }
+  ]
+}
