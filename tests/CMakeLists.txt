@@ -170,6 +170,13 @@ set_target_properties(WO07LifetimeFixture PROPERTIES RUNTIME_OUTPUT_DIRECTORY
     "${COSMIC_SDK_DIR}/build/Runtime/$<CONFIG>")
 add_dependencies(CosmicTests WO07LifetimeFixture)
 
+# WO-07 L03 — a project DLL that loads but exports none of the engine plugin
+# signatures, so LoadProjectDLL must reject it and fall back to the launcher.
+add_library(WO07NoExport SHARED WO07NoExport.cpp)
+set_target_properties(WO07NoExport PROPERTIES RUNTIME_OUTPUT_DIRECTORY
+    "${COSMIC_SDK_DIR}/build/Runtime/$<CONFIG>")
+add_dependencies(CosmicTests WO07NoExport)
+
 target_link_libraries(CosmicTests PRIVATE Cosmic)
 target_include_directories(CosmicTests PRIVATE "${COSMIC_SDK_DIR}/Cosmic/dependencies/doctest")
 

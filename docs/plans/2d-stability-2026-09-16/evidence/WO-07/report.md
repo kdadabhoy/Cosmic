@@ -89,6 +89,25 @@ L05 surface (200 mixed cycles across the SF_Telem Main/Testing/Analysis/Replay s
 native file-dialog cancel, replay open/close, minimize/restore, resize, dock/undock,
 fullscreen, and closed/open/lost serial states) is tracked below.
 
+## L03 — broken runtime-plugin load is recoverable
+
+The same `test_wo07_host` binary drives three broken-load cases in fresh isolated
+children (`COSMIC_WO07_L03_CASE`), each verifying `Application::LoadProjectDLL` rejects
+the plugin and the app falls back to a **live launcher** that serves frames and closes
+cleanly (no crash, no hang, no stale handle):
+
+| Case | Plugin | Logged rejection (non-vacuous) |
+|---|---|---|
+| 0 | a missing DLL path | `Project DLL not found: '…wo07-does-not-exist.dll'` |
+| 1 | `WO07NoExport.dll` (loads, exports none of the engine signatures) | `Plugin is missing required engine export signatures!` |
+| 2 | `WO07LifetimeFixture.dll` with its report env unset → `CreatePluginLayer` returns null | `Plugin's CreatePluginLayer() returned nullptr — aborting load.` |
+
+Each child then constructs the `Application` without throwing, runs ≥5 live launcher
+frames (proving the host stayed functional), and closes cleanly. Driven through the
+runner as case `L03` (5 children per case = 15 per config); evidence under
+`l03-Debug/` and `l03-Release/`. The editor game-module compile/load-failure paths
+(`GameModule::Load` / `BuildRunner`) are the L02 surface and are not covered here.
+
 ## Retained tests (regression safety)
 
 WO-07 changes are confined to `Projects/Starforge/**` (editor DLL) plus new test
@@ -111,6 +130,7 @@ separate follow-up and is unrelated to the WO-07 changes.
 |---|---|---|
 | KI-1 | **PASS (Debug + Release, via runner)** | Real editor control; failing-before/passing-after both configs. |
 | L01 | **PASS (Debug + Release, via runner)** | F-LIFETIME runtime-plugin teardown, 100 reload + 10 fresh cycles per config; see below. |
+| L03 | **PASS (Debug + Release, via runner)** | Broken runtime-plugin load is recoverable (missing DLL / missing exports / null CreatePluginLayer); see below. |
 | L05 (stack-balance oracle) | **Mechanism delivered + demonstrated** | Per-widget colour-stack oracle on the real editor viewport strip, Release-safe; see above. |
 
 ## L01 — runtime-plugin (F-LIFETIME) teardown

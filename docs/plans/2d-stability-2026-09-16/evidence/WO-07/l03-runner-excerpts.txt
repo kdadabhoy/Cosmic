@@ -1,0 +1,16 @@
+WO-07 L03 — broken runtime-plugin recovery, acceptance-runner summary.
+(Full per-child .out.log files are gitignored; the runner verdict is in l03-<cfg>/results/results.json.)
+
+=== Debug ===
+case 0 completed=5
+case 1 completed=5
+case 2 completed=5
+[doctest] test cases: 15 | 15 passed | 0 failed
+"verdict":  "PASSED"
+
+=== Release ===
+case 0 completed=5
+case 1 completed=5
+case 2 completed=5
+[doctest] test cases: 15 | 15 passed | 0 failed
+"verdict":  "PASSED"

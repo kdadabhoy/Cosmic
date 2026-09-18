@@ -1,0 +1,25 @@
+{
+  "manifest": "wo07-l03",
+  "cases": [
+    {
+      "id": "L03",
+      "description": "Broken runtime-plugin load is recoverable: missing DLL, a DLL missing the engine export signatures, and a DLL whose CreatePluginLayer returns nullptr. Each is rejected by Application::LoadProjectDLL (logged, FreeLibrary, no active layer) and the app falls back to a live launcher that serves frames and closes cleanly. 5 isolated children per case.",
+      "tier": "G",
+      "profiles": ["gpu", "release"],
+      "requires": ["windows", "gpu-gl"],
+      "command": "powershell",
+      "workingDir": "{BIN}",
+      "args": [
+        "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
+        "{ACCEPTANCE}\\fixtures\\Run-WO07FailLoad.ps1",
+        "-Bin", "{BIN}",
+        "-Output", "{REPO}\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-07\\l03-runner-{CONFIG}",
+        "-IterationsPerCase", "5"
+      ],
+      "expectExit": 0,
+      "minTests": 15,
+      "deadlineSec": 600,
+      "fixture": "../../tests/test_wo07_host.cpp"
+    }
+  ]
+}

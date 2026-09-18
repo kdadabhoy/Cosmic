@@ -164,3 +164,61 @@ TEST_CASE("WO-07 L01 host: runtime plugin load/unload teardown (reload path)" * 
     if (sel) { fresh = (sel[0] == '1') ? 1 : 0; free(sel); }
     RunLifetime(fresh != 0);
 }
+
+namespace
+{
+    // Counts frames the (recovered) host actually served, then closes it. If the app
+    // reaches N live frames it is a functional launcher, not a crashed/hung half-load.
+    class FrameCounter final : public Cosmic::Layer
+    {
+        int& m_Frames; int m_Limit;
+    public:
+        FrameCounter(int& frames, int limit) : Cosmic::Layer("WO07 L03 driver"), m_Frames(frames), m_Limit(limit) {}
+        void OnUpdate(float) override
+        {
+            if (++m_Frames >= m_Limit)
+            {
+                Cosmic::WindowCloseEvent e;
+                Cosmic::Application::Get().OnEvent(e);
+            }
+        }
+    };
+}
+
+// L03 — a broken runtime-plugin load must be recoverable: Application::LoadProjectDLL
+// rejects it (logs, FreeLibrary, no active layer, no stale handle) and the app falls
+// back to a live launcher. Cases (COSMIC_WO07_L03_CASE): 0 missing DLL, 1 a DLL missing
+// the engine export signatures, 2 a DLL whose CreatePluginLayer returns nullptr.
+TEST_CASE("WO-07 L03 host: broken plugin load is recoverable" * doctest::skip())
+{
+    int which = 0;
+    char* sel = nullptr; size_t n = 0;
+    _dupenv_s(&sel, &n, "COSMIC_WO07_L03_CASE");
+    if (sel) { which = std::atoi(sel); free(sel); }
+
+    wchar_t exePath[MAX_PATH]{};
+    REQUIRE(GetModuleFileNameW(nullptr, exePath, MAX_PATH) != 0);
+    const auto dir = std::filesystem::path(exePath).parent_path();
+    std::string plugin;
+    switch (which)
+    {
+    case 0: plugin = (dir / "wo07-does-not-exist.dll").string(); break;  // missing DLL
+    case 1: plugin = (dir / "WO07NoExport.dll").string(); break;         // missing exports
+    default:                                                             // null CreatePluginLayer
+        plugin = (dir / "WO07LifetimeFixture.dll").string();
+        _putenv_s("COSMIC_WO07_LIFETIME_REPORT", "");                    // unset -> returns nullptr
+        break;
+    }
+    CAPTURE(which); CAPTURE(plugin);
+
+    int frames = 0;
+    {
+        Cosmic::Application app(plugin);   // must NOT throw — the failure is handled internally
+        app.GetWindow().SetVSync(false);
+        if (HWND hwnd = WO05NativeWindow(app.GetWindow())) ShowWindow(hwnd, SW_HIDE);
+        app.PushLayer(new FrameCounter(frames, 5));
+        app.Run();                          // a live launcher runs, then closes cleanly
+    }
+    CHECK(frames >= 5);                      // the host stayed live and functional after the bad load
+    std::printf("WO07 L03 case=%d frames=%d recovered\n", which, frames);
+}
