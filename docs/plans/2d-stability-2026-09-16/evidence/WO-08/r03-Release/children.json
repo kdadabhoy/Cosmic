@@ -1,0 +1,35 @@
+﻿{
+    "id":  "R03",
+    "tier":  "G",
+    "description":  "WO-08 WO-08 R03 via CosmicRenderTests.exe",
+    "requires":  [
+                     "windows",
+                     "gpu-gl"
+                 ],
+    "transport":  "none",
+    "seed":  null,
+    "start_utc":  "2026-09-18T11:50:06.7546293Z",
+    "deadline_sec":  300,
+    "exercised":  "production",
+    "command":  "C:\\dev\\Cosmic\\build\\Runtime\\Release\\CosmicRenderTests.exe \"--test-suite=WO-08 R03\" --reporters=console --no-intro --no-colors",
+    "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-08\\r03-Release\\R03.out.log",
+    "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-08\\r03-Release\\R03.err.log",
+    "pid":  8984,
+    "exit_code":  0,
+    "crash":  false,
+    "tests_passed":  5,
+    "tests_expected_min":  5,
+    "verdict":  "PASSED",
+    "detail":  "exit 0 as expected",
+    "duration_sec":  0.582,
+    "end_utc":  "2026-09-18T11:50:07.3442375Z",
+    "golden_mutated":  false,
+    "golden_mutations":  [
+
+                         ],
+    "golden_diagnostics":  [
+
+                           ],
+    "golden_sha256_before":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-08\\r03-Release\\goldens-sha256-before.txt",
+    "golden_sha256_after":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-08\\r03-Release\\goldens-sha256-after.txt"
+}

@@ -1,0 +1,24 @@
+﻿===============================================================================
+C:\dev\Cosmic\tests\render\render_wo08_primitives.cpp(100):
+TEST SUITE: WO-08 R01
+TEST CASE:  R01 primitives — every quad/SDF/line path, alpha, UVs, per-flush grouping (golden + sentinels)
+
+C:\dev\Cosmic\tests\render\GoldenImage.cpp(236): ERROR: golden 'wo08_primitives': no committed golden at C:/dev/Cosmic/tests/render/goldens\wo08_primitives.png — the captured frame was written there. Review it, then commit it (or re-run with --update-goldens).
+
+C:\dev\Cosmic\tests\render\render_wo08_primitives.cpp(221): ERROR: CHECK( CheckGolden("wo08_primitives", frame) ) is NOT correct!
+  values: CHECK( false )
+
+===============================================================================
+C:\dev\Cosmic\tests\render\render_wo08_primitives.cpp(224):
+TEST SUITE: WO-08 R01
+TEST CASE:  R01 text — SDF glyphs, sizes, multi-line, kerning and the '?' fallback (golden + glyph ROIs)
+
+C:\dev\Cosmic\tests\render\GoldenImage.cpp(236): ERROR: golden 'wo08_text': no committed golden at C:/dev/Cosmic/tests/render/goldens\wo08_text.png — the captured frame was written there. Review it, then commit it (or re-run with --update-goldens).
+
+C:\dev\Cosmic\tests\render\render_wo08_primitives.cpp(340): ERROR: CHECK( CheckGolden("wo08_text", frame) ) is NOT correct!
+  values: CHECK( false )
+
+===============================================================================
+[doctest] test cases:      2 |      0 passed | 2 failed | 28 skipped
+[doctest] assertions: 130917 | 130913 passed | 4 failed |
+[doctest] Status: FAILURE!

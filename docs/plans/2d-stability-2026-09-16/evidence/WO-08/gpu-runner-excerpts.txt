@@ -1,0 +1,57 @@
+﻿WO-08 R01-R06 GPU cases (tier G) through the WO-04 acceptance runner + Run-WO08Render.ps1 wrapper - summary (2026-09-18, final pass on the final binaries).
+(results.json + results.junit.xml per config under wo08-gpu-runner-<cfg>/; per-case wrapper output, captures and golden hashes under <case>-<cfg>/.)
+
+=== Debug ===  commit=2024748 dirty=True golden_files=18 golden_mutated=False host=DESKTOP-SEOA4BT os=26200.9457 cpu=AMD Ryzen 7 7800X3D 8-Core Processor gpu=NVIDIA GeForce RTX 5070 Ti driver=32.0.16.1692
+R01              verdict=PASSED   tests=2    duration=1.067s  (exit 0 as expected)
+      [doctest] test cases:      2 |      2 passed | 0 failed | 28 skipped
+      [doctest] assertions: 130915 | 130915 passed | 0 failed |
+      R01 PASSED (WO-08 R01)
+R02              verdict=PASSED   tests=7    duration=4.113s  (exit 0 as expected)
+      [doctest] test cases:       7 |       7 passed | 0 failed | 23 skipped
+      [doctest] assertions: 6835380 | 6835380 passed | 0 failed |
+      R02 PASSED (WO-08 R02)
+R03              verdict=PASSED   tests=5    duration=1.535s  (exit 0 as expected)
+      [doctest] test cases:       5 |       5 passed | 0 failed | 25 skipped
+      [doctest] assertions: 2761622 | 2761622 passed | 0 failed |
+      R03 PASSED (WO-08 R03)
+R04-G            verdict=PASSED   tests=4    duration=2.287s  (exit 0 as expected)
+      [doctest] test cases:        4 |        4 passed | 0 failed | 26 skipped
+      [doctest] assertions: 11390985 | 11390985 passed | 0 failed |
+      R04-G PASSED (WO-08 R04)
+R05              verdict=PASSED   tests=2    duration=1.421s  (exit 0 as expected)
+      R05 live engine GPU objects after 200 cycles: fbo=3 att=6 tex=2 buf=11 vao=6 prog=6
+      [doctest] test cases:    2 |    2 passed | 0 failed | 28 skipped
+      [doctest] assertions: 2804 | 2804 passed | 0 failed |
+      R05 PASSED (WO-08 R05)
+R06-G            verdict=PASSED   tests=2    duration=0.792s  (exit 0 as expected)
+      [doctest] test cases:  2 |  2 passed | 0 failed | 28 skipped
+      [doctest] assertions: 48 | 48 passed | 0 failed |
+      R06-G PASSED (WO-08 R06)
+
+=== Release ===  commit=2024748 dirty=True golden_files=18 golden_mutated=False host=DESKTOP-SEOA4BT os=26200.9457 cpu=AMD Ryzen 7 7800X3D 8-Core Processor gpu=NVIDIA GeForce RTX 5070 Ti driver=32.0.16.1692
+R01              verdict=PASSED   tests=2    duration=0.892s  (exit 0 as expected)
+      [doctest] test cases:      2 |      2 passed | 0 failed | 28 skipped
+      [doctest] assertions: 130915 | 130915 passed | 0 failed |
+      R01 PASSED (WO-08 R01)
+R02              verdict=PASSED   tests=7    duration=1.675s  (exit 0 as expected)
+      [doctest] test cases:       7 |       7 passed | 0 failed | 23 skipped
+      [doctest] assertions: 6835380 | 6835380 passed | 0 failed |
+      R02 PASSED (WO-08 R02)
+R03              verdict=PASSED   tests=5    duration=0.978s  (exit 0 as expected)
+      [doctest] test cases:       5 |       5 passed | 0 failed | 25 skipped
+      [doctest] assertions: 2761622 | 2761622 passed | 0 failed |
+      R03 PASSED (WO-08 R03)
+R04-G            verdict=PASSED   tests=4    duration=1.087s  (exit 0 as expected)
+      [doctest] test cases:        4 |        4 passed | 0 failed | 26 skipped
+      [doctest] assertions: 11390985 | 11390985 passed | 0 failed |
+      R04-G PASSED (WO-08 R04)
+R05              verdict=PASSED   tests=2    duration=1.355s  (exit 0 as expected)
+      R05 live engine GPU objects after 200 cycles: fbo=3 att=6 tex=2 buf=11 vao=6 prog=6
+      [doctest] test cases:    2 |    2 passed | 0 failed | 28 skipped
+      [doctest] assertions: 2804 | 2804 passed | 0 failed |
+      R05 PASSED (WO-08 R05)
+R06-G            verdict=PASSED   tests=2    duration=0.748s  (exit 0 as expected)
+      [doctest] test cases:  2 |  2 passed | 0 failed | 28 skipped
+      [doctest] assertions: 48 | 48 passed | 0 failed |
+      R06-G PASSED (WO-08 R06)
+

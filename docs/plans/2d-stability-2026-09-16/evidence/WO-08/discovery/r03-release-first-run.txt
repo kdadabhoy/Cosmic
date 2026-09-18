@@ -1,0 +1,17 @@
+===============================================================================
+C:\dev\Cosmic\tests\render\render_wo08_instancing.cpp(294):
+TEST SUITE: WO-08 R03
+TEST CASE:  R03 golden — instancing2d: instanced quads + circles with batched draws before and after (NEW 2D golden)
+
+C:\dev\Cosmic\tests\render\render_wo08_instancing.cpp(358): ERROR: CHECK( Near(px({ -8.4f + 23 * 0.62f, 4.3f - 11 * 0.62f }), ToU8(quads[24 * 12 - 1].Color), 3) ) is NOT correct!
+  values: CHECK( false )
+
+C:\dev\Cosmic\tests\render\GoldenImage.cpp(236): ERROR: golden 'instancing2d': no committed golden at C:/dev/Cosmic/tests/render/goldens\instancing2d.png — the captured frame was written there. Review it, then commit it (or re-run with --update-goldens).
+
+C:\dev\Cosmic\tests\render\render_wo08_instancing.cpp(362): ERROR: CHECK( CheckGolden("instancing2d", frame) ) is NOT correct!
+  values: CHECK( false )
+
+===============================================================================
+[doctest] test cases:       5 |       4 passed | 1 failed | 25 skipped
+[doctest] assertions: 2761623 | 2761620 passed | 3 failed |
+[doctest] Status: FAILURE!

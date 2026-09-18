@@ -1,0 +1,43 @@
+[2026-09-18 04:27:45.003] [COSMIC] [error] ImageIO::WritePNG: invalid arguments for 'C:\dev\Cosmic\build\wo08-scratch-temp\cosmic-wo08-r06\r06-args.png'.
+[2026-09-18 04:27:45.003] [COSMIC] [error] ImageIO::WritePNG: invalid arguments for 'C:\dev\Cosmic\build\wo08-scratch-temp\cosmic-wo08-r06\r06-args.png'.
+[2026-09-18 04:27:45.003] [COSMIC] [error] ImageIO::WritePNG: invalid arguments for 'C:\dev\Cosmic\build\wo08-scratch-temp\cosmic-wo08-r06\r06-args.png'.
+[2026-09-18 04:27:45.003] [COSMIC] [error] ImageIO::WritePNG: invalid arguments for 'C:\dev\Cosmic\build\wo08-scratch-temp\cosmic-wo08-r06\r06-args.png'.
+[2026-09-18 04:27:45.003] [COSMIC] [error] ImageIO::WritePNG: invalid arguments for 'C:\dev\Cosmic\build\wo08-scratch-temp\cosmic-wo08-r06\r06-args.png'.
+[2026-09-18 04:27:45.003] [COSMIC] [error] ImageIO::WritePNG: invalid arguments for 'C:\dev\Cosmic\build\wo08-scratch-temp\cosmic-wo08-r06\r06-args.png'.
+[2026-09-18 04:27:45.003] [COSMIC] [error] ImageIO::WritePNG: invalid arguments for 'C:\dev\Cosmic\build\wo08-scratch-temp\cosmic-wo08-r06\r06-args.png'.
+[2026-09-18 04:27:45.004] [COSMIC] [error] ImageIO::WritePNG: failed to write 'C:\dev\Cosmic\build\wo08-scratch-temp\cosmic-wo08-r06\no-such-dir-wo08\x.png'.
+[2026-09-18 04:27:45.004] [COSMIC] [error] ImageIO::WritePNG: failed to write ''.
+[2026-09-18 04:27:45.004] [COSMIC] [warning] ImageIO::ReadPixels: could not decode 'C:\dev\Cosmic\build\wo08-scratch-temp\cosmic-wo08-r06\does-not-exist.png'.
+[2026-09-18 04:27:45.005] [COSMIC] [warning] ImageIO::ReadPixels: could not decode 'C:\dev\Cosmic\build\wo08-scratch-temp\cosmic-wo08-r06\r06-not-an-image.png'.
+[2026-09-18 04:27:45.008] [COSMIC] [warning] ImageIO::ReadPixels: could not decode 'C:\dev\Cosmic\build\wo08-scratch-temp\cosmic-wo08-r06\r06-truncated.png'.
+[2026-09-18 04:27:45.008] [COSMIC] [warning] ImageIO::ReadPixels: could not decode ''.
+[doctest] doctest version is "2.4.12"
+[doctest] run with "--help" for options
+===============================================================================
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(94):
+TEST CASE:  WO-08 R04: ScreenToWorld round trip <= 0.5 px across zoom range, DPI scales, viewport offsets and 641x359
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(137): MESSAGE: R04 ScreenToWorld round trip: 51840 samples, worst 0.0425752 px (bar 0.5)
+
+===============================================================================
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(141):
+TEST CASE:  WO-08 R04: the controller's own projection agrees with the pinhole model to <= 0.5 px, and inverts
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(174): MESSAGE: R04 projection-vs-model worst 0.00109183 px
+
+===============================================================================
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(177):
+TEST CASE:  WO-08 R04: zoom-about-cursor keeps the anchor pixel fixed and PanBy keeps the world under the cursor (<= 0.5 px)
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(231): MESSAGE: R04 zoom-about-cursor: 1550 pairs asserted inside the envelope, 370 outside it measured only (worst 127.803 px)
+
+===============================================================================
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(399):
+TEST CASE:  WO-08 R04: outside the declared envelope the float error is measured, not hidden
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(410): MESSAGE: R04 outside-envelope sample (zoom 0.01, focus 1000): round-trip error 1.4723 px
+
+===============================================================================
+[doctest] test cases:    12 |    12 passed | 0 failed | 398 skipped
+[doctest] assertions: 62047 | 62047 passed | 0 failed |
+[doctest] Status: SUCCESS!

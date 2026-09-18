@@ -1,0 +1,13 @@
+﻿WO-08 R07 named-machine performance qualification (tier Q, Release only) through the WO-04 acceptance runner - summary (2026-09-18, final pass). Numbers qualify DESKTOP-SEOA4BT only.
+(results.json + results.junit.xml per config under wo08-r07-runner-<cfg>/; per-case wrapper output, captures and golden hashes under <case>-<cfg>/.)
+
+=== Debug === NOT RUN (Debug is not a qualified performance configuration; the catalog runs R07 on the release profile only)
+
+=== Release ===  commit=2024748 dirty=True golden_files=18 golden_mutated=False host=DESKTOP-SEOA4BT os=26200.9457 cpu=AMD Ryzen 7 7800X3D 8-Core Processor gpu=NVIDIA GeForce RTX 5070 Ti driver=32.0.16.1692
+R07              verdict=PASSED   tests=2    duration=141.129s  (exit 0 as expected)
+      R07 circles: 411535 frames in 60 s after 10 s warmup; complete-frame ms mean 0.145444 p50 0.0925 p95 0.3658 p99 0.4422 max 2.121; cpu-submit p95 0.0168; gpu-zone samples 411535 p95 0.329664 p99 0.37968; instance draws/frame 1
+      R07 quads: 317850 frames in 60 s after 10 s warmup; complete-frame ms mean 0.188378 p50 0.1199 p95 0.4049 p99 0.4911 max 3.1492; cpu-submit p95 0.0221; gpu-zone samples 317850 p95 0.36032 p99 0.418912; instance draws/frame 1
+      [doctest] test cases:       2 |       2 passed | 0 failed | 28 skipped
+      [doctest] assertions: 8294418 | 8294418 passed | 0 failed |
+      R07 PASSED (WO-08 R07)
+

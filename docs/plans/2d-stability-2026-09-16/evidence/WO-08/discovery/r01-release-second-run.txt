@@ -1,0 +1,32 @@
+﻿===============================================================================
+C:\dev\Cosmic\tests\render\render_wo08_primitives.cpp(100):
+TEST SUITE: WO-08 R01
+TEST CASE:  R01 primitives — every quad/SDF/line path, alpha, UVs, per-flush grouping (golden + sentinels)
+
+C:\dev\Cosmic\tests\render\render_wo08_primitives.cpp(197): ERROR: CHECK( Near(Sample(frame, { -2.0f, 0.5f }), kClearU8) ) is NOT correct!
+  values: CHECK( false )
+  logged: ring centre is empty
+
+C:\dev\Cosmic\tests\render\render_wo08_primitives.cpp(198): ERROR: CHECK( Near(Sample(frame, { -2.0f + 0.9f, 0.5f }), ToU8({ 0.95f, 0.55f, 0.20f, 1.0f })) ) is NOT correct!
+  values: CHECK( false )
+  logged: ring at r=0.9
+
+C:\dev\Cosmic\tests\render\GoldenImage.cpp(270): ERROR: golden 'wo08_primitives': 1002 / 57600 pixels differ (1.73958%, budget 0.1%), max channel delta 229 (tolerance 2), first at (124, 9). Wrote wo08_primitives.actual.png and wo08_primitives.diff.png
+
+C:\dev\Cosmic\tests\render\render_wo08_primitives.cpp(221): ERROR: CHECK( CheckGolden("wo08_primitives", frame) ) is NOT correct!
+  values: CHECK( false )
+
+===============================================================================
+C:\dev\Cosmic\tests\render\render_wo08_primitives.cpp(224):
+TEST SUITE: WO-08 R01
+TEST CASE:  R01 text — SDF glyphs, sizes, multi-line, kerning and the '?' fallback (golden + glyph ROIs)
+
+C:\dev\Cosmic\tests\render\render_wo08_primitives.cpp(297): ERROR: CHECK( penDelta == doctest::Approx(font->LineHeight()) ) is NOT correct!
+  values: CHECK( 1.125 == Approx( 1 ) )
+
+C:\dev\Cosmic\tests\render\GoldenImage.cpp(250): MESSAGE: golden 'wo08_text': matched within tolerance but NOT byte-exact — 5 pixel(s) over tolerance, max channel delta 52
+
+===============================================================================
+[doctest] test cases:      2 |      0 passed | 2 failed | 28 skipped
+[doctest] assertions: 130916 | 130911 passed | 5 failed |
+[doctest] Status: FAILURE!

@@ -1,0 +1,478 @@
+﻿===============================================================================
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(341):
+TEST SUITE: WO-08 R02
+TEST CASE:  R02 material / shader transitions — batch breaks land where the state changes, nothing leaks across
+  material quad followed by flat quads: the flat quads return to the default batch
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(367): ERROR: CHECK( st.DrawCalls == 2 ) is NOT correct!
+  values: CHECK( 6 == 2 )
+  logged: 1 material batch + 1 default batch expected, got 6
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(368): ERROR: CHECK( st.Flushes == 2 ) is NOT correct!
+  values: CHECK( 7 == 2 )
+  logged: flushes=7
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(376): ERROR: CHECK( Near(grid.Probe(img, i), whiteU8) ) is NOT correct!
+  values: CHECK( false )
+  logged: flat quad 1 must NOT carry the material's shader/tint: (255,0,255,255)
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(376): ERROR: CHECK( Near(grid.Probe(img, i), whiteU8) ) is NOT correct!
+  values: CHECK( false )
+  logged: flat quad 2 must NOT carry the material's shader/tint: (255,0,255,255)
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(376): ERROR: CHECK( Near(grid.Probe(img, i), whiteU8) ) is NOT correct!
+  values: CHECK( false )
+  logged: flat quad 3 must NOT carry the material's shader/tint: (255,0,255,255)
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(376): ERROR: CHECK( Near(grid.Probe(img, i), whiteU8) ) is NOT correct!
+  values: CHECK( false )
+  logged: flat quad 4 must NOT carry the material's shader/tint: (255,0,255,255)
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(376): ERROR: CHECK( Near(grid.Probe(img, i), whiteU8) ) is NOT correct!
+  values: CHECK( false )
+  logged: flat quad 5 must NOT carry the material's shader/tint: (255,0,255,255)
+
+===============================================================================
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(341):
+TEST SUITE: WO-08 R02
+TEST CASE:  R02 material / shader transitions — batch breaks land where the state changes, nothing leaks across
+  material quad followed by textured and sub-textured quads
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(390): ERROR: CHECK( st.DrawCalls == 2 ) is NOT correct!
+  values: CHECK( 4 == 2 )
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(395): ERROR: CHECK( Near(grid.Probe(img, i), whiteU8) ) is NOT correct!
+  values: CHECK( false )
+  logged: quad 1: (0,255,255,255)
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(395): ERROR: CHECK( Near(grid.Probe(img, i), whiteU8) ) is NOT correct!
+  values: CHECK( false )
+  logged: quad 2: (0,255,255,255)
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(395): ERROR: CHECK( Near(grid.Probe(img, i), whiteU8) ) is NOT correct!
+  values: CHECK( false )
+  logged: quad 3: (0,255,255,255)
+
+===============================================================================
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(341):
+TEST SUITE: WO-08 R02
+TEST CASE:  R02 material / shader transitions — batch breaks land where the state changes, nothing leaks across
+  alternating flat / material / flat / material: one draw per switch
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(407): ERROR: CHECK( stats.Get().DrawCalls == 4 ) is NOT correct!
+  values: CHECK( 3 == 4 )
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(412): ERROR: CHECK( Near(grid.Probe(img, 2), whiteU8) ) is NOT correct!
+  values: CHECK( false )
+
+===============================================================================
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(487):
+TEST SUITE: WO-08 R02
+TEST CASE:  R02 mixed calls — interleaved quads/lines/circles/glyphs in one pass, and an instanced call mid-batch
+  100 of each kind interleaved: one flush, one draw per pipeline, every cell correct
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 1 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 5 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 9 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 13 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 17 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 21 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 25 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 29 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 33 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 37 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 41 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 45 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 49 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 53 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 57 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 61 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 65 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 69 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 73 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 77 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 81 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 85 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 89 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 93 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 97 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 101 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 105 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 109 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 113 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 117 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 121 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 125 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 129 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 133 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 137 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 141 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 145 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 149 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 153 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 157 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 161 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 165 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 169 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 173 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 177 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 181 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 185 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 189 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 193 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 197 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 201 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 205 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 209 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 213 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 217 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 221 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 225 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 229 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 233 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 237 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 241 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 245 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 249 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 253 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 257 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 261 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 265 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 269 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 273 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 277 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 281 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 285 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 289 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 293 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 297 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 301 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 305 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 309 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 313 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 317 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 321 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 325 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 329 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 333 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 337 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 341 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 345 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 349 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 353 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 357 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, Enc[2026-09-18 04:19:03.831] [COSMIC] [info] Font: loaded 'Roboto-Regular' from cache (1024x256, 95 glyphs)
+odeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 361 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 365 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 369 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 373 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 377 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 381 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 385 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 389 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 393 has no ink
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(545): ERROR: CHECK( CountColor(img, col * grid.Cell, yImg, grid.Cell, 1, EncodeIndexU8(l), 2) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+  logged: line cell 397 has no ink
+
+===============================================================================
+[doctest] test cases:       7 |       5 passed |   2 failed | 23 skipped
+[doctest] assertions: 6835404 | 6835291 passed | 113 failed |
+[doctest] Status: FAILURE!

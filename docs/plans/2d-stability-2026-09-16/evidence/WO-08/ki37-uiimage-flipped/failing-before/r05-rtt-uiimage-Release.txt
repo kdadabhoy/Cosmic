@@ -1,0 +1,51 @@
+===============================================================================
+C:\dev\Cosmic\tests\render\render_wo08_rtt.cpp(92):
+TEST SUITE: WO-08 R05
+TEST CASE:  R05 two RTT targets through UiImage, nested passes, and camera/viewport/FBO/blend/depth restoration
+
+C:\dev\Cosmic\tests\render\render_wo08_rtt.cpp(198): ERROR: CHECK( Near(at(rectA, 2, 2), ca.TL) ) is NOT correct!
+  values: CHECK( false )
+  logged: UiImage(A) top-left shows A's top-left marker: (0,0,255,255)
+
+C:\dev\Cosmic\tests\render\render_wo08_rtt.cpp(199): ERROR: CHECK( Near(at(rectA, 61, 2), ca.TR) ) is NOT correct!
+  values: CHECK( false )
+  logged: UiImage(A) top-right: (255,255,0,255)
+
+C:\dev\Cosmic\tests\render\render_wo08_rtt.cpp(200): ERROR: CHECK( Near(at(rectA, 2, 45), ca.BL) ) is NOT correct!
+  values: CHECK( false )
+  logged: UiImage(A) bottom-left: (255,0,0,255)
+
+C:\dev\Cosmic\tests\render\render_wo08_rtt.cpp(201): ERROR: CHECK( Near(at(rectA, 61, 45), ca.BR) ) is NOT correct!
+  values: CHECK( false )
+  logged: UiImage(A) bottom-right: (0,255,0,255)
+
+C:\dev\Cosmic\tests\render\render_wo08_rtt.cpp(202): ERROR: CHECK( Near(at(rectA, 32, 0), ca.TL) ) is NOT correct!
+  values: CHECK( false )
+  logged: UiImage(A) top bar is at the TOP of the rect: (13,13,13,255)
+
+C:\dev\Cosmic\tests\render\render_wo08_rtt.cpp(203): ERROR: CHECK( Near(at(rectB, 2, 2), cb.TL) ) is NOT correct!
+  values: CHECK( false )
+  logged: UiImage(B) top-left: (255,255,255,255)
+
+C:\dev\Cosmic\tests\render\render_wo08_rtt.cpp(204): ERROR: CHECK( Near(at(rectB, 45, 2), cb.TR) ) is NOT correct!
+  values: CHECK( false )
+  logged: UiImage(B) top-right: (40,40,40,255)
+
+C:\dev\Cosmic\tests\render\render_wo08_rtt.cpp(205): ERROR: CHECK( Near(at(rectB, 2, 61), cb.BL) ) is NOT correct!
+  values: CHECK( false )
+  logged: UiImage(B) bottom-left: (255,0,255,255)
+
+C:\dev\Cosmic\tests\render\render_wo08_rtt.cpp(206): ERROR: CHECK( Near(at(rectB, 45, 61), cb.BR) ) is NOT correct!
+  values: CHECK( false )
+  logged: UiImage(B) bottom-right: (0,255,255,255)
+
+C:\dev\Cosmic\tests\render\render_wo08_rtt.cpp(264): ERROR: CHECK( Near(at(rectA, 2, 2), ca2.TL) ) is NOT correct!
+  values: CHECK( false )
+
+C:\dev\Cosmic\tests\render\render_wo08_rtt.cpp(265): ERROR: CHECK( Near(at(rectA, 61, 45), ca2.BR) ) is NOT correct!
+  values: CHECK( false )
+
+===============================================================================
+[doctest] test cases:   1 |   0 passed |  1 failed | 29 skipped
+[doctest] assertions: 172 | 161 passed | 11 failed |
+[doctest] Status: FAILURE!

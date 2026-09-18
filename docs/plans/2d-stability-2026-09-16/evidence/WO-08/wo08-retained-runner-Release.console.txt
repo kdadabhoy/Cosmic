@@ -1,0 +1,14 @@
+﻿=== Cosmic 2D acceptance runner (WO-04) ===
+manifest=wo08-retained  profile=all  config=Release  mode=2D
+bin=C:\dev\Cosmic\build\Runtime\Release
+commit=2024748a37fbcfbbae0b4e185fcaa9c3bfcf5863 dirty=True
+selected 2 case(s) of 2
+  [RUN ] retained-units (U)
+  [PASSED] retained-units - exit 0 as expected
+  [RUN ] retained-goldens (G)
+  [PASSED] retained-goldens - exit 0 as expected
+
+=== SUMMARY: 2 passed / 0 failed / 0 env-blocked (of 2) ===
+evidence: C:\dev\Cosmic\docs\plans\2d-stability-2026-09-16\evidence\WO-08\wo08-retained-runner-Release\results.json
+junit:    C:\dev\Cosmic\docs\plans\2d-stability-2026-09-16\evidence\WO-08\wo08-retained-runner-Release\results.junit.xml
+per-run artifacts preserved: C:\dev\Cosmic\build\wo08-accept-temp\cosmic-accept-f7f015d146024e63b4b1656c912fdc1e

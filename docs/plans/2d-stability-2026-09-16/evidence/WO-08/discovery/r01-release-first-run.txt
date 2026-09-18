@@ -1,0 +1,58 @@
+﻿===============================================================================
+C:\dev\Cosmic\tests\render\render_wo08_primitives.cpp(100):
+TEST SUITE: WO-08 R01
+TEST CASE:  R01 primitives — every quad/SDF/line path, alpha, UVs, per-flush grouping (golden + sentinels)
+
+C:\dev\Cosmic\tests\render\render_wo08_primitives.cpp(157): ERROR: CHECK( st.QuadCount == 12 ) is NOT correct!
+  values: CHECK( 11 == 12 )
+
+C:\dev\Cosmic\tests\render\render_wo08_primitives.cpp(171): ERROR: CHECK( Near(Sample(frame, { -1.5f, 3.5f }), Over({ 1, 1, 1, 0.5f }, ToU8({ 0.10f, 0.10f, 1.00f, 1.0f }))) ) is NOT correct!
+  values: CHECK( false )
+  logged: 50% white over blue
+
+C:\dev\Cosmic\tests\render\render_wo08_primitives.cpp(185): ERROR: CHECK( Near(Sample(frame, { -7.0f - 0.25f, 0.5f - 0.25f }), glm::u8vec4{ 235, 235, 235, 255 }) ) is NOT correct!
+  values: CHECK( false )
+  logged: tiling: cell (3,3)
+
+C:\dev\Cosmic\tests\render\render_wo08_primitives.cpp(186): ERROR: CHECK( Near(Sample(frame, { -7.0f - 0.25f + 0.25f * 0.5f, 0.5f - 0.25f }), glm::u8vec4{ 60, 70, 90, 255 }) ) is NOT correct!
+  values: CHECK( false )
+  logged: tiling: half a cell over -> colour b
+
+C:\dev\Cosmic\tests\render\render_wo08_primitives.cpp(190): ERROR: CHECK( Near(Sample(frame, { -2.0f, 0.5f }), kClearU8) ) is NOT correct!
+  values: CHECK( false )
+  logged: ring centre is empty
+
+C:\dev\Cosmic\tests\render\render_wo08_primitives.cpp(191): ERROR: CHECK( Near(Sample(frame, { -2.0f + 0.9f, 0.5f }), ToU8({ 0.95f, 0.55f, 0.20f, 1.0f })) ) is NOT correct!
+  values: CHECK( false )
+  logged: ring at r=0.9
+
+C:\dev\Cosmic\tests\render\render_wo08_primitives.cpp(206): ERROR: CHECK( Near(Sample(frame, { 4.5f, -2.5f }), ToU8({ 0.95f, 0.20f, 0.80f, 1.0f })) ) is NOT correct!
+  values: CHECK( false )
+  logged: circle submitted first still draws over the quad (quads flush before circles)
+
+C:\dev\Cosmic\tests\render\render_wo08_primitives.cpp(209): ERROR: CHECK( CountColor(frame, r.x, r.y, r.w, r.h, ToU8({ 1.0f, 0.95f, 0.20f, 1.0f }), 12) >= 8 ) is NOT correct!
+  values: CHECK( 0 >= 8 )
+  logged: line submitted first still draws over the quad (quads flush before lines)
+
+C:\dev\Cosmic\tests\render\GoldenImage.cpp(236): ERROR: golden 'wo08_primitives': no committed golden at C:/dev/Cosmic/tests/render/goldens\wo08_primitives.png — the captured frame was written there. Review it, then commit it (or re-run with --update-goldens).
+
+C:\dev\Cosmic\tests\render\render_wo08_primitives.cpp(214): ERROR: CHECK( CheckGolden("wo08_primitives", frame) ) is NOT correct!
+  values: CHECK( false )
+
+===============================================================================
+C:\dev\Cosmic\tests\render\render_wo08_primitives.cpp(217):
+TEST SUITE: WO-08 R01
+TEST CASE:  R01 text — SDF glyphs, sizes, multi-line, kerning and the '?' fallback (golden + glyph ROIs)
+
+C:\dev\Cosmic\tests\render\render_wo08_primitives.cpp(286): ERROR: CHECK( std::abs((B.max.y - T.max.y) - font->LineHeight() * 1.0f) < 1e-4f ) is NOT correct!
+  values: CHECK( 0.125 <  0.0001 )
+
+C:\dev\Cosmic\tests\render\GoldenImage.cpp(236): ERROR: golden 'wo08_text': no committed golden at C:/dev/Cosmic/tests/render/goldens\wo08_text.png — the captured frame was written there. Review it, then commit it (or re-run with --update-goldens).
+
+C:\dev\Cosmic\tests\render\render_wo08_primitives.cpp(329): ERROR: CHECK( CheckGolden("wo08_text", frame) ) is NOT correct!
+  values: CHECK( false )
+
+===============================================================================
+[doctest] test cases:      2 |      0 passed |  2 failed | 28 skipped
+[doctest] assertions: 130911 | 130898 passed | 13 failed |
+[doctest] Status: FAILURE!

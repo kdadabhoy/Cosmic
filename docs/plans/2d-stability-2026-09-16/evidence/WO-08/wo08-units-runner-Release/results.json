@@ -1,0 +1,166 @@
+﻿{
+    "manifest":  "wo08-units",
+    "profile":  "all",
+    "tier_filter":  [
+
+                    ],
+    "config":  "Release",
+    "mode":  "2D",
+    "generated_utc":  "2026-09-18T11:50:02.1879354Z",
+    "git":  {
+                "commit":  "2024748a37fbcfbbae0b4e185fcaa9c3bfcf5863",
+                "dirty":  true,
+                "dirty_diff_sha256":  null
+            },
+    "environment":  {
+                        "os_caption":  "Microsoft Windows 11 Education",
+                        "os_version":  "10.0.26200",
+                        "os_build":  "26200",
+                        "os_display":  "26200.9457",
+                        "cpu_name":  "AMD Ryzen 7 7800X3D 8-Core Processor",
+                        "cpu_cores":  8,
+                        "cpu_threads":  16,
+                        "cpu_addr_width":  64,
+                        "cpu_isa_floor":  "SSE4.2 (D-CPU); see evidence/WO-02/cpu-isa-probe.txt",
+                        "ram_bytes":  33462239232,
+                        "ram_gib":  31.2,
+                        "gpus":  [
+                                     {
+                                         "name":  "NVIDIA GeForce RTX 5070 Ti",
+                                         "driver":  "32.0.16.1692",
+                                         "driver_date":  "\/Date(1788480000000)\/"
+                                     },
+                                     {
+                                         "name":  "AMD Radeon(TM) Graphics",
+                                         "driver":  "32.0.21045.5002",
+                                         "driver_date":  "\/Date(1786924800000)\/"
+                                     }
+                                 ],
+                        "opengl_version":  null,
+                        "powershell":  "5.1.26100.9444",
+                        "hostname":  "DESKTOP-SEOA4BT"
+                    },
+    "capabilities":  {
+                         "windows":  true,
+                         "cpu-sse42":  true,
+                         "gpu-gl":  true,
+                         "serial-device":  false,
+                         "editor-ui":  false
+                     },
+    "forced_unavailable":  [
+
+                           ],
+    "bin_dir":  "C:\\dev\\Cosmic\\build\\Runtime\\Release",
+    "run_temp":  "C:\\dev\\Cosmic\\build\\wo08-accept-temp\\cosmic-accept-a323bf2118fe4e6bb42cd46be02a081d",
+    "golden_dir":  "C:\\dev\\Cosmic\\tests\\render\\goldens",
+    "golden_before":  {
+                          ".gitignore":  "cf670909971a60290e243f753ce7cc04503e15086e4be8eb873b995eb6de6711",
+                          "instancing.png":  "df18ff8fe21c44231af704bfbc2cf4d942d78fd1b9318996e47b86c037cbeeea",
+                          "instancing2d.png":  "95f18d759240773a9ad0b66aaa608f48defe3853fc8668e97579f76323381b01",
+                          "light2d.png":  "d61b27301b2bfcda9f260582f86109a63a8e49f151f525b693f867a1a29922f6",
+                          "mesh_pbr.png":  "cfd02fa1098ccfdb59fd2abc5950612fe9372053098f93e8ccca717e7df285ad",
+                          "outline.png":  "56d461dc6651a8c9def7bd8ccdddd73a95727a5f7a6ae2c0bd096d65cf48299b",
+                          "particles.png":  "ae4eae72b5c6ecc3105ac6663a26455dea356f009535293e9dfe677f0f212e71",
+                          "postchain_off.png":  "7cb85443a802c51fbc8b1b8c7099c0f9559afaeed72423f74351a932d7cba315",
+                          "postchain_on.png":  "2f13978d20f864466295c47ee6930d57f86057e3f4ccde9f8a153f5fc5ed2db1",
+                          "scene2d.png":  "335affdf6489ecec5890ef77ba076230d48e729c90dc9aa8c9d0392d2c362382",
+                          "sky_ibl.png":  "5bb968d6c106369d42e4c2b419800244deecec9710117aad544a3c6999d855aa",
+                          "sprites.png":  "4daba99d1c754e4456c2915f36fe1c82cce37af285766462e14334e3645f9c17",
+                          "terrain.png":  "05c4c7f98e01774d012dd204752071749b2c709a8560f46146c9f46f7a2115e2",
+                          "tilemap.png":  "f78f46c4a0219a9e9750f8630459aebf3c3552b653c483c910ee6bea3e6fb12b",
+                          "ui.png":  "1f29656ebf57d4a8660ba62b27cd17a93b910d90c657d9b1a880160f15c92792",
+                          "water.png":  "c0e47be508635a3a3b04afe704dc62440d84427f3bb5136e89c97bc121cbe89b",
+                          "wo08_primitives.png":  "3a91fcd4ea7fa90f5f096338a6cb36c5d00d11242945e173ce22a03b2e80dc95",
+                          "wo08_text.png":  "6e7220e4744329c9318dd7ba53ead8c40e141a351b363b5ecc61b9952fc5ac5a"
+                      },
+    "golden_after":  {
+                         ".gitignore":  "cf670909971a60290e243f753ce7cc04503e15086e4be8eb873b995eb6de6711",
+                         "instancing.png":  "df18ff8fe21c44231af704bfbc2cf4d942d78fd1b9318996e47b86c037cbeeea",
+                         "instancing2d.png":  "95f18d759240773a9ad0b66aaa608f48defe3853fc8668e97579f76323381b01",
+                         "light2d.png":  "d61b27301b2bfcda9f260582f86109a63a8e49f151f525b693f867a1a29922f6",
+                         "mesh_pbr.png":  "cfd02fa1098ccfdb59fd2abc5950612fe9372053098f93e8ccca717e7df285ad",
+                         "outline.png":  "56d461dc6651a8c9def7bd8ccdddd73a95727a5f7a6ae2c0bd096d65cf48299b",
+                         "particles.png":  "ae4eae72b5c6ecc3105ac6663a26455dea356f009535293e9dfe677f0f212e71",
+                         "postchain_off.png":  "7cb85443a802c51fbc8b1b8c7099c0f9559afaeed72423f74351a932d7cba315",
+                         "postchain_on.png":  "2f13978d20f864466295c47ee6930d57f86057e3f4ccde9f8a153f5fc5ed2db1",
+                         "scene2d.png":  "335affdf6489ecec5890ef77ba076230d48e729c90dc9aa8c9d0392d2c362382",
+                         "sky_ibl.png":  "5bb968d6c106369d42e4c2b419800244deecec9710117aad544a3c6999d855aa",
+                         "sprites.png":  "4daba99d1c754e4456c2915f36fe1c82cce37af285766462e14334e3645f9c17",
+                         "terrain.png":  "05c4c7f98e01774d012dd204752071749b2c709a8560f46146c9f46f7a2115e2",
+                         "tilemap.png":  "f78f46c4a0219a9e9750f8630459aebf3c3552b653c483c910ee6bea3e6fb12b",
+                         "ui.png":  "1f29656ebf57d4a8660ba62b27cd17a93b910d90c657d9b1a880160f15c92792",
+                         "water.png":  "c0e47be508635a3a3b04afe704dc62440d84427f3bb5136e89c97bc121cbe89b",
+                         "wo08_primitives.png":  "3a91fcd4ea7fa90f5f096338a6cb36c5d00d11242945e173ce22a03b2e80dc95",
+                         "wo08_text.png":  "6e7220e4744329c9318dd7ba53ead8c40e141a351b363b5ecc61b9952fc5ac5a"
+                     },
+    "golden_mutated":  false,
+    "acceptance_mode":  true,
+    "counts":  {
+                   "total":  2,
+                   "passed":  2,
+                   "failed":  0,
+                   "blocked":  0
+               },
+    "self_test":  {
+                      "enabled":  false,
+                      "failures":  [
+
+                                   ]
+                  },
+    "cases":  [
+                  {
+                      "id":  "R04-U",
+                      "tier":  "U",
+                      "description":  "Camera2DController headless: ScreenToWorld round trips (51,840 samples) and the controller\u0027s own projection against an independent pinhole model, zoom-about-cursor anchor drift and PanBy under 100/125/150/200 % DPI viewports with and without screen offsets and the 641x359 target, all \u003c= 0.5 px inside the declared local envelope (|focus| \u003c= 1000*zoom, |world-focus| \u003c= 4*zoom*max(aspect,1)); zoom range 0.01..10,000 (zero/negative clamp); the nonfinite input policy (NaN/inf zoom, focus, size, rect, bounds, scroll all rejected, projection stays finite); FrameBounds degenerate boxes; a changing viewport incl. 0x0.",
+                      "requires":  [
+                                       "windows"
+                                   ],
+                      "transport":  "none",
+                      "seed":  null,
+                      "start_utc":  "2026-09-18T11:50:01.9935739Z",
+                      "deadline_sec":  120,
+                      "exercised":  "fixture",
+                      "fixture":  "C:\\dev\\Cosmic\\tests\\acceptance\\..\\..\\tests\\test_wo08_camera.cpp",
+                      "fixture_sha256":  "df4995c2c7bf33ad9b82f47313a0a55132e52ea161d07b530927f545cd0bf8ef",
+                      "command":  "C:\\dev\\Cosmic\\build\\Runtime\\Release\\CosmicTests.exe \"--test-case=WO-08 R04*\" --no-colors",
+                      "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-08\\wo08-units-runner-Release\\R04-U.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-08\\wo08-units-runner-Release\\R04-U.err.log",
+                      "pid":  20864,
+                      "exit_code":  0,
+                      "crash":  false,
+                      "tests_passed":  8,
+                      "tests_expected_min":  8,
+                      "verdict":  "PASSED",
+                      "detail":  "exit 0 as expected",
+                      "duration_sec":  0.104,
+                      "end_utc":  "2026-09-18T11:50:02.1027556Z"
+                  },
+                  {
+                      "id":  "R06-U",
+                      "tier":  "U",
+                      "description":  "CPU PNG encode/decode: an exact 7x5 4-corner RGBA fixture (alpha 255/128/64/0 corners, RGB kept under alpha 0) round-trips WritePNG -\u003e ReadPixels byte for byte; the file\u0027s signature/IHDR (width, height, bit depth 8, colour type 6, CRC) is checked by parsing the bytes; decode orientation is proven against a PNG the test builds by hand (stored-deflate + adler32 + crc32); invalid args (null data, zero/negative dims, 0/5 channels), a missing directory, an empty path, a missing file, a non-image file and a truncated PNG all fail leaving outputs untouched; ResizeRgba copy / box average / bilinear / degenerate no-ops.",
+                      "requires":  [
+                                       "windows"
+                                   ],
+                      "transport":  "none",
+                      "seed":  null,
+                      "start_utc":  "2026-09-18T11:50:02.1077553Z",
+                      "deadline_sec":  120,
+                      "exercised":  "fixture",
+                      "fixture":  "C:\\dev\\Cosmic\\tests\\acceptance\\..\\..\\tests\\test_wo08_png.cpp",
+                      "fixture_sha256":  "61ce55d7069077a334e0573d68a82f71879914b7a81c24d10a9d0d02a89fafd4",
+                      "command":  "C:\\dev\\Cosmic\\build\\Runtime\\Release\\CosmicTests.exe \"--test-case=WO-08 R06*\" --no-colors",
+                      "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-08\\wo08-units-runner-Release\\R06-U.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-08\\wo08-units-runner-Release\\R06-U.err.log",
+                      "pid":  26396,
+                      "exit_code":  0,
+                      "crash":  false,
+                      "tests_passed":  4,
+                      "tests_expected_min":  4,
+                      "verdict":  "PASSED",
+                      "detail":  "exit 0 as expected",
+                      "duration_sec":  0.058,
+                      "end_utc":  "2026-09-18T11:50:02.1649326Z"
+                  }
+              ]
+}

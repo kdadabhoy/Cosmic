@@ -1,0 +1,10 @@
+﻿GL CONFORMANCE FAILURE - raw GL tokens outside platform/OpenGL/ (doc 05 rule 0.1):
+  tests\WO07PlotFixture.cpp:148: int prevRead = 0; getIntegerv(0x8CAA /*GL_READ_FRAMEBUFFER_BINDING*/, &prevRead);
+  tests\WO07PlotFixture.cpp:149: bindFbo(0x8CA8 /*GL_READ_FRAMEBUFFER*/, 0);
+  tests\WO07PlotFixture.cpp:150: readBuffer(0x0404 /*GL_FRONT*/);
+  tests\WO07PlotFixture.cpp:151: pixelStore(0x0D05 /*GL_PACK_ALIGNMENT*/, 1);
+  tests\WO07PlotFixture.cpp:152: readPixels(px, py, 1, 1, 0x1908 /*GL_RGBA*/, 0x1401 /*GL_UNSIGNED_BYTE*/, rgba);
+  tests\WO07PlotFixture.cpp:153: readBuffer(0x0405 /*GL_BACK*/);
+  tests\WO07PlotFixture.cpp:154: bindFbo(0x8CA8 /*GL_READ_FRAMEBUFFER*/, (unsigned)prevRead);
+  tests\WO07UiCyclesFixture.cpp:83: readBuffer(0x0404 /*GL_FRONT*/);
+8 violation(s). Promote the operation to a RendererAPI/RenderCommand verb instead.

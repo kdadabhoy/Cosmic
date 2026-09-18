@@ -1,0 +1,14 @@
+﻿===============================================================================
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(341):
+TEST SUITE: WO-08 R02
+TEST CASE:  R02 material / shader transitions — batch breaks land where the state changes, nothing leaks across
+  material quad followed by flat quads: the flat quads return to the default batch
+
+C:\dev\Cosmic\tests\render\render_wo08_batches.cpp(368): ERROR: CHECK( st.Flushes == 2 ) is NOT correct!
+  values: CHECK( 3 == 2 )
+  logged: flushes=3
+
+===============================================================================
+[doctest] test cases:       7 |       6 passed | 1 failed | 23 skipped
+[doctest] assertions: 6835380 | 6835379 passed | 1 failed |
+[doctest] Status: FAILURE!

@@ -1,0 +1,27 @@
+﻿WO-08 R04-U / R06-U headless halves (tier U, CosmicTests) through the WO-04 acceptance runner - summary (2026-09-18, final pass).
+(results.json + results.junit.xml per config under wo08-units-runner-<cfg>/; per-case wrapper output, captures and golden hashes under <case>-<cfg>/.)
+
+=== Debug ===  commit=2024748 dirty=True golden_files=18 golden_mutated=False host=DESKTOP-SEOA4BT os=26200.9457 cpu=AMD Ryzen 7 7800X3D 8-Core Processor gpu=NVIDIA GeForce RTX 5070 Ti driver=32.0.16.1692
+R04-U            verdict=PASSED   tests=8    duration=0.141s  (exit 0 as expected)
+      R04 ScreenToWorld round trip: 51840 samples, worst 0.0425752 px (bar 0.5)
+      R04 projection-vs-model worst 0.00109183 px
+      R04 zoom-about-cursor: 1550 pairs asserted inside the envelope, 370 outside it measured only (worst 127.803 px)
+      R04 outside-envelope sample (zoom 0.01, focus 1000): round-trip error 1.4723 px
+      [doctest] test cases:     8 |     8 passed | 0 failed | 402 skipped
+      [doctest] assertions: 61824 | 61824 passed | 0 failed |
+R06-U            verdict=PASSED   tests=4    duration=0.069s  (exit 0 as expected)
+      [doctest] test cases:   4 |   4 passed | 0 failed | 406 skipped
+      [doctest] assertions: 223 | 223 passed | 0 failed |
+
+=== Release ===  commit=2024748 dirty=True golden_files=18 golden_mutated=False host=DESKTOP-SEOA4BT os=26200.9457 cpu=AMD Ryzen 7 7800X3D 8-Core Processor gpu=NVIDIA GeForce RTX 5070 Ti driver=32.0.16.1692
+R04-U            verdict=PASSED   tests=8    duration=0.104s  (exit 0 as expected)
+      R04 ScreenToWorld round trip: 51840 samples, worst 0.0425752 px (bar 0.5)
+      R04 projection-vs-model worst 0.00109183 px
+      R04 zoom-about-cursor: 1550 pairs asserted inside the envelope, 370 outside it measured only (worst 127.803 px)
+      R04 outside-envelope sample (zoom 0.01, focus 1000): round-trip error 1.4723 px
+      [doctest] test cases:     8 |     8 passed | 0 failed | 402 skipped
+      [doctest] assertions: 61824 | 61824 passed | 0 failed |
+R06-U            verdict=PASSED   tests=4    duration=0.058s  (exit 0 as expected)
+      [doctest] test cases:   4 |   4 passed | 0 failed | 406 skipped
+      [doctest] assertions: 223 | 223 passed | 0 failed |
+

@@ -1,0 +1,464 @@
+[doctest] doctest version is "2.4.12"
+[doctest] run with "--help" for options
+===============================================================================
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(93):
+TEST CASE:  WO-08 R04: ScreenToWorld round trip <= 0.5 px across zoom range, DPI scales, viewport offsets and 641x359
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(136): MESSAGE: R04 ScreenToWorld round trip: 51840 samples, worst 0.0425752 px (bar 0.5)
+
+===============================================================================
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(140):
+TEST CASE:  WO-08 R04: the controller's own projection agrees with the pinhole model to <= 0.5 px, and inverts
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(173): MESSAGE: R04 projection-vs-model worst 0.00109183 px
+
+===============================================================================
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(176):
+TEST CASE:  WO-08 R04: zoom-about-cursor keeps the anchor pixel fixed and PanBy keeps the world under the cursor (<= 0.5 px)
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(230): MESSAGE: R04 zoom-about-cursor: 1550 pairs asserted inside the envelope, 370 outside it measured only (worst 127.803 px)
+
+===============================================================================
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(264):
+TEST CASE:  WO-08 R04: nonfinite input policy — NaN/inf zoom, focus, size, viewport, bounds and scroll never reach the projection
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(275): ERROR: CHECK( cam.GetZoom() == doctest::Approx(2.5f) ) is NOT correct!
+  values: CHECK( nan == Approx( 2.5 ) )
+  logged: 00007FF7EAD83670: zoom changed to nan
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(278): ERROR: CHECK( Finite(cam.GetCamera().GetViewProjectionMatrix()) ) is NOT correct!
+  values: CHECK( false )
+  logged: 00007FF7EAD83670: projection is not finite
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(279): ERROR: CHECK( cam.GetCamera().GetViewProjectionMatrix() == good ) is NOT correct!
+  values: CHECK( {?} == {?} )
+  logged: 00007FF7EAD83670: projection moved
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(275): ERROR: CHECK( cam.GetZoom() == doctest::Approx(2.5f) ) is NOT correct!
+  values: CHECK( 10000 == Approx( 2.5 ) )
+  logged: 00007FF7EAD83680: zoom changed to 10000
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(279): ERROR: CHECK( cam.GetCamera().GetViewProjectionMatrix() == good ) is NOT correct!
+  values: CHECK( {?} == {?} )
+  logged: 00007FF7EAD83680: projection moved
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(275): ERROR: CHECK( cam.GetZoom() == doctest::Approx(2.5f) ) is NOT correct!
+  values: CHECK( 0.01 == Approx( 2.5 ) )
+  logged: 00007FF7EAD83690: zoom changed to 0.01
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(279): ERROR: CHECK( cam.GetCamera().GetViewProjectionMatrix() == good ) is NOT correct!
+  values: CHECK( {?} == {?} )
+  logged: 00007FF7EAD83690: projection moved
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(275): ERROR: CHECK( cam.GetZoom() == doctest::Approx(2.5f) ) is NOT correct!
+  values: CHECK( 0.01 == Approx( 2.5 ) )
+  logged: 00007FF7EAD836A0: zoom changed to 0.01
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(276): ERROR: CHECK( cam.GetFocus() == glm::vec2(3.0f, 4.0f) ) is NOT correct!
+  values: CHECK( {?} == {?} )
+  logged: 00007FF7EAD836A0: focus changed
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(278): ERROR: CHECK( Finite(cam.GetCamera().GetViewProjectionMatrix()) ) is NOT correct!
+  values: CHECK( false )
+  logged: 00007FF7EAD836A0: projection is not finite
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(279): ERROR: CHECK( cam.GetCamera().GetViewProjectionMatrix() == good ) is NOT correct!
+  values: CHECK( {?} == {?} )
+  logged: 00007FF7EAD836A0: projection moved
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(275): ERROR: CHECK( cam.GetZoom() == doctest::Approx(2.5f) ) is NOT correct!
+  values: CHECK( 0.01 == Approx( 2.5 ) )
+  logged: 00007FF7EAD836B8: zoom changed to 0.01
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(276): ERROR: CHECK( cam.GetFocus() == glm::vec2(3.0f, 4.0f) ) is NOT correct!
+  values: CHECK( {?} == {?} )
+  logged: 00007FF7EAD836B8: focus changed
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(278): ERROR: CHECK( Finite(cam.GetCamera().GetViewProjectionMatrix()) ) is NOT correct!
+  values: CHECK( false )
+  logged: 00007FF7EAD836B8: projection is not finite
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(279): ERROR: CHECK( cam.GetCamera().GetViewProjectionMatrix() == good ) is NOT correct!
+  values: CHECK( {?} == {?} )
+  logged: 00007FF7EAD836B8: projection moved
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(275): ERROR: CHECK( cam.GetZoom() == doctest::Approx(2.5f) ) is NOT correct!
+  values: CHECK( 0.01 == Approx( 2.5 ) )
+  logged: 00007FF7EAD836D0: zoom changed to 0.01
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(276): ERROR: CHECK( cam.GetFocus() == glm::vec2(3.0f, 4.0f) ) is NOT correct!
+  values: CHECK( {?} == {?} )
+  logged: 00007FF7EAD836D0: focus changed
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(278): ERROR: CHECK( Finite(cam.GetCamera().GetViewProjectionMatrix()) ) is NOT correct!
+  values: CHECK( false )
+  logged: 00007FF7EAD836D0: projection is not finite
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(279): ERROR: CHECK( cam.GetCamera().GetViewProjectionMatrix() == good ) is NOT correct!
+  values: CHECK( {?} == {?} )
+  logged: 00007FF7EAD836D0: projection moved
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(275): ERROR: CHECK( cam.GetZoom() == doctest::Approx(2.5f) ) is NOT correct!
+  values: CHECK( 0.01 == Approx( 2.5 ) )
+  logged: 00007FF7EAD836E8: zoom changed to 0.01
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(276): ERROR: CHECK( cam.GetFocus() == glm::vec2(3.0f, 4.0f) ) is NOT correct!
+  values: CHECK( {?} == {?} )
+  logged: 00007FF7EAD836E8: focus changed
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(278): ERROR: CHECK( Finite(cam.GetCamera().GetViewProjectionMatrix()) ) is NOT correct!
+  values: CHECK( false )
+  logged: 00007FF7EAD836E8: projection is not finite
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(279): ERROR: CHECK( cam.GetCamera().GetViewProjectionMatrix() == good ) is NOT correct!
+  values: CHECK( {?} == {?} )
+  logged: 00007FF7EAD836E8: projection moved
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(275): ERROR: CHECK( cam.GetZoom() == doctest::Approx(2.5f) ) is NOT correct!
+  values: CHECK( 0.01 == Approx( 2.5 ) )
+  logged: 00007FF7EAD836F8: zoom changed to 0.01
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(276): ERROR: CHECK( cam.GetFocus() == glm::vec2(3.0f, 4.0f) ) is NOT correct!
+  values: CHECK( {?} == {?} )
+  logged: 00007FF7EAD836F8: focus changed
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(278): ERROR: CHECK( Finite(cam.GetCamera().GetViewProjectionMatrix()) ) is NOT correct!
+  values: CHECK( false )
+  logged: 00007FF7EAD836F8: projection is not finite
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(279): ERROR: CHECK( cam.GetCamera().GetViewProjectionMatrix() == good ) is NOT correct!
+  values: CHECK( {?} == {?} )
+  logged: 00007FF7EAD836F8: projection moved
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(275): ERROR: CHECK( cam.GetZoom() == doctest::Approx(2.5f) ) is NOT correct!
+  values: CHECK( 0.01 == Approx( 2.5 ) )
+  logged: 00007FF7EAD83708: zoom changed to 0.01
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(276): ERROR: CHECK( cam.GetFocus() == glm::vec2(3.0f, 4.0f) ) is NOT correct!
+  values: CHECK( {?} == {?} )
+  logged: 00007FF7EAD83708: focus changed
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(277): ERROR: CHECK( cam.GetAspect() == doctest::Approx(1280.0f / 720.0f) ) is NOT correct!
+  values: CHECK( nan == Approx( 1.77778 ) )
+  logged: 00007FF7EAD83708: aspect changed to nan
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(278): ERROR: CHECK( Finite(cam.GetCamera().GetViewProjectionMatrix()) ) is NOT correct!
+  values: CHECK( false )
+  logged: 00007FF7EAD83708: projection is not finite
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(279): ERROR: CHECK( cam.GetCamera().GetViewProjectionMatrix() == good ) is NOT correct!
+  values: CHECK( {?} == {?} )
+  logged: 00007FF7EAD83708: projection moved
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(275): ERROR: CHECK( cam.GetZoom() == doctest::Approx(2.5f) ) is NOT correct!
+  values: CHECK( 0.01 == Approx( 2.5 ) )
+  logged: 00007FF7EAD83720: zoom changed to 0.01
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(276): ERROR: CHECK( cam.GetFocus() == glm::vec2(3.0f, 4.0f) ) is NOT correct!
+  values: CHECK( {?} == {?} )
+  logged: 00007FF7EAD83720: focus changed
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(277): ERROR: CHECK( cam.GetAspect() == doctest::Approx(1280.0f / 720.0f) ) is NOT correct!
+  values: CHECK( nan == Approx( 1.77778 ) )
+  logged: 00007FF7EAD83720: aspect changed to nan
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(278): ERROR: CHECK( Finite(cam.GetCamera().GetViewProjectionMatrix()) ) is NOT correct!
+  values: CHECK( false )
+  logged: 00007FF7EAD83720: projection is not finite
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(279): ERROR: CHECK( cam.GetCamera().GetViewProjectionMatrix() == good ) is NOT correct!
+  values: CHECK( {?} == {?} )
+  logged: 00007FF7EAD83720: projection moved
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(275): ERROR: CHECK( cam.GetZoom() == doctest::Approx(2.5f) ) is NOT correct!
+  values: CHECK( 0.01 == Approx( 2.5 ) )
+  logged: 00007FF7EAD83738: zoom changed to 0.01
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(276): ERROR: CHECK( cam.GetFocus() == glm::vec2(3.0f, 4.0f) ) is NOT correct!
+  values: CHECK( {?} == {?} )
+  logged: 00007FF7EAD83738: focus changed
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(277): ERROR: CHECK( cam.GetAspect() == doctest::Approx(1280.0f / 720.0f) ) is NOT correct!
+  values: CHECK( inf == Approx( 1.77778 ) )
+  logged: 00007FF7EAD83738: aspect changed to inf
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(278): ERROR: CHECK( Finite(cam.GetCamera().GetViewProjectionMatrix()) ) is NOT correct!
+  values: CHECK( false )
+  logged: 00007FF7EAD83738: projection is not finite
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(279): ERROR: CHECK( cam.GetCamera().GetViewProjectionMatrix() == good ) is NOT correct!
+  values: CHECK( {?} == {?} )
+  logged: 00007FF7EAD83738: projection moved
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(275): ERROR: CHECK( cam.GetZoom() == doctest::Approx(2.5f) ) is NOT correct!
+  values: CHECK( 0.01 == Approx( 2.5 ) )
+  logged: 00007FF7EAD83750: zoom changed to 0.01
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(276): ERROR: CHECK( cam.GetFocus() == glm::vec2(3.0f, 4.0f) ) is NOT correct!
+  values: CHECK( {?} == {?} )
+  logged: 00007FF7EAD83750: focus changed
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(277): ERROR: CHECK( cam.GetAspect() == doctest::Approx(1280.0f / 720.0f) ) is NOT correct!
+  values: CHECK( 0 == Approx( 1.77778 ) )
+  logged: 00007FF7EAD83750: aspect changed to 0
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(278): ERROR: CHECK( Finite(cam.GetCamera().GetViewProjectionMatrix()) ) is NOT correct!
+  values: CHECK( false )
+  logged: 00007FF7EAD83750: projection is not finite
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(279): ERROR: CHECK( cam.GetCamera().GetViewProjectionMatrix() == good ) is NOT correct!
+  values: CHECK( {?} == {?} )
+  logged: 00007FF7EAD83750: projection moved
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(275): ERROR: CHECK( cam.GetZoom() == doctest::Approx(2.5f) ) is NOT correct!
+  values: CHECK( 0.01 == Approx( 2.5 ) )
+  logged: 00007FF7EAD83768: zoom changed to 0.01
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(276): ERROR: CHECK( cam.GetFocus() == glm::vec2(3.0f, 4.0f) ) is NOT correct!
+  values: CHECK( {?} == {?} )
+  logged: 00007FF7EAD83768: focus changed
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(278): ERROR: CHECK( Finite(cam.GetCamera().GetViewProjectionMatrix()) ) is NOT correct!
+  values: CHECK( false )
+  logged: 00007FF7EAD83768: projection is not finite
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(279): ERROR: CHECK( cam.GetCamera().GetViewProjectionMatrix() == good ) is NOT correct!
+  values: CHECK( {?} == {?} )
+  logged: 00007FF7EAD83768: projection moved
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(275): ERROR: CHECK( cam.GetZoom() == doctest::Approx(2.5f) ) is NOT correct!
+  values: CHECK( 0.01 == Approx( 2.5 ) )
+  logged: 00007FF7EAD83788: zoom changed to 0.01
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(276): ERROR: CHECK( cam.GetFocus() == glm::vec2(3.0f, 4.0f) ) is NOT correct!
+  values: CHECK( {?} == {?} )
+  logged: 00007FF7EAD83788: focus changed
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(277): ERROR: CHECK( cam.GetAspect() == doctest::Approx(1280.0f / 720.0f) ) is NOT correct!
+  values: CHECK( inf == Approx( 1.77778 ) )
+  logged: 00007FF7EAD83788: aspect changed to inf
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(278): ERROR: CHECK( Finite(cam.GetCamera().GetViewProjectionMatrix()) ) is NOT correct!
+  values: CHECK( false )
+  logged: 00007FF7EAD83788: projection is not finite
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(279): ERROR: CHECK( cam.GetCamera().GetViewProjectionMatrix() == good ) is NOT correct!
+  values: CHECK( {?} == {?} )
+  logged: 00007FF7EAD83788: projection moved
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(275): ERROR: CHECK( cam.GetZoom() == doctest::Approx(2.5f) ) is NOT correct!
+  values: CHECK( 0.01 == Approx( 2.5 ) )
+  logged: 00007FF7EAD837A8: zoom changed to 0.01
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(276): ERROR: CHECK( cam.GetFocus() == glm::vec2(3.0f, 4.0f) ) is NOT correct!
+  values: CHECK( {?} == {?} )
+  logged: 00007FF7EAD837A8: focus changed
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(277): ERROR: CHECK( cam.GetAspect() == doctest::Approx(1280.0f / 720.0f) ) is NOT correct!
+  values: CHECK( inf == Approx( 1.77778 ) )
+  logged: 00007FF7EAD837A8: aspect changed to inf
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(278): ERROR: CHECK( Finite(cam.GetCamera().GetViewProjectionMatrix()) ) is NOT correct!
+  values: CHECK( false )
+  logged: 00007FF7EAD837A8: projection is not finite
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(279): ERROR: CHECK( cam.GetCamera().GetViewProjectionMatrix() == good ) is NOT correct!
+  values: CHECK( {?} == {?} )
+  logged: 00007FF7EAD837A8: projection moved
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(275): ERROR: CHECK( cam.GetZoom() == doctest::Approx(2.5f) ) is NOT correct!
+  values: CHECK( 0.55 == Approx( 2.5 ) )
+  logged: 00007FF7EAD837C0: zoom changed to 0.55
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(276): ERROR: CHECK( cam.GetFocus() == glm::vec2(3.0f, 4.0f) ) is NOT correct!
+  values: CHECK( {?} == {?} )
+  logged: 00007FF7EAD837C0: focus changed
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(277): ERROR: CHECK( cam.GetAspect() == doctest::Approx(1280.0f / 720.0f) ) is NOT correct!
+  values: CHECK( inf == Approx( 1.77778 ) )
+  logged: 00007FF7EAD837C0: aspect changed to inf
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(278): ERROR: CHECK( Finite(cam.GetCamera().GetViewProjectionMatrix()) ) is NOT correct!
+  values: CHECK( false )
+  logged: 00007FF7EAD837C0: projection is not finite
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(279): ERROR: CHECK( cam.GetCamera().GetViewProjectionMatrix() == good ) is NOT correct!
+  values: CHECK( {?} == {?} )
+  logged: 00007FF7EAD837C0: projection moved
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(275): ERROR: CHECK( cam.GetZoom() == doctest::Approx(2.5f) ) is NOT correct!
+  values: CHECK( 0.55 == Approx( 2.5 ) )
+  logged: 00007FF7EAD837D8: zoom changed to 0.55
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(276): ERROR: CHECK( cam.GetFocus() == glm::vec2(3.0f, 4.0f) ) is NOT correct!
+  values: CHECK( {?} == {?} )
+  logged: 00007FF7EAD837D8: focus changed
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(277): ERROR: CHECK( cam.GetAspect() == doctest::Approx(1280.0f / 720.0f) ) is NOT correct!
+  values: CHECK( inf == Approx( 1.77778 ) )
+  logged: 00007FF7EAD837D8: aspect changed to inf
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(278): ERROR: CHECK( Finite(cam.GetCamera().GetViewProjectionMatrix()) ) is NOT correct!
+  values: CHECK( false )
+  logged: 00007FF7EAD837D8: projection is not finite
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(279): ERROR: CHECK( cam.GetCamera().GetViewProjectionMatrix() == good ) is NOT correct!
+  values: CHECK( {?} == {?} )
+  logged: 00007FF7EAD837D8: projection moved
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(275): ERROR: CHECK( cam.GetZoom() == doctest::Approx(2.5f) ) is NOT correct!
+  values: CHECK( 10000 == Approx( 2.5 ) )
+  logged: 00007FF7EAD837F0: zoom changed to 10000
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(276): ERROR: CHECK( cam.GetFocus() == glm::vec2(3.0f, 4.0f) ) is NOT correct!
+  values: CHECK( {?} == {?} )
+  logged: 00007FF7EAD837F0: focus changed
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(277): ERROR: CHECK( cam.GetAspect() == doctest::Approx(1280.0f / 720.0f) ) is NOT correct!
+  values: CHECK( inf == Approx( 1.77778 ) )
+  logged: 00007FF7EAD837F0: aspect changed to inf
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(278): ERROR: CHECK( Finite(cam.GetCamera().GetViewProjectionMatrix()) ) is NOT correct!
+  values: CHECK( false )
+  logged: 00007FF7EAD837F0: projection is not finite
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(279): ERROR: CHECK( cam.GetCamera().GetViewProjectionMatrix() == good ) is NOT correct!
+  values: CHECK( {?} == {?} )
+  logged: 00007FF7EAD837F0: projection moved
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(275): ERROR: CHECK( cam.GetZoom() == doctest::Approx(2.5f) ) is NOT correct!
+  values: CHECK( -nan(ind) == Approx( 2.5 ) )
+  logged: 00007FF7EAD83810: zoom changed to -nan(ind)
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(276): ERROR: CHECK( cam.GetFocus() == glm::vec2(3.0f, 4.0f) ) is NOT correct!
+  values: CHECK( {?} == {?} )
+  logged: 00007FF7EAD83810: focus changed
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(277): ERROR: CHECK( cam.GetAspect() == doctest::Approx(1280.0f / 720.0f) ) is NOT correct!
+  values: CHECK( inf == Approx( 1.77778 ) )
+  logged: 00007FF7EAD83810: aspect changed to inf
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(278): ERROR: CHECK( Finite(cam.GetCamera().GetViewProjectionMatrix()) ) is NOT correct!
+  values: CHECK( false )
+  logged: 00007FF7EAD83810: projection is not finite
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(279): ERROR: CHECK( cam.GetCamera().GetViewProjectionMatrix() == good ) is NOT correct!
+  values: CHECK( {?} == {?} )
+  logged: 00007FF7EAD83810: projection moved
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(275): ERROR: CHECK( cam.GetZoom() == doctest::Approx(2.5f) ) is NOT correct!
+  values: CHECK( -nan(ind) == Approx( 2.5 ) )
+  logged: 00007FF7EAD83820: zoom changed to -nan(ind)
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(276): ERROR: CHECK( cam.GetFocus() == glm::vec2(3.0f, 4.0f) ) is NOT correct!
+  values: CHECK( {?} == {?} )
+  logged: 00007FF7EAD83820: focus changed
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(277): ERROR: CHECK( cam.GetAspect() == doctest::Approx(1280.0f / 720.0f) ) is NOT correct!
+  values: CHECK( inf == Approx( 1.77778 ) )
+  logged: 00007FF7EAD83820: aspect changed to inf
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(278): ERROR: CHECK( Finite(cam.GetCamera().GetViewProjectionMatrix()) ) is NOT correct!
+  values: CHECK( false )
+  logged: 00007FF7EAD83820: projection is not finite
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(279): ERROR: CHECK( cam.GetCamera().GetViewProjectionMatrix() == good ) is NOT correct!
+  values: CHECK( {?} == {?} )
+  logged: 00007FF7EAD83820: projection moved
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(275): ERROR: CHECK( cam.GetZoom() == doctest::Approx(2.5f) ) is NOT correct!
+  values: CHECK( -nan(ind) == Approx( 2.5 ) )
+  logged: 00007FF7EAD83830: zoom changed to -nan(ind)
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(276): ERROR: CHECK( cam.GetFocus() == glm::vec2(3.0f, 4.0f) ) is NOT correct!
+  values: CHECK( {?} == {?} )
+  logged: 00007FF7EAD83830: focus changed
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(277): ERROR: CHECK( cam.GetAspect() == doctest::Approx(1280.0f / 720.0f) ) is NOT correct!
+  values: CHECK( inf == Approx( 1.77778 ) )
+  logged: 00007FF7EAD83830: aspect changed to inf
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(278): ERROR: CHECK( Finite(cam.GetCamera().GetViewProjectionMatrix()) ) is NOT correct!
+  values: CHECK( false )
+  logged: 00007FF7EAD83830: projection is not finite
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(279): ERROR: CHECK( cam.GetCamera().GetViewProjectionMatrix() == good ) is NOT correct!
+  values: CHECK( {?} == {?} )
+  logged: 00007FF7EAD83830: projection moved
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(275): ERROR: CHECK( cam.GetZoom() == doctest::Approx(2.5f) ) is NOT correct!
+  values: CHECK( -nan(ind) == Ap[2026-09-18 04:25:12.183] [COSMIC] [error] ImageIO::WritePNG: invalid arguments for 'C:\dev\Cosmic\build\wo08-scratch-temp\cosmic-wo08-r06\r06-args.png'.
+[2026-09-18 04:25:12.183] [COSMIC] [error] ImageIO::WritePNG: invalid arguments for 'C:\dev\Cosmic\build\wo08-scratch-temp\cosmic-wo08-r06\r06-args.png'.
+[2026-09-18 04:25:12.183] [COSMIC] [error] ImageIO::WritePNG: invalid arguments for 'C:\dev\Cosmic\build\wo08-scratch-temp\cosmic-wo08-r06\r06-args.png'.
+[2026-09-18 04:25:12.183] [COSMIC] [error] ImageIO::WritePNG: invalid arguments for 'C:\dev\Cosmic\build\wo08-scratch-temp\cosmic-wo08-r06\r06-args.png'.
+[2026-09-18 04:25:12.184] [COSMIC] [error] ImageIO::WritePNG: invalid arguments for 'C:\dev\Cosmic\build\wo08-scratch-temp\cosmic-wo08-r06\r06-args.png'.
+[2026-09-18 04:25:12.184] [COSMIC] [error] ImageIO::WritePNG: invalid arguments for 'C:\dev\Cosmic\build\wo08-scratch-temp\cosmic-wo08-r06\r06-args.png'.
+[2026-09-18 04:25:12.184] [COSMIC] [error] ImageIO::WritePNG: invalid arguments for 'C:\dev\Cosmic\build\wo08-scratch-temp\cosmic-wo08-r06\r06-args.png'.
+[2026-09-18 04:25:12.184] [COSMIC] [error] ImageIO::WritePNG: failed to write 'C:\dev\Cosmic\build\wo08-scratch-temp\cosmic-wo08-r06\no-such-dir-wo08\x.png'.
+[2026-09-18 04:25:12.184] [COSMIC] [error] ImageIO::WritePNG: failed to write ''.
+[2026-09-18 04:25:12.185] [COSMIC] [warning] ImageIO::ReadPixels: could not decode 'C:\dev\Cosmic\build\wo08-scratch-temp\cosmic-wo08-r06\does-not-exist.png'.
+[2026-09-18 04:25:12.188] [COSMIC] [warning] ImageIO::ReadPixels: could not decode 'C:\dev\Cosmic\build\wo08-scratch-temp\cosmic-wo08-r06\r06-not-an-image.png'.
+[2026-09-18 04:25:12.195] [COSMIC] [warning] ImageIO::ReadPixels: could not decode 'C:\dev\Cosmic\build\wo08-scratch-temp\cosmic-wo08-r06\r06-truncated.png'.
+[2026-09-18 04:25:12.195] [COSMIC] [warning] ImageIO::ReadPixels: could not decode ''.
+prox( 2.5 ) )
+  logged: 00007FF7EAD83840: zoom changed to -nan(ind)
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(276): ERROR: CHECK( cam.GetFocus() == glm::vec2(3.0f, 4.0f) ) is NOT correct!
+  values: CHECK( {?} == {?} )
+  logged: 00007FF7EAD83840: focus changed
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(277): ERROR: CHECK( cam.GetAspect() == doctest::Approx(1280.0f / 720.0f) ) is NOT correct!
+  values: CHECK( inf == Approx( 1.77778 ) )
+  logged: 00007FF7EAD83840: aspect changed to inf
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(278): ERROR: CHECK( Finite(cam.GetCamera().GetViewProjectionMatrix()) ) is NOT correct!
+  values: CHECK( false )
+  logged: 00007FF7EAD83840: projection is not finite
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(279): ERROR: CHECK( cam.GetCamera().GetViewProjectionMatrix() == good ) is NOT correct!
+  values: CHECK( {?} == {?} )
+  logged: 00007FF7EAD83840: projection moved
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(321): ERROR: CHECK( Camera2DController::ScreenToWorld({ kNaN, 10.0f }, vpPos, vpSize, focus, 5.0f) == focus ) is NOT correct!
+  values: CHECK( {?} == {?} )
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(322): ERROR: CHECK( Camera2DController::ScreenToWorld({ 10.0f, 10.0f }, vpPos, vpSize, focus, kNaN) == focus ) is NOT correct!
+  values: CHECK( {?} == {?} )
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(323): ERROR: CHECK( Camera2DController::ScreenToWorld({ 10.0f, 10.0f }, vpPos, { 800.0f, kInf }, focus, 5.0f) == focus ) is NOT correct!
+  values: CHECK( {?} == {?} )
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(326): ERROR: CHECK( Camera2DController::ScreenToWorld({ 10.0f, 10.0f }, vpPos, vpSize, focus, -1.0f) == focus ) is NOT correct!
+  values: CHECK( {?} == {?} )
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(327): ERROR: CHECK( Camera2DController::PanBy(focus, { kNaN, 0.0f }, 5.0f, 600.0f) == focus ) is NOT correct!
+  values: CHECK( {?} == {?} )
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(328): ERROR: CHECK( Camera2DController::PanBy(focus, { 1.0f, 1.0f }, kInf, 600.0f) == focus ) is NOT correct!
+  values: CHECK( {?} == {?} )
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(330): ERROR: CHECK( Camera2DController::PanBy(focus, { 1.0f, 1.0f }, 5.0f, kNaN) == focus ) is NOT correct!
+  values: CHECK( {?} == {?} )
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(331): ERROR: CHECK( Camera2DController::ZoomAboutPoint(focus, { kNaN, 0.0f }, 5.0f, 2.0f) == focus ) is NOT correct!
+  values: CHECK( {?} == {?} )
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(332): ERROR: CHECK( Camera2DController::ZoomAboutPoint(focus, { 0.0f, 0.0f }, kNaN, 2.0f) == focus ) is NOT correct!
+  values: CHECK( {?} == {?} )
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(333): ERROR: CHECK( Camera2DController::ZoomAboutPoint(focus, { 0.0f, 0.0f }, 5.0f, kInf) == focus ) is NOT correct!
+  values: CHECK( {?} == {?} )
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(342): ERROR: CHECK( Camera2DController(kInf).GetAspect() == doctest::Approx(1.0f) ) is NOT correct!
+  values: CHECK( inf == Approx( 1 ) )
+
+===============================================================================
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(397):
+TEST CASE:  WO-08 R04: outside the declared envelope the float error is measured, not hidden
+
+C:\dev\Cosmic\tests\test_wo08_camera.cpp(408): MESSAGE: R04 outside-envelope sample (zoom 0.01, focus 1000): round-trip error 1.4723 px
+
+===============================================================================
+[doctest] test cases:    12 |    11 passed |   1 failed | 398 skipped
+[doctest] assertions: 62047 | 61940 passed | 107 failed |
+[doctest] Status: FAILURE!

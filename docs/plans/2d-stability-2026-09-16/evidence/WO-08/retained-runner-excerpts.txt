@@ -1,0 +1,21 @@
+﻿WO-08 retained validation: the 388 pre-WO-08 headless cases (WO-08 excluded by name) + the six pre-WO-08 2D golden cases with the goldens hashed before/after - summary (2026-09-18, final pass).
+(results.json + results.junit.xml per config under wo08-retained-runner-<cfg>/; per-case wrapper output, captures and golden hashes under <case>-<cfg>/.)
+
+=== Debug ===  commit=2024748 dirty=True golden_files=18 golden_mutated=False host=DESKTOP-SEOA4BT os=26200.9457 cpu=AMD Ryzen 7 7800X3D 8-Core Processor gpu=NVIDIA GeForce RTX 5070 Ti driver=32.0.16.1692
+retained-units   verdict=PASSED   tests=388  duration=196.278s  (exit 0 as expected)
+      [doctest] test cases:      388 |      388 passed | 0 failed | 22 skipped
+      [doctest] assertions: 23115082 | 23115082 passed | 0 failed |
+retained-goldens verdict=PASSED   tests=6    duration=0.81s  (exit 0 as expected)
+      [doctest] test cases:  6 |  6 passed | 0 failed | 24 skipped
+      [doctest] assertions: 29 | 29 passed | 0 failed |
+      retained-goldens PASSED (2D goldens)
+
+=== Release ===  commit=2024748 dirty=True golden_files=18 golden_mutated=False host=DESKTOP-SEOA4BT os=26200.9457 cpu=AMD Ryzen 7 7800X3D 8-Core Processor gpu=NVIDIA GeForce RTX 5070 Ti driver=32.0.16.1692
+retained-units   verdict=PASSED   tests=388  duration=132.764s  (exit 0 as expected)
+      [doctest] test cases:      388 |      388 passed | 0 failed | 22 skipped
+      [doctest] assertions: 23164582 | 23164582 passed | 0 failed |
+retained-goldens verdict=PASSED   tests=6    duration=0.765s  (exit 0 as expected)
+      [doctest] test cases:  6 |  6 passed | 0 failed | 24 skipped
+      [doctest] assertions: 29 | 29 passed | 0 failed |
+      retained-goldens PASSED (2D goldens)
+

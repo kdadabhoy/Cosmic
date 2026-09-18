@@ -1,0 +1,18 @@
+{
+  "case": "R07",
+  "workload": "quads",
+  "instances": 10000,
+  "target": "1920x1080 RGBA8+D24S8 offscreen",
+  "config": "Release",
+  "machine": "DESKTOP-SEOA4BT",
+  "method": "per frame: clear + PushRenderPass + one DrawInstanced* of 10000 + PopRenderPass + RenderCommand::FinishGpu() fence; clock stops after the fence; no read-back in the timed region; vsync moot (offscreen target, no present)",
+  "warmup_sec": 10,
+  "sample_sec": 60,
+  "frames_sampled": 317850,
+  "instance_draw_calls_per_frame": 1,
+  "complete_frame_ms": { "mean": 0.188378, "p50": 0.1199, "p95": 0.4049, "p99": 0.4911, "max": 3.1492, "min": 0.1029 },
+  "cpu_submit_ms": { "mean": 0.0196974, "p50": 0.0195, "p95": 0.0221, "p99": 0.0242, "max": 0.0969 },
+  "gpu_zone_ms": { "samples": 317850, "mean": 0.127908, "p50": 0.069376, "p95": 0.36032, "p99": 0.418912, "max": 2.34403 },
+  "bar": { "p95_ms": 16.67, "p99_ms": 33.33 },
+  "passed": true
+}

@@ -1,0 +1,12 @@
+﻿=== Cosmic 2D acceptance runner (WO-04) ===
+manifest=wo08-r07  profile=release  config=Release  mode=2D
+bin=C:\dev\Cosmic\build\Runtime\Release
+commit=2024748a37fbcfbbae0b4e185fcaa9c3bfcf5863 dirty=True
+selected 1 case(s) of 1
+  [RUN ] R07 (Q)
+  [PASSED] R07 - exit 0 as expected
+
+=== SUMMARY: 1 passed / 0 failed / 0 env-blocked (of 1) ===
+evidence: C:\dev\Cosmic\docs\plans\2d-stability-2026-09-16\evidence\WO-08\wo08-r07-runner-Release\results.json
+junit:    C:\dev\Cosmic\docs\plans\2d-stability-2026-09-16\evidence\WO-08\wo08-r07-runner-Release\results.junit.xml
+per-run artifacts preserved: C:\dev\Cosmic\build\wo08-accept-temp\cosmic-accept-ad0854f1baa34a8a9df365985370e2e5

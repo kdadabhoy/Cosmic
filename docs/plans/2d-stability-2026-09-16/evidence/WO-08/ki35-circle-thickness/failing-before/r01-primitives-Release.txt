@@ -1,0 +1,22 @@
+﻿===============================================================================
+C:\dev\Cosmic\tests\render\render_wo08_primitives.cpp(100):
+TEST SUITE: WO-08 R01
+TEST CASE:  R01 primitives — every quad/SDF/line path, alpha, UVs, per-flush grouping (golden + sentinels)
+
+C:\dev\Cosmic\tests\render\render_wo08_primitives.cpp(197): ERROR: CHECK( Near(Sample(frame, { -2.0f, 0.5f }), kClearU8) ) is NOT correct!
+  values: CHECK( false )
+  logged: ring centre is empty
+
+C:\dev\Cosmic\tests\render\render_wo08_primitives.cpp(198): ERROR: CHECK( Near(Sample(frame, { -2.0f + 0.9f, 0.5f }), ToU8({ 0.95f, 0.55f, 0.20f, 1.0f })) ) is NOT correct!
+  values: CHECK( false )
+  logged: ring at r=0.9
+
+C:\dev\Cosmic\tests\render\GoldenImage.cpp(236): ERROR: golden 'wo08_primitives': no committed golden at C:/dev/Cosmic/tests/render/goldens\wo08_primitives.png — the captured frame was written there. Review it, then commit it (or re-run with --update-goldens).
+
+C:\dev\Cosmic\tests\render\render_wo08_primitives.cpp(221): ERROR: CHECK( CheckGolden("wo08_primitives", frame) ) is NOT correct!
+  values: CHECK( false )
+
+===============================================================================
+[doctest] test cases:    1 |    0 passed | 1 failed | 29 skipped
+[doctest] assertions: 5847 | 5843 passed | 4 failed |
+[doctest] Status: FAILURE!

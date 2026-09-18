@@ -1,0 +1,25 @@
+﻿===============================================================================
+C:\dev\Cosmic\tests\render\render_wo08_instancing.cpp(294):
+TEST SUITE: WO-08 R03
+TEST CASE:  R03 golden — instancing2d: instanced quads + circles with batched draws before and after (NEW 2D golden)
+
+C:\dev\Cosmic\tests\render\GoldenImage.cpp(224): MESSAGE: golden 'instancing2d': WROTE 320x180
+
+===============================================================================
+C:\dev\Cosmic\tests\render\render_wo08_primitives.cpp(100):
+TEST SUITE: WO-08 R01
+TEST CASE:  R01 primitives — every quad/SDF/line path, alpha, UVs, per-flush grouping (golden + sentinels)
+
+C:\dev\Cosmic\tests\render\GoldenImage.cpp(224): MESSAGE: golden 'wo08_primitives': WROTE 320x180
+
+===============================================================================
+C:\dev\Cosmic\tests\render\render_wo08_primitives.cpp(224):
+TEST SUITE: WO-08 R01
+TEST CASE:  R01 text — SDF glyphs, sizes, multi-line, kerning and the '?' fallback (golden + glyph ROIs)
+
+C:\dev\Cosmic\tests\render\GoldenImage.cpp(224): MESSAGE: golden 'wo08_text': WROTE 320x180
+
+===============================================================================
+[doctest] test cases:      3 |      3 passed | 0 failed | 27 skipped
+[doctest] assertions: 130936 | 130936 passed | 0 failed |
+[doctest] Status: SUCCESS!

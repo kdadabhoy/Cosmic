@@ -1,0 +1,1 @@
+C:\dev\Cosmic\build\Runtime\Release\CosmicRenderTests.exe --update-goldens --test-case="R01 primitives*,R01 text*,R03 golden*" --reporters=console --no-intro --no-colors
