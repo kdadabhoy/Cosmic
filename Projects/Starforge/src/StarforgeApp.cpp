@@ -153,6 +153,8 @@ namespace Starforge
         m_Ctx.Log("[Starforge] Editor attached — open or create a project from the homescreen.");
         m_Ctx.Log("[Starforge] Viewport: MMB orbit | Ctrl+MMB pan | scroll zoom | LMB pick.");
         m_Ctx.Log("[Starforge] W/E/R gizmo | F frame | Ctrl+Z/Y undo | Ctrl+S save.");
+
+        Ki1SelfTestInit();   // WO-07: arm the KI-1 snap-chip regression when its env is set
     }
 
     // =========================================================================
@@ -194,6 +196,8 @@ namespace Starforge
         // next in this process gets its own look, not the forge accent (E21).
         if (!m_PrevTheme.empty())
             Cosmic::ThemeManager::Apply(m_PrevTheme);
+
+        Ki1SelfTestShutdown();   // WO-07: free the KI-1 harness (no-op when never armed)
 
         Cosmic::Log::SetLogDirectory("logs");
         CS_INFO("Starforge: detached.");
@@ -1769,7 +1773,11 @@ namespace Starforge
 
             // K6/K8/K9 — the viewport instrument (strip hides while playing).
             if (m_Ctx.Scene)
+            {
+                Ki1SelfTestPreStrip();   // WO-07: no-op unless the KI-1 harness is armed
                 m_Viewport.DrawViewportOverlays(m_Ctx, m_Rig, IsPlaying(), m_Mode2D);
+                Ki1SelfTestPostStrip();  // WO-07: balance-check + actuate the real snap chip
+            }
 
             // K13 — Content-Browser drops onto the viewport (spawn at the hit
             // point / assign material / assign sprite image; single undo each).

@@ -34,6 +34,11 @@ using namespace Cosmic;
 
 namespace Starforge
 {
+    // WO-07 KI-1 regression probe (see ViewportController.h). Null in every normal
+    // run; the editor self-test points it at its own buffer to learn the real
+    // snap-chip rects.
+    ViewportController::Ki1ChipProbe* ViewportController::s_Ki1Probe = nullptr;
+
     namespace
     {
 #ifndef COSMIC_2D_ONLY
@@ -1282,15 +1287,36 @@ namespace Starforge
                                 const char* tip)
             {
                 ImGui::PushID(icon);
-                if (on)
+                const int ki1ColorBefore =            // WO-07 probe (gated): stack size
+                    s_Ki1Probe ? ImGui::GetCurrentContext()->ColorStack.Size : 0;
+                // KI-1 FIX (WO-07): latch the pushed state BEFORE the button flips
+                // `on`. The old code guarded the pop on the post-click value, so every
+                // click left ImGui's colour stack off by one — a Debug abort
+                // ("PopStyleColor() too many times") and silent Release corruption.
+                // This is the same latched-push pattern the `toggle` lambda below
+                // already uses. The chip ships in the 2D editor (outside the
+                // COSMIC_2D_ONLY fence), so this shipped to users.
+                const bool pushed = on;
+                if (pushed)
                 {
                     const ImVec4 acc = ImGui::GetStyleColorVec4(ImGuiCol_CheckMark);
                     ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(acc.x, acc.y, acc.z, 0.32f));
                 }
                 if (ImGui::Button(icon, ImVec2(sq, sq)))
                     on = !on;
-                if (on)
+                if (pushed)
                     ImGui::PopStyleColor();
+                if (s_Ki1Probe && s_Ki1Probe->count < 3)   // WO-07 test probe (gated)
+                {
+                    const int i = s_Ki1Probe->count;
+                    const ImVec2 mn = ImGui::GetItemRectMin(), mx = ImGui::GetItemRectMax();
+                    s_Ki1Probe->cx[i] = (mn.x + mx.x) * 0.5f;
+                    s_Ki1Probe->cy[i] = (mn.y + mx.y) * 0.5f;
+                    // Net colour push/pop of THIS chip, measured at the widget — the
+                    // KI-1 signal, immune to ImGui's end-of-window stack recovery.
+                    s_Ki1Probe->colorDelta[i] = ImGui::GetCurrentContext()->ColorStack.Size - ki1ColorBefore;
+                    ++s_Ki1Probe->count;
+                }
                 if (ImGui::IsItemHovered())
                     ImGui::SetTooltip("%s", tip);
                 ImGui::SameLine(0.0f, 2.0f);

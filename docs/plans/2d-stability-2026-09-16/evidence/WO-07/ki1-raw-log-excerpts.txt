@@ -1,0 +1,28 @@
+WO-07 KI-1 — raw log excerpts (full .log files are gitignored per repo policy; kept local).
+Captured 2026-09-17..18 on DESKTOP ref machine (RTX 5070 Ti, GL4.5), COSMIC_2D_ONLY=ON.
+
+==================================================================
+FAILING-BEFORE  Debug  (unfixed snapChip)  -> process exit 3 (abort)
+==================================================================
+Assertion failed: (0) && "Calling PopStyleColor() too many times!", file C:\dev\Cosmic\Cosmic\dependencies\imgui\imgui.cpp, line 3680
+[00008] [imgui-error] (current settings: Assert=1, Log=1, Tooltip=1)
+[00008] [imgui-error] In window 'Untitled###Viewport': Calling PopStyleColor() too many times!
+
+==================================================================
+FAILING-BEFORE  Release  (unfixed snapChip)  -> exit 1, imbalance detected at the widget
+==================================================================
+KI1_SELFTEST_RESULT=FAIL config=Release registered=4/4 imbalance=1
+
+==================================================================
+PASSING-AFTER  Debug + Release  (fixed snapChip)  -> exit 0, PASS
+==================================================================
+docs/plans/2d-stability-2026-09-16/evidence/WO-07/ki1/passing-after-Debug.stdout.log:KI1_SELFTEST_RESULT=PASS config=Debug registered=4/4 imbalance=0
+docs/plans/2d-stability-2026-09-16/evidence/WO-07/ki1/passing-after-Release.stdout.log:KI1_SELFTEST_RESULT=PASS config=Release registered=4/4 imbalance=0
+
+==================================================================
+WO-04 ACCEPTANCE RUNNER  (fixed)  -> KI-1 PASSED both configs
+==================================================================
+KI-1 self-test: exit=0 verdict=PASS result=C:\dev\Cosmic\docs\plans\2d-stability-2026-09-16\evidence\WO-07\runner-Debug\ki1-result.json
+[doctest] test cases: 1 | 1 passed | 0 failed
+                      "verdict":  "PASSED",
+                      "verdict":  "PASSED",

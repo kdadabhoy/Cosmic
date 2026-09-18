@@ -1,0 +1,24 @@
+{
+  "manifest": "wo07-ki1",
+  "cases": [
+    {
+      "id": "KI-1",
+      "description": "KI-1 snap-chip regression: the real Starforge editor actuates the real viewport-strip snap chip (both toggle directions) and the ImGui colour stack stays balanced at the widget. Debug abort / Release colorDelta both fail; fixed editor passes.",
+      "tier": "I",
+      "profiles": ["gpu", "release"],
+      "requires": ["windows", "gpu-gl"],
+      "command": "powershell",
+      "workingDir": "{BIN}",
+      "args": [
+        "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
+        "{ACCEPTANCE}\\fixtures\\Run-Ki1SelfTest.ps1",
+        "-Bin", "{BIN}",
+        "-Output", "{REPO}\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-07\\runner-{CONFIG}"
+      ],
+      "expectExit": 0,
+      "minTests": 1,
+      "deadlineSec": 120,
+      "fixture": "../../Projects/Starforge/src/Ki1SnapChipSelfTest.cpp"
+    }
+  ]
+}

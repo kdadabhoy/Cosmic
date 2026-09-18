@@ -1,0 +1,25 @@
+{
+  "work_order": "WO-07",
+  "case": "KI-1 snap-chip regression",
+  "config": "Release",
+  "control": "ViewportController::DrawViewportOverlays snapChip (production)",
+  "actuations_planned": 4,
+  "actuations_registered": 4,
+  "any_click_unregistered": false,
+  "stack_imbalance": true,
+  "worst_delta": { "color": -1, "styleVar": 0, "font": 0, "popup": 0, "id": 0 },
+  "verdict": "FAIL",
+  "log": [
+    "armed: opened empty 2D edit scene, hid window",
+    "viewport 806x386; snap chips at (432.0,161.0)(520.0,161.0)(608.0,161.0) (stable)",
+    "press lands on: hoveredWin='Untitled###Viewport/##k6strip_5D4223CA' hoveredId=4035674746 activeId=4035674746 at (608,161)",
+    "CHIP IMBALANCE at actuation 0 phase 4: snap chip 2 colorDelta=-1",
+    "actuation 0 registered: OFF->ON at (608.0,161.0)",
+    "CHIP IMBALANCE at actuation 1 phase 4: snap chip 2 colorDelta=1",
+    "actuation 1 registered: ON->OFF at (608.0,161.0)",
+    "CHIP IMBALANCE at actuation 2 phase 4: snap chip 2 colorDelta=-1",
+    "actuation 2 registered: OFF->ON at (608.0,161.0)",
+    "CHIP IMBALANCE at actuation 3 phase 4: snap chip 2 colorDelta=1",
+    "actuation 3 registered: ON->OFF at (608.0,161.0)"
+  ]
+}

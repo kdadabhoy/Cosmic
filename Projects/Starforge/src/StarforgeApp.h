@@ -331,6 +331,21 @@ namespace Starforge
 
         Prefs::EditorSettings m_Settings;
 
+        // WO-07 (2D stability) — KI-1 snap-chip regression harness. Gated ON only
+        // when the env var COSMIC_KI1_SELFTEST=<result-file> is set; otherwise
+        // m_Ki1 stays null and the editor behaves exactly as it ships. When armed
+        // it opens a real 2D edit scene, drives the REAL viewport-strip snap chip
+        // (ViewportController::DrawViewportOverlays) through Dear ImGui for both
+        // toggle directions, and asserts the ImGui style/ID stacks stay balanced
+        // around every strip draw — the check KI-1 defeats (a Debug abort / silent
+        // Release corruption). Defined in Ki1SnapChipSelfTest.cpp.
+        struct Ki1SnapSelfTest;                 // opaque state machine (that .cpp)
+        Ki1SnapSelfTest* m_Ki1 = nullptr;       // raw: created in OnAttach, freed in OnDetach
+        void Ki1SelfTestInit();                 // OnAttach: arm from env + open a 2D edit scene
+        void Ki1SelfTestPreStrip();             // capture ImGui stack depths before the strip
+        void Ki1SelfTestPostStrip();            // compare depths, actuate the chip, finish/close
+        void Ki1SelfTestShutdown();             // OnDetach: destroy m_Ki1 (complete type in its .cpp)
+
         // Engine-log → Console sink (H7). The CallbackSink fires from ANY thread, so
         // it enqueues under a mutex; DrainLogQueue moves lines onto the UI thread.
         std::shared_ptr<Cosmic::CallbackSink>            m_LogSink;

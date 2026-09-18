@@ -178,6 +178,26 @@ namespace Starforge
         // Last-frame gizmo state — StarforgeApp gates the camera on it.
         bool GizmoBusy() const { return m_GizmoActive || m_GizmoOver; }
 
+        // WO-07 (2D stability) — KI-1 regression probe (TEST-ONLY, gated). When
+        // s_Ki1Probe is non-null, the viewport-strip snap-chip helper records each
+        // chip button's screen-space centre here so the editor self-test can
+        // actuate the REAL control precisely (no coordinate guessing, no copy of
+        // the widget). It is null — and therefore zero-cost and invisible — in
+        // every normal editor run; only Ki1SnapChipSelfTest.cpp ever sets it.
+        // count       — chips seen this strip draw (0..3)
+        // cx/cy        — each chip button's screen-space centre (for the click)
+        // colorDelta   — ImGui ColorStack.Size change ACROSS each chip, read at the
+        //                widget itself (before ImGui 1.92's per-window error recovery
+        //                masks it at EndChild). Nonzero == KI-1's unbalanced push/pop.
+        struct Ki1ChipProbe
+        {
+            int   count = 0;
+            float cx[3] = {0,0,0};
+            float cy[3] = {0,0,0};
+            int   colorDelta[3] = {0,0,0};
+        };
+        static Ki1ChipProbe* s_Ki1Probe;
+
     private:
         void FrameSelection(EditorContext& ctx, EditorCameraRig& rig);
         bool SelectionBounds(EditorContext& ctx, glm::vec3& mn, glm::vec3& mx) const;

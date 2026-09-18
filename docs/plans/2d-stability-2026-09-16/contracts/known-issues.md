@@ -41,12 +41,25 @@ Append format (copy the block below for a new entry):
 - **Repro:** launch Starforge (Debug, `COSMIC_2D_ONLY=ON`), open a scene, click any of the three
   snap chips in the viewport strip. Debug: assert + `abort()`. Release: silent style-stack
   corruption. The Phase 29 W7 on-GPU pass already observed this in both 2D and 3D editors.
-- **Regression:** none yet. WO-07 writes a failing-before repro (headless or UI-tier) asserting the
-  ImGui colour-stack depth is balanced across a simulated chip toggle, then applies the `pushed`-latch
-  fix, then the same assertion passes (L05).
-- **Fix shape (for WO-07, not implemented here):** mirror the `toggle` lambda — latch
-  `const bool pushed = on;` before the button and guard the pop on `pushed`.
-- **Disposition:** open.
+- **Regression (WO-07):** `Projects/Starforge/src/Ki1SnapChipSelfTest.cpp` — a gated in-editor
+  harness (armed by `COSMIC_KI1_SELFTEST`) that opens a real 2D edit scene and actuates the **real**
+  `ViewportController::DrawViewportOverlays` snap chip through Dear ImGui for both toggle directions,
+  reading the colour-stack size **at the widget** (before ImGui 1.92's end-of-window error recovery
+  masks it — the naive after-frame check nets to zero in Release). Driven through the WO-04 runner as
+  case `KI-1` (`tests/acceptance/manifests/wo07-ki1.manifest.json` +
+  `tests/acceptance/fixtures/Run-Ki1SelfTest.ps1`). Evidence in `evidence/WO-07/ki1/`:
+  - **Failing-before Debug** — `abort()`, exit 3, ImGui `IM_ASSERT` "Calling PopStyleColor() too many
+    times!" in window `Untitled###Viewport` (`failing-before-Debug.stdout.log`).
+  - **Failing-before Release** — no crash, but `colorDelta=-1` (OFF→ON spurious pop) and `colorDelta=+1`
+    (ON→OFF leaked push) at the chip, verdict FAIL exit 1 (`failing-before-Release.result.json`) —
+    the silent case a whole-frame no-crash check misses.
+  - **Passing-after Debug + Release** — 4/4 actuations registered, imbalance 0, verdict PASS exit 0
+    (`passing-after-*.result.json`); runner PASSED both configs (`evidence/WO-07/runner-*/results/`).
+- **Fix:** mirrors the `toggle` lambda — latches `const bool pushed = on;` before the button and
+  guards both the `PushStyleColor` and `PopStyleColor` on `pushed`
+  (`Projects/Starforge/src/ViewportController.cpp`, the `snapChip` lambda).
+- **Disposition:** **fix landed (WO-07 local commit, 2026-09-17).** Both configs build 0-warn; all
+  385 retained headless tests still pass. Reproduce via the runner: see `evidence/WO-07/report.md`.
 
 ### KI-2 — SerialLink connected-state behaviour is unreachable headlessly (coverage gap)
 
