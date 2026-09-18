@@ -517,9 +517,15 @@ Those four are built — this chapter links them and does not redraw them.
 ### `Application::Application`
 
 ```cpp
-// Application.h:65
+// Application.h
 Application(const std::string& startupProjectDll = "");
+// test-only (WO-10): the same boot with an injected frame time source
+Application(const std::string& startupProjectDll, std::unique_ptr<IFrameClock> clock);
 ```
+
+The two-argument overload exists for the clock acceptance cases (N01/N02): it is the identical
+construction with `clock` in place of `GlfwFrameClock`, and the shipping one-argument constructor
+delegates to it. A null `clock` falls back to the GLFW clock.
 
 **What it does** — constructs the engine and **runs the entire subsystem boot inside the
 constructor**. In order (`Application.cpp:83-101` → `Initialize()` at `:536-612`):
@@ -974,6 +980,15 @@ glm::vec2			GetViewportSize() const;
 <a id="application--time-control"></a>
 ### Time control
 
+The frame clock behind everything in this section is sampled through `IFrameClock`
+(`core/IFrameClock.h`, WO-10): `GlfwFrameClock` (`glfwGetTime()`) in shipping, a scripted clock
+under test. `Application::Run` seeds the clock with one `Now()`, `RenderSingleFrame` samples one
+`Now()` per frame in `double`, and only the frame **delta** is narrowed to the `float` `Timestep`
+the layers receive. The test-only constructor overload `Application(const std::string&
+startupProjectDll, std::unique_ptr<IFrameClock> clock)` injects the source; nothing about the
+scheduler (accumulator, clamp, pause, scale, dispatch) is affected by which clock feeds it. The
+fake clock lives under `tests/` and never ships (no fake symbol in `Cosmic.dll`).
+
 The frame's two passes and the exact meaning of each delta are the guide's job
 ([`../guide/time-and-ticks.md`](../guide/time-and-ticks.md), diagram DG-10). What follows is the
 per-call contract.
@@ -1002,14 +1017,14 @@ is **true** (`Application.h:185`).
 ### `Application::SetFixedTimestepHz`
 
 ```cpp
-// Application.h:111
+// Application.h
 void			SetFixedTimestepHz(float hz);
 ```
 
-**What it does** — sets the fixed-pass rate. The value is **clamped to `[1, 1000]`**, and a clamped
-call logs `CS_CORE_WARN("SetFixedTimestepHz({0}) clamped to {1} Hz.", …)`
-(`Application.cpp:514-522`). The new rate is sampled once at the top of the next frame
-(`:205`), so a change mid-frame cannot tear the drain loop.
+**What it does** — sets the fixed-pass rate. **`NaN` is rejected** (a warning, the previous rate
+kept — WO-10, KI-53); every other value is **clamped to `[1, 1000]`**, and a clamped call logs
+`CS_CORE_WARN("SetFixedTimestepHz({0}) clamped to {1} Hz.", …)`. The new rate is sampled once at
+the top of the next frame, so a change mid-frame cannot tear the drain loop.
 
 **Why you'd use it** — a control loop or vehicle sim that needs 120 Hz or 240 Hz. Default 60 Hz
 (`Application.h:214`). `PlayerLayer` calls it on attach from the project manifest's `fixed_dt_hz`
@@ -1026,9 +1041,10 @@ Cosmic::Application::Get().SetFixedTimestepHz(240.0f);   // 4.17 ms fixed dt
   a single high-rate loop, substep inside your own `OnFixedUpdate` instead — the header says so at
   `Application.h:108-110`.
 - Out-of-range values are clamped and logged, never rejected: `SetFixedTimestepHz(0.0f)` becomes
-  1 Hz, not "off". Use `UseFixedTimeStep(false)` for off.
-- `NaN` survives `std::clamp` unchanged on MSVC and would make the drain loop's condition false
-  forever — fixed updates would silently stop. Nothing validates for it.
+  1 Hz, not "off" (`+inf` → 1000, `-inf` → 1). Use `UseFixedTimeStep(false)` for off.
+- `NaN` is rejected outright. Before WO-10 it survived `std::clamp`, made the drain condition false
+  forever (no fixed update) while the accumulator kept growing, and the next valid rate repaid the
+  gap as one burst — 91 ticks in one frame after 1.5 s in the N02 case (KI-53).
 - Raising the rate raises the **maximum** drain iterations per frame: the 0.25 s spiral clamp
   (`:210-213`) divided by `1/hz` — 15 at 60 Hz, 60 at 240 Hz, 250 at 1000 Hz.
 
@@ -1045,19 +1061,20 @@ float			GetFixedTimestepHz() const					{ return m_FixedTimestepHz; }
 ### `Application::SetTimeScale`
 
 ```cpp
-// Application.h:104
-void			SetTimeScale(float timescale)				{ m_TimeScale = timescale; }
+// Application.h
+void			SetTimeScale(float timescale);   // finite and >= 0, else rejected
 ```
 
-**What it does** — sets the global time multiplier, default `1.0f` (`Application.h:212`). It is
-applied in **two** places per frame:
+**What it does** — sets the global time multiplier, default `1.0f`. **Policy (WO-10, KI-52 /
+KI-54; `contracts.md` §7):** the value must be **finite and `>= 0`**; `NaN`, `±inf` and negative
+values are rejected with `CS_CORE_WARN("SetTimeScale({0}) rejected …")` and the previous scale is
+kept. An accepted scale is applied in **two** places per frame:
 
-- the fixed accumulator fills at scaled rate: `m_Accumulator += frameTime * m_TimeScale`
-  (`Application.cpp:215`);
-- the variable delta is scaled: `rawTimestep.GetSeconds() * m_TimeScale` (`:238`).
+- the fixed accumulator fills at scaled rate: `m_Accumulator += frameTime * m_TimeScale`;
+- the variable delta is scaled: `rawTimestep.GetSeconds() * m_TimeScale`.
 
-**It does not change the magnitude of the fixed delta**, which stays `1/hz` so fixed-step
-integration remains stable (`:205`, `:218`).
+**It does not change the magnitude of the fixed delta**, which stays `+1/hz` so fixed-step
+integration remains stable.
 
 **Why you'd use it** — slow-motion, fast-forward, a simulation speed slider. For a *pause*, use
 [`Pause()`](#applicationpause), not `SetTimeScale(0)`.
@@ -1071,16 +1088,20 @@ if (ImGui::SliderFloat("Speed", &speed, 0.0f, 4.0f))
 ```
 
 **Notes & pitfalls**
-- **No clamping, no validation.** Negative, zero, huge and `NaN` are all accepted.
-- **A negative scale does not rewind the fixed pass.** The accumulator runs *backwards*
-  (`:215`), so the drain condition `m_Accumulator >= fixedDeltaTime` (`:221`) never fires and the
-  signed delta computed at `:218` is unreachable in practice. Worse, the accumulated negative debt
-  must be repaid before fixed updates resume after you restore a positive scale. Rewind works for
-  visuals, which read `Layer::GetLocalTime()`. Documented in
-  [`../guide/time-and-ticks.md#rewind-and-the-accumulator-debt`](../guide/time-and-ticks.md#rewind-and-the-accumulator-debt).
-- A very large scale makes the accumulator overrun the 0.25 s spiral clamp's protection: the clamp
-  is applied to `frameTime` *before* the multiply (`:210-215`), so `TimeScale = 100` still queues
-  25 s of simulated time into one frame.
+- **Negative is not a rewind and is rejected.** Before WO-10 a negative scale ran the accumulator
+  *backwards*: the drain condition never fired (no fixed update at all) and the negative balance
+  was repaid as a no-tick period once a positive scale returned — 3 s at `-1` cost 3 s of forward
+  time without fixed updates (KI-54). The "signed fixed delta" branch that suggested rewind support
+  could never execute and is gone. Reverse playback is a **local** rate: `Layer::SetTimeScale(<0)`,
+  `DataPlayer::SetSpeed(<0)`, `TimelineState::Speed < 0` — see
+  [`../guide/time-and-ticks.md#the-global-scale-policy-no-rewind`](../guide/time-and-ticks.md#the-global-scale-policy-no-rewind).
+- **`NaN` / `±inf` are rejected.** A `NaN` used to poison the accumulator for the rest of the
+  process (no fixed update ever again, `NaN` in every `OnUpdate` and local time); `+inf` never left
+  the drain loop (a hang, reproduced as a runner TIMEOUT) (KI-52).
+- A very large *finite* scale makes the accumulator overrun the 0.25 s spiral clamp's protection:
+  the clamp is applied to `frameTime` *before* the multiply, so `TimeScale = 100` still queues 25 s
+  of simulated time into one frame, and `1e30` is an effective hang (KI-55, open — a ceiling is a
+  policy decision).
 - Orthogonal to pause. While paused the variable delta is forced to `0` regardless of scale
   (`:238`), and the fixed pass is skipped entirely (`:200`).
 
@@ -1091,7 +1112,8 @@ if (ImGui::SliderFloat("Speed", &speed, 0.0f, 4.0f))
 float			GetTimeScale() const						{ return m_TimeScale; }
 ```
 
-**What it does** — returns the current multiplier, exactly as set (never clamped).
+**What it does** — returns the current multiplier: the last value `SetTimeScale` *accepted* (a
+rejected NaN / inf / negative call leaves it unchanged).
 
 **Notes & pitfalls** — `GetTimeScale() == 0.0f` is **not** a reliable "is paused" test: the engine
 can be paused with a scale of 1, and scaled to 0 without being paused. Use
@@ -1100,13 +1122,13 @@ can be paused with a scale of 1, and scaled to 0 without being paused. Use
 ### `Application::GetAbsoluteTime`
 
 ```cpp
-// Application.h:114
-inline float	GetAbsoluteTime() const						{ return m_AbsoluteTime; } // seconds
+// Application.h
+inline float	GetAbsoluteTime() const						{ return (float)m_AbsoluteTime; } // seconds
 ```
 
-**What it does** — returns unscaled process uptime in seconds, accumulated from the raw frame delta
-at the very top of every frame (`Application.cpp:185`) — **before** the minimized early-out, before
-the pause checks, before any scaling.
+**What it does** — returns unscaled process uptime in seconds, accumulated (in `double`, since
+WO-10) from the raw frame delta at the very top of every frame — **before** the minimized
+early-out, before the pause checks, before any scaling.
 
 **Why you'd use it** — anything that must keep moving regardless of simulation state: a spinner on
 the pause screen, a session clock, a UI shimmer. For anything that should freeze with the
@@ -1123,9 +1145,12 @@ const float angle = std::fmod(t * 90.0f, 360.0f);
 **Notes & pitfalls**
 - Keeps advancing while **paused**, while **minimized** and at any `TimeScale`, including negative.
   It is uptime, not simulated time.
-- It accumulates a `float` per frame from zero, so precision decays with session length: at 60 fps
-  the increment stops resolving cleanly past a few hours of uptime. Fine for UI, wrong for a
-  long-running timestamp — record wall-clock time for that.
+- The accumulator is `double` (a `float` one ran **3 % slow after 24 h** of 60-Hz frames and
+  17 s slow after 2 h — measured by WO-10, KI-51). The **returned** `float` is the correctly rounded
+  uptime, so it has no cumulative drift but a float's resolution: 0.49 ms at 2 h, 7.8 ms at 24 h.
+  Fine for UI and session length, wrong for a long-running timestamp — record wall-clock time for
+  that. (`Layer::GetLocalTime()` is still a `float` accumulator with the 3 %-per-day behaviour —
+  KI-56.)
 - There is no setter and no reset.
 
 <a id="application--pause"></a>

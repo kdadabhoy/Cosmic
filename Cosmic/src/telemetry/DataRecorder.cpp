@@ -71,7 +71,7 @@ namespace Cosmic
         std::lock_guard<std::mutex> lock(rec.mutex);
         // Sample append time after acquiring the lock: a waiting writer must not
         // append an older pre-lock time behind a newer writer's completed row.
-        const float t = m_ElapsedTime.load(std::memory_order_relaxed);
+        const float t = (float)m_ElapsedTime.load(std::memory_order_relaxed);
 
         // Update live frame.
         rec.currentFrame.timestamp = t;
@@ -161,7 +161,9 @@ namespace Cosmic
     void DataRecorder::Tick(float dt)
     {
         if(!std::isfinite(dt) || dt<0) return;
-        m_ElapsedTime.fetch_add(dt, std::memory_order_relaxed);
+        // Single writer (the owner thread); a load+store keeps the double accumulator
+        // lock-free without needing atomic<double>::fetch_add.
+        m_ElapsedTime.store(m_ElapsedTime.load(std::memory_order_relaxed) + (double)dt, std::memory_order_relaxed);
 
         // Crash-failsafe autosave: periodically write a rolling snapshot so a hard
         // crash can recover the last successful publication. Skipped if a
@@ -180,7 +182,7 @@ namespace Cosmic
 
     float DataRecorder::GetRecordedDuration() const
     {
-        return m_ElapsedTime.load(std::memory_order_relaxed);
+        return (float)m_ElapsedTime.load(std::memory_order_relaxed);
     }
 
     // =========================================================================
@@ -437,7 +439,7 @@ namespace Cosmic
             std::fill(rec->currentFrame.values.begin(),
                       rec->currentFrame.values.end(), 0.0f);
         }
-        m_ElapsedTime.store(0.0f, std::memory_order_relaxed);
+        m_ElapsedTime.store(0.0, std::memory_order_relaxed);
         m_AutosaveClock=0;
     }
 

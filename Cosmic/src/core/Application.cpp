@@ -16,10 +16,12 @@
 #include "imgui_internal.h"
 
 
-// Note: glfw3.h is kept only for glfwGetTime() in the Run() loop.
+// Note: glfw3.h is kept only for glfwGetTime() behind GlfwFrameClock (the
+// default IFrameClock the Run() loop samples through).
 #include <GLFW/glfw3.h>
 
 #include <algorithm>
+#include <cmath>
 
 // Wrap Windows.h to isolate polluting win32 macro definitions
 // Note: WIN32_LEAN_AND_MEAN removed here because it is already declared via the command line compiler flags
@@ -81,8 +83,23 @@ namespace Cosmic
 	 * the internal subsystem initialization sequence.
 	 */
 	Application::Application(const std::string& startupProjectDll)
+		: Application(startupProjectDll, std::make_unique<GlfwFrameClock>())
+	{
+	}
+
+	// The shipping clock (IFrameClock.h): glfwGetTime(), sampled where it always was.
+	double GlfwFrameClock::Now()
+	{
+		return glfwGetTime();
+	}
+
+	Application::Application(const std::string& startupProjectDll, std::unique_ptr<IFrameClock> clock)
 		: m_Running(true), m_Minimized(false), m_UseFixedTimestep(true), m_TimeScale(1.0f), m_ImGuiLayer(nullptr)
 	{
+		// The frame time source (WO-10 seam). A null clock is a caller bug; fall
+		// back to the shipping source rather than dereference null every frame.
+		m_Clock = clock ? std::move(clock) : std::make_unique<GlfwFrameClock>();
+
 		// Must be assigned before Initialize() below — it decides Launcher vs project.
 		m_StartupProjectDLL = startupProjectDll;
 
@@ -133,7 +150,7 @@ namespace Cosmic
 	{
 		// Seed the shared frame clock so the first frame's dt is ~0 rather than
 		// the full boot duration. Shared with the modal-loop frame pump.
-		m_LastFrameTime = (float)glfwGetTime();
+		m_LastFrameTime = m_Clock->Now();
 
 		while (m_Running && !m_Window->ShouldClose())
 		{
@@ -179,10 +196,13 @@ namespace Cosmic
 			return true;
 		m_InFrameTick = true;
 
-		float time = (float)glfwGetTime();
-		Timestep rawTimestep = time - m_LastFrameTime;
+		// Sample the clock in double and narrow only the DELTA (KI-51): the frame
+		// delta is small, so its float is exact to ~1e-9 s at any uptime, whereas a
+		// float sample of the uptime itself has a 7.8 ms ulp after 24 h.
+		const double time = m_Clock->Now();
+		Timestep rawTimestep = (float)(time - m_LastFrameTime);
 		m_LastFrameTime = time;
-		m_AbsoluteTime += rawTimestep.GetSeconds();
+		m_AbsoluteTime += (double)rawTimestep.GetSeconds();
 
 		// Skip execution passes while minimized (default). Disabled via
 		// SetPauseOnMinimize(false). Run() still processes the Safe Zone.
@@ -212,17 +232,19 @@ namespace Cosmic
 				frameTime = 0.25f;
 			}
 
+			// SetTimeScale guarantees a finite, non-negative scale (KI-52 / KI-54),
+			// so the accumulator only ever grows here and the delta every layer
+			// receives is always +fixedDeltaTime. (The pre-WO-10 "signed delta for
+			// rewind" branch could never fire: a negative scale drove the
+			// accumulator below the drain condition and left a silent debt.)
 			m_Accumulator += (frameTime * m_TimeScale);
-
-			// Signed so layers receive a negative dt during rewind (TimeScale < 0)
-			const float signedFixedDelta = m_TimeScale >= 0.f ? fixedDeltaTime : -fixedDeltaTime;
 
 			m_LayerStack.SetIterating(true);
 			while (m_Accumulator >= fixedDeltaTime)
 			{
 				for (Layer* layer : m_LayerStack)
 				{
-					layer->OnFixedUpdate(signedFixedDelta);
+					layer->OnFixedUpdate(fixedDeltaTime);
 				}
 				m_Accumulator -= fixedDeltaTime;
 			}
@@ -513,12 +535,37 @@ namespace Cosmic
 
 	void Application::SetFixedTimestepHz(float hz)
 	{
+		// NaN is rejected outright (KI-53): it survives std::clamp, and 1/NaN as the
+		// fixed delta silently stops every fixed update while the accumulator keeps
+		// growing — repaid as one burst on the next valid rate. ±inf clamp like any
+		// other out-of-range value (+inf -> 1000 Hz, -inf -> 1 Hz).
+		if (std::isnan(hz))
+		{
+			CS_CORE_WARN("SetFixedTimestepHz(NaN) rejected; keeping {0} Hz.", m_FixedTimestepHz);
+			return;
+		}
 		// Clamp to a sane band: below 1 Hz the accumulator starves; above 1000 Hz the
 		// per-tick overhead of ticking every layer dominates (prefer app-side substepping).
 		const float clamped = std::clamp(hz, 1.0f, 1000.0f);
 		if (clamped != hz)
 			CS_CORE_WARN("SetFixedTimestepHz({0}) clamped to {1} Hz.", hz, clamped);
 		m_FixedTimestepHz = clamped;
+	}
+
+	void Application::SetTimeScale(float timescale)
+	{
+		// POLICY (WO-10, KI-52 / KI-54): finite and >= 0 only. A NaN would poison
+		// the fixed accumulator for the rest of the process, +inf never leaves the
+		// drain loop, -inf never enters it, and a negative scale is not a rewind of
+		// the fixed pass (it only ever stalled it and then charged the stall back as
+		// a no-tick period). Reverse playback is a LOCAL-timeline feature
+		// (Layer::SetTimeScale, DataPlayer::SetSpeed, TimelineState::Speed).
+		if (!std::isfinite(timescale) || timescale < 0.0f)
+		{
+			CS_CORE_WARN("SetTimeScale({0}) rejected (must be finite and >= 0); keeping {1}.", timescale, m_TimeScale);
+			return;
+		}
+		m_TimeScale = timescale;
 	}
 
 	Application& Application::Get()

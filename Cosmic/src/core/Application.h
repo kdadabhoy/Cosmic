@@ -32,6 +32,7 @@
 #include "layers/ImGuiLayer.h"
 #include "graphics/FrameBuffer.h"
 #include "core/Timestep.h"
+#include "core/IFrameClock.h"
 #include <glm/glm.hpp>
 #include <memory>
 #include <string>
@@ -63,6 +64,13 @@ namespace Cosmic
 		// there. If the DLL cannot be found the engine logs an error and falls
 		// back to the Launcher.
 		Application(const std::string& startupProjectDll = "");
+
+		// Test-only overload (WO-10 clock seam): the same construction with an
+		// injected frame time source. Every scheduling decision (accumulator,
+		// clamp, pause, scale, dispatch) runs unchanged over it; only the value
+		// RenderSingleFrame samples once per frame comes from `clock`. The
+		// shipping constructor above passes GlfwFrameClock. Never pass null.
+		Application(const std::string& startupProjectDll, std::unique_ptr<IFrameClock> clock);
 		virtual ~Application();
 
 		void		Run();
@@ -101,17 +109,33 @@ namespace Cosmic
 		/////////////////////////////////////////////////////////////////////////////////
 
 		void			UseFixedTimeStep(bool useFixedTimeStep)		{ m_UseFixedTimestep = useFixedTimeStep; }
-		void			SetTimeScale(float timescale)				{ m_TimeScale = timescale; }
+
+		// Global simulation speed (default 1). POLICY (WO-10, KI-52/KI-54): the
+		// scale must be FINITE and >= 0 — 0 freezes (prefer Pause()), 0.25 is slow
+		// motion, 4 is fast-forward. NaN, ±inf and NEGATIVE values are rejected with
+		// a warning and the previous scale is kept: a NaN would poison the fixed
+		// accumulator for the rest of the process, +inf never leaves the drain loop,
+		// and a negative scale is not a rewind (no fixed update could ever fire and
+		// the negative accumulator became a silent no-tick debt once the scale was
+		// positive again). Reverse playback belongs to a layer's LOCAL timeline
+		// (Layer::SetTimeScale accepts negative rates), DataPlayer::SetSpeed and
+		// TimelineState::Speed. See contracts.md §7 / docs/guide/time-and-ticks.md.
+		void			SetTimeScale(float timescale);
 		float			GetTimeScale() const						{ return m_TimeScale; }
 
-		// Fixed-step rate control (default 60 Hz, clamped to [1, 1000]). The new rate
-		// is picked up at the start of the next frame. For very high control-loop
-		// rates prefer app-side substepping inside OnFixedUpdate — raising this rate
-		// ticks EVERY layer's OnFixedUpdate faster, not just yours.
+		// Fixed-step rate control (default 60 Hz, clamped to [1, 1000] — ±inf included;
+		// NaN is rejected and the previous rate kept — KI-53). The new rate is picked
+		// up at the start of the next frame. For very high control-loop rates prefer
+		// app-side substepping inside OnFixedUpdate — raising this rate ticks EVERY
+		// layer's OnFixedUpdate faster, not just yours.
 		void			SetFixedTimestepHz(float hz);
 		float			GetFixedTimestepHz() const					{ return m_FixedTimestepHz; }
 
-		inline float	GetAbsoluteTime() const						{ return m_AbsoluteTime; } // seconds
+		// Unscaled, never-paused process uptime in seconds. Accumulated in double
+		// (KI-51) and returned as the correctly rounded float: no cumulative drift,
+		// but the RETURNED value's resolution is a float's (0.49 ms at 2 h, 7.8 ms
+		// at 24 h) — a phase/session-length source, not a timestamp.
+		inline float	GetAbsoluteTime() const						{ return (float)m_AbsoluteTime; } // seconds
 
 		// First-class pause (docs/design/responsive-rendering-and-pause.md,
 		// Feature B). Orthogonal to TimeScale — Resume() never touches the
@@ -210,12 +234,19 @@ namespace Cosmic
 		const std::string				DEFAULT_WINDOW_TITLE = "Cosmic Engine";
 
 		float			m_TimeScale			= 1.0f;
-		float			m_AbsoluteTime		= 0.0f;
+		double			m_AbsoluteTime		= 0.0;		// double: a float accumulator ran 3 % slow after 24 h (KI-51)
 		float			m_FixedTimestepHz	= 60.0f;
+
+		// The frame time source (WO-10 seam): GlfwFrameClock in shipping, a
+		// scripted clock under test. Sampled once per frame; see IFrameClock.h.
+		std::unique_ptr<IFrameClock> m_Clock;
 
 		// Frame-loop clock state. Members (not Run() locals) so the main loop
 		// and the modal-loop frame pump share one coherent clock/accumulator.
-		float			m_LastFrameTime		= 0.0f;
+		// The clock SAMPLE is kept in double (KI-51): only the frame DELTA is
+		// narrowed to the float Timestep, so a sub-frame delta at 24 h of uptime
+		// is still exact instead of quantised to the float ulp of 86,400 (7.8 ms).
+		double			m_LastFrameTime		= 0.0;
 		float			m_Accumulator		= 0.0f;
 		bool			m_InFrameTick		= false;	// RenderSingleFrame re-entrancy guard
 		bool			m_Paused			= false;	// first-class pause (orthogonal to TimeScale)

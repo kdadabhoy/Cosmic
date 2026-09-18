@@ -293,7 +293,9 @@ Append format (copy the block below for a new entry):
 - Repro: WO-06 two-hour fixture records last timestamp 7183.12793 for nominal
   last sample 7199.983333; drift about -16.8554 seconds, beyond one fixed step.
 - Evidence: evidence/WO-06/debug-initial/D05-two-hour.out.log.
-- Disposition: open for WO-10; WO-06 does not change the v1 float time representation.
+- Disposition: **fixed in WO-10** (2026-09-18) — see the KI-16 entry in the WO-10 findings
+  below (double accumulator behind the unchanged float v1 timestamps). WO-06 did not change
+  the v1 float time representation; neither does the fix.
 
 ### KI-14 — Ratified two-hour stop-and-finalize limit is unenforced
 - Status: Confirmed enforcement defect. Owner WO: WO-06.
@@ -896,6 +898,155 @@ in the WO-09 suites. HEAD at discovery: `3ef69810c89318ffa044b3f18627862dfb033c3
   `StarforgeEditor`, so the launcher's PDB is `StarforgeEditor.pdb` and the DLL keeps
   `Starforge.pdb`. Nothing in the tree references the launcher's PDB by name (packaging copies no
   PDBs).
+
+## WO-10 findings (2026-09-18) — clocks, numerics and the analysis sample (N01–N04, X01)
+
+All were found by the WO-10 acceptance cases before any fix was written; each has
+failing-before evidence under `evidence/WO-10/failing-before/` (the runner's
+`wo10-host-runner-Release/` and `wo10-units-runner-Release/` JSON/JUnit + per-case
+logs, captured on the tree with only the inert clock seam added) and a regression in
+the WO-10 suites. HEAD at discovery: `a9789facc74cbc84eee381954fd870879af02e1d`.
+The clock cases drive the PRODUCTION `Application::Run` → `RenderSingleFrame` path
+over the injected `IFrameClock` (`core/IFrameClock.h`, the WO-10 seam) with the
+`WO10ClockFixture` plugin hosted by the real `WorkspaceLayer`.
+
+### KI-51 — The frame clock is sampled as `float`: every frame delta is quantised to the ulp of process uptime
+- Status: Confirmed defect (silent time corruption that grows with uptime). Owner WO: WO-10
+  (N01 "no double tick", N02 "clock origins 0 / 2 h / 24 h with sub-frame deltas").
+- Anchor: `Cosmic/src/core/Application.cpp:182-185` at `a9789fa` — `float time =
+  (float)glfwGetTime(); Timestep rawTimestep = time - m_LastFrameTime;` with `float
+  m_LastFrameTime` (`Application.h:218`) and `m_AbsoluteTime += rawTimestep` into a `float`
+  (`Application.h:213`). A float has 24 significant bits, so the clock sample's resolution is
+  the ulp of the uptime: 4.8e-7 s at 5 s, 4.9e-4 s at 2 h, 7.8e-3 s at 24 h. The frame delta
+  is the difference of two such samples.
+- Repro (all Release, `evidence/WO-10/failing-before/wo10-host-runner-Release/`):
+  - `N01-60hz`: an exact 1/60 s frame schedule at origin 0 delivers 600 ticks in total but
+    **140 frames with 0 ticks and 139 with 2** (the delta alternates one ulp above/below
+    1/60 from the first seconds); `N01-speed4` shows the same quantisation as a 2.8e-6 s
+    per-frame dt error over the float bar.
+  - `N02-origin-2h`: 1/144 s frames at 7,200 s uptime — max per-frame dt error **3.8e-4 s**
+    (every one of 1,441 frames over the float bar).
+  - `N02-origin-24h`: at 86,400 s uptime every 1/144 s frame becomes **0 or 7.8 ms** (dt
+    error 6.944e-3 s = the whole frame), **599 of the declared 600 ticks** are delivered and
+    the plugin's local time reads 10.000 for 10.002 s of frames.
+  - The `float` uptime accumulator: after 24 h of 1/60 s frames `m_AbsoluteTime`'s
+    arithmetic ends at **83,794.8 s for 86,400 s (−3.0 %)** (`N02-U`, "stored-float
+    accumulator quantisation").
+- Regression: `tests/test_wo10_n01_dispatch.cpp` (60hz: exactly one tick per frame;
+  every rung: per-frame dt within the float bar), `tests/test_wo10_n02_clock.cpp` (origin-0 /
+  -2h / -24h; the arithmetic measurement).
+- Disposition: fix landed (WO-10) — the clock is sampled in `double`, the previous sample is
+  kept in `double`, and only the DIFFERENCE is narrowed to the `float` `Timestep` the layers
+  receive (a frame delta is small, so the float is exact to ~1e-9 s at any uptime);
+  `m_AbsoluteTime` accumulates in `double` and `GetAbsoluteTime()` still returns `float`
+  (API unchanged — the returned float is the correctly rounded uptime, 7.8 ms resolution at
+  24 h, with no cumulative drift). Documented in `docs/reference/core.md` and
+  `docs/guide/time-and-ticks.md`.
+
+### KI-52 — `SetTimeScale` accepts NaN / ±inf: NaN poisons the accumulator for the rest of the process, +inf hangs it
+- Status: Confirmed defect (permanent loss of every fixed update; a hang). Owner WO: WO-10
+  (N02 "zero / NaN / inf rate and speed policy").
+- Anchor: `Cosmic/src/core/Application.h:104` at `a9789fa` — `void SetTimeScale(float
+  timescale) { m_TimeScale = timescale; }` (no validation), consumed by `m_Accumulator +=
+  frameTime * m_TimeScale` (`Application.cpp:215`) and `while (m_Accumulator >=
+  fixedDeltaTime)` (`:221`).
+- Repro (`failing-before/wo10-host-runner-Release/`):
+  - `N02-policy-scale-nan`: `SetTimeScale(NAN)` for 2 s → **0 fixed ticks**, a NaN `dt`
+    reaches every layer's `OnUpdate` and `GetLocalTime()` reads NaN; after `SetTimeScale(1)`
+    still **0 ticks for the remaining 2 s** (the accumulator is NaN forever): 119 ticks
+    delivered of 360 declared.
+  - `N02-policy-scale-inf`: `SetTimeScale(INFINITY)` → the drain loop never terminates; the
+    runner killed the child at its 150 s deadline (**TIMEOUT**). `-inf` leaves the
+    accumulator at −inf (no tick ever again).
+- Regression: `tests/test_wo10_n02_clock.cpp` (rungs `policy-scale-nan`, `policy-scale-inf`).
+- Disposition: fix landed (WO-10) — POLICY: `SetTimeScale` accepts only FINITE values
+  `>= 0`; anything else is rejected with `CS_CORE_WARN` and the previous scale is kept (see
+  KI-54 for the negative half of the policy and `contracts/contracts.md` §7).
+
+### KI-53 — `SetFixedTimestepHz(NaN)` survives `std::clamp`: no fixed ticks, an unbounded accumulator, and a catch-up burst on the next valid rate
+- Status: Confirmed defect (silent loss of fixed updates followed by a burst). Owner WO: WO-10.
+- Anchor: `Cosmic/src/core/Application.cpp:514-521` at `a9789fa` — `std::clamp(NaN, 1, 1000)`
+  returns NaN, `clamped != hz` is true for NaN so the call even *logs* "clamped to nan" and
+  stores it; `fixedDeltaTime = 1/NaN` makes the drain condition false while
+  `m_Accumulator += frameTime * scale` keeps growing.
+- Repro (`failing-before/wo10-host-runner-Release/N02-policy-hz`): 1.5 s at a NaN rate →
+  **0 ticks**; the first frame after `SetFixedTimestepHz(60)` delivers **91 ticks** (the 1.5 s
+  of accumulated debt + its own); 3,907 ticks delivered of 3,951 declared over the rung.
+- Regression: `tests/test_wo10_n02_clock.cpp` (rung `policy-hz`: 0 / 1e9 / NaN / +inf / −inf /
+  60 in sequence against the double reference; `GetFixedTimestepHz()` pinned per window).
+- Disposition: fix landed (WO-10) — NaN is rejected with a warning and the previous rate
+  kept; every other value keeps clamping to `[1, 1000]` (0 → 1, 1e9 → 1000, +inf → 1000,
+  −inf → 1) exactly as before.
+
+### KI-54 — A negative global `TimeScale` is not a rewind: it silently stops every fixed update and the debt is repaid as a no-tick period after a positive scale returns
+- Status: Confirmed defect (documented in the guide as a caveat, but a hidden restart debt
+  in a shipping API). Owner WO: WO-10 (N02 "negative global physics scale — reject or a safe
+  documented policy without accumulating hidden restart debt").
+- Anchor: `Cosmic/src/core/Application.cpp:215-227` at `a9789fa` — `m_Accumulator +=
+  frameTime * m_TimeScale` goes negative; the `signedFixedDelta` branch (`:218`) is
+  unreachable because `while (m_Accumulator >= fixedDeltaTime)` never holds; nothing resets
+  the accumulator when the scale turns positive again.
+- Repro (`failing-before/wo10-host-runner-Release/N02-policy-scale-negative`): 3 s at
+  `SetTimeScale(-1)` → **0 fixed ticks**, `OnUpdate` receives −1/60 and `GetLocalTime()` runs
+  backwards (180 monotonicity violations); after `SetTimeScale(1)` → **0 ticks for the next
+  3 s** (the accumulator climbs back from −3 s): 120 ticks delivered of 480 declared, local
+  time 2.0 s for 8.0 s of frames.
+- Regression: `tests/test_wo10_n02_clock.cpp` (rung `policy-scale-negative`: 180 ticks during
+  the request, 180 in the 3 s after, never a signed fixed delta, local time monotonic).
+- Disposition: fix landed (WO-10) — POLICY (written into `contracts/contracts.md` §7 and the
+  reference/guide): **a negative global `TimeScale` is rejected** (`CS_CORE_WARN`, previous
+  scale kept); the global scale is a speed in `[0, +finite)`. Reverse playback belongs to the
+  plugin-LOCAL timelines (`Layer::SetTimeScale` / `UpdateLayerTime`, which accept negative
+  rates and drive only that layer's `GetLocalTime()`), `DataPlayer::SetSpeed(<0)` and
+  `TimelineState::Speed` — all three verified in N02. The dead `signedFixedDelta` branch is
+  removed: the fixed delta a layer receives is always `+1/Hz`.
+
+### KI-16 — Float telemetry accumulator drifts over two nominal hours (fixed here)
+- Disposition (WO-10): fix landed — `DataRecorder::m_ElapsedTime` accumulates in `double`
+  (`std::atomic<double>`, still relaxed/lock-free on x64); each stored v1 timestamp is the
+  correctly rounded `float` of the exact elapsed time (format unchanged: float rows,
+  `GetRecordedDuration()` still returns `float`). Failing-before (this tree,
+  `failing-before/wo10-units-runner-Release/N02-U` + `N03`): 432,000 ticks of 1/60 →
+  **7,183.1445 s for 7,200 (−16.8555 s)**, and on the 10-s F-TRAJECTORY fixture the 1,200th
+  timestamp already sat **6.7e-5 s** off, which the float replay path turned into a **2.0 mm
+  x / 3.2 mm y** error over the float bar. Passing-after: duration and every stored timestamp
+  within one float ulp (4.9e-4 s at 7,200 s; 9.5e-7 s at 10 s), the replay error back to the
+  float-storage floor (`n02u-<cfg>/`, `n03-<cfg>/`).
+
+### KI-55 — A huge finite `TimeScale` (e.g. 1e30) queues an astronomically long drain loop (effective hang)
+- Status: Known limitation, open (documented; not reachable by any shipped UI — the speed
+  sliders are bounded). Owner WO: WO-10 (recorded), policy decision Kaden's.
+- Anchor: `Cosmic/src/core/Application.cpp` fixed pass — the 0.25 s spiral clamp is applied
+  to the frame time BEFORE the multiply by `m_TimeScale`, so `frameTime * scale` can be any
+  finite number of seconds per frame and the drain loop runs `scale * frameTime * Hz`
+  iterations. `docs/reference/core.md` already states it ("TimeScale = 100 still queues 25 s
+  of simulated time into one frame").
+- Repro: `SetTimeScale(1e30f)` then one frame — the drain loop runs ~1e30 / 60 iterations.
+  Not run as a case (it would only produce a TIMEOUT identical to KI-52's).
+- Regression: none (open). N02 pins the finite/non-negative policy; a ceiling would need a
+  ratified number.
+- Disposition: open — proposal for Kaden: clamp the global scale to a documented maximum
+  (e.g. 1,000×; 60,000 ticks per 1/60 s frame at 60 Hz is already unusable but bounded) with
+  a warning, the same shape as `SetFixedTimestepHz`'s `[1, 1000]`. Not implemented in WO-10
+  (a semantic ceiling is a policy choice, not a defect fix).
+
+### KI-56 — `Layer::m_LocalTime` is a `float` accumulator: `GetLocalTime()` quantises with uptime (−3.0 % after 24 h of 60-Hz frames)
+- Status: Known numerical limitation, open (documented; measured by WO-10). Owner WO: WO-10
+  (recorded), fix deferred.
+- Anchor: `Cosmic/src/core/Layer.h:119,129` — `inline void UpdateLayerTime(float deltaTime)
+  { m_LocalTime += deltaTime * m_LocalTimeScale; }` with `float m_LocalTime`. Same arithmetic
+  as KI-51's uptime accumulator, but `Layer` is the plugin-boundary class: changing the
+  member's type changes `sizeof(Layer)`, i.e. the SDK ABI every plugin/game module is built
+  against.
+- Measured (`N02-U` arithmetic; `N02-drift-2h` on the production loop): `float += 1/60` reads
+  7,183.14 s after 2 h (−16.86 s) and 83,794.8 s after 24 h (−3.0 %). The 2-h production run's
+  plugin local time is in `evidence/WO-10/n02-drift-2h-<cfg>/captures/n02-drift-2h.txt`.
+- Regression: none (open); the measurement is asserted only in its shape (`N02-U`).
+- Disposition: open — `GetLocalTime()` is documented as a local animation/shader phase, not a
+  session clock (`docs/reference/core.md`, `docs/guide/time-and-ticks.md` now carry the
+  measured number). A double accumulator behind the same float getter is a one-line change
+  that costs an SDK-wide rebuild (ABI); recommended for the next SDK-breaking release, not
+  for a stability point release.
 
 ## Register invariants
 

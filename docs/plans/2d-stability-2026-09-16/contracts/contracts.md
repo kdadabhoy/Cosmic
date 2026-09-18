@@ -223,6 +223,19 @@ coordinates before float rendering. The engine is **not** migrated to double dur
 **Invalidated by / re-opened when:** a real to-9km schema arrives and defines its own precision/units
 contract (D-9km revisit).
 
+**WO-10 record (2026-09-18) — what the float representation costs, measured.** The float
+telemetry / replay path (`DataRecorder` → v1 → `DataPlayer::SampleAt`) reproduces the double
+F-TRAJECTORY reference to **≤ 3.1e-5 m in x (300 m span), ≤ 4.6e-5 m in y** and every velocity
+to ≤ 1.4e-5 m/s; the error budget that bounds it is *two float ulps of the value* (float storage +
+float linear interpolation) *plus* `|d/dt| × two float ulps of the time* (float timestamps), and
+every sample sits inside it (N03). The recorder's time base is now accumulated in `double`
+(KI-16 fixed — the float accumulator had put the 1,200th timestamp 6.7e-5 s off, i.e. 2–3 mm,
+and 16.9 s off after two hours); the stored timestamps stay `float` (format unchanged). The
+sample's `1e11` world origin is subtracted in `double` before float display and reproduces
+every local value to **7.6e-6 m** (half the double ulp at 1e11) — the naive float-first path is
+**300 m** off (a float has 8,192 m ulps at 1e11). **Real to-9km qualification remains deferred
+(D-9km)**: X01 is a compatibility specimen on synthetic fixtures.
+
 ---
 
 ## 6. Trunk 2D-only enforcement (recommendation recorded here)
@@ -249,6 +262,57 @@ rule.
 rejection** of `-DCOSMIC_2D_ONLY=OFF` — a `message(FATAL_ERROR ...)` at configure, not a warning —
 so no default entry point, stale cache, or script override can silently ship 3D. OFF is retained only
 on `engine-3d`. WO-03 implements this.
+
+---
+
+## 7. Global time scale and fixed-rate policy (WO-10, 2026-09-18)
+
+*Shape set by WO-10 from measured defects (KI-52, KI-53, KI-54); numbers are code constants.
+Owner: WO-10. Covers N01/N02.*
+
+**Promise.** `Application::SetTimeScale` and `Application::SetFixedTimestepHz` can never put the
+fixed-step scheduler into a state it does not leave on its own: no poisoned accumulator, no
+unbounded drain loop, no silent no-tick period, and **no hidden restart debt** — every fixed
+tick a layer receives is `+1/Hz` and the count of ticks over any window equals the integer-tick /
+double reference of the declared policy (`tests/WO10ClockHarness.h`, N01/N02).
+
+**Policy.**
+- **Global `TimeScale` is a speed in `[0, +finite)`.** `SetTimeScale(v)` with `v` NaN, `±inf` or
+  **negative** is **rejected**: `CS_CORE_WARN`, the previous scale is kept, nothing else changes.
+  `0` is accepted (a freeze; prefer `Pause()`, which keeps the user's speed). A NaN would have
+  poisoned the accumulator for the rest of the process, `+inf` never left the drain loop (a hang),
+  `-inf` never entered it, and a negative scale was **not a rewind** — it only stalled the fixed
+  pass and then charged the stall back as a no-tick period once the scale was positive again
+  (3 s at −1 ⇒ 3 s without fixed updates at +1).
+- **Reverse playback is a LOCAL-timeline feature, never the global scale.** The plugin-local
+  `Layer::SetTimeScale` (any finite value, negative included — it scales only that layer's
+  `GetLocalTime()` through `UpdateLayerTime`, and, for a `WorkspaceLayer`-hosted plugin, the
+  `dt` it is handed), `DataPlayer::SetSpeed(<0)` (replay runs backwards to 0 and auto-stops) and
+  `TimelineState::Speed < 0` (the editor transport) are the supported reverse rates; all three
+  are verified in N02 / the retained `test_timeline_state`.
+- **The fixed delta is unsigned.** The pre-WO-10 "signed fixed delta for rewind" branch could
+  never execute and is removed: `OnFixedUpdate` always receives `+1/Hz`.
+- **`SetFixedTimestepHz(v)`:** NaN is **rejected** (warning, previous rate kept); every other value
+  clamps to `[1, 1000]` as before (0 → 1, 1e9 → 1000, +inf → 1000, −inf → 1). NaN survived
+  `std::clamp` and silently stopped every fixed update while the accumulator kept growing —
+  repaid as one burst (91 ticks in one frame after 1.5 s) on the next valid rate.
+- **Frame-time clamp (unchanged, now pinned):** a frame longer than **0.25 s** contributes exactly
+  0.25 s of fixed time (15 ticks at 60 Hz) and the remainder is **dropped, never repaid**; the
+  variable pass (`OnUpdate`, `UpdateLayerTime`) still receives the unclamped delta × scale.
+  `Pause()` skips the fixed pass and freezes the accumulator: resuming delivers at most the one
+  tick the resume frame earns plus the carried sub-step residual (no pause debt).
+- **Clock sample precision (KI-51):** the frame clock is sampled in `double` and only the frame
+  DELTA is narrowed to the `float` `Timestep`; uptime (`GetAbsoluteTime`) accumulates in double
+  and returns the correctly rounded float. A float sample had quantised every frame delta to the
+  ulp of the uptime (0/2-tick jitter at 60 Hz from the first seconds, 0.49 ms at 2 h, 7.8 ms at
+  24 h — one tick in 600 lost at 24 h) and the float uptime accumulator ran 3 % slow after a day.
+- **Known limitation (KI-55, open):** a *huge finite* scale (e.g. 1e30) queues an astronomically
+  long drain loop; a ceiling (proposed 1,000×) is Kaden's call. **Known limitation (KI-56, open):**
+  `Layer::GetLocalTime()` is a `float` accumulator (−16.9 s after 2 h, −3 % after 24 h of 60-Hz
+  frames); it is an animation/shader phase, not a session clock (an SDK-ABI change to fix).
+
+**Invalidated by / re-opened when:** a consumer needs a global rewind (a state-recording replay
+is the documented route), or Kaden ratifies a scale ceiling.
 
 ---
 

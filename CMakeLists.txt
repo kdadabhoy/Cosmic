@@ -128,13 +128,19 @@ endif()
 # and are preserved on the `engine-3d` branch and the `cosmic-pre-2d-2026-09-16`
 # tag (the frozen full-tree snapshot). The two remaining projects, SF_Telem and
 # Starforge, both build in 2D, so nothing is skipped in either mode now. The skip
-# machinery is retained (still hand-overridable via -DCOSMIC_SKIP_PROJECTS="Foo;Bar")
-# but both mode defaults are empty.
+# machinery is retained (still hand-overridable via -DCOSMIC_SKIP_PROJECTS="Foo;Bar").
 #
 # Starforge builds in 2D with its 3D panels, menus and overlays fenced out (Phase 29
 # W7, §8.5); Projects/Starforge/CMakeLists.txt drops the three 3D-only TUs.
-set(COSMIC_SKIP_PROJECTS_3D "")
-set(COSMIC_SKIP_PROJECTS_2D "")
+#
+# AnalysisSample (WO-10 / X01, 2D stability) is an EXTERNAL-consumer specimen: its
+# source is committed under Projects/ so the consumption path is reproducible, but
+# it is configured and built on its own against COSMIC_SDK_DIR (the way the
+# Starforge packager builds any external project) — never as part of this build,
+# so it stays out of the scan (and out of the install rules) in both modes. Its
+# own CMakeLists refuses to be added in-tree.
+set(COSMIC_SKIP_PROJECTS_3D "AnalysisSample")
+set(COSMIC_SKIP_PROJECTS_2D "AnalysisSample")
 if(COSMIC_2D_ONLY)
     set(SKIP_DEFAULT "${COSMIC_SKIP_PROJECTS_2D}")
     set(SKIP_OTHER   "${COSMIC_SKIP_PROJECTS_3D}")
@@ -150,8 +156,14 @@ set(COSMIC_SKIP_PROJECTS "${SKIP_DEFAULT}" CACHE STRING
 # an already-configured 2D tree would have gone on skipping the editor silently).
 # COSMIC_SKIP_PROJECTS_APPLIED remembers the default this tree last derived, so
 # both cases are detectable and a HAND-EDITED list is still left alone.
-set(COSMIC_SKIP_PROJECTS_APPLIED "${SKIP_DEFAULT}" CACHE INTERNAL
-    "The mode default COSMIC_SKIP_PROJECTS was last derived from")
+# (CACHE INTERNAL implies FORCE, so this seed must be guarded — an unguarded set
+# here overwrote the remembered default BEFORE the comparison below and the
+# migration could never fire on an edited default; found by WO-10 when
+# AnalysisSample joined the list.)
+if(NOT DEFINED COSMIC_SKIP_PROJECTS_APPLIED)
+    set(COSMIC_SKIP_PROJECTS_APPLIED "${SKIP_DEFAULT}" CACHE INTERNAL
+        "The mode default COSMIC_SKIP_PROJECTS was last derived from")
+endif()
 if(NOT COSMIC_SKIP_PROJECTS STREQUAL "${SKIP_DEFAULT}" AND
    (COSMIC_SKIP_PROJECTS STREQUAL "${SKIP_OTHER}" OR
     COSMIC_SKIP_PROJECTS STREQUAL "${COSMIC_SKIP_PROJECTS_APPLIED}"))

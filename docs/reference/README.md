@@ -131,6 +131,7 @@ script `tests/check_docs_coverage.ps1` (work order D5) diffs `Cosmic.h` against 
 | `core/Application.h` | [core.md](core.md) |
 | `core/Layer.h` | [core.md](core.md) |
 | `core/Timestep.h` | [core.md](core.md) |
+| `core/IFrameClock.h` | [core.md](core.md) |
 | `core/Log.h` | [core.md](core.md) |
 | `core/Input.h` | [events-input.md](events-input.md) |
 | `events/Event.h` | [events-input.md](events-input.md) |

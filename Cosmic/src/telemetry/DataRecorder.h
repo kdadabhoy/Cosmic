@@ -19,7 +19,7 @@
  * m_Records is populated exclusively during Register() on the main thread and
  * NEVER resized after that, so m_Records[id] dereferences are lock-free.
  * Each EntityRecord has its own mutex held only during Record() (< 1 µs).
- * m_ElapsedTime is std::atomic<float>; Tick() and RecordImpl() use relaxed
+ * m_ElapsedTime is std::atomic<double>; Tick() and RecordImpl() use relaxed
  * ordering — on x86 this is a plain mov with no barrier overhead.
  *
  * INTERNAL STORAGE — columnar layout
@@ -247,7 +247,10 @@ namespace Cosmic
         std::atomic<bool>       m_Flushing{ false };
         std::atomic<FlushState> m_FlushState{FlushState::Idle};
         std::function<void()> m_FlushWriteBarrier;
-        std::atomic<float>      m_ElapsedTime{ 0.0f }; // written by Tick (main), read by RecordImpl (workers)
+        // Accumulated in double (KI-16, WO-10): a float accumulator of 1/60 s ticks
+        // ended 16.9 s short after two hours. Still relaxed + lock-free on x64; the
+        // stored v1 timestamp is the correctly rounded float of the exact time.
+        std::atomic<double>     m_ElapsedTime{ 0.0 };  // written by Tick (main), read by RecordImpl (workers)
 
         // Autosave state (main-thread only — driven from Tick()).
         bool        m_AutosaveEnabled    = false;

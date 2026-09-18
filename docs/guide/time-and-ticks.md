@@ -58,9 +58,9 @@ Keeping these straight is most of the chapter:
 | Clock | Where from | Scaled by | Pauses? | Rewinds? | Use it for |
 | --- | --- | --- | --- | --- | --- |
 | `GetAbsoluteTime()` | `Application` | nothing | **no** | no | profiling, session length, a live clock on a pause screen |
-| `ts` in `OnUpdate(float ts)` | the frame | global scale (+ the layer's own, for a plugin layer) | yes — becomes `0` | yes — goes negative | movement, cameras, anything per-frame |
-| `dt` in `OnFixedUpdate(float dt)` | the accumulator | **nothing** — the magnitude is constant | the pass is **skipped** | see [rewind](#rewind-and-the-accumulator-debt) | physics, integrators, control loops |
-| `GetLocalTime()` | each `Layer` | global scale **×** that layer's scale | yes — stops advancing | yes | shader `u_Time`, particle age, any accumulated value |
+| `ts` in `OnUpdate(float ts)` | the frame | global scale (+ the layer's own, for a plugin layer) | yes — becomes `0` | only through a **negative layer-local scale** (the global scale cannot be negative) | movement, cameras, anything per-frame |
+| `dt` in `OnFixedUpdate(float dt)` | the accumulator | **nothing** — always exactly `+1/FixedHz` | the pass is **skipped** | **never** — see [the global-scale policy](#the-global-scale-policy-no-rewind) | physics, integrators, control loops |
+| `GetLocalTime()` | each `Layer` | global scale **×** that layer's scale | yes — stops advancing | yes, via a negative layer scale | shader `u_Time`, particle age, any accumulated value |
 
 The one people get wrong is `dt`. **The fixed delta's magnitude is never scaled.** `SetTimeScale(0.5f)`
 does not halve `dt`; it halves how *often* the fixed pass fires. That is deliberate — a fixed-step
@@ -70,14 +70,14 @@ simulator (Jolt included) is only stable when every step is the same size.
 
 ```mermaid
 flowchart TD
-    CLK["glfwGetTime · monotonic wall clock"]
-    RAW["rawDelta = now − lastFrameTime"]
-    ABS["m_AbsoluteTime += rawDelta<br/>GetAbsoluteTime: never scaled, never paused"]
+    CLK["IFrameClock::Now · glfwGetTime in shipping, sampled in double"]
+    RAW["rawDelta = float(now − lastFrameTime)"]
+    ABS["m_AbsoluteTime (double) += rawDelta<br/>GetAbsoluteTime: never scaled, never paused"]
     P{"IsPaused?"}
     SKIP["PASS 1A skipped entirely<br/>accumulator frozen — no catch-up burst on Resume"]
     ACC["accumulator += min of rawDelta and 0.25 s, × TimeScale"]
     W{"accumulator ≥ 1 / FixedHz?"}
-    FIX["OnFixedUpdate ± 1/FixedHz<br/>magnitude NEVER scaled — only the sign follows TimeScale"]
+    FIX["OnFixedUpdate +1/FixedHz<br/>never scaled, never signed"]
     TS["ts = paused ? 0 : rawDelta × TimeScale"]
     ULT["UpdateLayerTime ts<br/>m_LocalTime += ts × this layer's own scale"]
     UPD["OnUpdate ts"]
@@ -130,9 +130,14 @@ velocity in m/s times `ts` gives metres, with no conversion.
 frameTime    = min(rawDelta, 0.25)          // spiral-of-death clamp
 accumulator += frameTime × TimeScale
 while (accumulator >= 1/FixedHz)
-    every layer: OnFixedUpdate(±1/FixedHz)
+    every layer: OnFixedUpdate(+1/FixedHz)
     accumulator -= 1/FixedHz
 ```
+
+`TimeScale` is always finite and `>= 0` here (`SetTimeScale` rejects anything else — below), so the
+accumulator only ever grows and the delta is always positive. The frame clock itself is sampled in
+`double` and only the *delta* is narrowed to `float`: a sub-frame delta is exact at any uptime
+(a `float` sample used to quantise it to 7.8 ms after a day — WO-10, KI-51).
 
 The 0.25 s clamp is applied to the **frame time**, before it enters the accumulator. At the default
 60 Hz that caps a single frame at 15 fixed steps (plus at most one carried over from the previous
@@ -232,41 +237,53 @@ character climb stairs") is [`physics.md`](physics.md).
 auto& app = Cosmic::Application::Get();
 app.SetTimeScale(1.0f);     // normal
 app.SetTimeScale(0.25f);    // quarter speed — a bullet-time effect
+app.SetTimeScale(4.0f);     // fast-forward
 app.SetTimeScale(0.0f);     // soft freeze (but prefer Pause(), below)
-app.SetTimeScale(-1.0f);    // "rewind" — read the caveat first
+app.SetTimeScale(-1.0f);    // REJECTED with a warning — the scale stays 1 (policy below)
 float scale = app.GetTimeScale();
 ```
 
-The scale is not clamped and not validated. What it actually reaches:
+The scale must be **finite and `>= 0`**; `NaN`, `±inf` and negative values are rejected with a
+`CS_CORE_WARN` and the previous scale is kept (WO-10 policy, `contracts.md` §7). What an accepted
+scale actually reaches:
 
 - **`ts` in `OnUpdate`** — multiplied directly. Halve the scale, halve every per-frame delta.
 - **The fixed accumulator** — multiplied, so the fixed pass fires proportionally *less often*. `dt`
   itself is unchanged.
 - **`GetLocalTime()`** — via `ts`, so shader time and particle age follow automatically.
-- **`GetAbsoluteTime()`** — never. It is raw wall clock, by design.
+- **`GetAbsoluteTime()`** — never. It is raw wall clock, by design (accumulated in `double` since
+  WO-10; the returned `float` has a 0.49 ms step at 2 h and 7.8 ms at 24 h of uptime, but no
+  cumulative drift). `GetLocalTime()` is still a `float` accumulator: after two hours of 60-Hz
+  frames it reads about 17 s short, after a day 3 % — it is a phase, not a session clock (KI-56).
 
-### Rewind and the accumulator debt
+### The global-scale policy: no rewind
 
-A negative `TimeScale` is **not** a working rewind for fixed-step simulation, and this is worth
-knowing before you build a feature on it.
+Before WO-10 a negative `TimeScale` was accepted and was **not** a rewind: the accumulator ran
+downwards, so no fixed step ever fired, and once you restored `+1.0` the negative balance had to be
+worked off first — five seconds at `-1.0` meant **five seconds of forward time with no fixed
+updates**, a silent restart debt (KI-54). A `NaN` scale poisoned the accumulator for the rest of the
+process and `+inf` never left the drain loop (KI-52). All of those are now rejected at
+`SetTimeScale`, and `OnFixedUpdate` always receives exactly `+1/FixedHz`.
 
-`Application` computes a signed fixed delta (`m_TimeScale >= 0 ? +fixedDt : -fixedDt`) so that layers
-*could* receive a negative `dt`. But the drain loop is `while (accumulator >= fixedDt)`, and a
-negative scale drives the accumulator **downward**. The condition never becomes true, so:
+If you want time to run backwards, use a **local** rate, which is designed for it:
 
-- **`OnFixedUpdate` does not run at all while `TimeScale < 0`.** The negative-`dt` branch is
-  unreachable in the current code.
-- The accumulator keeps going more negative for as long as you rewind, and nothing resets it. After
-  five seconds at `-1.0`, returning to `+1.0` means roughly **five seconds of forward time before the
-  first fixed step fires again**.
+- `Layer::SetTimeScale(-1.0f)` — this layer's `GetLocalTime()` runs backwards through
+  `UpdateLayerTime`; a plugin layer hosted by the `WorkspaceLayer` also receives the negative rate in
+  its `OnUpdate`/`OnFixedUpdate` `dt`;
+- `DataPlayer::SetSpeed(-1.0f)` — a recording plays backwards to `0` and auto-stops;
+- `TimelineState::Speed = -1.0f` — the editor transport.
 
-The variable pass *does* run with a negative `ts`, and `GetLocalTime()` genuinely runs backwards — so
-rewind works fine for visuals, shaders and anything you integrate yourself in `OnUpdate`. If you need
-a rewindable simulation, keep it in `OnUpdate` with your own integrator, or record and replay states
-rather than driving physics backwards.
+A rewindable *simulation* is still a state-recording problem (record and replay states), not
+something to drive physics backwards through.
 
-For an ordinary freeze, use `Pause()` — it leaves the accumulator alone and has none of this
-behaviour.
+For an ordinary freeze, use `Pause()` — it leaves the accumulator alone and resuming delivers at
+most the one tick the resume frame earns plus the carried sub-step residual (no pause debt).
+
+Two more policy points the WO-10 clock cases pin: a frame longer than **0.25 s** contributes exactly
+0.25 s of fixed time (15 ticks at 60 Hz) and the rest is **dropped, never repaid**, while `OnUpdate`
+still receives the unclamped delta; and `SetFixedTimestepHz(NaN)` is rejected (it used to stop every
+fixed update and repay the gap as one burst on the next valid rate — KI-53), while any other value
+clamps to `[1, 1000]`.
 
 ---
 
