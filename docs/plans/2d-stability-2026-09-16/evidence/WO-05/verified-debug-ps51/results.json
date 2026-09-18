@@ -1,0 +1,294 @@
+﻿{
+    "manifest":  "wo05",
+    "profile":  "all",
+    "tier_filter":  [
+                        "U"
+                    ],
+    "config":  "Debug",
+    "mode":  "2D",
+    "generated_utc":  "2026-09-17T20:15:14.4625811Z",
+    "git":  {
+                "commit":  "552ef4519475e614b2e18f35d656daa8c011a8ca",
+                "dirty":  true,
+                "dirty_diff_sha256":  null
+            },
+    "environment":  {
+                        "os_caption":  "Microsoft Windows 11 Education",
+                        "os_version":  "10.0.26200",
+                        "os_build":  "26200",
+                        "os_display":  "26200.9457",
+                        "cpu_name":  "AMD Ryzen 7 7800X3D 8-Core Processor",
+                        "cpu_cores":  8,
+                        "cpu_threads":  16,
+                        "cpu_addr_width":  64,
+                        "cpu_isa_floor":  "SSE4.2 (D-CPU); see evidence/WO-02/cpu-isa-probe.txt",
+                        "ram_bytes":  33462239232,
+                        "ram_gib":  31.2,
+                        "gpus":  [
+                                     {
+                                         "name":  "NVIDIA GeForce RTX 5070 Ti",
+                                         "driver":  "32.0.16.1692",
+                                         "driver_date":  "\/Date(1788480000000)\/"
+                                     },
+                                     {
+                                         "name":  "AMD Radeon(TM) Graphics",
+                                         "driver":  "32.0.21045.5002",
+                                         "driver_date":  "\/Date(1786924800000)\/"
+                                     }
+                                 ],
+                        "opengl_version":  null,
+                        "powershell":  "5.1.26100.9444",
+                        "hostname":  "DESKTOP-SEOA4BT"
+                    },
+    "capabilities":  {
+                         "windows":  true,
+                         "cpu-sse42":  true,
+                         "gpu-gl":  true,
+                         "serial-device":  false,
+                         "editor-ui":  false
+                     },
+    "forced_unavailable":  [
+
+                           ],
+    "bin_dir":  "C:\\dev\\Cosmic\\build\\Runtime\\Debug",
+    "run_temp":  "C:\\dev\\Cosmic\\build\\wo05-temp\\cosmic-accept-8e2c49ef08484b0fb9198edf07fff9ea",
+    "golden_dir":  "C:\\dev\\Cosmic\\tests\\acceptance\\goldens",
+    "golden_before":  {
+                          ".gitkeep-golden.txt":  "8e92944b7b4e999a32148948af2a13498ece10d56133c62c5c84431f2d335118"
+                      },
+    "golden_after":  {
+                         ".gitkeep-golden.txt":  "8e92944b7b4e999a32148948af2a13498ece10d56133c62c5c84431f2d335118"
+                     },
+    "golden_mutated":  false,
+    "acceptance_mode":  true,
+    "counts":  {
+                   "total":  8,
+                   "passed":  8,
+                   "failed":  0,
+                   "blocked":  0
+               },
+    "self_test":  {
+                      "enabled":  false,
+                      "failures":  [
+
+                                   ]
+                  },
+    "cases":  [
+                  {
+                      "id":  "T01-PC-text",
+                      "tier":  "U",
+                      "description":  "PC text parsing, chunk/routing oracle and retained hardening",
+                      "requires":  [
+                                       "windows"
+                                   ],
+                      "transport":  "fake",
+                      "seed":  5,
+                      "start_utc":  "2026-09-17T20:12:47.1755069Z",
+                      "deadline_sec":  60,
+                      "exercised":  "fake-transport",
+                      "fixture":  "C:\\dev\\Cosmic\\tests\\acceptance\\..\\test_wo05_matrix.cpp",
+                      "fixture_sha256":  "c60636cfb417014e2278a7140bc76095f70f3b8bcbc967524e4718609d2aecb3",
+                      "command":  "C:\\dev\\Cosmic\\build\\Runtime\\Debug\\CosmicTests.exe \"--test-case=WO-05 T01:*,ParseFrame*,DriveSample*,WeaponSample*,TelemHub*\" --no-colors",
+                      "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-05\\verified-debug-ps51\\T01-PC-text.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-05\\verified-debug-ps51\\T01-PC-text.err.log",
+                      "pid":  11148,
+                      "exit_code":  0,
+                      "crash":  false,
+                      "tests_passed":  33,
+                      "tests_expected_min":  33,
+                      "verdict":  "PASSED",
+                      "detail":  "exit 0 as expected",
+                      "duration_sec":  0.353,
+                      "end_utc":  "2026-09-17T20:12:47.5343101Z"
+                  },
+                  {
+                      "id":  "T02-PC-faults",
+                      "tier":  "U",
+                      "description":  "Purge threshold, faults and exact staleness boundary",
+                      "requires":  [
+                                       "windows"
+                                   ],
+                      "transport":  "fake",
+                      "seed":  5,
+                      "start_utc":  "2026-09-17T20:12:47.5383125Z",
+                      "deadline_sec":  15,
+                      "exercised":  "fake-transport",
+                      "fixture":  "C:\\dev\\Cosmic\\tests\\acceptance\\..\\test_wo05_matrix.cpp",
+                      "fixture_sha256":  "c60636cfb417014e2278a7140bc76095f70f3b8bcbc967524e4718609d2aecb3",
+                      "command":  "C:\\dev\\Cosmic\\build\\Runtime\\Debug\\CosmicTests.exe \"--test-case=WO-05 T02:*\" --no-colors",
+                      "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-05\\verified-debug-ps51\\T02-PC-faults.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-05\\verified-debug-ps51\\T02-PC-faults.err.log",
+                      "pid":  15560,
+                      "exit_code":  0,
+                      "crash":  false,
+                      "tests_passed":  1,
+                      "tests_expected_min":  1,
+                      "verdict":  "PASSED",
+                      "detail":  "exit 0 as expected",
+                      "duration_sec":  0.057,
+                      "end_utc":  "2026-09-17T20:12:47.5957739Z"
+                  },
+                  {
+                      "id":  "T03-root-matrix",
+                      "tier":  "U",
+                      "description":  "225 root schedules x100, barriers and storage validation",
+                      "requires":  [
+                                       "windows"
+                                   ],
+                      "transport":  "fake",
+                      "seed":  5,
+                      "start_utc":  "2026-09-17T20:12:47.5977740Z",
+                      "deadline_sec":  1800,
+                      "exercised":  "fake-transport",
+                      "fixture":  "C:\\dev\\Cosmic\\tests\\acceptance\\..\\test_wo05_matrix.cpp",
+                      "fixture_sha256":  "c60636cfb417014e2278a7140bc76095f70f3b8bcbc967524e4718609d2aecb3",
+                      "command":  "C:\\dev\\Cosmic\\build\\Runtime\\Debug\\CosmicTests.exe \"--test-case=WO-05 T03: root*\" --no-colors",
+                      "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-05\\verified-debug-ps51\\T03-root-matrix.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-05\\verified-debug-ps51\\T03-root-matrix.err.log",
+                      "pid":  30348,
+                      "exit_code":  0,
+                      "crash":  false,
+                      "tests_passed":  1,
+                      "tests_expected_min":  1,
+                      "verdict":  "PASSED",
+                      "detail":  "exit 0 as expected",
+                      "duration_sec":  77.989,
+                      "end_utc":  "2026-09-17T20:14:05.5868499Z"
+                  },
+                  {
+                      "id":  "T03-late-open",
+                      "tier":  "U",
+                      "description":  "100 cancelled non-cooperative opens surviving root destruction",
+                      "requires":  [
+                                       "windows"
+                                   ],
+                      "transport":  "fake",
+                      "seed":  5,
+                      "start_utc":  "2026-09-17T20:14:05.5878492Z",
+                      "deadline_sec":  90,
+                      "exercised":  "fake-transport",
+                      "fixture":  "C:\\dev\\Cosmic\\tests\\acceptance\\..\\test_wo05_matrix.cpp",
+                      "fixture_sha256":  "c60636cfb417014e2278a7140bc76095f70f3b8bcbc967524e4718609d2aecb3",
+                      "command":  "C:\\dev\\Cosmic\\build\\Runtime\\Debug\\CosmicTests.exe \"--test-case=WO-05 T03: non-cooperative*\" --no-colors",
+                      "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-05\\verified-debug-ps51\\T03-late-open.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-05\\verified-debug-ps51\\T03-late-open.err.log",
+                      "pid":  28932,
+                      "exit_code":  0,
+                      "crash":  false,
+                      "tests_passed":  1,
+                      "tests_expected_min":  1,
+                      "verdict":  "PASSED",
+                      "detail":  "exit 0 as expected",
+                      "duration_sec":  50.708,
+                      "end_utc":  "2026-09-17T20:14:56.2955567Z"
+                  },
+                  {
+                      "id":  "T05-controlled-30min",
+                      "tier":  "U",
+                      "description":  "216000 accepted data frames, 108000 ticks/entity on controlled clock",
+                      "requires":  [
+                                       "windows"
+                                   ],
+                      "transport":  "fake",
+                      "seed":  5,
+                      "start_utc":  "2026-09-17T20:14:56.2975574Z",
+                      "deadline_sec":  180,
+                      "exercised":  "fake-transport",
+                      "fixture":  "C:\\dev\\Cosmic\\tests\\acceptance\\..\\test_wo05_matrix.cpp",
+                      "fixture_sha256":  "c60636cfb417014e2278a7140bc76095f70f3b8bcbc967524e4718609d2aecb3",
+                      "command":  "C:\\dev\\Cosmic\\build\\Runtime\\Debug\\CosmicTests.exe \"--test-case=WO-05 T05:*\" --no-colors",
+                      "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-05\\verified-debug-ps51\\T05-controlled-30min.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-05\\verified-debug-ps51\\T05-controlled-30min.err.log",
+                      "pid":  23112,
+                      "exit_code":  0,
+                      "crash":  false,
+                      "tests_passed":  2,
+                      "tests_expected_min":  2,
+                      "verdict":  "PASSED",
+                      "detail":  "exit 0 as expected",
+                      "duration_sec":  13.473,
+                      "end_utc":  "2026-09-17T20:15:09.7711316Z"
+                  },
+                  {
+                      "id":  "T06-burst-reconnect",
+                      "tier":  "U",
+                      "description":  "10x60s in-memory stream, silence, corruption and 20 reconnects",
+                      "requires":  [
+                                       "windows"
+                                   ],
+                      "transport":  "fake",
+                      "seed":  5,
+                      "start_utc":  "2026-09-17T20:15:09.7721325Z",
+                      "deadline_sec":  60,
+                      "exercised":  "fake-transport",
+                      "fixture":  "C:\\dev\\Cosmic\\tests\\acceptance\\..\\test_wo05_kiss.cpp",
+                      "fixture_sha256":  "9428bddab53c1d78cb349c2307e28c98f5b231dfa2a4952dc252f8471ad5e5b8",
+                      "command":  "C:\\dev\\Cosmic\\build\\Runtime\\Debug\\CosmicTests.exe \"--test-case=WO-05 T06:*,WO-05 T06 KISS:*,*COBS*,*CRC protection*\" --no-colors",
+                      "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-05\\verified-debug-ps51\\T06-burst-reconnect.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-05\\verified-debug-ps51\\T06-burst-reconnect.err.log",
+                      "pid":  26000,
+                      "exit_code":  0,
+                      "crash":  false,
+                      "tests_passed":  8,
+                      "tests_expected_min":  8,
+                      "verdict":  "PASSED",
+                      "detail":  "exit 0 as expected",
+                      "duration_sec":  0.431,
+                      "end_utc":  "2026-09-17T20:15:10.2033429Z"
+                  },
+                  {
+                      "id":  "T03-write-close",
+                      "tier":  "U",
+                      "description":  "App-owned pending write cancelled/drained before device release",
+                      "requires":  [
+                                       "windows"
+                                   ],
+                      "transport":  "fake",
+                      "seed":  5,
+                      "start_utc":  "2026-09-17T20:15:10.2043436Z",
+                      "deadline_sec":  15,
+                      "exercised":  "fake-transport",
+                      "fixture":  "C:\\dev\\Cosmic\\tests\\acceptance\\..\\test_wo05_matrix.cpp",
+                      "fixture_sha256":  "c60636cfb417014e2278a7140bc76095f70f3b8bcbc967524e4718609d2aecb3",
+                      "command":  "C:\\dev\\Cosmic\\build\\Runtime\\Debug\\CosmicTests.exe \"--test-case=WO-05 T03: close drains*\" --no-colors",
+                      "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-05\\verified-debug-ps51\\T03-write-close.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-05\\verified-debug-ps51\\T03-write-close.err.log",
+                      "pid":  29588,
+                      "exit_code":  0,
+                      "crash":  false,
+                      "tests_passed":  1,
+                      "tests_expected_min":  1,
+                      "verdict":  "PASSED",
+                      "detail":  "exit 0 as expected",
+                      "duration_sec":  0.059,
+                      "end_utc":  "2026-09-17T20:15:10.2633725Z"
+                  },
+                  {
+                      "id":  "Retained-suite",
+                      "tier":  "U",
+                      "description":  "Full existing hardening and both activated WO-05a regressions",
+                      "requires":  [
+                                       "windows"
+                                   ],
+                      "transport":  "fake",
+                      "seed":  5,
+                      "start_utc":  "2026-09-17T20:15:10.2653736Z",
+                      "deadline_sec":  180,
+                      "exercised":  "fake-transport",
+                      "fixture":  "C:\\dev\\Cosmic\\tests\\acceptance\\..\\test_serial_shutdown_race.cpp",
+                      "fixture_sha256":  "711e01c760575c0dbbcae0db109a3e05abec423953498c88f03b463dd99e2140",
+                      "command":  "C:\\dev\\Cosmic\\build\\Runtime\\Debug\\CosmicTests.exe \"--test-case-exclude=WO-05 *\" --no-colors",
+                      "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-05\\verified-debug-ps51\\Retained-suite.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-05\\verified-debug-ps51\\Retained-suite.err.log",
+                      "pid":  21452,
+                      "exit_code":  0,
+                      "crash":  false,
+                      "tests_passed":  350,
+                      "tests_expected_min":  350,
+                      "verdict":  "PASSED",
+                      "detail":  "exit 0 as expected",
+                      "duration_sec":  4.186,
+                      "end_utc":  "2026-09-17T20:15:14.4520745Z"
+                  }
+              ]
+}

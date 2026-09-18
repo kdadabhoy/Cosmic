@@ -1,0 +1,10 @@
+{
+  "manifest": "wo05-empty-count-repro",
+  "cases": [{
+    "id": "WO05-empty-count", "description": "Empty stdout with minTests must produce FAILED JSON/JUnit, not abort the parent",
+    "tier": "U", "profiles": ["pr"], "requires": ["windows"], "transport": "none",
+    "command": "powershell", "args": ["-NoProfile", "-File", "{ACCEPTANCE}\\fixtures\\WO05-EmptyCount.ps1"],
+    "expectExit": 1, "minTests": 1, "deadlineSec": 15, "expectVerdict": "FAILED",
+    "fixture": "fixtures/WO05-EmptyCount.ps1"
+  }]
+}

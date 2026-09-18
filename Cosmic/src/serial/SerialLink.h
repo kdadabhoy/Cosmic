@@ -37,6 +37,8 @@ namespace Cosmic
 	class COSMIC_API SerialLink
 	{
 	public:
+		// Owner-thread policy/lifecycle/status/Poll. Only Write may run on an
+		// app-owned concurrent writer; join it before destroying this link/caller.
 		SerialLink() = default;
 
 		// Test-only seam (WO-04): forward an injected transport into the owned
@@ -62,6 +64,9 @@ namespace Cosmic
 		bool             IsOpen() const       { return m_Port.IsOpen(); }
 		bool             IsReceiving() const;                 // open AND a byte arrived < 1 s ago
 		SerialPort::State GetState() const    { return m_Port.GetState(); }
+		uint64_t ReceivedBytes() const { return m_Port.ReceivedBytes(); }
+		uint64_t OverflowBytes() const { return m_Port.OverflowBytes(); }
+		uint64_t DiscardedOnCloseBytes() const { return m_Port.DiscardedOnCloseBytes(); }
 		float            SecondsSinceLastByte() const { return m_Clock - m_LastByteTime; }
 
 		// One-shot: true exactly once after each fresh (re)connect, so the caller can
@@ -92,8 +97,8 @@ namespace Cosmic
 
 		bool   m_AutoReconnect  = true;     // re-open the link when data stops
 		bool   m_WantConnection = false;    // user intends to stay connected
-		bool   m_JustConnected  = false;    // set on a closed->open transition
-		bool   m_WasOpen        = false;    // previous-frame open state (edge detect)
+		bool   m_JustConnected  = false;    // set on a newly adopted session generation
+		uint64_t m_ObservedGeneration = 0;  // session identity, including rapid reconnects
 
 		float  m_Clock          = 0.0f;
 		float  m_LastByteTime   = -100.0f;  // m_Clock of the last byte received

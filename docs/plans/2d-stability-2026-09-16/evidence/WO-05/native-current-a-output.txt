@@ -1,0 +1,13 @@
+Case output: T03-native-schedules-0-4.out.log
+SHA256: 88afeb64250c5530d75a50b628419142c190bde4a11939139a5d8fc1f754edbd
+host schedule=0 transition=0 completed=100
+host schedule=0 transition=1 completed=100
+host schedule=1 transition=0 completed=100
+host schedule=1 transition=1 completed=100
+host schedule=2 transition=0 completed=100
+host schedule=2 transition=1 completed=100
+host schedule=3 transition=0 completed=100
+host schedule=3 transition=1 completed=100
+host schedule=4 transition=0 completed=100
+host schedule=4 transition=1 completed=100
+[doctest] test cases: 1000 | 1000 passed | 0 failed

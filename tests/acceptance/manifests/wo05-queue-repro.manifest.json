@@ -1,0 +1,9 @@
+{
+  "manifest": "wo05-queue-repro",
+  "cases": [{
+    "id": "T06-consumer-stall-queue", "description": "A consumer that stops polling must have a bounded serial queue",
+    "tier": "U", "profiles": ["nightly"], "transport": "fake", "requires": ["windows"],
+    "command": "{BIN}\\CosmicTests.exe", "args": ["--test-case=WO-05 T06: stalled consumer*", "--no-colors"],
+    "expectExit": 0, "minTests": 1, "deadlineSec": 15, "seed": 5, "fixture": "../test_wo05_matrix.cpp"
+  }]
+}

@@ -1,0 +1,3 @@
+# Per-child native scratch roots include linked runtime assets and actual saves.
+# Keep summaries, JSON/JUnit, hashes and text excerpts; raw artifacts stay local.
+**/s*-t*-i*/

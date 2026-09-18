@@ -1,0 +1,30 @@
+Case output: T03-owner-cancel-heartbeat.out.log
+SHA256: 8590c08a4dfc324767aa39c8992f9d09bcb788566919949d42cbf1d3733189c0
+[2026-09-17 13:36:31.686] [COSMIC] [error] Failed to load texture at assets/projects/images/SF_Drivetrain.PNG
+[2026-09-17 13:36:31.686] [COSMIC] [error] Failed to load texture at assets/projects/images/SF_Weapon.PNG
+[2026-09-17 13:36:31.686] [COSMIC] [error] Failed to load texture at assets/projects/images/SF_Drivetrain.PNG
+[2026-09-17 13:36:32.188] [COSMIC] [error] Failed to load texture at assets/projects/images/SF_Drivetrain.PNG
+[2026-09-17 13:36:32.188] [COSMIC] [error] Failed to load texture at assets/projects/images/SF_Weapon.PNG
+[2026-09-17 13:36:32.188] [COSMIC] [error] Failed to load texture at assets/projects/images/SF_Drivetrain.PNG
+osmic\tests\test_wo05_matrix.cpp(277): ERROR: CHECK( Clock::now()-start<=std::chrono::milliseconds(250) ) is NOT correct!
+  values: CHECK( 497518300ns <= 250ms )
+
+C:\dev\Cosmic\tests\test_wo05_matrix.cpp(277): ERROR: CHECK( Clock::now()-start<=std::chrono::milliseconds(250) ) is NOT correct!
+  values: CHECK( 498460100ns <= 250ms )
+
+C:\dev\Cosmic\tests\test_wo05_matrix.cpp(277): ERROR: CHECK( Clock::now()-start<=std::chrono::milliseconds(250) ) is NOT correct!
+  values: CHECK( 488305200ns <= 250ms )
+
+C:\dev\Cosmic\tests\test_wo05_matrix.cpp(277): ERROR: CHECK( Clock::now()-start<=std::chrono::milliseconds(250) ) is NOT correct!
+  values: CHECK( 501511700ns <= 250ms )
+
+C:\dev\Cosmic\tests\test_wo05_matrix.cpp(277): ERROR: CHECK( Clock::now()-start<=std::chrono::milliseconds(250) ) is NOT correct!
+  values: CHECK( 500563600ns <= 250ms )
+
+C:\dev\Cosmic\tests\test_wo05_matrix.cpp(277): ERROR: CHECK( Clock::now()-start<=std::chrono::milliseconds(250) ) is NOT correct!
+  values: CHECK( 501203200ns <= 250ms )
+
+===============================================================================
+[doctest] test cases:   1 |   0 passed |   1 failed | 363 skipped
+[doctest] assertions: 800 | 700 passed | 100 failed |
+[doctest] Status: FAILURE!

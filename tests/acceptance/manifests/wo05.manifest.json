@@ -1,0 +1,327 @@
+{
+  "manifest": "wo05",
+  "cases": [
+    {
+      "id": "T01-PC-text",
+      "description": "PC text parsing, chunk/routing oracle and retained hardening",
+      "tier": "U",
+      "profiles": [
+        "pr"
+      ],
+      "requires": [
+        "windows"
+      ],
+      "transport": "fake",
+      "command": "{BIN}\\CosmicTests.exe",
+      "args": [
+        "--test-case=WO-05 T01:*,ParseFrame*,DriveSample*,WeaponSample*,TelemHub*",
+        "--no-colors"
+      ],
+      "expectExit": 0,
+      "minTests": 33,
+      "deadlineSec": 60,
+      "seed": 5,
+      "fixture": "../test_wo05_matrix.cpp"
+    },
+    {
+      "id": "T02-PC-faults",
+      "description": "Purge threshold, faults and exact staleness boundary",
+      "tier": "U",
+      "profiles": [
+        "nightly"
+      ],
+      "requires": [
+        "windows"
+      ],
+      "transport": "fake",
+      "command": "{BIN}\\CosmicTests.exe",
+      "args": [
+        "--test-case=WO-05 T02:*",
+        "--no-colors"
+      ],
+      "expectExit": 0,
+      "minTests": 1,
+      "deadlineSec": 15,
+      "seed": 5,
+      "fixture": "../test_wo05_matrix.cpp"
+    },
+    {
+      "id": "T03-root-matrix",
+      "description": "225 root schedules x100, barriers and storage validation",
+      "tier": "U",
+      "profiles": [
+        "pr"
+      ],
+      "requires": [
+        "windows"
+      ],
+      "transport": "fake",
+      "command": "{BIN}\\CosmicTests.exe",
+      "args": [
+        "--test-case=WO-05 T03: root*",
+        "--no-colors"
+      ],
+      "expectExit": 0,
+      "minTests": 1,
+      "deadlineSec": 1800,
+      "seed": 5,
+      "fixture": "../test_wo05_matrix.cpp"
+    },
+    {
+      "id": "T03-late-open",
+      "description": "100 cancelled non-cooperative opens surviving root destruction",
+      "tier": "U",
+      "profiles": [
+        "pr"
+      ],
+      "requires": [
+        "windows"
+      ],
+      "transport": "fake",
+      "command": "{BIN}\\CosmicTests.exe",
+      "args": [
+        "--test-case=WO-05 T03: non-cooperative*",
+        "--no-colors"
+      ],
+      "expectExit": 0,
+      "minTests": 1,
+      "deadlineSec": 90,
+      "seed": 5,
+      "fixture": "../test_wo05_matrix.cpp"
+    },
+    {
+      "id": "T03-real-host",
+      "description": "Real host window events and deferred DLL unload: 18 schedules x100, storage cycling",
+      "tier": "G",
+      "profiles": [
+        "serial"
+      ],
+      "requires": [
+        "windows",
+        "gpu-gl"
+      ],
+      "transport": "fake",
+      "command": "powershell",
+      "workingDir": "{BIN}",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "{ACCEPTANCE}\\fixtures\\Run-WO05Host.ps1",
+        "-Bin",
+        "{BIN}",
+        "-Output",
+        "{REPO}\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-05\\host-verified-{CONFIG}"
+      ],
+      "expectExit": 0,
+      "minTests": 1800,
+      "deadlineSec": 1800,
+      "seed": 5,
+      "fixture": "../WO05HostFixture.cpp"
+    },
+    {
+      "id": "T05-controlled-30min",
+      "description": "216000 accepted data frames, 108000 ticks/entity on controlled clock",
+      "tier": "U",
+      "profiles": [
+        "nightly"
+      ],
+      "requires": [
+        "windows"
+      ],
+      "transport": "fake",
+      "command": "{BIN}\\CosmicTests.exe",
+      "args": [
+        "--test-case=WO-05 T05:*",
+        "--no-colors"
+      ],
+      "expectExit": 0,
+      "minTests": 2,
+      "deadlineSec": 180,
+      "seed": 5,
+      "fixture": "../test_wo05_matrix.cpp"
+    },
+    {
+      "id": "T05-real-host-policy",
+      "description": "Actual Application pause, native minimize/restore, Home and Main acquisition policy",
+      "tier": "G",
+      "profiles": [
+        "serial",
+        "policy"
+      ],
+      "requires": [
+        "windows",
+        "gpu-gl"
+      ],
+      "transport": "fake",
+      "command": "powershell",
+      "workingDir": "{BIN}",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "{ACCEPTANCE}\\fixtures\\Run-WO05Host.ps1",
+        "-Policy",
+        "-Bin",
+        "{BIN}",
+        "-Output",
+        "{REPO}\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-05\\policy-host-{CONFIG}"
+      ],
+      "expectExit": 0,
+      "minTests": 1,
+      "deadlineSec": 60,
+      "seed": 5,
+      "fixture": "../WO05HostFixture.cpp"
+    },
+    {
+      "id": "T06-burst-reconnect",
+      "description": "10x60s in-memory stream, silence, corruption and 20 reconnects",
+      "tier": "U",
+      "profiles": [
+        "nightly"
+      ],
+      "requires": [
+        "windows"
+      ],
+      "transport": "fake",
+      "command": "{BIN}\\CosmicTests.exe",
+      "args": [
+        "--test-case=WO-05 T06:*,WO-05 T06 KISS:*,*COBS*,*CRC protection*",
+        "--no-colors"
+      ],
+      "expectExit": 0,
+      "minTests": 8,
+      "deadlineSec": 60,
+      "seed": 5,
+      "fixture": "../test_wo05_kiss.cpp"
+    },
+    {
+      "id": "T04-Windows10-virtualCOM",
+      "description": "20 critical scenarios on Windows10 com0com; missing physical qualification",
+      "tier": "W",
+      "profiles": [
+        "serial"
+      ],
+      "requires": [
+        "windows10",
+        "com0com"
+      ],
+      "transport": "virtual-com",
+      "command": "powershell",
+      "args": [
+        "-Command",
+        "throw 'Requires a configured COM pair and qualification workload'"
+      ],
+      "expectExit": 0,
+      "deadlineSec": 60
+    },
+    {
+      "id": "T04-Windows11-virtualCOM",
+      "description": "20 critical scenarios on Windows11 com0com; missing physical qualification",
+      "tier": "W",
+      "profiles": [
+        "serial"
+      ],
+      "requires": [
+        "com0com"
+      ],
+      "transport": "virtual-com",
+      "command": "powershell",
+      "args": [
+        "-Command",
+        "throw 'Requires a configured COM pair and qualification workload'"
+      ],
+      "expectExit": 0,
+      "deadlineSec": 60
+    },
+    {
+      "id": "T04-USB-Bluetooth-bothWindows",
+      "description": "20 physical loss/close iterations per hardware/Windows combination",
+      "tier": "W",
+      "profiles": [
+        "serial"
+      ],
+      "requires": [
+        "serial-device",
+        "qualified-usb-spp",
+        "windows10-and11"
+      ],
+      "transport": "physical",
+      "command": "powershell",
+      "args": [
+        "-Command",
+        "throw 'Requires representative USB and SPP equipment on both Windows versions'"
+      ],
+      "expectExit": 0,
+      "deadlineSec": 60
+    },
+    {
+      "id": "T03-write-close",
+      "description": "App-owned pending write cancelled/drained before device release",
+      "tier": "U",
+      "profiles": [
+        "pr"
+      ],
+      "requires": [
+        "windows"
+      ],
+      "transport": "fake",
+      "command": "{BIN}\\CosmicTests.exe",
+      "args": [
+        "--test-case=WO-05 T03: close drains*",
+        "--no-colors"
+      ],
+      "expectExit": 0,
+      "minTests": 1,
+      "deadlineSec": 15,
+      "seed": 5,
+      "fixture": "../test_wo05_matrix.cpp"
+    },
+    {
+      "id": "Retained-suite",
+      "description": "Full existing hardening and both activated WO-05a regressions",
+      "tier": "U",
+      "profiles": [
+        "pr"
+      ],
+      "requires": [
+        "windows"
+      ],
+      "transport": "fake",
+      "command": "{BIN}\\CosmicTests.exe",
+      "args": [
+        "--test-case-exclude=WO-05 *",
+        "--no-colors"
+      ],
+      "expectExit": 0,
+      "minTests": 350,
+      "deadlineSec": 180,
+      "seed": 5,
+      "fixture": "../test_serial_shutdown_race.cpp"
+    },
+    {
+      "id": "T03-owner-cancel",
+      "description": "100 held opens cancel within the approved 250-ms owner budget",
+      "tier": "U",
+      "profiles": [
+        "pr"
+      ],
+      "requires": [
+        "windows"
+      ],
+      "transport": "fake",
+      "command": "{BIN}\\CosmicTests.exe",
+      "args": [
+        "--test-case=WO-05 T03: cancel a non-cooperative*",
+        "--no-colors"
+      ],
+      "expectExit": 0,
+      "minTests": 1,
+      "deadlineSec": 90,
+      "seed": 5,
+      "fixture": "../test_wo05_matrix.cpp"
+    }
+  ]
+}

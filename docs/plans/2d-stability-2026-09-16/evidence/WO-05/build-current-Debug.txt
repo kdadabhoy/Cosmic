@@ -1,0 +1,50 @@
+MSBuild version 18.7.8+1ac568fee for .NET Framework
+
+  Checking File Globs
+  glad.vcxproj -> C:\dev\Cosmic\build\Cosmic\Debug\glad.lib
+  glfw.vcxproj -> C:\dev\Cosmic\build\Cosmic\dependencies\glfw\src\Debug\glfw3.lib
+  Jolt.vcxproj -> C:\dev\Cosmic\build\Cosmic\dependencies\JoltPhysics\Debug\Jolt.lib
+  imgui.vcxproj -> C:\dev\Cosmic\build\Cosmic\Debug\imgui.lib
+  implot.vcxproj -> C:\dev\Cosmic\build\Cosmic\Debug\implot.lib
+  ImGuizmo.vcxproj -> C:\dev\Cosmic\build\Cosmic\Debug\ImGuizmo.lib
+  SerialPort.cpp
+  Cosmic.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\Cosmic.dll
+  Syncing Cosmic Engine core assets to output directory...
+  Main.cpp
+  SF_Telem.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\SF_Telem.dll
+  Syncing SF_Telem assets to VFS output directory...
+  BuildRunner.cpp
+  EditorCameraRig.cpp
+  EditorSnapshot.cpp
+  GameModule.cpp
+  LayoutPresets.cpp
+  Packager.cpp
+  PreviewRig.cpp
+  StarforgeApp.cpp
+  TelemetryRecording.cpp
+  ViewportController.cpp
+  EditorCommands.cpp
+  AssetEditorHost.cpp
+  FlowEditor.cpp
+  PostChainEditor.cpp
+  StoryEditor.cpp
+  ConsolePanel.cpp
+  WO05HostFixture.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\WO05HostFixture.dll
+  CosmicRenderTests.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\CosmicRenderTests.exe
+  Main.cpp
+  test_wo05_matrix.cpp
+  ContentBrowserPanel.cpp
+  EnvironmentPanel.cpp
+  HierarchyPanel.cpp
+  InspectorPanel.cpp
+  MaterialEditorPanel.cpp
+  ProfilerPanel.cpp
+  SystemPanel.cpp
+  TelemetryPanel.cpp
+  TilePalettePanel.cpp
+  CosmicTests.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\CosmicTests.exe
+  CosmicApp.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\CosmicApp.exe
+  StarforgeEditor.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\Starforge.exe
+     Creating library C:/dev/Cosmic/build/Projects/Starforge/Debug/Starforge.lib and object C:/dev/Cosmic/build/Projects/Starforge/Debug/Starforge.exp
+  Starforge.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\Starforge.dll
+  Syncing Starforge assets to VFS output directory...	Staging the Starforge branding icon next to the runtime...

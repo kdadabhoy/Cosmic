@@ -1,0 +1,501 @@
+{
+  "config": "Release",
+  "transport": "fake",
+  "native_children": 1800,
+  "normal_exit_passed": 1800,
+  "failed": 0,
+  "close_deadline_ms": 2000,
+  "close_exit_upper_bound_p95_ms": 222,
+  "close_exit_upper_bound_p99_ms": 235,
+  "close_exit_upper_bound_max_ms": 272,
+  "root_matrix_Debug": 22500,
+  "root_matrix_Release": 22500,
+  "schedules": [
+    {
+      "schedule_transition": "s0-t0",
+      "iterations": 100,
+      "storage_states": [
+        {
+          "storage": 0,
+          "iterations": 20
+        },
+        {
+          "storage": 1,
+          "iterations": 20
+        },
+        {
+          "storage": 2,
+          "iterations": 20
+        },
+        {
+          "storage": 3,
+          "iterations": 20
+        },
+        {
+          "storage": 4,
+          "iterations": 20
+        }
+      ],
+      "max_close_exit_upper_bound_ms": 241.0
+    },
+    {
+      "schedule_transition": "s0-t1",
+      "iterations": 100,
+      "storage_states": [
+        {
+          "storage": 0,
+          "iterations": 20
+        },
+        {
+          "storage": 1,
+          "iterations": 20
+        },
+        {
+          "storage": 2,
+          "iterations": 20
+        },
+        {
+          "storage": 3,
+          "iterations": 20
+        },
+        {
+          "storage": 4,
+          "iterations": 20
+        }
+      ],
+      "max_close_exit_upper_bound_ms": 224.0
+    },
+    {
+      "schedule_transition": "s1-t0",
+      "iterations": 100,
+      "storage_states": [
+        {
+          "storage": 0,
+          "iterations": 20
+        },
+        {
+          "storage": 1,
+          "iterations": 20
+        },
+        {
+          "storage": 2,
+          "iterations": 20
+        },
+        {
+          "storage": 3,
+          "iterations": 20
+        },
+        {
+          "storage": 4,
+          "iterations": 20
+        }
+      ],
+      "max_close_exit_upper_bound_ms": 236.0
+    },
+    {
+      "schedule_transition": "s1-t1",
+      "iterations": 100,
+      "storage_states": [
+        {
+          "storage": 0,
+          "iterations": 20
+        },
+        {
+          "storage": 1,
+          "iterations": 20
+        },
+        {
+          "storage": 2,
+          "iterations": 20
+        },
+        {
+          "storage": 3,
+          "iterations": 20
+        },
+        {
+          "storage": 4,
+          "iterations": 20
+        }
+      ],
+      "max_close_exit_upper_bound_ms": 228.0
+    },
+    {
+      "schedule_transition": "s2-t0",
+      "iterations": 100,
+      "storage_states": [
+        {
+          "storage": 0,
+          "iterations": 20
+        },
+        {
+          "storage": 1,
+          "iterations": 20
+        },
+        {
+          "storage": 2,
+          "iterations": 20
+        },
+        {
+          "storage": 3,
+          "iterations": 20
+        },
+        {
+          "storage": 4,
+          "iterations": 20
+        }
+      ],
+      "max_close_exit_upper_bound_ms": 245.0
+    },
+    {
+      "schedule_transition": "s2-t1",
+      "iterations": 100,
+      "storage_states": [
+        {
+          "storage": 0,
+          "iterations": 20
+        },
+        {
+          "storage": 1,
+          "iterations": 20
+        },
+        {
+          "storage": 2,
+          "iterations": 20
+        },
+        {
+          "storage": 3,
+          "iterations": 20
+        },
+        {
+          "storage": 4,
+          "iterations": 20
+        }
+      ],
+      "max_close_exit_upper_bound_ms": 216.0
+    },
+    {
+      "schedule_transition": "s3-t0",
+      "iterations": 100,
+      "storage_states": [
+        {
+          "storage": 0,
+          "iterations": 20
+        },
+        {
+          "storage": 1,
+          "iterations": 20
+        },
+        {
+          "storage": 2,
+          "iterations": 20
+        },
+        {
+          "storage": 3,
+          "iterations": 20
+        },
+        {
+          "storage": 4,
+          "iterations": 20
+        }
+      ],
+      "max_close_exit_upper_bound_ms": 223.0
+    },
+    {
+      "schedule_transition": "s3-t1",
+      "iterations": 100,
+      "storage_states": [
+        {
+          "storage": 0,
+          "iterations": 20
+        },
+        {
+          "storage": 1,
+          "iterations": 20
+        },
+        {
+          "storage": 2,
+          "iterations": 20
+        },
+        {
+          "storage": 3,
+          "iterations": 20
+        },
+        {
+          "storage": 4,
+          "iterations": 20
+        }
+      ],
+      "max_close_exit_upper_bound_ms": 220.0
+    },
+    {
+      "schedule_transition": "s4-t0",
+      "iterations": 100,
+      "storage_states": [
+        {
+          "storage": 0,
+          "iterations": 20
+        },
+        {
+          "storage": 1,
+          "iterations": 20
+        },
+        {
+          "storage": 2,
+          "iterations": 20
+        },
+        {
+          "storage": 3,
+          "iterations": 20
+        },
+        {
+          "storage": 4,
+          "iterations": 20
+        }
+      ],
+      "max_close_exit_upper_bound_ms": 212.0
+    },
+    {
+      "schedule_transition": "s4-t1",
+      "iterations": 100,
+      "storage_states": [
+        {
+          "storage": 0,
+          "iterations": 20
+        },
+        {
+          "storage": 1,
+          "iterations": 20
+        },
+        {
+          "storage": 2,
+          "iterations": 20
+        },
+        {
+          "storage": 3,
+          "iterations": 20
+        },
+        {
+          "storage": 4,
+          "iterations": 20
+        }
+      ],
+      "max_close_exit_upper_bound_ms": 207.0
+    },
+    {
+      "schedule_transition": "s5-t0",
+      "iterations": 100,
+      "storage_states": [
+        {
+          "storage": 0,
+          "iterations": 20
+        },
+        {
+          "storage": 1,
+          "iterations": 20
+        },
+        {
+          "storage": 2,
+          "iterations": 20
+        },
+        {
+          "storage": 3,
+          "iterations": 20
+        },
+        {
+          "storage": 4,
+          "iterations": 20
+        }
+      ],
+      "max_close_exit_upper_bound_ms": 272.0
+    },
+    {
+      "schedule_transition": "s5-t1",
+      "iterations": 100,
+      "storage_states": [
+        {
+          "storage": 0,
+          "iterations": 20
+        },
+        {
+          "storage": 1,
+          "iterations": 20
+        },
+        {
+          "storage": 2,
+          "iterations": 20
+        },
+        {
+          "storage": 3,
+          "iterations": 20
+        },
+        {
+          "storage": 4,
+          "iterations": 20
+        }
+      ],
+      "max_close_exit_upper_bound_ms": 230.0
+    },
+    {
+      "schedule_transition": "s6-t0",
+      "iterations": 100,
+      "storage_states": [
+        {
+          "storage": 0,
+          "iterations": 20
+        },
+        {
+          "storage": 1,
+          "iterations": 20
+        },
+        {
+          "storage": 2,
+          "iterations": 20
+        },
+        {
+          "storage": 3,
+          "iterations": 20
+        },
+        {
+          "storage": 4,
+          "iterations": 20
+        }
+      ],
+      "max_close_exit_upper_bound_ms": 218.0
+    },
+    {
+      "schedule_transition": "s6-t1",
+      "iterations": 100,
+      "storage_states": [
+        {
+          "storage": 0,
+          "iterations": 20
+        },
+        {
+          "storage": 1,
+          "iterations": 20
+        },
+        {
+          "storage": 2,
+          "iterations": 20
+        },
+        {
+          "storage": 3,
+          "iterations": 20
+        },
+        {
+          "storage": 4,
+          "iterations": 20
+        }
+      ],
+      "max_close_exit_upper_bound_ms": 216.0
+    },
+    {
+      "schedule_transition": "s7-t0",
+      "iterations": 100,
+      "storage_states": [
+        {
+          "storage": 0,
+          "iterations": 20
+        },
+        {
+          "storage": 1,
+          "iterations": 20
+        },
+        {
+          "storage": 2,
+          "iterations": 20
+        },
+        {
+          "storage": 3,
+          "iterations": 20
+        },
+        {
+          "storage": 4,
+          "iterations": 20
+        }
+      ],
+      "max_close_exit_upper_bound_ms": 228.0
+    },
+    {
+      "schedule_transition": "s7-t1",
+      "iterations": 100,
+      "storage_states": [
+        {
+          "storage": 0,
+          "iterations": 20
+        },
+        {
+          "storage": 1,
+          "iterations": 20
+        },
+        {
+          "storage": 2,
+          "iterations": 20
+        },
+        {
+          "storage": 3,
+          "iterations": 20
+        },
+        {
+          "storage": 4,
+          "iterations": 20
+        }
+      ],
+      "max_close_exit_upper_bound_ms": 218.0
+    },
+    {
+      "schedule_transition": "s8-t0",
+      "iterations": 100,
+      "storage_states": [
+        {
+          "storage": 0,
+          "iterations": 20
+        },
+        {
+          "storage": 1,
+          "iterations": 20
+        },
+        {
+          "storage": 2,
+          "iterations": 20
+        },
+        {
+          "storage": 3,
+          "iterations": 20
+        },
+        {
+          "storage": 4,
+          "iterations": 20
+        }
+      ],
+      "max_close_exit_upper_bound_ms": 216.0
+    },
+    {
+      "schedule_transition": "s8-t1",
+      "iterations": 100,
+      "storage_states": [
+        {
+          "storage": 0,
+          "iterations": 20
+        },
+        {
+          "storage": 1,
+          "iterations": 20
+        },
+        {
+          "storage": 2,
+          "iterations": 20
+        },
+        {
+          "storage": 3,
+          "iterations": 20
+        },
+        {
+          "storage": 4,
+          "iterations": 20
+        }
+      ],
+      "max_close_exit_upper_bound_ms": 226.0
+    }
+  ]
+}

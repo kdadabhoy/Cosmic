@@ -1,0 +1,23 @@
+{
+  "manifest": "wo05-host-shards",
+  "cases": [
+    {
+      "id": "T03-native-schedules-0-4", "description": "1000 fresh isolated native children; full-process close deadline",
+      "tier": "G", "profiles": ["a"], "requires": ["windows", "gpu-gl"], "transport": "fake",
+      "command": "powershell", "workingDir": "{BIN}",
+      "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "{ACCEPTANCE}\\fixtures\\Run-WO05Host.ps1",
+        "-FirstSchedule", "0", "-LastSchedule", "4", "-Bin", "{BIN}", "-Output",
+        "{REPO}\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-05\\host-current-a-{CONFIG}"],
+      "expectExit": 0, "minTests": 1000, "deadlineSec": 1800, "seed": 5, "fixture": "../WO05HostFixture.cpp"
+    },
+    {
+      "id": "T03-native-schedules-5-8", "description": "800 fresh isolated native children; full-process close deadline",
+      "tier": "G", "profiles": ["b"], "requires": ["windows", "gpu-gl"], "transport": "fake",
+      "command": "powershell", "workingDir": "{BIN}",
+      "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "{ACCEPTANCE}\\fixtures\\Run-WO05Host.ps1",
+        "-FirstSchedule", "5", "-LastSchedule", "8", "-Bin", "{BIN}", "-Output",
+        "{REPO}\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-05\\host-current-b-{CONFIG}"],
+      "expectExit": 0, "minTests": 800, "deadlineSec": 1800, "seed": 5, "fixture": "../WO05HostFixture.cpp"
+    }
+  ]
+}

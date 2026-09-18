@@ -1,0 +1,16 @@
+
+Algorithm : SHA256
+Hash      : 1D77F977CA2A6410CA7EC13ABAF85473B49BE6AE443DB2632782B166701BAD53
+Path      : C:\dev\Cosmic\Projects\SF_Telem\src\Telemetry.h
+
+Algorithm : SHA256
+Hash      : B1CDDF36E59BED9B9F0E1AA79777FC5EBBEED852E2DFEA181A35A2A2441192EC
+Path      : C:\dev\Cosmic\Projects\SF_Telem\src\FirmwareTemplates.h
+
+Algorithm : SHA256
+Hash      : 35268AB995F69981E612A7529544FEE121B4151EC3DA007317900F3C2D98D9CD
+Path      : C:\dev\Cosmic\Projects\SF_Telem\src\TestFirmwareTemplates.h
+
+Algorithm : SHA256
+Hash      : C34E737E6450F6CABBB78DF18835AF163351CE28E8E27E7ABB09B8DEE080F307
+Path      : C:\dev\Cosmic\build\tests\wo05_kiss.inc

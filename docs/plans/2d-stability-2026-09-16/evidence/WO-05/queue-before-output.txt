@@ -1,0 +1,21 @@
+LOG: T06-consumer-stall-queue.out.log
+SHA256: 62cc1493194836d08ec8bdea9ce5145184fde61916a3582034c62a44001f6f8d
+[2026-09-17 12:56:11.815] [COSMIC] [error] Failed to load texture at assets/projects/images/SF_Drivetrain.PNG
+[2026-09-17 12:56:11.815] [COSMIC] [error] Failed to load texture at assets/projects/images/SF_Weapon.PNG
+[2026-09-17 12:56:11.815] [COSMIC] [error] Failed to load texture at assets/projects/images/SF_Drivetrain.PNG
+[2026-09-17 12:56:11.842] [COSMIC] [warning] Redirecting active logging channels to destination target: 'logs'
+[2026-09-17 12:56:11.843] [COSMIC] [info] Log streams successfully re-routed.
+[2026-09-17 12:56:11.843] [APP] [info] SF_Telem: Detached.
+[doctest] doctest version is "2.4.12"
+[doctest] run with "--help" for options
+===============================================================================
+C:\dev\Cosmic\tests\test_wo05_matrix.cpp(260):
+TEST CASE:  WO-05 T06: stalled consumer serial receive queue is bounded
+
+C:\dev\Cosmic\tests\test_wo05_matrix.cpp(269): ERROR: CHECK( buffered.size()<=capacity ) is NOT correct!
+  values: CHECK( 1049088 <= 1048576 )
+
+===============================================================================
+[doctest] test cases: 1 | 0 passed | 1 failed | 359 skipped
+[doctest] assertions: 4 | 3 passed | 1 failed |
+[doctest] Status: FAILURE!

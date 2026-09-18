@@ -1,0 +1,9 @@
+{
+  "manifest": "wo05-cancel-repro",
+  "cases": [{
+    "id": "T03-owner-cancel-heartbeat", "description": "100 non-cooperative open cancellations on the actual root, approved 250-ms service budget",
+    "tier": "U", "profiles": ["pr"], "requires": ["windows"], "transport": "fake",
+    "command": "{BIN}\\CosmicTests.exe", "args": ["--test-case=WO-05 T03: cancel a non-cooperative*", "--no-colors"],
+    "expectExit": 0, "minTests": 1, "deadlineSec": 90, "seed": 5, "fixture": "../test_wo05_matrix.cpp"
+  }]
+}

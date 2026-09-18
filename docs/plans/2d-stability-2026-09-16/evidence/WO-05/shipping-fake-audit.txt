@@ -1,0 +1,2 @@
+Debug: FakeSerialTransport string occurrences = 0; sha256=d8f76a3dd094a1a9bcd20c141a3b7152811ad0a6c03d96c60eeaf29715c76b28
+Release: FakeSerialTransport string occurrences = 0; sha256=b3986e349e1fe3848fc8a6844ebbee3862316882c7bd6479931d4760c0eb57e4

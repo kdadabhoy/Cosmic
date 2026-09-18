@@ -1,0 +1,74 @@
+MSBuild version 18.7.8+1ac568fee for .NET Framework
+
+  Checking File Globs
+  glfw.vcxproj -> C:\dev\Cosmic\build\Cosmic\dependencies\glfw\src\Release\glfw3.lib
+  glad.vcxproj -> C:\dev\Cosmic\build\Cosmic\Release\glad.lib
+  imgui.vcxproj -> C:\dev\Cosmic\build\Cosmic\Release\imgui.lib
+  implot.vcxproj -> C:\dev\Cosmic\build\Cosmic\Release\implot.lib
+  Jolt.vcxproj -> C:\dev\Cosmic\build\Cosmic\dependencies\JoltPhysics\Release\Jolt.lib
+  ImGuizmo.vcxproj -> C:\dev\Cosmic\build\Cosmic\Release\ImGuizmo.lib
+  Application.cpp
+  PlayerLayer.cpp
+  WorkspaceLayer.cpp
+  SerialLink.cpp
+  SerialPort.cpp
+  Win32SerialTransport.cpp
+     Creating library C:/dev/Cosmic/build/Runtime/Release/Cosmic.lib and object C:/dev/Cosmic/build/Runtime/Release/Cosmic.exp
+  Cosmic.vcxproj -> C:\dev\Cosmic\build\Runtime\Release\Cosmic.dll
+  Syncing Cosmic Engine core assets to output directory...
+  DashboardView.cpp
+  DrivetrainLayer.cpp
+  MainLayer.cpp
+  ReplayLayer.cpp
+  SF_Telem.cpp
+  TelemHub.cpp
+  TestHub.cpp
+  TestLayers.cpp
+  TestingManager.cpp
+  WeaponLayer.cpp
+  WO05HostFixture.cpp
+     Creating library C:/dev/Cosmic/build/tests/Release/WO05HostFixture.lib and object C:/dev/Cosmic/build/tests/Release/WO05HostFixture.exp
+  WO05HostFixture.vcxproj -> C:\dev\Cosmic\build\Runtime\Release\WO05HostFixture.dll
+  DashboardView.cpp
+  DrivetrainLayer.cpp
+  MainLayer.cpp
+  ReplayLayer.cpp
+  SF_Telem.cpp
+  TelemHub.cpp
+  TestHub.cpp
+  TestLayers.cpp
+  TestingManager.cpp
+  test_audio.cpp
+  test_serial_lifecycle.cpp
+  test_serial_seam.cpp
+  test_serial_shutdown_race.cpp
+  test_sftelem_hub.cpp
+  test_template_scripts.cpp
+  test_wo05_host.cpp
+  test_wo05_matrix.cpp
+     Creating library C:/dev/Cosmic/build/tests/Release/CosmicTests.lib and object C:/dev/Cosmic/build/tests/Release/CosmicTests.exp
+  CosmicTests.vcxproj -> C:\dev\Cosmic\build\Runtime\Release\CosmicTests.exe
+MSBuild version 18.7.8+1ac568fee for .NET Framework
+
+  Checking File Globs
+  glad.vcxproj -> C:\dev\Cosmic\build\Cosmic\Release\glad.lib
+  glfw.vcxproj -> C:\dev\Cosmic\build\Cosmic\dependencies\glfw\src\Release\glfw3.lib
+  imgui.vcxproj -> C:\dev\Cosmic\build\Cosmic\Release\imgui.lib
+  implot.vcxproj -> C:\dev\Cosmic\build\Cosmic\Release\implot.lib
+  Jolt.vcxproj -> C:\dev\Cosmic\build\Cosmic\dependencies\JoltPhysics\Release\Jolt.lib
+  ImGuizmo.vcxproj -> C:\dev\Cosmic\build\Cosmic\Release\ImGuizmo.lib
+  Cosmic.vcxproj -> C:\dev\Cosmic\build\Runtime\Release\Cosmic.dll
+  Syncing Cosmic Engine core assets to output directory...
+  DashboardView.cpp
+  DrivetrainLayer.cpp
+  MainLayer.cpp
+  ReplayLayer.cpp
+  SF_Telem.cpp
+  TelemHub.cpp
+  TestHub.cpp
+  TestLayers.cpp
+  TestingManager.cpp
+  WeaponLayer.cpp
+     Creating library C:/dev/Cosmic/build/Projects/SF_Telem/Release/SF_Telem.lib and object C:/dev/Cosmic/build/Projects/SF_Telem/Release/SF_Telem.exp
+  SF_Telem.vcxproj -> C:\dev\Cosmic\build\Runtime\Release\SF_Telem.dll
+  Syncing SF_Telem assets to VFS output directory...

@@ -79,6 +79,14 @@ namespace Workspace
         void Shutdown();
         void OnUpdate(float ts);     // clock, serial pump, panel, model, rings, flush
         void RecordFixed(float dt);  // continuous capture (call from OnFixedUpdate)
+        void StartRecording();
+        void StopRecording();
+        void ExportRecording();
+        void SetSessionName(const std::string& name) { m_SessionName = name; }
+        Cosmic::DataRecorder& Recorder() { return m_Recorder; }
+        Cosmic::DataPlayer& Player() { return m_Player; }
+        const Ring& PlotRing(int id) const { return m_Ring[id]; }
+        size_t PendingTextBytes() const { return m_RxAccumulator.size(); }
 
         // Feed received bytes straight into the framing + decode path, bypassing the
         // serial read. This is the pure half of PumpSerial() — chunks may split mid

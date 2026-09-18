@@ -1,0 +1,9 @@
+{
+  "manifest": "wo05-write-repro",
+  "cases": [{
+    "id": "T03-write-close-root", "description": "Close must drain the root's app-owned writer before releasing the session",
+    "tier": "U", "profiles": ["pr"], "transport": "fake", "requires": ["windows"],
+    "command": "{BIN}\\CosmicTests.exe", "args": ["--test-case=WO-05 T03: close drains*", "--no-colors"],
+    "expectExit": 0, "minTests": 1, "deadlineSec": 15, "seed": 5, "fixture": "../test_wo05_matrix.cpp"
+  }]
+}

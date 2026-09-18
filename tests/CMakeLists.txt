@@ -76,6 +76,9 @@ set(COSMIC_TEST_SOURCES
     # real SerialPort/SerialLink state machine over FakeSerialTransport (tests/ only),
     # reaching the connected state and making KI-4's teardown join observable.
     test_serial_seam.cpp
+    test_wo05_matrix.cpp
+    test_wo05_kiss.cpp
+    test_wo05_host.cpp
     test_sftelem_protocol.cpp
     test_sftelem_hub.cpp
     test_crossbuild_scene.cpp
@@ -131,6 +134,22 @@ if(NOT COSMIC_2D_ONLY)
 endif()
 
 add_executable(CosmicTests ${COSMIC_TEST_SOURCES})
+
+execute_process(COMMAND powershell -NoProfile -ExecutionPolicy Bypass -File
+    "${CMAKE_CURRENT_SOURCE_DIR}/acceptance/fixtures/Generate-KissHarness.ps1"
+    -Repo "${COSMIC_SDK_DIR}" -Output "${CMAKE_CURRENT_BINARY_DIR}/wo05_kiss.inc"
+    COMMAND_ERROR_IS_FATAL ANY)
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
+    "${COSMIC_SDK_DIR}/Projects/SF_Telem/src/FirmwareTemplates.h")
+target_include_directories(CosmicTests PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
+
+file(GLOB WO05_SF_SOURCES "${COSMIC_SDK_DIR}/Projects/SF_Telem/src/*.cpp")
+add_library(WO05HostFixture SHARED WO05HostFixture.cpp ${WO05_SF_SOURCES})
+target_link_libraries(WO05HostFixture PRIVATE Cosmic)
+target_compile_definitions(WO05HostFixture PRIVATE COSMIC_WO05_HOST_FIXTURE)
+set_target_properties(WO05HostFixture PROPERTIES RUNTIME_OUTPUT_DIRECTORY
+    "${COSMIC_SDK_DIR}/build/Runtime/$<CONFIG>")
+add_dependencies(CosmicTests WO05HostFixture)
 
 target_link_libraries(CosmicTests PRIVATE Cosmic)
 target_include_directories(CosmicTests PRIVATE "${COSMIC_SDK_DIR}/Cosmic/dependencies/doctest")

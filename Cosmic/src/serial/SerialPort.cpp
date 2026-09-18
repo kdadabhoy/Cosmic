@@ -2,6 +2,7 @@
 #include "serial/Win32SerialTransport.h"
 #include <stdexcept>
 #include <utility>
+#include <algorithm>
 
 namespace Cosmic
 {
@@ -46,6 +47,7 @@ namespace Cosmic
         if (!m_OpenJob->success) { m_State.store(State::Failed); return; }
         m_StopEvent = m_OpenJob->stop;
         m_Connected.store(true);
+        m_ConnectionGeneration.fetch_add(1);
         m_State.store(State::Open);
         m_ReadThread = std::thread(&SerialPort::ReadLoop, this);
     }
@@ -114,7 +116,10 @@ namespace Cosmic
             if (r.bytes > 0)
             {
                 std::lock_guard<std::mutex> lock(m_BufferMutex);
-                m_DataBuffer.append(buf, r.bytes);
+                m_ReceivedBytes.fetch_add(r.bytes);
+                const size_t accepted = (std::min)(r.bytes, ReceiveCapacity - m_DataBuffer.size());
+                m_DataBuffer.append(buf, accepted);
+                m_OverflowBytes.fetch_add(r.bytes - accepted);
             }
         }
     }
@@ -145,6 +150,7 @@ namespace Cosmic
         m_Transport->Close();
         m_StopEvent = nullptr; // event lifetime belongs to OpenJob
         std::lock_guard<std::mutex> bufferLock(m_BufferMutex);
+        m_DiscardedOnCloseBytes.fetch_add(m_DataBuffer.size());
         m_DataBuffer.clear(); // partial bytes never survive reconnect
     }
 
@@ -160,7 +166,7 @@ namespace Cosmic
             if (m_ConnectThread.joinable())
             {
                 // Repeat to cover Close just before CreateFile enters the kernel.
-                const ULONGLONG deadline = GetTickCount64() + 500;
+                const ULONGLONG deadline = GetTickCount64() + 100;
                 while (WaitForSingleObject(m_OpenJob->done, 5) == WAIT_TIMEOUT &&
                        GetTickCount64() < deadline)
                     CancelSynchronousIo(m_ConnectThread.native_handle());

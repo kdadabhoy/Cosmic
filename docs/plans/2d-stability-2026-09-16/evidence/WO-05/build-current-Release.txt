@@ -1,0 +1,56 @@
+MSBuild version 18.7.8+1ac568fee for .NET Framework
+
+  Checking File Globs
+  glad.vcxproj -> C:\dev\Cosmic\build\Cosmic\Release\glad.lib
+  glfw.vcxproj -> C:\dev\Cosmic\build\Cosmic\dependencies\glfw\src\Release\glfw3.lib
+  Jolt.vcxproj -> C:\dev\Cosmic\build\Cosmic\dependencies\JoltPhysics\Release\Jolt.lib
+  imgui.vcxproj -> C:\dev\Cosmic\build\Cosmic\Release\imgui.lib
+  implot.vcxproj -> C:\dev\Cosmic\build\Cosmic\Release\implot.lib
+  ImGuizmo.vcxproj -> C:\dev\Cosmic\build\Cosmic\Release\ImGuizmo.lib
+  SerialPort.cpp
+     Creating library C:/dev/Cosmic/build/Runtime/Release/Cosmic.lib and object C:/dev/Cosmic/build/Runtime/Release/Cosmic.exp
+  Cosmic.vcxproj -> C:\dev\Cosmic\build\Runtime\Release\Cosmic.dll
+  Syncing Cosmic Engine core assets to output directory...
+  Main.cpp
+     Creating library C:/dev/Cosmic/build/Projects/SF_Telem/Release/SF_Telem.lib and object C:/dev/Cosmic/build/Projects/SF_Telem/Release/SF_Telem.exp
+  Main.cpp
+  WO05HostFixture.cpp
+  BuildRunner.cpp
+  EditorCameraRig.cpp
+  EditorSnapshot.cpp
+  GameModule.cpp
+  LayoutPresets.cpp
+  Packager.cpp
+  PreviewRig.cpp
+  StarforgeApp.cpp
+  TelemetryRecording.cpp
+  ViewportController.cpp
+  EditorCommands.cpp
+  AssetEditorHost.cpp
+  FlowEditor.cpp
+  PostChainEditor.cpp
+  StoryEditor.cpp
+  ConsolePanel.cpp
+  CosmicRenderTests.vcxproj -> C:\dev\Cosmic\build\Runtime\Release\CosmicRenderTests.exe
+  SF_Telem.vcxproj -> C:\dev\Cosmic\build\Runtime\Release\SF_Telem.dll
+  Syncing SF_Telem assets to VFS output directory...
+  ContentBrowserPanel.cpp
+  EnvironmentPanel.cpp
+  HierarchyPanel.cpp
+  InspectorPanel.cpp
+  MaterialEditorPanel.cpp
+  ProfilerPanel.cpp
+     Creating library C:/dev/Cosmic/build/tests/Release/WO05HostFixture.lib and object C:/dev/Cosmic/build/tests/Release/WO05HostFixture.exp
+  SystemPanel.cpp
+  StarforgeEditor.vcxproj -> C:\dev\Cosmic\build\Runtime\Release\Starforge.exe
+  WO05HostFixture.vcxproj -> C:\dev\Cosmic\build\Runtime\Release\WO05HostFixture.dll
+  TelemetryPanel.cpp
+  TilePalettePanel.cpp
+  test_wo05_host.cpp
+  test_wo05_matrix.cpp
+  CosmicApp.vcxproj -> C:\dev\Cosmic\build\Runtime\Release\CosmicApp.exe
+     Creating library C:/dev/Cosmic/build/Projects/Starforge/Release/Starforge.lib and object C:/dev/Cosmic/build/Projects/Starforge/Release/Starforge.exp
+  Starforge.vcxproj -> C:\dev\Cosmic\build\Runtime\Release\Starforge.dll
+  Syncing Starforge assets to VFS output directory...	Staging the Starforge branding icon next to the runtime...
+     Creating library C:/dev/Cosmic/build/tests/Release/CosmicTests.lib and object C:/dev/Cosmic/build/tests/Release/CosmicTests.exp
+  CosmicTests.vcxproj -> C:\dev\Cosmic\build\Runtime\Release\CosmicTests.exe

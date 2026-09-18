@@ -9,7 +9,7 @@
  * 
  * The SerialPort class provides a simplified interface for RS-232 serial communication
  * on Windows systems. It encapsulates the complex Win32 File I/O and Registry APIs
- * into a high-level, thread-safe subsystem.
+ * into an owner-thread lifecycle with mutex-protected byte reads/writes.
  * 
  * Design:
  * It utilizes a dedicated background thread to poll the hardware port, preventing
@@ -40,8 +40,8 @@
  * (e.g., {"COM3", "COM4"}).
  *
  * Write support: port is opened GENERIC_READ | GENERIC_WRITE. Write(data, len)
- * performs a blocking overlapped write (bounded by the OS transmit buffer);
- * safe to call from the main thread alongside the background read thread.
+ * performs an overlapped write, requests cancellation after 1 s or session stop,
+ * and drains completion. A driver may ignore cancellation; see serial-ownership.md.
  */
 
 #include "core/Core.h"   // COSMIC_API — export across the engine DLL boundary
@@ -63,6 +63,9 @@ namespace Cosmic
 	class COSMIC_API SerialPort
 	{
 	public:
+		// Lifecycle/status: one owner thread, including const status accessors
+		// (which adopt completed opens). Write/FlushBuffer alone may be concurrent;
+		// callers must join their own writers before destroying this object.
 		// Connection lifecycle state for the asynchronous (non-blocking) open path.
 		// Idle      — never opened, or fully closed.
 		// Connecting— a background worker is running the blocking CreateFileA.
@@ -77,7 +80,7 @@ namespace Cosmic
 		SerialPort();
 
 		// Test-only seam (WO-04): run the REAL connection state machine (threads,
-		// m_Abandon, the stop event, every State transition) over an injected
+		// cancellation jobs, stop events, every State transition) over an injected
 		// transport, so the connected-state paths are reachable without hardware.
 		// Production never uses this — the default constructor installs the shipping
 		// Win32 transport. See transport-seam-spec.md.
@@ -100,6 +103,11 @@ namespace Cosmic
 		void		Close();
 		bool IsOpen() const;
 		State GetState() const;
+		static constexpr size_t ReceiveCapacity = 1024 * 1024;
+		uint64_t ReceivedBytes() const { return m_ReceivedBytes.load(); }
+		uint64_t OverflowBytes() const { return m_OverflowBytes.load(); }
+		uint64_t DiscardedOnCloseBytes() const { return m_DiscardedOnCloseBytes.load(); }
+		uint64_t ConnectionGeneration() const { return m_ConnectionGeneration.load(); }
 
 		////////////////////////////////
 		// Data Retrieval
@@ -113,7 +121,7 @@ namespace Cosmic
 
 		// Write raw bytes (may contain NULs — binary-framing safe). Returns
 		// true when every byte was accepted. Overlapped + waited, so it is a
-		// bounded blocking call; false when the port is closed or the device
+		// cancellation-aware blocking call; false when the port is closed or the device
 		// dropped mid-write.
 		bool		Write(const void* data, size_t length);
 		bool		Write(const std::string& data) { return Write(data.data(), data.size()); }
@@ -136,14 +144,10 @@ namespace Cosmic
 
 		void		ReadLoop();
 
-		// Core open work: CreateFileA -> DCB/timeouts -> start read thread. Does NOT
-		// tear down a previous session (callers must CloseReadSession first) and does
-		// NOT touch the connect thread (so the worker can call it without self-join).
+		// Owner-thread handoff of a completed OS open; joins before starting a reader.
 		void AdoptOpen();
 
-		// Tear down only the read session (thread + handle + stop event). Unlike
-		// Close() this does not join the connect thread, so it is safe to call from
-		// inside the connect worker.
+		// Owner-thread teardown of an adopted session, after the open worker finishes.
 		void		CloseReadSession();
 
 	private:
@@ -159,6 +163,8 @@ namespace Cosmic
 		std::thread				m_ConnectThread;
 		std::mutex				m_BufferMutex;
 		std::mutex m_WriteMutex;
+		std::atomic<uint64_t> m_ReceivedBytes{0}, m_OverflowBytes{0}, m_DiscardedOnCloseBytes{0};
+		std::atomic<uint64_t> m_ConnectionGeneration{0};
 		std::string				m_DataBuffer;
 
 		////////////////////////////////
@@ -175,10 +181,8 @@ namespace Cosmic
 		///////////////////////////////
 
 #ifdef _WIN32
-		// Manual-reset event signalled by Close() to wake the overlapped read
-		// thread instantly, so join() can never hang on a stalled port. This is
-		// synchronization owned by the state machine, NOT transport — it stays here
-		// and is passed into the transport's Open/Read as an opaque handle.
+		// Borrowed from OpenJob. Signalled before draining reader/writer completion;
+		// job ownership keeps it alive through an uncooperative late open.
 		HANDLE		m_StopEvent = nullptr;
 #endif
 	};

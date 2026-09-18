@@ -1,0 +1,198 @@
+Native child: s0-t0-i0
+SHA256: 854e5bccd8b6ea237acbcc55359e53d93377ce2cd88ca9f5ff02d2ce2036233f
+[2026-09-17 17:44:14.717] [COSMIC] [trace] Application Subsystems safely terminated.
+[doctest] doctest version is "2.4.12"
+[doctest] run with "--help" for options
+WO05 close_request_unix_ms=1789692254618
+WO05 actual host child: schedule=0 transition=0 storage=0
+===============================================================================
+[doctest] test cases: 1 | 1 passed | 0 failed | 363 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+Native child: s0-t1-i0
+SHA256: a519e4cae17f83ad5345dd61738230c177fa59a0b910e886023e742742590bdf
+[2026-09-17 17:45:26.851] [COSMIC] [trace] Application Subsystems safely terminated.
+[doctest] doctest version is "2.4.12"
+[doctest] run with "--help" for options
+WO05 close_request_unix_ms=1789692326714
+WO05 actual host child: schedule=0 transition=1 storage=0
+===============================================================================
+[doctest] test cases: 1 | 1 passed | 0 failed | 363 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+Native child: s1-t0-i0
+SHA256: bb6c47fcdd1c5970675ef908a7bcdaa62a28ff835507fad4083010fcdae6f744
+[2026-09-17 17:46:31.692] [COSMIC] [trace] Application Subsystems safely terminated.
+[doctest] doctest version is "2.4.12"
+[doctest] run with "--help" for options
+WO05 close_request_unix_ms=1789692391583
+WO05 actual host child: schedule=1 transition=0 storage=0
+===============================================================================
+[doctest] test cases: 1 | 1 passed | 0 failed | 363 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+Native child: s1-t1-i0
+SHA256: 4f5857a84d358fa6ddc1b52711134ede3b869b60dd03fbc9357d49ada454fb8e
+[2026-09-17 17:47:35.315] [COSMIC] [trace] Application Subsystems safely terminated.
+[doctest] doctest version is "2.4.12"
+[doctest] run with "--help" for options
+WO05 close_request_unix_ms=1789692455197
+WO05 actual host child: schedule=1 transition=1 storage=0
+===============================================================================
+[doctest] test cases: 1 | 1 passed | 0 failed | 363 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+Native child: s2-t0-i0
+SHA256: cad63b96d8f30c97a2d9ae968a281ecd9f408bb3729c05d66688df0da8ac8b0b
+[2026-09-17 17:48:38.877] [COSMIC] [trace] Application Subsystems safely terminated.
+[doctest] doctest version is "2.4.12"
+[doctest] run with "--help" for options
+WO05 close_request_unix_ms=1789692518755
+WO05 actual host child: schedule=2 transition=0 storage=0
+===============================================================================
+[doctest] test cases: 1 | 1 passed | 0 failed | 363 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+Native child: s2-t1-i0
+SHA256: a57893ed4c6ebc2c74d0a614d2ed97911a189b1fc3bba09e15061def0dfa142a
+[2026-09-17 17:49:43.298] [COSMIC] [trace] Application Subsystems safely terminated.
+[doctest] doctest version is "2.4.12"
+[doctest] run with "--help" for options
+WO05 close_request_unix_ms=1789692583189
+WO05 actual host child: schedule=2 transition=1 storage=0
+===============================================================================
+[doctest] test cases: 1 | 1 passed | 0 failed | 363 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+Native child: s3-t0-i0
+SHA256: 6a9d011ef78612f89e465ab018b9500bd02276d5fab88b5d3e03dfab5857f452
+[2026-09-17 17:50:47.133] [COSMIC] [trace] Application Subsystems safely terminated.
+[doctest] doctest version is "2.4.12"
+[doctest] run with "--help" for options
+WO05 close_request_unix_ms=1789692647022
+WO05 actual host child: schedule=3 transition=0 storage=0
+===============================================================================
+[doctest] test cases: 1 | 1 passed | 0 failed | 363 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+Native child: s3-t1-i0
+SHA256: c16c1c3ce47a58793a0d1d1e122c72fe34b89c98f304791bfe14bf83487a3301
+[2026-09-17 17:51:50.505] [COSMIC] [trace] Application Subsystems safely terminated.
+[doctest] doctest version is "2.4.12"
+[doctest] run with "--help" for options
+WO05 close_request_unix_ms=1789692710389
+WO05 actual host child: schedule=3 transition=1 storage=0
+===============================================================================
+[doctest] test cases: 1 | 1 passed | 0 failed | 363 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+Native child: s4-t0-i0
+SHA256: e55d41ec8cfcffbb2b35b84ce5e720a27faef6a7c57aec6481bc7efe40fda26d
+[2026-09-17 17:52:54.501] [COSMIC] [trace] Application Subsystems safely terminated.
+[doctest] doctest version is "2.4.12"
+[doctest] run with "--help" for options
+WO05 close_request_unix_ms=1789692774393
+WO05 actual host child: schedule=4 transition=0 storage=0
+===============================================================================
+[doctest] test cases: 1 | 1 passed | 0 failed | 363 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+Native child: s4-t1-i0
+SHA256: 67ecc5761753eb61028b1c3417de6b4075e1d3c98377ceea94e8afb8e49d86d5
+[2026-09-17 17:53:55.558] [COSMIC] [trace] Application Subsystems safely terminated.
+[doctest] doctest version is "2.4.12"
+[doctest] run with "--help" for options
+WO05 close_request_unix_ms=1789692835451
+WO05 actual host child: schedule=4 transition=1 storage=0
+===============================================================================
+[doctest] test cases: 1 | 1 passed | 0 failed | 363 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+Native child: s5-t0-i0
+SHA256: c72c9212ebd95f2d423737b7c4b1acb1584c74bc3b6571941cf36ec1047ce396
+[2026-09-17 17:44:16.888] [COSMIC] [trace] Application Subsystems safely terminated.
+[doctest] doctest version is "2.4.12"
+[doctest] run with "--help" for options
+WO05 close_request_unix_ms=1789692256753
+WO05 actual host child: schedule=5 transition=0 storage=0
+===============================================================================
+[doctest] test cases: 1 | 1 passed | 0 failed | 363 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+Native child: s5-t1-i0
+SHA256: c81c69611744e4400ca187767daad573b38b88dd031704e9e2c2e70551afff8d
+[2026-09-17 17:45:28.929] [COSMIC] [trace] Application Subsystems safely terminated.
+[doctest] doctest version is "2.4.12"
+[doctest] run with "--help" for options
+WO05 close_request_unix_ms=1789692328826
+WO05 actual host child: schedule=5 transition=1 storage=0
+===============================================================================
+[doctest] test cases: 1 | 1 passed | 0 failed | 363 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+Native child: s6-t0-i0
+SHA256: 3084ed49752c3c5c7c22425201a946aa70f704e59c46f3174a5ede1e291c5fb5
+[2026-09-17 17:46:33.566] [COSMIC] [trace] Application Subsystems safely terminated.
+[doctest] doctest version is "2.4.12"
+[doctest] run with "--help" for options
+WO05 close_request_unix_ms=1789692393454
+WO05 actual host child: schedule=6 transition=0 storage=0
+===============================================================================
+[doctest] test cases: 1 | 1 passed | 0 failed | 363 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+Native child: s6-t1-i0
+SHA256: cfde80e42609f5dc01ed7e6bedd2a78c5cb1ee15c55c40c84878c3a925c45d96
+[2026-09-17 17:47:37.216] [COSMIC] [trace] Application Subsystems safely terminated.
+[doctest] doctest version is "2.4.12"
+[doctest] run with "--help" for options
+WO05 close_request_unix_ms=1789692457120
+WO05 actual host child: schedule=6 transition=1 storage=0
+===============================================================================
+[doctest] test cases: 1 | 1 passed | 0 failed | 363 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+Native child: s7-t0-i0
+SHA256: a74d67b356ea2cbf1b5fc82e332ec5ea9ac9750b265826bc00a658542358df4e
+[2026-09-17 17:48:40.835] [COSMIC] [trace] Application Subsystems safely terminated.
+[doctest] doctest version is "2.4.12"
+[doctest] run with "--help" for options
+WO05 close_request_unix_ms=1789692520741
+WO05 actual host child: schedule=7 transition=0 storage=0
+===============================================================================
+[doctest] test cases: 1 | 1 passed | 0 failed | 363 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+Native child: s7-t1-i0
+SHA256: 028ea3595b1cc8ef08dfa42b70417346d32d50da7081fcada14f8d739fa20401
+[2026-09-17 17:49:45.238] [COSMIC] [trace] Application Subsystems safely terminated.
+[doctest] doctest version is "2.4.12"
+[doctest] run with "--help" for options
+WO05 close_request_unix_ms=1789692585128
+WO05 actual host child: schedule=7 transition=1 storage=0
+===============================================================================
+[doctest] test cases: 1 | 1 passed | 0 failed | 363 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+Native child: s8-t0-i0
+SHA256: 88823100c77a9304097d1f26a2af6ddf983ed186e61120083bd1d3cc19ed6341
+[2026-09-17 17:50:49.017] [COSMIC] [trace] Application Subsystems safely terminated.
+[doctest] doctest version is "2.4.12"
+[doctest] run with "--help" for options
+WO05 close_request_unix_ms=1789692648917
+WO05 actual host child: schedule=8 transition=0 storage=0
+===============================================================================
+[doctest] test cases: 1 | 1 passed | 0 failed | 363 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+Native child: s8-t1-i0
+SHA256: bdf93dec411c1b5b83acfa741391b87b0449bd8a976dc30c745c5cef9c6ee23c
+[2026-09-17 17:51:52.451] [COSMIC] [trace] Application Subsystems safely terminated.
+[doctest] doctest version is "2.4.12"
+[doctest] run with "--help" for options
+WO05 close_request_unix_ms=1789692712340
+WO05 actual host child: schedule=8 transition=1 storage=0
+===============================================================================
+[doctest] test cases: 1 | 1 passed | 0 failed | 363 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!

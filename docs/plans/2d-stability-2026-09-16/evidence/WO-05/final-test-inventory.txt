@@ -1,0 +1,366 @@
+[doctest] listing all test case names
+===============================================================================
+NormalizeKey: raw and VFS spellings of the same file collapse to one key
+NormalizeKey: collapses .. segments
+NormalizeKey: backslashes normalize to forward slashes
+NormalizeKey: is deterministic (idempotent on its own output)
+T2: Sound::CopyPcm decodes a peak-decimated mono envelope
+AudioEngine: headless-safe lifecycle and no-op surface
+Sound::Create failure policy — degraded silent object, never null
+AudioEngine::Init leaves the calling thread in the STA (file-dialog safety)
+Branding::ResolveIcon honours the documented candidate order
+Branding::ResolveIcon skips empty roots and missing directories
+ImageIO PNG round-trip preserves pixels (top-left origin)
+ImageIO::ResizeRgba box-averages on shrink and copies at same size
+BufferLayout computes offsets and stride for a mixed layout
+BufferElement sizes and component counts match ShaderDataType
+Instanced flag is carried through the layout
+U3: ScreenToWorld — viewport center maps to focus, +y screen is -y world
+U3: PanBy — the world point under the cursor follows the drag
+U3: ZoomAboutPoint keeps the anchor's screen position fixed
+U3: FrameBounds centers the box and fits the larger extent
+E7: Execute applies the change and records one undo step
+E7: Undo/Redo walk the history
+E7: a new command after Undo clears the redo branch
+E7: Push records without re-applying (already-live edit)
+E7: same-key commands coalesce into one undo step
+E7: a merge barrier splits a coalescing run
+E7: empty merge keys never coalesce
+E7: history is bounded to the max depth (oldest dropped)
+E7: the dirty callback fires on mutating ops only
+TransformComponent: a vec3 scale lands on the matrix diagonal
+TransformComponent: quaternion rotation matches the Euler product
+TransformComponent: UseQuatRotation defaults off (Euler path is the default)
+parses from string and reads typed values via dotted paths
+integer TOML values coerce to float getters
+missing keys return the fallback
+Has() reports key presence
+vec3 array maps to glm::vec3; wrong arity falls back
+arrays-of-tables via GetTable; views outlive the parent
+malformed TOML returns nullptr
+A 3D-authored scene round-trips and is idempotent
+A component name no build knows survives verbatim
+Unknown blocks survive alongside known ones on the same entity
+An empty scene and a scene of only unknown blocks both round-trip
+2D engine: 3D component blocks are preserved verbatim
+2D engine: 3D components are NOT resurrected as real components
+T3: WindowFileDropEvent carries paths with the right type/category
+T3: WindowFileDropEvent dispatches through EventDispatcher to the drop handler
+embeds a multi-size icon into a copied exe
+NAME mode resolves under assets/projects/<name>
+PATH mode with a flat layout resolves under the root
+PATH mode with an assets/ subdir routes under assets/
+SetActiveProject clears an absolute PATH mount
+E10: watching a missing directory fails cleanly
+E10: Stop is idempotent and safe on an unstarted watcher
+E10: a new file in the watched tree is reported
+LPF step response hits 63.2% at t = tau (within 1%)
+LPF first sample primes the state (no transient from zero)
+LPF cutoff-Hz constructor maps to tau = 1/(2*pi*fc)
+Biquad LPF magnitude at cutoff is ~-3 dB
+Biquad notch kills the center frequency, passes DC
+RateLimiter clamps the slew exactly
+MovingAverage<4> averages the window, handles partial fill
+MovingAverage<4> Reset(value) seeds the whole window
+Washout passes transients and decays steady input to zero
+U5: .cflow parses, serializes, and round-trips
+U6: node layout (EditorPos) round-trips the .cflow and is runtime-inert
+U5: Validate flags missing start and unknown transition targets
+U5: full run — menu -> game -> pause(push) -> pop -> timer -> quit
+U5: a guard reads a reflected field and blocks/allows the transition
+Q2: a variable-gated transition fires only after three increments
+Q2: runtime SetVar/GetVar drives a variable guard (the Flow() proxy path)
+Q2: old v1 .cflow loads unchanged (no variables, stays v1 on save)
+Q2: variables + enum + setVar round-trip through the serializer
+Crc16Ccitt matches the CCITT-FALSE check value
+COBS round-trips payloads containing zero bytes
+COBS round-trips a long payload (group boundary at 254 bytes)
+CobsDecode rejects malformed input
+EncodeFrame/DecodeFrame round-trip with CRC protection
+DecodeFrame rejects a corrupted frame
+EncodeFrame reports insufficient output capacity as 0
+T13: effective-active = own flag AND every ancestor's
+E3: three-deep chain composes world position
+E3: reparent with keepWorldPose preserves world transform (rot+scale)
+E3: destroy-with-children removes the subtree; orphan mode keeps them
+E3: cycles are refused
+E3: flat entities use their local transform and gain no components
+E3: hierarchy survives serialization with children order preserved
+RK4 projectile matches the exact solution
+RK4 mass-spring-damper decays like the analytic envelope
+RK4 error scales ~O(h^4): halving h shrinks error ~16x
+semi-implicit Euler stays energy-bounded on an undamped oscillator
+FixedSubstepper runs N equal substeps and carries residual
+the centre is full intensity and the rim is exactly zero
+intensity decays monotonically with distance, for every falloff
+a higher falloff exponent tightens the light
+lights accumulate additively and are order-independent
+a zero radius contributes nothing instead of dividing by zero
+the ambient multiply is identity at white — the compat invariant
+no lights + white ambient makes no GL calls (headless no-crash)
+an active light or a non-white ambient dispatches to the pass
+1D: exact at breakpoints, linear at midpoints
+1D: unsorted input points are sorted by x
+1D: clamp holds edges; extrapolate continues the edge slope
+2D: bilinear against hand-computed values
+2D: invalid shape yields an empty table
+1D: FromCSV round-trip (with header row)
+LoadCSV: headerless data, header capture, malformed rejection
+.cmat round-trips every field
+Unknown type id is a safe no-op
+Bare-object form (no fields wrapper) still loads
+same seed => identical field; different seed => different field
+all variants stay within [-1, 1]
+noise actually varies (not a constant field)
+Perlin is zero on the integer lattice
+fBm octave falloff: successive octaves contribute geometrically less
+Ridged2D: [0,1] bound, seed determinism, decorrelation
+Ridged2D actually ridges: sharper creases than Fbm2D
+Gravity pulls along -Y and the body lands on the ground
+The depth axis never drifts over 600 steps
+A 2D trigger volume raises enter and exit exactly once
+Two runs with ThreadCount = 0 are bit-identical
+Registry: register, list, look up, create, and the default name
+A third-party backend drives Scene -> ScenePhysics -> script contacts
+A third-party backend's trigger volumes reach OnTriggerEnter/Exit
+An unknown backend name logs and falls back to null instead of crashing
+PhysicsWorld tolerates use before Init and after Shutdown
+Rests on the ground under gravity and reports grounded
+Walks along flat ground
+Blocked by a wall — no tunnelling at speed
+Climbs a gentle slope
+Two identical runs of the DoD scene are bit-for-bit identical
+Scripted box: OnCollisionEnter on landing, OnCollisionExit on separation; raycast hits every step
+Trigger volume: OnTriggerEnter/Exit fire and apply no contact force
+Physics components round-trip the serializer
+T12: a disabled collider is not baked (a box falls through a disabled ground)
+T13: an inactive entity is not baked (a box falls through an inactive ground)
+A dropped stack settles onto the ground through the scene session
+Two identical runs are deterministic
+Free fall matches the closed-form drop within 1%
+A box stack settles on the ground and goes to sleep
+Raycast hits the expected body and round-trips the entity UUID
+Category/mask filter selects only matching bodies
+OverlapSphere reports the bodies it encloses
+Create/destroy churn leaks nothing
+fixed seed reproduces the canonical PCG32 reference sequence
+same seed => identical stream; different stream => different values
+NextFloat stays in [0, 1); Range respects bounds
+Gaussian mean/sigma within tolerance over 1e5 samples
+InUnitSphere/OnUnitSphere/InUnitDisc geometric bounds
+E1: engine components are registered with their fields
+E1: builder deduces kinds and applies hints/flags
+T1: reflection metadata v2 — Doc + Units reported where declared, defaulted where not
+E1: get/set through descriptors round-trips
+E1: entt glue — has/copy/remove and component enumeration
+E1: unknown type hash returns nullptr without crashing
+SnapView: Front puts the camera on +Z looking -Z
+SnapView: Right / Left / Back place the camera on the expected axis
+SnapView: Top / Bottom look down / up the Y axis (shy of the poles)
+FrameSphere: recenters on the sphere and fits ~70% of the view height
+FrameBounds: frames the bounding sphere of an AABB
+OrbitBy: latching a pivot on press does not move the view
+OrbitBy: the pivot re-projects to the same pixel through a 90° orbit
+OrbitBy: a classic orbit about the target leaves the target fixed
+two runs of a scripted 2D scene are bit-for-bit identical
+the run actually moved: the snapshot is not a pile of defaults
+E4: CameraComponent projection matches glm perspective/ortho
+E4: EnvironmentComponent defaults equal the SceneRenderer defaults
+E4: Camera + Environment components round-trip through the serializer
+U4: SelectFrame wraps when looping and clamps when one-shot
+U4: FrameUV maps a cell to normalized UV (top-left origin)
+U4: SpriteAnimation + SourceRect round-trip through the serializer
+X5: Light2DComponent defaults + serializer round-trip
+X7: SceneRenderer::RenderToTexture is a safe no-op headless
+T12: default-true Enabled is omitted while true (compat), written + round-tripped when false
+T13: TagComponent::Active is omitted while true (every-entity compat), written when false
+E2: UUID hex round-trips and 0 is the null value
+E2: one million UUID draws collide zero times
+E2: scene round-trips with a stable EntityRef and identical JSON
+E2: unknown component blocks survive a round-trip verbatim
+E21: Save rotates the previous file to a single .bak (crash-safe)
+E14: a prefab subtree instantiates with fresh UUIDs and preserved hierarchy
+E5: a fade transition runs FadeOut -> Loading -> FadeIn -> Idle once
+E5: a no-fade transition loads on the next Loading frame
+E5: a request made mid-transition is queued and honored after
+E5: alpha and progress stay in [0,1] across a transition
+E5: a failed load keeps the current scene
+E11: a registered script instantiates, ticks, and moves its entity
+E11: field pull reads the live instance back into the component
+E11: an unknown script class is inert, not a crash
+E20: script telemetry pushes route to an installed sink (and no-op without one)
+E11: NativeScript is a reflected component and its fields round-trip through JSON
+U2: scene signals reach script OnSignal; scripts can emit; route drops on Destroy
+H9: a system ticks once with its whole matching set and moves them all
+H9: membership is rebuilt each tick as entities spawn and die
+H9: SystemScript fields round-trip through the scene serializer
+SerialPort::Open on an unreachable port fails fast and reports Failed
+SerialPort::Write on a closed port returns false instead of touching the handle
+SerialPort::Close is idempotent and safe when never opened
+SerialPort::GetAvailablePorts never crashes and returns plausible names
+SerialPort::BeginOpen on an unreachable port returns immediately and ends Failed
+SerialPort::Open refuses to race an in-flight BeginOpen
+SerialPort survives the abandon race: BeginOpen then immediate Close
+SerialPort::BeginOpen does not stack connect attempts
+SerialPort destructor joins a connect worker that is still running
+SerialPort reuse: repeated failed opens do not leak threads or wedge state
+SerialLink starts idle and stays bounded while pumped
+SerialLink::SecondsSinceLastByte advances with the clock while nothing arrives
+SerialLink::ConsumeJustConnected is a one-shot that starts false
+SerialLink::Shutdown and Disconnect clear the reconnect intent
+SerialLink::Write on a closed link fails without opening anything
+SerialLink destruction while pumping is clean
+WO-04 seam: the default SerialPort transport is Win32 (shipping path)
+WO-04 seam: an injected transport replaces port discovery
+WO-04 seam (a): a fake port opens, receives, and delivers the exact bytes
+WO-04 seam (b): a mid-session drop drives State::Failed, then auto-reconnect re-opens
+WO-04 seam (c): teardown cancels a blocked Open (WO-05 regression)
+WO-05a: teardown joins a reconnect worker that is in flight (reachable path)
+WO-05a: repeated reconnect churn then teardown stays bounded and leak-free
+WO-05a: SerialLink pumped without Connect never opens a port (KI-2 boundary)
+WO-05a H1: exit hang - close while a reconnect worker blocks in CreateFileA
+WO-05a H3: connected-state drop - lose an open port then close
+TelemHub reassembles a frame split across chunk boundaries
+TelemHub survives a split at every byte boundary
+TelemHub handles many frames in one chunk, and one frame per chunk
+TelemHub strips carriage returns and skips empty lines
+TelemHub ignores an empty chunk entirely
+TelemHub counts good and bad frames separately
+TelemHub routes each side tag to its own decoder
+TelemHub tracks max and average stats per ESC
+TelemHub reports per-ESC presence and goes stale on silence
+TelemHub purges the accumulator when a newline never arrives
+TelemHub keeps sub-threshold junk, proving the purge is what saved the frame
+TelemHub stays bounded under sustained newline-free noise
+TelemHub keeps consuming live bytes until a recording is actually loaded
+TelemHub::RecordFixed captures all three entities every tick
+TelemHub::Shutdown is bounded, clean and idempotent
+TelemHub construct/destroy cycles leave no residue
+ParseFrame decodes a well-formed frame for each side tag
+ParseFrame accepts lower-case checksum digits
+ParseFrame accepts the boundary values the raw fields can carry
+ParseFrame rejects a checksum mismatch
+ParseFrame rejects a payload edited without recomputing the checksum
+ParseFrame ignores heartbeat and non-frame lines
+ParseFrame rejects an unknown side tag
+ParseFrame rejects a missing star
+ParseFrame rejects every truncation of a valid frame
+ParseFrame rejects non-numeric and short field lists
+ParseFrame never reads past the end of a hostile string
+DriveSample survives ToChannels -> FromChannels exactly
+WeaponSample survives ToChannels -> FromChannels exactly
+FromChannels tolerates short and empty frames
+DriveSample::Decode guards against zero poles, gear ratio and slip
+WeaponSample::Decode guards against zero poles and gear ratio
+Id helpers round-trip and reject unknown tags
+ParseFrame survives seeded mutation fuzz
+Euler ZYX <-> quaternion round-trips away from the gimbal poles
+Pure yaw rotates North toward East (NED handedness)
+IntegrateBodyRate accumulates a constant rate to the expected angle
+NED <-> render frame mapping and round-trip
+NedQuatToRender maps a NED yaw onto render axes consistently
+a looping clip advances one frame per 1/FPS and wraps
+a one-shot clip clamps to the last frame and stays there
+negative time (a reversed clip) wraps forward when looping, clamps otherwise
+degenerate clips pin to frame 0 instead of dividing or modding by zero
+frames walk the row left to right in normalized, top-left-origin UV
+a degenerate sheet or cell size falls back to the whole image
+Elapsed accumulates across variable dt and only while Playing
+the SourceRect is left alone when the sheet cannot be resolved
+a scene with no sprite animations is untouched (compat gate)
+ZOrder is the primary key and beats every position term
+within one ZOrder, the default key is Position.z
+YSort keys on -Position.y so a lower sprite draws in front
+tilemaps interleave with sprites through the same keys
+T12: a disabled sprite is excluded from the list
+T13: an inactive entity or an inactive ancestor is excluded
+fully-tied items break by entity id, and the list is deterministic
+a scene with no 2D content yields an empty list
+Q3: .cstory parses (nodes, options, guard, once, variables)
+Q3: a guarded option + a Once option + signals walk every path
+Q3: the Fight branch + serialize round-trip
+Q3: a story shares the flow blackboard when run under a flow
+DataPlayer rejects an empty file
+DataPlayer rejects a file with bad magic
+DataPlayer rejects unknown versions
+DataPlayer rejects absurd counts instead of attempting the allocation
+DataPlayer rejects every truncation of a real recording
+DataPlayer accepts a file with trailing garbage but not a short one
+DataPlayer survives seeded random-byte fuzz
+DataRecorder autosave overwrites one rolling folder
+DataRecorder::Flush is safe while four threads are recording
+DataRecorder::Clear drops frames but keeps registrations
+DataRecorder tolerates a second Flush while the first is in flight
+DataRecorder destructor waits for an in-flight flush
+DataRecorder -> DataPlayer round-trip via scene.bin
+DataPlayer falls back to per-entity .bin files when scene.bin is absent
+DataPlayer::Load fails cleanly on an empty directory
+U8: ForgePong template scripts compile and expose their tuned fields
+Q3: the stock Story Graph UI binding template compiles
+U4: EnsureCells clamps the grid to 1..1024 and sizes the buffer
+U4: FloodFill fills the 4-connected region and reports changes
+U4: tilemap Cells round-trip the scene serializer as an int array
+InBounds is exact on all four edges and rejects negatives
+At reads inside and returns empty outside, never out of range
+growing preserves existing cells (row-major) and zero-fills the rest
+shrinking truncates the buffer and clamps out-of-range reads
+EnsureCells is idempotent and clamps to the 1..1024 cap both ways
+an ortho camera over the map centre selects only the visible cells
+the window clamps at the map edges instead of walking off the grid
+the map origin offsets the window by the entity position
+a full 1024x64 int-array map round-trips exactly and re-saves identically
+an empty map round-trips without inventing cells
+Advance moves the head only while Playing
+a looping clip wraps into [0, Duration) and never lands ON Duration
+a non-looping clip clamps to an end and stops itself
+negative Speed runs the clip backwards: looping wraps, one-shot stops at 0
+Speed scales the advance and zero freezes without stopping
+Scrub clamps to the clip in both directions
+Duration <= 0 pins the head at 0 through every entry point
+Normalized and SetNormalized are inverses inside the clip
+Stop rewinds and pauses; Pause holds the head
+a variable frame rate reaches the same head as one big step
+the world origin lands at the canvas centre
++y is UP in the world and DOWN on the canvas
+the frustum edges map exactly to the canvas corners
+a point just outside the frustum projects OUTSIDE the canvas, not clamped
+the canvas rect's own origin and size are honoured
+a point in front of the camera projects; the centre is the canvas centre
+a point BEHIND the camera is reported as unprojectable
+perspective divide: the same object is smaller and nearer the centre when far
+a nameplate offset above an entity tracks it across the screen
+Contains is inclusive on every edge and rejects just outside
+a hit inside a deeply nested child is a hit in every ancestor
+canvas scale moves a nested hit area with the layout
+U1: ResolveRect centered point-anchor
+U1: ResolveRect stretched (insets from edges)
+U1: ResolveRect corner-pinned (top-right)
+U1: ResolveRect nested resolves against the parent rect
+U1: ResolveRect scale multiplies offsets (ScaleWithHeight)
+U1: CanvasScale — ConstantPixel is 1, ScaleWithHeight is viewportH/refH
+U1: PivotPoint is rect min + size*pivot
+U1: button hover / press / release-inside emits once
+U1: button release OUTSIDE does not emit
+U1: non-interactable button is Disabled and never emits
+U1: Update routes a click to the scene EventBus
+U1: click that releases outside the button never emits
+U1: overlapping buttons — topmost ZOrder wins the click
+U1: HitTest returns the topmost element under a point (editor select)
+U2: EventBus disconnect stops delivery; ConnectAny sees every signal
+X6: ProjectToCanvas maps world points to canvas (top-left, +y down)
+X6: ProjectToCanvas reports behind-camera points as hidden
+X6: CollectElements positions a world-anchored element at the projected point
+WO-05 T06 KISS: shipping CRC8 and resync, separately from PC text and COBS
+WO-05 T03: root shared-link matrix, 100 barrier iterations per crossed schedule
+WO-05 T03: non-cooperative late-open success survives destruction, 100 iterations
+WO-05 T03: cancel a non-cooperative open keeps the owner responsive, 100 iterations
+WO-05 T03: close drains an app-owned in-flight writer before releasing its session
+WO-05 T06: stalled consumer serial receive queue is bounded
+WO-05 T06: rapid silent-stall reconnect resets the actual hub accumulator
+WO-05 T01: PC text fixture every split, bytewise, seeded and coalesced routing
+WO-05 T02: exact purge boundary, seeded faults, recovery and 1.5-second staleness
+WO-05 T05: controlled 30-minute 40-Hz per-ESC acquisition and 60-Hz recording
+WO-05 T05: screen and paused-update acquisition policy uses the shared root
+WO-05 T06: 10x bursts, silence and 20 real-link reconnects discard partial bytes
+===============================================================================
+[doctest] unskipped test cases passing the current filters: 362

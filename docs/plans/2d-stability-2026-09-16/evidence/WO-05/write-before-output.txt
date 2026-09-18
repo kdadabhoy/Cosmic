@@ -1,0 +1,23 @@
+LOG: T03-write-close-root.out.log
+SHA256: 9bb19c7166750c7b4a9b15d787c3311bbae6af0635a98f144cd3da914d592d0f
+[2026-09-17 12:54:00.713] [COSMIC] [error] Failed to load texture at assets/projects/images/SF_Drivetrain.PNG
+[2026-09-17 12:54:00.713] [COSMIC] [error] Failed to load texture at assets/projects/images/SF_Weapon.PNG
+[2026-09-17 12:54:00.713] [COSMIC] [error] Failed to load texture at assets/projects/images/SF_Drivetrain.PNG
+[2026-09-17 12:54:00.714] [COSMIC] [info] [SERIAL THREAD] Started with ID: 30476 on Core: 10
+[2026-09-17 12:54:00.714] [COSMIC] [info] [SERIAL THREAD] Shutting down.
+[2026-09-17 12:54:00.714] [COSMIC] [warning] Redirecting active logging channels to destination target: 'logs'
+[2026-09-17 12:54:00.715] [COSMIC] [info] Log streams successfully re-routed.
+[2026-09-17 12:54:00.715] [APP] [info] SF_Telem: Detached.
+[doctest] doctest version is "2.4.12"
+[doctest] run with "--help" for options
+===============================================================================
+C:\dev\Cosmic\tests\test_wo05_matrix.cpp(243):
+TEST CASE:  WO-05 T03: close drains an app-owned in-flight writer before releasing its session
+
+C:\dev\Cosmic\tests\test_wo05_matrix.cpp(251): ERROR: CHECK( rig.counts->writes==0 ) is NOT correct!
+  values: CHECK( {?} == 0 )
+
+===============================================================================
+[doctest] test cases:  1 | 0 passed | 1 failed | 358 skipped
+[doctest] assertions: 10 | 9 passed | 1 failed |
+[doctest] Status: FAILURE!

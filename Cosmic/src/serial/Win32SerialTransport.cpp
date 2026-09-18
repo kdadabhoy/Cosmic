@@ -2,9 +2,9 @@
 //
 // The shipping serial transport: the same CreateFileA / overlapped ReadFile /
 // overlapped WriteFile / CancelIoEx+CloseHandle / SERIALCOMM registry calls that
-// used to live in SerialPort.cpp, moved verbatim behind ISerialTransport (WO-04).
-// Behaviour is byte-identical; SerialPort keeps the threads, stop event, m_Abandon
-// and every State transition.
+// used to live in SerialPort.cpp, moved behind ISerialTransport (WO-04).
+// WO-05 adds cancellation-aware write completion and late-open cleanup; wire
+// bytes and port parameters remain unchanged. SerialPort owns the state machine.
 
 #include "serial/Win32SerialTransport.h"
 
@@ -20,8 +20,8 @@ namespace Cosmic
 	/////////////////////////////////////////////////////////////////////////////////
 
 	// CreateFileA -> DCB (8N1) -> COMMTIMEOUTS, exactly as the old SerialPort::DoOpen.
-	// `stopEvent` is ignored: CreateFileA cannot be cancelled mid-call, which is the
-	// root of KI-4 (the exit soft-hang). A fake honours it; the real transport cannot.
+	// SerialPort requests synchronous cancellation; a driver may ignore it. The
+	// worker's shared-owned cancellation block then handles any late result safely.
 	bool Win32SerialTransport::Open(const std::string& portName, std::uint32_t baudRate, void* stopEvent)
 	{
 		std::string fullPath = "\\\\.\\" + portName;

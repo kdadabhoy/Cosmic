@@ -1,0 +1,37 @@
+LOG: T03-real-host.out.log
+SHA256: 25f2f89e07e0a9fca5fec72680ea90b19bd92daeee18522383b2e204fea4318f
+[2026-09-17 12:45:59.184] [COSMIC] [info] User data root: .
+[2026-09-17 12:45:59.184] [COSMIC] [trace] Initializing Application Subsystems...
+[2026-09-17 12:45:59.184] [COSMIC] [info] JobSystem: Detected 16 logical cores. Spawning 15 worker thread(s).
+[2026-09-17 12:45:59.184] [COSMIC] [info] JobSystem: Thread pool initialised successfully.
+[2026-09-17 12:45:59.296] [COSMIC] [info] AudioEngine initialized (48000 Hz, 2 channels).
+[2026-09-17 12:45:59.315] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[2026-09-17 12:45:59.321] [COSMIC] [info] Window: borderless custom chrome enabled.
+[2026-09-17 12:45:59.326] [COSMIC] [trace] Initializing Renderer2D...
+[2026-09-17 12:45:59.327] [COSMIC] [info] Shader [Texture]: Automatically mapped 'u_Textures' to 32 hardware slots.
+[2026-09-17 12:45:59.329] [COSMIC] [info] Shader [QuadInstance]: Automatically mapped 'u_Textures' to 32 hardware slots.
+[2026-09-17 12:45:59.329] [COSMIC] [info] Renderer2D initialized successfully.
+[2026-09-17 12:45:59.331] [COSMIC] [info] Startup project requested: 'WO05HostFixture.dll' — skipping the Launcher.
+[2026-09-17 12:45:59.335] [COSMIC] [info] WorkspaceLayer: Mounting client layer: SF_Telem
+[2026-09-17 12:45:59.335] [APP] [info] SF_Telem: Attaching combined telemetry app.
+[2026-09-17 12:45:59.336] [COSMIC] [warning] Redirecting active logging channels to destination target: 'assets/projects/SF_Telem/logs'
+[2026-09-17 12:45:59.337] [COSMIC] [info] Log streams successfully re-routed.
+[2026-09-17 12:45:59.423] [APP] [info] DrivetrainLayer: Attaching drivetrain calculator screen.
+[2026-09-17 12:45:59.423] [APP] [info] DrivetrainLayer: OnAttach complete.
+[2026-09-17 12:45:59.489] [APP] [info] SF_Telem: screens ready (Main / Testing / Analysis / Replay).
+[2026-09-17 12:45:59.489] [COSMIC] [info] WorkspaceLayer project name set to: 'WO05HostFixture'
+[2026-09-17 12:45:59.489] [COSMIC] [info] Successfully loaded and mounted project DLL Layer!
+[2026-09-17 12:45:59.492] [COSMIC] [info] WorkspaceLayer: Dockspace built (legacy 3-tier left sidebar).
+[doctest] doctest version is "2.4.12"
+[doctest] run with "--help" for options
+===============================================================================
+C:\dev\Cosmic\tests\test_wo05_host.cpp(29):
+TEST CASE:  WO-05 T03 host: actual window close and deferred launcher unload, 100 iterations
+
+C:\dev\Cosmic\tests\test_wo05_host.cpp(29): FATAL ERROR: test case CRASHED: SIGSEGV - Segmentation violation signal
+
+===============================================================================
+[doctest] test cases: 1 | 0 passed | 1 failed | 357 skipped
+[doctest] assertions: 4 | 4 passed | 0 failed |
+[doctest] Status: FAILURE!
+[2026-09-17 12:45:59.552] [COSMIC] [info] JobSystem: Thread pool shut down cleanly.

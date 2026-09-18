@@ -240,8 +240,10 @@ namespace Cosmic
                      snapshots.size(), outputDir);
 
         m_FlushThread = std::thread(
-            [snapshots = std::move(snapshots), outputDir, sampleRate, this]() mutable
+            [snapshots = std::move(snapshots), outputDir, sampleRate, this,
+             barrier = m_FlushWriteBarrier]() mutable
             {
+                if (barrier) barrier();
                 namespace fs = std::filesystem;
 
                 std::error_code ec;

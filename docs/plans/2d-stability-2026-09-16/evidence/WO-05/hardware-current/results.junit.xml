@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="wo05" tests="3" failures="0" skipped="3">
+  <testsuite name="serial" tests="3" failures="0" skipped="3">
+    <testcase name="T04-Windows10-virtualCOM" classname="wo05.W" time="0">
+      <skipped message="missing capability: windows10"/>
+    </testcase>
+    <testcase name="T04-Windows11-virtualCOM" classname="wo05.W" time="0">
+      <skipped message="missing capability: com0com"/>
+    </testcase>
+    <testcase name="T04-USB-Bluetooth-bothWindows" classname="wo05.W" time="0">
+      <skipped message="missing capability: serial-device"/>
+    </testcase>
+  </testsuite>
+</testsuites>

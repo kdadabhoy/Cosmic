@@ -99,6 +99,15 @@ later-additions backlog. This packet delivers **stability of the current 2D surf
 | KI-3 | **Resolved (WO-03, 2026-09-17)** | Was: default build/preset/CI/release/package selected 3D and the CI cache key omitted build mode. Fixed: root `CMakeLists.txt` defaults `COSMIC_2D_ONLY=ON` and **rejects OFF at configure time** (the single gate every entry point funnels through); CI/release/package/scripts/scaffold/hot-reload all pass the flag explicitly; the CI cache key now carries mode+arch+toolchain. Verified B03–B05 clean + stale-cache; see `evidence/WO-03/WO-03-report.md`. | WO-03 |
 | KI-4 | **Confirmed-by-analysis defect (WO-05a, 2026-09-17)** | **COM close/link-loss = exit soft-hang.** Both reported symptoms converge: losing a Bluetooth link starts auto-reconnect (`SerialLink.cpp:56-68`) whose worker blocks in `CreateFileA` ~10–20 s (`SerialPort.cpp:99-100`); the final `OnUpdate` before window-close (`Application.cpp:146,240-247` → `WorkspaceLayer.cpp:96-100` → `SF_Telem.cpp:104`) can spawn that worker, and teardown's `SerialPort::Close()` **joins it** (`SerialPort.cpp:294-301`) while `m_Abandon` is read only *after* `DoOpen` returns (`:80-82`) — so app exit stalls for the full open timeout. Bounded soft-hang, not a fault. Confirmed from control flow end-to-end (`OnDetach` **is** reached, via `Shutdown→UnloadProjectDLL→WorkspaceLayer::ClearViewportLayer`, `Application.cpp:783-786`). Live BT/virtual-COM repro `ENVIRONMENT_BLOCKED` (only a legacy COM1 UART present, which does not block). Reachable-path guard + reserved seats: `tests/test_serial_shutdown_race.cpp`. Latent siblings for the WO-05 matrix: **H2** `Open()`-vs-worker TOCTOU (`SerialPort.cpp:29-40`, off the SF_Telem path), **H3** connected-state drop race (env-blocked). Full analysis: `evidence/WO-05a/hazard-analysis.md`. | WO-05 (fix + matrix), WO-04 (seam) |
 
+**WO-05 update (2026-09-17; supersedes the KI-2/KI-4 seed statuses above):** the
+initial delayed-open shutdown fix is local `552ef45`. H1/H3 are active; the real
+root/shared-service and actual native/deferred host matrices use the seam. KI-5
+pending writer release, KI-6 unbounded receive queue and KI-7 rapid-reconnect
+partial-frame retention have failing-before regressions and software fixes.
+T04 real-driver corroboration remains ENVIRONMENT_BLOCKED. The authoritative
+running dispositions are in [`../contracts/known-issues.md`](../contracts/known-issues.md),
+with results in [`../evidence/WO-05/WO-05-report.md`](../evidence/WO-05/WO-05-report.md).
+
 Add every newly discovered crash / data-loss / hang here with a minimal regression and a
 disposition. Missing equipment or a skipped test is never logged as a pass.
 
@@ -133,3 +142,9 @@ WO-13  qualify the pinned candidate; hand Kaden the promotion runbook
 
 The graph is dependency, not permission to parallelize agents. Run WO-05a and the COM work with
 real Windows corroboration where hardware allows; the rest can proceed on synthetic fixtures.
+
+WO-05 evidence is authoritative in [the execution report](../evidence/WO-05/WO-05-report.md).
+KI-8 (PS5.1 empty-output evidence handling) and KI-9 (owner cancellation grace)
+have failing-before and passing-after regressions; no verdict or deadline was relaxed.
+The caller/module lifetime contract is in [serial ownership](../contracts/serial-ownership.md).
+T04 remains ENVIRONMENT_BLOCKED on all six physical/virtual OS-transport seats.

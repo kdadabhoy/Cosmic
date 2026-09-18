@@ -1,0 +1,27 @@
+LOG: T06-rapid-reconnect.out.log
+SHA256: d4eb893ebcb018e17e74582689eb9f3f371f267e418aee9de0f3bdb447ffc496
+[2026-09-17 12:58:09.679] [COSMIC] [error] Failed to load texture at assets/projects/images/SF_Drivetrain.PNG
+[2026-09-17 12:58:09.680] [COSMIC] [error] Failed to load texture at assets/projects/images/SF_Weapon.PNG
+[2026-09-17 12:58:09.680] [COSMIC] [error] Failed to load texture at assets/projects/images/SF_Drivetrain.PNG
+[2026-09-17 12:58:09.681] [COSMIC] [warning] Redirecting active logging channels to destination target: 'logs'
+[2026-09-17 12:58:09.681] [COSMIC] [info] Log streams successfully re-routed.
+[2026-09-17 12:58:09.681] [APP] [info] SF_Telem: Detached.
+[doctest] doctest version is "2.4.12"
+[doctest] run with "--help" for options
+===============================================================================
+C:\dev\Cosmic\tests\test_wo05_matrix.cpp(275):
+TEST CASE:  WO-05 T06: rapid silent-stall reconnect resets the actual hub accumulator
+
+C:\dev\Cosmic\tests\test_wo05_matrix.cpp(285): ERROR: CHECK( rig.root->Hub().PendingTextBytes()==0 ) is NOT correct!
+  values: CHECK( 6 == 0 )
+
+C:\dev\Cosmic\tests\test_wo05_matrix.cpp(287): ERROR: CHECK( rig.root->Hub().GoodFrames()==1 ) is NOT correct!
+  values: CHECK( 0 == 1 )
+
+C:\dev\Cosmic\tests\test_wo05_matrix.cpp(287): ERROR: CHECK( rig.root->Hub().BadFrames()==0 ) is NOT correct!
+  values: CHECK( 1 == 0 )
+
+===============================================================================
+[doctest] test cases:  1 | 0 passed | 1 failed | 360 skipped
+[doctest] assertions: 11 | 8 passed | 3 failed |
+[doctest] Status: FAILURE!

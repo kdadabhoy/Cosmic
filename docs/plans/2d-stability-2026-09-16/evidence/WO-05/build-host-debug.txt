@@ -1,0 +1,14 @@
+MSBuild version 18.7.8+1ac568fee for .NET Framework
+
+  Checking File Globs
+  glad.vcxproj -> C:\dev\Cosmic\build\Cosmic\Debug\glad.lib
+  glfw.vcxproj -> C:\dev\Cosmic\build\Cosmic\dependencies\glfw\src\Debug\glfw3.lib
+  imgui.vcxproj -> C:\dev\Cosmic\build\Cosmic\Debug\imgui.lib
+  Jolt.vcxproj -> C:\dev\Cosmic\build\Cosmic\dependencies\JoltPhysics\Debug\Jolt.lib
+  implot.vcxproj -> C:\dev\Cosmic\build\Cosmic\Debug\implot.lib
+  ImGuizmo.vcxproj -> C:\dev\Cosmic\build\Cosmic\Debug\ImGuizmo.lib
+  Cosmic.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\Cosmic.dll
+  Syncing Cosmic Engine core assets to output directory...
+  WO05HostFixture.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\WO05HostFixture.dll
+  test_wo05_host.cpp
+LINK : fatal error LNK1168: cannot open C:\dev\Cosmic\build\Runtime\Debug\CosmicTests.exe for writing [C:\dev\Cosmic\build\tests\CosmicTests.vcxproj]

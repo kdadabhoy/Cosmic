@@ -1,0 +1,9 @@
+{
+  "manifest": "wo05-generation-repro",
+  "cases": [{
+    "id": "T06-rapid-reconnect", "description": "A complete reconnect between policy ticks must clear the real hub's partial frame",
+    "tier": "U", "profiles": ["nightly"], "transport": "fake", "requires": ["windows"],
+    "command": "{BIN}\\CosmicTests.exe", "args": ["--test-case=WO-05 T06: rapid silent*", "--no-colors"],
+    "expectExit": 0, "minTests": 1, "deadlineSec": 15, "seed": 5, "fixture": "../test_wo05_matrix.cpp"
+  }]
+}

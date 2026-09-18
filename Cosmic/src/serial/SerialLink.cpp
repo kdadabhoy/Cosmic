@@ -43,8 +43,9 @@ namespace Cosmic
 
 		// Detect a fresh (re)connect so the caller can reset its RX accumulator.
 		const bool open = m_Port.IsOpen();
-		if (open && !m_WasOpen) m_JustConnected = true;
-		m_WasOpen = open;
+		const uint64_t generation = m_Port.ConnectionGeneration();
+		if (open && generation != m_ObservedGeneration) m_JustConnected = true;
+		m_ObservedGeneration = generation;
 
 		// Auto-refresh the port list (~1 Hz) so freshly paired / unplugged devices
 		// show up without clicking Refresh. Skip while a session is live so the
@@ -99,6 +100,7 @@ namespace Cosmic
 
 	void SerialLink::Disconnect()
 	{
+		m_JustConnected = false;
 		m_WantConnection = false;
 		m_ReconnectClock = 0.0f;
 		m_Port.Close();
@@ -106,6 +108,7 @@ namespace Cosmic
 
 	void SerialLink::Shutdown()
 	{
+		m_JustConnected = false;
 		// Clear reconnect intent BEFORE closing so a return-to-launcher never leaves
 		// a stale "keep reconnecting" flag behind.
 		m_WantConnection = false;

@@ -1,0 +1,106 @@
+﻿{
+    "manifest":  "wo05-host-shards",
+    "profile":  "a",
+    "tier_filter":  [
+                        "G"
+                    ],
+    "config":  "Release",
+    "mode":  "2D",
+    "generated_utc":  "2026-09-17T20:35:21.0895215Z",
+    "git":  {
+                "commit":  "552ef4519475e614b2e18f35d656daa8c011a8ca",
+                "dirty":  true,
+                "dirty_diff_sha256":  "44a0ce3ab44d98b6183f5a9012168951c3681c8c95252992b874e6e88454e4e2"
+            },
+    "environment":  {
+                        "os_caption":  "Microsoft Windows 11 Education",
+                        "os_version":  "10.0.26200",
+                        "os_build":  "26200",
+                        "os_display":  "26200.9457",
+                        "cpu_name":  "AMD Ryzen 7 7800X3D 8-Core Processor",
+                        "cpu_cores":  8,
+                        "cpu_threads":  16,
+                        "cpu_addr_width":  64,
+                        "cpu_isa_floor":  "SSE4.2 (D-CPU); see evidence/WO-02/cpu-isa-probe.txt",
+                        "ram_bytes":  33462239232,
+                        "ram_gib":  31.2,
+                        "gpus":  [
+                                     {
+                                         "name":  "NVIDIA GeForce RTX 5070 Ti",
+                                         "driver":  "32.0.16.1692",
+                                         "driver_date":  "\/Date(1788480000000)\/"
+                                     },
+                                     {
+                                         "name":  "AMD Radeon(TM) Graphics",
+                                         "driver":  "32.0.21045.5002",
+                                         "driver_date":  "\/Date(1786924800000)\/"
+                                     }
+                                 ],
+                        "opengl_version":  null,
+                        "powershell":  "5.1.26100.9444",
+                        "hostname":  "DESKTOP-SEOA4BT"
+                    },
+    "capabilities":  {
+                         "windows":  true,
+                         "cpu-sse42":  true,
+                         "gpu-gl":  true,
+                         "serial-device":  false,
+                         "editor-ui":  false
+                     },
+    "forced_unavailable":  [
+
+                           ],
+    "bin_dir":  "C:\\dev\\Cosmic\\build\\Runtime\\Release",
+    "run_temp":  "C:\\dev\\Cosmic\\build\\wo05-temp\\cosmic-accept-b40d1b3ba91b45eab43e9fda18f7b659",
+    "golden_dir":  "C:\\dev\\Cosmic\\tests\\acceptance\\goldens",
+    "golden_before":  {
+                          ".gitkeep-golden.txt":  "8e92944b7b4e999a32148948af2a13498ece10d56133c62c5c84431f2d335118"
+                      },
+    "golden_after":  {
+                         ".gitkeep-golden.txt":  "8e92944b7b4e999a32148948af2a13498ece10d56133c62c5c84431f2d335118"
+                     },
+    "golden_mutated":  false,
+    "acceptance_mode":  true,
+    "counts":  {
+                   "total":  1,
+                   "passed":  1,
+                   "failed":  0,
+                   "blocked":  0
+               },
+    "self_test":  {
+                      "enabled":  false,
+                      "failures":  [
+
+                                   ]
+                  },
+    "cases":  [
+                  {
+                      "id":  "T03-native-schedules-0-4",
+                      "tier":  "G",
+                      "description":  "1000 fresh isolated native children; full-process close deadline",
+                      "requires":  [
+                                       "windows",
+                                       "gpu-gl"
+                                   ],
+                      "transport":  "fake",
+                      "seed":  5,
+                      "start_utc":  "2026-09-17T20:24:30.4141099Z",
+                      "deadline_sec":  1800,
+                      "exercised":  "fake-transport",
+                      "fixture":  "C:\\dev\\Cosmic\\tests\\acceptance\\..\\WO05HostFixture.cpp",
+                      "fixture_sha256":  "68e66a7a03c1f2f26b5038e43a95eeca029d7f576960679a122b3af6107d687e",
+                      "command":  "powershell -NoProfile -ExecutionPolicy Bypass -File C:\\dev\\Cosmic\\tests\\acceptance\\fixtures\\Run-WO05Host.ps1 -FirstSchedule 0 -LastSchedule 4 -Bin C:\\dev\\Cosmic\\build\\Runtime\\Release -Output C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-05\\host-final-a-Release",
+                      "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-05\\native-final-a\\T03-native-schedules-0-4.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-05\\native-final-a\\T03-native-schedules-0-4.err.log",
+                      "pid":  30432,
+                      "exit_code":  0,
+                      "crash":  false,
+                      "tests_passed":  1000,
+                      "tests_expected_min":  1000,
+                      "verdict":  "PASSED",
+                      "detail":  "exit 0 as expected",
+                      "duration_sec":  650.637,
+                      "end_utc":  "2026-09-17T20:35:21.0575214Z"
+                  }
+              ]
+}

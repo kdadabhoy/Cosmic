@@ -1,0 +1,31 @@
+MSBuild version 18.7.8+1ac568fee for .NET Framework
+
+  Checking File Globs
+  glad.vcxproj -> C:\dev\Cosmic\build\Cosmic\Debug\glad.lib
+  glfw.vcxproj -> C:\dev\Cosmic\build\Cosmic\dependencies\glfw\src\Debug\glfw3.lib
+  imgui.vcxproj -> C:\dev\Cosmic\build\Cosmic\Debug\imgui.lib
+  implot.vcxproj -> C:\dev\Cosmic\build\Cosmic\Debug\implot.lib
+  ImGuizmo.vcxproj -> C:\dev\Cosmic\build\Cosmic\Debug\ImGuizmo.lib
+  Jolt.vcxproj -> C:\dev\Cosmic\build\Cosmic\dependencies\JoltPhysics\Debug\Jolt.lib
+  Cosmic.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\Cosmic.dll
+  Syncing Cosmic Engine core assets to output directory...
+  Building Custom Rule C:/dev/Cosmic/tests/CMakeLists.txt
+  WO05HostFixture.cpp
+  DashboardView.cpp
+  DrivetrainLayer.cpp
+  MainLayer.cpp
+  ReplayLayer.cpp
+  SF_Telem.cpp
+  TelemHub.cpp
+  TestHub.cpp
+  TestLayers.cpp
+  TestingManager.cpp
+  WeaponLayer.cpp
+     Creating library C:/dev/Cosmic/build/tests/Debug/WO05HostFixture.lib and object C:/dev/Cosmic/build/tests/Debug/WO05HostFixture.exp
+  WO05HostFixture.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\WO05HostFixture.dll
+  test_wo05_matrix.cpp
+  test_wo05_kiss.cpp
+  test_wo05_host.cpp
+  SF_Telem.cpp
+     Creating library C:/dev/Cosmic/build/tests/Debug/CosmicTests.lib and object C:/dev/Cosmic/build/tests/Debug/CosmicTests.exp
+  CosmicTests.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\CosmicTests.exe

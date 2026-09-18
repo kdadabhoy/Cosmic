@@ -1,0 +1,60 @@
+Case output: T05-per-entity-Debug.out.log
+SHA256: 26fce991f2413a00e21d8a83e0e84b3b0611effef01e8399f96fba34113134f3
+    "entities":  [
+                     {
+                         "name":  "ESC_Right",
+                         "tag":  "Drive",
+                         "channels":  8,
+                         "binary_samples":  108000,
+                         "csv_rows":  108000,
+                         "csv_sha256":  "65485ecbb2b0894b14d92868cacf490954f275beb2133d17ed52188401ea81d3"
+                     },
+                     {
+                         "name":  "ESC_Left",
+                         "tag":  "Drive",
+                         "channels":  8,
+                         "binary_samples":  108000,
+                         "csv_rows":  108000,
+                         "csv_sha256":  "65485ecbb2b0894b14d92868cacf490954f275beb2133d17ed52188401ea81d3"
+                     },
+                     {
+                         "name":  "ESC_Weapon",
+                         "tag":  "Weapon",
+                         "channels":  9,
+                         "binary_samples":  108000,
+                         "csv_rows":  108000,
+                         "csv_sha256":  "245b049947bfd4d33d3bbf3cacf312603eeb554d994ce2dd7166068412c148e6"
+                     }
+                 ]
+}
+[doctest] test cases: 1 | 1 passed | 0 failed
+Case output: T05-per-entity-Release.out.log
+SHA256: 94db94d709fd6dd6b19fda53d4482765b0774df8e0cea251ec2b2b338c77d041
+    "entities":  [
+                     {
+                         "name":  "ESC_Right",
+                         "tag":  "Drive",
+                         "channels":  8,
+                         "binary_samples":  108000,
+                         "csv_rows":  108000,
+                         "csv_sha256":  "65485ecbb2b0894b14d92868cacf490954f275beb2133d17ed52188401ea81d3"
+                     },
+                     {
+                         "name":  "ESC_Left",
+                         "tag":  "Drive",
+                         "channels":  8,
+                         "binary_samples":  108000,
+                         "csv_rows":  108000,
+                         "csv_sha256":  "65485ecbb2b0894b14d92868cacf490954f275beb2133d17ed52188401ea81d3"
+                     },
+                     {
+                         "name":  "ESC_Weapon",
+                         "tag":  "Weapon",
+                         "channels":  9,
+                         "binary_samples":  108000,
+                         "csv_rows":  108000,
+                         "csv_sha256":  "245b049947bfd4d33d3bbf3cacf312603eeb554d994ce2dd7166068412c148e6"
+                     }
+                 ]
+}
+[doctest] test cases: 1 | 1 passed | 0 failed

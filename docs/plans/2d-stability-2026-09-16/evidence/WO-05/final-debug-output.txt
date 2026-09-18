@@ -1,0 +1,239 @@
+LOG: Retained-suite.out.log
+SHA256: cd134914bd7537648a623d9e23626f05c41758e279e97b763eb4ae9da4312c4e
+[2026-09-17 13:05:54.617] [COSMIC] [info] DataRecorder: Starting background flush of 1 entities → 'C:\dev\Cosmic\build\wo05-temp\cosmic-accept-e74005a2473f4fe0a4b1ca5991fe3450\temp\cosmic_tests\robust_dtor/dtor'.
+[2026-09-17 13:05:54.855] [COSMIC] [info] DataExport::WriteCSV: wrote 20000 rows to 'C:\dev\Cosmic\build\wo05-temp\cosmic-accept-e74005a2473f4fe0a4b1ca5991fe3450\temp\cosmic_tests\robust_dtor/dtor/Dying.csv'.
+[2026-09-17 13:05:54.855] [COSMIC] [info] DataRecorder: Flush complete — 1 entities → 'C:\dev\Cosmic\build\wo05-temp\cosmic-accept-e74005a2473f4fe0a4b1ca5991fe3450\temp\cosmic_tests\robust_dtor\dtor'.
+[2026-09-17 13:05:54.863] [COSMIC] [info] DataPlayer: Loaded 1 entities, duration = 333.30s from 'C:\dev\Cosmic\build\wo05-temp\cosmic-accept-e74005a2473f4fe0a4b1ca5991fe3450\temp\cosmic_tests\robust_dtor\dtor\scene.bin'.
+[2026-09-17 13:05:54.869] [COSMIC] [info] DataRecorder: Starting background flush of 2 entities → 'C:\dev\Cosmic\build\wo05-temp\cosmic-accept-e74005a2473f4fe0a4b1ca5991fe3450\temp\cosmic_tests\roundtrip/session'.
+[2026-09-17 13:05:54.871] [COSMIC] [info] DataExport::WriteCSV: wrote 100 rows to 'C:\dev\Cosmic\build\wo05-temp\cosmic-accept-e74005a2473f4fe0a4b1ca5991fe3450\temp\cosmic_tests\roundtrip/session/EntityA.csv'.
+[2026-09-17 13:05:54.872] [COSMIC] [info] DataExport::WriteCSV: wrote 100 rows to 'C:\dev\Cosmic\build\wo05-temp\cosmic-accept-e74005a2473f4fe0a4b1ca5991fe3450\temp\cosmic_tests\roundtrip/session/EntityB.csv'.
+[2026-09-17 13:05:54.872] [COSMIC] [info] DataRecorder: Flush complete — 2 entities → 'C:\dev\Cosmic\build\wo05-temp\cosmic-accept-e74005a2473f4fe0a4b1ca5991fe3450\temp\cosmic_tests\roundtrip\session'.
+[2026-09-17 13:05:54.874] [COSMIC] [info] DataPlayer: Loaded 2 entities, duration = 1.67s from 'C:\dev\Cosmic\build\wo05-temp\cosmic-accept-e74005a2473f4fe0a4b1ca5991fe3450\temp\cosmic_tests\roundtrip\session'.
+[2026-09-17 13:05:54.876] [COSMIC] [info] DataRecorder: Starting background flush of 1 entities → 'C:\dev\Cosmic\build\wo05-temp\cosmic-accept-e74005a2473f4fe0a4b1ca5991fe3450\temp\cosmic_tests\fallback/session'.
+[2026-09-17 13:05:54.878] [COSMIC] [info] DataExport::WriteCSV: wrote 30 rows to 'C:\dev\Cosmic\build\wo05-temp\cosmic-accept-e74005a2473f4fe0a4b1ca5991fe3450\temp\cosmic_tests\fallback/session/SoloEntity.csv'.
+[2026-09-17 13:05:54.878] [COSMIC] [info] DataRecorder: Flush complete — 1 entities → 'C:\dev\Cosmic\build\wo05-temp\cosmic-accept-e74005a2473f4fe0a4b1ca5991fe3450\temp\cosmic_tests\fallback\session'.
+[2026-09-17 13:05:54.882] [COSMIC] [info] DataPlayer: Loaded 1 entities, duration = 0.50s from 'C:\dev\Cosmic\build\wo05-temp\cosmic-accept-e74005a2473f4fe0a4b1ca5991fe3450\temp\cosmic_tests\fallback\legacy'.
+[2026-09-17 13:05:54.884] [COSMIC] [warning] DataPlayer::Load: No valid .bin entities found in 'C:\dev\Cosmic\build\wo05-temp\cosmic-accept-e74005a2473f4fe0a4b1ca5991fe3450\temp\cosmic_tests\empty'.
+[doctest] doctest version is "2.4.12"
+[doctest] run with "--help" for options
+===============================================================================
+C:\dev\Cosmic\tests\test_physics_2d.cpp(173):
+TEST SUITE: Physics / 2D plane (W3)
+TEST CASE:  The depth axis never drifts over 600 steps
+
+C:\dev\Cosmic\tests\test_physics_2d.cpp(195): MESSAGE: drop-only: max |z| = 0.000587754 m, max out-of-plane |q| = 8.71855e-05
+
+C:\dev\Cosmic\tests\test_physics_2d.cpp(196): MESSAGE: sliding:   max |z| = 0.00205322 m, max out-of-plane |q| = 7.71662e-05
+
+===============================================================================
+C:\dev\Cosmic\tests\test_serial_lifecycle.cpp(326):
+TEST CASE:  SerialLink::Shutdown and Disconnect clear the reconnect intent
+
+C:\dev\Cosmic\tests\test_serial_lifecycle.cpp(343): MESSAGE: Serial hardware present - skipping the no-port Connect() case so the suite never opens a real device.
+
+===============================================================================
+[doctest] test cases:    345 |    345 passed | 0 failed | 17 skipped
+[doctest] assertions: 116502 | 116502 passed | 0 failed |
+[doctest] Status: SUCCESS!
+LOG: T01-PC-text.out.log
+SHA256: 614f3f905e05adac702bde74d50be0ed839ef730d4183437ad37c63994ba9e95
+[2026-09-17 13:03:26.904] [COSMIC] [error] Failed to load texture at assets/projects/images/SF_Weapon.PNG
+[2026-09-17 13:03:26.904] [COSMIC] [error] Failed to load texture at assets/projects/images/SF_Drivetrain.PNG
+[2026-09-17 13:03:26.904] [COSMIC] [warning] Redirecting active logging channels to destination target: 'logs'
+[2026-09-17 13:03:26.905] [COSMIC] [info] Log streams successfully re-routed.
+[2026-09-17 13:03:26.905] [APP] [info] SF_Telem: Detached.
+[2026-09-17 13:03:26.906] [COSMIC] [error] Failed to load texture at assets/projects/images/SF_Drivetrain.PNG
+[2026-09-17 13:03:26.906] [COSMIC] [error] Failed to load texture at assets/projects/images/SF_Weapon.PNG
+[2026-09-17 13:03:26.906] [COSMIC] [error] Failed to load texture at assets/projects/images/SF_Drivetrain.PNG
+[2026-09-17 13:03:26.906] [COSMIC] [warning] Redirecting active logging channels to destination target: 'logs'
+[2026-09-17 13:03:26.907] [COSMIC] [info] Log streams successfully re-routed.
+[2026-09-17 13:03:26.907] [APP] [info] SF_Telem: Detached.
+[2026-09-17 13:03:26.908] [COSMIC] [error] Failed to load texture at assets/projects/images/SF_Drivetrain.PNG
+[2026-09-17 13:03:26.908] [COSMIC] [error] Failed to load texture at assets/projects/images/SF_Weapon.PNG
+[2026-09-17 13:03:26.908] [COSMIC] [error] Failed to load texture at assets/projects/images/SF_Drivetrain.PNG
+[2026-09-17 13:03:26.908] [COSMIC] [warning] Redirecting active logging channels to destination target: 'logs'
+[2026-09-17 13:03:26.909] [COSMIC] [info] Log streams successfully re-routed.
+[2026-09-17 13:03:26.909] [APP] [info] SF_Telem: Detached.
+[2026-09-17 13:03:26.910] [COSMIC] [error] Failed to load texture at assets/projects/images/SF_Drivetrain.PNG
+[2026-09-17 13:03:26.910] [COSMIC] [error] Failed to load texture at assets/projects/images/SF_Weapon.PNG
+[2026-09-17 13:03:26.910] [COSMIC] [error] Failed to load texture at assets/projects/images/SF_Drivetrain.PNG
+[2026-09-17 13:03:26.910] [COSMIC] [warning] Redirecting active logging channels to destination target: 'logs'
+[2026-09-17 13:03:26.911] [COSMIC] [info] Log streams successfully re-routed.
+[2026-09-17 13:03:26.911] [APP] [info] SF_Telem: Detached.
+[2026-09-17 13:03:26.911] [COSMIC] [error] Failed to load texture at assets/projects/images/SF_Drivetrain.PNG
+[2026-09-17 13:03:26.911] [COSMIC] [error] Failed to load texture at assets/projects/images/SF_Weapon.PNG
+[2026-09-17 13:03:26.911] [COSMIC] [error] Failed to load texture at assets/projects/images/SF_Drivetrain.PNG
+[2026-09-17 13:03:26.912] [COSMIC] [warning] Redirecting active logging channels to destination target: 'logs'
+[2026-09-17 13:03:26.912] [COSMIC] [info] Log streams successfully re-routed.
+[2026-09-17 13:03:26.912] [APP] [info] SF_Telem: Detached.
+[doctest] doctest version is "2.4.12"
+[doctest] run with "--help" for options
+===============================================================================
+[doctest] test cases:   33 |   33 passed | 0 failed | 329 skipped
+[doctest] assertions: 3834 | 3834 passed | 0 failed |
+[doctest] Status: SUCCESS!
+LOG: T02-PC-faults.out.log
+SHA256: 8d9eba63fd7449124daf1381a2b92a6f1bb35de32f3cff9ad3441cfaf33f09e7
+[2026-09-17 13:03:26.995] [COSMIC] [error] Failed to load texture at assets/projects/images/SF_Drivetrain.PNG
+[2026-09-17 13:03:26.995] [COSMIC] [error] Failed to load texture at assets/projects/images/SF_Weapon.PNG
+[2026-09-17 13:03:26.995] [COSMIC] [error] Failed to load texture at assets/projects/images/SF_Drivetrain.PNG
+[2026-09-17 13:03:26.998] [COSMIC] [warning] Redirecting active logging channels to destination target: 'logs'
+[2026-09-17 13:03:26.999] [COSMIC] [info] Log streams successfully re-routed.
+[2026-09-17 13:03:26.999] [APP] [info] SF_Telem: Detached.
+[doctest] doctest version is "2.4.12"
+[doctest] run with "--help" for options
+===============================================================================
+[doctest] test cases:    1 |    1 passed | 0 failed | 361 skipped
+[doctest] assertions: 1009 | 1009 passed | 0 failed |
+[doctest] Status: SUCCESS!
+LOG: T03-late-open.out.log
+SHA256: 707b25eea22788038358f76e0501610a472179d57817ba9e3120b65760463015
+[2026-09-17 13:05:34.688] [COSMIC] [error] Failed to load texture at assets/projects/images/SF_Weapon.PNG
+[2026-09-17 13:05:34.688] [COSMIC] [error] Failed to load texture at assets/projects/images/SF_Drivetrain.PNG
+[2026-09-17 13:05:35.190] [COSMIC] [warning] Redirecting active logging channels to destination target: 'logs'
+[2026-09-17 13:05:35.191] [COSMIC] [info] Log streams successfully re-routed.
+[2026-09-17 13:05:35.191] [APP] [info] SF_Telem: Detached.
+[2026-09-17 13:05:35.192] [COSMIC] [error] Failed to load texture at assets/projects/images/SF_Drivetrain.PNG
+[2026-09-17 13:05:35.192] [COSMIC] [error] Failed to load texture at assets/projects/images/SF_Weapon.PNG
+[2026-09-17 13:05:35.192] [COSMIC] [error] Failed to load texture at assets/projects/images/SF_Drivetrain.PNG
+[2026-09-17 13:05:35.689] [COSMIC] [warning] Redirecting active logging channels to destination target: 'logs'
+[2026-09-17 13:05:35.690] [COSMIC] [info] Log streams successfully re-routed.
+[2026-09-17 13:05:35.690] [APP] [info] SF_Telem: Detached.
+[2026-09-17 13:05:35.692] [COSMIC] [error] Failed to load texture at assets/projects/images/SF_Drivetrain.PNG
+[2026-09-17 13:05:35.692] [COSMIC] [error] Failed to load texture at assets/projects/images/SF_Weapon.PNG
+[2026-09-17 13:05:35.692] [COSMIC] [error] Failed to load texture at assets/projects/images/SF_Drivetrain.PNG
+[2026-09-17 13:05:36.193] [COSMIC] [warning] Redirecting active logging channels to destination target: 'logs'
+[2026-09-17 13:05:36.194] [COSMIC] [info] Log streams successfully re-routed.
+[2026-09-17 13:05:36.194] [APP] [info] SF_Telem: Detached.
+[2026-09-17 13:05:36.195] [COSMIC] [error] Failed to load texture at assets/projects/images/SF_Drivetrain.PNG
+[2026-09-17 13:05:36.196] [COSMIC] [error] Failed to load texture at assets/projects/images/SF_Weapon.PNG
+[2026-09-17 13:05:36.196] [COSMIC] [error] Failed to load texture at assets/projects/images/SF_Drivetrain.PNG
+[2026-09-17 13:05:36.693] [COSMIC] [warning] Redirecting active logging channels to destination target: 'logs'
+[2026-09-17 13:05:36.695] [COSMIC] [info] Log streams successfully re-routed.
+[2026-09-17 13:05:36.695] [APP] [info] SF_Telem: Detached.
+[2026-09-17 13:05:36.696] [COSMIC] [error] Failed to load texture at assets/projects/images/SF_Drivetrain.PNG
+[2026-09-17 13:05:36.696] [COSMIC] [error] Failed to load texture at assets/projects/images/SF_Weapon.PNG
+[2026-09-17 13:05:36.696] [COSMIC] [error] Failed to load texture at assets/projects/images/SF_Drivetrain.PNG
+[2026-09-17 13:05:37.191] [COSMIC] [warning] Redirecting active logging channels to destination target: 'logs'
+[2026-09-17 13:05:37.193] [COSMIC] [info] Log streams successfully re-routed.
+[2026-09-17 13:05:37.193] [APP] [info] SF_Telem: Detached.
+[doctest] doctest version is "2.4.12"
+[doctest] run with "--help" for options
+===============================================================================
+[doctest] test cases:    1 |    1 passed | 0 failed | 361 skipped
+[doctest] assertions: 1100 | 1100 passed | 0 failed |
+[doctest] Status: SUCCESS!
+LOG: T03-root-matrix.out.log
+SHA256: 664a3224928fe8522560fd4124b452dc77f1193b4fa6dfa64ed87c536bb4785b
+[2026-09-17 13:04:45.907] [APP] [info] SF_Telem: Detached.
+[2026-09-17 13:04:45.907] [COSMIC] [info] DataPlayer: Loaded 3 entities, duration = 0.00s from 'recordings/SF_Telem/wo05-matrix/scene.bin'.
+[2026-09-17 13:04:45.907] [COSMIC] [error] Failed to load texture at assets/projects/images/SF_Drivetrain.PNG
+[2026-09-17 13:04:45.907] [COSMIC] [error] Failed to load texture at assets/projects/images/SF_Weapon.PNG
+[2026-09-17 13:04:45.907] [COSMIC] [error] Failed to load texture at assets/projects/images/SF_Drivetrain.PNG
+[2026-09-17 13:04:45.908] [COSMIC] [info] DataRecorder: Starting background flush of 3 entities → 'recordings/SF_Telem/wo05-matrix'.
+[2026-09-17 13:04:45.909] [COSMIC] [info] DataExport::WriteCSV: wrote 1 rows to 'recordings/SF_Telem/wo05-matrix/ESC_Right.csv'.
+[2026-09-17 13:04:45.909] [COSMIC] [info] DataExport::WriteCSV: wrote 1 rows to 'recordings/SF_Telem/wo05-matrix/ESC_Left.csv'.
+[2026-09-17 13:04:45.910] [COSMIC] [info] DataExport::WriteCSV: wrote 1 rows to 'recordings/SF_Telem/wo05-matrix/ESC_Weapon.csv'.
+[2026-09-17 13:04:45.910] [COSMIC] [info] DataRecorder: Flush complete — 3 entities → 'C:\dev\Cosmic\build\wo05-temp\cosmic-accept-e74005a2473f4fe0a4b1ca5991fe3450\temp\recordings\SF_Telem\wo05-matrix'.
+[2026-09-17 13:04:45.910] [COSMIC] [info] DataPlayer: Loaded 3 entities, duration = 0.00s from 'recordings/SF_Telem/wo05-matrix/scene.bin'.
+[2026-09-17 13:04:45.910] [COSMIC] [warning] Redirecting active logging channels to destination target: 'logs'
+[2026-09-17 13:04:45.911] [COSMIC] [info] Log streams successfully re-routed.
+[2026-09-17 13:04:45.911] [APP] [info] SF_Telem: Detached.
+[2026-09-17 13:04:45.911] [COSMIC] [info] DataPlayer: Loaded 3 entities, duration = 0.00s from 'recordings/SF_Telem/wo05-matrix/scene.bin'.
+[2026-09-17 13:04:45.911] [COSMIC] [error] Failed to load texture at assets/projects/images/SF_Drivetrain.PNG
+[2026-09-17 13:04:45.912] [COSMIC] [error] Failed to load texture at assets/projects/images/SF_Weapon.PNG
+[2026-09-17 13:04:45.912] [COSMIC] [error] Failed to load texture at assets/projects/images/SF_Drivetrain.PNG
+[2026-09-17 13:04:45.912] [COSMIC] [info] DataRecorder: Starting background flush of 3 entities → 'recordings/SF_Telem/wo05-matrix'.
+[2026-09-17 13:04:45.913] [COSMIC] [info] DataExport::WriteCSV: wrote 1 rows to 'recordings/SF_Telem/wo05-matrix/ESC_Right.csv'.
+[2026-09-17 13:04:45.913] [COSMIC] [info] DataExport::WriteCSV: wrote 1 rows to 'recordings/SF_Telem/wo05-matrix/ESC_Left.csv'.
+[2026-09-17 13:04:45.913] [COSMIC] [info] DataExport::WriteCSV: wrote 1 rows to 'recordings/SF_Telem/wo05-matrix/ESC_Weapon.csv'.
+[2026-09-17 13:04:45.914] [COSMIC] [info] DataRecorder: Flush complete — 3 entities → 'C:\dev\Cosmic\build\wo05-temp\cosmic-accept-e74005a2473f4fe0a4b1ca5991fe3450\temp\recordings\SF_Telem\wo05-matrix'.
+[2026-09-17 13:04:45.914] [COSMIC] [info] DataPlayer: Loaded 3 entities, duration = 0.00s from 'recordings/SF_Telem/wo05-matrix/scene.bin'.
+[2026-09-17 13:04:45.914] [COSMIC] [warning] Redirecting active logging channels to destination target: 'logs'
+[2026-09-17 13:04:45.915] [COSMIC] [info] Log streams successfully re-routed.
+[2026-09-17 13:04:45.915] [APP] [info] SF_Telem: Detached.
+[2026-09-17 13:04:45.915] [COSMIC] [info] DataPlayer: Loaded 3 entities, duration = 0.00s from 'recordings/SF_Telem/wo05-matrix/scene.bin'.
+[doctest] doctest version is "2.4.12"
+[doctest] run with "--help" for options
+WO05 matrix: schedules=9 transitions=5 storage=5 iterations=100 total=22500 max_close_ms=9
+===============================================================================
+[doctest] test cases:      1 |      1 passed | 0 failed | 361 skipped
+[doctest] assertions: 704500 | 704500 passed | 0 failed |
+[doctest] Status: SUCCESS!
+LOG: T03-write-close.out.log
+SHA256: efe3e8fde8b3f1a51ff79f9d6d2b64c82a5f8a17e5e04f3fbdf41b9981beadb3
+[2026-09-17 13:05:51.340] [COSMIC] [error] Failed to load texture at assets/projects/images/SF_Drivetrain.PNG
+[2026-09-17 13:05:51.340] [COSMIC] [error] Failed to load texture at assets/projects/images/SF_Weapon.PNG
+[2026-09-17 13:05:51.340] [COSMIC] [error] Failed to load texture at assets/projects/images/SF_Drivetrain.PNG
+[2026-09-17 13:05:51.341] [COSMIC] [warning] Redirecting active logging channels to destination target: 'logs'
+[2026-09-17 13:05:51.341] [COSMIC] [info] Log streams successfully re-routed.
+[2026-09-17 13:05:51.342] [APP] [info] SF_Telem: Detached.
+[doctest] doctest version is "2.4.12"
+[doctest] run with "--help" for options
+===============================================================================
+[doctest] test cases:  1 |  1 passed | 0 failed | 361 skipped
+[doctest] assertions: 12 | 12 passed | 0 failed |
+[doctest] Status: SUCCESS!
+LOG: T05-controlled-30min.out.log
+SHA256: 5f96dc79d4b82722381a3a27ebe5cb8397f806ab2f48bee0ebea7889ca993734
+[2026-09-17 13:05:38.221] [COSMIC] [info] DataExport::WriteCSV: wrote 12300 rows to 'recordings/SF_Telem/_autosave/wo05-long/ESC_Right.csv'.
+[2026-09-17 13:05:38.598] [COSMIC] [info] DataExport::WriteCSV: wrote 12300 rows to 'recordings/SF_Telem/_autosave/wo05-long/ESC_Left.csv'.
+[2026-09-17 13:05:39.016] [COSMIC] [info] DataExport::WriteCSV: wrote 12300 rows to 'recordings/SF_Telem/_autosave/wo05-long/ESC_Weapon.csv'.
+[2026-09-17 13:05:39.016] [COSMIC] [info] DataRecorder: Flush complete — 3 entities → 'C:\dev\Cosmic\build\wo05-temp\cosmic-accept-e74005a2473f4fe0a4b1ca5991fe3450\temp\recordings\SF_Telem\_autosave\wo05-long'.
+[2026-09-17 13:05:39.024] [COSMIC] [info] DataRecorder: Starting background flush of 3 entities → 'recordings/SF_Telem/_autosave/wo05-long'.
+[2026-09-17 13:05:40.240] [COSMIC] [info] DataExport::WriteCSV: wrote 38700 rows to 'recordings/SF_Telem/_autosave/wo05-long/ESC_Right.csv'.
+[2026-09-17 13:05:41.449] [COSMIC] [info] DataExport::WriteCSV: wrote 38700 rows to 'recordings/SF_Telem/_autosave/wo05-long/ESC_Left.csv'.
+[2026-09-17 13:05:42.644] [COSMIC] [info] DataExport::WriteCSV: wrote 38700 rows to 'recordings/SF_Telem/_autosave/wo05-long/ESC_Weapon.csv'.
+[2026-09-17 13:05:42.644] [COSMIC] [info] DataRecorder: Flush complete — 3 entities → 'C:\dev\Cosmic\build\wo05-temp\cosmic-accept-e74005a2473f4fe0a4b1ca5991fe3450\temp\recordings\SF_Telem\_autosave\wo05-long'.
+[2026-09-17 13:05:42.647] [COSMIC] [info] DataRecorder: Starting background flush of 3 entities → 'recordings/SF_Telem/wo05-long'.
+[2026-09-17 13:05:45.288] [COSMIC] [info] DataExport::WriteCSV: wrote 108000 rows to 'recordings/SF_Telem/wo05-long/ESC_Right.csv'.
+[2026-09-17 13:05:47.926] [COSMIC] [info] DataExport::WriteCSV: wrote 108000 rows to 'recordings/SF_Telem/wo05-long/ESC_Left.csv'.
+[2026-09-17 13:05:50.824] [COSMIC] [info] DataExport::WriteCSV: wrote 108000 rows to 'recordings/SF_Telem/wo05-long/ESC_Weapon.csv'.
+[2026-09-17 13:05:50.824] [COSMIC] [info] DataRecorder: Flush complete — 3 entities → 'C:\dev\Cosmic\build\wo05-temp\cosmic-accept-e74005a2473f4fe0a4b1ca5991fe3450\temp\recordings\SF_Telem\wo05-long'.
+[2026-09-17 13:05:50.826] [COSMIC] [warning] Redirecting active logging channels to destination target: 'logs'
+[2026-09-17 13:05:50.827] [COSMIC] [info] Log streams successfully re-routed.
+[2026-09-17 13:05:50.827] [APP] [info] SF_Telem: Detached.
+[2026-09-17 13:05:50.829] [COSMIC] [error] Failed to load texture at assets/projects/images/SF_Drivetrain.PNG
+[2026-09-17 13:05:50.829] [COSMIC] [error] Failed to load texture at assets/projects/images/SF_Weapon.PNG
+[2026-09-17 13:05:50.830] [COSMIC] [error] Failed to load texture at assets/projects/images/SF_Drivetrain.PNG
+[2026-09-17 13:05:50.830] [COSMIC] [info] DataRecorder: Starting background flush of 3 entities → 'recordings/SF_Telem/wo05-policy'.
+[2026-09-17 13:05:50.832] [COSMIC] [info] DataExport::WriteCSV: wrote 1 rows to 'recordings/SF_Telem/wo05-policy/ESC_Right.csv'.
+[2026-09-17 13:05:50.833] [COSMIC] [info] DataExport::WriteCSV: wrote 1 rows to 'recordings/SF_Telem/wo05-policy/ESC_Left.csv'.
+[2026-09-17 13:05:50.833] [COSMIC] [info] DataExport::WriteCSV: wrote 1 rows to 'recordings/SF_Telem/wo05-policy/ESC_Weapon.csv'.
+[2026-09-17 13:05:50.833] [COSMIC] [info] DataRecorder: Flush complete — 3 entities → 'C:\dev\Cosmic\build\wo05-temp\cosmic-accept-e74005a2473f4fe0a4b1ca5991fe3450\temp\recordings\SF_Telem\wo05-policy'.
+[2026-09-17 13:05:50.836] [COSMIC] [info] DataPlayer: Loaded 3 entities, duration = 0.00s from 'recordings/SF_Telem/wo05-policy/scene.bin'.
+[2026-09-17 13:05:50.836] [COSMIC] [warning] Redirecting active logging channels to destination target: 'logs'
+[2026-09-17 13:05:50.837] [COSMIC] [info] Log streams successfully re-routed.
+[2026-09-17 13:05:50.837] [APP] [info] SF_Telem: Detached.
+[doctest] doctest version is "2.4.12"
+[doctest] run with "--help" for options
+===============================================================================
+[doctest] test cases:       2 |       2 passed | 0 failed | 360 skipped
+[doctest] assertions: 2016031 | 2016031 passed | 0 failed |
+[doctest] Status: SUCCESS!
+LOG: T06-burst-reconnect.out.log
+SHA256: deed4fa4c604701fcfbebe5653509dc19e67ab4f22fdce056e8213048315281c
+[2026-09-17 13:05:50.900] [COSMIC] [error] Failed to load texture at assets/projects/images/SF_Drivetrain.PNG
+[2026-09-17 13:05:50.900] [COSMIC] [error] Failed to load texture at assets/projects/images/SF_Weapon.PNG
+[2026-09-17 13:05:50.900] [COSMIC] [error] Failed to load texture at assets/projects/images/SF_Drivetrain.PNG
+[2026-09-17 13:05:50.925] [COSMIC] [warning] Redirecting active logging channels to destination target: 'logs'
+[2026-09-17 13:05:50.926] [COSMIC] [info] Log streams successfully re-routed.
+[2026-09-17 13:05:50.926] [APP] [info] SF_Telem: Detached.
+[2026-09-17 13:05:50.927] [COSMIC] [error] Failed to load texture at assets/projects/images/SF_Drivetrain.PNG
+[2026-09-17 13:05:50.927] [COSMIC] [error] Failed to load texture at assets/projects/images/SF_Weapon.PNG
+[2026-09-17 13:05:50.927] [COSMIC] [error] Failed to load texture at assets/projects/images/SF_Drivetrain.PNG
+[2026-09-17 13:05:50.928] [COSMIC] [warning] Redirecting active logging channels to destination target: 'logs'
+[2026-09-17 13:05:50.929] [COSMIC] [info] Log streams successfully re-routed.
+[2026-09-17 13:05:50.929] [APP] [info] SF_Telem: Detached.
+[2026-09-17 13:05:50.930] [COSMIC] [error] Failed to load texture at assets/projects/images/SF_Drivetrain.PNG
+[2026-09-17 13:05:50.930] [COSMIC] [error] Failed to load texture at assets/projects/images/SF_Weapon.PNG
+[2026-09-17 13:05:50.930] [COSMIC] [error] Failed to load texture at assets/projects/images/SF_Drivetrain.PNG
+[2026-09-17 13:05:51.278] [COSMIC] [warning] Redirecting active logging channels to destination target: 'logs'
+[2026-09-17 13:05:51.279] [COSMIC] [info] Log streams successfully re-routed.
+[2026-09-17 13:05:51.279] [APP] [info] SF_Telem: Detached.
+[doctest] doctest version is "2.4.12"
+[doctest] run with "--help" for options
+===============================================================================
+[doctest] test cases:   8 |   8 passed | 0 failed | 354 skipped
+[doctest] assertions: 402 | 402 passed | 0 failed |
+[doctest] Status: SUCCESS!

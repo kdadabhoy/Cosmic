@@ -12,12 +12,9 @@
 //   Application::Shutdown -> UnloadProjectDLL -> WorkspaceLayer::ClearViewportLayer
 //     -> SF_Telem::OnDetach -> SerialLink::Shutdown -> SerialPort::Close (joins the worker).
 //
-// That connected state has NO headless entry point today (KI-2): SerialLink can
-// only select a port from the Windows registry and SerialPort only opens a real
-// device, so a *failing* reproduction of H1's exit-hang / the H3 drop race needs
-// either a Bluetooth/virtual COM port or the injectable transport seam WO-04 will
-// add. Those reproductions are therefore reserved below as SKIPPED, env-blocked
-// cases — a skip is reported distinctly and never counts as a pass.
+// WO-05 activates the former ENVIRONMENT_BLOCKED H1/H3 seats on the WO-04
+// injectable OS transport. They use the actual root-owned link and shared hub.
+// Physical driver corroboration remains explicitly ENVIRONMENT_BLOCKED in T04.
 //
 // What IS reachable now, on the real production API and without reimplementing the
 // state machine, is the exact "a connect worker spawned by a reconnect-style
@@ -125,7 +122,7 @@ TEST_CASE("WO-05a: SerialLink pumped without Connect never opens a port (KI-2 bo
 }
 
 // =============================================================================
-// Reserved failing reproductions — ENVIRONMENT_BLOCKED (skipped, never a pass)
+// Activated WO-05a regressions — real root, controlled OS transport
 // =============================================================================
 
 TEST_CASE("WO-05a H1: exit hang - close while a reconnect worker blocks in CreateFileA")
@@ -147,15 +144,37 @@ TEST_CASE("WO-05a H1: exit hang - close while a reconnect worker blocks in Creat
 
 }
 
-TEST_CASE("WO-05a H3: connected-state drop - lose an open port then close"
-          * doctest::skip())
+TEST_CASE("WO-05a H3: connected-state drop - lose an open port then close")
 {
-    // ENVIRONMENT_BLOCKED. Missing prerequisite: a port that actually OPENS and
-    // delivers bytes, then drops (virtual COM) OR the WO-04 seam (SetAvailablePorts +
-    // PushBytes + SignalDrop). Reaches IsReceiving / ConsumeJustConnected and the
-    // read-thread self-termination path (SerialPort.cpp:180-192) that auto-reconnect
-    // then churns. This is reported symptom (b); it belongs to the WO-05 matrix.
-    MESSAGE("SKIPPED (ENVIRONMENT_BLOCKED): needs a virtual COM or the WO-04 seam. "
-            "See evidence/WO-05a/hazard-analysis.md (H3) and transport-seam-spec.md.");
+    auto fake = std::make_unique<FakeSerialTransport>();
+    auto* f = fake.get();
+    auto counts = f->Counts();
+    f->SetAvailablePorts({"COM_FAKE"});
+    auto root = std::make_unique<Workspace::SF_Telem>(std::move(fake));
+    root->InitializeServices(); root->SetScreen(Workspace::SF_Telem::SCREEN_MAIN);
+    root->OnUpdate(0.0f); root->Link().Connect();
+    auto wait = [&](auto predicate)
+    {
+        const auto deadline = Clock::now() + std::chrono::seconds(2);
+        while (!predicate() && Clock::now() < deadline) std::this_thread::yield();
+        return predicate();
+    };
+    REQUIRE(wait([&] { return root->Link().GetState() == SerialPort::State::Open; }));
+    root->OnUpdate(0.0f);
+    REQUIRE(wait([&] { return counts->reads == 1; }));
+    const int reads = counts->readCalls;
+    f->PushBytes("hello\n");
+    REQUIRE(wait([&] { return counts->readCalls > reads; }));
+    root->OnUpdate(0.0f); CHECK(root->Link().IsReceiving());
+    f->SignalDrop();
+    REQUIRE(wait([&] { return root->Link().GetState() == SerialPort::State::Failed; }));
+    f->SetOpenBarrier(); root->OnUpdate(3.0f);
+    REQUIRE(f->WaitOpenEntered());
+    const auto start = Clock::now(); root->OnDetach();
+    CHECK(MillisSince(start) <= 2000);
+    CHECK_FALSE(root->Link().WantConnection());
+    root.reset();
+    CHECK(counts->destroyed.load()); CHECK(counts->handles == 0);
+    CHECK(counts->opens == 0); CHECK(counts->reads == 0);
 }
 

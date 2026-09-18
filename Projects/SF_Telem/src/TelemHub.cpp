@@ -575,6 +575,51 @@ namespace Workspace
     // =========================================================================
     // Shared UI — Recording (drawn inside the caller's window)
     // =========================================================================
+
+    void TelemHub::StartRecording()
+    {
+        if (m_Panel.GetMode() == Cosmic::TelemetryPanel::Mode::Replay)
+        {
+            m_Player.Unload();
+            Cosmic::EntitySelection::SetByName(IdEntity(ESC_RIGHT), "Drive");
+        }
+        m_Recorder.Clear();
+        m_Recorder.ReserveCapacity(k_RecordCap);
+        for (auto& r : m_Ring) r.Clear();
+        m_Recording      = true;
+        m_RecordingDirty = true;   // user intends to keep this run
+        m_RecordStatus = "Recording...";
+        m_Panel.SetMode(Cosmic::TelemetryPanel::Mode::Live);
+        // Crash failsafe: roll a snapshot to _autosave/ every few seconds.
+        m_Recorder.SetAutosave(k_AutoSaveDir, m_SessionName, k_AutoSaveInterval, k_SampleRate);
+    }
+
+    void TelemHub::StopRecording()
+    {
+        m_Recording = false;
+        m_Recorder.DisableAutosave();
+        if (m_AutoExportOnStop && m_Recorder.GetTotalFrameCount() > 0 && !m_Recorder.IsFlushing())
+        {
+            m_Recorder.Flush(k_RecordDir, m_SessionName, k_SampleRate);
+            const std::string dest = m_SessionName.empty() ? "<timestamp>" : m_SessionName;
+            m_RecordStatus = "Exporting -> " + std::string(k_RecordDir) + "/" + dest + "/";
+            m_WasFlushing  = true;
+            m_RecordingDirty = false;
+        }
+        else
+        {
+            m_RecordStatus = "Stopped. Ready to export.";
+        }
+    }
+
+    void TelemHub::ExportRecording()
+    {
+        m_Recorder.Flush(k_RecordDir, m_SessionName, k_SampleRate);
+        const std::string dest = m_SessionName.empty() ? "<timestamp>" : m_SessionName;
+        m_RecordStatus = "Exporting -> " + std::string(k_RecordDir) + "/" + dest + "/";
+        m_WasFlushing  = true;
+        m_RecordingDirty = false;
+    }
     void TelemHub::DrawRecordingControls()
     {
         m_Panel.DrawTransportControls();
@@ -601,43 +646,13 @@ namespace Workspace
         if (!m_Recording)
         {
             if (ImGui::Button("  Start Recording  ##recstart"))
-            {
-                if (m_Panel.GetMode() == Cosmic::TelemetryPanel::Mode::Replay)
-                {
-                    m_Player.Unload();
-                    Cosmic::EntitySelection::SetByName(IdEntity(ESC_RIGHT), "Drive");
-                }
-                m_Recorder.Clear();
-                m_Recorder.ReserveCapacity(k_RecordCap);
-                for (auto& r : m_Ring) r.Clear();
-                m_Recording      = true;
-                m_RecordingDirty = true;   // user intends to keep this run
-                m_RecordStatus = "Recording...";
-                m_Panel.SetMode(Cosmic::TelemetryPanel::Mode::Live);
-                // Crash failsafe: roll a snapshot to _autosave/ every few seconds.
-                m_Recorder.SetAutosave(k_AutoSaveDir, m_SessionName, k_AutoSaveInterval, k_SampleRate);
-            }
+            { StartRecording(); }
         }
         else
         {
             ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.8f, 0.15f, 0.15f, 1.0f));
             if (ImGui::Button("  Stop  ##recstop"))
-            {
-                m_Recording = false;
-                m_Recorder.DisableAutosave();
-                if (m_AutoExportOnStop && m_Recorder.GetTotalFrameCount() > 0 && !m_Recorder.IsFlushing())
-                {
-                    m_Recorder.Flush(k_RecordDir, m_SessionName, k_SampleRate);
-                    const std::string dest = m_SessionName.empty() ? "<timestamp>" : m_SessionName;
-                    m_RecordStatus = "Exporting -> " + std::string(k_RecordDir) + "/" + dest + "/";
-                    m_WasFlushing  = true;
-                    m_RecordingDirty = false;
-                }
-                else
-                {
-                    m_RecordStatus = "Stopped. Ready to export.";
-                }
-            }
+            { StopRecording(); }
             ImGui::PopStyleColor();
         }
 
@@ -646,13 +661,7 @@ namespace Workspace
                                && m_Recorder.GetTotalFrameCount() > 0;
         if (!canExport) ImGui::BeginDisabled();
         if (ImGui::Button("  Export CSV + bin  ##recexport"))
-        {
-            m_Recorder.Flush(k_RecordDir, m_SessionName, k_SampleRate);
-            const std::string dest = m_SessionName.empty() ? "<timestamp>" : m_SessionName;
-            m_RecordStatus = "Exporting -> " + std::string(k_RecordDir) + "/" + dest + "/";
-            m_WasFlushing  = true;
-            m_RecordingDirty = false;
-        }
+        { ExportRecording(); }
         if (!canExport) ImGui::EndDisabled();
 
         ImGui::Spacing();

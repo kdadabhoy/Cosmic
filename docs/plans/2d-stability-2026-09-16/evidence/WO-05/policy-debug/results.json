@@ -1,0 +1,102 @@
+{
+  "manifest": "wo05",
+  "profile": "policy",
+  "tier_filter": [
+    "G"
+  ],
+  "config": "Debug",
+  "mode": "2D",
+  "generated_utc": "2026-09-17T20:08:45.7711385Z",
+  "git": {
+    "commit": "552ef4519475e614b2e18f35d656daa8c011a8ca",
+    "dirty": true,
+    "dirty_diff_sha256": "719989c2d9b1d2f43ca8a165a88348e33998019f54f612e5cabbed1b6ba77bad"
+  },
+  "environment": {
+    "os_caption": "Microsoft Windows 11 Education",
+    "os_version": "10.0.26200",
+    "os_build": "26200",
+    "os_display": "26200.9457",
+    "cpu_name": "AMD Ryzen 7 7800X3D 8-Core Processor",
+    "cpu_cores": 8,
+    "cpu_threads": 16,
+    "cpu_addr_width": 64,
+    "cpu_isa_floor": "SSE4.2 (D-CPU); see evidence/WO-02/cpu-isa-probe.txt",
+    "ram_bytes": 33462239232,
+    "ram_gib": 31.2,
+    "gpus": [
+      {
+        "name": "NVIDIA GeForce RTX 5070 Ti",
+        "driver": "32.0.16.1692",
+        "driver_date": "2026-09-03T17:00:00-07:00"
+      },
+      {
+        "name": "AMD Radeon(TM) Graphics",
+        "driver": "32.0.21045.5002",
+        "driver_date": "2026-08-16T17:00:00-07:00"
+      }
+    ],
+    "opengl_version": null,
+    "powershell": "7.6.5",
+    "hostname": "DESKTOP-SEOA4BT"
+  },
+  "capabilities": {
+    "windows": true,
+    "cpu-sse42": true,
+    "gpu-gl": true,
+    "serial-device": false,
+    "editor-ui": false
+  },
+  "forced_unavailable": [],
+  "bin_dir": "C:\\dev\\Cosmic\\build\\Runtime\\Debug",
+  "run_temp": "C:\\dev\\Cosmic\\build\\wo05-temp\\cosmic-accept-7204fb080a184420974bd17794a7658f",
+  "golden_dir": "C:\\dev\\Cosmic\\tests\\acceptance\\goldens",
+  "golden_before": {
+    ".gitkeep-golden.txt": "8e92944b7b4e999a32148948af2a13498ece10d56133c62c5c84431f2d335118"
+  },
+  "golden_after": {
+    ".gitkeep-golden.txt": "8e92944b7b4e999a32148948af2a13498ece10d56133c62c5c84431f2d335118"
+  },
+  "golden_mutated": false,
+  "acceptance_mode": true,
+  "counts": {
+    "total": 1,
+    "passed": 1,
+    "failed": 0,
+    "blocked": 0
+  },
+  "self_test": {
+    "enabled": false,
+    "failures": []
+  },
+  "cases": [
+    {
+      "id": "T05-real-host-policy",
+      "tier": "G",
+      "description": "Actual Application pause, native minimize/restore, Home and Main acquisition policy",
+      "requires": [
+        "windows",
+        "gpu-gl"
+      ],
+      "transport": "fake",
+      "seed": 5,
+      "start_utc": "2026-09-17T20:08:44.6374101Z",
+      "deadline_sec": 60,
+      "exercised": "fake-transport",
+      "fixture": "C:\\dev\\Cosmic\\tests\\acceptance\\..\\WO05HostFixture.cpp",
+      "fixture_sha256": "800ccf6bee04d9a6be8d477449ed8e15dd353ad83ac4d6832d25e31b1f547726",
+      "command": "C:\\dev\\Cosmic\\build\\Runtime\\Debug\\CosmicTests.exe \"--test-case=WO-05 T05 host:*\" --no-skip=true --no-colors",
+      "stdout_log": "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-05\\policy-debug\\T05-real-host-policy.out.log",
+      "stderr_log": "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-05\\policy-debug\\T05-real-host-policy.err.log",
+      "pid": 12392,
+      "exit_code": 0,
+      "crash": false,
+      "tests_passed": 1,
+      "tests_expected_min": 1,
+      "verdict": "PASSED",
+      "detail": "exit 0 as expected",
+      "duration_sec": 1.116,
+      "end_utc": "2026-09-17T20:08:45.7595928Z"
+    }
+  ]
+}

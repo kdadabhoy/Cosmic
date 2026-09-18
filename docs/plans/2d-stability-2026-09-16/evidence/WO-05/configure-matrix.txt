@@ -1,0 +1,8 @@
+-- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.26200.
+-- Including Win32 support
+-- Documentation generation requires Doxygen 1.9.8 or later
+-- --> Auto-detected game project: SF_Telem
+-- --> Auto-detected game project: Starforge
+-- Configuring done (0.2s)
+-- Generating done (0.5s)
+-- Build files have been written to: C:/dev/Cosmic/build

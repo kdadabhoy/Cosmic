@@ -1,0 +1,11 @@
+Case output: T03-native-schedules-5-8.out.log
+SHA256: 01c271f91e6b75e7381e0b15d7a7b71956e7031e2ea92a1f6cbfd3172af2f8d8
+host schedule=5 transition=0 completed=100
+host schedule=5 transition=1 completed=100
+host schedule=6 transition=0 completed=100
+host schedule=6 transition=1 completed=100
+host schedule=7 transition=0 completed=100
+host schedule=7 transition=1 completed=100
+host schedule=8 transition=0 completed=100
+host schedule=8 transition=1 completed=100
+[doctest] test cases: 800 | 800 passed | 0 failed

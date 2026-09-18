@@ -1,0 +1,21 @@
+{
+  "manifest": "wo05-long-audit",
+  "cases": [
+    {
+      "id": "T05-per-entity-Debug", "description": "Independent binary descriptors and CSV rows: 108000 ticks for every entity",
+      "tier": "U", "profiles": ["nightly"], "requires": ["windows"], "transport": "fake",
+      "command": "powershell",
+      "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "{ACCEPTANCE}\\fixtures\\Verify-WO05Long.ps1",
+        "-Report", "{REPO}\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-05\\current-debug\\results.json"],
+      "expectExit": 0, "minTests": 1, "deadlineSec": 60, "seed": 5, "fixture": "fixtures/Verify-WO05Long.ps1"
+    },
+    {
+      "id": "T05-per-entity-Release", "description": "Independent binary descriptors and CSV rows: 108000 ticks for every entity",
+      "tier": "U", "profiles": ["nightly"], "requires": ["windows"], "transport": "fake",
+      "command": "powershell",
+      "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "{ACCEPTANCE}\\fixtures\\Verify-WO05Long.ps1",
+        "-Report", "{REPO}\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-05\\current-release\\results.json"],
+      "expectExit": 0, "minTests": 1, "deadlineSec": 60, "seed": 5, "fixture": "fixtures/Verify-WO05Long.ps1"
+    }
+  ]
+}

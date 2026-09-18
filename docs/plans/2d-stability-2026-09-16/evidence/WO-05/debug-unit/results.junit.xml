@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="wo05" tests="6" failures="1" skipped="0">
+  <testsuite name="all" tests="6" failures="1" skipped="0">
+    <testcase name="T01-PC-text" classname="wo05.U" time="0">
+    </testcase>
+    <testcase name="T02-PC-faults" classname="wo05.U" time="0">
+    </testcase>
+    <testcase name="T03-root-matrix" classname="wo05.U" time="0">
+    </testcase>
+    <testcase name="T03-late-open" classname="wo05.U" time="0">
+    </testcase>
+    <testcase name="T05-controlled-30min" classname="wo05.U" time="0">
+    </testcase>
+    <testcase name="T06-burst-reconnect" classname="wo05.U" time="0">
+      <failure type="FAILED" message="nonzero-exit: exit 1, expected 0"></failure>
+    </testcase>
+  </testsuite>
+</testsuites>

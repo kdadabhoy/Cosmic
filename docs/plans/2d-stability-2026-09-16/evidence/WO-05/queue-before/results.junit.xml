@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="wo05-queue-repro" tests="1" failures="1" skipped="0">
+  <testsuite name="all" tests="1" failures="1" skipped="0">
+    <testcase name="T06-consumer-stall-queue" classname="wo05-queue-repro.U" time="0">
+      <failure type="FAILED" message="expected &gt;= 1 tests, got 0 (exit 1, wanted 0)"></failure>
+    </testcase>
+  </testsuite>
+</testsuites>

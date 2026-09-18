@@ -1,0 +1,25 @@
+LOG: T03-H1-root-close-delayed-open.out.log
+SHA256: 943ab8fbd3cb2445f493b954c6b612521f7c06b0efe408863a283c87389b193f
+[2026-09-17 12:31:24.156] [COSMIC] [error] Failed to load texture at assets/projects/images/SF_Drivetrain.PNG
+[2026-09-17 12:31:24.156] [COSMIC] [error] Failed to load texture at assets/projects/images/SF_Weapon.PNG
+[2026-09-17 12:31:24.156] [COSMIC] [error] Failed to load texture at assets/projects/images/SF_Drivetrain.PNG
+[2026-09-17 12:31:26.661] [COSMIC] [info] [SERIAL THREAD] Started with ID: 24668 on Core: 10
+[2026-09-17 12:31:26.661] [COSMIC] [info] [SERIAL THREAD] Shutting down.
+[2026-09-17 12:31:26.661] [COSMIC] [warning] Redirecting active logging channels to destination target: 'logs'
+[2026-09-17 12:31:26.664] [COSMIC] [info] Log streams successfully re-routed.
+[2026-09-17 12:31:26.664] [APP] [info] SF_Telem: Detached.
+[doctest] doctest version is "2.4.12"
+[doctest] run with "--help" for options
+===============================================================================
+C:\dev\Cosmic\tests\test_serial_shutdown_race.cpp(131):
+TEST CASE:  WO-05a H1: exit hang - close while a reconnect worker blocks in CreateFileA
+
+C:\dev\Cosmic\tests\test_serial_shutdown_race.cpp(144): ERROR: CHECK( MillisSince(start) <= 2000 ) is NOT correct!
+  values: CHECK( 2507 <= 2000 )
+
+C:\dev\Cosmic\tests\test_serial_shutdown_race.cpp(154): MESSAGE: SKIPPED (ENVIRONMENT_BLOCKED): needs a Bluetooth/virtual COM or the WO-04 seam (FakeSerialTransport::SetOpenBlockMs). See evidence/WO-05a/transport-seam-spec.md.
+
+===============================================================================
+[doctest] test cases: 1 | 0 passed | 1 failed | 349 skipped
+[doctest] assertions: 4 | 3 passed | 1 failed |
+[doctest] Status: FAILURE!

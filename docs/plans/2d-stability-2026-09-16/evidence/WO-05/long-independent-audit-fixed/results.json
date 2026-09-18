@@ -1,0 +1,132 @@
+﻿{
+    "manifest":  "wo05-long-audit",
+    "profile":  "all",
+    "tier_filter":  [
+
+                    ],
+    "config":  "Release",
+    "mode":  "2D",
+    "generated_utc":  "2026-09-17T20:30:06.8861594Z",
+    "git":  {
+                "commit":  "552ef4519475e614b2e18f35d656daa8c011a8ca",
+                "dirty":  true,
+                "dirty_diff_sha256":  "1617d136b52108a458e10acb59fcba4932e5c99375e339dc6ff110c2e410f269"
+            },
+    "environment":  {
+                        "os_caption":  "Microsoft Windows 11 Education",
+                        "os_version":  "10.0.26200",
+                        "os_build":  "26200",
+                        "os_display":  "26200.9457",
+                        "cpu_name":  "AMD Ryzen 7 7800X3D 8-Core Processor",
+                        "cpu_cores":  8,
+                        "cpu_threads":  16,
+                        "cpu_addr_width":  64,
+                        "cpu_isa_floor":  "SSE4.2 (D-CPU); see evidence/WO-02/cpu-isa-probe.txt",
+                        "ram_bytes":  33462239232,
+                        "ram_gib":  31.2,
+                        "gpus":  [
+                                     {
+                                         "name":  "NVIDIA GeForce RTX 5070 Ti",
+                                         "driver":  "32.0.16.1692",
+                                         "driver_date":  "\/Date(1788480000000)\/"
+                                     },
+                                     {
+                                         "name":  "AMD Radeon(TM) Graphics",
+                                         "driver":  "32.0.21045.5002",
+                                         "driver_date":  "\/Date(1786924800000)\/"
+                                     }
+                                 ],
+                        "opengl_version":  null,
+                        "powershell":  "5.1.26100.9444",
+                        "hostname":  "DESKTOP-SEOA4BT"
+                    },
+    "capabilities":  {
+                         "windows":  true,
+                         "cpu-sse42":  true,
+                         "gpu-gl":  true,
+                         "serial-device":  false,
+                         "editor-ui":  false
+                     },
+    "forced_unavailable":  [
+
+                           ],
+    "bin_dir":  "C:\\dev\\Cosmic\\build\\Runtime\\Release",
+    "run_temp":  "C:\\dev\\Cosmic\\build\\wo05-temp\\cosmic-accept-473eba33e6a84c949bc5f8375dd6be31",
+    "golden_dir":  "C:\\dev\\Cosmic\\tests\\acceptance\\goldens",
+    "golden_before":  {
+                          ".gitkeep-golden.txt":  "8e92944b7b4e999a32148948af2a13498ece10d56133c62c5c84431f2d335118"
+                      },
+    "golden_after":  {
+                         ".gitkeep-golden.txt":  "8e92944b7b4e999a32148948af2a13498ece10d56133c62c5c84431f2d335118"
+                     },
+    "golden_mutated":  false,
+    "acceptance_mode":  true,
+    "counts":  {
+                   "total":  2,
+                   "passed":  2,
+                   "failed":  0,
+                   "blocked":  0
+               },
+    "self_test":  {
+                      "enabled":  false,
+                      "failures":  [
+
+                                   ]
+                  },
+    "cases":  [
+                  {
+                      "id":  "T05-per-entity-Debug",
+                      "tier":  "U",
+                      "description":  "Independent binary descriptors and CSV rows: 108000 ticks for every entity",
+                      "requires":  [
+                                       "windows"
+                                   ],
+                      "transport":  "fake",
+                      "seed":  5,
+                      "start_utc":  "2026-09-17T20:30:04.9142353Z",
+                      "deadline_sec":  60,
+                      "exercised":  "fake-transport",
+                      "fixture":  "C:\\dev\\Cosmic\\tests\\acceptance\\fixtures\\Verify-WO05Long.ps1",
+                      "fixture_sha256":  "aa93bcaf4daecad7a74251e431e5f263f009cedb2b973275306b2e839e828128",
+                      "command":  "powershell -NoProfile -ExecutionPolicy Bypass -File C:\\dev\\Cosmic\\tests\\acceptance\\fixtures\\Verify-WO05Long.ps1 -Report C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-05\\verified-debug-final\\results.json",
+                      "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-05\\long-independent-audit-fixed\\T05-per-entity-Debug.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-05\\long-independent-audit-fixed\\T05-per-entity-Debug.err.log",
+                      "pid":  10420,
+                      "exit_code":  0,
+                      "crash":  false,
+                      "tests_passed":  1,
+                      "tests_expected_min":  1,
+                      "verdict":  "PASSED",
+                      "detail":  "exit 0 as expected",
+                      "duration_sec":  0.976,
+                      "end_utc":  "2026-09-17T20:30:05.8961651Z"
+                  },
+                  {
+                      "id":  "T05-per-entity-Release",
+                      "tier":  "U",
+                      "description":  "Independent binary descriptors and CSV rows: 108000 ticks for every entity",
+                      "requires":  [
+                                       "windows"
+                                   ],
+                      "transport":  "fake",
+                      "seed":  5,
+                      "start_utc":  "2026-09-17T20:30:05.9016797Z",
+                      "deadline_sec":  60,
+                      "exercised":  "fake-transport",
+                      "fixture":  "C:\\dev\\Cosmic\\tests\\acceptance\\fixtures\\Verify-WO05Long.ps1",
+                      "fixture_sha256":  "aa93bcaf4daecad7a74251e431e5f263f009cedb2b973275306b2e839e828128",
+                      "command":  "powershell -NoProfile -ExecutionPolicy Bypass -File C:\\dev\\Cosmic\\tests\\acceptance\\fixtures\\Verify-WO05Long.ps1 -Report C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-05\\verified-release-final\\results.json",
+                      "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-05\\long-independent-audit-fixed\\T05-per-entity-Release.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-05\\long-independent-audit-fixed\\T05-per-entity-Release.err.log",
+                      "pid":  19464,
+                      "exit_code":  0,
+                      "crash":  false,
+                      "tests_passed":  1,
+                      "tests_expected_min":  1,
+                      "verdict":  "PASSED",
+                      "detail":  "exit 0 as expected",
+                      "duration_sec":  0.975,
+                      "end_utc":  "2026-09-17T20:30:06.8771570Z"
+                  }
+              ]
+}

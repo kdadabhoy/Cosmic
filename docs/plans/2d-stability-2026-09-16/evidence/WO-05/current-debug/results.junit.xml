@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="wo05" tests="9" failures="0" skipped="0">
+  <testsuite name="all" tests="9" failures="0" skipped="0">
+    <testcase name="T01-PC-text" classname="wo05.U" time="0">
+    </testcase>
+    <testcase name="T02-PC-faults" classname="wo05.U" time="0">
+    </testcase>
+    <testcase name="T03-root-matrix" classname="wo05.U" time="0">
+    </testcase>
+    <testcase name="T03-late-open" classname="wo05.U" time="0">
+    </testcase>
+    <testcase name="T05-controlled-30min" classname="wo05.U" time="0">
+    </testcase>
+    <testcase name="T06-burst-reconnect" classname="wo05.U" time="0">
+    </testcase>
+    <testcase name="T03-write-close" classname="wo05.U" time="0">
+    </testcase>
+    <testcase name="Retained-suite" classname="wo05.U" time="0">
+    </testcase>
+    <testcase name="T03-owner-cancel" classname="wo05.U" time="0">
+    </testcase>
+  </testsuite>
+</testsuites>

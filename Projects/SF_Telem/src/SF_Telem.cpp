@@ -463,6 +463,7 @@ namespace Workspace
 // =============================================================================
 // Required C-linkage DLL entry points — do not rename or remove
 // =============================================================================
+#ifndef COSMIC_WO05_HOST_FIXTURE
 extern "C"
 {
     __declspec(dllexport) void InitializePluginContexts(Cosmic::HostContext context)
@@ -476,3 +477,4 @@ extern "C"
         return new Workspace::SF_Telem();
     }
 }
+#endif

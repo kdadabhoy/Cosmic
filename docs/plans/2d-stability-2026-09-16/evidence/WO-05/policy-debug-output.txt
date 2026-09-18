@@ -1,0 +1,37 @@
+LOG: T05-real-host-policy.out.log
+SHA256: ecdcdddcfd34ffe903ea038bc611550b13492efdeb5d99f25327d07afc1ed228
+[2026-09-17 13:08:45.289] [APP] [info] SF_Telem: Attaching combined telemetry app.
+[2026-09-17 13:08:45.289] [COSMIC] [warning] Redirecting active logging channels to destination target: 'assets/projects/SF_Telem/logs'
+[2026-09-17 13:08:45.291] [COSMIC] [info] Log streams successfully re-routed.
+[2026-09-17 13:08:45.404] [APP] [info] DrivetrainLayer: Attaching drivetrain calculator screen.
+[2026-09-17 13:08:45.404] [APP] [info] DrivetrainLayer: OnAttach complete.
+[2026-09-17 13:08:45.481] [APP] [info] SF_Telem: screens ready (Main / Testing / Analysis / Replay).
+[2026-09-17 13:08:45.481] [COSMIC] [info] WorkspaceLayer project name set to: 'WO05HostFixture'
+[2026-09-17 13:08:45.481] [COSMIC] [info] Successfully loaded and mounted project DLL Layer!
+[2026-09-17 13:08:45.484] [COSMIC] [info] WorkspaceLayer: Dockspace built (legacy 3-tier left sidebar).
+[2026-09-17 13:08:45.578] [COSMIC] [info] WorkspaceLayer: Dockspace built (port mode L=true R=true T=false B=true).
+[2026-09-17 13:08:45.603] [COSMIC] [info] WorkspaceLayer: Dockspace built (port mode L=false R=false T=false B=false).
+[2026-09-17 13:08:45.607] [COSMIC] [info] WorkspaceLayer: Dockspace built (port mode L=true R=true T=false B=true).
+[2026-09-17 13:08:45.611] [COSMIC] [trace] Shutting down Application Subsystems...
+[2026-09-17 13:08:45.612] [COSMIC] [info] JobSystem: Thread pool shut down cleanly.
+[2026-09-17 13:08:45.612] [COSMIC] [warning] WorkspaceLayer: Clearing client layer: SF_Telem
+[2026-09-17 13:08:45.612] [APP] [info] DrivetrainLayer: Detached.
+[2026-09-17 13:08:45.612] [COSMIC] [info] DataRecorder: Starting background flush of 3 entities → 'recordings/SF_Telem/wo05-host-policy'.
+[2026-09-17 13:08:45.613] [COSMIC] [info] DataExport::WriteCSV: wrote 1 rows to 'recordings/SF_Telem/wo05-host-policy/ESC_Right.csv'.
+[2026-09-17 13:08:45.614] [COSMIC] [info] DataExport::WriteCSV: wrote 1 rows to 'recordings/SF_Telem/wo05-host-policy/ESC_Left.csv'.
+[2026-09-17 13:08:45.614] [COSMIC] [info] DataExport::WriteCSV: wrote 1 rows to 'recordings/SF_Telem/wo05-host-policy/ESC_Weapon.csv'.
+[2026-09-17 13:08:45.614] [COSMIC] [info] DataRecorder: Flush complete — 3 entities → 'C:\dev\Cosmic\build\Runtime\Debug\recordings\SF_Telem\wo05-host-policy'.
+[2026-09-17 13:08:45.615] [COSMIC] [warning] Redirecting active logging channels to destination target: 'logs'
+[2026-09-17 13:08:45.616] [COSMIC] [info] Log streams successfully re-routed.
+[2026-09-17 13:08:45.616] [APP] [info] SF_Telem: Detached.
+[2026-09-17 13:08:45.617] [COSMIC] [info] Project DLL safely unmounted and unloaded.
+[2026-09-17 13:08:45.624] [COSMIC] [trace] AudioEngine shut down.
+[2026-09-17 13:08:45.624] [COSMIC] [trace] Shutting down Renderer2D
+[2026-09-17 13:08:45.644] [COSMIC] [trace] Application Subsystems safely terminated.
+[doctest] doctest version is "2.4.12"
+[doctest] run with "--help" for options
+WO05 actual host child: schedule=0 transition=0 storage=0
+===============================================================================
+[doctest] test cases: 1 | 1 passed | 0 failed | 362 skipped
+[doctest] assertions: 6 | 6 passed | 0 failed |
+[doctest] Status: SUCCESS!

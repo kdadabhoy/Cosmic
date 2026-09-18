@@ -1,0 +1,666 @@
+LOG: s0-t0-i0.out.log
+SHA256: 21c97c9070ad731f670a3823b33c9e58418d57190c8285700c65ec50c74b6448
+[2026-09-17 12:52:16.763] [COSMIC] [info] ThemeManager: initialised (11 theme(s))
+[2026-09-17 12:52:16.770] [COSMIC] [info] Fonts: registered 'Roboto-Bold'
+[2026-09-17 12:52:16.773] [COSMIC] [info] Fonts: registered 'Roboto-Medium'
+[2026-09-17 12:52:16.776] [COSMIC] [info] Fonts: registered 'Roboto-Regular'
+[2026-09-17 12:52:16.776] [COSMIC] [info] Fonts: initialised (3 custom face(s), icons on)
+[2026-09-17 12:52:16.776] [COSMIC] [info] Startup project requested: 'WO05HostFixture.dll' — skipping the Launcher.
+[2026-09-17 12:52:16.803] [COSMIC] [info] WorkspaceLayer: Mounting client layer: SF_Telem
+[2026-09-17 12:52:16.803] [APP] [info] SF_Telem: Attaching combined telemetry app.
+[2026-09-17 12:52:16.803] [COSMIC] [warning] Redirecting active logging channels to destination target: 'assets/projects/SF_Telem/logs'
+[2026-09-17 12:52:16.804] [COSMIC] [info] Log streams successfully re-routed.
+[2026-09-17 12:52:16.887] [APP] [info] DrivetrainLayer: Attaching drivetrain calculator screen.
+[2026-09-17 12:52:16.888] [APP] [info] DrivetrainLayer: OnAttach complete.
+[2026-09-17 12:52:16.950] [APP] [info] SF_Telem: screens ready (Main / Testing / Analysis / Replay).
+[2026-09-17 12:52:16.950] [COSMIC] [info] WorkspaceLayer project name set to: 'WO05HostFixture'
+[2026-09-17 12:52:16.950] [COSMIC] [info] Successfully loaded and mounted project DLL Layer!
+[2026-09-17 12:52:16.951] [COSMIC] [info] WorkspaceLayer: Dockspace built (legacy 3-tier left sidebar).
+[2026-09-17 12:52:17.026] [COSMIC] [info] WorkspaceLayer: Dockspace built (port mode L=true R=true T=false B=true).
+[2026-09-17 12:52:17.027] [COSMIC] [trace] Shutting down Application Subsystems...
+[2026-09-17 12:52:17.029] [COSMIC] [info] JobSystem: Thread pool shut down cleanly.
+[2026-09-17 12:52:17.029] [COSMIC] [warning] WorkspaceLayer: Clearing client layer: SF_Telem
+[2026-09-17 12:52:17.029] [APP] [info] DrivetrainLayer: Detached.
+[2026-09-17 12:52:17.029] [COSMIC] [warning] Redirecting active logging channels to destination target: 'logs'
+[2026-09-17 12:52:17.030] [COSMIC] [info] Log streams successfully re-routed.
+[2026-09-17 12:52:17.030] [APP] [info] SF_Telem: Detached.
+[2026-09-17 12:52:17.030] [COSMIC] [info] Project DLL safely unmounted and unloaded.
+[2026-09-17 12:52:17.046] [COSMIC] [trace] AudioEngine shut down.
+[2026-09-17 12:52:17.046] [COSMIC] [trace] Shutting down Renderer2D
+[2026-09-17 12:52:17.062] [COSMIC] [trace] Application Subsystems safely terminated.
+[doctest] doctest version is "2.4.12"
+[doctest] run with "--help" for options
+WO05 actual host child: schedule=0 transition=0 storage=0
+===============================================================================
+[doctest] test cases: 1 | 1 passed | 0 failed | 357 skipped
+[doctest] assertions: 6 | 6 passed | 0 failed |
+[doctest] Status: SUCCESS!
+LOG: s0-t1-i0.out.log
+SHA256: 8cae19865563e77be0e741a8d9e58d1dcefbe1368f6896169bf57be723940ed2
+[2026-09-17 12:52:17.516] [COSMIC] [info] ThemeManager: initialised (11 theme(s))
+[2026-09-17 12:52:17.518] [COSMIC] [info] Fonts: registered 'Roboto-Bold'
+[2026-09-17 12:52:17.518] [COSMIC] [info] Fonts: registered 'Roboto-Medium'
+[2026-09-17 12:52:17.519] [COSMIC] [info] Fonts: registered 'Roboto-Regular'
+[2026-09-17 12:52:17.519] [COSMIC] [info] Fonts: initialised (3 custom face(s), icons on)
+[2026-09-17 12:52:17.519] [COSMIC] [info] Startup project requested: 'WO05HostFixture.dll' — skipping the Launcher.
+[2026-09-17 12:52:17.531] [COSMIC] [info] WorkspaceLayer: Mounting client layer: SF_Telem
+[2026-09-17 12:52:17.531] [APP] [info] SF_Telem: Attaching combined telemetry app.
+[2026-09-17 12:52:17.532] [COSMIC] [warning] Redirecting active logging channels to destination target: 'assets/projects/SF_Telem/logs'
+[2026-09-17 12:52:17.533] [COSMIC] [info] Log streams successfully re-routed.
+[2026-09-17 12:52:17.620] [APP] [info] DrivetrainLayer: Attaching drivetrain calculator screen.
+[2026-09-17 12:52:17.620] [APP] [info] DrivetrainLayer: OnAttach complete.
+[2026-09-17 12:52:17.683] [APP] [info] SF_Telem: screens ready (Main / Testing / Analysis / Replay).
+[2026-09-17 12:52:17.683] [COSMIC] [info] WorkspaceLayer project name set to: 'WO05HostFixture'
+[2026-09-17 12:52:17.683] [COSMIC] [info] Successfully loaded and mounted project DLL Layer!
+[2026-09-17 12:52:17.684] [COSMIC] [info] WorkspaceLayer: Dockspace built (legacy 3-tier left sidebar).
+[2026-09-17 12:52:17.688] [COSMIC] [warning] WorkspaceLayer: Clearing client layer: SF_Telem
+[2026-09-17 12:52:17.688] [APP] [info] DrivetrainLayer: Detached.
+[2026-09-17 12:52:17.688] [COSMIC] [warning] Redirecting active logging channels to destination target: 'logs'
+[2026-09-17 12:52:17.689] [COSMIC] [info] Log streams successfully re-routed.
+[2026-09-17 12:52:17.689] [APP] [info] SF_Telem: Detached.
+[2026-09-17 12:52:17.689] [COSMIC] [info] Project DLL safely unmounted and unloaded.
+[2026-09-17 12:52:17.799] [COSMIC] [info] LauncherLayer: Background shader loaded.
+[2026-09-17 12:52:17.828] [COSMIC] [trace] Shutting down Application Subsystems...
+[2026-09-17 12:52:17.829] [COSMIC] [info] JobSystem: Thread pool shut down cleanly.
+[2026-09-17 12:52:17.847] [COSMIC] [trace] AudioEngine shut down.
+[2026-09-17 12:52:17.847] [COSMIC] [trace] Shutting down Renderer2D
+[2026-09-17 12:52:17.867] [COSMIC] [trace] Application Subsystems safely terminated.
+[doctest] doctest version is "2.4.12"
+[doctest] run with "--help" for options
+WO05 actual host child: schedule=0 transition=1 storage=0
+===============================================================================
+[doctest] test cases: 1 | 1 passed | 0 failed | 357 skipped
+[doctest] assertions: 6 | 6 passed | 0 failed |
+[doctest] Status: SUCCESS!
+LOG: s1-t0-i0.out.log
+SHA256: 6a7ed44ae47a5d9f442b328be7c11147c56dfab1c92f68be2e068298ff519437
+[2026-09-17 12:52:18.286] [COSMIC] [info] ThemeManager: initialised (11 theme(s))
+[2026-09-17 12:52:18.288] [COSMIC] [info] Fonts: registered 'Roboto-Bold'
+[2026-09-17 12:52:18.288] [COSMIC] [info] Fonts: registered 'Roboto-Medium'
+[2026-09-17 12:52:18.288] [COSMIC] [info] Fonts: registered 'Roboto-Regular'
+[2026-09-17 12:52:18.288] [COSMIC] [info] Fonts: initialised (3 custom face(s), icons on)
+[2026-09-17 12:52:18.288] [COSMIC] [info] Startup project requested: 'WO05HostFixture.dll' — skipping the Launcher.
+[2026-09-17 12:52:18.299] [COSMIC] [info] WorkspaceLayer: Mounting client layer: SF_Telem
+[2026-09-17 12:52:18.300] [APP] [info] SF_Telem: Attaching combined telemetry app.
+[2026-09-17 12:52:18.300] [COSMIC] [warning] Redirecting active logging channels to destination target: 'assets/projects/SF_Telem/logs'
+[2026-09-17 12:52:18.301] [COSMIC] [info] Log streams successfully re-routed.
+[2026-09-17 12:52:18.384] [APP] [info] DrivetrainLayer: Attaching drivetrain calculator screen.
+[2026-09-17 12:52:18.384] [APP] [info] DrivetrainLayer: OnAttach complete.
+[2026-09-17 12:52:18.446] [APP] [info] SF_Telem: screens ready (Main / Testing / Analysis / Replay).
+[2026-09-17 12:52:18.446] [COSMIC] [info] WorkspaceLayer project name set to: 'WO05HostFixture'
+[2026-09-17 12:52:18.446] [COSMIC] [info] Successfully loaded and mounted project DLL Layer!
+[2026-09-17 12:52:18.448] [COSMIC] [info] WorkspaceLayer: Dockspace built (legacy 3-tier left sidebar).
+[2026-09-17 12:52:18.522] [COSMIC] [info] WorkspaceLayer: Dockspace built (port mode L=true R=true T=false B=true).
+[2026-09-17 12:52:18.522] [COSMIC] [trace] Shutting down Application Subsystems...
+[2026-09-17 12:52:18.523] [COSMIC] [info] JobSystem: Thread pool shut down cleanly.
+[2026-09-17 12:52:18.523] [COSMIC] [warning] WorkspaceLayer: Clearing client layer: SF_Telem
+[2026-09-17 12:52:18.523] [APP] [info] DrivetrainLayer: Detached.
+[2026-09-17 12:52:18.523] [COSMIC] [warning] Redirecting active logging channels to destination target: 'logs'
+[2026-09-17 12:52:18.524] [COSMIC] [info] Log streams successfully re-routed.
+[2026-09-17 12:52:18.524] [APP] [info] SF_Telem: Detached.
+[2026-09-17 12:52:18.525] [COSMIC] [info] Project DLL safely unmounted and unloaded.
+[2026-09-17 12:52:18.543] [COSMIC] [trace] AudioEngine shut down.
+[2026-09-17 12:52:18.543] [COSMIC] [trace] Shutting down Renderer2D
+[2026-09-17 12:52:18.562] [COSMIC] [trace] Application Subsystems safely terminated.
+[doctest] doctest version is "2.4.12"
+[doctest] run with "--help" for options
+WO05 actual host child: schedule=1 transition=0 storage=0
+===============================================================================
+[doctest] test cases: 1 | 1 passed | 0 failed | 357 skipped
+[doctest] assertions: 6 | 6 passed | 0 failed |
+[doctest] Status: SUCCESS!
+LOG: s1-t1-i0.out.log
+SHA256: dcca45ff86bf54421b16c1dd12e41ba1aa3562b35f0cd93a83f843c0749c240d
+[2026-09-17 12:52:18.989] [COSMIC] [info] ThemeManager: initialised (11 theme(s))
+[2026-09-17 12:52:18.990] [COSMIC] [info] Fonts: registered 'Roboto-Bold'
+[2026-09-17 12:52:18.991] [COSMIC] [info] Fonts: registered 'Roboto-Medium'
+[2026-09-17 12:52:18.991] [COSMIC] [info] Fonts: registered 'Roboto-Regular'
+[2026-09-17 12:52:18.991] [COSMIC] [info] Fonts: initialised (3 custom face(s), icons on)
+[2026-09-17 12:52:18.991] [COSMIC] [info] Startup project requested: 'WO05HostFixture.dll' — skipping the Launcher.
+[2026-09-17 12:52:19.004] [COSMIC] [info] WorkspaceLayer: Mounting client layer: SF_Telem
+[2026-09-17 12:52:19.004] [APP] [info] SF_Telem: Attaching combined telemetry app.
+[2026-09-17 12:52:19.005] [COSMIC] [warning] Redirecting active logging channels to destination target: 'assets/projects/SF_Telem/logs'
+[2026-09-17 12:52:19.006] [COSMIC] [info] Log streams successfully re-routed.
+[2026-09-17 12:52:19.090] [APP] [info] DrivetrainLayer: Attaching drivetrain calculator screen.
+[2026-09-17 12:52:19.090] [APP] [info] DrivetrainLayer: OnAttach complete.
+[2026-09-17 12:52:19.152] [APP] [info] SF_Telem: screens ready (Main / Testing / Analysis / Replay).
+[2026-09-17 12:52:19.152] [COSMIC] [info] WorkspaceLayer project name set to: 'WO05HostFixture'
+[2026-09-17 12:52:19.152] [COSMIC] [info] Successfully loaded and mounted project DLL Layer!
+[2026-09-17 12:52:19.154] [COSMIC] [info] WorkspaceLayer: Dockspace built (legacy 3-tier left sidebar).
+[2026-09-17 12:52:19.157] [COSMIC] [warning] WorkspaceLayer: Clearing client layer: SF_Telem
+[2026-09-17 12:52:19.158] [APP] [info] DrivetrainLayer: Detached.
+[2026-09-17 12:52:19.158] [COSMIC] [warning] Redirecting active logging channels to destination target: 'logs'
+[2026-09-17 12:52:19.159] [COSMIC] [info] Log streams successfully re-routed.
+[2026-09-17 12:52:19.159] [APP] [info] SF_Telem: Detached.
+[2026-09-17 12:52:19.160] [COSMIC] [info] Project DLL safely unmounted and unloaded.
+[2026-09-17 12:52:19.236] [COSMIC] [info] LauncherLayer: Background shader loaded.
+[2026-09-17 12:52:19.238] [COSMIC] [trace] Shutting down Application Subsystems...
+[2026-09-17 12:52:19.238] [COSMIC] [info] JobSystem: Thread pool shut down cleanly.
+[2026-09-17 12:52:19.256] [COSMIC] [trace] AudioEngine shut down.
+[2026-09-17 12:52:19.256] [COSMIC] [trace] Shutting down Renderer2D
+[2026-09-17 12:52:19.273] [COSMIC] [trace] Application Subsystems safely terminated.
+[doctest] doctest version is "2.4.12"
+[doctest] run with "--help" for options
+WO05 actual host child: schedule=1 transition=1 storage=0
+===============================================================================
+[doctest] test cases: 1 | 1 passed | 0 failed | 357 skipped
+[doctest] assertions: 6 | 6 passed | 0 failed |
+[doctest] Status: SUCCESS!
+LOG: s2-t0-i0.out.log
+SHA256: fe99210d289cd98583ac30419c7ea10d4f5aa2c7ad4e29c31fe0732270a210d7
+[2026-09-17 12:52:19.689] [COSMIC] [info] ThemeManager: initialised (11 theme(s))
+[2026-09-17 12:52:19.691] [COSMIC] [info] Fonts: registered 'Roboto-Bold'
+[2026-09-17 12:52:19.691] [COSMIC] [info] Fonts: registered 'Roboto-Medium'
+[2026-09-17 12:52:19.691] [COSMIC] [info] Fonts: registered 'Roboto-Regular'
+[2026-09-17 12:52:19.692] [COSMIC] [info] Fonts: initialised (3 custom face(s), icons on)
+[2026-09-17 12:52:19.692] [COSMIC] [info] Startup project requested: 'WO05HostFixture.dll' — skipping the Launcher.
+[2026-09-17 12:52:19.702] [COSMIC] [info] WorkspaceLayer: Mounting client layer: SF_Telem
+[2026-09-17 12:52:19.702] [APP] [info] SF_Telem: Attaching combined telemetry app.
+[2026-09-17 12:52:19.702] [COSMIC] [warning] Redirecting active logging channels to destination target: 'assets/projects/SF_Telem/logs'
+[2026-09-17 12:52:19.703] [COSMIC] [info] Log streams successfully re-routed.
+[2026-09-17 12:52:19.791] [APP] [info] DrivetrainLayer: Attaching drivetrain calculator screen.
+[2026-09-17 12:52:19.791] [APP] [info] DrivetrainLayer: OnAttach complete.
+[2026-09-17 12:52:19.858] [APP] [info] SF_Telem: screens ready (Main / Testing / Analysis / Replay).
+[2026-09-17 12:52:19.858] [COSMIC] [info] WorkspaceLayer project name set to: 'WO05HostFixture'
+[2026-09-17 12:52:19.858] [COSMIC] [info] Successfully loaded and mounted project DLL Layer!
+[2026-09-17 12:52:19.859] [COSMIC] [info] WorkspaceLayer: Dockspace built (legacy 3-tier left sidebar).
+[2026-09-17 12:52:19.935] [COSMIC] [info] WorkspaceLayer: Dockspace built (port mode L=true R=true T=false B=true).
+[2026-09-17 12:52:19.936] [COSMIC] [trace] Shutting down Application Subsystems...
+[2026-09-17 12:52:19.936] [COSMIC] [info] JobSystem: Thread pool shut down cleanly.
+[2026-09-17 12:52:19.936] [COSMIC] [warning] WorkspaceLayer: Clearing client layer: SF_Telem
+[2026-09-17 12:52:19.937] [APP] [info] DrivetrainLayer: Detached.
+[2026-09-17 12:52:19.937] [COSMIC] [warning] Redirecting active logging channels to destination target: 'logs'
+[2026-09-17 12:52:19.937] [COSMIC] [info] Log streams successfully re-routed.
+[2026-09-17 12:52:19.938] [APP] [info] SF_Telem: Detached.
+[2026-09-17 12:52:19.938] [COSMIC] [info] Project DLL safely unmounted and unloaded.
+[2026-09-17 12:52:19.948] [COSMIC] [trace] AudioEngine shut down.
+[2026-09-17 12:52:19.948] [COSMIC] [trace] Shutting down Renderer2D
+[2026-09-17 12:52:19.961] [COSMIC] [trace] Application Subsystems safely terminated.
+[doctest] doctest version is "2.4.12"
+[doctest] run with "--help" for options
+WO05 actual host child: schedule=2 transition=0 storage=0
+===============================================================================
+[doctest] test cases: 1 | 1 passed | 0 failed | 357 skipped
+[doctest] assertions: 6 | 6 passed | 0 failed |
+[doctest] Status: SUCCESS!
+LOG: s2-t1-i0.out.log
+SHA256: 456f9748a7d61743216abc9449fd534161fc6af838a865951601a159fa43ca6b
+[2026-09-17 12:52:20.386] [COSMIC] [info] ThemeManager: initialised (11 theme(s))
+[2026-09-17 12:52:20.388] [COSMIC] [info] Fonts: registered 'Roboto-Bold'
+[2026-09-17 12:52:20.388] [COSMIC] [info] Fonts: registered 'Roboto-Medium'
+[2026-09-17 12:52:20.389] [COSMIC] [info] Fonts: registered 'Roboto-Regular'
+[2026-09-17 12:52:20.389] [COSMIC] [info] Fonts: initialised (3 custom face(s), icons on)
+[2026-09-17 12:52:20.389] [COSMIC] [info] Startup project requested: 'WO05HostFixture.dll' — skipping the Launcher.
+[2026-09-17 12:52:20.399] [COSMIC] [info] WorkspaceLayer: Mounting client layer: SF_Telem
+[2026-09-17 12:52:20.399] [APP] [info] SF_Telem: Attaching combined telemetry app.
+[2026-09-17 12:52:20.399] [COSMIC] [warning] Redirecting active logging channels to destination target: 'assets/projects/SF_Telem/logs'
+[2026-09-17 12:52:20.401] [COSMIC] [info] Log streams successfully re-routed.
+[2026-09-17 12:52:20.485] [APP] [info] DrivetrainLayer: Attaching drivetrain calculator screen.
+[2026-09-17 12:52:20.485] [APP] [info] DrivetrainLayer: OnAttach complete.
+[2026-09-17 12:52:20.547] [APP] [info] SF_Telem: screens ready (Main / Testing / Analysis / Replay).
+[2026-09-17 12:52:20.547] [COSMIC] [info] WorkspaceLayer project name set to: 'WO05HostFixture'
+[2026-09-17 12:52:20.547] [COSMIC] [info] Successfully loaded and mounted project DLL Layer!
+[2026-09-17 12:52:20.549] [COSMIC] [info] WorkspaceLayer: Dockspace built (legacy 3-tier left sidebar).
+[2026-09-17 12:52:20.552] [COSMIC] [warning] WorkspaceLayer: Clearing client layer: SF_Telem
+[2026-09-17 12:52:20.552] [APP] [info] DrivetrainLayer: Detached.
+[2026-09-17 12:52:20.553] [COSMIC] [warning] Redirecting active logging channels to destination target: 'logs'
+[2026-09-17 12:52:20.554] [COSMIC] [info] Log streams successfully re-routed.
+[2026-09-17 12:52:20.554] [APP] [info] SF_Telem: Detached.
+[2026-09-17 12:52:20.554] [COSMIC] [info] Project DLL safely unmounted and unloaded.
+[2026-09-17 12:52:20.627] [COSMIC] [info] LauncherLayer: Background shader loaded.
+[2026-09-17 12:52:20.629] [COSMIC] [trace] Shutting down Application Subsystems...
+[2026-09-17 12:52:20.630] [COSMIC] [info] JobSystem: Thread pool shut down cleanly.
+[2026-09-17 12:52:20.643] [COSMIC] [trace] AudioEngine shut down.
+[2026-09-17 12:52:20.643] [COSMIC] [trace] Shutting down Renderer2D
+[2026-09-17 12:52:20.661] [COSMIC] [trace] Application Subsystems safely terminated.
+[doctest] doctest version is "2.4.12"
+[doctest] run with "--help" for options
+WO05 actual host child: schedule=2 transition=1 storage=0
+===============================================================================
+[doctest] test cases: 1 | 1 passed | 0 failed | 357 skipped
+[doctest] assertions: 6 | 6 passed | 0 failed |
+[doctest] Status: SUCCESS!
+LOG: s3-t0-i0.out.log
+SHA256: 1a4ee0d9a3df7cf5f0ab09151ae70f3f64960518f5b83719d30aa7f7af18c071
+[2026-09-17 12:52:21.086] [COSMIC] [info] ThemeManager: initialised (11 theme(s))
+[2026-09-17 12:52:21.088] [COSMIC] [info] Fonts: registered 'Roboto-Bold'
+[2026-09-17 12:52:21.088] [COSMIC] [info] Fonts: registered 'Roboto-Medium'
+[2026-09-17 12:52:21.088] [COSMIC] [info] Fonts: registered 'Roboto-Regular'
+[2026-09-17 12:52:21.088] [COSMIC] [info] Fonts: initialised (3 custom face(s), icons on)
+[2026-09-17 12:52:21.088] [COSMIC] [info] Startup project requested: 'WO05HostFixture.dll' — skipping the Launcher.
+[2026-09-17 12:52:21.102] [COSMIC] [info] WorkspaceLayer: Mounting client layer: SF_Telem
+[2026-09-17 12:52:21.102] [APP] [info] SF_Telem: Attaching combined telemetry app.
+[2026-09-17 12:52:21.102] [COSMIC] [warning] Redirecting active logging channels to destination target: 'assets/projects/SF_Telem/logs'
+[2026-09-17 12:52:21.103] [COSMIC] [info] Log streams successfully re-routed.
+[2026-09-17 12:52:21.190] [APP] [info] DrivetrainLayer: Attaching drivetrain calculator screen.
+[2026-09-17 12:52:21.191] [APP] [info] DrivetrainLayer: OnAttach complete.
+[2026-09-17 12:52:21.253] [APP] [info] SF_Telem: screens ready (Main / Testing / Analysis / Replay).
+[2026-09-17 12:52:21.253] [COSMIC] [info] WorkspaceLayer project name set to: 'WO05HostFixture'
+[2026-09-17 12:52:21.253] [COSMIC] [info] Successfully loaded and mounted project DLL Layer!
+[2026-09-17 12:52:21.255] [COSMIC] [info] WorkspaceLayer: Dockspace built (legacy 3-tier left sidebar).
+[2026-09-17 12:52:21.336] [COSMIC] [info] WorkspaceLayer: Dockspace built (port mode L=true R=true T=false B=true).
+[2026-09-17 12:52:21.337] [COSMIC] [trace] Shutting down Application Subsystems...
+[2026-09-17 12:52:21.339] [COSMIC] [info] JobSystem: Thread pool shut down cleanly.
+[2026-09-17 12:52:21.339] [COSMIC] [warning] WorkspaceLayer: Clearing client layer: SF_Telem
+[2026-09-17 12:52:21.339] [APP] [info] DrivetrainLayer: Detached.
+[2026-09-17 12:52:21.339] [COSMIC] [warning] Redirecting active logging channels to destination target: 'logs'
+[2026-09-17 12:52:21.340] [COSMIC] [info] Log streams successfully re-routed.
+[2026-09-17 12:52:21.340] [APP] [info] SF_Telem: Detached.
+[2026-09-17 12:52:21.341] [COSMIC] [info] Project DLL safely unmounted and unloaded.
+[2026-09-17 12:52:21.351] [COSMIC] [trace] AudioEngine shut down.
+[2026-09-17 12:52:21.351] [COSMIC] [trace] Shutting down Renderer2D
+[2026-09-17 12:52:21.369] [COSMIC] [trace] Application Subsystems safely terminated.
+[doctest] doctest version is "2.4.12"
+[doctest] run with "--help" for options
+WO05 actual host child: schedule=3 transition=0 storage=0
+===============================================================================
+[doctest] test cases: 1 | 1 passed | 0 failed | 357 skipped
+[doctest] assertions: 6 | 6 passed | 0 failed |
+[doctest] Status: SUCCESS!
+LOG: s3-t1-i0.out.log
+SHA256: 3ad6de71c46744918dd13c6bce146c6959457b308f4bce509cbee5b2d486bae0
+[2026-09-17 12:52:21.791] [COSMIC] [info] ThemeManager: initialised (11 theme(s))
+[2026-09-17 12:52:21.792] [COSMIC] [info] Fonts: registered 'Roboto-Bold'
+[2026-09-17 12:52:21.793] [COSMIC] [info] Fonts: registered 'Roboto-Medium'
+[2026-09-17 12:52:21.793] [COSMIC] [info] Fonts: registered 'Roboto-Regular'
+[2026-09-17 12:52:21.793] [COSMIC] [info] Fonts: initialised (3 custom face(s), icons on)
+[2026-09-17 12:52:21.793] [COSMIC] [info] Startup project requested: 'WO05HostFixture.dll' — skipping the Launcher.
+[2026-09-17 12:52:21.805] [COSMIC] [info] WorkspaceLayer: Mounting client layer: SF_Telem
+[2026-09-17 12:52:21.805] [APP] [info] SF_Telem: Attaching combined telemetry app.
+[2026-09-17 12:52:21.806] [COSMIC] [warning] Redirecting active logging channels to destination target: 'assets/projects/SF_Telem/logs'
+[2026-09-17 12:52:21.806] [COSMIC] [info] Log streams successfully re-routed.
+[2026-09-17 12:52:21.890] [APP] [info] DrivetrainLayer: Attaching drivetrain calculator screen.
+[2026-09-17 12:52:21.890] [APP] [info] DrivetrainLayer: OnAttach complete.
+[2026-09-17 12:52:21.952] [APP] [info] SF_Telem: screens ready (Main / Testing / Analysis / Replay).
+[2026-09-17 12:52:21.952] [COSMIC] [info] WorkspaceLayer project name set to: 'WO05HostFixture'
+[2026-09-17 12:52:21.952] [COSMIC] [info] Successfully loaded and mounted project DLL Layer!
+[2026-09-17 12:52:21.954] [COSMIC] [info] WorkspaceLayer: Dockspace built (legacy 3-tier left sidebar).
+[2026-09-17 12:52:21.957] [COSMIC] [warning] WorkspaceLayer: Clearing client layer: SF_Telem
+[2026-09-17 12:52:21.957] [APP] [info] DrivetrainLayer: Detached.
+[2026-09-17 12:52:21.957] [COSMIC] [warning] Redirecting active logging channels to destination target: 'logs'
+[2026-09-17 12:52:21.958] [COSMIC] [info] Log streams successfully re-routed.
+[2026-09-17 12:52:21.958] [APP] [info] SF_Telem: Detached.
+[2026-09-17 12:52:21.959] [COSMIC] [info] Project DLL safely unmounted and unloaded.
+[2026-09-17 12:52:22.032] [COSMIC] [info] LauncherLayer: Background shader loaded.
+[2026-09-17 12:52:22.034] [COSMIC] [trace] Shutting down Application Subsystems...
+[2026-09-17 12:52:22.034] [COSMIC] [info] JobSystem: Thread pool shut down cleanly.
+[2026-09-17 12:52:22.049] [COSMIC] [trace] AudioEngine shut down.
+[2026-09-17 12:52:22.049] [COSMIC] [trace] Shutting down Renderer2D
+[2026-09-17 12:52:22.063] [COSMIC] [trace] Application Subsystems safely terminated.
+[doctest] doctest version is "2.4.12"
+[doctest] run with "--help" for options
+WO05 actual host child: schedule=3 transition=1 storage=0
+===============================================================================
+[doctest] test cases: 1 | 1 passed | 0 failed | 357 skipped
+[doctest] assertions: 6 | 6 passed | 0 failed |
+[doctest] Status: SUCCESS!
+LOG: s4-t0-i0.out.log
+SHA256: bf6d54b281b1cdc4674fd32d7c91822ec7cb7d93d121b8f9550d8041b61d3eb3
+[2026-09-17 12:52:22.487] [COSMIC] [info] ThemeManager: initialised (11 theme(s))
+[2026-09-17 12:52:22.489] [COSMIC] [info] Fonts: registered 'Roboto-Bold'
+[2026-09-17 12:52:22.489] [COSMIC] [info] Fonts: registered 'Roboto-Medium'
+[2026-09-17 12:52:22.490] [COSMIC] [info] Fonts: registered 'Roboto-Regular'
+[2026-09-17 12:52:22.490] [COSMIC] [info] Fonts: initialised (3 custom face(s), icons on)
+[2026-09-17 12:52:22.490] [COSMIC] [info] Startup project requested: 'WO05HostFixture.dll' — skipping the Launcher.
+[2026-09-17 12:52:22.501] [COSMIC] [info] WorkspaceLayer: Mounting client layer: SF_Telem
+[2026-09-17 12:52:22.501] [APP] [info] SF_Telem: Attaching combined telemetry app.
+[2026-09-17 12:52:22.501] [COSMIC] [warning] Redirecting active logging channels to destination target: 'assets/projects/SF_Telem/logs'
+[2026-09-17 12:52:22.503] [COSMIC] [info] Log streams successfully re-routed.
+[2026-09-17 12:52:22.592] [APP] [info] DrivetrainLayer: Attaching drivetrain calculator screen.
+[2026-09-17 12:52:22.592] [APP] [info] DrivetrainLayer: OnAttach complete.
+[2026-09-17 12:52:22.654] [APP] [info] SF_Telem: screens ready (Main / Testing / Analysis / Replay).
+[2026-09-17 12:52:22.654] [COSMIC] [info] WorkspaceLayer project name set to: 'WO05HostFixture'
+[2026-09-17 12:52:22.654] [COSMIC] [info] Successfully loaded and mounted project DLL Layer!
+[2026-09-17 12:52:22.656] [COSMIC] [info] WorkspaceLayer: Dockspace built (legacy 3-tier left sidebar).
+[2026-09-17 12:52:22.735] [COSMIC] [info] WorkspaceLayer: Dockspace built (port mode L=true R=true T=false B=true).
+[2026-09-17 12:52:22.735] [COSMIC] [trace] Shutting down Application Subsystems...
+[2026-09-17 12:52:22.736] [COSMIC] [info] JobSystem: Thread pool shut down cleanly.
+[2026-09-17 12:52:22.736] [COSMIC] [warning] WorkspaceLayer: Clearing client layer: SF_Telem
+[2026-09-17 12:52:22.736] [APP] [info] DrivetrainLayer: Detached.
+[2026-09-17 12:52:22.736] [COSMIC] [warning] Redirecting active logging channels to destination target: 'logs'
+[2026-09-17 12:52:22.737] [COSMIC] [info] Log streams successfully re-routed.
+[2026-09-17 12:52:22.737] [APP] [info] SF_Telem: Detached.
+[2026-09-17 12:52:22.738] [COSMIC] [info] Project DLL safely unmounted and unloaded.
+[2026-09-17 12:52:22.755] [COSMIC] [trace] AudioEngine shut down.
+[2026-09-17 12:52:22.755] [COSMIC] [trace] Shutting down Renderer2D
+[2026-09-17 12:52:22.773] [COSMIC] [trace] Application Subsystems safely terminated.
+[doctest] doctest version is "2.4.12"
+[doctest] run with "--help" for options
+WO05 actual host child: schedule=4 transition=0 storage=0
+===============================================================================
+[doctest] test cases: 1 | 1 passed | 0 failed | 357 skipped
+[doctest] assertions: 6 | 6 passed | 0 failed |
+[doctest] Status: SUCCESS!
+LOG: s4-t1-i0.out.log
+SHA256: fc0c59ded8f06d5f1244e93338c1d306f002f65754230230f47d40c420b5ffb3
+[2026-09-17 12:52:23.185] [COSMIC] [info] ThemeManager: initialised (11 theme(s))
+[2026-09-17 12:52:23.186] [COSMIC] [info] Fonts: registered 'Roboto-Bold'
+[2026-09-17 12:52:23.186] [COSMIC] [info] Fonts: registered 'Roboto-Medium'
+[2026-09-17 12:52:23.187] [COSMIC] [info] Fonts: registered 'Roboto-Regular'
+[2026-09-17 12:52:23.187] [COSMIC] [info] Fonts: initialised (3 custom face(s), icons on)
+[2026-09-17 12:52:23.187] [COSMIC] [info] Startup project requested: 'WO05HostFixture.dll' — skipping the Launcher.
+[2026-09-17 12:52:23.198] [COSMIC] [info] WorkspaceLayer: Mounting client layer: SF_Telem
+[2026-09-17 12:52:23.198] [APP] [info] SF_Telem: Attaching combined telemetry app.
+[2026-09-17 12:52:23.198] [COSMIC] [warning] Redirecting active logging channels to destination target: 'assets/projects/SF_Telem/logs'
+[2026-09-17 12:52:23.199] [COSMIC] [info] Log streams successfully re-routed.
+[2026-09-17 12:52:23.290] [APP] [info] DrivetrainLayer: Attaching drivetrain calculator screen.
+[2026-09-17 12:52:23.290] [APP] [info] DrivetrainLayer: OnAttach complete.
+[2026-09-17 12:52:23.354] [APP] [info] SF_Telem: screens ready (Main / Testing / Analysis / Replay).
+[2026-09-17 12:52:23.354] [COSMIC] [info] WorkspaceLayer project name set to: 'WO05HostFixture'
+[2026-09-17 12:52:23.354] [COSMIC] [info] Successfully loaded and mounted project DLL Layer!
+[2026-09-17 12:52:23.356] [COSMIC] [info] WorkspaceLayer: Dockspace built (legacy 3-tier left sidebar).
+[2026-09-17 12:52:23.359] [COSMIC] [warning] WorkspaceLayer: Clearing client layer: SF_Telem
+[2026-09-17 12:52:23.359] [APP] [info] DrivetrainLayer: Detached.
+[2026-09-17 12:52:23.359] [COSMIC] [warning] Redirecting active logging channels to destination target: 'logs'
+[2026-09-17 12:52:23.361] [COSMIC] [info] Log streams successfully re-routed.
+[2026-09-17 12:52:23.361] [APP] [info] SF_Telem: Detached.
+[2026-09-17 12:52:23.362] [COSMIC] [info] Project DLL safely unmounted and unloaded.
+[2026-09-17 12:52:23.431] [COSMIC] [info] LauncherLayer: Background shader loaded.
+[2026-09-17 12:52:23.433] [COSMIC] [trace] Shutting down Application Subsystems...
+[2026-09-17 12:52:23.434] [COSMIC] [info] JobSystem: Thread pool shut down cleanly.
+[2026-09-17 12:52:23.447] [COSMIC] [trace] AudioEngine shut down.
+[2026-09-17 12:52:23.447] [COSMIC] [trace] Shutting down Renderer2D
+[2026-09-17 12:52:23.466] [COSMIC] [trace] Application Subsystems safely terminated.
+[doctest] doctest version is "2.4.12"
+[doctest] run with "--help" for options
+WO05 actual host child: schedule=4 transition=1 storage=0
+===============================================================================
+[doctest] test cases: 1 | 1 passed | 0 failed | 357 skipped
+[doctest] assertions: 6 | 6 passed | 0 failed |
+[doctest] Status: SUCCESS!
+LOG: s5-t0-i0.out.log
+SHA256: e6f9dcafa1e819ad2ba885a68a0005bbd66c05f4fe57ec76805dbdda9ca3a256
+[2026-09-17 12:52:23.891] [COSMIC] [info] ThemeManager: initialised (11 theme(s))
+[2026-09-17 12:52:23.892] [COSMIC] [info] Fonts: registered 'Roboto-Bold'
+[2026-09-17 12:52:23.892] [COSMIC] [info] Fonts: registered 'Roboto-Medium'
+[2026-09-17 12:52:23.893] [COSMIC] [info] Fonts: registered 'Roboto-Regular'
+[2026-09-17 12:52:23.893] [COSMIC] [info] Fonts: initialised (3 custom face(s), icons on)
+[2026-09-17 12:52:23.893] [COSMIC] [info] Startup project requested: 'WO05HostFixture.dll' — skipping the Launcher.
+[2026-09-17 12:52:23.904] [COSMIC] [info] WorkspaceLayer: Mounting client layer: SF_Telem
+[2026-09-17 12:52:23.904] [APP] [info] SF_Telem: Attaching combined telemetry app.
+[2026-09-17 12:52:23.904] [COSMIC] [warning] Redirecting active logging channels to destination target: 'assets/projects/SF_Telem/logs'
+[2026-09-17 12:52:23.905] [COSMIC] [info] Log streams successfully re-routed.
+[2026-09-17 12:52:23.989] [APP] [info] DrivetrainLayer: Attaching drivetrain calculator screen.
+[2026-09-17 12:52:23.989] [APP] [info] DrivetrainLayer: OnAttach complete.
+[2026-09-17 12:52:24.051] [APP] [info] SF_Telem: screens ready (Main / Testing / Analysis / Replay).
+[2026-09-17 12:52:24.051] [COSMIC] [info] WorkspaceLayer project name set to: 'WO05HostFixture'
+[2026-09-17 12:52:24.051] [COSMIC] [info] Successfully loaded and mounted project DLL Layer!
+[2026-09-17 12:52:24.053] [COSMIC] [info] WorkspaceLayer: Dockspace built (legacy 3-tier left sidebar).
+[2026-09-17 12:52:24.126] [COSMIC] [info] WorkspaceLayer: Dockspace built (port mode L=true R=true T=false B=true).
+[2026-09-17 12:52:24.126] [COSMIC] [trace] Shutting down Application Subsystems...
+[2026-09-17 12:52:24.127] [COSMIC] [info] JobSystem: Thread pool shut down cleanly.
+[2026-09-17 12:52:24.127] [COSMIC] [warning] WorkspaceLayer: Clearing client layer: SF_Telem
+[2026-09-17 12:52:24.127] [APP] [info] DrivetrainLayer: Detached.
+[2026-09-17 12:52:24.127] [COSMIC] [warning] Redirecting active logging channels to destination target: 'logs'
+[2026-09-17 12:52:24.128] [COSMIC] [info] Log streams successfully re-routed.
+[2026-09-17 12:52:24.128] [APP] [info] SF_Telem: Detached.
+[2026-09-17 12:52:24.129] [COSMIC] [info] Project DLL safely unmounted and unloaded.
+[2026-09-17 12:52:24.147] [COSMIC] [trace] AudioEngine shut down.
+[2026-09-17 12:52:24.147] [COSMIC] [trace] Shutting down Renderer2D
+[2026-09-17 12:52:24.164] [COSMIC] [trace] Application Subsystems safely terminated.
+[doctest] doctest version is "2.4.12"
+[doctest] run with "--help" for options
+WO05 actual host child: schedule=5 transition=0 storage=0
+===============================================================================
+[doctest] test cases: 1 | 1 passed | 0 failed | 357 skipped
+[doctest] assertions: 6 | 6 passed | 0 failed |
+[doctest] Status: SUCCESS!
+LOG: s5-t1-i0.out.log
+SHA256: c0236a2be249d5735500e5c3af0e62e50f750ebcac89a76671be6c067b21d0e7
+[2026-09-17 12:52:24.577] [COSMIC] [info] ThemeManager: initialised (11 theme(s))
+[2026-09-17 12:52:24.578] [COSMIC] [info] Fonts: registered 'Roboto-Bold'
+[2026-09-17 12:52:24.579] [COSMIC] [info] Fonts: registered 'Roboto-Medium'
+[2026-09-17 12:52:24.579] [COSMIC] [info] Fonts: registered 'Roboto-Regular'
+[2026-09-17 12:52:24.579] [COSMIC] [info] Fonts: initialised (3 custom face(s), icons on)
+[2026-09-17 12:52:24.579] [COSMIC] [info] Startup project requested: 'WO05HostFixture.dll' — skipping the Launcher.
+[2026-09-17 12:52:24.591] [COSMIC] [info] WorkspaceLayer: Mounting client layer: SF_Telem
+[2026-09-17 12:52:24.591] [APP] [info] SF_Telem: Attaching combined telemetry app.
+[2026-09-17 12:52:24.591] [COSMIC] [warning] Redirecting active logging channels to destination target: 'assets/projects/SF_Telem/logs'
+[2026-09-17 12:52:24.592] [COSMIC] [info] Log streams successfully re-routed.
+[2026-09-17 12:52:24.676] [APP] [info] DrivetrainLayer: Attaching drivetrain calculator screen.
+[2026-09-17 12:52:24.676] [APP] [info] DrivetrainLayer: OnAttach complete.
+[2026-09-17 12:52:24.739] [APP] [info] SF_Telem: screens ready (Main / Testing / Analysis / Replay).
+[2026-09-17 12:52:24.739] [COSMIC] [info] WorkspaceLayer project name set to: 'WO05HostFixture'
+[2026-09-17 12:52:24.739] [COSMIC] [info] Successfully loaded and mounted project DLL Layer!
+[2026-09-17 12:52:24.741] [COSMIC] [info] WorkspaceLayer: Dockspace built (legacy 3-tier left sidebar).
+[2026-09-17 12:52:24.745] [COSMIC] [warning] WorkspaceLayer: Clearing client layer: SF_Telem
+[2026-09-17 12:52:24.745] [APP] [info] DrivetrainLayer: Detached.
+[2026-09-17 12:52:24.745] [COSMIC] [warning] Redirecting active logging channels to destination target: 'logs'
+[2026-09-17 12:52:24.747] [COSMIC] [info] Log streams successfully re-routed.
+[2026-09-17 12:52:24.747] [APP] [info] SF_Telem: Detached.
+[2026-09-17 12:52:24.748] [COSMIC] [info] Project DLL safely unmounted and unloaded.
+[2026-09-17 12:52:24.820] [COSMIC] [info] LauncherLayer: Background shader loaded.
+[2026-09-17 12:52:24.821] [COSMIC] [trace] Shutting down Application Subsystems...
+[2026-09-17 12:52:24.822] [COSMIC] [info] JobSystem: Thread pool shut down cleanly.
+[2026-09-17 12:52:24.834] [COSMIC] [trace] AudioEngine shut down.
+[2026-09-17 12:52:24.834] [COSMIC] [trace] Shutting down Renderer2D
+[2026-09-17 12:52:24.848] [COSMIC] [trace] Application Subsystems safely terminated.
+[doctest] doctest version is "2.4.12"
+[doctest] run with "--help" for options
+WO05 actual host child: schedule=5 transition=1 storage=0
+===============================================================================
+[doctest] test cases: 1 | 1 passed | 0 failed | 357 skipped
+[doctest] assertions: 6 | 6 passed | 0 failed |
+[doctest] Status: SUCCESS!
+LOG: s6-t0-i0.out.log
+SHA256: c9636622949dc52a08a8228c725079d372d05952ac9488d53c47de9112993fdf
+[2026-09-17 12:52:25.268] [COSMIC] [info] ThemeManager: initialised (11 theme(s))
+[2026-09-17 12:52:25.270] [COSMIC] [info] Fonts: registered 'Roboto-Bold'
+[2026-09-17 12:52:25.270] [COSMIC] [info] Fonts: registered 'Roboto-Medium'
+[2026-09-17 12:52:25.270] [COSMIC] [info] Fonts: registered 'Roboto-Regular'
+[2026-09-17 12:52:25.270] [COSMIC] [info] Fonts: initialised (3 custom face(s), icons on)
+[2026-09-17 12:52:25.270] [COSMIC] [info] Startup project requested: 'WO05HostFixture.dll' — skipping the Launcher.
+[2026-09-17 12:52:25.284] [COSMIC] [info] WorkspaceLayer: Mounting client layer: SF_Telem
+[2026-09-17 12:52:25.284] [APP] [info] SF_Telem: Attaching combined telemetry app.
+[2026-09-17 12:52:25.284] [COSMIC] [warning] Redirecting active logging channels to destination target: 'assets/projects/SF_Telem/logs'
+[2026-09-17 12:52:25.285] [COSMIC] [info] Log streams successfully re-routed.
+[2026-09-17 12:52:25.368] [APP] [info] DrivetrainLayer: Attaching drivetrain calculator screen.
+[2026-09-17 12:52:25.368] [APP] [info] DrivetrainLayer: OnAttach complete.
+[2026-09-17 12:52:25.434] [APP] [info] SF_Telem: screens ready (Main / Testing / Analysis / Replay).
+[2026-09-17 12:52:25.434] [COSMIC] [info] WorkspaceLayer project name set to: 'WO05HostFixture'
+[2026-09-17 12:52:25.434] [COSMIC] [info] Successfully loaded and mounted project DLL Layer!
+[2026-09-17 12:52:25.436] [COSMIC] [info] WorkspaceLayer: Dockspace built (legacy 3-tier left sidebar).
+[2026-09-17 12:52:25.518] [COSMIC] [info] WorkspaceLayer: Dockspace built (port mode L=true R=true T=false B=true).
+[2026-09-17 12:52:25.518] [COSMIC] [trace] Shutting down Application Subsystems...
+[2026-09-17 12:52:25.520] [COSMIC] [info] JobSystem: Thread pool shut down cleanly.
+[2026-09-17 12:52:25.520] [COSMIC] [warning] WorkspaceLayer: Clearing client layer: SF_Telem
+[2026-09-17 12:52:25.520] [APP] [info] DrivetrainLayer: Detached.
+[2026-09-17 12:52:25.520] [COSMIC] [warning] Redirecting active logging channels to destination target: 'logs'
+[2026-09-17 12:52:25.521] [COSMIC] [info] Log streams successfully re-routed.
+[2026-09-17 12:52:25.521] [APP] [info] SF_Telem: Detached.
+[2026-09-17 12:52:25.521] [COSMIC] [info] Project DLL safely unmounted and unloaded.
+[2026-09-17 12:52:25.537] [COSMIC] [trace] AudioEngine shut down.
+[2026-09-17 12:52:25.537] [COSMIC] [trace] Shutting down Renderer2D
+[2026-09-17 12:52:25.555] [COSMIC] [trace] Application Subsystems safely terminated.
+[doctest] doctest version is "2.4.12"
+[doctest] run with "--help" for options
+WO05 actual host child: schedule=6 transition=0 storage=0
+===============================================================================
+[doctest] test cases: 1 | 1 passed | 0 failed | 357 skipped
+[doctest] assertions: 6 | 6 passed | 0 failed |
+[doctest] Status: SUCCESS!
+LOG: s6-t1-i0.out.log
+SHA256: 56c67bd6758e5825b761ac5529df21a5891200d6023b301958893f8dd1dd9ff4
+[2026-09-17 12:52:25.980] [COSMIC] [info] ThemeManager: initialised (11 theme(s))
+[2026-09-17 12:52:25.982] [COSMIC] [info] Fonts: registered 'Roboto-Bold'
+[2026-09-17 12:52:25.983] [COSMIC] [info] Fonts: registered 'Roboto-Medium'
+[2026-09-17 12:52:25.983] [COSMIC] [info] Fonts: registered 'Roboto-Regular'
+[2026-09-17 12:52:25.983] [COSMIC] [info] Fonts: initialised (3 custom face(s), icons on)
+[2026-09-17 12:52:25.983] [COSMIC] [info] Startup project requested: 'WO05HostFixture.dll' — skipping the Launcher.
+[2026-09-17 12:52:25.995] [COSMIC] [info] WorkspaceLayer: Mounting client layer: SF_Telem
+[2026-09-17 12:52:25.995] [APP] [info] SF_Telem: Attaching combined telemetry app.
+[2026-09-17 12:52:25.995] [COSMIC] [warning] Redirecting active logging channels to destination target: 'assets/projects/SF_Telem/logs'
+[2026-09-17 12:52:25.996] [COSMIC] [info] Log streams successfully re-routed.
+[2026-09-17 12:52:26.080] [APP] [info] DrivetrainLayer: Attaching drivetrain calculator screen.
+[2026-09-17 12:52:26.081] [APP] [info] DrivetrainLayer: OnAttach complete.
+[2026-09-17 12:52:26.143] [APP] [info] SF_Telem: screens ready (Main / Testing / Analysis / Replay).
+[2026-09-17 12:52:26.143] [COSMIC] [info] WorkspaceLayer project name set to: 'WO05HostFixture'
+[2026-09-17 12:52:26.143] [COSMIC] [info] Successfully loaded and mounted project DLL Layer!
+[2026-09-17 12:52:26.145] [COSMIC] [info] WorkspaceLayer: Dockspace built (legacy 3-tier left sidebar).
+[2026-09-17 12:52:26.148] [COSMIC] [warning] WorkspaceLayer: Clearing client layer: SF_Telem
+[2026-09-17 12:52:26.148] [APP] [info] DrivetrainLayer: Detached.
+[2026-09-17 12:52:26.148] [COSMIC] [warning] Redirecting active logging channels to destination target: 'logs'
+[2026-09-17 12:52:26.149] [COSMIC] [info] Log streams successfully re-routed.
+[2026-09-17 12:52:26.149] [APP] [info] SF_Telem: Detached.
+[2026-09-17 12:52:26.150] [COSMIC] [info] Project DLL safely unmounted and unloaded.
+[2026-09-17 12:52:26.238] [COSMIC] [info] LauncherLayer: Background shader loaded.
+[2026-09-17 12:52:26.239] [COSMIC] [trace] Shutting down Application Subsystems...
+[2026-09-17 12:52:26.240] [COSMIC] [info] JobSystem: Thread pool shut down cleanly.
+[2026-09-17 12:52:26.256] [COSMIC] [trace] AudioEngine shut down.
+[2026-09-17 12:52:26.256] [COSMIC] [trace] Shutting down Renderer2D
+[2026-09-17 12:52:26.274] [COSMIC] [trace] Application Subsystems safely terminated.
+[doctest] doctest version is "2.4.12"
+[doctest] run with "--help" for options
+WO05 actual host child: schedule=6 transition=1 storage=0
+===============================================================================
+[doctest] test cases: 1 | 1 passed | 0 failed | 357 skipped
+[doctest] assertions: 6 | 6 passed | 0 failed |
+[doctest] Status: SUCCESS!
+LOG: s7-t0-i0.out.log
+SHA256: b9fff88cce62cbf11e4891144b70bc3c96ddc79f6e252310643015b23302afcb
+[2026-09-17 12:52:26.684] [COSMIC] [info] ThemeManager: initialised (11 theme(s))
+[2026-09-17 12:52:26.685] [COSMIC] [info] Fonts: registered 'Roboto-Bold'
+[2026-09-17 12:52:26.686] [COSMIC] [info] Fonts: registered 'Roboto-Medium'
+[2026-09-17 12:52:26.686] [COSMIC] [info] Fonts: registered 'Roboto-Regular'
+[2026-09-17 12:52:26.686] [COSMIC] [info] Fonts: initialised (3 custom face(s), icons on)
+[2026-09-17 12:52:26.686] [COSMIC] [info] Startup project requested: 'WO05HostFixture.dll' — skipping the Launcher.
+[2026-09-17 12:52:26.699] [COSMIC] [info] WorkspaceLayer: Mounting client layer: SF_Telem
+[2026-09-17 12:52:26.699] [APP] [info] SF_Telem: Attaching combined telemetry app.
+[2026-09-17 12:52:26.699] [COSMIC] [warning] Redirecting active logging channels to destination target: 'assets/projects/SF_Telem/logs'
+[2026-09-17 12:52:26.700] [COSMIC] [info] Log streams successfully re-routed.
+[2026-09-17 12:52:26.783] [APP] [info] DrivetrainLayer: Attaching drivetrain calculator screen.
+[2026-09-17 12:52:26.784] [APP] [info] DrivetrainLayer: OnAttach complete.
+[2026-09-17 12:52:26.847] [APP] [info] SF_Telem: screens ready (Main / Testing / Analysis / Replay).
+[2026-09-17 12:52:26.847] [COSMIC] [info] WorkspaceLayer project name set to: 'WO05HostFixture'
+[2026-09-17 12:52:26.847] [COSMIC] [info] Successfully loaded and mounted project DLL Layer!
+[2026-09-17 12:52:26.849] [COSMIC] [info] WorkspaceLayer: Dockspace built (legacy 3-tier left sidebar).
+[2026-09-17 12:52:26.923] [COSMIC] [info] WorkspaceLayer: Dockspace built (port mode L=true R=true T=false B=true).
+[2026-09-17 12:52:26.924] [COSMIC] [trace] Shutting down Application Subsystems...
+[2026-09-17 12:52:26.925] [COSMIC] [info] JobSystem: Thread pool shut down cleanly.
+[2026-09-17 12:52:26.925] [COSMIC] [warning] WorkspaceLayer: Clearing client layer: SF_Telem
+[2026-09-17 12:52:26.925] [APP] [info] DrivetrainLayer: Detached.
+[2026-09-17 12:52:26.925] [COSMIC] [warning] Redirecting active logging channels to destination target: 'logs'
+[2026-09-17 12:52:26.926] [COSMIC] [info] Log streams successfully re-routed.
+[2026-09-17 12:52:26.926] [APP] [info] SF_Telem: Detached.
+[2026-09-17 12:52:26.927] [COSMIC] [info] Project DLL safely unmounted and unloaded.
+[2026-09-17 12:52:26.945] [COSMIC] [trace] AudioEngine shut down.
+[2026-09-17 12:52:26.945] [COSMIC] [trace] Shutting down Renderer2D
+[2026-09-17 12:52:26.963] [COSMIC] [trace] Application Subsystems safely terminated.
+[doctest] doctest version is "2.4.12"
+[doctest] run with "--help" for options
+WO05 actual host child: schedule=7 transition=0 storage=0
+===============================================================================
+[doctest] test cases: 1 | 1 passed | 0 failed | 357 skipped
+[doctest] assertions: 6 | 6 passed | 0 failed |
+[doctest] Status: SUCCESS!
+LOG: s7-t1-i0.out.log
+SHA256: 6449c3e6569369bba4a8bdf9d6197f6f7fc44f329d59b495ad07e8b29fad9ecc
+[2026-09-17 12:52:27.382] [COSMIC] [info] ThemeManager: initialised (11 theme(s))
+[2026-09-17 12:52:27.384] [COSMIC] [info] Fonts: registered 'Roboto-Bold'
+[2026-09-17 12:52:27.384] [COSMIC] [info] Fonts: registered 'Roboto-Medium'
+[2026-09-17 12:52:27.384] [COSMIC] [info] Fonts: registered 'Roboto-Regular'
+[2026-09-17 12:52:27.384] [COSMIC] [info] Fonts: initialised (3 custom face(s), icons on)
+[2026-09-17 12:52:27.384] [COSMIC] [info] Startup project requested: 'WO05HostFixture.dll' — skipping the Launcher.
+[2026-09-17 12:52:27.396] [COSMIC] [info] WorkspaceLayer: Mounting client layer: SF_Telem
+[2026-09-17 12:52:27.396] [APP] [info] SF_Telem: Attaching combined telemetry app.
+[2026-09-17 12:52:27.396] [COSMIC] [warning] Redirecting active logging channels to destination target: 'assets/projects/SF_Telem/logs'
+[2026-09-17 12:52:27.397] [COSMIC] [info] Log streams successfully re-routed.
+[2026-09-17 12:52:27.479] [APP] [info] DrivetrainLayer: Attaching drivetrain calculator screen.
+[2026-09-17 12:52:27.480] [APP] [info] DrivetrainLayer: OnAttach complete.
+[2026-09-17 12:52:27.542] [APP] [info] SF_Telem: screens ready (Main / Testing / Analysis / Replay).
+[2026-09-17 12:52:27.542] [COSMIC] [info] WorkspaceLayer project name set to: 'WO05HostFixture'
+[2026-09-17 12:52:27.542] [COSMIC] [info] Successfully loaded and mounted project DLL Layer!
+[2026-09-17 12:52:27.544] [COSMIC] [info] WorkspaceLayer: Dockspace built (legacy 3-tier left sidebar).
+[2026-09-17 12:52:27.547] [COSMIC] [warning] WorkspaceLayer: Clearing client layer: SF_Telem
+[2026-09-17 12:52:27.547] [APP] [info] DrivetrainLayer: Detached.
+[2026-09-17 12:52:27.547] [COSMIC] [warning] Redirecting active logging channels to destination target: 'logs'
+[2026-09-17 12:52:27.548] [COSMIC] [info] Log streams successfully re-routed.
+[2026-09-17 12:52:27.548] [APP] [info] SF_Telem: Detached.
+[2026-09-17 12:52:27.549] [COSMIC] [info] Project DLL safely unmounted and unloaded.
+[2026-09-17 12:52:27.623] [COSMIC] [info] LauncherLayer: Background shader loaded.
+[2026-09-17 12:52:27.624] [COSMIC] [trace] Shutting down Application Subsystems...
+[2026-09-17 12:52:27.625] [COSMIC] [info] JobSystem: Thread pool shut down cleanly.
+[2026-09-17 12:52:27.637] [COSMIC] [trace] AudioEngine shut down.
+[2026-09-17 12:52:27.637] [COSMIC] [trace] Shutting down Renderer2D
+[2026-09-17 12:52:27.655] [COSMIC] [trace] Application Subsystems safely terminated.
+[doctest] doctest version is "2.4.12"
+[doctest] run with "--help" for options
+WO05 actual host child: schedule=7 transition=1 storage=0
+===============================================================================
+[doctest] test cases: 1 | 1 passed | 0 failed | 357 skipped
+[doctest] assertions: 6 | 6 passed | 0 failed |
+[doctest] Status: SUCCESS!
+LOG: s8-t0-i0.out.log
+SHA256: dc7d818cefe1ce39bb760956925d876946858a6d0663e668e388b664418f1840
+[2026-09-17 12:52:28.085] [COSMIC] [info] ThemeManager: initialised (11 theme(s))
+[2026-09-17 12:52:28.087] [COSMIC] [info] Fonts: registered 'Roboto-Bold'
+[2026-09-17 12:52:28.087] [COSMIC] [info] Fonts: registered 'Roboto-Medium'
+[2026-09-17 12:52:28.087] [COSMIC] [info] Fonts: registered 'Roboto-Regular'
+[2026-09-17 12:52:28.088] [COSMIC] [info] Fonts: initialised (3 custom face(s), icons on)
+[2026-09-17 12:52:28.088] [COSMIC] [info] Startup project requested: 'WO05HostFixture.dll' — skipping the Launcher.
+[2026-09-17 12:52:28.101] [COSMIC] [info] WorkspaceLayer: Mounting client layer: SF_Telem
+[2026-09-17 12:52:28.101] [APP] [info] SF_Telem: Attaching combined telemetry app.
+[2026-09-17 12:52:28.101] [COSMIC] [warning] Redirecting active logging channels to destination target: 'assets/projects/SF_Telem/logs'
+[2026-09-17 12:52:28.102] [COSMIC] [info] Log streams successfully re-routed.
+[2026-09-17 12:52:28.187] [APP] [info] DrivetrainLayer: Attaching drivetrain calculator screen.
+[2026-09-17 12:52:28.187] [APP] [info] DrivetrainLayer: OnAttach complete.
+[2026-09-17 12:52:28.250] [APP] [info] SF_Telem: screens ready (Main / Testing / Analysis / Replay).
+[2026-09-17 12:52:28.250] [COSMIC] [info] WorkspaceLayer project name set to: 'WO05HostFixture'
+[2026-09-17 12:52:28.250] [COSMIC] [info] Successfully loaded and mounted project DLL Layer!
+[2026-09-17 12:52:28.252] [COSMIC] [info] WorkspaceLayer: Dockspace built (legacy 3-tier left sidebar).
+[2026-09-17 12:52:28.334] [COSMIC] [info] WorkspaceLayer: Dockspace built (port mode L=true R=true T=false B=true).
+[2026-09-17 12:52:28.335] [COSMIC] [trace] Shutting down Application Subsystems...
+[2026-09-17 12:52:28.335] [COSMIC] [info] JobSystem: Thread pool shut down cleanly.
+[2026-09-17 12:52:28.335] [COSMIC] [warning] WorkspaceLayer: Clearing client layer: SF_Telem
+[2026-09-17 12:52:28.335] [APP] [info] DrivetrainLayer: Detached.
+[2026-09-17 12:52:28.335] [COSMIC] [warning] Redirecting active logging channels to destination target: 'logs'
+[2026-09-17 12:52:28.337] [COSMIC] [info] Log streams successfully re-routed.
+[2026-09-17 12:52:28.337] [APP] [info] SF_Telem: Detached.
+[2026-09-17 12:52:28.337] [COSMIC] [info] Project DLL safely unmounted and unloaded.
+[2026-09-17 12:52:28.355] [COSMIC] [trace] AudioEngine shut down.
+[2026-09-17 12:52:28.355] [COSMIC] [trace] Shutting down Renderer2D
+[2026-09-17 12:52:28.373] [COSMIC] [trace] Application Subsystems safely terminated.
+[doctest] doctest version is "2.4.12"
+[doctest] run with "--help" for options
+WO05 actual host child: schedule=8 transition=0 storage=0
+===============================================================================
+[doctest] test cases: 1 | 1 passed | 0 failed | 357 skipped
+[doctest] assertions: 6 | 6 passed | 0 failed |
+[doctest] Status: SUCCESS!
+LOG: s8-t1-i0.out.log
+SHA256: 748a601c41d32aea6e89f34d48a8decdbac1819a8ccc01a57ef991956be6470b
+[2026-09-17 12:52:28.777] [COSMIC] [info] ThemeManager: initialised (11 theme(s))
+[2026-09-17 12:52:28.779] [COSMIC] [info] Fonts: registered 'Roboto-Bold'
+[2026-09-17 12:52:28.779] [COSMIC] [info] Fonts: registered 'Roboto-Medium'
+[2026-09-17 12:52:28.779] [COSMIC] [info] Fonts: registered 'Roboto-Regular'
+[2026-09-17 12:52:28.779] [COSMIC] [info] Fonts: initialised (3 custom face(s), icons on)
+[2026-09-17 12:52:28.779] [COSMIC] [info] Startup project requested: 'WO05HostFixture.dll' — skipping the Launcher.
+[2026-09-17 12:52:28.793] [COSMIC] [info] WorkspaceLayer: Mounting client layer: SF_Telem
+[2026-09-17 12:52:28.793] [APP] [info] SF_Telem: Attaching combined telemetry app.
+[2026-09-17 12:52:28.793] [COSMIC] [warning] Redirecting active logging channels to destination target: 'assets/projects/SF_Telem/logs'
+[2026-09-17 12:52:28.794] [COSMIC] [info] Log streams successfully re-routed.
+[2026-09-17 12:52:28.880] [APP] [info] DrivetrainLayer: Attaching drivetrain calculator screen.
+[2026-09-17 12:52:28.880] [APP] [info] DrivetrainLayer: OnAttach complete.
+[2026-09-17 12:52:28.942] [APP] [info] SF_Telem: screens ready (Main / Testing / Analysis / Replay).
+[2026-09-17 12:52:28.942] [COSMIC] [info] WorkspaceLayer project name set to: 'WO05HostFixture'
+[2026-09-17 12:52:28.943] [COSMIC] [info] Successfully loaded and mounted project DLL Layer!
+[2026-09-17 12:52:28.944] [COSMIC] [info] WorkspaceLayer: Dockspace built (legacy 3-tier left sidebar).
+[2026-09-17 12:52:28.948] [COSMIC] [warning] WorkspaceLayer: Clearing client layer: SF_Telem
+[2026-09-17 12:52:28.948] [APP] [info] DrivetrainLayer: Detached.
+[2026-09-17 12:52:28.948] [COSMIC] [warning] Redirecting active logging channels to destination target: 'logs'
+[2026-09-17 12:52:28.949] [COSMIC] [info] Log streams successfully re-routed.
+[2026-09-17 12:52:28.949] [APP] [info] SF_Telem: Detached.
+[2026-09-17 12:52:28.949] [COSMIC] [info] Project DLL safely unmounted and unloaded.
+[2026-09-17 12:52:29.021] [COSMIC] [info] LauncherLayer: Background shader loaded.
+[2026-09-17 12:52:29.022] [COSMIC] [trace] Shutting down Application Subsystems...
+[2026-09-17 12:52:29.023] [COSMIC] [info] JobSystem: Thread pool shut down cleanly.
+[2026-09-17 12:52:29.040] [COSMIC] [trace] AudioEngine shut down.
+[2026-09-17 12:52:29.040] [COSMIC] [trace] Shutting down Renderer2D
+[2026-09-17 12:52:29.058] [COSMIC] [trace] Application Subsystems safely terminated.
+[doctest] doctest version is "2.4.12"
+[doctest] run with "--help" for options
+WO05 actual host child: schedule=8 transition=1 storage=0
+===============================================================================
+[doctest] test cases: 1 | 1 passed | 0 failed | 357 skipped
+[doctest] assertions: 6 | 6 passed | 0 failed |
+[doctest] Status: SUCCESS!

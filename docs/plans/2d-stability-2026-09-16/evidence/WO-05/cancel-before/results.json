@@ -1,0 +1,105 @@
+﻿{
+    "manifest":  "wo05-cancel-repro",
+    "profile":  "all",
+    "tier_filter":  [
+
+                    ],
+    "config":  "Debug",
+    "mode":  "2D",
+    "generated_utc":  "2026-09-17T20:36:32.7268188Z",
+    "git":  {
+                "commit":  "552ef4519475e614b2e18f35d656daa8c011a8ca",
+                "dirty":  true,
+                "dirty_diff_sha256":  "e1d46e103018923e4b9ea28bee150580e2ad7da67c8538ca217c70f85c7a11e3"
+            },
+    "environment":  {
+                        "os_caption":  "Microsoft Windows 11 Education",
+                        "os_version":  "10.0.26200",
+                        "os_build":  "26200",
+                        "os_display":  "26200.9457",
+                        "cpu_name":  "AMD Ryzen 7 7800X3D 8-Core Processor",
+                        "cpu_cores":  8,
+                        "cpu_threads":  16,
+                        "cpu_addr_width":  64,
+                        "cpu_isa_floor":  "SSE4.2 (D-CPU); see evidence/WO-02/cpu-isa-probe.txt",
+                        "ram_bytes":  33462239232,
+                        "ram_gib":  31.2,
+                        "gpus":  [
+                                     {
+                                         "name":  "NVIDIA GeForce RTX 5070 Ti",
+                                         "driver":  "32.0.16.1692",
+                                         "driver_date":  "\/Date(1788480000000)\/"
+                                     },
+                                     {
+                                         "name":  "AMD Radeon(TM) Graphics",
+                                         "driver":  "32.0.21045.5002",
+                                         "driver_date":  "\/Date(1786924800000)\/"
+                                     }
+                                 ],
+                        "opengl_version":  null,
+                        "powershell":  "5.1.26100.9444",
+                        "hostname":  "DESKTOP-SEOA4BT"
+                    },
+    "capabilities":  {
+                         "windows":  true,
+                         "cpu-sse42":  true,
+                         "gpu-gl":  true,
+                         "serial-device":  false,
+                         "editor-ui":  false
+                     },
+    "forced_unavailable":  [
+
+                           ],
+    "bin_dir":  "C:\\dev\\Cosmic\\build\\Runtime\\Debug",
+    "run_temp":  "C:\\dev\\Cosmic\\build\\wo05-temp\\cosmic-accept-8de1bfcce49f4726994b4e6f375d2ada",
+    "golden_dir":  "C:\\dev\\Cosmic\\tests\\acceptance\\goldens",
+    "golden_before":  {
+                          ".gitkeep-golden.txt":  "8e92944b7b4e999a32148948af2a13498ece10d56133c62c5c84431f2d335118"
+                      },
+    "golden_after":  {
+                         ".gitkeep-golden.txt":  "8e92944b7b4e999a32148948af2a13498ece10d56133c62c5c84431f2d335118"
+                     },
+    "golden_mutated":  false,
+    "acceptance_mode":  true,
+    "counts":  {
+                   "total":  1,
+                   "passed":  0,
+                   "failed":  1,
+                   "blocked":  0
+               },
+    "self_test":  {
+                      "enabled":  false,
+                      "failures":  [
+
+                                   ]
+                  },
+    "cases":  [
+                  {
+                      "id":  "T03-owner-cancel-heartbeat",
+                      "tier":  "U",
+                      "description":  "100 non-cooperative open cancellations on the actual root, approved 250-ms service budget",
+                      "requires":  [
+                                       "windows"
+                                   ],
+                      "transport":  "fake",
+                      "seed":  5,
+                      "start_utc":  "2026-09-17T20:35:42.4694332Z",
+                      "deadline_sec":  90,
+                      "exercised":  "fake-transport",
+                      "fixture":  "C:\\dev\\Cosmic\\tests\\acceptance\\..\\test_wo05_matrix.cpp",
+                      "fixture_sha256":  "bf647883f377982f63f0e4bf5ef8242d7a3d1bcc92c56fb894c44711de1f8b63",
+                      "command":  "C:\\dev\\Cosmic\\build\\Runtime\\Debug\\CosmicTests.exe \"--test-case=WO-05 T03: cancel a non-cooperative*\" --no-colors",
+                      "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-05\\cancel-before\\T03-owner-cancel-heartbeat.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-05\\cancel-before\\T03-owner-cancel-heartbeat.err.log",
+                      "pid":  29324,
+                      "exit_code":  1,
+                      "crash":  false,
+                      "tests_passed":  0,
+                      "tests_expected_min":  1,
+                      "verdict":  "FAILED",
+                      "detail":  "expected \u003e= 1 tests, got 0 (exit 1, wanted 0)",
+                      "duration_sec":  50.24,
+                      "end_utc":  "2026-09-17T20:36:32.7148165Z"
+                  }
+              ]
+}

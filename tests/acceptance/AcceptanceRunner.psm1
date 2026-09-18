@@ -328,8 +328,10 @@ function Invoke-AcceptanceCase {
         $stdout = ''
         if (Test-Path -LiteralPath $outLog) { $stdout = (Get-Content -LiteralPath $outLog -Raw -ErrorAction SilentlyContinue) }
         $passedCount = -1
-        $m = [regex]::Match($stdout, 'test cases:\s*(\d+)\s*\|\s*(\d+)\s+passed')
-        if ($m.Success) { $passedCount = [int]$m.Groups[2].Value }
+        if ($stdout) {
+            $m = [regex]::Match($stdout, 'test cases:\s*(\d+)\s*\|\s*(\d+)\s+passed')
+            if ($m.Success) { $passedCount = [int]$m.Groups[2].Value }
+        }
         $rec.tests_passed = $passedCount
         $rec.tests_expected_min = [int]$Case.minTests
         if ($passedCount -lt [int]$Case.minTests) {

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="selftest" tests="11" failures="6" skipped="2">
+  <testsuite name="all" tests="11" failures="6" skipped="2">
+    <testcase name="H01a-intentional-nonzero-exit" classname="selftest.W" time="0">
+      <failure type="FAILED" message="nonzero-exit: exit 7, expected 0"></failure>
+    </testcase>
+    <testcase name="H01b-crashing-fixture" classname="selftest.W" time="0">
+      <failure type="FAILED" message="crash: exit -2146232797, expected 0"></failure>
+    </testcase>
+    <testcase name="H01c-passing-fixture" classname="selftest.W" time="0">
+    </testcase>
+    <testcase name="H02-hanging-child-times-out" classname="selftest.W" time="0">
+      <failure type="TIMEOUT" message="exceeded per-case deadline of 2s; child tree killed, parent survived"></failure>
+    </testcase>
+    <testcase name="H03-missing-fixture" classname="selftest.U" time="0">
+      <failure type="MISSING" message="missing fixture: C:\dev\Cosmic\tests\acceptance\fixtures\does-not-exist.ps1"></failure>
+    </testcase>
+    <testcase name="H03-missing-test-zero-count" classname="selftest.U" time="0">
+      <failure type="FAILED" message="expected &gt;= 1 tests, got 0 (exit 0, wanted 0)"></failure>
+    </testcase>
+    <testcase name="H03-missing-golden" classname="selftest.G" time="0">
+      <failure type="MISSING" message="missing golden: C:\dev\Cosmic\tests\acceptance\goldens\does-not-exist.png (acceptance mode never regenerates goldens)"></failure>
+    </testcase>
+    <testcase name="H04-serial-hardware-blocked" classname="selftest.W" time="0">
+      <skipped message="missing capability: serial-device"/>
+    </testcase>
+    <testcase name="H04-gpu-blocked" classname="selftest.G" time="0">
+      <skipped message="missing capability: gpu-gl"/>
+    </testcase>
+    <testcase name="H04-fake-transport-runs" classname="selftest.W" time="0">
+    </testcase>
+    <testcase name="Hnormal-minimal-pass" classname="selftest.U" time="0">
+    </testcase>
+  </testsuite>
+</testsuites>

@@ -1,0 +1,4 @@
+Case output: T05-real-host-policy.out.log
+SHA256: 69b114cd362bd40ce2963fa4fe023fdc22d3fe96ec7df461145a41db420f41f8
+host schedule=0 transition=0 completed=1
+[doctest] test cases: 1 | 1 passed | 0 failed

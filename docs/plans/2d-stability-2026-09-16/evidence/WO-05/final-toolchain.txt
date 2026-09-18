@@ -1,0 +1,10 @@
+Captured UTC: 2026-09-17T20:25:53.7803352Z
+cmake version 4.3.1-msvc1
+
+CMake suite maintained and supported by Kitware (kitware.com/cmake).
+COSMIC_2D_ONLY:BOOL=ON
+COSMIC_BUILD_TESTS:BOOL=ON
+CMAKE_GENERATOR:INTERNAL=Visual Studio 18 2026
+CMAKE_GENERATOR_PLATFORM:INTERNAL=x64
+set(CMAKE_CXX_COMPILER "C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe")
+set(CMAKE_CXX_COMPILER_VERSION "19.51.36248.0")

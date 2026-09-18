@@ -5,20 +5,19 @@
 // The OS-boundary seam for SerialPort (WO-04, 2D stability campaign)
 // ============================================================================
 //
-// SerialPort's connection state machine — the two std::threads, m_Abandon, the
-// manual-reset stop event, and every State transition — is the code that shipped
+// SerialPort's connection state machine — the workers, cancellation jobs,
+// manual-reset stop events, and every State transition — is the code that shipped
 // the Bluetooth-drop bugs, so it is exactly what tests must exercise. But its
-// interesting states (a port that opens, receives bytes, then drops) have no
-// headless entry point: SerialPort only opens a real device via CreateFileA and
-// SerialLink only discovers ports from the Windows registry (KI-2).
+// interesting states (a port that opens, receives bytes, then drops) originally
+// had no headless entry point (KI-2); WO-04 made those states reachable here.
 //
 // This interface extracts ONLY the four Win32 syscalls SerialPort makes plus the
 // registry scan, behind one boundary, so a test can drive the REAL state machine
 // over an injected transport (a fake) without hardware. The parser, the state
 // machine, and SerialLink's auto-reconnect policy stay exactly as they ship.
 //
-// The default is Win32SerialTransport, which is today's code verbatim; the
-// shipping build is byte-identical in behaviour. A test injects a fake through
+// The default is Win32SerialTransport. WO-05 changes cancellation and lifetime
+// ordering while preserving wire bytes/port parameters. A test injects a fake through
 // SerialPort's / SerialLink's test-only constructor. Nothing test-only (the fake)
 // lives in the engine or ships in a package — it lives under tests/.
 //
@@ -51,7 +50,7 @@ namespace Cosmic
 
 	// The transport boundary. Every method maps to exactly one place in the shipping
 	// SerialPort (see the mapping table in transport-seam-spec.md §2). Nothing about
-	// synchronization lives here: the stop event is owned and signalled by SerialPort,
+	// lifecycle policy lives here: the stop event is owned and signalled by SerialPort,
 	// and merely passed in as an opaque handle so a transport that honours cancellation
 	// (the fake) can observe it.
 	class ISerialTransport
@@ -61,9 +60,8 @@ namespace Cosmic
 
 		// Blocking open (CreateFileA + DCB + timeouts on Win32). `stopEvent` is the
 		// SerialPort-owned cancel handle: an implementation that can cancel a stalled
-		// open returns promptly once it is signalled. The Win32 transport CANNOT
-		// cancel CreateFileA and so ignores it — that inability is KI-4, and honouring
-		// `stopEvent` in a fake is what lets WO-05 assert the bounded-close contract.
+		// open observes cancellation. SerialPort also requests CancelSynchronousIo
+		// on Win32; unsupported driver cancellation uses shared-owned late cleanup.
 		virtual bool Open(const std::string& portName, std::uint32_t baudRate, void* stopEvent) = 0;
 
 		// Blocking read. Returns on data, a device drop, or `stopEvent` being signalled
@@ -71,8 +69,8 @@ namespace Cosmic
 		// Win32). Writes at most `cap` bytes into `buf`.
 		virtual ReadResult Read(char* buf, std::size_t cap, void* stopEvent) = 0;
 
-		// Bounded blocking write (overlapped WriteFile on Win32). True only when every
-		// byte was accepted.
+		// Blocking write observes stopEvent, then drains completion before returning.
+		// True only when every byte was accepted; never return with borrowed data live.
 		virtual bool Write(const void* data, std::size_t length, void* stopEvent) = 0;
 
 		// Release the device and unblock any pending Read (CancelIoEx + CloseHandle on

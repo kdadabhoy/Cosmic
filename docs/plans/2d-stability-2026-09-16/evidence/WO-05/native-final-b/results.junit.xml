@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="wo05-host-shards" tests="1" failures="0" skipped="0">
+  <testsuite name="b" tests="1" failures="0" skipped="0">
+    <testcase name="T03-native-schedules-5-8" classname="wo05-host-shards.G" time="0">
+    </testcase>
+  </testsuite>
+</testsuites>

@@ -103,6 +103,67 @@ Append format (copy the block below for a new entry):
 
 ---
 
+### KI-4 — Delayed open stalls shared-root teardown
+- Owner: WO-05; diagnosis: WO-05a.
+- Before: real SF_Telem OnDetach with a barrier-confirmed 2500-ms open took 2507 ms,
+  exceeding the approved 2000-ms budget. `evidence/WO-05/before/`.
+- Fix/regression landed first in local commit `552ef45`; shared-owned late cleanup,
+  cancellation before waiting, and owner-thread session adoption. T04 qualification
+  remains hardware-blocked; software proof does not close the physical gate.
+
+### KI-5 — Close releases a session with an app-owned writer still active
+- Owner: WO-05. Before: isolated WO-04 SerialPort source with only a signature adapter
+  passing null cancellation to the extended Write seam; root OnDetach returned with
+  one active writer. `evidence/WO-05/write-before/`; writer joined before root destruction.
+- The WO-05 fix serializes writes/device release and drains cancellation. Regression:
+  `WO-05 T03: close drains an app-owned in-flight writer...`.
+
+### KI-6 — A non-polling screen allows an unbounded serial receive queue
+- Confirmed before fix: `evidence/WO-05/queue-before/`; 1049088 bytes remained queued
+  when the consumer stopped polling. Main's 4096-byte parser purge cannot bound the
+  upstream serial queue while Home/Analysis/loaded Replay does not poll it.
+- Owner: WO-05 / T06. Fix: 1-MiB queue preserving the accepted prefix, with
+  explicit overflow and close-discard byte counters. Parser/firmware remain unchanged.
+  Passing Debug/Release T06 evidence is in `evidence/WO-05/`; follow-on local commit
+  recorded by the WO-05 report. Physical qualification remains blocked.
+
+### KI-7 — A rapid silent-stall reconnect retains the previous partial text frame
+- Confirmed before fix: `evidence/WO-05/generation-before/`; a reconnect completes
+  between policy ticks, so the old open/closed edge detector never emits
+  ConsumeJustConnected. The real root's TelemHub retains six old bytes and rejects
+  the following otherwise valid frame. Owner: WO-05 / T06.
+- Fix: monotonic adopted-session generation instead of a sampled boolean
+  open edge, preserving one notification per session even without a closed frame.
+  Passing Debug/Release T06 regression evidence is in `evidence/WO-05/`.
+
+### WO-05 update — KI-2 deterministic coverage gap
+- The real SF_Telem root, shared screens/services and host unload now use the seam:
+  225 crossed root schedules x100, plus 18 fresh host close/launcher schedules x100.
+- Both previously reserved WO-05a H1/H3 cases are active. Virtual-COM, representative
+  USB/SPP and the second Windows version remain T04 ENVIRONMENT_BLOCKED; software
+  coverage does not certify driver cancellation.
+
+### KI-8 — PS5.1 acceptance minTests aborts on an empty stdout file
+- Owner: WO-05 (discovered while auditing T05). Before:
+  `evidence/WO-05/runner-before.txt`; minimal empty-output nonzero child causes
+  Regex.Match(null) in the WO-04 runner and aborts the parent before JSON/JUnit.
+- Regression: `wo05-runner-repro.manifest.json` self-test must classify FAILED,
+  expected minimum1 / observed-1, and preserve complete evidence. Fix: skip the
+  regex call for empty stdout, leaving the missing-count failure unchanged.
+  `evidence/WO-05/runner-after-fixed/` classifies FAILED and self-test succeeds;
+  no count requirement or verdict is weakened.
+
+### KI-9 - Cancelling a held open exceeds the UI connection-service budget
+- Owner: WO-05 / T03. Before: `evidence/WO-05/cancel-before/`; all 100
+  barrier-confirmed non-cooperative opens require about 501 ms for Disconnect,
+  exceeding the approved 250-ms owner responsiveness budget. Root lifetime and
+  eventual late cleanup still balance; this is a cancellation grace defect.
+- Regression: `WO-05 T03: cancel a non-cooperative open keeps the owner responsive...`.
+  Reduce the grace to 100 ms; retain independent job/transport ownership for late
+  completion. Passing-after: `evidence/WO-05/current-debug/` and
+  `current-release/`, all 100 iterations/config <=250 ms, maxima 121.911/116.552 ms.
+  Software regression is proven; physical driver qualification remains blocked.
+
 ## Register invariants
 
 - No entry is closed without a landed regression (or an explicit reviewed won't-fix with reason).

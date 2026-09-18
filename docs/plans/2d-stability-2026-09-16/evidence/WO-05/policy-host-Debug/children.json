@@ -1,0 +1,26 @@
+﻿{
+    "id":  "s0-t0-i0",
+    "tier":  "G",
+    "description":  "Fresh real host, actual SF_Telem and DLL unload",
+    "requires":  [
+                     "windows"
+                 ],
+    "transport":  "fake",
+    "seed":  null,
+    "start_utc":  "2026-09-18T00:46:24.3720156Z",
+    "deadline_sec":  60,
+    "exercised":  "fake-transport",
+    "command":  "C:\\dev\\Cosmic\\build\\Runtime\\Debug\\CosmicTests.exe \"--test-case=WO-05 T05 host:*\" --no-skip=true --no-colors",
+    "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-05\\policy-host-Debug\\s0-t0-i0.out.log",
+    "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-05\\policy-host-Debug\\s0-t0-i0.err.log",
+    "pid":  27312,
+    "exit_code":  0,
+    "crash":  false,
+    "tests_passed":  1,
+    "tests_expected_min":  1,
+    "verdict":  "PASSED",
+    "detail":  "exit 0 as expected",
+    "duration_sec":  0.951,
+    "end_utc":  "2026-09-18T00:46:25.3312469Z",
+    "close_exit_upper_bound_ms":  156
+}

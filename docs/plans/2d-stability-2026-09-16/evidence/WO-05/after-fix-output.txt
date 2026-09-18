@@ -1,0 +1,20 @@
+LOG: T03-H1-root-close-delayed-open.out.log
+SHA256: 1dfa736e778e51dfd0b9dbd8ef4a90a5f266c971444696a821464cd8168a2a23
+[2026-09-17 12:36:10.459] [COSMIC] [error] Failed to load texture at assets/projects/images/SF_Drivetrain.PNG
+[2026-09-17 12:36:10.459] [COSMIC] [error] Failed to load texture at assets/projects/images/SF_Weapon.PNG
+[2026-09-17 12:36:10.459] [COSMIC] [error] Failed to load texture at assets/projects/images/SF_Drivetrain.PNG
+[2026-09-17 12:36:10.460] [COSMIC] [warning] Redirecting active logging channels to destination target: 'logs'
+[2026-09-17 12:36:10.460] [COSMIC] [info] Log streams successfully re-routed.
+[2026-09-17 12:36:10.461] [APP] [info] SF_Telem: Detached.
+[doctest] doctest version is "2.4.12"
+[doctest] run with "--help" for options
+===============================================================================
+C:\dev\Cosmic\tests\test_serial_shutdown_race.cpp(131):
+TEST CASE:  WO-05a H1: exit hang - close while a reconnect worker blocks in CreateFileA
+
+C:\dev\Cosmic\tests\test_serial_shutdown_race.cpp(154): MESSAGE: SKIPPED (ENVIRONMENT_BLOCKED): needs a Bluetooth/virtual COM or the WO-04 seam (FakeSerialTransport::SetOpenBlockMs). See evidence/WO-05a/transport-seam-spec.md.
+
+===============================================================================
+[doctest] test cases: 1 | 1 passed | 0 failed | 349 skipped
+[doctest] assertions: 4 | 4 passed | 0 failed |
+[doctest] Status: SUCCESS!
