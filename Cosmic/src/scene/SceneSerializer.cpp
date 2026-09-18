@@ -19,6 +19,7 @@
 #include <fstream>
 #include <sstream>
 #include <unordered_map>
+#include <unordered_set>   // WO-09 — GatherSubtree visited set
 #include <vector>
 
 namespace Cosmic
@@ -367,17 +368,39 @@ namespace Cosmic
         }
 
         // Preorder subtree walk (parent, then children in stored order) via the
-        // RelationshipComponent tree — used by prefab save (E14).
-        void GatherSubtree(Scene& scene, entt::entity node, std::vector<entt::entity>& out)
+        // RelationshipComponent tree — used by prefab save (E14). Iterative with a
+        // visited set and the shared depth ceiling (WO-09 / KI-42): a chain deeper
+        // than Scene::kMaxHierarchyDepth is cut there (warned once), a hand-authored
+        // cycle is gathered once.
+        void GatherSubtree(Scene& scene, entt::entity root, std::vector<entt::entity>& out)
         {
-            out.push_back(node);
             auto& reg = scene.GetRegistry();
-            if (auto* rel = reg.try_get<RelationshipComponent>(node))
-                for (const UUID& childId : rel->Children)
+            struct Item { entt::entity Handle; int Depth; };
+            std::vector<Item> work{ { root, 0 } };
+            std::unordered_set<entt::entity> visited;
+            bool warned = false;
+            while (!work.empty())
+            {
+                const Item it = work.back();
+                work.pop_back();
+                if (!reg.valid(it.Handle) || !visited.insert(it.Handle).second)
+                    continue;
+                out.push_back(it.Handle);
+                if (it.Depth + 1 >= Scene::kMaxHierarchyDepth)
                 {
-                    Entity child = scene.FindByUUID(childId);
-                    if (child) GatherSubtree(scene, (entt::entity)child, out);
+                    if (!warned)
+                    {
+                        warned = true;
+                        CS_CORE_WARN("SceneSerializer::SavePrefab: hierarchy deeper than {0} levels — the rest is not saved.",
+                                     Scene::kMaxHierarchyDepth);
+                    }
+                    continue;
                 }
+                if (auto* rel = reg.try_get<RelationshipComponent>(it.Handle))
+                    for (auto c = rel->Children.rbegin(); c != rel->Children.rend(); ++c)
+                        if (Entity child = scene.FindByUUID(*c))
+                            work.push_back({ (entt::entity)child, it.Depth + 1 });
+            }
         }
 
         // Crash-safe text write (temp file + atomic rename). Shared by Save + SavePrefab.
@@ -432,6 +455,40 @@ namespace Cosmic
         }
     }
 
+    int SceneSerializer::JsonNestingDepth(const std::string& text)
+    {
+        int depth = 0, maxDepth = 0;
+        bool inString = false, escaped = false;
+        for (char c : text)
+        {
+            if (inString)
+            {
+                if (escaped)        escaped = false;
+                else if (c == '\\') escaped = true;
+                else if (c == '"')  inString = false;
+                continue;
+            }
+            if (c == '"') { inString = true; continue; }
+            if (c == '[' || c == '{') { if (++depth > maxDepth) maxDepth = depth; }
+            else if (c == ']' || c == '}') { if (depth > 0) --depth; }
+        }
+        return maxDepth;
+    }
+
+    namespace
+    {
+        // The KI-44 gate every loader runs before json::parse.
+        bool NestingOk(const std::string& text, const char* who)
+        {
+            const int depth = SceneSerializer::JsonNestingDepth(text);
+            if (depth <= SceneSerializer::kMaxJsonNestingDepth)
+                return true;
+            CS_CORE_ERROR("{0}: document nests {1} levels deep (limit {2}) — rejected.",
+                          who, depth, SceneSerializer::kMaxJsonNestingDepth);
+            return false;
+        }
+    }
+
     std::string SceneSerializer::SaveToString(Scene& scene)
     {
         auto& reg      = scene.GetRegistry();
@@ -460,6 +517,8 @@ namespace Cosmic
 
     bool SceneSerializer::LoadFromString(Scene& scene, const std::string& text)
     {
+        if (!NestingOk(text, "SceneSerializer::LoadFromString"))
+            return false;
         json j = json::parse(text, nullptr, false);
         if (j.is_discarded())
         {
@@ -482,6 +541,18 @@ namespace Cosmic
             UUID id = (je.contains("id") && je["id"].is_string())
                           ? UUID::FromString(je["id"].get<std::string>())
                           : UUID();
+
+            // Duplicate ids (WO-09 / KI-45): a second block with an id that is already
+            // in this scene gets a FRESH id — its data is kept, nothing is dropped, and
+            // the UUID index is never overwritten by a load (which left the survivor
+            // unreachable once its twin was destroyed). File references to the id keep
+            // resolving to the first entity that carried it.
+            if (id.IsValid() && scene.FindByUUID(id))
+            {
+                CS_CORE_WARN("SceneSerializer: duplicate entity id {0} in the file — the later entity was given a fresh id.",
+                             id.ToString());
+                id = UUID();
+            }
 
             Entity e = scene.CreateEntityWithUUID(id);   // Tag/Transform blocks overwrite defaults
             const entt::entity handle = (entt::entity)e;
@@ -565,8 +636,11 @@ namespace Cosmic
             return Entity{};
         }
         std::stringstream ss; ss << is.rdbuf();
+        const std::string text = ss.str();
+        if (!NestingOk(text, "SceneSerializer::InstantiatePrefab"))
+            return Entity{};
 
-        json j = json::parse(ss.str(), nullptr, false);
+        json j = json::parse(text, nullptr, false);
         if (j.is_discarded() || !j.contains("entities") || !j["entities"].is_array())
         {
             CS_CORE_ERROR("SceneSerializer::InstantiatePrefab: bad prefab '{0}'.", path);
@@ -648,6 +722,8 @@ namespace Cosmic
         if (!d || !instance)
             return false;
 
+        if (!NestingOk(jsonText, "SceneSerializer::LoadReflectedFromString"))
+            return false;
         json j = json::parse(jsonText, nullptr, false);
         if (j.is_discarded())
         {

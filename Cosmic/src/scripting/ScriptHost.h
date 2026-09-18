@@ -100,6 +100,16 @@ namespace Cosmic
         ITelemetrySink* m_Sink = nullptr;   // E20 — injected into each instance
         uint64_t m_SignalHandle = 0;        // U2 — EventBus ConnectAny handle (0 = none)
 
+        // WO-09 / KI-46 — an entity destroyed (or its NativeScriptComponent removed)
+        // while this host is instantiated used to leak its script object, skip its
+        // OnDestroy and stay counted in LiveCount. Instantiate connects this to the
+        // registry's on_destroy<NativeScriptComponent> signal; Destroy disconnects it.
+        // The callback runs while the entity handle is still valid but sibling
+        // components may already be gone — OnDestroy must use only the script's own
+        // state when it is reached this way.
+        void OnScriptComponentDestroyed(entt::registry& reg, entt::entity e);
+        entt::connection m_DestroyConnection;
+
         // SystemScript tier (H9): one instance per SystemScriptComponent, resolved
         // after per-entity scripts and ticked BEFORE them (deterministic order).
         struct LiveSystem

@@ -129,6 +129,11 @@ namespace Cosmic
             return false;
         }
 
+        // The whole schema walk runs inside a try (WO-09 / KI-43) — see
+        // FlowAsset::LoadFromString: a mistyped key is a failed load, never a
+        // type_error escaping into std::terminate.
+        try
+        {
         out.Version = j.value("cosmic_story", 1);
         out.Start   = j.value("start", std::string());
         ParseVariables(j, out.Variables);
@@ -174,12 +179,20 @@ namespace Cosmic
                     jn["editor"].contains("pos") && jn["editor"]["pos"].is_array() &&
                     jn["editor"]["pos"].size() == 2)
                 {
-                    n.EditorPos.x = jn["editor"]["pos"][0].get<float>();
-                    n.EditorPos.y = jn["editor"]["pos"][1].get<float>();
+                    const auto& pos = jn["editor"]["pos"];   // tolerant, like FlowAsset (KI-43)
+                    n.EditorPos.x = pos[0].is_number() ? pos[0].get<float>() : 0.0f;
+                    n.EditorPos.y = pos[1].is_number() ? pos[1].get<float>() : 0.0f;
                 }
 
                 out.Nodes.push_back(std::move(n));
             }
+        }
+        }
+        catch (const std::exception& e)
+        {
+            if (error) *error = std::string("schema error: ") + e.what();
+            out = StoryGraph{};
+            return false;
         }
         return true;
     }

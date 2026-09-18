@@ -64,6 +64,18 @@ namespace Cosmic
 
 		// --- Hierarchy (E3) ---------------------------------------------------
 
+		/** @brief The SUPPORTED hierarchy depth (WO-09 / KI-42, ratified in the 2D
+		 *  stability numeric-bar policy): every walker — the parent chain
+		 *  (GetWorldTransform, IsAncestor, IsActiveInHierarchy) and the children
+		 *  walks (DestroyEntity, UiSystem::CollectElements, SceneSerializer::
+		 *  SavePrefab) — visits at most this many nodes along one path (self +
+		 *  4,095 ancestors / descendants). Deeper data is not an error: a walk stops
+		 *  at the ceiling (and warns once) instead of overflowing the stack, and a
+		 *  malformed cycle (RelationshipComponent authored by hand) is entered once
+		 *  and left. Data the editor and the serializer produce (SetParent refuses
+		 *  cycles) is always well inside it. */
+		static constexpr int kMaxHierarchyDepth = 4096;
+
 		/** @brief Re-parent `child` under `parent` (pass an invalid parent to
 		 *  detach to root). When keepWorldPose is true the child's local
 		 *  transform is rewritten so its WORLD pose does not change. Refuses (and

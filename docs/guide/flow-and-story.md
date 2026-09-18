@@ -98,7 +98,11 @@ Four things this is quietly asserting:
 
 `FlowAsset::LoadFromString` is the only parser (`FlowMachine.cpp:90`) and it is forgiving: every key
 is optional, unknown keys are ignored, and a malformed action entry is skipped rather than failing
-the load. Only invalid **JSON** returns `false`.
+the load. Invalid **JSON** returns `false` with `"parse error: …"` in `error`; since WO-09 (KI-43) a
+key that holds the **wrong JSON type** (`"push": ""`, `"emit": 5`, a document whose root is not an
+object) returns `false` with `"schema error: …"` instead of throwing out of the loader — a
+mistyped file is a failed load, never a crash. `StoryGraph::LoadFromString` follows the same rule.
+An editor `pos` that is not a number reads as `0`.
 
 | Key | Where | Type | Meaning |
 | --- | --- | --- | --- |

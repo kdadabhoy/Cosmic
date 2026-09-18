@@ -45,6 +45,11 @@ namespace Cosmic
             return;
         }
 
+        // WO-09 / KI-47 — Shutdown leaves m_Stopping raised; a pool spawned after it
+        // would observe the stale flag, exit at once, and every later Submit would
+        // sit in the queue forever (WaitIdle hangs). Re-arm before the workers start.
+        m_Stopping.store(false, std::memory_order_release);
+
         // -----------------------------------------------------------------------
         // WINDOWS CORE DISCOVERY
         // GetSystemInfo fills a SYSTEM_INFO struct. dwNumberOfProcessors is the

@@ -28,6 +28,18 @@ namespace Cosmic
     class COSMIC_API SceneSerializer
     {
     public:
+        // Bounded parsing (WO-09 / KI-44): a document whose JSON nests deeper than
+        // this (brackets outside strings) is REJECTED by every loader below before
+        // it is parsed. The parser itself is iterative, but an unknown component
+        // block is preserved by re-serialising it, and that walk is recursive — a
+        // 100,000-deep `[[[…]]]` in a 200 KB file overflowed the stack. A real
+        // scene nests about six levels; 512 leaves any authored data untouched.
+        static constexpr int kMaxJsonNestingDepth = 512;
+
+        // Nesting depth of `text` as a JSON document (max open brackets at any
+        // point, string contents ignored). Pure; exposed for tests and tools.
+        static int JsonNestingDepth(const std::string& text);
+
         // File I/O. Save writes atomically (temp file + rename) and, before
         // overwriting an existing file, rotates it to "<path>.bak" (one
         // crash-safe backup kept — E21). Load does NOT clear the scene first —

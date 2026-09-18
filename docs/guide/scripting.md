@@ -319,8 +319,17 @@ Notes that save time later:
   that fans every scene signal into each live script's `OnSignal`; `Destroy` disconnects it before
   deleting instances.
 - `ScriptHost` is non-copyable (it owns heap instances) and its destructor calls `Destroy()`.
+  Call `Destroy()` (or let the host die) **before** the scene it was instantiated on — every
+  shipped path does (`StopScene`, `PlayerLayer::RebindScripts`).
+- **An entity destroyed while the host is live releases its script at once (WO-09 / KI-46).**
+  `Instantiate` connects the registry's `on_destroy<NativeScriptComponent>` signal; when a live
+  entity is destroyed (a bullet script calling `Destroy` on its own entity, a system culling
+  members) the host runs that script's `OnDestroy`, deletes the instance and drops it from
+  `LiveCount()` immediately — it used to leak until the next `Destroy()`, skip `OnDestroy`, and keep
+  counting. An `OnDestroy` reached this way runs while the entity handle is still valid but sibling
+  components may already be gone: use only the script's own state there.
 - `IsInstantiated()` and `LiveCount()` are there for status UI — Starforge logs
-  `"Started — N script(s)"` from the latter.
+  `"Started — N script(s)"` from the latter; `LiveCount()` is exact across mid-play destroys.
 
 Because the host is GL-free, the whole tier is headless-testable: `tests/test_scripthost.cpp`
 registers scripts in-exe with the same macros and drives the lifecycle with no DLL and no window.

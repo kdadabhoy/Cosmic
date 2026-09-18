@@ -5,6 +5,7 @@
 #include "scene/Entity.h"
 #include "scene/Components.h"          // RelationshipComponent (E3 hierarchy)
 #include "scene/EventBus.h"
+#include "core/Log.h"                  // WO-09 — the depth-ceiling warning
 
 #include "renderer/Renderer2D.h"
 #include "renderer/RenderCommand.h"
@@ -14,6 +15,7 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <algorithm>
+#include <unordered_set>   // WO-09 — the iterative canvas walk's visited set
 #include <sstream>
 
 namespace Cosmic
@@ -95,72 +97,99 @@ namespace Cosmic
 
     namespace
     {
-        void VisitUi(Scene& scene, entt::entity node, const UiRect& parentRect,
-                     bool isCanvasRoot, float scale, int32_t canvasOrder,
+        // Preorder walk of one canvas subtree (parent, then children in authored
+        // order). Iterative (WO-09 / KI-42): an explicit stack bounded by
+        // Scene::kMaxHierarchyDepth per path and a per-walk visited set, so a
+        // legally deep hierarchy can never overflow the C++ stack and a hand-authored
+        // Children cycle is entered once and left. Elements below the ceiling are
+        // omitted (warned once per walk); the Seq numbering is exactly the order the
+        // recursive walk produced.
+        void VisitUi(Scene& scene, entt::entity root, const UiRect& rootRect,
+                     float scale, int32_t canvasOrder,
                      int32_t& seq, std::vector<UiElement>& out,
                      const UiRect& canvasRect, const glm::mat4* cameraVP)
         {
             auto& reg = scene.GetRegistry();
 
-            UiRect rect = parentRect;
-            int32_t z = 0;
-            if (!isCanvasRoot)
+            struct Frame { entt::entity Node; UiRect ParentRect; int Depth; bool IsCanvasRoot; };
+            std::vector<Frame> work{ { root, rootRect, 0, true } };
+            std::unordered_set<entt::entity> visited;
+            bool warned = false;
+            while (!work.empty())
             {
-                // X6 — world-anchored: project the tracked world point into canvas
-                // space and use it (plus ScreenOffset) as a zero-size parent origin,
-                // so the RectTransform's offsets size the box around it. Behind the
-                // camera / off-screen ⇒ hide this element AND its subtree.
-                UiRect effectiveParent = parentRect;
-                if (auto* anchor = reg.try_get<UiWorldAnchorComponent>(node); anchor && cameraVP)
-                {
-                    glm::vec3 worldPos = anchor->WorldOffset;
-                    if (anchor->TargetEntity != 0)
-                        if (Entity target = scene.FindByUUID(UUID(anchor->TargetEntity)))
-                            worldPos += glm::vec3(scene.GetWorldTransform(target)[3]);
+                const Frame f = work.back();
+                work.pop_back();
+                const entt::entity node = f.Node;
+                if (!reg.valid(node) || !visited.insert(node).second)
+                    continue;
 
-                    glm::vec2 pt;
-                    if (!UiSystem::ProjectToCanvas(worldPos, *cameraVP, canvasRect, pt))
-                        return;                              // behind camera -> hidden
-                    pt += anchor->ScreenOffset;
-                    if (anchor->HideWhenOffscreen && !canvasRect.Contains(pt))
-                        return;                              // off-screen -> hidden
-                    effectiveParent = UiRect{ pt, pt };      // zero-size origin at the point
+                UiRect rect = f.ParentRect;
+                int32_t z = 0;
+                if (!f.IsCanvasRoot)
+                {
+                    // X6 — world-anchored: project the tracked world point into canvas
+                    // space and use it (plus ScreenOffset) as a zero-size parent origin,
+                    // so the RectTransform's offsets size the box around it. Behind the
+                    // camera / off-screen ⇒ hide this element AND its subtree.
+                    UiRect effectiveParent = f.ParentRect;
+                    if (auto* anchor = reg.try_get<UiWorldAnchorComponent>(node); anchor && cameraVP)
+                    {
+                        glm::vec3 worldPos = anchor->WorldOffset;
+                        if (anchor->TargetEntity != 0)
+                            if (Entity target = scene.FindByUUID(UUID(anchor->TargetEntity)))
+                                worldPos += glm::vec3(scene.GetWorldTransform(target)[3]);
+
+                        glm::vec2 pt;
+                        if (!UiSystem::ProjectToCanvas(worldPos, *cameraVP, canvasRect, pt))
+                            continue;                            // behind camera -> hidden
+                        pt += anchor->ScreenOffset;
+                        if (anchor->HideWhenOffscreen && !canvasRect.Contains(pt))
+                            continue;                            // off-screen -> hidden
+                        effectiveParent = UiRect{ pt, pt };      // zero-size origin at the point
+                    }
+
+                    if (auto* rt = reg.try_get<RectTransformComponent>(node))
+                    {
+                        rect = UiSystem::ResolveRect(effectiveParent, *rt, scale);
+                        z = rt->ZOrder;
+                    }
+                    else
+                    {
+                        rect = effectiveParent;
+                    }
                 }
 
-                if (auto* rt = reg.try_get<RectTransformComponent>(node))
+                // Add as a drawable/interactive element if it carries any UI content.
+                const bool drawable = reg.any_of<UiImageComponent, UiTextComponent, UiButtonComponent>(node);
+                if (drawable)
                 {
-                    rect = UiSystem::ResolveRect(effectiveParent, *rt, scale);
-                    z = rt->ZOrder;
+                    UiElement el;
+                    el.Handle      = static_cast<uint32_t>(node);
+                    el.Rect        = rect;
+                    el.Scale       = scale;
+                    el.CanvasOrder = canvasOrder;
+                    el.ZOrder      = z;
+                    el.Seq         = seq++;
+                    out.push_back(el);
                 }
-                else
+
+                // Children (E3 UUID links, authored order): pushed in reverse so the
+                // first child is visited next.
+                if (f.Depth + 1 >= Scene::kMaxHierarchyDepth)
                 {
-                    rect = effectiveParent;
+                    if (!warned)
+                    {
+                        warned = true;
+                        CS_CORE_WARN("UiSystem: canvas hierarchy deeper than {0} levels — deeper elements are not laid out.",
+                                     Scene::kMaxHierarchyDepth);
+                    }
+                    continue;
                 }
-            }
-
-            // Add as a drawable/interactive element if it carries any UI content.
-            const bool drawable = reg.any_of<UiImageComponent, UiTextComponent, UiButtonComponent>(node);
-            if (drawable)
-            {
-                UiElement el;
-                el.Handle      = static_cast<uint32_t>(node);
-                el.Rect        = rect;
-                el.Scale       = scale;
-                el.CanvasOrder = canvasOrder;
-                el.ZOrder      = z;
-                el.Seq         = seq++;
-                out.push_back(el);
-            }
-
-            // Recurse into hierarchy children (E3 UUID links, authored order).
-            if (auto* rel = reg.try_get<RelationshipComponent>(node))
-            {
-                for (UUID childId : rel->Children)
+                if (auto* rel = reg.try_get<RelationshipComponent>(node))
                 {
-                    Entity child = scene.FindByUUID(childId);
-                    if (!child) continue;
-                    VisitUi(scene, static_cast<entt::entity>(child), rect, false,
-                            scale, canvasOrder, seq, out, canvasRect, cameraVP);
+                    for (auto c = rel->Children.rbegin(); c != rel->Children.rend(); ++c)
+                        if (Entity child = scene.FindByUUID(*c))
+                            work.push_back({ static_cast<entt::entity>(child), rect, f.Depth + 1, false });
                 }
             }
         }
@@ -190,8 +219,7 @@ namespace Cosmic
         {
             const CanvasComponent& canvas = reg.get<CanvasComponent>(c.Handle);
             const float scale = CanvasScale(canvas, viewport);
-            VisitUi(scene, c.Handle, viewport, /*isCanvasRoot*/ true, scale, c.Order, seq, out,
-                    viewport, cameraViewProj);
+            VisitUi(scene, c.Handle, viewport, scale, c.Order, seq, out, viewport, cameraViewProj);
         }
 
         // Back-to-front draw order: ascending CanvasOrder, then ZOrder, then Seq.

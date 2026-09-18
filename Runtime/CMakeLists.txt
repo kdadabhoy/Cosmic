@@ -58,6 +58,11 @@ target_include_directories(StarforgeEditor PRIVATE
 target_link_libraries(StarforgeEditor PRIVATE Cosmic shell32)
 set_target_properties(StarforgeEditor PROPERTIES
     OUTPUT_NAME "Starforge"
+    # WO-09 / KI-50: the exe and the project DLL both landed on Starforge.pdb in the
+    # same directory, and a parallel (-m) build sometimes linked them at once —
+    # sporadic LNK1201 "error writing to program database". Distinct PDB names.
+    PDB_NAME "StarforgeEditor"
+    COMPILE_PDB_NAME "StarforgeEditor"
     RUNTIME_OUTPUT_DIRECTORY "${COSMIC_SDK_DIR}/build/Runtime/$<CONFIG>"
 )
 if(MSVC)

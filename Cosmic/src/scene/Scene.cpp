@@ -29,8 +29,10 @@
 #include "jobs/JobSystem.h"
 #include "core/Log.h"
 #include <unordered_map>
+#include <unordered_set>   // WO-09 — the DestroyEntity subtree walk's visited set
 #include <vector>
 #include <algorithm>
+#include <cmath>       // WO-09 — std::isfinite in the painter comparator
 #include <cstddef>
 #include <functional>
 #include <limits>
@@ -112,49 +114,90 @@ namespace Cosmic
 	{
 		if (!entity)
 			return;
-		const entt::entity handle = (entt::entity)entity;
-		if (!m_Registry.valid(handle))
+		const entt::entity root = (entt::entity)entity;
+		if (!m_Registry.valid(root))
 			return;
 
-		// Read everything we need up front — destroying children below mutates
-		// the RelationshipComponent pool and would dangle a held reference.
-		const UUID myID = m_Registry.all_of<IDComponent>(handle)
-			? m_Registry.get<IDComponent>(handle).ID : UUID(0);
-		UUID parentID(0);
-		std::vector<UUID> kids;
-		if (m_Registry.all_of<RelationshipComponent>(handle))
+		// One entity's teardown: detach from its parent's Children list, orphan its
+		// surviving children, drop the UUID index entry, destroy the handle.
+		// Everything is read up front — the RelationshipComponent pool mutates
+		// underneath and a held reference would dangle.
+		auto destroyOne = [this](entt::entity handle)
 		{
-			const auto& rel = m_Registry.get<RelationshipComponent>(handle);
-			parentID = rel.Parent;
-			kids     = rel.Children;
-		}
-
-		// Detach from the parent's Children list.
-		if (parentID.IsValid())
-		{
-			Entity parent = FindByUUID(parentID);
-			if (parent && parent.HasComponent<RelationshipComponent>())
+			const UUID myID = m_Registry.all_of<IDComponent>(handle)
+				? m_Registry.get<IDComponent>(handle).ID : UUID(0);
+			UUID parentID(0);
+			std::vector<UUID> kids;
+			if (m_Registry.all_of<RelationshipComponent>(handle))
 			{
-				auto& pc = parent.GetComponent<RelationshipComponent>().Children;
-				pc.erase(std::remove(pc.begin(), pc.end(), myID), pc.end());
+				const auto& rel = m_Registry.get<RelationshipComponent>(handle);
+				parentID = rel.Parent;
+				kids     = rel.Children;
 			}
-		}
+			if (parentID.IsValid())
+			{
+				Entity parent = FindByUUID(parentID);
+				if (parent && parent.HasComponent<RelationshipComponent>())
+				{
+					auto& pc = parent.GetComponent<RelationshipComponent>().Children;
+					pc.erase(std::remove(pc.begin(), pc.end(), myID), pc.end());
+				}
+			}
+			for (UUID k : kids)
+			{
+				Entity ke = FindByUUID(k);
+				if (!ke)
+					continue;
+				if (ke.HasComponent<RelationshipComponent>())
+					ke.GetComponent<RelationshipComponent>().Parent = UUID(0);
+			}
+			if (myID.IsValid())
+				m_UUIDMap.erase(myID);
+			m_Registry.destroy(handle);
+		};
 
-		// Recurse into (or orphan) the children.
-		for (UUID k : kids)
+		if (!destroyChildren)
 		{
-			Entity ke = FindByUUID(k);
-			if (!ke)
-				continue;
-			if (destroyChildren)
-				DestroyEntity(ke, true);
-			else if (ke.HasComponent<RelationshipComponent>())
-				ke.GetComponent<RelationshipComponent>().Parent = UUID(0);
+			destroyOne(root);
+			return;
 		}
 
-		if (myID.IsValid())
-			m_UUIDMap.erase(myID);
-		m_Registry.destroy(handle);
+		// Subtree destroy WITHOUT recursion (WO-09 / KI-42). Pass 1 gathers the
+		// subtree in preorder with an explicit work list bounded by kMaxHierarchyDepth
+		// per path and a visited set, so a hand-authored cycle (A -> B -> A) is
+		// gathered once and never re-entered. Pass 2 destroys it in REVERSE (children
+		// before parents — the order the recursive version had). Entities past the
+		// ceiling are orphaned (their Parent link cleared) by their parent's teardown,
+		// not leaked.
+		struct Item { entt::entity Handle; int Depth; };
+		std::vector<Item> work{ { root, 0 } };
+		std::vector<entt::entity> order;
+		std::unordered_set<entt::entity> visited;
+		bool warned = false;
+		while (!work.empty())
+		{
+			const Item it = work.back();
+			work.pop_back();
+			if (!m_Registry.valid(it.Handle) || !visited.insert(it.Handle).second)
+				continue;
+			order.push_back(it.Handle);
+			if (it.Depth + 1 >= kMaxHierarchyDepth)
+			{
+				if (!warned)
+				{
+					warned = true;
+					CS_CORE_WARN("Scene::DestroyEntity: hierarchy deeper than {0} levels — orphaning the rest.", kMaxHierarchyDepth);
+				}
+				continue;   // its children are orphaned when it is torn down below
+			}
+			if (const auto* rel = m_Registry.try_get<RelationshipComponent>(it.Handle))
+				for (auto k = rel->Children.rbegin(); k != rel->Children.rend(); ++k)
+					if (Entity ke = FindByUUID(*k))
+						work.push_back({ (entt::entity)ke, it.Depth + 1 });
+		}
+		for (auto h = order.rbegin(); h != order.rend(); ++h)
+			if (m_Registry.valid(*h))
+				destroyOne(*h);
 	}
 
 	bool Scene::IsAncestor(Entity ancestor, Entity node)
@@ -163,8 +206,11 @@ namespace Cosmic
 			return false;
 		const entt::entity ancestorHandle = (entt::entity)ancestor;
 
+		// Bounded like IsActiveInHierarchy (WO-09 / KI-42): a hand-authored parent
+		// cycle can never spin this loop forever.
 		entt::entity cur = (entt::entity)node;
-		while (m_Registry.valid(cur) && m_Registry.all_of<RelationshipComponent>(cur))
+		for (int guard = 0; m_Registry.valid(cur) && m_Registry.all_of<RelationshipComponent>(cur)
+		                    && guard < kMaxHierarchyDepth; ++guard)
 		{
 			const UUID p = m_Registry.get<RelationshipComponent>(cur).Parent;
 			if (!p.IsValid())
@@ -227,21 +273,35 @@ namespace Cosmic
 		}
 #endif   // COSMIC_2D_ONLY — no skeletons, so no sockets to resolve (pre-M4 path)
 
-		glm::mat4 local(1.0f);
-		if (m_Registry.all_of<TransformComponent>(handle))
-			local = m_Registry.get<TransformComponent>(handle).GetTransform();
-
-		if (m_Registry.all_of<RelationshipComponent>(handle))
+		// Parent chain WITHOUT recursion (WO-09 / KI-42): collect the chain root-ward
+		// (bounded by kMaxHierarchyDepth, so a hand-authored parent cycle ends), then
+		// multiply from the root down — the same left-to-right association the
+		// recursive form produced ((root * … ) * local), so results are bit-identical.
+		std::vector<entt::entity> chain;
+		chain.push_back(handle);
 		{
-			const UUID p = m_Registry.get<RelationshipComponent>(handle).Parent;
-			if (p.IsValid())
+			entt::entity cur = handle;
+			for (int guard = 1; guard < kMaxHierarchyDepth; ++guard)
 			{
-				auto it = m_UUIDMap.find(p);
-				if (it != m_UUIDMap.end() && m_Registry.valid(it->second))
-					return WorldOf(it->second) * local;
+				const auto* rel = m_Registry.try_get<RelationshipComponent>(cur);
+				if (!rel || !rel->Parent.IsValid())
+					break;
+				auto it = m_UUIDMap.find(rel->Parent);
+				if (it == m_UUIDMap.end() || !m_Registry.valid(it->second))
+					break;
+				cur = it->second;
+				chain.push_back(cur);
 			}
 		}
-		return local;
+		glm::mat4 world(1.0f);
+		for (auto it = chain.rbegin(); it != chain.rend(); ++it)
+		{
+			glm::mat4 local(1.0f);
+			if (m_Registry.all_of<TransformComponent>(*it))
+				local = m_Registry.get<TransformComponent>(*it).GetTransform();
+			world = (it == chain.rbegin()) ? local : world * local;
+		}
+		return world;
 	}
 
 	bool Scene::IsActiveInHierarchy(Entity entity)
@@ -252,9 +312,10 @@ namespace Cosmic
 	bool Scene::IsActiveInHierarchy(entt::entity handle)
 	{
 		// Walk up the parent chain (like WorldOf): false if self or any ancestor
-		// is inactive. Guarded against a malformed cycle.
+		// is inactive. Guarded against a malformed cycle (kMaxHierarchyDepth nodes —
+		// the ceiling every walker shares since WO-09 / KI-42).
 		entt::entity cur = handle;
-		for (int guard = 0; m_Registry.valid(cur) && guard < 4096; ++guard)
+		for (int guard = 0; m_Registry.valid(cur) && guard < kMaxHierarchyDepth; ++guard)
 		{
 			if (const auto* tag = m_Registry.try_get<TagComponent>(cur); tag && !tag->Active)
 				return false;
@@ -573,10 +634,17 @@ namespace Cosmic
 				continue;
 			items.push_back({ e, tm.ZOrder, t.Position.z, true });
 		}
+		// A TOTAL order (WO-09 / KI-40): a NaN key compares "equal" to every key, which
+		// breaks std::sort's strict-weak-order contract and let a single NaN transform
+		// misorder the FINITE sprites around it. Finite keys sort ascending first;
+		// every non-finite key (NaN, ±inf) sorts after them; ties — and all non-finite
+		// keys among themselves — break by entity handle.
 		std::sort(items.begin(), items.end(), [](const SpriteDrawItem& a, const SpriteDrawItem& b)
 		{
-			if (a.Z   != b.Z)   return a.Z   < b.Z;
-			if (a.Key != b.Key) return a.Key < b.Key;
+			if (a.Z != b.Z) return a.Z < b.Z;
+			const bool fa = std::isfinite(a.Key), fb = std::isfinite(b.Key);
+			if (fa != fb)   return fa;
+			if (fa && a.Key != b.Key) return a.Key < b.Key;
 			return a.E < b.E;
 		});
 		return items;

@@ -98,6 +98,13 @@ namespace Cosmic
             return false;
         }
 
+        // The whole schema walk runs inside a try (WO-09 / KI-43): a key that holds
+        // the wrong JSON type ("push": "", "emit": 5, a non-object root) makes
+        // nlohmann throw type_error, which used to escape this loader and terminate
+        // the process. A mistyped document is now just a failed load, like a parse
+        // error, with the reason in `error`.
+        try
+        {
         out.Version = j.value("cosmic_flow", 1);
         out.Start   = j.value("start", std::string());
 
@@ -170,8 +177,11 @@ namespace Cosmic
                     js["editor"].contains("pos") && js["editor"]["pos"].is_array() &&
                     js["editor"]["pos"].size() == 2)
                 {
-                    s.EditorPos.x = js["editor"]["pos"][0].get<float>();
-                    s.EditorPos.y = js["editor"]["pos"][1].get<float>();
+                    // Tolerant (WO-09 / KI-43): a non-number (a null that a non-finite
+                    // position dumped to) reads as 0 instead of making the file unloadable.
+                    const auto& pos = js["editor"]["pos"];
+                    s.EditorPos.x = pos[0].is_number() ? pos[0].get<float>() : 0.0f;
+                    s.EditorPos.y = pos[1].is_number() ? pos[1].get<float>() : 0.0f;
                 }
 
                 out.States.push_back(std::move(s));
@@ -206,6 +216,13 @@ namespace Cosmic
 
                 out.Variables.push_back(std::move(var));
             }
+        }
+        }
+        catch (const std::exception& e)
+        {
+            if (error) *error = std::string("schema error: ") + e.what();
+            out = FlowAsset{};
+            return false;
         }
         return true;
     }
@@ -734,7 +751,7 @@ namespace Cosmic
         while (m_Running && !m_Pending.empty())
         {
             const std::string sig = m_Pending.front();
-            m_Pending.erase(m_Pending.begin());
+            m_Pending.pop_front();
             TryFireSignal(sig);
             if (++iterations > 100000)
             {

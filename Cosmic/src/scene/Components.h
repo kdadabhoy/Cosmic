@@ -20,6 +20,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
+#include <cmath>       // WO-09 — SelectFrame evaluates in double (floor / fmod / isfinite)
 #include <cstddef>
 #include <cstdint>
 #include <string>
@@ -235,13 +236,24 @@ namespace Cosmic
         SpriteAnimationComponent(const SpriteAnimationComponent&) = default;
 
         /** @brief Frame index at `elapsed` seconds (pure, headless-tested). A
-         *  looping clip wraps; a one-shot clamps to the last frame. */
+         *  looping clip wraps; a one-shot clamps to the last frame. Evaluated in
+         *  double (WO-09 / KI-41): any `elapsed * fps` past the last frame — a
+         *  268-million-second clip at 8 fps, one huge delta, +inf — clamps a one-shot
+         *  to its LAST frame instead of overflowing the int cast back to frame 0;
+         *  a loop wraps with fmod; NaN (or a non-finite loop input) selects frame 0. */
         static int SelectFrame(float elapsed, float fps, int frames, bool loop)
         {
-            if (frames <= 1 || fps <= 0.0f) return 0;
-            const int f = (int)(elapsed * fps);
-            if (loop) return ((f % frames) + frames) % frames;
-            return f < 0 ? 0 : (f >= frames ? frames - 1 : f);
+            if (frames <= 1 || !(fps > 0.0f)) return 0;      // !(fps > 0) also rejects NaN
+            const double f = std::floor((double)elapsed * (double)fps);
+            if (std::isnan(f)) return 0;
+            if (loop)
+            {
+                if (!std::isfinite(f)) return 0;
+                const double m = std::fmod(f, (double)frames);
+                return (int)(m < 0.0 ? m + (double)frames : m);
+            }
+            if (f < 0.0) return 0;
+            return f >= (double)frames ? frames - 1 : (int)f;
         }
 
         /** @brief Normalized UV {u0,v0,u1,v1} of `frame` on a texW x texH sheet

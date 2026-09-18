@@ -14,6 +14,8 @@
 #include <toml.hpp>
 
 #include <filesystem>
+#include <fstream>
+#include <iterator>
 #include <memory>
 #include <string>
 #include <vector>
@@ -60,6 +62,116 @@ namespace Cosmic
 	}
 
 	Config::~Config() = default;
+	// =========================================================================
+	// WO-09 / KI-49 — the table-header gate.
+	//
+	// toml++ 3.4's parse_table_header() hands the character after "[" / "[[" (and
+	// horizontal whitespace) straight to parse_key(), whose first line is
+	// TOML_ASSERT_ASSUME(is_bare_key_character(*cp) || is_string_delimiter(*cp)):
+	// an assert() in a Debug build, a compiler __assume in Release. The document
+	// loop guards the key-value path with that predicate but not the header
+	// path, so "[!x]" — a one-character typo in any .toml — aborted a Debug
+	// editor and was undefined behaviour in Release. Every parse in this file
+	// runs this check first, using the parser's OWN predicates on the first
+	// UTF-8 code point of each header, so nothing toml++ would accept is refused.
+	// =========================================================================
+	namespace
+	{
+		// Decode one UTF-8 code point at text[i] (malformed bytes decode to the
+		// byte value, which is never a bare-key character or a delimiter).
+		char32_t CodePointAt(const std::string& text, size_t i)
+		{
+			const unsigned char b0 = (unsigned char)text[i];
+			auto cont = [&](size_t k) -> int
+			{
+				if (i + k >= text.size()) return -1;
+				const unsigned char b = (unsigned char)text[i + k];
+				return (b & 0xC0) == 0x80 ? (b & 0x3F) : -1;
+			};
+			if (b0 < 0x80) return b0;
+			if ((b0 & 0xE0) == 0xC0) { const int c1 = cont(1); return c1 < 0 ? b0 : (char32_t)(((b0 & 0x1F) << 6) | c1); }
+			if ((b0 & 0xF0) == 0xE0) { const int c1 = cont(1), c2 = cont(2); return (c1 < 0 || c2 < 0) ? b0 : (char32_t)(((b0 & 0x0F) << 12) | (c1 << 6) | c2); }
+			if ((b0 & 0xF8) == 0xF0) { const int c1 = cont(1), c2 = cont(2), c3 = cont(3); return (c1 < 0 || c2 < 0 || c3 < 0) ? b0 : (char32_t)(((b0 & 0x07) << 18) | (c1 << 12) | (c2 << 6) | c3); }
+			return b0;
+		}
+
+		// False (with the 1-based line) when a table header starts with a character
+		// parse_key() cannot take. Table headers are the only place the parser
+		// reaches parse_key() unguarded, so this is exactly the assertion's
+		// precondition. Lines inside a multi-line string (""" or ''') are content, not
+		// headers, so the scan tracks those two states (comments and single-line
+		// strings are skipped so a quote inside them cannot open one).
+		bool TableHeadersOk(const std::string& text, size_t& badLine)
+		{
+			enum { None, BasicML, LiteralML } ml = None;
+			size_t line = 1;
+			for (size_t i = 0; i < text.size(); ++line)
+			{
+				size_t eol = i;
+				while (eol < text.size() && text[eol] != '\n') ++eol;
+
+				if (ml == None)
+				{
+					// Line start: skip horizontal whitespace, then the header check.
+					size_t k = i;
+					while (k < eol && (text[k] == ' ' || text[k] == '\t')) ++k;
+					if (k < eol && text[k] == '[')
+					{
+						size_t j = k + 1;
+						while (j < eol && (text[j] == ' ' || text[j] == '\t')) ++j;
+						if (j < eol && text[j] == '[')
+						{
+							++j;
+							while (j < eol && (text[j] == ' ' || text[j] == '\t')) ++j;
+						}
+						// EOF and a premature ']' are the parser's own (safe) error paths.
+						if (j < eol && text[j] != ']' && text[j] != '\r')
+						{
+							const char32_t c = CodePointAt(text, j);
+							if (!toml::impl::is_bare_key_character(c) && !toml::impl::is_string_delimiter(c))
+							{
+								badLine = line;
+								return false;
+							}
+						}
+					}
+				}
+
+				// Walk the rest of the line to track multi-line string state.
+				for (size_t p = i; p < eol; ++p)
+				{
+					const char c = text[p];
+					if (ml == BasicML)
+					{
+						if (c == '\\') { ++p; continue; }                       // escaped char (incl. \")
+						if (c == '"' && text.compare(p, 3, "\"\"\"") == 0) { ml = None; p += 2; }
+						continue;
+					}
+					if (ml == LiteralML)
+					{
+						if (c == '\'' && text.compare(p, 3, "'''") == 0) { ml = None; p += 2; }
+						continue;
+					}
+					if (c == '#') break;                                         // comment to end of line
+					if (c == '"')
+					{
+						if (text.compare(p, 3, "\"\"\"") == 0) { ml = BasicML; p += 2; continue; }
+						for (++p; p < eol && text[p] != '"'; ++p) if (text[p] == '\\') ++p;   // single-line basic
+						continue;
+					}
+					if (c == '\'')
+					{
+						if (text.compare(p, 3, "'''") == 0) { ml = LiteralML; p += 2; continue; }
+						for (++p; p < eol && text[p] != '\''; ++p) {}                       // single-line literal
+						continue;
+					}
+				}
+				i = eol < text.size() ? eol + 1 : eol;
+			}
+			return true;
+		}
+	}
+
 
 	Ref<Config> Config::Load(const std::string& path)
 	{
@@ -80,7 +192,26 @@ namespace Cosmic
 			return nullptr;
 		}
 
-		toml::parse_result result = toml::parse_file(resolved);
+		// Read the text ourselves (rather than toml::parse_file) so the KI-49 header
+		// gate sees it before the parser does; the source path in errors is unchanged.
+		std::string text;
+		{
+			std::ifstream in(std::filesystem::u8path(resolved), std::ios::binary);
+			if (!in)
+			{
+				CS_CORE_ERROR("Config: cannot open '{0}'.", resolved);
+				return nullptr;
+			}
+			text.assign((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+		}
+		size_t badLine = 0;
+		if (!TableHeadersOk(text, badLine))
+		{
+			CS_CORE_ERROR("Config: failed to parse '{0}': table header must start with a key (line {1})", resolved, badLine);
+			return nullptr;
+		}
+
+		toml::parse_result result = toml::parse(text, resolved);
 		if (!result)
 		{
 			CS_CORE_ERROR("Config: failed to parse '{0}': {1} (line {2}, column {3})",
@@ -102,6 +233,12 @@ namespace Cosmic
 
 	Ref<Config> Config::Parse(const std::string& tomlText, const std::string& sourceName)
 	{
+		size_t badLine = 0;
+		if (!TableHeadersOk(tomlText, badLine))   // WO-09 / KI-49 — see the gate above
+		{
+			CS_CORE_ERROR("Config: failed to parse {0}: table header must start with a key (line {1})", sourceName, badLine);
+			return nullptr;
+		}
 		toml::parse_result result = toml::parse(tomlText, sourceName);
 		if (!result)
 		{

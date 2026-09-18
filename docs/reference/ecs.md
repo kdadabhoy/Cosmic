@@ -320,9 +320,13 @@ resolves terminates the walk and returns what has been composed so far.
   build.
 - **This is the read you want for a pose, not `Transform.Rotation`.** Physics write-back, sockets
   and `SetParent(keepWorldPose)` all bypass the Euler field.
-- Recursion is unmemoized: a deep chain re-walks per query. The socket search is guarded at 4096
-  steps; the ordinary parent walk is **not** cycle-guarded, but `SetParent` is the only supported
-  mutator and it refuses cycles.
+- The walk is unmemoized: a deep chain re-walks per query. Since WO-09 (KI-42) it is **iterative
+  and bounded by `Scene::kMaxHierarchyDepth` (4,096 nodes: self + 4,095 ancestors)** — the
+  ratified hierarchy depth ceiling. A chain deeper than that composes only the nearest 4,096
+  nodes (documented truncation), and a `RelationshipComponent` cycle authored by hand
+  (`SetParent` refuses cycles) terminates instead of overflowing the stack. The 3D socket search
+  carries the same guard. The same ceiling bounds `DestroyEntity`'s subtree walk,
+  `UiSystem::CollectElements` and `SceneSerializer::SavePrefab`.
 - Both configurations.
 
 #### `Scene::IsAncestor`
@@ -333,7 +337,8 @@ bool IsAncestor(Entity ancestor, Entity node);
 
 **What it does** — true if `ancestor` appears anywhere on `node`'s parent chain. Returns `false` if
 either handle is falsy. Used by `SetParent`'s cycle check and by the Hierarchy panel's drag-drop
-validation.
+validation. Bounded at `Scene::kMaxHierarchyDepth` steps (WO-09 / KI-42), so a hand-authored parent
+cycle can never spin it forever.
 
 Both configurations.
 
@@ -345,8 +350,8 @@ bool IsActiveInHierarchy(Entity entity);
 ```
 
 **What it does** — effective-active: the entity's own `TagComponent::Active` **and** every
-ancestor's. Walks the parent chain with a 4096-step cycle guard. An entity **without** a
-`TagComponent` counts as active.
+ancestor's. Walks the parent chain with the `Scene::kMaxHierarchyDepth` (4,096-node) guard every
+hierarchy walker shares since WO-09. An entity **without** a `TagComponent` counts as active.
 
 **Failure behaviour** — the `Entity` overload returns `false` for a falsy handle; the `entt::entity`
 overload assumes a valid handle.
@@ -718,7 +723,15 @@ std::vector<SpriteDrawItem> BuildSpriteDrawList();
 **only** place it is decided. Sprites contribute `(ZOrder, YSort ? -Position.y : Position.z, Map=false)`
 and are skipped when `!Enabled` or `!IsActiveInHierarchy`; tilemaps contribute
 `(ZOrder, Position.z, Map=true)` and are skipped only on `!IsActiveInHierarchy` (they have no
-`Enabled`). The list is sorted ascending by `(Z, Key, entity id)`.
+`Enabled`). The list is sorted ascending by `(Z, Key, entity handle)`.
+
+**Ordering policy (WO-09 / KI-40)** — within a `ZOrder` layer, **finite keys sort ascending
+first; every non-finite key (NaN, ±inf) sorts after them**, and ties — including all non-finite
+keys among themselves — break by the entt handle value. That is a total order, so one sprite with a
+NaN transform can no longer misorder the finite sprites around it (the previous `a.Key < b.Key`
+comparator was not a strict weak order on NaN). The handle tie-break is exact: a recycled entity
+slot carries a higher version and therefore draws on top of every never-recycled entity with the
+same keys. A non-finite key implies a non-finite coordinate, and such a sprite paints nothing.
 
 **Why you'd use it** — to reproduce or test the engine's painter order without a GL context.
 
@@ -1223,9 +1236,12 @@ Registered as **`SpriteAnimation`**, category `Rendering`. **Read by**
 static int SelectFrame(float elapsed, float fps, int frames, bool loop)
 ```
 
-Returns the frame index at `elapsed` seconds. `frames <= 1` or `fps <= 0` returns `0`. Looping wraps
-(and handles negative `elapsed` correctly via `((f % frames) + frames) % frames`); one-shot clamps to
-`[0, frames-1]`. Pure; pinned by `tests/test_scene_components.cpp:130`.
+Returns the frame index at `elapsed` seconds. `frames <= 1` or `fps <= 0` (or a NaN `fps`) returns
+`0`. Evaluated in **double** since WO-09 (KI-41): looping wraps with `fmod` (negative `elapsed`
+wraps forward), a one-shot clamps to `[0, frames-1]` for **any** `elapsed * fps` past the last frame
+— a 268-million-second clip at 8 fps, one huge delta or `+inf` all sit on the last frame instead of
+overflowing an int cast back to frame 0; a NaN `elapsed` (or a non-finite loop input) selects
+frame 0. Pure; pinned by `tests/test_scene_components.cpp:130` and `tests/test_wo09_c01_sprites.cpp`.
 
 #### `SpriteAnimationComponent::FrameUV`
 

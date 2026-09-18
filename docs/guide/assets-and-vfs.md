@@ -528,6 +528,13 @@ for (const Cosmic::Ref<Cosmic::Config>& motor : cfg->GetTable("motors"))
   a one-element vector, so both shapes read the same way.
 - **Table views share ownership of the parsed document**, so a `Ref<Config>` from `GetTable`
   outlives its parent. `tests/test_config.cpp` pins that explicitly.
+- **A malformed file is a null return plus a log line, never a crash.** Since WO-09 (KI-49) both
+  `Load` and `Parse` pre-check every table header with the parser's own key predicates: a header
+  that starts with a non-key character (`[!x]`, `[[%arr]]`, a control byte) is rejected as
+  "table header must start with a key (line N)". That line used to trip an internal toml++
+  assertion (a Debug `abort()`, undefined behaviour in Release). Header-like lines inside `"""` /
+  `'''` strings and comments are content and still load; `tests/test_wo09_c05_json.cpp` and the
+  seeded config fuzz pin both sides.
 - **Ints coerce to float getters.** Writing `tau = 1` for a float parameter gives you `1.0f`, not
   the fallback.
 - **`Config::Parse(text, name)`** parses from memory — the path `.cmeta` uses, and the one for

@@ -108,6 +108,24 @@ the save proceeds; a save is never blocked by backup trouble.
 
 **Failure is a `false` return plus a log line, never an exception or an assert.** Check the return.
 
+**Malformed files are bounded, not trusted (WO-09, 2D stability).** Three rules the loader applies
+before and during a load, each pinned by `tests/test_wo09_c05_json.cpp`:
+
+- A document whose JSON nests deeper than **512 levels** (`SceneSerializer::kMaxJsonNestingDepth`,
+  brackets outside strings) is **rejected** before it is parsed — every loader (`Load`,
+  `LoadFromString`, `InstantiatePrefab`, the reflected-struct loaders behind `.cmat`) shares the
+  gate. A real scene nests about six levels; the limit exists because an unknown component block is
+  preserved by re-serialising it and that walk is recursive (a 100,000-deep `[[[…]]]` in a 200 KB
+  file used to overflow the stack).
+- Two entity blocks with the **same `id`**: the second gets a fresh UUID (its data is kept, a warning
+  names the id) so a later destroy can never leave the survivor unreachable by UUID. File references
+  to the id keep resolving to the first entity that carried it.
+- A `Relationship.Children` link to itself, to an ancestor, or to an id the file does not contain is
+  refused / skipped through the same `SetParent` rule the editor uses — a loaded scene never holds a
+  hierarchy cycle. Non-finite numbers cannot be expressed in JSON: `1e999` is a parse error for the
+  whole document, a value that overflows `float` (`1e300`) loads as `±inf`, and a `NaN`/`inf` field
+  saves as `null` and reloads as `0`.
+
 ```cpp
 Cosmic::Ref<Cosmic::Scene> fresh = Cosmic::Scene::Create();
 if (!Cosmic::SceneSerializer::Load(*fresh, Cosmic::FileSystem::Resolve("project://scenes/Level2.cscene")))

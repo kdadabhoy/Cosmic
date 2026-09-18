@@ -33,6 +33,7 @@
 #include <glm/glm.hpp>
 
 #include <cstdint>
+#include <deque>
 #include <functional>
 #include <string>
 #include <unordered_map>
@@ -224,7 +225,7 @@ namespace Cosmic
         SceneLoader m_Loader;
         std::vector<Frame> m_Stack;
         std::unordered_map<std::string, FlowValue> m_Vars;   // Q2 — runtime blackboard
-        std::vector<std::string> m_Pending;   // queued signals
+        std::deque<std::string> m_Pending;    // queued signals (deque: O(1) pop-front — WO-09 / KI-48)
         float m_Elapsed = 0.0f;               // time in the current top state
         bool  m_Running = false;
         bool  m_Quit    = false;

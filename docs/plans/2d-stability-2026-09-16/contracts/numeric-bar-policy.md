@@ -59,7 +59,10 @@ to-9km precision/units/volume bars are deferred until real to-9km data exists.
 | RNG / determinism | canonical PCG vector; 1,000,000 same-seed outputs; same-build reproducibility | deterministic, same-toolchain scope (N04) |
 | Trajectory fixture | `F-TRAJECTORY` 1,201 samples, `x=30t`, `y=50t−0.5·9.80665·t²`, `t=i/120` | equation-defined synthetic fixture (X01) — **spec-derived, so X01 runs despite D-9km** |
 | Large-series fixture | `F-SERIES-LARGE` 100,000 samples/channel, 8 finite channels | equation/seed-defined synthetic fixture |
-| Tilemap ceiling | 1,048,576 cells max; 1025 invalid-boundary | declared code contract (C02) |
+| Tilemap ceiling | 1,048,576 cells max; 1025 invalid-boundary (clamped to 1,024, never a 1,025-wide map) | declared code contract (C02) — validated by WO-09 (EnsureCells + serializer + the full 1M-cell map on the GPU) |
+| Hierarchy depth ceiling | 4,096 nodes per path (`Scene::kMaxHierarchyDepth`); deeper data is truncated, never a crash | declared code contract (C03) — ratified by WO-09, see below |
+| JSON nesting limit | 512 levels (`SceneSerializer::kMaxJsonNestingDepth`); deeper scene / prefab / material documents are rejected before parsing | declared code contract (C05, KI-44) |
+| Flow cascade guard | 100,000 signal iterations per `FlowMachine::OnUpdate`, then the queue is dropped with a warning; a push cycle reaches a stack depth of 100,002 | existing code constant (C04), pinned by WO-09 |
 | Fuzz volumes | 2,000 cases/parser (PR), 50,000 (nightly); every failure minimized to a fixture | policy choice |
 
 ### Deadline limits (policy limits, not performance bars)
@@ -72,8 +75,33 @@ a 30-min run; soak 140 min for a 120-min session. A timeout is FAILED, never a g
 
 - **Ratified (Kaden 2026-09-17):** supported maximum recording **session length = 2 h**, over-limit
   policy = **stop-and-finalize** (tunable; [`contracts.md`](contracts.md) §2).
-- Still open (WO-00/02 decisions): supported UI hierarchy **depth** ceiling and supported **light**
-  ceiling (C03) — flagged in the retained-feature register as `known-limitation`.
+- **Ratified (WO-09, 2026-09-18) — supported hierarchy DEPTH ceiling = 4,096 nodes per path**
+  (`Scene::kMaxHierarchyDepth`: self + 4,095 ancestors / descendants). It applies to the UI canvas
+  walk (`UiSystem::CollectElements` / `Render` / `HitTest`), the parent chain
+  (`GetWorldTransform`, `IsAncestor`, `IsActiveInHierarchy`), the subtree walks
+  (`DestroyEntity`, `SceneSerializer::SavePrefab`) and, through them, every editor and player
+  path. Measurement behind it (C03 depth ladder, `evidence/WO-09/`): before WO-09 a chain built
+  with the public `SetParent` overflowed the stack in `CollectElements` between 2,500 and 2,750
+  levels (Release; Debug lower), `GetWorldTransform` between 3,000 and 4,096, `DestroyEntity`
+  between 4,096 and 8,192, `SavePrefab` between 8,192 and 16,384, and a hand-authored cycle never
+  returned (KI-42). After WO-09 every walker is iterative or guarded at the ceiling: 4,095 / 4,096
+  / 4,097 / 8,192-deep chains and A<->B / self cycles all terminate in both configurations, with
+  the documented truncation beyond the ceiling (UI elements / prefab entities below it omitted with
+  one warning; `DestroyEntity` orphans what it did not reach). The number is the existing
+  `IsActiveInHierarchy` guard — nothing an editor or the serializer produces comes within two
+  orders of magnitude of it (a real UI nests ~6 deep). Class: definition/spec-derived (a code
+  constant), validated by a deterministic run.
+- **Proposed (WO-09, 2026-09-18, measurement-informed) — supported 2D LIGHT ceiling = 100
+  simultaneous `Light2DComponent`s per frame at 1920x1080.** Measured on the reference machine
+  (C03 GPU ladder, Release, RTX 5070 Ti, radius 120 px lights, sprites + composite + `FinishGpu`):
+  1 / 10 / 100 / 1,000 lights at 320x180 = 0.16 / 0.17 / 0.19 / 0.49 ms per frame; 100 / 1,000
+  lights at 1920x1080 = 2.0 / 2.1 ms per frame. Correctness holds at 1,000 (no pixel below
+  ambient, every light additive), so 100 is a generous *support* line, not a cliff — one light is
+  one additive quad into the half-res buffer, so the cost is fill-bound in the light radius, not
+  the count. Under 100 lights the pass stays below 15 % of a 60-Hz frame on the reference GPU; a
+  scene that wants more is a performance question (WO-13 qualification), not a correctness one.
+  Class: measurement-derived (qualifies the named machine only). Ratification of the number is
+  Kaden's call; the `known-limitation` flag in the retained-feature register now carries it.
 
 ### Consumer-derived (deferred by D-9km — none required this milestone)
 

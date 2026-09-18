@@ -55,6 +55,10 @@ namespace Cosmic
         auto& reg = scene.GetRegistry();
         auto& modules = ModuleRegistry::Get();
 
+        // WO-09 / KI-46 — own the instance lifetime of an entity that dies mid-play.
+        m_DestroyConnection = reg.on_destroy<NativeScriptComponent>()
+                                 .connect<&ScriptHost::OnScriptComponentDestroyed>(*this);
+
         // Pass 1 — construct + inject + push fields. Collect for the OnCreate/OnStart
         // sweeps so every entity exists before any callback runs.
         std::vector<entt::entity> created;
@@ -251,6 +255,9 @@ namespace Cosmic
             m_Scene->Events().Disconnect(m_SignalHandle);
         m_SignalHandle = 0;
 
+        // WO-09 / KI-46 — stop owning mid-play destroys; the sweep below is the owner now.
+        m_DestroyConnection.release();
+
         // Systems first (H9) — they were created last; OnDestroy, delete, null holder.
         for (auto& ls : m_Systems)
         {
@@ -280,5 +287,26 @@ namespace Cosmic
         }
         m_Live.clear();
         m_Scene = nullptr;
+    }
+}
+
+namespace Cosmic
+{
+    // WO-09 / KI-46 — registry signal: the NativeScriptComponent of a live entity is
+    // going away (the entity is being destroyed, or the component removed) while this
+    // host is instantiated. Run OnDestroy, delete the instance, drop it from m_Live —
+    // exactly what Destroy() would have done had the entity still existed then.
+    void ScriptHost::OnScriptComponentDestroyed(entt::registry& reg, entt::entity e)
+    {
+        if (!m_Scene || &reg != &m_Scene->GetRegistry())
+            return;
+        auto* nsc = reg.try_get<NativeScriptComponent>(e);
+        if (nsc && nsc->Instance)
+        {
+            nsc->Instance->OnDestroy();
+            delete nsc->Instance;
+            nsc->Instance = nullptr;
+        }
+        m_Live.erase(std::remove(m_Live.begin(), m_Live.end(), e), m_Live.end());
     }
 }

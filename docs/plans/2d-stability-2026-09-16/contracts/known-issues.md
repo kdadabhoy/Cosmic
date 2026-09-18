@@ -674,6 +674,229 @@ evidence is under `evidence/WO-07/l02/`; each entry names its file.
   `serial.md`, `utils/AtomicOutput.h` → the utilities chapter) with a short entry each. Neither
   change touches behaviour.
 
+## WO-09 findings (2026-09-18) — authored 2D content / shared services (C01–C06)
+
+All ten were found by the WO-09 acceptance cases before any fix was written; each has
+failing-before evidence under `evidence/WO-09/failing-before/` (the runner's
+`wo09-units-runner-<cfg>/` JSON/JUnit + the per-case `c0*-<cfg>/` logs) and a regression
+in the WO-09 suites. HEAD at discovery: `3ef69810c89318ffa044b3f18627862dfb033c3b`.
+
+### KI-40 — BuildSpriteDrawList's comparator is not a strict weak order on NaN/inf keys (finite sprites misordered)
+- Status: Confirmed defect (silent painter-order corruption; formally undefined behaviour in
+  `std::sort`). Owner WO: WO-09 (C01 "zero/negative/nonfinite transforms … deterministic order").
+- Anchor: `Cosmic/src/scene/Scene.cpp:576-581` at `3ef6981` — `if (a.Key != b.Key) return
+  a.Key < b.Key;` A NaN key compares "equal" to every key, so NaN ~ 1 and NaN ~ 0 while 1 > 0:
+  the equivalence is not transitive. MSVC's introsort does not crash on it, but the FINITE
+  items around a NaN entry come out of order (the key is `Position.z`, or `-Position.y` under
+  YSort, so any NaN transform poisons the whole layer).
+- Repro: `CosmicTests --test-case="WO-09 C01: nonfinite sort keys*"` — 10,000 sprites, 30 % NaN
+  keys, 8 seeds: 9,990+ positions off the reference total order and hundreds of adjacent
+  finite same-layer pairs inverted per seed (`failing-before/c01u-Release/C01-U.out.log`).
+- Regression: `tests/test_wo09_c01_sprites.cpp` (nonfinite keys: permutation, determinism,
+  zero finite-pair inversions, equality with the reference total order).
+- Disposition: fix landed (WO-09) — POLICY: within a ZOrder layer, FINITE keys sort ascending
+  first, every non-finite key (NaN, ±inf) sorts AFTER them, ties (and all non-finite keys)
+  break by entity handle. Documented on `Scene::BuildSpriteDrawList`.
+
+### KI-41 — SelectFrame: a large elapsed time (or ±inf/NaN) restarts a one-shot clip at frame 0
+- Status: Confirmed defect (out-of-range float-to-int conversion is undefined; MSVC yields
+  INT_MIN). Owner WO: WO-09 (C01 "animation at loop/end/large delta").
+- Anchor: `Cosmic/src/scene/Components.h:239-245` at `3ef6981` — `const int f = (int)(elapsed
+  * fps);` once `elapsed * fps >= 2^31` (268 M s at 8 fps; one 1e9-s delta; +inf; NaN) `f` is
+  INT_MIN: the one-shot branch returns 0 instead of the last frame and the loop branch picks
+  an arbitrary frame. `Scene::UpdateSpriteAnimations` accumulates `Elapsed` without bound.
+- Repro: `CosmicTests --test-case="WO-09 C01: SelectFrame*"` — `SelectFrame(1e9, 8, 4, false)
+  == 0`, expected 3; same for 3e8, 1e12, 3e38 and +inf.
+- Regression: `tests/test_wo09_c01_sprites.cpp` (SelectFrame vs a double-precision definition
+  at loop/end/large delta; 0/1-frame clips; fps 0/negative/NaN; ±inf/NaN elapsed).
+- Disposition: fix landed (WO-09): the frame index is computed in double — a one-shot clamps
+  to the last frame for any `elapsed*fps >= frames` (incl. +inf), a loop wraps with `fmod`,
+  NaN (and any non-finite loop input) selects frame 0. Documented on the function.
+
+### KI-42 — Hierarchy walkers recurse without bound: a legal deep chain overflows the stack, a cycle never returns
+- Status: Confirmed defect (stack overflow on legal data; infinite recursion / loop on a
+  malformed hierarchy). Owner WO: WO-09 (C03 "deep hierarchy … cycles (must terminate)").
+- Anchors at `3ef6981`: `Cosmic/src/scene/ui/UiSystem.cpp:98-166` (`VisitUi`, recursive over
+  `Children`, no depth or cycle guard); `Cosmic/src/scene/Scene.cpp:189-244` (`WorldOf`,
+  recursive over `Parent`, no guard); `Scene.cpp:111-158` (`DestroyEntity`, recursive over
+  `Children`); `Scene.cpp:160-180` (`IsAncestor`, a `while` over `Parent` with no guard);
+  `Cosmic/src/scene/SceneSerializer.cpp:371-380` (`GatherSubtree`, recursive over `Children`).
+  `IsActiveInHierarchy` (`Scene.cpp:252-269`) is the one guarded walker (4,096 nodes).
+- Measured (Release, `tests/test_wo09_c03_ui.cpp` depth ladder, children of CosmicTests): a
+  chain built with the public `Scene::SetParent` overflows `UiSystem::CollectElements` between
+  2,500 and 2,750 levels, `GetWorldTransform` between 3,000 and 4,096, `DestroyEntity`
+  between 4,096 and 8,192, `SavePrefab` between 8,192 and 16,384 (Debug frames are larger —
+  see the Debug ladder file in `evidence/WO-09/failing-before/`). A cycle authored through
+  the public `RelationshipComponent` (A.Children=[B], B.Children=[A], B.Parent=A) — which
+  `SetParent` and the serializer refuse — crashes `CollectElements` (stack overflow) and
+  hangs `IsAncestor`.
+- Repro: `CosmicTests --test-case="WO-09 C03: depth ladder*"` (rung 4,096 exit 1 = SIGSEGV
+  stack overflow in the child) and `--test-case="WO-09 C03: hierarchy CYCLES*"` (CRASHED).
+- Regression: `tests/test_wo09_c03_ui.cpp` (depth probe/ladder — the 4,096-deep chain must
+  survive every walker in both configurations; cycles terminate in every walker).
+- Disposition: fix landed (WO-09), and the C03 depth ceiling RATIFIED at **4,096 nodes** (self +
+  4,095 ancestors — the existing `IsActiveInHierarchy` guard, now shared by every walker):
+  `WorldOf` and `IsAncestor` walk the parent chain iteratively with the guard; `VisitUi`,
+  `DestroyEntity` and `GatherSubtree` walk children with an explicit stack, a per-walk visited
+  set (a cycle is entered once) and the same depth cap; beyond the cap a walker stops (UI
+  elements / prefab entities below it are omitted with one warning; `DestroyEntity` orphans
+  what it did not reach). Written into `numeric-bar-policy.md` and the retained-feature
+  register.
+
+### KI-43 — FlowAsset / StoryGraph loaders let nlohmann type errors escape (std::terminate on a mistyped field)
+- Status: Confirmed defect (an uncaught exception from a data file; `CosmicTests` reports
+  "test case THREW exception: [json.exception.type_error.302]", a shipped app terminates).
+  Owner WO: WO-09 (C04 "malformed JSON … seeded fuzz + fixed fixtures").
+- Anchors at `3ef6981`: `Cosmic/src/scene/FlowMachine.cpp:90-207` — only `json::parse` is
+  inside the `try`; every `j.value(...)` (`:101-102`, `:107-109`, `:127-129`, `:135-136`,
+  `:148-151`, `:158-162`, `:173-175`, `:185`), `ja["emit"].get<std::string>()` (`:121`) and
+  `js["editor"]["pos"][i].get<float>()` (`:169-170`) throws `type_error.302` when the key
+  holds the wrong type (`"push": ""`, `"cosmic_flow": "x"`, `"emit": 5`, `"pos": ["a","b"]`)
+  and `type_error.306` when the document root is not an object (`5`, `[]`).
+  `Cosmic/src/scene/StoryGraph.cpp:125-190` has the same shape (`:132-133`, `:141-146`,
+  `:161-163`, `:177-178`).
+- Repro: the seeded fuzz hits it on its FIRST case (`flow` seed 0x0904F10A case 0: a `push`
+  value swapped to `""`); minimized fixtures `tests/fixtures/wo09/corrupt/
+  fuzz-flow-0x0904F10A-0.cflow`, `typed-version.cflow`, `root-number.cflow`,
+  `emit-not-string.cflow`, `editor-pos-string.cstory`, `root-array.cstory`, `typed-once.cstory`.
+- Regression: `tests/test_wo09_c04_graphs.cpp` (parser fuzz, 2,000 cases per parser; the
+  committed F-CORRUPT fixtures).
+- Disposition: fix landed (WO-09): both loaders run the whole document walk inside the `try`
+  and turn any `nlohmann::json::exception` into `false` + the message in `error` (the path a
+  parse error already took); the editor's "failed to load" branch is unchanged.
+
+### KI-44 — SceneSerializer: a deeply nested JSON value in an unknown block overflows the stack on load
+- Status: Confirmed defect (a 200 KB file crashes the loader). Owner WO: WO-09 (C05 "seeded
+  malformed input … deep nesting … bounded parsing").
+- Anchor: `Cosmic/src/scene/SceneSerializer.cpp:127` at `3ef6981` — an unknown component
+  block is preserved as `compJson.dump()`; nlohmann's `dump` (and its copy) is recursive,
+  its parser is not, so a 100,000-deep `[[[[…]]]]` parses fine and then overflows the stack
+  while being stringified (SIGSEGV in `CosmicTests`, `failing-before/c05u-Release/`).
+  `InstantiatePrefab` shares the code; `LoadReflectedFromString` never dumps but shares the
+  same unbounded parse.
+- Repro: `CosmicTests --test-case="WO-09 C05: bad magic*"` (the 100,000-deep unknown block).
+- Regression: `tests/test_wo09_c05_json.cpp` (100,000-deep nesting inside a block and as the
+  whole document; `tests/fixtures/wo09/corrupt/deep-nesting.cprefab`, 5,000 deep).
+- Disposition: fix landed (WO-09): every SceneSerializer entry point pre-scans the text's
+  bracket nesting (outside strings) and REJECTS a document deeper than
+  `SceneSerializer::kMaxJsonNestingDepth = 512` with a logged error (a real scene nests ~6
+  levels); documented in `docs/reference/scenes.md`.
+
+### KI-45 — Duplicate entity UUIDs in a scene file leave the survivor unreachable after its twin is destroyed
+- Status: Confirmed defect (stale entity reference from malformed input). Owner WO: WO-09
+  (C05 "no stale entity reference").
+- Anchor: `Cosmic/src/scene/SceneSerializer.cpp:486` at `3ef6981` — `CreateEntityWithUUID(id)`
+  is called per entity block with the file's id; `Scene::CreateEntityWithUUID` (`Scene.cpp:99`)
+  overwrites `m_UUIDMap[id]`, so two blocks with one id yield two entities and a map that
+  points at the second; `DestroyEntity` of the FIRST erases the map entry by id
+  (`Scene.cpp:156`), after which `FindByUUID` no longer finds the second — every
+  UUID-keyed reference to it (hierarchy links, EntityRef fields, editor undo by UUID) is stale.
+- Repro: `CosmicTests --test-case="WO-09 C05: malformed hierarchy*"` (two blocks with id
+  `00000000000000AA`; after destroying the twin, `FindByUUID` returns null).
+- Regression: `tests/test_wo09_c05_json.cpp` (the duplicate-UUID case).
+- Disposition: fix landed (WO-09): `LoadFromString` gives a duplicate id a FRESH UUID (the
+  block's data is kept — nothing is dropped) and logs one warning naming the id; the map is
+  never overwritten by a load.
+
+### KI-46 — ScriptHost leaks (and never OnDestroys) the instance of an entity destroyed while instantiated; LiveCount stays stale
+- Status: Confirmed defect (callback/instance leak; the documented `LiveCount` is wrong after
+  a gameplay destroy). Owner WO: WO-09 (C06 "scripts (ScriptHost live count across
+  load/unload)").
+- Anchor: `Cosmic/src/scripting/ScriptHost.cpp:269-281` at `3ef6981` — `Destroy` walks
+  `m_Live` and skips `!reg.valid(e)`; the instance pointer lived only in the destroyed
+  entity's `NativeScriptComponent` (`Components.h:596`, "owned by ScriptHost"), so an entity
+  destroyed during Play (`Scene::DestroyEntity` from a script or a system) keeps its script
+  object alive forever, never receives `OnDestroy`, and `m_Live` (`LiveCount()`) still counts
+  it.
+- Repro: `CosmicTests --test-case="WO-09 C06: ScriptHost*"` — 40 live scripts, 6 of their
+  entities destroyed mid-play: after `Destroy()` the script's own live counter reads 6, only
+  34 `OnDestroy`s ran.
+- Regression: `tests/test_wo09_c06_services.cpp` (ScriptHost live count across Instantiate /
+  Destroy / re-Instantiate and entity destruction while live).
+- Disposition: fix landed (WO-09): `Instantiate` connects the registry's
+  `on_destroy<NativeScriptComponent>` signal (disconnected by `Destroy`); when a live
+  entity's script component goes away the host runs `OnDestroy`, deletes the instance and
+  drops it from `m_Live` at once. Documented rule: an `OnDestroy` triggered by a mid-play
+  entity destroy runs while the entity handle is still valid but sibling components may
+  already be gone — use only the script's own state there.
+
+### KI-47 — JobSystem: Initialize after Shutdown spawns workers that exit at once (stale stop flag) — a later WaitIdle hangs forever
+- Status: Confirmed defect (dead pool + hang; reachable by any host that restarts the pool —
+  a test harness, a future "restart engine" path — not by the one-Application-per-process
+  shipping apps). Owner WO: WO-09 (C06 "jobs … owners shut down cleanly").
+- Anchor: `Cosmic/src/jobs/JobSystem.cpp:40-93` (`Initialize`) vs `:94-117` (`Shutdown`, which
+  sets `m_Stopping = true` and never clears it) and the worker loop `:175-185`, at `3ef6981`:
+  a worker spawned after a Shutdown observes the stale flag and an empty queue and returns
+  immediately; only a job that happened to be queued before the worker started still runs.
+- Repro: `CosmicTests --test-case="WO-09 C06: JobSystem*Shutdown then*"` — after
+  Shutdown → Initialize (+100 ms) a submitted job never runs within 3 s.
+- Regression: `tests/test_wo09_c06_services.cpp` (the re-initialize case, polled — never a
+  hanging `WaitIdle` inside the suite).
+- Disposition: fix landed (WO-09): `Initialize` clears `m_Stopping` before spawning the pool.
+
+### KI-48 — FlowMachine: an authored self-loop that emits twice per entry stalls a frame for seconds (O(n²) signal queue)
+- Status: Confirmed defect (bounded by the 100,000-iteration cascade guard, but the bound
+  costs 4.5 s per `OnUpdate` in Release and far more in Debug — a frame stall the U-case
+  deadline catches). Owner WO: WO-09 (C04 "cycles … bounded evaluation").
+- Anchor: `Cosmic/src/scene/FlowMachine.cpp:737` at `3ef6981` — `m_Pending.erase(
+  m_Pending.begin())` on a `std::vector<std::string>` (`FlowMachine.h:227`): a state whose
+  `onEnter` emits its own transition signal twice grows the queue by one per iteration, so
+  draining to the guard is ~5·10⁹ string moves.
+- Repro: `CosmicTests --test-case="WO-09 C04: FlowMachine*double*"` — one `OnUpdate` = 4,508 ms
+  (Release; `failing-before/c04-Release/`).
+- Regression: `tests/test_wo09_c04_graphs.cpp` (the double-emit self-loop inside the deadline;
+  ping-pong and push cycles pinned deterministic).
+- Disposition: fix landed (WO-09): `m_Pending` is a `std::deque` (O(1) pop-front); the guard
+  and its semantics are unchanged (the push-cycle depth pin of 100,002 frames stays).
+
+### KI-49 — Config::Parse aborts a Debug build (and violates a compiler assumption in Release) on a TOML table header that starts with a non-key character
+- Status: Confirmed defect (Debug: `abort()` from a vendored assertion reachable from file input;
+  Release: the same predicate is `__assume`d true, i.e. undefined behaviour on the same input).
+  Owner WO: WO-09 (C05 "config … seeded malformed input").
+- Anchor: `Cosmic/src/utils/Config.cpp:105` at `3ef6981` hands the text straight to `toml::parse`;
+  vendored toml++ 3.4.0 `Cosmic/dependencies/tomlplusplus/toml.hpp:15559-15602`
+  (`parse_table_header`) calls `parse_key()` after `[` / `[[` + whitespace whenever the next
+  character is not `]`, and `parse_key` (`:15481`) opens with `TOML_ASSERT_ASSUME(
+  is_bare_key_character(*cp) || is_string_delimiter(*cp))` — `assert()` under `_DEBUG`, `__assume`
+  under `NDEBUG` (`toml.hpp:1084-1099`). The document loop guards the key-value path with the same
+  predicate (`:15905`) but the table-header path does not. So `[!x]`, `[%section]` or a header
+  with an embedded NUL (`[\0motors]]`) — a one-character typo in `project.cproj` or any `.toml` —
+  aborts a Debug editor at project open and is UB in Release (which today happens to report a
+  parse error).
+- Repro: Debug `CosmicTests --test-case="WO-09 C05: committed*"` with
+  `tests/fixtures/wo09/corrupt/header-bang.toml` (`[!x]`): "Assertion failed:
+  is_bare_key_character(*cp) || is_string_delimiter(*cp), … toml.hpp, line 15481" → SIGABRT. Found
+  by the config fuzz (seed `0x090570A1`, case 539, a NUL spliced into a `[[motors]]` header) —
+  `evidence/WO-09/failing-before/ki49-config-header/` (fuzz stderr, the culprit input, the Debug
+  runner's `C05-U` CRASHED log, the `[!x]` repro; the Release twin passes).
+- Regression: `tests/test_wo09_c05_json.cpp` (the config fuzz + the committed
+  `corrupt/header-bang.toml` and `corrupt/fuzz-config-0x090570A1-539.toml` fixtures).
+- Disposition: fix landed (WO-09): `Config::Parse` pre-validates every table-header line with the
+  parser's OWN predicates (`toml::impl::is_bare_key_character` / `is_string_delimiter` on the first
+  UTF-8 code point after `[` / `[[` and horizontal whitespace) and returns `nullptr` with a logged
+  "table header must start with a key" error instead of entering the assumption. The vendored
+  library is untouched; a header toml++ would accept is never rejected (the check is exactly the
+  assertion's precondition).
+
+### KI-50 — Starforge.exe and Starforge.dll share one PDB path: a parallel build sometimes fails with LNK1201 (build gap)
+- Status: Enforcement/build gap (sporadic full-build failure, no runtime effect). Owner WO: WO-09
+  (found while producing the final 0-warning build evidence).
+- Anchor: `Runtime/CMakeLists.txt:50-62` at `3ef6981` — target `StarforgeEditor` has
+  `OUTPUT_NAME "Starforge"` and the same `RUNTIME_OUTPUT_DIRECTORY` as the project DLL target
+  `Starforge` (`Projects/Starforge/CMakeLists.txt:92`), so both link steps write
+  `build/Runtime/<cfg>/Starforge.pdb`. Under `cmake --build … -- -m` the two projects can link
+  concurrently; when they do, the second writer gets `LINK : fatal error LNK1201: error writing
+  to program database '…\Starforge.pdb'` and `Starforge.dll` is not produced (the exe is).
+- Repro: `cmake --build build --config Release -- -m` from a clean-ish tree; struck once in this
+  WO's final Release build (`evidence/WO-09/failing-before/ki50-pdb-race/`), never in the earlier
+  WO-02..WO-08 full builds — a race, not a deterministic error.
+- Regression: none possible headlessly (a build race); the per-config full-build logs in every
+  WO's evidence are the observation point.
+- Disposition: fix landed (WO-09): `StarforgeEditor` gets `PDB_NAME` / `COMPILE_PDB_NAME`
+  `StarforgeEditor`, so the launcher's PDB is `StarforgeEditor.pdb` and the DLL keeps
+  `Starforge.pdb`. Nothing in the tree references the launcher's PDB by name (packaging copies no
+  PDBs).
+
 ## Register invariants
 
 - No entry is closed without a landed regression (or an explicit reviewed won't-fix with reason).
