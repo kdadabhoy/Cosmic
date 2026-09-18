@@ -10,8 +10,19 @@
 
 namespace Cosmic
 {
+	namespace
+	{
+		// The non-finite input policy (WO-08 KI-38): a NaN or infinite zoom,
+		// focus, size, rect, bounds, aspect or scroll amount is REJECTED — the
+		// call is a no-op and the last valid state stays. A NaN that reaches the
+		// projection blanks the viewport and, because clamp() passes NaN through,
+		// would otherwise stick until a finite zoom arrived.
+		bool Finite(float v)            { return std::isfinite(v); }
+		bool Finite(const glm::vec2& v) { return std::isfinite(v.x) && std::isfinite(v.y); }
+	}
+
 	Camera2DController::Camera2DController(float aspectRatio)
-		: m_Aspect(aspectRatio > 0.0f ? aspectRatio : 1.0f)
+		: m_Aspect((Finite(aspectRatio) && aspectRatio > 0.0f) ? aspectRatio : 1.0f)
 	{
 		Recalculate();
 	}
@@ -26,15 +37,25 @@ namespace Cosmic
 		m_Camera.SetPosition({ m_Focus.x, m_Focus.y, 0.0f });
 	}
 
+	void Camera2DController::SetFocus(const glm::vec2& xy)
+	{
+		if (!Finite(xy))
+			return;   // policy: non-finite focus is rejected
+		m_Focus = xy;
+		Recalculate();
+	}
+
 	void Camera2DController::SetZoom(float halfHeight)
 	{
+		if (!Finite(halfHeight))
+			return;   // policy: NaN / ±inf zoom is rejected (zero / negative clamp to the minimum)
 		m_Zoom = std::clamp(halfHeight, m_MinZoom, m_MaxZoom);
 		Recalculate();
 	}
 
 	void Camera2DController::OnResize(float width, float height)
 	{
-		if (width <= 0.0f || height <= 0.0f)
+		if (!Finite(width) || !Finite(height) || width <= 0.0f || height <= 0.0f)
 			return;
 		m_Aspect = width / height;
 		Recalculate();
@@ -42,6 +63,8 @@ namespace Cosmic
 
 	void Camera2DController::SetViewportRect(const glm::vec2& posPx, const glm::vec2& sizePx)
 	{
+		if (!Finite(posPx) || !Finite(sizePx))
+			return;   // policy: a non-finite rect is rejected whole (position AND size stay)
 		m_ViewportPos  = posPx;
 		m_ViewportSize = sizePx;
 		OnResize(sizePx.x, sizePx.y);
@@ -62,7 +85,9 @@ namespace Cosmic
 	                                            const glm::vec2& vpPosPx, const glm::vec2& vpSizePx,
 	                                            const glm::vec2& focus, float zoomHalfHeight)
 	{
-		if (vpSizePx.y <= 0.0f)
+		if (!Finite(screenPx) || !Finite(vpPosPx) || !Finite(vpSizePx) || !Finite(zoomHalfHeight))
+			return focus;
+		if (vpSizePx.y <= 0.0f || zoomHalfHeight <= 0.0f)
 			return focus;
 		const glm::vec2 center = vpPosPx + vpSizePx * 0.5f;
 		const float unitsPerPx = (2.0f * zoomHalfHeight) / vpSizePx.y;
@@ -73,6 +98,8 @@ namespace Cosmic
 	glm::vec2 Camera2DController::PanBy(const glm::vec2& focus, const glm::vec2& deltaPx,
 	                                    float zoomHalfHeight, float viewportHeightPx)
 	{
+		if (!Finite(deltaPx) || !Finite(zoomHalfHeight) || !Finite(viewportHeightPx))
+			return focus;
 		if (viewportHeightPx <= 0.0f)
 			return focus;
 		const float unitsPerPx = (2.0f * zoomHalfHeight) / viewportHeightPx;
@@ -84,6 +111,8 @@ namespace Cosmic
 	glm::vec2 Camera2DController::ZoomAboutPoint(const glm::vec2& focus, const glm::vec2& worldAnchor,
 	                                             float zoomBefore, float zoomAfter)
 	{
+		if (!Finite(worldAnchor) || !Finite(zoomBefore) || !Finite(zoomAfter))
+			return focus;
 		if (zoomBefore <= 0.0f)
 			return focus;
 		const float k = zoomAfter / zoomBefore;
@@ -134,10 +163,13 @@ namespace Cosmic
 		if (!m_ControlEnabled)
 			return false;
 
+		if (!Finite(e.GetYOffset()))
+			return false;   // policy: a non-finite scroll amount is rejected
+
 		const float before = m_Zoom;
 		const float after  = std::clamp(before * std::pow(1.15f, -e.GetYOffset() * m_ZoomSpeed),
 		                                m_MinZoom, m_MaxZoom);
-		if (after == before)
+		if (!Finite(after) || after == before)
 			return false;
 
 		// Keep the world point under the cursor fixed on screen.
@@ -169,6 +201,8 @@ namespace Cosmic
 
 	void Camera2DController::FrameBounds(const glm::vec2& worldMin, const glm::vec2& worldMax)
 	{
+		if (!Finite(worldMin) || !Finite(worldMax))
+			return;   // policy: a non-finite box is rejected (an infinite box has no centre)
 		const glm::vec2 size = worldMax - worldMin;
 		m_Focus = (worldMin + worldMax) * 0.5f;
 		if (size.x > 1e-6f || size.y > 1e-6f)

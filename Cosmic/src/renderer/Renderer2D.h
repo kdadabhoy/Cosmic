@@ -182,6 +182,15 @@ namespace Cosmic
             uint32_t CircleCount = 0;
             uint32_t LineCount = 0;
 
+            // WO-08 observation counters (2D stability R02/R03). Pure telemetry:
+            // nothing reads them back into a decision. DrawCalls/QuadCount/
+            // CircleCount keep their historical meaning (text glyphs still count
+            // into QuadCount, instanced chunks still count into DrawCalls).
+            uint32_t Flushes = 0;             // Flush() invocations (auto + explicit); each may issue 0..4 draws
+            uint32_t InstanceDrawCalls = 0;   // DrawIndexedInstanced chunks issued by the two instanced pipelines
+            uint32_t InstanceCount = 0;       // instances streamed to the GPU across those chunks
+            uint32_t GlyphCount = 0;          // visible SDF glyph quads emitted by DrawString
+
             uint32_t GetTotalVertexCount() const { return QuadCount * 4 + CircleCount * 4 + LineCount * 2; }
             // Quads and SDF circles each emit 6 indices (two triangles). Lines are
             // non-indexed (glDrawArrays) and therefore contribute nothing here.

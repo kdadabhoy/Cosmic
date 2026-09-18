@@ -328,7 +328,10 @@ namespace Cosmic
                     const float xs[4] = { rect.Min.x, rect.Min.x + lp, rect.Max.x - rp, rect.Max.x };
                     const float ys[4] = { rect.Min.y, rect.Min.y + tp, rect.Max.y - bp, rect.Max.y };
                     // Source UV edges (top-left origin; SubTexture2D UV is bottom-left,
-                    // so V is flipped: v = 1 - y/th).
+                    // so V is flipped: v = 1 - y/th). The canvas projection is +y DOWN,
+                    // which puts the quad corner carrying uvMin at the cell's screen
+                    // TOP — so the top band gets uvMin.v = vs[row] (the higher v), not
+                    // vs[row + 1], or every band renders upside-down (WO-08 KI-37).
                     const float us[4] = { 0.0f, l / tw, 1.0f - r / tw, 1.0f };
                     const float vs[4] = { 1.0f, 1.0f - t / th, b / th, 0.0f };
 
@@ -339,8 +342,8 @@ namespace Cosmic
                             const float cy = (ys[row] + ys[row + 1]) * 0.5f;
                             const glm::vec2 cellSize = { xs[col + 1] - xs[col], ys[row + 1] - ys[row] };
                             if (cellSize.x <= 0.0f || cellSize.y <= 0.0f) continue;
-                            const glm::vec2 uvMin = { us[col],     vs[row + 1] };
-                            const glm::vec2 uvMax = { us[col + 1], vs[row]     };
+                            const glm::vec2 uvMin = { us[col],     vs[row]     };
+                            const glm::vec2 uvMax = { us[col + 1], vs[row + 1] };
                             auto sub = CreateRef<SubTexture2D>(tex, uvMin, uvMax);
                             Renderer2D::DrawQuad(glm::vec3(cx, cy, 0.0f), cellSize, sub, tint);
                         }
@@ -361,7 +364,12 @@ namespace Cosmic
                 }
             }
 
-            Renderer2D::DrawQuad(glm::vec3(center, 0.0f), size, tex, 1.0f, tint);
+            // Under the +y-DOWN canvas projection the plain textured quad puts v = 0
+            // at the rect's top, i.e. the image upside-down (files are loaded with
+            // v = 1 as their top row; an FBO's row 0 is its bottom). Route through a
+            // sub-texture whose V runs 1 -> 0 from the screen top down (WO-08 KI-37).
+            auto upright = CreateRef<SubTexture2D>(tex, glm::vec2{ 0.0f, 1.0f }, glm::vec2{ 1.0f, 0.0f });
+            Renderer2D::DrawQuad(glm::vec3(center, 0.0f), size, upright, tint);
         }
 
         void DrawTextInRect(UiTextComponent& txt, const UiRect& rect, float scale)

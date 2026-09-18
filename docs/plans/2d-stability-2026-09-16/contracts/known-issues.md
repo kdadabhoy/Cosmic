@@ -534,6 +534,146 @@ evidence is under `evidence/WO-07/l02/`; each entry names its file.
   layouts match the process a hot module is mapped into; the module search dir and the
   non-release package pairing follow automatically.
 
+## WO-08 findings (2026-09-18) — renderer / camera / capture (R01–R07)
+
+### KI-35 — DrawCircle `thickness` is inverted: a ring renders as a small disc
+- Status: Confirmed defect (silent visual corruption against the documented contract).
+  Owner WO: WO-08 (R01 "SDF discs/rings/ellipse … correct").
+- Anchor: `Cosmic/assets/shaders/Circle.glsl` fragment stage and `CircleInstance.glsl` fragment
+  stage at `2024748`: `alpha *= smoothstep(Thickness + Fade, Thickness, 1.0 - distance)` where
+  `distance = 1.0 - length(LocalPosition)`, i.e. the second factor is evaluated on the normalised
+  RADIUS `r`, so it keeps `r < Thickness` — a **disc of radius `Thickness`** — instead of the
+  documented ring: `docs/guide/rendering-2d.md` §"Draw circles and rings" and
+  `docs/reference/rendering-2d.md:764` both define `thickness` as "the ring wall as a fraction of
+  the radius (`1.0` = filled)". Every shipping caller uses the documented meaning:
+  `Projects/SF_Telem/src/DrivetrainLayer.cpp:1307-1312` ("faded ring" 0.03, "bold tyre" 0.11)
+  and `Cosmic/src/layers/LauncherLayer.cpp:217-219` ("Mid ring" 0.02, "Inner ring" 0.015) — all
+  of which currently draw a near-invisible dot at the centre instead of a ring.
+- Repro: `CosmicRenderTests --test-suite="WO-08 R01" --test-case="R01 primitives*"`: the
+  `thickness = 0.2` circle at world (-2, 0.5) has its CENTRE painted and its r = 0.9 ring empty
+  (`ring centre is empty` / `ring at r=0.9` sentinels).
+- Failing-before: `evidence/WO-08/ki35-circle-thickness/failing-before/` (Release; the captured
+  frame `r01-primitives.png` shows the orange "ring" as a small filled dot).
+- Regression: `tests/render/render_wo08_primitives.cpp` (ring sentinels + the `wo08_primitives`
+  golden) and `render_wo08_instancing.cpp` (instanced thickness variants in the `instancing2d`
+  golden, R03).
+- Disposition: fix landed (this WO): both fragment stages evaluate the wall factor on `distance`
+  (`1 - r`) — `smoothstep(Thickness + Fade, Thickness, distance)` — which keeps
+  `1 - r < Thickness`, the outer wall of width `Thickness · R`; `thickness = 1.0` is unchanged (a
+  full disc). No committed golden draws a circle (the five 2D scene goldens and the 3D goldens
+  are circle-free), so no existing golden moves; `engine-3d` is untouched.
+
+### KI-36 — After a Material quad, every following non-material quad is its own draw under the material's shader
+- Status: Confirmed defect (silent visual corruption + per-quad batch break). Owner WO: WO-08
+  (R02 "material/shader changes and mixed calls").
+- Anchor: `Cosmic/src/renderer/Renderer2D.cpp` at `2024748` — the six non-material quad paths
+  (`DrawQuad` colour/texture/sub-texture and their `DrawRotatedQuad` twins) open with
+  `if (s_Data.CurrentMaterial != s_Data.DefaultMaterial) FlushAndReset();` but never set
+  `CurrentMaterial` back to `DefaultMaterial`, and `FlushAndReset()` deliberately PRESERVES the
+  active material across the reset. So once `DrawQuad(…, material)` has run in a pass, every
+  later flat / textured / sub-textured quad (a) trips the `!= DefaultMaterial` flush on EVERY
+  call — one draw call per quad — and (b) is flushed through `CurrentMaterial->Bind()`, i.e. the
+  custom material's shader and uniforms, not the engine batch shader. Only the next
+  `PushRenderPass`/`PopRenderPass` resets the bucket. Reachable from authored content:
+  `Scene::OnRenderSprites` (`Scene.cpp:717-729`) draws a material sprite through
+  `DrawRotatedQuad(…, s.ActiveMaterial)` and the next sprites in painter order through the
+  colour / sub-texture overloads.
+- Repro: `CosmicRenderTests --test-suite="WO-08 R02" --test-case="R02 material*"`: one quad on a
+  magenta-tint material followed by five flat WHITE quads → `DrawCalls == 6`, `Flushes == 7`, and
+  all five flat quads read (255,0,255) instead of white; a cyan material followed by textured /
+  sub-textured / rotated-flat quads → 4 draws, all three cyan.
+- Failing-before: `evidence/WO-08/ki36-material-restore/failing-before/` (Release; the capture
+  `r02-material-then-flat.png` shows six magenta cells where one magenta + five white were
+  submitted).
+- Regression: `tests/render/render_wo08_batches.cpp` "R02 material / shader transitions" (five
+  subcases: material→flat, material→textured/sub-textured, alternating, two materials on one
+  shader, fresh-pass reset) plus the draw-count assertions of every other R02 case.
+- Disposition: fix landed (this WO): each non-material quad path that flushes on
+  `CurrentMaterial != DefaultMaterial` now also sets `CurrentMaterial = DefaultMaterial` so the
+  quad joins the default bucket — the symmetric twin of the material path's
+  `CurrentMaterial = material`. `FlushAndReset`'s material preservation (which the material
+  path relies on across the 10,000-quad boundary) is unchanged.
+
+### KI-37 — UiImage draws every texture vertically flipped (plain and 9-slice paths)
+- Status: Confirmed defect (silent visual corruption of authored UI images and RTT feeds).
+  Owner WO: WO-08 (R05 "RTT UiImage orientation").
+- Anchor: `Cosmic/src/scene/ui/UiSystem.cpp` `DrawImageQuad` at `2024748`. The UI pass projects
+  with `glm::ortho(0, w, h, 0)` (canvas +y DOWN), so `Renderer2D`'s quad corner with local
+  (-0.5, +0.5) — the one that carries UV v = 1 — lands at the rect's screen BOTTOM. The plain path
+  (`:364`, `DrawQuad(center, size, tex, 1, tint)`) therefore shows texture v = 0 at the top of the
+  rect; the 9-slice path (`:330-345`) builds `vs[] = {1, 1-t/th, b/th, 0}` top-to-bottom (right)
+  but hands `uvMin.v = vs[row+1]` to the corner that is the screen TOP under this projection
+  (wrong), so each band is mirrored the same way. Files are loaded flip-on-load
+  (`OpenGLTexture.cpp:77`: v = 1 is the file's top row) and an FBO attachment's row 0 is its
+  bottom, so both an authored `TexturePath` image and a `RuntimeTexture` render-to-texture feed
+  appear upside-down. Text is unaffected (it flips its geometry, `:416`). `docs/guide/game-ui.md`
+  "Show a live render target in an image" documents the upright expectation (its option B says a
+  TOP-left-origin buffer would arrive flipped, i.e. the quad is expected to sample bottom-left).
+- Repro: `CosmicRenderTests --test-suite="WO-08 R05" --test-case="R05 two RTT*"`: a 64x48 target
+  with red / green / blue / yellow corner markers and a red bar along its TOP edge, shown 1:1
+  through `UiImageComponent::RuntimeTexture` (documented FboTexture adapter) — the rect's top-left
+  reads blue (the target's bottom-left), its bottom edge carries the bar.
+- Failing-before: `evidence/WO-08/ki37-uiimage-flipped/failing-before/` (Release; `r05-main.png`).
+- Regression: `tests/render/render_wo08_rtt.cpp` "R05 two RTT targets through UiImage…" (corner +
+  bar orientation on two targets of different aspect, plain path) and the added 9-slice / plain
+  orientation checks on a GL-native two-row texture.
+- Disposition: fix landed (this WO): the plain path draws through a `SubTexture2D` with
+  `uvMin = (0, 1)`, `uvMax = (1, 0)` so v = 1 sits at the rect top; the 9-slice path hands
+  `uvMin.v = vs[row]` / `uvMax.v = vs[row+1]`. Tint-only images (no texture) are untouched, so the
+  committed `ui` and `scene2d` goldens (tints only) do not move.
+
+### KI-38 — Camera2DController accepts NaN/inf zoom, focus, size and bounds and emits a non-finite projection
+- Status: Confirmed defect (a NaN view-projection blanks the whole viewport and is sticky).
+  Owner WO: WO-08 (R04 "zero/negative/nonfinite input policy … no NaN projection,
+  divide-by-zero or resize crash").
+- Anchor: `Cosmic/src/camera/Camera2DController.cpp` at `2024748`. `SetZoom` clamps with
+  `std::clamp`, which returns NaN unchanged, so `SetZoom(NaN)` stores NaN and `Recalculate()`
+  builds a NaN ortho; `SetFocus` and `FrameBounds` store whatever they are given (an infinite box
+  averages to a NaN focus); `OnResize` / `SetViewportRect` guard only `<= 0`, so a NaN or
+  infinite size passes and becomes the aspect; `OnMouseScrolled` computes
+  `before * pow(1.15, -NaN)` = NaN, the `after == before` early-out is false for NaN, and the NaN
+  is stored. The constructor guards `<= 0` but not `+inf`. The pure helpers (`ScreenToWorld`,
+  `PanBy`, `ZoomAboutPoint`) guard zero-height / zero-zoom only. Once stored, every later frame
+  projects through NaN (no vertex passes clipping — an empty viewport) until a finite `SetZoom`
+  arrives; the zoom clamp cannot recover it. Reachable: framing/zooming is driven from scene data
+  (entity bounds, saved view state), which the P2/P6 hardening notes already flag as able to
+  carry NaN/inf.
+- Repro: `CosmicTests --test-case="WO-08 R04: nonfinite input policy*"` (headless): after
+  `SetZoom(NaN)` the projection is non-finite; `SetZoom(±inf)` moves the zoom to a clamp end
+  instead of being rejected; `OnResize(NaN, 720)` / `OnResize(inf, 720)` change the aspect;
+  `FrameBounds({-inf,-inf},{inf,inf})` moves the focus to NaN; a `MouseScrolledEvent(0, NaN)`
+  through `OnEvent` poisons the zoom.
+- Failing-before: `evidence/WO-08/ki38-camera-nonfinite/failing-before/` (Release, 107 failed
+  assertions in the one case; every other R04/R06 headless case passed).
+- Regression: `tests/test_wo08_camera.cpp` "nonfinite input policy" (+ the round-trip, anchor,
+  zoom-range, FrameBounds and changing-viewport cases that must keep passing).
+- Disposition: fix landed (this WO) — POLICY: any non-finite zoom, focus, size, viewport rect,
+  bounds, aspect or scroll amount is REJECTED (the call is a no-op and the previous valid state
+  stays); zero/negative zoom still clamps to the minimum; zero/negative sizes are still ignored;
+  the pure helpers return `focus` unchanged for non-finite inputs, exactly as they already do for
+  a zero viewport height / zero zoom. Documented in `Camera2DController.h`.
+
+### KI-39 — Both trunk source audits fail at HEAD for reasons predating WO-08 (enforcement gap)
+- Status: Enforcement gap (the WO-03 CI gates `tests/check_gl_conformance.ps1` and
+  `tests/check_docs_coverage.ps1` are red on `main`; WO-02 recorded both clean at the baseline).
+  Owner WO: WO-07 / WO-04 / WO-06 follow-up (not fixed by WO-08 — outside its scope, other work
+  orders' files).
+- Anchor (GL conformance, 8 violations): `tests/WO07PlotFixture.cpp:148-154` and
+  `tests/WO07UiCyclesFixture.cpp:83` carry INLINE `/*GL_…*/` comments after code
+  (`0x8CA8 /*GL_READ_FRAMEBUFFER*/` etc.); the scanner exempts full-line comments only, so the
+  `GL_[A-Z0-9_]+` tokens count as violations. Anchor (docs coverage, 2 unlisted headers):
+  `serial/ISerialTransport.h` (WO-04) and `utils/AtomicOutput.h` (WO-06) have no row in
+  `docs/reference/README.md`. The WO-08 header `graphics/GpuObjectStats.h` was added WITH its row
+  and chapter entry, and no WO-08 file adds a GL token.
+- Repro: `powershell -File tests\check_gl_conformance.ps1` → exit 1 (8 violations);
+  `powershell -File tests\check_docs_coverage.ps1` → exit 1 (2 unlisted headers). Evidence:
+  `evidence/WO-08/audit-gl-conformance.txt`, `audit-docs-coverage.txt`.
+- Regression: the audits themselves (CI step "GL conformance audit", docs coverage step).
+- Disposition: open. Fix recipe: reword the eight inline comments so they do not spell `GL_…`
+  (e.g. `/*READ_FRAMEBUFFER*/`), and add two manifest rows (`serial/ISerialTransport.h` →
+  `serial.md`, `utils/AtomicOutput.h` → the utilities chapter) with a short entry each. Neither
+  change touches behaviour.
+
 ## Register invariants
 
 - No entry is closed without a landed regression (or an explicit reviewed won't-fix with reason).

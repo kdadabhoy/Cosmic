@@ -19,6 +19,14 @@
  * modest 3D props in 2.5D scenes all render; larger world Z = nearer the viewer
  * (the standard 2D convention). The pure pan/zoom math is exposed as static
  * functions (PanBy / ZoomAboutPoint / ScreenToWorld) so it is headless-testable.
+ *
+ * INPUT POLICY (WO-08 R04, KI-38): `Zoom` is clamped to [0.01, 10000] — zero and
+ * negative values clamp to the minimum. A NaN or infinite zoom, focus, size,
+ * viewport rect, framing box, aspect or scroll amount is REJECTED: the call is a
+ * no-op and the previous valid state stays, so the projection is always finite.
+ * Zero/negative sizes are ignored (aspect unchanged). The static helpers return
+ * `focus` unchanged for a non-finite input, a zero viewport height or a
+ * non-positive zoom.
  */
 
 #include "core/Core.h"
@@ -64,10 +72,12 @@ namespace Cosmic
 		const OrthographicCamera& GetCamera() const { return m_Camera; }
 
 		// --- View state ------------------------------------------------------
-		void             SetFocus(const glm::vec2& xy) { m_Focus = xy; Recalculate(); }
+		// Non-finite focus is rejected (see the input policy above).
+		void             SetFocus(const glm::vec2& xy);
 		const glm::vec2& GetFocus() const              { return m_Focus; }
 
-		// Zoom = visible half-height in world units (clamped to sane limits).
+		// Zoom = visible half-height in world units (clamped to sane limits;
+		// NaN / ±inf rejected).
 		void  SetZoom(float halfHeight);
 		float GetZoom() const { return m_Zoom; }
 

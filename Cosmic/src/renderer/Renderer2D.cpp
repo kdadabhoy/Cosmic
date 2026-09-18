@@ -643,6 +643,8 @@ namespace Cosmic
 
 	void Renderer2D::Flush()
 	{
+		if (s_Data.StatsEnabled) s_Data.Stats.Flushes++;
+
 		// --- Draw Quads ---
 		if (s_Data.QuadIndexCount != 0)
 		{
@@ -812,7 +814,14 @@ namespace Cosmic
 
 	void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color)
 	{
-		if (s_Data.CurrentMaterial != s_Data.DefaultMaterial) FlushAndReset();
+		if (s_Data.CurrentMaterial != s_Data.DefaultMaterial)
+		{
+			// Leaving a Material bucket: flush it and REJOIN the default bucket. Without
+			// the reassignment FlushAndReset() preserves the material and every later
+			// non-material quad flushes again under that material's shader (WO-08 KI-36).
+			FlushAndReset();
+			s_Data.CurrentMaterial = s_Data.DefaultMaterial;
+		}
 		if (s_Data.QuadIndexCount >= Renderer2DData::MaxIndices) FlushAndReset();
 
 		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
@@ -849,7 +858,14 @@ namespace Cosmic
 			return;
 		}
 
-		if (s_Data.CurrentMaterial != s_Data.DefaultMaterial) FlushAndReset();
+		if (s_Data.CurrentMaterial != s_Data.DefaultMaterial)
+		{
+			// Leaving a Material bucket: flush it and REJOIN the default bucket. Without
+			// the reassignment FlushAndReset() preserves the material and every later
+			// non-material quad flushes again under that material's shader (WO-08 KI-36).
+			FlushAndReset();
+			s_Data.CurrentMaterial = s_Data.DefaultMaterial;
+		}
 		if (s_Data.QuadIndexCount >= Renderer2DData::MaxIndices) FlushAndReset();
 
 		float textureIndex = ResolveTextureSlot(texture);
@@ -924,7 +940,14 @@ namespace Cosmic
 
 	void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const Ref<SubTexture2D>& subTexture, const glm::vec4& tintColor)
 	{
-		if (s_Data.CurrentMaterial != s_Data.DefaultMaterial) FlushAndReset();
+		if (s_Data.CurrentMaterial != s_Data.DefaultMaterial)
+		{
+			// Leaving a Material bucket: flush it and REJOIN the default bucket. Without
+			// the reassignment FlushAndReset() preserves the material and every later
+			// non-material quad flushes again under that material's shader (WO-08 KI-36).
+			FlushAndReset();
+			s_Data.CurrentMaterial = s_Data.DefaultMaterial;
+		}
 		if (s_Data.QuadIndexCount >= Renderer2DData::MaxIndices) FlushAndReset();
 
 		Ref<Texture> texture = subTexture->GetTexture();
@@ -958,7 +981,14 @@ namespace Cosmic
 
 	void Renderer2D::DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const glm::vec4& color)
 	{
-		if (s_Data.CurrentMaterial != s_Data.DefaultMaterial) FlushAndReset();
+		if (s_Data.CurrentMaterial != s_Data.DefaultMaterial)
+		{
+			// Leaving a Material bucket: flush it and REJOIN the default bucket. Without
+			// the reassignment FlushAndReset() preserves the material and every later
+			// non-material quad flushes again under that material's shader (WO-08 KI-36).
+			FlushAndReset();
+			s_Data.CurrentMaterial = s_Data.DefaultMaterial;
+		}
 		if (s_Data.QuadIndexCount >= Renderer2DData::MaxIndices) FlushAndReset();
 
 		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
@@ -989,7 +1019,14 @@ namespace Cosmic
 
 	void Renderer2D::DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const Ref<Texture>& texture, float tilingFactor, const glm::vec4& tintColor)
 	{
-		if (s_Data.CurrentMaterial != s_Data.DefaultMaterial) FlushAndReset();
+		if (s_Data.CurrentMaterial != s_Data.DefaultMaterial)
+		{
+			// Leaving a Material bucket: flush it and REJOIN the default bucket. Without
+			// the reassignment FlushAndReset() preserves the material and every later
+			// non-material quad flushes again under that material's shader (WO-08 KI-36).
+			FlushAndReset();
+			s_Data.CurrentMaterial = s_Data.DefaultMaterial;
+		}
 		if (s_Data.QuadIndexCount >= Renderer2DData::MaxIndices) FlushAndReset();
 
 		float textureIndex = ResolveTextureSlot(texture);
@@ -1066,7 +1103,14 @@ namespace Cosmic
 
 	void Renderer2D::DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const Ref<SubTexture2D>& subTexture, const glm::vec4& tintColor)
 	{
-		if (s_Data.CurrentMaterial != s_Data.DefaultMaterial) FlushAndReset();
+		if (s_Data.CurrentMaterial != s_Data.DefaultMaterial)
+		{
+			// Leaving a Material bucket: flush it and REJOIN the default bucket. Without
+			// the reassignment FlushAndReset() preserves the material and every later
+			// non-material quad flushes again under that material's shader (WO-08 KI-36).
+			FlushAndReset();
+			s_Data.CurrentMaterial = s_Data.DefaultMaterial;
+		}
 		if (s_Data.QuadIndexCount >= Renderer2DData::MaxIndices) FlushAndReset();
 
 		Ref<Texture> texture = subTexture->GetTexture();
@@ -1214,7 +1258,7 @@ namespace Cosmic
 					s_Data.TextVertexBufferPtr++;
 				}
 				s_Data.TextIndexCount += 6;
-				if (s_Data.StatsEnabled) s_Data.Stats.QuadCount++;
+				if (s_Data.StatsEnabled) { s_Data.Stats.QuadCount++; s_Data.Stats.GlyphCount++; }
 			}
 
 			x += g->advance + kerning;
@@ -1337,6 +1381,7 @@ namespace Cosmic
 
 			if (s_Data.StatsEnabled) s_Data.Stats.DrawCalls++;
 			if (s_Data.StatsEnabled) s_Data.Stats.CircleCount += batchSize;
+			if (s_Data.StatsEnabled) { s_Data.Stats.InstanceDrawCalls++; s_Data.Stats.InstanceCount += batchSize; }
 
 			remaining -= batchSize;
 			offset += batchSize;
@@ -1437,6 +1482,7 @@ namespace Cosmic
 
 			if (s_Data.StatsEnabled) s_Data.Stats.DrawCalls++;
 			if (s_Data.StatsEnabled) s_Data.Stats.QuadCount += batchSize;
+			if (s_Data.StatsEnabled) { s_Data.Stats.InstanceDrawCalls++; s_Data.Stats.InstanceCount += batchSize; }
 
 			remaining -= batchSize;
 			offset += batchSize;

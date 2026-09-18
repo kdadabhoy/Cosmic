@@ -54,8 +54,11 @@ void main()
     // Evaluate edge anti-aliasing outer border smoothing
     float alpha = smoothstep(0.0, Input.Fade, distance);
 
-    // Apply inner ring thickness clipping logic
-    alpha *= smoothstep(Input.Thickness + Input.Fade, Input.Thickness, 1.0 - distance);
+    // Ring wall: `Thickness` is the wall as a fraction of the radius (1.0 = a
+    // full disc), so the factor is evaluated on `distance` (= 1 - r) and keeps
+    // 1 - r < Thickness, i.e. the OUTER band. Evaluating it on r instead kept
+    // r < Thickness and drew a small disc (WO-08 KI-35).
+    alpha *= smoothstep(Input.Thickness + Input.Fade, Input.Thickness, distance);
 
     // Clip completely transparent fragment overhead completely
     if (alpha == 0.0)
