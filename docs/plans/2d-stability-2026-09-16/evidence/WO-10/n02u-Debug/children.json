@@ -1,0 +1,34 @@
+﻿{
+    "id":  "N02-U",
+    "tier":  "U",
+    "description":  "WO-10 N02-U via CosmicTests.exe",
+    "requires":  [
+                     "windows"
+                 ],
+    "transport":  "none",
+    "seed":  null,
+    "start_utc":  "2026-09-18T22:40:36.4765056Z",
+    "deadline_sec":  120,
+    "exercised":  "production",
+    "command":  "C:\\dev\\Cosmic\\build\\Runtime\\Debug\\CosmicTests.exe --reporters=console --no-intro --no-colors \"--test-suite=WO-10 N02 clock (headless)\"",
+    "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-10\\n02u-Debug\\N02-U.out.log",
+    "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-10\\n02u-Debug\\N02-U.err.log",
+    "pid":  25308,
+    "exit_code":  0,
+    "crash":  false,
+    "tests_passed":  3,
+    "tests_expected_min":  3,
+    "verdict":  "PASSED",
+    "detail":  "exit 0 as expected",
+    "duration_sec":  3.147,
+    "end_utc":  "2026-09-18T22:40:39.6306989Z",
+    "golden_mutated":  false,
+    "golden_mutations":  [
+
+                         ],
+    "golden_diagnostics":  [
+
+                           ],
+    "golden_sha256_before":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-10\\n02u-Debug\\goldens-sha256-before.txt",
+    "golden_sha256_after":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-10\\n02u-Debug\\goldens-sha256-after.txt"
+}

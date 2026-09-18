@@ -1,0 +1,35 @@
+﻿{
+    "id":  "retained-goldens",
+    "tier":  "G",
+    "description":  "WO-10 retained-goldens via CosmicRenderTests.exe",
+    "requires":  [
+                     "windows",
+                     "gpu-gl"
+                 ],
+    "transport":  "none",
+    "seed":  null,
+    "start_utc":  "2026-09-18T22:47:45.7316877Z",
+    "deadline_sec":  120,
+    "exercised":  "production",
+    "command":  "C:\\dev\\Cosmic\\build\\Runtime\\Debug\\CosmicRenderTests.exe --reporters=console --no-intro --no-colors \"--test-suite=2D goldens\"",
+    "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-10\\retained-goldens-Debug\\retained-goldens.out.log",
+    "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-10\\retained-goldens-Debug\\retained-goldens.err.log",
+    "pid":  28080,
+    "exit_code":  0,
+    "crash":  false,
+    "tests_passed":  6,
+    "tests_expected_min":  6,
+    "verdict":  "PASSED",
+    "detail":  "exit 0 as expected",
+    "duration_sec":  0.41,
+    "end_utc":  "2026-09-18T22:47:46.1490051Z",
+    "golden_mutated":  false,
+    "golden_mutations":  [
+
+                         ],
+    "golden_diagnostics":  [
+
+                           ],
+    "golden_sha256_before":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-10\\retained-goldens-Debug\\goldens-sha256-before.txt",
+    "golden_sha256_after":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-10\\retained-goldens-Debug\\goldens-sha256-after.txt"
+}

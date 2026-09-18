@@ -1,0 +1,18 @@
+==================== wo10-drift / Release ====================
+  [PASSED] N02-drift-2h - exit 0 as expected
+--- N02-drift-2h.out.log ---
+[drift-2h] frames=432001 ticks direct/plugin/ref=432000/432000/432000 maxTicksInFrame direct/plugin=1/1 zeroTickFrames=0 twoPlusTickFrames=0 realSeconds=193.047188
+[drift-2h] per-frame OnUpdate dt error max: direct 0.000e+00 (frame 0) plugin 0.000e+00 (frame 0); frames over the float bar: 0
+[drift-2h] plugin local time: observed 7183.14648 ref 7200.00208 err 1.686e+01 (float accumulation over 432001 frames, worst-case bound 1.055e+02); uptime: observed 7200.00244 ref 7200.00208 err 3.581e-04
+[drift-2h] production ticks 432000 vs reference 432000: drift 0 step(s) (proposed bar <= 1, measurement ƒ?" not gating); plugin local time 7183.146484 vs 7200.002083 (err -16.8556 s); uptime 7200.002441 (err 0.0004 s); real time 193.0 s for 432001 frames (0.447 ms/frame)
+  [doctest] test cases:  1 |  1 passed | 0 failed | 466 skipped
+  [doctest] assertions: 20 | 20 passed | 0 failed |
+==================== wo10-drift / Debug ====================
+  [PASSED] N02-drift-2h - exit 0 as expected
+--- N02-drift-2h.out.log ---
+[drift-2h] frames=432001 ticks direct/plugin/ref=432000/432000/432000 maxTicksInFrame direct/plugin=1/1 zeroTickFrames=0 twoPlusTickFrames=0 realSeconds=293.379318
+[drift-2h] per-frame OnUpdate dt error max: direct 0.000e+00 (frame 0) plugin 0.000e+00 (frame 0); frames over the float bar: 0
+[drift-2h] plugin local time: observed 7183.14648 ref 7200.00208 err 1.686e+01 (float accumulation over 432001 frames, worst-case bound 1.055e+02); uptime: observed 7200.00244 ref 7200.00208 err 3.581e-04
+[drift-2h] production ticks 432000 vs reference 432000: drift 0 step(s) (proposed bar <= 1, measurement ƒ?" not gating); plugin local time 7183.146484 vs 7200.002083 (err -16.8556 s); uptime 7200.002441 (err 0.0004 s); real time 293.4 s for 432001 frames (0.679 ms/frame)
+  [doctest] test cases:  1 |  1 passed | 0 failed | 466 skipped
+  [doctest] assertions: 20 | 20 passed | 0 failed |

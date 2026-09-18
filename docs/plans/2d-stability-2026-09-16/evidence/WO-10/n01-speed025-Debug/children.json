@@ -1,0 +1,35 @@
+﻿{
+    "id":  "N01-speed025",
+    "tier":  "W",
+    "description":  "WO-10 N01-speed025 via CosmicTests.exe",
+    "requires":  [
+                     "windows",
+                     "gpu-gl"
+                 ],
+    "transport":  "none",
+    "seed":  null,
+    "start_utc":  "2026-09-18T22:40:51.3628419Z",
+    "deadline_sec":  120,
+    "exercised":  "production",
+    "command":  "C:\\dev\\Cosmic\\build\\Runtime\\Debug\\CosmicTests.exe --reporters=console --no-intro --no-colors \"--test-case=WO-10 N01 host*\" --no-skip=true",
+    "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-10\\n01-speed025-Debug\\N01-speed025.out.log",
+    "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-10\\n01-speed025-Debug\\N01-speed025.err.log",
+    "pid":  12868,
+    "exit_code":  0,
+    "crash":  false,
+    "tests_passed":  1,
+    "tests_expected_min":  1,
+    "verdict":  "PASSED",
+    "detail":  "exit 0 as expected",
+    "duration_sec":  0.674,
+    "end_utc":  "2026-09-18T22:40:52.0432002Z",
+    "golden_mutated":  false,
+    "golden_mutations":  [
+
+                         ],
+    "golden_diagnostics":  [
+
+                           ],
+    "golden_sha256_before":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-10\\n01-speed025-Debug\\goldens-sha256-before.txt",
+    "golden_sha256_after":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-10\\n01-speed025-Debug\\goldens-sha256-after.txt"
+}

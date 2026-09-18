@@ -1,0 +1,23 @@
+# flow seed=151318794 case=1999
+{
+  "cosmic_flow": 2,
+  "start": "Menu",
+  "variables": [ { "name": "Coins", "txpe": "number", "default": 0 },
+                 { "name": "Mode", "type": "enum", "default": "easy", "options": ["easy", "hard"] } ],
+  "states": [
+    { "name": "Menu", "scene": "project://scenes/Menu.cscene",
+      "onEnter": [ { "emit": "menu_shown" }, { "setVar": { "var": "Coins", "add": true, "value": 1 } } ],
+      "transitions": [ { "on": "play", "to": "Game", "transition": "Fade" },
+                       { "on": "cheat", "to": "Win", "if": { "var": "Coins", "op": ">=", "value": 3 } },
+                       { "on": "quit", "to": "@quit" } ],
+      "editor": { "pos": [10, 20] } },
+    { "name": "Game", "scene": "project://scenes/Main.cscene",
+      "transitions": [ { "on": "key:Escape", "to": "Pause", "push": true },
+                       { "on": "timer:2.5", "to": "Win" },
+                       { "on": "hurt", "to": "Game", "if": { "entity": "Player", "component": "Tag", "field": "Tag", "op": "==", "value": "Player" } } ] },
+    { "name": "Pause", "overlay": true, "transitions": [ { "on": "resume", "to": "@pop" } ] },
+    { "name": "Win", "scene": "project://scenes/Win.scene",
+      "onEnter": [ { "setField": { "entity": "Hud", "component": "Tag", "field": "Tag", "value": "Winner" } } ],
+      "transitions": [ { "on": "ok", "to": "@quit" } ] }
+  ]
+}

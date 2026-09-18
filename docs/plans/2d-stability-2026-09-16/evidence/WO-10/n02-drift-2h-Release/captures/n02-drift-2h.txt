@@ -1,0 +1,1 @@
+[drift-2h] production ticks 432000 vs reference 432000: drift 0 step(s) (proposed bar <= 1, measurement — not gating); plugin local time 7183.146484 vs 7200.002083 (err -16.8556 s); uptime 7200.002441 (err 0.0004 s); real time 193.0 s for 432001 frames (0.447 ms/frame)

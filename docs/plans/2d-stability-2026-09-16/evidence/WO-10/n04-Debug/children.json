@@ -1,0 +1,84 @@
+﻿[
+    {
+        "id":  "N04-run1",
+        "tier":  "U",
+        "description":  "WO-10 N04 via CosmicTests.exe",
+        "requires":  [
+                         "windows"
+                     ],
+        "transport":  "none",
+        "seed":  null,
+        "start_utc":  "2026-09-18T22:40:40.7696356Z",
+        "deadline_sec":  120,
+        "exercised":  "production",
+        "command":  "C:\\dev\\Cosmic\\build\\Runtime\\Debug\\CosmicTests.exe --reporters=console --no-intro --no-colors \"--test-suite=WO-10 N04 determinism\"",
+        "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-10\\n04-Debug\\N04-run1.out.log",
+        "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-10\\n04-Debug\\N04-run1.err.log",
+        "pid":  1588,
+        "exit_code":  0,
+        "crash":  false,
+        "tests_passed":  3,
+        "tests_expected_min":  3,
+        "verdict":  "PASSED",
+        "detail":  "exit 0 as expected",
+        "duration_sec":  0.14,
+        "end_utc":  "2026-09-18T22:40:40.9185428Z",
+        "golden_mutated":  false,
+        "golden_mutations":  [
+
+                             ],
+        "golden_diagnostics":  [
+
+                               ],
+        "golden_sha256_before":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-10\\n04-Debug\\goldens-sha256-before.txt",
+        "golden_sha256_after":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-10\\n04-Debug\\goldens-sha256-after.txt",
+        "same_build_identical":  true,
+        "same_build_files":  [
+                                 "n04-gaussian-1e5.bin",
+                                 "n04-hashes.txt",
+                                 "n04-pcg32-1e6.bin",
+                                 "n04-transcendental-1e5.bin"
+                             ]
+    },
+    {
+        "id":  "N04-run2",
+        "tier":  "U",
+        "description":  "WO-10 N04 via CosmicTests.exe",
+        "requires":  [
+                         "windows"
+                     ],
+        "transport":  "none",
+        "seed":  null,
+        "start_utc":  "2026-09-18T22:40:40.9215480Z",
+        "deadline_sec":  120,
+        "exercised":  "production",
+        "command":  "C:\\dev\\Cosmic\\build\\Runtime\\Debug\\CosmicTests.exe --reporters=console --no-intro --no-colors \"--test-suite=WO-10 N04 determinism\"",
+        "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-10\\n04-Debug\\N04-run2.out.log",
+        "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-10\\n04-Debug\\N04-run2.err.log",
+        "pid":  9440,
+        "exit_code":  0,
+        "crash":  false,
+        "tests_passed":  3,
+        "tests_expected_min":  3,
+        "verdict":  "PASSED",
+        "detail":  "exit 0 as expected",
+        "duration_sec":  0.096,
+        "end_utc":  "2026-09-18T22:40:41.0171914Z",
+        "golden_mutated":  false,
+        "golden_mutations":  [
+
+                             ],
+        "golden_diagnostics":  [
+
+                               ],
+        "golden_sha256_before":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-10\\n04-Debug\\goldens-sha256-before.txt",
+        "golden_sha256_after":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-10\\n04-Debug\\goldens-sha256-after.txt",
+        "same_build_identical":  true,
+        "same_build_files":  [
+                                 "n04-gaussian-1e5.bin",
+                                 "n04-hashes.txt",
+                                 "n04-pcg32-1e6.bin",
+                                 "n04-transcendental-1e5.bin"
+                             ]
+    }
+]

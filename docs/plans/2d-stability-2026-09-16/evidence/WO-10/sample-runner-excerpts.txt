@@ -1,0 +1,18 @@
+==================== wo10-sample / Release ====================
+  [PASSED] X01 - exit 0 as expected
+--- X01.out.log ---
+X01 external project: C:\dev\Cosmic\build\wo10-sample-external\AnalysisSample (copied from C:\dev\Cosmic\Projects\AnalysisSample)
+X01 package (editor path): exit=0 verdict=PASS elapsed=33s timedOut=False
+X01 packaged run (cwd=C:\dev\Cosmic\docs\plans\2d-stability-2026-09-16\evidence\WO-10\x01-Release\scratch-cwd-ba0502883bdc40c5bfff35c673d34e22): exit=0 verdict=PASS elapsed=4s timedOut=False
+X01 numeric oracle (out of process): PASS - 12 scrubs re-evaluated in double: worst marker-vs-oracle 4.15E-005 m, worst plot-vs-equations 8.78E-005 m
+X01 image + series oracle (out of process): PASS - PNG 1022x504: marker colour at the reference pixel (463,70), clear colour far away, user:// copy identical; series metadata extrema/discontinuities/seed as the equations say
+[doctest] test cases: 4 | 4 passed | 0 failed
+==================== wo10-sample / Debug ====================
+  [PASSED] X01 - exit 0 as expected
+--- X01.out.log ---
+X01 external project: C:\dev\Cosmic\build\wo10-sample-external\AnalysisSample (copied from C:\dev\Cosmic\Projects\AnalysisSample)
+X01 package (editor path): exit=0 verdict=PASS elapsed=32s timedOut=False
+X01 packaged run (cwd=C:\dev\Cosmic\docs\plans\2d-stability-2026-09-16\evidence\WO-10\x01-Debug\scratch-cwd-eeaf44d491a242fb84e3a1449101ab51): exit=0 verdict=PASS elapsed=4s timedOut=False
+X01 numeric oracle (out of process): PASS - 12 scrubs re-evaluated in double: worst marker-vs-oracle 4.15E-005 m, worst plot-vs-equations 8.78E-005 m
+X01 image + series oracle (out of process): PASS - PNG 1022x504: marker colour at the reference pixel (463,70), clear colour far away, user:// copy identical; series metadata extrema/discontinuities/seed as the equations say
+[doctest] test cases: 4 | 4 passed | 0 failed

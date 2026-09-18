@@ -1,0 +1,280 @@
+==================== wo10-units / Release (tree at a9789fa + the inert clock seam only, BEFORE any fix) ====================
+  [FAILED] N02-U - expected >= 3 tests, got 1 (exit 1, wanted 0)
+  [FAILED] N03 - expected >= 7 tests, got 6 (exit 1, wanted 0)
+  [PASSED] N04 - exit 0 as expected
+  [PASSED] N04-FILTERS - exit 0 as expected
+  [PASSED] N04-LOOKUP - exit 0 as expected
+  [PASSED] N04-SCENE - exit 0 as expected
+--- N02-U.out.log ---
+KI-16: recorded duration after 432,000 ticks of 1/60 = 7183.144531 s (nominal 7200.000000, drift -16.8555 s, one float ulp at 7200 = 4.883e-04)
+CHECK( std::abs(dur - nominal) <= Wo10::Ulp(nominal) ) is NOT correct!
+KI-16: max stored-timestamp error 1.6855e+01 s at sample 431999 (t=7200.000); one float ulp there = 4.883e-04
+CHECK( maxErr <= Wo10::Ulp(nominal) ) is NOT correct!
+CHECK( std::abs((double)f.values[1] - y) <= yBar + 1e-4 ) is NOT correct!
+CHECK( std::abs((double)f.values[1] - y) <= yBar + 1e-4 ) is NOT correct!
+CHECK( std::abs((double)f.values[1] - y) <= yBar + 1e-4 ) is NOT correct!
+CHECK( std::abs((double)f.values[1] - y) <= yBar + 1e-4 ) is NOT correct!
+CHECK( std::abs((double)f.values[1] - y) <= yBar + 1e-4 ) is NOT correct!
+CHECK( std::abs((double)f.values[1] - y) <= yBar + 1e-4 ) is NOT correct!
+CHECK( std::abs((double)f.values[1] - y) <= yBar + 1e-4 ) is NOT correct!
+CHECK( std::abs((double)f.values[1] - y) <= yBar + 1e-4 ) is NOT correct!
+CHECK( std::abs((double)f.values[1] - y) <= yBar + 1e-4 ) is NOT correct!
+CHECK( std::abs((double)f.values[1] - y) <= yBar + 1e-4 ) is NOT correct!
+CHECK( std::abs((double)f.values[1] - y) <= yBar + 1e-4 ) is NOT correct!
+CHECK( std::abs((double)f.values[1] - y) <= yBar + 1e-4 ) is NOT correct!
+CHECK( std::abs((double)f.values[1] - y) <= yBar + 1e-4 ) is NOT correct!
+CHECK( std::abs((double)f.values[1] - y) <= yBar + 1e-4 ) is NOT correct!
+CHECK( std::abs((double)f.values[1] - y) <= yBar + 1e-4 ) is NOT correct!
+CHECK( std::abs((double)f.values[1] - y) <= yBar + 1e-4 ) is NOT correct!
+CHECK( std::abs((double)f.values[1] - y) <= yBar + 1e-4 ) is NOT correct!
+CHECK( std::abs((double)f.values[1] - y) <= yBar + 1e-4 ) is NOT correct!
+CHECK( std::abs((double)f.values[1] - y) <= yBar + 1e-4 ) is NOT correct!
+CHECK( std::abs((double)f.values[1] - y) <= yBar + 1e-4 ) is NOT correct!
+CHECK( std::abs((double)f.values[1] - y) <= yBar + 1e-4 ) is NOT correct!
+CHECK( std::abs((double)f.values[1] - y) <= yBar + 1e-4 ) is NOT correct!
+CHECK( std::abs((double)f.values[1] - y) <= yBar + 1e-4 ) is NOT correct!
+CHECK( std::abs((double)f.values[1] - y) <= yBar + 1e-4 ) is NOT correct!
+CHECK( std::abs((double)f.values[1] - y) <= yBar + 1e-4 ) is NOT correct!
+CHECK( std::abs((double)f.values[1] - y) <= yBar + 1e-4 ) is NOT correct!
+CHECK( std::abs((double)f.values[1] - y) <= yBar + 1e-4 ) is NOT correct!
+CHECK( std::abs((double)f.values[1] - y) <= yBar + 1e-4 ) is NOT correct!
+CHECK( std::abs((double)f.values[1] - y) <= yBar + 1e-4 ) is NOT correct!
+CHECK( std::abs((double)f.values[1] - y) <= yBar + 1e-4 ) is NOT correct!
+CHECK( std::abs((double)f.values[1] - y) <= yBar + 1e-4 ) is NOT correct!
+CHECK( std::abs((double)f.values[1] - y) <= yBar + 1e-4 ) is NOT correct!
+CHECK( std::abs((double)f.values[1] - y) <= yBar + 1e-4 ) is NOT correct!
+CHECK( std::abs((double)f.values[1] - y) <= yBar + 1e-4 ) is NOT correct!
+CHECK( std::abs((double)f.values[1] - y) <= yBar + 1e-4 ) is NOT correct!
+CHECK( std::abs((double)f.values[1] - y) <= yBar + 1e-4 ) is NOT correct!
+CHECK( std::abs((double)f.values[1] - y) <= yBar + 1e-4 ) is NOT correct!
+CHECK( std::abs((double)f.values[1] - y) <= yBar + 1e-4 ) is NOT correct!
+CHECK( std::abs((double)f.values[1] - y) <= yBar + 1e-4 ) is NOT correct!
+CHECK( std::abs((double)f.values[1] - y) <= yBar + 1e-4 ) is NOT correct!
+CHECK( std::abs((double)f.values[1] - y) <= yBar + 1e-4 ) is NOT correct!
+CHECK( std::abs((double)f.values[1] - y) <= yBar + 1e-4 ) is NOT correct!
+CHECK( std::abs((double)f.values[1] - y) <= yBar + 1e-4 ) is NOT correct!
+CHECK( std::abs((double)f.values[1] - y) <= yBar + 1e-4 ) is NOT correct!
+CHECK( std::abs((double)f.values[1] - y) <= yBar + 1e-4 ) is NOT correct!
+CHECK( std::abs((double)f.values[1] - y) <= yBar + 1e-4 ) is NOT correct!
+CHECK( std::abs((double)f.values[1] - y) <= yBar + 1e-4 ) is NOT correct!
+CHECK( std::abs((double)f.values[1] - y) <= yBar + 1e-4 ) is NOT correct!
+CHECK( std::abs((double)f.values[1] - y) <= yBar + 1e-4 ) is NOT correct!
+CHECK( std::abs((double)f.values[1] - y) <= yBar + 1e-4 ) is NOT correct!
+CHECK( std::abs((double)f.values[1] - y) <= yBar + 1e-4 ) is NOT correct!
+CHECK( std::abs((double)f.values[1] - y) <= yBar + 1e-4 ) is NOT correct!
+CHECK( std::abs((double)f.values[1] - y) <= yBar + 1e-4 ) is NOT correct!
+CHECK( std::abs((double)f.values[1] - y) <= yBar + 1e-4 ) is NOT correct!
+CHECK( std::abs((double)f.values[1] - y) <= yBar + 1e-4 ) is NOT correct!
+CHECK( std::abs((double)f.values[1] - y) <= yBar + 1e-4 ) is NOT correct!
+CHECK( std::abs((double)f.values[1] - y) <= yBar + 1e-4 ) is NOT correct!
+CHECK( std::abs((double)f.values[1] - y) <= yBar + 1e-4 ) is NOT correct!
+CHECK( std::abs((double)f.values[1] - y) <= yBar + 1e-4 ) is NOT correct!
+CHECK( std::abs((double)f.values[1] - y) <= yBar + 1e-4 ) is NOT correct!
+CHECK( std::abs((double)f.values[1] - y) <= yBar + 1e-4 ) is NOT correct!
+CHECK( std::abs((double)f.values[1] - y) <= yBar + 1e-4 ) is NOT correct!
+CHECK( std::abs((double)f.values[1] - y) <= yBar + 1e-4 ) is NOT correct!
+CHECK( std::abs((double)f.values[1] - y) <= yBar + 1e-4 ) is NOT correct!
+CHECK( std::abs((double)f.values[1] - y) <= yBar + 1e-4 ) is NOT correct!
+CHECK( std::abs((double)f.values[1] - y) <= yBar + 1e-4 ) is NOT correct!
+CHECK( std::abs((double)f.values[1] - y) <= yBar + 1e-4 ) is NOT correct!
+CHECK( std::abs((double)f.values[1] - y) <= yBar + 1e-4 ) is NOT correct!
+CHECK( std::abs((double)f.values[1] - y) <= yBar + 1e-4 ) is NOT correct!
+CHECK( std::abs((double)f.values[1] - y) <= yBar + 1e-4 ) is NOT correct!
+CHECK( std::abs((double)f.values[1] - y) <= yBar + 1e-4 ) is NOT correct!
+negative replay: x max error vs 30t over the scrub set = 0.002014
+float accumulator after 24 h of 1/60 frames: 83794.820 s vs exact 86400.005 s (error -2605.184 s = -3.015 %); frames where the float did not move at all: 0; float ulp at 86,400 s = 7.8125e-03 s (a 1/144 s frame is 0.89 ulps, a 1/60 s frame 2.13 ulps)
+float accumulator after 2 h of 1/60 frames: 7183.1445 s vs 7200 (error -16.8555 s; one 60-Hz step = 0.0167 s)
+  [doctest] test cases:    3 |   1 passed |  2 failed | 464 skipped
+  [doctest] assertions: 1049 | 976 passed | 73 failed |
+--- N03.out.log ---
+RK4 projectile float: p rel err 1.371e-06, v rel err 9.406e-06 (bound 1e-4); double-state reference rel err 8.675e-09 (IntegrateRK4's dt is float: dt/6 is rounded to float, ~1e-8 relative floor)
+oscillator: x(2 s) = 0.0791160 vs analytic 0.0791159, rel err 8.809e-07 (bound 2e-3)
+RK4 order: err(h=1/8) 4.851e-06 / err(h=1/16) 3.210e-07 = ratio 15.11 (bound 10..24, theory 16)
+semi-implicit: max energy / E0 = 1.01495 (bound < 1.10)
+F-TRAJECTORY: apex t=5.098581 s y=127.464527 m; range at 10 s x=300.000 m y=9.667500 m
+float path vs double: x max abs err 2.014e-03 (rel 6.731e-06), y max abs err 3.206e-03
+float path vs double: vy max abs err 6.574e-04; worst error in float ulps of the value (|value| >= 1): 3361.92; max timestamp err 6.676e-05 s (a timestamp error of e seconds shows up as 30*e metres in x)
+CHECK( overBar == 0 ) is NOT correct!
+CHECK( maxTimeErr <= UlpF(10.0) ) is NOT correct!
+1e11 offset: double-subtract-then-float max err 7.629e-06 m (double ulp at 1e11 = 1.526e-05 m); float-then-subtract max err 300.0 m (float ulp at 1e11 = 8192 m)
+  [doctest] test cases:     7 |     6 passed | 1 failed | 460 skipped
+  [doctest] assertions: 15636 | 15634 passed | 2 failed |
+--- N04-FILTERS.out.log ---
+  [doctest] test cases:  9 |  9 passed | 0 failed | 458 skipped
+  [doctest] assertions: 19 | 19 passed | 0 failed |
+--- N04-LOOKUP.out.log ---
+  [doctest] test cases:  7 |  7 passed | 0 failed | 460 skipped
+  [doctest] assertions: 37 | 37 passed | 0 failed |
+--- N04-SCENE.out.log ---
+  [doctest] test cases:  2 |  2 passed | 0 failed | 465 skipped
+  [doctest] assertions: 80 | 80 passed | 0 failed |
+--- N04.out.log ---
+PCG32 1,000,000 outputs: FNV-1a-64 0x3654ce49c351b391 (oracle 0x3654ce49c351b391), last word 0xef1e2afa
+Gaussian(2026,9) x100,000 FNV-1a-64 0xea0fddffaacaf6b4; transcendental x100,000 0x9540463af85ebf45 ƒ?" same-toolchain scope (MSVC x64, vendored <cmath>); a change here means the toolchain changed, not the seed
+  [doctest] test cases:      3 |      3 passed | 0 failed | 464 skipped
+  [doctest] assertions: 200015 | 200015 passed | 0 failed |
+PCG32 1,000,000 outputs: FNV-1a-64 0x3654ce49c351b391 (oracle 0x3654ce49c351b391), last word 0xef1e2afa
+Gaussian(2026,9) x100,000 FNV-1a-64 0xea0fddffaacaf6b4; transcendental x100,000 0x9540463af85ebf45 ƒ?" same-toolchain scope (MSVC x64, vendored <cmath>); a change here means the toolchain changed, not the seed
+  [doctest] test cases:      3 |      3 passed | 0 failed | 464 skipped
+  [doctest] assertions: 200015 | 200015 passed | 0 failed |
+==================== wo10-host / Release (tree at a9789fa + the inert clock seam only, BEFORE any fix) ====================
+  [PASSED] N01-30hz - exit 0 as expected
+  [FAILED] N01-60hz - expected >= 1 tests, got 0 (exit 1, wanted 0)
+  [PASSED] N01-144hz - exit 0 as expected
+  [PASSED] N01-irregular - exit 0 as expected
+  [PASSED] N01-speed0 - exit 0 as expected
+  [PASSED] N01-speed025 - exit 0 as expected
+  [FAILED] N01-speed4 - expected >= 1 tests, got 0 (exit 1, wanted 0)
+  [PASSED] N01-pause - exit 0 as expected
+  [PASSED] N01-stall - exit 0 as expected
+  [PASSED] N01-local-quarter - exit 0 as expected
+  [FAILED] N01-global-quarter - expected >= 1 tests, got 0 (exit 1, wanted 0)
+  [PASSED] N02-origin-0 - exit 0 as expected
+  [FAILED] N02-origin-2h - expected >= 1 tests, got 0 (exit 1, wanted 0)
+  [FAILED] N02-origin-24h - expected >= 1 tests, got 0 (exit 1, wanted 0)
+  [FAILED] N02-policy-hz - expected >= 1 tests, got 0 (exit 1, wanted 0)
+  [FAILED] N02-policy-scale-nan - expected >= 1 tests, got 0 (exit 1, wanted 0)
+  [FAILED] N02-policy-scale-negative - expected >= 1 tests, got 0 (exit 1, wanted 0)
+  [FAILED] N02-policy-scale-inf - expected >= 1 tests, got -1 (exit 1, wanted 0)
+--- N01-144hz.out.log ---
+[144hz] frames=1441 ticks direct/plugin/ref=600/600/600 maxTicksInFrame direct/plugin=1/1 zeroTickFrames=841 twoPlusTickFrames=0 realSeconds=0.884324
+[144hz] per-frame OnUpdate dt error max: direct 7.417e-07 (frame 1155) plugin 7.417e-07 (frame 1155); frames over the float bar: 0
+[144hz] plugin local time: observed 10.0020838 ref 10.0020833 err 4.450e-07 (float accumulation over 1441 frames, worst-case bound 6.881e-04); uptime: observed 10.0020838 ref 10.0020833 err 4.450e-07
+  [doctest] test cases:  1 |  1 passed | 0 failed | 466 skipped
+  [doctest] assertions: 24 | 24 passed | 0 failed |
+--- N01-30hz.out.log ---
+[30hz] frames=301 ticks direct/plugin/ref=600/600/600 maxTicksInFrame direct/plugin=3/3 zeroTickFrames=0 twoPlusTickFrames=244 realSeconds=0.486724
+[30hz] per-frame OnUpdate dt error max: direct 5.086e-07 (frame 242) plugin 5.086e-07 (frame 242); frames over the float bar: 0
+[30hz] plugin local time: observed 10.0020838 ref 10.0020833 err 4.450e-07 (float accumulation over 301 frames, worst-case bound 1.445e-04); uptime: observed 10.0020838 ref 10.0020833 err 4.450e-07
+  [doctest] test cases:  1 |  1 passed | 0 failed | 466 skipped
+  [doctest] assertions: 24 | 24 passed | 0 failed |
+--- N01-60hz.out.log ---
+[60hz] frames=601 ticks direct/plugin/ref=600/600/600 maxTicksInFrame direct/plugin=2/2 zeroTickFrames=140 twoPlusTickFrames=139 realSeconds=0.562690
+[60hz] per-frame OnUpdate dt error max: direct 6.994e-07 (frame 482) plugin 6.994e-07 (frame 482); frames over the float bar: 0
+[60hz] plugin local time: observed 10.0020838 ref 10.0020833 err 4.450e-07 (float accumulation over 601 frames, worst-case bound 2.876e-04); uptime: observed 10.0020838 ref 10.0020833 err 4.450e-07
+CHECK( st.framesWithZeroTicks == 1 ) is NOT correct!
+CHECK( st.framesWithTwoPlus == 0 ) is NOT correct!
+CHECK( rep.maxDirectTicksInFrame.load() == 1 ) is NOT correct!
+  [doctest] test cases:  1 |  0 passed | 1 failed | 466 skipped
+  [doctest] assertions: 27 | 24 passed | 3 failed |
+--- N01-global-quarter.out.log ---
+[global-quarter] frames=601 ticks direct/plugin/ref=150/150/150 maxTicksInFrame direct/plugin=1/1 zeroTickFrames=451 twoPlusTickFrames=0 realSeconds=0.563959
+[global-quarter] per-frame OnUpdate dt error max: direct 1.748e-07 (frame 482) plugin 1.748e-07 (frame 482); frames over the float bar: 0
+[global-quarter] plugin local time: observed 2.50052094 ref 2.50052083 err 1.113e-07 (float accumulation over 601 frames, worst-case bound 7.264e-05); uptime: observed 10.0020838 ref 10.0020833 err 4.450e-07
+CHECK( ticked == 150 ) is NOT correct!
+  [doctest] test cases:  1 |  0 passed | 1 failed | 466 skipped
+  [doctest] assertions: 26 | 25 passed | 1 failed |
+--- N01-irregular.out.log ---
+[irregular] frames=497 ticks direct/plugin/ref=600/600/600 maxTicksInFrame direct/plugin=3/3 zeroTickFrames=103 twoPlusTickFrames=192 realSeconds=0.523878
+[irregular] per-frame OnUpdate dt error max: direct 8.472e-07 (frame 469) plugin 8.472e-07 (frame 469); frames over the float bar: 0
+[irregular] plugin local time: observed 10.0020838 ref 10.0020833 err 4.450e-07 (float accumulation over 497 frames, worst-case bound 2.380e-04); uptime: observed 10.0020838 ref 10.0020833 err 4.450e-07
+  [doctest] test cases:  1 |  1 passed | 0 failed | 466 skipped
+  [doctest] assertions: 24 | 24 passed | 0 failed |
+--- N01-local-quarter.out.log ---
+[local-quarter] frames=601 ticks direct/plugin/ref=600/600/600 maxTicksInFrame direct/plugin=2/2 zeroTickFrames=140 twoPlusTickFrames=139 realSeconds=0.562650
+[local-quarter] per-frame OnUpdate dt error max: direct 6.994e-07 (frame 482) plugin 1.748e-07 (frame 482); frames over the float bar: 0
+[local-quarter] plugin local time: observed 2.50052094 ref 2.50052083 err 1.113e-07 (float accumulation over 601 frames, worst-case bound 7.264e-05); uptime: observed 10.0020838 ref 10.0020833 err 4.450e-07
+  [doctest] test cases:  1 |  1 passed | 0 failed | 466 skipped
+  [doctest] assertions: 28 | 28 passed | 0 failed |
+--- N01-pause.out.log ---
+[pause] frames=601 ticks direct/plugin/ref=480/480/480 maxTicksInFrame direct/plugin=2/2 zeroTickFrames=240 twoPlusTickFrames=119 realSeconds=0.573469
+[pause] per-frame OnUpdate dt error max: direct 6.994e-07 (frame 482) plugin 6.994e-07 (frame 482); frames over the float bar: 0
+[pause] plugin local time: observed 8.00208378 ref 8.00208333 err 4.450e-07 (float accumulation over 601 frames, worst-case bound 2.876e-04); uptime: observed 10.0020838 ref 10.0020833 err 4.450e-07
+  [doctest] test cases:  1 |  1 passed | 0 failed | 466 skipped
+  [doctest] assertions: 32 | 32 passed | 0 failed |
+--- N01-speed0.out.log ---
+[speed0] frames=601 ticks direct/plugin/ref=0/0/0 maxTicksInFrame direct/plugin=0/0 zeroTickFrames=601 twoPlusTickFrames=0 realSeconds=0.562744
+[speed0] per-frame OnUpdate dt error max: direct 0.000e+00 (frame 0) plugin 0.000e+00 (frame 0); frames over the float bar: 0
+[speed0] plugin local time: observed 0 ref 0 err 0.000e+00 (float accumulation over 601 frames, worst-case bound 1.000e-06); uptime: observed 10.0020838 ref 10.0020833 err 4.450e-07
+  [doctest] test cases:  1 |  1 passed | 0 failed | 466 skipped
+  [doctest] assertions: 26 | 26 passed | 0 failed |
+--- N01-speed025.out.log ---
+[speed025] frames=601 ticks direct/plugin/ref=150/150/150 maxTicksInFrame direct/plugin=1/1 zeroTickFrames=451 twoPlusTickFrames=0 realSeconds=0.572509
+[speed025] per-frame OnUpdate dt error max: direct 1.748e-07 (frame 482) plugin 1.748e-07 (frame 482); frames over the float bar: 0
+[speed025] plugin local time: observed 2.50052094 ref 2.50052083 err 1.113e-07 (float accumulation over 601 frames, worst-case bound 7.264e-05); uptime: observed 10.0020838 ref 10.0020833 err 4.450e-07
+  [doctest] test cases:  1 |  1 passed | 0 failed | 466 skipped
+  [doctest] assertions: 23 | 23 passed | 0 failed |
+--- N01-speed4.out.log ---
+[speed4] frames=601 ticks direct/plugin/ref=2400/2400/2400 maxTicksInFrame direct/plugin=4/4 zeroTickFrames=1 twoPlusTickFrames=600 realSeconds=0.563212
+[speed4] per-frame OnUpdate dt error max: direct 2.797e-06 (frame 482) plugin 2.797e-06 (frame 482); frames over the float bar: 33
+[speed4] plugin local time: observed 40.0083351 ref 40.0083333 err 1.780e-06 (float accumulation over 601 frames, worst-case bound 1.147e-03); uptime: observed 10.0020838 ref 10.0020833 err 4.450e-07
+CHECK( st.framesOverFloatBar == 0 ) is NOT correct!
+  [doctest] test cases:  1 |  0 passed | 1 failed | 466 skipped
+  [doctest] assertions: 24 | 23 passed | 1 failed |
+--- N01-stall.out.log ---
+[stall] frames=578 ticks direct/plugin/ref=591/591/591 maxTicksInFrame direct/plugin=15/15 zeroTickFrames=126 twoPlusTickFrames=126 realSeconds=0.562184
+[stall] per-frame OnUpdate dt error max: direct 6.994e-07 (frame 459) plugin 6.994e-07 (frame 459); frames over the float bar: 0
+[stall] plugin local time: observed 10.0020838 ref 10.0020833 err 4.450e-07 (float accumulation over 578 frames, worst-case bound 2.766e-04); uptime: observed 10.0020838 ref 10.0020833 err 4.450e-07
+[stall] ticks in the 0.4 s frame: 15, next frame: 1 (declared: 15 delivered, 9 dropped)
+  [doctest] test cases:  1 |  1 passed | 0 failed | 466 skipped
+  [doctest] assertions: 28 | 28 passed | 0 failed |
+--- N02-origin-0.out.log ---
+[origin-0] frames=1441 ticks direct/plugin/ref=600/600/600 maxTicksInFrame direct/plugin=1/1 zeroTickFrames=841 twoPlusTickFrames=0 realSeconds=0.882322
+[origin-0] per-frame OnUpdate dt error max: direct 7.417e-07 (frame 1155) plugin 7.417e-07 (frame 1155); frames over the float bar: 0
+[origin-0] plugin local time: observed 10.0020838 ref 10.0020833 err 4.450e-07 (float accumulation over 1441 frames, worst-case bound 6.881e-04); uptime: observed 10.0020838 ref 10.0020833 err 4.450e-07
+[origin-0] origin 0 s: float ulp at the origin = 1.401e-45 s; observed max dt error 7.417e-07 s (declared dt 1/144 = 6.944e-3)
+  [doctest] test cases:  1 |  1 passed | 0 failed | 466 skipped
+  [doctest] assertions: 23 | 23 passed | 0 failed |
+--- N02-origin-24h.out.log ---
+CHECK( rep.directTicksTotal.load() == r.ticks ) is NOT correct!
+CHECK( rep.pluginTicksTotal.load() == r.ticks ) is NOT correct!
+[origin-24h] frames=1441 ticks direct/plugin/ref=599/599/600 maxTicksInFrame direct/plugin=1/1 zeroTickFrames=842 twoPlusTickFrames=0 realSeconds=0.895766
+[origin-24h] per-frame OnUpdate dt error max: direct 6.944e-03 (frame 5) plugin 6.944e-03 (frame 5); frames over the float bar: 1441
+[origin-24h] plugin local time: observed 10 ref 10.0020833 err 2.083e-03 (float accumulation over 1441 frames, worst-case bound 6.881e-04); uptime: observed 10 ref 10.0020833 err 2.083e-03
+CHECK( st.framesOverFloatBar == 0 ) is NOT correct!
+CHECK( st.maxDirectDtErr <= Wo10::FloatBar(1.0 / 144.0) ) is NOT correct!
+[origin-24h] origin 86400 s: float ulp at the origin = 7.812e-03 s; observed max dt error 6.944e-03 s (declared dt 1/144 = 6.944e-3)
+  [doctest] test cases:  1 |  0 passed | 1 failed | 466 skipped
+  [doctest] assertions: 23 | 19 passed | 4 failed |
+--- N02-origin-2h.out.log ---
+[origin-2h] frames=1441 ticks direct/plugin/ref=600/600/600 maxTicksInFrame direct/plugin=1/1 zeroTickFrames=841 twoPlusTickFrames=0 realSeconds=0.893396
+[origin-2h] per-frame OnUpdate dt error max: direct 3.798e-04 (frame 3) plugin 3.798e-04 (frame 3); frames over the float bar: 1441
+[origin-2h] plugin local time: observed 10.0019531 ref 10.0020833 err 1.302e-04 (float accumulation over 1441 frames, worst-case bound 6.881e-04); uptime: observed 10.0019531 ref 10.0020833 err 1.302e-04
+CHECK( st.framesOverFloatBar == 0 ) is NOT correct!
+CHECK( st.maxDirectDtErr <= Wo10::FloatBar(1.0 / 144.0) ) is NOT correct!
+[origin-2h] origin 7200 s: float ulp at the origin = 4.883e-04 s; observed max dt error 3.798e-04 s (declared dt 1/144 = 6.944e-3)
+  [doctest] test cases:  1 |  0 passed | 1 failed | 466 skipped
+  [doctest] assertions: 23 | 21 passed | 2 failed |
+--- N02-policy-hz.out.log ---
+CHECK( rep.directTicksTotal.load() == r.ticks ) is NOT correct!
+CHECK( rep.pluginTicksTotal.load() == r.ticks ) is NOT correct!
+CHECK( st.fixedDtOffFrames == 0 ) is NOT correct!
+[policy-hz] frames=721 ticks direct/plugin/ref=3907/3907/3951 maxTicksInFrame direct/plugin=533/533 zeroTickFrames=286 twoPlusTickFrames=198 realSeconds=0.613555
+[policy-hz] per-frame OnUpdate dt error max: direct 6.994e-07 (frame 482) plugin 6.994e-07 (frame 482); frames over the float bar: 0
+[policy-hz] plugin local time: observed 12.0020838 ref 12.0020833 err 4.450e-07 (float accumulation over 721 frames, worst-case bound 3.448e-04); uptime: observed 12.0020838 ref 12.0020833 err 4.450e-07
+CHECK( rep.frames[300].fixedHz == 1000.0f ) is NOT correct!
+CHECK( rep.frames[361].directTicks <= 2 ) is NOT correct!
+CHECK( nanWindow >= 1499 ) is NOT correct!
+[policy-hz] ticks in the NaN-rate window (frames 271..360, must still run at 1000 Hz): 0; first frame after SetFixedTimestepHz(60): 91 ticks
+  [doctest] test cases:  1 |  0 passed | 1 failed | 466 skipped
+  [doctest] assertions: 27 | 21 passed | 6 failed |
+--- N02-policy-scale-inf.out.log ---
+N02-policy-scale-inf TIMEOUT: exceeded per-case deadline of 150s; child tree killed, parent survived
+--- N02-policy-scale-nan.out.log ---
+CHECK( rep.pluginNonFinite.load() == 0 ) is NOT correct!
+CHECK( rep.directNonFinite.load() == 0 ) is NOT correct!
+CHECK( rep.directTicksTotal.load() == r.ticks ) is NOT correct!
+CHECK( rep.pluginTicksTotal.load() == r.ticks ) is NOT correct!
+[policy-scale-nan] frames=361 ticks direct/plugin/ref=119/119/360 maxTicksInFrame direct/plugin=2/2 zeroTickFrames=262 twoPlusTickFrames=20 realSeconds=0.488118
+[policy-scale-nan] per-frame OnUpdate dt error max: direct 2.543e-07 (frame 242) plugin 2.543e-07 (frame 242); frames over the float bar: 0
+[policy-scale-nan] plugin local time: observed nan ref 6.00208333 err nan (float accumulation over 361 frames, worst-case bound 8.707e-05); uptime: observed 6.0020833 ref 6.00208333 err 3.179e-08
+CHECK( rep.frames[200].globalScale == 1.0f ) is NOT correct!
+CHECK( poisoned == 120 ) is NOT correct!
+CHECK( after == 120 ) is NOT correct!
+[policy-scale-nan] ticks while NaN was requested: 0; after SetTimeScale(1): 0
+  [doctest] test cases:  1 |  0 passed | 1 failed | 466 skipped
+  [doctest] assertions: 22 | 15 passed | 7 failed |
+--- N02-policy-scale-negative.out.log ---
+CHECK( rep.directTicksTotal.load() == r.ticks ) is NOT correct!
+CHECK( rep.pluginTicksTotal.load() == r.ticks ) is NOT correct!
+[policy-scale-negative] frames=481 ticks direct/plugin/ref=120/120/480 maxTicksInFrame direct/plugin=2/2 zeroTickFrames=381 twoPlusTickFrames=20 realSeconds=0.523459
+[policy-scale-negative] per-frame OnUpdate dt error max: direct 3.333e-02 (frame 128) plugin 3.333e-02 (frame 128); frames over the float bar: 180
+[policy-scale-negative] plugin local time: observed 2.00208378 ref 8.00208333 err 6.000e+00 (float accumulation over 481 frames, worst-case bound 2.304e-04); uptime: observed 8.00208378 ref 8.00208333 err 4.450e-07
+CHECK( rep.frames[200].globalScale == 1.0f ) is NOT correct!
+CHECK( duringNeg == 180 ) is NOT correct!
+CHECK( afterNeg == 180 ) is NOT correct!
+CHECK( rep.localTimeDecreased.load() == 0 ) is NOT correct!
+CHECK( rep.frames[200].directFixedDtMin > 0.0f ) is NOT correct!
+[policy-scale-negative] ticks while -1 was requested: 0; ticks in the 3 s after SetTimeScale(1): 0 (declared 180 / 180; before WO-10: 0 / 0 ƒ?" a 3 s restart debt)
+  [doctest] test cases:  1 |  0 passed | 1 failed | 466 skipped
+  [doctest] assertions: 25 | 18 passed | 7 failed |

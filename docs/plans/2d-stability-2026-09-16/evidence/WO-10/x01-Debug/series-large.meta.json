@@ -1,0 +1,17 @@
+{
+  "samples": 100000,
+  "channels": 8,
+  "rate_hz": 1000.0,
+  "seed": "0xA105E21",
+  "time": "t = i / rate_hz, i = 0..samples-1",
+  "channel": [
+    { "name": "sin_1hz", "equation": "sin(2*pi*t)", "seeded": false, "min": { "value": -1, "index": 750 }, "max": { "value": 1, "index": 250 }, "discontinuities": [] },
+    { "name": "cos_1hz", "equation": "cos(2*pi*t)", "seeded": false, "min": { "value": -1, "index": 500 }, "max": { "value": 1, "index": 0 }, "discontinuities": [] },
+    { "name": "ramp", "equation": "t", "seeded": false, "min": { "value": 0, "index": 0 }, "max": { "value": 99.998999999999995, "index": 99999 }, "discontinuities": [] },
+    { "name": "sawtooth", "equation": "t - floor(t)", "seeded": false, "min": { "value": 0, "index": 0 }, "max": { "value": 0.99900000000000233, "index": 32999 }, "discontinuities": [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000, 11000, 12000, 13000, 14000, 15000, 16000, 17000, 18000, 19000, 20000, 21000, 22000, 23000, 24000, 25000, 26000, 27000, 28000, 29000, 30000, 31000, 32000, 33000, 34000, 35000, 36000, 37000, 38000, 39000, 40000, 41000, 42000, 43000, 44000, 45000, 46000, 47000, 48000, 49000, 50000, 51000, 52000, 53000, 54000, 55000, 56000, 57000, 58000, 59000, 60000, 61000, 62000, 63000, 64000, 65000, 66000, 67000, 68000, 69000, 70000, 71000, 72000, 73000, 74000, 75000, 76000, 77000, 78000, 79000, 80000, 81000, 82000, 83000, 84000, 85000, 86000, 87000, 88000, 89000, 90000, 91000, 92000, 93000, 94000, 95000, 96000, 97000, 98000, 99000] },
+    { "name": "step", "equation": "t < 50 ? -1 : 1", "seeded": false, "min": { "value": -1, "index": 0 }, "max": { "value": 1, "index": 50000 }, "discontinuities": [50000] },
+    { "name": "damped", "equation": "exp(-t/20) * cos(2*pi*0.5*t)", "seeded": false, "min": { "value": -0.95134988143039301, "index": 995 }, "max": { "value": 1, "index": 0 }, "discontinuities": [] },
+    { "name": "noise_uniform", "equation": "-1 + 2*u, u = PCG32(seed, stream 7).NextFloat()  [(u32 >> 8) * 2^-24]", "seeded": true, "min": { "value": -0.99997580051422119, "index": 18501 }, "max": { "value": 0.99999880790710449, "index": 515 }, "discontinuities": [] },
+    { "name": "noise_gaussian", "equation": "PCG32(seed, stream 11).Gaussian(0, 1)  [Box-Muller, float log/sin/cos — same-toolchain scope]", "seeded": true, "min": { "value": -4.3484063148498535, "index": 24981 }, "max": { "value": 4.5061216354370117, "index": 33529 }, "discontinuities": [] }
+  ]
+}

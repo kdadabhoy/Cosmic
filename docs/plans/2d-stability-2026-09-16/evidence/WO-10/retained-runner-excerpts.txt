@@ -1,0 +1,212 @@
+==================== wo10-retained / Release ====================
+  [PASSED] retained-units - exit 0 as expected
+  [PASSED] wo09-units - exit 0 as expected
+  [PASSED] wo10-units-all - exit 0 as expected
+  [PASSED] retained-goldens - exit 0 as expected
+  [PASSED] retained-wo08-gpu - exit 0 as expected
+  [PASSED] retained-wo09-gpu - exit 0 as expected
+--- retained-goldens.out.log ---
+  [doctest] test cases:  6 |  6 passed | 0 failed | 33 skipped
+  [doctest] assertions: 29 | 29 passed | 0 failed |
+--- retained-units.out.log ---
+drop-only: max |z| = 0.000587754 m, max out-of-plane |q| = 8.71855e-05
+sliding:   max |z| = 0.00205322 m, max out-of-plane |q| = 7.71662e-05
+Serial hardware present - skipping the no-port Connect() case so the suite never opens a real device.
+R04 ScreenToWorld round trip: 51840 samples, worst 0.0425752 px (bar 0.5)
+R04 projection-vs-model worst 0.00109183 px
+R04 zoom-about-cursor: 1550 pairs asserted inside the envelope, 370 outside it measured only (worst 127.803 px)
+R04 outside-envelope sample (zoom 0.01, focus 1000): round-trip error 1.4723 px
+  [doctest] test cases:      401 |      401 passed | 0 failed | 66 skipped
+  [doctest] assertions: 23199635 | 23199635 passed | 0 failed |
+--- retained-wo08-gpu.out.log ---
+R05 live engine GPU objects after 200 cycles: fbo=3 att=6 tex=30 buf=11 vao=6 prog=6
+  [doctest] test cases:       22 |       22 passed | 0 failed | 17 skipped
+  [doctest] assertions: 21121754 | 21121754 passed | 0 failed |
+--- retained-wo09-gpu.out.log ---
+C02 GPU: 1024x1024 map built in 2.3054 ms
+C02 GPU view '10x5.6 cells': oracle strict=157 enclosed=180 drawn quads=180 draws=1 (0.0239 ms)
+C02 GPU view '200x112 cells': oracle strict=53818 enclosed=54237 drawn quads=54237 draws=6 (3.4822 ms)
+C02 GPU view 'corner overlap': oracle strict=114 enclosed=121 drawn quads=121 draws=1 (0.0088 ms)
+C02 GPU view 'whole map + margin': oracle strict=786432 enclosed=786432 drawn quads=786432 draws=79 (45.2706 ms)
+C02 GPU view 'fully outside': oracle strict=0 enclosed=0 drawn quads=0 draws=0 (0.0033 ms)
+C02 GPU view 'just outside right': oracle strict=0 enclosed=0 drawn quads=0 draws=0 (0.0007 ms)
+C02 GPU view 'extreme zoom-out': oracle strict=786432 enclosed=786432 drawn quads=786432 draws=79 (39.0082 ms)
+C02 GPU camera edge: oracle strict=653 enclosed=707 widened=740 drawn=740
+C03 GPU: 2,001 controls rendered in 0.3524 ms, 1 draw call(s)
+C03 GPU: an inverted UI rect PAINTS its mirrored quad (pinned)
+C03 GPU lights ceiling ladder: 1 lights at 320x180 = 0.17464 ms per frame (5-frame mean incl. sprites + composite + FinishGpu)
+C03 GPU lights ceiling ladder: 10 lights at 320x180 = 0.17694 ms per frame (5-frame mean incl. sprites + composite + FinishGpu)
+C03 GPU lights ceiling ladder: 100 lights at 320x180 = 0.18938 ms per frame (5-frame mean incl. sprites + composite + FinishGpu)
+C03 GPU lights ceiling ladder: 1000 lights at 320x180 = 0.48036 ms per frame (5-frame mean incl. sprites + composite + FinishGpu)
+C03 GPU lights ceiling ladder: 100 lights at 1920x1080 (r=120) = 2.1755 ms per frame
+C03 GPU lights ceiling ladder: 1000 lights at 1920x1080 (r=120) = 2.277 ms per frame
+  [doctest] test cases:       9 |       9 passed | 0 failed | 30 skipped
+  [doctest] assertions: 1606171 | 1606171 passed | 0 failed |
+--- wo09-units.out.log ---
+C01 BuildSpriteDrawList(10,000) = 0.8581 ms
+C01 BuildSpriteDrawList(20,000 incl. 5,000 tilemaps) = 1.7071 ms
+C01 tie-break pinned: equal (ZOrder, key) items draw in ascending entt handle order; a recycled entity (higher version) draws on top of every never-recycled one.
+C01 nonfinite keys, seed 1: 0 positions off the reference order; 0 of 4919 adjacent finite same-layer pairs are inverted
+C01 nonfinite keys, seed 2: 0 positions off the reference order; 0 of 5075 adjacent finite same-layer pairs are inverted
+C01 nonfinite keys, seed 3: 0 positions off the reference order; 0 of 4921 adjacent finite same-layer pairs are inverted
+C01 nonfinite keys, seed 4: 0 positions off the reference order; 0 of 5111 adjacent finite same-layer pairs are inverted
+C01 nonfinite keys, seed 5: 0 positions off the reference order; 0 of 4972 adjacent finite same-layer pairs are inverted
+C01 nonfinite keys, seed 6: 0 positions off the reference order; 0 of 4992 adjacent finite same-layer pairs are inverted
+C01 nonfinite keys, seed 7: 0 positions off the reference order; 0 of 4970 adjacent finite same-layer pairs are inverted
+C01 nonfinite keys, seed 8: 0 positions off the reference order; 0 of 4989 adjacent finite same-layer pairs are inverted
+C01 activity-propagation depth ceiling pinned: 4,096 nodes incl. self = 4,095 ancestors (Scene::IsActiveInHierarchy guard)
+C02 EnsureCells(1024x1024) = 0.2334 ms; buffer = 2097152 bytes (2 MiB of cells)
+C02 1,048,576-cell map: save 110.609 ms (16044050 bytes), load 112.378 ms
+C03 2,001 controls: CollectElements 0.3 ms, Update 0.39465 ms per frame
+C03 depth ladder: depth=64 exit=0x00000000 seconds=0.03
+C03 depth ladder: depth=256 exit=0x00000000 seconds=0.03
+C03 depth ladder: depth=1024 exit=0x00000000 seconds=0.06
+C03 depth ladder: depth=4095 exit=0x00000000 seconds=0.28
+C03 depth ladder: depth=4096 exit=0x00000000 seconds=0.28
+C03 depth ladder: depth=4097 exit=0x00000000 seconds=0.28
+C03 depth ladder: depth=8192 exit=0x00000000 seconds=0.62
+C03 depth ladder: deepest surviving rung = 8192, first failing rung = 0
+C03 cycles: every walker returned in 2.8093 ms
+C04 EventBus: 5,000-listener emit = 5.4797 ms (each call re-checks liveness)
+C04 flow ping-pong: one OnUpdate hit the cascade guard in 3.365 ms
+C04 flow push cycle: stack depth after one OnUpdate = 100002
+C04 flow double-emit self-loop: one OnUpdate = 9.4582 ms (queue grows by one per iteration to the guard)
+C04 fuzz flow:  seed 0x0904F10A cases=2000 accepted=373 rejected=1627 max=1.2995 ms (case 376)
+C04 fuzz story: seed 0x09045708 cases=2000 accepted=410 rejected=1590 max=1.884 ms (case 516)
+C04 corrupt fixtures: 4 .cflow + 3 .cstory handled
+C05 truncation ladder: 11321 prefixes, rejected=11321 accepted=0 max=0.2677 ms
+C05 float-overflow Position from JSON 1e300 loads as (inf, -inf, 0) ƒ?" pinned
+C05 100,000-deep nesting: rejected in 0.2114 ms
+C05 duplicate UUID: 2 entities created, the map resolved to 'first', after destroying the other the id still resolves
+C05 fuzz scene:    seed 0x0905C4E5 cases=2000 accepted=1067 rejected=933 max=3.3571 ms (case 62)
+C05 fuzz prefab:   seed 0x0905B4EF cases=2000 accepted=978 rejected=1022 max=21.9405 ms (case 674)
+C05 fuzz material: seed 0x0905CA47 cases=2000 accepted=1061 rejected=939 max=1.273 ms (case 1212)
+C05 fuzz config:   seed 0x090570A1 cases=2000 accepted=215 rejected=1785 max=0.1353 ms (case 760)
+C05 corrupt fixtures: 1 scene, 1 prefab, 1 material, 3 config handled
+  [doctest] test cases:   40 |   40 passed | 0 failed | 427 skipped
+  [doctest] assertions: 6190 | 6190 passed | 0 failed |
+--- wo10-units-all.out.log ---
+KI-16: recorded duration after 432,000 ticks of 1/60f = 7200.000488 s (exact sum of the float ticks 7200.000376, nominal 7200.000000; drift vs nominal 0.0005 s = 0.0293 steps; one float ulp at 7200 = 4.883e-04)
+KI-16: max stored-timestamp error vs the exact float-tick sum 2.4414e-04 s at sample 393215 (t=6553.600; one float ulp there = 4.883e-04); vs the nominal i/60: 6.1849e-04 s
+negative replay: x max error vs 30t over the scrub set = 0.000031
+float accumulator after 24 h of 1/60 frames: 83794.820 s vs exact 86400.005 s (error -2605.184 s = -3.015 %); frames where the float did not move at all: 0; float ulp at 86,400 s = 7.8125e-03 s (a 1/144 s frame is 0.89 ulps, a 1/60 s frame 2.13 ulps)
+float accumulator after 2 h of 1/60 frames: 7183.1445 s vs 7200 (error -16.8555 s; one 60-Hz step = 0.0167 s)
+RK4 projectile float: p rel err 1.371e-06, v rel err 9.406e-06 (bound 1e-4); double-state reference rel err 8.675e-09 (IntegrateRK4's dt is float: dt/6 is rounded to float, ~1e-8 relative floor)
+oscillator: x(2 s) = 0.0791160 vs analytic 0.0791159, rel err 8.809e-07 (bound 2e-3)
+RK4 order: err(h=1/8) 4.851e-06 / err(h=1/16) 3.210e-07 = ratio 15.11 (bound 10..24, theory 16)
+semi-implicit: max energy / E0 = 1.01495 (bound < 1.10)
+F-TRAJECTORY: apex t=5.098581 s y=127.464527 m; range at 10 s x=300.000 m y=9.667500 m
+float path vs double: x max abs err 3.052e-05 (rel 1.270e-07), y max abs err 4.614e-05
+float path vs double: vy max abs err 1.331e-05; worst error in float ulps of the value (|value| >= 1): 48.38; max timestamp err 4.450e-07 s (a timestamp error of e seconds shows up as 30*e metres in x)
+float path vs double: samples over the generic float bar (1e-6 + 1e-5|x|, dominated by the float TIME resolution near x = 0): 6 of 4804; over the domain bound (2|v| ulp(t) + 2 ulp(value)): 0; worst domain excess 0.000000 at sample -1 channel -1
+1e11 offset: double-subtract-then-float max err 7.629e-06 m (double ulp at 1e11 = 1.526e-05 m); float-then-subtract max err 300.0 m (float ulp at 1e11 = 8192 m)
+PCG32 1,000,000 outputs: FNV-1a-64 0x3654ce49c351b391 (oracle 0x3654ce49c351b391), last word 0xef1e2afa
+Gaussian(2026,9) x100,000 FNV-1a-64 0xea0fddffaacaf6b4; transcendental x100,000 0x9540463af85ebf45 ƒ?" same-toolchain scope (MSVC x64, vendored <cmath>); a change here means the toolchain changed, not the seed
+  [doctest] test cases:     13 |     13 passed | 0 failed | 454 skipped
+  [doctest] assertions: 216703 | 216703 passed | 0 failed |
+==================== wo10-retained / Debug ====================
+  [PASSED] retained-units - exit 0 as expected
+  [PASSED] wo09-units - exit 0 as expected
+  [PASSED] wo10-units-all - exit 0 as expected
+  [PASSED] retained-goldens - exit 0 as expected
+  [PASSED] retained-wo08-gpu - exit 0 as expected
+  [PASSED] retained-wo09-gpu - exit 0 as expected
+--- retained-goldens.out.log ---
+  [doctest] test cases:  6 |  6 passed | 0 failed | 33 skipped
+  [doctest] assertions: 29 | 29 passed | 0 failed |
+--- retained-units.out.log ---
+drop-only: max |z| = 0.000587754 m, max out-of-plane |q| = 8.71855e-05
+sliding:   max |z| = 0.00205322 m, max out-of-plane |q| = 7.71662e-05
+Serial hardware present - skipping the no-port Connect() case so the suite never opens a real device.
+R04 ScreenToWorld round trip: 51840 samples, worst 0.0425752 px (bar 0.5)
+R04 projection-vs-model worst 0.00109183 px
+R04 zoom-about-cursor: 1550 pairs asserted inside the envelope, 370 outside it measured only (worst 127.803 px)
+R04 outside-envelope sample (zoom 0.01, focus 1000): round-trip error 1.4723 px
+  [doctest] test cases:      401 |      401 passed | 0 failed | 66 skipped
+  [doctest] assertions: 23184880 | 23184880 passed | 0 failed |
+--- retained-wo08-gpu.out.log ---
+R05 live engine GPU objects after 200 cycles: fbo=3 att=6 tex=30 buf=11 vao=6 prog=6
+  [doctest] test cases:       22 |       22 passed | 0 failed | 17 skipped
+  [doctest] assertions: 21121754 | 21121754 passed | 0 failed |
+--- retained-wo09-gpu.out.log ---
+C02 GPU: 1024x1024 map built in 11.1902 ms
+C02 GPU view '10x5.6 cells': oracle strict=157 enclosed=180 drawn quads=180 draws=1 (0.4074 ms)
+C02 GPU view '200x112 cells': oracle strict=53818 enclosed=54237 drawn quads=54237 draws=6 (108.008 ms)
+C02 GPU view 'corner overlap': oracle strict=114 enclosed=121 drawn quads=121 draws=1 (0.2849 ms)
+C02 GPU view 'whole map + margin': oracle strict=786432 enclosed=786432 drawn quads=786432 draws=79 (1514.5 ms)
+C02 GPU view 'fully outside': oracle strict=0 enclosed=0 drawn quads=0 draws=0 (0.0477 ms)
+C02 GPU view 'just outside right': oracle strict=0 enclosed=0 drawn quads=0 draws=0 (0.0137 ms)
+C02 GPU view 'extreme zoom-out': oracle strict=786432 enclosed=786432 drawn quads=786432 draws=79 (1514.77 ms)
+C02 GPU camera edge: oracle strict=653 enclosed=707 widened=740 drawn=740
+C03 GPU: 2,001 controls rendered in 8.2852 ms, 1 draw call(s)
+C03 GPU: an inverted UI rect PAINTS its mirrored quad (pinned)
+C03 GPU lights ceiling ladder: 1 lights at 320x180 = 1.74218 ms per frame (5-frame mean incl. sprites + composite + FinishGpu)
+C03 GPU lights ceiling ladder: 10 lights at 320x180 = 0.31106 ms per frame (5-frame mean incl. sprites + composite + FinishGpu)
+C03 GPU lights ceiling ladder: 100 lights at 320x180 = 0.5877 ms per frame (5-frame mean incl. sprites + composite + FinishGpu)
+C03 GPU lights ceiling ladder: 1000 lights at 320x180 = 3.7235 ms per frame (5-frame mean incl. sprites + composite + FinishGpu)
+C03 GPU lights ceiling ladder: 100 lights at 1920x1080 (r=120) = 2.88584 ms per frame
+C03 GPU lights ceiling ladder: 1000 lights at 1920x1080 (r=120) = 5.85962 ms per frame
+  [doctest] test cases:       9 |       9 passed | 0 failed | 30 skipped
+  [doctest] assertions: 1606171 | 1606171 passed | 0 failed |
+--- wo09-units.out.log ---
+C01 BuildSpriteDrawList(10,000) = 10.6921 ms
+C01 BuildSpriteDrawList(20,000 incl. 5,000 tilemaps) = 22.1799 ms
+C01 tie-break pinned: equal (ZOrder, key) items draw in ascending entt handle order; a recycled entity (higher version) draws on top of every never-recycled one.
+C01 nonfinite keys, seed 1: 0 positions off the reference order; 0 of 4919 adjacent finite same-layer pairs are inverted
+C01 nonfinite keys, seed 2: 0 positions off the reference order; 0 of 5075 adjacent finite same-layer pairs are inverted
+C01 nonfinite keys, seed 3: 0 positions off the reference order; 0 of 4921 adjacent finite same-layer pairs are inverted
+C01 nonfinite keys, seed 4: 0 positions off the reference order; 0 of 5111 adjacent finite same-layer pairs are inverted
+C01 nonfinite keys, seed 5: 0 positions off the reference order; 0 of 4972 adjacent finite same-layer pairs are inverted
+C01 nonfinite keys, seed 6: 0 positions off the reference order; 0 of 4992 adjacent finite same-layer pairs are inverted
+C01 nonfinite keys, seed 7: 0 positions off the reference order; 0 of 4970 adjacent finite same-layer pairs are inverted
+C01 nonfinite keys, seed 8: 0 positions off the reference order; 0 of 4989 adjacent finite same-layer pairs are inverted
+C01 activity-propagation depth ceiling pinned: 4,096 nodes incl. self = 4,095 ancestors (Scene::IsActiveInHierarchy guard)
+C02 EnsureCells(1024x1024) = 0.228 ms; buffer = 2097152 bytes (2 MiB of cells)
+C02 1,048,576-cell map: save 1376.78 ms (16044050 bytes), load 2244.63 ms
+C03 2,001 controls: CollectElements 4.3405 ms, Update 4.97195 ms per frame
+C03 depth ladder: depth=64 exit=0x00000000 seconds=0.06
+C03 depth ladder: depth=256 exit=0x00000000 seconds=0.12
+C03 depth ladder: depth=1024 exit=0x00000000 seconds=0.61
+C03 depth ladder: depth=4095 exit=0x00000000 seconds=6.08
+C03 depth ladder: depth=4096 exit=0x00000000 seconds=6.13
+C03 depth ladder: depth=4097 exit=0x00000000 seconds=6.07
+C03 depth ladder: depth=8192 exit=0x00000000 seconds=16.08
+C03 depth ladder: deepest surviving rung = 8192, first failing rung = 0
+C03 cycles: every walker returned in 58.2787 ms
+C04 EventBus: 5,000-listener emit = 10.5892 ms (each call re-checks liveness)
+C04 flow ping-pong: one OnUpdate hit the cascade guard in 158.805 ms
+C04 flow push cycle: stack depth after one OnUpdate = 100002
+C04 flow double-emit self-loop: one OnUpdate = 222.049 ms (queue grows by one per iteration to the guard)
+C04 fuzz flow:  seed 0x0904F10A cases=2000 accepted=373 rejected=1627 max=17.6789 ms (case 376)
+C04 fuzz story: seed 0x09045708 cases=2000 accepted=410 rejected=1590 max=23.0503 ms (case 516)
+C04 corrupt fixtures: 4 .cflow + 3 .cstory handled
+C05 truncation ladder: 11321 prefixes, rejected=11321 accepted=0 max=3.3602 ms
+C05 float-overflow Position from JSON 1e300 loads as (inf, -inf, 0) ƒ?" pinned
+C05 100,000-deep nesting: rejected in 0.3876 ms
+C05 duplicate UUID: 2 entities created, the map resolved to 'first', after destroying the other the id still resolves
+C05 fuzz scene:    seed 0x0905C4E5 cases=2000 accepted=1063 rejected=937 max=27.4137 ms (case 1018)
+C05 fuzz prefab:   seed 0x0905B4EF cases=2000 accepted=978 rejected=1022 max=32.9755 ms (case 674)
+C05 fuzz material: seed 0x0905CA47 cases=2000 accepted=1061 rejected=939 max=20.6446 ms (case 1212)
+C05 fuzz config:   seed 0x090570A1 cases=2000 accepted=215 rejected=1785 max=0.2713 ms (case 845)
+C05 corrupt fixtures: 1 scene, 1 prefab, 1 material, 3 config handled
+  [doctest] test cases:   40 |   40 passed | 0 failed | 427 skipped
+  [doctest] assertions: 6190 | 6190 passed | 0 failed |
+--- wo10-units-all.out.log ---
+KI-16: recorded duration after 432,000 ticks of 1/60f = 7200.000488 s (exact sum of the float ticks 7200.000376, nominal 7200.000000; drift vs nominal 0.0005 s = 0.0293 steps; one float ulp at 7200 = 4.883e-04)
+KI-16: max stored-timestamp error vs the exact float-tick sum 2.4414e-04 s at sample 393215 (t=6553.600; one float ulp there = 4.883e-04); vs the nominal i/60: 6.1849e-04 s
+negative replay: x max error vs 30t over the scrub set = 0.000031
+float accumulator after 24 h of 1/60 frames: 83794.820 s vs exact 86400.005 s (error -2605.184 s = -3.015 %); frames where the float did not move at all: 0; float ulp at 86,400 s = 7.8125e-03 s (a 1/144 s frame is 0.89 ulps, a 1/60 s frame 2.13 ulps)
+float accumulator after 2 h of 1/60 frames: 7183.1445 s vs 7200 (error -16.8555 s; one 60-Hz step = 0.0167 s)
+RK4 projectile float: p rel err 1.371e-06, v rel err 9.406e-06 (bound 1e-4); double-state reference rel err 8.675e-09 (IntegrateRK4's dt is float: dt/6 is rounded to float, ~1e-8 relative floor)
+oscillator: x(2 s) = 0.0791160 vs analytic 0.0791159, rel err 8.809e-07 (bound 2e-3)
+RK4 order: err(h=1/8) 4.851e-06 / err(h=1/16) 3.210e-07 = ratio 15.11 (bound 10..24, theory 16)
+semi-implicit: max energy / E0 = 1.01495 (bound < 1.10)
+F-TRAJECTORY: apex t=5.098581 s y=127.464527 m; range at 10 s x=300.000 m y=9.667500 m
+float path vs double: x max abs err 3.052e-05 (rel 1.270e-07), y max abs err 4.614e-05
+float path vs double: vy max abs err 1.331e-05; worst error in float ulps of the value (|value| >= 1): 48.38; max timestamp err 4.450e-07 s (a timestamp error of e seconds shows up as 30*e metres in x)
+float path vs double: samples over the generic float bar (1e-6 + 1e-5|x|, dominated by the float TIME resolution near x = 0): 6 of 4804; over the domain bound (2|v| ulp(t) + 2 ulp(value)): 0; worst domain excess 0.000000 at sample -1 channel -1
+1e11 offset: double-subtract-then-float max err 7.629e-06 m (double ulp at 1e11 = 1.526e-05 m); float-then-subtract max err 300.0 m (float ulp at 1e11 = 8192 m)
+PCG32 1,000,000 outputs: FNV-1a-64 0x3654ce49c351b391 (oracle 0x3654ce49c351b391), last word 0xef1e2afa
+Gaussian(2026,9) x100,000 FNV-1a-64 0xea0fddffaacaf6b4; transcendental x100,000 0x9540463af85ebf45 ƒ?" same-toolchain scope (MSVC x64, vendored <cmath>); a change here means the toolchain changed, not the seed
+  [doctest] test cases:     13 |     13 passed | 0 failed | 454 skipped
+  [doctest] assertions: 216703 | 216703 passed | 0 failed |

@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="wo10-retained" tests="6" failures="0" skipped="0">
+  <testsuite name="all" tests="6" failures="0" skipped="0">
+    <testcase name="retained-units" classname="wo10-retained.U" time="0">
+    </testcase>
+    <testcase name="wo09-units" classname="wo10-retained.U" time="0">
+    </testcase>
+    <testcase name="wo10-units-all" classname="wo10-retained.U" time="0">
+    </testcase>
+    <testcase name="retained-goldens" classname="wo10-retained.G" time="0">
+    </testcase>
+    <testcase name="retained-wo08-gpu" classname="wo10-retained.G" time="0">
+    </testcase>
+    <testcase name="retained-wo09-gpu" classname="wo10-retained.G" time="0">
+    </testcase>
+  </testsuite>
+</testsuites>
+

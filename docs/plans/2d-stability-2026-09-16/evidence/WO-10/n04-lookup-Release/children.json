@@ -1,0 +1,34 @@
+﻿{
+    "id":  "N04-LOOKUP",
+    "tier":  "U",
+    "description":  "WO-10 N04-LOOKUP via CosmicTests.exe",
+    "requires":  [
+                     "windows"
+                 ],
+    "transport":  "none",
+    "seed":  null,
+    "start_utc":  "2026-09-18T22:32:58.5315013Z",
+    "deadline_sec":  60,
+    "exercised":  "production",
+    "command":  "C:\\dev\\Cosmic\\build\\Runtime\\Release\\CosmicTests.exe --reporters=console --no-intro --no-colors \"--test-suite=LookupTable (E13)\"",
+    "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-10\\n04-lookup-Release\\N04-LOOKUP.out.log",
+    "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-10\\n04-lookup-Release\\N04-LOOKUP.err.log",
+    "pid":  25204,
+    "exit_code":  0,
+    "crash":  false,
+    "tests_passed":  7,
+    "tests_expected_min":  1,
+    "verdict":  "PASSED",
+    "detail":  "exit 0 as expected",
+    "duration_sec":  0.086,
+    "end_utc":  "2026-09-18T22:32:58.6255451Z",
+    "golden_mutated":  false,
+    "golden_mutations":  [
+
+                         ],
+    "golden_diagnostics":  [
+
+                           ],
+    "golden_sha256_before":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-10\\n04-lookup-Release\\goldens-sha256-before.txt",
+    "golden_sha256_after":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-10\\n04-lookup-Release\\goldens-sha256-after.txt"
+}

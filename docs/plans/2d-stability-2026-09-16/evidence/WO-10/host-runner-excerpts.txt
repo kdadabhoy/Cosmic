@@ -1,0 +1,268 @@
+==================== wo10-host / Release ====================
+  [PASSED] N01-30hz - exit 0 as expected
+  [PASSED] N01-60hz - exit 0 as expected
+  [PASSED] N01-144hz - exit 0 as expected
+  [PASSED] N01-irregular - exit 0 as expected
+  [PASSED] N01-speed0 - exit 0 as expected
+  [PASSED] N01-speed025 - exit 0 as expected
+  [PASSED] N01-speed4 - exit 0 as expected
+  [PASSED] N01-pause - exit 0 as expected
+  [PASSED] N01-stall - exit 0 as expected
+  [PASSED] N01-local-quarter - exit 0 as expected
+  [PASSED] N01-global-quarter - exit 0 as expected
+  [PASSED] N02-origin-0 - exit 0 as expected
+  [PASSED] N02-origin-2h - exit 0 as expected
+  [PASSED] N02-origin-24h - exit 0 as expected
+  [PASSED] N02-policy-hz - exit 0 as expected
+  [PASSED] N02-policy-scale-nan - exit 0 as expected
+  [PASSED] N02-policy-scale-negative - exit 0 as expected
+  [PASSED] N02-policy-scale-inf - exit 0 as expected
+--- N01-144hz.out.log ---
+[144hz] frames=1441 ticks direct/plugin/ref=600/600/600 maxTicksInFrame direct/plugin=1/1 zeroTickFrames=841 twoPlusTickFrames=0 realSeconds=0.818960
+[144hz] per-frame OnUpdate dt error max: direct 1.087e-10 (frame 1441) plugin 1.087e-10 (frame 1441); frames over the float bar: 0
+[144hz] plugin local time: observed 10.0022535 ref 10.0020833 err 1.702e-04 (float accumulation over 1441 frames, worst-case bound 6.881e-04); uptime: observed 10.0020838 ref 10.0020833 err 4.450e-07
+  [doctest] test cases:  1 |  1 passed | 0 failed | 466 skipped
+  [doctest] assertions: 24 | 24 passed | 0 failed |
+--- N01-30hz.out.log ---
+[30hz] frames=301 ticks direct/plugin/ref=600/600/600 maxTicksInFrame direct/plugin=2/2 zeroTickFrames=1 twoPlusTickFrames=300 realSeconds=0.368844
+[30hz] per-frame OnUpdate dt error max: direct 1.738e-09 (frame 1) plugin 1.738e-09 (frame 1); frames over the float bar: 0
+[30hz] plugin local time: observed 10.0021038 ref 10.0020833 err 2.047e-05 (float accumulation over 301 frames, worst-case bound 1.445e-04); uptime: observed 10.0020838 ref 10.0020833 err 4.450e-07
+  [doctest] test cases:  1 |  1 passed | 0 failed | 466 skipped
+  [doctest] assertions: 24 | 24 passed | 0 failed |
+--- N01-60hz.out.log ---
+[60hz] frames=601 ticks direct/plugin/ref=600/600/600 maxTicksInFrame direct/plugin=1/1 zeroTickFrames=1 twoPlusTickFrames=0 realSeconds=0.487645
+[60hz] per-frame OnUpdate dt error max: direct 8.692e-10 (frame 1) plugin 8.692e-10 (frame 1); frames over the float bar: 0
+[60hz] plugin local time: observed 10.0021029 ref 10.0020833 err 1.952e-05 (float accumulation over 601 frames, worst-case bound 2.876e-04); uptime: observed 10.0020838 ref 10.0020833 err 4.450e-07
+  [doctest] test cases:  1 |  1 passed | 0 failed | 466 skipped
+  [doctest] assertions: 27 | 27 passed | 0 failed |
+--- N01-global-quarter.out.log ---
+[global-quarter] frames=601 ticks direct/plugin/ref=150/150/150 maxTicksInFrame direct/plugin=1/1 zeroTickFrames=451 twoPlusTickFrames=0 realSeconds=0.477796
+[global-quarter] per-frame OnUpdate dt error max: direct 2.173e-10 (frame 1) plugin 2.173e-10 (frame 1); frames over the float bar: 0
+[global-quarter] plugin local time: observed 2.50052571 ref 2.50052083 err 4.880e-06 (float accumulation over 601 frames, worst-case bound 7.264e-05); uptime: observed 10.0020838 ref 10.0020833 err 4.450e-07
+  [doctest] test cases:  1 |  1 passed | 0 failed | 466 skipped
+  [doctest] assertions: 26 | 26 passed | 0 failed |
+--- N01-irregular.out.log ---
+[irregular] frames=497 ticks direct/plugin/ref=600/600/600 maxTicksInFrame direct/plugin=3/3 zeroTickFrames=103 twoPlusTickFrames=192 realSeconds=0.439601
+[irregular] per-frame OnUpdate dt error max: direct 1.848e-09 (frame 152) plugin 1.848e-09 (frame 152); frames over the float bar: 0
+[irregular] plugin local time: observed 10.002079 ref 10.0020833 err 4.323e-06 (float accumulation over 497 frames, worst-case bound 2.380e-04); uptime: observed 10.0020828 ref 10.0020833 err 5.086e-07
+  [doctest] test cases:  1 |  1 passed | 0 failed | 466 skipped
+  [doctest] assertions: 24 | 24 passed | 0 failed |
+--- N01-local-quarter.out.log ---
+[local-quarter] frames=601 ticks direct/plugin/ref=600/600/600 maxTicksInFrame direct/plugin=1/1 zeroTickFrames=1 twoPlusTickFrames=0 realSeconds=0.487503
+[local-quarter] per-frame OnUpdate dt error max: direct 8.692e-10 (frame 1) plugin 2.173e-10 (frame 1); frames over the float bar: 0
+[local-quarter] plugin local time: observed 2.50052571 ref 2.50052083 err 4.880e-06 (float accumulation over 601 frames, worst-case bound 7.264e-05); uptime: observed 10.0020838 ref 10.0020833 err 4.450e-07
+  [doctest] test cases:  1 |  1 passed | 0 failed | 466 skipped
+  [doctest] assertions: 28 | 28 passed | 0 failed |
+--- N01-pause.out.log ---
+[pause] frames=601 ticks direct/plugin/ref=480/480/480 maxTicksInFrame direct/plugin=1/1 zeroTickFrames=121 twoPlusTickFrames=0 realSeconds=0.488979
+[pause] per-frame OnUpdate dt error max: direct 8.692e-10 (frame 1) plugin 8.692e-10 (frame 1); frames over the float bar: 0
+[pause] plugin local time: observed 8.00213337 ref 8.00208333 err 5.004e-05 (float accumulation over 601 frames, worst-case bound 2.876e-04); uptime: observed 10.0020838 ref 10.0020833 err 4.450e-07
+  [doctest] test cases:  1 |  1 passed | 0 failed | 466 skipped
+  [doctest] assertions: 32 | 32 passed | 0 failed |
+--- N01-speed0.out.log ---
+[speed0] frames=601 ticks direct/plugin/ref=0/0/0 maxTicksInFrame direct/plugin=0/0 zeroTickFrames=601 twoPlusTickFrames=0 realSeconds=0.487882
+[speed0] per-frame OnUpdate dt error max: direct 0.000e+00 (frame 0) plugin 0.000e+00 (frame 0); frames over the float bar: 0
+[speed0] plugin local time: observed 0 ref 0 err 0.000e+00 (float accumulation over 601 frames, worst-case bound 1.000e-06); uptime: observed 10.0020838 ref 10.0020833 err 4.450e-07
+  [doctest] test cases:  1 |  1 passed | 0 failed | 466 skipped
+  [doctest] assertions: 26 | 26 passed | 0 failed |
+--- N01-speed025.out.log ---
+[speed025] frames=601 ticks direct/plugin/ref=150/150/150 maxTicksInFrame direct/plugin=1/1 zeroTickFrames=451 twoPlusTickFrames=0 realSeconds=0.487076
+[speed025] per-frame OnUpdate dt error max: direct 2.173e-10 (frame 1) plugin 2.173e-10 (frame 1); frames over the float bar: 0
+[speed025] plugin local time: observed 2.50052571 ref 2.50052083 err 4.880e-06 (float accumulation over 601 frames, worst-case bound 7.264e-05); uptime: observed 10.0020838 ref 10.0020833 err 4.450e-07
+  [doctest] test cases:  1 |  1 passed | 0 failed | 466 skipped
+  [doctest] assertions: 23 | 23 passed | 0 failed |
+--- N01-speed4.out.log ---
+[speed4] frames=601 ticks direct/plugin/ref=2400/2400/2400 maxTicksInFrame direct/plugin=4/4 zeroTickFrames=1 twoPlusTickFrames=600 realSeconds=0.479363
+[speed4] per-frame OnUpdate dt error max: direct 3.477e-09 (frame 1) plugin 3.477e-09 (frame 1); frames over the float bar: 0
+[speed4] plugin local time: observed 40.0084114 ref 40.0083333 err 7.807e-05 (float accumulation over 601 frames, worst-case bound 1.147e-03); uptime: observed 10.0020838 ref 10.0020833 err 4.450e-07
+  [doctest] test cases:  1 |  1 passed | 0 failed | 466 skipped
+  [doctest] assertions: 24 | 24 passed | 0 failed |
+--- N01-stall.out.log ---
+[stall] frames=578 ticks direct/plugin/ref=591/591/591 maxTicksInFrame direct/plugin=15/15 zeroTickFrames=1 twoPlusTickFrames=1 realSeconds=0.469407
+[stall] per-frame OnUpdate dt error max: direct 5.960e-09 (frame 301) plugin 5.960e-09 (frame 301); frames over the float bar: 0
+[stall] plugin local time: observed 10.0020981 ref 10.0020833 err 1.475e-05 (float accumulation over 578 frames, worst-case bound 2.766e-04); uptime: observed 10.0020838 ref 10.0020833 err 4.450e-07
+[stall] ticks in the 0.4 s frame: 15, next frame: 1 (declared: 15 delivered, 9 dropped)
+  [doctest] test cases:  1 |  1 passed | 0 failed | 466 skipped
+  [doctest] assertions: 28 | 28 passed | 0 failed |
+--- N02-origin-0.out.log ---
+[origin-0] frames=1441 ticks direct/plugin/ref=600/600/600 maxTicksInFrame direct/plugin=1/1 zeroTickFrames=841 twoPlusTickFrames=0 realSeconds=0.829359
+[origin-0] per-frame OnUpdate dt error max: direct 1.087e-10 (frame 1441) plugin 1.087e-10 (frame 1441); frames over the float bar: 0
+[origin-0] plugin local time: observed 10.0022535 ref 10.0020833 err 1.702e-04 (float accumulation over 1441 frames, worst-case bound 6.881e-04); uptime: observed 10.0020838 ref 10.0020833 err 4.450e-07
+[origin-0] origin 0 s: float ulp at the origin = 1.401e-45 s; observed max dt error 1.087e-10 s (declared dt 1/144 = 6.944e-3)
+  [doctest] test cases:  1 |  1 passed | 0 failed | 466 skipped
+  [doctest] assertions: 23 | 23 passed | 0 failed |
+--- N02-origin-24h.out.log ---
+[origin-24h] frames=1441 ticks direct/plugin/ref=600/600/600 maxTicksInFrame direct/plugin=1/1 zeroTickFrames=841 twoPlusTickFrames=0 realSeconds=0.831838
+[origin-24h] per-frame OnUpdate dt error max: direct 1.087e-10 (frame 1441) plugin 1.087e-10 (frame 1441); frames over the float bar: 0
+[origin-24h] plugin local time: observed 10.0022535 ref 10.0020833 err 1.702e-04 (float accumulation over 1441 frames, worst-case bound 6.881e-04); uptime: observed 10.0020838 ref 10.0020833 err 4.450e-07
+[origin-24h] origin 86400 s: float ulp at the origin = 7.812e-03 s; observed max dt error 1.087e-10 s (declared dt 1/144 = 6.944e-3)
+  [doctest] test cases:  1 |  1 passed | 0 failed | 466 skipped
+  [doctest] assertions: 23 | 23 passed | 0 failed |
+--- N02-origin-2h.out.log ---
+[origin-2h] frames=1441 ticks direct/plugin/ref=600/600/600 maxTicksInFrame direct/plugin=1/1 zeroTickFrames=841 twoPlusTickFrames=0 realSeconds=0.822627
+[origin-2h] per-frame OnUpdate dt error max: direct 1.087e-10 (frame 1441) plugin 1.087e-10 (frame 1441); frames over the float bar: 0
+[origin-2h] plugin local time: observed 10.0022535 ref 10.0020833 err 1.702e-04 (float accumulation over 1441 frames, worst-case bound 6.881e-04); uptime: observed 10.0020838 ref 10.0020833 err 4.450e-07
+[origin-2h] origin 7200 s: float ulp at the origin = 4.883e-04 s; observed max dt error 1.087e-10 s (declared dt 1/144 = 6.944e-3)
+  [doctest] test cases:  1 |  1 passed | 0 failed | 466 skipped
+  [doctest] assertions: 23 | 23 passed | 0 failed |
+--- N02-policy-hz.out.log ---
+[policy-hz] frames=721 ticks direct/plugin/ref=5302/5302/5302 maxTicksInFrame direct/plugin=516/516 zeroTickFrames=179 twoPlusTickFrames=271 realSeconds=0.531264
+[policy-hz] per-frame OnUpdate dt error max: direct 8.692e-10 (frame 1) plugin 8.692e-10 (frame 1); frames over the float bar: 0
+[policy-hz] plugin local time: observed 12.0020723 ref 12.0020833 err 1.100e-05 (float accumulation over 721 frames, worst-case bound 3.448e-04); uptime: observed 12.0020838 ref 12.0020833 err 4.450e-07
+[policy-hz] ticks in the NaN-rate window (frames 271..360, must still run at 1000 Hz): 1500; first frame after SetFixedTimestepHz(60): 1 ticks
+  [doctest] test cases:  1 |  1 passed | 0 failed | 466 skipped
+  [doctest] assertions: 27 | 27 passed | 0 failed |
+--- N02-policy-scale-inf.out.log ---
+[policy-scale-inf] frames=361 ticks direct/plugin/ref=360/360/360 maxTicksInFrame direct/plugin=1/1 zeroTickFrames=1 twoPlusTickFrames=0 realSeconds=0.379974
+[policy-scale-inf] per-frame OnUpdate dt error max: direct 8.692e-10 (frame 1) plugin 8.692e-10 (frame 1); frames over the float bar: 0
+[policy-scale-inf] plugin local time: observed 6.00210667 ref 6.00208333 err 2.333e-05 (float accumulation over 361 frames, worst-case bound 8.707e-05); uptime: observed 6.00208378 ref 6.00208333 err 4.450e-07
+  [doctest] test cases:  1 |  1 passed | 0 failed | 466 skipped
+  [doctest] assertions: 21 | 21 passed | 0 failed |
+--- N02-policy-scale-nan.out.log ---
+[policy-scale-nan] frames=361 ticks direct/plugin/ref=360/360/360 maxTicksInFrame direct/plugin=1/1 zeroTickFrames=1 twoPlusTickFrames=0 realSeconds=0.390044
+[policy-scale-nan] per-frame OnUpdate dt error max: direct 8.692e-10 (frame 1) plugin 8.692e-10 (frame 1); frames over the float bar: 0
+[policy-scale-nan] plugin local time: observed 6.00210667 ref 6.00208333 err 2.333e-05 (float accumulation over 361 frames, worst-case bound 8.707e-05); uptime: observed 6.00208378 ref 6.00208333 err 4.450e-07
+[policy-scale-nan] ticks while NaN was requested: 120; after SetTimeScale(1): 120
+  [doctest] test cases:  1 |  1 passed | 0 failed | 466 skipped
+  [doctest] assertions: 22 | 22 passed | 0 failed |
+--- N02-policy-scale-negative.out.log ---
+[policy-scale-negative] frames=481 ticks direct/plugin/ref=480/480/480 maxTicksInFrame direct/plugin=1/1 zeroTickFrames=1 twoPlusTickFrames=0 realSeconds=0.438431
+[policy-scale-negative] per-frame OnUpdate dt error max: direct 8.692e-10 (frame 1) plugin 8.692e-10 (frame 1); frames over the float bar: 0
+[policy-scale-negative] plugin local time: observed 8.00213337 ref 8.00208333 err 5.004e-05 (float accumulation over 481 frames, worst-case bound 2.304e-04); uptime: observed 8.00208378 ref 8.00208333 err 4.450e-07
+[policy-scale-negative] ticks while -1 was requested: 180; ticks in the 3 s after SetTimeScale(1): 180 (declared 180 / 180; before WO-10: 0 / 0 ƒ?" a 3 s restart debt)
+  [doctest] test cases:  1 |  1 passed | 0 failed | 466 skipped
+  [doctest] assertions: 25 | 25 passed | 0 failed |
+==================== wo10-host / Debug ====================
+  [PASSED] N01-30hz - exit 0 as expected
+  [PASSED] N01-60hz - exit 0 as expected
+  [PASSED] N01-144hz - exit 0 as expected
+  [PASSED] N01-irregular - exit 0 as expected
+  [PASSED] N01-speed0 - exit 0 as expected
+  [PASSED] N01-speed025 - exit 0 as expected
+  [PASSED] N01-speed4 - exit 0 as expected
+  [PASSED] N01-pause - exit 0 as expected
+  [PASSED] N01-stall - exit 0 as expected
+  [PASSED] N01-local-quarter - exit 0 as expected
+  [PASSED] N01-global-quarter - exit 0 as expected
+  [PASSED] N02-origin-0 - exit 0 as expected
+  [PASSED] N02-origin-2h - exit 0 as expected
+  [PASSED] N02-origin-24h - exit 0 as expected
+  [PASSED] N02-policy-hz - exit 0 as expected
+  [PASSED] N02-policy-scale-nan - exit 0 as expected
+  [PASSED] N02-policy-scale-negative - exit 0 as expected
+  [PASSED] N02-policy-scale-inf - exit 0 as expected
+--- N01-144hz.out.log ---
+[144hz] frames=1441 ticks direct/plugin/ref=600/600/600 maxTicksInFrame direct/plugin=1/1 zeroTickFrames=841 twoPlusTickFrames=0 realSeconds=0.880515
+[144hz] per-frame OnUpdate dt error max: direct 1.087e-10 (frame 1441) plugin 1.087e-10 (frame 1441); frames over the float bar: 0
+[144hz] plugin local time: observed 10.0022535 ref 10.0020833 err 1.702e-04 (float accumulation over 1441 frames, worst-case bound 6.881e-04); uptime: observed 10.0020838 ref 10.0020833 err 4.450e-07
+  [doctest] test cases:  1 |  1 passed | 0 failed | 466 skipped
+  [doctest] assertions: 24 | 24 passed | 0 failed |
+--- N01-30hz.out.log ---
+[30hz] frames=301 ticks direct/plugin/ref=600/600/600 maxTicksInFrame direct/plugin=2/2 zeroTickFrames=1 twoPlusTickFrames=300 realSeconds=0.419262
+[30hz] per-frame OnUpdate dt error max: direct 1.738e-09 (frame 1) plugin 1.738e-09 (frame 1); frames over the float bar: 0
+[30hz] plugin local time: observed 10.0021038 ref 10.0020833 err 2.047e-05 (float accumulation over 301 frames, worst-case bound 1.445e-04); uptime: observed 10.0020838 ref 10.0020833 err 4.450e-07
+  [doctest] test cases:  1 |  1 passed | 0 failed | 466 skipped
+  [doctest] assertions: 24 | 24 passed | 0 failed |
+--- N01-60hz.out.log ---
+[60hz] frames=601 ticks direct/plugin/ref=600/600/600 maxTicksInFrame direct/plugin=1/1 zeroTickFrames=1 twoPlusTickFrames=0 realSeconds=0.513487
+[60hz] per-frame OnUpdate dt error max: direct 8.692e-10 (frame 1) plugin 8.692e-10 (frame 1); frames over the float bar: 0
+[60hz] plugin local time: observed 10.0021029 ref 10.0020833 err 1.952e-05 (float accumulation over 601 frames, worst-case bound 2.876e-04); uptime: observed 10.0020838 ref 10.0020833 err 4.450e-07
+  [doctest] test cases:  1 |  1 passed | 0 failed | 466 skipped
+  [doctest] assertions: 27 | 27 passed | 0 failed |
+--- N01-global-quarter.out.log ---
+[global-quarter] frames=601 ticks direct/plugin/ref=150/150/150 maxTicksInFrame direct/plugin=1/1 zeroTickFrames=451 twoPlusTickFrames=0 realSeconds=0.510246
+[global-quarter] per-frame OnUpdate dt error max: direct 2.173e-10 (frame 1) plugin 2.173e-10 (frame 1); frames over the float bar: 0
+[global-quarter] plugin local time: observed 2.50052571 ref 2.50052083 err 4.880e-06 (float accumulation over 601 frames, worst-case bound 7.264e-05); uptime: observed 10.0020838 ref 10.0020833 err 4.450e-07
+  [doctest] test cases:  1 |  1 passed | 0 failed | 466 skipped
+  [doctest] assertions: 26 | 26 passed | 0 failed |
+--- N01-irregular.out.log ---
+[irregular] frames=497 ticks direct/plugin/ref=600/600/600 maxTicksInFrame direct/plugin=3/3 zeroTickFrames=103 twoPlusTickFrames=192 realSeconds=0.464866
+[irregular] per-frame OnUpdate dt error max: direct 1.848e-09 (frame 152) plugin 1.848e-09 (frame 152); frames over the float bar: 0
+[irregular] plugin local time: observed 10.002079 ref 10.0020833 err 4.323e-06 (float accumulation over 497 frames, worst-case bound 2.380e-04); uptime: observed 10.0020828 ref 10.0020833 err 5.086e-07
+  [doctest] test cases:  1 |  1 passed | 0 failed | 466 skipped
+  [doctest] assertions: 24 | 24 passed | 0 failed |
+--- N01-local-quarter.out.log ---
+[local-quarter] frames=601 ticks direct/plugin/ref=600/600/600 maxTicksInFrame direct/plugin=1/1 zeroTickFrames=1 twoPlusTickFrames=0 realSeconds=0.513834
+[local-quarter] per-frame OnUpdate dt error max: direct 8.692e-10 (frame 1) plugin 2.173e-10 (frame 1); frames over the float bar: 0
+[local-quarter] plugin local time: observed 2.50052571 ref 2.50052083 err 4.880e-06 (float accumulation over 601 frames, worst-case bound 7.264e-05); uptime: observed 10.0020838 ref 10.0020833 err 4.450e-07
+  [doctest] test cases:  1 |  1 passed | 0 failed | 466 skipped
+  [doctest] assertions: 28 | 28 passed | 0 failed |
+--- N01-pause.out.log ---
+[pause] frames=601 ticks direct/plugin/ref=480/480/480 maxTicksInFrame direct/plugin=1/1 zeroTickFrames=121 twoPlusTickFrames=0 realSeconds=0.506602
+[pause] per-frame OnUpdate dt error max: direct 8.692e-10 (frame 1) plugin 8.692e-10 (frame 1); frames over the float bar: 0
+[pause] plugin local time: observed 8.00213337 ref 8.00208333 err 5.004e-05 (float accumulation over 601 frames, worst-case bound 2.876e-04); uptime: observed 10.0020838 ref 10.0020833 err 4.450e-07
+  [doctest] test cases:  1 |  1 passed | 0 failed | 466 skipped
+  [doctest] assertions: 32 | 32 passed | 0 failed |
+--- N01-speed0.out.log ---
+[speed0] frames=601 ticks direct/plugin/ref=0/0/0 maxTicksInFrame direct/plugin=0/0 zeroTickFrames=601 twoPlusTickFrames=0 realSeconds=0.505025
+[speed0] per-frame OnUpdate dt error max: direct 0.000e+00 (frame 0) plugin 0.000e+00 (frame 0); frames over the float bar: 0
+[speed0] plugin local time: observed 0 ref 0 err 0.000e+00 (float accumulation over 601 frames, worst-case bound 1.000e-06); uptime: observed 10.0020838 ref 10.0020833 err 4.450e-07
+  [doctest] test cases:  1 |  1 passed | 0 failed | 466 skipped
+  [doctest] assertions: 26 | 26 passed | 0 failed |
+--- N01-speed025.out.log ---
+[speed025] frames=601 ticks direct/plugin/ref=150/150/150 maxTicksInFrame direct/plugin=1/1 zeroTickFrames=451 twoPlusTickFrames=0 realSeconds=0.508483
+[speed025] per-frame OnUpdate dt error max: direct 2.173e-10 (frame 1) plugin 2.173e-10 (frame 1); frames over the float bar: 0
+[speed025] plugin local time: observed 2.50052571 ref 2.50052083 err 4.880e-06 (float accumulation over 601 frames, worst-case bound 7.264e-05); uptime: observed 10.0020838 ref 10.0020833 err 4.450e-07
+  [doctest] test cases:  1 |  1 passed | 0 failed | 466 skipped
+  [doctest] assertions: 23 | 23 passed | 0 failed |
+--- N01-speed4.out.log ---
+[speed4] frames=601 ticks direct/plugin/ref=2400/2400/2400 maxTicksInFrame direct/plugin=4/4 zeroTickFrames=1 twoPlusTickFrames=600 realSeconds=0.535032
+[speed4] per-frame OnUpdate dt error max: direct 3.477e-09 (frame 1) plugin 3.477e-09 (frame 1); frames over the float bar: 0
+[speed4] plugin local time: observed 40.0084114 ref 40.0083333 err 7.807e-05 (float accumulation over 601 frames, worst-case bound 1.147e-03); uptime: observed 10.0020838 ref 10.0020833 err 4.450e-07
+  [doctest] test cases:  1 |  1 passed | 0 failed | 466 skipped
+  [doctest] assertions: 24 | 24 passed | 0 failed |
+--- N01-stall.out.log ---
+[stall] frames=578 ticks direct/plugin/ref=591/591/591 maxTicksInFrame direct/plugin=15/15 zeroTickFrames=1 twoPlusTickFrames=1 realSeconds=0.502706
+[stall] per-frame OnUpdate dt error max: direct 5.960e-09 (frame 301) plugin 5.960e-09 (frame 301); frames over the float bar: 0
+[stall] plugin local time: observed 10.0020981 ref 10.0020833 err 1.475e-05 (float accumulation over 578 frames, worst-case bound 2.766e-04); uptime: observed 10.0020838 ref 10.0020833 err 4.450e-07
+[stall] ticks in the 0.4 s frame: 15, next frame: 1 (declared: 15 delivered, 9 dropped)
+  [doctest] test cases:  1 |  1 passed | 0 failed | 466 skipped
+  [doctest] assertions: 28 | 28 passed | 0 failed |
+--- N02-origin-0.out.log ---
+[origin-0] frames=1441 ticks direct/plugin/ref=600/600/600 maxTicksInFrame direct/plugin=1/1 zeroTickFrames=841 twoPlusTickFrames=0 realSeconds=0.874254
+[origin-0] per-frame OnUpdate dt error max: direct 1.087e-10 (frame 1441) plugin 1.087e-10 (frame 1441); frames over the float bar: 0
+[origin-0] plugin local time: observed 10.0022535 ref 10.0020833 err 1.702e-04 (float accumulation over 1441 frames, worst-case bound 6.881e-04); uptime: observed 10.0020838 ref 10.0020833 err 4.450e-07
+[origin-0] origin 0 s: float ulp at the origin = 1.401e-45 s; observed max dt error 1.087e-10 s (declared dt 1/144 = 6.944e-3)
+  [doctest] test cases:  1 |  1 passed | 0 failed | 466 skipped
+  [doctest] assertions: 23 | 23 passed | 0 failed |
+--- N02-origin-24h.out.log ---
+[origin-24h] frames=1441 ticks direct/plugin/ref=600/600/600 maxTicksInFrame direct/plugin=1/1 zeroTickFrames=841 twoPlusTickFrames=0 realSeconds=0.875665
+[origin-24h] per-frame OnUpdate dt error max: direct 1.087e-10 (frame 1441) plugin 1.087e-10 (frame 1441); frames over the float bar: 0
+[origin-24h] plugin local time: observed 10.0022535 ref 10.0020833 err 1.702e-04 (float accumulation over 1441 frames, worst-case bound 6.881e-04); uptime: observed 10.0020838 ref 10.0020833 err 4.450e-07
+[origin-24h] origin 86400 s: float ulp at the origin = 7.812e-03 s; observed max dt error 1.087e-10 s (declared dt 1/144 = 6.944e-3)
+  [doctest] test cases:  1 |  1 passed | 0 failed | 466 skipped
+  [doctest] assertions: 23 | 23 passed | 0 failed |
+--- N02-origin-2h.out.log ---
+[origin-2h] frames=1441 ticks direct/plugin/ref=600/600/600 maxTicksInFrame direct/plugin=1/1 zeroTickFrames=841 twoPlusTickFrames=0 realSeconds=0.884659
+[origin-2h] per-frame OnUpdate dt error max: direct 1.087e-10 (frame 1441) plugin 1.087e-10 (frame 1441); frames over the float bar: 0
+[origin-2h] plugin local time: observed 10.0022535 ref 10.0020833 err 1.702e-04 (float accumulation over 1441 frames, worst-case bound 6.881e-04); uptime: observed 10.0020838 ref 10.0020833 err 4.450e-07
+[origin-2h] origin 7200 s: float ulp at the origin = 4.883e-04 s; observed max dt error 1.087e-10 s (declared dt 1/144 = 6.944e-3)
+  [doctest] test cases:  1 |  1 passed | 0 failed | 466 skipped
+  [doctest] assertions: 23 | 23 passed | 0 failed |
+--- N02-policy-hz.out.log ---
+[policy-hz] frames=721 ticks direct/plugin/ref=5302/5302/5302 maxTicksInFrame direct/plugin=516/516 zeroTickFrames=179 twoPlusTickFrames=271 realSeconds=0.557025
+[policy-hz] per-frame OnUpdate dt error max: direct 8.692e-10 (frame 1) plugin 8.692e-10 (frame 1); frames over the float bar: 0
+[policy-hz] plugin local time: observed 12.0020723 ref 12.0020833 err 1.100e-05 (float accumulation over 721 frames, worst-case bound 3.448e-04); uptime: observed 12.0020838 ref 12.0020833 err 4.450e-07
+[policy-hz] ticks in the NaN-rate window (frames 271..360, must still run at 1000 Hz): 1500; first frame after SetFixedTimestepHz(60): 1 ticks
+  [doctest] test cases:  1 |  1 passed | 0 failed | 466 skipped
+  [doctest] assertions: 27 | 27 passed | 0 failed |
+--- N02-policy-scale-inf.out.log ---
+[policy-scale-inf] frames=361 ticks direct/plugin/ref=360/360/360 maxTicksInFrame direct/plugin=1/1 zeroTickFrames=1 twoPlusTickFrames=0 realSeconds=0.410341
+[policy-scale-inf] per-frame OnUpdate dt error max: direct 8.692e-10 (frame 1) plugin 8.692e-10 (frame 1); frames over the float bar: 0
+[policy-scale-inf] plugin local time: observed 6.00210667 ref 6.00208333 err 2.333e-05 (float accumulation over 361 frames, worst-case bound 8.707e-05); uptime: observed 6.00208378 ref 6.00208333 err 4.450e-07
+  [doctest] test cases:  1 |  1 passed | 0 failed | 466 skipped
+  [doctest] assertions: 21 | 21 passed | 0 failed |
+--- N02-policy-scale-nan.out.log ---
+[policy-scale-nan] frames=361 ticks direct/plugin/ref=360/360/360 maxTicksInFrame direct/plugin=1/1 zeroTickFrames=1 twoPlusTickFrames=0 realSeconds=0.404920
+[policy-scale-nan] per-frame OnUpdate dt error max: direct 8.692e-10 (frame 1) plugin 8.692e-10 (frame 1); frames over the float bar: 0
+[policy-scale-nan] plugin local time: observed 6.00210667 ref 6.00208333 err 2.333e-05 (float accumulation over 361 frames, worst-case bound 8.707e-05); uptime: observed 6.00208378 ref 6.00208333 err 4.450e-07
+[policy-scale-nan] ticks while NaN was requested: 120; after SetTimeScale(1): 120
+  [doctest] test cases:  1 |  1 passed | 0 failed | 466 skipped
+  [doctest] assertions: 22 | 22 passed | 0 failed |
+--- N02-policy-scale-negative.out.log ---
+[policy-scale-negative] frames=481 ticks direct/plugin/ref=480/480/480 maxTicksInFrame direct/plugin=1/1 zeroTickFrames=1 twoPlusTickFrames=0 realSeconds=0.459022
+[policy-scale-negative] per-frame OnUpdate dt error max: direct 8.692e-10 (frame 1) plugin 8.692e-10 (frame 1); frames over the float bar: 0
+[policy-scale-negative] plugin local time: observed 8.00213337 ref 8.00208333 err 5.004e-05 (float accumulation over 481 frames, worst-case bound 2.304e-04); uptime: observed 8.00208378 ref 8.00208333 err 4.450e-07
+[policy-scale-negative] ticks while -1 was requested: 180; ticks in the 3 s after SetTimeScale(1): 180 (declared 180 / 180; before WO-10: 0 / 0 ƒ?" a 3 s restart debt)
+  [doctest] test cases:  1 |  1 passed | 0 failed | 466 skipped
+  [doctest] assertions: 25 | 25 passed | 0 failed |

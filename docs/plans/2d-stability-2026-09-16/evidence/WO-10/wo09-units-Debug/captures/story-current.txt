@@ -1,0 +1,18 @@
+# story seed=151279368 case=1999
+{
+  "cosmic_story": 1,
+  "start": "Intro",
+  "variables": [ { "name": "Gold", "type": "number", "default": 5 } ],
+  "nodes": [
+    { "name": "Intro", "speaker": "Guard", "text": "Halt.", "portrait": "p.png", "background": "b.png", "audio": "a.wav",
+      "onEnter": ["intro"], "onExit": ["left"],
+      "options": [ { "text": "Pay", "next": "Paid", "if": { "var": "Gold", "op": ">=", "value": 10 } },
+                   { "text": "Fight", "~ext": "Fight" },
+                   { "text": "Secret", "next": "Secret", "once": true } ],
+      "editor": { "pos": [1, 2] } },
+    { "name": "Paid",   "onEnter": ["paid"],   "options": [ { "text": "Go", "next": "End" } ] },
+    { "name": "Fight",  "onEnter": ["fought"], "options": [ { "text": "Go", "next": "End" } ] },
+    { "name": "Secret", "options": [ { "text": "Back", "next": "Intro" } ] },
+    { "name": "End",    "text": "Done.", "options": [ { "text": "Finish", "next": "@end" } ] }
+  ]
+}

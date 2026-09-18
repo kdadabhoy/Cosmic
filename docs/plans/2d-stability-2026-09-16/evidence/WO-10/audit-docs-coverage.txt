@@ -1,0 +1,19 @@
+DOCS COVERAGE FAILURE - public headers with no row in docs/reference/README.md:
+  serial/ISerialTransport.h: reachable from Cosmic.h via serial/SerialPort.h - no manifest row
+  utils/AtomicOutput.h: not reachable from Cosmic.h; explicitly included by tests/test_wo06.cpp - no manifest row
+
+  Suggested manifest rows (fill in CHAPTER):
+    | `serial/ISerialTransport.h` | [CHAPTER](CHAPTER) |
+    | `utils/AtomicOutput.h` | [CHAPTER](CHAPTER) |
+
+WARNING - skeleton chapters with uncovered COSMIC_API symbols (strict mode turns on when the STATUS: SKELETON banner is deleted):
+  docs/reference/assets-io.md: STATUS: SKELETON - 1 COSMIC_API name(s) not covered yet
+      never mentions COSMIC_API ImportSettings (declared in assets/MeshImport.h)
+  docs/reference/jobs.md: STATUS: SKELETON - 1 COSMIC_API name(s) not covered yet
+      never mentions COSMIC_API ISystemQuery (declared in jobs/ParallelSystem.h)
+  docs/reference/rendering-pipeline.md: STATUS: SKELETON - 2 COSMIC_API name(s) not covered yet
+      never mentions COSMIC_API SceneDrawContext (declared in renderer/SceneRenderer.h)
+      never mentions COSMIC_API SceneRenderDesc (declared in renderer/SceneRenderer.h)
+
+2 coverage violation(s): 2 unlisted header(s), 0 stale row(s), 0 malformed row(s), 0 marker mismatch(es), 0 missing chapter file(s), 0 strict-mode gap(s).
+Add the row to the manifest in docs/reference/README.md (and an entry in its chapter), or justify the header in $internalHeaders.
