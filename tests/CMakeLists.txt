@@ -78,6 +78,9 @@ set(COSMIC_TEST_SOURCES
     # real SerialPort/SerialLink state machine over FakeSerialTransport (tests/ only),
     # reaching the connected state and making KI-4's teardown join observable.
     test_serial_seam.cpp
+    # WO-07 (2D stability) — L01 runtime-plugin (F-LIFETIME) teardown host. Skipped
+    # by default (needs a real Application/window/GL); the WO-04 runner launches it.
+    test_wo07_host.cpp
     test_wo05_matrix.cpp
     test_wo05_kiss.cpp
     test_wo05_host.cpp
@@ -158,6 +161,14 @@ target_compile_definitions(WO06HostFixture PRIVATE COSMIC_WO05_HOST_FIXTURE)
 set_target_properties(WO06HostFixture PROPERTIES RUNTIME_OUTPUT_DIRECTORY
     "${COSMIC_SDK_DIR}/build/Runtime/$<CONFIG>")
 add_dependencies(CosmicTests WO06HostFixture)
+
+# WO-07 (2D stability) — the F-LIFETIME runtime plugin (L01). A standalone project
+# DLL that owns one of every leakable resource class; test_wo07_host loads/unloads it.
+add_library(WO07LifetimeFixture SHARED WO07LifetimeFixture.cpp)
+target_link_libraries(WO07LifetimeFixture PRIVATE Cosmic)
+set_target_properties(WO07LifetimeFixture PROPERTIES RUNTIME_OUTPUT_DIRECTORY
+    "${COSMIC_SDK_DIR}/build/Runtime/$<CONFIG>")
+add_dependencies(CosmicTests WO07LifetimeFixture)
 
 target_link_libraries(CosmicTests PRIVATE Cosmic)
 target_include_directories(CosmicTests PRIVATE "${COSMIC_SDK_DIR}/Cosmic/dependencies/doctest")

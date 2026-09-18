@@ -1,0 +1,25 @@
+{
+  "manifest": "wo07-l01",
+  "cases": [
+    {
+      "id": "L01",
+      "description": "F-LIFETIME runtime-plugin teardown: 100 real load/unload cycles (TransitionToLauncher unload) + 10 fresh launches/closes. Each child asserts OnDetach before destructors before FreeLibrary, every owned resource (texture, framebuffer, module component, EntitySelection listener, log sink, job, file watcher) released, no callback after unload, and scenario-owned threads back to the warmed baseline.",
+      "tier": "G",
+      "profiles": ["gpu", "release"],
+      "requires": ["windows", "gpu-gl"],
+      "command": "powershell",
+      "workingDir": "{BIN}",
+      "args": [
+        "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
+        "{ACCEPTANCE}\\fixtures\\Run-WO07Lifetime.ps1",
+        "-Bin", "{BIN}",
+        "-Output", "{REPO}\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-07\\l01-runner-{CONFIG}",
+        "-ReloadCount", "100", "-FreshCount", "10"
+      ],
+      "expectExit": 0,
+      "minTests": 110,
+      "deadlineSec": 1200,
+      "fixture": "../../tests/WO07LifetimeFixture.cpp"
+    }
+  ]
+}

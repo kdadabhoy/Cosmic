@@ -1,0 +1,16 @@
+WO-07 L01 — F-LIFETIME runtime-plugin teardown, acceptance-runner summary.
+(Full per-child .out.log files are gitignored; the runner verdict is in l01-<cfg>/results/results.json.)
+
+=== Debug (l01-Debug/results/L01.out.log) ===
+reload cycles completed=100
+fresh launch/close cycles completed=10
+[doctest] test cases: 110 | 110 passed | 0 failed
+
+=== Release (l01-Release/results/L01.out.log) ===
+reload cycles completed=100
+fresh launch/close cycles completed=10
+[doctest] test cases: 110 | 110 passed | 0 failed
+
+=== runner verdicts ===
+Debug   "verdict":  "PASSED"
+Release "verdict":  "PASSED"

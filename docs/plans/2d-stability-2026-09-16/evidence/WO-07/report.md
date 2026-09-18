@@ -110,7 +110,47 @@ separate follow-up and is unrelated to the WO-07 changes.
 | Case | Status | Notes |
 |---|---|---|
 | KI-1 | **PASS (Debug + Release, via runner)** | Real editor control; failing-before/passing-after both configs. |
+| L01 | **PASS (Debug + Release, via runner)** | F-LIFETIME runtime-plugin teardown, 100 reload + 10 fresh cycles per config; see below. |
 | L05 (stack-balance oracle) | **Mechanism delivered + demonstrated** | Per-widget colour-stack oracle on the real editor viewport strip, Release-safe; see above. |
+
+## L01 — runtime-plugin (F-LIFETIME) teardown
+
+`WO07LifetimeFixture.dll` is a real project DLL loaded by the real `Application` (adopting
+the host's ImGui/ImPlot contexts). It owns one of every leakable resource class — a GPU
+**texture**, a GPU **framebuffer**, a module-owned **component** object, an
+**EntitySelection listener**, a **log sink**, a **JobSystem job**, and a **file watcher** —
+and records each create/release into an **exe-owned** report (so the counts survive
+`FreeLibrary`). `test_wo07_host.cpp` drives two runtime load/unload shapes:
+
+- **reload** — after warmup the fixture calls `Application::TransitionToLauncher()` (the real
+  `UnloadProjectDLL` path); the host then runs quiescence frames in the launcher and fires a
+  **post-unload** `EntitySelection` change.
+- **fresh launch/close** — after warmup it closes the window; the full `Application::Shutdown`
+  unloads the plugin.
+
+After `Run()` the host asserts, from the surviving report:
+- **destruction order** — `seqDetach < seqDestroy` (OnDetach ran, then the module-owned
+  destructors ran) and both completed before `Run()` returned, i.e. before `FreeLibrary`;
+- **owned resources balanced** — `texCreated==texFreed`, `fboCreated==fboFreed`,
+  `componentDestroyed==1`, `sinkAdded==sinkRemoved`, `listenerSubscribed==listenerUnsubscribed`,
+  `jobSubmitted==jobRan`, `watcherStarted==watcherStopped`;
+- **no callback after unload** — the fixture listener fired twice while live and **zero** times
+  after unload; the host's own listener DID see the post-unload emit (so the probe is
+  non-vacuous, and the freed fixture callback was never invoked — no crash);
+- **scenario threads back to the warmed baseline** — the file-watcher worker appears at warmup
+  (`warmedThreads > baselineThreads`) and is gone after quiescence (`postThreads == baselineThreads`);
+  process handle count did not grow across the cycle (finite GL/driver caches are logged, not gated).
+
+Driven through the runner as case `L01`
+(`manifests/wo07-l01.manifest.json` + `fixtures/Run-WO07Lifetime.ps1`): **100 reload + 10 fresh**
+isolated child processes per config, evidence under `l01-Debug/` and `l01-Release/`.
+
+Teardown-contract note surfaced while building this (not a defect, a caveat worth recording):
+`Application::Shutdown` tears down the **JobSystem before it unloads the project DLL**
+(`Application.cpp:385` then `:407`), so a plugin that submits work must not `WaitIdle()` in
+`OnDetach` on the full-shutdown path — the fixture settles its job during warmup instead. A
+plugin file watcher must also watch a **quiet** directory, not a volatile one the app writes to
+during shutdown, or its change events race the watcher's own teardown.
 
 **Contracts reviewed (destruction-order / reload semantics confirmed by reading current control flow):**
 
@@ -136,7 +176,6 @@ separate follow-up and is unrelated to the WO-07 changes.
 
 | Case | Status | What remains |
 |---|---|---|
-| L01 | **Not executed** | An F-LIFETIME plugin-fixture DLL (texture, framebuffer, script/component, listener, log sink, job, watcher, optional audio + observable lifetime/serial counters) + a 100-cycle host harness (WO-05 host pattern) asserting destruction-order, no-callback-after-unload, and owned-resource balance vs a warmed baseline. |
 | L02 | **Not executed** | 50 real Starforge game-module rebuild/reload cycles (≥10 reflected-field changes) through the actual `BuildRunner` + a scaffolded project, independently comparing preserved serialized fields. Heaviest case (50 real compiles). |
 | L03 | **Not executed** | A host harness driving each failure (missing DLL/export, null `CreatePluginLayer`, failed compile, failed module load) and asserting recoverable host/UI + preserved edit-scene data. |
 | L04 | **Not executed** | Teardown during live jobs/watcher notifications/selection-event-log callbacks/audio/hotkeys, with barriers + ownership counters. |
