@@ -93,6 +93,16 @@ set(COSMIC_TEST_SOURCES
     # and R06 (CPU PNG encode/decode against an independent hand-built PNG oracle).
     test_wo08_camera.cpp
     test_wo08_png.cpp
+    # WO-09 (2D stability) — authored 2D content + shared services, the headless
+    # halves of C01–C06 (sprites, tilemaps, UI, flow/story/events + parser fuzz,
+    # scene/prefab/material/config JSON + F-CORRUPT, EnTT/jobs/scripts/assets/
+    # watcher/audio lifetimes). Shared helpers: wo09_tilemap_oracle.h, wo09_fuzz.h.
+    test_wo09_c01_sprites.cpp
+    test_wo09_c02_tilemap.cpp
+    test_wo09_c03_ui.cpp
+    test_wo09_c04_graphs.cpp
+    test_wo09_c05_json.cpp
+    test_wo09_c06_services.cpp
     test_wo05_matrix.cpp
     test_wo05_kiss.cpp
     test_wo05_host.cpp
@@ -223,11 +233,16 @@ add_dependencies(CosmicTests WO07UiCyclesFixture)
 
 target_link_libraries(CosmicTests PRIVATE Cosmic)
 target_include_directories(CosmicTests PRIVATE "${COSMIC_SDK_DIR}/Cosmic/dependencies/doctest")
+# WO-09 — the fuzzer (tests/wo09_fuzz.h) mutates documents through nlohmann::json,
+# which the engine keeps PRIVATE; the tests reach the single header directly.
+target_include_directories(CosmicTests PRIVATE "${COSMIC_SDK_DIR}/Cosmic/dependencies")
 
 # Newer MSVC (C5285) rejects doctest's forward-declarations of std types in
 # namespace std; this makes doctest include the real <string>/<tuple> instead.
 target_compile_definitions(CosmicTests PRIVATE DOCTEST_CONFIG_USE_STD_HEADERS)
 target_compile_definitions(CosmicTests PRIVATE COSMIC_WO06_FIXTURES="${CMAKE_CURRENT_SOURCE_DIR}/acceptance/fixtures/wo06")
+# WO-09 — the F-CONTENT project + F-CORRUPT regression fixtures (source tree, committed).
+target_compile_definitions(CosmicTests PRIVATE COSMIC_WO09_FIXTURES="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/wo09")
 
 # Land next to Cosmic.dll so the exe runs without PATH games.
 set_target_properties(CosmicTests PROPERTIES

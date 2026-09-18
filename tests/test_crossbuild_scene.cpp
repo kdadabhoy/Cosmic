@@ -33,7 +33,11 @@
 #endif
 #include "scene/SceneSerializer.h"
 
+#include <algorithm>
+#include <filesystem>
 #include <string>
+#include <utility>
+#include <vector>
 
 using namespace Cosmic;
 
@@ -269,6 +273,91 @@ TEST_CASE("2D engine: 3D components are NOT resurrected as real components")
 
     // MeshRenderer, DirectionalLight, Terrain, TotallyUnknownFutureComponent.
     CHECK(opaqueCount == 4);
+}
+
+
+// =============================================================================
+// WO-09 C05 (2D stability): the preservation obligation across TWO full 2D
+// load -> edit -> save -> load cycles, and through the prefab path.
+// =============================================================================
+
+TEST_CASE("2D engine (WO-09 C05): unknown AND 3D blocks survive two load->edit->save->load cycles and a prefab instantiate, byte for byte")
+{
+    // Cycle 1: load the 3D-authored scene, make a 2D edit (move the mesh holder,
+    // give it a sprite), save.
+    Scene s1;
+    REQUIRE(SceneSerializer::LoadFromString(s1, kAuthoredScene));
+    {
+        Entity holder;
+        for (auto h : s1.GetRegistry().view<TagComponent>())
+            if (s1.GetRegistry().get<TagComponent>(h).Tag == "MeshHolder") holder = Entity{ h, &s1 };
+        REQUIRE(holder);
+        holder.GetComponent<TransformComponent>().Position = { 9.0f, 8.0f, 7.0f };
+        holder.AddComponent<SpriteRendererComponent>().ZOrder = 3;
+    }
+    const std::string pass1 = SceneSerializer::SaveToString(s1);
+
+    // Cycle 2: load what the 2D editor saved, edit again, save again.
+    Scene s2;
+    REQUIRE(SceneSerializer::LoadFromString(s2, pass1));
+    {
+        Entity sun;
+        for (auto h : s2.GetRegistry().view<TagComponent>())
+            if (s2.GetRegistry().get<TagComponent>(h).Tag == "Sun") sun = Entity{ h, &s2 };
+        REQUIRE(sun);
+        sun.GetComponent<TagComponent>().Tag = "Sun2";
+    }
+    const std::string pass2 = SceneSerializer::SaveToString(s2);
+    Scene s3;
+    REQUIRE(SceneSerializer::LoadFromString(s3, pass2));
+    const std::string pass3 = SceneSerializer::SaveToString(s3);
+    CHECK(pass2 == pass3);                                            // idempotent after the edits
+
+    // Every opaque block is byte-identical between the two saves (the edits
+    // touched only real 2D components), and equal to the authored values.
+    auto opaqueBlocks = [](Scene& s) {
+        std::vector<std::pair<std::string, std::string>> out;
+        for (auto h : s.GetRegistry().view<OpaqueComponentsComponent>())
+            for (const auto& b : s.GetRegistry().get<OpaqueComponentsComponent>(h).Blocks)
+                out.push_back(b);
+        std::sort(out.begin(), out.end());
+        return out;
+    };
+    const auto b1 = opaqueBlocks(s1), b2 = opaqueBlocks(s2), b3 = opaqueBlocks(s3);
+    REQUIRE(b1.size() == 4);
+    CHECK(b1 == b2);
+    CHECK(b2 == b3);
+    const std::string sq = Squeeze(pass2);
+    CHECK(Contains(sq, "\"MeshPath\":\"assets/models/crate.obj\""));
+    CHECK(Contains(sq, "\"CastShadows\":false"));
+    CHECK(Contains(sq, "\"Direction\":[-0.4,-1.0,-0.2]"));
+    CHECK(Contains(sq, "\"Resolution\":257.0"));
+    CHECK(Contains(sq, "\"Nested\":{\"Deep\":[1,2,3]}"));
+    CHECK(Contains(sq, "\"Text\":\"survives every build\""));
+    CHECK(Contains(sq, "\"Position\":[9.0,8.0,7.0]"));               // the 2D edit landed
+    CHECK(Contains(sq, "\"Tag\":\"Sun2\""));
+    CHECK(Contains(sq, "\"ZOrder\":3"));
+
+    // Prefab path: save the mesh holder as a prefab (its MeshRenderer is opaque
+    // here), instantiate it into a fresh scene: the clone carries the block verbatim.
+    Entity holder2;
+    for (auto h : s2.GetRegistry().view<TagComponent>())
+        if (s2.GetRegistry().get<TagComponent>(h).Tag == "MeshHolder") holder2 = Entity{ h, &s2 };
+    REQUIRE(holder2);
+    const std::string prefabPath = (std::filesystem::temp_directory_path() / "wo09-c05-crossbuild.cprefab").string();
+    REQUIRE(SceneSerializer::SavePrefab(s2, holder2, prefabPath));
+    Scene target;
+    Entity inst = SceneSerializer::InstantiatePrefab(target, prefabPath);
+    std::error_code ec; std::filesystem::remove(prefabPath, ec);
+    REQUIRE(inst);
+    REQUIRE(inst.HasComponent<OpaqueComponentsComponent>());
+    const auto& blocks = inst.GetComponent<OpaqueComponentsComponent>().Blocks;
+    REQUIRE(blocks.size() == 1);
+    CHECK(blocks[0].first == "MeshRenderer");
+    CHECK(Contains(Squeeze(blocks[0].second), "\"MeshPath\":\"assets/models/crate.obj\""));
+    CHECK(inst.GetComponent<IDComponent>().ID.Value() != holder2.GetComponent<IDComponent>().ID.Value());   // fresh UUID
+    CHECK(inst.HasComponent<SpriteRendererComponent>());
+    CHECK(Contains(Squeeze(SceneSerializer::SaveToString(target)), "\"CastShadows\":false"));
 }
 
 #else

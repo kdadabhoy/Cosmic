@@ -1,0 +1,62 @@
+{
+  "manifest": "wo09-retained",
+  "cases": [
+    {
+      "id": "retained-units",
+      "description": "The retained headless suite exactly as WO-08 left it (400 cases = 388 pre-WO-08 + 12 WO-08; every WO-09 case excluded by name), rerun after the WO-09 engine changes (the painter comparator, SelectFrame, the iterative hierarchy walkers + Scene::kMaxHierarchyDepth, the Flow/Story loader try scopes, the SceneSerializer nesting gate + duplicate-id policy, the ScriptHost destroy hook, the JobSystem stop-flag reset, the FlowMachine deque). test_crossbuild_scene's WO-09 extension is named '2D engine (WO-09 C05) ...' and is therefore INCLUDED here as a retained-obligation extension, so the expected count is 401 (400 retained + 1).",
+      "tier": "U",
+      "profiles": ["retained", "pr", "release"],
+      "requires": ["windows"],
+      "command": "powershell",
+      "workingDir": "{BIN}",
+      "args": [
+        "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
+        "{ACCEPTANCE}\\fixtures\\Run-WO09Case.ps1",
+        "-Bin", "{BIN}", "-CaseId", "retained-units", "-TestCaseExclude", "WO-09 *", "-MinTests", "401", "-DeadlineSec", "1800",
+        "-Output", "{REPO}\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-09\\retained-units-{CONFIG}"
+      ],
+      "expectExit": 0,
+      "minTests": 401,
+      "deadlineSec": 1860,
+      "fixture": "../../tests/test_crossbuild_scene.cpp"
+    },
+    {
+      "id": "retained-goldens",
+      "description": "The six pre-WO-08 2D golden cases (sprites, tilemap, light2d, light2d A/B, ui, scene2d) through the wrapper's before/after SHA-256 of tests/render/goldens: all 17 goldens must be byte-unchanged and no .actual/.diff diagnostics may appear.",
+      "tier": "G",
+      "profiles": ["retained", "gpu", "release"],
+      "requires": ["windows", "gpu-gl"],
+      "command": "powershell",
+      "workingDir": "{BIN}",
+      "args": [
+        "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
+        "{ACCEPTANCE}\\fixtures\\Run-WO09Case.ps1",
+        "-Bin", "{BIN}", "-Exe", "CosmicRenderTests.exe", "-CaseId", "retained-goldens", "-TestSuite", "2D goldens", "-Tier", "G", "-Requires", "windows,gpu-gl", "-MinTests", "6", "-DeadlineSec", "120",
+        "-Output", "{REPO}\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-09\\retained-goldens-{CONFIG}"
+      ],
+      "expectExit": 0,
+      "minTests": 6,
+      "deadlineSec": 180,
+      "golden": "{REPO}\\tests\\render\\goldens\\sprites.png"
+    },
+    {
+      "id": "retained-wo08-gpu",
+      "description": "The 24 WO-08 render cases (R01-R06 = 22 run + the 2 R07 perf cases, which stay skip(true) here) rerun after the WO-09 engine changes, with the golden dir hashed before/after (wo08_primitives / wo08_text / instancing2d byte-unchanged).",
+      "tier": "G",
+      "profiles": ["retained", "gpu", "release"],
+      "requires": ["windows", "gpu-gl"],
+      "command": "powershell",
+      "workingDir": "{BIN}",
+      "args": [
+        "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
+        "{ACCEPTANCE}\\fixtures\\Run-WO09Case.ps1",
+        "-Bin", "{BIN}", "-Exe", "CosmicRenderTests.exe", "-CaseId", "retained-wo08-gpu", "-TestSuite", "WO-08*", "-Tier", "G", "-Requires", "windows,gpu-gl", "-MinTests", "22", "-DeadlineSec", "900",
+        "-Output", "{REPO}\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-09\\retained-wo08-{CONFIG}"
+      ],
+      "expectExit": 0,
+      "minTests": 22,
+      "deadlineSec": 960,
+      "golden": "{REPO}\\tests\\render\\goldens\\instancing2d.png"
+    }
+  ]
+}

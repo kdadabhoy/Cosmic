@@ -139,6 +139,16 @@ function Get-AcceptanceCapabilities {
     # a headless runner.
     $caps['editor-ui'] = $false
 
+    # WO-09 (C06 audible lifecycle): a working sound device per Win32_SoundDevice.
+    # Absent (CI runner, RDP session, no audio hardware) => ENVIRONMENT_BLOCKED for the
+    # cases that require it - never a phantom pass through AudioEngine's no-op path.
+    $hasAudio = $false
+    try {
+        $hasAudio = @(Get-CimInstance Win32_SoundDevice -ErrorAction Stop |
+            Where-Object { $_.Status -eq 'OK' }).Count -gt 0
+    } catch { }
+    $caps['audio-device'] = $hasAudio
+
     $forced = @()
     foreach ($d in $Disable) {
         if ($caps.Contains($d)) { $caps[$d] = $false; $forced += $d }

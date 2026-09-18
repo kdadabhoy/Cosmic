@@ -1,0 +1,25 @@
+{
+  "manifest": "wo09-editor",
+  "cases": [
+    {
+      "id": "C05-I",
+      "description": "The real-project lifecycle inside the REAL Starforge editor (Projects/Starforge/src/C05ProjectLifecycleSelfTest.cpp): NewProjectAt scaffolds a project; Commands::Create/AddComponent/SetField/TileEdit author a sprite, a painted tilemap, a canvas + button and a 2D light; a PNG asset is imported into project://textures and referenced; the F-CONTENT prefab (3D MeshRenderer + DirectionalLight blocks, an unknown FutureThing block, a child) is imported through the K13 drop path (InstantiatePrefab + RecordSpawn); SaveScene; CloseProject + OpenProjectPath reloads from disk with every entity found by UUID, every field intact, the 3D/unknown blocks verbatim and no stale link; PlayScene, 30 frames of runtime drift, StopScene restores the untouched edit scene; Commands::Destroy + Undo (same UUID/fields) + Redo + Undo, a SetField undo/redo; Commands::Destroy on the tilemap, SaveScene; the final file reloads inside the deadline. The wrapper then parses the saved scenes/Main.cscene OUT OF PROCESS against the expected table (present/absent ids, fields, parent links, verbatim 3D/unknown blocks, no duplicate ids).",
+      "tier": "I",
+      "profiles": ["gpu", "release"],
+      "requires": ["windows", "gpu-gl"],
+      "command": "powershell",
+      "workingDir": "{BIN}",
+      "args": [
+        "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
+        "{ACCEPTANCE}\\fixtures\\Run-WO09Lifecycle.ps1",
+        "-Bin", "{BIN}",
+        "-Output", "{REPO}\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-09\\c05i-{CONFIG}",
+        "-ProjectRoot", "{RUNTEMP}\\c05"
+      ],
+      "expectExit": 0,
+      "minTests": 2,
+      "deadlineSec": 300,
+      "fixture": "../../tests/fixtures/wo09/content/prefabs/Imported.cprefab"
+    }
+  ]
+}

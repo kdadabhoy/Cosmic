@@ -1,0 +1,1 @@
+{"cosmic_flow":1,"start":"A","states":[{"name":"A","transitions":[{"on":"x","to":"A","push":""}]}]}

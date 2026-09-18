@@ -365,6 +365,20 @@ namespace Starforge
         void L02SelfTestOnModuleUnloaded(const std::string& oldStem);
         void L02SelfTestOnModuleLoaded(bool ok);
 
+        // WO-09 (2D stability) — C05 real-project lifecycle harness. Gated ON only
+        // when COSMIC_C05_SELFTEST=<result-file> is set. Scaffolds a real project
+        // (NewProjectAt), then drives create -> import (a prefab with unknown + 3D
+        // blocks and a PNG asset) -> save -> reopen (CloseProject/OpenProjectPath) ->
+        // play -> stop -> undo -> redo -> delete through the real editor commands,
+        // asserting no user-data loss / no stale entity reference after each step,
+        // and writes an expected table the runner wrapper checks against the saved
+        // scene OUT OF PROCESS. Defined in C05ProjectLifecycleSelfTest.cpp.
+        struct C05LifecycleSelfTest;
+        C05LifecycleSelfTest* m_C05 = nullptr;
+        void C05SelfTestInit();
+        void C05SelfTestTick();
+        void C05SelfTestShutdown();
+
         // WO-07 (2D stability) — L05 editor scripted UI cycles. Gated ON only when
         // COSMIC_L05_SELFTEST=<result-file> is set. Drives the real viewport-strip chips
         // (mouse events at the probed rects), layout presets, viewport show/hide, Play,

@@ -29,6 +29,12 @@ add_executable(CosmicRenderTests
     render_wo08_rtt.cpp
     render_wo08_capture.cpp
     render_wo08_perf.cpp
+    # WO-09 (2D stability) — authored 2D content on the GPU: sprite ordering/flips/
+    # nonfinite transforms (C01), the tilemap walk against the independent visible-
+    # cell oracle (C02), UI counts + 2D lights on odd buffers (C03). No new goldens.
+    render_wo09_sprites.cpp
+    render_wo09_tilemap.cpp
+    render_wo09_ui_lights.cpp
 )
 
 # WO-08 custom-shader fixtures (tint variants of the batch/instanced shaders) live

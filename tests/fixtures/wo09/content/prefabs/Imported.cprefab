@@ -1,0 +1,31 @@
+{
+  "cosmic_prefab": 1,
+  "root": "00000000000C0501",
+  "entities": [
+    {
+      "id": "00000000000C0501",
+      "components": {
+        "Tag": { "Tag": "Imported" },
+        "Transform": { "Position": [ -2.0, 1.0, 0.0 ], "Scale": [ 2.0, 2.0, 1.0 ] },
+        "SpriteRenderer": { "Color": [ 0.2, 0.9, 0.4, 1.0 ], "ZOrder": 4 },
+        "MeshRenderer": {
+          "MeshPath": "assets/models/crate.obj",
+          "MaterialPath": "assets/materials/crate.cmat",
+          "CastShadows": false,
+          "Color": [ 0.25, 0.5, 0.75, 1.0 ]
+        },
+        "FutureThing": { "Flag": true, "Nested": { "Deep": [ 1, 2, 3 ] }, "Text": "survives every build" },
+        "Relationship": { "Children": [ "00000000000C0502" ] }
+      }
+    },
+    {
+      "id": "00000000000C0502",
+      "components": {
+        "Tag": { "Tag": "ImportedChild" },
+        "Transform": { "Position": [ 0.5, 0.5, 0.0 ] },
+        "Light2D": { "Radius": 2.5, "Intensity": 1.5 },
+        "DirectionalLight": { "Intensity": 3.5, "Direction": [ -0.4, -1.0, -0.2 ] }
+      }
+    }
+  ]
+}

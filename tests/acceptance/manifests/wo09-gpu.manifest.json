@@ -1,0 +1,62 @@
+{
+  "manifest": "wo09-gpu",
+  "cases": [
+    {
+      "id": "C01-G",
+      "description": "Sprites on the GPU (Scene::OnRenderSprites, pixel camera, the pass's own depth/blend state): an overlapping chain of 60 equal-key index-coded sprites draws in exactly BuildSpriteDrawList order before and after entity-slot recycling (the documented entt-handle tie-break), a NaN-keyed sprite sorts last and changes no pixel (KI-40); FlipX / FlipY / both move a 2x2 texture's quadrants exactly, negative scale equals FlipX, zero scale draws nothing; NaN / inf position, scale and rotation produce NO fragments anywhere while the finite sentinels around them are fully painted. No new golden.",
+      "tier": "G",
+      "profiles": ["gpu", "nightly", "release"],
+      "requires": ["windows", "gpu-gl"],
+      "command": "powershell",
+      "workingDir": "{BIN}",
+      "args": [
+        "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
+        "{ACCEPTANCE}\\fixtures\\Run-WO09Case.ps1",
+        "-Bin", "{BIN}", "-Exe", "CosmicRenderTests.exe", "-CaseId", "C01-G", "-TestSuite", "WO-09 C01", "-Tier", "G", "-Requires", "windows,gpu-gl", "-MinTests", "3", "-DeadlineSec", "120",
+        "-Output", "{REPO}\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-09\\c01g-{CONFIG}"
+      ],
+      "expectExit": 0,
+      "minTests": 3,
+      "deadlineSec": 180,
+      "fixture": "../../tests/render/render_wo09_sprites.cpp"
+    },
+    {
+      "id": "C02-G",
+      "description": "Tilemaps on the GPU: the 1,048,576-cell map's walked/drawn cell counts equal the independent visible-cell oracle (wo09_tilemap_oracle.h) at seven views (small window, 200x112, a corner, whole map + margin, fully outside = 0, just outside = 0, extreme zoom-out = all 786,432 non-empty cells in exactly 79 batched draws); a partial-cover camera edge with per-cell colour sentinels (every fully visible cell's centre shows its atlas tile, the margin is clear, the count is bracketed by the exact and the 1e-3-widened walks); tile ids 17/255/65535 past the atlas, Columns=0 auto-derive (pixel-identical), null texture / zero and negative tile size skipped, and the 10,000-quad seam (10,100 cells, 2 draws, both seam cells painted).",
+      "tier": "G",
+      "profiles": ["gpu", "nightly", "release"],
+      "requires": ["windows", "gpu-gl"],
+      "command": "powershell",
+      "workingDir": "{BIN}",
+      "args": [
+        "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
+        "{ACCEPTANCE}\\fixtures\\Run-WO09Case.ps1",
+        "-Bin", "{BIN}", "-Exe", "CosmicRenderTests.exe", "-CaseId", "C02-G", "-TestSuite", "WO-09 C02", "-Tier", "G", "-Requires", "windows,gpu-gl", "-MinTests", "3", "-DeadlineSec", "300",
+        "-Output", "{REPO}\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-09\\c02g-{CONFIG}"
+      ],
+      "expectExit": 0,
+      "minTests": 3,
+      "deadlineSec": 360,
+      "fixture": "../../tests/wo09_tilemap_oracle.h"
+    },
+    {
+      "id": "C03-G",
+      "description": "UI + 2D lights on the GPU: 2,001 controls render as exactly 2,001 quads in one draw with index-coded sentinels; a 4,200-deep canvas chain renders bounded at the ratified 4,096-node ceiling (KI-42) with the deepest laid-out node on top; an inverted rect is pinned and never hit. Lights on a white backdrop under a 0.2 ambient: zero radius / zero intensity / black colour / fully and just off-screen are byte-identical to ambient-only, a negative radius equals its positive twin, a light on the viewport edge lights the edge pixel only, 100 lights never darken below ambient, the 1/10/100/1,000-light ladder at 320x180 and 100/1,000 at 1920x1080 is timed (the ceiling proposal); odd targets 1x1 / 3x3 / 1919x1079 composite through the half-res buffer and DO light the frame; the X5 A/B byte-identity holds on every size.",
+      "tier": "G",
+      "profiles": ["gpu", "nightly", "release"],
+      "requires": ["windows", "gpu-gl"],
+      "command": "powershell",
+      "workingDir": "{BIN}",
+      "args": [
+        "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
+        "{ACCEPTANCE}\\fixtures\\Run-WO09Case.ps1",
+        "-Bin", "{BIN}", "-Exe", "CosmicRenderTests.exe", "-CaseId", "C03-G", "-TestSuite", "WO-09 C03", "-Tier", "G", "-Requires", "windows,gpu-gl", "-MinTests", "3", "-DeadlineSec", "300",
+        "-Output", "{REPO}\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-09\\c03g-{CONFIG}"
+      ],
+      "expectExit": 0,
+      "minTests": 3,
+      "deadlineSec": 360,
+      "fixture": "../../tests/render/render_wo09_ui_lights.cpp"
+    }
+  ]
+}

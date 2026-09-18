@@ -1,0 +1,157 @@
+{
+  "manifest": "wo09-units",
+  "cases": [
+    {
+      "id": "C01-U",
+      "description": "Sprites, headless: Scene::BuildSpriteDrawList at 0 / 1 / 10,000 / 20,000 items (timed; order equals an independent total-order reference), equal keys build twice identical + the pinned entt-handle tie-break (a recycled entity draws last), NaN/inf sort keys stay a deterministic permutation with NO finite-pair inversions, zero/negative/nonfinite Scale/Rotation/Color leave the list alone + the WorldSize sizing rule, a 2,000-deep chain under an inactive root is excluded and the 4,096-node activity guard is pinned, SelectFrame at loop/end/large delta (1e9..3e38, inf, NaN) + 0/1-frame clips + fps 0/-8/NaN, FrameUV out-of-range frames finite, UpdateSpriteAnimations under huge/nonfinite/negative dt.",
+      "tier": "U",
+      "profiles": ["pr", "nightly", "release"],
+      "requires": ["windows"],
+      "command": "powershell",
+      "workingDir": "{BIN}",
+      "args": [
+        "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
+        "{ACCEPTANCE}\\fixtures\\Run-WO09Case.ps1",
+        "-Bin", "{BIN}", "-CaseId", "C01-U", "-TestSuite", "WO-09 C01 sprites (headless)", "-MinTests", "8", "-DeadlineSec", "120",
+        "-Output", "{REPO}\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-09\\c01u-{CONFIG}"
+      ],
+      "expectExit": 0,
+      "minTests": 8,
+      "deadlineSec": 180,
+      "fixture": "../../tests/test_wo09_c01_sprites.cpp"
+    },
+    {
+      "id": "C02-U",
+      "description": "Tilemaps, headless: EnsureCells at 0 / -1 / 1 / 1024 / 1025 / kMaxGrid+1 / INT_MIN / INT_MAX (1025 is clamped, never a 1025-wide map), the 1,048,576-cell maximum map (EnsureCells time, 2 MiB buffer, a full serializer round-trip timed and cell-exact), the SHORT-Cells buffer crash vector (At / FloodFill / EnsureCells never read past the buffer), serializer handling of Cells shorter/longer than the grid, ragged values, GridW 1025 / 0 / -7 / 1e9 and a non-array Cells block, and the independent visible-cell oracle (wo09_tilemap_oracle.h) on the catalog's pinned geometry.",
+      "tier": "U",
+      "profiles": ["pr", "nightly", "release"],
+      "requires": ["windows"],
+      "command": "powershell",
+      "workingDir": "{BIN}",
+      "args": [
+        "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
+        "{ACCEPTANCE}\\fixtures\\Run-WO09Case.ps1",
+        "-Bin", "{BIN}", "-CaseId", "C02-U", "-TestSuite", "WO-09 C02 tilemaps (headless)", "-MinTests", "5", "-DeadlineSec", "120",
+        "-Output", "{REPO}\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-09\\c02u-{CONFIG}"
+      ],
+      "expectExit": 0,
+      "minTests": 5,
+      "deadlineSec": 180,
+      "fixture": "../../tests/wo09_tilemap_oracle.h"
+    },
+    {
+      "id": "C03-U",
+      "description": "UI, headless: inverted / zero / NaN / inf rectangles resolve and are never hit, 2,001 controls (exact element count, topmost hit, exactly one emit per click, timing), canvas-scale extremes (ReferenceHeight 0 / 1e-30 / 1e30 / NaN / inf; 0x0 / 1x1 / inverted viewports), the depth PROBE self-check, the depth LADDER (children of this exe at 64..65,536 levels through every hierarchy walker: UI collect, world transform, prefab gather, destroy; the 4,096-deep chain must survive) and hierarchy CYCLES (A<->B, self-child) terminating in every walker.",
+      "tier": "U",
+      "profiles": ["pr", "nightly", "release"],
+      "requires": ["windows"],
+      "command": "powershell",
+      "workingDir": "{BIN}",
+      "args": [
+        "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
+        "{ACCEPTANCE}\\fixtures\\Run-WO09Case.ps1",
+        "-Bin", "{BIN}", "-CaseId", "C03-U", "-TestSuite", "WO-09 C03 UI (headless)", "-MinTests", "6", "-DeadlineSec", "600",
+        "-Output", "{REPO}\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-09\\c03u-{CONFIG}"
+      ],
+      "expectExit": 0,
+      "minTests": 6,
+      "deadlineSec": 660,
+      "fixture": "../../tests/test_wo09_c03_ui.cpp"
+    },
+    {
+      "id": "C04",
+      "description": "Flow / Story / EventBus, headless: EventBus add/remove during emit, nested emit (50 deep, exact), clear during emit, null handlers, 10,000 listeners (unique handles, exact delivery/removal); FlowMachine ping-pong and push cycles bounded by the 100,000-iteration cascade guard (deterministic; push-cycle stack depth pinned), the double-emit self-loop inside the deadline, dangling target / missing entry / @pop on a bare stack / malformed timers / bus subscription released on Stop; StoryRunner dangling next, missing start, chosen cycles, once; seeded structural+byte FUZZ of FlowAsset and StoryGraph (2,000 cases each, seeds 0x0904F10A / 0x09045708, 2 s per-parse deadline; COSMIC_WO09_FUZZ_CASES scales it) and every committed F-CORRUPT .cflow/.cstory fixture.",
+      "tier": "U",
+      "profiles": ["pr", "nightly", "release"],
+      "requires": ["windows"],
+      "command": "powershell",
+      "workingDir": "{BIN}",
+      "args": [
+        "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
+        "{ACCEPTANCE}\\fixtures\\Run-WO09Case.ps1",
+        "-Bin", "{BIN}", "-CaseId", "C04", "-TestSuite", "WO-09 C04 graphs (headless)", "-MinTests", "8", "-DeadlineSec", "300",
+        "-Output", "{REPO}\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-09\\c04-{CONFIG}"
+      ],
+      "expectExit": 0,
+      "minTests": 8,
+      "deadlineSec": 360,
+      "fixture": "../../tests/fixtures/wo09/corrupt/fuzz-flow-0x0904F10A-0.cflow"
+    },
+    {
+      "id": "C05-U",
+      "description": "Scene / prefab / material / config JSON, headless: the F-CONTENT scene round-trips byte-stable with exact content counts, truncation at EVERY byte, bad magic / version / counts / junk entities, float-overflow and NaN laundering (pinned), 4 MiB metadata, 100,000-deep nesting, huge counts; malformed hierarchy links (cycle, self-child, a child claimed twice, missing child) load bounded and duplicate UUIDs leave no stale reference; material + config valid round-trips and edge values; seeded structural+byte FUZZ of scene / prefab / material / config (2,000 cases each, seeds 0x0905C4E5 / 0x0905B4EF / 0x0905CA47 / 0x090570A1, 2 s per-parse deadline); every committed F-CORRUPT fixture and the committed F-CONTENT project scene. The 3D/unknown-block preservation obligation runs in the retained suite (test_crossbuild_scene, extended).",
+      "tier": "U",
+      "profiles": ["pr", "nightly", "release"],
+      "requires": ["windows"],
+      "command": "powershell",
+      "workingDir": "{BIN}",
+      "args": [
+        "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
+        "{ACCEPTANCE}\\fixtures\\Run-WO09Case.ps1",
+        "-Bin", "{BIN}", "-CaseId", "C05-U", "-TestSuite", "WO-09 C05 JSON (headless)", "-MinTests", "7", "-DeadlineSec", "300",
+        "-Output", "{REPO}\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-09\\c05u-{CONFIG}"
+      ],
+      "expectExit": 0,
+      "minTests": 7,
+      "deadlineSec": 360,
+      "fixture": "../../tests/fixtures/wo09/content/scenes/Main.cscene"
+    },
+    {
+      "id": "C05-XB",
+      "description": "The 2D compatibility obligation: unknown AND 3D component blocks preserved verbatim through two 2D load -> edit -> save -> load cycles and through the prefab path (test_crossbuild_scene.cpp, WO-09 extension) plus the file's original verbatim/no-resurrection cases.",
+      "tier": "U",
+      "profiles": ["pr", "nightly", "release"],
+      "requires": ["windows"],
+      "command": "powershell",
+      "workingDir": "{BIN}",
+      "args": [
+        "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
+        "{ACCEPTANCE}\\fixtures\\Run-WO09Case.ps1",
+        "-Bin", "{BIN}", "-CaseId", "C05-XB", "-TestCase", "*2D engine*", "-MinTests", "3", "-DeadlineSec", "120",
+        "-Output", "{REPO}\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-09\\c05xb-{CONFIG}"
+      ],
+      "expectExit": 0,
+      "minTests": 3,
+      "deadlineSec": 180,
+      "fixture": "../../tests/test_crossbuild_scene.cpp"
+    },
+    {
+      "id": "C06-U",
+      "description": "Shared services, headless (6 of the suite's 7 cases — the audible one is skip(true) and runs as C06-AUDIO): EnTT component storage at 1023 / 1024 / 1025 / 4095 / 4096 / 4097 entities with deletes straddling each page (reachability, stable addresses, no contiguous run across a packed page, exact survivors, slot reuse); JobSystem 1,000-job completion + the drain-before-unload owner rule + Shutdown/re-Initialize; ScriptHost LiveCount across Instantiate / Destroy / re-Instantiate and entity destruction while live; assets/VFS (missing texture policy, Clear, Reload, project mounts); FileWatcher watch / poll / stop / destroy-while-watching / missing dir.",
+      "tier": "U",
+      "profiles": ["pr", "nightly", "release"],
+      "requires": ["windows"],
+      "command": "powershell",
+      "workingDir": "{BIN}",
+      "args": [
+        "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
+        "{ACCEPTANCE}\\fixtures\\Run-WO09Case.ps1",
+        "-Bin", "{BIN}", "-CaseId", "C06-U", "-TestSuite", "WO-09 C06 services (headless)", "-MinTests", "6", "-DeadlineSec", "240",
+        "-Output", "{REPO}\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-09\\c06u-{CONFIG}"
+      ],
+      "expectExit": 0,
+      "minTests": 6,
+      "deadlineSec": 300,
+      "fixture": "../../tests/test_wo09_c06_services.cpp"
+    },
+    {
+      "id": "C06-AUDIO",
+      "description": "Shared services, audible lifecycle (needs a sound device): AudioEngine init, a generated WAV one-shot + loops, pitch/volume/group pause, Stop / StopAll, handles never reused, Shutdown WITH two voices live, control after shutdown harmless, the Sound outliving the engine, re-Init after Shutdown. Launched with --no-skip; a machine without an audio device is ENVIRONMENT_BLOCKED by the capability probe, never a pass.",
+      "tier": "W",
+      "profiles": ["nightly", "release"],
+      "requires": ["windows", "audio-device"],
+      "command": "powershell",
+      "workingDir": "{BIN}",
+      "args": [
+        "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
+        "{ACCEPTANCE}\\fixtures\\Run-WO09Case.ps1",
+        "-Bin", "{BIN}", "-CaseId", "C06-AUDIO", "-TestCase", "WO-09 C06: audio*", "-NoSkip", "-Tier", "W", "-Requires", "windows,audio-device", "-MinTests", "1", "-DeadlineSec", "60",
+        "-Output", "{REPO}\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-09\\c06audio-{CONFIG}"
+      ],
+      "expectExit": 0,
+      "minTests": 1,
+      "deadlineSec": 120,
+      "fixture": "../../tests/test_wo09_c06_services.cpp"
+    }
+  ]
+}
