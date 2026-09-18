@@ -1,0 +1,26 @@
+{
+  "manifest": "wo06",
+  "cases": [
+    {
+      "id": "D02",
+      "tier": "W",
+      "profiles": [
+        "pr"
+      ],
+      "requires": [
+        "windows"
+      ],
+      "command": "{BIN}\\CosmicTests.exe",
+      "args": [
+        "--test-case=WO-06 D02: reverse and zero*",
+        "--no-colors"
+      ],
+      "expectExit": 0,
+      "minTests": 1,
+      "deadlineSec": 30,
+      "seed": 6,
+      "fixture": "../test_wo06.cpp",
+      "description": "WO-06 D05 production regression"
+    }
+  ]
+}

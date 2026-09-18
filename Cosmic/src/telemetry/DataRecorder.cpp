@@ -3,6 +3,7 @@
 
 #include "telemetry/DataRecorder.h"
 #include "utils/DataExport.h"
+#include "utils/AtomicOutput.h"
 #include "core/Log.h"
 
 #include <fstream>
@@ -11,6 +12,8 @@
 #include <cstring>
 #include <chrono>
 #include <ctime>
+#include <cmath>
+#include <stdexcept>
 
 namespace Cosmic
 {
@@ -65,9 +68,10 @@ namespace Cosmic
 
         EntityRecord& rec = *m_Records[id];
         const size_t chCount = rec.info.channels.size();
-        const float  t       = m_ElapsedTime.load(std::memory_order_relaxed);
-
         std::lock_guard<std::mutex> lock(rec.mutex);
+        // Sample append time after acquiring the lock: a waiting writer must not
+        // append an older pre-lock time behind a newer writer's completed row.
+        const float t = m_ElapsedTime.load(std::memory_order_relaxed);
 
         // Update live frame.
         rec.currentFrame.timestamp = t;
@@ -156,10 +160,11 @@ namespace Cosmic
 
     void DataRecorder::Tick(float dt)
     {
+        if(!std::isfinite(dt) || dt<0) return;
         m_ElapsedTime.fetch_add(dt, std::memory_order_relaxed);
 
         // Crash-failsafe autosave: periodically write a rolling snapshot so a hard
-        // crash loses at most m_AutosaveInterval of data. Non-blocking; skipped if a
+        // crash can recover the last successful publication. Skipped if a
         // flush (manual export or a previous autosave) is still in progress.
         if (m_AutosaveEnabled)
         {
@@ -236,15 +241,27 @@ namespace Cosmic
             m_FlushThread.join();
 
         m_Flushing.store(true);
+        m_FlushState.store(FlushState::Writing);
         CS_CORE_INFO("DataRecorder: Starting background flush of {} entities → '{}'.",
                      snapshots.size(), outputDir);
 
         m_FlushThread = std::thread(
             [snapshots = std::move(snapshots), outputDir, sampleRate, this,
-             barrier = m_FlushWriteBarrier]() mutable
+             barrier = m_FlushWriteBarrier, fault=GetWriteFaultForTesting()]() mutable
             {
+                // The worker is always joined; errors cannot escape std::thread.
+                struct Done { DataRecorder* owner; ~Done(){if(owner->m_FlushState.load()==FlushState::Writing) owner->m_FlushState.store(FlushState::Failed);owner->m_Flushing.store(false);} } done{this};
+                try {
+                SetWriteFaultForTesting(fault);
                 if (barrier) barrier();
                 namespace fs = std::filesystem;
+                if(!std::isfinite(sampleRate) || sampleRate<=0) throw std::runtime_error("invalid sample rate");
+                for(const auto& snap:snapshots) {
+                    if(snap.info.name.empty() || snap.info.name.size()>63 || snap.info.tag.size()>63 ||
+                       snap.info.name.find_first_of("/\\:")!=std::string::npos || snap.info.name=="." || snap.info.name=="..")
+                        throw std::runtime_error("invalid entity metadata");
+                    for(const auto& ch:snap.info.channels) if(ch.empty() || ch.size()>31) throw std::runtime_error("invalid channel metadata");
+                }
 
                 std::error_code ec;
                 fs::create_directories(outputDir, ec);
@@ -256,10 +273,11 @@ namespace Cosmic
                 }
 
                 // ==============================================================
-                // 1. Write scene.bin — v3 format with per-entity sample_count
+                // 1. Stage scene.bin — v1 format with per-entity sample_count
                 // ==============================================================
                 const std::string binPath = outputDir + "/scene.bin";
-                std::ofstream binFile(binPath, std::ios::binary);
+                AtomicOutput binary(binPath);
+                auto& binFile=binary.stream;
 
                 if (!binFile.is_open())
                 {
@@ -320,7 +338,7 @@ namespace Cosmic
                     }
                 }
 
-                binFile.close();
+                if(!binary.Finish()) throw std::runtime_error("binary write/flush/close failed");
 
                 // ==============================================================
                 // 2. Write one CSV per entity
@@ -351,8 +369,13 @@ namespace Cosmic
                         }
                     }
 
-                    DataExport::WriteCSV(csvPath, headers, columns);
+                    if(!DataExport::WriteCSV(csvPath, headers, columns)) throw std::runtime_error("CSV export failed");
                 }
+
+                // scene.bin is the authoritative complete snapshot. All serializers
+                // and stream checks finish before atomic replacement of that file.
+                if(!binary.Publish()) throw std::runtime_error("snapshot publication failed");
+                m_FlushState.store(FlushState::Succeeded);
 
                 // Log the absolute path so it's obvious on disk where the recording
                 // landed (outputDir is relative to the working dir = the exe folder).
@@ -362,6 +385,9 @@ namespace Cosmic
                              snapshots.size(),
                              absEc ? outputDir : absDir.string());
                 m_Flushing.store(false);
+                } catch(const std::exception& e) {
+                    CS_CORE_ERROR("DataRecorder: Flush FAILED for '{}': {}",outputDir,e.what());
+                } catch(...) { CS_CORE_ERROR("DataRecorder: Flush FAILED for '{}'.",outputDir); }
             });
     }
 
@@ -400,6 +426,7 @@ namespace Cosmic
 
     void DataRecorder::Clear()
     {
+        WaitForFlush();
         for (auto& rec : m_Records)
         {
             std::lock_guard<std::mutex> lock(rec->mutex);
@@ -411,6 +438,17 @@ namespace Cosmic
                       rec->currentFrame.values.end(), 0.0f);
         }
         m_ElapsedTime.store(0.0f, std::memory_order_relaxed);
+        m_AutosaveClock=0;
+    }
+
+    std::pair<size_t,size_t> DataRecorder::GetStorageBytes() const {
+        size_t logical=0,reserved=0;
+        for(const auto& rec:m_Records) {
+            std::lock_guard<std::mutex> lock(rec->mutex);
+            logical+=rec->timestamps.size()*sizeof(float);reserved+=rec->timestamps.capacity()*sizeof(float);
+            for(const auto& col:rec->columns) {logical+=col.size()*sizeof(float);reserved+=col.capacity()*sizeof(float);}
+        }
+        return {logical,reserved};
     }
 
 } // namespace Cosmic

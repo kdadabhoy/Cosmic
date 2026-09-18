@@ -112,6 +112,7 @@ namespace Workspace
         // The shared link's port scan / async auto-reconnect runs on every screen
         // so the connection stays alive (and reconnects) regardless of where we are.
         m_Link.OnUpdate(ts);
+        m_TelemHub.ServiceRecording();
 
         switch (m_Screen)
         {

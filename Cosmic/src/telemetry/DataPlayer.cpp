@@ -27,34 +27,27 @@ namespace Cosmic
         m_Playing  = false;
         m_Loaded   = false;
 
-        fs::path path(folderOrFilePath);
+        try {
+        fs::path path=fs::u8path(folderOrFilePath);
 
         if (fs::is_directory(path))
         {
-            for (const auto& entry : fs::directory_iterator(path))
-            {
-                if (entry.is_regular_file() && entry.path().filename() == "scene.bin")
-                {
-                    LoadBinaryFile(entry.path().string());
-                    break;
-                }
-            }
+            if(fs::exists(path / "scene.bin")) {
+                if(!LoadBinaryFile((path / "scene.bin").string())) { Unload(); return false; }
+            } else {
 
-            // Fallback: no scene.bin produced any entities — load every individual
-            // *.bin file in the directory (legacy per-entity session layout). Only
-            // runs when scene.bin is absent/empty, so entities are never duplicated.
-            if (m_Entities.empty())
-            {
+            // Legacy fallback is used only when scene.bin is absent. A corrupt
+            // authoritative snapshot cannot silently select unrelated stale files.
                 for (const auto& entry : fs::directory_iterator(path))
                 {
                     if (entry.is_regular_file() && entry.path().extension() == ".bin")
-                        LoadBinaryFile(entry.path().string());
+                        if(!LoadBinaryFile(entry.path().string())) { Unload(); return false; }
                 }
             }
         }
         else if (fs::is_regular_file(path) && path.extension() == ".bin")
         {
-            LoadBinaryFile(folderOrFilePath);
+            if(!LoadBinaryFile(folderOrFilePath)) { Unload(); return false; }
         }
         else
         {
@@ -82,6 +75,9 @@ namespace Cosmic
         CS_CORE_INFO("DataPlayer: Loaded {} entities, duration = {:.2f}s from '{}'.",
                      m_Entities.size(), m_Duration, folderOrFilePath);
         return true;
+        } catch(const std::exception& e) {
+            Unload(); CS_CORE_ERROR("DataPlayer: failed load '{}': {}",folderOrFilePath,e.what()); return false;
+        }
     }
 
     // Hard ceilings on the counts read out of a file header. Nothing the engine
@@ -100,7 +96,7 @@ namespace Cosmic
         // Opened at the end so the size is available up front: every count in the
         // header is validated against the bytes that could actually follow it, which
         // is a far tighter bound than the hard caps alone.
-        std::ifstream file(filepath, std::ios::binary | std::ios::ate);
+        std::ifstream file(std::filesystem::u8path(filepath), std::ios::binary | std::ios::ate);
         if (!file.is_open())
         {
             CS_CORE_ERROR("DataPlayer::LoadBinaryFile: Cannot open '{}'.", filepath);
@@ -109,7 +105,7 @@ namespace Cosmic
 
         const std::streamoff fileSize = file.tellg();
         file.seekg(0, std::ios::beg);
-        if (fileSize < 0)
+        if (fileSize < 0 || fileSize > 512ll * 1024 * 1024)
         {
             CS_CORE_ERROR("DataPlayer::LoadBinaryFile: Cannot size '{}'.", filepath);
             return false;
@@ -146,7 +142,7 @@ namespace Cosmic
             file.read(reinterpret_cast<char*>(&entityCount), sizeof(entityCount));
             file.read(reinterpret_cast<char*>(&sampleRate),  sizeof(sampleRate));
 
-            if (!file.good())
+            if (!file.good() || !std::isfinite(sampleRate) || sampleRate <= 0)
             {
                 CS_CORE_ERROR("DataPlayer: Truncated v1 header in '{}'.", filepath);
                 return false;
@@ -170,12 +166,20 @@ namespace Cosmic
             // against the whole file below, so this catches the case where no single
             // count is absurd but their sum is.
             uint64_t declaredDataBytes = 0;
+            uint64_t allocationBytes = 0;
+            for(const auto& existing:m_Entities)
+                allocationBytes+=existing.frames.size()*(sizeof(TelemetryFrame)+existing.info.channels.size()*sizeof(float));
+            if(entityCount+m_Entities.size()>k_MaxEntities) return false;
 
             for (uint32_t e = 0; e < entityCount; ++e)
             {
                 char nameBuf[64] = {}; file.read(nameBuf, 64);
+                if(!std::memchr(nameBuf,0,64) || nameBuf[0]==0) return false;
                 entities[e].info.name = nameBuf;
+                if(m_NameToId.contains(entities[e].info.name)) return false;
+                for(uint32_t prior=0;prior<e;++prior) if(entities[prior].info.name==entities[e].info.name) return false;
                 char tagBuf[64] = {}; file.read(tagBuf, 64);
+                if(!std::memchr(tagBuf,0,64)) return false;
                 entities[e].info.tag = tagBuf;
 
                 uint32_t chCount = 0;
@@ -203,6 +207,9 @@ namespace Cosmic
                 // bound is the file size rather than what is left at this point.
                 const uint64_t rowBytes = (static_cast<uint64_t>(chCount) + 1u) * sizeof(float);
                 declaredDataBytes += static_cast<uint64_t>(sampleCounts[e]) * rowBytes;
+                allocationBytes += static_cast<uint64_t>(sampleCounts[e]) *
+                    (sizeof(TelemetryFrame) + static_cast<uint64_t>(chCount)*sizeof(float));
+                if(allocationBytes > 1024ull*1024*1024) return false;
                 if (declaredDataBytes > static_cast<uint64_t>(fileSize))
                 {
                     CS_CORE_ERROR("DataPlayer: Entity {} in '{}' declares {} samples x {} channels — "
@@ -215,13 +222,17 @@ namespace Cosmic
                 for (uint32_t c = 0; c < chCount; ++c)
                 {
                     char chBuf[32] = {}; file.read(chBuf, 32);
+                    if(!file.good() || !std::memchr(chBuf,0,32) || chBuf[0]==0) return false;
                     entities[e].info.channels.emplace_back(chBuf);
                 }
                 entities[e].sampleRate = sampleRate;
 
+            }
+
+            if(declaredDataBytes > remaining()) return false;
+            for(uint32_t e=0;e<entityCount;++e) {
                 entities[e].frames.resize(sampleCounts[e]);
-                for (uint32_t s = 0; s < sampleCounts[e]; ++s)
-                    entities[e].frames[s].values.resize(chCount, 0.0f);
+                for(auto& frame:entities[e].frames) frame.values.resize(entities[e].info.channels.size());
             }
 
             // Data blocks — one per entity, row = [timestamp, ch0, ..., ch(N-1)]
@@ -234,6 +245,8 @@ namespace Cosmic
                 for (uint32_t s = 0; s < sampleCount; ++s)
                 {
                     file.read(reinterpret_cast<char*>(rowBuf.data()), (chCount + 1) * sizeof(float));
+                    if(!file.good() || !std::isfinite(rowBuf[0]) || rowBuf[0]<0 ||
+                       (s && rowBuf[0]<entities[e].frames[s-1].timestamp)) return false;
                     entities[e].frames[s].timestamp = rowBuf[0];
                     for (uint32_t ch = 0; ch < chCount; ++ch)
                         entities[e].frames[s].values[ch] = rowBuf[ch + 1];
@@ -281,19 +294,20 @@ namespace Cosmic
 
     void DataPlayer::SetPosition(float seconds)
     {
+        if(!std::isfinite(seconds)) return;
         m_Position = std::clamp(seconds, 0.0f, m_Duration);
     }
 
     void DataPlayer::Tick(float dt)
     {
-        if (!m_Playing || !m_Loaded) return;
+        if (!m_Playing || !m_Loaded || !std::isfinite(dt) || dt<0) return;
 
         m_Position += dt * m_Speed;
 
         if (m_Position >= m_Duration)
         {
             m_Position = m_Duration;
-            m_Playing  = false;
+            if(m_Speed>0 || (m_Duration==0 && m_Speed<0)) m_Playing=false;
         }
         else if (m_Position <= 0.0f)
         {
@@ -322,6 +336,7 @@ namespace Cosmic
 
     bool DataPlayer::SampleAt(const std::string& entityName, float seconds, TelemetryFrame& out) const
     {
+        if(!std::isfinite(seconds)) return false;
         auto it = m_NameToId.find(entityName);
         if (it == m_NameToId.end()) return false;
 
@@ -337,6 +352,9 @@ namespace Cosmic
     void DataPlayer::Interpolate(const PlayerEntityData& data, float posSeconds, TelemetryFrame& out) const
     {
         const int sampleCount = static_cast<int>(data.frames.size());
+
+        if(posSeconds < data.frames.front().timestamp) { out=data.frames.front(); return; }
+        if(posSeconds >= data.frames.back().timestamp) { out=data.frames.back(); return; }
 
         if (sampleCount == 1)
         {
@@ -358,6 +376,8 @@ namespace Cosmic
 
         const TelemetryFrame& f0 = data.frames[i];
         const TelemetryFrame& f1 = data.frames[i + 1];
+
+        if(posSeconds==f0.timestamp) {out=f0;return;}
 
         const float span = f1.timestamp - f0.timestamp;
         const float frac = (span > 0.0f)

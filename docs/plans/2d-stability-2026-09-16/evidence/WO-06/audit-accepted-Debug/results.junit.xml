@@ -1,0 +1,8 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="wo06-audit" tests="1" failures="0" skipped="0">
+  <testsuite name="all" tests="1" failures="0" skipped="0">
+    <testcase name="D05-independent-audit" classname="wo06-audit.W" time="0">
+    </testcase>
+  </testsuite>
+</testsuites>
+

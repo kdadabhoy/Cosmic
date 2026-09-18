@@ -1,0 +1,10 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="wo06" tests="2" failures="0" skipped="0">
+  <testsuite name="native" tests="2" failures="0" skipped="0">
+    <testcase name="D05-native-retained" classname="wo06.G" time="0">
+    </testcase>
+    <testcase name="D05-native-two-hour" classname="wo06.G" time="0">
+    </testcase>
+  </testsuite>
+</testsuites>
+

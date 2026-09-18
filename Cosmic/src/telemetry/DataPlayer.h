@@ -45,6 +45,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <cmath>
 
 namespace Cosmic
 {
@@ -66,7 +67,8 @@ namespace Cosmic
          * only runs when scene.bin is absent, so entities are never duplicated
          * when scene.bin and legacy per-entity files coexist.
          *
-         * On success all previously loaded data is replaced.
+         * Prior data is cleared on every attempt. Failure leaves unloaded, paused,
+         * empty entities and zero position/duration; speed remains unchanged.
          *
          * @return True if at least one entity was loaded successfully.
          */
@@ -81,7 +83,7 @@ namespace Cosmic
         // Playback controls
         // -------------------------------------------------------------------------
 
-        void  SetSpeed(float speed)  { m_Speed = speed; }
+        void  SetSpeed(float speed)  { if(std::isfinite(speed)) m_Speed = speed; }
         float GetSpeed()  const      { return m_Speed; }
 
         void  Play()                 { m_Playing = true; }

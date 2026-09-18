@@ -98,11 +98,9 @@ namespace Cosmic
 		/**
 		 * @brief Append a single data row to a CSV file.
 		 *
-		 * The file is opened in append mode on each call. If the file does not
-		 * exist it is created. No header row is written by this method — call
-		 * WriteCSV with an empty columns vector first, or write the header
-		 * manually with a first AppendRow call containing your header strings
-		 * cast to double (not recommended — use WriteCSV for that case).
+         * Existing bytes plus the new finite numeric row are staged and atomically
+         * replaced. Failure preserves the old file. If absent it is created without
+         * a header. Initialize a header-only table with one empty column per header.
 		 *
 		 * For high-frequency streaming consider buffering rows in a
 		 * std::vector<std::vector<double>> and calling WriteCSV at run end.
@@ -157,7 +155,8 @@ namespace Cosmic
 		 * The transpose of WriteCSV. If the first row contains any non-numeric
 		 * cell it is treated as the header row (returned via outHeaders when
 		 * non-null, otherwise skipped). Ragged rows and rows with non-numeric
-		 * cells after the header are rejected with a logged error.
+         * cells after the header are rejected. This accepts finite decimal numbers
+         * and validated ASCII headers, not quoted CSV. Failure clears both outputs.
 		 *
 		 * @param filepath    Input path (goes through no VFS resolution — pass a
 		 *                    resolved or relative disk path, or resolve with

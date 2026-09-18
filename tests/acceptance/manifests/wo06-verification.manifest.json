@@ -1,0 +1,179 @@
+{
+  "manifest": "wo06-verification",
+  "cases": [
+    {
+      "id": "D01",
+      "tier": "U",
+      "profiles": [
+        "pr"
+      ],
+      "requires": [
+        "windows"
+      ],
+      "command": "{BIN}\\CosmicTests.exe",
+      "args": [
+        "--test-case=WO-06 D01:*",
+        "--no-colors"
+      ],
+      "expectExit": 0,
+      "minTests": 1,
+      "deadlineSec": 60,
+      "seed": 6,
+      "fixture": "../test_wo06.cpp",
+      "description": "WO-06 D01 production regression"
+    },
+    {
+      "id": "D02",
+      "tier": "U",
+      "profiles": [
+        "pr"
+      ],
+      "requires": [
+        "windows"
+      ],
+      "command": "{BIN}\\CosmicTests.exe",
+      "args": [
+        "--test-case=WO-06 D02:*",
+        "--no-colors"
+      ],
+      "expectExit": 0,
+      "minTests": 3,
+      "deadlineSec": 60,
+      "seed": 6,
+      "fixture": "../test_wo06.cpp",
+      "description": "WO-06 D02 production regression"
+    },
+    {
+      "id": "D03",
+      "tier": "U",
+      "profiles": [
+        "pr"
+      ],
+      "requires": [
+        "windows"
+      ],
+      "command": "{BIN}\\CosmicTests.exe",
+      "args": [
+        "--test-case=WO-06 D03:*",
+        "--no-colors"
+      ],
+      "expectExit": 0,
+      "minTests": 2,
+      "deadlineSec": 60,
+      "seed": 6,
+      "fixture": "../test_wo06.cpp",
+      "description": "WO-06 D03 production regression"
+    },
+    {
+      "id": "D04",
+      "tier": "U",
+      "profiles": [
+        "pr"
+      ],
+      "requires": [
+        "windows"
+      ],
+      "command": "{BIN}\\CosmicTests.exe",
+      "args": [
+        "--test-case=WO-06 D04:*",
+        "--no-colors"
+      ],
+      "expectExit": 0,
+      "minTests": 3,
+      "deadlineSec": 60,
+      "seed": 6,
+      "fixture": "../test_wo06.cpp",
+      "description": "WO-06 D04 production regression"
+    },
+    {
+      "id": "D05",
+      "tier": "W",
+      "profiles": [
+        "pr"
+      ],
+      "requires": [
+        "windows"
+      ],
+      "command": "{BIN}\\CosmicTests.exe",
+      "args": [
+        "--test-case=WO-06 D05:*",
+        "--no-colors",
+        "--test-case-exclude=*two hour*"
+      ],
+      "expectExit": 0,
+      "minTests": 8,
+      "deadlineSec": 30,
+      "seed": 6,
+      "fixture": "../test_wo06.cpp",
+      "description": "WO-06 D05 production regression"
+    },
+    {
+      "id": "D06",
+      "tier": "W",
+      "profiles": [
+        "pr"
+      ],
+      "requires": [
+        "windows"
+      ],
+      "command": "{BIN}\\CosmicTests.exe",
+      "args": [
+        "--test-case=WO-06 D06:*",
+        "--no-colors"
+      ],
+      "expectExit": 0,
+      "minTests": 5,
+      "deadlineSec": 60,
+      "seed": 6,
+      "fixture": "../test_wo06.cpp",
+      "description": "WO-06 D06 production regression"
+    },
+    {
+      "id": "D05-two-hour",
+      "description": "Two-hour logical fixture: full production command export, 30-second export limit, memory and independent accounting",
+      "tier": "W",
+      "profiles": [
+        "pr"
+      ],
+      "requires": [
+        "windows"
+      ],
+      "command": "{BIN}\\CosmicTests.exe",
+      "args": [
+        "--test-case=WO-06 D05: two hour*",
+        "--no-colors"
+      ],
+      "expectExit": 0,
+      "minTests": 1,
+      "deadlineSec": 60,
+      "seed": 6,
+      "fixture": "../test_wo06.cpp"
+    },
+    {
+      "id": "D03-nightly",
+      "description": "50000 bounded F-CORRUPT cases seed6",
+      "tier": "W",
+      "profiles": [
+        "nightly"
+      ],
+      "requires": [
+        "windows"
+      ],
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "{ACCEPTANCE}\\fixtures\\Run-WO06Fuzz.ps1",
+        "-Bin",
+        "{BIN}"
+      ],
+      "expectExit": 0,
+      "minTests": 1,
+      "deadlineSec": 60,
+      "seed": 6,
+      "fixture": "../test_wo06.cpp"
+    }
+  ]
+}

@@ -185,8 +185,9 @@ namespace Cosmic
          * @brief Periodically flush to a fixed rolling folder while recording.
          *
          * Once enabled, Tick() triggers a non-blocking Flush() every intervalSec of
-         * recorded time (skipped if a flush is already in progress), so even a hard
-         * crash leaves a snapshot at most intervalSec old. Uses a FIXED, non-empty
+         * recorded time (skipped if a flush is already in progress). Loss is measured
+         * from the last successful publication, not bounded by this interval alone.
+         * Uses a FIXED, non-empty
          * session name so it overwrites one folder instead of spawning a new
          * timestamped folder per tick. Call DisableAutosave() when recording stops.
          */
@@ -210,6 +211,10 @@ namespace Cosmic
 
         /** @brief True if a background flush is currently in progress. */
         bool IsFlushing() const { return m_Flushing.load(); }
+        enum class FlushState { Idle, Writing, Succeeded, Failed };
+        FlushState GetFlushState() const { return m_FlushState.load(); }
+        // Logical and reserved history bytes (excludes metadata/vector objects).
+        std::pair<size_t,size_t> GetStorageBytes() const;
 
         // Test OS-write barrier. Set on the owner thread before initiating Flush;
         // its capture must remain alive until WaitForFlush. Shipping leaves it empty.
@@ -240,6 +245,7 @@ namespace Cosmic
         mutable std::mutex      m_RegistryMutex;
         std::thread             m_FlushThread;
         std::atomic<bool>       m_Flushing{ false };
+        std::atomic<FlushState> m_FlushState{FlushState::Idle};
         std::function<void()> m_FlushWriteBarrier;
         std::atomic<float>      m_ElapsedTime{ 0.0f }; // written by Tick (main), read by RecordImpl (workers)
 

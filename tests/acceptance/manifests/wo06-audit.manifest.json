@@ -1,0 +1,35 @@
+{
+  "manifest": "wo06-audit",
+  "cases": [
+    {
+      "id": "D05-independent-audit",
+      "description": "Independent Python decoder and CSV oracle checks all 1296000 samples, every channel and exact CSV widening",
+      "tier": "W",
+      "profiles": [
+        "pr"
+      ],
+      "requires": [
+        "windows"
+      ],
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "{ACCEPTANCE}\\fixtures\\Verify-WO06.ps1",
+        "-Report",
+        "{REPO}\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-06\\{CONFIG}-oracle-input.json",
+        "-Python",
+        "C:\\Users\\Kaden\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-Output",
+        "{REPO}\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-06\\{CONFIG}-independent-audit.json"
+      ],
+      "expectExit": 0,
+      "minTests": 1,
+      "deadlineSec": 60,
+      "seed": 6,
+      "fixture": "fixtures/Verify-WO06.py"
+    }
+  ]
+}

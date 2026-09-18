@@ -67,6 +67,8 @@ set(COSMIC_TEST_SOURCES
     # it asserts VERBATIM preservation of 3D blocks on the 2D engine and real
     # component loading on the 3D one.
     test_telemetry_robustness.cpp
+    test_wo06.cpp
+    test_wo06_host.cpp
     test_serial_lifecycle.cpp
     # WO-05a (2D stability) — the reported COM close/link-loss crash: the reachable
     # ownership-chain teardown guard + reserved ENVIRONMENT_BLOCKED seats for the
@@ -150,6 +152,12 @@ target_compile_definitions(WO05HostFixture PRIVATE COSMIC_WO05_HOST_FIXTURE)
 set_target_properties(WO05HostFixture PROPERTIES RUNTIME_OUTPUT_DIRECTORY
     "${COSMIC_SDK_DIR}/build/Runtime/$<CONFIG>")
 add_dependencies(CosmicTests WO05HostFixture)
+add_library(WO06HostFixture SHARED WO06HostFixture.cpp ${WO05_SF_SOURCES})
+target_link_libraries(WO06HostFixture PRIVATE Cosmic)
+target_compile_definitions(WO06HostFixture PRIVATE COSMIC_WO05_HOST_FIXTURE)
+set_target_properties(WO06HostFixture PROPERTIES RUNTIME_OUTPUT_DIRECTORY
+    "${COSMIC_SDK_DIR}/build/Runtime/$<CONFIG>")
+add_dependencies(CosmicTests WO06HostFixture)
 
 target_link_libraries(CosmicTests PRIVATE Cosmic)
 target_include_directories(CosmicTests PRIVATE "${COSMIC_SDK_DIR}/Cosmic/dependencies/doctest")
@@ -157,6 +165,7 @@ target_include_directories(CosmicTests PRIVATE "${COSMIC_SDK_DIR}/Cosmic/depende
 # Newer MSVC (C5285) rejects doctest's forward-declarations of std types in
 # namespace std; this makes doctest include the real <string>/<tuple> instead.
 target_compile_definitions(CosmicTests PRIVATE DOCTEST_CONFIG_USE_STD_HEADERS)
+target_compile_definitions(CosmicTests PRIVATE COSMIC_WO06_FIXTURES="${CMAKE_CURRENT_SOURCE_DIR}/acceptance/fixtures/wo06")
 
 # Land next to Cosmic.dll so the exe runs without PATH games.
 set_target_properties(CosmicTests PROPERTIES

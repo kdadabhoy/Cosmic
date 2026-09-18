@@ -1,0 +1,65 @@
+{
+  "oracle": "independent Python little-endian decoder and numeric CSV reader; analytic channel constants",
+  "zeros": true,
+  "entities": [
+    {
+      "name": "ESC_Right",
+      "samples": 432000,
+      "channels": [
+        "Temp_C",
+        "Voltage_V",
+        "Current_A",
+        "Consumption_mAh",
+        "eRPM",
+        "MotorRPM",
+        "Speed_mph",
+        "Power_W"
+      ],
+      "last_timestamp": 7183.1279296875,
+      "source_float_bits_hex": "0000000000000000000000000000000000000000000000000000000000000000",
+      "csv_rows": 432000
+    },
+    {
+      "name": "ESC_Left",
+      "samples": 432000,
+      "channels": [
+        "Temp_C",
+        "Voltage_V",
+        "Current_A",
+        "Consumption_mAh",
+        "eRPM",
+        "MotorRPM",
+        "Speed_mph",
+        "Power_W"
+      ],
+      "last_timestamp": 7183.1279296875,
+      "source_float_bits_hex": "0000000000000000000000000000000000000000000000000000000000000000",
+      "csv_rows": 432000
+    },
+    {
+      "name": "ESC_Weapon",
+      "samples": 432000,
+      "channels": [
+        "Temp_C",
+        "Voltage_V",
+        "Current_A",
+        "Consumption_mAh",
+        "eRPM",
+        "MotorRPM",
+        "WeaponRPM",
+        "TipSpeed_mph",
+        "Power_W"
+      ],
+      "last_timestamp": 7183.1279296875,
+      "source_float_bits_hex": "000000000000000000000000000000000000000000000000000000000000000000000000",
+      "csv_rows": 432000
+    }
+  ],
+  "bytes": 48385224,
+  "sha256": {
+    "ESC_Left.csv": "3721379451660d0ef954edd5203734a5430b37296941eab4d30365d70a01e0d1",
+    "ESC_Right.csv": "3721379451660d0ef954edd5203734a5430b37296941eab4d30365d70a01e0d1",
+    "ESC_Weapon.csv": "02509e8e278e6e0eff4d19971dad44fc9dcdf104fbb63c04f643931892a9ef63",
+    "scene.bin": "3bbbd972ecbbd819cc8b4409f872d67a4019a5ce27082e19110372267cd91dfc"
+  }
+}

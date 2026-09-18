@@ -164,6 +164,179 @@ Append format (copy the block below for a new entry):
   `current-release/`, all 100 iterations/config <=250 ms, maxima 121.911/116.552 ms.
   Software regression is proven; physical driver qualification remains blocked.
 
+## WO-06 findings (2026-09-17)
+
+### KI-25 — Held reverse playback at a zero-duration recording misses its lower endpoint
+- Status: Confirmed defect in the endpoint fix. Owner WO: WO-06.
+- Anchor: Tick's upper branch takes priority when duration and position are both zero.
+- Regression: `WO-06 D02: reverse and zero transport at held endpoints`, independent
+  one-sample timestamp-zero specimen, held reverse Tick(0) must stop at the lower endpoint.
+- Failing-before: evidence/WO-06/endpoint-zero-before/D02.out.log; one armed test,
+  one failed assertion for reverse speed at coincident endpoints.
+- Disposition: fixed in the local WO-06 commit; D02 passes in accepted-Debug/Release.
+  Handle the coincident endpoints by stopping nonzero travel intent,
+  while zero speed retains Play intent.
+
+### KI-24 — Disabling ordinary auto-export bypasses mandatory ceiling finalization
+- Status: Confirmed defect in the WO-06 limit guard. Owner WO: WO-06.
+- Anchor: RecordFixed calls StopRecording, which respects the ordinary auto-export checkbox.
+- Regression: `WO-06 D05: recording ceiling stops and finalizes` now crosses both public
+  auto-export policy values and requires final scene.bin before shutdown can mask the omission.
+- Failing-before: evidence/WO-06/policy-before/D05.out.log; one armed test, two failed
+  assertions: final scene.bin absent and intentional data still dirty before shutdown.
+- Disposition: fixed in the local WO-06 commit; D05 passes in accepted-Debug/Release.
+  Ratified stop-and-finalize exports at the ceiling regardless of
+  the ordinary manual-stop preference. Preserve the preference for manual Stop.
+
+### KI-22 — A manual monitoring export failure does not remain dirty
+- Status: Confirmed defect. Owner WO: WO-06.
+- Anchor: TelemHub.cpp/ExportRecording never marks monitoring data as intentional.
+- Regression: `WO-06 D05: manual monitoring export failure remains dirty`;
+  one monitoring tick, write failure, owner update, shutdown. No Start command.
+- Failing-before: evidence/WO-06/monitor-before/D05.out.log; dirty=false after failed
+  manual export and shutdown skips finalization, leaving no recording.
+- Disposition: fixed in the local WO-06 commit; D05 passes in debug-complete/release-complete.
+  The explicit Export command establishes keep/save intent before
+  starting/queuing its write. Clean only after verified successful publication.
+
+### KI-23 — Upper endpoint stops reverse and zero-speed playback on a held tick
+- Status: Confirmed defect. Owner WO: WO-06.
+- Anchor: DataPlayer.cpp/Tick upper endpoint unconditionally clears Playing.
+- Regression: `WO-06 D02: reverse and zero transport at held endpoints`;
+  reverse at duration with dt=0, zero speed at both endpoints.
+- Failing-before: evidence/WO-06/endpoint-before/D02.out.log.
+- Disposition: fixed in the local WO-06 commit; D02 passes in debug-complete/release-complete.
+  Clamp upper bound but stop only for forward speed, retaining
+  reverse/zero intent until reaching the endpoint in the travel direction.
+
+### KI-21 — Counterfactual source restore preserves an older mtime and stale object
+- Status: Confirmed harness defect. Owner WO: WO-06.
+- Repro: Copy-Item restores correct DataPlayer.cpp bytes with the saved older mtime;
+  MSBuild does not rebuild the newer original-source object. The purported after
+  case still fails 4007 assertions. Source hash is correct, binary is stale.
+- Failing-before: evidence/WO-06/player-after/D03.out.log and build-debug-restored.log
+  (no DataPlayer.cpp compile). No result was accepted as a pass.
+- Disposition: corrected; player-after-fixed passes after explicitly invalidating restored source mtime,
+  rebuilding and rerunning the
+  armed D03 regression and capture source/binary hashes after restoring.
+
+### KI-20 — v1 fixed-width metadata is used as an unbounded C string
+- Status: Confirmed defect (analysis and counterfactual reproduction). Owner WO: WO-06.
+- Anchor: DataPlayer.cpp at 0435d3c constructs strings from 64/32-byte arrays
+  without checking for a terminating NUL; malformed metadata can read beyond them.
+- Regression: F-CORRUPT mutations 4/6/7 in `WO-06 D03: bounded independent...`;
+  full-width non-NUL names/tags/channels must reject and clear load state.
+- Before evidence: evidence/WO-06/player-before/D03.out.log, isolated original HEAD
+  DataPlayer.cpp (restore in finally); 4007 failing assertions include full-width
+  metadata acceptance, invalid sample rate/timestamps and mixed-file fallback state.
+- Disposition: fixed guard; evidence/WO-06/player-after-fixed has both D03 tests
+  passing after explicit source-mtime invalidation and rebuild. Source restored byte-exactly.
+
+### KI-19 — Independent long-fixture auditor confuses wire IDs with metadata tags
+- Status: Confirmed harness defect. Owner WO: WO-06.
+- Repro/regression: Verify-WO06.py expects R/L/W metadata tags, although v1 SF
+  descriptors use Drive/Weapon (`TelemHub.cpp/TagFor`). The first independent audit
+  fails before numeric checking. Wire IDs and descriptor categories are separate fields.
+- Failing-before: evidence/WO-06/audit-debug/D05-independent-audit.err.log.
+- Disposition: corrected in the local WO-06 commit; audit-complete-Debug/Release pass.
+  Assert the correct documented Drive/Weapon descriptor categories;
+  retain exact names/channels/counts/length and every numeric sample/CSV assertion.
+
+### KI-18 — Concurrent writers can append decreasing timestamps to one entity
+- Status: Confirmed defect. Owner WO: WO-06.
+- Anchor: DataRecorder.cpp/RecordImpl reads elapsed time before acquiring entity mutex.
+- Regression: `WO-06 D04: shared entity writers retain ordered append times and all calls`;
+  barrier-started four writers x10000 calls to one entity, owner Tick/query interleavings.
+  All 40000 calls accounted independently; the first execution detects timestamp reversals
+  and DataPlayer rejects the recorder's own published snapshot.
+- Failing-before: evidence/WO-06/shared-before/D04.out.log.
+- Disposition: fixed in the local WO-06 commit; D04 passes in debug-complete/release-complete,
+  accounting for all 40000 calls and zero reversals. Sample recorder time inside the entity append lock, preserving
+  nondecreasing timestamps under the supported concurrent Record/owner Tick contract.
+
+### KI-17 — Stop waits synchronously for an in-progress autosave
+- Status: Confirmed defect in initial WO-06 fix. Owner WO: WO-06.
+- Anchor: TelemHub.cpp/StopRecording unconditional WaitForFlush in proposed finalization fix.
+- Regression: `WO-06 D05: stop queues final export without blocking on pending autosave`;
+  root created/called/destroyed on one owner thread, write held behind a promise barrier.
+- Failing-before: evidence/WO-06/queued-before/D05.out.log; Stop does not return
+  within 250 ms while write barrier remains held. Barrier released and owner joined.
+- Disposition: fixed in the local WO-06 commit; D05 passes in debug-complete/release-complete.
+  Queue final export for owner updates, keep Stop/Export responsive;
+  shutdown still joins the pending writer then finalizes the newest dirty prefix.
+
+### KI-15 — Two-hour Debug export misses the approved 30-second limit
+- Status: Confirmed defect. Owner WO: WO-06.
+- Anchor: DataExport.cpp/WriteCSV per-value iostream formatting, WO-06 working tree.
+- Regression: `WO-06 D05: two hour production fixture final export memory and sample accounting`.
+- Failing-before: evidence/WO-06/debug-initial/D05-two-hour.out.log; 432000 samples
+  in each of three entities; 30.6457 seconds final export wait >30. No deadline extended.
+- Disposition: fixed in the local WO-06 commit; buffer locale-invariant max_digits10 decimal formatting.
+  debug-complete/release-complete export takes 5.481/0.741 seconds, below the unchanged 30-second limit.
+
+### KI-16 — Float telemetry accumulator drifts over two nominal hours
+- Status: Confirmed numerical limitation. Owner WO: WO-10 (clock work).
+- Anchor: DataRecorder.cpp/Tick float atomic accumulation at 0435d3c.
+- Repro: WO-06 two-hour fixture records last timestamp 7183.12793 for nominal
+  last sample 7199.983333; drift about -16.8554 seconds, beyond one fixed step.
+- Evidence: evidence/WO-06/debug-initial/D05-two-hour.out.log.
+- Disposition: open for WO-10; WO-06 does not change the v1 float time representation.
+
+### KI-14 — Ratified two-hour stop-and-finalize limit is unenforced
+- Status: Confirmed enforcement defect. Owner WO: WO-06.
+- Anchor: TelemHub.cpp/RecordFixed at 0435d3c; continues appending past session ceiling.
+- Repro/regression: `WO-06 D05: recording ceiling stops and finalizes` against
+  original HEAD TelemHub.cpp with the additive test/header; source restored in finally.
+- Failing-before: evidence/WO-06/ceiling-before/D05.out.log (still recording and
+  second post-limit tick increases frame count). Separate counterfactual build log retained.
+- Disposition: fixed in the local WO-06 commit; named 7200-second/432000-frame stop-and-finalize guard.
+  D05 passes in debug-complete/release-complete.
+
+### KI-10 — Replay accepts invalid timestamps and NaN seeks
+- Status: Confirmed defect. Owner WO: WO-06.
+- Anchor: DataPlayer.cpp/SetPosition, SampleAt, LoadBinaryFile at 0435d3c.
+- Repro/regression: `WO-06 D03: reject decreasing and nonfinite timestamps` and
+  `WO-06 D02: invalid seek leaves state and output unchanged` in tests/test_wo06.cpp.
+- Failing-before: evidence/WO-06/before-complete/D02.out.log and D03.out.log;
+  decreasing/negative/NaN times load successfully, NaN seek contaminates position/output.
+- Disposition: fixed in the local WO-06 commit; D02/D03 pass in debug-complete/release-complete.
+  Timestamps must be finite, nonnegative, nondecreasing;
+  invalid query/control time rejected without changing state.
+
+### KI-11 — CSV silently accepts blank/nonfinite cells and unsafe writer parameters
+- Status: Confirmed defect. Owner WO: WO-06.
+- Anchor: utils/DataExport.cpp at 0435d3c: strtod does not require conversion,
+  check range or finite values; writers do not validate header grammar/circular parameters.
+- Repro/regression: both WO-06 D06 tests in tests/test_wo06.cpp.
+- Failing-before: evidence/WO-06/before-complete/D06.out.log; whitespace becomes zero,
+  nan/inf/overflow/underflow succeed; bad header and negative count overwrite output;
+  failed load retains headers.
+- Disposition: fixed in the local WO-06 commit; locale-invariant restricted finite decimal grammar
+  and empty failure outputs. All five D06 tests pass in debug-complete/release-complete.
+
+### KI-12 — Flush replaces binary before checking CSV or stream completion
+- Status: Confirmed defect. Owner WO: WO-06.
+- Anchor: telemetry/DataRecorder.cpp and utils/DataExport.cpp at 0435d3c.
+- Repro: publish a sample, replace A.csv with a directory, append sample, Flush again.
+  `WO-06 D05: CSV failure preserves last complete snapshot` fails byte equality.
+- Failing-before: evidence/WO-06/before-complete/D05.out.log; Flush complete logged
+  although WriteCSV cannot open; previous scene.bin replaced. Streams also omit
+  write/flush/close status checking (analysis; fault regressions added with OS seam).
+- Disposition: fixed in the local WO-06 commit; D05/D06 pass in debug-complete/release-complete.
+  Stage/validate exports, publish scene.bin last atomically,
+  expose completion/failure and retain last published binary on failure.
+
+### KI-13 — Shutdown skips final records while an autosave is pending
+- Status: Confirmed defect. Owner WO: WO-06.
+- Anchor: TelemHub.cpp/Shutdown, StopRecording, ExportRecording at 0435d3c.
+- Repro: start production recording, snapshot at first tick behind write barrier,
+  record second tick, release and OnDetach. Shutdown skips final export.
+- Regression: `WO-06 D05: shutdown finalizes records newer than pending autosave`.
+- Failing-before: evidence/WO-06/before-complete/D05.out.log; final recording missing.
+- Disposition: fixed in the local WO-06 commit; D05 passes in debug-complete/release-complete.
+  Drain pending snapshot then finalize dirty records; mark clean
+  only after successful intentional export, surface errors.
+
 ## Register invariants
 
 - No entry is closed without a landed regression (or an explicit reviewed won't-fix with reason).

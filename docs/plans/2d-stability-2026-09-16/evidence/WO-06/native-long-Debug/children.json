@@ -1,0 +1,54 @@
+﻿[
+    {
+        "id":  "close",
+        "tier":  "G",
+        "description":  "Actual two-hour pending snapshot host shutdown",
+        "requires":  [
+                         "windows"
+                     ],
+        "transport":  "fake",
+        "seed":  null,
+        "start_utc":  "2026-09-18T01:21:58.4091143Z",
+        "deadline_sec":  60,
+        "exercised":  "fake-transport",
+        "command":  "C:\\dev\\Cosmic\\build\\Runtime\\Debug\\CosmicTests.exe \"--test-case=WO-06 D05 host: two hour pending export native close\" --no-skip=true --no-colors",
+        "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-06\\native-long-Debug\\close.out.log",
+        "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-06\\native-long-Debug\\close.err.log",
+        "pid":  26900,
+        "exit_code":  0,
+        "crash":  false,
+        "tests_passed":  1,
+        "tests_expected_min":  1,
+        "verdict":  "PASSED",
+        "detail":  "exit 0 as expected",
+        "duration_sec":  4.181,
+        "end_utc":  "2026-09-18T01:22:02.5976918Z",
+        "close_exit_upper_bound_ms":  2425
+    },
+    {
+        "id":  "launcher",
+        "tier":  "G",
+        "description":  "Actual two-hour pending snapshot host shutdown",
+        "requires":  [
+                         "windows"
+                     ],
+        "transport":  "fake",
+        "seed":  null,
+        "start_utc":  "2026-09-18T01:22:02.6336913Z",
+        "deadline_sec":  60,
+        "exercised":  "fake-transport",
+        "command":  "C:\\dev\\Cosmic\\build\\Runtime\\Debug\\CosmicTests.exe \"--test-case=WO-06 D05 host: two hour pending export launcher return\" --no-skip=true --no-colors",
+        "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-06\\native-long-Debug\\launcher.out.log",
+        "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-06\\native-long-Debug\\launcher.err.log",
+        "pid":  20772,
+        "exit_code":  0,
+        "crash":  false,
+        "tests_passed":  1,
+        "tests_expected_min":  1,
+        "verdict":  "PASSED",
+        "detail":  "exit 0 as expected",
+        "duration_sec":  4.103,
+        "end_utc":  "2026-09-18T01:22:06.7369952Z",
+        "close_exit_upper_bound_ms":  2377
+    }
+]

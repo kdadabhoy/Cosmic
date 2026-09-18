@@ -1,0 +1,70 @@
+{
+  "provenance": "Independently encoded from documented v1 layout; no SF-Stable runtime available.",
+  "entities": [
+    [
+      "Empty",
+      "zero",
+      [
+        "value"
+      ],
+      []
+    ],
+    [
+      "One",
+      "one",
+      [
+        "value"
+      ],
+      [
+        [
+          1.25,
+          -0.0
+        ]
+      ]
+    ],
+    [
+      "A",
+      "many",
+      [
+        "value"
+      ],
+      [
+        [
+          0.0,
+          8.0
+        ],
+        [
+          2.0,
+          16.0
+        ],
+        [
+          4.0,
+          32.0
+        ]
+      ]
+    ],
+    [
+      "B",
+      "delayed-unequal",
+      [
+        "value"
+      ],
+      [
+        [
+          1.0,
+          100.0
+        ],
+        [
+          3.0,
+          300.0
+        ]
+      ]
+    ]
+  ],
+  "sha256": {
+    "bad-version.bin": "add5f6b9e69e007344c4e4ad02280294a5fbd00052d6043f07a617dd27d1b01b",
+    "fallback-A.bin": "522c492ac767fb3cf98cd0dc3f0383925ce6c40cc66a4efc5d6cbb8542457809",
+    "independent-v1.bin": "bbfac9b992a66c0e01c33842ab6220ae106130224eddf2dddd1f48d0a6072b61",
+    "truncated.bin": "f830ca4dd998614a0df51e87d6a67d83fd1e211d324edb8815405a11d25b7247"
+  }
+}

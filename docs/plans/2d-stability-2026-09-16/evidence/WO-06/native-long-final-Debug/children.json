@@ -1,0 +1,54 @@
+﻿[
+    {
+        "id":  "close",
+        "tier":  "G",
+        "description":  "Actual two-hour pending snapshot host shutdown",
+        "requires":  [
+                         "windows"
+                     ],
+        "transport":  "fake",
+        "seed":  null,
+        "start_utc":  "2026-09-18T01:42:43.7561355Z",
+        "deadline_sec":  60,
+        "exercised":  "fake-transport",
+        "command":  "C:\\dev\\Cosmic\\build\\Runtime\\Debug\\CosmicTests.exe \"--test-case=WO-06 D05 host: two hour pending export native close\" --no-skip=true --no-colors",
+        "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-06\\native-long-final-Debug\\close.out.log",
+        "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-06\\native-long-final-Debug\\close.err.log",
+        "pid":  26756,
+        "exit_code":  0,
+        "crash":  false,
+        "tests_passed":  1,
+        "tests_expected_min":  1,
+        "verdict":  "PASSED",
+        "detail":  "exit 0 as expected",
+        "duration_sec":  4.198,
+        "end_utc":  "2026-09-18T01:42:47.9612256Z",
+        "close_exit_upper_bound_ms":  2447
+    },
+    {
+        "id":  "launcher",
+        "tier":  "G",
+        "description":  "Actual two-hour pending snapshot host shutdown",
+        "requires":  [
+                         "windows"
+                     ],
+        "transport":  "fake",
+        "seed":  null,
+        "start_utc":  "2026-09-18T01:42:48.0012257Z",
+        "deadline_sec":  60,
+        "exercised":  "fake-transport",
+        "command":  "C:\\dev\\Cosmic\\build\\Runtime\\Debug\\CosmicTests.exe \"--test-case=WO-06 D05 host: two hour pending export launcher return\" --no-skip=true --no-colors",
+        "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-06\\native-long-final-Debug\\launcher.out.log",
+        "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-06\\native-long-final-Debug\\launcher.err.log",
+        "pid":  8580,
+        "exit_code":  0,
+        "crash":  false,
+        "tests_passed":  1,
+        "tests_expected_min":  1,
+        "verdict":  "PASSED",
+        "detail":  "exit 0 as expected",
+        "duration_sec":  4.071,
+        "end_utc":  "2026-09-18T01:42:52.0720516Z",
+        "close_exit_upper_bound_ms":  2366
+    }
+]

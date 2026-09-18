@@ -1,0 +1,8 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="wo06" tests="1" failures="0" skipped="0">
+  <testsuite name="all" tests="1" failures="0" skipped="0">
+    <testcase name="D03" classname="wo06.W" time="0">
+    </testcase>
+  </testsuite>
+</testsuites>
+

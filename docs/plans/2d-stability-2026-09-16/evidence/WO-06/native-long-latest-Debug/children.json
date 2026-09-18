@@ -1,0 +1,54 @@
+﻿[
+    {
+        "id":  "close",
+        "tier":  "G",
+        "description":  "Actual two-hour pending snapshot host shutdown",
+        "requires":  [
+                         "windows"
+                     ],
+        "transport":  "fake",
+        "seed":  null,
+        "start_utc":  "2026-09-18T01:55:11.1848845Z",
+        "deadline_sec":  60,
+        "exercised":  "fake-transport",
+        "command":  "C:\\dev\\Cosmic\\build\\Runtime\\Debug\\CosmicTests.exe \"--test-case=WO-06 D05 host: two hour pending export native close\" --no-skip=true --no-colors",
+        "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-06\\native-long-latest-Debug\\close.out.log",
+        "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-06\\native-long-latest-Debug\\close.err.log",
+        "pid":  25912,
+        "exit_code":  0,
+        "crash":  false,
+        "tests_passed":  1,
+        "tests_expected_min":  1,
+        "verdict":  "PASSED",
+        "detail":  "exit 0 as expected",
+        "duration_sec":  4.384,
+        "end_utc":  "2026-09-18T01:55:15.5768693Z",
+        "close_exit_upper_bound_ms":  2535
+    },
+    {
+        "id":  "launcher",
+        "tier":  "G",
+        "description":  "Actual two-hour pending snapshot host shutdown",
+        "requires":  [
+                         "windows"
+                     ],
+        "transport":  "fake",
+        "seed":  null,
+        "start_utc":  "2026-09-18T01:55:15.6168702Z",
+        "deadline_sec":  60,
+        "exercised":  "fake-transport",
+        "command":  "C:\\dev\\Cosmic\\build\\Runtime\\Debug\\CosmicTests.exe \"--test-case=WO-06 D05 host: two hour pending export launcher return\" --no-skip=true --no-colors",
+        "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-06\\native-long-latest-Debug\\launcher.out.log",
+        "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-06\\native-long-latest-Debug\\launcher.err.log",
+        "pid":  25656,
+        "exit_code":  0,
+        "crash":  false,
+        "tests_passed":  1,
+        "tests_expected_min":  1,
+        "verdict":  "PASSED",
+        "detail":  "exit 0 as expected",
+        "duration_sec":  4.21,
+        "end_utc":  "2026-09-18T01:55:19.8277976Z",
+        "close_exit_upper_bound_ms":  2441
+    }
+]

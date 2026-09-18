@@ -1,0 +1,54 @@
+﻿[
+    {
+        "id":  "close",
+        "tier":  "G",
+        "description":  "Actual two-hour pending snapshot host shutdown",
+        "requires":  [
+                         "windows"
+                     ],
+        "transport":  "fake",
+        "seed":  null,
+        "start_utc":  "2026-09-18T01:59:37.1760021Z",
+        "deadline_sec":  60,
+        "exercised":  "fake-transport",
+        "command":  "C:\\dev\\Cosmic\\build\\Runtime\\Release\\CosmicTests.exe \"--test-case=WO-06 D05 host: two hour pending export native close\" --no-skip=true --no-colors",
+        "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-06\\native-long-finalized-Release\\close.out.log",
+        "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-06\\native-long-finalized-Release\\close.err.log",
+        "pid":  5420,
+        "exit_code":  0,
+        "crash":  false,
+        "tests_passed":  1,
+        "tests_expected_min":  1,
+        "verdict":  "PASSED",
+        "detail":  "exit 0 as expected",
+        "duration_sec":  1.089,
+        "end_utc":  "2026-09-18T01:59:38.2723487Z",
+        "close_exit_upper_bound_ms":  510
+    },
+    {
+        "id":  "launcher",
+        "tier":  "G",
+        "description":  "Actual two-hour pending snapshot host shutdown",
+        "requires":  [
+                         "windows"
+                     ],
+        "transport":  "fake",
+        "seed":  null,
+        "start_utc":  "2026-09-18T01:59:38.3133519Z",
+        "deadline_sec":  60,
+        "exercised":  "fake-transport",
+        "command":  "C:\\dev\\Cosmic\\build\\Runtime\\Release\\CosmicTests.exe \"--test-case=WO-06 D05 host: two hour pending export launcher return\" --no-skip=true --no-colors",
+        "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-06\\native-long-finalized-Release\\launcher.out.log",
+        "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-06\\native-long-finalized-Release\\launcher.err.log",
+        "pid":  15864,
+        "exit_code":  0,
+        "crash":  false,
+        "tests_passed":  1,
+        "tests_expected_min":  1,
+        "verdict":  "PASSED",
+        "detail":  "exit 0 as expected",
+        "duration_sec":  0.927,
+        "end_utc":  "2026-09-18T01:59:39.2401622Z",
+        "close_exit_upper_bound_ms":  412
+    }
+]

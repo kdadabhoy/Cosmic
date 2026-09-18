@@ -1,298 +1,314 @@
 #include "utils/DataExport.h"
 #include "core/Log.h"
-#include <fstream>
-#include <filesystem>
+#include "utils/AtomicOutput.h"
+#include <algorithm>
+#include <charconv>
+#include <cmath>
 #include <limits>
-#include <cstdlib>   // std::strtod (LoadCSV)
+#include <set>
 
 namespace Cosmic
 {
-	// -----------------------------------------------------------------------
-	// Internal helper
-	// -----------------------------------------------------------------------
-
-	static bool EnsureParentDirectory(const std::string& filepath)
-	{
-		std::filesystem::path parent = std::filesystem::path(filepath).parent_path();
-		if (!parent.empty() && !std::filesystem::exists(parent))
-		{
-			std::error_code ec;
-			std::filesystem::create_directories(parent, ec);
-			if (ec)
-			{
-				CS_CORE_ERROR("DataExport: could not create directory '{0}': {1}", parent.string(), ec.message());
-				return false;
-			}
-		}
-		return true;
-	}
-
-	// -----------------------------------------------------------------------
-	// WriteCSV
-	// -----------------------------------------------------------------------
-
-	bool DataExport::WriteCSV(
-		const std::string& filepath,
-		const std::vector<std::string>& headers,
-		const std::vector<std::vector<double>>& columns)
-	{
-		if (headers.size() != columns.size())
-		{
-			CS_CORE_ERROR("DataExport::WriteCSV: header count ({0}) does not match column count ({1}).",
-				headers.size(), columns.size());
-			return false;
-		}
-
-		if (!columns.empty())
-		{
-			size_t rowCount = columns[0].size();
-			for (size_t i = 1; i < columns.size(); ++i)
-			{
-				if (columns[i].size() != rowCount)
-				{
-					CS_CORE_ERROR("DataExport::WriteCSV: column {0} has {1} rows but column 0 has {2}.",
-						i, columns[i].size(), rowCount);
-					return false;
-				}
-			}
-		}
-
-		if (!EnsureParentDirectory(filepath))
-			return false;
-
-		std::ofstream file(filepath);
-		if (!file.is_open())
-		{
-			CS_CORE_ERROR("DataExport::WriteCSV: could not open '{0}' for writing.", filepath);
-			return false;
-		}
-
-		file.precision(std::numeric_limits<double>::max_digits10);
-
-		// Header row
-		for (size_t i = 0; i < headers.size(); ++i)
-		{
-			file << headers[i];
-			if (i + 1 < headers.size()) file << ',';
-		}
-		file << '\n';
-
-		// Data rows
-		if (!columns.empty())
-		{
-			size_t rowCount = columns[0].size();
-			for (size_t row = 0; row < rowCount; ++row)
-			{
-				for (size_t col = 0; col < columns.size(); ++col)
-				{
-					file << columns[col][row];
-					if (col + 1 < columns.size()) file << ',';
-				}
-				file << '\n';
-			}
-
-			CS_CORE_INFO("DataExport::WriteCSV: wrote {0} rows to '{1}'.", rowCount, filepath);
-		}
-
-		return true;
-	}
-
-	// -----------------------------------------------------------------------
-	// AppendRow
-	// -----------------------------------------------------------------------
-
-	bool DataExport::AppendRow(
-		const std::string& filepath,
-		const std::vector<double>& values)
-	{
-		if (!EnsureParentDirectory(filepath))
-			return false;
-
-		std::ofstream file(filepath, std::ios::app);
-		if (!file.is_open())
-		{
-			CS_CORE_ERROR("DataExport::AppendRow: could not open '{0}' for appending.", filepath);
-			return false;
-		}
-
-		file.precision(std::numeric_limits<double>::max_digits10);
-
-		for (size_t i = 0; i < values.size(); ++i)
-		{
-			file << values[i];
-			if (i + 1 < values.size()) file << ',';
-		}
-		file << '\n';
-
-		return true;
-	}
-
-	// -----------------------------------------------------------------------
-	// WriteCircularBuffer
-	// -----------------------------------------------------------------------
-
-	bool DataExport::WriteCircularBuffer(
-		const std::string& filepath,
-		const std::vector<std::string>& headers,
-		const std::vector<const float*>& buffers,
-		int count,
-		int offset,
-		int capacity)
-	{
-		if (headers.size() != buffers.size())
-		{
-			CS_CORE_ERROR("DataExport::WriteCircularBuffer: header count ({0}) does not match buffer count ({1}).",
-				headers.size(), buffers.size());
-			return false;
-		}
-
-		if (count > capacity)
-		{
-			CS_CORE_ERROR("DataExport::WriteCircularBuffer: count ({0}) exceeds capacity ({1}).", count, capacity);
-			return false;
-		}
-
-		if (!EnsureParentDirectory(filepath))
-			return false;
-
-		std::ofstream file(filepath);
-		if (!file.is_open())
-		{
-			CS_CORE_ERROR("DataExport::WriteCircularBuffer: could not open '{0}' for writing.", filepath);
-			return false;
-		}
-
-		file.precision(std::numeric_limits<double>::max_digits10);
-
-		// Header row
-		for (size_t i = 0; i < headers.size(); ++i)
-		{
-			file << headers[i];
-			if (i + 1 < headers.size()) file << ',';
-		}
-		file << '\n';
-
-		// Data rows in chronological order, unwrapping the circular index
-		for (int i = 0; i < count; ++i)
-		{
-			int idx = (offset + i) % capacity;
-			for (size_t col = 0; col < buffers.size(); ++col)
-			{
-				file << buffers[col][idx];
-				if (col + 1 < buffers.size()) file << ',';
-			}
-			file << '\n';
-		}
-
-		CS_CORE_INFO("DataExport::WriteCircularBuffer: wrote {0} rows to '{1}'.", count, filepath);
-		return true;
-	}
-
-	// -----------------------------------------------------------------------
-	// LoadCSV (E13 - read counterpart for lookup tables)
-	// -----------------------------------------------------------------------
-
-	bool DataExport::LoadCSV(
-		const std::string& filepath,
-		std::vector<std::vector<double>>& outColumns,
-		std::vector<std::string>* outHeaders)
-	{
-		outColumns.clear();
-		if (outHeaders)
-			outHeaders->clear();
-
-		std::ifstream file(filepath);
-		if (!file.is_open())
-		{
-			CS_CORE_ERROR("DataExport::LoadCSV: could not open '{0}' for reading.", filepath);
-			return false;
-		}
-
-		auto splitRow = [](const std::string& line, std::vector<std::string>& cells)
-		{
-			cells.clear();
-			std::string cell;
-			for (char c : line)
-			{
-				if (c == ',') { cells.push_back(cell); cell.clear(); }
-				else if (c != '\r') { cell.push_back(c); }
-			}
-			cells.push_back(cell);
-		};
-
-		auto parseCell = [](const std::string& cell, double& out) -> bool
-		{
-			if (cell.empty())
-				return false;
-			char* end = nullptr;
-			out = std::strtod(cell.c_str(), &end);
-			// require full consumption modulo trailing spaces
-			while (end && *end == ' ') ++end;
-			return end && *end == '\0';
-		};
-
-		std::string line;
-		std::vector<std::string> cells;
-		size_t lineNo = 0;
-		bool sawData = false;
-
-		while (std::getline(file, line))
-		{
-			++lineNo;
-			if (line.empty() || line == "\r")
-				continue;
-
-			splitRow(line, cells);
-
-			// First non-empty row: decide header vs data.
-			if (!sawData && outColumns.empty())
-			{
-				bool allNumeric = true;
-				double d;
-				for (const std::string& c : cells)
-					if (!parseCell(c, d)) { allNumeric = false; break; }
-
-				outColumns.assign(cells.size(), {});
-
-				if (!allNumeric)
-				{
-					if (outHeaders)
-						*outHeaders = cells;
-					continue;   // header consumed
-				}
-				// fall through: first row is data
-			}
-
-			if (cells.size() != outColumns.size())
-			{
-				CS_CORE_ERROR("DataExport::LoadCSV: '{0}' line {1}: {2} cells, expected {3}.",
-					filepath, lineNo, cells.size(), outColumns.size());
-				outColumns.clear();
-				return false;
-			}
-
-			for (size_t i = 0; i < cells.size(); ++i)
-			{
-				double d = 0.0;
-				if (!parseCell(cells[i], d))
-				{
-					CS_CORE_ERROR("DataExport::LoadCSV: '{0}' line {1}: non-numeric cell '{2}'.",
-						filepath, lineNo, cells[i]);
-					outColumns.clear();
-					return false;
-				}
-				outColumns[i].push_back(d);
-			}
-			sawData = true;
-		}
-
-		if (!sawData)
-		{
-			CS_CORE_ERROR("DataExport::LoadCSV: '{0}' contained no data rows.", filepath);
-			outColumns.clear();
-			return false;
-		}
-
-		return true;
-	}
+namespace
+{
+std::string Trim(const std::string &s)
+{
+    auto a = s.find_first_not_of(" \t\r"), b = s.find_last_not_of(" \t\r");
+    return a == std::string::npos ? "" : s.substr(a, b - a + 1);
 }
+bool Number(const std::string &s, double &out)
+{
+    auto t = Trim(s);
+    if (t.empty())
+        return false;
+    size_t i = 0;
+    if (t[i] == '+' || t[i] == '-')
+        ++i;
+    bool digits = false;
+    while (i < t.size() && t[i] >= '0' && t[i] <= '9')
+    {
+        digits = true;
+        ++i;
+    }
+    if (i < t.size() && t[i] == '.')
+    {
+        ++i;
+        while (i < t.size() && t[i] >= '0' && t[i] <= '9')
+        {
+            digits = true;
+            ++i;
+        }
+    }
+    if (!digits)
+        return false;
+    if (i < t.size() && (t[i] == 'e' || t[i] == 'E'))
+    {
+        ++i;
+        if (i < t.size() && (t[i] == '+' || t[i] == '-'))
+            ++i;
+        size_t start = i;
+        while (i < t.size() && t[i] >= '0' && t[i] <= '9')
+            ++i;
+        if (i == start)
+            return false;
+    }
+    if (i != t.size())
+        return false;
+    const char *begin = t.data();
+    if (*begin == '+')
+        ++begin;
+    auto r = std::from_chars(begin, t.data() + t.size(), out, std::chars_format::general);
+    return r.ec == std::errc{} && r.ptr == t.data() + t.size() && std::isfinite(out);
+}
+bool Headers(const std::vector<std::string> &h)
+{
+    std::set<std::string> names;
+    for (const auto &s : h)
+    {
+        auto t = Trim(s);
+        if (t == "nan" || t == "NaN" || t == "inf" || t == "Inf" || t == "infinity")
+            return false;
+        if (t.empty() || !((t[0] >= 'A' && t[0] <= 'Z') || (t[0] >= 'a' && t[0] <= 'z') || t[0] == '_') ||
+            t.find_first_of(",\r\n\"\t") != std::string::npos || !names.insert(t).second)
+            return false;
+        for (unsigned char c : t)
+            if (c < 32 || c > 126)
+                return false;
+    }
+    return !h.empty();
+}
+void Header(std::ofstream &f, const std::vector<std::string> &h)
+{
+    for (size_t i = 0; i < h.size(); ++i)
+    {
+        if (i)
+            f << ',';
+        f << h[i];
+    }
+    f << '\n';
+}
+bool Complete(AtomicOutput &out, const std::string &path)
+{
+    if (out.Finish() && out.Publish())
+        return true;
+    CS_CORE_ERROR("DataExport: write/flush/close/publication failed for '{}'.", path);
+    return false;
+}
+class NumericBuffer
+{
+    std::ofstream &stream;
+    std::string bytes;
+
+  public:
+    explicit NumericBuffer(std::ofstream &s) : stream(s)
+    {
+        bytes.reserve(1024 * 1024 + 128);
+    }
+    void Cell(double v)
+    {
+        char text[64];
+        auto result = std::to_chars(text, text + sizeof(text), v, std::chars_format::general,
+                                    std::numeric_limits<double>::max_digits10);
+        if (result.ec != std::errc{})
+        {
+            stream.setstate(std::ios::badbit);
+            return;
+        }
+        bytes.append(text, result.ptr);
+    }
+    void Separator(char c)
+    {
+        bytes.push_back(c);
+        if (bytes.size() >= 1024 * 1024)
+            Flush();
+    }
+    void Flush()
+    {
+        if (!bytes.empty())
+        {
+            stream.write(bytes.data(), static_cast<std::streamsize>(bytes.size()));
+            bytes.clear();
+        }
+    }
+};
+} // namespace
+bool DataExport::WriteCSV(const std::string &path, const std::vector<std::string> &headers,
+                          const std::vector<std::vector<double>> &columns)
+{
+    if (headers.size() != columns.size() || !Headers(headers))
+        return false;
+    const size_t rows = columns[0].size();
+    for (const auto &c : columns)
+    {
+        if (c.size() != rows)
+            return false;
+        for (double d : c)
+            if (!std::isfinite(d))
+                return false;
+    }
+    AtomicOutput output(path);
+    auto &f = output.stream;
+    if (!f.is_open())
+        return false;
+    f.precision(std::numeric_limits<double>::max_digits10);
+    Header(f, headers);
+    NumericBuffer buffer(f);
+    for (size_t row = 0; row < rows; ++row)
+    {
+        for (size_t col = 0; col < columns.size(); ++col)
+        {
+            if (col)
+                buffer.Separator(',');
+            buffer.Cell(columns[col][row]);
+        }
+        buffer.Separator('\n');
+    }
+    buffer.Flush();
+    return Complete(output, path);
+}
+bool DataExport::AppendRow(const std::string &path, const std::vector<double> &values)
+{
+    if (values.empty())
+        return false;
+    for (double v : values)
+        if (!std::isfinite(v))
+            return false;
+    AtomicOutput output(path);
+    auto &f = output.stream;
+    if (!f.is_open())
+        return false;
+    std::error_code ec;
+    if (std::filesystem::exists(std::filesystem::u8path(path), ec))
+    {
+        std::ifstream old(std::filesystem::u8path(path), std::ios::binary);
+        if (!old.is_open())
+            return false;
+        char buf[8192];
+        while (old.read(buf, sizeof(buf)) || old.gcount())
+            f.write(buf, old.gcount());
+        if (!old.eof())
+            return false;
+    }
+    else if (ec)
+        return false;
+    f.precision(std::numeric_limits<double>::max_digits10);
+    NumericBuffer buffer(f);
+    for (size_t i = 0; i < values.size(); ++i)
+    {
+        if (i)
+            buffer.Separator(',');
+        buffer.Cell(values[i]);
+    }
+    buffer.Separator('\n');
+    buffer.Flush();
+    return Complete(output, path);
+}
+bool DataExport::WriteCircularBuffer(const std::string &path, const std::vector<std::string> &headers,
+                                     const std::vector<const float *> &buffers, int count, int offset,
+                                     int capacity)
+{
+    if (headers.size() != buffers.size() || !Headers(headers) || count < 0 || capacity <= 0 ||
+        count > capacity || offset < 0 || offset >= capacity)
+        return false;
+    for (const auto *b : buffers)
+    {
+        if (!b)
+            return false;
+        for (int i = 0; i < count; ++i)
+            if (!std::isfinite(b[(static_cast<size_t>(offset) + i) % capacity]))
+                return false;
+    }
+    AtomicOutput output(path);
+    auto &f = output.stream;
+    if (!f.is_open())
+        return false;
+    f.precision(std::numeric_limits<double>::max_digits10);
+    Header(f, headers);
+    NumericBuffer buffer(f);
+    for (int i = 0; i < count; ++i)
+    {
+        auto idx = (static_cast<size_t>(offset) + i) % capacity;
+        for (size_t c = 0; c < buffers.size(); ++c)
+        {
+            if (c)
+                buffer.Separator(',');
+            buffer.Cell(buffers[c][idx]);
+        }
+        buffer.Separator('\n');
+    }
+    buffer.Flush();
+    return Complete(output, path);
+}
+bool DataExport::LoadCSV(const std::string &path, std::vector<std::vector<double>> &out,
+                         std::vector<std::string> *headers)
+{
+    out.clear();
+    if (headers)
+        headers->clear();
+    std::ifstream f(std::filesystem::u8path(path), std::ios::binary);
+    if (!f.is_open())
+        return false;
+    std::vector<std::vector<double>> cols;
+    std::vector<std::string> names;
+    std::string line;
+    bool first = true, data = false;
+    size_t lineNo = 0;
+    auto fail = [&](const char *reason) {
+        CS_CORE_ERROR("DataExport::LoadCSV '{}' line {}: {}", path, lineNo, reason);
+        return false;
+    };
+    while (std::getline(f, line))
+    {
+        ++lineNo;
+        if (first && line.compare(0, 3, "\xEF\xBB\xBF") == 0)
+            line.erase(0, 3);
+        if (!line.empty() && line.back() == '\r')
+            line.pop_back();
+        if (Trim(line).empty())
+            continue;
+        if (line.find_first_of("\"\r") != std::string::npos)
+            return fail("quoted cells or embedded CR are unsupported");
+        std::vector<std::string> cells;
+        size_t start = 0;
+        for (;;)
+        {
+            auto comma = line.find(',', start);
+            cells.push_back(line.substr(start, comma == std::string::npos ? comma : comma - start));
+            if (comma == std::string::npos)
+                break;
+            start = comma + 1;
+        }
+        if (first)
+        {
+            first = false;
+            cols.resize(cells.size());
+            double v;
+            bool numeric =
+                std::all_of(cells.begin(), cells.end(), [&](const auto &s) { return Number(s, v); });
+            if (!numeric)
+            {
+                if (!Headers(cells))
+                    return fail("invalid header or first numeric row");
+                names = cells;
+                continue;
+            }
+        }
+        if (cells.size() != cols.size())
+            return fail("ragged row");
+        for (size_t i = 0; i < cells.size(); ++i)
+        {
+            double v;
+            if (!Number(cells[i], v))
+                return fail("blank, nonfinite, out-of-range or malformed number");
+            cols[i].push_back(v);
+        }
+        data = true;
+    }
+    if (!f.eof() || !data)
+        return fail("unreadable file or no numeric data rows");
+    out = std::move(cols);
+    if (headers)
+        *headers = std::move(names);
+    return true;
+}
+} // namespace Cosmic

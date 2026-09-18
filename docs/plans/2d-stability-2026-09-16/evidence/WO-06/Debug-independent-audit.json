@@ -1,0 +1,65 @@
+{
+  "oracle": "independent Python little-endian decoder and numeric CSV reader; analytic channel constants",
+  "zeros": false,
+  "entities": [
+    {
+      "name": "ESC_Right",
+      "samples": 432000,
+      "channels": [
+        "Temp_C",
+        "Voltage_V",
+        "Current_A",
+        "Consumption_mAh",
+        "eRPM",
+        "MotorRPM",
+        "Speed_mph",
+        "Power_W"
+      ],
+      "last_timestamp": 7183.1279296875,
+      "source_float_bits_hex": "0000c84166668641666686400000f04200b80847ab4ab645d0495b40b71e8d42",
+      "csv_rows": 432000
+    },
+    {
+      "name": "ESC_Left",
+      "samples": 432000,
+      "channels": [
+        "Temp_C",
+        "Voltage_V",
+        "Current_A",
+        "Consumption_mAh",
+        "eRPM",
+        "MotorRPM",
+        "Speed_mph",
+        "Power_W"
+      ],
+      "last_timestamp": 7183.1279296875,
+      "source_float_bits_hex": "0000c84166668641666686400000f04200b80847ab4ab645d0495b40b71e8d42",
+      "csv_rows": 432000
+    },
+    {
+      "name": "ESC_Weapon",
+      "samples": 432000,
+      "channels": [
+        "Temp_C",
+        "Voltage_V",
+        "Current_A",
+        "Consumption_mAh",
+        "eRPM",
+        "MotorRPM",
+        "WeaponRPM",
+        "TipSpeed_mph",
+        "Power_W"
+      ],
+      "last_timestamp": 7183.1279296875,
+      "source_float_bits_hex": "0000c84166668641666686400000f04200b80847ab4a3646ab4a36457aa58842b71e8d42",
+      "csv_rows": 432000
+    }
+  ],
+  "bytes": 48385224,
+  "sha256": {
+    "ESC_Left.csv": "381816a85f5afb1b04e631a58319a100390393ccbccb65a258204f11034d4176",
+    "ESC_Right.csv": "381816a85f5afb1b04e631a58319a100390393ccbccb65a258204f11034d4176",
+    "ESC_Weapon.csv": "9a384d6cf349204df650469f11047301f614d290ab970617583eb69502a54023",
+    "scene.bin": "f3c95830fcce21770e075ec9417bd6ce35115a1ab8fc3c8f8ecf5e40d98690d7"
+  }
+}

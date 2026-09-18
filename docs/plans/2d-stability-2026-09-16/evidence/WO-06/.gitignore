@@ -1,0 +1,4 @@
+# Preserve raw large fixtures and linked assets locally; commit summaries/hashes.
+**/child-close/
+**/child-launcher/
+**/s*-t*-i*/

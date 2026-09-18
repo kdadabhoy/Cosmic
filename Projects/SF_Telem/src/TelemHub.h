@@ -78,10 +78,17 @@ namespace Workspace
         void Init(Cosmic::SerialLink* link);  // register recorder entities + panel inspectors
         void Shutdown();
         void OnUpdate(float ts);     // clock, serial pump, panel, model, rings, flush
+        void ServiceRecording();    // owner-thread save completion/queued export on every screen
         void RecordFixed(float dt);  // continuous capture (call from OnFixedUpdate)
         void StartRecording();
         void StopRecording();
         void ExportRecording();
+        void SetAutoExportOnStop(bool enabled) { m_AutoExportOnStop=enabled; }
+        bool Recording() const { return m_Recording; }
+        bool RecordingDirty() const { return m_RecordingDirty; }
+        const std::string& RecordingStatus() const { return m_RecordStatus; }
+        static constexpr double MaxRecordingSeconds=7200;
+        static constexpr size_t MaxRecordingFrames=432000;
         void SetSessionName(const std::string& name) { m_SessionName = name; }
         Cosmic::DataRecorder& Recorder() { return m_Recorder; }
         Cosmic::DataPlayer& Player() { return m_Player; }
@@ -251,6 +258,11 @@ namespace Workspace
         bool        m_WasFlushing        = false;
         bool        m_AutoExportOnStop   = true;   // checkbox: export to k_RecordDir when Stop is pressed
         bool        m_RecordingDirty     = false;  // an intentional recording exists that hasn't been exported
+        bool m_IntentionalExport=false;
+        bool m_PendingIntentionalExport=false;
+        size_t m_ExportFrameCount=0;
+        double m_RecordingSeconds=0;
+        bool m_RecordLimitReached=false;
         std::string m_SessionName;
         std::string m_RecordStatus = "Ready.";
 
@@ -267,7 +279,7 @@ namespace Workspace
         static constexpr const char* k_RecordDir = "recordings/SF_Telem";
 
         // Crash-failsafe autosave: a rolling snapshot written every few seconds
-        // while recording, so a hard crash loses at most k_AutoSaveInterval seconds.
+        // while recording. Crash loss depends on successful snapshot publication.
         static constexpr const char* k_AutoSaveDir      = "recordings/SF_Telem/_autosave";
         static constexpr float       k_AutoSaveInterval = 5.0f;
     };

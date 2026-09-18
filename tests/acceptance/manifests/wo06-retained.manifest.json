@@ -1,0 +1,26 @@
+{
+  "manifest": "wo06-retained",
+  "cases": [
+    {
+      "id": "retained",
+      "description": "All pre-WO06 headless tests, including complete WO05 root/cancel/long matrices",
+      "tier": "U",
+      "profiles": [
+        "retained"
+      ],
+      "requires": [
+        "windows"
+      ],
+      "command": "{BIN}\\CosmicTests.exe",
+      "args": [
+        "--test-case-exclude=WO-06 *",
+        "--no-colors"
+      ],
+      "expectExit": 0,
+      "minTests": 362,
+      "deadlineSec": 1800,
+      "seed": 5,
+      "fixture": "../test_wo05_matrix.cpp"
+    }
+  ]
+}

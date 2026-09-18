@@ -1,0 +1,267 @@
+﻿{
+    "manifest":  "wo06",
+    "profile":  "all",
+    "tier_filter":  [
+
+                    ],
+    "config":  "Debug",
+    "mode":  "2D",
+    "generated_utc":  "2026-09-18T01:13:39.1796085Z",
+    "git":  {
+                "commit":  "0435d3c31ec986b8a95ae07a3ea418075ab76fa1",
+                "dirty":  true,
+                "dirty_diff_sha256":  "f382ff64ae9383ed5686e08425ff7fe34d515223b8b7339c8dfcc0e41495f081"
+            },
+    "environment":  {
+                        "os_caption":  "Microsoft Windows 11 Education",
+                        "os_version":  "10.0.26200",
+                        "os_build":  "26200",
+                        "os_display":  "26200.9457",
+                        "cpu_name":  "AMD Ryzen 7 7800X3D 8-Core Processor",
+                        "cpu_cores":  8,
+                        "cpu_threads":  16,
+                        "cpu_addr_width":  64,
+                        "cpu_isa_floor":  "SSE4.2 (D-CPU); see evidence/WO-02/cpu-isa-probe.txt",
+                        "ram_bytes":  33462239232,
+                        "ram_gib":  31.2,
+                        "gpus":  [
+                                     {
+                                         "name":  "NVIDIA GeForce RTX 5070 Ti",
+                                         "driver":  "32.0.16.1692",
+                                         "driver_date":  "\/Date(1788480000000)\/"
+                                     },
+                                     {
+                                         "name":  "AMD Radeon(TM) Graphics",
+                                         "driver":  "32.0.21045.5002",
+                                         "driver_date":  "\/Date(1786924800000)\/"
+                                     }
+                                 ],
+                        "opengl_version":  null,
+                        "powershell":  "5.1.26100.9444",
+                        "hostname":  "DESKTOP-SEOA4BT"
+                    },
+    "capabilities":  {
+                         "windows":  true,
+                         "cpu-sse42":  true,
+                         "gpu-gl":  true,
+                         "serial-device":  false,
+                         "editor-ui":  false
+                     },
+    "forced_unavailable":  [
+
+                           ],
+    "bin_dir":  "C:\\dev\\Cosmic\\build\\Runtime\\Debug",
+    "run_temp":  "C:\\dev\\Cosmic\\tests\\acceptance\\_temp\\wo06-debug\\cosmic-accept-129fbf465eb445a58a013ec179478540",
+    "golden_dir":  "C:\\dev\\Cosmic\\tests\\acceptance\\goldens",
+    "golden_before":  {
+                          ".gitkeep-golden.txt":  "8e92944b7b4e999a32148948af2a13498ece10d56133c62c5c84431f2d335118"
+                      },
+    "golden_after":  {
+                         ".gitkeep-golden.txt":  "8e92944b7b4e999a32148948af2a13498ece10d56133c62c5c84431f2d335118"
+                     },
+    "golden_mutated":  false,
+    "acceptance_mode":  true,
+    "counts":  {
+                   "total":  7,
+                   "passed":  6,
+                   "failed":  1,
+                   "blocked":  0
+               },
+    "self_test":  {
+                      "enabled":  false,
+                      "failures":  [
+
+                                   ]
+                  },
+    "cases":  [
+                  {
+                      "id":  "D01",
+                      "tier":  "U",
+                      "description":  "WO-06 D01 production regression",
+                      "requires":  [
+                                       "windows"
+                                   ],
+                      "transport":  "none",
+                      "seed":  6,
+                      "start_utc":  "2026-09-18T01:12:55.4623971Z",
+                      "deadline_sec":  60,
+                      "exercised":  "fixture",
+                      "fixture":  "C:\\dev\\Cosmic\\tests\\acceptance\\..\\test_wo06.cpp",
+                      "fixture_sha256":  "d7270d5a678e65cd21fd11ba13bb22b740cad2239249876ae75b0ed150dbc984",
+                      "command":  "C:\\dev\\Cosmic\\build\\Runtime\\Debug\\CosmicTests.exe \"--test-case=WO-06 D01:*\" --no-colors",
+                      "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-06\\debug-initial\\D01.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-06\\debug-initial\\D01.err.log",
+                      "pid":  13520,
+                      "exit_code":  0,
+                      "crash":  false,
+                      "tests_passed":  1,
+                      "tests_expected_min":  1,
+                      "verdict":  "PASSED",
+                      "detail":  "exit 0 as expected",
+                      "duration_sec":  0.143,
+                      "end_utc":  "2026-09-18T01:12:55.6113978Z"
+                  },
+                  {
+                      "id":  "D02",
+                      "tier":  "U",
+                      "description":  "WO-06 D02 production regression",
+                      "requires":  [
+                                       "windows"
+                                   ],
+                      "transport":  "none",
+                      "seed":  6,
+                      "start_utc":  "2026-09-18T01:12:55.6163962Z",
+                      "deadline_sec":  60,
+                      "exercised":  "fixture",
+                      "fixture":  "C:\\dev\\Cosmic\\tests\\acceptance\\..\\test_wo06.cpp",
+                      "fixture_sha256":  "d7270d5a678e65cd21fd11ba13bb22b740cad2239249876ae75b0ed150dbc984",
+                      "command":  "C:\\dev\\Cosmic\\build\\Runtime\\Debug\\CosmicTests.exe \"--test-case=WO-06 D02:*\" --no-colors",
+                      "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-06\\debug-initial\\D02.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-06\\debug-initial\\D02.err.log",
+                      "pid":  18128,
+                      "exit_code":  0,
+                      "crash":  false,
+                      "tests_passed":  2,
+                      "tests_expected_min":  2,
+                      "verdict":  "PASSED",
+                      "detail":  "exit 0 as expected",
+                      "duration_sec":  0.054,
+                      "end_utc":  "2026-09-18T01:12:55.6698342Z"
+                  },
+                  {
+                      "id":  "D03",
+                      "tier":  "U",
+                      "description":  "WO-06 D03 production regression",
+                      "requires":  [
+                                       "windows"
+                                   ],
+                      "transport":  "none",
+                      "seed":  6,
+                      "start_utc":  "2026-09-18T01:12:55.6708343Z",
+                      "deadline_sec":  60,
+                      "exercised":  "fixture",
+                      "fixture":  "C:\\dev\\Cosmic\\tests\\acceptance\\..\\test_wo06.cpp",
+                      "fixture_sha256":  "d7270d5a678e65cd21fd11ba13bb22b740cad2239249876ae75b0ed150dbc984",
+                      "command":  "C:\\dev\\Cosmic\\build\\Runtime\\Debug\\CosmicTests.exe \"--test-case=WO-06 D03:*\" --no-colors",
+                      "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-06\\debug-initial\\D03.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-06\\debug-initial\\D03.err.log",
+                      "pid":  12948,
+                      "exit_code":  0,
+                      "crash":  false,
+                      "tests_passed":  2,
+                      "tests_expected_min":  2,
+                      "verdict":  "PASSED",
+                      "detail":  "exit 0 as expected",
+                      "duration_sec":  2.696,
+                      "end_utc":  "2026-09-18T01:12:58.3668355Z"
+                  },
+                  {
+                      "id":  "D04",
+                      "tier":  "U",
+                      "description":  "WO-06 D04 production regression",
+                      "requires":  [
+                                       "windows"
+                                   ],
+                      "transport":  "none",
+                      "seed":  6,
+                      "start_utc":  "2026-09-18T01:12:58.3678358Z",
+                      "deadline_sec":  60,
+                      "exercised":  "fixture",
+                      "fixture":  "C:\\dev\\Cosmic\\tests\\acceptance\\..\\test_wo06.cpp",
+                      "fixture_sha256":  "d7270d5a678e65cd21fd11ba13bb22b740cad2239249876ae75b0ed150dbc984",
+                      "command":  "C:\\dev\\Cosmic\\build\\Runtime\\Debug\\CosmicTests.exe \"--test-case=WO-06 D04:*\" --no-colors",
+                      "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-06\\debug-initial\\D04.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-06\\debug-initial\\D04.err.log",
+                      "pid":  17236,
+                      "exit_code":  0,
+                      "crash":  false,
+                      "tests_passed":  2,
+                      "tests_expected_min":  2,
+                      "verdict":  "PASSED",
+                      "detail":  "exit 0 as expected",
+                      "duration_sec":  0.667,
+                      "end_utc":  "2026-09-18T01:12:59.0353969Z"
+                  },
+                  {
+                      "id":  "D05",
+                      "tier":  "W",
+                      "description":  "WO-06 D05 production regression",
+                      "requires":  [
+                                       "windows"
+                                   ],
+                      "transport":  "none",
+                      "seed":  6,
+                      "start_utc":  "2026-09-18T01:12:59.0363968Z",
+                      "deadline_sec":  30,
+                      "exercised":  "fixture",
+                      "fixture":  "C:\\dev\\Cosmic\\tests\\acceptance\\..\\test_wo06.cpp",
+                      "fixture_sha256":  "d7270d5a678e65cd21fd11ba13bb22b740cad2239249876ae75b0ed150dbc984",
+                      "command":  "C:\\dev\\Cosmic\\build\\Runtime\\Debug\\CosmicTests.exe \"--test-case=WO-06 D05:*\" --no-colors \"--test-case-exclude=*two hour*\"",
+                      "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-06\\debug-initial\\D05.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-06\\debug-initial\\D05.err.log",
+                      "pid":  17160,
+                      "exit_code":  0,
+                      "crash":  false,
+                      "tests_passed":  6,
+                      "tests_expected_min":  6,
+                      "verdict":  "PASSED",
+                      "detail":  "exit 0 as expected",
+                      "duration_sec":  0.17,
+                      "end_utc":  "2026-09-18T01:12:59.2063954Z"
+                  },
+                  {
+                      "id":  "D06",
+                      "tier":  "W",
+                      "description":  "WO-06 D06 production regression",
+                      "requires":  [
+                                       "windows"
+                                   ],
+                      "transport":  "none",
+                      "seed":  6,
+                      "start_utc":  "2026-09-18T01:12:59.2073962Z",
+                      "deadline_sec":  60,
+                      "exercised":  "fixture",
+                      "fixture":  "C:\\dev\\Cosmic\\tests\\acceptance\\..\\test_wo06.cpp",
+                      "fixture_sha256":  "d7270d5a678e65cd21fd11ba13bb22b740cad2239249876ae75b0ed150dbc984",
+                      "command":  "C:\\dev\\Cosmic\\build\\Runtime\\Debug\\CosmicTests.exe \"--test-case=WO-06 D06:*\" --no-colors",
+                      "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-06\\debug-initial\\D06.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-06\\debug-initial\\D06.err.log",
+                      "pid":  23288,
+                      "exit_code":  0,
+                      "crash":  false,
+                      "tests_passed":  5,
+                      "tests_expected_min":  5,
+                      "verdict":  "PASSED",
+                      "detail":  "exit 0 as expected",
+                      "duration_sec":  0.213,
+                      "end_utc":  "2026-09-18T01:12:59.4203964Z"
+                  },
+                  {
+                      "id":  "D05-two-hour",
+                      "tier":  "W",
+                      "description":  "Two-hour logical fixture: full production command export, 30-second export limit, memory and independent accounting",
+                      "requires":  [
+                                       "windows"
+                                   ],
+                      "transport":  "none",
+                      "seed":  6,
+                      "start_utc":  "2026-09-18T01:12:59.4213961Z",
+                      "deadline_sec":  60,
+                      "exercised":  "fixture",
+                      "fixture":  "C:\\dev\\Cosmic\\tests\\acceptance\\..\\test_wo06.cpp",
+                      "fixture_sha256":  "d7270d5a678e65cd21fd11ba13bb22b740cad2239249876ae75b0ed150dbc984",
+                      "command":  "C:\\dev\\Cosmic\\build\\Runtime\\Debug\\CosmicTests.exe \"--test-case=WO-06 D05: two hour*\" --no-colors",
+                      "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-06\\debug-initial\\D05-two-hour.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-06\\debug-initial\\D05-two-hour.err.log",
+                      "pid":  18128,
+                      "exit_code":  1,
+                      "crash":  false,
+                      "tests_passed":  0,
+                      "tests_expected_min":  1,
+                      "verdict":  "FAILED",
+                      "detail":  "expected \u003e= 1 tests, got 0 (exit 1, wanted 0)",
+                      "duration_sec":  39.748,
+                      "end_utc":  "2026-09-18T01:13:39.1696079Z"
+                  }
+              ]
+}

@@ -176,12 +176,18 @@ namespace Workspace
     {
         // Failsafe: if an intentional recording was made but never exported, write it
         // out now so returning to the launcher / closing the app never loses it.
-        if (m_RecordingDirty && m_Recorder.GetTotalFrameCount() > 0 && !m_Recorder.IsFlushing())
-            m_Recorder.Flush(k_RecordDir, m_SessionName, k_SampleRate);
-
         m_Recorder.DisableAutosave();
         // The shared serial link is shut down by the root manager that owns it.
         m_Recorder.WaitForFlush();
+        m_PendingIntentionalExport=false;
+        if(m_IntentionalExport && m_Recorder.GetFlushState()==Cosmic::DataRecorder::FlushState::Succeeded &&
+           m_ExportFrameCount==m_Recorder.GetTotalFrameCount()) m_RecordingDirty=false;
+        if(m_RecordingDirty && m_Recorder.GetTotalFrameCount()>0) {
+            m_Recorder.Flush(k_RecordDir,m_SessionName,k_SampleRate);
+            m_Recorder.WaitForFlush();
+            m_RecordingDirty=m_Recorder.GetFlushState()!=Cosmic::DataRecorder::FlushState::Succeeded;
+        }
+        m_RecordStatus=m_RecordingDirty ? "Export FAILED; recording remains unsaved." : "Export complete.";
         Cosmic::EntitySelection::Clear();
     }
 
@@ -269,9 +275,7 @@ namespace Workspace
             m_LastStatsReset = m_AppClock;
         }
 
-        const bool flushing = m_Recorder.IsFlushing();
-        if (m_WasFlushing && !flushing) m_RecordStatus = "Export complete.";
-        m_WasFlushing = flushing;
+        ServiceRecording();
 
         // Port scanning + async (non-blocking) auto-reconnect are driven by the
         // root manager (the shared SerialLink persists across screens); here we
@@ -306,7 +310,7 @@ namespace Workspace
 
     void TelemHub::RecordFixed(float dt)
     {
-        if (dt <= 0.0f) return;
+        if (dt <= 0.0f || !std::isfinite(dt) || m_RecordLimitReached) return;
         if (m_Panel.GetMode() == Cosmic::TelemetryPanel::Mode::Replay) return;
 
         // Record all three entities every tick (absent ESCs record zeros), so the
@@ -315,6 +319,16 @@ namespace Workspace
         m_Recorder.Record(m_RecordId[ESC_LEFT],   m_Drive[ESC_LEFT].ToChannels());
         m_Recorder.Record(m_RecordId[ESC_WEAPON], m_Weapon.ToChannels());
         m_Recorder.Tick(dt);
+        if(m_Recording) {
+            m_RecordingSeconds+=dt;
+            if(m_RecordingSeconds>=MaxRecordingSeconds || m_Recorder.GetTotalFrameCount()>=MaxRecordingFrames) {
+                m_RecordLimitReached=true;StopRecording();
+                // The mandatory ceiling finalizes even when ordinary manual
+                // Stop auto-export is disabled by the user's preference.
+                if(!m_AutoExportOnStop) ExportRecording();
+                m_RecordStatus="Recording limit reached; finalizing export.";
+            }
+        }
     }
 
     // =========================================================================
@@ -578,12 +592,14 @@ namespace Workspace
 
     void TelemHub::StartRecording()
     {
+        if(m_Recorder.IsFlushing() || m_PendingIntentionalExport) {m_RecordStatus="Saving; start a new recording after completion.";return;}
         if (m_Panel.GetMode() == Cosmic::TelemetryPanel::Mode::Replay)
         {
             m_Player.Unload();
             Cosmic::EntitySelection::SetByName(IdEntity(ESC_RIGHT), "Drive");
         }
         m_Recorder.Clear();
+        m_RecordingSeconds=0;m_RecordLimitReached=false;m_IntentionalExport=false;
         m_Recorder.ReserveCapacity(k_RecordCap);
         for (auto& r : m_Ring) r.Clear();
         m_Recording      = true;
@@ -594,17 +610,33 @@ namespace Workspace
         m_Recorder.SetAutosave(k_AutoSaveDir, m_SessionName, k_AutoSaveInterval, k_SampleRate);
     }
 
+    void TelemHub::ServiceRecording()
+    {
+        bool flushing=m_Recorder.IsFlushing();
+        if(!flushing && m_PendingIntentionalExport) {
+            m_PendingIntentionalExport=false;ExportRecording();flushing=m_Recorder.IsFlushing();
+        }
+        if(m_WasFlushing && !flushing) {
+            const bool success=m_Recorder.GetFlushState()==Cosmic::DataRecorder::FlushState::Succeeded;
+            m_RecordStatus=success ? "Export complete." : "Export FAILED; recording remains unsaved.";
+            if(m_IntentionalExport && success && m_ExportFrameCount==m_Recorder.GetTotalFrameCount()) m_RecordingDirty=false;
+            m_IntentionalExport=false;
+        }
+        m_WasFlushing=flushing;
+    }
+
     void TelemHub::StopRecording()
     {
         m_Recording = false;
         m_Recorder.DisableAutosave();
-        if (m_AutoExportOnStop && m_Recorder.GetTotalFrameCount() > 0 && !m_Recorder.IsFlushing())
+        if (m_AutoExportOnStop && m_Recorder.GetTotalFrameCount() > 0)
         {
+            if(m_Recorder.IsFlushing()) {m_PendingIntentionalExport=true;m_RecordStatus="Saving; final export queued.";return;}
             m_Recorder.Flush(k_RecordDir, m_SessionName, k_SampleRate);
+            m_IntentionalExport=true;m_ExportFrameCount=m_Recorder.GetTotalFrameCount();
             const std::string dest = m_SessionName.empty() ? "<timestamp>" : m_SessionName;
             m_RecordStatus = "Exporting -> " + std::string(k_RecordDir) + "/" + dest + "/";
             m_WasFlushing  = true;
-            m_RecordingDirty = false;
         }
         else
         {
@@ -614,11 +646,13 @@ namespace Workspace
 
     void TelemHub::ExportRecording()
     {
+        if(m_Recorder.GetTotalFrameCount()>0) m_RecordingDirty=true;
+        if(m_Recorder.IsFlushing()) {m_PendingIntentionalExport=true;m_RecordStatus="Saving; final export queued.";return;}
         m_Recorder.Flush(k_RecordDir, m_SessionName, k_SampleRate);
+        m_IntentionalExport=true;m_ExportFrameCount=m_Recorder.GetTotalFrameCount();
         const std::string dest = m_SessionName.empty() ? "<timestamp>" : m_SessionName;
         m_RecordStatus = "Exporting -> " + std::string(k_RecordDir) + "/" + dest + "/";
         m_WasFlushing  = true;
-        m_RecordingDirty = false;
     }
     void TelemHub::DrawRecordingControls()
     {
@@ -635,7 +669,8 @@ namespace Workspace
             ImGui::TextDisabled("(blank = timestamp)");
         }
 
-        ImGui::Checkbox("Auto-export on stop", &m_AutoExportOnStop);
+        bool autoExport=m_AutoExportOnStop;
+        if(ImGui::Checkbox("Auto-export on stop", &autoExport)) SetAutoExportOnStop(autoExport);
         if (ImGui::IsItemHovered())
             ImGui::SetTooltip("Write the recording to %s/<session>/ automatically when you press Stop.\n"
                               "Regardless of this setting, a rolling autosave is written to %s/ every\n"

@@ -1,0 +1,2323 @@
+
+## accepted-Debug\D01.out.log
+[doctest] test cases:   1 |   1 passed | 0 failed | 388 skipped
+[doctest] assertions: 145 | 145 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## accepted-Debug\D02.out.log
+[doctest] test cases:  3 |  3 passed | 0 failed | 386 skipped
+[doctest] assertions: 80 | 80 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## accepted-Debug\D03-nightly.out.log
+WO06 F-CORRUPT seed=6 cases=50000 max_fixture_bytes=736
+[doctest] test cases:      1 |      1 passed | 0 failed | 388 skipped
+[doctest] assertions: 300005 | 300005 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## accepted-Debug\D03.out.log
+WO06 F-CORRUPT seed=6 cases=2000 max_fixture_bytes=736
+[doctest] test cases:     2 |     2 passed | 0 failed | 387 skipped
+[doctest] assertions: 12014 | 12014 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## accepted-Debug\D04.out.log
+WO06 shared_entity intended=40000 actual=40000 timestamp_reversals=0
+[doctest] test cases:      3 |      3 passed | 0 failed | 386 skipped
+[doctest] assertions: 397157 | 397157 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## accepted-Debug\D05-native-retained.out.log
+[doctest] test cases: 10 | 10 passed | 0 failed
+
+## accepted-Debug\D05-native-two-hour.out.log
+[doctest] test cases: 2 | 2 passed | 0 failed
+
+## accepted-Debug\D05-two-hour.out.log
+WO06 two_hour samples_per_entity=432000 entities=3 capture_wall_seconds=1.257 final_export_total_seconds=6.831 history_logical_bytes=48384000 history_capacity_bytes=51667504 snapshot_logical_bytes=48384000 largest_csv_double_bytes=34560000 observed_private_bytes=139513856 nominal_duration=7200 stored_last_timestamp=7183.12793
+[doctest] test cases:        1 |        1 passed | 0 failed | 388 skipped
+[doctest] assertions: 19872059 | 19872059 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## accepted-Debug\D05.out.log
+[2026-09-17 22:44:16.197] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-accepted-Debug\cosmic-accept-6ef03aa3e8a64dd495e63f800b1122c5\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 22:44:16.199] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-accepted-Debug\cosmic-accept-6ef03aa3e8a64dd495e63f800b1122c5\temp\wo06\record-fault/save': binary write/flush/close failed
+[2026-09-17 22:44:16.204] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-accepted-Debug\cosmic-accept-6ef03aa3e8a64dd495e63f800b1122c5\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 22:44:16.207] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-accepted-Debug\cosmic-accept-6ef03aa3e8a64dd495e63f800b1122c5\temp\wo06\record-fault/save': binary write/flush/close failed
+[2026-09-17 22:44:16.212] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-accepted-Debug\cosmic-accept-6ef03aa3e8a64dd495e63f800b1122c5\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 22:44:16.215] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-accepted-Debug\cosmic-accept-6ef03aa3e8a64dd495e63f800b1122c5\temp\wo06\record-fault/save': binary write/flush/close failed
+[2026-09-17 22:44:16.220] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-accepted-Debug\cosmic-accept-6ef03aa3e8a64dd495e63f800b1122c5\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 22:44:16.223] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-accepted-Debug\cosmic-accept-6ef03aa3e8a64dd495e63f800b1122c5\temp\wo06\record-fault/save': binary write/flush/close failed
+[2026-09-17 22:44:16.228] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-accepted-Debug\cosmic-accept-6ef03aa3e8a64dd495e63f800b1122c5\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 22:44:16.233] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-accepted-Debug\cosmic-accept-6ef03aa3e8a64dd495e63f800b1122c5\temp\wo06\record-fault/save': snapshot publication failed
+[2026-09-17 22:44:16.237] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-accepted-Debug\cosmic-accept-6ef03aa3e8a64dd495e63f800b1122c5\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 22:44:16.238] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-accepted-Debug\cosmic-accept-6ef03aa3e8a64dd495e63f800b1122c5\temp\wo06\record-fault/save': interrupted autosave
+[2026-09-17 22:44:16.243] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-accepted-Debug\cosmic-accept-6ef03aa3e8a64dd495e63f800b1122c5\temp\wo06\record-fault/save': snapshot publication failed
+[2026-09-17 22:44:16.284] [COSMIC] [error] DataRecorder: Flush FAILED for 'recordings/SF_Telem/wo06-state': binary write/flush/close failed
+[2026-09-17 22:44:16.363] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-accepted-Debug\cosmic-accept-6ef03aa3e8a64dd495e63f800b1122c5\temp\wo06\csv-failure/save': CSV export failed
+[2026-09-17 22:44:16.366] [COSMIC] [error] DataRecorder: Flush FAILED for 'recordings/SF_Telem/wo06-monitor-export': binary write/flush/close failed
+WO06 loss held_write current_samples=17 published_samples=5 unpublished_samples=12 oldest_unpublished_t=5 current_t=17 window_seconds=12
+WO06 loss final unpublished_samples=0 final_publication_ms=5.887
+[doctest] test cases:   8 |   8 passed | 0 failed | 381 skipped
+[doctest] assertions: 244 | 244 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## accepted-Debug\D06.out.log
+WO06 D06 grammar_cases=36 Unicode_UTF8_path=PASS
+[doctest] test cases:   5 |   5 passed | 0 failed | 384 skipped
+[doctest] assertions: 236 | 236 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## accepted-Debug\retained.out.log
+WO05 matrix: schedules=9 transitions=5 storage=5 iterations=100 total=22500 max_close_ms=50
+WO05 cancel owner ms p95=110.058 p99=121.982 max=122.017
+[doctest] test cases:     362 |     362 passed | 0 failed | 27 skipped
+[doctest] assertions: 2843526 | 2843526 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## accepted-Release\D01.out.log
+[doctest] test cases:   1 |   1 passed | 0 failed | 388 skipped
+[doctest] assertions: 145 | 145 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## accepted-Release\D02.out.log
+[doctest] test cases:  3 |  3 passed | 0 failed | 386 skipped
+[doctest] assertions: 80 | 80 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## accepted-Release\D03-nightly.out.log
+WO06 F-CORRUPT seed=6 cases=50000 max_fixture_bytes=736
+[doctest] test cases:      1 |      1 passed | 0 failed | 388 skipped
+[doctest] assertions: 300005 | 300005 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## accepted-Release\D03.out.log
+WO06 F-CORRUPT seed=6 cases=2000 max_fixture_bytes=736
+[doctest] test cases:     2 |     2 passed | 0 failed | 387 skipped
+[doctest] assertions: 12014 | 12014 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## accepted-Release\D04.out.log
+WO06 shared_entity intended=40000 actual=40000 timestamp_reversals=0
+[doctest] test cases:      3 |      3 passed | 0 failed | 386 skipped
+[doctest] assertions: 444722 | 444722 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## accepted-Release\D05-native-retained.out.log
+[doctest] test cases: 10 | 10 passed | 0 failed
+
+## accepted-Release\D05-native-two-hour.out.log
+[doctest] test cases: 2 | 2 passed | 0 failed
+
+## accepted-Release\D05-two-hour.out.log
+WO06 two_hour samples_per_entity=432000 entities=3 capture_wall_seconds=0.101 final_export_total_seconds=0.763 history_logical_bytes=48384000 history_capacity_bytes=51667504 snapshot_logical_bytes=48384000 largest_csv_double_bytes=34560000 observed_private_bytes=138919936 nominal_duration=7200 stored_last_timestamp=7183.12793
+[doctest] test cases:        1 |        1 passed | 0 failed | 388 skipped
+[doctest] assertions: 19872059 | 19872059 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## accepted-Release\D05.out.log
+[2026-09-17 22:44:16.080] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-accepted-Release\cosmic-accept-69c2a058895b444194677b589d114ae9\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 22:44:16.082] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-accepted-Release\cosmic-accept-69c2a058895b444194677b589d114ae9\temp\wo06\record-fault/save': binary write/flush/close failed
+[2026-09-17 22:44:16.086] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-accepted-Release\cosmic-accept-69c2a058895b444194677b589d114ae9\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 22:44:16.089] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-accepted-Release\cosmic-accept-69c2a058895b444194677b589d114ae9\temp\wo06\record-fault/save': binary write/flush/close failed
+[2026-09-17 22:44:16.092] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-accepted-Release\cosmic-accept-69c2a058895b444194677b589d114ae9\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 22:44:16.094] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-accepted-Release\cosmic-accept-69c2a058895b444194677b589d114ae9\temp\wo06\record-fault/save': binary write/flush/close failed
+[2026-09-17 22:44:16.099] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-accepted-Release\cosmic-accept-69c2a058895b444194677b589d114ae9\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 22:44:16.101] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-accepted-Release\cosmic-accept-69c2a058895b444194677b589d114ae9\temp\wo06\record-fault/save': binary write/flush/close failed
+[2026-09-17 22:44:16.105] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-accepted-Release\cosmic-accept-69c2a058895b444194677b589d114ae9\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 22:44:16.109] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-accepted-Release\cosmic-accept-69c2a058895b444194677b589d114ae9\temp\wo06\record-fault/save': snapshot publication failed
+[2026-09-17 22:44:16.114] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-accepted-Release\cosmic-accept-69c2a058895b444194677b589d114ae9\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 22:44:16.114] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-accepted-Release\cosmic-accept-69c2a058895b444194677b589d114ae9\temp\wo06\record-fault/save': interrupted autosave
+[2026-09-17 22:44:16.119] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-accepted-Release\cosmic-accept-69c2a058895b444194677b589d114ae9\temp\wo06\record-fault/save': snapshot publication failed
+[2026-09-17 22:44:16.152] [COSMIC] [error] DataRecorder: Flush FAILED for 'recordings/SF_Telem/wo06-state': binary write/flush/close failed
+[2026-09-17 22:44:16.216] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-accepted-Release\cosmic-accept-69c2a058895b444194677b589d114ae9\temp\wo06\csv-failure/save': CSV export failed
+[2026-09-17 22:44:16.217] [COSMIC] [error] DataRecorder: Flush FAILED for 'recordings/SF_Telem/wo06-monitor-export': binary write/flush/close failed
+WO06 loss held_write current_samples=17 published_samples=5 unpublished_samples=12 oldest_unpublished_t=5 current_t=17 window_seconds=12
+WO06 loss final unpublished_samples=0 final_publication_ms=6.850
+[doctest] test cases:   8 |   8 passed | 0 failed | 381 skipped
+[doctest] assertions: 244 | 244 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## accepted-Release\D06.out.log
+WO06 D06 grammar_cases=36 Unicode_UTF8_path=PASS
+[doctest] test cases:   5 |   5 passed | 0 failed | 384 skipped
+[doctest] assertions: 236 | 236 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## accepted-Release\retained.out.log
+[2026-09-17 22:45:11.257] [COSMIC] [error] DataRecorder: Flush FAILED for 'recordings/SF_Telem/wo05-matrix': CSV export failed
+WO05 matrix: schedules=9 transitions=5 storage=5 iterations=100 total=22500 max_close_ms=22
+WO05 cancel owner ms p95=110.493 p99=111.410 max=123.529
+[doctest] test cases:     362 |     362 passed | 0 failed | 27 skipped
+[doctest] assertions: 2843526 | 2843526 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## all-complete-Debug\D01.out.log
+[doctest] test cases:   1 |   1 passed | 0 failed | 388 skipped
+[doctest] assertions: 145 | 145 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## all-complete-Debug\D02.out.log
+[doctest] test cases:  3 |  3 passed | 0 failed | 386 skipped
+[doctest] assertions: 72 | 72 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## all-complete-Debug\D03-nightly.out.log
+WO06 F-CORRUPT seed=6 cases=50000 max_fixture_bytes=736
+[doctest] test cases:      1 |      1 passed | 0 failed | 388 skipped
+[doctest] assertions: 300005 | 300005 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## all-complete-Debug\D03.out.log
+WO06 F-CORRUPT seed=6 cases=2000 max_fixture_bytes=736
+[doctest] test cases:     2 |     2 passed | 0 failed | 387 skipped
+[doctest] assertions: 12014 | 12014 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## all-complete-Debug\D04.out.log
+WO06 shared_entity intended=40000 actual=40000 timestamp_reversals=0
+[doctest] test cases:      3 |      3 passed | 0 failed | 386 skipped
+[doctest] assertions: 397402 | 397402 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## all-complete-Debug\D05-native-retained.out.log
+[doctest] test cases: 10 | 10 passed | 0 failed
+
+## all-complete-Debug\D05-native-two-hour.out.log
+[doctest] test cases: 2 | 2 passed | 0 failed
+
+## all-complete-Debug\D05-two-hour.out.log
+WO06 two_hour samples_per_entity=432000 entities=3 capture_wall_seconds=1.288 final_export_total_seconds=5.357 history_logical_bytes=48384000 history_capacity_bytes=51667504 snapshot_logical_bytes=48384000 largest_csv_double_bytes=34560000 observed_private_bytes=139530240 nominal_duration=7200 stored_last_timestamp=7183.12793
+[doctest] test cases:        1 |        1 passed | 0 failed | 388 skipped
+[doctest] assertions: 19872059 | 19872059 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## all-complete-Debug\D05.out.log
+[2026-09-17 18:54:10.016] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-all-complete-Debug\cosmic-accept-e5cebfb70bb548268d43588c1a2133ba\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:54:10.019] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-all-complete-Debug\cosmic-accept-e5cebfb70bb548268d43588c1a2133ba\temp\wo06\record-fault/save': binary write/flush/close failed
+[2026-09-17 18:54:10.024] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-all-complete-Debug\cosmic-accept-e5cebfb70bb548268d43588c1a2133ba\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:54:10.028] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-all-complete-Debug\cosmic-accept-e5cebfb70bb548268d43588c1a2133ba\temp\wo06\record-fault/save': binary write/flush/close failed
+[2026-09-17 18:54:10.034] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-all-complete-Debug\cosmic-accept-e5cebfb70bb548268d43588c1a2133ba\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:54:10.037] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-all-complete-Debug\cosmic-accept-e5cebfb70bb548268d43588c1a2133ba\temp\wo06\record-fault/save': binary write/flush/close failed
+[2026-09-17 18:54:10.043] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-all-complete-Debug\cosmic-accept-e5cebfb70bb548268d43588c1a2133ba\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:54:10.047] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-all-complete-Debug\cosmic-accept-e5cebfb70bb548268d43588c1a2133ba\temp\wo06\record-fault/save': binary write/flush/close failed
+[2026-09-17 18:54:10.052] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-all-complete-Debug\cosmic-accept-e5cebfb70bb548268d43588c1a2133ba\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:54:10.057] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-all-complete-Debug\cosmic-accept-e5cebfb70bb548268d43588c1a2133ba\temp\wo06\record-fault/save': snapshot publication failed
+[2026-09-17 18:54:10.062] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-all-complete-Debug\cosmic-accept-e5cebfb70bb548268d43588c1a2133ba\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:54:10.063] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-all-complete-Debug\cosmic-accept-e5cebfb70bb548268d43588c1a2133ba\temp\wo06\record-fault/save': interrupted autosave
+[2026-09-17 18:54:10.068] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-all-complete-Debug\cosmic-accept-e5cebfb70bb548268d43588c1a2133ba\temp\wo06\record-fault/save': snapshot publication failed
+[2026-09-17 18:54:10.101] [COSMIC] [error] DataRecorder: Flush FAILED for 'recordings/SF_Telem/wo06-state': binary write/flush/close failed
+[2026-09-17 18:54:10.176] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-all-complete-Debug\cosmic-accept-e5cebfb70bb548268d43588c1a2133ba\temp\wo06\csv-failure/save': CSV export failed
+[2026-09-17 18:54:10.178] [COSMIC] [error] DataRecorder: Flush FAILED for 'recordings/SF_Telem/wo06-monitor-export': binary write/flush/close failed
+WO06 loss held_write current_samples=17 published_samples=5 unpublished_samples=12 oldest_unpublished_t=5 current_t=17 window_seconds=12
+WO06 loss final unpublished_samples=0 final_publication_ms=5.023
+[doctest] test cases:   8 |   8 passed | 0 failed | 381 skipped
+[doctest] assertions: 244 | 244 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## all-complete-Debug\D06.out.log
+WO06 D06 grammar_cases=36 Unicode_UTF8_path=PASS
+[doctest] test cases:   5 |   5 passed | 0 failed | 384 skipped
+[doctest] assertions: 236 | 236 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## all-complete-Debug\retained.out.log
+WO05 matrix: schedules=9 transitions=5 storage=5 iterations=100 total=22500 max_close_ms=20
+WO05 cancel owner ms p95=111.274 p99=123.165 max=124.003
+[doctest] test cases:     362 |     362 passed | 0 failed | 27 skipped
+[doctest] assertions: 2843526 | 2843526 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## all-complete-Release\D01.out.log
+[doctest] test cases:   1 |   1 passed | 0 failed | 388 skipped
+[doctest] assertions: 145 | 145 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## all-complete-Release\D02.out.log
+[doctest] test cases:  3 |  3 passed | 0 failed | 386 skipped
+[doctest] assertions: 72 | 72 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## all-complete-Release\D03-nightly.out.log
+WO06 F-CORRUPT seed=6 cases=50000 max_fixture_bytes=736
+[doctest] test cases:      1 |      1 passed | 0 failed | 388 skipped
+[doctest] assertions: 300005 | 300005 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## all-complete-Release\D03.out.log
+WO06 F-CORRUPT seed=6 cases=2000 max_fixture_bytes=736
+[doctest] test cases:     2 |     2 passed | 0 failed | 387 skipped
+[doctest] assertions: 12014 | 12014 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## all-complete-Release\D04.out.log
+WO06 shared_entity intended=40000 actual=40000 timestamp_reversals=0
+[doctest] test cases:      3 |      3 passed | 0 failed | 386 skipped
+[doctest] assertions: 440897 | 440897 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## all-complete-Release\D05-native-retained.out.log
+[doctest] test cases: 10 | 10 passed | 0 failed
+
+## all-complete-Release\D05-native-two-hour.out.log
+[doctest] test cases: 2 | 2 passed | 0 failed
+
+## all-complete-Release\D05-two-hour.out.log
+WO06 two_hour samples_per_entity=432000 entities=3 capture_wall_seconds=0.100 final_export_total_seconds=0.763 history_logical_bytes=48384000 history_capacity_bytes=51667504 snapshot_logical_bytes=48384000 largest_csv_double_bytes=34560000 observed_private_bytes=138919936 nominal_duration=7200 stored_last_timestamp=7183.12793
+[doctest] test cases:        1 |        1 passed | 0 failed | 388 skipped
+[doctest] assertions: 19872059 | 19872059 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## all-complete-Release\D05.out.log
+[2026-09-17 18:54:09.564] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-all-complete-Release\cosmic-accept-90791f6abc0c4ec8a0ba2ed49d44a9eb\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:54:09.566] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-all-complete-Release\cosmic-accept-90791f6abc0c4ec8a0ba2ed49d44a9eb\temp\wo06\record-fault/save': binary write/flush/close failed
+[2026-09-17 18:54:09.570] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-all-complete-Release\cosmic-accept-90791f6abc0c4ec8a0ba2ed49d44a9eb\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:54:09.572] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-all-complete-Release\cosmic-accept-90791f6abc0c4ec8a0ba2ed49d44a9eb\temp\wo06\record-fault/save': binary write/flush/close failed
+[2026-09-17 18:54:09.576] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-all-complete-Release\cosmic-accept-90791f6abc0c4ec8a0ba2ed49d44a9eb\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:54:09.578] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-all-complete-Release\cosmic-accept-90791f6abc0c4ec8a0ba2ed49d44a9eb\temp\wo06\record-fault/save': binary write/flush/close failed
+[2026-09-17 18:54:09.582] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-all-complete-Release\cosmic-accept-90791f6abc0c4ec8a0ba2ed49d44a9eb\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:54:09.584] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-all-complete-Release\cosmic-accept-90791f6abc0c4ec8a0ba2ed49d44a9eb\temp\wo06\record-fault/save': binary write/flush/close failed
+[2026-09-17 18:54:09.588] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-all-complete-Release\cosmic-accept-90791f6abc0c4ec8a0ba2ed49d44a9eb\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:54:09.592] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-all-complete-Release\cosmic-accept-90791f6abc0c4ec8a0ba2ed49d44a9eb\temp\wo06\record-fault/save': snapshot publication failed
+[2026-09-17 18:54:09.596] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-all-complete-Release\cosmic-accept-90791f6abc0c4ec8a0ba2ed49d44a9eb\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:54:09.596] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-all-complete-Release\cosmic-accept-90791f6abc0c4ec8a0ba2ed49d44a9eb\temp\wo06\record-fault/save': interrupted autosave
+[2026-09-17 18:54:09.600] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-all-complete-Release\cosmic-accept-90791f6abc0c4ec8a0ba2ed49d44a9eb\temp\wo06\record-fault/save': snapshot publication failed
+[2026-09-17 18:54:09.628] [COSMIC] [error] DataRecorder: Flush FAILED for 'recordings/SF_Telem/wo06-state': binary write/flush/close failed
+[2026-09-17 18:54:09.690] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-all-complete-Release\cosmic-accept-90791f6abc0c4ec8a0ba2ed49d44a9eb\temp\wo06\csv-failure/save': CSV export failed
+[2026-09-17 18:54:09.692] [COSMIC] [error] DataRecorder: Flush FAILED for 'recordings/SF_Telem/wo06-monitor-export': binary write/flush/close failed
+WO06 loss held_write current_samples=17 published_samples=5 unpublished_samples=12 oldest_unpublished_t=5 current_t=17 window_seconds=12
+WO06 loss final unpublished_samples=0 final_publication_ms=4.217
+[doctest] test cases:   8 |   8 passed | 0 failed | 381 skipped
+[doctest] assertions: 244 | 244 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## all-complete-Release\D06.out.log
+WO06 D06 grammar_cases=36 Unicode_UTF8_path=PASS
+[doctest] test cases:   5 |   5 passed | 0 failed | 384 skipped
+[doctest] assertions: 236 | 236 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## all-complete-Release\retained.out.log
+WO05 matrix: schedules=9 transitions=5 storage=5 iterations=100 total=22500 max_close_ms=18
+WO05 cancel owner ms p95=111.699 p99=111.749 max=124.629
+[doctest] test cases:     362 |     362 passed | 0 failed | 27 skipped
+[doctest] assertions: 2843526 | 2843526 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## audit-accepted-Debug\D05-independent-audit.out.log
+[doctest] test cases: 1 | 1 passed | 0 failed
+
+## audit-accepted-Release\D05-independent-audit.out.log
+[doctest] test cases: 1 | 1 passed | 0 failed
+
+## audit-complete-Debug\D05-independent-audit.out.log
+[doctest] test cases: 1 | 1 passed | 0 failed
+
+## audit-complete-Release\D05-independent-audit.out.log
+[doctest] test cases: 1 | 1 passed | 0 failed
+
+## audit-debug\D05-independent-audit.err.log
+Traceback (most recent call last):
+AssertionError
+
+## audit-debug-after\D05-independent-audit.out.log
+[doctest] test cases: 1 | 1 passed | 0 failed
+
+## audit-release\D05-independent-audit.out.log
+[doctest] test cases: 1 | 1 passed | 0 failed
+
+## before\D01.out.log
+[doctest] test cases: 0 | 0 passed | 0 failed | 368 skipped
+[doctest] assertions: 0 | 0 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## before\D02.out.log
+C:\dev\Cosmic\tests\test_wo06.cpp(40): ERROR: CHECK( p.GetPosition()==2 ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(41): ERROR: CHECK_FALSE( p.SampleAt("A",std::numeric_limits<float>::quiet_NaN(),out) ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(41): ERROR: CHECK( out.timestamp==7 ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(41): ERROR: CHECK( out.values==std::vector<float>{99} ) is NOT correct!
+[doctest] test cases: 1 | 0 passed | 1 failed | 367 skipped
+[doctest] assertions: 5 | 1 passed | 4 failed |
+[doctest] Status: FAILURE!
+
+## before\D03.out.log
+C:\dev\Cosmic\tests\test_wo06.cpp(34): ERROR: CHECK_FALSE( p.Load((dir/"bad.bin").string()) ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(35): ERROR: CHECK_FALSE( p.IsLoaded() ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(35): ERROR: CHECK( p.GetEntityNames().empty() ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(34): ERROR: CHECK_FALSE( p.Load((dir/"bad.bin").string()) ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(35): ERROR: CHECK_FALSE( p.IsLoaded() ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(35): ERROR: CHECK( p.GetEntityNames().empty() ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(34): ERROR: CHECK_FALSE( p.Load((dir/"bad.bin").string()) ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(35): ERROR: CHECK_FALSE( p.IsLoaded() ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(35): ERROR: CHECK( p.GetEntityNames().empty() ) is NOT correct!
+[doctest] test cases: 1 | 0 passed | 1 failed | 367 skipped
+[doctest] assertions: 9 | 0 passed | 9 failed |
+[doctest] Status: FAILURE!
+
+## before\D04.out.log
+[doctest] test cases: 0 | 0 passed | 0 failed | 368 skipped
+[doctest] assertions: 0 | 0 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## before\D05.out.log
+C:\dev\Cosmic\tests\test_wo06.cpp(57): FATAL ERROR: REQUIRE( p.Load("recordings/SF_Telem/wo06-pending") ) is NOT correct!
+[doctest] test cases: 1 | 0 passed | 1 failed | 367 skipped
+[doctest] assertions: 1 | 0 passed | 1 failed |
+[doctest] Status: FAILURE!
+
+## before\D06.out.log
+C:\dev\Cosmic\tests\test_wo06.cpp(47): ERROR: CHECK_FALSE( DataExport::LoadCSV(path.string(),c,&h) ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(47): ERROR: CHECK( c.empty() ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(47): ERROR: CHECK( h.empty() ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(47): ERROR: CHECK_FALSE( DataExport::LoadCSV(path.string(),c,&h) ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(47): ERROR: CHECK( c.empty() ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(47): ERROR: CHECK( h.empty() ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(47): ERROR: CHECK_FALSE( DataExport::LoadCSV(path.string(),c,&h) ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(47): ERROR: CHECK( c.empty() ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(47): ERROR: CHECK( h.empty() ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(47): ERROR: CHECK_FALSE( DataExport::LoadCSV(path.string(),c,&h) ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(47): ERROR: CHECK( c.empty() ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(47): ERROR: CHECK( h.empty() ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(47): ERROR: CHECK_FALSE( DataExport::LoadCSV(path.string(),c,&h) ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(47): ERROR: CHECK( c.empty() ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(47): ERROR: CHECK( h.empty() ) is NOT correct!
+[doctest] test cases:  1 | 0 passed |  1 failed | 367 skipped
+[doctest] assertions: 15 | 0 passed | 15 failed |
+[doctest] Status: FAILURE!
+
+## before-complete\D01.out.log
+[doctest] test cases: 0 | 0 passed | 0 failed | 370 skipped
+[doctest] assertions: 0 | 0 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## before-complete\D02.out.log
+C:\dev\Cosmic\tests\test_wo06.cpp(41): ERROR: CHECK( p.GetPosition()==2 ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(42): ERROR: CHECK_FALSE( p.SampleAt("A",std::numeric_limits<float>::quiet_NaN(),out) ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(42): ERROR: CHECK( out.timestamp==7 ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(42): ERROR: CHECK( out.values==std::vector<float>{99} ) is NOT correct!
+[doctest] test cases: 1 | 0 passed | 1 failed | 369 skipped
+[doctest] assertions: 5 | 1 passed | 4 failed |
+[doctest] Status: FAILURE!
+
+## before-complete\D03.out.log
+C:\dev\Cosmic\tests\test_wo06.cpp(35): ERROR: CHECK_FALSE( p.Load((dir/"bad.bin").string()) ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(36): ERROR: CHECK_FALSE( p.IsLoaded() ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(36): ERROR: CHECK( p.GetEntityNames().empty() ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(35): ERROR: CHECK_FALSE( p.Load((dir/"bad.bin").string()) ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(36): ERROR: CHECK_FALSE( p.IsLoaded() ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(36): ERROR: CHECK( p.GetEntityNames().empty() ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(35): ERROR: CHECK_FALSE( p.Load((dir/"bad.bin").string()) ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(36): ERROR: CHECK_FALSE( p.IsLoaded() ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(36): ERROR: CHECK( p.GetEntityNames().empty() ) is NOT correct!
+[doctest] test cases: 1 | 0 passed | 1 failed | 369 skipped
+[doctest] assertions: 9 | 0 passed | 9 failed |
+[doctest] Status: FAILURE!
+
+## before-complete\D04.out.log
+[doctest] test cases: 0 | 0 passed | 0 failed | 370 skipped
+[doctest] assertions: 0 | 0 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## before-complete\D05.out.log
+C:\dev\Cosmic\tests\test_wo06.cpp(58): FATAL ERROR: REQUIRE( p.Load("recordings/SF_Telem/wo06-pending") ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(63): ERROR: CHECK( Bytes(dir/"save/scene.bin")==old ) is NOT correct!
+[doctest] test cases: 2 | 0 passed | 2 failed | 368 skipped
+[doctest] assertions: 2 | 0 passed | 2 failed |
+[doctest] Status: FAILURE!
+
+## before-complete\D06.out.log
+C:\dev\Cosmic\tests\test_wo06.cpp(48): ERROR: CHECK_FALSE( DataExport::LoadCSV(path.string(),c,&h) ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(48): ERROR: CHECK( c.empty() ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(48): ERROR: CHECK( h.empty() ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(48): ERROR: CHECK_FALSE( DataExport::LoadCSV(path.string(),c,&h) ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(48): ERROR: CHECK( c.empty() ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(48): ERROR: CHECK( h.empty() ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(48): ERROR: CHECK_FALSE( DataExport::LoadCSV(path.string(),c,&h) ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(48): ERROR: CHECK( c.empty() ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(48): ERROR: CHECK( h.empty() ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(48): ERROR: CHECK_FALSE( DataExport::LoadCSV(path.string(),c,&h) ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(48): ERROR: CHECK( c.empty() ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(48): ERROR: CHECK( h.empty() ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(48): ERROR: CHECK_FALSE( DataExport::LoadCSV(path.string(),c,&h) ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(48): ERROR: CHECK( c.empty() ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(48): ERROR: CHECK( h.empty() ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(67): ERROR: CHECK_FALSE( DataExport::WriteCSV(path.string(),{"a,b"},{{1}}) ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(67): ERROR: CHECK( Bytes(path)=="last good" ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(68): ERROR: CHECK_FALSE( DataExport::WriteCircularBuffer(path.string(),{"a"},{nullptr},-1,0,0) ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(68): ERROR: CHECK( Bytes(path)=="last good" ) is NOT correct!
+[doctest] test cases:  2 | 0 passed |  2 failed | 368 skipped
+[doctest] assertions: 19 | 0 passed | 19 failed |
+[doctest] Status: FAILURE!
+
+## build-before.log
+  Jolt.vcxproj -> C:\dev\Cosmic\build\Cosmic\dependencies\JoltPhysics\Debug\Jolt.lib
+  implot.vcxproj -> C:\dev\Cosmic\build\Cosmic\Debug\implot.lib
+  ImGuizmo.vcxproj -> C:\dev\Cosmic\build\Cosmic\Debug\ImGuizmo.lib
+  Cosmic.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\Cosmic.dll
+  Syncing Cosmic Engine core assets to output directory...
+  WO05HostFixture.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\WO05HostFixture.dll
+  test_wo06.cpp
+  CosmicTests.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\CosmicTests.exe
+
+## build-counterfactual.log
+  test_telemetry_robustness.cpp
+  test_telemetry_roundtrip.cpp
+  test_template_scripts.cpp
+  test_wo05_kiss.cpp
+  test_wo05_matrix.cpp
+  test_wo06.cpp
+     Creating library C:/dev/Cosmic/build/tests/Debug/CosmicTests.lib and object C:/dev/Cosmic/build/tests/Debug/CosmicTests.exp
+  CosmicTests.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\CosmicTests.exe
+
+## build-debug-complete.log
+  implot.vcxproj -> C:\dev\Cosmic\build\Cosmic\Debug\implot.lib
+  Jolt.vcxproj -> C:\dev\Cosmic\build\Cosmic\dependencies\JoltPhysics\Debug\Jolt.lib
+  ImGuizmo.vcxproj -> C:\dev\Cosmic\build\Cosmic\Debug\ImGuizmo.lib
+  Cosmic.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\Cosmic.dll
+  Syncing Cosmic Engine core assets to output directory...
+  TelemHub.cpp
+  SF_Telem.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\SF_Telem.dll
+  Syncing SF_Telem assets to VFS output directory...
+
+## build-debug-final.log
+  imgui.vcxproj -> C:\dev\Cosmic\build\Cosmic\Debug\imgui.lib
+  Jolt.vcxproj -> C:\dev\Cosmic\build\Cosmic\dependencies\JoltPhysics\Debug\Jolt.lib
+  implot.vcxproj -> C:\dev\Cosmic\build\Cosmic\Debug\implot.lib
+  ImGuizmo.vcxproj -> C:\dev\Cosmic\build\Cosmic\Debug\ImGuizmo.lib
+  Cosmic.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\Cosmic.dll
+  Syncing Cosmic Engine core assets to output directory...
+  SF_Telem.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\SF_Telem.dll
+  Syncing SF_Telem assets to VFS output directory...
+
+## build-debug-restored-fixed.log
+  imgui.vcxproj -> C:\dev\Cosmic\build\Cosmic\Debug\imgui.lib
+  implot.vcxproj -> C:\dev\Cosmic\build\Cosmic\Debug\implot.lib
+  Jolt.vcxproj -> C:\dev\Cosmic\build\Cosmic\dependencies\JoltPhysics\Debug\Jolt.lib
+  ImGuizmo.vcxproj -> C:\dev\Cosmic\build\Cosmic\Debug\ImGuizmo.lib
+  Cosmic.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\Cosmic.dll
+  Syncing Cosmic Engine core assets to output directory...
+  SF_Telem.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\SF_Telem.dll
+  Syncing SF_Telem assets to VFS output directory...
+
+## build-debug-restored.log
+  imgui.vcxproj -> C:\dev\Cosmic\build\Cosmic\Debug\imgui.lib
+  Jolt.vcxproj -> C:\dev\Cosmic\build\Cosmic\dependencies\JoltPhysics\Debug\Jolt.lib
+  implot.vcxproj -> C:\dev\Cosmic\build\Cosmic\Debug\implot.lib
+  ImGuizmo.vcxproj -> C:\dev\Cosmic\build\Cosmic\Debug\ImGuizmo.lib
+  Cosmic.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\Cosmic.dll
+  Syncing Cosmic Engine core assets to output directory...
+  SF_Telem.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\SF_Telem.dll
+  Syncing SF_Telem assets to VFS output directory...
+
+## build-debug.log
+  Syncing Cosmic Engine core assets to output directory...
+  DashboardView.cpp
+  ReplayLayer.cpp
+  SF_Telem.cpp
+  TelemHub.cpp
+  WeaponLayer.cpp
+  SF_Telem.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\SF_Telem.dll
+  Syncing SF_Telem assets to VFS output directory...
+
+## build-endpoint-before.log
+  implot.vcxproj -> C:\dev\Cosmic\build\Cosmic\Debug\implot.lib
+  ImGuizmo.vcxproj -> C:\dev\Cosmic\build\Cosmic\Debug\ImGuizmo.lib
+  Cosmic.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\Cosmic.dll
+  Syncing Cosmic Engine core assets to output directory...
+  WO06HostFixture.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\WO06HostFixture.dll
+  WO05HostFixture.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\WO05HostFixture.dll
+  test_wo06.cpp
+  CosmicTests.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\CosmicTests.exe
+
+## build-endpoint-zero-before.log
+  ImGuizmo.vcxproj -> C:\dev\Cosmic\build\Cosmic\Release\ImGuizmo.lib
+  Cosmic.vcxproj -> C:\dev\Cosmic\build\Runtime\Release\Cosmic.dll
+  Syncing Cosmic Engine core assets to output directory...
+  WO06HostFixture.vcxproj -> C:\dev\Cosmic\build\Runtime\Release\WO06HostFixture.dll
+  WO05HostFixture.vcxproj -> C:\dev\Cosmic\build\Runtime\Release\WO05HostFixture.dll
+  test_wo06.cpp
+     Creating library C:/dev/Cosmic/build/tests/Release/CosmicTests.lib and object C:/dev/Cosmic/build/tests/Release/CosmicTests.exp
+  CosmicTests.vcxproj -> C:\dev\Cosmic\build\Runtime\Release\CosmicTests.exe
+
+## build-finalized-Debug.log
+  imgui.vcxproj -> C:\dev\Cosmic\build\Cosmic\Debug\imgui.lib
+  Jolt.vcxproj -> C:\dev\Cosmic\build\Cosmic\dependencies\JoltPhysics\Debug\Jolt.lib
+  implot.vcxproj -> C:\dev\Cosmic\build\Cosmic\Debug\implot.lib
+  ImGuizmo.vcxproj -> C:\dev\Cosmic\build\Cosmic\Debug\ImGuizmo.lib
+  Cosmic.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\Cosmic.dll
+  Syncing Cosmic Engine core assets to output directory...
+  SF_Telem.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\SF_Telem.dll
+  Syncing SF_Telem assets to VFS output directory...
+
+## build-finalized-Release.log
+  Jolt.vcxproj -> C:\dev\Cosmic\build\Cosmic\dependencies\JoltPhysics\Release\Jolt.lib
+  implot.vcxproj -> C:\dev\Cosmic\build\Cosmic\Release\implot.lib
+  ImGuizmo.vcxproj -> C:\dev\Cosmic\build\Cosmic\Release\ImGuizmo.lib
+  Cosmic.vcxproj -> C:\dev\Cosmic\build\Runtime\Release\Cosmic.dll
+  Syncing Cosmic Engine core assets to output directory...
+     Creating library C:/dev/Cosmic/build/Projects/SF_Telem/Release/SF_Telem.lib and object C:/dev/Cosmic/build/Projects/SF_Telem/Release/SF_Telem.exp
+  SF_Telem.vcxproj -> C:\dev\Cosmic\build\Runtime\Release\SF_Telem.dll
+  Syncing SF_Telem assets to VFS output directory...
+
+## build-latest-Debug.log
+  implot.vcxproj -> C:\dev\Cosmic\build\Cosmic\Debug\implot.lib
+  Jolt.vcxproj -> C:\dev\Cosmic\build\Cosmic\dependencies\JoltPhysics\Debug\Jolt.lib
+  ImGuizmo.vcxproj -> C:\dev\Cosmic\build\Cosmic\Debug\ImGuizmo.lib
+  Cosmic.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\Cosmic.dll
+  Syncing Cosmic Engine core assets to output directory...
+  TelemHub.cpp
+  SF_Telem.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\SF_Telem.dll
+  Syncing SF_Telem assets to VFS output directory...
+
+## build-latest-Release.log
+  DashboardView.cpp
+  ReplayLayer.cpp
+  SF_Telem.cpp
+  TelemHub.cpp
+  WeaponLayer.cpp
+     Creating library C:/dev/Cosmic/build/Projects/SF_Telem/Release/SF_Telem.lib and object C:/dev/Cosmic/build/Projects/SF_Telem/Release/SF_Telem.exp
+  SF_Telem.vcxproj -> C:\dev\Cosmic\build\Runtime\Release\SF_Telem.dll
+  Syncing SF_Telem assets to VFS output directory...
+
+## build-monitor-before.log
+  ImGuizmo.vcxproj -> C:\dev\Cosmic\build\Cosmic\Debug\ImGuizmo.lib
+  Cosmic.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\Cosmic.dll
+  Syncing Cosmic Engine core assets to output directory...
+  WO05HostFixture.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\WO05HostFixture.dll
+  WO06HostFixture.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\WO06HostFixture.dll
+  test_wo06.cpp
+     Creating library C:/dev/Cosmic/build/tests/Debug/CosmicTests.lib and object C:/dev/Cosmic/build/tests/Debug/CosmicTests.exp
+  CosmicTests.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\CosmicTests.exe
+
+## build-player-before.log
+  ImGuizmo.vcxproj -> C:\dev\Cosmic\build\Cosmic\Debug\ImGuizmo.lib
+  DataPlayer.cpp
+     Creating library C:/dev/Cosmic/build/Runtime/Debug/Cosmic.lib and object C:/dev/Cosmic/build/Runtime/Debug/Cosmic.exp
+  Cosmic.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\Cosmic.dll
+  Syncing Cosmic Engine core assets to output directory...
+  WO05HostFixture.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\WO05HostFixture.dll
+  WO06HostFixture.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\WO06HostFixture.dll
+  CosmicTests.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\CosmicTests.exe
+
+## build-policy-before.log
+  DashboardView.cpp
+  ReplayLayer.cpp
+  SF_Telem.cpp
+  TelemHub.cpp
+  WeaponLayer.cpp
+     Creating library C:/dev/Cosmic/build/Projects/SF_Telem/Debug/SF_Telem.lib and object C:/dev/Cosmic/build/Projects/SF_Telem/Debug/SF_Telem.exp
+  SF_Telem.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\SF_Telem.dll
+  Syncing SF_Telem assets to VFS output directory...
+
+## build-queued-before.log
+  ImGuizmo.vcxproj -> C:\dev\Cosmic\build\Cosmic\Debug\ImGuizmo.lib
+  Cosmic.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\Cosmic.dll
+  Syncing Cosmic Engine core assets to output directory...
+  WO06HostFixture.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\WO06HostFixture.dll
+  WO05HostFixture.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\WO05HostFixture.dll
+  test_wo06.cpp
+     Creating library C:/dev/Cosmic/build/tests/Debug/CosmicTests.lib and object C:/dev/Cosmic/build/tests/Debug/CosmicTests.exp
+  CosmicTests.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\CosmicTests.exe
+
+## build-release-complete.log
+  implot.vcxproj -> C:\dev\Cosmic\build\Cosmic\Release\implot.lib
+  ImGuizmo.vcxproj -> C:\dev\Cosmic\build\Cosmic\Release\ImGuizmo.lib
+  Cosmic.vcxproj -> C:\dev\Cosmic\build\Runtime\Release\Cosmic.dll
+  Syncing Cosmic Engine core assets to output directory...
+  TelemHub.cpp
+     Creating library C:/dev/Cosmic/build/Projects/SF_Telem/Release/SF_Telem.lib and object C:/dev/Cosmic/build/Projects/SF_Telem/Release/SF_Telem.exp
+  SF_Telem.vcxproj -> C:\dev\Cosmic\build\Runtime\Release\SF_Telem.dll
+  Syncing SF_Telem assets to VFS output directory...
+
+## build-release-final.log
+  TelemHub.cpp
+  TestHub.cpp
+  TestLayers.cpp
+  TestingManager.cpp
+  WeaponLayer.cpp
+     Creating library C:/dev/Cosmic/build/Projects/SF_Telem/Release/SF_Telem.lib and object C:/dev/Cosmic/build/Projects/SF_Telem/Release/SF_Telem.exp
+  SF_Telem.vcxproj -> C:\dev\Cosmic\build\Runtime\Release\SF_Telem.dll
+  Syncing SF_Telem assets to VFS output directory...
+
+## build-release.log
+  TelemHub.cpp
+  TestHub.cpp
+  TestLayers.cpp
+  TestingManager.cpp
+  WeaponLayer.cpp
+     Creating library C:/dev/Cosmic/build/Projects/SF_Telem/Release/SF_Telem.lib and object C:/dev/Cosmic/build/Projects/SF_Telem/Release/SF_Telem.exp
+  SF_Telem.vcxproj -> C:\dev\Cosmic\build\Runtime\Release\SF_Telem.dll
+  Syncing SF_Telem assets to VFS output directory...
+
+## build-shared-before.log
+  Jolt.vcxproj -> C:\dev\Cosmic\build\Cosmic\dependencies\JoltPhysics\Debug\Jolt.lib
+  ImGuizmo.vcxproj -> C:\dev\Cosmic\build\Cosmic\Debug\ImGuizmo.lib
+  Cosmic.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\Cosmic.dll
+  Syncing Cosmic Engine core assets to output directory...
+  WO05HostFixture.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\WO05HostFixture.dll
+  WO06HostFixture.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\WO06HostFixture.dll
+  test_wo06.cpp
+  CosmicTests.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\CosmicTests.exe
+
+## ceiling-before\D05.out.log
+C:\dev\Cosmic\tests\test_wo06.cpp(67): ERROR: CHECK_FALSE( h.Recording() ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(67): ERROR: CHECK( h.Recorder().GetTotalFrameCount()==count ) is NOT correct!
+[doctest] test cases: 1 | 0 passed | 1 failed | 370 skipped
+[doctest] assertions: 2 | 0 passed | 2 failed |
+[doctest] Status: FAILURE!
+
+## debug-after\D01.out.log
+[doctest] test cases:   1 |   1 passed | 0 failed | 384 skipped
+[doctest] assertions: 145 | 145 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## debug-after\D02.out.log
+[doctest] test cases:  2 |  2 passed | 0 failed | 383 skipped
+[doctest] assertions: 65 | 65 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## debug-after\D03.out.log
+WO06 F-CORRUPT seed=6 cases=2000 max_fixture_bytes=736
+[doctest] test cases:     2 |     2 passed | 0 failed | 383 skipped
+[doctest] assertions: 12013 | 12013 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## debug-after\D04.out.log
+[doctest] test cases:      2 |      2 passed | 0 failed | 383 skipped
+[doctest] assertions: 264891 | 264891 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## debug-after\D05-two-hour.out.log
+WO06 two_hour samples_per_entity=432000 entities=3 capture_wall_seconds=1.251 final_export_total_seconds=5.826 history_logical_bytes=48384000 history_capacity_bytes=51667504 snapshot_logical_bytes=48384000 largest_csv_double_bytes=34560000 observed_private_bytes=139575296 nominal_duration=7200 stored_last_timestamp=7183.12793
+[doctest] test cases:        1 |        1 passed | 0 failed | 384 skipped
+[doctest] assertions: 19872059 | 19872059 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## debug-after\D05.out.log
+[2026-09-17 18:17:00.393] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug-after\cosmic-accept-47e40c05b4d648f4a3bbdd1e8d81e927\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:17:00.395] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug-after\cosmic-accept-47e40c05b4d648f4a3bbdd1e8d81e927\temp\wo06\record-fault/save': binary write/flush/close failed
+[2026-09-17 18:17:00.399] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug-after\cosmic-accept-47e40c05b4d648f4a3bbdd1e8d81e927\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:17:00.402] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug-after\cosmic-accept-47e40c05b4d648f4a3bbdd1e8d81e927\temp\wo06\record-fault/save': binary write/flush/close failed
+[2026-09-17 18:17:00.406] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug-after\cosmic-accept-47e40c05b4d648f4a3bbdd1e8d81e927\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:17:00.409] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug-after\cosmic-accept-47e40c05b4d648f4a3bbdd1e8d81e927\temp\wo06\record-fault/save': binary write/flush/close failed
+[2026-09-17 18:17:00.413] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug-after\cosmic-accept-47e40c05b4d648f4a3bbdd1e8d81e927\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:17:00.415] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug-after\cosmic-accept-47e40c05b4d648f4a3bbdd1e8d81e927\temp\wo06\record-fault/save': binary write/flush/close failed
+[2026-09-17 18:17:00.420] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug-after\cosmic-accept-47e40c05b4d648f4a3bbdd1e8d81e927\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:17:00.424] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug-after\cosmic-accept-47e40c05b4d648f4a3bbdd1e8d81e927\temp\wo06\record-fault/save': snapshot publication failed
+[2026-09-17 18:17:00.428] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug-after\cosmic-accept-47e40c05b4d648f4a3bbdd1e8d81e927\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:17:00.429] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug-after\cosmic-accept-47e40c05b4d648f4a3bbdd1e8d81e927\temp\wo06\record-fault/save': interrupted autosave
+[2026-09-17 18:17:00.433] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug-after\cosmic-accept-47e40c05b4d648f4a3bbdd1e8d81e927\temp\wo06\record-fault/save': snapshot publication failed
+[2026-09-17 18:17:00.461] [COSMIC] [error] DataRecorder: Flush FAILED for 'recordings/SF_Telem/wo06-state': binary write/flush/close failed
+[2026-09-17 18:17:00.503] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug-after\cosmic-accept-47e40c05b4d648f4a3bbdd1e8d81e927\temp\wo06\csv-failure/save': CSV export failed
+WO06 loss held_write current_samples=17 published_samples=5 unpublished_samples=12 oldest_unpublished_t=5 current_t=17 window_seconds=12
+WO06 loss final unpublished_samples=0 final_publication_ms=4.385
+[doctest] test cases:   6 |   6 passed | 0 failed | 379 skipped
+[doctest] assertions: 231 | 231 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## debug-after\D06.out.log
+WO06 D06 grammar_cases=36 Unicode_UTF8_path=PASS
+[doctest] test cases:   5 |   5 passed | 0 failed | 380 skipped
+[doctest] assertions: 236 | 236 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## debug-complete\D01.out.log
+[doctest] test cases:   1 |   1 passed | 0 failed | 388 skipped
+[doctest] assertions: 145 | 145 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## debug-complete\D02.out.log
+[doctest] test cases:  3 |  3 passed | 0 failed | 386 skipped
+[doctest] assertions: 72 | 72 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## debug-complete\D03-nightly.out.log
+WO06 F-CORRUPT seed=6 cases=50000 max_fixture_bytes=736
+[doctest] test cases:      1 |      1 passed | 0 failed | 388 skipped
+[doctest] assertions: 300005 | 300005 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## debug-complete\D03.out.log
+WO06 F-CORRUPT seed=6 cases=2000 max_fixture_bytes=736
+[doctest] test cases:     2 |     2 passed | 0 failed | 387 skipped
+[doctest] assertions: 12014 | 12014 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## debug-complete\D04.out.log
+WO06 shared_entity intended=40000 actual=40000 timestamp_reversals=0
+[doctest] test cases:      3 |      3 passed | 0 failed | 386 skipped
+[doctest] assertions: 388992 | 388992 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## debug-complete\D05-two-hour.out.log
+WO06 two_hour samples_per_entity=432000 entities=3 capture_wall_seconds=1.405 final_export_total_seconds=5.481 history_logical_bytes=48384000 history_capacity_bytes=51667504 snapshot_logical_bytes=48384000 largest_csv_double_bytes=34560000 observed_private_bytes=139587584 nominal_duration=7200 stored_last_timestamp=7183.12793
+[doctest] test cases:        1 |        1 passed | 0 failed | 388 skipped
+[doctest] assertions: 19872059 | 19872059 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## debug-complete\D05.out.log
+[2026-09-17 18:39:20.354] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug-complete\cosmic-accept-9234fa12e3ba46a5a31e9698457d0a1d\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:39:20.357] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug-complete\cosmic-accept-9234fa12e3ba46a5a31e9698457d0a1d\temp\wo06\record-fault/save': binary write/flush/close failed
+[2026-09-17 18:39:20.361] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug-complete\cosmic-accept-9234fa12e3ba46a5a31e9698457d0a1d\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:39:20.363] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug-complete\cosmic-accept-9234fa12e3ba46a5a31e9698457d0a1d\temp\wo06\record-fault/save': binary write/flush/close failed
+[2026-09-17 18:39:20.367] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug-complete\cosmic-accept-9234fa12e3ba46a5a31e9698457d0a1d\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:39:20.370] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug-complete\cosmic-accept-9234fa12e3ba46a5a31e9698457d0a1d\temp\wo06\record-fault/save': binary write/flush/close failed
+[2026-09-17 18:39:20.374] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug-complete\cosmic-accept-9234fa12e3ba46a5a31e9698457d0a1d\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:39:20.376] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug-complete\cosmic-accept-9234fa12e3ba46a5a31e9698457d0a1d\temp\wo06\record-fault/save': binary write/flush/close failed
+[2026-09-17 18:39:20.381] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug-complete\cosmic-accept-9234fa12e3ba46a5a31e9698457d0a1d\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:39:20.385] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug-complete\cosmic-accept-9234fa12e3ba46a5a31e9698457d0a1d\temp\wo06\record-fault/save': snapshot publication failed
+[2026-09-17 18:39:20.389] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug-complete\cosmic-accept-9234fa12e3ba46a5a31e9698457d0a1d\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:39:20.390] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug-complete\cosmic-accept-9234fa12e3ba46a5a31e9698457d0a1d\temp\wo06\record-fault/save': interrupted autosave
+[2026-09-17 18:39:20.394] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug-complete\cosmic-accept-9234fa12e3ba46a5a31e9698457d0a1d\temp\wo06\record-fault/save': snapshot publication failed
+[2026-09-17 18:39:20.424] [COSMIC] [error] DataRecorder: Flush FAILED for 'recordings/SF_Telem/wo06-state': binary write/flush/close failed
+[2026-09-17 18:39:20.487] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug-complete\cosmic-accept-9234fa12e3ba46a5a31e9698457d0a1d\temp\wo06\csv-failure/save': CSV export failed
+[2026-09-17 18:39:20.490] [COSMIC] [error] DataRecorder: Flush FAILED for 'recordings/SF_Telem/wo06-monitor-export': binary write/flush/close failed
+WO06 loss held_write current_samples=17 published_samples=5 unpublished_samples=12 oldest_unpublished_t=5 current_t=17 window_seconds=12
+WO06 loss final unpublished_samples=0 final_publication_ms=4.579
+[doctest] test cases:   8 |   8 passed | 0 failed | 381 skipped
+[doctest] assertions: 238 | 238 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## debug-complete\D06.out.log
+WO06 D06 grammar_cases=36 Unicode_UTF8_path=PASS
+[doctest] test cases:   5 |   5 passed | 0 failed | 384 skipped
+[doctest] assertions: 236 | 236 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## debug-current\D01.out.log
+[doctest] test cases:   1 |   1 passed | 0 failed | 386 skipped
+[doctest] assertions: 145 | 145 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## debug-current\D02.out.log
+[doctest] test cases:  2 |  2 passed | 0 failed | 385 skipped
+[doctest] assertions: 65 | 65 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## debug-current\D03-nightly.out.log
+WO06 F-CORRUPT seed=6 cases=50000 max_fixture_bytes=736
+[doctest] test cases:      1 |      1 passed | 0 failed | 386 skipped
+[doctest] assertions: 300005 | 300005 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## debug-current\D03.out.log
+WO06 F-CORRUPT seed=6 cases=2000 max_fixture_bytes=736
+[doctest] test cases:     2 |     2 passed | 0 failed | 385 skipped
+[doctest] assertions: 12014 | 12014 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## debug-current\D04.out.log
+WO06 shared_entity intended=40000 actual=40000 timestamp_reversals=0
+[doctest] test cases:      3 |      3 passed | 0 failed | 384 skipped
+[doctest] assertions: 385867 | 385867 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## debug-current\D05-two-hour.out.log
+WO06 two_hour samples_per_entity=432000 entities=3 capture_wall_seconds=1.211 final_export_total_seconds=5.147 history_logical_bytes=48384000 history_capacity_bytes=51667504 snapshot_logical_bytes=48384000 largest_csv_double_bytes=34560000 observed_private_bytes=139534336 nominal_duration=7200 stored_last_timestamp=7183.12793
+[doctest] test cases:        1 |        1 passed | 0 failed | 386 skipped
+[doctest] assertions: 19872059 | 19872059 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## debug-current\D05.out.log
+[2026-09-17 18:29:28.544] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug-current\cosmic-accept-3ddf8f35cd364941a4b58896c943157f\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:29:28.547] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug-current\cosmic-accept-3ddf8f35cd364941a4b58896c943157f\temp\wo06\record-fault/save': binary write/flush/close failed
+[2026-09-17 18:29:28.551] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug-current\cosmic-accept-3ddf8f35cd364941a4b58896c943157f\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:29:28.553] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug-current\cosmic-accept-3ddf8f35cd364941a4b58896c943157f\temp\wo06\record-fault/save': binary write/flush/close failed
+[2026-09-17 18:29:28.558] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug-current\cosmic-accept-3ddf8f35cd364941a4b58896c943157f\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:29:28.560] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug-current\cosmic-accept-3ddf8f35cd364941a4b58896c943157f\temp\wo06\record-fault/save': binary write/flush/close failed
+[2026-09-17 18:29:28.565] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug-current\cosmic-accept-3ddf8f35cd364941a4b58896c943157f\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:29:28.568] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug-current\cosmic-accept-3ddf8f35cd364941a4b58896c943157f\temp\wo06\record-fault/save': binary write/flush/close failed
+[2026-09-17 18:29:28.572] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug-current\cosmic-accept-3ddf8f35cd364941a4b58896c943157f\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:29:28.576] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug-current\cosmic-accept-3ddf8f35cd364941a4b58896c943157f\temp\wo06\record-fault/save': snapshot publication failed
+[2026-09-17 18:29:28.581] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug-current\cosmic-accept-3ddf8f35cd364941a4b58896c943157f\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:29:28.581] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug-current\cosmic-accept-3ddf8f35cd364941a4b58896c943157f\temp\wo06\record-fault/save': interrupted autosave
+[2026-09-17 18:29:28.586] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug-current\cosmic-accept-3ddf8f35cd364941a4b58896c943157f\temp\wo06\record-fault/save': snapshot publication failed
+[2026-09-17 18:29:28.616] [COSMIC] [error] DataRecorder: Flush FAILED for 'recordings/SF_Telem/wo06-state': binary write/flush/close failed
+[2026-09-17 18:29:28.678] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug-current\cosmic-accept-3ddf8f35cd364941a4b58896c943157f\temp\wo06\csv-failure/save': CSV export failed
+WO06 loss held_write current_samples=17 published_samples=5 unpublished_samples=12 oldest_unpublished_t=5 current_t=17 window_seconds=12
+WO06 loss final unpublished_samples=0 final_publication_ms=4.456
+[doctest] test cases:   7 |   7 passed | 0 failed | 380 skipped
+[doctest] assertions: 234 | 234 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## debug-current\D06.out.log
+WO06 D06 grammar_cases=36 Unicode_UTF8_path=PASS
+[doctest] test cases:   5 |   5 passed | 0 failed | 382 skipped
+[doctest] assertions: 236 | 236 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## debug-final\D01.out.log
+[doctest] test cases:   1 |   1 passed | 0 failed | 385 skipped
+[doctest] assertions: 145 | 145 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## debug-final\D02.out.log
+[doctest] test cases:  2 |  2 passed | 0 failed | 384 skipped
+[doctest] assertions: 65 | 65 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## debug-final\D03-nightly.out.log
+WO06 F-CORRUPT seed=6 cases=50000 max_fixture_bytes=736
+[doctest] test cases:      1 |      1 passed | 0 failed | 385 skipped
+[doctest] assertions: 300005 | 300005 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## debug-final\D03.out.log
+WO06 F-CORRUPT seed=6 cases=2000 max_fixture_bytes=736
+[doctest] test cases:     2 |     2 passed | 0 failed | 384 skipped
+[doctest] assertions: 12014 | 12014 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## debug-final\D04.out.log
+[doctest] test cases:      2 |      2 passed | 0 failed | 384 skipped
+[doctest] assertions: 269376 | 269376 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## debug-final\D05-native-retained.out.log
+[doctest] test cases: 10 | 10 passed | 0 failed
+
+## debug-final\D05-native-two-hour.out.log
+[doctest] test cases: 2 | 2 passed | 0 failed
+
+## debug-final\D05-two-hour.out.log
+WO06 two_hour samples_per_entity=432000 entities=3 capture_wall_seconds=1.178 final_export_total_seconds=5.155 history_logical_bytes=48384000 history_capacity_bytes=51667504 snapshot_logical_bytes=48384000 largest_csv_double_bytes=34560000 observed_private_bytes=139538432 nominal_duration=7200 stored_last_timestamp=7183.12793
+[doctest] test cases:        1 |        1 passed | 0 failed | 385 skipped
+[doctest] assertions: 19872059 | 19872059 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## debug-final\D05.out.log
+[2026-09-17 18:20:55.921] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug-final\cosmic-accept-169c99e157e8435a95b63403d051a5f5\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:20:55.923] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug-final\cosmic-accept-169c99e157e8435a95b63403d051a5f5\temp\wo06\record-fault/save': binary write/flush/close failed
+[2026-09-17 18:20:55.927] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug-final\cosmic-accept-169c99e157e8435a95b63403d051a5f5\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:20:55.930] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug-final\cosmic-accept-169c99e157e8435a95b63403d051a5f5\temp\wo06\record-fault/save': binary write/flush/close failed
+[2026-09-17 18:20:55.934] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug-final\cosmic-accept-169c99e157e8435a95b63403d051a5f5\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:20:55.936] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug-final\cosmic-accept-169c99e157e8435a95b63403d051a5f5\temp\wo06\record-fault/save': binary write/flush/close failed
+[2026-09-17 18:20:55.940] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug-final\cosmic-accept-169c99e157e8435a95b63403d051a5f5\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:20:55.943] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug-final\cosmic-accept-169c99e157e8435a95b63403d051a5f5\temp\wo06\record-fault/save': binary write/flush/close failed
+[2026-09-17 18:20:55.947] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug-final\cosmic-accept-169c99e157e8435a95b63403d051a5f5\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:20:55.951] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug-final\cosmic-accept-169c99e157e8435a95b63403d051a5f5\temp\wo06\record-fault/save': snapshot publication failed
+[2026-09-17 18:20:55.955] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug-final\cosmic-accept-169c99e157e8435a95b63403d051a5f5\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:20:55.956] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug-final\cosmic-accept-169c99e157e8435a95b63403d051a5f5\temp\wo06\record-fault/save': interrupted autosave
+[2026-09-17 18:20:55.960] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug-final\cosmic-accept-169c99e157e8435a95b63403d051a5f5\temp\wo06\record-fault/save': snapshot publication failed
+[2026-09-17 18:20:55.989] [COSMIC] [error] DataRecorder: Flush FAILED for 'recordings/SF_Telem/wo06-state': binary write/flush/close failed
+[2026-09-17 18:20:56.049] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug-final\cosmic-accept-169c99e157e8435a95b63403d051a5f5\temp\wo06\csv-failure/save': CSV export failed
+WO06 loss held_write current_samples=17 published_samples=5 unpublished_samples=12 oldest_unpublished_t=5 current_t=17 window_seconds=12
+WO06 loss final unpublished_samples=0 final_publication_ms=4.639
+[doctest] test cases:   7 |   7 passed | 0 failed | 379 skipped
+[doctest] assertions: 234 | 234 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## debug-final\D06.out.log
+WO06 D06 grammar_cases=36 Unicode_UTF8_path=PASS
+[doctest] test cases:   5 |   5 passed | 0 failed | 381 skipped
+[doctest] assertions: 236 | 236 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## debug-final\retained.out.log
+WO05 matrix: schedules=9 transitions=5 storage=5 iterations=100 total=22500 max_close_ms=548
+WO05 cancel owner ms p95=111.162 p99=111.332 max=111.345
+[doctest] test cases:     362 |     362 passed | 0 failed | 24 skipped
+[doctest] assertions: 2843526 | 2843526 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## debug-initial\D01.out.log
+[doctest] test cases:   1 |   1 passed | 0 failed | 382 skipped
+[doctest] assertions: 145 | 145 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## debug-initial\D02.out.log
+[doctest] test cases:  2 |  2 passed | 0 failed | 381 skipped
+[doctest] assertions: 65 | 65 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## debug-initial\D03.out.log
+WO06 F-CORRUPT seed=6 cases=2000 max_fixture_bytes=736
+[doctest] test cases:     2 |     2 passed | 0 failed | 381 skipped
+[doctest] assertions: 12013 | 12013 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## debug-initial\D04.out.log
+[doctest] test cases:      2 |      2 passed | 0 failed | 381 skipped
+[doctest] assertions: 271746 | 271746 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## debug-initial\D05-two-hour.out.log
+C:\dev\Cosmic\tests\test_wo06.cpp(217): ERROR: CHECK( std::chrono::duration<double>(exported-captureEnd).count()<=30 ) is NOT correct!
+WO06 two_hour samples_per_entity=432000 entities=3 capture_wall_seconds=1.218 final_export_wait_seconds=30.646 history_logical_bytes=48384000 history_capacity_bytes=51667504 snapshot_logical_bytes=48384000 largest_csv_double_bytes=34560000 observed_private_bytes=104976384 nominal_duration=7200 stored_last_timestamp=7183.12793
+[doctest] test cases:        1 |        0 passed | 1 failed | 382 skipped
+[doctest] assertions: 19872059 | 19872058 passed | 1 failed |
+[doctest] Status: FAILURE!
+
+## debug-initial\D05.out.log
+[2026-09-17 18:12:59.092] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug\cosmic-accept-129fbf465eb445a58a013ec179478540\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:12:59.095] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug\cosmic-accept-129fbf465eb445a58a013ec179478540\temp\wo06\record-fault/save': binary write/flush/close failed
+[2026-09-17 18:12:59.099] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug\cosmic-accept-129fbf465eb445a58a013ec179478540\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:12:59.101] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug\cosmic-accept-129fbf465eb445a58a013ec179478540\temp\wo06\record-fault/save': binary write/flush/close failed
+[2026-09-17 18:12:59.105] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug\cosmic-accept-129fbf465eb445a58a013ec179478540\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:12:59.107] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug\cosmic-accept-129fbf465eb445a58a013ec179478540\temp\wo06\record-fault/save': binary write/flush/close failed
+[2026-09-17 18:12:59.111] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug\cosmic-accept-129fbf465eb445a58a013ec179478540\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:12:59.113] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug\cosmic-accept-129fbf465eb445a58a013ec179478540\temp\wo06\record-fault/save': binary write/flush/close failed
+[2026-09-17 18:12:59.117] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug\cosmic-accept-129fbf465eb445a58a013ec179478540\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:12:59.121] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug\cosmic-accept-129fbf465eb445a58a013ec179478540\temp\wo06\record-fault/save': snapshot publication failed
+[2026-09-17 18:12:59.125] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug\cosmic-accept-129fbf465eb445a58a013ec179478540\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:12:59.126] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug\cosmic-accept-129fbf465eb445a58a013ec179478540\temp\wo06\record-fault/save': interrupted autosave
+[2026-09-17 18:12:59.130] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug\cosmic-accept-129fbf465eb445a58a013ec179478540\temp\wo06\record-fault/save': snapshot publication failed
+[2026-09-17 18:12:59.159] [COSMIC] [error] DataRecorder: Flush FAILED for 'recordings/SF_Telem/wo06-state': binary write/flush/close failed
+[2026-09-17 18:12:59.199] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug\cosmic-accept-129fbf465eb445a58a013ec179478540\temp\wo06\csv-failure/save': CSV export failed
+WO06 loss held_write current_samples=17 published_samples=5 unpublished_samples=12 oldest_unpublished_t=5 current_t=17 window_seconds=12
+WO06 loss final unpublished_samples=0 final_publication_ms=5.344
+[doctest] test cases:   6 |   6 passed | 0 failed | 377 skipped
+[doctest] assertions: 223 | 223 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## debug-initial\D06.out.log
+WO06 D06 grammar_cases=36 Unicode_UTF8_path=PASS
+[doctest] test cases:   5 |   5 passed | 0 failed | 378 skipped
+[doctest] assertions: 236 | 236 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## debug-verified\D01.out.log
+[doctest] test cases:   1 |   1 passed | 0 failed | 385 skipped
+[doctest] assertions: 145 | 145 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## debug-verified\D02.out.log
+[doctest] test cases:  2 |  2 passed | 0 failed | 384 skipped
+[doctest] assertions: 65 | 65 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## debug-verified\D03-nightly.out.log
+WO06 F-CORRUPT seed=6 cases=50000 max_fixture_bytes=736
+[doctest] test cases:      1 |      1 passed | 0 failed | 385 skipped
+[doctest] assertions: 300005 | 300005 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## debug-verified\D03.out.log
+WO06 F-CORRUPT seed=6 cases=2000 max_fixture_bytes=736
+[doctest] test cases:     2 |     2 passed | 0 failed | 384 skipped
+[doctest] assertions: 12014 | 12014 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## debug-verified\D04.out.log
+[doctest] test cases:      2 |      2 passed | 0 failed | 384 skipped
+[doctest] assertions: 294026 | 294026 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## debug-verified\D05-two-hour.out.log
+WO06 two_hour samples_per_entity=432000 entities=3 capture_wall_seconds=1.234 final_export_total_seconds=5.202 history_logical_bytes=48384000 history_capacity_bytes=51667504 snapshot_logical_bytes=48384000 largest_csv_double_bytes=34560000 observed_private_bytes=139571200 nominal_duration=7200 stored_last_timestamp=7183.12793
+[doctest] test cases:        1 |        1 passed | 0 failed | 385 skipped
+[doctest] assertions: 19872059 | 19872059 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## debug-verified\D05.out.log
+[2026-09-17 18:27:50.680] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug-verified\cosmic-accept-250d95e75c2c48cc9eb9395a00b2d297\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:27:50.683] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug-verified\cosmic-accept-250d95e75c2c48cc9eb9395a00b2d297\temp\wo06\record-fault/save': binary write/flush/close failed
+[2026-09-17 18:27:50.686] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug-verified\cosmic-accept-250d95e75c2c48cc9eb9395a00b2d297\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:27:50.689] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug-verified\cosmic-accept-250d95e75c2c48cc9eb9395a00b2d297\temp\wo06\record-fault/save': binary write/flush/close failed
+[2026-09-17 18:27:50.693] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug-verified\cosmic-accept-250d95e75c2c48cc9eb9395a00b2d297\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:27:50.696] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug-verified\cosmic-accept-250d95e75c2c48cc9eb9395a00b2d297\temp\wo06\record-fault/save': binary write/flush/close failed
+[2026-09-17 18:27:50.700] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug-verified\cosmic-accept-250d95e75c2c48cc9eb9395a00b2d297\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:27:50.703] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug-verified\cosmic-accept-250d95e75c2c48cc9eb9395a00b2d297\temp\wo06\record-fault/save': binary write/flush/close failed
+[2026-09-17 18:27:50.707] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug-verified\cosmic-accept-250d95e75c2c48cc9eb9395a00b2d297\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:27:50.712] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug-verified\cosmic-accept-250d95e75c2c48cc9eb9395a00b2d297\temp\wo06\record-fault/save': snapshot publication failed
+[2026-09-17 18:27:50.716] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug-verified\cosmic-accept-250d95e75c2c48cc9eb9395a00b2d297\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:27:50.716] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug-verified\cosmic-accept-250d95e75c2c48cc9eb9395a00b2d297\temp\wo06\record-fault/save': interrupted autosave
+[2026-09-17 18:27:50.720] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug-verified\cosmic-accept-250d95e75c2c48cc9eb9395a00b2d297\temp\wo06\record-fault/save': snapshot publication failed
+[2026-09-17 18:27:50.749] [COSMIC] [error] DataRecorder: Flush FAILED for 'recordings/SF_Telem/wo06-state': binary write/flush/close failed
+[2026-09-17 18:27:50.809] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-debug-verified\cosmic-accept-250d95e75c2c48cc9eb9395a00b2d297\temp\wo06\csv-failure/save': CSV export failed
+WO06 loss held_write current_samples=17 published_samples=5 unpublished_samples=12 oldest_unpublished_t=5 current_t=17 window_seconds=12
+WO06 loss final unpublished_samples=0 final_publication_ms=4.429
+[doctest] test cases:   7 |   7 passed | 0 failed | 379 skipped
+[doctest] assertions: 234 | 234 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## debug-verified\D06.out.log
+WO06 D06 grammar_cases=36 Unicode_UTF8_path=PASS
+[doctest] test cases:   5 |   5 passed | 0 failed | 381 skipped
+[doctest] assertions: 236 | 236 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## endpoint-before\D02.out.log
+C:\dev\Cosmic\tests\test_wo06.cpp(917): ERROR: CHECK( p.IsPlaying() ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(918): ERROR: CHECK( p.IsPlaying() ) is NOT correct!
+[doctest] test cases: 1 | 0 passed | 1 failed | 388 skipped
+[doctest] assertions: 7 | 5 passed | 2 failed |
+[doctest] Status: FAILURE!
+
+## endpoint-zero-before\D02.out.log
+C:\dev\Cosmic\tests\test_wo06.cpp(969): ERROR: CHECK( p.IsPlaying() == (speed == 0) ) is NOT correct!
+[doctest] test cases:  1 |  0 passed | 1 failed | 388 skipped
+[doctest] assertions: 15 | 14 passed | 1 failed |
+[doctest] Status: FAILURE!
+
+## final-complete-Debug\D01.out.log
+[doctest] test cases:   1 |   1 passed | 0 failed | 388 skipped
+[doctest] assertions: 145 | 145 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## final-complete-Debug\D02.out.log
+[doctest] test cases:  3 |  3 passed | 0 failed | 386 skipped
+[doctest] assertions: 80 | 80 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## final-complete-Debug\D03-nightly.out.log
+WO06 F-CORRUPT seed=6 cases=50000 max_fixture_bytes=736
+[doctest] test cases:      1 |      1 passed | 0 failed | 388 skipped
+[doctest] assertions: 300005 | 300005 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## final-complete-Debug\D03.out.log
+WO06 F-CORRUPT seed=6 cases=2000 max_fixture_bytes=736
+[doctest] test cases:     2 |     2 passed | 0 failed | 387 skipped
+[doctest] assertions: 12014 | 12014 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## final-complete-Debug\D04.out.log
+WO06 shared_entity intended=40000 actual=40000 timestamp_reversals=0
+[doctest] test cases:      3 |      3 passed | 0 failed | 386 skipped
+[doctest] assertions: 386107 | 386107 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## final-complete-Debug\D05-native-retained.out.log
+[doctest] test cases: 10 | 10 passed | 0 failed
+
+## final-complete-Debug\D05-native-two-hour.out.log
+[doctest] test cases: 2 | 2 passed | 0 failed
+
+## final-complete-Debug\D05-two-hour.out.log
+WO06 two_hour samples_per_entity=432000 entities=3 capture_wall_seconds=1.247 final_export_total_seconds=5.614 history_logical_bytes=48384000 history_capacity_bytes=51667504 snapshot_logical_bytes=48384000 largest_csv_double_bytes=34560000 observed_private_bytes=139534336 nominal_duration=7200 stored_last_timestamp=7183.12793
+[doctest] test cases:        1 |        1 passed | 0 failed | 388 skipped
+[doctest] assertions: 19872059 | 19872059 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## final-complete-Debug\D05.out.log
+[2026-09-17 18:59:24.409] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-final-complete-Debug\cosmic-accept-8922d7ccebe24bd68e1fc41d1ecde31e\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:59:24.412] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-final-complete-Debug\cosmic-accept-8922d7ccebe24bd68e1fc41d1ecde31e\temp\wo06\record-fault/save': binary write/flush/close failed
+[2026-09-17 18:59:24.416] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-final-complete-Debug\cosmic-accept-8922d7ccebe24bd68e1fc41d1ecde31e\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:59:24.419] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-final-complete-Debug\cosmic-accept-8922d7ccebe24bd68e1fc41d1ecde31e\temp\wo06\record-fault/save': binary write/flush/close failed
+[2026-09-17 18:59:24.423] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-final-complete-Debug\cosmic-accept-8922d7ccebe24bd68e1fc41d1ecde31e\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:59:24.426] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-final-complete-Debug\cosmic-accept-8922d7ccebe24bd68e1fc41d1ecde31e\temp\wo06\record-fault/save': binary write/flush/close failed
+[2026-09-17 18:59:24.431] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-final-complete-Debug\cosmic-accept-8922d7ccebe24bd68e1fc41d1ecde31e\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:59:24.433] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-final-complete-Debug\cosmic-accept-8922d7ccebe24bd68e1fc41d1ecde31e\temp\wo06\record-fault/save': binary write/flush/close failed
+[2026-09-17 18:59:24.438] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-final-complete-Debug\cosmic-accept-8922d7ccebe24bd68e1fc41d1ecde31e\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:59:24.442] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-final-complete-Debug\cosmic-accept-8922d7ccebe24bd68e1fc41d1ecde31e\temp\wo06\record-fault/save': snapshot publication failed
+[2026-09-17 18:59:24.447] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-final-complete-Debug\cosmic-accept-8922d7ccebe24bd68e1fc41d1ecde31e\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:59:24.448] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-final-complete-Debug\cosmic-accept-8922d7ccebe24bd68e1fc41d1ecde31e\temp\wo06\record-fault/save': interrupted autosave
+[2026-09-17 18:59:24.452] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-final-complete-Debug\cosmic-accept-8922d7ccebe24bd68e1fc41d1ecde31e\temp\wo06\record-fault/save': snapshot publication failed
+[2026-09-17 18:59:24.483] [COSMIC] [error] DataRecorder: Flush FAILED for 'recordings/SF_Telem/wo06-state': binary write/flush/close failed
+[2026-09-17 18:59:24.557] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-final-complete-Debug\cosmic-accept-8922d7ccebe24bd68e1fc41d1ecde31e\temp\wo06\csv-failure/save': CSV export failed
+[2026-09-17 18:59:24.560] [COSMIC] [error] DataRecorder: Flush FAILED for 'recordings/SF_Telem/wo06-monitor-export': binary write/flush/close failed
+WO06 loss held_write current_samples=17 published_samples=5 unpublished_samples=12 oldest_unpublished_t=5 current_t=17 window_seconds=12
+WO06 loss final unpublished_samples=0 final_publication_ms=4.790
+[doctest] test cases:   8 |   8 passed | 0 failed | 381 skipped
+[doctest] assertions: 244 | 244 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## final-complete-Debug\D06.out.log
+WO06 D06 grammar_cases=36 Unicode_UTF8_path=PASS
+[doctest] test cases:   5 |   5 passed | 0 failed | 384 skipped
+[doctest] assertions: 236 | 236 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## final-complete-Release\D01.out.log
+[doctest] test cases:   1 |   1 passed | 0 failed | 388 skipped
+[doctest] assertions: 145 | 145 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## final-complete-Release\D02.out.log
+[doctest] test cases:  3 |  3 passed | 0 failed | 386 skipped
+[doctest] assertions: 80 | 80 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## final-complete-Release\D03-nightly.out.log
+WO06 F-CORRUPT seed=6 cases=50000 max_fixture_bytes=736
+[doctest] test cases:      1 |      1 passed | 0 failed | 388 skipped
+[doctest] assertions: 300005 | 300005 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## final-complete-Release\D03.out.log
+WO06 F-CORRUPT seed=6 cases=2000 max_fixture_bytes=736
+[doctest] test cases:     2 |     2 passed | 0 failed | 387 skipped
+[doctest] assertions: 12014 | 12014 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## final-complete-Release\D04.out.log
+WO06 shared_entity intended=40000 actual=40000 timestamp_reversals=0
+[doctest] test cases:      3 |      3 passed | 0 failed | 386 skipped
+[doctest] assertions: 448607 | 448607 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## final-complete-Release\D05-native-retained.out.log
+[doctest] test cases: 10 | 10 passed | 0 failed
+
+## final-complete-Release\D05-native-two-hour.out.log
+[doctest] test cases: 2 | 2 passed | 0 failed
+
+## final-complete-Release\D05-two-hour.out.log
+WO06 two_hour samples_per_entity=432000 entities=3 capture_wall_seconds=0.111 final_export_total_seconds=0.732 history_logical_bytes=48384000 history_capacity_bytes=51667504 snapshot_logical_bytes=48384000 largest_csv_double_bytes=34560000 observed_private_bytes=138956800 nominal_duration=7200 stored_last_timestamp=7183.12793
+[doctest] test cases:        1 |        1 passed | 0 failed | 388 skipped
+[doctest] assertions: 19872059 | 19872059 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## final-complete-Release\D05.out.log
+[2026-09-17 18:58:53.363] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-final-complete-Release\cosmic-accept-ff4a7e38dcc94452985339825e8d9243\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:58:53.366] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-final-complete-Release\cosmic-accept-ff4a7e38dcc94452985339825e8d9243\temp\wo06\record-fault/save': binary write/flush/close failed
+[2026-09-17 18:58:53.369] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-final-complete-Release\cosmic-accept-ff4a7e38dcc94452985339825e8d9243\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:58:53.372] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-final-complete-Release\cosmic-accept-ff4a7e38dcc94452985339825e8d9243\temp\wo06\record-fault/save': binary write/flush/close failed
+[2026-09-17 18:58:53.376] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-final-complete-Release\cosmic-accept-ff4a7e38dcc94452985339825e8d9243\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:58:53.378] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-final-complete-Release\cosmic-accept-ff4a7e38dcc94452985339825e8d9243\temp\wo06\record-fault/save': binary write/flush/close failed
+[2026-09-17 18:58:53.382] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-final-complete-Release\cosmic-accept-ff4a7e38dcc94452985339825e8d9243\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:58:53.384] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-final-complete-Release\cosmic-accept-ff4a7e38dcc94452985339825e8d9243\temp\wo06\record-fault/save': binary write/flush/close failed
+[2026-09-17 18:58:53.388] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-final-complete-Release\cosmic-accept-ff4a7e38dcc94452985339825e8d9243\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:58:53.392] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-final-complete-Release\cosmic-accept-ff4a7e38dcc94452985339825e8d9243\temp\wo06\record-fault/save': snapshot publication failed
+[2026-09-17 18:58:53.396] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-final-complete-Release\cosmic-accept-ff4a7e38dcc94452985339825e8d9243\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:58:53.396] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-final-complete-Release\cosmic-accept-ff4a7e38dcc94452985339825e8d9243\temp\wo06\record-fault/save': interrupted autosave
+[2026-09-17 18:58:53.402] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-final-complete-Release\cosmic-accept-ff4a7e38dcc94452985339825e8d9243\temp\wo06\record-fault/save': snapshot publication failed
+[2026-09-17 18:58:53.429] [COSMIC] [error] DataRecorder: Flush FAILED for 'recordings/SF_Telem/wo06-state': binary write/flush/close failed
+[2026-09-17 18:58:53.489] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-final-complete-Release\cosmic-accept-ff4a7e38dcc94452985339825e8d9243\temp\wo06\csv-failure/save': CSV export failed
+[2026-09-17 18:58:53.490] [COSMIC] [error] DataRecorder: Flush FAILED for 'recordings/SF_Telem/wo06-monitor-export': binary write/flush/close failed
+WO06 loss held_write current_samples=17 published_samples=5 unpublished_samples=12 oldest_unpublished_t=5 current_t=17 window_seconds=12
+WO06 loss final unpublished_samples=0 final_publication_ms=4.034
+[doctest] test cases:   8 |   8 passed | 0 failed | 381 skipped
+[doctest] assertions: 244 | 244 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## final-complete-Release\D06.out.log
+WO06 D06 grammar_cases=36 Unicode_UTF8_path=PASS
+[doctest] test cases:   5 |   5 passed | 0 failed | 384 skipped
+[doctest] assertions: 236 | 236 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## monitor-before\D05.out.log
+[2026-09-17 18:36:55.818] [COSMIC] [error] DataRecorder: Flush FAILED for 'recordings/SF_Telem/wo06-monitor-export': binary write/flush/close failed
+C:\dev\Cosmic\tests\test_wo06.cpp(1027): ERROR: CHECK( hub.RecordingDirty() ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(1028): ERROR: CHECK( p.Load("recordings/SF_Telem/wo06-monitor-export") ) is NOT correct!
+[doctest] test cases: 1 | 0 passed | 1 failed | 387 skipped
+[doctest] assertions: 4 | 2 passed | 2 failed |
+[doctest] Status: FAILURE!
+
+## native-audit-accepted-Debug\D05-native-independent.out.log
+[doctest] test cases: 2 | 2 passed | 0 failed
+
+## native-audit-accepted-Release\D05-native-independent.out.log
+[doctest] test cases: 2 | 2 passed | 0 failed
+
+## native-audit-Debug\D05-native-independent.out.log
+[doctest] test cases: 2 | 2 passed | 0 failed
+
+## native-audit-latest-Debug\D05-native-independent.out.log
+[doctest] test cases: 2 | 2 passed | 0 failed
+
+## native-audit-latest-Release\D05-native-independent.out.log
+[doctest] test cases: 2 | 2 passed | 0 failed
+
+## native-audit-Release\D05-native-independent.out.log
+[doctest] test cases: 2 | 2 passed | 0 failed
+
+## native-complete-Debug\D05-native-retained.out.log
+[doctest] test cases: 10 | 10 passed | 0 failed
+
+## native-complete-Debug\D05-native-two-hour.out.log
+[doctest] test cases: 2 | 2 passed | 0 failed
+
+## native-complete-Release\D05-native-retained.out.log
+[doctest] test cases: 10 | 10 passed | 0 failed
+
+## native-complete-Release\D05-native-two-hour.out.log
+[doctest] test cases: 2 | 2 passed | 0 failed
+
+## native-long-accepted-Debug\close.out.log
+[2026-09-17 22:45:22.985] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+WO06 close_request_unix_ms=1789710324498 close_ms=2546 transition=0 samples_per_entity=432000
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 6 | 6 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-long-accepted-Debug\launcher.out.log
+[2026-09-17 22:45:27.456] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+WO06 close_request_unix_ms=1789710328901 close_ms=2359 transition=1 samples_per_entity=432000
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 6 | 6 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-long-accepted-Release\close.out.log
+[2026-09-17 22:45:01.090] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+WO06 close_request_unix_ms=1789710301287 close_ms=375 transition=0 samples_per_entity=432000
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 6 | 6 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-long-accepted-Release\launcher.out.log
+[2026-09-17 22:45:02.030] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+WO06 close_request_unix_ms=1789710302213 close_ms=297 transition=1 samples_per_entity=432000
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 6 | 6 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-long-Debug\close.out.log
+[2026-09-17 18:21:58.767] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+WO06 close_request_unix_ms=1789694520172 close_ms=2297 transition=0 samples_per_entity=432000
+[doctest] test cases: 1 | 1 passed | 0 failed | 385 skipped
+[doctest] assertions: 6 | 6 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-long-Debug\launcher.out.log
+[2026-09-17 18:22:02.952] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+WO06 close_request_unix_ms=1789694524359 close_ms=2250 transition=1 samples_per_entity=432000
+[doctest] test cases: 1 | 1 passed | 0 failed | 385 skipped
+[doctest] assertions: 6 | 6 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-long-final-Debug\close.out.log
+[2026-09-17 18:42:44.107] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+WO06 close_request_unix_ms=1789695765514 close_ms=2313 transition=0 samples_per_entity=432000
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 6 | 6 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-long-final-Debug\launcher.out.log
+[2026-09-17 18:42:48.321] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+WO06 close_request_unix_ms=1789695769706 close_ms=2250 transition=1 samples_per_entity=432000
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 6 | 6 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-long-final-Release\close.out.log
+[2026-09-17 18:43:00.911] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+WO06 close_request_unix_ms=1789695781109 close_ms=359 transition=0 samples_per_entity=432000
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 6 | 6 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-long-final-Release\launcher.out.log
+[2026-09-17 18:43:01.936] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+WO06 close_request_unix_ms=1789695782120 close_ms=296 transition=1 samples_per_entity=432000
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 6 | 6 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-long-finalized-Debug\close.out.log
+[2026-09-17 19:00:27.686] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+WO06 close_request_unix_ms=1789696829179 close_ms=2407 transition=0 samples_per_entity=432000
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 6 | 6 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-long-finalized-Debug\launcher.out.log
+[2026-09-17 19:00:32.116] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+WO06 close_request_unix_ms=1789696833544 close_ms=2375 transition=1 samples_per_entity=432000
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 6 | 6 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-long-finalized-Release\close.out.log
+[2026-09-17 18:59:37.538] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+WO06 close_request_unix_ms=1789696777762 close_ms=360 transition=0 samples_per_entity=432000
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 6 | 6 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-long-finalized-Release\launcher.out.log
+[2026-09-17 18:59:38.634] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+WO06 close_request_unix_ms=1789696778828 close_ms=297 transition=1 samples_per_entity=432000
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 6 | 6 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-long-latest-Debug\close.out.log
+[2026-09-17 18:55:11.563] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+WO06 close_request_unix_ms=1789696513041 close_ms=2390 transition=0 samples_per_entity=432000
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 6 | 6 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-long-latest-Debug\launcher.out.log
+[2026-09-17 18:55:15.966] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+WO06 close_request_unix_ms=1789696517386 close_ms=2313 transition=1 samples_per_entity=432000
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 6 | 6 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-long-latest-Release\close.out.log
+[2026-09-17 18:54:54.592] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+WO06 close_request_unix_ms=1789696494802 close_ms=391 transition=0 samples_per_entity=432000
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 6 | 6 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-long-latest-Release\launcher.out.log
+[2026-09-17 18:54:55.687] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+WO06 close_request_unix_ms=1789696495875 close_ms=296 transition=1 samples_per_entity=432000
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 6 | 6 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-long-Release\close.out.log
+[2026-09-17 18:25:18.328] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+WO06 close_request_unix_ms=1789694718556 close_ms=407 transition=0 samples_per_entity=432000
+[doctest] test cases: 1 | 1 passed | 0 failed | 385 skipped
+[doctest] assertions: 6 | 6 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-long-Release\launcher.out.log
+[2026-09-17 18:25:19.474] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+WO06 close_request_unix_ms=1789694719696 close_ms=328 transition=1 samples_per_entity=432000
+[doctest] test cases: 1 | 1 passed | 0 failed | 385 skipped
+[doctest] assertions: 6 | 6 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-accepted-Debug\s3-t0-i0.out.log
+[2026-09-17 22:45:16.090] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-accepted-Debug\s3-t0-i1.out.log
+[2026-09-17 22:45:16.796] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-accepted-Debug\s3-t0-i2.out.log
+[2026-09-17 22:45:17.453] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-accepted-Debug\s3-t0-i3.out.log
+[2026-09-17 22:45:18.081] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-accepted-Debug\s3-t0-i4.out.log
+[2026-09-17 22:45:18.701] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-accepted-Debug\s3-t1-i0.out.log
+[2026-09-17 22:45:19.345] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-accepted-Debug\s3-t1-i1.out.log
+[2026-09-17 22:45:19.967] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-accepted-Debug\s3-t1-i2.out.log
+[2026-09-17 22:45:20.588] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-accepted-Debug\s3-t1-i3.out.log
+[2026-09-17 22:45:21.300] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-accepted-Debug\s3-t1-i4.out.log
+[2026-09-17 22:45:21.966] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-accepted-Release\s3-t0-i0.out.log
+[2026-09-17 22:44:55.583] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-accepted-Release\s3-t0-i1.out.log
+[2026-09-17 22:44:56.170] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-accepted-Release\s3-t0-i2.out.log
+[2026-09-17 22:44:56.672] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-accepted-Release\s3-t0-i3.out.log
+[2026-09-17 22:44:57.181] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-accepted-Release\s3-t0-i4.out.log
+[2026-09-17 22:44:57.692] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-accepted-Release\s3-t1-i0.out.log
+[2026-09-17 22:44:58.210] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-accepted-Release\s3-t1-i1.out.log
+[2026-09-17 22:44:58.723] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-accepted-Release\s3-t1-i2.out.log
+[2026-09-17 22:44:59.223] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-accepted-Release\s3-t1-i3.out.log
+[2026-09-17 22:44:59.744] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-accepted-Release\s3-t1-i4.out.log
+[2026-09-17 22:45:00.250] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-Debug\s3-t0-i0.out.log
+[2026-09-17 18:21:51.098] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 385 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-Debug\s3-t0-i1.out.log
+[2026-09-17 18:21:51.902] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 385 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-Debug\s3-t0-i2.out.log
+[2026-09-17 18:21:52.641] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 385 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-Debug\s3-t0-i3.out.log
+[2026-09-17 18:21:53.364] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 385 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-Debug\s3-t0-i4.out.log
+[2026-09-17 18:21:54.093] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 385 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-Debug\s3-t1-i0.out.log
+[2026-09-17 18:21:54.819] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 385 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-Debug\s3-t1-i1.out.log
+[2026-09-17 18:21:55.546] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 385 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-Debug\s3-t1-i2.out.log
+[2026-09-17 18:21:56.306] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 385 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-Debug\s3-t1-i3.out.log
+[2026-09-17 18:21:57.012] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 385 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-Debug\s3-t1-i4.out.log
+[2026-09-17 18:21:57.740] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 385 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-final-Debug\s3-t0-i0.out.log
+[2026-09-17 18:42:36.522] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-final-Debug\s3-t0-i1.out.log
+[2026-09-17 18:42:37.334] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-final-Debug\s3-t0-i2.out.log
+[2026-09-17 18:42:38.077] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-final-Debug\s3-t0-i3.out.log
+[2026-09-17 18:42:38.780] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-final-Debug\s3-t0-i4.out.log
+[2026-09-17 18:42:39.492] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-final-Debug\s3-t1-i0.out.log
+[2026-09-17 18:42:40.209] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-final-Debug\s3-t1-i1.out.log
+[2026-09-17 18:42:40.919] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-final-Debug\s3-t1-i2.out.log
+[2026-09-17 18:42:41.635] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-final-Debug\s3-t1-i3.out.log
+[2026-09-17 18:42:42.340] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-final-Debug\s3-t1-i4.out.log
+[2026-09-17 18:42:43.057] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-final-Release\s3-t0-i0.out.log
+[2026-09-17 18:42:54.383] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-final-Release\s3-t0-i1.out.log
+[2026-09-17 18:42:55.052] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-final-Release\s3-t0-i2.out.log
+[2026-09-17 18:42:55.675] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-final-Release\s3-t0-i3.out.log
+[2026-09-17 18:42:56.280] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-final-Release\s3-t0-i4.out.log
+[2026-09-17 18:42:56.885] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-final-Release\s3-t1-i0.out.log
+[2026-09-17 18:42:57.506] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-final-Release\s3-t1-i1.out.log
+[2026-09-17 18:42:58.111] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-final-Release\s3-t1-i2.out.log
+[2026-09-17 18:42:58.723] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-final-Release\s3-t1-i3.out.log
+[2026-09-17 18:42:59.353] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-final-Release\s3-t1-i4.out.log
+[2026-09-17 18:42:59.961] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-finalized-Debug\s3-t0-i0.out.log
+[2026-09-17 19:00:19.819] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-finalized-Debug\s3-t0-i1.out.log
+[2026-09-17 19:00:20.603] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-finalized-Debug\s3-t0-i2.out.log
+[2026-09-17 19:00:21.353] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-finalized-Debug\s3-t0-i3.out.log
+[2026-09-17 19:00:22.088] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-finalized-Debug\s3-t0-i4.out.log
+[2026-09-17 19:00:22.854] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-finalized-Debug\s3-t1-i0.out.log
+[2026-09-17 19:00:23.598] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-finalized-Debug\s3-t1-i1.out.log
+[2026-09-17 19:00:24.343] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-finalized-Debug\s3-t1-i2.out.log
+[2026-09-17 19:00:25.100] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-finalized-Debug\s3-t1-i3.out.log
+[2026-09-17 19:00:25.846] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-finalized-Debug\s3-t1-i4.out.log
+[2026-09-17 19:00:26.616] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-finalized-Release\s3-t0-i0.out.log
+[2026-09-17 18:59:30.861] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-finalized-Release\s3-t0-i1.out.log
+[2026-09-17 18:59:31.554] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-finalized-Release\s3-t0-i2.out.log
+[2026-09-17 18:59:32.178] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-finalized-Release\s3-t0-i3.out.log
+[2026-09-17 18:59:32.802] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-finalized-Release\s3-t0-i4.out.log
+[2026-09-17 18:59:33.443] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-finalized-Release\s3-t1-i0.out.log
+[2026-09-17 18:59:34.095] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-finalized-Release\s3-t1-i1.out.log
+[2026-09-17 18:59:34.767] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-finalized-Release\s3-t1-i2.out.log
+[2026-09-17 18:59:35.386] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-finalized-Release\s3-t1-i3.out.log
+[2026-09-17 18:59:36.000] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-finalized-Release\s3-t1-i4.out.log
+[2026-09-17 18:59:36.612] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-latest-Debug\s3-t0-i0.out.log
+[2026-09-17 18:55:03.545] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-latest-Debug\s3-t0-i1.out.log
+[2026-09-17 18:55:04.372] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-latest-Debug\s3-t0-i2.out.log
+[2026-09-17 18:55:05.144] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-latest-Debug\s3-t0-i3.out.log
+[2026-09-17 18:55:05.901] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-latest-Debug\s3-t0-i4.out.log
+[2026-09-17 18:55:06.677] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-latest-Debug\s3-t1-i0.out.log
+[2026-09-17 18:55:07.455] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-latest-Debug\s3-t1-i1.out.log
+[2026-09-17 18:55:08.185] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-latest-Debug\s3-t1-i2.out.log
+[2026-09-17 18:55:08.965] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-latest-Debug\s3-t1-i3.out.log
+[2026-09-17 18:55:09.746] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-latest-Debug\s3-t1-i4.out.log
+[2026-09-17 18:55:10.490] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-latest-Release\s3-t0-i0.out.log
+[2026-09-17 18:54:47.798] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-latest-Release\s3-t0-i1.out.log
+[2026-09-17 18:54:48.601] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-latest-Release\s3-t0-i2.out.log
+[2026-09-17 18:54:49.254] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-latest-Release\s3-t0-i3.out.log
+[2026-09-17 18:54:49.900] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-latest-Release\s3-t0-i4.out.log
+[2026-09-17 18:54:50.524] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-latest-Release\s3-t1-i0.out.log
+[2026-09-17 18:54:51.153] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-latest-Release\s3-t1-i1.out.log
+[2026-09-17 18:54:51.775] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-latest-Release\s3-t1-i2.out.log
+[2026-09-17 18:54:52.392] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-latest-Release\s3-t1-i3.out.log
+[2026-09-17 18:54:53.052] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-latest-Release\s3-t1-i4.out.log
+[2026-09-17 18:54:53.671] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 388 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-Release\s3-t0-i0.out.log
+[2026-09-17 18:25:11.400] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 385 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-Release\s3-t0-i1.out.log
+[2026-09-17 18:25:12.145] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 385 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-Release\s3-t0-i2.out.log
+[2026-09-17 18:25:12.803] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 385 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-Release\s3-t0-i3.out.log
+[2026-09-17 18:25:13.427] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 385 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-Release\s3-t0-i4.out.log
+[2026-09-17 18:25:14.082] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 385 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-Release\s3-t1-i0.out.log
+[2026-09-17 18:25:14.725] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 385 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-Release\s3-t1-i1.out.log
+[2026-09-17 18:25:15.350] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 385 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-Release\s3-t1-i2.out.log
+[2026-09-17 18:25:16.034] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 385 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-Release\s3-t1-i3.out.log
+[2026-09-17 18:25:16.695] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 385 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## native-retained-Release\s3-t1-i4.out.log
+[2026-09-17 18:25:17.329] [COSMIC] [info] OpenGL 4.5 — NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2
+[doctest] test cases: 1 | 1 passed | 0 failed | 385 skipped
+[doctest] assertions: 7 | 7 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## player-after\D03.out.log
+C:\dev\Cosmic\tests\test_wo06.cpp(337): ERROR: CHECK_FALSE( p.Load((dir / "bad.bin").string()) ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(338): ERROR: CHECK_FALSE( p.IsLoaded() ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(340): ERROR: CHECK( p.GetEntityNames().empty() ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(342): ERROR: CHECK( p.GetDuration() == 0 ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(337): ERROR: CHECK_FALSE( p.Load((dir / "bad.bin").string()) ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(338): ERROR: CHECK_FALSE( p.IsLoaded() ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(340): ERROR: CHECK( p.GetEntityNames().empty() ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(342): ERROR: CHECK( p.GetDuration() == 0 ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(337): ERROR: CHECK_FALSE( p.Load((dir / "bad.bin").string()) ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(338): ERROR: CHECK_FALSE( p.IsLoaded() ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(340): ERROR: CHECK( p.GetEntityNames().empty() ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(342): ERROR: CHECK( p.GetDuration() == 0 ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(337): ERROR: CHECK_FALSE( p.Load((dir / "bad.bin").string()) ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(338): ERROR: CHECK_FALSE( p.IsLoaded() ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(340): ERROR: CHECK( p.GetEntityNames().empty() ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(342): ERROR: CHECK( p.GetDuration() == 0 ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(337): ERROR: CHECK_FALSE( p.Load((dir / "bad.bin").string()) ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(338): ERROR: CHECK_FALSE( p.IsLoaded() ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(340): ERROR: CHECK( p.GetEntityNames().empty() ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(342): ERROR: CHECK( p.GetDuration() == 0 ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(337): ERROR: CHECK_FALSE( p.Load((dir / "bad.bin").string()) ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(338): ERROR: CHECK_FALSE( p.IsLoaded() ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(340): ERROR: CHECK( p.GetEntityNames().empty() ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(342): ERROR: CHECK( p.GetDuration() == 0 ) is NOT correct!
+[... full raw log retained locally ...]
+C:\dev\Cosmic\tests\test_wo06.cpp(342): ERROR: CHECK( p.GetDuration() == 0 ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(337): ERROR: CHECK_FALSE( p.Load((dir / "bad.bin").string()) ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(338): ERROR: CHECK_FALSE( p.IsLoaded() ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(340): ERROR: CHECK( p.GetEntityNames().empty() ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(342): ERROR: CHECK( p.GetDuration() == 0 ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(337): ERROR: CHECK_FALSE( p.Load((dir / "bad.bin").string()) ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(338): ERROR: CHECK_FALSE( p.IsLoaded() ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(340): ERROR: CHECK( p.GetEntityNames().empty() ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(342): ERROR: CHECK( p.GetDuration() == 0 ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(352): ERROR: CHECK_FALSE( p.Load(multi.string()) ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(353): ERROR: CHECK( p.GetEntityNames().empty() ) is NOT correct!
+WO06 F-CORRUPT seed=6 cases=2000 max_fixture_bytes=736
+C:\dev\Cosmic\tests\test_wo06.cpp(895): ERROR: CHECK_FALSE( p.Load((dir / "bad.bin").string()) ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(896): ERROR: CHECK_FALSE( p.IsLoaded() ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(897): ERROR: CHECK( p.GetEntityNames().empty() ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(895): ERROR: CHECK_FALSE( p.Load((dir / "bad.bin").string()) ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(896): ERROR: CHECK_FALSE( p.IsLoaded() ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(897): ERROR: CHECK( p.GetEntityNames().empty() ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(895): ERROR: CHECK_FALSE( p.Load((dir / "bad.bin").string()) ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(896): ERROR: CHECK_FALSE( p.IsLoaded() ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(897): ERROR: CHECK( p.GetEntityNames().empty() ) is NOT correct!
+[doctest] test cases:     2 |    0 passed |    2 failed | 385 skipped
+[doctest] assertions: 12014 | 8007 passed | 4007 failed |
+[doctest] Status: FAILURE!
+
+## player-after-fixed\D03.out.log
+WO06 F-CORRUPT seed=6 cases=2000 max_fixture_bytes=736
+[doctest] test cases:     2 |     2 passed | 0 failed | 385 skipped
+[doctest] assertions: 12014 | 12014 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## player-before\D03.out.log
+C:\dev\Cosmic\tests\test_wo06.cpp(337): ERROR: CHECK_FALSE( p.Load((dir / "bad.bin").string()) ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(338): ERROR: CHECK_FALSE( p.IsLoaded() ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(340): ERROR: CHECK( p.GetEntityNames().empty() ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(342): ERROR: CHECK( p.GetDuration() == 0 ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(337): ERROR: CHECK_FALSE( p.Load((dir / "bad.bin").string()) ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(338): ERROR: CHECK_FALSE( p.IsLoaded() ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(340): ERROR: CHECK( p.GetEntityNames().empty() ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(342): ERROR: CHECK( p.GetDuration() == 0 ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(337): ERROR: CHECK_FALSE( p.Load((dir / "bad.bin").string()) ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(338): ERROR: CHECK_FALSE( p.IsLoaded() ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(340): ERROR: CHECK( p.GetEntityNames().empty() ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(342): ERROR: CHECK( p.GetDuration() == 0 ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(337): ERROR: CHECK_FALSE( p.Load((dir / "bad.bin").string()) ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(338): ERROR: CHECK_FALSE( p.IsLoaded() ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(340): ERROR: CHECK( p.GetEntityNames().empty() ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(342): ERROR: CHECK( p.GetDuration() == 0 ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(337): ERROR: CHECK_FALSE( p.Load((dir / "bad.bin").string()) ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(338): ERROR: CHECK_FALSE( p.IsLoaded() ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(340): ERROR: CHECK( p.GetEntityNames().empty() ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(342): ERROR: CHECK( p.GetDuration() == 0 ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(337): ERROR: CHECK_FALSE( p.Load((dir / "bad.bin").string()) ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(338): ERROR: CHECK_FALSE( p.IsLoaded() ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(340): ERROR: CHECK( p.GetEntityNames().empty() ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(342): ERROR: CHECK( p.GetDuration() == 0 ) is NOT correct!
+[... full raw log retained locally ...]
+C:\dev\Cosmic\tests\test_wo06.cpp(342): ERROR: CHECK( p.GetDuration() == 0 ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(337): ERROR: CHECK_FALSE( p.Load((dir / "bad.bin").string()) ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(338): ERROR: CHECK_FALSE( p.IsLoaded() ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(340): ERROR: CHECK( p.GetEntityNames().empty() ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(342): ERROR: CHECK( p.GetDuration() == 0 ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(337): ERROR: CHECK_FALSE( p.Load((dir / "bad.bin").string()) ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(338): ERROR: CHECK_FALSE( p.IsLoaded() ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(340): ERROR: CHECK( p.GetEntityNames().empty() ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(342): ERROR: CHECK( p.GetDuration() == 0 ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(352): ERROR: CHECK_FALSE( p.Load(multi.string()) ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(353): ERROR: CHECK( p.GetEntityNames().empty() ) is NOT correct!
+WO06 F-CORRUPT seed=6 cases=2000 max_fixture_bytes=736
+C:\dev\Cosmic\tests\test_wo06.cpp(895): ERROR: CHECK_FALSE( p.Load((dir / "bad.bin").string()) ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(896): ERROR: CHECK_FALSE( p.IsLoaded() ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(897): ERROR: CHECK( p.GetEntityNames().empty() ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(895): ERROR: CHECK_FALSE( p.Load((dir / "bad.bin").string()) ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(896): ERROR: CHECK_FALSE( p.IsLoaded() ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(897): ERROR: CHECK( p.GetEntityNames().empty() ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(895): ERROR: CHECK_FALSE( p.Load((dir / "bad.bin").string()) ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(896): ERROR: CHECK_FALSE( p.IsLoaded() ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(897): ERROR: CHECK( p.GetEntityNames().empty() ) is NOT correct!
+[doctest] test cases:     2 |    0 passed |    2 failed | 385 skipped
+[doctest] assertions: 12014 | 8007 passed | 4007 failed |
+[doctest] Status: FAILURE!
+
+## policy-before\D05.out.log
+C:\dev\Cosmic\tests\test_wo06.cpp(981): ERROR: CHECK( fs::exists(fs::path("recordings/SF_Telem") / session / "scene.bin") ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(982): ERROR: CHECK_FALSE( h.RecordingDirty() ) is NOT correct!
+[doctest] test cases: 1 | 0 passed | 1 failed | 388 skipped
+[doctest] assertions: 8 | 6 passed | 2 failed |
+[doctest] Status: FAILURE!
+
+## queued-before\D05.out.log
+C:\dev\Cosmic\tests\test_wo06.cpp(279): ERROR: CHECK( result==std::future_status::ready ) is NOT correct!
+[doctest] test cases: 1 | 0 passed | 1 failed | 385 skipped
+[doctest] assertions: 3 | 2 passed | 1 failed |
+[doctest] Status: FAILURE!
+
+## release-complete\D01.out.log
+[doctest] test cases:   1 |   1 passed | 0 failed | 388 skipped
+[doctest] assertions: 145 | 145 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## release-complete\D02.out.log
+[doctest] test cases:  3 |  3 passed | 0 failed | 386 skipped
+[doctest] assertions: 72 | 72 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## release-complete\D03-nightly.out.log
+WO06 F-CORRUPT seed=6 cases=50000 max_fixture_bytes=736
+[doctest] test cases:      1 |      1 passed | 0 failed | 388 skipped
+[doctest] assertions: 300005 | 300005 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## release-complete\D03.out.log
+WO06 F-CORRUPT seed=6 cases=2000 max_fixture_bytes=736
+[doctest] test cases:     2 |     2 passed | 0 failed | 387 skipped
+[doctest] assertions: 12014 | 12014 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## release-complete\D04.out.log
+WO06 shared_entity intended=40000 actual=40000 timestamp_reversals=0
+[doctest] test cases:      3 |      3 passed | 0 failed | 386 skipped
+[doctest] assertions: 434707 | 434707 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## release-complete\D05-two-hour.out.log
+WO06 two_hour samples_per_entity=432000 entities=3 capture_wall_seconds=0.096 final_export_total_seconds=0.741 history_logical_bytes=48384000 history_capacity_bytes=51667504 snapshot_logical_bytes=48384000 largest_csv_double_bytes=34560000 observed_private_bytes=138924032 nominal_duration=7200 stored_last_timestamp=7183.12793
+[doctest] test cases:        1 |        1 passed | 0 failed | 388 skipped
+[doctest] assertions: 19872059 | 19872059 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## release-complete\D05.out.log
+[2026-09-17 18:39:37.280] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-release-complete\cosmic-accept-44ea216f8128404ca53da5320912f7b8\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:39:37.283] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-release-complete\cosmic-accept-44ea216f8128404ca53da5320912f7b8\temp\wo06\record-fault/save': binary write/flush/close failed
+[2026-09-17 18:39:37.287] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-release-complete\cosmic-accept-44ea216f8128404ca53da5320912f7b8\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:39:37.289] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-release-complete\cosmic-accept-44ea216f8128404ca53da5320912f7b8\temp\wo06\record-fault/save': binary write/flush/close failed
+[2026-09-17 18:39:37.293] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-release-complete\cosmic-accept-44ea216f8128404ca53da5320912f7b8\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:39:37.296] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-release-complete\cosmic-accept-44ea216f8128404ca53da5320912f7b8\temp\wo06\record-fault/save': binary write/flush/close failed
+[2026-09-17 18:39:37.299] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-release-complete\cosmic-accept-44ea216f8128404ca53da5320912f7b8\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:39:37.302] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-release-complete\cosmic-accept-44ea216f8128404ca53da5320912f7b8\temp\wo06\record-fault/save': binary write/flush/close failed
+[2026-09-17 18:39:37.305] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-release-complete\cosmic-accept-44ea216f8128404ca53da5320912f7b8\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:39:37.309] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-release-complete\cosmic-accept-44ea216f8128404ca53da5320912f7b8\temp\wo06\record-fault/save': snapshot publication failed
+[2026-09-17 18:39:37.313] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-release-complete\cosmic-accept-44ea216f8128404ca53da5320912f7b8\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:39:37.313] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-release-complete\cosmic-accept-44ea216f8128404ca53da5320912f7b8\temp\wo06\record-fault/save': interrupted autosave
+[2026-09-17 18:39:37.318] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-release-complete\cosmic-accept-44ea216f8128404ca53da5320912f7b8\temp\wo06\record-fault/save': snapshot publication failed
+[2026-09-17 18:39:37.345] [COSMIC] [error] DataRecorder: Flush FAILED for 'recordings/SF_Telem/wo06-state': binary write/flush/close failed
+[2026-09-17 18:39:37.394] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-release-complete\cosmic-accept-44ea216f8128404ca53da5320912f7b8\temp\wo06\csv-failure/save': CSV export failed
+[2026-09-17 18:39:37.395] [COSMIC] [error] DataRecorder: Flush FAILED for 'recordings/SF_Telem/wo06-monitor-export': binary write/flush/close failed
+WO06 loss held_write current_samples=17 published_samples=5 unpublished_samples=12 oldest_unpublished_t=5 current_t=17 window_seconds=12
+WO06 loss final unpublished_samples=0 final_publication_ms=3.992
+[doctest] test cases:   8 |   8 passed | 0 failed | 381 skipped
+[doctest] assertions: 238 | 238 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## release-complete\D06.out.log
+WO06 D06 grammar_cases=36 Unicode_UTF8_path=PASS
+[doctest] test cases:   5 |   5 passed | 0 failed | 384 skipped
+[doctest] assertions: 236 | 236 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## release-current\D01.out.log
+[doctest] test cases:   1 |   1 passed | 0 failed | 386 skipped
+[doctest] assertions: 145 | 145 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## release-current\D02.out.log
+[doctest] test cases:  2 |  2 passed | 0 failed | 385 skipped
+[doctest] assertions: 65 | 65 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## release-current\D03-nightly.out.log
+WO06 F-CORRUPT seed=6 cases=50000 max_fixture_bytes=736
+[doctest] test cases:      1 |      1 passed | 0 failed | 386 skipped
+[doctest] assertions: 300005 | 300005 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## release-current\D03.out.log
+WO06 F-CORRUPT seed=6 cases=2000 max_fixture_bytes=736
+[doctest] test cases:     2 |     2 passed | 0 failed | 385 skipped
+[doctest] assertions: 12014 | 12014 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## release-current\D04.out.log
+WO06 shared_entity intended=40000 actual=40000 timestamp_reversals=0
+[doctest] test cases:      3 |      3 passed | 0 failed | 384 skipped
+[doctest] assertions: 450077 | 450077 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## release-current\D05-two-hour.out.log
+WO06 two_hour samples_per_entity=432000 entities=3 capture_wall_seconds=0.106 final_export_total_seconds=0.726 history_logical_bytes=48384000 history_capacity_bytes=51667504 snapshot_logical_bytes=48384000 largest_csv_double_bytes=34560000 observed_private_bytes=138928128 nominal_duration=7200 stored_last_timestamp=7183.12793
+[doctest] test cases:        1 |        1 passed | 0 failed | 386 skipped
+[doctest] assertions: 19872059 | 19872059 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## release-current\D05.out.log
+[2026-09-17 18:30:49.782] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-release-current\cosmic-accept-392a871c8ab14322b00237bdf60b6e2e\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:30:49.785] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-release-current\cosmic-accept-392a871c8ab14322b00237bdf60b6e2e\temp\wo06\record-fault/save': binary write/flush/close failed
+[2026-09-17 18:30:49.789] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-release-current\cosmic-accept-392a871c8ab14322b00237bdf60b6e2e\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:30:49.791] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-release-current\cosmic-accept-392a871c8ab14322b00237bdf60b6e2e\temp\wo06\record-fault/save': binary write/flush/close failed
+[2026-09-17 18:30:49.795] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-release-current\cosmic-accept-392a871c8ab14322b00237bdf60b6e2e\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:30:49.798] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-release-current\cosmic-accept-392a871c8ab14322b00237bdf60b6e2e\temp\wo06\record-fault/save': binary write/flush/close failed
+[2026-09-17 18:30:49.802] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-release-current\cosmic-accept-392a871c8ab14322b00237bdf60b6e2e\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:30:49.804] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-release-current\cosmic-accept-392a871c8ab14322b00237bdf60b6e2e\temp\wo06\record-fault/save': binary write/flush/close failed
+[2026-09-17 18:30:49.808] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-release-current\cosmic-accept-392a871c8ab14322b00237bdf60b6e2e\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:30:49.813] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-release-current\cosmic-accept-392a871c8ab14322b00237bdf60b6e2e\temp\wo06\record-fault/save': snapshot publication failed
+[2026-09-17 18:30:49.817] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-release-current\cosmic-accept-392a871c8ab14322b00237bdf60b6e2e\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:30:49.817] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-release-current\cosmic-accept-392a871c8ab14322b00237bdf60b6e2e\temp\wo06\record-fault/save': interrupted autosave
+[2026-09-17 18:30:49.822] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-release-current\cosmic-accept-392a871c8ab14322b00237bdf60b6e2e\temp\wo06\record-fault/save': snapshot publication failed
+[2026-09-17 18:30:49.851] [COSMIC] [error] DataRecorder: Flush FAILED for 'recordings/SF_Telem/wo06-state': binary write/flush/close failed
+[2026-09-17 18:30:49.904] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-release-current\cosmic-accept-392a871c8ab14322b00237bdf60b6e2e\temp\wo06\csv-failure/save': CSV export failed
+WO06 loss held_write current_samples=17 published_samples=5 unpublished_samples=12 oldest_unpublished_t=5 current_t=17 window_seconds=12
+WO06 loss final unpublished_samples=0 final_publication_ms=4.423
+[doctest] test cases:   7 |   7 passed | 0 failed | 380 skipped
+[doctest] assertions: 234 | 234 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## release-current\D06.out.log
+WO06 D06 grammar_cases=36 Unicode_UTF8_path=PASS
+[doctest] test cases:   5 |   5 passed | 0 failed | 382 skipped
+[doctest] assertions: 236 | 236 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## release-final\D01.out.log
+[doctest] test cases:   1 |   1 passed | 0 failed | 385 skipped
+[doctest] assertions: 145 | 145 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## release-final\D02.out.log
+[doctest] test cases:  2 |  2 passed | 0 failed | 384 skipped
+[doctest] assertions: 65 | 65 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## release-final\D03-nightly.out.log
+WO06 F-CORRUPT seed=6 cases=50000 max_fixture_bytes=736
+[doctest] test cases:      1 |      1 passed | 0 failed | 385 skipped
+[doctest] assertions: 300005 | 300005 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## release-final\D03.out.log
+WO06 F-CORRUPT seed=6 cases=2000 max_fixture_bytes=736
+[doctest] test cases:     2 |     2 passed | 0 failed | 384 skipped
+[doctest] assertions: 12014 | 12014 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## release-final\D04.out.log
+[doctest] test cases:      2 |      2 passed | 0 failed | 384 skipped
+[doctest] assertions: 315351 | 315351 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## release-final\D05-native-retained.out.log
+[doctest] test cases: 10 | 10 passed | 0 failed
+
+## release-final\D05-native-two-hour.out.log
+[doctest] test cases: 2 | 2 passed | 0 failed
+
+## release-final\D05-two-hour.out.log
+WO06 two_hour samples_per_entity=432000 entities=3 capture_wall_seconds=0.097 final_export_total_seconds=0.749 history_logical_bytes=48384000 history_capacity_bytes=51667504 snapshot_logical_bytes=48384000 largest_csv_double_bytes=34560000 observed_private_bytes=138526720 nominal_duration=7200 stored_last_timestamp=7183.12793
+[doctest] test cases:        1 |        1 passed | 0 failed | 385 skipped
+[doctest] assertions: 19872059 | 19872059 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## release-final\D05.out.log
+[2026-09-17 18:24:32.483] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-release-final\cosmic-accept-38efa96a28b0487996f8ef59d2d5fb06\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:24:32.486] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-release-final\cosmic-accept-38efa96a28b0487996f8ef59d2d5fb06\temp\wo06\record-fault/save': binary write/flush/close failed
+[2026-09-17 18:24:32.489] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-release-final\cosmic-accept-38efa96a28b0487996f8ef59d2d5fb06\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:24:32.492] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-release-final\cosmic-accept-38efa96a28b0487996f8ef59d2d5fb06\temp\wo06\record-fault/save': binary write/flush/close failed
+[2026-09-17 18:24:32.496] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-release-final\cosmic-accept-38efa96a28b0487996f8ef59d2d5fb06\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:24:32.499] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-release-final\cosmic-accept-38efa96a28b0487996f8ef59d2d5fb06\temp\wo06\record-fault/save': binary write/flush/close failed
+[2026-09-17 18:24:32.503] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-release-final\cosmic-accept-38efa96a28b0487996f8ef59d2d5fb06\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:24:32.506] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-release-final\cosmic-accept-38efa96a28b0487996f8ef59d2d5fb06\temp\wo06\record-fault/save': binary write/flush/close failed
+[2026-09-17 18:24:32.509] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-release-final\cosmic-accept-38efa96a28b0487996f8ef59d2d5fb06\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:24:32.513] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-release-final\cosmic-accept-38efa96a28b0487996f8ef59d2d5fb06\temp\wo06\record-fault/save': snapshot publication failed
+[2026-09-17 18:24:32.517] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-release-final\cosmic-accept-38efa96a28b0487996f8ef59d2d5fb06\temp\wo06\record-fault/save': CSV export failed
+[2026-09-17 18:24:32.518] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-release-final\cosmic-accept-38efa96a28b0487996f8ef59d2d5fb06\temp\wo06\record-fault/save': interrupted autosave
+[2026-09-17 18:24:32.522] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-release-final\cosmic-accept-38efa96a28b0487996f8ef59d2d5fb06\temp\wo06\record-fault/save': snapshot publication failed
+[2026-09-17 18:24:32.553] [COSMIC] [error] DataRecorder: Flush FAILED for 'recordings/SF_Telem/wo06-state': binary write/flush/close failed
+[2026-09-17 18:24:32.606] [COSMIC] [error] DataRecorder: Flush FAILED for 'C:\dev\Cosmic\tests\acceptance\_temp\wo06-release-final\cosmic-accept-38efa96a28b0487996f8ef59d2d5fb06\temp\wo06\csv-failure/save': CSV export failed
+WO06 loss held_write current_samples=17 published_samples=5 unpublished_samples=12 oldest_unpublished_t=5 current_t=17 window_seconds=12
+WO06 loss final unpublished_samples=0 final_publication_ms=5.053
+[doctest] test cases:   7 |   7 passed | 0 failed | 379 skipped
+[doctest] assertions: 234 | 234 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## release-final\D06.out.log
+WO06 D06 grammar_cases=36 Unicode_UTF8_path=PASS
+[doctest] test cases:   5 |   5 passed | 0 failed | 381 skipped
+[doctest] assertions: 236 | 236 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## release-final\retained.out.log
+WO05 matrix: schedules=9 transitions=5 storage=5 iterations=100 total=22500 max_close_ms=148
+WO05 cancel owner ms p95=111.716 p99=111.749 max=111.750
+[doctest] test cases:     362 |     362 passed | 0 failed | 24 skipped
+[doctest] assertions: 2843526 | 2843526 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## retained-complete-Debug\retained.out.log
+WO05 matrix: schedules=9 transitions=5 storage=5 iterations=100 total=22500 max_close_ms=17
+WO05 cancel owner ms p95=122.763 p99=124.000 max=124.138
+[doctest] test cases:     362 |     362 passed | 0 failed | 27 skipped
+[doctest] assertions: 2843526 | 2843526 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## retained-complete-Release\retained.out.log
+WO05 matrix: schedules=9 transitions=5 storage=5 iterations=100 total=22500 max_close_ms=15
+WO05 cancel owner ms p95=111.712 p99=111.729 max=111.747
+[doctest] test cases:     362 |     362 passed | 0 failed | 27 skipped
+[doctest] assertions: 2843526 | 2843526 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## retained-current-debug\retained.out.log
+WO05 matrix: schedules=9 transitions=5 storage=5 iterations=100 total=22500 max_close_ms=85
+WO05 cancel owner ms p95=111.075 p99=111.162 max=111.311
+[doctest] test cases:     362 |     362 passed | 0 failed | 25 skipped
+[doctest] assertions: 2843526 | 2843526 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## retained-current-release\retained.out.log
+WO05 matrix: schedules=9 transitions=5 storage=5 iterations=100 total=22500 max_close_ms=15
+WO05 cancel owner ms p95=110.780 p99=111.120 max=111.132
+[doctest] test cases:     362 |     362 passed | 0 failed | 25 skipped
+[doctest] assertions: 2843526 | 2843526 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+## shared-before\D04.out.log
+WO06 shared_entity intended=40000 actual=40000 timestamp_reversals=1268
+C:\dev\Cosmic\tests\test_wo06.cpp(447): ERROR: CHECK( reversals==0 ) is NOT correct!
+C:\dev\Cosmic\tests\test_wo06.cpp(448): ERROR: CHECK( p.Load((Scratch("shared-writers")/"save").string()) ) is NOT correct!
+[doctest] test cases:      1 |      0 passed | 1 failed | 386 skipped
+[doctest] assertions: 120016 | 120014 passed | 2 failed |
+[doctest] Status: FAILURE!

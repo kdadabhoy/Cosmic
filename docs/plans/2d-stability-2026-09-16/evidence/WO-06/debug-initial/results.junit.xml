@@ -1,0 +1,21 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="wo06" tests="7" failures="1" skipped="0">
+  <testsuite name="all" tests="7" failures="1" skipped="0">
+    <testcase name="D01" classname="wo06.U" time="0">
+    </testcase>
+    <testcase name="D02" classname="wo06.U" time="0">
+    </testcase>
+    <testcase name="D03" classname="wo06.U" time="0">
+    </testcase>
+    <testcase name="D04" classname="wo06.U" time="0">
+    </testcase>
+    <testcase name="D05" classname="wo06.W" time="0">
+    </testcase>
+    <testcase name="D06" classname="wo06.W" time="0">
+    </testcase>
+    <testcase name="D05-two-hour" classname="wo06.W" time="0">
+      <failure type="FAILED" message="expected &gt;= 1 tests, got 0 (exit 1, wanted 0)"></failure>
+    </testcase>
+  </testsuite>
+</testsuites>
+
