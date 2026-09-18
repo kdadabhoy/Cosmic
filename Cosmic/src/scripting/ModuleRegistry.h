@@ -129,10 +129,11 @@ namespace Cosmic
         std::vector<entt::id_type> ComponentTypeIds(const std::string& module) const;
 
         // ---- hot-reload unload (E12) ---------------------------------------
-        // Forget every script + noted component a module registered. Does NOT touch
-        // entt storage or the Reflect registry entries — the caller strips scene
-        // storage first (it owns the scene); Reflect descriptors are overwritten on
-        // the next load.
+        // Forget every script + noted component a module registered, and remove the
+        // module's component descriptors from the Reflect registry (WO-07 / KI-29:
+        // their thunks are code in the module DLL, so they must go BEFORE the DLL is
+        // unmapped). Does NOT touch entt storage — the caller strips scene storage
+        // first (it owns the scene). The next load registers fresh descriptors.
         void UnregisterModule(const std::string& module);
 
     private:

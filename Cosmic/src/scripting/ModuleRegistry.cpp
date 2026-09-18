@@ -83,6 +83,17 @@ namespace Cosmic
 
     void ModuleRegistry::UnregisterModule(const std::string& module)
     {
+        // WO-07 / KI-29: the module's component descriptors in the Reflect
+        // registry hold std::functions (Add/Has/Get/Remove/Copy + every field
+        // Read/Write) whose code is IN the module DLL. Remove them now — the
+        // caller unloads the DLL right after — so no stale thunk can be called
+        // (or destroyed) once the image is unmapped, and a scene loaded while the
+        // module is absent keeps the block as an opaque block. The next load
+        // registers a fresh descriptor.
+        for (const auto& c : m_Components)
+            if (c.Module == module)
+                Reflect::GetRegistry().Remove(c.Id);
+
         for (auto it = m_Scripts.begin(); it != m_Scripts.end(); )
         {
             if (it->second.Module == module) it = m_Scripts.erase(it);

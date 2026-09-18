@@ -1,0 +1,21 @@
+WO-07 L02 failing-before (Release editor, BuildRunner::kHotConfig = "Debug" as at HEAD fe3d807).
+Run: wo07-l02.manifest.json -Config Release through the WO-04 runner, 2026-09-18 03:05 on DESKTOP-SEOA4BT.
+Editor exit code: -1073741819 (0xC0000005 ACCESS VIOLATION) during cycle 0, at the first GameModule::Load of the module the
+editor itself had just built: build/Debug/L02Reload_hot1.dll (a /MDd, Debug-STL module loaded into the /MD Release editor).
+
+=== l02-stdout.log (tail) ===
+[2026-09-18 03:05:54.250] [COSMIC] [trace] Config: no file at './starforge/layouts/active.toml'.
+[L02] scaffolded real project at C:/dev/Cosmic/tests/acceptance/_temp/wo07-l02-release/cosmic-accept-c3b9a09ed6034ed0b5dd7d71ee357859/temp/l02/L02Reload (module 'L02Reload'), template Module.cpp 3407 bytes
+[2026-09-18 03:05:54.253] [COSMIC] [info] WorkspaceLayer: Dockspace built (port mode L=true R=true T=true B=true).
+[L02] cycle 0: building L02Reload_hot1 (baseline)
+
+=== L02.out.log (wrapper) ===
+L02 self-test: exit=-1073741819 verdict=FAIL elapsed=25s result=C:\dev\Cosmic\docs\plans\2d-stability-2026-09-16\evidence\WO-07\l02-runner-Release\l02-result.json
+L02 independent scene oracle: FAIL - no expected-final file
+[doctest] test cases: 2 | 0 passed | 2 failed
+
+=== module build output dir ===
+L02Reload_hot1.dll
+L02Reload_hot1.exp
+L02Reload_hot1.lib
+L02Reload_hot1.pdb

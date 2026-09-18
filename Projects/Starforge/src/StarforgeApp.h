@@ -346,6 +346,38 @@ namespace Starforge
         void Ki1SelfTestPostStrip();            // compare depths, actuate the chip, finish/close
         void Ki1SelfTestShutdown();             // OnDetach: destroy m_Ki1 (complete type in its .cpp)
 
+        // WO-07 (2D stability) — L02 editor game-module reload harness. Gated ON
+        // only when COSMIC_L02_SELFTEST=<result-file> is set; otherwise m_L02 stays
+        // null and every hook is a no-op. When armed it scaffolds a real project
+        // through NewProjectAt, then drives the REAL BuildScripts -> BuildRunner ->
+        // ReloadModule -> GameModule path for N rebuild/reload cycles (with
+        // reflected-field changes, a deliberate compile failure and a deliberate
+        // module-load failure) and asserts the documented reload contract through
+        // the reflection registry. Defined in L02ModuleReloadSelfTest.cpp.
+        struct L02ReloadSelfTest;               // opaque state machine (that .cpp)
+        L02ReloadSelfTest* m_L02 = nullptr;     // raw: created in OnAttach, freed in OnDetach
+        void L02SelfTestInit();                 // OnAttach: arm from env
+        void L02SelfTestTick();                 // OnUpdate (after the build pump): drive cycles
+        void L02SelfTestShutdown();             // OnDetach: destroy m_L02
+        // ReloadModule probes (destruction-order proof: old DLL still mapped when
+        // the module-typed destructors ran, unmapped after Unload, then loaded).
+        void L02SelfTestOnSceneDropped(const std::string& oldStem);
+        void L02SelfTestOnModuleUnloaded(const std::string& oldStem);
+        void L02SelfTestOnModuleLoaded(bool ok);
+
+        // WO-07 (2D stability) — L05 editor scripted UI cycles. Gated ON only when
+        // COSMIC_L05_SELFTEST=<result-file> is set. Drives the real viewport-strip chips
+        // (mouse events at the probed rects), layout presets, viewport show/hide, Play,
+        // minimize/restore/resize/F11, judging the ImGui balance oracle after EVERY
+        // action (tests/WO07UiOracle.h + the per-chip probe). L05EditorSelfTest.cpp.
+        struct L05EditorSelfTest;
+        L05EditorSelfTest* m_L05 = nullptr;
+        void L05SelfTestInit();
+        void L05SelfTestTick();
+        void L05SelfTestPreStrip();
+        void L05SelfTestPostStrip();
+        void L05SelfTestShutdown();
+
         // Engine-log → Console sink (H7). The CallbackSink fires from ANY thread, so
         // it enqueues under a mutex; DrainLogQueue moves lines onto the UI thread.
         std::shared_ptr<Cosmic::CallbackSink>            m_LogSink;

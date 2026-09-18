@@ -1,0 +1,8 @@
+{
+  "scene": "C:/dev/Cosmic/tests/acceptance/_temp/wo07-l02-debug/cosmic-accept-ae0081825f32497a9b94653d0dd417a3/temp/l02/L02Reload/scenes/Main.cscene",
+  "probeId": "8843284da187912c",
+  "position": [7, 8, 9],
+  "L02Component": { "Count": 9, "Enabled": false, "Extra": 7, "Name": "beta", "Speed": 2 },
+  "L02ExtraOpaque": true,
+  "NativeScript": { "ClassName": "L02Script", "Fields": { "Bias": 0.25, "Rate": 3.5 } }
+}

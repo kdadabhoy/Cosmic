@@ -70,7 +70,17 @@ namespace Starforge
         bool   IsBuilding() const { return m_Status.load() == Status::Building; }
 
         // The config hot-reload builds (module DLLs load into the running editor).
+        // It MUST be the editor's OWN build configuration (WO-07 / KI-34): a hot
+        // module is mapped into this process and shares its CRT heap and STL
+        // layouts through the inline ModuleRegistry/Reflect templates, so a /MDd
+        // module inside the /MD Release editor (the old hard-coded "Debug") crashed
+        // at the first GameModule::Load. The non-release package path pairs the
+        // module with the editor's own runtime dir, so it follows the same rule.
+#if defined(NDEBUG)
+        static constexpr const char* kHotConfig = "Release";
+#else
         static constexpr const char* kHotConfig = "Debug";
+#endif
 
         // Locate cmake.exe (VS-bundled, else PATH). "" only if nothing is found.
         static std::string FindCMake();

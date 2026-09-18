@@ -1,0 +1,26 @@
+{
+  "manifest": "wo07-l02",
+  "cases": [
+    {
+      "id": "L02",
+      "description": "Editor game-module rebuild/reload: the real Starforge editor scaffolds a real project (NewProjectAt) and drives BuildScripts -> BuildRunner (cmake configure+build) -> ReloadModule -> GameModule for 52 builds = 50 successful rebuild/reload cycles + 1 deliberate compile failure + 1 deliberate module-load failure, with 12 reflected-field changes (add/remove/rename/retype/default/component-type add+remove). After every reload: preserved values + new defaults resolve through reflection, descriptor field lists equal the variant exactly, probe UUID/Tag/Transform survive, Play stopped, selection+undo cleared, old DLL mapped while module-typed destructors ran and unmapped after, build stamp read back from the loaded DLL. The wrapper then parses the saved Main.cscene out of process against the expected table.",
+      "tier": "I",
+      "profiles": ["gpu", "release"],
+      "requires": ["windows", "gpu-gl"],
+      "command": "powershell",
+      "workingDir": "{BIN}",
+      "args": [
+        "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
+        "{ACCEPTANCE}\\fixtures\\Run-WO07ModuleReload.ps1",
+        "-Bin", "{BIN}",
+        "-Output", "{REPO}\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-07\\l02-runner-{CONFIG}",
+        "-Cycles", "52",
+        "-ProjectRoot", "{RUNTEMP}\\l02"
+      ],
+      "expectExit": 0,
+      "minTests": 2,
+      "deadlineSec": 1800,
+      "fixture": "../../Projects/Starforge/src/L02ModuleReloadSelfTest.cpp"
+    }
+  ]
+}

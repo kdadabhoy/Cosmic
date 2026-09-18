@@ -1,0 +1,18 @@
+WO-07 L02 failing-before (Debug, HEAD fe3d807 + harness only, no fixes): failed module load -> ACCESS VIOLATION
+Editor exit code: -1073741819 (0xC0000005). Compile-fail cycle moved to 2 and load-fail cycle to 3 via env overrides.
+=== l02-stdout.log (tail) ===
+[L02] cycle 0: building L02Reload_hot1 (baseline)
+[2026-09-18 02:01:25.337] [APP] [info] GameModule: loaded 'L02Reload_hot1.dll'.
+[L02] cycle 0: probe entity cbe36edf6a406842 created via Commands (Speed=2.25 Count=9 Enabled=0 Label=probe-label Offset=[4,5,6] Pos=[7,8,9])
+[L02] cycle 0 done in 22.4s (ok)
+[L02] cycle 1: building L02Reload_hot2 (baseline)
+[2026-09-18 02:01:31.018] [APP] [info] GameModule: loaded 'L02Reload_hot2.dll'.
+[L02] FAIL descriptor 'L02Component' has 10 fields, expected 5 [Speed Count Enabled Label Offset Speed Count Enabled Label Offset ]
+[L02] cycle 1 done in 5.7s (FAILED)
+[L02] cycle 2: building L02Reload_hot3 (baseline, DELIBERATE COMPILE ERROR)
+[2026-09-18 02:01:31.067] [COSMIC] [info] Config: loaded 'C:/dev/Cosmic/.wo07-l02-probe/before-Debug/scratch-28179db82ee64cf284636542fee1840e/projects/L02Reload/project.cproj'.
+[L02] compile-error cycle: Play still running (kept, as documented); harness stops it
+[L02] cycle 2 done in 3.2s (ok)
+[L02] cycle 3: building L02Reload_hot4 (baseline, DELIBERATE NO-EXPORT DLL)
+[2026-09-18 02:01:39.655] [APP] [error] GameModule: 'L02Reload_hot4.dll' exports no CosmicModule_Register.
+=== l02-stderr.log ===

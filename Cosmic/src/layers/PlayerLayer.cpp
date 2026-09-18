@@ -18,6 +18,7 @@
 #include "utils/FileSystem.h"
 #include "utils/Branding.h"   // K1 — runtime app icon (manifest-aware)
 #include "core/Log.h"
+#include "scripting/ModuleRegistry.h"   // WO-07 / KI-29 — unregister on detach
 
 #include <imgui.h>
 
@@ -176,6 +177,15 @@ namespace Cosmic
         m_SceneRenderer.Shutdown();   // free GPU subsystems while the context is live (H2)
         m_TrackedScene.reset();
         m_Camera.reset();
+
+        // WO-07 / KI-29: CS_MODULE_END's CreatePluginLayer registered this module's
+        // scripts + components on our behalf; unregister them here — OnDetach runs
+        // before Application::UnloadProjectDLL's FreeLibrary — so no factory or
+        // reflection thunk pointing into the plugin DLL outlives the DLL. (The
+        // scenes the SceneManager still holds are destroyed by our destructor,
+        // also before FreeLibrary; entt storage does not consult the registry.)
+        if (!m_ProjectName.empty())
+            ModuleRegistry::Get().UnregisterModule(m_ProjectName);
     }
 
     void PlayerLayer::RebindScripts()

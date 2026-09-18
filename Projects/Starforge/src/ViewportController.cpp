@@ -1269,11 +1269,37 @@ namespace Starforge
                      "Universal (Q): move + rotate + scale in one gizmo.\n"
                      "Snapping uses the MOVE increment.");
 
+            // WO-07 test probe (gated): record the last item's centre + the colour-stack
+            // delta across it, in strip order. Null in every normal editor run.
+            auto probeChip = [&](int colorBefore)
+            {
+                if (!s_Ki1Probe || s_Ki1Probe->count >= Ki1ChipProbe::kMax) return;
+                const int i = s_Ki1Probe->count;
+                const ImVec2 mn = ImGui::GetItemRectMin(), mx = ImGui::GetItemRectMax();
+                s_Ki1Probe->cx[i] = (mn.x + mx.x) * 0.5f;
+                s_Ki1Probe->cy[i] = (mn.y + mx.y) * 0.5f;
+                // Net colour push/pop of THIS chip, measured at the widget — the KI-1
+                // signal, immune to ImGui's end-of-window stack recovery.
+                s_Ki1Probe->colorDelta[i] = ImGui::GetCurrentContext()->ColorStack.Size - colorBefore;
+                ++s_Ki1Probe->count;
+            };
+            auto colorNow = [&]() { return s_Ki1Probe ? ImGui::GetCurrentContext()->ColorStack.Size : 0; };
+
             // World/Local.
+            int wlColorBefore = 0;   // recorded in fixed slot 5 so the KI-1 snap chips keep 0-2
             {
                 const bool world = m_Space == Gizmo::Space::World;
+                wlColorBefore = colorNow();
                 if (ImGui::Button(world ? ICON_LC_GLOBE : ICON_LC_BOX, ImVec2(sq, sq)))
                     m_Space = world ? Gizmo::Space::Local : Gizmo::Space::World;
+                if (s_Ki1Probe)   // fixed slot 5 (count stays for the snap chips 0-2 / toggles 3-4)
+                {
+                    const ImVec2 mn = ImGui::GetItemRectMin(), mx = ImGui::GetItemRectMax();
+                    s_Ki1Probe->cx[5] = (mn.x + mx.x) * 0.5f;
+                    s_Ki1Probe->cy[5] = (mn.y + mx.y) * 0.5f;
+                    s_Ki1Probe->colorDelta[5] = ImGui::GetCurrentContext()->ColorStack.Size - wlColorBefore;
+                    s_Ki1Probe->haveWorldLocal = true;
+                }
                 if (ImGui::IsItemHovered())
                     ImGui::SetTooltip(world ? "Gizmo space: World (click for Local)"
                                             : "Gizmo space: Local (click for World)");
@@ -1306,17 +1332,7 @@ namespace Starforge
                     on = !on;
                 if (pushed)
                     ImGui::PopStyleColor();
-                if (s_Ki1Probe && s_Ki1Probe->count < 3)   // WO-07 test probe (gated)
-                {
-                    const int i = s_Ki1Probe->count;
-                    const ImVec2 mn = ImGui::GetItemRectMin(), mx = ImGui::GetItemRectMax();
-                    s_Ki1Probe->cx[i] = (mn.x + mx.x) * 0.5f;
-                    s_Ki1Probe->cy[i] = (mn.y + mx.y) * 0.5f;
-                    // Net colour push/pop of THIS chip, measured at the widget — the
-                    // KI-1 signal, immune to ImGui's end-of-window stack recovery.
-                    s_Ki1Probe->colorDelta[i] = ImGui::GetCurrentContext()->ColorStack.Size - ki1ColorBefore;
-                    ++s_Ki1Probe->count;
-                }
+                probeChip(ki1ColorBefore);   // WO-07 test probe (gated): snap chips are 0-2
                 if (ImGui::IsItemHovered())
                     ImGui::SetTooltip("%s", tip);
                 ImGui::SameLine(0.0f, 2.0f);
@@ -1345,6 +1361,7 @@ namespace Starforge
                 // style-colour stack unbalanced by one — an assert + abort() in
                 // Debug, silent corruption in Release. Latch the pushed state
                 // instead of re-reading the flag.
+                const int toggleColorBefore = colorNow();
                 const bool pushed = on;
                 if (pushed)
                 {
@@ -1355,6 +1372,7 @@ namespace Starforge
                     on = !on;
                 if (pushed)
                     ImGui::PopStyleColor();
+                probeChip(toggleColorBefore);   // WO-07 test probe (gated): toggles are 3-4
                 if (ImGui::IsItemHovered())
                     ImGui::SetTooltip("%s", tip);
                 ImGui::SameLine(0.0f, 3.0f);

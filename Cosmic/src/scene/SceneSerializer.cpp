@@ -144,12 +144,19 @@ namespace Cosmic
                     && compJson["Fields"].is_object())
                 {
                     auto* nsc = static_cast<NativeScriptComponent*>(comp);
+                    const json& fj = compJson["Fields"];
                     if (const ScriptDescriptor* sd = ModuleRegistry::Get().FindScript(nsc->ClassName))
                     {
-                        const json& fj = compJson["Fields"];
                         for (const auto& sf : sd->Fields.Fields)
                             if (fj.contains(sf.Name))
                                 nsc->Fields[sf.Name] = DeserializeValue(sf, fj[sf.Name]);
+                        nsc->PendingFields.clear();
+                    }
+                    else
+                    {
+                        // Class not registered (module not built yet / failed to load):
+                        // keep the overrides verbatim instead of dropping them (KI-30).
+                        nsc->PendingFields = fj.dump();
                     }
                 }
 
@@ -159,12 +166,17 @@ namespace Cosmic
                     && compJson["Fields"].is_object())
                 {
                     auto* ssc = static_cast<SystemScriptComponent*>(comp);
+                    const json& fj = compJson["Fields"];
                     if (const SystemDescriptor* sd = ModuleRegistry::Get().FindSystem(ssc->ClassName))
                     {
-                        const json& fj = compJson["Fields"];
                         for (const auto& sf : sd->Fields.Fields)
                             if (fj.contains(sf.Name))
                                 ssc->Fields[sf.Name] = DeserializeValue(sf, fj[sf.Name]);
+                        ssc->PendingFields.clear();
+                    }
+                    else
+                    {
+                        ssc->PendingFields = fj.dump();   // KI-30 — see NativeScript above
                     }
                 }
 
@@ -202,6 +214,22 @@ namespace Cosmic
                 }
 #endif
             }
+        }
+
+        // KI-30: a "Fields" block loaded while its class was unregistered is kept
+        // verbatim (PendingFields). When the class is present at save time, adopt
+        // the pending entries it declares that no live override has replaced.
+        void MergePendingFields(json& fj, const std::string& pending,
+                                const std::vector<Reflect::FieldDescriptor>& fields)
+        {
+            if (pending.empty())
+                return;
+            const json pj = json::parse(pending, nullptr, false);
+            if (!pj.is_object())
+                return;
+            for (const auto& sf : fields)
+                if (!fj.contains(sf.Name) && pj.contains(sf.Name))
+                    fj[sf.Name] = SerializeValue(sf, DeserializeValue(sf, pj[sf.Name]));
         }
 
         // Serialize one entity (id + every component block) to a JSON object.
@@ -244,8 +272,16 @@ namespace Cosmic
                             if (it != nsc->Fields.end())
                                 fj[sf.Name] = SerializeValue(sf, it->second);
                         }
+                        // Overrides loaded while the class was unregistered and never
+                        // re-resolved (KI-30): adopt the ones this class declares.
+                        MergePendingFields(fj, nsc->PendingFields, sd->Fields.Fields);
                         if (!fj.empty())
                             cj["Fields"] = std::move(fj);
+                    }
+                    else if (!nsc->PendingFields.empty())
+                    {
+                        // Still unregistered: re-emit the unresolved block verbatim (KI-30).
+                        cj["Fields"] = json::parse(nsc->PendingFields, nullptr, false);
                     }
                 }
 
@@ -261,8 +297,13 @@ namespace Cosmic
                             if (it != ssc->Fields.end())
                                 fj[sf.Name] = SerializeValue(sf, it->second);
                         }
+                        MergePendingFields(fj, ssc->PendingFields, sd->Fields.Fields);   // KI-30
                         if (!fj.empty())
                             cj["Fields"] = std::move(fj);
+                    }
+                    else if (!ssc->PendingFields.empty())
+                    {
+                        cj["Fields"] = json::parse(ssc->PendingFields, nullptr, false);   // KI-30
                     }
                 }
 

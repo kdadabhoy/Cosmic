@@ -155,6 +155,8 @@ namespace Starforge
         m_Ctx.Log("[Starforge] W/E/R gizmo | F frame | Ctrl+Z/Y undo | Ctrl+S save.");
 
         Ki1SelfTestInit();   // WO-07: arm the KI-1 snap-chip regression when its env is set
+        L02SelfTestInit();   // WO-07: arm the L02 module-reload harness when its env is set
+        L05SelfTestInit();   // WO-07: arm the L05 editor UI-cycle harness when its env is set
     }
 
     // =========================================================================
@@ -198,6 +200,8 @@ namespace Starforge
             Cosmic::ThemeManager::Apply(m_PrevTheme);
 
         Ki1SelfTestShutdown();   // WO-07: free the KI-1 harness (no-op when never armed)
+        L02SelfTestShutdown();   // WO-07: free the L02 harness (no-op when never armed)
+        L05SelfTestShutdown();   // WO-07: free the L05 harness (no-op when never armed)
 
         Cosmic::Log::SetLogDirectory("logs");
         CS_INFO("Starforge: detached.");
@@ -488,6 +492,14 @@ namespace Starforge
 
     void StarforgeApp::ReloadModule(const std::string& dllStem)
     {
+        // Stop Play FIRST (WO-07 / KI-28): while playing m_Ctx.Scene is the runtime
+        // copy and m_EditSceneBackup holds the edit scene. Snapshotting before the
+        // stop captured the simulated state and rebuilt the EDIT scene from it —
+        // reachable in the shipped editor by pressing Play while a build compiles.
+        // The documented reload rule is "preserve the serialized EDIT scene, stop
+        // Play, clear selection/undo".
+        if (IsPlaying()) StopScene();
+
         // Preserve edit-scene state across the module swap. Custom (module-owned)
         // components serialize while the OLD module is still loaded; NativeScript
         // data is engine-owned and survives regardless.
@@ -495,15 +507,19 @@ namespace Starforge
         if (m_Ctx.Scene)
             snapshot = Cosmic::SceneSerializer::SaveToString(*m_Ctx.Scene);
 
-        if (IsPlaying()) StopScene();
         m_Ctx.ClearSelection();
         m_Ctx.Commands.Clear();
         // Drop the scene while the OLD module is still loaded so any module-typed
         // component destructors run against valid code, THEN unload the DLL.
+        const std::string oldStem = m_Module.DllStem();
         m_Ctx.Scene.reset();
+        L02SelfTestOnSceneDropped(oldStem);     // WO-07 probe (no-op unless armed)
         m_Module.Unload();
+        L02SelfTestOnModuleUnloaded(oldStem);   // WO-07 probe (no-op unless armed)
 
-        if (!m_Module.Load(m_Ctx.ProjectName, dllStem, ModuleSearchDir()))
+        const bool loaded = m_Module.Load(m_Ctx.ProjectName, dllStem, ModuleSearchDir());
+        L02SelfTestOnModuleLoaded(loaded);      // WO-07 probe (no-op unless armed)
+        if (!loaded)
             m_Ctx.Log("[Module] Load failed — scripts unavailable this session.", LogSeverity::Error);
         CleanStaleHotDlls(dllStem);   // sweep older hot DLLs in the module dir (S1)
 
@@ -1127,6 +1143,8 @@ namespace Starforge
             if (m_AutoBuild && !changes.empty() && !m_Builder.IsBuilding() && !IsPlaying())
                 BuildScripts();
         }
+        L02SelfTestTick();   // WO-07: no-op unless the L02 reload harness is armed
+        L05SelfTestTick();   // WO-07: no-op unless the L05 editor harness is armed
 
 #ifndef COSMIC_2D_ONLY
         m_WorldSystems.OnUpdate(m_Ctx);   // E18 — drain the async terrain build
@@ -1775,8 +1793,10 @@ namespace Starforge
             if (m_Ctx.Scene)
             {
                 Ki1SelfTestPreStrip();   // WO-07: no-op unless the KI-1 harness is armed
+                L05SelfTestPreStrip();   // WO-07: no-op unless the L05 harness is armed
                 m_Viewport.DrawViewportOverlays(m_Ctx, m_Rig, IsPlaying(), m_Mode2D);
                 Ki1SelfTestPostStrip();  // WO-07: balance-check + actuate the real snap chip
+                L05SelfTestPostStrip();  // WO-07: per-chip balance + drive the pending click
             }
 
             // K13 — Content-Browser drops onto the viewport (spawn at the hit

@@ -533,13 +533,27 @@ namespace Starforge
         // Populate a component's Fields map with the script's default values by
         // spinning up a throwaway instance and pulling them back out. Called when a
         // class is first chosen so the fields display + serialize immediately.
-        void SeedScriptDefaults(NativeScriptComponent& nsc)
+        // `onlyMissing` (WO-07 / KI-31): the backfill after a rebuild that ADDED a
+        // field must seed just that field — clearing the map first wiped every
+        // tuned override on the entity the moment it was selected.
+        void SeedScriptDefaults(NativeScriptComponent& nsc, bool onlyMissing = false)
         {
-            nsc.Fields.clear();
             const ScriptDescriptor* sd = ModuleRegistry::Get().FindScript(nsc.ClassName);
-            if (!sd || !sd->Factory) return;
+            if (!sd || !sd->Factory) { if (!onlyMissing) nsc.Fields.clear(); return; }
             ScriptableEntity* tmp = sd->Factory();
-            ScriptHost::PullFields(*sd, tmp, nsc);
+            if (!onlyMissing)
+            {
+                nsc.Fields.clear();
+                ScriptHost::PullFields(*sd, tmp, nsc);
+            }
+            else
+            {
+                NativeScriptComponent defaults;
+                ScriptHost::PullFields(*sd, tmp, defaults);
+                for (auto& kv : defaults.Fields)
+                    if (nsc.Fields.find(kv.first) == nsc.Fields.end())
+                        nsc.Fields[kv.first] = kv.second;
+            }
             delete tmp;
         }
     }
@@ -614,10 +628,14 @@ namespace Starforge
             if (sd)
             {
                 // Backfill any field the map is missing (e.g. loaded before the
-                // module, or the script gained a field), then draw each one.
+                // module, or the script gained a field) — ONLY the missing ones
+                // (KI-31) — then draw each one.
                 for (const auto& sf : sd->Fields.Fields)
                     if (nsc->Fields.find(sf.Name) == nsc->Fields.end())
-                        SeedScriptDefaults(*nsc);
+                    {
+                        SeedScriptDefaults(*nsc, /*onlyMissing=*/true);
+                        break;
+                    }
 
                 for (const auto& sf : sd->Fields.Fields)
                 {

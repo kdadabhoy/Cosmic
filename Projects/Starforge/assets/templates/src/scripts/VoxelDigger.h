@@ -9,6 +9,8 @@
 
 #include <Cosmic.h>
 
+#ifndef COSMIC_2D_ONLY   // 3D engine only (WO-07 / KI-26): absent from the 2D SDK
+
 class VoxelDigger : public Cosmic::ScriptableEntity
 {
 public:
@@ -38,3 +40,4 @@ private:
     bool m_LmbWas = false;
     bool m_RmbWas = false;
 };
+#endif   // COSMIC_2D_ONLY

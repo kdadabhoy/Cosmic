@@ -1,0 +1,48 @@
+{
+  "work_order": "WO-07",
+  "case": "L02 editor game-module rebuild/reload",
+  "config": "Debug",
+  "path": "StarforgeApp::BuildScripts -> BuildRunner (cmake configure+build) -> StarforgeApp::ReloadModule -> GameModule",
+  "project": "C:/dev/Cosmic/.wo07-l02-probe/dev-Debug/scratch-15ae4603a6824e1387358c8ddbf7f828/projects/L02Reload",
+  "cycles_planned": 6,
+  "cycles_run": 3,
+  "builds": 4,
+  "successful_rebuild_reloads": 0,
+  "reflected_field_changes": 0,
+  "compile_failure_recovered": false,
+  "module_load_failure_recovered": false,
+  "failed_checks": 5,
+  "total_seconds": 39.3821,
+  "verdict": "FAIL",
+  "checks_failed": [
+    "cycle 1: descriptor 'L02Component' has 10 fields, expected 5 [Speed Count Enabled Label Offset Speed Count Enabled Label Offset ]",
+    "cycle 2: descriptor 'L02Component' has 15 fields, expected 5 [Speed Count Enabled Label Offset Speed Count Enabled Label Offset Speed Count Enabled Label Offset ]",
+    "cycle 2: edit-scene Position [2732,8,9] != [7,8,9] (runtime state leaked into the edit scene)",
+    "cycle 3: descriptor 'L02Component' has 20 fields, expected 5 [Speed Count Enabled Label Offset Speed Count Enabled Label Offset Speed Count Enabled Label Offset Speed Count Enabled Label Offset ]",
+    "cycle 3: edit-scene Position [2732,8,9] != [7,8,9]"
+  ],
+  "cycles": [
+    { "cycle": 0, "variant": 0, "stem": "L02Reload_hot1", "seconds": 22.468464, "stamp": 0, "compFields": 5, "scripts": 8, "playedDuringBuild": false, "undoDuringBuild": false, "kind": "initial-load", "ok": true },
+    { "cycle": 1, "variant": 0, "stem": "L02Reload_hot2", "seconds": 5.639815, "stamp": 1, "compFields": 10, "scripts": 8, "playedDuringBuild": false, "undoDuringBuild": false, "kind": "reload", "ok": false },
+    { "cycle": 2, "variant": 0, "stem": "L02Reload_hot3", "seconds": 5.512697, "stamp": 2, "compFields": 15, "scripts": 8, "playedDuringBuild": true, "undoDuringBuild": false, "kind": "reload", "ok": false },
+    { "cycle": 3, "variant": 0, "stem": "L02Reload_hot4", "seconds": 5.529136, "stamp": 3, "compFields": 20, "scripts": 8, "playedDuringBuild": false, "undoDuringBuild": true, "kind": "reload", "ok": false }
+  ],
+  "log": [
+    "armed: result=C:\\dev\\Cosmic\\.wo07-l02-probe\\dev-Debug\\l02-result.json projectRoot=C:\\dev\\Cosmic\\.wo07-l02-probe\\dev-Debug\\scratch-15ae4603a6824e1387358c8ddbf7f828\\projects cycles=6 sdk=C:\\dev\\Cosmic",
+    "scaffolded real project at C:/dev/Cosmic/.wo07-l02-probe/dev-Debug/scratch-15ae4603a6824e1387358c8ddbf7f828/projects/L02Reload (module 'L02Reload'), template Module.cpp 3407 bytes",
+    "cycle 0: building L02Reload_hot1 (baseline)",
+    "cycle 0: probe entity afb22142463ec105 created via Commands (Speed=2.25 Count=9 Enabled=0 Label=probe-label Offset=[4,5,6] Pos=[7,8,9])",
+    "cycle 0 done in 22.5s (ok)",
+    "cycle 1: building L02Reload_hot2 (baseline)",
+    "FAIL descriptor 'L02Component' has 10 fields, expected 5 [Speed Count Enabled Label Offset Speed Count Enabled Label Offset ]",
+    "cycle 1 done in 5.6s (FAILED)",
+    "cycle 2: building L02Reload_hot3 (baseline)",
+    "FAIL descriptor 'L02Component' has 15 fields, expected 5 [Speed Count Enabled Label Offset Speed Count Enabled Label Offset Speed Count Enabled Label Offset ]",
+    "FAIL edit-scene Position [2732,8,9] != [7,8,9] (runtime state leaked into the edit scene)",
+    "cycle 2 done in 5.5s (FAILED)",
+    "cycle 3: building L02Reload_hot4 (baseline)",
+    "FAIL descriptor 'L02Component' has 20 fields, expected 5 [Speed Count Enabled Label Offset Speed Count Enabled Label Offset Speed Count Enabled Label Offset Speed Count Enabled Label Offset ]",
+    "FAIL edit-scene Position [2732,8,9] != [7,8,9]",
+    "cycle 3 done in 5.5s (FAILED)"
+  ]
+}

@@ -1,0 +1,20 @@
+﻿WO-07 L02 - editor game-module rebuild/reload, acceptance-runner summary.
+(Full per-cycle output is in l02-runner-<cfg>/l02-result.json (committed) + l02-editor-console.txt; the gitignored .out.log files hold the raw stdout.)
+
+=== Debug (l02-Debug/L02.out.log) ===
+L02 self-test: exit=0 verdict=PASS elapsed=316s result=C:\dev\Cosmic\docs\plans\2d-stability-2026-09-16\evidence\WO-07\l02-runner-Debug\l02-result.json
+  builds=53 successful_rebuild_reloads=50 reflected_field_changes=12 compile_failure_recovered=True module_load_failure_recovered=True failed_checks=0
+  L02_SELFTEST_RESULT=PASS config=Debug successful=50/52 reflectedChanges=12 compileFail=1 loadFail=1 failedChecks=0 seconds=316
+L02 independent scene oracle: PASS - scene 'C:/dev/Cosmic/tests/acceptance/_temp/wo07-l02-debug/cosmic-accept-ae0081825f32497a9b94653d0dd417a3/temp/l02/L02Reload/scenes/Main.cscene' matches the expected table (5 component fields, position, script overrides)
+[doctest] test cases: 2 | 2 passed | 0 failed
+
+=== Release (l02-Release/L02.out.log) ===
+L02 self-test: exit=0 verdict=PASS elapsed=380s result=C:\dev\Cosmic\docs\plans\2d-stability-2026-09-16\evidence\WO-07\l02-runner-Release\l02-result.json
+  builds=53 successful_rebuild_reloads=50 reflected_field_changes=12 compile_failure_recovered=True module_load_failure_recovered=True failed_checks=0
+  L02_SELFTEST_RESULT=PASS config=Release successful=50/52 reflectedChanges=12 compileFail=1 loadFail=1 failedChecks=0 seconds=379
+L02 independent scene oracle: PASS - scene 'C:/dev/Cosmic/tests/acceptance/_temp/wo07-l02-release/cosmic-accept-2f35bf7f5b4349289749474709974259/temp/l02/L02Reload/scenes/Main.cscene' matches the expected table (5 component fields, position, script overrides)
+[doctest] test cases: 2 | 2 passed | 0 failed
+
+=== runner verdicts ===
+Debug   L02=PASSED
+Release   L02=PASSED

@@ -34,6 +34,8 @@ namespace
 }
 #include "scene/ComponentRegistry.h"
 #include "reflect/TypeRegistry.h"
+#include "scripting/ScriptableEntity.h"   // WO-07 KI-30 regression (in-exe CS_SCRIPT-style registration)
+#include "scripting/ModuleRegistry.h"
 
 #include <filesystem>
 #include <fstream>
@@ -225,6 +227,67 @@ TEST_CASE("E2: unknown component blocks survive a round-trip verbatim")
     REQUIRE(SceneSerializer::LoadFromString(scene2, save1));
     const std::string save2 = SceneSerializer::SaveToString(scene2);
     CHECK(save1 == save2);
+}
+
+// WO-07 / KI-30: a NativeScript "Fields" block whose class is NOT registered (project
+// opened before its module is built, or a failed module load) must survive a
+// load+save round-trip verbatim — the C05 rule for unknown component blocks — and
+// resolve normally once the class is registered.
+namespace
+{
+    class Ki30Script : public Cosmic::ScriptableEntity
+    {
+    public:
+        float Rate  = 1.0f;
+        int   Loops = 2;
+    };
+}
+
+TEST_CASE("WO-07 KI-30: script field overrides survive a round-trip while the class is unregistered")
+{
+    const std::string src = R"({
+      "cosmic_scene": 1,
+      "entities": [
+        {
+          "id": "00000000000000ab",
+          "components": {
+            "Tag": { "Tag": "Probe" },
+            "NativeScript": { "ClassName": "Ki30Script", "Fields": { "Rate": 3.5, "Loops": 5 } }
+          }
+        }
+      ]
+    })";
+
+    // 1) Unregistered: the overrides are kept (not dropped) and re-emitted on save.
+    REQUIRE(ModuleRegistry::Get().FindScript("Ki30Script") == nullptr);
+    Scene scene;
+    REQUIRE(SceneSerializer::LoadFromString(scene, src));
+    Entity e = scene.FindByUUID(UUID(0xab));
+    REQUIRE(e);
+    REQUIRE(e.HasComponent<NativeScriptComponent>());
+    CHECK(e.GetComponent<NativeScriptComponent>().Fields.empty());          // cannot resolve yet
+    CHECK_FALSE(e.GetComponent<NativeScriptComponent>().PendingFields.empty());   // but kept verbatim
+    const std::string save1 = SceneSerializer::SaveToString(scene);
+    CHECK(save1.find("\"Rate\"") != std::string::npos);
+    CHECK(save1.find("\"Loops\"") != std::string::npos);
+    CHECK(save1.find("3.5") != std::string::npos);
+
+    // 2) Register the class (in-exe, the CS_SCRIPT DSL) and load the SAVED scene:
+    //    the kept overrides resolve into typed values.
+    ModuleRegistry::Get().BeginModule("ki30");
+    { using CS_ReflectedType = Ki30Script; ModuleRegistry::Get().AddScript<Ki30Script>("Ki30Script").Field("Rate", &Ki30Script::Rate).Field("Loops", &Ki30Script::Loops); }
+    ModuleRegistry::Get().EndModule();
+    Scene scene2;
+    REQUIRE(SceneSerializer::LoadFromString(scene2, save1));
+    Entity e2 = scene2.FindByUUID(UUID(0xab));
+    REQUIRE(e2);
+    const auto& nsc = e2.GetComponent<NativeScriptComponent>();
+    REQUIRE(nsc.Fields.count("Rate") == 1);
+    REQUIRE(nsc.Fields.count("Loops") == 1);
+    CHECK(std::get<float>(nsc.Fields.at("Rate")) == doctest::Approx(3.5f));
+    CHECK(std::get<int32_t>(nsc.Fields.at("Loops")) == 5);
+    CHECK(nsc.PendingFields.empty());
+    ModuleRegistry::Get().UnregisterModule("ki30");
 }
 
 TEST_CASE("E21: Save rotates the previous file to a single .bak (crash-safe)")

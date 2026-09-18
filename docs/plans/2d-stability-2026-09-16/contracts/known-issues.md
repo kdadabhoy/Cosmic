@@ -350,6 +350,190 @@ Append format (copy the block below for a new entry):
   Drain pending snapshot then finalize dirty records; mark clean
   only after successful intentional export, surface errors.
 
+## WO-07 findings (2026-09-18) — editor game-module lifecycle (L02)
+
+All four were found by the L02 harness (`Projects/Starforge/src/L02ModuleReloadSelfTest.cpp`,
+driven through the real `BuildScripts -> BuildRunner -> ReloadModule -> GameModule` path) on the
+first real rebuild/reload cycles of a project scaffolded by the 2D editor itself. Failing-before
+evidence is under `evidence/WO-07/l02/`; each entry names its file.
+
+### KI-26 — A project scaffolded by the 2D editor cannot build its game module
+- Status: Confirmed defect (shipped: every Ctrl+B in the 2D editor fails). Owner WO: WO-07 (L02).
+- Anchor: `Projects/Starforge/assets/templates/CMakeLists.txt` at `fe3d807` — the scaffold template
+  never consumes the `-DCOSMIC_2D_ONLY=ON` that `BuildRunner::Start` passes ("Manually-specified
+  variables were not used by the project: COSMIC_2D_ONLY"), so every module TU compiles the 3D side
+  of the public-header fences against the 2D `Cosmic.lib`; and `templates/src/Module.cpp` registers
+  the 3D-only `VoxelDigger` / `NavCritter` samples unconditionally. WO-03 fixed the runtime-plugin
+  template (`Cosmic/templates/ExampleProject`) but not this one.
+- Repro: scaffold any project from the 2D editor's homescreen, press Ctrl+B — or copy the template
+  and run the exact `BuildRunner` cmake lines: 13 unresolved externals
+  (`Scene::GetNav`, `VoxelVolumeComponent`, `NavAgentComponent`, `SceneNavRuntime::*`,
+  `ScriptableEntity::Voxels`), `LNK1120`.
+- Failing-before: `evidence/WO-07/l02/scaffold-template-failing-before-Debug.txt`.
+- Regression: L02 harness cycle 0 (the initial build of the real scaffold) via
+  `tests/acceptance/manifests/wo07-l02.manifest.json`.
+- Disposition: fix landed (WO-07 local commit) — the scaffold CMakeLists gains the same
+  `option(COSMIC_2D_ONLY …)` + `target_compile_definitions` block the runtime template carries since
+  WO-03, and the two 3D-only samples are fenced (`#ifndef COSMIC_2D_ONLY`) in `Module.cpp` and in
+  their own headers. Passing-after: the L02 runner evidence (`l02-Debug/`, `l02-Release/`).
+
+### KI-27 — Re-registering a reflected component accumulates its fields on every reload
+- Status: Confirmed defect. Owner WO: WO-07 (L02, "registry entries neither accumulate nor vanish").
+- Anchor: `Cosmic/src/reflect/TypeRegistry.h` — `ClassIn<T>` → `TypeRegistry::GetOrCreate` reuses
+  the existing `TypeDescriptor` and `ClassBuilder::Field` **appends** to `d.Fields`; nothing clears
+  the list (unlike `ModuleRegistry::AddScript`, which does). `RegisterEngineTypes`' "Idempotent:
+  re-registering just overwrites" comment is false for fields.
+- Repro: any `CS_COMPONENT` module reloaded N times: the descriptor lists its fields N+1 times
+  (Inspector shows duplicates, the serializer writes each key N+1 times, and the first N copies'
+  Read/Write thunks are code in the **unmapped** previous DLL — see KI-29).
+- Failing-before: `evidence/WO-07/l02/failing-before-Debug-registry-accumulation-play-leak.result.json`
+  (`descriptor 'L02Component' has 10 fields, expected 5` … 15 … 20 across cycles 1–3).
+- Regression: L02 harness — descriptor field list must equal the variant exactly after every reload.
+- Disposition: fix landed (WO-07 local commit): `ClassIn` starts from a fresh field list, and
+  `ModuleRegistry::UnregisterModule` removes the module's component descriptors (KI-29).
+
+### KI-28 — A module reload during Play bakes runtime state into the edit scene
+- Status: Confirmed defect (contract §4 violation: "preserves the serialized edit scene, stops Play").
+- Owner WO: WO-07 (L02).
+- Anchor: `Projects/Starforge/src/StarforgeApp.cpp` `ReloadModule` at `fe3d807`: the snapshot
+  `SceneSerializer::SaveToString(*m_Ctx.Scene)` is taken **before** `StopScene()`, and while playing
+  `m_Ctx.Scene` is the runtime scene (`m_EditSceneBackup` holds the edit scene). `StopScene` restores
+  the edit scene, `Scene.reset()` drops it, and the scene is rebuilt from the **runtime** snapshot.
+  Reachable in the shipped editor: `BuildScripts` refuses to start while playing, but Play is not
+  refused while a build is running, and the reload fires when the build completes.
+- Repro: start a build, press Play while it compiles, let a script move an entity; when the build
+  finishes the edit scene holds the moved position.
+- Failing-before: same result file as KI-27 — `edit-scene Position [2732,8,9] != [7,8,9] (runtime
+  state leaked into the edit scene)` (cycle 2; the L02Script drifts x by 1 per frame during the build).
+- Regression: L02 harness cycles with `cycle % 5 == 2` (Play started during the build).
+- Disposition: fix landed (WO-07 local commit): `ReloadModule` stops Play **before** snapshotting,
+  so the snapshot is always the edit scene.
+
+### KI-29 — Registry entries of an unloaded module stay live and are invoked after FreeLibrary
+- Status: Confirmed defect (use-after-unload; ACCESS VIOLATION reproduced). Owner WO: WO-07 (L02/L04).
+- Anchors:
+  - `Cosmic/src/scripting/ModuleRegistry.cpp` `UnregisterModule` at `fe3d807` — erases the module's
+    script/system descriptors and its component *notes*, but deliberately leaves the component
+    `TypeDescriptor`s in `Reflect::GetRegistry()` ("overwritten on the next load"). Their
+    `Add/Has/Get/Remove/Copy` + every field `Read/Write` are `std::function`s whose code lives in
+    the module DLL that `GameModule::Unload` then `FreeLibrary`s.
+  - `Cosmic/src/layers/PlayerLayer.cpp` — the runtime-plugin lifecycle never unregisters at all:
+    `CS_MODULE_END`'s `CreatePluginLayer` registers the module, and nothing removes it before
+    `Application::UnloadProjectDLL`'s `FreeLibrary` (relaunching the same project from the launcher
+    re-registers over dangling `std::function`s).
+- Repro: reload a module whose build succeeds but exports no `CosmicModule_Register` (or whose load
+  fails for any reason) — `ReloadModule` rebuilds the scene from the snapshot,
+  `SceneSerializer::LoadFromString` finds the stale descriptor by name and calls its `Add` →
+  jump into unmapped memory. Every successful reload also leaves the previous module's stale field
+  thunks in the list (KI-27) — they only "work" because the next `_hotN.dll` happened to map at the
+  same base address.
+- Failing-before: `evidence/WO-07/l02/failing-before-Debug-load-failure-access-violation.txt`
+  (editor exit `-1073741819` = 0xC0000005 immediately after `GameModule: 'L02Reload_hot4.dll'
+  exports no CosmicModule_Register`).
+- Regression: L02 harness load-failure cycle (the custom blocks must survive **opaquely** per C05 and
+  no stale descriptor may remain); L04 host case "module-registered types are gone before
+  FreeLibrary" for the runtime-plugin path.
+- Disposition: fix landed (WO-07 local commit): `TypeRegistry::Remove`, `UnregisterModule` removes
+  the module's component descriptors (before `FreeLibrary`, so the thunks are destroyed while their
+  code is mapped), and `PlayerLayer::OnDetach` unregisters its own module. A failed load now leaves
+  the scene's custom blocks as opaque (forward-compat) blocks that re-resolve on the next good load.
+
+### KI-30 — Script field overrides are dropped when a scene is loaded without its script class
+- Status: Confirmed defect (silent data loss). Owner WO: WO-07 (L02, "preserve serialized scene /
+  custom fields").
+- Anchor: `Cosmic/src/scene/SceneSerializer.cpp` at `fe3d807` — `LoadEntityComponents` resolves a
+  `NativeScript` (and `SystemScript`) `Fields` block only through the **registered** descriptor
+  (`ModuleRegistry::FindScript`); when the class is not registered the overrides are discarded, and
+  `SerializeEntity` writes a `Fields` block only for a registered class — so the next save (or the
+  `ReloadModule` snapshot) no longer carries them. Reflected component blocks get the opaque C05
+  passthrough; script overrides do not.
+- Reachability (shipped editor): `StarforgeApp::OpenProject` opens the scene **before** any game
+  module is loaded on a fresh editor start — every per-entity script override in the file (e.g. a
+  tuned `HoverController.TargetAltitude`) is dropped at open; the first Ctrl+B snapshots the scene
+  without them and rebuilds it with the C++ defaults. Same after any failed module load.
+- Failing-before: `evidence/WO-07/l02/failing-before-Debug-script-overrides-lost.result.json`
+  (`script field Rate override lost` / `Loops override lost` on every cycle after the failed-load
+  cycle; the out-of-process oracle reports `NativeScript.Fields.Loops missing; …Rate missing`).
+- Regression: L02 harness — the probe's `L02Script` overrides (Rate=3.5, Loops=5) must survive the
+  failed-load cycle and every later reload; `test_scene_serializer.cpp` round-trip with an
+  unregistered class (headless).
+- Disposition: fix landed (WO-07 local commit): unresolved `Fields` are kept verbatim on the
+  component (`PendingFields`) and re-emitted on save while the class is unregistered — the same
+  forward-compat rule as opaque component blocks — and resolve on the next load that has the class.
+
+### KI-31 — Inspector backfill of a newly added script field resets every existing override
+- Status: Confirmed defect (silent data loss). Owner WO: WO-07 (L02).
+- Anchor: `Projects/Starforge/src/panels/InspectorPanel.cpp` at `fe3d807` — `DrawScriptComponent`
+  "Backfill any field the map is missing" calls `SeedScriptDefaults`, which does `nsc.Fields.clear()`
+  and re-pulls **all** defaults from a throwaway instance. So the frame after a rebuild adds one
+  field to a script, merely having an entity with that script selected wipes every tuned override
+  on it (Rate 3.5 → 1, Loops 5 → 2 in the L02 probe).
+- Repro: tune a script field, add a new public field to the script, Ctrl+B, select the entity: the
+  tuned value shows its C++ default; the next save persists the loss.
+- Failing-before: `evidence/WO-07/l02/failing-before-Debug-inspector-backfill-resets-overrides.result.json`
+  (cycle 23, the first Inspector draw after variant V5 added `Bias`: `script Rate = 1, expected
+  3.5`, `script Loops = 2, expected 5`; the out-of-process oracle confirms the saved scene).
+- Regression: L02 harness cycles with `cycle % 5 == 3` (probe selected while a build runs, so the
+  Inspector draws it across the reload) after a script-field addition (V5 at cycle 21).
+- Disposition: fix landed (WO-07 local commit): the backfill seeds **only the missing** fields.
+
+### KI-32 — EntitySelection invokes a listener that was unsubscribed during the dispatch
+- Status: Confirmed defect (stale-callback class). Owner WO: WO-07 (L04, "callback disconnect
+  during dispatch").
+- Anchor: `Cosmic/src/telemetry/EntitySelection.cpp` `Notify` at `fe3d807`: it snapshots the
+  whole subscription vector and then calls every snapshotted callback without re-checking that it
+  is still subscribed. A listener that another listener removes earlier in the same dispatch —
+  e.g. an owner torn down by the first callback — is still invoked (its captured `this` may be
+  freed). The per-scene `EventBus::Emit` re-checks liveness before each call (`IsNamedLive`) and
+  documents "a listener removed mid-dispatch does not fire"; EntitySelection did not.
+- Repro: subscribe A then B; in A's callback `Unsubscribe(B)`; `SetByName("x")` → B fires.
+- Failing-before: `evidence/WO-07/l04/failing-before-Debug-entityselection-removed-listener-fires.txt`
+  (3 of 3 probe dispatches invoked the removed listener; EventBus 0 of 3).
+- Regression: `test_wo07_l04.cpp` (`esRemovedMidDispatchFired == 0`, driven by
+  `WO07TeardownFixture`), plus the headless `test_events.cpp` case
+  `WO-07 L04: EntitySelection does not invoke a listener unsubscribed during dispatch`.
+- Disposition: fix landed (WO-07 local commit): `Notify` snapshots the handles and, for each,
+  re-fetches the callback under the mutex only if it is still subscribed — the EventBus rule.
+
+### KI-33 — UnloadProjectDLL frees the plugin while its job is still queued or in flight
+- Status: Confirmed defect (worker runs into unmapped code; ACCESS VIOLATION reproduced).
+  Owner WO: WO-07 (L04, "no invocation into unloaded DLL").
+- Anchor: `Cosmic/src/core/Application.cpp` `UnloadProjectDLL` at `fe3d807` — OnDetach → delete
+  layer → `FreeLibrary`, with no JobSystem drain in between. The JobSystem has no cancellation; a
+  job the plugin submitted (its callable is code in the plugin DLL) that is still queued, or
+  blocked inside the DLL when the plugin fails to join it in `OnDetach`, resumes after the image is
+  unmapped. The full-shutdown path is safe by accident (`Shutdown` drains the pool first).
+- Repro: `COSMIC_WO07_L04_CASE=2` — the fixture's OnDetach skips its join; the exe releases the
+  job 300 ms after detach: the process dies right after "Project DLL safely unmounted and unloaded".
+- Failing-before: `evidence/WO-07/l04/failing-before-Debug-job-runs-into-unmapped-plugin.txt`.
+- Regression: `test_wo07_l04.cpp` mode 2 (`seqJobDone < seqAfterUnload`, `jobActiveAfterUnload == 0`),
+  10 children per config through `wo07-l04.manifest.json`.
+- Disposition: fix landed (WO-07 local commit): `UnloadProjectDLL` waits for the JobSystem to go
+  idle (`WaitIdle`, only while the pool is initialized) after `OnDetach`/delete and BEFORE
+  `FreeLibrary`, so plugin-submitted work always completes against mapped code. A job that never
+  completes still hangs the transition exactly as it already hangs `JobSystem::Shutdown` at exit —
+  a plugin must not block its jobs forever (documented JobSystem rule).
+
+### KI-34 — The Release editor hot-loads a Debug-CRT game module (ABI/heap mismatch, crash)
+- Status: Confirmed defect (ACCESS VIOLATION reproduced). Owner WO: WO-07 (L02, release profile).
+- Anchor: `Projects/Starforge/src/BuildRunner.h` `kHotConfig = "Debug"` at `fe3d807` — the
+  hot-reload build configuration is a hard-coded constant, so a **Release** editor builds every
+  game module `/MDd` (Debug CRT + `_ITERATOR_DEBUG_LEVEL=2` STL layouts) and `LoadLibrary`s it into
+  its own `/MD` process. The inline `ModuleRegistry` templates then run with Debug `std::string` /
+  `std::unordered_map` layouts against the engine's Release objects, and every `new`/`delete`
+  crossing the boundary hits a different CRT heap — exactly the shared-allocator rule
+  `docs/guide/project-anatomy.md` says must never be broken. The same constant chooses the
+  module for a non-release **package** paired with the editor's own (Release) runtime dir.
+- Repro: Release `Starforge.exe`, any scaffolded project, Ctrl+B — the editor dies at the first
+  `GameModule::Load` (before "GameModule: loaded" is logged).
+- Failing-before: `evidence/WO-07/l02/failing-before-Release-debug-module-in-release-editor.txt`
+  (runner case L02 Release: exit `-1073741819` in cycle 0; `build/Debug/L02Reload_hot1.dll` built).
+- Regression: L02 through `wo07-l02.manifest.json` in **Release** (the whole 52-build campaign).
+- Disposition: fix landed (WO-07 local commit): `kHotConfig` now follows the editor's own build
+  configuration (`NDEBUG` → "Release", else "Debug") — the only configuration whose CRT and STL
+  layouts match the process a hot module is mapped into; the module search dir and the
+  non-release package pairing follow automatically.
+
 ## Register invariants
 
 - No entry is closed without a landed regression (or an explicit reviewed won't-fix with reason).

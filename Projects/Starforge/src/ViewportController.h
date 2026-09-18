@@ -135,6 +135,12 @@ namespace Starforge
         void LoadSnapPrefs(const Prefs::EditorSettings& s);
         void SaveSnapPrefs(Prefs::EditorSettings& s) const;
 
+        // WO-07 L05 — read-only strip state, so the editor self-test can confirm
+        // that a click on a strip chip really toggled it (never a mis-aimed pass).
+        bool ShowGridEnabled() const      { return m_ShowGrid; }
+        bool ShowCollidersEnabled() const { return m_ShowColliders; }
+        bool GizmoSpaceIsWorld() const    { return m_Space == Cosmic::Gizmo::Space::World; }
+
         // K9 — stats-chip row toggle (View menu).
         bool& ShowStatsChips() { return m_ShowStatsChips; }
 
@@ -184,17 +190,21 @@ namespace Starforge
         // actuate the REAL control precisely (no coordinate guessing, no copy of
         // the widget). It is null — and therefore zero-cost and invisible — in
         // every normal editor run; only Ki1SnapChipSelfTest.cpp ever sets it.
-        // count       — chips seen this strip draw (0..3)
+        // count       — chips seen this strip draw (0..kMax): 0-2 the Move/Rotate/Scale
+        //                snap chips (KI-1), 3 Grid, 4 Colliders (the `toggle` chips),
+        //                5 World/Local — WO-07 L05 drives all of them
         // cx/cy        — each chip button's screen-space centre (for the click)
         // colorDelta   — ImGui ColorStack.Size change ACROSS each chip, read at the
         //                widget itself (before ImGui 1.92's per-window error recovery
         //                masks it at EndChild). Nonzero == KI-1's unbalanced push/pop.
         struct Ki1ChipProbe
         {
+            static constexpr int kMax = 8;
             int   count = 0;
-            float cx[3] = {0,0,0};
-            float cy[3] = {0,0,0};
-            int   colorDelta[3] = {0,0,0};
+            float cx[kMax] = {};
+            float cy[kMax] = {};
+            int   colorDelta[kMax] = {};
+            bool  haveWorldLocal = false;   // slot 5 recorded this draw
         };
         static Ki1ChipProbe* s_Ki1Probe;
 

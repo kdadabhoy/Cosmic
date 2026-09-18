@@ -86,16 +86,27 @@ TEST_CASE("E1: engine components are registered with their fields")
 #endif
 }
 
+namespace
+{
+    // The test type's COMPLETE registration chain. A (re)registration starts from a
+    // fresh field list (WO-07 / KI-27 — a hot-reloaded module re-registers its
+    // components), so every site that registers WidgetComponent declares the whole
+    // chain; it is idempotent across test runs in one process.
+    void RegisterWidget()
+    {
+        Reflect::Class<WidgetComponent>("Widget", "Test")
+            .Field("Gain", &WidgetComponent::Gain).Range(0.0f, 10.0f).Tooltip("loop gain")
+            .Field("Tint", &WidgetComponent::Tint).Color()
+            .Field("State", &WidgetComponent::State)
+                .EnumValue("Idle", 0).EnumValue("Run", 1).EnumValue("Stop", 2)
+            .Field("Enabled", &WidgetComponent::Enabled)
+            .Field("Label", &WidgetComponent::Label).ReadOnly();
+    }
+}
+
 TEST_CASE("E1: builder deduces kinds and applies hints/flags")
 {
-    // Register the test type (idempotent across test runs in one process).
-    Reflect::Class<WidgetComponent>("Widget", "Test")
-        .Field("Gain", &WidgetComponent::Gain).Range(0.0f, 10.0f).Tooltip("loop gain")
-        .Field("Tint", &WidgetComponent::Tint).Color()
-        .Field("State", &WidgetComponent::State)
-            .EnumValue("Idle", 0).EnumValue("Run", 1).EnumValue("Stop", 2)
-        .Field("Enabled", &WidgetComponent::Enabled)
-        .Field("Label", &WidgetComponent::Label).ReadOnly();
+    RegisterWidget();
 
     const TypeDescriptor* d = GetRegistry().Find<WidgetComponent>();
     REQUIRE(d != nullptr);
@@ -166,6 +177,27 @@ TEST_CASE("T1: reflection metadata v2 — Doc + Units reported where declared, d
     CHECK(cam->FindField("Primary")->Hints.Units == FieldUnits::None);
 }
 
+TEST_CASE("WO-07 KI-27: re-registering a reflected component does not accumulate its fields")
+{
+    RegisterWidget();
+    const size_t once = GetRegistry().Find<WidgetComponent>()->Fields.size();
+    RegisterWidget();
+    RegisterWidget();
+    const TypeDescriptor* d = GetRegistry().Find<WidgetComponent>();
+    REQUIRE(d != nullptr);
+    CHECK(d->Fields.size() == once);        // 5, not 15 — the hot-reload accumulation of KI-27
+    CHECK(d->Fields.size() == 5);
+    CHECK(d->FindField("State") != nullptr);
+    CHECK(d->FindField("State")->Hints.EnumEntries.size() == 3);   // hints re-applied, not duplicated
+    // Remove forgets the descriptor (what UnregisterModule does before FreeLibrary).
+    GetRegistry().Remove(entt::type_hash<WidgetComponent>::value());
+    CHECK(GetRegistry().Find<WidgetComponent>() == nullptr);
+    CHECK(GetRegistry().FindByName("Widget") == nullptr);
+    RegisterWidget();                        // and a fresh registration brings it back intact
+    CHECK(GetRegistry().Find<WidgetComponent>() != nullptr);
+    CHECK(GetRegistry().Find<WidgetComponent>()->Fields.size() == 5);
+}
+
 TEST_CASE("E1: get/set through descriptors round-trips")
 {
     entt::registry registry;
@@ -193,7 +225,7 @@ TEST_CASE("E1: get/set through descriptors round-trips")
     CHECK(registry.get<TransformComponent>(e).Position.z == doctest::Approx(7.5f));
 
     // Enum round-trip (boxed as int32).
-    Reflect::Class<WidgetComponent>("Widget", "Test");   // ensure registered
+    RegisterWidget();   // ensure registered — with its full field chain (KI-27)
     const TypeDescriptor* wd = GetRegistry().Find<WidgetComponent>();
     void* wc = wd->Add(registry, e);
     wd->FindField("State")->Set(wc, FieldValue{ int32_t(2) });

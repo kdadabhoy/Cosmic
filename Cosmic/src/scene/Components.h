@@ -600,6 +600,13 @@ namespace Cosmic
         // defaults. FieldValue is the same boxed type the reflection registry uses.
         std::unordered_map<std::string, Reflect::FieldValue> Fields;
 
+        // Overrides that could not be resolved at load because ClassName was not
+        // registered (project opened before its module is built, or a failed module
+        // load) — the "Fields" JSON object kept verbatim, re-emitted on save while
+        // still unresolved and resolved on the next load that has the class
+        // (WO-07 / KI-30; the same forward-compat rule as opaque component blocks).
+        std::string PendingFields;
+
         NativeScriptComponent() = default;
         NativeScriptComponent(const NativeScriptComponent&) = default;
         NativeScriptComponent(const std::string& className) : ClassName(className) {}
@@ -621,6 +628,7 @@ namespace Cosmic
 
         // name -> boxed override value (same as NativeScriptComponent::Fields).
         std::unordered_map<std::string, Reflect::FieldValue> Fields;
+        std::string PendingFields;   // unresolved overrides, as NativeScriptComponent (KI-30)
 
         SystemScriptComponent() = default;
         SystemScriptComponent(const SystemScriptComponent&) = default;

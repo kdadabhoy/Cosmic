@@ -68,6 +68,23 @@ namespace Cosmic::Reflect
             return d;
         }
 
+        // Forget a descriptor (WO-07 / KI-29). A game module's component
+        // descriptors hold std::functions whose code lives in the module DLL:
+        // ModuleRegistry::UnregisterModule removes them here BEFORE the DLL is
+        // unmapped, so nothing can call — or destroy — a thunk in freed code, and
+        // a scene loaded without the module keeps the block as an opaque
+        // (forward-compat) block instead of invoking a stale Add.
+        void Remove(entt::id_type id)
+        {
+            auto it = m_Types.find(id);
+            if (it == m_Types.end())
+                return;
+            auto byName = m_ByName.find(it->second.Name);
+            if (byName != m_ByName.end() && byName->second == id)
+                m_ByName.erase(byName);
+            m_Types.erase(it);
+        }
+
         // Lookup by entt type hash / by name / by C++ type. Unknown -> nullptr.
         const TypeDescriptor* Find(entt::id_type id) const
         {
@@ -190,6 +207,12 @@ namespace Cosmic::Reflect
         const entt::id_type id = entt::type_hash<T>::value();
         TypeDescriptor& d = registry.GetOrCreate(id, name);
         d.Category = category;
+        // Fresh field list on (re)registration (WO-07 / KI-27): every registration
+        // site declares its complete field chain, and a hot-reloaded module
+        // re-registers the same type — appending would list the fields once per
+        // reload (and keep thunks into the previous, unmapped DLL). Mirrors
+        // ModuleRegistry::AddScript.
+        d.Fields.clear();
 
         d.Add = [](entt::registry& r, entt::entity e) -> void*
         {
