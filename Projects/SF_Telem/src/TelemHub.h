@@ -273,14 +273,19 @@ namespace Workspace
         static constexpr size_t k_RecordCap    = static_cast<size_t>(60.0f * 300.0f);
         static constexpr float  k_StaleTimeout = 1.5f;
 
-        // Recordings land in a top-level, project-namespaced folder next to the exe
-        // (e.g. recordings/SF_Telem/<session>/) — discoverable, and won't collide
-        // with other projects' recordings. Kept separate from the app's logs/.
-        static constexpr const char* k_RecordDir = "recordings/SF_Telem";
+        // WRITABLE USER DATA (AP-P1 / design-contracts section 12). Recordings land
+        // in a project-namespaced folder under the WRITABLE user-data root — never
+        // relative to the CWD, which in an installed app is the read-only install
+        // directory. user:// is "<exe>/user/" portable and "%LOCALAPPDATA%\SF_Telem"
+        // installed, so takes stay discoverable and never collide with another app's.
+        // DataRecorder writes raw paths, so every USE of these constants goes through
+        // Cosmic::FileSystem::Resolve() (see TelemHub.cpp); in a dev tree the result
+        // is the unchanged "./recordings/SF_Telem".
+        static constexpr const char* k_RecordDir = "user://recordings/SF_Telem";
 
         // Crash-failsafe autosave: a rolling snapshot written every few seconds
         // while recording. Crash loss depends on successful snapshot publication.
-        static constexpr const char* k_AutoSaveDir      = "recordings/SF_Telem/_autosave";
+        static constexpr const char* k_AutoSaveDir      = "user://recordings/SF_Telem/_autosave";
         static constexpr float       k_AutoSaveInterval = 5.0f;
     };
 

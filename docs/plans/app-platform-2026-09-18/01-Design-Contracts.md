@@ -506,15 +506,59 @@ Worktree protocol and land protocol: `work-orders/README.md` L1–L5.
   moved to a dated "History" note. `docs/guide/README.md:50` (the exemplar list) becomes
   "the template projects, PendulumLab, AnalysisSample, SF_Telem".
 
-## §12 Writable user data (AP-P1; extends the stability packet's contracts.md)
+## §12 Writable user data + the one package layout (AP-P1 — final policy)
 
-An installed app must never write under its install directory. `project://logs` and relative
-`recordings/` in `Projects/SF_Telem/src/SF_Telem.cpp` (see `:62`) resolve to `user://logs` and
-`user://recordings/SF_Telem` respectively; the packaged identity comes from `boot.cfg`
-(`Runtime/Main.cpp:68-83`, `:100-101`), so two shipped apps never share a user root. The single package
-layout is the editor Packager's (`<App>.exe` = renamed `CosmicApp.exe`, `Cosmic.dll`, `<App>.dll`,
-`assets/`, `assets/projects/<App>/`, `boot.cfg`, `user/` placeholder); `package.bat` and `release.yml`
-produce the same tree (AP-P1 proves byte-equivalent file lists). AP-P1 records the final policy text here.
+**Rule.** An installed app never writes under its install directory. Every write an app makes —
+logs, recordings, autosaves, exports, screenshots, `imgui.ini`, settings — goes through
+`user://`. `engine://` and `project://` are **read-only content** roots and are never write
+targets.
+
+**Where `user://` lands** (`Cosmic/src/utils/FileSystem.cpp`, decided once at first use):
+
+| Boot | Identity | `user://` resolves to |
+| --- | --- | --- |
+| Packaged, writable install dir (unzipped folder, or a `portable.txt` next to the exe) | from `boot.cfg` | `<exe>/user/` |
+| Packaged, read-only install dir (Program Files / `{autopf}`) | from `boot.cfg` | `%LOCALAPPDATA%\<AppName>` (system temp if `LOCALAPPDATA` is unset) |
+| Dev boot (Launcher, `--project`) | none | `.` when the CWD is writable, else `%LOCALAPPDATA%\Cosmic` |
+
+The identity comes **only** from `boot.cfg` (`Runtime/Main.cpp:68-83`, `:100-101`), so two shipped
+apps never share a user root. A shortcut that passes `--project` skips that branch, leaves the
+identity empty and drops the app back to the shared root — which is why every installer script
+launches `{app}\<App>.exe` with **no flags** (fixed in `installer/CosmicSetup.iss` by AP-P1;
+`installer/AppSetup.iss` was already correct).
+
+**SF_Telem's paths** (the qualified app): `user://logs` for the engine log
+(`Projects/SF_Telem/src/SF_Telem.cpp`, `OnAttach` and `OnDetach`) and for the drivetrain CSV export
+(`DrivetrainLayer.cpp`); `user://recordings/SF_Telem` and `user://recordings/SF_Telem/_autosave`
+for takes (`TelemHub.h`, resolved at every use in `TelemHub.cpp` because `DataRecorder` writes raw
+paths). In a dev tree these resolve to the unchanged `./logs` and `./recordings/SF_Telem`.
+
+**The one package layout.** The editor packager (`Projects/Starforge/src/Packager.cpp`) is the
+reference; `installer/Stage-AppPackage.ps1` mirrors it and is what **both** `package.bat <App>` and
+`.github/workflows/release.yml` call, so the three shipping paths cannot drift:
+
+```
+<App>.exe                  renamed CosmicApp.exe
+<App>.dll                  only this app's plugin DLL
+Cosmic.dll
+boot.cfg                   names <App>; sets the user:// identity
+assets/**                  engine assets, minus assets/projects/**
+assets/projects/<App>/**   only this app's content (no src/, build/, .git/, CMakeLists.txt)
+licenses/**                from installer/licenses/MANIFEST.txt (one source of truth)
+user/README.txt            portable-mode writable-root placeholder
+```
+
+No dev-only target (`CosmicTests`, `CosmicRenderTests`, the `WO0*Fixture` DLLs), no `.pdb`/`.lib`/
+`.exp`, and no second app's DLL or content may appear; the stager fails the run if one does.
+Every packaging configure passes `-DCOSMIC_2D_ONLY=ON` and asserts `COSMIC_2D_ONLY:BOOL=ON` in the
+generated cache before staging (after AP-05 the option is an always-ON compatibility no-op; it
+stays). `cmake --install` still works and still produces the **developer SDK bundle**
+(`package.bat` with no argument) — it is **not** a shipping path, and `package.bat`,
+`Runtime/CMakeLists.txt` and the root `CMakeLists.txt` say so at the install rules.
+
+**Uninstall policy.** Uninstalling removes `{app}` only. `%LOCALAPPDATA%\<AppName>` is user data
+and survives an update, a reinstall and an uninstall; removing it is the user's action, not the
+installer's.
 
 ## §13 New-surface register (AP sessions append; AP-Q1 finalizes)
 

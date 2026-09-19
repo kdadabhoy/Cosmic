@@ -70,7 +70,12 @@ namespace Workspace
         CS_INFO("SF_Telem: Attaching combined telemetry app.");
 
         Cosmic::FileSystem::SetActiveProject("SF_Telem");
-        Cosmic::Log::SetLogDirectory(Cosmic::FileSystem::Resolve("project://logs"));
+        // WRITABLE USER DATA (AP-P1 / design-contracts section 12): logs go to
+        // user://logs, never project://logs. project:// resolves under the app's
+        // read-only content (assets/projects/SF_Telem/), which in an installed app
+        // lives inside the install directory — spdlog would fail to open its sink
+        // there. user:// is <exe>/user/ portable, %LOCALAPPDATA%\SF_Telem installed.
+        Cosmic::Log::SetLogDirectory(Cosmic::FileSystem::Resolve("user://logs"));
 
         // One shared connection feeds every screen.
         InitializeServices();
@@ -102,7 +107,9 @@ namespace Workspace
         m_Testing.Shutdown();
         m_TelemHub.Shutdown();
 
-        Cosmic::Log::SetLogDirectory("logs");
+        // Back to the host's own log root — the same user:// location Application
+        // ::Init chose, not a bare relative "logs" under a read-only install dir.
+        Cosmic::Log::SetLogDirectory(Cosmic::FileSystem::Resolve("user://logs"));
         CS_INFO("SF_Telem: Detached.");
     }
 

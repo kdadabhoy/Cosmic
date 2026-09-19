@@ -1126,7 +1126,11 @@ namespace Workspace
         }
         if (fileName.find(".csv") == std::string::npos) fileName += ".csv";
 
-        const std::string dir = Cosmic::FileSystem::Resolve("project://logs");
+        // WRITABLE USER DATA (AP-P1 / section 12): the CSV export is a WRITE, so it
+        // goes to user://logs. project://logs is the app's read-only content root and
+        // fails from an installed (Program Files) location — silently, because
+        // create_directories takes an error_code.
+        const std::string dir = Cosmic::FileSystem::Resolve("user://logs");
         std::error_code ec;
         std::filesystem::create_directories(dir, ec);
         const std::filesystem::path outPath = std::filesystem::path(dir) / fileName;
