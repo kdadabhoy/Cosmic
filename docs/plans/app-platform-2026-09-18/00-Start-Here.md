@@ -74,19 +74,23 @@ AP-D2 → AP-Q1.
 
 ## Session guide
 
-| # | WO | Prompt | Runs where | Concurrent with | Model |
-| --- | --- | --- | --- | --- | --- |
-| 1 | AP-00 | `work-orders/AP-00.md` | `main` | — | Fable 5.1 — **done** |
-| 2 | AP-05A | `work-orders/AP-05.md` §Part A | `main`, alone | AP-P1 | Fable 5.1 (`claude-fable-5-1`) |
-| 3 | AP-05B | `work-orders/AP-05.md` §Part B | `main`, alone | AP-P1 | Fable 5.1 |
-| 4 | AP-01 | `work-orders/AP-01.md` | `main`, alone | AP-P1 | Fable 5.1 |
-| 5 | AP-P1 | `work-orders/AP-P1.md` | worktree `ap/p1` | AP-05/AP-01 | Opus 5 (`claude-opus-5`) |
-| 6 | AP-02 | `work-orders/AP-02.md` | worktree `ap/02` | AP-04, AP-D1 | Fable 5.1 |
-| 7 | AP-04 | `work-orders/AP-04.md` | worktree `ap/04` | AP-02, AP-D1 | Opus 5 |
-| 8 | AP-D1 | `work-orders/AP-D1.md` | worktree `ap/d1` | AP-02, AP-04 | Opus 5 |
-| 9 | AP-03 | `work-orders/AP-03.md` | worktree `ap/03`, alone | — | Fable 5.1 |
-| 10 | AP-D2 | `work-orders/AP-D2.md` | worktree `ap/d2`, alone | — | Opus 5 (Sonnet 5 only for chapter prose) |
-| 11 | AP-Q1 | `work-orders/AP-Q1.md` | `main`, alone | — | Fable 5.1 |
+| # | WO | Prompt | Runs where | Concurrent with | Model | Effort |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | AP-00 | `work-orders/AP-00.md` | `main` | — | Fable 5.1 — **done** | max |
+| 2 | AP-05A | `work-orders/AP-05.md` §Part A | `main`, alone | AP-P1 | Fable 5.1 (`claude-fable-5-1`) | high |
+| 3 | AP-05B | `work-orders/AP-05.md` §Part B | `main`, alone | AP-P1 | Fable 5.1 | max |
+| 4 | AP-01 | `work-orders/AP-01.md` | `main`, alone | AP-P1 | Fable 5.1 | max |
+| 5 | AP-P1 | `work-orders/AP-P1.md` | worktree `ap/p1` | AP-05/AP-01 | Opus 5 (`claude-opus-5`) | high |
+| 6 | AP-02 | `work-orders/AP-02.md` | worktree `ap/02` | AP-04, AP-D1 | Fable 5.1 | xhigh |
+| 7 | AP-04 | `work-orders/AP-04.md` | worktree `ap/04` | AP-02, AP-D1 | Opus 5 | high |
+| 8 | AP-D1 | `work-orders/AP-D1.md` | worktree `ap/d1` | AP-02, AP-04 | Opus 5 | high |
+| 9 | AP-03 | `work-orders/AP-03.md` | worktree `ap/03`, alone | — | Fable 5.1 | max |
+| 10 | AP-D2 | `work-orders/AP-D2.md` | worktree `ap/d2`, alone | — | Opus 5 (Sonnet 5 only for chapter prose) | high |
+| 11 | AP-Q1 | `work-orders/AP-Q1.md` | `main`, alone | — | Fable 5.1 | xhigh |
+
+Effort is the Claude Code effort setting (the session effort control or `/effort`): **max** for engine and editor
+architecture, **xhigh** for rendering and final qualification, **high** for scripted moves, content and
+packaging. Never below high on this campaign.
 
 How to run one: open a fresh Claude Code session on `C:\dev\Cosmic` (or on the lane's worktree, see
 `work-orders/README.md` rule L1), paste the `~~~text` block from the WO file, nothing else. The prompt

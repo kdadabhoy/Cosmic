@@ -2,7 +2,7 @@
 
 **Gate:** G2 · **Wave:** 2 (worktree, alongside AP-02 and AP-04) · **Runs:** worktree `ap/d1` ·
 **Base:** `main` after AP-P1 has landed · **Depends on:** AP-P1 landed · **Acceptance:** DOC01, DOC03,
-DOC04 · **Model:** Opus 5 · **Status:** not started
+DOC04 · **Model:** Opus 5 · **Effort:** high · **Status:** not started
 
 The structural half of the former WO-12, widened by D-DOCS and D-PURGE: everything completed or
 superseded goes to an archive tier with a dated banner and a replacement link; every 3D chapter goes
@@ -44,9 +44,14 @@ Do, in order, scripting every mechanical move (PowerShell or Python kept in evid
    Superseded by |). Re-check frame-lifecycle.md, modularity-audit.md, responsive-rendering-and-pause.md:
    keep them live, add a dated note where they describe 3D paths that no longer exist on main.
 4. Park 3D: create docs/parked-3d/{guide,reference,systems}/ and git mv docs/guide/{rendering-3d,
-   voxels,navigation-and-ai,animation,world-systems}.md, docs/reference/{rendering-3d,
-   rendering-pipeline,world-systems}.md, docs/systems/{rendering-3d,rendering-pipeline,terrain,water,
-   particles,cameras-navigation,build-2d-3d-split}.md there; split docs/guide/lighting-and-environment.md
+   voxels,navigation-and-ai,animation,world-systems}.md, docs/reference/{rendering-3d,world-systems}.md,
+   docs/systems/{rendering-3d,terrain,water,particles,build-2d-3d-split}.md there. Park a chapter ONLY
+   when every header it documents was deleted by AP-05; MIXED chapters stay live and lose their 3D
+   sections to a parked twin: docs/reference/rendering-pipeline.md and docs/systems/rendering-pipeline.md
+   (SceneRenderer/PostProcessStack are the live 2D spine; EnvironmentMap/ShadowMap/CoverageCapture parts
+   move out), docs/systems/cameras-navigation.md (Camera2D stays; CAD orbit/fly/nav-cube parts move
+   out). A moved or trimmed chapter keeps its STATUS: SKELETON banner exactly as it was, or the coverage
+   checker's strict mode engages at the new path. Split docs/guide/lighting-and-environment.md
    into the 2D-lights part (stays, renamed lighting-2d.md, links fixed) and the parked rest; move the
    root README's Part II sections that describe 3D systems (sections 30-43 where they are 3D) into
    docs/parked-3d/README-part2-3d-systems.md verbatim, leaving a one-paragraph pointer in README.md.

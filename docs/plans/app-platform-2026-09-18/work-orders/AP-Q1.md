@@ -2,7 +2,7 @@
 
 **Gate:** G5 · **Wave:** 5 (alone) · **Runs:** `main` in `C:\dev\Cosmic` · **Base:** `main` after AP-D2 has
 landed · **Depends on:** everything · **Acceptance:** S01–S04, Y02, Y03, K02 (PendulumLab), DOC05, the
-retained suites, every `ap*` manifest · **Model:** Fable 5.1 · **Status:** not started
+retained suites, every `ap*` manifest · **Model:** Fable 5.1 · **Effort:** xhigh · **Status:** not started
 
 The former WO-13 for the new surface: prove the landed `main` at a pinned SHA, run the long tests the
 lanes could not, tidy what AP-05 listed, produce the showcase kit for the website, write the release

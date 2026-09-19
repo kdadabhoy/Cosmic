@@ -485,8 +485,12 @@ Worktree protocol and land protocol: `work-orders/README.md` L1–L5.
   systems, moved verbatim). Every parked file gets, at line 3:
   `> **PARKED 3D — not on the trunk.** This chapter documents code that lives only on the \`engine-3d\` branch (\`0e8894b\`, tag \`cosmic-pre-2d-2026-09-16\`). The 2D trunk (\`main\`) no longer builds or ships it (D-PURGE, 2026-09-18). Kept for when 3D resumes.`
   Manifest rows that pointed at a moved chapter are rewritten to `../parked-3d/…` (rows may point
-  outside `docs/reference/`, and headers deleted by AP-05 no longer have rows at all). Live docs may link
-  into `parked-3d/` only with the visible label "(parked 3D)".
+  outside `docs/reference/`, and headers deleted by AP-05 no longer have rows at all). A chapter is
+  parked only when every header it documents was deleted; mixed chapters (`rendering-pipeline`,
+  `cameras-navigation`) stay live and hand their 3D sections to a parked twin. A moved or trimmed
+  chapter keeps its `STATUS: SKELETON` banner unchanged (strict mode otherwise engages). Live docs may
+  link into `parked-3d/` only with the visible label "(parked 3D)". Supersession banners on retired
+  prompts sit at line 3, like archived and parked banners (the three WO-11/12/13 banners follow this).
 - **Link checker** `tests/check_docs_links.ps1` (AP-D1): scans `README.md`, `docs/**/*.md`,
   `Projects/*/README.md`, `Projects/*/docs/*.md`, `tests/**/*.md`; resolves relative file links and
   `#anchors` (GitHub slug rules: lowercase, spaces→`-`, strip punctuation except `-`/`_`); skips

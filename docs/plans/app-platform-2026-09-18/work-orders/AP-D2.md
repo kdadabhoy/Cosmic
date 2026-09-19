@@ -1,7 +1,7 @@
 # AP-D2 — Docs content: the app-authoring chapter, chapter updates, reference, roadmap final, DOC02
 
 **Gate:** G4 · **Wave:** 4 (alone) · **Runs:** worktree `ap/d2` · **Base:** `main` after AP-03 has landed ·
-**Depends on:** AP-03 · **Acceptance:** DOC01–DOC03 (rerun) · **Model:** Opus 5 (Sonnet 5 acceptable for
+**Depends on:** AP-03 · **Acceptance:** DOC01–DOC03 (rerun) · **Model:** Opus 5 · **Effort:** high (Sonnet 5 acceptable for
 the chapter prose only, with Opus verifying every code claim) · **Status:** not started
 
 Written from source per the guide's five authoring rules (`docs/guide/README.md:26-44`): the new

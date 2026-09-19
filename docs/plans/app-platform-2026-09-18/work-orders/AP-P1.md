@@ -52,8 +52,9 @@ Do, in order:
    tests/acceptance/manifests/pr-*.manifest.json aggregating the U/W cases the stability campaign left
    green plus ap05-purge when it exists), fails on any FAILED, uploads results.json/JUnit, and reports
    G/I/Q cases as ENVIRONMENT_BLOCKED (hosted runners have no GPU/editor). Keep the 300-case discovery
-   floor. Drop stale 3D mentions from the workflows (release.yml's Frontier example etc.). Run the
-   profile locally exactly as CI would.
+   floor. Drop stale 3D mentions from the workflows (release.yml's Frontier example etc.) and the stale
+   comment at ci.yml:138-139 that cites docs/plans/07-installer-packaging-plan.md (it lives under
+   docs/plans/archive/). Run the profile locally exactly as CI would.
 
 Evidence in evidence/AP-P1/report.md (WO-10 layout): the three file lists, the read-only-install proof
 (paths written), K01-K04 results with blocked legs named, the CI profile run. Land per L2: rebase onto
