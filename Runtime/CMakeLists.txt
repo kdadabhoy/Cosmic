@@ -75,5 +75,13 @@ if(MSVC)
     )
 endif()
 
-# Packaging (cmake --install): the host exe lands at the package root.
+# `cmake --install` staging: the host exe lands at the bundle root as CosmicApp.exe.
+#
+# NOT A SHIPPING PATH (AP-P1). These install rules produce the DEVELOPER SDK bundle
+# (`package.bat` with no argument): every project's DLL under projects/, every
+# project's assets, and the host exe under its own name. A shipped app is staged by
+# installer/Stage-AppPackage.ps1 (package.bat <App>, release.yml) or by the editor
+# packager instead — exactly one app, the exe renamed to <App>.exe, plus boot.cfg,
+# licenses/ and user/. StarforgeEditor is deliberately NOT installed: the dev-tree
+# editor host is not part of any bundle; Starforge ships through the app path.
 install(TARGETS CosmicApp RUNTIME DESTINATION .)

@@ -1,0 +1,25 @@
+# installer/licenses/MANIFEST.txt — the third-party license payload of a shipped
+# Cosmic 2D app (AP-P1). ONE source of truth: the editor Packager
+# (Projects/Starforge/src/Packager.cpp) and the CLI stager
+# (installer/Stage-AppPackage.ps1) both read this file, so all packaging paths
+# stage byte-identical licenses/ trees.
+#
+# Format:  <path relative to the SDK root> | <file name under licenses/>
+# Lines starting with '#' and blank lines are ignored. A listed source that does
+# not exist is a staging ERROR (never a silent omission) — keep this list in step
+# with Cosmic/CMakeLists.txt's link list.
+#
+# Components that ship WITHOUT a vendored license file (implot, glad, stb_*,
+# miniaudio, nlohmann/json) are named in THIRD-PARTY.txt with their license, which
+# is always staged first. Dev-only (doctest) and 3D-only (assimp, recastnavigation,
+# cgltf) dependencies are NOT in a 2D package and are NOT listed here.
+installer/licenses/THIRD-PARTY.txt                 | THIRD-PARTY.txt
+Cosmic/dependencies/imgui/LICENSE.txt              | imgui-LICENSE.txt
+Cosmic/dependencies/imgui-node-editor/LICENSE      | imgui-node-editor-LICENSE.txt
+Cosmic/dependencies/ImGuizmo/LICENSE               | ImGuizmo-LICENSE.txt
+Cosmic/dependencies/glfw/LICENSE.md                | glfw-LICENSE.md
+Cosmic/dependencies/glm/copying.txt                | glm-copying.txt
+Cosmic/dependencies/entt/LICENSE                   | entt-LICENSE.txt
+Cosmic/dependencies/spdlog/LICENSE                 | spdlog-LICENSE.txt
+Cosmic/dependencies/tomlplusplus/LICENSE           | tomlplusplus-LICENSE.txt
+Cosmic/dependencies/JoltPhysics/LICENSE            | JoltPhysics-LICENSE.txt

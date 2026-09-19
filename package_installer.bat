@@ -7,7 +7,8 @@ echo ======================================================
 
 :: Builds a Release single-app distributable via package.bat, then compiles an
 :: Inno Setup installer that puts ONE shortcut on the desktop which boots the
-:: app directly ("CosmicApp.exe --project <AppName>").
+:: app directly ("<AppName>.exe", no flags — boot.cfg names the app and sets its
+:: per-app user:// data identity; AP-P1's one package layout).
 ::
 :: Usage:   package_installer.bat <AppName>
 :: Example: package_installer.bat SF_Telem

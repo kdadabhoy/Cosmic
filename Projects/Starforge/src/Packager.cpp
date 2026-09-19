@@ -26,6 +26,21 @@ namespace Starforge
             return kSkip.count(name) != 0;
         }
 
+        // user/README.txt — the portable-mode writable root placeholder (AP-P1 /
+        // design-contracts section 12). ASCII, LF in source: the text-mode ofstream
+        // below turns each '\n' into CRLF, which is what installer/Stage-AppPackage.ps1
+        // writes, so every packaging path emits this file byte for byte.
+        const char* const kUserPlaceholder =
+            "This folder is the app's PORTABLE user-data root.\n"
+            "\n"
+            "Run from a writable folder (an unzipped copy), everything the app writes - logs,\n"
+            "recordings, exports, screenshots, imgui.ini, settings - lands here, under user://.\n"
+            "Installed to a read-only location (Program Files), the same user:// paths resolve\n"
+            "to %LOCALAPPDATA%\\<AppName> instead and this folder stays empty. The app never\n"
+            "writes anywhere else inside its install directory.\n"
+            "\n"
+            "Deleting this folder discards that data; the app recreates it on the next run.\n";
+
         void CopyProjectContent(const fs::path& srcRoot, const fs::path& dstRoot)
         {
             std::error_code ec;
@@ -114,15 +129,89 @@ namespace Starforge
         CopyProjectContent(in.ProjectContentDir, assetsDst / "projects" / in.ProjectName);
 
         // boot.cfg — Main.cpp launches this project (and sets the S6 app identity)
-        // when run with no --project flag.
+        // when run with no --project flag. ASCII only: Stage-AppPackage.ps1 writes
+        // the same three lines byte for byte (AP-P1's one-layout contract).
         {
             std::ofstream boot(outRoot / "boot.cfg", std::ios::trunc);
-            boot << "# Cosmic packaged app — launched with no --project flag; also sets\n"
+            boot << "# Cosmic packaged app - launched with no --project flag; also sets\n"
                  << "# the per-app user:// data identity (S6).\n"
                  << in.ProjectName << "\n";
         }
 
+        // licenses/ — the third-party payload, driven by installer/licenses/MANIFEST.txt
+        // so the editor path and the CLI stager can never drift apart (AP-P1). A listed
+        // source that is missing FAILS the stage; it is never silently dropped.
+        if (!StageLicenses(ctx, in, outRoot.generic_string()))
+            return false;
+
+        // user/ — the portable-mode writable root (AP-P1 / section 12). The placeholder
+        // makes the folder survive a zip and states the policy to whoever opens the
+        // install directory.
+        {
+            fs::create_directories(outRoot / "user", ec);
+            std::ofstream note(outRoot / "user" / "README.txt", std::ios::trunc);
+            note << kUserPlaceholder;
+        }
+
         ctx.Log("[Package] Staged '" + in.ProjectName + "' -> " + fs::absolute(outRoot, ec).generic_string());
+        return true;
+    }
+
+    // installer/licenses/MANIFEST.txt rows are "<path relative to the SDK root> |
+    // <staged name>"; '#' comments and blank lines are ignored. Same parse, same
+    // one source of truth, as installer/Stage-AppPackage.ps1.
+    bool Packager::StageLicenses(EditorContext& ctx, const PackageInputs& in, const std::string& outDistDir)
+    {
+        std::error_code ec;
+        const fs::path outRoot  = outDistDir;
+        const fs::path manifest = fs::path(in.SdkDir) / "installer" / "licenses" / "MANIFEST.txt";
+        std::ifstream f(manifest);
+        if (!f)
+        {
+            ctx.Log("[Package] License manifest missing: " + manifest.generic_string(), LogSeverity::Error);
+            return false;
+        }
+        const fs::path licDst = outRoot / "licenses";
+        fs::create_directories(licDst, ec);
+
+        auto trim = [](const std::string& s)
+        {
+            const size_t p = s.find_first_not_of(" \t\r\n");
+            if (p == std::string::npos) return std::string();
+            const size_t q = s.find_last_not_of(" \t\r\n");
+            return s.substr(p, q - p + 1);
+        };
+
+        std::string line;
+        int staged = 0;
+        while (std::getline(f, line))
+        {
+            const std::string t = trim(line);
+            if (t.empty() || t[0] == '#') continue;
+
+            const size_t bar = t.find('|');
+            if (bar == std::string::npos)
+            {
+                ctx.Log("[Package] Bad license manifest row: " + t, LogSeverity::Error);
+                return false;
+            }
+            const fs::path src = fs::path(in.SdkDir) / trim(t.substr(0, bar));
+            const fs::path dst = licDst / trim(t.substr(bar + 1));
+            if (!fs::exists(src, ec))
+            {
+                ctx.Log("[Package] License source missing: " + src.generic_string(), LogSeverity::Error);
+                return false;
+            }
+            fs::copy_file(src, dst, fs::copy_options::overwrite_existing, ec);
+            ++staged;
+        }
+        if (staged == 0)
+        {
+            ctx.Log("[Package] License manifest staged nothing — refusing to ship without licenses.",
+                    LogSeverity::Error);
+            return false;
+        }
+        ctx.Log("[Package] Staged " + std::to_string(staged) + " license file(s).");
         return true;
     }
 
