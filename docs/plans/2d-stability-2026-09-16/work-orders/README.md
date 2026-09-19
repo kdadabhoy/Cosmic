@@ -148,3 +148,14 @@ KI-8 (PS5.1 empty-output evidence handling) and KI-9 (owner cancellation grace)
 have failing-before and passing-after regressions; no verdict or deadline was relaxed.
 The caller/module lifetime contract is in [serial ownership](../contracts/serial-ownership.md).
 T04 remains ENVIRONMENT_BLOCKED on all six physical/virtual OS-transport seats.
+
+---
+
+## Campaign closed (2026-09-18)
+
+WO-00 through WO-10 are complete on `main`. **WO-11, WO-12 and WO-13 were never started and are
+superseded** by the 2D App Platform campaign: packaging → `AP-P1`, documentation → `AP-D1` + `AP-D2`,
+qualification → `AP-Q1`, all under `docs/plans/app-platform-2026-09-18/`. That packet also adds the
+3D purge (`AP-05`), the app-authoring foundation (`AP-01`), widgets, editor UX, templates and the
+PendulumLab sample. `contracts/known-issues.md` in this directory **remains the single running
+known-issue register** (next entry KI-57) for every later campaign.

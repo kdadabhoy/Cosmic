@@ -145,13 +145,13 @@ namespace
             while (getError() != 0) {}
             // The engine may leave one of its FBOs bound at frame end; the presented image
             // is the DEFAULT framebuffer's front buffer, so bind it for the read and restore.
-            int prevRead = 0; getIntegerv(0x8CAA /*GL_READ_FRAMEBUFFER_BINDING*/, &prevRead);
-            bindFbo(0x8CA8 /*GL_READ_FRAMEBUFFER*/, 0);
-            readBuffer(0x0404 /*GL_FRONT*/);
-            pixelStore(0x0D05 /*GL_PACK_ALIGNMENT*/, 1);
-            readPixels(px, py, 1, 1, 0x1908 /*GL_RGBA*/, 0x1401 /*GL_UNSIGNED_BYTE*/, rgba);
-            readBuffer(0x0405 /*GL_BACK*/);
-            bindFbo(0x8CA8 /*GL_READ_FRAMEBUFFER*/, (unsigned)prevRead);
+            int prevRead = 0; getIntegerv(0x8CAA /*READ_FRAMEBUFFER_BINDING*/, &prevRead);
+            bindFbo(0x8CA8 /*READ_FRAMEBUFFER*/, 0);
+            readBuffer(0x0404 /*FRONT*/);
+            pixelStore(0x0D05 /*PACK_ALIGNMENT*/, 1);
+            readPixels(px, py, 1, 1, 0x1908 /*RGBA*/, 0x1401 /*UNSIGNED_BYTE*/, rgba);
+            readBuffer(0x0405 /*BACK*/);
+            bindFbo(0x8CA8 /*READ_FRAMEBUFFER*/, (unsigned)prevRead);
             if (const unsigned err = getError()) { ++report->pixelOccluded; report->dbgGlError = (int)err; return; }
             ++report->pixelChecked;
             report->lastPixelR = rgba[0]; report->lastPixelG = rgba[1]; report->lastPixelB = rgba[2];

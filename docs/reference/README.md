@@ -219,11 +219,13 @@ script `tests/check_docs_coverage.ps1` (work order D5) diffs `Cosmic.h` against 
 | `utils/ImageIO.h` | [assets-io.md](assets-io.md) |
 | `utils/ExeResources.h` | [assets-io.md](assets-io.md) |
 | `utils/Branding.h` | [assets-io.md](assets-io.md) |
+| `utils/AtomicOutput.h` | [assets-io.md](assets-io.md) |
 | `audio/AudioEngine.h` | [audio.md](audio.md) |
 | `audio/Sound.h` | [audio.md](audio.md) |
 | `serial/SerialPort.h` | [serial-telemetry.md](serial-telemetry.md) |
 | `serial/SerialLink.h` | [serial-telemetry.md](serial-telemetry.md) |
 | `serial/Framing.h` | [serial-telemetry.md](serial-telemetry.md) |
+| `serial/ISerialTransport.h` | [serial-telemetry.md](serial-telemetry.md) |
 | `telemetry/TelemetryChannel.h` | [serial-telemetry.md](serial-telemetry.md) |
 | `telemetry/EntitySelection.h` | [serial-telemetry.md](serial-telemetry.md) |
 | `telemetry/DataRecorder.h` | [serial-telemetry.md](serial-telemetry.md) |

@@ -80,7 +80,7 @@ namespace
         std::vector<unsigned char> rgba((size_t)w * h * 4);
         int prevRead = 0; getIntegerv(0x8CAA, &prevRead);
         bindFbo(0x8CA8, 0);
-        readBuffer(0x0404 /*GL_FRONT*/);
+        readBuffer(0x0404 /*FRONT*/);
         pixelStore(0x0D05, 1);
         readPixels(0, 0, w, h, 0x1908, 0x1401, rgba.data());
         readBuffer(0x0405);
