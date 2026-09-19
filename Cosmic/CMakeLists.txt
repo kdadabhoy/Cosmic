@@ -103,62 +103,6 @@ if(COSMIC_WITH_JOLT)
     add_subdirectory(dependencies/JoltPhysics)
 endif()
 
-# Recast & Detour navigation (N1, Phase 26) — vendored static lib, Zlib. Built
-# from its own curated CMakeLists (dependencies/recastnavigation/CMakeLists.txt);
-# linked PRIVATE into Cosmic below so the Recast/Detour types never leak past the
-# engine's nav/ TUs (the Jolt firewall — only nav/*.cpp include <Recast.h> etc.,
-# behind the NavWorld pimpl). Navigation is 3D-only, so the 2D configuration never
-# configures it — 26 TUs, and src/nav/ + scene/SceneNav.* go with it.
-if(NOT COSMIC_2D_ONLY)
-    add_subdirectory(dependencies/recastnavigation)
-endif()
-
-# assimp (A1, Phase 20) — vendored mesh-import backend, BSD-3-Clause, pinned +
-# trimmed (see dependencies/assimp/README-COSMIC.md). Default ON since A1; the
-# OBJ-only fallback stays one configure flag away. Built through assimp's OWN
-# CMakeLists — its cmake_minimum_required is 3.22, so CMP0077 lets these plain
-# variables override its option() defaults. Static, linked PRIVATE into
-# Cosmic.dll below (the Jolt firewall: only assets/MeshImport.cpp includes
-# assimp headers, so aiScene types never reach game/project DLLs).
-# The 2D configuration never configures it either (159 TUs — the dominant term in
-# the 2D build-time win); assets/MeshImport.cpp is excluded there in step 3.
-option(COSMIC_WITH_ASSIMP "FBX/STL/DAE/PLY mesh import via vendored assimp" ON)
-if(COSMIC_WITH_ASSIMP AND NOT COSMIC_2D_ONLY)
-    set(ASSIMP_BUILD_ALL_IMPORTERS_BY_DEFAULT OFF)   # importers trimmed to the E16 five
-    set(ASSIMP_BUILD_FBX_IMPORTER ON)
-    set(ASSIMP_BUILD_OBJ_IMPORTER ON)
-    set(ASSIMP_BUILD_STL_IMPORTER ON)
-    set(ASSIMP_BUILD_COLLADA_IMPORTER ON)
-    set(ASSIMP_BUILD_PLY_IMPORTER ON)
-    set(ASSIMP_NO_EXPORT ON)                          # exporters compiled out
-    set(ASSIMP_BUILD_TESTS OFF)
-    set(ASSIMP_BUILD_ASSIMP_TOOLS OFF)
-    set(ASSIMP_BUILD_SAMPLES OFF)
-    set(ASSIMP_BUILD_DOCS OFF)
-    set(ASSIMP_INSTALL OFF)
-    set(ASSIMP_BUILD_ZLIB ON)                         # vendored zlib, no system dep
-    set(ASSIMP_WARNINGS_AS_ERRORS OFF)
-    set(ASSIMP_IGNORE_GIT_HASH ON)                    # vendored tree has no .git
-    set(ASSIMP_BUILD_USE_CCACHE OFF)                  # would set a GLOBAL launcher hook
-    set(ASSIMP_INJECT_DEBUG_POSTFIX OFF)
-    set(BUILD_SHARED_LIBS OFF)
-    # assimp 5.4.3's mkdir custom commands predate CMP0175; OLD keeps the
-    # legacy POST_BUILD assumption without a per-configure warning wall.
-    set(CMAKE_POLICY_DEFAULT_CMP0175 OLD)
-    add_subdirectory(dependencies/assimp)
-    unset(CMAKE_POLICY_DEFAULT_CMP0175)
-    # assimp's dir scope pins C++17; hoist its target to the engine's /std:c++20
-    # so MSVC sees ONE standard flag (the Jolt precedent). /W0 silences the
-    # vendored targets only (the engine's zero-warning bar is for our code) —
-    # spelled /W0, not /w, so the VS generator emits a WarningLevel and MSBuild
-    # doesn't inject its /W1 default next to it (D9025).
-    set_target_properties(assimp PROPERTIES CXX_STANDARD 20)
-    if(MSVC)
-        target_compile_options(assimp PRIVATE /W0)
-        target_compile_options(zlibstatic PRIVATE /W0)
-    endif()
-endif()
-
 # ----------------------------
 # 3. Engine Source Files
 # ----------------------------
@@ -169,49 +113,6 @@ file(GLOB_RECURSE COSMIC_SOURCES
     "dependencies/stb_truetype/*.cpp"
     "dependencies/stb_image_write/*.cpp"
 )
-
-# The 2D partition (Phase 29 §4). GLOB_RECURSE yields absolute paths, so every
-# pattern is anchored on its src/ subdirectory. One list(FILTER) per row of the §4
-# table, in table order, so the two stay auditable against each other.
-#
-# Several targets do not exist yet — Scene3D.cpp, Components3D.h and
-# TypeRegistry3D.cpp arrive in W4/W5. A pattern that matches nothing is harmless,
-# and writing them now means those phases add files without editing this block.
-# Note the GLOB has no CONFIGURE_DEPENDS: adding or removing an engine source file
-# needs an explicit reconfigure, not just a rebuild.
-if(COSMIC_2D_ONLY)
-    # Whole 3D subsystem trees.
-    list(FILTER COSMIC_SOURCES EXCLUDE REGEX "/src/(terrain|voxel|water|nav|particles)/")
-
-    # renderer/ — the 3D passes and the GPU resources only they own. Renderer,
-    # Renderer2D, RenderCommand, RendererAPI, RenderPass, RenderQueue,
-    # PostProcessStack, Light2DRenderer and SceneRenderer all stay: 2D composites
-    # through the same HDR → tonemap → overlay spine.
-    list(FILTER COSMIC_SOURCES EXCLUDE REGEX "/src/renderer/(Renderer3D|EnvironmentMap|ShadowMap|CoverageCapture|InstanceSet)\\.")
-
-    # graphics/ — model loading and skeletal animation. Mesh, Material, Buffer,
-    # Font, Gizmo, Texture and Shader are generic GPU infrastructure and stay.
-    list(FILTER COSMIC_SOURCES EXCLUDE REGEX "/src/graphics/(Model|Skeleton|AnimationClip|CgltfImpl)\\.")
-
-    # camera/ — the §4.2 audit-at-implementation set, settled in W6. Camera,
-    # PerspectiveCamera, OrthographicCamera, Camera2D, OrbitCameraController and
-    # FlyCameraController are all 3D-free and stay. NavigationCube does NOT: its
-    # Render() draws the orientation gizmo with direct Renderer3D BeginScene /
-    # DrawMesh / DrawWireBox / DrawAxes calls, and a 2D viewport has no use for a
-    # 3D orientation cube anyway.
-    list(FILTER COSMIC_SOURCES EXCLUDE REGEX "/src/camera/NavigationCube\\.")
-
-    # scene/ — the 3D half of the scene layer. Scene.cpp, SceneSerializer and the
-    # ECS core stay; Scene3D.cpp and Components3D.h are the W4/W5 split products.
-    list(FILTER COSMIC_SOURCES EXCLUDE REGEX "/src/scene/(Scene3D|Components3D|SceneNav|ScenePicker|WorldSystemRecipes)\\.")
-
-    # reflect/ — the 3D component registrations (W4). TypeRegistry.cpp stays.
-    list(FILTER COSMIC_SOURCES EXCLUDE REGEX "/src/reflect/TypeRegistry3D\\.")
-
-    # assets/ — mesh import. AssetLibrary stays; the header stays visible so the
-    # fences that reference it read the same on both configurations.
-    list(FILTER COSMIC_SOURCES EXCLUDE REGEX "/src/assets/MeshImport\\.cpp$")
-endif()
 
 # physics/backends/ (W3) — the Jolt backend is the only TU that includes
 # <Jolt/...>, so COSMIC_WITH_JOLT=OFF drops it and leaves the null backend plus
@@ -227,7 +128,7 @@ add_library(Cosmic SHARED ${COSMIC_SOURCES})
 # 4. Engine Configuration and Linking
 # ----------------------------
 target_include_directories(Cosmic PUBLIC src)
-target_include_directories(Cosmic PRIVATE dependencies/stb_image dependencies/stb_truetype dependencies/stb_image_write dependencies/miniaudio dependencies/cgltf)
+target_include_directories(Cosmic PRIVATE dependencies/stb_image dependencies/stb_truetype dependencies/stb_image_write dependencies/miniaudio)
 target_compile_definitions(Cosmic PRIVATE COSMIC_BUILD_DLL)
 
 # COSMIC_2D_ONLY is PUBLIC, unlike every other engine define: Starforge, the game
@@ -255,29 +156,17 @@ target_link_libraries(Cosmic PUBLIC imgui implot glad glm entt glfw OpenGL::GL s
 # include dirs — ImGuizmo stays behind graphics/Gizmo (its symbols aren't
 # dllexported, so leaking the headers would only invite link errors). Jolt is the
 # same story: only physics/*.cpp include <Jolt/...>, behind the PhysicsWorld pimpl.
-# RecastNavigation likewise: only nav/*.cpp include <Recast.h>/<Detour...>, behind
-# the NavWorld pimpl. Both are generator-expression gated so the link list follows
-# the same conditions as the add_subdirectory calls above — an unconfigured target
-# name would otherwise reach the linker as a bare library.
+# Jolt is generator-expression gated so the link list follows the same condition
+# as the add_subdirectory call above — an unconfigured target name would
+# otherwise reach the linker as a bare library.
 target_link_libraries(Cosmic PRIVATE tomlplusplus ImGuizmo nlohmann_json
-    $<$<BOOL:${COSMIC_WITH_JOLT}>:Jolt>
-    $<$<NOT:$<BOOL:${COSMIC_2D_ONLY}>>:RecastNavigation>)
+    $<$<BOOL:${COSMIC_WITH_JOLT}>:Jolt>)
 
 # Compile-time counterpart of the option: PhysicsBackend.cpp calls
 # RegisterJoltPhysicsBackend() and defaults the registry to "jolt" only when this
 # is defined; without it the default is "null".
 if(COSMIC_WITH_JOLT)
     target_compile_definitions(Cosmic PRIVATE COSMIC_WITH_JOLT)
-endif()
-
-# assimp backend (A1): PRIVATE link + define — MeshImport.cpp's #ifdef block is
-# the only consumer; MeshImport::AssimpEnabled() reports the gate at runtime. The
-# condition must match the add_subdirectory above exactly: in the 2D configuration
-# the target does not exist, and a bare "assimp" here would reach the linker as
-# assimp.lib.
-if(COSMIC_WITH_ASSIMP AND NOT COSMIC_2D_ONLY)
-    target_link_libraries(Cosmic PRIVATE assimp)
-    target_compile_definitions(Cosmic PRIVATE COSMIC_WITH_ASSIMP)
 endif()
 
 # Borderless custom window chrome uses DWM (drop shadow) on Windows.

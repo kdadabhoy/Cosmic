@@ -1,0 +1,77 @@
+# AP-05 part A build excerpts (full *.log files are gitignored; these are the load-bearing lines)
+
+## Toolchain
+cmake: cmake version 4.3.1-msvc1 (VS-bundled, not on PATH)
+MSVC: CMAKE_CXX_COMPILER_VERSION "19.51.36248.0"
+MSBuild: MSBuild version 18.7.8+1ac568fee
+generator: CMAKE_GENERATOR:INTERNAL=Visual Studio 18 2026
+
+## 1. Pre-purge baseline (HEAD 7479927, existing build/ reconfigured in place, Debug incremental)
+configure: cmake -S . -B build -A x64 -DCOSMIC_2D_ONLY=ON -DCOSMIC_BUILD_TESTS=ON
+-- --> Skipping game projects: AnalysisSample
+-- --> Auto-detected game project: SF_Telem
+-- --> Auto-detected game project: Starforge
+-- Configuring done (0.3s)
+-- Generating done (1.2s)
+configure exit=0
+build: cmake --build build --config Debug --parallel
+build exit=0
+warnings ('warning [A-Z]' lines): 0
+CosmicTests.exe --count           -> 454
+CosmicTests.exe --count --no-skip -> 467
+
+## 2. Post-purge clean configure (build/ deleted first)
+configure: cmake -S . -B build -A x64 -DCOSMIC_2D_ONLY=ON -DCOSMIC_BUILD_TESTS=ON -DCOSMIC_BUILD_RENDER_TESTS=ON
+-- --> Skipping game projects: AnalysisSample
+-- --> Auto-detected game project: SF_Telem
+-- --> Auto-detected game project: Starforge
+-- Configuring done (4.2s)
+-- Generating done (0.5s)
+configure exit=0
+effective cache values:
+  COSMIC_2D_ONLY:BOOL=ON
+  COSMIC_BUILD_RENDER_TESTS:BOOL=ON
+  COSMIC_BUILD_TESTS:BOOL=ON
+  COSMIC_SKIP_PROJECTS:STRING=AnalysisSample
+  COSMIC_WITH_JOLT:BOOL=ON
+  (COSMIC_WITH_ASSIMP no longer exists - the option went with the assimp block)
+
+## 3. Post-purge Debug build: cmake --build build --config Debug --parallel
+build exit=0
+warnings: 0   errors: 0
+  WO07NoExport.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\WO07NoExport.dll
+  Cosmic.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\Cosmic.dll
+  WO07LifetimeFixture.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\WO07LifetimeFixture.dll
+  StarforgeEditor.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\Starforge.exe
+  CosmicApp.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\CosmicApp.exe
+  WO10ClockFixture.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\WO10ClockFixture.dll
+  WO07ModuleFixture.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\WO07ModuleFixture.dll
+  WO07PlotFixture.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\WO07PlotFixture.dll
+  WO07TeardownFixture.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\WO07TeardownFixture.dll
+  CosmicRenderTests.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\CosmicRenderTests.exe
+  SF_Telem.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\SF_Telem.dll
+  WO06HostFixture.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\WO06HostFixture.dll
+  WO07UiCyclesFixture.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\WO07UiCyclesFixture.dll
+  WO05HostFixture.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\WO05HostFixture.dll
+  Starforge.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\Starforge.dll
+  CosmicTests.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\CosmicTests.exe
+
+## 4. Post-purge Release build: cmake --build build --config Release --parallel
+build exit=0
+warnings: 0   errors: 0
+  WO07NoExport.vcxproj -> C:\dev\Cosmic\build\Runtime\Release\WO07NoExport.dll
+  Cosmic.vcxproj -> C:\dev\Cosmic\build\Runtime\Release\Cosmic.dll
+  WO07LifetimeFixture.vcxproj -> C:\dev\Cosmic\build\Runtime\Release\WO07LifetimeFixture.dll
+  CosmicApp.vcxproj -> C:\dev\Cosmic\build\Runtime\Release\CosmicApp.exe
+  WO07TeardownFixture.vcxproj -> C:\dev\Cosmic\build\Runtime\Release\WO07TeardownFixture.dll
+  WO10ClockFixture.vcxproj -> C:\dev\Cosmic\build\Runtime\Release\WO10ClockFixture.dll
+  WO07ModuleFixture.vcxproj -> C:\dev\Cosmic\build\Runtime\Release\WO07ModuleFixture.dll
+  WO05HostFixture.vcxproj -> C:\dev\Cosmic\build\Runtime\Release\WO05HostFixture.dll
+  WO06HostFixture.vcxproj -> C:\dev\Cosmic\build\Runtime\Release\WO06HostFixture.dll
+  CosmicRenderTests.vcxproj -> C:\dev\Cosmic\build\Runtime\Release\CosmicRenderTests.exe
+  WO07PlotFixture.vcxproj -> C:\dev\Cosmic\build\Runtime\Release\WO07PlotFixture.dll
+  StarforgeEditor.vcxproj -> C:\dev\Cosmic\build\Runtime\Release\Starforge.exe
+  SF_Telem.vcxproj -> C:\dev\Cosmic\build\Runtime\Release\SF_Telem.dll
+  WO07UiCyclesFixture.vcxproj -> C:\dev\Cosmic\build\Runtime\Release\WO07UiCyclesFixture.dll
+  Starforge.vcxproj -> C:\dev\Cosmic\build\Runtime\Release\Starforge.dll
+  CosmicTests.vcxproj -> C:\dev\Cosmic\build\Runtime\Release\CosmicTests.exe

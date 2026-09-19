@@ -5,14 +5,12 @@
 #include <doctest.h>
 
 #include "camera/OrbitCameraController.h"
-#include "camera/NavigationCube.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <cmath>
 
 using Cosmic::OrbitCameraController;
-using Cosmic::NavigationCube;
 using Cosmic::ViewPreset;
 
 namespace

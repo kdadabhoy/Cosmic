@@ -1,0 +1,60 @@
+# Verify-AP05Purge.ps1 WITHOUT -AllowFences (B06 strict) on the part-A tree - expected to FAIL until part B removes the fences
+[PASS] paths-absent: none of the 102 Part-A paths exists
+[PASS] build-files-clean: no CMake/preset line names a purged dep dir, partition rule, 3D test block, render_3d.cpp, purged editor TU or 3D preset
+[FAIL] fence-uses: 240 COSMIC_2D_ONLY preprocessor use(s) remain
+       uses (240):
+         Cosmic/src/Cosmic.h:35: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/Cosmic.h:45: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/Cosmic.h:50: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/Cosmic.h:71: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/Cosmic.h:79: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/Cosmic.h:111: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/Cosmic.h:116: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/Cosmic.h:127: #ifndef COSMIC_2D_ONLY
+         ... 232 more
+[FAIL] includes-of-deleted: 71 #include(s) of a purged header or tree
+       fenced includes (71):
+         Cosmic/src/Cosmic.h:36: #include "renderer/Renderer3D.h"
+         Cosmic/src/Cosmic.h:46: #include "renderer/EnvironmentMap.h"     // S6.3 â€” image-based lighting + skybox
+         Cosmic/src/Cosmic.h:47: #include "renderer/ShadowMap.h"          // S6.4 â€” directional sun shadows
+         Cosmic/src/Cosmic.h:51: #include "renderer/InstanceSet.h"        // F5  â€” per-instance transform pool (instanced draw)
+         Cosmic/src/Cosmic.h:52: #include "renderer/CoverageCapture.h"    // F8  â€” top-down snow/coverage accumulation mask
+         Cosmic/src/Cosmic.h:53: #include "terrain/Terrain.h"             // S8  â€” heightmap terrain (quadtree LOD + queries)
+         Cosmic/src/Cosmic.h:54: #include "water/Water.h"                 // S9  â€” Gerstner water surface + buoyancy queries
+         Cosmic/src/Cosmic.h:55: #include "water/Presets.h"               // E18 â€” ocean/lake/storm water presets
+         ... 63 more
+[FAIL] identifiers: 234 3D identifier mention(s) in Cosmic/src outside History: notes (150 fenced, 68 comment, 16 code)
+       code lines (16):
+         Cosmic/src/physics/PhysicsWorld.h:49: class Renderer3DDebugSink;   // fwd (J8) â€” not used publicly here
+         Cosmic/src/renderer/BindingPoints.h:88: constexpr uint32_t TexUnitShadowMap = 11;
+         Cosmic/src/renderer/PostProcessStack.cpp:196: if (m_GodRaysEnabled && m_ShaftShadowMapID != 0)
+         Cosmic/src/renderer/PostProcessStack.cpp:307: RenderCommand::BindTextureSlot(1, m_ShaftShadowMapID);
+         Cosmic/src/renderer/PostProcessStack.cpp:308: m_GodRaysShader->SetInt("u_ShadowMap", 1);
+         Cosmic/src/renderer/PostProcessStack.h:140: void SetSunShaftInputs(uint32_t shadowMapID, const glm::mat4& lightViewProj,
+         Cosmic/src/renderer/PostProcessStack.h:143: m_ShaftShadowMapID = shadowMapID; m_ShaftLightViewProj = lightViewProj;
+         Cosmic/src/renderer/PostProcessStack.h:273: uint32_t  m_ShaftShadowMapID = 0;
+         ... 8 more
+       comment lines (68):
+         Cosmic/src/Cosmic.h:108: // terrain/water/particles/voxels, the geometry-derived colliders and navigation.
+         Cosmic/src/camera/Camera.h:12: * Renderer3D::BeginScene, and RenderPass all take `const Camera&` and call only
+         Cosmic/src/camera/FlyCameraController.h:49: * supplies it (typically Terrain::SampleHeight); returns the world-space
+         Cosmic/src/camera/PerspectiveCamera.h:11: * camera for the 3D viewport (Renderer3D), simulators, and any world where
+         Cosmic/src/graphics/Material.h:82: * Used by Renderer3D's S12.3 auto-instancing to bind this material's
+         Cosmic/src/graphics/Material.h:95: * Renderer3D's queue draws transparent-material meshes AFTER all opaques,
+         Cosmic/src/graphics/Material.h:109: * Renderer3D's queue may collapse runs of identical (mesh, material)
+         Cosmic/src/graphics/Material.h:122: * attributes (e.g. PBR.glsl -> PBRSkinned.glsl). Renderer3D's
+         ... 60 more
+       fenced lines (150):
+         Cosmic/src/Cosmic.h:36: #include "renderer/Renderer3D.h"
+         Cosmic/src/Cosmic.h:46: #include "renderer/EnvironmentMap.h"     // S6.3 â€” image-based lighting + skybox
+         Cosmic/src/Cosmic.h:47: #include "renderer/ShadowMap.h"          // S6.4 â€” directional sun shadows
+         Cosmic/src/Cosmic.h:53: #include "terrain/Terrain.h"             // S8  â€” heightmap terrain (quadtree LOD + queries)
+         Cosmic/src/Cosmic.h:80: #include "assets/MeshImport.h"        // E16 â€” model import (OBJ + gated assimp) + .cmeta
+         Cosmic/src/Cosmic.h:128: #include "scene/WorldSystemRecipes.h"  // E18 â€” terrain/water/particle recipe -> spec mapping
+         Cosmic/src/assets/AssetLibrary.h:90: /** @brief Cached mesh. Miss imports via MeshImport (OBJ + gated assimp), applying .cmeta. */
+         Cosmic/src/layers/PlayerLayer.cpp:209: m_TrackedScene->SyncWorldSystems();          // build recipe terrain etc. first
+         ... 142 more
+
+[AP05] mode=B06 strict  repo=C:\dev\Cosmic  paths=102
+[doctest] test cases: 5 | 2 passed | 3 failed
+exit=1

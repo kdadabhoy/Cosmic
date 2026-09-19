@@ -19,7 +19,6 @@ add_executable(CosmicRenderTests
     render_main.cpp
     GoldenImage.cpp
     render_2d.cpp
-    render_3d.cpp
     # WO-08 (2D stability) — the renderer / camera / capture safety net, R01–R07.
     # Shared helpers in wo08_common.h; custom-shader fixtures under fixtures/wo08.
     render_wo08_primitives.cpp

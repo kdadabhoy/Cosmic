@@ -18,12 +18,6 @@
 #include "scripts/PhysicsBall.h"
 #include "scripts/PaddleController.h"
 #include "scripts/PongBall.h"
-#ifndef COSMIC_2D_ONLY
-// 3D-engine-only samples (WO-07 / KI-26): the 2D SDK ships no voxel volume and
-// no navmesh runtime, so these do not compile — or link — against it.
-#include "scripts/VoxelDigger.h"
-#include "scripts/NavCritter.h"
-#endif
 
 CS_MODULE_BEGIN(@PROJECT_NAME@)
     CS_SCRIPT(HoverController)
@@ -58,16 +52,6 @@ CS_MODULE_BEGIN(@PROJECT_NAME@)
     CS_SCRIPT(PhysicsBall)
     CS_END;
 
-#ifndef COSMIC_2D_ONLY
-    // Voxel place/break (Phase 18 / V4) — LMB digs, RMB places along forward.
-    // 3D engine only (WO-07 / KI-26).
-    CS_SCRIPT(VoxelDigger)
-        CS_FIELD(Reach).Range(1.0f, 32.0f)
-        CS_FIELD(PlaceBlock).Range(0.0f, 16.0f)
-        CS_FIELD(EyeHeight).Range(0.0f, 4.0f)
-    CS_END;
-#endif
-
     // ForgePong (Phase 17 / U8) — 2D sprites + UI + flow working together.
     CS_SCRIPT(PaddleController)
         CS_FIELD(Speed).Range(0.0f, 30.0f)
@@ -82,14 +66,4 @@ CS_MODULE_BEGIN(@PROJECT_NAME@)
         CS_FIELD(CourtHalfH).Range(1.0f, 32.0f)
         CS_FIELD(WinScore).Range(1.0f, 99.0f)
     CS_END;
-
-#ifndef COSMIC_2D_ONLY
-    // Nav AI (Phase 26 / N5) — one system drives every "Critter" NavAgent: patrol a
-    // waypoint loop around spawn, chase the "Player" when near. 3D engine only
-    // (WO-07 / KI-26).
-    CS_SYSTEM(NavCritter).Requires<Cosmic::NavAgentComponent>().WithTag("Critter")
-        CS_FIELD(ChaseRadius).Range(0.0f, 40.0f)
-        CS_FIELD(PatrolRadius).Range(1.0f, 40.0f)
-    CS_END;
-#endif
 CS_MODULE_END()

@@ -160,31 +160,16 @@ script `tests/check_docs_coverage.ps1` (work order D5) diffs `Cosmic.h` against 
 | `graphics/SubTexture2D.h` | [rendering-2d.md](rendering-2d.md) |
 | `graphics/Font.h` | [rendering-2d.md](rendering-2d.md) |
 | `renderer/Light2DRenderer.h` | [rendering-2d.md](rendering-2d.md) |
-| `renderer/Renderer3D.h` ³ᴰ | [rendering-3d.md](rendering-3d.md) |
 | `graphics/Mesh.h` | [rendering-3d.md](rendering-3d.md) |
-| `graphics/Model.h` ³ᴰ | [rendering-3d.md](rendering-3d.md) |
-| `renderer/InstanceSet.h` ³ᴰ | [rendering-3d.md](rendering-3d.md) |
 | `renderer/RenderQueue.h` | [rendering-3d.md](rendering-3d.md) |
 | `math/Frustum.h` | [math.md](math.md) |
 | `renderer/SceneRenderer.h` | [rendering-pipeline.md](rendering-pipeline.md) |
 | `renderer/PostProcessStack.h` | [rendering-pipeline.md](rendering-pipeline.md) |
-| `renderer/EnvironmentMap.h` ³ᴰ | [rendering-pipeline.md](rendering-pipeline.md) |
-| `renderer/ShadowMap.h` ³ᴰ | [rendering-pipeline.md](rendering-pipeline.md) |
-| `renderer/CoverageCapture.h` ³ᴰ | [rendering-pipeline.md](rendering-pipeline.md) |
-| `terrain/Terrain.h` ³ᴰ | [world-systems.md](world-systems.md) |
-| `water/Water.h` ³ᴰ | [world-systems.md](world-systems.md) |
-| `particles/ParticleSystem.h` ³ᴰ | [world-systems.md](world-systems.md) |
-| `particles/Presets.h` ³ᴰ | [world-systems.md](world-systems.md) |
-| `water/Presets.h` ³ᴰ | [world-systems.md](world-systems.md) |
-| `water/GerstnerWave.h` ³ᴰ | [world-systems.md](world-systems.md) |
-| `scene/WorldSystemRecipes.h` ³ᴰ | [world-systems.md](world-systems.md) |
 | `scene/Scene.h` | [ecs.md](ecs.md) |
 | `scene/Entity.h` | [ecs.md](ecs.md) |
 | `scene/Components.h` | [ecs.md](ecs.md) |
-| `scene/Components3D.h` ³ᴰ | [ecs.md](ecs.md) |
 | `scene/System.h` | [ecs.md](ecs.md) |
 | `scene/ComponentRegistry.h` | [ecs.md](ecs.md) |
-| `scene/ScenePicker.h` ³ᴰ | [cameras.md](cameras.md) |
 | `scene/SelectableComponent.h` | [ecs.md](ecs.md) |
 | `scene/SceneSerializer.h` | [ecs.md](ecs.md) |
 | `scene/SceneManager.h` | [ecs.md](ecs.md) |
@@ -201,7 +186,6 @@ script `tests/check_docs_coverage.ps1` (work order D5) diffs `Cosmic.h` against 
 | `camera/OrbitCameraController.h` | [cameras.md](cameras.md) |
 | `camera/FlyCameraController.h` | [cameras.md](cameras.md) |
 | `camera/Camera2DController.h` | [cameras.md](cameras.md) |
-| `camera/NavigationCube.h` ³ᴰ⁺ | [cameras.md](cameras.md) |
 | `graphics/Gizmo.h` | [cameras.md](cameras.md) |
 | `math/Spatial.h` | [math.md](math.md) |
 | `math/Integrators.h` | [math.md](math.md) |
@@ -213,7 +197,6 @@ script `tests/check_docs_coverage.ps1` (work order D5) diffs `Cosmic.h` against 
 | `utils/FileSystem.h` | [assets-io.md](assets-io.md) |
 | `utils/Config.h` | [assets-io.md](assets-io.md) |
 | `utils/DataExport.h` | [assets-io.md](assets-io.md) |
-| `assets/MeshImport.h` ³ᴰ | [assets-io.md](assets-io.md) |
 | `utils/FileWatcher.h` | [assets-io.md](assets-io.md) |
 | `utils/FileDialog.h` | [assets-io.md](assets-io.md) |
 | `utils/ImageIO.h` | [assets-io.md](assets-io.md) |
@@ -252,16 +235,6 @@ script `tests/check_docs_coverage.ps1` (work order D5) diffs `Cosmic.h` against 
 | `core/UUID.h` | [core.md](core.md) |
 | `core/Version.h` | [core.md](core.md) |
 | `layers/PlayerLayer.h` | [core.md](core.md) |
-| `graphics/Skeleton.h` ³ᴰ | [../guide/animation.md](../guide/animation.md) |
-| `graphics/AnimationClip.h` ³ᴰ | [../guide/animation.md](../guide/animation.md) |
-| `nav/NavWorld.h` ³ᴰ | [../guide/navigation-and-ai.md](../guide/navigation-and-ai.md) |
-| `nav/NavTypes.h` ³ᴰ | [../guide/navigation-and-ai.md](../guide/navigation-and-ai.md) |
-| `scene/SceneNav.h` ³ᴰ | [../guide/navigation-and-ai.md](../guide/navigation-and-ai.md) |
-| `voxel/VoxelVolume.h` ³ᴰ | [../guide/voxels.md](../guide/voxels.md) |
-| `voxel/BlockPalette.h` ³ᴰ | [../guide/voxels.md](../guide/voxels.md) |
-| `voxel/VoxelMesher.h` ³ᴰ⁺ | [../guide/voxels.md](../guide/voxels.md) |
-| `voxel/VoxelGenerator.h` ³ᴰ⁺ | [../guide/voxels.md](../guide/voxels.md) |
-| `voxel/VoxelRender.h` ³ᴰ⁺ | [../guide/voxels.md](../guide/voxels.md) |
 | `scene/EventBus.h` | [../guide/flow-and-story.md](../guide/flow-and-story.md) |
 | `scene/FlowMachine.h` | [../guide/flow-and-story.md](../guide/flow-and-story.md) |
 | `scene/StoryGraph.h` | [../guide/flow-and-story.md](../guide/flow-and-story.md) |

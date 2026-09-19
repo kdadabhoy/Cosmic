@@ -18,19 +18,10 @@
       }
     },
     {
-      "name": "default",
-      "inherits": "base",
-      "displayName": "Cosmic — full 3D engine",
-      "description": "The 3D trunk configuration: every subsystem, every game project, Jolt + Recast + assimp.",
-      "cacheVariables": {
-        "COSMIC_2D_ONLY": "OFF"
-      }
-    },
-    {
       "name": "2d",
       "inherits": "base",
       "displayName": "Cosmic — 2D-only engine",
-      "description": "The pure-2D configuration: no terrain/voxel/water/nav/particles, no 3D renderer passes, no assimp or Recast, and the three 3D game projects skipped. Jolt stays. See docs/plans/28-phase29-engine-split-plan.md §4.",
+      "description": "The only configuration on this trunk: the 2D engine (Jolt stays). The 3D source, its vendored dependencies and the 3D preset were purged (AP-05); COSMIC_2D_ONLY=ON is kept as an explicit, always-on compatibility flag.",
       "cacheVariables": {
         "COSMIC_2D_ONLY": "ON"
       }

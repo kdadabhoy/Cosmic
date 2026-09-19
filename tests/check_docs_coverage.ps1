@@ -5,26 +5,24 @@
 #   1. a public header with NO manifest row
 #   2. a manifest row whose header no longer exists on disk (stale row)
 #   3. a manifest row with no chapter cell (malformed - would be skipped silently)
-#   4. a manifest row whose 3D marker contradicts the build (see MARKERS below)
-#   5. a manifest row pointing at a chapter file that does not exist
-#   6. STRICT MODE (per chapter, automatic): a chapter file with no
+#   4. a manifest row pointing at a chapter file that does not exist
+#   5. STRICT MODE (per chapter, automatic): a chapter file with no
 #      "STATUS: SKELETON" banner that never mentions a COSMIC_API class/struct
 #      declared by one of its own headers.
 # Chapters that still carry the skeleton banner WARN only - they have not been
 # written yet, so a missing class name there is expected, not a defect.
 #
 # Chapter links are resolved relative to docs/reference/, so a row MAY point
-# outside that directory - "../guide/voxels.md" is how a header whose reference
+# outside that directory - "../guide/scripting.md" is how a header whose reference
 # chapter does not exist yet gets parked on its client-facing guide chapter.
 # Strict mode is a reference-tier contract and does not apply to those.
 #
 # WHAT COUNTS AS "PUBLIC" (three tiers - doc 12 section 5, flavours 1-5):
 #   A. DIRECT      - #include "..." in Cosmic/src/Cosmic.h.
 #   B. TRANSITIVE  - anything those headers pull in, recursively, that lives
-#                    under Cosmic/src/. A one-level scan of Cosmic.h misses
-#                    graphics/Skeleton.h (via scene/Components3D.h) and
-#                    voxel/VoxelVolume.h (via scripting/ScriptableEntity.h),
-#                    both of which are named in public signatures.
+#                    under Cosmic/src/. A one-level scan of Cosmic.h misses the
+#                    headers that only ride in through another public header
+#                    yet are named in public signatures.
 #   C. CLIENT-ONLY - an engine header under Cosmic/src/ that is not reachable
 #                    from Cosmic.h at all but IS explicitly #included by shipped
 #                    client code (Projects/*/src, tests/). utils/Branding.h is
@@ -35,22 +33,22 @@
 # the failure mode this script exists to end. The including file is printed with
 # every tier-C finding so a reviewer can judge the claim.
 #
-# THE 2D/3D SPLIT (README section 1.6, systems/build-2d-3d-split.md):
-#   Cosmic.h is parsed WITH its #ifndef COSMIC_2D_ONLY fences, not as flat text.
-#   Fence state propagates through the transitive walk, so a header reachable
-#   only through a fenced include is itself 3D-only.
-#   "Inside a fence" is NOT the test for 3D-only, though. camera/NavigationCube.h
-#   is included UNFENCED yet NavigationCube.cpp is dropped from the 2D build by
-#   the list(FILTER) block in Cosmic/CMakeLists.txt - it compiles in a 2D tree
-#   and fails at LINK time. So the script parses that CMake block too and
-#   classifies by the union of the two.
+# Cosmic.h and every header it reaches are parsed as flat text: an #include is an
+# #include whatever preprocessor block it sits in. A quoted include whose file is
+# absent under Cosmic/src/ is simply not a public header (it is skipped, not
+# reported), which is what keeps a leftover COSMIC_2D_ONLY fence around a deleted
+# 3D include harmless while AP-05 part B removes the fences.
 #
-# MARKERS in the manifest's first column:
-#   U+00B3 U+1D30        ("3D")   header Cosmic.h includes only inside a fence
-#   U+00B3 U+1D30 U+207A ("3D+")  header compiles in 2D but whose .cpp the
-#                                 CMake 2D filter removes -> link-time failure
-# Both are written with [char] casts below so this file stays pure ASCII:
-# PowerShell 5.1 decodes a BOM-less .ps1 as ANSI, which would corrupt literals.
+# History: until AP-05 part A (2026-09-18) this script also parsed Cosmic.h
+# fence-aware and read the list(FILTER) block in Cosmic/CMakeLists.txt to classify
+# headers as 3D-only, and checked the manifest's 3D marker glyphs against that
+# classification. The 3D source, the filter block and the marked rows are gone
+# from this trunk, so that machinery (which exited 1 whenever no filter rules
+# existed) went with them. Rows may still carry the old marker glyphs after the
+# header cell; they are ignored.
+#
+# This file stays pure ASCII: PowerShell 5.1 decodes a BOM-less .ps1 as ANSI,
+# which would corrupt any non-ASCII literal.
 #
 # Run locally:   powershell -ExecutionPolicy Bypass -File tests\check_docs_coverage.ps1
 # Run in CI:     .github/workflows/ci.yml "API reference coverage audit" step (pwsh).
@@ -61,11 +59,7 @@ $repoRoot = Split-Path -Parent $PSScriptRoot   # tests/ -> repo root
 $srcRoot = Join-Path $repoRoot 'Cosmic\src'
 $manifestPath = Join-Path $repoRoot 'docs\reference\README.md'
 $referenceDir = Join-Path $repoRoot 'docs\reference'
-$cmakePath = Join-Path $repoRoot 'Cosmic\CMakeLists.txt'
 $clientRoots = @((Join-Path $repoRoot 'Projects'), (Join-Path $repoRoot 'tests'))
-
-$MARK_3D = [string]([char]0x00B3) + [string]([char]0x1D30)
-$MARK_3D_LINK = $MARK_3D + [string]([char]0x207A)
 
 # Headers reachable from Cosmic.h that are engine plumbing, not client surface.
 # Each one is reached only because a public header needs its type internally;
@@ -87,65 +81,23 @@ $footnoteRows = @{
 }
 
 # ---------------------------------------------------------------------------
-# 1. The CMake 2D filter - which sources vanish when COSMIC_2D_ONLY is ON.
+# 1. Flat include parser.
 # ---------------------------------------------------------------------------
-$cmakeText = Get-Content -LiteralPath $cmakePath -Raw -Encoding UTF8
-$cmakeLines = $cmakeText -split "`r?`n"
-$filterPatterns = @()
-$inBlock = $false
-foreach ($line in $cmakeLines)
-{
-    if ($line -match '^\s*if\s*\(\s*COSMIC_2D_ONLY\s*\)') { $inBlock = $true; continue }
-    if ($inBlock -and $line -match '^\s*endif\s*\(') { $inBlock = $false; continue }
-    if (-not $inBlock) { continue }
-    if ($line -match 'list\s*\(\s*FILTER\s+COSMIC_SOURCES\s+EXCLUDE\s+REGEX\s+"([^"]+)"')
-    {
-        # CMake string escaping: "\\." in the file is the regex \. once parsed.
-        $filterPatterns += ($matches[1] -replace '\\\\', '\')
-    }
-}
-if ($filterPatterns.Count -eq 0)
-{
-    Write-Host 'DOCS COVERAGE ERROR - no list(FILTER COSMIC_SOURCES ...) rules found inside if(COSMIC_2D_ONLY)'
-    Write-Host ('  {0}: the 2D partition block moved or was renamed; the 3D classification cannot be computed.' -f 'Cosmic/CMakeLists.txt')
-    exit 1
-}
-
-function Test-FilteredFrom2D([string]$relPath)
-{
-    # The CMake patterns are written against absolute paths, all anchored on /src/.
-    $probe = '/src/' + $relPath
-    foreach ($p in $filterPatterns) { if ($probe -match $p) { return $true } }
-    return $false
-}
-
-# ---------------------------------------------------------------------------
-# 2. Fence-aware include parser.
-# ---------------------------------------------------------------------------
-# Returns one object per quoted #include: the raw path and whether it sits
-# inside an #ifndef COSMIC_2D_ONLY region. Ordinary include guards and unrelated
-# #if blocks are tracked too so the nesting stays balanced.
+# Returns one object per quoted #include: the raw path and its line number.
 function Get-QuotedIncludes([string]$fullPath)
 {
     $text = Get-Content -LiteralPath $fullPath -Raw -Encoding UTF8
     $lines = $text -split "`r?`n"
-    $stack = New-Object System.Collections.Generic.Stack[bool]
     $results = @()
     $lineNo = 0
     foreach ($line in $lines)
     {
         $lineNo++
-        if ($line -match '^\s*#\s*ifndef\s+COSMIC_2D_ONLY\b') { $stack.Push($true); continue }
-        if ($line -match '^\s*#\s*(if|ifdef|ifndef)\b') { $stack.Push($false); continue }
-        if ($line -match '^\s*#\s*endif\b') { if ($stack.Count -gt 0) { $null = $stack.Pop() }; continue }
         if ($line -match '^\s*#\s*include\s+"([^"]+)"')
         {
-            $fenced = $false
-            foreach ($f in $stack) { if ($f) { $fenced = $true } }
             $results += [pscustomobject]@{
-                Path   = $matches[1] -replace '\\', '/'
-                Fenced = $fenced
-                Line   = $lineNo
+                Path = $matches[1] -replace '\\', '/'
+                Line = $lineNo
             }
         }
     }
@@ -170,13 +122,13 @@ function Resolve-EngineHeader([string]$includePath, [string]$includingFile)
 }
 
 # ---------------------------------------------------------------------------
-# 3. Walk Cosmic.h: tier A (direct) + tier B (transitive), fence state carried.
+# 2. Walk Cosmic.h: tier A (direct) + tier B (transitive).
 # ---------------------------------------------------------------------------
 $public = @{}   # rel path -> record
 $entryHeader = Join-Path $srcRoot 'Cosmic.h'
 
 $public['Cosmic.h'] = [pscustomobject]@{
-    Path = 'Cosmic.h'; Tier = 'A'; Fenced = $false; Via = ''; Line = 0; Evidence = ''
+    Path = 'Cosmic.h'; Tier = 'A'; Via = ''; Line = 0; Evidence = ''
 }
 
 $queue = New-Object System.Collections.Queue
@@ -185,7 +137,7 @@ foreach ($inc in (Get-QuotedIncludes $entryHeader))
     $rel = Resolve-EngineHeader $inc.Path $entryHeader
     if (-not $rel) { continue }
     $queue.Enqueue([pscustomobject]@{
-        Path = $rel; Fenced = $inc.Fenced; Tier = 'A'; Via = 'Cosmic.h'; Line = $inc.Line
+        Path = $rel; Tier = 'A'; Via = 'Cosmic.h'; Line = $inc.Line
     })
 }
 
@@ -194,9 +146,6 @@ while ($queue.Count -gt 0)
     $item = $queue.Dequeue()
     if ($public.ContainsKey($item.Path))
     {
-        # An unfenced route to a header beats a fenced one: if ANY reachable path
-        # is unfenced the header exists in a 2D compile.
-        if (-not $item.Fenced) { $public[$item.Path].Fenced = $false }
         if ($item.Tier -eq 'A' -and $public[$item.Path].Tier -ne 'A')
         {
             $public[$item.Path].Tier = 'A'
@@ -206,7 +155,7 @@ while ($queue.Count -gt 0)
         continue
     }
     $public[$item.Path] = [pscustomobject]@{
-        Path = $item.Path; Tier = $item.Tier; Fenced = $item.Fenced
+        Path = $item.Path; Tier = $item.Tier
         Via = $item.Via; Line = $item.Line; Evidence = ''
     }
 
@@ -216,14 +165,13 @@ while ($queue.Count -gt 0)
         $rel = Resolve-EngineHeader $inc.Path $full
         if (-not $rel) { continue }
         $queue.Enqueue([pscustomobject]@{
-            Path = $rel; Fenced = ($item.Fenced -or $inc.Fenced); Tier = 'B'
-            Via = $item.Path; Line = $inc.Line
+            Path = $rel; Tier = 'B'; Via = $item.Path; Line = $inc.Line
         })
     }
 }
 
 # ---------------------------------------------------------------------------
-# 4. Tier C - engine headers only shipped client code includes explicitly.
+# 3. Tier C - engine headers only shipped client code includes explicitly.
 # ---------------------------------------------------------------------------
 foreach ($root in $clientRoots)
 {
@@ -244,7 +192,7 @@ foreach ($root in $clientRoots)
             if (Test-Path -LiteralPath $localCand -PathType Leaf) { continue }
             if ($public.ContainsKey($inc)) { continue }
             $public[$inc] = [pscustomobject]@{
-                Path = $inc; Tier = 'C'; Fenced = $false; Via = ''; Line = 0
+                Path = $inc; Tier = 'C'; Via = ''; Line = 0
                 Evidence = $file.FullName.Substring($repoRoot.Length + 1) -replace '\\', '/'
             }
         }
@@ -252,7 +200,7 @@ foreach ($root in $clientRoots)
 }
 
 # ---------------------------------------------------------------------------
-# 5. Parse the coverage manifest table (+ the encoded footnote rows).
+# 4. Parse the coverage manifest table (+ the encoded footnote rows).
 # ---------------------------------------------------------------------------
 $manifestText = Get-Content -LiteralPath $manifestPath -Raw -Encoding UTF8
 $manifestLines = $manifestText -split "`r?`n"
@@ -277,35 +225,29 @@ foreach ($line in $manifestLines)
     }
     $right = $cells[2].Trim()
 
-    # 3D markers, matched by codepoint so this file stays ASCII-only:
-    # U+207A superscript plus, U+1D30 modifier letter capital D.
-    $marker = ''
-    if ($left.IndexOf([char]0x207A) -ge 0) { $marker = '3D+' }
-    elseif ($left.IndexOf([char]0x1D30) -ge 0) { $marker = '3D' }
-
     $chapters = @()
     foreach ($lm in [regex]::Matches($right, '\[[^\]]*\]\(([^)#]+)')) { $chapters += $lm.Groups[1].Value }
 
     $rows[$header] = [pscustomobject]@{
-        Header = $header; Chapters = $chapters; Marker = $marker; Source = 'table'
+        Header = $header; Chapters = $chapters; Source = 'table'
     }
 }
 foreach ($k in $footnoteRows.Keys)
 {
     if ($rows.ContainsKey($k)) { continue }
     $rows[$k] = [pscustomobject]@{
-        Header = $k; Chapters = @($footnoteRows[$k]); Marker = ''; Source = 'footnote'
+        Header = $k; Chapters = @($footnoteRows[$k]); Source = 'footnote'
     }
 }
 
 # ---------------------------------------------------------------------------
-# 6. Compare.
+# 5. Compare.
 # ---------------------------------------------------------------------------
 $failures = @()
 $failures += $malformedRows
 $suggestedRows = @()
 
-# 6a. Public headers with no manifest row.
+# 5a. Public headers with no manifest row.
 $missing = @()
 foreach ($key in ($public.Keys | Sort-Object))
 {
@@ -313,79 +255,27 @@ foreach ($key in ($public.Keys | Sort-Object))
     if ($internalHeaders.ContainsKey($key)) { continue }
     if ($rows.ContainsKey($key)) { continue }
 
-    $full = Join-Path $srcRoot ($key -replace '/', '\')
-    $is3DFence = $rec.Fenced
-    $is3DLink = Test-FilteredFrom2D $key
-    # A 2D-only distribution that physically drops the 3D sources must not be
-    # reported as a wall of missing headers - that is the naive-parse trap.
-    if (-not (Test-Path -LiteralPath $full -PathType Leaf))
-    {
-        if ($is3DFence -or $is3DLink) { continue }
-    }
-
-    $mark = ''
-    if ($is3DFence) { $mark = $MARK_3D }
-    elseif ($is3DLink) { $mark = $MARK_3D_LINK }
-
     if ($rec.Tier -eq 'A') { $why = ('included directly by Cosmic.h:{0}' -f $rec.Line) }
     elseif ($rec.Tier -eq 'B') { $why = ('reachable from Cosmic.h via {0}' -f $rec.Via) }
     else { $why = ('not reachable from Cosmic.h; explicitly included by {0}' -f $rec.Evidence) }
-    if ($is3DFence) { $why = $why + ' [3D-only: fenced]' }
-    elseif ($is3DLink) { $why = $why + ' [3D-only: CMake 2D filter drops its .cpp]' }
 
     $missing += ('{0}: {1} - no manifest row' -f $key, $why)
-    if ($mark -eq '') { $suggestedRows += ('| `{0}` | [CHAPTER](CHAPTER) |' -f $key) }
-    else { $suggestedRows += ('| `{0}` {1} | [CHAPTER](CHAPTER) |' -f $key, $mark) }
+    $suggestedRows += ('| `{0}` | [CHAPTER](CHAPTER) |' -f $key)
 }
 $failures += $missing
 
-# 6b. Stale rows - a listed header that no longer exists.
+# 5b. Stale rows - a listed header that no longer exists.
 $stale = @()
 foreach ($header in ($rows.Keys | Sort-Object))
 {
-    $row = $rows[$header]
     $full = Join-Path $srcRoot ($header -replace '/', '\')
     if (Test-Path -LiteralPath $full -PathType Leaf) { continue }
-    # A 3D-marked row in a 2D-only distribution is not stale, just absent.
-    if ($row.Marker -ne '') { continue }
     $stale += ('{0}: listed in the coverage manifest but no such file under Cosmic/src/' -f $header)
 }
 $failures += $stale
 
-# 6c. Marker vs. build reality.
-$markerIssues = @()
-foreach ($header in ($rows.Keys | Sort-Object))
-{
-    $row = $rows[$header]
-    if ($row.Source -eq 'footnote') { continue }
-    if (-not $public.ContainsKey($header)) { continue }
-    $full = Join-Path $srcRoot ($header -replace '/', '\')
-    if (-not (Test-Path -LiteralPath $full -PathType Leaf)) { continue }
-
-    $is3DFence = $public[$header].Fenced
-    $is3DLink = Test-FilteredFrom2D $header
-    $expected = ''
-    if ($is3DFence) { $expected = '3D' }
-    elseif ($is3DLink) { $expected = '3D+' }
-
-    if ($row.Marker -eq $expected) { continue }
-    if ($expected -eq '')
-    {
-        $markerIssues += ('{0}: row carries a 3D marker but the header compiles AND links in the 2D build - drop the marker' -f $header)
-    }
-    elseif ($expected -eq '3D')
-    {
-        $markerIssues += ('{0}: Cosmic.h reaches it only inside an #ifndef COSMIC_2D_ONLY fence - row needs the 3D marker' -f $header)
-    }
-    else
-    {
-        $markerIssues += ('{0}: unfenced but Cosmic/CMakeLists.txt drops its .cpp from the 2D build (link-time failure) - row needs the 3D-plus marker' -f $header)
-    }
-}
-$failures += $markerIssues
-
 # ---------------------------------------------------------------------------
-# 7. Strict mode - per chapter, automatic when the skeleton banner is gone.
+# 6. Strict mode - per chapter, automatic when the skeleton banner is gone.
 # ---------------------------------------------------------------------------
 $chapterHeaders = @{}
 foreach ($header in $rows.Keys)
@@ -406,7 +296,7 @@ $offTierChapters = 0
 foreach ($chapterLink in ($chapterHeaders.Keys | Sort-Object))
 {
     # Links are relative to docs/reference/. A row may legitimately point OUTSIDE
-    # that directory - "../guide/voxels.md" is how a header whose reference
+    # that directory - "../guide/scripting.md" is how a header whose reference
     # chapter does not exist yet gets parked on its client-facing guide chapter.
     $chapterPath = [System.IO.Path]::GetFullPath((Join-Path $referenceDir $chapterLink))
     $chapterName = $chapterPath.Substring($repoRoot.Length + 1) -replace '\\', '/'
@@ -465,7 +355,7 @@ $failures += $missingChapters
 $failures += $strictIssues
 
 # ---------------------------------------------------------------------------
-# 8. Report.
+# 7. Report.
 # ---------------------------------------------------------------------------
 if ($missing.Count -gt 0)
 {
@@ -486,12 +376,6 @@ if ($malformedRows.Count -gt 0)
 {
     Write-Host 'DOCS COVERAGE FAILURE - malformed manifest rows:'
     $malformedRows | ForEach-Object { Write-Host "  $_" }
-    Write-Host ''
-}
-if ($markerIssues.Count -gt 0)
-{
-    Write-Host 'DOCS COVERAGE FAILURE - 2D/3D marker does not match the build:'
-    $markerIssues | ForEach-Object { Write-Host "  $_" }
     Write-Host ''
 }
 if ($missingChapters.Count -gt 0)
@@ -515,8 +399,8 @@ if ($skeletonReport.Count -gt 0)
 
 if ($failures.Count -gt 0)
 {
-    Write-Host ('{0} coverage violation(s): {1} unlisted header(s), {2} stale row(s), {3} malformed row(s), {4} marker mismatch(es), {5} missing chapter file(s), {6} strict-mode gap(s).' -f `
-        $failures.Count, $missing.Count, $stale.Count, $malformedRows.Count, $markerIssues.Count, $missingChapters.Count, $strictIssues.Count)
+    Write-Host ('{0} coverage violation(s): {1} unlisted header(s), {2} stale row(s), {3} malformed row(s), {4} missing chapter file(s), {5} strict-mode gap(s).' -f `
+        $failures.Count, $missing.Count, $stale.Count, $malformedRows.Count, $missingChapters.Count, $strictIssues.Count)
     Write-Host 'Add the row to the manifest in docs/reference/README.md (and an entry in its chapter), or justify the header in $internalHeaders.'
     exit 1
 }

@@ -33,8 +33,8 @@ set(COSMIC_TEST_SOURCES
     test_commandstack.cpp
     test_filewatcher.cpp
     test_scripthost.cpp
-    # Physics is dimension agnostic (§4.1): five of the six test_physics_* files
-    # stay in the 2D suite. Only test_physics_terrain is 3D-gated below.
+    # Physics is dimension agnostic (§4.1): every test_physics_* file runs here
+    # (the terrain-collider suite left with the 3D purge, AP-05).
     test_physics_world.cpp
     test_physics_scene.cpp
     test_physics_events.cpp
@@ -133,41 +133,6 @@ set(COSMIC_TEST_SOURCES
     ../Projects/SF_Telem/src/DrivetrainLayer.cpp
     ../Projects/SF_Telem/src/DashboardView.cpp
 )
-
-# 3D-only tier (§9.1). These name terrain / voxel / nav / mesh / skeletal / 3D
-# renderer types the 2D engine does not ship, so they leave the build outright
-# rather than becoming empty translation units.
-if(NOT COSMIC_2D_ONLY)
-    list(APPEND COSMIC_TEST_SOURCES
-        test_phase10_world.cpp
-        test_flycamera.cpp
-        test_frustum.cpp
-        test_presets.cpp
-        test_particle_noise.cpp
-        test_render_queue.cpp
-        test_primitives.cpp
-        test_meshimport.cpp
-        test_animation.cpp
-        test_sockets.cpp
-        test_crossfade.cpp
-        test_material_slots.cpp
-        test_worldsystems.cpp
-        test_physics_terrain.cpp
-        test_nav_world.cpp
-        test_nav_bake.cpp
-        test_nav_agents.cpp
-        test_voxel.cpp
-        test_voxel_collision.cpp
-        # ForgeIsle is a 3D flagship the 2D scanner skips outright, and this file
-        # builds its terrain/water recipes to check the authored content. §9.1
-        # calls the build gate cleaner than an in-file fence — it already
-        # self-skips at RUNTIME when Projects/ForgeIsle is absent.
-        test_forgeisle_content.cpp
-        # 3D partition baselines, captured against the UN-split code (§9.3):
-        test_render_desc.cpp
-        test_components3d_registry.cpp
-    )
-endif()
 
 add_executable(CosmicTests ${COSMIC_TEST_SOURCES})
 

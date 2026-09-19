@@ -1,0 +1,34 @@
+{
+  "manifest": "ap05-purge",
+  "cases": [
+    {
+      "id": "B06-A",
+      "description": "AP-05 part A purge oracle (the B06 grep/file half): every Part-A path is gone from the tree; the CMake files and CMakePresets.json no longer name the purged vendored deps, the list(FILTER) partition block, the 3D-only test block, render_3d.cpp, the excluded editor TUs or a 3D (OFF) preset; no 2D-compiled #include reaches a purged header or tree. The remaining COSMIC_2D_ONLY preprocessor uses and the 3D identifiers inside excluded fences are reported, not failed (-AllowFences): part B removes the fences and drops the switch from this manifest, after which B06 must pass strict.",
+      "tier": "U",
+      "profiles": [
+        "pr",
+        "nightly",
+        "release"
+      ],
+      "requires": [
+        "windows"
+      ],
+      "command": "powershell",
+      "workingDir": "{REPO}",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "{ACCEPTANCE}\\fixtures\\Verify-AP05Purge.ps1",
+        "-Repo",
+        "{REPO}",
+        "-AllowFences"
+      ],
+      "expectExit": 0,
+      "minTests": 5,
+      "deadlineSec": 300,
+      "fixture": "fixtures/Verify-AP05Purge.ps1"
+    }
+  ]
+}

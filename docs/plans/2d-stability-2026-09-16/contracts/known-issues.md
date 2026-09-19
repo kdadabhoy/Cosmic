@@ -671,7 +671,9 @@ evidence is under `evidence/WO-07/l02/`; each entry names its file.
   `powershell -File tests\check_docs_coverage.ps1` → exit 1 (2 unlisted headers). Evidence:
   `evidence/WO-08/audit-gl-conformance.txt`, `audit-docs-coverage.txt`.
 - Regression: the audits themselves (CI step "GL conformance audit", docs coverage step).
-- Disposition: open. Fix recipe: reword the eight inline comments so they do not spell `GL_…`
+- Disposition: fix landed `726ae35208ad7b1906350b13989840360bcae850` (AP-00, 2026-09-18 — the eight
+  inline comments reworded and the two manifest rows added; both audits exit 0 on `main`, re-verified
+  by AP-05 part A). The recipe as applied: reword the eight inline comments so they do not spell `GL_…`
   (e.g. `/*READ_FRAMEBUFFER*/`), and add two manifest rows (`serial/ISerialTransport.h` →
   `serial.md`, `utils/AtomicOutput.h` → the utilities chapter) with a short entry each. Neither
   change touches behaviour.
@@ -1055,3 +1057,22 @@ over the injected `IFrameClock` (`core/IFrameClock.h`, the WO-10 seam) with the
   failing-before evidence.
 - Equipment/fixture unavailability is tracked as `ENVIRONMENT_BLOCKED` in the acceptance evidence,
   never as a closed KI and never as a pass.
+
+## AP-05 part A findings (2026-09-19) — the 3D purge (App Platform packet)
+
+### KI-57 — `test_wo06.cpp` D01 is not idempotent outside the runner: a stale `%TEMP%\wo06\fallback\scene.bin` fails the next direct run
+- Status: Coverage gap (test hygiene, no product defect — `DataPlayer::Load` behaves as specified; the
+  case poisons its own shared scratch directory).
+- Owner WO: WO-06 follow-up (file `tests/test_wo06.cpp`, outside AP-05's ownership; found by AP-05 part A
+  running the retained unit suite directly, which the WO-06..WO-10 evidence never did — they ran it through
+  `Run-Acceptance.ps1`, whose per-run `TEMP` redirection hides it).
+- Anchor: `tests/test_wo06.cpp:28-33` at `7479927` — `Scratch()` only `create_directories()`, never clears;
+  `:213-215` the case's LAST step copies `bad-version.bin` over `<TEMP>/wo06/fallback/scene.bin`, asserts
+  `Load` fails, and leaves it there; `:205-208` the NEXT run's first `Load(fallback)` then finds that bad
+  `scene.bin` ahead of `A.bin` and fails (`REQUIRE( p.Load(fallback.string()) ) is NOT correct!`).
+- Repro: `build\Runtime\Debug\CosmicTests.exe -tc="WO-06 D01*"` twice from the same `%TEMP%` → first run
+  1/1 passed (clean), second run 0/1 failed at `test_wo06.cpp(208)`; `rd /s /q %TEMP%\wo06` restores the
+  pass. Seen first as 453/454 in AP-05 part A's direct Debug run (`evidence/AP-05/report.md`).
+- Regression: none yet (fix = `Scratch()` removes the directory before creating it, or the case deletes its
+  `scene.bin` on exit; one line either way).
+- Disposition: open.

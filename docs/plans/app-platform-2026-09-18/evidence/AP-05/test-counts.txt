@@ -1,0 +1,35 @@
+# AP-05 part A - CosmicTests counts and suite results (full *.log files are gitignored; excerpts here)
+
+## Pre-purge baseline (HEAD 7479927, build/Runtime/Debug/CosmicTests.exe from the reconfigured incremental Debug build)
+CosmicTests.exe --count           : [doctest] unskipped test cases passing the current filters: 454
+CosmicTests.exe --count --no-skip : [doctest] unskipped test cases passing the current filters: 467
+
+## Post-purge (clean configure, clean Debug + Release builds)
+Debug   --count : 454      --count --no-skip : 467
+Release --count : 454      --count --no-skip : 467
+
+## Reconciliation: post = baseline - cases of the deleted TUs that the 2D build compiled
+The 22 deleted test TUs (167 TEST_CASEs in total) sat under if(NOT COSMIC_2D_ONLY) in tests/CMakeLists.txt and were
+never compiled on this trunk; render_3d.cpp (8 cases) was fenced as a whole; the removed N5 NavCritter case and the two
+NavigationCube cases in test_s5_navigation.cpp were #ifndef COSMIC_2D_ONLY-fenced. Cases removed from the 2D suite = 0.
+454 - 0 = 454 (Debug) and 454 (Release). TEST_CASE counts per deleted TU (grep of TEST_CASE/TEST_CASE_FIXTURE/SCENARIO):
+  test_phase10_world.cpp 19 | test_flycamera.cpp 9 | test_frustum.cpp 6 | test_presets.cpp 7 | test_particle_noise.cpp 8
+  test_render_queue.cpp 7  | test_primitives.cpp 7 | test_meshimport.cpp 13 | test_animation.cpp 9 | test_sockets.cpp 6
+  test_crossfade.cpp 4     | test_material_slots.cpp 3 | test_worldsystems.cpp 7 | test_physics_terrain.cpp 2
+  test_nav_world.cpp 5     | test_nav_bake.cpp 5 | test_nav_agents.cpp 5 | test_voxel.cpp 18 | test_voxel_collision.cpp 3
+  test_forgeisle_content.cpp 3 | test_render_desc.cpp 7 | test_components3d_registry.cpp 14   => 167 (3D-only, 0 in the 2D count)
+  tests/render/render_3d.cpp 8 (CosmicRenderTests, fenced as a whole => 0 in the 2D render suite)
+
+## Full retained suites on the final binaries, sequential, each with TEMP/TMP pointed at a fresh scratch dir
+Debug   : [doctest] test cases:      454 |      454 passed | 0 failed | 13 skipped
+          [doctest] assertions: 23404893 | 23404893 passed | 0 failed |
+Release : [doctest] test cases:      454 |      454 passed | 0 failed | 13 skipped
+          [doctest] assertions: 23450203 | 23450203 passed | 0 failed |
+(13 skipped in each = the host/runner-launched cases that skip by default, unchanged from WO-10)
+
+## Failing-before evidence for KI-57 (direct runs reusing the machine's %TEMP%\wo06 from an earlier run)
+Debug full suite, stale TEMP   : [doctest] test cases:      454 |      453 passed | 1 failed | 13 skipped
+  tests\test_wo06.cpp(208): FATAL ERROR: REQUIRE( p.Load(fallback.string()) ) is NOT correct!
+Release full suite, stale TEMP : [doctest] test cases:      454 |      453 passed | 1 failed | 13 skipped
+  tests\test_wo06.cpp(208): FATAL ERROR: REQUIRE( p.Load(fallback.string()) ) is NOT correct!
+CosmicTests.exe -tc="WO-06 D01*" (Debug): stale TEMP -> 0/1 failed (140 assertions, 1 failed); after rd /s /q %TEMP%\wo06 -> 1/1 passed (145 assertions); run again immediately -> 0/1 failed again.

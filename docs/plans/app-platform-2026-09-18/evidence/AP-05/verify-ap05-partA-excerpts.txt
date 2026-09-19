@@ -1,0 +1,27 @@
+# Verify-AP05Purge.ps1 -AllowFences (part A mode) on the purged tree
+[PASS] paths-absent: none of the 102 Part-A paths exists
+[PASS] build-files-clean: no CMake/preset line names a purged dep dir, partition rule, 3D test block, render_3d.cpp, purged editor TU or 3D preset
+[INFO] fence-uses: 240 COSMIC_2D_ONLY preprocessor use(s) remain (tolerated by -AllowFences; part B removes them)
+[PASS] includes-of-deleted: no 2D-compiled #include of a purged header; 71 dead include(s) inside excluded fences remain (tolerated by -AllowFences)
+[INFO] identifiers: 3D identifier mentions remain in Cosmic/src: 150 inside excluded fences (ignored), 68 in unfenced comments, 16 on unfenced code lines, 0 under History: notes (tolerated by -AllowFences; part B / AP-Q1 clean them up)
+       unfenced code lines (16):
+         Cosmic/src/physics/PhysicsWorld.h:49: class Renderer3DDebugSink;   // fwd (J8) â€” not used publicly here
+         Cosmic/src/renderer/BindingPoints.h:88: constexpr uint32_t TexUnitShadowMap = 11;
+         Cosmic/src/renderer/PostProcessStack.cpp:196: if (m_GodRaysEnabled && m_ShaftShadowMapID != 0)
+         Cosmic/src/renderer/PostProcessStack.cpp:307: RenderCommand::BindTextureSlot(1, m_ShaftShadowMapID);
+         Cosmic/src/renderer/PostProcessStack.cpp:308: m_GodRaysShader->SetInt("u_ShadowMap", 1);
+         Cosmic/src/renderer/PostProcessStack.h:140: void SetSunShaftInputs(uint32_t shadowMapID, const glm::mat4& lightViewProj,
+         Cosmic/src/renderer/PostProcessStack.h:143: m_ShaftShadowMapID = shadowMapID; m_ShaftLightViewProj = lightViewProj;
+         Cosmic/src/renderer/PostProcessStack.h:273: uint32_t  m_ShaftShadowMapID = 0;
+         Cosmic/src/renderer/SceneRenderer.cpp:201: void SceneRenderer::Init(uint32_t width, uint32_t height, uint32_t shadowMapSize)
+         Cosmic/src/renderer/SceneRenderer.cpp:214: (void)shadowMapSize;   // no sky/IBL cube and no shadow map in a 2D build
+         Cosmic/src/renderer/SceneRenderer.h:82: class Terrain;
+         Cosmic/src/renderer/SceneRenderer.h:165: bool TerrainCastsShadows = true;                      // consumed from F4
+         Cosmic/src/renderer/SceneRenderer.h:283: void Init(uint32_t width, uint32_t height, uint32_t shadowMapSize = 2048);
+         Cosmic/src/renderer/SceneRenderer.h:284: void Shutdown();                          // also Renderer3D::ClearIBL/ClearShadow
+         Cosmic/src/scene/Scene.h:297: void SyncVoxelVolumes(const glm::vec3& cameraPos);
+         Cosmic/src/scene/Scene.h:307: void SyncNavMeshes();
+
+[AP05] mode=part-A (-AllowFences)  repo=C:\dev\Cosmic  paths=102
+[doctest] test cases: 5 | 5 passed | 0 failed
+exit=0

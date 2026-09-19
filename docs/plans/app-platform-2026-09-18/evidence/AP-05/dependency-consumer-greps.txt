@@ -1,0 +1,49 @@
+# AP-05 part A - dependency-consumer greps (run at HEAD 7479927 BEFORE deleting each vendored dependency)
+# Roots: Cosmic/src, Projects, tests (*.cpp, *.h, CMakeLists.txt, *.cmake). A file counts as a 2D consumer only if
+# it is compiled on the 2D trunk AND the mention is outside an '#ifndef COSMIC_2D_ONLY' region.
+
+## recastnavigation (pattern: recast|detour|DetourCrowd|dtNavMesh|rcConfig, case-insensitive) - files matched:
+Cosmic/src/nav/NavTypes.h                      DELETED (nav tree)
+Cosmic/src/nav/NavWorld.cpp                    DELETED (nav tree)
+Cosmic/src/nav/NavWorld.h                      DELETED (nav tree)
+Cosmic/src/physics/backends/JoltBackend.cpp    retained - matches are the physics verb "SphereCast" (substring "recast"), not Recast
+Cosmic/src/physics/backends/NullBackend.cpp    retained - "SphereCast"
+Cosmic/src/physics/PhysicsBackend.h            retained - "SphereCast"
+Cosmic/src/physics/PhysicsWorld.cpp            retained - "SphereCast"
+Cosmic/src/physics/PhysicsWorld.h              retained - "SphereCast"
+Cosmic/src/reflect/TypeRegistry3D.cpp          DELETED
+Cosmic/src/scene/Components3D.h                DELETED
+Cosmic/src/scene/Scene.h                       retained - comment/declaration mentions only (SyncNavMeshes decl, fenced impl)
+Cosmic/src/scene/SceneNav.cpp                  DELETED
+Cosmic/src/scene/SceneNav.h                    DELETED
+Projects/Starforge/assets/templates/src/scripts/NavCritter.h   DELETED
+Projects/Starforge/src/StarforgeApp.cpp        retained - every nav/NavWorld.h include + use sits inside #ifndef COSMIC_2D_ONLY
+tests/test_assetlibrary.cpp                    retained - "SphereCast"-style false positive / fenced 3D cases only
+tests/test_nav_agents.cpp                      DELETED
+tests/test_nav_bake.cpp                        DELETED
+tests/test_nav_world.cpp                       DELETED
+tests/test_physics_backend.cpp                 retained - "SphereCast"
+=> no 2D consumer: no retained, 2D-compiled line includes <Recast.h>/<Detour*.h> or names a Recast/Detour type.
+   Cosmic/CMakeLists.txt configured the target only under if(NOT COSMIC_2D_ONLY) and linked it via
+   $<$<NOT:$<BOOL:${COSMIC_2D_ONLY}>>:RecastNavigation> - both removed in part A.
+
+## assimp (pattern: assimp|aiScene|aiProcess, case-insensitive) - files matched:
+Cosmic/src/assets/AssetLibrary.h               retained - doc comment only ("gated assimp")
+Cosmic/src/assets/MeshImport.cpp               DELETED (the only TU that ever included <assimp/...>)
+Cosmic/src/assets/MeshImport.h                 DELETED
+Cosmic/src/Cosmic.h                            retained - the fenced "#include assets/MeshImport.h // ... gated assimp" comment
+Cosmic/src/graphics/AnimationClip.cpp          DELETED
+Projects/Starforge/src/StarforgeApp.cpp        retained - user-facing strings + MeshImport::AssimpEnabled() call, all inside #ifndef COSMIC_2D_ONLY (StarforgeApp.cpp:4012-4057)
+tests/test_meshimport.cpp                      DELETED
+=> no 2D consumer. COSMIC_WITH_ASSIMP was only ever set under if(COSMIC_WITH_ASSIMP AND NOT COSMIC_2D_ONLY) - removed.
+
+## cgltf (pattern: cgltf, case-insensitive) - files matched:
+Cosmic/src/assets/AssetLibrary.cpp             retained - the cgltf mention is inside the fenced GetModel/GetAnimationClip block (#ifndef COSMIC_2D_ONLY)
+Cosmic/src/assets/MeshImport.cpp               DELETED
+Cosmic/src/assets/MeshImport.h                 DELETED
+Cosmic/src/graphics/CgltfImpl.cpp              DELETED (the single-header implementation TU)
+Cosmic/src/graphics/Model.cpp                  DELETED
+tests/test_animation.cpp                       DELETED
+tests/test_assetlibrary.cpp                    retained - mention inside the fenced clip-set case (test_assetlibrary.cpp:62-132)
+tests/test_meshimport.cpp                      DELETED
+=> no 2D consumer. The PRIVATE include dir dependencies/cgltf (Cosmic/CMakeLists.txt) - removed.
