@@ -4,18 +4,12 @@
 #include <doctest.h>
 
 #include "scene/Components.h"
-#ifndef COSMIC_2D_ONLY
-#include "scene/Components3D.h"
-#endif
 
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
 using Cosmic::TransformComponent;
-#ifndef COSMIC_2D_ONLY
-using Cosmic::MeshRendererComponent;
-#endif
 
 static bool Mat4Near(const glm::mat4& a, const glm::mat4& b, float eps = 1e-4f)
 {
@@ -65,13 +59,3 @@ TEST_CASE("TransformComponent: UseQuatRotation defaults off (Euler path is the d
     CHECK(Mat4Near(tc.GetTransform(), glm::mat4(1.0f)));
 }
 
-#ifndef COSMIC_2D_ONLY
-TEST_CASE("MeshRendererComponent: sane defaults")
-{
-    MeshRendererComponent mr;
-    CHECK(mr.MeshAsset == nullptr);
-    CHECK(mr.MaterialAsset == nullptr);
-    CHECK(mr.CastShadows == true);
-    CHECK(mr.Color == glm::vec4(1.0f));
-}
-#endif   // COSMIC_2D_ONLY — W4 moved MeshRendererComponent to Components3D.h

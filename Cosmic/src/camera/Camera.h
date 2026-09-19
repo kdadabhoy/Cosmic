@@ -8,8 +8,8 @@
  *
  * Camera is the pure-interface base that unifies OrthographicCamera (2D) and
  * PerspectiveCamera (3D) behind a single type. It exists so renderer entry
- * points can accept ANY camera by const-reference — Renderer2D::BeginScene,
- * Renderer3D::BeginScene, and RenderPass all take `const Camera&` and call only
+ * points can accept ANY camera by const-reference — Renderer2D::BeginScene and
+ * RenderPass take `const Camera&` and call only
  * the four getters below. Concrete cameras keep their own rich, type-specific
  * APIs (SetProjection, LookAt, orbit controls, …); this base is deliberately
  * minimal so the forward-compatibility contract (doc 05 §1 rule 1 —

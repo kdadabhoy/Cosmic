@@ -9,9 +9,10 @@
  * ============================================================================
  * [pure, header-only]
  *
- * The sorting brain of Renderer3D's mesh queue, factored out of the GL-coupled
- * renderer so it is unit-testable headless (tests/test_render_queue.cpp) —
- * same convention as math/Frustum.h and water/GerstnerWave.h.
+ * History: the sorting brain of Renderer3D's mesh queue, factored out of the
+ * GL-coupled renderer so it was unit-testable headless (test_render_queue.cpp,
+ * purged with the 3D renderer in AP-05). Nothing on the 2D trunk submits to it;
+ * it stays compiled until AP-Q1 tidies it.
  *
  * Renderer3D::DrawMesh no longer draws immediately (S12.2): submissions are
  * recorded with a Key and executed at Flush()/EndScene() in sorted order.

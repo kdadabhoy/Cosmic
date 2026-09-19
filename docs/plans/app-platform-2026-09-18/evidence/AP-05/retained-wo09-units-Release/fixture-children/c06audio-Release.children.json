@@ -1,0 +1,35 @@
+﻿{
+    "id":  "C06-AUDIO",
+    "tier":  "W",
+    "description":  "WO-09 C06-AUDIO via CosmicTests.exe",
+    "requires":  [
+                     "windows",
+                     "audio-device"
+                 ],
+    "transport":  "none",
+    "seed":  null,
+    "start_utc":  "2026-09-19T20:36:00.0590882Z",
+    "deadline_sec":  60,
+    "exercised":  "production",
+    "command":  "C:\\dev\\Cosmic\\build\\Runtime\\Release\\CosmicTests.exe --reporters=console --no-intro --no-colors \"--test-case=WO-09 C06: audio*\" --no-skip=true",
+    "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-09\\c06audio-Release\\C06-AUDIO.out.log",
+    "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-09\\c06audio-Release\\C06-AUDIO.err.log",
+    "pid":  7236,
+    "exit_code":  0,
+    "crash":  false,
+    "tests_passed":  1,
+    "tests_expected_min":  1,
+    "verdict":  "PASSED",
+    "detail":  "exit 0 as expected",
+    "duration_sec":  0.686,
+    "end_utc":  "2026-09-19T20:36:00.7517944Z",
+    "golden_mutated":  false,
+    "golden_mutations":  [
+
+                         ],
+    "golden_diagnostics":  [
+
+                           ],
+    "golden_sha256_before":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-09\\c06audio-Release\\goldens-sha256-before.txt",
+    "golden_sha256_after":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-09\\c06audio-Release\\goldens-sha256-after.txt"
+}

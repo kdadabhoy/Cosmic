@@ -1,0 +1,112 @@
+== COSMIC_2D_ONLY spellings in C/C++ sources under Cosmic/src, Projects, tests, Cosmic/templates ==
+  #ifndef COSMIC_2D_ONLY            : 225
+  #ifdef COSMIC_2D_ONLY             : 10
+  #if defined(COSMIC_2D_ONLY)       : 0
+  #if !defined(COSMIC_2D_ONLY)      : 0
+  #elif mentioning it               : 0
+  compound #if conditions           : 1
+  #else/#endif trailing comments    : 43
+  other (non-directive) mentions    : 6
+  marked blocks                     : 235  (+ 1 exception directive(s))
+
+== per file: blocks (neg dropped / neg->else kept / pos body kept) and lines removed ==
+  Cosmic/src/Cosmic.h                                    marks=  8  dropped=  8  else-kept= 0  pos-kept= 0  -31 lines
+  Cosmic/src/assets/AssetLibrary.cpp                     marks= 11  dropped= 11  else-kept= 0  pos-kept= 0  -233 lines
+  Cosmic/src/assets/AssetLibrary.h                       marks=  2  dropped=  2  else-kept= 0  pos-kept= 0  -30 lines
+  Cosmic/src/layers/PlayerLayer.cpp                      marks=  6  dropped=  6  else-kept= 0  pos-kept= 0  -19 lines
+  Cosmic/src/physics/ScenePhysics.cpp                    marks=  9  dropped=  9  else-kept= 0  pos-kept= 0  -219 lines
+  Cosmic/src/physics/ScenePhysics.h                      marks=  3  dropped=  3  else-kept= 0  pos-kept= 0  -18 lines
+  Cosmic/src/physics/backends/JoltBackend.cpp            marks=  1  dropped=  1  else-kept= 0  pos-kept= 0  -3 lines
+  Cosmic/src/reflect/TypeRegistry.cpp                    marks=  1  dropped=  1  else-kept= 0  pos-kept= 0  -3 lines
+  Cosmic/src/reflect/TypeRegistry.h                      marks=  1  dropped=  1  else-kept= 0  pos-kept= 0  -9 lines
+  Cosmic/src/renderer/Renderer.cpp                       marks=  3  dropped=  3  else-kept= 0  pos-kept= 0  -9 lines
+  Cosmic/src/renderer/SceneRenderer.cpp                  marks= 20  dropped= 18  else-kept= 2  pos-kept= 0  -540 lines
+  Cosmic/src/renderer/SceneRenderer.h                    marks= 13  dropped= 13  else-kept= 0  pos-kept= 0  -103 lines
+  Cosmic/src/scene/Scene.cpp                             marks=  6  dropped=  4  else-kept= 0  pos-kept= 2  -55 lines
+  Cosmic/src/scene/Scene.h                               marks=  3  dropped=  3  else-kept= 0  pos-kept= 0  -42 lines
+  Cosmic/src/scene/SceneSerializer.cpp                   marks=  3  dropped=  3  else-kept= 0  pos-kept= 0  -29 lines
+  Cosmic/src/scripting/ScriptableEntity.h                marks=  3  dropped=  3  else-kept= 0  pos-kept= 0  -135 lines
+  Projects/Starforge/src/AssetTypes.cpp                  marks=  9  dropped=  9  else-kept= 0  pos-kept= 0  -53 lines
+  Projects/Starforge/src/BuildRunner.cpp                 marks=  0  dropped=  0  else-kept= 0  pos-kept= 0  -0 lines
+  Projects/Starforge/src/PreviewRig.cpp                  marks=  3  dropped=  2  else-kept= 0  pos-kept= 1  -306 lines
+  Projects/Starforge/src/PreviewRig.h                    marks=  2  dropped=  2  else-kept= 0  pos-kept= 0  -45 lines
+  Projects/Starforge/src/StarforgeApp.cpp                marks= 51  dropped= 39  else-kept= 9  pos-kept= 3  -1068 lines
+  Projects/Starforge/src/StarforgeApp.h                  marks=  8  dropped=  7  else-kept= 0  pos-kept= 1  -33 lines
+  Projects/Starforge/src/ViewportController.cpp          marks= 22  dropped= 12  else-kept= 9  pos-kept= 1  -690 lines
+  Projects/Starforge/src/ViewportController.h            marks=  8  dropped=  7  else-kept= 0  pos-kept= 1  -60 lines
+  Projects/Starforge/src/commands/EditorCommands.cpp     marks=  3  dropped=  3  else-kept= 0  pos-kept= 0  -163 lines
+  Projects/Starforge/src/commands/EditorCommands.h       marks=  1  dropped=  1  else-kept= 0  pos-kept= 0  -22 lines
+  Projects/Starforge/src/panels/ContentBrowserPanel.cpp  marks=  3  dropped=  2  else-kept= 1  pos-kept= 0  -54 lines
+  Projects/Starforge/src/panels/EnvironmentPanel.cpp     marks=  1  dropped=  0  else-kept= 1  pos-kept= 0  -17 lines
+  Projects/Starforge/src/panels/HierarchyPanel.cpp       marks=  4  dropped=  2  else-kept= 2  pos-kept= 0  -50 lines
+  Projects/Starforge/src/panels/InspectorPanel.cpp       marks=  2  dropped=  2  else-kept= 0  pos-kept= 0  -191 lines
+  Projects/Starforge/src/panels/MaterialEditorPanel.cpp  marks=  2  dropped=  1  else-kept= 1  pos-kept= 0  -58 lines
+  Projects/Starforge/src/panels/ProfilerPanel.cpp        marks=  1  dropped=  0  else-kept= 1  pos-kept= 0  -15 lines
+  tests/render/render_main.cpp                           marks=  3  dropped=  3  else-kept= 0  pos-kept= 0  -9 lines
+  tests/test_assetlibrary.cpp                            marks=  2  dropped=  2  else-kept= 0  pos-kept= 0  -116 lines
+  tests/test_components.cpp                              marks=  3  dropped=  3  else-kept= 0  pos-kept= 0  -16 lines
+  tests/test_crossbuild_scene.cpp                        marks=  2  dropped=  1  else-kept= 0  pos-kept= 1  -79 lines
+  tests/test_filesystem_mounts.cpp                       marks=  2  dropped=  2  else-kept= 0  pos-kept= 0  -24 lines
+  tests/test_physics_scene.cpp                           marks=  3  dropped=  3  else-kept= 0  pos-kept= 0  -15 lines
+  tests/test_reflect.cpp                                 marks=  4  dropped=  2  else-kept= 2  pos-kept= 0  -24 lines
+  tests/test_s5_navigation.cpp                           marks=  1  dropped=  1  else-kept= 0  pos-kept= 0  -30 lines
+  tests/test_scene_serializer.cpp                        marks=  2  dropped=  1  else-kept= 1  pos-kept= 0  -8 lines
+
+== dry-run diff stat ==
+  Cosmic/src/Cosmic.h                                   |    31 -------------------------------
+  Cosmic/src/assets/AssetLibrary.cpp                    |   233 ------------------------------------------------------------
+  Cosmic/src/assets/AssetLibrary.h                      |    30 ------------------------------
+  Cosmic/src/layers/PlayerLayer.cpp                     |    19 -------------------
+  Cosmic/src/physics/ScenePhysics.cpp                   |   219 ------------------------------------------------------------
+  Cosmic/src/physics/ScenePhysics.h                     |    18 ------------------
+  Cosmic/src/physics/backends/JoltBackend.cpp           |     3 ---
+  Cosmic/src/reflect/TypeRegistry.cpp                   |     3 ---
+  Cosmic/src/reflect/TypeRegistry.h                     |     9 ---------
+  Cosmic/src/renderer/Renderer.cpp                      |     9 ---------
+  Cosmic/src/renderer/SceneRenderer.cpp                 |   540 ------------------------------------------------------------
+  Cosmic/src/renderer/SceneRenderer.h                   |   103 ------------------------------------------------------------
+  Cosmic/src/scene/Scene.cpp                            |    55 -------------------------------------------------------
+  Cosmic/src/scene/Scene.h                              |    42 ------------------------------------------
+  Cosmic/src/scene/SceneSerializer.cpp                  |    29 -----------------------------
+  Cosmic/src/scripting/ScriptableEntity.h               |   135 ------------------------------------------------------------
+  Projects/Starforge/src/AssetTypes.cpp                 |    53 -----------------------------------------------------
+  Projects/Starforge/src/PreviewRig.cpp                 |   306 ------------------------------------------------------------
+  Projects/Starforge/src/PreviewRig.h                   |    45 ---------------------------------------------
+  Projects/Starforge/src/StarforgeApp.cpp               |  1068 ------------------------------------------------------------
+  Projects/Starforge/src/StarforgeApp.h                 |    33 ---------------------------------
+  Projects/Starforge/src/ViewportController.cpp         |   690 ------------------------------------------------------------
+  Projects/Starforge/src/ViewportController.h           |    60 ------------------------------------------------------------
+  Projects/Starforge/src/commands/EditorCommands.cpp    |   163 ------------------------------------------------------------
+  Projects/Starforge/src/commands/EditorCommands.h      |    22 ----------------------
+  Projects/Starforge/src/panels/ContentBrowserPanel.cpp |    54 ------------------------------------------------------
+  Projects/Starforge/src/panels/EnvironmentPanel.cpp    |    17 -----------------
+  Projects/Starforge/src/panels/HierarchyPanel.cpp      |    50 --------------------------------------------------
+  Projects/Starforge/src/panels/InspectorPanel.cpp      |   191 ------------------------------------------------------------
+  Projects/Starforge/src/panels/MaterialEditorPanel.cpp |    58 ----------------------------------------------------------
+  Projects/Starforge/src/panels/ProfilerPanel.cpp       |    15 ---------------
+  tests/render/render_main.cpp                          |     9 ---------
+  tests/test_assetlibrary.cpp                           |   116 ------------------------------------------------------------
+  tests/test_components.cpp                             |    16 ----------------
+  tests/test_crossbuild_scene.cpp                       |    79 ------------------------------------------------------------
+  tests/test_filesystem_mounts.cpp                      |    24 ------------------------
+  tests/test_physics_scene.cpp                          |    15 ---------------
+  tests/test_reflect.cpp                                |    24 ------------------------
+  tests/test_s5_navigation.cpp                          |    30 ------------------------------
+  tests/test_scene_serializer.cpp                       |     8 --------
+  40 file(s) changed, 0 insertions(+), 4624 deletions(-)
+
+== EXCEPTIONS left untouched - edit by hand ==
+  Cosmic/src/physics/backends/JoltBackend.cpp:1027: #if defined(JPH_DEBUG_RENDERER) && !defined(COSMIC_2D_ONLY)  (COSMIC_2D_ONLY inside a compound condition)
+== non-C/C++ files mentioning COSMIC_2D_ONLY (hand-edit; never rewritten) ==
+  Cosmic/templates/ExampleProject/CMakeLists.txt  (6 line(s))
+  Projects/AnalysisSample/CMakeLists.txt  (5 line(s))
+  Projects/AnalysisSample/README.md  (1 line(s))
+  Projects/Starforge/CMakeLists.txt  (3 line(s))
+  Projects/Starforge/assets/templates/CMakeLists.txt  (6 line(s))
+  tests/CMakeLists.txt  (2 line(s))
+  tests/acceptance/fixtures/Capture-WO06.py  (2 line(s))
+  tests/acceptance/fixtures/Verify-AP05Purge.ps1  (20 line(s))
+  tests/acceptance/manifests/ap05-purge.manifest.json  (1 line(s))
+  tests/check_docs_coverage.ps1  (1 line(s))
+
+dry run - nothing written (re-run with --write)

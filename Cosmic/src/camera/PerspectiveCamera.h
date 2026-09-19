@@ -8,7 +8,7 @@
  * The PerspectiveCamera is the 3D counterpart of OrthographicCamera: a pinhole
  * projection (vertical FOV / aspect / near / far) plus a rigid transform stored
  * as position + quaternion orientation. Distant objects shrink — this is the
- * camera for the 3D viewport (Renderer3D), simulators, and any world where
+ * camera for a perspective 3D viewport, simulators, and any world where
  * depth perception matters.
  *
  * Frame convention (see math/Spatial.h): the RENDER frame is right-handed,

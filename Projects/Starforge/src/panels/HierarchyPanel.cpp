@@ -57,25 +57,12 @@ namespace Starforge
             // Components3D.h and are absent from the 2D build. Only the rows
             // themselves fence: every 2D row below, and the whole panel's
             // hierarchy/reorder/rename/search behaviour, is untouched.
-#ifndef COSMIC_2D_ONLY
-            if (e.HasComponent<DirectionalLightComponent>() ||
-                e.HasComponent<PointLightComponent>())        return { ICON_LC_LIGHTBULB, IM_COL32(240, 200,  90, 255) };
-            if (e.HasComponent<TerrainComponent>())           return { ICON_LC_MOUNTAIN, IM_COL32(150, 175, 110, 255) };
-            if (e.HasComponent<WaterComponent>())             return { ICON_LC_WAVES,    IM_COL32( 80, 180, 200, 255) };
-            if (e.HasComponent<ParticleEmitterComponent>())   return { ICON_LC_SPARKLES, IM_COL32(236,  90, 190, 255) };
-            if (e.HasComponent<VoxelVolumeComponent>())       return { ICON_LC_BLOCKS,   IM_COL32(140, 150, 160, 255) };
-#endif
             if (e.HasComponent<Light2DComponent>())           return { ICON_LC_LIGHTBULB, IM_COL32(240, 200,  90, 255) };
             if (e.HasComponent<CanvasComponent>()      || e.HasComponent<RectTransformComponent>() ||
                 e.HasComponent<UiImageComponent>()     || e.HasComponent<UiTextComponent>() ||
                 e.HasComponent<UiButtonComponent>())          return { ICON_LC_TYPE,     IM_COL32(240, 200,  60, 255) };
             if (e.HasComponent<TilemapComponent>())           return { ICON_LC_GRID_2X2, IM_COL32(180, 120, 230, 255) };
             if (e.HasComponent<SpriteRendererComponent>())    return { ICON_LC_IMAGE,    IM_COL32(180, 120, 230, 255) };
-#ifndef COSMIC_2D_ONLY
-            if (e.HasComponent<MeshRendererComponent>()  ||
-                e.HasComponent<PrimitiveMeshComponent>() ||
-                e.HasComponent<LODGroupComponent>())          return { ICON_LC_BOX,      IM_COL32(120, 190, 100, 255) };
-#endif
             if (e.HasComponent<NativeScriptComponent>() ||
                 e.HasComponent<SystemScriptComponent>())      return { ICON_LC_CODE,     IM_COL32(100, 200, 180, 255) };
             return { ICON_LC_CIRCLE, IM_COL32(150, 150, 155, 255) };   // an empty / transform-only entity
@@ -83,27 +70,9 @@ namespace Starforge
 
         // Attach a light/camera/mesh at spawn — the create-menu builders.
         void MakeCamera(Entity e)     { e.AddComponent<CameraComponent>(); }
-#ifndef COSMIC_2D_ONLY
-        void MakeDirLight(Entity e)   { e.AddComponent<DirectionalLightComponent>(); }
-        void MakePointLight(Entity e) { e.AddComponent<PointLightComponent>(); }
-        // Parametric primitives (E15): attach shape + params + a default-tint
-        // MeshRenderer; Scene::SyncPrimitiveMeshes builds the mesh at render time.
-        void MakePrimitive(Entity e, PrimitiveMeshComponent::Shape shape)
-        {
-            e.AddComponent<PrimitiveMeshComponent>(shape);
-            e.AddComponent<MeshRendererComponent>().Color = { 0.8f, 0.8f, 0.82f, 1.0f };
-        }
-        void MakeCube(Entity e)     { MakePrimitive(e, PrimitiveMeshComponent::Shape::Box); }
-        void MakeSphere(Entity e)   { MakePrimitive(e, PrimitiveMeshComponent::Shape::Sphere); }
-        void MakePlane(Entity e)    { MakePrimitive(e, PrimitiveMeshComponent::Shape::Plane); }
-        void MakeCylinder(Entity e) { MakePrimitive(e, PrimitiveMeshComponent::Shape::Cylinder); }
-        void MakeCone(Entity e)     { MakePrimitive(e, PrimitiveMeshComponent::Shape::Cone); }
-        void MakeTorus(Entity e)    { MakePrimitive(e, PrimitiveMeshComponent::Shape::Torus); }
-#else
         // The 2D create-menu builders: a flat-colour sprite and a point light.
         void MakeSprite(Entity e)     { e.AddComponent<SpriteRendererComponent>(); }
         void MakeLight2D(Entity e)    { e.AddComponent<Light2DComponent>(); }
-#endif
     }
 
     void HierarchyPanel::OnImGuiRender(EditorContext& ctx, bool* pOpen)
@@ -411,27 +380,8 @@ namespace Starforge
         };
 
         emit("Empty", nullptr);
-#ifndef COSMIC_2D_ONLY
-        if (ImGui::BeginMenu("Primitive"))
-        {
-            emit("Cube",     &MakeCube);
-            emit("Sphere",   &MakeSphere);
-            emit("Plane",    &MakePlane);
-            emit("Cylinder", &MakeCylinder);
-            emit("Cone",     &MakeCone);
-            emit("Torus",    &MakeTorus);
-            ImGui::EndMenu();
-        }
-        if (ImGui::BeginMenu("Light"))
-        {
-            emit("Directional Light", &MakeDirLight);
-            emit("Point Light",       &MakePointLight);
-            ImGui::EndMenu();
-        }
-#else
         emit("Sprite",   &MakeSprite);
         emit("2D Light", &MakeLight2D);
-#endif
         emit("Camera", &MakeCamera);
     }
 }

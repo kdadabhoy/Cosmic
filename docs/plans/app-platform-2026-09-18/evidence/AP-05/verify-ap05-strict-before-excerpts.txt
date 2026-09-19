@@ -1,0 +1,559 @@
+# Verify-AP05Purge.ps1 WITHOUT -AllowFences (B06 strict) on the part-A tree (HEAD 1bedfa4), BEFORE part B - the full 240/71/234 lists
+[PASS] paths-absent: none of the 102 Part-A paths exists
+[PASS] build-files-clean: no CMake/preset line names a purged dep dir, partition rule, 3D test block, render_3d.cpp, purged editor TU or 3D preset
+[FAIL] fence-uses: 240 COSMIC_2D_ONLY preprocessor use(s) remain
+       uses (240):
+         Cosmic/src/Cosmic.h:35: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/Cosmic.h:45: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/Cosmic.h:50: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/Cosmic.h:71: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/Cosmic.h:79: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/Cosmic.h:111: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/Cosmic.h:116: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/Cosmic.h:127: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/assets/AssetLibrary.cpp:10: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/assets/AssetLibrary.cpp:33: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/assets/AssetLibrary.cpp:39: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/assets/AssetLibrary.cpp:117: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/assets/AssetLibrary.cpp:216: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/assets/AssetLibrary.cpp:352: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/assets/AssetLibrary.cpp:376: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/assets/AssetLibrary.cpp:392: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/assets/AssetLibrary.cpp:397: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/assets/AssetLibrary.cpp:419: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/assets/AssetLibrary.cpp:425: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/assets/AssetLibrary.h:84: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/assets/AssetLibrary.h:110: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/layers/PlayerLayer.cpp:170: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/layers/PlayerLayer.cpp:198: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/layers/PlayerLayer.cpp:208: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/layers/PlayerLayer.cpp:212: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/layers/PlayerLayer.cpp:270: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/layers/PlayerLayer.cpp:313: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/physics/ScenePhysics.cpp:9: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/physics/ScenePhysics.cpp:13: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/physics/ScenePhysics.cpp:47: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/physics/ScenePhysics.cpp:146: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/physics/ScenePhysics.cpp:279: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/physics/ScenePhysics.cpp:299: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/physics/ScenePhysics.cpp:307: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/physics/ScenePhysics.cpp:402: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/physics/ScenePhysics.cpp:531: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/physics/ScenePhysics.h:27: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/physics/ScenePhysics.h:84: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/physics/ScenePhysics.h:98: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/physics/backends/JoltBackend.cpp:21: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/physics/backends/JoltBackend.cpp:1027: #if defined(JPH_DEBUG_RENDERER) && !defined(COSMIC_2D_ONLY)
+         Cosmic/src/reflect/TypeRegistry.cpp:270: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/reflect/TypeRegistry.h:128: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/renderer/Renderer.cpp:2: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/renderer/Renderer.cpp:27: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/renderer/Renderer.cpp:39: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/renderer/SceneRenderer.cpp:6: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/renderer/SceneRenderer.cpp:13: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/renderer/SceneRenderer.cpp:19: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/renderer/SceneRenderer.cpp:27: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/renderer/SceneRenderer.cpp:38: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/renderer/SceneRenderer.cpp:210: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/renderer/SceneRenderer.cpp:226: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/renderer/SceneRenderer.cpp:282: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/renderer/SceneRenderer.cpp:344: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/renderer/SceneRenderer.cpp:368: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/renderer/SceneRenderer.cpp:405: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/renderer/SceneRenderer.cpp:590: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/renderer/SceneRenderer.cpp:644: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/renderer/SceneRenderer.cpp:672: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/renderer/SceneRenderer.cpp:681: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/renderer/SceneRenderer.cpp:724: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/renderer/SceneRenderer.cpp:734: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/renderer/SceneRenderer.cpp:746: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/renderer/SceneRenderer.cpp:764: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/renderer/SceneRenderer.cpp:782: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/renderer/SceneRenderer.h:59: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/renderer/SceneRenderer.h:64: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/renderer/SceneRenderer.h:117: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/renderer/SceneRenderer.h:152: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/renderer/SceneRenderer.h:224: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/renderer/SceneRenderer.h:230: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/renderer/SceneRenderer.h:240: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/renderer/SceneRenderer.h:260: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/renderer/SceneRenderer.h:311: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/renderer/SceneRenderer.h:315: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/renderer/SceneRenderer.h:335: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/renderer/SceneRenderer.h:343: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/renderer/SceneRenderer.h:349: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/scene/Scene.cpp:6: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/scene/Scene.cpp:12: #ifdef COSMIC_2D_ONLY
+         Cosmic/src/scene/Scene.cpp:23: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/scene/Scene.cpp:237: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/scene/Scene.cpp:407: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/scene/Scene.cpp:844: #ifdef COSMIC_2D_ONLY
+         Cosmic/src/scene/Scene.h:133: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/scene/Scene.h:426: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/scene/Scene.h:446: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/scene/SceneSerializer.cpp:8: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/scene/SceneSerializer.cpp:206: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/scene/SceneSerializer.cpp:323: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/scripting/ScriptableEntity.h:31: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/scripting/ScriptableEntity.h:37: #ifndef COSMIC_2D_ONLY
+         Cosmic/src/scripting/ScriptableEntity.h:249: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/AssetTypes.cpp:9: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/AssetTypes.cpp:17: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/AssetTypes.cpp:49: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/AssetTypes.cpp:72: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/AssetTypes.cpp:91: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/AssetTypes.cpp:132: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/AssetTypes.cpp:137: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/AssetTypes.cpp:157: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/AssetTypes.cpp:188: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/PreviewRig.cpp:77: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/PreviewRig.cpp:117: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/PreviewRig.cpp:379: #ifdef COSMIC_2D_ONLY
+         Projects/Starforge/src/PreviewRig.h:68: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/PreviewRig.h:138: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/StarforgeApp.cpp:7: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/StarforgeApp.cpp:18: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/StarforgeApp.cpp:27: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/StarforgeApp.cpp:109: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/StarforgeApp.cpp:132: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/StarforgeApp.cpp:385: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/StarforgeApp.cpp:549: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/StarforgeApp.cpp:707: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/StarforgeApp.cpp:712: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/StarforgeApp.cpp:747: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/StarforgeApp.cpp:809: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/StarforgeApp.cpp:818: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/StarforgeApp.cpp:822: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/StarforgeApp.cpp:832: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/StarforgeApp.cpp:849: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/StarforgeApp.cpp:864: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/StarforgeApp.cpp:874: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/StarforgeApp.cpp:1090: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/StarforgeApp.cpp:1119: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/StarforgeApp.cpp:1155: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/StarforgeApp.cpp:1159: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/StarforgeApp.cpp:1229: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/StarforgeApp.cpp:1241: #ifdef COSMIC_2D_ONLY
+         Projects/Starforge/src/StarforgeApp.cpp:1332: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/StarforgeApp.cpp:1344: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/StarforgeApp.cpp:1382: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/StarforgeApp.cpp:1401: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/StarforgeApp.cpp:1415: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/StarforgeApp.cpp:1427: #ifdef COSMIC_2D_ONLY
+         Projects/Starforge/src/StarforgeApp.cpp:1473: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/StarforgeApp.cpp:1769: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/StarforgeApp.cpp:1883: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/StarforgeApp.cpp:1963: #ifdef COSMIC_2D_ONLY
+         Projects/Starforge/src/StarforgeApp.cpp:1975: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/StarforgeApp.cpp:2277: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/StarforgeApp.cpp:2349: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/StarforgeApp.cpp:2353: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/StarforgeApp.cpp:2366: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/StarforgeApp.cpp:2371: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/StarforgeApp.cpp:2416: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/StarforgeApp.cpp:2538: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/StarforgeApp.cpp:2709: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/StarforgeApp.cpp:2717: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/StarforgeApp.cpp:2927: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/StarforgeApp.cpp:2941: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/StarforgeApp.cpp:2949: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/StarforgeApp.cpp:3270: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/StarforgeApp.cpp:3316: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/StarforgeApp.cpp:3538: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/StarforgeApp.cpp:3839: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/StarforgeApp.cpp:4015: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/StarforgeApp.h:29: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/StarforgeApp.h:48: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/StarforgeApp.h:138: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/StarforgeApp.h:166: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/StarforgeApp.h:210: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/StarforgeApp.h:242: #ifdef COSMIC_2D_ONLY
+         Projects/Starforge/src/StarforgeApp.h:280: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/StarforgeApp.h:321: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/ViewportController.cpp:12: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/ViewportController.cpp:44: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/ViewportController.cpp:170: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/ViewportController.cpp:228: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/ViewportController.cpp:471: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/ViewportController.cpp:508: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/ViewportController.cpp:596: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/ViewportController.cpp:945: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/ViewportController.cpp:1211: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/ViewportController.cpp:1381: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/ViewportController.cpp:1400: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/ViewportController.cpp:1408: #ifdef COSMIC_2D_ONLY
+         Projects/Starforge/src/ViewportController.cpp:1413: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/ViewportController.cpp:1491: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/ViewportController.cpp:1519: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/ViewportController.cpp:1593: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/ViewportController.cpp:1612: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/ViewportController.cpp:1623: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/ViewportController.cpp:1627: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/ViewportController.cpp:1644: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/ViewportController.cpp:1725: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/ViewportController.cpp:1764: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/ViewportController.h:31: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/ViewportController.h:70: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/ViewportController.h:92: #ifdef COSMIC_2D_ONLY
+         Projects/Starforge/src/ViewportController.h:127: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/ViewportController.h:167: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/ViewportController.h:215: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/ViewportController.h:246: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/ViewportController.h:262: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/commands/EditorCommands.cpp:7: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/commands/EditorCommands.cpp:436: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/commands/EditorCommands.cpp:604: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/commands/EditorCommands.h:85: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/panels/ContentBrowserPanel.cpp:375: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/panels/ContentBrowserPanel.cpp:458: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/panels/ContentBrowserPanel.cpp:543: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/panels/EnvironmentPanel.cpp:83: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/panels/HierarchyPanel.cpp:60: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/panels/HierarchyPanel.cpp:74: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/panels/HierarchyPanel.cpp:86: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/panels/HierarchyPanel.cpp:414: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/panels/InspectorPanel.cpp:9: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/panels/InspectorPanel.cpp:336: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/panels/MaterialEditorPanel.cpp:107: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/panels/MaterialEditorPanel.cpp:168: #ifndef COSMIC_2D_ONLY
+         Projects/Starforge/src/panels/ProfilerPanel.cpp:86: #ifndef COSMIC_2D_ONLY
+         tests/test_assetlibrary.cpp:62: #ifndef COSMIC_2D_ONLY
+         tests/test_assetlibrary.cpp:168: #ifndef COSMIC_2D_ONLY
+         tests/test_components.cpp:7: #ifndef COSMIC_2D_ONLY
+         tests/test_components.cpp:16: #ifndef COSMIC_2D_ONLY
+         tests/test_components.cpp:68: #ifndef COSMIC_2D_ONLY
+         tests/test_crossbuild_scene.cpp:31: #ifndef COSMIC_2D_ONLY
+         tests/test_crossbuild_scene.cpp:233: #ifdef COSMIC_2D_ONLY
+         tests/test_filesystem_mounts.cpp:16: #ifndef COSMIC_2D_ONLY
+         tests/test_filesystem_mounts.cpp:74: #ifndef COSMIC_2D_ONLY
+         tests/test_physics_scene.cpp:14: #ifndef COSMIC_2D_ONLY
+         tests/test_physics_scene.cpp:57: #ifndef COSMIC_2D_ONLY
+         tests/test_physics_scene.cpp:93: #ifndef COSMIC_2D_ONLY
+         tests/test_reflect.cpp:11: #ifndef COSMIC_2D_ONLY
+         tests/test_reflect.cpp:74: #ifndef COSMIC_2D_ONLY
+         tests/test_reflect.cpp:169: #ifndef COSMIC_2D_ONLY
+         tests/test_reflect.cpp:254: #ifndef COSMIC_2D_ONLY
+         tests/test_s5_navigation.cpp:208: #ifndef COSMIC_2D_ONLY
+         tests/test_scene_serializer.cpp:14: #ifndef COSMIC_2D_ONLY
+         tests/test_scene_serializer.cpp:27: #ifndef COSMIC_2D_ONLY
+         tests/acceptance/fixtures/Verify-AP05Purge.ps1:17: "defined(COSMIC_2D_ONLY)" under Cosmic/src, Projects, tests.
+         tests/acceptance/fixtures/Verify-AP05Purge.ps1:176: # Fence state per line: EXCLUDED = inside an "#ifndef COSMIC_2D_ONLY" / "#if !defined(COSMIC_2D_ONLY)"
+         tests/acceptance/fixtures/Verify-AP05Purge.ps1:177: # (or "... && !defined(COSMIC_2D_ONLY)") true branch -> never compiled on this trunk.
+         tests/acceptance/fixtures/Verify-AP05Purge.ps1:178: # INCLUDED = inside an "#ifdef COSMIC_2D_ONLY" / "#if defined(COSMIC_2D_ONLY)" true branch or the
+         tests/render/render_main.cpp:34: #ifndef COSMIC_2D_ONLY
+         tests/render/render_main.cpp:107: #ifndef COSMIC_2D_ONLY
+         tests/render/render_main.cpp:127: #ifndef COSMIC_2D_ONLY
+[FAIL] includes-of-deleted: 71 #include(s) of a purged header or tree
+       fenced includes (71):
+         Cosmic/src/Cosmic.h:36: #include "renderer/Renderer3D.h"
+         Cosmic/src/Cosmic.h:46: #include "renderer/EnvironmentMap.h"     // S6.3 ƒ?" image-based lighting + skybox
+         Cosmic/src/Cosmic.h:47: #include "renderer/ShadowMap.h"          // S6.4 ƒ?" directional sun shadows
+         Cosmic/src/Cosmic.h:51: #include "renderer/InstanceSet.h"        // F5  ƒ?" per-instance transform pool (instanced draw)
+         Cosmic/src/Cosmic.h:52: #include "renderer/CoverageCapture.h"    // F8  ƒ?" top-down snow/coverage accumulation mask
+         Cosmic/src/Cosmic.h:53: #include "terrain/Terrain.h"             // S8  ƒ?" heightmap terrain (quadtree LOD + queries)
+         Cosmic/src/Cosmic.h:54: #include "water/Water.h"                 // S9  ƒ?" Gerstner water surface + buoyancy queries
+         Cosmic/src/Cosmic.h:55: #include "water/Presets.h"               // E18 ƒ?" ocean/lake/storm water presets
+         Cosmic/src/Cosmic.h:56: #include "particles/ParticleSystem.h"    // S10 ƒ?" GPU particles + ribbon trails
+         Cosmic/src/Cosmic.h:57: #include "particles/Presets.h"           // F8/F9 ƒ?" atmospheric particle emitter presets
+         Cosmic/src/Cosmic.h:72: #include "graphics/Model.h"           // W4 ƒ?" model loading (Skeleton/AnimationClip ride Components3D.h)
+         Cosmic/src/Cosmic.h:80: #include "assets/MeshImport.h"        // E16 ƒ?" model import (OBJ + gated assimp) + .cmeta
+         Cosmic/src/Cosmic.h:112: #include "scene/Components3D.h"
+         Cosmic/src/Cosmic.h:117: #include "scene/ScenePicker.h"        // S5.4 ƒ?" entity-ID 3D picking
+         Cosmic/src/Cosmic.h:128: #include "scene/WorldSystemRecipes.h"  // E18 ƒ?" terrain/water/particle recipe -> spec mapping
+         Cosmic/src/assets/AssetLibrary.cpp:12: #include "graphics/Model.h"
+         Cosmic/src/assets/AssetLibrary.cpp:13: #include "graphics/AnimationClip.h"
+         Cosmic/src/assets/AssetLibrary.cpp:14: #include "assets/MeshImport.h"
+         Cosmic/src/physics/ScenePhysics.cpp:10: #include "scene/Components3D.h"   // W4 ƒ?" MeshCollider/TerrainCollider + the terrain & voxel shape branches
+         Cosmic/src/physics/ScenePhysics.cpp:15: #include "terrain/Terrain.h"
+         Cosmic/src/physics/ScenePhysics.cpp:16: #include "voxel/VoxelVolume.h"       // V5 ƒ?" per-chunk static mesh collision
+         Cosmic/src/physics/ScenePhysics.cpp:17: #include "voxel/BlockPalette.h"
+         Cosmic/src/physics/ScenePhysics.cpp:18: #include "voxel/VoxelMesher.h"
+         Cosmic/src/physics/ScenePhysics.cpp:19: #include "voxel/VoxelRender.h"       // VoxelRenderData::CollisionDirty
+         Cosmic/src/physics/ScenePhysics.h:28: #include "voxel/VoxelVolume.h"           // V5 ƒ?" IVec3Hash for the per-chunk body map
+         Cosmic/src/physics/backends/JoltBackend.cpp:22: #include "renderer/Renderer3D.h"   // debug-draw line batch (J8)
+         Cosmic/src/renderer/Renderer.cpp:3: #include "renderer/Renderer3D.h"        // W5 ƒ?" dropped from a 2D build (CMakeLists step 3)
+         Cosmic/src/renderer/SceneRenderer.cpp:7: #include "renderer/InstanceSet.h"
+         Cosmic/src/renderer/SceneRenderer.cpp:8: #include "renderer/CoverageCapture.h"
+         Cosmic/src/renderer/SceneRenderer.cpp:14: #include "graphics/Model.h"
+         Cosmic/src/renderer/SceneRenderer.cpp:20: #include "terrain/Terrain.h"
+         Cosmic/src/renderer/SceneRenderer.cpp:21: #include "water/Water.h"
+         Cosmic/src/renderer/SceneRenderer.cpp:22: #include "particles/ParticleSystem.h"
+         Cosmic/src/renderer/SceneRenderer.cpp:28: #include "scene/Components3D.h"   // W4 ƒ?" the 3D passes read mesh/light/terrain/water/particle components
+         Cosmic/src/renderer/SceneRenderer.cpp:29: #include "scene/ScenePicker.h"    // K12 ƒ?" the outline id-mask pass
+         Cosmic/src/renderer/SceneRenderer.h:60: #include "renderer/Renderer3D.h"       // SceneRenderDesc holds Renderer3D::SceneLightsDesc by value
+         Cosmic/src/renderer/SceneRenderer.h:61: #include "renderer/EnvironmentMap.h"   // owned by value
+         Cosmic/src/renderer/SceneRenderer.h:65: #include "renderer/ShadowMap.h"        // owned by value
+         Cosmic/src/scene/Scene.cpp:9: #include "scene/Components3D.h"
+         Cosmic/src/scene/Scene.cpp:26: #include "scene/SceneNav.h"           // N4 ƒ?" the play-session crowd binding
+         Cosmic/src/scene/SceneSerializer.cpp:9: #include "scene/Components3D.h"         // W4 ƒ?" the two MeshRenderer material-slot blocks
+         Cosmic/src/scripting/ScriptableEntity.h:32: #include "scene/Components3D.h"          // W4 ƒ?" Voxels()/Animator() proxy component types
+         Cosmic/src/scripting/ScriptableEntity.h:38: #include "voxel/VoxelVolume.h"           // V4 ƒ?" Voxels() script proxy
+         Cosmic/src/scripting/ScriptableEntity.h:39: #include "voxel/BlockPalette.h"
+         Cosmic/src/scripting/ScriptableEntity.h:40: #include "scene/SceneNav.h"              // N4 ƒ?" Nav() script proxy (SceneNavRuntime)
+         Cosmic/src/scripting/ScriptableEntity.h:41: #include "nav/NavWorld.h"                // N4 ƒ?" Nav() queries (FindPath/Raycast/...)
+         Projects/Starforge/src/AssetTypes.cpp:10: #include "scene/Components3D.h"       // W4 ƒ?" the .cemitter default writer
+         Projects/Starforge/src/AssetTypes.cpp:18: #include "voxel/BlockPalette.h"      // the .cpal default writer
+         Projects/Starforge/src/StarforgeApp.cpp:8: #include "editors/AnimationEditor.h"   // M3 ƒ?" the AssetEditorHost factory target
+         Projects/Starforge/src/StarforgeApp.cpp:19: #include "scene/SceneNav.h"          // N3 ƒ?" async navmesh bake orchestration
+         Projects/Starforge/src/StarforgeApp.cpp:20: #include "nav/NavWorld.h"            // N3 ƒ?" NavMeshComponent::Nav->IsBuilt()
+         Projects/Starforge/src/StarforgeApp.cpp:28: #include "voxel/VoxelVolume.h"       // Phase 18 ƒ?" ForgeBlocks sample authoring
+         Projects/Starforge/src/StarforgeApp.cpp:29: #include "voxel/BlockPalette.h"
+         Projects/Starforge/src/StarforgeApp.cpp:30: #include "voxel/VoxelGenerator.h"
+         Projects/Starforge/src/StarforgeApp.cpp:31: #include "voxel/VoxelRender.h"
+         Projects/Starforge/src/StarforgeApp.h:30: #include "scene/SceneNav.h"      // N3 ƒ?" NavBakeJob (async navmesh bake tracking)
+         Projects/Starforge/src/StarforgeApp.h:49: #include "panels/WorldSystemsPanel.h"
+         Projects/Starforge/src/StarforgeApp.h:50: #include "panels/VoxelPanel.h"
+         Projects/Starforge/src/ViewportController.cpp:13: #include "voxel/VoxelVolume.h"      // V4 ƒ?" voxel brush raycast
+         Projects/Starforge/src/ViewportController.cpp:14: #include "voxel/VoxelRender.h"      // R8 ƒ?" entity-ID view draws voxel chunk meshes
+         Projects/Starforge/src/ViewportController.cpp:15: #include "nav/NavWorld.h"           // N3 ƒ?" nav-poly overlay (GetDebugTriangles)
+         Projects/Starforge/src/ViewportController.h:32: #include "nav/NavTypes.h"            // N3 ƒ?" NavDebugTri (nav-overlay draw scratch)
+         Projects/Starforge/src/commands/EditorCommands.cpp:8: #include "voxel/VoxelVolume.h"   // V4 ƒ?" undoable voxel edits
+         Projects/Starforge/src/panels/InspectorPanel.cpp:10: #include "nav/NavWorld.h"            // N3 ƒ?" NavMeshComponent::Nav->IsBuilt() for the Regenerate row
+         tests/test_components.cpp:8: #include "scene/Components3D.h"
+         tests/test_crossbuild_scene.cpp:32: #include "scene/Components3D.h"
+         tests/test_filesystem_mounts.cpp:17: #include "scene/Components3D.h"
+         tests/test_physics_scene.cpp:15: #include "scene/Components3D.h"
+         tests/test_reflect.cpp:12: #include "scene/Components3D.h"
+         tests/test_scene_serializer.cpp:15: #include "scene/Components3D.h"
+         tests/render/render_main.cpp:35: #include "renderer/Renderer3D.h"
+[FAIL] identifiers: 234 3D identifier mention(s) in Cosmic/src outside History: notes (150 fenced, 68 comment, 16 code)
+       code lines (16):
+         Cosmic/src/physics/PhysicsWorld.h:49: class Renderer3DDebugSink;   // fwd (J8) ƒ?" not used publicly here
+         Cosmic/src/renderer/BindingPoints.h:88: constexpr uint32_t TexUnitShadowMap = 11;
+         Cosmic/src/renderer/PostProcessStack.cpp:196: if (m_GodRaysEnabled && m_ShaftShadowMapID != 0)
+         Cosmic/src/renderer/PostProcessStack.cpp:307: RenderCommand::BindTextureSlot(1, m_ShaftShadowMapID);
+         Cosmic/src/renderer/PostProcessStack.cpp:308: m_GodRaysShader->SetInt("u_ShadowMap", 1);
+         Cosmic/src/renderer/PostProcessStack.h:140: void SetSunShaftInputs(uint32_t shadowMapID, const glm::mat4& lightViewProj,
+         Cosmic/src/renderer/PostProcessStack.h:143: m_ShaftShadowMapID = shadowMapID; m_ShaftLightViewProj = lightViewProj;
+         Cosmic/src/renderer/PostProcessStack.h:273: uint32_t  m_ShaftShadowMapID = 0;
+         Cosmic/src/renderer/SceneRenderer.cpp:201: void SceneRenderer::Init(uint32_t width, uint32_t height, uint32_t shadowMapSize)
+         Cosmic/src/renderer/SceneRenderer.cpp:214: (void)shadowMapSize;   // no sky/IBL cube and no shadow map in a 2D build
+         Cosmic/src/renderer/SceneRenderer.h:82: class Terrain;
+         Cosmic/src/renderer/SceneRenderer.h:165: bool TerrainCastsShadows = true;                      // consumed from F4
+         Cosmic/src/renderer/SceneRenderer.h:283: void Init(uint32_t width, uint32_t height, uint32_t shadowMapSize = 2048);
+         Cosmic/src/renderer/SceneRenderer.h:284: void Shutdown();                          // also Renderer3D::ClearIBL/ClearShadow
+         Cosmic/src/scene/Scene.h:297: void SyncVoxelVolumes(const glm::vec3& cameraPos);
+         Cosmic/src/scene/Scene.h:307: void SyncNavMeshes();
+       comment lines (68):
+         Cosmic/src/Cosmic.h:108: // terrain/water/particles/voxels, the geometry-derived colliders and navigation.
+         Cosmic/src/camera/Camera.h:12: * Renderer3D::BeginScene, and RenderPass all take `const Camera&` and call only
+         Cosmic/src/camera/FlyCameraController.h:49: * supplies it (typically Terrain::SampleHeight); returns the world-space
+         Cosmic/src/camera/PerspectiveCamera.h:11: * camera for the 3D viewport (Renderer3D), simulators, and any world where
+         Cosmic/src/graphics/Material.h:82: * Used by Renderer3D's S12.3 auto-instancing to bind this material's
+         Cosmic/src/graphics/Material.h:95: * Renderer3D's queue draws transparent-material meshes AFTER all opaques,
+         Cosmic/src/graphics/Material.h:109: * Renderer3D's queue may collapse runs of identical (mesh, material)
+         Cosmic/src/graphics/Material.h:122: * attributes (e.g. PBR.glsl -> PBRSkinned.glsl). Renderer3D's
+         Cosmic/src/graphics/Mesh.h:32: *   Renderer3D::DrawMesh(box, transform, color);
+         Cosmic/src/graphics/Mesh.h:69: * from the GPU upload mirrors Terrain (CPU heights vs. GPU texture) so unit
+         Cosmic/src/graphics/TextureCube.h:13: * specular map are all TextureCubes (renderer/EnvironmentMap owns the bakes).
+         Cosmic/src/graphics/UniformBuffer.h:17: * `vec4` and use `.w` for a scalar. See Renderer3D's GpuLightsBlock.
+         Cosmic/src/math/Noise.h:8: // Consumers on both roadmap tracks: terrain heightmaps (doc 05 S8), wind
+         Cosmic/src/math/Noise.h:20: //     float h  = noise.Fbm2D(x * 0.01f, y * 0.01f, 6);     // terrain
+         Cosmic/src/math/Noise.h:105: // noise ƒ?" the terrain/texture workhorse.
+         Cosmic/src/math/Spatial.h:18: * RENDER FRAME (Renderer3D / cameras): right-handed, Y-up.
+         Cosmic/src/physics/PhysicsWorld.h:136: *  Renderer3D line batch (call between BeginScene/EndScene). Sleeping
+         Cosmic/src/physics/ScenePhysics.cpp:79: // play-session body build above and the N2 navmesh bake (SceneNav).
+         Cosmic/src/physics/ScenePhysics.cpp:306: // --- Voxel collision (V5) ƒ?" 3D-only (plan doc 28 A6.4) -------------------
+         Cosmic/src/physics/ScenePhysics.h:71: *  build (BuildBodyDesc wraps it) and the N2 navmesh bake (SceneNav gathers
+         Cosmic/src/physics/ScenePhysics.h:72: *  triangles through it, the "honest physics source" of the navmesh). */
+         Cosmic/src/physics/backends/JoltBackend.cpp:15: // character controller. The single 3D coupling ƒ?" Renderer3D, used by DebugDraw ƒ?"
+         Cosmic/src/physics/backends/JoltBackend.cpp:1015: // Live Jolt state to the Renderer3D line batch. Jolt's DrawBodies is compiled
+         Cosmic/src/physics/backends/JoltBackend.cpp:1019: // only the batched line verbs (the real GL lives in Renderer3D/platform).
+         Cosmic/src/physics/backends/JoltBackend.cpp:1021: // The 2D engine has no Renderer3D, so the body is fenced out there as well and
+         Cosmic/src/reflect/TypeRegistry.cpp:262: // ...and the 3D half (W4). Terrain/water/particles/voxels, meshes and LODs,
+         Cosmic/src/renderer/BindingPoints.h:33: /** Renderer3D scene-lights block ƒ?" GpuLightsBlock ƒ+" `LightsBlock` in
+         Cosmic/src/renderer/BindingPoints.h:34: *  MeshLit.glsl (and any future lit shader). Uploaded by Renderer3D::SetLights. */
+         Cosmic/src/renderer/BindingPoints.h:40: *  Renderer3D::BeginScene, replacing the old per-draw loose u_ViewProjection /
+         Cosmic/src/renderer/BindingPoints.h:67: *  Renderer3D uploads the queued draws' palettes at Flush; ShadowMap's
+         Cosmic/src/renderer/BindingPoints.h:74: // Sampler units the ENGINE binds behind every material draw (Renderer3D
+         Cosmic/src/renderer/BindingPoints.h:78: // numbers here and the Renderer3D upload are the single source of truth.
+         Cosmic/src/renderer/BindingPoints.h:87: /** S6.4 ƒ?" directional sun shadow map (`u_ShadowMap`). */
+         Cosmic/src/renderer/BindingPoints.h:91: *  encoded top-surface Y). Pushed by Renderer3D::SetSnow via ApplySceneBindings
+         Cosmic/src/renderer/BindingPoints.h:92: *  to PBR / PBRInstanced / Terrain. Assigned unconditionally (portability rule);
+         Cosmic/src/renderer/BindingPoints.h:102: // Renderer3D / EnvironmentMap / ShadowMap / PostProcessStack passes, which
+         Cosmic/src/renderer/CameraUniforms.h:12: * reads from (binding: Bindings::CameraUbo = 1). Renderer3D::BeginScene packs +
+         Cosmic/src/renderer/PostProcessStack.h:137: /** The sun's shadow map + light matrix (ShadowMap::GetDepthID / GetLightViewProj)
+         Cosmic/src/renderer/RendererAPI.h:137: // Depth testing/writing toggles. Both default ON at Init(). Renderer3D and
+         Cosmic/src/renderer/RendererAPI.h:139: // altered across a Begin/End scope (see the Renderer3D state contract).
+         Cosmic/src/renderer/RenderQueue.h:12: * The sorting brain of Renderer3D's mesh queue, factored out of the GL-coupled
+         Cosmic/src/renderer/RenderQueue.h:16: * Renderer3D::DrawMesh no longer draws immediately (S12.2): submissions are
+         Cosmic/src/renderer/SceneRenderer.cpp:196: // and also clears the Renderer3D registration, so call it if still live.
+         Cosmic/src/renderer/SceneRenderer.cpp:664: // a live Renderer3D (the camera UBO is restored to the main camera here).
+         Cosmic/src/renderer/SceneRenderer.cpp:667: // target still bound. Only the Renderer3D scope fences out ƒ?" Renderer2D
+         Cosmic/src/renderer/SceneRenderer.h:19: * OWNED GPU SUBSYSTEMS (one each, like the app used to own): EnvironmentMap
+         Cosmic/src/renderer/SceneRenderer.h:22: * ShadowMap (the directional sun map). Init() needs a live GL context;
+         Cosmic/src/renderer/SceneRenderer.h:23: * Shutdown() before context teardown (it also clears the Renderer3D IBL/shadow
+         Cosmic/src/renderer/SceneRenderer.h:32: *   desc.Lights = ...; desc.TerrainSystem = &terrain; desc.WaterBodies = {...};
+         Cosmic/src/renderer/SceneRenderer.h:52: * gather, terrain/water/particles/ribbons, the sky + IBL environment, the shadow
+         Cosmic/src/renderer/SceneRenderer.h:102: * route by Pass: Reflection/Main ƒ+' Renderer3D (a scene is live), ShadowDepth ƒ+'
+         Cosmic/src/renderer/SceneRenderer.h:103: * ShadowMap::DrawCaster (material/color/entityID are ignored there). Direct
+         Cosmic/src/renderer/SceneRenderer.h:104: * Renderer3D::Draw* calls from the callback are legal in Reflection/Main and a
+         Cosmic/src/renderer/SceneRenderer.h:322: * desc.Lights, and drives the owned EnvironmentMap's sun direction + sky
+         Cosmic/src/scene/Components.h:9: // terrain/water/particles/voxels, the mesh + terrain colliders, and navigation ƒ?"
+         Cosmic/src/scene/Components.h:437: // Sun ƒ?" drives the first DirectionalLight / the owned EnvironmentMap.
+         Cosmic/src/scene/Scene.cpp:848: // to gather: the four asset syncs (primitive meshes / world systems / voxel
+         Cosmic/src/scene/Scene.cpp:849: // volumes / navmeshes), the scene-light walk, terrain, water, particle
+         Cosmic/src/scene/Scene.h:242: * TransformComponent + MeshRendererComponent via Renderer3D.
+         Cosmic/src/scene/Scene.h:277: * For every TerrainComponent / WaterComponent / ParticleEmitterComponent
+         Cosmic/src/scene/Scene.h:279: * recipe-parameter signature changed ƒ?" terrain only auto-builds once (its
+         Cosmic/src/scene/Scene.h:288: * @brief Stream + (re)mesh voxel volumes (Phase 18 / V3ƒ?"V6). For every
+         Cosmic/src/scene/Scene.h:289: * VoxelVolumeComponent: lazily loads its palette/`.cvox`, places the volume
+         Cosmic/src/scene/Scene.h:294: * per call). No-op for scenes without a VoxelVolumeComponent (compat gate).
+         Cosmic/src/scene/Scene.h:300: * @brief Lazily load each NavMeshComponent's `.cnav` sidecar into its runtime
+         Cosmic/src/scene/Scene.h:301: * NavWorld (Phase 26 / N2) so the navmesh is query-ready for debug draw and
+         Cosmic/src/scene/Scene.h:304: * No-op for scenes without a NavMeshComponent (the compat gate). Called at the
+         Cosmic/src/scene/Scene.h:328: * built TerrainComponent, all built WaterComponents (PrimaryReflectionWater =
+       fenced lines (150):
+         Cosmic/src/Cosmic.h:36: #include "renderer/Renderer3D.h"
+         Cosmic/src/Cosmic.h:46: #include "renderer/EnvironmentMap.h"     // S6.3 ƒ?" image-based lighting + skybox
+         Cosmic/src/Cosmic.h:47: #include "renderer/ShadowMap.h"          // S6.4 ƒ?" directional sun shadows
+         Cosmic/src/Cosmic.h:53: #include "terrain/Terrain.h"             // S8  ƒ?" heightmap terrain (quadtree LOD + queries)
+         Cosmic/src/Cosmic.h:80: #include "assets/MeshImport.h"        // E16 ƒ?" model import (OBJ + gated assimp) + .cmeta
+         Cosmic/src/Cosmic.h:128: #include "scene/WorldSystemRecipes.h"  // E18 ƒ?" terrain/water/particle recipe -> spec mapping
+         Cosmic/src/assets/AssetLibrary.h:90: /** @brief Cached mesh. Miss imports via MeshImport (OBJ + gated assimp), applying .cmeta. */
+         Cosmic/src/layers/PlayerLayer.cpp:209: m_TrackedScene->SyncWorldSystems();          // build recipe terrain etc. first
+         Cosmic/src/layers/PlayerLayer.cpp:213: m_TrackedScene->OnNavStart();                // bind the crowd to the navmesh (N4)
+         Cosmic/src/physics/ScenePhysics.cpp:10: #include "scene/Components3D.h"   // W4 ƒ?" MeshCollider/TerrainCollider + the terrain & voxel shape branches
+         Cosmic/src/physics/ScenePhysics.cpp:15: #include "terrain/Terrain.h"
+         Cosmic/src/physics/ScenePhysics.cpp:16: #include "voxel/VoxelVolume.h"       // V5 ƒ?" per-chunk static mesh collision
+         Cosmic/src/physics/ScenePhysics.cpp:17: #include "voxel/BlockPalette.h"
+         Cosmic/src/physics/ScenePhysics.cpp:18: #include "voxel/VoxelMesher.h"
+         Cosmic/src/physics/ScenePhysics.cpp:19: #include "voxel/VoxelRender.h"       // VoxelRenderData::CollisionDirty
+         Cosmic/src/physics/ScenePhysics.cpp:147: // MeshCollider and TerrainCollider are 3D-only (plan doc 28 A6.4); 2D keeps
+         Cosmic/src/physics/ScenePhysics.cpp:186: if (reg.all_of<TerrainColliderComponent>(e))
+         Cosmic/src/physics/ScenePhysics.cpp:188: if (const auto* tcomp = reg.try_get<TerrainComponent>(e); tcomp && tcomp->TerrainAsset)
+         Cosmic/src/physics/ScenePhysics.cpp:190: const Terrain& terr = *tcomp->TerrainAsset;
+         Cosmic/src/physics/ScenePhysics.cpp:191: const TerrainSpecification& spec = terr.GetSpecification();
+         Cosmic/src/physics/ScenePhysics.cpp:196: // +X/+Z edge row (a documented, harmless loss at the terrain rim).
+         Cosmic/src/physics/ScenePhysics.cpp:212: // Terrain is world geometry placed by its own spec ƒ?" ignore the
+         Cosmic/src/physics/ScenePhysics.cpp:221: CS_CORE_WARN("TerrainCollider (entity {0}) has no built TerrainComponent ƒ?" skipped.", uint32_t(e));
+         Cosmic/src/physics/ScenePhysics.cpp:280: || reg.any_of<MeshColliderComponent, TerrainColliderComponent>(e)
+         Cosmic/src/physics/ScenePhysics.cpp:300: // Static collision for any voxel volumes already resident at session start
+         Cosmic/src/physics/ScenePhysics.cpp:302: BuildVoxelBodies();
+         Cosmic/src/physics/ScenePhysics.cpp:309: PhysicsBody ScenePhysics::MakeVoxelChunkBody(entt::entity e, const glm::ivec3& chunk)
+         Cosmic/src/physics/ScenePhysics.cpp:312: auto* vc = reg.try_get<VoxelVolumeComponent>(e);
+         Cosmic/src/physics/ScenePhysics.cpp:316: const MeshData md = VoxelMesher::BuildCollision(*vc->Volume, chunk, *vc->Palette);
+         Cosmic/src/physics/ScenePhysics.cpp:321: // at the origin (voxel volumes are static world geometry, like terrain).
+         Cosmic/src/physics/ScenePhysics.cpp:323: const float     vs     = vc->Volume->GetVoxelSize();
+         Cosmic/src/physics/ScenePhysics.cpp:343: void ScenePhysics::BuildVoxelBodies()
+         Cosmic/src/physics/ScenePhysics.cpp:346: for (auto e : reg.view<VoxelVolumeComponent>())
+         Cosmic/src/physics/ScenePhysics.cpp:348: auto& vc = reg.get<VoxelVolumeComponent>(e);
+         Cosmic/src/physics/ScenePhysics.cpp:352: ChunkBodyMap& bodies = m_VoxelBodies[e];
+         Cosmic/src/physics/ScenePhysics.cpp:357: PhysicsBody b = MakeVoxelChunkBody(e, c);
+         Cosmic/src/physics/ScenePhysics.cpp:366: void ScenePhysics::RebuildDirtyVoxelChunks()
+         Cosmic/src/physics/ScenePhysics.cpp:369: for (auto e : reg.view<VoxelVolumeComponent>())
+         Cosmic/src/physics/ScenePhysics.cpp:371: auto& vc = reg.get<VoxelVolumeComponent>(e);
+         Cosmic/src/physics/ScenePhysics.cpp:375: ChunkBodyMap& bodies = m_VoxelBodies[e];
+         Cosmic/src/physics/ScenePhysics.cpp:389: PhysicsBody b = MakeVoxelChunkBody(e, c);
+         Cosmic/src/physics/ScenePhysics.cpp:403: // 0) Rebuild collision for any voxel chunks edited/streamed since last step,
+         Cosmic/src/physics/ScenePhysics.cpp:405: RebuildDirtyVoxelChunks();
+         Cosmic/src/physics/ScenePhysics.cpp:532: for (auto& [e, chunks] : m_VoxelBodies)
+         Cosmic/src/physics/ScenePhysics.cpp:535: m_VoxelBodies.clear();
+         Cosmic/src/physics/ScenePhysics.h:28: #include "voxel/VoxelVolume.h"           // V5 ƒ?" IVec3Hash for the per-chunk body map
+         Cosmic/src/physics/ScenePhysics.h:85: // Voxel collision (V5): one static triangle-mesh body per resident chunk.
+         Cosmic/src/physics/ScenePhysics.h:86: // 3D-only ƒ?" voxel volumes do not exist in the 2D engine (plan doc 28 A6.4).
+         Cosmic/src/physics/ScenePhysics.h:87: void        BuildVoxelBodies();
+         Cosmic/src/physics/ScenePhysics.h:88: void        RebuildDirtyVoxelChunks();
+         Cosmic/src/physics/ScenePhysics.h:89: PhysicsBody MakeVoxelChunkBody(entt::entity e, const glm::ivec3& chunk);
+         Cosmic/src/physics/ScenePhysics.h:100: // only reason this header includes voxel/VoxelVolume.h at all.
+         Cosmic/src/physics/ScenePhysics.h:102: std::unordered_map<entt::entity, ChunkBodyMap> m_VoxelBodies;
+         Cosmic/src/physics/backends/JoltBackend.cpp:22: #include "renderer/Renderer3D.h"   // debug-draw line batch (J8)
+         Cosmic/src/physics/backends/JoltBackend.cpp:1034: Renderer3D::DrawLine(ToGlmR(from), ToGlmR(to),
+         Cosmic/src/physics/backends/JoltBackend.cpp:1041: Renderer3D::DrawLine(ToGlmR(v1), ToGlmR(v2), c);
+         Cosmic/src/physics/backends/JoltBackend.cpp:1042: Renderer3D::DrawLine(ToGlmR(v2), ToGlmR(v3), c);
+         Cosmic/src/physics/backends/JoltBackend.cpp:1043: Renderer3D::DrawLine(ToGlmR(v3), ToGlmR(v1), c);
+         Cosmic/src/reflect/TypeRegistry.h:130: // lights, terrain/water/particles/voxels, the geometry-derived colliders and
+         Cosmic/src/renderer/Renderer.cpp:3: #include "renderer/Renderer3D.h"        // W5 ƒ?" dropped from a 2D build (CMakeLists step 3)
+         Cosmic/src/renderer/Renderer.cpp:28: Renderer3D::Init();
+         Cosmic/src/renderer/Renderer.cpp:40: Renderer3D::Shutdown();
+         Cosmic/src/renderer/SceneRenderer.cpp:20: #include "terrain/Terrain.h"
+         Cosmic/src/renderer/SceneRenderer.cpp:28: #include "scene/Components3D.h"   // W4 ƒ?" the 3D passes read mesh/light/terrain/water/particle components
+         Cosmic/src/renderer/SceneRenderer.cpp:83: Renderer3D::DrawMesh(mesh, transform, color, entityID);
+         Cosmic/src/renderer/SceneRenderer.cpp:101: Renderer3D::DrawMesh(mesh, transform, material, entityID);
+         Cosmic/src/renderer/SceneRenderer.cpp:114: Renderer3D::DrawMesh(mesh, transform, material, entityID, indexOffset, indexCount);
+         Cosmic/src/renderer/SceneRenderer.cpp:116: Renderer3D::DrawMesh(mesh, transform, color, entityID, indexOffset, indexCount);
+         Cosmic/src/renderer/SceneRenderer.cpp:138: Renderer3D::DrawMeshSkinned(mesh, transform, material, palette, jointCount, entityID);
+         Cosmic/src/renderer/SceneRenderer.cpp:156: Renderer3D::DrawModel(model, transform, entityID);
+         Cosmic/src/renderer/SceneRenderer.cpp:174: Renderer3D::DrawMeshInstanced(mesh, material, instances, count, entityID);
+         Cosmic/src/renderer/SceneRenderer.cpp:212: m_Shadow.Init(shadowMapSize);
+         Cosmic/src/renderer/SceneRenderer.cpp:228: Renderer3D::ClearIBL();
+         Cosmic/src/renderer/SceneRenderer.cpp:230: Renderer3D::ClearShadow();
+         Cosmic/src/renderer/SceneRenderer.cpp:345: // 2) Lights: upload once up front so every pass (reflection terrain, opaque,
+         Cosmic/src/renderer/SceneRenderer.cpp:347: Renderer3D::SetLightDirection(desc.Lights.SunDirection);
+         Cosmic/src/renderer/SceneRenderer.cpp:348: Renderer3D::SetAmbient(desc.Lights.Ambient);
+         Cosmic/src/renderer/SceneRenderer.cpp:349: Renderer3D::SetAmbientIntensity(desc.Settings.AmbientIntensity);   // X2 (default 1.0)
+         Cosmic/src/renderer/SceneRenderer.cpp:350: Renderer3D::SetLights(desc.Lights);
+         Cosmic/src/renderer/SceneRenderer.cpp:354: //    IBL set is pushed to Renderer3D only when IBL is on.
+         Cosmic/src/renderer/SceneRenderer.cpp:360: Renderer3D::ClearIBL();
+         Cosmic/src/renderer/SceneRenderer.cpp:411: Renderer3D::ClearShadow();
+         Cosmic/src/renderer/SceneRenderer.cpp:458: // Terrain casts too (F4): walks the same LOD cut as the lit pass using the
+         Cosmic/src/renderer/SceneRenderer.cpp:461: if (desc.TerrainSystem && desc.Settings.TerrainCastsShadows)
+         Cosmic/src/renderer/SceneRenderer.cpp:462: desc.TerrainSystem->RenderDepth(m_Shadow.GetLightViewProj(), desc.CameraPosition);
+         Cosmic/src/renderer/SceneRenderer.cpp:517: // Terrain top surface (same depth path, the coverage's top-down ortho matrix).
+         Cosmic/src/renderer/SceneRenderer.cpp:518: if (desc.TerrainSystem)
+         Cosmic/src/renderer/SceneRenderer.cpp:519: desc.TerrainSystem->RenderDepth(cov.GetCaptureViewProj(), desc.CameraPosition);
+         Cosmic/src/renderer/SceneRenderer.cpp:544: Renderer3D::BeginScene(reflVP, reflCam);
+         Cosmic/src/renderer/SceneRenderer.cpp:554: // LOD selection uses the REAL camera position so the reflected terrain
+         Cosmic/src/renderer/SceneRenderer.cpp:556: if (desc.TerrainSystem)
+         Cosmic/src/renderer/SceneRenderer.cpp:557: desc.TerrainSystem->Render(desc.CameraPosition);
+         Cosmic/src/renderer/SceneRenderer.cpp:569: Renderer3D::EndScene();
+         Cosmic/src/renderer/SceneRenderer.cpp:591: Renderer3D::BeginScene(m_ViewProj, desc.CameraPosition);
+         Cosmic/src/renderer/SceneRenderer.cpp:601: if (desc.TerrainSystem)
+         Cosmic/src/renderer/SceneRenderer.cpp:602: desc.TerrainSystem->Render(desc.CameraPosition);
+         Cosmic/src/renderer/SceneRenderer.cpp:614: Renderer3D::EndScene();
+         Cosmic/src/renderer/SceneRenderer.cpp:623: Renderer3D::SetLights(desc.Lights);
+         Cosmic/src/renderer/SceneRenderer.cpp:673: Renderer3D::BeginScene(m_ViewProj, desc.CameraPosition);
+         Cosmic/src/renderer/SceneRenderer.cpp:682: Renderer3D::EndScene();
+         Cosmic/src/renderer/SceneRenderer.h:60: #include "renderer/Renderer3D.h"       // SceneRenderDesc holds Renderer3D::SceneLightsDesc by value
+         Cosmic/src/renderer/SceneRenderer.h:61: #include "renderer/EnvironmentMap.h"   // owned by value
+         Cosmic/src/renderer/SceneRenderer.h:65: #include "renderer/ShadowMap.h"        // owned by value
+         Cosmic/src/renderer/SceneRenderer.h:118: // W6 ƒ?" every submit verb routes to Renderer3D / ShadowMap / CoverageCapture,
+         Cosmic/src/renderer/SceneRenderer.h:129: // Renderer3D queue. Depth passes never call this ƒ?" the Scene draws the
+         Cosmic/src/renderer/SceneRenderer.h:137: // Skinned submit (Phase 20 / A2): Reflection/Main -> Renderer3D::
+         Cosmic/src/renderer/SceneRenderer.h:138: // DrawMeshSkinned (the PBRSkinned twin); ShadowDepth -> ShadowMap::
+         Cosmic/src/renderer/SceneRenderer.h:144: // Instanced submit (F5): Reflection/Main ƒ+' Renderer3D::DrawMeshInstanced;
+         Cosmic/src/renderer/SceneRenderer.h:145: // ShadowDepth ƒ+' ShadowMap::DrawCasterInstanced (material/entityID ignored).
+         Cosmic/src/renderer/SceneRenderer.h:153: ShadowMap*       m_Shadow   = nullptr;   // ShadowDepth routing target
+         Cosmic/src/renderer/SceneRenderer.h:225: Renderer3D::SceneLightsDesc Lights;
+         Cosmic/src/renderer/SceneRenderer.h:231: Terrain* TerrainSystem = nullptr;                     // Reflection + Main (+ shadow via F4)
+         Cosmic/src/renderer/SceneRenderer.h:248: // CoverageCapture), plus terrain depth + ECS casters ƒ?" then the coverage mask
+         Cosmic/src/renderer/SceneRenderer.h:312: EnvironmentMap&   GetEnvironment() { return m_Environment; }   // app drives the sun policy
+         Cosmic/src/renderer/SceneRenderer.h:316: ShadowMap&        GetShadowMap()   { return m_Shadow; }
+         Cosmic/src/renderer/SceneRenderer.h:346: EnvironmentMap   m_Environment;
+         Cosmic/src/renderer/SceneRenderer.h:350: ShadowMap        m_Shadow;
+         Cosmic/src/scene/Scene.h:141: /** @brief Bind the primary baked navmesh + DetourCrowd and create an agent per
+         Cosmic/src/scene/Scene.h:143: *  has no NavAgentComponent and no NavMeshComponent (the compat gate). */
+         Cosmic/src/scene/Scene.h:147: *  emit nav.arrived. No-op if no session/navmesh is active. */
+         Cosmic/src/scene/Scene.h:154: *  ScriptableEntity::Nav() to reach the agent + navmesh queries. */
+         Cosmic/src/scene/Scene.h:430: *  SceneDrawContext (Main/Reflection ƒ+' Renderer3D queue; depth passes ƒ+'
+         Cosmic/src/scripting/ScriptableEntity.h:32: #include "scene/Components3D.h"          // W4 ƒ?" Voxels()/Animator() proxy component types
+         Cosmic/src/scripting/ScriptableEntity.h:38: #include "voxel/VoxelVolume.h"           // V4 ƒ?" Voxels() script proxy
+         Cosmic/src/scripting/ScriptableEntity.h:39: #include "voxel/BlockPalette.h"
+         Cosmic/src/scripting/ScriptableEntity.h:250: // W5 ƒ?" the three 3D-world script proxies: voxels, skeletal animation and
+         Cosmic/src/scripting/ScriptableEntity.h:254: // ---- voxel passthrough (V4) -----------------------------------------
+         Cosmic/src/scripting/ScriptableEntity.h:255: // A thin handle to a voxel world: this entity's VoxelVolumeComponent if it
+         Cosmic/src/scripting/ScriptableEntity.h:256: // has one, else the scene's first. Get/Set are in WORLD VOXEL coordinates;
+         Cosmic/src/scripting/ScriptableEntity.h:260: // initialized (the first Scene::SyncVoxelVolumes) or with no voxel entity.
+         Cosmic/src/scripting/ScriptableEntity.h:261: struct VoxelProxy
+         Cosmic/src/scripting/ScriptableEntity.h:266: VoxelVolumeComponent* Comp() const
+         Cosmic/src/scripting/ScriptableEntity.h:269: if (auto* c = S->GetRegistry().try_get<VoxelVolumeComponent>(Handle)) return c;
+         Cosmic/src/scripting/ScriptableEntity.h:270: for (auto e : S->GetRegistry().view<VoxelVolumeComponent>())
+         Cosmic/src/scripting/ScriptableEntity.h:271: return &S->GetRegistry().get<VoxelVolumeComponent>(e);
+         Cosmic/src/scripting/ScriptableEntity.h:274: VoxelVolume*  Volume()  const { auto* c = Comp(); return c ? c->Volume.get()  : nullptr; }
+         Cosmic/src/scripting/ScriptableEntity.h:281: glm::ivec3 WorldToVoxel(const glm::vec3& p) const { auto* v = Volume(); return v ? v->WorldToVoxel(p) : glm::ivec3(0); }
+         Cosmic/src/scripting/ScriptableEntity.h:283: VoxelRayHit RayCast(const glm::vec3& origin, const glm::vec3& dir, float maxDist) const
+         Cosmic/src/scripting/ScriptableEntity.h:285: VoxelVolume* v = Volume(); BlockPalette* p = Palette();
+         Cosmic/src/scripting/ScriptableEntity.h:289: /** @brief Break (set to Air) the first solid voxel a world ray hits. */
+         Cosmic/src/scripting/ScriptableEntity.h:292: const VoxelRayHit h = RayCast(origin, dir, maxDist);
+         Cosmic/src/scripting/ScriptableEntity.h:294: Set(h.Voxel, 0);
+         Cosmic/src/scripting/ScriptableEntity.h:298: *  ray hits (the standard voxel place-on-face). */
+         Cosmic/src/scripting/ScriptableEntity.h:301: const VoxelRayHit h = RayCast(origin, dir, maxDist);
+         Cosmic/src/scripting/ScriptableEntity.h:307: VoxelProxy Voxels() const { return { m_Scene, m_Handle }; }
+         Cosmic/src/scripting/ScriptableEntity.h:340: // Steer this entity's NavAgent over the scene's baked navmesh, and run
+         Cosmic/src/scripting/ScriptableEntity.h:341: // navmesh queries usable by any script (agent or not ƒ?" e.g. a SystemScript
+         Cosmic/src/scripting/ScriptableEntity.h:343: // when no play session or navmesh is active. Arrival fires as the
+         Cosmic/src/scripting/ScriptableEntity.h:361: // Navmesh queries (const ƒ?" no agent required).
+         Cosmic/src/scripting/ScriptableEntity.h:365: /** @brief Deterministic random navmesh point within `radius` of `center`;
+
+[AP05] mode=B06 strict  repo=C:\dev\Cosmic  paths=102
+[doctest] test cases: 5 | 2 passed | 3 failed

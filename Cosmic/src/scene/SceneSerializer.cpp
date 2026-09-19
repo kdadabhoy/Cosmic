@@ -5,9 +5,6 @@
 #include "scene/Scene.h"
 #include "scene/Entity.h"
 #include "scene/Components.h"
-#ifndef COSMIC_2D_ONLY
-#include "scene/Components3D.h"         // W4 — the two MeshRenderer material-slot blocks
-#endif
 #include "reflect/TypeRegistry.h"
 #include "scripting/ModuleRegistry.h"   // E11 — typed NativeScript field (de)serialization
 #include "core/Log.h"
@@ -203,17 +200,6 @@ namespace Cosmic
                 // no "MeshRenderer" registration at all, so the whole block never
                 // reaches here — it lands in OpaqueComponentsComponent verbatim
                 // (MaterialPaths and all) and is re-emitted unchanged on save.
-#ifndef COSMIC_2D_ONLY
-                if (compName == "MeshRenderer" && compJson.contains("MaterialPaths")
-                    && compJson["MaterialPaths"].is_array())
-                {
-                    auto* mr = static_cast<MeshRendererComponent*>(comp);
-                    mr->MaterialPaths.clear();
-                    for (const auto& p : compJson["MaterialPaths"])
-                        mr->MaterialPaths.push_back(p.is_string() ? p.get<std::string>()
-                                                                  : std::string());
-                }
-#endif
             }
         }
 
@@ -320,21 +306,6 @@ namespace Cosmic
                 // 3D-only (W4) — the save-side twin of the load block above. A 2D
                 // build never walks a MeshRenderer descriptor here (there is none),
                 // so the slots ride out through OpaqueComponentsComponent instead.
-#ifndef COSMIC_2D_ONLY
-                if (d->Name == "MeshRenderer")   // M5 — material slots as a string array
-                {
-                    const auto* mr = static_cast<const MeshRendererComponent*>(comp);
-                    // EMPTY ⇒ write nothing, so single-material scenes stay
-                    // byte-identical (the compat gate).
-                    if (!mr->MaterialPaths.empty())
-                    {
-                        json arr = json::array();
-                        for (const std::string& p : mr->MaterialPaths)
-                            arr.push_back(p);
-                        cj["MaterialPaths"] = std::move(arr);
-                    }
-                }
-#endif
 
                 comps[d->Name] = cj;
             }

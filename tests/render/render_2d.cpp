@@ -542,7 +542,7 @@ TEST_SUITE("2D goldens")
         };
 
         SceneRenderer renderer;
-        renderer.Init(kW, kH, 512);
+        renderer.Init(kW, kH);
         REQUIRE(renderer.IsInitialized());
 
         Ref<FrameBuffer> fbo = MakeTarget();

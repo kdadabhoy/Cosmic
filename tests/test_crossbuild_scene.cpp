@@ -28,9 +28,6 @@
 #include "scene/Scene.h"
 #include "scene/Entity.h"
 #include "scene/Components.h"
-#ifndef COSMIC_2D_ONLY
-#include "scene/Components3D.h"
-#endif
 #include "scene/SceneSerializer.h"
 
 #include <algorithm>
@@ -230,7 +227,6 @@ TEST_CASE("An empty scene and a scene of only unknown blocks both round-trip")
 // 2D build: every 3D block must come back byte-for-byte
 // =============================================================================
 
-#ifdef COSMIC_2D_ONLY
 
 TEST_CASE("2D engine: 3D component blocks are preserved verbatim")
 {
@@ -360,78 +356,3 @@ TEST_CASE("2D engine (WO-09 C05): unknown AND 3D blocks survive two load->edit->
     CHECK(Contains(Squeeze(SceneSerializer::SaveToString(target)), "\"CastShadows\":false"));
 }
 
-#else
-
-// =============================================================================
-// 3D build: every 3D block must load into its real component
-// =============================================================================
-
-TEST_CASE("3D engine: 3D component blocks load into real components")
-{
-    Scene scene;
-    REQUIRE(SceneSerializer::LoadFromString(scene, kAuthoredScene));
-
-    auto& reg = scene.GetRegistry();
-
-    // Exactly one carrier of each, counted by hand so the assertion does not
-    // depend on which entt view API version is in play.
-    auto countOf = [&reg](auto typeTag) -> size_t
-    {
-        using T = decltype(typeTag);
-        size_t n = 0;
-        for (auto handle : reg.view<T>()) { (void)handle; ++n; }
-        return n;
-    };
-
-    // MeshRenderer — asset paths and the non-default flag survived.
-    {
-        REQUIRE(countOf(MeshRendererComponent{}) == 1);
-        auto view = reg.view<MeshRendererComponent>();
-        const auto& mr = reg.get<MeshRendererComponent>(*view.begin());
-        CHECK(mr.MeshPath     == "assets/models/crate.obj");
-        CHECK(mr.MaterialPath == "assets/materials/crate.cmat");
-        CHECK(mr.CastShadows  == false);
-    }
-
-    // DirectionalLight — a scalar the 2D build can only carry as text.
-    {
-        REQUIRE(countOf(DirectionalLightComponent{}) == 1);
-        auto view = reg.view<DirectionalLightComponent>();
-        const auto& dl = reg.get<DirectionalLightComponent>(*view.begin());
-        CHECK(dl.Intensity == doctest::Approx(3.5f));
-    }
-
-    // Terrain — the recipe fields.
-    {
-        REQUIRE(countOf(TerrainComponent{}) == 1);
-        auto view = reg.view<TerrainComponent>();
-        const auto& t = reg.get<TerrainComponent>(*view.begin());
-        CHECK(t.WorldSize   == doctest::Approx(512.0f));
-        CHECK(t.HeightScale == doctest::Approx(80.0f));
-    }
-
-    // Only the genuinely unknown block went opaque here.
-    size_t opaqueCount = 0;
-    for (auto handle : reg.view<OpaqueComponentsComponent>())
-        opaqueCount += reg.get<OpaqueComponentsComponent>(handle).Blocks.size();
-    CHECK(opaqueCount == 1);
-}
-
-TEST_CASE("3D engine: re-saving preserves the authored 3D values")
-{
-    const std::string pass1 = RoundTrip(kAuthoredScene);
-
-    // Values, not formatting — a real component re-serializes its whole field
-    // set, so the block is a superset of what was authored.
-    CHECK(Contains(pass1, "assets/models/crate.obj"));
-    CHECK(Contains(pass1, "assets/materials/crate.cmat"));
-    CHECK(Contains(pass1, "\"CastShadows\":false"));
-    CHECK(Contains(pass1, "\"Intensity\":3.5"));
-    CHECK(Contains(pass1, "\"WorldSize\":512.0"));
-    CHECK(Contains(pass1, "\"HeightScale\":80.0"));
-
-    // And the unknown block rode through untouched next to them.
-    CHECK(Contains(pass1, "survives every build"));
-}
-
-#endif

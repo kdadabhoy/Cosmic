@@ -2,8 +2,8 @@
   "manifest": "ap05-purge",
   "cases": [
     {
-      "id": "B06-A",
-      "description": "AP-05 part A purge oracle (the B06 grep/file half): every Part-A path is gone from the tree; the CMake files and CMakePresets.json no longer name the purged vendored deps, the list(FILTER) partition block, the 3D-only test block, render_3d.cpp, the excluded editor TUs or a 3D (OFF) preset; no 2D-compiled #include reaches a purged header or tree. The remaining COSMIC_2D_ONLY preprocessor uses and the 3D identifiers inside excluded fences are reported, not failed (-AllowFences): part B removes the fences and drops the switch from this manifest, after which B06 must pass strict.",
+      "id": "B06",
+      "description": "AP-05 purge oracle, strict (the B06 grep/file half, 01-Design-Contracts.md section 9): every Part-A path is gone from the tree; the CMake files and CMakePresets.json no longer name the purged vendored deps, the list(FILTER) partition block, the 3D-only test block, render_3d.cpp, the excluded editor TUs or a 3D (OFF) preset; zero COSMIC_2D_ONLY preprocessor uses under Cosmic/src, Projects, tests (part B removed every fence); no #include of a purged header or tree anywhere; zero 3D identifiers (Renderer3D|Terrain|Voxel|NavMesh|assimp|Recast|EnvironmentMap|ShadowMap) in Cosmic/src outside a History: comment note. Part A ran this same case with -AllowFences (id B06-A); part B dropped the switch.",
       "tier": "U",
       "profiles": [
         "pr",
@@ -22,8 +22,7 @@
         "-File",
         "{ACCEPTANCE}\\fixtures\\Verify-AP05Purge.ps1",
         "-Repo",
-        "{REPO}",
-        "-AllowFences"
+        "{REPO}"
       ],
       "expectExit": 0,
       "minTests": 5,

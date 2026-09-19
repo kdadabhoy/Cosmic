@@ -82,28 +82,6 @@ namespace Starforge
         // W7 — the three 3D-component commands. MeshRenderer and VoxelVolume do
         // not exist in the 2D build, so declaration and definition fence
         // together: a stray 2D caller is a compile error, not a link error.
-#ifndef COSMIC_2D_ONLY
-        // Assign a .cmat to `e`'s MeshRenderer as ONE undo step (K13 material
-        // drops). Applies now: sets MaterialPath AND resolves MaterialAsset
-        // through AssetLibrary (undo restores both — the plain reflected string
-        // write would leave the resolved asset stale).
-        void AssignMaterial(EditorContext& ctx, Cosmic::Entity e, const std::string& vfsPath);
-
-        // Set one material SLOT (M5) of `e`'s MeshRenderer::MaterialPaths to a
-        // `.cmat` (or "" to clear), undoable. Resizes the vector to fit `slot`;
-        // trailing empty slots are trimmed so an all-empty vector stays ABSENT
-        // from serialization (the compat gate). Resets MaterialPathsResolved so
-        // SyncPrimitiveMeshes rebuilds MaterialAssets.
-        void SetMaterialSlot(EditorContext& ctx, Cosmic::Entity e, size_t slot,
-                             const std::string& vfsPath);
-
-        // Set one voxel (world voxel coords) on `e`'s VoxelVolume to `newId`,
-        // undoable (V4). Applies immediately; records the old id for undo.
-        // Consecutive edits sharing `stroke` coalesce into one undo step (a brush
-        // drag = one undo). No-op when the id is unchanged or there is no volume.
-        void VoxelEdit(EditorContext& ctx, Cosmic::Entity e,
-                       const glm::ivec3& voxel, uint16_t newId, int stroke);
-#endif   // COSMIC_2D_ONLY — AssignMaterial / SetMaterialSlot / VoxelEdit
 
         // Set one tilemap cell (grid coords) on `e`'s Tilemap to `value`,
         // undoable (U4). Same stroke-coalescing contract as VoxelEdit: a paint

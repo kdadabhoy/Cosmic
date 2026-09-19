@@ -65,46 +65,6 @@ namespace Starforge
         PreviewRig(const PreviewRig&)            = delete;
         PreviewRig& operator=(const PreviewRig&) = delete;
 
-#ifndef COSMIC_2D_ONLY
-        // ---- Interactive mode ------------------------------------------------
-        // Draw into the rig's FBO at (width, height) with the rig's orbit
-        // camera; returns the color-attachment texture id (0 on failure). The
-        // material wins when non-null, else the Lambert color path.
-        uint32_t RenderMesh(const Cosmic::Ref<Cosmic::Mesh>& mesh,
-                            const Cosmic::Ref<Cosmic::Material>& material,
-                            const glm::vec4& lambertColor,
-                            uint32_t width, uint32_t height);
-
-        // Material preview: the rig's UV sphere with a live-built PBR material
-        // (rebuilt only when the asset's reflected fields change).
-        uint32_t RenderMaterial(const Cosmic::MaterialAsset& asset,
-                                uint32_t width, uint32_t height);
-
-        // ---- Skeletal preview (Phase 24 / M3) --------------------------------
-        // Render a skinned `mesh` at the pose given by `palette` (null/empty →
-        // bind pose / static) into the rig's FBO, optionally with a bone overlay
-        // drawn ON TOP of the mesh: joint crosses + parent lines from
-        // `jointModels` (baked-space per-joint transforms, i.e.
-        // ImportCorrection·global), `parents` the joint parent indices, `selected`
-        // the highlighted joint (its inbound bone + an inspect-only axis tripod).
-        // `material` null → the rig's neutral default (carries the skinned twin).
-        // Returns the color-attachment id; caches the view-projection for
-        // ProjectPoint. All args except `mesh` may be null/empty.
-        uint32_t RenderSkeletal(const Cosmic::Ref<Cosmic::Mesh>& mesh,
-                                const Cosmic::Ref<Cosmic::Material>& material,
-                                const glm::mat4* palette, uint32_t jointCount,
-                                const std::vector<glm::mat4>* jointModels,
-                                const std::vector<int>* parents,
-                                int selected, bool showBones,
-                                uint32_t width, uint32_t height);
-
-        // Project a baked-space model point (e.g. a joint origin) into pixel
-        // coords of the LAST RenderSkeletal image (top-left origin, w×h, matching
-        // the flipped-V ImGui::Image draw). Returns false if behind the camera.
-        bool ProjectPoint(const glm::vec3& modelPoint, uint32_t width, uint32_t height,
-                          glm::vec2& outPx) const;
-#endif   // COSMIC_2D_ONLY — every interactive render path
-
         // Orbit input for the interactive image (pixel drag deltas / wheel).
         void Orbit(float dxPixels, float dyPixels);
         void Zoom(float wheelSteps);
@@ -135,11 +95,6 @@ namespace Starforge
 
     private:
         void        EnsureResources();
-#ifndef COSMIC_2D_ONLY
-        uint32_t    Draw(const Cosmic::Ref<Cosmic::Mesh>& mesh,
-                         const Cosmic::Ref<Cosmic::Material>& material,
-                         const glm::vec4& color, uint32_t w, uint32_t h);
-#endif
         bool        Generate(const std::string& vfs);
         std::string CacheFileFor(const std::string& vfs) const;   // "" = uncacheable
 

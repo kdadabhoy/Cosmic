@@ -29,11 +29,11 @@ if(WIN32)
     add_definitions(-DWIN32_LEAN_AND_MEAN -DNOMINMAX)
 endif()
 
-# Engine build mode — MUST match the Cosmic SDK this plugin links against (the 2D
-# stability trunk ships Cosmic.dll compiled with COSMIC_2D_ONLY; the PUBLIC headers
-# carry #ifndef COSMIC_2D_ONLY fences, so every plugin TU needs the same definition
-# or the plugin-boundary ABI silently diverges). Same option the scaffold template
-# and the hot-reload configure use.
+# Engine build mode — kept in step with the Cosmic SDK this plugin links against.
+# Since AP-05 the SDK's public headers carry no COSMIC_2D_ONLY fences (the trunk is
+# 2D-only source), so the definition below is a compatibility no-op; it stays
+# because Cosmic.dll still carries the same PUBLIC define and a consumer may test
+# it. Same option the scaffold template and the hot-reload configure use.
 option(COSMIC_2D_ONLY "Match the 2D-only Cosmic SDK this plugin links against" ON)
 
 # Output root for the plugin DLL (<dir>/<CONFIG>). The Starforge packager passes

@@ -130,31 +130,6 @@ namespace Cosmic
 		 *  by ScriptableEntity::Physics()/Character() to reach a body/controller. */
 		ScenePhysics* GetPhysics() { return m_Physics.get(); }
 
-#ifndef COSMIC_2D_ONLY
-		// --- Nav session (Phase 26 / N4) -------------------------------------
-		// Agents exist only while a play session runs (the physics-body lifetime
-		// rule). Tick-order contract (per fixed step, in order):
-		//   scripts OnFixedUpdate -> OnPhysicsStep -> OnNavStep -> DispatchPhysicsEvents.
-		// W5 — defined in scene/Scene3D.cpp; navigation is 3D only. The physics
-		// session above is NOT fenced: physics is dimension agnostic (§4.1).
-
-		/** @brief Bind the primary baked navmesh + DetourCrowd and create an agent per
-		 *  NavAgentComponent. Call once when a play session starts. No-op if the scene
-		 *  has no NavAgentComponent and no NavMeshComponent (the compat gate). */
-		void OnNavStart();
-
-		/** @brief Advance the crowd one fixed step: step agents, write transforms back,
-		 *  emit nav.arrived. No-op if no session/navmesh is active. */
-		void OnNavStep(float fixedDeltaTime);
-
-		/** @brief Release the crowd + agents and end the nav session. */
-		void OnNavStop();
-
-		/** @brief The active nav runtime binding, or nullptr in edit mode. Used by
-		 *  ScriptableEntity::Nav() to reach the agent + navmesh queries. */
-		SceneNavRuntime* GetNav() { return m_NavRuntime.get(); }
-#endif   // COSMIC_2D_ONLY
-
 		/**
 		 * @brief Calls BeginScene with the provided camera, dispatches all sprite-bearing
 		 * entities to Renderer2D (grouped by material bucket to minimise draw call overhead),
@@ -238,106 +213,17 @@ namespace Cosmic
 		                      uint32_t viewportWidth, uint32_t viewportHeight);
 
 		/**
-		 * @brief 3D render pass (S4.3): draws every entity with a
-		 * TransformComponent + MeshRendererComponent via Renderer3D.
+		 * @brief Fill a SceneRenderDesc from this scene (H2) so SceneRenderer — the
+		 * engine's HDR/post orchestrator — is THE editor + player render path:
+		 * advances the world clock and fills the camera + time fields the passes
+		 * read. The CALLER then sets the clear color and, when FindEnvironment() is
+		 * non-null, applies it via SceneRenderer::ApplyEnvironment before Render().
+		 * Generic — no editor concepts leak in. Main-thread.
 		 *
-		 * Owns its own BeginScene/EndScene — do NOT wrap this call. Entities with a
-		 * null MeshAsset are skipped; a null MaterialAsset uses the Lambert color
-		 * path (Color tint), otherwise the custom-material path. No sorting/culling
-		 * yet (that is S12). Does not touch OnRender (the 2D path) — both can run in
-		 * one frame, 3D world first then 2D overlay.
-		 */
-		void OnRender3D(const Camera& camera);
-
-		/**
-		 * @brief Advance + sample every AnimatorComponent (Phase 20 / A2): resolve
-		 * its ClipPath (guarded, like MeshPath), find the skinned mesh it drives
-		 * (own entity or a descendant's), step the play head (Playing) or honor
-		 * the scrubbed NormalizedTime (paused), and bake the pose into the
-		 * component's skinning Palette for this frame's submits. Called by
-		 * OnUpdate for play sessions; the editor calls it directly per frame in
-		 * edit mode (the A2 "play preview in edit mode"). Pure CPU — safe
-		 * headless. COMPAT GATE: a scene with no Animators returns immediately.
-		 */
-		void UpdateAnimators(float deltaTime);
-
-		/**
-		 * @brief Prepare mesh assets for rendering (E15/E16). (Re)generates the mesh
-		 * of every entity with a PrimitiveMeshComponent whose parameters changed
-		 * since its last build, and resolves any MeshRendererComponent::MeshPath
-		 * (an imported/loaded asset) to a live MeshAsset via AssetLibrary — both
-		 * cover the freshly-loaded-scene case where meshes are stored by params /
-		 * path only. Called automatically at the top of OnRender3D; safe to call
-		 * manually before a custom render path. Main-thread / GL (uploads meshes).
-		 */
-		void SyncPrimitiveMeshes();
-
-		/**
-		 * @brief Regenerate world-system assets from their authoring recipes (E18).
-		 * For every TerrainComponent / WaterComponent / ParticleEmitterComponent
-		 * whose UseRecipe is set, (re)builds the held asset when it is null or the
-		 * recipe-parameter signature changed — terrain only auto-builds once (its
-		 * build is expensive; the editor drives rebuilds off the JobSystem). An
-		 * entity whose asset was set in CODE keeps UseRecipe false and is never
-		 * touched (the shipped-app compat gate). Called automatically at the top of
-		 * OnRender3D; main-thread / GL (uploads assets, resolves AssetPath fields).
-		 */
-		void SyncWorldSystems();
-
-		/**
-		 * @brief Stream + (re)mesh voxel volumes (Phase 18 / V3–V6). For every
-		 * VoxelVolumeComponent: lazily loads its palette/`.cvox`, places the volume
-		 * at the entity's world transform, (re)builds the procedural atlas when the
-		 * palette changes, procedurally generates ungenerated chunks within
-		 * ViewRadius of `cameraPos` (when GenEnabled), and re-meshes dirty chunks
-		 * (JobSystem workers build MeshData, the main thread uploads a bounded budget
-		 * per call). No-op for scenes without a VoxelVolumeComponent (compat gate).
-		 * Called automatically by OnRender3D / BuildRenderDesc. Main-thread / GL.
-		 */
-		void SyncVoxelVolumes(const glm::vec3& cameraPos);
-
-		/**
-		 * @brief Lazily load each NavMeshComponent's `.cnav` sidecar into its runtime
-		 * NavWorld (Phase 26 / N2) so the navmesh is query-ready for debug draw and
-		 * for the Play crowd. Loads only when the component has a SidecarPath and no
-		 * Nav yet — baking itself is driven by the editor / SceneNav (not this call).
-		 * No-op for scenes without a NavMeshComponent (the compat gate). Called at the
-		 * top of OnRender3D / BuildRenderDesc. Main-thread (file I/O).
-		 */
-		void SyncNavMeshes();
-
-		/**
-		 * @brief Draw the scene's water + particle components (E18) into the
-		 * currently bound target, AFTER OnRender3D has drawn the opaque world.
-		 * Water grabs `sceneColorID`/`sceneDepthID` for refraction/depth-fade (pass
-		 * the bound FBO's attachments + pixel size); particles are updated by
-		 * `deltaTime` and placed at each entity's world transform. Uses the cheap
-		 * IBL-fallback water reflection (planar reflection is a SceneRenderer path).
-		 * Only the editor (Starforge) and PlayerLayer call this — shipped apps that
-		 * sequence water/particles themselves are unaffected. Main-thread / GL.
-		 */
-		void OnRenderWorldFX(const Camera& camera,
-		                     uint32_t sceneColorID, uint32_t sceneDepthID,
-		                     uint32_t viewportWidth, uint32_t viewportHeight,
-		                     float deltaTime);
-
-		/**
-		 * @brief Fill a SceneRenderDesc from this scene's ECS (H2) so SceneRenderer —
-		 * the engine's env/sky/shadow/HDR/post orchestrator — becomes THE editor +
-		 * player render path (not just Frontier's). Gathers camera + lights, the first
-		 * built TerrainComponent, all built WaterComponents (PrimaryReflectionWater =
-		 * nearest to the camera), all built ParticleEmitterComponents (advanced by
-		 * deltaTime), and a DrawOpaque callback that submits every MeshRenderer/LODGroup
-		 * routed by pass (so meshes appear in shadows + reflections + main). Runs
-		 * SyncPrimitiveMeshes/SyncWorldSystems first and advances the world clock. The
-		 * CALLER then sets the clear color and, when FindEnvironment() is non-null,
-		 * applies it via SceneRenderer::ApplyEnvironment before Render(). Main-thread/GL.
-		 * Generic — no editor concepts leak in; OnRender3D stays the cheap direct path.
-		 *
-		 * W6 — defined TWICE, once per engine configuration: the 3D gather above in
-		 * scene/Scene3D.cpp, and a 2D twin in Scene.cpp that advances the world clock
-		 * and fills camera + time (there is no 3D content to gather). The declaration
-		 * is deliberately unfenced so every caller is configuration-agnostic.
+		 * History: the 3D engine defined this twice (W6) — the gather in
+		 * scene/Scene3D.cpp also collected lights, terrain, water, particle emitters
+		 * and the routed DrawOpaque submit; AP-05 purged it and this 2D twin is the
+		 * only definition left.
 		 */
 		void BuildRenderDesc(const Camera& camera, float deltaTime, SceneRenderDesc& out);
 
@@ -423,29 +309,12 @@ namespace Cosmic
 		/** @brief Recursive world-transform walk keyed by entt handle (E3). */
 		glm::mat4 WorldOf(entt::entity handle);
 
-#ifndef COSMIC_2D_ONLY
-		// W5 — both are defined in scene/Scene3D.cpp (mesh + skeletal submit).
-
-		/** @brief Submit every MeshRenderer/LODGroup opaque draw through the routed
-		 *  SceneDrawContext (Main/Reflection → Renderer3D queue; depth passes →
-		 *  shadow/coverage caster, honoring CastShadows). The single truth shared by
-		 *  OnRender3D (a Main-pass context) and BuildRenderDesc's DrawOpaque hook (H2). */
-		void SubmitOpaqueMeshes(const SceneDrawContext& ctx);
-
-		// A2 — the Animator driving an entity (own component or nearest
-		// ancestor's); null when none. Used by the skinned submit path.
-		AnimatorComponent* FindAnimatorFor(entt::entity entity);
-#endif   // COSMIC_2D_ONLY
-
 		float m_WorldTime = 0.0f;   // accumulated seconds for water/particle animation (E18)
 
 		EventBus m_Events;          // U2 — per-scene signal channel
 		FlowMachine* m_ActiveFlow = nullptr;   // Q2 — the flow driving this scene (not owned)
 
 		std::unique_ptr<ScenePhysics>    m_Physics;      // J4 — non-null only during a play session
-#ifndef COSMIC_2D_ONLY
-		std::unique_ptr<SceneNavRuntime> m_NavRuntime;   // N4 — non-null only during a play session
-#endif
 
 		entt::registry m_Registry;
 		std::vector<Scope<System>>   m_Systems;

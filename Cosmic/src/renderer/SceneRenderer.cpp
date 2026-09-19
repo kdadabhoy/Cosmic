@@ -3,31 +3,15 @@
 #include "renderer/SceneRenderer.h"
 
 #include "renderer/RenderCommand.h"
-#ifndef COSMIC_2D_ONLY
-#include "renderer/InstanceSet.h"
-#include "renderer/CoverageCapture.h"
-#endif
 #include "renderer/BindingPoints.h"
 #include "graphics/FrameBuffer.h"
 #include "graphics/Mesh.h"
-#ifndef COSMIC_2D_ONLY
-#include "graphics/Model.h"
-#endif
 #include "graphics/Material.h"
 #include "graphics/Shader.h"
 #include "camera/Camera.h"
-#ifndef COSMIC_2D_ONLY
-#include "terrain/Terrain.h"
-#include "water/Water.h"
-#include "particles/ParticleSystem.h"
-#endif
 #include "scene/Scene.h"
 #include "scene/Entity.h"
 #include "scene/Components.h"
-#ifndef COSMIC_2D_ONLY
-#include "scene/Components3D.h"   // W4 — the 3D passes read mesh/light/terrain/water/particle components
-#include "scene/ScenePicker.h"    // K12 — the outline id-mask pass
-#endif
 #include "utils/FileSystem.h"   // resolve project:// HdriPath (H4)
 #include "core/Log.h"
 
@@ -35,145 +19,6 @@
 
 namespace Cosmic
 {
-#ifndef COSMIC_2D_ONLY
-	namespace
-	{
-		// Minimal Camera adapter so Scene::OnRender3D (which takes const Camera&)
-		// can be driven from the frame's loose matrices. Camera getters return
-		// const&, so the four values are cached as members (Camera.h contract).
-		// W6 — its only two callers (the ECS leg of PassOpaqueHDR and PassOutline)
-		// are 3D, so the adapter goes with them.
-		class MatrixCamera : public Camera
-		{
-		public:
-			MatrixCamera(const glm::mat4& view, const glm::mat4& proj,
-			             const glm::mat4& viewProj, const glm::vec3& pos)
-				: m_View(view), m_Proj(proj), m_ViewProj(viewProj), m_Pos(pos) {}
-
-			const glm::mat4& GetViewMatrix()           const override { return m_View; }
-			const glm::mat4& GetProjectionMatrix()     const override { return m_Proj; }
-			const glm::mat4& GetViewProjectionMatrix() const override { return m_ViewProj; }
-			const glm::vec3& GetPosition()             const override { return m_Pos; }
-
-		private:
-			glm::mat4 m_View, m_Proj, m_ViewProj;
-			glm::vec3 m_Pos;
-		};
-	}
-
-	// =========================================================================
-	// SceneDrawContext — routed submits
-	// =========================================================================
-
-	void SceneDrawContext::DrawMesh(const Ref<Mesh>& mesh, const glm::mat4& transform,
-	                                const glm::vec4& color, int entityID) const
-	{
-		if (Pass == ScenePass::ShadowDepth)
-		{
-			if (m_Shadow && mesh)
-				m_Shadow->DrawCaster(mesh, transform);
-			return;
-		}
-		if (Pass == ScenePass::TopDownDepth)
-		{
-			if (m_Coverage && mesh)
-				m_Coverage->DrawCaster(mesh, transform);
-			return;
-		}
-		Renderer3D::DrawMesh(mesh, transform, color, entityID);
-	}
-
-	void SceneDrawContext::DrawMesh(const Ref<Mesh>& mesh, const glm::mat4& transform,
-	                                const Ref<Material>& material, int entityID) const
-	{
-		if (Pass == ScenePass::ShadowDepth)
-		{
-			if (m_Shadow && mesh)
-				m_Shadow->DrawCaster(mesh, transform);      // material ignored for depth
-			return;
-		}
-		if (Pass == ScenePass::TopDownDepth)
-		{
-			if (m_Coverage && mesh)
-				m_Coverage->DrawCaster(mesh, transform);
-			return;
-		}
-		Renderer3D::DrawMesh(mesh, transform, material, entityID);
-	}
-
-	void SceneDrawContext::DrawMeshRange(const Ref<Mesh>& mesh, const glm::mat4& transform,
-	                                     const Ref<Material>& material, const glm::vec4& color,
-	                                     uint32_t indexOffset, uint32_t indexCount, int entityID) const
-	{
-		// Lit passes only — the Scene routes multi-material meshes' shadow/coverage
-		// as a single whole-mesh caster (see SubmitOpaqueMeshes), so a range never
-		// reaches a depth pass. Guard anyway.
-		if (IsDepthOnly() || !mesh)
-			return;
-		if (material)
-			Renderer3D::DrawMesh(mesh, transform, material, entityID, indexOffset, indexCount);
-		else
-			Renderer3D::DrawMesh(mesh, transform, color, entityID, indexOffset, indexCount);
-	}
-
-	void SceneDrawContext::DrawMeshSkinned(const Ref<Mesh>& mesh, const glm::mat4& transform,
-	                                       const Ref<Material>& material,
-	                                       const glm::mat4* palette, uint32_t jointCount,
-	                                       int entityID) const
-	{
-		if (Pass == ScenePass::ShadowDepth)
-		{
-			if (m_Shadow && mesh)
-				m_Shadow->DrawCasterSkinned(mesh, transform, palette, jointCount);
-			return;
-		}
-		if (Pass == ScenePass::TopDownDepth)
-		{
-			// Snow-coverage capture reads the bind pose — coverage tolerance is
-			// meters-scale, animation-scale deformation is noise there.
-			if (m_Coverage && mesh)
-				m_Coverage->DrawCaster(mesh, transform);
-			return;
-		}
-		Renderer3D::DrawMeshSkinned(mesh, transform, material, palette, jointCount, entityID);
-	}
-
-	void SceneDrawContext::DrawModel(const Ref<Model>& model, const glm::mat4& transform, int entityID) const
-	{
-		if (Pass == ScenePass::ShadowDepth || Pass == ScenePass::TopDownDepth)
-		{
-			if (model)
-				for (const auto& part : model->GetParts())
-					if (part.Geometry)
-					{
-						if (Pass == ScenePass::ShadowDepth && m_Shadow)
-							m_Shadow->DrawCaster(part.Geometry, transform);
-						else if (Pass == ScenePass::TopDownDepth && m_Coverage)
-							m_Coverage->DrawCaster(part.Geometry, transform);
-					}
-			return;
-		}
-		Renderer3D::DrawModel(model, transform, entityID);
-	}
-
-	void SceneDrawContext::DrawMeshInstanced(const Ref<Mesh>& mesh, const Ref<Material>& material,
-	                                         const Ref<InstanceSet>& instances, uint32_t count, int entityID) const
-	{
-		if (Pass == ScenePass::ShadowDepth)
-		{
-			if (m_Shadow && mesh)
-				m_Shadow->DrawCasterInstanced(mesh, instances, count);   // material/entityID ignored
-			return;
-		}
-		if (Pass == ScenePass::TopDownDepth)
-		{
-			if (m_Coverage && mesh)
-				m_Coverage->DrawCasterInstanced(mesh, instances, count);
-			return;
-		}
-		Renderer3D::DrawMeshInstanced(mesh, material, instances, count, entityID);
-	}
-#endif   // COSMIC_2D_ONLY — MatrixCamera + every routed submit verb
 
 	// =========================================================================
 	// SceneRenderDesc
@@ -192,13 +37,13 @@ namespace Cosmic
 
 	SceneRenderer::~SceneRenderer()
 	{
-		// Members' own dtors release their GPU resources; Shutdown() is idempotent
-		// and also clears the Renderer3D registration, so call it if still live.
+		// Members' own dtors release their GPU resources; Shutdown() is idempotent,
+		// so call it if still live.
 		if (m_Initialized)
 			Shutdown();
 	}
 
-	void SceneRenderer::Init(uint32_t width, uint32_t height, uint32_t shadowMapSize)
+	void SceneRenderer::Init(uint32_t width, uint32_t height)
 	{
 		if (m_Initialized)
 			return;
@@ -207,12 +52,6 @@ namespace Cosmic
 		m_Height = height > 0 ? height : 1;
 
 		m_Post.Init(m_Width, m_Height);
-#ifndef COSMIC_2D_ONLY
-		m_Environment.Init();
-		m_Shadow.Init(shadowMapSize);
-#else
-		(void)shadowMapSize;   // no sky/IBL cube and no shadow map in a 2D build
-#endif
 
 		m_Initialized = true;
 	}
@@ -223,17 +62,6 @@ namespace Cosmic
 			return;
 
 		m_Post.Shutdown();
-#ifndef COSMIC_2D_ONLY
-		m_Environment.Shutdown();
-		Renderer3D::ClearIBL();
-		m_Shadow.Shutdown();
-		Renderer3D::ClearShadow();
-
-		// K12 — release the outline resources while the context is live.
-		m_OutlineMask.reset();
-		m_OutlineShader.reset();
-		m_OutlineShaderTried = false;
-#endif
 
 		m_Initialized = false;
 	}
@@ -279,40 +107,6 @@ namespace Cosmic
 		s.AmbientIntensity = env.AmbientIntensity;     // X2 (default 1.0 = identical)
 		s.Gamma            = env.Gamma;                // X2 (default 2.2 = identical)
 
-#ifndef COSMIC_2D_ONLY
-		// Sun → the frame's directional light.
-		desc.Lights.SunDirection = env.SunDirection;
-		desc.Lights.SunColor     = env.SunColor;
-		desc.Lights.SunIntensity = env.SunIntensity;
-
-		// Runtime sky/IBL bits on the owned environment (toSun = -travel dir).
-		if (m_Initialized)
-		{
-			const glm::vec3 travel = env.SunDirection;
-			if (glm::dot(travel, travel) > 1e-8f)
-				m_Environment.SetSunDirection(-glm::normalize(travel));
-			m_Environment.SetSkyIntensity(env.IBLIntensity);
-
-			// H4 — HDRI sky: project an equirect .hdr onto the environment cube. Any
-			// other SkyMode (Procedural / Detailed / Physical) uses the analytic sky.
-			// A failed load reverts to procedural inside SetHdri (never a black scene).
-			if (env.Sky == EnvironmentComponent::SkyMode::HDRI && !env.HdriPath.empty())
-				m_Environment.SetHdri(FileSystem::Resolve(env.HdriPath));
-			else
-				m_Environment.ClearHdri();
-
-			// X1 — physical atmosphere: active only for SkyMode::Physical. Disabled
-			// for every other mode keeps their bake byte-identical (the compat gate).
-			PhysicalSkyDesc phys;
-			phys.Enabled        = (env.Sky == EnvironmentComponent::SkyMode::Physical);
-			phys.Turbidity      = env.Turbidity;
-			phys.RayleighScale  = env.RayleighScale;
-			phys.MieScale       = env.MieScale;
-			phys.MieG           = env.MieG;
-			phys.SunAngularSize = env.SunAngularSize;
-			m_Environment.SetPhysicalSky(phys);
-		}
-#endif   // COSMIC_2D_ONLY — no sun light, no sky cube, no IBL to drive
 	}
 
 	// =========================================================================
@@ -341,35 +135,11 @@ namespace Cosmic
 		m_ViewProj    = desc.Projection * desc.View;
 		m_InvViewProj = glm::inverse(m_ViewProj);
 
-#ifndef COSMIC_2D_ONLY
-		// 2) Lights: upload once up front so every pass (reflection terrain, opaque,
-		//    the transparent tail) reads the same lights UBO.
-		Renderer3D::SetLightDirection(desc.Lights.SunDirection);
-		Renderer3D::SetAmbient(desc.Lights.Ambient);
-		Renderer3D::SetAmbientIntensity(desc.Settings.AmbientIntensity);   // X2 (default 1.0)
-		Renderer3D::SetLights(desc.Lights);
-
-		// 3) Environment: bake when the skybox OR IBL needs the cube (dirty-flag
-		//    no-op; leaves the default FBO bound — safe HERE, never mid-pass). The
-		//    IBL set is pushed to Renderer3D only when IBL is on.
-		if ((desc.Settings.IBL || desc.Settings.Skybox) && m_Environment.IsInitialized())
-			m_Environment.Bake();
-		if (desc.Settings.IBL)
-			m_Environment.PushToRenderer();
-		else
-			Renderer3D::ClearIBL();
-#endif
-
 		// Each pass runs inside a GPU timer zone (F3). Zone names are the profiler
 		// HUD's rows; they respond live to the Settings toggles (a disabled feature
 		// shrinks or zeroes its zone). Steps 4–5 have no 2D counterpart — 2D content
 		// casts no shadows, accumulates no coverage and reflects nothing — so the 2D
 		// frame is Opaque (an HDR clear) -> Transparents (sprites) -> Post.
-#ifndef COSMIC_2D_ONLY
-		RenderCommand::BeginGpuZone("Shadow");         PassShadow(desc);           RenderCommand::EndGpuZone();  // 4
-		RenderCommand::BeginGpuZone("Coverage");       PassCoverage(desc);         RenderCommand::EndGpuZone();  // 4b (F8)
-		RenderCommand::BeginGpuZone("Reflection");     PassReflection(desc);       RenderCommand::EndGpuZone();  // 5
-#endif
 		RenderCommand::BeginGpuZone("Opaque");         PassOpaqueHDR(desc);        RenderCommand::EndGpuZone();  // 6
 		RenderCommand::BeginGpuZone("Transparents");   PassTransparents(desc);     RenderCommand::EndGpuZone();  // 7
 		RenderCommand::BeginGpuZone("Post+Composite"); PassPostAndComposite(desc); RenderCommand::EndGpuZone();  // 8
@@ -402,176 +172,6 @@ namespace Cosmic
 		RenderCommand::BindFramebufferHandle(prevFbo);
 	}
 
-#ifndef COSMIC_2D_ONLY
-	// 4) Shadow depth pass -----------------------------------------------------
-	void SceneRenderer::PassShadow(const SceneRenderDesc& desc)
-	{
-		if (!desc.Settings.Shadows)
-		{
-			Renderer3D::ClearShadow();
-			return;
-		}
-
-		m_Shadow.SetLight(desc.Lights.SunDirection, desc.Settings.ShadowCenter, desc.Settings.ShadowRadius);
-		m_Shadow.BeginDepthPass();
-
-		if (desc.DrawOpaque)
-		{
-			SceneDrawContext ctx;
-			ctx.Pass           = ScenePass::ShadowDepth;
-			ctx.ViewProjection = m_Shadow.GetLightViewProj();
-			ctx.EyePosition    = desc.CameraPosition;   // no eye for a directional depth pass
-			ctx.CameraPosition = desc.CameraPosition;
-			ctx.m_Shadow       = &m_Shadow;
-			desc.DrawOpaque(ctx);
-		}
-
-		// ECS meshes cast too (respect CastShadows; skip null mesh).
-		if (desc.EcsScene)
-		{
-			auto view = desc.EcsScene->View<TransformComponent, MeshRendererComponent>();
-			for (auto entity : view)
-			{
-				Entity e{ entity, desc.EcsScene };
-				const auto& mr = e.GetComponent<MeshRendererComponent>();
-				if (mr.MeshAsset && mr.CastShadows)
-					m_Shadow.DrawCaster(mr.MeshAsset, desc.EcsScene->GetWorldTransform(e));
-			}
-
-			// LOD groups cast with the SAME level the lit pass selects (real
-			// camera distance) so caster and receiver geometry agree (S12.4).
-			auto lodView = desc.EcsScene->View<TransformComponent, LODGroupComponent>();
-			for (auto entity : lodView)
-			{
-				Entity e{ entity, desc.EcsScene };
-				const auto& lod = e.GetComponent<LODGroupComponent>();
-				if (!lod.CastShadows)
-					continue;
-				const auto& t = e.GetComponent<TransformComponent>();
-				const int level = LODGroupComponent::SelectLevel(
-					lod.Levels, glm::distance(desc.CameraPosition, t.Position));
-				if (level >= 0 && lod.Levels[level].MeshAsset)
-					m_Shadow.DrawCaster(lod.Levels[level].MeshAsset, desc.EcsScene->GetWorldTransform(e));
-			}
-		}
-
-		// Terrain casts too (F4): walks the same LOD cut as the lit pass using the
-		// REAL camera position so caster and receiver tessellation agree. Uses the
-		// shadow pass's render state (front-cull + viewport already set).
-		if (desc.TerrainSystem && desc.Settings.TerrainCastsShadows)
-			desc.TerrainSystem->RenderDepth(m_Shadow.GetLightViewProj(), desc.CameraPosition);
-
-		m_Shadow.EndDepthPass();
-		m_Shadow.PushToRenderer(desc.Settings.ShadowBias);
-	}
-
-	// 4b) Top-down snow coverage capture (F8) ----------------------------------
-	void SceneRenderer::PassCoverage(const SceneRenderDesc& desc)
-	{
-		if (!desc.Coverage || !desc.Coverage->IsInitialized())
-			return;
-
-		CoverageCapture& cov = *desc.Coverage;
-		cov.BeginDepthCapture();   // binds the depth FBO + ortho viewport; restores at End
-
-		// App occluders — routed to the coverage's depth draw via TopDownDepth.
-		if (desc.DrawOpaque)
-		{
-			SceneDrawContext ctx;
-			ctx.Pass           = ScenePass::TopDownDepth;
-			ctx.ViewProjection = cov.GetCaptureViewProj();
-			ctx.EyePosition    = desc.CameraPosition;
-			ctx.CameraPosition = desc.CameraPosition;
-			ctx.m_Coverage     = &cov;
-			desc.DrawOpaque(ctx);
-		}
-
-		// ECS meshes occlude too (CastShadows doubles as the "casts coverage" gate).
-		if (desc.EcsScene)
-		{
-			auto view = desc.EcsScene->View<TransformComponent, MeshRendererComponent>();
-			for (auto entity : view)
-			{
-				Entity e{ entity, desc.EcsScene };
-				const auto& mr = e.GetComponent<MeshRendererComponent>();
-				if (mr.MeshAsset && mr.CastShadows)
-					cov.DrawCaster(mr.MeshAsset, desc.EcsScene->GetWorldTransform(e));
-			}
-
-			// LOD groups occlude with their camera-distance-selected level (S12.4).
-			auto lodView = desc.EcsScene->View<TransformComponent, LODGroupComponent>();
-			for (auto entity : lodView)
-			{
-				Entity e{ entity, desc.EcsScene };
-				const auto& lod = e.GetComponent<LODGroupComponent>();
-				if (!lod.CastShadows)
-					continue;
-				const auto& t = e.GetComponent<TransformComponent>();
-				const int level = LODGroupComponent::SelectLevel(
-					lod.Levels, glm::distance(desc.CameraPosition, t.Position));
-				if (level >= 0 && lod.Levels[level].MeshAsset)
-					cov.DrawCaster(lod.Levels[level].MeshAsset, desc.EcsScene->GetWorldTransform(e));
-			}
-		}
-
-		// Terrain top surface (same depth path, the coverage's top-down ortho matrix).
-		if (desc.TerrainSystem)
-			desc.TerrainSystem->RenderDepth(cov.GetCaptureViewProj(), desc.CameraPosition);
-
-		cov.EndDepthCapture();
-		cov.UpdateCoverage(desc.DeltaTime, desc.CoverageAccumPerSec, desc.CoverageMeltPerSec);
-	}
-
-	// 5) Planar reflection pass (primary water only) ---------------------------
-	void SceneRenderer::PassReflection(const SceneRenderDesc& desc)
-	{
-		if (!desc.Settings.WaterReflections || desc.WaterBodies.empty())
-			return;
-
-		const int idx = desc.PrimaryReflectionWater;
-		if (idx < 0 || idx >= static_cast<int>(desc.WaterBodies.size()))
-			return;   // -1 (or out of range) = IBL-only for all waters
-
-		Water* water = desc.WaterBodies[idx];
-		if (!water)
-			return;
-
-		glm::mat4 reflVP{ 1.0f };
-		glm::vec3 reflCam{ 0.0f };
-		if (!water->BeginReflection(desc.View, desc.Projection, desc.CameraPosition, reflVP, reflCam))
-			return;
-
-		Renderer3D::BeginScene(reflVP, reflCam);
-
-		if (desc.Settings.Skybox)
-		{
-			if (desc.DetailedSky)
-				m_Environment.DrawSkyboxDetailed(reflVP, *desc.DetailedSky);
-			else
-				m_Environment.DrawSkybox(reflVP);
-		}
-
-		// LOD selection uses the REAL camera position so the reflected terrain
-		// tessellation matches the main view exactly (no seam under the surface).
-		if (desc.TerrainSystem)
-			desc.TerrainSystem->Render(desc.CameraPosition);
-
-		if (desc.DrawOpaque)
-		{
-			SceneDrawContext ctx;
-			ctx.Pass           = ScenePass::Reflection;
-			ctx.ViewProjection = reflVP;
-			ctx.EyePosition    = reflCam;
-			ctx.CameraPosition = desc.CameraPosition;
-			desc.DrawOpaque(ctx);
-		}
-
-		Renderer3D::EndScene();
-		water->EndReflection();
-		// The following opaque pass (BeginHDR) re-asserts the viewport.
-	}
-#endif   // COSMIC_2D_ONLY — PassShadow + PassCoverage + PassReflection
-
 	// 6) Opaque HDR pass -------------------------------------------------------
 	void SceneRenderer::PassOpaqueHDR(const SceneRenderDesc& desc)
 	{
@@ -587,42 +187,6 @@ namespace Cosmic
 		// W6 — everything from here to the wireframe restore is 3D. A 2D frame's
 		// opaque pass is exactly the HDR bind + clear above: sprites are transparent
 		// geometry and draw in the next pass.
-#ifndef COSMIC_2D_ONLY
-		Renderer3D::BeginScene(m_ViewProj, desc.CameraPosition);
-
-		if (desc.Settings.Skybox && !desc.Settings.Wireframe)
-		{
-			if (desc.DetailedSky)
-				m_Environment.DrawSkyboxDetailed(m_ViewProj, *desc.DetailedSky);
-			else
-				m_Environment.DrawSkybox(m_ViewProj);
-		}
-
-		if (desc.TerrainSystem)
-			desc.TerrainSystem->Render(desc.CameraPosition);
-
-		if (desc.DrawOpaque)
-		{
-			SceneDrawContext ctx;
-			ctx.Pass           = ScenePass::Main;
-			ctx.ViewProjection = m_ViewProj;
-			ctx.EyePosition    = desc.CameraPosition;
-			ctx.CameraPosition = desc.CameraPosition;
-			desc.DrawOpaque(ctx);
-		}
-
-		Renderer3D::EndScene();
-
-		// ECS scene (Main only). OnRender3D owns its own BeginScene/EndScene and
-		// re-uploads the lights UBO from ECS light components, so re-assert the
-		// app's lights afterwards for the transparent tail (fixed here by design).
-		if (desc.EcsScene)
-		{
-			MatrixCamera cam(desc.View, desc.Projection, m_ViewProj, desc.CameraPosition);
-			desc.EcsScene->OnRender3D(cam);
-			Renderer3D::SetLights(desc.Lights);
-		}
-#endif   // COSMIC_2D_ONLY
 
 		if (desc.Settings.Wireframe)
 			RenderCommand::SetPolygonMode(RendererAPI::PolygonMode::Fill);
@@ -641,46 +205,17 @@ namespace Cosmic
 		if (desc.Settings.Wireframe)
 			RenderCommand::SetPolygonMode(RendererAPI::PolygonMode::Line);
 
-#ifndef COSMIC_2D_ONLY
-		const uint32_t colorID = sceneFbo->GetColorAttachmentRendererID(0);
-		const uint32_t depthID = sceneFbo->GetDepthAttachmentRendererID();
-
-		// Water far -> near: each does its own refraction grab + FBO/viewport re-assert.
-		for (Water* w : desc.WaterBodies)
-			if (w)
-				w->Render(desc.CameraPosition, desc.TimeSeconds, m_ViewProj,
-				          colorID, depthID, m_Width, m_Height);
-
-		for (ParticleEmitter* e : desc.Emitters)
-			if (e)
-				e->Render(desc.View, depthID, m_InvViewProj);
-
-		for (RibbonEmitter* r : desc.Ribbons)
-			if (r)
-				r->Render(desc.View, desc.TimeSeconds);
-#endif
-
-		// App transparent geometry — wrapped in a scene so ctx.DrawMesh routes to
-		// a live Renderer3D (the camera UBO is restored to the main camera here).
 		// THIS is the 2D sprite path: PlayerLayer, Starforge and the scene2d golden
 		// all draw OnRenderSprites + OnRender2DLights from this hook with the HDR
-		// target still bound. Only the Renderer3D scope fences out — Renderer2D
-		// opens its own scene, and an empty 3D queue flushes nothing, so dropping
-		// the pair leaves the sprite pixels untouched.
+		// target still bound (Renderer2D opens its own scene inside the callback).
 		if (desc.DrawTransparent)
 		{
-#ifndef COSMIC_2D_ONLY
-			Renderer3D::BeginScene(m_ViewProj, desc.CameraPosition);
-#endif
 			SceneDrawContext ctx;
 			ctx.Pass           = ScenePass::Main;
 			ctx.ViewProjection = m_ViewProj;
 			ctx.EyePosition    = desc.CameraPosition;
 			ctx.CameraPosition = desc.CameraPosition;
 			desc.DrawTransparent(ctx);
-#ifndef COSMIC_2D_ONLY
-			Renderer3D::EndScene();
-#endif
 		}
 
 		if (desc.Settings.Wireframe)
@@ -710,49 +245,21 @@ namespace Cosmic
 		m_Post.SetUnderwaterGrading(s.UnderwaterDeepColor, s.UnderwaterDepthReference);
 		m_Post.SetUnderwaterCaustics(s.UnderwaterCausticStrength, s.UnderwaterCausticScale);
 		m_Post.SetTime(desc.TimeSeconds);
-		// Camera for depth reconstruction (fog + god rays + lens flare) — needed by
-		// both RenderEffects and Composite; set once, it persists across both.
+		// Camera for depth reconstruction (fog + lens flare) — needed by both
+		// RenderEffects and Composite; set once, it persists across both.
 		m_Post.SetCamera(m_ViewProj, desc.CameraPosition);
 
-		// Lens flare (F7): additive screen-space flare in Composite's LDR stage. The
-		// tint is the sun color; the sun screen position comes from the camera above
-		// and the sun travel direction (the sun sits opposite it). Both the flare and
-		// the god-ray shafts are SUN effects with no 2D meaning, and the shafts also
-		// raymarch the shadow map — so they fence out together. Not calling the
-		// setters is byte-identical to calling them disabled (PostProcessStack's
-		// m_LensFlareEnabled / god-rays default to off).
-#ifndef COSMIC_2D_ONLY
-		m_Post.SetLensFlare(s.LensFlare, s.LensFlareIntensity, desc.Lights.SunColor);
-		m_Post.SetLensFlareSun(desc.Lights.SunDirection);
-
-		const bool godRays = s.GodRays && s.Shadows;   // shafts raymarch the shadow map
-#else
-		const bool godRays = false;                    // no shadow map to raymarch
-#endif
-		m_Post.SetGodRaysEnabled(godRays);
-		m_Post.SetGodRaysParams(s.GodRaysIntensity, s.GodRaysDensity);
-#ifndef COSMIC_2D_ONLY
-		if (godRays)
-			m_Post.SetSunShaftInputs(m_Shadow.GetDepthID(), m_Shadow.GetLightViewProj(),
-			                         desc.Lights.SunDirection, desc.Lights.SunColor, desc.Lights.SunIntensity);
-#endif
+		// Lens flare (F7): additive screen-space flare in Composite's LDR stage. A
+		// SUN effect with no 2D meaning, so its setters are never called here —
+		// byte-identical to calling them disabled (PostProcessStack's
+		// m_LensFlareEnabled defaults to off). The sun-shaft pass that used to sit
+		// beside it went with the 3D renderer (AP-05).
 
 		// Heat-haze distortion field (S10.5): distortion emitters write it; the
 		// tonemap displaces the scene fetch by it. The toggles stay (the tonemap
-		// reads them on both engines); only the emitter write-back is 3D, and with
-		// no emitters the 3D build skips the block too.
+		// reads them); with no emitters the field is never written.
 		m_Post.SetHeatHazeEnabled(s.HeatHaze);
 		m_Post.SetHeatHazeStrength(s.HeatHazeStrength);
-#ifndef COSMIC_2D_ONLY
-		if (s.HeatHaze && !desc.DistortionEmitters.empty() && m_Post.BeginDistortion())
-		{
-			const uint32_t depthID = m_Post.GetSceneTarget()->GetDepthAttachmentRendererID();
-			for (ParticleEmitter* e : desc.DistortionEmitters)
-				if (e)
-					e->RenderDistortion(desc.View, depthID, m_InvViewProj);
-			m_Post.EndDistortion();
-		}
-#endif
 
 		m_Post.RenderEffects(desc.Projection);
 
@@ -761,66 +268,8 @@ namespace Cosmic
 		RenderCommand::SetViewport(0, 0, m_Width, m_Height);
 		m_Post.Composite(desc.Exposure);
 
-#ifndef COSMIC_2D_ONLY
-		// K12 — the selection outline rides over the composited LDR image, under
-		// the 2D/UI overlay (UI must never be outlined over). ScenePicker is 3D-only
-		// and sprites have never had an outline path, so a 2D build simply has no
-		// outline stage — the scene2d golden is what proves that costs no pixels.
-		if (desc.Settings.OutlineEnabled && desc.EcsScene &&
-		    desc.SelectedEntities && !desc.SelectedEntities->empty())
-		{
-			RenderCommand::BeginGpuZone("Outline");
-			PassOutline(desc);
-			RenderCommand::EndGpuZone();
-		}
-#endif
-
 		if (desc.DrawOverlay2D)
 			desc.DrawOverlay2D();
 	}
 
-#ifndef COSMIC_2D_ONLY
-	// 8b) Selection outline (K12) ----------------------------------------------
-	void SceneRenderer::PassOutline(const SceneRenderDesc& desc)
-	{
-		// Lazy resources: zero cost until the first outlined frame.
-		if (!m_OutlineShaderTried)
-		{
-			m_OutlineShaderTried = true;
-			m_OutlineShader = Shader::Create("assets/shaders/Outline.glsl");
-			if (!m_OutlineShader)
-				CS_CORE_WARN("SceneRenderer: Outline shader unavailable — selection outline disabled.");
-		}
-		if (!m_OutlineShader)
-			return;
-		if (!m_OutlineMask)
-			m_OutlineMask = ScenePicker::Create();
-		if (!m_OutlineMask)
-			return;
-
-		// 1) Selection-filtered id pass into the mask FBO (self-contained: it
-		//    binds + unbinds its own target; we restore ours right after).
-		MatrixCamera cam(desc.View, desc.Projection, m_ViewProj, desc.CameraPosition);
-		m_OutlineMask->RenderIdPass(*desc.EcsScene, cam, m_Width, m_Height,
-		                            desc.SelectedEntities);
-
-		RenderCommand::BindFramebufferHandle(m_FinalFbo);
-		RenderCommand::SetViewport(0, 0, m_Width, m_Height);
-
-		// 2) Fullscreen edge-detect composite over the LDR frame. Depth test off
-		//    for the composite (restored — the state contract); default alpha
-		//    blend is exactly what the ring wants.
-		m_OutlineShader->Bind();
-		RenderCommand::BindTextureSlot(Bindings::TexUnitOutlineMask, m_OutlineMask->GetIdTextureID());
-		m_OutlineShader->SetInt("u_IdMask", (int)Bindings::TexUnitOutlineMask);
-		m_OutlineShader->SetFloat4("u_Color", glm::vec4(desc.Settings.OutlineColor, 1.0f));
-		m_OutlineShader->SetFloat("u_WidthPx", desc.Settings.OutlineWidthPx);
-		m_OutlineShader->SetFloat2("u_TexelSize", glm::vec2(1.0f / (float)m_Width,
-		                                                    1.0f / (float)m_Height));
-
-		RenderCommand::SetDepthTest(false);
-		RenderCommand::DrawArrays(RendererAPI::PrimitiveTopology::Triangles, 0, 3);
-		RenderCommand::SetDepthTest(true);
-	}
-#endif   // COSMIC_2D_ONLY — PassOutline
 }

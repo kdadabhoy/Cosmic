@@ -1,4 +1,4 @@
-# tests/check_docs_coverage.ps1 (simplified in part A) on the purged tree, 2026-09-19
+# tests/check_docs_coverage.ps1 - AP-05 part B (after the unfence)
 WARNING - skeleton chapters with uncovered COSMIC_API symbols (strict mode turns on when the STATUS: SKELETON banner is deleted):
   docs/reference/assets-io.md: STATUS: SKELETON - 1 COSMIC_API name(s) not covered yet
       never mentions COSMIC_API AtomicOutput (declared in utils/AtomicOutput.h)

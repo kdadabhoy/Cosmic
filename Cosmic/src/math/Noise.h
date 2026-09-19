@@ -5,7 +5,7 @@
 //
 // E14 (docs/plans/03-simulation-engine-plan.md): seeded procedural noise —
 // value noise, Perlin gradient noise, and fBm octave stacks in 1D/2D/3D.
-// Consumers on both roadmap tracks: terrain heightmaps (doc 05 S8), wind
+// Consumers on both roadmap tracks: heightmaps (doc 05 S8), wind
 // gusts / Dryden-ish turbulence (doc 04), procedural textures.
 //
 // DETERMINISM IS THE CONTRACT: a given (seed, coordinate) pair returns the
@@ -17,7 +17,7 @@
 //
 // Usage:
 //     Cosmic::Noise noise(1337);
-//     float h  = noise.Fbm2D(x * 0.01f, y * 0.01f, 6);     // terrain
+//     float h  = noise.Fbm2D(x * 0.01f, y * 0.01f, 6);     // heightmap
 //     float gust = noise.Perlin1D(t * 0.4f);                // wind channel
 
 #include "math/Random.h"
@@ -102,7 +102,7 @@ namespace Cosmic
 		// =================================================================
 		// Perlin gradient noise (Ken Perlin's improved noise, seeded table).
 		// Zero at lattice points; smoother spectral character than value
-		// noise — the terrain/texture workhorse.
+		// noise — the heightmap/texture workhorse.
 		// =================================================================
 
 		float Perlin1D(float x) const

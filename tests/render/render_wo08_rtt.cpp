@@ -196,7 +196,7 @@ TEST_SUITE("WO-08 R05")
             Scene* sp = tiny.get();
             desc.DrawTransparent = [sp](const SceneDrawContext& ctx) { sp->OnRenderSprites(ctx.ViewProjection, 64, 48); };
             SceneRenderer renderer;
-            renderer.Init(64, 48, 256);
+            renderer.Init(64, 48);
             REQUIRE(renderer.IsInitialized());
             main->Bind();
             REQUIRE(RenderCommand::GetBoundFramebuffer() == mainHandle);

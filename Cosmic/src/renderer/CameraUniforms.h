@@ -8,9 +8,9 @@
  * COSMIC ENGINE — per-frame camera UBO mirror (S6.2)
  * ============================================================================
  *
- * The std140 C++ mirror of the `CameraBlock` uniform block that every 3D shader
- * reads from (binding: Bindings::CameraUbo = 1). Renderer3D::BeginScene packs +
- * uploads one of these once per pass, REPLACING the old per-draw loose
+ * The std140 C++ mirror of the `CameraBlock` uniform block the lit mesh shaders
+ * read from (binding: Bindings::CameraUbo = 1). History: Renderer3D::BeginScene
+ * packed + uploaded one of these once per pass, REPLACING the old per-draw loose
  * u_ViewProjection / u_CameraPos uniforms (deferred here from S6.1 — see doc 05
  * §5). One upload per BeginScene instead of two setters per DrawMesh, and every
  * lit/mesh/line/particle shader shares one source of camera truth.

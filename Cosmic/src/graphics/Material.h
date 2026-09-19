@@ -79,8 +79,9 @@ namespace Cosmic
          * BindFullTo
          * * BindFull(), but onto `shader` instead of the material's own shader:
          * binds `shader` and uploads every cached uniform + texture slot to it.
-         * Used by Renderer3D's S12.3 auto-instancing to bind this material's
-         * values onto its instancing twin (see SetInstancingShader) — the twin
+         * History: used by the 3D renderer's S12.3 auto-instancing (purged in
+         * AP-05) to bind this material's values onto its instancing twin (see
+         * SetInstancingShader) — the twin
          * declares the same uniform contract, so the cache maps 1:1. Undeclared
          * names no-op on location -1 (engine-wide silent-ignore rule).
          */
@@ -92,7 +93,7 @@ namespace Cosmic
 
         /**
          * @brief Mark this material TRANSPARENT (default false = opaque).
-         * Renderer3D's queue draws transparent-material meshes AFTER all opaques,
+         * History: the 3D mesh queue drew transparent-material meshes AFTER all opaques,
          * sorted back-to-front, with depth writes off (depth test stays on) under
          * the engine's default Alpha blend — the state juggling apps used to do
          * by hand around DrawMesh. Opaque materials sort for state grouping +
@@ -106,7 +107,7 @@ namespace Cosmic
          * same uniform/texture contract that reads per-instance { mat4 Model;
          * vec4 Tint; } from the SSBO at Bindings::InstancesSsbo instead of a
          * per-draw u_Model (e.g. PBR.glsl -> PBRInstanced.glsl). When set,
-         * Renderer3D's queue may collapse runs of identical (mesh, material)
+         * History: the 3D mesh queue could collapse runs of identical (mesh, material)
          * opaque submissions with entityID == -1 into one instanced draw
          * (S12.3). Transforms should be rigid + uniform scale — the twin
          * derives normals from mat3(Model) (same documented limitation as
@@ -119,8 +120,8 @@ namespace Cosmic
          * @brief Register this material's SKINNED TWIN (Phase 20 / A2) — same
          * uniform/texture contract, plus the joint palette read from the SSBO
          * at Bindings::SkinningSsbo and blended by the location-4/5 skin
-         * attributes (e.g. PBR.glsl -> PBRSkinned.glsl). Renderer3D's
-         * DrawMeshSkinned routes through it; a material without one draws the
+         * attributes (e.g. PBR.glsl -> PBRSkinned.glsl). History: the 3D renderer's
+         * DrawMeshSkinned routed through it; a material without one draws the
          * mesh in bind pose via the regular shader (the compat default).
          */
         void                SetSkinnedShader(const Ref<Shader>& shader) { m_SkinnedShader = shader; }

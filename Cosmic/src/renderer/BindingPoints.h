@@ -30,15 +30,16 @@ namespace Cosmic::Bindings
 	// UBO (std140) binding points
 	// ------------------------------------------------------------------
 
-	/** Renderer3D scene-lights block — GpuLightsBlock ↔ `LightsBlock` in
-	 *  MeshLit.glsl (and any future lit shader). Uploaded by Renderer3D::SetLights. */
+	/** Scene-lights block — `LightsBlock` in MeshLit.glsl (and any future lit
+	 *  shader). History: uploaded by the 3D renderer's SetLights (GpuLightsBlock,
+	 *  purged in AP-05); reserved while the shader still declares it. */
 	constexpr uint32_t LightsUbo = 0;
 
-	/** Per-frame camera block (S6.2) — GpuCameraBlock ↔ `CameraBlock` (instance
-	 *  name `u_Camera`) in every 3D shader. View-projection + camera position;
-	 *  time/viewport get added with their first consumer (SSAO/fog). Uploaded by
-	 *  Renderer3D::BeginScene, replacing the old per-draw loose u_ViewProjection /
-	 *  u_CameraPos uniforms. */
+	/** Per-frame camera block (S6.2) — GpuCameraBlock (renderer/CameraUniforms.h)
+	 *  ↔ `CameraBlock` (instance name `u_Camera`) in the lit mesh shaders.
+	 *  View-projection + camera position. History: the 3D renderer's BeginScene
+	 *  uploaded it once per pass, replacing the old per-draw loose
+	 *  u_ViewProjection / u_CameraPos uniforms. */
 	constexpr uint32_t CameraUbo = 1;
 
 	// ------------------------------------------------------------------
@@ -63,20 +64,20 @@ namespace Cosmic::Bindings
 
 	/** Skinning-matrix palette (Phase 20 / A2) — a std430 mat4 array holding
 	 *  every skinned draw's joint palette for the frame, read by
-	 *  PBRSkinned.glsl and ShadowDepthSkinned.glsl at `u_SkinBase + joint`.
-	 *  Renderer3D uploads the queued draws' palettes at Flush; ShadowMap's
-	 *  immediate caster path uploads per caster at base 0. */
+	 *  PBRSkinned.glsl at `u_SkinBase + joint`. History: the 3D renderer
+	 *  uploaded the queued draws' palettes at Flush and the shadow caster path
+	 *  per caster at base 0 (both purged in AP-05). */
 	constexpr uint32_t SkinningSsbo = 10;
 
 	// ------------------------------------------------------------------
 	// Reserved fragment texture units
 	// ------------------------------------------------------------------
-	// Sampler units the ENGINE binds behind every material draw (Renderer3D
-	// injects them after Material::BindFull). Chosen high so a material's own
-	// textures (bound from unit 0 upward) never collide; GL guarantees >= 16
-	// fragment units. Shaders receive these via their sampler uniforms — the
-	// numbers here and the Renderer3D upload are the single source of truth.
-	// A future backend maps this table to a per-frame descriptor set (S13.2).
+	// Sampler units reserved for the ENGINE behind every material draw (History:
+	// the 3D renderer injected them after Material::BindFull). Chosen high so a
+	// material's own textures (bound from unit 0 upward) never collide; GL
+	// guarantees >= 16 fragment units. Shaders receive these via their sampler
+	// uniforms — the numbers here are the single source of truth. A future
+	// backend maps this table to a per-frame descriptor set (S13.2).
 
 	/** S6.3 IBL — diffuse irradiance cubemap (`u_IrradianceMap`). */
 	constexpr uint32_t TexUnitIblIrradiance = 8;
@@ -84,13 +85,14 @@ namespace Cosmic::Bindings
 	constexpr uint32_t TexUnitIblPrefilter = 9;
 	/** S6.3 IBL — split-sum BRDF LUT (`u_BrdfLut`). */
 	constexpr uint32_t TexUnitIblBrdfLut = 10;
-	/** S6.4 — directional sun shadow map (`u_ShadowMap`). */
-	constexpr uint32_t TexUnitShadowMap = 11;
+	// Unit 11 is reserved: History: it carried the S6.4 directional sun shadow
+	// map (`u_ShadowMap`, the deleted TexUnitShadowMap) and PBR.glsl /
+	// PBRSkinned.glsl / MeshLit.glsl still declare that sampler.
 
 	/** S11.1 (doc 10 F8) — snow coverage mask (`u_SnowMaskMap`; RG = coverage +
-	 *  encoded top-surface Y). Pushed by Renderer3D::SetSnow via ApplySceneBindings
-	 *  to PBR / PBRInstanced / Terrain. Assigned unconditionally (portability rule);
-	 *  a texture is bound here only when the SnowDesc supplies a mask. */
+	 *  encoded top-surface Y). History: pushed by the 3D renderer's SetSnow via
+	 *  ApplySceneBindings to PBR / PBRInstanced / Terrain (purged in AP-05);
+	 *  reserved while PBR.glsl still declares the sampler. */
 	constexpr uint32_t TexUnitSnowMask = 12;
 
 	/** K12 — the selection-outline id mask (`u_IdMask`, isampler2D): the
@@ -98,7 +100,7 @@ namespace Cosmic::Bindings
 	 *  for the Outline.glsl composite only. */
 	constexpr uint32_t TexUnitOutlineMask = 13;
 
-	// F2 SceneRenderer claims NO other slots: it orchestrates the existing
-	// Renderer3D / EnvironmentMap / ShadowMap / PostProcessStack passes, which
-	// already own every binding above. (F5 instancing claims SSBO 9 above.)
+	// F2 SceneRenderer claims NO other slots: it orchestrates the PostProcessStack
+	// passes, which own their bindings shader-side. (History: the 3D renderer, the
+	// environment map and the shadow map passes owned the rest of the table.)
 }

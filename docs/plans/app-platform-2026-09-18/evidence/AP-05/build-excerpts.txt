@@ -1,77 +1,56 @@
-# AP-05 part A build excerpts (full *.log files are gitignored; these are the load-bearing lines)
+# AP-05 part B - clean configure + Debug + Release build excerpts (full MSBuild logs are gitignored; excerpts here)
 
 ## Toolchain
+-- Building for: Visual Studio 18 2026
+-- The C compiler identification is MSVC 19.51.36248.0
+-- The CXX compiler identification is MSVC 19.51.36248.0
+-- Build files have been written to: C:/dev/Cosmic/build
 cmake: cmake version 4.3.1-msvc1 (VS-bundled, not on PATH)
-MSVC: CMAKE_CXX_COMPILER_VERSION "19.51.36248.0"
-MSBuild: MSBuild version 18.7.8+1ac568fee
-generator: CMAKE_GENERATOR:INTERNAL=Visual Studio 18 2026
 
-## 1. Pre-purge baseline (HEAD 7479927, existing build/ reconfigured in place, Debug incremental)
-configure: cmake -S . -B build -A x64 -DCOSMIC_2D_ONLY=ON -DCOSMIC_BUILD_TESTS=ON
+## Configure (build/ deleted first)
+cmake.exe -S . -B build -A x64 -DCOSMIC_2D_ONLY=ON -DCOSMIC_BUILD_TESTS=ON -DCOSMIC_BUILD_RENDER_TESTS=ON
+== configure start 2026-09-19T10:38:26Z
 -- --> Skipping game projects: AnalysisSample
 -- --> Auto-detected game project: SF_Telem
 -- --> Auto-detected game project: Starforge
--- Configuring done (0.3s)
--- Generating done (1.2s)
 configure exit=0
-build: cmake --build build --config Debug --parallel
-build exit=0
-warnings ('warning [A-Z]' lines): 0
-CosmicTests.exe --count           -> 454
-CosmicTests.exe --count --no-skip -> 467
 
-## 2. Post-purge clean configure (build/ deleted first)
-configure: cmake -S . -B build -A x64 -DCOSMIC_2D_ONLY=ON -DCOSMIC_BUILD_TESTS=ON -DCOSMIC_BUILD_RENDER_TESTS=ON
--- --> Skipping game projects: AnalysisSample
--- --> Auto-detected game project: SF_Telem
--- --> Auto-detected game project: Starforge
--- Configuring done (4.2s)
--- Generating done (0.5s)
-configure exit=0
-effective cache values:
-  COSMIC_2D_ONLY:BOOL=ON
-  COSMIC_BUILD_RENDER_TESTS:BOOL=ON
-  COSMIC_BUILD_TESTS:BOOL=ON
-  COSMIC_SKIP_PROJECTS:STRING=AnalysisSample
-  COSMIC_WITH_JOLT:BOOL=ON
-  (COSMIC_WITH_ASSIMP no longer exists - the option went with the assimp block)
+## Effective cache values (build/CMakeCache.txt)
+COSMIC_2D_ONLY:BOOL=ON
+COSMIC_BUILD_RENDER_TESTS:BOOL=ON
+COSMIC_BUILD_TESTS:BOOL=ON
+COSMIC_SKIP_PROJECTS:STRING=AnalysisSample
+COSMIC_WITH_JOLT:BOOL=ON
+CMAKE_GENERATOR:INTERNAL=Visual Studio 18 2026
+COSMIC_SKIP_PROJECTS_APPLIED:INTERNAL=AnalysisSample
+COSMIC_WITH_ASSIMP: 0 entries (option no longer exists)
 
-## 3. Post-purge Debug build: cmake --build build --config Debug --parallel
-build exit=0
-warnings: 0   errors: 0
-  WO07NoExport.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\WO07NoExport.dll
-  Cosmic.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\Cosmic.dll
-  WO07LifetimeFixture.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\WO07LifetimeFixture.dll
-  StarforgeEditor.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\Starforge.exe
-  CosmicApp.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\CosmicApp.exe
-  WO10ClockFixture.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\WO10ClockFixture.dll
-  WO07ModuleFixture.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\WO07ModuleFixture.dll
-  WO07PlotFixture.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\WO07PlotFixture.dll
-  WO07TeardownFixture.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\WO07TeardownFixture.dll
-  CosmicRenderTests.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\CosmicRenderTests.exe
-  SF_Telem.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\SF_Telem.dll
-  WO06HostFixture.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\WO06HostFixture.dll
-  WO07UiCyclesFixture.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\WO07UiCyclesFixture.dll
-  WO05HostFixture.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\WO05HostFixture.dll
-  Starforge.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\Starforge.dll
-  CosmicTests.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\CosmicTests.exe
+## Debug: cmake --build build --config Debug --parallel
+== debug build start 2026-09-19T10:38:30Z
+debug build exit=0
+== debug build end 2026-09-19T10:40:04Z
+TUs compiled: 421
+warning lines ('warning [A-Z]'): 0   error lines: 0
+Cosmic.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\Cosmic.dll
+CosmicApp.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\CosmicApp.exe
+CosmicRenderTests.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\CosmicRenderTests.exe
+SF_Telem.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\SF_Telem.dll
+Starforge.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\Starforge.dll
+CosmicTests.vcxproj -> C:\dev\Cosmic\build\Runtime\Debug\CosmicTests.exe
 
-## 4. Post-purge Release build: cmake --build build --config Release --parallel
-build exit=0
-warnings: 0   errors: 0
-  WO07NoExport.vcxproj -> C:\dev\Cosmic\build\Runtime\Release\WO07NoExport.dll
-  Cosmic.vcxproj -> C:\dev\Cosmic\build\Runtime\Release\Cosmic.dll
-  WO07LifetimeFixture.vcxproj -> C:\dev\Cosmic\build\Runtime\Release\WO07LifetimeFixture.dll
-  CosmicApp.vcxproj -> C:\dev\Cosmic\build\Runtime\Release\CosmicApp.exe
-  WO07TeardownFixture.vcxproj -> C:\dev\Cosmic\build\Runtime\Release\WO07TeardownFixture.dll
-  WO10ClockFixture.vcxproj -> C:\dev\Cosmic\build\Runtime\Release\WO10ClockFixture.dll
-  WO07ModuleFixture.vcxproj -> C:\dev\Cosmic\build\Runtime\Release\WO07ModuleFixture.dll
-  WO05HostFixture.vcxproj -> C:\dev\Cosmic\build\Runtime\Release\WO05HostFixture.dll
-  WO06HostFixture.vcxproj -> C:\dev\Cosmic\build\Runtime\Release\WO06HostFixture.dll
-  CosmicRenderTests.vcxproj -> C:\dev\Cosmic\build\Runtime\Release\CosmicRenderTests.exe
-  WO07PlotFixture.vcxproj -> C:\dev\Cosmic\build\Runtime\Release\WO07PlotFixture.dll
-  StarforgeEditor.vcxproj -> C:\dev\Cosmic\build\Runtime\Release\Starforge.exe
-  SF_Telem.vcxproj -> C:\dev\Cosmic\build\Runtime\Release\SF_Telem.dll
-  WO07UiCyclesFixture.vcxproj -> C:\dev\Cosmic\build\Runtime\Release\WO07UiCyclesFixture.dll
-  Starforge.vcxproj -> C:\dev\Cosmic\build\Runtime\Release\Starforge.dll
-  CosmicTests.vcxproj -> C:\dev\Cosmic\build\Runtime\Release\CosmicTests.exe
+## Release: cmake --build build --config Release --parallel (same configure)
+== release build start 2026-09-19T10:40:51Z
+release build exit=0
+== release build end 2026-09-19T10:43:20Z
+TUs compiled: 421
+warning lines ('warning [A-Z]'): 0   error lines: 0
+Cosmic.vcxproj -> C:\dev\Cosmic\build\Runtime\Release\Cosmic.dll
+CosmicApp.vcxproj -> C:\dev\Cosmic\build\Runtime\Release\CosmicApp.exe
+CosmicRenderTests.vcxproj -> C:\dev\Cosmic\build\Runtime\Release\CosmicRenderTests.exe
+SF_Telem.vcxproj -> C:\dev\Cosmic\build\Runtime\Release\SF_Telem.dll
+Starforge.vcxproj -> C:\dev\Cosmic\build\Runtime\Release\Starforge.dll
+CosmicTests.vcxproj -> C:\dev\Cosmic\build\Runtime\Release\CosmicTests.exe
+
+## Earlier compile checks on the same source state (incremental, existing build/ from part A)
+- after the unfence script alone: exit 0, 0 warnings, 159 TUs
+- after the identifier cleanup: FAILED (exit 1) - a nested '/* ... */' inside the rewritten SceneRenderer.h header doc closed the block comment early (C4138 + cascade in 5 TUs); fixed (the wiring example no longer nests a comment) and re-verified by the clean builds above. A nested-comment scan (scratch scan_comments.py) over all 59 changed C/C++ files: 0 problems.

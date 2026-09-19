@@ -4,24 +4,21 @@ project(Cosmic LANGUAGES C CXX)
 # ----------------------------
 # 1. Engine configuration flags
 # ----------------------------
-# COSMIC_2D_ONLY (Phase 29) — the pure-2D engine configuration. It drops every 3D
-# subsystem: the terrain/voxel/water/nav/particles source trees, the 3D renderer
-# passes, model + skeletal-animation loading, and the assimp and recastnavigation
-# vendored dependencies (which are not even configured). See §4 of
-# docs/plans/28-phase29-engine-split-plan.md for the authoritative exclusion table.
-#
-# Both options are also declared in the root CMakeLists.txt (which forwards them to
-# the project scanner); option() is a no-op when the cache entry already exists, so
-# declaring them here as well keeps this directory configurable standalone.
-# Defaults ON on the 2D stability trunk (WO-03): the root CMakeLists' cache entry
-# governs an in-tree build, but this default makes a standalone `cmake -S Cosmic`
-# configure select the 2D engine too. The hard OFF-rejection lives in the root
-# CMakeLists (the enforcement point); engine-3d keeps this OFF.
-option(COSMIC_2D_ONLY "Build the 2D-only engine (excludes all 3D subsystems)" ON)
+# COSMIC_2D_ONLY — a compatibility no-op since AP-05 (App Platform packet). The
+# 3D subsystems, their vendored dependencies and every in-file fence were purged
+# from this trunk, so the option selects nothing any more: this directory IS the
+# 2D engine. It is kept (default ON) so existing configure lines, Starforge's
+# hot-reload build and the external project CMakeLists that still pass or define
+# it keep working, and so the root CMakeLists' reject-OFF gate (the enforcement
+# point) can still refuse a stale 3D cache. Both options are also declared in the
+# root CMakeLists.txt; option() is a no-op when the cache entry already exists, so
+# declaring them here as well keeps this directory configurable standalone
+# (`cmake -S Cosmic`). engine-3d keeps the real, selecting flag.
+option(COSMIC_2D_ONLY "Compatibility no-op: this trunk is the 2D-only engine (OFF is rejected)" ON)
 
-# Jolt ships on BOTH configurations (Phase 29 decision 3) — physics is dimension
-# agnostic, so 2D keeps rigid bodies, box/sphere/capsule colliders and the
-# character controller. OFF is a supported configuration since W3: it drops
+# Jolt ships by default (Phase 29 decision 3) — physics is dimension agnostic, so
+# the 2D trunk keeps rigid bodies, box/sphere/capsule colliders and the character
+# controller. OFF is a supported configuration since W3: it drops
 # physics/backends/JoltBackend.cpp and leaves the null backend plus whatever an app
 # registers through IPhysicsBackend (physics/PhysicsBackend.h).
 option(COSMIC_WITH_JOLT "Build the Jolt physics backend" ON)
@@ -116,8 +113,8 @@ file(GLOB_RECURSE COSMIC_SOURCES
 
 # physics/backends/ (W3) — the Jolt backend is the only TU that includes
 # <Jolt/...>, so COSMIC_WITH_JOLT=OFF drops it and leaves the null backend plus
-# whatever an app registers through IPhysicsBackend. Orthogonal to COSMIC_2D_ONLY:
-# both engine configurations ship Jolt by default (decision 3).
+# whatever an app registers through IPhysicsBackend. Physics is dimension
+# agnostic, so the 2D trunk ships Jolt by default (Phase 29 decision 3).
 if(NOT COSMIC_WITH_JOLT)
     list(FILTER COSMIC_SOURCES EXCLUDE REGEX "/src/physics/backends/JoltBackend\\.cpp$")
 endif()
@@ -131,11 +128,11 @@ target_include_directories(Cosmic PUBLIC src)
 target_include_directories(Cosmic PRIVATE dependencies/stb_image dependencies/stb_truetype dependencies/stb_image_write dependencies/miniaudio)
 target_compile_definitions(Cosmic PRIVATE COSMIC_BUILD_DLL)
 
-# COSMIC_2D_ONLY is PUBLIC, unlike every other engine define: Starforge, the game
-# projects and CosmicTests all compile against public headers that carry the
-# partition fences (Cosmic.h, Components.h, SceneRenderer.h), so the flag has to
-# resolve identically in every consumer or the ABI silently diverges. Empty (not
-# defined at all) in the 3D configuration.
+# COSMIC_2D_ONLY stays a PUBLIC compile definition as a compatibility no-op: no
+# engine, editor, test or template source tests it any more (AP-05 part B removed
+# every fence), but a consumer built against this SDK may still check it and the
+# external project CMakeLists define it themselves to match. Always defined here
+# in practice — the root CMakeLists rejects OFF.
 target_compile_definitions(Cosmic PUBLIC $<$<BOOL:${COSMIC_2D_ONLY}>:COSMIC_2D_ONLY>)
 
 # TypeRegistry.cpp instantiates a reflection thunk set per registered component;

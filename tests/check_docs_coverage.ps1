@@ -34,10 +34,9 @@
 # every tier-C finding so a reviewer can judge the claim.
 #
 # Cosmic.h and every header it reaches are parsed as flat text: an #include is an
-# #include whatever preprocessor block it sits in. A quoted include whose file is
-# absent under Cosmic/src/ is simply not a public header (it is skipped, not
-# reported), which is what keeps a leftover COSMIC_2D_ONLY fence around a deleted
-# 3D include harmless while AP-05 part B removes the fences.
+# #include whatever preprocessor block it sits in (there are no COSMIC_2D_ONLY
+# fences left since AP-05 part B). A quoted include whose file is absent under
+# Cosmic/src/ is simply not a public header (it is skipped, not reported).
 #
 # History: until AP-05 part A (2026-09-18) this script also parsed Cosmic.h
 # fence-aware and read the list(FILTER) block in Cosmic/CMakeLists.txt to classify

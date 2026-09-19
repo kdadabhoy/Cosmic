@@ -1,25 +1,6 @@
-# tests/render/goldens/*.png SHA-256 - pre-purge (git show HEAD:<path> at 7479927) and post-purge (working tree)
+# tests/render/goldens/*.png SHA-256 - AP-05 part B: HEAD (1bedfa4, git show) vs the working tree after the unfence
 
-## pre-purge (17 files at HEAD 7479927)
-df18ff8fe21c44231af704bfbc2cf4d942d78fd1b9318996e47b86c037cbeeea  tests/render/goldens/instancing.png
-95f18d759240773a9ad0b66aaa608f48defe3853fc8668e97579f76323381b01  tests/render/goldens/instancing2d.png
-d61b27301b2bfcda9f260582f86109a63a8e49f151f525b693f867a1a29922f6  tests/render/goldens/light2d.png
-cfd02fa1098ccfdb59fd2abc5950612fe9372053098f93e8ccca717e7df285ad  tests/render/goldens/mesh_pbr.png
-56d461dc6651a8c9def7bd8ccdddd73a95727a5f7a6ae2c0bd096d65cf48299b  tests/render/goldens/outline.png
-ae4eae72b5c6ecc3105ac6663a26455dea356f009535293e9dfe677f0f212e71  tests/render/goldens/particles.png
-7cb85443a802c51fbc8b1b8c7099c0f9559afaeed72423f74351a932d7cba315  tests/render/goldens/postchain_off.png
-2f13978d20f864466295c47ee6930d57f86057e3f4ccde9f8a153f5fc5ed2db1  tests/render/goldens/postchain_on.png
-335affdf6489ecec5890ef77ba076230d48e729c90dc9aa8c9d0392d2c362382  tests/render/goldens/scene2d.png
-5bb968d6c106369d42e4c2b419800244deecec9710117aad544a3c6999d855aa  tests/render/goldens/sky_ibl.png
-4daba99d1c754e4456c2915f36fe1c82cce37af285766462e14334e3645f9c17  tests/render/goldens/sprites.png
-05c4c7f98e01774d012dd204752071749b2c709a8560f46146c9f46f7a2115e2  tests/render/goldens/terrain.png
-f78f46c4a0219a9e9750f8630459aebf3c3552b653c483c910ee6bea3e6fb12b  tests/render/goldens/tilemap.png
-1f29656ebf57d4a8660ba62b27cd17a93b910d90c657d9b1a880160f15c92792  tests/render/goldens/ui.png
-c0e47be508635a3a3b04afe704dc62440d84427f3bb5136e89c97bc121cbe89b  tests/render/goldens/water.png
-3a91fcd4ea7fa90f5f096338a6cb36c5d00d11242945e173ce22a03b2e80dc95  tests/render/goldens/wo08_primitives.png
-6e7220e4744329c9318dd7ba53ead8c40e141a351b363b5ecc61b9952fc5ac5a  tests/render/goldens/wo08_text.png
-
-## post-purge (working tree, 8 retained files)
+## HEAD 1bedfa4 (8 retained 2D goldens)
 95f18d759240773a9ad0b66aaa608f48defe3853fc8668e97579f76323381b01  tests/render/goldens/instancing2d.png
 d61b27301b2bfcda9f260582f86109a63a8e49f151f525b693f867a1a29922f6  tests/render/goldens/light2d.png
 335affdf6489ecec5890ef77ba076230d48e729c90dc9aa8c9d0392d2c362382  tests/render/goldens/scene2d.png
@@ -29,7 +10,17 @@ f78f46c4a0219a9e9750f8630459aebf3c3552b653c483c910ee6bea3e6fb12b  tests/render/g
 3a91fcd4ea7fa90f5f096338a6cb36c5d00d11242945e173ce22a03b2e80dc95  tests/render/goldens/wo08_primitives.png
 6e7220e4744329c9318dd7ba53ead8c40e141a351b363b5ecc61b9952fc5ac5a  tests/render/goldens/wo08_text.png
 
-## retained goldens: byte-identical check
+## working tree
+95f18d759240773a9ad0b66aaa608f48defe3853fc8668e97579f76323381b01  tests/render/goldens/instancing2d.png
+d61b27301b2bfcda9f260582f86109a63a8e49f151f525b693f867a1a29922f6  tests/render/goldens/light2d.png
+335affdf6489ecec5890ef77ba076230d48e729c90dc9aa8c9d0392d2c362382  tests/render/goldens/scene2d.png
+4daba99d1c754e4456c2915f36fe1c82cce37af285766462e14334e3645f9c17  tests/render/goldens/sprites.png
+f78f46c4a0219a9e9750f8630459aebf3c3552b653c483c910ee6bea3e6fb12b  tests/render/goldens/tilemap.png
+1f29656ebf57d4a8660ba62b27cd17a93b910d90c657d9b1a880160f15c92792  tests/render/goldens/ui.png
+3a91fcd4ea7fa90f5f096338a6cb36c5d00d11242945e173ce22a03b2e80dc95  tests/render/goldens/wo08_primitives.png
+6e7220e4744329c9318dd7ba53ead8c40e141a351b363b5ecc61b9952fc5ac5a  tests/render/goldens/wo08_text.png
+
+## byte-identical check
 IDENTICAL  tests/render/goldens/instancing2d.png
 IDENTICAL  tests/render/goldens/light2d.png
 IDENTICAL  tests/render/goldens/scene2d.png
@@ -39,13 +30,4 @@ IDENTICAL  tests/render/goldens/ui.png
 IDENTICAL  tests/render/goldens/wo08_primitives.png
 IDENTICAL  tests/render/goldens/wo08_text.png
 
-## deleted goldens (referenced only by tests/render/render_3d.cpp)
-deleted  tests/render/goldens/instancing.png
-deleted  tests/render/goldens/mesh_pbr.png
-deleted  tests/render/goldens/outline.png
-deleted  tests/render/goldens/particles.png
-deleted  tests/render/goldens/postchain_off.png
-deleted  tests/render/goldens/postchain_on.png
-deleted  tests/render/goldens/sky_ibl.png
-deleted  tests/render/goldens/terrain.png
-deleted  tests/render/goldens/water.png
+8 of 8 identical; git status --short tests/render/goldens reports 0 entries (0 = untouched); part B touched no golden.

@@ -1,0 +1,33 @@
+# Verify-AP05Purge.ps1 WITHOUT -AllowFences (B06 strict) AFTER part B - through Run-Acceptance.ps1 (manifest ap05-purge, case B06), Release and Debug
+
+## Release - B06.out.log (fixture stdout)
+[PASS] paths-absent: none of the 102 Part-A paths exists
+[PASS] build-files-clean: no CMake/preset line names a purged dep dir, partition rule, 3D test block, render_3d.cpp, purged editor TU or 3D preset
+[PASS] fence-uses: zero COSMIC_2D_ONLY preprocessor uses under Cosmic/src, Projects, tests
+[PASS] includes-of-deleted: no #include of a purged header or tree anywhere
+[PASS] identifiers: zero 3D identifiers in Cosmic/src outside History notes (19 under a History: note)
+
+[AP05] mode=B06 strict  repo=C:\dev\Cosmic  paths=102
+[doctest] test cases: 5 | 5 passed | 0 failed
+
+## Release - runner console
+commit=1bedfa49c09ec3e734853746a651c7bc25ef88e2 dirty=True
+  [RUN ] B06 (U)
+  [PASSED] B06 - exit 0 as expected
+=== SUMMARY: 1 passed / 0 failed / 0 env-blocked (of 1) ===
+
+## Debug - B06.out.log (fixture stdout)
+[PASS] paths-absent: none of the 102 Part-A paths exists
+[PASS] build-files-clean: no CMake/preset line names a purged dep dir, partition rule, 3D test block, render_3d.cpp, purged editor TU or 3D preset
+[PASS] fence-uses: zero COSMIC_2D_ONLY preprocessor uses under Cosmic/src, Projects, tests
+[PASS] includes-of-deleted: no #include of a purged header or tree anywhere
+[PASS] identifiers: zero 3D identifiers in Cosmic/src outside History notes (19 under a History: note)
+
+[AP05] mode=B06 strict  repo=C:\dev\Cosmic  paths=102
+[doctest] test cases: 5 | 5 passed | 0 failed
+
+## Debug - runner console
+commit=1bedfa49c09ec3e734853746a651c7bc25ef88e2 dirty=True
+  [RUN ] B06 (U)
+  [PASSED] B06 - exit 0 as expected
+=== SUMMARY: 1 passed / 0 failed / 0 env-blocked (of 1) ===

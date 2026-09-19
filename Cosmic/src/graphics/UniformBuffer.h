@@ -14,7 +14,7 @@
  *
  * std140 CAVEAT (baked into every UBO struct): never place a bare `vec3` in a
  * std140 block — its padding silently offsets everything after it. Pack as
- * `vec4` and use `.w` for a scalar. See Renderer3D's GpuLightsBlock.
+ * `vec4` and use `.w` for a scalar. See GpuCameraBlock (renderer/CameraUniforms.h).
  *
  * Factory pattern (RendererAPI-dispatched, like Shader/Texture2D).
  *

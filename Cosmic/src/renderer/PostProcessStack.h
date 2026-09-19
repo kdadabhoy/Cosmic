@@ -19,10 +19,11 @@
  *   S6.6  Bloom (soft-knee threshold + Gaussian chain) (BloomPrefilter/BloomBlur)
  *   S6.7  FXAA (final LDR edge blend)                  (Fxaa.glsl)
  *   S7.2  Height fog (folded into the tonemap)
- *   S10.3 Sun shafts: shadow-map raymarch god rays     (GodRays.glsl)
- *         [tier 1 — the froxel fog grid is the documented follow-up]
  *   S10.5 Heat-haze: a distortion field the app renders (e.g. distortion
  *         particles) that displaces the tonemap's scene fetch
+ *   (History: the S10.3 sun shafts — a raymarch against the 3D sun's shadow
+ *   depth map, GodRays.glsl — went with the 3D renderer in AP-05; the
+ *   tonemap's u_Shafts input is now always off.)
  *
  * FRAME SHAPE (app-side; mirrors the S3.1 FPV-inset rebind pattern):
  *
@@ -124,25 +125,10 @@ namespace Cosmic
 		bool IsFogEnabled() const        { return m_FogEnabled; }
 		void SetFogParams(const glm::vec3& color, float density, float heightFalloff, float baseHeight)
 		{ m_FogColor = color; m_FogDensity = density; m_FogHeightFalloff = heightFalloff; m_FogBaseHeight = baseHeight; }
-		/** Camera for depth-based reconstruction (fog S7.2 + god rays S10.3) —
-		 *  set before RenderEffects/Composite when either is on. */
+		/** Camera for depth-based reconstruction (fog S7.2 + the lens flare's sun
+		 *  projection) — set before RenderEffects/Composite when either is on. */
 		void SetCamera(const glm::mat4& viewProjection, const glm::vec3& cameraPos)
 		{ m_ViewProjection = viewProjection; m_CameraPos = cameraPos; }
-
-		// ---- Sun shafts / god rays (S10.3 tier 1) ----
-		void SetGodRaysEnabled(bool enabled) { m_GodRaysEnabled = enabled; }
-		bool IsGodRaysEnabled() const        { return m_GodRaysEnabled; }
-		void SetGodRaysParams(float intensity, float density)
-		{ m_GodRaysIntensity = intensity; m_GodRaysDensity = density; }
-		/** The sun's shadow map + light matrix (ShadowMap::GetDepthID / GetLightViewProj)
-		 *  and sun state — required inputs; call each frame god rays are enabled.
-		 *  Also requires SetCamera (world reconstruction). */
-		void SetSunShaftInputs(uint32_t shadowMapID, const glm::mat4& lightViewProj,
-		                       const glm::vec3& sunTravelDir, const glm::vec3& sunColor, float sunIntensity)
-		{
-			m_ShaftShadowMapID = shadowMapID; m_ShaftLightViewProj = lightViewProj;
-			m_ShaftSunDir = sunTravelDir; m_ShaftSunColor = sunColor; m_ShaftSunIntensity = sunIntensity;
-		}
 
 		// ---- Heat-haze distortion (S10.5) ----
 		void SetHeatHazeEnabled(bool enabled) { m_HeatHazeEnabled = enabled; }
@@ -209,7 +195,6 @@ namespace Cosmic
 		void ResizeEffects();
 		void RenderSSAO(const glm::mat4& projection);
 		void RenderBloom();
-		void RenderGodRays();
 
 		Ref<FrameBuffer> m_SceneHDR;        // {RGBA16F, DEPTH24STENCIL8}
 		Ref<Shader>      m_TonemapShader;   // Tonemap.glsl
@@ -263,19 +248,6 @@ namespace Cosmic
 		float     m_FogBaseHeight    = 0.0f;
 		glm::mat4 m_ViewProjection{ 1.0f };
 		glm::vec3 m_CameraPos{ 0.0f };
-
-		// ---- Sun shafts (S10.3 tier 1) ----
-		Ref<Shader>      m_GodRaysShader;
-		Ref<FrameBuffer> m_ShaftTarget;             // half-res
-		bool      m_GodRaysEnabled   = false;
-		float     m_GodRaysIntensity = 0.6f;
-		float     m_GodRaysDensity   = 0.04f;
-		uint32_t  m_ShaftShadowMapID = 0;
-		glm::mat4 m_ShaftLightViewProj{ 1.0f };
-		glm::vec3 m_ShaftSunDir{ 0.0f, -1.0f, 0.0f };
-		glm::vec3 m_ShaftSunColor{ 1.0f };
-		float     m_ShaftSunIntensity = 1.0f;
-		uint32_t  m_ShaftResultID    = 0;           // set by RenderGodRays
 
 		// ---- Heat-haze distortion (S10.5) ----
 		Ref<FrameBuffer> m_DistortTarget;           // half-res RG offset field

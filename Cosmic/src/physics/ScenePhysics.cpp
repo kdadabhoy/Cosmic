@@ -6,18 +6,7 @@
 #include "scene/Scene.h"
 #include "scene/Entity.h"
 #include "scene/Components.h"
-#ifndef COSMIC_2D_ONLY
-#include "scene/Components3D.h"   // W4 — MeshCollider/TerrainCollider + the terrain & voxel shape branches
-#endif
 #include "scripting/ScriptHost.h"
-#ifndef COSMIC_2D_ONLY
-#include "graphics/Mesh.h"           // mesh-collider geometry rebuild
-#include "terrain/Terrain.h"
-#include "voxel/VoxelVolume.h"       // V5 — per-chunk static mesh collision
-#include "voxel/BlockPalette.h"
-#include "voxel/VoxelMesher.h"
-#include "voxel/VoxelRender.h"       // VoxelRenderData::CollisionDirty
-#endif
 #include "core/Log.h"
 
 #include <glm/gtc/quaternion.hpp>
@@ -44,25 +33,6 @@ namespace Cosmic
         r = glm::normalize(glm::quat_cast(rot));
     }
 
-#ifndef COSMIC_2D_ONLY
-    // Rebuild CPU geometry for a parametric primitive (the mesh itself keeps no CPU
-    // copy after GPU upload, so a mesh collider on a primitive regenerates it here).
-    static MeshData PrimitiveMeshData(const PrimitiveMeshComponent& p)
-    {
-        using Shape = PrimitiveMeshComponent::Shape;
-        switch (p.ShapeType)
-        {
-            case Shape::Box:      return Mesh::BuildBox(p.Size);
-            case Shape::Plane:    return Mesh::BuildPlane(p.Size.x, p.Size.z);
-            case Shape::Cylinder: return Mesh::BuildCylinder(p.Radius, p.Height, uint32_t(p.Segments));
-            case Shape::Cone:     return Mesh::BuildCone(p.Radius, p.Height, uint32_t(p.Segments));
-            case Shape::Sphere:   return Mesh::BuildUVSphere(p.Radius, uint32_t(p.Rings), uint32_t(p.Segments));
-            case Shape::Torus:    return Mesh::BuildTorus(p.Radius, p.TubeRadius, uint32_t(p.Segments), uint32_t(p.Rings));
-        }
-        return {};
-    }
-#endif // !COSMIC_2D_ONLY
-
     ScenePhysics::ScenePhysics(Scene& scene, PhysicsWorld& world)
         : m_Scene(scene), m_World(world) {}
 
@@ -76,7 +46,8 @@ namespace Cosmic
     }
 
     // The scene's collision-view enumeration (edit-mode safe, static). Shared by the
-    // play-session body build above and the N2 navmesh bake (SceneNav).
+    // play-session body build above and any edit-mode consumer (History: the N2
+    // navmesh bake, SceneNav, gathered triangles through it on the 3D engine).
     bool ScenePhysics::BuildColliderDesc(Scene& scene, entt::entity e, BodyDesc& out)
     {
         auto& reg = scene.GetRegistry();
@@ -143,85 +114,6 @@ namespace Cosmic
             out.Shapes.push_back(std::move(d));
             anyTrigger |= c->IsTrigger;
         }
-#ifndef COSMIC_2D_ONLY
-        // MeshCollider and TerrainCollider are 3D-only (plan doc 28 §6.4); 2D keeps
-        // the dimension-agnostic subset — RigidBody + Box/Sphere/Capsule + character.
-        if (const auto* c = reg.try_get<MeshColliderComponent>(e); c && c->Enabled)   // T12
-        {
-            // Mesh geometry: rebuild from a sibling primitive; else fall back to the
-            // renderer mesh's local AABB (imported-mesh triangle colliders wait on
-            // CPU-side mesh retention — documented v1 limit).
-            if (const auto* prim = reg.try_get<PrimitiveMeshComponent>(e))
-            {
-                MeshData md = PrimitiveMeshData(*prim);
-                if (!md.Vertices.empty())
-                {
-                    if (!c->Convex && wantsDynamic)
-                        CS_CORE_WARN("MeshCollider: a concave triangle mesh can't be dynamic (entity {0}); treat as static.", uint32_t(e));
-
-                    CollisionShapeDesc d;
-                    d.Shape = c->Convex ? CollisionShapeDesc::Kind::ConvexHull
-                                        : CollisionShapeDesc::Kind::Mesh;
-                    d.Scale = s;
-                    d.Vertices.reserve(md.Vertices.size());
-                    for (const auto& v : md.Vertices) d.Vertices.push_back(v.Position);
-                    if (!c->Convex) d.Indices = md.Indices;
-                    out.Shapes.push_back(std::move(d));
-                }
-            }
-            else if (const auto* mr = reg.try_get<MeshRendererComponent>(e); mr && mr->MeshAsset)
-            {
-                const glm::vec3 mn = mr->MeshAsset->GetLocalMin();
-                const glm::vec3 mx = mr->MeshAsset->GetLocalMax();
-                CollisionShapeDesc d;
-                d.Shape = CollisionShapeDesc::Kind::Box;
-                d.HalfExtents = glm::max((mx - mn) * 0.5f, glm::vec3(0.01f));
-                d.Offset = (mn + mx) * 0.5f;
-                d.Scale = s;
-                out.Shapes.push_back(std::move(d));
-                CS_CORE_WARN("MeshCollider on an imported mesh (entity {0}) uses an AABB box in v1.", uint32_t(e));
-            }
-            anyTrigger |= c->IsTrigger;
-        }
-        if (reg.all_of<TerrainColliderComponent>(e))
-        {
-            if (const auto* tcomp = reg.try_get<TerrainComponent>(e); tcomp && tcomp->TerrainAsset)
-            {
-                const Terrain& terr = *tcomp->TerrainAsset;
-                const TerrainSpecification& spec = terr.GetSpecification();
-                const uint32_t n = spec.Resolution;         // vertices per side (32*2^k + 1, odd)
-                // Jolt HeightFieldShape rounds its sample count UP to a multiple of the
-                // block size (2), which would read past an odd n. n-1 is always even
-                // (n = 32*2^k + 1), so we build the (n-1)^2 grid — dropping the far
-                // +X/+Z edge row (a documented, harmless loss at the terrain rim).
-                const uint32_t m = n - 1;
-                const float spacing = spec.WorldSize / float(n - 1);   // vertex spacing
-
-                CollisionShapeDesc d;
-                d.Shape = CollisionShapeDesc::Kind::HeightField;
-                d.HeightFieldSize = m;
-                d.HeightSamples.resize(size_t(m) * m);
-                for (uint32_t j = 0; j < m; ++j)
-                    for (uint32_t i = 0; i < m; ++i)
-                        d.HeightSamples[size_t(j) * m + i] =
-                            spec.BaseHeight + terr.GetSample(i, j) * spec.HeightScale;
-
-                const glm::vec2 corner = terr.GetWorldMinCorner();
-                d.HeightFieldOffset = glm::vec3(corner.x, 0.0f, corner.y);
-                d.HeightFieldCellSize = spacing;
-                // Terrain is world geometry placed by its own spec — ignore the
-                // entity transform for the shape (it is already world-space).
-                out.Position = glm::vec3(0.0f);
-                out.Rotation = glm::quat(1, 0, 0, 0);
-                out.Motion = MotionType::Static;
-                out.Shapes.push_back(std::move(d));
-            }
-            else
-            {
-                CS_CORE_WARN("TerrainCollider (entity {0}) has no built TerrainComponent — skipped.", uint32_t(e));
-            }
-        }
-#endif // !COSMIC_2D_ONLY
 
         out.IsTrigger = anyTrigger;
         out.EntityId  = 0;
@@ -276,9 +168,6 @@ namespace Cosmic
             // pass the probe and then produce no shapes.
             const bool hasCollider =
                 reg.any_of<BoxColliderComponent, SphereColliderComponent, CapsuleColliderComponent>(e)
-#ifndef COSMIC_2D_ONLY
-                || reg.any_of<MeshColliderComponent, TerrainColliderComponent>(e)
-#endif
                 ;
             const bool hasBody = reg.all_of<RigidBodyComponent>(e);
             if (!hasCollider && !hasBody)
@@ -296,114 +185,11 @@ namespace Cosmic
                 m_Bodies.emplace(e, body);
         }
 
-#ifndef COSMIC_2D_ONLY
-        // Static collision for any voxel volumes already resident at session start
-        // (a loaded .cvox). Streamed/edited chunks come online via CollisionDirty.
-        BuildVoxelBodies();
-#endif
     }
-
-    // --- Voxel collision (V5) — 3D-only (plan doc 28 §6.4) -------------------
-#ifndef COSMIC_2D_ONLY
-
-    PhysicsBody ScenePhysics::MakeVoxelChunkBody(entt::entity e, const glm::ivec3& chunk)
-    {
-        auto& reg = m_Scene.GetRegistry();
-        auto* vc = reg.try_get<VoxelVolumeComponent>(e);
-        if (!vc || !vc->Volume || !vc->Palette)
-            return {};
-
-        const MeshData md = VoxelMesher::BuildCollision(*vc->Volume, chunk, *vc->Palette);
-        if (md.Indices.empty())
-            return {};
-
-        // Bake the volume's world placement into the vertices so the static body sits
-        // at the origin (voxel volumes are static world geometry, like terrain).
-        const glm::vec3 origin = vc->Volume->GetOrigin();
-        const float     vs     = vc->Volume->GetVoxelSize();
-
-        CollisionShapeDesc shape;
-        shape.Shape = CollisionShapeDesc::Kind::Mesh;
-        shape.Vertices.reserve(md.Vertices.size());
-        for (const MeshVertex& v : md.Vertices)
-            shape.Vertices.push_back(origin + v.Position * vs);
-        shape.Indices = md.Indices;
-
-        BodyDesc desc;
-        desc.Motion   = MotionType::Static;
-        desc.Position = glm::vec3(0.0f);
-        desc.Rotation = glm::quat(1, 0, 0, 0);
-        desc.Friction = 0.8f;
-        if (const auto* id = reg.try_get<IDComponent>(e))
-            desc.EntityId = id->ID.Value();
-        desc.Shapes.push_back(std::move(shape));
-        return m_World.CreateBody(desc);
-    }
-
-    void ScenePhysics::BuildVoxelBodies()
-    {
-        auto& reg = m_Scene.GetRegistry();
-        for (auto e : reg.view<VoxelVolumeComponent>())
-        {
-            auto& vc = reg.get<VoxelVolumeComponent>(e);
-            if (!vc.Volume || !vc.Palette)
-                continue;
-
-            ChunkBodyMap& bodies = m_VoxelBodies[e];
-            std::vector<glm::ivec3> chunks;
-            vc.Volume->ForEachChunk([&](const glm::ivec3& c) { chunks.push_back(c); });
-            for (const glm::ivec3& c : chunks)
-            {
-                PhysicsBody b = MakeVoxelChunkBody(e, c);
-                if (b.IsValid())
-                    bodies[c] = b;
-            }
-            if (vc.Render)
-                vc.Render->CollisionDirty.clear();   // just built these
-        }
-    }
-
-    void ScenePhysics::RebuildDirtyVoxelChunks()
-    {
-        auto& reg = m_Scene.GetRegistry();
-        for (auto e : reg.view<VoxelVolumeComponent>())
-        {
-            auto& vc = reg.get<VoxelVolumeComponent>(e);
-            if (!vc.Volume || !vc.Palette || !vc.Render || vc.Render->CollisionDirty.empty())
-                continue;
-
-            ChunkBodyMap& bodies = m_VoxelBodies[e];
-            std::vector<glm::ivec3> dirty(vc.Render->CollisionDirty.begin(), vc.Render->CollisionDirty.end());
-            vc.Render->CollisionDirty.clear();
-
-            constexpr size_t kBudget = 8;   // chunk bodies rebuilt per fixed step
-            size_t done = 0;
-            for (const glm::ivec3& c : dirty)
-            {
-                if (done++ >= kBudget) { vc.Render->CollisionDirty.insert(c); continue; }
-                if (auto it = bodies.find(c); it != bodies.end())
-                {
-                    m_World.DestroyBody(it->second);
-                    bodies.erase(it);
-                }
-                PhysicsBody b = MakeVoxelChunkBody(e, c);
-                if (b.IsValid())
-                    bodies[c] = b;
-            }
-        }
-    }
-
-#endif // !COSMIC_2D_ONLY
 
     void ScenePhysics::Step(float fixedDt)
     {
         auto& reg = m_Scene.GetRegistry();
-
-#ifndef COSMIC_2D_ONLY
-        // 0) Rebuild collision for any voxel chunks edited/streamed since last step,
-        //    so characters + dynamics walk on the current geometry this step.
-        RebuildDirtyVoxelChunks();
-#endif
 
         // 1) Push kinematic targets from the (possibly script-moved) transforms.
         for (auto& [e, body] : m_Bodies)
@@ -528,12 +314,6 @@ namespace Cosmic
                 m_World.DestroyCharacter(ctrl.GetHandle());
         m_Characters.clear();
 
-#ifndef COSMIC_2D_ONLY
-        for (auto& [e, chunks] : m_VoxelBodies)
-            for (auto& [c, body] : chunks)
-                m_World.DestroyBody(body);
-        m_VoxelBodies.clear();
-#endif
     }
 
     PhysicsBody ScenePhysics::GetBody(entt::entity e) const

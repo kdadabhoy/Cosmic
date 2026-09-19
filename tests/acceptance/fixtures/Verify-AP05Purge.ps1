@@ -154,12 +154,17 @@ function Show-Lines($lines, [string]$label) {
     }
 }
 function Get-CodeFiles([string[]]$roots, [string[]]$exts) {
+    # Windows PowerShell 5.1 ignores -Include on "Get-ChildItem -LiteralPath <dir> -Recurse"
+    # (every file comes back: .ps1, .md, .json, ...), so the extension filter is applied by
+    # hand. Part A's 240 fence-uses carried four of this script's own comment lines that way.
+    $extSet = @($exts | ForEach-Object { ([string]$_).TrimStart('*').ToLowerInvariant() })
     $out = @()
     foreach ($r in $roots) {
         $full = Join-Path $Repo $r
         if (-not (Test-Path -LiteralPath $full)) { continue }
-        $out += @(Get-ChildItem -LiteralPath $full -Recurse -File -Include $exts |
-            Where-Object { $_.FullName -notmatch '\\(build|_results|_temp)\\' })
+        $out += @(Get-ChildItem -LiteralPath $full -Recurse -File |
+            Where-Object { ($extSet -contains $_.Extension.ToLowerInvariant()) -and
+                           ($_.FullName -notmatch '\\(build|_results|_temp)\\') })
     }
     # Plain return on purpose: the pipeline unrolls the array into one FileInfo per
     # iteration for the caller's @(...) foreach (a ",$out" would hand it ONE element).

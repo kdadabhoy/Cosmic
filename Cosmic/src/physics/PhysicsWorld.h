@@ -46,7 +46,6 @@
 
 namespace Cosmic
 {
-    class Renderer3DDebugSink;   // fwd (J8) — not used publicly here
     class IPhysicsBackend;       // fwd (W3) — physics/PhysicsBackend.h
 
     class COSMIC_API PhysicsWorld
@@ -132,10 +131,10 @@ namespace Cosmic
         PhysicsStats GetStatistics() const;
 
         // ---- debug draw (J8) ------------------------------------------------
-        /** @brief Emit live body/character wireframes + contact points to the
-         *  Renderer3D line batch (call between BeginScene/EndScene). Sleeping
-         *  bodies draw grey, awake green, triggers cyan, characters yellow.
-         *  Debug-config only (needs JPH_DEBUG_RENDERER); a no-op in Release. */
+        /** @brief A no-op on this trunk. History: emitted live body/character
+         *  wireframes + contact points to the Renderer3D line batch (Debug config
+         *  only); that bridge went with the 3D renderer in AP-05 — the editor's
+         *  collider overlay lives in ViewportController instead. */
         void DebugDraw() const;
 
     private:

@@ -29,7 +29,7 @@
  *
  *   Ref<Mesh> box  = Mesh::CreateBox({1, 0.25f, 2});
  *   Ref<Mesh> body = Mesh::CreateFromOBJ(FileSystem::Resolve("project://models/viper.obj"));
- *   Renderer3D::DrawMesh(box, transform, color);
+ *   // History: Renderer3D::DrawMesh(box, transform, color) drew it on the 3D engine
  *
  * Primitives are unit-ish sized and centered on the origin so a plain scale
  * matrix resizes them predictably. All primitives have outward normals and
@@ -66,7 +66,7 @@ namespace Cosmic
 	 * resources — the headless-testable half of a mesh (E15). Every parametric
 	 * primitive is produced by a pure Mesh::Build* function returning one of
 	 * these; Mesh::Create(MeshData) uploads it. Splitting geometry generation
-	 * from the GPU upload mirrors Terrain (CPU heights vs. GPU texture) so unit
+	 * from the GPU upload (CPU data vs. GPU resource) means that unit
 	 * tests can assert vertex counts / bounds / normals without a GL context,
 	 * and lets importers (E16) hand raw geometry straight to the uploader.
 	 */

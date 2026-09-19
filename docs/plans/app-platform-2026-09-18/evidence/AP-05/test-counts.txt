@@ -33,3 +33,26 @@ Debug full suite, stale TEMP   : [doctest] test cases:      454 |      453 passe
 Release full suite, stale TEMP : [doctest] test cases:      454 |      453 passed | 1 failed | 13 skipped
   tests\test_wo06.cpp(208): FATAL ERROR: REQUIRE( p.Load(fallback.string()) ) is NOT correct!
 CosmicTests.exe -tc="WO-06 D01*" (Debug): stale TEMP -> 0/1 failed (140 assertions, 1 failed); after rd /s /q %TEMP%\wo06 -> 1/1 passed (145 assertions); run again immediately -> 0/1 failed again.
+
+# ============================================================================
+# AP-05 part B - CosmicTests counts and suite results after the unfence (clean configure, clean Debug + Release builds)
+# ============================================================================
+
+## Counts (the part-A post count is the bar: 454)
+Debug   --count : 454      --count --no-skip : 467      CosmicRenderTests --count : 37
+Release --count : 454      --count --no-skip : 467      CosmicRenderTests --count : 37
+Part A post count 454 == part B count 454 in both configs. Removing the fences removed no compiled case: every dropped
+block was the never-compiled 3D branch, the kept #else / #ifdef COSMIC_2D_ONLY branches are exactly what the 2D
+preprocessor already selected, and the two NavigationCube cases (test_s5_navigation.cpp) / the fenced 3D cases in
+test_assetlibrary / test_components / test_crossbuild_scene / test_filesystem_mounts / test_physics_scene / test_reflect /
+test_scene_serializer / render_main were 0 in the 2D count before and are gone now.
+
+## Full retained suites on the final binaries, sequential, each with TEMP/TMP pointed at a fresh scratch dir
+## (build\_temp\suite-<Config>; the KI-57 D01 trap needs a clean TEMP per run)
+Debug   : [doctest] test cases:      454 |      454 passed | 0 failed | 13 skipped
+          [doctest] assertions: 23400718 | 23400718 passed | 0 failed |
+          [doctest] Status: SUCCESS!   (exit 0; 2026-09-19T10:54:05Z .. 10:59:23Z)
+Release : [doctest] test cases:      454 |      454 passed | 0 failed | 13 skipped
+          [doctest] assertions: 23486893 | 23486893 passed | 0 failed |
+          [doctest] Status: SUCCESS!   (exit 0; 2026-09-19T10:59:23Z .. 11:01:48Z)
+(13 skipped in each = the host/runner-only cases that skip by default, unchanged from WO-10 and part A)

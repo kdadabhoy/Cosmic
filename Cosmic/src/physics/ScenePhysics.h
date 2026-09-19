@@ -24,9 +24,6 @@
 #include "physics/PhysicsBody.h"
 #include "physics/PhysicsTypes.h"
 #include "physics/CharacterController.h"
-#ifndef COSMIC_2D_ONLY
-#include "voxel/VoxelVolume.h"           // V5 — IVec3Hash for the per-chunk body map
-#endif
 
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
@@ -68,8 +65,9 @@ namespace Cosmic
          *  `scene`, edit-mode safe (reads components + assets only; creates no Jolt
          *  objects). Returns false when the entity carries no collider shape. This is
          *  the scene's collision-view enumeration — shared by the play-session body
-         *  build (BuildBodyDesc wraps it) and the N2 navmesh bake (SceneNav gathers
-         *  triangles through it, the "honest physics source" of the navmesh). */
+         *  build (BuildBodyDesc wraps it) and any edit-mode consumer. History: the
+         *  N2 navmesh bake (SceneNav) gathered triangles through it on the 3D
+         *  engine, the "honest physics source" of the navmesh. */
         static bool BuildColliderDesc(Scene& scene, entt::entity e, BodyDesc& out);
 
         /** @brief The body bound to `entity`, or an invalid handle. */
@@ -81,26 +79,11 @@ namespace Cosmic
         bool BuildBodyDesc(entt::entity e, BodyDesc& out) const;
         void WriteBackWorldPose(entt::entity e, const glm::vec3& worldPos, const glm::quat& worldRot);
 
-#ifndef COSMIC_2D_ONLY
-        // Voxel collision (V5): one static triangle-mesh body per resident chunk.
-        // 3D-only — voxel volumes do not exist in the 2D engine (plan doc 28 §6.4).
-        void        BuildVoxelBodies();
-        void        RebuildDirtyVoxelChunks();
-        PhysicsBody MakeVoxelChunkBody(entt::entity e, const glm::ivec3& chunk);
-#endif
-
         Scene&        m_Scene;
         PhysicsWorld& m_World;
 
         std::unordered_map<entt::entity, PhysicsBody>          m_Bodies;
         std::unordered_map<entt::entity, CharacterController>  m_Characters;
-
-#ifndef COSMIC_2D_ONLY
-        // entity -> (chunk coord -> static mesh body). IVec3Hash/IVec3Eq are the
-        // only reason this header includes voxel/VoxelVolume.h at all.
-        using ChunkBodyMap = std::unordered_map<glm::ivec3, PhysicsBody, IVec3Hash, IVec3Eq>;
-        std::unordered_map<entt::entity, ChunkBodyMap> m_VoxelBodies;
-#endif
 
         std::vector<ContactEvent> m_EventScratch;
         bool m_WarnedMovingParent = false;

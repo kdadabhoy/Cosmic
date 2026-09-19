@@ -46,7 +46,7 @@ namespace Cosmic
 	public:
 		/**
 		 * @brief Ground-height probe for the optional above-ground clamp. The app
-		 * supplies it (typically Terrain::SampleHeight); returns the world-space
+		 * supplies it (a heightfield sample on the 3D engine); returns the world-space
 		 * ground Y at (x, z). When set, the camera position is kept at least
 		 * `clearance` metres above the returned height each frame. Null = free
 		 * flight (no clamp).

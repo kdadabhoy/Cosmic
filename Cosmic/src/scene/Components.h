@@ -1,14 +1,13 @@
 #pragma once
 // Last Modified: 7/25/2026
 
-// The 19 components EVERY engine configuration has (Phase 29 W4): the
+// The 19 components of the 2D engine (the Phase 29 W4 shared tier): the
 // dimension-neutral core, the 2D renderables, and the dimension-agnostic physics
-// tier (rigid body + box/sphere/capsule colliders + character controller, kept
-// shared because Jolt ships on both engines). The 15 that only mean anything in a
-// 3D world — meshes and LODs, skeletal animation and sockets, the 3D lights,
-// terrain/water/particles/voxels, the mesh + terrain colliders, and navigation —
-// live in scene/Components3D.h, which includes this header and which the pure-2D
-// configuration does not compile. Name a 3D component and you must include that.
+// tier (rigid body + box/sphere/capsule colliders + character controller — Jolt
+// is dimension-agnostic). History: the 15 that only meant anything in a 3D world
+// (meshes and LODs, skeletal animation and sockets, the 3D lights,
+// terrain/water/particles/voxels, the mesh + terrain colliders, and navigation)
+// lived in scene/Components3D.h, purged with the 3D engine in AP-05.
 
 #include "core/Core.h"
 #include "core/UUID.h"
@@ -434,7 +433,8 @@ namespace Cosmic
     {
         enum class SkyMode { Procedural = 0, Detailed = 1, HDRI = 2, Physical = 3 };
 
-        // Sun — drives the first DirectionalLight / the owned EnvironmentMap.
+        // Sun — kept for scene compatibility; nothing reads it in a 2D frame.
+        // History: drove the 3D engine's first DirectionalLight and its EnvironmentMap.
         glm::vec3 SunDirection{ -0.4f, -1.0f, -0.3f };  // direction the light TRAVELS
         glm::vec3 SunColor{ 1.0f };
         float     SunIntensity = 1.0f;

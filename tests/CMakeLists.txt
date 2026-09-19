@@ -3,9 +3,9 @@
 # single header (Cosmic/dependencies/doctest). Run from build/Runtime/<CONFIG>/
 # (the exe is placed next to Cosmic.dll) or via `ctest`.
 
-# Shared tier (plan doc 28 §9.4) — every file here compiles under BOTH engine
-# configurations. Several carry in-file COSMIC_2D_ONLY fences around the cases
-# that reach for a 3D component; the file itself stays in both suites.
+# Shared tier (plan doc 28 §9.4) — since the AP-05 purge every file here is plain
+# 2D source: the 3D-only TUs were deleted (part A) and the in-file COSMIC_2D_ONLY
+# fences around the cases that reached for a 3D component are gone (part B).
 set(COSMIC_TEST_SOURCES
     test_main.cpp
     test_framing.cpp
@@ -63,9 +63,9 @@ set(COSMIC_TEST_SOURCES
     # Phase 29 W9 — telemetry / serial / SF_Telem hardening (plan doc 28 §9.6).
     # All shared tier: the telemetry and serial stacks are dimension agnostic,
     # and SF_Telem ships on both branches (decision 4), so these run in both
-    # suites. test_crossbuild_scene carries in-file COSMIC_2D_ONLY fences —
-    # it asserts VERBATIM preservation of 3D blocks on the 2D engine and real
-    # component loading on the 3D one.
+    # suites. test_crossbuild_scene asserts VERBATIM preservation of the 3D
+    # component blocks a scene may carry (its 3D-engine half, which asserted
+    # real component loading, went with the fences in AP-05).
     test_telemetry_robustness.cpp
     test_wo06.cpp
     test_wo06_host.cpp

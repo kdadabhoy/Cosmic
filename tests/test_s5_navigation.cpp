@@ -205,33 +205,3 @@ TEST_CASE("OrbitBy: a classic orbit about the target leaves the target fixed")
 // through Renderer3D, so §4.2's audit dropped camera/NavigationCube.* from the 2D
 // engine and this picker has no implementation to link against there.
 
-#ifndef COSMIC_2D_ONLY
-
-TEST_CASE("NavigationCube: a centered click selects the face nearest the camera")
-{
-	const glm::mat4 proj = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, 0.1f, 10.0f);
-	auto vp = [&](const glm::vec3& eye, const glm::vec3& up)
-	{
-		return proj * glm::lookAt(eye, glm::vec3(0.0f), up);
-	};
-
-	ViewPreset p;
-	CHECK(NavigationCube::PickFaceFromViewProjection(vp({ 0, 0,  3 }, { 0, 1, 0 }), 0.5f, 0.5f, p)); CHECK(p == ViewPreset::Front);
-	CHECK(NavigationCube::PickFaceFromViewProjection(vp({ 0, 0, -3 }, { 0, 1, 0 }), 0.5f, 0.5f, p)); CHECK(p == ViewPreset::Back);
-	CHECK(NavigationCube::PickFaceFromViewProjection(vp({  3, 0, 0 }, { 0, 1, 0 }), 0.5f, 0.5f, p)); CHECK(p == ViewPreset::Right);
-	CHECK(NavigationCube::PickFaceFromViewProjection(vp({ -3, 0, 0 }, { 0, 1, 0 }), 0.5f, 0.5f, p)); CHECK(p == ViewPreset::Left);
-	CHECK(NavigationCube::PickFaceFromViewProjection(vp({ 0,  3, 0 }, { 0, 0, -1 }), 0.5f, 0.5f, p)); CHECK(p == ViewPreset::Top);
-	CHECK(NavigationCube::PickFaceFromViewProjection(vp({ 0, -3, 0 }, { 0, 0,  1 }), 0.5f, 0.5f, p)); CHECK(p == ViewPreset::Bottom);
-}
-
-TEST_CASE("NavigationCube: a click off the cube misses")
-{
-	const glm::mat4 proj = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, 0.1f, 10.0f);
-	const glm::mat4 vp   = proj * glm::lookAt(glm::vec3(0, 0, 3), glm::vec3(0.0f), glm::vec3(0, 1, 0));
-
-	// u = 0 maps to world x = -1, well outside the ±0.5 cube — the ray misses.
-	ViewPreset p = ViewPreset::Iso;
-	CHECK(NavigationCube::PickFaceFromViewProjection(vp, 0.0f, 0.5f, p) == false);
-}
-
-#endif   // COSMIC_2D_ONLY

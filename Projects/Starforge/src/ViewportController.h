@@ -28,9 +28,6 @@
 #include "EditorContext.h"
 #include "EditorCameraRig.h"
 #include "EditorPrefs.h"
-#ifndef COSMIC_2D_ONLY
-#include "nav/NavTypes.h"            // N3 — NavDebugTri (nav-overlay draw scratch)
-#endif
 
 #include <Cosmic.h>
 
@@ -67,18 +64,6 @@ namespace Starforge
                       const Cosmic::Camera* renderCamOverride = nullptr,
                       const glm::vec4& uiBandUv = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
 
-#ifndef COSMIC_2D_ONLY
-        // Grid + axes + selection outline, drawn via Renderer3D into the bound
-        // viewport FBO. Call after Scene::OnRender3D, before unbinding. Wraps
-        // DrawOverlayContent in its own BeginScene/EndScene.
-        void DrawSceneOverlay(EditorContext& ctx, const Cosmic::Camera& cam);
-
-        // The overlay draw calls WITHOUT a BeginScene/EndScene wrap — for the
-        // SceneRenderer DrawTransparent hook (H2), which is already inside a scene
-        // with the HDR target + scene depth bound.
-        void DrawOverlayContent(EditorContext& ctx);
-#endif
-
         // 2D-mode overlay (U3): the pixel grid (1-unit minors, 10-unit majors,
         // XY axes) sized to the 2D rig's visible rect, plus wire-rect selection
         // outlines for sprites. Same no-wrap contract as DrawOverlayContent.
@@ -89,7 +74,6 @@ namespace Starforge
         // draws the collider overlay (§6.4). Both produce the same picture.
         void DrawOverlayContent2D(EditorContext& ctx, const Cosmic::Camera2DController& cam);
 
-#ifdef COSMIC_2D_ONLY
         // W7 / §6.4 — the 2D collider overlay: Box/Sphere/Capsule projected onto
         // XY with Renderer2D, so 2D physics is visually debuggable now that
         // PhysicsWorld::DebugDraw is a no-op without Renderer3D. Honours the same
@@ -100,7 +84,6 @@ namespace Starforge
         // BEFORE the sprites, so the grid stays under the art) would bury it.
         // It opens its own render pass, so it stands alone in the hook.
         void DrawColliderOverlay2D(EditorContext& ctx, const Cosmic::Camera2DController& cam);
-#endif
 
         // The gizmo, drawn inside the viewport overlay window (between
         // WorkspaceLayer::BeginViewportOverlay/EndViewportOverlay), AFTER
@@ -123,13 +106,6 @@ namespace Starforge
         // 3D-only pieces (camera dropdown, nav cube).
         void DrawViewportOverlays(EditorContext& ctx, EditorCameraRig& rig,
                                   bool playing, bool mode2D);
-
-#ifndef COSMIC_2D_ONLY
-        // K8 — render the navigation cube's offscreen pass for this frame's
-        // camera. Call from RenderViewport BEFORE binding the viewport FBO (the
-        // cube binds + unbinds its own target).
-        void PrerenderNavCube(const Cosmic::Camera& cam, bool playing, bool mode2D);
-#endif
 
         // K6 — snap prefs round-trip (EditorPrefs persistence).
         void LoadSnapPrefs(const Prefs::EditorSettings& s);
@@ -164,23 +140,6 @@ namespace Starforge
         ViewMode GetViewMode() const          { return m_ViewMode; }
         void     SetViewMode(ViewMode m)      { m_ViewMode = m; }
 
-#ifndef COSMIC_2D_ONLY
-        // The Entity-ID debug view (R8): draws every mesh (MeshRenderer, LOD
-        // groups, voxel chunks) flat-colored by a hash of its entt id — the
-        // human-readable form of the picker's integer ID buffer. Owns its own
-        // BeginScene/EndScene; call with the viewport FBO bound + cleared
-        // INSTEAD of the SceneRenderer path.
-        void DrawEntityIdView(EditorContext& ctx, const Cosmic::Camera& cam);
-
-        // Depth probe for orbit-about-surface (H1): renders a one-off ID pass at the
-        // current camera pose and reconstructs the world point under the given SCREEN
-        // pixel. StarforgeApp wires this into OrbitCameraController::SetPivotProbe so a
-        // CAD orbit pivots about the actual surface under the cursor (falls back to the
-        // controller's ray/target-plane pivot when it misses geometry).
-        bool ProbeWorldPoint(EditorContext& ctx, const Cosmic::Camera& cam,
-                             const glm::vec2& screenMouse, glm::vec3& out);
-#endif
-
         // Last-frame gizmo state — StarforgeApp gates the camera on it.
         bool GizmoBusy() const { return m_GizmoActive || m_GizmoOver; }
 
@@ -212,14 +171,6 @@ namespace Starforge
         void FrameSelection(EditorContext& ctx, EditorCameraRig& rig);
         bool SelectionBounds(EditorContext& ctx, glm::vec3& mn, glm::vec3& mx) const;
 
-#ifndef COSMIC_2D_ONLY
-        Cosmic::Ref<Cosmic::ScenePicker> m_Picker;
-
-        // K8 — engine navigation cube (bottom-left overlay).
-        Cosmic::Ref<Cosmic::NavigationCube> m_NavCube;
-        bool m_NavCubeFresh = false;   // rendered this frame (2D/play skip it)
-#endif
-
         bool m_ShowStatsChips = true;  // K9 — chip row toggle (View menu)
         bool m_OutlinePassActive = false;   // K12 — wire boxes yield to the pass
 
@@ -243,11 +194,6 @@ namespace Starforge
 
         bool  m_ShowGrid  = true;
         bool  m_ShowColliders    = true;    // J8 — collider wireframe gizmos (W7: the 2D overlay reads it too)
-#ifndef COSMIC_2D_ONLY
-        bool  m_ShowPhysicsDebug = false;   // J8 — live Jolt body outlines during Play
-        bool  m_ShowNavMesh      = true;    // N3 — translucent nav-poly overlay (respects AlwaysRenderHelper + selection)
-        std::vector<Cosmic::NavDebugTri> m_NavTriScratch;   // N3 — reused per-frame nav-poly draw buffer
-#endif
 
         bool  m_GizmoActive = false;
         bool  m_GizmoOver   = false;
@@ -258,12 +204,6 @@ namespace Starforge
 
         // U1 — UI pointer latch for Play-mode canvas interaction in the viewport.
         bool  m_UiMouseWas = false;
-
-#ifndef COSMIC_2D_ONLY
-        // Voxel brush press-edge latches (V4): one edit per click.
-        bool  m_VoxelLmbWas = false;
-        bool  m_VoxelRmbWas = false;
-#endif
 
         // Tile painter latches (U4): stroke edges + the last hovered cell (the
         // rect tool finalizes with it even when the release lands off-viewport).

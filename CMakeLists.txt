@@ -58,26 +58,29 @@ endif()
 
 option(COSMIC_BUILD_ENGINE_ONLY "Build only the core engine components" OFF)
 
-# Phase 29 engine split — the two engine configurations. Declared here, ahead of
-# add_subdirectory(Cosmic), so the flags are in the cache before anything reads
-# them: the engine's source partition, the test target and the project scanner
-# below all key off COSMIC_2D_ONLY. Cosmic/CMakeLists.txt declares the same two
-# options (a no-op once these cache entries exist) so that directory still
-# configures on its own. See docs/plans/28-phase29-engine-split-plan.md.
-option(COSMIC_2D_ONLY "Build the 2D-only engine (excludes all 3D subsystems)" ON)
+# COSMIC_2D_ONLY — a compatibility no-op since AP-05 (App Platform packet). The
+# 3D subsystems, their vendored dependencies and every in-file fence were purged
+# from this trunk, so the option no longer selects anything: the engine source IS
+# the 2D engine. It is kept (default ON) so every existing configure line keeps
+# working unchanged — the build_*.bat scripts, CI, Starforge's BuildRunner and
+# the external project CMakeLists all still pass -DCOSMIC_2D_ONLY=ON — and so the
+# reject-OFF gate below can still refuse a stale 3D cache. Declared here, ahead
+# of add_subdirectory(Cosmic), so the flags are in the cache before anything
+# reads them; Cosmic/CMakeLists.txt declares the same two options (a no-op once
+# these cache entries exist) so that directory still configures on its own.
+option(COSMIC_2D_ONLY "Compatibility no-op: this trunk is the 2D-only engine (OFF is rejected)" ON)
 option(COSMIC_WITH_JOLT "Build the Jolt physics backend" ON)
 
-# 2D stability trunk enforcement (WO-03, KI-3). `main` is the 2D-only trunk: the
-# ONLY supported shipping configuration here is COSMIC_2D_ONLY=ON, which is why
-# the option now defaults ON. Reject an explicit OFF (from a stale cache carried
-# over from an old 3D configure, a copied 3D command line, or a script default)
-# at CONFIGURE time — before any target is generated — so no build/CI/release/
-# package path on this branch can ever silently produce a 3D or mixed binary.
-# This guard is the enforcement point every entry point funnels through; the
-# per-script -DCOSMIC_2D_ONLY=ON flags are explicitness on top of it, not the
-# gate. The full 3D engine lives on the `engine-3d` branch (and the frozen
-# `cosmic-pre-2d-2026-09-16` tag), where OFF stays supported and this guard is
-# absent. Do not weaken this to a warning: a warning still generates a 3D tree.
+# 2D stability trunk enforcement (WO-03, KI-3). `main` is the 2D-only trunk and,
+# since AP-05, its only source: there is no 3D engine here to build. Reject an
+# explicit OFF (from a stale cache carried over from an old 3D configure, a copied
+# 3D command line, or a script default) at CONFIGURE time — before any target is
+# generated — so no build/CI/release/package path on this branch can ever claim
+# to produce a 3D or mixed binary. This guard is the enforcement point every entry
+# point funnels through; the per-script -DCOSMIC_2D_ONLY=ON flags are explicitness
+# on top of it, not the gate. The full 3D engine lives on the `engine-3d` branch
+# (and the frozen `cosmic-pre-2d-2026-09-16` tag), where OFF stays supported and
+# this guard is absent. Do not weaken this to a warning.
 if(NOT COSMIC_2D_ONLY)
     message(FATAL_ERROR
         "COSMIC_2D_ONLY=OFF is not supported on this branch.\n"
@@ -127,50 +130,40 @@ endif()
 # REMOVED from this 2D-only trunk (2026-09-17): they are for 3D demonstration only
 # and are preserved on the `engine-3d` branch and the `cosmic-pre-2d-2026-09-16`
 # tag (the frozen full-tree snapshot). The two remaining projects, SF_Telem and
-# Starforge, both build in 2D, so nothing is skipped in either mode now. The skip
-# machinery is retained (still hand-overridable via -DCOSMIC_SKIP_PROJECTS="Foo;Bar").
-#
-# Starforge builds in 2D with its 3D panels, menus and overlays fenced out (Phase 29
-# W7, §8.5); Projects/Starforge/CMakeLists.txt drops the three 3D-only TUs.
+# Starforge, both build here (Starforge lost its 3D panels, menus and overlays
+# with the AP-05 purge), so nothing but the external specimen below is skipped.
+# The skip machinery is retained (still hand-overridable via
+# -DCOSMIC_SKIP_PROJECTS="Foo;Bar").
 #
 # AnalysisSample (WO-10 / X01, 2D stability) is an EXTERNAL-consumer specimen: its
 # source is committed under Projects/ so the consumption path is reproducible, but
 # it is configured and built on its own against COSMIC_SDK_DIR (the way the
 # Starforge packager builds any external project) — never as part of this build,
-# so it stays out of the scan (and out of the install rules) in both modes. Its
-# own CMakeLists refuses to be added in-tree.
-set(COSMIC_SKIP_PROJECTS_3D "AnalysisSample")
-set(COSMIC_SKIP_PROJECTS_2D "AnalysisSample")
-if(COSMIC_2D_ONLY)
-    set(SKIP_DEFAULT "${COSMIC_SKIP_PROJECTS_2D}")
-    set(SKIP_OTHER   "${COSMIC_SKIP_PROJECTS_3D}")
-else()
-    set(SKIP_DEFAULT "${COSMIC_SKIP_PROJECTS_3D}")
-    set(SKIP_OTHER   "${COSMIC_SKIP_PROJECTS_2D}")
-endif()
+# so it stays out of the scan (and out of the install rules). Its own CMakeLists
+# refuses to be added in-tree.
+set(SKIP_DEFAULT "AnalysisSample")
 set(COSMIC_SKIP_PROJECTS "${SKIP_DEFAULT}" CACHE STRING
     "Semicolon-separated Projects/ subdirectory names the scanner skips")
-# The cache is sticky, but this default is mode-derived, so a stored value can go
-# stale two ways: flipping COSMIC_2D_ONLY in an existing tree (the list is now the
-# OTHER mode's), or editing a default here (W7 took Starforge off the 2D list —
-# an already-configured 2D tree would have gone on skipping the editor silently).
-# COSMIC_SKIP_PROJECTS_APPLIED remembers the default this tree last derived, so
-# both cases are detectable and a HAND-EDITED list is still left alone.
-# (CACHE INTERNAL implies FORCE, so this seed must be guarded — an unguarded set
-# here overwrote the remembered default BEFORE the comparison below and the
-# migration could never fire on an edited default; found by WO-10 when
-# AnalysisSample joined the list.)
+# The cache is sticky, so a stored value goes stale when the default here is
+# edited (W7 took Starforge off the list — an already-configured tree would have
+# gone on skipping the editor silently; WO-10 added AnalysisSample). Until AP-05
+# the default was also mode-derived (a 2D and a 3D list), which is where this
+# migration comes from. COSMIC_SKIP_PROJECTS_APPLIED remembers the default this
+# tree last derived, so an unchanged stored list follows a new default while a
+# HAND-EDITED list is still left alone. (CACHE INTERNAL implies FORCE, so this
+# seed must be guarded — an unguarded set here overwrote the remembered default
+# BEFORE the comparison below and the migration could never fire on an edited
+# default; found by WO-10 when AnalysisSample joined the list.)
 if(NOT DEFINED COSMIC_SKIP_PROJECTS_APPLIED)
     set(COSMIC_SKIP_PROJECTS_APPLIED "${SKIP_DEFAULT}" CACHE INTERNAL
-        "The mode default COSMIC_SKIP_PROJECTS was last derived from")
+        "The default COSMIC_SKIP_PROJECTS was last derived from")
 endif()
 if(NOT COSMIC_SKIP_PROJECTS STREQUAL "${SKIP_DEFAULT}" AND
-   (COSMIC_SKIP_PROJECTS STREQUAL "${SKIP_OTHER}" OR
-    COSMIC_SKIP_PROJECTS STREQUAL "${COSMIC_SKIP_PROJECTS_APPLIED}"))
+   COSMIC_SKIP_PROJECTS STREQUAL "${COSMIC_SKIP_PROJECTS_APPLIED}")
     set_property(CACHE COSMIC_SKIP_PROJECTS PROPERTY VALUE "${SKIP_DEFAULT}")
 endif()
 set(COSMIC_SKIP_PROJECTS_APPLIED "${SKIP_DEFAULT}" CACHE INTERNAL
-    "The mode default COSMIC_SKIP_PROJECTS was last derived from" FORCE)
+    "The default COSMIC_SKIP_PROJECTS was last derived from" FORCE)
 
 # AUTOMATED GAME PROJECT SCANNER
 if(NOT COSMIC_BUILD_ENGINE_ONLY)

@@ -11,9 +11,6 @@
 #include "scene/Scene.h"
 #include "scene/Entity.h"
 #include "scene/Components.h"
-#ifndef COSMIC_2D_ONLY
-#include "scene/Components3D.h"
-#endif
 #include "scene/SceneSerializer.h"
 #include "physics/PhysicsWorld.h"
 
@@ -54,14 +51,6 @@ TEST_SUITE("Physics / components + scene (J3/J4)")
         box.Offset = { 0.1f, 0.0f, -0.2f };
         box.IsTrigger = true;
 
-#ifndef COSMIC_2D_ONLY
-        // W6 — the one 3D line in the otherwise dimension-agnostic physics suite
-        // (§4.1 keeps five of the six test_physics_* files in the 2D build).
-        // TerrainColliderComponent moved to Components3D.h in W4; it is here as
-        // the EMPTY-component serializer case, which the 3D suite still covers.
-        e.AddComponent<TerrainColliderComponent>();   // empty component
-#endif
-
         auto& cc = e.AddComponent<CharacterControllerComponent>();
         cc.Height = 2.1f; cc.Radius = 0.4f; cc.StepHeight = 0.5f;
 
@@ -89,10 +78,6 @@ TEST_SUITE("Physics / components + scene (J3/J4)")
         CHECK(box2.HalfExtents.z == doctest::Approx(1.5f));
         CHECK(box2.Offset.x == doctest::Approx(0.1f));
         CHECK(box2.IsTrigger == true);
-
-#ifndef COSMIC_2D_ONLY
-        CHECK(scene2.GetRegistry().all_of<TerrainColliderComponent>(h));   // empty comp survived
-#endif
 
         REQUIRE(scene2.GetRegistry().all_of<CharacterControllerComponent>(h));
         CHECK(scene2.GetRegistry().get<CharacterControllerComponent>(h).Height == doctest::Approx(2.1f));

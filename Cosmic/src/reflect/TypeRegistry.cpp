@@ -259,16 +259,13 @@ namespace Cosmic::Reflect
             .Field("AOMap",         &MaterialAsset::AOMap).AsAssetPath("texture")
             .Field("EmissiveMap",   &MaterialAsset::EmissiveMap).AsAssetPath("texture");
 
-        // ...and the 3D half (W4). Terrain/water/particles/voxels, meshes and LODs,
-        // skeletal animation and sockets, the 3D lights, the two geometry-derived
-        // colliders and navigation all live in reflect/TypeRegistry3D.cpp, which the
-        // 2D configuration does not compile. Splitting the call changes no output:
+        // History: the 3D half (W4) — terrain/water/particles/voxels, meshes and
+        // LODs, skeletal animation and sockets, the 3D lights, the two
+        // geometry-derived colliders and navigation — was registered from
+        // reflect/TypeRegistry3D.cpp, purged in AP-05. The split changed no output:
         // the registry is keyed by entt type hash, so a descriptor is identical
         // wherever it was registered from, and the only two consumers of iteration
         // order (the Inspector's Add menu, the SceneSerializer's component blocks)
         // both re-sort by name.
-#ifndef COSMIC_2D_ONLY
-        RegisterEngine3DTypes(r);
-#endif
     }
 }

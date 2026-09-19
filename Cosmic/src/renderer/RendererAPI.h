@@ -134,9 +134,9 @@ namespace Cosmic
 		// Render State Control
 		///////////////////////////////
 
-		// Depth testing/writing toggles. Both default ON at Init(). Renderer3D and
-		// future passes MUST restore any state they change — never leave these
-		// altered across a Begin/End scope (see the Renderer3D state contract).
+		// Depth testing/writing toggles. Both default ON at Init(). Every pass MUST
+		// restore any state it changes — never leave these altered across a
+		// Begin/End scope (the renderer state contract).
 		virtual void SetDepthTest(bool enabled) = 0;
 		virtual void SetDepthWrite(bool enabled) = 0;
 

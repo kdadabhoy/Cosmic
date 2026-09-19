@@ -31,9 +31,6 @@
 #include "renderer/Light2DRenderer.h"
 #include "renderer/RenderCommand.h"
 #include "renderer/Renderer2D.h"
-#ifndef COSMIC_2D_ONLY
-#include "renderer/Renderer3D.h"
-#endif
 
 #include <cstdlib>
 #include <cstring>
@@ -99,14 +96,9 @@ int main(int argc, char** argv)
 
     // Renderer::Init()'s body, spelled out. The Renderer facade is the one
     // renderer class without COSMIC_API, so it is not callable across the DLL
-    // boundary; its three subsystem calls all are. Spelling them out is also
-    // what lets the Renderer3D half carry the COSMIC_2D_ONLY fence — the 2D
-    // engine has no Renderer3D to initialize.
+    // boundary; its two subsystem calls both are.
     Cosmic::RenderCommand::Init();
     Cosmic::Renderer2D::Init();
-#ifndef COSMIC_2D_ONLY
-    Cosmic::Renderer3D::Init();
-#endif
 
     // Deterministic starting state: the engine defaults the goldens were
     // captured under. Every suite sets its own pass state on top of this.
@@ -124,9 +116,6 @@ int main(int argc, char** argv)
     // check for it, but the renderer's own subsystems do not. Same order
     // Renderer::Shutdown() uses.
     Cosmic::Renderer2D::Shutdown();
-#ifndef COSMIC_2D_ONLY
-    Cosmic::Renderer3D::Shutdown();
-#endif
     Cosmic::Light2DRenderer::Shutdown();
     window.reset();
 

@@ -4,10 +4,6 @@
 #include "EditorContext.h"
 #include "EditorSnapshot.h"
 
-#ifndef COSMIC_2D_ONLY
-#include "voxel/VoxelVolume.h"   // V4 — undoable voxel edits
-#endif
-
 #include <memory>
 #include <vector>
 
@@ -433,100 +429,6 @@ namespace Starforge
     // Both operate on MeshRendererComponent, which the 2D build does not have.
     // A 2D material assignment is a reflected SpriteRenderer field write and
     // already goes through the generic Commands::SetField path.
-#ifndef COSMIC_2D_ONLY
-    namespace
-    {
-        // K13 — material drop: path + resolved asset move together so undo/redo
-        // are visually exact (the string-only reflected write leaves the old
-        // Ref<MaterialAsset> live).
-        class AssignMaterialCommand : public ICommand
-        {
-        public:
-            AssignMaterialCommand(EditorContext& ctx, uint64_t uuid,
-                                  std::string before, std::string after)
-                : m_Ctx(&ctx), m_Uuid(uuid), m_Before(std::move(before)), m_After(std::move(after)) {}
-
-            void Do() override   { Apply(m_After); }
-            void Undo() override { Apply(m_Before); }
-            std::string Name() const override { return "Assign Material"; }
-
-        private:
-            void Apply(const std::string& path)
-            {
-                Entity e = Resolve(*m_Ctx, m_Uuid);
-                if (!e || !e.HasComponent<MeshRendererComponent>()) return;
-                auto& mr = e.GetComponent<MeshRendererComponent>();
-                mr.MaterialPath         = path;
-                mr.MaterialAsset        = path.empty() ? nullptr : AssetLibrary::GetMaterial(path);
-                mr.MaterialPathResolved = true;   // the sync must not overwrite this
-                m_Ctx->MarkDirty();
-            }
-
-            EditorContext* m_Ctx;
-            uint64_t       m_Uuid;
-            std::string    m_Before, m_After;
-        };
-    }
-
-    void Commands::AssignMaterial(EditorContext& ctx, Entity e, const std::string& vfsPath)
-    {
-        if (!ctx.Scene || !e || !e.HasComponent<MeshRendererComponent>()) return;
-        const std::string before = e.GetComponent<MeshRendererComponent>().MaterialPath;
-        if (before == vfsPath) return;
-        ctx.Commands.Execute(std::make_unique<AssignMaterialCommand>(ctx, IdOf(e), before, vfsPath));
-    }
-
-    namespace
-    {
-        // M5 — captures the whole MaterialPaths vector before/after (a slot edit is
-        // rare, the vector tiny) so undo restores it exactly; clears the resolved
-        // flag so the next SyncPrimitiveMeshes rebuilds MaterialAssets.
-        class MaterialSlotCommand : public ICommand
-        {
-        public:
-            MaterialSlotCommand(EditorContext& ctx, uint64_t uuid,
-                                std::vector<std::string> before, std::vector<std::string> after)
-                : m_Ctx(&ctx), m_Uuid(uuid), m_Before(std::move(before)), m_After(std::move(after)) {}
-
-            void Do() override   { Apply(m_After); }
-            void Undo() override { Apply(m_Before); }
-            std::string Name() const override { return "Edit Material Slot"; }
-
-        private:
-            void Apply(const std::vector<std::string>& paths)
-            {
-                Entity e = Resolve(*m_Ctx, m_Uuid);
-                if (!e || !e.HasComponent<MeshRendererComponent>()) return;
-                auto& mr = e.GetComponent<MeshRendererComponent>();
-                mr.MaterialPaths          = paths;
-                mr.MaterialPathsResolved  = false;   // re-resolve on the next sync
-                m_Ctx->MarkDirty();
-            }
-
-            EditorContext*           m_Ctx;
-            uint64_t                 m_Uuid;
-            std::vector<std::string> m_Before, m_After;
-        };
-    }
-
-    void Commands::SetMaterialSlot(EditorContext& ctx, Entity e, size_t slot,
-                                   const std::string& vfsPath)
-    {
-        if (!ctx.Scene || !e || !e.HasComponent<MeshRendererComponent>()) return;
-        std::vector<std::string> before = e.GetComponent<MeshRendererComponent>().MaterialPaths;
-        std::vector<std::string> after  = before;
-        if (after.size() <= slot)
-            after.resize(slot + 1);
-        if (after[slot] == vfsPath)
-            return;   // no-op
-        after[slot] = vfsPath;
-        // Trailing-empty trim: an all-empty vector serializes as absent (compat).
-        while (!after.empty() && after.back().empty())
-            after.pop_back();
-        ctx.Commands.Execute(std::make_unique<MaterialSlotCommand>(
-            ctx, IdOf(e), std::move(before), std::move(after)));
-    }
-#endif   // COSMIC_2D_ONLY — AssignMaterial + SetMaterialSlot
 
     Entity Commands::Duplicate(EditorContext& ctx, Entity src)
     {
@@ -601,71 +503,6 @@ namespace Starforge
     }
 
     // ----- voxel edits (V4) — a coalesced brush stroke = one undo step -------
-#ifndef COSMIC_2D_ONLY
-    namespace
-    {
-        class VoxelEditCommand : public ICommand
-        {
-        public:
-            struct Op { glm::ivec3 V; uint16_t Old; uint16_t New; };
-
-            VoxelEditCommand(EditorContext& ctx, uint64_t uuid, int stroke, Op op)
-                : m_Ctx(&ctx), m_Uuid(uuid), m_Stroke(stroke) { m_Ops.push_back(op); }
-
-            void Do() override
-            {
-                if (VoxelVolume* v = Vol())
-                    for (const Op& o : m_Ops) v->Set(o.V, o.New);
-                if (m_Ctx) m_Ctx->MarkDirty();
-            }
-            void Undo() override
-            {
-                if (VoxelVolume* v = Vol())
-                    for (auto it = m_Ops.rbegin(); it != m_Ops.rend(); ++it) v->Set(it->V, it->Old);
-                if (m_Ctx) m_Ctx->MarkDirty();
-            }
-            std::string Name() const override { return "Voxel Edit"; }
-            std::string MergeKey() const override
-            {
-                return "voxel:" + std::to_string(m_Uuid) + ":" + std::to_string(m_Stroke);
-            }
-            bool TryMerge(const ICommand& next) override
-            {
-                const auto* n = dynamic_cast<const VoxelEditCommand*>(&next);
-                if (!n || n->MergeKey() != MergeKey()) return false;
-                m_Ops.insert(m_Ops.end(), n->m_Ops.begin(), n->m_Ops.end());
-                return true;
-            }
-
-        private:
-            VoxelVolume* Vol() const
-            {
-                Entity e = Resolve(*m_Ctx, m_Uuid);
-                if (!e || !e.HasComponent<VoxelVolumeComponent>()) return nullptr;
-                return e.GetComponent<VoxelVolumeComponent>().Volume.get();
-            }
-
-            EditorContext*  m_Ctx;
-            uint64_t        m_Uuid;
-            int             m_Stroke;
-            std::vector<Op> m_Ops;
-        };
-    }
-
-    void Commands::VoxelEdit(EditorContext& ctx, Entity e, const glm::ivec3& voxel,
-                             uint16_t newId, int stroke)
-    {
-        if (!ctx.Scene || !e || !e.HasComponent<VoxelVolumeComponent>()) return;
-        VoxelVolume* vol = e.GetComponent<VoxelVolumeComponent>().Volume.get();
-        if (!vol) return;
-        const uint16_t oldId = vol->Get(voxel);
-        if (oldId == newId) return;
-
-        vol->Set(voxel, newId);   // apply live, then record (Push, not Execute)
-        ctx.Commands.Push(std::make_unique<VoxelEditCommand>(
-            ctx, IdOf(e), stroke, VoxelEditCommand::Op{ voxel, oldId, newId }));
-    }
-#endif   // COSMIC_2D_ONLY — VoxelEdit
 
     // ----- tilemap edits (U4) — a coalesced paint stroke = one undo step ------
     namespace

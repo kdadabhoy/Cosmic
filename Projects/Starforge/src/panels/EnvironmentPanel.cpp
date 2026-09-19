@@ -80,26 +80,9 @@ namespace Starforge
             // H3 advisory fences: it probes DirectionalLightComponent, which
             // lives in Components3D.h and is absent from the 2D build — the one
             // place §8.5's "verified 3D-free" note was wrong about this file.
-#ifndef COSMIC_2D_ONLY
-            ImGui::TextDisabled("Sun, sky, time-of-day, fog, IBL and post — drives the renderer.");
-
-            // H3: tell the user WHY the Sun fields here may look inert — if the scene
-            // has a DirectionalLight entity, THAT light defines the sun (this panel's
-            // Sun fields only take effect via the owned sky/IBL); with none, the sun
-            // below is the whole story.
-            bool hasDirLight = false;
-            for (auto h : ctx.Scene->View<DirectionalLightComponent>()) { (void)h; hasDirLight = true; break; }
-            if (hasDirLight)
-                ImGui::TextColored(ImVec4(0.85f, 0.75f, 0.35f, 1.0f),
-                                   "A DirectionalLight entity defines the sun for lit meshes.");
-            else
-                ImGui::TextColored(ImVec4(0.60f, 0.65f, 0.72f, 1.0f),
-                                   "Default sun (no DirectionalLight in scene).");
-#else
             ImGui::TextDisabled("Ambient 2D, exposure, gamma and the post chain — drives the renderer.");
             ImGui::TextColored(ImVec4(0.60f, 0.65f, 0.72f, 1.0f),
                                "The sun / sky / IBL fields are inert in a 2D build.");
-#endif
             ImGui::Separator();
 
             for (const auto& f : desc->Fields)

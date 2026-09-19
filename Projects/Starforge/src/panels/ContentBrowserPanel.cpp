@@ -372,12 +372,8 @@ namespace Starforge
         // than raising a request nothing consumes.
         if (IsModel(ext))
         {
-#ifndef COSMIC_2D_ONLY
-            ctx.PendingImportModel = srcDisk.string();
-#else
             ctx.Log("[Content] '" + ext + "' model import is a 3D-engine feature.",
                     LogSeverity::Warn);
-#endif
             return;
         }
 
@@ -455,43 +451,6 @@ namespace Starforge
         // both render through PreviewRig's 3D pass, and the mesh leg additionally
         // needs AssetLibrary::GetMesh. Both fall through to the glyph tile in the
         // 2D build; the image and audio previews below are shared and untouched.
-#ifndef COSMIC_2D_ONLY
-        else if (ext == ".cmat" && !vfs.empty())
-        {
-            Cosmic::MaterialAsset asset;
-            Cosmic::AssetLibrary::LoadMaterialAsset(asset, vfs);
-            const uint32_t id = m_PreviewRig.RenderMaterial(asset, (uint32_t)box, (uint32_t)box);
-            ImGui::ImageButton("##pvmat", (ImTextureID)(intptr_t)id, ImVec2(box, box), ImVec2(0, 1), ImVec2(1, 0));
-            if (ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Left, 0.0f))
-            { const ImVec2 d = ImGui::GetIO().MouseDelta; m_PreviewRig.Orbit(d.x, d.y); }
-            if (ImGui::IsItemHovered())
-            {
-                if (const float w = ImGui::GetIO().MouseWheel; w != 0.0f) m_PreviewRig.Zoom(w);
-                if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) m_PreviewRig.ResetView();
-            }
-        }
-        else if (IsThumbable(ext) && !vfs.empty())   // a mesh
-        {
-            auto mesh = Cosmic::AssetLibrary::GetMesh(vfs);
-            if (!mesh)
-            {
-                GlyphTile(info, box);
-            }
-            else
-            {
-                const uint32_t id = m_PreviewRig.RenderMesh(mesh, nullptr, glm::vec4(0.82f, 0.82f, 0.85f, 1.0f),
-                                                            (uint32_t)box, (uint32_t)box);
-                ImGui::ImageButton("##pvmesh", (ImTextureID)(intptr_t)id, ImVec2(box, box), ImVec2(0, 1), ImVec2(1, 0));
-                if (ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Left, 0.0f))
-                { const ImVec2 d = ImGui::GetIO().MouseDelta; m_PreviewRig.Orbit(d.x, d.y); }
-                if (ImGui::IsItemHovered())
-                {
-                    if (const float w = ImGui::GetIO().MouseWheel; w != 0.0f) m_PreviewRig.Zoom(w);
-                    if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) m_PreviewRig.ResetView();
-                }
-            }
-        }
-#endif   // COSMIC_2D_ONLY — the .cmat / mesh turntable previews
         else if (IsAudio(ext))
         {
             // Decode the envelope once per selection (device-independent — T2).
@@ -540,19 +499,6 @@ namespace Starforge
                     ImGui::Text("GPU: %s", FormatBytes(tex->GetGpuBytes()).c_str());
                 }
             }
-#ifndef COSMIC_2D_ONLY
-            else if (IsThumbable(ext) && ext != ".cmat" && !vfs.empty())
-            {
-                if (auto mesh = Cosmic::AssetLibrary::GetMesh(vfs))
-                {
-                    ImGui::Text("Verts: %u", mesh->GetVertexCount());
-                    ImGui::Text("Indices: %u", mesh->GetIndexCount());
-                    const glm::vec3 e0 = mesh->GetLocalMin(), e1 = mesh->GetLocalMax();
-                    ImGui::Text("AABB: %.2f x %.2f x %.2f", e1.x - e0.x, e1.y - e0.y, e1.z - e0.z);
-                    ImGui::Text("GPU: %s", FormatBytes(mesh->GetGpuBytes()).c_str());
-                }
-            }
-#endif
             else if (IsAudio(ext) && m_PreviewSound)
             {
                 ImGui::Text("Duration: %.2f s", m_PreviewSound->GetDuration());

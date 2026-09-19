@@ -15,20 +15,17 @@
 // ============================================================================
 
 // ============================================================================
-// THE 2D CONFIGURATION (Phase 29 / W7, plan doc 28 §8.5). Under COSMIC_2D_ONLY
-// the editor still boots, opens projects, plays scenes and packages them — what
-// fences out is every panel, menu, sample and tick that needs a 3D subsystem:
-// the World Systems + Voxels panels, the Animation Editor document, the navmesh
-// bake orchestration, the model importer, the 3D entity-creation menus and the
-// 3D sample scaffolds. m_Physics and the whole play-session physics path STAY
+// THE 2D EDITOR (Phase 29 / W7, plan doc 28 §8.5; AP-05). The editor boots,
+// opens projects, plays scenes and packages them; every panel, menu, sample and
+// tick that needed a 3D subsystem (the World Systems + Voxels panels, the
+// Animation Editor document, the navmesh bake orchestration, the model importer,
+// the 3D entity-creation menus and the 3D sample scaffolds) was fenced out by
+// W7 and purged by AP-05. m_Physics and the whole play-session physics path STAY
 // (physics is dimension-agnostic — §4.1), and m_Mode2D defaults ON.
 // ============================================================================
 
 #include <Cosmic.h>
 #include "scene/FlowMachine.h"   // U5/U8 — flow-driven editor Play
-#ifndef COSMIC_2D_ONLY
-#include "scene/SceneNav.h"      // N3 — NavBakeJob (async navmesh bake tracking)
-#endif
 
 #include "EditorContext.h"
 #include "EditorPrefs.h"
@@ -45,10 +42,6 @@
 #include "panels/ConsolePanel.h"
 #include "panels/EnvironmentPanel.h"
 #include "panels/MaterialEditorPanel.h"
-#ifndef COSMIC_2D_ONLY
-#include "panels/WorldSystemsPanel.h"
-#include "panels/VoxelPanel.h"
-#endif
 #include "panels/TilePalettePanel.h"
 #include "panels/TelemetryPanel.h"
 #include "panels/ProfilerPanel.h"
@@ -135,9 +128,6 @@ namespace Starforge
         void TogglePausePlay();
         void StepScene();
         void TickPlay(float ts);
-#ifndef COSMIC_2D_ONLY
-        void TickNavMeshes(float ts);   // N3 — drive async navmesh (re)bakes + sidecar save (edit mode)
-#endif
         void DrawPlayControls();
         bool IsPlaying() const { return m_Play != PlayMode::Edit; }
 
@@ -163,10 +153,6 @@ namespace Starforge
         // --- Model import (E16) --------------------------------------------
         // 3D-only: MeshImport is excluded from the 2D build, and the spawn path
         // authors MeshRenderer/Animator components that do not exist there.
-#ifndef COSMIC_2D_ONLY
-        void DrawImportModelPopup();
-        bool ImportModelFile(const std::string& srcPath);   // copy into project://models/ + spawn
-#endif
 
         // --- Package & ship (E19 / S5, S2) ---------------------------------
         void DrawPackagePopup();
@@ -207,11 +193,6 @@ namespace Starforge
         void GenerateSampleTake();         // pre-baked telemetry take for the sample
         bool ForgePlaygroundExists() const;
 
-#ifndef COSMIC_2D_ONLY
-        bool BuildForgeBlocks();           // Phase 18 — scaffold + author the voxel sample
-        bool ForgeBlocksExists() const;
-#endif
-
         // Phase 17 / U8 samples. FlowDemo = the ZERO-CODE two-screen app
         // (menu -> game -> pause overlay, all navigation from Main.cflow);
         // ForgePong = 2D sprites + UI + flow + tiny scripts, playable pong.
@@ -239,14 +220,10 @@ namespace Starforge
         // swapped in for the orbit camera by the toolbar "2D" toggle. View-only
         // state — never serialized; 3D scenes are untouched when it stays off.
         Cosmic::Camera2DController m_Camera2D{ 16.0f / 9.0f };
-#ifdef COSMIC_2D_ONLY
         // W7 — the 2D engine has no orbit/fly world to author in, so 2D mode is
         // the ONLY mode: it starts on, the toolbar toggle is pinned, and
         // CloseProject no longer resets it (see StarforgeApp.cpp).
         bool m_Mode2D = true;
-#else
-        bool m_Mode2D = false;
-#endif
 
         // Game view (U7): during Play the viewport renders from the scene's
         // primary CameraComponent (like the shipped player); Eject flies the
@@ -277,12 +254,6 @@ namespace Starforge
         // dimension-agnostic (plan §4.1) and a 2D game is its biggest consumer.
         Cosmic::PhysicsWorld       m_Physics;     // built on Play
 
-#ifndef COSMIC_2D_ONLY
-        // N3 — in-flight async navmesh bakes, keyed by the navmesh entity's UUID
-        // (survives handle churn). Polled each edit-mode frame in TickNavMeshes.
-        std::unordered_map<uint64_t, Cosmic::NavBakeJob> m_NavBakes;
-        float m_NavAutoTimer = 0.0f;   // throttle for the AutoGenerate signature scan
-#endif
         float                      m_FixedDt     = 1.0f / 60.0f;
         float                      m_FixedAccum  = 0.0f;
         bool                       m_StepRequested = false;
@@ -318,10 +289,6 @@ namespace Starforge
         ConsolePanel        m_Console;
         EnvironmentPanel    m_Environment;    // E17
         MaterialEditorPanel m_Material;        // E17
-#ifndef COSMIC_2D_ONLY
-        WorldSystemsPanel   m_WorldSystems;   // E18
-        VoxelPanel          m_Voxel;           // Phase 18
-#endif
         TilePalettePanel    m_TilePalette;    // U4
         TelemetryPanel      m_Telemetry;      // E20
         ProfilerPanel       m_Profiler;       // T17 — GPU/CPU profiler

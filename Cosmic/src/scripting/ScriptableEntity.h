@@ -28,18 +28,9 @@
 #include "scene/Entity.h"
 #include "scene/Scene.h"
 #include "scene/Components.h"            // TagComponent (SystemBuilder::WithTag), H9
-#ifndef COSMIC_2D_ONLY
-#include "scene/Components3D.h"          // W4 — Voxels()/Animator() proxy component types
-#endif
 #include "scene/FlowMachine.h"           // Q2 — Flow() variable proxy (FlowMachine/FlowValue)
 #include "scripting/ModuleRegistry.h"    // SystemDescriptor (SystemBuilder), H9
 #include "physics/ScenePhysics.h"        // J5/J6 — Physics()/Character() script proxies (NOT fenced: physics is shared)
-#ifndef COSMIC_2D_ONLY
-#include "voxel/VoxelVolume.h"           // V4 — Voxels() script proxy
-#include "voxel/BlockPalette.h"
-#include "scene/SceneNav.h"              // N4 — Nav() script proxy (SceneNavRuntime)
-#include "nav/NavWorld.h"                // N4 — Nav() queries (FindPath/Raycast/...)
-#endif
 
 #include <entt/entt.hpp>
 
@@ -245,132 +236,6 @@ namespace Cosmic
             void   SetString(const std::string& n, const std::string& v) const { SetVar(n, FlowValue::MakeString(v)); }
         };
         FlowProxy Flow() const { return { m_Scene }; }
-
-#ifndef COSMIC_2D_ONLY
-        // W5 — the three 3D-world script proxies: voxels, skeletal animation and
-        // navigation. Physics()/Character()/Flow()/Signals()/Telemetry() above are
-        // dimension agnostic and stay in every configuration.
-
-        // ---- voxel passthrough (V4) -----------------------------------------
-        // A thin handle to a voxel world: this entity's VoxelVolumeComponent if it
-        // has one, else the scene's first. Get/Set are in WORLD VOXEL coordinates;
-        // RayCast/Break/Place take a WORLD ray (the "dig a tunnel / place a block"
-        // script path). Edits mark chunks dirty — the render + collision rebuild
-        // picks them up next frame. All calls are safe no-ops before the volume is
-        // initialized (the first Scene::SyncVoxelVolumes) or with no voxel entity.
-        struct VoxelProxy
-        {
-            Scene*       S = nullptr;
-            entt::entity Handle = entt::null;
-
-            VoxelVolumeComponent* Comp() const
-            {
-                if (!S) return nullptr;
-                if (auto* c = S->GetRegistry().try_get<VoxelVolumeComponent>(Handle)) return c;
-                for (auto e : S->GetRegistry().view<VoxelVolumeComponent>())
-                    return &S->GetRegistry().get<VoxelVolumeComponent>(e);
-                return nullptr;
-            }
-            VoxelVolume*  Volume()  const { auto* c = Comp(); return c ? c->Volume.get()  : nullptr; }
-            BlockPalette* Palette() const { auto* c = Comp(); return c ? c->Palette.get() : nullptr; }
-
-            uint16_t Get(int x, int y, int z) const { auto* v = Volume(); return v ? v->Get(x, y, z) : 0; }
-            void     Set(int x, int y, int z, uint16_t block) const { if (auto* v = Volume()) v->Set(x, y, z, block); }
-            void     Set(const glm::ivec3& c, uint16_t block) const { Set(c.x, c.y, c.z, block); }
-
-            glm::ivec3 WorldToVoxel(const glm::vec3& p) const { auto* v = Volume(); return v ? v->WorldToVoxel(p) : glm::ivec3(0); }
-
-            VoxelRayHit RayCast(const glm::vec3& origin, const glm::vec3& dir, float maxDist) const
-            {
-                VoxelVolume* v = Volume(); BlockPalette* p = Palette();
-                if (!v || !p) return {};
-                return v->RayCast(origin, dir, maxDist, *p);
-            }
-            /** @brief Break (set to Air) the first solid voxel a world ray hits. */
-            bool Break(const glm::vec3& origin, const glm::vec3& dir, float maxDist) const
-            {
-                const VoxelRayHit h = RayCast(origin, dir, maxDist);
-                if (!h.Hit) return false;
-                Set(h.Voxel, 0);
-                return true;
-            }
-            /** @brief Place `block` into the empty cell in front of the face a world
-             *  ray hits (the standard voxel place-on-face). */
-            bool Place(const glm::vec3& origin, const glm::vec3& dir, float maxDist, uint16_t block) const
-            {
-                const VoxelRayHit h = RayCast(origin, dir, maxDist);
-                if (!h.Hit) return false;
-                Set(h.Place, block);
-                return true;
-            }
-        };
-        VoxelProxy Voxels() const { return { m_Scene, m_Handle }; }
-
-        // ---- animator passthrough (M6) --------------------------------------
-        // Script control of THIS entity's AnimatorComponent: a timed CROSSFADE to
-        // another clip (idle↔walk↔run), a hard Play, pause/resume, and a fade
-        // query. No-ops when the entity has no Animator. The full controller graph
-        // stays parked — this is the minimal playable-character tier.
-        struct AnimatorProxy
-        {
-            Scene*       S = nullptr;
-            entt::entity Handle = entt::null;
-
-            AnimatorComponent* Comp() const
-            {
-                return S ? S->GetRegistry().try_get<AnimatorComponent>(Handle) : nullptr;
-            }
-
-            /** @brief Timed blend to `clipPath` ("file#clip") over `seconds` (<=0 =
-             *  hard switch). Re-targets an in-flight fade. */
-            void CrossfadeTo(const std::string& clipPath, float seconds) const
-            {
-                if (auto* an = Comp()) an->CrossfadeTo(clipPath, seconds);
-            }
-            /** @brief Switch to `clipPath` immediately (no fade). */
-            void Play(const std::string& clipPath) const { CrossfadeTo(clipPath, 0.0f); }
-            void SetPlaying(bool playing) const { if (auto* an = Comp()) an->Playing = playing; }
-            /** @brief True while a crossfade is pending or in flight. */
-            bool IsCrossfading() const { auto* an = Comp(); return an && !an->NextClipPath.empty(); }
-            std::string CurrentClip() const { auto* an = Comp(); return an ? an->ClipPath : std::string(); }
-        };
-        AnimatorProxy Animator() const { return { m_Scene, m_Handle }; }
-
-        // ---- navigation passthrough (N4) ------------------------------------
-        // Steer this entity's NavAgent over the scene's baked navmesh, and run
-        // navmesh queries usable by any script (agent or not — e.g. a SystemScript
-        // computing patrol waypoints). All calls are safe no-ops / empty results
-        // when no play session or navmesh is active. Arrival fires as the
-        // `nav.arrived` signal on the scene EventBus (catch it in OnSignal).
-        struct NavProxy
-        {
-            Scene*       S = nullptr;
-            entt::entity Handle = entt::null;
-
-            SceneNavRuntime* Runtime() const { return S ? S->GetNav() : nullptr; }
-            NavWorld*        World()   const { auto* r = Runtime(); return r ? r->Nav() : nullptr; }
-
-            // Agent control (this entity's NavAgent).
-            void SetTarget(const glm::vec3& worldPos) const { if (auto* r = Runtime()) r->SetTarget(Handle, worldPos); }
-            void Stop()          const { if (auto* r = Runtime()) r->Stop(Handle); }
-            bool HasAgent()      const { auto* r = Runtime(); return r && r->HasAgent(Handle); }
-            bool HasArrived()    const { auto* r = Runtime(); return r && r->HasArrived(Handle); }
-            glm::vec3 Position() const { auto* r = Runtime(); return r ? r->AgentPosition(Handle) : glm::vec3(0.0f); }
-            glm::vec3 Velocity() const { auto* r = Runtime(); return r ? r->AgentVelocity(Handle) : glm::vec3(0.0f); }
-
-            // Navmesh queries (const — no agent required).
-            NavPath   FindPath(const glm::vec3& a, const glm::vec3& b) const { auto* w = World(); return w ? w->FindPath(a, b) : NavPath{}; }
-            NavRayHit Raycast(const glm::vec3& a, const glm::vec3& b)   const { auto* w = World(); return w ? w->Raycast(a, b) : NavRayHit{}; }
-            std::optional<glm::vec3> NearestPoint(const glm::vec3& p)   const { auto* w = World(); return w ? w->NearestPoint(p) : std::nullopt; }
-            /** @brief Deterministic random navmesh point within `radius` of `center`;
-             *  `rngState` is a caller-owned xorshift seed (reproducible). */
-            std::optional<glm::vec3> RandomPointAround(const glm::vec3& center, float radius, uint32_t& rngState) const
-            {
-                auto* w = World(); return w ? w->RandomPointAround(center, radius, rngState) : std::nullopt;
-            }
-        };
-        NavProxy Nav() const { return { m_Scene, m_Handle }; }
-#endif   // COSMIC_2D_ONLY
 
 
         // Override the ones you need — all default to no-ops.

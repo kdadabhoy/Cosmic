@@ -1,0 +1,122 @@
+﻿{
+    "manifest":  "ap05-purge",
+    "profile":  "all",
+    "tier_filter":  [
+
+                    ],
+    "config":  "Debug",
+    "mode":  "2D",
+    "generated_utc":  "2026-09-19T20:35:23.4629627Z",
+    "git":  {
+                "commit":  "1bedfa49c09ec3e734853746a651c7bc25ef88e2",
+                "dirty":  true,
+                "dirty_diff_sha256":  null
+            },
+    "environment":  {
+                        "os_caption":  "Microsoft Windows 11 Education",
+                        "os_version":  "10.0.26200",
+                        "os_build":  "26200",
+                        "os_display":  "26200.9457",
+                        "cpu_name":  "AMD Ryzen 7 7800X3D 8-Core Processor",
+                        "cpu_cores":  8,
+                        "cpu_threads":  16,
+                        "cpu_addr_width":  64,
+                        "cpu_isa_floor":  "SSE4.2 (D-CPU); see evidence/WO-02/cpu-isa-probe.txt",
+                        "ram_bytes":  33462239232,
+                        "ram_gib":  31.2,
+                        "gpus":  [
+                                     {
+                                         "name":  "NVIDIA GeForce RTX 5070 Ti",
+                                         "driver":  "32.0.16.1692",
+                                         "driver_date":  "\/Date(1788480000000)\/"
+                                     },
+                                     {
+                                         "name":  "AMD Radeon(TM) Graphics",
+                                         "driver":  "32.0.21045.5002",
+                                         "driver_date":  "\/Date(1786924800000)\/"
+                                     }
+                                 ],
+                        "opengl_version":  null,
+                        "powershell":  "5.1.26100.9444",
+                        "hostname":  "DESKTOP-SEOA4BT"
+                    },
+    "capabilities":  {
+                         "windows":  true,
+                         "cpu-sse42":  true,
+                         "gpu-gl":  true,
+                         "serial-device":  false,
+                         "editor-ui":  false,
+                         "audio-device":  true
+                     },
+    "forced_unavailable":  [
+
+                           ],
+    "bin_dir":  "C:\\dev\\Cosmic\\build\\Runtime\\Debug",
+    "run_temp":  "C:\\dev\\Cosmic\\build\\_temp\\b06-Debug\\cosmic-accept-e51b6a8d6bbc4c089e401d7be261e446",
+    "golden_dir":  "C:/dev/Cosmic/tests/render/goldens",
+    "golden_before":  {
+                          ".gitignore":  "cf670909971a60290e243f753ce7cc04503e15086e4be8eb873b995eb6de6711",
+                          "instancing2d.png":  "95f18d759240773a9ad0b66aaa608f48defe3853fc8668e97579f76323381b01",
+                          "light2d.png":  "d61b27301b2bfcda9f260582f86109a63a8e49f151f525b693f867a1a29922f6",
+                          "scene2d.png":  "335affdf6489ecec5890ef77ba076230d48e729c90dc9aa8c9d0392d2c362382",
+                          "sprites.png":  "4daba99d1c754e4456c2915f36fe1c82cce37af285766462e14334e3645f9c17",
+                          "tilemap.png":  "f78f46c4a0219a9e9750f8630459aebf3c3552b653c483c910ee6bea3e6fb12b",
+                          "ui.png":  "1f29656ebf57d4a8660ba62b27cd17a93b910d90c657d9b1a880160f15c92792",
+                          "wo08_primitives.png":  "3a91fcd4ea7fa90f5f096338a6cb36c5d00d11242945e173ce22a03b2e80dc95",
+                          "wo08_text.png":  "6e7220e4744329c9318dd7ba53ead8c40e141a351b363b5ecc61b9952fc5ac5a"
+                      },
+    "golden_after":  {
+                         ".gitignore":  "cf670909971a60290e243f753ce7cc04503e15086e4be8eb873b995eb6de6711",
+                         "instancing2d.png":  "95f18d759240773a9ad0b66aaa608f48defe3853fc8668e97579f76323381b01",
+                         "light2d.png":  "d61b27301b2bfcda9f260582f86109a63a8e49f151f525b693f867a1a29922f6",
+                         "scene2d.png":  "335affdf6489ecec5890ef77ba076230d48e729c90dc9aa8c9d0392d2c362382",
+                         "sprites.png":  "4daba99d1c754e4456c2915f36fe1c82cce37af285766462e14334e3645f9c17",
+                         "tilemap.png":  "f78f46c4a0219a9e9750f8630459aebf3c3552b653c483c910ee6bea3e6fb12b",
+                         "ui.png":  "1f29656ebf57d4a8660ba62b27cd17a93b910d90c657d9b1a880160f15c92792",
+                         "wo08_primitives.png":  "3a91fcd4ea7fa90f5f096338a6cb36c5d00d11242945e173ce22a03b2e80dc95",
+                         "wo08_text.png":  "6e7220e4744329c9318dd7ba53ead8c40e141a351b363b5ecc61b9952fc5ac5a"
+                     },
+    "golden_mutated":  false,
+    "acceptance_mode":  true,
+    "counts":  {
+                   "total":  1,
+                   "passed":  1,
+                   "failed":  0,
+                   "blocked":  0
+               },
+    "self_test":  {
+                      "enabled":  false,
+                      "failures":  [
+
+                                   ]
+                  },
+    "cases":  [
+                  {
+                      "id":  "B06",
+                      "tier":  "U",
+                      "description":  "AP-05 purge oracle, strict (the B06 grep/file half, 01-Design-Contracts.md section 9): every Part-A path is gone from the tree; the CMake files and CMakePresets.json no longer name the purged vendored deps, the list(FILTER) partition block, the 3D-only test block, render_3d.cpp, the excluded editor TUs or a 3D (OFF) preset; zero COSMIC_2D_ONLY preprocessor uses under Cosmic/src, Projects, tests (part B removed every fence); no #include of a purged header or tree anywhere; zero 3D identifiers (Renderer3D|Terrain|Voxel|NavMesh|assimp|Recast|EnvironmentMap|ShadowMap) in Cosmic/src outside a History: comment note. Part A ran this same case with -AllowFences (id B06-A); part B dropped the switch.",
+                      "requires":  [
+                                       "windows"
+                                   ],
+                      "transport":  "none",
+                      "seed":  null,
+                      "start_utc":  "2026-09-19T20:35:19.7221914Z",
+                      "deadline_sec":  300,
+                      "exercised":  "fixture",
+                      "fixture":  "C:\\dev\\Cosmic\\tests\\acceptance\\fixtures\\Verify-AP05Purge.ps1",
+                      "fixture_sha256":  "30bec6f9de2bb5f1e433ca11c4596c0963b25581019fdee7073bfb1eba42bf4c",
+                      "command":  "powershell -NoProfile -ExecutionPolicy Bypass -File C:\\dev\\Cosmic\\tests\\acceptance\\fixtures\\Verify-AP05Purge.ps1 -Repo C:\\dev\\Cosmic",
+                      "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-05\\b06-Debug\\B06.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-05\\b06-Debug\\B06.err.log",
+                      "pid":  23996,
+                      "exit_code":  0,
+                      "crash":  false,
+                      "tests_passed":  5,
+                      "tests_expected_min":  5,
+                      "verdict":  "PASSED",
+                      "detail":  "exit 0 as expected",
+                      "duration_sec":  3.718,
+                      "end_utc":  "2026-09-19T20:35:23.4459586Z"
+                  }
+              ]
+}

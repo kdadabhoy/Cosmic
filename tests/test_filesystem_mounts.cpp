@@ -13,9 +13,6 @@
 #include "scene/Scene.h"
 #include "scene/Entity.h"
 #include "scene/Components.h"
-#ifndef COSMIC_2D_ONLY
-#include "scene/Components3D.h"
-#endif
 #include "scene/SceneSerializer.h"
 
 namespace fs = std::filesystem;
@@ -71,25 +68,4 @@ TEST_SUITE("FileSystem project mounts (S1)")
         fs::remove_all(root, ec);
     }
 
-#ifndef COSMIC_2D_ONLY
-    // W6 — MeshRendererComponent::MeshPath is the project:// carrier this asserts
-    // on, and it is a 3D component. The rule it pins (the serializer never writes
-    // an absolute root) is engine-wide, and the 2D suite covers it through
-    // test_scene_serializer's sprite/tilemap round-trips.
-    TEST_CASE("scene paths stay project:// (no absolute-root leak)")
-    {
-        const fs::path root = fs::temp_directory_path() / "cosmic_mount_scene";
-        std::error_code ec; fs::create_directories(root, ec);
-        FileSystem::SetActiveProjectPath(root.generic_string());
-
-        Cosmic::Ref<Cosmic::Scene> scene = Cosmic::Scene::Create();
-        Cosmic::Entity e = scene->CreateEntity("Mesh");
-        e.AddComponent<Cosmic::MeshRendererComponent>().MeshPath = "project://models/x.obj";
-
-        const std::string s = Cosmic::SceneSerializer::SaveToString(*scene);
-        CHECK(s.find("project://models/x.obj") != std::string::npos);
-        CHECK(s.find(root.generic_string()) == std::string::npos);   // no absolute leak
-        fs::remove_all(root, ec);
-    }
-#endif   // COSMIC_2D_ONLY
 }

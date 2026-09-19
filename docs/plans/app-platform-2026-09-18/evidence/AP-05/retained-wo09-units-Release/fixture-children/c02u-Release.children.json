@@ -1,0 +1,34 @@
+﻿{
+    "id":  "C02-U",
+    "tier":  "U",
+    "description":  "WO-09 C02-U via CosmicTests.exe",
+    "requires":  [
+                     "windows"
+                 ],
+    "transport":  "none",
+    "seed":  null,
+    "start_utc":  "2026-09-19T20:35:28.3489771Z",
+    "deadline_sec":  120,
+    "exercised":  "production",
+    "command":  "C:\\dev\\Cosmic\\build\\Runtime\\Release\\CosmicTests.exe --reporters=console --no-intro --no-colors \"--test-suite=WO-09 C02 tilemaps (headless)\"",
+    "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-09\\c02u-Release\\C02-U.out.log",
+    "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-09\\c02u-Release\\C02-U.err.log",
+    "pid":  14808,
+    "exit_code":  0,
+    "crash":  false,
+    "tests_passed":  5,
+    "tests_expected_min":  5,
+    "verdict":  "PASSED",
+    "detail":  "exit 0 as expected",
+    "duration_sec":  0.312,
+    "end_utc":  "2026-09-19T20:35:28.6684126Z",
+    "golden_mutated":  false,
+    "golden_mutations":  [
+
+                         ],
+    "golden_diagnostics":  [
+
+                           ],
+    "golden_sha256_before":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-09\\c02u-Release\\goldens-sha256-before.txt",
+    "golden_sha256_after":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-09\\c02u-Release\\goldens-sha256-after.txt"
+}

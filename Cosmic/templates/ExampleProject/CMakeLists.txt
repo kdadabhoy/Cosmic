@@ -18,15 +18,13 @@ if(WIN32)
     add_definitions(-DNOMINMAX)
 endif()
 
-# Engine build mode — MUST match the Cosmic SDK this plugin links against
-# (WO-03 / 2D stability trunk). The engine's PUBLIC headers (Cosmic.h,
-# Components.h, SceneRenderer.h, ...) carry `#ifndef COSMIC_2D_ONLY` fences and
-# Cosmic.dll is compiled with COSMIC_2D_ONLY defined on this trunk, so a plugin
-# TU that does NOT define it sees the 3D side of those fences and the interface
-# (and ABI) silently diverges across the plugin boundary. This SDK ships the
-# 2D-only engine, so the option defaults ON; BuildRunner's hot-reload configure
-# also passes -DCOSMIC_2D_ONLY=ON explicitly. In-tree (TARGET Cosmic) the define
-# also propagates PUBLIC from the engine target — defining it here too is an
+# Engine build mode — kept in step with the Cosmic SDK this plugin links against
+# (WO-03 / 2D stability trunk). Since AP-05 the engine's PUBLIC headers carry no
+# COSMIC_2D_ONLY fences (the trunk is 2D-only source), so the definition is a
+# compatibility no-op: Cosmic.dll still carries the same PUBLIC define, a plugin
+# may test it, and BuildRunner's hot-reload configure still passes
+# -DCOSMIC_2D_ONLY=ON explicitly. In-tree (TARGET Cosmic) the define also
+# propagates PUBLIC from the engine target — defining it here too is an
 # identical, harmless duplicate.
 option(COSMIC_2D_ONLY "Match the 2D-only Cosmic SDK this plugin links against" ON)
 

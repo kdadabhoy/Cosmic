@@ -15,7 +15,7 @@
  * WORLD FRAME (simulation): NED — aviation standard, right-handed.
  *   +X = North, +Y = East, +Z = Down.  Gravity is +Z.
  *
- * RENDER FRAME (Renderer3D / cameras): right-handed, Y-up.
+ * RENDER FRAME (renderer / cameras): right-handed, Y-up.
  *   +X = East, +Y = Up, +Z = South.
  *   Mapping: render(x, y, z) = (ned.e, -ned.d, -ned.n).
  *

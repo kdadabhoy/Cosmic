@@ -11,9 +11,6 @@
 #include "scene/Scene.h"
 #include "scene/Entity.h"
 #include "scene/Components.h"
-#ifndef COSMIC_2D_ONLY
-#include "scene/Components3D.h"
-#endif
 #include "scene/SceneSerializer.h"
 
 // W6 — the serializer invariants below (T12's omit-while-true `Enabled`, E2's
@@ -24,13 +21,8 @@
 // `Color`.Color() and `Enabled`.OmitIfTrue() (reflect/TypeRegistry.cpp).
 namespace
 {
-#ifndef COSMIC_2D_ONLY
-    using RenderableComponent = Cosmic::MeshRendererComponent;
-    using SceneLightComponent = Cosmic::DirectionalLightComponent;
-#else
     using RenderableComponent = Cosmic::SpriteRendererComponent;
     using SceneLightComponent = Cosmic::Light2DComponent;
-#endif
 }
 #include "scene/ComponentRegistry.h"
 #include "reflect/TypeRegistry.h"

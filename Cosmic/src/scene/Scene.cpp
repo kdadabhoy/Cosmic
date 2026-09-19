@@ -3,28 +3,16 @@
 #include "scene/Scene.h"
 #include "scene/Entity.h"
 #include "scene/Components.h"
-#ifndef COSMIC_2D_ONLY
-// W5 — the ONE 3D dependency left in this file: WorldOf's M4 socket override reads
-// SocketComponent + AnimatorComponent (both fenced with it below).
-#include "scene/Components3D.h"
-#endif
 #include "renderer/Renderer2D.h"
-#ifdef COSMIC_2D_ONLY
 // W6 — only the 2D configuration defines BuildRenderDesc here (the 3D one is in
 // Scene3D.cpp, which this build excludes), and it needs SceneRenderDesc complete.
 #include "renderer/SceneRenderer.h"
-#endif
 #include "renderer/Light2DRenderer.h"   // X5 — 2D lighting composite
 #include "renderer/RenderCommand.h"   // U3 — sprite-pass depth/blend state
 #include "graphics/SubTexture2D.h"    // U3 — SourceRect sub-rect draws
 #include "assets/AssetLibrary.h"
 #include "physics/ScenePhysics.h"     // J4 — runtime body binding (Scene owns m_Physics)
 #include "physics/PhysicsWorld.h"     // J4 — the play-session physics service
-#ifndef COSMIC_2D_ONLY
-// W5 — ~Scene destroys the m_NavRuntime unique_ptr, so SceneNavRuntime must be a
-// complete type HERE even though every nav method now lives in Scene3D.cpp.
-#include "scene/SceneNav.h"           // N4 — the play-session crowd binding
-#endif
 #include "camera/OrthographicCamera.h"
 #include "jobs/JobSystem.h"
 #include "core/Log.h"
@@ -234,44 +222,6 @@ namespace Cosmic
 
 	glm::mat4 Scene::WorldOf(entt::entity handle)
 	{
-#ifndef COSMIC_2D_ONLY
-		// Socket override (M4): an entity with a SocketComponent follows a named
-		// joint of the NEAREST animated ancestor whose skeleton has that joint —
-		// socketWorld = ancestorWorld · jointFrame · offset. It bypasses the
-		// normal parent-relative local (the offset lives on the component). Falls
-		// through to the ordinary path when no ancestor animates the joint yet, so
-		// a socket behaves as a plain child until its rig poses (compat).
-		if (const SocketComponent* sock = m_Registry.try_get<SocketComponent>(handle))
-		{
-			entt::entity cur = handle;
-			for (int guard = 0; m_Registry.valid(cur) && guard < 4096; ++guard)
-			{
-				const auto* rel = m_Registry.try_get<RelationshipComponent>(cur);
-				if (!rel || !rel->Parent.IsValid())
-					break;
-				auto it = m_UUIDMap.find(rel->Parent);
-				if (it == m_UUIDMap.end() || !m_Registry.valid(it->second))
-					break;
-				const entt::entity parent = it->second;
-
-				if (const auto* an = m_Registry.try_get<AnimatorComponent>(parent);
-				    an && an->SkelRef && !an->JointModelMatrices.empty())
-				{
-					const int j = an->SkelRef->Find(sock->Joint);
-					if (j >= 0 && (size_t)j < an->JointModelMatrices.size())
-					{
-						const glm::mat4 offset =
-							glm::translate(glm::mat4(1.0f), sock->Position) *
-							glm::mat4_cast(sock->Rotation) *
-							glm::scale(glm::mat4(1.0f), sock->Scale);
-						return WorldOf(parent) * an->JointModelMatrices[(size_t)j] * offset;
-					}
-				}
-				cur = parent;
-			}
-			// Unresolved — fall through to the ordinary transform below.
-		}
-#endif   // COSMIC_2D_ONLY — no skeletons, so no sockets to resolve (pre-M4 path)
 
 		// Parent chain WITHOUT recursion (WO-09 / KI-42): collect the chain root-ward
 		// (bounded by kMaxHierarchyDepth, so a hand-authored parent cycle ends), then
@@ -404,9 +354,6 @@ namespace Cosmic
 		// editor calls UpdateAnimators itself in edit mode, where OnUpdate
 		// never runs). W5 — skeletal animation is 3D only; UpdateAnimators
 		// lives in Scene3D.cpp and is not linked into a 2D build.
-#ifndef COSMIC_2D_ONLY
-		UpdateAnimators(deltaTime);
-#endif
 
 		// PASS A — Sequential systems (main thread)
 		for (auto& system : m_Systems)
@@ -841,18 +788,15 @@ namespace Cosmic
 		return nullptr;
 	}
 
-#ifdef COSMIC_2D_ONLY
-	// W6 — the 2D twin of BuildRenderDesc. The 3D definition lives in Scene3D.cpp,
-	// which the 2D configuration never compiles; this is the residue of it that a
-	// 2D scene can actually fill. Everything it drops is a 3D gather with nothing
-	// to gather: the four asset syncs (primitive meshes / world systems / voxel
-	// volumes / navmeshes), the scene-light walk, terrain, water, particle
-	// emitters, and the routed DrawOpaque submit hook. The clock advance and the
-	// camera + time fields below are what SceneRenderer's surviving passes read, so
-	// PlayerLayer, Starforge and the scene2d golden drive the 2D frame through the
-	// SAME call they use on the 3D engine — no call-site fences anywhere.
+	// BuildRenderDesc (W6): the clock advance and the camera + time fields below
+	// are what SceneRenderer's passes read, so PlayerLayer, Starforge and the
+	// scene2d golden drive the frame through the SAME call they always used — no
+	// call-site fences anywhere. History: the 3D twin in Scene3D.cpp (purged in
+	// AP-05) also ran the four asset syncs (primitive meshes / world systems /
+	// voxel volumes / navmeshes), the scene-light walk, terrain, water, particle
+	// emitters, and the routed DrawOpaque submit hook.
 	//
-	// EcsScene stays null here for the same reason it does in the 3D twin.
+	// EcsScene stays null here for the same reason it did in the 3D twin.
 	void Scene::BuildRenderDesc(const Camera& camera, float deltaTime, SceneRenderDesc& out)
 	{
 		m_WorldTime += deltaTime;
@@ -861,6 +805,5 @@ namespace Cosmic
 		out.TimeSeconds = m_WorldTime;
 		out.DeltaTime   = deltaTime;
 	}
-#endif   // COSMIC_2D_ONLY
 
 } // Closes namespace Cosmic

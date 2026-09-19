@@ -26,15 +26,13 @@ set(GAME_HOT_SUFFIX "" CACHE STRING "Unique suffix for hot-reloaded module DLLs"
 # back to the SDK runtime dir, next to Cosmic.dll / CosmicApp.exe.
 set(GAME_OUTPUT_DIR "" CACHE PATH "Output root for the module DLL (<dir>/<CONFIG>)")
 
-# Engine build mode — MUST match the Cosmic SDK this module links against
-# (WO-07 / 2D stability trunk, KI-26). The engine's PUBLIC headers (Cosmic.h,
-# Components.h, SceneRenderer.h, ...) carry `#ifndef COSMIC_2D_ONLY` fences and
-# Cosmic.dll is compiled with COSMIC_2D_ONLY defined on this trunk, so a module
-# TU that does NOT define it sees the 3D side of those fences: the plugin-boundary
-# interface (and ABI) silently diverges, and the link fails on 3D symbols the 2D
-# engine does not export. BuildRunner's hot-reload configure already passes
-# -DCOSMIC_2D_ONLY=ON; this option turns it into the compile definition every
-# module TU needs (the same block the runtime-plugin template carries since WO-03).
+# Engine build mode — kept in step with the Cosmic SDK this module links against
+# (WO-07 / 2D stability trunk, KI-26). Since AP-05 the engine's PUBLIC headers
+# carry no COSMIC_2D_ONLY fences (the trunk is 2D-only source), so the definition
+# is a compatibility no-op: Cosmic.dll still carries the same PUBLIC define, a
+# module may test it, and BuildRunner's hot-reload configure still passes
+# -DCOSMIC_2D_ONLY=ON. This option turns that into the compile definition (the
+# same block the runtime-plugin template carries since WO-03).
 option(COSMIC_2D_ONLY "Match the 2D-only Cosmic SDK this module links against" ON)
 
 # ---- SDK path -----------------------------------------------------------------

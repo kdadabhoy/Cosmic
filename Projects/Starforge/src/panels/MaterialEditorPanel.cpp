@@ -104,35 +104,6 @@ namespace Starforge
             // 2D build has no sphere. The reflected field editor below — which
             // IS the material authoring surface, and matters in 2D because a
             // SpriteRenderer can carry a material — is untouched.
-#ifndef COSMIC_2D_ONLY
-            {
-                const float pw = std::max(96.0f, ImGui::GetContentRegionAvail().x);
-                const float ph = std::min(220.0f, std::max(96.0f, pw * 0.62f));
-                const uint32_t tex = m_Rig.RenderMaterial(m_Asset, (uint32_t)pw, (uint32_t)ph);
-                if (tex)
-                {
-                    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
-                    ImGui::ImageButton("##matpreview", (ImTextureID)(intptr_t)tex,
-                                       ImVec2(pw, ph), ImVec2(0, 1), ImVec2(1, 0));
-                    ImGui::PopStyleVar();
-                    if (ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Left, 0.0f))
-                    {
-                        const ImVec2 d = ImGui::GetIO().MouseDelta;
-                        m_Rig.Orbit(d.x, d.y);
-                    }
-                    if (ImGui::IsItemHovered())
-                    {
-                        if (const float wheel = ImGui::GetIO().MouseWheel; wheel != 0.0f)
-                            m_Rig.Zoom(wheel);
-                        if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
-                            m_Rig.ResetView();
-                        ImGui::SetTooltip("Drag to orbit, wheel to zoom, double-click to reset.");
-                    }
-                }
-            }
-
-            ImGui::Separator();
-#endif   // COSMIC_2D_ONLY — the preview sphere
 
             // --- Reflected material fields (auto-UI, undoable — A4) --------
             // The capture-on-activate / push-on-commit idiom the Inspector uses:
@@ -165,37 +136,8 @@ namespace Starforge
             // --- Assign / load to the selected MeshRenderer ----------------
             // MeshRenderer is 3D-only; a 2D material is assigned from the
             // Inspector's SpriteRenderer material slot instead.
-#ifndef COSMIC_2D_ONLY
-            Entity sel = ctx.PrimaryEntity();
-            const bool hasMesh = sel && sel.HasComponent<MeshRendererComponent>();
-
-            ImGui::BeginDisabled(!hasMesh);
-            if (ImGui::Button("Assign to Selection"))
-            {
-                auto& mr = sel.GetComponent<MeshRendererComponent>();
-                mr.MaterialPath         = m_Path;   // "" when unsaved -> live-only until saved
-                mr.MaterialAsset        = AssetLibrary::BuildMaterial(m_Asset, m_SaveName);
-                mr.MaterialPathResolved = true;     // don't let the sync overwrite our live build
-                ctx.MarkDirty();
-                ctx.Log("[Material] Assigned to selection.");
-            }
-            ImGui::SameLine();
-            if (ImGui::Button("Load from Selection") && hasMesh)
-            {
-                auto& mr = sel.GetComponent<MeshRendererComponent>();
-                if (!mr.MaterialPath.empty() && AssetLibrary::LoadMaterialAsset(m_Asset, mr.MaterialPath))
-                    m_Path = mr.MaterialPath;
-                else
-                    ctx.Log("[Material] Selection has no .cmat to load.", LogSeverity::Warn);
-            }
-            ImGui::EndDisabled();
-
-            ImGui::TextDisabled("Edits are undoable (Ctrl+Z) and preview live above;");
-            ImGui::TextDisabled("Save, then Assign (or re-open the scene) to apply to entities.");
-#else
             ImGui::TextDisabled("Edits are undoable (Ctrl+Z). Save the .cmat, then assign it");
             ImGui::TextDisabled("from a SpriteRenderer's material slot in the Inspector.");
-#endif
         }
         ImGui::End();
     }

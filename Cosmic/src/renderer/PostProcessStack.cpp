@@ -62,10 +62,9 @@ namespace Cosmic
 		m_BloomPrefilterShader = Shader::Create("assets/shaders/BloomPrefilter.glsl");
 		m_BloomBlurShader      = Shader::Create("assets/shaders/BloomBlur.glsl");
 		m_FxaaShader           = Shader::Create("assets/shaders/Fxaa.glsl");
-		m_GodRaysShader        = Shader::Create("assets/shaders/GodRays.glsl");
 		m_LensFlareShader      = Shader::Create("assets/shaders/LensFlare.glsl");
 		if (!m_SsaoShader || !m_SsaoBlurShader || !m_BloomPrefilterShader || !m_BloomBlurShader ||
-		    !m_FxaaShader || !m_GodRaysShader || !m_LensFlareShader)
+		    !m_FxaaShader || !m_LensFlareShader)
 			CS_CORE_ERROR("PostProcessStack: one or more effect shaders failed to load.");
 
 		// --- Targets ---
@@ -126,7 +125,6 @@ namespace Cosmic
 		ensure(m_SsaoBlurTarget, hw, hh,            FramebufferTextureFormat::RGBA16F);
 		ensure(m_BloomA,         hw, hh,            FramebufferTextureFormat::RGBA16F);
 		ensure(m_BloomB,         hw, hh,            FramebufferTextureFormat::RGBA16F);
-		ensure(m_ShaftTarget,    hw, hh,            FramebufferTextureFormat::RGBA16F);
 		ensure(m_DistortTarget,  hw, hh,            FramebufferTextureFormat::RGBA16F);
 		ensure(m_LdrTarget,      m_Width, m_Height, FramebufferTextureFormat::RGBA8);
 	}
@@ -148,8 +146,6 @@ namespace Cosmic
 		m_BloomB.reset();
 		m_FxaaShader.reset();
 		m_LdrTarget.reset();
-		m_GodRaysShader.reset();
-		m_ShaftTarget.reset();
 		m_DistortTarget.reset();
 		m_LensFlareShader.reset();
 		m_Initialized = false;
@@ -185,7 +181,6 @@ namespace Cosmic
 	{
 		m_AoResultID    = 0;
 		m_BloomResultID = 0;
-		m_ShaftResultID = 0;
 		if (!m_Initialized)
 			return;
 
@@ -193,8 +188,6 @@ namespace Cosmic
 			RenderSSAO(projection);
 		if (m_BloomEnabled)
 			RenderBloom();
-		if (m_GodRaysEnabled && m_ShaftShadowMapID != 0)
-			RenderGodRays();
 	}
 
 	void PostProcessStack::RenderSSAO(const glm::mat4& projection)
@@ -286,39 +279,6 @@ namespace Cosmic
 		RenderCommand::SetDepthWrite(true);
 
 		m_BloomResultID = src->GetColorAttachmentRendererID(0);   // last written
-	}
-
-	void PostProcessStack::RenderGodRays()
-	{
-		if (!m_GodRaysShader || !m_ShaftTarget || !m_SceneHDR)
-			return;
-
-		const uint32_t sw = m_ShaftTarget->GetWidth();
-		const uint32_t sh = m_ShaftTarget->GetHeight();
-
-		RenderCommand::SetDepthTest(false);
-		RenderCommand::SetDepthWrite(false);
-
-		m_ShaftTarget->Bind();
-		RenderCommand::SetViewport(0, 0, sw, sh);
-		m_GodRaysShader->Bind();
-		RenderCommand::BindTextureSlot(0, m_SceneHDR->GetDepthAttachmentRendererID());
-		m_GodRaysShader->SetInt("u_Depth", 0);
-		RenderCommand::BindTextureSlot(1, m_ShaftShadowMapID);
-		m_GodRaysShader->SetInt("u_ShadowMap", 1);
-		m_GodRaysShader->SetMat4("u_InvViewProj", glm::inverse(m_ViewProjection));
-		m_GodRaysShader->SetFloat3("u_CameraPos", m_CameraPos);
-		m_GodRaysShader->SetMat4("u_LightViewProj", m_ShaftLightViewProj);
-		m_GodRaysShader->SetFloat3("u_SunDir", m_ShaftSunDir);
-		m_GodRaysShader->SetFloat3("u_SunColor", m_ShaftSunColor * m_ShaftSunIntensity);
-		m_GodRaysShader->SetFloat("u_Intensity", m_GodRaysIntensity);
-		m_GodRaysShader->SetFloat("u_Density", m_GodRaysDensity);
-		DrawFullscreenTriangle();
-
-		RenderCommand::SetDepthTest(true);
-		RenderCommand::SetDepthWrite(true);
-
-		m_ShaftResultID = m_ShaftTarget->GetColorAttachmentRendererID(0);
 	}
 
 	bool PostProcessStack::BeginDistortion()
@@ -440,15 +400,9 @@ namespace Cosmic
 		else
 			m_TonemapShader->SetFloat("u_UseBloom", 0.0f);
 
-		// Sun shafts (S10.3): additive, like bloom.
-		if (m_GodRaysEnabled && m_ShaftResultID)
-		{
-			RenderCommand::BindTextureSlot(4, m_ShaftResultID);
-			m_TonemapShader->SetInt("u_Shafts", 4);
-			m_TonemapShader->SetFloat("u_UseShafts", 1.0f);
-		}
-		else
-			m_TonemapShader->SetFloat("u_UseShafts", 0.0f);
+		// Sun shafts: the tonemap still declares the additive u_Shafts input, but the
+		// pass that fed it went with the 3D renderer (AP-05) — always off.
+		m_TonemapShader->SetFloat("u_UseShafts", 0.0f);
 
 		// Heat-haze (S10.5): displace every scene-space fetch by the offset field.
 		if (m_HeatHazeEnabled && m_DistortionWritten && m_DistortTarget)

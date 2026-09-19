@@ -1,0 +1,34 @@
+﻿{
+    "id":  "N04-SCENE",
+    "tier":  "U",
+    "description":  "WO-10 N04-SCENE via CosmicTests.exe",
+    "requires":  [
+                     "windows"
+                 ],
+    "transport":  "none",
+    "seed":  null,
+    "start_utc":  "2026-09-19T20:35:31.6262483Z",
+    "deadline_sec":  60,
+    "exercised":  "production",
+    "command":  "C:\\dev\\Cosmic\\build\\Runtime\\Release\\CosmicTests.exe --reporters=console --no-intro --no-colors \"--test-suite=2D scene determinism (W2)\"",
+    "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-10\\n04-scene-Release\\N04-SCENE.out.log",
+    "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-10\\n04-scene-Release\\N04-SCENE.err.log",
+    "pid":  11540,
+    "exit_code":  0,
+    "crash":  false,
+    "tests_passed":  2,
+    "tests_expected_min":  1,
+    "verdict":  "PASSED",
+    "detail":  "exit 0 as expected",
+    "duration_sec":  0.087,
+    "end_utc":  "2026-09-19T20:35:31.7203328Z",
+    "golden_mutated":  false,
+    "golden_mutations":  [
+
+                         ],
+    "golden_diagnostics":  [
+
+                           ],
+    "golden_sha256_before":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-10\\n04-scene-Release\\goldens-sha256-before.txt",
+    "golden_sha256_after":  "C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-10\\n04-scene-Release\\goldens-sha256-after.txt"
+}

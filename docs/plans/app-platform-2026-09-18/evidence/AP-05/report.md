@@ -215,4 +215,317 @@ suites pass **454/454 Debug, 454/454 Release**. The fences themselves are untouc
 ## Local commits (not pushed — Kaden pushes)
 
 - Part A: one commit on `main`, "Purge the filtered 3D source, deps, tests, goldens and editor TUs from
-  main (AP-05 part A)" — the SHA is in the session's final report and in `git log`.
+  main (AP-05 part A)" — `1bedfa49c09ec3e734853746a651c7bc25ef88e2`.
+
+---
+
+# AP-05 part B execution report — 2026-09-19 (remove the `COSMIC_2D_ONLY` fences; the trunk is 2D-only source)
+
+Only AP-05 **Part B** was executed, alone on `main` in `C:\dev\Cosmic` on top of the part-A commit
+`1bedfa4`. `evidence/AP-05/unfence.py` (Python 3.14 via `py -3`, committed) rewrote the **40** C/C++
+files that carried fences — **235 marked blocks, 4,624 lines dropped, 0 added, 271 hunks every one of
+which starts and ends on a fence directive** — and left exactly **one exception** for hand editing
+(`JoltBackend.cpp:1027`, a compound condition). The CMake `if(COSMIC_2D_ONLY)` block in the root
+CMakeLists was collapsed by hand; `option(COSMIC_2D_ONLY … ON)`, the reject-OFF `FATAL_ERROR` gate, the
+PUBLIC define, every project CMakeLists' option and BuildRunner's `-DCOSMIC_2D_ONLY=ON` stay as a
+documented compatibility no-op. Because B06's `identifiers` oracle is strict (zero 3D identifiers in
+`Cosmic/src` outside a `History:` note), the 16 unfenced code lines and 68 unfenced comment lines part A
+listed were resolved too (dead declarations removed, the unreachable sun-shaft pass removed, comments
+reworded or moved under `History:` notes) — nothing that any 2D code path reached. **Both configs rebuilt
+from a clean configure with 0 warnings (421 TUs each); `CosmicTests --count` is 454 in both configs =
+part A's post count; the full suites pass 454/454 Debug and 454/454 Release; both audits exit 0; the 8
+retained goldens are byte-identical; B06 PASSES strict (5/5) through the runner in Release and Debug;
+the retained stability manifests wo07-l01 (1/1), wo09-units (8/8), wo10-units (6/6) pass and wo08-gpu
+ran on the RTX 5070 Ti (see "Retained suites").** No crash, hang or data loss was found; no KI entry
+was added. The trunk now contains **no preprocessor use of `COSMIC_2D_ONLY` anywhere under
+`Cosmic/src`, `Projects`, `tests`, `Cosmic/templates`**.
+
+## Scope and provenance
+
+- Base `HEAD` at start: `1bedfa49c09ec3e734853746a651c7bc25ef88e2` (part A). `git status --short` at
+  start: only the untracked root plan `Cosmic - 2D Trunk Consolidation & Acceptance Plan.md` and
+  `recordings/`; both were never staged, moved or overwritten. Worktrees `C:\dev\Cosmic-ap-p1` (ap/p1, the
+  concurrent lane) and `.claude/worktrees/epic-clarke-338e7f` were not touched; `engine-3d` and the
+  `cosmic-pre-2d-2026-09-16` tag were not touched.
+- Prompt vs packet: no conflict. Two things the prompt does not spell out were needed to make B06 pass
+  and are recorded under "Contract deviations": the identifier cleanup in `Cosmic/src` files that carried
+  no fence, and a bug fix in the part-A oracle's file enumeration.
+- The session was interrupted once by an API usage limit (HTTP 429) after both clean builds while the
+  full suites ran in the background; it resumed on the same tree (reconciled by `git status`: 80 status
+  lines, HEAD still `1bedfa4`, no build process running, both `CosmicTests.exe` newer than every source
+  edit — proven by an incremental `cmake --build` per config that compiled **0** TUs). Nothing was reset
+  or restored.
+- Commit: authored and committed as `kdadabhoy <kdadabhoy28@gmail.com>`, no `Co-Authored-By`, no AI
+  trailer, no "Generated with" line; only explicit AP-05 paths staged. Not pushed.
+
+## Toolchain and environment
+
+- VS-bundled CMake `4.3.1-msvc1`, generator `Visual Studio 18 2026`, `-A x64`, MSVC `19.51.36248.0`;
+  Python 3.14.0 (`py -3`); Windows PowerShell 5.1 for every script and the runner.
+- Clean configure: `build/` deleted, then `-DCOSMIC_2D_ONLY=ON -DCOSMIC_BUILD_TESTS=ON
+  -DCOSMIC_BUILD_RENDER_TESTS=ON`. Effective cache: `COSMIC_2D_ONLY=ON`, `COSMIC_BUILD_TESTS=ON`,
+  `COSMIC_BUILD_RENDER_TESTS=ON`, `COSMIC_WITH_JOLT=ON`, `COSMIC_SKIP_PROJECTS=AnalysisSample`,
+  `COSMIC_SKIP_PROJECTS_APPLIED=AnalysisSample` (`build-excerpts.txt`).
+- Reference machine DESKTOP-SEOA4BT (Windows 11 26200, Ryzen 7 7800X3D, RTX 5070 Ti + Radeon iGPU) —
+  the runner's `results.json` files record the environment.
+
+## Counts — before and after (the four roots `Cosmic/src`, `Projects`, `tests`, `Cosmic/templates`)
+
+| Spelling | Before (HEAD `1bedfa4`) | After |
+| --- | --- | --- |
+| `#ifndef COSMIC_2D_ONLY` | **225** | 0 |
+| `#ifdef COSMIC_2D_ONLY` | **10** | 0 |
+| `#if defined(COSMIC_2D_ONLY)` | 0 | 0 |
+| `#if !defined(COSMIC_2D_ONLY)` | 0 | 0 |
+| `#elif` lines mentioning it | 0 | 0 |
+| `COSMIC_2D_ONLY` inside a compound condition | **1** (`Cosmic/src/physics/backends/JoltBackend.cpp:1027`, `#if defined(JPH_DEBUG_RENDERER) && !defined(COSMIC_2D_ONLY)`) | 0 |
+| `#else` / `#endif` trailing `// COSMIC_2D_ONLY` comments | 43 | 0 |
+| non-directive mentions in C/C++ (comments, one string) | 6 | 3 (`SceneRenderer.h:48` inside a `History:` note; `BuildRunner.cpp:54,62` — the `-DCOSMIC_2D_ONLY=ON` the hot-reload configure passes, kept on purpose) |
+| files mentioning the token (any type) | 51 (41 C/C++ + 10 CMake/script/doc) | 12 (0 C/C++ fence files; the CMake options/defines/comments, the oracle, the manifest, `Capture-WO06.py`, `check_docs_coverage.ps1`, `AnalysisSample/README.md`, the 2 files above) |
+| B06 `fence-uses` (oracle, `Cosmic/src`+`Projects`+`tests`) | 240 = 236 directives + 4 lines of the oracle's own `.ps1` (see the oracle fix) | **0** |
+| B06 `includes-of-deleted` | 71 (all inside excluded fences) | **0** |
+| B06 `identifiers` in `Cosmic/src` | 234 (150 fenced / 68 comment / 16 code) | **0** (19 lines under `History:` notes) |
+
+Marked blocks by outcome: **196** `#ifndef` blocks dropped whole, **29** `#ifndef … #else … #endif`
+blocks reduced to their `#else` (2D) branch, **10** `#ifdef COSMIC_2D_ONLY` blocks reduced to their body
+(= 235). Per-file counts and the dry-run diff stat: `unfence-dryrun.txt`; every hunk's first/last removed
+line: `unfence-hunks.txt`.
+
+## What was built / changed
+
+1. **`evidence/AP-05/unfence.py`** — the nesting-aware rewriter (two passes: block structure +
+   exceptions, then emit; bytes in / bytes out, CRLF and the final-newline state preserved, nothing ever
+   added; a fully dropped block sitting between two blank lines collapses one blank). Dry run by default,
+   `--write` to rewrite. Run order: dry run (saved as `unfence-dryrun.txt`) → `--write` (40 files) →
+   dry run again (0 marked blocks, 1 exception, idempotent) → `git diff --stat` (40 files, 4,624
+   deletions, 0 insertions) → the per-hunk review (`unfence-hunks.txt`, 271 hunks, 0 needing a look:
+   each begins on `#ifndef/#ifdef COSMIC_2D_ONLY`, `#else` or `#endif` and ends on `#endif`/`#else`) →
+   the 29 `#else` promotions and 10 `#ifdef` bodies read file by file (`ViewportController.cpp` 9+1,
+   `StarforgeApp.cpp` 9+3, `SceneRenderer.cpp` 2, `HierarchyPanel.cpp` 2, `test_reflect.cpp` 2,
+   `Scene.cpp` 0+2, one each in `ContentBrowserPanel`, `EnvironmentPanel`, `MaterialEditorPanel`,
+   `ProfilerPanel`, `test_scene_serializer`, `PreviewRig.cpp`, `StarforgeApp.h`, `ViewportController.h`,
+   `test_crossbuild_scene.cpp`). The kept text is exactly what the 2D preprocessor already selected, which
+   the unchanged test count and the incremental compile check (0 warnings) confirm.
+2. **The exception, by hand** — `JoltBackend.cpp` `DebugDraw()`: the compound-fenced Jolt→Renderer3D
+   line-batch bridge (always false on this trunk) removed; the method is an explicit no-op with a `History:`
+   note, and the file-header/`PhysicsWorld.h` prose about "the single 3D coupling" reworded.
+3. **CMake, by hand** (`build-files-clean` stays green): root `CMakeLists.txt` — option comment rewritten
+   as the compatibility no-op, the gate comment updated, the mode-derived `if(COSMIC_2D_ONLY)`/`else()`
+   skip-list block collapsed to one `SKIP_DEFAULT` (behaviour identical for existing caches: both lists
+   were `AnalysisSample`), the stale "Starforge … fenced out" prose fixed; `Cosmic/CMakeLists.txt` —
+   the `:7-11` option comment (part A's hand-off) rewritten, the PUBLIC define kept with a no-op comment,
+   the Jolt comments no longer speak of "both configurations"; `tests/CMakeLists.txt`,
+   `Projects/Starforge/CMakeLists.txt`, `Projects/AnalysisSample/CMakeLists.txt`,
+   `Projects/Starforge/assets/templates/CMakeLists.txt`, `Cosmic/templates/ExampleProject/CMakeLists.txt`
+   — comments only; every `option(COSMIC_2D_ONLY … ON)` and the projects' `if(COSMIC_2D_ONLY)
+   target_compile_definitions(...)` blocks kept (harmless; external projects keep configuring).
+   `CMakePresets.json` untouched (the `2d` preset already passes ON).
+4. **Identifier cleanup for B06 strict** (the 16 code lines → 0, the 68 comment lines → 0 outside
+   `History:`), all provably unreachable from 2D code:
+   - `PhysicsWorld.h:49` `class Renderer3DDebugSink;` — removed (dead forward declaration).
+   - `BindingPoints.h:87-88` `TexUnitShadowMap = 11` — removed; unit 11 documented as reserved under a
+     `History:` note because `PBR.glsl` / `PBRSkinned.glsl` / `MeshLit.glsl` still declare `u_ShadowMap`.
+   - `PostProcessStack.{h,cpp}` (6 lines: `SetSunShaftInputs`, `m_ShaftShadowMapID` ×3, `u_ShadowMap`,
+     the `RenderEffects` guard) — the S10.3 sun-shaft / god-rays pass removed whole: its only feeder
+     `SetSunShaftInputs` was called from the fenced 3D half of `SceneRenderer::PassPostAndComposite`, so
+     `m_ShaftShadowMapID` could never be non-zero and `RenderGodRays` could never run. Gone:
+     `SetGodRaysEnabled/IsGodRaysEnabled/SetGodRaysParams/SetSunShaftInputs`, `RenderGodRays`, 11
+     members, the `GodRays.glsl` load/reset and the half-res shaft FBO; `Composite` now always sets
+     `u_UseShafts = 0` (the value it always set on this trunk — byte-identical, the goldens agree).
+     With it: `SceneRendererSettings::GodRays/GodRaysIntensity/GodRaysDensity` and their two setter calls
+     in `SceneRenderer.cpp`, the `desc.Settings.GodRays = false` wireframe override in
+     `StarforgeApp.cpp`, and **`Cosmic/assets/shaders/GodRays.glsl`** (its only load site is gone —
+     part A's "every load site deleted" rule).
+   - `SceneRenderer.h:283` / `.cpp:201,214` — `Init(width, height, shadowMapSize = 2048)` →
+     `Init(width, height)`; the two render-test callers that passed a size (`render_2d.cpp:545`,
+     `render_wo08_rtt.cpp:199`) updated; PlayerLayer and Starforge already passed two arguments.
+   - `SceneRenderer.h:82` `class Terrain;` — removed with the other forward declarations of purged
+     types (`Model`, `InstanceSet`, `Water`, `ParticleEmitter`, `RibbonEmitter`, `ScenePicker`,
+     `CoverageCapture`) and the unused `Mesh`/`Material`/`Shader` ones; `:165` `TerrainCastsShadows` —
+     removed (its only reader was the fenced `PassShadow`); `:284` comment reworded.
+   - `Scene.h:297,307` `SyncVoxelVolumes` / `SyncNavMeshes` — removed together with the five other
+     declarations whose definitions lived in the purged `Scene3D.cpp` (`OnRender3D`, `UpdateAnimators`,
+     `SyncPrimitiveMeshes`, `SyncWorldSystems`, `OnRenderWorldFX`; 84 lines with their docs; zero callers).
+   - The 68 comment lines: reworded where the subject is live (`Camera.h`, `FlyCameraController.h`,
+     `PerspectiveCamera.h`, `Mesh.h:69`, `UniformBuffer.h`, `Noise.h` ×3, `Spatial.h`, `RendererAPI.h`,
+     `Cosmic.h` — the 4-line "3D component half" note removed, `Scene.h` BuildRenderDesc doc,
+     `SceneRenderer.{h,cpp}` — the 50-line class header rewritten around the 2D spine with a `History:`
+     paragraph for the 3D past, `Components.h` header, `ScenePhysics.cpp:189` — an orphaned "Voxel
+     collision" section header removed), or moved under a `History:` note where the text explains why a
+     3D-era remnant exists (`Material.h` ×4, `Mesh.h:32`, `TextureCube.h`, `PhysicsWorld.h:136`,
+     `ScenePhysics.{h,cpp}` navmesh-bake notes, `TypeRegistry.cpp`, `BindingPoints.h` ×8,
+     `CameraUniforms.h`, `RenderQueue.h`, `Components.h:437`, `Scene.cpp` BuildRenderDesc,
+     `PostProcessStack.h` ×2, `SceneRenderer.h` ScenePass). The oracle counts 19 lines under `History:`.
+   - Stale fence prose outside `Cosmic/src`: `StarforgeApp.h:18`, `ViewportController.cpp:749`,
+     `render_main.cpp:100`, `tests/check_docs_coverage.ps1:39` reworded.
+5. **Oracle fix** — `tests/acceptance/fixtures/Verify-AP05Purge.ps1` `Get-CodeFiles`: Windows
+   PowerShell 5.1 ignores `-Include` on `Get-ChildItem -LiteralPath <dir> -Recurse` (every file came
+   back — `.ps1`, `.md`, `.json`, `.gitignore`), which is why part A's 240 `fence-uses` carried four of the
+   script's own comment lines (`:17,176-178`, the `defined(COSMIC_2D_ONLY)` regex matched them) and why
+   strict mode could never have reached zero. The extension filter is now applied explicitly; the
+   `includes-of-deleted` and `identifiers` walks were affected the same way (no false hits there).
+6. **Manifest** — `ap05-purge.manifest.json`: `-AllowFences` dropped, case id `B06-A` → `B06`,
+   description rewritten as the strict oracle.
+
+## Acceptance-case status
+
+| ID | Result | Evidence |
+| --- | --- | --- |
+| **B06** strict (no `-AllowFences`) through `Run-Acceptance.ps1` | **PASSED** Release and Debug — 5/5 (`paths-absent`, `build-files-clean`, `fence-uses` 0, `includes-of-deleted` 0, `identifiers` 0 outside 19 History lines) | `b06-Release/results.json`, `b06-Debug/results.json` (+junit), `verify-ap05-strict-after-excerpts.txt` |
+| B06 strict on the part-A tree (control) | FAILED as designed, 3 of 5 — the full 240/71/234 lists | `verify-ap05-strict-before-excerpts.txt` |
+| Both configs 0 warnings, clean configure | **PASS** — Debug 421 TUs 0 warnings, Release 421 TUs 0 warnings (`'warning [A-Z]'` grep of the full MSBuild logs) | `build-excerpts.txt` |
+| Test count = part A's post count | **PASS** — 454 Debug, 454 Release (`--no-skip` 467/467; `CosmicRenderTests --count` 37/37) | `test-counts.txt` |
+| Retained goldens byte-identical | **PASS** — 8/8 SHA-256 equal to `git show HEAD:`; `git status` of the golden dir empty | `golden-hashes.txt` |
+| GL conformance audit | **PASS** exit 0, "clean" | `audit-gl-conformance.txt` |
+| Docs coverage audit | **PASS** exit 0, "clean (123 public headers, 121 manifest rows, 6 skeleton chapters, 4 off-tier)" — unchanged from part A (no header deleted, no row touched) | `audit-docs-coverage.txt` |
+| Full unit suites | **PASS** 454/454 Debug, 454/454 Release, each with a fresh per-run TEMP | `test-counts.txt` |
+| Retained manifests | see "Retained suites" | `retained-*-Release/results.json` |
+
+## Retained suites (Release, `Run-Acceptance.ps1`, per-manifest `-TempRoot build\_temp\<name>`)
+
+| Manifest | Result |
+| --- | --- |
+| `wo07-l01` (L01 runtime-plugin teardown host, 110+ cases, `gpu-gl`) | **PASSED** 1/1 |
+| `wo08-gpu` (R01, R02, R03, R04-G, R05, R06-G — hidden-window GL on the RTX 5070 Ti) | **PASSED** 6/6 (GPU present, nothing blocked) |
+| `wo09-units` (C01-U … C06-U, C05-XB, C06-AUDIO) | **PASSED** 8/8 (audio device present) |
+| `wo10-units` (N02-U, N03, N04, N04-FILTERS, N04-LOOKUP, N04-SCENE) | **PASSED** 6/6 |
+
+The fixtures behind these manifests write their own child records into the stability packet's tracked
+evidence directories (`docs/plans/2d-stability-2026-09-16/evidence/WO-07|08|09|10/*-Release/`, the
+`-Output` argument baked into each manifest). Those directories are outside this WO's ownership and
+WO-10's own commit never touched other WOs' evidence, so the side-effect rewrites (child records, golden
+hash snapshots, captures — identical verdicts, new timestamps) were **reverted to HEAD after the runs**
+and are not part of the commit; the runner's `results.json` / `results.junit.xml` for every retained run
+live under `evidence/AP-05/retained-<manifest>-Release/` instead.
+
+## Defects found
+
+- None: no crash, hang or data loss; no golden regenerated, no tolerance loosened, no test skipped. The
+  KI register was not appended (next entry stays **KI-57**). Two tooling issues were fixed in flight and
+  are not product defects: the oracle's `-Include` enumeration (above), and a transient compile break of
+  my own making (a nested `/* … */` inside the rewritten `SceneRenderer.h` header doc closed the block
+  comment early — caught by the incremental compile check, fixed, and every changed C/C++ file was then
+  scanned for nested/unterminated block comments: 0).
+
+## Now-dead 3D-only surface (survives only because it was never fenced — for AP-Q1 to tidy)
+
+Engine, `Cosmic/src` (all still exported through `Cosmic.h`, rows still in `docs/reference/README.md`):
+
+- `camera/OrbitCameraController.h:51` `OrbitCameraController` (+ NavStyle / ViewPreset) and
+  `camera/FlyCameraController.h:44` `FlyCameraController` — the editor rig's Orbit / Fly modes; the only
+  consumers are `Projects/Starforge/src/EditorCameraRig.{h,cpp}` and `tests/test_s5_navigation.cpp`.
+  `Camera2DController` only *mirrors* their architecture (comments).
+- `camera/PerspectiveCamera.h:59` `PerspectiveCamera` — a pinhole camera with no perspective renderer;
+  kept alive by the two controllers above and by the render fixtures' camera choice
+  (`tests/render/render_2d.cpp:514`, `render_wo08_rtt.cpp:188`), which could use `OrthographicCamera`.
+- `renderer/RenderQueue.h:44` `Key`, `:58` `OpaqueLess`, `:68` `TransparentLess`, `:76` `Run`, `:89`
+  `FindInstancableRuns` — the 3D mesh-queue sorter; zero consumers (its test left in part A).
+- `math/Frustum.h:32` `Frustum` — zero consumers (only `Cosmic.h:72` and a `RenderQueue.h` comment).
+- `renderer/CameraUniforms.h:42` `GpuCameraBlock` — the camera UBO mirror; nothing uploads it.
+- `graphics/TextureCube.h:48` `TextureCube` (+ `platform/OpenGL/OpenGLTextureCube.{h,cpp}` and the
+  cube verbs in `RendererAPI.h` / `RenderCommand.h`) — IBL-only; zero consumers.
+- `graphics/UniformBuffer.h:43` `UniformBuffer`, `graphics/StorageBuffer.h:37` `StorageBuffer` (+ their
+  OpenGL implementations) — no 2D consumer (Renderer2D / Light2DRenderer use plain uniforms).
+- `graphics/Mesh.h:128` `Mesh` with `MeshVertex`, `MeshData`, `SkinVertex`, `Submesh` (`:60-125`) —
+  primitives and OBJ loading with no renderer that draws them; `Scene.h:21` fwd-declares `Material` only
+  as the bucket key of the live 2D `OnRender` path.
+- `graphics/Material.h:12` `Material` render-queue hints (`SetTransparent`, `SetInstancingShader`,
+  `SetSkinnedShader`, `BindFullTo`) and the whole `.cmat` pipeline — `graphics/MaterialAsset.h`,
+  `AssetLibrary::GetMaterial/BuildMaterial` (`assets/AssetLibrary.cpp:101-125`, which loads
+  `PBR.glsl` / `PBRSkinned.glsl`), `reflect/TypeRegistry.cpp:250-260`, the editor's
+  `MaterialEditorPanel`, `AssetTypes.cpp` `.cmat` and `ContentBrowserPanel` `.cmat` rows — authoring PBR
+  materials for meshes nothing renders (`tests/test_wo09_c06_services.cpp:312` covers the null path).
+- `renderer/SceneRenderer.h:79` `ScenePass::{ShadowDepth, Reflection, TopDownDepth}` + `:94`
+  `SceneDrawContext::IsDepthOnly`; `SceneRendererSettings` `Skybox/IBL/Shadows/WaterReflections` (`:108`),
+  `ShadowCenter/ShadowRadius/ShadowBias` (`:114`), the `Underwater*` block (`:125-133`), `LensFlare*`
+  (`:136`), `OutlineEnabled/OutlineColor/OutlineWidthPx` (`:152-154`) — no reader; the hosts still assign
+  `Skybox/IBL/Shadows = false` (`PlayerLayer.cpp:378-380`, `StarforgeApp.cpp:1179-1181,1189`,
+  `render_2d.cpp:527-529`, `render_wo08_rtt.cpp:195`) and `ApplyEnvironment` still maps `Skybox`/`IBL`
+  (`SceneRenderer.cpp:88-89`, asserted by `tests/test_scene_components.cpp:57-58`).
+- `scene/Components.h:434-444` `EnvironmentComponent` sun + sky fields (`SunDirection`, `SunColor`,
+  `SunIntensity`, `Sky`/`SkyMode`, `HdriPath`; reflected at `reflect/TypeRegistry.cpp:96-101`, so the
+  Inspector still shows them and scenes still serialize them) — kept for scene compatibility.
+- `renderer/PostProcessStack.h` — SSAO (`RenderEffects(projection)` reconstructs view-space position
+  from a perspective projection), height fog, underwater medium, lens flare and heat-haze are 3D-scene
+  effects still reachable from `EnvironmentComponent` (SSAO/Fog/LensFlare toggles); `Tonemap.glsl` keeps
+  the `u_Shafts`/`u_UseShafts` input that is now always off.
+- `physics/PhysicsWorld.h:138` `PhysicsWorld::DebugDraw` and `physics/PhysicsBackend.h:134`
+  `IPhysicsBackend::DebugDraw` + `JoltBackend::DebugDraw` — explicit no-ops now (the editor draws its own
+  Renderer2D collider overlay).
+- `scene/Components.h:397-413` `CameraComponent::Projection::Perspective` (default!) — the perspective
+  branch of the play camera feed (`Projects/Starforge/src/StarforgeApp.h:63` `PoseCamera`, and
+  PlayerLayer's twin) has no perspective renderer behind it.
+- Assets with no load site left: `Cosmic/assets/shaders/{ComputeParticles,FlatColor,FlowEmissive,
+  ParticlePoints,WaterFlow}.glsl`, `textures/Galaxy.png` (part A's list); loaded but 3D-only:
+  `PBR.glsl`, `PBRSkinned.glsl` (AssetLibrary), `MeshLit.glsl`, `Outline.glsl` (no loader after the
+  fence drop — `SceneRenderer.cpp:790` went with `PassOutline`).
+- Docs manifest rows that will go stale when the headers above are deleted (the checker's stale-row
+  mode enforces it): `renderer/RenderQueue.h` → `rendering-3d.md` (a chapter still named for 3D — AP-D1),
+  `camera/{PerspectiveCamera,OrbitCameraController,FlyCameraController}.h` → `cameras.md`,
+  `graphics/TextureCube.h`, `renderer/BindingPoints.h` → `graphics-resources.md`.
+
+Editor, `Projects/Starforge/src`: `EditorCameraRig.{h,cpp}` (`EditorCameraRig` `:49`, `PossessCamera`
+`:33` — Orbit/Fly/Possess for a perspective viewport; `ViewportController.cpp:108` `rig.Orbit()`, `:881`
+`rig.Fly().GetMoveSpeed()`), the `Settings.Skybox/IBL/Shadows` assignments above, `EditorSnapshot.h:12`
+(a comment naming the purged `MeshRendererComponent`), `PreviewRig.h:40` prose about `GetMesh`.
+
+## Measured numbers
+
+- Unfence: 40 files, 235 blocks (196 dropped / 29 else-kept / 10 body-kept), 4,624 lines removed, 271
+  hunks; identifier cleanup + CMake + oracle + manifest + the two test callers: 29 more files. Whole
+  source change outside `docs/`: **69 files, +290 / −5,162 lines**, plus `GodRays.glsl` deleted
+  (78 lines); the evidence files come on top.
+- Builds: Debug 421 TUs, 0 warnings (10:38:30–10:40:04Z); Release 421 TUs, 0 warnings
+  (10:40:51–10:43:20Z); incremental re-check after the interruption: 0 TUs both configs.
+- `CosmicTests.exe --count`: 454 / 454 (Debug / Release); `--no-skip` 467 / 467; full suites 454/454
+  passed both (23,400,718 / 23,486,893 assertions, 13 skipped by design each); `CosmicRenderTests
+  --count` 37 / 37.
+- Goldens: 8 retained, 8 identical. Docs checker 123 headers / 121 rows (unchanged).
+- Line endings: 35 of the 40 rewritten files are CRLF and stayed CRLF; `Scene.cpp`, `SceneSerializer.cpp`,
+  `StarforgeApp.cpp`, `StarforgeApp.h`, `test_crossbuild_scene.cpp` were already LF-only in the working
+  copy before part B (the script provably preserves endings; git stores LF either way).
+
+## Contract deviations and notes for the integrator
+
+1. **Edits outside the fence sites in `Cosmic/src`** (the identifier cleanup in group 4 above) touch 20
+   engine files that carried no fence (`Camera.h`, `FlyCameraController.h`, `PerspectiveCamera.h`,
+   `Material.h`, `Mesh.h`, `TextureCube.h`, `UniformBuffer.h`, `Noise.h`, `Spatial.h`, `PhysicsWorld.h`,
+   `BindingPoints.h`, `CameraUniforms.h`, `PostProcessStack.{h,cpp}`, `RendererAPI.h`, `RenderQueue.h`,
+   `Components.h`, `Scene.{h,cpp}`, `TypeRegistry.cpp`, `Cosmic.h`). B06's `identifiers` oracle is the
+   packet's own bar (§9: "zero identifiers … comments that explain history may mention 3D only under a
+   History: note") and the prompt says B06 must PASS; nothing was deleted that any 2D code path reached,
+   and the "deleting dead-but-compiled classes" exclusion was respected — the classes stay and are listed
+   above. The god-rays pass is the one *feature* removed; it was unreachable by construction (its input
+   was the purged `ShadowMap`).
+2. **`SceneRenderer::Init` lost its third parameter** (public ABI of the engine DLL); the two render-test
+   call sites were updated. External consumers pass two arguments (PlayerLayer/Starforge did).
+3. **Comment-only edits to two files outside the Owns list**: `Projects/AnalysisSample/CMakeLists.txt`
+   (`:32-36`) and `Projects/Starforge/assets/templates/CMakeLists.txt` (`:29-38`), whose prose claimed the
+   SDK headers carry fences; the prompt names "every project CMakeLists'" option as kept, so their
+   comments were brought in line. Options and blocks unchanged.
+4. **Reverted side effects**: the retained manifests' fixtures rewrote 52+ tracked files under
+   `docs/plans/2d-stability-2026-09-16/evidence/WO-09|WO-10` (and WO-07/WO-08's `-Release` dirs); reverted
+   to HEAD after the runs (see "Retained suites") — not part of this commit.
+5. Left for their owners: `docs/reference/README.md:95-127` and the `docs/guide` chapters that still
+   describe the markers / `build_3d.bat` / `cmake --preset default` (AP-D1); `.github/workflows/ci.yml:34`
+   (AP-P1); `docs/reference/rendering-3d.md` as a chapter name (AP-D1); everything in the dead list
+   (AP-Q1). `tests/test_wo06.cpp` D01 (KI-57) still needs a clean TEMP per direct run — unchanged.
+6. The runner's `results.json` files record `commit=1bedfa4 dirty=True` because every run happened on the
+   uncommitted part-B tree (the WO-10 / part-A precedent); the per-case `*.log` files are gitignored.
+
+## Files
+
+- Evidence (this directory, part B): `unfence.py`, `unfence-dryrun.txt`, `unfence-hunks.txt`,
+  `verify-ap05-strict-before-excerpts.txt`, `verify-ap05-strict-after-excerpts.txt`,
+  `build-excerpts.txt`, `test-counts.txt` (part B section appended), `golden-hashes.txt`,
+  `audit-gl-conformance.txt`, `audit-docs-coverage.txt` (the last five rewritten for part B),
+  `b06-Release/`, `b06-Debug/`, `retained-wo07-l01-Release/`, `retained-wo08-gpu-Release/`,
+  `retained-wo09-units-Release/`, `retained-wo10-units-Release/` (`results.json` + `results.junit.xml`
+  each). Part A's files are untouched except this report.
+- Source: the 69 files above (including `tests/acceptance/fixtures/Verify-AP05Purge.ps1` and
+  `tests/acceptance/manifests/ap05-purge.manifest.json`), `Cosmic/assets/shaders/GodRays.glsl` deleted.
+
+## Local commits (not pushed — Kaden pushes)
+
+- Part B: one commit on `main`, "Remove the COSMIC_2D_ONLY fences; the trunk is 2D-only source (AP-05
+  part B)" — the SHA is in the session's final report and in `git log`.

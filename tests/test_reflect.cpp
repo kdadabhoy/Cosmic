@@ -8,9 +8,6 @@
 
 #include "reflect/TypeRegistry.h"
 #include "scene/Components.h"
-#ifndef COSMIC_2D_ONLY
-#include "scene/Components3D.h"
-#endif
 #include "scene/ComponentRegistry.h"
 
 #include <entt/entt.hpp>
@@ -71,19 +68,9 @@ TEST_CASE("E1: engine components are registered with their fields")
     CHECK(reg.FindByName("Transform") == transform);
     CHECK(reg.Find(entt::type_hash<TransformComponent>::value()) == transform);
 
-#ifndef COSMIC_2D_ONLY
-    // A colour-flagged vec4 deduces to Color, not Vec4. (W4 moved MeshRenderer to
-    // Components3D.h / TypeRegistry3D.cpp; SpriteRendererComponent below carries
-    // the same Color deduction for the 2D suite.)
-    const TypeDescriptor* mesh = reg.Find<MeshRendererComponent>();
-    REQUIRE(mesh != nullptr);
-    CHECK(mesh->FindField("Color")->Kind == FieldKind::Color);
-    CHECK(mesh->FindField("CastShadows")->Kind == FieldKind::Bool);
-#else
     const TypeDescriptor* sprite = reg.Find<SpriteRendererComponent>();
     REQUIRE(sprite != nullptr);
     CHECK(sprite->FindField("Color")->Kind == FieldKind::Color);
-#endif
 }
 
 namespace
@@ -166,13 +153,6 @@ TEST_CASE("T1: reflection metadata v2 — Doc + Units reported where declared, d
     CHECK(cam->FindField("FovDeg")->Hints.Units == FieldUnits::Degrees);
     CHECK(cam->FindField("Near")->Hints.Units   == FieldUnits::Meters);
 
-#ifndef COSMIC_2D_ONLY
-    const TypeDescriptor* emitter = GetRegistry().Find<ParticleEmitterComponent>();
-    REQUIRE(emitter != nullptr);
-    CHECK(emitter->FindField("LifeMin")->Hints.Units      == FieldUnits::Seconds);
-    CHECK(emitter->FindField("ConeAngleDeg")->Hints.Units == FieldUnits::Degrees);
-#endif
-
     // Untouched fields still default (no silent metadata churn).
     CHECK(cam->FindField("Primary")->Hints.Units == FieldUnits::None);
 }
@@ -251,11 +231,7 @@ TEST_CASE("E1: entt glue — has/copy/remove and component enumeration")
 
     // Enumerate: add a second component too, expect exactly the two descriptors
     // back. A 3D point light on the 3D engine; the 2D engine uses its 2D light.
-#ifndef COSMIC_2D_ONLY
-    const TypeDescriptor* ld = GetRegistry().Find<PointLightComponent>();
-#else
     const TypeDescriptor* ld = GetRegistry().Find<Light2DComponent>();
-#endif
     REQUIRE(ld != nullptr);
     ld->Add(registry, src);
     auto comps = GetRegistry().ComponentsOf(registry, src);

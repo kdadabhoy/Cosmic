@@ -10,17 +10,14 @@
 // across runs, and that is the gate this move was made under.
 //
 // Built only when COSMIC_WITH_JOLT is ON (the CMake source filter drops the whole
-// file otherwise), on BOTH engine configurations: physics is dimension-agnostic,
-// so the 2D engine keeps rigid bodies, box/sphere/capsule colliders and the
-// character controller. The single 3D coupling — Renderer3D, used by DebugDraw —
-// is fenced below.
+// file otherwise). Physics is dimension-agnostic, so the 2D trunk keeps rigid
+// bodies, box/sphere/capsule colliders and the character controller; the one 3D
+// coupling this file had (the DebugDraw line-batch bridge) went with the 3D
+// renderer in AP-05 and DebugDraw is a no-op now.
 
 #include "physics/PhysicsBackend.h"
 #include "physics/backends/BuiltinBackends.h"
 #include "core/Log.h"
-#ifndef COSMIC_2D_ONLY
-#include "renderer/Renderer3D.h"   // debug-draw line batch (J8)
-#endif
 
 // --- Jolt ---------------------------------------------------------------------
 #include <Jolt/Jolt.h>
@@ -1012,52 +1009,12 @@ namespace Cosmic
         }
 
         // ---- debug draw (J8) ------------------------------------------------
-        // Live Jolt state to the Renderer3D line batch. Jolt's DrawBodies is compiled
-        // only under JPH_DEBUG_RENDERER (Debug config), so this is a no-op in Release —
-        // exactly the desired "engine builds clean, ships lean" behaviour. Colours come
-        // from Jolt (SleepColor: sleeping bodies read grey/blue); no GL is touched here,
-        // only the batched line verbs (the real GL lives in Renderer3D/platform).
-        //
-        // The 2D engine has no Renderer3D, so the body is fenced out there as well and
-        // DebugDraw becomes a no-op; §6.4 pairs that with a Renderer2D collider overlay
-        // in ViewportController.
+        // A no-op on this trunk. History: the 3D engine forwarded Jolt's DrawBodies
+        // geometry (compiled only under JPH_DEBUG_RENDERER) to the batched 3D line
+        // verbs; that bridge went with the 3D renderer (AP-05). The collider overlay
+        // the editor draws instead lives in ViewportController (Renderer2D, §6.4).
         void JoltBackend::DebugDraw() const
         {
-            if (!initialized) return;
-#if defined(JPH_DEBUG_RENDERER) && !defined(COSMIC_2D_ONLY)
-            // Forward Jolt's debug geometry to the engine's batched line verbs.
-            class LineRenderer final : public JPH::DebugRendererSimple
-            {
-            public:
-                void DrawLine(JPH::RVec3Arg from, JPH::RVec3Arg to, JPH::ColorArg color) override
-                {
-                    Renderer3D::DrawLine(ToGlmR(from), ToGlmR(to),
-                        glm::vec4(color.r / 255.0f, color.g / 255.0f, color.b / 255.0f, 1.0f));
-                }
-                void DrawTriangle(JPH::RVec3Arg v1, JPH::RVec3Arg v2, JPH::RVec3Arg v3,
-                                  JPH::ColorArg color, ECastShadow) override
-                {
-                    const glm::vec4 c(color.r / 255.0f, color.g / 255.0f, color.b / 255.0f, 1.0f);
-                    Renderer3D::DrawLine(ToGlmR(v1), ToGlmR(v2), c);
-                    Renderer3D::DrawLine(ToGlmR(v2), ToGlmR(v3), c);
-                    Renderer3D::DrawLine(ToGlmR(v3), ToGlmR(v1), c);
-                }
-                void DrawText3D(JPH::RVec3Arg, const JPH::string_view&, JPH::ColorArg, float) override {}
-            };
-
-            LineRenderer r;
-            JPH::BodyManager::DrawSettings ds;
-            ds.mDrawShape          = true;
-            ds.mDrawShapeWireframe = true;
-            ds.mDrawShapeColor     = JPH::BodyManager::EShapeColor::SleepColor;   // sleeping bodies read grey
-            system->DrawBodies(ds, &r);
-
-            // Character capsules (they are not bodies in the system).
-            for (const auto& e : characters)
-                if (e.alive && e.ch)
-                    e.ch->GetShape()->Draw(&r, e.ch->GetCenterOfMassTransform(), JPH::Vec3::sReplicate(1.0f),
-                                           JPH::Color::sYellow, false, true);
-#endif
         }
     }
 

@@ -10,7 +10,8 @@
  *
  * A six-face cubemap used by the image-based-lighting pipeline: the environment
  * map, its diffuse-irradiance convolution, and the roughness-mip prefiltered
- * specular map are all TextureCubes (renderer/EnvironmentMap owns the bakes).
+ * specular map are all TextureCubes. History: the 3D EnvironmentMap owned the
+ * bakes (purged in AP-05); the resource class stays until AP-Q1 tidies it.
  *
  * Factory pattern (RendererAPI-dispatched, like Texture2D / UniformBuffer) — no
  * GL tokens in this header (§0 rule 2). A cube may be a plain sampled resource

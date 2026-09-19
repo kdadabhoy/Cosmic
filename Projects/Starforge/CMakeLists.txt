@@ -42,12 +42,12 @@ endif()
 file(GLOB_RECURSE STARFORGE_SOURCES CONFIGURE_DEPENDS "src/*.cpp" "src/*.h")
 
 # COSMIC_2D_ONLY is redeclared here (a no-op once the root CMakeLists' cache entry
-# exists) so this directory still configures standalone; it defaults ON on the 2D
-# trunk. The three 3D-only editor TUs this block used to exclude (VoxelPanel,
-# WorldSystemsPanel, AnimationEditor) were deleted by the 3D purge (AP-05 part A);
-# the remaining Starforge files carry in-file #ifndef COSMIC_2D_ONLY fences until
-# part B unfences them.
-option(COSMIC_2D_ONLY "Build the 2D-only engine (excludes all 3D subsystems)" ON)
+# exists) so this directory still configures standalone. Since AP-05 it is a
+# compatibility no-op everywhere: the three 3D-only editor TUs this block used to
+# exclude were deleted in part A and the in-file fences of the remaining Starforge
+# sources were removed in part B, so the editor source is 2D-only; the option stays
+# so every existing configure line keeps working.
+option(COSMIC_2D_ONLY "Compatibility no-op: this trunk is the 2D-only engine (OFF is rejected)" ON)
 
 # imgui-node-editor (U6 Flow Graph panel) — vendored library sources compiled
 # into the editor DLL, warnings off (external code; see the dependency's
