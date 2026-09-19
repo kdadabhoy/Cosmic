@@ -1,0 +1,113 @@
+{
+  "manifest": "pr-blocked",
+  "description": "AP-P1 / H05 - the G (GPU), I (real editor UI) and Q (qualified/soak) cases the 'pr' profile carries so the uploaded results.json SHOWS them, honestly, as ENVIRONMENT_BLOCKED with the missing prerequisite named. GitHub's windows-latest runners have no GPU, no interactive desktop session and no serial equipment, so a hosted run blocks every case here and passes none of them. On a machine that does have the capability (the GPU qualification runner) the same cases execute for real - nothing is faked either way.",
+  "cases": [
+    {
+      "id": "GOLDENS-G",
+      "tier": "G",
+      "profiles": [
+        "pr",
+        "nightly",
+        "release"
+      ],
+      "requires": [
+        "windows",
+        "gpu-gl",
+        "render-tests"
+      ],
+      "description": "The 2D golden-image suite (CosmicRenderTests). Needs a real GL context AND a tree configured with -DCOSMIC_BUILD_RENDER_TESTS=ON; ci.yml provides neither, so this is blocked there and runs on the GPU runner.",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "{ACCEPTANCE}\\fixtures\\Run-WO10Case.ps1",
+        "-Bin",
+        "{BIN}",
+        "-Exe",
+        "CosmicRenderTests.exe",
+        "-CaseId",
+        "GOLDENS-G",
+        "-TestSuite",
+        "2D goldens",
+        "-Tier",
+        "G",
+        "-Requires",
+        "windows,gpu-gl",
+        "-MinTests",
+        "6",
+        "-DeadlineSec",
+        "120",
+        "-Output",
+        "{REPO}\\build\\acceptance-evidence\\goldens-g-{CONFIG}"
+      ],
+      "expectExit": 0,
+      "minTests": 6,
+      "deadlineSec": 180
+    },
+    {
+      "id": "EDITOR-I",
+      "tier": "I",
+      "profiles": [
+        "pr",
+        "nightly",
+        "release"
+      ],
+      "requires": [
+        "windows",
+        "gpu-gl",
+        "editor-ui"
+      ],
+      "description": "L05: the real Starforge editor driven through 200 UI cycles. Needs a GPU and an interactive desktop session; 'editor-ui' is reported absent on every headless runner.",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "{ACCEPTANCE}\\fixtures\\Run-L05EditorSelfTest.ps1",
+        "-Bin",
+        "{BIN}",
+        "-Output",
+        "{REPO}\\build\\acceptance-evidence\\editor-i-{CONFIG}",
+        "-Cycles",
+        "200"
+      ],
+      "expectExit": 0,
+      "minTests": 1,
+      "deadlineSec": 900,
+      "fixture": "../../Projects/Starforge/src/L05EditorSelfTest.cpp"
+    },
+    {
+      "id": "SOAK-Q",
+      "tier": "Q",
+      "profiles": [
+        "pr",
+        "nightly",
+        "release"
+      ],
+      "requires": [
+        "windows",
+        "gpu-gl",
+        "serial-device"
+      ],
+      "description": "S01: the two-hour SF_Telem soak on a live stream (record/autosave/export, screen switches, a defined disconnect/reconnect sequence, final close). Requires real serial equipment, which this campaign reports absent by standing policy, so it is ENVIRONMENT_BLOCKED in every automated profile and is only ever run by hand.",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "{ACCEPTANCE}\\fixtures\\Run-WO06Host.ps1",
+        "-Bin",
+        "{BIN}",
+        "-Output",
+        "{REPO}\\build\\acceptance-evidence\\soak-q-{CONFIG}"
+      ],
+      "expectExit": 0,
+      "minTests": 1,
+      "deadlineSec": 600
+    }
+  ]
+}

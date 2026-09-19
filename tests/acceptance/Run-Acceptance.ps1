@@ -69,6 +69,11 @@ $childTemp = Join-Path $runTemp 'temp'
 New-Item -ItemType Directory -Path $userData  -Force | Out-Null
 New-Item -ItemType Directory -Path $childTemp -Force | Out-Null
 New-Item -ItemType Directory -Path $OutDir    -Force | Out-Null
+# Absolute from here on: each case is launched through cmd.exe with its stdout/stderr
+# redirected to a path under $OutDir, and the CHILD's working directory is the isolated
+# run-temp - so a RELATIVE $OutDir makes the redirection resolve there, cmd fails to
+# open the file and every case comes back 'exit 1, no output' (AP-P1 hit exactly this).
+$OutDir = (Resolve-Path -LiteralPath $OutDir).Path
 
 # --- Manifest --------------------------------------------------------------------
 $manifestPath = $Manifest
@@ -81,7 +86,7 @@ $manifestObj = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
 
 # --- Environment + capabilities --------------------------------------------------
 $environment = Get-AcceptanceEnvironment
-$capProbe = Get-AcceptanceCapabilities -Disable $DisableCapability
+$capProbe = Get-AcceptanceCapabilities -Disable $DisableCapability -BinDir $BinDir
 $caps = $capProbe.caps
 $capsHt = @{}
 foreach ($k in $caps.Keys) { $capsHt[$k] = $caps[$k] }

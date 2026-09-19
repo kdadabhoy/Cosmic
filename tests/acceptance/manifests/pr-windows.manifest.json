@@ -1,0 +1,74 @@
+{
+  "manifest": "pr-windows",
+  "description": "AP-P1 / H05 - the W-tier (Windows integration) acceptance cases in the 'pr' profile. A case whose equipment the runner lacks (a genuine SF-Stable v1 capture, a COM pair) is ENVIRONMENT_BLOCKED with the prerequisite named, never a pass.",
+  "cases": [
+    {
+      "tier": "W",
+      "profiles": [
+        "pr",
+        "nightly",
+        "release"
+      ],
+      "requires": [
+        "windows"
+      ],
+      "command": "{BIN}\\CosmicTests.exe",
+      "args": [
+        "--test-case=WO-06 D05:*",
+        "--test-case-exclude=*two hour*",
+        "--no-colors"
+      ],
+      "expectExit": 0,
+      "deadlineSec": 90,
+      "minTests": 8,
+      "fixture": "../../tests/test_wo06.cpp",
+      "id": "D05",
+      "description": "WO-06 D05: autosave/publication window and loss bounds (the two-hour leg is excluded here - it belongs to the nightly/release profiles)."
+    },
+    {
+      "tier": "W",
+      "profiles": [
+        "pr",
+        "nightly",
+        "release"
+      ],
+      "requires": [
+        "windows"
+      ],
+      "command": "{BIN}\\CosmicTests.exe",
+      "args": [
+        "--test-case=WO-06 D06:*",
+        "--no-colors"
+      ],
+      "expectExit": 0,
+      "deadlineSec": 90,
+      "minTests": 5,
+      "fixture": "../../tests/test_wo06.cpp",
+      "id": "D06",
+      "description": "WO-06 D06: session-name grammar including Unicode/UTF-8 paths on NTFS."
+    },
+    {
+      "tier": "W",
+      "profiles": [
+        "pr",
+        "nightly",
+        "release"
+      ],
+      "requires": [
+        "windows",
+        "sf-stable-v1-capture"
+      ],
+      "command": "{BIN}\\CosmicTests.exe",
+      "args": [
+        "--test-case=WO-06 D01:*",
+        "--no-colors"
+      ],
+      "expectExit": 0,
+      "deadlineSec": 90,
+      "minTests": 1,
+      "fixture": "../../tests/test_wo06.cpp",
+      "id": "D01-genuine-SF-Stable",
+      "description": "WO-06 D01 against a GENUINE SF-Stable v1 capture instead of the synthetic pinned fixture. No such capture is committed, so this is ENVIRONMENT_BLOCKED (prerequisite: a recording from the production SF-Stable build) and must never read as passed."
+    }
+  ]
+}

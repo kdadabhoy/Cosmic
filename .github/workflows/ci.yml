@@ -134,6 +134,109 @@ jobs:
             test-results-release.txt
           if-no-files-found: warn
 
-      # Packaging is intentionally not part of this PR gate — see release.yml for
-      # the manual-dispatch 2D distributable job and docs/plans/07-installer-
-      # packaging-plan.md step 6.
+      # Packaging is intentionally not part of this PR gate - see release.yml for the
+      # manual-dispatch 2D distributable job, and package.bat's header for which of the
+      # packaging paths actually ships (AP-P1: the editor packager, package.bat <App>
+      # and release.yml all stage one layout; `cmake --install` does not ship).
+
+  # ---------------------------------------------------------------------------------
+  # H05 - the acceptance runner's `pr` profile, after the units.
+  #
+  # Runs tests/acceptance/Run-Acceptance.ps1 -Profile pr over every manifest that
+  # carries the pr profile (manifests/pr-*.manifest.json, plus ap05-purge.manifest.json
+  # once AP-05 lands it). The job FAILS on any FAILED/TIMEOUT/MISSING case. Cases whose
+  # tier this runner cannot honour - G (GPU), I (real editor UI), Q (qualified/soak) -
+  # come back as ENVIRONMENT_BLOCKED with the missing prerequisite named in results.json
+  # and are never counted as passes; a hosted runner has no GPU, no interactive desktop
+  # session and no serial equipment. A profile that selects ZERO cases is a failure
+  # (runner exit 2), so this can never degenerate into a green no-op.
+  #
+  # It reuses build-and-test's build through the same cache entry rather than rebuilding.
+  # If the restore does not produce the test binaries the job fails loudly - it never
+  # skips quietly.
+  # ---------------------------------------------------------------------------------
+  acceptance-pr:
+    needs: build-and-test
+    runs-on: windows-latest
+
+    env:
+      COSMIC_MODE: 2d
+      COSMIC_ARCH: x64
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve toolchain id
+        id: toolchain
+        shell: pwsh
+        run: |
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          $ver = (& $vswhere -latest -products * -property installationVersion).Trim()
+          if (-not $ver) { $ver = "unknown" }
+          Write-Output "ver=$ver" >> $env:GITHUB_OUTPUT
+
+      # Same key as build-and-test, so this job gets exactly the tree that job built
+      # and tested - not a rebuild that could differ.
+      - name: Restore CMake build
+        uses: actions/cache/restore@v4
+        with:
+          path: build
+          key: cmake-build-${{ runner.os }}-${{ env.COSMIC_MODE }}-${{ env.COSMIC_ARCH }}-msvc${{ steps.toolchain.outputs.ver }}-${{ hashFiles('CMakeLists.txt', 'Cosmic/CMakeLists.txt', 'Runtime/CMakeLists.txt', 'tests/CMakeLists.txt', 'Projects/Starforge/CMakeLists.txt', 'CMakePresets.json', '.github/workflows/ci.yml') }}
+          restore-keys: |
+            cmake-build-${{ runner.os }}-${{ env.COSMIC_MODE }}-${{ env.COSMIC_ARCH }}-msvc${{ steps.toolchain.outputs.ver }}-
+
+      - name: Assert the restored tree is the 2D build that was tested
+        shell: pwsh
+        run: |
+          foreach ($f in @('build/CMakeCache.txt','build/Runtime/Release/CosmicTests.exe')) {
+            if (-not (Test-Path $f)) { throw "Acceptance cannot run: '$f' is missing from the restored build. Refusing to report a green acceptance run without the binaries the units were run on." }
+          }
+          $hit = Select-String -Path build/CMakeCache.txt -Pattern '^COSMIC_2D_ONLY:BOOL=ON$' -Quiet
+          if (-not $hit) { throw "Restored CMakeCache does not carry COSMIC_2D_ONLY=ON - refusing to accept a non-2D tree." }
+          Write-Output "Restored 2D build confirmed; running the acceptance pr profile against build/Runtime/Release."
+
+      - name: Acceptance runner (profile pr)
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $manifests = @(Get-ChildItem 'tests/acceptance/manifests/pr-*.manifest.json' | Sort-Object Name)
+          # AP-05 contributes its purge case under its own name; picked up once it lands.
+          $ap05 = 'tests/acceptance/manifests/ap05-purge.manifest.json'
+          if (Test-Path $ap05) { $manifests += Get-Item $ap05 }
+          if ($manifests.Count -eq 0) { throw "No pr-*.manifest.json found - a profile with nothing to run is a failure, not a pass." }
+
+          $resultsRoot = Join-Path (Get-Location).Path 'acceptance-results'
+          New-Item -ItemType Directory -Force -Path $resultsRoot | Out-Null
+          $failed = @()
+          foreach ($m in $manifests) {
+            $name = [IO.Path]::GetFileNameWithoutExtension($m.Name)
+            Write-Host "=== acceptance: $name ==="
+            & ./tests/acceptance/Run-Acceptance.ps1 -Manifest $m.FullName -Profile pr -Config Release -OutDir (Join-Path $resultsRoot $name)
+            if ($LASTEXITCODE -ne 0) { $failed += ("{0} (exit {1})" -f $name, $LASTEXITCODE) }
+          }
+
+          # One honest summary over every case the profile ran.
+          $tot = 0; $pass = 0; $blocked = 0; $bad = 0
+          foreach ($j in Get-ChildItem 'acceptance-results' -Recurse -Filter 'results.json') {
+            $r = Get-Content $j.FullName -Raw | ConvertFrom-Json
+            $tot += $r.counts.total; $pass += $r.counts.passed
+            $blocked += $r.counts.blocked; $bad += $r.counts.failed
+            foreach ($c in $r.cases) {
+              if ($c.verdict -eq 'ENVIRONMENT_BLOCKED') { Write-Host ("  [BLOCKED] {0} ({1}) - {2}" -f $c.id, $c.tier, $c.detail) }
+              elseif ($c.verdict -ne 'PASSED')          { Write-Host ("  [{0}] {1} ({2}) - {3}" -f $c.verdict, $c.id, $c.tier, $c.detail) }
+            }
+          }
+          Write-Host ("=== acceptance pr: {0} passed / {1} failed / {2} env-blocked (of {3}) ===" -f $pass, $bad, $blocked, $tot)
+          if ($tot -eq 0) { throw "The pr profile selected zero cases - a filtered suite with no expected tests is a FAILURE." }
+          if ($failed.Count -gt 0) { throw ("Acceptance pr profile failed: " + ($failed -join '; ')) }
+
+      - name: Upload acceptance results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cosmic-acceptance-pr
+          path: |
+            acceptance-results/**/results.json
+            acceptance-results/**/results.junit.xml
+          if-no-files-found: error
