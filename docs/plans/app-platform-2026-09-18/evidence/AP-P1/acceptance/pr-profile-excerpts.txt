@@ -1,0 +1,11 @@
+=== acceptance: pr-blocked.manifest ===
+=== SUMMARY: 0 passed / 0 failed / 3 env-blocked (of 3) ===
+=== acceptance: pr-units.manifest ===
+=== SUMMARY: 19 passed / 0 failed / 0 env-blocked (of 19) ===
+=== acceptance: pr-windows.manifest ===
+=== SUMMARY: 2 passed / 0 failed / 1 env-blocked (of 3) ===
+  [BLOCKED] GOLDENS-G (G) - missing capability: render-tests
+  [BLOCKED] EDITOR-I (I) - missing capability: editor-ui
+  [BLOCKED] SOAK-Q (Q) - missing capability: serial-device
+  [BLOCKED] D01-genuine-SF-Stable (W) - missing capability: sf-stable-v1-capture
+=== acceptance pr: 21 passed / 0 failed / 4 env-blocked (of 25) ===

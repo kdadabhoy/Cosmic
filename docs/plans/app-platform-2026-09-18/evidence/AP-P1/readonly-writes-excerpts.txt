@@ -1,0 +1,18 @@
+﻿=== PORTABLE: the chain from a WRITABLE package copy (user:// = the app dir) ===
+  fixture exit 0, doctest cases passed 1
+  PASS  L05 (record -> autosave -> export -> replay -> screenshot) passes from a package
+  WO07 L05: cycles=12 actions=124 failed=0 screens=60 mismatch=0 serial[closed=4 open=4 lost=4] replay[load=12 unload=12] dialogs[opened=1 cancelled=1] window[min=3 restore=3 resize=3 fullscreen=2 undock=2 redock=2] shots=3 oracle[errors=0 leaks=0 drift=0 layer=0]
+  PASS  the recording landed in the package's own user root (portable mode)
+  recording: 5144 bytes
+  PASS  screenshots captured (3)
+=== READONLY: the same chain with the app directory denied write access ===
+  PASS  the app directory really is read-only for this user
+  fixture exit -1073740791, doctest cases passed -1
+  PASS  nothing was written into the read-only app directory
+  BLOCKED  record/autosave/export/replay/screenshot INSIDE a read-only app dir
+           prerequisite: a test host that starts from a non-writable working
+           directory (KI-58), or an SF_Telem UI-automation harness not hosted
+           by the dev-only CosmicTests.exe. The same chain is proven above on a
+           writable package, and the writable-path policy itself is proven by
+           the real packaged SF_Telem.exe from a read-only install (K03).
+           observed: exit -1073740791 (0xC0000409), 0 bytes of output

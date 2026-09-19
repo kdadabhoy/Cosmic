@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="pr-blocked" tests="3" failures="0" skipped="3">
+  <testsuite name="pr" tests="3" failures="0" skipped="3">
+    <testcase name="GOLDENS-G" classname="pr-blocked.G" time="0">
+      <skipped message="missing capability: render-tests"/>
+    </testcase>
+    <testcase name="EDITOR-I" classname="pr-blocked.I" time="0">
+      <skipped message="missing capability: editor-ui"/>
+    </testcase>
+    <testcase name="SOAK-Q" classname="pr-blocked.Q" time="0">
+      <skipped message="missing capability: serial-device"/>
+    </testcase>
+  </testsuite>
+</testsuites>
+

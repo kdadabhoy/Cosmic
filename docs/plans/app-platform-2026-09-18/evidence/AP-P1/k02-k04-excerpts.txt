@@ -1,0 +1,41 @@
+﻿=== K02: stage SF_Telem through the CLI shipping path ===
+  staged 75 files
+  PASS  <App>.exe present (renamed CosmicApp.exe)
+  PASS  <App>.dll present
+  PASS  Cosmic.dll present
+  PASS  boot.cfg present
+  PASS  user/ placeholder present
+  PASS  licenses/ staged
+  PASS  assets/projects/<App>/ staged
+  PASS  no other app's content
+  PASS  no dev-only target staged
+  PASS  no PDB/LIB/EXP staged
+  PASS  the only root DLLs are Cosmic.dll and SF_Telem.dll (got: Cosmic.dll,SF_Telem.dll)
+  PASS  boot.cfg names SF_Telem (it is what sets the user:// identity)
+  (no -EditorList supplied; the editor-path comparison is reported separately)
+=== K03: install to a read-only location with spaces and a non-ASCII character ===
+  C:\dev\Cosmic-ap-p1\build\ap-p1\k02k04\install root Ünicode\SF_Telem app
+  PASS  the install directory really is read-only for this user
+  launching SF_Telem.exe (no flags) from an arbitrary working directory ...
+  process exited 0 (CloseMainWindow=True)
+  PASS  the installed app exited cleanly (exit 0) from a read-only install
+  PASS  the install tree is byte-identical after the run (nothing written into it)
+  PASS  log written under %LOCALAPPDATA%\SF_Telem\logs
+  PASS  config (imgui.ini) written under %LOCALAPPDATA%\SF_Telem
+  log: App_2026-09-19_03-21-32.log (342 bytes)
+  log: App_2026-09-19_03-21-57.log (60 bytes)
+  log: Cosmic_2026-09-19_03-21-32.log (901 bytes)
+  log: Cosmic_2026-09-19_03-21-57.log (387 bytes)
+  user data: imgui.ini
+  user data: logs\App_2026-09-19_03-21-32.log
+  user data: logs\App_2026-09-19_03-21-57.log
+  user data: logs\Cosmic_2026-09-19_03-21-32.log
+  user data: logs\Cosmic_2026-09-19_03-21-57.log
+=== K04: reinstall over the same location, then uninstall ===
+  PASS  user data survives a reinstall
+  PASS  user data is unchanged by a reinstall
+  PASS  the reinstalled tree has the same file list
+  PASS  uninstall removes the install directory
+  PASS  uninstall leaves %LOCALAPPDATA%\SF_Telem user data in place (documented policy)
+=== K04: older v1 recording fixtures stay readable by the shipped reader ===
+  PASS  the pinned v1 fixtures (independent-v1.bin, fallback-A.bin, bad-version.bin) still load/reject as specified

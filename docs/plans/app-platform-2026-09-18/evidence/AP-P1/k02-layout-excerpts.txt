@@ -1,0 +1,10 @@
+editor dist: 78 files (72 payload + 6 runtime output under user/)
+CLI dist   : 72 files (72 payload)
+runtime output the X01 run left in the editor dist (portable mode, user:// = <exe>/user/):
+  user/exports/trajectory-rec/scene.bin
+  user/exports/trajectory-rec/trajectory.csv
+  user/exports/x01-trajectory-4.5s.png
+  user/imgui.ini
+  user/logs/App_2026-09-19_03-36-08.log
+  user/logs/Cosmic_2026-09-19_03-36-08.log
+IDENTICAL payload: 72 paths, editor packager == installer\Stage-AppPackage.ps1

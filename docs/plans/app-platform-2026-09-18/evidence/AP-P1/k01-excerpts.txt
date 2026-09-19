@@ -1,0 +1,58 @@
+=== 1. export a clean SDK copy ===
+clean SDK: 3836 files, 74.1 MB
+=== 2. copy the consumer source outside both trees ===
+=== 3. configure the consumer against the clean SDK only ===
+-- Building for: Visual Studio 18 2026
+-- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.26200.
+=== 4. build Release ===
+MSBuild version 18.7.8+1ac568fee for .NET Framework
+
+  Building Custom Rule C:/Users/Kaden/AppData/Local/Temp/claude/C--dev-Cosmic/91717d8d-e74c-445a-8041-81ad3be3d11e/scratchpad/k01/consumer/AnalysisSample/CMakeLists.txt
+     Creating library C:/Users/Kaden/AppData/Local/Temp/claude/C--dev-Cosmic/91717d8d-e74c-445a-8041-81ad3be3d11e/scratchpad/k01/consumer/AnalysisSample/build/Release/AnalysisSample.lib and object C:/Users/Kaden/AppData/Local/Temp/claude/C--dev-Cosmic/91717d8d-e74c-445a-8041-81ad3be3d11e/scratchpad/k01/consumer/AnalysisSample/build/Release/AnalysisSample.exp
+  AnalysisSample.vcxproj -> <K01>\consumer\AnalysisSample\build\Release\AnalysisSample.dll
+  Building Custom Rule C:/Users/Kaden/AppData/Local/Temp/claude/C--dev-Cosmic/91717d8d-e74c-445a-8041-81ad3be3d11e/scratchpad/k01/consumer/AnalysisSample/CMakeLists.txt
+consumer DLL: <K01>\consumer\AnalysisSample\build\Release\AnalysisSample.dll
+=== 5. no source-relative hidden dependency ===
+CMakeCache.txt contains no path into C:\dev\Cosmic-ap-p1 (only the clean SDK copy).
+  COSMIC_2D_ONLY:BOOL=ON
+  COSMIC_SDK_DIR:UNINITIALIZED=<K01>\sdk-clean
+=== 6. 2D mode agreement (the PUBLIC fence) ===
+consumer TUs compile with COSMIC_2D_ONLY (8 occurrence(s) in the vcxproj)
+=== 7. DLL / CRT identity ===
+Cosmic.dll:
+    api-ms-win-crt-convert-l1-1-0.dll
+    api-ms-win-crt-environment-l1-1-0.dll
+    api-ms-win-crt-filesystem-l1-1-0.dll
+    api-ms-win-crt-heap-l1-1-0.dll
+    api-ms-win-crt-locale-l1-1-0.dll
+    api-ms-win-crt-math-l1-1-0.dll
+    api-ms-win-crt-runtime-l1-1-0.dll
+    api-ms-win-crt-stdio-l1-1-0.dll
+    api-ms-win-crt-string-l1-1-0.dll
+    api-ms-win-crt-time-l1-1-0.dll
+    api-ms-win-crt-utility-l1-1-0.dll
+    MSVCP140.dll
+    VCRUNTIME140.dll
+    VCRUNTIME140_1.dll
+AnalysisSample.dll:
+    api-ms-win-crt-convert-l1-1-0.dll
+    api-ms-win-crt-environment-l1-1-0.dll
+    api-ms-win-crt-filesystem-l1-1-0.dll
+    api-ms-win-crt-heap-l1-1-0.dll
+    api-ms-win-crt-locale-l1-1-0.dll
+    api-ms-win-crt-math-l1-1-0.dll
+    api-ms-win-crt-runtime-l1-1-0.dll
+    api-ms-win-crt-stdio-l1-1-0.dll
+    api-ms-win-crt-string-l1-1-0.dll
+    api-ms-win-crt-time-l1-1-0.dll
+    api-ms-win-crt-utility-l1-1-0.dll
+    MSVCP140.dll
+    VCRUNTIME140.dll
+    VCRUNTIME140_1.dll
+consumer machine: 8664 machine (x64)
+=== 8. the SDK engine DLL is the 2D build ===
+  exported symbols containing 'Scene3D': 0
+  exported symbols containing 'NavWorld': 0
+  exported symbols containing 'SceneRenderer': 39
+  exported symbols containing 'Skeleton': 5
+K01 OK
