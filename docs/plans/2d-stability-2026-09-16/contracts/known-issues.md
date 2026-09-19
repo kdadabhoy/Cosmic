@@ -1050,6 +1050,65 @@ over the injected `IFrameClock` (`core/IFrameClock.h`, the WO-10 seam) with the
   that costs an SDK-wide rebuild (ABI); recommended for the next SDK-breaking release, not
   for a stability point release.
 
+### KI-57 - `CosmicTests` is not idempotent: `WO-06 D01` fails on every run after the first on a machine (stale `%TEMP%\wo06` scratch)
+
+- Status: Confirmed defect (test-isolation / false red). Owner WO: AP-05A registered it;
+  ALSO FOUND INDEPENDENTLY BY AP-P1, which carries the fix. AP-05A did not fix it. If both
+  entries reach `main`, they are the same defect and the integrator keeps one, with this
+  entry's fix and evidence.
+- Anchor: `tests/test_wo06.cpp:28-33` - `Scratch()` does `fs::create_directories(%TEMP%/wo06/<name>)`
+  and never clears it, while `WO-06 D01` (`:205-215`) deliberately ends by copying
+  `bad-version.bin` over `%TEMP%\wo06\fallback\scene.bin`. The next process to run D01 hits the
+  directory-load branch, `DataPlayer` finds the leftover `scene.bin` (version 99), logs
+  "Unknown binary version 99" and returns false - `REQUIRE(p.Load(fallback.string()))` at `:208`
+  fails although nothing in the product changed.
+- Repro (deterministic, no rebuild): remove `%TEMP%\wo06`, then run
+  `build\Runtime\Release\CosmicTests.exe --test-case="WO-06 D01*"` twice - run 1 SUCCESS
+  (145 assertions), run 2 FAILURE at `test_wo06.cpp:208`. Same in Debug. It is why a full
+  Debug-then-Release pass on one machine reports 454/454 for Debug and 453/454 for Release:
+  the Debug run poisons the scratch the Release run reuses. `ci.yml` runs Debug then Release in
+  one job and the AP-P1 acceptance `pr` profile re-runs the same cases, so this is a live
+  false-red in CI, not only a local annoyance.
+- Failing-before: `../../app-platform-2026-09-18/evidence/AP-P1/ki57/failing-before-excerpts.txt`.
+- Regression: the existing `WO-06 D01` case, now run TWICE back to back inside one acceptance case
+  (`tests/acceptance/manifests/pr-units.manifest.json`, case `D01-IDEMPOTENT`), which failed before
+  the fix and passes after it.
+- Disposition: fix landed on `ap/p1` - `Scratch()` removes the per-name directory before recreating
+  it, so every case starts from an empty scratch. Product code untouched: the defect is in the test
+  harness, and the behaviour it masked (a stale bad-version file making a good load look broken) is
+  exactly what D01 exists to detect.
+
+### KI-58 - `CosmicTests.exe` fail-fasts at startup (0xC0000409) when its working directory is not writable
+
+- Status: Confirmed defect (dev-only host; does NOT affect the shipped app). Owner WO: AP-P1
+  (found + registered, not fixed - `tests/*.cpp` startup code is outside AP-P1's ownership).
+- Anchor: no single line yet; the failure is before any output, so it is a static-init /
+  early-startup path in `CosmicTests.exe` (doctest main + the test TUs' global constructors),
+  not in `Cosmic.dll` as such - see the contrast below.
+- Repro (minimal, deterministic, Release AND Debug):
+  1. `mkdir <dir>` (EMPTY - no assets, no DLLs) and deny this user
+     `WriteData, AppendData, WriteExtendedAttributes, WriteAttributes` on it;
+  2. run `build\Runtime\Release\CosmicTests.exe --count --no-intro --no-colors` with that
+     directory as the WORKING directory.
+  Writable working directory: exit 0, "unskipped test cases passing the current filters: 454".
+  Non-writable working directory: exit `-1073740791` (`0xC0000409`) and ZERO bytes on stdout
+  and stderr. `0xC0000409` is what the release CRT's `abort()` raises, i.e. something throws
+  or aborts during startup instead of tolerating a read-only CWD.
+- Contrast (why this is the test host, not the engine): the PACKAGED `SF_Telem.exe`
+  (`CosmicApp.exe` renamed, which sets its own CWD to the exe directory) runs from exactly such
+  a read-only tree, exits 0, writes nothing into it and puts its log and `imgui.ini` under
+  `%LOCALAPPDATA%\SF_Telem` - AP-P1's K03 evidence
+  (`../../app-platform-2026-09-18/evidence/AP-P1/k02-k04-excerpts.txt`).
+- Impact: a dev-only binary that is never installed or packaged. It blocks ONE acceptance leg:
+  driving record/autosave/export/replay/screenshot through the L05 host fixture with the app
+  directory read-only, because that fixture is hosted by `CosmicTests.exe`. AP-P1 reports that
+  leg ENVIRONMENT_BLOCKED naming this KI, and proves the same chain on a writable package
+  (`evidence/AP-P1/readonly-writes-excerpts.txt`).
+- Regression: none yet (open).
+- Disposition: open. Suggested owner: whoever next touches the test host. The fix is to find
+  the startup path that assumes a writable CWD and make it tolerate the failure the way
+  `FileSystem::GetUserDataRoot()` already does.
+
 ## Register invariants
 
 - No entry is closed without a landed regression (or an explicit reviewed won't-fix with reason).

@@ -20,6 +20,8 @@
 #include <locale>
 #include <psapi.h>
 #include <random>
+#include <set>
+#include <string>
 #include <thread>
 using namespace Cosmic;
 namespace fs = std::filesystem;
@@ -27,7 +29,22 @@ namespace
 {
 fs::path Scratch(const char *name)
 {
+    // KI-57 (AP-P1): start each named scratch EMPTY, once per process. D01
+    // deliberately leaves a bad-version scene.bin in %TEMP%\wo06\fallback, so
+    // without this the next process to run D01 loaded that leftover and
+    // REQUIRE(p.Load(...)) failed — the suite passed only on a machine's first
+    // run, and CI's Debug pass poisoned its own Release pass.
+    //
+    // Once per NAME, not per call: several cases call Scratch("x") again to read
+    // back what they just wrote there, so clearing on every call would delete the
+    // data under the test. Main-thread only, like every call site.
+    static std::set<std::string> cleared;
     auto p = fs::temp_directory_path() / "wo06" / name;
+    if (cleared.insert(name).second)
+    {
+        std::error_code ec;
+        fs::remove_all(p, ec);
+    }
     fs::create_directories(p);
     return p;
 }
