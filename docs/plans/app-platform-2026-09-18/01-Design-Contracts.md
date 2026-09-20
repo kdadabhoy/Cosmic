@@ -1,6 +1,8 @@
 # App Platform — design contracts
 
-Status: contract of record, 2026-09-18, against `main` `8da533c`. Every name, field, signature and
+Status: contract of record, 2026-09-18, against `main` `8da533c`; **reconciled by AP-Q1 on 2026-09-19** against
+`main` `8b4798a` (every "Contract deviations" section of `evidence/AP-*/report.md` applied; each applied deviation is
+marked `[AP-xx Dn]` inline). Every name, field, signature and
 ordering below is **fixed** for the parallel lanes. A work order that needs a deviation records it in
 its report under "Contract deviations" and the integrator (AP-Q1) updates this file; nobody edits another
 lane's files to make a deviation fit. Section anchors are the ones the prompts cite (`§1` … `§14`).
@@ -14,8 +16,9 @@ below knows what a pendulum, a rocket or an ESC is.
 
 The host-owned, GL-free store that connects app logic to screens. It is a member of the **host**
 (`PlayerLayer`, and `StarforgeApp` for editor Play), never of the module DLL, so it survives a module
-reload. Included by `Cosmic.h`; manifest row `data/DataBus.h → ../guide/app-authoring.md` (AP-D2 may
-re-point it to `reference/app-services.md`).
+reload. Included by `Cosmic.h`; manifest row `data/DataBus.h → ../guide/scripting.md` [AP-01 D4: the four AP-01 rows
+(DataBus, AppService, ServiceHost → `scripting.md`; FlowKeyBridge → `flow-and-story.md`) point at existing chapters because
+`check_docs_coverage.ps1` rule 4 fails a row whose chapter is missing; AP-D2 (deferred) re-points them to `app-authoring.md`].
 
 ```cpp
 namespace Cosmic
@@ -31,6 +34,7 @@ namespace Cosmic
         static DataValue MakeString(std::string s);
         double      AsNumber() const;   // Bool -> 0/1; String -> strtod or 0.0
         std::string AsString() const;   // Number -> "%g"; Bool -> "true"/"false"
+        bool        AsBool() const;     // Number -> finite && != 0; String -> "true"/"1"   [AP-01 D1: added; GetBool coerces through it]
     };
 
     struct DataSample { double Time; double Value; };     // ring-history entry (numeric channels only)
@@ -149,8 +153,8 @@ namespace Cosmic
     // Expands inside a member function of an AppService subclass (Panels() is a protected member).
     #define CS_PANEL(name, fn) Panels().Register((name), (fn), __FILE__, __LINE__)
 
-    struct ServiceDescriptor
-    {
+    struct ServiceDescriptor        // [AP-01 D2: declared in scripting/ModuleRegistry.h, not AppService.h — AddService<T> stores it
+    {                               //  and AppService.h includes ModuleRegistry.h; ServiceBuilder<T> stays here, forward-declared there]
         std::string                    Name;
         std::function<AppService*()>   Factory;
         std::string                    Module;   // owner module ("" = in-exe)
@@ -224,12 +228,12 @@ the bus lacks the channel while in preview mode.
 | Component (reflected name) | Fields (type, default) | Draws / does |
 | --- | --- | --- |
 | `UiValueTextComponent` ("UiValueText") | `std::string Channel`; `std::string Format = "%.2f"` (printf, exactly one numeric conversion; anything else → literal); `std::string Prefix`, `Suffix`; `std::string Placeholder = "--"`; `float StaleAfter = 0` (s, 0 = never); `glm::vec4 StaleColor{0.6,0.6,0.6,1}`; `float PreviewValue = 0` | **Requires a sibling `UiTextComponent`** (same entity) that supplies font/size/colour/alignment; at draw time the resolved string replaces `UiText.Text` (the component's own `Text` is untouched). Missing channel → `Placeholder`; `Age > StaleAfter` → drawn with `StaleColor`. String channels print `AsString()`; bool → `true`/`false`. |
-| `UiGaugeComponent` ("UiGauge") | `Channel`; `float Min = 0, Max = 100`; `UiGaugeStyle Style = Bar` (`Bar=0`, `Arc=1`); `UiGaugeDirection Direction = LeftToRight` (`LeftToRight=0`, `BottomToTop=1`; ignored by Arc); `glm::vec4 FillColor{0.2,0.8,0.3,1}`, `TrackColor{0.15,0.15,0.18,1}`; `float Thickness = 0.25` (Arc ring thickness as a fraction of the radius); `float PreviewValue = 50` | Fills the element rect: Bar = track quad + fill quad clipped to `fill = clamp((v-Min)/(Max-Min),0,1)`; Arc = 270° ring (gap at the bottom) via `Renderer2D::DrawCircle` thickness/fade for the track and a polyline of quads for the fill. A sibling `UiImage` draws behind. |
+| `UiGaugeComponent` ("UiGauge") | `Channel`; `float Min = 0, Max = 100`; `UiGaugeStyle Style = Bar` (`Bar=0`, `Arc=1`); `UiGaugeDirection Direction = LeftToRight` (`LeftToRight=0`, `BottomToTop=1`; ignored by Arc); `glm::vec4 FillColor{0.2,0.8,0.3,1}`, `TrackColor{0.15,0.15,0.18,1}`; `float Thickness = 0.25` (Arc ring thickness as a fraction of the radius); `float PreviewValue = 50` | Fills the element rect: Bar = track quad + fill quad clipped to `fill = clamp((v-Min)/(Max-Min),0,1)`; Arc = 270° ring (gap at the bottom): track AND fill are polylines of 48 rotated quads (chords at the mid radius, `Thickness × radius` thick, sweep 135° → 405°) [AP-02 D1: `DrawCircle` cannot leave the gap and the circle batch flushes after the quad batch, which would paint the track over the fill]. A sibling `UiImage` draws behind. |
 | `UiIndicatorComponent` ("UiIndicator") | `Channel`; `std::string Op = "=="` (`== != < > <= >=`); `float Threshold = 1`; `glm::vec4 OnTint{0.2,1,0.3,1}`, `OffTint{0.3,0.3,0.3,1}`; `std::string OnTexture`, `OffTexture` (`AsAssetPath("texture")`, empty = solid); `bool PreviewOn = false` | Draws a quad with the On/Off texture + tint; bool channels compare as 0/1; missing/non-finite → Off. |
-| `UiPlotComponent` ("UiPlot") | `std::string Channel, Channel2, Channel3, Channel4`; `float WindowSeconds = 10`; `bool AutoScaleY = true`; `float YMin = -1, YMax = 1`; `glm::vec4 LineColor{0.3,0.8,1,1}, LineColor2{1,0.6,0.2,1}, LineColor3{0.6,1,0.4,1}, LineColor4{1,0.4,0.8,1}`; `glm::vec4 GridColor{1,1,1,0.12}`, `BackgroundColor{0,0,0,0.35}`; `int32_t GridDivisions = 4`; `float LineWidth = 2` (px, canvas-scaled); `bool ShowLabels = true`; `float PreviewAmplitude = 1` | Background quad, grid lines, one polyline per bound channel from `bus->History(ch, out, WindowSeconds)` (x = time within the window, y = value), Y range from the visible samples when `AutoScaleY` (padded 5 %), labels (min/max Y, window seconds) via `DrawString`. Skips non-finite samples. Preview: a sine of `PreviewAmplitude` over the window. Stays within `Renderer2D::MaxLines` per plot (decimate to ≤ 512 segments per channel). |
+| `UiPlotComponent` ("UiPlot") | `std::string Channel, Channel2, Channel3, Channel4`; `float WindowSeconds = 10`; `bool AutoScaleY = true`; `float YMin = -1, YMax = 1`; `glm::vec4 LineColor{0.3,0.8,1,1}, LineColor2{1,0.6,0.2,1}, LineColor3{0.6,1,0.4,1}, LineColor4{1,0.4,0.8,1}`; `glm::vec4 GridColor{1,1,1,0.12}`, `BackgroundColor{0,0,0,0.35}`; `int32_t GridDivisions = 4`; `float LineWidth = 2` (px, canvas-scaled); `bool ShowLabels = true`; `float PreviewAmplitude = 1` | Background quad, grid lines, one polyline per bound channel from `bus->History(ch, out, WindowSeconds)` (x = time within the window, y = value), Y range from the visible samples when `AutoScaleY` (padded 5 %), labels (min/max Y, window seconds) via `DrawString`. Skips non-finite samples. Preview: a sine of `PreviewAmplitude` over the window. Traces are rotated quads (`LineWidth × scale` thick, `LineWidth` honoured) and the grid is 1-px quads; the line batch is unused (`LineCount == 0`, pinned by V03) so the `Renderer2D::MaxLines` rule is met trivially; decimation to ≤ 512 segments per channel is implemented and pinned by the quad-count bound [AP-02 D2]. |
 | `UiSliderComponent` ("UiSlider") | `Channel` (written); `float Min = 0, Max = 1, Step = 0`; `std::string Signal` (emitted on release when the value changed; empty = none); `UiSliderOrientation Orientation = Horizontal` (`Horizontal=0`, `Vertical=1`); `glm::vec4 TrackColor{0.15,0.15,0.18,1}`, `FillColor{0.3,0.6,1,1}`, `KnobColor{0.95,0.95,1,1}`; `float KnobSize = 18` (px); `bool Interactable = true`; `float PreviewValue = 0.5`; runtime: `bool Dragging = false` | Track + fill + knob. Interaction in `UiSystem::Update`: press inside arms + sets, drag updates, release emits `Signal` with the entity as source. Value = `Min + t*(Max-Min)` snapped to `Step` when `Step > 0`; written with `bus->Set(Channel, v)` (so the app's own writes to the channel are reflected when not dragging). |
 | `UiToggleComponent` ("UiToggle") | `Channel` (bool written); `std::string Signal`; `glm::vec4 OnTint{0.2,1,0.3,1}`, `OffTint{0.5,0.5,0.5,1}`; `std::string OnTexture`, `OffTexture`; `bool Interactable = true`; `bool PreviewOn = false`; runtime: `bool Armed = false` | **An image + this** (the tint multiplies into a sibling `UiImage`, like `UiButton`). Release-inside flips `bus->GetBool(Channel)` and emits `Signal`. |
-| `UiHostedPanelComponent` ("UiHostedPanel") | `std::string PanelName`; `bool ShowFrame = true`; `glm::vec4 FrameColor{1,1,1,0.25}`; `std::string PlaceholderText` (empty = `PanelName`); runtime: `bool DrawnThisFrame = false` | `Render` draws only the frame (and, in preview mode or when the host reports the name unregistered, the placeholder label). The contents are drawn by the host through `CollectHostedPanels` + `PanelRegistry::Draw` (§4). |
+| `UiHostedPanelComponent` ("UiHostedPanel") | `std::string PanelName`; `bool ShowFrame = true`; `glm::vec4 FrameColor{1,1,1,0.25}`; `std::string PlaceholderText` (empty = `PanelName`); runtime: `bool DrawnThisFrame = false` | `Render` draws only the frame (and, in preview mode or while `DrawnThisFrame == false`, the placeholder label `PlaceholderText`/`PanelName` — identical text in both modes, no " (unregistered)" suffix [AP-02 D3: E05 requires `Render(nullptr)` and `Render(bus)` byte-identical while no host has reported a draw]). The contents are drawn by the host through `CollectHostedPanels` + `PanelRegistry::Draw` (§4). |
 
 `UiSystem` additions (signatures land in AP-01 with no-op bodies; AP-02 implements):
 
@@ -249,6 +253,10 @@ static std::string FormatValue(const UiValueTextComponent&, const DataValue* val
 static float       GaugeFill(float min, float max, double value);           // 0..1, non-finite -> 0
 static double      SliderValueAt(const UiRect& rect, UiSliderOrientation, const glm::vec2& p, float min, float max, float step);
 ```
+[AP-02 D4] `FormatValue(…, stale)` keeps this signature; the text is identical for stale and fresh (pinned by V04) — staleness is
+carried by the colour only. [AP-02 D5] runtime additions inside the components: `UiSlider::DragStartValue`, `ResolvedOn/Off`
+texture caches on indicator/toggle; an image-less toggle draws its own quad; `Placeholder` is wrapped in `Prefix`/`Suffix` like a
+value; a live-mode slider with a missing channel draws the knob at `Min`.
 
 Rules: `bus == nullptr` ⇒ preview mode regardless of `preview`. Interactive precedence: the topmost
 element with an interactable `UiButton`, `UiSlider` or `UiToggle` under the pointer wins; `Update`
@@ -269,7 +277,7 @@ for each p in panels (back to front):
     drawn = m_Panels.Draw(p.Name, p.Rect)                   // false => leave the canvas placeholder visible
     ImGui::End()
 ```
-Unknown names are not an error (the canvas shows "`<name>` (unregistered)"). The ImGui stack must be
+Unknown names are not an error (the canvas keeps showing the placeholder label — `PlaceholderText` or `PanelName`, no suffix [AP-02 D3]); both hosts write `DrawnThisFrame = drawn` after `Draw` [AP-02 D6 / AP-03: `PlayerLayer::DrawHostedPanels` and the editor's Play block]. The ImGui stack must be
 balanced around the block (the WO-07 oracle checks it in V05). Edit mode never calls `Draw`.
 
 ## §5 Screens, screen scripts, flow additions (AP-01 engine, AP-03 editor, AP-04 templates)
@@ -326,7 +334,16 @@ class FlowMachine {
 };
 ```
 Save writes `"channel"` only when non-empty and `"on": "when"` verbatim; v1 files without these stay
-byte-stable. `EvaluateFlowGuard` gains a `lookupChannel` callback parameter (default empty ⇒ false).
+byte-stable. `EvaluateFlowGuard` gains a `lookupChannel` callback parameter
+`const std::function<bool(const std::string&, DataValue&)>& lookupChannel = {}` (default empty ⇒ false) [AP-01 D3: the
+out-parameter form distinguishes a missing channel from a present-but-non-finite value].
+[AP-04 note] `FlowMachine::Enter` runs `onEnter` emits on the *new* scene's bus before the host has re-bound services/scripts
+to it, so a flow `onEnter: emit` cannot start a service action; screen scripts emit from `OnStart` instead (PendulumLab's
+`LabScreen::OnStart` emits `pendulum.start`). Engine behaviour, unchanged.
+
+[AP-03 D1] "byte-stable" for the Screens panel / flow editor writes (E02, F01) is asserted against the serializer's canonical
+Load→Save text: the hand-authored template `Main.cflow` is not in canonical form, so the first editor write canonicalises it and
+every write from then on is byte-stable apart from the edited keys.
 
 **Key bridge** (`scene/FlowKeyBridge.{h,cpp}`, engine; replaces the hand-rolled Escape edge in both hosts):
 
@@ -364,7 +381,9 @@ Sequence when a source file under `<project>/src/` changes while the editor is o
 What survives a swap: the bus (values, history, producers), the edit scene, the flow state name; the
 selection and the undo stack are cleared (existing reload contract). What does not: service member
 state, script member state, the physics world, ImGui panel state. Documented in
-`docs/guide/app-authoring.md` (AP-D2) as "keep state you care about on the bus or in components".
+`docs/guide/app-authoring.md` (AP-D2, deferred) as "keep state you care about on the bus or in components".
+[AP-03 D2] A build that started *before* Play (Ctrl+B, then Play) also resumes Play through the same stop-build-resume path;
+`EditorPrefs::AutoResumePlay` gates the resume; the watcher is a 500 ms debounced `src/` poll and `AutoBuild` follows `kind`.
 
 ## §7 Source links (D-LINKS; AP-01 records, AP-03 resolves + UI)
 
@@ -420,6 +439,15 @@ Projects/Starforge/assets/templates/          (synced POST_BUILD to assets/proje
 `templates/samples/<Name>/`) replacing `@PROJECT_NAME@` in every file (binary files are copied byte-for-
 byte — AP-04 keeps PNGs free of the token). Every template's `Module.cpp` carries the §5 markers. The
 root scanner's target-name == directory-name rule (`CMakeLists.txt:194-202`) applies to in-tree copies.
+[AP-03 D3] `NewProjectAt` gained a `kind` overload; the two-argument form keeps `game` (C05/L02 unchanged). The homescreen
+Samples buttons open `templates/samples/*` through `OpenSample`; `BuildFlowDemo`/`BuildForgePong` are deleted.
+[AP-04 D1] PendulumLab additions beyond §8: reads `settings.theta0_deg` (5) and `settings.small_angle` (false — the F-PENDULUM
+reference is the linearised solution, so the 1e-4 bound is checked with the toggle set; the in-app default is the full `sin θ`
+model), publishes `pendulum.phaseplot_draws` (read by the Y02 host) and handles `startstop_clicked`. [AP-04 D2] the `app`
+template's service is named `AppService` per this section; a TU that opens `using namespace Cosmic` must qualify
+`Cosmic::AppService` (the template's `Module.cpp` does not open the namespace).
+[AP-04 D3] The samples are the code builders' output as of `e01f0a0` (FlowDemo's menu screens keep a perspective camera and an
+`Environment` component); `StarforgeApp::OpenProject` now opens the flow's start scene for `app`-kind projects (AP-03).
 
 ## §9 3D purge scope (AP-05)
 
@@ -453,6 +481,19 @@ EnvironmentMap|ShadowMap" Cosmic/src` → zero identifiers (comments that explai
 only under a "History:" note); both configs 0-warn; `CosmicTests` case count = pre-purge count minus the
 deleted TUs' cases (record both numbers); every retained 2D golden byte-identical; both audits exit 0.
 
+**Applied deviations (AP-05 A/B):** [A1] `Cosmic/src/Cosmic.h` lost its one unfenced include of a purged header
+(`camera/NavigationCube.h`) and `tests/test_s5_navigation.cpp` its include + `using`. [A2] the oracle script
+`tests/acceptance/fixtures/Verify-AP05Purge.ps1` has an `-AllowFences` mode (part A: `fence-uses`/`identifiers` INFO, includes
+inside `#ifndef COSMIC_2D_ONLY` ignored); without it, it is the literal B06 above (the physics verb `SphereCast` is masked as a
+documented `Recast` substring false positive); `-DeletedPaths`/`-DeletedPathsFile`/`-NoDefaultPaths` extend the path list.
+[A3] Kept on purpose: `Outline.glsl`, `GodRays`-family post shaders used by `PostProcessStack`/`Light2DRenderer`, `PBR.glsl`/
+`PBRSkinned.glsl` (loaded by `AssetLibrary.cpp`) and the six unreferenced shaders + `textures/Galaxy.png` (AP-Q1 tidy list).
+[B1] The identifier cleanup touched 20 engine files that carried no fence (listed in `evidence/AP-05/report.md`); the god-rays
+pass was removed as unreachable (its input was the purged `ShadowMap`). [B2] `SceneRenderer::Init` lost its third parameter
+(engine DLL ABI; both render-test call sites updated). [B3] comment-only edits to `Projects/AnalysisSample/CMakeLists.txt` and
+`Projects/Starforge/assets/templates/CMakeLists.txt`. [B4] `JoltBackend.cpp` compound `JPH_DEBUG_RENDERER` condition and the
+`SceneRenderer.cpp` `#else` fence were edited by hand as the script listed them.
+
 ## §10 Parallel lanes (D-LANES) — file ownership matrix
 
 "Owns" is exclusive. "May touch" is shared with a rebase expectation (keep both sides). Anything else is
@@ -462,7 +503,7 @@ reported, not edited. Concurrent lanes (same wave) never share an "Owns" path.
 | --- | --- | --- |
 | AP-05 | everything in §9 Part A/B; `Cosmic/CMakeLists.txt`; root `CMakeLists.txt`; `tests/CMakeLists.txt`; `tests/render/CMakeLists.txt`; `Projects/Starforge/CMakeLists.txt`; `CMakePresets.json`; `build_*.bat`; `tests/check_docs_coverage.ps1`; `docs/reference/README.md` (row deletions); `Projects/Starforge/src/**` fence sites; `Cosmic/templates/ExampleProject/**` fence sites | — (runs alone on `main`; `.github/workflows/**` is AP-P1's) |
 | AP-01 | `Cosmic/src/data/**`; `Cosmic/src/scripting/{AppService.h,ServiceHost.h,ServiceHost.cpp,ModuleRegistry.h,ModuleRegistry.cpp,ModuleMacros.h,ScriptableEntity.h,ScriptHost.h,ScriptHost.cpp}`; `Cosmic/src/scene/{FlowMachine.h,FlowMachine.cpp,FlowKeyBridge.h,FlowKeyBridge.cpp}`; `Cosmic/src/scene/ui/UiSystem.h` (signatures) + the matching no-op bodies in `UiSystem.cpp`; `Cosmic/src/layers/PlayerLayer.{h,cpp}`; `Cosmic/src/Cosmic.h`; `Projects/Starforge/src/StarforgeApp.{h,cpp}` (play/stop/tick/render/reload hooks and the `ScaffoldProjectTo` path only); `Projects/Starforge/assets/templates/**` (the move to `game/`); `Projects/Starforge/CMakeLists.txt` (sync path); `tests/test_databus.cpp`, `tests/test_servicehost.cpp`, `tests/test_flow_channels.cpp`; `tests/acceptance/manifests/ap01-*.json` | `tests/CMakeLists.txt` (add TUs); `docs/reference/README.md` (add rows for `data/DataBus.h`, `scripting/AppService.h`, `scripting/ServiceHost.h`, `scene/FlowKeyBridge.h`) |
-| AP-P1 | `Runtime/CMakeLists.txt`; root `CMakeLists.txt` install rules only; `package.bat`, `package_installer.bat`; `installer/**`; `.github/workflows/**`; `Projects/Starforge/src/Packager.{h,cpp}`; `Projects/SF_Telem/CMakeLists.txt`; `Projects/SF_Telem/src/SF_Telem.cpp` (the writable-path lines only); `tests/acceptance/**` except other WOs' manifests/wrappers; `docs/plans/app-platform-2026-09-18/evidence/AP-P1/**`; this file §12 (user-data policy) | — |
+| AP-P1 | `Runtime/CMakeLists.txt`; root `CMakeLists.txt` install rules only; `package.bat`, `package_installer.bat`; `installer/**`; `.github/workflows/**`; `Projects/Starforge/src/Packager.{h,cpp}`; `Projects/SF_Telem/CMakeLists.txt`; `Projects/SF_Telem/src/SF_Telem.cpp` (the writable-path lines only) [AP-P1 D1: also `TelemHub.{h,cpp}` and `DrivetrainLayer.cpp`, path lines only — see §12]; `tests/acceptance/**` except other WOs' manifests/wrappers [AP-P1 D4: `AcceptanceRunner.psm1` gained the `render-tests` capability and an absolute `-OutDir`]; `tests/test_wo06.cpp` `Scratch()` [AP-P1 D2: the KI-57 fix]; `docs/plans/app-platform-2026-09-18/evidence/AP-P1/**`; this file §12 (user-data policy) | — |
 | AP-02 | `Cosmic/src/scene/ui/{UiComponents.h,UiSystem.cpp}` (+ `UiSystem.h` below the AP-01 signatures); `Cosmic/src/reflect/TypeRegistry.cpp`; `tests/test_ui_widgets.cpp`; `tests/render/render_ap02_widgets.cpp`; `tests/render/goldens/ap02_*.png`; `tests/acceptance/manifests/ap02-*.json`; `tests/acceptance/fixtures/Run-AP02Render.ps1` | `tests/CMakeLists.txt`, `tests/render/CMakeLists.txt` (add TUs) |
 | AP-04 | `Projects/Starforge/assets/templates/**` (except `_stubs`); `Projects/PendulumLab/**`; root `CMakeLists.txt` (skip list only); `tests/test_template_scripts.cpp`; `tests/test_pendulumlab.cpp`; `tests/fixtures/ap04/**`; `tests/acceptance/fixtures/Run-AP04Sample.ps1`; `tests/acceptance/manifests/ap04-*.json` | `tests/CMakeLists.txt` (add TUs, fixture define) |
 | AP-D1 | `docs/**` except `docs/plans/app-platform-2026-09-18/{01-Design-Contracts.md,evidence/**}`; `README.md`; `tests/check_docs_links.ps1` (new); `tests/check_docs_coverage.ps1` (parked-dir allowance only) | `.github/workflows/ci.yml` (add one step); `docs/reference/README.md` (rewrite links of moved chapters) |
@@ -560,42 +601,36 @@ stays). `cmake --install` still works and still produces the **developer SDK bun
 and survives an update, a reinstall and an uninstall; removing it is the user's action, not the
 installer's.
 
-## §13 New-surface register (AP sessions append; AP-Q1 finalizes)
+## §13 New-surface register (finalized by AP-Q1, 2026-09-19; every row proven at the pinned SHA in `evidence/AP-Q1/release-report.md`)
+
+Status legend: **qualified** = every proving ID passed at the AP-Q1 pinned SHA; **qualified (partial)** = the named ID is
+`ENVIRONMENT_BLOCKED` or pending with the prerequisite named; **deferred** = the owning WO has not run (AP-D1/AP-D2, Kaden's decision).
 
 | Surface | Contract | Class | Proven by | Status |
 | --- | --- | --- | --- | --- |
-| DataBus | §1 | new | V01 | planned |
-| AppService / ServiceHost / CS_SERVICE / CS_PANEL | §2 | new | V02, V05 | planned |
-| Data() script proxy | §2 | new | V06 | planned |
-| Bound widgets (7 components) | §3 | new | V03, V04, E05 | planned |
-| Hosted panels (host draw) | §4 | new | V05 | planned |
-| Flow channel guards / when / StartAt / key bridge | §5 | new | V06, F02 | planned |
-| Screens panel + screen scripts + scaffold | §5 | new | E02, F01 | planned |
-| Live loop (auto-build → reload → resume) | §6 | new | E07 | planned |
-| Source links | §7 | new | E08 | planned |
-| Template kinds + samples on disk | §8 | new/changed | E01, E06 | planned |
-| PendulumLab | §8 | new | F02, Y01–Y03 | planned |
-| 3D purge | §9 | removal | B06 | planned |
-| Packaging identity + writable user data | §12 | changed | K01–K04 | planned |
-| Acceptance in CI | — | new | H05 | planned |
-| Docs archive / parked-3d / link checker | §11 | changed | DOC01, DOC03–DOC05 | planned |
-| DataBus (`data/DataBus.{h,cpp}`; `DataValue::AsBool` added) | §1 | new | V01 (13 cases, both configs) | landed (AP-01) |
-| AppService / PanelRegistry / ServiceHost / CS_SERVICE / CS_PANEL; `ModuleRegistry` AddService/FindService/ServiceNames + UnregisterModule stripping (`ServiceDescriptor` lives in `ModuleRegistry.h`) | §2 | new | V02 U (9 cases) + V02 W (20 GameModule reloads in-exe, 20 PlayerLayer reloads through the Application) | landed (AP-01); V05 pending AP-02/AP-03 |
-| Data() script proxy (`ScriptHost::SetDataBus`, `DataProxy` on ScriptableEntity + SystemScript) | §2 | new | V06 (Data proxy case) | landed (AP-01) |
-| Flow channel guards / `when` / `StartAt` / `KeySignals` / `SetDataBus` / `EvaluateFlowGuard(lookupChannel)`; `scene/FlowKeyBridge.{h,cpp}` | §5 | new | V06 (9 flow cases; v1/v2 save bytes pinned against the AP-05B binary) | landed (AP-01); F02 pending AP-04 |
-| UiSystem signatures: `DataBus*` on Update, `bus`/`preview` on both Render overloads, `UiHostedPanelDraw`, `CollectHostedPanels` (no-op body) | §3 | new | existing UI suites unchanged; bodies proven by V03–V05 | landed (AP-01, signatures only) |
-| Host wiring: PlayerLayer (`m_Bus`/`m_Panels`/`m_Services`/`m_KeyBridge`, §2 frame order, §4 hosted-panel block, key bridge replaces the Escape edge) and StarforgeApp Play (`m_PlayBus`/`m_PlayPanels`/`m_PlayServices`/`m_PlayKeyBridge`, `StarforgeAppServices.cpp`) | §2, §4 | new | V02 W (PlayerLayer path); wo09-editor C05 (editor Play/Stop unchanged); editor hosted-panel draw pending AP-03 (V05) | landed (AP-01) |
-| Template layout: `assets/templates/game/` (moved verbatim), `ScaffoldProjectTo(name, dest, kind = "game")`, `ProjectManifest::Kind` (read only) | §8, §5 | changed | wo09-editor C05 (scaffold + Play through the moved template) | landed (AP-01); app/blank/samples pending AP-04, `kind` write + picker pending AP-03 |
-| Bound widgets: `UiValueText`, `UiGauge`, `UiIndicator`, `UiPlot`, `UiSlider`, `UiToggle`, `UiHostedPanel` (+ `UiGaugeStyle`/`UiGaugeDirection`/`UiSliderOrientation`), reflected under "UI"; `UiSystem::FormatValue`/`GaugeFill`/`SliderValueAt`; Render bus/preview rules; slider/toggle interaction in `Update`; plot history/decimation | §3 | new | V04 (11 cases, both configs), V03 (7 goldens `ap02_*.png` + sentinel ROIs), E05 (preview/live byte-identical A/B) | landed (AP-02); deviations: arc track is a quad polyline (not `DrawCircle`), plot traces/grid are quads (LineWidth honoured, line batch unused), placeholder label identical in both modes |
-| Hosted panels (collection): `UiSystem::CollectHostedPanels` resolves `UiHostedPanel` rects back-to-front (clears `DrawnThisFrame`); `Render` draws frame + placeholder (preview, or `DrawnThisFrame == false`); the host sets `DrawnThisFrame` after `PanelRegistry::Draw` returns true | §3, §4 | new | V05 engine half (V04 case + `ap02_hostedpanel` golden incl. the live/`DrawnThisFrame` rule) | landed (AP-02); host draw + `DrawnThisFrame` write pending AP-03 (PlayerLayer ignores the `Draw` result today) |
-| Template kinds on disk: `templates/game` (2D `Main.cscene`: sprite + ortho camera; 3D scripts HoverController/WalkController removed; StoryUiBinding registered; `kind = "game"`; CS_SCREENS markers), `templates/blank` (`kind = "blank"`, canvas + camera, markers only), `templates/app` (§8 tree: `kind = "app"` + `startup_flow`, Home → Dashboard → Settings flow with `key:Escape` back and `@quit`, three §3-widget screens, `AppService` publishing `app.uptime`/`app.sine`/`app.counter` + `CS_PANEL("Diagnostics")`, three §5 screen scripts, two token-free PNGs, README) | §8, §5, §3 | new | E01-U (ap04-units: every scene through SceneSerializer with the §3 names/fields, flows validate, kind/markers/token), scaffold + open of all five kinds through `ScaffoldProjectTo`/`OpenProjectPath` (AP-04 report), each scaffolded module built standalone | landed (AP-04); editor picker + Screens panel pending AP-03; widget rendering pending AP-02 |
-| Samples on disk: `templates/samples/FlowDemo`, `templates/samples/ForgePong` (captured from `BuildFlowDemo`/`BuildForgePong` output, `@PROJECT_NAME@` in text files only, `kind = "game"`, markers; unrelated game-template scripts trimmed, ForgePong keeps PaddleController/PongBall) | §8 | new | E01-U (scenes load; provenance hashes in `evidence/AP-04/sample-capture-provenance.json`), scaffold + open + standalone module build (AP-04 report) | landed (AP-04); homescreen buttons still call the code builders until AP-03 switches them to the trees |
-| PendulumLab (`Projects/PendulumLab`, external consumer in `COSMIC_SKIP_PROJECTS`): `PendulumService` (RK4 via `IntegrateRK4` at the 240 Hz fixed step, `settings.*` from the bus incl. `settings.theta0_deg` and `settings.small_angle`, publishes `pendulum.angle_deg/omega/energy/period_est/running/phaseplot_draws`, handles `pendulum.start/stop/reset/nudge`, `CS_PANEL("PhasePlot")` ImPlot scatter), screens Home/Lab/Settings + Stopped overlay (`when pendulum.energy < 0.01` push, `resume_clicked` pop + re-release), `Y02SelfTestService` (env `COSMIC_Y02_SELFTEST`), F-PENDULUM fixture + generator | §8, §2, §5 | new | Y01-U + F02-U (ap04-units, both configs), Y01 (ap04-sample: clean-SDK-path standalone build), Y02/Y03 hosts built here and run by AP-Q1 | landed (AP-04); Y02/Y03 execution pending AP-Q1 (plot ROI + hosted-panel draw count need AP-02/AP-03) |
-| Screens panel + screen scripts + scaffold (`panels/ScreensPanel.{h,cpp}`, `ScreenScaffold.{h,cpp}`, `assets/editor/stubs/ScreenScript.h.in`; New Screen / Set as start / Open scene / Open script / Reveal / Create-relink script / Rename; `Module.cpp has no CS_SCREENS markers` refusal; `ProjectManifest` writes `kind`); `OpenProject` opens the flow's start scene (AP-04 caveat) | §5 | new | E02 + F01 (ap03-editor, both configs; E02 U in `test_ap03_editor.cpp`) | landed (AP-03); deviation: "byte-stable" is asserted against the canonical Load->Save text (the hand-authored template flow is not canonical) |
-| Live loop (`StarforgeAppPlatform.cpp`: 500 ms debounced `src/` watcher, `AutoBuild` from `kind`, stop-build-resume with `StartAt(flow state)` and the bus kept (`m_PlayKeepBus`), `Build failed` stays stopped, status chip Live / Building… / Reloading / Build failed, `EditorPrefs::AutoResumePlay`, Ctrl+B during Play) | §6 | new | E07 (ap03-editor, both configs: amplitude x2 -> resumed on Dashboard with history kept; compile error -> stopped + chip; fix -> resumed) | landed (AP-03); a build that started BEFORE Play also resumes it |
-| Source links (`SourceLocator.{h,cpp}`; Inspector NativeScript / Channel / Signal / PanelName rows, Screens panel, DataBus panel, viewport right-click `Open logic source` with the §7 order; `COSMIC_AP03_RECORD_SHELL` seam) | §7 | new | E08 U (7 cases) + E08 I (11 recorded invocations, ap03-editor) | landed (AP-03); the I half drives the panels' resolution API + Open/Reveal, not the ImGui buttons themselves |
-| Template kinds picker + samples on disk + projects cache (New Project lists `templates/{app,game,blank}` as App / Game / Blank with descriptions; Samples buttons over `templates/samples/*` via `OpenSample`; `BuildFlowDemo`/`BuildForgePong` deleted; `CachedProjects()` keyed on `projects.toml`'s write time) | §8 | changed | E06 (ap03-editor: lists, each kind scaffolds/opens/builds/plays, 1 `LoadProjects` call over 600 homescreen frames) | landed (AP-03) |
-| UI rect gizmo (`UiRectGizmo.{h,cpp}`: move + 8 resize handles, one undo entry per gesture on OffsetMin/OffsetMax, 1/8 px + 16 px snap chips), Entity > UI entries for the seven widgets + Hosted Panel, hosted panels drawn in editor Play (§4, letterbox-mapped, `DrawnThisFrame` written in both hosts), DataBus panel + preview bus | §3, §4 | new | E03 U (4 cases) + E03 I, V05 editor half (ap03-editor, both configs) | landed (AP-03); KI-59 (project layout probe) and KI-60 (module ImGui context hand-off) fixed on the way |
+| DataBus (`data/DataBus.{h,cpp}`; `DataValue::AsBool` added) | §1 | new | V01 (13 cases, both configs) | qualified (AP-01; AP-Q1 ap01-units Debug+Release) |
+| AppService / PanelRegistry / ServiceHost / CS_SERVICE / CS_PANEL; `ModuleRegistry` AddService/FindService/ServiceNames + UnregisterModule stripping (`ServiceDescriptor` lives in `ModuleRegistry.h`) | §2 | new | V02 U (9 cases) + V02 W (20 GameModule reloads in-exe, 20 PlayerLayer reloads through the Application) | qualified (AP-01; V05 engine half AP-02 `ap02-gpu`, editor half AP-03 `ap03-editor`, player half AP-Q1 Y02) |
+| Data() script proxy (`ScriptHost::SetDataBus`, `DataProxy` on ScriptableEntity + SystemScript) | §2 | new | V06 (Data proxy case) | qualified (AP-01; AP-Q1 ap01-units Debug+Release) |
+| Flow channel guards / `when` / `StartAt` / `KeySignals` / `SetDataBus` / `EvaluateFlowGuard(lookupChannel)`; `scene/FlowKeyBridge.{h,cpp}` | §5 | new | V06 (9 flow cases; v1/v2 save bytes pinned against the AP-05B binary) | qualified (AP-01; F02 by AP-04 `ap04-units`, re-run by AP-Q1) |
+| UiSystem signatures: `DataBus*` on Update, `bus`/`preview` on both Render overloads, `UiHostedPanelDraw`, `CollectHostedPanels` (no-op body) | §3 | new | existing UI suites unchanged; bodies proven by V03–V05 | qualified (AP-01 signatures; bodies AP-02 V03–V05) |
+| Host wiring: PlayerLayer (`m_Bus`/`m_Panels`/`m_Services`/`m_KeyBridge`, §2 frame order, §4 hosted-panel block, key bridge replaces the Escape edge) and StarforgeApp Play (`m_PlayBus`/`m_PlayPanels`/`m_PlayServices`/`m_PlayKeyBridge`, `StarforgeAppServices.cpp`) | §2, §4 | new | V02 W (PlayerLayer path); wo09-editor C05 (editor Play/Stop unchanged); editor hosted-panel draw pending AP-03 (V05) | qualified (AP-01; AP-Q1 ap01-units Debug+Release) |
+| Template layout: `assets/templates/game/` (moved verbatim), `ScaffoldProjectTo(name, dest, kind = "game")`, `ProjectManifest::Kind` (read only) | §8, §5 | changed | wo09-editor C05 (scaffold + Play through the moved template) | qualified (AP-01; app/blank/samples AP-04 E01-U, `kind` write + picker AP-03 E06) |
+| Bound widgets: `UiValueText`, `UiGauge`, `UiIndicator`, `UiPlot`, `UiSlider`, `UiToggle`, `UiHostedPanel` (+ `UiGaugeStyle`/`UiGaugeDirection`/`UiSliderOrientation`), reflected under "UI"; `UiSystem::FormatValue`/`GaugeFill`/`SliderValueAt`; Render bus/preview rules; slider/toggle interaction in `Update`; plot history/decimation | §3 | new | V04 (11 cases, both configs), V03 (7 goldens `ap02_*.png` + sentinel ROIs), E05 (preview/live byte-identical A/B) | qualified (AP-02; deviations applied to §3/§4 as [AP-02 D1–D5]) |
+| Hosted panels (collection): `UiSystem::CollectHostedPanels` resolves `UiHostedPanel` rects back-to-front (clears `DrawnThisFrame`); `Render` draws frame + placeholder (preview, or `DrawnThisFrame == false`); the host sets `DrawnThisFrame` after `PanelRegistry::Draw` returns true | §3, §4 | new | V05 engine half (V04 case + `ap02_hostedpanel` golden incl. the live/`DrawnThisFrame` rule) | qualified (AP-02; `DrawnThisFrame` written by both hosts since AP-03, player half checked by Y02) |
+| Template kinds on disk: `templates/game` (2D `Main.cscene`: sprite + ortho camera; 3D scripts HoverController/WalkController removed; StoryUiBinding registered; `kind = "game"`; CS_SCREENS markers), `templates/blank` (`kind = "blank"`, canvas + camera, markers only), `templates/app` (§8 tree: `kind = "app"` + `startup_flow`, Home → Dashboard → Settings flow with `key:Escape` back and `@quit`, three §3-widget screens, `AppService` publishing `app.uptime`/`app.sine`/`app.counter` + `CS_PANEL("Diagnostics")`, three §5 screen scripts, two token-free PNGs, README) | §8, §5, §3 | new | E01-U (ap04-units: every scene through SceneSerializer with the §3 names/fields, flows validate, kind/markers/token), scaffold + open of all five kinds through `ScaffoldProjectTo`/`OpenProjectPath` (AP-04 report), each scaffolded module built standalone | qualified (AP-04; picker/Screens panel AP-03 E02/E06, widget rendering AP-02 V03) |
+| Samples on disk: `templates/samples/FlowDemo`, `templates/samples/ForgePong` (captured from `BuildFlowDemo`/`BuildForgePong` output, `@PROJECT_NAME@` in text files only, `kind = "game"`, markers; unrelated game-template scripts trimmed, ForgePong keeps PaddleController/PongBall) | §8 | new | E01-U (scenes load; provenance hashes in `evidence/AP-04/sample-capture-provenance.json`), scaffold + open + standalone module build (AP-04 report) | qualified (AP-04; homescreen buttons open the trees since AP-03 E06) |
+| PendulumLab (`Projects/PendulumLab`, external consumer in `COSMIC_SKIP_PROJECTS`): `PendulumService` (RK4 via `IntegrateRK4` at the 240 Hz fixed step, `settings.*` from the bus incl. `settings.theta0_deg` and `settings.small_angle`, publishes `pendulum.angle_deg/omega/energy/period_est/running/phaseplot_draws`, handles `pendulum.start/stop/reset/nudge`, `CS_PANEL("PhasePlot")` ImPlot scatter), screens Home/Lab/Settings + Stopped overlay (`when pendulum.energy < 0.01` push, `resume_clicked` pop + re-release), `Y02SelfTestService` (env `COSMIC_Y02_SELFTEST`), F-PENDULUM fixture + generator | §8, §2, §5 | new | Y01-U + F02-U (ap04-units, both configs), Y01 (ap04-sample: clean-SDK-path standalone build), Y02/Y03 hosts built here and run by AP-Q1 | qualified (partial) (AP-04; Y02 + S03 + K02 run by AP-Q1; Y03 2-h soak pending, not run — budget; command in the release report) |
+| Screens panel + screen scripts + scaffold (`panels/ScreensPanel.{h,cpp}`, `ScreenScaffold.{h,cpp}`, `assets/editor/stubs/ScreenScript.h.in`; New Screen / Set as start / Open scene / Open script / Reveal / Create-relink script / Rename; `Module.cpp has no CS_SCREENS markers` refusal; `ProjectManifest` writes `kind`); `OpenProject` opens the flow's start scene (AP-04 caveat) | §5 | new | E02 + F01 (ap03-editor, both configs; E02 U in `test_ap03_editor.cpp`) | qualified (AP-03; deviation applied to §5 as [AP-03 D1]) |
+| Live loop (`StarforgeAppPlatform.cpp`: 500 ms debounced `src/` watcher, `AutoBuild` from `kind`, stop-build-resume with `StartAt(flow state)` and the bus kept (`m_PlayKeepBus`), `Build failed` stays stopped, status chip Live / Building… / Reloading / Build failed, `EditorPrefs::AutoResumePlay`, Ctrl+B during Play) | §6 | new | E07 (ap03-editor, both configs: amplitude x2 -> resumed on Dashboard with history kept; compile error -> stopped + chip; fix -> resumed) | qualified (AP-03; [AP-03 D2] applied to §6) |
+| Source links (`SourceLocator.{h,cpp}`; Inspector NativeScript / Channel / Signal / PanelName rows, Screens panel, DataBus panel, viewport right-click `Open logic source` with the §7 order; `COSMIC_AP03_RECORD_SHELL` seam) | §7 | new | E08 U (7 cases) + E08 I (11 recorded invocations, ap03-editor) | qualified (AP-03; E08-I drives the panels' resolution API + Open/Reveal, not the ImGui buttons — the buttons call the same functions) |
+| Template kinds picker + samples on disk + projects cache (New Project lists `templates/{app,game,blank}` as App / Game / Blank with descriptions; Samples buttons over `templates/samples/*` via `OpenSample`; `BuildFlowDemo`/`BuildForgePong` deleted; `CachedProjects()` keyed on `projects.toml`'s write time) | §8 | changed | E06 (ap03-editor: lists, each kind scaffolds/opens/builds/plays, 1 `LoadProjects` call over 600 homescreen frames) | qualified (AP-03; [AP-03 D3] applied to §8) |
+| UI rect gizmo (`UiRectGizmo.{h,cpp}`: move + 8 resize handles, one undo entry per gesture on OffsetMin/OffsetMax, 1/8 px + 16 px snap chips), Entity > UI entries for the seven widgets + Hosted Panel, hosted panels drawn in editor Play (§4, letterbox-mapped, `DrawnThisFrame` written in both hosts), DataBus panel + preview bus | §3, §4 | new | E03 U (4 cases) + E03 I, V05 editor half (ap03-editor, both configs) | qualified (AP-03; KI-59 and KI-60 registered and fixed) |
+| 3D purge (§9 Part A deletions + Part B unfence; `Verify-AP05Purge.ps1`) | §9 | removal | B06 (`ap05-purge`, both configs; re-run by AP-Q1 after each tidy commit) | qualified (AP-05) |
+| Packaging identity + writable user data (`Stage-AppPackage.ps1`, one layout from `package.bat` / `Packager` / CI; `user://` paths in SF_Telem) | §12 | changed | K01, K02, K04 (AP-P1 `pr-windows`), K02 PendulumLab (AP-Q1 Y02 package), K03 `ENVIRONMENT_BLOCKED` (Win10 VM) | qualified (partial) (AP-P1; K03 blocked) |
+| Acceptance in CI (`ci.yml` job `acceptance-pr`, profile `pr`, 300-case discovery floor) | — | new | H05 (AP-P1) | qualified (AP-P1; CI run itself happens on Kaden's push) |
+| Docs archive / parked-3d / link checker / app-authoring chapter | §11 | changed | DOC01, DOC02, DOC03, DOC04 | deferred (AP-D1/AP-D2 not run — Kaden's decision; `tests/check_docs_links.ps1`, `docs/parked-3d/`, `docs/guide/app-authoring.md`, roadmap v5 do not exist) |
+| Showcase kit (`docs/showcase/`, README strip) | — | new | DOC05 (AP-Q1) | see `evidence/AP-Q1/release-report.md` |
+| Now-dead 3D-only surface listed by AP-05 | §9 | removal | B06 re-run per tidy commit | see the release report's tidy section (removed / pending) |
 
 ## §14 Anchors (revalidated 2026-09-18 at `8da533c`; re-check before editing)
 
