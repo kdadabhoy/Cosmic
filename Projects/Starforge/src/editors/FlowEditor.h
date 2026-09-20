@@ -49,6 +49,9 @@ namespace Starforge
         bool               Dirty() const override { return m_Dirty; }
         bool               Save(EditorContext& ctx) override { return SaveFlow(ctx); }
         void               OnImGuiRender(EditorContext& ctx) override;
+        // Harness seam (GUIDE walkthrough self-test): select a state node + one of its
+        // transitions so the inspector shows them; -1 clears. No effect on the asset.
+        void               HarnessSelect(int stateIdx, int transIdx) { m_SelState = stateIdx; m_SelTrans = transIdx; }
 
     private:
         void Revalidate();
