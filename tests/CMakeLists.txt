@@ -120,6 +120,9 @@ set(COSMIC_TEST_SOURCES
     test_databus.cpp
     test_servicehost.cpp
     test_flow_channels.cpp
+    # AP-02 (App Platform) — bound widgets: the pure helpers, the slider/toggle Update
+    # machine over a real DataBus, CollectHostedPanels, reflection + serializer round-trip (V04, V05).
+    test_ui_widgets.cpp
     # AP-01 V02 W — the REAL editor-side module loader (LoadLibrary + CosmicModule_Register,
     # UnregisterModule + FreeLibrary), compiled from the Starforge tree rather than copied:
     # the thing under test is the code the editor ships.

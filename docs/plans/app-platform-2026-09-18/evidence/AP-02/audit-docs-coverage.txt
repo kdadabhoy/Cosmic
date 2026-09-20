@@ -1,0 +1,10 @@
+﻿WARNING - skeleton chapters with uncovered COSMIC_API symbols (strict mode turns on when the STATUS: SKELETON banner is deleted):
+  docs/reference/assets-io.md: STATUS: SKELETON - 1 COSMIC_API name(s) not covered yet
+      never mentions COSMIC_API AtomicOutput (declared in utils/AtomicOutput.h)
+  docs/reference/jobs.md: STATUS: SKELETON - 1 COSMIC_API name(s) not covered yet
+      never mentions COSMIC_API ISystemQuery (declared in jobs/ParallelSystem.h)
+  docs/reference/rendering-pipeline.md: STATUS: SKELETON - 2 COSMIC_API name(s) not covered yet
+      never mentions COSMIC_API SceneDrawContext (declared in renderer/SceneRenderer.h)
+      never mentions COSMIC_API SceneRenderDesc (declared in renderer/SceneRenderer.h)
+
+Docs coverage: clean (127 public headers, 125 manifest rows, 6 reference chapter(s) still skeletons, 4 chapter(s) outside docs/reference/ so exempt from strict mode).

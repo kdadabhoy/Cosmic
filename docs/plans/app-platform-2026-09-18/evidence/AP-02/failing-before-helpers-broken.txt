@@ -1,0 +1,51 @@
+﻿===============================================================================
+C:\dev\Cosmic-ap-02\tests\test_ui_widgets.cpp(75):
+TEST SUITE: AP-02 V04 widgets
+TEST CASE:  V04 FormatValue: one conversion / none / two (literal) / bool / string / missing / stale / non-finite / prefix+suffix
+
+C:\dev\Cosmic-ap-02\tests\test_ui_widgets.cpp(92): ERROR: CHECK( Fmt("%.1f / %.1f", &n) == "%.1f / %.1f" ) is NOT correct!
+  values: CHECK( 3.1 / -92559631349317830736831783200707727132248687965119994463780864.0 == %.1f / %.1f )
+
+===============================================================================
+C:\dev\Cosmic-ap-02\tests\test_ui_widgets.cpp(130):
+TEST SUITE: AP-02 V04 widgets
+TEST CASE:  V04 GaugeFill: linear, clamped both ends, reversed range, degenerate range, non-finite -> 0
+
+C:\dev\Cosmic-ap-02\tests\test_ui_widgets.cpp(136): ERROR: CHECK( UiSystem::GaugeFill(0.0f, 100.0f, 250.0) == 1.0f ) is NOT correct!
+  values: CHECK( 2.5 == 1 )
+
+===============================================================================
+C:\dev\Cosmic-ap-02\tests\test_ui_widgets.cpp(149):
+TEST SUITE: AP-02 V04 widgets
+TEST CASE:  V04 SliderValueAt: horizontal / vertical, Step snapping, out-of-rect clamps, degenerate rect
+
+C:\dev\Cosmic-ap-02\tests\test_ui_widgets.cpp(166): ERROR: CHECK( UiSystem::SliderValueAt(r, UiSliderOrientation::Horizontal, { 100.0f + 200.0f * 0.33f, 220.0f }, 0.0f, 1.0f, 0.25f) == doctest::Approx(0.25) ) is NOT correct!
+  values: CHECK( 0.33 == Approx( 0.25 ) )
+
+C:\dev\Cosmic-ap-02\tests\test_ui_widgets.cpp(167): ERROR: CHECK( UiSystem::SliderValueAt(r, UiSliderOrientation::Horizontal, { 100.0f + 200.0f * 0.40f, 220.0f }, 0.0f, 1.0f, 0.25f) == doctest::Approx(0.5) ) is NOT correct!
+  values: CHECK( 0.4 == Approx( 0.5 ) )
+
+C:\dev\Cosmic-ap-02\tests\test_ui_widgets.cpp(168): ERROR: CHECK( UiSystem::SliderValueAt(r, UiSliderOrientation::Horizontal, { 100.0f + 200.0f * 0.44f, 220.0f }, 0.0f, 100.0f, 10.0f) == doctest::Approx(40.0) ) is NOT correct!
+  values: CHECK( 44 == Approx( 40 ) )
+
+C:\dev\Cosmic-ap-02\tests\test_ui_widgets.cpp(169): ERROR: CHECK( UiSystem::SliderValueAt(r, UiSliderOrientation::Horizontal, { 100.0f + 200.0f * 0.99f, 220.0f }, 0.0f, 1.0f, 0.3f) == doctest::Approx(0.9) ) is NOT correct!
+  values: CHECK( 0.99 == Approx( 0.9 ) )
+
+C:\dev\Cosmic-ap-02\tests\test_ui_widgets.cpp(170): ERROR: CHECK( UiSystem::SliderValueAt(r, UiSliderOrientation::Horizontal, { 100.0f + 200.0f * 0.7f, 220.0f }, 1.0f, 2.0f, 0.5f) == doctest::Approx(1.5) ) is NOT correct!
+  values: CHECK( 1.7 == Approx( 1.5 ) )
+
+C:\dev\Cosmic-ap-02\tests\test_ui_widgets.cpp(171): ERROR: CHECK( UiSystem::SliderValueAt(r, UiSliderOrientation::Horizontal, { 100.0f + 200.0f * 0.9f, 220.0f }, 1.0f, 2.0f, 0.5f) == doctest::Approx(2.0) ) is NOT correct!
+  values: CHECK( 1.9 == Approx( 2 ) )
+
+===============================================================================
+C:\dev\Cosmic-ap-02\tests\test_ui_widgets.cpp(194):
+TEST SUITE: AP-02 V04 widgets
+TEST CASE:  V04 Update slider: press-drag-release writes the bus every frame; Signal only on release and only when changed; no double-emit
+
+C:\dev\Cosmic-ap-02\tests\test_ui_widgets.cpp(268): ERROR: CHECK( bus.GetNumber("gain") == doctest::Approx(0.5) ) is NOT correct!
+  values: CHECK( 0.6 == Approx( 0.5 ) )
+
+===============================================================================
+[doctest] test cases:  11 |   7 passed | 4 failed | 501 skipped
+[doctest] assertions: 366 | 357 passed | 9 failed |
+[doctest] Status: FAILURE!

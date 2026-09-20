@@ -1,0 +1,44 @@
+{
+  "manifest": "ap02-gpu",
+  "cases": [
+    {
+      "id": "V03",
+      "description": "F-WIDGETS on the GPU: one reviewed 320x180 golden per widget kind (ap02_valuetext fresh/stale/missing, ap02_gauge bar 0/50/100 % + bottom-to-top + arc 0/50/100 % with the bottom gap, ap02_indicator on/off with half-and-half textures + solid tints, ap02_plot two channels over 10 s with a NaN gap + grid + labels, ap02_slider H/V at 0/0.5/1, ap02_toggle on/off tints + textures + image-less fallback, ap02_hostedpanel frame + placeholder), each compared with the harness tolerance PLUS exact sentinel pixels/ROIs (fill edge, knob centre, plot line pixel, texture halves, frame edge); the hosted-panel case also runs CollectHostedPanels (V05 engine half) and the live/DrawnThisFrame placeholder rule. The wrapper hashes tests/render/goldens before and after: every pre-existing golden byte-identical.",
+      "tier": "G",
+      "profiles": ["gpu", "release"],
+      "requires": ["windows", "gpu-gl"],
+      "command": "powershell",
+      "workingDir": "{BIN}",
+      "args": [
+        "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
+        "{ACCEPTANCE}\\fixtures\\Run-AP02Render.ps1",
+        "-Bin", "{BIN}", "-CaseId", "V03", "-Suite", "AP-02 V03", "-MinTests", "7", "-DeadlineSec", "180",
+        "-Output", "{REPO}\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-02\\v03-{CONFIG}"
+      ],
+      "expectExit": 0,
+      "minTests": 7,
+      "deadlineSec": 240,
+      "fixture": "../../tests/render/render_ap02_widgets.cpp",
+      "golden": "{REPO}\\tests\\render\\goldens\\ap02_gauge.png"
+    },
+    {
+      "id": "E05",
+      "description": "Preview vs live A/B on the combined F-WIDGETS scene: Render(bus = nullptr) against Render(bus) with the bus holding exactly the preview values (value, gauge, indicator, toggle, slider and a sample-exact replica of the plot's preview sine) is byte-identical (BytesEqual, in-process pair), and equal to Render(bus, preview = true); with different bus values the diff mask is confined to the bound widgets' rects, every bound widget shows a diff, the hosted panel none.",
+      "tier": "G",
+      "profiles": ["gpu", "release"],
+      "requires": ["windows", "gpu-gl"],
+      "command": "powershell",
+      "workingDir": "{BIN}",
+      "args": [
+        "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
+        "{ACCEPTANCE}\\fixtures\\Run-AP02Render.ps1",
+        "-Bin", "{BIN}", "-CaseId", "E05", "-Suite", "AP-02 E05", "-MinTests", "1", "-DeadlineSec", "120",
+        "-Output", "{REPO}\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-02\\e05-{CONFIG}"
+      ],
+      "expectExit": 0,
+      "minTests": 1,
+      "deadlineSec": 180,
+      "fixture": "../../tests/render/render_ap02_widgets.cpp"
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+﻿=== Cosmic 2D acceptance runner (WO-04) ===
+manifest=ap02-gpu  profile=all  config=Debug  mode=2D
+bin=C:\dev\Cosmic-ap-02\build\Runtime\Debug
+commit=e01f0a0ef0497f322307f77988f9de6bdfd8efb6 dirty=True
+selected 2 case(s) of 2
+  [RUN ] V03 (G)
+  [PASSED] V03 - exit 0 as expected
+  [RUN ] E05 (G)
+  [PASSED] E05 - exit 0 as expected
+
+=== SUMMARY: 2 passed / 0 failed / 0 env-blocked (of 2) ===
+evidence: C:\dev\Cosmic-ap-02\docs\plans\app-platform-2026-09-18\evidence\AP-02\ap02-gpu-runner-Debug\results.json
+junit:    C:\dev\Cosmic-ap-02\docs\plans\app-platform-2026-09-18\evidence\AP-02\ap02-gpu-runner-Debug\results.junit.xml

@@ -1,0 +1,24 @@
+== CosmicTests Debug (full retained suite, build/Runtime/Debug/CosmicTests.exe --no-intro --no-colors, exit 0) ==
+[doctest] test cases:      498 |      498 passed | 0 failed | 14 skipped
+[doctest] assertions: 23428622 | 23428622 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+== CosmicRenderTests Debug (full suite, exit 0) ==
+[doctest] test cases:       45 |       45 passed | 0 failed | 2 skipped
+[doctest] assertions: 23516339 | 23516339 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+== runner V04 child (Debug) ==
+[doctest] test cases:  11 |  11 passed | 0 failed | 501 skipped
+[doctest] assertions: 366 | 366 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+== runner V03 child (Debug) ==
+[doctest] test cases:      7 |      7 passed | 0 failed | 40 skipped
+[doctest] assertions: 260534 | 260534 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+== runner E05 child (Debug) ==
+[doctest] test cases:      1 |      1 passed | 0 failed | 46 skipped
+[doctest] assertions: 527851 | 527851 passed | 0 failed |
+[doctest] Status: SUCCESS!
