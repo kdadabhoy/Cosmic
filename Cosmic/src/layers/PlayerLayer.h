@@ -19,7 +19,13 @@
 //     drawing;
 //   * renders the scene from its first Primary CameraComponent (E4), falling back
 //     to a default view + a one-time warning;
-//   * offers a minimal Esc pause menu (Resume / Quit to Launcher).
+//   * offers a minimal Esc pause menu (Resume / Quit to Launcher);
+//   * owns the app-platform host state (AP-01, contract §2): the DataBus, the
+//     PanelRegistry and the ServiceHost that instantiates the module's CS_SERVICE
+//     registrations after the manifest is read, ticks them BEFORE the UI/flow/
+//     scripts, and destroys them before UnregisterModule; hosted panels (§4) draw
+//     in OnImGuiRender before the pause menu; the FlowKeyBridge replaces the
+//     hand-rolled Escape edge.
 //
 // This is what makes "ship from the editor" free — the SAME project DLL that the
 // editor hot-reloads is the one the player runs. Rendering goes through the engine
@@ -29,9 +35,13 @@
 
 #include "core/Core.h"
 #include "core/Layer.h"
+#include "data/DataBus.h"             // AP-01 — the host-owned channel store
 #include "scene/SceneManager.h"
 #include "scene/FlowMachine.h"        // U5 — optional startup screen-flow
+#include "scene/FlowKeyBridge.h"      // AP-01 — "key:<Name>" edges into the flow
 #include "scripting/ScriptHost.h"
+#include "scripting/AppService.h"     // AP-01 — PanelRegistry / AppContext
+#include "scripting/ServiceHost.h"    // AP-01 — the module's app services
 #include "renderer/SceneRenderer.h"   // H2 — the shared render path
 #include "physics/PhysicsWorld.h"     // J4 — the play-session physics service
 
@@ -59,10 +69,11 @@ namespace Cosmic
         void OnEvent(Event& e) override;
 
     private:
-        void RebindScripts();          // (re)instantiate scripts when the scene swaps
+        void RebindScripts();          // (re)instantiate scripts when the scene swaps (+ services BindScene)
         void UpdateCamera(float aspect);
         void RenderScene(float dt);
-        void UpdateUI(float dt);       // U1 — pointer interaction -> scene EventBus
+        void UpdateUI(float dt);       // U1 — pointer interaction -> scene EventBus (+ the bus, AP-01)
+        void DrawHostedPanels();       // AP-01 — §4 hosted panels through the PanelRegistry
         Ref<Scene> LoadSceneFile(const std::string& path);  // U5 flow loader
 
         std::string  m_ProjectName;
@@ -79,9 +90,18 @@ namespace Cosmic
         // "startup_flow"; otherwise the single-startup-scene path is unchanged.
         FlowMachine m_Flow;
         bool        m_UseFlow = false;
-        // U1 — pointer edge tracking for UI interaction / key-signal feed.
+        // U1 — pointer edge tracking for UI interaction.
         bool m_PrevMouseDown = false;
-        bool m_PrevEscape    = false;
+
+        // AP-01 — app-platform host state (contract §2). The bus is HOST-owned:
+        // it lives here, not in the module DLL, so values/history/producers survive
+        // a module reload in the editor; here it lives as long as the layer.
+        DataBus       m_Bus;
+        PanelRegistry m_Panels;
+        ServiceHost   m_Services;
+        FlowKeyBridge m_KeyBridge;      // replaces the U5 Escape edge for every "key:<Name>"
+        float         m_LastAbsTime = 0.0f;   // unscaled clock sample for m_Bus.Advance
+        glm::mat4     m_LastCamVP{ 1.0f };    // last frame's projector for the hosted-panel collect
         // U7 — mouse-look capture ("capture_cursor" manifest key): captured on
         // boot, Esc releases, a click inside the window recaptures.
         bool m_CaptureCursor = false;

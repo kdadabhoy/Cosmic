@@ -8,9 +8,9 @@
 
 #include <doctest.h>
 
-#include "../Projects/Starforge/assets/templates/src/scripts/PaddleController.h"
-#include "../Projects/Starforge/assets/templates/src/scripts/PongBall.h"
-#include "../Projects/Starforge/assets/templates/src/scripts/StoryUiBinding.h"   // Q3
+#include "../Projects/Starforge/assets/templates/game/src/scripts/PaddleController.h"
+#include "../Projects/Starforge/assets/templates/game/src/scripts/PongBall.h"
+#include "../Projects/Starforge/assets/templates/game/src/scripts/StoryUiBinding.h"   // Q3
 
 TEST_CASE("U8: ForgePong template scripts compile and expose their tuned fields")
 {

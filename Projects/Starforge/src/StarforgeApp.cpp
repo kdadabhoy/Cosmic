@@ -286,13 +286,15 @@ namespace Starforge
         return true;
     }
 
-    bool StarforgeApp::ScaffoldProjectTo(const std::string& name, const std::string& destRoot)
+    bool StarforgeApp::ScaffoldProjectTo(const std::string& name, const std::string& destRoot,
+                                         const std::string& kind)
     {
-        // Copy the editor's templates/ into destRoot, replacing @PROJECT_NAME@ in
-        // every (text) file. The templates ship with the Starforge DLL and sync to
-        // assets/projects/Starforge/templates/.
+        // Copy the editor's templates/<kind>/ into destRoot, replacing @PROJECT_NAME@
+        // in every (text) file. The templates ship with the Starforge DLL and sync to
+        // assets/projects/Starforge/templates/<kind>/ (AP-01 layout: game/ today;
+        // app/, blank/ and samples/<Name>/ arrive with AP-04, picked by AP-03).
         std::error_code ec;
-        const fs::path templates = fs::path("assets") / "projects" / "Starforge" / "templates";
+        const fs::path templates = fs::path("assets") / "projects" / "Starforge" / "templates" / kind;
         if (!fs::exists(templates, ec))
             return false;
 
@@ -474,7 +476,9 @@ namespace Starforge
         // stop captured the simulated state and rebuilt the EDIT scene from it —
         // reachable in the shipped editor by pressing Play while a build compiles.
         // The documented reload rule is "preserve the serialized EDIT scene, stop
-        // Play, clear selection/undo".
+        // Play, clear selection/undo". AP-01: StopScene also destroys the app
+        // services (their vtables are code in the OLD module) and leaves m_PlayBus
+        // intact for the D-LIVE resume (AP-03).
         if (IsPlaying()) StopScene();
 
         // Preserve edit-scene state across the module swap. Custom (module-owned)
@@ -610,7 +614,6 @@ namespace Starforge
         // exactly like the shipped player. A state referencing the OPEN scene
         // loads the live snapshot, so unsaved edits play as seen.
         m_PlayFlowActive = false;
-        m_PrevEscape     = false;
         if (m_PlayFlowUse && !m_ManifestFlow.empty())
         {
             Cosmic::FlowAsset asset;
@@ -636,6 +639,7 @@ namespace Starforge
                     }
                     return s;
                 });
+                PlayFlowBindKeys(asset);   // AP-01 — bus for channel guards + the key bridge
                 m_PlayFlow.Start(asset);
                 if (Cosmic::Ref<Cosmic::Scene> fs = m_PlayFlow.ActiveScene())
                 {
@@ -663,10 +667,14 @@ namespace Starforge
         m_FixedAccum   = 0.0f;
         m_StepRequested = false;
 
+        // AP-01 — app services (InEditor) BEFORE the scripts, then the scripts' bus.
+        PlayServicesStart(runtime.get());
+
         // Route script telemetry pushes to the panel (must be set before Instantiate
         // so OnCreate/OnStart pushes have a sink), then arm the take (E20).
         m_Scripts.SetTelemetrySink(&m_Telemetry);
         m_Scripts.Instantiate(*runtime);
+        PlayServicesBindScene(runtime.get());   // AP-01 — services follow the played scene
 
         // J4 — build physics bodies from the runtime scene's components. Build the
         // recipe-driven world systems first (terrain heightfield etc.) so a
@@ -711,6 +719,7 @@ namespace Starforge
         }
         m_Physics.Shutdown();
         m_Scripts.Destroy();
+        PlayServicesStop();                // AP-01 — scripts, then services; m_PlayBus stays intact
         m_Ctx.Scene = m_EditSceneBackup;   // untouched edit scene
         m_EditSceneBackup.reset();
         m_Ctx.ClearSelection();
@@ -733,6 +742,8 @@ namespace Starforge
 
     void StarforgeApp::TickPlay(float ts)
     {
+        PlayServicesAdvanceBus();   // AP-01 — the bus clock runs on the unscaled frame delta
+
         // U7 — cursor capture for mouse-look: only while actively PLAYING in
         // the game camera; Esc releases (and unchecks, so it stays released).
         {
@@ -744,15 +755,14 @@ namespace Starforge
 
         if (m_Play == PlayMode::Playing)
         {
+            m_PlayServices.Tick(ts);   // AP-01 — services before the UI, the flow and the scripts (§2)
+
             // U5/U8 — advance the screen flow first (drains queued button signals
             // into transitions, mirrors PlayerLayer). A scene swap rebinds
             // scripts + physics to the flow's new top scene.
             if (m_PlayFlowActive)
             {
-                const bool esc = Cosmic::Input::IsKeyPressed(CS_KEY_ESCAPE);
-                if (esc && !m_PrevEscape)
-                    m_PlayFlow.FeedSignal("key:Escape");
-                m_PrevEscape = esc;
+                m_PlayKeyBridge.Poll(m_PlayFlow);   // AP-01 — every "key:<Name>" edge
 
                 m_PlayFlow.OnUpdate(ts);
                 if (m_PlayFlow.QuitRequested())
@@ -769,6 +779,7 @@ namespace Starforge
                         m_Ctx.Scene->OnPhysicsStop(m_Physics);
                     }
                     m_Scripts.Destroy();
+                    PlayServicesBindScene(fs.get());   // AP-01 — while the old scene is still alive
                     m_Ctx.Scene = fs;
                     m_Ctx.ClearSelection();
                     m_Scripts.Instantiate(*fs);
@@ -785,8 +796,9 @@ namespace Starforge
             int guard = 0;
             while (m_FixedAccum >= m_FixedDt && guard++ < 8)   // clamp catch-up
             {
-                // Tick order contract (J4 + N4): scripts OnFixedUpdate -> physics step
-                // -> nav step -> collision-event dispatch -> telemetry sample.
+                // Tick order contract (J4 + N4 + AP-01): services OnFixedUpdate -> scripts
+                // OnFixedUpdate -> physics step -> collision-event dispatch -> telemetry sample.
+                m_PlayServices.FixedTick(m_FixedDt);
                 m_Scripts.FixedTick(m_FixedDt);
                 if (m_Ctx.Scene)
                 {
@@ -799,7 +811,8 @@ namespace Starforge
         }
         else if (m_Play == PlayMode::Paused && m_StepRequested)
         {
-            m_Scripts.FixedTick(m_FixedDt);   // one deterministic step
+            m_PlayServices.FixedTick(m_FixedDt);   // AP-01 — same order as the live loop
+            m_Scripts.FixedTick(m_FixedDt);        // one deterministic step
             if (m_Ctx.Scene)
             {
                 m_Ctx.Scene->OnPhysicsStep(m_FixedDt);
@@ -1224,12 +1237,14 @@ namespace Starforge
             // (band == full viewport whenever the game camera is not active).
             const glm::vec4 bandUv = m_GameBandUv;
             const glm::mat4 camVP = desc.Projection * desc.View;   // X6 — world-anchor projector
-            desc.DrawOverlay2D = [scenePtr, vw, vh, bandUv, camVP]()
+            const Cosmic::DataBus* uiBus = IsPlaying() ? &m_PlayBus : nullptr;   // AP-01 — live bus in Play, preview in edit mode
+            const bool uiPreview = !IsPlaying();
+            desc.DrawOverlay2D = [scenePtr, vw, vh, bandUv, camVP, uiBus, uiPreview]()
             {
                 const Cosmic::UiRect band{
                     { bandUv.x * (float)vw,                       bandUv.y * (float)vh },
                     { (bandUv.x + bandUv.z) * (float)vw,          (bandUv.y + bandUv.w) * (float)vh } };
-                Cosmic::UiSystem::Render(*scenePtr, band, vw, vh, &camVP);
+                Cosmic::UiSystem::Render(*scenePtr, band, vw, vh, &camVP, uiBus, uiPreview);
             };
 
             m_SceneRenderer.Render(desc);   // PRE/POST: vfb stays the bound target
@@ -3757,8 +3772,11 @@ namespace Starforge
             return true;
         });
 
-        if (m_Play == PlayMode::Playing)   // forward input to live scripts
+        if (m_Play == PlayMode::Playing)   // forward input to live services, then scripts (AP-01)
+        {
+            m_PlayServices.DispatchEvent(e);
             m_Scripts.DispatchEvent(e);
+        }
     }
 
 } // namespace Starforge

@@ -18,6 +18,7 @@ namespace Starforge
     struct ProjectManifest
     {
         std::string Name;
+        std::string Kind         = "game";  // AP-01 (read only; §5): "app" | "game" | "blank" — default game when absent
         std::string StartupScene = "scenes/Main.cscene";
         std::string StartupFlow;          // U5 — "" => single-scene boot; else e.g. "flows/Main.cflow"
         int         FixedHz      = 60;
@@ -34,6 +35,7 @@ namespace Starforge
             if (auto cfg = Cosmic::Config::Load(vfsOrDiskPath))
             {
                 m.Name         = cfg->GetString("name", m.Name);
+                m.Kind         = cfg->GetString("kind", m.Kind);
                 m.StartupScene = cfg->GetString("startup_scene", m.StartupScene);
                 m.StartupFlow  = cfg->GetString("startup_flow", m.StartupFlow);
                 m.FixedHz      = static_cast<int>(cfg->GetInt("fixed_dt_hz", m.FixedHz));

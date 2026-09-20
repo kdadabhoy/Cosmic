@@ -112,6 +112,16 @@ namespace Cosmic
 
         m_Physics.Init();   // J4 — one world for the layer; scenes bind/unbind to it
 
+        // AP-01 — app services: instantiated AFTER the manifest is read and BEFORE
+        // the flow starts (§2 frame order), on the fresh host-owned bus. Scripts and
+        // the flow get the same bus (Data() proxy, channel guards).
+        m_LastAbsTime = Application::Get().GetAbsoluteTime();
+        m_Scripts.SetDataBus(&m_Bus);
+        m_Flow.SetDataBus(&m_Bus);
+        m_Services.Instantiate(m_ProjectName,
+            AppContext{ m_Bus, m_Panels, nullptr, startupFlow.empty() ? nullptr : &m_Flow,
+                        m_ProjectName, /*InEditor=*/false });
+
         // U5 — when a startup flow is named, it OWNS scene selection: its start
         // state's scene is loaded and adopted. Otherwise the single startup scene
         // loads exactly as before (shipped-app compat — no flow key => unchanged).
@@ -123,6 +133,7 @@ namespace Cosmic
             if (FlowAsset::Load(asset, "project://" + startupFlow, &err))
             {
                 m_UseFlow = true;
+                m_KeyBridge.Bind(asset);   // AP-01 — every "key:<Name>" the flow names
                 m_Flow.Start(asset);
                 if (Ref<Scene> s = m_Flow.ActiveScene())
                 {
@@ -170,6 +181,8 @@ namespace Cosmic
             m_TrackedScene->OnPhysicsStop(m_Physics);
         }
         m_Scripts.Destroy();
+        m_Services.Destroy();   // AP-01 — OnDetach + delete while the module code is mapped (before UnregisterModule)
+        m_KeyBridge.Clear();
         m_Physics.Shutdown();
         m_SceneRenderer.Shutdown();   // free GPU subsystems while the context is live (H2)
         m_TrackedScene.reset();
@@ -195,6 +208,7 @@ namespace Cosmic
             m_TrackedScene->OnPhysicsStop(m_Physics);    // tear down the old scene's bodies
         }
         m_Scripts.Destroy();          // tear down the old scene's instances first
+        m_Services.BindScene(active.get());   // AP-01 — re-point services while the old scene is still alive
         m_TrackedScene = active;
         if (m_TrackedScene)
         {
@@ -206,6 +220,14 @@ namespace Cosmic
     void PlayerLayer::OnUpdate(float ts)
     {
         auto& app = Application::Get();
+
+        // AP-01 — the bus clock advances by the UNSCALED, never-paused frame delta
+        // (Age() is staleness in wall time, independent of TimeScale and pause).
+        {
+            const float now = app.GetAbsoluteTime();
+            m_Bus.Advance((double)(now - m_LastAbsTime));
+            m_LastAbsTime = now;
+        }
 
         // U7 — mouse-look capture lifecycle: Esc releases, a click recaptures.
         // (The Esc press ALSO reaches the flow below — releasing capture and
@@ -224,6 +246,11 @@ namespace Cosmic
         m_Scenes.OnUpdate(ts);
         RebindScripts();
 
+        // AP-01 — app services tick BEFORE the UI and the flow (§2 frame order),
+        // skipped while paused like everything else that simulates.
+        if (!app.IsPaused())
+            m_Services.Tick(ts);
+
         // U1 — UI pointer interaction FIRST, so button signals are on the bus
         // before the flow drains them this same frame.
         if (!app.IsPaused())
@@ -232,9 +259,7 @@ namespace Cosmic
         // U5 — advance the screen flow (drains queued signals -> transitions).
         if (m_UseFlow)
         {
-            const bool esc = Input::IsKeyPressed(CS_KEY_ESCAPE);
-            if (esc && !m_PrevEscape) m_Flow.FeedSignal("key:Escape");
-            m_PrevEscape = esc;
+            m_KeyBridge.Poll(m_Flow);   // AP-01 — rising edge per bound key -> "key:<Name>"
 
             m_Flow.OnUpdate(ts);
             if (m_Flow.QuitRequested())
@@ -282,14 +307,16 @@ namespace Cosmic
         p.ReleasedEdge = !down && m_PrevMouseDown;
         m_PrevMouseDown = down;
 
-        UiSystem::Update(*m_TrackedScene, viewport, p);
+        UiSystem::Update(*m_TrackedScene, viewport, p, nullptr, &m_Bus);
     }
 
     void PlayerLayer::OnFixedUpdate(float fixedDt)
     {
         // Application skips this entirely while paused (Feature B) — so the sim
-        // freezes without a guard here. Tick order contract (J4): scripts'
-        // OnFixedUpdate -> physics step -> collision-event dispatch.
+        // freezes without a guard here. Tick order contract (J4 + AP-01):
+        // services' OnFixedUpdate -> scripts' OnFixedUpdate -> physics step ->
+        // collision-event dispatch.
+        m_Services.FixedTick(fixedDt);
         m_Scripts.FixedTick(fixedDt);
         if (m_TrackedScene)
         {
@@ -355,9 +382,11 @@ namespace Cosmic
             // so shipped 3D apps are unaffected.
             Scene* scenePtr = m_TrackedScene.get();
             const glm::mat4 camVP = desc.Projection * desc.View;   // X6 — world-anchor projector
-            desc.DrawOverlay2D = [scenePtr, vw, vh, camVP]()
+            m_LastCamVP = camVP;                                    // AP-01 — for the hosted-panel collect
+            const DataBus* bus = &m_Bus;                           // AP-01 — live bus (never preview in the player)
+            desc.DrawOverlay2D = [scenePtr, vw, vh, camVP, bus]()
             {
-                UiSystem::Render(*scenePtr, UiRect{ { 0.0f, 0.0f }, { (float)vw, (float)vh } }, &camVP);
+                UiSystem::Render(*scenePtr, UiRect{ { 0.0f, 0.0f }, { (float)vw, (float)vh } }, &camVP, bus, false);
             };
 
             // U3 — world-space sprites draw in the transparent phase (HDR bound,
@@ -384,9 +413,45 @@ namespace Cosmic
         }
     }
 
+    void PlayerLayer::DrawHostedPanels()
+    {
+        // §4 — per frame, after the scene render and before any other ImGui of the
+        // host: one NoDecoration/NoBackground window per resolved UiHostedPanel
+        // element at the viewport-offset rect, the registered drawer inside it. An
+        // unknown name is not an error (the canvas keeps its placeholder). The stack
+        // is balanced around the block. (CollectHostedPanels is a no-op until AP-02.)
+        if (!m_TrackedScene) return;
+        auto& app = Application::Get();
+        Ref<FrameBuffer> fb = app.GetFrameBuffer();
+        if (!fb || fb->GetWidth() < 1 || fb->GetHeight() < 1) return;
+
+        const UiRect viewport{ { 0.0f, 0.0f }, { (float)fb->GetWidth(), (float)fb->GetHeight() } };
+        std::vector<UiHostedPanelDraw> panels;
+        UiSystem::CollectHostedPanels(*m_TrackedScene, viewport, panels, &m_LastCamVP);
+        if (panels.empty()) return;
+
+        const glm::vec2 origin = app.GetViewportPos();   // the presented frame's screen top-left
+        const ImGuiViewport* vp = ImGui::GetMainViewport();
+        for (const UiHostedPanelDraw& p : panels)          // back to front, like elements
+        {
+            ImGui::SetNextWindowPos(ImVec2(origin.x + p.Rect.Min.x, origin.y + p.Rect.Min.y));
+            ImGui::SetNextWindowSize(ImVec2(p.Rect.Width(), p.Rect.Height()));
+            if (vp) ImGui::SetNextWindowViewport(vp->ID);
+            const std::string id = "##hosted_" + p.Name + "_" + std::to_string(p.Handle);
+            ImGui::Begin(id.c_str(), nullptr,
+                         ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize |
+                         ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoDocking |
+                         ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoBackground);
+            m_Panels.Draw(p.Name, p.Rect);                 // false => leave the canvas placeholder visible
+            ImGui::End();
+        }
+    }
+
     void PlayerLayer::OnImGuiRender()
     {
         auto& app = Application::Get();
+
+        DrawHostedPanels();   // AP-01 — hosted panels (§4) before the pause menu
 
         // When a screen flow is active it OWNS Escape (key:Escape transitions /
         // its own pause overlay), so the built-in ImGui pause menu stands down.
@@ -419,6 +484,9 @@ namespace Cosmic
     void PlayerLayer::OnEvent(Event& e)
     {
         if (!Application::Get().IsPaused())
+        {
+            m_Services.DispatchEvent(e);   // AP-01 — services before scripts
             m_Scripts.DispatchEvent(e);
+        }
     }
 }

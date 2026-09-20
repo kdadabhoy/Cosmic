@@ -136,7 +136,12 @@ set_target_properties(Starforge PROPERTIES
 # -------------------------------------------------------------------
 # 6. Asset sync (project:// VFS). Inert while assets/ is absent. E6/E12 add
 #    editor templates + sample assets here; they sync to
-#    assets/projects/Starforge/ next to the runtime.
+#    assets/projects/Starforge/ next to the runtime. Project templates are
+#    keyed by kind (AP-01, contract §8): assets/templates/<kind>/ — game/ today,
+#    app/, blank/ and samples/<Name>/ with AP-04 — and ScaffoldProjectTo reads
+#    assets/projects/Starforge/templates/<kind>/ from this synced copy. The copy
+#    is additive: a build tree from before the move keeps stale files at the
+#    old flat templates/ root, which the scaffold no longer reads.
 # -------------------------------------------------------------------
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/assets")
     add_custom_command(TARGET Starforge POST_BUILD

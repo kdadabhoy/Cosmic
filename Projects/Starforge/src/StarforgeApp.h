@@ -94,7 +94,8 @@ namespace Starforge
         void OpenProject(const std::string& name);            // legacy in-tree convenience
         bool OpenProjectPath(const std::string& absoluteRoot);// validate + open an external folder
         bool NewProjectAt(const std::string& name, const std::string& location);
-        bool ScaffoldProjectTo(const std::string& name, const std::string& destRoot);
+        bool ScaffoldProjectTo(const std::string& name, const std::string& destRoot,
+                               const std::string& kind = "game");   // templates/<kind>/ (AP-01 layout, §8)
         bool ScaffoldProject(const std::string& name);        // legacy: assets/projects/<name>
         void MountProject(const Prefs::ProjectEntry& entry);   // FileSystem mount + m_Ctx fields
         void CloseProject();
@@ -130,6 +131,14 @@ namespace Starforge
         void TickPlay(float ts);
         void DrawPlayControls();
         bool IsPlaying() const { return m_Play != PlayMode::Edit; }
+
+        // --- App services in editor Play (AP-01, contract §2; bodies in
+        //     StarforgeAppServices.cpp — StarforgeApp.cpp only carries the hook lines) ---
+        void PlayServicesStart(Cosmic::Scene* runtime);         // bus Clear + Instantiate(InEditor) + scripts' bus, BEFORE m_Scripts.Instantiate
+        void PlayServicesBindScene(Cosmic::Scene* scene);       // BindScene (call while the previous scene is still alive)
+        void PlayServicesStop();                                // after m_Scripts.Destroy(); the bus stays intact
+        void PlayServicesAdvanceBus();                          // m_PlayBus.Advance(unscaled frame delta)
+        void PlayFlowBindKeys(const Cosmic::FlowAsset& asset);  // flow bus + key bridge for this Play session
 
         // --- Shell rendering -----------------------------------------------
         void ApplyDockLayout();
@@ -266,8 +275,16 @@ namespace Starforge
         Cosmic::FlowMachine m_PlayFlow;
         bool        m_PlayFlowActive = false;   // this Play session runs the flow
         bool        m_PlayFlowUse    = true;    // toolbar toggle (shown when a flow exists)
-        bool        m_PrevEscape     = false;   // key:Escape edge for the flow
         std::string m_ManifestFlow;             // manifest startup_flow ("" = none)
+
+        // AP-01 — the app-platform host state for editor Play (contract §2). The
+        // bus is EDITOR-owned: StopScene and ReloadModule destroy the services and
+        // scripts but leave m_PlayBus intact (the D-LIVE resume reads it back).
+        Cosmic::DataBus       m_PlayBus;
+        Cosmic::PanelRegistry m_PlayPanels;
+        Cosmic::ServiceHost   m_PlayServices;
+        Cosmic::FlowKeyBridge m_PlayKeyBridge;  // replaces the hand-rolled key:Escape edge
+        float                 m_PlayLastAbsTime = 0.0f;
 
         // Game module / hot reload (E12).
         GameModule          m_Module;
