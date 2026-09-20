@@ -1,0 +1,12 @@
+﻿# passing-after (Release): CosmicTests.exe -ts="KI-64/65 pointer mapping" exit 0, then the full CosmicTests.exe exit 0, 2026-09-20T03:22:48
+
+===============================================================================
+[doctest] test cases:  4 |  4 passed | 0 failed | 533 skipped
+[doctest] assertions: 95 | 95 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+# full run:
+===============================================================================
+[doctest] test cases:      523 |      523 passed | 0 failed | 14 skipped
+[doctest] assertions: 23464100 | 23464100 passed | 0 failed |
+[doctest] Status: SUCCESS!

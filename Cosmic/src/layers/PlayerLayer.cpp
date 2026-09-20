@@ -298,16 +298,17 @@ namespace Cosmic
         const UiRect viewport{ { 0.0f, 0.0f },
                                { (float)fb->GetWidth(), (float)fb->GetHeight() } };
 
-        // The pointer in FRAME coordinates: the presented frame sits inside the workspace's
-        // Viewport dock, below the menu bar and tab header, so a window-client cursor position
-        // would hit-test every element about a chrome height too low (found while writing the
-        // PendulumLab walkthrough: the packaged app's Start button answered clicks 54 px above
-        // it). Mouse and viewport origin are both in ImGui screen space; scale to the framebuffer.
+        // The pointer in FRAME coordinates (KI-61 / KI-64): the presented frame sits inside the
+        // workspace's Viewport dock, below the menu bar and tab header (54 px windowed, 27 px
+        // fullscreen where the menu bar hides), so a window-client cursor position hit-tests
+        // every element a chrome height too low — clicks landed one button row down and a
+        // slider knob grabbed only from above it. Mouse and viewport origin are both in ImGui
+        // screen space; the ONE pure mapping (headless-tested) subtracts the origin and scales
+        // the presented size to the framebuffer.
         auto& app = Application::Get();
-        glm::vec2 mouse = Input::GetMouseScreenPosition() - app.GetViewportPos();
-        const glm::vec2 vpSize = app.GetViewportSize();
-        if (vpSize.x > 0.0f && vpSize.y > 0.0f)
-            mouse *= glm::vec2((float)fb->GetWidth() / vpSize.x, (float)fb->GetHeight() / vpSize.y);
+        const glm::vec2 mouse = UiSystem::MapPointerToCanvas(
+            Input::GetMouseScreenPosition(), app.GetViewportPos(), app.GetViewportSize(),
+            { (float)fb->GetWidth(), (float)fb->GetHeight() });
         const bool down = Input::IsMouseButtonPressed(CS_MOUSE_BUTTON_LEFT);
 
         UiPointer p;

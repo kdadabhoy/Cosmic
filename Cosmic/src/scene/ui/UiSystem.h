@@ -106,6 +106,30 @@ namespace Cosmic
                                           bool interactable, bool hovered,
                                           bool pressedEdge, bool releasedEdge, bool down);
 
+        /** @brief KI-64 — map a pointer from the host's SCREEN space (the space of
+         *  Input::GetMouseScreenPosition / ImGui io.MousePos / WorkspaceLayer::
+         *  GetViewportPos) into canvas space: subtract the presented frame's screen
+         *  origin (everything above/left of the image — menu bar, dock tab bar,
+         *  window position) and scale by framebufferSize / frameScreenSize (a frame
+         *  presented at a size other than its framebuffer's: HiDPI, a downscaled
+         *  preview). A non-positive frameScreenSize component scales by 1. The result
+         *  is in target pixels; a letterboxed host hands Update the band rect as the
+         *  viewport and this pointer unchanged. Pure. Every host calls this one
+         *  function so a harness and a shipped exe cannot disagree (KI-61 lived in an
+         *  inline expression nothing headless could reach). */
+        static glm::vec2 MapPointerToCanvas(const glm::vec2& pointerScreen,
+                                            const glm::vec2& frameScreenPos,
+                                            const glm::vec2& frameScreenSize,
+                                            const glm::vec2& framebufferSize);
+
+        /** @brief KI-65 — the square knob a slider DRAWS for `value`: `knobSizePx`
+         *  (already canvas-scaled; floored at 2 px like the draw) centred on the
+         *  track at the value's position (bottom = min, top = max when vertical).
+         *  Update grabs by rect ∪ this, so the visible knob is always a grab target
+         *  even when it overhangs a thin track. Pure. */
+        static UiRect SliderKnobRect(const UiRect& rect, UiSliderOrientation orientation,
+                                     float knobSizePx, float min, float max, double value);
+
         // ---- scene-driven (engine, shared by editor + player) ---------------
 
         /** @brief Resolve every canvas subtree in the scene into a back-to-front
