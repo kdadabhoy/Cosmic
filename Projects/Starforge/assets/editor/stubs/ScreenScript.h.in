@@ -1,0 +1,15 @@
+#pragma once
+#include <Cosmic.h>
+#include "scene/ui/UiComponents.h"
+
+// @SCREEN@ screen — per-display logic for scenes/@SCREEN@.cscene (created by Starforge ▸ Screens ▸ New Screen).
+// Project: @PROJECT_NAME@. Values come from the app's services through Data(); commands go out as signals or bus writes.
+class @SCREEN@Screen : public Cosmic::ScriptableEntity
+{
+public:
+    float ExampleField = 1.0f;
+protected:
+    void OnStart() override {}
+    void OnUpdate(float ts) override { (void)ts; }
+    void OnSignal(const std::string& signal, Cosmic::Entity source) override { (void)signal; (void)source; }
+};

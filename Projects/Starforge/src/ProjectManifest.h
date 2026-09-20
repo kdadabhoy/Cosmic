@@ -56,6 +56,7 @@ namespace Starforge
             f << "# Cosmic project manifest — " << Name << "\n";
             f << "# Consumed by the standalone PlayerLayer (E13) and Starforge.\n";
             f << "name          = \"" << Name << "\"\n";
+            f << "kind          = \"" << (Kind.empty() ? std::string("game") : Kind) << "\"\n";   // AP-03 (§5)
             f << "startup_scene = \"" << StartupScene << "\"\n";
             if (!StartupFlow.empty())
                 f << "startup_flow  = \"" << StartupFlow << "\"\n";
