@@ -293,6 +293,7 @@ namespace Starforge
                 const bool mixed = FieldMixed(ctx, desc.TypeId, f);
                 PropertyRows::SlotContext slot{ &ctx.Preview, &ctx.PendingRevealAsset };
                 PropertyRows::Result res = PropertyRows::DrawField(f, comp, mixed, &slot);
+                DrawSourceLinkRow(desc.Name, f.Name, comp, f);   // AP-03 — Open producer / Find handlers / panel source
 
                 // Right-click a numeric field to (un)mark it for telemetry (E20).
                 if (uuid && Telemetry::IsRecordable(f.Kind))
@@ -429,6 +430,19 @@ namespace Starforge
             if (names.empty())
                 ImGui::TextDisabled("No scripts registered — build the project's game module (Ctrl+B).");
 
+            // AP-03 (§7) — Open source / Reveal for the script class.
+            if (!nsc->ClassName.empty() && !m_Links.ProjectRoot.empty())
+            {
+                const SourceHit hit = SourceLocator(m_Links.ProjectRoot).ForScriptClass(nsc->ClassName);
+                ImGui::BeginDisabled(!hit.Resolved());
+                if (ImGui::SmallButton("Open source")) SourceLocator::Open(hit);
+                if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
+                    ImGui::SetTooltip("%s", hit.Resolved() ? (hit.Path + ":" + std::to_string(hit.Line)).c_str() : hit.Reason.c_str());
+                ImGui::SameLine();
+                if (ImGui::SmallButton("Reveal")) SourceLocator::Reveal(hit);
+                ImGui::EndDisabled();
+            }
+
             const ScriptDescriptor* sd = nsc->ClassName.empty()
                 ? nullptr : ModuleRegistry::Get().FindScript(nsc->ClassName);
             if (!nsc->ClassName.empty() && !sd)
@@ -517,6 +531,83 @@ namespace Starforge
             ImGui::EndDisabled();
             if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
                 ImGui::SetTooltip("Select a single entity to add components.");
+        }
+    }
+
+    // AP-03 (§7) — source links next to the fields that name logic.
+    void InspectorPanel::DrawSourceLinkRow(const std::string& compName, const std::string& fieldName, void* comp,
+                                           const Cosmic::Reflect::FieldDescriptor& f)
+    {
+        if (m_Links.ProjectRoot.empty() || !comp) return;
+        if (f.Kind != Cosmic::Reflect::FieldKind::String) return;
+        const bool isUi = compName.rfind("Ui", 0) == 0;
+        if (!isUi) return;
+        const std::string value = std::get<std::string>(f.Get(comp));
+        const SourceLocator loc(m_Links.ProjectRoot);
+
+        auto tip = [](const SourceHit& h)
+        {
+            if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
+                ImGui::SetTooltip("%s", h.Resolved() ? (h.Path + ":" + std::to_string(h.Line)).c_str() : h.Reason.c_str());
+        };
+
+        if (fieldName.rfind("Channel", 0) == 0)   // Channel, Channel2..4
+        {
+            SourceHit h;
+            if (value.empty()) h.Reason = "no channel bound";
+            else if (!m_Links.Bus) h.Reason = "no bus";
+            else h = loc.ForChannel(value, *m_Links.Bus);
+            if (!h.Resolved() && !value.empty() && !m_Links.Playing && h.Reason.find("no value") != std::string::npos)
+                h.Reason = "run Play once to resolve the producer of '" + value + "'";
+            ImGui::PushID(("ap03ch_" + fieldName).c_str());
+            ImGui::BeginDisabled(!h.Resolved());
+            if (ImGui::SmallButton("Open producer")) SourceLocator::Open(h);
+            ImGui::EndDisabled();
+            tip(h);
+            ImGui::PopID();
+        }
+        else if (fieldName == "Signal")
+        {
+            ImGui::PushID("ap03sig");
+            const bool any = !value.empty();
+            ImGui::BeginDisabled(!any);
+            if (ImGui::SmallButton("Find handlers")) ImGui::OpenPopup("##handlers");
+            ImGui::EndDisabled();
+            if (!any && ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) ImGui::SetTooltip("no signal name");
+            if (ImGui::BeginPopup("##handlers"))
+            {
+                const auto hits = loc.ForSignal(value);
+                ImGui::TextDisabled("src/** files containing \"%s\"", value.c_str());
+                if (hits.empty()) ImGui::TextDisabled("(none)");
+                for (const SourceHit& h : hits)
+                {
+                    const std::string rel = h.Path.size() > m_Links.ProjectRoot.size()
+                        ? h.Path.substr(m_Links.ProjectRoot.size() + 1) : h.Path;
+                    if (ImGui::MenuItem((rel + ":" + std::to_string(h.Line)).c_str())) SourceLocator::Open(h);
+                }
+                ImGui::EndPopup();
+            }
+            ImGui::PopID();
+        }
+        else if (compName == "UiHostedPanel" && fieldName == "PanelName")
+        {
+            SourceHit h;
+            if (value.empty()) h.Reason = "no panel name";
+            else if (!m_Links.Panels) h.Reason = "run Play once to resolve";
+            else
+            {
+                h = loc.ForPanel(value, *m_Links.Panels);
+                if (!h.Resolved() && !m_Links.Playing) h.Reason = "run Play once to resolve '" + value + "'";
+            }
+            ImGui::PushID("ap03panel");
+            ImGui::BeginDisabled(!h.Resolved());
+            if (ImGui::SmallButton("Open source")) SourceLocator::Open(h);
+            tip(h);
+            ImGui::SameLine();
+            if (ImGui::SmallButton("Reveal")) SourceLocator::Reveal(h);
+            tip(h);
+            ImGui::EndDisabled();
+            ImGui::PopID();
         }
     }
 }

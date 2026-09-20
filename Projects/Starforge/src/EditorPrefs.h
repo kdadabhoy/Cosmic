@@ -36,6 +36,7 @@ namespace Starforge::Prefs
         float CameraSpeed     = 1.0f;
         bool  PlaygroundOffered = false;   // E21 — first-run sample already offered
         bool  AdoptSceneCamera  = true;    // H8 — on open, adopt a Primary camera's pose
+        bool  AutoResumePlay    = true;    // AP-03 (§6) — resume Play after a live rebuild
 
         // K6 — per-operation snapping (the viewport strip chips).
         bool  SnapMoveOn   = false;
@@ -213,6 +214,7 @@ namespace Starforge::Prefs
             s.CameraSpeed     = cfg->GetFloat("camera_speed", s.CameraSpeed);
             s.PlaygroundOffered = cfg->GetBool("playground_offered", s.PlaygroundOffered);
             s.AdoptSceneCamera  = cfg->GetBool("adopt_scene_camera", s.AdoptSceneCamera);
+            s.AutoResumePlay    = cfg->GetBool("auto_resume_play", s.AutoResumePlay);
             s.SnapMoveOn   = cfg->GetBool("snap_move_on",   s.SnapMoveOn);
             s.SnapRotateOn = cfg->GetBool("snap_rotate_on", s.SnapRotateOn);
             s.SnapScaleOn  = cfg->GetBool("snap_scale_on",  s.SnapScaleOn);
@@ -236,6 +238,7 @@ namespace Starforge::Prefs
         f << "camera_speed = " << s.CameraSpeed << "\n";
         f << "playground_offered = " << (s.PlaygroundOffered ? "true" : "false") << "\n";
         f << "adopt_scene_camera = " << (s.AdoptSceneCamera ? "true" : "false") << "\n";
+        f << "auto_resume_play = " << (s.AutoResumePlay ? "true" : "false") << "\n";
         f << "snap_move_on = "   << (s.SnapMoveOn   ? "true" : "false") << "\n";
         f << "snap_rotate_on = " << (s.SnapRotateOn ? "true" : "false") << "\n";
         f << "snap_scale_on = "  << (s.SnapScaleOn  ? "true" : "false") << "\n";

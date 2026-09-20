@@ -135,6 +135,12 @@ set(COSMIC_TEST_SOURCES
     # UnregisterModule + FreeLibrary), compiled from the Starforge tree rather than copied:
     # the thing under test is the code the editor ships.
     ../Projects/Starforge/src/GameModule.cpp
+    # AP-03 (App Platform) — the headless halves of E03 (UiRectGizmoMath), E08 (SourceLocator)
+    # and E02 (ScreenScaffold text edits), compiled from the Starforge tree like GameModule.cpp.
+    test_ap03_editor.cpp
+    ../Projects/Starforge/src/UiRectGizmo.cpp
+    ../Projects/Starforge/src/SourceLocator.cpp
+    ../Projects/Starforge/src/ScreenScaffold.cpp
     test_wo05_matrix.cpp
     test_wo05_kiss.cpp
     test_wo05_host.cpp

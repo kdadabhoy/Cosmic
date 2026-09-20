@@ -46,6 +46,9 @@
 #include "panels/TelemetryPanel.h"
 #include "panels/ProfilerPanel.h"
 #include "panels/SystemPanel.h"
+#include "panels/ScreensPanel.h"     // AP-03 — screens + screen scripts
+#include "panels/DataBusPanel.h"     // AP-03 — live / preview bus table
+#include "SourceLocator.h"           // AP-03 — source links (§7)
 #include "editors/AssetEditorHost.h"   // M1 — tabbed asset-editor documents
 #include "editors/PostChainEditor.h"   // Q6 — post-chain graph view (panel)
 
@@ -55,6 +58,7 @@
 #include <memory>
 #include <utility>
 #include <unordered_map>
+#include <filesystem>
 
 namespace Starforge
 {
@@ -94,6 +98,8 @@ namespace Starforge
         void OpenProject(const std::string& name);            // legacy in-tree convenience
         bool OpenProjectPath(const std::string& absoluteRoot);// validate + open an external folder
         bool NewProjectAt(const std::string& name, const std::string& location);
+        bool NewProjectAt(const std::string& name, const std::string& location,
+                          const std::string& kind);                  // AP-03 — templates/<kind>
         bool ScaffoldProjectTo(const std::string& name, const std::string& destRoot,
                                const std::string& kind = "game");   // templates/<kind>/ (AP-01 layout, §8)
         bool ScaffoldProject(const std::string& name);        // legacy: assets/projects/<name>
@@ -202,13 +208,35 @@ namespace Starforge
         void GenerateSampleTake();         // pre-baked telemetry take for the sample
         bool ForgePlaygroundExists() const;
 
-        // Phase 17 / U8 samples. FlowDemo = the ZERO-CODE two-screen app
-        // (menu -> game -> pause overlay, all navigation from Main.cflow);
-        // ForgePong = 2D sprites + UI + flow + tiny scripts, playable pong.
-        bool BuildFlowDemo();
-        bool FlowDemoExists() const;
-        bool BuildForgePong();
-        bool ForgePongExists() const;
+        // Phase 17 / U8 samples now live ON DISK (templates/samples/<Name>, AP-04):
+        // the homescreen buttons scaffold them through ScaffoldProjectTo (AP-03).
+
+        // --- AP-03 (App Platform) — bodies in StarforgeAppPlatform.cpp -------
+        void OpenStartupScene();                       // flow start state -> startup_scene -> Main.cscene
+        ScreensPanel::Host ScreensHost();
+        void SetManifestFlow(const std::string& rel);  // project.cproj startup_flow + adopt
+        void DrawAppPlatformPanels();                  // Screens + DataBus panels, Inspector links
+        void UpdateInspectorLinks();
+        void CapturePanelSources();                    // shadow the CS_PANEL sources before Stop clears them
+        void DrawHostedPanels();                       // §4 host draw in editor Play (never in edit mode)
+        void DrawUiWidgetMenu();                       // Entity > UI: the seven AP-02 widgets + Hosted Panel
+        SourceHit ResolveLogicSource(Cosmic::Entity e, std::string* what = nullptr) const;   // §7 order
+        void DrawViewportContextMenu();                // right-click selected element -> Open logic source
+        struct TemplateInfo { std::string Kind, Display, Description; };
+        std::vector<TemplateInfo> ListTemplates() const;     // templates/{app,game,blank} on disk
+        std::vector<std::string>  ListSamples() const;       // templates/samples/*
+        std::string SamplePath(const std::string& name) const;
+        bool SampleExists(const std::string& name) const;
+        bool OpenSample(const std::string& name);            // scaffold on first use, then open
+        void DrawTemplatePicker();
+        void DrawSampleButtons();
+        const std::vector<Prefs::ProjectEntry>& CachedProjects();   // E06: no per-frame TOML parse
+        void InvalidateProjects();
+        void LiveLoopTick(float ts);                   // §6: debounce + auto-build
+        void LiveBeforeBuild();                        // BuildScripts during Play: remember + stop
+        void LiveAfterBuild(bool ok);                  // resume / stay stopped
+        const char* LiveChipText(ImVec4& color) const;
+        void DrawLiveChip();                           // status bar: Live / Building… / Reloading / Build failed
 
         // --- Frame helpers -------------------------------------------------
         void HandleShortcuts();
@@ -249,6 +277,11 @@ namespace Starforge
         glm::vec4  m_GameBandUv{ 0.0f, 0.0f, 1.0f, 1.0f };   // letterbox band, viewport fractions
 
         ViewportController m_Viewport;
+
+        // AP-03 — the UI rect gizmo (E03): move + 8 resize handles over the selected
+        // RectTransform element in 2D edit mode; one CommandStack entry per gesture;
+        // its snap chips are drawn by the viewport strip (SetRectGizmoSnap).
+        UiRectGizmo m_RectGizmo;
 
         // The engine frame orchestrator (H2): environment/sky/shadows/HDR/post live
         // in the editor viewport (and, identically, the standalone PlayerLayer).
@@ -314,6 +347,43 @@ namespace Starforge
         PostChainEditor     m_PostChain;      // Q6 — post-chain graph view
 
         Prefs::EditorSettings m_Settings;
+
+        // AP-03 (App Platform) state — see StarforgeAppPlatform.cpp.
+        ScreensPanel          m_Screens;
+        DataBusPanel          m_DataBusPanel;
+        bool                  m_ShowScreens = false, m_ShowDataBus = false;
+        Cosmic::DataBus       m_PreviewBus;          // edit-mode preview values (RenderViewport passes preview=true)
+        Cosmic::PanelRegistry m_LastPanels;          // CS_PANEL sources seen in the last Play (edit-mode links)
+        std::string           m_ProjectKind = "game";
+        std::string           m_PlayStartAt;         // consumed by PlayScene: StartAt(flow state) on a live resume
+        bool                  m_PlayKeepBus = false; // consumed by PlayServicesStart: skip the bus Clear on a live resume
+        glm::mat4             m_LastCamVP{ 1.0f };   // world-anchor projector for CollectHostedPanels
+        struct LiveLoopState
+        {
+            float       Debounce = -1.0f;            // >= 0: seconds until the coalesced rebuild
+            bool        WasPlaying = false, WasPaused = false;
+            std::string FlowState;                   // flow state at the stop
+            bool        Failed = false, Reloading = false;
+            int         Builds = 0, Resumes = 0, Failures = 0;
+        } m_Live;
+        struct HostedDrawRecord { std::string Name; Cosmic::UiRect Rect; glm::vec2 ScreenMin; bool Drawn; };
+        std::vector<HostedDrawRecord> m_HostedDraws;   // last frame (V05 editor-half evidence)
+        int  m_HostedImbalance = 0;                    // ImGui depth deltas across the hosted block
+        std::vector<Prefs::ProjectEntry> m_ProjectsCache;
+        bool m_ProjectsCacheValid = false, m_ProjectsCacheExists = false;
+        std::filesystem::file_time_type m_ProjectsCacheTime{};
+        int  m_LoadProjectsCalls = 0;                  // E06 probe
+        std::string m_NewProjectKind = "game";
+        bool        m_NewProjectPixelArt = false;
+
+        // AP-03 — the E01..E08 authoring self-test host (AP03AuthoringSelfTest.cpp).
+        struct AP03SelfTest;
+        AP03SelfTest* m_AP03 = nullptr;
+        void AP03SelfTestInit();
+        void AP03SelfTestTick();
+        void AP03SelfTestFrameEnd();   // after the UI: oracle judgement + injected input
+        void AP03SelfTestAfterRender(); // inside RenderViewport, FBO still bound: pixel capture
+        void AP03SelfTestShutdown();
 
         // WO-07 (2D stability) — KI-1 snap-chip regression harness. Gated ON only
         // when the env var COSMIC_KI1_SELFTEST=<result-file> is set; otherwise
