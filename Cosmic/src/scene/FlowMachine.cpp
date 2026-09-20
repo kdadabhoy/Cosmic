@@ -12,6 +12,7 @@
 
 #include <nlohmann/json.hpp>
 
+#include <algorithm>
 #include <cmath>
 #include <cstdlib>
 #include <filesystem>
@@ -162,6 +163,7 @@ namespace Cosmic
                         {
                             const auto& g = jt["if"];
                             t.HasGuard        = true;
+                            t.Guard.Channel   = g.value("channel", std::string());   // AP-01 — channel guard
                             t.Guard.Var       = g.value("var", std::string());   // Q2 — variable guard
                             t.Guard.Entity    = g.value("entity", std::string());
                             t.Guard.Component = g.value("component", std::string());
@@ -280,7 +282,10 @@ namespace Cosmic
                 if (t.Push) o["push"] = true;
                 if (t.HasGuard)
                 {
-                    if (!t.Guard.Var.empty())   // Q2 — variable guard
+                    if (!t.Guard.Channel.empty())   // AP-01 — channel guard ("channel" only when non-empty)
+                        o["if"] = { { "channel", t.Guard.Channel }, { "op", t.Guard.Op },
+                                    { "value", ValueToJson(t.Guard.Value) } };
+                    else if (!t.Guard.Var.empty())   // Q2 — variable guard
                         o["if"] = { { "var", t.Guard.Var }, { "op", t.Guard.Op },
                                     { "value", ValueToJson(t.Guard.Value) } };
                     else
@@ -380,6 +385,8 @@ namespace Cosmic
                 }
                 else if (!Find(t.To))
                     errors.push_back("state '" + s.Name + "' transitions to unknown state '" + t.To + "'");
+                if (t.On == "when" && !t.HasGuard)   // AP-01
+                    errors.push_back("state '" + s.Name + "' has a 'when' transition without an 'if' guard");
             }
         }
         return errors;
@@ -484,6 +491,11 @@ namespace Cosmic
 
     void FlowMachine::Start(const FlowAsset& asset)
     {
+        StartAt(asset, asset.Start);
+    }
+
+    void FlowMachine::StartAt(const FlowAsset& asset, const std::string& stateName)
+    {
         Stop();
         m_Asset   = asset;
         m_Quit    = false;
@@ -495,7 +507,14 @@ namespace Cosmic
         for (const FlowVariable& v : m_Asset.Variables)
             m_Vars[v.Name] = v.Default;
 
-        const FlowState* s = m_Asset.Find(m_Asset.Start);
+        // AP-01 — an unknown resume state falls back to the asset's start state.
+        const FlowState* s = m_Asset.Find(stateName);
+        if (!s && stateName != m_Asset.Start)
+        {
+            CS_CORE_WARN("FlowMachine::StartAt: state '{0}' not found — starting at '{1}'",
+                         stateName, m_Asset.Start);
+            s = m_Asset.Find(m_Asset.Start);
+        }
         if (!s)
         {
             CS_CORE_WARN("FlowMachine::Start: start state '{0}' not found", m_Asset.Start);
@@ -503,6 +522,17 @@ namespace Cosmic
             return;
         }
         Enter(*s, /*push=*/false);
+    }
+
+    std::vector<std::string> FlowMachine::KeySignals(const FlowAsset& asset)
+    {
+        std::vector<std::string> out;
+        for (const FlowState& s : asset.States)
+            for (const FlowTransition& t : s.Transitions)
+                if (t.On.rfind("key:", 0) == 0 && t.On.size() > 4 &&
+                    std::find(out.begin(), out.end(), t.On) == out.end())
+                    out.push_back(t.On);
+        return out;
     }
 
     void FlowMachine::Stop()
@@ -634,12 +664,36 @@ namespace Cosmic
         }
     }
 
-    // Shared guard evaluator (Q2/Q3) — see FlowMachine.h.
+    // Shared guard evaluator (Q2/Q3/AP-01) — see FlowMachine.h.
     bool EvaluateFlowGuard(const FlowGuard& guard, Scene* scene,
                            const std::function<bool(const std::string&, FlowValue&)>& lookupVar,
-                           const std::function<void(const std::string&)>& warn)
+                           const std::function<void(const std::string&)>& warn,
+                           const std::function<bool(const std::string&, DataValue&)>& lookupChannel)
     {
         auto w = [&](const std::string& key) { if (warn) warn(key); };
+
+        // Channel guard (AP-01): compare a DataBus channel, coerced to the literal's
+        // kind (number / bool / string). Non-finite numbers evaluate false.
+        if (!guard.Channel.empty())
+        {
+            DataValue v;
+            if (!lookupChannel || !lookupChannel(guard.Channel, v)) { w("no channel '" + guard.Channel + "'"); return false; }
+            switch (guard.Value.ValueKind)
+            {
+                case FlowValue::Kind::Number:
+                {
+                    const double n = v.AsNumber();
+                    if (!std::isfinite(n)) return false;
+                    return CompareFlowValues(FlowValue::MakeNumber(n), guard.Value, guard.Op);
+                }
+                case FlowValue::Kind::Bool:
+                    return CompareFlowValues(FlowValue::MakeBool(v.AsBool()), guard.Value, guard.Op);
+                case FlowValue::Kind::String:
+                case FlowValue::Kind::Enum:
+                    return CompareFlowValues(FlowValue::MakeString(v.AsString()), guard.Value, guard.Op);
+            }
+            return false;
+        }
 
         // Variable guard: compare a blackboard variable (no scene needed).
         if (!guard.Var.empty())
@@ -678,7 +732,19 @@ namespace Cosmic
             if (m_GuardWarned.insert(key).second)
                 CS_CORE_WARN("flow guard: {0}", key);
         };
-        return EvaluateFlowGuard(guard, scene, lookup, warnOnce);
+        // AP-01 — channel guards read the host-owned bus; no bus ⇒ false, warned once.
+        if (!guard.Channel.empty() && !m_Bus)
+        {
+            warnOnce("no data bus for channel '" + guard.Channel + "'");
+            return false;
+        }
+        auto lookupChannel = [this](const std::string& ch, DataValue& out) -> bool
+        {
+            if (!m_Bus || !m_Bus->Has(ch)) return false;
+            out = m_Bus->Get(ch);
+            return true;
+        };
+        return EvaluateFlowGuard(guard, scene, lookup, warnOnce, lookupChannel);
     }
 
     bool FlowMachine::TryFireSignal(const std::string& signal)
@@ -688,7 +754,25 @@ namespace Cosmic
         for (const auto& t : cur->Transitions)
         {
             if (t.On != signal) continue;
+            if (t.On == "when") continue;      // AP-01: condition-only, never signal-driven
             if (t.HasGuard && !EvalGuard(t.Guard)) continue;
+            PerformTransition(t);
+            return true;
+        }
+        return false;
+    }
+
+    // AP-01 — the first "when" transition (declaration order) whose guard passes
+    // fires; at most one per OnUpdate. A "when" without a guard never fires.
+    bool FlowMachine::TryFireWhen()
+    {
+        const FlowState* cur = CurrentStateDef();
+        if (!cur) return false;
+        for (const auto& t : cur->Transitions)
+        {
+            if (t.On != "when") continue;
+            if (!t.HasGuard) continue;
+            if (!EvalGuard(t.Guard)) continue;
             PerformTransition(t);
             return true;
         }
@@ -760,6 +844,9 @@ namespace Cosmic
                 break;
             }
         }
+
+        // AP-01 — condition-only transitions: once per update, after the drain, before timers.
+        if (m_Running) TryFireWhen();
 
         if (m_Running) TryFireTimer();
     }

@@ -101,6 +101,14 @@
 #include "scripting/ScriptHost.h"
 #include "scripting/ModuleMacros.h"
 
+// App Platform (AP-01) — the host-owned DataBus that connects app logic to screens,
+// the AppService tier (CS_SERVICE / CS_PANEL, driven by the host's ServiceHost), and
+// the flow key bridge that turns "key:<Name>" transitions into signals.
+#include "data/DataBus.h"
+#include "scripting/AppService.h"
+#include "scripting/ServiceHost.h"
+#include "scene/FlowKeyBridge.h"
+
 // Physics (Phase 15 / J1-J9) — generic rigid-body / query / character tier, Jolt
 // backed by default. PhysicsWorld is the service; PhysicsTypes/PhysicsBody are the
 // backend-free value types scripts + apps pass. Jolt itself never appears in these

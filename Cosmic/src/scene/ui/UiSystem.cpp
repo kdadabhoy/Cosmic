@@ -236,8 +236,9 @@ namespace Cosmic
     // ========================================================================
 
     bool UiSystem::Update(Scene& scene, const UiRect& viewport, const UiPointer& pointer,
-                          const glm::mat4* cameraViewProj)
+                          const glm::mat4* cameraViewProj, DataBus* bus)
     {
+        (void)bus;   // AP-01: signature only — sliders/toggles write it in AP-02
         std::vector<UiElement> elements;
         CollectElements(scene, viewport, elements, cameraViewProj);
 
@@ -457,19 +458,31 @@ namespace Cosmic
         }
     }
 
-    void UiSystem::Render(Scene& scene, const UiRect& viewport, const glm::mat4* cameraViewProj)
+    void UiSystem::Render(Scene& scene, const UiRect& viewport, const glm::mat4* cameraViewProj,
+                          const DataBus* bus, bool preview)
     {
         // Projection spans the layout rect itself (the classic full-target case).
         Render(scene, viewport,
                (uint32_t)std::max(1.0f, viewport.Width()),
                (uint32_t)std::max(1.0f, viewport.Height()),
-               cameraViewProj);
+               cameraViewProj, bus, preview);
+    }
+
+    void UiSystem::CollectHostedPanels(Scene& scene, const UiRect& viewport,
+                                       std::vector<UiHostedPanelDraw>& out,
+                                       const glm::mat4* cameraViewProj)
+    {
+        // AP-01: signature only — AP-02 resolves the UiHostedPanel elements here.
+        (void)scene; (void)viewport; (void)cameraViewProj;
+        out.clear();
     }
 
     void UiSystem::Render(Scene& scene, const UiRect& canvasRect,
                           uint32_t targetW, uint32_t targetH,
-                          const glm::mat4* cameraViewProj)
+                          const glm::mat4* cameraViewProj,
+                          const DataBus* bus, bool preview)
     {
+        (void)bus; (void)preview;   // AP-01: signatures only — the bound widgets read them in AP-02
         std::vector<UiElement> elements;
         CollectElements(scene, canvasRect, elements, cameraViewProj);
         if (elements.empty()) return;

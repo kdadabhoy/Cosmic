@@ -34,8 +34,10 @@ namespace Cosmic
 {
     class ScriptableEntity;
     class SystemScript;                     // scripting/ScriptableEntity.h (H9)
+    class AppService;                       // scripting/AppService.h (App Platform / AP-01)
     class Scene;                            // membership query iterates its registry
     template<typename> class SystemBuilder; // scripting/ScriptableEntity.h (H9)
+    template<typename> class ServiceBuilder;// scripting/AppService.h (AP-01)
 
     // One registered script class: its factory + reflected field list + owner tag.
     struct ScriptDescriptor
@@ -57,6 +59,20 @@ namespace Cosmic
         std::string                    Module;
         int                            Order = 0;
         std::function<void(Scene&, std::vector<entt::entity>&)> Collect;
+    };
+
+    // One registered APP SERVICE (AP-01, contract §2): factory + owner module + the
+    // registration call site (D-LINKS "Open source") + Order. Kept in REGISTRATION
+    // order (a vector, not a map) because ServiceHost instantiates in that order,
+    // stable-sorted by Order. Re-registering a name replaces the entry in place.
+    struct ServiceDescriptor
+    {
+        std::string                    Name;
+        std::function<AppService*()>   Factory;
+        std::string                    Module;   // owner module ("" = in-exe)
+        std::string                    File;     // registration call site (D-LINKS)
+        int                            Line = 0;
+        int                            Order = 0;
     };
 
     class COSMIC_API ModuleRegistry
@@ -110,6 +126,24 @@ namespace Cosmic
             return SystemBuilder<T>(&d);
         }
 
+        // Register an APP SERVICE class T (an AppService subclass, AP-01) with its
+        // registration call site. Returns a ServiceBuilder so the CS_SERVICE chain can
+        // attach .Order(n) before CS_END. Re-registering the same name overwrites in
+        // place (idempotent reload). Like AddSystem, the body only instantiates where
+        // the full ServiceBuilder is visible (a module .cpp via <Cosmic.h>).
+        template<typename T>
+        ServiceBuilder<T> AddService(const std::string& name, const char* file, int line)
+        {
+            ServiceDescriptor& d = ServiceSlot(name);
+            d.Name    = name;
+            d.Module  = m_CurrentModule;
+            d.File    = file ? file : "";
+            d.Line    = line;
+            d.Order   = 0;
+            d.Factory = []() -> AppService* { return static_cast<AppService*>(new T()); };
+            return ServiceBuilder<T>(&d);
+        }
+
         // Note a custom component type a module registered (CS_COMPONENT). The
         // component itself lives in Reflect::GetRegistry(); this only records the
         // type id for storage stripping on unload.
@@ -124,22 +158,31 @@ namespace Cosmic
         std::vector<std::string> SystemNames() const;
         std::vector<std::string> SystemNames(const std::string& module) const;
 
+        const ServiceDescriptor* FindService(const std::string& name) const;   // AP-01
+        std::vector<std::string> ServiceNames() const;                         // registration order
+        std::vector<std::string> ServiceNames(const std::string& module) const;
+
         // entt type ids of the components a module registered (E12 clears their
         // storage before FreeLibrary so no dangling vtables remain).
         std::vector<entt::id_type> ComponentTypeIds(const std::string& module) const;
 
         // ---- hot-reload unload (E12) ---------------------------------------
-        // Forget every script + noted component a module registered, and remove the
-        // module's component descriptors from the Reflect registry (WO-07 / KI-29:
-        // their thunks are code in the module DLL, so they must go BEFORE the DLL is
-        // unmapped). Does NOT touch entt storage — the caller strips scene storage
-        // first (it owns the scene). The next load registers fresh descriptors.
+        // Forget every script, system, service + noted component a module registered,
+        // and remove the module's component descriptors from the Reflect registry
+        // (WO-07 / KI-29: their thunks are code in the module DLL, so they must go
+        // BEFORE the DLL is unmapped). Does NOT touch entt storage — the caller strips
+        // scene storage first (it owns the scene) — and does NOT destroy live service
+        // instances: the host's ServiceHost::Destroy() runs before this (AP-01). The
+        // next load registers fresh descriptors.
         void UnregisterModule(const std::string& module);
 
     private:
+        ServiceDescriptor& ServiceSlot(const std::string& name);   // find-or-append (registration order)
+
         std::string m_CurrentModule;                            // active during Begin/EndModule
         std::unordered_map<std::string, ScriptDescriptor> m_Scripts;   // by class name
         std::unordered_map<std::string, SystemDescriptor> m_Systems;   // by class name (H9)
+        std::vector<ServiceDescriptor>                    m_Services;  // registration order (AP-01)
 
         struct ComponentNote { entt::id_type Id; std::string Name; std::string Module; };
         std::vector<ComponentNote> m_Components;

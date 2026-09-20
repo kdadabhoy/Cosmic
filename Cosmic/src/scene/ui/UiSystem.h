@@ -24,11 +24,13 @@
 
 #include <glm/glm.hpp>
 #include <cstdint>
+#include <string>
 #include <vector>
 
 namespace Cosmic
 {
     class Scene;
+    class DataBus;   // data/DataBus.h — bound widgets read/write it (AP-01 signatures, AP-02 bodies)
 
     /**
      * @brief Pointer state for one UI update, in canvas space (viewport-local,
@@ -61,6 +63,17 @@ namespace Cosmic
         int32_t  CanvasOrder = 0;
         int32_t  ZOrder      = 0;
         int32_t  Seq         = 0;  // DFS order, stable tie-break
+    };
+
+    /** @brief One resolved UiHostedPanel element for the host to draw (§4): the
+     *  entt handle, the panel name, its canvas rect and the canvas scale. Collected
+     *  back-to-front like elements (AP-02 fills it; AP-01 ships the signature). */
+    struct UiHostedPanelDraw
+    {
+        uint32_t    Handle = 0;
+        std::string Name;
+        UiRect      Rect;
+        float       Scale = 1.0f;
     };
 
     class COSMIC_API UiSystem
@@ -103,9 +116,11 @@ namespace Cosmic
 
         /** @brief Advance button states from the pointer and emit signals on the
          *  scene EventBus (U2). Returns true when the pointer is over an
-         *  interactable button (the caller then skips 3D scene picking). */
+         *  interactable element (the caller then skips 3D scene picking). `bus`
+         *  (AP-01 signature) is what sliders/toggles write (AP-02); null keeps
+         *  today's behaviour. */
         static bool Update(Scene& scene, const UiRect& viewport, const UiPointer& pointer,
-                           const glm::mat4* cameraViewProj = nullptr);
+                           const glm::mat4* cameraViewProj = nullptr, DataBus* bus = nullptr);
 
         /** @brief Topmost drawable UI element under `point` (any element that
          *  CollectElements returns, not just buttons — an editor uses this to
@@ -116,9 +131,12 @@ namespace Cosmic
 
         /** @brief Draw the scene's canvases through Renderer2D in screen space.
          *  PRE: the destination FBO is bound and its GL viewport is the full
-         *  target; canvas space is viewport-local with Min at (0,0). Main-thread/GL. */
+         *  target; canvas space is viewport-local with Min at (0,0). Main-thread/GL.
+         *  `bus` / `preview` (AP-01 signatures, AP-02 bodies): the bound widgets
+         *  read `bus`; `bus == nullptr` means preview mode regardless of `preview`. */
         static void Render(Scene& scene, const UiRect& viewport,
-                           const glm::mat4* cameraViewProj = nullptr);
+                           const glm::mat4* cameraViewProj = nullptr,
+                           const DataBus* bus = nullptr, bool preview = false);
 
         /** @brief Letterboxed variant (U7): lay the canvases out in `canvasRect`
          *  — a sub-rect of the bound target (an aspect-locked game view) — while
@@ -127,6 +145,14 @@ namespace Cosmic
          *  canvasRect == the full target behaves exactly like the 2-arg Render. */
         static void Render(Scene& scene, const UiRect& canvasRect,
                            uint32_t targetW, uint32_t targetH,
-                           const glm::mat4* cameraViewProj = nullptr);
+                           const glm::mat4* cameraViewProj = nullptr,
+                           const DataBus* bus = nullptr, bool preview = false);
+
+        /** @brief Resolve every UiHostedPanel element into a back-to-front list the
+         *  host draws through PanelRegistry::Draw (§4). AP-01 ships the signature
+         *  with a no-op body (always empty); AP-02 implements it. Pure over the scene. */
+        static void CollectHostedPanels(Scene& scene, const UiRect& viewport,
+                                        std::vector<UiHostedPanelDraw>& out,
+                                        const glm::mat4* cameraViewProj = nullptr);
     };
 }

@@ -81,6 +81,7 @@ namespace Cosmic
             inst->m_Scene         = &scene;
             inst->m_Handle        = e;
             inst->m_TelemetrySink = m_Sink;   // E20 — null unless a host installed one
+            inst->m_DataBus       = m_Bus;    // AP-01 — null unless a host installed one
             nsc.Instance          = inst;
             PushFields(*desc, nsc, inst);
 
@@ -118,8 +119,9 @@ namespace Cosmic
             }
 
             SystemScript* inst = desc->Factory();
-            inst->m_Scene = &scene;
-            ssc.Instance  = inst;
+            inst->m_Scene   = &scene;
+            inst->m_DataBus = m_Bus;          // AP-01 — Data() proxy for systems too
+            ssc.Instance    = inst;
 
             // Push saved reflected overrides (same thunk contract as scripts).
             void* obj = static_cast<void*>(inst);

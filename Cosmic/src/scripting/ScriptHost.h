@@ -40,6 +40,7 @@ namespace Cosmic
     class Event;
     class ScriptableEntity;
     class ITelemetrySink;
+    class DataBus;
     class SystemScript;
     struct ScriptDescriptor;
     struct SystemDescriptor;
@@ -59,6 +60,13 @@ namespace Cosmic
         // Instantiate; set before Instantiate to also catch OnCreate/OnStart
         // pushes. Pass nullptr to detach. No-op for scripts that never push.
         void SetTelemetrySink(ITelemetrySink* sink) { m_Sink = sink; }
+
+        // DataBus seam (App Platform / AP-01, contract §2): the host-owned bus that
+        // scripts reach through ScriptableEntity::Data() / SystemScript::Data().
+        // Same seam shape as SetTelemetrySink: injected into every instance at
+        // Instantiate, so set it BEFORE Instantiate; nullptr => every Data() call is
+        // a no-op / default (scripts work in a bus-less harness).
+        void SetDataBus(DataBus* bus) { m_Bus = bus; }
 
         // Build + start every script in the scene (OnCreate all, then OnStart all).
         void Instantiate(Scene& scene);
@@ -98,6 +106,7 @@ namespace Cosmic
         Scene* m_Scene = nullptr;
         std::vector<entt::entity> m_Live;   // entities with a live instance, creation order
         ITelemetrySink* m_Sink = nullptr;   // E20 — injected into each instance
+        DataBus*        m_Bus  = nullptr;   // AP-01 — injected into each instance (Data() proxy)
         uint64_t m_SignalHandle = 0;        // U2 — EventBus ConnectAny handle (0 = none)
 
         // WO-09 / KI-46 — an entity destroyed (or its NativeScriptComponent removed)

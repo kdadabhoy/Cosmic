@@ -72,6 +72,39 @@ namespace Cosmic
         return out;
     }
 
+    ServiceDescriptor& ModuleRegistry::ServiceSlot(const std::string& name)
+    {
+        for (ServiceDescriptor& d : m_Services)
+            if (d.Name == name) return d;      // re-register: replace in place
+        m_Services.push_back(ServiceDescriptor{});
+        return m_Services.back();
+    }
+
+    const ServiceDescriptor* ModuleRegistry::FindService(const std::string& name) const
+    {
+        for (const ServiceDescriptor& d : m_Services)
+            if (d.Name == name) return &d;
+        return nullptr;
+    }
+
+    std::vector<std::string> ModuleRegistry::ServiceNames() const
+    {
+        std::vector<std::string> out;
+        out.reserve(m_Services.size());
+        for (const ServiceDescriptor& d : m_Services)
+            out.push_back(d.Name);
+        return out;
+    }
+
+    std::vector<std::string> ModuleRegistry::ServiceNames(const std::string& module) const
+    {
+        std::vector<std::string> out;
+        for (const ServiceDescriptor& d : m_Services)
+            if (d.Module == module)
+                out.push_back(d.Name);
+        return out;
+    }
+
     std::vector<entt::id_type> ModuleRegistry::ComponentTypeIds(const std::string& module) const
     {
         std::vector<entt::id_type> out;
@@ -104,6 +137,13 @@ namespace Cosmic
             if (it->second.Module == module) it = m_Systems.erase(it);
             else                             ++it;
         }
+        // AP-01: the module's services go exactly like its scripts — their factories
+        // are code in the module DLL. Live instances were destroyed by the host's
+        // ServiceHost::Destroy() before it called this.
+        m_Services.erase(
+            std::remove_if(m_Services.begin(), m_Services.end(),
+                           [&](const ServiceDescriptor& d) { return d.Module == module; }),
+            m_Services.end());
         m_Components.erase(
             std::remove_if(m_Components.begin(), m_Components.end(),
                            [&](const ComponentNote& c) { return c.Module == module; }),

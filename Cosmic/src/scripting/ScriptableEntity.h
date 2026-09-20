@@ -25,6 +25,7 @@
 // ============================================================================
 
 #include "core/Core.h"
+#include "data/DataBus.h"                // AP-01 — Data() channel proxy (DataBus/DataValue)
 #include "scene/Entity.h"
 #include "scene/Scene.h"
 #include "scene/Components.h"            // TagComponent (SystemBuilder::WithTag), H9
@@ -35,6 +36,7 @@
 #include <entt/entt.hpp>
 
 #include <glm/glm.hpp>
+#include <limits>
 #include <optional>
 #include <span>
 #include <vector>
@@ -44,6 +46,40 @@
 namespace Cosmic
 {
     class Event;
+
+    // ------------------------------------------------------------------------
+    // DataProxy (App Platform / AP-01, contract §2) — the Data() passthrough shared
+    // by ScriptableEntity and SystemScript: the host-owned DataBus reached from a
+    // script (Data().Set("pendulum.angle", a), Data().GetNumber("ui.gain")).
+    // Injected by ScriptHost::SetDataBus before Instantiate (the SetTelemetrySink
+    // seam shape); every call is a no-op / default with no bus, so scripts run
+    // unchanged in a bus-less harness and in shipped apps that never touch it.
+    // ------------------------------------------------------------------------
+    struct DataProxy
+    {
+        DataBus* Bus = nullptr;
+
+        double GetNumber(const std::string& channel, double fallback = 0.0) const
+        {
+            return Bus ? Bus->GetNumber(channel, fallback) : fallback;
+        }
+        void Set(const std::string& channel, double v) const { if (Bus) Bus->Set(channel, v); }
+        bool GetBool(const std::string& channel, bool fallback = false) const
+        {
+            return Bus ? Bus->GetBool(channel, fallback) : fallback;
+        }
+        void SetBool(const std::string& channel, bool v) const { if (Bus) Bus->SetBool(channel, v); }
+        std::string GetString(const std::string& channel, const std::string& fallback = "") const
+        {
+            return Bus ? Bus->GetString(channel, fallback) : fallback;
+        }
+        void SetString(const std::string& channel, std::string v) const { if (Bus) Bus->SetString(channel, std::move(v)); }
+        bool   Has(const std::string& channel) const { return Bus && Bus->Has(channel); }
+        double Age(const std::string& channel) const
+        {
+            return Bus ? Bus->Age(channel) : std::numeric_limits<double>::infinity();
+        }
+    };
 
     // ------------------------------------------------------------------------
     // ITelemetrySink (E20) — a generic seam for script-emitted telemetry.
@@ -237,6 +273,11 @@ namespace Cosmic
         };
         FlowProxy Flow() const { return { m_Scene }; }
 
+        // ---- data-bus passthrough (AP-01) -----------------------------------
+        // The host-owned DataBus (values, history, producers survive a module
+        // reload). No-ops / defaults until a host installs one via
+        // ScriptHost::SetDataBus (both hosts do at Play).
+        DataProxy Data() const { return { m_DataBus }; }
 
         // Override the ones you need — all default to no-ops.
         virtual void OnCreate() {}
@@ -259,10 +300,11 @@ namespace Cosmic
         virtual void OnTriggerExit(Entity other)    { (void)other; }
 
     private:
-        friend class ScriptHost;   // injects m_Scene/m_Handle/m_TelemetrySink + drives callbacks
+        friend class ScriptHost;   // injects m_Scene/m_Handle/m_TelemetrySink/m_DataBus + drives callbacks
         entt::entity    m_Handle{ entt::null };
         Scene*          m_Scene = nullptr;
         ITelemetrySink* m_TelemetrySink = nullptr;   // null unless a host installs one
+        DataBus*        m_DataBus = nullptr;         // AP-01 — null unless a host installs one
     };
 
     // ========================================================================
@@ -286,6 +328,9 @@ namespace Cosmic
         Scene& GetScene() const { return *m_Scene; }
 
     protected:
+        // The host-owned DataBus (AP-01), same proxy as ScriptableEntity::Data().
+        DataProxy Data() const { return { m_DataBus }; }
+
         virtual void OnCreate() {}
         virtual void OnStart() {}
         // Called ONCE per tick with the matching entity set (not per entity). The span
@@ -296,8 +341,9 @@ namespace Cosmic
         virtual void OnDestroy() {}
 
     private:
-        friend class ScriptHost;   // injects m_Scene + drives callbacks
-        Scene* m_Scene = nullptr;
+        friend class ScriptHost;   // injects m_Scene/m_DataBus + drives callbacks
+        Scene*   m_Scene   = nullptr;
+        DataBus* m_DataBus = nullptr;   // AP-01
     };
 
     // ------------------------------------------------------------------------

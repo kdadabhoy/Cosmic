@@ -33,13 +33,15 @@
 //       CS_COMPONENT(ThrusterComponent)          // custom reflected entt component
 //           CS_FIELD(MaxThrustN)
 //       CS_END;
+//       CS_SERVICE(RoverTelemetryService).Order(0) CS_END;   // app service (AP-01)
 //   CS_MODULE_END()
 //
-// CS_SCRIPT / CS_COMPONENT / CS_FIELD / CS_END are ALSO usable standalone (no DLL)
-// — the E11 unit test registers a script in-exe with them.
+// CS_SCRIPT / CS_COMPONENT / CS_SERVICE / CS_FIELD / CS_END are ALSO usable
+// standalone (no DLL) — the E11 and AP-01 unit tests register in-exe with them.
 // ============================================================================
 
 #include "scripting/ModuleRegistry.h"
+#include "scripting/AppService.h"       // ServiceBuilder — CS_SERVICE (AP-01)
 #include "reflect/TypeRegistry.h"
 
 #include <entt/entt.hpp>
@@ -69,6 +71,18 @@
     {                                                                           \
         using CS_ReflectedType = T;                                            \
         ::Cosmic::ModuleRegistry::Get().AddSystem<T>(#T)
+
+// Register an APP SERVICE class T (an AppService subclass, App Platform / AP-01):
+// one instance per run, constructed by the host's ServiceHost after the module
+// loads, given the host-owned DataBus + PanelRegistry, driven in the fixed frame
+// order (see scripting/ServiceHost.h). Chain .Order(n) then CS_END — no CS_FIELD
+// support in v1:
+//
+//   CS_SERVICE(PendulumService).Order(0) CS_END;
+#define CS_SERVICE(T)                                                           \
+    {                                                                           \
+        using CS_ReflectedType = T;                                            \
+        ::Cosmic::ModuleRegistry::Get().AddService<T>(#T, __FILE__, __LINE__)
 
 // Register a plain custom reflected component T (needs CS_REGISTER_COMPONENT(T)
 // in its own header). It becomes a first-class component: Inspector, serializer,

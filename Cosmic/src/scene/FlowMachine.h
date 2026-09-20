@@ -29,6 +29,7 @@
 // ============================================================================
 
 #include "core/Core.h"
+#include "data/DataBus.h"   // AP-01 — channel guards read the host-owned DataBus
 
 #include <glm/glm.hpp>
 
@@ -43,6 +44,7 @@
 namespace Cosmic
 {
     class Scene;
+    class DataBus;
 
     /** @brief A typed literal for a guard comparison / setField / variable value.
      *  Enum (Q2) is an "enum of strings": the value lives in `String` (the picked
@@ -75,14 +77,20 @@ namespace Cosmic
         std::vector<std::string> EnumOptions;  // Kind::Enum only
     };
 
-    /** @brief A guard on a transition. Two sources (Q2):
-     *   - VARIABLE: when `Var` is non-empty, compare the flow variable `Var`
+    /** @brief A guard on a transition. Three sources, highest precedence first:
+     *   - CHANNEL (AP-01): when `Channel` is non-empty, compare the host DataBus
+     *     channel against `Value` under `Op` — as a number (GetNumber; non-finite
+     *     ⇒ false), a bool (GetBool) or a string (GetString) by `Value`'s kind. A
+     *     missing channel, or a machine with no bus, ⇒ false (one warning per guard).
+     *     JSON: "if": { "channel": "pendulum.energy", "op": "<", "value": 0.01 }.
+     *   - VARIABLE (Q2): when `Var` is non-empty, compare the flow variable `Var`
      *     against `Value` under `Op`. A missing variable => false (one warning).
      *   - FIELD (v1): otherwise find `Entity` (by Tag) in the ACTIVE scene, read
      *     `Component`.`Field` (E1 reflection), compare with `Value` under `Op`.
      *  Ops: "==","!=","<",">","<=",">=". */
     struct FlowGuard
     {
+        std::string Channel;      // AP-01 — DataBus channel (non-empty ⇒ channel guard, highest precedence)
         std::string Var;          // Q2 — variable name (non-empty ⇒ variable guard)
         std::string Entity;
         std::string Component;
@@ -105,7 +113,11 @@ namespace Cosmic
     };
 
     /** @brief One transition out of a state. `On` is a signal name, "key:<Name>",
-     *  or "timer:<seconds>". `To` is a target state name or "@quit" / "@pop". */
+     *  "timer:<seconds>", or "when" (AP-01: a condition-only transition — evaluated
+     *  once per OnUpdate AFTER the signal drain and BEFORE timers; at most one
+     *  `when` fires per update, the first in declaration order whose guard passes;
+     *  a `when` without an `if` never fires and Validate() reports it). `To` is a
+     *  target state name or "@quit" / "@pop". */
     struct FlowTransition
     {
         std::string On;
@@ -150,21 +162,25 @@ namespace Cosmic
         bool        Save(const std::string& path) const;
 
         // Structural validation used by the editor (U6): missing start state,
-        // duplicate names, transitions to unknown states. Scene-file existence is
-        // checked by the editor (needs the VFS). Empty vector == valid.
+        // duplicate names, transitions to unknown states, a `when` transition without
+        // an `if` guard (AP-01). Scene-file existence is checked by the editor (needs
+        // the VFS). Empty vector == valid.
         std::vector<std::string> Validate() const;
     };
 
     /** @brief Evaluate a FlowGuard — shared by FlowMachine and the Q3 StoryRunner
-     *  so both honour variables + reflected-field guards identically. A VARIABLE
-     *  guard (guard.Var non-empty) compares `lookupVar(guard.Var)` (null ⇒ false);
-     *  a FIELD guard reads `Entity.Component.Field` from `scene` (null scene ⇒
-     *  false). `warn` (optional) receives a human message on each failure reason —
-     *  callers own any dedup. GL-free. */
+     *  so both honour variables + reflected-field guards identically. A CHANNEL
+     *  guard (guard.Channel non-empty, AP-01) compares `lookupChannel(guard.Channel)`
+     *  (empty callback or missing channel ⇒ false); a VARIABLE guard (guard.Var
+     *  non-empty) compares `lookupVar(guard.Var)` (null ⇒ false); a FIELD guard
+     *  reads `Entity.Component.Field` from `scene` (null scene ⇒ false). `warn`
+     *  (optional) receives a human message on each failure reason — callers own
+     *  any dedup. GL-free. */
     COSMIC_API bool EvaluateFlowGuard(
         const FlowGuard& guard, Scene* scene,
         const std::function<bool(const std::string&, FlowValue&)>& lookupVar,
-        const std::function<void(const std::string&)>& warn = {});
+        const std::function<void(const std::string&)>& warn = {},
+        const std::function<bool(const std::string&, DataValue&)>& lookupChannel = {});
 
     class COSMIC_API FlowMachine
     {
@@ -180,8 +196,22 @@ namespace Cosmic
         void SetSceneLoader(SceneLoader loader) { m_Loader = std::move(loader); }
 
         /** @brief Enter the asset's start state (loads its scene, runs onEnter,
-         *  subscribes to the active scene bus). Replaces any running flow. */
+         *  subscribes to the active scene bus). Replaces any running flow.
+         *  Start(asset) == StartAt(asset, asset.Start). */
         void Start(const FlowAsset& asset);
+
+        /** @brief Enter `stateName` instead of the asset's start state (AP-01: the
+         *  live-loop resume). An unknown name warns and falls back to Start. */
+        void StartAt(const FlowAsset& asset, const std::string& stateName);
+
+        /** @brief The host-owned DataBus channel guards read (AP-01). May be null:
+         *  channel guards then evaluate false (warned once per guard). Set it before
+         *  Start; the pointer is kept, not the values. */
+        void SetDataBus(const DataBus* bus) { m_Bus = bus; }
+
+        /** @brief Every distinct "key:<Name>" transition trigger in the asset, in
+         *  first-occurrence order (AP-01: what FlowKeyBridge binds). */
+        static std::vector<std::string> KeySignals(const FlowAsset& asset);
 
         /** @brief Advance timers + apply pending transitions deterministically. */
         void OnUpdate(float dt);
@@ -213,7 +243,8 @@ namespace Cosmic
 
         void   Enter(const FlowState& state, bool push);
         void   RunActions(const std::vector<FlowAction>& actions);
-        bool   TryFireSignal(const std::string& signal);   // one matching transition
+        bool   TryFireSignal(const std::string& signal);   // one matching transition ("when" excluded)
+        bool   TryFireWhen();                              // AP-01: first "when" whose guard passes
         bool   TryFireTimer();                             // timer:N on the current state
         void   PerformTransition(const FlowTransition& t);
         void   SubscribeActiveBus();
@@ -231,6 +262,7 @@ namespace Cosmic
         bool  m_Quit    = false;
         uint64_t m_BusHandle = 0;             // ConnectAny handle on the active scene bus
         Scene*   m_BusScene  = nullptr;       // scene the handle belongs to
+        const DataBus* m_Bus = nullptr;       // AP-01 — channel guards (not owned; may be null)
 
         mutable std::unordered_set<std::string> m_GuardWarned;   // dedup guard warnings
     };
