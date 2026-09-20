@@ -60,6 +60,9 @@ x86/
 # dev tree resolves to the exe's own directory — so a `logs/` folder appears
 # wherever the app was launched from, which is why these turn up under src/ too.
 logs/
+# Recorder output (user://recordings) — the tests and SF_Telem write recordings under the
+# CWD in a dev tree; they are outputs, never inputs.
+recordings/
 
 # -------------------------------------------------------
 # 3. Visual Studio & IDE Specific Files
