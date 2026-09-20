@@ -10,7 +10,7 @@ prompt and any older document disagree, **the prompt wins** and the session says
 
 The single running known-issue register is
 [`../../2d-stability-2026-09-16/contracts/known-issues.md`](../../2d-stability-2026-09-16/contracts/known-issues.md)
-— next entry **KI-64**. Every crash / hang / data loss found by any AP session is appended there with a
+— next entry **KI-66**. Every crash / hang / data loss found by any AP session is appended there with a
 minimal regression and a disposition, using its template. A missing fixture or skipped test is never
 logged as a pass.
 
