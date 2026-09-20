@@ -49,6 +49,10 @@ x86/
 *.log
 *.tlog
 *.csv
+# ...except the CSV fixtures the build and tests read (they were force-added before
+# these negations existed; AP-D1 made the rule explicit so edits are not missed).
+!tests/fixtures/**/*.csv
+!Projects/*/data/*.csv
 
 # Runtime log output. `*.log` above already covers the files; this ignores the
 # DIRECTORIES so anything else that lands in one (crash dumps, .txt, .json)
