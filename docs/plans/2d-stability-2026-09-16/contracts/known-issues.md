@@ -1052,10 +1052,13 @@ over the injected `IFrameClock` (`core/IFrameClock.h`, the WO-10 seam) with the
 
 ### KI-57 - `CosmicTests` is not idempotent: `WO-06 D01` fails on every run after the first on a machine (stale `%TEMP%\wo06` scratch)
 
-- Status: Confirmed defect (test-isolation / false red). Owner WO: AP-05A registered it;
-  ALSO FOUND INDEPENDENTLY BY AP-P1, which carries the fix. AP-05A did not fix it. If both
-  entries reach `main`, they are the same defect and the integrator keeps one, with this
-  entry's fix and evidence.
+- Status: Confirmed defect (test-isolation / false red; no product defect - `DataPlayer::Load`
+  behaves as specified, the case poisons its own shared scratch directory). Found independently
+  by AP-05 part A (running the retained unit suite directly, which the WO-06..WO-10 evidence never
+  did - they ran it through `Run-Acceptance.ps1`, whose per-run `TEMP` redirection hides it; seen
+  first as 453/454 in AP-05's direct Debug run, `../../app-platform-2026-09-18/evidence/AP-05/report.md`)
+  and by AP-P1, which carries the fix. Owner WO: AP-P1 (fix); the two registrations were merged
+  into this single entry when `ap/p1` landed on `main`.
 - Anchor: `tests/test_wo06.cpp:28-33` - `Scratch()` does `fs::create_directories(%TEMP%/wo06/<name>)`
   and never clears it, while `WO-06 D01` (`:205-215`) deliberately ends by copying
   `bad-version.bin` over `%TEMP%\wo06\fallback\scene.bin`. The next process to run D01 hits the
@@ -1119,19 +1122,8 @@ over the injected `IFrameClock` (`core/IFrameClock.h`, the WO-10 seam) with the
 
 ## AP-05 part A findings (2026-09-19) — the 3D purge (App Platform packet)
 
-### KI-57 — `test_wo06.cpp` D01 is not idempotent outside the runner: a stale `%TEMP%\wo06\fallback\scene.bin` fails the next direct run
-- Status: Coverage gap (test hygiene, no product defect — `DataPlayer::Load` behaves as specified; the
-  case poisons its own shared scratch directory).
-- Owner WO: WO-06 follow-up (file `tests/test_wo06.cpp`, outside AP-05's ownership; found by AP-05 part A
-  running the retained unit suite directly, which the WO-06..WO-10 evidence never did — they ran it through
-  `Run-Acceptance.ps1`, whose per-run `TEMP` redirection hides it).
-- Anchor: `tests/test_wo06.cpp:28-33` at `7479927` — `Scratch()` only `create_directories()`, never clears;
-  `:213-215` the case's LAST step copies `bad-version.bin` over `<TEMP>/wo06/fallback/scene.bin`, asserts
-  `Load` fails, and leaves it there; `:205-208` the NEXT run's first `Load(fallback)` then finds that bad
-  `scene.bin` ahead of `A.bin` and fails (`REQUIRE( p.Load(fallback.string()) ) is NOT correct!`).
-- Repro: `build\Runtime\Debug\CosmicTests.exe -tc="WO-06 D01*"` twice from the same `%TEMP%` → first run
-  1/1 passed (clean), second run 0/1 failed at `test_wo06.cpp(208)`; `rd /s /q %TEMP%\wo06` restores the
-  pass. Seen first as 453/454 in AP-05 part A's direct Debug run (`evidence/AP-05/report.md`).
-- Regression: none yet (fix = `Scratch()` removes the directory before creating it, or the case deletes its
-  `scene.bin` on exit; one line either way).
-- Disposition: open.
+### KI-57 — registered here by AP-05 part A; merged into the single KI-57 entry above
+- AP-05 part A registered the `test_wo06.cpp` D01 idempotency defect (stale `%TEMP%\wo06\fallback\scene.bin`
+  fails the next direct run) under this number on `main` while AP-P1 registered and fixed the same defect
+  on `ap/p1`. The two texts were combined into the KI-57 entry in the AP-P1 section (status, anchor, repro,
+  failing-before evidence, regression `D01-IDEMPOTENT`, disposition: fixed on `ap/p1`). No separate entry.
