@@ -1,0 +1,35 @@
+﻿{
+    "id":  "V03",
+    "tier":  "G",
+    "description":  "AP-02 AP-02 V03 via CosmicRenderTests.exe",
+    "requires":  [
+                     "windows",
+                     "gpu-gl"
+                 ],
+    "transport":  "none",
+    "seed":  null,
+    "start_utc":  "2026-09-20T04:42:17.9904075Z",
+    "deadline_sec":  180,
+    "exercised":  "production",
+    "command":  "C:\\dev\\Cosmic-ap-02\\build\\Runtime\\Release\\CosmicRenderTests.exe \"--test-suite=AP-02 V03\" --reporters=console --no-intro --no-colors",
+    "stdout_log":  "C:\\dev\\Cosmic-ap-02\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-02\\v03-Release\\V03.out.log",
+    "stderr_log":  "C:\\dev\\Cosmic-ap-02\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-02\\v03-Release\\V03.err.log",
+    "pid":  25804,
+    "exit_code":  0,
+    "crash":  false,
+    "tests_passed":  7,
+    "tests_expected_min":  7,
+    "verdict":  "PASSED",
+    "detail":  "exit 0 as expected",
+    "duration_sec":  0.436,
+    "end_utc":  "2026-09-20T04:42:18.4331584Z",
+    "golden_mutated":  false,
+    "golden_mutations":  [
+
+                         ],
+    "golden_diagnostics":  [
+
+                           ],
+    "golden_sha256_before":  "C:\\dev\\Cosmic-ap-02\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-02\\v03-Release\\goldens-sha256-before.txt",
+    "golden_sha256_after":  "C:\\dev\\Cosmic-ap-02\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-02\\v03-Release\\goldens-sha256-after.txt"
+}

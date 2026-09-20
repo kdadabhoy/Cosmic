@@ -207,6 +207,207 @@ namespace Cosmic
         UiButtonComponent() = default;
         UiButtonComponent(const UiButtonComponent&) = default;
     };
+
+    // ========================================================================
+    // Bound widgets (App Platform AP-02, contract §3).
+    // ========================================================================
+    //
+    // Widgets that READ a host-owned DataBus channel (value text, gauge,
+    // indicator, plot) or WRITE one (slider, toggle), plus the canvas-side half
+    // of a hosted ImGui panel. Every draw goes through Renderer2D inside
+    // UiSystem::Render; the interaction lives in UiSystem::Update. Preview mode
+    // (no bus, or `preview == true`) substitutes the Preview* fields so a
+    // screen is previewable in the editor without an app running; in live mode
+    // a missing channel shows the placeholder / off state / an empty plot.
+    // Runtime-only members (Dragging, Armed, DrawnThisFrame, Resolved*) are not
+    // reflected. The engine knows nothing about what a channel means (D-UI).
+
+    enum class UiGaugeStyle        : int32_t { Bar = 0, Arc = 1 };
+    enum class UiGaugeDirection    : int32_t { LeftToRight = 0, BottomToTop = 1 };
+    enum class UiSliderOrientation : int32_t { Horizontal = 0, Vertical = 1 };
+
+    /**
+     * @brief Prints a channel through a sibling UiTextComponent (same entity),
+     * which supplies font/size/colour/alignment. At draw time the resolved
+     * string (Prefix + formatted value + Suffix) replaces what UiText would
+     * have drawn; UiText.Text itself is never modified. Format is printf with
+     * exactly one numeric conversion; anything else is used literally.
+     * Missing channel (live mode) -> Placeholder; Age > StaleAfter -> StaleColor.
+     */
+    struct COSMIC_API UiValueTextComponent
+    {
+        std::string Channel;
+        std::string Format      = "%.2f";
+        std::string Prefix;
+        std::string Suffix;
+        std::string Placeholder = "--";
+        float       StaleAfter  = 0.0f;                    // seconds; 0 = never stale
+        glm::vec4   StaleColor{ 0.6f, 0.6f, 0.6f, 1.0f };
+        float       PreviewValue = 0.0f;
+
+        UiValueTextComponent() = default;
+        UiValueTextComponent(const UiValueTextComponent&) = default;
+    };
+
+    /**
+     * @brief Fills the element rect with a track + a fill proportional to
+     * clamp((v - Min) / (Max - Min), 0, 1). Bar: two quads (Direction picks
+     * the growth axis). Arc: a 270-degree ring with its gap at the bottom,
+     * Thickness = ring thickness as a fraction of the radius. A sibling UiImage
+     * draws behind.
+     */
+    struct COSMIC_API UiGaugeComponent
+    {
+        std::string      Channel;
+        float            Min = 0.0f;
+        float            Max = 100.0f;
+        UiGaugeStyle     Style     = UiGaugeStyle::Bar;
+        UiGaugeDirection Direction = UiGaugeDirection::LeftToRight;   // ignored by Arc
+        glm::vec4        FillColor { 0.2f,  0.8f,  0.3f,  1.0f };
+        glm::vec4        TrackColor{ 0.15f, 0.15f, 0.18f, 1.0f };
+        float            Thickness = 0.25f;
+        float            PreviewValue = 50.0f;
+
+        UiGaugeComponent() = default;
+        UiGaugeComponent(const UiGaugeComponent&) = default;
+    };
+
+    /**
+     * @brief A quad whose texture + tint follow a comparison of the channel
+     * against Threshold (Op: == != < > <= >=). Bool channels compare as 0/1;
+     * a missing or non-finite value is Off. Empty texture = solid tint.
+     */
+    struct COSMIC_API UiIndicatorComponent
+    {
+        std::string Channel;
+        std::string Op        = "==";
+        float       Threshold = 1.0f;
+        glm::vec4   OnTint { 0.2f, 1.0f, 0.3f, 1.0f };
+        glm::vec4   OffTint{ 0.3f, 0.3f, 0.3f, 1.0f };
+        std::string OnTexture;                       // AssetPath("texture"); empty => solid
+        std::string OffTexture;
+        bool        PreviewOn = false;
+
+        // Runtime-only (not reflected): lazily resolved textures + their source paths.
+        Ref<Texture2D> ResolvedOn,  ResolvedOff;
+        std::string    ResolvedOnPath, ResolvedOffPath;
+
+        UiIndicatorComponent() = default;
+        UiIndicatorComponent(const UiIndicatorComponent&) = default;
+    };
+
+    /**
+     * @brief Time-series plot of up to four channels over the last WindowSeconds
+     * of bus history (x = time within the window, y = value). Background quad,
+     * grid, one polyline per bound channel, optional min/max/window labels. Y
+     * range from the visible samples when AutoScaleY (padded 5 %), else
+     * YMin..YMax. Non-finite samples are skipped; each channel is decimated to
+     * at most 512 segments. Preview: a sine of PreviewAmplitude per channel.
+     */
+    struct COSMIC_API UiPlotComponent
+    {
+        std::string Channel;
+        std::string Channel2;
+        std::string Channel3;
+        std::string Channel4;
+        float       WindowSeconds = 10.0f;
+        bool        AutoScaleY    = true;
+        float       YMin = -1.0f;
+        float       YMax =  1.0f;
+        glm::vec4   LineColor { 0.3f, 0.8f, 1.0f, 1.0f };
+        glm::vec4   LineColor2{ 1.0f, 0.6f, 0.2f, 1.0f };
+        glm::vec4   LineColor3{ 0.6f, 1.0f, 0.4f, 1.0f };
+        glm::vec4   LineColor4{ 1.0f, 0.4f, 0.8f, 1.0f };
+        glm::vec4   GridColor      { 1.0f, 1.0f, 1.0f, 0.12f };
+        glm::vec4   BackgroundColor{ 0.0f, 0.0f, 0.0f, 0.35f };
+        int32_t     GridDivisions = 4;
+        float       LineWidth     = 2.0f;                 // canvas px (scaled)
+        bool        ShowLabels    = true;
+        float       PreviewAmplitude = 1.0f;
+
+        UiPlotComponent() = default;
+        UiPlotComponent(const UiPlotComponent&) = default;
+    };
+
+    /**
+     * @brief Writes a channel: press inside arms + sets, drag updates every
+     * frame, release emits Signal (when non-empty) only if the value changed
+     * since the press. Value = Min + t * (Max - Min), snapped to Step when
+     * Step > 0. When not dragging the knob follows the bus (so the app's own
+     * writes are reflected). Track + fill + knob, all Renderer2D quads.
+     */
+    struct COSMIC_API UiSliderComponent
+    {
+        std::string         Channel;                     // written with bus->Set
+        float               Min  = 0.0f;
+        float               Max  = 1.0f;
+        float               Step = 0.0f;                 // 0 = continuous
+        std::string         Signal;                      // emitted on release when changed; empty = none
+        UiSliderOrientation Orientation = UiSliderOrientation::Horizontal;
+        glm::vec4           TrackColor{ 0.15f, 0.15f, 0.18f, 1.0f };
+        glm::vec4           FillColor { 0.3f,  0.6f,  1.0f,  1.0f };
+        glm::vec4           KnobColor { 0.95f, 0.95f, 1.0f,  1.0f };
+        float               KnobSize = 18.0f;            // canvas px (scaled)
+        bool                Interactable = true;
+        float               PreviewValue = 0.5f;
+
+        // Runtime-only (not reflected): live drag state + the value at press time
+        // (Signal fires on release only when the value differs from it).
+        bool   Dragging       = false;
+        double DragStartValue = 0.0;
+
+        UiSliderComponent() = default;
+        UiSliderComponent(const UiSliderComponent&) = default;
+    };
+
+    /**
+     * @brief An image + this (like UiButton): the On/Off tint multiplies into
+     * the sibling UiImage and, when set, the On/Off texture replaces its
+     * texture. Release-inside flips bus->GetBool(Channel) and emits Signal.
+     * Without a sibling UiImage the toggle draws its own quad.
+     */
+    struct COSMIC_API UiToggleComponent
+    {
+        std::string Channel;                             // bool written with bus->SetBool
+        std::string Signal;                              // emitted on every flip; empty = none
+        glm::vec4   OnTint { 0.2f, 1.0f, 0.3f, 1.0f };
+        glm::vec4   OffTint{ 0.5f, 0.5f, 0.5f, 1.0f };
+        std::string OnTexture;                           // AssetPath("texture"); empty => the image's own
+        std::string OffTexture;
+        bool        Interactable = true;
+        bool        PreviewOn    = false;
+
+        // Runtime-only (not reflected).
+        bool           Armed = false;                    // the current press began on this toggle
+        Ref<Texture2D> ResolvedOn,  ResolvedOff;
+        std::string    ResolvedOnPath, ResolvedOffPath;
+
+        UiToggleComponent() = default;
+        UiToggleComponent(const UiToggleComponent&) = default;
+    };
+
+    /**
+     * @brief Canvas-side half of a hosted ImGui panel (contract §4). Render draws
+     * the frame (ShowFrame) and, in preview mode or while the host has not
+     * reported a draw (DrawnThisFrame == false), the placeholder label
+     * (PlaceholderText, empty = PanelName). The contents are drawn by the host:
+     * UiSystem::CollectHostedPanels resolves the rects (and clears
+     * DrawnThisFrame); the host sets DrawnThisFrame after PanelRegistry::Draw
+     * returns true.
+     */
+    struct COSMIC_API UiHostedPanelComponent
+    {
+        std::string PanelName;
+        bool        ShowFrame = true;
+        glm::vec4   FrameColor{ 1.0f, 1.0f, 1.0f, 0.25f };
+        std::string PlaceholderText;                     // empty = PanelName
+
+        // Runtime-only (not reflected).
+        bool DrawnThisFrame = false;
+
+        UiHostedPanelComponent() = default;
+        UiHostedPanelComponent(const UiHostedPanelComponent&) = default;
+    };
 }
 
 // EnTT type-hash stabilization across the DLL boundary (see Components.h). Each
@@ -217,3 +418,11 @@ CS_REGISTER_COMPONENT(Cosmic::UiImageComponent)
 CS_REGISTER_COMPONENT(Cosmic::UiTextComponent)
 CS_REGISTER_COMPONENT(Cosmic::UiButtonComponent)
 CS_REGISTER_COMPONENT(Cosmic::UiWorldAnchorComponent)
+// Bound widgets (AP-02, §3).
+CS_REGISTER_COMPONENT(Cosmic::UiValueTextComponent)
+CS_REGISTER_COMPONENT(Cosmic::UiGaugeComponent)
+CS_REGISTER_COMPONENT(Cosmic::UiIndicatorComponent)
+CS_REGISTER_COMPONENT(Cosmic::UiPlotComponent)
+CS_REGISTER_COMPONENT(Cosmic::UiSliderComponent)
+CS_REGISTER_COMPONENT(Cosmic::UiToggleComponent)
+CS_REGISTER_COMPONENT(Cosmic::UiHostedPanelComponent)

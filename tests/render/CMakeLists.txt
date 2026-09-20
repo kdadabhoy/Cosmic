@@ -34,6 +34,9 @@ add_executable(CosmicRenderTests
     render_wo09_sprites.cpp
     render_wo09_tilemap.cpp
     render_wo09_ui_lights.cpp
+    # AP-02 (App Platform) — bound widgets on the GPU: one 320x180 golden per kind with
+    # sentinel ROIs (V03) and the preview-vs-live A/B pair (E05).
+    render_ap02_widgets.cpp
 )
 
 # WO-08 custom-shader fixtures (tint variants of the batch/instanced shaders) live

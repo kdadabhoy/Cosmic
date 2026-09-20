@@ -31,6 +31,7 @@ namespace Cosmic
 {
     class Scene;
     class DataBus;   // data/DataBus.h — bound widgets read/write it (AP-01 signatures, AP-02 bodies)
+    struct DataValue;
 
     /**
      * @brief Pointer state for one UI update, in canvas space (viewport-local,
@@ -154,5 +155,26 @@ namespace Cosmic
         static void CollectHostedPanels(Scene& scene, const UiRect& viewport,
                                         std::vector<UiHostedPanelDraw>& out,
                                         const glm::mat4* cameraViewProj = nullptr);
+
+        // ---- bound-widget helpers (AP-02, §3) — pure, headless-tested ------
+
+        /** @brief The string a UiValueText draws: Prefix + body + Suffix, where the
+         *  body is `value` printed through Format (printf with exactly ONE numeric
+         *  conversion; zero or several conversions, or a non-numeric one, make
+         *  Format a literal), a bool as "true"/"false", a string as AsString(), and
+         *  a null `value` (missing channel) as Placeholder. `stale` never changes the
+         *  text (staleness is the colour's job); it is part of the contract signature. */
+        static std::string FormatValue(const UiValueTextComponent& comp, const DataValue* value, bool stale);
+
+        /** @brief clamp((value - min) / (max - min), 0, 1); non-finite -> 0; a
+         *  degenerate range (max == min) is 1 at/above it and 0 below. */
+        static float GaugeFill(float min, float max, double value);
+
+        /** @brief The value a slider takes for pointer `p`: t along the rect's axis
+         *  (Horizontal: left -> right; Vertical: bottom -> top), clamped to 0..1 when
+         *  p is outside the rect, then min + t * (max - min), snapped to the nearest
+         *  multiple of `step` from min when step > 0 and clamped to the range. */
+        static double SliderValueAt(const UiRect& rect, UiSliderOrientation orientation,
+                                    const glm::vec2& p, float min, float max, float step);
     };
 }

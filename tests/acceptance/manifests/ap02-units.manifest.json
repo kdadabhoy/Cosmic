@@ -1,0 +1,24 @@
+{
+  "manifest": "ap02-units",
+  "cases": [
+    {
+      "id": "V04",
+      "description": "Bound widgets (contract section 3), headless: FormatValue (one conversion / none / two -> literal / non-numeric -> literal / bool / string / missing -> Placeholder / stale text unchanged / non-finite -> Placeholder / Prefix+Suffix); GaugeFill clamp, reversed and degenerate ranges, non-finite -> 0; SliderValueAt H/V, Step snapping, out-of-rect clamps, degenerate rect. UiSystem::Update over a real Scene + DataBus: slider press-drag-release writes every frame and emits Signal on release only when the value changed (no double-emit on repeated edges, drag owns the pointer off-rect, off-window release ends the drag, Step through the production path, empty Signal, no bus => inert); toggle release-inside flips the bool and emits once (release-outside / press-outside do not, drag off-and-back fires, Interactable=false removes it, app writes respected); precedence (a UiImage over a slider does not block it, topmost of button/slider/toggle wins, Update returns true over any of them, the existing UiButton machine unchanged); CollectHostedPanels (V05 engine half) returns canvas-ordered rects/names/handles/scale and clears DrawnThisFrame; the seven reflected names under category UI with AssetPath/Color/Enum hints and no runtime members; a scene with all seven widgets round-trips through SceneSerializer field-exact with save->load->save byte-identical.",
+      "tier": "U",
+      "profiles": ["pr", "nightly", "release"],
+      "requires": ["windows"],
+      "command": "powershell",
+      "workingDir": "{BIN}",
+      "args": [
+        "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
+        "{ACCEPTANCE}\\fixtures\\Run-WO10Case.ps1",
+        "-Bin", "{BIN}", "-CaseId", "V04", "-TestSuite", "AP-02 V04 widgets", "-MinTests", "10", "-DeadlineSec", "120",
+        "-Output", "{REPO}\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-02\\v04-{CONFIG}"
+      ],
+      "expectExit": 0,
+      "minTests": 10,
+      "deadlineSec": 180,
+      "fixture": "../../tests/test_ui_widgets.cpp"
+    }
+  ]
+}
