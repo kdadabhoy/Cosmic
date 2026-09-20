@@ -998,7 +998,9 @@ namespace Starforge
             }
             else if (ok)
             {
-                if (IsPlaying()) LiveBeforeBuild();   // AP-03 — a build that started BEFORE Play still resumes it
+                // A build that started BEFORE Play follows the WO-07 / KI-28 reload contract
+                // (stop Play, no resume — retained L02); only a build the live loop started
+                // DURING Play (BuildScripts -> LiveBeforeBuild) resumes (§6).
                 ReloadModule(m_LastBuiltStem);
                 LiveAfterBuild(true);    // AP-03 — resume Play on the remembered flow state
             }

@@ -84,7 +84,7 @@ namespace Starforge
         std::string Esc(const std::string& s)
         {
             std::string o;
-            for (char c : s) { if (c == '"' || c == '\\') o += '\\'; if (c == '\n') { o += "\\n"; continue; } if (c == '\r') continue; o += c; }
+            for (char c : s) { if (c == '"' || c == '\\') o += '\\'; if (c == '\n') { o += "\\n"; continue; } if (c == '\t') { o += "\\t"; continue; } if (c == '\r') continue; o += c; }
             return o;
         }
         std::string ReadAll(const fs::path& p)
@@ -339,6 +339,10 @@ namespace Starforge
             });
             add("E01 build", [&] { BuildScripts(); t.check("E01", m_Builder.IsBuilding(), "BuildScripts did not start"); waitFrames(2); return true; });
             add("E01 wait build", [&] { if (m_Builder.IsBuilding()) return false; waitFrames(2); return true; });
+            add("E01 wait: watcher + builder idle (late scaffold events may queue an auto-build)", [&]
+            {
+                return !m_Builder.IsBuilding() && m_Live.Debounce < 0.0f;
+            });
             add("E01 module loaded + play", [&]
             {
                 t.check("E01", m_Builder.GetStatus() == BuildRunner::Status::Success, "the app template's module build failed");

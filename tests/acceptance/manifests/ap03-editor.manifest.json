@@ -11,10 +11,10 @@
       "workingDir": "{BIN}",
       "args": [
         "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
-        "{ACCEPTANCE}\fixtures\Run-AP03Authoring.ps1",
+        "{ACCEPTANCE}\\fixtures\\Run-AP03Authoring.ps1",
         "-Bin", "{BIN}",
-        "-Output", "{REPO}\docs\plans\app-platform-2026-09-18\evidence\AP-03\ap03-{CONFIG}",
-        "-ProjectRoot", "{RUNTEMP}\ap03"
+        "-Output", "{REPO}\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-03\\ap03-{CONFIG}",
+        "-ProjectRoot", "{RUNTEMP}\\ap03"
       ],
       "expectExit": 0,
       "minTests": 2,
