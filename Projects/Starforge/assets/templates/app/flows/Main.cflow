@@ -1,0 +1,36 @@
+{
+  "cosmic_flow": 1,
+  "start": "Home",
+  "states": [
+    {
+      "name": "Home",
+      "scene": "project://scenes/Home.cscene",
+      "editor": { "pos": [40.0, 60.0] },
+      "transitions": [
+        { "on": "dashboard_clicked", "to": "Dashboard" },
+        { "on": "settings_clicked", "to": "Settings" },
+        { "on": "quit_clicked", "to": "@quit" },
+        { "on": "key:Escape", "to": "@quit" }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "scene": "project://scenes/Dashboard.cscene",
+      "editor": { "pos": [380.0, 60.0] },
+      "transitions": [
+        { "on": "settings_clicked", "to": "Settings" },
+        { "on": "back_clicked", "to": "Home" },
+        { "on": "key:Escape", "to": "Home" }
+      ]
+    },
+    {
+      "name": "Settings",
+      "scene": "project://scenes/Settings.cscene",
+      "editor": { "pos": [720.0, 60.0] },
+      "transitions": [
+        { "on": "back_clicked", "to": "Dashboard" },
+        { "on": "key:Escape", "to": "Dashboard" }
+      ]
+    }
+  ]
+}

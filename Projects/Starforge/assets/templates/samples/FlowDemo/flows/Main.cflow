@@ -1,0 +1,64 @@
+{
+  "cosmic_flow": 1,
+  "start": "MainMenu",
+  "states": [
+    {
+      "editor": {
+        "pos": [
+          40.0,
+          60.0
+        ]
+      },
+      "name": "MainMenu",
+      "scene": "project://scenes/MainMenu.cscene",
+      "transitions": [
+        {
+          "on": "play_clicked",
+          "to": "Game"
+        },
+        {
+          "on": "quit_clicked",
+          "to": "@quit"
+        }
+      ]
+    },
+    {
+      "editor": {
+        "pos": [
+          380.0,
+          60.0
+        ]
+      },
+      "name": "Game",
+      "scene": "project://scenes/Game.cscene",
+      "transitions": [
+        {
+          "on": "key:Escape",
+          "push": true,
+          "to": "Pause"
+        }
+      ]
+    },
+    {
+      "editor": {
+        "pos": [
+          720.0,
+          60.0
+        ]
+      },
+      "name": "Pause",
+      "overlay": true,
+      "scene": "project://scenes/Pause.cscene",
+      "transitions": [
+        {
+          "on": "resume_clicked",
+          "to": "@pop"
+        },
+        {
+          "on": "quit_clicked",
+          "to": "@quit"
+        }
+      ]
+    }
+  ]
+}

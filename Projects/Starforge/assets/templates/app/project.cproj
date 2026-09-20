@@ -1,0 +1,14 @@
+# Cosmic project manifest — @PROJECT_NAME@ (app template, App Platform / AP-04)
+# Consumed by the standalone PlayerLayer (E13) and Starforge (E12). The startup
+# flow owns navigation (Home -> Dashboard -> Settings); kind = "app" turns the
+# editor's auto-build on so edits under src/ rebuild and resume Play (D-LIVE).
+name          = "@PROJECT_NAME@"
+kind          = "app"
+startup_scene = "scenes/Home.cscene"
+startup_flow  = "flows/Main.cflow"
+fixed_dt_hz   = 60
+
+[window]
+title  = "@PROJECT_NAME@"
+width  = 1280
+height = 720

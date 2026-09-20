@@ -7,25 +7,19 @@
 //     the Launcher / `CosmicApp --project @PROJECT_NAME@` / a packaged exe.
 //
 // Add one CS_SCRIPT / CS_COMPONENT block per class. Rebuild in the editor with
-// "Build Scripts" (Ctrl+B).
+// "Build Scripts" (Ctrl+B). Screen scripts created by Starforge ▸ Screens land
+// between the CS_SCREENS markers below — leave the markers in place.
 
 #include <Cosmic.h>
 
-#include "scripts/HoverController.h"
 #include "scripts/BouncingBall.h"
 #include "scripts/PidController.h"
-#include "scripts/WalkController.h"
 #include "scripts/PhysicsBall.h"
 #include "scripts/PaddleController.h"
 #include "scripts/PongBall.h"
+#include "scripts/StoryUiBinding.h"
 
 CS_MODULE_BEGIN(@PROJECT_NAME@)
-    CS_SCRIPT(HoverController)
-        CS_FIELD(TargetAltitude).Range(0.0f, 100.0f)
-        CS_FIELD(Kp)
-        CS_FIELD(Kd)
-    CS_END;
-
     // Telemetry demos (E20) — push channels sampled per fixed step during Play.
     CS_SCRIPT(BouncingBall)
         CS_FIELD(Gravity)
@@ -39,13 +33,6 @@ CS_MODULE_BEGIN(@PROJECT_NAME@)
         CS_FIELD(Kp)
         CS_FIELD(Ki)
         CS_FIELD(Kd)
-    CS_END;
-
-    // Physics character walker (Phase 15 / J6) — attach with a
-    // CharacterControllerComponent; WASD / left stick walk, Space jumps.
-    CS_SCRIPT(WalkController)
-        CS_FIELD(MoveSpeed).Range(0.0f, 20.0f)
-        CS_FIELD(JumpSpeed).Range(0.0f, 20.0f)
     CS_END;
 
     // Telemetry reporter for a dynamic-rigid-body ball (Phase 15 / J9).
@@ -66,4 +53,18 @@ CS_MODULE_BEGIN(@PROJECT_NAME@)
         CS_FIELD(CourtHalfH).Range(1.0f, 32.0f)
         CS_FIELD(WinScore).Range(1.0f, 99.0f)
     CS_END;
+
+    // Story Graph UI binding (Phase 25 / Q3) — attach next to a canvas, point
+    // StoryPath at a .cstory, tag the UI entities it drives.
+    CS_SCRIPT(StoryUiBinding)
+        CS_FIELD(StoryPath)
+        CS_FIELD(TextTag)
+        CS_FIELD(SpeakerTag)
+        CS_FIELD(PortraitTag)
+        CS_FIELD(BackgroundTag)
+        CS_FIELD(OptionTagPrefix)
+    CS_END;
+
+    // CS_SCREENS_BEGIN — managed by Starforge ▸ Screens (one CS_SCRIPT per screen script)
+    // CS_SCREENS_END
 CS_MODULE_END()
