@@ -1,0 +1,44 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="pr-units" tests="19" failures="0" skipped="0">
+  <testsuite name="pr" tests="19" failures="0" skipped="0">
+    <testcase name="T01-PC-text" classname="pr-units.U" time="0">
+    </testcase>
+    <testcase name="T02-PC-faults" classname="pr-units.U" time="0">
+    </testcase>
+    <testcase name="T03-write-close" classname="pr-units.U" time="0">
+    </testcase>
+    <testcase name="T03-late-open" classname="pr-units.U" time="0">
+    </testcase>
+    <testcase name="T03-owner-cancel" classname="pr-units.U" time="0">
+    </testcase>
+    <testcase name="T06-burst-reconnect" classname="pr-units.U" time="0">
+    </testcase>
+    <testcase name="D01" classname="pr-units.U" time="0">
+    </testcase>
+    <testcase name="D01-IDEMPOTENT" classname="pr-units.U" time="0">
+    </testcase>
+    <testcase name="D02" classname="pr-units.U" time="0">
+    </testcase>
+    <testcase name="D03" classname="pr-units.U" time="0">
+    </testcase>
+    <testcase name="D04" classname="pr-units.U" time="0">
+    </testcase>
+    <testcase name="R04-U" classname="pr-units.U" time="0">
+    </testcase>
+    <testcase name="R06-U" classname="pr-units.U" time="0">
+    </testcase>
+    <testcase name="N02-U" classname="pr-units.U" time="0">
+    </testcase>
+    <testcase name="N03" classname="pr-units.U" time="0">
+    </testcase>
+    <testcase name="N04" classname="pr-units.U" time="0">
+    </testcase>
+    <testcase name="N04-FILTERS" classname="pr-units.U" time="0">
+    </testcase>
+    <testcase name="N04-LOOKUP" classname="pr-units.U" time="0">
+    </testcase>
+    <testcase name="N04-SCENE" classname="pr-units.U" time="0">
+    </testcase>
+  </testsuite>
+</testsuites>
+

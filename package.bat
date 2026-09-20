@@ -9,14 +9,38 @@ echo ======================================================
 :: zips it.
 ::
 :: Usage:
-::   package.bat              -> full SDK dist (every project) at dist\Cosmic\
-::   package.bat <AppName>    -> single-app dist at dist\<AppName>\ containing
-::                               ONLY that project's DLL and assets (e.g.
-::                               "package.bat SF_Telem"). Pair with
-::                               package_installer.bat for a setup exe.
+::   package.bat <AppName>    -> THE shipping path. Stages dist\<AppName>\ in the
+::                               ONE package layout (AP-P1), identical to what the
+::                               Starforge editor's File > Package produces and to
+::                               what .github/workflows/release.yml uploads:
+::
+::                                 <App>.exe        (renamed CosmicApp.exe)
+::                                 <App>.dll        (only this app's DLL)
+::                                 Cosmic.dll
+::                                 boot.cfg         (names <App>; sets the user:// identity)
+::                                 assets\          (engine assets minus projects\)
+::                                 assets\projects\<App>\
+::                                 licenses\        (installer\licenses\MANIFEST.txt)
+::                                 user\            (portable writable-root placeholder)
+::
+::                               Staging is done by installer\Stage-AppPackage.ps1,
+::                               the same script release.yml calls, so the two CLI
+::                               paths cannot drift. Pair with package_installer.bat
+::                               for a setup exe.
+::
+::   package.bat              -> DEVELOPER SDK bundle (every project) at dist\Cosmic\,
+::                               staged through `cmake --install`.
+::
+:: NOTE (AP-P1): `cmake --install` still works and is still how the no-argument SDK
+:: bundle above is produced, but it is NOT a shipping path any more. It emits the old
+:: multi-project layout (CosmicApp.exe at the root, project DLLs in projects\, every
+:: app's assets) which no installer, shortcut or boot.cfg targets. Ship only
+:: `package.bat <AppName>`, the editor's Package command, or release.yml.
 ::
 :: Set COSMIC_NOPAUSE=1 to suppress the final pause (used when chained from
 :: package_installer.bat).
+:: Set COSMIC_STAGE_ONLY=1 to skip the clean configure+build and stage from the
+:: existing build\Runtime\Release outputs (CI and acceptance runs that already built).
 
 set "SDK_ROOT=%~dp0"
 if "%SDK_ROOT:~-1%"=="\" set "SDK_ROOT=%SDK_ROOT:~0,-1%"
@@ -44,6 +68,11 @@ if defined VS_PATH (
     echo [INFO] Visual Studio not detected. Relying on system default CMake generator...
 )
 
+if defined COSMIC_STAGE_ONLY (
+    echo [STAGE 1-2] Skipped ^(COSMIC_STAGE_ONLY^) - staging the existing Release build.
+    goto :stage
+)
+
 :: 1. Clean configure + build (Release implies the distribution build)
 if exist build rmdir /s /q build
 mkdir build
@@ -52,15 +81,29 @@ cd build
 :: -DCOSMIC_2D_ONLY=ON — this trunk packages the 2D-only engine (WO-03). The root
 :: CMakeLists also rejects OFF, so a stale build\ cache can't smuggle a 3D binary
 :: into the distributable; the explicit flag makes the intent visible here too.
+:: -DCOSMIC_BUILD_TESTS=OFF — CosmicTests/CosmicRenderTests are developer-only
+:: targets and are never built into, let alone staged from, a shipping tree.
 echo [STAGE 1] Configuring (Release, 2D-only engine)...
 if defined VS_PATH (
-    cmake .. -A x64 -DCOSMIC_BUILD_ENGINE_ONLY=OFF -DCOSMIC_2D_ONLY=ON
+    cmake .. -A x64 -DCOSMIC_BUILD_ENGINE_ONLY=OFF -DCOSMIC_2D_ONLY=ON -DCOSMIC_BUILD_TESTS=OFF
 ) else (
-    cmake .. -DCOSMIC_BUILD_ENGINE_ONLY=OFF -DCOSMIC_2D_ONLY=ON
+    cmake .. -DCOSMIC_BUILD_ENGINE_ONLY=OFF -DCOSMIC_2D_ONLY=ON -DCOSMIC_BUILD_TESTS=OFF
 )
 if errorlevel 1 (
     echo.
     echo [ERROR] CMake configure failed! Check log output above.
+    cd "%SDK_ROOT%"
+    if not defined COSMIC_NOPAUSE pause
+    ENDLOCAL
+    exit /b 1
+)
+
+:: Guard: prove the configured tree really is 2D before it becomes a distributable
+:: (the same assertion ci.yml and release.yml make).
+findstr /R /C:"^COSMIC_2D_ONLY:BOOL=ON$" CMakeCache.txt >nul
+if errorlevel 1 (
+    echo.
+    echo [ERROR] build\CMakeCache.txt is not COSMIC_2D_ONLY=ON - refusing to stage a non-2D distributable.
     cd "%SDK_ROOT%"
     if not defined COSMIC_NOPAUSE pause
     ENDLOCAL
@@ -78,40 +121,42 @@ if errorlevel 1 (
     exit /b 1
 )
 
-:: 2. Stage a clean distributable folder via install rules
-echo [STAGE 3] Staging distributable to "%DIST_DIR%"...
+:stage
+cd "%SDK_ROOT%"
 if exist "%SDK_ROOT%\dist" rmdir /s /q "%SDK_ROOT%\dist"
-cmake --install . --config Release --prefix "%DIST_DIR%"
+
+if not defined APP_NAME goto :sdkbundle
+
+:: 3a. Single-app mode: THE shipping layout, staged by the same script release.yml
+::     calls. The staged tree carries exactly one app; the shortcut boots it as
+::     "<App>.exe" with no --project flag (boot.cfg also sets the per-app user://
+::     identity, which --project would bypass).
+echo [STAGE 3] Staging app "%APP_NAME%" to "%DIST_DIR%"...
+powershell -NoProfile -ExecutionPolicy Bypass -File "%SDK_ROOT%\installer\Stage-AppPackage.ps1" -SdkRoot "%SDK_ROOT%" -App "%APP_NAME%" -RuntimeDir "%SDK_ROOT%\build\Runtime\Release" -OutDir "%DIST_DIR%" -ListOut "%SDK_ROOT%\dist\%APP_NAME%.files.txt"
+if errorlevel 1 (
+    echo.
+    echo [ERROR] Staging failed! Check log output above.
+    if not defined COSMIC_NOPAUSE pause
+    ENDLOCAL
+    exit /b 1
+)
+goto :zip
+
+:sdkbundle
+:: 3b. No app name: the DEVELOPER SDK bundle via the install rules. Not a shipping
+::     layout (see the note in this file's header).
+echo [STAGE 3] Staging developer SDK bundle to "%DIST_DIR%" (cmake --install; NOT a shipping layout)...
+cmake --install build --config Release --prefix "%DIST_DIR%"
 if errorlevel 1 (
     echo.
     echo [ERROR] Install/staging failed! Check log output above.
-    cd "%SDK_ROOT%"
     if not defined COSMIC_NOPAUSE pause
     ENDLOCAL
     exit /b 1
 )
 
-:: 2b. Single-app mode: prune every project except the requested one so the
-::     distributable carries exactly one app (the desktop shortcut boots it via
-::     "CosmicApp.exe --project <AppName>").
-if defined APP_NAME (
-    echo [STAGE 3b] Pruning distributable to app "%APP_NAME%"...
-    if not exist "%DIST_DIR%\projects\%APP_NAME%.dll" (
-        echo [ERROR] Project DLL "%APP_NAME%.dll" was not produced by the build!
-        cd "%SDK_ROOT%"
-        if not defined COSMIC_NOPAUSE pause
-        ENDLOCAL
-        exit /b 1
-    )
-    for %%f in ("%DIST_DIR%\projects\*.dll") do (
-        if /I not "%%~nf"=="%APP_NAME%" del "%%f"
-    )
-    for /d %%d in ("%DIST_DIR%\assets\projects\*") do (
-        if /I not "%%~nxd"=="%APP_NAME%" rmdir /s /q "%%d"
-    )
-)
-
-:: 3. Zip the staged folder. Use PowerShell's Compress-Archive — reliable on
+:zip
+:: 4. Zip the staged folder. Use PowerShell's Compress-Archive — reliable on
 ::    Windows 10/11. (Plain `tar` is often the GNU build from Git-for-Windows,
 ::    which cannot write .zip archives.)
 echo [STAGE 4] Zipping to "%SDK_ROOT%\dist\!DIST_NAME!.zip"...

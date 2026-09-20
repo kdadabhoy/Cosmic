@@ -45,7 +45,11 @@ namespace Starforge
     {
     public:
         // Copy the renamed exe + DLLs + engine assets + this project's content +
-        // boot.cfg into OutDistDir (fresh). Returns false + logs on failure.
+        // boot.cfg + licenses/ + the user/ placeholder into OutDistDir (fresh).
+        // THE reference implementation of the one shipping layout (AP-P1): the CLI
+        // stager installer/Stage-AppPackage.ps1 — which package.bat and
+        // .github/workflows/release.yml both call — mirrors it file for file.
+        // Returns false + logs on failure.
         static bool Stage(EditorContext& ctx, const PackageInputs& in);
 
         // Post-stage: embed the icon (if any), sign (if a cert is configured), then
@@ -54,6 +58,10 @@ namespace Starforge
         static bool Finalize(EditorContext& ctx, const PackageInputs& in, const PackageOptions& opt);
 
     private:
+        // licenses/ from installer/licenses/MANIFEST.txt (AP-P1). False + logs when
+        // the manifest, or any source it lists, is missing — a package never ships
+        // silently without its third-party notices.
+        static bool StageLicenses(EditorContext& ctx, const PackageInputs& in, const std::string& outDistDir);
         static bool WriteInstallerScript(EditorContext& ctx, const PackageInputs& in);
         static void RunInnoIfAvailable(EditorContext& ctx, const std::string& issPath);
         static void ZipDist(EditorContext& ctx, const PackageInputs& in);

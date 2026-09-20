@@ -184,11 +184,18 @@ if(NOT COSMIC_BUILD_ENGINE_ONLY)
             message(STATUS "--> Auto-detected game project: ${SUBDIR}")
             add_subdirectory("Projects/${SUBDIR}")
 
-            # Generic per-project packaging rule — relies on the convention that the
-            # project's target name matches its directory name (true for all current
-            # projects). Project DLLs land in projects/ (the launcher scans there);
-            # their assets mirror the assets/projects/<name>/ VFS layout the POST_BUILD
-            # sync produces.
+            # Generic per-project rule for the DEVELOPER SDK bundle — relies on the
+            # convention that the project's target name matches its directory name
+            # (true for all current projects). Project DLLs land in projects/ (the
+            # launcher scans there); their assets mirror the assets/projects/<name>/
+            # VFS layout the POST_BUILD sync produces.
+            #
+            # NOT A SHIPPING PATH (AP-P1): `cmake --install` stages EVERY project into
+            # one multi-app bundle, which no boot.cfg, installer or shortcut targets.
+            # A shipped app comes from installer/Stage-AppPackage.ps1 (package.bat
+            # <App>, release.yml) or the editor packager — one app, <App>.exe, boot.cfg,
+            # licenses/, user/. Dev-only targets (CosmicTests, CosmicRenderTests,
+            # fixtures) carry no install rule anywhere and can never be staged.
             install(TARGETS ${SUBDIR}
                 RUNTIME DESTINATION projects
                 LIBRARY DESTINATION projects

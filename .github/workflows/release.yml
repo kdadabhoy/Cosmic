@@ -4,12 +4,20 @@ name: Release
 # standalone dist/<app> for a named in-tree project, then uploads it as an artifact.
 # Per-app icon embedding / installer compilation is done from Starforge's Package UI
 # (or locally with installer/AppSetup.iss); this job produces the runnable payload.
+#
+# ONE package layout (AP-P1): the staging below is not hand-written any more, it calls
+# installer/Stage-AppPackage.ps1 — the same script package.bat <App> calls, mirroring
+# the editor packager (Projects/Starforge/src/Packager.cpp). All three paths therefore
+# emit the identical file list:
+#   <App>.exe  <App>.dll  Cosmic.dll  boot.cfg  assets/  assets/projects/<App>/
+#   licenses/  user/README.txt
+# `cmake --install` still works but is NOT a shipping path (see package.bat's header).
 
 on:
   workflow_dispatch:
     inputs:
       app_name:
-        description: "Project/plugin to package (its DLL must build in Release, e.g. SF_Telem or Starforge — the 2D-only trunk ships these)"
+        description: "Project/plugin to package (its DLL must build in Release, e.g. SF_Telem or Starforge - the 2D-only trunk ships these)"
         required: true
         default: "Starforge"
 
@@ -24,6 +32,8 @@ jobs:
       # COSMIC_2D_ONLY=OFF, a release run cannot produce a 3D or mixed distributable:
       # editing this flag to OFF fails the configure outright, and the assertion
       # below re-checks the generated cache before any staging happens.
+      # COSMIC_BUILD_TESTS=OFF: CosmicTests/CosmicRenderTests are developer-only
+      # targets that must never be built into, let alone staged from, a release tree.
       - name: Configure (2D-only engine)
         run: cmake -S . -B build -A x64 -DCOSMIC_2D_ONLY=ON -DCOSMIC_BUILD_TESTS=OFF
 
@@ -37,32 +47,31 @@ jobs:
       - name: Build (Release)
         run: cmake --build build --config Release --parallel
 
-      - name: Stage dist
-        shell: pwsh
+      - name: Stage dist (one layout)
+        shell: powershell
         run: |
           $app = "${{ github.event.inputs.app_name }}"
-          $rt  = "build/Runtime/Release"
-          $out = "dist/$app"
-          if (-not (Test-Path "$rt/$app.dll")) { throw "Release DLL '$rt/$app.dll' not found — is '$app' an in-tree project?" }
-          Remove-Item -Recurse -Force $out -ErrorAction SilentlyContinue
-          New-Item -ItemType Directory -Force -Path "$out/assets/projects" | Out-Null
-
-          Copy-Item "$rt/CosmicApp.exe" "$out/$app.exe"
-          Copy-Item "$rt/Cosmic.dll"    "$out/Cosmic.dll"
-          Copy-Item "$rt/$app.dll"      "$out/$app.dll"
-
-          # Engine assets minus the projects/ tree, then only this app's content.
-          Get-ChildItem "$rt/assets" -Force | Where-Object { $_.Name -ne "projects" } |
-            ForEach-Object { Copy-Item $_.FullName "$out/assets/" -Recurse -Force }
-          if (Test-Path "$rt/assets/projects/$app") {
-            Copy-Item "$rt/assets/projects/$app" "$out/assets/projects/$app" -Recurse -Force
-          }
-
-          "# Cosmic packaged app (boot.cfg): launched with no --project; sets the S6 user data identity.`n$app" |
-            Set-Content -Encoding ascii "$out/boot.cfg"
+          ./installer/Stage-AppPackage.ps1 `
+            -SdkRoot (Get-Location).Path `
+            -App $app `
+            -RuntimeDir "build/Runtime/Release" `
+            -OutDir "dist/$app" `
+            -ListOut "dist/$app.files.txt"
+          if ($LASTEXITCODE -ne 0) { throw "Staging failed (exit $LASTEXITCODE)." }
+          Get-Content "dist/$app.files.txt"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ github.event.inputs.app_name }}-dist
           path: dist/${{ github.event.inputs.app_name }}
+
+      # The sorted relative-path list of the staged tree. AP-P1's one-layout contract
+      # is checked by diffing this against the editor path's and package.bat's lists.
+      - name: Upload file list
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ github.event.inputs.app_name }}-file-list
+          path: dist/${{ github.event.inputs.app_name }}.files.txt
+          if-no-files-found: warn

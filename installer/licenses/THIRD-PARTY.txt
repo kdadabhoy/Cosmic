@@ -1,0 +1,39 @@
+Cosmic Engine - third-party components in a packaged 2D app
+===========================================================
+
+This file ships in every Cosmic app package as licenses/THIRD-PARTY.txt. It names
+every third-party component linked into the payload (<App>.exe, Cosmic.dll and
+<App>.dll) of a COSMIC_2D_ONLY build, with its license. Where the upstream project
+vendors a license file in this repository, that file is staged next to this one
+(see the file name column); where it does not, the license is named here and the
+canonical text is at the upstream URL.
+
+Dev-only and 3D-only dependencies are NOT part of a 2D package and are therefore
+not listed: doctest (unit tests), assimp and cgltf (3D mesh import),
+recastnavigation (3D navmesh).
+
+Component            License                     Staged file                        Upstream
+-------------------- --------------------------- ---------------------------------- ------------------------------------------------
+Dear ImGui           MIT                         imgui-LICENSE.txt                  https://github.com/ocornut/imgui
+ImPlot               MIT                         (see upstream)                     https://github.com/epezent/implot
+imgui-node-editor    MIT                         imgui-node-editor-LICENSE.txt      https://github.com/thedmd/imgui-node-editor
+ImGuizmo             MIT                         ImGuizmo-LICENSE.txt               https://github.com/CedricGuillemet/ImGuizmo
+GLFW                 zlib/libpng                 glfw-LICENSE.md                    https://www.glfw.org
+glad                 Apache-2.0 / MIT (generated loader)  (see upstream)            https://github.com/Dav1dde/glad
+OpenGL Mathematics   MIT (Happy Bunny variant)   glm-copying.txt                    https://github.com/g-truc/glm
+EnTT                 MIT                         entt-LICENSE.txt                   https://github.com/skypjack/entt
+spdlog               MIT                         spdlog-LICENSE.txt                 https://github.com/gabime/spdlog
+toml++               MIT                         tomlplusplus-LICENSE.txt           https://github.com/marzer/tomlplusplus
+nlohmann/json        MIT                         (see upstream)                     https://github.com/nlohmann/json
+stb_image,
+stb_image_write,
+stb_truetype         MIT / public domain (dual)  (see upstream)                     https://github.com/nothings/stb
+miniaudio            MIT-0 / public domain (dual)  (see upstream)                   https://github.com/mackron/miniaudio
+Jolt Physics         MIT                         JoltPhysics-LICENSE.txt            https://github.com/jrouwe/JoltPhysics
+
+Jolt Physics is linked only when the SDK was configured with COSMIC_WITH_JOLT=ON
+(the default). Its license is staged unconditionally so the package's file list
+does not vary with that option.
+
+The Cosmic Engine itself and the application content under assets/projects/<App>/
+are not third-party material and are covered by their own terms.

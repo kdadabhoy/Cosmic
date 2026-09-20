@@ -128,7 +128,7 @@ namespace Workspace
         m_Panel.SetPlayer(&m_Player);
         // Point the replay loader at the same folder recordings are written to, so
         // Browse opens where the .bin/.csv files actually live.
-        m_Panel.SetReplayPath(std::string(k_RecordDir) + "/");
+        m_Panel.SetReplayPath(Cosmic::FileSystem::Resolve(k_RecordDir) + "/");
 
         m_Panel.RegisterTagInspector("Drive",
             [](const std::string& name, const Cosmic::TelemetryFrame& f)
@@ -183,7 +183,7 @@ namespace Workspace
         if(m_IntentionalExport && m_Recorder.GetFlushState()==Cosmic::DataRecorder::FlushState::Succeeded &&
            m_ExportFrameCount==m_Recorder.GetTotalFrameCount()) m_RecordingDirty=false;
         if(m_RecordingDirty && m_Recorder.GetTotalFrameCount()>0) {
-            m_Recorder.Flush(k_RecordDir,m_SessionName,k_SampleRate);
+            m_Recorder.Flush(Cosmic::FileSystem::Resolve(k_RecordDir),m_SessionName,k_SampleRate);
             m_Recorder.WaitForFlush();
             m_RecordingDirty=m_Recorder.GetFlushState()!=Cosmic::DataRecorder::FlushState::Succeeded;
         }
@@ -607,7 +607,7 @@ namespace Workspace
         m_RecordStatus = "Recording...";
         m_Panel.SetMode(Cosmic::TelemetryPanel::Mode::Live);
         // Crash failsafe: roll a snapshot to _autosave/ every few seconds.
-        m_Recorder.SetAutosave(k_AutoSaveDir, m_SessionName, k_AutoSaveInterval, k_SampleRate);
+        m_Recorder.SetAutosave(Cosmic::FileSystem::Resolve(k_AutoSaveDir), m_SessionName, k_AutoSaveInterval, k_SampleRate);
     }
 
     void TelemHub::ServiceRecording()
@@ -632,10 +632,10 @@ namespace Workspace
         if (m_AutoExportOnStop && m_Recorder.GetTotalFrameCount() > 0)
         {
             if(m_Recorder.IsFlushing()) {m_PendingIntentionalExport=true;m_RecordStatus="Saving; final export queued.";return;}
-            m_Recorder.Flush(k_RecordDir, m_SessionName, k_SampleRate);
+            m_Recorder.Flush(Cosmic::FileSystem::Resolve(k_RecordDir), m_SessionName, k_SampleRate);
             m_IntentionalExport=true;m_ExportFrameCount=m_Recorder.GetTotalFrameCount();
             const std::string dest = m_SessionName.empty() ? "<timestamp>" : m_SessionName;
-            m_RecordStatus = "Exporting -> " + std::string(k_RecordDir) + "/" + dest + "/";
+            m_RecordStatus = "Exporting -> " + Cosmic::FileSystem::Resolve(k_RecordDir) + "/" + dest + "/";
             m_WasFlushing  = true;
         }
         else
@@ -648,10 +648,10 @@ namespace Workspace
     {
         if(m_Recorder.GetTotalFrameCount()>0) m_RecordingDirty=true;
         if(m_Recorder.IsFlushing()) {m_PendingIntentionalExport=true;m_RecordStatus="Saving; final export queued.";return;}
-        m_Recorder.Flush(k_RecordDir, m_SessionName, k_SampleRate);
+        m_Recorder.Flush(Cosmic::FileSystem::Resolve(k_RecordDir), m_SessionName, k_SampleRate);
         m_IntentionalExport=true;m_ExportFrameCount=m_Recorder.GetTotalFrameCount();
         const std::string dest = m_SessionName.empty() ? "<timestamp>" : m_SessionName;
-        m_RecordStatus = "Exporting -> " + std::string(k_RecordDir) + "/" + dest + "/";
+        m_RecordStatus = "Exporting -> " + Cosmic::FileSystem::Resolve(k_RecordDir) + "/" + dest + "/";
         m_WasFlushing  = true;
     }
     void TelemHub::DrawRecordingControls()

@@ -113,7 +113,7 @@ function Get-AcceptanceCapabilities {
     # is reported ABSENT. `Disable` force-removes capabilities (used by the self-test
     # to exercise the GPU/Windows environment-blocked branch on a machine that has
     # them); every forced removal is recorded so evidence never claims real absence.
-    param([string[]]$Disable = @())
+    param([string[]]$Disable = @(), [string]$BinDir = '')
 
     $caps = [ordered]@{}
     $caps['windows'] = ($env:OS -eq 'Windows_NT')
@@ -148,6 +148,14 @@ function Get-AcceptanceCapabilities {
             Where-Object { $_.Status -eq 'OK' }).Count -gt 0
     } catch { }
     $caps['audio-device'] = $hasAudio
+
+    # AP-P1: the golden-image binary only exists in a tree configured with
+    # -DCOSMIC_BUILD_RENDER_TESTS=ON. A G-tier case needs BOTH a GPU and this binary;
+    # without it the case is ENVIRONMENT_BLOCKED naming 'render-tests', instead of
+    # reading as a MISSING-executable failure on a machine that simply did not build
+    # the GPU suite (ci.yml's PR tree, for one).
+    $caps['render-tests'] = $false
+    if ($BinDir) { $caps['render-tests'] = (Test-Path -LiteralPath (Join-Path $BinDir 'CosmicRenderTests.exe')) }
 
     $forced = @()
     foreach ($d in $Disable) {

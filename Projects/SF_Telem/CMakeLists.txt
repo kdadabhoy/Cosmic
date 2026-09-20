@@ -18,6 +18,17 @@ if(WIN32)
     add_definitions(-DNOMINMAX)
 endif()
 
+# Engine build mode — MUST match the Cosmic SDK this plugin links against (AP-P1;
+# the same option AnalysisSample and the scaffold template declare). In-tree this is
+# already a cache entry from the root CMakeLists, so option() is a no-op here and the
+# value follows the engine. Standalone (-DCOSMIC_SDK_DIR against a built SDK) it
+# defaults ON, matching the 2D-only trunk. The PUBLIC headers carry
+# `#ifndef COSMIC_2D_ONLY` fences, so every plugin TU needs the same definition or the
+# plugin-boundary ABI silently diverges: in-tree the PUBLIC define on the Cosmic target
+# already supplies it, and the explicit one below is what makes a STANDALONE SF_Telem
+# build agree with the SDK it loads into.
+option(COSMIC_2D_ONLY "Match the 2D-only Cosmic SDK this plugin links against" ON)
+
 # -------------------------------------------------------------------
 # 1. SDK Path Resolution
 # -------------------------------------------------------------------
@@ -50,6 +61,10 @@ if(NOT TARGET Cosmic)
 endif()
 
 add_library(SF_Telem SHARED ${TEMPLATE_SOURCES})
+
+if(COSMIC_2D_ONLY)
+    target_compile_definitions(SF_Telem PRIVATE COSMIC_2D_ONLY)
+endif()
 
 # -------------------------------------------------------------------
 # 3. Include Paths

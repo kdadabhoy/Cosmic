@@ -1,0 +1,526 @@
+{
+  "manifest": "pr-units",
+  "description": "AP-P1 / H05 - the U-tier acceptance cases the 2D stability campaign left green, aggregated into the 'pr' profile that .github/workflows/ci.yml's acceptance-pr job runs after the unit steps. Deliberately NOT here: the 'retained-units' re-runs of the whole suite (ci.yml already runs CosmicTests in both configs as its own step, with the 300-case discovery floor), the GPU/editor/soak tiers (pr-blocked.manifest.json) and D05-independent-audit (its manifest hardcodes a machine-specific python.exe). Wrapper evidence goes under {REPO}\\build\\, which is gitignored, so a CI run never dirties the tree.",
+  "cases": [
+    {
+      "tier": "U",
+      "profiles": [
+        "pr",
+        "nightly",
+        "release"
+      ],
+      "requires": [
+        "windows"
+      ],
+      "command": "{BIN}\\CosmicTests.exe",
+      "args": [
+        "--test-case=WO-05 T01:*,ParseFrame*,DriveSample*,WeaponSample*,TelemHub*",
+        "--no-colors"
+      ],
+      "expectExit": 0,
+      "deadlineSec": 90,
+      "minTests": 33,
+      "fixture": "../../tests/test_wo05_matrix.cpp",
+      "id": "T01-PC-text",
+      "description": "WO-05 T01: ASCII/KISS protocol decode, drive/weapon sample mapping and TelemHub ingest."
+    },
+    {
+      "tier": "U",
+      "profiles": [
+        "pr",
+        "nightly",
+        "release"
+      ],
+      "requires": [
+        "windows"
+      ],
+      "command": "{BIN}\\CosmicTests.exe",
+      "args": [
+        "--test-case=WO-05 T02:*",
+        "--no-colors"
+      ],
+      "expectExit": 0,
+      "deadlineSec": 60,
+      "minTests": 1,
+      "fixture": "../../tests/test_wo05_matrix.cpp",
+      "id": "T02-PC-faults",
+      "description": "WO-05 T02: malformed/partial frame faults are rejected without corrupting state."
+    },
+    {
+      "tier": "U",
+      "profiles": [
+        "pr",
+        "nightly",
+        "release"
+      ],
+      "requires": [
+        "windows"
+      ],
+      "command": "{BIN}\\CosmicTests.exe",
+      "args": [
+        "--test-case=WO-05 T03: close drains*",
+        "--no-colors"
+      ],
+      "expectExit": 0,
+      "deadlineSec": 60,
+      "minTests": 1,
+      "fixture": "../../tests/test_wo05_matrix.cpp",
+      "id": "T03-write-close",
+      "description": "WO-05 T03: Close() drains a pending write instead of losing it."
+    },
+    {
+      "tier": "U",
+      "profiles": [
+        "pr",
+        "nightly",
+        "release"
+      ],
+      "requires": [
+        "windows"
+      ],
+      "command": "{BIN}\\CosmicTests.exe",
+      "args": [
+        "--test-case=WO-05 T03: non-cooperative*",
+        "--no-colors"
+      ],
+      "expectExit": 0,
+      "deadlineSec": 180,
+      "minTests": 1,
+      "fixture": "../../tests/test_wo05_matrix.cpp",
+      "id": "T03-late-open",
+      "description": "WO-05 T03 (KI-4 seam): teardown while a reconnect worker is blocked in a late open."
+    },
+    {
+      "tier": "U",
+      "profiles": [
+        "pr",
+        "nightly",
+        "release"
+      ],
+      "requires": [
+        "windows"
+      ],
+      "command": "{BIN}\\CosmicTests.exe",
+      "args": [
+        "--test-case=WO-05 T03: cancel a non-cooperative*",
+        "--no-colors"
+      ],
+      "expectExit": 0,
+      "deadlineSec": 180,
+      "minTests": 1,
+      "fixture": "../../tests/test_wo05_matrix.cpp",
+      "id": "T03-owner-cancel",
+      "description": "WO-05 T03: the owner cancels a non-cooperative open; no hang, no leaked worker."
+    },
+    {
+      "tier": "U",
+      "profiles": [
+        "pr",
+        "nightly",
+        "release"
+      ],
+      "requires": [
+        "windows"
+      ],
+      "command": "{BIN}\\CosmicTests.exe",
+      "args": [
+        "--test-case=WO-05 T06:*,WO-05 T06 KISS:*,*COBS*,*CRC protection*",
+        "--no-colors"
+      ],
+      "expectExit": 0,
+      "deadlineSec": 90,
+      "minTests": 8,
+      "fixture": "../../tests/test_wo05_kiss.cpp",
+      "id": "T06-burst-reconnect",
+      "description": "WO-05 T06: burst/reconnect framing - KISS, COBS and CRC protection."
+    },
+    {
+      "tier": "U",
+      "profiles": [
+        "pr",
+        "nightly",
+        "release"
+      ],
+      "requires": [
+        "windows"
+      ],
+      "command": "{BIN}\\CosmicTests.exe",
+      "args": [
+        "--test-case=WO-06 D01:*",
+        "--no-colors"
+      ],
+      "expectExit": 0,
+      "deadlineSec": 90,
+      "minTests": 1,
+      "fixture": "../../tests/test_wo06.cpp",
+      "id": "D01",
+      "description": "WO-06 D01: pinned independent v1 fixture and exact recorder storage."
+    },
+    {
+      "tier": "U",
+      "profiles": [
+        "pr",
+        "nightly",
+        "release"
+      ],
+      "requires": [
+        "windows"
+      ],
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "{ACCEPTANCE}\\fixtures\\Run-RepeatCase.ps1",
+        "-Bin",
+        "{BIN}",
+        "-TestCase",
+        "WO-06 D01*",
+        "-Times",
+        "3",
+        "-MinTests",
+        "1"
+      ],
+      "expectExit": 0,
+      "deadlineSec": 240,
+      "minTests": 1,
+      "fixture": "../../tests/test_wo06.cpp",
+      "id": "D01-IDEMPOTENT",
+      "description": "KI-57 regression: WO-06 D01 run three times in three processes without clearing the %TEMP%\\wo06 scratch. Before the fix, run 2 FAILED (a leftover bad-version scene.bin made DataPlayer::Load return false); after it all three runs are green. This is what makes ci.yml's Debug-then-Release unit pass honest."
+    },
+    {
+      "tier": "U",
+      "profiles": [
+        "pr",
+        "nightly",
+        "release"
+      ],
+      "requires": [
+        "windows"
+      ],
+      "command": "{BIN}\\CosmicTests.exe",
+      "args": [
+        "--test-case=WO-06 D02:*",
+        "--no-colors"
+      ],
+      "expectExit": 0,
+      "deadlineSec": 90,
+      "minTests": 3,
+      "fixture": "../../tests/test_wo06.cpp",
+      "id": "D02",
+      "description": "WO-06 D02: recording/export endpoint behaviour."
+    },
+    {
+      "tier": "U",
+      "profiles": [
+        "pr",
+        "nightly",
+        "release"
+      ],
+      "requires": [
+        "windows"
+      ],
+      "command": "{BIN}\\CosmicTests.exe",
+      "args": [
+        "--test-case=WO-06 D03:*",
+        "--no-colors"
+      ],
+      "expectExit": 0,
+      "deadlineSec": 90,
+      "minTests": 2,
+      "fixture": "../../tests/test_wo06.cpp",
+      "id": "D03",
+      "description": "WO-06 D03: DataPlayer load/seek against truncated and absurd-count files."
+    },
+    {
+      "tier": "U",
+      "profiles": [
+        "pr",
+        "nightly",
+        "release"
+      ],
+      "requires": [
+        "windows"
+      ],
+      "command": "{BIN}\\CosmicTests.exe",
+      "args": [
+        "--test-case=WO-06 D04:*",
+        "--no-colors"
+      ],
+      "expectExit": 0,
+      "deadlineSec": 90,
+      "minTests": 3,
+      "fixture": "../../tests/test_wo06.cpp",
+      "id": "D04",
+      "description": "WO-06 D04: shared-entity recording; no timestamp reversals."
+    },
+    {
+      "tier": "U",
+      "profiles": [
+        "pr",
+        "nightly",
+        "release"
+      ],
+      "requires": [
+        "windows"
+      ],
+      "command": "{BIN}\\CosmicTests.exe",
+      "args": [
+        "--test-case=WO-08 R04*",
+        "--no-colors"
+      ],
+      "expectExit": 0,
+      "deadlineSec": 180,
+      "minTests": 8,
+      "fixture": "../../tests/test_wo08_camera.cpp",
+      "id": "R04-U",
+      "description": "WO-08 R04: ScreenToWorld round trip <= 0.5 px across zoom, DPI and viewport offsets."
+    },
+    {
+      "tier": "U",
+      "profiles": [
+        "pr",
+        "nightly",
+        "release"
+      ],
+      "requires": [
+        "windows"
+      ],
+      "command": "{BIN}\\CosmicTests.exe",
+      "args": [
+        "--test-case=WO-08 R06*",
+        "--no-colors"
+      ],
+      "expectExit": 0,
+      "deadlineSec": 180,
+      "minTests": 4,
+      "fixture": "../../tests/test_wo08_png.cpp",
+      "id": "R06-U",
+      "description": "WO-08 R06: PNG encode/decode of captured frames."
+    },
+    {
+      "tier": "U",
+      "profiles": [
+        "pr",
+        "nightly",
+        "release"
+      ],
+      "requires": [
+        "windows"
+      ],
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "{ACCEPTANCE}\\fixtures\\Run-WO10Case.ps1",
+        "-Bin",
+        "{BIN}",
+        "-CaseId",
+        "N02-U",
+        "-TestSuite",
+        "WO-10 N02 clock (headless)",
+        "-MinTests",
+        "3",
+        "-DeadlineSec",
+        "150",
+        "-Output",
+        "{REPO}\\build\\acceptance-evidence\\n02u-{CONFIG}"
+      ],
+      "expectExit": 0,
+      "deadlineSec": 240,
+      "minTests": 3,
+      "fixture": "../../tests/test_wo10_n02_clock.cpp",
+      "id": "N02-U",
+      "description": "WO-10 N02: recorder time base over 432,000 ticks and negative-speed replay (KI-16)."
+    },
+    {
+      "tier": "U",
+      "profiles": [
+        "pr",
+        "nightly",
+        "release"
+      ],
+      "requires": [
+        "windows"
+      ],
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "{ACCEPTANCE}\\fixtures\\Run-WO10Case.ps1",
+        "-Bin",
+        "{BIN}",
+        "-CaseId",
+        "N03",
+        "-TestSuite",
+        "WO-10 N03 numerics",
+        "-MinTests",
+        "7",
+        "-DeadlineSec",
+        "150",
+        "-Output",
+        "{REPO}\\build\\acceptance-evidence\\n03-{CONFIG}"
+      ],
+      "expectExit": 0,
+      "deadlineSec": 240,
+      "minTests": 7,
+      "fixture": "../../Projects/AnalysisSample/data/trajectory.csv",
+      "id": "N03",
+      "description": "WO-10 N03: RK4 / spring-damper / energy bounds, and the float telemetry path against the double reference."
+    },
+    {
+      "tier": "U",
+      "profiles": [
+        "pr",
+        "nightly",
+        "release"
+      ],
+      "requires": [
+        "windows"
+      ],
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "{ACCEPTANCE}\\fixtures\\Run-WO10Case.ps1",
+        "-Bin",
+        "{BIN}",
+        "-CaseId",
+        "N04",
+        "-TestSuite",
+        "WO-10 N04 determinism",
+        "-MinTests",
+        "3",
+        "-DeadlineSec",
+        "240",
+        "-CompareRuns",
+        "-Output",
+        "{REPO}\\build\\acceptance-evidence\\n04-{CONFIG}"
+      ],
+      "expectExit": 0,
+      "deadlineSec": 420,
+      "minTests": 3,
+      "fixture": "../../tests/fixtures/wo10/pcg32_oracle.py",
+      "id": "N04",
+      "description": "WO-10 N04: the PCG32 vector against the independent oracle, plus same-build reproducibility byte-compared across two processes."
+    },
+    {
+      "tier": "U",
+      "profiles": [
+        "pr",
+        "nightly",
+        "release"
+      ],
+      "requires": [
+        "windows"
+      ],
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "{ACCEPTANCE}\\fixtures\\Run-WO10Case.ps1",
+        "-Bin",
+        "{BIN}",
+        "-CaseId",
+        "N04-FILTERS",
+        "-TestSuite",
+        "Filters (E12)",
+        "-MinTests",
+        "1",
+        "-DeadlineSec",
+        "90",
+        "-Output",
+        "{REPO}\\build\\acceptance-evidence\\n04-filters-{CONFIG}"
+      ],
+      "expectExit": 0,
+      "deadlineSec": 150,
+      "minTests": 1,
+      "fixture": "../../tests/test_filters.cpp",
+      "id": "N04-FILTERS",
+      "description": "Retained: deterministic filter responses (E12)."
+    },
+    {
+      "tier": "U",
+      "profiles": [
+        "pr",
+        "nightly",
+        "release"
+      ],
+      "requires": [
+        "windows"
+      ],
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "{ACCEPTANCE}\\fixtures\\Run-WO10Case.ps1",
+        "-Bin",
+        "{BIN}",
+        "-CaseId",
+        "N04-LOOKUP",
+        "-TestSuite",
+        "LookupTable (E13)",
+        "-MinTests",
+        "1",
+        "-DeadlineSec",
+        "90",
+        "-Output",
+        "{REPO}\\build\\acceptance-evidence\\n04-lookup-{CONFIG}"
+      ],
+      "expectExit": 0,
+      "deadlineSec": 150,
+      "minTests": 1,
+      "fixture": "../../tests/test_lookuptable.cpp",
+      "id": "N04-LOOKUP",
+      "description": "Retained: the restricted numeric CSV reader incl. ragged/non-numeric rejection (E13)."
+    },
+    {
+      "tier": "U",
+      "profiles": [
+        "pr",
+        "nightly",
+        "release"
+      ],
+      "requires": [
+        "windows"
+      ],
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "{ACCEPTANCE}\\fixtures\\Run-WO10Case.ps1",
+        "-Bin",
+        "{BIN}",
+        "-CaseId",
+        "N04-SCENE",
+        "-TestSuite",
+        "2D scene determinism (W2)",
+        "-MinTests",
+        "1",
+        "-DeadlineSec",
+        "90",
+        "-Output",
+        "{REPO}\\build\\acceptance-evidence\\n04-scene-{CONFIG}"
+      ],
+      "expectExit": 0,
+      "deadlineSec": 150,
+      "minTests": 1,
+      "fixture": "../../tests/test_scene2d_determinism.cpp",
+      "id": "N04-SCENE",
+      "description": "Retained: the same seed/input sequence gives identical 2D scene state (W2)."
+    }
+  ]
+}

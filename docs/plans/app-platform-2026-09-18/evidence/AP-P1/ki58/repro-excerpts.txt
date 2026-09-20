@@ -1,0 +1,3 @@
+writable empty cwd  : exit=0 out=[doctest] unskipped test cases passing the current filters: 454
+read-only empty cwd : exit=-1073740791 outlen=0 err=
+done

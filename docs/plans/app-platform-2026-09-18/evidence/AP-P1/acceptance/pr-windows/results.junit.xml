@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="pr-windows" tests="3" failures="0" skipped="1">
+  <testsuite name="pr" tests="3" failures="0" skipped="1">
+    <testcase name="D05" classname="pr-windows.W" time="0">
+    </testcase>
+    <testcase name="D06" classname="pr-windows.W" time="0">
+    </testcase>
+    <testcase name="D01-genuine-SF-Stable" classname="pr-windows.W" time="0">
+      <skipped message="missing capability: sf-stable-v1-capture"/>
+    </testcase>
+  </testsuite>
+</testsuites>
+
