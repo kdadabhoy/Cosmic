@@ -1,0 +1,447 @@
+{
+  "cosmic_scene": 1,
+  "entities": [
+    {
+      "id": "7bb541aa00000001",
+      "components": {
+        "Tag": {
+          "Tag": "Camera"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            0.0,
+            10.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "UseQuatRotation": false
+        },
+        "Camera": {
+          "Primary": true,
+          "ProjectionType": 1,
+          "FovDeg": 60.0,
+          "Near": 0.1,
+          "Far": 1000.0,
+          "OrthoSize": 5.0
+        }
+      }
+    },
+    {
+      "id": "7bb541aa00000002",
+      "components": {
+        "Tag": {
+          "Tag": "Canvas"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "UseQuatRotation": false
+        },
+        "Canvas": {
+          "ScaleMode": 1,
+          "ReferenceHeight": 1080.0,
+          "SortOrder": 10
+        },
+        "UiImage": {
+          "TexturePath": "",
+          "Tint": [
+            0.0,
+            0.0,
+            0.0,
+            0.6
+          ],
+          "NineSlice": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "PreserveAspect": false
+        },
+        "NativeScript": {
+          "ClassName": "StoppedScreen",
+          "Fields": {}
+        },
+        "Relationship": {
+          "Children": [
+            "7bb541aa00000003",
+            "7bb541aa00000004",
+            "7bb541aa00000005",
+            "7bb541aa00000006"
+          ]
+        }
+      }
+    },
+    {
+      "id": "7bb541aa00000003",
+      "components": {
+        "Tag": {
+          "Tag": "Panel"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "UseQuatRotation": false
+        },
+        "RectTransform": {
+          "AnchorMin": [
+            0.5,
+            0.5
+          ],
+          "AnchorMax": [
+            0.5,
+            0.5
+          ],
+          "OffsetMin": [
+            -320.0,
+            -150.0
+          ],
+          "OffsetMax": [
+            320.0,
+            150.0
+          ],
+          "Pivot": [
+            0.5,
+            0.5
+          ],
+          "ZOrder": 1
+        },
+        "UiImage": {
+          "TexturePath": "",
+          "Tint": [
+            0.1,
+            0.11,
+            0.14,
+            0.85
+          ],
+          "NineSlice": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "PreserveAspect": false
+        }
+      }
+    },
+    {
+      "id": "7bb541aa00000004",
+      "components": {
+        "Tag": {
+          "Tag": "Title"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "UseQuatRotation": false
+        },
+        "RectTransform": {
+          "AnchorMin": [
+            0.5,
+            0.42
+          ],
+          "AnchorMax": [
+            0.5,
+            0.42
+          ],
+          "OffsetMin": [
+            -300.0,
+            -30.0
+          ],
+          "OffsetMax": [
+            300.0,
+            30.0
+          ],
+          "Pivot": [
+            0.5,
+            0.5
+          ],
+          "ZOrder": 2
+        },
+        "UiText": {
+          "Text": "The pendulum came to rest",
+          "FontPath": "",
+          "SizePx": 36.0,
+          "Color": [
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "HAlign": 1,
+          "VAlign": 1,
+          "Wrap": false
+        }
+      }
+    },
+    {
+      "id": "7bb541aa00000005",
+      "components": {
+        "Tag": {
+          "Tag": "Energy"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "UseQuatRotation": false
+        },
+        "RectTransform": {
+          "AnchorMin": [
+            0.5,
+            0.5
+          ],
+          "AnchorMax": [
+            0.5,
+            0.5
+          ],
+          "OffsetMin": [
+            -300.0,
+            -18.0
+          ],
+          "OffsetMax": [
+            300.0,
+            18.0
+          ],
+          "Pivot": [
+            0.5,
+            0.5
+          ],
+          "ZOrder": 2
+        },
+        "UiText": {
+          "Text": "--",
+          "FontPath": "",
+          "SizePx": 20.0,
+          "Color": [
+            0.7,
+            0.74,
+            0.82,
+            1.0
+          ],
+          "HAlign": 1,
+          "VAlign": 1,
+          "Wrap": false
+        },
+        "UiValueText": {
+          "Channel": "pendulum.energy",
+          "Format": "%.4f",
+          "Prefix": "energy ",
+          "Suffix": " J/kg (below the 0.01 threshold)",
+          "Placeholder": "--",
+          "StaleAfter": 0.0,
+          "StaleColor": [
+            0.6,
+            0.6,
+            0.6,
+            1.0
+          ],
+          "PreviewValue": 0.0
+        }
+      }
+    },
+    {
+      "id": "7bb541aa00000006",
+      "components": {
+        "Tag": {
+          "Tag": "ResumeButton"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "UseQuatRotation": false
+        },
+        "RectTransform": {
+          "AnchorMin": [
+            0.5,
+            0.6
+          ],
+          "AnchorMax": [
+            0.5,
+            0.6
+          ],
+          "OffsetMin": [
+            -140.0,
+            -28.0
+          ],
+          "OffsetMax": [
+            140.0,
+            28.0
+          ],
+          "Pivot": [
+            0.5,
+            0.5
+          ],
+          "ZOrder": 2
+        },
+        "UiImage": {
+          "TexturePath": "",
+          "Tint": [
+            0.16,
+            0.19,
+            0.25,
+            0.92
+          ],
+          "NineSlice": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "PreserveAspect": false
+        },
+        "UiButton": {
+          "Signal": "resume_clicked",
+          "NormalTint": [
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "HoverTint": [
+            1.15,
+            1.15,
+            1.15,
+            1.0
+          ],
+          "PressedTint": [
+            0.8,
+            0.8,
+            0.8,
+            1.0
+          ],
+          "DisabledTint": [
+            0.5,
+            0.5,
+            0.5,
+            0.6
+          ],
+          "Interactable": true
+        },
+        "UiText": {
+          "Text": "Resume (reset)",
+          "FontPath": "",
+          "SizePx": 26.0,
+          "Color": [
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "HAlign": 1,
+          "VAlign": 1,
+          "Wrap": false
+        }
+      }
+    }
+  ]
+}

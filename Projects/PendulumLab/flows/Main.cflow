@@ -1,0 +1,46 @@
+{
+  "cosmic_flow": 1,
+  "start": "Home",
+  "states": [
+    {
+      "name": "Home",
+      "scene": "project://scenes/Home.cscene",
+      "editor": { "pos": [40.0, 60.0] },
+      "transitions": [
+        { "on": "start_clicked", "to": "Lab" },
+        { "on": "settings_clicked", "to": "Settings" },
+        { "on": "quit_clicked", "to": "@quit" },
+        { "on": "key:Escape", "to": "@quit" }
+      ]
+    },
+    {
+      "name": "Lab",
+      "scene": "project://scenes/Lab.cscene",
+      "editor": { "pos": [380.0, 60.0] },
+      "transitions": [
+        { "on": "when", "to": "Stopped", "push": true, "if": { "channel": "pendulum.energy", "op": "<", "value": 0.01 } },
+        { "on": "settings_clicked", "to": "Settings" },
+        { "on": "home_clicked", "to": "Home" },
+        { "on": "key:Escape", "to": "Home" }
+      ]
+    },
+    {
+      "name": "Settings",
+      "scene": "project://scenes/Settings.cscene",
+      "editor": { "pos": [720.0, 60.0] },
+      "transitions": [
+        { "on": "back_clicked", "to": "Lab" },
+        { "on": "key:Escape", "to": "Lab" }
+      ]
+    },
+    {
+      "name": "Stopped",
+      "scene": "project://scenes/Stopped.cscene",
+      "overlay": true,
+      "editor": { "pos": [380.0, 300.0] },
+      "transitions": [
+        { "on": "resume_clicked", "to": "@pop" }
+      ]
+    }
+  ]
+}

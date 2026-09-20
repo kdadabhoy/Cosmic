@@ -141,7 +141,11 @@ endif()
 # Starforge packager builds any external project) — never as part of this build,
 # so it stays out of the scan (and out of the install rules). Its own CMakeLists
 # refuses to be added in-tree.
-set(SKIP_DEFAULT "AnalysisSample")
+#
+# PendulumLab (App Platform / AP-04, Y01) is the second external-consumer
+# specimen — the app-kind showcase project — built the same way (its CMakeLists
+# refuses in-tree add_subdirectory too).
+set(SKIP_DEFAULT "AnalysisSample;PendulumLab")
 set(COSMIC_SKIP_PROJECTS "${SKIP_DEFAULT}" CACHE STRING
     "Semicolon-separated Projects/ subdirectory names the scanner skips")
 # The cache is sticky, so a stored value goes stale when the default here is

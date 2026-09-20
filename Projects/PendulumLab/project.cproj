@@ -1,0 +1,15 @@
+# Cosmic project manifest — PendulumLab (App Platform / AP-04, the §8 sample project).
+# Consumed by the standalone PlayerLayer (E13) and Starforge (E12). The startup
+# flow owns navigation (Home -> Lab -> Settings, the Stopped overlay); kind = "app"
+# turns the editor's auto-build on (D-LIVE). fixed_dt_hz = 240 is the RK4 step the
+# service integrates with and the step the F-PENDULUM reference is tabulated at.
+name          = "PendulumLab"
+kind          = "app"
+startup_scene = "scenes/Home.cscene"
+startup_flow  = "flows/Main.cflow"
+fixed_dt_hz   = 240
+
+[window]
+title  = "Pendulum Lab"
+width  = 1280
+height = 720
