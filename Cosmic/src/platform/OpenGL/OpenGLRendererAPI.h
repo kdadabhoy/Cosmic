@@ -97,7 +97,6 @@ namespace Cosmic
 		///////////////////////////////
 
 		virtual void BindTextureSlot(uint32_t slot, uint32_t rendererID) override;
-		virtual void BindTextureCubeSlot(uint32_t slot, uint32_t rendererID) override;
 		virtual uint32_t GetBoundFramebuffer() const override;
 		virtual void     BindFramebufferHandle(uint32_t id) override;
 

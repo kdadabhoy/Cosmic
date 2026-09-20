@@ -200,11 +200,6 @@ namespace Cosmic
 		// translates it to a descriptor/image bind.
 		virtual void BindTextureSlot(uint32_t slot, uint32_t rendererID) = 0;
 
-		// Same as BindTextureSlot but for a CUBEMAP handle (S6.3 IBL) — binds to
-		// the GL_TEXTURE_CUBE_MAP target of the unit. The samplerCube uniform must
-		// be set to the same `slot`.
-		virtual void BindTextureCubeSlot(uint32_t slot, uint32_t rendererID) = 0;
-
 		// Query / restore the bound draw framebuffer handle. The post stack (S6.7)
 		// tonemaps into an intermediate then rebinds the caller's target for the
 		// final FXAA pass; a future backend tracks the bound target itself.

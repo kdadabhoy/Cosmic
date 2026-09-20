@@ -35,7 +35,7 @@ namespace Cosmic::Bindings
 	 *  purged in AP-05); reserved while the shader still declares it. */
 	constexpr uint32_t LightsUbo = 0;
 
-	/** Per-frame camera block (S6.2) — GpuCameraBlock (renderer/CameraUniforms.h)
+	/** Per-frame camera block (S6.2) — History: the GpuCameraBlock mirror (renderer/CameraUniforms.h) was removed by AP-Q1 with nothing uploading it;
 	 *  ↔ `CameraBlock` (instance name `u_Camera`) in the lit mesh shaders.
 	 *  View-projection + camera position. History: the 3D renderer's BeginScene
 	 *  uploaded it once per pass, replacing the old per-draw loose

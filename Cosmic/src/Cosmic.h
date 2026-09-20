@@ -44,11 +44,8 @@
 #include "graphics/Shader.h"
 #include "graphics/VertexArray.h"
 #include "graphics/Texture.h"
-#include "graphics/TextureCube.h"     // S6.3 — cubemap resource (IBL)
 #include "graphics/SubTexture2D.h"
 #include "graphics/FrameBuffer.h"
-#include "graphics/UniformBuffer.h"
-#include "graphics/StorageBuffer.h"
 #include "graphics/Material.h"
 #include "graphics/MaterialAsset.h"   // E17 — reflected .cmat struct
 #include "graphics/Mesh.h"
@@ -69,7 +66,6 @@
 
 // Math (spatial conventions: NED world frame, Y-up render frame, quaternions)
 #include "math/Spatial.h"
-#include "math/Frustum.h"        // F5 — view-frustum extraction + culling tests
 
 // Simulation toolkit (E-series: docs/plans/03-simulation-engine-plan.md)
 #include "math/Integrators.h"    // E11 — RK4, semi-implicit Euler, FixedSubstepper

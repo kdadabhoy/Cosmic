@@ -148,11 +148,8 @@ script `tests/check_docs_coverage.ps1` (work order D5) diffs `Cosmic.h` against 
 | `graphics/VertexArray.h` | [graphics-resources.md](graphics-resources.md) |
 | `graphics/Shader.h` | [graphics-resources.md](graphics-resources.md) |
 | `graphics/Texture.h` | [graphics-resources.md](graphics-resources.md) |
-| `graphics/TextureCube.h` | [graphics-resources.md](graphics-resources.md) |
 | `graphics/FrameBuffer.h` | [graphics-resources.md](graphics-resources.md) |
 | `graphics/GpuObjectStats.h` | [graphics-resources.md](graphics-resources.md) |
-| `graphics/UniformBuffer.h` | [graphics-resources.md](graphics-resources.md) |
-| `graphics/StorageBuffer.h` | [graphics-resources.md](graphics-resources.md) |
 | `graphics/Material.h` | [graphics-resources.md](graphics-resources.md) |
 | `graphics/MaterialAsset.h` | [graphics-resources.md](graphics-resources.md) |
 | `renderer/Renderer2D.h` | [rendering-2d.md](rendering-2d.md) |
@@ -161,8 +158,6 @@ script `tests/check_docs_coverage.ps1` (work order D5) diffs `Cosmic.h` against 
 | `graphics/Font.h` | [rendering-2d.md](rendering-2d.md) |
 | `renderer/Light2DRenderer.h` | [rendering-2d.md](rendering-2d.md) |
 | `graphics/Mesh.h` | [rendering-3d.md](rendering-3d.md) |
-| `renderer/RenderQueue.h` | [rendering-3d.md](rendering-3d.md) |
-| `math/Frustum.h` | [math.md](math.md) |
 | `renderer/SceneRenderer.h` | [rendering-pipeline.md](rendering-pipeline.md) |
 | `renderer/PostProcessStack.h` | [rendering-pipeline.md](rendering-pipeline.md) |
 | `scene/Scene.h` | [ecs.md](ecs.md) |

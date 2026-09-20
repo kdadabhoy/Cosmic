@@ -244,13 +244,6 @@ namespace Cosmic
 			s_RendererAPI->BindTextureSlot(slot, rendererID);
 		}
 
-		/** @brief Bind a raw CUBEMAP handle to a sampler unit (S6.3 IBL). Set the
-		 *  matching samplerCube uniform to the same `slot`. */
-		inline static void BindTextureCubeSlot(uint32_t slot, uint32_t rendererID)
-		{
-			s_RendererAPI->BindTextureCubeSlot(slot, rendererID);
-		}
-
 		/** @brief Current bound draw framebuffer handle (S6.7 post stack). */
 		inline static uint32_t GetBoundFramebuffer()
 		{
