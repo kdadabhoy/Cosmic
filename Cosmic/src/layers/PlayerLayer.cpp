@@ -298,7 +298,16 @@ namespace Cosmic
         const UiRect viewport{ { 0.0f, 0.0f },
                                { (float)fb->GetWidth(), (float)fb->GetHeight() } };
 
-        const glm::vec2 mouse = Input::GetMousePosition();
+        // The pointer in FRAME coordinates: the presented frame sits inside the workspace's
+        // Viewport dock, below the menu bar and tab header, so a window-client cursor position
+        // would hit-test every element about a chrome height too low (found while writing the
+        // PendulumLab walkthrough: the packaged app's Start button answered clicks 54 px above
+        // it). Mouse and viewport origin are both in ImGui screen space; scale to the framebuffer.
+        auto& app = Application::Get();
+        glm::vec2 mouse = Input::GetMouseScreenPosition() - app.GetViewportPos();
+        const glm::vec2 vpSize = app.GetViewportSize();
+        if (vpSize.x > 0.0f && vpSize.y > 0.0f)
+            mouse *= glm::vec2((float)fb->GetWidth() / vpSize.x, (float)fb->GetHeight() / vpSize.y);
         const bool down = Input::IsMouseButtonPressed(CS_MOUSE_BUTTON_LEFT);
 
         UiPointer p;
