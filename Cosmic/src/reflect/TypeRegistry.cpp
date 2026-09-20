@@ -244,6 +244,92 @@ namespace Cosmic::Reflect
             .Field("ScreenOffset",      &UiWorldAnchorComponent::ScreenOffset).Doc("Canvas-pixel nudge after projection")
             .Field("HideWhenOffscreen", &UiWorldAnchorComponent::HideWhenOffscreen);
 
+        // Bound widgets (App Platform AP-02, contract §3): DataBus-driven UI. Runtime-
+        // only members (Dragging, Armed, DrawnThisFrame, Resolved*) are unregistered.
+        ClassIn<UiValueTextComponent>(r, "UiValueText", "UI")
+            .Field("Channel",      &UiValueTextComponent::Channel).Tooltip("DataBus channel to print (through the sibling UiText)")
+            .Field("Format",       &UiValueTextComponent::Format).Tooltip("printf with exactly one numeric conversion; anything else is literal")
+            .Field("Prefix",       &UiValueTextComponent::Prefix)
+            .Field("Suffix",       &UiValueTextComponent::Suffix)
+            .Field("Placeholder",  &UiValueTextComponent::Placeholder).Tooltip("Drawn while the channel is missing")
+            .Field("StaleAfter",   &UiValueTextComponent::StaleAfter).Range(0.0f, 3600.0f).Tooltip("Seconds since the last write before StaleColor applies; 0 = never")
+            .Field("StaleColor",   &UiValueTextComponent::StaleColor).Color()
+            .Field("PreviewValue", &UiValueTextComponent::PreviewValue).Tooltip("Shown in preview mode (no bus / edit mode)");
+
+        ClassIn<UiGaugeComponent>(r, "UiGauge", "UI")
+            .Field("Channel",      &UiGaugeComponent::Channel)
+            .Field("Min",          &UiGaugeComponent::Min)
+            .Field("Max",          &UiGaugeComponent::Max)
+            .Field("Style",        &UiGaugeComponent::Style)
+                .EnumValue("Bar", 0).EnumValue("Arc", 1)
+            .Field("Direction",    &UiGaugeComponent::Direction)
+                .EnumValue("LeftToRight", 0).EnumValue("BottomToTop", 1).Tooltip("Bar growth axis (ignored by Arc)")
+            .Field("FillColor",    &UiGaugeComponent::FillColor).Color()
+            .Field("TrackColor",   &UiGaugeComponent::TrackColor).Color()
+            .Field("Thickness",    &UiGaugeComponent::Thickness).Range(0.01f, 1.0f).Tooltip("Arc ring thickness as a fraction of the radius")
+            .Field("PreviewValue", &UiGaugeComponent::PreviewValue);
+
+        ClassIn<UiIndicatorComponent>(r, "UiIndicator", "UI")
+            .Field("Channel",    &UiIndicatorComponent::Channel)
+            .Field("Op",         &UiIndicatorComponent::Op).Tooltip("== != < > <= >= against Threshold; bool channels compare as 0/1")
+            .Field("Threshold",  &UiIndicatorComponent::Threshold)
+            .Field("OnTint",     &UiIndicatorComponent::OnTint).Color()
+            .Field("OffTint",    &UiIndicatorComponent::OffTint).Color()
+            .Field("OnTexture",  &UiIndicatorComponent::OnTexture).AsAssetPath("texture").Tooltip("Empty = solid tint")
+            .Field("OffTexture", &UiIndicatorComponent::OffTexture).AsAssetPath("texture").Tooltip("Empty = solid tint")
+            .Field("PreviewOn",  &UiIndicatorComponent::PreviewOn);
+
+        ClassIn<UiPlotComponent>(r, "UiPlot", "UI")
+            .Field("Channel",          &UiPlotComponent::Channel)
+            .Field("Channel2",         &UiPlotComponent::Channel2)
+            .Field("Channel3",         &UiPlotComponent::Channel3)
+            .Field("Channel4",         &UiPlotComponent::Channel4)
+            .Field("WindowSeconds",    &UiPlotComponent::WindowSeconds).Range(0.01f, 3600.0f)
+            .Field("AutoScaleY",       &UiPlotComponent::AutoScaleY).Tooltip("Y range from the visible samples (padded 5 %)")
+            .Field("YMin",             &UiPlotComponent::YMin)
+            .Field("YMax",             &UiPlotComponent::YMax)
+            .Field("LineColor",        &UiPlotComponent::LineColor).Color()
+            .Field("LineColor2",       &UiPlotComponent::LineColor2).Color()
+            .Field("LineColor3",       &UiPlotComponent::LineColor3).Color()
+            .Field("LineColor4",       &UiPlotComponent::LineColor4).Color()
+            .Field("GridColor",        &UiPlotComponent::GridColor).Color()
+            .Field("BackgroundColor",  &UiPlotComponent::BackgroundColor).Color()
+            .Field("GridDivisions",    &UiPlotComponent::GridDivisions).Range(0.0f, 64.0f)
+            .Field("LineWidth",        &UiPlotComponent::LineWidth).Range(0.5f, 32.0f).Tooltip("Canvas px (scaled)")
+            .Field("ShowLabels",       &UiPlotComponent::ShowLabels).Tooltip("Min/max Y and the window length")
+            .Field("PreviewAmplitude", &UiPlotComponent::PreviewAmplitude).Tooltip("Preview sine amplitude");
+
+        ClassIn<UiSliderComponent>(r, "UiSlider", "UI")
+            .Field("Channel",      &UiSliderComponent::Channel).Tooltip("Written with bus->Set while dragging")
+            .Field("Min",          &UiSliderComponent::Min)
+            .Field("Max",          &UiSliderComponent::Max)
+            .Field("Step",         &UiSliderComponent::Step).Tooltip("Snap increment from Min; 0 = continuous")
+            .Field("Signal",       &UiSliderComponent::Signal).Tooltip("Emitted on release when the value changed; empty = none")
+            .Field("Orientation",  &UiSliderComponent::Orientation)
+                .EnumValue("Horizontal", 0).EnumValue("Vertical", 1)
+            .Field("TrackColor",   &UiSliderComponent::TrackColor).Color()
+            .Field("FillColor",    &UiSliderComponent::FillColor).Color()
+            .Field("KnobColor",    &UiSliderComponent::KnobColor).Color()
+            .Field("KnobSize",     &UiSliderComponent::KnobSize).Range(1.0f, 256.0f).Tooltip("Canvas px (scaled)")
+            .Field("Interactable", &UiSliderComponent::Interactable)
+            .Field("PreviewValue", &UiSliderComponent::PreviewValue);
+
+        ClassIn<UiToggleComponent>(r, "UiToggle", "UI")
+            .Field("Channel",      &UiToggleComponent::Channel).Tooltip("Bool channel flipped on release-inside")
+            .Field("Signal",       &UiToggleComponent::Signal).Tooltip("Emitted on every flip; empty = none")
+            .Field("OnTint",       &UiToggleComponent::OnTint).Color()
+            .Field("OffTint",      &UiToggleComponent::OffTint).Color()
+            .Field("OnTexture",    &UiToggleComponent::OnTexture).AsAssetPath("texture").Tooltip("Replaces the sibling UiImage's texture while on; empty = keep")
+            .Field("OffTexture",   &UiToggleComponent::OffTexture).AsAssetPath("texture").Tooltip("Replaces the sibling UiImage's texture while off; empty = keep")
+            .Field("Interactable", &UiToggleComponent::Interactable)
+            .Field("PreviewOn",    &UiToggleComponent::PreviewOn);
+
+        ClassIn<UiHostedPanelComponent>(r, "UiHostedPanel", "UI")
+            .Field("PanelName",       &UiHostedPanelComponent::PanelName).Tooltip("CS_PANEL name the host draws into this rect")
+            .Field("ShowFrame",       &UiHostedPanelComponent::ShowFrame)
+            .Field("FrameColor",      &UiHostedPanelComponent::FrameColor).Color()
+            .Field("PlaceholderText", &UiHostedPanelComponent::PlaceholderText).Tooltip("Preview / unregistered label; empty = PanelName");
+
         // PBR material asset (E17) — the reflected `.cmat` struct (not an entity
         // component; registered so the Material Editor UI + serialization are generic).
         ClassIn<MaterialAsset>(r, "Material", "Material")
