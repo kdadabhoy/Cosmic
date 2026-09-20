@@ -70,7 +70,7 @@ Writing bar (this is the part a rushed session gets wrong — hold the line):
   key constants (pool sizes, formats, thresholds) *with* the file they come from, so a reader
   can verify.
 - **At least one Mermaid diagram per document** (see the diagram inventory in
-  [`../plans/12-documentation-plan.md`](../plans/12-documentation-plan.md) §4 — your document's
+  [`../plans/12-documentation-plan.md`](../plans/archive/12-documentation-plan.md) §4 — your document's
   diagrams are pre-assigned there).
 - **Don't duplicate the reference.** Method-by-method detail belongs in `docs/reference/`;
   here you explain flow and rationale, linking entries where a reader would want the signature.

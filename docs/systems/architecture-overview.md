@@ -1,7 +1,7 @@
 # Architecture Overview — How It Works
 
 > **STATUS: SKELETON** — to be filled by work order **D25** in
-> [`docs/plans/12-documentation-plan.md`](../plans/12-documentation-plan.md).
+> [`docs/plans/archive/12-documentation-plan.md`](../plans/archive/12-documentation-plan.md).
 > Format + writing bar: [systems/README.md](README.md#document-format-mandatory--every-explainer-uses-this-shape).
 
 **One-liner:** Cosmic is a C++20/OpenGL engine that loads your project as a hot-swappable

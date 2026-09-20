@@ -1,5 +1,7 @@
 # Phase 14 Plan — Starforge Hardening (bugs, rendering truth, editor UX)
 
+> **ARCHIVED 2026-09-20** — completed/superseded; kept as the record of what was built and why. Do not execute. Origin: Phase 14, created 2026-07-04. Landed by: see git log (H1-H10, 2026-07-04). Replacement: none (shipped).
+
 > **Created 2026-07-04** from a live triage session: every bug below was reproduced in the
 > running editor and root-caused in code the same day (file/line references were verified then —
 > re-verify by content before editing, they will drift). This phase makes what Phase 13 built

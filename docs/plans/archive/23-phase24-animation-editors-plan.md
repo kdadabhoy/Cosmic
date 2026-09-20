@@ -1,7 +1,9 @@
 # Phase 24 Plan — Skeletal Animation Editors & Multi-Material Meshes
 
+> **ARCHIVED 2026-09-20** — completed/superseded; kept as the record of what was built and why. Do not execute. Origin: Phase 24 (3D), created 2026-07-11. Landed by: see git log (M1-M6, 2026-07-12). Replacement: [`../../parked-3d/README.md`](../../parked-3d/README.md).
+
 > **Created 2026-07-11.** Editor-vision phase 3 of 7 (spec of record:
-> [`../design/example-images-gap-analysis.md`](../design/example-images-gap-analysis.md) §8 +
+> [`../design/example-images-gap-analysis.md`](../../design/example-images-gap-analysis.md) §8 +
 > §5.5). Doc 19 **A2 remains the runtime spec** (skins/clips/GPU skinning/`AnimatorComponent`) —
 > its unlock FIRED 2026-07-11 (the Phase 28 flagship is the character project). This phase
 > builds the editor superstructure the reference screenshots show: a document-style **Starforge

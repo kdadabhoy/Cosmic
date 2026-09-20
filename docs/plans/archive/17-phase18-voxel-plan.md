@@ -1,5 +1,7 @@
 # Phase 18 Plan — Voxel Worlds (blocky 3D games)
 
+> **ARCHIVED 2026-09-20** — completed/superseded; kept as the record of what was built and why. Do not execute. Origin: Phase 18 (3D), created 2026-07-04. Landed by: see git log (V1-V7, 2026-07-08). Replacement: [`../../parked-3d/README.md`](../../parked-3d/README.md) (parked 3D; source on `engine-3d`).
+
 > **STATUS 2026-07-08 (UNcommitted) — engine + editor foundation CODE-COMPLETE.**
 > All seven work orders landed. New engine module `Cosmic/src/voxel/` (`VoxelVolume`
 > chunk store, `BlockPalette`, `VoxelMesher` culled+greedy, `VoxelGenerator`,

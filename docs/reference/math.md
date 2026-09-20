@@ -1,7 +1,7 @@
 # API Reference — Math & Simulation Toolkit
 
 > **STATUS: WRITTEN** — work order **D15** (2026-07-26) in
-> [`docs/plans/12-documentation-plan.md`](../plans/12-documentation-plan.md).
+> [`docs/plans/archive/12-documentation-plan.md`](../plans/archive/12-documentation-plan.md).
 > Entry format: [reference/README.md → Entry format](README.md#entry-format-mandatory--copy-this-shape).
 
 **Scope (headers are the truth):** `Cosmic/src/math/Spatial.h`, `math/Integrators.h`,
@@ -94,7 +94,7 @@ it there.** That is an artefact of the split, not a property of the header.
 
 The property this whole tier exists to protect: **the same seed and the same step schedule must
 produce the same numbers on a later run.** Phase 30's fuzz campaigns
-([`../plans/29-phase30-2d-hardening-plan.md`](../plans/29-phase30-2d-hardening-plan.md)) are built
+([`../plans/29-phase30-2d-hardening-plan.md`](../plans/archive/29-phase30-2d-hardening-plan.md)) are built
 on exactly this, so the boundary is worth stating precisely rather than generously.
 
 **Tier 1 — bit-exact, and pinned by a test.**

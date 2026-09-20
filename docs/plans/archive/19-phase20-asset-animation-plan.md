@@ -1,5 +1,7 @@
 # Phase 20 Plan — Asset Pipeline Completion & Animation
 
+> **ARCHIVED 2026-09-20** — completed/superseded; kept as the record of what was built and why. Do not execute. Origin: Phase 20 (3D), created 2026-07-04. Landed by: see git log (A1/A2/A4, 2026-07-12). Replacement: [`../../parked-3d/README.md`](../../parked-3d/README.md).
+
 > **Created 2026-07-04.** Gathers the content-pipeline work left open by Phase 13: the gated
 > assimp backend, skeletal animation (doc 05 S14 row), the CAD/modeling parks (STEP, CSG,
 > terrain brushes — doc 11 §9 P1/P2/P5), the material/asset UX debt (E10/E17 deviations),

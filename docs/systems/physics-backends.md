@@ -7,7 +7,7 @@ implementation without a single call site moving.
 **API Reference:** [../reference/physics.md](../reference/physics.md) · **Guide:** [../guide/physics.md](../guide/physics.md) (authoring physics in a scene, and swapping the backend at a usage level), [../guide/entities-and-components.md](../guide/entities-and-components.md) (the physics component tier), [../guide/scripting.md](../guide/scripting.md) (the `Physics()` / `Character()` script proxies)
 
 > Written by work order **D42** (Phase 29 W10, 2026-07-25). Design record:
-> [`../plans/28-phase29-engine-split-plan.md`](../plans/28-phase29-engine-split-plan.md) §6.
+> [`../plans/28-phase29-engine-split-plan.md`](../plans/archive/28-phase29-engine-split-plan.md) §6.
 > The complete worked example is a real, compiled, tested file:
 > [`tests/test_physics_backend.cpp`](../../tests/test_physics_backend.cpp).
 
@@ -468,7 +468,7 @@ against it.
 usage-level view of swapping a backend) ·
 [`build-2d-3d-split.md`](build-2d-3d-split.md) (why physics is shared by both engine
 configurations) · [`../design/modularity-audit.md`](../design/modularity-audit.md) §G3 ·
-[`../plans/28-phase29-engine-split-plan.md`](../plans/28-phase29-engine-split-plan.md) §6.
+[`../plans/28-phase29-engine-split-plan.md`](../plans/archive/28-phase29-engine-split-plan.md) §6.
 
 *Changelog:*
 *2026-07-25 — created (D42, Phase 29 W10).*

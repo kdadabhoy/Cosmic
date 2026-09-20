@@ -1,7 +1,7 @@
 # API Reference — Physics
 
 > **STATUS: WRITTEN** — work order **D43** (Phase 29 W10, 2026-07-25) in
-> [`docs/plans/12-documentation-plan.md`](../plans/12-documentation-plan.md).
+> [`docs/plans/archive/12-documentation-plan.md`](../plans/archive/12-documentation-plan.md).
 > Entry format: [reference/README.md → Entry format](README.md#entry-format-mandatory--copy-this-shape).
 
 **Scope (headers are the truth):** `Cosmic/src/physics/PhysicsTypes.h`, `physics/PhysicsBody.h`,

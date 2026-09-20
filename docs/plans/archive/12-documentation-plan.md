@@ -1,7 +1,9 @@
 # Docs Plan v2 — Guide Tier, API Reference, System Explainers (D5–D45)
 
+> **ARCHIVED 2026-09-20** — completed/superseded; kept as the record of what was built and why. Do not execute. Origin: Docs Plan v2, 2026-07-03 (restructured 2026-07-25), work orders D5-D61. Landed by: see git log (D5-D61, 2026-07-03 .. 2026-07-26). Replacement: [`../../guide/README.md`](../../guide/README.md) + [`../../reference/README.md`](../../reference/README.md) (the living tiers) and `tests/check_docs_coverage.ps1` / `tests/check_docs_links.ps1`.
+
 > **RESTRUCTURED 2026-07-25 (user decisions 1b + 1c).** The README monolith is **split**: a fourth
-> tier, **[`docs/guide/`](../guide/README.md)**, takes the per-topic detail, and the root README
+> tier, **[`docs/guide/`](../../guide/README.md)**, takes the per-topic detail, and the root README
 > stays a **substantial overview** with a documentation map at the top (1b, reversing decision 1 of
 > 2026-07-03). The guide tier is then **written from scratch against the source rather than
 > extracted** (1c) — the old README is a quarry, not a source, because a grep of all 4,875 lines
@@ -25,9 +27,9 @@
 > the user's "document explaining all Starforge features") and §14 (**per-phase documentation
 > hooks**, D40 — the standing rule + per-phase checklist that keeps docs current as Phases
 > 14–21 ship). Diagram inventory §4 gained DG-15…DG-18. Doc 06 now lives in
-> [`archive/06-docs-plan.md`](archive/06-docs-plan.md).
+> [`archive/06-docs-plan.md`](06-docs-plan.md).
 >
-> **Created 2026-07-03.** Supersedes [`archive/06-docs-plan.md`](archive/06-docs-plan.md):
+> **Created 2026-07-03.** Supersedes [`archive/06-docs-plan.md`](06-docs-plan.md):
 > - **D1** (§1.5 command-reference contract) — *carried forward unchanged*, and extended by
 >   this plan's API-reference contract (§11).
 > - **D2** (§40 packaging refresh) — *absorbed into D23*.
@@ -58,9 +60,9 @@
    checklist row, don't invent the API. **Never document unshipped/parked API** (e.g. audio
    A3 positional, FFT ocean, CSM).
 3. **Formats are fixed, not suggestions.** API entries: the template in
-   [`../reference/README.md`](../reference/README.md#entry-format-mandatory--copy-this-shape).
+   [`../reference/README.md`](../../reference/README.md#entry-format-mandatory--copy-this-shape).
    Explainers: the section shape + writing bar in
-   [`../systems/README.md`](../systems/README.md#document-format-mandatory--every-explainer-uses-this-shape).
+   [`../systems/README.md`](../../systems/README.md#document-format-mandatory--every-explainer-uses-this-shape).
    README additions: match the existing README's voice (second person, tables for facts,
    `>` blockquotes for warnings, code fences with real namespaces).
 4. **Code samples must compile against the current API.** Model them on Engine3DDemo /
@@ -245,20 +247,20 @@ tests/check_docs_coverage.ps1      ← NEW (D5) + a ci.yml step
 
 | ID | Type | Content | Home(s) | Truth source |
 | --- | --- | --- | --- | --- |
-| DG-1 | flowchart TD | Module block diagram: host exe → engine DLL (subsystem boxes) → platform/OpenGL; project DLLs plugging in | ✅ **built D46** in [`../guide/getting-started.md`](../guide/getting-started.md#dg-1--how-the-pieces-fit); systems/architecture-overview reuses it | `Cosmic/src/` tree, Cosmic.h |
+| DG-1 | flowchart TD | Module block diagram: host exe → engine DLL (subsystem boxes) → platform/OpenGL; project DLLs plugging in | ✅ **built D46** in [`../guide/getting-started.md`](../../guide/getting-started.md#dg-1--how-the-pieces-fit); systems/architecture-overview reuses it | `Cosmic/src/` tree, Cosmic.h |
 | DG-2 | classDiagram | Core object model: Application–Window–LayerStack–Layer–ImGuiLayer–WorkspaceLayer–LauncherLayer (+ownership) | ✅ **built D61** in README §30; systems/architecture-overview reuses it | core/*.h, layers/*.h |
-| DG-3 | sequenceDiagram | One frame: PollEvents → fixed pass ×N → variable pass → ImGui → swap → Safe Zone | ✅ **built D47** in [`../guide/project-anatomy.md`](../guide/project-anatomy.md#dg-3--the-frame-sequence); systems/core-runtime reuses it | Application.cpp Run loop |
-| DG-4 | flowchart TD | Event propagation: OS → Application handlers → overlays→layers with Handled short-circuit + viewport-hover pass-through | ✅ **built D48** in [`../guide/events-and-input.md`](../guide/events-and-input.md#dg-4--event-propagation); systems/events-input reuses it | Application::OnEvent, ImGuiLayer, Window.cpp callbacks |
-| DG-5 | sequenceDiagram | Plugin DLL lifecycle: scan → LoadLibrary → InitializePluginContexts → CreatePluginLayer → hooks → delete-before-FreeLibrary | ✅ **built D60** in [`../guide/project-anatomy.md`](../guide/project-anatomy.md#dg-5--the-plugin-dll-lifecycle); README §31 points at it and systems/build-plugin-packaging reuses it | Application.cpp DLL code, Cosmic.h |
+| DG-3 | sequenceDiagram | One frame: PollEvents → fixed pass ×N → variable pass → ImGui → swap → Safe Zone | ✅ **built D47** in [`../guide/project-anatomy.md`](../../guide/project-anatomy.md#dg-3--the-frame-sequence); systems/core-runtime reuses it | Application.cpp Run loop |
+| DG-4 | flowchart TD | Event propagation: OS → Application handlers → overlays→layers with Handled short-circuit + viewport-hover pass-through | ✅ **built D48** in [`../guide/events-and-input.md`](../../guide/events-and-input.md#dg-4--event-propagation); systems/events-input reuses it | Application::OnEvent, ImGuiLayer, Window.cpp callbacks |
+| DG-5 | sequenceDiagram | Plugin DLL lifecycle: scan → LoadLibrary → InitializePluginContexts → CreatePluginLayer → hooks → delete-before-FreeLibrary | ✅ **built D60** in [`../guide/project-anatomy.md`](../../guide/project-anatomy.md#dg-5--the-plugin-dll-lifecycle); README §31 points at it and systems/build-plugin-packaging reuses it | Application.cpp DLL code, Cosmic.h |
 | DG-6 | classDiagram | Renderer stack: Renderer2D/Renderer3D/SceneRenderer → RenderCommand → RendererAPI → OpenGL*; resources (Shader/Material/Mesh/Texture) | ✅ **built D61** in README §35; systems/rendering-3d + rendering-2d reuse it | renderer/*, platform/OpenGL/* |
-| DG-7 | flowchart LR | 3D submission: DrawMesh → frustum cull → sort key → auto-instance detect → flush (opaque F2B, transparent B2F) | ✅ **built D54** in [`../guide/rendering-3d.md`](../guide/rendering-3d.md#dg-7--what-one-submission-actually-does); reference/rendering-3d + systems/rendering-3d reuse it | Renderer3D.cpp, RenderQueue.h |
-| DG-8 | flowchart TD | SceneRenderer pass graph incl. read/write targets: shadow → coverage → reflection → refraction → main HDR → water → particles → post chain → present | ✅ **built D55** in [`../guide/lighting-and-environment.md`](../guide/lighting-and-environment.md#dg-8--the-pass-graph); reference+systems rendering-pipeline reuse it | SceneRenderer.cpp, frame-lifecycle.md |
-| DG-9 | classDiagram | ECS: Scene ⇄ entt registry ⇄ Entity handle ⇄ component types (+ which pass consumes which component) | ✅ **built D49** in [`../guide/entities-and-components.md`](../guide/entities-and-components.md#dg-9--scene-registry-entity-components); systems/ecs-scene reuses it | scene/*.h |
-| DG-10 | flowchart TD | Time waterfall: rawDelta → global scale → (fixed accumulator \| variable) → layer scale → GetLocalTime; Pause() tap | ✅ **built D48** in [`../guide/time-and-ticks.md`](../guide/time-and-ticks.md#dg-10--the-time-waterfall); systems/core-runtime reuses it | Application.cpp, Layer.h, WorkspaceLayer.cpp |
-| DG-11 | stateDiagram-v2 | App states: Launcher ⇄ Workspace(project) with queued Safe-Zone transitions | ✅ **built D47** in [`../guide/project-anatomy.md`](../guide/project-anatomy.md#dg-11--application-states); systems/core-runtime reuses it | Application transition code |
-| DG-12 | flowchart LR | Job system: main-thread frame lanes vs worker pool, submit/wait sync points, GL-stays-on-main rule | ✅ **built D59** in [`../guide/jobs-and-parallelism.md`](../guide/jobs-and-parallelism.md#dg-12--where-the-work-actually-runs); systems/jobs-parallelism reuses it | JobSystem.cpp, Scene.cpp |
-| DG-13 | flowchart LR | Telemetry: device/sim → SerialPort/SerialLink → framing/decode → channels (columnar) → recorder file ⇄ player → panel/plots | ✅ **built D59** in [`../guide/serial-and-telemetry.md`](../guide/serial-and-telemetry.md#dg-13--the-telemetry-data-path); systems/serial-telemetry reuses it | telemetry/*, serial/* |
-| DG-14 | flowchart TD | Packaging: source → Release build → cmake --install staging → dist/<App> prune → zip / Inno installer | ✅ **built D61** in [`../guide/building-and-shipping.md`](../guide/building-and-shipping.md#dg-14--from-source-tree-to-installed-app) (the Phase C precedent: the diagram lives in the guide chapter that owns the topic); systems/build-plugin-packaging reuses it | package.bat, CosmicSetup.iss |
+| DG-7 | flowchart LR | 3D submission: DrawMesh → frustum cull → sort key → auto-instance detect → flush (opaque F2B, transparent B2F) | ✅ **built D54** in [`../guide/rendering-3d.md`](../../guide/rendering-3d.md#dg-7--what-one-submission-actually-does); reference/rendering-3d + systems/rendering-3d reuse it | Renderer3D.cpp, RenderQueue.h |
+| DG-8 | flowchart TD | SceneRenderer pass graph incl. read/write targets: shadow → coverage → reflection → refraction → main HDR → water → particles → post chain → present | ✅ **built D55** in [`../guide/lighting-and-environment.md`](../../guide/lighting-and-environment.md#dg-8--the-pass-graph); reference+systems rendering-pipeline reuse it | SceneRenderer.cpp, frame-lifecycle.md |
+| DG-9 | classDiagram | ECS: Scene ⇄ entt registry ⇄ Entity handle ⇄ component types (+ which pass consumes which component) | ✅ **built D49** in [`../guide/entities-and-components.md`](../../guide/entities-and-components.md#dg-9--scene-registry-entity-components); systems/ecs-scene reuses it | scene/*.h |
+| DG-10 | flowchart TD | Time waterfall: rawDelta → global scale → (fixed accumulator \| variable) → layer scale → GetLocalTime; Pause() tap | ✅ **built D48** in [`../guide/time-and-ticks.md`](../../guide/time-and-ticks.md#dg-10--the-time-waterfall); systems/core-runtime reuses it | Application.cpp, Layer.h, WorkspaceLayer.cpp |
+| DG-11 | stateDiagram-v2 | App states: Launcher ⇄ Workspace(project) with queued Safe-Zone transitions | ✅ **built D47** in [`../guide/project-anatomy.md`](../../guide/project-anatomy.md#dg-11--application-states); systems/core-runtime reuses it | Application transition code |
+| DG-12 | flowchart LR | Job system: main-thread frame lanes vs worker pool, submit/wait sync points, GL-stays-on-main rule | ✅ **built D59** in [`../guide/jobs-and-parallelism.md`](../../guide/jobs-and-parallelism.md#dg-12--where-the-work-actually-runs); systems/jobs-parallelism reuses it | JobSystem.cpp, Scene.cpp |
+| DG-13 | flowchart LR | Telemetry: device/sim → SerialPort/SerialLink → framing/decode → channels (columnar) → recorder file ⇄ player → panel/plots | ✅ **built D59** in [`../guide/serial-and-telemetry.md`](../../guide/serial-and-telemetry.md#dg-13--the-telemetry-data-path); systems/serial-telemetry reuses it | telemetry/*, serial/* |
+| DG-14 | flowchart TD | Packaging: source → Release build → cmake --install staging → dist/<App> prune → zip / Inno installer | ✅ **built D61** in [`../guide/building-and-shipping.md`](../../guide/building-and-shipping.md#dg-14--from-source-tree-to-installed-app) (the Phase C precedent: the diagram lives in the guide chapter that owns the topic); systems/build-plugin-packaging reuses it | package.bat, CosmicSetup.iss |
 | DG-15 | flowchart TD | Starforge architecture: editor DLL ⇄ engine seams (reflect/serializer/CommandStack/ScriptHost/SceneManager) ⇄ project folder ⇄ game DLL (two exports) | starforge manual §1, systems/build-plugin-packaging | archived doc 11 §2.1 (verify vs code) |
 | DG-16 | sequenceDiagram | Project lifecycle: New → scaffold → edit/save (.cscene) → Build Scripts (hot reload steps 1–5) → Play (snapshot→runtime scene) → Package → standalone boot (boot.cfg → PlayerLayer) | starforge manual §2/§7 | StarforgeApp.cpp, GameModule.cpp, PlayerLayer.cpp |
 | DG-17 | stateDiagram-v2 | FlowMachine: states/transitions/guards/overlay push-pop (once doc 16 U5 ships) | starforge manual flow chapter, reference/ecs or new flow chapter | scene/FlowMachine.h |
@@ -601,7 +603,7 @@ Run tests/check_docs_coverage.ps1; it must still exit 0. Report per §6 rule 12.
 > source.** Rationale in §1. The original D19–D24 work orders are **retired**; the new numbers are
 > **D46–D61**, continuing past D45 so nothing collides.
 
-**Read [`../guide/README.md`](../guide/README.md) first.** Its *authoring contract* (five rules +
+**Read [`../guide/README.md`](../../guide/README.md) first.** Its *authoring contract* (five rules +
 verification bar), *document format*, and *chapter table* are binding on every item below.
 
 ### Why from scratch, in one paragraph
@@ -3392,7 +3394,7 @@ every implementation phase (14–21), plus one bookkeeping pass now:
 | 27 (world rendering/2D parity) | §7 sky/environment note (physical sky + polish knobs), §12-style 2D-lighting note | rendering rows (`SkyMode::Physical` + `EnvironmentMap::{PhysicalSkyDesc,SetPhysicalSky}`, `Renderer3D::SetAmbientIntensity` + `SceneRendererSettings::{AmbientIntensity,Gamma}`, `RendererAPI::BlendMode::Multiply`, `renderer/Light2DRenderer`, `SceneRenderer::RenderToTexture`), scene rows (`EnvironmentComponent` X1/X2 fields + `Ambient2D`, `ParticleEmitterSpec`/component curl-noise + bounds + `ParticleEmitter::{CurlNoise,SetTurbulence}`, `Light2DComponent`, `UiWorldAnchorComponent` + `UiSystem::ProjectToCanvas`, `UiImageComponent::RuntimeTexture`) | rendering-pipeline (physical sky + 2D light composite); particles (curl noise CPU/GPU lockstep) | D37/D38: sun Elevation/Azimuth widget, Project Settings left-nav, live curl-noise preview, Entity ▸ 2D ▸ Light + radius-ring gizmo | — |
 | ↳ **DUE 2026-07-14** (Phase 27 X1–X7 ✅ code-complete; row queued for the next docs session). New surface to document: `EnvSky.glsl` physical branch (`u_SkyMode`), `Tonemap.glsl` `u_Gamma`, PBR-family `u_AmbientIntensity`, `Light2D.glsl`, `ParticleUpdate.glsl` curl-noise + bounds mirror; `EnvironmentPanel` sun-angle widget, `StarforgeApp::DrawProjectSettingsPopup` left-nav, `WorldSystemsPanel::{DrawNoisePreview,RebuildNoisePreview}`, Entity ▸ 2D ▸ Light + `ViewportController` Light2D ring; the Starforge `/bigobj` + node-editor `/W0` CMake notes. | | | | |
 
-| 29 (engine split / pluggable physics) | §1.5 gains `build_2d.bat` / `build_3d.bat` / `build_all_2d.bat` + `-DCOSMIC_2D_ONLY` / `-DCOSMIC_WITH_JOLT`; NEW §1.6 "The two engine configurations" | NEW [physics.md](../reference/physics.md) chapter (`PhysicsWorld`/`PhysicsTypes`/`PhysicsBody`/`CharacterController`/`ScenePhysics`/`PhysicsBackendRegistry` + the script proxies); manifest rows for the five physics headers | NEW [build-2d-3d-split.md](../systems/build-2d-3d-split.md) + [physics-backends.md](../systems/physics-backends.md); pointer updates in ecs-scene / rendering-2d / rendering-3d / build-plugin-packaging | — (no new editor surface; the 2D editor is the same editor with 3D fenced) | ✅ **done as doc 28 W10 (D41–D45), 2026-07-25** |
+| 29 (engine split / pluggable physics) | §1.5 gains `build_2d.bat` / `build_3d.bat` / `build_all_2d.bat` + `-DCOSMIC_2D_ONLY` / `-DCOSMIC_WITH_JOLT`; NEW §1.6 "The two engine configurations" | NEW [physics.md](../../reference/physics.md) chapter (`PhysicsWorld`/`PhysicsTypes`/`PhysicsBody`/`CharacterController`/`ScenePhysics`/`PhysicsBackendRegistry` + the script proxies); manifest rows for the five physics headers | NEW [build-2d-3d-split.md](../../systems/build-2d-3d-split.md) + [physics-backends.md](../../systems/physics-backends.md); pointer updates in ecs-scene / rendering-2d / rendering-3d / build-plugin-packaging | — (no new editor surface; the 2D editor is the same editor with 3D fenced) | ✅ **done as doc 28 W10 (D41–D45), 2026-07-25** |
 
 Bookkeeping pass now (part of any next docs session): add the table above as tracked rows,
 and extend the §11 upkeep contract with rule 4: **"a phase's final work order runs its D40
@@ -3413,9 +3415,9 @@ Its own W10 work order wrote the documentation, planned in
 
 | ID | Document | Contents | Status |
 | --- | --- | --- | --- |
-| **D41** | NEW [`../systems/build-2d-3d-split.md`](../systems/build-2d-3d-split.md) | What `COSMIC_2D_ONLY` excludes and why; the **classification rule for new code**; `build.bat` / `build_2d.bat` / `build_3d.bat` / presets / the worktree layout; the **recorded** build times (not the estimate) and the `/MP` finding; the branch and carry-over workflow. | ✅ 2026-07-25 |
-| **D42** | NEW [`../systems/physics-backends.md`](../systems/physics-backends.md) | `IPhysicsBackend`, `PhysicsBackendRegistry`, `PhysicsSettings::Backend`; the fixed-step contract; `ThreadCount`/determinism; the `RayHit::EntityId` round-trip; a worked example lifted from `tests/test_physics_backend.cpp`. | ✅ 2026-07-25 |
-| **D43** | NEW [`../reference/physics.md`](../reference/physics.md) | The per-call reference for `PhysicsWorld` / `PhysicsTypes` / `PhysicsBody` / `CharacterController` / `ScenePhysics` / the registry / the script proxies — a chapter that **did not exist** before. | ✅ 2026-07-25 |
+| **D41** | NEW [`../systems/build-2d-3d-split.md`](../../systems/build-2d-3d-split.md) | What `COSMIC_2D_ONLY` excludes and why; the **classification rule for new code**; `build.bat` / `build_2d.bat` / `build_3d.bat` / presets / the worktree layout; the **recorded** build times (not the estimate) and the `/MP` finding; the branch and carry-over workflow. | ✅ 2026-07-25 |
+| **D42** | NEW [`../systems/physics-backends.md`](../../systems/physics-backends.md) | `IPhysicsBackend`, `PhysicsBackendRegistry`, `PhysicsSettings::Backend`; the fixed-step contract; `ThreadCount`/determinism; the `RayHit::EntityId` round-trip; a worked example lifted from `tests/test_physics_backend.cpp`. | ✅ 2026-07-25 |
+| **D43** | NEW [`../reference/physics.md`](../../reference/physics.md) | The per-call reference for `PhysicsWorld` / `PhysicsTypes` / `PhysicsBody` / `CharacterController` / `ScenePhysics` / the registry / the script proxies — a chapter that **did not exist** before. | ✅ 2026-07-25 |
 | **D44** | [`28-phase29-engine-split-plan.md`](28-phase29-engine-split-plan.md) | Status banner, per-work-order ✅ lines with dates and results (§11), the **honest deviation record** (§16, 15 entries) and the follow-ups leaving the phase (§17). | ✅ 2026-07-25 |
 | **D45** | Index/pointer updates | `00-MASTER-ROADMAP.md` (Phase 29 entry, doc 28 row, the *both configurations green* working-agreement rule), `FEATURE-MATRIX.md` (5 new rows incl. the ⏸ 2D-native particles), this document (§15), `../design/modularity-audit.md` (**G3 closed** + a physics row in the §4 cookbook), `../systems/build-plugin-packaging.md`, `../systems/{ecs-scene,rendering-2d,rendering-3d,README}.md`, `../reference/README.md`, root `README.md` (§1.5 + a new §1.6). | ✅ 2026-07-25 |
 
@@ -3504,7 +3506,7 @@ shared state:
 | `docs/reference/README.md` | all 13 Phase B items | the Status column + the coverage manifest |
 | `docs/systems/README.md` | all 10 Phase D items | the Status column |
 | `README.md` | D25, D26, D27, D28, D29, D32, D33, D34 | Part II section conversions |
-| `docs/plans/12-documentation-plan.md` | every item | its own status banner + the §7 findings log |
+| `docs/plans/archive/12-documentation-plan.md` | every item | its own status banner + the §7 findings log |
 
 Concurrent edits to these clobber each other — last writer wins and the loser's row silently
 vanishes. So: **each agent writes only its chapter, deletes only its own `STATUS: SKELETON` banner,
@@ -3522,7 +3524,7 @@ Defer all of them to the integration pass, or run those items' conversions seria
 | **0** | **D5** | alone | The checker. Run it first and *act on its output* — it tells the Phase B waves which manifest rows are missing, which is information they otherwise each rediscover by hand. |
 | **1** | D7, D13, D14, D15 | 4 | M-sized, well-specified, each has a written guide counterpart to lean on. Good shakedown wave. |
 | ~~**2**~~ | ~~D6, D8, D9, D16, D18~~ | — | ✅ **D9 done in wave 1; D6, D8, D18 done in wave B1** (2026-07-26). D16 slips to wave 3. D8's `BindingPoints` table and `#materialclone` anchor now exist, so D11 can link them. |
-| **3** | D12, D16, D17 + D10, D11 | 3 then 2 | **D10 and D11 are XL and want a stronger model or your review** — the deferred-flush and pass-graph semantics must be exactly right. Run these two attended rather than fanned out. D11 can now link D8's [`BindingPoints`](../reference/graphics-resources.md#bindingpoints) table instead of rediscovering it. |
+| **3** | D12, D16, D17 + D10, D11 | 3 then 2 | **D10 and D11 are XL and want a stronger model or your review** — the deferred-flush and pass-graph semantics must be exactly right. Run these two attended rather than fanned out. D11 can now link D8's [`BindingPoints`](../../reference/graphics-resources.md#bindingpoints) table instead of rediscovering it. |
 | **4** | D25 first, then D26–D33 | 1 then 8 | D25 (architecture-overview) is the map — do it first for orientation, but write its §5 directory table last. **D29 is XL** (the PBR material must explain, not name-drop). |
 | **5** | D34 | 1 | Depends on nothing, but its `build-plugin-packaging` half pairs with D25's module map. |
 | **6** | D35 → D36 | serial | Must be last and in order: D35 sweeps links, D36 runs the checker in full strict mode. |
@@ -3546,7 +3548,7 @@ picking three claims per chapter and grepping for their citation.
 
 ## 16. Kickoff prompt (paste for each implementation session)
 
-> Read `docs/plans/12-documentation-plan.md` §0 fully, then work order **D\<n\>** only. Open
+> Read `docs/plans/archive/12-documentation-plan.md` §0 fully, then work order **D\<n\>** only. Open
 > the skeleton file(s) named in the item — the skeleton's scope list, checklist, and truth
 > sources are binding. Verify every signature and behavior claim against the current headers
 > and source before writing (checklists are starting points; headers are truth; never

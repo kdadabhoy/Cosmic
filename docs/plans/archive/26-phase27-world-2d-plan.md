@@ -1,5 +1,7 @@
 # Phase 27 Plan — World Rendering & 2D Game Parity
 
+> **ARCHIVED 2026-09-20** — completed/superseded; kept as the record of what was built and why. Do not execute. Origin: Phase 27, created 2026-07-11. Landed by: see git log (X1-X7, 2026-07-14). Replacement: [`../../guide/lighting-2d.md`](../../guide/lighting-2d.md) (2D lights); the sky/particle items are parked 3D.
+
 > **STATUS 2026-07-14 (UNcommitted) — PHASE CODE-COMPLETE (X1–X7 all ✅).** All seven work
 > orders landed in one session. Engine gained only generic, default-off/identical-by-default
 > surface: `SkyMode::Physical` (analytic Rayleigh+Mie scattering baked into the IBL cube),
@@ -18,7 +20,7 @@
 > darkness scene, nameplate tracking, live minimap) + commit.
 >
 > **Created 2026-07-11.** Editor-vision phase 6 of 7 (spec of record:
-> [`../design/example-images-gap-analysis.md`](../design/example-images-gap-analysis.md)
+> [`../design/example-images-gap-analysis.md`](../../design/example-images-gap-analysis.md)
 > §7.2–§7.5, §11, §12). The engine-side additions the reference screenshots demand beyond the
 > existing plans: a physical-atmosphere sky option, particle turbulence with live preview,
 > and the three genuine gaps behind the 2D survival-game screenshot (2D lights, world-anchored

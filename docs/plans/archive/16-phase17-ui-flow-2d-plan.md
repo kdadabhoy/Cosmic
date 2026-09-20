@@ -1,5 +1,7 @@
 # Phase 17 Plan — In-Game UI, Screen Flow, and 2D Game Authoring
 
+> **ARCHIVED 2026-09-20** — completed/superseded; kept as the record of what was built and why. Do not execute. Origin: Phase 17, created 2026-07-04. Landed by: see git log (U1-U8, 2026-07-08 .. 2026-07-11). Replacement: [`../../guide/game-ui.md`](../../guide/game-ui.md), [`../../guide/flow-and-story.md`](../../guide/flow-and-story.md).
+
 > **STATUS 2026-07-11 (UNcommitted) — PHASE CODE-COMPLETE (U1–U8 all ✅).** The
 > editor/on-GPU remainder landed on top of the 07-08 engine foundation: **U1**
 > editor click-consumption (+ `UiSystem::HitTest` edit-mode UI select), **U3**
@@ -19,7 +21,7 @@
 > (241→272), GL-conformance clean, compat gate held (no shipped app attaches
 > the new components; the sprite/UI hooks early-out on scenes without them).
 > **REMAINING (user ledger):** the recorded acceptance —
-> [`../design/ui-flow-2d-acceptance.md`](../design/ui-flow-2d-acceptance.md).
+> [`../design/ui-flow-2d-acceptance.md`](../../design/ui-flow-2d-acceptance.md).
 >
 > **STATUS 2026-07-08 — engine foundation code-complete.** The
 > headless-testable engine core of Phase 17 landed and is verified: build green
@@ -442,7 +444,7 @@ Build green, `CosmicTests` **271/271**. The 16:9-proportions screenshot comparis
    Proves 2D + UI + flow + scripts together; packaged and run clean.
 
 **Status:** ✅ STAGED 2026-07-11 — the recorded demo itself is on the USER's acceptance
-ledger (script: [`../design/ui-flow-2d-acceptance.md`](../design/ui-flow-2d-acceptance.md)).
+ledger (script: [`../design/ui-flow-2d-acceptance.md`](../../design/ui-flow-2d-acceptance.md)).
 What's in the tree:
 - **Zero-code app "FlowDemo"** (homescreen ▸ *Flow Sample*, self-built): MainMenu
   (canvas/title/Play/Quit) + Game (world + HUD hint) + Pause (scrim overlay) scenes,

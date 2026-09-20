@@ -1,7 +1,7 @@
 # API Reference — Events & Input
 
 > **STATUS: WRITTEN** — work order **D7** (2026-07-26) in
-> [`docs/plans/12-documentation-plan.md`](../plans/12-documentation-plan.md).
+> [`docs/plans/archive/12-documentation-plan.md`](../plans/archive/12-documentation-plan.md).
 > Entry format: [reference/README.md → Entry format](README.md#entry-format-mandatory--copy-this-shape).
 
 **Scope (headers are the truth):** `Cosmic/src/events/Event.h`, `events/ApplicationEvent.h`,
@@ -43,7 +43,7 @@ without linking anything.
 ### The type hierarchy
 
 *(Chapter-local inventory diagram — it is **not** a `DG-n` diagram from
-[doc 12 §4](../plans/12-documentation-plan.md#4-diagram-inventory-build-exactly-these-ids-are-referenced-by-skeletons),
+[doc 12 §4](../plans/archive/12-documentation-plan.md#4-diagram-inventory-build-exactly-these-ids-are-referenced-by-skeletons),
 and it does not duplicate DG-4, which is a propagation flowchart.)*
 
 ```mermaid

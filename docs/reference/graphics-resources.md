@@ -1,7 +1,7 @@
 # API Reference — Graphics Resources
 
 > **STATUS: WRITTEN** — work order **D8** (2026-07-26) in
-> [`docs/plans/12-documentation-plan.md`](../plans/12-documentation-plan.md).
+> [`docs/plans/archive/12-documentation-plan.md`](../plans/archive/12-documentation-plan.md).
 > Entry format: [reference/README.md → Entry format](README.md#entry-format-mandatory--copy-this-shape).
 
 **Scope (headers are the truth):** `Cosmic/src/graphics/Shader.h`, `graphics/Texture.h`,

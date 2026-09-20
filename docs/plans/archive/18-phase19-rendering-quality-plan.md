@@ -1,5 +1,7 @@
 # Phase 19 Plan — Rendering Quality Tier 2 (deviation closures)
 
+> **ARCHIVED 2026-09-20** — completed/superseded; kept as the record of what was built and why. Do not execute. Origin: Phase 19 menu, created 2026-07-04. Landed by: R8 2026-07-11; the rest never fired. Replacement: [`../FEATURE-MATRIX.md`](../FEATURE-MATRIX.md) "Parked (engine-3d)" for the 3D items.
+
 > **Created 2026-07-04.** Collects every *documented tier deviation* left behind by Phases
 > 9–13 into one place, per the 2026-07-04 rule ("live docs contain only unimplemented work;
 > every future feature has a phase home"). Each item cites its origin. **This doc is a menu,

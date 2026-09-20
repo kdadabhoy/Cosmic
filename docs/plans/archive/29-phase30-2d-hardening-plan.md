@@ -1,5 +1,7 @@
 # Phase 30 Plan — 2D Engine Hardening: stress, edge cases, fuzz, and a driven-on-GPU campaign
 
+> **ARCHIVED 2026-09-20** — completed/superseded; kept as the record of what was built and why. Do not execute. Origin: Phase 30, planned 2026-07-25, never executed as written. Landed by: superseded. Replacement: **superseded by the 2D stability packet** [`../2d-stability-2026-09-16/00-Start-Here.md`](../2d-stability-2026-09-16/00-Start-Here.md) (WO-00..WO-10 done) and the App Platform packet.
+
 > **STATUS 2026-07-25 — ☐ PLANNED, nothing implemented.** This document is the complete,
 > self-contained work order set for hardening the **2D engine configuration** (`engine-2d` /
 > `COSMIC_2D_ONLY=ON`) against scale, degenerate input, hostile data and long runs — and for

@@ -1,5 +1,7 @@
 # Phase 21 Plan — Scripting & Connectivity Extensions
 
+> **ARCHIVED 2026-09-20** — completed/superseded; kept as the record of what was built and why. Do not execute. Origin: Phase 21, created 2026-07-04. Landed by: never started (unlock-driven). Replacement: [`../00-MASTER-ROADMAP.md`](../00-MASTER-ROADMAP.md) deferred list (UDP / link abstraction).
+
 > **Created 2026-07-04.** The remaining carried-forward engine capabilities that fit neither
 > rendering (doc 18) nor assets (doc 19): the **Lua tier** (doc 11 §4, mapped there in full —
 > parked by user decision 2026-07-04 in favor of the C++ SystemScript tier, doc 13 H9, but per

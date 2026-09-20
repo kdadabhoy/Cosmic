@@ -1,5 +1,7 @@
 # Phase 28 Plan — Flagship Showcase: **Forge Isle**
 
+> **ARCHIVED 2026-09-20** — completed/superseded; kept as the record of what was built and why. Do not execute. Origin: Phase 28 (3D flagship Forge Isle), created 2026-07-11. Landed by: Z1 greybox only; project deleted from `main` 2026-09 (preserved on `engine-3d`). Replacement: [`../../showcase/README.md`](../../showcase/README.md) (PendulumLab is the 2D showcase).
+
 > **Created 2026-07-11.** The capstone (user decision 2026-07-11: "the last thing should be
 > creating a very cool example application"). **Forge Isle** is a small, polished third-person
 > island adventure built entirely with Starforge — a real packaged product whose every beat
@@ -108,7 +110,7 @@ line (note it there when landing).
 **Files:** ForgeIsle `icon.png` + branding pass (K1: window/taskbar icon + the project's
 identity everywhere), Project Settings (title/size), Packager run (icon/zip/installer),
 telemetry-recorded trailer script (`docs/design/forge-isle.md` §trailer — the E21/J9 recorded-
-demo pattern), homescreen tile + `docs/plans/12-documentation-plan.md` D40 row.
+demo pattern), homescreen tile + `docs/plans/archive/12-documentation-plan.md` D40 row.
 **Acceptance (the phase DoD):** clean-machine install from the installer → Forge Isle runs
 start-to-finale at ≥60 fps/1080p with its own icon/title, user data isolated (S6), `--replay`
 works; the recorded trailer is saved; **the Z1 matrix is walked live on stream/recording with

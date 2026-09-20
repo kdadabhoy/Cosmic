@@ -6,6 +6,8 @@
 > to ✅ + date and leave the row (history is cheap; hunting is not). When a new need appears,
 > add a row BEFORE writing code, and give it a phase home or an explicit "unplanned" verdict.
 >
+> **2026-09-20:** the 3D rows now live under [Parked (engine-3d)](#parked-engine-3d--3d-rows-no-phase-home-on-the-2d-trunk) with no phase home; `docs/plans/1x-*.md` are archived under [`archive/`](archive/README.md). New work is planned in the [App Platform packet](app-platform-2026-09-18/00-Start-Here.md), not here.
+>
 > Sibling documents: [`00-MASTER-ROADMAP.md`](00-MASTER-ROADMAP.md) sequences the phases;
 > each `docs/plans/1x-*.md` holds the work orders; `docs/design/modularity-audit.md` covers
 > *architectural* swappability (how to replace a system rather than add one).
@@ -20,24 +22,19 @@
 | Feature | Today | Phase home | Unlock / trigger | Size | Status |
 | --- | --- | --- | --- | --- | --- |
 | Orbit camera without MMB jump (pose-based pivot) | look-at rig re-aims on press | 14 · doc 13 H1 | now (daily irritation) | M | ✅ 2026-07-04 |
-| Environment/sky/shadows/post live in editor + player | `Scene::OnRender3D` ignores `EnvironmentComponent` | 14 · doc 13 H2 | now | L | ✅ 2026-07-04 |
-| Scene lights affect default materials + light billboards | color path ignores lights UBO; lights invisible | 14 · doc 13 H3 | now | M | ✅ 2026-07-04 |
-| HDRI skies | enum exists, no loader | 14 · doc 13 H4 | now | M | ✅ 2026-07-04 |
+| Wireframe / entity-ID view modes | no fill-mode verb | 19 · doc 18 R8 | **fired 2026-07-11** (rides Phase 22 K6's viewport strip) | S | ✅ 2026-07-11 |
+| Viewport instrument (header strip, per-op snap, fly/possess camera, axis navigator, stats chips, infinite grid) | top-bar toolbar, one snap value, orbit-only | 22 · doc 21 K6–K10 | now | L | ✅ 2026-07-11 |
 | Editor chrome: toolbar visible, one menu bar, panel ✕, viewport title | top dock clips toolbar; hard-coded names | 14 · doc 13 H5 | now | M | ✅ 2026-07-04 |
 | Native file dialogs everywhere | hand-typed paths; 2 ad-hoc usages | 14 · doc 13 H6 | now | M | ✅ 2026-07-04 |
 | Colored terminal logs; logs in `user://`; engine log in Console panel | pattern uncolored; logs land in content dirs | 14 · doc 13 H7 | now | S | ✅ 2026-07-04 |
-| ForgePlayground that demos well + scene-camera adoption | content buried in terrain; camera spawns underground | 14 · doc 13 H8 | now | M | ✅ 2026-07-04 |
 | SystemScript tier (logic over a *class* of entities) | per-entity scripts only | 14 · doc 13 H9 | now (user need #4) | M | ✅ 2026-07-04 |
 | Editor consistency sweep (labels, glyphs, Add-Component filtering) | assorted rough edges | 14 · doc 13 H10 | now | S | ✅ 2026-07-04 |
 | Material-edit undo + preview rig + browser thumbnails | live-but-not-undoable; no thumbnails | 20 · doc 19 A4 | **fired 2026-07-11** (editor vision; expands to the shared PreviewRig service, gap §14.3) | M/L | ✅ 2026-07-12 (PreviewRig interactive+batch; self-test proved byte-identical scene render) |
 | In-place texture/asset hot reload into held Refs | cache-slot swap only | 20 · doc 19 A5 | live-tuning workflow | S | ⏸ |
-| Terrain sculpt/splat brushes | recipe params only | 20 · doc 19 A6 | param terrain stops being enough | L | ⏸ |
 | Prefab overrides v2 (field-level diff/propagation) | whole-instance apply/revert | 20 · doc 19 A7 | content-heavy project | M | ⏸ |
-| Wireframe / entity-ID view modes | no fill-mode verb | 19 · doc 18 R8 | **fired 2026-07-11** (rides Phase 22 K6's viewport strip) | S | ✅ 2026-07-11 |
 | Sequencer / cinematics (keyframes on reflected fields) | none | 21 · doc 20 C6 | trailer/cutscene need (reuses Phase 24 M2's Timeline widget; Forge Isle may fire it) | L | ⏸ |
 | Drop-a-file branding: window/taskbar icon + top-bar logo, hot-swap | GLFW default icon in dev; exe-embed only at package time | 22 · doc 21 K1 | now (user request 2026-07-11) | M | ✅ 2026-07-11 |
 | Editor chrome v2 (icon toolbar/centered transport, layout presets, undo UI, status bar) | text-button strip, one layout | 22 · doc 21 K2–K5 | now (editor vision) | M | ✅ 2026-07-11 |
-| Viewport instrument (header strip, per-op snap, fly/possess camera, axis navigator, stats chips, infinite grid) | top-bar toolbar, one snap value, orbit-only | 22 · doc 21 K6–K10 | now | L | ✅ 2026-07-11 |
 | Universal gizmo + selection outline + viewport drag-drop | single-op gizmo, wire-box highlight, Inspector-only drops | 22 · doc 21 K11–K13 | now | M | ✅ 2026-07-11 |
 | Reflection metadata v2 (per-field docs/ranges/units → tooltips + bounded widgets) | name/kind/flags only | 23 · doc 22 T1/T10 | now | M | ✅ 2026-07-12 |
 | Asset accounting/enumeration + JobSystem introspection panels | none | 23 · doc 22 T2/T18 | now | M | ✅ 2026-07-12 |
@@ -46,7 +43,6 @@
 | Per-entity Active semantics + Hierarchy icons/toggles | no visibility/active concept | 23 · doc 22 T13/T14 | now | M | ✅ 2026-07-12 |
 | Console v2 + GPU profiler panel (Starforge port) | basic console; profiler only in Frontier | 23 · doc 22 T16/T17 | now | S | ✅ 2026-07-12 |
 | Asset-editor document host + reusable Timeline widget | one shared Inspector; no document tabs | 24 · doc 23 M1/M2 | now (anim/story editors sit on it) | L | ✅ 2026-07-12 (AssetEditorHost tabbed docs + IAssetEditor; pure-transport Timeline widget, display+scrub) |
-| Starforge Animation Editor (skeleton tree, bone-overlay preview, clip scrub, sockets UI) | none | 24 · doc 23 M3 | with doc 19 A2 | L | ✅ 2026-07-12 (skeleton tree + PreviewRig::RenderSkeletal bone overlay + joint pick + clip timeline; inspect-only) |
 | Reusable node canvas + Starforge Story Graph editor + post-chain graph view | doc 16 U6 ships the flow panel | 25 · doc 24 Q1/Q4/Q6 | after U6 + M1 | L | ✅ 2026-07-12 (flow editor rehosted as an M1 `FlowEditor` document on `NodeCanvas`; `StoryEditor` doc w/ rich nodes + Play preview; `PostChainEditor` read-only-topology view w/ undo-identical field edits) |
 | **2D collider debug overlay** (Box/Sphere/Capsule flattened onto XY via `Renderer2D`, same `m_ShowColliders` chip) | `PhysicsWorld::DebugDraw` draws through `Renderer3D`, so 2D physics was invisible | 29 · doc 28 W7 §6.4 | with the 2D engine build (physics ships on both configurations) | S | ✅ 2026-07-25 (`ViewportController::DrawColliderOverlay2D`, drawn AFTER the sprites + 2D lights — the on-GPU pass caught it painting underneath them; reads components not the backend, so a custom physics backend gets it free) |
 | Undoable content-browser rename/delete | confirm-dialog only (by design, E10; rename itself ships in 23 · T6) | — | revisit only if it bites | S | ✖ |
@@ -62,10 +58,9 @@
 | Per-app `user://` isolation (+ portable mode) | shared root | 16 · doc 15 S6 | now | M | ✅ 2026-07-05 |
 | Run-standalone button, save-thumbnails, About | — | 16 · doc 15 S7 | now | S | ✅ 2026-07-05 |
 | Desktop app identity: live OS window titles, per-app AppUserModelID, dev-tree `Starforge.exe` (own VERSIONINFO) | static "Cosmic Engine" title; one anonymous host exe | 16 · doc 15 S2/S5 follow-through | now (desktop tools can't identify the window) | S | ✅ 2026-07-10 |
-| **Pure-2D engine build configuration** (`COSMIC_2D_ONLY`; no terrain/voxel/water/nav/particles/3D-renderer, no assimp or Recast configured; `engine-2d` branch + worktree) | one engine, 3D-only; a 2D game dragged the whole 3D stack through the compiler and into the DLL | 29 · doc 28 W1–W8 | now (user request 2026-07-24) | XL | ✅ 2026-07-25 (572→347 TUs, 78→50 targets; Starforge boots and authors in 2D; SF_Telem on both branches with zero source changes; 3D 513/513 + 14/14 goldens, 2D 340/340 + 6/6. Clean-build cut is **−24.7 %**, short of the 40–55 % target — doc 28 §5.3) |
+| **Pure-2D engine build configuration** (`COSMIC_2D_ONLY`; no terrain/voxel/water/nav/particles/3D-renderer, no assimp or Recast configured; `engine-2d` branch + worktree) | one engine, 3D-only; a 2D game dragged the whole 3D stack through the compiler and into the DLL | 29 · doc 28 W1–W8 | now (user request 2026-07-24) | XL | ✅ 2026-07-25 (572→347 TUs, 78→50 targets; Starforge boots and authors in 2D; SF_Telem on both branches with zero source changes; 3D 513/513 + 14/14 goldens, 2D 340/340 + 6/6. Clean-build cut is **−24.7 %**, short of the 40–55 % target — doc 28 §5.3) — **superseded 2026-09-18 (D-PURGE): `main` is 2D-only, no `engine-2d` branch; the 3D tree is `engine-3d`** |
 | **Global `/MP` (parallel translation-unit compilation)** | `/MP` existed in exactly ONE place — assimp's own CMakeLists; every other target compiled serially | 29 · doc 28 §5.3 | found while measuring the split's build-time gate | S | ✅ 2026-07-25 (one `add_compile_options(/MP)` at MSVC scope in the root CMakeLists: clean Release **3D 546.4→169.4 s (−69.0 %)**, **2D 411.7→123.1 s (−70.1 %)** — ~2.8× the entire engine split, at no cost to functionality) |
-| **ViperSim on the 2D branch** | 2D skip-list — `FlightScreen`/`ReplayScreen` draw the airframe, pad, grid, axes and trail with direct `Renderer3D` calls | 29 · doc 28 §17 #1 | needs a Renderer2D rewrite of those two screens; contradicts doc 28's own decision 4 | M | ⏸ |
-| **CI leg for the 2D configuration** | GitHub Actions watches `main` with the 3D config only (doc 28 decision 6 kept workflows untouched); 2D is verified locally every phase | 29 · doc 28 §17 #3 | 2D regressions start slipping through, or `engine-2d` gains its own contributors | S | ⏸ |
+| **CI leg for the 2D configuration** | GitHub Actions watches `main` with the 3D config only (doc 28 decision 6 kept workflows untouched); 2D is verified locally every phase | 29 · doc 28 §17 #3 | 2D regressions start slipping through, or `engine-2d` gains its own contributors | S | ⏸ — ✅ 2026-09-17 (stability WO-03: CI builds and tests the 2D trunk) |
 | Binary asset pak | loose files | 20 · doc 19 A9 | shipped-app size/IO measured to matter | M | ⏸ |
 | Project templates gallery | one template + picker seam | 17 ships the 2D one | a third real template | S | ⏸ |
 | Cloud/team project sync, DB service | registry file over folders | — (doc 15 §3) | multi-machine/team | XL | ✖ |
@@ -78,25 +73,19 @@
 | --- | --- | --- | --- | --- | --- |
 | Rigid-body physics, colliders, queries, triggers (Jolt) | **shipped (Jolt v5.5.0, 2026-07-04)** | 15 · doc 14 J1–J5 | now (decision 2026-07-04) | XL | ✅ |
 | Character controller (walk/step/slope) | **shipped (CharacterVirtual, 2026-07-04)** | 15 · doc 14 J6 | with physics | M | ✅ |
-| Terrain heightfield collision | **shipped (HeightFieldShape, ≤2 cm parity, 2026-07-04)** | 15 · doc 14 J7 | with physics | M | ✅ |
 | **Pluggable physics backend** (`IPhysicsBackend` + `PhysicsBackendRegistry`; `PhysicsSettings::Backend`; write your own simulator for a single app) | Jolt hard-wired behind `PhysicsWorld`'s pimpl — replaceable only by editing the engine | 29 · doc 28 W3 | now (user request 2026-07-24: *"I must be able to write my own physics later on"*) | M/L | ✅ 2026-07-25 (`PhysicsWorld` became a dispatcher — its public API did not change by one character, so no call site moved and no gameplay script changed; Jolt + null built in, `COSMIC_WITH_JOLT=OFF` supported; contracts + a complete <150-line worked backend in `tests/test_physics_backend.cpp`; closes `modularity-audit.md` **G3**) |
 | Physics constraints/joints/ragdolls | — | 15 · doc 14 §3 | articulated-body project | L | ⏸ |
-| Rigid-body water buoyancy | script-applied forces via S9 queries | 15 · doc 14 §3 | floating-dynamics need | M | ⏸ |
 | In-game UI as entities (canvas/button/text/image) | ImGui only (editor chrome) | 17 · doc 16 U1/U2 | now | L | ✅ 2026-07-11 (editor click-consume + `UiSystem::HitTest` select; engine/tests 2026-07-08) |
 | Screen-flow node graph (`.cflow` + FlowMachine + panel) | code-only SceneManager | 17 · doc 16 U5/U6 | now (user need #5) | L | ✅ 2026-07-11 (U6 Flow Graph panel + vendored imgui-node-editor + flow-driven editor Play; U5 runtime 2026-07-08) |
 | 2D/pixel authoring (ortho mode, crisp sampling, sorting) | engine 2D exists, editor can't author it | 17 · doc 16 U3 | now (user need #2) | M | ✅ 2026-07-11 (2D mode + Camera2DController + pixel grid + `Scene::OnRenderSprites` + pixel-art sampling preset) |
 | Sprite animation + tilemaps | none | 17 · doc 16 U4 | now | M | ✅ 2026-07-11 (TilemapComponent + int-array Cells + culled draw + Tile Palette painter w/ stroke undo; flipbook 2026-07-08) |
 | Game-view correctness (primary camera, aspect presets, eject) | editor camera always | 17 · doc 16 U7 | now | S | ✅ 2026-07-11 (primary-camera Play + eject + letterboxed aspect presets + cursor capture) |
-| Voxel worlds (chunks, meshing, edit, collision, gen) | none | 18 · doc 17 V1–V7 | after 14–17 (user-approved scope) | XL | ✅ 2026-07-08 (code + editor; recorded V7 demo stays on the user ledger) |
 | Visual *logic* scripting (blueprints) | — | — (doc 16 §3) | explicit demand post-flow; doctrine is C++ logic | XL | ✖ |
-| Navmesh / AI pathfinding (Recast/Detour, bake + `.cnav`, crowd agents, script `Nav()`) | none | 26 · doc 25 N1–N5 | **now — verdict flipped 2026-07-11** (editor vision + Forge Isle AI) | XL | ✅ 2026-07-14 (recastnavigation v1.6.0 PRIVATE-static behind `nav/NavWorld` pimpl; `NavMeshComponent` recipe + collision-sourced bake + `.cnav` sidecar; `NavAgentComponent` + DetourCrowd stepped in the play tick; script `Nav()` proxy + `nav.arrived` signal; nav-critter sample; headless bake/path/crowd + two-run bit-match determinism — `CosmicTests` 339/339; on-GPU recorded demo stays on the user ledger) |
 | Flow variables (typed blackboard on `.cflow`: groups, defaults, guards/actions/`Flow().GetVar`) | guards read reflected entity fields only | 25 · doc 24 Q2 | now (editor vision) | M | ✅ 2026-07-12 (FlowAsset::Variables Bool/Number/String/Enum, variable guards + setVar actions, `Flow()` script proxy, versioned `.cflow` — v1 loads unchanged; headless-tested) |
 | Story graphs (`.cstory` dialogue runtime: speaker/portrait/audio/options w/ guards + once; zero-code UI binding) | none | 25 · doc 24 Q3/Q4 | now (editor vision) | L | ✅ 2026-07-12 (GL-free `StoryGraph`/`StoryRunner` — nodes/options/guards/Once/signals + shared `EvaluateFlowGuard`; `StoryUiBinding` stock template; `StoryEditor` document; headless-tested) |
-| Joint sockets (attach entities to animated joints) | none | 24 · doc 23 M4 | with doc 19 A2 | M | ✅ 2026-07-12 (reflected SocketComponent + GetWorldTransform composition through the pose palette; headless-tested) |
 | 2D lighting (radial lights + ambient darkness over Renderer2D) | 2D is unlit | 27 · doc 26 X5 | now (2D game parity) | M/L | ✅ 2026-07-14 |
 | World-anchored UI (nameplates/prompts/health bars via UiWorldAnchor) | screen-space canvas only | 27 · doc 26 X6 | now | S/M | ✅ 2026-07-14 |
 | Render-to-texture verb (+ UiImage runtime texture; minimap building block) | offscreen passes are internal-only | 27 · doc 26 X7 | now | M | ✅ 2026-07-14 |
-| Flagship showcase app (**Forge Isle**: character/AI/story/2D vignette/branding, packaged + trailer) | samples only (Playground/Pong/Blocks) | 28 · doc 27 Z1–Z7 | last — the capstone (decision #12, 2026-07-11) | XL | ☐ |
 | Networking / multiplayer | none (C1 gives UDP transport) | — | a networked project (plan a phase then) | XL | ✖ |
 | Save-game system | serializer exists; no slot/versioning layer | — | first game needing saves (likely doc 16-adjacent) | M | ✖ |
 | Input rebinding UI | codes + gamepad polling exist | — | first shipped game with options menu | M | ✖ |
@@ -114,23 +103,8 @@
 
 | Feature | Today | Phase home | Unlock / trigger | Size | Status |
 | --- | --- | --- | --- | --- | --- |
-| Cascaded shadow maps | single 2k map + camera-follow workaround | 19 · doc 18 R1 | shadow range complaints | L | ⏸ |
-| Depth prepass + ambient-only SSAO | whole-image composite | 19 · doc 18 R2 | SSAO dirtying lit surfaces | M | ⏸ |
-| Progressive bloom | Gaussian pyramid | 19 · doc 18 R3 | shimmer complaints / cinematic pass | M | ⏸ |
-| Froxel volumetrics | shadow-map raymarch god rays | 19 · doc 18 R4 | local fog volumes / multi-light shafts | L | ⏸ |
-| FFT ocean (water tier 2) | 8-wave Gerstner | 19 · doc 18 R5 | open-ocean scale app | L | ⏸ |
-| Terrain tessellation + holes | quadtree LOD, no holes | 19 · doc 18 R6 | silhouette quality / cave entrances | L | ⏸ |
-| Particle indirect draw + sorting | fixed-count quads, unsorted | 19 · doc 18 R7 | effects-heavy overdraw measured | M | ⏸ |
-| **2D-native particles** (a sprite/Renderer2D emitter path for the 2D engine build) | `src/particles/` is GPU-compute + 3D billboards/ribbons and is **excluded** from the 2D configuration (doc 28 decision 5). `ParticleEmitterComponent` still round-trips **opaquely**, so authored scenes are safe either way | 29 · doc 28 §4 / §17 #2 | a 2D project that actually needs effects — v1 deliberately shipped without it | M | ⏸ |
-| BCn/KTX2 compressed textures | none (audited: not needed yet) | 19 · doc 18 R9 | VRAM/load-time pressure | M | ⏸ |
-| Projected decals | none | 19 · doc 18 R10 | content polish need | M | ⏸ |
-| Skybox LEQUAL depth verb | background-first draw | 19 · doc 18 R11 | pair with any sky work | S | ⏸ |
-| World-system builder registry (swap water/terrain impls) | concrete factories behind data recipes | 19 · doc 18 R12 | a second implementation must coexist | S | ⏸ |
-| Positional/3D audio (panning, doppler, streaming) | distance-gain loops app-side | 21 · doc 20 C2 | true 3D audio need (Forge Isle polish may fire it) | M | ⏸ |
-| Physical-atmosphere sky (turbidity/Rayleigh/Mie, IBL-matched) | artistic gradient/detailed/HDRI modes | 27 · doc 26 X1 | now (editor vision) | L | ✅ 2026-07-14 |
-| Environment polish (sun elevation/azimuth widget, ambient intensity, exposed gamma, sun angular size) | raw vec3 sun; gamma fixed 2.2 | 27 · doc 26 X2 | now | S | ✅ 2026-07-14 |
+| **2D-native particles** (a sprite/Renderer2D emitter path for the 2D engine build) | `src/particles/` is GPU-compute + 3D billboards/ribbons and is **excluded** from the 2D configuration (doc 28 decision 5). `ParticleEmitterComponent` still round-trips **opaquely**, so authored scenes are safe either way | 29 · doc 28 §4 / §17 #2 | a 2D project that actually needs effects — v1 deliberately shipped without it | M | ⏸ — home now the roadmap v5 deferred list (stability backlog A4) |
 | Vignette post pass (tonemap-folded, default off) | none | 25 · doc 24 Q5 | now | S | ✅ 2026-07-12 (folded into `Tonemap.glsl`, gated on `u_VignetteAmount>0` ⇒ byte-identical off; `EnvironmentComponent` fields + Engine3DDemo toggle; conformance green) |
-| Particle curl-noise turbulence + live noise preview + bounds clamp | recipe forces only (gravity/drag/wind) | 27 · doc 26 X3/X4 | now (CPU/GPU twins stay in lockstep) | M | ✅ 2026-07-14 |
 | Arbitrary post-FX pass-graph executor | fixed verified chain (Q6 ships a graph *view* of it) | — | ✖ decision #13 2026-07-11 — revisit only with a real compositing need | XL | ✖ |
 | Vulkan / second RHI backend | **stay on OpenGL** (S13.3 provisional-closed) | — | doc 05 §12 reopen conditions (archived): GL perf wall, platform need, or driver pain | XL | ✖ |
 | MSAA (vs FXAA) | FXAA ships | — | perceived AA quality issue on thin geometry | M | ✖ |
@@ -139,14 +113,53 @@
 
 | Feature | Today | Phase home | Unlock / trigger | Size | Status |
 | --- | --- | --- | --- | --- | --- |
-| assimp backend ON (FBX/STL/DAE/PLY live) | written, gated off (`COSMIC_WITH_ASSIMP`) | 20 · doc 19 A1 | now (anchor of Phase 20; feeds Phases 23–24) | M | ✅ 2026-07-12 (assimp v5.4.3 vendored/trimmed, default ON; + glTF via cgltf, multi-mesh `#i` children, materials→`.cmat`) |
-| Skeletal animation (skins/clips/skinning) | none | 20 · doc 19 A2 | **fired 2026-07-11** — Forge Isle is the character project; editor superstructure = Phase 24 | XL | ✅ 2026-07-12 (runtime: Skeleton/Clip sampling, glTF+FBX skins, SSBO-10 GPU skinning + shadow twin, Animator + editor scrub; Fox verified on-GPU) |
-| Animator crossfade tier (script-driven clip switching w/ timed blend) | — | 24 · doc 23 M6 | with A2 (the minimal tier a playable character needs) | S | ✅ 2026-07-12 (AnimationClip::BlendLocals pose blend + Animator CrossfadeTo + Animator() script proxy; headless-tested) |
-| Animation blend trees / state machines (full controller graph + editor) | — | — (doc 23 M6 restates the park) | after Forge Isle ships; editor would ride Phase 25's canvas | L | ✖ |
-| Material slots (multi-material meshes on ONE entity, per-slot override) | one slot; multi-material sources import as child entities | 24 · doc 23 M5 | with A1 (engine-architectural — schedule deliberately) | L | ✅ 2026-07-12 (Mesh submesh ranges + MeshRenderer MaterialPaths + per-submesh queue entries; empty-vector legacy compat, serializer-tested) |
-| STEP/CAD B-rep import (`step2gltf` tool) | STL path only | 20 · doc 19 A3 | STEP-only workflow appears | L | ⏸ |
-| CSG booleans (manifold) | primitives only | 20 · doc 19 A8 | modeling outgrows primitives | M | ⏸ |
 | Connectivity: UDP sockets | serial only | 21 · doc 20 C1 | UDP telemetry/sim link need | S | ⏸ |
+
+## Parked (engine-3d) — 3D rows, no phase home on the 2D trunk
+
+> **2026-09-20 (D-PURGE, D-DOCS).** `main` no longer builds or ships any 3D subsystem; the full tree is preserved on the
+> `engine-3d` branch (`0e8894b`, tag `cosmic-pre-2d-2026-09-16`). Every 3D row of this matrix moved here unchanged except
+> for its phase home, which it no longer has. A shipped row means "shipped on the pre-split tree, available on `engine-3d`".
+> Their documentation is under [`../parked-3d/`](../parked-3d/README.md) (parked 3D). Nothing here is planned; 3D resumes
+> by branching from `engine-3d`, not by re-adding to `main`.
+
+| Feature | Today (as last recorded) | Phase home | Unlock / trigger | Size | Status |
+| --- | --- | --- | --- | --- | --- |
+| Environment/sky/shadows/post live in editor + player | `Scene::OnRender3D` ignores `EnvironmentComponent` | — (parked; was 14 · doc 13 H2) | now | L | ✅ on `engine-3d` only — 2026-07-04 |
+| Scene lights affect default materials + light billboards | color path ignores lights UBO; lights invisible | — (parked; was 14 · doc 13 H3) | now | M | ✅ on `engine-3d` only — 2026-07-04 |
+| HDRI skies | enum exists, no loader | — (parked; was 14 · doc 13 H4) | now | M | ✅ on `engine-3d` only — 2026-07-04 |
+| ForgePlayground that demos well + scene-camera adoption | content buried in terrain; camera spawns underground | — (parked; was 14 · doc 13 H8) | now | M | ✅ on `engine-3d` only — 2026-07-04 |
+| Terrain sculpt/splat brushes | recipe params only | — (parked; was 20 · doc 19 A6) | param terrain stops being enough | L | ⏸ parked (3D) |
+| Starforge Animation Editor (skeleton tree, bone-overlay preview, clip scrub, sockets UI) | none | — (parked; was 24 · doc 23 M3) | with doc 19 A2 | L | ✅ on `engine-3d` only — 2026-07-12 (skeleton tree + PreviewRig::RenderSkeletal bone overlay + joint pick + clip timeline; inspect-only) |
+| **ViperSim on the 2D branch** | 2D skip-list — `FlightScreen`/`ReplayScreen` draw the airframe, pad, grid, axes and trail with direct `Renderer3D` calls | — (parked; was 29 · doc 28 §17 #1) | needs a Renderer2D rewrite of those two screens; contradicts doc 28's own decision 4 | M | ⏸ parked (3D) |
+| Terrain heightfield collision | **shipped (HeightFieldShape, ≤2 cm parity, 2026-07-04)** | — (parked; was 15 · doc 14 J7) | with physics | M | ✅ on `engine-3d` only — |
+| Rigid-body water buoyancy | script-applied forces via S9 queries | — (parked; was 15 · doc 14 §3) | floating-dynamics need | M | ⏸ parked (3D) |
+| Voxel worlds (chunks, meshing, edit, collision, gen) | none | — (parked; was 18 · doc 17 V1–V7) | after 14–17 (user-approved scope) | XL | ✅ on `engine-3d` only — 2026-07-08 (code + editor; recorded V7 demo stays on the user ledger) |
+| Navmesh / AI pathfinding (Recast/Detour, bake + `.cnav`, crowd agents, script `Nav()`) | none | — (parked; was 26 · doc 25 N1–N5) | **now — verdict flipped 2026-07-11** (editor vision + Forge Isle AI) | XL | ✅ on `engine-3d` only — 2026-07-14 (recastnavigation v1.6.0 PRIVATE-static behind `nav/NavWorld` pimpl; `NavMeshComponent` recipe + collision-sourced bake + `.cnav` sidecar; `NavAgentComponent` + DetourCrowd stepped in the play tick; script `Nav()` proxy + `nav.arrived` signal; nav-critter sample; headless bake/path/crowd + two-run bit-match determinism — `CosmicTests` 339/339; on-GPU recorded demo stays on the user ledger) |
+| Joint sockets (attach entities to animated joints) | none | — (parked; was 24 · doc 23 M4) | with doc 19 A2 | M | ✅ on `engine-3d` only — 2026-07-12 (reflected SocketComponent + GetWorldTransform composition through the pose palette; headless-tested) |
+| Flagship showcase app (**Forge Isle**: character/AI/story/2D vignette/branding, packaged + trailer) | samples only (Playground/Pong/Blocks) | — (parked; was 28 · doc 27 Z1–Z7) | last — the capstone (decision #12, 2026-07-11) | XL | ⏸ parked (3D; was ☐) |
+| Cascaded shadow maps | single 2k map + camera-follow workaround | — (parked; was 19 · doc 18 R1) | shadow range complaints | L | ⏸ parked (3D) |
+| Depth prepass + ambient-only SSAO | whole-image composite | — (parked; was 19 · doc 18 R2) | SSAO dirtying lit surfaces | M | ⏸ parked (3D) |
+| Progressive bloom | Gaussian pyramid | — (parked; was 19 · doc 18 R3) | shimmer complaints / cinematic pass | M | ⏸ parked (3D) |
+| Froxel volumetrics | shadow-map raymarch god rays | — (parked; was 19 · doc 18 R4) | local fog volumes / multi-light shafts | L | ⏸ parked (3D) |
+| FFT ocean (water tier 2) | 8-wave Gerstner | — (parked; was 19 · doc 18 R5) | open-ocean scale app | L | ⏸ parked (3D) |
+| Terrain tessellation + holes | quadtree LOD, no holes | — (parked; was 19 · doc 18 R6) | silhouette quality / cave entrances | L | ⏸ parked (3D) |
+| Particle indirect draw + sorting | fixed-count quads, unsorted | — (parked; was 19 · doc 18 R7) | effects-heavy overdraw measured | M | ⏸ parked (3D) |
+| BCn/KTX2 compressed textures | none (audited: not needed yet) | — (parked; was 19 · doc 18 R9) | VRAM/load-time pressure | M | ⏸ parked (3D) |
+| Projected decals | none | — (parked; was 19 · doc 18 R10) | content polish need | M | ⏸ parked (3D) |
+| Skybox LEQUAL depth verb | background-first draw | — (parked; was 19 · doc 18 R11) | pair with any sky work | S | ⏸ parked (3D) |
+| World-system builder registry (swap water/terrain impls) | concrete factories behind data recipes | — (parked; was 19 · doc 18 R12) | a second implementation must coexist | S | ⏸ parked (3D) |
+| Positional/3D audio (panning, doppler, streaming) | distance-gain loops app-side | — (parked; was 21 · doc 20 C2) | true 3D audio need (Forge Isle polish may fire it) | M | ⏸ parked (3D) |
+| Physical-atmosphere sky (turbidity/Rayleigh/Mie, IBL-matched) | artistic gradient/detailed/HDRI modes | — (parked; was 27 · doc 26 X1) | now (editor vision) | L | ✅ on `engine-3d` only — 2026-07-14 |
+| Environment polish (sun elevation/azimuth widget, ambient intensity, exposed gamma, sun angular size) | raw vec3 sun; gamma fixed 2.2 | — (parked; was 27 · doc 26 X2) | now | S | ✅ on `engine-3d` only — 2026-07-14 |
+| Particle curl-noise turbulence + live noise preview + bounds clamp | recipe forces only (gravity/drag/wind) | — (parked; was 27 · doc 26 X3/X4) | now (CPU/GPU twins stay in lockstep) | M | ✅ on `engine-3d` only — 2026-07-14 |
+| assimp backend ON (FBX/STL/DAE/PLY live) | written, gated off (`COSMIC_WITH_ASSIMP`) | — (parked; was 20 · doc 19 A1) | now (anchor of Phase 20; feeds Phases 23–24) | M | ✅ on `engine-3d` only — 2026-07-12 (assimp v5.4.3 vendored/trimmed, default ON; + glTF via cgltf, multi-mesh `#i` children, materials→`.cmat`) |
+| Skeletal animation (skins/clips/skinning) | none | — (parked; was 20 · doc 19 A2) | **fired 2026-07-11** — Forge Isle is the character project; editor superstructure = Phase 24 | XL | ✅ on `engine-3d` only — 2026-07-12 (runtime: Skeleton/Clip sampling, glTF+FBX skins, SSBO-10 GPU skinning + shadow twin, Animator + editor scrub; Fox verified on-GPU) |
+| Animator crossfade tier (script-driven clip switching w/ timed blend) | — | — (parked; was 24 · doc 23 M6) | with A2 (the minimal tier a playable character needs) | S | ✅ on `engine-3d` only — 2026-07-12 (AnimationClip::BlendLocals pose blend + Animator CrossfadeTo + Animator() script proxy; headless-tested) |
+| Animation blend trees / state machines (full controller graph + editor) | — | — (parked; was — (doc 23 M6 restates the park)) | after Forge Isle ships; editor would ride Phase 25's canvas | L | ✖ parked (3D) |
+| Material slots (multi-material meshes on ONE entity, per-slot override) | one slot; multi-material sources import as child entities | — (parked; was 24 · doc 23 M5) | with A1 (engine-architectural — schedule deliberately) | L | ✅ on `engine-3d` only — 2026-07-12 (Mesh submesh ranges + MeshRenderer MaterialPaths + per-submesh queue entries; empty-vector legacy compat, serializer-tested) |
+| STEP/CAD B-rep import (`step2gltf` tool) | STL path only | — (parked; was 20 · doc 19 A3) | STEP-only workflow appears | L | ⏸ parked (3D) |
+| CSG booleans (manifold) | primitives only | — (parked; was 20 · doc 19 A8) | modeling outgrows primitives | M | ⏸ parked (3D) |
 
 ## Standing user-acceptance ledger (not features — recorded here so nothing silently drops)
 

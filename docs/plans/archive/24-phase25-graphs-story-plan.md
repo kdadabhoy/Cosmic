@@ -1,7 +1,9 @@
 # Phase 25 Plan — Node Graphs, Flow Variables & Story Tooling
 
+> **ARCHIVED 2026-09-20** — completed/superseded; kept as the record of what was built and why. Do not execute. Origin: Phase 25, created 2026-07-11. Landed by: see git log (Q1-Q6, 2026-07-12). Replacement: [`../../guide/flow-and-story.md`](../../guide/flow-and-story.md).
+
 > **Created 2026-07-11.** Editor-vision phase 4 of 7 (spec of record:
-> [`../design/example-images-gap-analysis.md`](../design/example-images-gap-analysis.md) §9).
+> [`../design/example-images-gap-analysis.md`](../../design/example-images-gap-analysis.md) §9).
 > Doc 16 **U6** stays the home of the `.cflow` node-graph panel and the imgui-node-editor
 > vendoring — run U6 FIRST; this phase extracts its canvas into a reusable widget and builds
 > the graph-shaped tooling the reference screenshots show: flow **variables**, the **Starforge

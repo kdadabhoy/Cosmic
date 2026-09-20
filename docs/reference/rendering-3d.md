@@ -1,7 +1,7 @@
 # API Reference — 3D Rendering
 
 > **STATUS: SKELETON** — to be filled by work order **D10** in
-> [`docs/plans/12-documentation-plan.md`](../plans/12-documentation-plan.md). This is one of
+> [`docs/plans/archive/12-documentation-plan.md`](../plans/archive/12-documentation-plan.md). This is one of
 > the two largest chapters (with the README 3D sections) — the work order allows splitting
 > into two sessions.
 > Entry format: [reference/README.md → Entry format](README.md#entry-format-mandatory--copy-this-shape).

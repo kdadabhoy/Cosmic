@@ -1,5 +1,7 @@
 # Phase 15 Plan — Physics & Collision (Jolt)
 
+> **ARCHIVED 2026-09-20** — completed/superseded; kept as the record of what was built and why. Do not execute. Origin: Phase 15, created 2026-07-04. Landed by: see git log (J1-J9, 2026-07-04). Replacement: [`../../guide/physics.md`](../../guide/physics.md) (2D trunk; terrain colliders parked).
+
 > **Created 2026-07-04.** Promotes the long-parked "Physics middleware gate" (doc 05 S14 row →
 > doc 11 §9 P3) into a full phase. **User decision 2026-07-04: vendor Jolt now** — the
 > "collision detection / a ground" need is real (games in Starforge, walking characters,

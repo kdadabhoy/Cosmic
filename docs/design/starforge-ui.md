@@ -5,7 +5,7 @@
 > normal plugin — launch it from the Launcher, or `CosmicApp --project Starforge`.
 > This guide covers the Stage-D authoring workflow (primitives, import, materials,
 > environment, packaging). Plan of record: [`docs/plans/archive/11-phase13-starforge-plan.md`](../plans/archive/11-phase13-starforge-plan.md)
-> (Phase 13 complete — current work: [`docs/plans/13-phase14-starforge-hardening-plan.md`](../plans/13-phase14-starforge-hardening-plan.md)).
+> (Phase 13 complete — current work: [`docs/plans/13-phase14-starforge-hardening-plan.md`](../plans/archive/13-phase14-starforge-hardening-plan.md)).
 > This quick guide will be absorbed into the full Starforge manual (doc 12 D39).
 
 ## Layout

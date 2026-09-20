@@ -1,7 +1,9 @@
 # Phase 26 Plan — Navigation & AI (NavMesh, Agents)
 
+> **ARCHIVED 2026-09-20** — completed/superseded; kept as the record of what was built and why. Do not execute. Origin: Phase 26 (3D), created 2026-07-11. Landed by: see git log (N1-N5, 2026-07-14). Replacement: [`../../parked-3d/README.md`](../../parked-3d/README.md).
+
 > **Created 2026-07-11.** Editor-vision phase 5 of 7 (spec of record:
-> [`../design/example-images-gap-analysis.md`](../design/example-images-gap-analysis.md) §10).
+> [`../design/example-images-gap-analysis.md`](../../design/example-images-gap-analysis.md) §10).
 > This phase flips FEATURE-MATRIX's former "Navmesh / AI pathfinding — ✖ unplanned" verdict:
 > the reference screenshots + the Phase 28 flagship (companion/creature AI) are the unlock.
 > Pattern of record throughout: **the Jolt vendoring playbook** (doc 14 J1 — PRIVATE-static,

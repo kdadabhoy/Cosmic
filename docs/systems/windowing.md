@@ -1,7 +1,7 @@
 # Windowing & Platform — How It Works
 
 > **STATUS: SKELETON** — to be filled by work order **D26** in
-> [`docs/plans/12-documentation-plan.md`](../plans/12-documentation-plan.md).
+> [`docs/plans/archive/12-documentation-plan.md`](../plans/archive/12-documentation-plan.md).
 > Format + writing bar: [systems/README.md](README.md#document-format-mandatory--every-explainer-uses-this-shape).
 
 **One-liner:** a GLFW window wrapped in custom Win32 borderless chrome, with

@@ -1,7 +1,7 @@
 # API Reference — World Systems (Terrain, Water, Particles)
 
 > **STATUS: SKELETON** — to be filled by work order **D12** in
-> [`docs/plans/12-documentation-plan.md`](../plans/12-documentation-plan.md).
+> [`docs/plans/archive/12-documentation-plan.md`](../plans/archive/12-documentation-plan.md).
 > Entry format: [reference/README.md → Entry format](README.md#entry-format-mandatory--copy-this-shape).
 
 **Scope (headers are the truth):** `Cosmic/src/terrain/Terrain.h`, `water/Water.h`,

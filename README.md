@@ -210,7 +210,7 @@ skeleton, the VFS, and the two build configurations, with the pitfalls each one 
 
 ## 1.5 Command Reference — Every Command
 
-Every command you can run against this SDK, in one place. All `.bat` scripts run from the **repo root** and pause on completion — except `package_installer.bat`, which does not. (Contract: any PR that adds or changes a script, flag, or option updates this section — see `docs/plans/12-documentation-plan.md` §11 (contract carried from archived doc 06 D1).)
+Every command you can run against this SDK, in one place. All `.bat` scripts run from the **repo root** and pause on completion — except `package_installer.bat`, which does not. (Contract: any PR that adds or changes a script, flag, or option updates this section — see `docs/plans/archive/12-documentation-plan.md` §11 (contract carried from archived doc 06 D1).)
 
 > **This is the list; the depth is one click away.**
 > [`docs/guide/building-and-shipping.md`](docs/guide/building-and-shipping.md) explains what each

@@ -7,7 +7,7 @@ single CMake flag, with **byte-identical tracked files on both branches**.
 **API Reference:** README [§1.5](../../README.md#15-command-reference--every-command) (the command contract) · **Guide:** [`../guide/building-and-shipping.md`](../guide/building-and-shipping.md), root README [§1.6](../../README.md#16-the-two-engine-configurations)
 
 > Written by work order **D41** (Phase 29 W10, 2026-07-25). The design record and the full
-> work-order history are in [`../plans/28-phase29-engine-split-plan.md`](../plans/28-phase29-engine-split-plan.md);
+> work-order history are in [`../plans/28-phase29-engine-split-plan.md`](../plans/archive/28-phase29-engine-split-plan.md);
 > this document is the standing explainer.
 
 ---
@@ -457,7 +457,7 @@ rounded-up number would have buried.
 
 *See also:* [`physics-backends.md`](physics-backends.md) (the swappable physics seam this phase
 also delivered) · [`build-plugin-packaging.md`](build-plugin-packaging.md) (CMake layout, plugin
-DLLs, packaging) · [`../plans/28-phase29-engine-split-plan.md`](../plans/28-phase29-engine-split-plan.md)
+DLLs, packaging) · [`../plans/28-phase29-engine-split-plan.md`](../plans/archive/28-phase29-engine-split-plan.md)
 (the full work-order record, including the deviation log).
 
 *Changelog:*

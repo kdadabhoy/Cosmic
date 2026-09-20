@@ -49,4 +49,4 @@ banner is live documentation and subject to the upkeep contract in
 [`reference/README.md`](reference/README.md). **Where a reference or systems chapter is still a
 skeleton, the matching guide chapter is the client-facing source** and says so in its header block —
 check the Status column in each tier's index rather than assuming a link is populated. Progress is
-tracked in [`plans/12-documentation-plan.md`](plans/12-documentation-plan.md).
+tracked in [`plans/12-documentation-plan.md`](plans/archive/12-documentation-plan.md).

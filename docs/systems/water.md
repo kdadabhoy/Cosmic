@@ -1,7 +1,7 @@
 # Water — How It Works
 
 > **STATUS: SKELETON** — to be filled by work order **D30** in
-> [`docs/plans/12-documentation-plan.md`](../plans/12-documentation-plan.md).
+> [`docs/plans/archive/12-documentation-plan.md`](../plans/archive/12-documentation-plan.md).
 > Format + writing bar: [systems/README.md](README.md#document-format-mandatory--every-explainer-uses-this-shape).
 
 **One-liner:** a flat grid displaced by summed Gerstner waves (identical math on CPU and

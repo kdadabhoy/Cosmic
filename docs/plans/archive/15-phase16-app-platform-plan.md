@@ -1,5 +1,7 @@
 # Phase 16 Plan — App Platform & Shipping (Starforge as a product, apps as products)
 
+> **ARCHIVED 2026-09-20** — completed/superseded; kept as the record of what was built and why. Do not execute. Origin: Phase 16, created 2026-07-04. Landed by: see git log (S1-S8, 2026-07-05). Replacement: [`../app-platform-2026-09-18/00-Start-Here.md`](../app-platform-2026-09-18/00-Start-Here.md) (the 2026-09 App Platform campaign).
+
 > **STATUS 2026-07-05 — CODE-COMPLETE (UNcommitted).** All eight work orders (S1–S8)
 > landed. Build green Debug **and** Release across 5 projects, **zero warnings**;
 > `CosmicTests` **219/219** (213→219: +5 FileSystem mount tests, +1 icon-embed test that

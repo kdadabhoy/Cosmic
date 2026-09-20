@@ -1,5 +1,7 @@
 # Phase 22 Plan — Editor Shell, Viewport & Branding
 
+> **ARCHIVED 2026-09-20** — completed/superseded; kept as the record of what was built and why. Do not execute. Origin: Phase 22, created 2026-07-11. Landed by: see git log (K1-K13, 2026-07-11). Replacement: [`../../guide/editor-ui-and-theming.md`](../../guide/editor-ui-and-theming.md).
+
 > **STATUS 2026-07-11 — PHASE CODE-COMPLETE (UNcommitted).** Doc 18 **R8** (prerequisite) +
 > **K1–K13 all ✅** — per-item details in each status line below. Build green Debug + Release,
 > zero warnings; `CosmicTests` **276/276** both configs (272→276: +4 K1 branding/ImageIO);
@@ -16,7 +18,7 @@
 > roadmap's Done-when requires) + commit.
 >
 > **Created 2026-07-11.** First of the editor-vision phases adopted from
-> [`../design/example-images-gap-analysis.md`](../design/example-images-gap-analysis.md) (the
+> [`../design/example-images-gap-analysis.md`](../../design/example-images-gap-analysis.md) (the
 > spec of record — each item cites its §; re-read it before starting an item). This phase makes
 > Starforge *feel* like the reference editors: product-grade chrome, the viewport as a
 > self-contained instrument, and the user's branding requirement (drop a PNG → icon + top-bar
@@ -57,7 +59,7 @@ taskbar icon. **(c) Hot-swap:** Starforge watches the resolved file (`utils/File
 Content-Browser pattern) — replacing the PNG on disk re-applies the icon and re-uploads the
 top-bar texture within a second, **no code, no restart**. **(d) Top-bar logo:** Starforge draws
 the same image (as a `Texture2D`) at the left end of its menu bar (`DrawTopBar`,
-[StarforgeApp.cpp:1024](../../Projects/Starforge/src/StarforgeApp.cpp)) with a fixed row-height
+[StarforgeApp.cpp:1024](../../../Projects/Starforge/src/StarforgeApp.cpp)) with a fixed row-height
 fit + tooltip (app name/version); reuse in the homescreen header and About box. Ship a default
 `branding/icon.png` for Starforge itself (the molten-orange mark) so the mechanism is visibly
 live out of the box.

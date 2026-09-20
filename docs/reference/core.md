@@ -1,7 +1,7 @@
 # API Reference — Core Runtime
 
 > **STATUS: WRITTEN** — work order **D6** (2026-07-26) in
-> [`docs/plans/12-documentation-plan.md`](../plans/12-documentation-plan.md).
+> [`docs/plans/archive/12-documentation-plan.md`](../plans/archive/12-documentation-plan.md).
 > Entry format: [reference/README.md → Entry format](README.md#entry-format-mandatory--copy-this-shape).
 
 **Scope (headers are the truth):** `Cosmic/src/core/Core.h`, `core/Application.h`, `core/Layer.h`,

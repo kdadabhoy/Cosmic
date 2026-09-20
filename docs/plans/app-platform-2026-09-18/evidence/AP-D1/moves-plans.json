@@ -1,0 +1,20 @@
+{
+ "docs/plans/12-documentation-plan.md": "docs/plans/archive/12-documentation-plan.md",
+ "docs/plans/13-phase14-starforge-hardening-plan.md": "docs/plans/archive/13-phase14-starforge-hardening-plan.md",
+ "docs/plans/14-phase15-physics-plan.md": "docs/plans/archive/14-phase15-physics-plan.md",
+ "docs/plans/15-phase16-app-platform-plan.md": "docs/plans/archive/15-phase16-app-platform-plan.md",
+ "docs/plans/16-phase17-ui-flow-2d-plan.md": "docs/plans/archive/16-phase17-ui-flow-2d-plan.md",
+ "docs/plans/17-phase18-voxel-plan.md": "docs/plans/archive/17-phase18-voxel-plan.md",
+ "docs/plans/18-phase19-rendering-quality-plan.md": "docs/plans/archive/18-phase19-rendering-quality-plan.md",
+ "docs/plans/19-phase20-asset-animation-plan.md": "docs/plans/archive/19-phase20-asset-animation-plan.md",
+ "docs/plans/20-phase21-scripting-connectivity-plan.md": "docs/plans/archive/20-phase21-scripting-connectivity-plan.md",
+ "docs/plans/21-phase22-editor-shell-plan.md": "docs/plans/archive/21-phase22-editor-shell-plan.md",
+ "docs/plans/22-phase23-asset-workflows-plan.md": "docs/plans/archive/22-phase23-asset-workflows-plan.md",
+ "docs/plans/23-phase24-animation-editors-plan.md": "docs/plans/archive/23-phase24-animation-editors-plan.md",
+ "docs/plans/24-phase25-graphs-story-plan.md": "docs/plans/archive/24-phase25-graphs-story-plan.md",
+ "docs/plans/25-phase26-navigation-ai-plan.md": "docs/plans/archive/25-phase26-navigation-ai-plan.md",
+ "docs/plans/26-phase27-world-2d-plan.md": "docs/plans/archive/26-phase27-world-2d-plan.md",
+ "docs/plans/27-phase28-flagship-sample-plan.md": "docs/plans/archive/27-phase28-flagship-sample-plan.md",
+ "docs/plans/28-phase29-engine-split-plan.md": "docs/plans/archive/28-phase29-engine-split-plan.md",
+ "docs/plans/29-phase30-2d-hardening-plan.md": "docs/plans/archive/29-phase30-2d-hardening-plan.md"
+}

@@ -1,7 +1,7 @@
 # Frame Pipeline & Post-Processing — How It Works
 
 > **STATUS: SKELETON** — to be filled by work order **D29** in
-> [`docs/plans/12-documentation-plan.md`](../plans/12-documentation-plan.md). Biggest
+> [`docs/plans/archive/12-documentation-plan.md`](../plans/archive/12-documentation-plan.md). Biggest
 > explainer — the work order allows two sessions (pipeline/passes, then lighting theory).
 > Format + writing bar: [systems/README.md](README.md#document-format-mandatory--every-explainer-uses-this-shape).
 

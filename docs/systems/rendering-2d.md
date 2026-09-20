@@ -1,7 +1,7 @@
 # 2D Renderer — How It Works
 
 > **STATUS: SKELETON** — to be filled by work order **D28** in
-> [`docs/plans/12-documentation-plan.md`](../plans/12-documentation-plan.md).
+> [`docs/plans/archive/12-documentation-plan.md`](../plans/archive/12-documentation-plan.md).
 > Format + writing bar: [systems/README.md](README.md#document-format-mandatory--every-explainer-uses-this-shape).
 
 **One-liner:** every `DrawQuad` appends vertices to a CPU-side batch; `EndScene` uploads the

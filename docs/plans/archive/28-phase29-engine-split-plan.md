@@ -1,5 +1,7 @@
 # Phase 29 Plan — Engine Split: pure-2D build, `engine-2d` branch, pluggable physics
 
+> **ARCHIVED 2026-09-20** — completed/superseded; kept as the record of what was built and why. Do not execute. Origin: Phase 29, 2026-07-25. Landed by: see git log (W0-W10, 2026-07-25). Replacement: superseded by the trunk policy: `main` is 2D-only (D-PURGE, [`../app-platform-2026-09-18/00-Start-Here.md`](../app-platform-2026-09-18/00-Start-Here.md)).
+
 > **STATUS 2026-07-25 — ✅ COMPLETE. W0–W10 all landed.** Both engine configurations build clean
 > Debug + Release with zero warnings, `engine-2d` is cut and worktree'd, physics is pluggable, and
 > the documentation (D41–D45) is written. Final state: **3D 513/513 tests + 14/14 goldens,
@@ -839,9 +841,9 @@ Planned now, written only after the separation is verified working on-GPU.
 
 | ID | Document | Contents |
 |---|---|---|
-| **D41** ✅ | [`docs/systems/build-2d-3d-split.md`](../systems/build-2d-3d-split.md) | What the flag excludes and why; the classification rule for new code ("which side does this file belong on?"); `build.bat` / `build_2d.bat` / presets / worktree layout; **the recorded build-time numbers from W2 and W8**; the branch and carry-over workflow. |
-| **D42** ✅ | [`docs/systems/physics-backends.md`](../systems/physics-backends.md) | `IPhysicsBackend`, the registry, `PhysicsSettings::Backend`; the fixed-step contract a backend must honour; `ThreadCount`/determinism expectations; `RayHit::EntityId` round-trip; a worked example lifted from `test_physics_backend.cpp`. |
-| **D43** ✅ | [`docs/reference/physics.md`](../reference/physics.md) | The per-call reference for `PhysicsWorld` / `PhysicsTypes` / `PhysicsBody` / `CharacterController` / `ScenePhysics` — currently **missing entirely** from `docs/reference/`. Follows `docs/reference/README.md`'s entry format. |
+| **D41** ✅ | [`docs/systems/build-2d-3d-split.md`](../../systems/build-2d-3d-split.md) | What the flag excludes and why; the classification rule for new code ("which side does this file belong on?"); `build.bat` / `build_2d.bat` / presets / worktree layout; **the recorded build-time numbers from W2 and W8**; the branch and carry-over workflow. |
+| **D42** ✅ | [`docs/systems/physics-backends.md`](../../systems/physics-backends.md) | `IPhysicsBackend`, the registry, `PhysicsSettings::Backend`; the fixed-step contract a backend must honour; `ThreadCount`/determinism expectations; `RayHit::EntityId` round-trip; a worked example lifted from `test_physics_backend.cpp`. |
+| **D43** ✅ | [`docs/reference/physics.md`](../../reference/physics.md) | The per-call reference for `PhysicsWorld` / `PhysicsTypes` / `PhysicsBody` / `CharacterController` / `ScenePhysics` — currently **missing entirely** from `docs/reference/`. Follows `docs/reference/README.md`'s entry format. |
 | **D44** ✅ | This document, updated | Status banners, ✅-with-date lines, and a deviation section recording every place implementation diverged from the plan → [§11](#11-phase-table), [§16](#16-deviations--where-implementation-diverged-from-the-plan), [§17](#17-follow-ups-leaving-this-phase). |
 
 **Updated documents (D45)** — ✅ all landed 2026-07-25
@@ -850,7 +852,7 @@ Planned now, written only after the separation is verified working on-GPU.
   working-agreement line: *every change must leave both configurations green*.
 - `docs/plans/FEATURE-MATRIX.md` — new rows: pure-2D engine build ✅, pluggable physics backend
   ✅, 2D collider debug overlay ✅; a ⏸ row for 2D-native particles.
-- `docs/plans/12-documentation-plan.md` — register D41–D45 alongside D5–D40.
+- `docs/plans/archive/12-documentation-plan.md` — register D41–D45 alongside D5–D40.
 - `docs/design/modularity-audit.md` — **close G3** ("Concrete world-system factories:
   replaceable, not coexistable") with the physics backend registry as the first real instance,
   and add a physics row to the §4 swap cookbook.
@@ -1126,8 +1128,8 @@ is considered good. They are the reference for the whole refactor.
 > by one character. Additions the plan did not name: `physics/backends/BuiltinBackends.h`, a fence on
 > `MeshColliderComponent` in the collider probe, and a fix for a latent uninitialised-locals read in
 > `ScenePhysics::Step` ([§16](#16-deviations--where-implementation-diverged-from-the-plan) D-3).
-> Documented in [`docs/systems/physics-backends.md`](../systems/physics-backends.md) and
-> [`docs/reference/physics.md`](../reference/physics.md).
+> Documented in [`docs/systems/physics-backends.md`](../../systems/physics-backends.md) and
+> [`docs/reference/physics.md`](../../reference/physics.md).
 
 **Goal.** Give physics a swappable backend without changing `PhysicsWorld`'s public API or any
 call site — the deliverable capability behind decision 3.
@@ -1666,9 +1668,9 @@ connect to a port, record, replay.
 
 ### W10 — Documentation
 
-> **✅ DONE 2026-07-25.** D41 [`systems/build-2d-3d-split.md`](../systems/build-2d-3d-split.md),
-> D42 [`systems/physics-backends.md`](../systems/physics-backends.md),
-> D43 [`reference/physics.md`](../reference/physics.md), D44 this document's status banner,
+> **✅ DONE 2026-07-25.** D41 [`systems/build-2d-3d-split.md`](../../systems/build-2d-3d-split.md),
+> D42 [`systems/physics-backends.md`](../../systems/physics-backends.md),
+> D43 [`reference/physics.md`](../../reference/physics.md), D44 this document's status banner,
 > per-work-order lines and [§16](#16-deviations--where-implementation-diverged-from-the-plan), and
 > the D45 updates. D41 uses the recorded numbers, not the §5.1 estimate, and states the `/MP`
 > finding. D41–D43 are written as **complete** documents rather than the D5–D40 skeleton shape
@@ -1690,7 +1692,7 @@ connect to a port, record, replay.
   resolution, don't rewrite the finding.
 
 **DoD.** All four new docs exist and follow their format contracts; all listed updates land;
-`docs/plans/12-documentation-plan.md` registers D41–D45; this document carries ✅ status lines
+`docs/plans/archive/12-documentation-plan.md` registers D41–D45; this document carries ✅ status lines
 with dates and a deviation section.
 
 **📋 PROMPT**
@@ -2007,7 +2009,7 @@ live in the editor since before this phase started.
 **Shipped:** only clean-build numbers. The header-partition argument in §5.1 — `Components.h` no
 longer dragging `Skeleton.h` / `AnimationClip.h` / `ParticleSystem.h` into every consumer — is
 therefore **argued but not measured**. Noted as a limit in
-[`docs/systems/build-2d-3d-split.md`](../systems/build-2d-3d-split.md) §6.
+[`docs/systems/build-2d-3d-split.md`](../../systems/build-2d-3d-split.md) §6.
 
 ### D-12 — Two §9.6 behaviours are not headlessly reachable
 
