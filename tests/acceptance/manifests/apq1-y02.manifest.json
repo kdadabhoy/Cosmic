@@ -1,0 +1,35 @@
+{
+  "manifest": "apq1-y02",
+  "cases": [
+    {
+      "id": "Y02",
+      "description": "Y02 PendulumLab packaged through the REAL editor path and run from another directory (App Platform catalog): Projects/PendulumLab is copied OUTSIDE the SDK source tree (build/apq1-y02-external), packaged by Starforge.exe + X01PackageSelfTest (OpenProjectPath -> PackageProject -> BuildRunner cmake configure + Release build of the external project against COSMIC_SDK -> Packager::Stage/Finalize -> dist/PendulumLab with the renamed exe, Cosmic.dll, PendulumLab.dll, assets, boot.cfg), then the STAGED PendulumLab.exe is started from a different working directory with COSMIC_Y02_SELFTEST (Y02SelfTestService: Home -> Lab -> Settings -> Lab -> key:Escape -> Home through the real FlowMachine; pendulum.angle_deg changing on a monotone bus clock; PhasePlot hosted-panel draws > 0; the UiPlot rect read back from the framebuffer contains line-colour pixels; verdict JSON, PASS exits 0). The wrapper's out-of-process oracle checks the trace, the draw count, the plot pixels, the angle sweep, the producer, the cwd (scratch, not dist), the user_root under the isolated COSMIC_USER_DATA and decodes the ROI PNG. Three verdicts: package, packaged run, oracle. The packaged app under test is the Release build in both configurations (the packager builds Release).",
+      "tier": "I",
+      "profiles": [
+        "gpu",
+        "release"
+      ],
+      "requires": [
+        "windows",
+        "gpu-gl"
+      ],
+      "command": "powershell",
+      "workingDir": "{BIN}",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "{ACCEPTANCE}\fixtures\Run-Y02Package.ps1",
+        "-Bin",
+        "{BIN}",
+        "-Output",
+        "{REPO}\docs\plans\app-platform-2026-09-18\evidence\AP-Q1\y02-{CONFIG}"
+      ],
+      "expectExit": 0,
+      "minTests": 3,
+      "deadlineSec": 1500,
+      "fixture": "../../Projects/PendulumLab/project.cproj"
+    }
+  ]
+}
