@@ -64,7 +64,7 @@ $cmake = "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\Comm
 `-DCOSMIC_2D_ONLY=ON` is an explicit, always-on compatibility flag (this trunk builds one engine,
 2D-only; `OFF` is rejected at configure — see [§1.6](#16-the-engine-configuration)). Use `--config
 Debug` for a debug build; both configurations share the one `build/` directory. A clean Release
-build of everything takes roughly 10–15 minutes on an 8-core machine; incremental rebuilds of a
+build of everything took **3 minutes** on the reference machine (a laptop takes longer); incremental rebuilds of a
 project DLL take seconds.
 
 **The script way (same thing, pauses at the end):** `build_all.bat Release` does a clean configure
@@ -83,9 +83,16 @@ build\Runtime\Release\
 ├── CosmicApp.exe          the generic host / launcher (--project <Name> boots straight into one)
 ├── CosmicTests.exe        the headless unit-test suite
 ├── Cosmic.dll             the engine
-├── projects\*.dll         SF_Telem, PendulumLab, AnalysisSample, Starforge, the template projects
-└── assets\                engine + project assets
+├── Starforge.dll          the editor (a project DLL like any other)
+├── SF_Telem.dll           one DLL per project the scanner built, flat beside the exes
+├── *Fixture.dll           test-fixture plugins used by CosmicTests
+└── assets\                engine + project assets, synced in after every build
 ```
+
+`PendulumLab` and `AnalysisSample` are **not** built by the SDK build on purpose: they are the
+external-consumer specimens and build the way your own project will — standalone against the SDK
+(`Projects/<Name>/CMakeLists.txt` with `-DCOSMIC_SDK_DIR=<repo root>`, or the editor's **Build**
+button). Their READMEs give the exact command.
 
 ### 5. Run the tests
 
@@ -93,8 +100,8 @@ build\Runtime\Release\
 build\Runtime\Release\CosmicTests.exe
 ```
 
-Expected on this SHA: **519 test cases passed, 14 skipped** (the skipped ones need a serial port or a
-GPU). The two documentation audits and the link checker are one-liners too and are what CI runs first:
+Expected on this SHA: **519 test cases passed, 0 failed, 14 skipped** (the skipped ones need a serial
+port or a GPU); about three minutes. The two documentation audits and the link checker are one-liners too and are what CI runs first:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File tests\check_gl_conformance.ps1
@@ -119,7 +126,8 @@ which is right only when you `cd build\Runtime\Release` first and wrong from any
 Then, in the editor:
 
 1. **Open the sample.** On the homescreen press **Open…** and pick the folder `Projects\PendulumLab`
-   (it then stays in the project grid). Press **Play**: the pendulum runs from
+   (it then stays in the project grid). Press **Build** (toolbar; the first build of the project DLL
+   takes a minute), then **Play**: the pendulum runs from
    `Projects/PendulumLab/src/services/PendulumService.cpp`, and the Lab screen's plot, gauge and
    slider are bound to its DataBus channels. The **Screens** panel lists the four screens and their
    scripts; right-click any bound widget for **Open source**.
@@ -131,9 +139,9 @@ Then, in the editor:
    builds PendulumLab from scratch, step by step with screenshots, and ends with **Export** to a
    standalone `PendulumLab.exe`. The result is what [`docs/showcase/`](docs/showcase/README.md) shows.
 
-If something does not start: in a dev boot the editor and every app write their log to `logs\` under
-the directory you launched from (`user://` is the current directory when it is writable); an
-installed app writes to `%LOCALAPPDATA%\<App>\logs\`. The known-issue
+If something does not start: in a dev boot the editor and every app write their log to `logs\` next
+to the executable (`build\Runtime\Release\logs\`); an installed app writes to
+`%LOCALAPPDATA%\<App>\logs\`. The known-issue
 register is [`docs/plans/2d-stability-2026-09-16/contracts/known-issues.md`](docs/plans/2d-stability-2026-09-16/contracts/known-issues.md).
 
 ---
@@ -421,7 +429,7 @@ build\Runtime\Debug\CosmicApp.exe --project SF_Telem
 | `-DCOSMIC_2D_ONLY=ON` | `ON` (always) | Compatibility flag kept from the Phase 29 split: the trunk builds one engine, 2D-only, and the root `CMakeLists.txt` **rejects `OFF`** at configure. Pass `ON` explicitly (the scripts and CI do). [§1.6](#16-the-engine-configuration). |
 | `-DCOSMIC_WITH_JOLT=ON\|OFF` | `ON` | Build the Jolt physics backend. `OFF` is supported: it drops `physics/backends/JoltBackend.cpp` and leaves the null backend plus whatever an app registers through `IPhysicsBackend`. |
 | `-DCOSMIC_BUILD_RENDER_TESTS=ON\|OFF` | `OFF` | Build `CosmicRenderTests`, the golden-image target. Needs a real GPU and is driver-specific, so it is local-only and never runs in CI. |
-| `-DCOSMIC_SKIP_PROJECTS="A;B"` | empty | Semicolon-separated `Projects/` directory names the scanner skips (nothing is skipped by default; the 3D projects no longer exist on this branch). |
+| `-DCOSMIC_SKIP_PROJECTS="A;B"` | `AnalysisSample;PendulumLab` | Semicolon-separated `Projects/` directory names the scanner skips. The default names the two external-consumer specimens, which refuse an in-tree `add_subdirectory` and build standalone against the SDK. |
 | `-DCOSMIC_SDK_DIR=<path>` | repo root (cache) | Where project builds look for the engine; standalone project configures fall back to the `COSMIC_SDK` env var from `setup.bat`. |
 
 One CMake preset exists, equivalent to the Quickstart configure (Visual Studio 18 2026, x64, `build/`):
@@ -445,14 +453,15 @@ All other shortcuts are app-defined (check the project's own docs/panels).
 **One trunk, one engine.** `main` builds the 2D engine and nothing else. `-DCOSMIC_2D_ONLY=ON` is an
 explicit, always-on compatibility flag (every script, preset and CI step passes it; the root
 `CMakeLists.txt` rejects `OFF` at configure), and there is no `#ifndef COSMIC_2D_ONLY` fence left in
-the source. Every project under `Projects/` builds; nothing is skipped by mode.
+the source. Nothing is skipped by mode; `COSMIC_SKIP_PROJECTS` defaults to the two standalone
+specimens (`AnalysisSample;PendulumLab`), which build against the SDK rather than inside it.
 
 | | **The 2D trunk** |
 | --- | --- |
 | Branch | **`main`** |
 | Flag | `COSMIC_2D_ONLY=ON` (always; `OFF` rejected) |
 | Preset / scripts | `cmake --preset 2d` · `build.bat` · `build_all.bat` |
-| Ships | sprites, tilemaps, 2D lights, canvas UI + bound widgets, DataBus + services, flow/story graphs, Jolt physics (box/sphere/capsule, character controller), assets/VFS, audio, serial + telemetry, jobs, the Starforge editor, `SF_Telem`, `PendulumLab`, `AnalysisSample`, the templates |
+| Ships | sprites, tilemaps, 2D lights, canvas UI + bound widgets, DataBus + services, flow/story graphs, Jolt physics (box/sphere/capsule, character controller), assets/VFS, audio, serial + telemetry, jobs, the Starforge editor, `SF_Telem`; `PendulumLab` and `AnalysisSample` build standalone against the SDK |
 | CI | GitHub Actions: both audits + the link checker, Debug + Release build, `CosmicTests` both configs, the `pr` acceptance profile |
 
 **Where the 3D engine is.** The full pre-split tree — `Renderer3D`, terrain, water, particles,

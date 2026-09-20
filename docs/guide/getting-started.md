@@ -189,7 +189,7 @@ build/Runtime/Debug/
 ├── Starforge.exe        ← the same host with "Starforge" compiled in as the default project
 ├── Cosmic.dll           ← the engine (+ Cosmic.lib, the import library projects link)
 ├── Starforge.dll        ← the editor, as a project DLL
-├── SF_Telem.dll  PendulumLab.dll  AnalysisSample.dll   ← one DLL per project the scanner built
+├── SF_Telem.dll         ← one DLL per project the scanner built (PendulumLab and AnalysisSample build standalone against the SDK)
 ├── CosmicTests.exe      ← the headless doctest suite (built by default)
 └── assets/
     ├── shaders/ fonts/ themes/ …     ← engine assets, synced POST_BUILD; this is engine://
