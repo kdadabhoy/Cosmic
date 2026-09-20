@@ -4,6 +4,9 @@
 
 #include <Cosmic.h>   // ModuleRegistry, Log
 
+#include <imgui.h>
+#include <implot.h>
+
 #include <filesystem>
 
 #ifndef WIN32_LEAN_AND_MEAN
@@ -56,6 +59,20 @@ namespace Starforge
             CS_ERROR("GameModule: '{0}' exports no CosmicModule_Register.", dll);
             ::FreeLibrary(h);
             return false;
+        }
+
+        // AP-03 (KI-60): hand the HOST's ImGui/ImPlot contexts to the module, exactly as
+        // Application::LoadPlugin does for a plugin layer. A game module links its own
+        // static ImGui/ImPlot copy (template CMakeLists), so a CS_PANEL draw fn calling
+        // ImGui::Text from the module ran against a NULL context and crashed the first
+        // hosted-panel draw in editor Play. Optional: a module built without the export
+        // (pre-AP-01 scaffolds) simply has no panels to draw.
+        if (auto init = reinterpret_cast<void(*)(Cosmic::HostContext)>(::GetProcAddress(h, "InitializePluginContexts")))
+        {
+            Cosmic::HostContext ctx;
+            ctx.ImGuiCtx  = ImGui::GetCurrentContext();
+            ctx.ImPlotCtx = ImPlot::GetCurrentContext();
+            init(ctx);
         }
 
         reg(Cosmic::ModuleRegistry::Get());   // BeginModule/register/EndModule internally

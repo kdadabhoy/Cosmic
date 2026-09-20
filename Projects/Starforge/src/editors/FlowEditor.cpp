@@ -2,6 +2,7 @@
 // an M1 document (Phase 25 / Q1). Behaviour is unchanged from U6.
 
 #include "editors/FlowEditor.h"
+#include "scene/FlowKeyBridge.h"   // AP-03 — the key picker's table
 #include "EditorContext.h"
 #include "widgets/VariablesPanel.h"   // Q2 — shared blackboard editor
 
@@ -157,9 +158,11 @@ namespace Starforge
             {
                 if (!e.contains("components")) continue;
                 const auto& comps = e["components"];
-                if (comps.contains("UiButton") && comps["UiButton"].contains("Signal") &&
-                    comps["UiButton"]["Signal"].is_string())
-                    found.insert(comps["UiButton"]["Signal"].get<std::string>());
+                // U2 buttons + the AP-02 widgets that emit a Signal (slider / toggle) — F01.
+                for (const char* comp : { "UiButton", "UiSlider", "UiToggle" })
+                    if (comps.contains(comp) && comps[comp].contains("Signal") &&
+                        comps[comp]["Signal"].is_string() && !comps[comp]["Signal"].get<std::string>().empty())
+                        found.insert(comps[comp]["Signal"].get<std::string>());
             }
         }
         found.insert("key:Escape");
@@ -747,7 +750,43 @@ namespace Starforge
             Snapshot();
             tr.On = on;
         }
-        ImGui::TextDisabled("signals, key:<Name>, or timer:<seconds>");
+        ImGui::TextDisabled("signals, key:<Name>, timer:<seconds>, or when (condition only)");
+
+        // AP-03 (§5): the "when" trigger — a condition-only transition (needs a guard) —
+        // and a key picker over FlowKeyBridge::KeyCodeFor's table.
+        {
+            const bool isWhen = (tr.On == "when");
+            if (ImGui::RadioButton("when (guard only)", isWhen) && !isWhen)
+            {
+                Snapshot();
+                tr.On = "when";
+                if (!tr.HasGuard) tr.HasGuard = true;
+                Revalidate();
+            }
+            ImGui::SameLine();
+            const std::string keyLabel = tr.On.rfind("key:", 0) == 0 ? tr.On.substr(4) : std::string("key…");
+            ImGui::SetNextItemWidth(120.0f);
+            if (ImGui::BeginCombo("##keypick", keyLabel.c_str()))
+            {
+                static const char* kNamed[] = { "Escape", "Space", "Enter", "Tab", "Backspace", "Up", "Down", "Left", "Right" };
+                std::vector<std::string> names(std::begin(kNamed), std::end(kNamed));
+                for (int i = 1; i <= 12; ++i) names.push_back("F" + std::to_string(i));
+                for (char c = 'A'; c <= 'Z'; ++c) names.push_back(std::string(1, c));
+                for (char c = '0'; c <= '9'; ++c) names.push_back(std::string(1, c));
+                for (const std::string& n : names)
+                {
+                    if (FlowKeyBridge::KeyCodeFor(n) < 0) continue;   // only what the bridge resolves
+                    const std::string sig = "key:" + n;
+                    if (ImGui::Selectable(n.c_str(), tr.On == sig) && tr.On != sig)
+                    {
+                        Snapshot();
+                        tr.On = sig;
+                    }
+                }
+                ImGui::EndCombo();
+            }
+            if (ImGui::IsItemHovered()) ImGui::SetTooltip("key:<Name> — FlowKeyBridge rising edge");
+        }
 
         if (ImGui::BeginCombo("To", tr.To.c_str()))
         {

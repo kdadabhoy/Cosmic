@@ -127,7 +127,17 @@ namespace Cosmic
 		namespace fs = std::filesystem;
 		std::error_code ec;
 		s_ActiveProjectPath      = fs::path(absoluteRoot).generic_string();
-		s_ProjectHasAssetsSubdir = fs::exists(fs::path(absoluteRoot) / "assets", ec);
+		// Layout probe. A project either keeps its content FLAT at the root (project.cproj,
+		// scenes/, src/ beside each other — every template since AP-01) or under an
+		// assets/ subfolder (the manifest then lives at assets/project.cproj). The old
+		// rule keyed on the mere existence of an assets/ folder, so a flat project that
+		// happens to ship an assets/ content folder (the AP-04 app template: assets/ui/
+		// PNGs, referenced as project://assets/ui/...) resolved project:// one level too
+		// deep and its manifest, scenes and flow were "missing" (KI-59, found by AP-03 E01).
+		// The manifest's location decides now.
+		const fs::path root = absoluteRoot;
+		s_ProjectHasAssetsSubdir = fs::exists(root / "assets" / "project.cproj", ec) ||
+		                           (fs::exists(root / "assets", ec) && !fs::exists(root / "project.cproj", ec));
 	}
 
 	const std::string& FileSystem::ActiveProjectPath() { return s_ActiveProjectPath; }

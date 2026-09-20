@@ -12,6 +12,7 @@
 #include "scene/Components.h"
 #include "scene/SceneSerializer.h"    // U5 — flow scene loader
 #include "scene/ui/UiSystem.h"        // U1 — in-game UI overlay + interaction
+#include "scene/ui/UiComponents.h"    // AP-03 — UiHostedPanelComponent::DrawnThisFrame
 #include "camera/Camera.h"
 #include "renderer/RenderCommand.h"
 #include "utils/Config.h"
@@ -442,8 +443,12 @@ namespace Cosmic
                          ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize |
                          ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoDocking |
                          ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoBackground);
-            m_Panels.Draw(p.Name, p.Rect);                 // false => leave the canvas placeholder visible
+            const bool drawn = m_Panels.Draw(p.Name, p.Rect);   // false => leave the canvas placeholder visible
             ImGui::End();
+            // AP-03 (May-touch, contract §4): the host records the draw so UiSystem::Render
+            // skips the placeholder for a panel that really drew this frame.
+            if (auto* hp = m_TrackedScene->GetRegistry().try_get<UiHostedPanelComponent>(static_cast<entt::entity>(p.Handle)))
+                hp->DrawnThisFrame = drawn;
         }
     }
 

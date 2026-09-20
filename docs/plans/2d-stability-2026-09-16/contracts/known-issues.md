@@ -1127,3 +1127,21 @@ over the injected `IFrameClock` (`core/IFrameClock.h`, the WO-10 seam) with the
   fails the next direct run) under this number on `main` while AP-P1 registered and fixed the same defect
   on `ap/p1`. The two texts were combined into the KI-57 entry in the AP-P1 section (status, anchor, repro,
   failing-before evidence, regression `D01-IDEMPOTENT`, disposition: fixed on `ap/p1`). No separate entry.
+
+## AP-03 findings (2026-09-19) — editor authoring (App Platform packet)
+
+### KI-59 — A flat project that ships an `assets/` content folder mounts `project://` one level too deep (the AP-04 app template's manifest, scenes and flow were "missing")
+- Status: Confirmed defect. Owner WO: AP-03 (found by E01; fixed on `ap/03`).
+- Anchor: `Cosmic/src/utils/FileSystem.cpp` `SetActiveProjectPath` (`s_ProjectHasAssetsSubdir = fs::exists(root / "assets")` at `e34bdd8`).
+- Repro: scaffold `templates/app` (it carries `assets/ui/{logo,panel}.png` per contract §8, referenced as `project://assets/ui/...`) and open it through `OpenProjectPath`: the Console shows `Config: no file at '<root>/assets/project.cproj'`, the manifest loads as defaults (`kind = game`, no `startup_flow`), the editor opens an empty "Untitled" scene and the Screens panel reports "no flow". Every `project://` read resolved under `<root>/assets/` because the layout probe keyed on the mere existence of an `assets/` folder. AP-04's open check did not read the manifest back, so this shipped in the template.
+- Failing-before: `evidence/AP-03/report.md` (first Debug run: E01 `manifest kind not read as app`, `open scene is 'Untitled'`; 51 cascading failures).
+- Regression: `ap03-editor` E01 (`m_ProjectKind == "app"`, the open scene is the flow start `Home`) + the wrapper's F-APP / flow oracles.
+- Disposition: fix landed on `ap/03` (the manifest's location decides the layout: `assets/project.cproj` present, or `assets/` present without a root `project.cproj`).
+
+### KI-60 — The editor's `GameModule::Load` never hands the host ImGui/ImPlot contexts to the game module; the first hosted-panel (`CS_PANEL`) draw in editor Play dereferenced a null ImGui context (access violation)
+- Status: Confirmed defect (crash). Owner WO: AP-03 (found by V05 editor half; fixed on `ap/03`).
+- Anchor: `Projects/Starforge/src/GameModule.cpp` `GameModule::Load` (only `CosmicModule_Register` was resolved at `e34bdd8`); contrast `Cosmic/src/core/Application.cpp:749` which calls `InitializePluginContexts` for plugin layers.
+- Repro: build the app template, Play, navigate to Dashboard (its `UiHostedPanel` "Diagnostics" is drawn by the host through `PanelRegistry::Draw` once AP-03's §4 block exists): `ImGui::Text` inside the module's static ImGui copy runs with `GImGui == nullptr` -> `0xC0000005`. Before AP-03 the editor never called `Draw`, so the missing hand-off was latent; the packaged player was unaffected (`Application::LoadPlugin` does the hand-off).
+- Failing-before: `evidence/AP-03/report.md` (second Debug run: exit `-1073741819` right after `E07 play + navigate to Dashboard`).
+- Regression: `ap03-editor` V05 (Diagnostics drawn, `DrawnThisFrame` set, stacks balanced) — a Debug and Release run each.
+- Disposition: fix landed on `ap/03` (`GameModule::Load` resolves the optional `InitializePluginContexts` export and passes `HostContext{ImGui::GetCurrentContext(), ImPlot::GetCurrentContext()}` before `CosmicModule_Register`).

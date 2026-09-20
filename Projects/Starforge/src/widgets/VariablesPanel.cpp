@@ -141,16 +141,24 @@ namespace Starforge
         ImGui::PushID(id);
         char buf[96];
 
-        // Source: reflected Field (v1) or a flow Variable (Q2).
-        int src = g.Var.empty() ? 0 : 1;
-        if (ImGui::Combo("Compare", &src, "Field\0Variable\0"))
+        // Source: reflected Field (v1), a flow Variable (Q2) or a DataBus Channel (AP-01/AP-03).
+        int src = !g.Channel.empty() ? 2 : (g.Var.empty() ? 0 : 1);
+        if (ImGui::Combo("Compare", &src, "Field\0Variable\0Channel\0"))
         {
             snap();
-            if (src == 1 && g.Var.empty()) g.Var = "Var";
-            if (src == 0) g.Var.clear();
+            if (src == 1) { g.Channel.clear(); if (g.Var.empty()) g.Var = "Var"; }
+            else if (src == 2) { g.Var.clear(); if (g.Channel.empty()) g.Channel = "app.value"; }
+            else { g.Var.clear(); g.Channel.clear(); }
         }
 
-        if (!g.Var.empty())
+        if (!g.Channel.empty())
+        {
+            std::snprintf(buf, sizeof(buf), "%s", g.Channel.c_str());
+            if (ImGui::InputText("Channel", buf, sizeof(buf), ImGuiInputTextFlags_EnterReturnsTrue))
+            { snap(); g.Channel = buf; }
+            ImGui::TextDisabled("DataBus channel (number / bool / string by the value type below)");
+        }
+        else if (!g.Var.empty())
         {
             std::snprintf(buf, sizeof(buf), "%s", g.Var.c_str());
             if (ImGui::InputText("Variable", buf, sizeof(buf), ImGuiInputTextFlags_EnterReturnsTrue))

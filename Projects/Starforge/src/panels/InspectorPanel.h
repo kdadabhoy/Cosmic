@@ -9,8 +9,11 @@
 // multi-selection. "Add/Remove Component" is driven by the registry.
 
 #include "EditorContext.h"
+#include "../SourceLocator.h"   // AP-03 — Open source / Reveal / Open producer / Find handlers
 
 #include <Cosmic.h>
+
+namespace Cosmic { class DataBus; class PanelRegistry; }
 
 namespace Starforge
 {
@@ -18,6 +21,17 @@ namespace Starforge
     {
     public:
         void OnImGuiRender(EditorContext& ctx, bool* pOpen = nullptr);
+
+        // AP-03 (§7) — what the source-link rows resolve against; the shell sets it
+        // every frame (project root, the play bus, the play / last-seen panel registry).
+        struct SourceLinks
+        {
+            std::string                 ProjectRoot;
+            const Cosmic::DataBus*      Bus    = nullptr;
+            const Cosmic::PanelRegistry* Panels = nullptr;
+            bool                        Playing = false;
+        };
+        void SetSourceLinks(const SourceLinks& l) { m_Links = l; }
 
     private:
         // Draws one component's fields; records undo on commit. `typeId` keys the
@@ -45,5 +59,11 @@ namespace Starforge
 
         // T9 — property search filter (empty = show everything).
         char m_Search[128] = { 0 };
+
+        // AP-03 — source-link rows (drawn next to Channel / Signal / PanelName fields
+        // and under the NativeScript class picker).
+        void DrawSourceLinkRow(const std::string& compName, const std::string& fieldName, void* comp,
+                               const Cosmic::Reflect::FieldDescriptor& f);
+        SourceLinks m_Links;
     };
 }
