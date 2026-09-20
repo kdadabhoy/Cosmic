@@ -12,9 +12,7 @@ interaction prompts, and feeding a live render target into an image through
 reference manifest** (the same gap D50 found for `SceneSerializer`, `EventBus`, `FlowMachine` and
 the whole `scripting/` tier), so **this chapter is the client-facing source for both headers.**
 **How it works:** [../systems/rendering-2d.md](../systems/rendering-2d.md) *(skeleton — D28)*
-**Configuration:** **both.** `scene/ui/` is shared source, unfenced in the 3D and 2D engine builds
-([`../systems/build-2d-3d-split.md`](../systems/build-2d-3d-split.md)). This is UI for a **3D** game
-every bit as much as a 2D one.
+**Configuration:** 2D trunk. `main` builds one engine, 2D-only (since 2026-09-18, D-PURGE); `-DCOSMIC_2D_ONLY=ON` is an always-on compatibility flag and `OFF` is rejected at configure. History: the two-configuration build this line used to describe is [parked](../parked-3d/systems/build-2d-3d-split.md) (parked 3D).
 
 > ### This is not the editor's UI system
 >
@@ -773,5 +771,5 @@ calling renderer's post stack to the target. Use a second, dedicated `SceneRende
   `Active` gate
 - [`scenes-and-serialization.md`](scenes-and-serialization.md) — how UI entities persist, and the
   prefab `EntityRef` caveat
-- [`../systems/build-2d-3d-split.md`](../systems/build-2d-3d-split.md) — what each engine
+- [`../systems/build-2d-3d-split.md`](../parked-3d/systems/build-2d-3d-split.md) (parked 3D) — what each engine
   configuration ships

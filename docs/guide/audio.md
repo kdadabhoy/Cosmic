@@ -1,5 +1,7 @@
 # Audio — Guide
 
+> **History (2026-09-20, App Platform AP-D1).** This chapter was written for the two-configuration engine (Phase 29) and cites `Projects/Frontier`, `Projects/Engine3DDemo`, `Projects/ForgeIsle`, `Projects/ViperSim` or `#ifndef COSMIC_2D_ONLY` fences as worked examples. `main` is now the 2D-only trunk (D-PURGE): those projects, the fences and the `engine-2d` branch are gone from it and survive only on `engine-3d` (`0e8894b`, tag `cosmic-pre-2d-2026-09-16`), so read such mentions and their `file:line` references as historical. The current exemplars are the template projects, `Projects/PendulumLab`, `Projects/AnalysisSample` and `Projects/SF_Telem`; the trunk policy is in the root README 1.6 and [`../parked-3d/systems/build-2d-3d-split.md`](../parked-3d/systems/build-2d-3d-split.md) (parked 3D) records what the split was.
+
 **What this covers:** loading a `Sound`, firing one-shots, holding a loop and steering its volume
 and pitch live, the four mixing groups and how pausing works, what happens on a machine with no
 audio device — and **the COM apartment gotcha**, which is the single most important thing on this
@@ -14,8 +16,7 @@ page even though it has nothing to do with sound.
 **API Reference:** [`../reference/audio.md`](../reference/audio.md) *(skeleton — D16 unwritten;
 this chapter is the client-facing source until it lands)* · **How it works:**
 [`../systems/audio.md`](../systems/audio.md) *(skeleton — D32)*
-**Configuration:** **both.** `audio/` is unfenced in `Cosmic.h` and compiles identically on the 2D
-and 3D engines.
+**Configuration:** 2D trunk. `main` builds one engine, 2D-only (since 2026-09-18, D-PURGE); `-DCOSMIC_2D_ONLY=ON` is an always-on compatibility flag and `OFF` is rejected at configure. History: the two-configuration build this line used to describe is [parked](../parked-3d/systems/build-2d-3d-split.md) (parked 3D).
 
 The engine ships **verbs**, not meaning. `Play`, `PlayLooping`, `SetVolume`, `SetPitch`,
 `SetGroupVolume` — that is the whole surface. What a sound *means* (low-battery warning, mode

@@ -1,5 +1,7 @@
 # Frame Lifecycle & GPU Resource Contract (S13.2)
 
+> **History (2026-09-20, App Platform AP-D1).** This chapter was written for the two-configuration engine (Phase 29) and cites `Projects/Frontier`, `Projects/Engine3DDemo`, `Projects/ForgeIsle`, `Projects/ViperSim` or `#ifndef COSMIC_2D_ONLY` fences as worked examples. `main` is now the 2D-only trunk (D-PURGE): those projects, the fences and the `engine-2d` branch are gone from it and survive only on `engine-3d` (`0e8894b`, tag `cosmic-pre-2d-2026-09-16`), so read such mentions and their `file:line` references as historical. The current exemplars are the template projects, `Projects/PendulumLab`, `Projects/AnalysisSample` and `Projects/SF_Telem`; the trunk policy is in the root README 1.6 and [`../parked-3d/systems/build-2d-3d-split.md`](../parked-3d/systems/build-2d-3d-split.md) (parked 3D) records what the split was.
+
 > **Note (2026-09-20, App Platform AP-D1):** this spec was written for the full engine. On the 2D trunk (`main`) only the `Renderer2D` / `SceneRenderer` / `PostProcessStack` parts of the frame exist; the environment bake, shadow depth, coverage capture, terrain, water and every `Renderer3D` step described below were deleted by AP-05 (D-PURGE) and survive only on the `engine-3d` branch (`0e8894b`). The resource-lifetime, binding-registry and render-state rules still bind the 2D path. See [`../parked-3d/README.md`](../parked-3d/README.md) (parked 3D).
 
 > **Status:** accepted 2026-07-03 (Phase 12). This is the internals spec named by

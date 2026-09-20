@@ -1,5 +1,7 @@
 # Editor UI & Theming — Guide
 
+> **History (2026-09-20, App Platform AP-D1).** This chapter was written for the two-configuration engine (Phase 29) and cites `Projects/Frontier`, `Projects/Engine3DDemo`, `Projects/ForgeIsle`, `Projects/ViperSim` or `#ifndef COSMIC_2D_ONLY` fences as worked examples. `main` is now the 2D-only trunk (D-PURGE): those projects, the fences and the `engine-2d` branch are gone from it and survive only on `engine-3d` (`0e8894b`, tag `cosmic-pre-2d-2026-09-16`), so read such mentions and their `file:line` references as historical. The current exemplars are the template projects, `Projects/PendulumLab`, `Projects/AnalysisSample` and `Projects/SF_Telem`; the trunk policy is in the root README 1.6 and [`../parked-3d/systems/build-2d-3d-split.md`](../parked-3d/systems/build-2d-3d-split.md) (parked 3D) records what the split was.
+
 **What this covers:** the **ImGui** side of Cosmic — `ImGuiLayer` and what it has already done for
 you before your first `ImGui::Begin`, the workspace docking model and port-mode
 `DockWindow(name, DockPort::…)` (including the rule that you must **never store a dock-node id**),
@@ -14,8 +16,7 @@ you before your first `ImGui::Begin`, the workspace docking model and port-mode
 `Projects/Starforge/src/{LayoutPresets,StarforgeApp}.cpp`, `Projects/SF_Telem/src/SF_Telem.cpp`
 **API Reference:** [`../reference/ui.md`](../reference/ui.md)
 **How it works:** [`../systems/ui-theming.md`](../systems/ui-theming.md) *(skeleton — D34)*
-**Configuration:** **both.** Every header here is unfenced and compiles in the 2D and 3D engine
-builds ([`../systems/build-2d-3d-split.md`](../systems/build-2d-3d-split.md)).
+**Configuration:** 2D trunk. `main` builds one engine, 2D-only (since 2026-09-18, D-PURGE); `-DCOSMIC_2D_ONLY=ON` is an always-on compatibility flag and `OFF` is rejected at configure. History: the two-configuration build this line used to describe is [parked](../parked-3d/systems/build-2d-3d-split.md) (parked 3D).
 
 > ### This is not the game's UI system
 >

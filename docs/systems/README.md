@@ -20,11 +20,11 @@ else is a territory.
 | [Events & Input](events-input.md) | Event objects, propagation, polling, gamepad | SKELETON — D27 |
 | [Cameras & CAD Navigation](cameras-navigation.md) | Camera hierarchy, orbit/fly controllers, SolidWorks-style nav, ViewCube, picking, gizmos | SKELETON — D27 |
 | [2D Renderer](rendering-2d.md) | Batching, texture slots, SDF circles, instancing, text | SKELETON — D28 |
-| [3D Renderer](rendering-3d.md) | Sorted render queue: submit → cull → sort → auto-instance → flush; transparency; LOD | SKELETON — D28 |
+| [3D Renderer](../parked-3d/systems/rendering-3d.md) (parked 3D) | Sorted render queue: submit → cull → sort → auto-instance → flush; transparency; LOD | SKELETON — D28 |
 | [Frame Pipeline & Post-Processing](rendering-pipeline.md) | SceneRenderer pass graph, HDR, PBR + IBL, shadows, SSAO/bloom/FXAA, sky/fog/time-of-day | SKELETON — D29 |
-| [Terrain](terrain.md) | Heightmap composition, quadtree LOD, splat/triplanar materials, CPU height queries | SKELETON — D30 |
-| [Water](water.md) | Gerstner waves, planar reflection/refraction, underwater rendering, buoyancy | SKELETON — D30 |
-| [Particles](particles.md) | GPU particle pools, compute-shader simulation, billboards/ribbons, presets | SKELETON — D31 |
+| [Terrain](../parked-3d/systems/terrain.md) (parked 3D) | Heightmap composition, quadtree LOD, splat/triplanar materials, CPU height queries | SKELETON — D30 |
+| [Water](../parked-3d/systems/water.md) (parked 3D) | Gerstner waves, planar reflection/refraction, underwater rendering, buoyancy | SKELETON — D30 |
+| [Particles](../parked-3d/systems/particles.md) (parked 3D) | GPU particle pools, compute-shader simulation, billboards/ribbons, presets | SKELETON — D31 |
 | [ECS & Scenes](ecs-scene.md) | Entity-component model on entt, components, systems, scene rendering hooks | SKELETON — D31 |
 | [Assets & Virtual File System](assets-vfs.md) | Asset cache, glTF import, `engine://`/`project://`/`user://` schemes, shader preprocessing | SKELETON — D32 |
 | [Audio](audio.md) | miniaudio backend, one-shots, loops/groups | SKELETON — D32 |
@@ -33,14 +33,14 @@ else is a territory.
 | [Serial & Telemetry](serial-telemetry.md) | Serial ports/links, COBS framing, columnar recording, replay | SKELETON — D33 |
 | [UI & Theming](ui-theming.md) | ImGui integration, docking model, theme manager, fonts/icons, widgets | SKELETON — D34 |
 | [Build System & Plugin Architecture](build-plugin-packaging.md) | CMake layout, hot-reloadable project DLLs, packaging/installer pipeline | SKELETON — D34 |
-| [**The 2D / 3D Build Split**](build-2d-3d-split.md) | `COSMIC_2D_ONLY`: what each configuration excludes, the classification rule for new code, presets + `.bat` scripts + the worktree layout, the recorded build times, the `main` / `engine-2d` carry-over workflow | **✅ WRITTEN — D41** |
+| [**The 2D / 3D Build Split**](../parked-3d/systems/build-2d-3d-split.md) (parked 3D) | `COSMIC_2D_ONLY`: what each configuration excludes, the classification rule for new code, presets + `.bat` scripts + the worktree layout, the recorded build times, the `main` / `engine-2d` carry-over workflow | **✅ WRITTEN — D41** |
 | [**Pluggable Physics Backends**](physics-backends.md) | `PhysicsWorld` as a dispatcher over `IPhysicsBackend`; the registry; the contracts a backend must honour; writing your own | **✅ WRITTEN — D42** |
 
 > **Two things to know about this table.** (1) Most rows are still skeletons awaiting their D25–D34
 > work order; the two written rows came out of Phase 29 W10 and are complete documents. The Status
 > column is the only reliable signal of which is which. (2) **The engine has two build
 > configurations since Phase 29.** Any explainer that describes 3D-only machinery should say so and
-> link [`build-2d-3d-split.md`](build-2d-3d-split.md) rather than restating the exclusion rules —
+> link [`build-2d-3d-split.md`](../parked-3d/systems/build-2d-3d-split.md) (parked 3D) rather than restating the exclusion rules —
 > `rendering-2d.md`, `rendering-3d.md` and `ecs-scene.md` already carry that build note.
 
 ## Document format (mandatory — every explainer uses this shape)

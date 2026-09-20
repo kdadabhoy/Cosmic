@@ -1,5 +1,7 @@
 # Project Anatomy — Guide
 
+> **History (2026-09-20, App Platform AP-D1).** This chapter was written for the two-configuration engine (Phase 29) and cites `Projects/Frontier`, `Projects/Engine3DDemo`, `Projects/ForgeIsle`, `Projects/ViperSim` or `#ifndef COSMIC_2D_ONLY` fences as worked examples. `main` is now the 2D-only trunk (D-PURGE): those projects, the fences and the `engine-2d` branch are gone from it and survive only on `engine-3d` (`0e8894b`, tag `cosmic-pre-2d-2026-09-16`), so read such mentions and their `file:line` references as historical. The current exemplars are the template projects, `Projects/PendulumLab`, `Projects/AnalysisSample` and `Projects/SF_Telem`; the trunk policy is in the root README 1.6 and [`../parked-3d/systems/build-2d-3d-split.md`](../parked-3d/systems/build-2d-3d-split.md) (parked 3D) records what the split was.
+
 **What this covers:** How a project DLL is loaded, hot-reloaded and unloaded; the `Application`
 lifecycle and its frame loop; layers, the `LayerStack` and the composite-layer pattern; `Ref`/`Scope`
 and the shared-allocator rule; the Safe Zone and teardown ordering; and owning your own services.
@@ -10,7 +12,7 @@ and the shared-allocator rule; the Safe Zone and teardown ordering; and owning y
 **API Reference:** [../reference/core.md](../reference/core.md) · **How it works:**
 [../systems/core-runtime.md](../systems/core-runtime.md) ·
 [../systems/build-plugin-packaging.md](../systems/build-plugin-packaging.md)
-**Configuration:** both — nothing in this chapter differs between the 3D and 2D engine builds.
+**Configuration:** 2D trunk. `main` builds one engine, 2D-only (since 2026-09-18, D-PURGE); `-DCOSMIC_2D_ONLY=ON` is an always-on compatibility flag and `OFF` is rejected at configure. History: the two-configuration build this line used to describe is [parked](../parked-3d/systems/build-2d-3d-split.md) (parked 3D).
 
 Read [`getting-started.md`](getting-started.md) first if you have not built the SDK yet; it covers
 setup, the tree layout and the bare minimum plugin. This chapter is the layer underneath: *who owns
@@ -829,7 +831,7 @@ does not compile:
 #endif
 ```
 
-See [`../systems/build-2d-3d-split.md`](../systems/build-2d-3d-split.md).
+See [`../systems/build-2d-3d-split.md`](../parked-3d/systems/build-2d-3d-split.md) (parked 3D).
 
 **Register dock bindings in `OnAttach`, before the first ImGui frame.** `DockWindow` and
 `RequestExtraDockedPanel` both invalidate the layout and trigger a rebuild, so calling them later
@@ -904,4 +906,4 @@ the link will fail.
   `Window`, `Log` and the plugin boundary.
 - [`../systems/core-runtime.md`](../systems/core-runtime.md) ·
   [`../systems/build-plugin-packaging.md`](../systems/build-plugin-packaging.md) ·
-  [`../systems/build-2d-3d-split.md`](../systems/build-2d-3d-split.md)
+  [`../systems/build-2d-3d-split.md`](../parked-3d/systems/build-2d-3d-split.md) (parked 3D)

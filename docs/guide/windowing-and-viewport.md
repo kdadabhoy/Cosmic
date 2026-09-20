@@ -1,5 +1,7 @@
 # Windowing & the Viewport — Guide
 
+> **History (2026-09-20, App Platform AP-D1).** This chapter was written for the two-configuration engine (Phase 29) and cites `Projects/Frontier`, `Projects/Engine3DDemo`, `Projects/ForgeIsle`, `Projects/ViperSim` or `#ifndef COSMIC_2D_ONLY` fences as worked examples. `main` is now the 2D-only trunk (D-PURGE): those projects, the fences and the `engine-2d` branch are gone from it and survive only on `engine-3d` (`0e8894b`, tag `cosmic-pre-2d-2026-09-16`), so read such mentions and their `file:line` references as historical. The current exemplars are the template projects, `Projects/PendulumLab`, `Projects/AnalysisSample` and `Projects/SF_Telem`; the trunk policy is in the root README 1.6 and [`../parked-3d/systems/build-2d-3d-split.md`](../parked-3d/systems/build-2d-3d-split.md) (parked 3D) records what the split was.
+
 **What this covers:** the `Window` surface a project actually calls — size, title, VSync, the
 min/max/restore controls — borderless custom chrome and drawing your own title bar, high-DPI
 handling, borderless fullscreen (the built-in `F11` and `SetFullscreenHotkeyOverride`), the
@@ -15,9 +17,7 @@ and docking into its place.
 **API Reference:** [`../reference/core.md`](../reference/core.md) *(`core/Window.h` is listed there)*
 and [`../reference/ui.md`](../reference/ui.md) *(`WorkspaceLayer` is listed there)*.
 **How it works:** [`../systems/windowing.md`](../systems/windowing.md) *(skeleton — D26)*
-**Configuration:** **both.** Nothing in this chapter is fenced by `COSMIC_2D_ONLY` — the window,
-the chrome, fullscreen, the modal pump and the workspace viewport are identical in the 2D and 3D
-engine builds ([`../systems/build-2d-3d-split.md`](../systems/build-2d-3d-split.md)).
+**Configuration:** 2D trunk. `main` builds one engine, 2D-only (since 2026-09-18, D-PURGE); `-DCOSMIC_2D_ONLY=ON` is an always-on compatibility flag and `OFF` is rejected at configure. History: the two-configuration build this line used to describe is [parked](../parked-3d/systems/build-2d-3d-split.md) (parked 3D).
 
 > **Windows-only in practice.** Borderless chrome, the fullscreen style-strip, the modal frame pump
 > and the DPI manifest are all inside `#ifdef _WIN32`. On any other platform `SetCustomChrome` is a

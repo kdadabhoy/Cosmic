@@ -1,5 +1,7 @@
 # Navigation & AI — Guide
 
+> **PARKED 3D — not on the trunk.** This chapter documents code that lives only on the `engine-3d` branch (`0e8894b`, tag `cosmic-pre-2d-2026-09-16`). The 2D trunk (`main`) no longer builds or ships it (D-PURGE, 2026-09-18). Kept for when 3D resumes.
+
 **What this covers:** getting characters to walk somewhere sensible — authoring a `NavMeshComponent`
 and **baking** it from the scene's collision view, the signature gate that decides when to rebake,
 the `.cnav` sidecar the result rides in, `NavAgentComponent` and the **DetourCrowd** that steers a
@@ -14,7 +16,7 @@ and running navmesh queries with no agent at all.
 `Projects/Starforge/assets/templates/src/scripts/NavCritter.h`, `tests/test_nav_world.cpp`,
 `test_nav_bake.cpp`, `test_nav_agents.cpp`
 **API Reference:** *none — `nav/NavWorld.h`, `nav/NavTypes.h` and `scene/SceneNav.h` have **no row**
-in the [reference manifest](../reference/README.md), so this chapter is the client-facing source for
+in the [reference manifest](../../reference/README.md), so this chapter is the client-facing source for
 them.* · **How it works:** *none — there is no `docs/systems/` explainer for navigation either.
 (`../systems/cameras-navigation.md` is about **camera** navigation — orbit/fly controllers and the
 nav cube — not navmeshes.)*
@@ -502,7 +504,7 @@ scene.Events().Connect("nav.arrived", [&](Cosmic::Entity src)
 
 **It fires once per target.** The latch is cleared only by the next `SetTarget` or `Stop`. Because
 `OnSignal` is a catch-all for *every* signal on the bus (buttons, flow graphs, other scripts), always
-filter by name — see [`flow-and-story.md`](flow-and-story.md).
+filter by name — see [`flow-and-story.md`](../../guide/flow-and-story.md).
 
 ## Navmesh queries without an agent
 
@@ -674,19 +676,19 @@ a non-zero value logs a warning and is ignored.
 
 **Guide**
 
-- [`physics.md`](physics.md) — the collision view the bake reads: colliders, the implicit-static
+- [`physics.md`](../../guide/physics.md) — the collision view the bake reads: colliders, the implicit-static
   rule, and the `Enabled`/`Active` gates that decide what contributes.
-- [`scripting.md`](scripting.md) — `ScriptableEntity` vs `SystemScript`, all eight proxies, and
+- [`scripting.md`](../../guide/scripting.md) — `ScriptableEntity` vs `SystemScript`, all eight proxies, and
   `OnSignal`.
-- [`flow-and-story.md`](flow-and-story.md) — the `EventBus` that carries `nav.arrived`.
-- [`entities-and-components.md`](entities-and-components.md) — `NavMeshComponent` and
+- [`flow-and-story.md`](../../guide/flow-and-story.md) — the `EventBus` that carries `nav.arrived`.
+- [`entities-and-components.md`](../../guide/entities-and-components.md) — `NavMeshComponent` and
   `NavAgentComponent` in the full component catalogue.
 - [`voxels.md`](voxels.md) — voxel chunks are baked into the navmesh too.
 - [`world-systems.md`](world-systems.md) — terrain, whose heightfield collider is exact in the bake.
-- [`time-and-ticks.md`](time-and-ticks.md) — the fixed pass the crowd steps on.
+- [`time-and-ticks.md`](../../guide/time-and-ticks.md) — the fixed pass the crowd steps on.
 
 **Reference / systems** — neither tier covers navigation yet (see the header block). The closest
-neighbours are [`../reference/physics.md`](../reference/physics.md) for
+neighbours are [`../reference/physics.md`](../../reference/physics.md) for
 `ScenePhysics::BuildColliderDesc`, the enumeration the bake is built on, and
 [`../systems/build-2d-3d-split.md`](../systems/build-2d-3d-split.md) for why the whole tier is 3D
 only.

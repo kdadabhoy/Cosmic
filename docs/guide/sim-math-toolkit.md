@@ -1,5 +1,7 @@
 # Simulation Math Toolkit — Guide
 
+> **History (2026-09-20, App Platform AP-D1).** This chapter was written for the two-configuration engine (Phase 29) and cites `Projects/Frontier`, `Projects/Engine3DDemo`, `Projects/ForgeIsle`, `Projects/ViperSim` or `#ifndef COSMIC_2D_ONLY` fences as worked examples. `main` is now the 2D-only trunk (D-PURGE): those projects, the fences and the `engine-2d` branch are gone from it and survive only on `engine-3d` (`0e8894b`, tag `cosmic-pre-2d-2026-09-16`), so read such mentions and their `file:line` references as historical. The current exemplars are the template projects, `Projects/PendulumLab`, `Projects/AnalysisSample` and `Projects/SF_Telem`; the trunk policy is in the root README 1.6 and [`../parked-3d/systems/build-2d-3d-split.md`](../parked-3d/systems/build-2d-3d-split.md) (parked 3D) records what the split was.
+
 **What this covers:** the header-only math a simulation is built from — RK4 and semi-implicit Euler
 integrators plus `FixedSubstepper`, the signal-conditioning filters (low-pass, derivative, rate
 limit, moving average, biquad, washout), 1D/2D lookup tables for measured data, seeded procedural
@@ -15,8 +17,7 @@ way is up.
 **API Reference:** [`../reference/math.md`](../reference/math.md) *(skeleton — D15 unwritten; this
 chapter is the client-facing source until it lands)* · **How it works:**
 [`../systems/math-sim-toolkit.md`](../systems/math-sim-toolkit.md) *(skeleton — D32)*
-**Configuration:** **both.** All six headers are included by `Cosmic.h` outside any fence and
-compile identically on the 2D and 3D engines.
+**Configuration:** 2D trunk. `main` builds one engine, 2D-only (since 2026-09-18, D-PURGE); `-DCOSMIC_2D_ONLY=ON` is an always-on compatibility flag and `OFF` is rejected at configure. History: the two-configuration build this line used to describe is [parked](../parked-3d/systems/build-2d-3d-split.md) (parked 3D).
 
 Every header here is **header-only, allocation-free after construction, and GL-free**, so it works
 in a project DLL, in a unit test, in a headless tool, and — for the integrators and filters — in
@@ -631,7 +632,7 @@ gravity is `+Z` in one and `-Y` in the other.
   yourself
 - [`assets-and-vfs.md`](assets-and-vfs.md#configure-with-toml) — `Config` for tunables and
   `DataExport` under `LookupTable1D::FromCSV`
-- [`world-systems.md`](world-systems.md) — `Noise` on the terrain side, and the `32·2^k+1`
+- [`world-systems.md`](../parked-3d/guide/world-systems.md) (parked 3D) — `Noise` on the terrain side, and the `32·2^k+1`
   resolution rule
 - [`serial-and-telemetry.md`](serial-and-telemetry.md) — recording a run so a seed is worth having
 - [`../reference/math.md`](../reference/math.md) *(skeleton)* ·

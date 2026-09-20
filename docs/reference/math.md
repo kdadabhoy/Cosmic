@@ -1,5 +1,7 @@
 # API Reference — Math & Simulation Toolkit
 
+> **History (2026-09-20, App Platform AP-D1).** This chapter was written for the two-configuration engine (Phase 29) and cites `Projects/Frontier`, `Projects/Engine3DDemo`, `Projects/ForgeIsle`, `Projects/ViperSim` or `#ifndef COSMIC_2D_ONLY` fences as worked examples. `main` is now the 2D-only trunk (D-PURGE): those projects, the fences and the `engine-2d` branch are gone from it and survive only on `engine-3d` (`0e8894b`, tag `cosmic-pre-2d-2026-09-16`), so read such mentions and their `file:line` references as historical. The current exemplars are the template projects, `Projects/PendulumLab`, `Projects/AnalysisSample` and `Projects/SF_Telem`; the trunk policy is in the root README 1.6 and [`../parked-3d/systems/build-2d-3d-split.md`](../parked-3d/systems/build-2d-3d-split.md) (parked 3D) records what the split was.
+
 > **STATUS: WRITTEN** — work order **D15** (2026-07-26) in
 > [`docs/plans/archive/12-documentation-plan.md`](../plans/archive/12-documentation-plan.md).
 > Entry format: [reference/README.md → Entry format](README.md#entry-format-mandatory--copy-this-shape).
@@ -18,7 +20,7 @@ template; no `COSMIC_API`, no `.cpp`, nothing to link), and all seven are includ
 **outside any `COSMIC_2D_ONLY` fence** — `Spatial.h` and `Frustum.h` at `Cosmic.h:94-95`, the five
 E-series headers at `Cosmic.h:98-102`. They compile and behave identically on the 2D and 3D
 engines. See [README §1.6](../../README.md#16-the-two-engine-configurations) and
-[build-2d-3d-split.md](../systems/build-2d-3d-split.md).
+[build-2d-3d-split.md](../parked-3d/systems/build-2d-3d-split.md) (parked 3D).
 
 Six of the seven have **no engine dependencies at all** — glm and the C++ standard library only, so
 they work in a project DLL, a headless tool, a unit test, or MCU-portable code. The exception is
@@ -1594,9 +1596,9 @@ Namespace `Cosmic`. One `struct`, pure math (glm only, no GPU types). Test file:
 `tests/test_frustum.cpp`, suite `"Frustum (F5 culling)"`.
 
 > **Manifest routing note.** The [coverage manifest](README.md#coverage-manifest--every-public-header-maps-to-a-chapter)
-> currently routes `math/Frustum.h` to [rendering-3d.md](rendering-3d.md), where it sits next to its
+> currently routes `math/Frustum.h` to [rendering-3d.md](../parked-3d/reference/rendering-3d.md) (parked 3D), where it sits next to its
 > main consumer, `Renderer3D`. D15's scope put it here with the rest of `math/`. **The entries below
-> are the canonical ones** — [rendering-3d.md](rendering-3d.md) should link to them rather than
+> are the canonical ones** — [rendering-3d.md](../parked-3d/reference/rendering-3d.md) (parked 3D) should link to them rather than
 > restate them (execution note 7: each fact has exactly one home). The manifest row needs re-pointing
 > either way; a chapter file cannot be in two rows.
 
@@ -1810,9 +1812,9 @@ one-line fix. None is documented anywhere else.
 chapter — start there) · [`../guide/time-and-ticks.md`](../guide/time-and-ticks.md) (the fixed vs
 variable tick that `FixedSubstepper` divides) · [physics.md](physics.md) (when to let the rigid-body
 engine integrate for you) · [assets-io.md](assets-io.md) (`Config`, `DataExport` and the VFS under
-`LookupTable1D::FromCSV`) · [world-systems.md](world-systems.md) (`Noise` on the terrain side) ·
-[rendering-3d.md](rendering-3d.md) (`Renderer3D`'s use of [`Frustum`](#view-frustum--mathfrustumh)) ·
-[`../systems/build-2d-3d-split.md`](../systems/build-2d-3d-split.md) (why all seven headers are
+`LookupTable1D::FromCSV`) · [world-systems.md](../parked-3d/reference/world-systems.md) (parked 3D) (`Noise` on the terrain side) ·
+[rendering-3d.md](../parked-3d/reference/rendering-3d.md) (parked 3D) (`Renderer3D`'s use of [`Frustum`](#view-frustum--mathfrustumh)) ·
+[`../systems/build-2d-3d-split.md`](../parked-3d/systems/build-2d-3d-split.md) (parked 3D) (why all seven headers are
 unfenced) · [`../systems/math-sim-toolkit.md`](../systems/math-sim-toolkit.md) *(skeleton — D32)*
 
 ---

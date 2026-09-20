@@ -1,5 +1,7 @@
 # Building & Shipping — Guide
 
+> **History (2026-09-20, App Platform AP-D1).** This chapter was written for the two-configuration engine (Phase 29) and cites `Projects/Frontier`, `Projects/Engine3DDemo`, `Projects/ForgeIsle`, `Projects/ViperSim` or `#ifndef COSMIC_2D_ONLY` fences as worked examples. `main` is now the 2D-only trunk (D-PURGE): those projects, the fences and the `engine-2d` branch are gone from it and survive only on `engine-3d` (`0e8894b`, tag `cosmic-pre-2d-2026-09-16`), so read such mentions and their `file:line` references as historical. The current exemplars are the template projects, `Projects/PendulumLab`, `Projects/AnalysisSample` and `Projects/SF_Telem`; the trunk policy is in the root README 1.6 and [`../parked-3d/systems/build-2d-3d-split.md`](../parked-3d/systems/build-2d-3d-split.md) (parked 3D) records what the split was.
+
 **What this covers:** the two engine configurations and how to pick one; every CMake option the
 build understands and what turning it off actually removes; what each of the ten root `.bat`
 scripts really does; packaging (`cmake --install` staging → `dist/<Name>` prune → zip) and exactly
@@ -16,9 +18,8 @@ decides which project to boot and where it writes user data.
 `utils/ExeResources.h` and `utils/Branding.h` have **no manifest row** — see below)*
 **How it works:** [`../systems/build-plugin-packaging.md`](../systems/build-plugin-packaging.md)
 *(skeleton — D34)* and
-[`../systems/build-2d-3d-split.md`](../systems/build-2d-3d-split.md) *(written)*
-**Configuration:** **both.** Everything here works identically on the 3D and 2D engine builds —
-choosing between them is one of the things this chapter is *about*.
+[`../systems/build-2d-3d-split.md`](../parked-3d/systems/build-2d-3d-split.md) (parked 3D) *(written)*
+**Configuration:** 2D trunk. `main` builds one engine, 2D-only (since 2026-09-18, D-PURGE); `-DCOSMIC_2D_ONLY=ON` is an always-on compatibility flag and `OFF` is rejected at configure. History: the two-configuration build this line used to describe is [parked](../parked-3d/systems/build-2d-3d-split.md) (parked 3D).
 
 > **This chapter is the client-facing source for `utils/ExeResources.h`.** That header is included
 > by `Cosmic.h` directly and unfenced yet has no row in the
@@ -91,7 +92,7 @@ The engine configuration is the one that bites, because it is sticky and invisib
 or `[MODE] full 3D engine` without ever changing it; only `build_2d.bat`, `build_3d.bat` and
 `build_all_2d.bat` set it. The full comparison table lives in root README
 [§1.6](../../README.md#16-the-two-engine-configurations) and the mechanism in
-[`../systems/build-2d-3d-split.md`](../systems/build-2d-3d-split.md).
+[`../systems/build-2d-3d-split.md`](../parked-3d/systems/build-2d-3d-split.md) (parked 3D).
 
 **`Release` is the distribution build.** There is no separate dist flag — that decision was made
 per-config with generator expressions so it can never be left stale in a cache:
@@ -619,7 +620,7 @@ off. Measure in `Release` (or `RelWithDebInfo` if you need the Launcher).
   configuration comparison
 - [`../installer-guide.md`](../installer-guide.md) — the end-to-end ship-and-install walkthrough,
   including recipient-side troubleshooting and the release acceptance check
-- [`../systems/build-2d-3d-split.md`](../systems/build-2d-3d-split.md) — the full exclusion table,
+- [`../systems/build-2d-3d-split.md`](../parked-3d/systems/build-2d-3d-split.md) (parked 3D) — the full exclusion table,
   the classification rule for new code, and the recorded build times
 - [`../systems/build-plugin-packaging.md`](../systems/build-plugin-packaging.md) *(skeleton — D34)*
   — where the architecture-level "why" will live

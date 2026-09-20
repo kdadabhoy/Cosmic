@@ -1,8 +1,10 @@
 # Particles — How It Works
 
+> **PARKED 3D — not on the trunk.** This chapter documents code that lives only on the `engine-3d` branch (`0e8894b`, tag `cosmic-pre-2d-2026-09-16`). The 2D trunk (`main`) no longer builds or ships it (D-PURGE, 2026-09-18). Kept for when 3D resumes.
+
 > **STATUS: SKELETON** — to be filled by work order **D31** in
-> [`docs/plans/archive/12-documentation-plan.md`](../plans/archive/12-documentation-plan.md).
-> Format + writing bar: [systems/README.md](README.md#document-format-mandatory--every-explainer-uses-this-shape).
+> [`docs/plans/archive/12-documentation-plan.md`](../../plans/archive/12-documentation-plan.md).
+> Format + writing bar: [systems/README.md](../../systems/README.md#document-format-mandatory--every-explainer-uses-this-shape).
 
 **One-liner:** tens of thousands of smoke puffs, embers, raindrops and snowflakes live
 entirely on the GPU — a compute shader moves them each frame, a ring buffer recycles dead

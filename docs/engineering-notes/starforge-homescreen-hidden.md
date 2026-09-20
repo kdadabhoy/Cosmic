@@ -1,5 +1,7 @@
 # Starforge homescreen (project library) invisible when no project is open
 
+> **History (2026-09-20, App Platform AP-D1).** This chapter was written for the two-configuration engine (Phase 29) and cites `Projects/Frontier`, `Projects/Engine3DDemo`, `Projects/ForgeIsle`, `Projects/ViperSim` or `#ifndef COSMIC_2D_ONLY` fences as worked examples. `main` is now the 2D-only trunk (D-PURGE): those projects, the fences and the `engine-2d` branch are gone from it and survive only on `engine-3d` (`0e8894b`, tag `cosmic-pre-2d-2026-09-16`), so read such mentions and their `file:line` references as historical. The current exemplars are the template projects, `Projects/PendulumLab`, `Projects/AnalysisSample` and `Projects/SF_Telem`; the trunk policy is in the root README 1.6 and [`../parked-3d/systems/build-2d-3d-split.md`](../parked-3d/systems/build-2d-3d-split.md) (parked 3D) records what the split was.
+
 > **Verified against commit:** working tree of 2026-07-10 (Phase 18 branch `phase-7-3d-foundations`,
 > uncommitted). `file:line` references to `Projects/Starforge/src/StarforgeApp.cpp` are live as of then.
 > **Status:** FIXED 2026-07-10 — for real this time. The 2026-07-08 fix (anchor to the OS work area)

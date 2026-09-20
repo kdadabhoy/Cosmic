@@ -1,10 +1,12 @@
 # API Reference — 3D Rendering
 
+> **PARKED 3D — not on the trunk.** This chapter documents code that lives only on the `engine-3d` branch (`0e8894b`, tag `cosmic-pre-2d-2026-09-16`). The 2D trunk (`main`) no longer builds or ships it (D-PURGE, 2026-09-18). Kept for when 3D resumes.
+
 > **STATUS: SKELETON** — to be filled by work order **D10** in
-> [`docs/plans/archive/12-documentation-plan.md`](../plans/archive/12-documentation-plan.md). This is one of
+> [`docs/plans/archive/12-documentation-plan.md`](../../plans/archive/12-documentation-plan.md). This is one of
 > the two largest chapters (with the README 3D sections) — the work order allows splitting
 > into two sessions.
-> Entry format: [reference/README.md → Entry format](README.md#entry-format-mandatory--copy-this-shape).
+> Entry format: [reference/README.md → Entry format](../../reference/README.md#entry-format-mandatory--copy-this-shape).
 
 **Scope (headers are the truth):** `Cosmic/src/renderer/Renderer3D.h`, `graphics/Mesh.h`,
 `graphics/Model.h`, `renderer/InstanceSet.h`, `math/Frustum.h` (+ the *documented semantics*
@@ -14,8 +16,8 @@ of `renderer/RenderQueue.h` even though clients don't include it directly).
 D54, and until this skeleton is filled it is the client-facing source of truth** for the whole
 scope above, including the material-read-at-flush rule, the auto-instancing preconditions and the
 statistics counters. Then the systems explainer [rendering-3d](../systems/rendering-3d.md);
-[`docs/design/frame-lifecycle.md`](../design/frame-lifecycle.md) (pass/state contract);
-Phase 12 banner in [`docs/plans/00-MASTER-ROADMAP.md`](../plans/00-MASTER-ROADMAP.md) for the
+[`docs/design/frame-lifecycle.md`](../../design/frame-lifecycle.md) (pass/state contract);
+Phase 12 banner in [`docs/plans/00-MASTER-ROADMAP.md`](../../plans/00-MASTER-ROADMAP.md) for the
 queue semantics that MUST be reflected in every mutating entry.
 
 **D10 must not re-derive the guide's material.** Link it for usage and worked examples; this tier
@@ -34,7 +36,7 @@ carries signatures, parameters, return/failure behaviour and per-entry notes.
 - [ ] `Model` — glTF load via cgltf (`Create`), submeshes/materials, PBR material import behavior, winding/scene fixes
 - [ ] `InstanceSet` — per-instance transform pool (SSBO binding 9), update/draw API (F5)
 - [ ] `Frustum` — extraction from view-projection, containment/intersection tests (header-only)
-- [ ] LOD — `LODGroupComponent` behavior contract (component itself lives in [ecs.md](ecs.md); the distance-switch + caster-uses-lit-level rule is documented here)
+- [ ] LOD — `LODGroupComponent` behavior contract (component itself lives in [ecs.md](../../reference/ecs.md); the distance-switch + caster-uses-lit-level rule is documented here)
 
 ## Sections to write
 

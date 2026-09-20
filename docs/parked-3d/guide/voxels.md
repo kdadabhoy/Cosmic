@@ -1,5 +1,7 @@
 # Voxels — Guide
 
+> **PARKED 3D — not on the trunk.** This chapter documents code that lives only on the `engine-3d` branch (`0e8894b`, tag `cosmic-pre-2d-2026-09-16`). The 2D trunk (`main`) no longer builds or ships it (D-PURGE, 2026-09-18). Kept for when 3D resumes.
+
 **What this covers:** authoring editable block worlds — the **block palette**, the sparse **chunk
 store** and its dirty tracking, the `.cvox`/`.cpal` files, the **mesher** (culled vs greedy),
 `VoxelVolumeComponent` and what `Scene::SyncVoxelVolumes` does every frame, **editing** voxels from
@@ -13,7 +15,7 @@ one static body per resident chunk, rebuilt when the chunk goes dirty.
 `Projects/Starforge/src/commands/EditorCommands.cpp`, `Projects/Starforge/src/StarforgeApp.cpp`
 (`BuildForgeBlocks`), `tests/test_voxel.cpp`, `tests/test_voxel_collision.cpp`
 **API Reference:** *none — the whole `voxel/` tier has **no row** in the
-[reference manifest](../reference/README.md), so this chapter is the client-facing source.* ·
+[reference manifest](../../reference/README.md), so this chapter is the client-facing source.* ·
 **How it works:** *none — there is no `docs/systems/` explainer for voxels either.*
 **Configuration:** **3D only.** `Cosmic/src/voxel/` is filtered out of the 2D engine build,
 `VoxelVolumeComponent` lives in `scene/Components3D.h`, and the `Voxels()` script proxy sits inside
@@ -484,7 +486,7 @@ sync and switch the component to `Greedy = false`.
 ## Editing voxels from code
 
 Scripts reach a voxel world through the `Voxels()` proxy on `ScriptableEntity` (3D builds only —
-see [`scripting.md`](scripting.md)):
+see [`scripting.md`](../../guide/scripting.md)):
 
 ```cpp
 uint16_t    Get(int x, int y, int z) const;
@@ -742,7 +744,7 @@ bodies and character controllers collide with it; you cannot make a voxel volume
 
 **Walking on voxels.** ForgeBlocks pairs the volume with a `CharacterControllerComponent` sized
 `Height 1.8`, `Radius 0.35`, `StepHeight 0.6` — a step height above 0.5 is what lets a character
-walk up single 1 m voxels without jumping. See [`physics.md`](physics.md) for the controller.
+walk up single 1 m voxels without jumping. See [`physics.md`](../../guide/physics.md) for the controller.
 
 **Navmesh baking** reads voxels too: `SceneNav` appends each resident chunk's collision geometry to
 the bake soup (`SceneNav.cpp:205`), filtered by `IsActiveInHierarchy` and the navmesh's scope. See
@@ -835,16 +837,16 @@ iterations per frame once the neighbourhood is full. Keep it near the default.
 
 ## See also
 
-- [`entities-and-components.md`](entities-and-components.md) — the component catalogue,
+- [`entities-and-components.md`](../../guide/entities-and-components.md) — the component catalogue,
   `Active`/`Enabled` gates, and what a 2D build sees
 - [`rendering-3d.md`](rendering-3d.md) — the queue chunk meshes are submitted into: culling,
   sorting, statistics
-- [`materials-and-shaders.md`](materials-and-shaders.md) — `Material`, the PBR uniform contract, and
+- [`materials-and-shaders.md`](../../guide/materials-and-shaders.md) — `Material`, the PBR uniform contract, and
   swapping the atlas material's albedo map
-- [`physics.md`](physics.md) — static bodies, the character controller, queries
+- [`physics.md`](../../guide/physics.md) — static bodies, the character controller, queries
 - [`navigation-and-ai.md`](navigation-and-ai.md) — baking a navmesh over voxel geometry
-- [`scripting.md`](scripting.md) — `ScriptableEntity`, all eight proxies, and which are fenced
-- [`assets-and-vfs.md`](assets-and-vfs.md) — `project://` paths and where sidecar assets live
+- [`scripting.md`](../../guide/scripting.md) — `ScriptableEntity`, all eight proxies, and which are fenced
+- [`assets-and-vfs.md`](../../guide/assets-and-vfs.md) — `project://` paths and where sidecar assets live
 - [`../systems/build-2d-3d-split.md`](../systems/build-2d-3d-split.md) — why `voxel/` is 3D only
 - `tests/test_voxel.cpp`, `tests/test_voxel_collision.cpp` — the executable specification for
   everything above

@@ -1,5 +1,7 @@
 # Animation — Guide
 
+> **PARKED 3D — not on the trunk.** This chapter documents code that lives only on the `engine-3d` branch (`0e8894b`, tag `cosmic-pre-2d-2026-09-16`). The 2D trunk (`main`) no longer builds or ships it (D-PURGE, 2026-09-18). Kept for when 3D resumes.
+
 **What this covers:** skeletal animation end to end — `Skeleton` and `AnimationClip`, importing
 skinned meshes (glTF/GLB via cgltf, FBX/DAE via assimp), `AnimatorComponent`, playing and scrubbing
 clips, `CrossfadeTo` and the pose-space blend model, **joint sockets** (attaching entities to
@@ -16,7 +18,7 @@ twin.
 `Projects/Starforge/src/panels/InspectorPanel.cpp`, `tests/test_animation.cpp`,
 `tests/test_crossfade.cpp`, `tests/test_sockets.cpp`
 **API Reference:** *none — `graphics/Skeleton.h` and `graphics/AnimationClip.h` have **no row** in
-the [reference manifest](../reference/README.md), so this chapter is the client-facing source.* ·
+the [reference manifest](../../reference/README.md), so this chapter is the client-facing source.* ·
 **How it works:** *none — there is no `docs/systems/` explainer for skeletal animation either.*
 **Configuration:** **3D only.** `AnimatorComponent` and `SocketComponent` live in
 `scene/Components3D.h`, `Scene::UpdateAnimators` is compiled in `scene/Scene3D.cpp`, and the
@@ -113,7 +115,7 @@ and starts nothing.
 
 ## Importing a rigged model
 
-Skins and clips ride the ordinary model import (see [`assets-and-vfs.md`](assets-and-vfs.md) for the
+Skins and clips ride the ordinary model import (see [`assets-and-vfs.md`](../../guide/assets-and-vfs.md) for the
 import pipeline as a whole). What matters for animation:
 
 | Format | Backend | Skins | Clips |
@@ -618,17 +620,17 @@ code-built rigs.
 
 ## See also
 
-- [`entities-and-components.md`](entities-and-components.md) — `AnimatorComponent`,
+- [`entities-and-components.md`](../../guide/entities-and-components.md) — `AnimatorComponent`,
   `SocketComponent` and `MeshRendererComponent` in the full component catalogue
 - [`rendering-3d.md`](rendering-3d.md) — the queue skinned draws enter: state groups, culling,
   `Model` vs `Mesh`, and why skinned draws never auto-instance
-- [`materials-and-shaders.md`](materials-and-shaders.md) — `Material`, `.cmat`, the shader
+- [`materials-and-shaders.md`](../../guide/materials-and-shaders.md) — `Material`, `.cmat`, the shader
   contract, and `SetSkinnedShader`
-- [`lighting-and-environment.md`](lighting-and-environment.md) — the pass graph the shadow twin
+- [`lighting-and-environment.md`](../../guide/lighting-2d.md) — the pass graph the shadow twin
   runs in
-- [`assets-and-vfs.md`](assets-and-vfs.md) — model import, `.cmeta` sidecars, `AssetLibrary` caching
-- [`scripting.md`](scripting.md) — `ScriptableEntity` and all eight proxies, including `Animator()`
-- [`scenes-and-serialization.md`](scenes-and-serialization.md) — how reflected fields (including
+- [`assets-and-vfs.md`](../../guide/assets-and-vfs.md) — model import, `.cmeta` sidecars, `AssetLibrary` caching
+- [`scripting.md`](../../guide/scripting.md) — `ScriptableEntity` and all eight proxies, including `Animator()`
+- [`scenes-and-serialization.md`](../../guide/scenes-and-serialization.md) — how reflected fields (including
   `Quat` ordering: `[w, x, y, z]`) are written
 - [`../systems/build-2d-3d-split.md`](../systems/build-2d-3d-split.md) — why this whole tier is 3D
   only

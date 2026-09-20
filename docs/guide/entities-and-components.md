@@ -1,5 +1,7 @@
 # Entities & Components — Guide
 
+> **History (2026-09-20, App Platform AP-D1).** This chapter was written for the two-configuration engine (Phase 29) and cites `Projects/Frontier`, `Projects/Engine3DDemo`, `Projects/ForgeIsle`, `Projects/ViperSim` or `#ifndef COSMIC_2D_ONLY` fences as worked examples. `main` is now the 2D-only trunk (D-PURGE): those projects, the fences and the `engine-2d` branch are gone from it and survive only on `engine-3d` (`0e8894b`, tag `cosmic-pre-2d-2026-09-16`), so read such mentions and their `file:line` references as historical. The current exemplars are the template projects, `Projects/PendulumLab`, `Projects/AnalysisSample` and `Projects/SF_Telem`; the trunk policy is in the root README 1.6 and [`../parked-3d/systems/build-2d-3d-split.md`](../parked-3d/systems/build-2d-3d-split.md) (parked 3D) records what the split was.
+
 **What this covers:** the entity handle and what it really is; the **complete catalogue of all 34
 built-in components** with fields, units, defaults and *who reads them*; what a 2D build sees;
 parent/child hierarchy; the two independent off-switches (`Active` and per-component `Enabled`);
@@ -12,9 +14,7 @@ automatically**.
 **API Reference:** [../reference/ecs.md](../reference/ecs.md) ·
 [../reference/physics.md](../reference/physics.md) · **How it works:**
 [../systems/ecs-scene.md](../systems/ecs-scene.md)
-**Configuration:** both — **19** of the 34 built-in components exist in every build; **15** are 3D
-only. See [What a 2D build sees](#what-a-2d-build-sees) and
-[../systems/build-2d-3d-split.md](../systems/build-2d-3d-split.md).
+**Configuration:** 2D trunk. `main` builds one engine, 2D-only (since 2026-09-18, D-PURGE); `-DCOSMIC_2D_ONLY=ON` is an always-on compatibility flag and `OFF` is rejected at configure. History: the two-configuration build this line used to describe is [parked](../parked-3d/systems/build-2d-3d-split.md) (parked 3D).
 
 A Cosmic scene is a table. Each **entity** is a row with no columns of its own; each **component
 type** is a column that only exists for the rows that opted into it. Nothing about an entity is
@@ -1003,7 +1003,7 @@ includes it behind the same fence — a 2D engine never compiles a line of it.
 
 The per-file partition table (which components, which `.cpp`, which registration file) lives in
 [`../systems/ecs-scene.md`](../systems/ecs-scene.md); the full rules are in
-[`../systems/build-2d-3d-split.md`](../systems/build-2d-3d-split.md). It is not repeated here.
+[`../systems/build-2d-3d-split.md`](../parked-3d/systems/build-2d-3d-split.md) (parked 3D). It is not repeated here.
 
 ---
 
@@ -1460,16 +1460,16 @@ rotation only. If scale moved, something else did it.
   component.
 - [`../systems/ecs-scene.md`](../systems/ecs-scene.md) — how the registry, views and the Phase 29
   file partition actually work.
-- [`../systems/build-2d-3d-split.md`](../systems/build-2d-3d-split.md) — the full 2D/3D rules.
+- [`../systems/build-2d-3d-split.md`](../parked-3d/systems/build-2d-3d-split.md) (parked 3D) — the full 2D/3D rules.
 - [`scenes-and-serialization.md`](scenes-and-serialization.md) — `.cscene`, reflection, prefabs,
   UUIDs, undo, opaque preservation.
 - [`scripting.md`](scripting.md) — `ScriptableEntity`, `SystemScript`, and the proxies that drive
   components at runtime.
 - [`physics.md`](physics.md) · [`../reference/physics.md`](../reference/physics.md) — bodies,
   colliders, the character controller, queries and contact events.
-- [`rendering-3d.md`](rendering-3d.md) · [`lighting-and-environment.md`](lighting-and-environment.md)
-  · [`world-systems.md`](world-systems.md) · [`voxels.md`](voxels.md) ·
-  [`animation.md`](animation.md) · [`navigation-and-ai.md`](navigation-and-ai.md) — the subsystems
+- [`rendering-3d.md`](../parked-3d/guide/rendering-3d.md) (parked 3D) · [`lighting-and-environment.md`](lighting-2d.md)
+  · [`world-systems.md`](../parked-3d/guide/world-systems.md) (parked 3D) · [`voxels.md`](../parked-3d/guide/voxels.md) (parked 3D) ·
+  [`animation.md`](../parked-3d/guide/animation.md) (parked 3D) · [`navigation-and-ai.md`](../parked-3d/guide/navigation-and-ai.md) (parked 3D) — the subsystems
   behind the 3D components.
 - [`sprites-and-tilemaps.md`](sprites-and-tilemaps.md) · [`game-ui.md`](game-ui.md) — the 2D and UI
   component families in depth.

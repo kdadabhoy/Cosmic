@@ -54,7 +54,7 @@ because it inherits the old document's shape instead of the engine's.
   The guide says which.
 - **Configuration-aware.** The engine builds in two configurations (root README §1.6). Any chapter
   covering something absent from the 2D build says so up front and links
-  [`../systems/build-2d-3d-split.md`](../systems/build-2d-3d-split.md).
+  [`../systems/build-2d-3d-split.md`](../parked-3d/systems/build-2d-3d-split.md) (parked 3D).
 - **Don't duplicate the reference** (link the entry for the full signature) **or the explainer**
   (link it for internals and rationale). This tier stays on the outside of the API, showing usage.
 
@@ -124,18 +124,18 @@ in the reference.
 
 | Chapter | Covers | Retires | WO | Status |
 | --- | --- | --- | --- | --- |
-| [`rendering-3d.md`](rendering-3d.md) | `Renderer3D` submit/cull/sort/instance/LOD, meshes and models, **material-read-at-flush + `Material::Clone`** | *nothing* | D54 | ✅ 2026-07-26 |
-| [`lighting-and-environment.md`](lighting-and-environment.md) | The `SceneRenderer` pass graph, PBR/IBL, sky and time-of-day, shadows, the post chain | *nothing* | D55 | ✅ 2026-07-26 |
-| [`world-systems.md`](world-systems.md) | Terrain (incl. the `32·2^k+1` rule), water, GPU particles | *nothing* | D55 | ✅ 2026-07-26 |
-| [`voxels.md`](voxels.md) | Voxel volumes, chunks, meshing, editing, generation, collision | *nothing* | D56 | ✅ 2026-07-26 |
-| [`animation.md`](animation.md) | Skeletons, clips, `Animator`, crossfade, joint sockets, GPU skinning | *nothing* | D56 | ✅ 2026-07-26 |
+| [`rendering-3d.md`](../parked-3d/guide/rendering-3d.md) (parked 3D) | `Renderer3D` submit/cull/sort/instance/LOD, meshes and models, **material-read-at-flush + `Material::Clone`** | *nothing* | D54 | ✅ 2026-07-26 |
+| [`lighting-and-environment.md`](lighting-2d.md) | The `SceneRenderer` pass graph, PBR/IBL, sky and time-of-day, shadows, the post chain | *nothing* | D55 | ✅ 2026-07-26 |
+| [`world-systems.md`](../parked-3d/guide/world-systems.md) (parked 3D) | Terrain (incl. the `32·2^k+1` rule), water, GPU particles | *nothing* | D55 | ✅ 2026-07-26 |
+| [`voxels.md`](../parked-3d/guide/voxels.md) (parked 3D) | Voxel volumes, chunks, meshing, editing, generation, collision | *nothing* | D56 | ✅ 2026-07-26 |
+| [`animation.md`](../parked-3d/guide/animation.md) (parked 3D) | Skeletons, clips, `Animator`, crossfade, joint sockets, GPU skinning | *nothing* | D56 | ✅ 2026-07-26 |
 
 ### Simulation
 
 | Chapter | Covers | Retires | WO | Status |
 | --- | --- | --- | --- | --- |
 | [`physics.md`](physics.md) | Rigid bodies, colliders, the character controller, queries, triggers, contact events, swapping the backend | *nothing* | D57 | ✅ 2026-07-26 |
-| [`navigation-and-ai.md`](navigation-and-ai.md) | Navmesh bake, `.cnav`, agents and crowds, the `Nav()` proxy | *nothing* | D57 | ✅ 2026-07-26 |
+| [`navigation-and-ai.md`](../parked-3d/guide/navigation-and-ai.md) (parked 3D) | Navmesh bake, `.cnav`, agents and crowds, the `Nav()` proxy | *nothing* | D57 | ✅ 2026-07-26 |
 | [`sim-math-toolkit.md`](sim-math-toolkit.md) | Integrators, filters, lookup tables, noise, deterministic RNG, spatial frames | *nothing* | D58 | ✅ 2026-07-26 |
 
 ### Platform & tooling
@@ -265,7 +265,7 @@ from a project DLL, and not included by `Cosmic.h` at all). Both are packaging s
 [`../reference/assets-io.md`](../reference/assets-io.md), which is itself a skeleton (D16) — as is
 [`../systems/build-plugin-packaging.md`](../systems/build-plugin-packaging.md) (D34). The one
 written explainer this chapter leans on,
-[`../systems/build-2d-3d-split.md`](../systems/build-2d-3d-split.md), is the reason the chapter does
+[`../systems/build-2d-3d-split.md`](../parked-3d/systems/build-2d-3d-split.md) (parked 3D), is the reason the chapter does
 **not** re-derive the exclusion table.
 
 **What D61 changed in Part II** (§30–§43), so a later Phase D session does not re-derive it:
@@ -284,7 +284,7 @@ the roadmap and `FEATURE-MATRIX.md`.
 
 `rendering-3d.md`, `lighting-and-environment.md`, `world-systems.md`, `voxels.md`, `animation.md`
 and `navigation-and-ai.md` cover subsystems that **do not exist in the 2D engine build**. Each
-states that up front and links [`../systems/build-2d-3d-split.md`](../systems/build-2d-3d-split.md).
+states that up front and links [`../systems/build-2d-3d-split.md`](../parked-3d/systems/build-2d-3d-split.md) (parked 3D).
 
 **"3D only" is per header, not per chapter** (D54). `rendering-3d.md`'s scope splits: `Renderer3D`,
 `InstanceSet` and `Model` are filtered out of the 2D build *and* fenced in `Cosmic.h`, while

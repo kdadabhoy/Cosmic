@@ -1,5 +1,7 @@
 # API Reference — Graphics Resources
 
+> **History (2026-09-20, App Platform AP-D1).** This chapter was written for the two-configuration engine (Phase 29) and cites `Projects/Frontier`, `Projects/Engine3DDemo`, `Projects/ForgeIsle`, `Projects/ViperSim` or `#ifndef COSMIC_2D_ONLY` fences as worked examples. `main` is now the 2D-only trunk (D-PURGE): those projects, the fences and the `engine-2d` branch are gone from it and survive only on `engine-3d` (`0e8894b`, tag `cosmic-pre-2d-2026-09-16`), so read such mentions and their `file:line` references as historical. The current exemplars are the template projects, `Projects/PendulumLab`, `Projects/AnalysisSample` and `Projects/SF_Telem`; the trunk policy is in the root README 1.6 and [`../parked-3d/systems/build-2d-3d-split.md`](../parked-3d/systems/build-2d-3d-split.md) (parked 3D) records what the split was.
+
 > **STATUS: WRITTEN** — work order **D8** (2026-07-26) in
 > [`docs/plans/archive/12-documentation-plan.md`](../plans/archive/12-documentation-plan.md).
 > Entry format: [reference/README.md → Entry format](README.md#entry-format-mandatory--copy-this-shape).
@@ -25,14 +27,14 @@ behaviour, failure mode, pitfalls.
 
 **Owned elsewhere, linked not restated:** `Gizmo` (`graphics/Gizmo.h`) is documented in
 [cameras.md → `Gizmo`](cameras.md#gizmo) even though it lives under `graphics/`. `Mesh`, `Model`,
-`InstanceSet` and the 3D submission queue are [rendering-3d.md](rendering-3d.md) *(skeleton — D10)*.
+`InstanceSet` and the 3D submission queue are [rendering-3d.md](../parked-3d/reference/rendering-3d.md) (parked 3D) *(skeleton — D10)*.
 `SceneRenderer`, `PostProcessStack`, `EnvironmentMap` and `ShadowMap` — the systems that *consume*
 most of the reserved bindings below — are [rendering-pipeline.md](rendering-pipeline.md)
 *(skeleton — D11)*. `AssetLibrary` itself is [assets-io.md](assets-io.md) *(skeleton — D16)*; this
 chapter states only what `AssetLibrary` does to the resources it caches.
 
 **How it works:** [rendering-2d](../systems/rendering-2d.md) *(skeleton — D28)* ·
-[rendering-3d](../systems/rendering-3d.md) *(skeleton — D29)*. The renderer class diagram
+[rendering-3d](../parked-3d/systems/rendering-3d.md) (parked 3D) *(skeleton — D29)*. The renderer class diagram
 (**DG-6**) is built in [root README §35](../../README.md#dg-6--the-renderer-stack).
 
 ---
@@ -44,7 +46,7 @@ thirteen *unfenced* (`Cosmic.h:33`, `:38`, `:40`, `:59-69`), and none of their `
 in the 2D `list(FILTER)` block — `Cosmic/CMakeLists.txt:189` explicitly keeps `Material`, `Buffer`,
 `Texture` and `Shader` ("generic GPU infrastructure"), and `:185` keeps `Renderer` and
 `RenderCommand`. Nothing here is ³ᴰ or ³ᴰ⁺. Background:
-[build-2d-3d-split](../systems/build-2d-3d-split.md).
+[build-2d-3d-split](../parked-3d/systems/build-2d-3d-split.md) (parked 3D).
 
 ### Ownership
 
@@ -1147,7 +1149,7 @@ auto setMap = [&](const std::string& p, const char* mapU, const char* hasU)
 
 These are the low-level geometry types. You need them only when you are building geometry by hand —
 a custom `Renderer::Submit` pipeline, a debug overlay, an app-owned compute pass. `Mesh` (see
-[rendering-3d.md](rendering-3d.md)) wraps all of it for normal 3D work, and `Renderer2D` owns its
+[rendering-3d.md](../parked-3d/reference/rendering-3d.md) (parked 3D)) wraps all of it for normal 3D work, and `Renderer2D` owns its
 own buffers.
 
 **None of these types is `COSMIC_API`-exported** — see
@@ -2346,6 +2348,63 @@ already dispatch.
 
 ---
 
+## `Mesh`
+
+> **Routed here 2026-09-20 (App Platform AP-D1).** `graphics/Mesh.h` used to belong to the 3D Rendering
+> chapter, which is parked ([`../parked-3d/reference/rendering-3d.md`](../parked-3d/reference/rendering-3d.md) (parked 3D),
+> parked 3D). The header itself survives on the 2D trunk: `AssetLibrary` caches meshes, `MeshRendererComponent`
+> holds one and `SceneRenderer.cpp` includes it. Nothing on `main` draws a mesh (`Renderer3D` is gone), so the
+> entries below are the resource surface only; AP-D2 owns any expansion.
+
+**Declared in** `Cosmic/src/graphics/Mesh.h`. A `Mesh` is a first-class GPU geometry resource: a `VertexArray`
+with one vertex buffer in the canonical `MeshVertex` layout (position, normal, uv, tangent), an index buffer, and an
+optional `Submesh` table for per-material ranges. CPU-side geometry travels as `MeshData` (`Vertices`, `Indices`,
+`Submeshes`); the `Build*` functions produce it GL-free and `Create` uploads it.
+
+### `Mesh::Create`
+
+```cpp
+static Ref<Mesh> Create(const std::vector<MeshVertex>& vertices, const std::vector<uint32_t>& indices);
+static Ref<Mesh> Create(const MeshData& data);
+```
+
+**What it does** — uploads geometry to the GPU and returns a live mesh, or `nullptr` on empty input. `indices.size()`
+must be a multiple of 3 and every index must be `< vertices.size()`.
+
+### `Mesh::BuildBox` / `BuildPlane` / `BuildCylinder` / `BuildCone` / `BuildUVSphere`
+
+```cpp
+static MeshData BuildBox(const glm::vec3& size = { 1.0f, 1.0f, 1.0f });
+static MeshData BuildPlane(float width = 1.0f, float depth = 1.0f);
+static MeshData BuildCylinder(float radius = 0.5f, float height = 1.0f, uint32_t segments = 24);
+static MeshData BuildCone(float radius = 0.5f, float height = 1.0f, uint32_t segments = 24);
+static MeshData BuildUVSphere(float radius = 0.5f, uint32_t rings = 16, uint32_t segments = 24);
+```
+
+**What it does** — generates primitive geometry on the CPU (no GL context needed; unit-tested headless). The
+matching `CreateBox` / `CreatePlane` / `CreateCylinder` / `CreateCone` / `CreateUVSphere` wrappers call `Create` on
+the result.
+
+### `Mesh::CreateFromOBJ` / `BuildFromOBJ`
+
+```cpp
+static Ref<Mesh> CreateFromOBJ(const std::string& resolvedPath);
+static MeshData  BuildFromOBJ(const std::string& resolvedPath);
+```
+
+**What it does** — parses a Wavefront OBJ (`v`/`vt`/`vn`/`f`, n-gons fan-triangulated, relative indices allowed;
+materials, groups and smoothing ignored). `BuildFromOBJ` is the pure parse and returns empty data on failure;
+`CreateFromOBJ` uploads it and returns `nullptr` with a logged error on parse/IO failure. Pass a real disk path —
+resolve `project://` URIs with `FileSystem::Resolve` first.
+
+### Accessors
+
+`GetVertexArray()`, `GetVertexCount()`, `GetIndexCount()`, `GetSubmeshes()` / `HasSubmeshes()` (per-material
+ranges; empty means one material for the whole mesh) and `GetMaterialSlotCount()` (max `MaterialIndex + 1`, or 0
+without a submesh table — the Inspector's Materials list length).
+
+---
+
 ## `BindingPoints`
 
 Declared in `Cosmic/src/renderer/BindingPoints.h`, namespace `Cosmic::Bindings`. **The single source
@@ -2414,7 +2473,7 @@ layout(std140, binding = 1) uniform CameraBlock { mat4 u_ViewProjection; vec4 u_
 *See also:* [`../guide/materials-and-shaders.md`](../guide/materials-and-shaders.md) (the guide —
 worked examples, the shader-preprocessor contract, `.cmat` authoring, material slots) ·
 [rendering-2d.md](rendering-2d.md) (`Renderer2D`, whose flush is where 2D materials are read) ·
-[rendering-3d.md](rendering-3d.md) (`Renderer3D`, `Mesh`, `Model`, `InstanceSet`, the submission
+[rendering-3d.md](../parked-3d/reference/rendering-3d.md) (parked 3D) (`Renderer3D`, `Mesh`, `Model`, `InstanceSet`, the submission
 queue) · [rendering-pipeline.md](rendering-pipeline.md) (`SceneRenderer`, `PostProcessStack`,
 `EnvironmentMap`, `ShadowMap` — the systems that consume most of the reserved bindings) ·
 [cameras.md](cameras.md#gizmo) (`Gizmo`, which lives under `graphics/` but is documented there) ·
@@ -2425,6 +2484,7 @@ queue) · [rendering-pipeline.md](rendering-pipeline.md) (`SceneRenderer`, `Post
 
 ---
 *Changelog:*
+- 2026-09-20 — **AP-D1**: `Mesh` resource surface routed here from the parked 3D Rendering chapter.
 - 2026-07-26 — **D8**: chapter written from the headers. Scope expanded with `graphics/MaterialAsset.h`
   (D61 integration). `BindingPoints` registry and the `Material::Clone` / deferred-read contract
   established here as the single home other chapters link.

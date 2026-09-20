@@ -1,5 +1,7 @@
 # Pluggable Physics Backends — How It Works
 
+> **History (2026-09-20, App Platform AP-D1).** This chapter was written for the two-configuration engine (Phase 29) and cites `Projects/Frontier`, `Projects/Engine3DDemo`, `Projects/ForgeIsle`, `Projects/ViperSim` or `#ifndef COSMIC_2D_ONLY` fences as worked examples. `main` is now the 2D-only trunk (D-PURGE): those projects, the fences and the `engine-2d` branch are gone from it and survive only on `engine-3d` (`0e8894b`, tag `cosmic-pre-2d-2026-09-16`), so read such mentions and their `file:line` references as historical. The current exemplars are the template projects, `Projects/PendulumLab`, `Projects/AnalysisSample` and `Projects/SF_Telem`; the trunk policy is in the root README 1.6 and [`../parked-3d/systems/build-2d-3d-split.md`](../parked-3d/systems/build-2d-3d-split.md) (parked 3D) records what the split was.
+
 **One-liner:** `PhysicsWorld` is a dispatcher, not a simulator — it forwards every call to one
 `IPhysicsBackend` resolved by name at `Init`, so an app can register and select its own physics
 implementation without a single call site moving.
@@ -398,7 +400,7 @@ handles; it never sees a component, a registry, or an `Entity`.
 
 The 3D-geometry collider paths inside `ScenePhysics.cpp` (mesh colliders, terrain heightfields,
 voxel chunk bodies) are fenced out of the 2D engine — see
-[`build-2d-3d-split.md`](build-2d-3d-split.md) §4.3. A backend never has to implement them; it
+[`build-2d-3d-split.md`](../parked-3d/systems/build-2d-3d-split.md) (parked 3D) §4.3. A backend never has to implement them; it
 simply never receives those shape kinds in the 2D configuration.
 
 ---
@@ -466,7 +468,7 @@ against it.
 *See also:* [`../reference/physics.md`](../reference/physics.md) (per-call reference) ·
 [`../guide/physics.md`](../guide/physics.md) (the guide chapter — authoring physics, and the
 usage-level view of swapping a backend) ·
-[`build-2d-3d-split.md`](build-2d-3d-split.md) (why physics is shared by both engine
+[`build-2d-3d-split.md`](../parked-3d/systems/build-2d-3d-split.md) (parked 3D) (why physics is shared by both engine
 configurations) · [`../design/modularity-audit.md`](../design/modularity-audit.md) §G3 ·
 [`../plans/28-phase29-engine-split-plan.md`](../plans/archive/28-phase29-engine-split-plan.md) §6.
 

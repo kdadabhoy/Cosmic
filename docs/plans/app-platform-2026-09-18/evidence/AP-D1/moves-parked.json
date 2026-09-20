@@ -1,0 +1,15 @@
+{
+ "docs/guide/rendering-3d.md": "docs/parked-3d/guide/rendering-3d.md",
+ "docs/guide/voxels.md": "docs/parked-3d/guide/voxels.md",
+ "docs/guide/navigation-and-ai.md": "docs/parked-3d/guide/navigation-and-ai.md",
+ "docs/guide/animation.md": "docs/parked-3d/guide/animation.md",
+ "docs/guide/world-systems.md": "docs/parked-3d/guide/world-systems.md",
+ "docs/reference/rendering-3d.md": "docs/parked-3d/reference/rendering-3d.md",
+ "docs/reference/world-systems.md": "docs/parked-3d/reference/world-systems.md",
+ "docs/systems/rendering-3d.md": "docs/parked-3d/systems/rendering-3d.md",
+ "docs/systems/terrain.md": "docs/parked-3d/systems/terrain.md",
+ "docs/systems/water.md": "docs/parked-3d/systems/water.md",
+ "docs/systems/particles.md": "docs/parked-3d/systems/particles.md",
+ "docs/systems/build-2d-3d-split.md": "docs/parked-3d/systems/build-2d-3d-split.md",
+ "docs/guide/lighting-and-environment.md": "docs/guide/lighting-2d.md"
+}

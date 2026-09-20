@@ -1,14 +1,16 @@
 # 3D Renderer — How It Works
 
+> **PARKED 3D — not on the trunk.** This chapter documents code that lives only on the `engine-3d` branch (`0e8894b`, tag `cosmic-pre-2d-2026-09-16`). The 2D trunk (`main`) no longer builds or ships it (D-PURGE, 2026-09-18). Kept for when 3D resumes.
+
 > **STATUS: SKELETON** — to be filled by work order **D28** in
-> [`docs/plans/archive/12-documentation-plan.md`](../plans/archive/12-documentation-plan.md).
-> Format + writing bar: [systems/README.md](README.md#document-format-mandatory--every-explainer-uses-this-shape).
+> [`docs/plans/archive/12-documentation-plan.md`](../../plans/archive/12-documentation-plan.md).
+> Format + writing bar: [systems/README.md](../../systems/README.md#document-format-mandatory--every-explainer-uses-this-shape).
 
 **One-liner:** `DrawMesh` doesn't draw — it *submits*. The renderer culls against the camera
 frustum, sorts by a packed key (shader → material → mesh → depth), collapses identical runs
 into instanced draws, and only then touches the GPU.
 **Source:** `Cosmic/src/renderer/Renderer3D.*`, `renderer/RenderQueue.h`, `renderer/InstanceSet.*`, `math/Frustum.h`
-**API Reference:** [../reference/rendering-3d.md](../reference/rendering-3d.md) · **Guide:** [`../guide/rendering-3d.md`](../guide/rendering-3d.md) · **Design spec:** [`../design/frame-lifecycle.md`](../design/frame-lifecycle.md)
+**API Reference:** [../reference/rendering-3d.md](../reference/rendering-3d.md) · **Guide:** [`../guide/rendering-3d.md`](../guide/rendering-3d.md) · **Design spec:** [`../design/frame-lifecycle.md`](../../design/frame-lifecycle.md)
 
 > **The guide chapter landed first (D54).** [`../guide/rendering-3d.md`](../guide/rendering-3d.md)
 > already carries **DG-7**, the cull/sort/instance walkthrough, the material-read-at-flush rule with

@@ -1,5 +1,7 @@
 # Cameras & Viewport Navigation — Guide
 
+> **History (2026-09-20, App Platform AP-D1).** This chapter was written for the two-configuration engine (Phase 29) and cites `Projects/Frontier`, `Projects/Engine3DDemo`, `Projects/ForgeIsle`, `Projects/ViperSim` or `#ifndef COSMIC_2D_ONLY` fences as worked examples. `main` is now the 2D-only trunk (D-PURGE): those projects, the fences and the `engine-2d` branch are gone from it and survive only on `engine-3d` (`0e8894b`, tag `cosmic-pre-2d-2026-09-16`), so read such mentions and their `file:line` references as historical. The current exemplars are the template projects, `Projects/PendulumLab`, `Projects/AnalysisSample` and `Projects/SF_Telem`; the trunk policy is in the root README 1.6 and [`../parked-3d/systems/build-2d-3d-split.md`](../parked-3d/systems/build-2d-3d-split.md) (parked 3D) records what the split was.
+
 **What this covers:** the `Camera` interface and its two concrete cameras (`OrthographicCamera`,
 `PerspectiveCamera`), all four controllers — `Camera2DController`, `OrthographicCameraController`,
 `OrbitCameraController` (`NavStyle`, `ViewPreset`, frame-and-snap), `FlyCameraController` — and then
@@ -20,13 +22,7 @@ only controller missing) and `scene/ScenePicker.h`'s row points at
 [../reference/ecs.md](../reference/ecs.md), not at the camera chapter.
 **How it works:** [../systems/cameras-navigation.md](../systems/cameras-navigation.md)
 *(skeleton — D27)*
-**Configuration:** **mostly both.** Every camera and every controller ships in the 2D engine build —
-`Cosmic/CMakeLists.txt:192-198` deliberately keeps `Camera`, `PerspectiveCamera`,
-`OrthographicCamera`, `Camera2DController`, `OrbitCameraController` and `FlyCameraController`, and
-`Gizmo` survives too. **`NavigationCube` and `ScenePicker` do not** — both are filtered out of the
-2D build (`:198`, `:202`) because they draw through `Renderer3D`. See
-[Two things a 2D build does not have](#two-things-a-2d-build-does-not-have) and
-[`../systems/build-2d-3d-split.md`](../systems/build-2d-3d-split.md).
+**Configuration:** 2D trunk. `main` builds one engine, 2D-only (since 2026-09-18, D-PURGE); `-DCOSMIC_2D_ONLY=ON` is an always-on compatibility flag and `OFF` is rejected at configure. History: the two-configuration build this line used to describe is [parked](../parked-3d/systems/build-2d-3d-split.md) (parked 3D).
 
 > The old root README §16 covered `OrthographicCameraController` and `OrthographicCamera` and
 > nothing else — a grep of all 4,875 lines returned **zero** hits for `PerspectiveCamera`,
@@ -789,5 +785,5 @@ controller header.
 - [`../reference/cameras.md`](../reference/cameras.md) — per-call signatures *(skeleton — D14)*
 - [`../systems/cameras-navigation.md`](../systems/cameras-navigation.md) — internals and rationale
   *(skeleton — D27)*
-- [`../systems/build-2d-3d-split.md`](../systems/build-2d-3d-split.md) — what each engine
+- [`../systems/build-2d-3d-split.md`](../parked-3d/systems/build-2d-3d-split.md) (parked 3D) — what each engine
   configuration ships

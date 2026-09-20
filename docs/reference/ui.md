@@ -1,5 +1,7 @@
 # API Reference — UI & Theming
 
+> **History (2026-09-20, App Platform AP-D1).** This chapter was written for the two-configuration engine (Phase 29) and cites `Projects/Frontier`, `Projects/Engine3DDemo`, `Projects/ForgeIsle`, `Projects/ViperSim` or `#ifndef COSMIC_2D_ONLY` fences as worked examples. `main` is now the 2D-only trunk (D-PURGE): those projects, the fences and the `engine-2d` branch are gone from it and survive only on `engine-3d` (`0e8894b`, tag `cosmic-pre-2d-2026-09-16`), so read such mentions and their `file:line` references as historical. The current exemplars are the template projects, `Projects/PendulumLab`, `Projects/AnalysisSample` and `Projects/SF_Telem`; the trunk policy is in the root README 1.6 and [`../parked-3d/systems/build-2d-3d-split.md`](../parked-3d/systems/build-2d-3d-split.md) (parked 3D) records what the split was.
+
 > **STATUS: WRITTEN** — work order **D18** (2026-07-26) in
 > [`docs/plans/archive/12-documentation-plan.md`](../plans/archive/12-documentation-plan.md).
 > Entry format: [reference/README.md → Entry format](README.md#entry-format-mandatory--copy-this-shape).
@@ -55,7 +57,7 @@ Systems explainer: [ui-theming](../systems/ui-theming.md) *(skeleton — D34)*.
 `camera/NavigationCube`, `scene/`, `reflect/TypeRegistry3D` and `assets/MeshImport` — it touches
 nothing under `layers/` or `ui/`. So neither the ³ᴰ (fenced → compile error) nor the ³ᴰ⁺ (unfenced,
 `.cpp` dropped → link error) failure applies to anything documented here. Background:
-[`../systems/build-2d-3d-split.md`](../systems/build-2d-3d-split.md), README §1.6.
+[`../systems/build-2d-3d-split.md`](../parked-3d/systems/build-2d-3d-split.md) (parked 3D), README §1.6.
 
 > **No pre-condition in this chapter is enforced by an assertion.** `CS_ASSERT` / `CS_CORE_ASSERT`
 > are compiled out in *every* configuration, and no file in this scope uses them at all. Where a

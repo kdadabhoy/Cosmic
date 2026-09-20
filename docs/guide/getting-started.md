@@ -1,5 +1,7 @@
 # Getting Started — Guide
 
+> **History (2026-09-20, App Platform AP-D1).** This chapter was written for the two-configuration engine (Phase 29) and cites `Projects/Frontier`, `Projects/Engine3DDemo`, `Projects/ForgeIsle`, `Projects/ViperSim` or `#ifndef COSMIC_2D_ONLY` fences as worked examples. `main` is now the 2D-only trunk (D-PURGE): those projects, the fences and the `engine-2d` branch are gone from it and survive only on `engine-3d` (`0e8894b`, tag `cosmic-pre-2d-2026-09-16`), so read such mentions and their `file:line` references as historical. The current exemplars are the template projects, `Projects/PendulumLab`, `Projects/AnalysisSample` and `Projects/SF_Telem`; the trunk policy is in the root README 1.6 and [`../parked-3d/systems/build-2d-3d-split.md`](../parked-3d/systems/build-2d-3d-split.md) (parked 3D) records what the split was.
+
 **What this covers:** What Cosmic is, first-time setup, building the SDK, the two kinds of project
 you can create, the tree layout, the minimal plugin skeleton, and the two build configurations.
 **Source of truth:** `Runtime/Main.cpp`, root `CMakeLists.txt`, `Cosmic/CMakeLists.txt`,
@@ -9,8 +11,7 @@ you can create, the tree layout, the minimal plugin skeleton, and the two build 
 **API Reference:** [../reference/core.md](../reference/core.md) · **How it works:**
 [../systems/architecture-overview.md](../systems/architecture-overview.md) ·
 [../systems/build-plugin-packaging.md](../systems/build-plugin-packaging.md)
-**Configuration:** both — the differences are called out in
-[Pick a build configuration](#pick-a-build-configuration)
+**Configuration:** 2D trunk. `main` builds one engine, 2D-only (since 2026-09-18, D-PURGE); `-DCOSMIC_2D_ONLY=ON` is an always-on compatibility flag and `OFF` is rejected at configure. History: the two-configuration build this line used to describe is [parked](../parked-3d/systems/build-2d-3d-split.md) (parked 3D).
 
 ---
 
@@ -550,7 +551,7 @@ modules in the process agree on one active project.
 Cosmic builds **two engines from one source tree**, selected by `COSMIC_2D_ONLY`. The full table —
 what each configuration ships, which branch and worktree it lives on, and the recorded build times
 — is root README [§1.6](../../README.md#16-the-two-engine-configurations), and the mechanism is
-explained in [`../systems/build-2d-3d-split.md`](../systems/build-2d-3d-split.md). What you need on
+explained in [`../systems/build-2d-3d-split.md`](../parked-3d/systems/build-2d-3d-split.md) (parked 3D). What you need on
 day one:
 
 ```bat
@@ -690,6 +691,6 @@ empty and keeps the shared root; a Starforge-packaged app writes `boot.cfg` and 
   reference. [§1.6](../../README.md#16-the-two-engine-configurations) — the two configurations.
 - [`../systems/architecture-overview.md`](../systems/architecture-overview.md) ·
   [`../systems/build-plugin-packaging.md`](../systems/build-plugin-packaging.md) ·
-  [`../systems/build-2d-3d-split.md`](../systems/build-2d-3d-split.md)
+  [`../systems/build-2d-3d-split.md`](../parked-3d/systems/build-2d-3d-split.md) (parked 3D)
 - [`../reference/core.md`](../reference/core.md) — `Application`, `Layer`, `Window`, `Log`, the
   plugin boundary.

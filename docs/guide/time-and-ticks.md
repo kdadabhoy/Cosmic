@@ -1,5 +1,7 @@
 # Time & Ticks — Guide
 
+> **History (2026-09-20, App Platform AP-D1).** This chapter was written for the two-configuration engine (Phase 29) and cites `Projects/Frontier`, `Projects/Engine3DDemo`, `Projects/ForgeIsle`, `Projects/ViperSim` or `#ifndef COSMIC_2D_ONLY` fences as worked examples. `main` is now the 2D-only trunk (D-PURGE): those projects, the fences and the `engine-2d` branch are gone from it and survive only on `engine-3d` (`0e8894b`, tag `cosmic-pre-2d-2026-09-16`), so read such mentions and their `file:line` references as historical. The current exemplars are the template projects, `Projects/PendulumLab`, `Projects/AnalysisSample` and `Projects/SF_Telem`; the trunk policy is in the root README 1.6 and [`../parked-3d/systems/build-2d-3d-split.md`](../parked-3d/systems/build-2d-3d-split.md) (parked 3D) records what the split was.
+
 **What this covers:** `Timestep`; the four clocks the engine keeps; the global time scale; `Pause()`
 versus `SetTimeScale(0)`; per-layer local time; and the fixed-versus-variable dual-rate model that
 physics and every deterministic simulation depend on.
@@ -8,7 +10,7 @@ physics and every deterministic simulation depend on.
 **API Reference:** [../reference/core.md](../reference/core.md) ·
 [../reference/physics.md](../reference/physics.md) · **How it works:**
 [../systems/core-runtime.md](../systems/core-runtime.md)
-**Configuration:** both — the time model is identical in the 3D and 2D engine builds.
+**Configuration:** 2D trunk. `main` builds one engine, 2D-only (since 2026-09-18, D-PURGE); `-DCOSMIC_2D_ONLY=ON` is an always-on compatibility flag and `OFF` is rejected at configure. History: the two-configuration build this line used to describe is [parked](../parked-3d/systems/build-2d-3d-split.md) (parked 3D).
 
 Cosmic runs **two update rates in the same frame**. A variable-rate pass tracks the display, and a
 fixed-rate pass advances simulation in constant-size steps. On top of that sit a global speed

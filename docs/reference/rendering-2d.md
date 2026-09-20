@@ -1,5 +1,7 @@
 # API Reference — 2D Rendering
 
+> **History (2026-09-20, App Platform AP-D1).** This chapter was written for the two-configuration engine (Phase 29) and cites `Projects/Frontier`, `Projects/Engine3DDemo`, `Projects/ForgeIsle`, `Projects/ViperSim` or `#ifndef COSMIC_2D_ONLY` fences as worked examples. `main` is now the 2D-only trunk (D-PURGE): those projects, the fences and the `engine-2d` branch are gone from it and survive only on `engine-3d` (`0e8894b`, tag `cosmic-pre-2d-2026-09-16`), so read such mentions and their `file:line` references as historical. The current exemplars are the template projects, `Projects/PendulumLab`, `Projects/AnalysisSample` and `Projects/SF_Telem`; the trunk policy is in the root README 1.6 and [`../parked-3d/systems/build-2d-3d-split.md`](../parked-3d/systems/build-2d-3d-split.md) (parked 3D) records what the split was.
+
 > **STATUS: WRITTEN** — work order **D9** (2026-07-26) in
 > [`docs/plans/archive/12-documentation-plan.md`](../plans/archive/12-documentation-plan.md).
 > Entry format: [reference/README.md → Entry format](README.md#entry-format-mandatory--copy-this-shape).
@@ -31,7 +33,7 @@ material read-at-flush semantics all live in
 Every class in this chapter ships in **both** engine configurations. None of these headers is
 fenced in `Cosmic.h`, and `Cosmic/CMakeLists.txt`'s 2D `list(FILTER)` block removes none of their
 `.cpp` files — `Renderer2D`, `RenderPass`, `SubTexture2D`, `Font` and `Light2DRenderer` are shared
-source. Background: [build-2d-3d-split](../systems/build-2d-3d-split.md).
+source. Background: [build-2d-3d-split](../parked-3d/systems/build-2d-3d-split.md) (parked 3D).
 
 `Renderer2D` is an **all-static service over one file-scope `Renderer2DData s_Data`**
 (`Renderer2D.cpp:184`). There is no instance to own, no handle to pass around, and no reentrancy:
@@ -1135,7 +1137,7 @@ void MyLayer::OnUpdate(float ts)
 **Notes & pitfalls**
 - **Nothing in the engine calls it.** Miss it and every counter is a lifetime total.
 - `Renderer3D`'s counters behave differently again — always on, and also never reset by the engine.
-  See [rendering-3d.md](rendering-3d.md) *(D10)*.
+  See [rendering-3d.md](../parked-3d/reference/rendering-3d.md) (parked 3D) *(D10)*.
 
 ### `Renderer2D::GetStats`
 
@@ -1815,11 +1817,11 @@ path) · [`../guide/game-ui.md`](../guide/game-ui.md) (canvas UI, which composit
 `FrameBuffer`, `RenderCommand`, the `BindingPoints` registry — D8) ·
 [cameras.md](cameras.md) (`Camera`, `OrthographicCamera`, `Camera2DController`) ·
 [ecs.md](ecs.md) (`SpriteRendererComponent`, `TilemapComponent`, `Light2DComponent`,
-`EnvironmentComponent::Ambient2D`) · [rendering-3d.md](rendering-3d.md) (`Renderer3D`, whose
+`EnvironmentComponent::Ambient2D`) · [rendering-3d.md](../parked-3d/reference/rendering-3d.md) (parked 3D) (`Renderer3D`, whose
 `BeginScene` and stats behave differently on purpose) ·
 [rendering-pipeline.md](rendering-pipeline.md) (`SceneRenderer`, where 2D pixels actually land) ·
 [ui.md](ui.md) (`UI::Fonts`, the ImGui text path) ·
-[build-2d-3d-split](../systems/build-2d-3d-split.md) (what each configuration ships).
+[build-2d-3d-split](../parked-3d/systems/build-2d-3d-split.md) (parked 3D) (what each configuration ships).
 
 ---
 *Changelog:*

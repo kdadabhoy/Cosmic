@@ -1,5 +1,7 @@
 # Serial & Telemetry — Guide
 
+> **History (2026-09-20, App Platform AP-D1).** This chapter was written for the two-configuration engine (Phase 29) and cites `Projects/Frontier`, `Projects/Engine3DDemo`, `Projects/ForgeIsle`, `Projects/ViperSim` or `#ifndef COSMIC_2D_ONLY` fences as worked examples. `main` is now the 2D-only trunk (D-PURGE): those projects, the fences and the `engine-2d` branch are gone from it and survive only on `engine-3d` (`0e8894b`, tag `cosmic-pre-2d-2026-09-16`), so read such mentions and their `file:line` references as historical. The current exemplars are the template projects, `Projects/PendulumLab`, `Projects/AnalysisSample` and `Projects/SF_Telem`; the trunk policy is in the root README 1.6 and [`../parked-3d/systems/build-2d-3d-split.md`](../parked-3d/systems/build-2d-3d-split.md) (parked 3D) records what the split was.
+
 **What this covers:** talking to a device over a COM port (`SerialPort`, and the `SerialLink`
 service that manages it for you), framing a binary protocol with COBS + CRC16, defining telemetry
 channels and recording them from any thread, exporting a session to disk, replaying it with
@@ -18,8 +20,7 @@ service the panel plots against.
 *(skeleton — D17 unwritten; this chapter is the client-facing source until it lands)* ·
 **How it works:** [`../systems/serial-telemetry.md`](../systems/serial-telemetry.md)
 *(skeleton — D33)*
-**Configuration:** **both.** Every header here is included by `Cosmic.h` unfenced and compiles
-identically on the 2D and 3D engines.
+**Configuration:** 2D trunk. `main` builds one engine, 2D-only (since 2026-09-18, D-PURGE); `-DCOSMIC_2D_ONLY=ON` is an always-on compatibility flag and `OFF` is rejected at configure. History: the two-configuration build this line used to describe is [parked](../parked-3d/systems/build-2d-3d-split.md) (parked 3D).
 
 > **`SerialPort` is Windows-only.** It is built directly on Win32 — `CreateFileA` with
 > `FILE_FLAG_OVERLAPPED`, `WaitForMultipleObjects`, and a registry walk of

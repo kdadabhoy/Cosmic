@@ -1,5 +1,7 @@
 # Scripting — Guide
 
+> **History (2026-09-20, App Platform AP-D1).** This chapter was written for the two-configuration engine (Phase 29) and cites `Projects/Frontier`, `Projects/Engine3DDemo`, `Projects/ForgeIsle`, `Projects/ViperSim` or `#ifndef COSMIC_2D_ONLY` fences as worked examples. `main` is now the 2D-only trunk (D-PURGE): those projects, the fences and the `engine-2d` branch are gone from it and survive only on `engine-3d` (`0e8894b`, tag `cosmic-pre-2d-2026-09-16`), so read such mentions and their `file:line` references as historical. The current exemplars are the template projects, `Projects/PendulumLab`, `Projects/AnalysisSample` and `Projects/SF_Telem`; the trunk policy is in the root README 1.6 and [`../parked-3d/systems/build-2d-3d-split.md`](../parked-3d/systems/build-2d-3d-split.md) (parked 3D) records what the split was.
+
 **What this covers:** Cosmic's C++ script tier — `ScriptableEntity` and every lifecycle callback,
 declaring Inspector fields, registering a game module with the `CS_*` macros, who owns and drives
 the `ScriptHost`, the `SystemScript` tier for class-of-entity logic, hot reload and why it only
@@ -18,10 +20,7 @@ works in edit mode, and all eight script proxies:
 `Character()` proxies) — the scripting headers have **no reference chapter yet**; this chapter and
 the headers are the current source · **How it works:**
 [../systems/ecs-scene.md](../systems/ecs-scene.md)
-**Configuration:** both — the script tier itself, and `Physics()`, `Character()`, `Flow()`,
-`Signals()` and `Telemetry()`, exist in every build. **`Nav()`, `Animator()` and `Voxels()` are 3D
-only** (see [Which proxies a 2D build has](#which-proxies-a-2d-build-has) and
-[../systems/build-2d-3d-split.md](../systems/build-2d-3d-split.md)).
+**Configuration:** 2D trunk. `main` builds one engine, 2D-only (since 2026-09-18, D-PURGE); `-DCOSMIC_2D_ONLY=ON` is an always-on compatibility flag and `OFF` is rejected at configure. History: the two-configuration build this line used to describe is [parked](../parked-3d/systems/build-2d-3d-split.md) (parked 3D).
 
 A Cosmic script is **a real C++ class**, compiled into your project's game DLL, deriving from
 `Cosmic::ScriptableEntity`. There is no embedded VM and no binding layer: inside a callback you have
@@ -561,7 +560,7 @@ if (auto wander = Nav().RandomPointAround(home, 20.0f, rng)) Nav().SetTarget(*wa
 
 Arrival is also broadcast as the `nav.arrived` signal on the scene bus — catch it in `OnSignal`
 rather than polling if that reads better. The queries are usable by any script, agent or not.
-See [`navigation-and-ai.md`](navigation-and-ai.md).
+See [`navigation-and-ai.md`](../parked-3d/guide/navigation-and-ai.md) (parked 3D).
 
 ### `Animator()` — 3D only
 
@@ -575,7 +574,7 @@ const std::string clip = Animator().CurrentClip();
 
 Clip paths are `"file#clip"`. Every call is a no-op without an `AnimatorComponent`. Call
 `CrossfadeTo` from `OnUpdate`: both hosts advance animators *after* scripts, so the fade lands the
-same frame. See [`animation.md`](animation.md).
+same frame. See [`animation.md`](../parked-3d/guide/animation.md) (parked 3D).
 
 ### `Voxels()` — 3D only
 
@@ -592,7 +591,7 @@ Cosmic::VoxelRayHit h = Voxels().RayCast(origin, dir, maxDist);
 `Get`/`Set` take **world voxel coordinates**; `RayCast`/`Break`/`Place` take a world ray. Edits mark
 chunks dirty and the render + collision rebuild picks them up next frame. Everything is a safe no-op
 before the volume is initialised (the first `Scene::SyncVoxelVolumes`) or with no voxel entity in
-the scene. `VoxelDigger.h` is the shipped example. See [`voxels.md`](voxels.md).
+the scene. `VoxelDigger.h` is the shipped example. See [`voxels.md`](../parked-3d/guide/voxels.md) (parked 3D).
 
 ### Which proxies a 2D build has
 
@@ -713,10 +712,10 @@ only. Copy what you keep.
   colliders, the character controller, queries, contact events.
 - [`flow-and-story.md`](flow-and-story.md) — `.cflow` variables and guards behind `Flow()`, and the
   `EventBus` signals behind `Signals()`.
-- [`navigation-and-ai.md`](navigation-and-ai.md) · [`animation.md`](animation.md) ·
-  [`voxels.md`](voxels.md) — the three 3D-only subsystems behind `Nav()`, `Animator()`, `Voxels()`.
+- [`navigation-and-ai.md`](../parked-3d/guide/navigation-and-ai.md) (parked 3D) · [`animation.md`](../parked-3d/guide/animation.md) (parked 3D) ·
+  [`voxels.md`](../parked-3d/guide/voxels.md) (parked 3D) — the three 3D-only subsystems behind `Nav()`, `Animator()`, `Voxels()`.
 - [`serial-and-telemetry.md`](serial-and-telemetry.md) — the telemetry store behind `Telemetry()`.
 - [`time-and-ticks.md`](time-and-ticks.md) — variable vs fixed timestep, and why pause freezes
   `OnFixedUpdate` without a guard in your script.
-- [`../systems/build-2d-3d-split.md`](../systems/build-2d-3d-split.md) — the configuration rules
+- [`../systems/build-2d-3d-split.md`](../parked-3d/systems/build-2d-3d-split.md) (parked 3D) — the configuration rules
   behind the fenced proxies.

@@ -1,13 +1,15 @@
 # The 2D / 3D Build Split — How It Works
 
+> **PARKED 3D — not on the trunk.** This chapter documents code that lives only on the `engine-3d` branch (`0e8894b`, tag `cosmic-pre-2d-2026-09-16`). The 2D trunk (`main`) no longer builds or ships it (D-PURGE, 2026-09-18). Kept for when 3D resumes.
+
 **One-liner:** one source tree builds two engines — the full 3D engine and a pure-2D engine that
 never compiles terrain, voxels, water, navigation, particles or the 3D renderer — selected by a
 single CMake flag, with **byte-identical tracked files on both branches**.
 **Source:** root `CMakeLists.txt`, `Cosmic/CMakeLists.txt`, `CMakePresets.json`, `build_2d.bat` / `build_3d.bat` / `build_all_2d.bat`, `Projects/Starforge/CMakeLists.txt`, `tests/CMakeLists.txt`
-**API Reference:** README [§1.5](../../README.md#15-command-reference--every-command) (the command contract) · **Guide:** [`../guide/building-and-shipping.md`](../guide/building-and-shipping.md), root README [§1.6](../../README.md#16-the-two-engine-configurations)
+**API Reference:** README [§1.5](../../../README.md#15-command-reference--every-command) (the command contract) · **Guide:** [`../guide/building-and-shipping.md`](../../guide/building-and-shipping.md), root README [§1.6](../../../README.md#16-the-two-engine-configurations)
 
 > Written by work order **D41** (Phase 29 W10, 2026-07-25). The design record and the full
-> work-order history are in [`../plans/28-phase29-engine-split-plan.md`](../plans/archive/28-phase29-engine-split-plan.md);
+> work-order history are in [`../plans/28-phase29-engine-split-plan.md`](../../plans/archive/28-phase29-engine-split-plan.md);
 > this document is the standing explainer.
 
 ---
@@ -202,7 +204,7 @@ Two consequences follow from that:
   `DrawLine`, alongside the existing 2D pixel grid.
 - **Physics is where the "write your own" story lives.** `COSMIC_WITH_JOLT` is orthogonal to
   `COSMIC_2D_ONLY`; a 2D app can turn Jolt off entirely and register its own XY solver. See
-  [`physics-backends.md`](physics-backends.md).
+  [`physics-backends.md`](../../systems/physics-backends.md).
 
 `SceneRenderer` also stays outside the fence. Both configurations composite through the same
 HDR → tonemap → overlay spine; the 3D passes inside it are fenced individually rather than the
@@ -417,7 +419,7 @@ the engine linking and an app can register its own solver.
 
 **Particles are excluded from the 2D build in v1.** `ParticleEmitterComponent` still round-trips
 opaquely, so authored scenes are safe. A 2D-native particle path is future work
-([`../plans/FEATURE-MATRIX.md`](../plans/FEATURE-MATRIX.md)).
+([`../plans/FEATURE-MATRIX.md`](../../plans/FEATURE-MATRIX.md)).
 
 **CI untouched.** GitHub Actions keeps watching `main` with the 3D configuration only. The 2D
 configuration is verified locally, every phase, by the same recipe. Adding a second CI matrix leg
@@ -455,9 +457,9 @@ rounded-up number would have buried.
 
 ---
 
-*See also:* [`physics-backends.md`](physics-backends.md) (the swappable physics seam this phase
-also delivered) · [`build-plugin-packaging.md`](build-plugin-packaging.md) (CMake layout, plugin
-DLLs, packaging) · [`../plans/28-phase29-engine-split-plan.md`](../plans/archive/28-phase29-engine-split-plan.md)
+*See also:* [`physics-backends.md`](../../systems/physics-backends.md) (the swappable physics seam this phase
+also delivered) · [`build-plugin-packaging.md`](../../systems/build-plugin-packaging.md) (CMake layout, plugin
+DLLs, packaging) · [`../plans/28-phase29-engine-split-plan.md`](../../plans/archive/28-phase29-engine-split-plan.md)
 (the full work-order record, including the deviation log).
 
 *Changelog:*

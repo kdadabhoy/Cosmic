@@ -1,5 +1,7 @@
 # Physics — Guide
 
+> **History (2026-09-20, App Platform AP-D1).** This chapter was written for the two-configuration engine (Phase 29) and cites `Projects/Frontier`, `Projects/Engine3DDemo`, `Projects/ForgeIsle`, `Projects/ViperSim` or `#ifndef COSMIC_2D_ONLY` fences as worked examples. `main` is now the 2D-only trunk (D-PURGE): those projects, the fences and the `engine-2d` branch are gone from it and survive only on `engine-3d` (`0e8894b`, tag `cosmic-pre-2d-2026-09-16`), so read such mentions and their `file:line` references as historical. The current exemplars are the template projects, `Projects/PendulumLab`, `Projects/AnalysisSample` and `Projects/SF_Telem`; the trunk policy is in the root README 1.6 and [`../parked-3d/systems/build-2d-3d-split.md`](../parked-3d/systems/build-2d-3d-split.md) (parked 3D) records what the split was.
+
 **What this covers:** authoring physics in a scene — `RigidBodyComponent` and the three motion
 types, the collider set (box / sphere / capsule, plus the 3D-only mesh and terrain colliders),
 triggers, the category/mask collision filter, the `CharacterControllerComponent` walk model,
@@ -17,7 +19,7 @@ specified against, and swapping the whole simulator for your own.
 signature, every failure mode · **How it works:**
 [../systems/physics-backends.md](../systems/physics-backends.md) — why `PhysicsWorld` is a
 dispatcher, and the full backend contract
-**Configuration:** **both.**
+**Configuration:** 2D trunk. `main` builds one engine, 2D-only (since 2026-09-18, D-PURGE); `-DCOSMIC_2D_ONLY=ON` is an always-on compatibility flag and `OFF` is rejected at configure. History: the two-configuration build this line used to describe is [parked](../parked-3d/systems/build-2d-3d-split.md) (parked 3D).
 
 > ## Physics ships in *both* engine builds
 >
@@ -41,7 +43,7 @@ dispatcher, and the full backend contract
 > `CharacterControllerComponent`, all four contact callbacks, every query, the backend registry —
 > is dimension-agnostic. `tests/test_physics_2d.cpp` is the proof, and
 > [Physics in a 2D game](#physics-in-a-2d-game) below is the section for it. See
-> [`../systems/build-2d-3d-split.md`](../systems/build-2d-3d-split.md) §4.3.
+> [`../systems/build-2d-3d-split.md`](../parked-3d/systems/build-2d-3d-split.md) (parked 3D) §4.3.
 
 **This chapter is the task-oriented half.** *"Make a crate fall", "make a character climb stairs",
 "make a trigger fire once."* Per-call detail — signatures, defaults, what each call returns when it
@@ -337,7 +339,7 @@ becomes a static collision surface. It has no fields at all. Three behaviours wo
 
 Voxel volumes get collision automatically — one static mesh body per resident chunk, rebuilt when a
 chunk goes dirty (budget 8 chunk bodies per fixed step). See
-[`voxels.md`](voxels.md#voxel-collision).
+[`voxels.md`](../parked-3d/guide/voxels.md#voxel-collision) (parked 3D).
 
 ---
 
@@ -691,7 +693,7 @@ Three overlays, all on the viewport strip:
 | --- | --- | --- |
 | **Collider gizmos** | authored collider wireframes (box / sphere / capsule) at the same world transform the runtime bakes | always, edit or Play; both builds |
 | **Physics debug** | live body outlines coloured by sleep state, plus contact points | Play only · **Debug config only** (needs `JPH_DEBUG_RENDERER`) · 3D build only |
-| **Nav overlay** | the walkable navmesh — see [`navigation-and-ai.md`](navigation-and-ai.md) | 3D build only |
+| **Nav overlay** | the walkable navmesh — see [`navigation-and-ai.md`](../parked-3d/guide/navigation-and-ai.md) (parked 3D) | 3D build only |
 
 `PhysicsWorld::GetStatistics()` gives you `BodyCount` and `ActiveBodies` (awake, non-sleeping) cheap
 enough to poll every frame. `BodyCount == 0` right after `OnPhysicsStart` is the tell-tale for
@@ -865,7 +867,7 @@ and [`CharacterController::Tick`](../reference/physics.md#charactercontrollertic
 
 **Systems** — [`../systems/physics-backends.md`](../systems/physics-backends.md): why the
 dispatcher shape was chosen, the complete `IPhysicsBackend` contract, and the worked `TinyPhysics`
-example. [`../systems/build-2d-3d-split.md`](../systems/build-2d-3d-split.md) §4.3 explains why
+example. [`../systems/build-2d-3d-split.md`](../parked-3d/systems/build-2d-3d-split.md) (parked 3D) §4.3 explains why
 physics is shared and the two geometry-derived colliders are not.
 
 **Guide**
@@ -877,11 +879,11 @@ physics is shared and the two geometry-derived colliders are not.
   itself: why `dt` is constant, what `TimeScale` does to it, and what raising the rate costs.
 - [`scripting.md`](scripting.md) — `ScriptableEntity`, the eight proxies, and where
   `OnFixedUpdate` sits relative to everything else.
-- [`navigation-and-ai.md`](navigation-and-ai.md) — the navmesh is baked from the same collision view
+- [`navigation-and-ai.md`](../parked-3d/guide/navigation-and-ai.md) (parked 3D) — the navmesh is baked from the same collision view
   these components define, through the same `ScenePhysics::BuildColliderDesc`.
-- [`voxels.md`](voxels.md#voxel-collision) — per-chunk static collision, its rebuild budget, and why
+- [`voxels.md`](../parked-3d/guide/voxels.md#voxel-collision) (parked 3D) — per-chunk static collision, its rebuild budget, and why
   a moved volume leaves its collision behind.
-- [`world-systems.md`](world-systems.md) — terrain, and why a scene holds exactly one of them at the
+- [`world-systems.md`](../parked-3d/guide/world-systems.md) (parked 3D) — terrain, and why a scene holds exactly one of them at the
   world origin.
 
 **Tests as executable documentation** — [`tests/test_physics_scene.cpp`](../../tests/test_physics_scene.cpp)

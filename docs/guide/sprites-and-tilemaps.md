@@ -1,5 +1,7 @@
 # Sprites & Tilemaps — Guide
 
+> **History (2026-09-20, App Platform AP-D1).** This chapter was written for the two-configuration engine (Phase 29) and cites `Projects/Frontier`, `Projects/Engine3DDemo`, `Projects/ForgeIsle`, `Projects/ViperSim` or `#ifndef COSMIC_2D_ONLY` fences as worked examples. `main` is now the 2D-only trunk (D-PURGE): those projects, the fences and the `engine-2d` branch are gone from it and survive only on `engine-3d` (`0e8894b`, tag `cosmic-pre-2d-2026-09-16`), so read such mentions and their `file:line` references as historical. The current exemplars are the template projects, `Projects/PendulumLab`, `Projects/AnalysisSample` and `Projects/SF_Telem`; the trunk policy is in the root README 1.6 and [`../parked-3d/systems/build-2d-3d-split.md`](../parked-3d/systems/build-2d-3d-split.md) (parked 3D) records what the split was.
+
 **What this covers:** authoring a 2D game out of **components** rather than draw calls —
 `SpriteRendererComponent` and its three draw modes, the painter list that decides sort order,
 `SpriteAnimationComponent` flipbooks, `TilemapComponent` (atlas layout, the cell array, the
@@ -15,8 +17,7 @@ for you and which parts only exist in code.**
 `camera/Camera2DController.h` and `renderer/Light2DRenderer.h` have **no row in the reference
 manifest at all**, so this chapter is the client-facing source for both.
 **How it works:** [../systems/rendering-2d.md](../systems/rendering-2d.md) *(skeleton — D28)*
-**Configuration:** **both.** Every component and every call below is shared source that compiles
-unfenced in the 3D and 2D engine builds ([`../systems/build-2d-3d-split.md`](../systems/build-2d-3d-split.md)).
+**Configuration:** 2D trunk. `main` builds one engine, 2D-only (since 2026-09-18, D-PURGE); `-DCOSMIC_2D_ONLY=ON` is an always-on compatibility flag and `OFF` is rejected at configure. History: the two-configuration build this line used to describe is [parked](../parked-3d/systems/build-2d-3d-split.md) (parked 3D).
 
 This is the *component* half of 2D. Its sibling, [`rendering-2d.md`](rendering-2d.md), is the
 *immediate-mode* half — `Renderer2D::DrawQuad` and friends, called from a layer. You can use either,
@@ -799,5 +800,5 @@ tilemap.
 - [`materials-and-shaders.md`](materials-and-shaders.md) — the `ActiveMaterial` path
 - [`../reference/ecs.md`](../reference/ecs.md) — component field tables *(skeleton, D13)*
 - [`../reference/rendering-2d.md`](../reference/rendering-2d.md) — per-call signatures *(skeleton, D9)*
-- [`../systems/build-2d-3d-split.md`](../systems/build-2d-3d-split.md) — what each engine
+- [`../systems/build-2d-3d-split.md`](../parked-3d/systems/build-2d-3d-split.md) (parked 3D) — what each engine
   configuration ships

@@ -1,5 +1,7 @@
 # API Reference — Entity Component System
 
+> **History (2026-09-20, App Platform AP-D1).** This chapter was written for the two-configuration engine (Phase 29) and cites `Projects/Frontier`, `Projects/Engine3DDemo`, `Projects/ForgeIsle`, `Projects/ViperSim` or `#ifndef COSMIC_2D_ONLY` fences as worked examples. `main` is now the 2D-only trunk (D-PURGE): those projects, the fences and the `engine-2d` branch are gone from it and survive only on `engine-3d` (`0e8894b`, tag `cosmic-pre-2d-2026-09-16`), so read such mentions and their `file:line` references as historical. The current exemplars are the template projects, `Projects/PendulumLab`, `Projects/AnalysisSample` and `Projects/SF_Telem`; the trunk policy is in the root README 1.6 and [`../parked-3d/systems/build-2d-3d-split.md`](../parked-3d/systems/build-2d-3d-split.md) (parked 3D) records what the split was.
+
 > **STATUS: WRITTEN** — work order **D13** (2026-07-26) in
 > [`docs/plans/archive/12-documentation-plan.md`](../plans/archive/12-documentation-plan.md).
 > Entry format: [reference/README.md → Entry format](README.md#entry-format-mandatory--copy-this-shape).
@@ -119,7 +121,7 @@ you keep.
 **Configuration** — `Scene` itself ships in **both** engine builds. Its implementation is split
 across two translation units: `scene/Scene.cpp` (everything shared) and `scene/Scene3D.cpp` (the 3D
 half), and **`Scene3D.cpp` is excluded from the 2D build** (`Cosmic/CMakeLists.txt:202`). The
-mechanism is [`../systems/build-2d-3d-split.md`](../systems/build-2d-3d-split.md).
+mechanism is [`../systems/build-2d-3d-split.md`](../parked-3d/systems/build-2d-3d-split.md) (parked 3D).
 
 > **Seven `Scene` members are 3D-only but declared *unfenced*.** `OnRender3D` (`Scene.h:238`),
 > `UpdateAnimators` (`:250`), `SyncPrimitiveMeshes` (`:261`), `SyncWorldSystems` (`:273`),
@@ -1497,7 +1499,7 @@ build outright (`Cosmic/CMakeLists.txt:202`), and `Cosmic.h` includes it behind 
 **Naming any of these types in a 2D build is a compile error, not a silent no-op.** In a 3D build, a
 translation unit that names one must `#include "scene/Components3D.h"` — `Components.h` alone no
 longer declares them; including `<Cosmic.h>` does it for you. The mechanism:
-[`../systems/build-2d-3d-split.md`](../systems/build-2d-3d-split.md).
+[`../systems/build-2d-3d-split.md`](../parked-3d/systems/build-2d-3d-split.md) (parked 3D).
 
 Struct bodies, field order, defaults and registered names are the pre-split text **verbatim**, so
 type ids and serialized scenes are unaffected in either direction —
@@ -1703,7 +1705,7 @@ gate for hand-built scenes.
 to it.** **Read by** `SyncWorldSystems` (auto-builds **once only**), `OnRender3D` (quadtree LOD
 around the pass camera), `BuildRenderDesc` (first built terrain becomes `TerrainSystem` **and** the
 shore-attenuation source for water), and `ScenePhysics` via `TerrainColliderComponent`. Terrain
-geometry itself: [world-systems.md](world-systems.md).
+geometry itself: [world-systems.md](../parked-3d/reference/world-systems.md) (parked 3D).
 
 #### `WaterComponent` *(registered as `Water`, category `World`)*
 
@@ -1767,7 +1769,7 @@ which pushes every built body and marks the one **nearest the camera** as `Prima
 | `BuiltSignature` | `std::size_t` | `0` | — **runtime** | — |
 
 `EmitterShape`, `ParticleBlend` and `ParticleSpace` come from `particles/ParticleSystem.h`
-([world-systems.md](world-systems.md)). **The reflected recipe *is* the `.cemitter` preset format.**
+([world-systems.md](../parked-3d/reference/world-systems.md) (parked 3D)). **The reflected recipe *is* the `.cemitter` preset format.**
 Defaults describe a warm additive campfire ember cone. **Read by** `SyncWorldSystems`,
 `OnRenderWorldFX` (update + draw at the entity's world transform) and `BuildRenderDesc` (which
 *advances* the emitter and hands `SceneRenderer` a pointer — the renderer only draws).
@@ -1810,7 +1812,7 @@ Defaults describe a warm additive campfire ember cone. **Read by** `SyncWorldSys
 The voxel **data** rides a `.cvox` sidecar, not the scene JSON. **Read by**
 [`Scene::SyncVoxelVolumes`](#scenesyncvoxelvolumes), `Scene::SubmitOpaqueMeshes` (one draw per
 uploaded chunk mesh, frustum-culled per chunk), and `ScenePhysics::BuildVoxelBodies` /
-`RebuildDirtyVoxelChunks`. Depth: [`../guide/voxels.md`](../guide/voxels.md).
+`RebuildDirtyVoxelChunks`. Depth: [`../guide/voxels.md`](../parked-3d/guide/voxels.md) (parked 3D).
 
 ### 3D colliders
 
@@ -1880,7 +1882,7 @@ sidecar, not the scene JSON. Bake geometry is the **collision** view of the scen
 Steered by DetourCrowd **only while a play session runs** — the same lifetime rule as physics bodies —
 and the transform is written back each fixed step like a body. **Read by** `Scene::OnNavStart` /
 `OnNavStep` / `OnNavStop` and `SceneNavRuntime`; scripts drive it through `Nav().SetTarget` / `Stop`.
-Depth: [`../guide/navigation-and-ai.md`](../guide/navigation-and-ai.md).
+Depth: [`../guide/navigation-and-ai.md`](../parked-3d/guide/navigation-and-ai.md) (parked 3D).
 
 ---
 
@@ -2031,10 +2033,7 @@ chapter that covers it end to end — the coordinate contract, what the ID pass 
 `-1`/invalid-`Entity` miss behaviour, and the CAD pivot probe — is
 [`../guide/cameras.md`](../guide/cameras.md#click-to-select-an-entity-3d-only).
 
-**Configuration:** 3D only. Its `Cosmic.h` include is fenced (`Cosmic.h:117-119`) **and**
-`ScenePicker.cpp` is filtered out of the 2D build (`Cosmic/CMakeLists.txt:202`), so in a 2D tree it
-fails at **compile** time with a clear "undeclared identifier" — unlike `NavigationCube`, whose
-include is unfenced and which therefore fails at link.
+**Configuration:** 2D trunk. `main` builds one engine, 2D-only (since 2026-09-18, D-PURGE); `-DCOSMIC_2D_ONLY=ON` is an always-on compatibility flag and `OFF` is rejected at configure. History: the two-configuration build this line used to describe is [parked](../parked-3d/systems/build-2d-3d-split.md) (parked 3D).
 
 **Manifest re-routed (D61 integration, 2026-07-26):** the row now reads
 `| scene/ScenePicker.h ³ᴰ | cameras.md |`, and the full entries live in
@@ -2057,7 +2056,7 @@ looking for `ScenePicker` under the ECS finds the pointer rather than nothing.
 | The whole physics session (`OnPhysicsStart/Step/Stop`, `DispatchPhysicsEvents`, `GetPhysics`) | ✅ | ✅ | — |
 | `ScenePicker` | ❌ | ✅ | **compile error** |
 
-Rules and rationale: [`../systems/build-2d-3d-split.md`](../systems/build-2d-3d-split.md); the
+Rules and rationale: [`../systems/build-2d-3d-split.md`](../parked-3d/systems/build-2d-3d-split.md) (parked 3D); the
 configuration table in root [README §1.6](../../README.md#16-the-two-engine-configurations).
 
 ---
@@ -2069,7 +2068,7 @@ reflection, prefabs, undo) · [`../systems/ecs-scene.md`](../systems/ecs-scene.m
 views and the Phase 29 file partition work) · [physics.md](physics.md) (the runtime behind the
 physics components) · [jobs.md](jobs.md) (`ParallelSystem`, `SystemQuery`, `JobSystem`) ·
 [cameras.md](cameras.md) (`ScenePicker`'s intended home) ·
-[world-systems.md](world-systems.md) (`Terrain`, `Water`, `ParticleEmitter` themselves) ·
+[world-systems.md](../parked-3d/reference/world-systems.md) (parked 3D) (`Terrain`, `Water`, `ParticleEmitter` themselves) ·
 [serial-telemetry.md](serial-telemetry.md) (`EntityPicker`, `EntitySelection`).
 
 ---

@@ -16,7 +16,7 @@ Package Project), `StarforgeAppPlatform.cpp` (Entity ▸ UI widgets, template pi
 **API Reference:** [../reference/core.md](../reference/core.md) · **How it works:**
 [../plans/app-platform-2026-09-18/01-Design-Contracts.md](../plans/app-platform-2026-09-18/01-Design-Contracts.md)
 (§1 DataBus, §2 services, §3 bound widgets, §5 screens and flow, §6 live loop, §12 packaging)
-**Configuration:** the 2D build (`-DCOSMIC_2D_ONLY=ON`); Release is what the packager ships.
+**Configuration:** 2D trunk. `main` builds one engine, 2D-only (since 2026-09-18, D-PURGE); `-DCOSMIC_2D_ONLY=ON` is an always-on compatibility flag and `OFF` is rejected at configure. History: the two-configuration build this line used to describe is [parked](../parked-3d/systems/build-2d-3d-split.md) (parked 3D).
 **Verified by:** `tests/acceptance/fixtures/Run-GuideWalkthrough.ps1`, which runs every step of
 this chapter inside the editor and against the exported exe (see [How this chapter was
 verified](#how-this-chapter-was-verified)).

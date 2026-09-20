@@ -1,5 +1,7 @@
 # Assets & the Virtual File System — Guide
 
+> **History (2026-09-20, App Platform AP-D1).** This chapter was written for the two-configuration engine (Phase 29) and cites `Projects/Frontier`, `Projects/Engine3DDemo`, `Projects/ForgeIsle`, `Projects/ViperSim` or `#ifndef COSMIC_2D_ONLY` fences as worked examples. `main` is now the 2D-only trunk (D-PURGE): those projects, the fences and the `engine-2d` branch are gone from it and survive only on `engine-3d` (`0e8894b`, tag `cosmic-pre-2d-2026-09-16`), so read such mentions and their `file:line` references as historical. The current exemplars are the template projects, `Projects/PendulumLab`, `Projects/AnalysisSample` and `Projects/SF_Telem`; the trunk policy is in the root README 1.6 and [`../parked-3d/systems/build-2d-3d-split.md`](../parked-3d/systems/build-2d-3d-split.md) (parked 3D) records what the split was.
+
 **What this covers:** getting files into your project and out of it — the `engine://`,
 `project://` and `user://` schemes and exactly what each resolves to in a dev tree versus a
 shipped install, the two ways `project://` mounts, **per-app `user://` isolation and portable
@@ -17,11 +19,7 @@ utility surface around all of it: `FileDialog`, `FileWatcher`, `ImageIO`, `DataE
 **API Reference:** [`../reference/assets-io.md`](../reference/assets-io.md) *(skeleton — D16
 unwritten; this chapter is the client-facing source until it lands)* · **How it works:**
 [`../systems/assets-vfs.md`](../systems/assets-vfs.md) *(skeleton — D32)*
-**Configuration:** **both**, with one exception. `FileSystem`, `Config`, the whole `utils/` tier
-and `AssetLibrary`'s texture / shader / material verbs ship on both engines. `AssetLibrary::GetMesh`,
-`GetModel`, `GetAnimationClip`, `GetAnimationClipNames` and the entire `assets/MeshImport.h` header
-are inside `#ifndef COSMIC_2D_ONLY` — a 2D build has the cache but not the 3D backends behind it.
-See [`../systems/build-2d-3d-split.md`](../systems/build-2d-3d-split.md).
+**Configuration:** 2D trunk. `main` builds one engine, 2D-only (since 2026-09-18, D-PURGE); `-DCOSMIC_2D_ONLY=ON` is an always-on compatibility flag and `OFF` is rejected at configure. History: the two-configuration build this line used to describe is [parked](../parked-3d/systems/build-2d-3d-split.md) (parked 3D).
 
 Three things are stacked here and it pays to keep them apart:
 
@@ -759,9 +757,9 @@ reload idempotent — `AssetLibrary::Reload` is.
 
 - [`materials-and-shaders.md`](materials-and-shaders.md) — the `.cmat` format, the shader contract,
   and what `BuildMaterial` binds
-- [`rendering-3d.md`](rendering-3d.md) — `Mesh` vs `Model` on the drawing side, and material
+- [`rendering-3d.md`](../parked-3d/guide/rendering-3d.md) (parked 3D) — `Mesh` vs `Model` on the drawing side, and material
   read-at-flush
-- [`animation.md`](animation.md) — what a clip is once `GetAnimationClip` hands you one
+- [`animation.md`](../parked-3d/guide/animation.md) (parked 3D) — what a clip is once `GetAnimationClip` hands you one
 - [`scenes-and-serialization.md`](scenes-and-serialization.md) — why scene files must hold
   `project://` paths, and `SceneManager`'s missing `Resolve`
 - [`logging-and-diagnostics.md`](logging-and-diagnostics.md) — `Log::SetLogDirectory` and where the
@@ -770,6 +768,6 @@ reload idempotent — `AssetLibrary::Reload` is.
   `DataExport`
 - [`audio.md`](audio.md#the-com-apartment-gotcha) — why `FileDialog` has an MTA guard
 - [root README §1.6](../../README.md#16-the-two-engine-configurations) and
-  [`../systems/build-2d-3d-split.md`](../systems/build-2d-3d-split.md) — what a 2D build drops
+  [`../systems/build-2d-3d-split.md`](../parked-3d/systems/build-2d-3d-split.md) (parked 3D) — what a 2D build drops
 - [`../reference/assets-io.md`](../reference/assets-io.md) *(skeleton)* ·
   [`../systems/assets-vfs.md`](../systems/assets-vfs.md) *(skeleton)*

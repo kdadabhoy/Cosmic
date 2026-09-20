@@ -1,5 +1,7 @@
 # API Reference — Events & Input
 
+> **History (2026-09-20, App Platform AP-D1).** This chapter was written for the two-configuration engine (Phase 29) and cites `Projects/Frontier`, `Projects/Engine3DDemo`, `Projects/ForgeIsle`, `Projects/ViperSim` or `#ifndef COSMIC_2D_ONLY` fences as worked examples. `main` is now the 2D-only trunk (D-PURGE): those projects, the fences and the `engine-2d` branch are gone from it and survive only on `engine-3d` (`0e8894b`, tag `cosmic-pre-2d-2026-09-16`), so read such mentions and their `file:line` references as historical. The current exemplars are the template projects, `Projects/PendulumLab`, `Projects/AnalysisSample` and `Projects/SF_Telem`; the trunk policy is in the root README 1.6 and [`../parked-3d/systems/build-2d-3d-split.md`](../parked-3d/systems/build-2d-3d-split.md) (parked 3D) records what the split was.
+
 > **STATUS: WRITTEN** — work order **D7** (2026-07-26) in
 > [`docs/plans/archive/12-documentation-plan.md`](../plans/archive/12-documentation-plan.md).
 > Entry format: [reference/README.md → Entry format](README.md#entry-format-mandatory--copy-this-shape).
@@ -15,9 +17,7 @@ per-call lookup behind it: verbatim signature, exact behaviour, failure mode, pi
 repeat the guide's idiom, and it never restates DG-4.
 **How it works:** [`../systems/events-input.md`](../systems/events-input.md).
 
-**Configuration:** all eight headers are included by `Cosmic.h` **unfenced** (`Cosmic.h:20`, `:27-30`,
-`:152-154`), so every symbol below exists in **both** the 3D and the 2D engine builds. Nothing here
-is `COSMIC_2D_ONLY`-sensitive. See [README §1.6](../../README.md#16-the-two-engine-configurations).
+**Configuration:** 2D trunk. `main` builds one engine, 2D-only (since 2026-09-18, D-PURGE); `-DCOSMIC_2D_ONLY=ON` is an always-on compatibility flag and `OFF` is rejected at configure. History: the two-configuration build this line used to describe is [parked](../parked-3d/systems/build-2d-3d-split.md) (parked 3D).
 
 **DLL-boundary note.** Only two classes in this chapter are `COSMIC_API`-exported: `Event`
 (`Event.h:86`) and `Input` (`Input.h:40`). `EventDispatcher` and all nine concrete event classes are

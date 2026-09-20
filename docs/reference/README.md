@@ -15,14 +15,14 @@
 | --- | --- | --- |
 | [**Core Runtime**](core.md) | `Application`, `Layer`, `LayerStack`, `Window`, `Log`, `Timestep`, `UUID`, `CommandStack`, `PlayerLayer`, `Ref`/`Scope`, plugin exports | **✅ WRITTEN — D6 · 2026-07-26** |
 | [**Events & Input**](events-input.md) | `Event` hierarchy, `EventDispatcher`, `Input` polling, key/mouse/gamepad codes | **✅ WRITTEN — D7 · 2026-07-26** |
-| [**Graphics Resources**](graphics-resources.md) | `Shader`, `Material`, `MaterialAsset`, `Texture2D`, `TextureCube`, `FrameBuffer`, vertex/index/uniform/storage buffers, `RenderCommand`, [`BindingPoints`](graphics-resources.md#bindingpoints), `Renderer` init | **✅ WRITTEN — D8 · 2026-07-26** |
+| [**Graphics Resources**](graphics-resources.md) | `Shader`, `Material`, `MaterialAsset`, `Texture2D`, `FrameBuffer`, vertex/index buffers, `Mesh`, `RenderCommand`, [`BindingPoints`](graphics-resources.md#bindingpoints), `Renderer` init | **✅ WRITTEN — D8 · 2026-07-26** |
 | [**2D Rendering**](rendering-2d.md) | `Renderer2D` draw API, `RenderPass` multi-camera, `SubTexture2D`, `Font` text, `Light2DRenderer` | **✅ WRITTEN — D9 · 2026-07-26** |
-| [3D Rendering](rendering-3d.md) | `Renderer3D` (submit/cull/sort/instancing/transparency/LOD), `Mesh`, `Model`, `InstanceSet` — `Frustum` moved to [math.md](math.md) by D15 | SKELETON — D10 |
-| [Frame Pipeline](rendering-pipeline.md) | `SceneRenderer` pass orchestration, `PostProcessStack`, `EnvironmentMap` (IBL/sky), `ShadowMap`, `CoverageCapture` | SKELETON — D11 |
-| [World Systems](world-systems.md) | `Terrain`, `Water` + `GerstnerWave`, `ParticleEmitter`/`RibbonEmitter` + `Presets` | SKELETON — D12 |
+| [3D Rendering](../parked-3d/reference/rendering-3d.md) (parked 3D) | `Renderer3D`, `Model`, `InstanceSet` — deleted from `main` by AP-05; `Mesh` is documented in [graphics-resources.md](graphics-resources.md#mesh) | PARKED (was SKELETON — D10) |
+| [Frame Pipeline](rendering-pipeline.md) | `SceneRenderer` pass orchestration, `PostProcessStack` (the 3D half — `EnvironmentMap`, `ShadowMap`, `CoverageCapture` — is [parked](../parked-3d/reference/rendering-pipeline-3d.md) (parked 3D)) | SKELETON — D11 |
+| [World Systems](../parked-3d/reference/world-systems.md) (parked 3D) | `Terrain`, `Water` + `GerstnerWave`, `ParticleEmitter`/`RibbonEmitter` + `Presets` — deleted from `main` by AP-05 | PARKED (was SKELETON — D12) |
 | [**Entity Component System**](ecs.md) | `Scene`, `Entity`, all 34 components field-by-field (with their reflected names + Inspector ranges), `System`, `ComponentRegistry`, `SelectableComponent` | **✅ WRITTEN — D13 · 2026-07-26** |
 | [**Physics**](physics.md) | `PhysicsWorld`, `PhysicsTypes` value types, `PhysicsBody`/`CharacterHandle`, `CharacterController`, `ScenePhysics`, `PhysicsBackendRegistry`, the `Physics()`/`Character()` script proxies | **✅ WRITTEN — D43 · 2026-07-25** |
-| [**Cameras & Navigation**](cameras.md) | Camera classes, orthographic/orbit/fly controllers, `NavStyle`/`ViewPreset`, `NavigationCube`, `Gizmo`, `ScenePicker` | **✅ WRITTEN — D14 · 2026-07-26** |
+| [**Cameras & Navigation**](cameras.md) | Camera classes, orthographic/orbit/fly controllers, `Camera2DController`, `NavStyle`/`ViewPreset`, `Gizmo` (`NavigationCube` and `ScenePicker` were deleted by AP-05) | **✅ WRITTEN — D14 · 2026-07-26** |
 | [**Math & Simulation Toolkit**](math.md) | `Spatial`, `Integrators`, `Filters`, `LookupTable`, `Noise`, `Random`, `Frustum` | **✅ WRITTEN — D15 · 2026-07-26** |
 | [Assets, Files & Config](assets-io.md) | `AssetLibrary`, `FileSystem` VFS, `Config` (TOML), `DataExport` | SKELETON — D16 |
 | [Audio](audio.md) | `AudioEngine`, `Sound` | SKELETON — D16 |
@@ -79,51 +79,13 @@ This table is the enforcement backbone: **every** header included by `Cosmic/src
 must appear here, and every listed symbol must have an entry in its chapter. The checker
 script `tests/check_docs_coverage.ps1` (work order D5) diffs `Cosmic.h` against this table.
 
-> **³ᴰ marks a header `Cosmic.h` includes only in the 3D configuration** (inside an
-> `#ifndef COSMIC_2D_ONLY` fence). Its symbols do not exist in the 2D engine build, and a chapter
-> entry for one should say so. Everything unmarked is present in **both** configurations — including
-> the whole `physics/` block: physics is dimension-agnostic and ships on both branches. When D5's
-> checker is written it must parse `Cosmic.h` **with the fences**, not as flat text, or it will
-> report the ³ᴰ headers as missing from a 2D tree. Background:
-> [`../systems/build-2d-3d-split.md`](../systems/build-2d-3d-split.md).
->
-> The other 3D-fenced `Cosmic.h` includes already have manifest rows under their own chapters:
-> `renderer/Renderer3D.h`, `renderer/EnvironmentMap.h`, `renderer/ShadowMap.h`,
-> `renderer/InstanceSet.h`, `renderer/CoverageCapture.h`, `terrain/Terrain.h`, `water/Water.h`,
-> `particles/ParticleSystem.h`, `particles/Presets.h`, `graphics/Model.h` — **D54 added the missing
-> ³ᴰ marker to all ten**, which the table listed unmarked, i.e. as present in both configurations.
-> Note that `graphics/Mesh.h` and `math/Frustum.h` are correctly unmarked: both are unfenced in
-> `Cosmic.h` and compile in a 2D tree, even though nothing there draws a mesh.
->
-> **The hand-maintained gap list that used to live here is retired (D61, 2026-07-26).** It named
-> `water/Presets.h`, `assets/MeshImport.h`, `scene/WorldSystemRecipes.h`, `physics/ScenePhysics.h`,
-> `nav/NavWorld.h`, `nav/NavTypes.h` and `scene/SceneNav.h` as known-missing. **All of them now have
-> rows**, along with 35 others: `tests/check_docs_coverage.ps1` found **42** unlisted headers against
-> a public surface of **147**, so this table had been covering 71 %. Five of the 42 had never been
-> spotted by hand at all — `graphics/MaterialAsset.h`, `layers/PlayerLayer.h`, `water/GerstnerWave.h`,
-> `renderer/RenderQueue.h` and `core/Version.h` — and four of those are named in a chapter's own
-> scope in doc 12, which is exactly the drift a script catches and a person does not.
->
-> **Do not maintain a gap list here again.** Run the checker; it is wired into CI and it prints
-> ready-made rows for anything missing. It classifies each header by *how* it is reachable (direct
-> include, transitive closure, or an explicit `#include` from `Projects/**` or `tests/**`) and
-> derives 3D-only status from the CMake `list(FILTER)` block as well as the `Cosmic.h` fences —
-> which is why it correctly flags `voxel/VoxelMesher.h` and its two siblings, all of them
-> **unfenced**.
->
-> **Rows may point outside this tier.** Roughly twenty headers have no reference chapter yet and are
-> routed to the `docs/guide/` chapter that actually documents them — the whole `scripting/` and
-> `reflect/` tiers, the `voxel/` and `nav/` blocks, `scene/ui/`, and the flow/story headers. Strict
-> mode is a reference-tier contract and is skipped for those targets. **The `scripting/` tier having
-> no reference chapter at all is a chapter-sized hole, not a row fix**, and it needs a decision
-> before D36 can reach a green strict-mode run.
->
-> **³ᴰ⁺ marks the one header that is 3D-only in a *different* way** (found by D53).
-> `camera/NavigationCube.h` is included by `Cosmic.h` **unfenced**, so it compiles in a 2D tree —
-> but `NavigationCube.cpp` is filtered out of the 2D build (`Cosmic/CMakeLists.txt:198`), so calling
-> it fails at **link** time rather than at compile time. Its symbols are 3D-only exactly like a ³ᴰ
-> header's; only the diagnostic differs. D5's checker must not treat "inside a fence" as the sole
-> test for 3D-only, and fencing the include is the one-line fix.
+> **History (2026-09-20, App Platform AP-D1).** Until AP-05 this table carried ³ᴰ / ³ᴰ⁺ markers for headers that
+> existed only in the 3D configuration and a hand-maintained gap list (retired D61). The 3D headers were deleted from
+> `main` (D-PURGE) and their rows removed; the checker no longer parses fences or the CMake filter block. Rows may
+> point outside this tier: the `scripting/`, `reflect/`, `data/`, `scene/ui/` and flow/story headers are routed to the
+> `docs/guide/` chapter that documents them (strict mode is a reference-tier contract and is skipped for those). Do
+> not maintain a gap list here; run `tests/check_docs_coverage.ps1`, which prints ready-made rows for anything missing.
+> The parked 3D chapters and their old rows are under [`../parked-3d/`](../parked-3d/README.md) (parked 3D).
 
 | Header (under `Cosmic/src/`) | Chapter |
 | --- | --- |
@@ -157,7 +119,7 @@ script `tests/check_docs_coverage.ps1` (work order D5) diffs `Cosmic.h` against 
 | `graphics/SubTexture2D.h` | [rendering-2d.md](rendering-2d.md) |
 | `graphics/Font.h` | [rendering-2d.md](rendering-2d.md) |
 | `renderer/Light2DRenderer.h` | [rendering-2d.md](rendering-2d.md) |
-| `graphics/Mesh.h` | [rendering-3d.md](rendering-3d.md) |
+| `graphics/Mesh.h` | [rendering-3d.md](../parked-3d/reference/rendering-3d.md) (parked 3D) |
 | `renderer/SceneRenderer.h` | [rendering-pipeline.md](rendering-pipeline.md) |
 | `renderer/PostProcessStack.h` | [rendering-pipeline.md](rendering-pipeline.md) |
 | `scene/Scene.h` | [ecs.md](ecs.md) |

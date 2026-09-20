@@ -1,5 +1,7 @@
 # World Systems — Guide
 
+> **PARKED 3D — not on the trunk.** This chapter documents code that lives only on the `engine-3d` branch (`0e8894b`, tag `cosmic-pre-2d-2026-09-16`). The 2D trunk (`main`) no longer builds or ships it (D-PURGE, 2026-09-18). Kept for when 3D resumes.
+
 **What this covers:** the three large-scale world systems — heightmap **terrain** (including the
 `32·2^k + 1` resolution rule, the CPU height queries, and the async-build/loading-screen pattern),
 **water** (Gerstner surfaces, the planar-reflection handoff, shore awareness, buoyancy queries and
@@ -82,7 +84,7 @@ fire.AddComponent<Cosmic::ParticleEmitterComponent>().UseRecipe = true;
 
 That is the whole setup. `Scene::SyncWorldSystems` — run at the top of `Scene::OnRender3D` and
 `Scene::BuildRenderDesc` — turns each recipe into its asset, and `BuildRenderDesc` hands the results
-to `SceneRenderer` (see [`lighting-and-environment.md`](lighting-and-environment.md)). Save the
+to `SceneRenderer` (see [`lighting-and-environment.md`](../../guide/lighting-2d.md)). Save the
 scene and only the recipe fields are written; the assets rebuild on load.
 
 In the editor the same thing is three buttons: **Entity ▸ World ▸ Terrain / Water / Particle
@@ -199,7 +201,7 @@ this placement maths, then throws it away and saves only the recipe (`StarforgeA
 Add a `TerrainColliderComponent` alongside and the physics session builds a Jolt heightfield from
 the same samples. One caveat worth knowing: **the heightfield build drops the far +X/+Z edge row**,
 because Jolt rounds its sample count up to a multiple of two and terrain resolutions are always odd.
-Keep gameplay off the last cell. See [`physics.md`](physics.md) *(D57)*.
+Keep gameplay off the last cell. See [`physics.md`](../../guide/physics.md) *(D57)*.
 
 ### Building a large terrain without freezing the frame
 
@@ -290,7 +292,7 @@ it needs no engine GPU resources.
 
 > **This is not the same thing as `SceneManager`'s async load.** That one is a *fade*, not a thread:
 > the loader runs on the main thread in a single `OnUpdate` and `Progress()` reports transition
-> progress, never bytes. See [`scenes-and-serialization.md`](scenes-and-serialization.md). For heavy
+> progress, never bytes. See [`scenes-and-serialization.md`](../../guide/scenes-and-serialization.md). For heavy
 > world content, the JobSystem pattern above is what you want.
 
 ### Drawing terrain by hand
@@ -436,7 +438,7 @@ bobbing orange box is a four-line demonstration.
 
 Going *under* the surface is a post-chain effect, not a water feature — it lives on
 `SceneRendererSettings` and is documented in
-[`lighting-and-environment.md`](lighting-and-environment.md). The one-line summary:
+[`lighting-and-environment.md`](../../guide/lighting-2d.md). The one-line summary:
 
 ```cpp
 desc.Settings.Underwater  = m_UnderwaterEnabled && (camPos.y < kOceanY + 1.0f);
@@ -611,7 +613,7 @@ Cosmic::SceneSerializer::LoadReflectedFromFile(tid, comp, Cosmic::FileSystem::Re
 Loading one sets `UseRecipe = true` and clears `Emitter` so `SyncWorldSystems` rebuilds. Like every
 other reflected asset it is pretty-printed with `dump(2)`, and enum fields accept either the integer
 or the option name on read. See
-[`scenes-and-serialization.md`](scenes-and-serialization.md).
+[`scenes-and-serialization.md`](../../guide/scenes-and-serialization.md).
 
 ---
 
@@ -637,7 +639,7 @@ terrains, only the first participates.
 
 **Release GPU-owning assets while the context is live.** Terrain, water and emitters all own lazily
 created GPU resources. Reset them in `OnDetach`, before the context goes away — see
-[`project-anatomy.md`](project-anatomy.md).
+[`project-anatomy.md`](../../guide/project-anatomy.md).
 
 **Heat haze wants its emitters in two lists.** A distortion emitter usually also draws normally:
 push it into `desc.Emitters` *and* `desc.DistortionEmitters`. The haze field is only written by the
@@ -702,15 +704,15 @@ depth attachment, or `SoftFadeDistance` is 0.
 
 ## See also
 
-- [`lighting-and-environment.md`](lighting-and-environment.md) — `SceneRenderer`, the pass graph,
+- [`lighting-and-environment.md`](../../guide/lighting-2d.md) — `SceneRenderer`, the pass graph,
   the underwater medium, the snow/coverage overlay, and the post chain these systems feed
 - [`rendering-3d.md`](rendering-3d.md) — `Renderer3D`, instancing (how Frontier scatters 5,000
   pines over terrain), frustum culling and the statistics counters
-- [`entities-and-components.md`](entities-and-components.md) — `TerrainComponent`,
+- [`entities-and-components.md`](../../guide/entities-and-components.md) — `TerrainComponent`,
   `WaterComponent`, `ParticleEmitterComponent` field-by-field, with units and defaults
-- [`scenes-and-serialization.md`](scenes-and-serialization.md) — how recipes are stored, the
+- [`scenes-and-serialization.md`](../../guide/scenes-and-serialization.md) — how recipes are stored, the
   reflected-struct serializer behind `.cemitter`, and `SceneManager`'s (different) async load
-- [`physics.md`](physics.md) *(D57)* — `TerrainColliderComponent` and the heightfield build
+- [`physics.md`](../../guide/physics.md) *(D57)* — `TerrainColliderComponent` and the heightfield build
 - [`voxels.md`](voxels.md) *(D56)* — the other large-scale world system, on the same
   "params, not meshes" principle
 - [`../reference/world-systems.md`](../reference/world-systems.md) *(skeleton — D12)* ·

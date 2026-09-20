@@ -1,5 +1,7 @@
 # Lighting & Environment — Guide
 
+> **PARKED 3D — not on the trunk.** This chapter documents code that lives only on the `engine-3d` branch (`0e8894b`, tag `cosmic-pre-2d-2026-09-16`). The 2D trunk (`main`) no longer builds or ships it (D-PURGE, 2026-09-18). Kept for when 3D resumes.
+
 **What this covers:** `SceneRenderer` — the engine-owned frame orchestrator most 3D apps should
 use instead of driving passes by hand: filling a `SceneRenderDesc` and calling `Render()`, the pass
 graph in order, directional and point lights and the lights UBO, PBR + image-based lighting, the

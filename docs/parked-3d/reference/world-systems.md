@@ -1,8 +1,10 @@
 # API Reference — World Systems (Terrain, Water, Particles)
 
+> **PARKED 3D — not on the trunk.** This chapter documents code that lives only on the `engine-3d` branch (`0e8894b`, tag `cosmic-pre-2d-2026-09-16`). The 2D trunk (`main`) no longer builds or ships it (D-PURGE, 2026-09-18). Kept for when 3D resumes.
+
 > **STATUS: SKELETON** — to be filled by work order **D12** in
-> [`docs/plans/archive/12-documentation-plan.md`](../plans/archive/12-documentation-plan.md).
-> Entry format: [reference/README.md → Entry format](README.md#entry-format-mandatory--copy-this-shape).
+> [`docs/plans/archive/12-documentation-plan.md`](../../plans/archive/12-documentation-plan.md).
+> Entry format: [reference/README.md → Entry format](../../reference/README.md#entry-format-mandatory--copy-this-shape).
 
 **Scope (headers are the truth):** `Cosmic/src/terrain/Terrain.h`, `water/Water.h`,
 `water/GerstnerWave.h`, `particles/ParticleSystem.h`, `particles/Presets.h`.
@@ -18,7 +20,7 @@ whole scope above plus the two unlisted headers: the recipe model, the resolutio
 different limits, the async-build pattern, the reflection handoff and the particle presets. Then the
 systems explainers [terrain](../systems/terrain.md), [water](../systems/water.md),
 [particles](../systems/particles.md); and
-[`docs/design/water-rendering-notes.md`](../archive/design/water-rendering-notes.md). Usage
+[`docs/design/water-rendering-notes.md`](../../archive/design/water-rendering-notes.md). Usage
 exemplars: `Projects/Frontier` (all five worlds), Engine3DDemo "World systems" panel,
 `Projects/ForgeIsle/scenes/Island.cscene` (the recipe route).
 

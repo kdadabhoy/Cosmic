@@ -1,5 +1,7 @@
 # Materials & Shaders — Guide
 
+> **History (2026-09-20, App Platform AP-D1).** This chapter was written for the two-configuration engine (Phase 29) and cites `Projects/Frontier`, `Projects/Engine3DDemo`, `Projects/ForgeIsle`, `Projects/ViperSim` or `#ifndef COSMIC_2D_ONLY` fences as worked examples. `main` is now the 2D-only trunk (D-PURGE): those projects, the fences and the `engine-2d` branch are gone from it and survive only on `engine-3d` (`0e8894b`, tag `cosmic-pre-2d-2026-09-16`), so read such mentions and their `file:line` references as historical. The current exemplars are the template projects, `Projects/PendulumLab`, `Projects/AnalysisSample` and `Projects/SF_Telem`; the trunk policy is in the root README 1.6 and [`../parked-3d/systems/build-2d-3d-split.md`](../parked-3d/systems/build-2d-3d-split.md) (parked 3D) records what the split was.
+
 **What this covers:** loading and compiling shaders, building and configuring `Material` objects,
 the cached-uniform model and its read-at-flush rule, the **shader contract** the preprocessor
 enforces (`#type` blocks, the three routing paths, auto-injected uniforms, the vertex-attribute
@@ -12,11 +14,8 @@ slots**, and framebuffers including MRT and pixel read-back.
 **API Reference:** [../reference/graphics-resources.md](../reference/graphics-resources.md)
 *(per-call signatures and the full [`BindingPoints` table](../reference/graphics-resources.md#bindingpoints))* ·
 **How it works:** [../systems/rendering-2d.md](../systems/rendering-2d.md) ·
-[../systems/rendering-3d.md](../systems/rendering-3d.md)
-**Configuration:** **both.** `Shader`, `Material`, `FrameBuffer` and the preprocessor are shared and
-unfenced. Two things on this page are 3D-only: **material slots** (they need `Mesh` submeshes) and
-the PBR uniform contract that `.cmat` files target — see
-[`../systems/build-2d-3d-split.md`](../systems/build-2d-3d-split.md).
+[../systems/rendering-3d.md](../parked-3d/systems/rendering-3d.md) (parked 3D)
+**Configuration:** 2D trunk. `main` builds one engine, 2D-only (since 2026-09-18, D-PURGE); `-DCOSMIC_2D_ONLY=ON` is an always-on compatibility flag and `OFF` is rejected at configure. History: the two-configuration build this line used to describe is [parked](../parked-3d/systems/build-2d-3d-split.md) (parked 3D).
 
 A **shader** is a compiled GPU program. A **material** is a shader plus a named bag of uniform
 values. The split exists so a hundred objects can share one compiled program and still look
@@ -207,8 +206,8 @@ mat->SetSkinnedShader(pbrSkinned);         // required for GPU skinning; without
 `SetInstancingShader` registers a twin that reads `{ mat4 Model; vec4 Tint; }` from the SSBO at
 `Bindings::InstancesSsbo`; transforms should be rigid with uniform scale, because the twin derives
 normals from `mat3(Model)`. `SetSkinnedShader` registers a twin that reads the joint palette from
-`Bindings::SkinningSsbo`. Details in [`rendering-3d.md`](rendering-3d.md) and
-[`animation.md`](animation.md).
+`Bindings::SkinningSsbo`. Details in [`rendering-3d.md`](../parked-3d/guide/rendering-3d.md) (parked 3D) and
+[`animation.md`](../parked-3d/guide/animation.md) (parked 3D).
 
 ---
 
@@ -356,7 +355,7 @@ duplicated across files today. If you need common code, duplicate it or generate
 `#type compute` is recognised and compiled (`OpenGLShader.cpp:32`); `ComputeParticles.glsl` and
 `ParticleUpdate.glsl` are working examples. Dispatch and memory barriers go through
 `RenderCommand`, and storage buffers through `graphics/StorageBuffer.h` with an index claimed in
-`BindingPoints.h`. Covered in [`world-systems.md`](world-systems.md).
+`BindingPoints.h`. Covered in [`world-systems.md`](../parked-3d/guide/world-systems.md) (parked 3D).
 
 ---
 
@@ -688,9 +687,9 @@ conventions in the same class, both deliberate.
 - [`../reference/graphics-resources.md`](../reference/graphics-resources.md) — per-call signatures
   and the full `BindingPoints` registry *(skeleton, D8)*
 - [`rendering-2d.md`](rendering-2d.md) — the batch renderer, the material quad path, batch limits
-- [`rendering-3d.md`](rendering-3d.md) — submit/sort/instance and the read-at-flush contract in full
-- [`lighting-and-environment.md`](lighting-and-environment.md) — the `SceneRenderer` pass graph, PBR/IBL
+- [`rendering-3d.md`](../parked-3d/guide/rendering-3d.md) (parked 3D) — submit/sort/instance and the read-at-flush contract in full
+- [`lighting-and-environment.md`](lighting-2d.md) — the `SceneRenderer` pass graph, PBR/IBL
 - [`assets-and-vfs.md`](assets-and-vfs.md) — `AssetLibrary`, the VFS, import
 - [`scenes-and-serialization.md`](scenes-and-serialization.md) — reflection, which is what makes
   `.cmat` generic
-- [`../systems/build-2d-3d-split.md`](../systems/build-2d-3d-split.md) — what each configuration ships
+- [`../systems/build-2d-3d-split.md`](../parked-3d/systems/build-2d-3d-split.md) (parked 3D) — what each configuration ships

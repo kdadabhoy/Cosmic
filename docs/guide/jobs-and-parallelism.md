@@ -1,5 +1,7 @@
 # Jobs & Parallelism — Guide
 
+> **History (2026-09-20, App Platform AP-D1).** This chapter was written for the two-configuration engine (Phase 29) and cites `Projects/Frontier`, `Projects/Engine3DDemo`, `Projects/ForgeIsle`, `Projects/ViperSim` or `#ifndef COSMIC_2D_ONLY` fences as worked examples. `main` is now the 2D-only trunk (D-PURGE): those projects, the fences and the `engine-2d` branch are gone from it and survive only on `engine-3d` (`0e8894b`, tag `cosmic-pre-2d-2026-09-16`), so read such mentions and their `file:line` references as historical. The current exemplars are the template projects, `Projects/PendulumLab`, `Projects/AnalysisSample` and `Projects/SF_Telem`; the trunk policy is in the root README 1.6 and [`../parked-3d/systems/build-2d-3d-split.md`](../parked-3d/systems/build-2d-3d-split.md) (parked 3D) records what the split was.
+
 **What this covers:** the worker pool (`JobSystem`), splitting a loop across cores (`ParallelFor`),
 running an ECS system in parallel (`ParallelSystem` + `SystemQuery`), getting a raw pointer to a
 component pool (`ComponentArray`), cross-entity double buffering (`DoubleBuffer`), the live job
@@ -14,8 +16,7 @@ counters — and, above all, **exactly what a worker thread may and may not touc
 **API Reference:** [`../reference/jobs.md`](../reference/jobs.md) *(skeleton — D17 unwritten; this
 chapter is the client-facing source until it lands)* · **How it works:**
 [`../systems/jobs-parallelism.md`](../systems/jobs-parallelism.md) *(skeleton — D33)*
-**Configuration:** **both.** All six headers are included by `Cosmic.h` unfenced and compile
-identically on the 2D and 3D engines.
+**Configuration:** 2D trunk. `main` builds one engine, 2D-only (since 2026-09-18, D-PURGE); `-DCOSMIC_2D_ONLY=ON` is an always-on compatibility flag and `OFF` is rejected at configure. History: the two-configuration build this line used to describe is [parked](../parked-3d/systems/build-2d-3d-split.md) (parked 3D).
 
 > **This chapter exists for one reason: the threading contract.** Everything else here is
 > convenience API. Get the contract wrong and you get a crash that reproduces once a week on one
@@ -613,9 +614,9 @@ with the outer ones for the same fixed pool. Keep parallelism flat and single-le
   catalogue the queries stage.
 - [`serial-and-telemetry.md`](serial-and-telemetry.md) — `DataRecorder`, the one engine API designed
   to be called from a worker.
-- [`world-systems.md`](world-systems.md) — terrain, water and particles, and the async-build pattern
+- [`world-systems.md`](../parked-3d/guide/world-systems.md) (parked 3D) — terrain, water and particles, and the async-build pattern
   Frontier wraps around them.
-- [`voxels.md`](voxels.md) · [`navigation-and-ai.md`](navigation-and-ai.md) — the engine's two other
+- [`voxels.md`](../parked-3d/guide/voxels.md) (parked 3D) · [`navigation-and-ai.md`](../parked-3d/guide/navigation-and-ai.md) (parked 3D) — the engine's two other
   `Submit` sites, both CPU-build-then-upload.
 - [`project-anatomy.md`](project-anatomy.md) — where `JobSystem::Initialize`/`Shutdown` sit in the
   `Application` lifecycle.

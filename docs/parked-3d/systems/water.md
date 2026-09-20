@@ -1,14 +1,16 @@
 # Water — How It Works
 
+> **PARKED 3D — not on the trunk.** This chapter documents code that lives only on the `engine-3d` branch (`0e8894b`, tag `cosmic-pre-2d-2026-09-16`). The 2D trunk (`main`) no longer builds or ships it (D-PURGE, 2026-09-18). Kept for when 3D resumes.
+
 > **STATUS: SKELETON** — to be filled by work order **D30** in
-> [`docs/plans/archive/12-documentation-plan.md`](../plans/archive/12-documentation-plan.md).
-> Format + writing bar: [systems/README.md](README.md#document-format-mandatory--every-explainer-uses-this-shape).
+> [`docs/plans/archive/12-documentation-plan.md`](../../plans/archive/12-documentation-plan.md).
+> Format + writing bar: [systems/README.md](../../systems/README.md#document-format-mandatory--every-explainer-uses-this-shape).
 
 **One-liner:** a flat grid displaced by summed Gerstner waves (identical math on CPU and
 GPU, so boats float correctly), shaded with a mirrored render of the world above and a
 grabbed copy of the world below — plus a full underwater mode when the camera dives.
 **Source:** `Cosmic/src/water/GerstnerWave.h`, `water/Water.*`, `Cosmic/assets/shaders/Water*.glsl`
-**API Reference:** [../reference/world-systems.md](../reference/world-systems.md) · **Guide:** [`../guide/world-systems.md`](../guide/world-systems.md) · **Design record:** [`../design/water-rendering-notes.md`](../archive/design/water-rendering-notes.md)
+**API Reference:** [../reference/world-systems.md](../reference/world-systems.md) · **Guide:** [`../guide/world-systems.md`](../guide/world-systems.md) · **Design record:** [`../design/water-rendering-notes.md`](../../archive/design/water-rendering-notes.md)
 
 > **The guide chapter landed first (D55).** [`../guide/world-systems.md`](../guide/world-systems.md)
 > already carries the three `WaterPreset` characters, the reflection handoff (one planar reflection

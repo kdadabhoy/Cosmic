@@ -1,5 +1,7 @@
 # ECS & Scenes — How It Works
 
+> **History (2026-09-20, App Platform AP-D1).** This chapter was written for the two-configuration engine (Phase 29) and cites `Projects/Frontier`, `Projects/Engine3DDemo`, `Projects/ForgeIsle`, `Projects/ViperSim` or `#ifndef COSMIC_2D_ONLY` fences as worked examples. `main` is now the 2D-only trunk (D-PURGE): those projects, the fences and the `engine-2d` branch are gone from it and survive only on `engine-3d` (`0e8894b`, tag `cosmic-pre-2d-2026-09-16`), so read such mentions and their `file:line` references as historical. The current exemplars are the template projects, `Projects/PendulumLab`, `Projects/AnalysisSample` and `Projects/SF_Telem`; the trunk policy is in the root README 1.6 and [`../parked-3d/systems/build-2d-3d-split.md`](../parked-3d/systems/build-2d-3d-split.md) (parked 3D) records what the split was.
+
 > **STATUS: SKELETON** — to be filled by work order **D31** in
 > [`docs/plans/archive/12-documentation-plan.md`](../plans/archive/12-documentation-plan.md).
 > Format + writing bar: [systems/README.md](README.md#document-format-mandatory--every-explainer-uses-this-shape).
@@ -24,7 +26,7 @@ those arrays to make things happen.
 > by an engine that never registered its type is preserved as verbatim JSON and re-emitted unchanged
 > on save. So a 3D scene opened, edited and saved by the 2D editor keeps every 3D block
 > byte-for-byte (`tests/test_crossbuild_scene.cpp` asserts both directions). Full rules:
-> [`build-2d-3d-split.md`](build-2d-3d-split.md).
+> [`build-2d-3d-split.md`](../parked-3d/systems/build-2d-3d-split.md) (parked 3D).
 
 ## Section plan
 

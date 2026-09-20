@@ -1,5 +1,7 @@
 # Logging & Diagnostics — Guide
 
+> **History (2026-09-20, App Platform AP-D1).** This chapter was written for the two-configuration engine (Phase 29) and cites `Projects/Frontier`, `Projects/Engine3DDemo`, `Projects/ForgeIsle`, `Projects/ViperSim` or `#ifndef COSMIC_2D_ONLY` fences as worked examples. `main` is now the 2D-only trunk (D-PURGE): those projects, the fences and the `engine-2d` branch are gone from it and survive only on `engine-3d` (`0e8894b`, tag `cosmic-pre-2d-2026-09-16`), so read such mentions and their `file:line` references as historical. The current exemplars are the template projects, `Projects/PendulumLab`, `Projects/AnalysisSample` and `Projects/SF_Telem`; the trunk policy is in the root README 1.6 and [`../parked-3d/systems/build-2d-3d-split.md`](../parked-3d/systems/build-2d-3d-split.md) (parked 3D) records what the split was.
+
 **What this covers:** The two loggers and their macros, where log files land, redirecting the log
 directory, mirroring the log into your own UI with a sink, the editor Console panel, the 2D and 3D
 renderer statistics counters, the per-pass GPU profiler, and why the assert macros do nothing.
@@ -11,8 +13,7 @@ renderer statistics counters, the per-pass GPU profiler, and why the assert macr
 `Projects/Starforge/src/{StarforgeApp.cpp,EditorContext.h}`
 **API Reference:** [../reference/core.md](../reference/core.md) · **How it works:**
 [../systems/core-runtime.md](../systems/core-runtime.md)
-**Configuration:** both — the only difference is that `Renderer3D`'s counters do not exist in the 2D
-engine build (see [../systems/build-2d-3d-split.md](../systems/build-2d-3d-split.md)).
+**Configuration:** 2D trunk. `main` builds one engine, 2D-only (since 2026-09-18, D-PURGE); `-DCOSMIC_2D_ONLY=ON` is an always-on compatibility flag and `OFF` is rejected at configure. History: the two-configuration build this line used to describe is [parked](../parked-3d/systems/build-2d-3d-split.md) (parked 3D).
 
 ---
 
@@ -297,7 +298,7 @@ ImGui::Text("    auto-inst %u batches / %u meshes | explicit %u draws / %u insta
 `MeshesCulled` is the frustum-culling evidence and `AutoInstanceBatches` the auto-instancing
 evidence — the two numbers to watch when a 3D scene is slower than it looks. Explicit
 `DrawMeshInstanced` calls are **never engine-culled**; you cull those yourself, which is why they get
-their own counters. Details in [`rendering-3d.md`](rendering-3d.md).
+their own counters. Details in [`rendering-3d.md`](../parked-3d/guide/rendering-3d.md) (parked 3D).
 
 In a 2D engine build `Renderer3D` does not exist at all — fence any stats readout with
 `#ifndef COSMIC_2D_ONLY`.
@@ -470,9 +471,9 @@ flushes each one. Gate it yourself.
   the Safe Zone, and the `OnDetach` teardown contract that `RemoveSink` belongs to.
 - [`rendering-2d.md`](rendering-2d.md) — what the 2D counters are counting: batching, every batch
   limit, and what forces a flush.
-- [`rendering-3d.md`](rendering-3d.md) — culling, sorting and auto-instancing, which is what
+- [`rendering-3d.md`](../parked-3d/guide/rendering-3d.md) (parked 3D) — culling, sorting and auto-instancing, which is what
   `MeshesCulled` and `AutoInstanceBatches` measure.
-- [`lighting-and-environment.md`](lighting-and-environment.md) — the `SceneRenderer` pass graph the
+- [`lighting-and-environment.md`](lighting-2d.md) — the `SceneRenderer` pass graph the
   GPU zones are named after.
 - [`editor-ui-and-theming.md`](editor-ui-and-theming.md) — docking the Console and Profiler panels.
 - [`assets-and-vfs.md`](assets-and-vfs.md) — `user://` versus `project://` in full, and why writes
@@ -482,4 +483,4 @@ flushes each one. Gate it yourself.
 - [`../reference/core.md`](../reference/core.md) — formal signatures for `Log`, `CallbackSink` and
   the macro families.
 - [`../systems/core-runtime.md`](../systems/core-runtime.md) ·
-  [`../systems/build-2d-3d-split.md`](../systems/build-2d-3d-split.md)
+  [`../systems/build-2d-3d-split.md`](../parked-3d/systems/build-2d-3d-split.md) (parked 3D)

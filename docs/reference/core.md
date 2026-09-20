@@ -1,5 +1,7 @@
 # API Reference — Core Runtime
 
+> **History (2026-09-20, App Platform AP-D1).** This chapter was written for the two-configuration engine (Phase 29) and cites `Projects/Frontier`, `Projects/Engine3DDemo`, `Projects/ForgeIsle`, `Projects/ViperSim` or `#ifndef COSMIC_2D_ONLY` fences as worked examples. `main` is now the 2D-only trunk (D-PURGE): those projects, the fences and the `engine-2d` branch are gone from it and survive only on `engine-3d` (`0e8894b`, tag `cosmic-pre-2d-2026-09-16`), so read such mentions and their `file:line` references as historical. The current exemplars are the template projects, `Projects/PendulumLab`, `Projects/AnalysisSample` and `Projects/SF_Telem`; the trunk policy is in the root README 1.6 and [`../parked-3d/systems/build-2d-3d-split.md`](../parked-3d/systems/build-2d-3d-split.md) (parked 3D) records what the split was.
+
 > **STATUS: WRITTEN** — work order **D6** (2026-07-26) in
 > [`docs/plans/archive/12-documentation-plan.md`](../plans/archive/12-documentation-plan.md).
 > Entry format: [reference/README.md → Entry format](README.md#entry-format-mandatory--copy-this-shape).
@@ -70,7 +72,7 @@ block (`Cosmic/CMakeLists.txt:178-210`) filters only `terrain|voxel|water|nav|pa
 `reflect/TypeRegistry3D` and `assets/MeshImport.cpp`. It touches nothing under `core/` or `layers/`.
 So neither the ³ᴰ failure (fenced → clean compile error) nor the ³ᴰ⁺ failure (unfenced, `.cpp`
 dropped → `LNK2019`) applies to anything documented here. Background:
-[`../systems/build-2d-3d-split.md`](../systems/build-2d-3d-split.md), README §1.6.
+[`../systems/build-2d-3d-split.md`](../parked-3d/systems/build-2d-3d-split.md) (parked 3D), README §1.6.
 
 One entry has *behaviour* that differs between the builds — [`PlayerLayer`](#playerlayer) carries
 in-file fences around navigation and skeletal animation (`PlayerLayer.cpp:169-171`, `:188-204`,

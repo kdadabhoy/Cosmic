@@ -44,11 +44,11 @@ docs/
 [Command Reference](#15-command-reference--every-command) ·
 [The Two Engine Configurations](#16-the-two-engine-configurations) ·
 [2D Rendering](docs/guide/rendering-2d.md) ·
-[3D Rendering](docs/guide/rendering-3d.md) ·
-[Lighting & Environment](docs/guide/lighting-and-environment.md) ·
-[World Systems](docs/guide/world-systems.md) ·
-[Animation](docs/guide/animation.md) ·
-[Voxels](docs/guide/voxels.md) ·
+[3D Rendering](docs/parked-3d/guide/rendering-3d.md) (parked 3D) ·
+[Lighting & Environment](docs/guide/lighting-2d.md) ·
+[World Systems](docs/parked-3d/guide/world-systems.md) (parked 3D) ·
+[Animation](docs/parked-3d/guide/animation.md) (parked 3D) ·
+[Voxels](docs/parked-3d/guide/voxels.md) (parked 3D) ·
 [Sprites & Tilemaps](docs/guide/sprites-and-tilemaps.md) ·
 [In-Game UI](docs/guide/game-ui.md) ·
 [Cameras & Navigation](docs/guide/cameras.md) ·
@@ -59,7 +59,7 @@ docs/
 [Flow & Story](docs/guide/flow-and-story.md) ·
 [Logging & Diagnostics](docs/guide/logging-and-diagnostics.md) ·
 [Physics](docs/guide/physics.md) ·
-[Navigation & AI](docs/guide/navigation-and-ai.md) ·
+[Navigation & AI](docs/parked-3d/guide/navigation-and-ai.md) (parked 3D) ·
 [Assets & the VFS](docs/guide/assets-and-vfs.md) ·
 [Audio](docs/guide/audio.md) ·
 [Simulation Math](docs/guide/sim-math-toolkit.md) ·
@@ -364,7 +364,7 @@ whole file over fencing one; a file the 2D build never compiles costs nothing.
 
 Full details — the exclusion table, the classification rule, the recorded build times, and the
 carry-over workflow — are in
-[`docs/systems/build-2d-3d-split.md`](docs/systems/build-2d-3d-split.md).
+[`docs/systems/build-2d-3d-split.md`](docs/parked-3d/systems/build-2d-3d-split.md) (parked 3D).
 
 ---
 
@@ -615,7 +615,7 @@ The rule that catches people is **when** values are uploaded. `Renderer3D` captu
 reference* and reads its values at flush, so mutating one material between two draws gives both
 draws the last value rather than per-draw variation — `Material::Clone` per variant is the supported
 answer, spelled out with migration examples in
-[`docs/guide/rendering-3d.md`](docs/guide/rendering-3d.md#the-one-rule-that-breaks-migrated-code-material-values-are-read-at-flush).
+[`docs/guide/rendering-3d.md`](docs/parked-3d/guide/rendering-3d.md#the-one-rule-that-breaks-migrated-code-material-values-are-read-at-flush) (parked 3D).
 `Renderer2D` is a partial exception: `u_Color` and `u_Texture` are read at submit and baked into
 vertex data, while the rest of the cache uploads once at flush.
 
@@ -1342,10 +1342,11 @@ on.
 
 ## §30 Source File Map
 
-> **Verified against the tree at Phase 29.** Directories are listed with the files a contributor
-> reaches for first, not exhaustively — `Cosmic/src/` is the truth. Entries marked **3D** are
-> excluded from the 2D engine build; see [the partition](#the-2d-partition) below and
-> [`docs/systems/build-2d-3d-split.md`](docs/systems/build-2d-3d-split.md).
+> **Verified against the tree at Phase 29; 3D entries removed 2026-09-20 (AP-05 deleted them from
+> `main`).** Directories are listed with the files a contributor reaches for first, not
+> exhaustively — `Cosmic/src/` is the truth. The 3D lines that used to sit here are kept verbatim in
+> [`docs/parked-3d/README-part2-3d-systems.md`](docs/parked-3d/README-part2-3d-systems.md) (parked 3D);
+> see [Where the 3D half went](#where-the-3d-half-went) below.
 
 ```
 Cosmic/src/
@@ -1365,11 +1366,9 @@ Cosmic/src/
 ├── codes/                            KeyCodes.h, MouseButtonCodes.h, GamepadCodes.h
 ├── renderer/
 │   ├── Renderer2D.h/.cpp             Batch renderer: quads, circles, lines, text, instancing
-│   ├── Renderer3D.h/.cpp         3D  Sorted queue: submit → cull → sort → auto-instance → flush
 │   ├── SceneRenderer.h/.cpp          The pass graph / compositor (runs on BOTH configurations)
 │   ├── PostProcessStack.h/.cpp       Tonemap, FXAA, bloom, vignette, god rays
 │   ├── Light2DRenderer.h/.cpp        Half-res 2D light buffer, composited in the HDR phase
-│   ├── ShadowMap.*  EnvironmentMap.*  CoverageCapture.*  InstanceSet.*                      3D
 │   ├── RenderCommand.h/.cpp          Static forwarder → RendererAPI
 │   ├── RendererAPI.h/.cpp            Abstract GPU verbs (draw, state, compute, GPU zones)
 │   ├── RenderPass.h  RenderQueue.h   RAII camera/viewport scope; the sort-key queue
@@ -1378,21 +1377,16 @@ Cosmic/src/
 │   ├── Shader.*  Texture.*  TextureCube.*  Material.*  MaterialAsset.h
 │   ├── Buffer.*  VertexArray.*  UniformBuffer.*  StorageBuffer.*  FrameBuffer.*
 │   ├── Mesh.*  SubTexture2D.*  Font.*  Gizmo.*  GraphicsContext.h
-│   └── Model.*  Skeleton.*  AnimationClip.*  CgltfImpl.cpp                                  3D
 ├── scene/
 │   ├── Scene.h/.cpp                  entt registry, hierarchy, system dispatch, 4-pass pipeline
-│   ├── Scene3D.cpp               3D  the 3D half of Scene (split out in Phase 29 W5)
 │   ├── Entity.h  System.h  ComponentRegistry.h  SelectableComponent.h
 │   ├── Components.h                  Transform/Tag/ID/Sprite/Camera/2D/UI/physics components
-│   ├── Components3D.h            3D  mesh renderer, lights, environment, animator, world systems
 │   ├── SceneSerializer.*             .cscene / .cprefab JSON, opaque-field preservation
 │   ├── SceneManager.*                Async scene load/swap
 │   ├── EventBus.*                    Signals between entities, scripts and UI
 │   ├── FlowMachine.*  StoryGraph.*   .cflow screen flow; .cstory dialogue
-│   ├── WorldSystemRecipes.*      3D  scene-authored terrain/water/emitter → spec
-│   ├── SceneNav.*  ScenePicker.*  3D  navmesh bake + .cnav; 3D viewport picking
 │   └── ui/                           UiComponents.h, UiSystem.* — in-game canvas UI
-├── reflect/                          TypeDescriptor.h, TypeRegistry.* (+ TypeRegistry3D.cpp 3D)
+├── reflect/                          TypeDescriptor.h, TypeRegistry.*
 ├── scripting/                        ScriptableEntity.h, ScriptHost.*, ModuleRegistry.*,
 │                                     ModuleMacros.h — CS_SCRIPT/CS_SYSTEM + the eight proxies
 ├── physics/
@@ -1402,17 +1396,12 @@ Cosmic/src/
 │   ├── ScenePhysics.*                Component → collider desc, scene stepping
 │   └── backends/                     JoltBackend.cpp, NullBackend.cpp, BuiltinBackends.h
 ├── camera/                           Camera.h, Perspective/Orthographic, Camera2DController,
-│                                     Orbit/Fly/OrthographicCameraController, NavigationCube 3D
-├── nav/                          3D  NavWorld.* (Recast/Detour behind a pimpl), NavTypes.h
-├── terrain/                      3D  Terrain.* — heightmap composition, quadtree LOD
-├── water/                        3D  Water.*, GerstnerWave.h, Presets.h
-├── particles/                    3D  ParticleSystem.* (GPU compute), Presets.h
-├── voxel/                        3D  VoxelVolume, BlockPalette, VoxelMesher/Generator/Render
+│                                     Orbit/Fly/OrthographicCameraController
 ├── jobs/                             JobSystem.*, ParallelSystem.h, SystemQuery.h,
 │                                     ParallelFor.h, DoubleBuffer.h, ComponentArray.h
 ├── math/                             Spatial.h, Integrators.h, Filters.h, LookupTable.h,
 │                                     Noise.h, Random.h, Frustum.h  (header-only)
-├── assets/                           AssetLibrary.* (cache) + MeshImport.* 3D (assimp/cgltf)
+├── assets/                           AssetLibrary.* (cache)
 ├── audio/                            AudioEngine.h, Sound.h, Audio.cpp, MiniaudioImpl.cpp
 ├── serial/                           SerialPort.*, SerialLink.*, Framing.h (COBS + CRC16)
 ├── telemetry/                        TelemetryChannel.h, DataRecorder.*, DataPlayer.*,
@@ -1429,7 +1418,7 @@ Cosmic/src/
 
 Runtime/          Main.cpp (bootloader) + CosmicApp.rc / Starforge.rc / CosmicApp.manifest
 Cosmic/templates/ExampleProject/     The canonical C++ plugin template the Launcher scaffolds
-Projects/         Starforge (editor), SF_Telem, Frontier, Engine3DDemo, ForgeIsle, ViperSim
+Projects/         Starforge (editor), SF_Telem, PendulumLab, AnalysisSample, the template projects
 tests/            CosmicTests (headless doctest) + tests/render/ (golden images, opt-in)
 ```
 
@@ -1501,30 +1490,16 @@ classDiagram
 therefore never call `Application::PushLayer` with its own objects — see
 [`docs/guide/project-anatomy.md`](docs/guide/project-anatomy.md).
 
-### The 2D partition
+### Where the 3D half went
 
-Since Phase 29 the same source tree builds **two engines**. The 2D configuration is produced by
-`list(FILTER … EXCLUDE REGEX …)` calls in `Cosmic/CMakeLists.txt` (lines 178–210) — one per row of
-the partition table, in table order, so the two stay auditable against each other. Nothing is
-deleted and no file differs between the branches; the difference is entirely which files reach the
-compiler.
-
-| Excluded in the 2D build | What goes |
-| --- | --- |
-| Whole subsystem trees | `terrain/`, `voxel/`, `water/`, `nav/`, `particles/` |
-| `renderer/` | `Renderer3D`, `EnvironmentMap`, `ShadowMap`, `CoverageCapture`, `InstanceSet` |
-| `graphics/` | `Model`, `Skeleton`, `AnimationClip`, `CgltfImpl` |
-| `camera/` | `NavigationCube` (its `Render()` issues direct `Renderer3D` calls) |
-| `scene/` | `Scene3D`, `Components3D`, `SceneNav`, `ScenePicker`, `WorldSystemRecipes` |
-| `reflect/` | `TypeRegistry3D` |
-| `assets/` | `MeshImport.cpp` (the header stays, so the fences read the same on both) |
-| Vendored | **assimp** (159 TUs) and **recastnavigation** (26) are never configured |
-
-`physics/` is **shared and unfenced** — Jolt ships on both configurations. `SceneRenderer` and
-`PostProcessStack` ship on both too: a 2D frame runs the same HDR → tonemap → overlay spine. The
-authoritative exclusion table, the classification rule for new code, and the recorded build times
-are in [`docs/systems/build-2d-3d-split.md`](docs/systems/build-2d-3d-split.md); the client-facing
-summary is [§1.6](#16-the-two-engine-configurations).
+Until 2026-09-18 this section described the *2D partition*: how one source tree built two engines,
+which directories the `COSMIC_2D_ONLY` filter excluded and how the fences were classified. **`main` is
+now the 2D-only trunk (D-PURGE):** the 3D source, its vendored dependencies (assimp, recastnavigation),
+tests, goldens, editor panels and template scripts were deleted from this branch and are preserved on
+`engine-3d` (`0e8894b`, tag `cosmic-pre-2d-2026-09-16`). The partition table, the 3D lines of the source
+map above, the `Renderer3D` nodes of DG-6 and the old build-flag paragraph were moved verbatim to
+[`docs/parked-3d/README-part2-3d-systems.md`](docs/parked-3d/README-part2-3d-systems.md) (parked 3D);
+how to resume 3D is in [`docs/parked-3d/README.md`](docs/parked-3d/README.md) (parked 3D).
 
 ---
 
@@ -1905,8 +1880,9 @@ Note: `DrawIndexed` and `DrawIndexedInstanced` do **not** bind the vertex array 
 > — but a scene rendered through `SceneRenderer` runs shadow, coverage, reflection/refraction, main
 > HDR, water, particles and the post chain before the image reaches that ImGui blit. The
 > authoritative pass contract is [`docs/design/frame-lifecycle.md`](docs/design/frame-lifecycle.md),
-> the diagram is **DG-8** in
-> [`docs/guide/lighting-and-environment.md`](docs/guide/lighting-and-environment.md#dg-8--the-pass-graph),
+> the diagram is **DG-8** in the parked
+> [`docs/parked-3d/guide/lighting-and-environment.md`](docs/parked-3d/guide/lighting-and-environment.md#dg-8--the-pass-graph) (parked 3D)
+> (the 2D spine is described in [`docs/guide/lighting-2d.md`](docs/guide/lighting-2d.md)),
 > and the host-side frame sequence is **DG-3** in
 > [`docs/guide/project-anatomy.md`](docs/guide/project-anatomy.md#dg-3--the-frame-sequence).
 
@@ -1950,12 +1926,6 @@ classDiagram
         +DrawText()
         +Flush()
     }
-    class Renderer3D {
-        <<static — 3D build only>>
-        +DrawMesh()
-        +Flush()
-        -RenderQueue m_Queue
-    }
     class SceneRenderer {
         +Render(SceneRenderDesc)
         -PostProcessStack m_Post
@@ -1992,10 +1962,8 @@ classDiagram
     class OpenGLShader
     class OpenGLTexture2D
 
-    SceneRenderer ..> Renderer3D : routes opaque/transparent
     SceneRenderer ..> Renderer2D : sprites + overlay
     Renderer2D ..> RenderCommand
-    Renderer3D ..> RenderCommand
     RenderCommand o-- RendererAPI : one static pointer
     RendererAPI <|-- OpenGLRendererAPI
     OpenGLRendererAPI ..> OpenGLContext : needs a current context
@@ -2009,8 +1977,8 @@ classDiagram
 ```
 
 Two things the diagram encodes that are easy to get wrong. **`SceneRenderer` ships in both engine
-configurations** — a 2D frame runs the same HDR → tonemap → overlay spine; what the 2D build drops
-is `Renderer3D` and the resources only it owns. And **resources are abstract-with-one-backend**:
+configurations** — a 2D frame runs the same HDR → tonemap → overlay spine; the `Renderer3D` half that used to sit
+beside it is parked (see below). And **resources are abstract-with-one-backend**:
 `Shader::Create` / `Texture2D::Create` are factories returning the OpenGL subclass, which is why
 client code never names an `OpenGL*` type.
 
@@ -2446,13 +2414,10 @@ install rules that put `Cosmic.dll` and the engine assets into a package. **`Run
 two host executables, `CosmicApp.exe` and `Starforge.exe`, from the same `Main.cpp`; they differ
 only in a compiled-in `COSMIC_STARTUP_PROJECT`, a resource script and a taskbar identity.
 
-Two flags shape what gets built. **`COSMIC_2D_ONLY`** selects the engine configuration — it filters
-the source glob, skips the assimp and recastnavigation dependencies entirely, and changes the
-project skip-list; it is the only engine define exported `PUBLIC`, because public headers carry
-`#ifndef COSMIC_2D_ONLY` fences that must resolve identically in the engine and in every consumer.
-**`COSMIC_BUILD_ENGINE_ONLY`** skips the project scanner. Everything else — `COSMIC_WITH_JOLT`,
-`COSMIC_WITH_ASSIMP`, `COSMIC_BUILD_TESTS`, `COSMIC_BUILD_RENDER_TESTS`, `COSMIC_SKIP_PROJECTS` — is
-a narrower switch on one subsystem or target.
+One flag used to shape what got built: `COSMIC_2D_ONLY` selected the engine configuration. Since AP-05 it is an
+**always-ON compatibility no-op** (`OFF` is rejected at configure) and the remaining options — `COSMIC_BUILD_ENGINE_ONLY`,
+`COSMIC_WITH_JOLT`, `COSMIC_BUILD_TESTS`, `COSMIC_BUILD_RENDER_TESTS`, `COSMIC_SKIP_PROJECTS` — are each a narrower
+switch on one subsystem or target. History: [`docs/parked-3d/README-part2-3d-systems.md`](docs/parked-3d/README-part2-3d-systems.md) (parked 3D).
 
 **Release is the distribution build**, decided per-configuration by generator expression rather than
 by a cache flag that could be left stale: `$<$<CONFIG:Release>:COSMIC_DIST>` compiles out the
@@ -2899,11 +2864,11 @@ everything else is a territory. Twenty-one documents:
 | [`ecs-scene.md`](docs/systems/ecs-scene.md) | The entt-backed entity/component model, systems, scene render hooks |
 | [`cameras-navigation.md`](docs/systems/cameras-navigation.md) | Camera hierarchy, orbit/fly controllers, CAD-style navigation, the nav cube, picking, gizmos |
 | [`rendering-2d.md`](docs/systems/rendering-2d.md) | Batching, texture slots, SDF circles, instancing, text |
-| [`rendering-3d.md`](docs/systems/rendering-3d.md) | The sorted queue: submit → cull → sort → auto-instance → flush; transparency; LOD |
+| [`rendering-3d.md`](docs/parked-3d/systems/rendering-3d.md) (parked 3D) | The sorted queue: submit → cull → sort → auto-instance → flush; transparency; LOD |
 | [`rendering-pipeline.md`](docs/systems/rendering-pipeline.md) | `SceneRenderer`'s pass graph, HDR, PBR + IBL, shadows, SSAO/bloom/FXAA, sky and time of day |
-| [`terrain.md`](docs/systems/terrain.md) | Heightmap composition, quadtree LOD, splat/triplanar materials, CPU height queries |
-| [`water.md`](docs/systems/water.md) | Gerstner waves, planar reflection/refraction, underwater rendering, buoyancy |
-| [`particles.md`](docs/systems/particles.md) | GPU particle pools, compute-shader simulation, billboards and ribbons, presets |
+| [`terrain.md`](docs/parked-3d/systems/terrain.md) (parked 3D) | Heightmap composition, quadtree LOD, splat/triplanar materials, CPU height queries |
+| [`water.md`](docs/parked-3d/systems/water.md) (parked 3D) | Gerstner waves, planar reflection/refraction, underwater rendering, buoyancy |
+| [`particles.md`](docs/parked-3d/systems/particles.md) (parked 3D) | GPU particle pools, compute-shader simulation, billboards and ribbons, presets |
 | [`physics-backends.md`](docs/systems/physics-backends.md) | `PhysicsWorld` as a dispatcher over `IPhysicsBackend`; the registry; writing your own |
 | [`assets-vfs.md`](docs/systems/assets-vfs.md) | The asset cache, model import, the `engine://` / `project://` / `user://` schemes, shader preprocessing |
 | [`audio.md`](docs/systems/audio.md) | The miniaudio backend, one-shots, loops and groups |
@@ -2912,7 +2877,7 @@ everything else is a territory. Twenty-one documents:
 | [`serial-telemetry.md`](docs/systems/serial-telemetry.md) | Serial ports and links, COBS framing, columnar recording, replay |
 | [`ui-theming.md`](docs/systems/ui-theming.md) | ImGui integration, the docking model, the theme manager, fonts and icons, widgets |
 | [`build-plugin-packaging.md`](docs/systems/build-plugin-packaging.md) | CMake layout, hot-reloadable project DLLs, the packaging/installer pipeline |
-| [`build-2d-3d-split.md`](docs/systems/build-2d-3d-split.md) | `COSMIC_2D_ONLY`: what each configuration excludes, the classification rule for new code, presets and scripts, recorded build times, the carry-over workflow |
+| [`build-2d-3d-split.md`](docs/parked-3d/systems/build-2d-3d-split.md) (parked 3D) | `COSMIC_2D_ONLY`: what each configuration excludes, the classification rule for new code, presets and scripts, recorded build times, the carry-over workflow |
 
 > **Most of those are still skeletons.** Only `build-2d-3d-split.md` and `physics-backends.md` are
 > written; the rest carry a `STATUS: SKELETON` banner until their work order lands. **The Status
@@ -2940,7 +2905,7 @@ Supporting material, unchanged in purpose:
 | --- | --- |
 | [`docs/plans/`](docs/plans/) | Live per-phase plan docs with PR-sized work orders and acceptance checks. Completed plans move to [`docs/plans/archive/`](docs/plans/archive/) — the rule is that a *live* doc contains only unimplemented work. |
 | [`docs/engineering-notes/`](docs/engineering-notes/) | Root-caused postmortems (borderless-window DPI, GL teardown, telemetry resync, the Starforge homescreen z-order). Why a bug happened and what fixed it. |
-| [`docs/design/`](docs/design/) | Accepted design documents and specs of record — [`frame-lifecycle.md`](docs/design/frame-lifecycle.md), [`responsive-rendering-and-pause.md`](docs/design/responsive-rendering-and-pause.md), [`water-rendering-notes.md`](docs/design/water-rendering-notes.md). |
+| [`docs/design/`](docs/design/) | Accepted design documents and specs of record — [`frame-lifecycle.md`](docs/design/frame-lifecycle.md), [`responsive-rendering-and-pause.md`](docs/design/responsive-rendering-and-pause.md), [`water-rendering-notes.md`](docs/archive/design/water-rendering-notes.md). |
 | [`docs/archive/`](docs/archive/) | Historical analyses (2026-05/06 audits and improvement passes) — superseded, kept for the "why". |
 
 **Where limitations are actually recorded now.** Each guide chapter carries a `Pitfalls` section

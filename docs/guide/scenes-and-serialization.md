@@ -1,5 +1,7 @@
 # Scenes & Serialization — Guide
 
+> **History (2026-09-20, App Platform AP-D1).** This chapter was written for the two-configuration engine (Phase 29) and cites `Projects/Frontier`, `Projects/Engine3DDemo`, `Projects/ForgeIsle`, `Projects/ViperSim` or `#ifndef COSMIC_2D_ONLY` fences as worked examples. `main` is now the 2D-only trunk (D-PURGE): those projects, the fences and the `engine-2d` branch are gone from it and survive only on `engine-3d` (`0e8894b`, tag `cosmic-pre-2d-2026-09-16`), so read such mentions and their `file:line` references as historical. The current exemplars are the template projects, `Projects/PendulumLab`, `Projects/AnalysisSample` and `Projects/SF_Telem`; the trunk policy is in the root README 1.6 and [`../parked-3d/systems/build-2d-3d-split.md`](../parked-3d/systems/build-2d-3d-split.md) (parked 3D) records what the split was.
+
 **What this covers:** creating, saving and loading scenes; the `.cscene` file format and the
 reflection registry that generates it; UUIDs and `EntityRef` fields; **prefabs**; async scene
 transitions with `SceneManager`; undo/redo with `CommandStack`; and the guarantee that opening a
@@ -14,9 +16,7 @@ scene in a build that does not know one of its component types **loses nothing**
 `SceneSerializer`, `SceneManager`, `CommandStack`, `UUID` and the reflection registry have **no
 reference chapter yet**; this chapter and the headers are the current source ·
 **How it works:** [../systems/ecs-scene.md](../systems/ecs-scene.md)
-**Configuration:** both. Everything here compiles in the 2D build, and the cross-build guarantee in
-[Nothing is ever lost](#nothing-is-ever-lost--opaquecomponentscomponent) is *why* the split is safe.
-See [../systems/build-2d-3d-split.md](../systems/build-2d-3d-split.md).
+**Configuration:** 2D trunk. `main` builds one engine, 2D-only (since 2026-09-18, D-PURGE); `-DCOSMIC_2D_ONLY=ON` is an always-on compatibility flag and `OFF` is rejected at configure. History: the two-configuration build this line used to describe is [parked](../parked-3d/systems/build-2d-3d-split.md) (parked 3D).
 
 A `.cscene` is a JSON file, and **nothing in the engine writes it by hand.** One generic visitor
 walks the reflection registry: every component type that registered its fields is written and read
@@ -663,7 +663,7 @@ script hot reload.
 - [`../reference/ecs.md`](../reference/ecs.md) — exact `Scene` / `Entity` / component signatures.
 - [`../systems/ecs-scene.md`](../systems/ecs-scene.md) — how the registry and the Phase 29 file
   partition work.
-- [`../systems/build-2d-3d-split.md`](../systems/build-2d-3d-split.md) — the configuration split the
+- [`../systems/build-2d-3d-split.md`](../parked-3d/systems/build-2d-3d-split.md) (parked 3D) — the configuration split the
   opaque-preservation guarantee protects.
 - [`assets-and-vfs.md`](assets-and-vfs.md) — `FileSystem::Resolve`, the `project://` / `user://`
   roots, and `AssetLibrary`.

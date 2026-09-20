@@ -841,7 +841,7 @@ Planned now, written only after the separation is verified working on-GPU.
 
 | ID | Document | Contents |
 |---|---|---|
-| **D41** ✅ | [`docs/systems/build-2d-3d-split.md`](../../systems/build-2d-3d-split.md) | What the flag excludes and why; the classification rule for new code ("which side does this file belong on?"); `build.bat` / `build_2d.bat` / presets / worktree layout; **the recorded build-time numbers from W2 and W8**; the branch and carry-over workflow. |
+| **D41** ✅ | [`docs/systems/build-2d-3d-split.md`](../../parked-3d/systems/build-2d-3d-split.md) | What the flag excludes and why; the classification rule for new code ("which side does this file belong on?"); `build.bat` / `build_2d.bat` / presets / worktree layout; **the recorded build-time numbers from W2 and W8**; the branch and carry-over workflow. |
 | **D42** ✅ | [`docs/systems/physics-backends.md`](../../systems/physics-backends.md) | `IPhysicsBackend`, the registry, `PhysicsSettings::Backend`; the fixed-step contract a backend must honour; `ThreadCount`/determinism expectations; `RayHit::EntityId` round-trip; a worked example lifted from `test_physics_backend.cpp`. |
 | **D43** ✅ | [`docs/reference/physics.md`](../../reference/physics.md) | The per-call reference for `PhysicsWorld` / `PhysicsTypes` / `PhysicsBody` / `CharacterController` / `ScenePhysics` — currently **missing entirely** from `docs/reference/`. Follows `docs/reference/README.md`'s entry format. |
 | **D44** ✅ | This document, updated | Status banners, ✅-with-date lines, and a deviation section recording every place implementation diverged from the plan → [§11](#11-phase-table), [§16](#16-deviations--where-implementation-diverged-from-the-plan), [§17](#17-follow-ups-leaving-this-phase). |
@@ -1668,7 +1668,7 @@ connect to a port, record, replay.
 
 ### W10 — Documentation
 
-> **✅ DONE 2026-07-25.** D41 [`systems/build-2d-3d-split.md`](../../systems/build-2d-3d-split.md),
+> **✅ DONE 2026-07-25.** D41 [`systems/build-2d-3d-split.md`](../../parked-3d/systems/build-2d-3d-split.md),
 > D42 [`systems/physics-backends.md`](../../systems/physics-backends.md),
 > D43 [`reference/physics.md`](../../reference/physics.md), D44 this document's status banner,
 > per-work-order lines and [§16](#16-deviations--where-implementation-diverged-from-the-plan), and
@@ -2009,7 +2009,7 @@ live in the editor since before this phase started.
 **Shipped:** only clean-build numbers. The header-partition argument in §5.1 — `Components.h` no
 longer dragging `Skeleton.h` / `AnimationClip.h` / `ParticleSystem.h` into every consumer — is
 therefore **argued but not measured**. Noted as a limit in
-[`docs/systems/build-2d-3d-split.md`](../../systems/build-2d-3d-split.md) §6.
+[`docs/systems/build-2d-3d-split.md`](../../parked-3d/systems/build-2d-3d-split.md) §6.
 
 ### D-12 — Two §9.6 behaviours are not headlessly reachable
 

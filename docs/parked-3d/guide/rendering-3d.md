@@ -1,5 +1,7 @@
 # 3D Rendering — Guide
 
+> **PARKED 3D — not on the trunk.** This chapter documents code that lives only on the `engine-3d` branch (`0e8894b`, tag `cosmic-pre-2d-2026-09-16`). The 2D trunk (`main`) no longer builds or ships it (D-PURGE, 2026-09-18). Kept for when 3D resumes.
+
 **What this covers:** `Renderer3D` end to end — why `DrawMesh` **submits** instead of drawing, the
 cull → sort → auto-instance → flush pipeline and what it means for your code, **the
 material-read-at-flush rule that breaks naive per-draw tinting**, meshes and primitives, glTF/FBX
@@ -55,12 +57,12 @@ void MyLayer::OnUpdate(float deltaTime)
 Four things this is quietly asserting:
 
 - **Drawing happens in `OnUpdate`.** `Layer::OnRender()` is declared but never called by the engine
-  (D46 finding) — see [`time-and-ticks.md`](time-and-ticks.md).
+  (D46 finding) — see [`time-and-ticks.md`](../../guide/time-and-ticks.md).
 - **`EndScene` is what draws.** Nothing between the two calls touches the GPU.
 - **Depth testing is already on.** `RendererAPI::Init` enables `GL_DEPTH_TEST` and alpha blending
   process-wide (`OpenGLRendererAPI.cpp:17-20`), so opaque geometry sorts correctly with no setup.
 - **You do not bind a framebuffer.** Under `WorkspaceLayer` (the editor and the packaged player) a
-  viewport target is already bound. See [`windowing-and-viewport.md`](windowing-and-viewport.md)
+  viewport target is already bound. See [`windowing-and-viewport.md`](../../guide/windowing-and-viewport.md)
   *(D60)*.
 
 `Renderer3D::Init()` / `Shutdown()` are called by `Renderer::Init` (`Renderer.cpp:28`) — client code
@@ -174,7 +176,7 @@ Cosmic::Renderer3D::EndScene();
 
 `Flush()` executes and **clears** both queues (`Renderer3D.cpp:922`, `:953`), so — unlike
 `Renderer2D::Flush()`, which does not reset its counters and double-draws
-([`rendering-2d.md`](rendering-2d.md#flush-is-public-and-does-not-reset)) — calling it mid-scene is
+([`rendering-2d.md`](../../guide/rendering-2d.md#flush-is-public-and-does-not-reset)) — calling it mid-scene is
 safe and idempotent. Starforge's asset-preview rig uses it to draw a mesh with depth on and then a
 bone overlay with depth off (`Projects/Starforge/src/PreviewRig.cpp:249`).
 
@@ -212,7 +214,7 @@ matrix (`Engine3DDemo.cpp:1047`).
 
 Because the camera lives in a UBO, **no shader needs a per-draw `u_ViewProjection`**. A custom mesh
 shader declares `layout(std140, binding = 1) uniform CameraBlock { mat4 ViewProjection; vec4
-CameraPosition; }` and gets it for free — see [`materials-and-shaders.md`](materials-and-shaders.md).
+CameraPosition; }` and gets it for free — see [`materials-and-shaders.md`](../../guide/materials-and-shaders.md).
 
 `EndScene` flushes the mesh queue first and the batched debug lines second, so lines depth-test
 against the meshes you just drew (`:365-381`). It warns and returns if no scene is open.
@@ -315,7 +317,7 @@ Cosmic::Ref<Cosmic::Mesh> rover = Cosmic::AssetLibrary::GetMesh("project://model
 
 `AssetLibrary::GetMesh` sends every format the importer supports through `MeshImport` (so the
 source's `.cmeta` unit scale and up-axis are applied) and falls back to the OBJ parser otherwise
-(`AssetLibrary.cpp:136-147`). Prefer it. See [`assets-and-vfs.md`](assets-and-vfs.md) *(D58)*.
+(`AssetLibrary.cpp:136-147`). Prefer it. See [`assets-and-vfs.md`](../../guide/assets-and-vfs.md) *(D58)*.
 
 ### What a mesh knows about itself
 
@@ -385,7 +387,7 @@ merged mesh; the fragment form `"project://models/gun.fbx#2"` addresses sub-mesh
 its own asset slot (`assets/MeshImport.h`, `AssetLibrary.cpp:120-134`). Import parameters —
 source-to-metre scale, up axis, UV flip, normal generation — live in a `<source>.cmeta` TOML sidecar
 so a re-import is reproducible; the presets are STL mm, FBX cm. Full coverage is
-[`assets-and-vfs.md`](assets-and-vfs.md) *(D58)*.
+[`assets-and-vfs.md`](../../guide/assets-and-vfs.md) *(D58)*.
 
 ---
 
@@ -473,7 +475,7 @@ which is why imported models still pick up image-based lighting.
 
 `SetIBL` / `SetShadow` / `SetSnow` register scene-level resources by raw renderer ID and are normally
 driven by `SceneRenderer`, not by you. They are covered in
-[`lighting-and-environment.md`](lighting-and-environment.md). `ApplySceneBindings(shader)` is
+[`lighting-and-environment.md`](../../guide/lighting-2d.md). `ApplySceneBindings(shader)` is
 public for the one case that needs it: an engine subsystem drawing with its **own** shader (terrain,
 water) calls it right after binding so IBL and shadows still apply.
 
@@ -486,8 +488,8 @@ path for you: `MaterialAsset` set → the material path; null → the Lambert `C
 null → the entity is skipped. `Enabled == false` or an inactive ancestor skips it everywhere;
 `CastShadows == false` skips it in the depth passes only.
 
-The full component catalogue is [`entities-and-components.md`](entities-and-components.md); the pass
-graph that drives it is [`lighting-and-environment.md`](lighting-and-environment.md).
+The full component catalogue is [`entities-and-components.md`](../../guide/entities-and-components.md); the pass
+graph that drives it is [`lighting-and-environment.md`](../../guide/lighting-2d.md).
 
 ---
 
@@ -855,7 +857,7 @@ not in it.
 > `BeginScene`, or the counters read as lifetime totals. Engine3DDemo
 > (`Engine3DDemo.cpp:835`) and Frontier (`FrontierApp.cpp:103`) do; **Starforge does not**, so the
 > editor's Profiler panel shows accumulating totals. This is the 3D half of the asymmetry described
-> in [`logging-and-diagnostics.md`](logging-and-diagnostics.md) — `Renderer3D` has no
+> in [`logging-and-diagnostics.md`](../../guide/logging-and-diagnostics.md) — `Renderer3D` has no
 > `StatsEnabled` flag (counters always accumulate), while `Renderer2D` has one and it defaults to
 > `false`.
 
@@ -973,7 +975,7 @@ flush, not at submit. Use `Material::Clone` per variant — see
 **"Nothing draws and there is no error."** Either a null `Ref<Mesh>` / `Ref<Material>` (dropped
 silently) or drawing outside `BeginScene`/`EndScene` (which *does* warn — check the log; Release
 builds have no console, so the log **file** is the only output, see
-[`logging-and-diagnostics.md`](logging-and-diagnostics.md)).
+[`logging-and-diagnostics.md`](../../guide/logging-and-diagnostics.md)).
 
 **"My objects vanish when I look away, but they should still render."** That is frustum culling
 working. If a custom shader displaces vertices past the mesh AABB, call
@@ -1027,13 +1029,13 @@ check you resolved the VFS path first; neither `Mesh` factory nor `Model::Create
 
 - [`../reference/rendering-3d.md`](../reference/rendering-3d.md) — per-call signatures *(skeleton, D10)*
 - [`../systems/rendering-3d.md`](../systems/rendering-3d.md) — how the queue works internally *(skeleton, D28)*
-- [`materials-and-shaders.md`](materials-and-shaders.md) — `Material`, `Clone`, the three bind verbs, `.cmat`, the shader contract
-- [`lighting-and-environment.md`](lighting-and-environment.md) — `SceneRenderer`, the pass graph, IBL, shadows, sky, the post chain
+- [`materials-and-shaders.md`](../../guide/materials-and-shaders.md) — `Material`, `Clone`, the three bind verbs, `.cmat`, the shader contract
+- [`lighting-and-environment.md`](../../guide/lighting-2d.md) — `SceneRenderer`, the pass graph, IBL, shadows, sky, the post chain
 - [`world-systems.md`](world-systems.md) — terrain, water and particles: the content `desc.TerrainSystem` / `WaterBodies` / `Emitters` carry
-- [`entities-and-components.md`](entities-and-components.md) — `MeshRendererComponent`, `PrimitiveMeshComponent`, `LODGroupComponent`, the automatic-draw contract
-- [`cameras.md`](cameras.md) — the cameras and controllers `BeginScene` accepts, and picking
+- [`entities-and-components.md`](../../guide/entities-and-components.md) — `MeshRendererComponent`, `PrimitiveMeshComponent`, `LODGroupComponent`, the automatic-draw contract
+- [`cameras.md`](../../guide/cameras.md) — the cameras and controllers `BeginScene` accepts, and picking
 - [`animation.md`](animation.md) — skeletons, clips and the palette `DrawMeshSkinned` consumes *(D56)*
-- [`assets-and-vfs.md`](assets-and-vfs.md) — `AssetLibrary`, model import, `.cmeta` sidecars *(D58)*
-- [`logging-and-diagnostics.md`](logging-and-diagnostics.md) — the other stats counters and the GPU profiler
-- [`../design/frame-lifecycle.md`](../design/frame-lifecycle.md) — the pass and state contract
+- [`assets-and-vfs.md`](../../guide/assets-and-vfs.md) — `AssetLibrary`, model import, `.cmeta` sidecars *(D58)*
+- [`logging-and-diagnostics.md`](../../guide/logging-and-diagnostics.md) — the other stats counters and the GPU profiler
+- [`../design/frame-lifecycle.md`](../../design/frame-lifecycle.md) — the pass and state contract
 - [`../systems/build-2d-3d-split.md`](../systems/build-2d-3d-split.md) — what each configuration ships
