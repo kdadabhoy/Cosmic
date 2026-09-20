@@ -54,7 +54,7 @@ Items, in order (each gets its own agent; report to Kaden in one paragraph after
    the soak results, stage the push + tag commands for Kaden (unexecuted).
 
 Memory notes (state at hand-off, 2026-09-20): main = 918add9 (AP-D1 docs restructure + clone-and-run cleanup + KI-64/65 pointer lane) pushed; qualified
-SHA fa1223a (tag cosmic-app-platform-g5-2026-09-20); CosmicTests 523 passed / 14 skipped both configs; testseck_docs_links.ps1 exists and runs in CI;
+SHA fa1223a (tag cosmic-app-platform-g5-2026-09-20); CosmicTests 523 passed / 14 skipped both configs; tests/check_docs_links.ps1 exists and runs in CI;
 CosmicRenderTests 45/45, 15 goldens; KI-1..65 registered (61/62/64/65 fixed, 63 open). Deferred by decision, not
 by failure: AP-D2, the soaks, KI-63, the tidy remainder, hardening.
 ~~~
