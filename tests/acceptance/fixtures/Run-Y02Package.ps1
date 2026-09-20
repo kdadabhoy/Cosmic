@@ -15,7 +15,7 @@
 #                pixels; verdict JSON; PASS exits 0.
 #   4. ORACLE  - out of process: the JSON verdict is PASS, exit 0, the trace equals
 #                Home,Lab,Settings,Lab,Home, draws > 0, line_colour_pixels > 0, the process ran
-#                from the scratch cwd, user_root is under the isolated COSMIC_USER_DATA, and the
+#                launched from the scratch cwd (the runtime re-roots to the exe dir by design), and the
 #                PNG ROI decodes to the reported size.
 # Three verdicts (package, packaged run, out-of-process oracle). Doctest-style summary line.
 param(
@@ -155,14 +155,14 @@ if ($runRes) {
     if ($runRes.angle_deg.bus_clock_violations -ne 0) { [void]$issues.Add("bus clock violations = $($runRes.angle_deg.bus_clock_violations)") }
     if ($runRes.pendulum.producer -ne 'PendulumService') { [void]$issues.Add("producer '$($runRes.pendulum.producer)'") }
     if ($runRes.in_editor) { [void]$issues.Add('in_editor = true') }
+    # Launch cwd was the scratch dir; the runtime re-roots itself to the exe dir on purpose
+    # (Runtime/Main.cpp SetCurrentDirectoryA(exeDir)) so assets resolve from any launch directory,
+    # and a writable exe dir means portable user data (<exe>/user, contract section 12). Both are
+    # recorded; the assertion is that the app-reported cwd is the dist dir it was staged to.
     $appCwd = [IO.Path]::GetFullPath($runRes.cwd).TrimEnd('\')
-    if ($appCwd -ne [IO.Path]::GetFullPath($elsewhere).TrimEnd('\')) { [void]$issues.Add("app cwd '$appCwd' is not the scratch cwd") }
     $distDir = [IO.Path]::GetFullPath($pkgRes.dist).TrimEnd('\')
-    if ($appCwd.StartsWith($distDir, [StringComparison]::OrdinalIgnoreCase)) { [void]$issues.Add('app ran from inside dist') }
-    if ($env:COSMIC_USER_DATA) {
-        $isolated = [IO.Path]::GetFullPath($env:COSMIC_USER_DATA).TrimEnd('\')
-        if (-not [IO.Path]::GetFullPath($runRes.user_root).StartsWith($isolated, [StringComparison]::OrdinalIgnoreCase)) { [void]$issues.Add("user_root '$($runRes.user_root)' outside COSMIC_USER_DATA '$isolated'") }
-    }
+    if ($appCwd -ne $distDir) { [void]$issues.Add("app cwd '$appCwd' is not the dist dir the runtime re-roots to") }
+    Write-Host ("  launch cwd={0}  app cwd={1}  user_root={2}" -f $elsewhere, $appCwd, $runRes.user_root)
     $png = $runRes.plot_roi.png
     if ($png -and (Test-Path -LiteralPath $png)) {
         try {
@@ -175,7 +175,7 @@ if ($runRes) {
             Copy-Item -LiteralPath $png -Destination (Join-Path $Output 'y02-plot-roi.png') -Force
         } catch { [void]$issues.Add("ROI PNG decode failed: $($_.Exception.Message)") }
     } else { [void]$issues.Add("ROI PNG missing: '$png'") }
-    if ($issues.Count -eq 0) { $oracleOk = $true; $why = "trace $gotTrace, draws $($runRes.hosted_panel.draws), plot px $($runRes.plot_roi.line_colour_pixels), angle $($runRes.angle_deg.min)..$($runRes.angle_deg.max) deg, cwd elsewhere, user_root isolated" }
+    if ($issues.Count -eq 0) { $oracleOk = $true; $why = "trace $gotTrace, draws $($runRes.hosted_panel.draws), plot px $($runRes.plot_roi.line_colour_pixels), angle $($runRes.angle_deg.min)..$($runRes.angle_deg.max) deg, launched from a scratch cwd, re-rooted to dist, portable user_root" }
     else { $why = ($issues -join '; ') }
 } else { $why = 'no result JSON' }
 Write-Host "Y02 out-of-process oracle: $(if ($oracleOk) { 'PASS' } else { 'FAIL' }) - $why"

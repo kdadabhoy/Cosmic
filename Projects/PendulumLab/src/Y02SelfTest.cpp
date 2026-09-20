@@ -174,7 +174,12 @@ void Y02SelfTestService::OnUpdate(float ts)
         auto fb = Cosmic::Application::Get().GetFrameBuffer();
         std::vector<uint8_t> rgba; uint32_t w = 0, h = 0;
         Cosmic::Scene* scene = Context().ActiveScene;
-        if (!fb || !fb->ReadPixels(0, rgba, w, h) || w == 0 || h == 0) t.fail("viewport framebuffer not readable");
+        // FrameBuffer::ReadPixels reads the CURRENTLY BOUND FBO; bind the viewport target first (the
+        // service ticks between frames, when the default framebuffer is bound). AP-Q1 fix: without the
+        // Bind the readback returned the window surface, never the scene (AP-04's smoke ROI = flat grey).
+        bool readable = false;
+        if (fb) { fb->Bind(); readable = fb->ReadPixels(0, rgba, w, h); fb->Unbind(); }
+        if (!readable || w == 0 || h == 0) t.fail("viewport framebuffer not readable");
         else if (!scene) t.fail("no active scene bound to the services");
         else
         {

@@ -145,7 +145,12 @@ namespace Starforge
             need(t.projectName + ".dll");
             need("boot.cfg");
             need(fs::path("assets") / "projects" / t.projectName / "project.cproj");
-            need(fs::path("assets") / "projects" / t.projectName / "data" / "trajectory.csv");
+            // The project's own content follows it into the payload: every regular file under the
+            // SOURCE project's data/ (AnalysisSample ships data/trajectory.csv; PendulumLab, or any
+            // other project driven through this harness, may have none — AP-Q1 made this generic).
+            if (fs::is_directory(fs::path(t.projectRoot) / "data", ec))
+                for (const auto& f : fs::directory_iterator(fs::path(t.projectRoot) / "data", ec))
+                    if (f.is_regular_file(ec)) need(fs::path("assets") / "projects" / t.projectName / "data" / f.path().filename());
             need(fs::path("assets") / "shaders");
             // Nothing developer-only or source in the payload.
             for (const char* bad : { "src", "build", "CMakeLists.txt", ".git" })
