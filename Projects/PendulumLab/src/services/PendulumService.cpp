@@ -134,9 +134,13 @@ void PendulumService::Publish()
 
 // ---- hosted panel -------------------------------------------------------------------
 
+static std::function<void()> s_AfterPhasePlotDrawOnce;
+void PendulumService::SetAfterPhasePlotDrawOnce(std::function<void()> fn) { s_AfterPhasePlotDrawOnce = std::move(fn); }
+
 void PendulumService::DrawPhasePlot(const Cosmic::UiRect& rect)
 {
     ++m_PanelDraws;
+    struct AfterDraw { ~AfterDraw() { if (s_AfterPhasePlotDrawOnce) { auto fn = std::move(s_AfterPhasePlotDrawOnce); s_AfterPhasePlotDrawOnce = nullptr; fn(); } } } afterDraw;
     // Pair the two histories from the tail: both channels are written in the same
     // fixed step, so the newest N samples of each line up.
     const size_t na = Bus().History("pendulum.angle_deg", m_ScratchA, 10.0);

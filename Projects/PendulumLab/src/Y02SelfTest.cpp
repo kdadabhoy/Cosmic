@@ -1,6 +1,7 @@
 // Y02SelfTest.cpp — see Y02SelfTest.h.
 
 #include "Y02SelfTest.h"
+#include "services/PendulumService.h"
 
 #include "scene/FlowMachine.h"
 #include "scene/ui/UiComponents.h"
@@ -56,6 +57,9 @@ struct Y02SelfTestService::Impl
     double angleMin = 1e300, angleMax = -1e300, busNowPrev = -1.0; int busClockViolations = 0, sampleFrames = 0;
     double panelDraws = 0.0; int plotPixels = 0, plotRoiPixels = 0; std::string roiPng;
     float  plotRect[4]{ 0, 0, 0, 0 }; uint32_t fbW = 0, fbH = 0;
+    // Deferred framebuffer readback: requested through PendulumService::SetAfterPhasePlotDrawOnce and
+    // filled at the end of that frame's PhasePlot draw (after the scene render), consumed next tick.
+    bool readbackRequested = false, readbackReady = false, readbackOk = false; std::vector<uint8_t> readback; uint32_t readbackW = 0, readbackH = 0;
     std::vector<std::string> trace;   // state after every transition we requested
 
     int failures = 0;
@@ -171,15 +175,26 @@ void Y02SelfTestService::OnUpdate(float ts)
         if (!(t.panelDraws > 0.0)) t.fail("PhasePlot hosted panel was never drawn (pendulum.phaseplot_draws = %.0f)", t.panelDraws);
         // Plot ROI: resolve the Lab canvas' "Plot" element over the framebuffer and look for
         // the UiPlot line colours (LineColor / LineColor2 of scenes/Lab.cscene) inside it.
-        auto fb = Cosmic::Application::Get().GetFrameBuffer();
-        std::vector<uint8_t> rgba; uint32_t w = 0, h = 0;
         Cosmic::Scene* scene = Context().ActiveScene;
-        // FrameBuffer::ReadPixels reads the CURRENTLY BOUND FBO; bind the viewport target first (the
-        // service ticks between frames, when the default framebuffer is bound). AP-Q1 fix: without the
-        // Bind the readback returned the window surface, never the scene (AP-04's smoke ROI = flat grey).
-        bool readable = false;
-        if (fb) { fb->Bind(); readable = fb->ReadPixels(0, rgba, w, h); fb->Unbind(); }
-        if (!readable || w == 0 || h == 0) t.fail("viewport framebuffer not readable");
+        // The readback must see a COMPLETE frame: a service's OnUpdate runs after the host cleared the
+        // viewport target and before PlayerLayer renders into it (WorkspaceLayer::OnUpdate clears to 0.1
+        // grey, then RenderScene). So the read is requested once and performed inside the PhasePlot
+        // hosted-panel draw of the same frame (host ImGui pass, after the render), then consumed here.
+        if (!t.readbackRequested)
+        {
+            t.readbackRequested = true;
+            Impl* impl = m_Impl;
+            PendulumService::SetAfterPhasePlotDrawOnce([impl]()
+            {
+                auto fb = Cosmic::Application::Get().GetFrameBuffer();
+                if (fb) { fb->Bind(); impl->readbackOk = fb->ReadPixels(0, impl->readback, impl->readbackW, impl->readbackH); fb->Unbind(); }
+                impl->readbackReady = true;
+            });
+            return;
+        }
+        if (!t.readbackReady) { if (phaseSec > 10.0) { t.fail("PhasePlot draw never ran the framebuffer probe"); t.go(P::Escape); } return; }
+        std::vector<uint8_t>& rgba = t.readback; const uint32_t w = t.readbackW, h = t.readbackH;
+        if (!t.readbackOk || w == 0 || h == 0) t.fail("viewport framebuffer not readable");
         else if (!scene) t.fail("no active scene bound to the services");
         else
         {
@@ -221,12 +236,17 @@ void Y02SelfTestService::OnUpdate(float ts)
                 for (int y = y0; y < y1; ++y)
                     for (int x = x0; x < x1; ++x)
                     {
+                        // The viewport target is rendered canvas-space (row 0 = top), so the readback rows are
+                        // top-down like the UI rect (verified against y02-frame.png).
                         const uint8_t* p = &rgba[((size_t)y * w + (size_t)x) * 4];
                         crop.insert(crop.end(), p, p + 4);
                         ++t.plotRoiPixels;
                         if (closeTo(p[0], p[1], p[2], 77, 204, 255) || closeTo(p[0], p[1], p[2], 255, 153, 51)) ++t.plotPixels;   // LineColor / LineColor2
                     }
                 t.roiPng = (fs::path(t.outputDir) / "y02-plot-roi.png").generic_string();
+                {   // the whole readback (row 0 = top) for the evidence folder
+                    Cosmic::ImageIO::WritePNG((fs::path(t.outputDir) / "y02-frame.png").generic_string(), (int)w, (int)h, 4, rgba.data());
+                }
                 if (x1 > x0 && y1 > y0) Cosmic::ImageIO::WritePNG(t.roiPng, x1 - x0, y1 - y0, 4, crop.data());
             }
             if (!found) t.fail("Lab scene has no 'Plot' UI element");

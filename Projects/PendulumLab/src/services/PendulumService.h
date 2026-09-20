@@ -30,11 +30,17 @@
 
 #include <Cosmic.h>
 
+#include <functional>
 #include <vector>
 
 class PendulumService : public Cosmic::AppService
 {
 public:
+    // One-shot hook run at the END of the next PhasePlot hosted-panel draw, i.e. inside the host's
+    // ImGui pass AFTER the scene render of that frame, with the viewport framebuffer complete. The
+    // Y02 self-test uses it for its plot-ROI readback (a service's OnUpdate runs BEFORE the render,
+    // when the host has just cleared the target). Test seam; nothing else calls it.
+    static void SetAfterPhasePlotDrawOnce(std::function<void()> fn);
     struct State
     {
         double Theta = 0.0;   // rad
