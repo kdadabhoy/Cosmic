@@ -1,0 +1,12 @@
+# Cosmic project manifest — PendulumLab2
+# Consumed by the standalone PlayerLayer (E13) and Starforge.
+name          = "PendulumLab2"
+kind          = "app"
+startup_scene = "scenes/Home.cscene"
+startup_flow  = "flows/Main.cflow"
+fixed_dt_hz   = 240
+
+[window]
+title  = "Pendulum Lab"
+width  = 1280
+height = 720

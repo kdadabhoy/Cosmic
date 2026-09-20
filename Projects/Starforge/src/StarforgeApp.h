@@ -385,6 +385,15 @@ namespace Starforge
         void AP03SelfTestAfterRender(); // inside RenderViewport, FBO still bound: pixel capture
         void AP03SelfTestShutdown();
 
+        // GUIDE — the PendulumLab walkthrough driver (GuideWalkthroughSelfTest.cpp). Gated ON
+        // only when COSMIC_GUIDE_SELFTEST=<result.json> is set; otherwise every hook is a no-op.
+        struct GuideSelfTest;
+        GuideSelfTest* m_Guide = nullptr;
+        void GuideSelfTestInit();
+        void GuideSelfTestTick();
+        void GuideSelfTestFrameEnd();
+        void GuideSelfTestShutdown();
+
         // WO-07 (2D stability) — KI-1 snap-chip regression harness. Gated ON only
         // when the env var COSMIC_KI1_SELFTEST=<result-file> is set; otherwise
         // m_Ki1 stays null and the editor behaves exactly as it ships. When armed

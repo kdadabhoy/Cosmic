@@ -1,0 +1,28 @@
+{
+    "logs":  [
+                 "C:\\dev\\Cosmic-ap-guide\\dist\\PendulumLab2\\user\\logs\\App_2026-09-20_01-55-16.log",
+                 "C:\\dev\\Cosmic-ap-guide\\dist\\PendulumLab2\\user\\logs\\Cosmic_2026-09-20_01-55-16.log"
+             ],
+    "wrote_into_cwd":  0,
+    "start_button_rows":  [
+                              490,
+                              525
+                          ],
+    "exists":  true,
+    "client":  {
+                   "y":  0,
+                   "w":  1280,
+                   "h":  720,
+                   "x":  0
+               },
+    "sha256_exe":  "F485A49B00087D10B856B2292388E4243B78202D77014DF5AE3AC22B3423647F",
+    "exe":  "C:\\dev\\Cosmic-ap-guide\\dist\\PendulumLab2\\PendulumLab2.exe",
+    "files":  71,
+    "sha256_dll":  "4DF564CD1027814E6144A7014843428F6E12F66F3F7E8A2FB0805C45108A8265",
+    "exit_code":  0,
+    "window_found":  true,
+    "click":  {
+                  "y":  508,
+                  "x":  640
+              }
+}

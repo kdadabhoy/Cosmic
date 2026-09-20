@@ -366,8 +366,11 @@ namespace Starforge
         {
             if (!fs::exists(root / k.Kind / "project.cproj", ec)) continue;
             TemplateInfo t; t.Kind = k.Kind; t.Display = k.Display; t.Description = k.Desc;
+            // The README's first line is the description unless it is the templated title
+            // (the app template's README opens with "# @PROJECT_NAME@", which the picker
+            // used to show verbatim).
             const std::string readme = FirstLine(root / k.Kind / "README.md");
-            if (!readme.empty() && readme.size() < 140) t.Description = readme;
+            if (!readme.empty() && readme.size() < 140 && readme.find("@PROJECT_NAME@") == std::string::npos) t.Description = readme;
             out.push_back(t);
         }
         return out;

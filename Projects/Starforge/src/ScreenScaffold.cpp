@@ -104,7 +104,16 @@ namespace Starforge
         // 2) the include after the last #include that precedes CS_MODULE_BEGIN.
         if (text.find(include) == std::string::npos)
         {
-            const size_t moduleBegin = text.find("CS_MODULE_BEGIN");
+            // The macro invocation, not a mention of it in the header comment (every
+            // template's Module.cpp explains "CS_MODULE_BEGIN/END ..." in a // line, which
+            // used to win here and put the include above the comment block).
+            size_t moduleBegin = std::string::npos;
+            for (size_t p = text.find("CS_MODULE_BEGIN"); p != std::string::npos; p = text.find("CS_MODULE_BEGIN", p + 1))
+            {
+                const size_t ls = LineStart(text, p);
+                const size_t firstNonSpace = text.find_first_not_of(" 	", ls);
+                if (firstNonSpace == p) { moduleBegin = p; break; }
+            }
             const size_t limit = moduleBegin == std::string::npos ? text.size() : moduleBegin;
             size_t lastInc = std::string::npos, pos = 0;
             while ((pos = text.find("#include", pos)) != std::string::npos && pos < limit)

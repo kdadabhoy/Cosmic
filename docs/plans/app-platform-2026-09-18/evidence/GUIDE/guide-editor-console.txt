@@ -1,0 +1,1501 @@
+[Starforge] Editor attached — open or create a project from the homescreen.
+[Starforge] Viewport: MMB orbit | Ctrl+MMB pan | scroll zoom | LMB pick.
+[Starforge] W/E/R gizmo | F frame | Ctrl+Z/Y undo | Ctrl+S save.
+[COSMIC] Config: loaded './starforge/editor.toml'.
+
+[COSMIC] WorkspaceLayer project name set to: 'Starforge'
+
+[COSMIC] Successfully loaded and mounted project DLL Layer!
+
+[COSMIC] WorkspaceLayer: Dockspace built (legacy 3-tier left sidebar).
+
+[COSMIC] WorkspaceLayer: Dockspace built (port mode L=true R=true T=true B=true).
+
+[Scene] Opened 'project://scenes/Home.cscene'.
+[Scripts] 1 script(s) not built — press Ctrl+B to compile the project module.
+[Project] Scaffolded project — press Ctrl+B to build the game module.
+[Project] Opened 'PendulumLab2' @ C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded './starforge/layouts/active.toml'.
+
+[COSMIC] Config: loaded './starforge/layouts/active.toml'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] WorkspaceLayer: Dockspace built (port mode L=true R=true T=true B=true).
+
+[COSMIC] Font: baked 'lucide' (1024x71, 95 glyphs)
+
+[COSMIC] Font: baked 'Roboto-Bold' (1024x257, 95 glyphs)
+
+[COSMIC] Font: baked 'Roboto-Medium' (1024x255, 95 glyphs)
+
+[COSMIC] Font: baked 'Roboto-Regular' (1024x256, 95 glyphs)
+
+[COSMIC] Font: library initialised (4 font(s))
+
+[Build] Building 'PendulumLab2' -> PendulumLab2_hot1.dll
+[build] configuring C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2
+-- Building for: Visual Studio 18 2026
+-- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.26200.
+-- The C compiler identification is MSVC 19.51.36248.0
+-- The CXX compiler identification is MSVC 19.51.36248.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Configuring done (2.4s)
+-- Generating done (0.0s)
+-- Build files have been written to: C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/build
+[build] compiling (Release)
+MSBuild version 18.7.8+1ac568fee for .NET Framework
+
+  Checking File Globs
+  1>Checking Build System
+  Building Custom Rule C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/CMakeLists.txt
+  Module.cpp
+  AppService.cpp
+  imgui.cpp
+  imgui_draw.cpp
+  imgui_widgets.cpp
+  imgui_tables.cpp
+  implot.cpp
+  implot_items.cpp
+  Generating Code...
+     Creating library C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/build/Release/PendulumLab2_hot1.lib and object C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/build/Release/PendulumLab2_hot1.exp
+  PendulumLab2.vcxproj -> C:\dev\Cosmic-ap-guide\build\guide-run12\projects\PendulumLab2\build\Release\PendulumLab2_hot1.dll
+  Building Custom Rule C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/CMakeLists.txt
+[build] SUCCESS
+[Module] Reloaded 'PendulumLab2_hot1' (3 script(s)).
+[APP] GameModule: loaded 'PendulumLab2_hot1.dll'.
+
+[Build] Building 'PendulumLab2' -> PendulumLab2_hot2.dll
+[build] configuring C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2
+-- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.26200.
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/build
+[build] compiling (Release)
+MSBuild version 18.7.8+1ac568fee for .NET Framework
+
+  Checking File Globs
+  1>Checking Build System
+  Building Custom Rule C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/CMakeLists.txt
+     Creating library C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/build/Release/PendulumLab2_hot2.lib and object C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/build/Release/PendulumLab2_hot2.exp
+  PendulumLab2.vcxproj -> C:\dev\Cosmic-ap-guide\build\guide-run12\projects\PendulumLab2\build\Release\PendulumLab2_hot2.dll
+  Building Custom Rule C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/CMakeLists.txt
+[build] SUCCESS
+[Module] Reloaded 'PendulumLab2_hot2' (3 script(s)).
+[APP] GameModule: loaded 'PendulumLab2_hot2.dll'.
+
+[Screens] New screen 'Lab': scenes/Lab.cscene + flow state + src/screens/LabScreen.h
+[Screens] New screen 'Stopped': scenes/Stopped.cscene + flow state + src/screens/StoppedScreen.h
+[Scene] Opened 'project://scenes/Home.cscene'.
+[Scene] Saved 'project://scenes/Home.cscene'.
+[Scene] Opened 'project://scenes/Lab.cscene'.
+[Scripts] 1 script(s) not built — press Ctrl+B to compile the project module.
+[Scene] Saved 'project://scenes/Lab.cscene'.
+[Scene] Opened 'project://scenes/Settings.cscene'.
+[Scene] Saved 'project://scenes/Settings.cscene'.
+[Scene] Opened 'project://scenes/Stopped.cscene'.
+[Scripts] 1 script(s) not built — press Ctrl+B to compile the project module.
+[Scene] Saved 'project://scenes/Stopped.cscene'.
+[COSMIC] WorkspaceLayer: Dockspace built (port mode L=true R=true T=true B=true).
+
+[Build] Building 'PendulumLab2' -> PendulumLab2_hot3.dll
+[build] configuring C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2
+[COSMIC] WorkspaceLayer: Dockspace built (port mode L=true R=true T=true B=true).
+
+[Guide] Sources pasted; the live loop rebuilds now.
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+-- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.26200.
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/build
+[build] compiling (Release)
+MSBuild version 18.7.8+1ac568fee for .NET Framework
+
+  Checking File Globs
+  Module.cpp
+  PendulumService.cpp
+  Generating Code...
+     Creating library C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/build/Release/PendulumLab2_hot3.lib and object C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/build/Release/PendulumLab2_hot3.exp
+  PendulumLab2.vcxproj -> C:\dev\Cosmic-ap-guide\build\guide-run12\projects\PendulumLab2\build\Release\PendulumLab2_hot3.dll
+[build] SUCCESS
+[Module] Reloaded 'PendulumLab2_hot3' (4 script(s)).
+[APP] GameModule: loaded 'PendulumLab2_hot3.dll'.
+
+[Build] Building 'PendulumLab2' -> PendulumLab2_hot4.dll
+[build] configuring C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2
+-- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.26200.
+-- Configuring done (0.0s)
+-- Generating done (0.1s)
+-- Build files have been written to: C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/build
+[build] compiling (Release)
+MSBuild version 18.7.8+1ac568fee for .NET Framework
+
+  Checking File Globs
+     Creating library C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/build/Release/PendulumLab2_hot4.lib and object C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/build/Release/PendulumLab2_hot4.exp
+  PendulumLab2.vcxproj -> C:\dev\Cosmic-ap-guide\build\guide-run12\projects\PendulumLab2\build\Release\PendulumLab2_hot4.dll
+[build] SUCCESS
+[Module] Reloaded 'PendulumLab2_hot4' (4 script(s)).
+[APP] GameModule: loaded 'PendulumLab2_hot4.dll'.
+
+[Scene] Opened 'project://scenes/Home.cscene'.
+[Play] Started — 1 script(s).
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[Live] Module rebuild while playing — stopping, then resuming on 'Lab' after the reload.
+[Play] Stopped — edit scene restored.
+[Build] Building 'PendulumLab2' -> PendulumLab2_hot5.dll
+[build] configuring C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2
+-- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.26200.
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/build
+[build] compiling (Release)
+MSBuild version 18.7.8+1ac568fee for .NET Framework
+
+  Checking File Globs
+  PendulumService.cpp
+     Creating library C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/build/Release/PendulumLab2_hot5.lib and object C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/build/Release/PendulumLab2_hot5.exp
+  PendulumLab2.vcxproj -> C:\dev\Cosmic-ap-guide\build\guide-run12\projects\PendulumLab2\build\Release\PendulumLab2_hot5.dll
+[build] SUCCESS
+[Module] Reloaded 'PendulumLab2_hot5' (4 script(s)).
+[Play] Started — 1 script(s).
+[Live] Resumed Play on 'Lab'.
+[APP] GameModule: loaded 'PendulumLab2_hot5.dll'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[Live] Module rebuild while playing — stopping, then resuming on 'Lab' after the reload.
+[Play] Stopped — edit scene restored.
+[Build] Building 'PendulumLab2' -> PendulumLab2_hot6.dll
+[build] configuring C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2
+-- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.26200.
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/build
+[build] compiling (Release)
+MSBuild version 18.7.8+1ac568fee for .NET Framework
+
+  Checking File Globs
+  PendulumService.cpp
+C:\dev\Cosmic-ap-guide\build\guide-run12\projects\PendulumLab2\src\services\PendulumService.cpp(167,1): error C2059: syntax error: 'this' [C:\dev\Cosmic-ap-guide\build\guide-run12\projects\PendulumLab2\build\PendulumLab2.vcxproj]
+[build] FAILED (exit 1)
+[Build] Failed — see the Console. Keeping the current module.
+[Build] Building 'PendulumLab2' -> PendulumLab2_hot7.dll
+[build] configuring C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2
+-- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.26200.
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/build
+[build] compiling (Release)
+MSBuild version 18.7.8+1ac568fee for .NET Framework
+
+  Checking File Globs
+  PendulumService.cpp
+     Creating library C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/build/Release/PendulumLab2_hot7.lib and object C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/build/Release/PendulumLab2_hot7.exp
+  PendulumLab2.vcxproj -> C:\dev\Cosmic-ap-guide\build\guide-run12\projects\PendulumLab2\build\Release\PendulumLab2_hot7.dll
+[build] SUCCESS
+[Module] Reloaded 'PendulumLab2_hot7' (4 script(s)).
+[Play] Started — 1 script(s).
+[Live] Resumed Play on 'Lab'.
+[APP] GameModule: loaded 'PendulumLab2_hot7.dll'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[Play] Stopped — edit scene restored.
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[Package] Building Release for 'PendulumLab2'… (see Console)
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[package] configuring project
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+-- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.26200.
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/build
+[package] building project (Release)
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+MSBuild version 18.7.8+1ac568fee for .NET Framework
+
+  Checking File Globs
+  PendulumLab2.vcxproj -> C:\dev\Cosmic-ap-guide\build\guide-run12\projects\PendulumLab2\build\Release\PendulumLab2_hot7.dll
+[build] SUCCESS
+[Package] Using hot-built module PendulumLab2_hot7.dll as PendulumLab2.dll.
+[Package] Staged 10 license file(s).
+[Package] Staged 'PendulumLab2' -> C:/dev/Cosmic-ap-guide/dist/PendulumLab2
+[Package] Code signing skipped (no cert configured).
+[Package] Done -> C:/dev/Cosmic-ap-guide/dist/PendulumLab2
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-guide/build/guide-run12/projects/PendulumLab2/project.cproj'.
+
