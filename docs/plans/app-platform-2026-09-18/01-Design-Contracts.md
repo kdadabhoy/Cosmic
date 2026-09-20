@@ -535,6 +535,13 @@ produce the same tree (AP-P1 proves byte-equivalent file lists). AP-P1 records t
 | Packaging identity + writable user data | §12 | changed | K01–K04 | planned |
 | Acceptance in CI | — | new | H05 | planned |
 | Docs archive / parked-3d / link checker | §11 | changed | DOC01, DOC03–DOC05 | planned |
+| DataBus (`data/DataBus.{h,cpp}`; `DataValue::AsBool` added) | §1 | new | V01 (13 cases, both configs) | landed (AP-01) |
+| AppService / PanelRegistry / ServiceHost / CS_SERVICE / CS_PANEL; `ModuleRegistry` AddService/FindService/ServiceNames + UnregisterModule stripping (`ServiceDescriptor` lives in `ModuleRegistry.h`) | §2 | new | V02 U (9 cases) + V02 W (20 GameModule reloads in-exe, 20 PlayerLayer reloads through the Application) | landed (AP-01); V05 pending AP-02/AP-03 |
+| Data() script proxy (`ScriptHost::SetDataBus`, `DataProxy` on ScriptableEntity + SystemScript) | §2 | new | V06 (Data proxy case) | landed (AP-01) |
+| Flow channel guards / `when` / `StartAt` / `KeySignals` / `SetDataBus` / `EvaluateFlowGuard(lookupChannel)`; `scene/FlowKeyBridge.{h,cpp}` | §5 | new | V06 (9 flow cases; v1/v2 save bytes pinned against the AP-05B binary) | landed (AP-01); F02 pending AP-04 |
+| UiSystem signatures: `DataBus*` on Update, `bus`/`preview` on both Render overloads, `UiHostedPanelDraw`, `CollectHostedPanels` (no-op body) | §3 | new | existing UI suites unchanged; bodies proven by V03–V05 | landed (AP-01, signatures only) |
+| Host wiring: PlayerLayer (`m_Bus`/`m_Panels`/`m_Services`/`m_KeyBridge`, §2 frame order, §4 hosted-panel block, key bridge replaces the Escape edge) and StarforgeApp Play (`m_PlayBus`/`m_PlayPanels`/`m_PlayServices`/`m_PlayKeyBridge`, `StarforgeAppServices.cpp`) | §2, §4 | new | V02 W (PlayerLayer path); wo09-editor C05 (editor Play/Stop unchanged); editor hosted-panel draw pending AP-03 (V05) | landed (AP-01) |
+| Template layout: `assets/templates/game/` (moved verbatim), `ScaffoldProjectTo(name, dest, kind = "game")`, `ProjectManifest::Kind` (read only) | §8, §5 | changed | wo09-editor C05 (scaffold + Play through the moved template) | landed (AP-01); app/blank/samples pending AP-04, `kind` write + picker pending AP-03 |
 
 ## §14 Anchors (revalidated 2026-09-18 at `8da533c`; re-check before editing)
 

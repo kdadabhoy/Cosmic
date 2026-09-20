@@ -1,0 +1,640 @@
+===============================================================================
+C:\dev\Cosmic\tests\test_flow_channels.cpp(287):
+TEST SUITE: AP-01 V06 Flow channels
+TEST CASE:  V06: channel guards — all six ops on number, bool and string channels (EvaluateFlowGuard)
+
+C:\dev\Cosmic\tests\test_flow_channels.cpp(306): ERROR: CHECK( eval("n", "!=", N(6)) ) is NOT correct!
+  values: CHECK( false )
+
+C:\dev\Cosmic\tests\test_flow_channels.cpp(306): ERROR: CHECK_FALSE( eval("n", "!=", N(5)) ) is NOT correct!
+  values: CHECK_FALSE( true )
+
+C:\dev\Cosmic\tests\test_flow_channels.cpp(307): ERROR: CHECK( eval("n", "<", N(6)) ) is NOT correct!
+  values: CHECK( false )
+
+C:\dev\Cosmic\tests\test_flow_channels.cpp(307): ERROR: CHECK_FALSE( eval("n", "<", N(5)) ) is NOT correct!
+  values: CHECK_FALSE( true )
+
+C:\dev\Cosmic\tests\test_flow_channels.cpp(308): ERROR: CHECK( eval("n", ">", N(4)) ) is NOT correct!
+  values: CHECK( false )
+
+C:\dev\Cosmic\tests\test_flow_channels.cpp(308): ERROR: CHECK_FALSE( eval("n", ">", N(5)) ) is NOT correct!
+  values: CHECK_FALSE( true )
+
+C:\dev\Cosmic\tests\test_flow_channels.cpp(311): ERROR: CHECK_FALSE( eval("n", "?", N(5)) ) is NOT correct!
+  values: CHECK_FALSE( true )
+
+C:\dev\Cosmic\tests\test_flow_channels.cpp(333): ERROR: CHECK( eval("numstr", ">", N(7)) ) is NOT correct!
+  values: CHECK( false )
+
+===============================================================================
+C:\dev\Cosmic\tests\test_flow_channels.cpp(357):
+TEST SUITE: AP-01 V06 Flow channels
+TEST CASE:  V06: a running machine reads channel guards from SetDataBus; missing channel and no bus are false with ONE warning per guard
+
+C:\dev\Cosmic\tests\test_flow_channels.cpp(404): ERROR: CHECK( noBus.Count == 2 ) is NOT correct!
+  values: CHECK( {?} == 2 )
+
+===============================================================================
+C:\dev\Cosmic\tests\test_flow_channels.cpp(408):
+TEST SUITE: AP-01 V06 Flow channels
+TEST CASE:  V06: 'when' fires at most once per OnUpdate, after the signal drain, before timers, never without a guard
+
+C:\dev\Cosmic\tests\test_flow_channels.cpp(423): ERROR: CHECK( m.CurrentState() == "Stopped" ) is NOT correct!
+  values: CHECK( Alarm == Stopped )
+
+C:\dev\Cosmic\tests\test_flow_channels.cpp(424): ERROR: CHECK( m.StackDepth() == 2 ) is NOT correct!
+  values: CHECK( 1 == 2 )
+
+C:\dev\Cosmic\tests\test_flow_channels.cpp(426): ERROR: CHECK( m.CurrentState() == "Stopped" ) is NOT correct!
+  values: CHECK( Alarm == Stopped )
+
+C:\dev\Cosmic\tests\test_flow_channels.cpp(429): ERROR: CHECK( m.CurrentState() == "Stopped" ) is NOT correct!
+  values: CHECK( Alarm == Stopped )
+
+C:\dev\Cosmic\tests\test_flow_channels.cpp(430): ERROR: CHECK( m.StackDepth() == 2 ) is NOT correct!
+  values: CHECK( 1 == 2 )
+
+C:\dev\Cosmic\tests\test_flow_channels.cpp(438): ERROR: CHECK( m.CurrentState() == "Settings" ) is NOT correct!
+  values: CHECK( Alarm == Settings )
+
+C:\dev\Cosmic\tests\test_flow_channels.cpp(441): ERROR: CHECK( m.CurrentState() == "Lab" ) is NOT correct!
+  values: CHECK( Alarm == Lab )
+
+===============================================================================
+C:\dev\Cosmic\tests\test_flow_channels.cpp(446):
+TEST SUITE: AP-01 V06 Flow channels
+TEST CASE:  V06: 'when' one-per-update ordering, timer ordering and the guard-less 'when'
+
+C:\dev\Cosmic\tests\test_flow_channels.cpp(457): FATAL ERROR: REQUIRE( m.CurrentState() == "Settings" ) is NOT correct!
+  values: REQUIRE( Lab == Settings )
+
+===============================================================================
+C:\dev\Cosmic\tests\test_flow_channels.cpp(498):
+TEST SUITE: AP-01 V06 Flow channels
+TEST CASE:  V06: StartAt enters the named state and falls back to Start for an unknown name
+
+C:\dev\Cosmic\tests\test_flow_channels.cpp(508): ERROR: CHECK( m.CurrentState() == "Lab" ) is NOT correct!
+  values: CHECK( Home == Lab )
+
+C:\dev\Cosmic\tests\test_flow_channels.cpp(510): ERROR: CHECK( loads[0] == "project://scenes/Lab.cscene" ) is NOT correct!
+  values: CHECK( project://scenes/Home.cscene == project://scenes/Lab.cscene )
+
+C:\dev\Cosmic\tests\test_flow_cha[2026-09-19 15:27:07.415] [COSMIC] [warning] flow setField: no entity tagged 'Title'
+nnels.cpp(518): ERROR: CHECK( warns.Count == 1 ) is NOT correct!
+  values: CHECK( {?} == 1 )
+
+C:\dev\Cosmic\tests\test_flow_channels.cpp(522): ERROR: CHECK( warns.Count == 1 ) is NOT correct!
+  values: CHECK( {?} == 1 )
+
+C:\dev\Cosmic\tests\test_flow_channels.cpp(527): ERROR: CHECK( m.CurrentState() == "Settings" ) is NOT correct!
+  values: CHECK( Home == Settings )
+
+C:\dev\Cosmic\tests\test_flow_channels.cpp(528): ERROR: CHECK( loads.size() == n ) is NOT correct!
+  values: CHECK( 4 == 3 )
+
+C:\dev\Cosmic\tests\test_flow_channels.cpp(529): ERROR: CHECK( m.ActiveScene() == nullptr ) is NOT correct!
+  values: CHECK( 0000019F95D74A30 == nullptr )
+
+===============================================================================
+C:\dev\Cosmic\tests\test_flow_channels.cpp(532):
+TEST SUITE: AP-01 V06 Flow channels
+TEST CASE:  V06: FlowKeyBridge::KeyCodeFor table
+
+C:\dev\Cosmic\tests\test_flow_channels.cpp(534): ERROR: CHECK( FlowKeyBridge::KeyCodeFor("Escape") == 256 ) is NOT correct!
+  values: CHECK( -1 == 256 )
+
+===============================================================================
+C:\dev\Cosmic\tests\test_flow_channels.cpp(563):
+TEST SUITE: AP-01 V06 Flow channels
+TEST CASE:  V06: KeySignals is a distinct first-occurrence list across all transitions
+
+C:\dev\Cosmic\tests\test_flow_channels.cpp(567): FATAL ERROR: REQUIRE( keys.size() == 4 ) is NOT correct!
+  values: REQUIRE( 6 == 4 )
+
+===============================================================================
+C:\dev\Cosmic\tests\test_flow_channels.cpp(579):
+TEST SUITE: AP-01 V06 Flow channels
+TEST CASE:  V06: FlowKeyBridge feeds one signal per rising edge per key over an injected probe; unknown names warn once
+
+C:\dev\Cosmic\tests\test_flow_channels.cpp(594): ERROR: CHECK( warns.Count == 1 ) is NOT correct!
+  values: CHECK( {?} == 1 )
+
+C:\dev\Cosmic\tests\test_flow_channels.cpp(596): ERROR: CHECK( warns.Count == 1 ) is NOT correct!
+  values: CHECK( {?} == 1 )
+
+C:\dev\Cosmic\tests\test_flow_channels.cpp(606): ERROR: CHECK( m.CurrentState() == "Alarm" ) is NOT correct!
+  values: CHECK( Lab == Alarm )
+
+C:\dev\Cosmic\tests\test_flow_channels.cpp(609): ERROR: CHECK( m.CurrentState() == "Alarm" ) is NOT correct!
+  values: CHECK( Lab == Alarm )
+
+C:\dev\Cosmic\tests\test_flow_channels.cpp(614): ERROR: CHECK( m.CurrentState() == "Alarm" ) is NOT correct!
+  values: CHECK( Lab == Alarm )
+
+C:\dev\Cosmic\tests\test_flow_channels.cpp(624): ERROR: CHECK( m.QuitRequested() ) is NOT correct!
+  values: CHECK( false )
+
+C:\dev\Cosmic\tests\test_flow_channels.cpp(625): ERROR: CHECK_FALSE( m.IsRunning() ) is NOT correct!
+  values: CHECK_FALSE( true )
+
+===============================================================================
+C:\dev\Cosmic\tests\test_flow_channels.cpp(634):
+TEST SUITE: AP-01 V06 Flow channels
+TEST CASE:  V06: JSON — v1 and v2 files save byte-identical to the pre-AP-01 binary; 'channel' only when non-empty; 'when' verbatim
+
+C:\dev\Cosmic\tests\test_flow_channels.cpp(637): ERROR: CHECK( v1.SaveToString() == std::string(kExpectedV1) ) is NOT correct!
+  values: CHECK( {
+  "cosmic_flow": 1,
+  "start": "Home",
+  "states": [
+    {
+      "editor": {
+        "pos": [
+          0.0,
+          0.0
+        ]
+      },
+      "name": "Home",
+      "onEnter": [
+        {
+          "emit": "home_shown"
+        },
+        {
+          "setField": {
+            "component": "UiText",
+            "entity": "Title",
+            "field": "Text",
+            "value": "Hi"
+          }
+        }
+      ],
+      "scene": "project://scenes/Home.cscene",
+      "transitions": [
+        {
+          "on": "start_clicked",
+          "to": "Lab",
+          "transition": "Fade"
+        },
+        {
+          "on": "key:Escape",
+          "to": "@quit"
+        },
+        {
+          "if": {
+            "channel": "",
+            "op": ">",
+            "value": 2.0
+          },
+          "on": "timer:3",
+          "to": "Lab"
+        }
+      ]
+    },
+    {
+      "editor": {
+        "pos": [
+          320.0,
+          40.0
+        ]
+      },
+      "name": "Lab",
+      "scene": "project://scenes/Lab.cscene",
+      "transitions": [
+        {
+          "on": "key:Escape",
+          "to": "Home"
+        },
+        {
+          "on": "settings",
+          "push": true,
+          "to": "Settings"
+        }
+      ]
+    },
+    {
+      "editor": {
+        "pos": [
+          0.0,
+          0.0
+        ]
+      },
+      "name": "Settings",
+      "overlay": true,
+      "transitions": [
+        {
+          "on": "back",
+          "to": "@pop"
+        }
+      ]
+    }
+  ]
+} == {
+  "cosmic_flow": 1,
+  "start": "Home",
+  "states": [
+    {
+      "editor": {
+        "pos": [
+          0.0,
+          0.0
+        ]
+      },
+      "name": "Home",
+      "onEnter": [
+        {
+          "emit": "home_shown"
+        },
+        {
+          "setField": {
+            "component": "UiText",
+            "entity": "Title",
+            "field": "Text",
+            "value": "Hi"
+          }
+        }
+      ],
+      "scene": "project://scenes/Home.cscene",
+      "transitions": [
+        {
+          "on": "start_clicked",
+          "to": "Lab",
+          "transition": "Fade"
+        },
+        {
+          "on": "key:Escape",
+          "to": "@quit"
+        },
+        {
+          "if": {
+            "component": "Transform",
+            "entity": "Player",
+            "field": "Position",
+            "op": ">",
+            "value": 2.0
+          },
+          "on": "timer:3",
+          "to": "Lab"
+        }
+      ]
+    },
+    {
+      "editor": {
+        "pos": [
+          320.0,
+          40.0
+        ]
+      },
+      "name": "Lab",
+      "scene": "project://scenes/Lab.cscene",
+      "transitions": [
+        {
+          "on": "key:Escape",
+          "to": "Home"
+        },
+        {
+          "on": "settings",
+          "push": true,
+          "to": "Settings"
+        }
+      ]
+    },
+    {
+      "editor": {
+        "pos": [
+          0.0,
+          0.0
+        ]
+      },
+      "name": "Settings",
+      "overlay": true,
+      "transitions": [
+        {
+          "on": "back",
+          "to": "@pop"
+        }
+      ]
+    }
+  ]
+} )
+
+C:\dev\Cosmic\tests\test_flow_channels.cpp(639): ERROR: CHECK( v2.SaveToString() == std::string(kExpectedV2) ) is NOT correct!
+  values: CHECK( {
+  "cosmic_flow": 2,
+  "start": "A",
+  "states": [
+    {
+      "editor": {
+        "pos": [
+          0.0,
+          0.0
+        ]
+      },
+      "name": "A",
+      "onEnter": [
+        {
+          "setVar": {
+            "add": true,
+            "value": -1.0,
+            "var": "Lives"
+          }
+        }
+      ],
+      "scene": "project://scenes/A.cscene",
+      "transitions": [
+        {
+          "if": {
+            "channel": "",
+            "op": "<=",
+            "value": 0.0
+          },
+          "on": "go",
+          "to": "B"
+        }
+      ]
+    },
+    {
+      "editor": {
+        "pos": [
+          0.0,
+          0.0
+        ]
+      },
+      "name": "B",
+      "transitions": [
+        {
+          "on": "key:Space",
+          "to": "A"
+        }
+      ]
+    }
+  ],
+  "variables": [
+    {
+      "default": 3.0,
+      "name": "Lives",
+      "type": "number"
+    },
+    {
+      "default": "Calm",
+      "name": "Mood",
+      "options": [
+        "Calm",
+        "Angry"
+      ],
+      "type": "enum"
+    }
+  ]
+} == {
+  "cosmic_flow": 2,
+  "start": "A",
+  "states": [
+    {
+      "editor": {
+        "pos": [
+          0.0,
+          0.0
+        ]
+      },
+      "name": "A",
+      "onEnter": [
+        {
+          "setVar": {
+            "add": true,
+            "value": -1.0,
+            "var": "Lives"
+          }
+        }
+      ],
+      "scene": "project://scenes/A.cscene",
+      "transitions": [
+        {
+          "if": {
+            "op": "<=",
+            "value": 0.0,
+            "var": "Lives"
+          },
+          "on": "go",
+          "to": "B"
+        }
+      ]
+    },
+    {
+      "editor": {
+        "pos": [
+          0.0,
+          0.0
+        ]
+      },
+      "name": "B",
+      "transitions": [
+        {
+          "on": "key:Space",
+          "to": "A"
+        }
+      ]
+    }
+  ],
+  "variables": [
+    {
+      "default": 3.0,
+      "name": "Lives",
+      "type": "number"
+    },
+    {
+      "default": "Calm",
+      "name": "Mood",
+      "options": [
+        "Calm",
+        "Angry"
+      ],
+      "type": "enum"
+    }
+  ]
+} )
+
+C:\dev\Cosmic\tests\test_flow_channels.cpp(643): ERROR: CHECK( again.SaveToString() == std::string(kExpectedV1) ) is NOT correct!
+  values: CHECK( {
+  "cosmic_flow": 1,
+  "start": "Home",
+  "states": [
+    {
+      "editor": {
+        "pos": [
+          0.0,
+          0.0
+        ]
+      },
+      "name": "Home",
+      "onEnter": [
+        {
+          "emit": "home_shown"
+        },
+        {
+          "setField": {
+            "component": "UiText",
+            "entity": "Title",
+            "field": "Text",
+            "value": "Hi"
+          }
+        }
+      ],
+      "scene": "project://scenes/Home.cscene",
+      "transitions": [
+        {
+          "on": "start_clicked",
+          "to": "Lab",
+          "transition": "Fade"
+        },
+        {
+          "on": "key:Escape",
+          "to": "@quit"
+        },
+        {
+          "if": {
+            "channel": "",
+            "op": ">",
+            "value": 2.0
+          },
+          "on": "timer:3",
+          "to": "Lab"
+        }
+      ]
+    },
+    {
+      "editor": {
+        "pos": [
+          320.0,
+          40.0
+        ]
+      },
+      "name": "Lab",
+      "scene": "project://scenes/Lab.cscene",
+      "transitions": [
+        {
+          "on": "key:Escape",
+          "to": "Home"
+        },
+        {
+          "on": "settings",
+          "push": true,
+          "to": "Settings"
+        }
+      ]
+    },
+    {
+      "editor": {
+        "pos": [
+          0.0,
+          0.0
+        ]
+      },
+      "name": "Settings",
+      "overlay": true,
+      "transitions": [
+        {
+          "on": "back",
+          "to": "@pop"
+        }
+      ]
+    }
+  ]
+} == {
+  "cosmic_flow": 1,
+  "start": "Home",
+  "states": [
+    {
+      "editor": {
+        "pos": [
+          0.0,
+          0.0
+        ]
+      },
+      "name": "Home",
+      "onEnter": [
+        {
+          "emit": "home_shown"
+        },
+        {
+          "setField": {
+            "component": "UiText",
+            "entity": "Title",
+            "field": "Text",
+            "value": "Hi"
+          }
+        }
+      ],
+      "scene": "project://scenes/Home.cscene",
+      "transitions": [
+        {
+          "on": "start_clicked",
+          "to": "Lab",
+          "transition": "Fade"
+        },
+        {
+          "on": "key:Escape",
+          "to": "@quit"
+        },
+        {
+          "if": {
+            "component": "Transform",
+            "entity": "Player",
+            "field": "Position",
+            "op": ">",
+            "value": 2.0
+          },
+          "on": "timer:3",
+          "to": "Lab"
+        }
+      ]
+    },
+    {
+      "editor": {
+        "pos": [
+          320.0,
+          40.0
+        ]
+      },
+      "name": "Lab",
+      "scene": "project://scenes/Lab.cscene",
+      "transitions": [
+        {
+          "on": "key:Escape",
+          "to": "Home"
+        },
+        {
+          "on": "settings",
+          "push": true,
+          "to": "Settings"
+        }
+      ]
+    },
+    {
+      "editor": {
+        "pos": [
+          0.0,
+          0.0
+        ]
+      },
+      "name": "Settings",
+      "overlay": true,
+      "transitions": [
+        {
+          "on": "back",
+          "to": "@pop"
+        }
+      ]
+    }
+  ]
+} )
+
+C:\dev\Cosmic\tests\test_flow_channels.cpp(648): ERROR: CHECK( v1.SaveToString().find("channel") == std::string::npos ) is NOT correct!
+  values: CHECK( 717 == 18446744073709551615 )
+
+C:\dev\Cosmic\tests\test_flow_channels.cpp(649): ERROR: CHECK( v2.SaveToString().find("channel") == std::string::npos ) is NOT correct!
+  values: CHECK( 429 == 18446744073709551615 )
+
+===============================================================================
+[doctest] test cases:   9 |   0 passed |  9 failed | 492 skipped
+[doctest] assertions: 174 | 136 passed | 38 failed |
+[doctest] Status: FAILURE!

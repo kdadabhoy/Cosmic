@@ -1,0 +1,81 @@
+{
+  "manifest": "ap01-units",
+  "cases": [
+    {
+      "id": "V01",
+      "description": "DataBus (contract section 1), headless: number/bool/string round-trips and coercions; Set creates; history ring wraps at capacity (oldest dropped, order preserved) and the capacity rules; History(window) boundary inclusive; Age before/after Advance; Producer follows SetProducer; Subscribe/SubscribeAny fire once per Set with the stored value; unsubscribe-during-dispatch prevents the call and subscribe-during-dispatch misses the in-flight value; nested Set allowed with the depth-65 dispatch dropped under ONE warning; Clear keeps subscriptions; non-finite stored; every method safe on an empty bus; 100,000 Set on 100 channels timed (MESSAGE, not gating).",
+      "tier": "U",
+      "profiles": ["pr", "nightly", "release"],
+      "requires": ["windows"],
+      "command": "powershell",
+      "workingDir": "{BIN}",
+      "args": [
+        "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
+        "{ACCEPTANCE}\\fixtures\\Run-WO10Case.ps1",
+        "-Bin", "{BIN}", "-CaseId", "V01", "-TestSuite", "AP-01 V01 DataBus", "-MinTests", "13", "-DeadlineSec", "120",
+        "-Output", "{REPO}\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-01\\v01-{CONFIG}"
+      ],
+      "expectExit": 0,
+      "minTests": 13,
+      "deadlineSec": 180,
+      "fixture": "../../tests/test_databus.cpp"
+    },
+    {
+      "id": "V02-U",
+      "description": "ServiceHost with in-exe CS_SERVICE registrations (contract section 2) plus the 20-cycle GameModule half of the W part: instantiation order (registration, then Order); OnAttach after all constructed and before BindScene; Tick/FixedTick/DispatchSignal bracket Producer (nesting-safe); BindScene unsubscribes/subscribes and calls OnSceneChanged(old, new); 50 scene swaps keep the same instances and still deliver OnSignal; Destroy in reverse order; Instantiate re-entry destroys first; UnregisterModule strips services; PanelRegistry + the CS_PANEL call site; DispatchEvent; AP01ServiceFixture.dll loaded/unloaded 20 times through the REAL Starforge GameModule TU with a test-owned DataBus whose values, history and producers persist across the reloads, OnDetach stamped before the DLL's static destructor (FreeLibrary), no callback after unload while the same bus/scene paths still reach exe listeners.",
+      "tier": "U",
+      "profiles": ["pr", "nightly", "release"],
+      "requires": ["windows"],
+      "command": "powershell",
+      "workingDir": "{BIN}",
+      "args": [
+        "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
+        "{ACCEPTANCE}\\fixtures\\Run-WO10Case.ps1",
+        "-Bin", "{BIN}", "-CaseId", "V02-U", "-TestSuite", "AP-01 V02 ServiceHost", "-MinTests", "10", "-DeadlineSec", "180",
+        "-Output", "{REPO}\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-01\\v02u-{CONFIG}"
+      ],
+      "expectExit": 0,
+      "minTests": 10,
+      "deadlineSec": 240,
+      "fixture": "../../tests/AP01ServiceFixture.cpp"
+    },
+    {
+      "id": "V02-W-PLAYER",
+      "description": "The W part through the REAL Application / PlayerLayer path: AP01ServiceFixture.dll (CS_MODULE_END's CreatePluginLayer returns the real PlayerLayer) loaded and unloaded 20 times with TransitionToLauncher / TransitionFromLauncherToWorkspace; every cycle the PlayerLayer instantiates the module's service after the manifest read, ticks it inside the producer bracket, destroys it in OnDetach before UnregisterModule and the DLL's static destructor (one shared sequence), no callback after unload, the ModuleRegistry clean after the last unload. Isolated CWD (the Application writes logs/ + imgui.ini).",
+      "tier": "W",
+      "profiles": ["pr", "nightly", "release"],
+      "requires": ["windows", "gpu-gl"],
+      "command": "powershell",
+      "workingDir": "{BIN}",
+      "args": [
+        "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
+        "{ACCEPTANCE}\\fixtures\\Run-WO10Case.ps1",
+        "-Bin", "{BIN}", "-CaseId", "V02-W-PLAYER", "-TestCase", "V02 W host*", "-NoSkip", "-IsolateCwd", "-Tier", "W", "-Requires", "windows,gpu-gl", "-MinTests", "1", "-DeadlineSec", "180",
+        "-Output", "{REPO}\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-01\\v02w-{CONFIG}"
+      ],
+      "expectExit": 0,
+      "minTests": 1,
+      "deadlineSec": 240,
+      "fixture": "../../tests/AP01ServiceFixture.cpp"
+    },
+    {
+      "id": "V06",
+      "description": "Flow additions (contract section 5) and the Data() proxy (section 2): channel guards for all six ops on number/bool/string, missing channel and bus-less machine false with one warning per guard; 'on':'when' fires at most once per OnUpdate, after the signal drain, before timers, never without a guard (Validate reports it); StartAt enters the named state and falls back to Start; FlowKeyBridge::KeyCodeFor table, rising edge per key over an injected probe, unknown names warn once; KeySignals distinct; v1 and v2 files save byte-identical to the AP-05B binary's output, 'channel' only when non-empty, 'when' verbatim; Data() no-ops without a bus and reads/writes with one on ScriptableEntity and SystemScript.",
+      "tier": "U",
+      "profiles": ["pr", "nightly", "release"],
+      "requires": ["windows"],
+      "command": "powershell",
+      "workingDir": "{BIN}",
+      "args": [
+        "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
+        "{ACCEPTANCE}\\fixtures\\Run-WO10Case.ps1",
+        "-Bin", "{BIN}", "-CaseId", "V06", "-TestSuite", "AP-01 V06*", "-MinTests", "10", "-DeadlineSec", "120",
+        "-Output", "{REPO}\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-01\\v06-{CONFIG}"
+      ],
+      "expectExit": 0,
+      "minTests": 10,
+      "deadlineSec": 180,
+      "fixture": "../../tests/test_flow_channels.cpp"
+    }
+  ]
+}

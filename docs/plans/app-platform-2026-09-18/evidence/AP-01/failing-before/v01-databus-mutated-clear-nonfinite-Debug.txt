@@ -1,0 +1,41 @@
+===============================================================================
+C:\dev\Cosmic\tests\test_databus.cpp(382):
+TEST SUITE: AP-01 V01 DataBus
+TEST CASE:  V01: Clear drops channels, history and producers but keeps subscriptions
+
+C:\dev\Cosmic\tests\test_databus.cpp(405): ERROR: CHECK( hits == 4 ) is NOT correct!
+  values: CHECK( 3 == 4 )
+
+===============================================================================
+C:\dev\Cosmic\tests\test_databus.cpp(409):
+TEST SUITE: AP-01 V01 DataBus
+TEST CASE:  V01: non-finite numbers are stored as written (channels are data)
+
+C:\dev\Cosmic\tests\test_databus.cpp(417): ERROR: CHECK( std::isnan(bus.GetNumber("x")) ) is NOT correct!
+  values: CHECK( false )
+
+C:\dev\Cosmic\tests\test_databus.cpp(418): ERROR: CHECK( std::isnan(bus.Get("x").Number) ) is NOT correct!
+  values: CHECK( false )
+
+C:\dev\Cosmic\tests\test_databus.cpp(420): ERROR: CHECK( std::isinf(bus.GetNumber("x")) ) is NOT correct!
+  values: CHECK( false )
+
+C:\dev\Cosmic\tests\test_databus.cpp(422): ERROR: CHECK( bus.GetNumber("x") < 0.0 ) is NOT correct!
+  values: CHECK( 0 <  0 )
+
+C:\dev\Cosmic\tests\test_databus.cpp(423): ERROR: CHECK( std::isinf(bus.GetNumber("x")) ) is NOT correct!
+  values: CHECK( false )
+
+C:\dev\Cosmic\tests\test_databus.cpp(425): ERROR: CHECK( std::isnan(h[0].Value) ) is NOT correct!
+  values: CHECK( false )
+
+C:\dev\Cosmic\tests\test_databus.cpp(426): ERROR: CHECK( std::isinf(h[1].Value) ) is NOT correct!
+  values: CHECK( false )
+
+C:\dev\Cosmic\tests\test_databus.cpp(428): ERROR: CHECK( bus.GetString("x") == "-inf" ) is NOT correct!
+  values: CHECK( 0 == -inf )
+
+===============================================================================
+[doctest] test cases:  2 |  0 passed | 2 failed | 499 skipped
+[doctest] assertions: 22 | 13 passed | 9 failed |
+[doctest] Status: FAILURE!

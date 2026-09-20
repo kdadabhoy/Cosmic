@@ -1,0 +1,11 @@
+=== Cosmic 2D acceptance runner (WO-04) ===
+manifest=wo09-editor  profile=all  config=Release  mode=2D
+bin=C:\dev\Cosmic\build\Runtime\Release
+commit=84a8075e816f438422e2999618d6740669428f47 dirty=True
+selected 1 case(s) of 1
+  [RUN ] C05-I (I)
+  [PASSED] C05-I - exit 0 as expected
+
+=== SUMMARY: 1 passed / 0 failed / 0 env-blocked (of 1) ===
+evidence: C:\dev\Cosmic\tests\acceptance\_results\run-20260919-201101\results.json
+junit:    C:\dev\Cosmic\tests\acceptance\_results\run-20260919-201101\results.junit.xml

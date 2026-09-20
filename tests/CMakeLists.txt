@@ -112,6 +112,18 @@ set(COSMIC_TEST_SOURCES
     test_wo10_n02_clock.cpp
     test_wo10_n03_numerics.cpp
     test_wo10_n04_determinism.cpp
+    # AP-01 (App Platform) — the foundation tier: the host-owned DataBus (V01), the
+    # AppService / ServiceHost / CS_SERVICE / CS_PANEL tier with its in-exe and
+    # DLL-reload halves (V02; the reload halves drive the REAL GameModule TU below and,
+    # skipped by default, the real PlayerLayer through an Application), and the flow
+    # channel guards / when / StartAt / key bridge + the Data() script proxy (V06).
+    test_databus.cpp
+    test_servicehost.cpp
+    test_flow_channels.cpp
+    # AP-01 V02 W — the REAL editor-side module loader (LoadLibrary + CosmicModule_Register,
+    # UnregisterModule + FreeLibrary), compiled from the Starforge tree rather than copied:
+    # the thing under test is the code the editor ships.
+    ../Projects/Starforge/src/GameModule.cpp
     test_wo05_matrix.cpp
     test_wo05_kiss.cpp
     test_wo05_host.cpp
@@ -204,6 +216,16 @@ target_compile_definitions(WO07UiCyclesFixture PRIVATE COSMIC_WO05_HOST_FIXTURE)
 set_target_properties(WO07UiCyclesFixture PROPERTIES RUNTIME_OUTPUT_DIRECTORY
     "${COSMIC_SDK_DIR}/build/Runtime/$<CONFIG>")
 add_dependencies(CosmicTests WO07UiCyclesFixture)
+
+# AP-01 V02 W — a real CS_MODULE game module that registers a CS_SERVICE (which
+# registers a CS_PANEL from OnAttach) and a CS_SCRIPT; test_servicehost loads and
+# unloads it 20 times through the real GameModule TU (in-exe, ordinary suite) and,
+# skipped by default, through the real Application / PlayerLayer path.
+add_library(AP01ServiceFixture SHARED AP01ServiceFixture.cpp)
+target_link_libraries(AP01ServiceFixture PRIVATE Cosmic)
+set_target_properties(AP01ServiceFixture PROPERTIES RUNTIME_OUTPUT_DIRECTORY
+    "${COSMIC_SDK_DIR}/build/Runtime/$<CONFIG>")
+add_dependencies(CosmicTests AP01ServiceFixture)
 
 # WO-10 N01/N02 — the clock-probe runtime plugin: a real project DLL hosted by the
 # real WorkspaceLayer that records what the production dispatch hands a plugin

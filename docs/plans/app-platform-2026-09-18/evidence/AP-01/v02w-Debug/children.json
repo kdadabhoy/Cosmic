@@ -1,0 +1,35 @@
+﻿{
+    "id":  "V02-W-PLAYER",
+    "tier":  "W",
+    "description":  "WO-10 V02-W-PLAYER via CosmicTests.exe",
+    "requires":  [
+                     "windows",
+                     "gpu-gl"
+                 ],
+    "transport":  "none",
+    "seed":  null,
+    "start_utc":  "2026-09-20T03:08:31.6964916Z",
+    "deadline_sec":  180,
+    "exercised":  "production",
+    "command":  "C:\\dev\\Cosmic\\build\\Runtime\\Debug\\CosmicTests.exe --reporters=console --no-intro --no-colors \"--test-case=V02 W host*\" --no-skip=true",
+    "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-01\\v02w-Debug\\V02-W-PLAYER.out.log",
+    "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-01\\v02w-Debug\\V02-W-PLAYER.err.log",
+    "pid":  11920,
+    "exit_code":  0,
+    "crash":  false,
+    "tests_passed":  1,
+    "tests_expected_min":  1,
+    "verdict":  "PASSED",
+    "detail":  "exit 0 as expected",
+    "duration_sec":  1.236,
+    "end_utc":  "2026-09-20T03:08:32.9401342Z",
+    "golden_mutated":  false,
+    "golden_mutations":  [
+
+                         ],
+    "golden_diagnostics":  [
+
+                           ],
+    "golden_sha256_before":  "C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-01\\v02w-Debug\\goldens-sha256-before.txt",
+    "golden_sha256_after":  "C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-01\\v02w-Debug\\goldens-sha256-after.txt"
+}

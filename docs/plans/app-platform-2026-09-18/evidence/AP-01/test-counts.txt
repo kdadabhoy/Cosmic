@@ -1,0 +1,52 @@
+AP-01 direct-suite counts (CosmicTests.exe run alone per config, %TEMP%\wo06 cleared first — KI-57)
+Baseline at 84a8075 (evidence/AP-05/test-counts.txt): 454 run / 454 passed / 13 skipped, both configs
+
+== Debug
+[doctest] test cases:      487 |      487 passed | 0 failed | 14 skipped
+[doctest] assertions: 23419581 | 23419581 passed | 0 failed |
+[doctest] Status: SUCCESS!
+C:\dev\Cosmic\tests\test_databus.cpp(452): MESSAGE: V01 timing: 100,000 Set on 100 channels = 65.4082 ms (Debug; the 50 ms Release bar is recorded, not asserted)
+AP01 V02 W GameModule: reloads=20 updates=60 producerSeen=60 pingAfterUnload=0 signalsAfterUnload=0
+
+== Release
+[doctest] test cases:      487 |      487 passed | 0 failed | 14 skipped
+[doctest] assertions: 23458781 | 23458781 passed | 0 failed |
+[doctest] Status: SUCCESS!
+C:\dev\Cosmic\tests\test_databus.cpp(452): MESSAGE: V01 timing: 100,000 Set on 100 channels = 2.7761 ms (Release; the 50 ms Release bar is recorded, not asserted)
+AP01 V02 W GameModule: reloads=20 updates=60 producerSeen=60 pingAfterUnload=0 signalsAfterUnload=0
+
+== AP-01 test cases (34; from the three TUs — doctest prints headers only for cases with MESSAGE/failures)
+  V01: every method is safe on an empty bus
+  V01: number / bool / string round-trips and coercions
+  V01: Set creates a missing channel (like FlowMachine::SetVar); Remove / Channels / ChannelCount
+  V01: history ring wraps at capacity — oldest dropped, order preserved; capacity rules
+  V01: History(window) keeps samples with Time >= Now()-window (inclusive boundary)
+  V01: Age before and after Advance; LastWriteTime; Advance ignores negative and non-finite deltas
+  V01: Producer follows SetProducer per write
+  V01: Subscribe / SubscribeAny fire once per Set with the stored value
+  V01: unsubscribe during dispatch prevents the call; subscribe during dispatch misses the in-flight value
+  V01: nested Set from a handler is allowed; the depth-65 dispatch is dropped with one warning
+  V01: Clear drops channels, history and producers but keeps subscriptions
+  V01: non-finite numbers are stored as written (channels are data)
+  V01: 100,000 Set calls on 100 channels — timing recorded (not gating)
+  V02: instantiation order is registration order stable-sorted by Order; OnAttach after all constructed, before BindScene
+  V02: Tick / FixedTick / DispatchSignal bracket the producer per service (nesting-safe)
+  V02: BindScene unsubscribes the old bus, subscribes the new one and calls OnSceneChanged(old, new)
+  V02: 50 scene swaps keep the same instances and still deliver OnSignal
+  V02: Destroy runs OnDetach in reverse order, deletes, unsubscribes and clears the panels
+  V02: Instantiate re-entry destroys the previous set first
+  V02: ModuleRegistry AddService / FindService / ServiceNames and UnregisterModule stripping
+  V02: PanelRegistry — register/replace/draw/source/names/unregister/clear and the CS_PANEL call site
+  V02: DispatchEvent reaches every service in order
+  V06: Data() no-ops / defaults without a bus, reads and writes with one, on scripts and systems
+  V02 W: 20 GameModule reloads keep the host-owned DataBus, detach before FreeLibrary and never call back after unload
+  V02 W host: 20 PlayerLayer reloads through the real Application detach the service before FreeLibrary
+  V06: channel guards — all six ops on number, bool and string channels (EvaluateFlowGuard)
+  V06: a running machine reads channel guards from SetDataBus; missing channel and no bus are false with ONE warning per guard
+  V06: 'when' fires at most once per OnUpdate, after the signal drain, before timers, never without a guard
+  V06: 'when' one-per-update ordering, timer ordering and the guard-less 'when'
+  V06: StartAt enters the named state and falls back to Start for an unknown name
+  V06: FlowKeyBridge::KeyCodeFor table
+  V06: KeySignals is a distinct first-occurrence list across all transitions
+  V06: FlowKeyBridge feeds one signal per rising edge per key over an injected probe; unknown names warn once
+  V06: JSON — v1 and v2 files save byte-identical to the pre-AP-01 binary; 'channel' only when non-empty; 'when' verbatim

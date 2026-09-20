@@ -246,6 +246,10 @@ script `tests/check_docs_coverage.ps1` (work order D5) diffs `Cosmic.h` against 
 | `scripting/ScriptHost.h` | [../guide/scripting.md](../guide/scripting.md) |
 | `scripting/ModuleRegistry.h` | [../guide/scripting.md](../guide/scripting.md) |
 | `scripting/ModuleMacros.h` | [../guide/scripting.md](../guide/scripting.md) |
+| `data/DataBus.h` | [../guide/scripting.md](../guide/scripting.md) |
+| `scripting/AppService.h` | [../guide/scripting.md](../guide/scripting.md) |
+| `scripting/ServiceHost.h` | [../guide/scripting.md](../guide/scripting.md) |
+| `scene/FlowKeyBridge.h` | [../guide/flow-and-story.md](../guide/flow-and-story.md) |
 
 *Not in `Cosmic.h` but client-reachable, documented anyway:* `core/Window.h` (via
 `Application::GetWindow()`) → [core.md](core.md); `layers/WorkspaceLayer.h` (via

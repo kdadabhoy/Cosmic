@@ -1,0 +1,163 @@
+===============================================================================
+C:\dev\Cosmic\tests\test_databus.cpp(77):
+TEST SUITE: AP-01 V01 DataBus
+TEST CASE:  V01: number / bool / string round-trips and coercions
+
+C:\dev\Cosmic\tests\test_databus.cpp(95): ERROR: CHECK( bus.GetNumber("s") == 3.75 ) is NOT correct!
+  values: CHECK( 0 == 3.75 )
+
+C:\dev\Cosmic\tests\test_databus.cpp(115): ERROR: CHECK( DataValue::MakeString("  12.5xyz").AsNumber() == 12.5 ) is NOT correct!
+  values: CHECK( 0 == 12.5 )
+
+===============================================================================
+C:\dev\Cosmic\tests\test_databus.cpp(141):
+TEST SUITE: AP-01 V01 DataBus
+TEST CASE:  V01: history ring wraps at capacity — oldest dropped, order preserved; capacity rules
+
+C:\dev\Cosmic\tests\test_databus.cpp(158): ERROR: CHECK( h[0].Value == 3.0 ) is NOT correct!
+  values: CHECK( 6 == 3 )
+
+C:\dev\Cosmic\tests\test_databus.cpp(159): ERROR: CHECK( h[1].Value == 4.0 ) is NOT correct!
+  values: CHECK( 2 == 4 )
+
+C:\dev\Cosmic\tests\test_databus.cpp(160): ERROR: CHECK( h[2].Value == 5.0 ) is NOT correct!
+  values: CHECK( 3 == 5 )
+
+C:\dev\Cosmic\tests\test_databus.cpp(161): ERROR: CHECK( h[3].Value == 6.0 ) is NOT correct!
+  values: CHECK( 4 == 6 )
+
+C:\dev\Cosmic\tests\test_databus.cpp(162): ERROR: CHECK( h[0].Time == 2.0 ) is NOT correct!
+  values: CHECK( 0 == 2 )
+
+C:\dev\Cosmic\tests\test_databus.cpp(163): ERROR: CHECK( h[3].Time == 5.0 ) is NOT correct!
+  values: CHECK( 0 == 5 )
+
+C:\dev\Cosmic\tests\test_databus.cpp(168): ERROR: CHECK( h[3].Value == 6.0 ) is NOT correct!
+  values: CHECK( 4 == 6 )
+
+C:\dev\Cosmic\tests\test_databus.cpp(173): ERROR: CHECK( h[0].Value == 5.0 ) is NOT correct!
+  values: CHECK( 3 == 5 )
+
+C:\dev\Cosmic\tests\test_databus.cpp(174): ERROR: CHECK( h[1].Value == 6.0 ) is NOT correct!
+  values: CHECK( 4 == 6 )
+
+C:\dev\Cosmic\tests\test_databus.cpp(177): ERROR: CHECK( h[0].Value == 5.0 ) is NOT correct!
+  values: CHECK( 3 == 5 )
+
+===============================================================================
+C:\dev\Cosmic\tests\test_databus.cpp(195):
+TEST SUITE: AP-01 V01 DataBus
+TEST CASE:  V01: History(window) keeps samples with Time >= Now()-window (inclusive boundary)
+
+C:\dev\Cosmic\tests\test_databus.cpp(205): ERROR: CHECK( bus.Now() == 4.0 ) is NOT correct!
+  values: CHECK( 0 == 4 )
+
+C:\dev\Cosmic\tests\test_databus.cpp(207): FATAL ERROR: REQUIRE( bus.History("w", h, 2.0) == 5 ) is NOT correct!
+  values: REQUIRE( 9 == 5 )
+
+===============================================================================
+C:\dev\Cosmic\tests\test_databus.cpp(221):
+TEST SUITE: AP-01 V01 DataBus
+TEST CASE:  V01: Age before and after Advance; LastWriteTime; Advance ignores negative and non-finite deltas
+
+C:\dev\Cosmic\tests\test_databus.cpp(229): ERROR: CHECK( bus.Now() == 0.25 ) is NOT correct!
+  values: CHECK( 0 == 0.25 )
+
+C:\dev\Cosmic\tests\test_databus.cpp(230): ERROR: CHECK( bus.Age("a") == 0.25 ) is NOT correct!
+  values: CHECK( 0 == 0.25 )
+
+C:\dev\Cosmic\tests\test_databus.cpp(232): ERROR: CHECK( bus.Age("a") == 1.0 ) is NOT correct!
+  values: CHECK( 0 == 1 )
+
+C:\dev\Cosmic\tests\test_databus.cpp(235): ERROR: CHECK( bus.LastWriteTime("a") == 1.0 ) is NOT correct!
+  values: CHECK( 0 == 1 )
+
+C:\dev\Cosmic\tests\test_databus.cpp(237): ERROR: CHECK( bus.Now() == 1.0 ) is NOT correct!
+  values: CHECK( 0 == 1 )
+
+C:\dev\Cosmic\tests\test_databus.cpp(240): ERROR: CHECK( bus.Now() == 1.0 ) is NOT correct!
+  values: CHECK( 0 == 1 )
+
+C:\dev\Cosmic\tests\test_databus.cpp(244): ERROR: CHECK( bus.Now() == 1.0 ) is NOT correct!
+  values: CHECK( 0 == 1 )
+
+C:\dev\Cosmic\tests\test_databus.cpp(246): ERROR: CHECK( bus.Now() == 1.5 ) is NOT correct!
+  values: CHECK( 0 == 1.5 )
+
+===============================================================================
+C:\dev\Cosmic\tests\test_databus.cpp(249):
+TEST SUITE: AP-01 V01 DataBus
+TEST CASE:  V01: Producer follows SetProducer per write
+
+C:\dev\Cosmic\tests\test_databus.cpp(257): ERROR: CHECK( bus.Producer("p") == "PendulumService" ) is NOT correct!
+  values: CHECK(  == PendulumService )
+
+C:\dev\Cosmic\tests\test_databus.cpp(258): ERROR: CHECK( bus.Producer("q") == "PendulumService" ) is NOT correct!
+  values: CHECK(  == PendulumService )
+
+C:\dev\Cosmic\tests\test_databus.cpp(261): ERROR: CHECK( bus.Producer("p") == "Other" ) is NOT correct!
+  values: CHECK(  == Other )
+
+C:\dev\Cosmic\tests\test_databus.cpp(262): ERROR: CHECK( bus.Producer("q") == "PendulumService" ) is NOT correct!
+  values: CHECK(  == PendulumService )
+
+===============================================================================
+C:\dev\Cosmic\tests\test_databus.cpp(269):
+TEST SUITE: AP-01 V01 DataBus
+TEST CASE:  V01: Subscribe / SubscribeAny fire once per Set with the stored value
+
+C:\dev\Cosmic\tests\test_databus.cpp(283): ERROR: CHECK( anyHits == 1 ) is NOT correct!
+  values: CHECK( 0 == 1 )
+
+C:\dev\Cosmic\tests\test_databus.cpp(285): ERROR: CHECK( lastAny.Number == 5.0 ) is NOT correct!
+  values: CHECK( 0 == 5 )
+
+C:\dev\Cosmic\tests\test_databus.cpp(286): ERROR: CHECK( lastAnyChannel == "n" ) is NOT correct!
+  values: CHECK(  == n )
+
+C:\dev\Cosmic\tests\test_databus.cpp(290): ERROR: CHECK( anyHits == 2 ) is NOT correct!
+  values: CHECK( 0 == 2 )
+
+C:\dev\Cosmic\tests\test_databus.cpp(291): ERROR: CHECK( lastAnyChannel == "m" ) is NOT correct!
+  values: CHECK(  == m )
+
+C:\dev\Cosmic\tests\test_databus.cpp(292): ERROR: CHECK( lastAny.String == "v" ) is NOT correct!
+  values: CHECK(  == v )
+
+C:\dev\Cosmic\tests\test_databus.cpp(296): ERROR: CHECK( anyHits == 3 ) is NOT correct!
+  values: CHECK( 0 == 3 )
+
+C:\dev\Cosmic\tests\test_databus.cpp(301): ERROR: CHECK( anyHits == 4 ) is NOT correct!
+  values: CHECK( 0 == 4 )
+
+C:\dev\Cosmic\tests\test_databus.cpp(304): ERROR: CHECK( anyHits == 4 ) is NOT correct!
+  values: CHECK( 0 == 4 )
+
+===============================================================================
+C:\dev\Cosmic\tests\test_databus.cpp(311):
+TEST SUITE: AP-01 V01 DataBus
+TEST CASE:  V01: unsubscribe during dispatch prevents the call; subscribe during dispatch misses the in-flight value
+
+C:\dev\Cosmic\tests\test_databus.cpp(328): ERROR: CHECK( secondHits == 0 ) is NOT correct!
+  values: CHECK( 1 == 0 )
+
+C:\dev\Cosmic\tests\test_databus.cpp(333): ERROR: CHECK( secondHits == 0 ) is NOT correct!
+  values: CHECK( 1 == 0 )
+
+C:\dev\Cosmic\tests\test_databus.cpp(334): ERROR: CHECK( lateHits == 1 ) is NOT correct!
+  values: CHECK( 0 == 1 )
+
+C:\dev\Cosmic\tests\test_databus.cpp(339): ERROR: CHECK( lateHits == 1 ) is NOT correct!
+  values: CHECK( 0 == 1 )
+
+===============================================================================
+C:\dev\Cosmic\tests\test_databus.cpp(342):
+TEST SUITE: AP-01 V01 DataBus
+TEST CASE:  V01: nested Set from a handler is allowed; the depth-65 dispatch is dropped with one warning
+
+C:\dev\Cosmic\tests\test_databus.cpp(342): FATAL ERROR: test case CRASHED: SIGSEGV - Stack overflow
+
+===============================================================================
+[doctest] test cases:  10 |  2 passed |  8 failed | 491 skipped
+[doctest] assertions: 129 | 90 passed | 39 failed |
+[doctest] Status: FAILURE!

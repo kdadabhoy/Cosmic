@@ -1,0 +1,16 @@
+===============================================================================
+C:\dev\Cosmic\tests\test_servicehost.cpp(775):
+TEST SUITE: AP-01 V02 ServiceHost
+TEST CASE:  V02 W host: 20 PlayerLayer reloads through the real Application detach the service before FreeLibrary
+
+C:\dev\Cosmic\tests\test_servicehost.cpp(803): ERROR: CHECK( rep.producerSeen == rep.updates ) is NOT correct!
+  values: CHECK( {?} == {?} )
+
+C:\dev\Cosmic\tests\test_servicehost.cpp(806): ERROR: CHECK( ModuleRegistry::Get().FindService("AP01Service") == nullptr ) is NOT correct!
+  values: CHECK( 000001481489CB70 == nullptr )
+
+AP01 V02 W PlayerLayer: cycles=20 updates=80 producerSeen=0 orderFailures=0
+===============================================================================
+[doctest] test cases:  1 |  0 passed | 1 failed | 500 skipped
+[doctest] assertions: 17 | 15 passed | 2 failed |
+[doctest] Status: FAILURE!

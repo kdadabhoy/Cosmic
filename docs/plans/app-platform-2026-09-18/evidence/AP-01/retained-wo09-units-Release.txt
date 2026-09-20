@@ -1,0 +1,25 @@
+=== Cosmic 2D acceptance runner (WO-04) ===
+manifest=wo09-units  profile=all  config=Release  mode=2D
+bin=C:\dev\Cosmic\build\Runtime\Release
+commit=84a8075e816f438422e2999618d6740669428f47 dirty=True
+selected 8 case(s) of 8
+  [RUN ] C01-U (U)
+  [PASSED] C01-U - exit 0 as expected
+  [RUN ] C02-U (U)
+  [PASSED] C02-U - exit 0 as expected
+  [RUN ] C03-U (U)
+  [PASSED] C03-U - exit 0 as expected
+  [RUN ] C04 (U)
+  [PASSED] C04 - exit 0 as expected
+  [RUN ] C05-U (U)
+  [PASSED] C05-U - exit 0 as expected
+  [RUN ] C05-XB (U)
+  [PASSED] C05-XB - exit 0 as expected
+  [RUN ] C06-U (U)
+  [PASSED] C06-U - exit 0 as expected
+  [RUN ] C06-AUDIO (W)
+  [PASSED] C06-AUDIO - exit 0 as expected
+
+=== SUMMARY: 8 passed / 0 failed / 0 env-blocked (of 8) ===
+evidence: C:\dev\Cosmic\tests\acceptance\_results\run-20260919-200922\results.json
+junit:    C:\dev\Cosmic\tests\acceptance\_results\run-20260919-200922\results.junit.xml

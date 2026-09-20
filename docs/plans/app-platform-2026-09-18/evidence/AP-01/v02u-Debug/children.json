@@ -1,0 +1,34 @@
+﻿{
+    "id":  "V02-U",
+    "tier":  "U",
+    "description":  "WO-10 V02-U via CosmicTests.exe",
+    "requires":  [
+                     "windows"
+                 ],
+    "transport":  "none",
+    "seed":  null,
+    "start_utc":  "2026-09-20T03:08:31.0936340Z",
+    "deadline_sec":  180,
+    "exercised":  "production",
+    "command":  "C:\\dev\\Cosmic\\build\\Runtime\\Debug\\CosmicTests.exe --reporters=console --no-intro --no-colors \"--test-suite=AP-01 V02 ServiceHost\"",
+    "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-01\\v02u-Debug\\V02-U.out.log",
+    "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-01\\v02u-Debug\\V02-U.err.log",
+    "pid":  29568,
+    "exit_code":  0,
+    "crash":  false,
+    "tests_passed":  10,
+    "tests_expected_min":  10,
+    "verdict":  "PASSED",
+    "detail":  "exit 0 as expected",
+    "duration_sec":  0.128,
+    "end_utc":  "2026-09-20T03:08:31.2300503Z",
+    "golden_mutated":  false,
+    "golden_mutations":  [
+
+                         ],
+    "golden_diagnostics":  [
+
+                           ],
+    "golden_sha256_before":  "C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-01\\v02u-Debug\\goldens-sha256-before.txt",
+    "golden_sha256_after":  "C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-01\\v02u-Debug\\goldens-sha256-after.txt"
+}
