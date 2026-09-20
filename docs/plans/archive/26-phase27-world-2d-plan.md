@@ -20,7 +20,7 @@
 > darkness scene, nameplate tracking, live minimap) + commit.
 >
 > **Created 2026-07-11.** Editor-vision phase 6 of 7 (spec of record:
-> [`../design/example-images-gap-analysis.md`](../../design/example-images-gap-analysis.md)
+> [`../design/example-images-gap-analysis.md`](../../archive/design/example-images-gap-analysis.md)
 > §7.2–§7.5, §11, §12). The engine-side additions the reference screenshots demand beyond the
 > existing plans: a physical-atmosphere sky option, particle turbulence with live preview,
 > and the three genuine gaps behind the 2D survival-game screenshot (2D lights, world-anchored

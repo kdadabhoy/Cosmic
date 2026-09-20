@@ -18,7 +18,7 @@ whole scope above plus the two unlisted headers: the recipe model, the resolutio
 different limits, the async-build pattern, the reflection handoff and the particle presets. Then the
 systems explainers [terrain](../systems/terrain.md), [water](../systems/water.md),
 [particles](../systems/particles.md); and
-[`docs/design/water-rendering-notes.md`](../design/water-rendering-notes.md). Usage
+[`docs/design/water-rendering-notes.md`](../archive/design/water-rendering-notes.md). Usage
 exemplars: `Projects/Frontier` (all five worlds), Engine3DDemo "World systems" panel,
 `Projects/ForgeIsle/scenes/Island.cscene` (the recipe route).
 

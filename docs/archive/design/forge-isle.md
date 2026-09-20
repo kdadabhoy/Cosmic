@@ -1,5 +1,7 @@
 # Forge Isle — flagship showcase design (Phase 28 / Z1)
 
+> **ARCHIVED 2026-09-20** — completed/superseded; kept as the record of what was built and why. Do not execute. Origin: Phase 28 / Z1 content spec, 2026-07-14. Landed by: Z1 greybox on the pre-split tree; project deleted from `main` 2026-09. Replacement: 3D flagship parked — the 2D showcase is [`../../showcase/README.md`](../../showcase/README.md).
+
 > **Created 2026-07-14.** The content spec of record for `docs/plans/27-phase28-flagship-sample-plan.md`
 > (Z1–Z7). Forge Isle is a small third-person island adventure built **entirely with Starforge**
 > — a packaged, clean-machine-accepted product whose every beat exists to demonstrate an engine

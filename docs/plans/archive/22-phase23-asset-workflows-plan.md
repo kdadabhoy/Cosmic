@@ -3,7 +3,7 @@
 > **ARCHIVED 2026-09-20** — completed/superseded; kept as the record of what was built and why. Do not execute. Origin: Phase 23, created 2026-07-11. Landed by: see git log (T1-T18, 2026-07-12). Replacement: none (shipped).
 
 > **Created 2026-07-11.** Editor-vision phase 2 of 7 (spec of record:
-> [`../design/example-images-gap-analysis.md`](../../design/example-images-gap-analysis.md) — each
+> [`../design/example-images-gap-analysis.md`](../../archive/design/example-images-gap-analysis.md) — each
 > item cites its §). This phase makes assets and properties feel like the reference editors:
 > typed/thumbnailed/searchable everywhere, a two-pane browser with preview + metadata, a
 > tooltipped drag-target Inspector, a Hierarchy with real Active semantics, and the utility

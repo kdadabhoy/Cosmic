@@ -167,8 +167,8 @@
 | --- | --- |
 | Viper gates G1 (hover w/ gusts — estimator suspect), G2, G3 + committed recordings; Teensy HIL flight; gimbal rig | archived doc 04 (app-side by decision 2026-07-04) |
 | Phase 12 on-GPU perf pass (cull %, auto-instance, LOD swaps; 5 Frontier worlds ≥60 fps, CPU≪GPU) + screenshots | archived doc 05 §"S12" |
-| Phase 13 recorded acceptance demo (new project → import → scene → script → Play/telemetry → package → clean run) | archived doc 11 E21 / `docs/design/starforge-acceptance-demo.md` |
+| Phase 13 recorded acceptance demo (new project → import → scene → script → Play/telemetry → package → clean run) | archived doc 11 E21 / `docs/archive/design/starforge-acceptance-demo.md` |
 | W3 DWM compat-mode decision + interactive repro matrix (snip overlay, 125 % laptop) | archived doc 09 §3.5 |
-| Water look tuning (from-below surface, caustics/shafts) | `docs/design/water-rendering-notes.md` |
-| Phase 17 recorded acceptance (zero-code FlowDemo authored/played/packaged; ForgePong match + package; U1/U3/U4/U7 on-GPU spot checks) | doc 16 U8 / `docs/design/ui-flow-2d-acceptance.md` |
+| Water look tuning (from-below surface, caustics/shafts) | `docs/archive/design/water-rendering-notes.md` |
+| Phase 17 recorded acceptance (zero-code FlowDemo authored/played/packaged; ForgePong match + package; U1/U3/U4/U7 on-GPU spot checks) | doc 16 U8 / `docs/archive/design/ui-flow-2d-acceptance.md` |
 | Phase 20 remainder: Blender FBX + glTF of one object at identical world size; Fox playback vs a reference viewer; 50 animated instances ≥60 fps; skinned-shadow visual (a lit scene w/ shadows); packaged-app animation run. (Self-run 2026-07-12: Fox import/playback/scrub/clip-switch, `.cmeta` rescale re-import, preview self-test PASSED, thumbnails, material undo.) | doc 19 A1/A2/A4 |

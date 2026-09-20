@@ -1,5 +1,7 @@
 # Frame Lifecycle & GPU Resource Contract (S13.2)
 
+> **Note (2026-09-20, App Platform AP-D1):** this spec was written for the full engine. On the 2D trunk (`main`) only the `Renderer2D` / `SceneRenderer` / `PostProcessStack` parts of the frame exist; the environment bake, shadow depth, coverage capture, terrain, water and every `Renderer3D` step described below were deleted by AP-05 (D-PURGE) and survive only on the `engine-3d` branch (`0e8894b`). The resource-lifetime, binding-registry and render-state rules still bind the 2D path. See [`../parked-3d/README.md`](../parked-3d/README.md) (parked 3D).
+
 > **Status:** accepted 2026-07-03 (Phase 12). This is the internals spec named by
 > doc 05 §12 S13.2 — the document a second rendering backend (Vulkan native or an
 > RHI) would implement. It records what the OpenGL backend *promises*, not how it
@@ -8,7 +10,7 @@
 >
 > Companion references: `Cosmic/src/renderer/BindingPoints.h` (the binding
 > registry — the seed of a future descriptor-set layout), doc 05 §0 (the API
-> decision + binding rules), `docs/design/water-rendering-notes.md` (water pass
+> decision + binding rules), `docs/archive/design/water-rendering-notes.md` (water pass
 > internals), [`docs/guide/materials-and-shaders.md`](../guide/materials-and-shaders.md)
 > (the `#type` shader contract — formerly README §10) and
 > [`../guide/project-anatomy.md`](../guide/project-anatomy.md#teardown-ordering-for-gpu-resources)

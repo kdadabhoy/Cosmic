@@ -18,7 +18,7 @@
 > roadmap's Done-when requires) + commit.
 >
 > **Created 2026-07-11.** First of the editor-vision phases adopted from
-> [`../design/example-images-gap-analysis.md`](../../design/example-images-gap-analysis.md) (the
+> [`../design/example-images-gap-analysis.md`](../../archive/design/example-images-gap-analysis.md) (the
 > spec of record — each item cites its §; re-read it before starting an item). This phase makes
 > Starforge *feel* like the reference editors: product-grade chrome, the viewport as a
 > self-contained instrument, and the user's branding requirement (drop a PNG → icon + top-bar

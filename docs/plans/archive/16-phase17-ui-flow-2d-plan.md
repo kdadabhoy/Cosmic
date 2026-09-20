@@ -21,7 +21,7 @@
 > (241→272), GL-conformance clean, compat gate held (no shipped app attaches
 > the new components; the sprite/UI hooks early-out on scenes without them).
 > **REMAINING (user ledger):** the recorded acceptance —
-> [`../design/ui-flow-2d-acceptance.md`](../../design/ui-flow-2d-acceptance.md).
+> [`../design/ui-flow-2d-acceptance.md`](../../archive/design/ui-flow-2d-acceptance.md).
 >
 > **STATUS 2026-07-08 — engine foundation code-complete.** The
 > headless-testable engine core of Phase 17 landed and is verified: build green
@@ -444,7 +444,7 @@ Build green, `CosmicTests` **271/271**. The 16:9-proportions screenshot comparis
    Proves 2D + UI + flow + scripts together; packaged and run clean.
 
 **Status:** ✅ STAGED 2026-07-11 — the recorded demo itself is on the USER's acceptance
-ledger (script: [`../design/ui-flow-2d-acceptance.md`](../../design/ui-flow-2d-acceptance.md)).
+ledger (script: [`../design/ui-flow-2d-acceptance.md`](../../archive/design/ui-flow-2d-acceptance.md)).
 What's in the tree:
 - **Zero-code app "FlowDemo"** (homescreen ▸ *Flow Sample*, self-built): MainMenu
   (canvas/title/Play/Quit) + Game (world + HUD hint) + Pause (scrim overlay) scenes,

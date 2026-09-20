@@ -1,5 +1,7 @@
 # Phase 17 acceptance demo — UI, screen flow, 2D (doc 16 U8)
 
+> **ARCHIVED 2026-09-20** — completed/superseded; kept as the record of what was built and why. Do not execute. Origin: Phase 17 U8 acceptance, 2026-07-11. Landed by: U8 (archived plan 16); FlowDemo/ForgePong samples replaced by the template projects. Replacement: the retained C-series manifests under `tests/acceptance/manifests/` and [`../../guide/pendulumlab-walkthrough.md`](../../guide/pendulumlab-walkthrough.md).
+
 > **Created 2026-07-11.** The recorded, user-run acceptance for Phase 17. Everything
 > below is staged in the tree: the two samples build themselves from the homescreen,
 > and every editor feature referenced shipped with U1/U3/U4/U6/U7. Record one take

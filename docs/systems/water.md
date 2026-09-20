@@ -8,7 +8,7 @@
 GPU, so boats float correctly), shaded with a mirrored render of the world above and a
 grabbed copy of the world below — plus a full underwater mode when the camera dives.
 **Source:** `Cosmic/src/water/GerstnerWave.h`, `water/Water.*`, `Cosmic/assets/shaders/Water*.glsl`
-**API Reference:** [../reference/world-systems.md](../reference/world-systems.md) · **Guide:** [`../guide/world-systems.md`](../guide/world-systems.md) · **Design record:** [`../design/water-rendering-notes.md`](../design/water-rendering-notes.md)
+**API Reference:** [../reference/world-systems.md](../reference/world-systems.md) · **Guide:** [`../guide/world-systems.md`](../guide/world-systems.md) · **Design record:** [`../design/water-rendering-notes.md`](../archive/design/water-rendering-notes.md)
 
 > **The guide chapter landed first (D55).** [`../guide/world-systems.md`](../guide/world-systems.md)
 > already carries the three `WaterPreset` characters, the reflection handoff (one planar reflection

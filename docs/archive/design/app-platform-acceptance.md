@@ -1,5 +1,7 @@
 # Phase 16 acceptance — app platform & shipping (S8)
 
+> **ARCHIVED 2026-09-20** — completed/superseded; kept as the record of what was built and why. Do not execute. Origin: Phase 16 S8 acceptance, 2026-07-05. Landed by: S8 (archived plan 15). Replacement: AP-P1 packaging acceptance K01–K04 in [`../../plans/app-platform-2026-09-18/03-Acceptance-Catalog.md`](../../plans/app-platform-2026-09-18/03-Acceptance-Catalog.md).
+
 The recorded proof that a Starforge project becomes a finished product that runs on a
 machine that has never seen the SDK. This is a **user-run** step (it needs a second,
 clean machine or VM the AI can't drive). Record it as a screen capture + keep the

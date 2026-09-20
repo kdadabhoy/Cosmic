@@ -1,5 +1,7 @@
 # Modularity Audit — how swappable are the 3D systems? (2026-07-04)
 
+> **Note (2026-09-20, App Platform AP-D1):** this audit covers the 3D systems (`Renderer3D`, terrain, water, particles, environment), none of which exist on the 2D trunk (`main`) since AP-05 (D-PURGE); they live on `engine-3d` (`0e8894b`). Kept live for the seam catalogue and the "how to swap X" method, which still apply to the 2D renderer, the physics backend seam and the audio backend. The physics-backend gap it names (G1) was closed by Phase 29. See [`../parked-3d/README.md`](../parked-3d/README.md) (parked 3D).
+
 > Requested by the user: *"if I needed/wanted to change the way I render water to a different
 > system I could; if I wanted to change the way I render light/how it behaves I could easily
 > do that — find any improvements I need to make relating to modularity."*

@@ -1,10 +1,12 @@
 # Starforge — Phase 13 acceptance demo (recording script)
 
+> **ARCHIVED 2026-09-20** — completed/superseded; kept as the record of what was built and why. Do not execute. Origin: Phase 13 acceptance script, 2026-07-04. Landed by: E21 (archived plan 11). Replacement: the scripted acceptance runner [`../../../tests/acceptance/README.md`](../../../tests/acceptance/README.md) and the PendulumLab walkthrough [`../../guide/pendulumlab-walkthrough.md`](../../guide/pendulumlab-walkthrough.md).
+
 > **This is Phase 13's definition of done.** A single recorded run that exercises
 > the whole editor loop end-to-end. Everything below runs on the user's GPU (the
 > automated half — reflection, serialization, `.bak` rotation, recipe→spec
 > mapping, telemetry routing, boot.cfg — is covered by `CosmicTests`). Plan of
-> record: [`docs/plans/archive/11-phase13-starforge-plan.md`](../plans/archive/11-phase13-starforge-plan.md).
+> record: [`docs/plans/archive/11-phase13-starforge-plan.md`](../../plans/archive/11-phase13-starforge-plan.md).
 
 The **Forge Playground** sample (offered on first run, or Home ▸ *Open "Forge
 Playground" sample*) is the fast path: it already contains terrain + a lake + a

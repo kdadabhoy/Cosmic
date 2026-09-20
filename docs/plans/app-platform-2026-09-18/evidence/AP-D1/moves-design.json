@@ -1,0 +1,9 @@
+{
+ "docs/design/forge-isle.md": "docs/archive/design/forge-isle.md",
+ "docs/design/example-images-gap-analysis.md": "docs/archive/design/example-images-gap-analysis.md",
+ "docs/design/starforge-acceptance-demo.md": "docs/archive/design/starforge-acceptance-demo.md",
+ "docs/design/app-platform-acceptance.md": "docs/archive/design/app-platform-acceptance.md",
+ "docs/design/ui-flow-2d-acceptance.md": "docs/archive/design/ui-flow-2d-acceptance.md",
+ "docs/design/water-rendering-notes.md": "docs/archive/design/water-rendering-notes.md",
+ "docs/design/starforge-ui.md": "docs/archive/design/starforge-ui.md"
+}

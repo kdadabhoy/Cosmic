@@ -1,5 +1,7 @@
 # Water rendering — notes, fixes, and limits (2026-07-03)
 
+> **ARCHIVED 2026-09-20** — completed/superseded; kept as the record of what was built and why. Do not execute. Origin: water system engineering note, 2026-07-03. Landed by: Phase 11 (archived plan 05/10). Replacement: 3D water is parked — [`../../parked-3d/systems/water.md`](../../parked-3d/systems/water.md).
+
 > Engineering note for the Cosmic water system (Gerstner Tier 1, `Cosmic/src/water/`,
 > `assets/shaders/Water.glsl`) after the "Subnautica-style water" pass. It records what the
 > distance "pixelation" was, the surface + dive work layered on top, the tunable knobs, and what is

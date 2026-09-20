@@ -1,11 +1,13 @@
 # Starforge — editor user guide
 
+> **ARCHIVED 2026-09-20** — completed/superseded; kept as the record of what was built and why. Do not execute. Origin: Stage-D editor quick guide, 2026-07-03. Landed by: absorbed by the guide tier (D39 and later). Replacement: [`../../guide/editor-ui-and-theming.md`](../../guide/editor-ui-and-theming.md), [`../../guide/getting-started.md`](../../guide/getting-started.md).
+
 > Starforge is the Cosmic editor: assemble scenes visually, attach C++ simulation
 > logic, press Play, and package the result as a standalone app. It ships as a
 > normal plugin — launch it from the Launcher, or `CosmicApp --project Starforge`.
 > This guide covers the Stage-D authoring workflow (primitives, import, materials,
-> environment, packaging). Plan of record: [`docs/plans/archive/11-phase13-starforge-plan.md`](../plans/archive/11-phase13-starforge-plan.md)
-> (Phase 13 complete — current work: [`docs/plans/13-phase14-starforge-hardening-plan.md`](../plans/archive/13-phase14-starforge-hardening-plan.md)).
+> environment, packaging). Plan of record: [`docs/plans/archive/11-phase13-starforge-plan.md`](../../plans/archive/11-phase13-starforge-plan.md)
+> (Phase 13 complete — current work: [`docs/plans/13-phase14-starforge-hardening-plan.md`](../../plans/archive/13-phase14-starforge-hardening-plan.md)).
 > This quick guide will be absorbed into the full Starforge manual (doc 12 D39).
 
 ## Layout

@@ -1,5 +1,7 @@
 # Example-Images Gap Analysis — what it takes for Cosmic/Starforge to match the reference editors
 
+> **ARCHIVED 2026-09-20** — completed/superseded; kept as the record of what was built and why. Do not execute. Origin: editor-vision spec of record, 2026-07-11. Landed by: Phases 22–28 (archived plans 21–27). Replacement: [`../../plans/archive/00-MASTER-ROADMAP-v4.md`](../../plans/archive/00-MASTER-ROADMAP-v4.md) records what shipped; the 2D editor direction is the [App Platform packet](../../plans/app-platform-2026-09-18/00-Start-Here.md).
+
 > **Created 2026-07-11.** The user dropped ten screenshots into `ExampleImages/` (three distinct
 > commercial-grade editors, a dialogue-graph tool, and a shipped 2D game) and asked: *what has to
 > change in the engine and editor so Cosmic/Starforge has similar functionality and a similar
@@ -60,7 +62,7 @@ shared inspector.** That is the bar this document decomposes.
 **Target (2208/2211):** one top strip: left = file/tool icons, **center = Play · Pause · Step ·
 Stop (· Eject)** as icon buttons, right = Platforms/Package + layout tabs. Reads as a product, not
 a debug panel.
-**Today:** `StarforgeApp::DrawTopBar` ([StarforgeApp.cpp:1024](../../Projects/Starforge/src/StarforgeApp.cpp))
+**Today:** `StarforgeApp::DrawTopBar` ([StarforgeApp.cpp:1024](../../../Projects/Starforge/src/StarforgeApp.cpp))
 renders text buttons left-aligned in flow order: `Play`/`Stop`/`Resume`/`Step`
 (`DrawPlayControls`), `Build Scripts` + auto checkbox + status text (`DrawBuildControls`),
 `Run App`, then the gizmo toolbar. Functionally complete (H5 fixed clipping); visually a debug
@@ -75,7 +77,7 @@ small colored dot + tooltip; move `Run App`/`Package` right. Eject itself is Pha
 ### 1.2 Workspace layout presets (Default / 2D / Animation / Custom tabs) — **M**
 **Target (2211):** named dock layouts switchable from the top-right; users save their own.
 **Today:** one hand-built default layout + `View ▸ Reset Layout`
-([StarforgeApp.cpp:1214](../../Projects/Starforge/src/StarforgeApp.cpp)); panel visibility bools
+([StarforgeApp.cpp:1214](../../../Projects/Starforge/src/StarforgeApp.cpp)); panel visibility bools
 persist via `EditorPrefs`. The engine dock system already supports named-port docking
 (`WorkspaceLayer::DockWindow(name, DockPort::…)`).
 **Change (editor-only):** a `LayoutPresets` helper in Starforge that snapshots/restores layouts
@@ -88,7 +90,7 @@ names (they do — panel titles are fixed strings).
 ### 1.3 Undo/redo buttons with history visibility — **S**
 **Target (2211):** toolbar ⟲/⟳ buttons with pending-count badges.
 **Today:** full undo stack exists (`core/CommandStack.h`, editor `commands/EditorCommands.*`) but
-is reachable only via `Edit` menu / Ctrl+Z ([StarforgeApp.cpp:1170](../../Projects/Starforge/src/StarforgeApp.cpp)).
+is reachable only via `Edit` menu / Ctrl+Z ([StarforgeApp.cpp:1170](../../../Projects/Starforge/src/StarforgeApp.cpp)).
 **Change (editor-only):** toolbar icon buttons + count badges; `CommandStack` needs tiny
 accessors if missing (`UndoCount()`, `RedoCount()`, and `NameAt(i)` for a hover-list of the last
 ~10 actions). Optional: a History popup listing recent commands (names already exist —
@@ -97,7 +99,7 @@ accessors if missing (`UndoCount()`, `RedoCount()`, and `NameAt(i)` for a hover-
 ### 1.4 Status bar (bottom strip) — **S**
 **Target (2211):** persistent bottom edge: storage/memory quota, play state, counts.
 **Today:** nothing; stats live in a floating Statistics window
-([StarforgeApp.cpp:1232](../../Projects/Starforge/src/StarforgeApp.cpp)).
+([StarforgeApp.cpp:1232](../../../Projects/Starforge/src/StarforgeApp.cpp)).
 **Change (editor-only):** a fixed `ImGuiWindowFlags_NoDecoration` strip pinned under the dockspace
 (same pattern as the top bar's `m_TopBarBottomY` anchoring, mirrored to the bottom): FPS,
 entity count, selected count, build-module state, play state, and — once §14.2's asset accounting
@@ -112,7 +114,7 @@ exists — "assets: N (X MiB CPU / Y MiB GPU)". Engine change: none (accounting 
 dropdown, gizmo mode buttons, snap toggles. The rest of the chrome never needs to be visible to
 fly around a level.
 **Today:** gizmo/snap/grid/collider toggles render in the *top bar* — `ViewportController::DrawToolbar`
-([ViewportController.cpp:404](../../Projects/Starforge/src/ViewportController.cpp)) with
+([ViewportController.cpp:404](../../../Projects/Starforge/src/ViewportController.cpp)) with
 `RadioButton("Move"/"Rotate"/"Scale")`, one shared `m_SnapValue`, `Front/Top/Iso/Frame` buttons.
 The engine already provides an in-viewport ImGui surface: `WorkspaceLayer::BeginViewportOverlay()`
 (used for the gizmo and the UI-canvas preview).
@@ -120,7 +122,7 @@ The engine already provides an in-viewport ImGui surface: `WorkspaceLayer::Begin
 `BeginViewportOverlay()` (top-left, like 2208), as icon buttons. Split snapping into
 **per-operation values** (`m_SnapMove = 0.25 m`, `m_SnapRotate = 15°`, `m_SnapScale = 0.1`) —
 `Gizmo::Manipulate` already takes a per-call `snap` float
-([Gizmo.h:78](../../Cosmic/src/graphics/Gizmo.h)), so this is pure editor state; show the three
+([Gizmo.h:78](../../../Cosmic/src/graphics/Gizmo.h)), so this is pure editor state; show the three
 values as editable chips exactly like 2208's `10 | 15° | 0.25`.
 
 ### 2.2 Camera selector + editor fly camera — **M**
@@ -135,7 +137,7 @@ enters Fly (the Unreal idiom), scroll while flying scales speed; Possess renders
 the selected `CameraComponent`'s pose (read-only — no writing back). Dropdown lists
 `Free (Orbit)` / `Free (Fly)` / every camera entity by Tag. Hook point:
 `StarforgeApp::OnUpdate` already gates camera control on viewport hover
-([StarforgeApp.cpp:805](../../Projects/Starforge/src/StarforgeApp.cpp)).
+([StarforgeApp.cpp:805](../../../Projects/Starforge/src/StarforgeApp.cpp)).
 
 ### 2.3 Axis navigator widget (view cube) — **S**
 **Target (2208/2211):** clickable orientation gizmo in a viewport corner.
@@ -166,7 +168,7 @@ belongs on the §2.1 viewport strip, not in a menu.
 ### 2.6 Editor grid/overlay polish — **S**
 **Target:** infinite-feeling grid that fades with distance and adapts spacing to zoom.
 **Today:** `Renderer3D::DrawGrid(50, 1, …)` — fixed 50 m extent, fixed 1 m step
-([ViewportController.cpp:253](../../Projects/Starforge/src/ViewportController.cpp)).
+([ViewportController.cpp:253](../../../Projects/Starforge/src/ViewportController.cpp)).
 **Change (engine, small):** either extend `DrawGrid` with camera-aware fade (distance-alpha per
 line, step decade switching on zoom like CAD apps) or add a dedicated one-quad
 `InfiniteGrid.glsl` (ray-plane in the fragment shader — the standard trick) drawn by a new
@@ -180,7 +182,7 @@ the references visually do. Editor passes the camera; default off for apps (comp
 ### 3.1 Combined ("universal") transform gizmo — **S**
 **Target (2208):** translate arrows + rotate rings + plane handles in ONE gizmo.
 **Today:** `Gizmo::Operation{Translate,Rotate,Scale}` single-op only
-([Gizmo.h:57](../../Cosmic/src/graphics/Gizmo.h)); vendored ImGuizmo *already supports*
+([Gizmo.h:57](../../../Cosmic/src/graphics/Gizmo.h)); vendored ImGuizmo *already supports*
 `OPERATION::UNIVERSAL` (bitmask).
 **Change (engine, tiny):** add `Operation::Universal` mapping to
 `ImGuizmo::TRANSLATE | ROTATE | SCALEU` in `graphics/Gizmo.cpp`; editor adds a fourth mode button
@@ -190,7 +192,7 @@ limitation: one snap vector per call — acceptable; document it).
 ### 3.2 Selection outline (post-process silhouette) — **M**
 **Target (2208/2210):** selected meshes get a crisp colored outline, not a bounding box.
 **Today:** an oriented wire AABB per selected mesh
-([ViewportController.cpp:259](../../Projects/Starforge/src/ViewportController.cpp)). The two
+([ViewportController.cpp:259](../../../Projects/Starforge/src/ViewportController.cpp)). The two
 ingredients already exist: `scene/ScenePicker` renders an entity-ID buffer on demand, and
 `renderer/PostProcessStack` owns fullscreen passes.
 **Change (engine + editor):** new optional pass `Outline.glsl`: render selected entities' IDs (or
@@ -206,10 +208,10 @@ Keep the wire-box path as the fallback when the outline pass is off.
 **Target (2208-style UX, implied by every reference):** drag a mesh/prefab from the browser into
 the world to spawn it at the hit point; drag a material onto a mesh to assign it.
 **Today:** drag *sources* exist (`ASSET_PATH` payload,
-[ContentBrowserPanel.cpp:219](../../Projects/Starforge/src/panels/ContentBrowserPanel.cpp)); the
+[ContentBrowserPanel.cpp:219](../../../Projects/Starforge/src/panels/ContentBrowserPanel.cpp)); the
 only *targets* are Inspector asset slots. The world-point probe already exists:
 `ViewportController::ProbeWorldPoint` (ID-pass depth readback,
-[ViewportController.cpp:219](../../Projects/Starforge/src/ViewportController.cpp)).
+[ViewportController.cpp:219](../../../Projects/Starforge/src/ViewportController.cpp)).
 **Change (editor-only):** accept the payload over the viewport — inside the viewport overlay use
 `ImGui::BeginDragDropTargetCustom(viewportRect, id)`; on drop: `.obj/.gltf/...` & `.cprefab` →
 spawn via the existing create/instantiate commands at `ProbeWorldPoint` (fallback: 10 m along the
@@ -222,7 +224,7 @@ through `commands/EditorCommands` so they're undoable.
 ## 4. Content Browser v2
 
 The references treat the asset browser as the editor's second-most-important surface. Today's
-panel ([ContentBrowserPanel.cpp](../../Projects/Starforge/src/panels/ContentBrowserPanel.cpp)) is
+panel ([ContentBrowserPanel.cpp](../../../Projects/Starforge/src/panels/ContentBrowserPanel.cpp)) is
 a single-pane tile grid: breadcrumbs, double-click actions, drag source, recycle-delete,
 texture-only thumbnails, folder/file creation context menus, FileWatcher-driven texture reload.
 Solid core; the gaps below are additive. (Doc 19 **A4** already owns "real thumbnails via an
@@ -241,7 +243,7 @@ width / tile size in `EditorPrefs`.
 ### 4.2 Typed visual identity + per-type create menu — **S**
 **Target (2208/2211):** every asset type is instantly recognizable (colored icon/badge); the
 "Add" button offers Material / Scene / Prefab / Emitter / Flow / Palette creation in place.
-**Today:** 4-char text badges (`SCN`, `MAT`, `MSH`…, [ContentBrowserPanel.cpp:49](../../Projects/Starforge/src/panels/ContentBrowserPanel.cpp));
+**Today:** 4-char text badges (`SCN`, `MAT`, `MSH`…, [ContentBrowserPanel.cpp:49](../../../Projects/Starforge/src/panels/ContentBrowserPanel.cpp));
 creation menu covers Folder + Scene only. Cosmic already has more first-class types than the
 menu admits: `.cscene`, `.cprefab`, `.cmat`, `.cmeta`, `.cemitter`, `.cflow`, `.cpal`, `.cvox`,
 `.cseq` (future), audio, images, models.
@@ -288,8 +290,8 @@ add a `WindowFileDropEvent` in `events/ApplicationEvent.h` + Win32 `WM_DROPFILES
 
 Foundation is genuinely good — reflected auto-UI with undo (`CommitFieldEdit`), multi-select
 intersection with mixed-value display, categorized Add Component
-([InspectorPanel.cpp](../../Projects/Starforge/src/panels/InspectorPanel.cpp),
-[widgets/PropertyRows.h](../../Projects/Starforge/src/widgets/PropertyRows.h)). The references
+([InspectorPanel.cpp](../../../Projects/Starforge/src/panels/InspectorPanel.cpp),
+[widgets/PropertyRows.h](../../../Projects/Starforge/src/widgets/PropertyRows.h)). The references
 add polish that mostly lands in `PropertyRows` + reflection metadata (§14.1).
 
 ### 5.1 Property search box — **S**
@@ -342,7 +344,7 @@ Copy/Paste; fields reset to default.
 **Target (2208):** a "Materials" array section on the mesh renderer: one row per slot with
 inline color/roughness/metallic and per-slot override.
 **Today:** `MeshRendererComponent` = ONE `MeshAsset` + ONE `MaterialAsset`/`MaterialPath`
-([Components.h:221](../../Cosmic/src/scene/Components.h)); multi-material sources import as
+([Components.h:221](../../../Cosmic/src/scene/Components.h)); multi-material sources import as
 *child entities* (E16: multi-mesh → parent + child MeshRenderers), which works but means "the
 gun's 4 materials" are 4 entities.
 **Change (engine + editor):** teach `Mesh` submeshes (ranges + material index — `graphics/Model`
@@ -371,7 +373,7 @@ push undo entries — gate `Commands::CommitFieldEdit` on play mode, apply direc
 **Target (2210/2211):** entity count in the header; per-row type icon + type column; per-row
 **Active** checkbox (grayed subtree when off); disabled rows render dimmed; search (have it).
 **Today:** tree + search + create menu + drag-reparent + prefab affordances
-([HierarchyPanel.cpp](../../Projects/Starforge/src/panels/HierarchyPanel.cpp)); no icons, no
+([HierarchyPanel.cpp](../../../Projects/Starforge/src/panels/HierarchyPanel.cpp)); no icons, no
 visibility/active concept (grep confirms no `Visible`/`Enabled`/`Active` flags on any component).
 
 - **6.1 Icons + count (editor-only) — S:** pick the row glyph from the entity's dominant
@@ -392,7 +394,7 @@ visibility/active concept (grep confirms no `Visible`/`Enabled`/`Active` flags o
 ## 7. Environment, sky & project settings parity
 
 **Today:** `EnvironmentComponent` is already close to 2210's Environment block
-([Components.h:404](../../Cosmic/src/scene/Components.h)): sun dir/color/intensity,
+([Components.h:404](../../../Cosmic/src/scene/Components.h)): sun dir/color/intensity,
 Procedural/Detailed/HDRI sky + `HdriPath` (H4), IBL toggle+intensity, exposure, height fog,
 bloom/SSAO/FXAA/lens-flare toggles; `EnvironmentPanel` auto-UIs it with undo.
 
@@ -476,7 +478,7 @@ model, selection, context menus), not a flow-only panel.
 - **9.2 Typed-variables blackboard (engine + editor) — M:** 2218's left panel (grouped, typed,
   default-valued variables; conditions/bindings reference them). Engine: `FlowAsset` gains a
   `Variables` table (name → `FlowValue` default + optional group label — `FlowValue` already
-  models Bool/Number/String, [FlowMachine.h:47](../../Cosmic/src/scene/FlowMachine.h); add an
+  models Bool/Number/String, [FlowMachine.h:47](../../../Cosmic/src/scene/FlowMachine.h); add an
   Enum-of-strings kind); `FlowMachine` holds runtime values, `FlowGuard` grows a variant that
   compares a *variable* (today guards read reflected entity fields only), actions grow
   `setVar`; script/EventBus access via `Signals()`-adjacent `Flow().GetVar/SetVar`. Serializer:
@@ -537,7 +539,7 @@ integration happens):
 - **10.4 Editor authoring (editor) — S:** the E1 dividend — the reflected recipe auto-UIs;
   add a "Regenerate now" button row (the 2215 Trigger) in the Inspector for `NavMeshComponent`
   (the `Fit to mesh` per-component-button precedent in
-  [InspectorPanel.cpp:200](../../Projects/Starforge/src/panels/InspectorPanel.cpp)), plus
+  [InspectorPanel.cpp:200](../../../Projects/Starforge/src/panels/InspectorPanel.cpp)), plus
   Entity ▸ World ▸ Nav Mesh menu item and the debug-draw toggle on the §2.1 strip.
 
 ---
@@ -545,7 +547,7 @@ integration happens):
 ## 11. Particle authoring parity
 
 **Today:** `ParticleEmitterComponent`'s reflected recipe (shape/cone/box, spawn, life, gravity,
-drag, wind, flipbook, soft-fade, stretch — [Components.h:545](../../Cosmic/src/scene/Components.h))
+drag, wind, flipbook, soft-fade, stretch — [Components.h:545](../../../Cosmic/src/scene/Components.h))
 already matches most of 2216's Inspector; `.cemitter` presets save/load; WorldSystemsPanel edits
 it. Doc 18 **R7** owns indirect-draw/sorting. Gaps:
 
@@ -581,7 +583,7 @@ those as the spec; the image exposes three genuine engine gaps beyond them:
   (`Renderer2D` flush or the PostFx path when active). Normal-mapped 2D lights are explicitly
   out of scope v1.
 - **12.2 World-anchored UI labels (engine) — S/M:** the "Frouty" nameplate. `UiSystem` is
-  screen-space canvas only ([UiComponents.h](../../Cosmic/src/scene/ui/UiComponents.h)). Add a
+  screen-space canvas only ([UiComponents.h](../../../Cosmic/src/scene/ui/UiComponents.h)). Add a
   `UiWorldAnchorComponent { TargetEntity(UUID) or WorldOffset; }` on a rect: before layout,
   project the anchor's world position through the active camera into canvas space and treat it
   as the rect's origin (one hook in `UiSystem::ResolveRect`'s canvas pass). Works for 3D too
@@ -599,7 +601,7 @@ those as the spec; the image exposes three genuine engine gaps beyond them:
 ## 13. Console & the utility dock
 
 - **13.1 Console v2 (editor) — S:** today's panel already has timestamps, severity filters,
-  auto-scroll, copy ([ConsolePanel.cpp](../../Projects/Starforge/src/panels/ConsolePanel.cpp)).
+  auto-scroll, copy ([ConsolePanel.cpp](../../../Projects/Starforge/src/panels/ConsolePanel.cpp)).
   Add: a text search filter, per-source chips once more sinks exist (Engine/Editor/Game —
   `ConsoleLine` would need a Source enum plumbed where lines are pushed), monospace font for
   alignment, and a max-line ring (guard long sessions).
