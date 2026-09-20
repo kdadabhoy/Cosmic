@@ -253,7 +253,7 @@ namespace Starforge
             {
                 m_UiMouseWas = false;
                 if (clicked && !voxelBrushConsumed && !tileBrushConsumed && vpHover &&
-                    !m_GizmoActive && !m_GizmoOver && vpRect.Contains(local))
+                    !m_GizmoActive && !m_GizmoOver && !m_ExternalGizmoBusy && vpRect.Contains(local))
                 {
                     uint32_t hit = 0;
                     if (UiSystem::HitTest(*ctx.Scene, vpRect, local, hit))
@@ -273,7 +273,7 @@ namespace Starforge
         // pass on a miss so meshes in a 2.5D scene stay pickable.
         bool spriteConsumed = false;
         if (clicked && !voxelBrushConsumed && !tileBrushConsumed && !uiConsumed && vpHover && cam2d &&
-            !m_GizmoActive && !m_GizmoOver && ctx.Scene && vpSize.x > 1.0f && vpSize.y > 1.0f)
+            !m_GizmoActive && !m_GizmoOver && !m_ExternalGizmoBusy && ctx.Scene && vpSize.x > 1.0f && vpSize.y > 1.0f)
         {
             const glm::vec2 world = Camera2DController::ScreenToWorld(
                 Input::GetMouseScreenPosition(), vpPos, vpSize,
@@ -317,7 +317,7 @@ namespace Starforge
         // the selection — the same "click-away deselects" contract the ID pass
         // provides in the 3D build.
         if (clicked && !tileBrushConsumed && !uiConsumed && !spriteConsumed &&
-            vpHover && !m_GizmoActive && !m_GizmoOver && !io.KeyCtrl && ctx.Scene)
+            vpHover && !m_GizmoActive && !m_GizmoOver && !m_ExternalGizmoBusy && !io.KeyCtrl && ctx.Scene)
         {
             ctx.ClearSelection();
         }
@@ -810,6 +810,37 @@ namespace Starforge
             toggle(ICON_LC_BOXES,    m_ShowColliders,
                    "Collider overlay (J8/W7): Box/Sphere/Capsule projected onto XY");
             ImGui::SameLine(0.0f, 8.0f);
+
+            // AP-03 — the UI rect gizmo's snap chips (2D mode). Same latched-push
+            // toggle as above (the KI-1-fixed pattern); NOT probed, so the WO-07
+            // harnesses' fixed chip slots (0-2 snap, 3-4 toggles, 5 World/Local)
+            // are unchanged.
+            if (mode2D && m_RectSnap)
+            {
+                auto rectChip = [&](const char* icon, bool& on, const char* tip)
+                {
+                    const bool pushed = on;
+                    if (pushed)
+                    {
+                        const ImVec4 acc = ImGui::GetStyleColorVec4(ImGuiCol_CheckMark);
+                        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(acc.x, acc.y, acc.z, 0.32f));
+                    }
+                    if (ImGui::Button(icon, ImVec2(sq * 1.9f, sq)))
+                        on = !on;
+                    if (pushed)
+                        ImGui::PopStyleColor();
+                    if (ImGui::IsItemHovered())
+                        ImGui::SetTooltip("%s", tip);
+                    ImGui::SameLine(0.0f, 3.0f);
+                };
+                ImGui::PushID("ap03rect");
+                rectChip(ICON_LC_MOVE " 1/8", m_RectSnap->PixelEighth,
+                         "UI rect gizmo: snap edges to 1/8 px (AP-03)");
+                rectChip(ICON_LC_GRID_3X3 " 16", m_RectSnap->Grid16,
+                         "UI rect gizmo: snap edges to a 16 px grid (wins over 1/8 px)");
+                ImGui::PopID();
+                ImGui::SameLine(0.0f, 8.0f);
+            }
 
             // R8 — view-mode dropdown (Lit · Unlit · Wireframe · Entity ID).
             // The 2D build keeps Lit and Wireframe only: Unlit neutralizes 3D

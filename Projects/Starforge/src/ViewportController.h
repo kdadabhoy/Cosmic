@@ -28,6 +28,7 @@
 #include "EditorContext.h"
 #include "EditorCameraRig.h"
 #include "EditorPrefs.h"
+#include "UiRectGizmo.h"    // AP-03 — the rect gizmo's snap chips live in the strip
 
 #include <Cosmic.h>
 
@@ -141,7 +142,13 @@ namespace Starforge
         void     SetViewMode(ViewMode m)      { m_ViewMode = m; }
 
         // Last-frame gizmo state — StarforgeApp gates the camera on it.
-        bool GizmoBusy() const { return m_GizmoActive || m_GizmoOver; }
+        bool GizmoBusy() const { return m_GizmoActive || m_GizmoOver || m_ExternalGizmoBusy; }
+
+        // AP-03 — the UI rect gizmo (StarforgeApp-owned) reports "I own the pointer"
+        // so the click-pick / click-away-deselect below yields to it; its two snap
+        // chips (1/8 px, 16 px grid) are drawn in the strip off this state.
+        void SetExternalGizmoBusy(bool busy)        { m_ExternalGizmoBusy = busy; }
+        void SetRectGizmoSnap(RectGizmoSnap* snap)  { m_RectSnap = snap; }
 
         // WO-07 (2D stability) — KI-1 regression probe (TEST-ONLY, gated). When
         // s_Ki1Probe is non-null, the viewport-strip snap-chip helper records each
@@ -196,6 +203,8 @@ namespace Starforge
         bool  m_ShowColliders    = true;    // J8 — collider wireframe gizmos (W7: the 2D overlay reads it too)
 
         bool  m_GizmoActive = false;
+        bool  m_ExternalGizmoBusy = false;    // AP-03 — UiRectGizmo hover/drag this frame
+        RectGizmoSnap* m_RectSnap = nullptr;   // AP-03 — strip chips edit this
         bool  m_GizmoOver   = false;
         bool  m_GizmoWasUsing = false;
         Cosmic::TransformComponent m_DragBefore;   // gizmo drag-start pose (undo)
