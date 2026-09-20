@@ -1,0 +1,108 @@
+﻿{
+    "manifest":  "wo08-r07",
+    "profile":  "release",
+    "tier_filter":  [
+
+                    ],
+    "config":  "Release",
+    "mode":  "2D",
+    "generated_utc":  "2026-09-20T07:27:04.3581646Z",
+    "git":  {
+                "commit":  "54b0beb072f7cb0c74ecda02e9db443fd24d7714",
+                "dirty":  true,
+                "dirty_diff_sha256":  null
+            },
+    "environment":  {
+                        "os_caption":  "Microsoft Windows 11 Education",
+                        "os_version":  "10.0.26200",
+                        "os_build":  "26200",
+                        "os_display":  "26200.9457",
+                        "cpu_name":  "AMD Ryzen 7 7800X3D 8-Core Processor",
+                        "cpu_cores":  8,
+                        "cpu_threads":  16,
+                        "cpu_addr_width":  64,
+                        "cpu_isa_floor":  "SSE4.2 (D-CPU); see evidence/WO-02/cpu-isa-probe.txt",
+                        "ram_bytes":  33462239232,
+                        "ram_gib":  31.2,
+                        "gpus":  [
+                                     {
+                                         "name":  "NVIDIA GeForce RTX 5070 Ti",
+                                         "driver":  "32.0.16.1692",
+                                         "driver_date":  "\/Date(1788480000000)\/"
+                                     },
+                                     {
+                                         "name":  "AMD Radeon(TM) Graphics",
+                                         "driver":  "32.0.21045.5002",
+                                         "driver_date":  "\/Date(1786924800000)\/"
+                                     }
+                                 ],
+                        "opengl_version":  null,
+                        "powershell":  "5.1.26100.9444",
+                        "hostname":  "DESKTOP-SEOA4BT"
+                    },
+    "capabilities":  {
+                         "windows":  true,
+                         "cpu-sse42":  true,
+                         "gpu-gl":  true,
+                         "serial-device":  false,
+                         "editor-ui":  false,
+                         "audio-device":  true,
+                         "render-tests":  true
+                     },
+    "forced_unavailable":  [
+
+                           ],
+    "bin_dir":  "C:\\dev\\Cosmic\\build\\Runtime\\Release",
+    "run_temp":  "C:\\Users\\Kaden\\AppData\\Local\\Temp\\cosmic-accept-1a5f7af622e7415fb3a18a8e9f0784af",
+    "golden_dir":  "C:\\dev\\Cosmic\\tests\\acceptance\\goldens",
+    "golden_before":  {
+                          ".gitkeep-golden.txt":  "8e92944b7b4e999a32148948af2a13498ece10d56133c62c5c84431f2d335118"
+                      },
+    "golden_after":  {
+                         ".gitkeep-golden.txt":  "8e92944b7b4e999a32148948af2a13498ece10d56133c62c5c84431f2d335118"
+                     },
+    "golden_mutated":  false,
+    "acceptance_mode":  true,
+    "counts":  {
+                   "total":  1,
+                   "passed":  1,
+                   "failed":  0,
+                   "blocked":  0
+               },
+    "self_test":  {
+                      "enabled":  false,
+                      "failures":  [
+
+                                   ]
+                  },
+    "cases":  [
+                  {
+                      "id":  "R07",
+                      "tier":  "Q",
+                      "description":  "Named-machine performance qualification (Q): 10,000 instanced circles and, separately, 10,000 instanced quads into an offscreen 1920x1080 RGBA8 target, one DrawInstanced* per frame, 10-s warmup + 60-s sample each, timing that includes a RenderCommand::FinishGpu() completion fence per frame and NO read-back in the timed region (vsync off; no present). Records mean/p50/p95/p99/max complete-frame ms, CPU-submit ms, GPU timer-zone ms, draw counts and the machine; bar p95 \u003c= 16.67 ms, p99 \u003c= 33.33 ms. Correctness is asserted separately (1 instance draw/frame, 10,000 instances, non-blank frame). Applies to the named configuration only.",
+                      "requires":  [
+                                       "windows",
+                                       "gpu-gl"
+                                   ],
+                      "transport":  "none",
+                      "seed":  null,
+                      "start_utc":  "2026-09-20T07:24:43.2005952Z",
+                      "deadline_sec":  660,
+                      "exercised":  "fixture",
+                      "fixture":  "C:\\dev\\Cosmic\\tests\\acceptance\\..\\..\\tests\\render\\render_wo08_perf.cpp",
+                      "fixture_sha256":  "9d6f4d5e1289ce40b502576e162142193ce133a5ed809ee135674ba889d270ca",
+                      "command":  "powershell -NoProfile -ExecutionPolicy Bypass -File C:\\dev\\Cosmic\\tests\\acceptance\\fixtures\\Run-WO08Render.ps1 -Bin C:\\dev\\Cosmic\\build\\Runtime\\Release -CaseId R07 -Suite \"WO-08 R07\" -MinTests 2 -DeadlineSec 600 -NoSkip -PerfOut C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-08\\r07-Release\\perf -Output C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-08\\r07-Release",
+                      "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-Q1\\manifests-Release\\wo08-r07\\R07.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-Q1\\manifests-Release\\wo08-r07\\R07.err.log",
+                      "pid":  13148,
+                      "exit_code":  0,
+                      "crash":  false,
+                      "tests_passed":  2,
+                      "tests_expected_min":  2,
+                      "verdict":  "PASSED",
+                      "detail":  "exit 0 as expected",
+                      "duration_sec":  141.12,
+                      "end_utc":  "2026-09-20T07:27:04.3261269Z"
+                  }
+              ]
+}

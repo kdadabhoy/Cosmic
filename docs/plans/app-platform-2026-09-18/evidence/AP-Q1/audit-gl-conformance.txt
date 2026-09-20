@@ -1,0 +1,1 @@
+GL conformance: clean (no raw gl*/GL_* tokens outside the platform layer).

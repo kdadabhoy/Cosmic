@@ -1,0 +1,218 @@
+﻿{
+    "case":  "S03",
+    "config":  "Release",
+    "runs":  5,
+    "exe":  "C:\\dev\\Cosmic\\build\\Runtime\\Release\\CosmicTests.exe",
+    "commit":  "fa1223a88629319a927304d7c6dbb04401c3604a",
+    "generated_utc":  "2026-09-20T08:38:16.5622967Z",
+    "verdict":  "PASS",
+    "fixtures":  [
+                     {
+                         "fixture":  "F-PENDULUM-series-hash",
+                         "test_case":  "AP-04 Y01: two runs*",
+                         "runs":  5,
+                         "verdict":  "PASS",
+                         "all_pass":  true,
+                         "identical":  true,
+                         "checksum":  "fcb4b3e077909a4fa46c448471f272d06689634eaac96880d322245f6b5c0000",
+                         "checksums":  [
+                                           "fcb4b3e077909a4fa46c448471f272d06689634eaac96880d322245f6b5c0000",
+                                           "fcb4b3e077909a4fa46c448471f272d06689634eaac96880d322245f6b5c0000",
+                                           "fcb4b3e077909a4fa46c448471f272d06689634eaac96880d322245f6b5c0000",
+                                           "fcb4b3e077909a4fa46c448471f272d06689634eaac96880d322245f6b5c0000",
+                                           "fcb4b3e077909a4fa46c448471f272d06689634eaac96880d322245f6b5c0000"
+                                       ],
+                         "assertions":  [
+                                            3,
+                                            3,
+                                            3,
+                                            3,
+                                            3
+                                        ]
+                     },
+                     {
+                         "fixture":  "F-PENDULUM-analytic",
+                         "test_case":  "AP-04 Y01: undamped*",
+                         "runs":  5,
+                         "verdict":  "PASS",
+                         "all_pass":  true,
+                         "identical":  true,
+                         "checksum":  "d25dff6f530d8ab70803317868ec0b3c4fd30c7a4d25bed9390df519b4a73c5f",
+                         "checksums":  [
+                                           "d25dff6f530d8ab70803317868ec0b3c4fd30c7a4d25bed9390df519b4a73c5f",
+                                           "d25dff6f530d8ab70803317868ec0b3c4fd30c7a4d25bed9390df519b4a73c5f",
+                                           "d25dff6f530d8ab70803317868ec0b3c4fd30c7a4d25bed9390df519b4a73c5f",
+                                           "d25dff6f530d8ab70803317868ec0b3c4fd30c7a4d25bed9390df519b4a73c5f",
+                                           "d25dff6f530d8ab70803317868ec0b3c4fd30c7a4d25bed9390df519b4a73c5f"
+                                       ],
+                         "assertions":  [
+                                            9,
+                                            9,
+                                            9,
+                                            9,
+                                            9
+                                        ]
+                     },
+                     {
+                         "fixture":  "F-PENDULUM-period",
+                         "test_case":  "AP-04 Y01: the zero-crossing*",
+                         "runs":  5,
+                         "verdict":  "PASS",
+                         "all_pass":  true,
+                         "identical":  true,
+                         "checksum":  "b8d25b65152302fe85fcea224114c7087b77f3b137255b7dc6b54046a60b80d8",
+                         "checksums":  [
+                                           "b8d25b65152302fe85fcea224114c7087b77f3b137255b7dc6b54046a60b80d8",
+                                           "b8d25b65152302fe85fcea224114c7087b77f3b137255b7dc6b54046a60b80d8",
+                                           "b8d25b65152302fe85fcea224114c7087b77f3b137255b7dc6b54046a60b80d8",
+                                           "b8d25b65152302fe85fcea224114c7087b77f3b137255b7dc6b54046a60b80d8",
+                                           "b8d25b65152302fe85fcea224114c7087b77f3b137255b7dc6b54046a60b80d8"
+                                       ],
+                         "assertions":  [
+                                            7,
+                                            7,
+                                            7,
+                                            7,
+                                            7
+                                        ]
+                     },
+                     {
+                         "fixture":  "F02-200-step-trace",
+                         "test_case":  "AP-04 F02: a scripted 200-step*",
+                         "runs":  5,
+                         "verdict":  "PASS",
+                         "all_pass":  true,
+                         "identical":  true,
+                         "checksum":  "40fdf06d6bbfa27b690b382e86ac2ab4cf8c6c8e454a315a2ff9c1a3447922d6",
+                         "checksums":  [
+                                           "40fdf06d6bbfa27b690b382e86ac2ab4cf8c6c8e454a315a2ff9c1a3447922d6",
+                                           "40fdf06d6bbfa27b690b382e86ac2ab4cf8c6c8e454a315a2ff9c1a3447922d6",
+                                           "40fdf06d6bbfa27b690b382e86ac2ab4cf8c6c8e454a315a2ff9c1a3447922d6",
+                                           "40fdf06d6bbfa27b690b382e86ac2ab4cf8c6c8e454a315a2ff9c1a3447922d6",
+                                           "40fdf06d6bbfa27b690b382e86ac2ab4cf8c6c8e454a315a2ff9c1a3447922d6"
+                                       ],
+                         "assertions":  [
+                                            15,
+                                            15,
+                                            15,
+                                            15,
+                                            15
+                                        ]
+                     },
+                     {
+                         "fixture":  "N04-determinism",
+                         "test_case":  "WO-10 N04*",
+                         "runs":  5,
+                         "verdict":  "PASS",
+                         "all_pass":  true,
+                         "identical":  true,
+                         "checksum":  "824513f344f2bb0adaaa3c7588fb753008d516f55b777f72ac9f8c22ecd1098d",
+                         "checksums":  [
+                                           "824513f344f2bb0adaaa3c7588fb753008d516f55b777f72ac9f8c22ecd1098d",
+                                           "824513f344f2bb0adaaa3c7588fb753008d516f55b777f72ac9f8c22ecd1098d",
+                                           "824513f344f2bb0adaaa3c7588fb753008d516f55b777f72ac9f8c22ecd1098d",
+                                           "824513f344f2bb0adaaa3c7588fb753008d516f55b777f72ac9f8c22ecd1098d",
+                                           "824513f344f2bb0adaaa3c7588fb753008d516f55b777f72ac9f8c22ecd1098d"
+                                       ],
+                         "assertions":  [
+                                            200015,
+                                            200015,
+                                            200015,
+                                            200015,
+                                            200015
+                                        ]
+                     },
+                     {
+                         "fixture":  "V01-DataBus",
+                         "test_case":  "V01*",
+                         "runs":  5,
+                         "verdict":  "PASS",
+                         "all_pass":  true,
+                         "identical":  true,
+                         "checksum":  "34d90ea5456b75eecc6365e6d73d7eeed161f9d4667b9cf8fc3f32e526ed58ec",
+                         "checksums":  [
+                                           "34d90ea5456b75eecc6365e6d73d7eeed161f9d4667b9cf8fc3f32e526ed58ec",
+                                           "34d90ea5456b75eecc6365e6d73d7eeed161f9d4667b9cf8fc3f32e526ed58ec",
+                                           "34d90ea5456b75eecc6365e6d73d7eeed161f9d4667b9cf8fc3f32e526ed58ec",
+                                           "34d90ea5456b75eecc6365e6d73d7eeed161f9d4667b9cf8fc3f32e526ed58ec",
+                                           "34d90ea5456b75eecc6365e6d73d7eeed161f9d4667b9cf8fc3f32e526ed58ec"
+                                       ],
+                         "assertions":  [
+                                            168,
+                                            168,
+                                            168,
+                                            168,
+                                            168
+                                        ]
+                     },
+                     {
+                         "fixture":  "WO06-D01-storage",
+                         "test_case":  "WO-06 D01*",
+                         "runs":  5,
+                         "verdict":  "PASS",
+                         "all_pass":  true,
+                         "identical":  true,
+                         "checksum":  "8e36b50767d355dc810196e291b9af3865fcbe43735bdc92165177db10d87c1e",
+                         "checksums":  [
+                                           "8e36b50767d355dc810196e291b9af3865fcbe43735bdc92165177db10d87c1e",
+                                           "8e36b50767d355dc810196e291b9af3865fcbe43735bdc92165177db10d87c1e",
+                                           "8e36b50767d355dc810196e291b9af3865fcbe43735bdc92165177db10d87c1e",
+                                           "8e36b50767d355dc810196e291b9af3865fcbe43735bdc92165177db10d87c1e",
+                                           "8e36b50767d355dc810196e291b9af3865fcbe43735bdc92165177db10d87c1e"
+                                       ],
+                         "assertions":  [
+                                            145,
+                                            145,
+                                            145,
+                                            145,
+                                            145
+                                        ]
+                     },
+                     {
+                         "fixture":  "WO06-D02-interpolation",
+                         "test_case":  "WO-06 D02*",
+                         "runs":  5,
+                         "verdict":  "PASS",
+                         "all_pass":  true,
+                         "identical":  true,
+                         "checksum":  "9fff49e3a7756446d49606a837f5995b2720d8ea53a44a928ec8c34eb4aae986",
+                         "checksums":  [
+                                           "9fff49e3a7756446d49606a837f5995b2720d8ea53a44a928ec8c34eb4aae986",
+                                           "9fff49e3a7756446d49606a837f5995b2720d8ea53a44a928ec8c34eb4aae986",
+                                           "9fff49e3a7756446d49606a837f5995b2720d8ea53a44a928ec8c34eb4aae986",
+                                           "9fff49e3a7756446d49606a837f5995b2720d8ea53a44a928ec8c34eb4aae986",
+                                           "9fff49e3a7756446d49606a837f5995b2720d8ea53a44a928ec8c34eb4aae986"
+                                       ],
+                         "assertions":  [
+                                            80,
+                                            80,
+                                            80,
+                                            80,
+                                            80
+                                        ]
+                     },
+                     {
+                         "fixture":  "WO06-D03-corrupt-seed6",
+                         "test_case":  "WO-06 D03*",
+                         "runs":  5,
+                         "verdict":  "PASS",
+                         "all_pass":  true,
+                         "identical":  true,
+                         "checksum":  "af64026ab7744cb0481949093cf4f92fdb324683f656a36a0f2ba75f151fb21d",
+                         "checksums":  [
+                                           "af64026ab7744cb0481949093cf4f92fdb324683f656a36a0f2ba75f151fb21d",
+                                           "af64026ab7744cb0481949093cf4f92fdb324683f656a36a0f2ba75f151fb21d",
+                                           "af64026ab7744cb0481949093cf4f92fdb324683f656a36a0f2ba75f151fb21d",
+                                           "af64026ab7744cb0481949093cf4f92fdb324683f656a36a0f2ba75f151fb21d",
+                                           "af64026ab7744cb0481949093cf4f92fdb324683f656a36a0f2ba75f151fb21d"
+                                       ],
+                         "assertions":  [
+                                            12014,
+                                            12014,
+                                            12014,
+                                            12014,
+                                            12014
+                                        ]
+                     }
+                 ]
+}

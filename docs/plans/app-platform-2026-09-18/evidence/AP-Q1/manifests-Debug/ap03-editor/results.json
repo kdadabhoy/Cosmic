@@ -1,0 +1,106 @@
+﻿{
+    "manifest":  "ap03-editor",
+    "profile":  "release",
+    "tier_filter":  [
+
+                    ],
+    "config":  "Debug",
+    "mode":  "2D",
+    "generated_utc":  "2026-09-20T08:47:58.5764685Z",
+    "git":  {
+                "commit":  "fa1223a88629319a927304d7c6dbb04401c3604a",
+                "dirty":  true,
+                "dirty_diff_sha256":  null
+            },
+    "environment":  {
+                        "os_caption":  "Microsoft Windows 11 Education",
+                        "os_version":  "10.0.26200",
+                        "os_build":  "26200",
+                        "os_display":  "26200.9457",
+                        "cpu_name":  "AMD Ryzen 7 7800X3D 8-Core Processor",
+                        "cpu_cores":  8,
+                        "cpu_threads":  16,
+                        "cpu_addr_width":  64,
+                        "cpu_isa_floor":  "SSE4.2 (D-CPU); see evidence/WO-02/cpu-isa-probe.txt",
+                        "ram_bytes":  33462239232,
+                        "ram_gib":  31.2,
+                        "gpus":  [
+                                     {
+                                         "name":  "NVIDIA GeForce RTX 5070 Ti",
+                                         "driver":  "32.0.16.1692",
+                                         "driver_date":  "\/Date(1788480000000)\/"
+                                     },
+                                     {
+                                         "name":  "AMD Radeon(TM) Graphics",
+                                         "driver":  "32.0.21045.5002",
+                                         "driver_date":  "\/Date(1786924800000)\/"
+                                     }
+                                 ],
+                        "opengl_version":  null,
+                        "powershell":  "5.1.26100.9444",
+                        "hostname":  "DESKTOP-SEOA4BT"
+                    },
+    "capabilities":  {
+                         "windows":  true,
+                         "cpu-sse42":  true,
+                         "gpu-gl":  true,
+                         "serial-device":  false,
+                         "editor-ui":  false,
+                         "audio-device":  true,
+                         "render-tests":  true
+                     },
+    "forced_unavailable":  [
+
+                           ],
+    "bin_dir":  "C:\\dev\\Cosmic\\build\\Runtime\\Debug",
+    "run_temp":  "C:\\dev\\Cosmic\\build\\_temp\\apq1\\cosmic-accept-7f151b9558b54273b253cbe3219c14f9",
+    "golden_dir":  "C:\\dev\\Cosmic\\tests\\acceptance\\goldens",
+    "golden_before":  {
+                          ".gitkeep-golden.txt":  "8e92944b7b4e999a32148948af2a13498ece10d56133c62c5c84431f2d335118"
+                      },
+    "golden_after":  {
+                         ".gitkeep-golden.txt":  "8e92944b7b4e999a32148948af2a13498ece10d56133c62c5c84431f2d335118"
+                     },
+    "golden_mutated":  false,
+    "acceptance_mode":  true,
+    "counts":  {
+                   "total":  1,
+                   "passed":  1,
+                   "failed":  0,
+                   "blocked":  0
+               },
+    "self_test":  {
+                      "enabled":  false,
+                      "failures":  [
+
+                                   ]
+                  },
+    "cases":  [
+                  {
+                      "id":  "AP03-EDITOR",
+                      "tier":  "I",
+                      "description":  "AP-03 editor authoring inside the REAL Starforge editor (Projects/Starforge/src/AP03AuthoringSelfTest.cpp): E01 New Project (kind app) -\u003e F-APP tree equals templates/app -\u003e the flow\u0027s start screen opens -\u003e viewport non-blank -\u003e BuildScripts -\u003e Play (flow state Home, services instantiated) -\u003e Stop; E02 Screens \u003e New Screen \u0027Telemetry\u0027 + Create script (scene with canvas + ortho camera + NativeScript, flow state added byte-stable, stub header, include + CS_SCRIPT between the CS_SCREENS markers, rebuild ok, Validate empty, marker-less refusal with the documented message and no file change); F01 rename / set-start round-trip byte-stable + when/channel guard round trip; E03 injected pointer drag on the rect gizmo (one CommandStack entry, undo/redo, anchors untouched, SE resize edits OffsetMax only); E04 UiImage.TexturePath replaced with an imported PNG, saved, reopened, sentinel pixels in the viewport readback; E08 recorded Open/Reveal (COSMIC_AP03_RECORD_SHELL) for a screen script, the CS_SERVICE site (DataBus panel producer + Inspector Open producer), the CS_PANEL site (viewport context menu + Inspector), a bound widget channel and a button signal; V05 editor half (Diagnostics CS_PANEL drawn at the element\u0027s viewport-offset rect, also letterboxed; unknown name -\u003e placeholder; never in edit mode; ImGui stacks balanced); E07 live loop (AppService.cpp rewritten while playing -\u003e stop, rebuild, resume on the same flow state with services re-instantiated, amplitude changed, uptime history kept, Console build line; compile error -\u003e stays stopped with the \u0027Build failed\u0027 chip; fix -\u003e resumes); E06 homescreen lists App/Game/Blank + FlowDemo/ForgePong, each scaffolds/opens/builds/plays, LoadProjects \u003c= 3 over 600 frames. The wrapper adds the OUT-OF-PROCESS oracles (F-APP byte comparison, E02 files + flow JSON, E08 recorded paths).",
+                      "requires":  [
+                                       "windows",
+                                       "gpu-gl"
+                                   ],
+                      "transport":  "none",
+                      "seed":  null,
+                      "start_utc":  "2026-09-20T08:46:13.6070571Z",
+                      "deadline_sec":  1600,
+                      "exercised":  "production",
+                      "command":  "powershell -NoProfile -ExecutionPolicy Bypass -File C:\\dev\\Cosmic\\tests\\acceptance\\fixtures\\Run-AP03Authoring.ps1 -Bin C:\\dev\\Cosmic\\build\\Runtime\\Debug -Output C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-03\\ap03-Debug -ProjectRoot C:\\dev\\Cosmic\\build\\_temp\\apq1\\cosmic-accept-7f151b9558b54273b253cbe3219c14f9\\temp\\ap03",
+                      "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-Q1\\manifests-Debug\\ap03-editor\\AP03-EDITOR.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-Q1\\manifests-Debug\\ap03-editor\\AP03-EDITOR.err.log",
+                      "pid":  17536,
+                      "exit_code":  0,
+                      "crash":  false,
+                      "tests_passed":  2,
+                      "tests_expected_min":  2,
+                      "verdict":  "PASSED",
+                      "detail":  "exit 0 as expected",
+                      "duration_sec":  104.951,
+                      "end_utc":  "2026-09-20T08:47:58.5634516Z"
+                  }
+              ]
+}

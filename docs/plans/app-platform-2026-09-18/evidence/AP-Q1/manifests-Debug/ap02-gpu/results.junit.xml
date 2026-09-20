@@ -1,0 +1,10 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="ap02-gpu" tests="2" failures="0" skipped="0">
+  <testsuite name="release" tests="2" failures="0" skipped="0">
+    <testcase name="V03" classname="ap02-gpu.G" time="0">
+    </testcase>
+    <testcase name="E05" classname="ap02-gpu.G" time="0">
+    </testcase>
+  </testsuite>
+</testsuites>
+

@@ -1,0 +1,242 @@
+﻿{
+    "manifest":  "wo05",
+    "profile":  "pr",
+    "tier_filter":  [
+
+                    ],
+    "config":  "Release",
+    "mode":  "2D",
+    "generated_utc":  "2026-09-20T08:07:39.9859116Z",
+    "git":  {
+                "commit":  "fa1223a88629319a927304d7c6dbb04401c3604a",
+                "dirty":  true,
+                "dirty_diff_sha256":  null
+            },
+    "environment":  {
+                        "os_caption":  "Microsoft Windows 11 Education",
+                        "os_version":  "10.0.26200",
+                        "os_build":  "26200",
+                        "os_display":  "26200.9457",
+                        "cpu_name":  "AMD Ryzen 7 7800X3D 8-Core Processor",
+                        "cpu_cores":  8,
+                        "cpu_threads":  16,
+                        "cpu_addr_width":  64,
+                        "cpu_isa_floor":  "SSE4.2 (D-CPU); see evidence/WO-02/cpu-isa-probe.txt",
+                        "ram_bytes":  33462239232,
+                        "ram_gib":  31.2,
+                        "gpus":  [
+                                     {
+                                         "name":  "NVIDIA GeForce RTX 5070 Ti",
+                                         "driver":  "32.0.16.1692",
+                                         "driver_date":  "\/Date(1788480000000)\/"
+                                     },
+                                     {
+                                         "name":  "AMD Radeon(TM) Graphics",
+                                         "driver":  "32.0.21045.5002",
+                                         "driver_date":  "\/Date(1786924800000)\/"
+                                     }
+                                 ],
+                        "opengl_version":  null,
+                        "powershell":  "5.1.26100.9444",
+                        "hostname":  "DESKTOP-SEOA4BT"
+                    },
+    "capabilities":  {
+                         "windows":  true,
+                         "cpu-sse42":  true,
+                         "gpu-gl":  true,
+                         "serial-device":  false,
+                         "editor-ui":  false,
+                         "audio-device":  true,
+                         "render-tests":  true
+                     },
+    "forced_unavailable":  [
+
+                           ],
+    "bin_dir":  "C:\\dev\\Cosmic\\build\\Runtime\\Release",
+    "run_temp":  "C:\\dev\\Cosmic\\build\\_temp\\apq1\\cosmic-accept-2ebc70a770e64e458e56a9328f98dc3f",
+    "golden_dir":  "C:\\dev\\Cosmic\\tests\\acceptance\\goldens",
+    "golden_before":  {
+                          ".gitkeep-golden.txt":  "8e92944b7b4e999a32148948af2a13498ece10d56133c62c5c84431f2d335118"
+                      },
+    "golden_after":  {
+                         ".gitkeep-golden.txt":  "8e92944b7b4e999a32148948af2a13498ece10d56133c62c5c84431f2d335118"
+                     },
+    "golden_mutated":  false,
+    "acceptance_mode":  true,
+    "counts":  {
+                   "total":  6,
+                   "passed":  6,
+                   "failed":  0,
+                   "blocked":  0
+               },
+    "self_test":  {
+                      "enabled":  false,
+                      "failures":  [
+
+                                   ]
+                  },
+    "cases":  [
+                  {
+                      "id":  "T01-PC-text",
+                      "tier":  "U",
+                      "description":  "PC text parsing, chunk/routing oracle and retained hardening",
+                      "requires":  [
+                                       "windows"
+                                   ],
+                      "transport":  "fake",
+                      "seed":  5,
+                      "start_utc":  "2026-09-20T08:01:39.3991640Z",
+                      "deadline_sec":  60,
+                      "exercised":  "fake-transport",
+                      "fixture":  "C:\\dev\\Cosmic\\tests\\acceptance\\..\\test_wo05_matrix.cpp",
+                      "fixture_sha256":  "8914ff4249b7a42ff4ab97b982d0d6256582f214ab67fe07e51fbb8889dc4938",
+                      "command":  "C:\\dev\\Cosmic\\build\\Runtime\\Release\\CosmicTests.exe \"--test-case=WO-05 T01:*,ParseFrame*,DriveSample*,WeaponSample*,TelemHub*\" --no-colors",
+                      "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-Q1\\manifests-Release-final\\wo05\\T01-PC-text.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-Q1\\manifests-Release-final\\wo05\\T01-PC-text.err.log",
+                      "pid":  16556,
+                      "exit_code":  0,
+                      "crash":  false,
+                      "tests_passed":  33,
+                      "tests_expected_min":  33,
+                      "verdict":  "PASSED",
+                      "detail":  "exit 0 as expected",
+                      "duration_sec":  0.152,
+                      "end_utc":  "2026-09-20T08:01:39.5565018Z"
+                  },
+                  {
+                      "id":  "T03-root-matrix",
+                      "tier":  "U",
+                      "description":  "225 root schedules x100, barriers and storage validation",
+                      "requires":  [
+                                       "windows"
+                                   ],
+                      "transport":  "fake",
+                      "seed":  5,
+                      "start_utc":  "2026-09-20T08:01:39.5605042Z",
+                      "deadline_sec":  1800,
+                      "exercised":  "fake-transport",
+                      "fixture":  "C:\\dev\\Cosmic\\tests\\acceptance\\..\\test_wo05_matrix.cpp",
+                      "fixture_sha256":  "8914ff4249b7a42ff4ab97b982d0d6256582f214ab67fe07e51fbb8889dc4938",
+                      "command":  "C:\\dev\\Cosmic\\build\\Runtime\\Release\\CosmicTests.exe \"--test-case=WO-05 T03: root*\" --no-colors",
+                      "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-Q1\\manifests-Release-final\\wo05\\T03-root-matrix.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-Q1\\manifests-Release-final\\wo05\\T03-root-matrix.err.log",
+                      "pid":  23112,
+                      "exit_code":  0,
+                      "crash":  false,
+                      "tests_passed":  1,
+                      "tests_expected_min":  1,
+                      "verdict":  "PASSED",
+                      "detail":  "exit 0 as expected",
+                      "duration_sec":  315.734,
+                      "end_utc":  "2026-09-20T08:06:55.2957731Z"
+                  },
+                  {
+                      "id":  "T03-late-open",
+                      "tier":  "U",
+                      "description":  "100 cancelled non-cooperative opens surviving root destruction",
+                      "requires":  [
+                                       "windows"
+                                   ],
+                      "transport":  "fake",
+                      "seed":  5,
+                      "start_utc":  "2026-09-20T08:06:55.2967733Z",
+                      "deadline_sec":  90,
+                      "exercised":  "fake-transport",
+                      "fixture":  "C:\\dev\\Cosmic\\tests\\acceptance\\..\\test_wo05_matrix.cpp",
+                      "fixture_sha256":  "8914ff4249b7a42ff4ab97b982d0d6256582f214ab67fe07e51fbb8889dc4938",
+                      "command":  "C:\\dev\\Cosmic\\build\\Runtime\\Release\\CosmicTests.exe \"--test-case=WO-05 T03: non-cooperative*\" --no-colors",
+                      "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-Q1\\manifests-Release-final\\wo05\\T03-late-open.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-Q1\\manifests-Release-final\\wo05\\T03-late-open.err.log",
+                      "pid":  31252,
+                      "exit_code":  0,
+                      "crash":  false,
+                      "tests_passed":  1,
+                      "tests_expected_min":  1,
+                      "verdict":  "PASSED",
+                      "detail":  "exit 0 as expected",
+                      "duration_sec":  11.053,
+                      "end_utc":  "2026-09-20T08:07:06.3501429Z"
+                  },
+                  {
+                      "id":  "T03-write-close",
+                      "tier":  "U",
+                      "description":  "App-owned pending write cancelled/drained before device release",
+                      "requires":  [
+                                       "windows"
+                                   ],
+                      "transport":  "fake",
+                      "seed":  5,
+                      "start_utc":  "2026-09-20T08:07:06.3516526Z",
+                      "deadline_sec":  15,
+                      "exercised":  "fake-transport",
+                      "fixture":  "C:\\dev\\Cosmic\\tests\\acceptance\\..\\test_wo05_matrix.cpp",
+                      "fixture_sha256":  "8914ff4249b7a42ff4ab97b982d0d6256582f214ab67fe07e51fbb8889dc4938",
+                      "command":  "C:\\dev\\Cosmic\\build\\Runtime\\Release\\CosmicTests.exe \"--test-case=WO-05 T03: close drains*\" --no-colors",
+                      "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-Q1\\manifests-Release-final\\wo05\\T03-write-close.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-Q1\\manifests-Release-final\\wo05\\T03-write-close.err.log",
+                      "pid":  13984,
+                      "exit_code":  0,
+                      "crash":  false,
+                      "tests_passed":  1,
+                      "tests_expected_min":  1,
+                      "verdict":  "PASSED",
+                      "detail":  "exit 0 as expected",
+                      "duration_sec":  0.045,
+                      "end_utc":  "2026-09-20T08:07:06.3970296Z"
+                  },
+                  {
+                      "id":  "Retained-suite",
+                      "tier":  "U",
+                      "description":  "Full existing hardening and both activated WO-05a regressions",
+                      "requires":  [
+                                       "windows"
+                                   ],
+                      "transport":  "fake",
+                      "seed":  5,
+                      "start_utc":  "2026-09-20T08:07:06.3980351Z",
+                      "deadline_sec":  180,
+                      "exercised":  "fake-transport",
+                      "fixture":  "C:\\dev\\Cosmic\\tests\\acceptance\\..\\test_serial_shutdown_race.cpp",
+                      "fixture_sha256":  "711e01c760575c0dbbcae0db109a3e05abec423953498c88f03b463dd99e2140",
+                      "command":  "C:\\dev\\Cosmic\\build\\Runtime\\Release\\CosmicTests.exe \"--test-case-exclude=WO-05 *\" --no-colors",
+                      "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-Q1\\manifests-Release-final\\wo05\\Retained-suite.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-Q1\\manifests-Release-final\\wo05\\Retained-suite.err.log",
+                      "pid":  26248,
+                      "exit_code":  0,
+                      "crash":  false,
+                      "tests_passed":  507,
+                      "tests_expected_min":  350,
+                      "verdict":  "PASSED",
+                      "detail":  "exit 0 as expected",
+                      "duration_sec":  22.536,
+                      "end_utc":  "2026-09-20T08:07:28.9337067Z"
+                  },
+                  {
+                      "id":  "T03-owner-cancel",
+                      "tier":  "U",
+                      "description":  "100 held opens cancel within the approved 250-ms owner budget",
+                      "requires":  [
+                                       "windows"
+                                   ],
+                      "transport":  "fake",
+                      "seed":  5,
+                      "start_utc":  "2026-09-20T08:07:28.9357079Z",
+                      "deadline_sec":  90,
+                      "exercised":  "fake-transport",
+                      "fixture":  "C:\\dev\\Cosmic\\tests\\acceptance\\..\\test_wo05_matrix.cpp",
+                      "fixture_sha256":  "8914ff4249b7a42ff4ab97b982d0d6256582f214ab67fe07e51fbb8889dc4938",
+                      "command":  "C:\\dev\\Cosmic\\build\\Runtime\\Release\\CosmicTests.exe \"--test-case=WO-05 T03: cancel a non-cooperative*\" --no-colors",
+                      "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-Q1\\manifests-Release-final\\wo05\\T03-owner-cancel.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-Q1\\manifests-Release-final\\wo05\\T03-owner-cancel.err.log",
+                      "pid":  27412,
+                      "exit_code":  0,
+                      "crash":  false,
+                      "tests_passed":  1,
+                      "tests_expected_min":  1,
+                      "verdict":  "PASSED",
+                      "detail":  "exit 0 as expected",
+                      "duration_sec":  11.033,
+                      "end_utc":  "2026-09-20T08:07:39.9695035Z"
+                  }
+              ]
+}

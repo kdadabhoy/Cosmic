@@ -1,0 +1,25 @@
+﻿{
+    "case":  "K02 (PendulumLab)",
+    "commit":  "fa1223a88629319a927304d7c6dbb04401c3604a",
+    "generated_utc":  "2026-09-20T09:09:24.0225614Z",
+    "verdict":  "PASS",
+    "cli_dist":  "C:\\dev\\Cosmic\\build\\_temp\\apq1\\k02-cli\\PendulumLab",
+    "editor_dist":  "C:\\dev\\Cosmic\\dist\\PendulumLab",
+    "cli_files":  60,
+    "editor_files":  60,
+    "editor_runtime_output_files":  5,
+    "shaders":  25,
+    "fonts":  4,
+    "boot_cfg":  "# Cosmic packaged app - launched with no --project flag; also sets\r\n# the per-app user:// data identity (S6).\r\nPendulumLab\r\n",
+    "hashes":  {
+                   "exe":  "44962cf069b1686540408a96f128b6d4afa4b72eef47374db2ccc51a9bfddeff",
+                   "app_dll":  "16d5ed7aba9abe88d9b1bd05ddd6064fe32ac7e8451238dfd41f13d5eb50097c",
+                   "cosmic_dll":  "3633c4cd73ab20ffffd9b1a7ec7495e5d99c2cb17adae388f193c0d34008e4b2"
+               },
+    "findings":  [
+
+                 ],
+    "notes":  [
+                  "user/README.txt: same text, CRLF+trailing newline (editor) vs LF (CLI)"
+              ]
+}

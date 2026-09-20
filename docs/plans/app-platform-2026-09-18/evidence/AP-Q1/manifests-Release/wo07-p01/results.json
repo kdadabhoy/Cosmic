@@ -1,0 +1,108 @@
+﻿{
+    "manifest":  "wo07-p01",
+    "profile":  "release",
+    "tier_filter":  [
+
+                    ],
+    "config":  "Release",
+    "mode":  "2D",
+    "generated_utc":  "2026-09-20T07:22:38.9314614Z",
+    "git":  {
+                "commit":  "54b0beb072f7cb0c74ecda02e9db443fd24d7714",
+                "dirty":  true,
+                "dirty_diff_sha256":  null
+            },
+    "environment":  {
+                        "os_caption":  "Microsoft Windows 11 Education",
+                        "os_version":  "10.0.26200",
+                        "os_build":  "26200",
+                        "os_display":  "26200.9457",
+                        "cpu_name":  "AMD Ryzen 7 7800X3D 8-Core Processor",
+                        "cpu_cores":  8,
+                        "cpu_threads":  16,
+                        "cpu_addr_width":  64,
+                        "cpu_isa_floor":  "SSE4.2 (D-CPU); see evidence/WO-02/cpu-isa-probe.txt",
+                        "ram_bytes":  33462239232,
+                        "ram_gib":  31.2,
+                        "gpus":  [
+                                     {
+                                         "name":  "NVIDIA GeForce RTX 5070 Ti",
+                                         "driver":  "32.0.16.1692",
+                                         "driver_date":  "\/Date(1788480000000)\/"
+                                     },
+                                     {
+                                         "name":  "AMD Radeon(TM) Graphics",
+                                         "driver":  "32.0.21045.5002",
+                                         "driver_date":  "\/Date(1786924800000)\/"
+                                     }
+                                 ],
+                        "opengl_version":  null,
+                        "powershell":  "5.1.26100.9444",
+                        "hostname":  "DESKTOP-SEOA4BT"
+                    },
+    "capabilities":  {
+                         "windows":  true,
+                         "cpu-sse42":  true,
+                         "gpu-gl":  true,
+                         "serial-device":  false,
+                         "editor-ui":  false,
+                         "audio-device":  true,
+                         "render-tests":  true
+                     },
+    "forced_unavailable":  [
+
+                           ],
+    "bin_dir":  "C:\\dev\\Cosmic\\build\\Runtime\\Release",
+    "run_temp":  "C:\\Users\\Kaden\\AppData\\Local\\Temp\\cosmic-accept-f33e39f6efd5411ca9272df7e0419146",
+    "golden_dir":  "C:\\dev\\Cosmic\\tests\\acceptance\\goldens",
+    "golden_before":  {
+                          ".gitkeep-golden.txt":  "8e92944b7b4e999a32148948af2a13498ece10d56133c62c5c84431f2d335118"
+                      },
+    "golden_after":  {
+                         ".gitkeep-golden.txt":  "8e92944b7b4e999a32148948af2a13498ece10d56133c62c5c84431f2d335118"
+                     },
+    "golden_mutated":  false,
+    "acceptance_mode":  true,
+    "counts":  {
+                   "total":  1,
+                   "passed":  0,
+                   "failed":  1,
+                   "blocked":  0
+               },
+    "self_test":  {
+                      "enabled":  false,
+                      "failures":  [
+
+                                   ]
+                  },
+    "cases":  [
+                  {
+                      "id":  "P01",
+                      "tier":  "G",
+                      "description":  "ImPlot lifetime + known data: a real runtime plugin adopting the host\u0027s ImGui/ImPlot contexts plots F-TRAJECTORY time-series, XY, scatter, shaded band, a 3-series legend, a log10 axis, the nonfinite (NaN/Inf skipped) policy and empty series under the themed UI, across 50 in-process reload/reopen cycles per launch (3 fresh launches). Asserts adopted contexts stable + non-null, fitted limits == known ranges, nonfinite samples never move them, log/linear spacing, legend entries, drawn vertices with the series colours at known samples, ImGui stack balance, zero recovered ImGui errors, and a front-buffer pixel probe of the presented image at a known sample.",
+                      "requires":  [
+                                       "windows",
+                                       "gpu-gl"
+                                   ],
+                      "transport":  "none",
+                      "seed":  null,
+                      "start_utc":  "2026-09-20T07:22:37.1518120Z",
+                      "deadline_sec":  600,
+                      "exercised":  "fixture",
+                      "fixture":  "C:\\dev\\Cosmic\\tests\\acceptance\\..\\..\\tests\\WO07PlotFixture.cpp",
+                      "fixture_sha256":  "6a366ebc58f978c81311bcbb2aae6db00ba39e6990b155f2a1aca6d8fce15cd5",
+                      "command":  "powershell -NoProfile -ExecutionPolicy Bypass -File C:\\dev\\Cosmic\\tests\\acceptance\\fixtures\\Run-WO07Plots.ps1 -Bin C:\\dev\\Cosmic\\build\\Runtime\\Release -Output C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-07\\p01-runner-Release -Launches 3",
+                      "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-Q1\\manifests-Release\\wo07-p01\\P01.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-Q1\\manifests-Release\\wo07-p01\\P01.err.log",
+                      "pid":  29648,
+                      "exit_code":  1,
+                      "crash":  false,
+                      "tests_passed":  -1,
+                      "tests_expected_min":  3,
+                      "verdict":  "FAILED",
+                      "detail":  "expected \u003e= 3 tests, got -1 (exit 1, wanted 0)",
+                      "duration_sec":  1.761,
+                      "end_utc":  "2026-09-20T07:22:38.9179464Z"
+                  }
+              ]
+}

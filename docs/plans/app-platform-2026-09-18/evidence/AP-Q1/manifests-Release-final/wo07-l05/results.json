@@ -1,0 +1,136 @@
+﻿{
+    "manifest":  "wo07-l05",
+    "profile":  "release",
+    "tier_filter":  [
+
+                    ],
+    "config":  "Release",
+    "mode":  "2D",
+    "generated_utc":  "2026-09-20T08:17:48.0473409Z",
+    "git":  {
+                "commit":  "fa1223a88629319a927304d7c6dbb04401c3604a",
+                "dirty":  true,
+                "dirty_diff_sha256":  null
+            },
+    "environment":  {
+                        "os_caption":  "Microsoft Windows 11 Education",
+                        "os_version":  "10.0.26200",
+                        "os_build":  "26200",
+                        "os_display":  "26200.9457",
+                        "cpu_name":  "AMD Ryzen 7 7800X3D 8-Core Processor",
+                        "cpu_cores":  8,
+                        "cpu_threads":  16,
+                        "cpu_addr_width":  64,
+                        "cpu_isa_floor":  "SSE4.2 (D-CPU); see evidence/WO-02/cpu-isa-probe.txt",
+                        "ram_bytes":  33462239232,
+                        "ram_gib":  31.2,
+                        "gpus":  [
+                                     {
+                                         "name":  "NVIDIA GeForce RTX 5070 Ti",
+                                         "driver":  "32.0.16.1692",
+                                         "driver_date":  "\/Date(1788480000000)\/"
+                                     },
+                                     {
+                                         "name":  "AMD Radeon(TM) Graphics",
+                                         "driver":  "32.0.21045.5002",
+                                         "driver_date":  "\/Date(1786924800000)\/"
+                                     }
+                                 ],
+                        "opengl_version":  null,
+                        "powershell":  "5.1.26100.9444",
+                        "hostname":  "DESKTOP-SEOA4BT"
+                    },
+    "capabilities":  {
+                         "windows":  true,
+                         "cpu-sse42":  true,
+                         "gpu-gl":  true,
+                         "serial-device":  false,
+                         "editor-ui":  false,
+                         "audio-device":  true,
+                         "render-tests":  true
+                     },
+    "forced_unavailable":  [
+
+                           ],
+    "bin_dir":  "C:\\dev\\Cosmic\\build\\Runtime\\Release",
+    "run_temp":  "C:\\dev\\Cosmic\\build\\_temp\\apq1\\cosmic-accept-927d7d57a1604411b65731ed33da5876",
+    "golden_dir":  "C:\\dev\\Cosmic\\tests\\acceptance\\goldens",
+    "golden_before":  {
+                          ".gitkeep-golden.txt":  "8e92944b7b4e999a32148948af2a13498ece10d56133c62c5c84431f2d335118"
+                      },
+    "golden_after":  {
+                         ".gitkeep-golden.txt":  "8e92944b7b4e999a32148948af2a13498ece10d56133c62c5c84431f2d335118"
+                     },
+    "golden_mutated":  false,
+    "acceptance_mode":  true,
+    "counts":  {
+                   "total":  2,
+                   "passed":  2,
+                   "failed":  0,
+                   "blocked":  0
+               },
+    "self_test":  {
+                      "enabled":  false,
+                      "failures":  [
+
+                                   ]
+                  },
+    "cases":  [
+                  {
+                      "id":  "L05-sftelem",
+                      "tier":  "I",
+                      "description":  "200 scripted UI cycles over the real SF_Telem root (over the fake serial transport) with a per-action Dear ImGui balance oracle: serial closed/open/lost through the production chain, the REAL Navigation buttons and homescreen tile (ImGui item activation), replay open + the REAL Unload button, the REAL Browse button opening the native IFileDialog cancelled by a helper thread, minimize/restore, resize, F11 fullscreen (real hotkey) both ways, and undocking a docked window through ImGui\u0027s own undock path. After EVERY action: zero recovered ImGui errors, zero end-of-frame stack leaks, zero context/font drift, per-layer depths balanced. Exact action log + screenshots saved.",
+                      "requires":  [
+                                       "windows",
+                                       "gpu-gl"
+                                   ],
+                      "transport":  "none",
+                      "seed":  null,
+                      "start_utc":  "2026-09-20T08:17:16.5096807Z",
+                      "deadline_sec":  900,
+                      "exercised":  "fixture",
+                      "fixture":  "C:\\dev\\Cosmic\\tests\\acceptance\\..\\..\\tests\\WO07UiCyclesFixture.cpp",
+                      "fixture_sha256":  "36a9401ce4b4f7701bb31a001233c868b6424359f893e5b3f01e1f16838197b2",
+                      "command":  "powershell -NoProfile -ExecutionPolicy Bypass -File C:\\dev\\Cosmic\\tests\\acceptance\\fixtures\\Run-WO07UiCycles.ps1 -Bin C:\\dev\\Cosmic\\build\\Runtime\\Release -Output C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-07\\l05-runner-Release -Cycles 200",
+                      "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-Q1\\manifests-Release-final\\wo07-l05\\L05-sftelem.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-Q1\\manifests-Release-final\\wo07-l05\\L05-sftelem.err.log",
+                      "pid":  25876,
+                      "exit_code":  0,
+                      "crash":  false,
+                      "tests_passed":  1,
+                      "tests_expected_min":  1,
+                      "verdict":  "PASSED",
+                      "detail":  "exit 0 as expected",
+                      "duration_sec":  14.08,
+                      "end_utc":  "2026-09-20T08:17:30.5951790Z"
+                  },
+                  {
+                      "id":  "L05-editor",
+                      "tier":  "I",
+                      "description":  "200 scripted UI cycles in the real Starforge editor: every viewport-strip chip (snap Move/Rotate/Scale, Grid, Colliders, World/Local) clicked through Dear ImGui mouse events at the probed rects and confirmed to toggle, built-in layout presets (dock/undock churn), viewport hide/show, Play start/stop, minimize/restore, resize and F11 fullscreen (real hotkey). After EVERY action: zero recovered ImGui errors, zero end-of-frame leaks, zero context drift, strip and per-chip colour-stack deltas zero (the KI-1 mechanism). Action log + screenshots saved.",
+                      "requires":  [
+                                       "windows",
+                                       "gpu-gl"
+                                   ],
+                      "transport":  "none",
+                      "seed":  null,
+                      "start_utc":  "2026-09-20T08:17:30.5996852Z",
+                      "deadline_sec":  900,
+                      "exercised":  "fixture",
+                      "fixture":  "C:\\dev\\Cosmic\\tests\\acceptance\\..\\..\\Projects\\Starforge\\src\\L05EditorSelfTest.cpp",
+                      "fixture_sha256":  "951d0948b0a6285660dc9ec9bd7c66ff046ff4a54ba90248ae9dc68696c4dbd0",
+                      "command":  "powershell -NoProfile -ExecutionPolicy Bypass -File C:\\dev\\Cosmic\\tests\\acceptance\\fixtures\\Run-L05EditorSelfTest.ps1 -Bin C:\\dev\\Cosmic\\build\\Runtime\\Release -Output C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-07\\l05-editor-runner-Release -Cycles 200",
+                      "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-Q1\\manifests-Release-final\\wo07-l05\\L05-editor.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-Q1\\manifests-Release-final\\wo07-l05\\L05-editor.err.log",
+                      "pid":  28272,
+                      "exit_code":  0,
+                      "crash":  false,
+                      "tests_passed":  1,
+                      "tests_expected_min":  1,
+                      "verdict":  "PASSED",
+                      "detail":  "exit 0 as expected",
+                      "duration_sec":  17.439,
+                      "end_utc":  "2026-09-20T08:17:48.0388270Z"
+                  }
+              ]
+}

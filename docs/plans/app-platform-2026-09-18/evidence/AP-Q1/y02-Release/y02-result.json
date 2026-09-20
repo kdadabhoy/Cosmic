@@ -1,0 +1,30 @@
+{
+  "work_order": "AP-04",
+  "case": "Y02 PendulumLab self-test",
+  "config": "Release",
+  "verdict": "PASS",
+  "failed_checks": 0,
+  "total_seconds": 2.75993,
+  "frames": 4159,
+  "exe": "C:\\dev\\Cosmic\\dist\\PendulumLab\\PendulumLab.exe",
+  "cwd": "C:\\dev\\Cosmic\\dist\\PendulumLab",
+  "user_root": "./user",
+  "project_name": "PendulumLab",
+  "in_editor": false,
+  "trace": ["Home", "Lab", "Settings", "Lab", "Home"],
+  "angle_deg": { "frames": 2597, "min": -4.99999, "max": 4.9983, "bus_clock_violations": 0 },
+  "pendulum": { "running": true, "energy": 0.0373173, "period_est": 0, "producer": "PendulumService" },
+  "hosted_panel": { "name": "PhasePlot", "draws": 4150 },
+  "plot_roi": { "rect": [665.6, 113.126, 1265.24, 345.28], "fb": [1280, 664], "pixels": 140033, "line_colour_pixels": 907, "png": "C:/dev/Cosmic/docs/plans/app-platform-2026-09-18/evidence/AP-Q1/y02-Release/y02-output/y02-plot-roi.png" },
+  "checks_failed": [
+  ],
+  "log": [
+    "armed: result=C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-Q1\\y02-Release\\y02-result.json output=C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-Q1\\y02-Release\\y02-output",
+    "state -> Lab after 1 frames",
+    "sampled 2597 frames: angle -5.000..4.998 deg, running=1, energy 0.0373, period_est 0.0000",
+    "state -> Settings after 1 frames",
+    "state -> Lab after 1 frames",
+    "verify: panel draws 4150, plot rect [666 113 1265 345] in 1280x664, 907/140033 line-colour px, roi C:/dev/Cosmic/docs/plans/app-platform-2026-09-18/evidence/AP-Q1/y02-Release/y02-output/y02-plot-roi.png",
+    "state -> Home after 1 frames"
+  ]
+}

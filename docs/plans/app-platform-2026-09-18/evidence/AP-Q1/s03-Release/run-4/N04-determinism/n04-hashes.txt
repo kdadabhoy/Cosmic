@@ -1,0 +1,3 @@
+pcg32-1e6 see n04-pcg32-1e6.bin
+gaussian-1e5 0xea0fddffaacaf6b4
+transcendental-1e5 0x9540463af85ebf45

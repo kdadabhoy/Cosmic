@@ -1,0 +1,5 @@
+﻿user/imgui.ini
+user/logs/App_2026-09-20_01-22-44.log
+user/logs/App_2026-09-20_01-50-17.log
+user/logs/Cosmic_2026-09-20_01-22-44.log
+user/logs/Cosmic_2026-09-20_01-50-17.log

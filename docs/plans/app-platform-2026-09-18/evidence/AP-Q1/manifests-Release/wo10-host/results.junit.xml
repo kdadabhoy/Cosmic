@@ -1,0 +1,42 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="wo10-host" tests="18" failures="0" skipped="0">
+  <testsuite name="release" tests="18" failures="0" skipped="0">
+    <testcase name="N01-30hz" classname="wo10-host.W" time="0">
+    </testcase>
+    <testcase name="N01-60hz" classname="wo10-host.W" time="0">
+    </testcase>
+    <testcase name="N01-144hz" classname="wo10-host.W" time="0">
+    </testcase>
+    <testcase name="N01-irregular" classname="wo10-host.W" time="0">
+    </testcase>
+    <testcase name="N01-speed0" classname="wo10-host.W" time="0">
+    </testcase>
+    <testcase name="N01-speed025" classname="wo10-host.W" time="0">
+    </testcase>
+    <testcase name="N01-speed4" classname="wo10-host.W" time="0">
+    </testcase>
+    <testcase name="N01-pause" classname="wo10-host.W" time="0">
+    </testcase>
+    <testcase name="N01-stall" classname="wo10-host.W" time="0">
+    </testcase>
+    <testcase name="N01-local-quarter" classname="wo10-host.W" time="0">
+    </testcase>
+    <testcase name="N01-global-quarter" classname="wo10-host.W" time="0">
+    </testcase>
+    <testcase name="N02-origin-0" classname="wo10-host.W" time="0">
+    </testcase>
+    <testcase name="N02-origin-2h" classname="wo10-host.W" time="0">
+    </testcase>
+    <testcase name="N02-origin-24h" classname="wo10-host.W" time="0">
+    </testcase>
+    <testcase name="N02-policy-hz" classname="wo10-host.W" time="0">
+    </testcase>
+    <testcase name="N02-policy-scale-nan" classname="wo10-host.W" time="0">
+    </testcase>
+    <testcase name="N02-policy-scale-negative" classname="wo10-host.W" time="0">
+    </testcase>
+    <testcase name="N02-policy-scale-inf" classname="wo10-host.W" time="0">
+    </testcase>
+  </testsuite>
+</testsuites>
+

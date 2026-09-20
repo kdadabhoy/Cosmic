@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="ap01-units" tests="4" failures="0" skipped="0">
+  <testsuite name="release" tests="4" failures="0" skipped="0">
+    <testcase name="V01" classname="ap01-units.U" time="0">
+    </testcase>
+    <testcase name="V02-U" classname="ap01-units.U" time="0">
+    </testcase>
+    <testcase name="V02-W-PLAYER" classname="ap01-units.W" time="0">
+    </testcase>
+    <testcase name="V06" classname="ap01-units.U" time="0">
+    </testcase>
+  </testsuite>
+</testsuites>
+

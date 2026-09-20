@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="wo10-units" tests="6" failures="0" skipped="0">
+  <testsuite name="release" tests="6" failures="0" skipped="0">
+    <testcase name="N02-U" classname="wo10-units.U" time="0">
+    </testcase>
+    <testcase name="N03" classname="wo10-units.U" time="0">
+    </testcase>
+    <testcase name="N04" classname="wo10-units.U" time="0">
+    </testcase>
+    <testcase name="N04-FILTERS" classname="wo10-units.U" time="0">
+    </testcase>
+    <testcase name="N04-LOOKUP" classname="wo10-units.U" time="0">
+    </testcase>
+    <testcase name="N04-SCENE" classname="wo10-units.U" time="0">
+    </testcase>
+  </testsuite>
+</testsuites>
+

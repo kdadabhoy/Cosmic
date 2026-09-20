@@ -1,0 +1,107 @@
+﻿{
+    "manifest":  "ap02-units",
+    "profile":  "release",
+    "tier_filter":  [
+
+                    ],
+    "config":  "Debug",
+    "mode":  "2D",
+    "generated_utc":  "2026-09-20T08:36:06.8108529Z",
+    "git":  {
+                "commit":  "fa1223a88629319a927304d7c6dbb04401c3604a",
+                "dirty":  true,
+                "dirty_diff_sha256":  null
+            },
+    "environment":  {
+                        "os_caption":  "Microsoft Windows 11 Education",
+                        "os_version":  "10.0.26200",
+                        "os_build":  "26200",
+                        "os_display":  "26200.9457",
+                        "cpu_name":  "AMD Ryzen 7 7800X3D 8-Core Processor",
+                        "cpu_cores":  8,
+                        "cpu_threads":  16,
+                        "cpu_addr_width":  64,
+                        "cpu_isa_floor":  "SSE4.2 (D-CPU); see evidence/WO-02/cpu-isa-probe.txt",
+                        "ram_bytes":  33462239232,
+                        "ram_gib":  31.2,
+                        "gpus":  [
+                                     {
+                                         "name":  "NVIDIA GeForce RTX 5070 Ti",
+                                         "driver":  "32.0.16.1692",
+                                         "driver_date":  "\/Date(1788480000000)\/"
+                                     },
+                                     {
+                                         "name":  "AMD Radeon(TM) Graphics",
+                                         "driver":  "32.0.21045.5002",
+                                         "driver_date":  "\/Date(1786924800000)\/"
+                                     }
+                                 ],
+                        "opengl_version":  null,
+                        "powershell":  "5.1.26100.9444",
+                        "hostname":  "DESKTOP-SEOA4BT"
+                    },
+    "capabilities":  {
+                         "windows":  true,
+                         "cpu-sse42":  true,
+                         "gpu-gl":  true,
+                         "serial-device":  false,
+                         "editor-ui":  false,
+                         "audio-device":  true,
+                         "render-tests":  true
+                     },
+    "forced_unavailable":  [
+
+                           ],
+    "bin_dir":  "C:\\dev\\Cosmic\\build\\Runtime\\Debug",
+    "run_temp":  "C:\\dev\\Cosmic\\build\\_temp\\apq1\\cosmic-accept-f234e3de13f34d67a19a2777536db806",
+    "golden_dir":  "C:\\dev\\Cosmic\\tests\\acceptance\\goldens",
+    "golden_before":  {
+                          ".gitkeep-golden.txt":  "8e92944b7b4e999a32148948af2a13498ece10d56133c62c5c84431f2d335118"
+                      },
+    "golden_after":  {
+                         ".gitkeep-golden.txt":  "8e92944b7b4e999a32148948af2a13498ece10d56133c62c5c84431f2d335118"
+                     },
+    "golden_mutated":  false,
+    "acceptance_mode":  true,
+    "counts":  {
+                   "total":  1,
+                   "passed":  1,
+                   "failed":  0,
+                   "blocked":  0
+               },
+    "self_test":  {
+                      "enabled":  false,
+                      "failures":  [
+
+                                   ]
+                  },
+    "cases":  [
+                  {
+                      "id":  "V04",
+                      "tier":  "U",
+                      "description":  "Bound widgets (contract section 3), headless: FormatValue (one conversion / none / two -\u003e literal / non-numeric -\u003e literal / bool / string / missing -\u003e Placeholder / stale text unchanged / non-finite -\u003e Placeholder / Prefix+Suffix); GaugeFill clamp, reversed and degenerate ranges, non-finite -\u003e 0; SliderValueAt H/V, Step snapping, out-of-rect clamps, degenerate rect. UiSystem::Update over a real Scene + DataBus: slider press-drag-release writes every frame and emits Signal on release only when the value changed (no double-emit on repeated edges, drag owns the pointer off-rect, off-window release ends the drag, Step through the production path, empty Signal, no bus =\u003e inert); toggle release-inside flips the bool and emits once (release-outside / press-outside do not, drag off-and-back fires, Interactable=false removes it, app writes respected); precedence (a UiImage over a slider does not block it, topmost of button/slider/toggle wins, Update returns true over any of them, the existing UiButton machine unchanged); CollectHostedPanels (V05 engine half) returns canvas-ordered rects/names/handles/scale and clears DrawnThisFrame; the seven reflected names under category UI with AssetPath/Color/Enum hints and no runtime members; a scene with all seven widgets round-trips through SceneSerializer field-exact with save-\u003eload-\u003esave byte-identical.",
+                      "requires":  [
+                                       "windows"
+                                   ],
+                      "transport":  "none",
+                      "seed":  null,
+                      "start_utc":  "2026-09-20T08:36:06.1048894Z",
+                      "deadline_sec":  180,
+                      "exercised":  "fixture",
+                      "fixture":  "C:\\dev\\Cosmic\\tests\\acceptance\\..\\..\\tests\\test_ui_widgets.cpp",
+                      "fixture_sha256":  "f69801990fa0d1dc7bebb425fd9ecc6f59c25e3e81944e5394c7fba2851c1df7",
+                      "command":  "powershell -NoProfile -ExecutionPolicy Bypass -File C:\\dev\\Cosmic\\tests\\acceptance\\fixtures\\Run-WO10Case.ps1 -Bin C:\\dev\\Cosmic\\build\\Runtime\\Debug -CaseId V04 -TestSuite \"AP-02 V04 widgets\" -MinTests 10 -DeadlineSec 120 -Output C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-02\\v04-Debug",
+                      "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-Q1\\manifests-Debug\\ap02-units\\V04.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-Q1\\manifests-Debug\\ap02-units\\V04.err.log",
+                      "pid":  28200,
+                      "exit_code":  0,
+                      "crash":  false,
+                      "tests_passed":  11,
+                      "tests_expected_min":  10,
+                      "verdict":  "PASSED",
+                      "detail":  "exit 0 as expected",
+                      "duration_sec":  0.671,
+                      "end_utc":  "2026-09-20T08:36:06.7807922Z"
+                  }
+              ]
+}

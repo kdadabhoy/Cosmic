@@ -199,7 +199,10 @@ Evidence: this folder (`*.log` gitignored; excerpts and JSON committed). Registe
 
 Appended below after committing (`ap/04`, base `e01f0a0`).
 
-- `2f633cd` Fill the template kinds and put the samples on disk (AP-04)
-- `2d1b6b2` Add PendulumLab, the App Platform showcase project (AP-04)
-- `3bb1d76` Test the templates and PendulumLab headlessly; F-PENDULUM fixture; AP-04 evidence (AP-04)
-- (this line) the report amendment recording the three SHAs above; `git rebase main` at land time was a no-op (`main` = `e01f0a0`).
+- `0fa2dd7` Fill the template kinds and put the samples on disk (AP-04)
+- `3894819` Add PendulumLab, the App Platform showcase project (AP-04)
+- `b4a0dff` Test the templates and PendulumLab headlessly; F-PENDULUM fixture; AP-04 evidence (AP-04)
+- `28d6516` Record the AP-04 lane commit SHAs in the evidence report (AP-04)
+- Correction (AP-Q1, 2026-09-20): the lane was rebased onto `ef795c1` (the AP-02 merge) before landing; the SHAs first
+  recorded here (`2f633cd` / `2d1b6b2` / `3bb1d76` / `a51b348`) were the PRE-rebase ones and are not reachable from
+  `main`. The four above are the commits `main` carries (merged at `e34bdd8`).

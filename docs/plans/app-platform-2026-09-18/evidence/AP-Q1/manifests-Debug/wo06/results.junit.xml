@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="wo06" tests="7" failures="0" skipped="0">
+  <testsuite name="pr" tests="7" failures="0" skipped="0">
+    <testcase name="D01" classname="wo06.U" time="0">
+    </testcase>
+    <testcase name="D02" classname="wo06.U" time="0">
+    </testcase>
+    <testcase name="D03" classname="wo06.U" time="0">
+    </testcase>
+    <testcase name="D04" classname="wo06.U" time="0">
+    </testcase>
+    <testcase name="D05" classname="wo06.W" time="0">
+    </testcase>
+    <testcase name="D06" classname="wo06.W" time="0">
+    </testcase>
+    <testcase name="D05-two-hour" classname="wo06.W" time="0">
+    </testcase>
+  </testsuite>
+</testsuites>
+

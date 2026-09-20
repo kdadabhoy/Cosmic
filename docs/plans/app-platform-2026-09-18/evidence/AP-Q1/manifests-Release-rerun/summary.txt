@@ -1,0 +1,7 @@
+﻿apq1-y02  profile=release  exit=1  seconds=42  passed=0 failed=1 blocked=0  commit=c35e6bd4f2accbf105e414b5a0b70bf00fd99087 dirty=True  [Y02:FAILED]
+wo07-l02  profile=release  exit=0  seconds=412  passed=1 failed=0 blocked=0  commit=c35e6bd4f2accbf105e414b5a0b70bf00fd99087 dirty=True  [L02:PASSED]
+wo09-editor  profile=release  exit=0  seconds=3  passed=1 failed=0 blocked=0  commit=c35e6bd4f2accbf105e414b5a0b70bf00fd99087 dirty=True  [C05-I:PASSED]
+ap03-editor  profile=release  exit=0  seconds=173  passed=1 failed=0 blocked=0  commit=c35e6bd4f2accbf105e414b5a0b70bf00fd99087 dirty=True  [AP03-EDITOR:PASSED]
+wo07-l05  profile=release  exit=0  seconds=37  passed=2 failed=0 blocked=0  commit=c35e6bd4f2accbf105e414b5a0b70bf00fd99087 dirty=True  [L05-sftelem:PASSED L05-editor:PASSED]
+wo07-p01  profile=release  exit=0  seconds=7  passed=1 failed=0 blocked=0  commit=c35e6bd4f2accbf105e414b5a0b70bf00fd99087 dirty=True  [P01:PASSED]
+DONE

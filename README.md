@@ -1,5 +1,17 @@
 # Cosmic Engine
 
+<p align="center">
+  <a href="docs/showcase/README.md"><img src="docs/showcase/07-lab-screen-live.png" width="24%" alt="PendulumLab's Lab screen live in editor Play: bound plot, gauge and slider"></a>
+  <a href="docs/showcase/README.md"><img src="docs/showcase/02-rect-gizmo-arranging-screen.png" width="24%" alt="Arranging a screen with the UI rect gizmo"></a>
+  <a href="docs/showcase/README.md"><img src="docs/showcase/05-pendulumlab-flow-graph.png" width="24%" alt="PendulumLab's flow graph"></a>
+  <a href="docs/showcase/README.md"><img src="docs/showcase/10-packaged-pendulumlab.png" width="24%" alt="The packaged PendulumLab.exe"></a>
+</p>
+
+> **Showcase:** [`docs/showcase/`](docs/showcase/README.md) — twelve captures, the one-line feature list and the 150-word
+> blurb · **App authoring:** [design contracts](docs/plans/app-platform-2026-09-18/01-Design-Contracts.md),
+> [`Projects/PendulumLab`](Projects/PendulumLab) (the sample app) · **Qualification:**
+> [AP-Q1 release report](docs/plans/app-platform-2026-09-18/evidence/AP-Q1/release-report.md).
+
 > **How to use this document:** This is the **overview** — what Cosmic is, how to build it, and a
 > tour of every subsystem with enough detail to get oriented and reach for the right thing. Each
 > section links to its full chapter in [`docs/guide/`](docs/guide/README.md). The

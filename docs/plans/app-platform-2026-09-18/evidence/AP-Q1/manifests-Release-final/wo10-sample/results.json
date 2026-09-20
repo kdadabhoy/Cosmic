@@ -1,0 +1,108 @@
+﻿{
+    "manifest":  "wo10-sample",
+    "profile":  "release",
+    "tier_filter":  [
+
+                    ],
+    "config":  "Release",
+    "mode":  "2D",
+    "generated_utc":  "2026-09-20T08:18:33.5435248Z",
+    "git":  {
+                "commit":  "fa1223a88629319a927304d7c6dbb04401c3604a",
+                "dirty":  true,
+                "dirty_diff_sha256":  null
+            },
+    "environment":  {
+                        "os_caption":  "Microsoft Windows 11 Education",
+                        "os_version":  "10.0.26200",
+                        "os_build":  "26200",
+                        "os_display":  "26200.9457",
+                        "cpu_name":  "AMD Ryzen 7 7800X3D 8-Core Processor",
+                        "cpu_cores":  8,
+                        "cpu_threads":  16,
+                        "cpu_addr_width":  64,
+                        "cpu_isa_floor":  "SSE4.2 (D-CPU); see evidence/WO-02/cpu-isa-probe.txt",
+                        "ram_bytes":  33462239232,
+                        "ram_gib":  31.2,
+                        "gpus":  [
+                                     {
+                                         "name":  "NVIDIA GeForce RTX 5070 Ti",
+                                         "driver":  "32.0.16.1692",
+                                         "driver_date":  "\/Date(1788480000000)\/"
+                                     },
+                                     {
+                                         "name":  "AMD Radeon(TM) Graphics",
+                                         "driver":  "32.0.21045.5002",
+                                         "driver_date":  "\/Date(1786924800000)\/"
+                                     }
+                                 ],
+                        "opengl_version":  null,
+                        "powershell":  "5.1.26100.9444",
+                        "hostname":  "DESKTOP-SEOA4BT"
+                    },
+    "capabilities":  {
+                         "windows":  true,
+                         "cpu-sse42":  true,
+                         "gpu-gl":  true,
+                         "serial-device":  false,
+                         "editor-ui":  false,
+                         "audio-device":  true,
+                         "render-tests":  true
+                     },
+    "forced_unavailable":  [
+
+                           ],
+    "bin_dir":  "C:\\dev\\Cosmic\\build\\Runtime\\Release",
+    "run_temp":  "C:\\dev\\Cosmic\\build\\_temp\\apq1\\cosmic-accept-c8e1d00fbb714343ac2091707fe7bc6b",
+    "golden_dir":  "C:\\dev\\Cosmic\\tests\\acceptance\\goldens",
+    "golden_before":  {
+                          ".gitkeep-golden.txt":  "8e92944b7b4e999a32148948af2a13498ece10d56133c62c5c84431f2d335118"
+                      },
+    "golden_after":  {
+                         ".gitkeep-golden.txt":  "8e92944b7b4e999a32148948af2a13498ece10d56133c62c5c84431f2d335118"
+                     },
+    "golden_mutated":  false,
+    "acceptance_mode":  true,
+    "counts":  {
+                   "total":  1,
+                   "passed":  1,
+                   "failed":  0,
+                   "blocked":  0
+               },
+    "self_test":  {
+                      "enabled":  false,
+                      "failures":  [
+
+                                   ]
+                  },
+    "cases":  [
+                  {
+                      "id":  "X01",
+                      "tier":  "I",
+                      "description":  "X01 analysis sample (compatibility specimen, D-9km): Projects/AnalysisSample is copied OUTSIDE the SDK source tree (build/wo10-sample-external), packaged through the REAL editor path (Starforge.exe + X01PackageSelfTest: OpenProjectPath -\u003e PackageProject -\u003e BuildRunner cmake configure + Release build of the external project against COSMIC_SDK -\u003e Packager::Stage/Finalize -\u003e dist/AnalysisSample with the renamed exe, Cosmic.dll, the project DLL, assets/projects/AnalysisSample/data/trajectory.csv, boot.cfg), then the STAGED AnalysisSample.exe is run from a different working directory with its in-app harness (X01SelfTest: F-TRAJECTORY 1,201 double rows == equations, F-SERIES-LARGE 100,000 x 8 generated from the metadata\u0027s equations + seed with extrema/discontinuity markers, the v1 recording written by DataRecorder and played by DataPlayer, play -\u003e pause -\u003e scrub at exact and midpoint times with the float marker / double plot / equations agreeing, the 1e11 world origin subtracted in double before float display, a PNG exported from the viewport framebuffer with the marker pixel from the projection). The wrapper\u0027s OUT-OF-PROCESS oracle re-evaluates the equations in double for every reported scrub, decodes the PNG and checks the marker colour at the pixel it derives itself, recomputes the analytic series extrema and hashes the packaged trajectory.csv against the committed fixture. Four verdicts: package, packaged run, numeric oracle, image+series oracle. In the Debug configuration the DEBUG editor packages the sample; the packager\u0027s default (File \u003e Package) builds the project Release and stages from the Release runtime, so the packaged app under test is the Release build in both configurations.",
+                      "requires":  [
+                                       "windows",
+                                       "gpu-gl"
+                                   ],
+                      "transport":  "none",
+                      "seed":  null,
+                      "start_utc":  "2026-09-20T08:17:52.5797900Z",
+                      "deadline_sec":  1500,
+                      "exercised":  "fixture",
+                      "fixture":  "C:\\dev\\Cosmic\\tests\\acceptance\\..\\..\\Projects\\AnalysisSample\\data\\trajectory.csv",
+                      "fixture_sha256":  "ab0d5761845778eb37fdea44e3477f8b6e14b757778f736ae6694142493b9648",
+                      "command":  "powershell -NoProfile -ExecutionPolicy Bypass -File C:\\dev\\Cosmic\\tests\\acceptance\\fixtures\\Run-WO10Sample.ps1 -Bin C:\\dev\\Cosmic\\build\\Runtime\\Release -Output C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-10\\x01-Release",
+                      "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-Q1\\manifests-Release-final\\wo10-sample\\X01.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-Q1\\manifests-Release-final\\wo10-sample\\X01.err.log",
+                      "pid":  14476,
+                      "exit_code":  0,
+                      "crash":  false,
+                      "tests_passed":  4,
+                      "tests_expected_min":  4,
+                      "verdict":  "PASSED",
+                      "detail":  "exit 0 as expected",
+                      "duration_sec":  40.92,
+                      "end_utc":  "2026-09-20T08:18:33.5058070Z"
+                  }
+              ]
+}

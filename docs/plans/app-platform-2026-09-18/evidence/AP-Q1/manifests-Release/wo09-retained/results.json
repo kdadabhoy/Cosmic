@@ -1,0 +1,163 @@
+﻿{
+    "manifest":  "wo09-retained",
+    "profile":  "release",
+    "tier_filter":  [
+
+                    ],
+    "config":  "Release",
+    "mode":  "2D",
+    "generated_utc":  "2026-09-20T07:32:53.3188662Z",
+    "git":  {
+                "commit":  "c35e6bd4f2accbf105e414b5a0b70bf00fd99087",
+                "dirty":  true,
+                "dirty_diff_sha256":  null
+            },
+    "environment":  {
+                        "os_caption":  "Microsoft Windows 11 Education",
+                        "os_version":  "10.0.26200",
+                        "os_build":  "26200",
+                        "os_display":  "26200.9457",
+                        "cpu_name":  "AMD Ryzen 7 7800X3D 8-Core Processor",
+                        "cpu_cores":  8,
+                        "cpu_threads":  16,
+                        "cpu_addr_width":  64,
+                        "cpu_isa_floor":  "SSE4.2 (D-CPU); see evidence/WO-02/cpu-isa-probe.txt",
+                        "ram_bytes":  33462239232,
+                        "ram_gib":  31.2,
+                        "gpus":  [
+                                     {
+                                         "name":  "NVIDIA GeForce RTX 5070 Ti",
+                                         "driver":  "32.0.16.1692",
+                                         "driver_date":  "\/Date(1788480000000)\/"
+                                     },
+                                     {
+                                         "name":  "AMD Radeon(TM) Graphics",
+                                         "driver":  "32.0.21045.5002",
+                                         "driver_date":  "\/Date(1786924800000)\/"
+                                     }
+                                 ],
+                        "opengl_version":  null,
+                        "powershell":  "5.1.26100.9444",
+                        "hostname":  "DESKTOP-SEOA4BT"
+                    },
+    "capabilities":  {
+                         "windows":  true,
+                         "cpu-sse42":  true,
+                         "gpu-gl":  true,
+                         "serial-device":  false,
+                         "editor-ui":  false,
+                         "audio-device":  true,
+                         "render-tests":  true
+                     },
+    "forced_unavailable":  [
+
+                           ],
+    "bin_dir":  "C:\\dev\\Cosmic\\build\\Runtime\\Release",
+    "run_temp":  "C:\\Users\\Kaden\\AppData\\Local\\Temp\\cosmic-accept-ff9c1bfdae9c4a78b6a20a77968a2b68",
+    "golden_dir":  "C:\\dev\\Cosmic\\tests\\acceptance\\goldens",
+    "golden_before":  {
+                          ".gitkeep-golden.txt":  "8e92944b7b4e999a32148948af2a13498ece10d56133c62c5c84431f2d335118"
+                      },
+    "golden_after":  {
+                         ".gitkeep-golden.txt":  "8e92944b7b4e999a32148948af2a13498ece10d56133c62c5c84431f2d335118"
+                     },
+    "golden_mutated":  false,
+    "acceptance_mode":  true,
+    "counts":  {
+                   "total":  3,
+                   "passed":  3,
+                   "failed":  0,
+                   "blocked":  0
+               },
+    "self_test":  {
+                      "enabled":  false,
+                      "failures":  [
+
+                                   ]
+                  },
+    "cases":  [
+                  {
+                      "id":  "retained-units",
+                      "tier":  "U",
+                      "description":  "The retained headless suite exactly as WO-08 left it (400 cases = 388 pre-WO-08 + 12 WO-08; every WO-09 case excluded by name), rerun after the WO-09 engine changes (the painter comparator, SelectFrame, the iterative hierarchy walkers + Scene::kMaxHierarchyDepth, the Flow/Story loader try scopes, the SceneSerializer nesting gate + duplicate-id policy, the ScriptHost destroy hook, the JobSystem stop-flag reset, the FlowMachine deque). test_crossbuild_scene\u0027s WO-09 extension is named \u00272D engine (WO-09 C05) ...\u0027 and is therefore INCLUDED here as a retained-obligation extension, so the expected count is 401 (400 retained + 1).",
+                      "requires":  [
+                                       "windows"
+                                   ],
+                      "transport":  "none",
+                      "seed":  null,
+                      "start_utc":  "2026-09-20T07:30:00.3434262Z",
+                      "deadline_sec":  1860,
+                      "exercised":  "fixture",
+                      "fixture":  "C:\\dev\\Cosmic\\tests\\acceptance\\..\\..\\tests\\test_crossbuild_scene.cpp",
+                      "fixture_sha256":  "e6feb153e9fc9e96ab3515964d8509451182aec119e839612eaa0ce07943733a",
+                      "command":  "powershell -NoProfile -ExecutionPolicy Bypass -File C:\\dev\\Cosmic\\tests\\acceptance\\fixtures\\Run-WO09Case.ps1 -Bin C:\\dev\\Cosmic\\build\\Runtime\\Release -CaseId retained-units -TestCaseExclude \"WO-09 *\" -MinTests 401 -DeadlineSec 1800 -Output C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-09\\retained-units-Release",
+                      "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-Q1\\manifests-Release\\wo09-retained\\retained-units.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-Q1\\manifests-Release\\wo09-retained\\retained-units.err.log",
+                      "pid":  33372,
+                      "exit_code":  0,
+                      "crash":  false,
+                      "tests_passed":  479,
+                      "tests_expected_min":  401,
+                      "verdict":  "PASSED",
+                      "detail":  "exit 0 as expected",
+                      "duration_sec":  168.81,
+                      "end_utc":  "2026-09-20T07:32:49.1581526Z"
+                  },
+                  {
+                      "id":  "retained-goldens",
+                      "tier":  "G",
+                      "description":  "The six pre-WO-08 2D golden cases (sprites, tilemap, light2d, light2d A/B, ui, scene2d) through the wrapper\u0027s before/after SHA-256 of tests/render/goldens: all 17 goldens must be byte-unchanged and no .actual/.diff diagnostics may appear.",
+                      "requires":  [
+                                       "windows",
+                                       "gpu-gl"
+                                   ],
+                      "transport":  "none",
+                      "seed":  null,
+                      "start_utc":  "2026-09-20T07:32:49.1621534Z",
+                      "deadline_sec":  180,
+                      "exercised":  "production",
+                      "golden":  "C:\\dev\\Cosmic\\tests\\render\\goldens\\sprites.png",
+                      "golden_sha256":  "4daba99d1c754e4456c2915f36fe1c82cce37af285766462e14334e3645f9c17",
+                      "command":  "powershell -NoProfile -ExecutionPolicy Bypass -File C:\\dev\\Cosmic\\tests\\acceptance\\fixtures\\Run-WO09Case.ps1 -Bin C:\\dev\\Cosmic\\build\\Runtime\\Release -Exe CosmicRenderTests.exe -CaseId retained-goldens -TestSuite \"2D goldens\" -Tier G -Requires windows,gpu-gl -MinTests 6 -DeadlineSec 120 -Output C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-09\\retained-goldens-Release",
+                      "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-Q1\\manifests-Release\\wo09-retained\\retained-goldens.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-Q1\\manifests-Release\\wo09-retained\\retained-goldens.err.log",
+                      "pid":  8872,
+                      "exit_code":  0,
+                      "crash":  false,
+                      "tests_passed":  6,
+                      "tests_expected_min":  6,
+                      "verdict":  "PASSED",
+                      "detail":  "exit 0 as expected",
+                      "duration_sec":  0.882,
+                      "end_utc":  "2026-09-20T07:32:50.0456571Z"
+                  },
+                  {
+                      "id":  "retained-wo08-gpu",
+                      "tier":  "G",
+                      "description":  "The 24 WO-08 render cases (R01-R06 = 22 run + the 2 R07 perf cases, which stay skip(true) here) rerun after the WO-09 engine changes, with the golden dir hashed before/after (wo08_primitives / wo08_text / instancing2d byte-unchanged).",
+                      "requires":  [
+                                       "windows",
+                                       "gpu-gl"
+                                   ],
+                      "transport":  "none",
+                      "seed":  null,
+                      "start_utc":  "2026-09-20T07:32:50.0466563Z",
+                      "deadline_sec":  960,
+                      "exercised":  "production",
+                      "golden":  "C:\\dev\\Cosmic\\tests\\render\\goldens\\instancing2d.png",
+                      "golden_sha256":  "95f18d759240773a9ad0b66aaa608f48defe3853fc8668e97579f76323381b01",
+                      "command":  "powershell -NoProfile -ExecutionPolicy Bypass -File C:\\dev\\Cosmic\\tests\\acceptance\\fixtures\\Run-WO09Case.ps1 -Bin C:\\dev\\Cosmic\\build\\Runtime\\Release -Exe CosmicRenderTests.exe -CaseId retained-wo08-gpu -TestSuite WO-08* -Tier G -Requires windows,gpu-gl -MinTests 22 -DeadlineSec 900 -Output C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-09\\retained-wo08-Release",
+                      "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-Q1\\manifests-Release\\wo09-retained\\retained-wo08-gpu.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-Q1\\manifests-Release\\wo09-retained\\retained-wo08-gpu.err.log",
+                      "pid":  21368,
+                      "exit_code":  0,
+                      "crash":  false,
+                      "tests_passed":  22,
+                      "tests_expected_min":  22,
+                      "verdict":  "PASSED",
+                      "detail":  "exit 0 as expected",
+                      "duration_sec":  3.247,
+                      "end_utc":  "2026-09-20T07:32:53.2938513Z"
+                  }
+              ]
+}

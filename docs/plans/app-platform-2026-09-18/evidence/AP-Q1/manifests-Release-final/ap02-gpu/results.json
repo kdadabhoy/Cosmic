@@ -1,0 +1,138 @@
+﻿{
+    "manifest":  "ap02-gpu",
+    "profile":  "release",
+    "tier_filter":  [
+
+                    ],
+    "config":  "Release",
+    "mode":  "2D",
+    "generated_utc":  "2026-09-20T08:07:50.7944833Z",
+    "git":  {
+                "commit":  "fa1223a88629319a927304d7c6dbb04401c3604a",
+                "dirty":  true,
+                "dirty_diff_sha256":  null
+            },
+    "environment":  {
+                        "os_caption":  "Microsoft Windows 11 Education",
+                        "os_version":  "10.0.26200",
+                        "os_build":  "26200",
+                        "os_display":  "26200.9457",
+                        "cpu_name":  "AMD Ryzen 7 7800X3D 8-Core Processor",
+                        "cpu_cores":  8,
+                        "cpu_threads":  16,
+                        "cpu_addr_width":  64,
+                        "cpu_isa_floor":  "SSE4.2 (D-CPU); see evidence/WO-02/cpu-isa-probe.txt",
+                        "ram_bytes":  33462239232,
+                        "ram_gib":  31.2,
+                        "gpus":  [
+                                     {
+                                         "name":  "NVIDIA GeForce RTX 5070 Ti",
+                                         "driver":  "32.0.16.1692",
+                                         "driver_date":  "\/Date(1788480000000)\/"
+                                     },
+                                     {
+                                         "name":  "AMD Radeon(TM) Graphics",
+                                         "driver":  "32.0.21045.5002",
+                                         "driver_date":  "\/Date(1786924800000)\/"
+                                     }
+                                 ],
+                        "opengl_version":  null,
+                        "powershell":  "5.1.26100.9444",
+                        "hostname":  "DESKTOP-SEOA4BT"
+                    },
+    "capabilities":  {
+                         "windows":  true,
+                         "cpu-sse42":  true,
+                         "gpu-gl":  true,
+                         "serial-device":  false,
+                         "editor-ui":  false,
+                         "audio-device":  true,
+                         "render-tests":  true
+                     },
+    "forced_unavailable":  [
+
+                           ],
+    "bin_dir":  "C:\\dev\\Cosmic\\build\\Runtime\\Release",
+    "run_temp":  "C:\\dev\\Cosmic\\build\\_temp\\apq1\\cosmic-accept-17a4d5cebf8a4ca88c48125823c866a0",
+    "golden_dir":  "C:\\dev\\Cosmic\\tests\\acceptance\\goldens",
+    "golden_before":  {
+                          ".gitkeep-golden.txt":  "8e92944b7b4e999a32148948af2a13498ece10d56133c62c5c84431f2d335118"
+                      },
+    "golden_after":  {
+                         ".gitkeep-golden.txt":  "8e92944b7b4e999a32148948af2a13498ece10d56133c62c5c84431f2d335118"
+                     },
+    "golden_mutated":  false,
+    "acceptance_mode":  true,
+    "counts":  {
+                   "total":  2,
+                   "passed":  2,
+                   "failed":  0,
+                   "blocked":  0
+               },
+    "self_test":  {
+                      "enabled":  false,
+                      "failures":  [
+
+                                   ]
+                  },
+    "cases":  [
+                  {
+                      "id":  "V03",
+                      "tier":  "G",
+                      "description":  "F-WIDGETS on the GPU: one reviewed 320x180 golden per widget kind (ap02_valuetext fresh/stale/missing, ap02_gauge bar 0/50/100 % + bottom-to-top + arc 0/50/100 % with the bottom gap, ap02_indicator on/off with half-and-half textures + solid tints, ap02_plot two channels over 10 s with a NaN gap + grid + labels, ap02_slider H/V at 0/0.5/1, ap02_toggle on/off tints + textures + image-less fallback, ap02_hostedpanel frame + placeholder), each compared with the harness tolerance PLUS exact sentinel pixels/ROIs (fill edge, knob centre, plot line pixel, texture halves, frame edge); the hosted-panel case also runs CollectHostedPanels (V05 engine half) and the live/DrawnThisFrame placeholder rule. The wrapper hashes tests/render/goldens before and after: every pre-existing golden byte-identical.",
+                      "requires":  [
+                                       "windows",
+                                       "gpu-gl"
+                                   ],
+                      "transport":  "none",
+                      "seed":  null,
+                      "start_utc":  "2026-09-20T08:07:48.9580416Z",
+                      "deadline_sec":  240,
+                      "exercised":  "fixture",
+                      "fixture":  "C:\\dev\\Cosmic\\tests\\acceptance\\..\\..\\tests\\render\\render_ap02_widgets.cpp",
+                      "fixture_sha256":  "6a14626c99b8b74571566cd5bad683f4260bcbfd16e2db07e7fdad15a6b5d063",
+                      "golden":  "C:\\dev\\Cosmic\\tests\\render\\goldens\\ap02_gauge.png",
+                      "golden_sha256":  "b4cec6f5170f0794a77123085066e09423b5ef728b498ce3375c2b0789c28e73",
+                      "command":  "powershell -NoProfile -ExecutionPolicy Bypass -File C:\\dev\\Cosmic\\tests\\acceptance\\fixtures\\Run-AP02Render.ps1 -Bin C:\\dev\\Cosmic\\build\\Runtime\\Release -CaseId V03 -Suite \"AP-02 V03\" -MinTests 7 -DeadlineSec 180 -Output C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-02\\v03-Release",
+                      "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-Q1\\manifests-Release-final\\ap02-gpu\\V03.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-Q1\\manifests-Release-final\\ap02-gpu\\V03.err.log",
+                      "pid":  34928,
+                      "exit_code":  0,
+                      "crash":  false,
+                      "tests_passed":  7,
+                      "tests_expected_min":  7,
+                      "verdict":  "PASSED",
+                      "detail":  "exit 0 as expected",
+                      "duration_sec":  0.974,
+                      "end_utc":  "2026-09-20T08:07:49.9563193Z"
+                  },
+                  {
+                      "id":  "E05",
+                      "tier":  "G",
+                      "description":  "Preview vs live A/B on the combined F-WIDGETS scene: Render(bus = nullptr) against Render(bus) with the bus holding exactly the preview values (value, gauge, indicator, toggle, slider and a sample-exact replica of the plot\u0027s preview sine) is byte-identical (BytesEqual, in-process pair), and equal to Render(bus, preview = true); with different bus values the diff mask is confined to the bound widgets\u0027 rects, every bound widget shows a diff, the hosted panel none.",
+                      "requires":  [
+                                       "windows",
+                                       "gpu-gl"
+                                   ],
+                      "transport":  "none",
+                      "seed":  null,
+                      "start_utc":  "2026-09-20T08:07:49.9613442Z",
+                      "deadline_sec":  180,
+                      "exercised":  "fixture",
+                      "fixture":  "C:\\dev\\Cosmic\\tests\\acceptance\\..\\..\\tests\\render\\render_ap02_widgets.cpp",
+                      "fixture_sha256":  "6a14626c99b8b74571566cd5bad683f4260bcbfd16e2db07e7fdad15a6b5d063",
+                      "command":  "powershell -NoProfile -ExecutionPolicy Bypass -File C:\\dev\\Cosmic\\tests\\acceptance\\fixtures\\Run-AP02Render.ps1 -Bin C:\\dev\\Cosmic\\build\\Runtime\\Release -CaseId E05 -Suite \"AP-02 E05\" -MinTests 1 -DeadlineSec 120 -Output C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-02\\e05-Release",
+                      "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-Q1\\manifests-Release-final\\ap02-gpu\\E05.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-Q1\\manifests-Release-final\\ap02-gpu\\E05.err.log",
+                      "pid":  25068,
+                      "exit_code":  0,
+                      "crash":  false,
+                      "tests_passed":  1,
+                      "tests_expected_min":  1,
+                      "verdict":  "PASSED",
+                      "detail":  "exit 0 as expected",
+                      "duration_sec":  0.822,
+                      "end_utc":  "2026-09-20T08:07:50.7829512Z"
+                  }
+              ]
+}

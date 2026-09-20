@@ -1,0 +1,8 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="wo10-sample" tests="1" failures="0" skipped="0">
+  <testsuite name="release" tests="1" failures="0" skipped="0">
+    <testcase name="X01" classname="wo10-sample.I" time="0">
+    </testcase>
+  </testsuite>
+</testsuites>
+

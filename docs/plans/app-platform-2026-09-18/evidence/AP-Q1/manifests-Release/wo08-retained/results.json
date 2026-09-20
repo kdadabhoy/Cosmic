@@ -1,0 +1,135 @@
+﻿{
+    "manifest":  "wo08-retained",
+    "profile":  "release",
+    "tier_filter":  [
+
+                    ],
+    "config":  "Release",
+    "mode":  "2D",
+    "generated_utc":  "2026-09-20T07:29:58.4534167Z",
+    "git":  {
+                "commit":  "c35e6bd4f2accbf105e414b5a0b70bf00fd99087",
+                "dirty":  true,
+                "dirty_diff_sha256":  null
+            },
+    "environment":  {
+                        "os_caption":  "Microsoft Windows 11 Education",
+                        "os_version":  "10.0.26200",
+                        "os_build":  "26200",
+                        "os_display":  "26200.9457",
+                        "cpu_name":  "AMD Ryzen 7 7800X3D 8-Core Processor",
+                        "cpu_cores":  8,
+                        "cpu_threads":  16,
+                        "cpu_addr_width":  64,
+                        "cpu_isa_floor":  "SSE4.2 (D-CPU); see evidence/WO-02/cpu-isa-probe.txt",
+                        "ram_bytes":  33462239232,
+                        "ram_gib":  31.2,
+                        "gpus":  [
+                                     {
+                                         "name":  "NVIDIA GeForce RTX 5070 Ti",
+                                         "driver":  "32.0.16.1692",
+                                         "driver_date":  "\/Date(1788480000000)\/"
+                                     },
+                                     {
+                                         "name":  "AMD Radeon(TM) Graphics",
+                                         "driver":  "32.0.21045.5002",
+                                         "driver_date":  "\/Date(1786924800000)\/"
+                                     }
+                                 ],
+                        "opengl_version":  null,
+                        "powershell":  "5.1.26100.9444",
+                        "hostname":  "DESKTOP-SEOA4BT"
+                    },
+    "capabilities":  {
+                         "windows":  true,
+                         "cpu-sse42":  true,
+                         "gpu-gl":  true,
+                         "serial-device":  false,
+                         "editor-ui":  false,
+                         "audio-device":  true,
+                         "render-tests":  true
+                     },
+    "forced_unavailable":  [
+
+                           ],
+    "bin_dir":  "C:\\dev\\Cosmic\\build\\Runtime\\Release",
+    "run_temp":  "C:\\Users\\Kaden\\AppData\\Local\\Temp\\cosmic-accept-bc4ae37ca6544c85ae360fc1a75c3712",
+    "golden_dir":  "C:\\dev\\Cosmic\\tests\\acceptance\\goldens",
+    "golden_before":  {
+                          ".gitkeep-golden.txt":  "8e92944b7b4e999a32148948af2a13498ece10d56133c62c5c84431f2d335118"
+                      },
+    "golden_after":  {
+                         ".gitkeep-golden.txt":  "8e92944b7b4e999a32148948af2a13498ece10d56133c62c5c84431f2d335118"
+                     },
+    "golden_mutated":  false,
+    "acceptance_mode":  true,
+    "counts":  {
+                   "total":  2,
+                   "passed":  2,
+                   "failed":  0,
+                   "blocked":  0
+               },
+    "self_test":  {
+                      "enabled":  false,
+                      "failures":  [
+
+                                   ]
+                  },
+    "cases":  [
+                  {
+                      "id":  "retained-units",
+                      "tier":  "U",
+                      "description":  "The retained headless suite exactly as WO-07 left it (388 cases: every pre-WO-08 test, WO-08 cases excluded by name), rerun after the WO-08 engine changes (Renderer2D material bucket + observation counters, Circle shaders, UiSystem image UVs, Camera2DController input policy, RendererAPI::FinishGpu, GpuObjectStats hooks).",
+                      "requires":  [
+                                       "windows"
+                                   ],
+                      "transport":  "none",
+                      "seed":  null,
+                      "start_utc":  "2026-09-20T07:27:06.0557942Z",
+                      "deadline_sec":  1800,
+                      "exercised":  "fixture",
+                      "fixture":  "C:\\dev\\Cosmic\\tests\\acceptance\\..\\..\\tests\\test_wo07_l04.cpp",
+                      "fixture_sha256":  "e57c414e94cd818e7d6402d1966e6ea49d96c67a52bf9c3219087e67e856ae31",
+                      "command":  "C:\\dev\\Cosmic\\build\\Runtime\\Release\\CosmicTests.exe \"--test-case-exclude=WO-08 *\" --no-colors",
+                      "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-Q1\\manifests-Release\\wo08-retained\\retained-units.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-Q1\\manifests-Release\\wo08-retained\\retained-units.err.log",
+                      "pid":  18728,
+                      "exit_code":  0,
+                      "crash":  false,
+                      "tests_passed":  507,
+                      "tests_expected_min":  388,
+                      "verdict":  "PASSED",
+                      "detail":  "exit 0 as expected",
+                      "duration_sec":  171.587,
+                      "end_utc":  "2026-09-20T07:29:57.6478338Z"
+                  },
+                  {
+                      "id":  "retained-goldens",
+                      "tier":  "G",
+                      "description":  "The six pre-WO-08 2D golden cases (sprites, tilemap, light2d, light2d A/B, ui, scene2d) through the wrapper\u0027s before/after SHA-256 of tests/render/goldens: the 14 original goldens must be byte-unchanged and no .actual/.diff diagnostics may appear.",
+                      "requires":  [
+                                       "windows",
+                                       "gpu-gl"
+                                   ],
+                      "transport":  "none",
+                      "seed":  null,
+                      "start_utc":  "2026-09-20T07:29:57.6520549Z",
+                      "deadline_sec":  180,
+                      "exercised":  "production",
+                      "golden":  "C:\\dev\\Cosmic\\tests\\render\\goldens\\sprites.png",
+                      "golden_sha256":  "4daba99d1c754e4456c2915f36fe1c82cce37af285766462e14334e3645f9c17",
+                      "command":  "powershell -NoProfile -ExecutionPolicy Bypass -File C:\\dev\\Cosmic\\tests\\acceptance\\fixtures\\Run-WO08Render.ps1 -Bin C:\\dev\\Cosmic\\build\\Runtime\\Release -CaseId retained-goldens -Suite \"2D goldens\" -MinTests 6 -DeadlineSec 120 -Output C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-08\\retained-goldens-Release",
+                      "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-Q1\\manifests-Release\\wo08-retained\\retained-goldens.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-Q1\\manifests-Release\\wo08-retained\\retained-goldens.err.log",
+                      "pid":  21584,
+                      "exit_code":  0,
+                      "crash":  false,
+                      "tests_passed":  6,
+                      "tests_expected_min":  6,
+                      "verdict":  "PASSED",
+                      "detail":  "exit 0 as expected",
+                      "duration_sec":  0.791,
+                      "end_utc":  "2026-09-20T07:29:58.4431478Z"
+                  }
+              ]
+}

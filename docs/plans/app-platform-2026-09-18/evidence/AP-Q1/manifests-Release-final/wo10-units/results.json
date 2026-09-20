@@ -1,0 +1,242 @@
+﻿{
+    "manifest":  "wo10-units",
+    "profile":  "release",
+    "tier_filter":  [
+
+                    ],
+    "config":  "Release",
+    "mode":  "2D",
+    "generated_utc":  "2026-09-20T08:01:11.1700363Z",
+    "git":  {
+                "commit":  "fa1223a88629319a927304d7c6dbb04401c3604a",
+                "dirty":  true,
+                "dirty_diff_sha256":  null
+            },
+    "environment":  {
+                        "os_caption":  "Microsoft Windows 11 Education",
+                        "os_version":  "10.0.26200",
+                        "os_build":  "26200",
+                        "os_display":  "26200.9457",
+                        "cpu_name":  "AMD Ryzen 7 7800X3D 8-Core Processor",
+                        "cpu_cores":  8,
+                        "cpu_threads":  16,
+                        "cpu_addr_width":  64,
+                        "cpu_isa_floor":  "SSE4.2 (D-CPU); see evidence/WO-02/cpu-isa-probe.txt",
+                        "ram_bytes":  33462239232,
+                        "ram_gib":  31.2,
+                        "gpus":  [
+                                     {
+                                         "name":  "NVIDIA GeForce RTX 5070 Ti",
+                                         "driver":  "32.0.16.1692",
+                                         "driver_date":  "\/Date(1788480000000)\/"
+                                     },
+                                     {
+                                         "name":  "AMD Radeon(TM) Graphics",
+                                         "driver":  "32.0.21045.5002",
+                                         "driver_date":  "\/Date(1786924800000)\/"
+                                     }
+                                 ],
+                        "opengl_version":  null,
+                        "powershell":  "5.1.26100.9444",
+                        "hostname":  "DESKTOP-SEOA4BT"
+                    },
+    "capabilities":  {
+                         "windows":  true,
+                         "cpu-sse42":  true,
+                         "gpu-gl":  true,
+                         "serial-device":  false,
+                         "editor-ui":  false,
+                         "audio-device":  true,
+                         "render-tests":  true
+                     },
+    "forced_unavailable":  [
+
+                           ],
+    "bin_dir":  "C:\\dev\\Cosmic\\build\\Runtime\\Release",
+    "run_temp":  "C:\\dev\\Cosmic\\build\\_temp\\apq1\\cosmic-accept-4ba3c14e1a0640239446f8b4e67eaf74",
+    "golden_dir":  "C:\\dev\\Cosmic\\tests\\acceptance\\goldens",
+    "golden_before":  {
+                          ".gitkeep-golden.txt":  "8e92944b7b4e999a32148948af2a13498ece10d56133c62c5c84431f2d335118"
+                      },
+    "golden_after":  {
+                         ".gitkeep-golden.txt":  "8e92944b7b4e999a32148948af2a13498ece10d56133c62c5c84431f2d335118"
+                     },
+    "golden_mutated":  false,
+    "acceptance_mode":  true,
+    "counts":  {
+                   "total":  6,
+                   "passed":  6,
+                   "failed":  0,
+                   "blocked":  0
+               },
+    "self_test":  {
+                      "enabled":  false,
+                      "failures":  [
+
+                                   ]
+                  },
+    "cases":  [
+                  {
+                      "id":  "N02-U",
+                      "tier":  "U",
+                      "description":  "N02 headless: KI-16 - DataRecorder\u0027s time accumulator over 432,000 ticks of 1/60 (duration and every stored timestamp within one float ulp of i/60); negative replay - DataPlayer speed -1 over a v1 recording of F-TRAJECTORY plays backwards to 0, auto-stops, SampleAt agrees with the double equations at exact and midpoint times, NaN/inf speed and NaN seek ignored; the stored-float accumulator arithmetic at 2 h and 24 h uptime measured against a double sum (reported).",
+                      "requires":  [
+                                       "windows"
+                                   ],
+                      "transport":  "none",
+                      "seed":  null,
+                      "start_utc":  "2026-09-20T08:01:07.0634826Z",
+                      "deadline_sec":  180,
+                      "exercised":  "fixture",
+                      "fixture":  "C:\\dev\\Cosmic\\tests\\acceptance\\..\\..\\tests\\test_wo10_n02_clock.cpp",
+                      "fixture_sha256":  "ce8fc41b279ba44c81c3aa514c166693fcb62e061c36feeb7a56a35eb1272d13",
+                      "command":  "powershell -NoProfile -ExecutionPolicy Bypass -File C:\\dev\\Cosmic\\tests\\acceptance\\fixtures\\Run-WO10Case.ps1 -Bin C:\\dev\\Cosmic\\build\\Runtime\\Release -CaseId N02-U -TestSuite \"WO-10 N02 clock (headless)\" -MinTests 3 -DeadlineSec 120 -Output C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-10\\n02u-Release",
+                      "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-Q1\\manifests-Release-final\\wo10-units\\N02-U.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-Q1\\manifests-Release-final\\wo10-units\\N02-U.err.log",
+                      "pid":  22604,
+                      "exit_code":  0,
+                      "crash":  false,
+                      "tests_passed":  3,
+                      "tests_expected_min":  3,
+                      "verdict":  "PASSED",
+                      "detail":  "exit 0 as expected",
+                      "duration_sec":  1.004,
+                      "end_utc":  "2026-09-20T08:01:08.0729485Z"
+                  },
+                  {
+                      "id":  "N03",
+                      "tier":  "U",
+                      "description":  "N03 numerics at the catalog\u0027s exact parameters: RK4 projectile dt=1/480 for 1 s within 1e-4 relative (+ the double-state reference), mass-spring-damper 2,000 steps at 1/1000 within 2e-3 of the analytic envelope, RK4 halving-step error ratio in 10..24, semi-implicit Euler energy \u003c 1.10x initial over 10 s; F-TRAJECTORY generator == catalog equations, the committed reference CSV round-trips bit-exactly, SI units (g, apex, zero-crossing, range); the FLOAT telemetry path (DataRecorder -\u003e v1 -\u003e DataPlayer::SampleAt) vs the double reference within the default float bar with the observed error reported; the 1e11 origin offset subtracted in double before float display (exact to the double ulp at 1e11) vs the naive float path (hundreds of metres off).",
+                      "requires":  [
+                                       "windows"
+                                   ],
+                      "transport":  "none",
+                      "seed":  null,
+                      "start_utc":  "2026-09-20T08:01:08.0969517Z",
+                      "deadline_sec":  180,
+                      "exercised":  "fixture",
+                      "fixture":  "C:\\dev\\Cosmic\\tests\\acceptance\\..\\..\\Projects\\AnalysisSample\\data\\trajectory.csv",
+                      "fixture_sha256":  "ab0d5761845778eb37fdea44e3477f8b6e14b757778f736ae6694142493b9648",
+                      "command":  "powershell -NoProfile -ExecutionPolicy Bypass -File C:\\dev\\Cosmic\\tests\\acceptance\\fixtures\\Run-WO10Case.ps1 -Bin C:\\dev\\Cosmic\\build\\Runtime\\Release -CaseId N03 -TestSuite \"WO-10 N03 numerics\" -MinTests 7 -DeadlineSec 120 -Output C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-10\\n03-Release",
+                      "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-Q1\\manifests-Release-final\\wo10-units\\N03.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-Q1\\manifests-Release-final\\wo10-units\\N03.err.log",
+                      "pid":  39124,
+                      "exit_code":  0,
+                      "crash":  false,
+                      "tests_passed":  7,
+                      "tests_expected_min":  7,
+                      "verdict":  "PASSED",
+                      "detail":  "exit 0 as expected",
+                      "duration_sec":  0.604,
+                      "end_utc":  "2026-09-20T08:01:08.7011542Z"
+                  },
+                  {
+                      "id":  "N04",
+                      "tier":  "U",
+                      "description":  "N04 determinism: the canonical PCG32 vector (seed 42, stream 54); 1,000,000 outputs from the same seed/stream agree word for word and FNV-1a-64 to the INDEPENDENT Python oracle (tests/fixtures/wo10/pcg32_oracle.py); seeded Gaussian + transcendental streams pinned under the declared same-toolchain scope. Same-build reproducibility: the wrapper runs the suite in TWO processes and byte-compares the 1,000,000-word stream and both 100,000-sample streams they wrote.",
+                      "requires":  [
+                                       "windows"
+                                   ],
+                      "transport":  "none",
+                      "seed":  null,
+                      "start_utc":  "2026-09-20T08:01:08.7021539Z",
+                      "deadline_sec":  300,
+                      "exercised":  "fixture",
+                      "fixture":  "C:\\dev\\Cosmic\\tests\\acceptance\\..\\..\\tests\\fixtures\\wo10\\pcg32_oracle.py",
+                      "fixture_sha256":  "95d54d46504a0a68f525444c11f751756ec9cf3cfcf3a57da88a7a0dff53a7f5",
+                      "command":  "powershell -NoProfile -ExecutionPolicy Bypass -File C:\\dev\\Cosmic\\tests\\acceptance\\fixtures\\Run-WO10Case.ps1 -Bin C:\\dev\\Cosmic\\build\\Runtime\\Release -CaseId N04 -TestSuite \"WO-10 N04 determinism\" -MinTests 3 -DeadlineSec 120 -CompareRuns -Output C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-10\\n04-Release",
+                      "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-Q1\\manifests-Release-final\\wo10-units\\N04.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-Q1\\manifests-Release-final\\wo10-units\\N04.err.log",
+                      "pid":  8532,
+                      "exit_code":  0,
+                      "crash":  false,
+                      "tests_passed":  3,
+                      "tests_expected_min":  3,
+                      "verdict":  "PASSED",
+                      "detail":  "exit 0 as expected",
+                      "duration_sec":  0.692,
+                      "end_utc":  "2026-09-20T08:01:09.3939139Z"
+                  },
+                  {
+                      "id":  "N04-FILTERS",
+                      "tier":  "U",
+                      "description":  "N04 retained: the Filters (E12) suite stays green (deterministic filter responses).",
+                      "requires":  [
+                                       "windows"
+                                   ],
+                      "transport":  "none",
+                      "seed":  null,
+                      "start_utc":  "2026-09-20T08:01:09.3959098Z",
+                      "deadline_sec":  120,
+                      "exercised":  "fixture",
+                      "fixture":  "C:\\dev\\Cosmic\\tests\\acceptance\\..\\..\\tests\\test_filters.cpp",
+                      "fixture_sha256":  "045cbdce19f38e4ff42b3bb2a887be1b48908d0abf24c3e461ec8d2d1daaf58d",
+                      "command":  "powershell -NoProfile -ExecutionPolicy Bypass -File C:\\dev\\Cosmic\\tests\\acceptance\\fixtures\\Run-WO10Case.ps1 -Bin C:\\dev\\Cosmic\\build\\Runtime\\Release -CaseId N04-FILTERS -TestSuite \"Filters (E12)\" -MinTests 1 -DeadlineSec 60 -Output C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-10\\n04-filters-Release",
+                      "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-Q1\\manifests-Release-final\\wo10-units\\N04-FILTERS.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-Q1\\manifests-Release-final\\wo10-units\\N04-FILTERS.err.log",
+                      "pid":  31196,
+                      "exit_code":  0,
+                      "crash":  false,
+                      "tests_passed":  9,
+                      "tests_expected_min":  1,
+                      "verdict":  "PASSED",
+                      "detail":  "exit 0 as expected",
+                      "duration_sec":  0.587,
+                      "end_utc":  "2026-09-20T08:01:09.9825780Z"
+                  },
+                  {
+                      "id":  "N04-LOOKUP",
+                      "tier":  "U",
+                      "description":  "N04 retained: the LookupTable (E13) suite stays green (restricted numeric CSV reader incl. ragged/non-numeric rejection).",
+                      "requires":  [
+                                       "windows"
+                                   ],
+                      "transport":  "none",
+                      "seed":  null,
+                      "start_utc":  "2026-09-20T08:01:09.9835801Z",
+                      "deadline_sec":  120,
+                      "exercised":  "fixture",
+                      "fixture":  "C:\\dev\\Cosmic\\tests\\acceptance\\..\\..\\tests\\test_lookuptable.cpp",
+                      "fixture_sha256":  "c3030bdbde7bd5e31846a38e6948ce344d478abee7b4c6a9c8a738a4ebdf05ad",
+                      "command":  "powershell -NoProfile -ExecutionPolicy Bypass -File C:\\dev\\Cosmic\\tests\\acceptance\\fixtures\\Run-WO10Case.ps1 -Bin C:\\dev\\Cosmic\\build\\Runtime\\Release -CaseId N04-LOOKUP -TestSuite \"LookupTable (E13)\" -MinTests 1 -DeadlineSec 60 -Output C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-10\\n04-lookup-Release",
+                      "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-Q1\\manifests-Release-final\\wo10-units\\N04-LOOKUP.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-Q1\\manifests-Release-final\\wo10-units\\N04-LOOKUP.err.log",
+                      "pid":  34296,
+                      "exit_code":  0,
+                      "crash":  false,
+                      "tests_passed":  7,
+                      "tests_expected_min":  1,
+                      "verdict":  "PASSED",
+                      "detail":  "exit 0 as expected",
+                      "duration_sec":  0.59,
+                      "end_utc":  "2026-09-20T08:01:10.5728319Z"
+                  },
+                  {
+                      "id":  "N04-SCENE",
+                      "tier":  "U",
+                      "description":  "N04 retained: the 2D scene determinism (W2) suite stays green (same seed/input sequence =\u003e identical scene state).",
+                      "requires":  [
+                                       "windows"
+                                   ],
+                      "transport":  "none",
+                      "seed":  null,
+                      "start_utc":  "2026-09-20T08:01:10.5748327Z",
+                      "deadline_sec":  120,
+                      "exercised":  "fixture",
+                      "fixture":  "C:\\dev\\Cosmic\\tests\\acceptance\\..\\..\\tests\\test_scene2d_determinism.cpp",
+                      "fixture_sha256":  "a379062ef03c0573674e076cb3fb37f058bc02cdc2699de48e628919fddd03a7",
+                      "command":  "powershell -NoProfile -ExecutionPolicy Bypass -File C:\\dev\\Cosmic\\tests\\acceptance\\fixtures\\Run-WO10Case.ps1 -Bin C:\\dev\\Cosmic\\build\\Runtime\\Release -CaseId N04-SCENE -TestSuite \"2D scene determinism (W2)\" -MinTests 1 -DeadlineSec 60 -Output C:\\dev\\Cosmic\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-10\\n04-scene-Release",
+                      "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-Q1\\manifests-Release-final\\wo10-units\\N04-SCENE.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-Q1\\manifests-Release-final\\wo10-units\\N04-SCENE.err.log",
+                      "pid":  34448,
+                      "exit_code":  0,
+                      "crash":  false,
+                      "tests_passed":  2,
+                      "tests_expected_min":  1,
+                      "verdict":  "PASSED",
+                      "detail":  "exit 0 as expected",
+                      "duration_sec":  0.585,
+                      "end_utc":  "2026-09-20T08:01:11.1600312Z"
+                  }
+              ]
+}

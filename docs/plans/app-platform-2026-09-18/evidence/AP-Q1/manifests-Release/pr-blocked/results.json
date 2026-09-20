@@ -1,0 +1,145 @@
+﻿{
+    "manifest":  "pr-blocked",
+    "profile":  "pr",
+    "tier_filter":  [
+
+                    ],
+    "config":  "Release",
+    "mode":  "2D",
+    "generated_utc":  "2026-09-20T07:15:20.5493425Z",
+    "git":  {
+                "commit":  "54b0beb072f7cb0c74ecda02e9db443fd24d7714",
+                "dirty":  true,
+                "dirty_diff_sha256":  "e8350b1d619df06f367503c29a5f4358fbda86cce8085b33867c1413ed68eb89"
+            },
+    "environment":  {
+                        "os_caption":  "Microsoft Windows 11 Education",
+                        "os_version":  "10.0.26200",
+                        "os_build":  "26200",
+                        "os_display":  "26200.9457",
+                        "cpu_name":  "AMD Ryzen 7 7800X3D 8-Core Processor",
+                        "cpu_cores":  8,
+                        "cpu_threads":  16,
+                        "cpu_addr_width":  64,
+                        "cpu_isa_floor":  "SSE4.2 (D-CPU); see evidence/WO-02/cpu-isa-probe.txt",
+                        "ram_bytes":  33462239232,
+                        "ram_gib":  31.2,
+                        "gpus":  [
+                                     {
+                                         "name":  "NVIDIA GeForce RTX 5070 Ti",
+                                         "driver":  "32.0.16.1692",
+                                         "driver_date":  "\/Date(1788480000000)\/"
+                                     },
+                                     {
+                                         "name":  "AMD Radeon(TM) Graphics",
+                                         "driver":  "32.0.21045.5002",
+                                         "driver_date":  "\/Date(1786924800000)\/"
+                                     }
+                                 ],
+                        "opengl_version":  null,
+                        "powershell":  "5.1.26100.9444",
+                        "hostname":  "DESKTOP-SEOA4BT"
+                    },
+    "capabilities":  {
+                         "windows":  true,
+                         "cpu-sse42":  true,
+                         "gpu-gl":  true,
+                         "serial-device":  false,
+                         "editor-ui":  false,
+                         "audio-device":  true,
+                         "render-tests":  true
+                     },
+    "forced_unavailable":  [
+
+                           ],
+    "bin_dir":  "C:\\dev\\Cosmic\\build\\Runtime\\Release",
+    "run_temp":  "C:\\Users\\Kaden\\AppData\\Local\\Temp\\cosmic-accept-9cd5ed4de0804fbb8de9571d2fe8c66c",
+    "golden_dir":  "C:\\dev\\Cosmic\\tests\\acceptance\\goldens",
+    "golden_before":  {
+                          ".gitkeep-golden.txt":  "8e92944b7b4e999a32148948af2a13498ece10d56133c62c5c84431f2d335118"
+                      },
+    "golden_after":  {
+                         ".gitkeep-golden.txt":  "8e92944b7b4e999a32148948af2a13498ece10d56133c62c5c84431f2d335118"
+                     },
+    "golden_mutated":  false,
+    "acceptance_mode":  true,
+    "counts":  {
+                   "total":  3,
+                   "passed":  1,
+                   "failed":  0,
+                   "blocked":  2
+               },
+    "self_test":  {
+                      "enabled":  false,
+                      "failures":  [
+
+                                   ]
+                  },
+    "cases":  [
+                  {
+                      "id":  "GOLDENS-G",
+                      "tier":  "G",
+                      "description":  "The 2D golden-image suite (CosmicRenderTests). Needs a real GL context AND a tree configured with -DCOSMIC_BUILD_RENDER_TESTS=ON; ci.yml provides neither, so this is blocked there and runs on the GPU runner.",
+                      "requires":  [
+                                       "windows",
+                                       "gpu-gl",
+                                       "render-tests"
+                                   ],
+                      "transport":  "none",
+                      "seed":  null,
+                      "start_utc":  "2026-09-20T07:15:19.5926034Z",
+                      "deadline_sec":  180,
+                      "exercised":  "production",
+                      "command":  "powershell -NoProfile -ExecutionPolicy Bypass -File C:\\dev\\Cosmic\\tests\\acceptance\\fixtures\\Run-WO10Case.ps1 -Bin C:\\dev\\Cosmic\\build\\Runtime\\Release -Exe CosmicRenderTests.exe -CaseId GOLDENS-G -TestSuite \"2D goldens\" -Tier G -Requires windows,gpu-gl -MinTests 6 -DeadlineSec 120 -Output C:\\dev\\Cosmic\\build\\acceptance-evidence\\goldens-g-Release",
+                      "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-Q1\\manifests-Release\\pr-blocked\\GOLDENS-G.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-Q1\\manifests-Release\\pr-blocked\\GOLDENS-G.err.log",
+                      "pid":  26948,
+                      "exit_code":  0,
+                      "crash":  false,
+                      "tests_passed":  6,
+                      "tests_expected_min":  6,
+                      "verdict":  "PASSED",
+                      "detail":  "exit 0 as expected",
+                      "duration_sec":  0.917,
+                      "end_utc":  "2026-09-20T07:15:20.5152127Z"
+                  },
+                  {
+                      "id":  "EDITOR-I",
+                      "tier":  "I",
+                      "description":  "L05: the real Starforge editor driven through 200 UI cycles. Needs a GPU and an interactive desktop session; \u0027editor-ui\u0027 is reported absent on every headless runner.",
+                      "requires":  [
+                                       "windows",
+                                       "gpu-gl",
+                                       "editor-ui"
+                                   ],
+                      "transport":  "none",
+                      "seed":  null,
+                      "start_utc":  "2026-09-20T07:15:20.5383412Z",
+                      "deadline_sec":  900,
+                      "exercised":  "production",
+                      "verdict":  "ENVIRONMENT_BLOCKED",
+                      "detail":  "missing capability: editor-ui",
+                      "duration_sec":  0,
+                      "end_utc":  "2026-09-20T07:15:20.5383412Z"
+                  },
+                  {
+                      "id":  "SOAK-Q",
+                      "tier":  "Q",
+                      "description":  "S01: the two-hour SF_Telem soak on a live stream (record/autosave/export, screen switches, a defined disconnect/reconnect sequence, final close). Requires real serial equipment, which this campaign reports absent by standing policy, so it is ENVIRONMENT_BLOCKED in every automated profile and is only ever run by hand.",
+                      "requires":  [
+                                       "windows",
+                                       "gpu-gl",
+                                       "serial-device"
+                                   ],
+                      "transport":  "none",
+                      "seed":  null,
+                      "start_utc":  "2026-09-20T07:15:20.5393415Z",
+                      "deadline_sec":  600,
+                      "exercised":  "production",
+                      "verdict":  "ENVIRONMENT_BLOCKED",
+                      "detail":  "missing capability: serial-device",
+                      "duration_sec":  0,
+                      "end_utc":  "2026-09-20T07:15:20.5403444Z"
+                  }
+              ]
+}

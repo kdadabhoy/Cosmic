@@ -1,0 +1,189 @@
+﻿{
+    "manifest":  "ap01-units",
+    "profile":  "release",
+    "tier_filter":  [
+
+                    ],
+    "config":  "Release",
+    "mode":  "2D",
+    "generated_utc":  "2026-09-20T07:59:44.2959330Z",
+    "git":  {
+                "commit":  "fa1223a88629319a927304d7c6dbb04401c3604a",
+                "dirty":  true,
+                "dirty_diff_sha256":  null
+            },
+    "environment":  {
+                        "os_caption":  "Microsoft Windows 11 Education",
+                        "os_version":  "10.0.26200",
+                        "os_build":  "26200",
+                        "os_display":  "26200.9457",
+                        "cpu_name":  "AMD Ryzen 7 7800X3D 8-Core Processor",
+                        "cpu_cores":  8,
+                        "cpu_threads":  16,
+                        "cpu_addr_width":  64,
+                        "cpu_isa_floor":  "SSE4.2 (D-CPU); see evidence/WO-02/cpu-isa-probe.txt",
+                        "ram_bytes":  33462239232,
+                        "ram_gib":  31.2,
+                        "gpus":  [
+                                     {
+                                         "name":  "NVIDIA GeForce RTX 5070 Ti",
+                                         "driver":  "32.0.16.1692",
+                                         "driver_date":  "\/Date(1788480000000)\/"
+                                     },
+                                     {
+                                         "name":  "AMD Radeon(TM) Graphics",
+                                         "driver":  "32.0.21045.5002",
+                                         "driver_date":  "\/Date(1786924800000)\/"
+                                     }
+                                 ],
+                        "opengl_version":  null,
+                        "powershell":  "5.1.26100.9444",
+                        "hostname":  "DESKTOP-SEOA4BT"
+                    },
+    "capabilities":  {
+                         "windows":  true,
+                         "cpu-sse42":  true,
+                         "gpu-gl":  true,
+                         "serial-device":  false,
+                         "editor-ui":  false,
+                         "audio-device":  true,
+                         "render-tests":  true
+                     },
+    "forced_unavailable":  [
+
+                           ],
+    "bin_dir":  "C:\\dev\\Cosmic\\build\\Runtime\\Release",
+    "run_temp":  "C:\\dev\\Cosmic\\build\\_temp\\apq1\\cosmic-accept-554e88b106694e45abb9142724a9dcf0",
+    "golden_dir":  "C:\\dev\\Cosmic\\tests\\acceptance\\goldens",
+    "golden_before":  {
+                          ".gitkeep-golden.txt":  "8e92944b7b4e999a32148948af2a13498ece10d56133c62c5c84431f2d335118"
+                      },
+    "golden_after":  {
+                         ".gitkeep-golden.txt":  "8e92944b7b4e999a32148948af2a13498ece10d56133c62c5c84431f2d335118"
+                     },
+    "golden_mutated":  false,
+    "acceptance_mode":  true,
+    "counts":  {
+                   "total":  4,
+                   "passed":  4,
+                   "failed":  0,
+                   "blocked":  0
+               },
+    "self_test":  {
+                      "enabled":  false,
+                      "failures":  [
+
+                                   ]
+                  },
+    "cases":  [
+                  {
+                      "id":  "V01",
+                      "tier":  "U",
+                      "description":  "DataBus (contract section 1), headless: number/bool/string round-trips and coercions; Set creates; history ring wraps at capacity (oldest dropped, order preserved) and the capacity rules; History(window) boundary inclusive; Age before/after Advance; Producer follows SetProducer; Subscribe/SubscribeAny fire once per Set with the stored value; unsubscribe-during-dispatch prevents the call and subscribe-during-dispatch misses the in-flight value; nested Set allowed with the depth-65 dispatch dropped under ONE warning; Clear keeps subscriptions; non-finite stored; every method safe on an empty bus; 100,000 Set on 100 channels timed (MESSAGE, not gating).",
+                      "requires":  [
+                                       "windows"
+                                   ],
+                      "transport":  "none",
+                      "seed":  null,
+                      "start_utc":  "2026-09-20T07:59:41.0322682Z",
+                      "deadline_sec":  180,
+                      "exercised":  "fixture",
+                      "fixture":  "C:\\dev\\Cosmic\\tests\\acceptance\\..\\..\\tests\\test_databus.cpp",
+                      "fixture_sha256":  "094a1c1af642a115eea4e89ca2a63cafd60b891b2c1181a522a64afcc55243a8",
+                      "command":  "powershell -NoProfile -ExecutionPolicy Bypass -File C:\\dev\\Cosmic\\tests\\acceptance\\fixtures\\Run-WO10Case.ps1 -Bin C:\\dev\\Cosmic\\build\\Runtime\\Release -CaseId V01 -TestSuite \"AP-01 V01 DataBus\" -MinTests 13 -DeadlineSec 120 -Output C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-01\\v01-Release",
+                      "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-Q1\\manifests-Release-final\\ap01-units\\V01.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-Q1\\manifests-Release-final\\ap01-units\\V01.err.log",
+                      "pid":  19924,
+                      "exit_code":  0,
+                      "crash":  false,
+                      "tests_passed":  13,
+                      "tests_expected_min":  13,
+                      "verdict":  "PASSED",
+                      "detail":  "exit 0 as expected",
+                      "duration_sec":  0.647,
+                      "end_utc":  "2026-09-20T07:59:41.6844030Z"
+                  },
+                  {
+                      "id":  "V02-U",
+                      "tier":  "U",
+                      "description":  "ServiceHost with in-exe CS_SERVICE registrations (contract section 2) plus the 20-cycle GameModule half of the W part: instantiation order (registration, then Order); OnAttach after all constructed and before BindScene; Tick/FixedTick/DispatchSignal bracket Producer (nesting-safe); BindScene unsubscribes/subscribes and calls OnSceneChanged(old, new); 50 scene swaps keep the same instances and still deliver OnSignal; Destroy in reverse order; Instantiate re-entry destroys first; UnregisterModule strips services; PanelRegistry + the CS_PANEL call site; DispatchEvent; AP01ServiceFixture.dll loaded/unloaded 20 times through the REAL Starforge GameModule TU with a test-owned DataBus whose values, history and producers persist across the reloads, OnDetach stamped before the DLL\u0027s static destructor (FreeLibrary), no callback after unload while the same bus/scene paths still reach exe listeners.",
+                      "requires":  [
+                                       "windows"
+                                   ],
+                      "transport":  "none",
+                      "seed":  null,
+                      "start_utc":  "2026-09-20T07:59:41.7054018Z",
+                      "deadline_sec":  240,
+                      "exercised":  "fixture",
+                      "fixture":  "C:\\dev\\Cosmic\\tests\\acceptance\\..\\..\\tests\\AP01ServiceFixture.cpp",
+                      "fixture_sha256":  "307a3f8e6bb22ab074e8d6423f1c30fbf617cbbd41cd437cf5c0c4ce58f4563a",
+                      "command":  "powershell -NoProfile -ExecutionPolicy Bypass -File C:\\dev\\Cosmic\\tests\\acceptance\\fixtures\\Run-WO10Case.ps1 -Bin C:\\dev\\Cosmic\\build\\Runtime\\Release -CaseId V02-U -TestSuite \"AP-01 V02 ServiceHost\" -MinTests 10 -DeadlineSec 180 -Output C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-01\\v02u-Release",
+                      "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-Q1\\manifests-Release-final\\ap01-units\\V02-U.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-Q1\\manifests-Release-final\\ap01-units\\V02-U.err.log",
+                      "pid":  35876,
+                      "exit_code":  0,
+                      "crash":  false,
+                      "tests_passed":  10,
+                      "tests_expected_min":  10,
+                      "verdict":  "PASSED",
+                      "detail":  "exit 0 as expected",
+                      "duration_sec":  0.576,
+                      "end_utc":  "2026-09-20T07:59:42.2819731Z"
+                  },
+                  {
+                      "id":  "V02-W-PLAYER",
+                      "tier":  "W",
+                      "description":  "The W part through the REAL Application / PlayerLayer path: AP01ServiceFixture.dll (CS_MODULE_END\u0027s CreatePluginLayer returns the real PlayerLayer) loaded and unloaded 20 times with TransitionToLauncher / TransitionFromLauncherToWorkspace; every cycle the PlayerLayer instantiates the module\u0027s service after the manifest read, ticks it inside the producer bracket, destroys it in OnDetach before UnregisterModule and the DLL\u0027s static destructor (one shared sequence), no callback after unload, the ModuleRegistry clean after the last unload. Isolated CWD (the Application writes logs/ + imgui.ini).",
+                      "requires":  [
+                                       "windows",
+                                       "gpu-gl"
+                                   ],
+                      "transport":  "none",
+                      "seed":  null,
+                      "start_utc":  "2026-09-20T07:59:42.2829790Z",
+                      "deadline_sec":  240,
+                      "exercised":  "fixture",
+                      "fixture":  "C:\\dev\\Cosmic\\tests\\acceptance\\..\\..\\tests\\AP01ServiceFixture.cpp",
+                      "fixture_sha256":  "307a3f8e6bb22ab074e8d6423f1c30fbf617cbbd41cd437cf5c0c4ce58f4563a",
+                      "command":  "powershell -NoProfile -ExecutionPolicy Bypass -File C:\\dev\\Cosmic\\tests\\acceptance\\fixtures\\Run-WO10Case.ps1 -Bin C:\\dev\\Cosmic\\build\\Runtime\\Release -CaseId V02-W-PLAYER -TestCase \"V02 W host*\" -NoSkip -IsolateCwd -Tier W -Requires windows,gpu-gl -MinTests 1 -DeadlineSec 180 -Output C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-01\\v02w-Release",
+                      "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-Q1\\manifests-Release-final\\ap01-units\\V02-W-PLAYER.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-Q1\\manifests-Release-final\\ap01-units\\V02-W-PLAYER.err.log",
+                      "pid":  2200,
+                      "exit_code":  0,
+                      "crash":  false,
+                      "tests_passed":  1,
+                      "tests_expected_min":  1,
+                      "verdict":  "PASSED",
+                      "detail":  "exit 0 as expected",
+                      "duration_sec":  1.428,
+                      "end_utc":  "2026-09-20T07:59:43.7104298Z"
+                  },
+                  {
+                      "id":  "V06",
+                      "tier":  "U",
+                      "description":  "Flow additions (contract section 5) and the Data() proxy (section 2): channel guards for all six ops on number/bool/string, missing channel and bus-less machine false with one warning per guard; \u0027on\u0027:\u0027when\u0027 fires at most once per OnUpdate, after the signal drain, before timers, never without a guard (Validate reports it); StartAt enters the named state and falls back to Start; FlowKeyBridge::KeyCodeFor table, rising edge per key over an injected probe, unknown names warn once; KeySignals distinct; v1 and v2 files save byte-identical to the AP-05B binary\u0027s output, \u0027channel\u0027 only when non-empty, \u0027when\u0027 verbatim; Data() no-ops without a bus and reads/writes with one on ScriptableEntity and SystemScript.",
+                      "requires":  [
+                                       "windows"
+                                   ],
+                      "transport":  "none",
+                      "seed":  null,
+                      "start_utc":  "2026-09-20T07:59:43.7114282Z",
+                      "deadline_sec":  180,
+                      "exercised":  "fixture",
+                      "fixture":  "C:\\dev\\Cosmic\\tests\\acceptance\\..\\..\\tests\\test_flow_channels.cpp",
+                      "fixture_sha256":  "71fb39c74a1f800c0c186493e896be70a4e0ee2c58c1415d708dd9aef8eb99dd",
+                      "command":  "powershell -NoProfile -ExecutionPolicy Bypass -File C:\\dev\\Cosmic\\tests\\acceptance\\fixtures\\Run-WO10Case.ps1 -Bin C:\\dev\\Cosmic\\build\\Runtime\\Release -CaseId V06 -TestSuite \"AP-01 V06*\" -MinTests 10 -DeadlineSec 120 -Output C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-01\\v06-Release",
+                      "stdout_log":  "C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-Q1\\manifests-Release-final\\ap01-units\\V06.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-Q1\\manifests-Release-final\\ap01-units\\V06.err.log",
+                      "pid":  30880,
+                      "exit_code":  0,
+                      "crash":  false,
+                      "tests_passed":  10,
+                      "tests_expected_min":  10,
+                      "verdict":  "PASSED",
+                      "detail":  "exit 0 as expected",
+                      "duration_sec":  0.575,
+                      "end_utc":  "2026-09-20T07:59:44.2869353Z"
+                  }
+              ]
+}

@@ -1,0 +1,89 @@
+
+**manifests-Debug** (`C:/dev/Cosmic/docs/plans/app-platform-2026-09-18/evidence/AP-Q1/manifests-Debug`)
+
+| Manifest | Profile | Cfg | Case | Tier | Verdict | Exit | Tests | s | Commit | Detail |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| ap01-units | release | Debug | V01 | U | PASSED | 0 | 13 | 0.7 | fa1223a | exit 0 as expected |
+| ap01-units | release | Debug | V02-U | U | PASSED | 0 | 10 | 0.7 | fa1223a | exit 0 as expected |
+| ap01-units | release | Debug | V02-W-PLAYER | W | PASSED | 0 | 1 | 1.8 | fa1223a | exit 0 as expected |
+| ap01-units | release | Debug | V06 | U | PASSED | 0 | 10 | 0.6 | fa1223a | exit 0 as expected |
+| ap02-gpu | release | Debug | V03 | G | PASSED | 0 | 7 | 1.0 | fa1223a | exit 0 as expected |
+| ap02-gpu | release | Debug | E05 | G | PASSED | 0 | 1 | 0.9 | fa1223a | exit 0 as expected |
+| ap02-units | release | Debug | V04 | U | PASSED | 0 | 11 | 0.7 | fa1223a | exit 0 as expected |
+| ap03-editor | release | Debug | AP03-EDITOR | I | PASSED | 0 | 2 | 105.0 | fa1223a | exit 0 as expected |
+| ap04-units | release | Debug | Y01-U | U | PASSED | 0 | 5 | 1.0 | fa1223a | exit 0 as expected |
+| ap04-units | release | Debug | F02-U | U | PASSED | 0 | 3 | 0.8 | fa1223a | exit 0 as expected |
+| ap04-units | release | Debug | E01-U | U | PASSED | 0 | 6 | 0.7 | fa1223a | exit 0 as expected |
+| ap05-purge | release | Debug | B06 | U | PASSED | 0 | 5 | 4.4 | fa1223a | exit 0 as expected |
+| pr-units | pr | Debug | T01-PC-text | U | PASSED | 0 | 33 | 0.3 | fa1223a | exit 0 as expected |
+| pr-units | pr | Debug | T02-PC-faults | U | PASSED | 0 | 1 | 0.1 | fa1223a | exit 0 as expected |
+| pr-units | pr | Debug | T03-write-close | U | PASSED | 0 | 1 | 0.1 | fa1223a | exit 0 as expected |
+| pr-units | pr | Debug | T03-late-open | U | PASSED | 0 | 1 | 11.2 | fa1223a | exit 0 as expected |
+| pr-units | pr | Debug | T03-owner-cancel | U | PASSED | 0 | 1 | 11.0 | fa1223a | exit 0 as expected |
+| pr-units | pr | Debug | T06-burst-reconnect | U | PASSED | 0 | 8 | 0.4 | fa1223a | exit 0 as expected |
+| pr-units | pr | Debug | D01 | U | PASSED | 0 | 1 | 0.1 | fa1223a | exit 0 as expected |
+| pr-units | pr | Debug | D01-IDEMPOTENT | U | PASSED | 0 | 1 | 0.4 | fa1223a | exit 0 as expected |
+| pr-units | pr | Debug | D02 | U | PASSED | 0 | 3 | 0.1 | fa1223a | exit 0 as expected |
+| pr-units | pr | Debug | D03 | U | PASSED | 0 | 2 | 2.1 | fa1223a | exit 0 as expected |
+| pr-units | pr | Debug | D04 | U | PASSED | 0 | 3 | 0.5 | fa1223a | exit 0 as expected |
+| pr-units | pr | Debug | R04-U | U | PASSED | 0 | 8 | 0.1 | fa1223a | exit 0 as expected |
+| pr-units | pr | Debug | R06-U | U | PASSED | 0 | 4 | 0.1 | fa1223a | exit 0 as expected |
+| pr-units | pr | Debug | N02-U | U | PASSED | 0 | 3 | 4.0 | fa1223a | exit 0 as expected |
+| pr-units | pr | Debug | N03 | U | PASSED | 0 | 7 | 0.6 | fa1223a | exit 0 as expected |
+| pr-units | pr | Debug | N04 | U | PASSED | 0 | 3 | 0.8 | fa1223a | exit 0 as expected |
+| pr-units | pr | Debug | N04-FILTERS | U | PASSED | 0 | 9 | 0.7 | fa1223a | exit 0 as expected |
+| pr-units | pr | Debug | N04-LOOKUP | U | PASSED | 0 | 7 | 0.7 | fa1223a | exit 0 as expected |
+| pr-units | pr | Debug | N04-SCENE | U | PASSED | 0 | 2 | 0.8 | fa1223a | exit 0 as expected |
+| pr-windows | pr | Debug | D05 | W | PASSED | 0 | 8 | 0.3 | fa1223a | exit 0 as expected |
+| pr-windows | pr | Debug | D06 | W | PASSED | 0 | 5 | 0.2 | fa1223a | exit 0 as expected |
+| pr-windows | pr | Debug | D01-genuine-SF-Stable | W | ENVIRONMENT_BLOCKED |  |  | 0 | fa1223a | missing capability: sf-stable-v1-capture |
+| wo05 | pr | Debug | T01-PC-text | U | PASSED | 0 | 33 | 0.3 | fa1223a | exit 0 as expected |
+| wo05 | pr | Debug | T03-root-matrix | U | PASSED | 0 | 1 | 167.4 | fa1223a | exit 0 as expected |
+| wo05 | pr | Debug | T03-late-open | U | PASSED | 0 | 1 | 11.2 | fa1223a | exit 0 as expected |
+| wo05 | pr | Debug | T03-write-close | U | PASSED | 0 | 1 | 0.1 | fa1223a | exit 0 as expected |
+| wo05 | pr | Debug | Retained-suite | U | PASSED | 0 | 507 | 146.9 | fa1223a | exit 0 as expected |
+| wo05 | pr | Debug | T03-owner-cancel | U | PASSED | 0 | 1 | 11.1 | fa1223a | exit 0 as expected |
+| wo06 | pr | Debug | D01 | U | PASSED | 0 | 1 | 0.1 | fa1223a | exit 0 as expected |
+| wo06 | pr | Debug | D02 | U | PASSED | 0 | 3 | 0.1 | fa1223a | exit 0 as expected |
+| wo06 | pr | Debug | D03 | U | PASSED | 0 | 2 | 1.8 | fa1223a | exit 0 as expected |
+| wo06 | pr | Debug | D04 | U | PASSED | 0 | 3 | 0.5 | fa1223a | exit 0 as expected |
+| wo06 | pr | Debug | D05 | W | PASSED | 0 | 8 | 0.2 | fa1223a | exit 0 as expected |
+| wo06 | pr | Debug | D06 | W | PASSED | 0 | 5 | 0.2 | fa1223a | exit 0 as expected |
+| wo06 | pr | Debug | D05-two-hour | W | PASSED | 0 | 1 | 16.2 | fa1223a | exit 0 as expected |
+| wo07-p01 | release | Debug | P01 | G | PASSED | 0 | 3 | 7.8 | fa1223a | exit 0 as expected |
+| wo08-units | release | Debug | R04-U | U | PASSED | 0 | 8 | 0.1 | fa1223a | exit 0 as expected |
+| wo08-units | release | Debug | R06-U | U | PASSED | 0 | 4 | 0.1 | fa1223a | exit 0 as expected |
+| wo09-units | release | Debug | C01-U | U | PASSED | 0 | 8 | 21.5 | fa1223a | exit 0 as expected |
+| wo09-units | release | Debug | C02-U | U | PASSED | 0 | 5 | 4.2 | fa1223a | exit 0 as expected |
+| wo09-units | release | Debug | C03-U | U | PASSED | 0 | 6 | 38.6 | fa1223a | exit 0 as expected |
+| wo09-units | release | Debug | C04 | U | PASSED | 0 | 8 | 22.3 | fa1223a | exit 0 as expected |
+| wo09-units | release | Debug | C05-U | U | PASSED | 0 | 7 | 66.2 | fa1223a | exit 0 as expected |
+| wo09-units | release | Debug | C05-XB | U | PASSED | 0 | 3 | 0.6 | fa1223a | exit 0 as expected |
+| wo09-units | release | Debug | C06-U | U | PASSED | 0 | 6 | 0.9 | fa1223a | exit 0 as expected |
+| wo09-units | release | Debug | C06-AUDIO | W | PASSED | 0 | 1 | 1.0 | fa1223a | exit 0 as expected |
+| wo10-host | release | Debug | N01-30hz | W | PASSED | 0 | 1 | 1.3 | fa1223a | exit 0 as expected |
+| wo10-host | release | Debug | N01-60hz | W | PASSED | 0 | 1 | 1.3 | fa1223a | exit 0 as expected |
+| wo10-host | release | Debug | N01-144hz | W | PASSED | 0 | 1 | 1.6 | fa1223a | exit 0 as expected |
+| wo10-host | release | Debug | N01-irregular | W | PASSED | 0 | 1 | 1.1 | fa1223a | exit 0 as expected |
+| wo10-host | release | Debug | N01-speed0 | W | PASSED | 0 | 1 | 1.2 | fa1223a | exit 0 as expected |
+| wo10-host | release | Debug | N01-speed025 | W | PASSED | 0 | 1 | 1.2 | fa1223a | exit 0 as expected |
+| wo10-host | release | Debug | N01-speed4 | W | PASSED | 0 | 1 | 1.2 | fa1223a | exit 0 as expected |
+| wo10-host | release | Debug | N01-pause | W | PASSED | 0 | 1 | 1.2 | fa1223a | exit 0 as expected |
+| wo10-host | release | Debug | N01-stall | W | PASSED | 0 | 1 | 1.3 | fa1223a | exit 0 as expected |
+| wo10-host | release | Debug | N01-local-quarter | W | PASSED | 0 | 1 | 1.3 | fa1223a | exit 0 as expected |
+| wo10-host | release | Debug | N01-global-quarter | W | PASSED | 0 | 1 | 1.3 | fa1223a | exit 0 as expected |
+| wo10-host | release | Debug | N02-origin-0 | W | PASSED | 0 | 1 | 1.8 | fa1223a | exit 0 as expected |
+| wo10-host | release | Debug | N02-origin-2h | W | PASSED | 0 | 1 | 1.8 | fa1223a | exit 0 as expected |
+| wo10-host | release | Debug | N02-origin-24h | W | PASSED | 0 | 1 | 1.9 | fa1223a | exit 0 as expected |
+| wo10-host | release | Debug | N02-policy-hz | W | PASSED | 0 | 1 | 1.4 | fa1223a | exit 0 as expected |
+| wo10-host | release | Debug | N02-policy-scale-nan | W | PASSED | 0 | 1 | 1.2 | fa1223a | exit 0 as expected |
+| wo10-host | release | Debug | N02-policy-scale-negative | W | PASSED | 0 | 1 | 1.2 | fa1223a | exit 0 as expected |
+| wo10-host | release | Debug | N02-policy-scale-inf | W | PASSED | 0 | 1 | 1.1 | fa1223a | exit 0 as expected |
+| wo10-units | release | Debug | N02-U | U | PASSED | 0 | 3 | 3.8 | fa1223a | exit 0 as expected |
+| wo10-units | release | Debug | N03 | U | PASSED | 0 | 7 | 0.7 | fa1223a | exit 0 as expected |
+| wo10-units | release | Debug | N04 | U | PASSED | 0 | 3 | 0.8 | fa1223a | exit 0 as expected |
+| wo10-units | release | Debug | N04-FILTERS | U | PASSED | 0 | 9 | 0.6 | fa1223a | exit 0 as expected |
+| wo10-units | release | Debug | N04-LOOKUP | U | PASSED | 0 | 7 | 0.6 | fa1223a | exit 0 as expected |
+| wo10-units | release | Debug | N04-SCENE | U | PASSED | 0 | 2 | 0.7 | fa1223a | exit 0 as expected |
+
+Counts: {'PASSED': 81, 'ENVIRONMENT_BLOCKED': 1}
