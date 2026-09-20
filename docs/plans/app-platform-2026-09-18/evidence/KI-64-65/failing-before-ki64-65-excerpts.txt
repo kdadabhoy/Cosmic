@@ -1,0 +1,153 @@
+﻿# failing-before: CosmicTests.exe -ts="KI-64/65 pointer mapping" (Release) at 505148b + the fix/test diff, with an ISOLATED temporary patch:
+#   UiSystem::MapPointerToCanvas returns the screen pointer unmapped (the pre-68e482a / KI-61 window-client expression)
+#   UiSystem::Update hit-tests a slider by it->Rect only (the unfixed KI-65 code)
+# exit code 1
+# 2026-09-20T03:07:29
+
+[doctest] doctest version is "2.4.12"
+[doctest] run with "--help" for options
+===============================================================================
+C:\dev\Cosmic\build\_lanes\ptr\tests\test_ui_widgets.cpp(922):
+TEST SUITE: KI-64/65 pointer mapping
+TEST CASE:  KI-64 MapPointerToCanvas: chrome offset, framebuffer scale, identity, degenerate sizes
+
+C:\dev\Cosmic\build\_lanes\ptr\tests\test_ui_widgets.cpp(927): ERROR: CHECK( UiSystem::MapPointerToCanvas({ 1280.0f, 1044.0f }, { 0.0f, 54.0f }, { 2560.0f, 1338.0f }, { 2560.0f, 1338.0f }) == glm::vec2(1280.0f, 990.0f) ) is NOT correct!
+  values: CHECK( {?} == {?} )
+
+C:\dev\Cosmic\build\_lanes\ptr\tests\test_ui_widgets.cpp(928): ERROR: CHECK( UiSystem::MapPointerToCanvas({ 300.0f, 254.0f }, { 100.0f, 54.0f }, { 640.0f, 480.0f }, { 640.0f, 480.0f }) == glm::vec2(200.0f, 200.0f) ) is NOT correct!
+  values: CHECK( {?} == {?} )
+
+C:\dev\Cosmic\build\_lanes\ptr\tests\test_ui_widgets.cpp(931): ERROR: CHECK( hi.x == doctest::Approx(960.0f) ) is NOT correct!
+  values: CHECK( 640 == Approx( 960 ) )
+
+C:\dev\Cosmic\build\_lanes\ptr\tests\test_ui_widgets.cpp(932): ERROR: CHECK( hi.y == doctest::Approx(540.0f) ) is NOT correct!
+  values: CHECK( 414 == Approx( 540 ) )
+
+C:\dev\Cosmic\build\_lanes\ptr\tests\test_ui_widgets.cpp(934): ERROR: CHECK( UiSystem::MapPointerToCanvas({ 400.0f, 300.0f }, { 0.0f, 0.0f }, { 800.0f, 600.0f }, { 400.0f, 300.0f }) == glm::vec2(200.0f, 150.0f) ) is NOT correct!
+  values: CHECK( {?} == {?} )
+
+C:\dev\Cosmic\build\_lanes\ptr\tests\test_ui_widgets.cpp(937): ERROR: CHECK( dg == glm::vec2(40.0f, 50.0f) ) is NOT correct!
+  values: CHECK( {?} == {?} )
+
+===============================================================================
+C:\dev\Cosmic\build\_lanes\ptr\tests\test_ui_widgets.cpp(941):
+TEST SUITE: KI-64/65 pointer mapping
+TEST CASE:  KI-64 buttons: a pointer mapped from screen space hits the button it points at under a chrome offset, a 1.5x framebuffer scale and a letterbox band; the pre-fix window-client pointer hits the row below
+  (b) chrome offset — Kaden's maximized window, cursor on Settings' centre
+
+C:\dev\Cosmic\build\_lanes\ptr\tests\test_ui_widgets.cpp(954): ERROR: CHECK( h.State(h.settings) == UiButtonState::Hover ) is NOT correct!
+  values: CHECK( 0 == 1 )
+
+C:\dev\Cosmic\build\_lanes\ptr\tests\test_ui_widgets.cpp(970): ERROR: CHECK( h.State(h.settings) == UiButtonState::Normal ) is NOT correct!
+  values: CHECK( 1 == 0 )
+
+C:\dev\Cosmic\build\_lanes\ptr\tests\test_ui_widgets.cpp(980): ERROR: CHECK( settingsFires == 1 ) is NOT correct!
+  values: CHECK( 0 == 1 )
+
+===============================================================================
+C:\dev\Cosmic\build\_lanes\ptr\tests\test_ui_widgets.cpp(941):
+TEST SUITE: KI-64/65 pointer mapping
+TEST CASE:  KI-64 buttons: a pointer mapped from screen space hits the button it points at under a chrome offset, a 1.5x framebuffer scale and a letterbox band; the pre-fix window-client pointer hits the row below
+  (a) 1.5x framebuffer scale — the presented image is smaller than the framebuffer
+
+C:\dev\Cosmic\build\_lanes\ptr\tests\test_ui_widgets.cpp(993): ERROR: CHECK( h.State(h.settings) == UiButtonState::Hover ) is NOT correct!
+  values: CHECK( 0 == 1 )
+
+===============================================================================
+C:\dev\Cosmic\build\_lanes\ptr\tests\test_ui_widgets.cpp(941):
+TEST SUITE: KI-64/65 pointer mapping
+TEST CASE:  KI-64 buttons: a pointer mapped from screen space hits the button it points at under a chrome offset, a 1.5x framebuffer scale and a letterbox band; the pre-fix window-client pointer hits the row below
+  (c) letterbox band — canvases laid out in a 4:3 band of a 16:9 target
+
+C:\dev\Cosmic\build\_lanes\ptr\tests\test_ui_widgets.cpp(1013): ERROR: CHECK( h.State(h.settings) == UiButtonState::Hover ) is NOT correct!
+  values: CHECK( 0 == 1 )
+
+===============================================================================
+C:\dev\Cosmic\build\_lanes\ptr\tests\test_ui_widgets.cpp(1021):
+TEST SUITE: KI-64/65 pointer mapping
+TEST CASE:  KI-64 slider knobs: the same three mappings grab the knob centre and refuse 1 px above the knob's top where the rect is not
+
+C:\dev\Cosmic\build\_lanes\ptr\tests\test_ui_widgets.cpp(1048): ERROR: CHECK( sl.Dragging ) is NOT correct!
+  values: CHECK( false )
+  logged: 00007FF7B58E2088
+
+C:\dev\Cosmic\build\_lanes\ptr\tests\test_ui_widgets.cpp(1052): ERROR: CHECK( bus.GetNumber("gain") == doctest::Approx(0.75) ) is NOT correct!
+  values: CHECK( 0.5 == Approx( 0.75 ) )
+  logged: 00007FF7B58E2088
+
+C:\dev\Cosmic\build\_lanes\ptr\tests\test_ui_widgets.cpp(1048): ERROR: CHECK( sl.Dragging ) is NOT correct!
+  values: CHECK( false )
+  logged: 00007FF7B58E20A0
+
+C:\dev\Cosmic\build\_lanes\ptr\tests\test_ui_widgets.cpp(1052): ERROR: CHECK( bus.GetNumber("gain") == doctest::Approx(0.75) ) is NOT correct!
+  values: CHECK( 0.5 == Approx( 0.75 ) )
+  logged: 00007FF7B58E20A0
+
+C:\dev\Cosmic\build\_lanes\ptr\tests\test_ui_widgets.cpp(1048): ERROR: CHECK( sl.Dragging ) is NOT correct!
+  values: CHECK( false )
+  logged: 00007FF7B58E20B8
+
+C:\dev\Cosmic\build\_lanes\ptr\tests\test_ui_widgets.cpp(1052): ERROR: CHECK( bus.GetNumber("gain") == doctest::Approx(0.75) ) is NOT correct!
+  values: CHECK( 0.5 == Approx( 0.75 ) )
+  logged: 00007FF7B58E20B8
+
+C:\dev\Cosmic\build\_lanes\ptr\tests\test_ui_widgets.cpp(1048): ERROR: CHECK( sl.Dragging ) is NOT correct!
+  values: CHECK( false )
+  logged: 00007FF7B58E20D8
+
+C:\dev\Cosmic\build\_lanes\ptr\tests\test_ui_widgets.cpp(1052): ERROR: CHECK( bus.GetNumber("gain") == doctest::Approx(0.75) ) is NOT correct!
+  values: CHECK( 0.5 == Approx( 0.75 ) )
+  logged: 00007FF7B58E20D8
+
+===============================================================================
+C:\dev\Cosmic\build\_lanes\ptr\tests\test_ui_widgets.cpp(1021):
+TEST SUITE: KI-64/65 pointer mapping
+TEST CASE:  KI-64 slider knobs: the same three mappings grab the knob centre and refuse 1 px above the knob's top where the rect is not
+  PendulumLab's Gravity row in fullscreen: the knob the draw shows is the one the mapped press grabs; the unmapped press (27 px low) misses, the unmapped press 21 px above it grabs
+
+C:\dev\Cosmic\build\_lanes\ptr\tests\test_ui_widgets.cpp(1090): ERROR: CHECK( r.Sl().Dragging ) is NOT correct!
+  values: CHECK( false )
+
+===============================================================================
+C:\dev\Cosmic\build\_lanes\ptr\tests\test_ui_widgets.cpp(1105):
+TEST SUITE: KI-64/65 pointer mapping
+TEST CASE:  KI-65 slider knob larger than its track: a press on the knob's overhang grabs and drags, 1 px beyond the knob does not; SliderKnobRect is the drawn geometry (horizontal + vertical)
+  horizontal: 200 x 8 track, 24 px knob at 50 %
+
+C:\dev\Cosmic\build\_lanes\ptr\tests\test_ui_widgets.cpp(1127): ERROR: CHECK( sl.Dragging ) is NOT correct!
+  values: CHECK( false )
+
+C:\dev\Cosmic\build\_lanes\ptr\tests\test_ui_widgets.cpp(1129): ERROR: CHECK( bus.GetNumber("gain") == doctest::Approx(0.75) ) is NOT correct!
+  values: CHECK( 0.5 == Approx( 0.75 ) )
+
+C:\dev\Cosmic\build\_lanes\ptr\tests\test_ui_widgets.cpp(1139): ERROR: CHECK( sl.Dragging ) is NOT correct!
+  values: CHECK( false )
+
+C:\dev\Cosmic\build\_lanes\ptr\tests\test_ui_widgets.cpp(1153): ERROR: CHECK( UiSystem::Update(s, kViewport, Idle({ 150.0f, 95.0f }), nullptr, &bus) ) is NOT correct!
+  values: CHECK( false )
+
+===============================================================================
+C:\dev\Cosmic\build\_lanes\ptr\tests\test_ui_widgets.cpp(1105):
+TEST SUITE: KI-64/65 pointer mapping
+TEST CASE:  KI-65 slider knob larger than its track: a press on the knob's overhang grabs and drags, 1 px beyond the knob does not; SliderKnobRect is the drawn geometry (horizontal + vertical)
+  vertical: 8 x 200 track, 24 px knob at 50 % (bottom = min)
+
+C:\dev\Cosmic\build\_lanes\ptr\tests\test_ui_widgets.cpp(1174): ERROR: CHECK( sl.Dragging ) is NOT correct!
+  values: CHECK( false )
+
+C:\dev\Cosmic\build\_lanes\ptr\tests\test_ui_widgets.cpp(1176): ERROR: CHECK( bus.GetNumber("level") == doctest::Approx(0.75) ) is NOT correct!
+  values: CHECK( 0.5 == Approx( 0.75 ) )
+
+===============================================================================
+C:\dev\Cosmic\build\_lanes\ptr\tests\test_ui_widgets.cpp(1105):
+TEST SUITE: KI-64/65 pointer mapping
+TEST CASE:  KI-65 slider knob larger than its track: a press on the knob's overhang grabs and drags, 1 px beyond the knob does not; SliderKnobRect is the drawn geometry (horizontal + vertical)
+  without a bus the knob sits at PreviewValue (what a bus-less host draws) and the hit region follows it; the slider stays inert
+
+C:\dev\Cosmic\build\_lanes\ptr\tests\test_ui_widgets.cpp(1192): ERROR: CHECK( UiSystem::Update(s, kViewport, Idle({ 300.0f, 95.0f })) ) is NOT correct!
+  values: CHECK( false )
+
+===============================================================================
+[doctest] test cases:  4 |  0 passed |  4 failed | 533 skipped
+[doctest] assertions: 95 | 68 passed | 27 failed |
+[doctest] Status: FAILURE!
