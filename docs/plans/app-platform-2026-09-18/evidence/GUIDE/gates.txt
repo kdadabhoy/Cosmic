@@ -1,0 +1,5 @@
+Release build (cmake --build build --config Release --parallel): exit 0, 0 warnings
+CosmicTests.exe Release: test cases:      519 |      519 passed | 0 failed | 14 skipped
+CosmicTests.exe Release: assertions: 23445485 | 23445485 passed | 0 failed |
+tests/check_gl_conformance.ps1: exit 0 - GL conformance: clean (no raw gl*/GL_* tokens outside the platform layer).
+tests/check_docs_coverage.ps1: exit 0 - Docs coverage: clean (127 public headers, 125 manifest rows, 6 reference chapter(s) still skeletons, 4 chapter(s) outside docs/reference/ so exempt from strict mode).

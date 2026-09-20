@@ -1,0 +1,13 @@
+==== C:\dev\Cosmic-ap-guide\dist\PendulumLab2\user\logs\App_2026-09-20_02-10-35.log
+==== C:\dev\Cosmic-ap-guide\dist\PendulumLab2\user\logs\Cosmic_2026-09-20_02-10-35.log
+[2026-09-20 02:10:35.985] [COSMIC] [info] Startup project requested: 'PendulumLab2' — skipping the Launcher.
+[2026-09-20 02:10:35.994] [COSMIC] [info] Config: loaded 'assets/projects/PendulumLab2/project.cproj'.
+[2026-09-20 02:10:36.000] [COSMIC] [info] PlayerLayer: running project 'PendulumLab2' (flow 'flows/Main.cflow', 240 Hz).
+[2026-09-20 02:10:36.000] [COSMIC] [info] WorkspaceLayer project name set to: 'PendulumLab2'
+[2026-09-20 02:10:36.000] [COSMIC] [info] Successfully loaded and mounted project DLL Layer!
+[2026-09-20 02:10:36.019] [COSMIC] [info] Font: loaded 'lucide' from cache (1024x71, 95 glyphs)
+[2026-09-20 02:10:36.025] [COSMIC] [info] Font: loaded 'Roboto-Bold' from cache (1024x257, 95 glyphs)
+[2026-09-20 02:10:36.031] [COSMIC] [info] Font: loaded 'Roboto-Medium' from cache (1024x255, 95 glyphs)
+[2026-09-20 02:10:36.040] [COSMIC] [info] Font: loaded 'Roboto-Regular' from cache (1024x256, 95 glyphs)
+[2026-09-20 02:10:51.515] [COSMIC] [warning] WorkspaceLayer: Clearing client layer: PlayerLayer
+[2026-09-20 02:10:51.515] [COSMIC] [info] Project DLL safely unmounted and unloaded.

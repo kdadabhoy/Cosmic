@@ -150,6 +150,12 @@ in the reference.
 | [`editor-ui-and-theming.md`](editor-ui-and-theming.md) | `ImGuiLayer`, the docking model, `ThemeManager`, fonts and Lucide icons, `Widgets`, `PlotStyle` | §27, §28 | D60 | ✅ 2026-07-26 |
 | [`building-and-shipping.md`](building-and-shipping.md) | The two build configurations, every CMake option, the build scripts, packaging, the installer, the exe icon and `VERSIONINFO`, what a shipped folder contains | §40 (Part II), §25 | D61 | ✅ 2026-07-26 |
 
+### Walkthroughs
+
+| Chapter | Covers | Retires | WO | Status |
+| --- | --- | --- | --- | --- |
+| [`pendulumlab-walkthrough.md`](pendulumlab-walkthrough.md) | Building the PendulumLab app from an empty **App** project in Starforge — screens, bound widgets, the flow with its channel-guarded overlay, the C++ service, the live loop, DataBus and source links — and exporting it with **File ▸ Package…**; pictures of the real editor, every step executed by `tests/acceptance/fixtures/Run-GuideWalkthrough.ps1` | *nothing* | AP guide | ✅ 2026-09-20 |
+
 **README §21 (The Template Project)** and **§25 (Complete API Reference Tables)** are retired
 without successors: the template is covered by `getting-started.md`, and the API tables are the
 reference tier's job. §21 was retired by **D50**; its heading keeps a pointer to

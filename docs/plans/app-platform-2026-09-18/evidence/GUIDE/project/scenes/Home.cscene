@@ -1,0 +1,742 @@
+{
+  "cosmic_scene": 1,
+  "entities": [
+    {
+      "components": {
+        "Camera": {
+          "Far": 1000.0,
+          "FovDeg": 60.0,
+          "Near": 0.10000000149011612,
+          "OrthoSize": 5.0,
+          "Primary": true,
+          "ProjectionType": 1
+        },
+        "Tag": {
+          "Tag": "Camera"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            0.0,
+            10.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "UseQuatRotation": false
+        }
+      },
+      "id": "2d18668100000001"
+    },
+    {
+      "components": {
+        "Canvas": {
+          "ReferenceHeight": 1080.0,
+          "ScaleMode": 1,
+          "SortOrder": 0
+        },
+        "NativeScript": {
+          "ClassName": "HomeScreen"
+        },
+        "Relationship": {
+          "Children": [
+            "2d18668100000004",
+            "2d18668100000005",
+            "2d18668100000006",
+            "2d18668100000007",
+            "2d18668100000008",
+            "2d18668100000009",
+            "2d1866810000000a"
+          ]
+        },
+        "Tag": {
+          "Tag": "Canvas"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "UseQuatRotation": false
+        },
+        "UiImage": {
+          "NineSlice": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "PreserveAspect": false,
+          "TexturePath": "",
+          "Tint": [
+            0.05999999865889549,
+            0.07000000029802322,
+            0.09000000357627869,
+            1.0
+          ]
+        }
+      },
+      "id": "2d18668100000002"
+    },
+    {
+      "components": {
+        "RectTransform": {
+          "AnchorMax": [
+            0.5,
+            0.4000000059604645
+          ],
+          "AnchorMin": [
+            0.5,
+            0.4000000059604645
+          ],
+          "OffsetMax": [
+            420.0,
+            50.0
+          ],
+          "OffsetMin": [
+            -420.0,
+            -50.0
+          ],
+          "Pivot": [
+            0.5,
+            0.5
+          ],
+          "ZOrder": 1
+        },
+        "Tag": {
+          "Tag": "Title"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "UseQuatRotation": false
+        },
+        "UiText": {
+          "Color": [
+            0.949999988079071,
+            0.9800000190734863,
+            1.0,
+            1.0
+          ],
+          "FontPath": "",
+          "HAlign": 1,
+          "SizePx": 72.0,
+          "Text": "PENDULUM LAB",
+          "VAlign": 1,
+          "Wrap": false
+        }
+      },
+      "id": "2d18668100000004"
+    },
+    {
+      "components": {
+        "RectTransform": {
+          "AnchorMax": [
+            0.5,
+            0.49000000953674316
+          ],
+          "AnchorMin": [
+            0.5,
+            0.49000000953674316
+          ],
+          "OffsetMax": [
+            420.0,
+            24.0
+          ],
+          "OffsetMin": [
+            -420.0,
+            -24.0
+          ],
+          "Pivot": [
+            0.5,
+            0.5
+          ],
+          "ZOrder": 1
+        },
+        "Tag": {
+          "Tag": "Subtitle"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "UseQuatRotation": false
+        },
+        "UiText": {
+          "Color": [
+            0.699999988079071,
+            0.7400000095367432,
+            0.8199999928474426,
+            1.0
+          ],
+          "FontPath": "",
+          "HAlign": 1,
+          "SizePx": 24.0,
+          "Text": "Physics in a C++ service, visuals authored in the editor, glued by the DataBus",
+          "VAlign": 1,
+          "Wrap": false
+        }
+      },
+      "id": "2d18668100000005"
+    },
+    {
+      "components": {
+        "RectTransform": {
+          "AnchorMax": [
+            0.5,
+            0.5600000023841858
+          ],
+          "AnchorMin": [
+            0.5,
+            0.5600000023841858
+          ],
+          "OffsetMax": [
+            200.0,
+            18.0
+          ],
+          "OffsetMin": [
+            -200.0,
+            -18.0
+          ],
+          "Pivot": [
+            0.5,
+            0.5
+          ],
+          "ZOrder": 1
+        },
+        "Tag": {
+          "Tag": "Period"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "UseQuatRotation": false
+        },
+        "UiText": {
+          "Color": [
+            0.6000000238418579,
+            0.800000011920929,
+            1.0,
+            1.0
+          ],
+          "FontPath": "",
+          "HAlign": 1,
+          "SizePx": 22.0,
+          "Text": "--",
+          "VAlign": 1,
+          "Wrap": false
+        },
+        "UiValueText": {
+          "Channel": "pendulum.period_est",
+          "Format": "%.3f",
+          "Placeholder": "--",
+          "Prefix": "Last period estimate: ",
+          "PreviewValue": 12.5,
+          "StaleAfter": 0.0,
+          "StaleColor": [
+            0.6000000238418579,
+            0.6000000238418579,
+            0.6000000238418579,
+            1.0
+          ],
+          "Suffix": " s"
+        }
+      },
+      "id": "2d18668100000006"
+    },
+    {
+      "components": {
+        "RectTransform": {
+          "AnchorMax": [
+            0.5,
+            0.6800000071525574
+          ],
+          "AnchorMin": [
+            0.5,
+            0.6800000071525574
+          ],
+          "OffsetMax": [
+            130.0,
+            28.0
+          ],
+          "OffsetMin": [
+            -130.0,
+            -28.0
+          ],
+          "Pivot": [
+            0.5,
+            0.5
+          ],
+          "ZOrder": 2
+        },
+        "Tag": {
+          "Tag": "StartButton"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "UseQuatRotation": false
+        },
+        "UiButton": {
+          "DisabledTint": [
+            0.5,
+            0.5,
+            0.5,
+            0.6000000238418579
+          ],
+          "HoverTint": [
+            1.149999976158142,
+            1.149999976158142,
+            1.149999976158142,
+            1.0
+          ],
+          "Interactable": true,
+          "NormalTint": [
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "PressedTint": [
+            0.800000011920929,
+            0.800000011920929,
+            0.800000011920929,
+            1.0
+          ],
+          "Signal": "start_clicked"
+        },
+        "UiImage": {
+          "NineSlice": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "PreserveAspect": false,
+          "TexturePath": "",
+          "Tint": [
+            0.1599999964237213,
+            0.1899999976158142,
+            0.25,
+            0.9200000166893005
+          ]
+        },
+        "UiText": {
+          "Color": [
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "FontPath": "",
+          "HAlign": 1,
+          "SizePx": 26.0,
+          "Text": "Start",
+          "VAlign": 1,
+          "Wrap": false
+        }
+      },
+      "id": "2d18668100000007"
+    },
+    {
+      "components": {
+        "RectTransform": {
+          "AnchorMax": [
+            0.5,
+            0.7699999809265137
+          ],
+          "AnchorMin": [
+            0.5,
+            0.7699999809265137
+          ],
+          "OffsetMax": [
+            130.0,
+            28.0
+          ],
+          "OffsetMin": [
+            -130.0,
+            -28.0
+          ],
+          "Pivot": [
+            0.5,
+            0.5
+          ],
+          "ZOrder": 2
+        },
+        "Tag": {
+          "Tag": "SettingsButton"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "UseQuatRotation": false
+        },
+        "UiButton": {
+          "DisabledTint": [
+            0.5,
+            0.5,
+            0.5,
+            0.6000000238418579
+          ],
+          "HoverTint": [
+            1.149999976158142,
+            1.149999976158142,
+            1.149999976158142,
+            1.0
+          ],
+          "Interactable": true,
+          "NormalTint": [
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "PressedTint": [
+            0.800000011920929,
+            0.800000011920929,
+            0.800000011920929,
+            1.0
+          ],
+          "Signal": "settings_clicked"
+        },
+        "UiImage": {
+          "NineSlice": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "PreserveAspect": false,
+          "TexturePath": "",
+          "Tint": [
+            0.1599999964237213,
+            0.1899999976158142,
+            0.25,
+            0.9200000166893005
+          ]
+        },
+        "UiText": {
+          "Color": [
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "FontPath": "",
+          "HAlign": 1,
+          "SizePx": 26.0,
+          "Text": "Settings",
+          "VAlign": 1,
+          "Wrap": false
+        }
+      },
+      "id": "2d18668100000008"
+    },
+    {
+      "components": {
+        "RectTransform": {
+          "AnchorMax": [
+            0.5,
+            0.8600000143051147
+          ],
+          "AnchorMin": [
+            0.5,
+            0.8600000143051147
+          ],
+          "OffsetMax": [
+            130.0,
+            28.0
+          ],
+          "OffsetMin": [
+            -130.0,
+            -28.0
+          ],
+          "Pivot": [
+            0.5,
+            0.5
+          ],
+          "ZOrder": 2
+        },
+        "Tag": {
+          "Tag": "QuitButton"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "UseQuatRotation": false
+        },
+        "UiButton": {
+          "DisabledTint": [
+            0.5,
+            0.5,
+            0.5,
+            0.6000000238418579
+          ],
+          "HoverTint": [
+            1.149999976158142,
+            1.149999976158142,
+            1.149999976158142,
+            1.0
+          ],
+          "Interactable": true,
+          "NormalTint": [
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "PressedTint": [
+            0.800000011920929,
+            0.800000011920929,
+            0.800000011920929,
+            1.0
+          ],
+          "Signal": "quit_clicked"
+        },
+        "UiImage": {
+          "NineSlice": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "PreserveAspect": false,
+          "TexturePath": "",
+          "Tint": [
+            0.1599999964237213,
+            0.1899999976158142,
+            0.25,
+            0.9200000166893005
+          ]
+        },
+        "UiText": {
+          "Color": [
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "FontPath": "",
+          "HAlign": 1,
+          "SizePx": 26.0,
+          "Text": "Quit",
+          "VAlign": 1,
+          "Wrap": false
+        }
+      },
+      "id": "2d18668100000009"
+    },
+    {
+      "components": {
+        "RectTransform": {
+          "AnchorMax": [
+            1.0,
+            1.0
+          ],
+          "AnchorMin": [
+            0.0,
+            1.0
+          ],
+          "OffsetMax": [
+            0.0,
+            0.0
+          ],
+          "OffsetMin": [
+            0.0,
+            -40.0
+          ],
+          "Pivot": [
+            0.5,
+            0.5
+          ],
+          "ZOrder": 0
+        },
+        "Tag": {
+          "Tag": "Hint"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "UseQuatRotation": false
+        },
+        "UiText": {
+          "Color": [
+            0.5,
+            0.550000011920929,
+            0.6200000047683716,
+            1.0
+          ],
+          "FontPath": "",
+          "HAlign": 1,
+          "SizePx": 18.0,
+          "Text": "Escape returns to this screen from the Lab",
+          "VAlign": 1,
+          "Wrap": false
+        }
+      },
+      "id": "2d1866810000000a"
+    }
+  ]
+}
