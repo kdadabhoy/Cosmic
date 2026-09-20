@@ -106,6 +106,14 @@ namespace Cosmic
                                           bool interactable, bool hovered,
                                           bool pressedEdge, bool releasedEdge, bool down);
 
+        /** @brief KI-65 — the square knob a slider DRAWS for `value`: `knobSizePx`
+         *  (already canvas-scaled; floored at 2 px like the draw) centred on the
+         *  track at the value's position (bottom = min, top = max when vertical).
+         *  Update grabs by rect ∪ this, so the visible knob is always a grab target
+         *  even when it overhangs a thin track. Pure. */
+        static UiRect SliderKnobRect(const UiRect& rect, UiSliderOrientation orientation,
+                                     float knobSizePx, float min, float max, double value);
+
         // ---- scene-driven (engine, shared by editor + player) ---------------
 
         /** @brief Resolve every canvas subtree in the scene into a back-to-front

@@ -233,6 +233,22 @@ namespace Cosmic
         return std::min(std::max(v, lo), hi);
     }
 
+    UiRect UiSystem::SliderKnobRect(const UiRect& rect, UiSliderOrientation orientation,
+                                    float knobSizePx, float min, float max, double value)
+    {
+        // KI-65: the draw's geometry, verbatim — DrawSlider calls this too.
+        const float knob = std::max(2.0f, knobSizePx);
+        const float t    = GaugeFill(min, max, value);
+        const glm::vec2 c = rect.Center();
+        glm::vec2 center;
+        if (orientation == UiSliderOrientation::Vertical)
+            center = { c.x, rect.Max.y - t * rect.Height() };
+        else
+            center = { rect.Min.x + t * rect.Width(), c.y };
+        const glm::vec2 half{ knob * 0.5f, knob * 0.5f };
+        return UiRect{ center - half, center + half };
+    }
+
     // ========================================================================
     // Scene traversal
     // ========================================================================
@@ -409,10 +425,26 @@ namespace Cosmic
                 const entt::entity e = static_cast<entt::entity>(it->Handle);
                 bool interactable = false;
                 if (auto* btn = reg.try_get<UiButtonComponent>(e); btn && btn->Interactable) interactable = true;
-                if (auto* sl  = reg.try_get<UiSliderComponent>(e); sl  && sl->Interactable)  interactable = true;
+                bool hit = it->Rect.Contains(pointer.Position);
+                if (auto* sl  = reg.try_get<UiSliderComponent>(e); sl  && sl->Interactable)
+                {
+                    interactable = true;
+                    // KI-65: the drawn knob is a grab target even where it overhangs the
+                    // rect — inside the rect OR inside the knob (two rects, deliberately not
+                    // their bounding box: the empty overhang beside the knob is not a target).
+                    // The knob sits where the DRAW puts it: at the bus value (Min when the
+                    // channel is absent, like DrawSlider's live mode); without a bus the
+                    // preview value, which is what a bus-less host draws.
+                    const double shown = bus ? (bus->Has(sl->Channel) ? bus->GetNumber(sl->Channel, (double)sl->Min)
+                                                                      : (double)sl->Min)
+                                             : (double)sl->PreviewValue;
+                    const UiRect knob = SliderKnobRect(it->Rect, sl->Orientation, sl->KnobSize * it->Scale,
+                                                       sl->Min, sl->Max, shown);
+                    hit = hit || knob.Contains(pointer.Position);
+                }
                 if (auto* tg  = reg.try_get<UiToggleComponent>(e); tg  && tg->Interactable)  interactable = true;
                 if (!interactable) continue;
-                if (it->Rect.Contains(pointer.Position)) { topHit = e; break; }
+                if (hit) { topHit = e; break; }
             }
         }
 
@@ -1014,26 +1046,26 @@ namespace Cosmic
             if (!ctx.Number(sl.Channel, sl.PreviewValue, v)) v = (double)sl.Min;   // live + missing: empty
             const float t = UiSystem::GaugeFill(sl.Min, sl.Max, v);
 
-            const float knob  = std::max(2.0f, sl.KnobSize * scale);
+            // KI-65: the knob geometry comes from SliderKnobRect — the SAME rect Update
+            // grabs by — so the picture and the hit region cannot drift apart again.
+            const UiRect knobRect = UiSystem::SliderKnobRect(rect, sl.Orientation, sl.KnobSize * scale,
+                                                             sl.Min, sl.Max, v);
+            const float knob  = knobRect.Width();
             const bool  vert  = sl.Orientation == UiSliderOrientation::Vertical;
             const float thick = std::max(2.0f, std::min(vert ? rect.Width() : rect.Height(), knob * 0.35f));
             const glm::vec2 c = rect.Center();
+            const glm::vec2 knobCenter = knobRect.Center();
 
             UiRect track, fill;
-            glm::vec2 knobCenter;
             if (vert)
             {
                 track = { { c.x - thick * 0.5f, rect.Min.y }, { c.x + thick * 0.5f, rect.Max.y } };
-                const float y = rect.Max.y - t * rect.Height();
-                fill = { { track.Min.x, y }, { track.Max.x, rect.Max.y } };
-                knobCenter = { c.x, y };
+                fill  = { { track.Min.x, knobCenter.y }, { track.Max.x, rect.Max.y } };
             }
             else
             {
                 track = { { rect.Min.x, c.y - thick * 0.5f }, { rect.Max.x, c.y + thick * 0.5f } };
-                const float x = rect.Min.x + t * rect.Width();
-                fill = { { rect.Min.x, track.Min.y }, { x, track.Max.y } };
-                knobCenter = { x, c.y };
+                fill  = { { rect.Min.x, track.Min.y }, { knobCenter.x, track.Max.y } };
             }
             FillRect(track, sl.TrackColor);
             FillRect(fill, sl.FillColor);

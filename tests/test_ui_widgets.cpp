@@ -813,3 +813,105 @@ TEST_SUITE("AP-02 V04 widgets")
         CHECK(SceneSerializer::SaveToString(dloaded) == dsave);
     }
 }
+
+// ============================================================================
+// KI-65 (fix/player-pointer, 2026-09-20) — the slider knob as a grab target:
+// Update hit-tests by rect OR the knob SliderKnobRect places (the draw's geometry).
+// ============================================================================
+
+TEST_SUITE("KI-64/65 pointer mapping")
+{
+    TEST_CASE("KI-65 slider knob larger than its track: a press on the knob's overhang grabs and drags, 1 px beyond the knob does not; SliderKnobRect is the drawn geometry (horizontal + vertical)")
+    {
+        SUBCASE("horizontal: 200 x 8 track, 24 px knob at 50 %")
+        {
+            Scene s;
+            Entity canvas = MakeCanvas(s);
+            Entity e = MakeElement(s, canvas, "Slider", { 100.0f, 100.0f }, { 300.0f, 108.0f });
+            auto& sl = e.AddComponent<UiSliderComponent>();
+            sl.Channel = "gain"; sl.Min = 0.0f; sl.Max = 1.0f; sl.KnobSize = 24.0f;
+            DataBus bus;
+            bus.Set("gain", 0.5);
+
+            const UiRect knob = UiSystem::SliderKnobRect({ { 100.0f, 100.0f }, { 300.0f, 108.0f } }, UiSliderOrientation::Horizontal, 24.0f, 0.0f, 1.0f, 0.5);
+            CHECK(knob.Min == glm::vec2(188.0f, 92.0f));
+            CHECK(knob.Max == glm::vec2(212.0f, 116.0f));
+            // The knob follows the value: at min it is centred on the rect's left edge.
+            CHECK(UiSystem::SliderKnobRect({ { 100.0f, 100.0f }, { 300.0f, 108.0f } }, UiSliderOrientation::Horizontal, 24.0f, 0.0f, 1.0f, 0.0).Center() == glm::vec2(100.0f, 104.0f));
+            // Floor at 2 px like the draw.
+            CHECK(UiSystem::SliderKnobRect({ { 100.0f, 100.0f }, { 300.0f, 108.0f } }, UiSliderOrientation::Horizontal, 0.0f, 0.0f, 1.0f, 0.0).Width() == doctest::Approx(2.0f));
+
+            // On the knob, 9 px above the rect's centre line (outside the 8 px rect, inside the knob): grabs.
+            UiSystem::Update(s, kViewport, Press({ 200.0f, 95.0f }), nullptr, &bus);
+            CHECK(sl.Dragging);
+            UiSystem::Update(s, kViewport, Hold({ 250.0f, 95.0f }), nullptr, &bus);
+            CHECK(bus.GetNumber("gain") == doctest::Approx(0.75));
+            UiSystem::Update(s, kViewport, Release({ 250.0f, 95.0f }), nullptr, &bus);
+            CHECK_FALSE(sl.Dragging);
+
+            // The knob moved with the value: its old overhang pixels are empty now, its new ones grab.
+            bus.Set("gain", 0.75);
+            UiSystem::Update(s, kViewport, Press({ 200.0f, 95.0f }), nullptr, &bus);
+            CHECK_FALSE(sl.Dragging);
+            UiSystem::Update(s, kViewport, Release({ 200.0f, 95.0f }), nullptr, &bus);
+            UiSystem::Update(s, kViewport, Press({ 250.0f, 113.0f }), nullptr, &bus);   // below the rect, on the knob
+            CHECK(sl.Dragging);
+            UiSystem::Update(s, kViewport, Release({ 250.0f, 113.0f }), nullptr, &bus);
+
+            // 1 px beyond the knob's top (y = 91 for a knob spanning 92..116) does not grab.
+            bus.Set("gain", 0.5);
+            UiSystem::Update(s, kViewport, Press({ 200.0f, 91.0f }), nullptr, &bus);
+            CHECK_FALSE(sl.Dragging);
+            UiSystem::Update(s, kViewport, Release({ 200.0f, 91.0f }), nullptr, &bus);
+            // The track away from the knob still grabs (a press at 25 % steers there).
+            UiSystem::Update(s, kViewport, Press({ 150.0f, 104.0f }), nullptr, &bus);
+            CHECK(sl.Dragging);
+            CHECK(bus.GetNumber("gain") == doctest::Approx(0.25));
+            UiSystem::Update(s, kViewport, Release({ 150.0f, 104.0f }), nullptr, &bus);
+            // Update reports the knob overhang as "over an interactable" (scene picking must yield).
+            CHECK(UiSystem::Update(s, kViewport, Idle({ 150.0f, 95.0f }), nullptr, &bus));
+            CHECK_FALSE(UiSystem::Update(s, kViewport, Idle({ 150.0f, 90.0f }), nullptr, &bus));
+        }
+
+        SUBCASE("vertical: 8 x 200 track, 24 px knob at 50 % (bottom = min)")
+        {
+            Scene s;
+            Entity canvas = MakeCanvas(s);
+            Entity e = MakeElement(s, canvas, "VSlider", { 100.0f, 100.0f }, { 108.0f, 300.0f });
+            auto& sl = e.AddComponent<UiSliderComponent>();
+            sl.Channel = "level"; sl.Min = 0.0f; sl.Max = 1.0f; sl.KnobSize = 24.0f;
+            sl.Orientation = UiSliderOrientation::Vertical;
+            DataBus bus;
+            bus.Set("level", 0.5);
+
+            const UiRect knob = UiSystem::SliderKnobRect({ { 100.0f, 100.0f }, { 108.0f, 300.0f } }, UiSliderOrientation::Vertical, 24.0f, 0.0f, 1.0f, 0.5);
+            CHECK(knob.Center() == glm::vec2(104.0f, 200.0f));
+            CHECK(UiSystem::SliderKnobRect({ { 100.0f, 100.0f }, { 108.0f, 300.0f } }, UiSliderOrientation::Vertical, 24.0f, 0.0f, 1.0f, 0.0).Center() == glm::vec2(104.0f, 300.0f));
+
+            // Left of the rect, on the knob: grabs; drag up raises the value.
+            UiSystem::Update(s, kViewport, Press({ 95.0f, 200.0f }), nullptr, &bus);
+            CHECK(sl.Dragging);
+            UiSystem::Update(s, kViewport, Hold({ 95.0f, 150.0f }), nullptr, &bus);
+            CHECK(bus.GetNumber("level") == doctest::Approx(0.75));
+            UiSystem::Update(s, kViewport, Release({ 95.0f, 150.0f }), nullptr, &bus);
+            // 1 px beyond the knob's left edge (x = 91 for a knob spanning 92..116) does not.
+            bus.Set("level", 0.5);
+            UiSystem::Update(s, kViewport, Press({ 91.0f, 200.0f }), nullptr, &bus);
+            CHECK_FALSE(sl.Dragging);
+            UiSystem::Update(s, kViewport, Release({ 91.0f, 200.0f }), nullptr, &bus);
+        }
+
+        SUBCASE("without a bus the knob sits at PreviewValue (what a bus-less host draws) and the hit region follows it; the slider stays inert")
+        {
+            Scene s;
+            Entity canvas = MakeCanvas(s);
+            Entity e = MakeElement(s, canvas, "Slider", { 100.0f, 100.0f }, { 300.0f, 108.0f });
+            auto& sl = e.AddComponent<UiSliderComponent>();
+            sl.Min = 0.0f; sl.Max = 1.0f; sl.KnobSize = 24.0f; sl.PreviewValue = 1.0f;
+            CHECK(UiSystem::Update(s, kViewport, Idle({ 300.0f, 95.0f })));        // knob at the right end
+            CHECK_FALSE(UiSystem::Update(s, kViewport, Idle({ 200.0f, 95.0f })));  // no knob at 50 %
+            UiSystem::Update(s, kViewport, Press({ 300.0f, 95.0f }));
+            CHECK_FALSE(sl.Dragging);
+        }
+    }
+}
