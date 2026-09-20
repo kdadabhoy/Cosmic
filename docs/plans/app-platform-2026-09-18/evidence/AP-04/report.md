@@ -198,3 +198,8 @@ Evidence: this folder (`*.log` gitignored; excerpts and JSON committed). Registe
 ## Local commits
 
 Appended below after committing (`ap/04`, base `e01f0a0`).
+
+- `2f633cd` Fill the template kinds and put the samples on disk (AP-04)
+- `2d1b6b2` Add PendulumLab, the App Platform showcase project (AP-04)
+- `3bb1d76` Test the templates and PendulumLab headlessly; F-PENDULUM fixture; AP-04 evidence (AP-04)
+- (this line) the report amendment recording the three SHAs above; `git rebase main` at land time was a no-op (`main` = `e01f0a0`).
