@@ -1,0 +1,51 @@
+== build-debug-1.log (initial full Debug build, from scratch)
+0
+  Building Custom Rule C:/dev/Cosmic-ap-04/CMakeLists.txt
+exit=0
+== build-release-1.log (initial full Release build, from scratch)
+0
+exit=0
+== build-debug-final.log / build-release-final.log (final incremental full builds)
+0
+0
+== tests-debug.log
+[doctest] test cases:      501 |      501 passed | 0 failed | 14 skipped
+[doctest] assertions: 23402723 | 23402723 passed | 0 failed |
+[doctest] Status: SUCCESS!
+== tests-release.log
+[doctest] test cases:      501 |      501 passed | 0 failed | 14 skipped
+[doctest] assertions: 23461708 | 23461708 passed | 0 failed |
+[doctest] Status: SUCCESS!
+== scaffold-builds.log (five scaffolded template projects built standalone, Debug)
+SCAFFOLD_BUILD Ap04Game configure=0 build=0 dll=True warnings=0
+SCAFFOLD_BUILD Ap04Blank configure=0 build=0 dll=True warnings=0
+SCAFFOLD_BUILD Ap04App configure=0 build=0 dll=True warnings=0
+SCAFFOLD_BUILD Ap04FlowDemo configure=0 build=0 dll=True warnings=0
+SCAFFOLD_BUILD Ap04ForgePong configure=0 build=0 dll=True warnings=0
+== scaffold-stdout.log (temporary hook: ScaffoldProjectTo + OpenProjectPath)
+AP04_SCAFFOLD kind=game name=Ap04Game scaffold=1 open=1
+AP04_SCAFFOLD open kind=game name=Ap04Game projectOpen=1 scene=1 entities=2
+AP04_SCAFFOLD kind=blank name=Ap04Blank scaffold=1 open=1
+AP04_SCAFFOLD open kind=blank name=Ap04Blank projectOpen=1 scene=1 entities=2
+AP04_SCAFFOLD kind=app name=Ap04App scaffold=1 open=1
+AP04_SCAFFOLD open kind=app name=Ap04App projectOpen=1 scene=1 entities=0
+AP04_SCAFFOLD kind=samples/FlowDemo name=Ap04FlowDemo scaffold=1 open=1
+AP04_SCAFFOLD open kind=samples/FlowDemo name=Ap04FlowDemo projectOpen=1 scene=1 entities=0
+AP04_SCAFFOLD kind=samples/ForgePong name=Ap04ForgePong scaffold=1 open=1
+AP04_SCAFFOLD open kind=samples/ForgePong name=Ap04ForgePong projectOpen=1 scene=1 entities=0
+== capture-stdout.log (temporary hook: BuildFlowDemo/BuildForgePong)
+[2026-09-19 20:51:43.466] [COSMIC] [info] Config: loaded 'assets/projects/FlowDemo/project.cproj'.
+[2026-09-19 20:51:43.494] [COSMIC] [info] Config: loaded 'assets/projects/ForgePong/project.cproj'.
+AP04_CAPTURE flow=1 pong=1
+== y02-smoke stdout
+[Y02] armed: result=C:\dev\Cosmic-ap-04\docs\plans\app-platform-2026-09-18\evidence\AP-04\y02-smoke-Release\result.json output=C:/dev/Cosmic-ap-04/docs/plans/app-platform-2026-09-18/evidence/AP-04/y02-smoke-Release
+[Y02] state -> Lab after 1 frames
+[Y02] sampled 3637 frames: angle -5.000..5.000 deg, running=1, energy 0.0373, period_est 0.0000
+[Y02] state -> Settings after 1 frames
+[Y02] state -> Lab after 1 frames
+[Y02] FAIL PhasePlot hosted panel was never drawn (pendulum.phaseplot_draws = 0)
+[Y02] Plot element not collected by UiSystem (pre-AP-02); rect resolved from its RectTransform
+[Y02] FAIL plot ROI (140033 px) has only 0 line-colour pixels
+[Y02] verify: panel draws 0, plot rect [666 113 1265 345] in 1280x664, 0/140033 line-colour px, roi C:/dev/Cosmic-ap-04/docs/plans/app-platform-2026-09-18/evidence/AP-04/y02-smoke-Release/y02-plot-roi.png
+[Y02] state -> Home after 1 frames
+Y02_SELFTEST_RESULT=FAIL config=Release failedChecks=2 frames=6119 seconds=2.7

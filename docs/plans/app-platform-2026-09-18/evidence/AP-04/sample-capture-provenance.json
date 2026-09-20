@@ -1,0 +1,197 @@
+{
+ "FlowDemo/CMakeLists.txt": {
+  "sha256": "ab8fbec2660657e2dc259093e9117ecc21ca93119e3a9e1d0f15d1d21c27a576",
+  "bytes": 5181,
+  "kept": true
+ },
+ "FlowDemo/project.cproj": {
+  "sha256": "94bcd7f188226b74f389e2b466f3770784a4eb513eda41fe1d4380d106642778",
+  "bytes": 263,
+  "kept": true
+ },
+ "FlowDemo/flows/Main.cflow": {
+  "sha256": "7a2c31606e691d24f767e699fbebd41334929752cd69c18398c2079ee941c722",
+  "bytes": 1096,
+  "kept": true
+ },
+ "FlowDemo/scenes/Game.cscene": {
+  "sha256": "a7f0c1deffea71e6ace691b0539769ddc9cb7995dce281ac6f91f65211c89ecf",
+  "bytes": 7134,
+  "kept": true
+ },
+ "FlowDemo/scenes/Main.cscene": {
+  "sha256": "b15de25546db1ee2f9aa2767ca38e812164e39931e0d07cf155f8db6a4b609c0",
+  "bytes": 1571,
+  "kept": false
+ },
+ "FlowDemo/scenes/MainMenu.cscene": {
+  "sha256": "8ecd11f27072d5a70c7b832567d6511b214206b79caac32350c0aeb677673a02",
+  "bytes": 11070,
+  "kept": true
+ },
+ "FlowDemo/scenes/Pause.cscene": {
+  "sha256": "6ca9149a230f8b2c5946d806849eb624522094f560e449a8e13648c059baaaba",
+  "bytes": 8866,
+  "kept": true
+ },
+ "FlowDemo/src/Module.cpp": {
+  "sha256": "5224820a40829bcb810363cba50cc251072026371cd868ca67a602fa2c917cc0",
+  "bytes": 2385,
+  "kept": false
+ },
+ "FlowDemo/src/scripts/BouncingBall.cpp": {
+  "sha256": "88c748b405fa7ed47e58a4457233ca643fa9596fcab55a448a5aea9202004950",
+  "bytes": 587,
+  "kept": false
+ },
+ "FlowDemo/src/scripts/BouncingBall.h": {
+  "sha256": "a3d3463f5d7a68d122d2c8acbc0fea2d8ecc985b85b414c20047d0449608a5ab",
+  "bytes": 1020,
+  "kept": false
+ },
+ "FlowDemo/src/scripts/HoverController.cpp": {
+  "sha256": "200180af6ff01fe060b18345f67696cfbc1304ce38431ad46d95be95b6c3be6e",
+  "bytes": 533,
+  "kept": false
+ },
+ "FlowDemo/src/scripts/HoverController.h": {
+  "sha256": "105ff9f919ded165514b4a0a03159ba3ea4f2e7191b8bf01b3abae36ec44c768",
+  "bytes": 739,
+  "kept": false
+ },
+ "FlowDemo/src/scripts/PaddleController.h": {
+  "sha256": "cdeccc915572acbf76b3a1704128cf334ae173d22b351c6ee2b277aaee48b3de",
+  "bytes": 1057,
+  "kept": false
+ },
+ "FlowDemo/src/scripts/PhysicsBall.h": {
+  "sha256": "e873ec629d596b4e958b7ad284bb80416f68f6713bfc74be168569623fa671e5",
+  "bytes": 997,
+  "kept": false
+ },
+ "FlowDemo/src/scripts/PidController.cpp": {
+  "sha256": "537d1adad83bcb1b69fafa2cb8dd9651e4f5ac9ff35f9a9ecdda7b78a8ed5a82",
+  "bytes": 652,
+  "kept": false
+ },
+ "FlowDemo/src/scripts/PidController.h": {
+  "sha256": "88f8fe0a503d131caadaabd79701a1c109c518cb6ed426b23dde9ccdceeeda2e",
+  "bytes": 731,
+  "kept": false
+ },
+ "FlowDemo/src/scripts/PongBall.h": {
+  "sha256": "272b58c4a15bf972f5ac4647b4013e81c8376b659fdac9e9c75a887fe2f93d67",
+  "bytes": 5015,
+  "kept": false
+ },
+ "FlowDemo/src/scripts/StoryUiBinding.h": {
+  "sha256": "ab978b29f974a6b9c61fa9ee82244de2ae307bd26714b31e5453afb22d35efc8",
+  "bytes": 4673,
+  "kept": false
+ },
+ "FlowDemo/src/scripts/WalkController.h": {
+  "sha256": "a1d9ed9d1fe9fec1331ed7c5c93fc6ddea768e430f328087de21db2841e6683e",
+  "bytes": 1779,
+  "kept": false
+ },
+ "ForgePong/CMakeLists.txt": {
+  "sha256": "5ed1d2b119eaba72fef398f0d879a74b0547e3974ef47a59a7d626814685fc0f",
+  "bytes": 5190,
+  "kept": true
+ },
+ "ForgePong/project.cproj": {
+  "sha256": "6ba69f97576b5a242846237c0fcde2b338237645bb6fffefd25e76a00c58b124",
+  "bytes": 290,
+  "kept": true
+ },
+ "ForgePong/flows/Main.cflow": {
+  "sha256": "ba618a54ff22ce723d60e29232609e6189d9a2a52cc35996d541383a9fcf66d5",
+  "bytes": 1177,
+  "kept": true
+ },
+ "ForgePong/scenes/Game.cscene": {
+  "sha256": "28763dd48995d673791814734ac5f72655fcc8d4b269875242e261d8c4f0fdeb",
+  "bytes": 12074,
+  "kept": true
+ },
+ "ForgePong/scenes/Main.cscene": {
+  "sha256": "b15de25546db1ee2f9aa2767ca38e812164e39931e0d07cf155f8db6a4b609c0",
+  "bytes": 1571,
+  "kept": false
+ },
+ "ForgePong/scenes/Menu.cscene": {
+  "sha256": "2771ffc149f8d9447842ea1ff294ecbbb42df0e82db62af8f92e20c621e0b0d0",
+  "bytes": 8916,
+  "kept": true
+ },
+ "ForgePong/scenes/Win.cscene": {
+  "sha256": "304a616752f88ae7f8cb070dd1861467ba5387a2999d8a6b90c8394e3ec88bd2",
+  "bytes": 7537,
+  "kept": true
+ },
+ "ForgePong/src/Module.cpp": {
+  "sha256": "67645723b9add53ba7f72118b4ce999ddb9085bbd59b321d531e79f884d9b0b9",
+  "bytes": 2388,
+  "kept": false
+ },
+ "ForgePong/src/scripts/BouncingBall.cpp": {
+  "sha256": "88c748b405fa7ed47e58a4457233ca643fa9596fcab55a448a5aea9202004950",
+  "bytes": 587,
+  "kept": false
+ },
+ "ForgePong/src/scripts/BouncingBall.h": {
+  "sha256": "d5e9f1f6ed0fe59db47ad63c99a3e47733d9f089252269dc1cd4b85773673592",
+  "bytes": 1021,
+  "kept": false
+ },
+ "ForgePong/src/scripts/HoverController.cpp": {
+  "sha256": "200180af6ff01fe060b18345f67696cfbc1304ce38431ad46d95be95b6c3be6e",
+  "bytes": 533,
+  "kept": false
+ },
+ "ForgePong/src/scripts/HoverController.h": {
+  "sha256": "0820f1997effc81ab96632436202d027e65266fdae0adbec7194adafb139ecc4",
+  "bytes": 740,
+  "kept": false
+ },
+ "ForgePong/src/scripts/PaddleController.h": {
+  "sha256": "919e7584a7fec7bbca5d4155d5ba27d32a81fbb16817095afa88492d63a1d09c",
+  "bytes": 1058,
+  "kept": true
+ },
+ "ForgePong/src/scripts/PhysicsBall.h": {
+  "sha256": "c0830ec01612fd1ed3fd72a6c2b86f37ff9061808f35d58e4e8837289053648b",
+  "bytes": 998,
+  "kept": false
+ },
+ "ForgePong/src/scripts/PidController.cpp": {
+  "sha256": "537d1adad83bcb1b69fafa2cb8dd9651e4f5ac9ff35f9a9ecdda7b78a8ed5a82",
+  "bytes": 652,
+  "kept": false
+ },
+ "ForgePong/src/scripts/PidController.h": {
+  "sha256": "ebdd008a667824893a3fafe9b5dcfceb3d19bb682db5685ae08cac62946ece04",
+  "bytes": 732,
+  "kept": false
+ },
+ "ForgePong/src/scripts/PongBall.h": {
+  "sha256": "ccee18506507b5f929d3435dba6fbd519f6da9b8cb7cc63bdbde310a5a8a720e",
+  "bytes": 5016,
+  "kept": true
+ },
+ "ForgePong/src/scripts/StoryUiBinding.h": {
+  "sha256": "6d9798e0d2bc82e4ce2da26acf247e74e9bf86b9da113d1ce20f8c0e7c54744c",
+  "bytes": 4674,
+  "kept": false
+ },
+ "ForgePong/src/scripts/WalkController.h": {
+  "sha256": "2a359eee3f9146dc1869c7240c763c8b238e2443dc73021bf1850ea4b65a41d4",
+  "bytes": 1780,
+  "kept": false
+ },
+ "ForgePong/textures/hit.png": {
+  "sha256": "60d4618a4818b02e5231674476161eaf89bb2295f013e1add5dff05fef9775b8",
+  "bytes": 1298,
+  "kept": true
+ }
+}

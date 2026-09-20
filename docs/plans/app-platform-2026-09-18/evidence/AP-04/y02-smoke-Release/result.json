@@ -1,0 +1,35 @@
+{
+  "work_order": "AP-04",
+  "case": "Y02 PendulumLab self-test",
+  "config": "Release",
+  "verdict": "FAIL",
+  "failed_checks": 2,
+  "total_seconds": 2.67005,
+  "frames": 6119,
+  "exe": "C:\\dev\\Cosmic-ap-04\\build\\Runtime\\Release\\CosmicApp.exe",
+  "cwd": "C:\\dev\\Cosmic-ap-04\\build\\Runtime\\Release",
+  "user_root": ".",
+  "project_name": "PendulumLab",
+  "in_editor": false,
+  "trace": ["Home", "Lab", "Settings", "Lab", "Home"],
+  "angle_deg": { "frames": 3637, "min": -4.99999, "max": 5, "bus_clock_violations": 0 },
+  "pendulum": { "running": true, "energy": 0.0373173, "period_est": 0, "producer": "PendulumService" },
+  "hosted_panel": { "name": "PhasePlot", "draws": 0 },
+  "plot_roi": { "rect": [665.6, 113.126, 1265.24, 345.28], "fb": [1280, 664], "pixels": 140033, "line_colour_pixels": 0, "png": "C:/dev/Cosmic-ap-04/docs/plans/app-platform-2026-09-18/evidence/AP-04/y02-smoke-Release/y02-plot-roi.png" },
+  "checks_failed": [
+    "PhasePlot hosted panel was never drawn (pendulum.phaseplot_draws = 0)",
+    "plot ROI (140033 px) has only 0 line-colour pixels"
+  ],
+  "log": [
+    "armed: result=C:\\dev\\Cosmic-ap-04\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-04\\y02-smoke-Release\\result.json output=C:/dev/Cosmic-ap-04/docs/plans/app-platform-2026-09-18/evidence/AP-04/y02-smoke-Release",
+    "state -> Lab after 1 frames",
+    "sampled 3637 frames: angle -5.000..5.000 deg, running=1, energy 0.0373, period_est 0.0000",
+    "state -> Settings after 1 frames",
+    "state -> Lab after 1 frames",
+    "FAIL PhasePlot hosted panel was never drawn (pendulum.phaseplot_draws = 0)",
+    "Plot element not collected by UiSystem (pre-AP-02); rect resolved from its RectTransform",
+    "FAIL plot ROI (140033 px) has only 0 line-colour pixels",
+    "verify: panel draws 0, plot rect [666 113 1265 345] in 1280x664, 0/140033 line-colour px, roi C:/dev/Cosmic-ap-04/docs/plans/app-platform-2026-09-18/evidence/AP-04/y02-smoke-Release/y02-plot-roi.png",
+    "state -> Home after 1 frames"
+  ]
+}

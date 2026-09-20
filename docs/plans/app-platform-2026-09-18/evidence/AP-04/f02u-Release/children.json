@@ -1,0 +1,34 @@
+﻿{
+    "id":  "F02-U",
+    "tier":  "U",
+    "description":  "WO-10 F02-U via CosmicTests.exe",
+    "requires":  [
+                     "windows"
+                 ],
+    "transport":  "none",
+    "seed":  null,
+    "start_utc":  "2026-09-20T04:48:43.4991944Z",
+    "deadline_sec":  180,
+    "exercised":  "production",
+    "command":  "C:\\dev\\Cosmic-ap-04\\build\\Runtime\\Release\\CosmicTests.exe --reporters=console --no-intro --no-colors \"--test-case=AP-04 F02*\"",
+    "stdout_log":  "C:\\dev\\Cosmic-ap-04\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-04\\f02u-Release\\F02-U.out.log",
+    "stderr_log":  "C:\\dev\\Cosmic-ap-04\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-04\\f02u-Release\\F02-U.err.log",
+    "pid":  34116,
+    "exit_code":  0,
+    "crash":  false,
+    "tests_passed":  3,
+    "tests_expected_min":  3,
+    "verdict":  "PASSED",
+    "detail":  "exit 0 as expected",
+    "duration_sec":  0.1,
+    "end_utc":  "2026-09-20T04:48:43.6068608Z",
+    "golden_mutated":  false,
+    "golden_mutations":  [
+
+                         ],
+    "golden_diagnostics":  [
+
+                           ],
+    "golden_sha256_before":  "C:\\dev\\Cosmic-ap-04\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-04\\f02u-Release\\goldens-sha256-before.txt",
+    "golden_sha256_after":  "C:\\dev\\Cosmic-ap-04\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-04\\f02u-Release\\goldens-sha256-after.txt"
+}
