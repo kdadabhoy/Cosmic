@@ -815,12 +815,293 @@ TEST_SUITE("AP-02 V04 widgets")
 }
 
 // ============================================================================
-// KI-65 (fix/player-pointer, 2026-09-20) — the slider knob as a grab target:
-// Update hit-tests by rect OR the knob SliderKnobRect places (the draw's geometry).
+// KI-64 / KI-65 (fix/player-pointer, 2026-09-20) — the standalone pointer mapping
+// and the slider knob as a grab target. Headless: the same UiSystem::Update the
+// PlayerLayer / editor call, fed pointers produced by UiSystem::MapPointerToCanvas
+// from SCREEN-space coordinates exactly as PlayerLayer::UpdateUI produces them.
 // ============================================================================
+
+namespace
+{
+    // A canvas that scales with height like every PendulumLab screen (ReferenceHeight 1080).
+    Entity MakeScaledCanvas(Scene& s)
+    {
+        Entity canvas = s.CreateEntity("Canvas");
+        auto& c = canvas.AddComponent<CanvasComponent>();
+        c.ScaleMode       = UiScaleMode::ScaleWithHeight;
+        c.ReferenceHeight = 1080.0f;
+        return canvas;
+    }
+
+    // A centre-anchored element (AnchorMin == AnchorMax == anchor), sized by +-half offsets.
+    Entity MakeAnchored(Scene& s, Entity parent, const char* name, glm::vec2 anchor, glm::vec2 half, int32_t z = 0)
+    {
+        Entity e = s.CreateEntity(name);
+        auto& rt = e.AddComponent<RectTransformComponent>();
+        rt.AnchorMin = rt.AnchorMax = anchor;
+        rt.OffsetMin = -half;
+        rt.OffsetMax = half;
+        rt.ZOrder = z;
+        s.SetParent(e, parent, /*keepWorldPose=*/false);
+        return e;
+    }
+
+    UiRect RectOf(Scene& s, Entity e, const UiRect& viewport)
+    {
+        std::vector<UiElement> els;
+        UiSystem::CollectElements(s, viewport, els);
+        for (const UiElement& el : els)
+            if (el.Handle == (uint32_t)(entt::entity)e) return el.Rect;
+        return {};
+    }
+
+    // PendulumLab's Home: Start / Settings / Quit at 0.64 / 0.74 / 0.84, 280 x 60 canvas px.
+    struct Home
+    {
+        Scene  s;
+        Entity start, settings, quit;
+        Home()
+        {
+            Entity canvas = MakeScaledCanvas(s);
+            start    = MakeAnchored(s, canvas, "StartButton",    { 0.5f, 0.64f }, { 140.0f, 30.0f }, 2);
+            settings = MakeAnchored(s, canvas, "SettingsButton", { 0.5f, 0.74f }, { 140.0f, 30.0f }, 2);
+            quit     = MakeAnchored(s, canvas, "QuitButton",     { 0.5f, 0.84f }, { 140.0f, 30.0f }, 2);
+            start.AddComponent<UiButtonComponent>().Signal    = "start_clicked";
+            settings.AddComponent<UiButtonComponent>().Signal = "settings_clicked";
+            quit.AddComponent<UiButtonComponent>().Signal     = "quit_clicked";
+        }
+        UiButtonState State(Entity e) { return e.GetComponent<UiButtonComponent>().State; }
+    };
+
+    // PendulumLab's Settings sliders: a 30 %-wide row at anchor y, 24 canvas px tall, 18 px knob.
+    struct SettingsRow
+    {
+        Scene  s;
+        Entity slider;
+        SettingsRow()
+        {
+            Entity canvas = MakeScaledCanvas(s);
+            slider = s.CreateEntity("GravitySlider");
+            auto& rt = slider.AddComponent<RectTransformComponent>();
+            rt.AnchorMin = { 0.36f, 0.29f };
+            rt.AnchorMax = { 0.66f, 0.29f };
+            rt.OffsetMin = { 0.0f, -12.0f };
+            rt.OffsetMax = { 0.0f,  12.0f };
+            s.SetParent(slider, canvas, false);
+            auto& sl = slider.AddComponent<UiSliderComponent>();
+            sl.Channel = "settings.gravity"; sl.Min = 1.0f; sl.Max = 25.0f; sl.KnobSize = 18.0f;
+        }
+        UiSliderComponent& Sl() { return slider.GetComponent<UiSliderComponent>(); }
+    };
+
+    // The host geometry of one pointer scenario: where the frame is presented on screen,
+    // how big it is there, and how big its framebuffer is.
+    struct Host
+    {
+        glm::vec2 FramePos, FrameSize, FbSize;
+        // Screen position of a canvas point (the inverse of the mapping) — where the cursor
+        // sits when it is exactly on that point's picture.
+        glm::vec2 ScreenOf(glm::vec2 canvasPt) const { return FramePos + canvasPt * (FrameSize / FbSize); }
+        glm::vec2 Map(glm::vec2 screen) const { return UiSystem::MapPointerToCanvas(screen, FramePos, FrameSize, FbSize); }
+    };
+
+    // (b) Kaden's maximized window: 2560 x 1392 client at (0,0), 54 px of menu bar + dock tab above the frame.
+    const Host kChrome   { { 0.0f, 54.0f },   { 2560.0f, 1338.0f }, { 2560.0f, 1338.0f } };
+    // (b') his fullscreen: 2560 x 1441 cover, only the 27 px dock tab bar above the frame.
+    const Host kFullscreen{ { 0.0f, 27.0f },  { 2560.0f, 1414.0f }, { 2560.0f, 1414.0f } };
+    // (a) a frame presented at 1280 x 720 whose framebuffer is 1920 x 1080 (1.5x), below 54 px of chrome.
+    const Host kDpi150   { { 0.0f, 54.0f },   { 1280.0f, 720.0f },  { 1920.0f, 1080.0f } };
+    // (c) a letterboxed host: the 1920 x 1080 target presented 1:1 at screen (100, 54); the canvas
+    //     is laid out in a 4:3 band inside it (the editor's game band / UiSystem::Render band variant).
+    const Host kBandHost { { 100.0f, 54.0f }, { 1920.0f, 1080.0f }, { 1920.0f, 1080.0f } };
+    const UiRect kBand   { { 240.0f, 0.0f }, { 1680.0f, 1080.0f } };
+}
 
 TEST_SUITE("KI-64/65 pointer mapping")
 {
+    TEST_CASE("KI-64 MapPointerToCanvas: chrome offset, framebuffer scale, identity, degenerate sizes")
+    {
+        // Identity: frame at the origin, presented 1:1.
+        CHECK(UiSystem::MapPointerToCanvas({ 10.0f, 20.0f }, { 0.0f, 0.0f }, { 800.0f, 600.0f }, { 800.0f, 600.0f }) == glm::vec2(10.0f, 20.0f));
+        // Chrome / window position is subtracted (the window's own position cancels: both inputs are screen space).
+        CHECK(UiSystem::MapPointerToCanvas({ 1280.0f, 1044.0f }, { 0.0f, 54.0f }, { 2560.0f, 1338.0f }, { 2560.0f, 1338.0f }) == glm::vec2(1280.0f, 990.0f));
+        CHECK(UiSystem::MapPointerToCanvas({ 300.0f, 254.0f }, { 100.0f, 54.0f }, { 640.0f, 480.0f }, { 640.0f, 480.0f }) == glm::vec2(200.0f, 200.0f));
+        // Framebuffer scale: presented at 2/3 of its framebuffer size -> canvas coordinates grow 1.5x.
+        const glm::vec2 hi = UiSystem::MapPointerToCanvas({ 640.0f, 414.0f }, { 0.0f, 54.0f }, { 1280.0f, 720.0f }, { 1920.0f, 1080.0f });
+        CHECK(hi.x == doctest::Approx(960.0f));
+        CHECK(hi.y == doctest::Approx(540.0f));
+        // A downscaled preview (framebuffer smaller than the presented image) shrinks instead.
+        CHECK(UiSystem::MapPointerToCanvas({ 400.0f, 300.0f }, { 0.0f, 0.0f }, { 800.0f, 600.0f }, { 400.0f, 300.0f }) == glm::vec2(200.0f, 150.0f));
+        // Degenerate presented size: no scaling (never a division by zero / inf).
+        const glm::vec2 dg = UiSystem::MapPointerToCanvas({ 50.0f, 60.0f }, { 10.0f, 10.0f }, { 0.0f, 0.0f }, { 800.0f, 600.0f });
+        CHECK(dg == glm::vec2(40.0f, 50.0f));
+        CHECK(std::isfinite(dg.x));
+    }
+
+    TEST_CASE("KI-64 buttons: a pointer mapped from screen space hits the button it points at under a chrome offset, a 1.5x framebuffer scale and a letterbox band; the pre-fix window-client pointer hits the row below")
+    {
+        SUBCASE("(b) chrome offset — Kaden's maximized window, cursor on Settings' centre")
+        {
+            Home h;
+            const UiRect viewport{ { 0.0f, 0.0f }, kChrome.FbSize };
+            const UiRect settingsRect = RectOf(h.s, h.settings, viewport);
+            CHECK(settingsRect.Center().y == doctest::Approx(0.74f * 1338.0f));
+
+            // Cursor exactly on the Settings picture (screen y = 54 + canvas y).
+            const glm::vec2 screen = kChrome.ScreenOf(settingsRect.Center());
+            CHECK(screen.y == doctest::Approx(54.0f + 0.74f * 1338.0f));
+            UiSystem::Update(h.s, viewport, Idle(kChrome.Map(screen)));
+            CHECK(h.State(h.settings) == UiButtonState::Hover);
+            CHECK(h.State(h.start)    == UiButtonState::Normal);
+            CHECK(h.State(h.quit)     == UiButtonState::Normal);
+
+            // The KI-61 expression (window-client pointer, chrome NOT subtracted) at the same
+            // cursor lands in the gap under Settings: nothing hovers ("exactly on Settings does nothing")...
+            UiSystem::Update(h.s, viewport, Idle(screen));
+            CHECK(h.State(h.settings) == UiButtonState::Normal);
+            CHECK(h.State(h.quit)     == UiButtonState::Normal);
+            // ...and 16 px under Start's picture it hovers Settings ("the cursor under Start activates Settings").
+            const UiRect startRect = RectOf(h.s, h.start, viewport);
+            const glm::vec2 underStart = kChrome.ScreenOf({ startRect.Center().x, startRect.Max.y + 16.0f });
+            UiSystem::Update(h.s, viewport, Idle(underStart));
+            CHECK(h.State(h.settings) == UiButtonState::Hover);
+            // Mapped, the same cursor hovers nothing (it is in the gap between the buttons).
+            UiSystem::Update(h.s, viewport, Idle(kChrome.Map(underStart)));
+            CHECK(h.State(h.settings) == UiButtonState::Normal);
+            CHECK(h.State(h.start)    == UiButtonState::Normal);
+
+            // A full press-release on the mapped Settings centre emits settings_clicked once.
+            int settingsFires = 0, otherFires = 0;
+            h.s.Events().Connect("settings_clicked", [&](Entity) { ++settingsFires; });
+            h.s.Events().Connect("start_clicked",    [&](Entity) { ++otherFires; });
+            h.s.Events().Connect("quit_clicked",     [&](Entity) { ++otherFires; });
+            UiSystem::Update(h.s, viewport, Press(kChrome.Map(screen)));
+            UiSystem::Update(h.s, viewport, Release(kChrome.Map(screen)));
+            CHECK(settingsFires == 1);
+            CHECK(otherFires == 0);
+        }
+
+        SUBCASE("(a) 1.5x framebuffer scale — the presented image is smaller than the framebuffer")
+        {
+            Home h;
+            const UiRect viewport{ { 0.0f, 0.0f }, kDpi150.FbSize };
+            const UiRect settingsRect = RectOf(h.s, h.settings, viewport);
+            // Centre of the picture on screen: chrome + canvas / 1.5.
+            const glm::vec2 screen = kDpi150.ScreenOf(settingsRect.Center());
+            CHECK(screen.x == doctest::Approx(640.0f));
+            UiSystem::Update(h.s, viewport, Idle(kDpi150.Map(screen)));
+            CHECK(h.State(h.settings) == UiButtonState::Hover);
+            CHECK(h.State(h.start)    == UiButtonState::Normal);
+            // One framebuffer pixel above the button's top edge (on screen: 2/3 px) misses it.
+            const glm::vec2 above = kDpi150.ScreenOf({ settingsRect.Center().x, settingsRect.Min.y - 1.0f });
+            UiSystem::Update(h.s, viewport, Idle(kDpi150.Map(above)));
+            CHECK(h.State(h.settings) == UiButtonState::Normal);
+            // The unscaled screen delta (origin subtracted, no scale) lands on a different row entirely.
+            UiSystem::Update(h.s, viewport, Idle(screen - kDpi150.FramePos));
+            CHECK(h.State(h.settings) == UiButtonState::Normal);
+        }
+
+        SUBCASE("(c) letterbox band — canvases laid out in a 4:3 band of a 16:9 target")
+        {
+            Home h;
+            // Elements resolve inside the band (absolute target pixels), like Render's band variant.
+            const UiRect settingsRect = RectOf(h.s, h.settings, kBand);
+            CHECK(settingsRect.Center().x == doctest::Approx(960.0f));
+            CHECK(settingsRect.Width()    == doctest::Approx(280.0f));   // 1080-tall band -> scale 1
+            const glm::vec2 screen = kBandHost.ScreenOf(settingsRect.Center());
+            UiSystem::Update(h.s, kBand, Idle(kBandHost.Map(screen)));
+            CHECK(h.State(h.settings) == UiButtonState::Hover);
+            // A cursor over the black side band (target x = 100) hovers nothing at the same height.
+            const glm::vec2 sideBand = kBandHost.ScreenOf({ 100.0f, settingsRect.Center().y });
+            CHECK_FALSE(UiSystem::Update(h.s, kBand, Idle(kBandHost.Map(sideBand))));
+            CHECK(h.State(h.settings) == UiButtonState::Normal);
+        }
+    }
+
+    TEST_CASE("KI-64 slider knobs: the same three mappings grab the knob centre and refuse 1 px above the knob's top where the rect is not")
+    {
+        // A slider whose rect is exactly as tall as its knob, so "1 px above the knob" is
+        // outside both: 200 x 18 px, knob 18 px, value 50 % -> knob centred at (200, 109).
+        auto makeSlider = [](Scene& s, Entity canvas) -> Entity
+        {
+            Entity e = MakeElement(s, canvas, "Slider", { 100.0f, 100.0f }, { 300.0f, 118.0f });
+            auto& sl = e.AddComponent<UiSliderComponent>();
+            sl.Channel = "gain"; sl.Min = 0.0f; sl.Max = 1.0f; sl.KnobSize = 18.0f;
+            return e;
+        };
+        auto check = [&](const Host& host, const UiRect& viewport, const char* label)
+        {
+            INFO(label);
+            Scene s;
+            Entity canvas = MakeCanvas(s);                       // ConstantPixel: literal rects
+            Entity e = makeSlider(s, canvas);
+            auto& sl = e.GetComponent<UiSliderComponent>();
+            DataBus bus;
+            bus.Set("gain", 0.5);
+            const UiRect rect = RectOf(s, e, viewport);
+            const UiRect knob = UiSystem::SliderKnobRect(rect, sl.Orientation, sl.KnobSize, sl.Min, sl.Max, 0.5);
+            CHECK(knob.Center() == rect.Center());
+            CHECK(knob.Height() == doctest::Approx(18.0f));
+
+            // Press on the knob centre (mapped from its screen position): the drag begins and writes.
+            UiSystem::Update(s, viewport, Press(host.Map(host.ScreenOf(knob.Center()))), nullptr, &bus);
+            CHECK(sl.Dragging);
+            CHECK(bus.GetNumber("gain") == doctest::Approx(0.5));
+            // Drag 50 px right in framebuffer pixels: the value follows (0.75).
+            UiSystem::Update(s, viewport, Hold(host.Map(host.ScreenOf(knob.Center() + glm::vec2(50.0f, 0.0f)))), nullptr, &bus);
+            CHECK(bus.GetNumber("gain") == doctest::Approx(0.75));
+            UiSystem::Update(s, viewport, Release(host.Map(host.ScreenOf(knob.Center() + glm::vec2(50.0f, 0.0f)))), nullptr, &bus);
+            CHECK_FALSE(sl.Dragging);
+
+            // 1 px above the knob's top (rect is not there either): no drag, no write.
+            bus.Set("gain", 0.5);
+            std::vector<DataSample> hist;
+            const size_t before = bus.History("gain", hist);
+            UiSystem::Update(s, viewport, Press(host.Map(host.ScreenOf({ knob.Center().x, knob.Min.y - 1.0f }))), nullptr, &bus);
+            CHECK_FALSE(sl.Dragging);
+            CHECK(bus.History("gain", hist) == before);
+            UiSystem::Update(s, viewport, Release(host.Map(host.ScreenOf({ knob.Center().x, knob.Min.y - 1.0f }))), nullptr, &bus);
+
+            // The KI-61 pointer (screen coordinates handed over unmapped) at the knob's picture misses it.
+            UiSystem::Update(s, viewport, Press(host.ScreenOf(knob.Center())), nullptr, &bus);
+            CHECK_FALSE(sl.Dragging);
+            UiSystem::Update(s, viewport, Release(host.ScreenOf(knob.Center())), nullptr, &bus);
+        };
+        check(kChrome,     UiRect{ { 0.0f, 0.0f }, kChrome.FbSize },     "(b) chrome offset");
+        check(kFullscreen, UiRect{ { 0.0f, 0.0f }, kFullscreen.FbSize }, "(b') fullscreen tab bar");
+        check(kDpi150,     UiRect{ { 0.0f, 0.0f }, kDpi150.FbSize },     "(a) 1.5x framebuffer scale");
+        check(kBandHost,   kBand,                                          "(c) letterbox band");
+
+        SUBCASE("PendulumLab's Gravity row in fullscreen: the knob the draw shows is the one the mapped press grabs; the unmapped press (27 px low) misses, the unmapped press 21 px above it grabs")
+        {
+            SettingsRow r;
+            const UiRect viewport{ { 0.0f, 0.0f }, kFullscreen.FbSize };
+            DataBus bus;
+            bus.Set("settings.gravity", 9.80665);
+            const UiRect rect = RectOf(r.s, r.slider, viewport);
+            const float scale = 1414.0f / 1080.0f;
+            CHECK(rect.Height() == doctest::Approx(24.0f * scale));
+            const UiRect knob = UiSystem::SliderKnobRect(rect, r.Sl().Orientation, r.Sl().KnobSize * scale, r.Sl().Min, r.Sl().Max, 9.80665);
+            CHECK(knob.Height() == doctest::Approx(18.0f * scale));
+            CHECK(knob.Center().y == doctest::Approx(rect.Center().y));
+
+            const glm::vec2 onKnob = kFullscreen.ScreenOf(knob.Center());
+            UiSystem::Update(r.s, viewport, Press(kFullscreen.Map(onKnob)), nullptr, &bus);
+            CHECK(r.Sl().Dragging);
+            UiSystem::Update(r.s, viewport, Release(kFullscreen.Map(onKnob)), nullptr, &bus);
+            CHECK_FALSE(r.Sl().Dragging);
+
+            // The stale package's mapping (window y used as frame y): the knob's own pixels miss...
+            UiSystem::Update(r.s, viewport, Press(onKnob), nullptr, &bus);
+            CHECK_FALSE(r.Sl().Dragging);
+            UiSystem::Update(r.s, viewport, Release(onKnob), nullptr, &bus);
+            // ...and 21 px above the knob grabs — the symptom in the fullscreen photo.
+            UiSystem::Update(r.s, viewport, Press(onKnob - glm::vec2(0.0f, 21.0f)), nullptr, &bus);
+            CHECK(r.Sl().Dragging);
+            UiSystem::Update(r.s, viewport, Release(onKnob - glm::vec2(0.0f, 21.0f)), nullptr, &bus);
+        }
+    }
+
     TEST_CASE("KI-65 slider knob larger than its track: a press on the knob's overhang grabs and drags, 1 px beyond the knob does not; SliderKnobRect is the drawn geometry (horizontal + vertical)")
     {
         SUBCASE("horizontal: 200 x 8 track, 24 px knob at 50 %")

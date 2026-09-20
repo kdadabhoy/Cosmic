@@ -1006,8 +1006,14 @@ first line of the template's README (its templated title) as the description; fi
 
 **Clicking a button in the exported exe does nothing (or hits the button above it).** The
 standalone player hit-tested the UI in window coordinates while drawing it inside the Viewport
-dock, so every button answered about 54 px above its picture; fixed in this tree
-(`PlayerLayer::UpdateUI`). A package built from an older engine keeps the bug — repackage.
+dock, so every button answered about 54 px above its picture (27 px in fullscreen, where only the
+dock tab bar remains — there a slider knob grabbed only when the cursor sat above it); fixed in
+this tree (`PlayerLayer::UpdateUI` through `UiSystem::MapPointerToCanvas`, KI-61 / KI-64). A
+package built from an older engine keeps the bug — repackage; the `dist\PendulumLab` staged by the
+AP-Q1 qualification (2026-09-20 00:05) is one. To see where the player thinks the cursor is, run
+the exe with `COSMIC_UI_DEBUG_POINTER=1`: every button / toggle / slider hit rect is outlined in
+magenta (a slider's knob in cyan) and the resolved pointer is drawn as a yellow cross-hair — it
+must sit under the OS cursor.
 
 **The package contains `*.cscene.bak` files.** The editor's save backups next to each scene are
 staged along with the project content (66 files instead of 62 for this project). They are

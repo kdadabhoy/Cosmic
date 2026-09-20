@@ -23,7 +23,34 @@
 #include <cctype>
 #include <cstdio>
 #include <cstring>
+#include <cstdlib>         // std::getenv — COSMIC_UI_DEBUG_POINTER (KI-64 overlay)
 #include <limits>
+
+namespace
+{
+    // KI-64 debug overlay: COSMIC_UI_DEBUG_POINTER=1 makes Render stroke every
+    // interactable's hit rect (magenta; a slider's knob rect in cyan) and cross-hair
+    // the pointer the last Update resolved (yellow), so one screenshot shows where
+    // the host's mapping put the cursor relative to the pictures it should hit.
+    bool DebugPointerEnabled()
+    {
+        static const bool enabled = []
+        {
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable: 4996)   // std::getenv is fine here; no CRT state is retained
+#endif
+            const char* v = std::getenv("COSMIC_UI_DEBUG_POINTER");
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
+            return v && v[0] == '1';
+        }();
+        return enabled;
+    }
+    glm::vec2 s_DebugPointer{ 0.0f };
+    bool      s_DebugPointerSet = false;
+}
 
 namespace Cosmic
 {
@@ -233,6 +260,24 @@ namespace Cosmic
         return std::min(std::max(v, lo), hi);
     }
 
+    glm::vec2 UiSystem::MapPointerToCanvas(const glm::vec2& pointerScreen,
+                                           const glm::vec2& frameScreenPos,
+                                           const glm::vec2& frameScreenSize,
+                                           const glm::vec2& framebufferSize)
+    {
+        // KI-64 (KI-61's expression, now the ONE place it lives): frame-local first,
+        // then presented-size -> framebuffer-size. Both inputs are in the same screen
+        // space, so the window's own position cancels; the chrome above the image
+        // (menu bar + dock tab bar, 54 px windowed / 27 px fullscreen on PendulumLab)
+        // is what frameScreenPos removes.
+        glm::vec2 p = pointerScreen - frameScreenPos;
+        const float sx = frameScreenSize.x > 0.0f ? framebufferSize.x / frameScreenSize.x : 1.0f;
+        const float sy = frameScreenSize.y > 0.0f ? framebufferSize.y / frameScreenSize.y : 1.0f;
+        p.x *= sx;
+        p.y *= sy;
+        return p;
+    }
+
     UiRect UiSystem::SliderKnobRect(const UiRect& rect, UiSliderOrientation orientation,
                                     float knobSizePx, float min, float max, double value)
     {
@@ -403,6 +448,9 @@ namespace Cosmic
         CollectElements(scene, viewport, elements, cameraViewProj);
 
         auto& reg = scene.GetRegistry();
+
+        s_DebugPointer    = pointer.Position;   // KI-64 overlay (drawn only when enabled)
+        s_DebugPointerSet = true;
 
         // Topmost interactable button / slider / toggle under the pointer (front-
         // to-back). A slider mid-drag keeps the pointer (the drag may leave its
@@ -1261,6 +1309,37 @@ namespace Cosmic
                 {
                     DrawTextInRect(*txt, el.Rect, el.Scale, txt->Text, txt->Color);
                 }
+            }
+        }
+
+        // KI-64 — COSMIC_UI_DEBUG_POINTER=1: hit rects + the resolved pointer, on top.
+        if (DebugPointerEnabled())
+        {
+            const glm::vec4 kHit { 1.0f, 0.0f, 1.0f, 0.9f };
+            const glm::vec4 kKnob{ 0.0f, 1.0f, 1.0f, 0.9f };
+            const glm::vec4 kPtr { 1.0f, 1.0f, 0.0f, 1.0f };
+            for (const UiElement& el : elements)
+            {
+                const entt::entity e = static_cast<entt::entity>(el.Handle);
+                bool interactable = false;
+                if (auto* btn = reg.try_get<UiButtonComponent>(e); btn && btn->Interactable) interactable = true;
+                if (auto* tg  = reg.try_get<UiToggleComponent>(e); tg  && tg->Interactable)  interactable = true;
+                if (auto* sl  = reg.try_get<UiSliderComponent>(e); sl  && sl->Interactable)
+                {
+                    interactable = true;
+                    double v = 0.0;
+                    if (!ctx.Number(sl->Channel, sl->PreviewValue, v)) v = (double)sl->Min;
+                    // The hit region is rect OR knob (KI-65): both outlines, no bounding box.
+                    StrokeRect(SliderKnobRect(el.Rect, sl->Orientation, sl->KnobSize * el.Scale,
+                                              sl->Min, sl->Max, v), 1.0f, kKnob);
+                }
+                if (interactable) StrokeRect(el.Rect, 1.0f, kHit);
+            }
+            if (s_DebugPointerSet)
+            {
+                const glm::vec2 p = s_DebugPointer;
+                FillRect({ { p.x - 14.0f, p.y }, { p.x + 15.0f, p.y + 1.0f } }, kPtr);
+                FillRect({ { p.x, p.y - 14.0f }, { p.x + 1.0f, p.y + 15.0f } }, kPtr);
             }
         }
 
