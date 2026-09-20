@@ -1,0 +1,11 @@
+open	C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/Ap03App/src/screens/HomeScreen.h	9
+reveal	C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/Ap03App/src/screens/HomeScreen.h	9
+open	C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/Ap03App/src/screens/HomeScreen.h	9
+open	C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/Ap03App/src/screens/HomeScreen.h	9
+open	C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/Ap03App/src/Module.cpp	25
+open	C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/Ap03App/src/Module.cpp	25
+open	C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/Ap03App/src/services/AppService.cpp	33
+reveal	C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/Ap03App/src/services/AppService.cpp	33
+open	C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/Ap03App/src/services/AppService.cpp	33
+open	C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/Ap03App/src/Module.cpp	25
+open	C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/Ap03App/src/services/AppService.cpp	62

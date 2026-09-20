@@ -1,0 +1,517 @@
+[Starforge] Editor attached — open or create a project from the homescreen.
+[Starforge] Viewport: MMB orbit | Ctrl+MMB pan | scroll zoom | LMB pick.
+[Starforge] W/E/R gizmo | F frame | Ctrl+Z/Y undo | Ctrl+S save.
+[COSMIC] WorkspaceLayer project name set to: 'Starforge'
+
+[COSMIC] Successfully loaded and mounted project DLL Layer!
+
+[COSMIC] WorkspaceLayer: Dockspace built (legacy 3-tier left sidebar).
+
+[COSMIC] WorkspaceLayer: Dockspace built (port mode L=true R=true T=true B=true).
+
+[Scene] Opened 'project://scenes/Home.cscene'.
+[Scripts] 1 script(s) not built — press Ctrl+B to compile the project module.
+[Project] Scaffolded project — press Ctrl+B to build the game module.
+[Project] Opened 'Ap03App' @ C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/Ap03App
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/Ap03App/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/Ap03App/project.cproj'.
+
+[COSMIC] Config: no file at './starforge/layouts/active.toml'.
+
+[COSMIC] Config: no file at './starforge/layouts/active.toml'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/Ap03App/project.cproj'.
+
+[COSMIC] WorkspaceLayer: Dockspace built (port mode L=true R=true T=true B=true).
+
+[COSMIC] Font: baked 'lucide' (1024x71, 95 glyphs)
+
+[COSMIC] Font: baked 'Roboto-Bold' (1024x257, 95 glyphs)
+
+[COSMIC] Font: baked 'Roboto-Medium' (1024x255, 95 glyphs)
+
+[COSMIC] Font: baked 'Roboto-Regular' (1024x256, 95 glyphs)
+
+[COSMIC] Font: library initialised (4 font(s))
+
+[Build] Building 'Ap03App' -> Ap03App_hot1.dll
+[build] configuring C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/Ap03App
+-- Building for: Visual Studio 18 2026
+-- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.26200.
+-- The C compiler identification is MSVC 19.51.36248.0
+-- The CXX compiler identification is MSVC 19.51.36248.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Configuring done (2.3s)
+-- Generating done (0.0s)
+-- Build files have been written to: C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/Ap03App/build
+[build] compiling (Debug)
+MSBuild version 18.7.8+1ac568fee for .NET Framework
+
+C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic-ap-03\build\ap03tmp\cosmic-accept-b5308f8a502e484180e9f55c9054151f\temp\ap03\Ap03App\build\ZERO_CHECK.vcxproj]
+  Checking File Globs
+  1>Checking Build System
+C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic-ap-03\build\ap03tmp\cosmic-accept-b5308f8a502e484180e9f55c9054151f\temp\ap03\Ap03App\build\Ap03App.vcxproj]
+  Building Custom Rule C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/Ap03App/CMakeLists.txt
+  Module.cpp
+  AppService.cpp
+  imgui.cpp
+  imgui_draw.cpp
+  imgui_widgets.cpp
+  imgui_tables.cpp
+  implot.cpp
+  implot_items.cpp
+  Generating Code...
+     Creating library C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/Ap03App/build/Debug/Ap03App_hot1.lib and object C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/Ap03App/build/Debug/Ap03App_hot1.exp
+  Ap03App.vcxproj -> C:\dev\Cosmic-ap-03\build\ap03tmp\cosmic-accept-b5308f8a502e484180e9f55c9054151f\temp\ap03\Ap03App\build\Debug\Ap03App_hot1.dll
+C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic-ap-03\build\ap03tmp\cosmic-accept-b5308f8a502e484180e9f55c9054151f\temp\ap03\Ap03App\build\ALL_BUILD.vcxproj]
+  Building Custom Rule C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/Ap03App/CMakeLists.txt
+[build] SUCCESS
+[Module] Reloaded 'Ap03App_hot1' (3 script(s)).
+[APP] GameModule: loaded 'Ap03App_hot1.dll'.
+
+[Build] Building 'Ap03App' -> Ap03App_hot2.dll
+[build] configuring C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/Ap03App
+-- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.26200.
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/Ap03App/build
+[build] compiling (Debug)
+MSBuild version 18.7.8+1ac568fee for .NET Framework
+
+C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic-ap-03\build\ap03tmp\cosmic-accept-b5308f8a502e484180e9f55c9054151f\temp\ap03\Ap03App\build\ZERO_CHECK.vcxproj]
+  Checking File Globs
+  1>Checking Build System
+C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic-ap-03\build\ap03tmp\cosmic-accept-b5308f8a502e484180e9f55c9054151f\temp\ap03\Ap03App\build\Ap03App.vcxproj]
+  Building Custom Rule C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/Ap03App/CMakeLists.txt
+     Creating library C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/Ap03App/build/Debug/Ap03App_hot2.lib and object C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/Ap03App/build/Debug/Ap03App_hot2.exp
+  Ap03App.vcxproj -> C:\dev\Cosmic-ap-03\build\ap03tmp\cosmic-accept-b5308f8a502e484180e9f55c9054151f\temp\ap03\Ap03App\build\Debug\Ap03App_hot2.dll
+C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic-ap-03\build\ap03tmp\cosmic-accept-b5308f8a502e484180e9f55c9054151f\temp\ap03\Ap03App\build\ALL_BUILD.vcxproj]
+  Building Custom Rule C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/Ap03App/CMakeLists.txt
+[build] SUCCESS
+[Module] Reloaded 'Ap03App_hot2' (3 script(s)).
+[APP] GameModule: loaded 'Ap03App_hot2.dll'.
+
+[Play] Started — 1 script(s).
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/Ap03App/project.cproj'.
+
+[Play] Stopped — edit scene restored.
+[Screens] New screen 'Telemetry': scenes/Telemetry.cscene + flow state + src/screens/TelemetryScreen.h
+[Screens] Renamed state 'Telemetry' -> 'Telem2' (the scene and script files keep their names).
+[Screens] Renamed state 'Telem2' -> 'Telemetry' (the scene and script files keep their names).
+[Screens] Start state -> 'Dashboard'.
+[Screens] Start state -> 'Home'.
+[Screens] Start state -> 'Dashboard'.
+[Screens] Start state -> 'Home'.
+[Build] Building 'Ap03App' -> Ap03App_hot3.dll
+[build] configuring C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/Ap03App
+-- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.26200.
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/Ap03App/build
+[build] compiling (Debug)
+MSBuild version 18.7.8+1ac568fee for .NET Framework
+
+C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic-ap-03\build\ap03tmp\cosmic-accept-b5308f8a502e484180e9f55c9054151f\temp\ap03\Ap03App\build\ZERO_CHECK.vcxproj]
+  Checking File Globs
+  1>Checking Build System
+C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic-ap-03\build\ap03tmp\cosmic-accept-b5308f8a502e484180e9f55c9054151f\temp\ap03\Ap03App\build\Ap03App.vcxproj]
+  Module.cpp
+     Creating library C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/Ap03App/build/Debug/Ap03App_hot3.lib and object C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/Ap03App/build/Debug/Ap03App_hot3.exp
+  Ap03App.vcxproj -> C:\dev\Cosmic-ap-03\build\ap03tmp\cosmic-accept-b5308f8a502e484180e9f55c9054151f\temp\ap03\Ap03App\build\Debug\Ap03App_hot3.dll
+C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic-ap-03\build\ap03tmp\cosmic-accept-b5308f8a502e484180e9f55c9054151f\temp\ap03\Ap03App\build\ALL_BUILD.vcxproj]
+[build] SUCCESS
+[Module] Reloaded 'Ap03App_hot3' (4 script(s)).
+[APP] GameModule: loaded 'Ap03App_hot3.dll'.
+
+[Scene] Opened 'project://scenes/Home.cscene'.
+[Scene] Saved 'project://scenes/Home.cscene'.
+[Scene] Opened 'project://scenes/Dashboard.cscene'.
+[Scene] Opened 'project://scenes/Home.cscene'.
+[Scene] Opened 'project://scenes/Dashboard.cscene'.
+[Scene] Saved 'project://scenes/Dashboard.cscene'.
+[Build] Building 'Ap03App' -> Ap03App_hot4.dll
+[build] configuring C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/Ap03App
+-- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.26200.
+-- Configuring done (0.0s)
+-- Generating done (0.1s)
+-- Build files have been written to: C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/Ap03App/build
+[build] compiling (Debug)
+MSBuild version 18.7.8+1ac568fee for .NET Framework
+
+C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic-ap-03\build\ap03tmp\cosmic-accept-b5308f8a502e484180e9f55c9054151f\temp\ap03\Ap03App\build\ZERO_CHECK.vcxproj]
+  Checking File Globs
+  1>Checking Build System
+C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic-ap-03\build\ap03tmp\cosmic-accept-b5308f8a502e484180e9f55c9054151f\temp\ap03\Ap03App\build\Ap03App.vcxproj]
+     Creating library C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/Ap03App/build/Debug/Ap03App_hot4.lib and object C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/Ap03App/build/Debug/Ap03App_hot4.exp
+  Ap03App.vcxproj -> C:\dev\Cosmic-ap-03\build\ap03tmp\cosmic-accept-b5308f8a502e484180e9f55c9054151f\temp\ap03\Ap03App\build\Debug\Ap03App_hot4.dll
+C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic-ap-03\build\ap03tmp\cosmic-accept-b5308f8a502e484180e9f55c9054151f\temp\ap03\Ap03App\build\ALL_BUILD.vcxproj]
+[build] SUCCESS
+[Module] Reloaded 'Ap03App_hot4' (4 script(s)).
+[APP] GameModule: loaded 'Ap03App_hot4.dll'.
+
+[Scene] Opened 'project://scenes/Home.cscene'.
+[Play] Started — 1 script(s).
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/Ap03App/project.cproj'.
+
+[Live] Module rebuild while playing — stopping, then resuming on 'Dashboard' after the reload.
+[Play] Stopped — edit scene restored.
+[Build] Building 'Ap03App' -> Ap03App_hot5.dll
+[build] configuring C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/Ap03App
+-- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.26200.
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/Ap03App/build
+[build] compiling (Debug)
+MSBuild version 18.7.8+1ac568fee for .NET Framework
+
+C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic-ap-03\build\ap03tmp\cosmic-accept-b5308f8a502e484180e9f55c9054151f\temp\ap03\Ap03App\build\ZERO_CHECK.vcxproj]
+  Checking File Globs
+  1>Checking Build System
+C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic-ap-03\build\ap03tmp\cosmic-accept-b5308f8a502e484180e9f55c9054151f\temp\ap03\Ap03App\build\Ap03App.vcxproj]
+  AppService.cpp
+     Creating library C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/Ap03App/build/Debug/Ap03App_hot5.lib and object C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/Ap03App/build/Debug/Ap03App_hot5.exp
+  Ap03App.vcxproj -> C:\dev\Cosmic-ap-03\build\ap03tmp\cosmic-accept-b5308f8a502e484180e9f55c9054151f\temp\ap03\Ap03App\build\Debug\Ap03App_hot5.dll
+C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic-ap-03\build\ap03tmp\cosmic-accept-b5308f8a502e484180e9f55c9054151f\temp\ap03\Ap03App\build\ALL_BUILD.vcxproj]
+[build] SUCCESS
+[Module] Reloaded 'Ap03App_hot5' (4 script(s)).
+[Play] Started — 1 script(s).
+[Live] Resumed Play on 'Dashboard'.
+[APP] GameModule: loaded 'Ap03App_hot5.dll'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/Ap03App/project.cproj'.
+
+[Live] Module rebuild while playing — stopping, then resuming on 'Dashboard' after the reload.
+[Play] Stopped — edit scene restored.
+[Build] Building 'Ap03App' -> Ap03App_hot6.dll
+[build] configuring C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/Ap03App
+-- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.26200.
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/Ap03App/build
+[build] compiling (Debug)
+MSBuild version 18.7.8+1ac568fee for .NET Framework
+
+C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic-ap-03\build\ap03tmp\cosmic-accept-b5308f8a502e484180e9f55c9054151f\temp\ap03\Ap03App\build\ZERO_CHECK.vcxproj]
+  Checking File Globs
+  1>Checking Build System
+C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic-ap-03\build\ap03tmp\cosmic-accept-b5308f8a502e484180e9f55c9054151f\temp\ap03\Ap03App\build\Ap03App.vcxproj]
+  AppService.cpp
+C:\dev\Cosmic-ap-03\build\ap03tmp\cosmic-accept-b5308f8a502e484180e9f55c9054151f\temp\ap03\Ap03App\src\services\AppService.cpp(92,1): error C2059: syntax error: 'this' [C:\dev\Cosmic-ap-03\build\ap03tmp\cosmic-accept-b5308f8a502e484180e9f55c9054151f\temp\ap03\Ap03App\build\Ap03App.vcxproj]
+[build] FAILED (exit 1)
+[Build] Failed — see the Console. Keeping the current module.
+[Build] Building 'Ap03App' -> Ap03App_hot7.dll
+[build] configuring C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/Ap03App
+-- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.26200.
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/Ap03App/build
+[build] compiling (Debug)
+MSBuild version 18.7.8+1ac568fee for .NET Framework
+
+C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic-ap-03\build\ap03tmp\cosmic-accept-b5308f8a502e484180e9f55c9054151f\temp\ap03\Ap03App\build\ZERO_CHECK.vcxproj]
+  Checking File Globs
+  1>Checking Build System
+C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic-ap-03\build\ap03tmp\cosmic-accept-b5308f8a502e484180e9f55c9054151f\temp\ap03\Ap03App\build\Ap03App.vcxproj]
+  AppService.cpp
+     Creating library C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/Ap03App/build/Debug/Ap03App_hot7.lib and object C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/Ap03App/build/Debug/Ap03App_hot7.exp
+  Ap03App.vcxproj -> C:\dev\Cosmic-ap-03\build\ap03tmp\cosmic-accept-b5308f8a502e484180e9f55c9054151f\temp\ap03\Ap03App\build\Debug\Ap03App_hot7.dll
+C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic-ap-03\build\ap03tmp\cosmic-accept-b5308f8a502e484180e9f55c9054151f\temp\ap03\Ap03App\build\ALL_BUILD.vcxproj]
+[build] SUCCESS
+[Module] Reloaded 'Ap03App_hot7' (4 script(s)).
+[Play] Started — 1 script(s).
+[Live] Resumed Play on 'Dashboard'.
+[APP] GameModule: loaded 'Ap03App_hot7.dll'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/Ap03App/project.cproj'.
+
+[Play] Stopped — edit scene restored.
+[COSMIC] WorkspaceLayer: Dockspace built (port mode L=true R=true T=true B=true).
+
+[COSMIC] Config: loaded './starforge/projects.toml'.
+
+[Scene] Opened 'project://scenes/Main.cscene'.
+[Project] Scaffolded project — press Ctrl+B to build the game module.
+[Project] Opened 'Ap03game' @ C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/Ap03game
+[Build] Building 'Ap03game' -> Ap03game_hot8.dll
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/Ap03game/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/Ap03game/project.cproj'.
+
+[COSMIC] Config: loaded './starforge/layouts/active.toml'.
+
+[COSMIC] Config: loaded './starforge/layouts/active.toml'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/Ap03game/project.cproj'.
+
+[COSMIC] Config: loaded './starforge/projects.toml'.
+
+[COSMIC] WorkspaceLayer: Dockspace built (port mode L=true R=true T=true B=true).
+
+[build] configuring C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/Ap03game
+-- Building for: Visual Studio 18 2026
+-- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.26200.
+-- The C compiler identification is MSVC 19.51.36248.0
+-- The CXX compiler identification is MSVC 19.51.36248.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Configuring done (2.3s)
+-- Generating done (0.0s)
+-- Build files have been written to: C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/Ap03game/build
+[build] compiling (Debug)
+MSBuild version 18.7.8+1ac568fee for .NET Framework
+
+C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic-ap-03\build\ap03tmp\cosmic-accept-b5308f8a502e484180e9f55c9054151f\temp\ap03\Ap03game\build\ZERO_CHECK.vcxproj]
+  Checking File Globs
+  1>Checking Build System
+C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic-ap-03\build\ap03tmp\cosmic-accept-b5308f8a502e484180e9f55c9054151f\temp\ap03\Ap03game\build\Ap03game.vcxproj]
+  Building Custom Rule C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/Ap03game/CMakeLists.txt
+  Module.cpp
+  BouncingBall.cpp
+  PidController.cpp
+  imgui.cpp
+  imgui_draw.cpp
+  imgui_widgets.cpp
+  imgui_tables.cpp
+  implot.cpp
+  implot_items.cpp
+  Generating Code...
+     Creating library C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/Ap03game/build/Debug/Ap03game_hot8.lib and object C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/Ap03game/build/Debug/Ap03game_hot8.exp
+  Ap03game.vcxproj -> C:\dev\Cosmic-ap-03\build\ap03tmp\cosmic-accept-b5308f8a502e484180e9f55c9054151f\temp\ap03\Ap03game\build\Debug\Ap03game_hot8.dll
+C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic-ap-03\build\ap03tmp\cosmic-accept-b5308f8a502e484180e9f55c9054151f\temp\ap03\Ap03game\build\ALL_BUILD.vcxproj]
+  Building Custom Rule C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/Ap03game/CMakeLists.txt
+[build] SUCCESS
+[Module] Reloaded 'Ap03game_hot8' (6 script(s)).
+[Play] Started — 0 script(s).
+[APP] GameModule: loaded 'Ap03game_hot8.dll'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/Ap03game/project.cproj'.
+
+[Play] Stopped — edit scene restored.
+[COSMIC] WorkspaceLayer: Dockspace built (port mode L=true R=true T=true B=true).
+
+[COSMIC] Config: loaded './starforge/projects.toml'.
+
+[Scene] Opened 'project://scenes/Main.cscene'.
+[Project] Scaffolded project — press Ctrl+B to build the game module.
+[Project] Opened 'Ap03blank' @ C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/Ap03blank
+[Build] Building 'Ap03blank' -> Ap03blank_hot9.dll
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/Ap03blank/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/Ap03blank/project.cproj'.
+
+[COSMIC] Config: loaded './starforge/layouts/active.toml'.
+
+[COSMIC] Config: loaded './starforge/layouts/active.toml'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/Ap03blank/project.cproj'.
+
+[COSMIC] Config: loaded './starforge/projects.toml'.
+
+[COSMIC] WorkspaceLayer: Dockspace built (port mode L=true R=true T=true B=true).
+
+[build] configuring C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/Ap03blank
+-- Building for: Visual Studio 18 2026
+-- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.26200.
+-- The C compiler identification is MSVC 19.51.36248.0
+-- The CXX compiler identification is MSVC 19.51.36248.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Configuring done (2.3s)
+-- Generating done (0.0s)
+-- Build files have been written to: C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/Ap03blank/build
+[build] compiling (Debug)
+MSBuild version 18.7.8+1ac568fee for .NET Framework
+
+C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic-ap-03\build\ap03tmp\cosmic-accept-b5308f8a502e484180e9f55c9054151f\temp\ap03\Ap03blank\build\ZERO_CHECK.vcxproj]
+  Checking File Globs
+  1>Checking Build System
+C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic-ap-03\build\ap03tmp\cosmic-accept-b5308f8a502e484180e9f55c9054151f\temp\ap03\Ap03blank\build\Ap03blank.vcxproj]
+  Building Custom Rule C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/Ap03blank/CMakeLists.txt
+  Module.cpp
+  imgui.cpp
+  imgui_draw.cpp
+  imgui_widgets.cpp
+  imgui_tables.cpp
+  implot.cpp
+  implot_items.cpp
+  Generating Code...
+     Creating library C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/Ap03blank/build/Debug/Ap03blank_hot9.lib and object C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/Ap03blank/build/Debug/Ap03blank_hot9.exp
+  Ap03blank.vcxproj -> C:\dev\Cosmic-ap-03\build\ap03tmp\cosmic-accept-b5308f8a502e484180e9f55c9054151f\temp\ap03\Ap03blank\build\Debug\Ap03blank_hot9.dll
+C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic-ap-03\build\ap03tmp\cosmic-accept-b5308f8a502e484180e9f55c9054151f\temp\ap03\Ap03blank\build\ALL_BUILD.vcxproj]
+  Building Custom Rule C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/Ap03blank/CMakeLists.txt
+[build] SUCCESS
+[Module] Reloaded 'Ap03blank_hot9' (0 script(s)).
+[Play] Started — 0 script(s).
+[APP] GameModule: loaded 'Ap03blank_hot9.dll'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/Ap03blank/project.cproj'.
+
+[Play] Stopped — edit scene restored.
+[COSMIC] WorkspaceLayer: Dockspace built (port mode L=true R=true T=true B=true).
+
+[COSMIC] Config: loaded './starforge/projects.toml'.
+
+[Samples] Created 'FlowDemo' at C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/FlowDemo from templates/samples/FlowDemo.
+[Scene] Opened 'project://scenes/MainMenu.cscene'.
+[Project] Scaffolded project — press Ctrl+B to build the game module.
+[Project] Opened 'FlowDemo' @ C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/FlowDemo
+[Build] Building 'FlowDemo' -> FlowDemo_hot10.dll
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/FlowDemo/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/FlowDemo/project.cproj'.
+
+[COSMIC] Config: loaded './starforge/layouts/active.toml'.
+
+[COSMIC] Config: loaded './starforge/layouts/active.toml'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/FlowDemo/project.cproj'.
+
+[COSMIC] Config: loaded './starforge/projects.toml'.
+
+[COSMIC] WorkspaceLayer: Dockspace built (port mode L=true R=true T=true B=true).
+
+[build] configuring C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/FlowDemo
+-- Building for: Visual Studio 18 2026
+-- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.26200.
+-- The C compiler identification is MSVC 19.51.36248.0
+-- The CXX compiler identification is MSVC 19.51.36248.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Configuring done (2.3s)
+-- Generating done (0.0s)
+-- Build files have been written to: C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/FlowDemo/build
+[build] compiling (Debug)
+MSBuild version 18.7.8+1ac568fee for .NET Framework
+
+C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic-ap-03\build\ap03tmp\cosmic-accept-b5308f8a502e484180e9f55c9054151f\temp\ap03\FlowDemo\build\ZERO_CHECK.vcxproj]
+  Checking File Globs
+  1>Checking Build System
+C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic-ap-03\build\ap03tmp\cosmic-accept-b5308f8a502e484180e9f55c9054151f\temp\ap03\FlowDemo\build\FlowDemo.vcxproj]
+  Building Custom Rule C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/FlowDemo/CMakeLists.txt
+  Module.cpp
+  imgui.cpp
+  imgui_draw.cpp
+  imgui_widgets.cpp
+  imgui_tables.cpp
+  implot.cpp
+  implot_items.cpp
+  Generating Code...
+     Creating library C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/FlowDemo/build/Debug/FlowDemo_hot10.lib and object C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/FlowDemo/build/Debug/FlowDemo_hot10.exp
+  FlowDemo.vcxproj -> C:\dev\Cosmic-ap-03\build\ap03tmp\cosmic-accept-b5308f8a502e484180e9f55c9054151f\temp\ap03\FlowDemo\build\Debug\FlowDemo_hot10.dll
+C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic-ap-03\build\ap03tmp\cosmic-accept-b5308f8a502e484180e9f55c9054151f\temp\ap03\FlowDemo\build\ALL_BUILD.vcxproj]
+  Building Custom Rule C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/FlowDemo/CMakeLists.txt
+[build] SUCCESS
+[Module] Reloaded 'FlowDemo_hot10' (0 script(s)).
+[Play] Started — 0 script(s).
+[APP] GameModule: loaded 'FlowDemo_hot10.dll'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/FlowDemo/project.cproj'.
+
+[Play] Stopped — edit scene restored.
+[COSMIC] WorkspaceLayer: Dockspace built (port mode L=true R=true T=true B=true).
+
+[COSMIC] Config: loaded './starforge/projects.toml'.
+
+[Samples] Created 'ForgePong' at C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/ForgePong from templates/samples/ForgePong.
+[Scene] Opened 'project://scenes/Menu.cscene'.
+[Project] Scaffolded project — press Ctrl+B to build the game module.
+[Project] Opened 'ForgePong' @ C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/ForgePong
+[Build] Building 'ForgePong' -> ForgePong_hot11.dll
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/ForgePong/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/ForgePong/project.cproj'.
+
+[COSMIC] Config: loaded './starforge/layouts/active.toml'.
+
+[COSMIC] Config: loaded './starforge/layouts/active.toml'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/ForgePong/project.cproj'.
+
+[COSMIC] Config: loaded './starforge/projects.toml'.
+
+[COSMIC] WorkspaceLayer: Dockspace built (port mode L=true R=true T=true B=true).
+
+[build] configuring C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/ForgePong
+-- Building for: Visual Studio 18 2026
+-- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.26200.
+-- The C compiler identification is MSVC 19.51.36248.0
+-- The CXX compiler identification is MSVC 19.51.36248.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Configuring done (2.3s)
+-- Generating done (0.0s)
+-- Build files have been written to: C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/ForgePong/build
+[build] compiling (Debug)
+MSBuild version 18.7.8+1ac568fee for .NET Framework
+
+C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic-ap-03\build\ap03tmp\cosmic-accept-b5308f8a502e484180e9f55c9054151f\temp\ap03\ForgePong\build\ZERO_CHECK.vcxproj]
+  Checking File Globs
+  1>Checking Build System
+C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic-ap-03\build\ap03tmp\cosmic-accept-b5308f8a502e484180e9f55c9054151f\temp\ap03\ForgePong\build\ForgePong.vcxproj]
+  Building Custom Rule C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/ForgePong/CMakeLists.txt
+  Module.cpp
+  imgui.cpp
+  imgui_draw.cpp
+  imgui_widgets.cpp
+  imgui_tables.cpp
+  implot.cpp
+  implot_items.cpp
+  Generating Code...
+     Creating library C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/ForgePong/build/Debug/ForgePong_hot11.lib and object C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/ForgePong/build/Debug/ForgePong_hot11.exp
+  ForgePong.vcxproj -> C:\dev\Cosmic-ap-03\build\ap03tmp\cosmic-accept-b5308f8a502e484180e9f55c9054151f\temp\ap03\ForgePong\build\Debug\ForgePong_hot11.dll
+C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic-ap-03\build\ap03tmp\cosmic-accept-b5308f8a502e484180e9f55c9054151f\temp\ap03\ForgePong\build\ALL_BUILD.vcxproj]
+  Building Custom Rule C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/ForgePong/CMakeLists.txt
+[build] SUCCESS
+[Module] Reloaded 'ForgePong_hot11' (2 script(s)).
+[Play] Started — 0 script(s).
+[APP] GameModule: loaded 'ForgePong_hot11.dll'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic-ap-03/build/ap03tmp/cosmic-accept-b5308f8a502e484180e9f55c9054151f/temp/ap03/ForgePong/project.cproj'.
+
+[Play] Stopped — edit scene restored.
+[COSMIC] WorkspaceLayer: Dockspace built (port mode L=true R=true T=true B=true).
+
+[COSMIC] Config: loaded './starforge/projects.toml'.
+
