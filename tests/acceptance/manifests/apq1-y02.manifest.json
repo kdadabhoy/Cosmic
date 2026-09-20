@@ -20,11 +20,11 @@
         "-ExecutionPolicy",
         "Bypass",
         "-File",
-        "{ACCEPTANCE}\fixtures\Run-Y02Package.ps1",
+        "{ACCEPTANCE}\\fixtures\\Run-Y02Package.ps1",
         "-Bin",
         "{BIN}",
         "-Output",
-        "{REPO}\docs\plans\app-platform-2026-09-18\evidence\AP-Q1\y02-{CONFIG}"
+        "{REPO}\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-Q1\\y02-{CONFIG}"
       ],
       "expectExit": 0,
       "minTests": 3,
