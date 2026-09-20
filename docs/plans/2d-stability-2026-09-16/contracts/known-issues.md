@@ -1145,3 +1145,27 @@ over the injected `IFrameClock` (`core/IFrameClock.h`, the WO-10 seam) with the
 - Failing-before: `evidence/AP-03/report.md` (second Debug run: exit `-1073741819` right after `E07 play + navigate to Dashboard`).
 - Regression: `ap03-editor` V05 (Diagnostics drawn, `DrawnThisFrame` set, stacks balanced) — a Debug and Release run each.
 - Disposition: fix landed on `ap/03` (`GameModule::Load` resolves the optional `InitializePluginContexts` export and passes `HostContext{ImGui::GetCurrentContext(), ImPlot::GetCurrentContext()}` before `CosmicModule_Register`).
+
+### KI-61 — Standalone `PlayerLayer` hit-tested the in-game UI with window-client pointer coordinates against the framebuffer-local viewport rect; every button in a packaged app answered clicks one chrome height (~54 px) above itself
+- Status: Confirmed defect (input, every shipped app incl. SF_Telem's player). Owner WO: GUIDE lane (found while exporting PendulumLab2 from scratch; fixed on `ap/guide`).
+- Anchor: `Cosmic/src/layers/PlayerLayer.cpp` `PlayerLayer::UpdateUI` (fed `Input::GetMousePosition()` unadjusted at `8b4798a`).
+- Repro: package any app with a `UiButton`, run the exe, click the button's pixels — the click lands on whatever sits ~54 px below (on PendulumLab2's Home a click on "Start" opened Settings).
+- Failing-before: `docs/plans/app-platform-2026-09-18/evidence/GUIDE/ki-player-ui-pointer/failing-before-*` (run 7).
+- Regression: `tests/acceptance/fixtures/Run-GuideWalkthrough.ps1` (exported-exe leg clicks Start and asserts the Lab screen; run 12 PASS). No retained suite clicked a game-view button in the standalone host before.
+- Disposition: fix landed on `ap/guide` (`68e482a`: pointer = `GetMouseScreenPosition() - GetViewportPos()`, scaled to the framebuffer); merged to main with the guide lane.
+
+### KI-62 — Screens ▸ New Screen / Create script inserted `#include "screens/<Name>Screen.h"` at line 3 of `Module.cpp`, inside the header comment, because `ScreenScaffold::InsertIntoModule` matched the words `CS_MODULE_BEGIN` in the template's `//` comment
+- Status: Confirmed defect (wrong file edit; compiled by accident because the headers include Cosmic.h, so AP-03's E02 did not see it). Owner WO: GUIDE lane (fixed on `ap/guide`).
+- Anchor: `Projects/Starforge/src/ScreenScaffold.cpp` `InsertIntoModule` (plain `find` at `8b4798a`).
+- Repro: New Project (App) → Screens ▸ New Screen "Lab" with Create script → open `src/Module.cpp`: the include sits above the header comment's closing line.
+- Failing-before / passing-after: `docs/plans/app-platform-2026-09-18/evidence/GUIDE/ki-scaffold-include/`.
+- Regression: `Run-GuideWalkthrough.ps1` checks the include position after each Create script.
+- Disposition: fix landed on `ap/guide` (`f591893`: match the macro only at line start).
+
+### KI-63 — `Package Project` stages the editor's `scenes/*.cscene.bak` backups (66 files instead of 62 for PendulumLab2)
+- Status: Open (harmless payload bloat). Owner WO: none yet (found by the GUIDE lane).
+- Anchor: `Projects/Starforge/src/Packager.cpp` `SkipContentEntry` and `installer/Stage-AppPackage.ps1` `$skip` — AP-P1's hand-synced pair; both need the `*.bak` rule (K02 compares them, so change both together).
+- Repro: edit and save any scene in the editor (a `.cscene.bak` appears), File ▸ Package…, list the staged `assets/projects/<name>/scenes/`.
+- Failing-before: `docs/plans/app-platform-2026-09-18/evidence/GUIDE/exported/files.txt`.
+- Regression: to write — K02's path comparison plus a `.bak` fixture.
+- Disposition: workaround documented in `docs/guide/pendulumlab-walkthrough.md` (Troubleshooting); fix pending.
