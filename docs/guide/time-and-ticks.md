@@ -468,7 +468,7 @@ is constant; the scale changes how often the pass fires.
 
 **"Rewind does nothing to my physics."** Correct, and expected: with `TimeScale < 0` the accumulator
 runs backwards and the fixed pass never fires. See
-[the accumulator debt](#rewind-and-the-accumulator-debt).
+[the accumulator debt](#the-global-scale-policy-no-rewind).
 
 **"After rewinding, physics took seconds to restart."** Same cause — the accumulator went deeply
 negative and has to climb back. Use `Pause()` and your own state history instead.

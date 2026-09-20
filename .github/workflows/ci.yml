@@ -38,6 +38,13 @@ jobs:
         shell: pwsh
         run: ./tests/check_docs_coverage.ps1
 
+      # Markdown link audit (App Platform AP-D1, DOC01/DOC04): every relative file link
+      # and #anchor in the live documentation tiers resolves; archived and parked
+      # tiers are warn-only.
+      - name: Markdown link audit
+        shell: pwsh
+        run: ./tests/check_docs_links.ps1
+
       # Toolchain identity for the cache key. The compiler version changes with the
       # windows-latest image, and a cache restored across a compiler bump can hand
       # the build stale, ABI-incompatible objects — so it becomes part of the key.

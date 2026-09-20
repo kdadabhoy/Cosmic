@@ -1,0 +1,29 @@
+Markdown link audit: 210 files, 2471 local links (1008 with anchors) checked.
+  strict-tier breakages: 3
+  warn-only breakages (archive / parked-3d / stability evidence): 19
+
+WARNING - breakages in warn-only tiers (not a failure):
+  docs/archive/IMPROVEMENTS.md:49: broken link "../Cosmic/src/renderer/Renderer2D.cpp" (file not found)
+  docs/archive/IMPROVEMENTS.md:51: broken link "../Cosmic/src/renderer/Renderer2D.h" (file not found)
+  docs/archive/IMPROVEMENTS.md:58: broken link "../Cosmic/src/renderer/Renderer.h" (file not found)
+  docs/archive/IMPROVEMENTS.md:58: broken link "../Cosmic/src/renderer/Renderer.cpp" (file not found)
+  docs/archive/IMPROVEMENTS.md:63: broken link "../Cosmic/src/platform/OpenGL/OpenGLTexture.cpp" (file not found)
+  docs/archive/IMPROVEMENTS.md:72: broken link "../Cosmic/src/core/Application.h" (file not found)
+  docs/archive/IMPROVEMENTS.md:83: broken link "../Cosmic/src/renderer/Renderer2D.cpp" (file not found)
+  docs/archive/IMPROVEMENTS.md:90: broken link "../Cosmic/src/scene/Scene.h" (file not found)
+  docs/archive/IMPROVEMENTS.md:116: broken link "../Cosmic/src/renderer/Renderer.h" (file not found)
+  docs/archive/IMPROVEMENTS.md:123: broken link "../Cosmic/src/platform/OpenGL/OpenGLRendererAPI.cpp" (file not found)
+  docs/archive/IMPROVEMENTS.md:135: broken link "../Cosmic/src/jobs/ComponentArray.h" (file not found)
+  docs/archive/IMPROVEMENTS.md:142: broken link "../Cosmic/src/renderer/Renderer2D.h" (file not found)
+  docs/plans/archive/01-bug-audit.md:159: broken link "../03-simulation-engine-plan.md" (file not found)
+  docs/plans/archive/05-3d-engine-plan.md:1058: broken link "../design/water-rendering-notes.md" (file not found)
+  docs/plans/archive/06-docs-plan.md:3: broken link "12-documentation-plan.md" (file not found)
+  docs/plans/archive/06-docs-plan.md:11: broken link "archive/06-readme-update-plan.md" (file not found)
+  docs/plans/archive/09-windowing-plan.md:4: broken link "../engineering-notes/borderless-window-dpi.md" (file not found)
+  docs/plans/archive/11-phase13-starforge-plan.md:1156: broken link "../design/starforge-ui.md" (file not found)
+  docs/plans/archive/11-phase13-starforge-plan.md:1183: broken link "../design/starforge-acceptance-demo.md" (file not found)
+
+DOCS LINK FAILURE - broken links or anchors in live documentation:
+  docs/guide/navigation-and-ai.md:694: broken link "../../tests/test_nav_world.cpp" (file not found)
+  docs/guide/navigation-and-ai.md:695: broken link "../../tests/test_nav_bake.cpp" (file not found)
+  docs/guide/navigation-and-ai.md:697: broken link "../../tests/test_nav_agents.cpp" (file not found)
