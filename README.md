@@ -12,22 +12,153 @@
 > [`Projects/PendulumLab`](Projects/PendulumLab) (the sample app) · **Qualification:**
 > [AP-Q1 release report](docs/plans/app-platform-2026-09-18/evidence/AP-Q1/release-report.md).
 
-> **How to use this document:** This is the **overview** — what Cosmic is, how to build it, and a
-> tour of every subsystem with enough detail to get oriented and reach for the right thing. Each
-> section links to its full chapter in [`docs/guide/`](docs/guide/README.md). The
-> [Command Reference (§1.5)](#15-command-reference--every-command) and
-> [The Two Engine Configurations (§1.6)](#16-the-two-engine-configurations) live here in full.
+**Cosmic** is a C++20 engine for **2D real-time applications** — telemetry ground stations, tuning
+and command panels, simulations, 2D games — where the app's logic is your own C++ and the *screens*
+are authored in the **Starforge** editor: arrange readouts, plots, images and buttons, wire screen
+switches in a flow graph, watch values live, edit the C++ with the editor open, and package to an
+exe. Windows x64, OpenGL 4.5, one `Cosmic.dll` plus a hot-reloadable project DLL.
+
+## Quickstart — from a fresh clone to the editor
+
+Everything below was run literally, from a clean `git clone`, on 2026-09-20
+([`evidence/AP-D1/clone-check.md`](docs/plans/app-platform-2026-09-18/evidence/AP-D1/clone-check.md)).
+
+### 1. Prerequisites
+
+| Need | Details |
+| --- | --- |
+| Windows 10 or 11, x64 | A CPU with SSE4.2 and a GPU/driver with OpenGL 4.5 core (any NVIDIA/AMD/Intel from the last decade; tested on NVIDIA incl. RTX 50). |
+| **Visual Studio 2026 Community** | Install the **"Desktop development with C++"** workload. It brings MSVC (C++20), the Windows SDK and the **VS-bundled CMake** used below. Nothing else is required — every dependency (GLFW, glad, ImGui, ImPlot, entt, Jolt, miniaudio, doctest, …) is vendored under `Cosmic/dependencies/`. |
+| Git | Any recent Git for Windows. |
+
+The bundled CMake is **not on `PATH`**. Its full path is
+
+```
+C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe
+```
+
+Use that path where the commands below say `cmake` (or open a *Developer PowerShell for VS 2026*,
+which has it on `PATH`). The `.bat` scripts find it themselves through `vswhere`.
+
+### 2. Clone
+
+```powershell
+git clone https://github.com/kdadabhoy/Cosmic.git
+cd Cosmic
+```
+
+No submodules, no LFS, no post-clone script. Everything the build, the tests and the docs need is
+tracked (test fixtures under `tests/fixtures/` and `tests/acceptance/fixtures/`, goldens under
+`tests/render/goldens/`, screenshots under `docs/`).
+
+### 3. Configure and build
+
+**The raw CMake way (canonical; what CI runs):**
+
+```powershell
+$cmake = "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe"
+& $cmake -S . -B build -A x64 -DCOSMIC_2D_ONLY=ON -DCOSMIC_BUILD_TESTS=ON
+& $cmake --build build --config Release --parallel
+```
+
+`-DCOSMIC_2D_ONLY=ON` is an explicit, always-on compatibility flag (this trunk builds one engine,
+2D-only; `OFF` is rejected at configure — see [§1.6](#16-the-engine-configuration)). Use `--config
+Debug` for a debug build; both configurations share the one `build/` directory. A clean Release
+build of everything takes roughly 10–15 minutes on an 8-core machine; incremental rebuilds of a
+project DLL take seconds.
+
+**The script way (same thing, pauses at the end):** `build_all.bat Release` does a clean configure
++ build; `build.bat [Debug|Release]` is the incremental everyday build. Run them from the repo
+root in a plain `cmd` or PowerShell window; they locate Visual Studio via `vswhere`. The full script
+list is in [§1.5](#15-command-reference--every-command).
+
+### 4. Where things land
+
+Everything writes to one flat directory per configuration, with the engine assets and every
+project DLL synced in beside the executables:
+
+```
+build\Runtime\Release\
+├── Starforge.exe          the editor (the front door)
+├── CosmicApp.exe          the generic host / launcher (--project <Name> boots straight into one)
+├── CosmicTests.exe        the headless unit-test suite
+├── Cosmic.dll             the engine
+├── projects\*.dll         SF_Telem, PendulumLab, AnalysisSample, Starforge, the template projects
+└── assets\                engine + project assets
+```
+
+### 5. Run the tests
+
+```powershell
+build\Runtime\Release\CosmicTests.exe
+```
+
+Expected on this SHA: **519 test cases passed, 14 skipped** (the skipped ones need a serial port or a
+GPU). The two documentation audits and the link checker are one-liners too and are what CI runs first:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tests\check_gl_conformance.ps1
+powershell -ExecutionPolicy Bypass -File tests\check_docs_coverage.ps1
+powershell -ExecutionPolicy Bypass -File tests\check_docs_links.ps1
+```
+
+### 6. Try it
+
+**Tell the editor where the SDK is.** Starforge builds your project's C++ against this checkout, so
+it needs the SDK root. Either run `setup.bat` once (it does `setx COSMIC_SDK <repo root>`; open a
+new shell afterwards) or set it in the shell you launch from:
+
+```powershell
+$env:COSMIC_SDK = (Get-Location).Path       # the repo root
+build\Runtime\Release\Starforge.exe
+```
+
+Without `COSMIC_SDK` the editor falls back to "three directories up from the *current directory*",
+which is right only when you `cd build\Runtime\Release` first and wrong from anywhere else.
+
+Then, in the editor:
+
+1. **Open the sample.** On the homescreen press **Open…** and pick the folder `Projects\PendulumLab`
+   (it then stays in the project grid). Press **Play**: the pendulum runs from
+   `Projects/PendulumLab/src/services/PendulumService.cpp`, and the Lab screen's plot, gauge and
+   slider are bound to its DataBus channels. The **Screens** panel lists the four screens and their
+   scripts; right-click any bound widget for **Open source**.
+2. **Make your own.** **New Project → template "App"** scaffolds a project with a Home screen, a
+   Settings screen, a service and a `Module.cpp`; **Build** compiles the DLL against `COSMIC_SDK`,
+   **Play** runs it. Edit the C++ with the editor open and save — the module rebuilds and swaps, and
+   Play resumes on the same screen.
+3. **Follow the walkthrough.** [`docs/guide/pendulumlab-walkthrough.md`](docs/guide/pendulumlab-walkthrough.md)
+   builds PendulumLab from scratch, step by step with screenshots, and ends with **Export** to a
+   standalone `PendulumLab.exe`. The result is what [`docs/showcase/`](docs/showcase/README.md) shows.
+
+If something does not start: in a dev boot the editor and every app write their log to `logs\` under
+the directory you launched from (`user://` is the current directory when it is writable); an
+installed app writes to `%LOCALAPPDATA%\<App>\logs\`. The known-issue
+register is [`docs/plans/2d-stability-2026-09-16/contracts/known-issues.md`](docs/plans/2d-stability-2026-09-16/contracts/known-issues.md).
+
+---
 
 ## 📚 Documentation map
 
 ```
-README.md ....................... you are here — overview, §1.5 commands, §1.6 configurations
+README.md ....................... you are here — Quickstart, §1.5 commands, §1.6 the engine configuration,
+│                                 Part I overviews (§1–§29), Part II internals (§30–§43)
 docs/
-├── guide/ ...................... "how do I build things with Cosmic"  → per-topic chapters
-├── reference/ .................. "what exactly does this call do"     → per-call API lookup
+├── README.md ................... the index of the whole documentation set
+├── guide/ ...................... "how do I build things with Cosmic"  → 24 per-topic chapters + the PendulumLab walkthrough
+├── reference/ .................. "what exactly does this call do"     → per-call API lookup + the coverage manifest
 ├── systems/ .................... "how does it work and why"           → subsystem explainers
-├── design/ ..................... decisions of record, specs, audits
-├── plans/ ...................... roadmap, phase plans, feature matrix
+├── design/ ..................... live design specs (frame lifecycle, modularity audit, responsive rendering)
+├── engineering-notes/ .......... postmortems of fixed bugs
+├── showcase/ ................... twelve captures, feature list, blurb
+├── plans/
+│   ├── 00-MASTER-ROADMAP.md .... roadmap v5 (what is done, what is pending, what is deferred)
+│   ├── FEATURE-MATRIX.md ....... every missing/parked capability and its home
+│   ├── app-platform-2026-09-18/  the current campaign: decisions, contracts, work orders, acceptance, evidence
+│   ├── 2d-stability-2026-09-16/  the closed stability campaign + the running known-issues register
+│   └── archive/ ................ every completed/superseded plan (docs 01–29, roadmap v4, the consolidation brief)
+├── archive/ .................... historical analyses; archive/design/ = superseded design docs
+├── parked-3d/ .................. (parked 3D) every chapter about code that lives only on the engine-3d branch
 └── installer-guide.md .......... build → ship → install a setup exe
 ```
 
@@ -36,22 +167,18 @@ docs/
 | 📖 **Guide** | [`docs/guide/README.md`](docs/guide/README.md) | *"How do I do X in my project?"* — task-oriented chapters with worked examples |
 | 🔎 **API Reference** | [`docs/reference/README.md`](docs/reference/README.md) | *"What exactly does this call do?"* — one entry per command: signature, behavior, failure modes, pitfalls |
 | ⚙️ **System Explainers** | [`docs/systems/README.md`](docs/systems/README.md) | *"How does this actually work, and why is it built that way?"* — plain-English first, then implementation |
-| 🧭 **Design & Plans** | [`docs/design/`](docs/design/README.md) · [`docs/plans/00-MASTER-ROADMAP.md`](docs/plans/00-MASTER-ROADMAP.md) | Decisions of record, the roadmap, and every phase's work orders |
+| 🧭 **Plans & Design** | [`docs/plans/00-MASTER-ROADMAP.md`](docs/plans/00-MASTER-ROADMAP.md) · [`docs/design/`](docs/design/README.md) | The roadmap, the two campaign packets, decisions of record |
 | 🗂️ **Docs index** | [`docs/README.md`](docs/README.md) | The map of the whole documentation set |
 
 **Most-asked pages:** [Getting Started](docs/guide/getting-started.md) ·
+[PendulumLab walkthrough](docs/guide/pendulumlab-walkthrough.md) ·
 [Project Anatomy](docs/guide/project-anatomy.md) ·
 [Command Reference](#15-command-reference--every-command) ·
-[The Two Engine Configurations](#16-the-two-engine-configurations) ·
 [2D Rendering](docs/guide/rendering-2d.md) ·
-[3D Rendering](docs/parked-3d/guide/rendering-3d.md) (parked 3D) ·
-[Lighting & Environment](docs/guide/lighting-2d.md) ·
-[World Systems](docs/parked-3d/guide/world-systems.md) (parked 3D) ·
-[Animation](docs/parked-3d/guide/animation.md) (parked 3D) ·
-[Voxels](docs/parked-3d/guide/voxels.md) (parked 3D) ·
+[Lighting & Post in 2D](docs/guide/lighting-2d.md) ·
 [Sprites & Tilemaps](docs/guide/sprites-and-tilemaps.md) ·
 [In-Game UI](docs/guide/game-ui.md) ·
-[Cameras & Navigation](docs/guide/cameras.md) ·
+[Cameras](docs/guide/cameras.md) ·
 [Materials & Shaders](docs/guide/materials-and-shaders.md) ·
 [Entities & Components](docs/guide/entities-and-components.md) ·
 [Scenes & Serialization](docs/guide/scenes-and-serialization.md) ·
@@ -59,7 +186,6 @@ docs/
 [Flow & Story](docs/guide/flow-and-story.md) ·
 [Logging & Diagnostics](docs/guide/logging-and-diagnostics.md) ·
 [Physics](docs/guide/physics.md) ·
-[Navigation & AI](docs/parked-3d/guide/navigation-and-ai.md) (parked 3D) ·
 [Assets & the VFS](docs/guide/assets-and-vfs.md) ·
 [Audio](docs/guide/audio.md) ·
 [Simulation Math](docs/guide/sim-math-toolkit.md) ·
@@ -67,25 +193,28 @@ docs/
 [Jobs & Parallelism](docs/guide/jobs-and-parallelism.md) ·
 [Windowing & the Viewport](docs/guide/windowing-and-viewport.md) ·
 [Editor UI & Theming](docs/guide/editor-ui-and-theming.md) ·
-[Building & Shipping](docs/guide/building-and-shipping.md)
+[Building & Shipping](docs/guide/building-and-shipping.md) ·
+[Parked 3D chapters](docs/parked-3d/README.md) (parked 3D)
 
-> **The guide tier is complete.** All 29 chapters are written; every Part I section below is now an
-> overview with a link to its chapter. This file stays the **overview** — plus
-> [§1.5](#15-command-reference--every-command) and
-> [§1.6](#16-the-two-engine-configurations), which live here in full. Part II's engine internals
-> are moving to [`docs/systems/`](docs/systems/README.md) next; see
-> [§42.5](#425-where-the-rest-of-part-ii-lives--the-systems-directory) for what is there today.
+> **How to read the rest of this file.** Part I (§1–§29) is an overview per topic with a link to
+> its guide chapter; only [§1.5](#15-command-reference--every-command) (the command reference) and
+> [§1.6](#16-the-engine-configuration) (the engine configuration) live here in full. Part II
+> (§30–§43) is the engine-internals tour; its 3D material moved to
+> [`docs/parked-3d/README-part2-3d-systems.md`](docs/parked-3d/README-part2-3d-systems.md) (parked 3D)
+> on 2026-09-20, and [§42.5](#425-where-the-rest-of-part-ii-lives--the-systems-directory) says what
+> `docs/systems/` holds today.
 
 ---
 
 ## Table of Contents
+
 
 ### Part 1: Client Developer Guide
 
 1. [Getting Started](#1-getting-started) — overview; full chapter:
    [`docs/guide/getting-started.md`](docs/guide/getting-started.md)
    - [1.5 Command Reference — Every Command](#15-command-reference--every-command)
-   - [1.6 The Two Engine Configurations](#16-the-two-engine-configurations)
+   - [1.6 The Two Engine Configurations](#16-the-engine-configuration)
 2. [Memory Management](#2-memory-management) — overview; full chapter:
    [`docs/guide/project-anatomy.md`](docs/guide/project-anatomy.md)
 3. [Application Lifecycle](#3-application-lifecycle) — overview; full chapter:
@@ -181,22 +310,25 @@ docs/
 
 ### What is Cosmic?
 
-Cosmic is a **C++20 engine for 2D and 3D real-time applications**, built on **OpenGL 4.5 core
+Cosmic is a **C++20 engine for 2D real-time applications**, built on **OpenGL 4.5 core
 profile** and targeting **Windows x64** only. It compiles to one shared library, `Cosmic.dll`; your
 own code compiles to a **separate DLL that a host executable loads at runtime**. That plugin
 boundary is the organising idea of the SDK — you rebuild your project in seconds without touching
 the engine, the editor can hot-reload it while it runs, and the same DLL is what a packaged app
 ships.
 
-The engine builds in **two configurations from one source tree**: the full 3D engine, and a
-pure-2D engine that never compiles terrain, voxels, water, navigation, particles or `Renderer3D`
-(see [§1.6](#16-the-two-engine-configurations)). Both ship physics, sprites and tilemaps, canvas
-UI, flow and story graphs, the asset/VFS stack, audio, jobs, and the Starforge editor.
+This trunk builds **one engine, 2D-only** (see [§1.6](#16-the-engine-configuration)): sprites and
+tilemaps, 2D lights, canvas UI with data-bound widgets, the DataBus and app services, flow and story
+graphs, Jolt physics, the asset/VFS stack, audio, jobs, serial + telemetry, and the Starforge editor.
+The 3D half the engine once had (terrain, voxels, water, navigation, particles, `Renderer3D`,
+skeletal animation) lives on the `engine-3d` branch and is documented under
+[`docs/parked-3d/`](docs/parked-3d/README.md) (parked 3D).
 
 Alongside the game-engine surface it carries what a **simulation** needs and a game engine usually
 does not: a TOML config facade, fixed-step integrators and filters, lookup tables, deterministic
 PCG32 RNG, a serial-port service, and a columnar telemetry recorder with replay. That is why
-`SF_Telem` and `ViperSim` live in the same tree as `ForgePong`.
+`SF_Telem` (a dual-ESC telemetry ground station) and `AnalysisSample` live in the same tree as
+`PendulumLab` and the game template.
 
 Two executables run it. `Starforge.exe` opens the **editor** — the front door for making
 something. `CosmicApp.exe` is the generic host: it boots a **Launcher** that lists every plugin DLL
@@ -204,7 +336,7 @@ it can find, or goes straight into one with `--project <Name>`.
 
 **→ Full chapter: [`docs/guide/getting-started.md`](docs/guide/getting-started.md)** — first-time
 setup, building, both kinds of project you can create, the tree layout, the minimal plugin
-skeleton, the VFS, and the two build configurations, with the pitfalls each one has.
+skeleton and the VFS, with the pitfalls each one has.
 
 ---
 
@@ -226,23 +358,20 @@ Every command you can run against this SDK, in one place. All `.bat` scripts run
 | `build_all.bat [Debug\|Release]` | **Clean** rebuild: deletes `build/`, reconfigures, builds everything. Default `Debug`. |
 | `build_all_release.bat` | Clean rebuild pinned to `Release`. Release *is* the distribution configuration (console-less subsystem, launcher New-Project UI disabled, `/O2`) — there is no separate dist flag. |
 | `build_engine.bat [Debug\|Release]` | Engine-only incremental build (`Cosmic` + `CosmicApp` targets, configured with `COSMIC_BUILD_ENGINE_ONLY=ON`). Fastest loop for engine-core work; skips all project DLLs. |
-| `build_2d.bat [Debug\|Release]` | **Switches this tree to the 2D-only engine** and builds it. Reconfigures with `-DCOSMIC_2D_ONLY=ON` whenever the cache is absent or says OFF. The cache is sticky, so afterwards plain `build.bat` keeps building 2D in this tree. See [§1.6](#16-the-two-engine-configurations). |
-| `build_3d.bat [Debug\|Release]` | The symmetric setter: switches this tree back to the **full 3D engine** (`-DCOSMIC_2D_ONLY=OFF`) and builds it. |
-| `build_all_2d.bat [Debug\|Release]` | **Clean** rebuild in 2D-only mode (mirrors `build_all.bat`). |
 
-`build.bat`, `build_all.bat` and `build_engine.bat` are **mode-preserving**: they read
-`COSMIC_2D_ONLY` out of `build\CMakeCache.txt` and echo `[MODE] 2D-only engine` or
-`[MODE] full 3D engine`, but never change it. Only `build_2d.bat` / `build_3d.bat` /
-`build_all_2d.bat` set the mode.
+Every build script passes `-DCOSMIC_2D_ONLY=ON` explicitly and echoes `[MODE] 2D-only engine`; there is
+no other mode on this trunk (`OFF` is rejected at configure). **History:** until 2026-09-20 the tree
+also carried `build_2d.bat`, `build_3d.bat` and `build_all_2d.bat`, the Phase 29 mode setters;
+`build_3d.bat` went with the 3D purge (AP-05) and the two `_2d` scripts were folded into `build.bat` /
+`build_all.bat` by AP-D1 because they had become byte-for-byte the same configure.
 
 Examples:
 
 ```bat
-build.bat                    :: incremental Debug in whatever mode this tree is — the everyday command
+build.bat                    :: incremental Debug — the everyday command
 build.bat Release            :: incremental Release
+build_all.bat Release        :: clean Release rebuild (what the Quickstart does)
 build_engine.bat Debug       :: engine core only
-build_2d.bat                 :: switch this tree to the 2D engine, then build Debug
-build_3d.bat Release         :: switch it back to the full 3D engine, then build Release
 ```
 
 ### Packaging & installer scripts
@@ -289,18 +418,13 @@ build\Runtime\Debug\CosmicApp.exe --project SF_Telem
 | --- | --- | --- |
 | `-DCOSMIC_BUILD_ENGINE_ONLY=ON\|OFF` | `OFF` | `ON` skips the `Projects/` scanner (engine + runtime only). The build scripts flip this automatically. |
 | `-DCOSMIC_BUILD_TESTS=ON\|OFF` | `ON` | Build the `CosmicTests` target. Never installed/packaged either way. |
-| `-DCOSMIC_2D_ONLY=ON\|OFF` | `OFF` | `ON` builds the **2D-only engine**: no terrain/voxel/water/nav/particles, no 3D renderer passes, no model or skeletal loading, and assimp + recastnavigation are not even configured. Set by `build_2d.bat` / `build_3d.bat` or the `2d` / `default` presets. [§1.6](#16-the-two-engine-configurations) |
-| `-DCOSMIC_WITH_JOLT=ON\|OFF` | `ON` | Build the Jolt physics backend. `OFF` is supported: it drops `physics/backends/JoltBackend.cpp` and leaves the null backend plus whatever an app registers through `IPhysicsBackend`. Orthogonal to `COSMIC_2D_ONLY` — Jolt ships on both configurations. |
-| `-DCOSMIC_WITH_ASSIMP=ON\|OFF` | `ON` | FBX/STL/DAE/PLY import via vendored assimp. Ignored in the 2D configuration, which never configures assimp at all. |
+| `-DCOSMIC_2D_ONLY=ON` | `ON` (always) | Compatibility flag kept from the Phase 29 split: the trunk builds one engine, 2D-only, and the root `CMakeLists.txt` **rejects `OFF`** at configure. Pass `ON` explicitly (the scripts and CI do). [§1.6](#16-the-engine-configuration). |
+| `-DCOSMIC_WITH_JOLT=ON\|OFF` | `ON` | Build the Jolt physics backend. `OFF` is supported: it drops `physics/backends/JoltBackend.cpp` and leaves the null backend plus whatever an app registers through `IPhysicsBackend`. |
 | `-DCOSMIC_BUILD_RENDER_TESTS=ON\|OFF` | `OFF` | Build `CosmicRenderTests`, the golden-image target. Needs a real GPU and is driver-specific, so it is local-only and never runs in CI. |
-| `-DCOSMIC_SKIP_PROJECTS="A;B"` | mode-derived | Semicolon-separated `Projects/` directory names the scanner skips. Defaults to nothing in 3D and `Frontier;Engine3DDemo;ForgeIsle;ViperSim` in 2D; a hand-set value is left alone. |
+| `-DCOSMIC_SKIP_PROJECTS="A;B"` | empty | Semicolon-separated `Projects/` directory names the scanner skips (nothing is skipped by default; the 3D projects no longer exist on this branch). |
 | `-DCOSMIC_SDK_DIR=<path>` | repo root (cache) | Where project builds look for the engine; standalone project configures fall back to the `COSMIC_SDK` env var from `setup.bat`. |
 
-CMake presets are available for the two engine configurations:
-
-```bash
-cmake --preset default
-```
+One CMake preset exists, equivalent to the Quickstart configure (Visual Studio 18 2026, x64, `build/`):
 
 ```bash
 cmake --preset 2d
@@ -316,55 +440,40 @@ All other shortcuts are app-defined (check the project's own docs/panels).
 
 ---
 
-## 1.6 The Two Engine Configurations
+## 1.6 The Engine Configuration
 
-Cosmic builds as **two engines from one source tree**, selected by a single CMake flag.
+**One trunk, one engine.** `main` builds the 2D engine and nothing else. `-DCOSMIC_2D_ONLY=ON` is an
+explicit, always-on compatibility flag (every script, preset and CI step passes it; the root
+`CMakeLists.txt` rejects `OFF` at configure), and there is no `#ifndef COSMIC_2D_ONLY` fence left in
+the source. Every project under `Projects/` builds; nothing is skipped by mode.
 
-| | **Full 3D engine** | **2D-only engine** |
-| --- | --- | --- |
-| Flag | `COSMIC_2D_ONLY=OFF` (default) | `COSMIC_2D_ONLY=ON` |
-| Branch | **`main`** — the trunk | **`engine-2d`** |
-| Working tree | `C:\dev\Cosmic` | `C:\dev\Cosmic-2D` (a git worktree) |
-| Preset / script | `cmake --preset default` · `build_3d.bat` | `cmake --preset 2d` · `build_2d.bat` |
-| Ships | everything | everything **except** the 3D subsystems below |
-| CI | GitHub Actions watches this | none — verified locally |
+| | **The 2D trunk** |
+| --- | --- |
+| Branch | **`main`** |
+| Flag | `COSMIC_2D_ONLY=ON` (always; `OFF` rejected) |
+| Preset / scripts | `cmake --preset 2d` · `build.bat` · `build_all.bat` |
+| Ships | sprites, tilemaps, 2D lights, canvas UI + bound widgets, DataBus + services, flow/story graphs, Jolt physics (box/sphere/capsule, character controller), assets/VFS, audio, serial + telemetry, jobs, the Starforge editor, `SF_Telem`, `PendulumLab`, `AnalysisSample`, the templates |
+| CI | GitHub Actions: both audits + the link checker, Debug + Release build, `CosmicTests` both configs, the `pr` acceptance profile |
 
-**What the 2D configuration leaves out:** the terrain, voxel, water, navigation and particle
-source trees; `Renderer3D` and the GPU resources only it owns (shadow maps, the IBL environment
-cube, coverage capture, the instancing pool); model loading and skeletal animation; the 3D half of
-the scene layer (`Components3D.h`, `Scene3D.cpp`, `TypeRegistry3D.cpp`, `ScenePicker`); the
-`Frontier`, `Engine3DDemo`, `ForgeIsle` and `ViperSim` projects; and — the big one for build times
-— the **assimp** and **recastnavigation** vendored dependencies, which are not even configured.
+**Where the 3D engine is.** The full pre-split tree — `Renderer3D`, terrain, water, particles,
+voxels, Recast/Detour navigation, skeletal animation and model import, their vendored dependencies
+(assimp, recastnavigation, cgltf), tests, goldens, editor panels and the Frontier / Engine3DDemo /
+ForgeIsle / ViperSim projects — is preserved on the **`engine-3d`** branch at `0e8894b`, tag
+**`cosmic-pre-2d-2026-09-16`**. It was deleted from `main` on 2026-09-18 (App Platform decision
+D-PURGE, work order AP-05). Its documentation is under
+[`docs/parked-3d/`](docs/parked-3d/README.md) (parked 3D), which also says how to resume 3D work: branch from the tag, never cherry-pick 3D source
+back onto `main`.
 
-**What it keeps:** sprites, sprite animation, tilemaps, 2D lights, canvas UI, flow and story
-graphs, the 2D camera rig, the whole asset/VFS/audio/serial/telemetry/jobs/UI stack, the Starforge
-editor (in 2D mode), SF_Telem — and **all of physics**. Rigid bodies, box/sphere/capsule colliders
-and the character controller are dimension-agnostic and ship in both; only mesh and terrain-
-heightfield colliders are 3D-only.
-
-**Both branches carry byte-identical tracked files.** Nothing is deleted on `engine-2d` — the
-difference is entirely the build cache and which preset you pick. Carrying a change across is
-copying the same file to the same path (or `git merge`, which is near-conflict-free by
-construction). Anything that *must* differ between the branches is a design bug.
-
-To work on both at once, use the worktree rather than a second build folder — `COSMIC_SDK_DIR` is
-source-relative, so two binary directories in one source tree would clobber each other's
-`Cosmic.dll`:
-
-```bash
-git worktree add ../Cosmic-2D engine-2d
-```
-
-**Writing code that works in both.** A file that names anything under `terrain/`, `voxel/`,
-`water/`, `nav/`, `particles/`, `Renderer3D`, `ShadowMap`, `EnvironmentMap`, `Model` or `Skeleton`
-is 3D-only and belongs in the exclusion list; everything else is shared. In shared code, guard 3D
-references with `#ifndef COSMIC_2D_ONLY` — the macro is defined **publicly** on the `Cosmic`
-target, so your project sees exactly the same value the engine was built with. Prefer excluding a
-whole file over fencing one; a file the 2D build never compiles costs nothing.
-
-Full details — the exclusion table, the classification rule, the recorded build times, and the
-carry-over workflow — are in
-[`docs/systems/build-2d-3d-split.md`](docs/parked-3d/systems/build-2d-3d-split.md) (parked 3D).
+**History (2026-07-25 → 2026-09-18).** Phase 29 made one source tree build *two* engines: a full 3D
+engine on `main` and a pure-2D engine on an `engine-2d` branch that carried byte-identical files and
+differed only in the CMake cache (`COSMIC_2D_ONLY`), with `#ifndef COSMIC_2D_ONLY` fences in shared
+headers and a git worktree per configuration. The 2D stability campaign (2026-09-16) made the 2D
+configuration the supported trunk and the App Platform campaign dissolved the split entirely. The
+old comparison table, exclusion list and carry-over workflow are kept verbatim in
+[`docs/parked-3d/systems/build-2d-3d-split.md`](docs/parked-3d/systems/build-2d-3d-split.md) (parked 3D)
+and [`docs/parked-3d/README-part2-3d-systems.md`](docs/parked-3d/README-part2-3d-systems.md) (parked 3D).
+Any live document that still says "2D build" / "3D build" or "both configurations"
+is describing that period.
 
 ---
 
@@ -841,7 +950,7 @@ and can reconstruct the world point under the cursor, which is what feeds `Orbit
 CAD pivot probe. `Gizmo` wraps vendored ImGuizmo behind engine-only enums for translate / rotate /
 scale / universal manipulation, with `IsUsing()` and `IsOver()` as the etiquette hooks a camera and
 a click-to-select path must both respect. **`NavigationCube` and `ScenePicker` are 3D-configuration
-only** (see [§1.6](#16-the-two-engine-configurations)); everything else, `Gizmo` included, ships in
+only** (see [§1.6](#16-the-engine-configuration)); everything else, `Gizmo` included, ships in
 both.
 
 The chapter covers all of it with worked examples — the per-controller tuning surfaces and their
@@ -2400,7 +2509,7 @@ Chunk size: `max(minChunkSize, ceil(totalCount / workerCount))`. This ensures at
 > does, the packaging pipeline, the installer, the exe icon and `VERSIONINFO`, and what a shipped
 > folder really contains. The canonical command list stays in
 > [§1.5](#15-command-reference--every-command); the configuration comparison in
-> [§1.6](#16-the-two-engine-configurations).
+> [§1.6](#16-the-engine-configuration).
 
 Three `CMakeLists.txt` files carry the whole build. The **root** one sets the global compiler
 posture (`/utf-8 /std:c++20`, and `/MP` at directory scope so every target — engine, projects,

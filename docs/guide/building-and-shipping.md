@@ -2,7 +2,7 @@
 
 > **History (2026-09-20, App Platform AP-D1).** This chapter was written for the two-configuration engine (Phase 29) and cites `Projects/Frontier`, `Projects/Engine3DDemo`, `Projects/ForgeIsle`, `Projects/ViperSim` or `#ifndef COSMIC_2D_ONLY` fences as worked examples. `main` is now the 2D-only trunk (D-PURGE): those projects, the fences and the `engine-2d` branch are gone from it and survive only on `engine-3d` (`0e8894b`, tag `cosmic-pre-2d-2026-09-16`), so read such mentions and their `file:line` references as historical. The current exemplars are the template projects, `Projects/PendulumLab`, `Projects/AnalysisSample` and `Projects/SF_Telem`; the trunk policy is in the root README 1.6 and [`../parked-3d/systems/build-2d-3d-split.md`](../parked-3d/systems/build-2d-3d-split.md) (parked 3D) records what the split was.
 
-**What this covers:** the two engine configurations and how to pick one; every CMake option the
+**What this covers:** the one engine configuration on this trunk; every CMake option the
 build understands and what turning it off actually removes; what each of the ten root `.bat`
 scripts really does; packaging (`cmake --install` staging → `dist/<Name>` prune → zip) and exactly
 what a staged folder contains; the Inno Setup installer flow — both the hand-run one and the one
@@ -56,7 +56,7 @@ sharp edges are.
 
 ```mermaid
 flowchart TD
-    SRC["Source tree<br/>Cosmic · Runtime · Projects"] --> CFG["cmake configure<br/>COSMIC_2D_ONLY picks the engine"]
+    SRC["Source tree<br/>Cosmic · Runtime · Projects"] --> CFG["cmake configure<br/>-DCOSMIC_2D_ONLY=ON (always)"]
     CFG --> BLD["cmake --build --config Release<br/>build/Runtime/Release — one flat folder"]
     BLD --> INST["cmake --install --prefix dist/NAME<br/>the four install rules, nothing else"]
     INST --> PRUNE{"App name given?"}
@@ -84,15 +84,12 @@ Two axes, and they are independent:
 
 | Axis | Values | Set by | Sticky? |
 | --- | --- | --- | --- |
-| **Engine configuration** | full 3D · 2D-only | `COSMIC_2D_ONLY` | **Yes** — lives in `build\CMakeCache.txt` |
+| **Engine configuration** | 2D-only (the only one) | `COSMIC_2D_ONLY=ON` | **Yes** — lives in `build\CMakeCache.txt`; `OFF` is rejected |
 | **Build configuration** | `Debug` · `Release` · `RelWithDebInfo` | `--config` at build time | No — multi-config generator |
 
-The engine configuration is the one that bites, because it is sticky and invisible. `build.bat`,
-`build_all.bat` and `build_engine.bat` **read** it out of the cache and echo `[MODE] 2D-only engine`
-or `[MODE] full 3D engine` without ever changing it; only `build_2d.bat`, `build_3d.bat` and
-`build_all_2d.bat` set it. The full comparison table lives in root README
-[§1.6](../../README.md#16-the-two-engine-configurations) and the mechanism in
-[`../systems/build-2d-3d-split.md`](../parked-3d/systems/build-2d-3d-split.md) (parked 3D).
+The engine configuration cannot bite any more: every script passes `-DCOSMIC_2D_ONLY=ON`, the root
+`CMakeLists.txt` rejects `OFF`, and the scripts still echo `[MODE] 2D-only engine` so old habits keep
+working. The trunk policy and its history are root README [§1.6](../../README.md#16-the-engine-configuration).
 
 **`Release` is the distribution build.** There is no separate dist flag — that decision was made
 per-config with generator expressions so it can never be left stale in a cache:
@@ -127,13 +124,10 @@ distinguishes them is *which cache state they insist on*.
 | Script | Configures with | Cache behaviour | Use when |
 | --- | --- | --- | --- |
 | `setup.bat` | — | — | Once per machine. `setx COSMIC_SDK <repo root>`. |
-| `build.bat [cfg]` | `ENGINE_ONLY=OFF` | Reconfigures **only** if the cache says `ENGINE_ONLY=ON`; preserves the engine mode | The everyday command |
-| `build_all.bat [cfg]` | `ENGINE_ONLY=OFF` (+ mode flag) | **Deletes `build/`**, then re-applies the mode it read *before* deleting | A glob went stale, or you want a known-clean tree |
-| `build_all_release.bat` | `ENGINE_ONLY=OFF` | Deletes `build/`; pinned to `Release`; **does not preserve the 2D mode** | A clean Release you will run in place |
+| `build.bat [cfg]` | `ENGINE_ONLY=OFF`, `2D_ONLY=ON` | Reconfigures **only** if `build/` is absent or the cache says `ENGINE_ONLY=ON` | The everyday command |
+| `build_all.bat [cfg]` | `ENGINE_ONLY=OFF`, `2D_ONLY=ON` | **Deletes `build/`**, clean configure + build | A glob went stale; after cloning |
+| `build_all_release.bat` | `ENGINE_ONLY=OFF`, `2D_ONLY=ON` | Deletes `build/`; pinned to `Release` | A clean Release you will run or package |
 | `build_engine.bat [cfg]` | `ENGINE_ONLY=ON` | Reconfigures if the cache says `OFF`; builds only `Cosmic` + `CosmicApp` | Engine-core work |
-| `build_2d.bat [cfg]` | `2D_ONLY=ON` | **Mode setter.** Reconfigures unless already 2D | Switching this tree to the 2D engine |
-| `build_3d.bat [cfg]` | `2D_ONLY=OFF` | **Mode setter.** Reconfigures if the cache is absent or 2D | Switching back |
-| `build_all_2d.bat [cfg]` | `2D_ONLY=ON` | Deletes `build/`, clean 2D configure | Clean 2D rebuild |
 | `package.bat [App]` | `ENGINE_ONLY=OFF` | **Deletes `build/` *and* `dist/`**; always Release | Making something to hand over |
 | `package_installer.bat <App>` | via `package.bat` | Same, plus ISCC | Making a setup exe |
 
@@ -149,12 +143,8 @@ automated shell as-is. Set `COSMIC_NOPAUSE=1` to suppress `package.bat`'s pause 
 cmake --build build --config Release --parallel
 ```
 
-**Two gaps worth knowing.** `build_all_release.bat` does *not* read the engine mode before deleting
-`build/`, unlike `build_all.bat` — run it in a 2D tree and you get a clean **3D** Release. And two
-projects (`Engine3DDemo`, `SF_Telem`) ship their own `Projects/<name>/build.bat` that configures a
-**separate** CMake cache under `Projects/<name>/build/` against `%COSMIC_SDK%`; the other four do
-not. That standalone path is for building a project outside the SDK tree — it links against the
-already-built `Cosmic.lib` and never rebuilds the engine.
+**One gap worth knowing.** `SF_Telem` ships its own `Projects/SF_Telem/build.bat` that configures a
+standalone build against `COSMIC_SDK`; it is for iterating on that app alone, not for building the SDK.
 
 ---
 
@@ -163,28 +153,13 @@ already-built `Cosmic.lib` and never rebuilds the engine.
 Root README [§1.5](../../README.md#15-command-reference--every-command) is the canonical one-line
 table. This section is the *consequences* — what actually disappears, and what fails when it does.
 
-### `COSMIC_2D_ONLY` (default `OFF`) — the engine configuration
+### `COSMIC_2D_ONLY` (always `ON`) — the compatibility flag
 
-Declared in **both** the root and `Cosmic/CMakeLists.txt` (line 67 and line 16). The duplicate is
-deliberate: `option()` is a no-op once the cache entry exists, and declaring it in both places keeps
-`Cosmic/` configurable standalone while letting the root forward it to the project scanner.
-
-It is the **only** engine define that is `PUBLIC` on the `Cosmic` target
-(`Cosmic/CMakeLists.txt:234`). Every other define — `COSMIC_BUILD_DLL`, `COSMIC_DIST`,
-`COSMIC_WITH_JOLT`, `COSMIC_WITH_ASSIMP` — is `PRIVATE`. That is because public headers
-(`Cosmic.h`, `Components.h`, `SceneRenderer.h`) carry `#ifndef COSMIC_2D_ONLY` fences, so the flag
-has to resolve identically in the engine and in every consumer or the ABI silently diverges. It is
-why `#ifndef COSMIC_2D_ONLY` works in your project code with no extra wiring.
-
-Mechanically it does three things:
-
-1. **Filters the engine source glob** — one `list(FILTER … EXCLUDE REGEX …)` per row of the
-   partition table (`Cosmic/CMakeLists.txt:178-210`): the whole `terrain/`, `voxel/`, `water/`,
-   `nav/` and `particles/` trees, five renderer TUs, four `graphics/` TUs, `NavigationCube`, five
-   `scene/` TUs, `TypeRegistry3D` and `MeshImport.cpp`.
-2. **Skips two vendored dependencies entirely** — assimp (159 TUs) and recastnavigation (26) are
-   never `add_subdirectory`'d, which is the dominant term in the 2D build-time win.
-3. **Changes the project skip-list default** to `Frontier;Engine3DDemo;ForgeIsle;ViperSim`.
+Kept from the Phase 29 split so every existing command line, preset and CI step keeps working: the
+root `CMakeLists.txt` accepts `ON` and **rejects `OFF`** with a message naming the `engine-3d` branch.
+It is still exported `PUBLIC` on the `Cosmic` target, but no source on this trunk tests it. History —
+what it used to filter out and why the fences existed — is in
+[`../parked-3d/systems/build-2d-3d-split.md`](../parked-3d/systems/build-2d-3d-split.md) (parked 3D).
 
 ### `COSMIC_BUILD_ENGINE_ONLY` (default `OFF`)
 
@@ -194,21 +169,13 @@ Do not package from an engine-only tree: you get a Launcher with nothing to laun
 
 ### `COSMIC_WITH_JOLT` (default `ON`)
 
-Orthogonal to `COSMIC_2D_ONLY` — Jolt ships on **both** engine configurations, because rigid
+Jolt ships on the trunk in full, because rigid
 bodies, box/sphere/capsule colliders and the character controller are dimension-agnostic. `OFF` is
 a supported configuration, not a broken one: it drops `physics/backends/JoltBackend.cpp` from the
 glob, does not link `Jolt`, and does not define `COSMIC_WITH_JOLT`, so `PhysicsBackend.cpp` defaults
 the registry to `"null"` instead of `"jolt"`. Physics calls then succeed and do nothing until an app
 registers its own `IPhysicsBackend`. See [`physics.md`](physics.md#swap-the-backend).
 
-### `COSMIC_WITH_ASSIMP` (default `ON`)
-
-Declared in `Cosmic/CMakeLists.txt:121` only. Gates FBX/OBJ/STL/DAE/PLY import; `OFF` leaves the
-OBJ-only fallback. **The condition is `COSMIC_WITH_ASSIMP AND NOT COSMIC_2D_ONLY`** in three places
-that must agree — the `add_subdirectory`, the `target_link_libraries` and the
-`target_compile_definitions` — because in a 2D tree the `assimp` target does not exist and a bare
-`assimp` in the link list would reach the linker as `assimp.lib`. So the option is silently ignored
-in the 2D configuration. `MeshImport::AssimpEnabled()` reports the gate at runtime.
 
 ### `COSMIC_BUILD_TESTS` (default `ON`) and `COSMIC_BUILD_RENDER_TESTS` (default `OFF`)
 
@@ -239,14 +206,14 @@ variable `setup.bat` sets.
 `ENGINE_ONLY=OFF`) and two configure presets that differ in one cache variable:
 
 ```bash
-cmake --preset default
+cmake --preset 2d
 ```
 
 ```bash
 cmake --preset 2d
 ```
 
-They are exactly equivalent to `build_3d.bat` / `build_2d.bat`'s configure step, minus the build.
+It is exactly equivalent to `build_all.bat`'s configure step, minus the delete and the build.
 
 ### Global compiler flags you inherit
 
@@ -295,7 +262,7 @@ redistributable, and `include(InstallRequiredSystemLibraries)` with
 exe so the app runs on a machine with no VC++ redist installed.
 
 **Note the sticky-cache interaction.** `package.bat` reconfigures from scratch *without* passing
-`-DCOSMIC_2D_ONLY`, so it always packages the **3D** engine regardless of what the tree was in.
+`-DCOSMIC_2D_ONLY=ON`, like every other script on this trunk.
 There is no `package_2d.bat`. To package a 2D app today, configure and install by hand:
 
 ```bat
@@ -328,7 +295,7 @@ Three consequences fall out of that list:
 
 A project is installed **only if the scanner added it**, because the install rules live inside the
 same `if()`. A skipped project is not built *and* not installed — which is the correct coupling, but
-it means a 2D-configured tree silently cannot package `Frontier`.
+it means a project that failed to build cannot be packaged, and the packager says so.
 
 ---
 
@@ -546,9 +513,7 @@ into a directory you have not built in, and run from there. The two things that 
 clean machine are the VC++ runtime (bundled, so fine) and `user://` resolution (which the boot log
 line tells you).
 
-**Keep both engine configurations packageable.** Use the worktree from README
-[§1.6](../../README.md#16-the-two-engine-configurations) and run the manual three-command install
-above in the 2D tree. `package.bat` cannot do it for you.
+**Package from a clean Release.** `package.bat` rebuilds Release before staging, so a stale Debug tree never leaks into `dist\`.
 
 **Automate around the `pause`.** None of these scripts are CI-friendly as written. Call `cmake`
 directly for builds and `cmake --install` for staging; the scripts are convenience wrappers, not the
@@ -558,13 +523,9 @@ interface.
 
 ## Pitfalls
 
-**"I built 2D but I'm getting 3D binaries" (or the reverse).** The mode lives in the sticky CMake
-cache, not in the command you just typed. `build.bat` preserves it and prints it. Read the `[MODE]`
-line; if it disagrees with you, run `build_2d.bat` / `build_3d.bat`, not `build.bat`.
+**The cache remembers `COSMIC_BUILD_ENGINE_ONLY`.** After `build_engine.bat`, plain `build.bat` reconfigures once to get the projects back; that is expected, not a bug.
 
-**`build_all_release.bat` silently switches a 2D tree back to 3D.** Unlike `build_all.bat`, it does
-not read the mode before deleting `build/`. Use `build_2d.bat Release` (incremental) or configure by
-hand.
+**`build_all_release.bat` deletes `build/`.** It is the clean Release rebuild; use `build.bat Release` for the incremental one.
 
 **`package.bat` deleted my other staged app.** Stage 3 does `rmdir /s /q dist` before installing —
 the *whole* `dist/` folder, not just the target one. Copy anything you care about out first.
@@ -616,7 +577,7 @@ off. Measure in `Release` (or `RelWithDebInfo` if you need the Launcher).
 - [`project-anatomy.md`](project-anatomy.md) — the plugin-DLL model the packaging layout exists to
   serve, and **DG-5**, the load/unload lifecycle
 - Root README [§1.5](../../README.md#15-command-reference--every-command) — the canonical
-  command/flag/option list · [§1.6](../../README.md#16-the-two-engine-configurations) — the
+  command/flag/option list · [§1.6](../../README.md#16-the-engine-configuration) — the
   configuration comparison
 - [`../installer-guide.md`](../installer-guide.md) — the end-to-end ship-and-install walkthrough,
   including recipient-side troubleshooting and the release acceptance check

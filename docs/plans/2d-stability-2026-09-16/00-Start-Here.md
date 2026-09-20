@@ -1,5 +1,7 @@
 # Cosmic 2D stability planning packet
 
+> **Closed (2026-09-20).** WO-00..WO-10 landed and are pushed; **WO-11/12/13 were absorbed by the [App Platform packet](../app-platform-2026-09-18/00-Start-Here.md)** (AP-P1 packaging, AP-D1 + AP-D2 docs, AP-Q1 qualification). The [known-issues register](contracts/known-issues.md) stays the single running register for both campaigns. Everything else here is history.
+
 Prepared 2026-09-16 against main 0e8894b8540029ac57e68540aa9774cf5cf77ebe.
 
 **Recommendation:** keep current main as the base, preserve its full tree on engine-3d, make the supported trunk reliably 2D-only, and stabilize it before implementing additions.

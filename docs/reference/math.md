@@ -19,7 +19,7 @@ Design record: [`../plans/archive/03-simulation-engine-plan.md`](../plans/archiv
 template; no `COSMIC_API`, no `.cpp`, nothing to link), and all seven are included by `Cosmic.h`
 **outside any `COSMIC_2D_ONLY` fence** — `Spatial.h` and `Frustum.h` at `Cosmic.h:94-95`, the five
 E-series headers at `Cosmic.h:98-102`. They compile and behave identically on the 2D and 3D
-engines. See [README §1.6](../../README.md#16-the-two-engine-configurations) and
+engines. See [README §1.6](../../README.md#16-the-engine-configuration) and
 [build-2d-3d-split.md](../parked-3d/systems/build-2d-3d-split.md) (parked 3D).
 
 Six of the seven have **no engine dependencies at all** — glm and the C++ standard library only, so

@@ -2057,7 +2057,7 @@ looking for `ScenePicker` under the ECS finds the pointer rather than nothing.
 | `ScenePicker` | ❌ | ✅ | **compile error** |
 
 Rules and rationale: [`../systems/build-2d-3d-split.md`](../parked-3d/systems/build-2d-3d-split.md) (parked 3D); the
-configuration table in root [README §1.6](../../README.md#16-the-two-engine-configurations).
+configuration table in root [README §1.6](../../README.md#16-the-engine-configuration).
 
 ---
 

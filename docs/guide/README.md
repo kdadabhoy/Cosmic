@@ -47,14 +47,14 @@ because it inherits the old document's shape instead of the engine's.
 
 - **Every example compiles** against the current API: real namespaces (`Cosmic::`), `Ref<T>`
   factories, VFS paths through `FileSystem::Resolve`, no `...` hand-waving. Model them on real
-  usage in `Projects/` — the template project, Engine3DDemo, Frontier, ForgePong, ViperSim,
-  SF_Telem — not on imagination.
+  usage in `Projects/` — the template projects, PendulumLab, AnalysisSample, SF_Telem — not on
+  imagination.
 - **Every failure mode is stated.** Cosmic's conventions vary on purpose: `Shader::Create` returns
   `nullptr`, `Texture2D::Create` returns a degraded non-null object, some calls log and continue.
   The guide says which.
-- **Configuration-aware.** The engine builds in two configurations (root README §1.6). Any chapter
-  covering something absent from the 2D build says so up front and links
-  [`../systems/build-2d-3d-split.md`](../parked-3d/systems/build-2d-3d-split.md) (parked 3D).
+- **One trunk.** `main` builds one engine, 2D-only (root README §1.6). A chapter never describes a
+  3D path as current; anything that documents code living only on `engine-3d` sits under
+  [`../parked-3d/`](../parked-3d/README.md) (parked 3D) and is linked with that label.
 - **Don't duplicate the reference** (link the entry for the full signature) **or the explainer**
   (link it for internals and rationale). This tier stays on the outside of the API, showing usage.
 
@@ -66,7 +66,7 @@ because it inherits the old document's shape instead of the engine's.
 **What this covers:** <one sentence>
 **Source of truth:** `Cosmic/src/<dir>/…`
 **API Reference:** ../reference/<chapter>.md · **How it works:** ../systems/<explainer>.md
-**Configuration:** both · or · 3D only (see ../systems/build-2d-3d-split.md)
+**Configuration:** 2D trunk (one line; see any written chapter for the wording)
 
 ## Quick start          ← the smallest thing that works, copy-pasteable, in the first screenful
 ## <Task sections>      ← one per thing a developer wants to DO, in the order they'd hit them
@@ -112,6 +112,7 @@ in the reference.
 | [`rendering-2d.md`](rendering-2d.md) | `Renderer2D` draw API, batching, **every batch limit**, `RenderPass`, `SubTexture2D`, text | §8, §11–§14 | D51 | ✅ 2026-07-26 |
 | [`sprites-and-tilemaps.md`](sprites-and-tilemaps.md) | 2D authoring: sprite components, sprite animation, tilemaps, 2D lights, the 2D camera rig | *nothing* | D52 | ✅ 2026-07-26 |
 | [`game-ui.md`](game-ui.md) | UI entities, canvas, anchors and layout, buttons, world-anchored UI, render-to-texture | *nothing* | D52 | ✅ 2026-07-26 |
+| [`lighting-2d.md`](lighting-2d.md) | The 2D `SceneRenderer` spine, the post chain (bloom/FXAA/tonemap/vignette), `ApplyEnvironment`, `RenderToTexture` | *nothing* | AP-D1 (split from D55) | ✅ 2026-09-20 (2D part of the D55 chapter; AP-D2 rewrites) |
 
 ### Graphics core
 
@@ -120,12 +121,13 @@ in the reference.
 | [`materials-and-shaders.md`](materials-and-shaders.md) | `Material`, `.cmat` assets, the shader contract, uniforms, framebuffers, `BindingPoints` | §9, §10, §18 | D51 | ✅ 2026-07-26 |
 | [`cameras.md`](cameras.md) | Camera classes, orthographic/orbit/fly/2D controllers, CAD navigation, the nav cube, gizmos, picking | §16 | D53 | ✅ 2026-07-26 |
 
-### 3D
+### 3D (parked)
+
+> **2026-09-20:** these chapters document subsystems deleted from `main` by AP-05 (D-PURGE) and now live under [`../parked-3d/guide/`](../parked-3d/README.md) (parked 3D), banners at line 3. `lighting-and-environment.md` was split: its 2D post-chain part stays live as [`lighting-2d.md`](lighting-2d.md) (listed under **2D**).
 
 | Chapter | Covers | Retires | WO | Status |
 | --- | --- | --- | --- | --- |
 | [`rendering-3d.md`](../parked-3d/guide/rendering-3d.md) (parked 3D) | `Renderer3D` submit/cull/sort/instance/LOD, meshes and models, **material-read-at-flush + `Material::Clone`** | *nothing* | D54 | ✅ 2026-07-26 |
-| [`lighting-and-environment.md`](lighting-2d.md) | The `SceneRenderer` pass graph, PBR/IBL, sky and time-of-day, shadows, the post chain | *nothing* | D55 | ✅ 2026-07-26 |
 | [`world-systems.md`](../parked-3d/guide/world-systems.md) (parked 3D) | Terrain (incl. the `32·2^k+1` rule), water, GPU particles | *nothing* | D55 | ✅ 2026-07-26 |
 | [`voxels.md`](../parked-3d/guide/voxels.md) (parked 3D) | Voxel volumes, chunks, meshing, editing, generation, collision | *nothing* | D56 | ✅ 2026-07-26 |
 | [`animation.md`](../parked-3d/guide/animation.md) (parked 3D) | Skeletons, clips, `Animator`, crossfade, joint sockets, GPU skinning | *nothing* | D56 | ✅ 2026-07-26 |
@@ -135,7 +137,7 @@ in the reference.
 | Chapter | Covers | Retires | WO | Status |
 | --- | --- | --- | --- | --- |
 | [`physics.md`](physics.md) | Rigid bodies, colliders, the character controller, queries, triggers, contact events, swapping the backend | *nothing* | D57 | ✅ 2026-07-26 |
-| [`navigation-and-ai.md`](../parked-3d/guide/navigation-and-ai.md) (parked 3D) | Navmesh bake, `.cnav`, agents and crowds, the `Nav()` proxy | *nothing* | D57 | ✅ 2026-07-26 |
+| [`navigation-and-ai.md`](../parked-3d/guide/navigation-and-ai.md) (parked 3D) — deleted from `main` by AP-05 | Navmesh bake, `.cnav`, agents and crowds, the `Nav()` proxy | *nothing* | D57 | ✅ 2026-07-26 |
 | [`sim-math-toolkit.md`](sim-math-toolkit.md) | Integrators, filters, lookup tables, noise, deterministic RNG, spatial frames | *nothing* | D58 | ✅ 2026-07-26 |
 
 ### Platform & tooling
@@ -282,39 +284,22 @@ the roadmap and `FEATURE-MATRIX.md`.
 
 ## Configuration coverage
 
-`rendering-3d.md`, `lighting-and-environment.md`, `world-systems.md`, `voxels.md`, `animation.md`
-and `navigation-and-ai.md` cover subsystems that **do not exist in the 2D engine build**. Each
-states that up front and links [`../systems/build-2d-3d-split.md`](../parked-3d/systems/build-2d-3d-split.md) (parked 3D).
+**One trunk (2026-09-20).** `main` builds one engine, 2D-only; `-DCOSMIC_2D_ONLY=ON` is an always-on
+compatibility flag and `OFF` is rejected at configure. Every live chapter carries a one-line
+`**Configuration:** 2D trunk` field. Chapters that documented the 3D subsystems (`rendering-3d`,
+`world-systems`, `voxels`, `animation`, `navigation-and-ai`, the 3D half of `lighting-and-environment`)
+are under [`../parked-3d/`](../parked-3d/README.md) (parked 3D); a live chapter may link into that
+directory only with the visible label "(parked 3D)" (DOC04, checked by
+`docs/plans/app-platform-2026-09-18/evidence/AP-D1/check_parked.py`).
 
-**"3D only" is per header, not per chapter** (D54). `rendering-3d.md`'s scope splits: `Renderer3D`,
-`InstanceSet` and `Model` are filtered out of the 2D build *and* fenced in `Cosmic.h`, while
-`graphics/Mesh.h` and the header-only `math/Frustum.h` are unfenced and compile in a 2D tree — there
-is simply nothing there that draws a mesh. Say which half you mean; the reference manifest now marks
-the fenced ones ³ᴰ and leaves those two unmarked.
+**History.** Until Phase 29's split was dissolved (AP-05, 2026-09-18) this section explained the
+per-header "3D only" nuance — `Renderer3D`/`InstanceSet`/`Model` fenced but `graphics/Mesh.h` not,
+`SceneRenderer`/`PostProcessStack` on both configurations, `NavigationCube` failing at link rather than
+compile, `AssetLibrary::GetMesh`/`GetModel` fenced inside one class. Those distinctions no longer exist on
+`main`; the record is
+[`../parked-3d/systems/build-2d-3d-split.md`](../parked-3d/systems/build-2d-3d-split.md) (parked 3D).
+What survives of that surface on the trunk: `graphics/Mesh.h` (documented in
+[`../reference/graphics-resources.md`](../reference/graphics-resources.md#mesh)), the perspective camera
+and orbit/fly controllers (used by the editor viewport), and the `Skybox`/`IBL`/`Shadows`/`WaterReflections`
+toggles on `SceneRendererSettings`, which compile and do nothing.
 
-**`lighting-and-environment.md` is the sharpest case of that** (D55). Its two central classes,
-`SceneRenderer` and `PostProcessStack`, ship in **both** configurations — a 2D frame runs the same
-compositor (`BeginHDR` → sprites via `DrawTransparent` → tonemap/FXAA/bloom/vignette →
-`DrawOverlay2D`), which is exactly why the pass contract in
-[`../design/frame-lifecycle.md`](../design/frame-lifecycle.md) §5 holds verbatim on both engines.
-What fences out is everything the chapter is *about*: `EnvironmentMap`, `ShadowMap`,
-`CoverageCapture`, `desc.Lights`, the routed `DrawOpaque` and the whole world-content half of
-`SceneRenderDesc`. The chapter states that split rather than calling itself flatly 3D-only.
-`world-systems.md` needs no such nuance — all three subsystems are excluded outright.
-
-`physics.md` covers a subsystem that **does** ship in both — only mesh and terrain-heightfield
-colliders are 3D-only. Say so; it is a common wrong assumption.
-
-`cameras.md` is the mixed case: every camera and every controller ships in **both**, and so does
-`Gizmo`, but `NavigationCube` and `ScenePicker` are filtered out of the 2D build. The chapter has a
-dedicated section for the two exclusions, because they fail differently — `ScenePicker`'s include is
-fenced in `Cosmic.h` and `NavigationCube`'s is not, so the latter compiles and fails at **link**
-time.
-
-`assets-and-vfs.md` splits **inside one class** (D58). `AssetLibrary` itself ships in both — a 2D
-game loads textures, shaders and materials — but `GetMesh`, `GetModel`, `GetAnimationClip` and
-`GetAnimationClipNames` are fenced in `AssetLibrary.h`, and their backends (`MeshImport.cpp`,
-`graphics/Model.*`, `graphics/AnimationClip.*`) are excluded from the 2D build, so there would be
-nothing left for them to call. `assets/MeshImport.h` is fenced in `Cosmic.h` outright. Everything
-else in the chapter — the whole VFS, `Config` and the `utils/` tier — is unfenced, and so are
-`audio.md` and `sim-math-toolkit.md` in full.

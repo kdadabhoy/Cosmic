@@ -767,7 +767,7 @@ reload idempotent — `AssetLibrary::Reload` is.
 - [`sim-math-toolkit.md`](sim-math-toolkit.md) — `LookupTable1D::FromCSV`, the other consumer of
   `DataExport`
 - [`audio.md`](audio.md#the-com-apartment-gotcha) — why `FileDialog` has an MTA guard
-- [root README §1.6](../../README.md#16-the-two-engine-configurations) and
+- [root README §1.6](../../README.md#16-the-engine-configuration) and
   [`../systems/build-2d-3d-split.md`](../parked-3d/systems/build-2d-3d-split.md) (parked 3D) — what a 2D build drops
 - [`../reference/assets-io.md`](../reference/assets-io.md) *(skeleton)* ·
   [`../systems/assets-vfs.md`](../systems/assets-vfs.md) *(skeleton)*

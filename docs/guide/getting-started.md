@@ -21,12 +21,15 @@ From a clean clone, on Windows x64 with Visual Studio's C++ x64 toolset installe
 
 ```bat
 setup.bat
-build_all.bat
-build\Runtime\Debug\Starforge.exe
+build_all.bat Release
+build\Runtime\Release\Starforge.exe
 ```
 
-`setup.bat` registers the SDK root once per machine. `build_all.bat` does a clean configure and
-builds the engine, both host executables, every project under `Projects/`, and the test suite.
+`setup.bat` registers the SDK root once per machine (`setx COSMIC_SDK`; open a new shell afterwards —
+the editor needs it to build your project's C++). `build_all.bat` does a clean configure and builds the
+engine, both host executables, every project under `Projects/`, and the test suite; the raw-CMake
+equivalent and the exact path of the VS-bundled `cmake.exe` (it is not on `PATH`) are in the root
+README's [Quickstart](../../README.md#quickstart--from-a-fresh-clone-to-the-editor).
 `Starforge.exe` is the editor — the front door if you want to *make* something. To browse the
 sample apps and demos instead, run `build\Runtime\Debug\CosmicApp.exe`, which boots the Launcher.
 
@@ -50,11 +53,10 @@ packaged app ships.
 Beyond rendering, the engine carries the parts a simulation needs and a game engine usually
 doesn't: a TOML config facade, fixed-step integrators, filters, lookup tables, deterministic
 PCG32 RNG, a serial-port service, and a columnar telemetry recorder with replay. Those are why
-projects like `SF_Telem` and `ViperSim` live in the same tree as `ForgePong`.
+`SF_Telem` and `AnalysisSample` live in the same tree as `PendulumLab` and the game template.
 
-Cosmic also builds as **two engines from one source tree** — the full 3D engine and a pure-2D
-engine that never compiles terrain, voxels, water, navigation, particles or `Renderer3D`. See
-[Pick a build configuration](#pick-a-build-configuration).
+This trunk builds **one engine, 2D-only**; the 3D half is preserved on the `engine-3d` branch. See
+[The engine configuration](#the-engine-configuration).
 
 ### DG-1 — how the pieces fit
 
@@ -158,7 +160,7 @@ The everyday command is `build.bat`. Everything else is a variation on it.
 | `build.bat [Debug\|Release]` | Incremental build of everything. Default `Debug`. Configures `build/` if absent. |
 | `build_all.bat [Debug\|Release]` | Deletes `build/` and does a clean configure + build. Use after cloning or when a glob went stale. |
 | `build_engine.bat [Debug\|Release]` | Configures with `COSMIC_BUILD_ENGINE_ONLY=ON` and builds only the `Cosmic` + `CosmicApp` targets. The fastest loop for engine work. |
-| `build_2d.bat` / `build_3d.bat` | Switch this tree's engine configuration and build. See [below](#pick-a-build-configuration). |
+| `build_all_release.bat` | Clean configure + build pinned to `Release`. |
 
 The full command reference — every script, every exe flag, every CMake option, with defaults — is
 root README [§1.5](../../README.md#15-command-reference--every-command). It is the canonical list;
@@ -187,8 +189,7 @@ build/Runtime/Debug/
 ├── Starforge.exe        ← the same host with "Starforge" compiled in as the default project
 ├── Cosmic.dll           ← the engine (+ Cosmic.lib, the import library projects link)
 ├── Starforge.dll        ← the editor, as a project DLL
-├── SF_Telem.dll         ← one DLL per project the scanner built
-├── Frontier.dll  ViperSim.dll  Engine3DDemo.dll  ForgeIsle.dll
+├── SF_Telem.dll  PendulumLab.dll  AnalysisSample.dll   ← one DLL per project the scanner built
 ├── CosmicTests.exe      ← the headless doctest suite (built by default)
 └── assets/
     ├── shaders/ fonts/ themes/ …     ← engine assets, synced POST_BUILD; this is engine://
@@ -339,7 +340,7 @@ So the same DLL the editor hot-reloads is the one a shipped build runs. There is
 ## Create a C++ plugin project
 
 This is the other path — an **engine-level app** rather than a scene-driven game. `SF_Telem`,
-`ViperSim` and `Frontier` are built this way: no `.cproj`, no scene required, just a `Layer`
+`SF_Telem` and `AnalysisSample` are built this way: no `.cproj`, no scene required, just a `Layer`
 subclass that owns everything. Use it when your app *is* the tooling — a telemetry dashboard, a
 flight sim, a benchmark harness.
 
@@ -360,7 +361,7 @@ scanner's install rule assumes **target name == directory name**.
 Either way, **any directory under `Projects/` containing a `CMakeLists.txt` is picked up
 automatically** on the next configure. You never edit the root `CMakeLists.txt` to register a
 project. The one exception is `COSMIC_SKIP_PROJECTS`, which the 2D configuration uses to drop the
-3D flagships — see [below](#pick-a-build-configuration).
+3D flagships — see [below](#the-engine-configuration).
 
 The template project is worth reading before you delete anything from it. It is a *working*
 example of the composite-layer pattern, VFS resolution, TOML config, gamepad polling, audio
@@ -378,23 +379,23 @@ C:\dev\Cosmic\
 │   ├── assets/                 ← engine assets — shaders, fonts, themes  (engine://)
 │   ├── dependencies/           ← vendored: glfw glad glm entt imgui implot spdlog
 │   │                             stb_* miniaudio cgltf tomlplusplus nlohmann
-│   │                             ImGuizmo JoltPhysics recastnavigation assimp
+│   │                             ImGuizmo JoltPhysics imgui-node-editor implot spdlog
 │   └── templates/ExampleProject/  ← the C++ plugin template the Launcher copies
 ├── Runtime/                    ← Main.cpp + the two host exe targets (+ .rc, .manifest)
 ├── Projects/                   ← scanned automatically; one subfolder per project
 │   ├── Starforge/              ← the editor (a project DLL like any other)
-│   ├── SF_Telem/  ViperSim/    ← simulation / telemetry apps
-│   └── Frontier/  Engine3DDemo/  ForgeIsle/   ← 3D flagships
+│   ├── SF_Telem/               ← the dual-ESC telemetry ground station
+│   ├── PendulumLab/            ← the showcase app (logic in C++, screens in the editor)
+│   └── AnalysisSample/         ← the analysis / plotting sample
 ├── tests/                      ← CosmicTests (doctest) + tests/render (golden images)
 ├── docs/                       ← guide/ reference/ systems/ design/ plans/
 ├── installer/                  ← CosmicSetup.iss (Inno Setup script)
 ├── build/Runtime/<Config>/     ← every binary, flat, plus the synced assets/ tree
 ├── dist/                       ← staged distributables + zips (package.bat)
-├── CMakeLists.txt              ← the root: flags, both configurations, the project scanner
-├── CMakePresets.json           ← presets "default" (3D) and "2d"
+├── CMakeLists.txt              ← the root: flags, the project scanner
+├── CMakePresets.json           ← the one preset, "2d"
 ├── setup.bat                   ← run once: sets COSMIC_SDK
-├── build.bat  build_all.bat  build_engine.bat
-├── build_2d.bat  build_3d.bat  build_all_2d.bat  build_all_release.bat
+├── build.bat  build_all.bat  build_all_release.bat  build_engine.bat
 └── package.bat  package_installer.bat
 ```
 
@@ -546,45 +547,27 @@ modules in the process agree on one active project.
 
 ---
 
-## Pick a build configuration
+## The engine configuration
 
-Cosmic builds **two engines from one source tree**, selected by `COSMIC_2D_ONLY`. The full table —
-what each configuration ships, which branch and worktree it lives on, and the recorded build times
-— is root README [§1.6](../../README.md#16-the-two-engine-configurations), and the mechanism is
-explained in [`../systems/build-2d-3d-split.md`](../parked-3d/systems/build-2d-3d-split.md) (parked 3D). What you need on
-day one:
+`main` builds **one engine, 2D-only**. `-DCOSMIC_2D_ONLY=ON` is an explicit, always-on compatibility
+flag — every script and preset passes it and the root `CMakeLists.txt` rejects `OFF` — and there is
+no `#ifndef COSMIC_2D_ONLY` fence left in engine or template code. Every project under `Projects/`
+builds. The one preset, `cmake --preset 2d`, is the Quickstart configure.
 
-```bat
-build_3d.bat     :: switch this tree to the full 3D engine, then build
-build_2d.bat     :: switch this tree to the 2D-only engine, then build
-```
+- **One `build/` per source tree.** `COSMIC_SDK_DIR` is the *source* directory and every target
+  writes to `${COSMIC_SDK_DIR}/build/Runtime/$<CONFIG>`, so a second binary directory in the same
+  tree would overwrite the first one's `Cosmic.dll`. Debug and Release share `build/` by design.
+- **Physics ships in full.** Rigid bodies, box/sphere/capsule colliders and the character controller
+  are dimension-agnostic; the mesh and terrain-heightfield colliders went with the 3D purge.
+- **Templates compile as generated.** The App, Blank and Game templates name no 3D API.
 
-or, equivalently, `cmake --preset default` / `cmake --preset 2d`.
+> **History (Phase 29 → 2026-09-18).** For two months the same tree built a full 3D engine and a
+> pure-2D engine selected by `COSMIC_2D_ONLY`, with `build_2d.bat` / `build_3d.bat` as mode setters, an
+> `engine-2d` branch, a worktree per configuration and a project skip-list. The App Platform campaign
+> deleted the 3D source from `main` (D-PURGE) and dissolved the split; the 3D tree is `engine-3d`
+> (`0e8894b`, tag `cosmic-pre-2d-2026-09-16`). The mechanism is recorded in
+> [`../parked-3d/systems/build-2d-3d-split.md`](../parked-3d/systems/build-2d-3d-split.md) (parked 3D).
 
-- **`build_2d.bat` and `build_3d.bat` are the only mode setters.** `build.bat`, `build_all.bat` and
-  `build_engine.bat` *read* `COSMIC_2D_ONLY` out of `build\CMakeCache.txt`, echo
-  `[MODE] 2D-only engine` or `[MODE] full 3D engine`, and never change it. The cache is sticky, so
-  after one `build_2d.bat` this tree stays 2D until you say otherwise. **Check the `[MODE]` line**
-  when a build behaves oddly.
-- **Use a git worktree, not a second build folder**, to have both at once. `COSMIC_SDK_DIR` is the
-  *source* directory and every target writes to `${COSMIC_SDK_DIR}/build/Runtime/$<CONFIG>`, so two
-  binary directories in one source tree overwrite each other's `Cosmic.dll`.
-- **The 2D configuration skips four projects** by default (`Frontier`, `Engine3DDemo`, `ForgeIsle`,
-  `ViperSim`) via `COSMIC_SKIP_PROJECTS`. Starforge is *not* skipped — the editor builds in both.
-- **`COSMIC_2D_ONLY` is a PUBLIC compile definition** on the `Cosmic` target, unlike every other
-  engine define. Your project sees exactly the value the engine was built with, so
-  `#ifndef COSMIC_2D_ONLY` guards work identically in engine and client code.
-- **Physics ships in both.** Rigid bodies, box/sphere/capsule colliders and the character
-  controller are dimension-agnostic; only mesh and terrain-heightfield colliders are 3D-only. This
-  is the most common wrong assumption about the split.
-
-> **A freshly scaffolded Starforge project does not compile against the 2D engine as generated.**
-> The template's `src/Module.cpp` registers `VoxelDigger` (which uses the `Voxels()` script proxy)
-> and `NavCritter` (which uses `NavAgentComponent`), and there is no `#ifndef COSMIC_2D_ONLY`
-> anywhere in `Projects/Starforge/assets/templates/`. Both proxies are fenced out of
-> `ScriptableEntity` in the 2D build. Delete those two `CS_SCRIPT`/`CS_SYSTEM` blocks and their
-> includes — plus `WalkController`'s siblings if you don't want them — for a 2D game. The
-> `ExampleProject` C++ plugin template has no such problem; it names no 3D-only API.
 
 ---
 
@@ -656,12 +639,11 @@ until the host hands its own over.
 **A new file under `Cosmic/src/` isn't compiled.** The engine glob has no `CONFIGURE_DEPENDS`.
 Reconfigure — `build_all.bat`, or delete `build/CMakeCache.txt`.
 
-**A 3D project silently stops building.** Check the `[MODE]` line the script prints. In 2D mode the
-scanner skips `Frontier`, `Engine3DDemo`, `ForgeIsle` and `ViperSim`, and the cache is sticky:
-`build.bat` will keep building 2D forever. `build_3d.bat` switches back.
+**Configure fails with "COSMIC_2D_ONLY=OFF is not supported".** This trunk is 2D-only; pass
+`-DCOSMIC_2D_ONLY=ON` (or nothing — the scripts pass it). 3D work happens on the `engine-3d` branch.
 
 **Two build folders in one source tree.** They clobber each other's `Cosmic.dll`, because
-`COSMIC_SDK_DIR` is source-relative. Use `git worktree add ../Cosmic-2D engine-2d`.
+`COSMIC_SDK_DIR` is source-relative. Keep one `build/` per checkout; Debug and Release share it.
 
 **Writes that work for you and fail for your users.** Anything under the exe directory fails once
 the app is installed to *Program Files*. Route every write through `user://`.
@@ -688,7 +670,7 @@ empty and keeps the shared root; a Starforge-packaged app writes `boot.cfg` and 
 - [`scripting.md`](scripting.md) — `ScriptableEntity`, `ScriptHost`, the registration DSL, hot
   reload, and every script proxy.
 - Root README [§1.5](../../README.md#15-command-reference--every-command) — the canonical command
-  reference. [§1.6](../../README.md#16-the-two-engine-configurations) — the two configurations.
+  reference. [§1.6](../../README.md#16-the-engine-configuration) — the two configurations.
 - [`../systems/architecture-overview.md`](../systems/architecture-overview.md) ·
   [`../systems/build-plugin-packaging.md`](../systems/build-plugin-packaging.md) ·
   [`../systems/build-2d-3d-split.md`](../parked-3d/systems/build-2d-3d-split.md) (parked 3D)
