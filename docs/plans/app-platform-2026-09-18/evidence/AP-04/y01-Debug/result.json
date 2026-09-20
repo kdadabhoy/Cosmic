@@ -1,0 +1,33 @@
+﻿{
+    "work_order":  "AP-04",
+    "case":  "Y01 PendulumLab standalone build",
+    "config":  "Debug",
+    "verdict":  "PASS",
+    "sdk_dir":  "C:\\dev\\Cosmic-ap-04",
+    "source_copy":  "C:\\dev\\_ap04-pendulum-build\\PendulumLab-src",
+    "build_dir":  "C:\\dev\\_ap04-pendulum-build\\build",
+    "configure_exit":  0,
+    "build_exit":  0,
+    "warnings_outside_deps":  0,
+    "dll":  "C:\\dev\\_ap04-pendulum-build\\build\\Debug\\PendulumLab.dll",
+    "dll_exists":  true,
+    "dll_sha256":  "038CD13841904E85848266E8F593C0A31C04D3C13A2D4E113D4B5E9C3A536BFC",
+    "exports_found":  [
+                          "CosmicModule_Register",
+                          "CreatePluginLayer",
+                          "InitializePluginContexts"
+                      ],
+    "manifest_kind_app":  true,
+    "flow_present":  true,
+    "screens_present":  [
+                            "Home",
+                            "Lab",
+                            "Settings",
+                            "Stopped"
+                        ],
+    "seconds":  18.8,
+    "commands":  [
+                     "\"C:\\Program Files\\Microsoft Visual Studio\\18\\Community\\Common7\\IDE\\CommonExtensions\\Microsoft\\CMake\\CMake\\bin\\cmake.exe\" -S \"C:\\dev\\_ap04-pendulum-build\\PendulumLab-src\" -B \"C:\\dev\\_ap04-pendulum-build\\build\" -A x64 -DCOSMIC_SDK_DIR=\"C:\\dev\\Cosmic-ap-04\" -DGAME_OUTPUT_DIR=\"C:\\dev\\_ap04-pendulum-build\\build\"",
+                     "\"C:\\Program Files\\Microsoft Visual Studio\\18\\Community\\Common7\\IDE\\CommonExtensions\\Microsoft\\CMake\\CMake\\bin\\cmake.exe\" --build \"C:\\dev\\_ap04-pendulum-build\\build\" --config Debug --parallel"
+                 ]
+}

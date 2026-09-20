@@ -1,0 +1,2 @@
+﻿"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -S "C:\dev\_ap04-pendulum-build\PendulumLab-src" -B "C:\dev\_ap04-pendulum-build\build" -A x64 -DCOSMIC_SDK_DIR="C:\dev\Cosmic-ap-04" -DGAME_OUTPUT_DIR="C:\dev\_ap04-pendulum-build\build"
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" --build "C:\dev\_ap04-pendulum-build\build" --config Release --parallel

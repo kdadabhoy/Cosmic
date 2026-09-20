@@ -1,0 +1,70 @@
+{
+  "cosmic_flow": 1,
+  "start": "Menu",
+  "states": [
+    {
+      "editor": {
+        "pos": [
+          40.0,
+          60.0
+        ]
+      },
+      "name": "Menu",
+      "scene": "project://scenes/Menu.cscene",
+      "transitions": [
+        {
+          "on": "play_clicked",
+          "to": "Game"
+        },
+        {
+          "on": "quit_clicked",
+          "to": "@quit"
+        }
+      ]
+    },
+    {
+      "editor": {
+        "pos": [
+          380.0,
+          60.0
+        ]
+      },
+      "name": "Game",
+      "scene": "project://scenes/Game.cscene",
+      "transitions": [
+        {
+          "on": "left_wins",
+          "to": "Win"
+        },
+        {
+          "on": "right_wins",
+          "to": "Win"
+        },
+        {
+          "on": "key:Escape",
+          "to": "Menu"
+        }
+      ]
+    },
+    {
+      "editor": {
+        "pos": [
+          720.0,
+          60.0
+        ]
+      },
+      "name": "Win",
+      "scene": "project://scenes/Win.cscene",
+      "transitions": [
+        {
+          "on": "rematch_clicked",
+          "to": "Game"
+        },
+        {
+          "on": "menu_clicked",
+          "to": "Menu"
+        }
+      ]
+    }
+  ]
+}

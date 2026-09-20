@@ -1,0 +1,350 @@
+{
+  "cosmic_scene": 1,
+  "entities": [
+    {
+      "components": {
+        "SpriteRenderer": {
+          "Color": [
+            0.8500000238418579,
+            0.550000011920929,
+            0.20000000298023224,
+            1.0
+          ],
+          "FlipX": false,
+          "FlipY": false,
+          "PixelsPerUnit": 100.0,
+          "SourceRect": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "TexturePath": "",
+          "YSort": false,
+          "ZOrder": 0
+        },
+        "Tag": {
+          "Tag": "Monument"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            -0.4000000059604645,
+            0.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            2.4000000953674316,
+            2.4000000953674316,
+            1.0
+          ],
+          "UseQuatRotation": false
+        }
+      },
+      "id": "3c01771f66149192"
+    },
+    {
+      "components": {
+        "Canvas": {
+          "ReferenceHeight": 1080.0,
+          "ScaleMode": 1,
+          "SortOrder": 0
+        },
+        "Relationship": {
+          "Children": [
+            "68db5c69b2d2913d"
+          ]
+        },
+        "Tag": {
+          "Tag": "HUD"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "UseQuatRotation": false
+        }
+      },
+      "id": "4529385b302710b5"
+    },
+    {
+      "components": {
+        "Environment": {
+          "Ambient2D": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "AmbientIntensity": 1.0,
+          "Bloom": false,
+          "BloomIntensity": 0.6000000238418579,
+          "BloomThreshold": 1.0,
+          "Exposure": 1.0,
+          "FXAA": true,
+          "Fog": false,
+          "FogBaseHeight": 0.0,
+          "FogColor": [
+            0.699999988079071,
+            0.800000011920929,
+            0.9200000166893005
+          ],
+          "FogDensity": 0.019999999552965164,
+          "FogHeightFalloff": 0.11999999731779099,
+          "Gamma": 2.200000047683716,
+          "HdriPath": "",
+          "IBL": true,
+          "IBLIntensity": 1.0,
+          "LensFlare": false,
+          "LensFlareIntensity": 0.3499999940395355,
+          "MieG": 0.800000011920929,
+          "MieScale": 1.0,
+          "RayleighScale": 1.0,
+          "SSAO": false,
+          "Sky": 0,
+          "Skybox": true,
+          "SsaoRadius": 0.5,
+          "SunAngularSize": 0.5299999713897705,
+          "SunColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "SunDirection": [
+            -0.4000000059604645,
+            -1.0,
+            -0.30000001192092896
+          ],
+          "SunIntensity": 1.0,
+          "TimeOfDay": 11.0,
+          "Turbidity": 2.5,
+          "Vignette": false,
+          "VignetteAmount": 0.3499999940395355,
+          "VignetteColor": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "VignetteFeather": 0.4000000059604645,
+          "VignetteRadius": 0.8999999761581421
+        },
+        "Tag": {
+          "Tag": "Environment"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "UseQuatRotation": false
+        }
+      },
+      "id": "60b66082cbcaaea0"
+    },
+    {
+      "components": {
+        "RectTransform": {
+          "AnchorMax": [
+            0.0,
+            1.0
+          ],
+          "AnchorMin": [
+            0.0,
+            1.0
+          ],
+          "OffsetMax": [
+            420.0,
+            -12.0
+          ],
+          "OffsetMin": [
+            16.0,
+            -44.0
+          ],
+          "Pivot": [
+            0.5,
+            0.5
+          ],
+          "ZOrder": 0
+        },
+        "Tag": {
+          "Tag": "Hint"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "UseQuatRotation": false
+        },
+        "UiText": {
+          "Color": [
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "FontPath": "",
+          "HAlign": 0,
+          "SizePx": 20.0,
+          "Text": "GAME  |  Esc = pause",
+          "VAlign": 1,
+          "Wrap": false
+        }
+      },
+      "id": "68db5c69b2d2913d"
+    },
+    {
+      "components": {
+        "SpriteRenderer": {
+          "Color": [
+            0.3199999928474426,
+            0.41999998688697815,
+            0.3400000035762787,
+            1.0
+          ],
+          "FlipX": false,
+          "FlipY": false,
+          "PixelsPerUnit": 100.0,
+          "SourceRect": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "TexturePath": "",
+          "YSort": false,
+          "ZOrder": -1
+        },
+        "Tag": {
+          "Tag": "Ground"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            -2.5,
+            0.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            20.0,
+            1.0,
+            1.0
+          ],
+          "UseQuatRotation": false
+        }
+      },
+      "id": "c776e106b404ad11"
+    },
+    {
+      "components": {
+        "Camera": {
+          "Far": 1000.0,
+          "FovDeg": 60.0,
+          "Near": 0.10000000149011612,
+          "OrthoSize": 5.0,
+          "Primary": true,
+          "ProjectionType": 1
+        },
+        "Tag": {
+          "Tag": "Camera"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            0.0,
+            10.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "UseQuatRotation": false
+        }
+      },
+      "id": "f9eb6f9ebb36eb74"
+    }
+  ]
+}

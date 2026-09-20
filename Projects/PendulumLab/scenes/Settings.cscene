@@ -1,0 +1,1738 @@
+{
+  "cosmic_scene": 1,
+  "entities": [
+    {
+      "id": "7a27576900000001",
+      "components": {
+        "Tag": {
+          "Tag": "Camera"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            0.0,
+            10.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "UseQuatRotation": false
+        },
+        "Camera": {
+          "Primary": true,
+          "ProjectionType": 1,
+          "FovDeg": 60.0,
+          "Near": 0.1,
+          "Far": 1000.0,
+          "OrthoSize": 5.0
+        }
+      }
+    },
+    {
+      "id": "7a27576900000002",
+      "components": {
+        "Tag": {
+          "Tag": "Canvas"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "UseQuatRotation": false
+        },
+        "Canvas": {
+          "ScaleMode": 1,
+          "ReferenceHeight": 1080.0,
+          "SortOrder": 0
+        },
+        "UiImage": {
+          "TexturePath": "",
+          "Tint": [
+            0.05,
+            0.06,
+            0.09,
+            1.0
+          ],
+          "NineSlice": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "PreserveAspect": false
+        },
+        "NativeScript": {
+          "ClassName": "SettingsScreen",
+          "Fields": {}
+        },
+        "Relationship": {
+          "Children": [
+            "7a27576900000003",
+            "7a27576900000004",
+            "7a27576900000005",
+            "7a27576900000006",
+            "7a27576900000007",
+            "7a27576900000008",
+            "7a27576900000009",
+            "7a2757690000000a",
+            "7a2757690000000b",
+            "7a2757690000000c",
+            "7a2757690000000d",
+            "7a2757690000000e",
+            "7a2757690000000f",
+            "7a27576900000010",
+            "7a27576900000011",
+            "7a27576900000012",
+            "7a27576900000013",
+            "7a27576900000014",
+            "7a27576900000015",
+            "7a27576900000016"
+          ]
+        }
+      }
+    },
+    {
+      "id": "7a27576900000003",
+      "components": {
+        "Tag": {
+          "Tag": "Header"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "UseQuatRotation": false
+        },
+        "RectTransform": {
+          "AnchorMin": [
+            0.0,
+            0.0
+          ],
+          "AnchorMax": [
+            1.0,
+            0.0
+          ],
+          "OffsetMin": [
+            0.0,
+            0.0
+          ],
+          "OffsetMax": [
+            0.0,
+            72.0
+          ],
+          "Pivot": [
+            0.5,
+            0.5
+          ],
+          "ZOrder": 1
+        },
+        "UiImage": {
+          "TexturePath": "",
+          "Tint": [
+            0.1,
+            0.11,
+            0.14,
+            0.85
+          ],
+          "NineSlice": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "PreserveAspect": false
+        }
+      }
+    },
+    {
+      "id": "7a27576900000004",
+      "components": {
+        "Tag": {
+          "Tag": "HeaderTitle"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "UseQuatRotation": false
+        },
+        "RectTransform": {
+          "AnchorMin": [
+            0.0,
+            0.0
+          ],
+          "AnchorMax": [
+            0.0,
+            0.0
+          ],
+          "OffsetMin": [
+            24.0,
+            18.0
+          ],
+          "OffsetMax": [
+            400.0,
+            54.0
+          ],
+          "Pivot": [
+            0.5,
+            0.5
+          ],
+          "ZOrder": 2
+        },
+        "UiText": {
+          "Text": "Settings",
+          "FontPath": "",
+          "SizePx": 30.0,
+          "Color": [
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "HAlign": 0,
+          "VAlign": 1,
+          "Wrap": false
+        }
+      }
+    },
+    {
+      "id": "7a27576900000005",
+      "components": {
+        "Tag": {
+          "Tag": "LengthSliderLabel"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "UseQuatRotation": false
+        },
+        "RectTransform": {
+          "AnchorMin": [
+            0.2,
+            0.2
+          ],
+          "AnchorMax": [
+            0.2,
+            0.2
+          ],
+          "OffsetMin": [
+            0.0,
+            -16.0
+          ],
+          "OffsetMax": [
+            260.0,
+            16.0
+          ],
+          "Pivot": [
+            0.5,
+            0.5
+          ],
+          "ZOrder": 0
+        },
+        "UiText": {
+          "Text": "Length (m)",
+          "FontPath": "",
+          "SizePx": 22.0,
+          "Color": [
+            0.8,
+            0.84,
+            0.9,
+            1.0
+          ],
+          "HAlign": 0,
+          "VAlign": 1,
+          "Wrap": false
+        }
+      }
+    },
+    {
+      "id": "7a27576900000006",
+      "components": {
+        "Tag": {
+          "Tag": "LengthSlider"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "UseQuatRotation": false
+        },
+        "RectTransform": {
+          "AnchorMin": [
+            0.36,
+            0.2
+          ],
+          "AnchorMax": [
+            0.66,
+            0.2
+          ],
+          "OffsetMin": [
+            0.0,
+            -12.0
+          ],
+          "OffsetMax": [
+            0.0,
+            12.0
+          ],
+          "Pivot": [
+            0.5,
+            0.5
+          ],
+          "ZOrder": 0
+        },
+        "UiSlider": {
+          "Channel": "settings.length",
+          "Min": 0.25,
+          "Max": 4.0,
+          "Step": 0.0,
+          "Signal": "",
+          "Orientation": 0,
+          "TrackColor": [
+            0.15,
+            0.15,
+            0.18,
+            1.0
+          ],
+          "FillColor": [
+            0.3,
+            0.6,
+            1.0,
+            1.0
+          ],
+          "KnobColor": [
+            0.95,
+            0.95,
+            1.0,
+            1.0
+          ],
+          "KnobSize": 18.0,
+          "Interactable": true,
+          "PreviewValue": 1.0
+        }
+      }
+    },
+    {
+      "id": "7a27576900000007",
+      "components": {
+        "Tag": {
+          "Tag": "LengthSliderValue"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "UseQuatRotation": false
+        },
+        "RectTransform": {
+          "AnchorMin": [
+            0.68,
+            0.2
+          ],
+          "AnchorMax": [
+            0.68,
+            0.2
+          ],
+          "OffsetMin": [
+            0.0,
+            -16.0
+          ],
+          "OffsetMax": [
+            140.0,
+            16.0
+          ],
+          "Pivot": [
+            0.5,
+            0.5
+          ],
+          "ZOrder": 0
+        },
+        "UiText": {
+          "Text": "--",
+          "FontPath": "",
+          "SizePx": 22.0,
+          "Color": [
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "HAlign": 0,
+          "VAlign": 1,
+          "Wrap": false
+        },
+        "UiValueText": {
+          "Channel": "settings.length",
+          "Format": "%.2f",
+          "Prefix": "",
+          "Suffix": " m",
+          "Placeholder": "--",
+          "StaleAfter": 0.0,
+          "StaleColor": [
+            0.6,
+            0.6,
+            0.6,
+            1.0
+          ],
+          "PreviewValue": 1.0
+        }
+      }
+    },
+    {
+      "id": "7a27576900000008",
+      "components": {
+        "Tag": {
+          "Tag": "GravitySliderLabel"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "UseQuatRotation": false
+        },
+        "RectTransform": {
+          "AnchorMin": [
+            0.2,
+            0.29
+          ],
+          "AnchorMax": [
+            0.2,
+            0.29
+          ],
+          "OffsetMin": [
+            0.0,
+            -16.0
+          ],
+          "OffsetMax": [
+            260.0,
+            16.0
+          ],
+          "Pivot": [
+            0.5,
+            0.5
+          ],
+          "ZOrder": 0
+        },
+        "UiText": {
+          "Text": "Gravity (m/s^2)",
+          "FontPath": "",
+          "SizePx": 22.0,
+          "Color": [
+            0.8,
+            0.84,
+            0.9,
+            1.0
+          ],
+          "HAlign": 0,
+          "VAlign": 1,
+          "Wrap": false
+        }
+      }
+    },
+    {
+      "id": "7a27576900000009",
+      "components": {
+        "Tag": {
+          "Tag": "GravitySlider"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "UseQuatRotation": false
+        },
+        "RectTransform": {
+          "AnchorMin": [
+            0.36,
+            0.29
+          ],
+          "AnchorMax": [
+            0.66,
+            0.29
+          ],
+          "OffsetMin": [
+            0.0,
+            -12.0
+          ],
+          "OffsetMax": [
+            0.0,
+            12.0
+          ],
+          "Pivot": [
+            0.5,
+            0.5
+          ],
+          "ZOrder": 0
+        },
+        "UiSlider": {
+          "Channel": "settings.gravity",
+          "Min": 1.0,
+          "Max": 25.0,
+          "Step": 0.0,
+          "Signal": "",
+          "Orientation": 0,
+          "TrackColor": [
+            0.15,
+            0.15,
+            0.18,
+            1.0
+          ],
+          "FillColor": [
+            0.3,
+            0.6,
+            1.0,
+            1.0
+          ],
+          "KnobColor": [
+            0.95,
+            0.95,
+            1.0,
+            1.0
+          ],
+          "KnobSize": 18.0,
+          "Interactable": true,
+          "PreviewValue": 9.80665
+        }
+      }
+    },
+    {
+      "id": "7a2757690000000a",
+      "components": {
+        "Tag": {
+          "Tag": "GravitySliderValue"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "UseQuatRotation": false
+        },
+        "RectTransform": {
+          "AnchorMin": [
+            0.68,
+            0.29
+          ],
+          "AnchorMax": [
+            0.68,
+            0.29
+          ],
+          "OffsetMin": [
+            0.0,
+            -16.0
+          ],
+          "OffsetMax": [
+            140.0,
+            16.0
+          ],
+          "Pivot": [
+            0.5,
+            0.5
+          ],
+          "ZOrder": 0
+        },
+        "UiText": {
+          "Text": "--",
+          "FontPath": "",
+          "SizePx": 22.0,
+          "Color": [
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "HAlign": 0,
+          "VAlign": 1,
+          "Wrap": false
+        },
+        "UiValueText": {
+          "Channel": "settings.gravity",
+          "Format": "%.3f",
+          "Prefix": "",
+          "Suffix": " m/s^2",
+          "Placeholder": "--",
+          "StaleAfter": 0.0,
+          "StaleColor": [
+            0.6,
+            0.6,
+            0.6,
+            1.0
+          ],
+          "PreviewValue": 9.80665
+        }
+      }
+    },
+    {
+      "id": "7a2757690000000b",
+      "components": {
+        "Tag": {
+          "Tag": "DampingSliderLabel"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "UseQuatRotation": false
+        },
+        "RectTransform": {
+          "AnchorMin": [
+            0.2,
+            0.38
+          ],
+          "AnchorMax": [
+            0.2,
+            0.38
+          ],
+          "OffsetMin": [
+            0.0,
+            -16.0
+          ],
+          "OffsetMax": [
+            260.0,
+            16.0
+          ],
+          "Pivot": [
+            0.5,
+            0.5
+          ],
+          "ZOrder": 0
+        },
+        "UiText": {
+          "Text": "Damping (1/s)",
+          "FontPath": "",
+          "SizePx": 22.0,
+          "Color": [
+            0.8,
+            0.84,
+            0.9,
+            1.0
+          ],
+          "HAlign": 0,
+          "VAlign": 1,
+          "Wrap": false
+        }
+      }
+    },
+    {
+      "id": "7a2757690000000c",
+      "components": {
+        "Tag": {
+          "Tag": "DampingSlider"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "UseQuatRotation": false
+        },
+        "RectTransform": {
+          "AnchorMin": [
+            0.36,
+            0.38
+          ],
+          "AnchorMax": [
+            0.66,
+            0.38
+          ],
+          "OffsetMin": [
+            0.0,
+            -12.0
+          ],
+          "OffsetMax": [
+            0.0,
+            12.0
+          ],
+          "Pivot": [
+            0.5,
+            0.5
+          ],
+          "ZOrder": 0
+        },
+        "UiSlider": {
+          "Channel": "settings.damping",
+          "Min": 0.0,
+          "Max": 1.0,
+          "Step": 0.0,
+          "Signal": "",
+          "Orientation": 0,
+          "TrackColor": [
+            0.15,
+            0.15,
+            0.18,
+            1.0
+          ],
+          "FillColor": [
+            0.3,
+            0.6,
+            1.0,
+            1.0
+          ],
+          "KnobColor": [
+            0.95,
+            0.95,
+            1.0,
+            1.0
+          ],
+          "KnobSize": 18.0,
+          "Interactable": true,
+          "PreviewValue": 0.0
+        }
+      }
+    },
+    {
+      "id": "7a2757690000000d",
+      "components": {
+        "Tag": {
+          "Tag": "DampingSliderValue"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "UseQuatRotation": false
+        },
+        "RectTransform": {
+          "AnchorMin": [
+            0.68,
+            0.38
+          ],
+          "AnchorMax": [
+            0.68,
+            0.38
+          ],
+          "OffsetMin": [
+            0.0,
+            -16.0
+          ],
+          "OffsetMax": [
+            140.0,
+            16.0
+          ],
+          "Pivot": [
+            0.5,
+            0.5
+          ],
+          "ZOrder": 0
+        },
+        "UiText": {
+          "Text": "--",
+          "FontPath": "",
+          "SizePx": 22.0,
+          "Color": [
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "HAlign": 0,
+          "VAlign": 1,
+          "Wrap": false
+        },
+        "UiValueText": {
+          "Channel": "settings.damping",
+          "Format": "%.3f",
+          "Prefix": "",
+          "Suffix": " 1/s",
+          "Placeholder": "--",
+          "StaleAfter": 0.0,
+          "StaleColor": [
+            0.6,
+            0.6,
+            0.6,
+            1.0
+          ],
+          "PreviewValue": 0.0
+        }
+      }
+    },
+    {
+      "id": "7a2757690000000e",
+      "components": {
+        "Tag": {
+          "Tag": "Theta0SliderLabel"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "UseQuatRotation": false
+        },
+        "RectTransform": {
+          "AnchorMin": [
+            0.2,
+            0.47
+          ],
+          "AnchorMax": [
+            0.2,
+            0.47
+          ],
+          "OffsetMin": [
+            0.0,
+            -16.0
+          ],
+          "OffsetMax": [
+            260.0,
+            16.0
+          ],
+          "Pivot": [
+            0.5,
+            0.5
+          ],
+          "ZOrder": 0
+        },
+        "UiText": {
+          "Text": "Release angle (deg)",
+          "FontPath": "",
+          "SizePx": 22.0,
+          "Color": [
+            0.8,
+            0.84,
+            0.9,
+            1.0
+          ],
+          "HAlign": 0,
+          "VAlign": 1,
+          "Wrap": false
+        }
+      }
+    },
+    {
+      "id": "7a2757690000000f",
+      "components": {
+        "Tag": {
+          "Tag": "Theta0Slider"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "UseQuatRotation": false
+        },
+        "RectTransform": {
+          "AnchorMin": [
+            0.36,
+            0.47
+          ],
+          "AnchorMax": [
+            0.66,
+            0.47
+          ],
+          "OffsetMin": [
+            0.0,
+            -12.0
+          ],
+          "OffsetMax": [
+            0.0,
+            12.0
+          ],
+          "Pivot": [
+            0.5,
+            0.5
+          ],
+          "ZOrder": 0
+        },
+        "UiSlider": {
+          "Channel": "settings.theta0_deg",
+          "Min": 1.0,
+          "Max": 90.0,
+          "Step": 1.0,
+          "Signal": "",
+          "Orientation": 0,
+          "TrackColor": [
+            0.15,
+            0.15,
+            0.18,
+            1.0
+          ],
+          "FillColor": [
+            0.3,
+            0.6,
+            1.0,
+            1.0
+          ],
+          "KnobColor": [
+            0.95,
+            0.95,
+            1.0,
+            1.0
+          ],
+          "KnobSize": 18.0,
+          "Interactable": true,
+          "PreviewValue": 5.0
+        }
+      }
+    },
+    {
+      "id": "7a27576900000010",
+      "components": {
+        "Tag": {
+          "Tag": "Theta0SliderValue"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "UseQuatRotation": false
+        },
+        "RectTransform": {
+          "AnchorMin": [
+            0.68,
+            0.47
+          ],
+          "AnchorMax": [
+            0.68,
+            0.47
+          ],
+          "OffsetMin": [
+            0.0,
+            -16.0
+          ],
+          "OffsetMax": [
+            140.0,
+            16.0
+          ],
+          "Pivot": [
+            0.5,
+            0.5
+          ],
+          "ZOrder": 0
+        },
+        "UiText": {
+          "Text": "--",
+          "FontPath": "",
+          "SizePx": 22.0,
+          "Color": [
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "HAlign": 0,
+          "VAlign": 1,
+          "Wrap": false
+        },
+        "UiValueText": {
+          "Channel": "settings.theta0_deg",
+          "Format": "%.0f",
+          "Prefix": "",
+          "Suffix": " deg",
+          "Placeholder": "--",
+          "StaleAfter": 0.0,
+          "StaleColor": [
+            0.6,
+            0.6,
+            0.6,
+            1.0
+          ],
+          "PreviewValue": 5.0
+        }
+      }
+    },
+    {
+      "id": "7a27576900000011",
+      "components": {
+        "Tag": {
+          "Tag": "SmallAngleLabel"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "UseQuatRotation": false
+        },
+        "RectTransform": {
+          "AnchorMin": [
+            0.2,
+            0.58
+          ],
+          "AnchorMax": [
+            0.2,
+            0.58
+          ],
+          "OffsetMin": [
+            0.0,
+            -16.0
+          ],
+          "OffsetMax": [
+            260.0,
+            16.0
+          ],
+          "Pivot": [
+            0.5,
+            0.5
+          ],
+          "ZOrder": 0
+        },
+        "UiText": {
+          "Text": "Small-angle model",
+          "FontPath": "",
+          "SizePx": 22.0,
+          "Color": [
+            0.8,
+            0.84,
+            0.9,
+            1.0
+          ],
+          "HAlign": 0,
+          "VAlign": 1,
+          "Wrap": false
+        }
+      }
+    },
+    {
+      "id": "7a27576900000012",
+      "components": {
+        "Tag": {
+          "Tag": "SmallAngleToggle"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "UseQuatRotation": false
+        },
+        "RectTransform": {
+          "AnchorMin": [
+            0.36,
+            0.58
+          ],
+          "AnchorMax": [
+            0.36,
+            0.58
+          ],
+          "OffsetMin": [
+            0.0,
+            -22.0
+          ],
+          "OffsetMax": [
+            44.0,
+            22.0
+          ],
+          "Pivot": [
+            0.5,
+            0.5
+          ],
+          "ZOrder": 0
+        },
+        "UiImage": {
+          "TexturePath": "",
+          "Tint": [
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "NineSlice": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "PreserveAspect": false
+        },
+        "UiToggle": {
+          "Channel": "settings.small_angle",
+          "Signal": "settings_changed",
+          "OnTint": [
+            0.2,
+            1.0,
+            0.3,
+            1.0
+          ],
+          "OffTint": [
+            0.5,
+            0.5,
+            0.5,
+            1.0
+          ],
+          "OnTexture": "",
+          "OffTexture": "",
+          "Interactable": true,
+          "PreviewOn": false
+        }
+      }
+    },
+    {
+      "id": "7a27576900000013",
+      "components": {
+        "Tag": {
+          "Tag": "SmallAngleNote"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "UseQuatRotation": false
+        },
+        "RectTransform": {
+          "AnchorMin": [
+            0.4,
+            0.58
+          ],
+          "AnchorMax": [
+            0.8,
+            0.58
+          ],
+          "OffsetMin": [
+            0.0,
+            -16.0
+          ],
+          "OffsetMax": [
+            0.0,
+            16.0
+          ],
+          "Pivot": [
+            0.5,
+            0.5
+          ],
+          "ZOrder": 0
+        },
+        "UiText": {
+          "Text": "linearised sin(theta) ~ theta (the analytic reference the tests compare against)",
+          "FontPath": "",
+          "SizePx": 18.0,
+          "Color": [
+            0.5,
+            0.55,
+            0.62,
+            1.0
+          ],
+          "HAlign": 0,
+          "VAlign": 1,
+          "Wrap": false
+        }
+      }
+    },
+    {
+      "id": "7a27576900000014",
+      "components": {
+        "Tag": {
+          "Tag": "Note"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "UseQuatRotation": false
+        },
+        "RectTransform": {
+          "AnchorMin": [
+            0.2,
+            0.68
+          ],
+          "AnchorMax": [
+            0.8,
+            0.68
+          ],
+          "OffsetMin": [
+            0.0,
+            -40.0
+          ],
+          "OffsetMax": [
+            0.0,
+            40.0
+          ],
+          "Pivot": [
+            0.5,
+            0.5
+          ],
+          "ZOrder": 0
+        },
+        "UiText": {
+          "Text": "Changes apply live: the service re-reads settings.* every fixed step. Reset re-releases from the release angle.",
+          "FontPath": "",
+          "SizePx": 18.0,
+          "Color": [
+            0.5,
+            0.55,
+            0.62,
+            1.0
+          ],
+          "HAlign": 1,
+          "VAlign": 1,
+          "Wrap": false
+        }
+      }
+    },
+    {
+      "id": "7a27576900000015",
+      "components": {
+        "Tag": {
+          "Tag": "DefaultsButton"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "UseQuatRotation": false
+        },
+        "RectTransform": {
+          "AnchorMin": [
+            0.4,
+            0.82
+          ],
+          "AnchorMax": [
+            0.4,
+            0.82
+          ],
+          "OffsetMin": [
+            -100.0,
+            -24.0
+          ],
+          "OffsetMax": [
+            100.0,
+            24.0
+          ],
+          "Pivot": [
+            0.5,
+            0.5
+          ],
+          "ZOrder": 2
+        },
+        "UiImage": {
+          "TexturePath": "",
+          "Tint": [
+            0.16,
+            0.19,
+            0.25,
+            0.92
+          ],
+          "NineSlice": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "PreserveAspect": false
+        },
+        "UiButton": {
+          "Signal": "settings.defaults",
+          "NormalTint": [
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "HoverTint": [
+            1.15,
+            1.15,
+            1.15,
+            1.0
+          ],
+          "PressedTint": [
+            0.8,
+            0.8,
+            0.8,
+            1.0
+          ],
+          "DisabledTint": [
+            0.5,
+            0.5,
+            0.5,
+            0.6
+          ],
+          "Interactable": true
+        },
+        "UiText": {
+          "Text": "Defaults",
+          "FontPath": "",
+          "SizePx": 26.0,
+          "Color": [
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "HAlign": 1,
+          "VAlign": 1,
+          "Wrap": false
+        }
+      }
+    },
+    {
+      "id": "7a27576900000016",
+      "components": {
+        "Tag": {
+          "Tag": "BackButton"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "UseQuatRotation": false
+        },
+        "RectTransform": {
+          "AnchorMin": [
+            0.6,
+            0.82
+          ],
+          "AnchorMax": [
+            0.6,
+            0.82
+          ],
+          "OffsetMin": [
+            -100.0,
+            -24.0
+          ],
+          "OffsetMax": [
+            100.0,
+            24.0
+          ],
+          "Pivot": [
+            0.5,
+            0.5
+          ],
+          "ZOrder": 2
+        },
+        "UiImage": {
+          "TexturePath": "",
+          "Tint": [
+            0.16,
+            0.19,
+            0.25,
+            0.92
+          ],
+          "NineSlice": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "PreserveAspect": false
+        },
+        "UiButton": {
+          "Signal": "back_clicked",
+          "NormalTint": [
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "HoverTint": [
+            1.15,
+            1.15,
+            1.15,
+            1.0
+          ],
+          "PressedTint": [
+            0.8,
+            0.8,
+            0.8,
+            1.0
+          ],
+          "DisabledTint": [
+            0.5,
+            0.5,
+            0.5,
+            0.6
+          ],
+          "Interactable": true
+        },
+        "UiText": {
+          "Text": "Back",
+          "FontPath": "",
+          "SizePx": 26.0,
+          "Color": [
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "HAlign": 1,
+          "VAlign": 1,
+          "Wrap": false
+        }
+      }
+    }
+  ]
+}

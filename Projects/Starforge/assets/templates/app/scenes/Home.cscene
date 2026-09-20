@@ -1,0 +1,815 @@
+{
+  "cosmic_scene": 1,
+  "entities": [
+    {
+      "id": "2d18668100000001",
+      "components": {
+        "Tag": {
+          "Tag": "Camera"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            0.0,
+            10.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "UseQuatRotation": false
+        },
+        "Camera": {
+          "Primary": true,
+          "ProjectionType": 1,
+          "FovDeg": 60.0,
+          "Near": 0.1,
+          "Far": 1000.0,
+          "OrthoSize": 5.0
+        }
+      }
+    },
+    {
+      "id": "2d18668100000002",
+      "components": {
+        "Tag": {
+          "Tag": "Canvas"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "UseQuatRotation": false
+        },
+        "Canvas": {
+          "ScaleMode": 1,
+          "ReferenceHeight": 1080.0,
+          "SortOrder": 0
+        },
+        "UiImage": {
+          "TexturePath": "",
+          "Tint": [
+            0.06,
+            0.07,
+            0.09,
+            1.0
+          ],
+          "NineSlice": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "PreserveAspect": false
+        },
+        "NativeScript": {
+          "ClassName": "HomeScreen",
+          "Fields": {}
+        },
+        "Relationship": {
+          "Children": [
+            "2d18668100000003",
+            "2d18668100000004",
+            "2d18668100000005",
+            "2d18668100000006",
+            "2d18668100000007",
+            "2d18668100000008",
+            "2d18668100000009",
+            "2d1866810000000a"
+          ]
+        }
+      }
+    },
+    {
+      "id": "2d18668100000003",
+      "components": {
+        "Tag": {
+          "Tag": "Logo"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "UseQuatRotation": false
+        },
+        "RectTransform": {
+          "AnchorMin": [
+            0.5,
+            0.22
+          ],
+          "AnchorMax": [
+            0.5,
+            0.22
+          ],
+          "OffsetMin": [
+            -80.0,
+            -80.0
+          ],
+          "OffsetMax": [
+            80.0,
+            80.0
+          ],
+          "Pivot": [
+            0.5,
+            0.5
+          ],
+          "ZOrder": 1
+        },
+        "UiImage": {
+          "TexturePath": "project://assets/ui/logo.png",
+          "Tint": [
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "NineSlice": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "PreserveAspect": false
+        }
+      }
+    },
+    {
+      "id": "2d18668100000004",
+      "components": {
+        "Tag": {
+          "Tag": "Title"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "UseQuatRotation": false
+        },
+        "RectTransform": {
+          "AnchorMin": [
+            0.5,
+            0.4
+          ],
+          "AnchorMax": [
+            0.5,
+            0.4
+          ],
+          "OffsetMin": [
+            -420.0,
+            -50.0
+          ],
+          "OffsetMax": [
+            420.0,
+            50.0
+          ],
+          "Pivot": [
+            0.5,
+            0.5
+          ],
+          "ZOrder": 1
+        },
+        "UiText": {
+          "Text": "@PROJECT_NAME@",
+          "FontPath": "",
+          "SizePx": 72.0,
+          "Color": [
+            0.95,
+            0.98,
+            1.0,
+            1.0
+          ],
+          "HAlign": 1,
+          "VAlign": 1,
+          "Wrap": false
+        }
+      }
+    },
+    {
+      "id": "2d18668100000005",
+      "components": {
+        "Tag": {
+          "Tag": "Subtitle"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "UseQuatRotation": false
+        },
+        "RectTransform": {
+          "AnchorMin": [
+            0.5,
+            0.49
+          ],
+          "AnchorMax": [
+            0.5,
+            0.49
+          ],
+          "OffsetMin": [
+            -420.0,
+            -24.0
+          ],
+          "OffsetMax": [
+            420.0,
+            24.0
+          ],
+          "Pivot": [
+            0.5,
+            0.5
+          ],
+          "ZOrder": 1
+        },
+        "UiText": {
+          "Text": "An app built on the Cosmic App Platform",
+          "FontPath": "",
+          "SizePx": 24.0,
+          "Color": [
+            0.7,
+            0.74,
+            0.82,
+            1.0
+          ],
+          "HAlign": 1,
+          "VAlign": 1,
+          "Wrap": false
+        }
+      }
+    },
+    {
+      "id": "2d18668100000006",
+      "components": {
+        "Tag": {
+          "Tag": "Uptime"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "UseQuatRotation": false
+        },
+        "RectTransform": {
+          "AnchorMin": [
+            0.5,
+            0.56
+          ],
+          "AnchorMax": [
+            0.5,
+            0.56
+          ],
+          "OffsetMin": [
+            -200.0,
+            -18.0
+          ],
+          "OffsetMax": [
+            200.0,
+            18.0
+          ],
+          "Pivot": [
+            0.5,
+            0.5
+          ],
+          "ZOrder": 1
+        },
+        "UiText": {
+          "Text": "--",
+          "FontPath": "",
+          "SizePx": 22.0,
+          "Color": [
+            0.6,
+            0.8,
+            1.0,
+            1.0
+          ],
+          "HAlign": 1,
+          "VAlign": 1,
+          "Wrap": false
+        },
+        "UiValueText": {
+          "Channel": "app.uptime",
+          "Format": "%.1f",
+          "Prefix": "Up ",
+          "Suffix": " s",
+          "Placeholder": "--",
+          "StaleAfter": 0.0,
+          "StaleColor": [
+            0.6,
+            0.6,
+            0.6,
+            1.0
+          ],
+          "PreviewValue": 12.5
+        }
+      }
+    },
+    {
+      "id": "2d18668100000007",
+      "components": {
+        "Tag": {
+          "Tag": "DashboardButton"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "UseQuatRotation": false
+        },
+        "RectTransform": {
+          "AnchorMin": [
+            0.5,
+            0.68
+          ],
+          "AnchorMax": [
+            0.5,
+            0.68
+          ],
+          "OffsetMin": [
+            -130.0,
+            -28.0
+          ],
+          "OffsetMax": [
+            130.0,
+            28.0
+          ],
+          "Pivot": [
+            0.5,
+            0.5
+          ],
+          "ZOrder": 2
+        },
+        "UiImage": {
+          "TexturePath": "",
+          "Tint": [
+            0.16,
+            0.19,
+            0.25,
+            0.92
+          ],
+          "NineSlice": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "PreserveAspect": false
+        },
+        "UiButton": {
+          "Signal": "dashboard_clicked",
+          "NormalTint": [
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "HoverTint": [
+            1.15,
+            1.15,
+            1.15,
+            1.0
+          ],
+          "PressedTint": [
+            0.8,
+            0.8,
+            0.8,
+            1.0
+          ],
+          "DisabledTint": [
+            0.5,
+            0.5,
+            0.5,
+            0.6
+          ],
+          "Interactable": true
+        },
+        "UiText": {
+          "Text": "Dashboard",
+          "FontPath": "",
+          "SizePx": 26.0,
+          "Color": [
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "HAlign": 1,
+          "VAlign": 1,
+          "Wrap": false
+        }
+      }
+    },
+    {
+      "id": "2d18668100000008",
+      "components": {
+        "Tag": {
+          "Tag": "SettingsButton"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "UseQuatRotation": false
+        },
+        "RectTransform": {
+          "AnchorMin": [
+            0.5,
+            0.77
+          ],
+          "AnchorMax": [
+            0.5,
+            0.77
+          ],
+          "OffsetMin": [
+            -130.0,
+            -28.0
+          ],
+          "OffsetMax": [
+            130.0,
+            28.0
+          ],
+          "Pivot": [
+            0.5,
+            0.5
+          ],
+          "ZOrder": 2
+        },
+        "UiImage": {
+          "TexturePath": "",
+          "Tint": [
+            0.16,
+            0.19,
+            0.25,
+            0.92
+          ],
+          "NineSlice": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "PreserveAspect": false
+        },
+        "UiButton": {
+          "Signal": "settings_clicked",
+          "NormalTint": [
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "HoverTint": [
+            1.15,
+            1.15,
+            1.15,
+            1.0
+          ],
+          "PressedTint": [
+            0.8,
+            0.8,
+            0.8,
+            1.0
+          ],
+          "DisabledTint": [
+            0.5,
+            0.5,
+            0.5,
+            0.6
+          ],
+          "Interactable": true
+        },
+        "UiText": {
+          "Text": "Settings",
+          "FontPath": "",
+          "SizePx": 26.0,
+          "Color": [
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "HAlign": 1,
+          "VAlign": 1,
+          "Wrap": false
+        }
+      }
+    },
+    {
+      "id": "2d18668100000009",
+      "components": {
+        "Tag": {
+          "Tag": "QuitButton"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "UseQuatRotation": false
+        },
+        "RectTransform": {
+          "AnchorMin": [
+            0.5,
+            0.86
+          ],
+          "AnchorMax": [
+            0.5,
+            0.86
+          ],
+          "OffsetMin": [
+            -130.0,
+            -28.0
+          ],
+          "OffsetMax": [
+            130.0,
+            28.0
+          ],
+          "Pivot": [
+            0.5,
+            0.5
+          ],
+          "ZOrder": 2
+        },
+        "UiImage": {
+          "TexturePath": "",
+          "Tint": [
+            0.16,
+            0.19,
+            0.25,
+            0.92
+          ],
+          "NineSlice": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "PreserveAspect": false
+        },
+        "UiButton": {
+          "Signal": "quit_clicked",
+          "NormalTint": [
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "HoverTint": [
+            1.15,
+            1.15,
+            1.15,
+            1.0
+          ],
+          "PressedTint": [
+            0.8,
+            0.8,
+            0.8,
+            1.0
+          ],
+          "DisabledTint": [
+            0.5,
+            0.5,
+            0.5,
+            0.6
+          ],
+          "Interactable": true
+        },
+        "UiText": {
+          "Text": "Quit",
+          "FontPath": "",
+          "SizePx": 26.0,
+          "Color": [
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "HAlign": 1,
+          "VAlign": 1,
+          "Wrap": false
+        }
+      }
+    },
+    {
+      "id": "2d1866810000000a",
+      "components": {
+        "Tag": {
+          "Tag": "Hint"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "UseQuatRotation": false
+        },
+        "RectTransform": {
+          "AnchorMin": [
+            0.0,
+            1.0
+          ],
+          "AnchorMax": [
+            1.0,
+            1.0
+          ],
+          "OffsetMin": [
+            0.0,
+            -40.0
+          ],
+          "OffsetMax": [
+            0.0,
+            0.0
+          ],
+          "Pivot": [
+            0.5,
+            0.5
+          ],
+          "ZOrder": 0
+        },
+        "UiText": {
+          "Text": "Escape returns to this screen from anywhere",
+          "FontPath": "",
+          "SizePx": 18.0,
+          "Color": [
+            0.5,
+            0.55,
+            0.62,
+            1.0
+          ],
+          "HAlign": 1,
+          "VAlign": 1,
+          "Wrap": false
+        }
+      }
+    }
+  ]
+}

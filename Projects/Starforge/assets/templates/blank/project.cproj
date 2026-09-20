@@ -1,7 +1,7 @@
-# Cosmic project manifest — @PROJECT_NAME@
+# Cosmic project manifest — @PROJECT_NAME@ (blank template)
 # Consumed by the standalone PlayerLayer (E13) and Starforge (E12).
 name          = "@PROJECT_NAME@"
-kind          = "game"
+kind          = "blank"
 startup_scene = "scenes/Main.cscene"
 fixed_dt_hz   = 60
 window_title  = "@PROJECT_NAME@"

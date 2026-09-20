@@ -2,7 +2,7 @@
   "cosmic_scene": 1,
   "entities": [
     {
-      "id": "0dddeeb900000003",
+      "id": "54fba31c00000001",
       "components": {
         "Tag": {
           "Tag": "Camera"
@@ -42,10 +42,10 @@
       }
     },
     {
-      "id": "0dddeeb900000004",
+      "id": "54fba31c00000002",
       "components": {
         "Tag": {
-          "Tag": "Sprite"
+          "Tag": "Canvas"
         },
         "Transform": {
           "Position": [
@@ -59,8 +59,8 @@
             0.0
           ],
           "Scale": [
-            2.0,
-            2.0,
+            1.0,
+            1.0,
             1.0
           ],
           "RotationQuat": [
@@ -71,24 +71,10 @@
           ],
           "UseQuatRotation": false
         },
-        "SpriteRenderer": {
-          "Color": [
-            0.92,
-            0.45,
-            0.14,
-            1.0
-          ],
-          "FlipX": false,
-          "FlipY": false,
-          "SourceRect": [
-            0.0,
-            0.0,
-            1.0,
-            1.0
-          ],
-          "PixelsPerUnit": 100.0,
-          "ZOrder": 0,
-          "TexturePath": ""
+        "Canvas": {
+          "ScaleMode": 1,
+          "ReferenceHeight": 1080.0,
+          "SortOrder": 0
         }
       }
     }

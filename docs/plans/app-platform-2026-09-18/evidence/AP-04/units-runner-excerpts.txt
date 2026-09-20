@@ -1,0 +1,26 @@
+== y01u-Debug
+[doctest] test cases:  5 |  5 passed | 0 failed | 510 skipped
+[doctest] assertions: 42 | 42 passed | 0 failed |
+[doctest] Status: SUCCESS!
+== y01u-Release
+[doctest] test cases:  5 |  5 passed | 0 failed | 510 skipped
+[doctest] assertions: 42 | 42 passed | 0 failed |
+[doctest] Status: SUCCESS!
+== f02u-Debug
+[doctest] test cases:  3 |  3 passed | 0 failed | 512 skipped
+[doctest] assertions: 50 | 50 passed | 0 failed |
+[doctest] Status: SUCCESS!
+== f02u-Release
+[doctest] test cases:  3 |  3 passed | 0 failed | 512 skipped
+[doctest] assertions: 50 | 50 passed | 0 failed |
+[doctest] Status: SUCCESS!
+== e01u-Debug
+C:\dev\Cosmic-ap-04\tests\test_template_scripts.cpp(386): MESSAGE: validated 15 scenes, 35 widget blocks (0 through registered components, 35 via verbatim preservation pending AP-02)
+[doctest] test cases:   6 |   6 passed | 0 failed | 509 skipped
+[doctest] assertions: 855 | 855 passed | 0 failed |
+[doctest] Status: SUCCESS!
+== e01u-Release
+C:\dev\Cosmic-ap-04\tests\test_template_scripts.cpp(386): MESSAGE: validated 15 scenes, 35 widget blocks (0 through registered components, 35 via verbatim preservation pending AP-02)
+[doctest] test cases:   6 |   6 passed | 0 failed | 509 skipped
+[doctest] assertions: 855 | 855 passed | 0 failed |
+[doctest] Status: SUCCESS!

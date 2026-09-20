@@ -1,0 +1,609 @@
+{
+  "cosmic_scene": 1,
+  "entities": [
+    {
+      "components": {
+        "SpriteAnimation": {
+          "FPS": 24.0,
+          "FrameH": 16,
+          "FrameW": 16,
+          "Frames": 8,
+          "Loop": false,
+          "Playing": false,
+          "Row": 0,
+          "SheetPath": "project://textures/hit.png"
+        },
+        "SpriteRenderer": {
+          "Color": [
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "FlipX": false,
+          "FlipY": false,
+          "PixelsPerUnit": 13.0,
+          "SourceRect": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "TexturePath": "project://textures/hit.png",
+          "YSort": false,
+          "ZOrder": 5
+        },
+        "Tag": {
+          "Tag": "HitFx"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            1000.0,
+            0.20000000298023224
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "UseQuatRotation": false
+        }
+      },
+      "id": "07e38ecdcc393d1a"
+    },
+    {
+      "components": {
+        "SpriteRenderer": {
+          "Color": [
+            0.3499999940395355,
+            0.3799999952316284,
+            0.46000000834465027,
+            0.6000000238418579
+          ],
+          "FlipX": false,
+          "FlipY": false,
+          "PixelsPerUnit": 100.0,
+          "SourceRect": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "TexturePath": "",
+          "YSort": false,
+          "ZOrder": -1
+        },
+        "Tag": {
+          "Tag": "CenterLine"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            0.0,
+            -0.10000000149011612
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            0.07999999821186066,
+            8.800000190734863,
+            1.0
+          ],
+          "UseQuatRotation": false
+        }
+      },
+      "id": "263baebe4b64b072"
+    },
+    {
+      "components": {
+        "RectTransform": {
+          "AnchorMax": [
+            0.6200000047683716,
+            0.0
+          ],
+          "AnchorMin": [
+            0.6200000047683716,
+            0.0
+          ],
+          "OffsetMax": [
+            60.0,
+            92.0
+          ],
+          "OffsetMin": [
+            -60.0,
+            18.0
+          ],
+          "Pivot": [
+            0.5,
+            0.5
+          ],
+          "ZOrder": 0
+        },
+        "Tag": {
+          "Tag": "ScoreR"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "UseQuatRotation": false
+        },
+        "UiText": {
+          "Color": [
+            0.8999999761581421,
+            0.9300000071525574,
+            1.0,
+            0.8999999761581421
+          ],
+          "FontPath": "",
+          "HAlign": 1,
+          "SizePx": 56.0,
+          "Text": "0",
+          "VAlign": 1,
+          "Wrap": false
+        }
+      },
+      "id": "2e722fac87251408"
+    },
+    {
+      "components": {
+        "NativeScript": {
+          "ClassName": "PaddleController"
+        },
+        "SpriteRenderer": {
+          "Color": [
+            0.949999988079071,
+            0.9700000286102295,
+            1.0,
+            1.0
+          ],
+          "FlipX": false,
+          "FlipY": false,
+          "PixelsPerUnit": 100.0,
+          "SourceRect": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "TexturePath": "",
+          "YSort": false,
+          "ZOrder": 1
+        },
+        "Tag": {
+          "Tag": "PaddleR"
+        },
+        "Transform": {
+          "Position": [
+            7.400000095367432,
+            0.0,
+            0.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            0.30000001192092896,
+            1.600000023841858,
+            1.0
+          ],
+          "UseQuatRotation": false
+        }
+      },
+      "id": "3becc1edbc1c0b93"
+    },
+    {
+      "components": {
+        "SpriteRenderer": {
+          "Color": [
+            0.8500000238418579,
+            0.8799999952316284,
+            0.949999988079071,
+            1.0
+          ],
+          "FlipX": false,
+          "FlipY": false,
+          "PixelsPerUnit": 100.0,
+          "SourceRect": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "TexturePath": "",
+          "YSort": false,
+          "ZOrder": 0
+        },
+        "Tag": {
+          "Tag": "WallBottom"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            -4.5,
+            0.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            16.399999618530273,
+            0.25,
+            1.0
+          ],
+          "UseQuatRotation": false
+        }
+      },
+      "id": "68e10d484ce25566"
+    },
+    {
+      "components": {
+        "NativeScript": {
+          "ClassName": "PongBall"
+        },
+        "SpriteRenderer": {
+          "Color": [
+            1.0,
+            0.8999999761581421,
+            0.5,
+            1.0
+          ],
+          "FlipX": false,
+          "FlipY": false,
+          "PixelsPerUnit": 100.0,
+          "SourceRect": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "TexturePath": "",
+          "YSort": false,
+          "ZOrder": 2
+        },
+        "Tag": {
+          "Tag": "Ball"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            0.0,
+            0.10000000149011612
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            0.30000001192092896,
+            0.30000001192092896,
+            1.0
+          ],
+          "UseQuatRotation": false
+        }
+      },
+      "id": "736311d563d04366"
+    },
+    {
+      "components": {
+        "SpriteRenderer": {
+          "Color": [
+            0.8500000238418579,
+            0.8799999952316284,
+            0.949999988079071,
+            1.0
+          ],
+          "FlipX": false,
+          "FlipY": false,
+          "PixelsPerUnit": 100.0,
+          "SourceRect": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "TexturePath": "",
+          "YSort": false,
+          "ZOrder": 0
+        },
+        "Tag": {
+          "Tag": "WallTop"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            4.5,
+            0.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            16.399999618530273,
+            0.25,
+            1.0
+          ],
+          "UseQuatRotation": false
+        }
+      },
+      "id": "935a35251b83cff5"
+    },
+    {
+      "components": {
+        "RectTransform": {
+          "AnchorMax": [
+            0.3799999952316284,
+            0.0
+          ],
+          "AnchorMin": [
+            0.3799999952316284,
+            0.0
+          ],
+          "OffsetMax": [
+            60.0,
+            92.0
+          ],
+          "OffsetMin": [
+            -60.0,
+            18.0
+          ],
+          "Pivot": [
+            0.5,
+            0.5
+          ],
+          "ZOrder": 0
+        },
+        "Tag": {
+          "Tag": "ScoreL"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "UseQuatRotation": false
+        },
+        "UiText": {
+          "Color": [
+            0.8999999761581421,
+            0.9300000071525574,
+            1.0,
+            0.8999999761581421
+          ],
+          "FontPath": "",
+          "HAlign": 1,
+          "SizePx": 56.0,
+          "Text": "0",
+          "VAlign": 1,
+          "Wrap": false
+        }
+      },
+      "id": "ad921bfdde89458e"
+    },
+    {
+      "components": {
+        "NativeScript": {
+          "ClassName": "PaddleController"
+        },
+        "SpriteRenderer": {
+          "Color": [
+            0.949999988079071,
+            0.9700000286102295,
+            1.0,
+            1.0
+          ],
+          "FlipX": false,
+          "FlipY": false,
+          "PixelsPerUnit": 100.0,
+          "SourceRect": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "TexturePath": "",
+          "YSort": false,
+          "ZOrder": 1
+        },
+        "Tag": {
+          "Tag": "PaddleL"
+        },
+        "Transform": {
+          "Position": [
+            -7.400000095367432,
+            0.0,
+            0.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            0.30000001192092896,
+            1.600000023841858,
+            1.0
+          ],
+          "UseQuatRotation": false
+        }
+      },
+      "id": "b82196f4aeb39b79"
+    },
+    {
+      "components": {
+        "Canvas": {
+          "ReferenceHeight": 1080.0,
+          "ScaleMode": 1,
+          "SortOrder": 0
+        },
+        "Relationship": {
+          "Children": [
+            "ad921bfdde89458e",
+            "2e722fac87251408"
+          ]
+        },
+        "Tag": {
+          "Tag": "HUD"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "UseQuatRotation": false
+        }
+      },
+      "id": "d5ed5aec52988bc1"
+    },
+    {
+      "components": {
+        "Camera": {
+          "Far": 1000.0,
+          "FovDeg": 60.0,
+          "Near": 0.10000000149011612,
+          "OrthoSize": 5.0,
+          "Primary": true,
+          "ProjectionType": 1
+        },
+        "Tag": {
+          "Tag": "Camera"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            0.0,
+            10.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "UseQuatRotation": false
+        }
+      },
+      "id": "d5ffea6d89bf2bc3"
+    }
+  ]
+}

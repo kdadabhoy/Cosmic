@@ -1,0 +1,23 @@
+{
+  "manifest": "ap04-sample",
+  "cases": [
+    {
+      "id": "Y01",
+      "description": "PendulumLab configures and builds standalone from a CLEAN SDK path (catalog Y01, the K01 procedure): the committed Projects/PendulumLab is copied outside the SDK tree, configured with -DCOSMIC_SDK_DIR=<repo> -DGAME_OUTPUT_DIR=<fresh build dir> into a fresh build directory outside the tree, built with 0 warnings outside imgui/implot; the module DLL exists and exports CosmicModule_Register / CreatePluginLayer / InitializePluginContexts; the tree carries kind = \"app\", the flow and the four screens. Commands recorded in commands.txt, verdict in result.json.",
+      "tier": "W",
+      "profiles": ["pr", "release"],
+      "requires": ["windows"],
+      "command": "powershell",
+      "workingDir": "{BIN}",
+      "args": [
+        "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
+        "{ACCEPTANCE}\\fixtures\\Run-AP04Sample.ps1",
+        "-Bin", "{BIN}", "-Config", "{CONFIG}",
+        "-Output", "{REPO}\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-04\\y01-{CONFIG}"
+      ],
+      "expectExit": 0,
+      "deadlineSec": 1200,
+      "fixture": "../../Projects/PendulumLab/CMakeLists.txt"
+    }
+  ]
+}

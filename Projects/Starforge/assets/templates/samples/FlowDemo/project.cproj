@@ -1,0 +1,10 @@
+# Cosmic project manifest — @PROJECT_NAME@
+# Consumed by the standalone PlayerLayer (E13) and Starforge.
+name          = "@PROJECT_NAME@"
+kind          = "game"
+startup_scene = "scenes/MainMenu.cscene"
+startup_flow  = "flows/Main.cflow"
+fixed_dt_hz   = 60
+
+[window]
+title  = "Flow Demo"
