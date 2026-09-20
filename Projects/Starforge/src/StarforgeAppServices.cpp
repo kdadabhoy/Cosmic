@@ -17,7 +17,8 @@ namespace Starforge
         // A fresh Play clears the previous run's channels (values + history + producer
         // tags; subscriptions are kept — there are none from the editor side). The
         // D-LIVE resume (AP-03) skips this Clear to carry the bus across a rebuild.
-        m_PlayBus.Clear();
+        if (!m_PlayKeepBus) m_PlayBus.Clear();   // AP-03: the live-loop resume keeps values + history
+        m_PlayKeepBus = false;
         m_PlayLastAbsTime = Cosmic::Application::Get().GetAbsoluteTime();
 
         // Services first (after all are constructed, OnAttach runs in order), on the

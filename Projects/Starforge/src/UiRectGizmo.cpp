@@ -197,7 +197,7 @@ namespace Starforge
     }
 
     bool UiRectGizmo::Update(EditorContext& ctx, const glm::vec2& vpPos, const glm::vec2& vpSize,
-                             const glm::vec4& bandUv)
+                             const glm::vec4& bandUv, bool pointerAvailable)
     {
         m_VpPos = vpPos;
         ImGuiIO& io = ImGui::GetIO();
@@ -257,7 +257,7 @@ namespace Starforge
         if (!m_HasRect) { m_Hover = RectHandle::None; return false; }
         m_Rect = rect; m_Scale = scale;
 
-        const bool inViewport = local.x >= 0.0f && local.y >= 0.0f &&
+        const bool inViewport = pointerAvailable && local.x >= 0.0f && local.y >= 0.0f &&
                                 local.x <= vpSize.x && local.y <= vpSize.y;
         m_Hover = inViewport ? UiRectGizmoMath::HitTest(rect, local) : RectHandle::None;
 

@@ -94,7 +94,7 @@ namespace Starforge
         // true while the gizmo owns the pointer (hovering a handle or dragging) —
         // the viewport then skips its own click-pick / click-away-deselect.
         bool Update(EditorContext& ctx, const glm::vec2& vpPos, const glm::vec2& vpSize,
-                    const glm::vec4& bandUv);
+                    const glm::vec4& bandUv, bool pointerAvailable = true);   // false: resolve only (viewport not hovered)
 
         // Inside the viewport's DrawOverlay2D pass (after UiSystem::Render): the
         // outline + nine handles through Renderer2D in target pixel space.

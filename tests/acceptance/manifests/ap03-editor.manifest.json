@@ -1,0 +1,24 @@
+{
+  "manifest": "ap03-editor",
+  "cases": [
+    {
+      "id": "AP03-EDITOR",
+      "description": "AP-03 editor authoring inside the REAL Starforge editor (Projects/Starforge/src/AP03AuthoringSelfTest.cpp): E01 New Project (kind app) -> F-APP tree equals templates/app -> the flow's start screen opens -> viewport non-blank -> BuildScripts -> Play (flow state Home, services instantiated) -> Stop; E02 Screens > New Screen 'Telemetry' + Create script (scene with canvas + ortho camera + NativeScript, flow state added byte-stable, stub header, include + CS_SCRIPT between the CS_SCREENS markers, rebuild ok, Validate empty, marker-less refusal with the documented message and no file change); F01 rename / set-start round-trip byte-stable + when/channel guard round trip; E03 injected pointer drag on the rect gizmo (one CommandStack entry, undo/redo, anchors untouched, SE resize edits OffsetMax only); E04 UiImage.TexturePath replaced with an imported PNG, saved, reopened, sentinel pixels in the viewport readback; E08 recorded Open/Reveal (COSMIC_AP03_RECORD_SHELL) for a screen script, the CS_SERVICE site (DataBus panel producer + Inspector Open producer), the CS_PANEL site (viewport context menu + Inspector), a bound widget channel and a button signal; V05 editor half (Diagnostics CS_PANEL drawn at the element's viewport-offset rect, also letterboxed; unknown name -> placeholder; never in edit mode; ImGui stacks balanced); E07 live loop (AppService.cpp rewritten while playing -> stop, rebuild, resume on the same flow state with services re-instantiated, amplitude changed, uptime history kept, Console build line; compile error -> stays stopped with the 'Build failed' chip; fix -> resumes); E06 homescreen lists App/Game/Blank + FlowDemo/ForgePong, each scaffolds/opens/builds/plays, LoadProjects <= 3 over 600 frames. The wrapper adds the OUT-OF-PROCESS oracles (F-APP byte comparison, E02 files + flow JSON, E08 recorded paths).",
+      "tier": "I",
+      "profiles": ["gpu", "release"],
+      "requires": ["windows", "gpu-gl"],
+      "command": "powershell",
+      "workingDir": "{BIN}",
+      "args": [
+        "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
+        "{ACCEPTANCE}\fixtures\Run-AP03Authoring.ps1",
+        "-Bin", "{BIN}",
+        "-Output", "{REPO}\docs\plans\app-platform-2026-09-18\evidence\AP-03\ap03-{CONFIG}",
+        "-ProjectRoot", "{RUNTEMP}\ap03"
+      ],
+      "expectExit": 0,
+      "minTests": 2,
+      "deadlineSec": 1600
+    }
+  ]
+}
