@@ -25,7 +25,18 @@
 #include "data/DataBus.h"
 #include "scripting/AppService.h"
 #include "scripting/ModuleRegistry.h"
+#include "graphics/Gizmo.h"          // UX-02 ED01 — Gizmo::ApplyModel
+#include "scene/Scene.h"
+#include "scene/Entity.h"
+#include "scene/Components.h"
+#include "scene/ui/UiComponents.h"
+#include "scene/SceneSerializer.h"
+#include "../Projects/Starforge/src/EditorPrefs.h"   // UX-02 ED05 — the prefs round trip
 
+#include <glm/gtc/quaternion.hpp>
+
+#include <algorithm>
+#include <cmath>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
@@ -321,6 +332,260 @@ TEST_SUITE("AP-03 editor units")
         CHECK_FALSE(SourceLocator::Recording());
         SourceLocator::ClearRecorded();
 
+        std::error_code ec; fs::remove_all(root, ec);
+    }
+}
+
+// ============================================================================
+// UX-02 (UX & Shipping) — the headless halves of ED01, ED03, ED04, ED05.
+// ============================================================================
+TEST_SUITE("UX-02 editor units")
+{
+    TEST_CASE("UX-02 ED01 Gizmo::ApplyModel 2D: 30 deg Z -> Rotation.z = 30 +- 1e-4, UseQuatRotation false, RotationQuat untouched")
+    {
+        Cosmic::TransformComponent t;
+        t.Position = { 1.0f, 2.0f, 0.5f };
+        t.Scale    = { 2.0f, 3.0f, 1.0f };
+        t.RotationQuat = glm::quat(0.8f, 0.1f, 0.2f, 0.3f);   // a sentinel the 2D write must not touch
+        const glm::quat sentinel = t.RotationQuat;
+
+        // The matrix the Z ring hands back after a 30 degree turn (translation + scale kept).
+        Cosmic::TransformComponent edited = t;
+        edited.Rotation.z = 30.0f;
+        Cosmic::Gizmo::ApplyModel(t, edited.GetTransform(), /*mode2D=*/true);
+        CHECK(std::abs(t.Rotation.z - 30.0f) <= 1e-4f);
+        CHECK(t.Rotation.x == 0.0f);
+        CHECK(t.Rotation.y == 0.0f);
+        CHECK_FALSE(t.UseQuatRotation);
+        CHECK(t.RotationQuat.w == sentinel.w);
+        CHECK(t.RotationQuat.x == sentinel.x);
+        CHECK(t.RotationQuat.y == sentinel.y);
+        CHECK(t.RotationQuat.z == sentinel.z);
+        CHECK(std::abs(t.Position.x - 1.0f) <= 1e-5f);
+        CHECK(std::abs(t.Position.y - 2.0f) <= 1e-5f);
+        CHECK(std::abs(t.Position.z - 0.5f) <= 1e-5f);
+        CHECK(std::abs(t.Scale.x - 2.0f) <= 1e-5f);
+        CHECK(std::abs(t.Scale.y - 3.0f) <= 1e-5f);
+
+        // Continuity: 350 deg turned by +20 lands on 370, not on 10 (no 360 jump mid-drag).
+        Cosmic::TransformComponent w; w.Rotation.z = 350.0f;
+        Cosmic::TransformComponent w2 = w; w2.Rotation.z = 370.0f;
+        Cosmic::Gizmo::ApplyModel(w, w2.GetTransform(), true);
+        CHECK(std::abs(w.Rotation.z - 370.0f) <= 1e-3f);
+
+        // Kept X/Y Euler factors are divided out before the Z angle is read.
+        Cosmic::TransformComponent k; k.Rotation = { 20.0f, -10.0f, 5.0f };
+        Cosmic::TransformComponent k2 = k; k2.Rotation.z = 50.0f;
+        Cosmic::Gizmo::ApplyModel(k, k2.GetTransform(), true);
+        CHECK(std::abs(k.Rotation.z - 50.0f) <= 1e-3f);
+        CHECK(k.Rotation.x == 20.0f);
+        CHECK(k.Rotation.y == -10.0f);
+
+        // 3D keeps the quaternion path (unchanged behaviour).
+        Cosmic::TransformComponent q;
+        Cosmic::Gizmo::ApplyModel(q, edited.GetTransform(), /*mode2D=*/false);
+        CHECK(q.UseQuatRotation);
+        const glm::quat expect = glm::angleAxis(glm::radians(30.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+        CHECK(std::abs(std::abs(glm::dot(q.RotationQuat, expect)) - 1.0f) <= 1e-5f);
+        CHECK(q.Rotation.z == 0.0f);
+    }
+
+    TEST_CASE("UX-02 ED01 KI-73 UiRectGizmoMath::CapturesMove: the centre square captures whether or not the selection is topmost; the rest of the rect only when topmost")
+    {
+        const UiRect r = R(100.0f, 100.0f, 300.0f, 200.0f);   // centre (200, 150)
+        const UiRect sq = UiRectGizmoMath::MoveHandleRect(r);
+        CHECK(sq.Min.x == 195.0f); CHECK(sq.Min.y == 145.0f);
+        CHECK(sq.Max.x == 205.0f); CHECK(sq.Max.y == 155.0f);
+        // the centre square: captured even when another element is drawn over it (the KI-73 case)
+        CHECK(UiRectGizmoMath::CapturesMove(r, { 200.0f, 150.0f }, false));
+        CHECK(UiRectGizmoMath::CapturesMove(r, { 204.0f, 154.0f }, false));
+        CHECK(UiRectGizmoMath::CapturesMove(r, { 200.0f, 150.0f }, true));
+        // elsewhere inside the rect: only when topmost (clicking an overlapping element still selects it)
+        CHECK_FALSE(UiRectGizmoMath::CapturesMove(r, { 207.0f, 150.0f }, false));
+        CHECK(UiRectGizmoMath::CapturesMove(r, { 207.0f, 150.0f }, true));
+        CHECK_FALSE(UiRectGizmoMath::CapturesMove(r, { 120.0f, 120.0f }, false));
+        CHECK(UiRectGizmoMath::CapturesMove(r, { 120.0f, 120.0f }, true));
+        // outside the rect: never the Move surface
+        CHECK_FALSE(UiRectGizmoMath::CapturesMove(r, { 50.0f, 50.0f }, true));
+        // the centre is still the Move surface in HitTest (resize squares win only on themselves)
+        CHECK(UiRectGizmoMath::HitTest(r, { 200.0f, 150.0f }) == RectHandle::Move);
+    }
+
+    TEST_CASE("UX-02 ED01 UiRectGizmo::Owns: RectTransform or Canvas -> the rect gizmo; a world sprite -> the transform gizmo")
+    {
+        Cosmic::Scene s;
+        Cosmic::Entity canvas = s.CreateEntity("Canvas");
+        canvas.AddComponent<Cosmic::CanvasComponent>();
+        Cosmic::Entity el = s.CreateEntity("Plot");
+        el.AddComponent<Cosmic::RectTransformComponent>();
+        el.AddComponent<Cosmic::UiPlotComponent>();
+        Cosmic::Entity sprite = s.CreateEntity("Sprite");
+        sprite.AddComponent<Cosmic::SpriteRendererComponent>();
+        CHECK(UiRectGizmo::Owns(canvas));
+        CHECK(UiRectGizmo::Owns(el));
+        CHECK_FALSE(UiRectGizmo::Owns(sprite));
+        CHECK_FALSE(UiRectGizmo::Owns(Cosmic::Entity{}));
+    }
+
+    TEST_CASE("UX-02 ED03 SourceLocator::ForSignal(back_clicked) on PendulumLab: src hits, then the Flow hit Settings -> Lab with state/target/indices; @quit/@pop/push shown as written")
+    {
+        const std::string pl = COSMIC_PENDULUMLAB_DIR;
+        const SourceLocator loc(pl);
+        CHECK(loc.StartupFlowRel() == "flows/Main.cflow");
+        const auto hits = loc.ForSignal("back_clicked");
+        size_t src = 0, flow = 0; bool srcAfterFlow = false;
+        for (const SourceHit& h : hits)
+        {
+            if (h.IsFlow()) ++flow;
+            else { ++src; if (flow) srcAfterFlow = true; }
+        }
+        CHECK(src >= 1);                 // src/Y02SelfTest.cpp feeds "back_clicked"
+        CHECK_FALSE(srcAfterFlow);       // the Flow hits come after every src/ hit
+        REQUIRE(flow == 1);
+        const SourceHit& f = hits.back();
+        CHECK(f.Kind == SourceHitKind::Flow);
+        CHECK(f.State == "Settings");
+        CHECK(f.Target == "Lab");
+        CHECK(f.Signal == "back_clicked");
+        CHECK(f.Line == 0);
+        CHECK(f.Path == SourceLocator::Normalize(pl + "/flows/Main.cflow"));
+        CHECK(f.FlowVfs == "project://flows/Main.cflow");
+        CHECK(f.StateIndex == 2);
+        CHECK(f.TransitionIndex == 0);
+        CHECK(f.FlowLine() == "Flow: Settings \xE2\x80\x94" "back_clicked\xE2\x86\x92 Lab");
+        CHECK(f.Reason.find(f.FlowLine()) != std::string::npos);
+        // every src hit is still a Source hit with a 1-based line (E08's contract)
+        for (const SourceHit& h : hits) if (!h.IsFlow()) { CHECK(h.Line >= 1); CHECK(h.Kind == SourceHitKind::Source); }
+
+        // targets as written
+        const auto q = loc.FlowHitsForSignal("quit_clicked");
+        REQUIRE(q.size() == 1);
+        CHECK(q[0].State == "Home"); CHECK(q[0].Target == "@quit");
+        const auto r = loc.FlowHitsForSignal("resume_clicked");
+        REQUIRE(r.size() == 1);
+        CHECK(r[0].State == "Stopped"); CHECK(r[0].Target == "@pop");
+        const auto w = loc.FlowHitsForSignal("when");
+        REQUIRE(w.size() == 1);
+        CHECK(w[0].State == "Lab"); CHECK(w[0].Target == "push Stopped");
+        CHECK(loc.FlowHitsForSignal("settings_clicked").size() == 2);   // Home + Lab
+        CHECK(loc.FlowHitsForSignal("no.such.signal").empty());
+        CHECK(loc.FlowHitsForSignal("").empty());
+
+        // a project without project.cproj / startup_flow contributes no Flow hits (E08's trees)
+        const fs::path bare = ScratchRoot("ux02-noflow");
+        Put(bare / "src" / "A.cpp", "Emit(\"back_clicked\");\n");
+        const auto bh = SourceLocator(bare.generic_string()).ForSignal("back_clicked");
+        REQUIRE(bh.size() == 1);
+        CHECK_FALSE(bh[0].IsFlow());
+        Put(bare / "project.cproj", "name = \"Bare\"\n");
+        CHECK(SourceLocator(bare.generic_string()).ForSignal("back_clicked").size() == 1);
+        std::error_code ec; fs::remove_all(bare, ec);
+    }
+
+    TEST_CASE("UX-02 ED04 SourceLocator::ProjectScenes: the ux02 fixture lists exactly Main, overlays/Pause, SpriteUnderUi (recursive, sorted, *.bak never)")
+    {
+        const std::string fx = COSMIC_UX02_FIXTURE_DIR;
+        const auto v = SourceLocator::ProjectScenes(fx);
+        REQUIRE(v.size() == 3);
+        CHECK(v[0] == "project://scenes/Main.cscene");
+        CHECK(v[1] == "project://scenes/overlays/Pause.cscene");
+        CHECK(v[2] == "project://scenes/SpriteUnderUi.cscene");
+        std::error_code ec;
+        CHECK(fs::exists(fs::path(fx) / "scenes" / "Main.cscene.bak", ec));   // the negative case is real
+        for (const std::string& s : v) CHECK(s.find(".bak") == std::string::npos);
+
+        // the fixture's scenes load, and the sprite scene is what ED01 needs: one sprite under a
+        // full-screen opaque UiImage
+        for (const std::string& s : v)
+        {
+            Cosmic::Ref<Cosmic::Scene> sc = Cosmic::Scene::Create();
+            CHECK_MESSAGE(Cosmic::SceneSerializer::Load(*sc, fx + "/" + s.substr(10)), s);
+        }
+        {
+            Cosmic::Ref<Cosmic::Scene> sc = Cosmic::Scene::Create();
+            REQUIRE(Cosmic::SceneSerializer::Load(*sc, fx + "/scenes/SpriteUnderUi.cscene"));
+            auto& reg = sc->GetRegistry();
+            int sprites = 0; bool opaqueFull = false;
+            for (auto e : reg.view<Cosmic::SpriteRendererComponent>()) { (void)e; ++sprites; }
+            for (auto e : reg.view<Cosmic::UiImageComponent, Cosmic::RectTransformComponent>())
+            {
+                const auto& rt = reg.get<Cosmic::RectTransformComponent>(e);
+                const auto& im = reg.get<Cosmic::UiImageComponent>(e);
+                opaqueFull = opaqueFull || (rt.AnchorMin == glm::vec2(0.0f) && rt.AnchorMax == glm::vec2(1.0f) && im.Tint.a == 1.0f);
+            }
+            CHECK(sprites == 1);
+            CHECK(opaqueFull);
+        }
+
+        // a scratch tree: nesting, other extensions, a backup, case-insensitive order
+        const fs::path root = ScratchRoot("ux02-scenes");
+        Put(root / "scenes" / "b.cscene", "{}");
+        Put(root / "scenes" / "A" / "z.cscene", "{}");
+        Put(root / "scenes" / "deep" / "er" / "y.cscene", "{}");
+        Put(root / "scenes" / "notes.txt", "x");
+        Put(root / "scenes" / "b.cscene.bak", "{}");
+        const auto s2 = SourceLocator::ProjectScenes(root.generic_string());
+        REQUIRE(s2.size() == 3);
+        CHECK(s2[0] == "project://scenes/A/z.cscene");
+        CHECK(s2[1] == "project://scenes/b.cscene");
+        CHECK(s2[2] == "project://scenes/deep/er/y.cscene");
+        CHECK(SourceLocator::ProjectScenes("").empty());
+        CHECK(SourceLocator::ProjectScenes((root / "missing").generic_string()).empty());
+        fs::remove_all(root, ec);
+    }
+
+    TEST_CASE("UX-02 ED05 EditorPrefs: editor.toml round trip of autosave_enabled / autosave_minutes / prompt_unsaved; defaults when absent; legacy float minutes")
+    {
+        const fs::path root = ScratchRoot("ux02-prefs");
+        const std::string p = (root / "starforge" / "editor.toml").generic_string();
+        CHECK(p != Prefs::PrefsPath());   // never the real editor.toml
+
+        const Prefs::EditorSettings d = Prefs::LoadSettingsFrom(p);   // absent -> defaults
+        CHECK(d.AutosaveEnabled);
+        CHECK(d.PromptUnsaved);
+        CHECK(d.AutosaveMinutes == 5);
+
+        Prefs::EditorSettings s;
+        s.AutosaveEnabled = false; s.PromptUnsaved = false; s.AutosaveMinutes = 17;
+        s.SnapMove = 0.5f; s.AutoResumePlay = false;   // the other keys keep round-tripping
+        REQUIRE(Prefs::SaveSettingsTo(s, p));
+        std::string text = Get(p);
+        text.erase(std::remove(text.begin(), text.end(), '\r'), text.end());   // text-mode CRLF on Windows
+        CHECK(text.find("autosave_minutes = 17\n") != std::string::npos);   // whole minutes, same key
+        CHECK(text.find("autosave_enabled = false\n") != std::string::npos);
+        CHECK(text.find("prompt_unsaved = false\n") != std::string::npos);
+        const Prefs::EditorSettings r = Prefs::LoadSettingsFrom(p);
+        CHECK_FALSE(r.AutosaveEnabled);
+        CHECK_FALSE(r.PromptUnsaved);
+        CHECK(r.AutosaveMinutes == 17);
+        CHECK(r.SnapMove == 0.5f);
+        CHECK_FALSE(r.AutoResumePlay);
+
+        s.AutosaveEnabled = true; s.PromptUnsaved = true; s.AutosaveMinutes = 60;
+        REQUIRE(Prefs::SaveSettingsTo(s, p));
+        const Prefs::EditorSettings r2 = Prefs::LoadSettingsFrom(p);
+        CHECK(r2.AutosaveEnabled); CHECK(r2.PromptUnsaved); CHECK(r2.AutosaveMinutes == 60);
+
+        // legacy float values and the 1-60 range
+        Put(p, "autosave_minutes = 2.6\n");
+        CHECK(Prefs::LoadSettingsFrom(p).AutosaveMinutes == 3);
+        CHECK(Prefs::LoadSettingsFrom(p).AutosaveEnabled);
+        Put(p, "autosave_minutes = 5.0\ncamera_speed = 1.0\n");
+        CHECK(Prefs::LoadSettingsFrom(p).AutosaveMinutes == 5);
+        Put(p, "autosave_minutes = 500\n");
+        CHECK(Prefs::LoadSettingsFrom(p).AutosaveMinutes == 60);
+        Put(p, "autosave_minutes = 0.0\n");                       // the old "0 = off"
+        CHECK(Prefs::LoadSettingsFrom(p).AutosaveMinutes == 5);
+        CHECK_FALSE(Prefs::LoadSettingsFrom(p).AutosaveEnabled);
+        Put(p, "autosave_minutes = 0.0\nautosave_enabled = true\n"); // an explicit flag wins
+        CHECK(Prefs::LoadSettingsFrom(p).AutosaveEnabled);
+        s.AutosaveMinutes = 0;                                      // clamped on save
+        REQUIRE(Prefs::SaveSettingsTo(s, p));
+        text = Get(p);
+        text.erase(std::remove(text.begin(), text.end(), '\r'), text.end());
+        CHECK(text.find("autosave_minutes = 1\n") != std::string::npos);
+        Put(p, "this is = = not toml [");                          // unparsable -> defaults
+        CHECK(Prefs::LoadSettingsFrom(p).AutosaveMinutes == 5);
         std::error_code ec; fs::remove_all(root, ec);
     }
 }

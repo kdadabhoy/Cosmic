@@ -1,0 +1,64 @@
+{
+  "manifest": "ux02-editor",
+  "cases": [
+    {
+      "id": "ED02",
+      "description": "UX-02 ED02 (KI-76), headless UiSystem: a canvas with a UiPlot child (plus a button and a hosted panel under it) whose TagComponent::Active = false — CollectElements (the list Render draws) omits the subtree, Update over it returns false and emits nothing, HitTest skips it, CollectHostedPanels omits the panel; re-activating restores all four; an inactive leaf removes only itself. tests/test_ui_widgets.cpp beside the V05 CollectHostedPanels case.",
+      "tier": "U",
+      "profiles": ["pr", "nightly", "release"],
+      "requires": ["windows"],
+      "command": "powershell",
+      "workingDir": "{BIN}",
+      "args": [
+        "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
+        "{ACCEPTANCE}\\fixtures\\Run-WO10Case.ps1",
+        "-Bin", "{BIN}", "-CaseId", "ED02", "-TestCase", "UX-02 ED02*", "-MinTests", "1", "-DeadlineSec", "120",
+        "-Output", "{REPO}\\docs\\plans\\ux-shipping-2026-09-24\\evidence\\UX-02\\ed02-{CONFIG}"
+      ],
+      "expectExit": 0,
+      "minTests": 1,
+      "deadlineSec": 180,
+      "fixture": "../../tests/test_ui_widgets.cpp"
+    },
+    {
+      "id": "ED-UNITS",
+      "description": "UX-02 headless halves (suite 'UX-02 editor units', tests/test_ap03_editor.cpp): ED01 Gizmo::ApplyModel 2D (30 deg Z -> Rotation.z = 30 +- 1e-4, UseQuatRotation false, RotationQuat untouched; unwrap; kept X/Y; 3D unchanged), ED01 KI-73 UiRectGizmoMath::CapturesMove (the centre square captures whether or not the selection is topmost), ED01 UiRectGizmo::Owns (RectTransform / Canvas -> rect gizmo), ED03 SourceLocator::ForSignal(back_clicked) on PendulumLab (src hits, then the Flow hit Settings -> Lab with state / target / indices; @quit, @pop, push as written; no project.cproj -> no Flow hits), ED04 SourceLocator::ProjectScenes on tests/fixtures/ux02 (Main, overlays/Pause, SpriteUnderUi; never the .bak; recursive, sorted), ED05 EditorPrefs LoadSettingsFrom / SaveSettingsTo round trip of autosave_enabled / autosave_minutes / prompt_unsaved, defaults when absent, legacy float minutes, 1-60 clamp.",
+      "tier": "U",
+      "profiles": ["pr", "nightly", "release"],
+      "requires": ["windows"],
+      "command": "powershell",
+      "workingDir": "{BIN}",
+      "args": [
+        "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
+        "{ACCEPTANCE}\\fixtures\\Run-WO10Case.ps1",
+        "-Bin", "{BIN}", "-CaseId", "ED-UNITS", "-TestSuite", "UX-02 editor units", "-MinTests", "6", "-DeadlineSec", "120",
+        "-Output", "{REPO}\\docs\\plans\\ux-shipping-2026-09-24\\evidence\\UX-02\\ed-units-{CONFIG}"
+      ],
+      "expectExit": 0,
+      "minTests": 6,
+      "deadlineSec": 180,
+      "fixture": "../../tests/test_ap03_editor.cpp"
+    },
+    {
+      "id": "UX02-EDITOR",
+      "description": "UX-02 ED01 / ED03 / ED04 / ED05 inside the REAL Starforge editor (Projects/Starforge/src/UX02EditorSelfTest.cpp): ED01 App template Dashboard, Plot selected -> no transform gizmo (probe counter), rect gizmo drawn, transform chips disabled (a world entity re-enables both); KI-73 a centre-square drag under an overlay moves the Plot by (40,-20)/scale, one entry; fixture SpriteUnderUi: an OS press-drag of (40,-20) px on the selected sprite under a full-screen opaque UiImage moves Position by the world equivalent, one CommandStack entry, selection kept, undo restores. ED03 PendulumLab Settings Back button: the viewport context menu and the Inspector Signal row show 'Flow: Settings -back_clicked-> Lab'; the Inspector's Open in flow editor opens flows/Main.cflow with Settings[0] selected. ED04 Screens > Scenes lists exactly the fixture set (start + open marked), a double-click opens overlays/Pause, File > Open Scene (opened with the pointer) draws the same set and a click opens a scene. ED05 Edit > Preferences (injected clicks): autosave off -> 2x the interval of injected time through the real Autosave writes nothing; on -> one file + 'autosaved HH:MM'; prompt on + dirty -> OpenScene raises Save / Discard / Cancel, Cancel keeps, Discard switches; prompt off -> switches directly; the window-close path (Application::Close) leaves the dirty scene's autosave copy (checked out of process). The WO-07 ImGui stack oracle is judged after every step.",
+      "tier": "I",
+      "profiles": ["gpu", "release"],
+      "requires": ["windows", "gpu-gl"],
+      "command": "powershell",
+      "workingDir": "{BIN}",
+      "args": [
+        "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
+        "{ACCEPTANCE}\\fixtures\\Run-UX02Editor.ps1",
+        "-Bin", "{BIN}",
+        "-Output", "{REPO}\\docs\\plans\\ux-shipping-2026-09-24\\evidence\\UX-02\\ux02-{CONFIG}",
+        "-ProjectRoot", "{RUNTEMP}\\ux02",
+        "-Shots", "{RUNTEMP}\\ux02-shots"
+      ],
+      "expectExit": 0,
+      "minTests": 2,
+      "deadlineSec": 1000,
+      "fixture": "../../tests/fixtures/ux02/scenes/SpriteUnderUi.cscene"
+    }
+  ]
+}

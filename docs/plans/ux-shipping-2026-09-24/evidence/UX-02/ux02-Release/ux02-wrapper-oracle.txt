@@ -1,0 +1,3 @@
+﻿fixture tests/fixtures/ux02 sha256/16: 6c97f449b607bed0 (6 files)
+exit=1 verdict=FAIL elapsed=44s timedOut=False
+independent oracle: PASS

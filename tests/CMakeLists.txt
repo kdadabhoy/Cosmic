@@ -281,6 +281,8 @@ target_compile_definitions(CosmicTests PRIVATE COSMIC_AP04_TEMPLATES="${COSMIC_S
 target_compile_definitions(CosmicTests PRIVATE COSMIC_PENDULUMLAB_DIR="${COSMIC_SDK_DIR}/Projects/PendulumLab")
 target_include_directories(CosmicTests PRIVATE "${COSMIC_SDK_DIR}/Projects/PendulumLab/src")
 target_include_directories(CosmicTests PRIVATE "${COSMIC_SDK_DIR}/Projects/Starforge/assets/templates/app/src")
+# UX-02 — the committed fixture project (ED04 scene lister, the ED01 sprite-under-UI scene).
+target_compile_definitions(CosmicTests PRIVATE COSMIC_UX02_FIXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/ux02")
 
 # Land next to Cosmic.dll so the exe runs without PATH games.
 set_target_properties(CosmicTests PROPERTIES

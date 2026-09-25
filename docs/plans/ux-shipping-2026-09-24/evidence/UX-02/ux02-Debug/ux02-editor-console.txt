@@ -1,0 +1,144 @@
+[Starforge] Editor attached — open or create a project from the homescreen.
+[Starforge] Viewport: MMB orbit | Ctrl+MMB pan | scroll zoom | LMB pick.
+[Starforge] W/E/R gizmo | F frame | Ctrl+Z/Y undo | Ctrl+S save.
+[COSMIC] WorkspaceLayer project name set to: 'Starforge'
+
+[COSMIC] Successfully loaded and mounted project DLL Layer!
+
+[COSMIC] WorkspaceLayer: Dockspace built (legacy 3-tier left sidebar).
+
+[COSMIC] WorkspaceLayer: Dockspace built (port mode L=true R=true T=true B=true).
+
+[Scene] Opened 'project://scenes/Home.cscene'.
+[Scripts] 1 script(s) not built — press Ctrl+B to compile the project module.
+[Project] Scaffolded project — press Ctrl+B to build the game module.
+[Project] Opened 'Ux02App' @ C:/dev/Cosmic/build/_lanes/ux-02/build/_temp/ux02-editor/cosmic-accept-7debe452f8264a26ad32f5bf99eea9cc/temp/ux02/Ux02App
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-02/build/_temp/ux02-editor/cosmic-accept-7debe452f8264a26ad32f5bf99eea9cc/temp/ux02/Ux02App/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-02/build/_temp/ux02-editor/cosmic-accept-7debe452f8264a26ad32f5bf99eea9cc/temp/ux02/Ux02App/project.cproj'.
+
+[COSMIC] Config: no file at './starforge/layouts/active.toml'.
+
+[COSMIC] Config: no file at './starforge/layouts/active.toml'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-02/build/_temp/ux02-editor/cosmic-accept-7debe452f8264a26ad32f5bf99eea9cc/temp/ux02/Ux02App/project.cproj'.
+
+[COSMIC] WorkspaceLayer: Dockspace built (port mode L=true R=true T=true B=true).
+
+[COSMIC] Font: baked 'lucide' (1024x71, 95 glyphs)
+
+[COSMIC] Font: baked 'Roboto-Bold' (1024x257, 95 glyphs)
+
+[COSMIC] Font: baked 'Roboto-Medium' (1024x255, 95 glyphs)
+
+[COSMIC] Font: baked 'Roboto-Regular' (1024x256, 95 glyphs)
+
+[COSMIC] Font: library initialised (4 font(s))
+
+[Scene] Opened 'project://scenes/Dashboard.cscene'.
+[Scripts] 1 script(s) not built — press Ctrl+B to compile the project module.
+[Scene] Opened 'project://scenes/Main.cscene'.
+[Project] Opened 'Ux02Fixture' @ C:/dev/Cosmic/build/_lanes/ux-02/build/_temp/ux02-editor/cosmic-accept-7debe452f8264a26ad32f5bf99eea9cc/temp/ux02/Ux02Fixture
+[Scene] Opened 'project://scenes/SpriteUnderUi.cscene'.
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-02/build/_temp/ux02-editor/cosmic-accept-7debe452f8264a26ad32f5bf99eea9cc/temp/ux02/Ux02Fixture/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-02/build/_temp/ux02-editor/cosmic-accept-7debe452f8264a26ad32f5bf99eea9cc/temp/ux02/Ux02Fixture/project.cproj'.
+
+[COSMIC] Config: loaded './starforge/layouts/active.toml'.
+
+[COSMIC] Config: loaded './starforge/layouts/active.toml'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-02/build/_temp/ux02-editor/cosmic-accept-7debe452f8264a26ad32f5bf99eea9cc/temp/ux02/Ux02Fixture/project.cproj'.
+
+[COSMIC] Config: loaded './starforge/projects.toml'.
+
+[COSMIC] WorkspaceLayer: Dockspace built (port mode L=true R=true T=true B=true).
+
+[Scene] Opened 'project://scenes/Home.cscene'.
+[Scripts] 1 script(s) not built — press Ctrl+B to compile the project module.
+[Project] Scaffolded project — press Ctrl+B to build the game module.
+[Project] Opened 'PendulumLab' @ C:/dev/Cosmic/build/_lanes/ux-02/build/_temp/ux02-editor/cosmic-accept-7debe452f8264a26ad32f5bf99eea9cc/temp/ux02/PendulumLab
+[Scene] Opened 'project://scenes/Settings.cscene'.
+[Scripts] 1 script(s) not built — press Ctrl+B to compile the project module.
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-02/build/_temp/ux02-editor/cosmic-accept-7debe452f8264a26ad32f5bf99eea9cc/temp/ux02/PendulumLab/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-02/build/_temp/ux02-editor/cosmic-accept-7debe452f8264a26ad32f5bf99eea9cc/temp/ux02/PendulumLab/project.cproj'.
+
+[COSMIC] Config: loaded './starforge/layouts/active.toml'.
+
+[COSMIC] Config: loaded './starforge/layouts/active.toml'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-02/build/_temp/ux02-editor/cosmic-accept-7debe452f8264a26ad32f5bf99eea9cc/temp/ux02/PendulumLab/project.cproj'.
+
+[COSMIC] Config: loaded './starforge/projects.toml'.
+
+[COSMIC] WorkspaceLayer: Dockspace built (port mode L=true R=true T=true B=true).
+
+[Build] Building 'PendulumLab' -> PendulumLab_hot1.dll
+[build] configuring C:/dev/Cosmic/build/_lanes/ux-02/build/_temp/ux02-editor/cosmic-accept-7debe452f8264a26ad32f5bf99eea9cc/temp/ux02/PendulumLab
+[Flow] Flow: Settings —back_clicked→ Lab  ->  project://flows/Main.cflow
+-- Building for: Visual Studio 18 2026
+-- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.26200.
+-- The C compiler identification is MSVC 19.51.36257.0
+-- The CXX compiler identification is MSVC 19.51.36257.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Configuring done (3.4s)
+-- Generating done (0.1s)
+-- Build files have been written to: C:/dev/Cosmic/build/_lanes/ux-02/build/_temp/ux02-editor/cosmic-accept-7debe452f8264a26ad32f5bf99eea9cc/temp/ux02/PendulumLab/build
+[build] compiling (Debug)
+MSBuild version 18.10.1-1.26427.6+3cd27c13e for .NET Framework
+
+C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic\build\_lanes\ux-02\build\_temp\ux02-editor\cosmic-accept-7debe452f8264a26ad32f5bf99eea9cc\temp\ux02\PendulumLab\build\ZERO_CHECK.vcxproj]
+  Checking File Globs
+  1>Checking Build System
+C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic\build\_lanes\ux-02\build\_temp\ux02-editor\cosmic-accept-7debe452f8264a26ad32f5bf99eea9cc\temp\ux02\PendulumLab\build\PendulumLab.vcxproj]
+  Building Custom Rule C:/dev/Cosmic/build/_lanes/ux-02/build/_temp/ux02-editor/cosmic-accept-7debe452f8264a26ad32f5bf99eea9cc/temp/ux02/PendulumLab/CMakeLists.txt
+  Module.cpp
+  Y02SelfTest.cpp
+  PendulumService.cpp
+  imgui.cpp
+  imgui_draw.cpp
+  imgui_widgets.cpp
+  imgui_tables.cpp
+  implot.cpp
+  implot_items.cpp
+  Generating Code...
+     Creating library C:/dev/Cosmic/build/_lanes/ux-02/build/_temp/ux02-editor/cosmic-accept-7debe452f8264a26ad32f5bf99eea9cc/temp/ux02/PendulumLab/build/Debug/PendulumLab_hot1.lib and object C:/dev/Cosmic/build/_lanes/ux-02/build/_temp/ux02-editor/cosmic-accept-7debe452f8264a26ad32f5bf99eea9cc/temp/ux02/PendulumLab/build/Debug/PendulumLab_hot1.exp
+  PendulumLab.vcxproj -> C:\dev\Cosmic\build\_lanes\ux-02\build\_temp\ux02-editor\cosmic-accept-7debe452f8264a26ad32f5bf99eea9cc\temp\ux02\PendulumLab\build\Debug\PendulumLab_hot1.dll
+C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic\build\_lanes\ux-02\build\_temp\ux02-editor\cosmic-accept-7debe452f8264a26ad32f5bf99eea9cc\temp\ux02\PendulumLab\build\ALL_BUILD.vcxproj]
+  Building Custom Rule C:/dev/Cosmic/build/_lanes/ux-02/build/_temp/ux02-editor/cosmic-accept-7debe452f8264a26ad32f5bf99eea9cc/temp/ux02/PendulumLab/CMakeLists.txt
+[build] SUCCESS
+[Module] Reloaded 'PendulumLab_hot1' (4 script(s)).
+[APP] GameModule: loaded 'PendulumLab_hot1.dll'.
+
+[Scene] Opened 'project://scenes/Main.cscene'.
+[Project] Opened 'Ux02Fixture' @ C:/dev/Cosmic/build/_lanes/ux-02/build/_temp/ux02-editor/cosmic-accept-7debe452f8264a26ad32f5bf99eea9cc/temp/ux02/Ux02Fixture
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-02/build/_temp/ux02-editor/cosmic-accept-7debe452f8264a26ad32f5bf99eea9cc/temp/ux02/Ux02Fixture/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-02/build/_temp/ux02-editor/cosmic-accept-7debe452f8264a26ad32f5bf99eea9cc/temp/ux02/Ux02Fixture/project.cproj'.
+
+[COSMIC] Config: loaded './starforge/layouts/active.toml'.
+
+[COSMIC] Config: loaded './starforge/layouts/active.toml'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-02/build/_temp/ux02-editor/cosmic-accept-7debe452f8264a26ad32f5bf99eea9cc/temp/ux02/Ux02Fixture/project.cproj'.
+
+[COSMIC] Config: loaded './starforge/projects.toml'.
+
+[COSMIC] WorkspaceLayer: Dockspace built (port mode L=true R=true T=true B=true).
+
+[Scene] Opened 'project://scenes/overlays/Pause.cscene'.
+[Autosave] ./starforge/autosave/Ux02Fixture/Pause.cscene
+[Scene] Cancelled: open 'Main.cscene' (unsaved changes kept).
+[Scene] Opened 'project://scenes/Main.cscene'.
+[Scene] Opened 'project://scenes/SpriteUnderUi.cscene'.
+[Scene] Opened 'project://scenes/Main.cscene'.

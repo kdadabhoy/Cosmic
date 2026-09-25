@@ -1,0 +1,7 @@
+# UX-02 fixture project (tests/fixtures/ux02): the ED01 sprite-under-UI scene and the ED04
+# scene set (a nested scenes/overlays/Pause.cscene + a Main.cscene.bak that must never be listed).
+# kind "game" (no src/, no auto-build); the startup flow starts on Main.
+name          = "Ux02Fixture"
+kind          = "game"
+startup_scene = "scenes/Main.cscene"
+startup_flow  = "flows/Main.cflow"

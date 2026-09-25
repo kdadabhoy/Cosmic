@@ -1,0 +1,34 @@
+﻿{
+    "id":  "ED-UNITS",
+    "tier":  "U",
+    "description":  "WO-10 ED-UNITS via CosmicTests.exe",
+    "requires":  [
+                     "windows"
+                 ],
+    "transport":  "none",
+    "seed":  null,
+    "start_utc":  "2026-09-25T04:08:38.5842888Z",
+    "deadline_sec":  120,
+    "exercised":  "production",
+    "command":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-02\\build\\Runtime\\Release\\CosmicTests.exe --reporters=console --no-intro --no-colors \"--test-suite=UX-02 editor units\"",
+    "stdout_log":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-02\\docs\\plans\\ux-shipping-2026-09-24\\evidence\\UX-02\\ed-units-Release\\ED-UNITS.out.log",
+    "stderr_log":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-02\\docs\\plans\\ux-shipping-2026-09-24\\evidence\\UX-02\\ed-units-Release\\ED-UNITS.err.log",
+    "pid":  11088,
+    "exit_code":  0,
+    "crash":  false,
+    "tests_passed":  6,
+    "tests_expected_min":  6,
+    "verdict":  "PASSED",
+    "detail":  "exit 0 as expected",
+    "duration_sec":  0.143,
+    "end_utc":  "2026-09-25T04:08:38.7371402Z",
+    "golden_mutated":  false,
+    "golden_mutations":  [
+
+                         ],
+    "golden_diagnostics":  [
+
+                           ],
+    "golden_sha256_before":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-02\\docs\\plans\\ux-shipping-2026-09-24\\evidence\\UX-02\\ed-units-Release\\goldens-sha256-before.txt",
+    "golden_sha256_after":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-02\\docs\\plans\\ux-shipping-2026-09-24\\evidence\\UX-02\\ed-units-Release\\goldens-sha256-after.txt"
+}

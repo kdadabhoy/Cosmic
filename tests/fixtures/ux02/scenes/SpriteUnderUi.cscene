@@ -1,0 +1,210 @@
+{
+  "cosmic_scene": 1,
+  "entities": [
+    {
+      "id": "75780200000000b1",
+      "components": {
+        "Tag": {
+          "Tag": "Camera"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            0.0,
+            10.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "UseQuatRotation": false
+        },
+        "Camera": {
+          "Primary": true,
+          "ProjectionType": 1,
+          "FovDeg": 60.0,
+          "Near": 0.1,
+          "Far": 1000.0,
+          "OrthoSize": 5.0
+        }
+      }
+    },
+    {
+      "id": "75780200000000b2",
+      "components": {
+        "Tag": {
+          "Tag": "Ux02Sprite"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            4.0,
+            4.0,
+            1.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "UseQuatRotation": false
+        },
+        "SpriteRenderer": {
+          "Color": [
+            0.9,
+            0.2,
+            0.2,
+            1.0
+          ],
+          "FlipX": false,
+          "FlipY": false,
+          "PixelsPerUnit": 100.0,
+          "SourceRect": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "TexturePath": "",
+          "YSort": false,
+          "ZOrder": 0
+        }
+      }
+    },
+    {
+      "id": "75780200000000b3",
+      "components": {
+        "Tag": {
+          "Tag": "Canvas"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "UseQuatRotation": false
+        },
+        "Canvas": {
+          "ScaleMode": 1,
+          "ReferenceHeight": 1080.0,
+          "SortOrder": 0
+        },
+        "Relationship": {
+          "Children": [
+            "75780200000000b4"
+          ]
+        }
+      }
+    },
+    {
+      "id": "75780200000000b4",
+      "components": {
+        "Tag": {
+          "Tag": "Backdrop"
+        },
+        "Transform": {
+          "Position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "RotationQuat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "UseQuatRotation": false
+        },
+        "RectTransform": {
+          "AnchorMin": [
+            0.0,
+            0.0
+          ],
+          "AnchorMax": [
+            1.0,
+            1.0
+          ],
+          "OffsetMin": [
+            0.0,
+            0.0
+          ],
+          "OffsetMax": [
+            0.0,
+            0.0
+          ],
+          "Pivot": [
+            0.5,
+            0.5
+          ],
+          "ZOrder": 0
+        },
+        "UiImage": {
+          "TexturePath": "",
+          "Tint": [
+            0.05,
+            0.06,
+            0.09,
+            1.0
+          ],
+          "NineSlice": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "PreserveAspect": false
+        }
+      }
+    }
+  ]
+}

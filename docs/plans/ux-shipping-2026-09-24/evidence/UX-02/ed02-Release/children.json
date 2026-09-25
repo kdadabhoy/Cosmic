@@ -1,0 +1,34 @@
+﻿{
+    "id":  "ED02",
+    "tier":  "U",
+    "description":  "WO-10 ED02 via CosmicTests.exe",
+    "requires":  [
+                     "windows"
+                 ],
+    "transport":  "none",
+    "seed":  null,
+    "start_utc":  "2026-09-25T04:08:37.8910783Z",
+    "deadline_sec":  120,
+    "exercised":  "production",
+    "command":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-02\\build\\Runtime\\Release\\CosmicTests.exe --reporters=console --no-intro --no-colors \"--test-case=UX-02 ED02*\"",
+    "stdout_log":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-02\\docs\\plans\\ux-shipping-2026-09-24\\evidence\\UX-02\\ed02-Release\\ED02.out.log",
+    "stderr_log":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-02\\docs\\plans\\ux-shipping-2026-09-24\\evidence\\UX-02\\ed02-Release\\ED02.err.log",
+    "pid":  27912,
+    "exit_code":  0,
+    "crash":  false,
+    "tests_passed":  1,
+    "tests_expected_min":  1,
+    "verdict":  "PASSED",
+    "detail":  "exit 0 as expected",
+    "duration_sec":  0.09,
+    "end_utc":  "2026-09-25T04:08:37.9900423Z",
+    "golden_mutated":  false,
+    "golden_mutations":  [
+
+                         ],
+    "golden_diagnostics":  [
+
+                           ],
+    "golden_sha256_before":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-02\\docs\\plans\\ux-shipping-2026-09-24\\evidence\\UX-02\\ed02-Release\\goldens-sha256-before.txt",
+    "golden_sha256_after":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-02\\docs\\plans\\ux-shipping-2026-09-24\\evidence\\UX-02\\ed02-Release\\goldens-sha256-after.txt"
+}

@@ -1,0 +1,60 @@
+{
+  "cosmic_flow": 1,
+  "start": "Main",
+  "states": [
+    {
+      "name": "Main",
+      "scene": "project://scenes/Main.cscene",
+      "editor": {
+        "pos": [
+          40.0,
+          60.0
+        ]
+      },
+      "transitions": [
+        {
+          "on": "sprite_clicked",
+          "to": "Sprite"
+        }
+      ]
+    },
+    {
+      "name": "Sprite",
+      "scene": "project://scenes/SpriteUnderUi.cscene",
+      "editor": {
+        "pos": [
+          380.0,
+          60.0
+        ]
+      },
+      "transitions": [
+        {
+          "on": "pause_clicked",
+          "to": "Pause",
+          "push": true
+        },
+        {
+          "on": "key:Escape",
+          "to": "Main"
+        }
+      ]
+    },
+    {
+      "name": "Pause",
+      "scene": "project://scenes/overlays/Pause.cscene",
+      "overlay": true,
+      "editor": {
+        "pos": [
+          380.0,
+          300.0
+        ]
+      },
+      "transitions": [
+        {
+          "on": "resume_clicked",
+          "to": "@pop"
+        }
+      ]
+    }
+  ]
+}
