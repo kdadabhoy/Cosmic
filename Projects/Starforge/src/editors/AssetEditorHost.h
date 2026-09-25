@@ -36,8 +36,9 @@ namespace Starforge
 
         // Open the asset at `vfsPath` — re-focusing the tab if one is already open
         // for that path, else building a new document via `make`. Raises *showFlag
-        // so the host window is visible and requests focus on the tab. Returns the
-        // (existing or new) editor, or null if `make` produced nothing.
+        // so the host window is visible and requests focus on the window + the tab
+        // for the next frame. Returns the (existing or new) editor, or null if `make`
+        // produced nothing.
         IAssetEditor* Open(const std::string& vfsPath, const Factory& make, bool* showFlag);
 
         bool   AnyOpen() const { return !m_Docs.empty(); }
@@ -51,12 +52,13 @@ namespace Starforge
         // single document (with a save prompt when dirty).
         void OnImGuiRender(EditorContext& ctx, bool* open);
 
-        void CloseAll() { m_Docs.clear(); m_FocusPath.clear(); m_PromptClosePath.clear(); }
+        void CloseAll() { m_Docs.clear(); m_FocusPath.clear(); m_PromptClosePath.clear(); m_WantFocus = false; }
 
     private:
         void Remove(const std::string& path);
 
         std::vector<std::unique_ptr<IAssetEditor>> m_Docs;
+        bool        m_WantFocus = false;  // SetNextWindowFocus on the next render (Open added / re-focused)
         std::string m_FocusPath;        // request SetSelected on the matching tab next render
         std::string m_PromptClosePath;  // a dirty doc awaiting the close prompt ("" = none)
     };
