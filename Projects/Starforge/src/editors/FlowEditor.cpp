@@ -311,6 +311,14 @@ namespace Starforge
 
     void FlowEditor::DrawCanvas(EditorContext& ctx)
     {
+        // UX-01 harness seam: the canvas fills the region (NodeCanvas::Begin with size 0).
+        m_Harness.CanvasMin = ImGui::GetCursorScreenPos();
+        {
+            const ImVec2 avail = ImGui::GetContentRegionAvail();
+            m_Harness.CanvasMax = ImVec2(m_Harness.CanvasMin.x + avail.x, m_Harness.CanvasMin.y + avail.y);
+        }
+        ++m_Harness.FramesDrawn;
+
         m_Canvas.Begin("flow_graph");
 
         if (m_PlaceNodes)
@@ -443,6 +451,15 @@ namespace Starforge
             ed::EndNode();
         }
         ed::PopStyleColor();
+
+        // UX-01 harness seam: every state node's screen rect as drawn this frame.
+        m_Harness.Nodes.clear();
+        for (int i = 0; i < (int)m_Asset.States.size(); ++i)
+        {
+            const ImVec2 p  = ed::GetNodePosition(NodeId(i));
+            const ImVec2 sz = ed::GetNodeSize(NodeId(i));
+            m_Harness.Nodes.push_back({ ed::CanvasToScreen(p), ed::CanvasToScreen(ImVec2(p.x + sz.x, p.y + sz.y)) });
+        }
 
         for (int i = 0; i < (int)m_Asset.States.size(); ++i)
         {

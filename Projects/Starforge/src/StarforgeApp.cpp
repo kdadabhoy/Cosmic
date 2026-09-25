@@ -138,6 +138,7 @@ namespace Starforge
         X01SelfTestInit();   // WO-10: arm the X01 external-project package harness when its env is set
         AP03SelfTestInit();  // AP-03: arm the E01..E08 authoring harness when its env is set
         GuideSelfTestInit(); // GUIDE: arm the PendulumLab walkthrough driver when its env is set
+        UX01SelfTestInit();  // UX-01: arm the flow-editor / Editors-host harness when its env is set
     }
 
     // =========================================================================
@@ -187,6 +188,7 @@ namespace Starforge
         X01SelfTestShutdown();   // WO-10: free the X01 harness (no-op when never armed)
         AP03SelfTestShutdown();  // AP-03: free the authoring harness (no-op when never armed)
         GuideSelfTestShutdown(); // GUIDE: free the walkthrough driver (no-op when never armed)
+        UX01SelfTestShutdown();  // UX-01: free the Editors-host harness (no-op when never armed)
 
         Cosmic::Log::SetLogDirectory("logs");
         CS_INFO("Starforge: detached.");
@@ -1021,6 +1023,7 @@ namespace Starforge
         X01SelfTestTick();   // WO-10: no-op unless the X01 package harness is armed
         AP03SelfTestTick();  // AP-03: no-op unless the authoring harness is armed
         GuideSelfTestTick(); // GUIDE: no-op unless the walkthrough driver is armed
+        UX01SelfTestTick();  // UX-01: no-op unless the Editors-host harness is armed
 
         m_Editors.OnUpdate(m_Ctx, ts);    // M1 — advance open document playback (Animation Editor scrub/play)
 
@@ -1662,6 +1665,7 @@ namespace Starforge
         m_Ctx.ValidateSelection();
         AP03SelfTestFrameEnd();      // AP-03: no-op unless the authoring harness is armed
         GuideSelfTestFrameEnd();     // GUIDE: no-op unless the walkthrough driver is armed
+        UX01SelfTestFrameEnd();      // UX-01: no-op unless the Editors-host harness is armed
     }
 
     namespace
