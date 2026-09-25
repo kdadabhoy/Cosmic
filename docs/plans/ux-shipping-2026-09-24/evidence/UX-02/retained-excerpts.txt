@@ -1,0 +1,9 @@
+# UX-02 retained-gate excerpts (Phase A, 2026-09-24)
+
+## ap03-editor Debug, first run (21:0x, three lanes building concurrently) — KI-79
+140:[Scene] Opened 'project://scenes/Dashboard.cscene'.
+147:[Scene] Opened 'project://scenes/Dashboard.cscene'.
+148:[Scene] Save FAILED: 'project://scenes/Dashboard.cscene'.
+149:[COSMIC] SceneSerializer: atomic rename failed for C:/dev/Cosmic/build/_lanes/ux-02/build/_temp/ap03-editor/cosmic-accept-4903997e1c3c4cb5b54870978cdf3971/temp/ap03/Ap03App/scenes/Dashboard.cscene
+80:[AP03] FAIL V05: unknown panel name reported as drawn (placeholder expected)
+81:[AP03] FAIL V05: UiHostedPanel.DrawnThisFrame set for the unknown panel

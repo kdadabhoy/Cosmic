@@ -1187,3 +1187,61 @@ over the injected `IFrameClock` (`core/IFrameClock.h`, the WO-10 seam) with the
 - Failing-before: `docs/plans/app-platform-2026-09-18/evidence/KI-64-65/failing-before-ki64-65-excerpts.txt` (the KI-65 unit case against the unfixed `Update`, same isolated-patch run).
 - Regression: `tests/test_ui_widgets.cpp` `KI-65 slider knob larger than its track: a press on the knob's overhang grabs and drags, 1 px beyond the knob does not; SliderKnobRect is the drawn geometry (horizontal + vertical)`.
 - Disposition: `UiSystem::SliderKnobRect(rect, orientation, knobSizePx, min, max, value)` (pure) is the single knob geometry; `DrawSlider` draws it and `Update` grabs by rect OR knob (the set union of the two rects — deliberately NOT their bounding box, which the first cut used and the regression caught: the empty overhang beside a moved knob is not a target; the track stays grabbable everywhere it was). Fixed in this lane.
+
+## UX-02 findings (2026-09-24) — viewport, UI Active semantics (UX & Shipping packet)
+
+### KI-72 — The transform gizmo draws for any entity with a Transform, including canvas UI elements whose layout ignores it: dragging it on a selected UI element moves nothing (and pushes a no-op undo step)
+- Status: Confirmed defect (editor UX; two gizmos on one UI selection). Owner WO: UX-02.
+- Anchor: `Projects/Starforge/src/ViewportController.cpp:594-595` (`DrawGizmo`: `sel && sel.HasComponent<TransformComponent>()` is the only gate) at `6021822`; `Cosmic/src/scene/ui/UiComponents.h:80-82` (a RectTransform is authoritative, the sibling Transform is ignored under a canvas); the UI rect gizmo (`UiRectGizmo.cpp`) already owns these entities.
+- Repro: App template, open `scenes/Dashboard.cscene`, select the canvas's `Plot` element: the ImGuizmo arrows draw on top of the rect gizmo; drag an arrow -> `Transform.Position` changes, the Plot does not move, one "Transform" undo entry is recorded.
+- Failing-before: `docs/plans/ux-shipping-2026-09-24/evidence/UX-02/failing-before-excerpts.txt` (the UX02 self-test ED01 leg on an isolated patch without the fix: transform-gizmo probe counter > 0 with Plot selected).
+- Regression: `ux02-editor` ED01 (`transform gizmo calls == 0` with a UI selection, rect gizmo drawn) + `tests/test_ap03_editor.cpp` `UX-02 ED01 UiRectGizmo::Owns ...`.
+- Disposition: fixed in UX-02 — `DrawGizmo` skips the transform gizmo when `UiRectGizmo::Owns(primary)` (RectTransform or Canvas); the strip chips that do not apply to a UI selection draw disabled with the tooltip `UI elements: use the rect gizmo`.
+
+### KI-73 — The UI rect gizmo's Move surface captures only when the selected element is the topmost hit under the pointer: an element with anything drawn over its centre (a label, an overlay image) cannot be moved with its own gizmo; the press selects the element on top instead
+- Status: Confirmed defect (editor UX). Owner WO: UX-02.
+- Anchor: `Projects/Starforge/src/UiRectGizmo.cpp:264-273` at `6021822` (`m_Hover == Move` is dropped unless `UiSystem::HitTest(...) == primary`).
+- Repro: Dashboard, select `Plot`, add a `UiImage` child of the canvas over the Plot's centre with a higher ZOrder, press-drag the gizmo's centre square: the overlay gets selected, the Plot's offsets are unchanged.
+- Failing-before: `evidence/UX-02/failing-before-excerpts.txt` (the unit case against the pre-fix capture rule, and the self-test ED01 KI-73 leg on the isolated patch).
+- Regression: `tests/test_ap03_editor.cpp` `UX-02 ED01 KI-73 UiRectGizmoMath::CapturesMove ...` + `ux02-editor` ED01 (drag under an overlay moves the Plot by (40,-20)/scale, one "Move UI Rect" entry).
+- Disposition: fixed in UX-02 — the centre square (`UiRectGizmoMath::MoveHandleRect`, 10 x 10 px, drawn at that size) always captures the selected element; the rest of the rect captures only when the element is topmost (so clicking an element drawn over the selection still selects it — the reason the topmost check existed).
+
+### KI-74 — `Gizmo::Manipulate(TransformComponent&)` writes `RotationQuat` + `UseQuatRotation = true`, but the 2D sprite pass draws `Rotation.z`: the Rotate gizmo is invisible on sprites (and leaves the entity on the quaternion path)
+- Status: Confirmed defect (editor; silent no-op edit). Owner WO: UX-02.
+- Anchor: `Cosmic/src/graphics/Gizmo.cpp:89-92` at `6021822`; `Cosmic/src/scene/Scene.cpp:716` (`rotZ = radians(t.Rotation.z)`).
+- Repro: select any sprite, Rotate (E), drag the ring: the sprite does not turn; the saved scene has `UseQuatRotation: true` and a rotated quaternion.
+- Failing-before: `evidence/UX-02/failing-before-excerpts.txt` (`UX-02 ED01 Gizmo::ApplyModel 2D ...` against the pre-fix decomposition, extracted into `ApplyModel` unchanged).
+- Regression: `tests/test_ap03_editor.cpp` `UX-02 ED01 Gizmo::ApplyModel 2D: 30 deg Z -> Rotation.z = 30 +- 1e-4, UseQuatRotation false, RotationQuat untouched`.
+- Disposition: fixed in UX-02 — the decomposition is the pure static `Gizmo::ApplyModel(TransformComponent&, const glm::mat4&, bool mode2D)`; in 2D it writes `Rotation.z` (degrees, from the matrix with the kept X/Y Euler factored out, unwrapped to the nearest turn of the previous value), keeps `Rotation.x/y`, leaves `UseQuatRotation` false and `RotationQuat` untouched; `Manipulate` gains a defaulted `mode2D` (and uses the Z ring only in 2D) that the viewport passes.
+
+### KI-75 — In edit mode the viewport's UI hit-test runs before the sprite pick: a selected world sprite under an opaque `UiImage` (a full-screen background, a HUD panel) cannot be pressed or dragged — the press selects the image
+- Status: Confirmed defect (editor UX). Owner WO: UX-02.
+- Anchor: `Projects/Starforge/src/ViewportController.cpp:255-266` (UI hit-test) before `:275` (sprite pick) at `6021822`.
+- Repro: fixture `tests/fixtures/ux02/scenes/SpriteUnderUi.cscene` (one sprite under a full-screen opaque UiImage), select the sprite in the Hierarchy, press on its body away from the gizmo arrows and drag: the UiImage becomes the selection, the sprite does not move.
+- Failing-before: `evidence/UX-02/failing-before-excerpts.txt` (self-test ED01 sprite leg on the isolated patch).
+- Regression: `ux02-editor` ED01 (OS-level press-drag of (40,-20) px on the sprite moves `Transform.Position` by the world equivalent, one CommandStack entry, undo restores, selection kept).
+- Disposition: fixed in UX-02 — when the primary selection is a world sprite (not UI-owned) the press first tests its sprite bounds (the pick's own `WorldSize` math); a hit keeps the selection and, with Move/Universal, starts a body drag that commits ONE `CommitTransform` entry per gesture (merge barrier after).
+
+### KI-76 — `UiSystem::VisitUi` never checks `TagComponent::Active`; only canvas roots are skipped: a hidden UI element (and its subtree) still draws, takes clicks, answers the editor hit-test and hosts panels
+- Status: Confirmed defect (runtime + editor; violates the T13 contract `Components.h:90-94`). Owner WO: UX-02.
+- Anchor: `Cosmic/src/scene/ui/UiSystem.cpp:310-401` (`VisitUi`) and `:415` (the canvas-only `IsActiveInHierarchy` check) at `6021822`.
+- Repro: a canvas with a `UiPlot` child whose Tag `Active = false`: `CollectElements` (the draw list `Render` draws) still returns it, `Update` over it returns true, `HitTest` returns it, a `UiHostedPanel` under it is still collected.
+- Failing-before: `evidence/UX-02/failing-before-excerpts.txt` (`UX-02 ED02 ...` against the unfixed `VisitUi`).
+- Regression: `tests/test_ui_widgets.cpp` `UX-02 ED02 inactive UiPlot child: no draw, Update false and silent, HitTest skips, hosted panel omitted; re-activate restores`.
+- Disposition: fixed in UX-02 — `VisitUi` skips a node whose `TagComponent::Active` is false right after the valid/visited check and does not push its children, so `Render`, `Update`, `HitTest` and `CollectHostedPanels` (all over `CollectElements`) ignore the whole subtree.
+
+### KI-78 — A hot-reload build started in one project completes after the editor has switched to another project: the completion handler loads the OLD project's module into the new session, rebuilds the new project's open scene from a snapshot and CLEARS its dirty flag (unsaved edits then get no prompt and no autosave copy)
+- Status: Confirmed defect (data-loss vector; latent until a build outlives a project switch). Owner WO: none yet (found by UX-02's ED05 window-close leg; outside UX-02's `StarforgeApp.cpp` ranges, not fixed there).
+- Anchor: `Projects/Starforge/src/StarforgeApp.cpp:995-1015` (the build pump's completion callback calls `ReloadModule(m_LastBuiltStem)` unconditionally) and `:488-526` (`ReloadModule` rebuilds `m_Ctx.Scene` from a snapshot and calls `m_Ctx.ClearDirty()`), with `OpenProject` (`:239-270`) / `CloseProject` (`:356-379`) neither waiting for, cancelling nor fencing an in-flight `m_Builder` build, at `6021822`.
+- Repro: open an app-kind project whose `src/` watcher queues an auto-build (PendulumLab copy: `[Build] Building 'PendulumLab' -> PendulumLab_hot1.dll`), open another project before the build finishes, make an edit (scene dirty): when the build completes the Console shows `[Module] Reloaded 'PendulumLab_hot1' (0 script(s))` in the SECOND project's session, `Dirty` is false, the unsaved-changes prompt no longer fires and `OnDetach` writes no autosave copy. UX-02 ED05's out-of-process check caught it (no copy at `.../autosave/Ux02Fixture/Main.cscene`).
+- Failing-before: `docs/plans/ux-shipping-2026-09-24/evidence/UX-02/ki78-excerpts.txt` (the first full Debug run's console lines 77-142 and the wrapper's oracle line).
+- Regression: none yet (UX-02's self-test now waits for the builder to go idle before leaving PendulumLab so ED05 tests the close path, not this defect — noted in the step name).
+- Disposition: open. Proposed fix (a later WO owning the build pump): stamp each hot-reload build with the project root it was started for and, on completion, reload only when it still matches the open project (else discard the result with a Console line); `CloseProject` should also refuse to tear down while a build it started is running, or fence it the same way.
+
+### KI-79 — `StarforgeApp::SaveScene` returns true when the write fails: `SaveSceneToVfs` only logs `Save FAILED` (e.g. the serializer's atomic rename lost a race with another process), so File ▸ Save and every caller that trusts the result proceed as if the scene were on disk
+- Status: Confirmed defect (silent data-loss vector; the failure itself is environmental). Owner WO: none yet (found by UX-02's retained `ap03-editor` Debug run; outside UX-02's ranges, not fixed).
+- Anchor: `Projects/Starforge/src/StarforgeApp.cpp:573-580` (`SaveScene` returns true after calling the void `SaveSceneToVfs`) and `:582-600`; `Cosmic/src/scene/SceneSerializer.cpp:402` (`atomic rename failed` -> `Save` returns false) at `6021822`.
+- Repro: `ap03-editor` Debug on 2026-09-24 21:0x (three lanes building concurrently): `[Scene] Save FAILED: 'project://scenes/Dashboard.cscene'` + `SceneSerializer: atomic rename failed for .../Dashboard.cscene`, yet AP-03's `t.check("V05", SaveScene(), ...)` passed; the scene on disk lacked the new `Ap03UnknownPanel`, so V05 failed two steps later ("unknown panel name reported as drawn").
+- Failing-before: `docs/plans/ux-shipping-2026-09-24/evidence/UX-02/retained-excerpts.txt` (the console lines and the V05 checks of that run).
+- Regression: none yet. UX-02's Save / Discard / Cancel prompt does not trust the return value alone: Save runs the command only when `SaveScene()` is true AND the scene is no longer dirty (a failed write keeps the prompt open with a Console error).
+- Disposition: open. Proposed fix: `SaveSceneToVfs` returns the serializer's result and `SaveScene` propagates it (File ▸ Save then keeps the scene dirty and says so); the AP-03 self-test's V05 setup should check it.

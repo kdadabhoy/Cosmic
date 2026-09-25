@@ -1,0 +1,15 @@
+# KI-78 failing-before (found by UX-02's ED05 window-close leg, first full Debug run of the self-test, 2026-09-24)
+# lane ux/02 at base 6021822 + the UX-02 working tree; config Debug; Run-UX02Editor.ps1 (dev run under build/_temp)
+# Console (ux02-editor-console.txt), the project switches and the stale build's completion:
+15:[Project] Opened 'Ux02App' @ C:/dev/Cosmic/build/_lanes/ux-02/build/_temp/ux02-dev/root/Ux02App
+41:[Project] Opened 'Ux02Fixture' @ C:/dev/Cosmic/build/_lanes/ux-02/build/_temp/ux02-dev/root/Ux02Fixture
+60:[Project] Opened 'PendulumLab' @ C:/dev/Cosmic/build/_lanes/ux-02/build/_temp/ux02-dev/root/PendulumLab
+77:[Build] Building 'PendulumLab' -> PendulumLab_hot1.dll
+81:[Project] Opened 'Ux02Fixture' @ C:/dev/Cosmic/build/_lanes/ux-02/build/_temp/ux02-dev/root/Ux02Fixture
+136:     Creating library C:/dev/Cosmic/build/_lanes/ux-02/build/_temp/ux02-dev/root/PendulumLab/build/Debug/PendulumLab_hot1.lib and object C:/dev/Cosmic/build/_lanes/ux-02/build/_temp/ux02-dev/root/PendulumLab/build/Debug/PendulumLab_hot1.exp
+137:  PendulumLab.vcxproj -> C:\dev\Cosmic\build\_lanes\ux-02\build\_temp\ux02-dev\root\PendulumLab\build\Debug\PendulumLab_hot1.dll
+140:[Module] Load failed — scripts unavailable this session.
+141:[Module] Reloaded 'PendulumLab_hot1' (0 script(s)).
+142:[APP] GameModule: LoadLibrary('PendulumLab_hot1.dll') failed (err 126).
+# wrapper:
+21:UX02 independent oracle: FAIL ED05 detach: no autosave copy at C:/dev/Cosmic/build/_lanes/ux-02/build/_temp/ux02-dev/out/scratch-55a8c61f94cf4ce295f73bd9b5512e22/starforge/autosave/Ux02Fixture/Main.cscene after the window-close path

@@ -1,0 +1,91 @@
+# UX-02 failing-before, editor half (KI-72, KI-73, KI-75): the UX02 self-test (Run-UX02Editor.ps1, Debug) on an ISOLATED PATCH that reverts only
+# the three viewport fixes (the probes stay); the patch:
+246c246
+<         else if (!playing && clicked && cam2d && !voxelBrushConsumed && !tileBrushConsumed && vpHover &&
+---
+>         else if (false && !playing && clicked && cam2d && !voxelBrushConsumed && !tileBrushConsumed && vpHover &&
+682c682
+<         if (sel && !UiRectGizmo::Owns(sel) && sel.HasComponent<TransformComponent>())
+---
+>         if (sel && sel.HasComponent<TransformComponent>())
+90,92c90
+<         if (!rect.Contains(p)) return false;                  // not the Move surface at all
+<         if (MoveHandleRect(rect).Contains(p)) return true;    // UX-02 (KI-73): the centre square always
+<         return selectionIsTopmost;                            // elsewhere: only when nothing covers it
+---
+>         return rect.Contains(p) && selectionIsTopmost;   // ISOLATED PATCH: the pre-fix rule
+# base HEAD 60218225d86ae7675978598f9343cc1fddacdce6; config Debug; command: powershell -File tests\acceptance\fixtures\Run-UX02Editor.ps1 -Bin build\Runtime\Debug -Output build\_temp\ux02-fb\out -ProjectRoot build\_temp\ux02-fb\root  (exit 1)
+UX02 self-test: exit=1 verdict=FAIL elapsed=33s timedOut=False result=C:\dev\Cosmic\build\_lanes\ux-02\build\_temp\ux02-fb\out\ux02-result.json
+  ED01: FAIL
+  ED03: PASS
+  ED04: PASS
+  ED05: PASS
+  ed01_camera_transform_gizmo_calls_6_frames = 7
+  ed01_plot_rect_gizmo_draws_8_frames = 9
+  ed01_plot_transform_gizmo_calls_8_frames = 9
+  ed01_sprite_input_retries = 0
+  ed01_sprite_world_delta = (0.00000, 0.00000) expected (1.03627, 0.51813)
+  FAILED CHECK: ED01: transform gizmo submitted 9 times over 8 frames with the UI Plot selected (KI-72)
+  FAILED CHECK: ED01: KI-73: Plot offsets after the centre-square drag (40,148)-(-28,-112), expected +(111.917,-55.9585)
+  FAILED CHECK: ED01: KI-73: 0 CommandStack entries for one gesture
+  FAILED CHECK: ED01: KI-73: undo label 'Create Ux02Overlay'
+  FAILED CHECK: ED01: KI-75: the press on the selected sprite did not start a drag (selection is now 'Backdrop')
+  FAILED CHECK: ED01: KI-75: sprite moved by (0.00000, 0.00000) expected (1.03627, 0.51813)
+  FAILED CHECK: ED01: KI-75: 0 CommandStack entries for one press-drag
+  FAILED CHECK: ED01: KI-75: the press changed the selection (to 'Backdrop')
+
+# ---- unit half (KI-73 CapturesMove, KI-74 ApplyModel, KI-76 VisitUi) ----
+# UX-02 failing-before, unit half (isolated patch: the pure seams extracted with the PRE-FIX behaviour, fixes not applied)
+# base HEAD 60218225d86ae7675978598f9343cc1fddacdce6; dirty-diff sha256 f4fbd1b1bedaa6a4; config Debug
+# command: build\Runtime\Debug\CosmicTests.exe -tc="UX-02*"  (exit 1)
+TEST CASE:  UX-02 ED01 Gizmo::ApplyModel 2D: 30 deg Z -> Rotation.z = 30 +- 1e-4, UseQuatRotation false, RotationQuat untouched
+C:\dev\Cosmic\build\_lanes\ux-02\tests\test_ap03_editor.cpp(354): ERROR: CHECK( std::abs(t.Rotation.z - 30.0f) <= 1e-4f ) is NOT correct!
+  values: CHECK( 30 <= 0.0001 )
+C:\dev\Cosmic\build\_lanes\ux-02\tests\test_ap03_editor.cpp(357): ERROR: CHECK_FALSE( t.UseQuatRotation ) is NOT correct!
+  values: CHECK_FALSE( true )
+C:\dev\Cosmic\build\_lanes\ux-02\tests\test_ap03_editor.cpp(358): ERROR: CHECK( t.RotationQuat.w == sentinel.w ) is NOT correct!
+  values: CHECK( 0.965926 == 0.8 )
+C:\dev\Cosmic\build\_lanes\ux-02\tests\test_ap03_editor.cpp(359): ERROR: CHECK( t.RotationQuat.x == sentinel.x ) is NOT correct!
+  values: CHECK( 0 == 0.1 )
+C:\dev\Cosmic\build\_lanes\ux-02\tests\test_ap03_editor.cpp(360): ERROR: CHECK( t.RotationQuat.y == sentinel.y ) is NOT correct!
+  values: CHECK( 0 == 0.2 )
+C:\dev\Cosmic\build\_lanes\ux-02\tests\test_ap03_editor.cpp(361): ERROR: CHECK( t.RotationQuat.z == sentinel.z ) is NOT correct!
+  values: CHECK( 0.258819 == 0.3 )
+C:\dev\Cosmic\build\_lanes\ux-02\tests\test_ap03_editor.cpp(372): ERROR: CHECK( std::abs(w.Rotation.z - 370.0f) <= 1e-3f ) is NOT correct!
+  values: CHECK( 20 <= 0.001 )
+C:\dev\Cosmic\build\_lanes\ux-02\tests\test_ap03_editor.cpp(378): ERROR: CHECK( std::abs(k.Rotation.z - 50.0f) <= 1e-3f ) is NOT correct!
+  values: CHECK( 45 <= 0.001 )
+TEST CASE:  UX-02 ED01 KI-73 UiRectGizmoMath::CapturesMove: the centre square captures whether or not the selection is topmost; the rest of the rect only when topmost
+C:\dev\Cosmic\build\_lanes\ux-02\tests\test_ap03_editor.cpp(398): ERROR: CHECK( UiRectGizmoMath::CapturesMove(r, { 200.0f, 150.0f }, false) ) is NOT correct!
+  values: CHECK( false )
+C:\dev\Cosmic\build\_lanes\ux-02\tests\test_ap03_editor.cpp(399): ERROR: CHECK( UiRectGizmoMath::CapturesMove(r, { 204.0f, 154.0f }, false) ) is NOT correct!
+  values: CHECK( false )
+TEST CASE:  UX-02 ED02 inactive UiPlot child: no draw, Update false and silent, HitTest skips, hosted panel omitted; re-activate restores
+C:\dev\Cosmic\build\_lanes\ux-02\tests\test_ui_widgets.cpp(637): ERROR: CHECK_FALSE( drawn(plot) ) is NOT correct!
+  values: CHECK_FALSE( true )
+C:\dev\Cosmic\build\_lanes\ux-02\tests\test_ui_widgets.cpp(638): ERROR: CHECK_FALSE( drawn(btn) ) is NOT correct!
+  values: CHECK_FALSE( true )
+C:\dev\Cosmic\build\_lanes\ux-02\tests\test_ui_widgets.cpp(639): ERROR: CHECK_FALSE( drawn(panel) ) is NOT correct!
+  values: CHECK_FALSE( true )
+C:\dev\Cosmic\build\_lanes\ux-02\tests\test_ui_widgets.cpp(640): ERROR: CHECK_FALSE( click() ) is NOT correct!
+  values: CHECK_FALSE( true )
+C:\dev\Cosmic\build\_lanes\ux-02\tests\test_ui_widgets.cpp(641): ERROR: CHECK( fires == 0 ) is NOT correct!
+  values: CHECK( 1 == 0 )
+C:\dev\Cosmic\build\_lanes\ux-02\tests\test_ui_widgets.cpp(643): ERROR: CHECK_FALSE( UiSystem::HitTest(s, kViewport, onButton, hit) ) is NOT correct!
+  values: CHECK_FALSE( true )
+C:\dev\Cosmic\build\_lanes\ux-02\tests\test_ui_widgets.cpp(644): ERROR: CHECK_FALSE( UiSystem::HitTest(s, kViewport, { 250.0f, 180.0f }, hit) ) is NOT correct!
+  values: CHECK_FALSE( true )
+C:\dev\Cosmic\build\_lanes\ux-02\tests\test_ui_widgets.cpp(645): ERROR: CHECK( hostedNames().empty() ) is NOT correct!
+  values: CHECK( false )
+C:\dev\Cosmic\build\_lanes\ux-02\tests\test_ui_widgets.cpp(651): ERROR: CHECK( fires == 1 ) is NOT correct!
+  values: CHECK( 2 == 1 )
+C:\dev\Cosmic\build\_lanes\ux-02\tests\test_ui_widgets.cpp(660): ERROR: CHECK_FALSE( drawn(btn) ) is NOT correct!
+  values: CHECK_FALSE( true )
+C:\dev\Cosmic\build\_lanes\ux-02\tests\test_ui_widgets.cpp(661): ERROR: CHECK_FALSE( click() ) is NOT correct!
+  values: CHECK_FALSE( true )
+C:\dev\Cosmic\build\_lanes\ux-02\tests\test_ui_widgets.cpp(662): ERROR: CHECK( fires == 1 ) is NOT correct!
+  values: CHECK( 3 == 1 )
+C:\dev\Cosmic\build\_lanes\ux-02\tests\test_ui_widgets.cpp(664): ERROR: CHECK( hit == (uint32_t)(entt::entity)plot ) is NOT correct!
+  values: CHECK( 2 == 1 )
+[doctest] test cases:  4 |  1 passed |  3 failed | 537 skipped
+[doctest] assertions: 66 | 43 passed | 23 failed |
