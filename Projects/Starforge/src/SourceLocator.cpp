@@ -5,6 +5,8 @@
 #include "data/DataBus.h"
 #include "scripting/AppService.h"
 #include "scripting/ModuleRegistry.h"
+#include "scene/FlowMachine.h"   // UX-02 — FlowAsset (the startup flow's transitions)
+#include "utils/Config.h"        // UX-02 — project.cproj startup_flow
 
 #ifdef _WIN32
 #ifndef WIN32_LEAN_AND_MEAN
@@ -220,6 +222,83 @@ namespace Starforge
             SourceHit h; h.Path = Normalize(f); h.Line = LineOf(text, pos); h.Reason = "contains " + quoted;
             out.push_back(h);
         }
+        // UX-02: the startup flow's transitions on this signal, after the src/ hits (so
+        // the AP-03 callers that take the first hit still get a source file first).
+        for (SourceHit& h : FlowHitsForSignal(signal))
+            out.push_back(std::move(h));
+        return out;
+    }
+
+    std::string SourceLocator::StartupFlowRel() const
+    {
+        const fs::path manifest = fs::path(m_Root) / "project.cproj";
+        std::error_code ec;
+        if (!fs::exists(manifest, ec)) return {};
+        const std::string text = ReadAll(manifest);
+        auto cfg = Cosmic::Config::Parse(text, manifest.generic_string());
+        if (!cfg) return {};
+        std::string rel = cfg->GetString("startup_flow", "");
+        if (rel.rfind("project://", 0) == 0) rel = rel.substr(10);
+        return rel;
+    }
+
+    std::vector<SourceHit> SourceLocator::FlowHitsForSignal(const std::string& signal) const
+    {
+        std::vector<SourceHit> out;
+        if (signal.empty()) return out;
+        const std::string rel = StartupFlowRel();
+        if (rel.empty()) return out;
+        const fs::path flowPath = fs::path(m_Root) / rel;
+        std::error_code ec;
+        if (!fs::exists(flowPath, ec)) return out;
+        Cosmic::FlowAsset asset;
+        std::string err;
+        if (!Cosmic::FlowAsset::LoadFromString(asset, ReadAll(flowPath), &err)) return out;
+        for (size_t s = 0; s < asset.States.size(); ++s)
+        {
+            const Cosmic::FlowState& st = asset.States[s];
+            for (size_t t = 0; t < st.Transitions.size(); ++t)
+            {
+                const Cosmic::FlowTransition& tr = st.Transitions[t];
+                if (tr.On != signal) continue;
+                SourceHit h;
+                h.Kind            = SourceHitKind::Flow;
+                h.Path            = Normalize(flowPath.generic_string());
+                h.Line            = 0;
+                h.State           = st.Name;
+                h.Target          = tr.Push ? ("push " + tr.To) : tr.To;
+                h.Signal          = tr.On;
+                h.FlowVfs         = "project://" + rel;
+                h.StateIndex      = (int)s;
+                h.TransitionIndex = (int)t;
+                h.Reason          = h.FlowLine() + "  (" + rel + ")";   // the description carries state/target (§2)
+                out.push_back(std::move(h));
+            }
+        }
+        return out;
+    }
+
+    std::vector<std::string> SourceLocator::ProjectScenes(const std::string& projectRoot)
+    {
+        std::vector<std::string> out;
+        std::error_code ec;
+        const fs::path scenes = fs::path(projectRoot) / "scenes";
+        if (projectRoot.empty() || !fs::is_directory(scenes, ec)) return out;
+        for (auto it = fs::recursive_directory_iterator(scenes, ec); it != fs::recursive_directory_iterator(); it.increment(ec))
+        {
+            if (ec) break;
+            if (!it->is_regular_file(ec)) continue;
+            if (it->path().extension() != ".cscene") continue;   // "Main.cscene.bak" has extension ".bak"
+            const std::string rel = fs::relative(it->path(), scenes, ec).generic_string();
+            if (ec || rel.empty()) continue;
+            out.push_back("project://scenes/" + rel);
+        }
+        auto lower = [](std::string s) { for (char& c : s) c = (char)std::tolower((unsigned char)c); return s; };
+        std::sort(out.begin(), out.end(), [&](const std::string& a, const std::string& b)
+        {
+            const std::string la = lower(a), lb = lower(b);
+            return la != lb ? la < lb : a < b;
+        });
         return out;
     }
 

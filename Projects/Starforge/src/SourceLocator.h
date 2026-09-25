@@ -9,6 +9,10 @@
 // (ForService, ForPanel) come from the CS_SERVICE / CS_PANEL call sites AP-01
 // records (__FILE__/__LINE__); the rest is a text scan of src/**/*.h,*.cpp.
 //
+// UX-02 (contract §2 "what a button does"): ForSignal also returns the project's startup
+// flow transitions on the signal (Kind Flow, after the src/ hits), and ProjectScenes is
+// the one scenes/** lister behind Screens ▸ Scenes and File ▸ Open Scene.
+//
 // Test seam (E08): when the env var COSMIC_AP03_RECORD_SHELL is set, Open/Reveal
 // RECORD the invocation (kind + absolute path + line) to a file and to an in-memory
 // list instead of calling ShellExecuteW / explorer.exe. The value "1" records to
@@ -23,13 +27,29 @@ namespace Cosmic { class PanelRegistry; class DataBus; }
 
 namespace Starforge
 {
+    // UX-02 (contract §2 "what a button does"): a hit is either a source file
+    // (src/**, the AP-03 kinds) or a transition of the project's startup flow.
+    enum class SourceHitKind { Source, Flow };
+
     struct SourceHit
     {
-        std::string Path;      // absolute disk path; empty => unresolved
-        int         Line = 0;  // 1-based when known, 0 = unknown
+        std::string Path;      // absolute disk path; empty => unresolved (Flow: the .cflow)
+        int         Line = 0;  // 1-based when known, 0 = unknown (Flow: always 0)
         std::string Reason;    // why unresolved (tooltip), or how it was found
 
+        // ---- Flow hits (Kind == Flow) — one per transition whose On == the signal ----
+        SourceHitKind Kind = SourceHitKind::Source;
+        std::string State;               // the transition's owner state
+        std::string Target;              // as written: a state, "@quit", "@pop"; "push <State>" for a push
+        std::string Signal;              // the transition's On
+        std::string FlowVfs;             // "project://<startup_flow>" — the document to open
+        int         StateIndex = -1;     // FlowAsset::States index (FlowEditor::HarnessSelect)
+        int         TransitionIndex = -1;// that state's Transitions index
+
         bool Resolved() const { return !Path.empty(); }
+        bool IsFlow() const   { return Kind == SourceHitKind::Flow; }
+        // The read-only line the Inspector / viewport menu show: "Flow: <State> —<signal>→ <Target>".
+        std::string FlowLine() const { return "Flow: " + State + " \xE2\x80\x94" + Signal + "\xE2\x86\x92 " + Target; }
     };
 
     class SourceLocator
@@ -43,7 +63,17 @@ namespace Starforge
         SourceHit ForService(const std::string& serviceName) const;     // ModuleRegistry::FindService()->File/Line, else scan like a class
         SourceHit ForPanel(const std::string& panelName, const Cosmic::PanelRegistry& panels) const;   // PanelRegistry::SourceOf
         SourceHit ForChannel(const std::string& channel, const Cosmic::DataBus& bus) const;            // Producer(channel) -> ForService
-        std::vector<SourceHit> ForSignal(const std::string& signal) const;   // every src/** file containing the quoted signal string
+        // Every src/** file containing the quoted signal string, THEN (UX-02) one Flow hit per
+        // transition of the startup flow (project.cproj startup_flow) whose On equals it.
+        std::vector<SourceHit> ForSignal(const std::string& signal) const;
+        std::vector<SourceHit> FlowHitsForSignal(const std::string& signal) const;   // the Flow half alone (cheap: two small reads)
+        std::string            StartupFlowRel() const;   // project.cproj startup_flow ("" = none), "project://" stripped
+
+        // UX-02 (contract §2 "Scenes list") — every scenes/**/*.cscene under `projectRoot`
+        // as "project://scenes/<rel>" (recursive; *.bak and other extensions never listed),
+        // sorted case-insensitively by path. The ONE lister behind Screens ▸ Scenes and
+        // File ▸ Open Scene.
+        static std::vector<std::string> ProjectScenes(const std::string& projectRoot);
         SourceHit ForScreen(const std::string& screenName) const;            // src/screens/<Name>Screen.h if it exists, else ForScriptClass
 
         static bool Open(const SourceHit& hit);      // ShellExecuteW "open" on the file (the OS default editor); false when unresolved

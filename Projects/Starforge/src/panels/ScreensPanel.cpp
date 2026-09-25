@@ -7,7 +7,9 @@
 #include "ui/IconsLucide.h"
 
 #include <imgui.h>
+#include <imgui_internal.h>   // UX-02 — GetCurrentContext for the throttled scene listing
 
+#include <algorithm>
 #include <cstdio>
 #include <filesystem>
 
@@ -151,6 +153,98 @@ namespace Starforge
         return SourceLocator::Open(SourceLocator(host.ProjectRoot).ForScreen(name));
     }
 
+    // ---- UX-02: the Scenes section ---------------------------------------------
+    void ScreensPanel::RefreshScenes(const Host& host)
+    {
+        const std::string key = host.ProjectRoot + "|" + host.ManifestFlow;
+        const double now = ImGui::GetCurrentContext() ? ImGui::GetTime() : 0.0;
+        if (key == m_ScenesFor && m_ScenesAt >= 0.0 && now - m_ScenesAt < 1.0) return;
+        m_ScenesFor = key;
+        m_ScenesAt  = now;
+        m_SceneList = SourceLocator::ProjectScenes(host.ProjectRoot);
+        // The start scene: the flow's start state's scene, else project.cproj startup_scene.
+        m_StartScene.clear();
+        if (Reload(host))
+        {
+            const Cosmic::FlowState* st = m_Asset.Find(m_Asset.Start);
+            if (!st && !m_Asset.States.empty()) st = &m_Asset.States.front();
+            if (st) m_StartScene = st->Scene;
+        }
+        if (m_StartScene.empty())
+        {
+            std::error_code ec;
+            const fs::path manifest = fs::path(host.ProjectRoot) / "project.cproj";
+            if (!host.ProjectRoot.empty() && fs::exists(manifest, ec))
+            {
+                const ProjectManifest pm = ProjectManifest::Load(manifest.generic_string());
+                if (!pm.StartupScene.empty())
+                    m_StartScene = pm.StartupScene.rfind("project://", 0) == 0 ? pm.StartupScene
+                                                                               : "project://" + pm.StartupScene;
+            }
+        }
+    }
+
+    bool ScreensPanel::RevealScene(const Host& host, const std::string& vfs)
+    {
+        if (vfs.rfind("project://", 0) != 0) return false;
+        SourceHit h;
+        h.Path = SourceLocator::Normalize((fs::path(host.ProjectRoot) / vfs.substr(10)).generic_string());
+        h.Reason = "scene file";
+        return SourceLocator::Reveal(h);
+    }
+
+    void ScreensPanel::DrawScenes(EditorContext& ctx, const Host& host)
+    {
+        RefreshScenes(host);
+        m_SceneRows.clear();
+        ImGui::SeparatorText("Scenes");
+        if (m_SceneList.empty())
+        {
+            ImGui::TextDisabled("no scenes under scenes/ yet (File > Save As... writes one)");
+            return;
+        }
+        // A list sized to its rows (at most 10 visible, then it scrolls): the panel itself
+        // scrolls when it is shorter, instead of squeezing the list to nothing.
+        const float listH = ImGui::GetTextLineHeightWithSpacing() * (float)std::min<size_t>(m_SceneList.size(), 10) +
+                            ImGui::GetStyle().WindowPadding.y * 2.0f + 2.0f;
+        if (ImGui::BeginChild("##ux02scenes", ImVec2(0.0f, listH), ImGuiChildFlags_Borders))
+        {
+            const ImVec4 startCol(0.45f, 0.95f, 0.55f, 1.0f);
+            for (const std::string& vfs : m_SceneList)
+            {
+                static const std::string kPrefix = "project://scenes/";
+                const std::string rel = vfs.rfind(kPrefix, 0) == 0 ? vfs.substr(kPrefix.size()) : vfs;
+                const bool isOpen  = (ctx.SceneVfsPath == vfs);
+                const bool isStart = (vfs == m_StartScene);
+                ImGui::PushID(vfs.c_str());
+                if (isStart) ImGui::PushStyleColor(ImGuiCol_Text, startCol);
+                const std::string label = isStart ? (rel + "   " ICON_LC_PLAY " start") : rel;
+                if (ImGui::Selectable(label.c_str(), isOpen, ImGuiSelectableFlags_AllowDoubleClick))
+                {
+                    if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && host.OpenScene)
+                        host.OpenScene(vfs);
+                }
+                if (isStart) ImGui::PopStyleColor();
+                {
+                    const ImVec2 mn = ImGui::GetItemRectMin(), mx = ImGui::GetItemRectMax();
+                    m_SceneRows.push_back({ vfs, (mn.x + mx.x) * 0.5f, (mn.y + mx.y) * 0.5f,
+                                            ImGui::IsItemVisible(), isStart, isOpen });
+                }
+                if (ImGui::IsItemHovered())
+                    ImGui::SetTooltip("%s%s%s\nDouble-click to open; right-click to reveal.", vfs.c_str(),
+                                      isStart ? "\nthe project's start scene" : "", isOpen ? "\n(open now)" : "");
+                if (ImGui::BeginPopupContextItem("##scenectx"))
+                {
+                    if (ImGui::MenuItem(ICON_LC_FOLDER_OPEN " Reveal in Explorer")) RevealScene(host, vfs);
+                    if (ImGui::MenuItem("Open", nullptr, false, !isOpen && (bool)host.OpenScene)) host.OpenScene(vfs);
+                    ImGui::EndPopup();
+                }
+                ImGui::PopID();
+            }
+        }
+        ImGui::EndChild();
+    }
+
     bool ScreensPanel::RevealScript(const Host& host, const std::string& name)
     {
         return SourceLocator::Reveal(SourceLocator(host.ProjectRoot).ForScreen(name));
@@ -178,6 +272,7 @@ namespace Starforge
             if (ImGui::Button(ICON_LC_PLUS " Create flow"))
                 report(CreateFlow(ctx, host));
             if (!m_Status.empty()) { ImGui::Separator(); ImGui::TextDisabled("%s", m_Status.c_str()); }
+            DrawScenes(ctx, host);   // UX-02 — a project without a flow still lists its scenes
             ImGui::End();
             return;
         }
@@ -217,10 +312,12 @@ namespace Starforge
 
         ImGui::Separator();
 
-        // The table of screens.
-        const float footer = ImGui::GetFrameHeightWithSpacing() * 3.5f;
+        // The table of screens. UX-02: sized to its rows (at most 8 visible, then it
+        // scrolls) so the Scenes section below keeps the rest of the panel.
+        const float rowH = ImGui::GetTextLineHeightWithSpacing() + 4.0f;
+        const float tableH = rowH * (float)(std::min<size_t>(m_Asset.States.size(), 8) + 1) + 6.0f;
         if (ImGui::BeginTable("##screens", 4, ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersInnerH |
-                              ImGuiTableFlags_ScrollY, ImVec2(0, -footer)))
+                              ImGuiTableFlags_ScrollY, ImVec2(0, tableH)))
         {
             ImGui::TableSetupColumn("Screen", ImGuiTableColumnFlags_WidthStretch, 0.35f);
             ImGui::TableSetupColumn("Scene",  ImGuiTableColumnFlags_WidthStretch, 0.30f);
@@ -289,6 +386,7 @@ namespace Starforge
             if (m_StatusError) ImGui::TextColored(ImVec4(1.0f, 0.45f, 0.45f, 1.0f), "%s", m_Status.c_str());
             else               ImGui::TextDisabled("%s", m_Status.c_str());
         }
+        DrawScenes(ctx, host);   // UX-02 — every scene file, under the flow states
         ImGui::End();
     }
 }

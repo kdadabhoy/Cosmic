@@ -52,15 +52,35 @@ namespace Starforge
         const std::vector<Cosmic::FlowState>& States() const { return m_Asset.States; }
         const std::string& StartState() const { return m_Asset.Start; }
         bool HasFlow() const { return m_HasFlow; }
-        void Invalidate() { m_Loaded = false; }   // re-read the .cflow next frame
+        void Invalidate() { m_Loaded = false; m_ScenesAt = -1.0; }   // re-read the .cflow (+ UX-02: re-list the scenes) next frame
 
         const std::string& Selected() const { return m_Selected; }
         void Select(const std::string& name) { m_Selected = name; }
+
+        // ---- UX-02 (contract §2 "Scenes list") ------------------------------------
+        // The Scenes section: every project://scenes/**/*.cscene (SourceLocator::
+        // ProjectScenes — the same lister File ▸ Open Scene uses), the start scene
+        // marked (the flow's start state's scene, else project.cproj startup_scene),
+        // the open scene highlighted; double-click -> host.OpenScene, right-click ->
+        // Reveal in Explorer. Re-listed at most once a second (and on Invalidate).
+        const std::vector<std::string>& SceneList() const { return m_SceneList; }   // as last listed
+        const std::string& StartScene() const { return m_StartScene; }             // vfs ("" = none)
+        struct SceneRowProbe { std::string Vfs; float Cx = 0.0f, Cy = 0.0f; bool Visible = false; bool Start = false; bool Open = false; };
+        const std::vector<SceneRowProbe>& SceneRows() const { return m_SceneRows; } // drawn last frame (self-test probe)
+        bool RevealScene(const Host& host, const std::string& vfs);                 // the right-click action
 
     private:
         bool Reload(const Host& host);                 // Load the manifest flow into m_Asset
         bool SaveFlow(const Host& host, std::string* error);
         std::string FlowDiskPath(const Host& host) const;
+        void RefreshScenes(const Host& host);          // UX-02 — the Scenes list + start scene (throttled)
+        void DrawScenes(EditorContext& ctx, const Host& host);
+
+        std::vector<std::string>   m_SceneList;
+        std::string                m_StartScene;
+        std::string                m_ScenesFor;         // root|flow the list was made for
+        double                     m_ScenesAt = -1.0;   // ImGui time of the last listing
+        std::vector<SceneRowProbe> m_SceneRows;
 
         Cosmic::FlowAsset m_Asset;
         bool        m_HasFlow  = false;

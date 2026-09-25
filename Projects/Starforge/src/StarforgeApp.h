@@ -52,6 +52,7 @@
 #include "editors/AssetEditorHost.h"   // M1 — tabbed asset-editor documents
 #include "editors/PostChainEditor.h"   // Q6 — post-chain graph view (panel)
 
+#include <functional>
 #include <string>
 #include <vector>
 #include <mutex>
@@ -393,6 +394,57 @@ namespace Starforge
         void GuideSelfTestTick();
         void GuideSelfTestFrameEnd();
         void GuideSelfTestShutdown();
+
+        // UX-02 — the ED01..ED05 editor self-test (UX02EditorSelfTest.cpp). Gated ON only
+        // when COSMIC_UX02_SELFTEST=<result.json> is set; otherwise every hook is a no-op.
+        struct UX02SelfTest;
+        UX02SelfTest* m_UX02 = nullptr;
+        void UX02SelfTestInit();
+        void UX02SelfTestTick();
+        void UX02SelfTestFrameEnd();    // after the UI: oracle judgement + injected input
+        void UX02SelfTestShutdown();
+
+        // UX-02 (contract §2 "Preferences", StarforgeAppPrefs.cpp) — Edit ▸ Preferences…,
+        // the unsaved-changes prompt around the USER commands (never the functions the
+        // self-tests call), the autosave copy + its status-bar chip, the shared scene list
+        // behind File ▸ Open Scene, and "Open in flow editor" for a Flow hit.
+        void RequestNewScene();
+        void RequestOpenScene(const std::string& vfsPath);
+        void RequestOpenProject(const Prefs::ProjectEntry& e);
+        void RequestCloseProject();
+        void RequestExitToLauncher();
+        bool UnsavedWork() const;                       // the dirty test the prompt uses
+        void GuardUnsaved(const std::string& what, std::function<void()> action);
+        void DrawUnsavedPrompt();
+        void DrawPreferencesPopup();
+        void DrawAutosaveChip();                        // status bar: "autosaved HH:MM"
+        bool WriteAutosaveCopy(const char* why);        // user://starforge/autosave/<project>/<scene>.cscene
+        void DrawOpenSceneMenu();                       // File ▸ Open Scene (the Scenes-list lister)
+        std::vector<std::string> SceneMenuEntries() const { return SourceLocator::ProjectScenes(m_Ctx.ProjectOpen ? ProjectDir() : std::string()); }
+        void OpenFlowHit(const SourceHit& h);           // open the .cflow + select the transition
+        bool                  m_OpenPreferences = false;
+        bool                  m_OpenUnsavedPrompt = false;
+        std::function<void()> m_PendingGuarded;         // the command waiting on Save / Discard / Cancel
+        std::string           m_PendingGuardedWhat;     // "open scene 'X'" (the prompt's text)
+        std::string           m_LastAutosaveHHMM;       // "" until the first autosave
+        std::string           m_LastAutosavePath;
+        // Self-test probe: the prompt's buttons as drawn last frame (screen centres).
+        struct UnsavedPromptProbe { bool Drawn = false; float SaveX = 0, SaveY = 0, DiscardX = 0, DiscardY = 0, CancelX = 0, CancelY = 0; };
+        UnsavedPromptProbe    m_UnsavedProbe;
+        // Self-test probes: the Preferences modal's controls, the status chip text, and
+        // File ▸ Open Scene (the File header, the submenu item, the entries it drew).
+        struct PrefsProbe { bool Drawn = false; float AutosaveX = 0, AutosaveY = 0, PromptX = 0, PromptY = 0, CloseX = 0, CloseY = 0; };
+        PrefsProbe            m_PrefsProbe;
+        std::string           m_AutosaveChipShown;      // what DrawAutosaveChip drew last frame ("" = nothing)
+        std::string           m_LastAutosaveProject;    // the chip shows only for the project it belongs to
+        struct SceneMenuProbe { float FileX = 0, FileY = 0, OpenSceneX = 0, OpenSceneY = 0; int Frame = 0; std::vector<std::string> Drawn; std::vector<float> ItemX, ItemY; };
+        SceneMenuProbe        m_SceneMenuProbe;
+        // The viewport context menu's Flow lines as drawn (frame + text), and the last
+        // "Open in flow editor" (document path + the selected state / transition indices).
+        std::vector<std::string> m_VpMenuFlowLines;
+        int                      m_VpMenuFlowFrame = -1;
+        struct FlowOpenRecord { std::string Vfs; int State = -1, Transition = -1; bool Opened = false; };
+        FlowOpenRecord           m_LastFlowOpen;
 
         // WO-07 (2D stability) — KI-1 snap-chip regression harness. Gated ON only
         // when the env var COSMIC_KI1_SELFTEST=<result-file> is set; otherwise

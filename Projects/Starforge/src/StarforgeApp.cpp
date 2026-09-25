@@ -138,6 +138,7 @@ namespace Starforge
         X01SelfTestInit();   // WO-10: arm the X01 external-project package harness when its env is set
         AP03SelfTestInit();  // AP-03: arm the E01..E08 authoring harness when its env is set
         GuideSelfTestInit(); // GUIDE: arm the PendulumLab walkthrough driver when its env is set
+        UX02SelfTestInit();  // UX-02: arm the ED01..ED05 editor harness when its env is set
     }
 
     // =========================================================================
@@ -151,6 +152,11 @@ namespace Starforge
         }
 
         StopScene();                 // tear down script instances before scene reset
+        // UX-02 (contract §2): the OS / title-bar close ends the app before any layer can
+        // veto it (Application.cpp WindowCloseEvent; WorkspaceLayer's X calls Close), so
+        // no Save / Discard / Cancel is possible here — keep a recovery copy instead.
+        if (m_Ctx.ProjectOpen && m_Ctx.Scene && m_Ctx.Dirty)
+            WriteAutosaveCopy("[Autosave] on close: ");
         m_SrcWatcher.Stop();
         m_BrandWatcher.Stop();       // K1 — stop the branding hot-swap watcher
         m_BrandTex.reset();          // release the logo texture while GL is live
@@ -187,6 +193,7 @@ namespace Starforge
         X01SelfTestShutdown();   // WO-10: free the X01 harness (no-op when never armed)
         AP03SelfTestShutdown();  // AP-03: free the authoring harness (no-op when never armed)
         GuideSelfTestShutdown(); // GUIDE: free the walkthrough driver (no-op when never armed)
+        UX02SelfTestShutdown();  // UX-02: free the editor harness (no-op when never armed)
 
         Cosmic::Log::SetLogDirectory("logs");
         CS_INFO("Starforge: detached.");
@@ -1020,6 +1027,7 @@ namespace Starforge
         X01SelfTestTick();   // WO-10: no-op unless the X01 package harness is armed
         AP03SelfTestTick();  // AP-03: no-op unless the authoring harness is armed
         GuideSelfTestTick(); // GUIDE: no-op unless the walkthrough driver is armed
+        UX02SelfTestTick();  // UX-02: no-op unless the editor harness is armed
 
         m_Editors.OnUpdate(m_Ctx, ts);    // M1 — advance open document playback (Animation Editor scrub/play)
 
@@ -1297,20 +1305,19 @@ namespace Starforge
     {
         if (IsPlaying())            // never autosave the throwaway runtime scene
             return;
+        if (!m_Settings.AutosaveEnabled)   // UX-02 — Edit ▸ Preferences… (the pre-Play copy is separate)
+        {
+            m_AutosaveTimer = 0.0f;
+            return;
+        }
         if (!m_Ctx.Dirty || !m_Ctx.Scene)
             return;
         m_AutosaveTimer += ts;
-        const float interval = m_Settings.AutosaveMinutes * 60.0f;
-        if (interval <= 0.0f || m_AutosaveTimer < interval)
+        const float interval = (float)Prefs::ClampAutosaveMinutes(m_Settings.AutosaveMinutes) * 60.0f;   // whole minutes 1-60
+        if (m_AutosaveTimer < interval)
             return;
         m_AutosaveTimer = 0.0f;
-
-        std::error_code ec;
-        const std::string dir = Cosmic::FileSystem::Resolve("user://starforge/autosave/" + m_Ctx.ProjectName);
-        fs::create_directories(dir, ec);
-        const std::string path = dir + "/" + m_Ctx.SceneName + ".cscene";
-        if (Cosmic::SceneSerializer::Save(*m_Ctx.Scene, path))
-            m_Ctx.Log("[Autosave] " + path);
+        WriteAutosaveCopy("[Autosave] ");   // UX-02 — also stamps the status bar's "autosaved HH:MM"
     }
 
     void StarforgeApp::UpdateWindowTitle()
@@ -1588,7 +1595,7 @@ namespace Starforge
             if (m_Ctx.Scene && !IsPlaying())
                 m_Viewport.DrawGizmo(m_Ctx, m_Mode2D
                     ? static_cast<const Cosmic::Camera&>(m_Camera2D.GetCamera())
-                    : m_Rig.ActiveCamera());
+                    : m_Rig.ActiveCamera(), m_Mode2D);   // UX-02: 2D write-back (Rotation.z)
         }
         if (m_Ctx.ProjectOpen && ws)
             ws->EndViewportOverlay();
@@ -1656,11 +1663,14 @@ namespace Starforge
         DrawHelpPopups();
         DrawFirstRunPopup();
         DrawSaveLayoutPopup();   // K3
+        DrawPreferencesPopup();  // UX-02 — Edit ▸ Preferences…
+        DrawUnsavedPrompt();     // UX-02 — Save / Discard / Cancel before New/Open/Close/Exit
         DrawViewportContextMenu();   // AP-03 — right-click a selected element: Open logic source
         HandleShortcuts();
         m_Ctx.ValidateSelection();
         AP03SelfTestFrameEnd();      // AP-03: no-op unless the authoring harness is armed
         GuideSelfTestFrameEnd();     // GUIDE: no-op unless the walkthrough driver is armed
+        UX02SelfTestFrameEnd();      // UX-02: no-op unless the editor harness is armed
     }
 
     namespace
@@ -2009,26 +2019,15 @@ namespace Starforge
 
     void StarforgeApp::DrawMenus()
     {
-        if (ImGui::BeginMenu("File"))
+        const bool fileMenuOpen = ImGui::BeginMenu("File");
+        {   // UX-02 self-test probe: the File header's centre (ED04 opens the menu with the pointer)
+            const ImVec2 mn = ImGui::GetItemRectMin(), mx = ImGui::GetItemRectMax();
+            m_SceneMenuProbe.FileX = (mn.x + mx.x) * 0.5f; m_SceneMenuProbe.FileY = (mn.y + mx.y) * 0.5f;
+        }
+        if (fileMenuOpen)
         {
-            if (ImGui::MenuItem("New Scene", "Ctrl+N", false, m_Ctx.ProjectOpen)) NewScene();
-            if (ImGui::BeginMenu("Open Scene", m_Ctx.ProjectOpen))
-            {
-                std::error_code ec;
-                const fs::path scenes = Cosmic::FileSystem::Resolve("project://scenes");
-                bool any = false;
-                if (fs::exists(scenes, ec))
-                    for (const auto& e : fs::directory_iterator(scenes, ec))
-                    {
-                        if (e.path().extension() != ".cscene") continue;
-                        any = true;
-                        const std::string vfs = "project://scenes/" + e.path().filename().string();
-                        if (ImGui::MenuItem(e.path().filename().string().c_str()))
-                            OpenScene(vfs);
-                    }
-                if (!any) ImGui::TextDisabled("(no scenes)");
-                ImGui::EndMenu();
-            }
+            if (ImGui::MenuItem("New Scene", "Ctrl+N", false, m_Ctx.ProjectOpen)) RequestNewScene();   // UX-02 — prompt when unsaved
+            DrawOpenSceneMenu();   // UX-02 — recursive scenes/**, the Screens ▸ Scenes lister
             ImGui::Separator();
             if (ImGui::MenuItem("Save", "Ctrl+S", false, m_Ctx.ProjectOpen))
                 if (!SaveScene()) m_OpenSaveAs = true;
@@ -2051,13 +2050,13 @@ namespace Starforge
                 if (recents.empty()) ImGui::TextDisabled("(none)");
                 for (const auto& e : recents)
                     if (ImGui::MenuItem(e.Name.c_str()))
-                        OpenProject(e);
+                        RequestOpenProject(e);   // UX-02 — prompt when unsaved
                 ImGui::EndMenu();
             }
-            if (ImGui::MenuItem("Close Project (Home)")) CloseProject();
+            if (ImGui::MenuItem("Close Project (Home)")) RequestCloseProject();   // UX-02
             ImGui::Separator();
             if (ImGui::MenuItem("Exit to Launcher"))
-                Cosmic::Application::Get().TransitionToLauncher();
+                RequestExitToLauncher();   // UX-02
             ImGui::EndMenu();
         }
 
@@ -2072,6 +2071,8 @@ namespace Starforge
             ImGui::Separator();
             if (ImGui::MenuItem("Auto-resume Play after rebuild", nullptr, &m_Settings.AutoResumePlay))   // AP-03 (§6)
                 Prefs::SaveSettings(m_Settings);
+            if (ImGui::MenuItem("Preferences…"))   // UX-02 — autosave + unsaved-changes prompt
+                m_OpenPreferences = true;
             ImGui::Separator();
             const bool sel = m_Ctx.HasSelection();
             if (ImGui::MenuItem("Duplicate", "Ctrl+D", false, sel))
@@ -2245,6 +2246,7 @@ namespace Starforge
             ImGui::TextColored(col, ICON_LC_HAMMER " %s", txt);
         }
         DrawLiveChip();   // AP-03 (§6) — Live / Building… / Reloading / Build failed
+        DrawAutosaveChip();   // UX-02 — "autosaved HH:MM"
 
         // Right side: scene identity now; Phase 23 T2's asset-memory chip takes
         // this slot ("assets: N (X MiB CPU / Y MiB GPU)") once accounting exists.
@@ -3337,7 +3339,7 @@ namespace Starforge
         if (ctrl && ImGui::IsKeyPressed(ImGuiKey_S, false))
             if (!SaveScene()) m_OpenSaveAs = true;
         if (ctrl && ImGui::IsKeyPressed(ImGuiKey_N, false))
-            NewScene();
+            RequestNewScene();   // UX-02 — prompt when unsaved
         if (ctrl && ImGui::IsKeyPressed(ImGuiKey_B, false))
             BuildScripts();
         if (ctrl && ImGui::IsKeyPressed(ImGuiKey_D, false))

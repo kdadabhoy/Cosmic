@@ -134,7 +134,7 @@ namespace Starforge
         h.ProjectRoot  = ProjectDir();
         h.ProjectName  = m_Ctx.ProjectName;
         h.ManifestFlow = m_ManifestFlow;
-        h.OpenScene    = [this](const std::string& vfs) { if (!IsPlaying()) OpenScene(vfs); };
+        h.OpenScene    = [this](const std::string& vfs) { if (!IsPlaying()) RequestOpenScene(vfs); };   // UX-02: a user command -> the unsaved prompt
         h.SetManifestFlow = [this](const std::string& rel) { SetManifestFlow(rel); };
         h.OpenFlowDocument = [this](const std::string& vfs)
         {
@@ -168,6 +168,7 @@ namespace Starforge
         l.Bus         = &m_PlayBus;
         l.Panels      = IsPlaying() ? &m_PlayPanels : &m_LastPanels;
         l.Playing     = IsPlaying();
+        l.OpenFlow    = [this](const SourceHit& h) { OpenFlowHit(h); };   // UX-02 — "Open in flow editor"
         m_Inspector.SetSourceLinks(l);
     }
 
@@ -297,8 +298,10 @@ namespace Starforge
         // 3) button signal (first handler file)
         if (auto* b = TryGet<Cosmic::UiButtonComponent>(e))
         {
-            const auto hits = loc.ForSignal(b->Signal);
-            if (!hits.empty()) return done(hits.front(), "signal");
+            // UX-02: ForSignal also lists the startup flow's transitions (Kind Flow, after the
+            // src/ hits); "Open logic source" opens a SOURCE file, so take the first of those.
+            for (const SourceHit& sh : loc.ForSignal(b->Signal))
+                if (!sh.IsFlow()) return done(sh, "signal");
             if (hit.Reason.empty()) hit.Reason = "no src/ file contains \"" + b->Signal + "\"";
         }
         // 4) the entity's script
@@ -344,6 +347,32 @@ namespace Starforge
             ImGui::BeginDisabled(!h.Resolved());
             if (ImGui::MenuItem(ICON_LC_FOLDER_OPEN " Reveal in Explorer")) SourceLocator::Reveal(h);
             ImGui::EndDisabled();
+
+            // UX-02 (contract §2 "what a button does") — the startup flow's transitions on this
+            // element's signal (UiButton / UiSlider / UiToggle), each a read-only line with
+            // "Open in flow editor".
+            std::string signal;
+            if (Cosmic::Entity pe = m_Ctx.PrimaryEntity())
+            {
+                if (auto* b = TryGet<Cosmic::UiButtonComponent>(pe))      signal = b->Signal;
+                else if (auto* sl = TryGet<Cosmic::UiSliderComponent>(pe)) signal = sl->Signal;
+                else if (auto* tg = TryGet<Cosmic::UiToggleComponent>(pe)) signal = tg->Signal;
+            }
+            if (!signal.empty())
+            {
+                const auto flows = SourceLocator(ProjectDir()).FlowHitsForSignal(signal);
+                if (!flows.empty()) ImGui::Separator();
+                m_VpMenuFlowLines.clear();                        // self-test probe (ED03)
+                m_VpMenuFlowFrame = ImGui::GetFrameCount();
+                for (size_t i = 0; i < flows.size(); ++i)
+                {
+                    ImGui::PushID((int)i);
+                    m_VpMenuFlowLines.push_back(flows[i].FlowLine());
+                    ImGui::TextDisabled("%s", InspectorPanel::FlowLineForDisplay(flows[i]).c_str());
+                    if (ImGui::MenuItem(ICON_LC_WORKFLOW " Open in flow editor")) OpenFlowHit(flows[i]);
+                    ImGui::PopID();
+                }
+            }
             ImGui::EndPopup();
         }
     }

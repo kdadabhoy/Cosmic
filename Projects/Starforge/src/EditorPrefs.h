@@ -19,10 +19,12 @@
 #include <Cosmic.h>
 
 #include <algorithm>
+#include <cmath>
 #include <cstdio>
 #include <ctime>
 #include <filesystem>
 #include <fstream>
+#include <iterator>
 #include <string>
 #include <vector>
 
@@ -32,7 +34,13 @@ namespace Starforge::Prefs
 
     struct EditorSettings
     {
-        float AutosaveMinutes = 5.0f;
+        // UX-02 (contract §2 "Preferences", Edit ▸ Preferences…). The key
+        // `autosave_minutes` keeps its name; it is WHOLE minutes 1-60 now (a legacy
+        // float is rounded and clamped; a legacy value <= 0 meant "off" and reads as
+        // autosave_enabled = false when that key is absent).
+        int   AutosaveMinutes = 5;
+        bool  AutosaveEnabled = true;    // autosave_enabled — the timed copy (the pre-Play safety copy is always written)
+        bool  PromptUnsaved   = true;    // prompt_unsaved — Save / Discard / Cancel before New/Open/Close/Exit
         float CameraSpeed     = 1.0f;
         bool  PlaygroundOffered = false;   // E21 — first-run sample already offered
         bool  AdoptSceneCamera  = true;    // H8 — on open, adopt a Primary camera's pose
@@ -203,14 +211,38 @@ namespace Starforge::Prefs
         SaveProjects(list);
     }
 
-    inline EditorSettings LoadSettings()
+    // UX-02 — the autosave interval rule: whole minutes, 1-60 (default 5).
+    inline int ClampAutosaveMinutes(double v)
+    {
+        if (!(v == v)) return 5;                                  // NaN
+        const long long r = (long long)std::llround(std::clamp(v, -1.0e6, 1.0e6));
+        return (int)std::clamp<long long>(r, 1, 60);
+    }
+
+    // UX-02 — the path-taking halves (a test never touches the real editor.toml).
+    // Absent file => defaults. Reads the same keys the editor always wrote.
+    inline EditorSettings LoadSettingsFrom(const std::string& diskPath)
     {
         EditorSettings s;
         std::error_code ec;
-        if (!fs::exists(PrefsPath(), ec)) return s;
-        if (auto cfg = Cosmic::Config::Load("user://starforge/editor.toml"))
+        if (diskPath.empty() || !fs::exists(diskPath, ec)) return s;
+        std::string text;
         {
-            s.AutosaveMinutes = cfg->GetFloat("autosave_minutes", s.AutosaveMinutes);
+            std::ifstream in(diskPath, std::ios::binary);
+            if (!in) return s;
+            text.assign(std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>());
+        }
+        if (auto cfg = Cosmic::Config::Parse(text, diskPath))
+        {
+            if (cfg->Has("autosave_minutes"))
+            {
+                const double legacy = cfg->GetDouble("autosave_minutes", 5.0);   // int or legacy float
+                s.AutosaveMinutes = ClampAutosaveMinutes(legacy > 0.0 ? legacy : 5.0);
+                if (legacy <= 0.0 && !cfg->Has("autosave_enabled"))
+                    s.AutosaveEnabled = false;                    // the old "0 = off" meaning
+            }
+            s.AutosaveEnabled = cfg->GetBool("autosave_enabled", s.AutosaveEnabled);
+            s.PromptUnsaved   = cfg->GetBool("prompt_unsaved", s.PromptUnsaved);
             s.CameraSpeed     = cfg->GetFloat("camera_speed", s.CameraSpeed);
             s.PlaygroundOffered = cfg->GetBool("playground_offered", s.PlaygroundOffered);
             s.AdoptSceneCamera  = cfg->GetBool("adopt_scene_camera", s.AdoptSceneCamera);
@@ -228,13 +260,19 @@ namespace Starforge::Prefs
         return s;
     }
 
-    inline void SaveSettings(const EditorSettings& s)
+    inline EditorSettings LoadSettings() { return LoadSettingsFrom(PrefsPath()); }
+
+    inline bool SaveSettingsTo(const EditorSettings& s, const std::string& diskPath)
     {
-        EnsureDir();
-        std::ofstream f(PrefsPath(), std::ios::trunc);
-        if (!f) return;
+        std::error_code ec;
+        const fs::path p(diskPath);
+        if (p.has_parent_path()) fs::create_directories(p.parent_path(), ec);
+        std::ofstream f(diskPath, std::ios::trunc);
+        if (!f) return false;
         f << "# Starforge editor preferences\n";
-        f << "autosave_minutes = " << s.AutosaveMinutes << "\n";
+        f << "autosave_minutes = " << ClampAutosaveMinutes(s.AutosaveMinutes) << "\n";   // whole minutes, 1-60
+        f << "autosave_enabled = " << (s.AutosaveEnabled ? "true" : "false") << "\n";
+        f << "prompt_unsaved = "   << (s.PromptUnsaved   ? "true" : "false") << "\n";
         f << "camera_speed = " << s.CameraSpeed << "\n";
         f << "playground_offered = " << (s.PlaygroundOffered ? "true" : "false") << "\n";
         f << "adopt_scene_camera = " << (s.AdoptSceneCamera ? "true" : "false") << "\n";
@@ -248,6 +286,13 @@ namespace Starforge::Prefs
         f << "cb_tree_width = "  << s.CbTreeWidth << "\n";
         f << "cb_tile_size = "   << s.CbTileSize  << "\n";
         f << "cb_show_preview = " << (s.CbShowPreview ? "true" : "false") << "\n";
+        return (bool)f;
+    }
+
+    inline void SaveSettings(const EditorSettings& s)
+    {
+        EnsureDir();
+        SaveSettingsTo(s, PrefsPath());
     }
 
     // Legacy in-tree discovery = subfolders of assets/projects/ that carry a

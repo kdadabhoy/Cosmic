@@ -122,6 +122,7 @@ namespace Starforge
 
     void InspectorPanel::OnImGuiRender(EditorContext& ctx, bool* pOpen)
     {
+        m_FlowRows.clear();   // UX-02 — re-filled by the Signal rows drawn this frame
         ImGui::Begin("Inspector", pOpen);
 
         if (!ctx.HasSelection() || !ctx.PrimaryEntity())
@@ -535,6 +536,33 @@ namespace Starforge
     }
 
     // AP-03 (§7) — source links next to the fields that name logic.
+    std::string InspectorPanel::FlowLineForDisplay(const SourceHit& h)
+    {
+        // The editor's text face has no U+2192: draw the Lucide arrow (merged into every
+        // face) in its place. The line's TEXT (FlowLine, the contract format) is unchanged.
+        std::string s = h.FlowLine();
+        const std::string arrow = "\xE2\x86\x92";   // U+2192
+        for (size_t p = s.find(arrow); p != std::string::npos; p = s.find(arrow, p))
+        {
+            s.replace(p, arrow.size(), ICON_LC_ARROW_RIGHT);
+            p += std::strlen(ICON_LC_ARROW_RIGHT);
+        }
+        return s;
+    }
+
+    const std::vector<SourceHit>& InspectorPanel::FlowHitsCached(const std::string& signal)
+    {
+        FlowCacheEntry& e = m_FlowCache[m_Links.ProjectRoot + "|" + signal];
+        const double now = ImGui::GetTime();
+        if (e.At < 0.0 || now - e.At > 1.0 || now < e.At)
+        {
+            e.Hits = SourceLocator(m_Links.ProjectRoot).FlowHitsForSignal(signal);
+            e.At = now;
+        }
+        if (m_FlowCache.size() > 64) { const auto keep = e; const std::string k = m_Links.ProjectRoot + "|" + signal; m_FlowCache.clear(); m_FlowCache[k] = keep; return m_FlowCache[k].Hits; }
+        return e.Hits;
+    }
+
     void InspectorPanel::DrawSourceLinkRow(const std::string& compName, const std::string& fieldName, void* comp,
                                            const Cosmic::Reflect::FieldDescriptor& f)
     {
@@ -578,14 +606,52 @@ namespace Starforge
             {
                 const auto hits = loc.ForSignal(value);
                 ImGui::TextDisabled("src/** files containing \"%s\"", value.c_str());
-                if (hits.empty()) ImGui::TextDisabled("(none)");
+                size_t src = 0;
                 for (const SourceHit& h : hits)
                 {
+                    if (h.IsFlow()) continue;
+                    ++src;
                     const std::string rel = h.Path.size() > m_Links.ProjectRoot.size()
                         ? h.Path.substr(m_Links.ProjectRoot.size() + 1) : h.Path;
                     if (ImGui::MenuItem((rel + ":" + std::to_string(h.Line)).c_str())) SourceLocator::Open(h);
                 }
+                if (src == 0) ImGui::TextDisabled("(none)");
+                // UX-02 — the startup flow's transitions on this signal (open in the flow editor).
+                bool sep = false;
+                for (const SourceHit& h : hits)
+                {
+                    if (!h.IsFlow()) continue;
+                    if (!sep) { ImGui::Separator(); ImGui::TextDisabled("startup flow"); sep = true; }
+                    if (ImGui::MenuItem(FlowLineForDisplay(h).c_str(), nullptr, false, (bool)m_Links.OpenFlow))
+                        m_Links.OpenFlow(h);
+                }
                 ImGui::EndPopup();
+            }
+
+            // UX-02 (contract §2 "what a button does") — each startup-flow transition this
+            // signal drives, as a read-only line with "Open in flow editor".
+            if (any)
+            {
+                const std::vector<SourceHit> flows = FlowHitsCached(value);   // copy: the handler may re-enter
+                for (size_t i = 0; i < flows.size(); ++i)
+                {
+                    const SourceHit& h = flows[i];
+                    ImGui::PushID((int)i);
+                    const std::string line = h.FlowLine();
+                    ImGui::PushTextWrapPos(0.0f);
+                    ImGui::TextDisabled("%s", FlowLineForDisplay(h).c_str());
+                    ImGui::PopTextWrapPos();
+                    if (ImGui::IsItemHovered()) ImGui::SetTooltip("%s", h.Reason.c_str());
+                    ImGui::BeginDisabled(!m_Links.OpenFlow);
+                    const bool open = ImGui::SmallButton(ICON_LC_WORKFLOW " Open in flow editor");
+                    ImGui::EndDisabled();
+                    const ImVec2 mn = ImGui::GetItemRectMin(), mx = ImGui::GetItemRectMax();
+                    m_FlowRows.push_back({ line, h, (mn.x + mx.x) * 0.5f, (mn.y + mx.y) * 0.5f, ImGui::IsItemVisible() });
+                    if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
+                        ImGui::SetTooltip("Open %s in the flow editor with this transition selected", h.FlowVfs.c_str());
+                    if (open && m_Links.OpenFlow) m_Links.OpenFlow(h);
+                    ImGui::PopID();
+                }
             }
             ImGui::PopID();
         }

@@ -13,6 +13,11 @@
 
 #include <Cosmic.h>
 
+#include <functional>
+#include <map>
+#include <string>
+#include <vector>
+
 namespace Cosmic { class DataBus; class PanelRegistry; }
 
 namespace Starforge
@@ -30,8 +35,18 @@ namespace Starforge
             const Cosmic::DataBus*      Bus    = nullptr;
             const Cosmic::PanelRegistry* Panels = nullptr;
             bool                        Playing = false;
+            // UX-02 (contract §2 "what a button does") — "Open in flow editor" on a Flow
+            // hit: the shell opens the flow document and selects that transition.
+            std::function<void(const SourceHit&)> OpenFlow;
         };
         void SetSourceLinks(const SourceLinks& l) { m_Links = l; }
+
+        // UX-02 — the Flow lines the Signal rows drew last frame (the ED03 self-test probe:
+        // the read-only text and the "Open in flow editor" button's centre + visibility).
+        struct FlowRowProbe { std::string Line; SourceHit Hit; float Cx = 0.0f, Cy = 0.0f; bool Visible = false; };
+        const std::vector<FlowRowProbe>& LastFlowRows() const { return m_FlowRows; }
+        // The Flow line as ImGui draws it (the arrow as the Lucide glyph: the text face has no U+2192).
+        static std::string FlowLineForDisplay(const SourceHit& h);
 
     private:
         // Draws one component's fields; records undo on commit. `typeId` keys the
@@ -65,5 +80,13 @@ namespace Starforge
         void DrawSourceLinkRow(const std::string& compName, const std::string& fieldName, void* comp,
                                const Cosmic::Reflect::FieldDescriptor& f);
         SourceLinks m_Links;
+
+        // UX-02 — Flow lines under a Signal row: the startup flow's transitions on that
+        // signal (SourceLocator::FlowHitsForSignal), cached per (root, signal) and re-read
+        // at most once a second (the .cflow may change under the editor).
+        std::vector<FlowRowProbe> m_FlowRows;
+        struct FlowCacheEntry { double At = -1.0; std::vector<SourceHit> Hits; };
+        std::map<std::string, FlowCacheEntry> m_FlowCache;   // key: root + "|" + signal
+        const std::vector<SourceHit>& FlowHitsCached(const std::string& signal);
     };
 }
