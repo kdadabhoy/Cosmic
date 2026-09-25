@@ -69,7 +69,7 @@ the paths back with SendMessage.
 
 Wave plan and landing order: 00-Start-Here.md "Waves" (wave 1: UX-01 ∥ UX-02 ∥ UX-03 from the packet
 commit, land 01 → 02 → 03; wave 2: UX-04 ∥ UX-G0 ∥ UX-D2, land 04 → G0 → D2; wave 3: UX-D1 ∥ UX-05 ∥ UX-H1,
-land D1 → 05 → H1; wave 4: UX-D3 alone; wave 5: UX-Q1 alone on main, soaks overnight). After each landed
+land D1 → 05 → H1; wave 4: UX-D3 alone; wave 5: UX-Q1 alone on main, quick legs only — soaks postponed to docs/plans/TESTING-PLAN.md by D-SOAKS). After each landed
 step append the outcome to the memory file (SHA, test counts, deviations, KIs, next step) and tell Kaden in
 one short paragraph; keep your own turns short. Stop after UX-Q1 with the staged push / tag / release
 commands for Kaden, unexecuted, and a one-screen summary of what changed for him (what to pull, what to

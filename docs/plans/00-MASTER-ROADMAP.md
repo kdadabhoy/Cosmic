@@ -23,6 +23,7 @@
 | [`ux-shipping-2026-09-24/`](ux-shipping-2026-09-24/00-Start-Here.md) | **The current campaign.** Kaden's 21 usability/shipping items: editor defects, guides-first docs, the SDK zip + Starforge installer, the app-in-its-own-repo path, the 2D world-mode contract; decisions D-SHIP/D-LIBRARY/D-SPECIMEN/D-GUIDES/D-SAMPLES/D-WORLD/D-LAUNCHER, work orders UX-00..UX-Q1, acceptance catalog, evidence |
 | [`app-platform-2026-09-18/`](app-platform-2026-09-18/00-Start-Here.md) | The App Platform campaign (priority scope done 2026-09-20; its remainder — AP-D2, KI-63, tidy, soaks, hardening — is absorbed by the UX packet). Decisions D-UI/D-LANES/D-SAMPLE/D-DOCS/D-PURGE/D-LIVE/D-LINKS, contracts, work orders AP-00..AP-Q1, acceptance catalog, evidence |
 | [`2d-stability-2026-09-16/`](2d-stability-2026-09-16/00-Start-Here.md) | The closed stability campaign (WO-00..WO-10 done; WO-11/12/13 absorbed by the App Platform packet); the running [known-issues register](2d-stability-2026-09-16/contracts/known-issues.md) |
+| [`TESTING-PLAN.md`](TESTING-PLAN.md) | The testing not run inside a campaign: the multi-hour soaks (postponed by Kaden 2026-09-24), their commands and missing drivers, and the clean-machine / by-a-person checks |
 | [`FEATURE-MATRIX.md`](FEATURE-MATRIX.md) | Living index: every missing/parked capability → home → unlock; the 3D rows now sit under "Parked (engine-3d)" |
 | [`archive/`](archive/) | Every completed/superseded plan (docs 01–29 and the v4 roadmap), each with an `ARCHIVED` banner and replacement link |
 | [`archive/2d-trunk-consolidation-brief-2026-09.md`](archive/2d-trunk-consolidation-brief-2026-09.md) | The original 2026-09 consolidation brief that both packets grew from (superseded by them) |
@@ -75,7 +76,7 @@ float telemetry, `COSMIC_2D_ONLY=OFF` rejected at configure, no COM hardware in 
 | GUIDE | PendulumLab from-scratch walkthrough with screenshots ([`../guide/pendulumlab-walkthrough.md`](../guide/pendulumlab-walkthrough.md)); KI-61/62 fixes | ✅ done |
 | AP-D1 | Docs structure: archive tiers, `parked-3d/`, roadmap v5, link checker in CI, stale sweep, clone-and-run README | ✅ done (this session, 2026-09-20) |
 | AP-D2 | Docs content: the app-authoring chapter, chapter updates for the new APIs, reference rows, DOC02 fresh-checkout walkthrough, roadmap final | ↪ absorbed by UX-D1 / UX-D2 / UX-D3 (DOC02 runs from the SDK zip in UX-Q1) |
-| Soaks | Y03, S01, S02, N02-drift-2h, T05 (the 2-hour runs AP-Q1 lite skipped; commands in `evidence/AP-Q1/release-report.md` §9) | ↪ UX-Q1 |
+| Soaks | Y03, S01, S02, N02-drift-2h, T05 (the 2-hour runs AP-Q1 lite skipped; commands in `evidence/AP-Q1/release-report.md` §9) | ↪ [`TESTING-PLAN.md`](TESTING-PLAN.md) (postponed out of UX-Q1, Kaden 2026-09-24) |
 | KI-63 | Packager stages `.cscene.bak` (registered from the GUIDE lane) | ↪ UX-04 |
 | Dead-3D tidy | The rest of the AP-Q1 tidy list (unreferenced shaders/textures kept on purpose in AP-05 [A3]) | ↪ UX-H1 |
 | Hardening WO | A stability pass on the new surface (DataBus/services/live loop) once AP-D2 has documented it | ↪ UX-H1 (prompt written in the UX packet) |
@@ -103,7 +104,7 @@ Platform for real, turned into twelve sessions run by an orchestrator
 | UX-05 | Cosmic as an SDK: `sdk` preset, app-repo kit, CI consumer job, SF_Telem dry run | ☐ |
 | UX-H1 | Crash dumps, ground-control dry run, scale profile, dead-3D tidy remainder | ☐ |
 | UX-D3 | Developer-tier chapter updates, `systems/app-platform.md` | ☐ |
-| UX-Q1 | Qualify, DOC02 from the zip, soaks, showcase refresh, release report, staged push/tag/release | ☐ |
+| UX-Q1 | Qualify, DOC02 from the zip, quick legs (soaks → TESTING-PLAN), showcase refresh, release report, staged push/tag/release | ☐ |
 
 Landing order: UX-00 → UX-01 → UX-02 → UX-03 → UX-04 → UX-G0 → UX-D2 → UX-D1 → UX-05 → UX-H1 → UX-D3 → UX-Q1.
 The 2D world-mode *features* (parallax, camera follow/zoom, `Particle2D`, sorting layers, the to-9km sample)
@@ -130,7 +131,7 @@ From [`app-platform-2026-09-18/00-Start-Here.md`](app-platform-2026-09-18/00-Sta
 
 | Item | Origin |
 | --- | --- |
-| The 2-hour soaks Y03 / S01 / S02 / N02-drift / T05 | AP-Q1 lite scope, 2026-09-19 |
+| The 2-hour soaks Y03 / S01 / S02 / N02-drift / T05 — commands, drivers, order in [`TESTING-PLAN.md`](TESTING-PLAN.md) | AP-Q1 lite scope, 2026-09-19; postponed again out of UX-Q1, 2026-09-24 |
 | Clean-machine install run of the packaged PendulumLab and SF_Telem (K03/K04 on a disposable VM) | stability catalog K03/K04; AP-P1 ran them on the dev machine |
 | Clean-machine run of `Starforge-Setup-<ver>.exe` (SD04 on a disposable VM without Visual Studio) | UX catalog SD04 |
 | Fresh-clone walkthrough of the root README Quickstart by a person, not a script (DOC02) | AP-D1 proved it by script (`evidence/AP-D1/clone-check.md`); AP-D2 owns the prose |

@@ -24,7 +24,7 @@ UX-00  packet ............................................ done (planning sessio
         │
       UX-D3 developer-tier updates (ux/d3, alone; needs D1's rename)
         │
-      UX-Q1 qualify + DOC02 from the zip + soaks + release report (main, alone)
+      UX-Q1 qualify + DOC02 from the zip + release report (main, alone; soaks → TESTING-PLAN, D-SOAKS)
 ```
 
 The graph is dependency **and** the permitted concurrency: only the three lanes of one wave run at the
@@ -50,7 +50,7 @@ same time, and their "Owns" sets are pairwise disjoint
 | UX-05 | G3 | `sdk` preset, `Build-Sdk.ps1`, `New-AppRepo.ps1`, CI `consumer` job, SF_Telem dry run, specimen banner | 3 | wave 2 landed (zip from UX-04) | EX01–EX05 | [UX-05.md](work-orders/UX-05.md) |
 | UX-H1 | G3 | Crash dumps, ground-control dry run, scale profile, build-once-after-scaffold, dead-3D tidy remainder | carry-over | wave 2 landed | H1-A–H1-D, B06 | [UX-H1.md](work-orders/UX-H1.md) |
 | UX-D3 | G4 | Developer-tier chapter updates, `systems/app-platform.md` (new), the stale 3D mentions (~318 in 44 files), `lighting-2d.md` rewrite, `ecs.md` count | 10, 13 | UX-D1 landed | DOC01, DOC03 | [UX-D3.md](work-orders/UX-D3.md) |
-| UX-Q1 | G5 | Integrate, qualify, DOC02 from the zip, soaks, showcase refresh, release report, staged push/tag/release | all | all | everything rerun; Y03, S01, S02, N02, T05, S03, K02, DG02 | [UX-Q1.md](work-orders/UX-Q1.md) |
+| UX-Q1 | G5 | Integrate, qualify, DOC02 from the zip, showcase refresh, release report, staged push/tag/release | all | all | everything rerun; S01 fake-clock leg, S03, K02, DG02 (Y03, S01-native, S02, N02, T05 → [TESTING-PLAN](../TESTING-PLAN.md)) | [UX-Q1.md](work-orders/UX-Q1.md) |
 
 Gates: G0 planning · G1 the editor defects Kaden hit are fixed and proven · G2 shippable SDK + world
 contract reserved + reference matrix · G3 guides with pictures, the consumer path proven, hardening ·
@@ -71,7 +71,7 @@ G4 developer docs consistent · G5 qualified, released state staged for Kaden.
 | ED04 | UX-02 | EX04 | UX-05 | H1-C | UX-H1 |
 | ED05 | UX-02 | EX05 | UX-05 (CI runs on Kaden's push) | H1-D | UX-H1 |
 | LH01 | UX-03 | WM01 | UX-G0 | B06 (per tidy commit) | UX-H1 |
-| LH02 | UX-03 | WM02 | UX-G0 | Y03, S01, S02, N02-drift-2h, T05 | UX-Q1 |
+| LH02 | UX-03 | WM02 | UX-G0 | Y03, S01, S02, N02-drift-2h, T05 | deferred → [TESTING-PLAN](../TESTING-PLAN.md) (D-SOAKS; UX-Q1 runs the S01 fake-clock leg) |
 | — | — | WM03 | UX-G0 | S03, K02 (rerun), retained suites | UX-Q1 |
 
 ## Per-WO gate / done-when summary
@@ -97,5 +97,5 @@ G4 developer docs consistent · G5 qualified, released state staged for Kaden.
   recorded; tidy commits each B06-clean and 0-warn.
 - **UX-D3** — the developer chapters describe the fixed editor and the app model; strict coverage passes
   for `systems/app-platform.md`.
-- **UX-Q1** — every suite and manifest green or honestly blocked; DOC02 executed from the zip; soaks run;
+- **UX-Q1** — every suite and manifest green or honestly blocked; DOC02 executed from the zip; quick legs run, soaks listed as deferred (D-SOAKS);
   release report with the requirement → case → evidence matrix; staged commands for Kaden.

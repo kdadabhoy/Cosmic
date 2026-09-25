@@ -102,8 +102,7 @@ K01–K04, Y01–Y03, S01–S04, DOC01–DOC03, DOC05 and every `ap*` / `wo*` ma
 
 ## Qualification (UX-Q1)
 
-Everything above re-run at the pinned SHA; the retained suites; the soaks Y03 / S01 / S02 / N02-drift-2h /
-T05 exactly as `../app-platform-2026-09-18/evidence/AP-Q1/release-report.md` §9 lists them (Y03's driver
-is written here if AP-H1 did not); S03 ×5; K02 for PendulumLab and for the UX-05 app repo; DG02; DOC01–DOC03;
+Everything above re-run at the pinned SHA; the retained suites; the S01 fake-clock leg (`wo06 -Profile pr`); S03 ×5 (the multi-hour soaks Y03 / S01-native /
+S02 / N02-drift-2h / T05 are postponed to [`../TESTING-PLAN.md`](../TESTING-PLAN.md), D-SOAKS); K02 for PendulumLab and for the UX-05 app repo; DG02; DOC01–DOC03;
 the goldens hashed before and after every landed merge (`evidence/UX-Q1/golden-hashes.txt`); the release
 report with the requirement → case → evidence matrix and the staged push / tag / release commands.

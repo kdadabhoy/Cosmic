@@ -4,7 +4,7 @@ Prepared 2026-09-24 against `main` at `0c2edd8` (origin/main == main). Successor
 [`../app-platform-2026-09-18/`](../app-platform-2026-09-18/00-Start-Here.md), whose priority scope is done
 (qualified `fa1223a`, tag `cosmic-app-platform-g5-2026-09-20`) and whose close-out prompt
 (`work-orders/FOLLOW-UP.md`) is absorbed here (AP-D2 → UX-D1/D2/D3; KI-63 → UX-04; tidy + AP-H1 → UX-H1;
-soaks → UX-Q1).
+soaks → UX-Q1, then postponed to [`../TESTING-PLAN.md`](../TESTING-PLAN.md) by D-SOAKS).
 
 **Goal.** Kaden used the App Platform for real (the PendulumLab walkthrough) and came back with 21 items.
 This packet turns them into work: the editor defects he hit (flow editor, gizmo, visibility toggle, Editors
@@ -72,6 +72,10 @@ Nothing in this packet is executed by reading it. Engine behaviour changes only 
 - **D-LAUNCHER** — test fixtures are hidden from the Cosmic Launcher **by structure**: every fixture DLL
   exports a marker symbol (`CosmicTestFixture`, via `CS_TEST_FIXTURE()`), the launcher skips DLLs that export
   it. No name blacklist, no test-path churn.
+- **D-SOAKS** (Kaden, 2026-09-24, during wave 1) — "do tests and quick things": the multi-hour soaks
+  (S01-native, Y03, S02, N02-drift-2h, T05) and their drivers are **postponed out of this campaign** to
+  [`../TESTING-PLAN.md`](../TESTING-PLAN.md). UX-Q1 runs the quick legs (S01 fake-clock, S03 ×5, K02) and reports
+  the soaks as not run — deferred, never as a pass.
 - Carried over unchanged: **D-commit** (author `kdadabhoy <kdadabhoy28@gmail.com>`, no AI trailer, the AI
   never pushes, never publishes a release), **D-LANES** (one worktree per parallel lane under
   `build\_lanes\`, at most three sessions at once, disjoint files, rebase + retained suites before landing),
@@ -102,7 +106,7 @@ Nothing in this packet is executed by reading it. Engine behaviour changes only 
 | 19 | A list of every screen/scene, quick navigation | UX-02 |
 | 20 | Test fixtures in "Engine demos & tools" | UX-03 |
 | 21 | Autosave, toggleable, interval | UX-02 · guide 07 |
-| — | Carry-over: KI-63, dead-3D tidy, AP-H1 hardening, soaks | UX-04 · UX-H1 · UX-Q1 |
+| — | Carry-over: KI-63, dead-3D tidy, AP-H1 hardening, soaks | UX-04 · UX-H1 · [TESTING-PLAN](../TESTING-PLAN.md) (D-SOAKS) |
 
 ## Waves (12 sessions; never more than three at once)
 
@@ -118,7 +122,7 @@ Wave 3  UX-D1   guides tier + rename + 8 guides with pictures        worktree ux
         UX-05   Cosmic as an SDK: preset, app-repo kit, CI, dry run  worktree ux/05 ├ land D1 → 05 → H1
         UX-H1   hardening carry-over + tidy remainder                worktree ux/h1 ┘
 Wave 4  UX-D3   developer-tier updates (post-rename)                 worktree ux/d3, alone
-Wave 5  UX-Q1   qualify, DOC02 from the zip, soaks, release report   main, alone
+Wave 5  UX-Q1   qualify, DOC02 from the zip, release report          main, alone (soaks: D-SOAKS)
 ```
 
 Landing order into `main`: UX-00 → UX-01 → UX-02 → UX-03 → UX-04 → UX-G0 → UX-D2 → UX-D1 → UX-05 → UX-H1 →

@@ -1,13 +1,16 @@
-# UX-Q1 — Qualify and release: suites, DOC02 from the SDK zip, overnight soaks, release report, staged push/tag/release
+# UX-Q1 — Qualify and release: suites, DOC02 from the SDK zip, release report, staged push/tag/release
 
 **Gate:** G5 · **Wave:** 5 (alone) · **Runs:** `main` in `C:\dev\Cosmic` · **Base:** `main` after UX-D3 has landed ·
-**Depends on:** every UX work order · **Acceptance:** every catalog ID re-run; owns Y03, S01, S02, N02-drift-2h, T05, S03,
-K02 (re-run) and DG02 executed from the zip · **Model:** Opus 5.5 · **Effort:** xhigh · **Status:** not started
+**Depends on:** every UX work order · **Acceptance:** every catalog ID re-run; owns S03, K02 (re-run), the S01 fake-clock
+leg and DG02 executed from the zip · **Model:** Opus 5.5 · **Effort:** xhigh · **Status:** not started
 
 Prove the landed `main` at one pinned SHA: the retained suites and every manifest, the guides followed from the
-**SDK zip** rather than the checkout, the soaks the last two campaigns deferred (overnight, bounded by Windows job objects),
-a refreshed showcase, the release report with the requirement → case → evidence matrix, and the push / tag / GitHub-release
-commands staged for Kaden, never executed.
+**SDK zip** rather than the checkout, a refreshed showcase, the release report with the requirement → case → evidence
+matrix, and the push / tag / GitHub-release commands staged for Kaden, never executed.
+
+**Soaks postponed (Kaden, 2026-09-24):** "do tests and quick things" — the multi-hour soaks (S01-native, Y03, S02,
+N02-drift-2h, T05) and their drivers moved to [`../../TESTING-PLAN.md`](../../TESTING-PLAN.md). UX-Q1 runs only the quick
+legs and reports the rest as *not run — deferred to TESTING-PLAN.md*, never as a pass.
 
 ## Copy-paste prompt
 
@@ -45,26 +48,15 @@ Do, in order:
    0c2edd8), run UX-04's Run-UX04Sdk.ps1 SD01 leg (the same GuideWalkthroughSelfTest) and say so. Pass = the exported
    exe runs from another directory and closes gracefully. DG01: every entry of docs/guides/images/manifest.json exists
    and names its capture method.
-6. Long runs, sequential, overnight, nothing else on the desktop. Every child runs in a Windows job object
-   (JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE). None exists at HEAD - the runner kills by taskkill /T
-   (tests/acceptance/AcceptanceRunner.psm1:322-331) - so write tests/acceptance/fixtures/JobObject.psm1 (Add-Type
-   P/Invoke) and use it. A manual kill is never a pass; a locked desktop mid-run is ENVIRONMENT_BLOCKED (never change
-   power or lock settings).
-   - S01: both wo06 commands of release-report §9 (D05-two-hour -Profile pr; D05-native-two-hour -Profile native, 2 h).
-   - N02-drift-2h: wo10-drift -Profile release. T05: wo05 -Profile nightly (T05-controlled-30min).
-   - Y03 (no driver yet; Y02SelfTest.h:2 says Y03 drives the packaged exe from outside): write
-     tests/acceptance/fixtures/Run-UXQ1Y03.ps1 + uxq1-y03.manifest.json over the PendulumLab.exe that a fresh apq1-y02
-     run packaged (take the dist folder from the Y02 result JSON, not a hard-coded <repo>\dist: after UX-04 an
-     external project packages under its own root; Run-K02PendulumLab.ps1:10's -EditorDist default is checked
-     the same way): 2 h, a screen switch every 30 s and a Reset every 5 min by injected input (Send-Click.ps1 /
-     Bring-ToFront.ps1 in ../app-platform-2026-09-18/evidence/AP-Q1/ are the pattern), memory plateau by the WO-02
-     method (../2d-stability-2026-09-16/evidence/WO-02/runtime-baselines.txt §(e)), no hang. "0 fixed-step drift over the
-     injected clock" needs in-process instrumentation PendulumLab lacks: NOT COVERED with the reason unless a registered
-     KI justifies a change - never PASS by omission.
-   - S02 (no 2-h driver; X01 is the functional half): Run-UXQ1S02.ps1 + uxq1-s02.manifest.json per the stability row
-     (:222: animation/scrub/resize/capture loop + reopen; memory and frame-time trend), same honesty rule.
+6. Quick legs only (the soaks are postponed to docs/plans/TESTING-PLAN.md by Kaden, 2026-09-24: do NOT run
+   S01-native, Y03, S02, N02-drift-2h or T05 and do NOT write their drivers or JobObject.psm1). Run sequentially:
+   - S01 fake-clock leg: wo06 -Profile pr (D05-two-hour, minutes) per release-report §9. Not the -Profile native leg.
    - S03: ../app-platform-2026-09-18/evidence/AP-Q1/Run-S03Determinism.ps1, x5 both configs. K02 (PendulumLab):
-     Run-K02PendulumLab.ps1 there, plus apq1-y02 (Y02).
+     Run-K02PendulumLab.ps1 there, plus apq1-y02 (Y02). Run-K02PendulumLab.ps1:10's -EditorDist default: take the dist
+     folder from the Y02 result JSON, not a hard-coded <repo>\dist (after UX-04 an external project packages under its
+     own root).
+   - In the matrix, S01-native, Y03, S02, N02-drift-2h and T05 are N "not run — deferred to TESTING-PLAN.md (Kaden
+     2026-09-24)"; if anything this campaign changed invalidates a command in TESTING-PLAN.md, fix the command there.
 7. Every defect: a KI under "the next free number" in work-orders/README.md (never hardcoded) BEFORE the fix, in
    docs/plans/2d-stability-2026-09-16/contracts/known-issues.md; failing-before / passing-after; its own commit; the
    affected manifest re-run. No failed case survives without a KI and a fix or an explicit Kaden decision.
@@ -75,7 +67,7 @@ Do, in order:
 9. evidence/UX-Q1/release-report.md: pinned SHA; environment (CPU, GPU/driver/GL, Windows build, toolchain); the
    requirement -> case -> evidence matrix for every ID in 03-Acceptance-Catalog.md plus the retained App Platform and
    stability rows; counts P/B/N/F; blocked cases with prerequisites; KI dispositions (every KI opened this campaign);
-   soak results; zip + installer hashes; the deferred list; docs/plans/00-MASTER-ROADMAP.md statuses (own commit); and
+   the quick-leg results and the deferred soaks (pointer to TESTING-PLAN.md); zip + installer hashes; the deferred list; docs/plans/00-MASTER-ROADMAP.md statuses (own commit); and
    the STAGED promotion, unexecuted:
      git -C C:\dev\Cosmic status --short
      git -C C:\dev\Cosmic log --oneline -25
@@ -86,8 +78,8 @@ Do, in order:
    with <ver> = COSMIC_VERSION_STRING (the job refuses any other tag); the CI jobs to expect on the push
    (build-and-test, acceptance-pr, consumer = EX05, the API-matrix step) and what stays ENVIRONMENT_BLOCKED there.
 Commit locally as kdadabhoy <kdadabhoy28@gmail.com>, no Co-Authored-By / AI trailer. Never push, tag, tag-push, run a
-workflow or publish a release. Report <= 40 lines: matrix summary P/B/N/F, soak verdicts, new KIs, zip and installer
-hashes, the staged commands verbatim.
+workflow or publish a release. Report <= 40 lines: matrix summary P/B/N/F, quick-leg verdicts (S01-pr, S03, K02), new
+KIs, zip and installer hashes, the staged commands verbatim.
 ~~~
 
 ## Files to read first (and nothing else)
@@ -98,28 +90,27 @@ UX reports' deviation sections; AP-Q1 release report §9/§12; the stability row
 ## Owns / May touch
 
 - **Owns:** `evidence/UX-Q1/**`; `docs/showcase/**`; the `README.md` top strip; `01-Contracts.md` §11 and the recorded
-  deviations; `docs/plans/00-MASTER-ROADMAP.md` statuses; `tests/acceptance/fixtures/{JobObject.psm1,Run-UXQ1Y03.ps1,
-  Run-UXQ1S02.ps1}`; `tests/acceptance/manifests/uxq1-*.json`.
+  deviations; `docs/plans/00-MASTER-ROADMAP.md` statuses; command fixes in `docs/plans/TESTING-PLAN.md`.
 - **May touch:** code only for a registered KI fix, each its own commit, the file named in the report.
 
 ## Scope
 
 - **In:** integration check, contract reconciliation, every suite and manifest, the zip at the pinned SHA, DG01/DG02,
-  the soaks and their missing drivers, KI fixes, showcase refresh, release report, staged promotion.
-- **Out:** new features; loosening any bar or updating a golden/pinned list to pass; pushing, tagging, running a
+  the quick legs (S01-pr, S03, K02), KI fixes, showcase refresh, release report, staged promotion.
+- **Out:** the multi-hour soaks and their drivers (postponed to `docs/plans/TESTING-PLAN.md`, Kaden 2026-09-24); new features; loosening any bar or updating a golden/pinned list to pass; pushing, tagging, running a
   workflow, publishing a release; bumping the version (Kaden's call before tagging).
 
 ## Deliverables
 
-`evidence/UX-Q1/{release-report.md,golden-hashes.txt,soaks/…}`; the soak drivers + job-object helper + `uxq1-*`
-manifests; refreshed `docs/showcase/**` + README strip; the reconciliation and roadmap commits; KI entries.
+`evidence/UX-Q1/{release-report.md,golden-hashes.txt}`; refreshed `docs/showcase/**` + README strip; the
+reconciliation and roadmap commits; KI entries.
 
 ## Done when (DoD)
 
-Every mandatory case passed or honestly blocked; DOC02 executed from the zip; all five soaks run to their deadline or
-blocked with a named cause; no failed case without a KI and a fix or a Kaden decision; showcase refreshed; the push,
-tag and release commands staged, not run.
+Every mandatory case passed or honestly blocked; DOC02 executed from the zip; the quick legs run; the five soaks
+listed as deferred to TESTING-PLAN.md; no failed case without a KI and a fix or a Kaden decision; showcase refreshed;
+the push, tag and release commands staged, not run.
 
 ## Rollback
 
-Report-only apart from KI fixes, drivers and the reconciliation/roadmap commits, each independently revertible.
+Report-only apart from KI fixes and the reconciliation/roadmap commits, each independently revertible.
