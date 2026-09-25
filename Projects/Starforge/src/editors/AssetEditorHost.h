@@ -13,6 +13,18 @@
 //   * close-with-save prompt (a dirty tab's ✕ raises Save / Discard / Cancel);
 //   * per-frame OnUpdate for every open doc (playback keeps running unfocused).
 //
+// UX-01 (contract §1) — the Editors host contract:
+//   * the window is drawn exactly while its View ▸ Editors flag is up (ShouldDraw):
+//     the window's ✕ clears the flag and hides the whole dock with every document
+//     still open; Open() raises the flag again;
+//   * the host auto-shows only when Open() adds or re-focuses a document, and then
+//     requests focus for the window on the next frame (SetNextWindowFocus);
+//   * first use sizes the window 1100x680 (every built-in layout preset docks it at
+//     DockPort::Center — LayoutPresets.cpp; DockWindow is never called at open time);
+//   * document tabs carry a stable id: a per-host counter assigned at Open(), never the
+//     index, so closing one document never re-keys another;
+//   * StarforgeApp::CloseProject logs the dirty documents it drops and calls CloseAll().
+//
 // The host never knows a document's concrete type — callers pass a factory, so
 // the shell wires the Content Browser's "Open in Animation Editor" request to
 // an AnimationEditor factory without this file depending on it.
@@ -43,6 +55,7 @@ namespace Starforge
         IAssetEditor* Open(const std::string& vfsPath, const Factory& make, bool* showFlag);
 
         bool   AnyOpen() const { return !m_Docs.empty(); }
+        bool   AnyDirty() const;
         size_t Count()   const { return m_Docs.size(); }
 
         // The open document for `vfsPath` (null when none). No focus / visibility effect.
@@ -55,6 +68,11 @@ namespace Starforge
         // The document's stable tab id (0 = not open). Keys the tab label and PushID.
         uint32_t TabId(const std::string& vfsPath) const;
 
+        // The draw rule, kept here so it has one owner (FE03's headless half calls it):
+        // the "Editors" window is drawn iff the View flag is up — open documents alone
+        // never keep it on screen.
+        bool ShouldDraw(bool showFlag) const;
+
         // Tick every open document (advance playback, pump previews).
         void OnUpdate(EditorContext& ctx, float ts);
 
@@ -62,6 +80,10 @@ namespace Starforge
         // visibility bool — its ✕ hides the whole dock; individual tab ✕ close a
         // single document (with a save prompt when dirty).
         void OnImGuiRender(EditorContext& ctx, bool* open);
+
+        // Log one console warning per dirty document that is about to be dropped
+        // (`why` names the command, e.g. "Close Project").
+        void LogDirty(EditorContext& ctx, const char* why) const;
 
         void CloseAll() { m_Docs.clear(); m_FocusPath.clear(); m_PromptClosePath.clear(); m_WantFocus = false; }
 

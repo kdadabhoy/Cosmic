@@ -34,6 +34,14 @@ namespace Starforge
         return raw;
     }
 
+    bool AssetEditorHost::AnyDirty() const
+    {
+        for (const auto& d : m_Docs)
+            if (d.Editor->Dirty())
+                return true;
+        return false;
+    }
+
     IAssetEditor* AssetEditorHost::Find(const std::string& vfsPath) const
     {
         for (const auto& d : m_Docs)
@@ -56,6 +64,19 @@ namespace Starforge
             if (d.Editor->Path() == vfsPath)
                 return d.Id;
         return 0;
+    }
+
+    bool AssetEditorHost::ShouldDraw(bool showFlag) const
+    {
+        return showFlag;
+    }
+
+    void AssetEditorHost::LogDirty(EditorContext& ctx, const char* why) const
+    {
+        for (const auto& d : m_Docs)
+            if (d.Editor->Dirty())
+                ctx.Log(std::string("[Editors] ") + why + " drops the unsaved changes in \"" +
+                        d.Editor->Title() + "\" (" + d.Editor->Path() + ").", LogSeverity::Warn);
     }
 
     void AssetEditorHost::OnUpdate(EditorContext& ctx, float ts)
