@@ -141,6 +141,13 @@ set(COSMIC_TEST_SOURCES
     ../Projects/Starforge/src/UiRectGizmo.cpp
     ../Projects/Starforge/src/SourceLocator.cpp
     ../Projects/Starforge/src/ScreenScaffold.cpp
+    # UX-01 (UX & Shipping) — the headless halves of FE01 (NodeCanvas::RouteLink), FE02 (the
+    # trigger-kind selector + FlowAsset::Validate + F-FLOWS) and FE03 / FE05 (the Editors host),
+    # compiled from the Starforge tree like UiRectGizmo.cpp.
+    test_flow_editor.cpp
+    ../Projects/Starforge/src/widgets/NodeCanvasRoute.cpp
+    ../Projects/Starforge/src/editors/FlowTrigger.cpp
+    ../Projects/Starforge/src/editors/AssetEditorHost.cpp
     test_wo05_matrix.cpp
     test_wo05_kiss.cpp
     test_wo05_host.cpp
@@ -281,6 +288,10 @@ target_compile_definitions(CosmicTests PRIVATE COSMIC_AP04_TEMPLATES="${COSMIC_S
 target_compile_definitions(CosmicTests PRIVATE COSMIC_PENDULUMLAB_DIR="${COSMIC_SDK_DIR}/Projects/PendulumLab")
 target_include_directories(CosmicTests PRIVATE "${COSMIC_SDK_DIR}/Projects/PendulumLab/src")
 target_include_directories(CosmicTests PRIVATE "${COSMIC_SDK_DIR}/Projects/Starforge/assets/templates/app/src")
+# UX-01 — imgui-node-editor headers for NodeCanvas.h (headers only: the library is compiled into
+# Starforge, never into the tests) and the Starforge source root for AssetEditorHost.cpp's includes.
+target_include_directories(CosmicTests SYSTEM PRIVATE "${COSMIC_SDK_DIR}/Cosmic/dependencies/imgui-node-editor")
+target_include_directories(CosmicTests PRIVATE "${COSMIC_SDK_DIR}/Projects/Starforge/src")
 
 # Land next to Cosmic.dll so the exe runs without PATH games.
 set_target_properties(CosmicTests PROPERTIES

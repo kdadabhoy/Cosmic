@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="ux01-editor" tests="5" failures="0" skipped="0">
+  <testsuite name="all" tests="5" failures="0" skipped="0">
+    <testcase name="FE01" classname="ux01-editor.U" time="0">
+    </testcase>
+    <testcase name="FE02" classname="ux01-editor.U" time="0">
+    </testcase>
+    <testcase name="FE03-U" classname="ux01-editor.U" time="0">
+    </testcase>
+    <testcase name="FE05-U" classname="ux01-editor.U" time="0">
+    </testcase>
+    <testcase name="UX01-EDITOR" classname="ux01-editor.I" time="0">
+    </testcase>
+  </testsuite>
+</testsuites>
+

@@ -394,6 +394,15 @@ namespace Starforge
         void GuideSelfTestFrameEnd();
         void GuideSelfTestShutdown();
 
+        // UX-01 — the flow-editor / Editors-host harness (UX01EditorSelfTest.cpp): FE03 / FE04 /
+        // FE05 in the real editor. Gated ON only when COSMIC_UX01_SELFTEST=<result.json> is set.
+        struct UX01SelfTest;
+        UX01SelfTest* m_UX01 = nullptr;
+        void UX01SelfTestInit();
+        void UX01SelfTestTick();
+        void UX01SelfTestFrameEnd();
+        void UX01SelfTestShutdown();
+
         // WO-07 (2D stability) — KI-1 snap-chip regression harness. Gated ON only
         // when the env var COSMIC_KI1_SELFTEST=<result-file> is set; otherwise
         // m_Ki1 stays null and the editor behaves exactly as it ships. When armed

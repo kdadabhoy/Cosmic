@@ -1,0 +1,208 @@
+﻿{
+    "manifest":  "ux01-editor",
+    "profile":  "all",
+    "tier_filter":  [
+
+                    ],
+    "config":  "Release",
+    "mode":  "2D",
+    "generated_utc":  "2026-09-25T03:59:13.8967333Z",
+    "git":  {
+                "commit":  "60218225d86ae7675978598f9343cc1fddacdce6",
+                "dirty":  true,
+                "dirty_diff_sha256":  null
+            },
+    "environment":  {
+                        "os_caption":  "Microsoft Windows 11 Education",
+                        "os_version":  "10.0.26200",
+                        "os_build":  "26200",
+                        "os_display":  "26200.9457",
+                        "cpu_name":  "AMD Ryzen 7 7800X3D 8-Core Processor",
+                        "cpu_cores":  8,
+                        "cpu_threads":  16,
+                        "cpu_addr_width":  64,
+                        "cpu_isa_floor":  "SSE4.2 (D-CPU); see evidence/WO-02/cpu-isa-probe.txt",
+                        "ram_bytes":  33462239232,
+                        "ram_gib":  31.2,
+                        "gpus":  [
+                                     {
+                                         "name":  "NVIDIA GeForce RTX 5070 Ti",
+                                         "driver":  "32.0.16.1692",
+                                         "driver_date":  "\/Date(1788480000000)\/"
+                                     },
+                                     {
+                                         "name":  "AMD Radeon(TM) Graphics",
+                                         "driver":  "32.0.21045.5002",
+                                         "driver_date":  "\/Date(1786924800000)\/"
+                                     }
+                                 ],
+                        "opengl_version":  null,
+                        "powershell":  "5.1.26100.9444",
+                        "hostname":  "DESKTOP-SEOA4BT"
+                    },
+    "capabilities":  {
+                         "windows":  true,
+                         "cpu-sse42":  true,
+                         "gpu-gl":  true,
+                         "serial-device":  false,
+                         "editor-ui":  false,
+                         "audio-device":  true,
+                         "render-tests":  false
+                     },
+    "forced_unavailable":  [
+
+                           ],
+    "bin_dir":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-01\\build\\Runtime\\Release",
+    "run_temp":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-01\\build\\_temp\\ux01\\cosmic-accept-d883a306226e43b7b5210faf518b059d",
+    "golden_dir":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-01\\tests\\acceptance\\goldens",
+    "golden_before":  {
+                          ".gitkeep-golden.txt":  "89e37141e7474880abc0f7363d7ae2598c0d28011f425d9a0b7130c944e9b137"
+                      },
+    "golden_after":  {
+                         ".gitkeep-golden.txt":  "89e37141e7474880abc0f7363d7ae2598c0d28011f425d9a0b7130c944e9b137"
+                     },
+    "golden_mutated":  false,
+    "acceptance_mode":  true,
+    "counts":  {
+                   "total":  5,
+                   "passed":  5,
+                   "failed":  0,
+                   "blocked":  0
+               },
+    "self_test":  {
+                      "enabled":  false,
+                      "failures":  [
+
+                                   ]
+                  },
+    "cases":  [
+                  {
+                      "id":  "FE01",
+                      "tier":  "U",
+                      "description":  "UX-01 link routing (catalog FE01 U): NodeCanvas::RouteLink, the TU the editor ships (Projects/Starforge/src/widgets/NodeCanvasRoute.cpp) compiled into CosmicTests â€” forward, backward same row, backward above, self-loop and vertical stack: 64 samples of each cubic never enter the source node rect grown by 2 px except at its own pin, backward / self-loop / stacked curves pass below the union of both rects, the five control-point pairs are bit-exact, and forward links equal imgui-node-editor\u0027s stock Link::GetCurve bit for bit (three more forward geometries).",
+                      "requires":  [
+                                       "windows"
+                                   ],
+                      "transport":  "none",
+                      "seed":  null,
+                      "start_utc":  "2026-09-25T03:59:08.9731789Z",
+                      "deadline_sec":  180,
+                      "exercised":  "production",
+                      "command":  "powershell -NoProfile -ExecutionPolicy Bypass -File C:\\dev\\Cosmic\\build\\_lanes\\ux-01\\tests\\acceptance\\fixtures\\Run-WO10Case.ps1 -Bin C:\\dev\\Cosmic\\build\\_lanes\\ux-01\\build\\Runtime\\Release -CaseId FE01 -TestCase \"UX-01 FE01*\" -MinTests 1 -DeadlineSec 120 -Output C:\\dev\\Cosmic\\build\\_lanes\\ux-01\\build\\_temp\\ux01\\cosmic-accept-d883a306226e43b7b5210faf518b059d\\temp\\fe01",
+                      "stdout_log":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-01\\tests\\acceptance\\_results\\run-20260924-205907\\FE01.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-01\\tests\\acceptance\\_results\\run-20260924-205907\\FE01.err.log",
+                      "pid":  26324,
+                      "exit_code":  0,
+                      "crash":  false,
+                      "tests_passed":  1,
+                      "tests_expected_min":  1,
+                      "verdict":  "PASSED",
+                      "detail":  "exit 0 as expected",
+                      "duration_sec":  0.83,
+                      "end_utc":  "2026-09-25T03:59:09.8085572Z"
+                  },
+                  {
+                      "id":  "FE02",
+                      "tier":  "U",
+                      "description":  "UX-01 trigger kinds (catalog FE02 U): the inspector\u0027s command path (editors/FlowTrigger.cpp) â€” Event -\u003e When -\u003e Event restores the transition field for field with no guard and no \"if\", Key / Timer memory per transition, a filled-in guard survives, an existing guard is kept; FlowAsset::Validate refuses `when` without a guard and reports an empty guard on any transition; F-FLOWS â€” LoadFromString + SaveToString of the 12 tracked .cflow files hash (SHA-256) exactly as the list generated at the base 6021822 (docs/plans/ux-shipping-2026-09-24/evidence/UX-01/fflows-sha256.txt).",
+                      "requires":  [
+                                       "windows"
+                                   ],
+                      "transport":  "none",
+                      "seed":  null,
+                      "start_utc":  "2026-09-25T03:59:09.8135632Z",
+                      "deadline_sec":  180,
+                      "exercised":  "fixture",
+                      "fixture":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-01\\tests\\acceptance\\..\\..\\docs\\plans\\ux-shipping-2026-09-24\\evidence\\UX-01\\fflows-sha256.txt",
+                      "fixture_sha256":  "8709093960558ee5f0c99be9c84c4fc3d96b34c42a0f31985532ccbc77193407",
+                      "command":  "powershell -NoProfile -ExecutionPolicy Bypass -File C:\\dev\\Cosmic\\build\\_lanes\\ux-01\\tests\\acceptance\\fixtures\\Run-WO10Case.ps1 -Bin C:\\dev\\Cosmic\\build\\_lanes\\ux-01\\build\\Runtime\\Release -CaseId FE02 -TestCase \"UX-01 FE02*\" -MinTests 3 -DeadlineSec 120 -Output C:\\dev\\Cosmic\\build\\_lanes\\ux-01\\build\\_temp\\ux01\\cosmic-accept-d883a306226e43b7b5210faf518b059d\\temp\\fe02",
+                      "stdout_log":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-01\\tests\\acceptance\\_results\\run-20260924-205907\\FE02.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-01\\tests\\acceptance\\_results\\run-20260924-205907\\FE02.err.log",
+                      "pid":  34992,
+                      "exit_code":  0,
+                      "crash":  false,
+                      "tests_passed":  3,
+                      "tests_expected_min":  3,
+                      "verdict":  "PASSED",
+                      "detail":  "exit 0 as expected",
+                      "duration_sec":  0.709,
+                      "end_utc":  "2026-09-25T03:59:10.5220002Z"
+                  },
+                  {
+                      "id":  "FE03-U",
+                      "tier":  "U",
+                      "description":  "UX-01 Editors host, headless half of FE03 (catalog FE03 U): AssetEditorHost::Open raises the View flag, a cleared flag means the window is not drawn while documents stay open (the rule StarforgeApp now calls), a later Open raises it again without duplicating the document, AnyDirty, CloseAll empties the host.",
+                      "requires":  [
+                                       "windows"
+                                   ],
+                      "transport":  "none",
+                      "seed":  null,
+                      "start_utc":  "2026-09-25T03:59:10.5239997Z",
+                      "deadline_sec":  180,
+                      "exercised":  "production",
+                      "command":  "powershell -NoProfile -ExecutionPolicy Bypass -File C:\\dev\\Cosmic\\build\\_lanes\\ux-01\\tests\\acceptance\\fixtures\\Run-WO10Case.ps1 -Bin C:\\dev\\Cosmic\\build\\_lanes\\ux-01\\build\\Runtime\\Release -CaseId FE03-U -TestCase \"UX-01 FE03*\" -MinTests 1 -DeadlineSec 120 -Output C:\\dev\\Cosmic\\build\\_lanes\\ux-01\\build\\_temp\\ux01\\cosmic-accept-d883a306226e43b7b5210faf518b059d\\temp\\fe03u",
+                      "stdout_log":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-01\\tests\\acceptance\\_results\\run-20260924-205907\\FE03-U.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-01\\tests\\acceptance\\_results\\run-20260924-205907\\FE03-U.err.log",
+                      "pid":  31736,
+                      "exit_code":  0,
+                      "crash":  false,
+                      "tests_passed":  1,
+                      "tests_expected_min":  1,
+                      "verdict":  "PASSED",
+                      "detail":  "exit 0 as expected",
+                      "duration_sec":  0.649,
+                      "end_utc":  "2026-09-25T03:59:11.1722092Z"
+                  },
+                  {
+                      "id":  "FE05-U",
+                      "tier":  "U",
+                      "description":  "UX-01 Editors host tab ids, headless half of FE05 (catalog FE05 U): per-document counters assigned at Open â€” closing a document keeps every other document\u0027s id, a reopened document gets a fresh one, the catalog\u0027s close-and-reopen-a-second-document sequence keeps the first\u0027s id. The not-dirty frames run in the editor case below; tests/test_flowmachine.cpp\u0027s EditorPos round trip runs in the retained suites.",
+                      "requires":  [
+                                       "windows"
+                                   ],
+                      "transport":  "none",
+                      "seed":  null,
+                      "start_utc":  "2026-09-25T03:59:11.1737183Z",
+                      "deadline_sec":  180,
+                      "exercised":  "production",
+                      "command":  "powershell -NoProfile -ExecutionPolicy Bypass -File C:\\dev\\Cosmic\\build\\_lanes\\ux-01\\tests\\acceptance\\fixtures\\Run-WO10Case.ps1 -Bin C:\\dev\\Cosmic\\build\\_lanes\\ux-01\\build\\Runtime\\Release -CaseId FE05-U -TestCase \"UX-01 FE05*\" -MinTests 1 -DeadlineSec 120 -Output C:\\dev\\Cosmic\\build\\_lanes\\ux-01\\build\\_temp\\ux01\\cosmic-accept-d883a306226e43b7b5210faf518b059d\\temp\\fe05u",
+                      "stdout_log":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-01\\tests\\acceptance\\_results\\run-20260924-205907\\FE05-U.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-01\\tests\\acceptance\\_results\\run-20260924-205907\\FE05-U.err.log",
+                      "pid":  36912,
+                      "exit_code":  0,
+                      "crash":  false,
+                      "tests_passed":  1,
+                      "tests_expected_min":  1,
+                      "verdict":  "PASSED",
+                      "detail":  "exit 0 as expected",
+                      "duration_sec":  0.677,
+                      "end_utc":  "2026-09-25T03:59:11.8511874Z"
+                  },
+                  {
+                      "id":  "UX01-EDITOR",
+                      "tier":  "I",
+                      "description":  "UX-01 editor halves inside the REAL Starforge editor (Projects/Starforge/src/UX01EditorSelfTest.cpp), fresh prefs (child CWD), window 1920x1080, a copy of Projects/PendulumLab: FE04 an injected click on Screens \u003e Flow graph -\u003e the next frame the Editors window is focused and its canvas \u003e= 800x400 px, then every state node inside the canvas (CenterOnContent), PNG saved; FE03 an injected click on the Editors tab\u0027s close button -\u003e window absent with the document still open, Screens \u003e Flow graph\u0027s command shows it again, Close Project leaves AnyOpen() false after logging the dirty document it drops; FE05 an injected Content Browser right-click \u003e New \u003e Flow, the file opened through the double-click request -\u003e Dirty() false after two drawn frames and ten, an injected node drag dirties it. WO-07 ImGui stack oracle after every step. The wrapper adds the OUT-OF-PROCESS oracles (PNG 1920x1080, flows/Main.cflow never rewritten, exactly one new default flow).",
+                      "requires":  [
+                                       "windows",
+                                       "gpu-gl"
+                                   ],
+                      "transport":  "none",
+                      "seed":  null,
+                      "start_utc":  "2026-09-25T03:59:11.8531924Z",
+                      "deadline_sec":  700,
+                      "exercised":  "production",
+                      "command":  "powershell -NoProfile -ExecutionPolicy Bypass -File C:\\dev\\Cosmic\\build\\_lanes\\ux-01\\tests\\acceptance\\fixtures\\Run-UX01Editor.ps1 -Bin C:\\dev\\Cosmic\\build\\_lanes\\ux-01\\build\\Runtime\\Release -Output C:\\dev\\Cosmic\\build\\_lanes\\ux-01\\docs\\plans\\ux-shipping-2026-09-24\\evidence\\UX-01\\ux01-Release -ProjectRoot C:\\dev\\Cosmic\\build\\_lanes\\ux-01\\build\\_temp\\ux01\\cosmic-accept-d883a306226e43b7b5210faf518b059d\\temp\\ux01proj",
+                      "stdout_log":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-01\\tests\\acceptance\\_results\\run-20260924-205907\\UX01-EDITOR.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-01\\tests\\acceptance\\_results\\run-20260924-205907\\UX01-EDITOR.err.log",
+                      "pid":  17340,
+                      "exit_code":  0,
+                      "crash":  false,
+                      "tests_passed":  4,
+                      "tests_expected_min":  4,
+                      "verdict":  "PASSED",
+                      "detail":  "exit 0 as expected",
+                      "duration_sec":  2.031,
+                      "end_utc":  "2026-09-25T03:59:13.8847654Z"
+                  }
+              ]
+}

@@ -1,0 +1,43 @@
+[Starforge] Editor attached — open or create a project from the homescreen.
+[Starforge] Viewport: MMB orbit | Ctrl+MMB pan | scroll zoom | LMB pick.
+[Starforge] W/E/R gizmo | F frame | Ctrl+Z/Y undo | Ctrl+S save.
+[COSMIC] WorkspaceLayer project name set to: 'Starforge'
+
+[COSMIC] Successfully loaded and mounted project DLL Layer!
+
+[COSMIC] WorkspaceLayer: Dockspace built (legacy 3-tier left sidebar).
+
+[COSMIC] WorkspaceLayer: Dockspace built (port mode L=true R=true T=true B=true).
+
+[Scene] Opened 'project://scenes/Home.cscene'.
+[Scripts] 1 script(s) not built — press Ctrl+B to compile the project module.
+[Project] Scaffolded project — press Ctrl+B to build the game module.
+[Project] Opened 'PendulumLab' @ C:/dev/Cosmic/build/_lanes/ux-01/build/_temp/ux01/cosmic-accept-d883a306226e43b7b5210faf518b059d/temp/ux01proj/PendulumLab
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-01/build/_temp/ux01/cosmic-accept-d883a306226e43b7b5210faf518b059d/temp/ux01proj/PendulumLab/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-01/build/_temp/ux01/cosmic-accept-d883a306226e43b7b5210faf518b059d/temp/ux01proj/PendulumLab/project.cproj'.
+
+[COSMIC] Config: no file at './starforge/layouts/active.toml'.
+
+[COSMIC] Config: no file at './starforge/layouts/active.toml'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-01/build/_temp/ux01/cosmic-accept-d883a306226e43b7b5210faf518b059d/temp/ux01proj/PendulumLab/project.cproj'.
+
+[COSMIC] WorkspaceLayer: Dockspace built (port mode L=true R=true T=true B=true).
+
+[COSMIC] Font: baked 'lucide' (1024x71, 95 glyphs)
+
+[COSMIC] Font: baked 'Roboto-Bold' (1024x257, 95 glyphs)
+
+[COSMIC] Font: baked 'Roboto-Medium' (1024x255, 95 glyphs)
+
+[COSMIC] Font: baked 'Roboto-Regular' (1024x256, 95 glyphs)
+
+[COSMIC] Font: library initialised (4 font(s))
+
+[Assets] Created New Flow.cflow.
+[Editors] Close Project drops the unsaved changes in "New Flow" (project://New Flow.cflow).
+[COSMIC] WorkspaceLayer: Dockspace built (port mode L=true R=true T=true B=true).
+
+[COSMIC] Config: loaded './starforge/projects.toml'.
+
