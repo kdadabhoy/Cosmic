@@ -1,0 +1,189 @@
+﻿{
+    "manifest":  "ap01-units",
+    "profile":  "all",
+    "tier_filter":  [
+
+                    ],
+    "config":  "Release",
+    "mode":  "2D",
+    "generated_utc":  "2026-09-25T03:46:08.0125009Z",
+    "git":  {
+                "commit":  "60218225d86ae7675978598f9343cc1fddacdce6",
+                "dirty":  true,
+                "dirty_diff_sha256":  "9662ce614458f6f1cba001a052f831a39637834b6258f3677b5a669eb36ecae3"
+            },
+    "environment":  {
+                        "os_caption":  "Microsoft Windows 11 Education",
+                        "os_version":  "10.0.26200",
+                        "os_build":  "26200",
+                        "os_display":  "26200.9457",
+                        "cpu_name":  "AMD Ryzen 7 7800X3D 8-Core Processor",
+                        "cpu_cores":  8,
+                        "cpu_threads":  16,
+                        "cpu_addr_width":  64,
+                        "cpu_isa_floor":  "SSE4.2 (D-CPU); see evidence/WO-02/cpu-isa-probe.txt",
+                        "ram_bytes":  33462239232,
+                        "ram_gib":  31.2,
+                        "gpus":  [
+                                     {
+                                         "name":  "NVIDIA GeForce RTX 5070 Ti",
+                                         "driver":  "32.0.16.1692",
+                                         "driver_date":  "\/Date(1788480000000)\/"
+                                     },
+                                     {
+                                         "name":  "AMD Radeon(TM) Graphics",
+                                         "driver":  "32.0.21045.5002",
+                                         "driver_date":  "\/Date(1786924800000)\/"
+                                     }
+                                 ],
+                        "opengl_version":  null,
+                        "powershell":  "5.1.26100.9444",
+                        "hostname":  "DESKTOP-SEOA4BT"
+                    },
+    "capabilities":  {
+                         "windows":  true,
+                         "cpu-sse42":  true,
+                         "gpu-gl":  true,
+                         "serial-device":  false,
+                         "editor-ui":  false,
+                         "audio-device":  true,
+                         "render-tests":  false
+                     },
+    "forced_unavailable":  [
+
+                           ],
+    "bin_dir":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-03\\build\\Runtime\\Release",
+    "run_temp":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-03\\build\\_temp\\ap01-units-Release\\cosmic-accept-27482f84ee1e4d829b2a91f5539306b7",
+    "golden_dir":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-03\\tests\\acceptance\\goldens",
+    "golden_before":  {
+                          ".gitkeep-golden.txt":  "89e37141e7474880abc0f7363d7ae2598c0d28011f425d9a0b7130c944e9b137"
+                      },
+    "golden_after":  {
+                         ".gitkeep-golden.txt":  "89e37141e7474880abc0f7363d7ae2598c0d28011f425d9a0b7130c944e9b137"
+                     },
+    "golden_mutated":  false,
+    "acceptance_mode":  true,
+    "counts":  {
+                   "total":  4,
+                   "passed":  4,
+                   "failed":  0,
+                   "blocked":  0
+               },
+    "self_test":  {
+                      "enabled":  false,
+                      "failures":  [
+
+                                   ]
+                  },
+    "cases":  [
+                  {
+                      "id":  "V01",
+                      "tier":  "U",
+                      "description":  "DataBus (contract section 1), headless: number/bool/string round-trips and coercions; Set creates; history ring wraps at capacity (oldest dropped, order preserved) and the capacity rules; History(window) boundary inclusive; Age before/after Advance; Producer follows SetProducer; Subscribe/SubscribeAny fire once per Set with the stored value; unsubscribe-during-dispatch prevents the call and subscribe-during-dispatch misses the in-flight value; nested Set allowed with the depth-65 dispatch dropped under ONE warning; Clear keeps subscriptions; non-finite stored; every method safe on an empty bus; 100,000 Set on 100 channels timed (MESSAGE, not gating).",
+                      "requires":  [
+                                       "windows"
+                                   ],
+                      "transport":  "none",
+                      "seed":  null,
+                      "start_utc":  "2026-09-25T03:46:04.6101325Z",
+                      "deadline_sec":  180,
+                      "exercised":  "fixture",
+                      "fixture":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-03\\tests\\acceptance\\..\\..\\tests\\test_databus.cpp",
+                      "fixture_sha256":  "03dedea3d7b654ad568ccfcea647b0d92f93bc1e2297ab1ce39e74a0f9c66113",
+                      "command":  "powershell -NoProfile -ExecutionPolicy Bypass -File C:\\dev\\Cosmic\\build\\_lanes\\ux-03\\tests\\acceptance\\fixtures\\Run-WO10Case.ps1 -Bin C:\\dev\\Cosmic\\build\\_lanes\\ux-03\\build\\Runtime\\Release -CaseId V01 -TestSuite \"AP-01 V01 DataBus\" -MinTests 13 -DeadlineSec 120 -Output C:\\dev\\Cosmic\\build\\_lanes\\ux-03\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-01\\v01-Release",
+                      "stdout_log":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-03\\docs\\plans\\ux-shipping-2026-09-24\\evidence\\UX-03\\retained-ap01-units-Release\\V01.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-03\\docs\\plans\\ux-shipping-2026-09-24\\evidence\\UX-03\\retained-ap01-units-Release\\V01.err.log",
+                      "pid":  10632,
+                      "exit_code":  0,
+                      "crash":  false,
+                      "tests_passed":  13,
+                      "tests_expected_min":  13,
+                      "verdict":  "PASSED",
+                      "detail":  "exit 0 as expected",
+                      "duration_sec":  0.68,
+                      "end_utc":  "2026-09-25T03:46:05.2958978Z"
+                  },
+                  {
+                      "id":  "V02-U",
+                      "tier":  "U",
+                      "description":  "ServiceHost with in-exe CS_SERVICE registrations (contract section 2) plus the 20-cycle GameModule half of the W part: instantiation order (registration, then Order); OnAttach after all constructed and before BindScene; Tick/FixedTick/DispatchSignal bracket Producer (nesting-safe); BindScene unsubscribes/subscribes and calls OnSceneChanged(old, new); 50 scene swaps keep the same instances and still deliver OnSignal; Destroy in reverse order; Instantiate re-entry destroys first; UnregisterModule strips services; PanelRegistry + the CS_PANEL call site; DispatchEvent; AP01ServiceFixture.dll loaded/unloaded 20 times through the REAL Starforge GameModule TU with a test-owned DataBus whose values, history and producers persist across the reloads, OnDetach stamped before the DLL\u0027s static destructor (FreeLibrary), no callback after unload while the same bus/scene paths still reach exe listeners.",
+                      "requires":  [
+                                       "windows"
+                                   ],
+                      "transport":  "none",
+                      "seed":  null,
+                      "start_utc":  "2026-09-25T03:46:05.2998971Z",
+                      "deadline_sec":  240,
+                      "exercised":  "fixture",
+                      "fixture":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-03\\tests\\acceptance\\..\\..\\tests\\AP01ServiceFixture.cpp",
+                      "fixture_sha256":  "f5c94bb220a348b3123e603b9be5622c9e87bfff3513f5fdd312267367ed327a",
+                      "command":  "powershell -NoProfile -ExecutionPolicy Bypass -File C:\\dev\\Cosmic\\build\\_lanes\\ux-03\\tests\\acceptance\\fixtures\\Run-WO10Case.ps1 -Bin C:\\dev\\Cosmic\\build\\_lanes\\ux-03\\build\\Runtime\\Release -CaseId V02-U -TestSuite \"AP-01 V02 ServiceHost\" -MinTests 10 -DeadlineSec 180 -Output C:\\dev\\Cosmic\\build\\_lanes\\ux-03\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-01\\v02u-Release",
+                      "stdout_log":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-03\\docs\\plans\\ux-shipping-2026-09-24\\evidence\\UX-03\\retained-ap01-units-Release\\V02-U.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-03\\docs\\plans\\ux-shipping-2026-09-24\\evidence\\UX-03\\retained-ap01-units-Release\\V02-U.err.log",
+                      "pid":  3792,
+                      "exit_code":  0,
+                      "crash":  false,
+                      "tests_passed":  10,
+                      "tests_expected_min":  10,
+                      "verdict":  "PASSED",
+                      "detail":  "exit 0 as expected",
+                      "duration_sec":  0.613,
+                      "end_utc":  "2026-09-25T03:46:05.9124757Z"
+                  },
+                  {
+                      "id":  "V02-W-PLAYER",
+                      "tier":  "W",
+                      "description":  "The W part through the REAL Application / PlayerLayer path: AP01ServiceFixture.dll (CS_MODULE_END\u0027s CreatePluginLayer returns the real PlayerLayer) loaded and unloaded 20 times with TransitionToLauncher / TransitionFromLauncherToWorkspace; every cycle the PlayerLayer instantiates the module\u0027s service after the manifest read, ticks it inside the producer bracket, destroys it in OnDetach before UnregisterModule and the DLL\u0027s static destructor (one shared sequence), no callback after unload, the ModuleRegistry clean after the last unload. Isolated CWD (the Application writes logs/ + imgui.ini).",
+                      "requires":  [
+                                       "windows",
+                                       "gpu-gl"
+                                   ],
+                      "transport":  "none",
+                      "seed":  null,
+                      "start_utc":  "2026-09-25T03:46:05.9144749Z",
+                      "deadline_sec":  240,
+                      "exercised":  "fixture",
+                      "fixture":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-03\\tests\\acceptance\\..\\..\\tests\\AP01ServiceFixture.cpp",
+                      "fixture_sha256":  "f5c94bb220a348b3123e603b9be5622c9e87bfff3513f5fdd312267367ed327a",
+                      "command":  "powershell -NoProfile -ExecutionPolicy Bypass -File C:\\dev\\Cosmic\\build\\_lanes\\ux-03\\tests\\acceptance\\fixtures\\Run-WO10Case.ps1 -Bin C:\\dev\\Cosmic\\build\\_lanes\\ux-03\\build\\Runtime\\Release -CaseId V02-W-PLAYER -TestCase \"V02 W host*\" -NoSkip -IsolateCwd -Tier W -Requires windows,gpu-gl -MinTests 1 -DeadlineSec 180 -Output C:\\dev\\Cosmic\\build\\_lanes\\ux-03\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-01\\v02w-Release",
+                      "stdout_log":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-03\\docs\\plans\\ux-shipping-2026-09-24\\evidence\\UX-03\\retained-ap01-units-Release\\V02-W-PLAYER.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-03\\docs\\plans\\ux-shipping-2026-09-24\\evidence\\UX-03\\retained-ap01-units-Release\\V02-W-PLAYER.err.log",
+                      "pid":  23408,
+                      "exit_code":  0,
+                      "crash":  false,
+                      "tests_passed":  1,
+                      "tests_expected_min":  1,
+                      "verdict":  "PASSED",
+                      "detail":  "exit 0 as expected",
+                      "duration_sec":  1.48,
+                      "end_utc":  "2026-09-25T03:46:07.3936459Z"
+                  },
+                  {
+                      "id":  "V06",
+                      "tier":  "U",
+                      "description":  "Flow additions (contract section 5) and the Data() proxy (section 2): channel guards for all six ops on number/bool/string, missing channel and bus-less machine false with one warning per guard; \u0027on\u0027:\u0027when\u0027 fires at most once per OnUpdate, after the signal drain, before timers, never without a guard (Validate reports it); StartAt enters the named state and falls back to Start; FlowKeyBridge::KeyCodeFor table, rising edge per key over an injected probe, unknown names warn once; KeySignals distinct; v1 and v2 files save byte-identical to the AP-05B binary\u0027s output, \u0027channel\u0027 only when non-empty, \u0027when\u0027 verbatim; Data() no-ops without a bus and reads/writes with one on ScriptableEntity and SystemScript.",
+                      "requires":  [
+                                       "windows"
+                                   ],
+                      "transport":  "none",
+                      "seed":  null,
+                      "start_utc":  "2026-09-25T03:46:07.3946460Z",
+                      "deadline_sec":  180,
+                      "exercised":  "fixture",
+                      "fixture":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-03\\tests\\acceptance\\..\\..\\tests\\test_flow_channels.cpp",
+                      "fixture_sha256":  "1ffab7212c435e551c0b81645b17d68cd7b4f04a26cff58f28252e0efa141446",
+                      "command":  "powershell -NoProfile -ExecutionPolicy Bypass -File C:\\dev\\Cosmic\\build\\_lanes\\ux-03\\tests\\acceptance\\fixtures\\Run-WO10Case.ps1 -Bin C:\\dev\\Cosmic\\build\\_lanes\\ux-03\\build\\Runtime\\Release -CaseId V06 -TestSuite \"AP-01 V06*\" -MinTests 10 -DeadlineSec 120 -Output C:\\dev\\Cosmic\\build\\_lanes\\ux-03\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-01\\v06-Release",
+                      "stdout_log":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-03\\docs\\plans\\ux-shipping-2026-09-24\\evidence\\UX-03\\retained-ap01-units-Release\\V06.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-03\\docs\\plans\\ux-shipping-2026-09-24\\evidence\\UX-03\\retained-ap01-units-Release\\V06.err.log",
+                      "pid":  33944,
+                      "exit_code":  0,
+                      "crash":  false,
+                      "tests_passed":  10,
+                      "tests_expected_min":  10,
+                      "verdict":  "PASSED",
+                      "detail":  "exit 0 as expected",
+                      "duration_sec":  0.608,
+                      "end_utc":  "2026-09-25T03:46:08.0029875Z"
+                  }
+              ]
+}

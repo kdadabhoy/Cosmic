@@ -1,0 +1,1279 @@
+[Starforge] Editor attached — open or create a project from the homescreen.
+[Starforge] Viewport: MMB orbit | Ctrl+MMB pan | scroll zoom | LMB pick.
+[Starforge] W/E/R gizmo | F frame | Ctrl+Z/Y undo | Ctrl+S save.
+[COSMIC] WorkspaceLayer project name set to: 'Starforge'
+
+[COSMIC] Successfully loaded and mounted project DLL Layer!
+
+[COSMIC] WorkspaceLayer: Dockspace built (legacy 3-tier left sidebar).
+
+[COSMIC] Config: loaded 'assets/projects/Starforge/templates/samples/FlowDemo/project.cproj'.
+
+[COSMIC] Config: loaded 'assets/projects/Starforge/templates/samples/ForgePong/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/Projects/AnalysisSample/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/Projects/PendulumLab/project.cproj'.
+
+[COSMIC] WorkspaceLayer: Dockspace built (port mode L=true R=true T=true B=true).
+
+[Scene] Opened 'project://scenes/Home.cscene'.
+[Scripts] 1 script(s) not built — press Ctrl+B to compile the project module.
+[Project] Scaffolded project — press Ctrl+B to build the game module.
+[Project] Opened 'Ap03App' @ C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Release/cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237/temp/ap03/Ap03App
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Release/cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237/temp/ap03/Ap03App/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Release/cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237/temp/ap03/Ap03App/project.cproj'.
+
+[COSMIC] Config: no file at './starforge/layouts/active.toml'.
+
+[COSMIC] Config: no file at './starforge/layouts/active.toml'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Release/cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237/temp/ap03/Ap03App/project.cproj'.
+
+[COSMIC] WorkspaceLayer: Dockspace built (port mode L=true R=true T=true B=true).
+
+[COSMIC] Font: baked 'lucide' (1024x71, 95 glyphs)
+
+[COSMIC] Font: baked 'Roboto-Bold' (1024x257, 95 glyphs)
+
+[COSMIC] Font: baked 'Roboto-Medium' (1024x255, 95 glyphs)
+
+[COSMIC] Font: baked 'Roboto-Regular' (1024x256, 95 glyphs)
+
+[COSMIC] Font: library initialised (4 font(s))
+
+[Build] Building 'Ap03App' -> Ap03App_hot1.dll
+[build] configuring C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Release/cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237/temp/ap03/Ap03App
+-- Building for: Visual Studio 18 2026
+-- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.26200.
+-- The C compiler identification is MSVC 19.51.36257.0
+-- The CXX compiler identification is MSVC 19.51.36257.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - failed
+-- Check for working C compiler: C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe
+-- Check for working C compiler: C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe - broken
+CMake Error at C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.3/Modules/CMakeTestCCompiler.cmake:67 (message):
+  The C compiler
+
+    "C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe"
+
+  is not able to compile a simple test program.
+
+  It fails with the following output:
+
+    Change Dir: 'C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Release/cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237/temp/ap03/Ap03App/build/CMakeFiles/CMakeScratch/TryCompile-b5kp2i'
+    
+    Run Build Command(s): "C:/Program Files/Microsoft Visual Studio/18/Community/MSBuild/Current/Bin/amd64/MSBuild.exe" cmTC_8ab5f.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=18.0 /v:n
+    MSBuild version 18.10.1-1.26427.6+3cd27c13e for .NET Framework
+    Build started 9/24/2026 8:45:04 PM.
+    
+    Project "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-b5kp2i\cmTC_8ab5f.vcxproj" on node 1 (default targets).
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-b5kp2i\cmTC_8ab5f.vcxproj]
+      Structured output is enabled. The formatting of compiler diagnostics will reflect the error hierarchy. See https://aka.ms/cpp/structured-output for more details.
+      Creating directory "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-b5kp2i\Debug\".
+      Creating directory "cmTC_8ab5f.dir\Debug\cmTC_8ab5f.tlog\".
+    InitializeBuildStatus:
+      Creating "cmTC_8ab5f.dir\Debug\cmTC_8ab5f.tlog\unsuccessfulbuild" because "AlwaysCreate" was specified.
+      Touching "cmTC_8ab5f.dir\Debug\cmTC_8ab5f.tlog\unsuccessfulbuild".
+    ClCompile:
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\CL.exe /c /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D _MBCS /D "CMAKE_INTDIR=\"Debug\"" /RTC1 /MDd /Fo"cmTC_8ab5f.dir\Debug\\" /Fd"cmTC_8ab5f.dir\Debug\vc145.pdb" /external:W1 /TC /errorReport:queue "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-b5kp2i\testCCompiler.c"
+      Microsoft (R) C/C++ Optimizing Compiler Version 19.51.36257 for x64
+      Copyright (C) Microsoft Corporation.  All rights reserved.
+      cl /c /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D _MBCS /D "CMAKE_INTDIR=\"Debug\"" /RTC1 /MDd /Fo"cmTC_8ab5f.dir\Debug\\" /Fd"cmTC_8ab5f.dir\Debug\vc145.pdb" /external:W1 /TC /errorReport:queue "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-b5kp2i\testCCompiler.c"
+      testCCompiler.c
+    Link:
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\link.exe /OUT:"C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-b5kp2i\Debug\cmTC_8ab5f.exe" /INCREMENTAL /ILK:"cmTC_8ab5f.dir\Debug\cmTC_8ab5f.ilk" /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Release/cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237/temp/ap03/Ap03App/build/CMakeFiles/CMakeScratch/TryCompile-b5kp2i/Debug/cmTC_8ab5f.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /IMPLIB:"C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Release/cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237/temp/ap03/Ap03App/build/CMakeFiles/CMakeScratch/TryCompile-b5kp2i/Debug/cmTC_8ab5f.lib" /MACHINE:X64  /machine:x64 cmTC_8ab5f.dir\Debug\testCCompiler.obj
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003: The specified task executable "link.exe" could not be run. System.IO.DirectoryNotFoundException: Could not find a part of the path 'C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-b5kp2i\cmTC_8ab5f.dir\Debug\cmTC_8ab5f.tlog'. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-b5kp2i\cmTC_8ab5f.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-b5kp2i\cmTC_8ab5f.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.FileSystemEnumerableIterator`1.CommonInit() [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-b5kp2i\cmTC_8ab5f.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.FileSystemEnumerableIterator`1..ctor(String path, String originalUserPath, String searchPattern, SearchOption searchOption, SearchResultHandler`1 resultHandler, Boolean checkHost) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-b5kp2i\cmTC_8ab5f.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.Directory.GetFiles(String path, String searchPattern) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-b5kp2i\cmTC_8ab5f.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.Utilities.TrackedDependencies.ExpandWildcards(ITaskItem[] expand, TaskLoggingHelper log) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-b5kp2i\cmTC_8ab5f.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.CPPTasks.TrackedVCToolTask.DeleteFiles(ITaskItem[] filesToDelete) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-b5kp2i\cmTC_8ab5f.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.CPPTasks.TrackedVCToolTask.PostExecuteTool(Int32 exitCode, Boolean preservePartialSuccess) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-b5kp2i\cmTC_8ab5f.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.CPPTasks.TrackedVCToolTask.ExecuteTool(String pathToTool, String responseFileCommands, String commandLineCommands) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-b5kp2i\cmTC_8ab5f.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.Utilities.ToolTask.Execute() [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-b5kp2i\cmTC_8ab5f.vcxproj]
+    Done Building Project "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-b5kp2i\cmTC_8ab5f.vcxproj" (default targets) -- FAILED.
+    
+    Build FAILED.
+    
+    "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-b5kp2i\cmTC_8ab5f.vcxproj" (default target) (1) ->
+    (PrepareForBuild target) -> 
+      C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-b5kp2i\cmTC_8ab5f.vcxproj]
+    
+    
+    "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-b5kp2i\cmTC_8ab5f.vcxproj" (default target) (1) ->
+    (Link target) -> 
+      C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003: The specified task executable "link.exe" could not be run. System.IO.DirectoryNotFoundException: Could not find a part of the path 'C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-b5kp2i\cmTC_8ab5f.dir\Debug\cmTC_8ab5f.tlog'. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-b5kp2i\cmTC_8ab5f.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-b5kp2i\cmTC_8ab5f.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.FileSystemEnumerableIterator`1.CommonInit() [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-b5kp2i\cmTC_8ab5f.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.FileSystemEnumerableIterator`1..ctor(String path, String originalUserPath, String searchPattern, SearchOption searchOption, SearchResultHandler`1 resultHandler, Boolean checkHost) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-b5kp2i\cmTC_8ab5f.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.Directory.GetFiles(String path, String searchPattern) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-b5kp2i\cmTC_8ab5f.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.Utilities.TrackedDependencies.ExpandWildcards(ITaskItem[] expand, TaskLoggingHelper log) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-b5kp2i\cmTC_8ab5f.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.CPPTasks.TrackedVCToolTask.DeleteFiles(ITaskItem[] filesToDelete) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-b5kp2i\cmTC_8ab5f.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.CPPTasks.TrackedVCToolTask.PostExecuteTool(Int32 exitCode, Boolean preservePartialSuccess) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-b5kp2i\cmTC_8ab5f.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.CPPTasks.TrackedVCToolTask.ExecuteTool(String pathToTool, String responseFileCommands, String commandLineCommands) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-b5kp2i\cmTC_8ab5f.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.Utilities.ToolTask.Execute() [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-b5kp2i\cmTC_8ab5f.vcxproj]
+    
+        1 Warning(s)
+        1 Error(s)
+    
+    Time Elapsed 00:00:00.40
+    
+    
+
+
+
+  CMake will not be able to correctly generate this project.
+Call Stack (most recent call first):
+  CMakeLists.txt:2 (project)
+
+
+-- Configuring incomplete, errors occurred!
+[build] FAILED (exit 1)
+[Build] Failed — see the Console. Keeping the current module.
+[Play] Started — 0 script(s).
+[COSMIC] ScriptHost: unknown script class 'HomeScreen' — entity kept inert.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Release/cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237/temp/ap03/Ap03App/project.cproj'.
+
+[Play] Stopped — edit scene restored.
+[Screens] New screen 'Telemetry': scenes/Telemetry.cscene + flow state + src/screens/TelemetryScreen.h
+[Screens] Renamed state 'Telemetry' -> 'Telem2' (the scene and script files keep their names).
+[Screens] Renamed state 'Telem2' -> 'Telemetry' (the scene and script files keep their names).
+[Screens] Start state -> 'Dashboard'.
+[Screens] Start state -> 'Home'.
+[Screens] Start state -> 'Dashboard'.
+[Screens] Start state -> 'Home'.
+[Build] Building 'Ap03App' -> Ap03App_hot2.dll
+[build] configuring C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Release/cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237/temp/ap03/Ap03App
+-- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.26200.
+-- The C compiler identification is MSVC 19.51.36257.0
+-- The CXX compiler identification is MSVC 19.51.36257.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - failed
+-- Check for working C compiler: C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe
+-- Check for working C compiler: C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe - broken
+CMake Error at C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.3/Modules/CMakeTestCCompiler.cmake:67 (message):
+  The C compiler
+
+    "C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe"
+
+  is not able to compile a simple test program.
+
+  It fails with the following output:
+
+    Change Dir: 'C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Release/cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237/temp/ap03/Ap03App/build/CMakeFiles/CMakeScratch/TryCompile-qoq7ab'
+    
+    Run Build Command(s): "C:/Program Files/Microsoft Visual Studio/18/Community/MSBuild/Current/Bin/amd64/MSBuild.exe" cmTC_ac9c0.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=18.0 /v:n
+    MSBuild version 18.10.1-1.26427.6+3cd27c13e for .NET Framework
+    Build started 9/24/2026 8:45:06 PM.
+    
+    Project "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-qoq7ab\cmTC_ac9c0.vcxproj" on node 1 (default targets).
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-qoq7ab\cmTC_ac9c0.vcxproj]
+      Structured output is enabled. The formatting of compiler diagnostics will reflect the error hierarchy. See https://aka.ms/cpp/structured-output for more details.
+      Creating directory "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-qoq7ab\Debug\".
+      Creating directory "cmTC_ac9c0.dir\Debug\cmTC_ac9c0.tlog\".
+    InitializeBuildStatus:
+      Creating "cmTC_ac9c0.dir\Debug\cmTC_ac9c0.tlog\unsuccessfulbuild" because "AlwaysCreate" was specified.
+      Touching "cmTC_ac9c0.dir\Debug\cmTC_ac9c0.tlog\unsuccessfulbuild".
+    ClCompile:
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\CL.exe /c /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D _MBCS /D "CMAKE_INTDIR=\"Debug\"" /RTC1 /MDd /Fo"cmTC_ac9c0.dir\Debug\\" /Fd"cmTC_ac9c0.dir\Debug\vc145.pdb" /external:W1 /TC /errorReport:queue "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-qoq7ab\testCCompiler.c"
+      Microsoft (R) C/C++ Optimizing Compiler Version 19.51.36257 for x64
+      Copyright (C) Microsoft Corporation.  All rights reserved.
+      cl /c /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D _MBCS /D "CMAKE_INTDIR=\"Debug\"" /RTC1 /MDd /Fo"cmTC_ac9c0.dir\Debug\\" /Fd"cmTC_ac9c0.dir\Debug\vc145.pdb" /external:W1 /TC /errorReport:queue "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-qoq7ab\testCCompiler.c"
+      testCCompiler.c
+    Link:
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\link.exe /OUT:"C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-qoq7ab\Debug\cmTC_ac9c0.exe" /INCREMENTAL /ILK:"cmTC_ac9c0.dir\Debug\cmTC_ac9c0.ilk" /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Release/cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237/temp/ap03/Ap03App/build/CMakeFiles/CMakeScratch/TryCompile-qoq7ab/Debug/cmTC_ac9c0.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /IMPLIB:"C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Release/cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237/temp/ap03/Ap03App/build/CMakeFiles/CMakeScratch/TryCompile-qoq7ab/Debug/cmTC_ac9c0.lib" /MACHINE:X64  /machine:x64 cmTC_ac9c0.dir\Debug\testCCompiler.obj
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003: The specified task executable "link.exe" could not be run. System.IO.DirectoryNotFoundException: Could not find a part of the path 'C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-qoq7ab\cmTC_ac9c0.dir\Debug\cmTC_ac9c0.tlog'. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-qoq7ab\cmTC_ac9c0.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-qoq7ab\cmTC_ac9c0.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.FileSystemEnumerableIterator`1.CommonInit() [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-qoq7ab\cmTC_ac9c0.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.FileSystemEnumerableIterator`1..ctor(String path, String originalUserPath, String searchPattern, SearchOption searchOption, SearchResultHandler`1 resultHandler, Boolean checkHost) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-qoq7ab\cmTC_ac9c0.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.Directory.GetFiles(String path, String searchPattern) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-qoq7ab\cmTC_ac9c0.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.Utilities.TrackedDependencies.ExpandWildcards(ITaskItem[] expand, TaskLoggingHelper log) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-qoq7ab\cmTC_ac9c0.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.CPPTasks.TrackedVCToolTask.DeleteFiles(ITaskItem[] filesToDelete) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-qoq7ab\cmTC_ac9c0.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.CPPTasks.TrackedVCToolTask.PostExecuteTool(Int32 exitCode, Boolean preservePartialSuccess) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-qoq7ab\cmTC_ac9c0.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.CPPTasks.TrackedVCToolTask.ExecuteTool(String pathToTool, String responseFileCommands, String commandLineCommands) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-qoq7ab\cmTC_ac9c0.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.Utilities.ToolTask.Execute() [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-qoq7ab\cmTC_ac9c0.vcxproj]
+    Done Building Project "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-qoq7ab\cmTC_ac9c0.vcxproj" (default targets) -- FAILED.
+    
+    Build FAILED.
+    
+    "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-qoq7ab\cmTC_ac9c0.vcxproj" (default target) (1) ->
+    (PrepareForBuild target) -> 
+      C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-qoq7ab\cmTC_ac9c0.vcxproj]
+    
+    
+    "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-qoq7ab\cmTC_ac9c0.vcxproj" (default target) (1) ->
+    (Link target) -> 
+      C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003: The specified task executable "link.exe" could not be run. System.IO.DirectoryNotFoundException: Could not find a part of the path 'C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-qoq7ab\cmTC_ac9c0.dir\Debug\cmTC_ac9c0.tlog'. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-qoq7ab\cmTC_ac9c0.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-qoq7ab\cmTC_ac9c0.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.FileSystemEnumerableIterator`1.CommonInit() [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-qoq7ab\cmTC_ac9c0.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.FileSystemEnumerableIterator`1..ctor(String path, String originalUserPath, String searchPattern, SearchOption searchOption, SearchResultHandler`1 resultHandler, Boolean checkHost) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-qoq7ab\cmTC_ac9c0.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.Directory.GetFiles(String path, String searchPattern) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-qoq7ab\cmTC_ac9c0.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.Utilities.TrackedDependencies.ExpandWildcards(ITaskItem[] expand, TaskLoggingHelper log) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-qoq7ab\cmTC_ac9c0.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.CPPTasks.TrackedVCToolTask.DeleteFiles(ITaskItem[] filesToDelete) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-qoq7ab\cmTC_ac9c0.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.CPPTasks.TrackedVCToolTask.PostExecuteTool(Int32 exitCode, Boolean preservePartialSuccess) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-qoq7ab\cmTC_ac9c0.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.CPPTasks.TrackedVCToolTask.ExecuteTool(String pathToTool, String responseFileCommands, String commandLineCommands) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-qoq7ab\cmTC_ac9c0.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.Utilities.ToolTask.Execute() [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-qoq7ab\cmTC_ac9c0.vcxproj]
+    
+        1 Warning(s)
+        1 Error(s)
+    
+    Time Elapsed 00:00:00.33
+    
+    
+
+
+
+  CMake will not be able to correctly generate this project.
+Call Stack (most recent call first):
+  CMakeLists.txt:2 (project)
+
+
+-- Configuring incomplete, errors occurred!
+[build] FAILED (exit 1)
+[Build] Failed — see the Console. Keeping the current module.
+[Scene] Opened 'project://scenes/Home.cscene'.
+[Scripts] 1 script(s) not built — press Ctrl+B to compile the project module.
+[Scene] Saved 'project://scenes/Home.cscene'.
+[Scene] Opened 'project://scenes/Dashboard.cscene'.
+[Scripts] 1 script(s) not built — press Ctrl+B to compile the project module.
+[Scene] Opened 'project://scenes/Home.cscene'.
+[Scripts] 1 script(s) not built — press Ctrl+B to compile the project module.
+[Scene] Opened 'project://scenes/Dashboard.cscene'.
+[Scripts] 1 script(s) not built — press Ctrl+B to compile the project module.
+[Scene] Saved 'project://scenes/Dashboard.cscene'.
+[Build] Building 'Ap03App' -> Ap03App_hot3.dll
+[build] configuring C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Release/cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237/temp/ap03/Ap03App
+-- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.26200.
+-- The C compiler identification is MSVC 19.51.36257.0
+-- The CXX compiler identification is MSVC 19.51.36257.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - failed
+-- Check for working C compiler: C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe
+-- Check for working C compiler: C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe - broken
+CMake Error at C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.3/Modules/CMakeTestCCompiler.cmake:67 (message):
+  The C compiler
+
+    "C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe"
+
+  is not able to compile a simple test program.
+
+  It fails with the following output:
+
+    Change Dir: 'C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Release/cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237/temp/ap03/Ap03App/build/CMakeFiles/CMakeScratch/TryCompile-5f1hsd'
+    
+    Run Build Command(s): "C:/Program Files/Microsoft Visual Studio/18/Community/MSBuild/Current/Bin/amd64/MSBuild.exe" cmTC_62fcf.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=18.0 /v:n
+    MSBuild version 18.10.1-1.26427.6+3cd27c13e for .NET Framework
+    Build started 9/24/2026 8:45:10 PM.
+    
+    Project "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-5f1hsd\cmTC_62fcf.vcxproj" on node 1 (default targets).
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-5f1hsd\cmTC_62fcf.vcxproj]
+      Structured output is enabled. The formatting of compiler diagnostics will reflect the error hierarchy. See https://aka.ms/cpp/structured-output for more details.
+      Creating directory "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-5f1hsd\Debug\".
+      Creating directory "cmTC_62fcf.dir\Debug\cmTC_62fcf.tlog\".
+    InitializeBuildStatus:
+      Creating "cmTC_62fcf.dir\Debug\cmTC_62fcf.tlog\unsuccessfulbuild" because "AlwaysCreate" was specified.
+      Touching "cmTC_62fcf.dir\Debug\cmTC_62fcf.tlog\unsuccessfulbuild".
+    ClCompile:
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\CL.exe /c /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D _MBCS /D "CMAKE_INTDIR=\"Debug\"" /RTC1 /MDd /Fo"cmTC_62fcf.dir\Debug\\" /Fd"cmTC_62fcf.dir\Debug\vc145.pdb" /external:W1 /TC /errorReport:queue "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-5f1hsd\testCCompiler.c"
+      Microsoft (R) C/C++ Optimizing Compiler Version 19.51.36257 for x64
+      Copyright (C) Microsoft Corporation.  All rights reserved.
+      cl /c /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D _MBCS /D "CMAKE_INTDIR=\"Debug\"" /RTC1 /MDd /Fo"cmTC_62fcf.dir\Debug\\" /Fd"cmTC_62fcf.dir\Debug\vc145.pdb" /external:W1 /TC /errorReport:queue "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-5f1hsd\testCCompiler.c"
+      testCCompiler.c
+    Link:
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\link.exe /OUT:"C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-5f1hsd\Debug\cmTC_62fcf.exe" /INCREMENTAL /ILK:"cmTC_62fcf.dir\Debug\cmTC_62fcf.ilk" /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Release/cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237/temp/ap03/Ap03App/build/CMakeFiles/CMakeScratch/TryCompile-5f1hsd/Debug/cmTC_62fcf.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /IMPLIB:"C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Release/cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237/temp/ap03/Ap03App/build/CMakeFiles/CMakeScratch/TryCompile-5f1hsd/Debug/cmTC_62fcf.lib" /MACHINE:X64  /machine:x64 cmTC_62fcf.dir\Debug\testCCompiler.obj
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003: The specified task executable "link.exe" could not be run. System.IO.DirectoryNotFoundException: Could not find a part of the path 'C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-5f1hsd\cmTC_62fcf.dir\Debug\cmTC_62fcf.tlog'. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-5f1hsd\cmTC_62fcf.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-5f1hsd\cmTC_62fcf.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.FileSystemEnumerableIterator`1.CommonInit() [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-5f1hsd\cmTC_62fcf.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.FileSystemEnumerableIterator`1..ctor(String path, String originalUserPath, String searchPattern, SearchOption searchOption, SearchResultHandler`1 resultHandler, Boolean checkHost) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-5f1hsd\cmTC_62fcf.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.Directory.GetFiles(String path, String searchPattern) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-5f1hsd\cmTC_62fcf.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.Utilities.TrackedDependencies.ExpandWildcards(ITaskItem[] expand, TaskLoggingHelper log) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-5f1hsd\cmTC_62fcf.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.CPPTasks.TrackedVCToolTask.DeleteFiles(ITaskItem[] filesToDelete) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-5f1hsd\cmTC_62fcf.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.CPPTasks.TrackedVCToolTask.PostExecuteTool(Int32 exitCode, Boolean preservePartialSuccess) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-5f1hsd\cmTC_62fcf.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.CPPTasks.TrackedVCToolTask.ExecuteTool(String pathToTool, String responseFileCommands, String commandLineCommands) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-5f1hsd\cmTC_62fcf.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.Utilities.ToolTask.Execute() [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-5f1hsd\cmTC_62fcf.vcxproj]
+    Done Building Project "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-5f1hsd\cmTC_62fcf.vcxproj" (default targets) -- FAILED.
+    
+    Build FAILED.
+    
+    "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-5f1hsd\cmTC_62fcf.vcxproj" (default target) (1) ->
+    (PrepareForBuild target) -> 
+      C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-5f1hsd\cmTC_62fcf.vcxproj]
+    
+    
+    "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-5f1hsd\cmTC_62fcf.vcxproj" (default target) (1) ->
+    (Link target) -> 
+      C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003: The specified task executable "link.exe" could not be run. System.IO.DirectoryNotFoundException: Could not find a part of the path 'C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-5f1hsd\cmTC_62fcf.dir\Debug\cmTC_62fcf.tlog'. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-5f1hsd\cmTC_62fcf.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-5f1hsd\cmTC_62fcf.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.FileSystemEnumerableIterator`1.CommonInit() [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-5f1hsd\cmTC_62fcf.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.FileSystemEnumerableIterator`1..ctor(String path, String originalUserPath, String searchPattern, SearchOption searchOption, SearchResultHandler`1 resultHandler, Boolean checkHost) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-5f1hsd\cmTC_62fcf.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.Directory.GetFiles(String path, String searchPattern) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-5f1hsd\cmTC_62fcf.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.Utilities.TrackedDependencies.ExpandWildcards(ITaskItem[] expand, TaskLoggingHelper log) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-5f1hsd\cmTC_62fcf.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.CPPTasks.TrackedVCToolTask.DeleteFiles(ITaskItem[] filesToDelete) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-5f1hsd\cmTC_62fcf.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.CPPTasks.TrackedVCToolTask.PostExecuteTool(Int32 exitCode, Boolean preservePartialSuccess) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-5f1hsd\cmTC_62fcf.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.CPPTasks.TrackedVCToolTask.ExecuteTool(String pathToTool, String responseFileCommands, String commandLineCommands) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-5f1hsd\cmTC_62fcf.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.Utilities.ToolTask.Execute() [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-5f1hsd\cmTC_62fcf.vcxproj]
+    
+        1 Warning(s)
+        1 Error(s)
+    
+    Time Elapsed 00:00:00.33
+    
+    
+
+
+
+  CMake will not be able to correctly generate this project.
+Call Stack (most recent call first):
+  CMakeLists.txt:2 (project)
+
+
+-- Configuring incomplete, errors occurred!
+[build] FAILED (exit 1)
+[Build] Failed — see the Console. Keeping the current module.
+[Scene] Opened 'project://scenes/Home.cscene'.
+[Scripts] 1 script(s) not built — press Ctrl+B to compile the project module.
+[Play] Started — 0 script(s).
+[COSMIC] ScriptHost: unknown script class 'HomeScreen' — entity kept inert.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Release/cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237/temp/ap03/Ap03App/project.cproj'.
+
+[COSMIC] ScriptHost: unknown script class 'DashboardScreen' — entity kept inert.
+
+[Live] Module rebuild while playing — stopping, then resuming on 'Dashboard' after the reload.
+[Play] Stopped — edit scene restored.
+[Build] Building 'Ap03App' -> Ap03App_hot4.dll
+[build] configuring C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Release/cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237/temp/ap03/Ap03App
+-- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.26200.
+-- The C compiler identification is MSVC 19.51.36257.0
+-- The CXX compiler identification is MSVC 19.51.36257.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - failed
+-- Check for working C compiler: C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe
+-- Check for working C compiler: C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe - broken
+CMake Error at C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.3/Modules/CMakeTestCCompiler.cmake:67 (message):
+  The C compiler
+
+    "C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe"
+
+  is not able to compile a simple test program.
+
+  It fails with the following output:
+
+    Change Dir: 'C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Release/cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237/temp/ap03/Ap03App/build/CMakeFiles/CMakeScratch/TryCompile-3aqqvp'
+    
+    Run Build Command(s): "C:/Program Files/Microsoft Visual Studio/18/Community/MSBuild/Current/Bin/amd64/MSBuild.exe" cmTC_74028.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=18.0 /v:n
+    MSBuild version 18.10.1-1.26427.6+3cd27c13e for .NET Framework
+    Build started 9/24/2026 8:45:13 PM.
+    
+    Project "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-3aqqvp\cmTC_74028.vcxproj" on node 1 (default targets).
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-3aqqvp\cmTC_74028.vcxproj]
+      Structured output is enabled. The formatting of compiler diagnostics will reflect the error hierarchy. See https://aka.ms/cpp/structured-output for more details.
+      Creating directory "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-3aqqvp\Debug\".
+      Creating directory "cmTC_74028.dir\Debug\cmTC_74028.tlog\".
+    InitializeBuildStatus:
+      Creating "cmTC_74028.dir\Debug\cmTC_74028.tlog\unsuccessfulbuild" because "AlwaysCreate" was specified.
+      Touching "cmTC_74028.dir\Debug\cmTC_74028.tlog\unsuccessfulbuild".
+    ClCompile:
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\CL.exe /c /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D _MBCS /D "CMAKE_INTDIR=\"Debug\"" /RTC1 /MDd /Fo"cmTC_74028.dir\Debug\\" /Fd"cmTC_74028.dir\Debug\vc145.pdb" /external:W1 /TC /errorReport:queue "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-3aqqvp\testCCompiler.c"
+      Microsoft (R) C/C++ Optimizing Compiler Version 19.51.36257 for x64
+      Copyright (C) Microsoft Corporation.  All rights reserved.
+      cl /c /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D _MBCS /D "CMAKE_INTDIR=\"Debug\"" /RTC1 /MDd /Fo"cmTC_74028.dir\Debug\\" /Fd"cmTC_74028.dir\Debug\vc145.pdb" /external:W1 /TC /errorReport:queue "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-3aqqvp\testCCompiler.c"
+      testCCompiler.c
+    Link:
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\link.exe /OUT:"C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-3aqqvp\Debug\cmTC_74028.exe" /INCREMENTAL /ILK:"cmTC_74028.dir\Debug\cmTC_74028.ilk" /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Release/cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237/temp/ap03/Ap03App/build/CMakeFiles/CMakeScratch/TryCompile-3aqqvp/Debug/cmTC_74028.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /IMPLIB:"C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Release/cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237/temp/ap03/Ap03App/build/CMakeFiles/CMakeScratch/TryCompile-3aqqvp/Debug/cmTC_74028.lib" /MACHINE:X64  /machine:x64 cmTC_74028.dir\Debug\testCCompiler.obj
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003: The specified task executable "link.exe" could not be run. System.IO.DirectoryNotFoundException: Could not find a part of the path 'C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-3aqqvp\cmTC_74028.dir\Debug\cmTC_74028.tlog'. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-3aqqvp\cmTC_74028.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-3aqqvp\cmTC_74028.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.FileSystemEnumerableIterator`1.CommonInit() [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-3aqqvp\cmTC_74028.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.FileSystemEnumerableIterator`1..ctor(String path, String originalUserPath, String searchPattern, SearchOption searchOption, SearchResultHandler`1 resultHandler, Boolean checkHost) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-3aqqvp\cmTC_74028.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.Directory.GetFiles(String path, String searchPattern) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-3aqqvp\cmTC_74028.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.Utilities.TrackedDependencies.ExpandWildcards(ITaskItem[] expand, TaskLoggingHelper log) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-3aqqvp\cmTC_74028.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.CPPTasks.TrackedVCToolTask.DeleteFiles(ITaskItem[] filesToDelete) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-3aqqvp\cmTC_74028.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.CPPTasks.TrackedVCToolTask.PostExecuteTool(Int32 exitCode, Boolean preservePartialSuccess) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-3aqqvp\cmTC_74028.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.CPPTasks.TrackedVCToolTask.ExecuteTool(String pathToTool, String responseFileCommands, String commandLineCommands) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-3aqqvp\cmTC_74028.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.Utilities.ToolTask.Execute() [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-3aqqvp\cmTC_74028.vcxproj]
+    Done Building Project "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-3aqqvp\cmTC_74028.vcxproj" (default targets) -- FAILED.
+    
+    Build FAILED.
+    
+    "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-3aqqvp\cmTC_74028.vcxproj" (default target) (1) ->
+    (PrepareForBuild target) -> 
+      C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-3aqqvp\cmTC_74028.vcxproj]
+    
+    
+    "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-3aqqvp\cmTC_74028.vcxproj" (default target) (1) ->
+    (Link target) -> 
+      C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003: The specified task executable "link.exe" could not be run. System.IO.DirectoryNotFoundException: Could not find a part of the path 'C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-3aqqvp\cmTC_74028.dir\Debug\cmTC_74028.tlog'. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-3aqqvp\cmTC_74028.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-3aqqvp\cmTC_74028.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.FileSystemEnumerableIterator`1.CommonInit() [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-3aqqvp\cmTC_74028.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.FileSystemEnumerableIterator`1..ctor(String path, String originalUserPath, String searchPattern, SearchOption searchOption, SearchResultHandler`1 resultHandler, Boolean checkHost) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-3aqqvp\cmTC_74028.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.Directory.GetFiles(String path, String searchPattern) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-3aqqvp\cmTC_74028.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.Utilities.TrackedDependencies.ExpandWildcards(ITaskItem[] expand, TaskLoggingHelper log) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-3aqqvp\cmTC_74028.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.CPPTasks.TrackedVCToolTask.DeleteFiles(ITaskItem[] filesToDelete) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-3aqqvp\cmTC_74028.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.CPPTasks.TrackedVCToolTask.PostExecuteTool(Int32 exitCode, Boolean preservePartialSuccess) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-3aqqvp\cmTC_74028.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.CPPTasks.TrackedVCToolTask.ExecuteTool(String pathToTool, String responseFileCommands, String commandLineCommands) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-3aqqvp\cmTC_74028.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.Utilities.ToolTask.Execute() [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-3aqqvp\cmTC_74028.vcxproj]
+    
+        1 Warning(s)
+        1 Error(s)
+    
+    Time Elapsed 00:00:00.36
+    
+    
+
+
+
+  CMake will not be able to correctly generate this project.
+Call Stack (most recent call first):
+  CMakeLists.txt:2 (project)
+
+
+-- Configuring incomplete, errors occurred!
+[build] FAILED (exit 1)
+[Build] Failed — see the Console. Keeping the current module.
+[Build] Building 'Ap03App' -> Ap03App_hot5.dll
+[build] configuring C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Release/cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237/temp/ap03/Ap03App
+-- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.26200.
+-- The C compiler identification is MSVC 19.51.36257.0
+-- The CXX compiler identification is MSVC 19.51.36257.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - failed
+-- Check for working C compiler: C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe
+-- Check for working C compiler: C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe - broken
+CMake Error at C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.3/Modules/CMakeTestCCompiler.cmake:67 (message):
+  The C compiler
+
+    "C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe"
+
+  is not able to compile a simple test program.
+
+  It fails with the following output:
+
+    Change Dir: 'C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Release/cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237/temp/ap03/Ap03App/build/CMakeFiles/CMakeScratch/TryCompile-6thsk9'
+    
+    Run Build Command(s): "C:/Program Files/Microsoft Visual Studio/18/Community/MSBuild/Current/Bin/amd64/MSBuild.exe" cmTC_27d79.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=18.0 /v:n
+    MSBuild version 18.10.1-1.26427.6+3cd27c13e for .NET Framework
+    Build started 9/24/2026 8:45:19 PM.
+    
+    Project "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-6thsk9\cmTC_27d79.vcxproj" on node 1 (default targets).
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-6thsk9\cmTC_27d79.vcxproj]
+      Structured output is enabled. The formatting of compiler diagnostics will reflect the error hierarchy. See https://aka.ms/cpp/structured-output for more details.
+      Creating directory "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-6thsk9\Debug\".
+      Creating directory "cmTC_27d79.dir\Debug\cmTC_27d79.tlog\".
+    InitializeBuildStatus:
+      Creating "cmTC_27d79.dir\Debug\cmTC_27d79.tlog\unsuccessfulbuild" because "AlwaysCreate" was specified.
+      Touching "cmTC_27d79.dir\Debug\cmTC_27d79.tlog\unsuccessfulbuild".
+    ClCompile:
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\CL.exe /c /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D _MBCS /D "CMAKE_INTDIR=\"Debug\"" /RTC1 /MDd /Fo"cmTC_27d79.dir\Debug\\" /Fd"cmTC_27d79.dir\Debug\vc145.pdb" /external:W1 /TC /errorReport:queue "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-6thsk9\testCCompiler.c"
+      Microsoft (R) C/C++ Optimizing Compiler Version 19.51.36257 for x64
+      Copyright (C) Microsoft Corporation.  All rights reserved.
+      cl /c /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D _MBCS /D "CMAKE_INTDIR=\"Debug\"" /RTC1 /MDd /Fo"cmTC_27d79.dir\Debug\\" /Fd"cmTC_27d79.dir\Debug\vc145.pdb" /external:W1 /TC /errorReport:queue "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-6thsk9\testCCompiler.c"
+      testCCompiler.c
+    Link:
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\link.exe /OUT:"C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-6thsk9\Debug\cmTC_27d79.exe" /INCREMENTAL /ILK:"cmTC_27d79.dir\Debug\cmTC_27d79.ilk" /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Release/cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237/temp/ap03/Ap03App/build/CMakeFiles/CMakeScratch/TryCompile-6thsk9/Debug/cmTC_27d79.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /IMPLIB:"C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Release/cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237/temp/ap03/Ap03App/build/CMakeFiles/CMakeScratch/TryCompile-6thsk9/Debug/cmTC_27d79.lib" /MACHINE:X64  /machine:x64 cmTC_27d79.dir\Debug\testCCompiler.obj
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003: The specified task executable "link.exe" could not be run. System.IO.DirectoryNotFoundException: Could not find a part of the path 'C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-6thsk9\cmTC_27d79.dir\Debug\cmTC_27d79.tlog'. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-6thsk9\cmTC_27d79.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-6thsk9\cmTC_27d79.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.FileSystemEnumerableIterator`1.CommonInit() [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-6thsk9\cmTC_27d79.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.FileSystemEnumerableIterator`1..ctor(String path, String originalUserPath, String searchPattern, SearchOption searchOption, SearchResultHandler`1 resultHandler, Boolean checkHost) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-6thsk9\cmTC_27d79.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.Directory.GetFiles(String path, String searchPattern) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-6thsk9\cmTC_27d79.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.Utilities.TrackedDependencies.ExpandWildcards(ITaskItem[] expand, TaskLoggingHelper log) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-6thsk9\cmTC_27d79.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.CPPTasks.TrackedVCToolTask.DeleteFiles(ITaskItem[] filesToDelete) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-6thsk9\cmTC_27d79.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.CPPTasks.TrackedVCToolTask.PostExecuteTool(Int32 exitCode, Boolean preservePartialSuccess) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-6thsk9\cmTC_27d79.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.CPPTasks.TrackedVCToolTask.ExecuteTool(String pathToTool, String responseFileCommands, String commandLineCommands) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-6thsk9\cmTC_27d79.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.Utilities.ToolTask.Execute() [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-6thsk9\cmTC_27d79.vcxproj]
+    Done Building Project "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-6thsk9\cmTC_27d79.vcxproj" (default targets) -- FAILED.
+    
+    Build FAILED.
+    
+    "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-6thsk9\cmTC_27d79.vcxproj" (default target) (1) ->
+    (PrepareForBuild target) -> 
+      C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-6thsk9\cmTC_27d79.vcxproj]
+    
+    
+    "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-6thsk9\cmTC_27d79.vcxproj" (default target) (1) ->
+    (Link target) -> 
+      C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003: The specified task executable "link.exe" could not be run. System.IO.DirectoryNotFoundException: Could not find a part of the path 'C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-6thsk9\cmTC_27d79.dir\Debug\cmTC_27d79.tlog'. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-6thsk9\cmTC_27d79.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-6thsk9\cmTC_27d79.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.FileSystemEnumerableIterator`1.CommonInit() [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-6thsk9\cmTC_27d79.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.FileSystemEnumerableIterator`1..ctor(String path, String originalUserPath, String searchPattern, SearchOption searchOption, SearchResultHandler`1 resultHandler, Boolean checkHost) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-6thsk9\cmTC_27d79.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.Directory.GetFiles(String path, String searchPattern) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-6thsk9\cmTC_27d79.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.Utilities.TrackedDependencies.ExpandWildcards(ITaskItem[] expand, TaskLoggingHelper log) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-6thsk9\cmTC_27d79.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.CPPTasks.TrackedVCToolTask.DeleteFiles(ITaskItem[] filesToDelete) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-6thsk9\cmTC_27d79.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.CPPTasks.TrackedVCToolTask.PostExecuteTool(Int32 exitCode, Boolean preservePartialSuccess) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-6thsk9\cmTC_27d79.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.CPPTasks.TrackedVCToolTask.ExecuteTool(String pathToTool, String responseFileCommands, String commandLineCommands) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-6thsk9\cmTC_27d79.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.Utilities.ToolTask.Execute() [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-6thsk9\cmTC_27d79.vcxproj]
+    
+        1 Warning(s)
+        1 Error(s)
+    
+    Time Elapsed 00:00:00.35
+    
+    
+
+
+
+  CMake will not be able to correctly generate this project.
+Call Stack (most recent call first):
+  CMakeLists.txt:2 (project)
+
+
+-- Configuring incomplete, errors occurred!
+[build] FAILED (exit 1)
+[Build] Failed — see the Console. Keeping the current module.
+[Build] Building 'Ap03App' -> Ap03App_hot6.dll
+[build] configuring C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Release/cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237/temp/ap03/Ap03App
+-- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.26200.
+-- The C compiler identification is MSVC 19.51.36257.0
+-- The CXX compiler identification is MSVC 19.51.36257.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - failed
+-- Check for working C compiler: C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe
+-- Check for working C compiler: C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe - broken
+CMake Error at C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.3/Modules/CMakeTestCCompiler.cmake:67 (message):
+  The C compiler
+
+    "C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe"
+
+  is not able to compile a simple test program.
+
+  It fails with the following output:
+
+    Change Dir: 'C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Release/cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237/temp/ap03/Ap03App/build/CMakeFiles/CMakeScratch/TryCompile-anr4vu'
+    
+    Run Build Command(s): "C:/Program Files/Microsoft Visual Studio/18/Community/MSBuild/Current/Bin/amd64/MSBuild.exe" cmTC_3d5f2.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=18.0 /v:n
+    MSBuild version 18.10.1-1.26427.6+3cd27c13e for .NET Framework
+    Build started 9/24/2026 8:45:48 PM.
+    
+    Project "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-anr4vu\cmTC_3d5f2.vcxproj" on node 1 (default targets).
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-anr4vu\cmTC_3d5f2.vcxproj]
+      Structured output is enabled. The formatting of compiler diagnostics will reflect the error hierarchy. See https://aka.ms/cpp/structured-output for more details.
+      Creating directory "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-anr4vu\Debug\".
+      Creating directory "cmTC_3d5f2.dir\Debug\cmTC_3d5f2.tlog\".
+    InitializeBuildStatus:
+      Creating "cmTC_3d5f2.dir\Debug\cmTC_3d5f2.tlog\unsuccessfulbuild" because "AlwaysCreate" was specified.
+      Touching "cmTC_3d5f2.dir\Debug\cmTC_3d5f2.tlog\unsuccessfulbuild".
+    ClCompile:
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\CL.exe /c /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D _MBCS /D "CMAKE_INTDIR=\"Debug\"" /RTC1 /MDd /Fo"cmTC_3d5f2.dir\Debug\\" /Fd"cmTC_3d5f2.dir\Debug\vc145.pdb" /external:W1 /TC /errorReport:queue "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-anr4vu\testCCompiler.c"
+      Microsoft (R) C/C++ Optimizing Compiler Version 19.51.36257 for x64
+      Copyright (C) Microsoft Corporation.  All rights reserved.
+      cl /c /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D _MBCS /D "CMAKE_INTDIR=\"Debug\"" /RTC1 /MDd /Fo"cmTC_3d5f2.dir\Debug\\" /Fd"cmTC_3d5f2.dir\Debug\vc145.pdb" /external:W1 /TC /errorReport:queue "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-anr4vu\testCCompiler.c"
+      testCCompiler.c
+    Link:
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\link.exe /OUT:"C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-anr4vu\Debug\cmTC_3d5f2.exe" /INCREMENTAL /ILK:"cmTC_3d5f2.dir\Debug\cmTC_3d5f2.ilk" /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Release/cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237/temp/ap03/Ap03App/build/CMakeFiles/CMakeScratch/TryCompile-anr4vu/Debug/cmTC_3d5f2.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /IMPLIB:"C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Release/cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237/temp/ap03/Ap03App/build/CMakeFiles/CMakeScratch/TryCompile-anr4vu/Debug/cmTC_3d5f2.lib" /MACHINE:X64  /machine:x64 cmTC_3d5f2.dir\Debug\testCCompiler.obj
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003: The specified task executable "link.exe" could not be run. System.IO.DirectoryNotFoundException: Could not find a part of the path 'C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-anr4vu\cmTC_3d5f2.dir\Debug\cmTC_3d5f2.tlog'. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-anr4vu\cmTC_3d5f2.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-anr4vu\cmTC_3d5f2.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.FileSystemEnumerableIterator`1.CommonInit() [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-anr4vu\cmTC_3d5f2.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.FileSystemEnumerableIterator`1..ctor(String path, String originalUserPath, String searchPattern, SearchOption searchOption, SearchResultHandler`1 resultHandler, Boolean checkHost) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-anr4vu\cmTC_3d5f2.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.Directory.GetFiles(String path, String searchPattern) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-anr4vu\cmTC_3d5f2.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.Utilities.TrackedDependencies.ExpandWildcards(ITaskItem[] expand, TaskLoggingHelper log) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-anr4vu\cmTC_3d5f2.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.CPPTasks.TrackedVCToolTask.DeleteFiles(ITaskItem[] filesToDelete) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-anr4vu\cmTC_3d5f2.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.CPPTasks.TrackedVCToolTask.PostExecuteTool(Int32 exitCode, Boolean preservePartialSuccess) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-anr4vu\cmTC_3d5f2.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.CPPTasks.TrackedVCToolTask.ExecuteTool(String pathToTool, String responseFileCommands, String commandLineCommands) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-anr4vu\cmTC_3d5f2.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.Utilities.ToolTask.Execute() [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-anr4vu\cmTC_3d5f2.vcxproj]
+    Done Building Project "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-anr4vu\cmTC_3d5f2.vcxproj" (default targets) -- FAILED.
+    
+    Build FAILED.
+    
+    "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-anr4vu\cmTC_3d5f2.vcxproj" (default target) (1) ->
+    (PrepareForBuild target) -> 
+      C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-anr4vu\cmTC_3d5f2.vcxproj]
+    
+    
+    "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-anr4vu\cmTC_3d5f2.vcxproj" (default target) (1) ->
+    (Link target) -> 
+      C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003: The specified task executable "link.exe" could not be run. System.IO.DirectoryNotFoundException: Could not find a part of the path 'C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-anr4vu\cmTC_3d5f2.dir\Debug\cmTC_3d5f2.tlog'. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-anr4vu\cmTC_3d5f2.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-anr4vu\cmTC_3d5f2.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.FileSystemEnumerableIterator`1.CommonInit() [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-anr4vu\cmTC_3d5f2.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.FileSystemEnumerableIterator`1..ctor(String path, String originalUserPath, String searchPattern, SearchOption searchOption, SearchResultHandler`1 resultHandler, Boolean checkHost) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-anr4vu\cmTC_3d5f2.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.Directory.GetFiles(String path, String searchPattern) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-anr4vu\cmTC_3d5f2.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.Utilities.TrackedDependencies.ExpandWildcards(ITaskItem[] expand, TaskLoggingHelper log) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-anr4vu\cmTC_3d5f2.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.CPPTasks.TrackedVCToolTask.DeleteFiles(ITaskItem[] filesToDelete) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-anr4vu\cmTC_3d5f2.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.CPPTasks.TrackedVCToolTask.PostExecuteTool(Int32 exitCode, Boolean preservePartialSuccess) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-anr4vu\cmTC_3d5f2.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.CPPTasks.TrackedVCToolTask.ExecuteTool(String pathToTool, String responseFileCommands, String commandLineCommands) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-anr4vu\cmTC_3d5f2.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.Utilities.ToolTask.Execute() [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-anr4vu\cmTC_3d5f2.vcxproj]
+    
+        1 Warning(s)
+        1 Error(s)
+    
+    Time Elapsed 00:00:00.35
+    
+    
+
+
+
+  CMake will not be able to correctly generate this project.
+Call Stack (most recent call first):
+  CMakeLists.txt:2 (project)
+
+
+-- Configuring incomplete, errors occurred!
+[build] FAILED (exit 1)
+[Build] Failed — see the Console. Keeping the current module.
+[COSMIC] Config: loaded 'assets/projects/Starforge/templates/samples/FlowDemo/project.cproj'.
+
+[COSMIC] Config: loaded 'assets/projects/Starforge/templates/samples/ForgePong/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/Projects/AnalysisSample/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/Projects/PendulumLab/project.cproj'.
+
+[COSMIC] WorkspaceLayer: Dockspace built (port mode L=true R=true T=true B=true).
+
+[COSMIC] Config: loaded 'assets/projects/Starforge/templates/samples/FlowDemo/project.cproj'.
+
+[COSMIC] Config: loaded 'assets/projects/Starforge/templates/samples/ForgePong/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/Projects/AnalysisSample/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/Projects/PendulumLab/project.cproj'.
+
+[COSMIC] Config: loaded './starforge/projects.toml'.
+
+[Scene] Opened 'project://scenes/Main.cscene'.
+[Project] Scaffolded project — press Ctrl+B to build the game module.
+[Project] Opened 'Ap03game' @ C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Release/cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237/temp/ap03/Ap03game
+[Build] Building 'Ap03game' -> Ap03game_hot7.dll
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Release/cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237/temp/ap03/Ap03game/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Release/cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237/temp/ap03/Ap03game/project.cproj'.
+
+[COSMIC] Config: loaded './starforge/layouts/active.toml'.
+
+[COSMIC] Config: loaded './starforge/layouts/active.toml'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Release/cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237/temp/ap03/Ap03game/project.cproj'.
+
+[COSMIC] Config: loaded './starforge/projects.toml'.
+
+[COSMIC] WorkspaceLayer: Dockspace built (port mode L=true R=true T=true B=true).
+
+[build] configuring C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Release/cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237/temp/ap03/Ap03game
+-- Building for: Visual Studio 18 2026
+-- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.26200.
+-- The C compiler identification is MSVC 19.51.36257.0
+-- The CXX compiler identification is MSVC 19.51.36257.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - failed
+-- Check for working C compiler: C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe
+-- Check for working C compiler: C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe - broken
+CMake Error at C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.3/Modules/CMakeTestCCompiler.cmake:67 (message):
+  The C compiler
+
+    "C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe"
+
+  is not able to compile a simple test program.
+
+  It fails with the following output:
+
+    Change Dir: 'C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Release/cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237/temp/ap03/Ap03game/build/CMakeFiles/CMakeScratch/TryCompile-cvoj1z'
+    
+    Run Build Command(s): "C:/Program Files/Microsoft Visual Studio/18/Community/MSBuild/Current/Bin/amd64/MSBuild.exe" cmTC_66feb.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=18.0 /v:n
+    MSBuild version 18.10.1-1.26427.6+3cd27c13e for .NET Framework
+    Build started 9/24/2026 8:45:51 PM.
+    
+    Project "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03game\build\CMakeFiles\CMakeScratch\TryCompile-cvoj1z\cmTC_66feb.vcxproj" on node 1 (default targets).
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03game\build\CMakeFiles\CMakeScratch\TryCompile-cvoj1z\cmTC_66feb.vcxproj]
+      Structured output is enabled. The formatting of compiler diagnostics will reflect the error hierarchy. See https://aka.ms/cpp/structured-output for more details.
+      Creating directory "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03game\build\CMakeFiles\CMakeScratch\TryCompile-cvoj1z\Debug\".
+      Creating directory "cmTC_66feb.dir\Debug\cmTC_66feb.tlog\".
+    InitializeBuildStatus:
+      Creating "cmTC_66feb.dir\Debug\cmTC_66feb.tlog\unsuccessfulbuild" because "AlwaysCreate" was specified.
+      Touching "cmTC_66feb.dir\Debug\cmTC_66feb.tlog\unsuccessfulbuild".
+    ClCompile:
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\CL.exe /c /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D _MBCS /D "CMAKE_INTDIR=\"Debug\"" /RTC1 /MDd /Fo"cmTC_66feb.dir\Debug\\" /Fd"cmTC_66feb.dir\Debug\vc145.pdb" /external:W1 /TC /errorReport:queue "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03game\build\CMakeFiles\CMakeScratch\TryCompile-cvoj1z\testCCompiler.c"
+      Microsoft (R) C/C++ Optimizing Compiler Version 19.51.36257 for x64
+      Copyright (C) Microsoft Corporation.  All rights reserved.
+      cl /c /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D _MBCS /D "CMAKE_INTDIR=\"Debug\"" /RTC1 /MDd /Fo"cmTC_66feb.dir\Debug\\" /Fd"cmTC_66feb.dir\Debug\vc145.pdb" /external:W1 /TC /errorReport:queue "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03game\build\CMakeFiles\CMakeScratch\TryCompile-cvoj1z\testCCompiler.c"
+      testCCompiler.c
+    Link:
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\link.exe /OUT:"C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03game\build\CMakeFiles\CMakeScratch\TryCompile-cvoj1z\Debug\cmTC_66feb.exe" /INCREMENTAL /ILK:"cmTC_66feb.dir\Debug\cmTC_66feb.ilk" /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Release/cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237/temp/ap03/Ap03game/build/CMakeFiles/CMakeScratch/TryCompile-cvoj1z/Debug/cmTC_66feb.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /IMPLIB:"C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Release/cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237/temp/ap03/Ap03game/build/CMakeFiles/CMakeScratch/TryCompile-cvoj1z/Debug/cmTC_66feb.lib" /MACHINE:X64  /machine:x64 cmTC_66feb.dir\Debug\testCCompiler.obj
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003: The specified task executable "link.exe" could not be run. System.IO.DirectoryNotFoundException: Could not find a part of the path 'C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03game\build\CMakeFiles\CMakeScratch\TryCompile-cvoj1z\cmTC_66feb.dir\Debug\cmTC_66feb.tlog'. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03game\build\CMakeFiles\CMakeScratch\TryCompile-cvoj1z\cmTC_66feb.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03game\build\CMakeFiles\CMakeScratch\TryCompile-cvoj1z\cmTC_66feb.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.FileSystemEnumerableIterator`1.CommonInit() [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03game\build\CMakeFiles\CMakeScratch\TryCompile-cvoj1z\cmTC_66feb.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.FileSystemEnumerableIterator`1..ctor(String path, String originalUserPath, String searchPattern, SearchOption searchOption, SearchResultHandler`1 resultHandler, Boolean checkHost) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03game\build\CMakeFiles\CMakeScratch\TryCompile-cvoj1z\cmTC_66feb.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.Directory.GetFiles(String path, String searchPattern) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03game\build\CMakeFiles\CMakeScratch\TryCompile-cvoj1z\cmTC_66feb.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.Utilities.TrackedDependencies.ExpandWildcards(ITaskItem[] expand, TaskLoggingHelper log) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03game\build\CMakeFiles\CMakeScratch\TryCompile-cvoj1z\cmTC_66feb.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.Utilities.CanonicalTrackedOutputFiles.InternalConstruct(ITask ownerTask, ITaskItem[] tlogFiles, Boolean constructOutputsFromTLogs) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03game\build\CMakeFiles\CMakeScratch\TryCompile-cvoj1z\cmTC_66feb.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.CPPTasks.TrackedVCToolTask.PostExecuteTool(Int32 exitCode, Boolean preservePartialSuccess) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03game\build\CMakeFiles\CMakeScratch\TryCompile-cvoj1z\cmTC_66feb.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.CPPTasks.TrackedVCToolTask.ExecuteTool(String pathToTool, String responseFileCommands, String commandLineCommands) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03game\build\CMakeFiles\CMakeScratch\TryCompile-cvoj1z\cmTC_66feb.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.Utilities.ToolTask.Execute() [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03game\build\CMakeFiles\CMakeScratch\TryCompile-cvoj1z\cmTC_66feb.vcxproj]
+    Done Building Project "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03game\build\CMakeFiles\CMakeScratch\TryCompile-cvoj1z\cmTC_66feb.vcxproj" (default targets) -- FAILED.
+    
+    Build FAILED.
+    
+    "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03game\build\CMakeFiles\CMakeScratch\TryCompile-cvoj1z\cmTC_66feb.vcxproj" (default target) (1) ->
+    (PrepareForBuild target) -> 
+      C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03game\build\CMakeFiles\CMakeScratch\TryCompile-cvoj1z\cmTC_66feb.vcxproj]
+    
+    
+    "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03game\build\CMakeFiles\CMakeScratch\TryCompile-cvoj1z\cmTC_66feb.vcxproj" (default target) (1) ->
+    (Link target) -> 
+      C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003: The specified task executable "link.exe" could not be run. System.IO.DirectoryNotFoundException: Could not find a part of the path 'C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03game\build\CMakeFiles\CMakeScratch\TryCompile-cvoj1z\cmTC_66feb.dir\Debug\cmTC_66feb.tlog'. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03game\build\CMakeFiles\CMakeScratch\TryCompile-cvoj1z\cmTC_66feb.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03game\build\CMakeFiles\CMakeScratch\TryCompile-cvoj1z\cmTC_66feb.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.FileSystemEnumerableIterator`1.CommonInit() [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03game\build\CMakeFiles\CMakeScratch\TryCompile-cvoj1z\cmTC_66feb.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.FileSystemEnumerableIterator`1..ctor(String path, String originalUserPath, String searchPattern, SearchOption searchOption, SearchResultHandler`1 resultHandler, Boolean checkHost) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03game\build\CMakeFiles\CMakeScratch\TryCompile-cvoj1z\cmTC_66feb.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.Directory.GetFiles(String path, String searchPattern) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03game\build\CMakeFiles\CMakeScratch\TryCompile-cvoj1z\cmTC_66feb.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.Utilities.TrackedDependencies.ExpandWildcards(ITaskItem[] expand, TaskLoggingHelper log) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03game\build\CMakeFiles\CMakeScratch\TryCompile-cvoj1z\cmTC_66feb.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.Utilities.CanonicalTrackedOutputFiles.InternalConstruct(ITask ownerTask, ITaskItem[] tlogFiles, Boolean constructOutputsFromTLogs) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03game\build\CMakeFiles\CMakeScratch\TryCompile-cvoj1z\cmTC_66feb.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.CPPTasks.TrackedVCToolTask.PostExecuteTool(Int32 exitCode, Boolean preservePartialSuccess) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03game\build\CMakeFiles\CMakeScratch\TryCompile-cvoj1z\cmTC_66feb.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.CPPTasks.TrackedVCToolTask.ExecuteTool(String pathToTool, String responseFileCommands, String commandLineCommands) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03game\build\CMakeFiles\CMakeScratch\TryCompile-cvoj1z\cmTC_66feb.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.Utilities.ToolTask.Execute() [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03game\build\CMakeFiles\CMakeScratch\TryCompile-cvoj1z\cmTC_66feb.vcxproj]
+    
+        1 Warning(s)
+        1 Error(s)
+    
+    Time Elapsed 00:00:00.31
+    
+    
+
+
+
+  CMake will not be able to correctly generate this project.
+Call Stack (most recent call first):
+  CMakeLists.txt:2 (project)
+
+
+-- Configuring incomplete, errors occurred!
+[build] FAILED (exit 1)
+[Build] Failed — see the Console. Keeping the current module.
+[Play] Started — 0 script(s).
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Release/cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237/temp/ap03/Ap03game/project.cproj'.
+
+[Play] Stopped — edit scene restored.
+[COSMIC] WorkspaceLayer: Dockspace built (port mode L=true R=true T=true B=true).
+
+[COSMIC] Config: loaded 'assets/projects/Starforge/templates/samples/FlowDemo/project.cproj'.
+
+[COSMIC] Config: loaded 'assets/projects/Starforge/templates/samples/ForgePong/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/Projects/AnalysisSample/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/Projects/PendulumLab/project.cproj'.
+
+[COSMIC] Config: loaded './starforge/projects.toml'.
+
+[Scene] Opened 'project://scenes/Main.cscene'.
+[Project] Scaffolded project — press Ctrl+B to build the game module.
+[Project] Opened 'Ap03blank' @ C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Release/cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237/temp/ap03/Ap03blank
+[Build] Building 'Ap03blank' -> Ap03blank_hot8.dll
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Release/cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237/temp/ap03/Ap03blank/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Release/cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237/temp/ap03/Ap03blank/project.cproj'.
+
+[COSMIC] Config: loaded './starforge/layouts/active.toml'.
+
+[COSMIC] Config: loaded './starforge/layouts/active.toml'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Release/cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237/temp/ap03/Ap03blank/project.cproj'.
+
+[COSMIC] Config: loaded './starforge/projects.toml'.
+
+[COSMIC] WorkspaceLayer: Dockspace built (port mode L=true R=true T=true B=true).
+
+[build] configuring C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Release/cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237/temp/ap03/Ap03blank
+-- Building for: Visual Studio 18 2026
+-- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.26200.
+-- The C compiler identification is MSVC 19.51.36257.0
+-- The CXX compiler identification is MSVC 19.51.36257.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - failed
+-- Check for working C compiler: C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe
+-- Check for working C compiler: C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe - broken
+CMake Error at C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.3/Modules/CMakeTestCCompiler.cmake:67 (message):
+  The C compiler
+
+    "C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe"
+
+  is not able to compile a simple test program.
+
+  It fails with the following output:
+
+    Change Dir: 'C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Release/cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237/temp/ap03/Ap03blank/build/CMakeFiles/CMakeScratch/TryCompile-k6utvy'
+    
+    Run Build Command(s): "C:/Program Files/Microsoft Visual Studio/18/Community/MSBuild/Current/Bin/amd64/MSBuild.exe" cmTC_4bb9e.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=18.0 /v:n
+    MSBuild version 18.10.1-1.26427.6+3cd27c13e for .NET Framework
+    Build started 9/24/2026 8:45:54 PM.
+    
+    Project "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03blank\build\CMakeFiles\CMakeScratch\TryCompile-k6utvy\cmTC_4bb9e.vcxproj" on node 1 (default targets).
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03blank\build\CMakeFiles\CMakeScratch\TryCompile-k6utvy\cmTC_4bb9e.vcxproj]
+      Structured output is enabled. The formatting of compiler diagnostics will reflect the error hierarchy. See https://aka.ms/cpp/structured-output for more details.
+      Creating directory "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03blank\build\CMakeFiles\CMakeScratch\TryCompile-k6utvy\Debug\".
+      Creating directory "cmTC_4bb9e.dir\Debug\cmTC_4bb9e.tlog\".
+    InitializeBuildStatus:
+      Creating "cmTC_4bb9e.dir\Debug\cmTC_4bb9e.tlog\unsuccessfulbuild" because "AlwaysCreate" was specified.
+      Touching "cmTC_4bb9e.dir\Debug\cmTC_4bb9e.tlog\unsuccessfulbuild".
+    ClCompile:
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\CL.exe /c /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D _MBCS /D "CMAKE_INTDIR=\"Debug\"" /RTC1 /MDd /Fo"cmTC_4bb9e.dir\Debug\\" /Fd"cmTC_4bb9e.dir\Debug\vc145.pdb" /external:W1 /TC /errorReport:queue "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03blank\build\CMakeFiles\CMakeScratch\TryCompile-k6utvy\testCCompiler.c"
+      Microsoft (R) C/C++ Optimizing Compiler Version 19.51.36257 for x64
+      Copyright (C) Microsoft Corporation.  All rights reserved.
+      cl /c /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D _MBCS /D "CMAKE_INTDIR=\"Debug\"" /RTC1 /MDd /Fo"cmTC_4bb9e.dir\Debug\\" /Fd"cmTC_4bb9e.dir\Debug\vc145.pdb" /external:W1 /TC /errorReport:queue "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03blank\build\CMakeFiles\CMakeScratch\TryCompile-k6utvy\testCCompiler.c"
+      testCCompiler.c
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003: The specified task executable "CL.exe" could not be run. System.IO.DirectoryNotFoundException: Could not find a part of the path 'C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03blank\build\CMakeFiles\CMakeScratch\TryCompile-k6utvy\cmTC_4bb9e.dir\Debug\cmTC_4bb9e.tlog'. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03blank\build\CMakeFiles\CMakeScratch\TryCompile-k6utvy\cmTC_4bb9e.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03blank\build\CMakeFiles\CMakeScratch\TryCompile-k6utvy\cmTC_4bb9e.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at System.IO.FileSystemEnumerableIterator`1.CommonInit() [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03blank\build\CMakeFiles\CMakeScratch\TryCompile-k6utvy\cmTC_4bb9e.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at System.IO.FileSystemEnumerableIterator`1..ctor(String path, String originalUserPath, String searchPattern, SearchOption searchOption, SearchResultHandler`1 resultHandler, Boolean checkHost) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03blank\build\CMakeFiles\CMakeScratch\TryCompile-k6utvy\cmTC_4bb9e.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at System.IO.Directory.GetFiles(String path, String searchPattern) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03blank\build\CMakeFiles\CMakeScratch\TryCompile-k6utvy\cmTC_4bb9e.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at Microsoft.Build.Utilities.TrackedDependencies.ExpandWildcards(ITaskItem[] expand, TaskLoggingHelper log) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03blank\build\CMakeFiles\CMakeScratch\TryCompile-k6utvy\cmTC_4bb9e.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at Microsoft.Build.CPPTasks.TrackedVCToolTask.DeleteFiles(ITaskItem[] filesToDelete) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03blank\build\CMakeFiles\CMakeScratch\TryCompile-k6utvy\cmTC_4bb9e.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at Microsoft.Build.CPPTasks.CL.PostExecuteTool(Int32 exitCode) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03blank\build\CMakeFiles\CMakeScratch\TryCompile-k6utvy\cmTC_4bb9e.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at Microsoft.Build.CPPTasks.TrackedVCToolTask.ExecuteTool(String pathToTool, String responseFileCommands, String commandLineCommands) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03blank\build\CMakeFiles\CMakeScratch\TryCompile-k6utvy\cmTC_4bb9e.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at Microsoft.Build.CPPTasks.CL.ExecuteTool(String pathToTool, String responseFileCommands, String commandLineCommands) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03blank\build\CMakeFiles\CMakeScratch\TryCompile-k6utvy\cmTC_4bb9e.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at Microsoft.Build.Utilities.ToolTask.Execute() [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03blank\build\CMakeFiles\CMakeScratch\TryCompile-k6utvy\cmTC_4bb9e.vcxproj]
+    Done Building Project "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03blank\build\CMakeFiles\CMakeScratch\TryCompile-k6utvy\cmTC_4bb9e.vcxproj" (default targets) -- FAILED.
+    
+    Build FAILED.
+    
+    "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03blank\build\CMakeFiles\CMakeScratch\TryCompile-k6utvy\cmTC_4bb9e.vcxproj" (default target) (1) ->
+    (PrepareForBuild target) -> 
+      C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03blank\build\CMakeFiles\CMakeScratch\TryCompile-k6utvy\cmTC_4bb9e.vcxproj]
+    
+    
+    "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03blank\build\CMakeFiles\CMakeScratch\TryCompile-k6utvy\cmTC_4bb9e.vcxproj" (default target) (1) ->
+    (ClCompile target) -> 
+      C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003: The specified task executable "CL.exe" could not be run. System.IO.DirectoryNotFoundException: Could not find a part of the path 'C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03blank\build\CMakeFiles\CMakeScratch\TryCompile-k6utvy\cmTC_4bb9e.dir\Debug\cmTC_4bb9e.tlog'. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03blank\build\CMakeFiles\CMakeScratch\TryCompile-k6utvy\cmTC_4bb9e.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03blank\build\CMakeFiles\CMakeScratch\TryCompile-k6utvy\cmTC_4bb9e.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at System.IO.FileSystemEnumerableIterator`1.CommonInit() [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03blank\build\CMakeFiles\CMakeScratch\TryCompile-k6utvy\cmTC_4bb9e.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at System.IO.FileSystemEnumerableIterator`1..ctor(String path, String originalUserPath, String searchPattern, SearchOption searchOption, SearchResultHandler`1 resultHandler, Boolean checkHost) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03blank\build\CMakeFiles\CMakeScratch\TryCompile-k6utvy\cmTC_4bb9e.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at System.IO.Directory.GetFiles(String path, String searchPattern) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03blank\build\CMakeFiles\CMakeScratch\TryCompile-k6utvy\cmTC_4bb9e.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at Microsoft.Build.Utilities.TrackedDependencies.ExpandWildcards(ITaskItem[] expand, TaskLoggingHelper log) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03blank\build\CMakeFiles\CMakeScratch\TryCompile-k6utvy\cmTC_4bb9e.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at Microsoft.Build.CPPTasks.TrackedVCToolTask.DeleteFiles(ITaskItem[] filesToDelete) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03blank\build\CMakeFiles\CMakeScratch\TryCompile-k6utvy\cmTC_4bb9e.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at Microsoft.Build.CPPTasks.CL.PostExecuteTool(Int32 exitCode) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03blank\build\CMakeFiles\CMakeScratch\TryCompile-k6utvy\cmTC_4bb9e.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at Microsoft.Build.CPPTasks.TrackedVCToolTask.ExecuteTool(String pathToTool, String responseFileCommands, String commandLineCommands) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03blank\build\CMakeFiles\CMakeScratch\TryCompile-k6utvy\cmTC_4bb9e.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at Microsoft.Build.CPPTasks.CL.ExecuteTool(String pathToTool, String responseFileCommands, String commandLineCommands) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03blank\build\CMakeFiles\CMakeScratch\TryCompile-k6utvy\cmTC_4bb9e.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at Microsoft.Build.Utilities.ToolTask.Execute() [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\Ap03blank\build\CMakeFiles\CMakeScratch\TryCompile-k6utvy\cmTC_4bb9e.vcxproj]
+    
+        1 Warning(s)
+        1 Error(s)
+    
+    Time Elapsed 00:00:00.20
+    
+    
+
+
+
+  CMake will not be able to correctly generate this project.
+Call Stack (most recent call first):
+  CMakeLists.txt:2 (project)
+
+
+-- Configuring incomplete, errors occurred!
+[build] FAILED (exit 1)
+[Build] Failed — see the Console. Keeping the current module.
+[Play] Started — 0 script(s).
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Release/cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237/temp/ap03/Ap03blank/project.cproj'.
+
+[Play] Stopped — edit scene restored.
+[COSMIC] WorkspaceLayer: Dockspace built (port mode L=true R=true T=true B=true).
+
+[COSMIC] Config: loaded 'assets/projects/Starforge/templates/samples/FlowDemo/project.cproj'.
+
+[COSMIC] Config: loaded 'assets/projects/Starforge/templates/samples/ForgePong/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/Projects/AnalysisSample/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/Projects/PendulumLab/project.cproj'.
+
+[COSMIC] Config: loaded './starforge/projects.toml'.
+
+[Samples] Created 'FlowDemo' at C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Release/cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237/temp/ap03/FlowDemo from assets/projects/Starforge/templates/samples/FlowDemo.
+[Scene] Opened 'project://scenes/MainMenu.cscene'.
+[Project] Scaffolded project — press Ctrl+B to build the game module.
+[Project] Opened 'FlowDemo' @ C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Release/cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237/temp/ap03/FlowDemo
+[Build] Building 'FlowDemo' -> FlowDemo_hot9.dll
+[COSMIC] Config: loaded 'assets/projects/Starforge/templates/samples/FlowDemo/project.cproj'.
+
+[COSMIC] Config: loaded 'assets/projects/Starforge/templates/samples/ForgePong/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/Projects/AnalysisSample/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/Projects/PendulumLab/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Release/cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237/temp/ap03/FlowDemo/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Release/cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237/temp/ap03/FlowDemo/project.cproj'.
+
+[COSMIC] Config: loaded './starforge/layouts/active.toml'.
+
+[COSMIC] Config: loaded './starforge/layouts/active.toml'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Release/cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237/temp/ap03/FlowDemo/project.cproj'.
+
+[COSMIC] Config: loaded './starforge/projects.toml'.
+
+[COSMIC] WorkspaceLayer: Dockspace built (port mode L=true R=true T=true B=true).
+
+[build] configuring C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Release/cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237/temp/ap03/FlowDemo
+-- Building for: Visual Studio 18 2026
+-- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.26200.
+-- The C compiler identification is MSVC 19.51.36257.0
+-- The CXX compiler identification is MSVC 19.51.36257.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - failed
+-- Check for working C compiler: C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe
+-- Check for working C compiler: C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe - broken
+CMake Error at C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.3/Modules/CMakeTestCCompiler.cmake:67 (message):
+  The C compiler
+
+    "C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe"
+
+  is not able to compile a simple test program.
+
+  It fails with the following output:
+
+    Change Dir: 'C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Release/cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237/temp/ap03/FlowDemo/build/CMakeFiles/CMakeScratch/TryCompile-378lch'
+    
+    Run Build Command(s): "C:/Program Files/Microsoft Visual Studio/18/Community/MSBuild/Current/Bin/amd64/MSBuild.exe" cmTC_329a1.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=18.0 /v:n
+    MSBuild version 18.10.1-1.26427.6+3cd27c13e for .NET Framework
+    Build started 9/24/2026 8:45:57 PM.
+    
+    Project "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\FlowDemo\build\CMakeFiles\CMakeScratch\TryCompile-378lch\cmTC_329a1.vcxproj" on node 1 (default targets).
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\FlowDemo\build\CMakeFiles\CMakeScratch\TryCompile-378lch\cmTC_329a1.vcxproj]
+      Structured output is enabled. The formatting of compiler diagnostics will reflect the error hierarchy. See https://aka.ms/cpp/structured-output for more details.
+      Creating directory "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\FlowDemo\build\CMakeFiles\CMakeScratch\TryCompile-378lch\Debug\".
+      Creating directory "cmTC_329a1.dir\Debug\cmTC_329a1.tlog\".
+    InitializeBuildStatus:
+      Creating "cmTC_329a1.dir\Debug\cmTC_329a1.tlog\unsuccessfulbuild" because "AlwaysCreate" was specified.
+      Touching "cmTC_329a1.dir\Debug\cmTC_329a1.tlog\unsuccessfulbuild".
+    ClCompile:
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\CL.exe /c /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D _MBCS /D "CMAKE_INTDIR=\"Debug\"" /RTC1 /MDd /Fo"cmTC_329a1.dir\Debug\\" /Fd"cmTC_329a1.dir\Debug\vc145.pdb" /external:W1 /TC /errorReport:queue "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\FlowDemo\build\CMakeFiles\CMakeScratch\TryCompile-378lch\testCCompiler.c"
+      Microsoft (R) C/C++ Optimizing Compiler Version 19.51.36257 for x64
+      Copyright (C) Microsoft Corporation.  All rights reserved.
+      cl /c /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D _MBCS /D "CMAKE_INTDIR=\"Debug\"" /RTC1 /MDd /Fo"cmTC_329a1.dir\Debug\\" /Fd"cmTC_329a1.dir\Debug\vc145.pdb" /external:W1 /TC /errorReport:queue "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\FlowDemo\build\CMakeFiles\CMakeScratch\TryCompile-378lch\testCCompiler.c"
+      testCCompiler.c
+    Link:
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\link.exe /OUT:"C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\FlowDemo\build\CMakeFiles\CMakeScratch\TryCompile-378lch\Debug\cmTC_329a1.exe" /INCREMENTAL /ILK:"cmTC_329a1.dir\Debug\cmTC_329a1.ilk" /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Release/cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237/temp/ap03/FlowDemo/build/CMakeFiles/CMakeScratch/TryCompile-378lch/Debug/cmTC_329a1.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /IMPLIB:"C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Release/cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237/temp/ap03/FlowDemo/build/CMakeFiles/CMakeScratch/TryCompile-378lch/Debug/cmTC_329a1.lib" /MACHINE:X64  /machine:x64 cmTC_329a1.dir\Debug\testCCompiler.obj
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003: The specified task executable "link.exe" could not be run. System.IO.DirectoryNotFoundException: Could not find a part of the path 'C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\FlowDemo\build\CMakeFiles\CMakeScratch\TryCompile-378lch\cmTC_329a1.dir\Debug\cmTC_329a1.tlog'. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\FlowDemo\build\CMakeFiles\CMakeScratch\TryCompile-378lch\cmTC_329a1.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\FlowDemo\build\CMakeFiles\CMakeScratch\TryCompile-378lch\cmTC_329a1.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.FileSystemEnumerableIterator`1.CommonInit() [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\FlowDemo\build\CMakeFiles\CMakeScratch\TryCompile-378lch\cmTC_329a1.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.FileSystemEnumerableIterator`1..ctor(String path, String originalUserPath, String searchPattern, SearchOption searchOption, SearchResultHandler`1 resultHandler, Boolean checkHost) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\FlowDemo\build\CMakeFiles\CMakeScratch\TryCompile-378lch\cmTC_329a1.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.Directory.GetFiles(String path, String searchPattern) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\FlowDemo\build\CMakeFiles\CMakeScratch\TryCompile-378lch\cmTC_329a1.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.Utilities.TrackedDependencies.ExpandWildcards(ITaskItem[] expand, TaskLoggingHelper log) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\FlowDemo\build\CMakeFiles\CMakeScratch\TryCompile-378lch\cmTC_329a1.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.Utilities.CanonicalTrackedOutputFiles.InternalConstruct(ITask ownerTask, ITaskItem[] tlogFiles, Boolean constructOutputsFromTLogs) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\FlowDemo\build\CMakeFiles\CMakeScratch\TryCompile-378lch\cmTC_329a1.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.CPPTasks.TrackedVCToolTask.PostExecuteTool(Int32 exitCode, Boolean preservePartialSuccess) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\FlowDemo\build\CMakeFiles\CMakeScratch\TryCompile-378lch\cmTC_329a1.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.CPPTasks.TrackedVCToolTask.ExecuteTool(String pathToTool, String responseFileCommands, String commandLineCommands) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\FlowDemo\build\CMakeFiles\CMakeScratch\TryCompile-378lch\cmTC_329a1.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.Utilities.ToolTask.Execute() [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\FlowDemo\build\CMakeFiles\CMakeScratch\TryCompile-378lch\cmTC_329a1.vcxproj]
+    Done Building Project "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\FlowDemo\build\CMakeFiles\CMakeScratch\TryCompile-378lch\cmTC_329a1.vcxproj" (default targets) -- FAILED.
+    
+    Build FAILED.
+    
+    "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\FlowDemo\build\CMakeFiles\CMakeScratch\TryCompile-378lch\cmTC_329a1.vcxproj" (default target) (1) ->
+    (PrepareForBuild target) -> 
+      C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\FlowDemo\build\CMakeFiles\CMakeScratch\TryCompile-378lch\cmTC_329a1.vcxproj]
+    
+    
+    "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\FlowDemo\build\CMakeFiles\CMakeScratch\TryCompile-378lch\cmTC_329a1.vcxproj" (default target) (1) ->
+    (Link target) -> 
+      C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003: The specified task executable "link.exe" could not be run. System.IO.DirectoryNotFoundException: Could not find a part of the path 'C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\FlowDemo\build\CMakeFiles\CMakeScratch\TryCompile-378lch\cmTC_329a1.dir\Debug\cmTC_329a1.tlog'. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\FlowDemo\build\CMakeFiles\CMakeScratch\TryCompile-378lch\cmTC_329a1.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\FlowDemo\build\CMakeFiles\CMakeScratch\TryCompile-378lch\cmTC_329a1.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.FileSystemEnumerableIterator`1.CommonInit() [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\FlowDemo\build\CMakeFiles\CMakeScratch\TryCompile-378lch\cmTC_329a1.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.FileSystemEnumerableIterator`1..ctor(String path, String originalUserPath, String searchPattern, SearchOption searchOption, SearchResultHandler`1 resultHandler, Boolean checkHost) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\FlowDemo\build\CMakeFiles\CMakeScratch\TryCompile-378lch\cmTC_329a1.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.Directory.GetFiles(String path, String searchPattern) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\FlowDemo\build\CMakeFiles\CMakeScratch\TryCompile-378lch\cmTC_329a1.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.Utilities.TrackedDependencies.ExpandWildcards(ITaskItem[] expand, TaskLoggingHelper log) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\FlowDemo\build\CMakeFiles\CMakeScratch\TryCompile-378lch\cmTC_329a1.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.Utilities.CanonicalTrackedOutputFiles.InternalConstruct(ITask ownerTask, ITaskItem[] tlogFiles, Boolean constructOutputsFromTLogs) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\FlowDemo\build\CMakeFiles\CMakeScratch\TryCompile-378lch\cmTC_329a1.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.CPPTasks.TrackedVCToolTask.PostExecuteTool(Int32 exitCode, Boolean preservePartialSuccess) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\FlowDemo\build\CMakeFiles\CMakeScratch\TryCompile-378lch\cmTC_329a1.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.CPPTasks.TrackedVCToolTask.ExecuteTool(String pathToTool, String responseFileCommands, String commandLineCommands) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\FlowDemo\build\CMakeFiles\CMakeScratch\TryCompile-378lch\cmTC_329a1.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.Utilities.ToolTask.Execute() [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\FlowDemo\build\CMakeFiles\CMakeScratch\TryCompile-378lch\cmTC_329a1.vcxproj]
+    
+        1 Warning(s)
+        1 Error(s)
+    
+    Time Elapsed 00:00:00.31
+    
+    
+
+
+
+  CMake will not be able to correctly generate this project.
+Call Stack (most recent call first):
+  CMakeLists.txt:2 (project)
+
+
+-- Configuring incomplete, errors occurred!
+[build] FAILED (exit 1)
+[Build] Failed — see the Console. Keeping the current module.
+[Play] Started — 0 script(s).
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Release/cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237/temp/ap03/FlowDemo/project.cproj'.
+
+[Play] Stopped — edit scene restored.
+[COSMIC] WorkspaceLayer: Dockspace built (port mode L=true R=true T=true B=true).
+
+[COSMIC] Config: loaded 'assets/projects/Starforge/templates/samples/FlowDemo/project.cproj'.
+
+[COSMIC] Config: loaded 'assets/projects/Starforge/templates/samples/ForgePong/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/Projects/AnalysisSample/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/Projects/PendulumLab/project.cproj'.
+
+[COSMIC] Config: loaded './starforge/projects.toml'.
+
+[Samples] Created 'ForgePong' at C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Release/cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237/temp/ap03/ForgePong from assets/projects/Starforge/templates/samples/ForgePong.
+[Scene] Opened 'project://scenes/Menu.cscene'.
+[Project] Scaffolded project — press Ctrl+B to build the game module.
+[Project] Opened 'ForgePong' @ C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Release/cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237/temp/ap03/ForgePong
+[Build] Building 'ForgePong' -> ForgePong_hot10.dll
+[COSMIC] Config: loaded 'assets/projects/Starforge/templates/samples/FlowDemo/project.cproj'.
+
+[COSMIC] Config: loaded 'assets/projects/Starforge/templates/samples/ForgePong/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/Projects/AnalysisSample/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/Projects/PendulumLab/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Release/cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237/temp/ap03/ForgePong/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Release/cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237/temp/ap03/ForgePong/project.cproj'.
+
+[COSMIC] Config: loaded './starforge/layouts/active.toml'.
+
+[COSMIC] Config: loaded './starforge/layouts/active.toml'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Release/cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237/temp/ap03/ForgePong/project.cproj'.
+
+[COSMIC] Config: loaded './starforge/projects.toml'.
+
+[COSMIC] WorkspaceLayer: Dockspace built (port mode L=true R=true T=true B=true).
+
+[build] configuring C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Release/cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237/temp/ap03/ForgePong
+-- Building for: Visual Studio 18 2026
+-- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.26200.
+-- The C compiler identification is MSVC 19.51.36257.0
+-- The CXX compiler identification is MSVC 19.51.36257.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - failed
+-- Check for working C compiler: C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe
+-- Check for working C compiler: C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe - broken
+CMake Error at C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.3/Modules/CMakeTestCCompiler.cmake:67 (message):
+  The C compiler
+
+    "C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe"
+
+  is not able to compile a simple test program.
+
+  It fails with the following output:
+
+    Change Dir: 'C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Release/cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237/temp/ap03/ForgePong/build/CMakeFiles/CMakeScratch/TryCompile-p777sv'
+    
+    Run Build Command(s): "C:/Program Files/Microsoft Visual Studio/18/Community/MSBuild/Current/Bin/amd64/MSBuild.exe" cmTC_da594.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=18.0 /v:n
+    MSBuild version 18.10.1-1.26427.6+3cd27c13e for .NET Framework
+    Build started 9/24/2026 8:45:59 PM.
+    
+    Project "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\ForgePong\build\CMakeFiles\CMakeScratch\TryCompile-p777sv\cmTC_da594.vcxproj" on node 1 (default targets).
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\ForgePong\build\CMakeFiles\CMakeScratch\TryCompile-p777sv\cmTC_da594.vcxproj]
+      Structured output is enabled. The formatting of compiler diagnostics will reflect the error hierarchy. See https://aka.ms/cpp/structured-output for more details.
+      Creating directory "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\ForgePong\build\CMakeFiles\CMakeScratch\TryCompile-p777sv\Debug\".
+      Creating directory "cmTC_da594.dir\Debug\cmTC_da594.tlog\".
+    InitializeBuildStatus:
+      Creating "cmTC_da594.dir\Debug\cmTC_da594.tlog\unsuccessfulbuild" because "AlwaysCreate" was specified.
+      Touching "cmTC_da594.dir\Debug\cmTC_da594.tlog\unsuccessfulbuild".
+    ClCompile:
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\CL.exe /c /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D _MBCS /D "CMAKE_INTDIR=\"Debug\"" /RTC1 /MDd /Fo"cmTC_da594.dir\Debug\\" /Fd"cmTC_da594.dir\Debug\vc145.pdb" /external:W1 /TC /errorReport:queue "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\ForgePong\build\CMakeFiles\CMakeScratch\TryCompile-p777sv\testCCompiler.c"
+      Microsoft (R) C/C++ Optimizing Compiler Version 19.51.36257 for x64
+      Copyright (C) Microsoft Corporation.  All rights reserved.
+      cl /c /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D _MBCS /D "CMAKE_INTDIR=\"Debug\"" /RTC1 /MDd /Fo"cmTC_da594.dir\Debug\\" /Fd"cmTC_da594.dir\Debug\vc145.pdb" /external:W1 /TC /errorReport:queue "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\ForgePong\build\CMakeFiles\CMakeScratch\TryCompile-p777sv\testCCompiler.c"
+      testCCompiler.c
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003: The specified task executable "CL.exe" could not be run. System.IO.DirectoryNotFoundException: Could not find a part of the path 'C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\ForgePong\build\CMakeFiles\CMakeScratch\TryCompile-p777sv\cmTC_da594.dir\Debug\cmTC_da594.tlog'. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\ForgePong\build\CMakeFiles\CMakeScratch\TryCompile-p777sv\cmTC_da594.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\ForgePong\build\CMakeFiles\CMakeScratch\TryCompile-p777sv\cmTC_da594.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at System.IO.FileSystemEnumerableIterator`1.CommonInit() [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\ForgePong\build\CMakeFiles\CMakeScratch\TryCompile-p777sv\cmTC_da594.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at System.IO.FileSystemEnumerableIterator`1..ctor(String path, String originalUserPath, String searchPattern, SearchOption searchOption, SearchResultHandler`1 resultHandler, Boolean checkHost) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\ForgePong\build\CMakeFiles\CMakeScratch\TryCompile-p777sv\cmTC_da594.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at System.IO.Directory.GetFiles(String path, String searchPattern) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\ForgePong\build\CMakeFiles\CMakeScratch\TryCompile-p777sv\cmTC_da594.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at Microsoft.Build.Utilities.TrackedDependencies.ExpandWildcards(ITaskItem[] expand, TaskLoggingHelper log) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\ForgePong\build\CMakeFiles\CMakeScratch\TryCompile-p777sv\cmTC_da594.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at Microsoft.Build.CPPTasks.TrackedVCToolTask.DeleteFiles(ITaskItem[] filesToDelete) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\ForgePong\build\CMakeFiles\CMakeScratch\TryCompile-p777sv\cmTC_da594.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at Microsoft.Build.CPPTasks.CL.PostExecuteTool(Int32 exitCode) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\ForgePong\build\CMakeFiles\CMakeScratch\TryCompile-p777sv\cmTC_da594.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at Microsoft.Build.CPPTasks.TrackedVCToolTask.ExecuteTool(String pathToTool, String responseFileCommands, String commandLineCommands) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\ForgePong\build\CMakeFiles\CMakeScratch\TryCompile-p777sv\cmTC_da594.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at Microsoft.Build.CPPTasks.CL.ExecuteTool(String pathToTool, String responseFileCommands, String commandLineCommands) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\ForgePong\build\CMakeFiles\CMakeScratch\TryCompile-p777sv\cmTC_da594.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at Microsoft.Build.Utilities.ToolTask.Execute() [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\ForgePong\build\CMakeFiles\CMakeScratch\TryCompile-p777sv\cmTC_da594.vcxproj]
+    Done Building Project "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\ForgePong\build\CMakeFiles\CMakeScratch\TryCompile-p777sv\cmTC_da594.vcxproj" (default targets) -- FAILED.
+    
+    Build FAILED.
+    
+    "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\ForgePong\build\CMakeFiles\CMakeScratch\TryCompile-p777sv\cmTC_da594.vcxproj" (default target) (1) ->
+    (PrepareForBuild target) -> 
+      C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\ForgePong\build\CMakeFiles\CMakeScratch\TryCompile-p777sv\cmTC_da594.vcxproj]
+    
+    
+    "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\ForgePong\build\CMakeFiles\CMakeScratch\TryCompile-p777sv\cmTC_da594.vcxproj" (default target) (1) ->
+    (ClCompile target) -> 
+      C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003: The specified task executable "CL.exe" could not be run. System.IO.DirectoryNotFoundException: Could not find a part of the path 'C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\ForgePong\build\CMakeFiles\CMakeScratch\TryCompile-p777sv\cmTC_da594.dir\Debug\cmTC_da594.tlog'. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\ForgePong\build\CMakeFiles\CMakeScratch\TryCompile-p777sv\cmTC_da594.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\ForgePong\build\CMakeFiles\CMakeScratch\TryCompile-p777sv\cmTC_da594.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at System.IO.FileSystemEnumerableIterator`1.CommonInit() [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\ForgePong\build\CMakeFiles\CMakeScratch\TryCompile-p777sv\cmTC_da594.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at System.IO.FileSystemEnumerableIterator`1..ctor(String path, String originalUserPath, String searchPattern, SearchOption searchOption, SearchResultHandler`1 resultHandler, Boolean checkHost) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\ForgePong\build\CMakeFiles\CMakeScratch\TryCompile-p777sv\cmTC_da594.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at System.IO.Directory.GetFiles(String path, String searchPattern) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\ForgePong\build\CMakeFiles\CMakeScratch\TryCompile-p777sv\cmTC_da594.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at Microsoft.Build.Utilities.TrackedDependencies.ExpandWildcards(ITaskItem[] expand, TaskLoggingHelper log) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\ForgePong\build\CMakeFiles\CMakeScratch\TryCompile-p777sv\cmTC_da594.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at Microsoft.Build.CPPTasks.TrackedVCToolTask.DeleteFiles(ITaskItem[] filesToDelete) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\ForgePong\build\CMakeFiles\CMakeScratch\TryCompile-p777sv\cmTC_da594.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at Microsoft.Build.CPPTasks.CL.PostExecuteTool(Int32 exitCode) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\ForgePong\build\CMakeFiles\CMakeScratch\TryCompile-p777sv\cmTC_da594.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at Microsoft.Build.CPPTasks.TrackedVCToolTask.ExecuteTool(String pathToTool, String responseFileCommands, String commandLineCommands) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\ForgePong\build\CMakeFiles\CMakeScratch\TryCompile-p777sv\cmTC_da594.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at Microsoft.Build.CPPTasks.CL.ExecuteTool(String pathToTool, String responseFileCommands, String commandLineCommands) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\ForgePong\build\CMakeFiles\CMakeScratch\TryCompile-p777sv\cmTC_da594.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at Microsoft.Build.Utilities.ToolTask.Execute() [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\ForgePong\build\CMakeFiles\CMakeScratch\TryCompile-p777sv\cmTC_da594.vcxproj]
+    
+        1 Warning(s)
+        1 Error(s)
+    
+    Time Elapsed 00:00:00.21
+    
+    
+
+
+
+  CMake will not be able to correctly generate this project.
+Call Stack (most recent call first):
+  CMakeLists.txt:2 (project)
+
+
+-- Configuring incomplete, errors occurred!
+[build] FAILED (exit 1)
+[Build] Failed — see the Console. Keeping the current module.
+[Play] Started — 0 script(s).
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Release/cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237/temp/ap03/ForgePong/project.cproj'.
+
+[Play] Stopped — edit scene restored.
+[COSMIC] WorkspaceLayer: Dockspace built (port mode L=true R=true T=true B=true).
+
+[COSMIC] Config: loaded 'assets/projects/Starforge/templates/samples/FlowDemo/project.cproj'.
+
+[COSMIC] Config: loaded 'assets/projects/Starforge/templates/samples/ForgePong/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/Projects/AnalysisSample/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/Projects/PendulumLab/project.cproj'.
+
+[COSMIC] Config: loaded './starforge/projects.toml'.
+
+[Samples] Created 'PendulumLab' at C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Release/cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237/temp/ap03/PendulumLab from C:/dev/Cosmic/build/_lanes/ux-03/Projects/PendulumLab.
+[Scene] Opened 'project://scenes/Home.cscene'.
+[Scripts] 1 script(s) not built — press Ctrl+B to compile the project module.
+[Project] Scaffolded project — press Ctrl+B to build the game module.
+[Project] Opened 'PendulumLab' @ C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Release/cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237/temp/ap03/PendulumLab
+[Build] Building 'PendulumLab' -> PendulumLab_hot11.dll
+[COSMIC] Config: loaded 'assets/projects/Starforge/templates/samples/FlowDemo/project.cproj'.
+
+[COSMIC] Config: loaded 'assets/projects/Starforge/templates/samples/ForgePong/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/Projects/AnalysisSample/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/Projects/PendulumLab/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Release/cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237/temp/ap03/PendulumLab/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Release/cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237/temp/ap03/PendulumLab/project.cproj'.
+
+[COSMIC] Config: loaded './starforge/layouts/active.toml'.
+
+[COSMIC] Config: loaded './starforge/layouts/active.toml'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Release/cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237/temp/ap03/PendulumLab/project.cproj'.
+
+[COSMIC] Config: loaded './starforge/projects.toml'.
+
+[COSMIC] WorkspaceLayer: Dockspace built (port mode L=true R=true T=true B=true).
+
+[build] configuring C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Release/cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237/temp/ap03/PendulumLab
+-- Building for: Visual Studio 18 2026
+-- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.26200.
+-- The C compiler identification is MSVC 19.51.36257.0
+-- The CXX compiler identification is MSVC 19.51.36257.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - failed
+-- Check for working C compiler: C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe
+-- Check for working C compiler: C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe - broken
+CMake Error at C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.3/Modules/CMakeTestCCompiler.cmake:67 (message):
+  The C compiler
+
+    "C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe"
+
+  is not able to compile a simple test program.
+
+  It fails with the following output:
+
+    Change Dir: 'C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Release/cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237/temp/ap03/PendulumLab/build/CMakeFiles/CMakeScratch/TryCompile-hbolss'
+    
+    Run Build Command(s): "C:/Program Files/Microsoft Visual Studio/18/Community/MSBuild/Current/Bin/amd64/MSBuild.exe" cmTC_65141.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=18.0 /v:n
+    MSBuild version 18.10.1-1.26427.6+3cd27c13e for .NET Framework
+    Build started 9/24/2026 8:46:02 PM.
+    
+    Project "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\PendulumLab\build\CMakeFiles\CMakeScratch\TryCompile-hbolss\cmTC_65141.vcxproj" on node 1 (default targets).
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\PendulumLab\build\CMakeFiles\CMakeScratch\TryCompile-hbolss\cmTC_65141.vcxproj]
+      Structured output is enabled. The formatting of compiler diagnostics will reflect the error hierarchy. See https://aka.ms/cpp/structured-output for more details.
+      Creating directory "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\PendulumLab\build\CMakeFiles\CMakeScratch\TryCompile-hbolss\Debug\".
+      Creating directory "cmTC_65141.dir\Debug\cmTC_65141.tlog\".
+    InitializeBuildStatus:
+      Creating "cmTC_65141.dir\Debug\cmTC_65141.tlog\unsuccessfulbuild" because "AlwaysCreate" was specified.
+      Touching "cmTC_65141.dir\Debug\cmTC_65141.tlog\unsuccessfulbuild".
+    ClCompile:
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\CL.exe /c /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D _MBCS /D "CMAKE_INTDIR=\"Debug\"" /RTC1 /MDd /Fo"cmTC_65141.dir\Debug\\" /Fd"cmTC_65141.dir\Debug\vc145.pdb" /external:W1 /TC /errorReport:queue "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\PendulumLab\build\CMakeFiles\CMakeScratch\TryCompile-hbolss\testCCompiler.c"
+      Microsoft (R) C/C++ Optimizing Compiler Version 19.51.36257 for x64
+      Copyright (C) Microsoft Corporation.  All rights reserved.
+      cl /c /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D _MBCS /D "CMAKE_INTDIR=\"Debug\"" /RTC1 /MDd /Fo"cmTC_65141.dir\Debug\\" /Fd"cmTC_65141.dir\Debug\vc145.pdb" /external:W1 /TC /errorReport:queue "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\PendulumLab\build\CMakeFiles\CMakeScratch\TryCompile-hbolss\testCCompiler.c"
+      testCCompiler.c
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003: The specified task executable "CL.exe" could not be run. System.IO.DirectoryNotFoundException: Could not find a part of the path 'C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\PendulumLab\build\CMakeFiles\CMakeScratch\TryCompile-hbolss\cmTC_65141.dir\Debug\cmTC_65141.tlog'. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\PendulumLab\build\CMakeFiles\CMakeScratch\TryCompile-hbolss\cmTC_65141.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\PendulumLab\build\CMakeFiles\CMakeScratch\TryCompile-hbolss\cmTC_65141.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at System.IO.FileSystemEnumerableIterator`1.CommonInit() [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\PendulumLab\build\CMakeFiles\CMakeScratch\TryCompile-hbolss\cmTC_65141.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at System.IO.FileSystemEnumerableIterator`1..ctor(String path, String originalUserPath, String searchPattern, SearchOption searchOption, SearchResultHandler`1 resultHandler, Boolean checkHost) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\PendulumLab\build\CMakeFiles\CMakeScratch\TryCompile-hbolss\cmTC_65141.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at System.IO.Directory.GetFiles(String path, String searchPattern) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\PendulumLab\build\CMakeFiles\CMakeScratch\TryCompile-hbolss\cmTC_65141.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at Microsoft.Build.Utilities.TrackedDependencies.ExpandWildcards(ITaskItem[] expand, TaskLoggingHelper log) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\PendulumLab\build\CMakeFiles\CMakeScratch\TryCompile-hbolss\cmTC_65141.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at Microsoft.Build.Utilities.CanonicalTrackedOutputFiles.InternalConstruct(ITask ownerTask, ITaskItem[] tlogFiles, Boolean constructOutputsFromTLogs) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\PendulumLab\build\CMakeFiles\CMakeScratch\TryCompile-hbolss\cmTC_65141.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at Microsoft.Build.CPPTasks.CL.PostExecuteTool(Int32 exitCode) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\PendulumLab\build\CMakeFiles\CMakeScratch\TryCompile-hbolss\cmTC_65141.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at Microsoft.Build.CPPTasks.TrackedVCToolTask.ExecuteTool(String pathToTool, String responseFileCommands, String commandLineCommands) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\PendulumLab\build\CMakeFiles\CMakeScratch\TryCompile-hbolss\cmTC_65141.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at Microsoft.Build.CPPTasks.CL.ExecuteTool(String pathToTool, String responseFileCommands, String commandLineCommands) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\PendulumLab\build\CMakeFiles\CMakeScratch\TryCompile-hbolss\cmTC_65141.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at Microsoft.Build.Utilities.ToolTask.Execute() [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\PendulumLab\build\CMakeFiles\CMakeScratch\TryCompile-hbolss\cmTC_65141.vcxproj]
+    Done Building Project "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\PendulumLab\build\CMakeFiles\CMakeScratch\TryCompile-hbolss\cmTC_65141.vcxproj" (default targets) -- FAILED.
+    
+    Build FAILED.
+    
+    "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\PendulumLab\build\CMakeFiles\CMakeScratch\TryCompile-hbolss\cmTC_65141.vcxproj" (default target) (1) ->
+    (PrepareForBuild target) -> 
+      C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\PendulumLab\build\CMakeFiles\CMakeScratch\TryCompile-hbolss\cmTC_65141.vcxproj]
+    
+    
+    "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\PendulumLab\build\CMakeFiles\CMakeScratch\TryCompile-hbolss\cmTC_65141.vcxproj" (default target) (1) ->
+    (ClCompile target) -> 
+      C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003: The specified task executable "CL.exe" could not be run. System.IO.DirectoryNotFoundException: Could not find a part of the path 'C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\PendulumLab\build\CMakeFiles\CMakeScratch\TryCompile-hbolss\cmTC_65141.dir\Debug\cmTC_65141.tlog'. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\PendulumLab\build\CMakeFiles\CMakeScratch\TryCompile-hbolss\cmTC_65141.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\PendulumLab\build\CMakeFiles\CMakeScratch\TryCompile-hbolss\cmTC_65141.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at System.IO.FileSystemEnumerableIterator`1.CommonInit() [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\PendulumLab\build\CMakeFiles\CMakeScratch\TryCompile-hbolss\cmTC_65141.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at System.IO.FileSystemEnumerableIterator`1..ctor(String path, String originalUserPath, String searchPattern, SearchOption searchOption, SearchResultHandler`1 resultHandler, Boolean checkHost) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\PendulumLab\build\CMakeFiles\CMakeScratch\TryCompile-hbolss\cmTC_65141.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at System.IO.Directory.GetFiles(String path, String searchPattern) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\PendulumLab\build\CMakeFiles\CMakeScratch\TryCompile-hbolss\cmTC_65141.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at Microsoft.Build.Utilities.TrackedDependencies.ExpandWildcards(ITaskItem[] expand, TaskLoggingHelper log) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\PendulumLab\build\CMakeFiles\CMakeScratch\TryCompile-hbolss\cmTC_65141.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at Microsoft.Build.Utilities.CanonicalTrackedOutputFiles.InternalConstruct(ITask ownerTask, ITaskItem[] tlogFiles, Boolean constructOutputsFromTLogs) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\PendulumLab\build\CMakeFiles\CMakeScratch\TryCompile-hbolss\cmTC_65141.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at Microsoft.Build.CPPTasks.CL.PostExecuteTool(Int32 exitCode) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\PendulumLab\build\CMakeFiles\CMakeScratch\TryCompile-hbolss\cmTC_65141.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at Microsoft.Build.CPPTasks.TrackedVCToolTask.ExecuteTool(String pathToTool, String responseFileCommands, String commandLineCommands) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\PendulumLab\build\CMakeFiles\CMakeScratch\TryCompile-hbolss\cmTC_65141.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at Microsoft.Build.CPPTasks.CL.ExecuteTool(String pathToTool, String responseFileCommands, String commandLineCommands) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\PendulumLab\build\CMakeFiles\CMakeScratch\TryCompile-hbolss\cmTC_65141.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at Microsoft.Build.Utilities.ToolTask.Execute() [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Release\cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237\temp\ap03\PendulumLab\build\CMakeFiles\CMakeScratch\TryCompile-hbolss\cmTC_65141.vcxproj]
+    
+        1 Warning(s)
+        1 Error(s)
+    
+    Time Elapsed 00:00:00.20
+    
+    
+
+
+
+  CMake will not be able to correctly generate this project.
+Call Stack (most recent call first):
+  CMakeLists.txt:2 (project)
+
+
+-- Configuring incomplete, errors occurred!
+[build] FAILED (exit 1)
+[Build] Failed — see the Console. Keeping the current module.
+[Play] Started — 0 script(s).
+[COSMIC] ScriptHost: unknown script class 'HomeScreen' — entity kept inert.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Release/cosmic-accept-ac4cdc97ae4b4609a100cc8833ddd237/temp/ap03/PendulumLab/project.cproj'.
+
+[Play] Stopped — edit scene restored.
+[COSMIC] WorkspaceLayer: Dockspace built (port mode L=true R=true T=true B=true).
+
+[COSMIC] Config: loaded 'assets/projects/Starforge/templates/samples/FlowDemo/project.cproj'.
+
+[COSMIC] Config: loaded 'assets/projects/Starforge/templates/samples/ForgePong/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/Projects/AnalysisSample/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/Projects/PendulumLab/project.cproj'.
+
+[COSMIC] Config: loaded './starforge/projects.toml'.
+

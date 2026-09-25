@@ -1,0 +1,33 @@
+﻿{
+    "id":  "LH01-W",
+    "verdict":  "PASS",
+    "bin":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-03\\build\\Runtime\\Debug",
+    "exe":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-03\\build\\Runtime\\Debug\\CosmicApp.exe",
+    "cwd":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-03\\build\\Runtime\\Debug",
+    "args":  [
+
+             ],
+    "found_line":  "LauncherLayer: scan found 2 project(s): [SF_Telem, Starforge]",
+    "found":  [
+                  "SF_Telem",
+                  "Starforge"
+              ],
+    "skipped_fixtures":  [
+                             "AP01ServiceFixture",
+                             "WO05HostFixture",
+                             "WO06HostFixture",
+                             "WO07LifetimeFixture",
+                             "WO07ModuleFixture",
+                             "WO07PlotFixture",
+                             "WO07TeardownFixture",
+                             "WO07UiCyclesFixture",
+                             "WO10ClockFixture"
+                         ],
+    "log":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-03\\build\\Runtime\\Debug\\logs\\Cosmic_2026-09-24_21-19-25.log",
+    "process_exit":  0,
+    "closed_by":  "CloseMainWindow",
+    "elapsed_s":  0,
+    "problems":  [
+
+                 ]
+}

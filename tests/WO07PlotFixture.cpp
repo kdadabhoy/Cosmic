@@ -399,3 +399,4 @@ extern "C"
         return new PlotLayer();
     }
 }
+CS_TEST_FIXTURE()   // UX-03: hidden from the Launcher project scan (KI-77)

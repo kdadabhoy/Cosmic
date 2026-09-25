@@ -1,0 +1,818 @@
+[Starforge] Editor attached — open or create a project from the homescreen.
+[Starforge] Viewport: MMB orbit | Ctrl+MMB pan | scroll zoom | LMB pick.
+[Starforge] W/E/R gizmo | F frame | Ctrl+Z/Y undo | Ctrl+S save.
+[COSMIC] WorkspaceLayer project name set to: 'Starforge'
+
+[COSMIC] Successfully loaded and mounted project DLL Layer!
+
+[COSMIC] WorkspaceLayer: Dockspace built (legacy 3-tier left sidebar).
+
+[COSMIC] Config: loaded 'assets/projects/Starforge/templates/samples/FlowDemo/project.cproj'.
+
+[COSMIC] Config: loaded 'assets/projects/Starforge/templates/samples/ForgePong/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/Projects/AnalysisSample/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/Projects/PendulumLab/project.cproj'.
+
+[COSMIC] WorkspaceLayer: Dockspace built (port mode L=true R=true T=true B=true).
+
+[Scene] Opened 'project://scenes/Home.cscene'.
+[Scripts] 1 script(s) not built — press Ctrl+B to compile the project module.
+[Project] Scaffolded project — press Ctrl+B to build the game module.
+[Project] Opened 'Ap03App' @ C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/Ap03App
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/Ap03App/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/Ap03App/project.cproj'.
+
+[COSMIC] Config: no file at './starforge/layouts/active.toml'.
+
+[COSMIC] Config: no file at './starforge/layouts/active.toml'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/Ap03App/project.cproj'.
+
+[COSMIC] WorkspaceLayer: Dockspace built (port mode L=true R=true T=true B=true).
+
+[COSMIC] Font: baked 'lucide' (1024x71, 95 glyphs)
+
+[COSMIC] Font: baked 'Roboto-Bold' (1024x257, 95 glyphs)
+
+[COSMIC] Font: baked 'Roboto-Medium' (1024x255, 95 glyphs)
+
+[COSMIC] Font: baked 'Roboto-Regular' (1024x256, 95 glyphs)
+
+[COSMIC] Font: library initialised (4 font(s))
+
+[Build] Building 'Ap03App' -> Ap03App_hot1.dll
+[build] configuring C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/Ap03App
+-- Building for: Visual Studio 18 2026
+-- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.26200.
+-- The C compiler identification is MSVC 19.51.36257.0
+-- The CXX compiler identification is MSVC 19.51.36257.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Configuring done (2.4s)
+-- Generating done (0.0s)
+-- Build files have been written to: C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/Ap03App/build
+[build] compiling (Debug)
+MSBuild version 18.10.1-1.26427.6+3cd27c13e for .NET Framework
+
+C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\Ap03App\build\ZERO_CHECK.vcxproj]
+  Checking File Globs
+  1>Checking Build System
+C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\Ap03App\build\Ap03App.vcxproj]
+  Building Custom Rule C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/Ap03App/CMakeLists.txt
+  Module.cpp
+  AppService.cpp
+  imgui.cpp
+  imgui_draw.cpp
+  imgui_widgets.cpp
+  imgui_tables.cpp
+  implot.cpp
+  implot_items.cpp
+  Generating Code...
+     Creating library C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/Ap03App/build/Debug/Ap03App_hot1.lib and object C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/Ap03App/build/Debug/Ap03App_hot1.exp
+  Ap03App.vcxproj -> C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\Ap03App\build\Debug\Ap03App_hot1.dll
+C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\Ap03App\build\ALL_BUILD.vcxproj]
+  Building Custom Rule C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/Ap03App/CMakeLists.txt
+[build] SUCCESS
+[Module] Reloaded 'Ap03App_hot1' (3 script(s)).
+[APP] GameModule: loaded 'Ap03App_hot1.dll'.
+
+[Build] Building 'Ap03App' -> Ap03App_hot2.dll
+[build] configuring C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/Ap03App
+-- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.26200.
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/Ap03App/build
+[build] compiling (Debug)
+MSBuild version 18.10.1-1.26427.6+3cd27c13e for .NET Framework
+
+C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\Ap03App\build\ZERO_CHECK.vcxproj]
+  Checking File Globs
+  1>Checking Build System
+C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\Ap03App\build\Ap03App.vcxproj]
+  Building Custom Rule C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/Ap03App/CMakeLists.txt
+     Creating library C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/Ap03App/build/Debug/Ap03App_hot2.lib and object C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/Ap03App/build/Debug/Ap03App_hot2.exp
+  Ap03App.vcxproj -> C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\Ap03App\build\Debug\Ap03App_hot2.dll
+C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\Ap03App\build\ALL_BUILD.vcxproj]
+  Building Custom Rule C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/Ap03App/CMakeLists.txt
+[build] SUCCESS
+[Module] Reloaded 'Ap03App_hot2' (3 script(s)).
+[APP] GameModule: loaded 'Ap03App_hot2.dll'.
+
+[Play] Started — 1 script(s).
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/Ap03App/project.cproj'.
+
+[Play] Stopped — edit scene restored.
+[Screens] New screen 'Telemetry': scenes/Telemetry.cscene + flow state + src/screens/TelemetryScreen.h
+[Screens] Renamed state 'Telemetry' -> 'Telem2' (the scene and script files keep their names).
+[Screens] Renamed state 'Telem2' -> 'Telemetry' (the scene and script files keep their names).
+[Screens] Start state -> 'Dashboard'.
+[Screens] Start state -> 'Home'.
+[Screens] Start state -> 'Dashboard'.
+[Screens] Start state -> 'Home'.
+[Build] Building 'Ap03App' -> Ap03App_hot3.dll
+[build] configuring C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/Ap03App
+-- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.26200.
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/Ap03App/build
+[build] compiling (Debug)
+MSBuild version 18.10.1-1.26427.6+3cd27c13e for .NET Framework
+
+C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\Ap03App\build\ZERO_CHECK.vcxproj]
+  Checking File Globs
+  1>Checking Build System
+C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\Ap03App\build\Ap03App.vcxproj]
+  Module.cpp
+     Creating library C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/Ap03App/build/Debug/Ap03App_hot3.lib and object C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/Ap03App/build/Debug/Ap03App_hot3.exp
+  Ap03App.vcxproj -> C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\Ap03App\build\Debug\Ap03App_hot3.dll
+C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\Ap03App\build\ALL_BUILD.vcxproj]
+[build] SUCCESS
+[Module] Reloaded 'Ap03App_hot3' (4 script(s)).
+[APP] GameModule: loaded 'Ap03App_hot3.dll'.
+
+[Scene] Opened 'project://scenes/Home.cscene'.
+[Build] Building 'Ap03App' -> Ap03App_hot4.dll
+[build] configuring C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/Ap03App
+[Scene] Saved 'project://scenes/Home.cscene'.
+-- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.26200.
+-- Configuring done (0.0s)
+-- Generating done (0.1s)
+-- Build files have been written to: C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/Ap03App/build
+[build] compiling (Debug)
+[Scene] Opened 'project://scenes/Dashboard.cscene'.
+[Scene] Opened 'project://scenes/Home.cscene'.
+[Scene] Opened 'project://scenes/Dashboard.cscene'.
+[Scene] Saved 'project://scenes/Dashboard.cscene'.
+MSBuild version 18.10.1-1.26427.6+3cd27c13e for .NET Framework
+
+C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\Ap03App\build\ZERO_CHECK.vcxproj]
+  Checking File Globs
+  1>Checking Build System
+C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\Ap03App\build\Ap03App.vcxproj]
+     Creating library C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/Ap03App/build/Debug/Ap03App_hot4.lib and object C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/Ap03App/build/Debug/Ap03App_hot4.exp
+  Ap03App.vcxproj -> C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\Ap03App\build\Debug\Ap03App_hot4.dll
+C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\Ap03App\build\ALL_BUILD.vcxproj]
+[build] SUCCESS
+[Module] Reloaded 'Ap03App_hot4' (4 script(s)).
+[APP] GameModule: loaded 'Ap03App_hot4.dll'.
+
+[Scene] Opened 'project://scenes/Home.cscene'.
+[Play] Started — 1 script(s).
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/Ap03App/project.cproj'.
+
+[Live] Module rebuild while playing — stopping, then resuming on 'Dashboard' after the reload.
+[Play] Stopped — edit scene restored.
+[Build] Building 'Ap03App' -> Ap03App_hot5.dll
+[build] configuring C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/Ap03App
+-- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.26200.
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/Ap03App/build
+[build] compiling (Debug)
+MSBuild version 18.10.1-1.26427.6+3cd27c13e for .NET Framework
+
+C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\Ap03App\build\ZERO_CHECK.vcxproj]
+  Checking File Globs
+  1>Checking Build System
+C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\Ap03App\build\Ap03App.vcxproj]
+  AppService.cpp
+     Creating library C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/Ap03App/build/Debug/Ap03App_hot5.lib and object C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/Ap03App/build/Debug/Ap03App_hot5.exp
+  Ap03App.vcxproj -> C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\Ap03App\build\Debug\Ap03App_hot5.dll
+C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\Ap03App\build\ALL_BUILD.vcxproj]
+[build] SUCCESS
+[Module] Reloaded 'Ap03App_hot5' (4 script(s)).
+[Play] Started — 1 script(s).
+[Live] Resumed Play on 'Dashboard'.
+[APP] GameModule: loaded 'Ap03App_hot5.dll'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/Ap03App/project.cproj'.
+
+[Live] Module rebuild while playing — stopping, then resuming on 'Dashboard' after the reload.
+[Play] Stopped — edit scene restored.
+[Build] Building 'Ap03App' -> Ap03App_hot6.dll
+[build] configuring C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/Ap03App
+-- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.26200.
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/Ap03App/build
+[build] compiling (Debug)
+MSBuild version 18.10.1-1.26427.6+3cd27c13e for .NET Framework
+
+C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\Ap03App\build\ZERO_CHECK.vcxproj]
+  Checking File Globs
+  1>Checking Build System
+C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\Ap03App\build\Ap03App.vcxproj]
+  AppService.cpp
+C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\Ap03App\src\services\AppService.cpp(92,1): error C2059: syntax error: 'this' [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\Ap03App\build\Ap03App.vcxproj]
+[build] FAILED (exit 1)
+[Build] Failed — see the Console. Keeping the current module.
+[Build] Building 'Ap03App' -> Ap03App_hot7.dll
+[build] configuring C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/Ap03App
+-- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.26200.
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/Ap03App/build
+[build] compiling (Debug)
+MSBuild version 18.10.1-1.26427.6+3cd27c13e for .NET Framework
+
+C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\Ap03App\build\ZERO_CHECK.vcxproj]
+  Checking File Globs
+  1>Checking Build System
+C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\Ap03App\build\Ap03App.vcxproj]
+  AppService.cpp
+     Creating library C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/Ap03App/build/Debug/Ap03App_hot7.lib and object C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/Ap03App/build/Debug/Ap03App_hot7.exp
+  Ap03App.vcxproj -> C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\Ap03App\build\Debug\Ap03App_hot7.dll
+C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\Ap03App\build\ALL_BUILD.vcxproj]
+[build] SUCCESS
+[Module] Reloaded 'Ap03App_hot7' (4 script(s)).
+[Play] Started — 1 script(s).
+[Live] Resumed Play on 'Dashboard'.
+[APP] GameModule: loaded 'Ap03App_hot7.dll'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/Ap03App/project.cproj'.
+
+[Play] Stopped — edit scene restored.
+[COSMIC] Config: loaded 'assets/projects/Starforge/templates/samples/FlowDemo/project.cproj'.
+
+[COSMIC] Config: loaded 'assets/projects/Starforge/templates/samples/ForgePong/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/Projects/AnalysisSample/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/Projects/PendulumLab/project.cproj'.
+
+[COSMIC] WorkspaceLayer: Dockspace built (port mode L=true R=true T=true B=true).
+
+[COSMIC] Config: loaded 'assets/projects/Starforge/templates/samples/FlowDemo/project.cproj'.
+
+[COSMIC] Config: loaded 'assets/projects/Starforge/templates/samples/ForgePong/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/Projects/AnalysisSample/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/Projects/PendulumLab/project.cproj'.
+
+[COSMIC] Config: loaded './starforge/projects.toml'.
+
+[Scene] Opened 'project://scenes/Main.cscene'.
+[Project] Scaffolded project — press Ctrl+B to build the game module.
+[Project] Opened 'Ap03game' @ C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/Ap03game
+[Build] Building 'Ap03game' -> Ap03game_hot8.dll
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/Ap03game/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/Ap03game/project.cproj'.
+
+[COSMIC] Config: loaded './starforge/layouts/active.toml'.
+
+[COSMIC] Config: loaded './starforge/layouts/active.toml'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/Ap03game/project.cproj'.
+
+[COSMIC] Config: loaded './starforge/projects.toml'.
+
+[COSMIC] WorkspaceLayer: Dockspace built (port mode L=true R=true T=true B=true).
+
+[build] configuring C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/Ap03game
+-- Building for: Visual Studio 18 2026
+-- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.26200.
+-- The C compiler identification is MSVC 19.51.36257.0
+-- The CXX compiler identification is MSVC 19.51.36257.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Configuring done (2.3s)
+-- Generating done (0.0s)
+-- Build files have been written to: C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/Ap03game/build
+[build] compiling (Debug)
+MSBuild version 18.10.1-1.26427.6+3cd27c13e for .NET Framework
+
+C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\Ap03game\build\ZERO_CHECK.vcxproj]
+  Checking File Globs
+  1>Checking Build System
+C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\Ap03game\build\Ap03game.vcxproj]
+  Building Custom Rule C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/Ap03game/CMakeLists.txt
+  Module.cpp
+  BouncingBall.cpp
+  PidController.cpp
+  imgui.cpp
+  imgui_draw.cpp
+  imgui_widgets.cpp
+  imgui_tables.cpp
+  implot.cpp
+  implot_items.cpp
+  Generating Code...
+     Creating library C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/Ap03game/build/Debug/Ap03game_hot8.lib and object C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/Ap03game/build/Debug/Ap03game_hot8.exp
+  Ap03game.vcxproj -> C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\Ap03game\build\Debug\Ap03game_hot8.dll
+C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\Ap03game\build\ALL_BUILD.vcxproj]
+  Building Custom Rule C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/Ap03game/CMakeLists.txt
+[build] SUCCESS
+[Module] Reloaded 'Ap03game_hot8' (6 script(s)).
+[Play] Started — 0 script(s).
+[APP] GameModule: loaded 'Ap03game_hot8.dll'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/Ap03game/project.cproj'.
+
+[Play] Stopped — edit scene restored.
+[COSMIC] WorkspaceLayer: Dockspace built (port mode L=true R=true T=true B=true).
+
+[COSMIC] Config: loaded 'assets/projects/Starforge/templates/samples/FlowDemo/project.cproj'.
+
+[COSMIC] Config: loaded 'assets/projects/Starforge/templates/samples/ForgePong/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/Projects/AnalysisSample/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/Projects/PendulumLab/project.cproj'.
+
+[COSMIC] Config: loaded './starforge/projects.toml'.
+
+[Scene] Opened 'project://scenes/Main.cscene'.
+[Project] Scaffolded project — press Ctrl+B to build the game module.
+[Project] Opened 'Ap03blank' @ C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/Ap03blank
+[Build] Building 'Ap03blank' -> Ap03blank_hot9.dll
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/Ap03blank/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/Ap03blank/project.cproj'.
+
+[COSMIC] Config: loaded './starforge/layouts/active.toml'.
+
+[COSMIC] Config: loaded './starforge/layouts/active.toml'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/Ap03blank/project.cproj'.
+
+[COSMIC] Config: loaded './starforge/projects.toml'.
+
+[COSMIC] WorkspaceLayer: Dockspace built (port mode L=true R=true T=true B=true).
+
+[build] configuring C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/Ap03blank
+-- Building for: Visual Studio 18 2026
+-- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.26200.
+-- The C compiler identification is MSVC 19.51.36257.0
+-- The CXX compiler identification is MSVC 19.51.36257.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - failed
+-- Check for working C compiler: C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe
+-- Check for working C compiler: C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe - broken
+CMake Error at C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.3/Modules/CMakeTestCCompiler.cmake:67 (message):
+  The C compiler
+
+    "C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe"
+
+  is not able to compile a simple test program.
+
+  It fails with the following output:
+
+    Change Dir: 'C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/Ap03blank/build/CMakeFiles/CMakeScratch/TryCompile-mdf1f6'
+    
+    Run Build Command(s): "C:/Program Files/Microsoft Visual Studio/18/Community/MSBuild/Current/Bin/amd64/MSBuild.exe" cmTC_d3fc0.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=18.0 /v:n
+    MSBuild version 18.10.1-1.26427.6+3cd27c13e for .NET Framework
+    Build started 9/24/2026 8:44:37 PM.
+    
+    Project "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\Ap03blank\build\CMakeFiles\CMakeScratch\TryCompile-mdf1f6\cmTC_d3fc0.vcxproj" on node 1 (default targets).
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\Ap03blank\build\CMakeFiles\CMakeScratch\TryCompile-mdf1f6\cmTC_d3fc0.vcxproj]
+      Structured output is enabled. The formatting of compiler diagnostics will reflect the error hierarchy. See https://aka.ms/cpp/structured-output for more details.
+      Creating directory "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\Ap03blank\build\CMakeFiles\CMakeScratch\TryCompile-mdf1f6\Debug\".
+      Creating directory "cmTC_d3fc0.dir\Debug\cmTC_d3fc0.tlog\".
+    InitializeBuildStatus:
+      Creating "cmTC_d3fc0.dir\Debug\cmTC_d3fc0.tlog\unsuccessfulbuild" because "AlwaysCreate" was specified.
+      Touching "cmTC_d3fc0.dir\Debug\cmTC_d3fc0.tlog\unsuccessfulbuild".
+    ClCompile:
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\CL.exe /c /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D _MBCS /D "CMAKE_INTDIR=\"Debug\"" /RTC1 /MDd /Fo"cmTC_d3fc0.dir\Debug\\" /Fd"cmTC_d3fc0.dir\Debug\vc145.pdb" /external:W1 /TC /errorReport:queue "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\Ap03blank\build\CMakeFiles\CMakeScratch\TryCompile-mdf1f6\testCCompiler.c"
+      Microsoft (R) C/C++ Optimizing Compiler Version 19.51.36257 for x64
+      Copyright (C) Microsoft Corporation.  All rights reserved.
+      cl /c /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D _MBCS /D "CMAKE_INTDIR=\"Debug\"" /RTC1 /MDd /Fo"cmTC_d3fc0.dir\Debug\\" /Fd"cmTC_d3fc0.dir\Debug\vc145.pdb" /external:W1 /TC /errorReport:queue "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\Ap03blank\build\CMakeFiles\CMakeScratch\TryCompile-mdf1f6\testCCompiler.c"
+      testCCompiler.c
+    Link:
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\link.exe /OUT:"C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\Ap03blank\build\CMakeFiles\CMakeScratch\TryCompile-mdf1f6\Debug\cmTC_d3fc0.exe" /INCREMENTAL /ILK:"cmTC_d3fc0.dir\Debug\cmTC_d3fc0.ilk" /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/Ap03blank/build/CMakeFiles/CMakeScratch/TryCompile-mdf1f6/Debug/cmTC_d3fc0.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /IMPLIB:"C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/Ap03blank/build/CMakeFiles/CMakeScratch/TryCompile-mdf1f6/Debug/cmTC_d3fc0.lib" /MACHINE:X64  /machine:x64 cmTC_d3fc0.dir\Debug\testCCompiler.obj
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003: The specified task executable "link.exe" could not be run. System.IO.DirectoryNotFoundException: Could not find a part of the path 'C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\Ap03blank\build\CMakeFiles\CMakeScratch\TryCompile-mdf1f6\cmTC_d3fc0.dir\Debug\cmTC_d3fc0.tlog'. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\Ap03blank\build\CMakeFiles\CMakeScratch\TryCompile-mdf1f6\cmTC_d3fc0.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\Ap03blank\build\CMakeFiles\CMakeScratch\TryCompile-mdf1f6\cmTC_d3fc0.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.FileSystemEnumerableIterator`1.CommonInit() [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\Ap03blank\build\CMakeFiles\CMakeScratch\TryCompile-mdf1f6\cmTC_d3fc0.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.FileSystemEnumerableIterator`1..ctor(String path, String originalUserPath, String searchPattern, SearchOption searchOption, SearchResultHandler`1 resultHandler, Boolean checkHost) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\Ap03blank\build\CMakeFiles\CMakeScratch\TryCompile-mdf1f6\cmTC_d3fc0.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.Directory.GetFiles(String path, String searchPattern) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\Ap03blank\build\CMakeFiles\CMakeScratch\TryCompile-mdf1f6\cmTC_d3fc0.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.Utilities.TrackedDependencies.ExpandWildcards(ITaskItem[] expand, TaskLoggingHelper log) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\Ap03blank\build\CMakeFiles\CMakeScratch\TryCompile-mdf1f6\cmTC_d3fc0.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.CPPTasks.TrackedVCToolTask.DeleteFiles(ITaskItem[] filesToDelete) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\Ap03blank\build\CMakeFiles\CMakeScratch\TryCompile-mdf1f6\cmTC_d3fc0.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.CPPTasks.TrackedVCToolTask.PostExecuteTool(Int32 exitCode, Boolean preservePartialSuccess) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\Ap03blank\build\CMakeFiles\CMakeScratch\TryCompile-mdf1f6\cmTC_d3fc0.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.CPPTasks.TrackedVCToolTask.ExecuteTool(String pathToTool, String responseFileCommands, String commandLineCommands) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\Ap03blank\build\CMakeFiles\CMakeScratch\TryCompile-mdf1f6\cmTC_d3fc0.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.Utilities.ToolTask.Execute() [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\Ap03blank\build\CMakeFiles\CMakeScratch\TryCompile-mdf1f6\cmTC_d3fc0.vcxproj]
+    Done Building Project "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\Ap03blank\build\CMakeFiles\CMakeScratch\TryCompile-mdf1f6\cmTC_d3fc0.vcxproj" (default targets) -- FAILED.
+    
+    Build FAILED.
+    
+    "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\Ap03blank\build\CMakeFiles\CMakeScratch\TryCompile-mdf1f6\cmTC_d3fc0.vcxproj" (default target) (1) ->
+    (PrepareForBuild target) -> 
+      C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\Ap03blank\build\CMakeFiles\CMakeScratch\TryCompile-mdf1f6\cmTC_d3fc0.vcxproj]
+    
+    
+    "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\Ap03blank\build\CMakeFiles\CMakeScratch\TryCompile-mdf1f6\cmTC_d3fc0.vcxproj" (default target) (1) ->
+    (Link target) -> 
+      C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003: The specified task executable "link.exe" could not be run. System.IO.DirectoryNotFoundException: Could not find a part of the path 'C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\Ap03blank\build\CMakeFiles\CMakeScratch\TryCompile-mdf1f6\cmTC_d3fc0.dir\Debug\cmTC_d3fc0.tlog'. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\Ap03blank\build\CMakeFiles\CMakeScratch\TryCompile-mdf1f6\cmTC_d3fc0.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\Ap03blank\build\CMakeFiles\CMakeScratch\TryCompile-mdf1f6\cmTC_d3fc0.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.FileSystemEnumerableIterator`1.CommonInit() [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\Ap03blank\build\CMakeFiles\CMakeScratch\TryCompile-mdf1f6\cmTC_d3fc0.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.FileSystemEnumerableIterator`1..ctor(String path, String originalUserPath, String searchPattern, SearchOption searchOption, SearchResultHandler`1 resultHandler, Boolean checkHost) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\Ap03blank\build\CMakeFiles\CMakeScratch\TryCompile-mdf1f6\cmTC_d3fc0.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.Directory.GetFiles(String path, String searchPattern) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\Ap03blank\build\CMakeFiles\CMakeScratch\TryCompile-mdf1f6\cmTC_d3fc0.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.Utilities.TrackedDependencies.ExpandWildcards(ITaskItem[] expand, TaskLoggingHelper log) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\Ap03blank\build\CMakeFiles\CMakeScratch\TryCompile-mdf1f6\cmTC_d3fc0.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.CPPTasks.TrackedVCToolTask.DeleteFiles(ITaskItem[] filesToDelete) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\Ap03blank\build\CMakeFiles\CMakeScratch\TryCompile-mdf1f6\cmTC_d3fc0.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.CPPTasks.TrackedVCToolTask.PostExecuteTool(Int32 exitCode, Boolean preservePartialSuccess) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\Ap03blank\build\CMakeFiles\CMakeScratch\TryCompile-mdf1f6\cmTC_d3fc0.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.CPPTasks.TrackedVCToolTask.ExecuteTool(String pathToTool, String responseFileCommands, String commandLineCommands) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\Ap03blank\build\CMakeFiles\CMakeScratch\TryCompile-mdf1f6\cmTC_d3fc0.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.Utilities.ToolTask.Execute() [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\Ap03blank\build\CMakeFiles\CMakeScratch\TryCompile-mdf1f6\cmTC_d3fc0.vcxproj]
+    
+        1 Warning(s)
+        1 Error(s)
+    
+    Time Elapsed 00:00:00.32
+    
+    
+
+
+
+  CMake will not be able to correctly generate this project.
+Call Stack (most recent call first):
+  CMakeLists.txt:2 (project)
+
+
+-- Configuring incomplete, errors occurred!
+[build] FAILED (exit 1)
+[Build] Failed — see the Console. Keeping the current module.
+[Play] Started — 0 script(s).
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/Ap03blank/project.cproj'.
+
+[Play] Stopped — edit scene restored.
+[COSMIC] WorkspaceLayer: Dockspace built (port mode L=true R=true T=true B=true).
+
+[COSMIC] Config: loaded 'assets/projects/Starforge/templates/samples/FlowDemo/project.cproj'.
+
+[COSMIC] Config: loaded 'assets/projects/Starforge/templates/samples/ForgePong/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/Projects/AnalysisSample/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/Projects/PendulumLab/project.cproj'.
+
+[COSMIC] Config: loaded './starforge/projects.toml'.
+
+[Samples] Created 'FlowDemo' at C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/FlowDemo from assets/projects/Starforge/templates/samples/FlowDemo.
+[Scene] Opened 'project://scenes/MainMenu.cscene'.
+[Project] Scaffolded project — press Ctrl+B to build the game module.
+[Project] Opened 'FlowDemo' @ C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/FlowDemo
+[Build] Building 'FlowDemo' -> FlowDemo_hot10.dll
+[COSMIC] Config: loaded 'assets/projects/Starforge/templates/samples/FlowDemo/project.cproj'.
+
+[COSMIC] Config: loaded 'assets/projects/Starforge/templates/samples/ForgePong/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/Projects/AnalysisSample/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/Projects/PendulumLab/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/FlowDemo/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/FlowDemo/project.cproj'.
+
+[COSMIC] Config: loaded './starforge/layouts/active.toml'.
+
+[COSMIC] Config: loaded './starforge/layouts/active.toml'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/FlowDemo/project.cproj'.
+
+[COSMIC] Config: loaded './starforge/projects.toml'.
+
+[COSMIC] WorkspaceLayer: Dockspace built (port mode L=true R=true T=true B=true).
+
+[build] configuring C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/FlowDemo
+-- Building for: Visual Studio 18 2026
+-- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.26200.
+-- The C compiler identification is MSVC 19.51.36257.0
+-- The CXX compiler identification is MSVC 19.51.36257.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Configuring done (2.4s)
+-- Generating done (0.0s)
+-- Build files have been written to: C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/FlowDemo/build
+[build] compiling (Debug)
+MSBuild version 18.10.1-1.26427.6+3cd27c13e for .NET Framework
+
+C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\FlowDemo\build\ZERO_CHECK.vcxproj]
+  Checking File Globs
+  1>Checking Build System
+C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\FlowDemo\build\FlowDemo.vcxproj]
+  Building Custom Rule C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/FlowDemo/CMakeLists.txt
+  Module.cpp
+  imgui.cpp
+  imgui_draw.cpp
+  imgui_widgets.cpp
+  imgui_tables.cpp
+  implot.cpp
+  implot_items.cpp
+  Generating Code...
+     Creating library C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/FlowDemo/build/Debug/FlowDemo_hot10.lib and object C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/FlowDemo/build/Debug/FlowDemo_hot10.exp
+  FlowDemo.vcxproj -> C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\FlowDemo\build\Debug\FlowDemo_hot10.dll
+C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\FlowDemo\build\ALL_BUILD.vcxproj]
+  Building Custom Rule C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/FlowDemo/CMakeLists.txt
+[build] SUCCESS
+[Module] Reloaded 'FlowDemo_hot10' (0 script(s)).
+[Play] Started — 0 script(s).
+[APP] GameModule: loaded 'FlowDemo_hot10.dll'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/FlowDemo/project.cproj'.
+
+[Play] Stopped — edit scene restored.
+[COSMIC] WorkspaceLayer: Dockspace built (port mode L=true R=true T=true B=true).
+
+[COSMIC] Config: loaded 'assets/projects/Starforge/templates/samples/FlowDemo/project.cproj'.
+
+[COSMIC] Config: loaded 'assets/projects/Starforge/templates/samples/ForgePong/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/Projects/AnalysisSample/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/Projects/PendulumLab/project.cproj'.
+
+[COSMIC] Config: loaded './starforge/projects.toml'.
+
+[Samples] Created 'ForgePong' at C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/ForgePong from assets/projects/Starforge/templates/samples/ForgePong.
+[Scene] Opened 'project://scenes/Menu.cscene'.
+[Project] Scaffolded project — press Ctrl+B to build the game module.
+[Project] Opened 'ForgePong' @ C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/ForgePong
+[Build] Building 'ForgePong' -> ForgePong_hot11.dll
+[COSMIC] Config: loaded 'assets/projects/Starforge/templates/samples/FlowDemo/project.cproj'.
+
+[COSMIC] Config: loaded 'assets/projects/Starforge/templates/samples/ForgePong/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/Projects/AnalysisSample/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/Projects/PendulumLab/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/ForgePong/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/ForgePong/project.cproj'.
+
+[COSMIC] Config: loaded './starforge/layouts/active.toml'.
+
+[COSMIC] Config: loaded './starforge/layouts/active.toml'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/ForgePong/project.cproj'.
+
+[COSMIC] Config: loaded './starforge/projects.toml'.
+
+[COSMIC] WorkspaceLayer: Dockspace built (port mode L=true R=true T=true B=true).
+
+[build] configuring C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/ForgePong
+-- Building for: Visual Studio 18 2026
+-- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.26200.
+-- The C compiler identification is MSVC 19.51.36257.0
+-- The CXX compiler identification is MSVC 19.51.36257.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - failed
+-- Check for working C compiler: C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe
+-- Check for working C compiler: C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe - broken
+CMake Error at C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.3/Modules/CMakeTestCCompiler.cmake:67 (message):
+  The C compiler
+
+    "C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe"
+
+  is not able to compile a simple test program.
+
+  It fails with the following output:
+
+    Change Dir: 'C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/ForgePong/build/CMakeFiles/CMakeScratch/TryCompile-h6c7l2'
+    
+    Run Build Command(s): "C:/Program Files/Microsoft Visual Studio/18/Community/MSBuild/Current/Bin/amd64/MSBuild.exe" cmTC_4c526.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=18.0 /v:n
+    MSBuild version 18.10.1-1.26427.6+3cd27c13e for .NET Framework
+    Build started 9/24/2026 8:44:50 PM.
+    
+    Project "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\ForgePong\build\CMakeFiles\CMakeScratch\TryCompile-h6c7l2\cmTC_4c526.vcxproj" on node 1 (default targets).
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\ForgePong\build\CMakeFiles\CMakeScratch\TryCompile-h6c7l2\cmTC_4c526.vcxproj]
+      Structured output is enabled. The formatting of compiler diagnostics will reflect the error hierarchy. See https://aka.ms/cpp/structured-output for more details.
+      Creating directory "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\ForgePong\build\CMakeFiles\CMakeScratch\TryCompile-h6c7l2\Debug\".
+      Creating directory "cmTC_4c526.dir\Debug\cmTC_4c526.tlog\".
+    InitializeBuildStatus:
+      Creating "cmTC_4c526.dir\Debug\cmTC_4c526.tlog\unsuccessfulbuild" because "AlwaysCreate" was specified.
+      Touching "cmTC_4c526.dir\Debug\cmTC_4c526.tlog\unsuccessfulbuild".
+    ClCompile:
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\CL.exe /c /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D _MBCS /D "CMAKE_INTDIR=\"Debug\"" /RTC1 /MDd /Fo"cmTC_4c526.dir\Debug\\" /Fd"cmTC_4c526.dir\Debug\vc145.pdb" /external:W1 /TC /errorReport:queue "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\ForgePong\build\CMakeFiles\CMakeScratch\TryCompile-h6c7l2\testCCompiler.c"
+      Microsoft (R) C/C++ Optimizing Compiler Version 19.51.36257 for x64
+      Copyright (C) Microsoft Corporation.  All rights reserved.
+      cl /c /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D _MBCS /D "CMAKE_INTDIR=\"Debug\"" /RTC1 /MDd /Fo"cmTC_4c526.dir\Debug\\" /Fd"cmTC_4c526.dir\Debug\vc145.pdb" /external:W1 /TC /errorReport:queue "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\ForgePong\build\CMakeFiles\CMakeScratch\TryCompile-h6c7l2\testCCompiler.c"
+      testCCompiler.c
+    Link:
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\link.exe /OUT:"C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\ForgePong\build\CMakeFiles\CMakeScratch\TryCompile-h6c7l2\Debug\cmTC_4c526.exe" /INCREMENTAL /ILK:"cmTC_4c526.dir\Debug\cmTC_4c526.ilk" /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/ForgePong/build/CMakeFiles/CMakeScratch/TryCompile-h6c7l2/Debug/cmTC_4c526.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /IMPLIB:"C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/ForgePong/build/CMakeFiles/CMakeScratch/TryCompile-h6c7l2/Debug/cmTC_4c526.lib" /MACHINE:X64  /machine:x64 cmTC_4c526.dir\Debug\testCCompiler.obj
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003: The specified task executable "link.exe" could not be run. System.IO.DirectoryNotFoundException: Could not find a part of the path 'C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\ForgePong\build\CMakeFiles\CMakeScratch\TryCompile-h6c7l2\cmTC_4c526.dir\Debug\cmTC_4c526.tlog'. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\ForgePong\build\CMakeFiles\CMakeScratch\TryCompile-h6c7l2\cmTC_4c526.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\ForgePong\build\CMakeFiles\CMakeScratch\TryCompile-h6c7l2\cmTC_4c526.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.FileSystemEnumerableIterator`1.CommonInit() [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\ForgePong\build\CMakeFiles\CMakeScratch\TryCompile-h6c7l2\cmTC_4c526.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.FileSystemEnumerableIterator`1..ctor(String path, String originalUserPath, String searchPattern, SearchOption searchOption, SearchResultHandler`1 resultHandler, Boolean checkHost) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\ForgePong\build\CMakeFiles\CMakeScratch\TryCompile-h6c7l2\cmTC_4c526.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.Directory.GetFiles(String path, String searchPattern) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\ForgePong\build\CMakeFiles\CMakeScratch\TryCompile-h6c7l2\cmTC_4c526.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.Utilities.TrackedDependencies.ExpandWildcards(ITaskItem[] expand, TaskLoggingHelper log) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\ForgePong\build\CMakeFiles\CMakeScratch\TryCompile-h6c7l2\cmTC_4c526.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.CPPTasks.TrackedVCToolTask.DeleteFiles(ITaskItem[] filesToDelete) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\ForgePong\build\CMakeFiles\CMakeScratch\TryCompile-h6c7l2\cmTC_4c526.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.CPPTasks.TrackedVCToolTask.PostExecuteTool(Int32 exitCode, Boolean preservePartialSuccess) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\ForgePong\build\CMakeFiles\CMakeScratch\TryCompile-h6c7l2\cmTC_4c526.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.CPPTasks.TrackedVCToolTask.ExecuteTool(String pathToTool, String responseFileCommands, String commandLineCommands) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\ForgePong\build\CMakeFiles\CMakeScratch\TryCompile-h6c7l2\cmTC_4c526.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.Utilities.ToolTask.Execute() [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\ForgePong\build\CMakeFiles\CMakeScratch\TryCompile-h6c7l2\cmTC_4c526.vcxproj]
+    Done Building Project "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\ForgePong\build\CMakeFiles\CMakeScratch\TryCompile-h6c7l2\cmTC_4c526.vcxproj" (default targets) -- FAILED.
+    
+    Build FAILED.
+    
+    "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\ForgePong\build\CMakeFiles\CMakeScratch\TryCompile-h6c7l2\cmTC_4c526.vcxproj" (default target) (1) ->
+    (PrepareForBuild target) -> 
+      C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\ForgePong\build\CMakeFiles\CMakeScratch\TryCompile-h6c7l2\cmTC_4c526.vcxproj]
+    
+    
+    "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\ForgePong\build\CMakeFiles\CMakeScratch\TryCompile-h6c7l2\cmTC_4c526.vcxproj" (default target) (1) ->
+    (Link target) -> 
+      C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003: The specified task executable "link.exe" could not be run. System.IO.DirectoryNotFoundException: Could not find a part of the path 'C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\ForgePong\build\CMakeFiles\CMakeScratch\TryCompile-h6c7l2\cmTC_4c526.dir\Debug\cmTC_4c526.tlog'. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\ForgePong\build\CMakeFiles\CMakeScratch\TryCompile-h6c7l2\cmTC_4c526.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\ForgePong\build\CMakeFiles\CMakeScratch\TryCompile-h6c7l2\cmTC_4c526.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.FileSystemEnumerableIterator`1.CommonInit() [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\ForgePong\build\CMakeFiles\CMakeScratch\TryCompile-h6c7l2\cmTC_4c526.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.FileSystemEnumerableIterator`1..ctor(String path, String originalUserPath, String searchPattern, SearchOption searchOption, SearchResultHandler`1 resultHandler, Boolean checkHost) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\ForgePong\build\CMakeFiles\CMakeScratch\TryCompile-h6c7l2\cmTC_4c526.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at System.IO.Directory.GetFiles(String path, String searchPattern) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\ForgePong\build\CMakeFiles\CMakeScratch\TryCompile-h6c7l2\cmTC_4c526.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.Utilities.TrackedDependencies.ExpandWildcards(ITaskItem[] expand, TaskLoggingHelper log) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\ForgePong\build\CMakeFiles\CMakeScratch\TryCompile-h6c7l2\cmTC_4c526.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.CPPTasks.TrackedVCToolTask.DeleteFiles(ITaskItem[] filesToDelete) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\ForgePong\build\CMakeFiles\CMakeScratch\TryCompile-h6c7l2\cmTC_4c526.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.CPPTasks.TrackedVCToolTask.PostExecuteTool(Int32 exitCode, Boolean preservePartialSuccess) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\ForgePong\build\CMakeFiles\CMakeScratch\TryCompile-h6c7l2\cmTC_4c526.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.CPPTasks.TrackedVCToolTask.ExecuteTool(String pathToTool, String responseFileCommands, String commandLineCommands) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\ForgePong\build\CMakeFiles\CMakeScratch\TryCompile-h6c7l2\cmTC_4c526.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003:    at Microsoft.Build.Utilities.ToolTask.Execute() [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\ForgePong\build\CMakeFiles\CMakeScratch\TryCompile-h6c7l2\cmTC_4c526.vcxproj]
+    
+        1 Warning(s)
+        1 Error(s)
+    
+    Time Elapsed 00:00:00.33
+    
+    
+
+
+
+  CMake will not be able to correctly generate this project.
+Call Stack (most recent call first):
+  CMakeLists.txt:2 (project)
+
+
+-- Configuring incomplete, errors occurred!
+[build] FAILED (exit 1)
+[Build] Failed — see the Console. Keeping the current module.
+[Play] Started — 0 script(s).
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/ForgePong/project.cproj'.
+
+[Play] Stopped — edit scene restored.
+[COSMIC] WorkspaceLayer: Dockspace built (port mode L=true R=true T=true B=true).
+
+[COSMIC] Config: loaded 'assets/projects/Starforge/templates/samples/FlowDemo/project.cproj'.
+
+[COSMIC] Config: loaded 'assets/projects/Starforge/templates/samples/ForgePong/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/Projects/AnalysisSample/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/Projects/PendulumLab/project.cproj'.
+
+[COSMIC] Config: loaded './starforge/projects.toml'.
+
+[Samples] Created 'PendulumLab' at C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/PendulumLab from C:/dev/Cosmic/build/_lanes/ux-03/Projects/PendulumLab.
+[Scene] Opened 'project://scenes/Home.cscene'.
+[Scripts] 1 script(s) not built — press Ctrl+B to compile the project module.
+[Project] Scaffolded project — press Ctrl+B to build the game module.
+[Project] Opened 'PendulumLab' @ C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/PendulumLab
+[Build] Building 'PendulumLab' -> PendulumLab_hot12.dll
+[COSMIC] Config: loaded 'assets/projects/Starforge/templates/samples/FlowDemo/project.cproj'.
+
+[COSMIC] Config: loaded 'assets/projects/Starforge/templates/samples/ForgePong/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/Projects/AnalysisSample/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/Projects/PendulumLab/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/PendulumLab/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/PendulumLab/project.cproj'.
+
+[COSMIC] Config: loaded './starforge/layouts/active.toml'.
+
+[COSMIC] Config: loaded './starforge/layouts/active.toml'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/PendulumLab/project.cproj'.
+
+[COSMIC] Config: loaded './starforge/projects.toml'.
+
+[COSMIC] WorkspaceLayer: Dockspace built (port mode L=true R=true T=true B=true).
+
+[build] configuring C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/PendulumLab
+-- Building for: Visual Studio 18 2026
+-- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.26200.
+-- The C compiler identification is MSVC 19.51.36257.0
+-- The CXX compiler identification is MSVC 19.51.36257.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - failed
+-- Check for working C compiler: C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe
+-- Check for working C compiler: C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe - broken
+CMake Error at C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.3/Modules/CMakeTestCCompiler.cmake:67 (message):
+  The C compiler
+
+    "C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe"
+
+  is not able to compile a simple test program.
+
+  It fails with the following output:
+
+    Change Dir: 'C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/PendulumLab/build/CMakeFiles/CMakeScratch/TryCompile-7xlgnv'
+    
+    Run Build Command(s): "C:/Program Files/Microsoft Visual Studio/18/Community/MSBuild/Current/Bin/amd64/MSBuild.exe" cmTC_bcc33.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=18.0 /v:n
+    MSBuild version 18.10.1-1.26427.6+3cd27c13e for .NET Framework
+    Build started 9/24/2026 8:44:52 PM.
+    
+    Project "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\PendulumLab\build\CMakeFiles\CMakeScratch\TryCompile-7xlgnv\cmTC_bcc33.vcxproj" on node 1 (default targets).
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\PendulumLab\build\CMakeFiles\CMakeScratch\TryCompile-7xlgnv\cmTC_bcc33.vcxproj]
+      Structured output is enabled. The formatting of compiler diagnostics will reflect the error hierarchy. See https://aka.ms/cpp/structured-output for more details.
+      Creating directory "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\PendulumLab\build\CMakeFiles\CMakeScratch\TryCompile-7xlgnv\Debug\".
+      Creating directory "cmTC_bcc33.dir\Debug\cmTC_bcc33.tlog\".
+    InitializeBuildStatus:
+      Creating "cmTC_bcc33.dir\Debug\cmTC_bcc33.tlog\unsuccessfulbuild" because "AlwaysCreate" was specified.
+      Touching "cmTC_bcc33.dir\Debug\cmTC_bcc33.tlog\unsuccessfulbuild".
+    ClCompile:
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\bin\HostX64\x64\CL.exe /c /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D _MBCS /D "CMAKE_INTDIR=\"Debug\"" /RTC1 /MDd /Fo"cmTC_bcc33.dir\Debug\\" /Fd"cmTC_bcc33.dir\Debug\vc145.pdb" /external:W1 /TC /errorReport:queue "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\PendulumLab\build\CMakeFiles\CMakeScratch\TryCompile-7xlgnv\testCCompiler.c"
+      Microsoft (R) C/C++ Optimizing Compiler Version 19.51.36257 for x64
+      Copyright (C) Microsoft Corporation.  All rights reserved.
+      cl /c /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D _MBCS /D "CMAKE_INTDIR=\"Debug\"" /RTC1 /MDd /Fo"cmTC_bcc33.dir\Debug\\" /Fd"cmTC_bcc33.dir\Debug\vc145.pdb" /external:W1 /TC /errorReport:queue "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\PendulumLab\build\CMakeFiles\CMakeScratch\TryCompile-7xlgnv\testCCompiler.c"
+      testCCompiler.c
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003: The specified task executable "CL.exe" could not be run. System.IO.DirectoryNotFoundException: Could not find a part of the path 'C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\PendulumLab\build\CMakeFiles\CMakeScratch\TryCompile-7xlgnv\cmTC_bcc33.dir\Debug\cmTC_bcc33.tlog'. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\PendulumLab\build\CMakeFiles\CMakeScratch\TryCompile-7xlgnv\cmTC_bcc33.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\PendulumLab\build\CMakeFiles\CMakeScratch\TryCompile-7xlgnv\cmTC_bcc33.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at System.IO.FileSystemEnumerableIterator`1.CommonInit() [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\PendulumLab\build\CMakeFiles\CMakeScratch\TryCompile-7xlgnv\cmTC_bcc33.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at System.IO.FileSystemEnumerableIterator`1..ctor(String path, String originalUserPath, String searchPattern, SearchOption searchOption, SearchResultHandler`1 resultHandler, Boolean checkHost) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\PendulumLab\build\CMakeFiles\CMakeScratch\TryCompile-7xlgnv\cmTC_bcc33.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at System.IO.Directory.GetFiles(String path, String searchPattern) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\PendulumLab\build\CMakeFiles\CMakeScratch\TryCompile-7xlgnv\cmTC_bcc33.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at Microsoft.Build.Utilities.TrackedDependencies.ExpandWildcards(ITaskItem[] expand, TaskLoggingHelper log) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\PendulumLab\build\CMakeFiles\CMakeScratch\TryCompile-7xlgnv\cmTC_bcc33.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at Microsoft.Build.CPPTasks.TrackedVCToolTask.DeleteFiles(ITaskItem[] filesToDelete) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\PendulumLab\build\CMakeFiles\CMakeScratch\TryCompile-7xlgnv\cmTC_bcc33.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at Microsoft.Build.CPPTasks.CL.PostExecuteTool(Int32 exitCode) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\PendulumLab\build\CMakeFiles\CMakeScratch\TryCompile-7xlgnv\cmTC_bcc33.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at Microsoft.Build.CPPTasks.TrackedVCToolTask.ExecuteTool(String pathToTool, String responseFileCommands, String commandLineCommands) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\PendulumLab\build\CMakeFiles\CMakeScratch\TryCompile-7xlgnv\cmTC_bcc33.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at Microsoft.Build.CPPTasks.CL.ExecuteTool(String pathToTool, String responseFileCommands, String commandLineCommands) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\PendulumLab\build\CMakeFiles\CMakeScratch\TryCompile-7xlgnv\cmTC_bcc33.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at Microsoft.Build.Utilities.ToolTask.Execute() [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\PendulumLab\build\CMakeFiles\CMakeScratch\TryCompile-7xlgnv\cmTC_bcc33.vcxproj]
+    Done Building Project "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\PendulumLab\build\CMakeFiles\CMakeScratch\TryCompile-7xlgnv\cmTC_bcc33.vcxproj" (default targets) -- FAILED.
+    
+    Build FAILED.
+    
+    "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\PendulumLab\build\CMakeFiles\CMakeScratch\TryCompile-7xlgnv\cmTC_bcc33.vcxproj" (default target) (1) ->
+    (PrepareForBuild target) -> 
+      C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(561,5): warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\PendulumLab\build\CMakeFiles\CMakeScratch\TryCompile-7xlgnv\cmTC_bcc33.vcxproj]
+    
+    
+    "C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\PendulumLab\build\CMakeFiles\CMakeScratch\TryCompile-7xlgnv\cmTC_bcc33.vcxproj" (default target) (1) ->
+    (ClCompile target) -> 
+      C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003: The specified task executable "CL.exe" could not be run. System.IO.DirectoryNotFoundException: Could not find a part of the path 'C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\PendulumLab\build\CMakeFiles\CMakeScratch\TryCompile-7xlgnv\cmTC_bcc33.dir\Debug\cmTC_bcc33.tlog'. [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\PendulumLab\build\CMakeFiles\CMakeScratch\TryCompile-7xlgnv\cmTC_bcc33.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\PendulumLab\build\CMakeFiles\CMakeScratch\TryCompile-7xlgnv\cmTC_bcc33.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at System.IO.FileSystemEnumerableIterator`1.CommonInit() [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\PendulumLab\build\CMakeFiles\CMakeScratch\TryCompile-7xlgnv\cmTC_bcc33.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at System.IO.FileSystemEnumerableIterator`1..ctor(String path, String originalUserPath, String searchPattern, SearchOption searchOption, SearchResultHandler`1 resultHandler, Boolean checkHost) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\PendulumLab\build\CMakeFiles\CMakeScratch\TryCompile-7xlgnv\cmTC_bcc33.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at System.IO.Directory.GetFiles(String path, String searchPattern) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\PendulumLab\build\CMakeFiles\CMakeScratch\TryCompile-7xlgnv\cmTC_bcc33.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at Microsoft.Build.Utilities.TrackedDependencies.ExpandWildcards(ITaskItem[] expand, TaskLoggingHelper log) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\PendulumLab\build\CMakeFiles\CMakeScratch\TryCompile-7xlgnv\cmTC_bcc33.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at Microsoft.Build.CPPTasks.TrackedVCToolTask.DeleteFiles(ITaskItem[] filesToDelete) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\PendulumLab\build\CMakeFiles\CMakeScratch\TryCompile-7xlgnv\cmTC_bcc33.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at Microsoft.Build.CPPTasks.CL.PostExecuteTool(Int32 exitCode) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\PendulumLab\build\CMakeFiles\CMakeScratch\TryCompile-7xlgnv\cmTC_bcc33.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at Microsoft.Build.CPPTasks.TrackedVCToolTask.ExecuteTool(String pathToTool, String responseFileCommands, String commandLineCommands) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\PendulumLab\build\CMakeFiles\CMakeScratch\TryCompile-7xlgnv\cmTC_bcc33.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at Microsoft.Build.CPPTasks.CL.ExecuteTool(String pathToTool, String responseFileCommands, String commandLineCommands) [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\PendulumLab\build\CMakeFiles\CMakeScratch\TryCompile-7xlgnv\cmTC_bcc33.vcxproj]
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(790,5): error MSB6003:    at Microsoft.Build.Utilities.ToolTask.Execute() [C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\PendulumLab\build\CMakeFiles\CMakeScratch\TryCompile-7xlgnv\cmTC_bcc33.vcxproj]
+    
+        1 Warning(s)
+        1 Error(s)
+    
+    Time Elapsed 00:00:00.24
+    
+    
+
+
+
+  CMake will not be able to correctly generate this project.
+Call Stack (most recent call first):
+  CMakeLists.txt:2 (project)
+
+
+-- Configuring incomplete, errors occurred!
+[build] FAILED (exit 1)
+[Build] Failed — see the Console. Keeping the current module.
+[Play] Started — 0 script(s).
+[COSMIC] ScriptHost: unknown script class 'HomeScreen' — entity kept inert.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/PendulumLab/project.cproj'.
+
+[Play] Stopped — edit scene restored.
+[COSMIC] WorkspaceLayer: Dockspace built (port mode L=true R=true T=true B=true).
+
+[COSMIC] Config: loaded 'assets/projects/Starforge/templates/samples/FlowDemo/project.cproj'.
+
+[COSMIC] Config: loaded 'assets/projects/Starforge/templates/samples/ForgePong/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/Projects/AnalysisSample/project.cproj'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-03/Projects/PendulumLab/project.cproj'.
+
+[COSMIC] Config: loaded './starforge/projects.toml'.
+

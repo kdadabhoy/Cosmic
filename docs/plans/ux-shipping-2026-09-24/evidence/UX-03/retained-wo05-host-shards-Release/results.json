@@ -1,0 +1,136 @@
+﻿{
+    "manifest":  "wo05-host-shards",
+    "profile":  "all",
+    "tier_filter":  [
+
+                    ],
+    "config":  "Release",
+    "mode":  "2D",
+    "generated_utc":  "2026-09-25T04:12:16.6151109Z",
+    "git":  {
+                "commit":  "60218225d86ae7675978598f9343cc1fddacdce6",
+                "dirty":  true,
+                "dirty_diff_sha256":  "f447781a34cb386a5e63cd41050125b5fc2d75c76f8f0c261bdb062fd82b975e"
+            },
+    "environment":  {
+                        "os_caption":  "Microsoft Windows 11 Education",
+                        "os_version":  "10.0.26200",
+                        "os_build":  "26200",
+                        "os_display":  "26200.9457",
+                        "cpu_name":  "AMD Ryzen 7 7800X3D 8-Core Processor",
+                        "cpu_cores":  8,
+                        "cpu_threads":  16,
+                        "cpu_addr_width":  64,
+                        "cpu_isa_floor":  "SSE4.2 (D-CPU); see evidence/WO-02/cpu-isa-probe.txt",
+                        "ram_bytes":  33462239232,
+                        "ram_gib":  31.2,
+                        "gpus":  [
+                                     {
+                                         "name":  "NVIDIA GeForce RTX 5070 Ti",
+                                         "driver":  "32.0.16.1692",
+                                         "driver_date":  "\/Date(1788480000000)\/"
+                                     },
+                                     {
+                                         "name":  "AMD Radeon(TM) Graphics",
+                                         "driver":  "32.0.21045.5002",
+                                         "driver_date":  "\/Date(1786924800000)\/"
+                                     }
+                                 ],
+                        "opengl_version":  null,
+                        "powershell":  "5.1.26100.9444",
+                        "hostname":  "DESKTOP-SEOA4BT"
+                    },
+    "capabilities":  {
+                         "windows":  true,
+                         "cpu-sse42":  true,
+                         "gpu-gl":  true,
+                         "serial-device":  false,
+                         "editor-ui":  false,
+                         "audio-device":  true,
+                         "render-tests":  false
+                     },
+    "forced_unavailable":  [
+
+                           ],
+    "bin_dir":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-03\\build\\Runtime\\Release",
+    "run_temp":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-03\\build\\_temp\\wo05-host-shards-Release\\cosmic-accept-9dce5dbce5ae408c948caa6463654f72",
+    "golden_dir":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-03\\tests\\acceptance\\goldens",
+    "golden_before":  {
+                          ".gitkeep-golden.txt":  "89e37141e7474880abc0f7363d7ae2598c0d28011f425d9a0b7130c944e9b137"
+                      },
+    "golden_after":  {
+                         ".gitkeep-golden.txt":  "89e37141e7474880abc0f7363d7ae2598c0d28011f425d9a0b7130c944e9b137"
+                     },
+    "golden_mutated":  false,
+    "acceptance_mode":  true,
+    "counts":  {
+                   "total":  2,
+                   "passed":  1,
+                   "failed":  1,
+                   "blocked":  0
+               },
+    "self_test":  {
+                      "enabled":  false,
+                      "failures":  [
+
+                                   ]
+                  },
+    "cases":  [
+                  {
+                      "id":  "T03-native-schedules-0-4",
+                      "tier":  "G",
+                      "description":  "1000 fresh isolated native children; full-process close deadline",
+                      "requires":  [
+                                       "windows",
+                                       "gpu-gl"
+                                   ],
+                      "transport":  "fake",
+                      "seed":  5,
+                      "start_utc":  "2026-09-25T03:59:26.5131597Z",
+                      "deadline_sec":  1800,
+                      "exercised":  "fake-transport",
+                      "fixture":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-03\\tests\\acceptance\\..\\WO05HostFixture.cpp",
+                      "fixture_sha256":  "81961baadab1d301d851cabc9f5082d21c45f5989e32bfb42f52770cc5fe0630",
+                      "command":  "powershell -NoProfile -ExecutionPolicy Bypass -File C:\\dev\\Cosmic\\build\\_lanes\\ux-03\\tests\\acceptance\\fixtures\\Run-WO05Host.ps1 -FirstSchedule 0 -LastSchedule 4 -Bin C:\\dev\\Cosmic\\build\\_lanes\\ux-03\\build\\Runtime\\Release -Output C:\\dev\\Cosmic\\build\\_lanes\\ux-03\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-05\\host-current-a-Release",
+                      "stdout_log":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-03\\docs\\plans\\ux-shipping-2026-09-24\\evidence\\UX-03\\retained-wo05-host-shards-Release\\T03-native-schedules-0-4.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-03\\docs\\plans\\ux-shipping-2026-09-24\\evidence\\UX-03\\retained-wo05-host-shards-Release\\T03-native-schedules-0-4.err.log",
+                      "pid":  31804,
+                      "exit_code":  0,
+                      "crash":  false,
+                      "tests_passed":  1000,
+                      "tests_expected_min":  1000,
+                      "verdict":  "PASSED",
+                      "detail":  "exit 0 as expected",
+                      "duration_sec":  628.473,
+                      "end_utc":  "2026-09-25T04:09:54.9922564Z"
+                  },
+                  {
+                      "id":  "T03-native-schedules-5-8",
+                      "tier":  "G",
+                      "description":  "800 fresh isolated native children; full-process close deadline",
+                      "requires":  [
+                                       "windows",
+                                       "gpu-gl"
+                                   ],
+                      "transport":  "fake",
+                      "seed":  5,
+                      "start_utc":  "2026-09-25T04:09:54.9971482Z",
+                      "deadline_sec":  1800,
+                      "exercised":  "fake-transport",
+                      "fixture":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-03\\tests\\acceptance\\..\\WO05HostFixture.cpp",
+                      "fixture_sha256":  "81961baadab1d301d851cabc9f5082d21c45f5989e32bfb42f52770cc5fe0630",
+                      "command":  "powershell -NoProfile -ExecutionPolicy Bypass -File C:\\dev\\Cosmic\\build\\_lanes\\ux-03\\tests\\acceptance\\fixtures\\Run-WO05Host.ps1 -FirstSchedule 5 -LastSchedule 8 -Bin C:\\dev\\Cosmic\\build\\_lanes\\ux-03\\build\\Runtime\\Release -Output C:\\dev\\Cosmic\\build\\_lanes\\ux-03\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-05\\host-current-b-Release",
+                      "stdout_log":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-03\\docs\\plans\\ux-shipping-2026-09-24\\evidence\\UX-03\\retained-wo05-host-shards-Release\\T03-native-schedules-5-8.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-03\\docs\\plans\\ux-shipping-2026-09-24\\evidence\\UX-03\\retained-wo05-host-shards-Release\\T03-native-schedules-5-8.err.log",
+                      "pid":  30636,
+                      "exit_code":  1,
+                      "crash":  false,
+                      "tests_passed":  -1,
+                      "tests_expected_min":  800,
+                      "verdict":  "FAILED",
+                      "detail":  "expected \u003e= 800 tests, got -1 (exit 1, wanted 0)",
+                      "duration_sec":  141.517,
+                      "end_utc":  "2026-09-25T04:12:16.5133210Z"
+                  }
+              ]
+}

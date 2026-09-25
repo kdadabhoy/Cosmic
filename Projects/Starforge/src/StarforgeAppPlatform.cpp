@@ -54,6 +54,114 @@ namespace Starforge
             return {};
         }
 
+        // ---- UX-03 samples (contract §3) ------------------------------------
+        constexpr const char* kFeaturedSample = "PendulumLab";
+
+        fs::path SampleTemplatesRoot()
+        {
+            return fs::path("assets") / "projects" / "Starforge" / "templates" / "samples";
+        }
+
+        bool IsTemplateSample(const std::string& sourcePath)
+        {
+            const std::string root = SampleTemplatesRoot().generic_string() + "/";
+            return sourcePath.rfind(root, 0) == 0;
+        }
+
+        // The sample's homescreen thumbnail (Projects/Starforge/assets/editor/samples/<Name>.png,
+        // synced next to the runtime); "" when the sample has none.
+        std::string SampleThumbPath(const std::string& name)
+        {
+            std::error_code ec;
+            const fs::path p = fs::path("assets") / "projects" / "Starforge" / "editor" / "samples" / (name + ".png");
+            return fs::exists(p, ec) ? p.generic_string() : std::string();
+        }
+
+        // The manifest's RAW kind key: "" when absent (ProjectManifest::Load maps an
+        // absent key to "game", which would file AnalysisSample under Game samples).
+        std::string RawKind(const fs::path& cproj)
+        {
+            if (auto cfg = Cosmic::Config::Load(cproj.generic_string()))
+                return cfg->GetString("kind", "");
+            return {};
+        }
+
+        // 0 = App samples, 1 = Game samples, 2 = Other samples (no kind / any other kind).
+        int SampleGroup(const std::string& kind)
+        {
+            if (kind == "app")  return 0;
+            if (kind == "game") return 1;
+            return 2;
+        }
+
+        // The first non-title README line (headings, blank lines and a templated
+        // "@PROJECT_NAME@" line skipped); "" without a README.
+        std::string FirstDescriptionLine(const fs::path& readme)
+        {
+            std::ifstream in(readme);
+            std::string line;
+            while (std::getline(in, line))
+            {
+                if (!line.empty() && line.back() == '\r') line.pop_back();
+                const size_t a = line.find_first_not_of(" \t");
+                if (a == std::string::npos) continue;          // blank
+                if (line[a] == '#') continue;                  // a title / heading
+                if (line.find("@PROJECT_NAME@") != std::string::npos) continue;
+                return line.substr(a);
+            }
+            return {};
+        }
+
+        // A plain recursive copy of an SDK sample into its user folder, skipping the
+        // per-machine outputs (build/, dist/, logs/, .starforge/ at any depth). The
+        // top-level project.cproj is written LAST, so a failed copy never leaves a
+        // folder that SampleExists() would take for a finished one.
+        bool CopySampleTree(const std::string& src, const std::string& dest, std::string& why)
+        {
+            std::error_code ec;
+            const fs::path from = src, to = dest;
+            fs::create_directories(to, ec);
+            if (ec) { why = "cannot create " + dest + ": " + ec.message(); return false; }
+            auto skipped = [](const fs::path& name)
+            {
+                return name == "build" || name == "dist" || name == "logs" || name == ".starforge";
+            };
+            bool manifest = false;
+            for (auto it = fs::recursive_directory_iterator(from, ec); !ec && it != fs::recursive_directory_iterator(); it.increment(ec))
+            {
+                const fs::path rel = fs::relative(it->path(), from, ec);
+                if (ec) break;
+                if (it->is_directory(ec))
+                {
+                    if (skipped(it->path().filename())) { it.disable_recursion_pending(); continue; }
+                    fs::create_directories(to / rel, ec);
+                    if (ec) break;
+                    continue;
+                }
+                if (rel == "project.cproj") { manifest = true; continue; }
+                fs::create_directories((to / rel).parent_path(), ec);
+                fs::copy_file(it->path(), to / rel, fs::copy_options::overwrite_existing, ec);
+                if (ec) { why = "copying " + rel.generic_string() + ": " + ec.message(); return false; }
+            }
+            if (ec) { why = ec.message(); return false; }
+            if (!manifest) { why = "no project.cproj in " + src; return false; }
+            fs::copy_file(from / "project.cproj", to / "project.cproj", fs::copy_options::overwrite_existing, ec);
+            if (ec) { why = "copying project.cproj: " + ec.message(); return false; }
+            return true;
+        }
+
+        // Seed <dest>/.starforge/thumb.png (what the project card shows, ThumbFor) from the
+        // sample's thumbnail, when it has one.
+        void SeedSampleThumb(const std::string& name, const std::string& dest)
+        {
+            const std::string thumb = SampleThumbPath(name);
+            if (thumb.empty()) return;
+            std::error_code ec;
+            const fs::path dir = fs::path(dest) / ".starforge";
+            fs::create_directories(dir, ec);
+            fs::copy_file(thumb, dir / "thumb.png", fs::copy_options::overwrite_existing, ec);
+        }
+
         std::string DefaultProjectsDirP()
         {
 #pragma warning(push)
@@ -376,16 +484,47 @@ namespace Starforge
         return out;
     }
 
-    std::vector<std::string> StarforgeApp::ListSamples() const
+    // UX-03 (contract §3): the samples come from two places — the editor's own
+    // templates/samples/* (scaffolded with the @PROJECT_NAME@ token) and the SDK's
+    // Projects/* that carry a project.cproj (copied verbatim; never Starforge).
+    // Ordered by group — App samples, Game samples, Other samples (no/other kind) —
+    // featured first inside a group, then by name.
+    std::vector<StarforgeApp::SampleInfo> StarforgeApp::ListSamples() const
     {
-        std::vector<std::string> out;
-        const fs::path root = fs::path("assets") / "projects" / "Starforge" / "templates" / "samples";
+        std::vector<SampleInfo> out;
         std::error_code ec;
-        if (!fs::exists(root, ec)) return out;
-        for (const auto& e : fs::directory_iterator(root, ec))
-            if (e.is_directory(ec) && fs::exists(e.path() / "project.cproj", ec))
-                out.push_back(e.path().filename().string());
-        std::sort(out.begin(), out.end());
+        auto add = [&](const fs::path& dir)
+        {
+            const std::string name = dir.filename().string();
+            for (const SampleInfo& s : out) if (s.Name == name) return;   // the first source wins a name clash
+            SampleInfo s;
+            s.Name        = name;
+            s.Kind        = RawKind(dir / "project.cproj");
+            s.Description = FirstDescriptionLine(dir / "README.md");
+            s.SourcePath  = dir.generic_string();
+            s.Featured    = (name == kFeaturedSample);
+            out.push_back(std::move(s));
+        };
+
+        const fs::path templ = SampleTemplatesRoot();
+        if (fs::exists(templ, ec))
+            for (const auto& e : fs::directory_iterator(templ, ec))
+                if (e.is_directory(ec) && fs::exists(e.path() / "project.cproj", ec))
+                    add(e.path());
+
+        const fs::path sdkProjects = fs::path(SdkDir()) / "Projects";
+        if (fs::exists(sdkProjects, ec))
+            for (const auto& e : fs::directory_iterator(sdkProjects, ec))
+                if (e.is_directory(ec) && e.path().filename() != "Starforge" && fs::exists(e.path() / "project.cproj", ec))
+                    add(e.path());
+
+        std::sort(out.begin(), out.end(), [](const SampleInfo& a, const SampleInfo& b)
+        {
+            const int ga = SampleGroup(a.Kind), gb = SampleGroup(b.Kind);
+            if (ga != gb) return ga < gb;
+            if (a.Featured != b.Featured) return a.Featured;
+            return a.Name < b.Name;
+        });
         return out;
     }
 
@@ -402,32 +541,123 @@ namespace Starforge
 
     bool StarforgeApp::OpenSample(const std::string& name)
     {
+        // First use copies the sample into SamplePath(name) (Documents/Starforge Projects,
+        // or COSMIC_STARFORGE_PROJECTS_DIR); later uses reopen that copy. The source —
+        // the editor's templates or the SDK's Projects/<name> — is never edited in place.
         const std::string dest = SamplePath(name);
         if (!SampleExists(name))
         {
-            std::error_code ec;
-            fs::create_directories(fs::path(dest).parent_path(), ec);
-            if (!ScaffoldProjectTo(name, dest, "samples/" + name))
+            const std::vector<SampleInfo> samples = ListSamples();
+            const auto it = std::find_if(samples.begin(), samples.end(),
+                                         [&](const SampleInfo& s) { return s.Name == name; });
+            if (it == samples.end())
             {
-                m_Ctx.Log("[Samples] Could not scaffold sample '" + name + "' — templates/samples/" + name + " missing.",
+                m_Ctx.Log("[Samples] No sample named '" + name + "' (templates/samples/ or " + SdkDir() + "/Projects/).",
                           LogSeverity::Error);
                 return false;
             }
-            m_Ctx.Log("[Samples] Created '" + name + "' at " + dest + " from templates/samples/" + name + ".");
+            std::error_code ec;
+            fs::create_directories(fs::path(dest).parent_path(), ec);
+            const bool fromTemplate = IsTemplateSample(it->SourcePath);
+            std::string why;
+            const bool ok = fromTemplate ? ScaffoldProjectTo(name, dest, "samples/" + name)
+                                         : CopySampleTree(it->SourcePath, dest, why);
+            if (!ok)
+            {
+                m_Ctx.Log("[Samples] Could not copy sample '" + name + "' from " + it->SourcePath +
+                          (why.empty() ? std::string() : " — " + why), LogSeverity::Error);
+                return false;
+            }
+            SeedSampleThumb(name, dest);
+            m_Ctx.Log("[Samples] Created '" + name + "' at " + dest + " from " + it->SourcePath + ".");
         }
         return OpenProjectPath(dest);
     }
 
     void StarforgeApp::DrawSampleButtons()
     {
-        for (const std::string& s : ListSamples())
+        // The homescreen draws every frame: re-list (directory scans + manifest/README
+        // reads) at most every 2 s, not per frame.
+        const double now = ImGui::GetTime();
+        if (m_SampleCacheTime < 0.0 || now - m_SampleCacheTime > 2.0 || now < m_SampleCacheTime)
         {
-            ImGui::SameLine();
-            if (ImGui::Button((s + " Sample").c_str(), ImVec2(0, 34)))
-                OpenSample(s);
-            if (ImGui::IsItemHovered())
-                ImGui::SetTooltip("templates/samples/%s -> %s\n(scaffolded on first use, then reopened)", s.c_str(), SamplePath(s).c_str());
+            m_SampleCache = ListSamples();
+            m_SampleCacheTime = now;
         }
+        if (m_SampleCache.empty())
+            return;
+
+        std::string open;   // deferred: OpenSample leaves the homescreen
+        auto SampleThumbTexture = [&](const std::string& name) -> Cosmic::Ref<Cosmic::Texture2D>
+        {
+            const std::string path = SampleThumbPath(name);
+            if (path.empty()) return nullptr;
+            std::error_code ec;
+            const std::string key = fs::absolute(path, ec).generic_string();
+            auto it = m_ThumbCache.find(key);
+            if (it != m_ThumbCache.end()) return it->second;
+            Cosmic::Ref<Cosmic::Texture2D> tex = Cosmic::Texture2D::Create(key);
+            m_ThumbCache[key] = tex;
+            return tex;
+        };
+        auto tooltip = [&](const SampleInfo& s)
+        {
+            if (!ImGui::IsItemHovered()) return;
+            ImGui::BeginTooltip();
+            ImGui::PushTextWrapPos(ImGui::GetFontSize() * 32.0f);
+            if (!s.Description.empty()) ImGui::TextUnformatted(s.Description.c_str());
+            ImGui::TextDisabled("%s -> %s", s.SourcePath.c_str(), SamplePath(s.Name).c_str());
+            ImGui::TextDisabled(SampleExists(s.Name) ? "(reopens your copy)" : "(copied on first use, then reopened)");
+            ImGui::PopTextWrapPos();
+            ImGui::EndTooltip();
+        };
+
+        static const char* const kGroupTitles[] = { "App samples", "Game samples", "Other samples" };
+        bool firstGroup = true;
+        for (int g = 0; g < 3; ++g)
+        {
+            std::vector<const SampleInfo*> items;
+            for (const SampleInfo& s : m_SampleCache)
+                if (SampleGroup(s.Kind) == g) items.push_back(&s);
+            if (items.empty()) continue;
+
+            if (!firstGroup) ImGui::SameLine(0.0f, 36.0f);
+            firstGroup = false;
+            ImGui::BeginGroup();
+            ImGui::AlignTextToFramePadding();   // same baseline in every group (SameLine after a group of buttons)
+            ImGui::TextDisabled("%s", kGroupTitles[g]);
+            for (const SampleInfo* s : items)
+            {
+                ImGui::PushID(s->Name.c_str());
+                if (s->Featured)
+                {
+                    const float w = 240.0f;
+                    if (Cosmic::Ref<Cosmic::Texture2D> tex = SampleThumbTexture(s->Name))
+                    {
+                        const float h = w * (float)tex->GetHeight() / (float)std::max(1u, tex->GetWidth());
+                        // Engine textures load V-flipped for GL UVs: the flipped UV pair draws upright.
+                        if (ImGui::ImageButton("##thumb", (ImTextureID)(intptr_t)tex->GetRendererID(),
+                                               ImVec2(w, h), ImVec2(0, 1), ImVec2(1, 0)))
+                            open = s->Name;
+                        tooltip(*s);
+                    }
+                    const float cardW = w + 2.0f * ImGui::GetStyle().FramePadding.x;   // the image button's outer width
+                    if (ImGui::Button((std::string(ICON_LC_STAR " ") + s->Name + "   (featured)").c_str(), ImVec2(cardW, 30.0f)))
+                        open = s->Name;
+                    tooltip(*s);
+                }
+                else
+                {
+                    if (ImGui::Button(s->Name.c_str(), ImVec2(180.0f, 30.0f)))
+                        open = s->Name;
+                    tooltip(*s);
+                }
+                ImGui::PopID();
+            }
+            ImGui::EndGroup();
+        }
+        if (!open.empty())
+            OpenSample(open);
     }
 
     void StarforgeApp::DrawTemplatePicker()

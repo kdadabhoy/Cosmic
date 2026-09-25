@@ -1,0 +1,11 @@
+open	C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/Ap03App/src/screens/HomeScreen.h	9
+reveal	C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/Ap03App/src/screens/HomeScreen.h	9
+open	C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/Ap03App/src/screens/HomeScreen.h	9
+open	C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/Ap03App/src/screens/HomeScreen.h	9
+open	C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/Ap03App/src/Module.cpp	24
+open	C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/Ap03App/src/Module.cpp	24
+open	C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/Ap03App/src/services/AppService.cpp	33
+reveal	C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/Ap03App/src/services/AppService.cpp	33
+open	C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/Ap03App/src/services/AppService.cpp	33
+open	C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/Ap03App/src/Module.cpp	24
+open	C:/dev/Cosmic/build/_lanes/ux-03/build/_temp/ux03-launcher-Debug/cosmic-accept-41a3b248066f41f8b2d785a056035b46/temp/ap03/Ap03App/src/services/AppService.cpp	62

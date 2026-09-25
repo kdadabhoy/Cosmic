@@ -147,6 +147,9 @@ set(COSMIC_TEST_SOURCES
     test_sftelem_protocol.cpp
     test_sftelem_hub.cpp
     test_crossbuild_scene.cpp
+    # UX-03 (UX & Shipping) LH01 U — the Launcher's project scan skips the test fixtures
+    # (CS_TEST_FIXTURE marker, KI-77); probes the real DLLs in build/Runtime/<cfg>.
+    test_launcher_scan.cpp
     # W9 refactored TelemHub::PumpSerial's pure half into the public
     # IngestChunk, so the framing/routing path can be driven without a COM port.
     # Compiling the real TU (rather than a test copy) is the point: the thing

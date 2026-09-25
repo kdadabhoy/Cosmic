@@ -1,0 +1,48 @@
+UX-03 / KI-77 failing-before — LH01 against the UNFIXED scan loop (isolated patch)
+Date: 2026-09-24T20:16:37-07:00  Base: 60218225d86ae7675978598f9343cc1fddacdce6  Config: Debug (-DCOSMIC_2D_ONLY=ON -DCOSMIC_BUILD_TESTS=ON)
+Patch state: CS_TEST_FIXTURE marker in ModuleMacros.h + the nine fixtures; LauncherLayer::ScanForProjects(dirs) overload holding
+TODAY's loop verbatim (CreatePluginLayer probe only, NO CosmicTestFixture skip) + the found-list INFO line; tests/test_launcher_scan.cpp.
+git diff HEAD (tracked) sha256: 3ab780449a2ddce93345f8a7f2bbf01beb940eab9a1a00dd53502f0128693504
+tests/test_launcher_scan.cpp sha256: 72a89f986c9369b42c3df4b4530ff428b327adc336d308ad3dc8998d7214ff65
+LauncherLayer.cpp sha256 (unfixed): 6db1a07b2f6ce30e64f956e25d427b7e14df3aea28046cd82e284263dd3088c1
+
+== LH01-U: build\Runtime\Debug\CosmicTests.exe --test-case="UX-03 LH01*"  (exit 1)
+[2026-09-24 20:16:13.932] [COSMIC] [info] LauncherLayer: scan found 2 project(s): [AP01ServiceFixture, Starforge]
+[2026-09-24 20:16:13.941] [COSMIC] [info] LauncherLayer: scan found 11 project(s): [AP01ServiceFixture, SF_Telem, Starforge, WO05HostFixture, WO06HostFixture, WO07LifetimeFixture, WO07ModuleFixture, WO07PlotFixture, WO07TeardownFixture, WO07UiCyclesFixture, WO10ClockFixture]
+[doctest] doctest version is "2.4.12"
+[doctest] run with "--help" for options
+===============================================================================
+C:\dev\Cosmic\build\_lanes\ux-03\tests\test_launcher_scan.cpp(73):
+TEST SUITE: UX-03 LH01 launcher scan
+TEST CASE:  UX-03 LH01 U: a dir holding a copy of Starforge.dll and of AP01ServiceFixture.dll scans to exactly {Starforge}
+C:\dev\Cosmic\build\_lanes\ux-03\tests\test_launcher_scan.cpp(95): ERROR: CHECK( found == std::vector<std::string>{ "Starforge" } ) is NOT correct!
+  values: CHECK( {?} == {?} )
+  logged: scan of the temp dir: [AP01ServiceFixture,Starforge]
+C:\dev\Cosmic\build\_lanes\ux-03\tests\test_launcher_scan.cpp(100): ERROR: CHECK( shaped == std::vector<std::string>{ "Starforge" } ) is NOT correct!
+C:\dev\Cosmic\build\_lanes\ux-03\tests\test_launcher_scan.cpp(105):
+TEST CASE:  UX-03 LH01 U: every *Fixture.dll beside the exe exports CosmicTestFixture; the runtime-dir scan lists no fixture and not WO07NoExport
+C:\dev\Cosmic\build\_lanes\ux-03\tests\test_launcher_scan.cpp(138): ERROR: CHECK( !(n.size() >= 7 && n.compare(n.size() - 7, 7, "Fixture") == 0) ) is NOT correct!
+  values: CHECK( false )
+  logged: scan of the runtime dir: [AP01ServiceFixture,SF_Telem,Starforge,WO05HostFixture,WO06HostFixture,WO07LifetimeFixture,WO07ModuleFixture,WO07PlotFixture,WO07TeardownFixture,WO07UiCyclesFixture,WO10ClockFixture]
+          fixture listed: AP01ServiceFixture
+[doctest] test cases:  2 |  0 passed |  2 failed | 537 skipped
+[doctest] assertions: 45 | 34 passed | 11 failed |
+[doctest] Status: FAILURE!
+  (the same CHECK fails once per listed fixture: AP01ServiceFixture, WO05HostFixture, WO06HostFixture, WO07LifetimeFixture, WO07ModuleFixture, WO07PlotFixture, WO07TeardownFixture, WO07UiCyclesFixture, WO10ClockFixture)
+
+== LH01-W: tests\acceptance\fixtures\Run-UX03Launcher.ps1 -Bin build\Runtime\Debug (CosmicApp.exe, no args, CWD = runtime dir)  (exit 1)
+launched CosmicApp.exe pid=5956 cwd=C:\dev\Cosmic\build\_lanes\ux-03\build\Runtime\Debug
+LH01-W found-list line: LauncherLayer: scan found 11 project(s): [AP01ServiceFixture, SF_Telem, Starforge, WO05HostFixture, WO06HostFixture, WO07LifetimeFixture, WO07ModuleFixture, WO07PlotFixture, WO07TeardownFixture, WO07UiCyclesFixture, WO10ClockFixture]
+  listed (11): AP01ServiceFixture, SF_Telem, Starforge, WO05HostFixture, WO06HostFixture, WO07LifetimeFixture, WO07ModuleFixture, WO07PlotFixture, WO07TeardownFixture, WO07UiCyclesFixture, WO10ClockFixture
+  skipped fixtures (0): 
+  log=C:\dev\Cosmic\build\_lanes\ux-03\build\Runtime\Debug\logs\Cosmic_2026-09-24_20-16-21.log closed_by=CloseMainWindow exit=0 elapsed=1s
+  FAIL: test fixture listed: AP01ServiceFixture
+  FAIL: test fixture listed: WO05HostFixture
+  FAIL: test fixture listed: WO06HostFixture
+  FAIL: test fixture listed: WO07LifetimeFixture
+  FAIL: test fixture listed: WO07ModuleFixture
+  FAIL: test fixture listed: WO07PlotFixture
+  FAIL: test fixture listed: WO07TeardownFixture
+  FAIL: test fixture listed: WO07UiCyclesFixture
+  FAIL: test fixture listed: WO10ClockFixture
+[doctest] test cases: 1 | 0 passed | 1 failed

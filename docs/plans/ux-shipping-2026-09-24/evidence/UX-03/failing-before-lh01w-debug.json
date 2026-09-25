@@ -1,0 +1,42 @@
+﻿{
+    "id":  "LH01-W",
+    "verdict":  "FAIL",
+    "bin":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-03\\build\\Runtime\\Debug",
+    "exe":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-03\\build\\Runtime\\Debug\\CosmicApp.exe",
+    "cwd":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-03\\build\\Runtime\\Debug",
+    "args":  [
+
+             ],
+    "found_line":  "LauncherLayer: scan found 11 project(s): [AP01ServiceFixture, SF_Telem, Starforge, WO05HostFixture, WO06HostFixture, WO07LifetimeFixture, WO07ModuleFixture, WO07PlotFixture, WO07TeardownFixture, WO07UiCyclesFixture, WO10ClockFixture]",
+    "found":  [
+                  "AP01ServiceFixture",
+                  "SF_Telem",
+                  "Starforge",
+                  "WO05HostFixture",
+                  "WO06HostFixture",
+                  "WO07LifetimeFixture",
+                  "WO07ModuleFixture",
+                  "WO07PlotFixture",
+                  "WO07TeardownFixture",
+                  "WO07UiCyclesFixture",
+                  "WO10ClockFixture"
+              ],
+    "skipped_fixtures":  [
+
+                         ],
+    "log":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-03\\build\\Runtime\\Debug\\logs\\Cosmic_2026-09-24_20-16-21.log",
+    "process_exit":  0,
+    "closed_by":  "CloseMainWindow",
+    "elapsed_s":  1,
+    "problems":  [
+                     "test fixture listed: AP01ServiceFixture",
+                     "test fixture listed: WO05HostFixture",
+                     "test fixture listed: WO06HostFixture",
+                     "test fixture listed: WO07LifetimeFixture",
+                     "test fixture listed: WO07ModuleFixture",
+                     "test fixture listed: WO07PlotFixture",
+                     "test fixture listed: WO07TeardownFixture",
+                     "test fixture listed: WO07UiCyclesFixture",
+                     "test fixture listed: WO10ClockFixture"
+                 ]
+}

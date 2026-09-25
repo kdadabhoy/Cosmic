@@ -1,0 +1,9 @@
+wo05-host-shards Release, shard b (schedules 5-8), attempt 1 (20:59-21:12): 1 child of the shard failed
+child s6-t0-i17 (tests/test_wo05_host.cpp, schedule=6 transition=0 storage=2):
+51:C:\dev\Cosmic\build\_lanes\ux-03\tests\test_wo05_host.cpp(66): ERROR: CHECK( report.failures==0 ) is NOT correct!
+52:  values: CHECK( {?} == 0 )
+57:C:\dev\Cosmic\build\_lanes\ux-03\tests\test_wo05_host.cpp(68): ERROR: CHECK( GetTickCount64()-report.closeRequestTick.load()<=2000 ) is NOT correct!
+58:  values: CHECK( 5375 <= 2000 )
+64:WO05 actual host child: schedule=6 transition=0 storage=2
+66:[doctest] test cases: 1 | 0 passed | 1 failed | 538 skipped
+67:[doctest] assertions: 7 | 5 passed | 2 failed |

@@ -21,6 +21,7 @@
 #include <sstream>
 #include <algorithm>
 #include <cmath>
+#include <mutex>
 #include <set>
 #include <vector>
 
@@ -581,14 +582,18 @@ namespace Cosmic
 
 	void LauncherLayer::ScanForProjects()
 	{
-		m_DiscoveredProjects.clear();
-
 		// Use an explicit exe-relative path so the scan is not sensitive to CWD changes.
 		// Scan the packaged "projects/" subfolder first, then the exe dir itself — this
 		// supports both the organized dist layout (DLLs in projects/) and the flat
 		// dev-build layout (DLLs alongside CosmicApp.exe) without a config switch.
-		fs::path exeDir = fs::current_path();
-		std::vector<fs::path> scanDirs = { exeDir / "projects", exeDir };
+		const fs::path exeDir = fs::current_path();
+		m_DiscoveredProjects = ScanForProjects({ exeDir / "projects", exeDir });
+	}
+
+	std::vector<std::string> LauncherLayer::ScanForProjects(const std::vector<fs::path>& scanDirs)
+	{
+		std::vector<std::string> found;
+		std::vector<std::string> skipped;   // test fixtures (CosmicTestFixture export)
 
 		std::set<std::string> seen; // de-dup if a project appears in both locations
 
@@ -619,18 +624,41 @@ namespace Cosmic
 				HMODULE hMod = LoadLibraryExA(fullPath.string().c_str(), nullptr, DONT_RESOLVE_DLL_REFERENCES);
 				if (!hMod) continue;
 				bool isPlugin = (GetProcAddress(hMod, "CreatePluginLayer") != nullptr);
+				// UX-03 (KI-77): a test fixture (CS_TEST_FIXTURE) is never a project, even
+				// though it exports CreatePluginLayer — the test build puts it here.
+				const bool isFixture = (GetProcAddress(hMod, "CosmicTestFixture") != nullptr);
 				FreeLibrary(hMod);
+				if (isFixture) { skipped.push_back(name); continue; }
 				if (!isPlugin) continue;
 
 				seen.insert(name);
-				m_DiscoveredProjects.push_back(name);
+				found.push_back(name);
 
 			} while (FindNextFileA(hFind, &fd));
 
 			FindClose(hFind);
 		}
 
-		std::sort(m_DiscoveredProjects.begin(), m_DiscoveredProjects.end());
+		std::sort(found.begin(), found.end());
+
+		// The launcher rescans every 2 s: log a result once, not on every rescan.
+		static std::mutex s_LogMutex;
+		static std::string s_LastLogged;
+		std::string list;
+		for (const std::string& n : found)
+			list += (list.empty() ? "" : ", ") + n;
+		std::string key = list + "|";
+		for (const std::string& n : skipped)
+			key += n + ",";
+		std::lock_guard<std::mutex> lock(s_LogMutex);
+		if (key != s_LastLogged)
+		{
+			s_LastLogged = key;
+			for (const std::string& n : skipped)
+				CS_CORE_TRACE("LauncherLayer: skipped test fixture '{0}' (exports CosmicTestFixture)", n);
+			CS_CORE_INFO("LauncherLayer: scan found {0} project(s): [{1}]", found.size(), list);
+		}
+		return found;
 	}
 
 #ifndef COSMIC_DIST

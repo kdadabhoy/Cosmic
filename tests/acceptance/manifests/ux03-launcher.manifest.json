@@ -1,0 +1,65 @@
+{
+  "manifest": "ux03-launcher",
+  "cases": [
+    {
+      "id": "LH01-U",
+      "description": "UX-03 LH01 unit (KI-77): LauncherLayer::ScanForProjects(dirs) over a temp dir holding a copy of the real Starforge.dll and of AP01ServiceFixture.dll returns exactly {Starforge} (the fixture exports CreatePluginLayer AND the CS_TEST_FIXTURE marker; the marker wins), also in the member's {dir/projects, dir} shape; every *Fixture.dll in the runtime dir exports CosmicTestFixture (GetProcAddress probe over the nine tests/*Fixture.cpp targets, a missing one is a failure); WO07NoExport.dll exports no entry point and the runtime-dir scan lists no fixture and not WO07NoExport.",
+      "tier": "U",
+      "profiles": ["pr", "nightly", "release"],
+      "requires": ["windows"],
+      "command": "powershell",
+      "workingDir": "{BIN}",
+      "args": [
+        "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
+        "{ACCEPTANCE}\\fixtures\\Run-WO10Case.ps1",
+        "-Bin", "{BIN}",
+        "-CaseId", "LH01-U",
+        "-TestCase", "UX-03 LH01*",
+        "-MinTests", "2",
+        "-DeadlineSec", "120",
+        "-Output", "{REPO}\\docs\\plans\\ux-shipping-2026-09-24\\evidence\\UX-03\\lh01u-{CONFIG}"
+      ],
+      "expectExit": 0,
+      "minTests": 2,
+      "deadlineSec": 180,
+      "fixture": "../../tests/test_launcher_scan.cpp"
+    },
+    {
+      "id": "LH01-W",
+      "description": "UX-03 LH01 W (KI-77): the REAL Cosmic Launcher - CosmicApp.exe started with no arguments and CWD = the runtime dir (the scan reads the CWD) - logs its found-list line ('LauncherLayer: scan found N project(s): [...]'); it names Starforge and SF_Telem and no *Fixture (nor WO07NoExport); the per-fixture skip lines are counted. Only the started process is closed (CloseMainWindow, then Kill of that PID).",
+      "tier": "W",
+      "profiles": ["pr", "gpu", "release"],
+      "requires": ["windows", "gpu-gl"],
+      "command": "powershell",
+      "workingDir": "{BIN}",
+      "args": [
+        "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
+        "{ACCEPTANCE}\\fixtures\\Run-UX03Launcher.ps1",
+        "-Bin", "{BIN}",
+        "-Output", "{REPO}\\docs\\plans\\ux-shipping-2026-09-24\\evidence\\UX-03\\lh01w-{CONFIG}"
+      ],
+      "expectExit": 0,
+      "minTests": 1,
+      "deadlineSec": 180
+    },
+    {
+      "id": "LH02",
+      "description": "UX-03 LH02 - AP-03's E06 extended, inside the REAL Starforge editor (Projects/Starforge/src/AP03AuthoringSelfTest.cpp through Run-AP03Authoring.ps1, the whole E01-E08/F01/V05 sequence and its out-of-process oracles unchanged): ListSamples() = templates/samples/* + <SdkDir()>/Projects/* (never Starforge); App samples = [PendulumLab] featured and first; Game samples hold FlowDemo + ForgePong from templates/samples; AnalysisSample (no kind key) last under Other samples; game, blank, FlowDemo, ForgePong and PendulumLab each scaffold/copy to SamplePath (COSMIC_STARFORGE_PROJECTS_DIR), open, BuildScripts and Play; the PendulumLab copy carries the seeded .starforge/thumb.png and the SDK's Projects/PendulumLab stays byte-identical; the welcome popup (m_OpenFirstRun, armed on the fresh profile) offers PendulumLab; the New Project modal opens with App selected; Prefs::LoadProjects <= 3 over 600 homescreen frames.",
+      "tier": "I",
+      "profiles": ["gpu", "release"],
+      "requires": ["windows", "gpu-gl"],
+      "command": "powershell",
+      "workingDir": "{BIN}",
+      "args": [
+        "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
+        "{ACCEPTANCE}\\fixtures\\Run-AP03Authoring.ps1",
+        "-Bin", "{BIN}",
+        "-Output", "{REPO}\\docs\\plans\\ux-shipping-2026-09-24\\evidence\\UX-03\\lh02-{CONFIG}",
+        "-ProjectRoot", "{RUNTEMP}\\ap03"
+      ],
+      "expectExit": 0,
+      "minTests": 2,
+      "deadlineSec": 1800
+    }
+  ]
+}

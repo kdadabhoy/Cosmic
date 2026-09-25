@@ -426,3 +426,4 @@ extern "C"
         return root;
     }
 }
+CS_TEST_FIXTURE()   // UX-03: hidden from the Launcher project scan (KI-77)

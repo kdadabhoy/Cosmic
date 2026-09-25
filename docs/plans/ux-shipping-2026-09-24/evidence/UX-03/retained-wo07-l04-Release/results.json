@@ -1,0 +1,108 @@
+﻿{
+    "manifest":  "wo07-l04",
+    "profile":  "all",
+    "tier_filter":  [
+
+                    ],
+    "config":  "Release",
+    "mode":  "2D",
+    "generated_utc":  "2026-09-25T03:48:16.7727060Z",
+    "git":  {
+                "commit":  "60218225d86ae7675978598f9343cc1fddacdce6",
+                "dirty":  true,
+                "dirty_diff_sha256":  "bfcf22206cdecc177e4f47562977a5e191a6ca447fcaa16c634e0a23b70b3156"
+            },
+    "environment":  {
+                        "os_caption":  "Microsoft Windows 11 Education",
+                        "os_version":  "10.0.26200",
+                        "os_build":  "26200",
+                        "os_display":  "26200.9457",
+                        "cpu_name":  "AMD Ryzen 7 7800X3D 8-Core Processor",
+                        "cpu_cores":  8,
+                        "cpu_threads":  16,
+                        "cpu_addr_width":  64,
+                        "cpu_isa_floor":  "SSE4.2 (D-CPU); see evidence/WO-02/cpu-isa-probe.txt",
+                        "ram_bytes":  33462239232,
+                        "ram_gib":  31.2,
+                        "gpus":  [
+                                     {
+                                         "name":  "NVIDIA GeForce RTX 5070 Ti",
+                                         "driver":  "32.0.16.1692",
+                                         "driver_date":  "\/Date(1788480000000)\/"
+                                     },
+                                     {
+                                         "name":  "AMD Radeon(TM) Graphics",
+                                         "driver":  "32.0.21045.5002",
+                                         "driver_date":  "\/Date(1786924800000)\/"
+                                     }
+                                 ],
+                        "opengl_version":  null,
+                        "powershell":  "5.1.26100.9444",
+                        "hostname":  "DESKTOP-SEOA4BT"
+                    },
+    "capabilities":  {
+                         "windows":  true,
+                         "cpu-sse42":  true,
+                         "gpu-gl":  true,
+                         "serial-device":  false,
+                         "editor-ui":  false,
+                         "audio-device":  true,
+                         "render-tests":  false
+                     },
+    "forced_unavailable":  [
+
+                           ],
+    "bin_dir":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-03\\build\\Runtime\\Release",
+    "run_temp":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-03\\build\\_temp\\wo07-l04-Release\\cosmic-accept-38487e41120240bb9a8d53f7e38b6d9c",
+    "golden_dir":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-03\\tests\\acceptance\\goldens",
+    "golden_before":  {
+                          ".gitkeep-golden.txt":  "89e37141e7474880abc0f7363d7ae2598c0d28011f425d9a0b7130c944e9b137"
+                      },
+    "golden_after":  {
+                         ".gitkeep-golden.txt":  "89e37141e7474880abc0f7363d7ae2598c0d28011f425d9a0b7130c944e9b137"
+                     },
+    "golden_mutated":  false,
+    "acceptance_mode":  true,
+    "counts":  {
+                   "total":  1,
+                   "passed":  1,
+                   "failed":  0,
+                   "blocked":  0
+               },
+    "self_test":  {
+                      "enabled":  false,
+                      "failures":  [
+
+                                   ]
+                  },
+    "cases":  [
+                  {
+                      "id":  "L04",
+                      "tier":  "G",
+                      "description":  "Teardown during live background activity (runtime plugin): 20 reloads requested from inside a selection dispatch while a job is blocked on an exe-owned barrier, the file watcher is delivering, serial bytes stream in over the fake transport and selection/log/hotkey/EventBus listeners fire every frame (then a quiescence window keeps every path firing); 10 WM_CLOSE-while-job-blocked closes (2 s bar); 10 careless-plugin unloads (job released only after detach; the engine must not let the worker run into freed code); 10 real CS_MODULE load/unload/load/unload cycles hosted by PlayerLayer with the registry asserted clean after each unload. Each child asserts ordering, no invocation into unloaded code, listener-removed-mid-dispatch never fires, owned resources balanced and scenario threads back to the warmed baseline.",
+                      "requires":  [
+                                       "windows",
+                                       "gpu-gl"
+                                   ],
+                      "transport":  "none",
+                      "seed":  null,
+                      "start_utc":  "2026-09-25T03:47:38.9917540Z",
+                      "deadline_sec":  1200,
+                      "exercised":  "fixture",
+                      "fixture":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-03\\tests\\acceptance\\..\\..\\tests\\WO07TeardownFixture.cpp",
+                      "fixture_sha256":  "b48171aee609d7349779be6abf38a2ff2bc3a7b27c307a2cae681239e92f46a1",
+                      "command":  "powershell -NoProfile -ExecutionPolicy Bypass -File C:\\dev\\Cosmic\\build\\_lanes\\ux-03\\tests\\acceptance\\fixtures\\Run-WO07Teardown.ps1 -Bin C:\\dev\\Cosmic\\build\\_lanes\\ux-03\\build\\Runtime\\Release -Output C:\\dev\\Cosmic\\build\\_lanes\\ux-03\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-07\\l04-runner-Release -ReloadCount 20 -CloseCount 10 -CarelessCount 10 -ModuleCount 10",
+                      "stdout_log":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-03\\docs\\plans\\ux-shipping-2026-09-24\\evidence\\UX-03\\retained-wo07-l04-Release\\L04.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-03\\docs\\plans\\ux-shipping-2026-09-24\\evidence\\UX-03\\retained-wo07-l04-Release\\L04.err.log",
+                      "pid":  13780,
+                      "exit_code":  0,
+                      "crash":  false,
+                      "tests_passed":  50,
+                      "tests_expected_min":  50,
+                      "verdict":  "PASSED",
+                      "detail":  "exit 0 as expected",
+                      "duration_sec":  37.763,
+                      "end_utc":  "2026-09-25T03:48:16.7607026Z"
+                  }
+              ]
+}

@@ -25,6 +25,10 @@
 //        sentinel colour is present in the viewport readback.
 //   E06  homescreen: templates App/Game/Blank + samples FlowDemo/ForgePong listed; each
 //        scaffolds, opens, builds, plays; LoadProjects calls over 600 homescreen frames <= 3.
+//        UX-03 LH02 extends it: App samples = [PendulumLab (featured, first)], Game samples
+//        hold FlowDemo + ForgePong, AnalysisSample last under Other; PendulumLab is copied
+//        from <SdkDir()>/Projects (left byte-identical) to SamplePath, opened, built, played;
+//        the welcome popup offers PendulumLab; the New Project modal opens with App selected.
 //   E07  live loop: rewrite AppService.cpp while playing (amplitude x2) -> back in Play on
 //        the same flow state, services re-instantiated, amplitude changed, uptime history
 //        older than the rebuild kept, Console has the build line; a compile error -> stays
@@ -60,6 +64,7 @@
 #endif
 #include <windows.h>
 
+#include <algorithm>
 #include <chrono>
 #include <cstdarg>
 #include <cstdio>
@@ -105,6 +110,19 @@ namespace Starforge
         uint64_t Fnv1a(uint64_t h, const std::string& s)
         {
             for (unsigned char c : s) { h ^= c; h *= 1099511628211ull; }
+            return h;
+        }
+        // UX-03 LH02: a whole folder (sorted relative paths + bytes), to prove the SDK's
+        // sample is never edited in place by OpenSample / build / play of its copy.
+        uint64_t TreeHash(const fs::path& root, int& files)
+        {
+            std::vector<fs::path> rels; std::error_code ec;
+            for (auto it = fs::recursive_directory_iterator(root, ec); !ec && it != fs::recursive_directory_iterator(); it.increment(ec))
+                if (it->is_regular_file(ec)) rels.push_back(fs::relative(it->path(), root, ec));
+            std::sort(rels.begin(), rels.end());
+            uint64_t h = 1469598103934665603ull;
+            for (const fs::path& r : rels) { h = Fnv1a(h, r.generic_string()); h = Fnv1a(h, ReadAll(root / r)); }
+            files = (int)rels.size();
             return h;
         }
         // Every file under templates/app, with the token replaced, must equal the scaffold.
@@ -164,6 +182,11 @@ namespace Starforge
         Cosmic::UUID e03Uuid;
         int loadCallsAtHome = 0, homeFrames = 0;
         std::vector<std::string> e06Kinds; size_t e06Index = 0;
+        // UX-03 LH02 — the boot-time first-run offer + New Project default, and the two
+        // modals opened/closed from FrameEnd (inside the ImGui frame).
+        bool firstRunAtBoot = false; std::string newKindAtBoot;
+        int uxPhase = 0; bool openNewProject = false, closePopups = false;
+        uint64_t sdkSampleHash = 0; int sdkSampleFiles = 0;
         double sineMaxAfter = 0.0; int sineSamples = 0;
         std::string e07State;
         bool hostedSeen = false, hostedLetterboxSeen = false, hostedUnknownPlaceholder = false;
@@ -209,6 +232,8 @@ namespace Starforge
         _set_abort_behavior(0, _WRITE_ABORT_MSG | _CALL_REPORTFAULT);
 #endif
         SetErrorMode(SEM_NOGPFAULTERRORBOX | SEM_FAILCRITICALERRORS | SEM_NOOPENFILEERRORBOX);
+        t.firstRunAtBoot = m_OpenFirstRun;     // UX-03 LH02: what the constructor armed (fresh profile)
+        t.newKindAtBoot  = m_NewProjectKind;   // UX-03 LH02: the New Project default
         m_OpenFirstRun = false;
         Cosmic::Application::Get().GetWindow().SetVSync(false);
         Cosmic::Application::Get().SetPauseOnMinimize(false);
@@ -239,6 +264,20 @@ namespace Starforge
         if (!m_AP03) return;
         auto& t = *m_AP03;
         t.oracle.CheckContexts();
+        // UX-03 LH02: the New Project modal is opened by the id its homescreen button opens
+        // (OpenPopup("New Project") inside ##StarforgeHome), and modals are dismissed without
+        // a click (no Create, and playground_offered untouched).
+        if (t.openNewProject)
+        {
+            t.openNewProject = false;
+            if (ImGuiWindow* home = ImGui::FindWindowByName("##StarforgeHome"))
+                ImGui::OpenPopupEx(ImHashStr("New Project", 0, home->ID));
+        }
+        if (t.closePopups)
+        {
+            t.closePopups = false;
+            ImGui::ClosePopupToLevel(0, true);
+        }
         if (!t.injects.empty())
         {
             const auto in = t.injects.front();
@@ -845,10 +884,40 @@ namespace Starforge
                 for (const auto& x : tpl) names += x.Display + ",";
                 t.check("E06", names == "App,Game,Blank,", "templates listed: " + names);
                 for (const auto& x : tpl) t.check("E06", !x.Description.empty(), "template without a description");
+                // UX-03 LH02 — the samples come from templates/samples/* AND <SdkDir()>/Projects/*
+                // (never Starforge), grouped App / Game / Other with PendulumLab featured + first.
                 const auto smp = ListSamples();
-                std::string sn; for (const auto& x : smp) sn += x + ",";
-                t.check("E06", sn == "FlowDemo,ForgePong,", "samples listed: " + sn);
-                t.e06Kinds = { "game", "blank", "sample:FlowDemo", "sample:ForgePong" };   // app already proven by E01
+                std::string sn; for (const auto& x : smp) sn += x.Name + "[" + x.Kind + (x.Featured ? ",featured" : "") + "],";
+                std::vector<std::string> appS, gameS, otherS;
+                int featured = 0;
+                for (const auto& x : smp)
+                {
+                    (x.Kind == "app" ? appS : x.Kind == "game" ? gameS : otherS).push_back(x.Name);
+                    if (x.Featured) ++featured;
+                    t.check("E06", x.Name != "Starforge", "Starforge listed as a sample");
+                }
+                auto has = [](const std::vector<std::string>& v, const char* n) { return std::find(v.begin(), v.end(), n) != v.end(); };
+                t.check("E06", appS == std::vector<std::string>{ "PendulumLab" }, "App samples: " + sn);
+                t.check("E06", !smp.empty() && smp.front().Name == "PendulumLab" && smp.front().Featured && featured == 1,
+                        "PendulumLab is not the one featured sample, first: " + sn);
+                // the AP-03 oracle kept: FlowDemo + ForgePong, from templates/samples, under Game samples
+                t.check("E06", has(gameS, "FlowDemo") && has(gameS, "ForgePong"), "Game samples lack FlowDemo/ForgePong: " + sn);
+                for (const auto& x : smp)
+                    if (x.Name == "FlowDemo" || x.Name == "ForgePong")
+                        t.check("E06", x.SourcePath.find("templates/samples/" + x.Name) != std::string::npos, x.Name + " not from templates/samples: " + x.SourcePath);
+                // a project with no kind key (AnalysisSample) is listed last, under Other samples
+                t.check("E06", has(otherS, "AnalysisSample") && smp.back().Name == "AnalysisSample" && smp.back().Kind.empty(),
+                        "AnalysisSample is not last under Other samples: " + sn);
+                for (const auto& x : smp)
+                    if (x.Name == "PendulumLab")
+                    {
+                        std::error_code ec;
+                        t.check("E06", fs::equivalent(x.SourcePath, fs::path(SdkDir()) / "Projects" / "PendulumLab", ec), "PendulumLab source is not <SdkDir()>/Projects/PendulumLab: " + x.SourcePath);
+                        t.check("E06", !x.Description.empty() && x.Description.find('#') != 0, "PendulumLab has no README description");
+                        t.sdkSampleHash = TreeHash(x.SourcePath, t.sdkSampleFiles);
+                    }
+                t.note("E06 samples: %s", sn.c_str());
+                t.e06Kinds = { "game", "blank", "sample:FlowDemo", "sample:ForgePong", "sample:PendulumLab" };   // app already proven by E01; AnalysisSample excluded (§3)
                 t.e06Index = 0; t.e06Phase = 0;
                 t.loadCallsAtHome = m_LoadProjectsCalls; t.homeFrames = 0;
                 waitFrames(2);
@@ -862,9 +931,60 @@ namespace Starforge
                 t.note("E06 LoadProjects calls over 600 frames: %d", calls);
                 return true;
             });
+            // UX-03 LH02 — the welcome popup names PendulumLab; New Project opens with App selected.
+            add("E06 welcome popup (PendulumLab) + New Project default (App)", [&]
+            {
+                auto popupShown = [](const char* name)
+                {
+                    ImGuiWindow* w = ImGui::FindWindowByName(name);
+                    return w && (w->Active || w->WasActive);
+                };
+                switch (t.uxPhase)
+                {
+                case 0:
+                    // A fresh profile (the wrapper's scratch CWD + an empty projects dir) arms the offer.
+                    t.check("E06", t.firstRunAtBoot, "the first-run offer was not armed at boot (playground_offered unset, no PendulumLab copy)");
+                    t.check("E06", !m_Settings.PlaygroundOffered, "playground_offered already set");
+                    m_FirstRunOfferDrawn.clear();
+                    m_OpenFirstRun = true;          // the constructor's flag: DrawFirstRunPopup opens the modal
+                    t.uxPhase = 1; waitFrames(4); return false;
+                case 1:
+                    t.check("E06", popupShown("Welcome to Starforge"), "the welcome popup did not open");
+                    t.check("E06", m_FirstRunOfferDrawn == "PendulumLab", "the welcome popup offers '" + m_FirstRunOfferDrawn + "', expected PendulumLab");
+                    t.note("E06 welcome popup offers: %s", m_FirstRunOfferDrawn.c_str());
+                    t.closePopups = true;           // dismissed without a click: playground_offered untouched
+                    t.uxPhase = 2; waitFrames(4); return false;
+                case 2:
+                    t.check("E06", !popupShown("Welcome to Starforge"), "the welcome popup did not close");
+                    t.check("E06", !m_Settings.PlaygroundOffered, "playground_offered changed by the check");
+                    t.check("E06", t.newKindAtBoot == "app", "New Project default at boot is '" + t.newKindAtBoot + "', expected app");
+                    t.openNewProject = true;        // the id the homescreen's New Project button opens
+                    t.uxPhase = 3; waitFrames(4); return false;
+                case 3:
+                    // the modal ran DrawTemplatePicker (which falls back to the first template when
+                    // the kind is unavailable): the radio it draws selected is the App template.
+                    t.check("E06", popupShown("New Project"), "the New Project modal did not open");
+                    t.check("E06", m_NewProjectKind == "app", "the New Project modal has '" + m_NewProjectKind + "' selected, expected app");
+                    t.note("E06 New Project modal open with kind: %s (boot default %s)", m_NewProjectKind.c_str(), t.newKindAtBoot.c_str());
+                    t.closePopups = true;
+                    t.uxPhase = 4; waitFrames(4); return false;
+                default:
+                    t.check("E06", !popupShown("New Project"), "the New Project modal did not close");
+                    return true;
+                }
+            });
             add("E06 each kind: scaffold + open + build + play", [&]
             {
-                if (t.e06Index >= t.e06Kinds.size()) { t.pass("E06"); return true; }
+                if (t.e06Index >= t.e06Kinds.size())
+                {
+                    // UX-03 LH02: the SDK's PendulumLab is byte-identical after its copy was built + played.
+                    int files = 0;
+                    const uint64_t after = TreeHash(fs::path(SdkDir()) / "Projects" / "PendulumLab", files);
+                    t.check("E06", t.sdkSampleFiles > 0 && after == t.sdkSampleHash && files == t.sdkSampleFiles,
+                            "the SDK's Projects/PendulumLab changed (edited in place?)");
+                    t.note("E06 SDK Projects/PendulumLab unchanged: %d files, tree %016llx", files, (unsigned long long)after);
+                    t.pass("E06"); return true;
+                }
                 const std::string kind = t.e06Kinds[t.e06Index];
                 const bool sample = kind.rfind("sample:", 0) == 0;
                 const std::string name = sample ? kind.substr(7) : ("Ap03" + kind);
@@ -875,6 +995,13 @@ namespace Starforge
                     const bool ok = sample ? OpenSample(name) : NewProjectAt(name, t.root, kind);
                     t.check("E06", ok, kind + ": scaffold/open failed");
                     if (sample) { std::error_code ec; t.check("E06", fs::exists(fs::path(SamplePath(name)) / "project.cproj", ec), kind + ": not scaffolded at SamplePath"); }
+                    if (name == "PendulumLab")   // UX-03 LH02: a copy (not the SDK folder), thumbnail seeded
+                    {
+                        std::error_code ec;
+                        t.check("E06", !fs::equivalent(SamplePath(name), fs::path(SdkDir()) / "Projects" / "PendulumLab", ec), "PendulumLab opened in place");
+                        t.check("E06", fs::exists(fs::path(SamplePath(name)) / ".starforge" / "thumb.png", ec), "PendulumLab copy has no seeded .starforge/thumb.png");
+                        t.check("E06", ProjectDir() == SamplePath(name) || fs::equivalent(ProjectDir(), SamplePath(name), ec), "open project is not the copy: " + ProjectDir());
+                    }
                     t.check("E06", m_Ctx.ProjectOpen, kind + ": project not open");
                     t.check("E06", m_Ctx.Scene != nullptr, kind + ": no scene");
                     BuildScripts();

@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="wo05-host-shards" tests="2" failures="1" skipped="0">
+  <testsuite name="all" tests="2" failures="1" skipped="0">
+    <testcase name="T03-native-schedules-0-4" classname="wo05-host-shards.G" time="0">
+    </testcase>
+    <testcase name="T03-native-schedules-5-8" classname="wo05-host-shards.G" time="0">
+      <failure type="FAILED" message="expected &gt;= 800 tests, got -1 (exit 1, wanted 0)"></failure>
+    </testcase>
+  </testsuite>
+</testsuites>
+

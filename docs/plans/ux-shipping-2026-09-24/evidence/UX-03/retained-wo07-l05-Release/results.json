@@ -1,0 +1,136 @@
+﻿{
+    "manifest":  "wo07-l05",
+    "profile":  "all",
+    "tier_filter":  [
+
+                    ],
+    "config":  "Release",
+    "mode":  "2D",
+    "generated_utc":  "2026-09-25T03:48:53.3784909Z",
+    "git":  {
+                "commit":  "60218225d86ae7675978598f9343cc1fddacdce6",
+                "dirty":  true,
+                "dirty_diff_sha256":  "9a4c72f7f16729e7938ba5925737b7bb2b994dbcd41940bcc031f4054f50583d"
+            },
+    "environment":  {
+                        "os_caption":  "Microsoft Windows 11 Education",
+                        "os_version":  "10.0.26200",
+                        "os_build":  "26200",
+                        "os_display":  "26200.9457",
+                        "cpu_name":  "AMD Ryzen 7 7800X3D 8-Core Processor",
+                        "cpu_cores":  8,
+                        "cpu_threads":  16,
+                        "cpu_addr_width":  64,
+                        "cpu_isa_floor":  "SSE4.2 (D-CPU); see evidence/WO-02/cpu-isa-probe.txt",
+                        "ram_bytes":  33462239232,
+                        "ram_gib":  31.2,
+                        "gpus":  [
+                                     {
+                                         "name":  "NVIDIA GeForce RTX 5070 Ti",
+                                         "driver":  "32.0.16.1692",
+                                         "driver_date":  "\/Date(1788480000000)\/"
+                                     },
+                                     {
+                                         "name":  "AMD Radeon(TM) Graphics",
+                                         "driver":  "32.0.21045.5002",
+                                         "driver_date":  "\/Date(1786924800000)\/"
+                                     }
+                                 ],
+                        "opengl_version":  null,
+                        "powershell":  "5.1.26100.9444",
+                        "hostname":  "DESKTOP-SEOA4BT"
+                    },
+    "capabilities":  {
+                         "windows":  true,
+                         "cpu-sse42":  true,
+                         "gpu-gl":  true,
+                         "serial-device":  false,
+                         "editor-ui":  false,
+                         "audio-device":  true,
+                         "render-tests":  false
+                     },
+    "forced_unavailable":  [
+
+                           ],
+    "bin_dir":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-03\\build\\Runtime\\Release",
+    "run_temp":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-03\\build\\_temp\\wo07-l05-Release\\cosmic-accept-e50c36fe559c4151a252098fc2dd5625",
+    "golden_dir":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-03\\tests\\acceptance\\goldens",
+    "golden_before":  {
+                          ".gitkeep-golden.txt":  "89e37141e7474880abc0f7363d7ae2598c0d28011f425d9a0b7130c944e9b137"
+                      },
+    "golden_after":  {
+                         ".gitkeep-golden.txt":  "89e37141e7474880abc0f7363d7ae2598c0d28011f425d9a0b7130c944e9b137"
+                     },
+    "golden_mutated":  false,
+    "acceptance_mode":  true,
+    "counts":  {
+                   "total":  2,
+                   "passed":  1,
+                   "failed":  1,
+                   "blocked":  0
+               },
+    "self_test":  {
+                      "enabled":  false,
+                      "failures":  [
+
+                                   ]
+                  },
+    "cases":  [
+                  {
+                      "id":  "L05-sftelem",
+                      "tier":  "I",
+                      "description":  "200 scripted UI cycles over the real SF_Telem root (over the fake serial transport) with a per-action Dear ImGui balance oracle: serial closed/open/lost through the production chain, the REAL Navigation buttons and homescreen tile (ImGui item activation), replay open + the REAL Unload button, the REAL Browse button opening the native IFileDialog cancelled by a helper thread, minimize/restore, resize, F11 fullscreen (real hotkey) both ways, and undocking a docked window through ImGui\u0027s own undock path. After EVERY action: zero recovered ImGui errors, zero end-of-frame stack leaks, zero context/font drift, per-layer depths balanced. Exact action log + screenshots saved.",
+                      "requires":  [
+                                       "windows",
+                                       "gpu-gl"
+                                   ],
+                      "transport":  "none",
+                      "seed":  null,
+                      "start_utc":  "2026-09-25T03:48:18.5759466Z",
+                      "deadline_sec":  900,
+                      "exercised":  "fixture",
+                      "fixture":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-03\\tests\\acceptance\\..\\..\\tests\\WO07UiCyclesFixture.cpp",
+                      "fixture_sha256":  "3d131ac1834c68a80ca5667da6a99df51c8a50881fb77da9a78b8cf660c88092",
+                      "command":  "powershell -NoProfile -ExecutionPolicy Bypass -File C:\\dev\\Cosmic\\build\\_lanes\\ux-03\\tests\\acceptance\\fixtures\\Run-WO07UiCycles.ps1 -Bin C:\\dev\\Cosmic\\build\\_lanes\\ux-03\\build\\Runtime\\Release -Output C:\\dev\\Cosmic\\build\\_lanes\\ux-03\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-07\\l05-runner-Release -Cycles 200",
+                      "stdout_log":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-03\\docs\\plans\\ux-shipping-2026-09-24\\evidence\\UX-03\\retained-wo07-l05-Release\\L05-sftelem.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-03\\docs\\plans\\ux-shipping-2026-09-24\\evidence\\UX-03\\retained-wo07-l05-Release\\L05-sftelem.err.log",
+                      "pid":  21272,
+                      "exit_code":  0,
+                      "crash":  false,
+                      "tests_passed":  1,
+                      "tests_expected_min":  1,
+                      "verdict":  "PASSED",
+                      "detail":  "exit 0 as expected",
+                      "duration_sec":  15.741,
+                      "end_utc":  "2026-09-25T03:48:34.3221116Z"
+                  },
+                  {
+                      "id":  "L05-editor",
+                      "tier":  "I",
+                      "description":  "200 scripted UI cycles in the real Starforge editor: every viewport-strip chip (snap Move/Rotate/Scale, Grid, Colliders, World/Local) clicked through Dear ImGui mouse events at the probed rects and confirmed to toggle, built-in layout presets (dock/undock churn), viewport hide/show, Play start/stop, minimize/restore, resize and F11 fullscreen (real hotkey). After EVERY action: zero recovered ImGui errors, zero end-of-frame leaks, zero context drift, strip and per-chip colour-stack deltas zero (the KI-1 mechanism). Action log + screenshots saved.",
+                      "requires":  [
+                                       "windows",
+                                       "gpu-gl"
+                                   ],
+                      "transport":  "none",
+                      "seed":  null,
+                      "start_utc":  "2026-09-25T03:48:34.3271108Z",
+                      "deadline_sec":  900,
+                      "exercised":  "fixture",
+                      "fixture":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-03\\tests\\acceptance\\..\\..\\Projects\\Starforge\\src\\L05EditorSelfTest.cpp",
+                      "fixture_sha256":  "c52c0227e8ff5560c304ee9479813ae126e8d3948f8e188f984271661adfac5a",
+                      "command":  "powershell -NoProfile -ExecutionPolicy Bypass -File C:\\dev\\Cosmic\\build\\_lanes\\ux-03\\tests\\acceptance\\fixtures\\Run-L05EditorSelfTest.ps1 -Bin C:\\dev\\Cosmic\\build\\_lanes\\ux-03\\build\\Runtime\\Release -Output C:\\dev\\Cosmic\\build\\_lanes\\ux-03\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-07\\l05-editor-runner-Release -Cycles 200",
+                      "stdout_log":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-03\\docs\\plans\\ux-shipping-2026-09-24\\evidence\\UX-03\\retained-wo07-l05-Release\\L05-editor.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-03\\docs\\plans\\ux-shipping-2026-09-24\\evidence\\UX-03\\retained-wo07-l05-Release\\L05-editor.err.log",
+                      "pid":  17224,
+                      "exit_code":  1,
+                      "crash":  false,
+                      "tests_passed":  0,
+                      "tests_expected_min":  1,
+                      "verdict":  "FAILED",
+                      "detail":  "expected \u003e= 1 tests, got 0 (exit 1, wanted 0)",
+                      "duration_sec":  19.042,
+                      "end_utc":  "2026-09-25T03:48:53.3689828Z"
+                  }
+              ]
+}

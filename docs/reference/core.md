@@ -3584,7 +3584,9 @@ engine provides. `Application::LoadProjectDLL` resolves both by name with `GetPr
 (`Application.cpp:702-703`), and **a DLL missing either one is rejected**: it logs
 `"Plugin is missing required engine export signatures!"`, calls `FreeLibrary` and returns
 (`:705-710`). The Launcher uses the presence of `CreatePluginLayer` as its "is this a Cosmic project"
-test when scanning a folder (`LauncherLayer.cpp:621`).
+test when scanning a folder — `static LauncherLayer::ScanForProjects(dirs)` (`layers/LauncherLayer.h`,
+exported), which skips any DLL that also exports `CosmicTestFixture` (the test-only `CS_TEST_FIXTURE()`
+marker from `scripting/ModuleMacros.h`, UX-03 / KI-77).
 
 `extern "C"` matters: the lookup is by the **undecorated** name. Defining them inside a namespace, or
 without `extern "C"`, produces a mangled export the engine will not find.

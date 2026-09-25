@@ -192,6 +192,7 @@ script `tests/check_docs_coverage.ps1` (work order D5) diffs `Cosmic.h` against 
 | `core/UUID.h` | [core.md](core.md) |
 | `core/Version.h` | [core.md](core.md) |
 | `layers/PlayerLayer.h` | [core.md](core.md) |
+| `layers/LauncherLayer.h` | [core.md](core.md) |
 | `scene/EventBus.h` | [../guide/flow-and-story.md](../guide/flow-and-story.md) |
 | `scene/FlowMachine.h` | [../guide/flow-and-story.md](../guide/flow-and-story.md) |
 | `scene/StoryGraph.h` | [../guide/flow-and-story.md](../guide/flow-and-story.md) |

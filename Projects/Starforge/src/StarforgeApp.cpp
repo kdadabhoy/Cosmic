@@ -109,10 +109,10 @@ namespace Starforge
         m_Viewport.LoadSnapPrefs(m_Settings);   // K6 — per-op snap values persist
         m_Content.LoadPrefs(m_Settings);        // T4 — content-browser layout persists
 
-        // First-run: offer the "Forge Playground" sample once (E21). Only when the
-        // sample isn't already present and the user hasn't been asked before.
-        if (!m_Settings.PlaygroundOffered && !SampleExists("ForgePong"))
-            m_OpenFirstRun = true;   // W7 — the 2D build offers ForgePong instead
+        // First-run: offer the featured sample once (E21). Only when the sample isn't
+        // already present and the user hasn't been asked before (playground_offered).
+        if (!m_Settings.PlaygroundOffered && !SampleExists("PendulumLab"))
+            m_OpenFirstRun = true;   // UX-03 — the App Platform showcase (was ForgePong)
 
         // Route command-stack activity to the dirty flag (belt-and-suspenders —
         // commands also mark dirty directly).
@@ -2447,22 +2447,22 @@ namespace Starforge
         {
             ImGui::TextUnformatted("Welcome to Starforge — where worlds are forged.");
             ImGui::Spacing();
-            // W7 — Forge Playground is the 3D showcase (terrain/water/particles/
-            // nav). The 2D engine offers ForgePong instead, which is its own
-            // flagship sample and is entirely 2D.
-            ImGui::TextDisabled("\"ForgePong\" is a ready-made project that shows the toolset:");
-            ImGui::BulletText("sprites + an ortho 2D camera, and a flipbook hit effect");
-            ImGui::BulletText("canvas UI score + a menu -> game -> win flow graph");
-            ImGui::BulletText("paddle + ball C++ scripts (Build Scripts to compile)");
+            // UX-03 — the offer is PendulumLab, the App Platform showcase (an app, the
+            // editor's default kind); the game samples stay one click away on the homescreen.
+            m_FirstRunOfferDrawn = "PendulumLab";
+            ImGui::TextDisabled("\"PendulumLab\" is a ready-made pendulum lab app that shows the toolset:");
+            ImGui::BulletText("screens (Home, Lab, Settings) and the flow that moves between them");
+            ImGui::BulletText("a C++ service that simulates the pendulum and publishes it on the DataBus");
+            ImGui::BulletText("bound widgets (sliders, readouts) and a hosted ImPlot panel, live");
             ImGui::Spacing();
-            ImGui::TextDisabled("Create it now, or start from a blank project any time.");
+            ImGui::TextDisabled("Open your own copy now, or start a new project any time.");
             ImGui::Separator();
 
-            if (ImGui::Button("Create ForgePong", ImVec2(200, 0)))
+            if (ImGui::Button("Open PendulumLab", ImVec2(200, 0)))
             {
                 m_Settings.PlaygroundOffered = true;
                 Prefs::SaveSettings(m_Settings);
-                OpenSample("ForgePong");   // AP-03 — from templates/samples/ForgePong
+                OpenSample("PendulumLab");   // UX-03 — copied from <SDK>/Projects/PendulumLab on first use
                 ImGui::CloseCurrentPopup();
             }
             ImGui::SameLine();
@@ -2753,15 +2753,22 @@ namespace Starforge
             if (auto picked = Cosmic::FileDialog::PickFolder("Open Project Folder"))
                 OpenProjectPath(*picked);
         }
-        // AP-03 — the samples ship on disk (templates/samples/*, AP-04): one button
-        // per sample, scaffolded on first use into the projects folder.
-        DrawSampleButtons();
         ImGui::SameLine();
         ImGui::SetNextItemWidth(240.0f);
         ImGui::InputTextWithHint("##search", "Search projects…", m_HomeSearch, sizeof(m_HomeSearch));
 
         ImGui::Separator();
         ImGui::Spacing();
+
+        // UX-03 — the samples (templates/samples/* + the SDK's Projects/*), grouped App /
+        // Game / Other, PendulumLab featured; copied on first use into the projects folder.
+        DrawSampleButtons();
+        if (!m_SampleCache.empty())
+        {
+            ImGui::Spacing();
+            ImGui::Separator();
+            ImGui::Spacing();
+        }
 
         // Project grid (pinned first, then most-recent). Missing-on-disk still shows
         // so the user can Locate/Remove it.
@@ -2801,7 +2808,7 @@ namespace Starforge
         {
             ImGui::Spacing();
             ImGui::TextDisabled(projects.empty()
-                ? "No projects yet — click New Project, or Open Sample to explore the toolset."
+                ? "No projects yet — click New Project, or open a sample above to explore the toolset."
                 : "No projects match your search.");
         }
         ImGui::EndChild();

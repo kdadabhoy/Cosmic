@@ -1,0 +1,89 @@
+{
+  "cosmic_flow": 1,
+  "start": "Home",
+  "states": [
+    {
+      "editor": {
+        "pos": [
+          40.0,
+          60.0
+        ]
+      },
+      "name": "Home",
+      "scene": "project://scenes/Home.cscene",
+      "transitions": [
+        {
+          "on": "dashboard_clicked",
+          "to": "Dashboard"
+        },
+        {
+          "on": "settings_clicked",
+          "to": "Settings"
+        },
+        {
+          "on": "quit_clicked",
+          "to": "@quit"
+        },
+        {
+          "on": "key:Escape",
+          "to": "@quit"
+        }
+      ]
+    },
+    {
+      "editor": {
+        "pos": [
+          380.0,
+          60.0
+        ]
+      },
+      "name": "Dashboard",
+      "scene": "project://scenes/Dashboard.cscene",
+      "transitions": [
+        {
+          "on": "settings_clicked",
+          "to": "Settings"
+        },
+        {
+          "on": "back_clicked",
+          "to": "Home"
+        },
+        {
+          "on": "key:Escape",
+          "to": "Home"
+        }
+      ]
+    },
+    {
+      "editor": {
+        "pos": [
+          720.0,
+          60.0
+        ]
+      },
+      "name": "Settings",
+      "scene": "project://scenes/Settings.cscene",
+      "transitions": [
+        {
+          "on": "back_clicked",
+          "to": "Dashboard"
+        },
+        {
+          "on": "key:Escape",
+          "to": "Dashboard"
+        }
+      ]
+    },
+    {
+      "editor": {
+        "pos": [
+          1060.0,
+          60.0
+        ]
+      },
+      "name": "Telemetry",
+      "scene": "project://scenes/Telemetry.cscene",
+      "transitions": []
+    }
+  ]
+}

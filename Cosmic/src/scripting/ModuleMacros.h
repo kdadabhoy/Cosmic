@@ -118,3 +118,10 @@
         ImGui::SetCurrentContext(context.ImGuiCtx);                             \
         ImPlot::SetCurrentContext(context.ImPlotCtx);                           \
     }
+
+// ---- test-fixture marker (UX-03, contract §3) --------------------------------
+// A DLL built only for the test suites (tests/*Fixture.cpp) invokes this once at
+// file scope. The Launcher's project scan skips any DLL exporting
+// CosmicTestFixture, so fixtures built beside CosmicApp.exe never show up as
+// runnable projects (KI-77). Explicit export, never name matching.
+#define CS_TEST_FIXTURE() extern "C" __declspec(dllexport) int CosmicTestFixture() { return 1; }

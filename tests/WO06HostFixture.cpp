@@ -101,3 +101,4 @@ extern "C"
         return new RecordingRoot(std::unique_ptr<Cosmic::FakeSerialTransport>(report->createTransport()));
     }
 }
+CS_TEST_FIXTURE()   // UX-03: hidden from the Launcher project scan (KI-77)

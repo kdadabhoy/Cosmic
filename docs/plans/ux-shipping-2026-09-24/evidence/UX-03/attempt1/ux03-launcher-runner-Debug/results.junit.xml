@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="ux03-launcher" tests="3" failures="1" skipped="0">
+  <testsuite name="all" tests="3" failures="1" skipped="0">
+    <testcase name="LH01-U" classname="ux03-launcher.U" time="0">
+    </testcase>
+    <testcase name="LH01-W" classname="ux03-launcher.W" time="0">
+    </testcase>
+    <testcase name="LH02" classname="ux03-launcher.I" time="0">
+      <failure type="FAILED" message="expected &gt;= 2 tests, got 1 (exit 1, wanted 0)"></failure>
+    </testcase>
+  </testsuite>
+</testsuites>
+

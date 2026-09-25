@@ -149,3 +149,4 @@ CS_MODULE_BEGIN(AP01ServiceFixture)
     CS_END;
     CS_SERVICE(AP01Service).Order(0) CS_END;
 CS_MODULE_END()
+CS_TEST_FIXTURE()   // UX-03: hidden from the Launcher project scan (KI-77)

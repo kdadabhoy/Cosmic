@@ -32,3 +32,4 @@ CS_MODULE_BEGIN(WO07ModuleFixture)
         CS_FIELD(Mode)
     CS_END;
 CS_MODULE_END()
+CS_TEST_FIXTURE()   // UX-03: hidden from the Launcher project scan (KI-77)

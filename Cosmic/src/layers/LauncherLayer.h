@@ -1,5 +1,6 @@
 #pragma once
 
+#include "core/Core.h"
 #include "core/Layer.h"
 #include "graphics/Texture.h"
 #include "camera/OrthographicCamera.h"
@@ -22,8 +23,15 @@ namespace Cosmic
 		virtual void OnUpdate(float dt)     override;
 		virtual void OnImGuiRender()        override;
 
+		// Project scanning (UX-03, contract §3): every DLL in `dirs` (earlier dirs
+		// win a name clash) that exports CreatePluginLayer, minus the test fixtures
+		// (a DLL exporting CosmicTestFixture, see CS_TEST_FIXTURE in
+		// scripting/ModuleMacros.h). Returns the DLL stems, sorted. Pure over the
+		// file system — no layer state — so the unit tests call it directly.
+		static COSMIC_API std::vector<std::string> ScanForProjects(const std::vector<std::filesystem::path>& dirs);
+
 	private:
-		// Project scanning
+		// Project scanning: ScanForProjects({<CWD>/projects, <CWD>}) into m_DiscoveredProjects.
 		void ScanForProjects();
 
 #ifndef COSMIC_DIST

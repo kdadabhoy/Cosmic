@@ -1,0 +1,7 @@
+UX-03 LH02 attempt with -TempRoot <worktree>\build\_temp\ux03-launcher-<cfg> (NOT the prompt's build\_temp\ux03) — 2026-09-24 20:43-20:46, final binaries of Phase A
+Debug: AP03 verdict FAIL, failed_checks=3: E06 blank / sample:ForgePong / sample:PendulumLab 'build failed' (E01-E08 PASS)
+Release: same pattern (runner: 'expected >= 2 tests, got 0')
+Cause (environment, not the code): the scaffolded projects' CMake try-compile paths under the longer temp root exceed MAX_PATH:
+  tlog dir length 216 chars + file names > 260: C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\Ap03blank\build\CMakeFiles\CMakeScratch\TryCompile-mdf1f6\cmTC_d3fc0.dir\Debug\cmTC_d3fc0.tlog
+    C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(1196,5): error MSB6003: The specified task executable "link.exe" could not be run. System.IO.DirectoryNotFoundException: Could not find a part of the path 'C:\dev\Cosmic\build\_lanes\ux-03\build\_temp\ux03-launcher-Debug\cosmic-accept-41a3b248066f41f8b2d785a056035b46\temp\ap03\Ap03blank\
+Rerun with the prompt's -TempRoot <worktree>\build\_temp\ux03 (15 chars shorter): see lh02-<cfg>/ and ux03-launcher-runner-<cfg>/ (the first Debug pass at 20:25 with that root also PASSED).

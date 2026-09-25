@@ -203,7 +203,7 @@ namespace Starforge
         void DrawStatsWindow();  // entity + Renderer3D draw statistics
         void DrawHelpPopups();   // keyboard-shortcut reference
         void ApplyEditorTheme(); // register + apply the "Starforge" forge accent
-        void DrawFirstRunPopup();          // one-time offer of the Forge Playground sample
+        void DrawFirstRunPopup();          // one-time offer of the featured sample (PendulumLab, UX-03)
         bool BuildForgePlayground();       // scaffold + author the sample project
         void GenerateSampleTake();         // pre-baked telemetry take for the sample
         bool ForgePlaygroundExists() const;
@@ -224,7 +224,11 @@ namespace Starforge
         void DrawViewportContextMenu();                // right-click selected element -> Open logic source
         struct TemplateInfo { std::string Kind, Display, Description; };
         std::vector<TemplateInfo> ListTemplates() const;     // templates/{app,game,blank} on disk
-        std::vector<std::string>  ListSamples() const;       // templates/samples/*
+        // UX-03 (contract §3): Kind = the manifest's raw kind key ("" when absent);
+        // Description = the README's first non-title line; SourcePath = the folder
+        // OpenSample copies from (never edited in place); Featured = PendulumLab.
+        struct SampleInfo { std::string Name, Kind, Description, SourcePath; bool Featured = false; };
+        std::vector<SampleInfo>   ListSamples() const;       // templates/samples/* + <SdkDir()>/Projects/* (never Starforge)
         std::string SamplePath(const std::string& name) const;
         bool SampleExists(const std::string& name) const;
         bool OpenSample(const std::string& name);            // scaffold on first use, then open
@@ -373,7 +377,10 @@ namespace Starforge
         bool m_ProjectsCacheValid = false, m_ProjectsCacheExists = false;
         std::filesystem::file_time_type m_ProjectsCacheTime{};
         int  m_LoadProjectsCalls = 0;                  // E06 probe
-        std::string m_NewProjectKind = "game";
+        std::string m_NewProjectKind = "app";          // UX-03 — New Project preselects App
+        std::vector<SampleInfo> m_SampleCache;         // UX-03 — the homescreen's ListSamples(), refreshed every 2 s
+        double      m_SampleCacheTime = -1.0;
+        std::string m_FirstRunOfferDrawn;              // UX-03 — the sample the welcome popup offered when last drawn (E06 probe)
         bool        m_NewProjectPixelArt = false;
 
         // AP-03 — the E01..E08 authoring self-test host (AP03AuthoringSelfTest.cpp).
