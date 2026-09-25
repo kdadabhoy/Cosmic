@@ -788,63 +788,7 @@ namespace Starforge
 
         ImGui::TextDisabled("Transition");
 
-        if (ImGui::BeginCombo("On", tr.On.c_str()))
-        {
-            for (const std::string& sig : m_KnownSignals)
-            {
-                const bool sel = (sig == tr.On);
-                if (ImGui::Selectable(sig.c_str(), sel) && !sel)
-                {
-                    Snapshot();
-                    tr.On = sig;
-                }
-            }
-            ImGui::EndCombo();
-        }
-        char on[96];
-        std::snprintf(on, sizeof(on), "%s", tr.On.c_str());
-        if (ImGui::InputText("On (custom)", on, sizeof(on), ImGuiInputTextFlags_EnterReturnsTrue))
-        {
-            Snapshot();
-            tr.On = on;
-        }
-        ImGui::TextDisabled("signals, key:<Name>, timer:<seconds>, or when (condition only)");
-
-        // AP-03 (§5): the "when" trigger — a condition-only transition (needs a guard) —
-        // and a key picker over FlowKeyBridge::KeyCodeFor's table.
-        {
-            const bool isWhen = (tr.On == "when");
-            if (ImGui::RadioButton("when (guard only)", isWhen) && !isWhen)
-            {
-                Snapshot();
-                tr.On = "when";
-                if (!tr.HasGuard) tr.HasGuard = true;
-                Revalidate();
-            }
-            ImGui::SameLine();
-            const std::string keyLabel = tr.On.rfind("key:", 0) == 0 ? tr.On.substr(4) : std::string("key…");
-            ImGui::SetNextItemWidth(120.0f);
-            if (ImGui::BeginCombo("##keypick", keyLabel.c_str()))
-            {
-                static const char* kNamed[] = { "Escape", "Space", "Enter", "Tab", "Backspace", "Up", "Down", "Left", "Right" };
-                std::vector<std::string> names(std::begin(kNamed), std::end(kNamed));
-                for (int i = 1; i <= 12; ++i) names.push_back("F" + std::to_string(i));
-                for (char c = 'A'; c <= 'Z'; ++c) names.push_back(std::string(1, c));
-                for (char c = '0'; c <= '9'; ++c) names.push_back(std::string(1, c));
-                for (const std::string& n : names)
-                {
-                    if (FlowKeyBridge::KeyCodeFor(n) < 0) continue;   // only what the bridge resolves
-                    const std::string sig = "key:" + n;
-                    if (ImGui::Selectable(n.c_str(), tr.On == sig) && tr.On != sig)
-                    {
-                        Snapshot();
-                        tr.On = sig;
-                    }
-                }
-                ImGui::EndCombo();
-            }
-            if (ImGui::IsItemHovered()) ImGui::SetTooltip("key:<Name> — FlowKeyBridge rising edge");
-        }
+        DrawTriggerKind(tr, TriggerMemory(stateIdx, transIdx));
 
         if (ImGui::BeginCombo("To", tr.To.c_str()))
         {
@@ -880,16 +824,20 @@ namespace Starforge
             tr.Push = push;
         }
 
+        const bool guardProblemBefore = tr.HasGuard && FlowTrigger::IsEmptyGuard(tr.Guard);
         bool hasGuard = tr.HasGuard;
         if (ImGui::Checkbox("Guard (if)", &hasGuard))
         {
             Snapshot();
             tr.HasGuard = hasGuard;
+            Revalidate();   // UX-01: "when without a guard" comes and goes with the checkbox
         }
         if (tr.HasGuard)
         {
             DrawFlowGuardFields("trguard", tr.Guard, [this]() { Snapshot(); });
         }
+        if ((tr.HasGuard && FlowTrigger::IsEmptyGuard(tr.Guard)) != guardProblemBefore)
+            Revalidate();   // UX-01: the empty-guard problem clears as soon as a source is named
 
         if (ImGui::Button("Delete Transition"))
         {
@@ -899,6 +847,116 @@ namespace Starforge
             Revalidate();
         }
         (void)ctx;
+    }
+
+    FlowTrigger::Memory& FlowEditor::TriggerMemory(int stateIdx, int transIdx)
+    {
+        return m_TriggerMemory[{ m_Asset.States[stateIdx].Name, transIdx }];
+    }
+
+    // UX-01 (§1, KI-68): the trigger-kind selector — Event / Key / Timer / When — replaces the
+    // one-way "when (guard only)" radio. Every switch goes through FlowTrigger::SetKind (the
+    // rules live there, ImGui-free, and CosmicTests FE02 drives the same command path).
+    void FlowEditor::DrawTriggerKind(FlowTransition& tr, FlowTrigger::Memory& mem)
+    {
+        using FlowTrigger::Kind;
+        const Kind kind = FlowTrigger::KindOf(tr.On);
+
+        ImGui::TextUnformatted("Trigger");
+        for (Kind k : { Kind::Event, Kind::Key, Kind::Timer, Kind::When })
+        {
+            ImGui::SameLine();
+            if (ImGui::RadioButton(FlowTrigger::Label(k), kind == k) && kind != k)
+            {
+                Snapshot();
+                FlowTrigger::SetKind(tr, k, mem);
+                Revalidate();
+            }
+        }
+
+        switch (FlowTrigger::KindOf(tr.On))
+        {
+        case Kind::Event:
+        {
+            // The scene's UiButton / UiSlider / UiToggle signals + the flow's existing event names.
+            if (ImGui::BeginCombo("On", tr.On.c_str()))
+            {
+                for (const std::string& sig : m_KnownSignals)
+                {
+                    if (FlowTrigger::KindOf(sig) != Kind::Event) continue;
+                    const bool sel = (sig == tr.On);
+                    if (ImGui::Selectable(sig.c_str(), sel) && !sel)
+                    {
+                        Snapshot();
+                        tr.On = sig;
+                    }
+                }
+                ImGui::EndCombo();
+            }
+            char on[96];
+            std::snprintf(on, sizeof(on), "%s", tr.On.c_str());
+            if (ImGui::InputText("On (custom)", on, sizeof(on), ImGuiInputTextFlags_EnterReturnsTrue) && on[0])
+            {
+                Snapshot();
+                tr.On = on;
+                Revalidate();
+            }
+            ImGui::TextDisabled("a signal: a button / slider / toggle Signal, or one a script emits");
+            break;
+        }
+        case Kind::Key:
+        {
+            // A key picker over FlowKeyBridge::KeyCodeFor's table (AP-03 §5).
+            const std::string keyLabel = tr.On.substr(4);
+            if (ImGui::BeginCombo("Key", keyLabel.c_str()))
+            {
+                static const char* kNamed[] = { "Escape", "Space", "Enter", "Tab", "Backspace", "Up", "Down", "Left", "Right" };
+                std::vector<std::string> names(std::begin(kNamed), std::end(kNamed));
+                for (int i = 1; i <= 12; ++i) names.push_back("F" + std::to_string(i));
+                for (char c = 'A'; c <= 'Z'; ++c) names.push_back(std::string(1, c));
+                for (char c = '0'; c <= '9'; ++c) names.push_back(std::string(1, c));
+                for (const std::string& n : names)
+                {
+                    if (FlowKeyBridge::KeyCodeFor(n) < 0) continue;   // only what the bridge resolves
+                    const std::string sig = "key:" + n;
+                    if (ImGui::Selectable(n.c_str(), tr.On == sig) && tr.On != sig)
+                    {
+                        Snapshot();
+                        tr.On = sig;
+                    }
+                }
+                ImGui::EndCombo();
+            }
+            ImGui::TextDisabled("key:<Name> — fires on the key's press (FlowKeyBridge rising edge)");
+            break;
+        }
+        case Kind::Timer:
+        {
+            float seconds = 1.0f;
+            FlowTrigger::TimerSeconds(tr.On, seconds);
+            if (ImGui::InputFloat("Seconds", &seconds, 0.0f, 0.0f, "%g", ImGuiInputTextFlags_EnterReturnsTrue) &&
+                seconds >= 0.0f)
+            {
+                const std::string next = FlowTrigger::TimerOn(seconds);
+                if (next != tr.On)
+                {
+                    Snapshot();
+                    tr.On = next;
+                }
+            }
+            ImGui::TextDisabled("timer:<seconds> — fires that long after the state is entered");
+            break;
+        }
+        case Kind::When:
+        {
+            ImGui::TextDisabled("condition only — fires once the guard below passes");
+            if (!tr.HasGuard || FlowTrigger::IsEmptyGuard(tr.Guard))
+                ImGui::TextColored(ImVec4(1.0f, 0.75f, 0.20f, 1.0f),
+                                   "Name what it waits for: Compare > Channel (a DataBus channel), "
+                                   "Variable or Field.");
+            break;
+        }
+        }
     }
 
     // Q2 — the typed-variables blackboard (shared widget; snapshots for undo).

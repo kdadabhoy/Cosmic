@@ -23,11 +23,13 @@
 // ============================================================================
 
 #include "editors/IAssetEditor.h"
+#include "editors/FlowTrigger.h"
 #include "widgets/NodeCanvas.h"
 
 #include <Cosmic.h>
 #include "scene/FlowMachine.h"   // FlowAsset (not aggregated by Cosmic.h)
 
+#include <map>
 #include <string>
 #include <unordered_set>
 #include <vector>
@@ -66,6 +68,8 @@ namespace Starforge
         void DrawStateInspector(EditorContext& ctx, int stateIdx);
         void DrawTransitionInspector(EditorContext& ctx, int stateIdx, int transIdx);
         void DrawVariablesPanel(EditorContext& ctx);   // Q2
+        void DrawTriggerKind(Cosmic::FlowTransition& tr, FlowTrigger::Memory& mem);   // UX-01 — Event / Key / Timer / When
+        FlowTrigger::Memory& TriggerMemory(int stateIdx, int transIdx);
 
         // --- id mapping (opaque uintptr ids for NodeCanvas) -----------------
         static constexpr uintptr_t kQuitNode   = 1000000;
@@ -99,6 +103,10 @@ namespace Starforge
         bool m_ShowVars = false;   // Q2 — variables side panel toggle
         bool m_ShowInspector = true;   // UX-01 — the inspector column, collapsible from the toolbar
         int  m_CenterPending = 0;      // UX-01 — frames until the one-time CenterOnContent (0 = done)
+
+        // UX-01 — trigger-kind switching memory per transition, keyed by (state name,
+        // transition index), kept for the document's lifetime (FlowTrigger::SetKind).
+        std::map<std::pair<std::string, int>, FlowTrigger::Memory> m_TriggerMemory;
 
         std::vector<std::string> m_UndoStack;
         std::vector<std::string> m_RedoStack;
