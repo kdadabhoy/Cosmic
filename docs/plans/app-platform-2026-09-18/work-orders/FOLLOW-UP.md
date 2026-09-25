@@ -1,5 +1,10 @@
 # Cosmic — post-campaign close-out prompt (written 2026-09-20 04:00; paste into a fresh Claude Code session on a clean clone, Opus 5, effort high)
 
+> **Superseded (2026-09-24).** Every item below is scheduled in the UX & Shipping packet
+> ([`../../ux-shipping-2026-09-24/00-Start-Here.md`](../../ux-shipping-2026-09-24/00-Start-Here.md)): AP-D2 → UX-D1/D2/D3,
+> KI-63 → UX-04, the tidy remainder and the hardening WO → UX-H1, the soaks → UX-Q1. Do not paste this prompt; use
+> [`../../ux-shipping-2026-09-24/work-orders/ORCHESTRATOR.md`](../../ux-shipping-2026-09-24/work-orders/ORCHESTRATOR.md). Kept as the record of the hand-off state.
+
 ~~~text
 You are the orchestrator for the Cosmic engine's post-campaign close-out in <repo root> (Windows; C++/CMake;
 PowerShell 5.1 + Git Bash; VS-bundled cmake path and standard commands in
