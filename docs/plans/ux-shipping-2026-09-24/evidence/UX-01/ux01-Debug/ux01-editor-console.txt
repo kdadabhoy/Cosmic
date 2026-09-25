@@ -12,16 +12,16 @@
 [Scene] Opened 'project://scenes/Home.cscene'.
 [Scripts] 1 script(s) not built — press Ctrl+B to compile the project module.
 [Project] Scaffolded project — press Ctrl+B to build the game module.
-[Project] Opened 'PendulumLab' @ C:/dev/Cosmic/build/_lanes/ux-01/build/_temp/ux01/cosmic-accept-765aaf838cbd480b84825bd92c5cd60d/temp/ux01proj/PendulumLab
-[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-01/build/_temp/ux01/cosmic-accept-765aaf838cbd480b84825bd92c5cd60d/temp/ux01proj/PendulumLab/project.cproj'.
+[Project] Opened 'PendulumLab' @ C:/dev/Cosmic/build/_lanes/ux-01/build/_temp/ux01/cosmic-accept-8e9ae35820fd40498fd75d856dd3ecae/temp/ux01proj/PendulumLab
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-01/build/_temp/ux01/cosmic-accept-8e9ae35820fd40498fd75d856dd3ecae/temp/ux01proj/PendulumLab/project.cproj'.
 
-[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-01/build/_temp/ux01/cosmic-accept-765aaf838cbd480b84825bd92c5cd60d/temp/ux01proj/PendulumLab/project.cproj'.
-
-[COSMIC] Config: no file at './starforge/layouts/active.toml'.
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-01/build/_temp/ux01/cosmic-accept-8e9ae35820fd40498fd75d856dd3ecae/temp/ux01proj/PendulumLab/project.cproj'.
 
 [COSMIC] Config: no file at './starforge/layouts/active.toml'.
 
-[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-01/build/_temp/ux01/cosmic-accept-765aaf838cbd480b84825bd92c5cd60d/temp/ux01proj/PendulumLab/project.cproj'.
+[COSMIC] Config: no file at './starforge/layouts/active.toml'.
+
+[COSMIC] Config: loaded 'C:/dev/Cosmic/build/_lanes/ux-01/build/_temp/ux01/cosmic-accept-8e9ae35820fd40498fd75d856dd3ecae/temp/ux01proj/PendulumLab/project.cproj'.
 
 [COSMIC] WorkspaceLayer: Dockspace built (port mode L=true R=true T=true B=true).
 
