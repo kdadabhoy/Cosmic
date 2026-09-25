@@ -325,6 +325,12 @@ namespace Cosmic
                 const entt::entity node = f.Node;
                 if (!reg.valid(node) || !visited.insert(node).second)
                     continue;
+                // UX-02 (KI-76) — T13 Active (Components.h): an inactive element and
+                // its whole subtree are not laid out, so Render, Update, HitTest and
+                // CollectHostedPanels (all over this walk) ignore them. Its children
+                // are never pushed.
+                if (const auto* tag = reg.try_get<TagComponent>(node); tag && !tag->Active)
+                    continue;
 
                 UiRect rect = f.ParentRect;
                 int32_t z = 0;

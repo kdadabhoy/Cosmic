@@ -37,8 +37,10 @@
  * also orbit the camera, and click-to-select should skip clicks on handles.
  *
  * The TransformComponent overload writes rotation as a QUATERNION (and sets
- * UseQuatRotation) — the component's Euler/quat representations are independent
- * by design (see Components.h), so this is the unambiguous choice for a 3D gizmo.
+ * UseQuatRotation) in 3D — the component's Euler/quat representations are
+ * independent by design (see Components.h), so this is the unambiguous choice for
+ * a 3D gizmo. In 2D (mode2D, UX-02) it writes Rotation.z instead: the sprite pass
+ * draws the Euler Z angle, so a quaternion write was an invisible edit (KI-74).
  * Undo/redo is deferred to the S14 editor work (documented, not wired here).
  * ============================================================================
  */
@@ -84,12 +86,29 @@ namespace Cosmic
 		                       Operation op, Space space, float snap = 0.0f);
 
 		/**
-		 * @brief Manipulate a TransformComponent in place (decomposes the result back
-		 * into Position/Scale/RotationQuat; sets UseQuatRotation). Returns true if the
-		 * transform changed this frame.
+		 * @brief Manipulate a TransformComponent in place and write the edited matrix
+		 * back through ApplyModel. Returns true if the transform changed this frame.
+		 * `mode2D` (UX-02): the 2D editor — Rotate offers the Z ring only and the
+		 * rotation lands in Rotation.z (what the sprite pass draws), see ApplyModel.
 		 * Pre: called between Begin/End of the viewport window (see FRAME PROTOCOL).
 		 */
 		static bool Manipulate(const Camera& camera, TransformComponent& transform,
-		                       Operation op, Space space, float snap = 0.0f);
+		                       Operation op, Space space, float snap = 0.0f,
+		                       bool mode2D = false);
+
+		/**
+		 * @brief Pure write-back of an edited model matrix into a TransformComponent
+		 * (no ImGui, no camera — unit-tested). Position = the translation column,
+		 * Scale = the basis-column lengths.
+		 *  - 3D (`mode2D == false`): rotation = the normalized basis as RotationQuat,
+		 *    UseQuatRotation = true (the component's Euler/quat representations are
+		 *    independent — the unambiguous choice for a 3D gizmo).
+		 *  - 2D (UX-02, KI-74): Rotation.z = the Z angle in DEGREES (the kept
+		 *    Rotation.x/y Euler factors divided out, unwrapped to the turn nearest
+		 *    the previous Rotation.z so a drag never jumps by 360), Rotation.x/y
+		 *    kept, UseQuatRotation = false (the Euler path the sprite pass draws),
+		 *    RotationQuat untouched.
+		 */
+		static void ApplyModel(TransformComponent& transform, const glm::mat4& model, bool mode2D);
 	};
 }

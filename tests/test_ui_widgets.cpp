@@ -584,6 +584,87 @@ TEST_SUITE("AP-02 V04 widgets")
     }
 
     // ------------------------------------------------------------------------
+    // UX-02 ED02 — TagComponent::Active honoured by the canvas walk (KI-76)
+    // ------------------------------------------------------------------------
+    // Render draws exactly the CollectElements list (UiSystem.cpp Render: CollectElements,
+    // then one draw per element) and needs a GL context, so the headless draw-list probe is
+    // CollectElements itself; Update, HitTest and CollectHostedPanels are driven directly.
+    TEST_CASE("UX-02 ED02 inactive UiPlot child: no draw, Update false and silent, HitTest skips, hosted panel omitted; re-activate restores")
+    {
+        Scene s;
+        Entity canvas = MakeCanvas(s);
+        Entity plot = MakeElement(s, canvas, "Plot", { 100.0f, 100.0f }, { 300.0f, 200.0f }, 5);
+        plot.AddComponent<UiPlotComponent>();
+        // The plot's subtree: an interactive button and a hosted panel (both must follow it).
+        Entity btn = MakeElement(s, plot, "PlotButton", { 10.0f, 10.0f }, { 90.0f, 50.0f }, 6);
+        btn.AddComponent<UiImageComponent>();
+        btn.AddComponent<UiButtonComponent>().Signal = "hidden.click";
+        Entity panel = MakeElement(s, plot, "PlotPanel", { 100.0f, 10.0f }, { 190.0f, 90.0f }, 6);
+        panel.AddComponent<UiHostedPanelComponent>().PanelName = "hiddenPanel";
+        DataBus bus;
+        int fires = 0;
+        s.Events().Connect("hidden.click", [&](Entity) { ++fires; });
+        const glm::vec2 onButton{ 150.0f, 130.0f };   // plot (100,100)-(300,200), button (110,110)-(190,150)
+
+        auto drawn = [&](Entity e)
+        {
+            std::vector<UiElement> els;
+            UiSystem::CollectElements(s, kViewport, els);
+            for (const UiElement& el : els) if (el.Handle == (uint32_t)(entt::entity)e) return true;
+            return false;
+        };
+        auto hostedNames = [&]()
+        {
+            std::vector<UiHostedPanelDraw> out;
+            UiSystem::CollectHostedPanels(s, kViewport, out);
+            std::string n; for (const auto& d : out) n += d.Name + ",";
+            return n;
+        };
+        auto click = [&]()
+        {
+            const bool over = UiSystem::Update(s, kViewport, Idle(onButton), nullptr, &bus);
+            UiSystem::Update(s, kViewport, Press(onButton), nullptr, &bus);
+            UiSystem::Update(s, kViewport, Release(onButton), nullptr, &bus);
+            return over;
+        };
+
+        // Sanity: everything is live while active.
+        CHECK(drawn(plot)); CHECK(drawn(btn)); CHECK(drawn(panel));
+        CHECK(hostedNames() == "hiddenPanel,");
+
+        // Deactivate the plot: the whole subtree leaves every path.
+        plot.GetComponent<TagComponent>().Active = false;
+        CHECK_FALSE(drawn(plot));
+        CHECK_FALSE(drawn(btn));
+        CHECK_FALSE(drawn(panel));
+        CHECK_FALSE(click());                 // Update over it: not over any UI ...
+        CHECK(fires == 0);                    // ... and silent
+        uint32_t hit = 0;
+        CHECK_FALSE(UiSystem::HitTest(s, kViewport, onButton, hit));
+        CHECK_FALSE(UiSystem::HitTest(s, kViewport, { 250.0f, 180.0f }, hit));
+        CHECK(hostedNames().empty());
+
+        // Re-activate: all four paths come back.
+        plot.GetComponent<TagComponent>().Active = true;
+        CHECK(drawn(plot)); CHECK(drawn(btn)); CHECK(drawn(panel));
+        CHECK(click());
+        CHECK(fires == 1);
+        REQUIRE(UiSystem::HitTest(s, kViewport, onButton, hit));
+        CHECK(hit == (uint32_t)(entt::entity)btn);
+        REQUIRE(UiSystem::HitTest(s, kViewport, { 250.0f, 195.0f }, hit));
+        CHECK(hit == (uint32_t)(entt::entity)plot);
+        CHECK(hostedNames() == "hiddenPanel,");
+
+        // A single inactive leaf leaves only itself.
+        btn.GetComponent<TagComponent>().Active = false;
+        CHECK(drawn(plot)); CHECK_FALSE(drawn(btn)); CHECK(drawn(panel));
+        CHECK_FALSE(click());
+        CHECK(fires == 1);
+        REQUIRE(UiSystem::HitTest(s, kViewport, onButton, hit));
+        CHECK(hit == (uint32_t)(entt::entity)plot);
+    }
+
+    // ------------------------------------------------------------------------
     // Reflection + serialization
     // ------------------------------------------------------------------------
     TEST_CASE("V04 reflection: the seven widget names are registered under category UI with their asset-path / colour / enum hints")
