@@ -2,6 +2,16 @@
 
 #include "widgets/NodeCanvas.h"
 
+#include <imgui_internal.h>
+
+// UX-01 — the vendored editor's link router (imgui_node_editor.cpp, Cosmic local patch 2;
+// VENDOR-NOTES.md). Link::GetCurve calls it, when set, for every link between two nodes.
+namespace ax { namespace NodeEditor { namespace Detail {
+    using CosmicLinkRouter = void (*)(ImVec2 start, ImVec2 end, const ImRect& startNode, const ImRect& endNode,
+                                      float strength, ImVec2& cp0, ImVec2& cp1);
+    extern CosmicLinkRouter g_CosmicLinkRouter;
+} } }
+
 namespace Starforge
 {
     NodeCanvas::~NodeCanvas()
@@ -15,6 +25,8 @@ namespace Starforge
 
     void NodeCanvas::Begin(const char* id, const ImVec2& size)
     {
+        if (!ax::NodeEditor::Detail::g_CosmicLinkRouter)   // UX-01: backward links / self-loops route below
+            ax::NodeEditor::Detail::g_CosmicLinkRouter = &NodeCanvas::RouteLink;
         if (!m_Ctx)
         {
             ed::Config cfg;

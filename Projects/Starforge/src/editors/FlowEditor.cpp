@@ -335,18 +335,66 @@ namespace Starforge
 
         const ImVec4 red(1.0f, 0.42f, 0.35f, 1.0f);
         const ImVec4 dim(0.62f, 0.66f, 0.72f, 1.0f);
+        const float  sp     = ImGui::GetStyle().ItemSpacing.x;
+        const float  arrowW = ImGui::CalcTextSize("->").x;
+
+        // UX-01 (§1): opaque node bodies (a link routed behind a node never shows through it);
+        // input pins on the node's left edge with an arrowhead, output pins on its right edge.
+        ed::PushStyleColor(ed::StyleColor_NodeBg, ImVec4(0.125f, 0.133f, 0.153f, 1.0f));
+        auto beginInPin = [](ed::PinId id)
+        {
+            ed::PushStyleVar(ed::StyleVar_PivotAlignment, ImVec2(0.0f, 0.5f));
+            ed::PushStyleVar(ed::StyleVar_PinArrowSize, 8.0f);
+            ed::PushStyleVar(ed::StyleVar_PinArrowWidth, 8.0f);
+            ed::BeginPin(id, ed::PinKind::Input);
+        };
+        auto endInPin = []() { ed::EndPin(); ed::PopStyleVar(3); };
+        auto beginOutPin = [](ed::PinId id)
+        {
+            ed::PushStyleVar(ed::StyleVar_PivotAlignment, ImVec2(1.0f, 0.5f));
+            ed::BeginPin(id, ed::PinKind::Output);
+        };
+        auto endOutPin = []() { ed::EndPin(); ed::PopStyleVar(); };
 
         for (int i = 0; i < (int)m_Asset.States.size(); ++i)
         {
             FlowState& s = m_Asset.States[i];
+            const bool isStart = (s.Name == m_Asset.Start);
+            const bool missing = m_MissingScene.count(i) != 0;
+            const bool unreachable = m_Unreachable.count(i) != 0;
+            const char* sceneText = s.Scene.empty() ? (s.Overlay ? "(under-scene)" : "(no scene)") : nullptr;
+            const std::string sceneStem = sceneText ? std::string(sceneText) : StemOf(s.Scene);
+
+            std::vector<std::string> labels;
+            float labelsW = 0.0f;
+            for (const FlowTransition& tr : s.Transitions)
+            {
+                std::string label = "on " + (tr.On.empty() ? std::string("?") : tr.On);
+                if (tr.HasGuard) label += " [if]";
+                if (tr.Push)     label += " [push]";
+                if (!tr.To.empty() && tr.To[0] == '@') label += " -> " + tr.To;
+                labelsW = std::max(labelsW, ImGui::CalcTextSize(label.c_str()).x);
+                labels.push_back(std::move(label));
+            }
+
+            // The node's content width: output pins ("->", "+ link") right-align to it.
+            float titleW = arrowW + sp + ImGui::CalcTextSize(s.Name.c_str()).x;
+            if (isStart)   titleW += ImGui::CalcTextSize("[start]").x + sp;
+            if (s.Overlay) titleW += sp + ImGui::CalcTextSize("(overlay)").x;
+            const float addW = ImGui::CalcTextSize("+ link").x;
+            float contentW = std::max({ titleW, ImGui::CalcTextSize(sceneStem.c_str()).x, addW,
+                                        unreachable ? ImGui::CalcTextSize("unreachable").x : 0.0f });
+            if (!labels.empty())
+                contentW = std::max(contentW, labelsW + sp + arrowW);
+
             ed::BeginNode(NodeId(i));
             ImGui::PushID((int)NodeId(i));
 
-            ed::BeginPin(InPin(i), ed::PinKind::Input);
+            beginInPin(InPin(i));
             ImGui::TextUnformatted("->");
-            ed::EndPin();
+            endInPin();
             ImGui::SameLine();
-            if (s.Name == m_Asset.Start)
+            if (isStart)
             {
                 ImGui::TextColored(ImVec4(1.0f, 0.75f, 0.20f, 1.0f), "[start]");
                 ImGui::SameLine();
@@ -354,32 +402,28 @@ namespace Starforge
             ImGui::TextUnformatted(s.Name.c_str());
             if (s.Overlay) { ImGui::SameLine(); ImGui::TextColored(dim, "(overlay)"); }
 
-            const bool missing = m_MissingScene.count(i) != 0;
-            ImGui::TextColored(missing ? red : dim, "%s",
-                               s.Scene.empty() ? (s.Overlay ? "(under-scene)" : "(no scene)")
-                                               : StemOf(s.Scene).c_str());
-            if (m_Unreachable.count(i))
+            ImGui::TextColored(missing ? red : dim, "%s", sceneStem.c_str());
+            if (unreachable)
                 ImGui::TextColored(red, "unreachable");
 
             for (int t = 0; t < (int)s.Transitions.size(); ++t)
             {
-                const FlowTransition& tr = s.Transitions[t];
-                std::string label = "on " + (tr.On.empty() ? std::string("?") : tr.On);
-                if (tr.HasGuard) label += " [if]";
-                if (tr.Push)     label += " [push]";
-                const bool external = !tr.To.empty() && tr.To[0] == '@';
-                if (external) label += " -> " + tr.To;
-
+                const std::string& label = labels[t];
                 ImGui::TextUnformatted(label.c_str());
-                ImGui::SameLine();
-                ed::BeginPin(OutPin(i, t), ed::PinKind::Output);
+                ImGui::SameLine(0.0f, contentW - ImGui::CalcTextSize(label.c_str()).x - arrowW);   // "->" column right-aligned
+                beginOutPin(OutPin(i, t));
                 ImGui::TextUnformatted("->");
-                ed::EndPin();
+                endOutPin();
             }
 
-            ed::BeginPin(AddPin(i), ed::PinKind::Output);
+            if (contentW - addW > 0.5f)
+            {
+                ImGui::Dummy(ImVec2(contentW - addW, 0.0f));
+                ImGui::SameLine(0.0f, 0.0f);
+            }
+            beginOutPin(AddPin(i));
             ImGui::TextDisabled("+ link");
-            ed::EndPin();
+            endOutPin();
 
             ImGui::PopID();
             ed::EndNode();
@@ -387,14 +431,15 @@ namespace Starforge
 
         {
             ed::BeginNode(kQuitNode);
-            ed::BeginPin(kQuitInPin, ed::PinKind::Input);
+            beginInPin(kQuitInPin);
             ImGui::TextUnformatted("->");
-            ed::EndPin();
+            endInPin();
             ImGui::SameLine();
             ImGui::TextUnformatted("@quit");
             ImGui::TextColored(dim, "closes the app / stops Play");
             ed::EndNode();
         }
+        ed::PopStyleColor();
 
         for (int i = 0; i < (int)m_Asset.States.size(); ++i)
         {
