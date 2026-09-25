@@ -22,9 +22,10 @@ namespace Starforge
 {
     struct EditorContext;
 
-    // Handle ids: Move = anywhere inside the rect (not on a resize square);
-    // the eight resize squares are named by compass direction (screen space,
-    // +y DOWN — N is the TOP edge).
+    // Handle ids: Move = anywhere inside the rect (not on a resize square) — its
+    // centre square always captures the selection, the rest only when the
+    // selection is topmost (UX-02, CapturesMove); the eight resize squares are
+    // named by compass direction (screen space, +y DOWN — N is the TOP edge).
     enum class RectHandle : int { None = -1, Move = 0, N, NE, E, SE, S, SW, W, NW };
 
     struct RectGizmoSnap
@@ -45,6 +46,17 @@ namespace Starforge
         // Which handle `p` (canvas px) hits: resize squares first (so a tiny
         // element is still resizable), then Move when inside, else None.
         static RectHandle HitTest(const Cosmic::UiRect& rect, const glm::vec2& p);
+
+        // UX-02 (KI-73) — the Move surface's centre square (kHandleHalf around the
+        // rect centre; drawn at exactly this size).
+        static Cosmic::UiRect MoveHandleRect(const Cosmic::UiRect& rect);
+
+        // UX-02 (KI-73) — does a press at `p` on the Move surface capture the
+        // selected element? The centre square ALWAYS captures (an explicit handle,
+        // like the resize squares), whatever is drawn over it; the rest of the rect
+        // captures only when the selection is the topmost element under `p`, so a
+        // click on an element drawn over the selection still selects that element.
+        static bool CapturesMove(const Cosmic::UiRect& rect, const glm::vec2& p, bool selectionIsTopmost);
 
         // One coordinate through the snap rule (Grid16 > PixelEighth > identity).
         static float Snap(float v, const RectGizmoSnap& snap);
@@ -88,6 +100,11 @@ namespace Starforge
     public:
         RectGizmoSnap Snap;   // the viewport strip's two chips edit this
 
+        // UX-02 (KI-72, contract §2 "one gizmo per selection") — the rect gizmo owns
+        // every entity with a RectTransform or a Canvas: their layout ignores the
+        // sibling Transform, so the transform gizmo is never drawn for them.
+        static bool Owns(Cosmic::Entity e);
+
         // Per frame, from OnImGuiRender (edit mode + 2D only; the caller gates).
         // Resolves the primary selection's rect inside the letterbox band, runs the
         // press/drag/release machine and records the command on release. Returns
@@ -104,6 +121,7 @@ namespace Starforge
         bool Dragging() const { return m_Dragging; }
         RectHandle Hover() const { return m_Hover; }
         bool HasTarget() const { return m_HasRect; }
+        uint64_t DrawCount() const { return m_DrawCount; }   // UX-02 ED01 probe: Draw() calls that drew a rect
         const Cosmic::UiRect& TargetRect() const { return m_Rect; }   // last resolved (viewport-local px)
 
         // Rect of a handle in SCREEN coordinates from the last Update — what a
@@ -128,5 +146,6 @@ namespace Starforge
         glm::vec2      m_StartMin{ 0.0f }, m_StartMax{ 0.0f };
         uint64_t       m_DragUuid = 0;
         bool           m_LmbWas   = false;
+        uint64_t       m_DrawCount = 0;
     };
 }

@@ -60,6 +60,20 @@ namespace Starforge
                 prev = cur;
             }
         }
+
+        // The sprite pick's bounds test (U3): the world point lies inside the
+        // sprite's WorldSize box around its position. Shared by the click-pick and
+        // the UX-02 selected-sprite press (KI-75) so the two can never disagree.
+        bool SpriteBoundsContain(const TransformComponent& t, const SpriteRendererComponent& s,
+                                 const glm::vec2& world)
+        {
+            const glm::vec2 half = SpriteRendererComponent::WorldSize(
+                s, { t.Scale.x, t.Scale.y },
+                s.Resolved ? (int)s.Resolved->GetWidth() : 0,
+                s.Resolved ? (int)s.Resolved->GetHeight() : 0) * 0.5f;
+            return std::abs(world.x - t.Position.x) <= std::abs(half.x) &&
+                   std::abs(world.y - t.Position.y) <= std::abs(half.y);
+        }
     }
 
     void ViewportController::Init()
@@ -218,6 +232,45 @@ namespace Starforge
         const bool clicked = lmb && !m_LmbWasDown;
         m_LmbWasDown = lmb;
 
+        // UX-02 (KI-75, contract §2) — the SELECTED world sprite owns a press on its
+        // own bounds, tested BEFORE the canvas UI hit-test below: a sprite under an
+        // opaque UiImage (a full-screen background, a HUD panel) stays selected and,
+        // under Move/Universal, the press starts a body drag of it (one undo entry per
+        // gesture, UpdateBodyDrag). Ctrl keeps its toggle-select meaning (falls through).
+        bool selSpriteConsumed = false;
+        if (m_BodyDrag)
+        {
+            UpdateBodyDrag(ctx, lmb, playing, cam2d, vpPos, vpSize);
+            selSpriteConsumed = true;   // the release frame of a gesture is not a click either
+        }
+        else if (!playing && clicked && cam2d && !voxelBrushConsumed && !tileBrushConsumed && vpHover &&
+                 !m_GizmoActive && !m_GizmoOver && !m_ExternalGizmoBusy && !io.KeyCtrl && ctx.Scene &&
+                 vpSize.x > 1.0f && vpSize.y > 1.0f)
+        {
+            Entity prim = ctx.PrimaryEntity();
+            if (prim && !UiRectGizmo::Owns(prim) &&
+                prim.HasComponent<TransformComponent>() && prim.HasComponent<SpriteRendererComponent>())
+            {
+                const glm::vec2 world = Camera2DController::ScreenToWorld(
+                    Input::GetMouseScreenPosition(), vpPos, vpSize, cam2d->GetFocus(), cam2d->GetZoom());
+                if (SpriteBoundsContain(prim.GetComponent<TransformComponent>(),
+                                        prim.GetComponent<SpriteRendererComponent>(), world))
+                {
+                    selSpriteConsumed = true;
+                    if ((m_Op == Gizmo::Operation::Translate || m_Op == Gizmo::Operation::Universal) &&
+                        prim.HasComponent<IDComponent>())
+                    {
+                        m_BodyDrag           = true;
+                        m_BodyDragUuid       = (uint64_t)prim.GetComponent<IDComponent>().ID;
+                        m_BodyDragStartWorld = world;
+                        m_BodyDragLastWorld  = world;
+                        m_DragBefore         = prim.GetComponent<TransformComponent>();
+                        ++m_BodyDragGestures;
+                    }
+                }
+            }
+        }
+
         // U1 — in-game UI in the viewport. While PLAYING the canvas is live:
         // hover/press tints step and buttons emit on the scene EventBus (same
         // UiSystem::Update the PlayerLayer runs), and a pointer over interactable
@@ -252,7 +305,7 @@ namespace Starforge
             else
             {
                 m_UiMouseWas = false;
-                if (clicked && !voxelBrushConsumed && !tileBrushConsumed && vpHover &&
+                if (clicked && !voxelBrushConsumed && !tileBrushConsumed && !selSpriteConsumed && vpHover &&
                     !m_GizmoActive && !m_GizmoOver && !m_ExternalGizmoBusy && vpRect.Contains(local))
                 {
                     uint32_t hit = 0;
@@ -272,7 +325,7 @@ namespace Starforge
         // key) under the cursor's world XY point first. Falls through to the ID
         // pass on a miss so meshes in a 2.5D scene stay pickable.
         bool spriteConsumed = false;
-        if (clicked && !voxelBrushConsumed && !tileBrushConsumed && !uiConsumed && vpHover && cam2d &&
+        if (clicked && !voxelBrushConsumed && !tileBrushConsumed && !uiConsumed && !selSpriteConsumed && vpHover && cam2d &&
             !m_GizmoActive && !m_GizmoOver && !m_ExternalGizmoBusy && ctx.Scene && vpSize.x > 1.0f && vpSize.y > 1.0f)
         {
             const glm::vec2 world = Camera2DController::ScreenToWorld(
@@ -286,12 +339,7 @@ namespace Starforge
             {
                 const auto& t = view.get<TransformComponent>(e);
                 const auto& s = view.get<SpriteRendererComponent>(e);
-                const glm::vec2 half = SpriteRendererComponent::WorldSize(
-                    s, { t.Scale.x, t.Scale.y },
-                    s.Resolved ? (int)s.Resolved->GetWidth() : 0,
-                    s.Resolved ? (int)s.Resolved->GetHeight() : 0) * 0.5f;
-                if (std::abs(world.x - t.Position.x) <= std::abs(half.x) &&
-                    std::abs(world.y - t.Position.y) <= std::abs(half.y))
+                if (SpriteBoundsContain(t, s, world))
                     hits.push_back({ e, s.ZOrder, s.YSort ? -t.Position.y : t.Position.z });
             }
             if (!hits.empty())
@@ -316,12 +364,48 @@ namespace Starforge
         // 2D: a click on empty space (no sprite, no UI, no tile stroke) clears
         // the selection — the same "click-away deselects" contract the ID pass
         // provides in the 3D build.
-        if (clicked && !tileBrushConsumed && !uiConsumed && !spriteConsumed &&
+        if (clicked && !tileBrushConsumed && !uiConsumed && !spriteConsumed && !selSpriteConsumed &&
             vpHover && !m_GizmoActive && !m_GizmoOver && !m_ExternalGizmoBusy && !io.KeyCtrl && ctx.Scene)
         {
             ctx.ClearSelection();
         }
         (void)voxelBrushConsumed;
+    }
+
+    // UX-02 (KI-75) — the sprite body drag: Position.xy follows the pointer's world
+    // delta from the press (the MOVE snap applies to the delta, as ImGuizmo's does);
+    // the release commits ONE CommitTransform entry against the press pose and sets
+    // a merge barrier, exactly like a gizmo gesture (DrawGizmo).
+    void ViewportController::UpdateBodyDrag(EditorContext& ctx, bool lmb, bool playing,
+                                            Camera2DController* cam2d,
+                                            const glm::vec2& vpPos, const glm::vec2& vpSize)
+    {
+        Entity e = ctx.Scene ? ctx.Scene->FindByUUID(UUID(m_BodyDragUuid)) : Entity{};
+        if (!e || !e.HasComponent<TransformComponent>() || !cam2d || playing ||
+            vpSize.x <= 1.0f || vpSize.y <= 1.0f)
+        {
+            m_BodyDrag = false;   // the scene / mode changed under the gesture: abandon it
+            return;
+        }
+        auto& t = e.GetComponent<TransformComponent>();
+        const glm::vec2 world = Camera2DController::ScreenToWorld(
+            Input::GetMouseScreenPosition(), vpPos, vpSize, cam2d->GetFocus(), cam2d->GetZoom());
+        m_BodyDragLastWorld = world;
+        glm::vec2 d = world - m_BodyDragStartWorld;
+        if (m_SnapMoveOn && m_SnapMove > 0.0f)
+            d = glm::round(d / m_SnapMove) * m_SnapMove;
+        t.Position.x = m_DragBefore.Position.x + d.x;
+        t.Position.y = m_DragBefore.Position.y + d.y;
+
+        if (!lmb)
+        {
+            m_BodyDrag = false;
+            if (t.Position != m_DragBefore.Position)
+            {
+                Commands::CommitTransform(ctx, e, m_DragBefore);
+                ctx.Commands.SetMergeBarrier();
+            }
+        }
     }
 
     // =========================================================================
@@ -569,7 +653,7 @@ namespace Starforge
         RenderCommand::SetDepthWrite(true);
     }
 
-    void ViewportController::DrawGizmo(EditorContext& ctx, const Camera& cam)
+    void ViewportController::DrawGizmo(EditorContext& ctx, const Camera& cam, bool mode2D)
     {
         auto& app = Application::Get();
         const glm::vec2 vpPos  = app.GetViewportPos();
@@ -591,8 +675,11 @@ namespace Starforge
 
         Gizmo::SetRect(vpPos.x, vpPos.y, vpSize.x, vpSize.y);
 
+        // UX-02 (KI-72, contract §2) — one gizmo per selection: a RectTransform /
+        // Canvas entity belongs to the UI rect gizmo (its layout ignores the sibling
+        // Transform, so this gizmo would drag a value nothing reads).
         Entity sel = ctx.PrimaryEntity();
-        if (sel && sel.HasComponent<TransformComponent>())
+        if (sel && !UiRectGizmo::Owns(sel) && sel.HasComponent<TransformComponent>())
         {
             auto& t = sel.GetComponent<TransformComponent>();
             const TransformComponent beforeThisFrame = t;   // pre-manipulate pose
@@ -607,7 +694,8 @@ namespace Starforge
                 case Gizmo::Operation::Universal:
                 case Gizmo::Operation::Translate: snap = m_SnapMoveOn   ? m_SnapMove   : 0.0f; break;
             }
-            Gizmo::Manipulate(cam, t, m_Op, m_Space, snap);
+            ++m_TransformGizmoCalls;   // UX-02 ED01 probe
+            Gizmo::Manipulate(cam, t, m_Op, m_Space, snap, mode2D);   // UX-02 (KI-74): 2D writes Rotation.z
 
             const bool usingNow = Gizmo::IsUsing();
             if (usingNow && !m_GizmoWasUsing)
@@ -671,6 +759,19 @@ namespace Starforge
                               ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AlwaysUseWindowPadding,
                               ImGuiWindowFlags_NoScrollbar);
 
+            // UX-02 (contract §2) — with a UI element selected (RectTransform / Canvas:
+            // the rect gizmo's), the transform-gizmo chips do not apply: they draw
+            // disabled with one tooltip. Slots, order and ids are unchanged (the WO-07
+            // KI-1 / L05 harnesses record chip slots 0-5 below).
+            const bool uiSel = UiRectGizmo::Owns(ctx.PrimaryEntity());
+            m_UiChipsDisabled = uiSel;
+            static const char* kUiChipTip = "UI elements: use the rect gizmo";
+            auto chipTip = [&](const char* tip)
+            {
+                if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
+                    ImGui::SetTooltip("%s", uiSel ? kUiChipTip : tip);
+            };
+
             auto opButton = [&](const char* icon, Gizmo::Operation op, const char* tip)
             {
                 const bool active = m_Op == op;
@@ -679,12 +780,13 @@ namespace Starforge
                     const ImVec4 acc = ImGui::GetStyleColorVec4(ImGuiCol_CheckMark);
                     ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(acc.x, acc.y, acc.z, 0.32f));
                 }
+                ImGui::BeginDisabled(uiSel);
                 if (ImGui::Button(icon, ImVec2(sq, sq)))
                     m_Op = op;
+                ImGui::EndDisabled();
                 if (active)
                     ImGui::PopStyleColor();
-                if (ImGui::IsItemHovered())
-                    ImGui::SetTooltip("%s", tip);
+                chipTip(tip);
                 ImGui::SameLine(0.0f, 3.0f);
             };
             opButton(ICON_LC_MOVE_3D,   Gizmo::Operation::Translate, "Move (W)");
@@ -715,8 +817,10 @@ namespace Starforge
             {
                 const bool world = m_Space == Gizmo::Space::World;
                 wlColorBefore = colorNow();
+                ImGui::BeginDisabled(uiSel);   // UX-02 — not for a UI selection
                 if (ImGui::Button(world ? ICON_LC_GLOBE : ICON_LC_BOX, ImVec2(sq, sq)))
                     m_Space = world ? Gizmo::Space::Local : Gizmo::Space::World;
+                ImGui::EndDisabled();
                 if (s_Ki1Probe)   // fixed slot 5 (count stays for the snap chips 0-2 / toggles 3-4)
                 {
                     const ImVec2 mn = ImGui::GetItemRectMin(), mx = ImGui::GetItemRectMax();
@@ -725,9 +829,8 @@ namespace Starforge
                     s_Ki1Probe->colorDelta[5] = ImGui::GetCurrentContext()->ColorStack.Size - wlColorBefore;
                     s_Ki1Probe->haveWorldLocal = true;
                 }
-                if (ImGui::IsItemHovered())
-                    ImGui::SetTooltip(world ? "Gizmo space: World (click for Local)"
-                                            : "Gizmo space: Local (click for World)");
+                chipTip(world ? "Gizmo space: World (click for Local)"
+                              : "Gizmo space: Local (click for World)");
                 ImGui::SameLine(0.0f, 8.0f);
             }
 
@@ -753,20 +856,20 @@ namespace Starforge
                     const ImVec4 acc = ImGui::GetStyleColorVec4(ImGuiCol_CheckMark);
                     ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(acc.x, acc.y, acc.z, 0.32f));
                 }
+                ImGui::BeginDisabled(uiSel);   // UX-02 — not for a UI selection (style-var push only)
                 if (ImGui::Button(icon, ImVec2(sq, sq)))
                     on = !on;
+                ImGui::EndDisabled();
                 if (pushed)
                     ImGui::PopStyleColor();
                 probeChip(ki1ColorBefore);   // WO-07 test probe (gated): snap chips are 0-2
-                if (ImGui::IsItemHovered())
-                    ImGui::SetTooltip("%s", tip);
+                chipTip(tip);
                 ImGui::SameLine(0.0f, 2.0f);
                 ImGui::SetNextItemWidth(52.0f);
-                ImGui::BeginDisabled(!on);
+                ImGui::BeginDisabled(!on || uiSel);
                 ImGui::DragFloat("##v", &value, speed, mn, mx, fmt);
                 ImGui::EndDisabled();
-                if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
-                    ImGui::SetTooltip("%s", tip);
+                chipTip(tip);
                 ImGui::PopID();
                 ImGui::SameLine(0.0f, 6.0f);
             };
@@ -916,10 +1019,11 @@ namespace Starforge
 
             // Frame selection (the old toolbar's Frame; Front/Top/Iso now live
             // on the K8 cube).
+            ImGui::BeginDisabled(uiSel);   // UX-02 — frames world bounds; not for a UI selection
             if (ImGui::Button(ICON_LC_FOCUS, ImVec2(sq, sq)))
                 FrameSelection(ctx, rig);
-            if (ImGui::IsItemHovered())
-                ImGui::SetTooltip("Frame selection (F)");
+            ImGui::EndDisabled();
+            chipTip("Frame selection (F)");
 
             ImGui::EndChild();
             ImGui::PopStyleVar(2);

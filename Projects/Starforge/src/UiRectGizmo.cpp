@@ -76,6 +76,22 @@ namespace Starforge
         return RectHandle::None;
     }
 
+    UiRect UiRectGizmoMath::MoveHandleRect(const UiRect& rect)
+    {
+        const glm::vec2 c = rect.Center();
+        UiRect out;
+        out.Min = c - glm::vec2(kHandleHalf);
+        out.Max = c + glm::vec2(kHandleHalf);
+        return out;
+    }
+
+    bool UiRectGizmoMath::CapturesMove(const UiRect& rect, const glm::vec2& p, bool selectionIsTopmost)
+    {
+        if (!rect.Contains(p)) return false;                  // not the Move surface at all
+        if (MoveHandleRect(rect).Contains(p)) return true;    // UX-02 (KI-73): the centre square always
+        return selectionIsTopmost;                            // elsewhere: only when nothing covers it
+    }
+
     float UiRectGizmoMath::Snap(float v, const RectGizmoSnap& snap)
     {
         if (snap.Grid16)      return std::round(v / 16.0f) * 16.0f;
@@ -169,6 +185,11 @@ namespace Starforge
     // =========================================================================
     // Interactive gizmo
     // =========================================================================
+    bool UiRectGizmo::Owns(Cosmic::Entity e)
+    {
+        return e && (e.HasComponent<Cosmic::RectTransformComponent>() || e.HasComponent<Cosmic::CanvasComponent>());
+    }
+
     bool UiRectGizmo::ResolveTarget(EditorContext& ctx, const glm::vec2& vpSize, const glm::vec4& bandUv,
                                     UiRect& outRect, float& outScale)
     {
@@ -261,15 +282,17 @@ namespace Starforge
                                 local.x <= vpSize.x && local.y <= vpSize.y;
         m_Hover = inViewport ? UiRectGizmoMath::HitTest(rect, local) : RectHandle::None;
 
-        // A resize square always captures. The Move surface captures only when the
-        // pointer is over the primary element itself (HitTest through the canvas
-        // picker), so clicking an element that overlaps the selection still selects it.
+        // A resize square always captures. The Move surface follows CapturesMove
+        // (UX-02, KI-73): its centre square always captures the selected element;
+        // elsewhere it captures only when the primary element is the topmost hit
+        // (HitTest through the canvas picker), so clicking an element that overlaps
+        // the selection still selects it.
         if (m_Hover == RectHandle::Move)
         {
             uint32_t hit = 0;
             const bool top = Cosmic::UiSystem::HitTest(*ctx.Scene, BandRect(vpSize, bandUv), local, hit) &&
                              hit == static_cast<uint32_t>(static_cast<entt::entity>(ctx.PrimaryEntity()));
-            if (!top) m_Hover = RectHandle::None;
+            if (!UiRectGizmoMath::CapturesMove(rect, local, top)) m_Hover = RectHandle::None;
         }
 
         if (m_Hover != RectHandle::None && pressEdge && !io.KeyCtrl)
@@ -325,9 +348,12 @@ namespace Starforge
             Cosmic::Renderer2D::DrawQuad(hr.Center(), hr.Size(), (m_Hover == hnd) ? hot : knob);
             Cosmic::Renderer2D::DrawRect(glm::vec3(hr.Center(), 0.0f), hr.Size(), line);
         }
-        // The move handle: a small filled square at the centre.
-        Cosmic::Renderer2D::DrawQuad(c, glm::vec2(UiRectGizmoMath::kHandleHalf * 1.2f),
-                                     (m_Hover == RectHandle::Move) ? hot : line);
+        // The move handle: the filled centre square — drawn at exactly its hit size
+        // (UX-02: it always captures the selected element, KI-73).
+        const UiRect mv = UiRectGizmoMath::MoveHandleRect(rect);
+        Cosmic::Renderer2D::DrawQuad(mv.Center(), mv.Size(), (m_Hover == RectHandle::Move) ? hot : line);
+        Cosmic::Renderer2D::DrawRect(glm::vec3(mv.Center(), 0.0f), mv.Size(), knob);
         Cosmic::Renderer2D::PopRenderPass();
+        ++m_DrawCount;
     }
 }

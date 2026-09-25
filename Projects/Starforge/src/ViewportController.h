@@ -91,7 +91,10 @@ namespace Starforge
         // DrawViewportOverlays (it yields while a strip widget is hovered or
         // active). Takes the ACTIVE render camera — ImGuizmo detects ortho vs
         // perspective itself.
-        void DrawGizmo(EditorContext& ctx, const Cosmic::Camera& cam);
+        // UX-02: `mode2D` routes Gizmo::Manipulate's 2D write-back (Rotation.z, the Z
+        // ring only — KI-74); a primary selection the UI rect gizmo owns (RectTransform
+        // or Canvas) gets NO transform gizmo (contract §2 "one gizmo", KI-72).
+        void DrawGizmo(EditorContext& ctx, const Cosmic::Camera& cam, bool mode2D = false);
 
         // Arm 1-unit MOVE snapping (the 2D pixel-grid convention) — called by
         // the shell when 2D mode turns on.
@@ -142,7 +145,20 @@ namespace Starforge
         void     SetViewMode(ViewMode m)      { m_ViewMode = m; }
 
         // Last-frame gizmo state — StarforgeApp gates the camera on it.
-        bool GizmoBusy() const { return m_GizmoActive || m_GizmoOver || m_ExternalGizmoBusy; }
+        bool GizmoBusy() const { return m_GizmoActive || m_GizmoOver || m_ExternalGizmoBusy || m_BodyDrag; }
+
+        // UX-02 — read-only probes for the editor self-test (UX02EditorSelfTest.cpp):
+        // how many times the transform gizmo was submitted (ED01: 0 with a UI
+        // selection), whether the last strip draw disabled the transform chips for a
+        // UI selection, the current operation, and whether a sprite body drag (KI-75)
+        // is in progress.
+        uint64_t TransformGizmoCalls() const      { return m_TransformGizmoCalls; }
+        bool UiSelectionChipsDisabled() const     { return m_UiChipsDisabled; }
+        Cosmic::Gizmo::Operation GetOperation() const { return m_Op; }
+        bool BodyDragging() const                 { return m_BodyDrag; }
+        uint64_t BodyDragGestures() const         { return m_BodyDragGestures; }    // gestures started
+        glm::vec2 BodyDragPressWorld() const      { return m_BodyDragStartWorld; }  // the pointer at the press
+        glm::vec2 BodyDragLastWorld() const       { return m_BodyDragLastWorld; }   // the pointer at the last update
 
         // AP-03 — the UI rect gizmo (StarforgeApp-owned) reports "I own the pointer"
         // so the click-pick / click-away-deselect below yields to it; its two snap
@@ -208,6 +224,20 @@ namespace Starforge
         bool  m_GizmoOver   = false;
         bool  m_GizmoWasUsing = false;
         Cosmic::TransformComponent m_DragBefore;   // gizmo drag-start pose (undo)
+
+        // UX-02 — probes (see TransformGizmoCalls) + the KI-75 sprite body drag: a
+        // press on the SELECTED world sprite's bounds (tested before the canvas UI
+        // hit-test) keeps it selected and, under Move/Universal, drags it; one
+        // CommitTransform per gesture on release.
+        uint64_t  m_TransformGizmoCalls = 0;
+        bool      m_UiChipsDisabled = false;
+        bool      m_BodyDrag = false;
+        uint64_t  m_BodyDragUuid = 0;
+        glm::vec2 m_BodyDragStartWorld{ 0.0f };
+        glm::vec2 m_BodyDragLastWorld{ 0.0f };
+        uint64_t  m_BodyDragGestures = 0;
+        void UpdateBodyDrag(EditorContext& ctx, bool lmb, bool playing, Cosmic::Camera2DController* cam2d,
+                            const glm::vec2& vpPos, const glm::vec2& vpSize);
 
         bool  m_LmbWasDown = false;
 
