@@ -13,12 +13,12 @@ namespace Starforge
         // One instance per path — re-focus an already-open document.
         for (auto& d : m_Docs)
         {
-            if (d->Path() == vfsPath)
+            if (d.Editor->Path() == vfsPath)
             {
                 m_FocusPath = vfsPath;
                 m_WantFocus = true;
                 if (showFlag) *showFlag = true;
-                return d.get();
+                return d.Editor.get();
             }
         }
 
@@ -27,24 +27,48 @@ namespace Starforge
             return nullptr;
 
         IAssetEditor* raw = ed.get();
-        m_Docs.push_back(std::move(ed));
+        m_Docs.push_back({ std::move(ed), m_NextId++ });
         m_FocusPath = vfsPath;
         m_WantFocus = true;
         if (showFlag) *showFlag = true;
         return raw;
     }
 
+    IAssetEditor* AssetEditorHost::Find(const std::string& vfsPath) const
+    {
+        for (const auto& d : m_Docs)
+            if (d.Editor->Path() == vfsPath)
+                return d.Editor.get();
+        return nullptr;
+    }
+
+    bool AssetEditorHost::Close(const std::string& vfsPath)
+    {
+        if (!Find(vfsPath))
+            return false;
+        Remove(vfsPath);
+        return true;
+    }
+
+    uint32_t AssetEditorHost::TabId(const std::string& vfsPath) const
+    {
+        for (const auto& d : m_Docs)
+            if (d.Editor->Path() == vfsPath)
+                return d.Id;
+        return 0;
+    }
+
     void AssetEditorHost::OnUpdate(EditorContext& ctx, float ts)
     {
         for (auto& d : m_Docs)
-            d->OnUpdate(ctx, ts);
+            d.Editor->OnUpdate(ctx, ts);
     }
 
     void AssetEditorHost::Remove(const std::string& path)
     {
         for (auto it = m_Docs.begin(); it != m_Docs.end(); ++it)
         {
-            if ((*it)->Path() == path)
+            if (it->Editor->Path() == path)
             {
                 m_Docs.erase(it);
                 return;
@@ -71,9 +95,9 @@ namespace Starforge
         if (m_Docs.empty())
         {
             ImGui::Dummy(ImVec2(0.0f, 8.0f));
-            ImGui::TextDisabled("No asset editor open.");
-            ImGui::TextWrapped("Double-click a rigged model (or right-click ▸ Open in Animation "
-                               "Editor) in the Content Browser to open it as a document here.");
+            ImGui::TextDisabled("No flow or story document open.");
+            ImGui::TextWrapped("Double-click a .cflow or .cstory in the Content Browser (or use "
+                               "Screens ▸ Flow graph) to open it as a document here.");
             ImGui::End();
             return;
         }
@@ -88,7 +112,8 @@ namespace Starforge
         {
             for (size_t i = 0; i < m_Docs.size(); ++i)
             {
-                IAssetEditor* doc = m_Docs[i].get();
+                IAssetEditor* doc = m_Docs[i].Editor.get();
+                const uint32_t id = m_Docs[i].Id;
                 bool tabOpen = true;
 
                 ImGuiTabItemFlags flags = ImGuiTabItemFlags_None;
@@ -97,13 +122,14 @@ namespace Starforge
                 if (!m_FocusPath.empty() && doc->Path() == m_FocusPath)
                     flags |= ImGuiTabItemFlags_SetSelected;
 
-                // A per-document ImGui id so identically-titled docs never collide.
+                // UX-01 (KI-70): the document's own stable id, never its index, keys the tab
+                // and its content — closing one document must not re-key another.
                 const std::string label = std::string(doc->Icon()) + " " + doc->Title()
-                                        + "###doc" + std::to_string(i);
+                                        + "###doc" + std::to_string(id);
 
                 if (ImGui::BeginTabItem(label.c_str(), &tabOpen, flags))
                 {
-                    ImGui::PushID((int)i);
+                    ImGui::PushID((int)id);
                     doc->OnImGuiRender(ctx);
                     ImGui::PopID();
                     ImGui::EndTabItem();
@@ -121,9 +147,7 @@ namespace Starforge
         // Resolve a tab-✕ click: dirty docs raise a prompt, clean ones just close.
         if (!closeRequest.empty())
         {
-            IAssetEditor* doc = nullptr;
-            for (auto& d : m_Docs)
-                if (d->Path() == closeRequest) { doc = d.get(); break; }
+            IAssetEditor* doc = Find(closeRequest);
             if (doc)
             {
                 if (doc->Dirty())
@@ -142,9 +166,7 @@ namespace Starforge
         if (ImGui::BeginPopupModal("Close Document##editorhost", nullptr,
                                    ImGuiWindowFlags_AlwaysAutoResize))
         {
-            IAssetEditor* doc = nullptr;
-            for (auto& d : m_Docs)
-                if (d->Path() == m_PromptClosePath) { doc = d.get(); break; }
+            IAssetEditor* doc = Find(m_PromptClosePath);
 
             if (!doc)
             {

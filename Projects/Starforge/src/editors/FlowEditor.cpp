@@ -325,6 +325,9 @@ namespace Starforge
                     ? glm::vec2(40.0f + 300.0f * (float)(i % 4), 40.0f + 200.0f * (float)(i / 4))
                     : m_Asset.States[i].EditorPos;
                 m_Canvas.SetNodePosition(NodeId(i), ImVec2(p.x, p.y));
+                // UX-01 (KI-69): the applied placement IS the stored layout, so the position
+                // sync below (the dirty check) never reads an auto-grid as a user edit.
+                m_Asset.States[i].EditorPos = p;
             }
             float maxX = 0.0f, minY = 40.0f;
             for (const FlowState& s : m_Asset.States)

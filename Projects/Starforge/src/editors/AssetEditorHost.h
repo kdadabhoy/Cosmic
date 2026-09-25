@@ -20,6 +20,7 @@
 
 #include "IAssetEditor.h"
 
+#include <cstdint>
 #include <functional>
 #include <memory>
 #include <string>
@@ -44,6 +45,16 @@ namespace Starforge
         bool   AnyOpen() const { return !m_Docs.empty(); }
         size_t Count()   const { return m_Docs.size(); }
 
+        // The open document for `vfsPath` (null when none). No focus / visibility effect.
+        IAssetEditor* Find(const std::string& vfsPath) const;
+
+        // Close the document for `vfsPath` without a prompt (what a clean tab's ✕ does).
+        // Returns false when no such document is open.
+        bool Close(const std::string& vfsPath);
+
+        // The document's stable tab id (0 = not open). Keys the tab label and PushID.
+        uint32_t TabId(const std::string& vfsPath) const;
+
         // Tick every open document (advance playback, pump previews).
         void OnUpdate(EditorContext& ctx, float ts);
 
@@ -55,9 +66,16 @@ namespace Starforge
         void CloseAll() { m_Docs.clear(); m_FocusPath.clear(); m_PromptClosePath.clear(); m_WantFocus = false; }
 
     private:
+        struct Doc
+        {
+            std::unique_ptr<IAssetEditor> Editor;
+            uint32_t                      Id = 0;   // stable tab id (per-host counter)
+        };
+
         void Remove(const std::string& path);
 
-        std::vector<std::unique_ptr<IAssetEditor>> m_Docs;
+        std::vector<Doc> m_Docs;
+        uint32_t    m_NextId = 1;
         bool        m_WantFocus = false;  // SetNextWindowFocus on the next render (Open added / re-focused)
         std::string m_FocusPath;        // request SetSelected on the matching tab next render
         std::string m_PromptClosePath;  // a dirty doc awaiting the close prompt ("" = none)
