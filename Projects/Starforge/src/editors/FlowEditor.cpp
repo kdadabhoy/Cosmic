@@ -63,6 +63,7 @@ namespace Starforge
             m_Loaded   = true;
             m_SelState = m_Asset.States.empty() ? -1 : 0;
             m_PlaceNodes = true;
+            m_CenterPending = 2;   // UX-01: centre once, the frame after the first layout
             Revalidate();
             ScanKnownSignals();
         }
@@ -208,10 +209,12 @@ namespace Starforge
         DrawToolbar(ctx);
         ImGui::Separator();
 
-        const float inspectorW = 330.0f;
+        // UX-01: the inspector column collapses from the toolbar (the canvas takes the width).
+        const float inspectorW = m_ShowInspector ? 330.0f : 0.0f;
         const float varsW = m_ShowVars ? 240.0f : 0.0f;
+        const float sideW = inspectorW + varsW;
         ImGui::BeginChild("flow_canvas_region",
-                          ImVec2(ImGui::GetContentRegionAvail().x - inspectorW - varsW - 8.0f, 0.0f),
+                          ImVec2(sideW > 0.0f ? ImGui::GetContentRegionAvail().x - sideW - 8.0f : 0.0f, 0.0f),
                           ImGuiChildFlags_None);
         DrawCanvas(ctx);
         ImGui::EndChild();
@@ -224,10 +227,13 @@ namespace Starforge
             ImGui::EndChild();
         }
 
-        ImGui::SameLine();
-        ImGui::BeginChild("flow_inspector_region", ImVec2(inspectorW, 0.0f), ImGuiChildFlags_Borders);
-        DrawInspector(ctx);
-        ImGui::EndChild();
+        if (m_ShowInspector)
+        {
+            ImGui::SameLine();
+            ImGui::BeginChild("flow_inspector_region", ImVec2(inspectorW, 0.0f), ImGuiChildFlags_Borders);
+            DrawInspector(ctx);
+            ImGui::EndChild();
+        }
     }
 
     void FlowEditor::DrawToolbar(EditorContext& ctx)
@@ -288,6 +294,8 @@ namespace Starforge
 
         ImGui::SameLine();
         ImGui::Checkbox("Variables", &m_ShowVars);   // Q2
+        ImGui::SameLine();
+        ImGui::Checkbox("Inspector", &m_ShowInspector);   // UX-01 — collapse the inspector column
 
         ImGui::SameLine();
         if (m_Problems.empty())
@@ -507,6 +515,11 @@ namespace Starforge
                 m_Dirty = true;
             }
         }
+
+        // UX-01 (KI-66): centre on the graph once, the frame after the first layout (the
+        // nodes have drawn once, so their sizes and the canvas size are settled).
+        if (m_CenterPending > 0 && --m_CenterPending == 0)
+            m_Canvas.CenterOnContent();
 
         m_Canvas.End();
         (void)ctx;

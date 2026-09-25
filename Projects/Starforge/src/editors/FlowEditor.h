@@ -97,6 +97,8 @@ namespace Starforge
         int  m_SelState = -1;
         int  m_SelTrans = -1;
         bool m_ShowVars = false;   // Q2 — variables side panel toggle
+        bool m_ShowInspector = true;   // UX-01 — the inspector column, collapsible from the toolbar
+        int  m_CenterPending = 0;      // UX-01 — frames until the one-time CenterOnContent (0 = done)
 
         std::vector<std::string> m_UndoStack;
         std::vector<std::string> m_RedoStack;

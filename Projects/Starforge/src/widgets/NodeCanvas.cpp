@@ -84,7 +84,8 @@ namespace Starforge
 
     void NodeCanvas::CenterOnContent()
     {
-        ed::NavigateToContent(0.25f);
+        // UX-01: immediate (no fly-in) — a document opens showing its whole graph.
+        ed::NavigateToContent(0.0f);
     }
 
     uintptr_t NodeCanvas::SelectedNode() const

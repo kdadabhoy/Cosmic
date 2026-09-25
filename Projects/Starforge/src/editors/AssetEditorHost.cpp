@@ -16,6 +16,7 @@ namespace Starforge
             if (d->Path() == vfsPath)
             {
                 m_FocusPath = vfsPath;
+                m_WantFocus = true;
                 if (showFlag) *showFlag = true;
                 return d.get();
             }
@@ -28,6 +29,7 @@ namespace Starforge
         IAssetEditor* raw = ed.get();
         m_Docs.push_back(std::move(ed));
         m_FocusPath = vfsPath;
+        m_WantFocus = true;
         if (showFlag) *showFlag = true;
         return raw;
     }
@@ -52,6 +54,14 @@ namespace Starforge
 
     void AssetEditorHost::OnImGuiRender(EditorContext& ctx, bool* open)
     {
+        // UX-01 (KI-66): a usable first-use size (floating case; the built-in presets dock
+        // it at Center) and focus on the frame after Open() added / re-focused a document.
+        ImGui::SetNextWindowSize(ImVec2(1100.0f, 680.0f), ImGuiCond_FirstUseEver);
+        if (m_WantFocus)
+        {
+            ImGui::SetNextWindowFocus();
+            m_WantFocus = false;
+        }
         if (!ImGui::Begin("Editors", open, ImGuiWindowFlags_NoScrollbar))
         {
             ImGui::End();
