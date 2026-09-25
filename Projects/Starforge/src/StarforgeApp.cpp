@@ -370,6 +370,7 @@ namespace Starforge
         m_Ctx.Preview.SetCacheDirectory("");   // A4 — thumbnails are per-project
         m_ManifestFlow.clear();   // U5/U8 — flow offer is per-project
         m_PreviewBus.Clear(); m_LastPanels.Clear(); m_Live = LiveLoopState{}; m_Screens.Invalidate();   // AP-03
+        m_Editors.LogDirty(m_Ctx, "Close Project"); m_Editors.CloseAll();   // UX-01 (KI-71) — documents are per-project
         Cosmic::AssetLibrary::ClearDefaultTextureSampling();   // U3 — drop the pixel-art override
         // Back to the editor's own bundled assets for the homescreen; the scene
         // Viewport panel hides with the project (MountProject re-shows it).
@@ -1535,10 +1536,10 @@ namespace Starforge
             if (m_ShowSystem)       m_System.OnImGuiRender(m_Ctx, &m_ShowSystem);
             if (m_ShowPostChain)    m_PostChain.OnImGuiRender(m_Ctx, &m_ShowPostChain);   // Q6
             DrawAppPlatformPanels();   // AP-03 — Screens + DataBus (+ the Inspector's source links)
-            // M1 — the asset-editor document host stays visible while any document
-            // is open even if the panel bool was toggled off (closing docs is the
-            // tab ✕, not the panel ✕); auto-shown when a document opens.
-            if (m_ShowEditors || m_Editors.AnyOpen())
+            // M1 / UX-01 (KI-71) — the asset-editor document host is drawn exactly while
+            // View ▸ Editors is on: its ✕ hides the dock with every document still open
+            // (a tab's ✕ closes one document); Open() raises the flag again.
+            if (m_Editors.ShouldDraw(m_ShowEditors))
                 m_Editors.OnImGuiRender(m_Ctx, &m_ShowEditors);
             if (m_ShowStats)        DrawStatsWindow();
         }
