@@ -1188,6 +1188,68 @@ over the injected `IFrameClock` (`core/IFrameClock.h`, the WO-10 seam) with the
 - Regression: `tests/test_ui_widgets.cpp` `KI-65 slider knob larger than its track: a press on the knob's overhang grabs and drags, 1 px beyond the knob does not; SliderKnobRect is the drawn geometry (horizontal + vertical)`.
 - Disposition: `UiSystem::SliderKnobRect(rect, orientation, knobSizePx, min, max, value)` (pure) is the single knob geometry; `DrawSlider` draws it and `Update` grabs by rect OR knob (the set union of the two rects — deliberately NOT their bounding box, which the first cut used and the regression caught: the empty overhang beside a moved knob is not a target; the track stays grabbable everywhere it was). Fixed in this lane.
 
+## UX-01 findings (2026-09-24) — the flow editor and the Editors document host (UX & Shipping packet)
+
+Registered before any fix, at `6021822` (the UX-00 packet commit; the anchors are unchanged from `0c2edd8`). Each entry's
+failing-before was produced on the lane's isolated before-state (the new test/self-test seams with the old behaviour),
+recorded in `docs/plans/ux-shipping-2026-09-24/evidence/UX-01/failing-before-excerpts.txt`.
+
+### KI-66 — A flow document opens tiny, unsized and unfocused: the "Editors" window has no first-use size, no Level / Assets / Telemetry preset docks it, `Open()` never requests focus and the canvas is never centred on the graph
+- Status: Confirmed defect (UX; the Q1 flow editor is unusable at first open). Owner WO: UX-01.
+- Anchor: `Projects/Starforge/src/editors/AssetEditorHost.cpp:53-59` (`Begin("Editors")` with no `SetNextWindowSize` / focus request), `:10-33` (`Open` only records `m_FocusPath` for the tab), `Projects/Starforge/src/LayoutPresets.cpp:91-139` (only the Animation preset docks "Editors", `:113`), `Projects/Starforge/src/widgets/NodeCanvas.cpp:85-88` (`CenterOnContent`, never called) at `6021822`.
+- Repro: fresh editor prefs, a 1920x1080 window, open a copy of `Projects/PendulumLab`, Screens ▸ Flow graph: the Editors window appears floating at Dear ImGui's auto-fit size of a window whose body is fill-children, and the nodes sit wherever the canvas origin puts them.
+- Failing-before: UX01 self-test FE04 on the before-state (window size / docking / canvas size / node containment numbers in the excerpt).
+- Regression: `tests/acceptance/manifests/ux01-editor.manifest.json` (FE04: Editors focused the frame after the click, canvas >= 800x400 px, every state node inside the canvas, PNG).
+- Disposition: open at registration; the UX-01 fix: first-use size 1100x680, `SetNextWindowFocus()` on the frame after `Open()` adds or re-focuses a document, every built-in preset docks "Editors" at `DockPort::Center` (tabbed with the Viewport), `FlowEditor` centres the canvas once after the first layout, the inspector column collapses from the toolbar.
+
+### KI-67 — Backward links and self-loops are drawn through the node boxes (and picked along that curve)
+- Status: Confirmed defect (UX; every flow with a loop back, e.g. Settings -> Lab in PendulumLab, draws its link across both nodes). Owner WO: UX-01.
+- Anchor: `Cosmic/dependencies/imgui-node-editor/imgui_node_editor.cpp:955-982` (`Link::GetCurve` points `cp0` along the start pin's `m_Dir` and `cp1` along the end pin's, `(1,0)` / `(-1,0)` by default, `imgui_node_editor.h:239-240`); `TestHit` (`:984-1032`) and `GetBounds` (`:1034-`) use the same curve.
+- Repro: a transition whose target node lies left of its source (or a state transitioning to itself): the bezier leaves the output pin to the right, turns back through the source box and enters the target from inside its own box.
+- Failing-before: `tests/test_flow_editor.cpp` "UX-01 FE01 ..." against the before-state router (today's control points for every case): the backward, self-loop and vertical-stack samples enter the source rect away from its pin.
+- Regression: `tests/test_flow_editor.cpp` "UX-01 FE01 ..." (CosmicTests, both configs).
+- Disposition: open at registration; the UX-01 fix: `NodeCanvas::RouteLink` (pure, `widgets/NodeCanvasRoute.cpp`) keeps forward links bit-identical and routes backward links / self-loops as one cubic below the union of both rects; the vendored `GetCurve` calls it through a router pointer (VENDOR-NOTES.md local patch 2), so drawing, hit-testing and bounds follow.
+
+### KI-68 — The "when" trigger is one-way and leaves an empty guard that is saved, never fires and is not reported
+- Status: Confirmed defect (authoring; a transition silently stops working). Owner WO: UX-01.
+- Anchor: `Projects/Starforge/src/editors/FlowEditor.cpp:757-765` (`RadioButton("when (guard only)")` guarded by `&& !isWhen`, forcing `HasGuard = true`; the only way back is re-picking an `On` value, which leaves the guard switched on), `Cosmic/src/scene/FlowMachine.cpp:283-295` (an empty guard is written as `"if": {"entity": "", ...}`), `:707-709` (an empty entity guard never passes), `:363-393` (`FlowAsset::Validate` reports only `when` without a guard).
+- Repro: select `Home --start_clicked--> Lab`, click "when (guard only)", pick `start_clicked` again in the On combo, Save: the transition now carries `"if": {"entity": "", "component": "", "field": "", "op": "==", ...}`, `Validate()` is empty, and at Play the button no longer navigates.
+- Failing-before: `tests/test_flow_editor.cpp` "UX-01 FE02 ..." against the before-state (`SetKind` reproducing the radio + combo path; the old `Validate`).
+- Regression: `tests/test_flow_editor.cpp` "UX-01 FE02 ..." (trigger-kind round trip field for field, `Validate` on an empty guard, F-FLOWS byte stability).
+- Disposition: open at registration; the UX-01 fix: the Event / Key / Timer / When selector (`editors/FlowTrigger.{h,cpp}`, `KindOf` / `SetKind`, ImGui-free), `Validate` reports an empty guard on any transition.
+
+### KI-69 — A new flow is dirty on its first frame
+- Status: Confirmed defect (UX; the unsaved dot and a close prompt on a document nobody edited). Owner WO: UX-01.
+- Anchor: `Projects/Starforge/src/AssetTypes.cpp:115-123` (`CreateDefaultAsset` leaves `EditorPos` at (0,0)), `Projects/Starforge/src/editors/FlowEditor.cpp:308-326` (the all-zero auto-grid is pushed to the canvas but not to the asset), `:500-509` (the position sync then sees (40,40) != (0,0) and sets `m_Dirty`).
+- Repro: Content Browser right-click ▸ New ▸ Flow, double-click it: the tab shows the unsaved dot on the first drawn frame.
+- Failing-before: UX01 self-test FE05 on the before-state.
+- Regression: UX01 self-test FE05 (`Dirty() == false` after two drawn frames; a user drag still dirties).
+- Disposition: open at registration; the UX-01 fix: the placement writes the applied position into `EditorPos` before the first comparison.
+
+### KI-70 — Document tabs are keyed by their index: closing one re-keys every later tab
+- Status: Confirmed defect (UX state corruption between documents). Owner WO: UX-01.
+- Anchor: `Projects/Starforge/src/editors/AssetEditorHost.cpp:91-92` (`"###doc" + std::to_string(i)`), `:96` (`PushID((int)i)`).
+- Repro: open three flows, close the first: the second now answers to the first's tab id (`###doc0`) and inherits its tab-bar and child-window state (inspector scroll, selection of the tab).
+- Failing-before: `tests/test_flow_editor.cpp` "UX-01 FE05 ..." against the before-state `TabId` (the index).
+- Regression: `tests/test_flow_editor.cpp` "UX-01 FE05 ..." (headless host) + UX01 self-test FE05.
+- Disposition: open at registration; the UX-01 fix: a per-document counter assigned at `Open()` keys the tab label and the `PushID`.
+
+### KI-71 — The Editors window's ✕ is ignored while a document is open, and documents survive Close Project (a later save writes into the next project)
+- Status: Confirmed defect (UX + latent data loss: an open `project://flows/Main.cflow` document stays alive across Close Project and resolves against the next project opened). Owner WO: UX-01.
+- Anchor: `Projects/Starforge/src/StarforgeApp.cpp:1538-1542` (draws the host when `m_ShowEditors || m_Editors.AnyOpen()`, contradicting `AssetEditorHost.h:49-51`), `:356-379` (`CloseProject` never calls `m_Editors.CloseAll()`, `AssetEditorHost.h:54`, which nothing calls).
+- Repro: open a flow, click the Editors tab's ✕: the window stays; File ▸ Close Project, open another project: the old document reappears and Save writes its asset into the new project's `flows/`.
+- Failing-before: `tests/test_flow_editor.cpp` "UX-01 FE03 ..." (the host's draw rule) and UX01 self-test FE03 on the before-state.
+- Regression: `tests/test_flow_editor.cpp` "UX-01 FE03 ..." + UX01 self-test FE03 (✕ hides the window with the document still open, `Open` shows it, `CloseProject` leaves `AnyOpen() == false`).
+- Disposition: open at registration; the UX-01 fix: the host is drawn exactly while its View flag is up (`AssetEditorHost::ShouldDraw`), `CloseProject` logs each dirty document it drops and calls `CloseAll()` (UX-02 adds the save prompt).
+
+### KI-78 — The Screens panel (auto-shown for `kind = "app"` projects) is docked by no built-in layout preset: it opens floating at (60,60), 510x318, over the Hierarchy and over the central dock node's tab bar
+- Status: Confirmed defect (UX, layout; found by the UX-01 harness). Owner WO: none yet — `panels/ScreensPanel.*` is UX-02's, the dock binding would sit in `LayoutPresets.cpp` (UX-01's file) but is outside UX-01's six changes, so it is registered, not fixed.
+- Anchor: `Projects/Starforge/src/StarforgeApp.cpp:226` (`m_ShowScreens = m_ShowScreens || (m_ProjectKind == "app")`), `Projects/Starforge/src/LayoutPresets.cpp:91-139` (no built-in binds "Screens"); the GUIDE driver docks it by hand (`GuideWalkthroughSelfTest.cpp:623`).
+- Repro: fresh editor prefs, a 1920x1080 window, open PendulumLab: "Screens" floats at (60,60) size 510x318. With the flow editor docked at Center (UX-01) it covers the Editors tab's ✕ at (509,120)-(529,140), so a click there lands on Screens.
+- Failing-before: `docs/plans/ux-shipping-2026-09-24/evidence/UX-01/ux01-*/ux01-result.json` `measured.editors_close_button_covered_by` (the UX01 harness detects the occluder with Dear ImGui's own hit test and drags the panel aside, as a user would, before clicking).
+- Regression: none yet.
+- Disposition: open (proposal: dock "Screens" at `DockPort::LeftBottom` in the built-ins, as the GUIDE driver does).
+
 ## UX & Shipping findings — UX-V0, VM enablement (2026-09-25; KI-66..81 are the wave-1 lanes', see `docs/plans/ux-shipping-2026-09-24/work-orders/RESUME.md`)
 
 ### KI-82 — The Renderer2D batch shaders index a sampler array with a non-constant, non-dynamically-uniform expression (`u_Textures[int(v_TexIndex)]`); a conformant GLSL compiler (Mesa: VMware/VirtualBox VMs, Intel and AMD on Linux) rejects `Texture.glsl` outright and may mis-sample `QuadInstance.glsl`
