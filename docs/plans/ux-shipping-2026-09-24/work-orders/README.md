@@ -10,8 +10,8 @@ prompt and any older document disagree, **the prompt wins** and the session says
 
 The single running known-issue register is
 [`../../2d-stability-2026-09-16/contracts/known-issues.md`](../../2d-stability-2026-09-16/contracts/known-issues.md)
-— next entry **KI-84** (KI-66..81 are pre-allocated to the wave-1 lanes, see [`RESUME.md`](RESUME.md); UX-V0
-registered KI-82/83). Every crash / hang / data loss / wrong-behaviour defect found by any UX session is
+— next entry **KI-85** (KI-66..81 are pre-allocated to the wave-1 lanes, see [`RESUME.md`](RESUME.md); UX-V0
+registered KI-82/83 and, for the orchestrator, KI-84). Every crash / hang / data loss / wrong-behaviour defect found by any UX session is
 appended there with a minimal regression and a disposition, using its template, **before** it is fixed. A
 missing fixture or skipped test is never logged as a pass.
 
@@ -124,6 +124,8 @@ The campaign resumed on a VMware Workstation VM (8 vCPU, 16 GB, Windows 11, VS C
 - llvmpipe is CPU-heavy: with two lanes at once use `--parallel 4`, expect editor self-tests to run slower, and
   re-run a timeout alone once before calling it a failure. At most **two** lane agents at once on this VM.
 - The OS cursor is shared by every lane; a self-test that moves it must tolerate a disturbed input.
+- Timing tests WO-05 T03, WO-09 C05 and E10 are load-sensitive here (KI-84): a failure of only those under load is
+  re-run alone before it counts, and the orchestrator's landing runs are done with no other lane building.
 - Baseline at `d815252` (this VM, Release): configure 33 s, build 6 min with `--parallel 4`, 0 warnings;
   CosmicTests 523/0/14 in 274 s.
 
