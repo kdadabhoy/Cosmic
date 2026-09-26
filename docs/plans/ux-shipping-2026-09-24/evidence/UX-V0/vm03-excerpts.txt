@@ -1,0 +1,92 @@
+UX-V0 VM03 excerpts - the retained editor manifests on the campaign VM (llvmpipe), lane build of 1538b2d
+Runner: tests/acceptance/Run-Acceptance.ps1 -Manifest <abs> -Config <cfg> -TempRoot <worktree>\build\_temp\<name> -OutDir <worktree>\build\_temp\results\<run>
+Result JSONs: evidence/UX-V0/manifests/*.results.json. Other lanes (UX-01, UX-02) were building/testing on the VM throughout.
+
+Runs in order (exit = runner exit code; 'rerun' = the one re-run the WO allows; 'short' = a diagnostic run with TempRoot build\_temp\a3):
+  wo07-l05 Release: exit=0 secs=139
+  ap03-editor Release: exit=1 secs=321
+  wo07-l05 Debug: exit=0 secs=153
+  ap03-editor Debug: exit=0 secs=777
+  ap03-editor Release-rerun: exit=1 secs=295
+  ap03-editor Release-short: exit=1 secs=661
+
+---- wo07-l05-Release-225639 (runner console) ----
+commit=1538b2de4c022217a42fcefd6ba974ad74d89b25 dirty=True
+  [PASSED] L05-sftelem - exit 0 as expected
+  [PASSED] L05-editor - exit 0 as expected
+=== SUMMARY: 2 passed / 0 failed / 0 env-blocked (of 2) ===
+---- wo07-l05-Debug-230419 (runner console) ----
+commit=1538b2de4c022217a42fcefd6ba974ad74d89b25 dirty=True
+  [PASSED] L05-sftelem - exit 0 as expected
+  [PASSED] L05-editor - exit 0 as expected
+=== SUMMARY: 2 passed / 0 failed / 0 env-blocked (of 2) ===
+---- ap03-editor-Debug-230653 (AP03-EDITOR.out.log) ----
+AP03 self-test: exit=0 verdict=PASS elapsed=768s timedOut=False result=C:\dev\Cosmic\build\_lanes\ux-v0\docs\plans\app-platform-2026-09-18\evidence\AP-03\ap03-Debug\ap03-result.json
+  AP03_SELFTEST_RESULT=PASS config=Debug failedChecks=0 seconds=766.6 errors=0 leaks=0 drift=0 hosted=0
+AP03 independent oracle: PASS 
+[doctest] test cases: 2 | 2 passed | 0 failed
+---- ap03-editor-Release-225859 (AP03-EDITOR.out.log) ----
+AP03 self-test: exit=-1073740791 verdict=FAIL elapsed=318s timedOut=False result=C:\dev\Cosmic\build\_lanes\ux-v0\docs\plans\app-platform-2026-09-18\evidence\AP-03\ap03-Release\ap03-result.json
+  [AP03] FAIL E03: OffsetMax after SE resize (-127.202,-25.2021), expected (185.959,61.5751)
+  [AP03] FAIL E06: blank: build failed
+  [AP03] FAIL E06: sample:ForgePong: build failed
+  AP03_SELFTEST_RESULT=FAIL config=Release failedChecks=3 seconds=317.7 errors=0 leaks=0 drift=0 hosted=0
+AP03 independent oracle: PASS 
+[doctest] test cases: 2 | 1 passed | 1 failed
+---- ap03-editor-Release-rerun-232021 (AP03-EDITOR.out.log) ----
+AP03 self-test: exit=-1073740791 verdict=FAIL elapsed=266s timedOut=False result=C:\dev\Cosmic\build\_lanes\ux-v0\docs\plans\app-platform-2026-09-18\evidence\AP-03\ap03-Release\ap03-result.json
+  [AP03] FAIL E01: the app template's module build failed
+  [AP03] FAIL E01: module not loaded after the build
+  [AP03] FAIL E01: no service instantiated
+  [AP03] FAIL E01: app.uptime not published
+  [AP03] FAIL E02: rebuild with TelemetryScreen failed
+  [AP03] FAIL E02: TelemetryScreen not registered after the rebuild
+  [AP03] FAIL V05: Diagnostics CS_PANEL not drawn in Play
+  [AP03] FAIL V05: UiHostedPanel.DrawnThisFrame not set for Diagnostics
+  [AP03] FAIL E08: DataBus panel producer for app.uptime unresolved: channel 'app.uptime' has no value on the bus yet
+  [AP03] FAIL E08: DataBus panel Open failed
+  [AP03] FAIL E08: databus-panel open producer app.uptime (CS_SERVICE site) recorded 'C:/dev/Cosmic/build/_lanes/ux-v0/build/_temp/ap03-editor-Release-rerun/cosmic-accept-71812b8a704043938042169feb28425a/temp/ap03/Ap03App/src/scre
+  [AP03] FAIL E08: Inspector Open producer failed
+  [AP03] FAIL E08: inspector open producer app.sine recorded 'C:/dev/Cosmic/build/_lanes/ux-v0/build/_temp/ap03-editor-Release-rerun/cosmic-accept-71812b8a704043938042169feb28425a/temp/ap03/Ap03App/src/screens/HomeScreen.h', expec
+  [AP03] FAIL E08: viewport resolution for the hosted panel: panel 'Diagnostics' is not registered �?" run Play once to resolve
+  [AP03] FAIL E08: viewport Open (panel) failed
+  [AP03] FAIL E08: viewport ctx open logic source (CS_PANEL Diagnostics) recorded 'C:/dev/Cosmic/build/_lanes/ux-v0/build/_temp/ap03-editor-Release-rerun/cosmic-accept-71812b8a704043938042169feb28425a/temp/ap03/Ap03App/src/screens
+  [AP03] FAIL E08: viewport Reveal (panel) failed
+  [AP03] FAIL E08: viewport ctx reveal (CS_PANEL Diagnostics) recorded 'C:/dev/Cosmic/build/_lanes/ux-v0/build/_temp/ap03-editor-Release-rerun/cosmic-accept-71812b8a704043938042169feb28425a/temp/ap03/Ap03App/src/screens/HomeScreen
+  [AP03] FAIL E08: Inspector hosted-panel Open failed
+  [AP03] FAIL E08: inspector open source UiHostedPanel recorded 'C:/dev/Cosmic/build/_lanes/ux-v0/build/_temp/ap03-editor-Release-rerun/cosmic-accept-71812b8a704043938042169feb28425a/temp/ap03/Ap03App/src/screens/HomeScreen.h', ex
+  [AP03] FAIL E08: viewport resolution for a bound widget: channel 'app.counter' has no value on the bus yet
+  [AP03] FAIL E08: viewport Open (bound widget) failed
+  [AP03] FAIL E08: viewport ctx open logic source (bound widget channel -> CS_SERVICE) recorded 'C:/dev/Cosmic/build/_lanes/ux-v0/build/_temp/ap03-editor-Release-rerun/cosmic-accept-71812b8a704043938042169feb28425a/temp/ap03/Ap03A
+  [AP03] FAIL E07: not back in Play after the rebuild
+  [AP03] FAIL E07: resumed on '', expected 'Dashboard'
+  [AP03] FAIL E07: services not re-instantiated
+  [AP03] FAIL E07: app.uptime history lost the samples from before the rebuild
+  [AP03] FAIL E07: app.sine amplitude after the rebuild 0.000 (expected ~2.0 over 220 samples)
+  [AP03] FAIL E07: auto-build (error) did not start within 30 s
+  [AP03] FAIL E07: not back in Play after the fix
+  [AP03] FAIL E07: fix resume landed on another state
+  [AP03] FAIL E07: chip after the fix is not Live/Reloading
+  [AP03] FAIL E06: game: build failed
+  [AP03] FAIL E06: blank: build failed
+  [AP03] FAIL E06: sample:FlowDemo: build failed
+  [AP03] FAIL E06: sample:ForgePong: build failed
+  AP03_SELFTEST_RESULT=FAIL config=Release failedChecks=36 seconds=263.8 errors=0 leaks=0 drift=0 hosted=0
+AP03 independent oracle: FAIL E08: no recorded invocation for C:/dev/Cosmic/build/_lanes/ux-v0/build/_temp/ap03-editor-Release-rerun/cosmic-accept-71812b8a704043938042169feb28425a/temp/ap03/Ap03App/src/Module.cpp
+[doctest] test cases: 2 | 0 passed | 2 failed
+---- ap03-Release-short (AP03-EDITOR.out.log) ----
+AP03 self-test: exit=-1073740791 verdict=FAIL elapsed=659s timedOut=False result=C:\dev\Cosmic\build\_lanes\ux-v0\docs\plans\app-platform-2026-09-18\evidence\AP-03\ap03-Release\ap03-result.json
+  [AP03] FAIL E03: OffsetMax after SE resize (-127.202,-25.2021), expected (185.959,61.5751)
+  AP03_SELFTEST_RESULT=FAIL config=Release failedChecks=1 seconds=658.0 errors=0 leaks=0 drift=0 hosted=0
+AP03 independent oracle: PASS 
+[doctest] test cases: 2 | 1 passed | 1 failed
+
+---- the build failures behind E06 (run 225859) and the E01/E02/E06/E07/E08 cascade (rerun 232021) ----
+Every failed scaffolded-project build is MSBuild's file tracker, not the compiler, e.g. (rerun, first try_compile):
+  warning MSB8029: The Intermediate directory or Output directory cannot reside under the Temporary directory as it could lead to issues with incremental build.
+  error MSB6003: The specified task executable "CL.exe" could not be run. System.IO.DirectoryNotFoundException: Could not find a part of the path
+    '<TempRoot>\cosmic-accept-<id>\temp\ap03\Ap03App\build\CMakeFiles\CMakeScratch\TryCompile-i9fk1m\cmTC_bc147.dir\Debug\cmTC_bc147.tlog'
+    at Microsoft.Build.Utilities.TrackedDependencies.ExpandWildcards -> CanonicalTrackedOutputFiles -> CL.PostExecuteTool
+(run 225859: the same MSB6003 from link.exe in the Ap03blank try_compile). The diagnostic run with the shorter TempRoot
+build\_temp\a3 had no MSB6003 (0 lines in its console) - consistent with RESUME.md's 'retained manifests ... can fail on load (MSB6003 ...)';
+the project build dirs sit under the per-run TEMP the runner sets (hence MSB8029).

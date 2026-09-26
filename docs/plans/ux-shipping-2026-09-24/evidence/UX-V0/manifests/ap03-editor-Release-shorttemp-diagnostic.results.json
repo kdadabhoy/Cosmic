@@ -1,0 +1,101 @@
+﻿{
+    "manifest":  "ap03-editor",
+    "profile":  "all",
+    "tier_filter":  [
+
+                    ],
+    "config":  "Release",
+    "mode":  "2D",
+    "generated_utc":  "2026-09-26T06:37:33.6038765Z",
+    "git":  {
+                "commit":  "445b303cba8950bc731ddc539f75120608ce3927",
+                "dirty":  true,
+                "dirty_diff_sha256":  null
+            },
+    "environment":  {
+                        "os_caption":  "Microsoft Windows 11 Education",
+                        "os_version":  "10.0.26200",
+                        "os_build":  "26200",
+                        "os_display":  "26200.9457",
+                        "cpu_name":  "AMD Ryzen 7 7800X3D 8-Core Processor",
+                        "cpu_cores":  8,
+                        "cpu_threads":  8,
+                        "cpu_addr_width":  64,
+                        "cpu_isa_floor":  "SSE4.2 (D-CPU); see evidence/WO-02/cpu-isa-probe.txt",
+                        "ram_bytes":  17178578944,
+                        "ram_gib":  16,
+                        "gpus":  [
+                                     {
+                                         "name":  "VMware SVGA 3D",
+                                         "driver":  "9.17.11.3",
+                                         "driver_date":  "\/Date(1768521600000)\/"
+                                     }
+                                 ],
+                        "opengl_version":  null,
+                        "powershell":  "5.1.26100.9444",
+                        "hostname":  "DESKTOP-A97KT7Q"
+                    },
+    "capabilities":  {
+                         "windows":  true,
+                         "cpu-sse42":  true,
+                         "gpu-gl":  true,
+                         "serial-device":  false,
+                         "editor-ui":  false,
+                         "audio-device":  true,
+                         "render-tests":  true
+                     },
+    "forced_unavailable":  [
+
+                           ],
+    "bin_dir":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-v0\\build\\Runtime\\Release",
+    "run_temp":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-v0\\build\\_temp\\a3\\cosmic-accept-019076a5af4f4af1989098252186b962",
+    "golden_dir":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-v0\\tests\\acceptance\\goldens",
+    "golden_before":  {
+                          ".gitkeep-golden.txt":  "89e37141e7474880abc0f7363d7ae2598c0d28011f425d9a0b7130c944e9b137"
+                      },
+    "golden_after":  {
+                         ".gitkeep-golden.txt":  "89e37141e7474880abc0f7363d7ae2598c0d28011f425d9a0b7130c944e9b137"
+                     },
+    "golden_mutated":  false,
+    "acceptance_mode":  true,
+    "counts":  {
+                   "total":  1,
+                   "passed":  0,
+                   "failed":  1,
+                   "blocked":  0
+               },
+    "self_test":  {
+                      "enabled":  false,
+                      "failures":  [
+
+                                   ]
+                  },
+    "cases":  [
+                  {
+                      "id":  "AP03-EDITOR",
+                      "tier":  "I",
+                      "description":  "AP-03 editor authoring inside the REAL Starforge editor (Projects/Starforge/src/AP03AuthoringSelfTest.cpp): E01 New Project (kind app) -\u003e F-APP tree equals templates/app -\u003e the flow\u0027s start screen opens -\u003e viewport non-blank -\u003e BuildScripts -\u003e Play (flow state Home, services instantiated) -\u003e Stop; E02 Screens \u003e New Screen \u0027Telemetry\u0027 + Create script (scene with canvas + ortho camera + NativeScript, flow state added byte-stable, stub header, include + CS_SCRIPT between the CS_SCREENS markers, rebuild ok, Validate empty, marker-less refusal with the documented message and no file change); F01 rename / set-start round-trip byte-stable + when/channel guard round trip; E03 injected pointer drag on the rect gizmo (one CommandStack entry, undo/redo, anchors untouched, SE resize edits OffsetMax only); E04 UiImage.TexturePath replaced with an imported PNG, saved, reopened, sentinel pixels in the viewport readback; E08 recorded Open/Reveal (COSMIC_AP03_RECORD_SHELL) for a screen script, the CS_SERVICE site (DataBus panel producer + Inspector Open producer), the CS_PANEL site (viewport context menu + Inspector), a bound widget channel and a button signal; V05 editor half (Diagnostics CS_PANEL drawn at the element\u0027s viewport-offset rect, also letterboxed; unknown name -\u003e placeholder; never in edit mode; ImGui stacks balanced); E07 live loop (AppService.cpp rewritten while playing -\u003e stop, rebuild, resume on the same flow state with services re-instantiated, amplitude changed, uptime history kept, Console build line; compile error -\u003e stays stopped with the \u0027Build failed\u0027 chip; fix -\u003e resumes); E06 homescreen lists App/Game/Blank + FlowDemo/ForgePong, each scaffolds/opens/builds/plays, LoadProjects \u003c= 3 over 600 frames. The wrapper adds the OUT-OF-PROCESS oracles (F-APP byte comparison, E02 files + flow JSON, E08 recorded paths).",
+                      "requires":  [
+                                       "windows",
+                                       "gpu-gl"
+                                   ],
+                      "transport":  "none",
+                      "seed":  null,
+                      "start_utc":  "2026-09-26T06:26:34.1403294Z",
+                      "deadline_sec":  1600,
+                      "exercised":  "production",
+                      "command":  "powershell -NoProfile -ExecutionPolicy Bypass -File C:\\dev\\Cosmic\\build\\_lanes\\ux-v0\\tests\\acceptance\\fixtures\\Run-AP03Authoring.ps1 -Bin C:\\dev\\Cosmic\\build\\_lanes\\ux-v0\\build\\Runtime\\Release -Output C:\\dev\\Cosmic\\build\\_lanes\\ux-v0\\docs\\plans\\app-platform-2026-09-18\\evidence\\AP-03\\ap03-Release -ProjectRoot C:\\dev\\Cosmic\\build\\_lanes\\ux-v0\\build\\_temp\\a3\\cosmic-accept-019076a5af4f4af1989098252186b962\\temp\\ap03",
+                      "stdout_log":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-v0\\build\\_temp\\results\\ap03-Release-short\\AP03-EDITOR.out.log",
+                      "stderr_log":  "C:\\dev\\Cosmic\\build\\_lanes\\ux-v0\\build\\_temp\\results\\ap03-Release-short\\AP03-EDITOR.err.log",
+                      "pid":  8036,
+                      "exit_code":  1,
+                      "crash":  false,
+                      "tests_passed":  1,
+                      "tests_expected_min":  2,
+                      "verdict":  "FAILED",
+                      "detail":  "expected \u003e= 2 tests, got 1 (exit 1, wanted 0)",
+                      "duration_sec":  659.44,
+                      "end_utc":  "2026-09-26T06:37:33.5865507Z"
+                  }
+              ]
+}

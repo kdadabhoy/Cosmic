@@ -1,0 +1,93 @@
+UX-V0 failing-before excerpts (KI-82, KI-83)
+Tree: 353948b8f49706b70914135897facc25d8164c1d (= main at the lane base; unmodified source), branch ux/v0
+Machine: VMware VM, 8 vCPU; OpenGL 4.5 - llvmpipe (LLVM 13.0.1, 256 bits); MSVC 14.51.36231; cmake 4.3.1-msvc1
+Configure: cmake -S . -B build -A x64 -DCOSMIC_2D_ONLY=ON -DCOSMIC_BUILD_TESTS=ON -DCOSMIC_BUILD_RENDER_TESTS=ON (COSMIC_SDK=<worktree>)
+
+=== 1. Starforge.exe, Release (build\Runtime\Release, cwd = exe dir), 2026-09-25 22:03:55 ===
+Command: Start-Process Starforge.exe -PassThru; WaitForExit(90 s)
+Result:  exit code -1073741819 (0xC0000005 ACCESS_VIOLATION) about 4 s after launch
+Log logs/Cosmic_2026-09-25_22-03-55.log (dump lines elided):
+[2026-09-25 22:03:55.700] [COSMIC] [info] =================================================
+[2026-09-25 22:03:55.700] [COSMIC] [info]   Cosmic Engine v0.9.0 — Subsystems Initialized
+[2026-09-25 22:03:55.700] [COSMIC] [info] =================================================
+[2026-09-25 22:03:55.700] [COSMIC] [info] User data root: .
+[2026-09-25 22:03:55.700] [COSMIC] [trace] Initializing Application Subsystems...
+[2026-09-25 22:03:55.700] [COSMIC] [info] JobSystem: Detected 8 logical cores. Spawning 7 worker thread(s).
+[2026-09-25 22:03:55.700] [COSMIC] [info] JobSystem: Thread pool initialised successfully.
+[2026-09-25 22:03:57.170] [COSMIC] [info] AudioEngine initialized (48000 Hz, 2 channels).
+[2026-09-25 22:03:59.432] [COSMIC] [info] OpenGL 4.5 — llvmpipe (LLVM 13.0.1, 256 bits)
+[2026-09-25 22:03:59.442] [COSMIC] [info] Window: borderless custom chrome enabled.
+[2026-09-25 22:03:59.458] [COSMIC] [trace] Initializing Renderer2D...
+[2026-09-25 22:03:59.479] [COSMIC] [error] Shader compilation failure in stage: FRAGMENT
+[2026-09-25 22:03:59.479] [COSMIC] [error] 0:17(18): error: sampler arrays indexed with non-constant expressions are forbidden in GLSL 1.30 and later
+[2026-09-25 22:03:59.479] [COSMIC] [error] --------------------- PREPROCESSED SHADER DUMP BEGIN ---------------------
+[2026-09-25 22:03:59.479] [COSMIC] [error] ==================== STAGE: VERTEX SHADER ====================
+[2026-09-25 22:03:59.480] [COSMIC] [error] ==================== STAGE: FRAGMENT SHADER ====================
+[2026-09-25 22:03:59.480] [COSMIC] [error] --------------------- PREPROCESSED SHADER DUMP END -----------------------
+[2026-09-25 22:03:59.480] [COSMIC] [error] Shader::Create: compilation or link failure for 'assets/shaders/Texture.glsl'. Returning nullptr.
+(end of log; the next statement in Renderer2D::Init is Renderer2D.cpp:239 s_Data.TextureShader->Bind() on the null Ref -
+ the CS_CORE_ASSERT at :238 is compiled out)
+
+=== 2. Starforge.exe, Debug (build\Runtime\Debug), 2026-09-25 22:10:28 ===
+Result:  did NOT crash - still running after 90 s (killed by PID). The failed shader was returned as VALID:
+         no 'Returning nullptr' line, 'Renderer2D initialized successfully' - OpenGLShader::m_RendererID has no
+         initializer and the Debug heap fill (0xCDCDCDCD) passes IsValid(). Every batched quad then draws with an
+         invalid program (see 4).
+Log logs/Cosmic_2026-09-25_22-10-28.log (dump lines elided):
+[2026-09-25 22:10:28.160] [COSMIC] [info] =================================================
+[2026-09-25 22:10:28.163] [COSMIC] [info]   Cosmic Engine v0.9.0 — Subsystems Initialized
+[2026-09-25 22:10:28.164] [COSMIC] [info] =================================================
+[2026-09-25 22:10:28.165] [COSMIC] [info] User data root: .
+[2026-09-25 22:10:28.165] [COSMIC] [trace] Initializing Application Subsystems...
+[2026-09-25 22:10:28.166] [COSMIC] [info] JobSystem: Detected 8 logical cores. Spawning 7 worker thread(s).
+[2026-09-25 22:10:28.167] [COSMIC] [info] JobSystem: Thread pool initialised successfully.
+[2026-09-25 22:10:28.254] [COSMIC] [info] AudioEngine initialized (48000 Hz, 2 channels).
+[2026-09-25 22:10:28.605] [COSMIC] [info] OpenGL 4.5 — llvmpipe (LLVM 13.0.1, 256 bits)
+[2026-09-25 22:10:28.621] [COSMIC] [info] Window: borderless custom chrome enabled.
+[2026-09-25 22:10:28.635] [COSMIC] [trace] Initializing Renderer2D...
+[2026-09-25 22:10:28.655] [COSMIC] [error] Shader compilation failure in stage: FRAGMENT
+[2026-09-25 22:10:28.655] [COSMIC] [error] 0:17(18): error: sampler arrays indexed with non-constant expressions are forbidden in GLSL 1.30 and later
+[2026-09-25 22:10:28.656] [COSMIC] [error] --------------------- PREPROCESSED SHADER DUMP BEGIN ---------------------
+[2026-09-25 22:10:28.657] [COSMIC] [error] ==================== STAGE: VERTEX SHADER ====================
+[2026-09-25 22:10:28.674] [COSMIC] [error] ==================== STAGE: FRAGMENT SHADER ====================
+[2026-09-25 22:10:28.686] [COSMIC] [error] --------------------- PREPROCESSED SHADER DUMP END -----------------------
+[2026-09-25 22:10:28.726] [COSMIC] [info] Shader [QuadInstance]: Automatically mapped 'u_Textures' to 32 hardware slots.
+[2026-09-25 22:10:28.727] [COSMIC] [info] Renderer2D initialized successfully.
+
+=== 3. CosmicRenderTests.exe --reporters=console --no-intro, Release ===
+Result:  exit code -1073741819 (0xC0000005) inside Renderer2D::Init (render_main.cpp), before any test case ran
+stdout tail (dump lines elided):
+[2026-09-25 22:05:28.812] [COSMIC] [error] 0:17(18): error: sampler arrays indexed with non-constant expressions are forbidden in GLSL 1.30 and later
+[2026-09-25 22:05:28.812] [COSMIC] [error] --------------------- PREPROCESSED SHADER DUMP BEGIN ---------------------
+[2026-09-25 22:05:28.813] [COSMIC] [error] ==================== STAGE: VERTEX SHADER ====================
+[2026-09-25 22:05:28.823] [COSMIC] [error] ==================== STAGE: FRAGMENT SHADER ====================
+[2026-09-25 22:05:28.832] [COSMIC] [error] --------------------- PREPROCESSED SHADER DUMP END -----------------------
+[2026-09-25 22:05:28.832] [COSMIC] [error] Shader::Create: compilation or link failure for 'assets/shaders/Texture.glsl'. Returning nullptr.
+
+=== 4. CosmicRenderTests.exe, Debug ===
+Result:  ran against the invalid (0xCDCDCDCD) batch program; stopped by PID after ~26 min (llvmpipe + Debug) with
+         611 'ERROR: CHECK' lines so far (610 of them attributed per file below):
+              5  render_2d.cpp
+             10  render_ap02_widgets.cpp
+            197  render_wo08_batches.cpp
+             38  render_wo08_camera.cpp
+             17  render_wo08_capture.cpp
+             17  render_wo08_instancing.cpp
+             18  render_wo08_primitives.cpp
+            234  render_wo08_rtt.cpp
+             74  render_wo09_sprites.cpp
+first failures:
+C:\dev\Cosmic\build\_lanes\ux-v0\tests\render\render_2d.cpp(258): ERROR: CHECK( CheckGolden("sprites", frame) ) is NOT correct!
+C:\dev\Cosmic\build\_lanes\ux-v0\tests\render\render_2d.cpp(307): ERROR: CHECK( CheckGolden("tilemap", frame) ) is NOT correct!
+C:\dev\Cosmic\build\_lanes\ux-v0\tests\render\render_2d.cpp(366): ERROR: CHECK( CheckGolden("light2d", frame) ) is NOT correct!
+
+=== 5. powershell -ExecutionPolicy Bypass -File tests\check_gl_conformance.ps1 (UX-V0 extended checker, unfixed shaders) ===
+GLSL SAMPLER-INDEX FAILURE - a uniform sampler array indexed by a non-literal expression (KI-82):
+  Cosmic\assets\shaders\QuadInstance.glsl:65: u_Textures[index] -> texColor *= texture(u_Textures[index], v_TexCoord * v_TilingFactor);
+  Cosmic\assets\shaders\Texture.glsl:40: u_Textures[int(v_TexIndex)] -> color = texture(u_Textures[int(v_TexIndex)], v_TexCoord * v_TilingFactor) * v_Color;
+  tests\render\fixtures\wo08\wo08_tint_quad.glsl:45: u_Textures[int(v_TexIndex)] -> color = texture(u_Textures[int(v_TexIndex)], v_TexCoord * v_TilingFactor) * v_Color * u_Tint;
+  tests\render\fixtures\wo08\wo08_tint_quad_instance.glsl:52: u_Textures[index] -> texColor *= texture(u_Textures[index], v_TexCoord * v_TilingFactor);
+4 violation(s). Index sampler arrays with integer literals only (a flat slot + switch, see Cosmic/assets/shaders/Texture.glsl).
+GL conformance: clean (no raw gl*/GL_* tokens outside the platform layer).
+exit=1
+353948b8f49706b70914135897facc25d8164c1d

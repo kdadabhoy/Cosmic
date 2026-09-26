@@ -118,7 +118,7 @@ was active on the VM at the time, its load not sampled): no timing failure in ei
 
 ================================================================================================
 Added on the orchestrator's second request: WO-09 C02 'maximum map'. Copied verbatim from the UX-02 lane's evidence:
-  build/_lanes/ux-02/docs/plans/ux-shipping-2026-09-24/evidence/UX-02/phase-a-excerpts.txt (mtime 2026-09-25 23:39), lines 1 and 9-17.
+  build/_lanes/ux-02/docs/plans/ux-shipping-2026-09-24/evidence/UX-02/phase-a-excerpts.txt (mtime 2026-09-25 23:39), lines 1 and 9-18.
 ================================================================================================
 # UX-02 Phase A excerpts (session 2, the VMware VM, 2026-09-25; HEAD 9667c84, clean tree; *.log stays ignored)
 ## CosmicTests Debug (under load: Release build + Release tests + the UX-V0 lane), exit 1, 1212 s
@@ -130,3 +130,4 @@ Added on the orchestrator's second request: WO-09 C02 'maximum map'. Copied verb
 [doctest] Status: FAILURE!
 ## the failing case alone (Debug), exit 0
 C:\dev\Cosmic\build\_lanes\ux-02\tests\test_wo09_c02_tilemap.cpp(130): MESSAGE: C02 1,048,576-cell map: save 1380.71 ms (16044050 bytes), load 2185.52 ms
+[doctest] test cases:  1 |  1 passed | 0 failed | 543 skipped
