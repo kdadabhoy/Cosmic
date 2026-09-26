@@ -1,0 +1,133 @@
+KI-84 excerpts - timing-bound CosmicTests under CPU load on the campaign VM (8 vCPU, llvmpipe)
+Copied by UX-V0 (orchestrator request, 2026-09-25) from the UX-01 lane's evidence:
+  build/_lanes/ux-01/docs/plans/ux-shipping-2026-09-24/evidence/UX-01/phaseA-vm-excerpts.txt (mtime 2026-09-25 23:03)
+  lines 1-3 (provenance) and the CosmicTests sections (lines 20-121), verbatim.
+The 'UX-V0 ...' load named in those lines is this lane's builds / render tests / manifests running at the same time.
+================================================================================================
+UX-01 Phase A excerpts (VMware VM, llvmpipe, 2026-09-25) - worktree build/_lanes/ux-01, HEAD d2aae20 + Phase A docs
+====================================================================================================
+Full logs stay under build/_temp (gitignored). COSMIC_SDK = the worktree; TEMP/TMP isolated per run under build/_temp.
+
+---- CosmicTests Debug, full suite, cwd = worktree root (exit 1, 877 s) ----
+Concurrent: this lane's Release build (--parallel 4) and UX-V0's build/tests.
+tests\test_filewatcher.cpp(83): ERROR: CHECK_FALSE( changes.empty() ) is NOT correct!
+  values: CHECK_FALSE( true )
+tests\test_filewatcher.cpp(84): ERROR: CHECK( MentionsFile(changes, name) ) is NOT correct!
+  values: CHECK( false )
+tests\test_wo05_matrix.cpp(218): ERROR: CHECK( ms <= 2000 ) is NOT correct!
+  values: CHECK( 10155 <= 2000 )
+tests\test_wo05_matrix.cpp(64): FATAL ERROR: REQUIRE( Until([&] { return root->Link().GetState() == SerialPort::State::Open; }) ) is NOT correct!
+  values: REQUIRE( false )
+tests\test_wo05_matrix.cpp(255): FATAL ERROR: REQUIRE( rig.fake->WaitOpenEntered() ) is NOT correct!
+  values: REQUIRE( false )
+tests\test_wo05_matrix.cpp(277): FATAL ERROR: REQUIRE( rig.fake->WaitOpenEntered() ) is NOT correct!
+  values: REQUIRE( false )
+tests\test_wo09_c05_json.cpp(218): ERROR: CHECK( maxMs < 2000.0 ) is NOT correct!
+  values: CHECK( 2819.86 <  2000 )
+tests\test_wo09_c05_json.cpp(437): ERROR: CHECK( st->maxMs <= deadlineMs ) is NOT correct!
+  values: CHECK( 2013.2 <= 2000 )
+[doctest] test cases:      529 |      523 passed | 6 failed | 14 skipped
+[doctest] assertions: 23118946 | 23118938 passed | 8 failed |
+
+---- CosmicTests Release, full suite, cwd = worktree root (exit 1, 114 s) ----
+Concurrent: UX-V0 CosmicRenderTests (llvmpipe), CPU 66-100 %.
+tests\test_wo05_matrix.cpp(131): FATAL ERROR: REQUIRE( rig.fake->WaitOpenEntered() ) is NOT correct!
+  values: REQUIRE( false )
+tests\test_wo05_matrix.cpp(255): FATAL ERROR: REQUIRE( rig.fake->WaitOpenEntered() ) is NOT correct!
+  values: REQUIRE( false )
+[doctest] test cases:      529 |      527 passed | 2 failed | 14 skipped
+[doctest] assertions: 22802769 | 22802767 passed | 2 failed |
+
+---- Re-run of the failed cases, Debug (-tc="WO-05 T03*,E10: a new file*,WO-09 C05: truncation*,WO-09 C05: parser fuzz*"), 155 s ----
+CPU 26 % at start; concurrent UX-V0 CosmicRenderTests Debug.
+tests\test_wo05_matrix.cpp(218): ERROR: CHECK( ms <= 2000 ) is NOT correct!
+  values: CHECK( 3427 <= 2000 )
+tests\test_wo05_matrix.cpp(131): FATAL ERROR: REQUIRE( rig.fake->WaitOpenEntered() ) is NOT correct!
+  values: REQUIRE( false )
+tests\test_wo05_matrix.cpp(255): FATAL ERROR: REQUIRE( rig.fake->WaitOpenEntered() ) is NOT correct!
+  values: REQUIRE( false )
+tests\test_wo05_matrix.cpp(281): ERROR: CHECK( duration<=std::chrono::milliseconds(250) ) is NOT correct!
+  values: CHECK( 396936600ns <= 250ms )
+[doctest] test cases:     7 |     4 passed | 3 failed | 536 skipped
+[doctest] assertions: 10141 | 10137 passed | 4 failed |
+
+---- Same re-run, Release, 434 s ----
+CPU 100 % at start; concurrent UX-V0 CosmicRenderTests Debug.
+tests\test_wo05_matrix.cpp(64): FATAL ERROR: REQUIRE( Until([&] { return root->Link().GetState() == SerialPort::State::Open; }) ) is NOT correct!
+  values: REQUIRE( false )
+tests\test_wo05_matrix.cpp(255): FATAL ERROR: REQUIRE( rig.fake->WaitOpenEntered() ) is NOT correct!
+  values: REQUIRE( false )
+tests\test_wo05_matrix.cpp(277): FATAL ERROR: REQUIRE( rig.fake->WaitOpenEntered() ) is NOT correct!
+  values: REQUIRE( false )
+[doctest] test cases:      7 |      4 passed | 3 failed | 536 skipped
+[doctest] assertions: 643960 | 643957 passed | 3 failed |
+
+---- WO-05 T03 alone, Debug (-tc="WO-05 T03*"), 168 s ----
+CPU 2 % at start, no other test/build process at start (UX-V0 Release CosmicRenderTests was running when the next run started 168 s later; load during this run not sampled).
+tests\test_wo05_matrix.cpp(64): FATAL ERROR: REQUIRE( Until([&] { return root->Link().GetState() == SerialPort::State::Open; }) ) is NOT correct!
+  values: REQUIRE( false )
+tests\test_wo05_matrix.cpp(255): FATAL ERROR: REQUIRE( rig.fake->WaitOpenEntered() ) is NOT correct!
+  values: REQUIRE( false )
+tests\test_wo05_matrix.cpp(277): FATAL ERROR: REQUIRE( rig.fake->WaitOpenEntered() ) is NOT correct!
+  values: REQUIRE( false )
+tests\test_wo05_matrix.cpp(64): FATAL ERROR: REQUIRE( Until([&] { return root->Link().GetState() == SerialPort::State::Open; }) ) is NOT correct!
+  values: REQUIRE( false )
+[doctest] test cases:      4 |      0 passed | 4 failed | 539 skipped
+[doctest] assertions: 404697 | 404693 passed | 4 failed |
+
+---- WO-05 T03 alone, Release, 16 s ----
+CPU 100 % at start; concurrent UX-V0 CosmicRenderTests Release.
+tests\test_wo05_matrix.cpp(131): FATAL ERROR: REQUIRE( rig.fake->WaitOpenEntered() ) is NOT correct!
+  values: REQUIRE( false )
+tests\test_wo05_matrix.cpp(255): FATAL ERROR: REQUIRE( rig.fake->WaitOpenEntered() ) is NOT correct!
+  values: REQUIRE( false )
+[doctest] test cases:   4 |   2 passed | 2 failed | 539 skipped
+[doctest] assertions: 814 | 812 passed | 2 failed |
+
+---- CONTROL: main's own Release CosmicTests (C:\dev\Cosmic\build, built 21:38 from d815252), -tc="WO-05 T03*", fresh cwd, 267 s ----
+Sampled CPU avg 56 / max 73 %, no other build/test process.
+[doctest] test cases:      4 |      4 passed | 0 failed | 533 skipped
+[doctest] assertions: 706412 | 706412 passed | 0 failed |
+
+---- This lane's Release CosmicTests, -tc="WO-05 T03*", fresh cwd, 392 s ----
+Sampled CPU avg 68 / max 100 %; UX-V0 cl.exe compiles and a Starforge.exe ran concurrently.
+[doctest] test cases:      4 |      4 passed | 0 failed | 539 skipped
+[doctest] assertions: 706412 | 706412 passed | 0 failed |
+
+---- This lane's Debug CosmicTests, -tc="WO-05 T03*", fresh cwd, 40 s ----
+CPU 56 % at start, 100 % at end (UX-V0 build).
+tests\test_wo05_matrix.cpp(131): FATAL ERROR: REQUIRE( rig.fake->WaitOpenEntered() ) is NOT correct!
+  values: REQUIRE( false )
+tests\test_wo05_matrix.cpp(255): FATAL ERROR: REQUIRE( rig.fake->WaitOpenEntered() ) is NOT correct!
+  values: REQUIRE( false )
+tests\test_wo05_matrix.cpp(277): FATAL ERROR: REQUIRE( rig.fake->WaitOpenEntered() ) is NOT correct!
+  values: REQUIRE( false )
+[doctest] test cases:     4 |     1 passed | 3 failed | 539 skipped
+[doctest] assertions: 56071 | 56068 passed | 3 failed |
+
+---- This lane's Debug CosmicTests, -tc="WO-05 T03*", cwd = worktree root, 401 s ----
+Sampled CPU avg 72 / max 100 %; UX-V0 Release CosmicTests + retained-manifest Starforge runs + cl.exe concurrently.
+[doctest] test cases:      4 |      4 passed | 0 failed | 539 skipped
+[doctest] assertions: 706412 | 706412 passed | 0 failed |
+
+================================================================================================
+UX-V0's own full CosmicTests runs (build/_lanes/ux-v0, source = 05f118c, cwd = build/Runtime/<cfg>; the UX-01 lane
+was active on the VM at the time, its load not sampled): no timing failure in either run.
+  Release 22:35-22:40, 300 s: [doctest] test cases:      523 |      523 passed | 0 failed | 14 skipped
+  Debug   22:48-22:55, 437 s: [doctest] test cases:      523 |      523 passed | 0 failed | 14 skipped
+
+================================================================================================
+Added on the orchestrator's second request: WO-09 C02 'maximum map'. Copied verbatim from the UX-02 lane's evidence:
+  build/_lanes/ux-02/docs/plans/ux-shipping-2026-09-24/evidence/UX-02/phase-a-excerpts.txt (mtime 2026-09-25 23:39), lines 1 and 9-18.
+================================================================================================
+# UX-02 Phase A excerpts (session 2, the VMware VM, 2026-09-25; HEAD 9667c84, clean tree; *.log stays ignored)
+## CosmicTests Debug (under load: Release build + Release tests + the UX-V0 lane), exit 1, 1212 s
+205751:C:\dev\Cosmic\build\_lanes\ux-02\tests\test_wo09_c02_tilemap.cpp(130): MESSAGE: C02 1,048,576-cell map: save 5335.37 ms (16044050 bytes), load 9119.47 ms
+205753:C:\dev\Cosmic\build\_lanes\ux-02\tests\test_wo09_c02_tilemap.cpp(131): ERROR: CHECK( msSave + msLoad < 10000.0 ) is NOT correct!
+205754:  values: CHECK( 14454.8 <  10000 )
+[doctest] test cases:      530 |      529 passed | 1 failed | 14 skipped
+[doctest] assertions: 23457810 | 23457809 passed | 1 failed |
+[doctest] Status: FAILURE!
+## the failing case alone (Debug), exit 0
+C:\dev\Cosmic\build\_lanes\ux-02\tests\test_wo09_c02_tilemap.cpp(130): MESSAGE: C02 1,048,576-cell map: save 1380.71 ms (16044050 bytes), load 2185.52 ms
+[doctest] test cases:  1 |  1 passed | 0 failed | 543 skipped

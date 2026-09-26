@@ -17,10 +17,10 @@ namespace Cosmic
 	 * Bootstraps the rendering pipeline by initializing the low-level
 	 * RenderCommand dispatcher and the optimized Renderer2D system.
 	 */
-	void Renderer::Init()
+	bool Renderer::Init()
 	{
 		RenderCommand::Init();
-		Renderer2D::Init();
+		return Renderer2D::Init();
 	}
 
 	/**

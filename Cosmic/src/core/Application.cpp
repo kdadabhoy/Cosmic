@@ -4,6 +4,7 @@
 #include "utils/FileSystem.h"
 #include "utils/Branding.h"    // K1 — boot app-icon resolution
 #include "renderer/Renderer.h"
+#include "renderer/Renderer2D.h"  // GetInitError() — UX-V0 / KI-83 start-up failure
 #include "renderer/RenderCommand.h"
 #include "core/Timestep.h"
 #include "graphics/FrameBuffer.h"
@@ -612,8 +613,17 @@ namespace Cosmic
 		// Explicitly lock your frame present scheduling onto your primary monitor refresh rate on boot!
 		m_Window->SetVSync(true);
 
-		// 2. Initialize the Renderer
-		Renderer::Init();
+		// 2. Initialize the Renderer. A renderer that cannot draw (UX-V0 / KI-83:
+		//    a driver rejected the batch shader) is a clean start-up failure — no
+		//    framebuffer, ImGui or layers are built, Run() returns at once, and the
+		//    host exits with GetExitCode(). Shutdown() handles this partial state.
+		if (!Renderer::Init())
+		{
+			m_StartupError = "the renderer could not start: " + Renderer2D::GetInitError();
+			CS_CORE_CRITICAL("Application: {0}. Exiting with code {1}.", m_StartupError, StartupFailureExitCode);
+			m_Running = false;
+			return;
+		}
 
 		// 3. Framebuffer Setup 
 		FramebufferSpecification fbSpec;
@@ -701,7 +711,11 @@ namespace Cosmic
 		}
 
 		m_Minimized = false;
-		m_Framebuffer->Resize(e.GetWidth(), e.GetHeight());
+		// Null after a start-up failure (UX-V0 / KI-83: Initialize() stops before
+		// creating it), and the Window's teardown still reports the resize its
+		// chrome restore causes — which was an access violation inside the WndProc.
+		if (m_Framebuffer)
+			m_Framebuffer->Resize(e.GetWidth(), e.GetHeight());
 		Renderer::OnWindowResize(e.GetWidth(), e.GetHeight());
 
 		return false;

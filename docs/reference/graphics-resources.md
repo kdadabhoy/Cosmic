@@ -185,7 +185,8 @@ static Ref<Shader> Create(const std::string& filepath);
 
 **What it does** — reads `filepath` off disk, preprocesses it into per-stage GLSL, compiles each
 stage, links the program, and returns it. Returns **`nullptr`** if anything in that chain fails
-(`Shader.cpp:22-40`).
+(`Shader.cpp`, `Shader::Create`). `Shader::GetLastCreateError()` returns the one-line reason for the
+most recent failed `Create` on the calling thread (empty after a success).
 
 **Why you'd use it** — the only way to obtain a `Shader`. Prefer
 `AssetLibrary::GetShader(path)` when you want caching and VFS path resolution; reach for
@@ -205,12 +206,15 @@ if (!fire)
 ```
 
 **Notes & pitfalls**
-- **Failure: `nullptr`, always.** `Shader::Create` constructs the `OpenGLShader`, tests
-  `IsValid()` (`OpenGLShader.h:75` — `m_RendererID != 0`), and on false logs
-  `"Shader::Create: compilation or link failure for '{0}'. Returning nullptr."` and returns null
-  (`Shader.cpp:30-34`). Compile and link failures each additionally dump the **preprocessed** source
-  with line numbers (`OpenGLShader.cpp:369-389`), which is what you want to read — the injected
-  preamble shifts every line number away from your file.
+- **Failure: `nullptr`, always — and every caller must handle it.** `Shader::Create` constructs the
+  `OpenGLShader`, tests `IsValid()` (`m_RendererID != 0`), and on false logs ONE error line that
+  names the path, the driver and the compiler's first error (UX-V0 / KI-83), e.g.
+  `Shader::Create: shader 'assets/shaders/X.glsl' failed to build on renderer 'llvmpipe (LLVM 13.0.1,
+  256 bits)', OpenGL '4.5 (Core Profile) Mesa …': FRAGMENT stage: 0:9(22): error: … Returning nullptr.`
+  — the same text `GetLastCreateError()` returns. Compile and link failures additionally dump the
+  full log and the **preprocessed** source with line numbers (`OpenGLShader::DumpPreprocessedShader`),
+  which is what you want to read — the injected preamble shifts every line number away from your
+  file (the `0:9(22)` above is a preprocessed line).
 - **`Shader::Create` does NOT resolve VFS paths.** `OpenGLShader::ReadFile` opens the string with a
   bare `std::ifstream` (`OpenGLShader.cpp:84`). A `project://` or `engine://` path reaches the
   filesystem verbatim, fails to open, logs `"Could not open file '{0}'"` (`:95`), and you get
@@ -218,15 +222,17 @@ if (!fire)
   `AssetLibrary::GetShader`, which resolves for you.
 - **A file with no `#type` and no Shadertoy signature is a hard failure**: the preprocessor logs
   *"File contains no '#type' configurations and lacks Shadertoy compatibility signatures"* and
-  returns an empty source map (`OpenGLShader.cpp:151`), which links an empty program.
+  returns an empty source map; the shader then fails with *"no shader stage found"* without
+  compiling anything. A missing or empty file fails with *"could not read the file"*.
 - `RendererAPI::API::None` returns `nullptr` before touching the disk (`Shader.cpp:26`). In practice
   the API is always `OpenGL` (`RendererAPI.cpp:19`).
-- **Engine defect (Phase 30 candidate):** `OpenGLShader::m_RendererID` is declared with **no
-  initialiser** (`OpenGLShader.h:123`). On the compile-fail (`:438`) and link-fail (`:465`) paths
-  `Compile` returns before `m_RendererID = program` (`:468`), so `IsValid()` reads an
-  uninitialised `uint32_t` and the destructor passes it to `glDeleteProgram` (`:71`). In practice
-  fresh heap is usually zero and the null return happens anyway, but the failure path is formally
-  UB. One-word fix: `uint32_t m_RendererID = 0;`.
+- **`COSMIC_SHADER_OVERRIDE`** (environment, read on every `Create`):
+  `"<file name>=<path>[;<file name>=<path>…]"` — a `Create` whose path ends in `<file name>`
+  (case-insensitive) loads `<path>` instead and logs a warning. For trying a shader edit without a
+  rebuild; the VM02 render test uses it to feed a broken shader through this loader. Unset: no effect.
+- `OpenGLShader::m_RendererID` starts at `0` (UX-V0 / KI-83). It used to have no initialiser, so a
+  failed build left it indeterminate — in Debug the heap fill `0xCDCDCDCD` made a shader that never
+  compiled pass `IsValid()` and come back from `Create` as if it were valid.
 - Requires a current GL context.
 
 **See also** — [`Material::Create`](#materialcreate),

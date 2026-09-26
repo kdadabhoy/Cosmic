@@ -127,14 +127,16 @@ instantiated.
 ### `Renderer2D::Init`
 
 ```cpp
-static void Init();
+static bool Init();
+static const std::string& GetInitError();
 ```
 
 **What it does** — allocates the four host staging buffers, builds the shared quad index buffer, the
 four batch VAOs and the two instancing VAOs, creates the 1×1 white texture that owns slot 0, and
 loads six shaders: `Texture.glsl`, `Line.glsl`, `Circle.glsl`, `Text.glsl`, `CircleInstance.glsl`,
 `QuadInstance.glsl`. It also creates `Cosmic_Default_Material` over `Texture.glsl` — the sentinel
-every non-material draw compares against.
+every non-material draw compares against. Returns `false` when `Texture.glsl` (the batch quad
+shader) failed to build; `GetInitError()` then says why (empty after a successful `Init`).
 
 **Why you'd use it** — you almost never call it. `Renderer::Init()` does (`Renderer.cpp:26`), and
 `Application` calls that. Call it directly only in a headless/offscreen harness that drives GL
@@ -145,18 +147,27 @@ itself, as `tests/render/render_main.cpp:100` does.
 ```cpp
 // Only in a custom host that owns the GL context itself.
 Cosmic::RenderCommand::Init();
-Cosmic::Renderer2D::Init();
+if (!Cosmic::Renderer2D::Init())
+{
+    std::fprintf(stderr, "renderer unavailable: %s\n", Cosmic::Renderer2D::GetInitError().c_str());
+    Cosmic::Renderer2D::Shutdown();   // always safe: Init builds everything else regardless
+    return 2;
+}
 ```
 
 **Notes & pitfalls**
 - **Shader paths are literal, not VFS.** `Shader::Create("assets/shaders/Texture.glsl")` is resolved
   relative to the process working directory, not through `FileSystem::Resolve`.
-- **Failure is per-shader and mostly non-fatal.** A failed `Line.glsl`, `Circle.glsl`, `Text.glsl`,
-  `CircleInstance.glsl` or `QuadInstance.glsl` logs `CS_CORE_ERROR` and `Init` continues; the
-  corresponding batch then silently draws nothing (`Flush` guards text on a null shader; the line
-  and circle paths would dereference a null `Ref` at flush time). Only `Texture.glsl` is guarded by
-  `CS_CORE_ASSERT` (`:238`) — **and that macro is compiled out in every configuration**, so a
-  missing core shader is an unchecked null dereference at the first flush, not a diagnostic.
+- **Failure is per-shader; only the batch quad shader is fatal (UX-V0 / KI-83).** A failed
+  `Line.glsl`, `Circle.glsl`, `Text.glsl`, `CircleInstance.glsl` or `QuadInstance.glsl` logs
+  `CS_CORE_ERROR` and `Init` continues; that batch then draws nothing (`Flush` skips a batch whose
+  shader is null; the instanced verbs return early with a log). A failed `Texture.glsl` logs one
+  `CS_CORE_CRITICAL`, `Init` still builds everything else (so `Shutdown` is symmetric and every draw
+  verb is a safe no-op for quads) and returns `false`. `Application` turns that into a clean start-up
+  failure: one CRITICAL line, `Run()` returns at once, and the host exits with
+  `Application::StartupFailureExitCode` (2) after telling the user (stderr, or a message box when a
+  GUI build has no console). Before UX-V0 this was a compiled-out `CS_CORE_ASSERT` followed by a null
+  dereference (exit `0xC0000005` on Mesa/llvmpipe, which rejected the pre-UX-V0 `Texture.glsl`, KI-82).
 - Calling `Init` twice leaks the previous host buffers (raw `new[]`, no delete on the second pass).
 - Requires a current GL context.
 

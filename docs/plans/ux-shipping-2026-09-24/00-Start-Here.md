@@ -124,6 +124,8 @@ Nothing in this packet is executed by reading it. Engine behaviour changes only 
 
 ```
 Wave 0  UX-00   packet                                               done in the planning session, on main
+Wave 1a UX-V0   VM enablement: conformant batch shaders, no crash    worktree ux/v0, from 353948b (added
+                on a failed shader (KI-82/83)                        2026-09-25 on the VM); lands BEFORE UX-01
 Wave 1  UX-01   flow editor + Editors host                           worktree ux/01 ┐ from the UX-00 commit;
         UX-02   viewport, hierarchy, inspector, scenes, autosave     worktree ux/02 ├ disjoint files;
         UX-03   launcher hygiene, samples, welcome, default template worktree ux/03 ┘ land 01 → 02 → 03
@@ -137,7 +139,7 @@ Wave 4  UX-D3   developer-tier updates (post-rename)                 worktree ux
 Wave 5  UX-Q1   qualify, DOC02 from the zip, release report          main, alone (soaks: D-SOAKS)
 ```
 
-Landing order into `main`: UX-00 → UX-01 → UX-02 → UX-03 → UX-04 → UX-G0 → UX-D2 → UX-D1 → UX-05 → UX-H1 →
+Landing order into `main`: UX-00 → UX-V0 → UX-01 → UX-02 → UX-03 → UX-04 → UX-G0 → UX-D2 → UX-D1 → UX-05 → UX-H1 →
 UX-D3 → UX-Q1.
 
 ## Session guide

@@ -10,6 +10,9 @@ cross-check. Model recommendations and the run table are in
 ```
 UX-00  packet ............................................ done (planning session, on main)
   │
+UX-V0  VM enablement: conformant batch shaders, no crash on a failed shader (ux/v0; wave 1a,
+  │    added 2026-09-25 on the VMware VM; lands before UX-01 — every VM run of the editor needs it)
+  │
   ├── UX-01 flow editor + Editors host (ux/01) ──────────┐
   ├── UX-02 viewport/hierarchy/inspector/scenes/autosave ├─ wave 1, land in this order
   └── UX-03 launcher hygiene + samples + welcome (ux/03) ┘
@@ -33,13 +36,14 @@ same time, and their "Owns" sets are pairwise disjoint
 
 ## Landing order
 
-`UX-00 → UX-01 → UX-02 → UX-03 → UX-04 → UX-G0 → UX-D2 → UX-D1 → UX-05 → UX-H1 → UX-D3 → UX-Q1`
+`UX-00 → UX-V0 → UX-01 → UX-02 → UX-03 → UX-04 → UX-G0 → UX-D2 → UX-D1 → UX-05 → UX-H1 → UX-D3 → UX-Q1`
 
 ## The work orders
 
 | WO | Gate | Title | Items | Depends on | Acceptance | Prompt |
 | --- | --- | --- | --- | --- | --- | --- |
 | UX-00 | G0 | Packet | — | — | checkers exit 0 | this packet |
+| UX-V0 | G1 | VM enablement: `Texture.glsl` / `QuadInstance.glsl` index `u_Textures` with literals only (KI-82), a failed engine shader is a clean failure, never an access violation (KI-83), the checker's GLSL pass | VM (2026-09-25) | UX-00 | VM01–VM03 | [UX-V0.md](work-orders/UX-V0.md) |
 | UX-01 | G1 | Flow editor: size/dock/focus, backward-link routing, trigger-kind picker, Editors ✕ | 5, 6, 7, 8 | UX-00 | FE01–FE05 | [UX-01.md](work-orders/UX-01.md) |
 | UX-02 | G1 | One gizmo per selection, UI Active semantics, flow-usage in the Inspector, Scenes list, Preferences + unsaved prompt | 16, 17, 18, 19, 21 | UX-00 | ED01–ED05 | [UX-02.md](work-orders/UX-02.md) |
 | UX-03 | G1 | Fixture marker + launcher skip, samples from disk incl. PendulumLab, welcome, App default | 20, 4 | UX-00 | LH01–LH02 | [UX-03.md](work-orders/UX-03.md) |
@@ -74,9 +78,14 @@ G4 developer docs consistent · G5 qualified, released state staged for Kaden.
 | LH02 | UX-03 | WM02 | UX-G0 | Y03, S01, S02, N02-drift-2h, T05 | deferred → [TESTING-PLAN](../TESTING-PLAN.md) (D-SOAKS; UX-Q1 runs the S01 fake-clock leg) |
 | — | — | WM03 | UX-G0 | S03, K02 (rerun), retained suites | UX-Q1 |
 | SD05 | UX-04 (D-TOOLCHAIN) | DG03 | UX-D1 (D-TOOLCHAIN) | H1-E, H1-F | UX-H1 (D-TOOLCHAIN) |
+| VM01 | UX-V0 | VM02 | UX-V0 | VM03 | UX-V0 |
 
 ## Per-WO gate / done-when summary
 
+- **UX-V0** — the extended `check_gl_conformance.ps1` exits 1 on the unfixed shaders and 0 after; no shader compile
+  error in the Starforge / CosmicApp / CosmicRenderTests logs under llvmpipe (Debug + Release); the VM02 render test
+  passes both configs; Starforge starts in the VM and `wo07-l05` + `ap03-editor` pass both configs; KI-82/83
+  registered then closed; the real-GPU render run is Kaden's (`evidence/UX-V0/HOST-VERIFY.md`).
 - **UX-01** — FE01–FE05 green Debug+Release; `.cflow` bytes of every tracked flow unchanged after open +
   save; the vendored patch documented; KIs for items 7 and 8 registered then closed.
 - **UX-02** — ED01–ED05 green; `test_ui_widgets`/`test_ap03_editor` extended, E08 still green; KIs for

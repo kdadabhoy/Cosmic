@@ -1,0 +1,54 @@
+UX-V0 passing-after excerpts - final verification on clean rebuilds (cmake --build --clean-first, both configs)
+Machine/toolchain: see report.md section 2. Source = the lane HEAD named below (code identical to 1538b2d; later commits are docs/evidence).
+
+HEAD 445b303cba8950bc731ddc539f75120608ce3927
+Release clean build: exit=0 secs=280 warnings=0 errors=0
+Debug clean build: exit=0 secs=189 warnings=0 errors=0
+
+final verification, HEAD 6bd88cc667a8a1565bad818c16b13332f2de6984, started 2026-09-25T23:48:56
+Release CosmicRenderTests (full): exit=1 secs=54 :: [doctest] test cases:       48 |       46 passed | 2 failed | 2 skipped
+    Release CosmicRenderTests log: files=1 compile_failures=4 link_failures=0 Shader::Create_errors=5 non_fixture=0 -> CLEAN
+Release CosmicRenderTests --test-suite="UX-V0 VM02": exit=0 secs=1 :: [doctest] test cases:  3 |  3 passed | 0 failed | 47 skipped
+Release Starforge.exe normal start: running after 45 s (stopped by PID) :: Release Starforge.exe start: files=2 compile_failures=0 link_failures=0 Shader::Create_errors=0 non_fixture=0 -> CLEAN
+Release CosmicApp.exe normal start: running after 45 s (stopped by PID) :: Release CosmicApp.exe start: files=1 compile_failures=0 link_failures=0 Shader::Create_errors=0 non_fixture=0 -> CLEAN
+Release Starforge.exe with COSMIC_SHADER_OVERRIDE=Texture.glsl=<broken>: exit= :: stderr: 
+Release CosmicApp.exe with COSMIC_SHADER_OVERRIDE=Texture.glsl=<broken>: exit= :: stderr: 
+Debug CosmicRenderTests (full): exit=1 secs=140 :: [doctest] test cases:       48 |       46 passed | 2 failed | 2 skipped
+    Debug CosmicRenderTests log: files=1 compile_failures=4 link_failures=0 Shader::Create_errors=5 non_fixture=0 -> CLEAN
+Debug CosmicRenderTests --test-suite="UX-V0 VM02": exit=0 secs=3 :: [doctest] test cases:  3 |  3 passed | 0 failed | 47 skipped
+Debug Starforge.exe normal start: running after 45 s (stopped by PID) :: Debug Starforge.exe start: files=2 compile_failures=0 link_failures=0 Shader::Create_errors=0 non_fixture=0 -> CLEAN
+Debug CosmicApp.exe normal start: running after 45 s (stopped by PID) :: Debug CosmicApp.exe start: files=1 compile_failures=0 link_failures=0 Shader::Create_errors=0 non_fixture=0 -> CLEAN
+Debug Starforge.exe with COSMIC_SHADER_OVERRIDE=Texture.glsl=<broken>: exit= :: stderr: 
+Debug CosmicApp.exe with COSMIC_SHADER_OVERRIDE=Texture.glsl=<broken>: exit= :: stderr: 
+Release CosmicTests: exit=0 secs=427 :: [doctest] test cases:      523 |      523 passed | 0 failed | 14 skipped
+Debug CosmicTests: exit=0 secs=571 :: [doctest] test cases:      523 |      523 passed | 0 failed | 14 skipped
+check_gl_conformance : exit=0 :: GLSL sampler indexing: clean (29 *.glsl file(s) scanned, no sampler array indexed by a non-literal). | GL conformance: clean (no raw gl*/GL_* tokens outside the platform layer).
+check_docs_coverage : exit=0 ::  | Docs coverage: clean (123 public headers, 120 manifest rows, 5 reference chapter(s) still skeletons, 5 chapter(s) outside docs/reference/ so exempt from strict mode).
+check_docs_links : exit=0 ::   warn-only breakages (archive / parked-3d / stability evidence): 62 | Markdown link audit passed.
+finished 2026-09-26T00:12:20
+DONE
+Release Starforge.exe with COSMIC_SHADER_OVERRIDE=Texture.glsl=<broken> (rerun; the first attempt's script passed an empty ArgumentList): exit=2 :: stderr: Fatal: Starforge could not start: the renderer could not start: the batch quad shader could not be built (shader 'assets/shaders/Texture.glsl' (overridden to 'C:\dev\Cosm :: last log line: [2026-09-26 00:12:43.018] [COSMIC] [trace] Application Subsystems safely terminated.
+Release CosmicApp.exe with COSMIC_SHADER_OVERRIDE=Texture.glsl=<broken> (rerun; the first attempt's script passed an empty ArgumentList): exit=2 :: stderr: Fatal: CosmicApp could not start: the renderer could not start: the batch quad shader could not be built (shader 'assets/shaders/Texture.glsl' (overridden to 'C:\dev\Cosm :: last log line: [2026-09-26 00:12:43.410] [COSMIC] [trace] Application Subsystems safely terminated.
+Debug Starforge.exe with COSMIC_SHADER_OVERRIDE=Texture.glsl=<broken> (rerun; the first attempt's script passed an empty ArgumentList): exit=2 :: stderr: Fatal: Starforge could not start: the renderer could not start: the batch quad shader could not be built (shader 'assets/shaders/Texture.glsl' (overridden to 'C:\dev\Cosm :: last log line: [2026-09-26 00:12:43.815] [COSMIC] [trace] Application Subsystems safely terminated.
+Debug CosmicApp.exe with COSMIC_SHADER_OVERRIDE=Texture.glsl=<broken> (rerun; the first attempt's script passed an empty ArgumentList): exit=2 :: stderr: Fatal: CosmicApp could not start: the renderer could not start: the batch quad shader could not be built (shader 'assets/shaders/Texture.glsl' (overridden to 'C:\dev\Cosm :: last log line: [2026-09-26 00:12:44.222] [COSMIC] [trace] Application Subsystems safely terminated.
+
+---- the two llvmpipe golden misses (not authoritative on this VM; HOST-VERIFY.md), identical in both configs and to the orchestrator's 43/45 experiment ----
+golden 'instancing2d': 68 / 57600 pixels differ (0.118056%, budget 0.1%), max channel delta 13 (tolerance 2), first at (135, 27). Wrote inst
+golden 'wo08_text': 74 / 57600 pixels differ (0.128472%, budget 0.1%), max channel delta 8 (tolerance 2), first at (26, 34). Wrote wo08_text
+
+---- VM02 start-up leg, Release CosmicApp.exe stderr (override run) ----
+Fatal: CosmicApp could not start: the renderer could not start: the batch quad shader could not be built (shader 'assets/shaders/Texture.glsl' (overridden to 'C:\dev\Cosmic\build\_lanes\ux-v0\tests\render\fixtures\ux_v0\ux_v0_broken.glsl') failed to build on renderer 'llvmpipe (LLVM 13.0.1, 256 bits)', OpenGL '4.5 (Core Profile) Mesa 24.1.0': FRAGMENT stage: 0:13(20): error: `ux_v0_undeclared' undeclared)
+The log in 'C:\dev\Cosmic\build\_lanes\ux-v0\build\Runtime\Release\logs' has the details.
+
+---- Release Starforge.exe log tail (override run): the clean start-up failure ----
+[2026-09-26 00:12:42.842] [COSMIC] [trace] Initializing Renderer2D...
+[2026-09-26 00:12:42.843] [COSMIC] [warning] Shader::Create: COSMIC_SHADER_OVERRIDE loads 'C:\dev\Cosmic\build\_lanes\ux-v0\tests\render\fixtures\ux_v0\ux_v0_broken.glsl' in place of 'assets/shaders/Texture.glsl'.
+[2026-09-26 00:12:42.865] [COSMIC] [error] Shader::Create: shader 'assets/shaders/Texture.glsl' (overridden to 'C:\dev\Cosmic\build\_lanes\ux-v0\tests\render\fixtures\ux_v0\ux_v0_broken.glsl') failed to build on renderer 'llvmpipe (LLVM 13.0.1, 256 bits)', Ope
+[2026-09-26 00:12:42.866] [COSMIC] [critical] Renderer2D: the batch quad shader could not be built (shader 'assets/shaders/Texture.glsl' (overridden to 'C:\dev\Cosmic\build\_lanes\ux-v0\tests\render\fixtures\ux_v0\ux_v0_broken.glsl') failed to build on rendere
+[2026-09-26 00:12:42.890] [COSMIC] [critical] Application: the renderer could not start: the batch quad shader could not be built (shader 'assets/shaders/Texture.glsl' (overridden to 'C:\dev\Cosmic\build\_lanes\ux-v0\tests\render\fixtures\ux_v0\ux_v0_broken.gl
+[2026-09-26 00:12:42.890] [COSMIC] [trace] Shutting down Application Subsystems...
+[2026-09-26 00:12:42.925] [COSMIC] [trace] Shutting down Renderer2D
+[2026-09-26 00:12:43.018] [COSMIC] [trace] Application Subsystems safely terminated.
+
+---- goldens ----
+golden-hashes-before.txt vs golden-hashes-after.txt: identical (15 files); git status --short tests/render/goldens: empty

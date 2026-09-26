@@ -48,9 +48,10 @@ namespace Cosmic
 		/**
 		 * SYSTEM LIFECYCLE
 		 * These methods are called by the Application to manage the GPU's state.
-		 * Init() wakes up RenderCommand and Renderer2D.
+		 * Init() wakes up RenderCommand and Renderer2D; false when Renderer2D
+		 * cannot run (Renderer2D::GetInitError() says why — UX-V0 / KI-83).
 		 */
-		static void Init();
+		static bool Init();
 		static void Shutdown();
 
 		/**

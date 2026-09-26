@@ -41,6 +41,32 @@ save rename race) — re-run such a failure alone before registering a KI.
 Open orchestrator TODOs: `01-Contracts.md` §12 acceptance index (≈ line 324) still lists the soaks under UX-Q1 — fix
 it to point at TESTING-PLAN.md after wave 1 lands (UX-02/03 edit that file); README next-free KI as above.
 
+**UX-V0 contract rows (added by UX-V0 on 2026-09-25; it left `01-Contracts.md` alone because the wave-1 lanes edit
+it).** UX-V0 lands before UX-01 and registered KI-82/83 and, for the orchestrator, KI-84 (README's next entry is now **KI-85**; KI-66..81 stay with the
+wave-1 lanes). After wave 1 lands, in the same `01-Contracts.md` commit as the D-TOOLCHAIN rows below:
+
+1. **§10 ownership** — a UX-V0 row (landed; recorded so later lanes know who changed what). **Owns:**
+   `Cosmic/assets/shaders/Texture.glsl`, `Cosmic/assets/shaders/QuadInstance.glsl`; `Cosmic/src/graphics/Shader.{h,cpp}`
+   (failure line, `GetLastCreateError`, `COSMIC_SHADER_OVERRIDE`); `Cosmic/src/platform/OpenGL/OpenGLShader.{h,cpp}`
+   (`m_RendererID = 0`, `GetFailureReason`, `DescribeContext`); `Cosmic/src/renderer/Renderer2D.{h,cpp}` (`Init` → bool,
+   `GetInitError`, the three `Flush` guards); `Cosmic/src/renderer/Renderer.{h,cpp}` (`Init` → bool);
+   `tests/render/render_ux_v0_shader_failure.cpp` + `tests/render/fixtures/ux_v0/**`; the sampler-index pass of
+   `tests/check_gl_conformance.ps1`; `evidence/UX-V0/**`. **May touch (shared, landed):**
+   `Cosmic/src/core/Application.{h,cpp}` (the start-up-failure lines after `Renderer::Init`, the members at the end of
+   the class, the `m_Framebuffer` guard in `OnWindowResize`) and `Runtime/Main.cpp` (`ReportStartupFailure` + its call)
+   — UX-H1 later adds its crash-dump install lines to the same two files (different lines); `tests/render/render_main.cpp`
+   (the `Init` check); `tests/render/CMakeLists.txt` (one TU, one define, `add_dependencies(... CosmicApp)`);
+   `tests/render/fixtures/wo08/wo08_tint_quad{,_instance}.glsl` (the same KI-82 fetch); docs text for the changed code:
+   `docs/guide/materials-and-shaders.md` (the batch-shader example + "Index u_Textures with literals only"),
+   `docs/reference/graphics-resources.md` (`Shader::Create`), `docs/reference/rendering-2d.md` (`Renderer2D::Init`),
+   `docs/reference/core.md` (Application start-up failure) — UX-D1's rename and UX-D3's sweep carry these along.
+2. **§11 new surface** rows: `Shader::GetLastCreateError()` + the one-line failure message (VM02); the
+   `COSMIC_SHADER_OVERRIDE` environment variable (VM02); `Renderer2D::Init()` → `bool` + `Renderer2D::GetInitError()`
+   and `Renderer::Init()` → `bool` (VM02); `Application::StartedSuccessfully()` / `GetStartupError()` / `GetExitCode()`
+   / `StartupFailureExitCode = 2` and the host's `COSMIC_NO_FATAL_DIALOG=1` (VM02); the GLSL sampler-index pass of
+   `check_gl_conformance.ps1` (VM01).
+3. **§12 acceptance index** — a `VM01–VM03 | UX-V0` cell.
+
 **D-TOOLCHAIN contract changes (added 2026-09-25; `01-Contracts.md` was left alone because the wave-1 lanes edit it).**
 Kaden kept MSVC as the only supported toolchain and added SD05 (UX-04), H1-E/H1-F (UX-H1) and DG03 (UX-D1) to the
 not-yet-started WOs; the prompts, `00-Start-Here.md`, `02-Work-Orders.md` and `03-Acceptance-Catalog.md` already carry

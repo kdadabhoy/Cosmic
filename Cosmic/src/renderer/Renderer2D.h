@@ -25,8 +25,13 @@ namespace Cosmic
         // Lifecycle
         /////////////////////////////////////////////////////////////////////////////////
 
-        static void Init();
+        // False when the batch quad shader (assets/shaders/Texture.glsl) failed to
+        // build — nothing can be drawn; GetInitError() says why (UX-V0 / KI-83).
+        // Init still builds everything else, so Shutdown() is always safe. The
+        // other shaders are optional: a failure logs and that batch is skipped.
+        static bool Init();
         static void Shutdown();
+        static const std::string& GetInitError();
 
         /////////////////////////////////////////////////////////////////////////////////
         // Scene / Pass Control

@@ -32,6 +32,7 @@
 #include "renderer/RenderCommand.h"
 #include "renderer/Renderer2D.h"
 
+#include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <filesystem>
@@ -98,7 +99,17 @@ int main(int argc, char** argv)
     // renderer class without COSMIC_API, so it is not callable across the DLL
     // boundary; its two subsystem calls both are.
     Cosmic::RenderCommand::Init();
-    Cosmic::Renderer2D::Init();
+    if (!Cosmic::Renderer2D::Init())
+    {
+        // UX-V0 / KI-83: the driver refused the batch shader. Every golden would
+        // fail for that one reason — say it once and stop (it used to be a null
+        // dereference inside Init).
+        std::fprintf(stderr, "CosmicRenderTests: Renderer2D::Init failed: %s\n",
+                     Cosmic::Renderer2D::GetInitError().c_str());
+        Cosmic::Renderer2D::Shutdown();
+        window.reset();
+        return 2;
+    }
 
     // Deterministic starting state: the engine defaults the goldens were
     // captured under. Every suite sets its own pass state on top of this.
