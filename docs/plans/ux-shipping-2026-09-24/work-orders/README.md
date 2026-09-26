@@ -10,7 +10,8 @@ prompt and any older document disagree, **the prompt wins** and the session says
 
 The single running known-issue register is
 [`../../2d-stability-2026-09-16/contracts/known-issues.md`](../../2d-stability-2026-09-16/contracts/known-issues.md)
-— next entry **KI-66**. Every crash / hang / data loss / wrong-behaviour defect found by any UX session is
+— next entry **KI-82** (KI-66..81 are pre-allocated to the wave-1 lanes, see [`RESUME.md`](RESUME.md); UX-V0
+takes KI-82/83). Every crash / hang / data loss / wrong-behaviour defect found by any UX session is
 appended there with a minimal regression and a disposition, using its template, **before** it is fixed. A
 missing fixture or skipped test is never logged as a pass.
 
@@ -104,6 +105,27 @@ glob has no `CONFIGURE_DEPENDS`). The acceptance runner's `-Manifest` resolves r
 Retained manifests rewrite tracked evidence files under the App Platform packet: `git checkout --` them and
 delete `n04-*.bin` / `recordings/` from the tree root before committing. Bash heredocs over ~12 k characters
 fail: use the Write/Edit tools. Python is `py -3`.
+
+## Environment: the VMware VM (from 2026-09-25)
+
+The campaign resumed on a VMware Workstation VM (8 vCPU, 16 GB, Windows 11, VS Community 2026 / MSVC
+14.51.36231, cmake 4.3.1, Python 3.13 via `py`, Inno Setup 6.7.3). There is **no real GPU**: OpenGL is
+`OpenGL 4.5 — llvmpipe (LLVM 13.0.1)`, VMware's Mesa software renderer, with 3D acceleration left on.
+
+- Valid in the VM: builds, CosmicTests, the checkers, the editor self-tests and acceptance manifests (once
+  [UX-V0](UX-V0.md) has landed — before it, Starforge crashes on the non-conformant batch shader), capture-driver
+  guide pictures.
+- CosmicRenderTests golden comparisons are **not authoritative** here: llvmpipe rasterises slightly differently
+  (43/45 with the UX-V0 experiment; `instancing2d`, `wo08_text` just over budget). Never loosen a tolerance or
+  regenerate a golden. Run them, record the counts, and list the real-GPU check as HOST-VERIFY in the report with
+  the exact commands — Kaden runs them on his host.
+- Mesa is a strict GLSL compiler: a shader NVIDIA/AMD accept may fail here. That is a real defect (KI), not an
+  environment issue.
+- llvmpipe is CPU-heavy: with two lanes at once use `--parallel 4`, expect editor self-tests to run slower, and
+  re-run a timeout alone once before calling it a failure. At most **two** lane agents at once on this VM.
+- The OS cursor is shared by every lane; a self-test that moves it must tolerate a disturbed input.
+- Baseline at `d815252` (this VM, Release): configure 33 s, build 6 min with `--parallel 4`, 0 warnings;
+  CosmicTests 523/0/14 in 274 s.
 
 ## Baseline at `0c2edd8`
 
