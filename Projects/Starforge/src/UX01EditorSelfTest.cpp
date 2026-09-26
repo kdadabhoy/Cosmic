@@ -26,7 +26,8 @@
 //         the Content Browser's double-click request -> Dirty() == false after two drawn
 //         frames (and ten); an injected drag of its node dirties it.
 //
-// Verdict -> exit code: PASS -> graceful close; FAIL -> quick_exit(1). JSON always written.
+// Verdict -> exit code: PASS -> graceful close; FAIL -> TerminateProcess(1) after the result JSON
+// and the console excerpt are closed (KI-85). JSON always written.
 
 #include "StarforgeApp.h"
 #include "editors/FlowEditor.h"
@@ -737,6 +738,7 @@ namespace Starforge
             for (size_t i = 0; i < t.log.size(); ++i) f << "    \"" << Esc(t.log[i]) << "\"" << (i + 1 < t.log.size() ? "," : "") << "\n";
             f << "  ]\n}\n";
         }
+        f.close();   // KI-85: the FAIL exit below runs no destructors, so the result is flushed and closed here
         {
             std::ofstream c(fs::path(t.resultPath).parent_path() / "ux01-editor-console.txt", std::ios::trunc);
             for (const auto& l : m_Ctx.ConsoleLines) c << l.Text << "\n";
@@ -746,6 +748,7 @@ namespace Starforge
                     t.oracle.contextDrift.load());
         std::fflush(stdout);
         if (pass) Cosmic::Application::Get().Close();
-        else      std::quick_exit(1);
+        else      ::TerminateProcess(::GetCurrentProcess(), 1);   // KI-85: exit code 1 on every GL driver (quick_exit
+                                                                  // ended in 0xC0000409 under Mesa llvmpipe)
     }
 }
