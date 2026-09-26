@@ -76,6 +76,17 @@ Nothing in this packet is executed by reading it. Engine behaviour changes only 
   (S01-native, Y03, S02, N02-drift-2h, T05) and their drivers are **postponed out of this campaign** to
   [`../TESTING-PLAN.md`](../TESTING-PLAN.md). UX-Q1 runs the quick legs (S01 fake-clock, S03 ×5, K02) and reports
   the soaks as not run — deferred, never as a pass.
+- **D-TOOLCHAIN** (Kaden, 2026-09-25, before wave 2) — **MSVC stays the only supported toolchain** for the engine, the
+  editor and user projects in this campaign: Visual Studio Community 2026 or the Build Tools for Visual Studio 2026,
+  workload "Desktop development with C++". A bundled llvm-mingw "zero-install" SDK flavour is **designed in
+  [`../TOOLCHAIN-PLAN.md`](../TOOLCHAIN-PLAN.md) and built later** (the `Cosmic.dll` ↔ project-DLL boundary exports
+  C++ classes, so a second toolchain means a second SDK flavour, never mixing). This campaign adds only the friction
+  fixes, each in a not-yet-started WO: **UX-04** — the VC++ runtime in every app package, the SDK zip and
+  Starforge-Setup (a real defect: today's packages carry none; a KI registered first) and `sdk.toml` gains
+  `toolchain = "msvc"` (SD05); **UX-H1** — Starforge's compiler check (one clear message with the winget one-liner
+  instead of a raw build failure) and the acceptance fixture's cmake path via vswhere (H1-E, H1-F); **UX-D1** — guide
+  00's "Install the C++ compiler" step and Build Tools in the README prerequisites (DG03); **UX-Q1** — qualifies the
+  new IDs and states D-TOOLCHAIN in its report.
 - Carried over unchanged: **D-commit** (author `kdadabhoy <kdadabhoy28@gmail.com>`, no AI trailer, the AI
   never pushes, never publishes a release), **D-LANES** (one worktree per parallel lane under
   `build\_lanes\`, at most three sessions at once, disjoint files, rebase + retained suites before landing),
@@ -107,6 +118,7 @@ Nothing in this packet is executed by reading it. Engine behaviour changes only 
 | 20 | Test fixtures in "Engine demos & tools" | UX-03 |
 | 21 | Autosave, toggleable, interval | UX-02 · guide 07 |
 | — | Carry-over: KI-63, dead-3D tidy, AP-H1 hardening, soaks | UX-04 · UX-H1 · [TESTING-PLAN](../TESTING-PLAN.md) (D-SOAKS) |
+| — | Added 2026-09-25 (D-TOOLCHAIN): the VC++ runtime missing from shipped packages; a clear "no C++ compiler" message; the install step in guide 00 | UX-04 (SD05) · UX-H1 (H1-E, H1-F) · UX-D1 (DG03) · UX-Q1 (re-run) · the bundled toolchain → [TOOLCHAIN-PLAN](../TOOLCHAIN-PLAN.md) |
 
 ## Waves (12 sessions; never more than three at once)
 
@@ -164,3 +176,8 @@ errors + missing channels in one list); a generic `--selftest` flag on packaged 
 pattern); crash dumps in shipped apps (UX-H1 does the editor); the UDP/CAN link + COBS codec (stability
 backlog A2) before to-9km; a serial-port simulator surfaced in the editor; a Starforge version check against
 the GitHub Releases feed once the SDK zip exists; animated (GIF) strips for the guides (stability A1).
+
+The bundled llvm-mingw toolchain — a second, "zero-install" SDK flavour so a user can build a project DLL with only
+Starforge installed — is designed in [`../TOOLCHAIN-PLAN.md`](../TOOLCHAIN-PLAN.md) (steps T0..T10, acceptance
+TC01..TC11) and built later (D-TOOLCHAIN): it unlocks once this campaign has closed and the App Platform is quiet,
+and Kaden decides whether zero-install is worth the doubled build and qualification matrix.

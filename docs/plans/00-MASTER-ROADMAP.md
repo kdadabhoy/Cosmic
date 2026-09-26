@@ -20,10 +20,11 @@
 
 | Doc | Covers |
 | --- | --- |
-| [`ux-shipping-2026-09-24/`](ux-shipping-2026-09-24/00-Start-Here.md) | **The current campaign.** Kaden's 21 usability/shipping items: editor defects, guides-first docs, the SDK zip + Starforge installer, the app-in-its-own-repo path, the 2D world-mode contract; decisions D-SHIP/D-LIBRARY/D-SPECIMEN/D-GUIDES/D-SAMPLES/D-WORLD/D-LAUNCHER, work orders UX-00..UX-Q1, acceptance catalog, evidence |
+| [`ux-shipping-2026-09-24/`](ux-shipping-2026-09-24/00-Start-Here.md) | **The current campaign.** Kaden's 21 usability/shipping items: editor defects, guides-first docs, the SDK zip + Starforge installer, the app-in-its-own-repo path, the 2D world-mode contract; decisions D-SHIP/D-LIBRARY/D-SPECIMEN/D-GUIDES/D-SAMPLES/D-WORLD/D-LAUNCHER/D-SOAKS/D-TOOLCHAIN, work orders UX-00..UX-Q1, acceptance catalog, evidence |
 | [`app-platform-2026-09-18/`](app-platform-2026-09-18/00-Start-Here.md) | The App Platform campaign (priority scope done 2026-09-20; its remainder — AP-D2, KI-63, tidy, soaks, hardening — is absorbed by the UX packet). Decisions D-UI/D-LANES/D-SAMPLE/D-DOCS/D-PURGE/D-LIVE/D-LINKS, contracts, work orders AP-00..AP-Q1, acceptance catalog, evidence |
 | [`2d-stability-2026-09-16/`](2d-stability-2026-09-16/00-Start-Here.md) | The closed stability campaign (WO-00..WO-10 done; WO-11/12/13 absorbed by the App Platform packet); the running [known-issues register](2d-stability-2026-09-16/contracts/known-issues.md) |
 | [`TESTING-PLAN.md`](TESTING-PLAN.md) | The testing not run inside a campaign: the multi-hour soaks (postponed by Kaden 2026-09-24), their commands and missing drivers, and the clean-machine / by-a-person checks |
+| [`TOOLCHAIN-PLAN.md`](TOOLCHAIN-PLAN.md) | The bundled llvm-mingw "zero-install" SDK flavour — designed now, built later (D-TOOLCHAIN, Kaden 2026-09-25: MSVC stays the only supported toolchain meanwhile); steps T0..T10, acceptance TC01..TC11, risks, effort, what unlocks it |
 | [`FEATURE-MATRIX.md`](FEATURE-MATRIX.md) | Living index: every missing/parked capability → home → unlock; the 3D rows now sit under "Parked (engine-3d)" |
 | [`archive/`](archive/) | Every completed/superseded plan (docs 01–29 and the v4 roadmap), each with an `ARCHIVED` banner and replacement link |
 | [`archive/2d-trunk-consolidation-brief-2026-09.md`](archive/2d-trunk-consolidation-brief-2026-09.md) | The original 2026-09 consolidation brief that both packets grew from (superseded by them) |
@@ -125,6 +126,7 @@ From [`app-platform-2026-09-18/00-Start-Here.md`](app-platform-2026-09-18/00-Sta
 | `UiText.Wrap` | contracts §3 (bound widgets) | long readout labels |
 | GIF/MP4 export (stability **A1** animated export: deterministic frame sequence first) | capture path (WO-08 R-series) | a showcase/trailer need |
 | Polygon fills (stability **A3**), analysis widgets (**A5**), 2D-native particles (**A4**) | `Renderer2D` / UI widgets | the analysis sample or a 2D game demonstrates repeated need |
+| Bundled C++ toolchain: a second, llvm-mingw SDK flavour so a project DLL builds with only Starforge installed — plan in [`TOOLCHAIN-PLAN.md`](TOOLCHAIN-PLAN.md) | the SDK layout (UX-04's `sdk.toml` `toolchain` key) + `BuildRunner` + the packager | the UX campaign closed and the App Platform quiet; Kaden decides zero-install is worth a second flavour (D-TOOLCHAIN) |
 | Everything 3D | — | 3D resumes on `engine-3d`; see [`../parked-3d/README.md`](../parked-3d/README.md) (parked 3D) for how |
 
 ## Acceptance ledger (user-run items — never silently dropped)

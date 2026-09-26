@@ -75,9 +75,10 @@ The orchestrator prompt is [`ORCHESTRATOR.md`](ORCHESTRATOR.md).
   verified on `main`.
 - **L4 — shared files.** `Projects/Starforge/src/StarforgeApp.cpp` (three wave-1 lanes, disjoint line
   ranges named in each prompt), `docs/reference/README.md`, `.github/workflows/ci.yml`,
-  `.github/workflows/release.yml`, `Projects/Starforge/CMakeLists.txt`, `tests/CMakeLists.txt` and
-  `docs/guides/06-package-and-ship.md` are touched by more than one WO; each prompt says which lines/rows it
-  may add. Resolve conflicts by keeping both sides.
+  `.github/workflows/release.yml`, `Projects/Starforge/CMakeLists.txt`, `tests/CMakeLists.txt`,
+  `docs/guides/06-package-and-ship.md` and `docs/guides/00-get-starforge.md` (UX-D1 writes it; UX-H1 adds the
+  compiler-check picture at its landing, D-TOOLCHAIN) are touched by more than one WO; each prompt says which
+  lines/rows it may add. Resolve conflicts by keeping both sides.
 - **L5 — registers.** Defects → the KI register (rule above); new surface (prefs keys, marker export,
   presets, SDK layout, guides manifest) → `01-Contracts.md` §11 table rows with the acceptance ID that
   proves each one. **KI numbers under concurrency:** three lanes of one wave would all take the next free

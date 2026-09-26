@@ -3,25 +3,32 @@
 **Gate:** G3 · **Wave:** 3 (worktree; alongside UX-D1 and UX-05) · **Runs:** worktree `ux/h1` at `build\_lanes\ux-h1` ·
 **Base:** `main` after UX-04 → UX-G0 → UX-D2 have landed (post-wave-2); lands last in wave 3 (D1 → 05 → H1) ·
 **Depends on:** UX-03 (fixture marker), UX-G0 (§6 world contract), UX-D2 (API matrix + checker) · **Acceptance:** H1-A,
-H1-B, H1-C, H1-D, B06 per tidy commit · **Model:** Opus 5.5 · **Effort:** high · **Status:** not started
+H1-B, H1-C, H1-D, H1-E, H1-F, B06 per tidy commit · **Model:** Opus 5.5 · **Effort:** high · **Status:** not started
 
 The App Platform `FOLLOW-UP.md` items 5 (the never-written AP-H1: ground-control dry run, scale profile, the Live chip
 after New Project, crash dumps for the unreproduced silent editor exit) and 3 (the dead-3D tidy remainder), carried into
-this packet as H1-A…H1-D plus one B06-clean commit per tidy item. The soaks (item 4) are UX-Q1's.
+this packet as H1-A…H1-D plus one B06-clean commit per tidy item. The soaks (item 4) are postponed to
+`docs/plans/TESTING-PLAN.md` (D-SOAKS). Added 2026-09-25 (D-TOOLCHAIN): Starforge's compiler check — one clear message
+with the winget one-liner when no MSVC toolset is installed, instead of a raw build failure (H1-E) — and the AP04
+acceptance fixture's cmake path via vswhere (H1-F). No `01-Contracts.md` §10 row owns the files these need; they are assigned here
+(wave 3, no concurrent lane touches the Starforge sources they need) and the §10 rows are an orchestrator TODO in
+`RESUME.md`.
 
 ## Copy-paste prompt
 
 ~~~text
 Execute only UX-H1 from the Cosmic UX & Shipping packet (docs/plans/ux-shipping-2026-09-24/). Read ONLY:
-work-orders/README.md (all); 01-Contracts.md §6 (what the world contract keeps), §9 + your §10 row;
-03-Acceptance-Catalog.md rows H1-A..H1-D, B06; ../app-platform-2026-09-18/work-orders/FOLLOW-UP.md items 3 and 5;
+work-orders/README.md (all); 00-Start-Here.md decision D-TOOLCHAIN; 01-Contracts.md §6 (what the world contract keeps),
+§9 + your §10 row; 03-Acceptance-Catalog.md rows H1-A..H1-F, B06, DG01, DG03; ../app-platform-2026-09-18/work-orders/
+FOLLOW-UP.md items 3 and 5;
 ../app-platform-2026-09-18/evidence/AP-Q1/release-report.md §3 step 3 ("Pending"); ../app-platform-2026-09-18/evidence/
 AP-05/report.md "Now-dead 3D-only surface" (:410-); tests/acceptance/fixtures/Verify-AP05Purge.ps1 (header :1-40).
 
 Lane: from C:\dev\Cosmic  git worktree add build\_lanes\ux-h1 -b ux/h1 <post-wave-2 main SHA> ; work only there with
 $env:COSMIC_SDK = that path. UX-D1 (docs/guides, docs/guide -> docs/developer, GuideWalkthroughSelfTest.cpp, README.md)
-and UX-05 (CMakePresets.json, tools/, ci.yml consumer job, SF_Telem README) run concurrently: never touch their files.
-Order: H1-D, H1-C, H1-A, H1-B, then the tidy. KI rule: a defect goes into docs/plans/2d-stability-2026-09-16/contracts/
+and UX-05 (CMakePresets.json, tools/, ci.yml consumer job, SF_Telem README) run concurrently: never touch their files
+(one exception, at landing only, after UX-D1 is on main: the guide-00 picture of item 6).
+Order: H1-D, H1-C, H1-E (item 6), H1-F (item 7), H1-A, H1-B, then the tidy. KI rule: a defect goes into docs/plans/2d-stability-2026-09-16/contracts/
 known-issues.md under "the next free number" in work-orders/README.md (never hardcoded) BEFORE its fix, with
 failing-before / passing-after on an isolated patch. Anchors below are from 0c2edd8: re-check first (README rule 2).
 
@@ -82,43 +89,91 @@ failing-before / passing-after on an isolated patch. Anchors below are from 0c2e
    never regenerate); remove docs/reference/README.md rows of deleted headers (coverage 0) and API-MATRIX.md rows naming
    deleted symbols (check_api_matrix 0); a doc link your deletion breaks loses the link, keeps the text; list touched
    docs/developer files for UX-D3 instead of editing their prose.
+6. H1-E compiler check (D-TOOLCHAIN: MSVC is the only supported toolchain). KI first: "a PC without MSVC gets a raw build
+   failure - nothing checks for a toolset; FindCMake falls back to a bare `cmake` on PATH" (BuildRunner.cpp:20-45, the
+   fallback :43-44). Probe beside FindCMake in BuildRunner.{h,cpp} (no new TU, so Projects/Starforge/CMakeLists.txt stays
+   untouched): MSVC present = vswhere (%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe -latest -products *
+   -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath - the package.bat:59 query;
+   spawned with no console window) returns an installation AND a cmake exists (FindCMake's VS-bundled hit, or cmake
+   resolvable on PATH); no vswhere.exe = no toolset. Cached per session; "Check again" re-probes. Seam:
+   COSMIC_SIMULATE_NO_TOOLSET=1, read ONLY inside the probe, makes vswhere's answer and FindCMake's VS search come back
+   empty; everything after it is the production path (README rule 5). Wire it wherever a build would start:
+   StarforgeApp::BuildScripts (StarforgeApp.cpp:456-478, before m_Builder.Start), BeginPackage's cmake steps (:3028-3048 at
+   60a0536; UX-04 changed that region - re-check), New Project (after the scaffold; H1-C: no automatic build) and the
+   homescreen's first frame (DrawHomescreen; a non-blocking notice). On "missing": no BuildRunner start, one Console line
+   naming the probe result, and one message titled "C++ compiler not found" showing the two winget one-liners of the
+   catalog's H1-E row VERBATIM (Build Tools first - the smaller install - then Community) with Copy buttons, the pointer
+   https://github.com/kdadabhoy/Cosmic/blob/main/docs/guides/00-get-starforge.md plus README-SDK.md (the zip has no docs/),
+   Check again and Close. Verify, don't trust: that --includeRecommended on the VCTools workload installs the VS-bundled
+   CMake FindCMake looks for; if not, add --add Microsoft.VisualStudio.Component.VC.CMake.Project to BOTH strings and
+   record a contract deviation (guide 00 and the catalog follow your source). Proof: AP03AuthoringSelfTest gains a second
+   plan selected by COSMIC_AP03_PLAN=toolchain (E01-E08 unchanged when unset; window sized 1600x900 as
+   GuideWalkthroughSelfTest.cpp does), run twice by a new tests/acceptance/fixtures/Run-UXH1Toolchain.ps1 +
+   ux-h1-toolchain.manifest.json per the catalog row: (a) with the override - the message on the homescreen; New Project,
+   Ctrl+B and Package start no build (BuildRunner Idle, no cmake.exe child, nothing new under dist/), one Console line
+   each; the strings byte-equal; a screenshot saved (guide 00's source shot); (b) without it - probe paths recorded, no
+   message, a build succeeds. Failing-before: plan (a) on a binary without the check (a build starts, no message) - kept.
+7. H1-F: tests/acceptance/fixtures/Run-AP04Sample.ps1:21's default -CMake (a hard-coded ...\18\Community\... path) resolves
+   through the same vswhere query + Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe, then PATH (its :30
+   fallback). Oracle: git grep -n -F "18\Community" -- "*.ps1" "*.psm1" "*.bat" "*.cpp" "*.h" "*.cmake" "*CMakeLists.txt"
+   "*.yml" "*.json" prints nothing (Markdown mentions are UX-D1's); ap04-sample re-run green with no -CMake argument.
 
-Acceptance: H1-A..H1-D and B06 as above; the manifests ux-h1-ground, ux-h1-scale, ux-h1-b06 (+ the H1-D wrapper's).
+Acceptance: H1-A..H1-F and B06 as above; the manifests ux-h1-ground, ux-h1-scale, ux-h1-b06, ux-h1-toolchain (+ the H1-D
+wrapper's) and the ap04-sample re-run.
 Evidence: evidence/UX-H1/report.md (WO-10 layout): dump paths/sizes + the analysis excerpt, frame-time and memory
-tables, the tidy table (item, files, grep proof, B06, golden hashes, SHA), KI entries; §11 row for crash dumps.
+tables, the tidy table (item, files, grep proof, B06, golden hashes, SHA), the H1-E probe results (a)/(b) + failing-before
+and the verified winget strings, KI entries; §11 rows for crash dumps and the compiler check.
 Land (L2) after UX-D1 and UX-05: git rebase main; Debug + Release 0-warn; CosmicTests both; your manifests +
-ap03-editor + ap05-purge; both audits + check_docs_links.ps1 + check_api_matrix.ps1; commit on ux/h1 as kdadabhoy
-<kdadabhoy28@gmail.com>, no Co-Authored-By / AI trailer; never push. Report <= 40 lines: H1 verdicts and numbers, the
-tidy items removed / kept (why), KIs, deviations, SHAs, git status --short.
+ap03-editor + ap05-purge + ap04-sample; both audits + check_docs_links.ps1 + check_api_matrix.ps1. Then, only now that
+UX-D1 is on main, the guide-00 picture: the H1-E (a) screenshot annotated by tools/guide_shots.py (a rect in
+annotations.json around the command field) into docs/guides/images/00-get-starforge/, one docs/guides/images/manifest.json
+entry (method "driver", source_shot, annotated_by), its sha256 appended to evidence/UX-D1/shots-sha256.txt, and in the
+"Install the C++ compiler" step one sentence quoting the title (copied from your source) that replaces UX-D1's named
+exception; evidence/UX-D1/check_guide_images.py (DG01) and check_guide00_toolchain.py (DG03) exit 0. If UX-D1 is not on
+main, skip it and tell the orchestrator. Commit on ux/h1 as kdadabhoy <kdadabhoy28@gmail.com>, no Co-Authored-By / AI
+trailer; never push. Report <= 40 lines: H1 verdicts and numbers (H1-E/H1-F included), the tidy items removed / kept
+(why), KIs, deviations, SHAs, git status --short.
 ~~~
 
 ## Files to read first (and nothing else)
 
-The seven in the prompt: README; §6, §9 + §10 row; H1/B06 rows; FOLLOW-UP items 3 + 5; AP-Q1 §3 step 3; AP-05 dead
-list; `Verify-AP05Purge.ps1` header.
+The eight in the prompt: README; D-TOOLCHAIN; §6, §9 + §10 row; H1/B06/DG01/DG03 rows; FOLLOW-UP items 3 + 5; AP-Q1 §3
+step 3; AP-05 dead list; `Verify-AP05Purge.ps1` header.
 
 ## Owns / May touch
 
 - **Owns:** `Cosmic/src/utils/CrashDump.{h,cpp}`; the install lines in `Runtime/Main.cpp`; `tests/UXH1GroundControlFixture.cpp`;
   the H1 fixtures + `ux-h1-*.json` manifests + `ux-h1-deleted-paths.txt`; the tidy removals (engine, editor, tests)
-  listed above, each in its own commit; `evidence/UX-H1/**`.
-- **May touch:** `StarforgeAppPlatform.cpp` (`LiveChipText`/`DrawLiveChip`); `AP03AuthoringSelfTest.cpp` (one step);
-  `tests/CMakeLists.txt` (one fixture block, L4); `docs/reference/README.md` + `API-MATRIX.md` (rows only); the KI
-  register; `01-Contracts.md` §11 row.
+  listed above, each in its own commit; `evidence/UX-H1/**`. D-TOOLCHAIN (not yet in `01-Contracts.md` §10 — see
+  `RESUME.md`): the toolset probe in `Projects/Starforge/src/BuildRunner.{h,cpp}`; `tests/acceptance/fixtures/Run-UXH1Toolchain.ps1`
+  (new); the cmake-discovery lines of `tests/acceptance/fixtures/Run-AP04Sample.ps1`.
+- **May touch:** `StarforgeAppPlatform.cpp` (`LiveChipText`/`DrawLiveChip`); `AP03AuthoringSelfTest.cpp` (one step + the
+  `toolchain` plan); `StarforgeApp.cpp` (the H1-E check calls in `BuildScripts`, the `BeginPackage` cmake steps, the New
+  Project path and a homescreen notice in `DrawHomescreen`, plus matching `StarforgeApp.h` declarations);
+  `tests/CMakeLists.txt` (one fixture block, L4); `docs/reference/README.md` + `API-MATRIX.md` (rows only); at landing
+  only, after UX-D1 is on `main`: `docs/guides/00-get-starforge.md` (the compiler-check sentence + picture in the
+  "Install the C++ compiler" step), one PNG under `docs/guides/images/00-get-starforge/`, one
+  `docs/guides/images/manifest.json` entry and one line of `evidence/UX-D1/shots-sha256.txt`; the KI register;
+  `01-Contracts.md` §11 rows.
 
 ## Scope
 
-- **In:** crash dumps in both hosts, the 60-min dry run, the scale profile, the Live chip, tidy items (1)–(5) by evidence.
-- **Out:** the soaks (UX-Q1); crash dumps inside packaged apps beyond what `Main.cpp` gives; developer-doc prose (UX-D3).
+- **In:** crash dumps in both hosts, the 60-min dry run, the scale profile, the Live chip, the compiler check + its guide-00
+  picture, the AP04 fixture's cmake discovery, tidy items (1)–(5) by evidence.
+- **Out:** the soaks (postponed to `docs/plans/TESTING-PLAN.md`, D-SOAKS); crash dumps inside packaged apps beyond what
+  `Main.cpp` gives; developer-doc prose (UX-D3); guide text beyond the one compiler-check sentence (UX-D1); any toolchain
+  other than MSVC (`docs/plans/TOOLCHAIN-PLAN.md`).
 
 ## Deliverables
 
-`CrashDump`, the fixture + three manifests, the chip fix + KI, one commit per removed tidy item, `evidence/UX-H1/report.md`.
+`CrashDump`, the fixture + four manifests, the chip fix + KI, the toolset probe + message + KI, `Run-AP04Sample.ps1` via
+vswhere, the guide-00 picture, one commit per removed tidy item, `evidence/UX-H1/report.md`.
 
 ## Done when (DoD)
 
 A deliberate fault leaves a readable dump in both hosts; H1-A oracles pass over 60 min; H1-B numbers recorded both
-configs; the chip KI closed; every tidy commit B06-clean, 0-warn, goldens byte-identical; kept items justified.
+configs; the chip KI closed; H1-E (a) and (b) pass and the compiler-check KI is closed; H1-F's grep prints nothing; every
+tidy commit B06-clean, 0-warn, goldens byte-identical; kept items justified.
 
 ## Rollback
 

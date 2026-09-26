@@ -12,11 +12,16 @@ matrix, and the push / tag / GitHub-release commands staged for Kaden, never exe
 N02-drift-2h, T05) and their drivers moved to [`../../TESTING-PLAN.md`](../../TESTING-PLAN.md). UX-Q1 runs only the quick
 legs and reports the rest as *not run — deferred to TESTING-PLAN.md*, never as a pass.
 
+**Toolchain (Kaden, 2026-09-25, D-TOOLCHAIN):** MSVC stays the only supported toolchain; the bundled llvm-mingw flavour is
+planned in [`../../TOOLCHAIN-PLAN.md`](../../TOOLCHAIN-PLAN.md), not built. UX-Q1 qualifies the friction fixes that
+decision added (SD05, H1-E, H1-F, DG03) and states the decision in the release report.
+
 ## Copy-paste prompt
 
 ~~~text
 Execute only UX-Q1 from the Cosmic UX & Shipping packet (docs/plans/ux-shipping-2026-09-24/). Read ONLY:
-work-orders/README.md (all); 02-Work-Orders.md (landing order, cross-check); 03-Acceptance-Catalog.md (all);
+work-orders/README.md (all); 00-Start-Here.md decision D-TOOLCHAIN; 02-Work-Orders.md (landing order, cross-check);
+03-Acceptance-Catalog.md (all);
 01-Contracts.md §11-§12; the "Contract deviations" section of each evidence/UX-*/report.md (grep for the heading, do not
 read whole reports); ../app-platform-2026-09-18/evidence/AP-Q1/release-report.md §9 and §12 (soak commands, staged-
 promotion shape); ../2d-stability-2026-09-16/03-Acceptance-Test-Catalog.md rows T05 (:108), N02 (:192), K02 (:208),
@@ -31,7 +36,8 @@ Do, in order:
    after). Record the pinned SHA and a clean status.
 2. Reconcile: apply every recorded deviation to 01-Contracts.md inline as [UX-xx Dn] notes (one commit); finalize §11
    (status + proving ID per row). Known ones to expect: the zip also carries the license-manifest sources, the installed
-   editor keeps its data in its exe dir, the added skip names, New-AppRepo's extra parameters.
+   editor keeps its data in its exe dir, the added skip names, New-AppRepo's extra parameters, sdk.toml's toolchain /
+   msvc_version keys and the VC++ runtime route (UX-04), the compiler-check strings if UX-H1 had to extend them.
 3. Retained suites: CosmicTests Debug + Release (new baseline; >= 523 passed, 0 failed); CosmicRenderTests with the 15
    goldens byte-identical (evidence/UX-Q1/golden-hashes.txt); tests\check_gl_conformance.ps1, check_docs_coverage.ps1,
    check_docs_links.ps1, check_api_matrix.ps1 exit 0; every manifest through the runner - ux01-*, ux02-*, ux03-*,
@@ -42,12 +48,19 @@ Do, in order:
 4. SDK zip at the pinned SHA: installer\Stage-Sdk.ps1 -Build -Zip in a clean worktree (git worktree add
    build\_lanes\uxq1-sdk --detach <SHA>); its list must equal tests/acceptance/goldens/ux04-sdk-files.txt (a difference is
    a finding, not a golden to update); record size + SHA-256; build the installer if ISCC exists, else name the blocker.
+   SD05 at the pinned SHA (D-TOOLCHAIN): UX-04's Test-PackageImports.ps1 over that zip's build\Runtime\Release and over
+   the packages step 6 produces (K02's Stage-AppPackage.ps1 package and the editor package from apq1-y02): zero MISSING,
+   the msvcp140.dll version leg, sdk.toml toolchain = "msvc". Where a VM exists, SD04's "missing toolchain" report must be
+   H1-E's "C++ compiler not found" message.
 5. DG02 = DOC02 from the zip: unzip to $env:TEMP\uxq1-doc02\Cosmic SDK, drop COSMIC_SDK from the child environment,
    follow guide 00 (the zip leg) and guide 01 through the DG02 driver UX-D1 landed, pointed at the unzipped
    build\Runtime\Release. If that driver still pins COSMIC_SDK to the checkout (Run-GuideWalkthrough.ps1:36 did at
    0c2edd8), run UX-04's Run-UX04Sdk.ps1 SD01 leg (the same GuideWalkthroughSelfTest) and say so. Pass = the exported
    exe runs from another directory and closes gracefully. DG01: every entry of docs/guides/images/manifest.json exists
-   and names its capture method.
+   and names its capture method. DG03: evidence/UX-D1/check_guide00_toolchain.py exits 0, plus the leg only you can run:
+   guide 00's two winget one-liners are byte-equal to the strings in the landed H1-E source (grep BuildRunner/StarforgeApp
+   for them), and the step carries UX-H1's compiler-check picture (else a finding). H1-E / H1-F: ux-h1-toolchain and
+   ap04-sample (step 3) green.
 6. Quick legs only (the soaks are postponed to docs/plans/TESTING-PLAN.md by Kaden, 2026-09-24: do NOT run
    S01-native, Y03, S02, N02-drift-2h or T05 and do NOT write their drivers or JobObject.psm1). Run sequentially:
    - S01 fake-clock leg: wo06 -Profile pr (D05-two-hour, minutes) per release-report §9. Not the -Profile native leg.
@@ -64,10 +77,14 @@ Do, in order:
    homescreen + samples/App default, 02 rect gizmo, 03 Screens panel with Scenes, 04 Inspector flow-usage line, 05
    PendulumLab flow graph routing, 09 Live chip) from the pinned Release build, <= 1 MB each; update the captions in
    docs/showcase/README.md and the README.md top strip.
-9. evidence/UX-Q1/release-report.md: pinned SHA; environment (CPU, GPU/driver/GL, Windows build, toolchain); the
+9. evidence/UX-Q1/release-report.md: pinned SHA; environment (CPU, GPU/driver/GL, Windows build, toolchain - and the
+   decision D-TOOLCHAIN in one paragraph: MSVC (Visual Studio Community 2026 or the Build Tools, "Desktop development with
+   C++") is the only supported toolchain for engine, editor and user projects; the bundled llvm-mingw flavour is designed
+   in docs/plans/TOOLCHAIN-PLAN.md and not built; the VC++ runtime route UX-04 chose); the
    requirement -> case -> evidence matrix for every ID in 03-Acceptance-Catalog.md plus the retained App Platform and
    stability rows; counts P/B/N/F; blocked cases with prerequisites; KI dispositions (every KI opened this campaign);
-   the quick-leg results and the deferred soaks (pointer to TESTING-PLAN.md); zip + installer hashes; the deferred list; docs/plans/00-MASTER-ROADMAP.md statuses (own commit); and
+   the quick-leg results and the deferred soaks (pointer to TESTING-PLAN.md); zip + installer hashes; the deferred list
+   (TOOLCHAIN-PLAN.md included); docs/plans/00-MASTER-ROADMAP.md statuses (own commit); and
    the STAGED promotion, unexecuted:
      git -C C:\dev\Cosmic status --short
      git -C C:\dev\Cosmic log --oneline -25
@@ -78,14 +95,14 @@ Do, in order:
    with <ver> = COSMIC_VERSION_STRING (the job refuses any other tag); the CI jobs to expect on the push
    (build-and-test, acceptance-pr, consumer = EX05, the API-matrix step) and what stays ENVIRONMENT_BLOCKED there.
 Commit locally as kdadabhoy <kdadabhoy28@gmail.com>, no Co-Authored-By / AI trailer. Never push, tag, tag-push, run a
-workflow or publish a release. Report <= 40 lines: matrix summary P/B/N/F, quick-leg verdicts (S01-pr, S03, K02), new
-KIs, zip and installer hashes, the staged commands verbatim.
+workflow or publish a release. Report <= 40 lines: matrix summary P/B/N/F, quick-leg verdicts (S01-pr, S03, K02), the
+D-TOOLCHAIN verdicts (SD05, H1-E, H1-F, DG03), new KIs, zip and installer hashes, the staged commands verbatim.
 ~~~
 
 ## Files to read first (and nothing else)
 
-The eight in the prompt: README; `02-Work-Orders.md`; `03-Acceptance-Catalog.md`; `01-Contracts.md` §11-§12; the
-UX reports' deviation sections; AP-Q1 release report §9/§12; the stability rows; the App Platform Y02/Y03/DOC05 rows.
+The nine in the prompt: README; D-TOOLCHAIN; `02-Work-Orders.md`; `03-Acceptance-Catalog.md`; `01-Contracts.md` §11-§12;
+the UX reports' deviation sections; AP-Q1 release report §9/§12; the stability rows; the App Platform Y02/Y03/DOC05 rows.
 
 ## Owns / May touch
 
@@ -96,8 +113,10 @@ UX reports' deviation sections; AP-Q1 release report §9/§12; the stability row
 ## Scope
 
 - **In:** integration check, contract reconciliation, every suite and manifest, the zip at the pinned SHA, DG01/DG02,
-  the quick legs (S01-pr, S03, K02), KI fixes, showcase refresh, release report, staged promotion.
-- **Out:** the multi-hour soaks and their drivers (postponed to `docs/plans/TESTING-PLAN.md`, Kaden 2026-09-24); new features; loosening any bar or updating a golden/pinned list to pass; pushing, tagging, running a
+  the quick legs (S01-pr, S03, K02), the D-TOOLCHAIN IDs (SD05, H1-E, H1-F, DG03), KI fixes, showcase refresh, release
+  report (stating D-TOOLCHAIN), staged promotion.
+- **Out:** the multi-hour soaks and their drivers (postponed to `docs/plans/TESTING-PLAN.md`, Kaden 2026-09-24); any toolchain
+  other than MSVC (`docs/plans/TOOLCHAIN-PLAN.md`, D-TOOLCHAIN); new features; loosening any bar or updating a golden/pinned list to pass; pushing, tagging, running a
   workflow, publishing a release; bumping the version (Kaden's call before tagging).
 
 ## Deliverables

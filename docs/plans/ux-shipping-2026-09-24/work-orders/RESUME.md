@@ -41,6 +41,48 @@ save rename race) — re-run such a failure alone before registering a KI.
 Open orchestrator TODOs: `01-Contracts.md` §12 acceptance index (≈ line 324) still lists the soaks under UX-Q1 — fix
 it to point at TESTING-PLAN.md after wave 1 lands (UX-02/03 edit that file); README next-free KI as above.
 
+**D-TOOLCHAIN contract changes (added 2026-09-25; `01-Contracts.md` was left alone because the wave-1 lanes edit it).**
+Kaden kept MSVC as the only supported toolchain and added SD05 (UX-04), H1-E/H1-F (UX-H1) and DG03 (UX-D1) to the
+not-yet-started WOs; the prompts, `00-Start-Here.md`, `02-Work-Orders.md` and `03-Acceptance-Catalog.md` already carry
+them. After wave 1 lands and **before spawning wave 2** (UX-04 reads §4 and §10), apply these to `01-Contracts.md` in one
+commit on `main`:
+
+1. **§4 SDK release.** (a) The `sdk.toml` line of the tree: `version, sha, date, layout = "checkout-mirror",
+   toolchain = "msvc", msvc_version` (reserve-now for [`../../TOOLCHAIN-PLAN.md`](../../TOOLCHAIN-PLAN.md)). (b) A new bullet
+   "**VC++ runtime (new KI, D-TOOLCHAIN)**": every app package (editor Packager; `Stage-AppPackage.ps1`, hence
+   `package.bat <App>` and `release.yml`'s `package` job; the Packager-generated `.iss`, `AppSetup.iss`, `CosmicSetup.iss`),
+   the zip's `build/Runtime/Release` and `Starforge-Setup` carry the Release VC++ runtime — app-local Distributable Code
+   DLLs from the building machine's `VC\Redist`, or `vc_redist.x64.exe` run by the installer (UX-04 records its choice) —
+   at least as new as the newest MSVC toolset that built any binary in the package; Debug trees carry none; proven by SD05
+   (`tests/acceptance/fixtures/Test-PackageImports.ps1`). (c) The Installer bullet: "carries the VC++ runtime (SD05)".
+2. **§7 Documentation tiers.** Guide `00-get-starforge` includes the "Install the C++ compiler" step (Visual Studio
+   Community 2026 or the Build Tools for Visual Studio 2026, "Desktop development with C++", the two winget strings of
+   catalog row H1-E; DG03); the step's compiler-check picture is added by UX-H1 at its landing.
+3. **§9 Hardening carry-over.** A paragraph "**Compiler check (UX-H1, D-TOOLCHAIN)**": the probe beside
+   `BuildRunner::FindCMake` (the `package.bat:59` vswhere query + a cmake), cached per session; wired into `BuildScripts`,
+   `BeginPackage`'s cmake steps, New Project after the scaffold and the homescreen's first frame; on "missing": no build,
+   one Console line, the message titled `C++ compiler not found` with the two winget strings verbatim, the guide-00 URL and
+   `README-SDK.md`; the probe-internal seam `COSMIC_SIMULATE_NO_TOOLSET=1`; the `COSMIC_AP03_PLAN=toolchain` self-test
+   plan; `Run-AP04Sample.ps1` resolves cmake through vswhere (H1-F).
+4. **§10 ownership.** UX-04 **Owns** + `tests/acceptance/fixtures/Test-PackageImports.ps1` (new, SD05), and the
+   `Packager.cpp` entry widened to "+ the VC++ runtime copy" (`Packager.h` if its interface changes). UX-H1 **Owns** +
+   `Projects/Starforge/src/BuildRunner.{h,cpp}` (the toolset probe), `tests/acceptance/fixtures/Run-UXH1Toolchain.ps1`
+   (new), `tests/acceptance/fixtures/Run-AP04Sample.ps1` (cmake-discovery lines only); UX-H1 **May touch** +
+   `Projects/Starforge/src/StarforgeApp.{h,cpp}` (the H1-E calls in `BuildScripts`, the `BeginPackage` cmake steps, the New
+   Project path, a `DrawHomescreen` notice), `Projects/Starforge/src/AP03AuthoringSelfTest.cpp` (one step + the `toolchain`
+   plan — the WO prompt already lists the H1-C step, §10 does not), and at landing only, after UX-D1:
+   `docs/guides/00-get-starforge.md` (the compiler-check sentence + picture), one PNG under
+   `docs/guides/images/00-get-starforge/`, one `docs/guides/images/manifest.json` entry, one line of
+   `evidence/UX-D1/shots-sha256.txt`. UX-D1: no new paths (`docs/guides/**`, `README.md` and `evidence/UX-D1/**` cover
+   DG03); `docs/guides/00-get-starforge.md` is now shared with UX-H1 (L4 in [`README.md`](README.md) already says so).
+5. **§11 New-surface register** rows: the VC++ runtime in every package + the import oracle (SD05); `sdk.toml`
+   `toolchain` / `msvc_version` (SD05, SD03); the toolset probe, the `C++ compiler not found` message and the
+   `COSMIC_SIMULATE_NO_TOOLSET` seam (H1-E); `Run-AP04Sample.ps1` cmake via vswhere (H1-F); guide 00's "Install the C++
+   compiler" step (DG03).
+6. **§12 Acceptance index.** `SD01–SD04, K02-bak` → `SD01–SD05, K02-bak` (UX-04); `H1-A–H1-D, B06 (per tidy commit)` →
+   `H1-A–H1-F, B06 (per tidy commit)` (UX-H1); a new `DG03` cell → `UX-D1 (UX-H1 adds its picture; UX-Q1 re-runs it with
+   the source-equality leg)`.
+
 ## How wave 1 was run (keep these adaptations when resuming)
 
 - The orchestrator creates each lane worktree itself (`git worktree add build\_lanes\ux-<id> ux/<id>`), and the

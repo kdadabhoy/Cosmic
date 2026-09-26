@@ -4,7 +4,7 @@
 worktree `ux/d1` at `build\_lanes\ux-d1` · **Base:** `main` after wave 2 has landed (UX-04 → UX-G0 → UX-D2) ·
 **Depends on:** UX-01, UX-02, UX-03 (the pictures show the fixed editor), UX-04 (the SDK zip and installer
 guide 00 describes), UX-D2 (guides 02/03 link `API-MATRIX.md` and `app-services.md`) · **Acceptance:** DOC01,
-DOC03, DG01, DG02 (made executable here; executed by UX-Q1 from the SDK zip) · **Model:** Opus 5.5 ·
+DOC03, DG01, DG02 (made executable here; executed by UX-Q1 from the SDK zip), DG03 · **Model:** Opus 5.5 ·
 **Effort:** high (Sonnet 5 acceptable for guide prose only, with Opus verifying every code claim and every
 quoted label — the AP-D2 rule) · **Status:** not started
 
@@ -12,16 +12,19 @@ D-GUIDES made real (items 1, 2, 9, 10, 12, 13, 15 and the doc halves of 18 and 2
 at "get Starforge", follows the editor's own labels step by step, and shows every step in a picture of the
 real, fixed editor produced by the capture pipeline; the 24 developer chapters keep their authoring contract
 under a new name. It lands first in wave 3 because UX-05 appends a section to guide 06 and UX-H1 rebases onto
-the rename.
+the rename. Added 2026-09-25 (D-TOOLCHAIN): guide 00 gains an "Install the C++ compiler" step and the README
+prerequisites name the Build Tools as the lighter alternative (DG03); the compiler-check message's picture in that
+step is added by UX-H1 at its landing, since the message is UX-H1's code.
 
 ## Copy-paste prompt
 
 ~~~text
 Execute only UX-D1 from the Cosmic "UX & Shipping" packet (docs/plans/ux-shipping-2026-09-24/). Read, and
 only: work-orders/README.md (global rules 1-10, lane rules L1-L5, build commands, next KI);
-00-Start-Here.md decision D-GUIDES; 01-Contracts.md §7 (guide format, image rule, images manifest, rename
-map), §10 (your ownership row) and §11 (you add the "guides tier + images manifest" row);
-03-Acceptance-Catalog.md rows DG01, DG02 and fixture F-GUIDESHOTS; docs/guide/README.md (the authoring
+00-Start-Here.md decisions D-GUIDES and D-TOOLCHAIN; 01-Contracts.md §7 (guide format, image rule, images
+manifest, rename map), §10 (your ownership row) and §11 (you add the "guides tier + images manifest" row);
+03-Acceptance-Catalog.md rows DG01, DG02, DG03, H1-E (its two winget strings) and fixture F-GUIDESHOTS;
+docs/guide/README.md (the authoring
 contract the developer tier keeps); docs/guide/pendulumlab-walkthrough.md;
 docs/plans/app-platform-2026-09-18/evidence/AP-D1/report.md §3 with rewrite_links.py beside it (the scripted
 move you copy). Then each file you edit, in full, and for every guide the editor source whose labels it quotes.
@@ -86,7 +89,18 @@ Do, in order (scripts and evidence in docs/plans/ux-shipping-2026-09-24/evidence
    - 00-get-starforge.md: the SDK zip or Starforge-Setup-<ver>.exe (UX-04), or clone + ONE table of the
      root scripts vs raw cmake (build.bat = incremental, Debug unless given Release; build_all.bat = clean;
      build_all_release.bat; build_engine.bat = engine only; setup.bat = setx COSMIC_SDK); where
-     Starforge.exe lives; COSMIC_SDK and the three-up fallback; first launch.
+     Starforge.exe lives; COSMIC_SDK and the three-up fallback; first launch. Plus (D-TOOLCHAIN) a numbered step
+     "Install the C++ compiler" before the first step that builds anything: Starforge and the engine ship prebuilt,
+     but your project's code is compiled on your PC by Microsoft Visual C++ (MSVC), the only supported toolchain -
+     Visual Studio Community 2026 (the IDE) or the smaller Build Tools for Visual Studio 2026, workload "Desktop
+     development with C++" (rule 2: verify the product and workload names as the Visual Studio Installer shows them);
+     the two winget one-liners byte-equal to the catalog's H1-E strings, Build Tools first; one line on licensing
+     (https://visualstudio.microsoft.com/vs/community/; the Build Tools may be used by anyone licensed for Community);
+     the clone path needs the same step. Picture: the Visual Studio Installer's workload page with "Desktop development
+     with C++" boxed - a computer-use request (Visual Studio Installer > Modify > Workloads on this PC; screenshot, then
+     Cancel; never click Modify or Install). The compiler-check message is UX-H1's and lands after you: do not describe
+     or quote it (rule 1 - its source is not on your base); name the step's second picture as the exception "H1-E
+     picture, added by UX-H1 at its landing".
    - 01-pendulumlab-walkthrough.md: the moved chapter, re-captured on this build. New prologue pointing at
      00 instead of the cmake block. A "Where your code lives" box after Step 1: the tree under
      %USERPROFILE%\Documents\Starforge Projects\<Name>\ shown in the Content Browser (it roots at
@@ -123,6 +137,10 @@ Do, in order (scripts and evidence in docs/plans/ux-shipping-2026-09-24/evidence
    (README.md:149 at 0c2edd8); the doc-map tree, the tier table and the most-asked list name guides/ and
    developer/. docs/README.md leads with Guides and lists five tiers (Guides, Developer, Reference,
    Systems, Plans); its stale "AP-D2 adds the app-authoring chapter" status (docs/README.md:44) goes.
+   README.md prerequisites (D-TOOLCHAIN; anchors at 60a0536): the Visual Studio 2026 Community row (:31) also names
+   the Build Tools for Visual Studio 2026 as the lighter alternative (same workload, the Build Tools winget one-liner,
+   a link to guide 00's step); the Community-only cmake paths (:37, :59) show the Build Tools variant or a vswhere
+   line that prints the installation path. MSVC stays the only supported toolchain - no other compiler is offered.
 
 Pictures the driver cannot reach (Windows Explorer, the installer wizard, a terminal, the IDE that Open
 source launches): list each in evidence/UX-D1/computer-use-requests.md (guide, step, window, state, the
@@ -141,11 +159,15 @@ px > 0 or a rect for that image; <= 600 KB and <= 1440 px wide; every ![...](ima
 docs/guides/*.md is in the manifest; no image serves two steps; every numbered step has a picture or a
 named exception. DG02: made executable, not claimed - run ux-d1-guides on the lane build (-BinDir the
 lane's Release) and record PASS, then rehearse the DG02 case once with -BinDir
-build\_temp\ux-d1\sdk\build\Runtime\Release; UX-Q1 owns the verdict.
+build\_temp\ux-d1\sdk\build\Runtime\Release; UX-Q1 owns the verdict. DG03: evidence/UX-D1/
+check_guide00_toolchain.py exits 0 on the catalog oracle (the "Install the C++ compiler" step before the first
+build step, both product names, the workload, both one-liners byte-equal to the H1-E strings, the README
+prerequisites and cmake-path lines); the step's Visual Studio Installer picture passes DG01; the compiler-check
+picture is the named exception UX-H1 resolves (UX-H1 re-runs both checks after adding it).
 
 Evidence: evidence/UX-D1/report.md in the WO-10 layout (README rule 8) plus rename_developer.py,
-moves-developer.json, check_guide_images.py, shots-sha256.txt, guide-result-*.json, annotations.json, the
-guide_shots reports and computer-use-requests.md; raw shots stay in build\_temp\ux-d1\shots\. A defect you
+moves-developer.json, check_guide_images.py, check_guide00_toolchain.py, shots-sha256.txt, guide-result-*.json,
+annotations.json, the guide_shots reports and computer-use-requests.md; raw shots stay in build\_temp\ux-d1\shots\. A defect you
 meet in the editor while capturing goes into the KI register (next number in work-orders/README.md) and
 the report; it is not fixed here.
 
@@ -154,13 +176,14 @@ ux-d1-guides manifest; the four checkers exit 0; commit on ux/d1 as kdadabhoy <k
 with no Co-Authored-By or AI trailer; never push. Commits: the rename; the capture pipeline; one per guide
 (00..07; the index and manifest.json with the last); README.md + docs/README.md; evidence + the §11 row.
 Report in at most 40 lines: the rename table summary, each guide with its step and picture counts, the
-shots the driver could not take, what you found (rule 5), and what UX-D3 and UX-Q1 must re-check.
+shots the driver could not take, the DG03 verdict and the product/workload names as verified, what you found
+(rule 5), and what UX-D3, UX-H1 (the guide-00 compiler-check picture) and UX-Q1 must re-check.
 ~~~
 
 ## Files to read first (and nothing else)
 
-`work-orders/README.md`; `00-Start-Here.md` (D-GUIDES); `01-Contracts.md` §7, §10 (UX-D1 row), §11;
-`03-Acceptance-Catalog.md` (DG01, DG02, F-GUIDESHOTS); `docs/guide/README.md`;
+`work-orders/README.md`; `00-Start-Here.md` (D-GUIDES, D-TOOLCHAIN); `01-Contracts.md` §7, §10 (UX-D1 row), §11;
+`03-Acceptance-Catalog.md` (DG01, DG02, DG03, the H1-E strings, F-GUIDESHOTS); `docs/guide/README.md`;
 `docs/guide/pendulumlab-walkthrough.md`; `../app-platform-2026-09-18/evidence/AP-D1/report.md` §3 +
 `rewrite_links.py`; then every file edited, in full, and the editor sources each guide quotes.
 
@@ -170,16 +193,21 @@ See `01-Contracts.md` §10 (UX-D1 row). The four source files whose comments nam
 (`Cosmic/src/core/Application.h:122`, `tests/render/wo08_common.h:14,281`,
 `Projects/PendulumLab/src/Y02SelfTest.cpp:205`) fall under "every file whose links the rename rewrites" —
 path text only. `docs/guides/06-package-and-ship.md` is shared with UX-05 (L4): UX-D1 writes the file and
-the placeholder heading; UX-05 fills that section after rebasing.
+the placeholder heading; UX-05 fills that section after rebasing. `docs/guides/00-get-starforge.md` is shared with
+UX-H1 the same way (D-TOOLCHAIN): UX-D1 writes the "Install the C++ compiler" step with a named exception for the
+compiler-check picture; UX-H1 adds that picture, one sentence, one images-manifest entry and one
+`evidence/UX-D1/shots-sha256.txt` line at its landing.
 
 ## Scope
 
 - **In:** the rename (scripted, checker-enforced); the capture pipeline (driver plan, wrappers,
   `guide_shots.py --report`, the `ux-d1-guides` manifest); guides 00–07, the index and the images
-  manifest; the README / `docs/README.md` front door; DG01; DG02 made runnable against the zip.
+  manifest; the README / `docs/README.md` front door; DG01; DG02 made runnable against the zip; guide 00's
+  "Install the C++ compiler" step and the README prerequisites (DG03, D-TOOLCHAIN).
 - **Out:** prose inside `docs/developer/` (UX-D3); `API-MATRIX.md` and `app-services.md` (UX-D2); the
   "Your app in its own repo" section (UX-05); editor or engine code beyond the driver (a needed seam is
-  reported, not added); `docs/showcase/` and the roadmap (UX-Q1); the DG02 verdict (UX-Q1).
+  reported, not added); `docs/showcase/` and the roadmap (UX-Q1); the DG02 verdict (UX-Q1); the compiler-check
+  message, its sentence and picture (UX-H1); any toolchain other than MSVC (`docs/plans/TOOLCHAIN-PLAN.md`).
 
 ## Deliverables
 
@@ -197,8 +225,8 @@ the placeholder heading; UX-05 fills that section after rebasing.
 
 The four checkers and `check_parked.py` exit 0 on the rebased tree; DG01's check passes; the
 `ux-d1-guides` manifest passes on the lane build; every numbered step of every guide has a real-editor
-picture or a named exception; Debug + Release build with 0 warnings and CosmicTests is at or above the
-baseline in both configs; `git grep "docs/guide/"` finds only history.
+picture or a named exception; DG03's check exits 0; Debug + Release build with 0 warnings and CosmicTests is at
+or above the baseline in both configs; `git grep "docs/guide/"` finds only history.
 
 ## Rollback
 

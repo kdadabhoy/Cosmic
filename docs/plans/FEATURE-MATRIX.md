@@ -65,6 +65,7 @@
 | Project templates gallery | one template + picker seam | 17 ships the 2D one | a third real template | S | ⏸ |
 | Cloud/team project sync, DB service | registry file over folders | — (doc 15 §3) | multi-machine/team | XL | ✖ |
 | Auto-update channel | — | — (doc 15 §3) | real users | L | ✖ |
+| Bundled C++ toolchain ("zero-install": a second, llvm-mingw SDK flavour; never mixed with MSVC) | every user installs VS Community 2026 or Build Tools ("Desktop development with C++") to build a project DLL; MSVC is the only supported toolchain (D-TOOLCHAIN, 2026-09-25) | [`TOOLCHAIN-PLAN.md`](TOOLCHAIN-PLAN.md) T0–T10 | the UX campaign closed and the App Platform quiet; Kaden decides zero-install is worth the second flavour (T0, a clang-cl portability CI job, can go earlier) | L | ⏸ (designed 2026-09-25) |
 | macOS/Linux | Win32+GL only | — (doc 05 §12 reopen conditions, archived) | a second platform request | XL | ✖ |
 
 ## Gameplay systems
