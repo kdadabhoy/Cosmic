@@ -124,8 +124,9 @@ The campaign resumed on a VMware Workstation VM (8 vCPU, 16 GB, Windows 11, VS C
 - llvmpipe is CPU-heavy: with two lanes at once use `--parallel 4`, expect editor self-tests to run slower, and
   re-run a timeout alone once before calling it a failure. At most **two** lane agents at once on this VM.
 - The OS cursor is shared by every lane; a self-test that moves it must tolerate a disturbed input.
-- Timing tests WO-05 T03, WO-09 C05 and E10 are load-sensitive here (KI-84): a failure of only those under load is
-  re-run alone before it counts, and the orchestrator's landing runs are done with no other lane building.
+- Timing tests WO-05 T03, WO-09 C05, WO-09 C02 (maximum map) and E10 are load-sensitive here (KI-84): a failure of
+  only those under load is re-run alone before it counts, and the orchestrator's landing runs are done with no other
+  lane building.
 - Baseline at `d815252` (this VM, Release): configure 33 s, build 6 min with `--parallel 4`, 0 warnings;
   CosmicTests 523/0/14 in 274 s.
 

@@ -115,3 +115,18 @@ UX-V0's own full CosmicTests runs (build/_lanes/ux-v0, source = 05f118c, cwd = b
 was active on the VM at the time, its load not sampled): no timing failure in either run.
   Release 22:35-22:40, 300 s: [doctest] test cases:      523 |      523 passed | 0 failed | 14 skipped
   Debug   22:48-22:55, 437 s: [doctest] test cases:      523 |      523 passed | 0 failed | 14 skipped
+
+================================================================================================
+Added on the orchestrator's second request: WO-09 C02 'maximum map'. Copied verbatim from the UX-02 lane's evidence:
+  build/_lanes/ux-02/docs/plans/ux-shipping-2026-09-24/evidence/UX-02/phase-a-excerpts.txt (mtime 2026-09-25 23:39), lines 1 and 9-17.
+================================================================================================
+# UX-02 Phase A excerpts (session 2, the VMware VM, 2026-09-25; HEAD 9667c84, clean tree; *.log stays ignored)
+## CosmicTests Debug (under load: Release build + Release tests + the UX-V0 lane), exit 1, 1212 s
+205751:C:\dev\Cosmic\build\_lanes\ux-02\tests\test_wo09_c02_tilemap.cpp(130): MESSAGE: C02 1,048,576-cell map: save 5335.37 ms (16044050 bytes), load 9119.47 ms
+205753:C:\dev\Cosmic\build\_lanes\ux-02\tests\test_wo09_c02_tilemap.cpp(131): ERROR: CHECK( msSave + msLoad < 10000.0 ) is NOT correct!
+205754:  values: CHECK( 14454.8 <  10000 )
+[doctest] test cases:      530 |      529 passed | 1 failed | 14 skipped
+[doctest] assertions: 23457810 | 23457809 passed | 1 failed |
+[doctest] Status: FAILURE!
+## the failing case alone (Debug), exit 0
+C:\dev\Cosmic\build\_lanes\ux-02\tests\test_wo09_c02_tilemap.cpp(130): MESSAGE: C02 1,048,576-cell map: save 1380.71 ms (16044050 bytes), load 2185.52 ms
