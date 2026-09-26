@@ -10,8 +10,8 @@ prompt and any older document disagree, **the prompt wins** and the session says
 
 The single running known-issue register is
 [`../../2d-stability-2026-09-16/contracts/known-issues.md`](../../2d-stability-2026-09-16/contracts/known-issues.md)
-— next entry **KI-82** (KI-66..81 are pre-allocated to the wave-1 lanes, see [`RESUME.md`](RESUME.md); UX-V0
-takes KI-82/83). Every crash / hang / data loss / wrong-behaviour defect found by any UX session is
+— next entry **KI-84** (KI-66..81 are pre-allocated to the wave-1 lanes, see [`RESUME.md`](RESUME.md); UX-V0
+registered KI-82/83). Every crash / hang / data loss / wrong-behaviour defect found by any UX session is
 appended there with a minimal regression and a disposition, using its template, **before** it is fixed. A
 missing fixture or skipped test is never logged as a pass.
 
