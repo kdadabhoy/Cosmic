@@ -63,3 +63,16 @@ passes, and by two shipped apps: SF_Telem, a serial telemetry recorder, and Pend
 | 12 | `12-acceptance-run-summary.png` | The acceptance runner (`Run-Acceptance.ps1`) in a terminal, followed by the per-manifest summary of the AP-Q1 qualification chain. |
 
 All twelve were taken (2026-09-20, `main` at `fa1223a`); the capture method and per-file details are in the release report §7.1.
+
+## SF_Telem engineering screens (added 2026-09-26)
+
+Four more whole-window captures of the real `SF_Telem` app (`CosmicApp.exe --project SF_Telem`, Release, `main` at
+`9ecc118`), 1280x720, taken on the campaign's VMware VM (software OpenGL 4.5, llvmpipe). No hardware was attached,
+so the bench screens show their "waiting for telemetry" state.
+
+| # | File | Caption |
+| --- | --- | --- |
+| 13 | `13-sf-telem-drivetrain-analysis.png` | The Analysis workspace — the drivetrain spin-up calculator: chassis/wheel diagram (rear 3.5 in, front 2.5 in, level chassis), speed and acceleration curves vs time, and the KPIs (top speed, peak acceleration, launch force vs traction cap: "launch is traction-limited"). |
+| 14 | `14-sf-telem-drive-esc-bench.png` | The Testing workspace, single drive-ESC bench: the robot's drivetrain render with live RPM / speed / current / voltage callouts, the serial-link panel and the wiring instructions for the ESP32 test firmware. |
+| 15 | `15-sf-telem-weapon-esc-bench.png` | The single weapon-ESC bench: the weapon render with weapon RPM, tip speed, current, voltage and temperature callouts. |
+| 16 | `16-sf-telem-homescreen.png` | SF_Telem's homescreen: Main Telemetry, Testing, Analysis and Replay workspaces. |
