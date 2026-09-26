@@ -19,6 +19,8 @@
 #include <cstdint>
 #include <vector>
 
+struct ImRect;   // imgui_internal.h — RouteLink's node rects
+
 namespace Starforge
 {
     namespace ed = ax::NodeEditor;
@@ -63,6 +65,21 @@ namespace Starforge
         uintptr_t SelectedLink() const;
 
         bool Ready() const { return m_Ctx != nullptr; }
+
+        // UX-01 (contract §1) — link routing. Pure (ImVec2 / ImRect / float, no ImGui state;
+        // defined in NodeCanvasRoute.cpp, compiled into CosmicTests for FE01): the bezier
+        // control points of a link from an output pin at `start` (node rect `startNode`,
+        // pins leave to the right) to an input pin at `end` (node rect `endNode`, pins enter
+        // from the left), in canvas coordinates.
+        //   * forward (end.x - start.x >= 0, two different nodes): exactly imgui-node-editor's
+        //     own points (`strength` eased by distance along (1,0) / (-1,0));
+        //   * backward (the end pin left of the start pin) and self-loops: one cubic below the
+        //     union of both rects that never crosses the source rect outside its pin.
+        // Begin() installs it as the vendored editor's link router (VENDOR-NOTES.md, local
+        // patch 2), so drawing, hit-testing and link bounds all follow it — for every
+        // NodeCanvas (Flow, Story, PostChain).
+        static void RouteLink(ImVec2 start, ImVec2 end, const ImRect& startNode, const ImRect& endNode,
+                              float strength, ImVec2& cp0, ImVec2& cp1);
 
     private:
         ed::EditorContext* m_Ctx = nullptr;

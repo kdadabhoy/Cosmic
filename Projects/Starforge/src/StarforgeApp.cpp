@@ -138,6 +138,7 @@ namespace Starforge
         X01SelfTestInit();   // WO-10: arm the X01 external-project package harness when its env is set
         AP03SelfTestInit();  // AP-03: arm the E01..E08 authoring harness when its env is set
         GuideSelfTestInit(); // GUIDE: arm the PendulumLab walkthrough driver when its env is set
+        UX01SelfTestInit();  // UX-01: arm the flow-editor / Editors-host harness when its env is set
     }
 
     // =========================================================================
@@ -187,6 +188,7 @@ namespace Starforge
         X01SelfTestShutdown();   // WO-10: free the X01 harness (no-op when never armed)
         AP03SelfTestShutdown();  // AP-03: free the authoring harness (no-op when never armed)
         GuideSelfTestShutdown(); // GUIDE: free the walkthrough driver (no-op when never armed)
+        UX01SelfTestShutdown();  // UX-01: free the Editors-host harness (no-op when never armed)
 
         Cosmic::Log::SetLogDirectory("logs");
         CS_INFO("Starforge: detached.");
@@ -370,6 +372,7 @@ namespace Starforge
         m_Ctx.Preview.SetCacheDirectory("");   // A4 — thumbnails are per-project
         m_ManifestFlow.clear();   // U5/U8 — flow offer is per-project
         m_PreviewBus.Clear(); m_LastPanels.Clear(); m_Live = LiveLoopState{}; m_Screens.Invalidate();   // AP-03
+        m_Editors.LogDirty(m_Ctx, "Close Project"); m_Editors.CloseAll();   // UX-01 (KI-71) — documents are per-project
         Cosmic::AssetLibrary::ClearDefaultTextureSampling();   // U3 — drop the pixel-art override
         // Back to the editor's own bundled assets for the homescreen; the scene
         // Viewport panel hides with the project (MountProject re-shows it).
@@ -1020,6 +1023,7 @@ namespace Starforge
         X01SelfTestTick();   // WO-10: no-op unless the X01 package harness is armed
         AP03SelfTestTick();  // AP-03: no-op unless the authoring harness is armed
         GuideSelfTestTick(); // GUIDE: no-op unless the walkthrough driver is armed
+        UX01SelfTestTick();  // UX-01: no-op unless the Editors-host harness is armed
 
         m_Editors.OnUpdate(m_Ctx, ts);    // M1 — advance open document playback (Animation Editor scrub/play)
 
@@ -1535,10 +1539,10 @@ namespace Starforge
             if (m_ShowSystem)       m_System.OnImGuiRender(m_Ctx, &m_ShowSystem);
             if (m_ShowPostChain)    m_PostChain.OnImGuiRender(m_Ctx, &m_ShowPostChain);   // Q6
             DrawAppPlatformPanels();   // AP-03 — Screens + DataBus (+ the Inspector's source links)
-            // M1 — the asset-editor document host stays visible while any document
-            // is open even if the panel bool was toggled off (closing docs is the
-            // tab ✕, not the panel ✕); auto-shown when a document opens.
-            if (m_ShowEditors || m_Editors.AnyOpen())
+            // M1 / UX-01 (KI-71) — the asset-editor document host is drawn exactly while
+            // View ▸ Editors is on: its ✕ hides the dock with every document still open
+            // (a tab's ✕ closes one document); Open() raises the flag again.
+            if (m_Editors.ShouldDraw(m_ShowEditors))
                 m_Editors.OnImGuiRender(m_Ctx, &m_ShowEditors);
             if (m_ShowStats)        DrawStatsWindow();
         }
@@ -1661,6 +1665,7 @@ namespace Starforge
         m_Ctx.ValidateSelection();
         AP03SelfTestFrameEnd();      // AP-03: no-op unless the authoring harness is armed
         GuideSelfTestFrameEnd();     // GUIDE: no-op unless the walkthrough driver is armed
+        UX01SelfTestFrameEnd();      // UX-01: no-op unless the Editors-host harness is armed
     }
 
     namespace

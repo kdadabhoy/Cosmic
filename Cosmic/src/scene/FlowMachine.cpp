@@ -387,6 +387,10 @@ namespace Cosmic
                     errors.push_back("state '" + s.Name + "' transitions to unknown state '" + t.To + "'");
                 if (t.On == "when" && !t.HasGuard)   // AP-01
                     errors.push_back("state '" + s.Name + "' has a 'when' transition without an 'if' guard");
+                // UX-01 (KI-68): a guard naming no channel, variable or entity never passes.
+                if (t.HasGuard && t.Guard.Channel.empty() && t.Guard.Var.empty() && t.Guard.Entity.empty())
+                    errors.push_back("state '" + s.Name + "' has a transition ('" + t.On + "' -> '" + t.To +
+                                     "') with an empty 'if' guard: name a channel, variable or entity");
             }
         }
         return errors;

@@ -1,0 +1,133 @@
+UX-01 Phase A excerpts (VMware VM, llvmpipe, 2026-09-25) - worktree build/_lanes/ux-01, HEAD d2aae20 + Phase A docs
+====================================================================================================
+Full logs stay under build/_temp (gitignored). COSMIC_SDK = the worktree; TEMP/TMP isolated per run under build/_temp.
+
+---- configure (fresh build/): exit 0, 7 s ----
+-- Building for: Visual Studio 18 2026
+-- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.26200.
+-- The C compiler identification is MSVC 19.51.36260.0
+-- The CXX compiler identification is MSVC 19.51.36260.0
+-- --> Skipping game projects: AnalysisSample;PendulumLab
+-- --> Auto-detected game project: SF_Telem
+-- --> Auto-detected game project: Starforge
+-- Configuring done (5.8s)
+-- Generating done (0.8s)
+
+---- cmake --build build --config Debug --parallel 4: exit=0 secs=459; ': warning' lines = 0; ': error' lines = 0 ----
+
+---- cmake --build build --config Release --parallel 4: exit=0 secs=349; ': warning' lines = 0; ': error' lines = 0 ----
+
+---- CosmicTests Debug, full suite, cwd = worktree root (exit 1, 877 s) ----
+Concurrent: this lane's Release build (--parallel 4) and UX-V0's build/tests.
+tests\test_filewatcher.cpp(83): ERROR: CHECK_FALSE( changes.empty() ) is NOT correct!
+  values: CHECK_FALSE( true )
+tests\test_filewatcher.cpp(84): ERROR: CHECK( MentionsFile(changes, name) ) is NOT correct!
+  values: CHECK( false )
+tests\test_wo05_matrix.cpp(218): ERROR: CHECK( ms <= 2000 ) is NOT correct!
+  values: CHECK( 10155 <= 2000 )
+tests\test_wo05_matrix.cpp(64): FATAL ERROR: REQUIRE( Until([&] { return root->Link().GetState() == SerialPort::State::Open; }) ) is NOT correct!
+  values: REQUIRE( false )
+tests\test_wo05_matrix.cpp(255): FATAL ERROR: REQUIRE( rig.fake->WaitOpenEntered() ) is NOT correct!
+  values: REQUIRE( false )
+tests\test_wo05_matrix.cpp(277): FATAL ERROR: REQUIRE( rig.fake->WaitOpenEntered() ) is NOT correct!
+  values: REQUIRE( false )
+tests\test_wo09_c05_json.cpp(218): ERROR: CHECK( maxMs < 2000.0 ) is NOT correct!
+  values: CHECK( 2819.86 <  2000 )
+tests\test_wo09_c05_json.cpp(437): ERROR: CHECK( st->maxMs <= deadlineMs ) is NOT correct!
+  values: CHECK( 2013.2 <= 2000 )
+[doctest] test cases:      529 |      523 passed | 6 failed | 14 skipped
+[doctest] assertions: 23118946 | 23118938 passed | 8 failed |
+
+---- CosmicTests Release, full suite, cwd = worktree root (exit 1, 114 s) ----
+Concurrent: UX-V0 CosmicRenderTests (llvmpipe), CPU 66-100 %.
+tests\test_wo05_matrix.cpp(131): FATAL ERROR: REQUIRE( rig.fake->WaitOpenEntered() ) is NOT correct!
+  values: REQUIRE( false )
+tests\test_wo05_matrix.cpp(255): FATAL ERROR: REQUIRE( rig.fake->WaitOpenEntered() ) is NOT correct!
+  values: REQUIRE( false )
+[doctest] test cases:      529 |      527 passed | 2 failed | 14 skipped
+[doctest] assertions: 22802769 | 22802767 passed | 2 failed |
+
+---- Re-run of the failed cases, Debug (-tc="WO-05 T03*,E10: a new file*,WO-09 C05: truncation*,WO-09 C05: parser fuzz*"), 155 s ----
+CPU 26 % at start; concurrent UX-V0 CosmicRenderTests Debug.
+tests\test_wo05_matrix.cpp(218): ERROR: CHECK( ms <= 2000 ) is NOT correct!
+  values: CHECK( 3427 <= 2000 )
+tests\test_wo05_matrix.cpp(131): FATAL ERROR: REQUIRE( rig.fake->WaitOpenEntered() ) is NOT correct!
+  values: REQUIRE( false )
+tests\test_wo05_matrix.cpp(255): FATAL ERROR: REQUIRE( rig.fake->WaitOpenEntered() ) is NOT correct!
+  values: REQUIRE( false )
+tests\test_wo05_matrix.cpp(281): ERROR: CHECK( duration<=std::chrono::milliseconds(250) ) is NOT correct!
+  values: CHECK( 396936600ns <= 250ms )
+[doctest] test cases:     7 |     4 passed | 3 failed | 536 skipped
+[doctest] assertions: 10141 | 10137 passed | 4 failed |
+
+---- Same re-run, Release, 434 s ----
+CPU 100 % at start; concurrent UX-V0 CosmicRenderTests Debug.
+tests\test_wo05_matrix.cpp(64): FATAL ERROR: REQUIRE( Until([&] { return root->Link().GetState() == SerialPort::State::Open; }) ) is NOT correct!
+  values: REQUIRE( false )
+tests\test_wo05_matrix.cpp(255): FATAL ERROR: REQUIRE( rig.fake->WaitOpenEntered() ) is NOT correct!
+  values: REQUIRE( false )
+tests\test_wo05_matrix.cpp(277): FATAL ERROR: REQUIRE( rig.fake->WaitOpenEntered() ) is NOT correct!
+  values: REQUIRE( false )
+[doctest] test cases:      7 |      4 passed | 3 failed | 536 skipped
+[doctest] assertions: 643960 | 643957 passed | 3 failed |
+
+---- WO-05 T03 alone, Debug (-tc="WO-05 T03*"), 168 s ----
+CPU 2 % at start, no other test/build process at start (UX-V0 Release CosmicRenderTests was running when the next run started 168 s later; load during this run not sampled).
+tests\test_wo05_matrix.cpp(64): FATAL ERROR: REQUIRE( Until([&] { return root->Link().GetState() == SerialPort::State::Open; }) ) is NOT correct!
+  values: REQUIRE( false )
+tests\test_wo05_matrix.cpp(255): FATAL ERROR: REQUIRE( rig.fake->WaitOpenEntered() ) is NOT correct!
+  values: REQUIRE( false )
+tests\test_wo05_matrix.cpp(277): FATAL ERROR: REQUIRE( rig.fake->WaitOpenEntered() ) is NOT correct!
+  values: REQUIRE( false )
+tests\test_wo05_matrix.cpp(64): FATAL ERROR: REQUIRE( Until([&] { return root->Link().GetState() == SerialPort::State::Open; }) ) is NOT correct!
+  values: REQUIRE( false )
+[doctest] test cases:      4 |      0 passed | 4 failed | 539 skipped
+[doctest] assertions: 404697 | 404693 passed | 4 failed |
+
+---- WO-05 T03 alone, Release, 16 s ----
+CPU 100 % at start; concurrent UX-V0 CosmicRenderTests Release.
+tests\test_wo05_matrix.cpp(131): FATAL ERROR: REQUIRE( rig.fake->WaitOpenEntered() ) is NOT correct!
+  values: REQUIRE( false )
+tests\test_wo05_matrix.cpp(255): FATAL ERROR: REQUIRE( rig.fake->WaitOpenEntered() ) is NOT correct!
+  values: REQUIRE( false )
+[doctest] test cases:   4 |   2 passed | 2 failed | 539 skipped
+[doctest] assertions: 814 | 812 passed | 2 failed |
+
+---- CONTROL: main's own Release CosmicTests (C:\dev\Cosmic\build, built 21:38 from d815252), -tc="WO-05 T03*", fresh cwd, 267 s ----
+Sampled CPU avg 56 / max 73 %, no other build/test process.
+[doctest] test cases:      4 |      4 passed | 0 failed | 533 skipped
+[doctest] assertions: 706412 | 706412 passed | 0 failed |
+
+---- This lane's Release CosmicTests, -tc="WO-05 T03*", fresh cwd, 392 s ----
+Sampled CPU avg 68 / max 100 %; UX-V0 cl.exe compiles and a Starforge.exe ran concurrently.
+[doctest] test cases:      4 |      4 passed | 0 failed | 539 skipped
+[doctest] assertions: 706412 | 706412 passed | 0 failed |
+
+---- This lane's Debug CosmicTests, -tc="WO-05 T03*", fresh cwd, 40 s ----
+CPU 56 % at start, 100 % at end (UX-V0 build).
+tests\test_wo05_matrix.cpp(131): FATAL ERROR: REQUIRE( rig.fake->WaitOpenEntered() ) is NOT correct!
+  values: REQUIRE( false )
+tests\test_wo05_matrix.cpp(255): FATAL ERROR: REQUIRE( rig.fake->WaitOpenEntered() ) is NOT correct!
+  values: REQUIRE( false )
+tests\test_wo05_matrix.cpp(277): FATAL ERROR: REQUIRE( rig.fake->WaitOpenEntered() ) is NOT correct!
+  values: REQUIRE( false )
+[doctest] test cases:     4 |     1 passed | 3 failed | 539 skipped
+[doctest] assertions: 56071 | 56068 passed | 3 failed |
+
+---- This lane's Debug CosmicTests, -tc="WO-05 T03*", cwd = worktree root, 401 s ----
+Sampled CPU avg 72 / max 100 %; UX-V0 Release CosmicTests + retained-manifest Starforge runs + cl.exe concurrently.
+[doctest] test cases:      4 |      4 passed | 0 failed | 539 skipped
+[doctest] assertions: 706412 | 706412 passed | 0 failed |
+
+---- The six UX-01 cases, Debug (-tc="UX-01*" -s) ----
+[doctest] test cases:   6 |   6 passed | 0 failed | 537 skipped
+[doctest] assertions: 162 | 162 passed | 0 failed |
+
+---- The six UX-01 cases, Release (-tc="UX-01*" -s) ----
+[doctest] test cases:   6 |   6 passed | 0 failed | 537 skipped
+[doctest] assertions: 162 | 162 passed | 0 failed |
+
+---- checkers ----
+check_gl_conformance: exit 0 :: GL conformance: clean (no raw gl*/GL_* tokens outside the platform layer).
+check_docs_coverage: exit 0 :: never mentions COSMIC_API SceneRenderDesc (declared in renderer/SceneRenderer.h) | Docs coverage: clean (123 public headers, 120 manifest rows, 5 reference chapter(s) still skeletons, 5 chapter(s) outside docs/reference/ so exempt from strict mode).
+check_docs_links: exit 0 :: warn-only breakages (archive / parked-3d / stability evidence): 62 | Markdown link audit passed.

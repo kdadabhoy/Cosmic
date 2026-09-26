@@ -23,13 +23,16 @@
 // ============================================================================
 
 #include "editors/IAssetEditor.h"
+#include "editors/FlowTrigger.h"
 #include "widgets/NodeCanvas.h"
 
 #include <Cosmic.h>
 #include "scene/FlowMachine.h"   // FlowAsset (not aggregated by Cosmic.h)
 
+#include <map>
 #include <string>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 namespace Starforge
@@ -52,6 +55,17 @@ namespace Starforge
         // Harness seam (GUIDE walkthrough self-test): select a state node + one of its
         // transitions so the inspector shows them; -1 clears. No effect on the asset.
         void               HarnessSelect(int stateIdx, int transIdx) { m_SelState = stateIdx; m_SelTrans = transIdx; }
+        // UX-01 harness seams (read-only). The inspector's current selection (-1 = none;
+        // UX-02's ED03 reads it), and the canvas as drawn last frame: its screen rect, every
+        // state node's screen rect (index = state index) and how many frames it has drawn.
+        void               HarnessSelection(int& state, int& trans) const { state = m_SelState; trans = m_SelTrans; }
+        struct HarnessView
+        {
+            ImVec2 CanvasMin{ 0.0f, 0.0f }, CanvasMax{ 0.0f, 0.0f };
+            std::vector<std::pair<ImVec2, ImVec2>> Nodes;
+            int FramesDrawn = 0;
+        };
+        const HarnessView& HarnessCanvas() const { return m_Harness; }
 
     private:
         void Revalidate();
@@ -66,6 +80,8 @@ namespace Starforge
         void DrawStateInspector(EditorContext& ctx, int stateIdx);
         void DrawTransitionInspector(EditorContext& ctx, int stateIdx, int transIdx);
         void DrawVariablesPanel(EditorContext& ctx);   // Q2
+        void DrawTriggerKind(Cosmic::FlowTransition& tr, FlowTrigger::Memory& mem);   // UX-01 — Event / Key / Timer / When
+        FlowTrigger::Memory& TriggerMemory(int stateIdx, int transIdx);
 
         // --- id mapping (opaque uintptr ids for NodeCanvas) -----------------
         static constexpr uintptr_t kQuitNode   = 1000000;
@@ -97,6 +113,13 @@ namespace Starforge
         int  m_SelState = -1;
         int  m_SelTrans = -1;
         bool m_ShowVars = false;   // Q2 — variables side panel toggle
+        bool m_ShowInspector = true;   // UX-01 — the inspector column, collapsible from the toolbar
+        int  m_CenterPending = 0;      // UX-01 — frames until the one-time CenterOnContent (0 = done)
+        HarnessView m_Harness;         // UX-01 — last drawn canvas geometry (harness seam)
+
+        // UX-01 — trigger-kind switching memory per transition, keyed by (state name,
+        // transition index), kept for the document's lifetime (FlowTrigger::SetKind).
+        std::map<std::pair<std::string, int>, FlowTrigger::Memory> m_TriggerMemory;
 
         std::vector<std::string> m_UndoStack;
         std::vector<std::string> m_RedoStack;

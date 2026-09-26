@@ -1,0 +1,140 @@
+UX-01 Phase B excerpts (VMware VM, llvmpipe, display 1718x920, 2026-09-26) - worktree build/_lanes/ux-01
+====================================================================================================
+ux/01 rebased onto main 690d642 (UX-V0 merge); KI conflict resolved keeping both sides (KI-66..71, KI-78 before KI-82..84).
+Rebased lane commits: 3f717f0 1fb0310 16263fb 7fec696 7fca363 7d0ec1c 318b981 1bf560c 24c0fba; Phase B: 067cd45 (KI-85 registered), e7f99a8 (KI-85 fixed).
+COSMIC_SDK = the worktree for every build / run; full logs stay under build/_temp (gitignored).
+
+---- re-configure + builds after the rebase (--parallel 4) ----
+Debug exit=0 secs=150
+Release exit=0 secs=217
+Debug: ': warning' lines = 0, ': error' lines = 0
+Release: ': warning' lines = 0, ': error' lines = 0
+KI-85 fix, --target Starforge Debug: ': warning' lines = 0, ': error' lines = 0
+KI-85 fix, --target Starforge Release: ': warning' lines = 0, ': error' lines = 0
+
+---- CosmicTests (full suite, cwd = worktree root, TEMP isolated) ----
+CosmicTests Debug exit=0 secs=510 loadStart=41 othersStart=[CosmicTests.exex2] :: [doctest] test cases:      529 |      529 passed | 0 failed | 14 skipped
+CosmicTests Release exit=0 secs=252 loadStart=1 othersStart=[] :: [doctest] test cases:      529 |      529 passed | 0 failed | 14 skipped
+
+---- KI-85 failing-before: the first ux01-editor Debug run after the rebase (before e7f99a8) ----
+ux01-result.json: 4157 bytes on disk (CRLF text); json.loads -> JSONDecodeError: Unterminated string starting at: line 62 column 5 (char 4056)
+last 160 characters of the file:
+  (0.2 s)",
+      "editors_close_button = (474,111)-(494,131)",
+      "step 10/25 done: FE03 click the ✕ (injected) (0.1 s)",
+      "after_close_button = show=0 open_do
+UX01 self-test: exit=-1073740791 verdict=FAIL elapsed=19s timedOut=False result=docs\plans\ux-shipping-2026-09-24\evidence\UX-01\ux01-Debug\ux01-result.json
+  [UX01] FAIL FE04: canvas 737x454 px, below 800x400
+  UX01_SELFTEST_RESULT=FAIL config=Debug failedChecks=1 seconds=4.9 errors=0 leaks=0 drift=0
+UX01 independent oracle: FAIL FE04: PNG is 1738x940, expected the 1920x1080 window
+[doctest] test cases: 4 | 0 passed | 4 failed
+
+---- ux01-editor after the KI-85 fix (runner verdicts + self-test lines) ----
+(Filed under evidence/UX-01/vm/ after the run; ux01-{Debug,Release}/ and runner-ux01-{Debug,Release}/ keep the pre-VM 1920x1080 PASS runs.)
+[Debug] ux01-editor Debug exit=1 secs=15 cpu avg=49 max=51 out=docs\plans\ux-shipping-2026-09-24\evidence\UX-01\runner-ux01-Debug
+  runner: FE01=PASSED, FE02=PASSED, FE03-U=PASSED, FE05-U=PASSED, UX01-EDITOR=FAILED  counts={'total': 5, 'passed': 4, 'failed': 1, 'blocked': 0}
+  UX01 self-test: exit=1 verdict=FAIL elapsed=6s timedOut=False result=docs\plans\ux-shipping-2026-09-24\evidence\UX-01\ux01-Debug\ux01-result.json
+  failed_checks=1 total_seconds=5 oracle errors=0 leaks=0 drift=0
+  FE03: PASS
+  FE04: FAIL
+  FE05: PASS
+  measured after_close_button: show=0 open_docs=1 window_active=0
+  measured canvas: 737x454 at (341,220) after 1 drawn frame(s)
+  measured close_project: docs before 2 (dirty 1) -> AnyOpen 0, dirty logged 1
+  measured editors_window: pos (331,107) size 1095x577 docked=1 dock_node=central
+  measured main_window: 1738x940
+  measured new_flow_dirty_after_12_frames: 0 (drawn 13)
+  measured new_flow_dirty_after_2_frames: 0 (drawn 2)
+  measured new_flow_dirty_after_drag: 1
+  measured nodes_inside_canvas: 4 of 4 (drawn frames 5)
+  FAILED CHECK: FE04: canvas 737x454 px, below 800x400
+  [UX01] FAIL FE04: canvas 737x454 px, below 800x400
+  UX01 independent oracle: FAIL FE04: PNG is 1738x940, expected the 1920x1080 window
+  [doctest] test cases: 4 | 2 passed | 2 failed
+[Release] ux01-editor Release exit=1 secs=16 cpu avg=45 max=65 out=docs\plans\ux-shipping-2026-09-24\evidence\UX-01\runner-ux01-Release
+  runner: FE01=PASSED, FE02=PASSED, FE03-U=PASSED, FE05-U=PASSED, UX01-EDITOR=FAILED  counts={'total': 5, 'passed': 4, 'failed': 1, 'blocked': 0}
+  UX01 self-test: exit=1 verdict=FAIL elapsed=6s timedOut=False result=docs\plans\ux-shipping-2026-09-24\evidence\UX-01\ux01-Release\ux01-result.json
+  failed_checks=1 total_seconds=4 oracle errors=0 leaks=0 drift=0
+  FE03: PASS
+  FE04: FAIL
+  FE05: PASS
+  measured after_close_button: show=0 open_docs=1 window_active=0
+  measured canvas: 737x454 at (341,220) after 1 drawn frame(s)
+  measured close_project: docs before 2 (dirty 1) -> AnyOpen 0, dirty logged 1
+  measured editors_window: pos (331,107) size 1095x577 docked=1 dock_node=central
+  measured main_window: 1738x940
+  measured new_flow_dirty_after_12_frames: 0 (drawn 13)
+  measured new_flow_dirty_after_2_frames: 0 (drawn 2)
+  measured new_flow_dirty_after_drag: 1
+  measured nodes_inside_canvas: 4 of 4 (drawn frames 5)
+  FAILED CHECK: FE04: canvas 737x454 px, below 800x400
+  [UX01] FAIL FE04: canvas 737x454 px, below 800x400
+  UX01 independent oracle: FAIL FE04: PNG is 1738x940, expected the 1920x1080 window
+  [doctest] test cases: 4 | 2 passed | 2 failed
+
+---- retained manifests (sequential; runner verdicts, wrapper summary lines) ----
+ap03-editor Debug exit=0 secs=189 cpu avg=67 max=90 out=docs\plans\ux-shipping-2026-09-24\evidence\UX-01\retained\ap03-editor-Debug othersStart=[]
+ap03-editor Release exit=0 secs=451 cpu avg=83 max=100 out=docs\plans\ux-shipping-2026-09-24\evidence\UX-01\retained\ap03-editor-Release othersStart=[]
+wo07-l02 Debug exit=0 secs=695 cpu avg=66 max=94 out=docs\plans\ux-shipping-2026-09-24\evidence\UX-01\retained\wo07-l02-Debug othersStart=[]
+wo07-l02 Release exit=0 secs=833 cpu avg=74 max=97 out=docs\plans\ux-shipping-2026-09-24\evidence\UX-01\retained\wo07-l02-Release othersStart=[]
+wo09-editor Debug exit=0 secs=5 cpu avg=16 max=16 out=docs\plans\ux-shipping-2026-09-24\evidence\UX-01\retained\wo09-editor-Debug othersStart=[]
+wo09-editor Release exit=0 secs=5 cpu avg=14 max=14 out=docs\plans\ux-shipping-2026-09-24\evidence\UX-01\retained\wo09-editor-Release othersStart=[]
+wo10-sample Debug exit=0 secs=96 cpu avg=72 max=96 out=docs\plans\ux-shipping-2026-09-24\evidence\UX-01\retained\wo10-sample-Debug othersStart=[]
+wo10-sample Release exit=0 secs=94 cpu avg=67 max=94 out=docs\plans\ux-shipping-2026-09-24\evidence\UX-01\retained\wo10-sample-Release othersStart=[]
+[ap03-editor-Debug] runner: AP03-EDITOR=PASSED  counts={'total': 1, 'passed': 1, 'failed': 0, 'blocked': 0}
+  AP03 self-test: exit=0 verdict=PASS elapsed=186s timedOut=False result=docs\plans\app-platform-2026-09-18\evidence\AP-03\ap03-Debug\ap03-result.json
+  failed_checks=0 total_seconds=186 live=2/2/1 oracle errors=0 leaks=0 drift=0 hosted=0
+  AP03 independent oracle: PASS
+  [doctest] test cases: 2 | 2 passed | 0 failed
+[ap03-editor-Release] runner: AP03-EDITOR=PASSED  counts={'total': 1, 'passed': 1, 'failed': 0, 'blocked': 0}
+  AP03 self-test: exit=0 verdict=PASS elapsed=448s timedOut=False result=docs\plans\app-platform-2026-09-18\evidence\AP-03\ap03-Release\ap03-result.json
+  failed_checks=0 total_seconds=448 live=2/2/1 oracle errors=0 leaks=0 drift=0 hosted=0
+  AP03 independent oracle: PASS
+  [doctest] test cases: 2 | 2 passed | 0 failed
+[wo07-l02-Debug] runner: L02=PASSED  counts={'total': 1, 'passed': 1, 'failed': 0, 'blocked': 0}
+  L02 self-test: exit=0 verdict=PASS elapsed=692s result=docs\plans\2d-stability-2026-09-16\evidence\WO-07\l02-runner-Debug\l02-result.json
+  builds=53 successful_rebuild_reloads=50 reflected_field_changes=12 compile_failure_recovered=True module_load_failure_recovered=True failed_checks=0
+  L02 independent scene oracle: PASS - scene 'C:/dev/Cosmic/build/_lanes/ux-01/build/_temp/l2d/cosmic-accept-370babb7dc10494197b1bbe313c8a88e/temp/l02/L02Reload/scenes/Main.cscene' matches the expected table (5 component fields, position, script overrides)
+  [doctest] test cases: 2 | 2 passed | 0 failed
+[wo07-l02-Release] runner: L02=PASSED  counts={'total': 1, 'passed': 1, 'failed': 0, 'blocked': 0}
+  L02 self-test: exit=0 verdict=PASS elapsed=830s result=docs\plans\2d-stability-2026-09-16\evidence\WO-07\l02-runner-Release\l02-result.json
+  builds=53 successful_rebuild_reloads=50 reflected_field_changes=12 compile_failure_recovered=True module_load_failure_recovered=True failed_checks=0
+  L02 independent scene oracle: PASS - scene 'C:/dev/Cosmic/build/_lanes/ux-01/build/_temp/l2r/cosmic-accept-990a810dac2d4234b0c96760967b66af/temp/l02/L02Reload/scenes/Main.cscene' matches the expected table (5 component fields, position, script overrides)
+  [doctest] test cases: 2 | 2 passed | 0 failed
+[wo09-editor-Debug] runner: C05-I=PASSED  counts={'total': 1, 'passed': 1, 'failed': 0, 'blocked': 0}
+  C05 self-test: exit=0 verdict=PASS elapsed=3s timedOut=False result=docs\plans\2d-stability-2026-09-16\evidence\WO-09\c05i-Debug\c05-result.json
+  failed_checks=0 steps=9 total_seconds=1.89532
+  C05 independent scene oracle: PASS - scene 'C:/dev/Cosmic/build/_lanes/ux-01/build/_temp/c5d/cosmic-accept-e70ecb7d6ccf47858c3bfbddf9af8707/temp/c05/C05Life/scenes/Main.cscene' matches the expected table (8 entities, parsed in 1 ms)
+  [doctest] test cases: 2 | 2 passed | 0 failed
+[wo09-editor-Release] runner: C05-I=PASSED  counts={'total': 1, 'passed': 1, 'failed': 0, 'blocked': 0}
+  C05 self-test: exit=0 verdict=PASS elapsed=2s timedOut=False result=docs\plans\2d-stability-2026-09-16\evidence\WO-09\c05i-Release\c05-result.json
+  failed_checks=0 steps=9 total_seconds=1.54586
+  C05 independent scene oracle: PASS - scene 'C:/dev/Cosmic/build/_lanes/ux-01/build/_temp/c5r/cosmic-accept-2f82c04551cb45b9a091b7cf69e57733/temp/c05/C05Life/scenes/Main.cscene' matches the expected table (8 entities, parsed in 2 ms)
+  [doctest] test cases: 2 | 2 passed | 0 failed
+[wo10-sample-Debug] runner: X01=PASSED  counts={'total': 1, 'passed': 1, 'failed': 0, 'blocked': 0}
+  X01 external project: build\wo10-sample-external\AnalysisSample (copied from Projects\AnalysisSample)
+  X01 package (editor path): exit=0 verdict=PASS elapsed=78s timedOut=False
+  dist=C:/dev/Cosmic/build/_lanes/ux-01/dist/AnalysisSample build_seconds=77.1155 failed_checks=0
+  X01 packaged run (cwd=docs\plans\2d-stability-2026-09-16\evidence\WO-10\x01-Debug\scratch-cwd-17a52ac84df342cfbd5ffbee125f6904): exit=0 verdict=PASS elapsed=15s timedOut=False
+  exe=dist\AnalysisSample\AnalysisSample.exe cwd(app)=dist\AnalysisSample user_root=./user rows=1201 scrubs=12 failed_checks=0
+  X01 numeric oracle (out of process): PASS - 12 scrubs re-evaluated in double: worst marker-vs-oracle 4.15E-005 m, worst plot-vs-equations 8.78E-005 m
+  X01 image + series oracle (out of process): PASS - PNG 1022x504: marker colour at the reference pixel (463,70), clear colour far away, user:// copy identical; series metadata extrema/discontinuities/seed as the equations say
+  [doctest] test cases: 4 | 4 passed | 0 failed
+[wo10-sample-Release] runner: X01=PASSED  counts={'total': 1, 'passed': 1, 'failed': 0, 'blocked': 0}
+  X01 external project: build\wo10-sample-external\AnalysisSample (copied from Projects\AnalysisSample)
+  X01 package (editor path): exit=0 verdict=PASS elapsed=77s timedOut=False
+  dist=C:/dev/Cosmic/build/_lanes/ux-01/dist/AnalysisSample build_seconds=76.3651 failed_checks=0
+  X01 packaged run (cwd=docs\plans\2d-stability-2026-09-16\evidence\WO-10\x01-Release\scratch-cwd-71a521b22f5448d4a5b387826c3e9279): exit=0 verdict=PASS elapsed=15s timedOut=False
+  exe=dist\AnalysisSample\AnalysisSample.exe cwd(app)=dist\AnalysisSample user_root=./user rows=1201 scrubs=12 failed_checks=0
+  X01 numeric oracle (out of process): PASS - 12 scrubs re-evaluated in double: worst marker-vs-oracle 4.15E-005 m, worst plot-vs-equations 8.78E-005 m
+  X01 image + series oracle (out of process): PASS - PNG 1022x504: marker colour at the reference pixel (463,70), clear colour far away, user:// copy identical; series metadata extrema/discontinuities/seed as the equations say
+  [doctest] test cases: 4 | 4 passed | 0 failed
+
+---- checkers (after the rebase) ----
+check_gl_conformance: GLSL sampler indexing: clean (89 *.glsl file(s) scanned, no sampler array indexed by a non-literal). | GL conformance: clean (no raw gl*/GL_* tokens outside the platform layer).
+check_docs_coverage: never mentions COSMIC_API SceneRenderDesc (declared in renderer/SceneRenderer.h) | Docs coverage: clean (123 public headers, 120 manifest rows, 5 reference chapter(s) still skeletons, 5 chapter(s) outside docs/reference/ so exempt from strict mode).
+check_docs_links: warn-only breakages (archive / parked-3d / stability evidence): 62 | Markdown link audit passed.
+check_gl_conformance exit=0
+check_docs_coverage exit=0
+check_docs_links exit=0
+

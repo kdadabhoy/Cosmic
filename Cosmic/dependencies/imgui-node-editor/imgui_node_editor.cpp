@@ -952,6 +952,16 @@ void ed::Link::UpdateEndpoints()
     m_End   = line.B;
 }
 
+// Cosmic local patch 2 (VENDOR-NOTES.md): an optional link router. When set, GetCurve asks it
+// for the control points of every link whose two pins belong to nodes (the link being dragged
+// out of a pin has a node-less cursor pin and keeps the stock curve).
+namespace ax { namespace NodeEditor { namespace Detail {
+using CosmicLinkRouter = void (*)(ImVec2 start, ImVec2 end, const ImRect& startNode, const ImRect& endNode,
+                                  float strength, ImVec2& cp0, ImVec2& cp1);
+extern CosmicLinkRouter g_CosmicLinkRouter;
+} } }
+ed::CosmicLinkRouter ed::g_CosmicLinkRouter = nullptr;
+
 ImCubicBezierPoints ed::Link::GetCurve() const
 {
     auto easeLinkStrength = [](const ImVec2& a, const ImVec2& b, float strength)
@@ -967,10 +977,17 @@ ImCubicBezierPoints ed::Link::GetCurve() const
         return strength;
     };
 
+    ImVec2 cp0, cp1;
+    if (g_CosmicLinkRouter && m_StartPin->m_Node && m_EndPin->m_Node)   // Cosmic local patch 2
+        g_CosmicLinkRouter(m_Start, m_End, m_StartPin->m_Node->m_Bounds, m_EndPin->m_Node->m_Bounds,
+                           m_StartPin->m_Strength, cp0, cp1);
+    else
+    {
     const auto startStrength = easeLinkStrength(m_Start, m_End, m_StartPin->m_Strength);
     const auto   endStrength = easeLinkStrength(m_Start, m_End,   m_EndPin->m_Strength);
-    const auto           cp0 = m_Start + m_StartPin->m_Dir * startStrength;
-    const auto           cp1 =   m_End +   m_EndPin->m_Dir *   endStrength;
+                         cp0 = m_Start + m_StartPin->m_Dir * startStrength;
+                         cp1 =   m_End +   m_EndPin->m_Dir *   endStrength;
+    }
 
     ImCubicBezierPoints result;
     result.P0 = m_Start;

@@ -1,0 +1,139 @@
+UX-01 failing-before excerpts (isolated before-state, Debug, 2026-09-24)
+=======================================================================
+Before-state = HEAD 6021822 + the new test / self-test seams with the OLD behaviour (every fixed code path at its
+6021822 text; seams: AssetEditorHost Find/Close/TabId(=index)/ShouldDraw(=flag||AnyOpen)/AnyDirty/LogDirty, FlowEditor
+HarnessSelection/HarnessCanvas, NodeCanvas::RouteLink = the stock curve, FlowTrigger::SetKind = the old radio + combo path).
+Produced by scratchpad make_before.py over the after-state files; tracked-file diff of the before-state vs 6021822:
+  sha256(git diff) = 9a06ced696aca2cc48963574916dca38464549923c83b26313a465bb04f56f5a
+Harness at the self-test run: UX01EditorSelfTest.cpp sha256 9b9f69dde8de36f2..., test_flow_editor.cpp 7a40154cf70c022d...
+(the test file later only gained a readable CAPTURE of the case name).
+Build: VS-bundled cmake 4.3.1-msvc1, -DCOSMIC_2D_ONLY=ON -DCOSMIC_BUILD_TESTS=ON, Debug, --parallel 4.
+
+---- 1. CosmicTests -ts="UX-01 flow editor" (exit 1) ----
+TEST CASE:  UX-01 FE01 RouteLink: forward links keep the stock curve bit for bit; backward, self-loop and vertical-stack links stay out of the source rect and pass below both nodes
+tests\test_flow_editor.cpp(279): ERROR: CHECK( bad == 0 ) is NOT correct!
+  values: CHECK( 14 == 0 )
+          first := t=0.206 (431.9, 40.0), 20.1 px from the pin
+tests\test_flow_editor.cpp(291): ERROR: CHECK( maxY > unionBottom + 2.0f ) is NOT correct!
+          first := t=0.206 (431.9, 40.0), 20.1 px from the pin
+tests\test_flow_editor.cpp(295): ERROR: CHECK( cp0.x == kExpected[n].Cp0x ) is NOT correct!
+          first := t=0.206 (431.9, 40.0), 20.1 px from the pin
+tests\test_flow_editor.cpp(296): ERROR: CHECK( cp0.y == kExpected[n].Cp0y ) is NOT correct!
+          first := t=0.206 (431.9, 40.0), 20.1 px from the pin
+tests\test_flow_editor.cpp(297): ERROR: CHECK( cp1.x == kExpected[n].Cp1x ) is NOT correct!
+          first := t=0.206 (431.9, 40.0), 20.1 px from the pin
+tests\test_flow_editor.cpp(298): ERROR: CHECK( cp1.y == kExpected[n].Cp1y ) is NOT correct!
+          first := t=0.206 (431.9, 40.0), 20.1 px from the pin
+tests\test_flow_editor.cpp(279): ERROR: CHECK( bad == 0 ) is NOT correct!
+  values: CHECK( 8 == 0 )
+          first := t=0.175 (444.3, 223.8), 17.9 px from the pin
+tests\test_flow_editor.cpp(291): ERROR: CHECK( maxY > unionBottom + 2.0f ) is NOT correct!
+          first := t=0.175 (444.3, 223.8), 17.9 px from the pin
+tests\test_flow_editor.cpp(295): ERROR: CHECK( cp0.x == kExpected[n].Cp0x ) is NOT correct!
+          first := t=0.175 (444.3, 223.8), 17.9 px from the pin
+tests\test_flow_editor.cpp(296): ERROR: CHECK( cp0.y == kExpected[n].Cp0y ) is NOT correct!
+          first := t=0.175 (444.3, 223.8), 17.9 px from the pin
+tests\test_flow_editor.cpp(297): ERROR: CHECK( cp1.x == kExpected[n].Cp1x ) is NOT correct!
+          first := t=0.175 (444.3, 223.8), 17.9 px from the pin
+tests\test_flow_editor.cpp(298): ERROR: CHECK( cp1.y == kExpected[n].Cp1y ) is NOT correct!
+          first := t=0.175 (444.3, 223.8), 17.9 px from the pin
+tests\test_flow_editor.cpp(279): ERROR: CHECK( bad == 0 ) is NOT correct!
+  values: CHECK( 22 == 0 )
+          first := t=0.333 (135.0, 52.2), 18.7 px from the pin
+tests\test_flow_editor.cpp(291): ERROR: CHECK( maxY > unionBottom + 2.0f ) is NOT correct!
+          first := t=0.333 (135.0, 52.2), 18.7 px from the pin
+tests\test_flow_editor.cpp(295): ERROR: CHECK( cp0.x == kExpected[n].Cp0x ) is NOT correct!
+          first := t=0.333 (135.0, 52.2), 18.7 px from the pin
+tests\test_flow_editor.cpp(296): ERROR: CHECK( cp0.y == kExpected[n].Cp0y ) is NOT correct!
+          first := t=0.333 (135.0, 52.2), 18.7 px from the pin
+tests\test_flow_editor.cpp(297): ERROR: CHECK( cp1.x == kExpected[n].Cp1x ) is NOT correct!
+          first := t=0.333 (135.0, 52.2), 18.7 px from the pin
+tests\test_flow_editor.cpp(298): ERROR: CHECK( cp1.y == kExpected[n].Cp1y ) is NOT correct!
+          first := t=0.333 (135.0, 52.2), 18.7 px from the pin
+tests\test_flow_editor.cpp(279): ERROR: CHECK( bad == 0 ) is NOT correct!
+  values: CHECK( 4 == 0 )
+          first := t=0.238 (159.9, 68.6), 29.7 px from the pin
+tests\test_flow_editor.cpp(291): ERROR: CHECK( maxY > unionBottom + 2.0f ) is NOT correct!
+          first := t=0.238 (159.9, 68.6), 29.7 px from the pin
+tests\test_flow_editor.cpp(295): ERROR: CHECK( cp0.x == kExpected[n].Cp0x ) is NOT correct!
+          first := t=0.238 (159.9, 68.6), 29.7 px from the pin
+tests\test_flow_editor.cpp(296): ERROR: CHECK( cp0.y == kExpected[n].Cp0y ) is NOT correct!
+          first := t=0.238 (159.9, 68.6), 29.7 px from the pin
+tests\test_flow_editor.cpp(297): ERROR: CHECK( cp1.x == kExpected[n].Cp1x ) is NOT correct!
+          first := t=0.238 (159.9, 68.6), 29.7 px from the pin
+tests\test_flow_editor.cpp(298): ERROR: CHECK( cp1.y == kExpected[n].Cp1y ) is NOT correct!
+          first := t=0.238 (159.9, 68.6), 29.7 px from the pin
+TEST CASE:  UX-01 FE02 trigger kinds: Event -> When -> Event through SetKind restores the transition field for field, with no guard and no "if"
+tests\test_flow_editor.cpp(334): ERROR: CHECK( AnyErrorContains(a.Validate(), "empty 'if' guard") ) is NOT correct!
+tests\test_flow_editor.cpp(166): ERROR: CHECK( a.HasGuard == b.HasGuard ) is NOT correct!
+tests\test_flow_editor.cpp(339): ERROR: CHECK( a.SaveToString() == before ) is NOT correct!
+tests\test_flow_editor.cpp(340): ERROR: CHECK( a.SaveToString().find("\"if\"") == std::string::npos ) is NOT correct!
+tests\test_flow_editor.cpp(353): ERROR: CHECK( a.SaveToString() == before ) is NOT correct!
+TEST CASE:  UX-01 FE02 FlowAsset::Validate: a when without a guard is refused and an empty guard on any transition is reported
+tests\test_flow_editor.cpp(396): ERROR: CHECK( errs.size() == 1 ) is NOT correct!
+tests\test_flow_editor.cpp(397): ERROR: CHECK( AnyErrorContains(errs, "empty 'if' guard") ) is NOT correct!
+tests\test_flow_editor.cpp(410): ERROR: CHECK( AnyErrorContains(a.Validate(), "empty 'if' guard") ) is NOT correct!
+TEST CASE:  UX-01 FE03 Editors host: Open raises the View flag, a cleared flag hides the window while documents stay open, a later Open raises it again, CloseAll empties
+tests\test_flow_editor.cpp(470): ERROR: CHECK_FALSE( host.ShouldDraw(show) ) is NOT correct!
+TEST CASE:  UX-01 FE05 Editors host: tab ids are per-document counters — closing a document never re-keys another, a reopened document gets a fresh id
+tests\test_flow_editor.cpp(503): ERROR: CHECK( host.TabId(b) == idB ) is NOT correct!
+tests\test_flow_editor.cpp(504): ERROR: CHECK( host.TabId(c) == idC ) is NOT correct!
+tests\test_flow_editor.cpp(508): ERROR: CHECK( idA2 != idC ) is NOT correct!
+tests\test_flow_editor.cpp(513): ERROR: CHECK( host.TabId(b) == idB ) is NOT correct!
+tests\test_flow_editor.cpp(514): ERROR: CHECK( host.TabId(a) == idA2 ) is NOT correct!
+tests\test_flow_editor.cpp(515): ERROR: CHECK( host.TabId(c) != idC ) is NOT correct!
+[doctest] test cases:   6 |   1 passed |  5 failed | 537 skipped
+
+  FE01 cases in order: forward (passes: the stock curve IS the forward route), backward same row, backward above,
+  self-loop, vertical stack. 'values: CHECK( N == 0 )' = samples inside the source rect (grown 2 px) outside its pin zone.
+
+---- 2. Run-UX01Editor.ps1 -Bin build\Runtime\Debug (exit 1) ----
+UX01 self-test: exit=1 verdict=FAIL elapsed=2s timedOut=False result=C:\dev\Cosmic\build\_lanes\ux-01\build\_temp\ux01\before-debug\ux01-result.json
+  failed_checks=10 total_seconds=2 oracle errors=0 leaks=0 drift=0
+  FE03: FAIL
+  FE04: FAIL
+  FE05: FAIL
+  measured after_close_button: show=1 open_docs=1 window_active=1
+  measured canvas: 4x5 at (70,173) after 1 drawn frame(s)
+  measured close_project: docs before 2 (dirty 1) -> AnyOpen 1, dirty logged 0
+  measured content_browser_rclick: (912,915) in grid (618,871)-(936,931), attempt 1
+  measured editors_close_button: (75,64)-(95,84)
+  measured editors_collapsed_before_fe05: yes (43x28) -> expanded
+  measured editors_window: pos (60,60) size 43x76 docked=0 dock_node=none
+  measured fe04_png: C:\dev\Cosmic\build\_lanes\ux-01\build\_temp\ux01\before-debug/fe04-flow-editor.png (1920x1080)
+  measured flow_graph_button: (187,97)-(294,127)
+  measured main_window: 1920x1080
+  measured new_flow: project://New Flow.cflow
+  measured new_flow_dirty_after_12_frames: 1 (drawn 13)
+  measured new_flow_dirty_after_2_frames: 1 (drawn 2)
+  measured new_flow_dirty_after_drag: 1
+  measured new_flow_drag_from: (127,280) on node (110,213)-(144,346)
+  measured new_flow_node_after_drag: (110,213)-(144,346)
+  measured nodes_inside_canvas: 0 of 4 (drawn frames 5)
+  measured open_after_frames: 6
+  measured os_pointer_events_dropped: 122
+  measured project_copy: C:/dev/Cosmic/build/_lanes/ux-01/build/_temp/ux01/before-proj/PendulumLab (18 files from C:/dev/Cosmic/build/_lanes/ux-01/Projects/PendulumLab)
+  FAILED CHECK: FE04: canvas 4x5 px, below 800x400
+  FAILED CHECK: FE04: the Editors window is neither >= 1100x680 nor docked
+  FAILED CHECK: FE04: state nodes outside the canvas: #0 (110,233)-(144,346) #1 (450,233)-(458,346) #2 (790,233)-(798,346) #3 (450,473)-(798,481)
+  FAILED CHECK: FE03: View > Editors still on after the xo
+  FAILED CHECK: FE03: the Editors window is still drawn after its xo (KI-71)
+  FAILED CHECK: FE05: a new flow is dirty on its first frames (KI-69)
+  FAILED CHECK: FE05: the new flow turned dirty without an edit
+  FAILED CHECK: FE05: the new flow's node is covered by 'Screens'
+  FAILED CHECK: FE03: documents survived Close Project (KI-71)
+  FAILED CHECK: FE03: the dirty document was dropped without a console line
+  UX01_SELFTEST_RESULT=FAIL config=Debug failedChecks=10 seconds=1.6 errors=0 leaks=0 drift=0
+  FE04 PNG 1920x1080
+  FE05 new flow: New Flow.cflow
+UX01 independent oracle: PASS 
+[doctest] test cases: 4 | 1 passed | 3 failed
+
+  Reading: KI-66 — the Editors window opened floating at (60,60) 43x76 with a 4x5 px canvas, no state node inside it
+  (it was focused: Dear ImGui focuses a newly appearing window; Open() itself never requested focus). KI-69 — the
+  CreateDefaultAsset flow was dirty after its first two drawn frames. KI-71 — Close Project left the documents open
+  (AnyOpen 1) with no console line. The FE03 ✕ step is confounded by KI-66: in a 43 px wide window the injected click
+  on the ✕ collapsed the window (43x28) instead of closing it, so the self-test's 'still drawn' does not isolate the
+  draw rule; the headless FE03 case above does (ShouldDraw(false) true while a document is open). The harness
+  expanded the collapsed window before FE05 (logged as editors_collapsed_before_fe05). FE05's drag check failed on
+  'covered by Screens' (the floating Screens panel, KI-78, over the tiny window's area).

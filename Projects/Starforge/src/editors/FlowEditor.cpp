@@ -63,6 +63,7 @@ namespace Starforge
             m_Loaded   = true;
             m_SelState = m_Asset.States.empty() ? -1 : 0;
             m_PlaceNodes = true;
+            m_CenterPending = 2;   // UX-01: centre once, the frame after the first layout
             Revalidate();
             ScanKnownSignals();
         }
@@ -208,10 +209,12 @@ namespace Starforge
         DrawToolbar(ctx);
         ImGui::Separator();
 
-        const float inspectorW = 330.0f;
+        // UX-01: the inspector column collapses from the toolbar (the canvas takes the width).
+        const float inspectorW = m_ShowInspector ? 330.0f : 0.0f;
         const float varsW = m_ShowVars ? 240.0f : 0.0f;
+        const float sideW = inspectorW + varsW;
         ImGui::BeginChild("flow_canvas_region",
-                          ImVec2(ImGui::GetContentRegionAvail().x - inspectorW - varsW - 8.0f, 0.0f),
+                          ImVec2(sideW > 0.0f ? ImGui::GetContentRegionAvail().x - sideW - 8.0f : 0.0f, 0.0f),
                           ImGuiChildFlags_None);
         DrawCanvas(ctx);
         ImGui::EndChild();
@@ -224,10 +227,13 @@ namespace Starforge
             ImGui::EndChild();
         }
 
-        ImGui::SameLine();
-        ImGui::BeginChild("flow_inspector_region", ImVec2(inspectorW, 0.0f), ImGuiChildFlags_Borders);
-        DrawInspector(ctx);
-        ImGui::EndChild();
+        if (m_ShowInspector)
+        {
+            ImGui::SameLine();
+            ImGui::BeginChild("flow_inspector_region", ImVec2(inspectorW, 0.0f), ImGuiChildFlags_Borders);
+            DrawInspector(ctx);
+            ImGui::EndChild();
+        }
     }
 
     void FlowEditor::DrawToolbar(EditorContext& ctx)
@@ -288,6 +294,8 @@ namespace Starforge
 
         ImGui::SameLine();
         ImGui::Checkbox("Variables", &m_ShowVars);   // Q2
+        ImGui::SameLine();
+        ImGui::Checkbox("Inspector", &m_ShowInspector);   // UX-01 — collapse the inspector column
 
         ImGui::SameLine();
         if (m_Problems.empty())
@@ -303,6 +311,14 @@ namespace Starforge
 
     void FlowEditor::DrawCanvas(EditorContext& ctx)
     {
+        // UX-01 harness seam: the canvas fills the region (NodeCanvas::Begin with size 0).
+        m_Harness.CanvasMin = ImGui::GetCursorScreenPos();
+        {
+            const ImVec2 avail = ImGui::GetContentRegionAvail();
+            m_Harness.CanvasMax = ImVec2(m_Harness.CanvasMin.x + avail.x, m_Harness.CanvasMin.y + avail.y);
+        }
+        ++m_Harness.FramesDrawn;
+
         m_Canvas.Begin("flow_graph");
 
         if (m_PlaceNodes)
@@ -317,6 +333,9 @@ namespace Starforge
                     ? glm::vec2(40.0f + 300.0f * (float)(i % 4), 40.0f + 200.0f * (float)(i / 4))
                     : m_Asset.States[i].EditorPos;
                 m_Canvas.SetNodePosition(NodeId(i), ImVec2(p.x, p.y));
+                // UX-01 (KI-69): the applied placement IS the stored layout, so the position
+                // sync below (the dirty check) never reads an auto-grid as a user edit.
+                m_Asset.States[i].EditorPos = p;
             }
             float maxX = 0.0f, minY = 40.0f;
             for (const FlowState& s : m_Asset.States)
@@ -327,18 +346,66 @@ namespace Starforge
 
         const ImVec4 red(1.0f, 0.42f, 0.35f, 1.0f);
         const ImVec4 dim(0.62f, 0.66f, 0.72f, 1.0f);
+        const float  sp     = ImGui::GetStyle().ItemSpacing.x;
+        const float  arrowW = ImGui::CalcTextSize("->").x;
+
+        // UX-01 (§1): opaque node bodies (a link routed behind a node never shows through it);
+        // input pins on the node's left edge with an arrowhead, output pins on its right edge.
+        ed::PushStyleColor(ed::StyleColor_NodeBg, ImVec4(0.125f, 0.133f, 0.153f, 1.0f));
+        auto beginInPin = [](ed::PinId id)
+        {
+            ed::PushStyleVar(ed::StyleVar_PivotAlignment, ImVec2(0.0f, 0.5f));
+            ed::PushStyleVar(ed::StyleVar_PinArrowSize, 8.0f);
+            ed::PushStyleVar(ed::StyleVar_PinArrowWidth, 8.0f);
+            ed::BeginPin(id, ed::PinKind::Input);
+        };
+        auto endInPin = []() { ed::EndPin(); ed::PopStyleVar(3); };
+        auto beginOutPin = [](ed::PinId id)
+        {
+            ed::PushStyleVar(ed::StyleVar_PivotAlignment, ImVec2(1.0f, 0.5f));
+            ed::BeginPin(id, ed::PinKind::Output);
+        };
+        auto endOutPin = []() { ed::EndPin(); ed::PopStyleVar(); };
 
         for (int i = 0; i < (int)m_Asset.States.size(); ++i)
         {
             FlowState& s = m_Asset.States[i];
+            const bool isStart = (s.Name == m_Asset.Start);
+            const bool missing = m_MissingScene.count(i) != 0;
+            const bool unreachable = m_Unreachable.count(i) != 0;
+            const char* sceneText = s.Scene.empty() ? (s.Overlay ? "(under-scene)" : "(no scene)") : nullptr;
+            const std::string sceneStem = sceneText ? std::string(sceneText) : StemOf(s.Scene);
+
+            std::vector<std::string> labels;
+            float labelsW = 0.0f;
+            for (const FlowTransition& tr : s.Transitions)
+            {
+                std::string label = "on " + (tr.On.empty() ? std::string("?") : tr.On);
+                if (tr.HasGuard) label += " [if]";
+                if (tr.Push)     label += " [push]";
+                if (!tr.To.empty() && tr.To[0] == '@') label += " -> " + tr.To;
+                labelsW = std::max(labelsW, ImGui::CalcTextSize(label.c_str()).x);
+                labels.push_back(std::move(label));
+            }
+
+            // The node's content width: output pins ("->", "+ link") right-align to it.
+            float titleW = arrowW + sp + ImGui::CalcTextSize(s.Name.c_str()).x;
+            if (isStart)   titleW += ImGui::CalcTextSize("[start]").x + sp;
+            if (s.Overlay) titleW += sp + ImGui::CalcTextSize("(overlay)").x;
+            const float addW = ImGui::CalcTextSize("+ link").x;
+            float contentW = std::max({ titleW, ImGui::CalcTextSize(sceneStem.c_str()).x, addW,
+                                        unreachable ? ImGui::CalcTextSize("unreachable").x : 0.0f });
+            if (!labels.empty())
+                contentW = std::max(contentW, labelsW + sp + arrowW);
+
             ed::BeginNode(NodeId(i));
             ImGui::PushID((int)NodeId(i));
 
-            ed::BeginPin(InPin(i), ed::PinKind::Input);
+            beginInPin(InPin(i));
             ImGui::TextUnformatted("->");
-            ed::EndPin();
+            endInPin();
             ImGui::SameLine();
-            if (s.Name == m_Asset.Start)
+            if (isStart)
             {
                 ImGui::TextColored(ImVec4(1.0f, 0.75f, 0.20f, 1.0f), "[start]");
                 ImGui::SameLine();
@@ -346,32 +413,28 @@ namespace Starforge
             ImGui::TextUnformatted(s.Name.c_str());
             if (s.Overlay) { ImGui::SameLine(); ImGui::TextColored(dim, "(overlay)"); }
 
-            const bool missing = m_MissingScene.count(i) != 0;
-            ImGui::TextColored(missing ? red : dim, "%s",
-                               s.Scene.empty() ? (s.Overlay ? "(under-scene)" : "(no scene)")
-                                               : StemOf(s.Scene).c_str());
-            if (m_Unreachable.count(i))
+            ImGui::TextColored(missing ? red : dim, "%s", sceneStem.c_str());
+            if (unreachable)
                 ImGui::TextColored(red, "unreachable");
 
             for (int t = 0; t < (int)s.Transitions.size(); ++t)
             {
-                const FlowTransition& tr = s.Transitions[t];
-                std::string label = "on " + (tr.On.empty() ? std::string("?") : tr.On);
-                if (tr.HasGuard) label += " [if]";
-                if (tr.Push)     label += " [push]";
-                const bool external = !tr.To.empty() && tr.To[0] == '@';
-                if (external) label += " -> " + tr.To;
-
+                const std::string& label = labels[t];
                 ImGui::TextUnformatted(label.c_str());
-                ImGui::SameLine();
-                ed::BeginPin(OutPin(i, t), ed::PinKind::Output);
+                ImGui::SameLine(0.0f, contentW - ImGui::CalcTextSize(label.c_str()).x - arrowW);   // "->" column right-aligned
+                beginOutPin(OutPin(i, t));
                 ImGui::TextUnformatted("->");
-                ed::EndPin();
+                endOutPin();
             }
 
-            ed::BeginPin(AddPin(i), ed::PinKind::Output);
+            if (contentW - addW > 0.5f)
+            {
+                ImGui::Dummy(ImVec2(contentW - addW, 0.0f));
+                ImGui::SameLine(0.0f, 0.0f);
+            }
+            beginOutPin(AddPin(i));
             ImGui::TextDisabled("+ link");
-            ed::EndPin();
+            endOutPin();
 
             ImGui::PopID();
             ed::EndNode();
@@ -379,13 +442,23 @@ namespace Starforge
 
         {
             ed::BeginNode(kQuitNode);
-            ed::BeginPin(kQuitInPin, ed::PinKind::Input);
+            beginInPin(kQuitInPin);
             ImGui::TextUnformatted("->");
-            ed::EndPin();
+            endInPin();
             ImGui::SameLine();
             ImGui::TextUnformatted("@quit");
             ImGui::TextColored(dim, "closes the app / stops Play");
             ed::EndNode();
+        }
+        ed::PopStyleColor();
+
+        // UX-01 harness seam: every state node's screen rect as drawn this frame.
+        m_Harness.Nodes.clear();
+        for (int i = 0; i < (int)m_Asset.States.size(); ++i)
+        {
+            const ImVec2 p  = ed::GetNodePosition(NodeId(i));
+            const ImVec2 sz = ed::GetNodeSize(NodeId(i));
+            m_Harness.Nodes.push_back({ ed::CanvasToScreen(p), ed::CanvasToScreen(ImVec2(p.x + sz.x, p.y + sz.y)) });
         }
 
         for (int i = 0; i < (int)m_Asset.States.size(); ++i)
@@ -507,6 +580,11 @@ namespace Starforge
                 m_Dirty = true;
             }
         }
+
+        // UX-01 (KI-66): centre on the graph once, the frame after the first layout (the
+        // nodes have drawn once, so their sizes and the canvas size are settled).
+        if (m_CenterPending > 0 && --m_CenterPending == 0)
+            m_Canvas.CenterOnContent();
 
         m_Canvas.End();
         (void)ctx;
@@ -730,63 +808,7 @@ namespace Starforge
 
         ImGui::TextDisabled("Transition");
 
-        if (ImGui::BeginCombo("On", tr.On.c_str()))
-        {
-            for (const std::string& sig : m_KnownSignals)
-            {
-                const bool sel = (sig == tr.On);
-                if (ImGui::Selectable(sig.c_str(), sel) && !sel)
-                {
-                    Snapshot();
-                    tr.On = sig;
-                }
-            }
-            ImGui::EndCombo();
-        }
-        char on[96];
-        std::snprintf(on, sizeof(on), "%s", tr.On.c_str());
-        if (ImGui::InputText("On (custom)", on, sizeof(on), ImGuiInputTextFlags_EnterReturnsTrue))
-        {
-            Snapshot();
-            tr.On = on;
-        }
-        ImGui::TextDisabled("signals, key:<Name>, timer:<seconds>, or when (condition only)");
-
-        // AP-03 (§5): the "when" trigger — a condition-only transition (needs a guard) —
-        // and a key picker over FlowKeyBridge::KeyCodeFor's table.
-        {
-            const bool isWhen = (tr.On == "when");
-            if (ImGui::RadioButton("when (guard only)", isWhen) && !isWhen)
-            {
-                Snapshot();
-                tr.On = "when";
-                if (!tr.HasGuard) tr.HasGuard = true;
-                Revalidate();
-            }
-            ImGui::SameLine();
-            const std::string keyLabel = tr.On.rfind("key:", 0) == 0 ? tr.On.substr(4) : std::string("key…");
-            ImGui::SetNextItemWidth(120.0f);
-            if (ImGui::BeginCombo("##keypick", keyLabel.c_str()))
-            {
-                static const char* kNamed[] = { "Escape", "Space", "Enter", "Tab", "Backspace", "Up", "Down", "Left", "Right" };
-                std::vector<std::string> names(std::begin(kNamed), std::end(kNamed));
-                for (int i = 1; i <= 12; ++i) names.push_back("F" + std::to_string(i));
-                for (char c = 'A'; c <= 'Z'; ++c) names.push_back(std::string(1, c));
-                for (char c = '0'; c <= '9'; ++c) names.push_back(std::string(1, c));
-                for (const std::string& n : names)
-                {
-                    if (FlowKeyBridge::KeyCodeFor(n) < 0) continue;   // only what the bridge resolves
-                    const std::string sig = "key:" + n;
-                    if (ImGui::Selectable(n.c_str(), tr.On == sig) && tr.On != sig)
-                    {
-                        Snapshot();
-                        tr.On = sig;
-                    }
-                }
-                ImGui::EndCombo();
-            }
-            if (ImGui::IsItemHovered()) ImGui::SetTooltip("key:<Name> — FlowKeyBridge rising edge");
-        }
+        DrawTriggerKind(tr, TriggerMemory(stateIdx, transIdx));
 
         if (ImGui::BeginCombo("To", tr.To.c_str()))
         {
@@ -822,16 +844,20 @@ namespace Starforge
             tr.Push = push;
         }
 
+        const bool guardProblemBefore = tr.HasGuard && FlowTrigger::IsEmptyGuard(tr.Guard);
         bool hasGuard = tr.HasGuard;
         if (ImGui::Checkbox("Guard (if)", &hasGuard))
         {
             Snapshot();
             tr.HasGuard = hasGuard;
+            Revalidate();   // UX-01: "when without a guard" comes and goes with the checkbox
         }
         if (tr.HasGuard)
         {
             DrawFlowGuardFields("trguard", tr.Guard, [this]() { Snapshot(); });
         }
+        if ((tr.HasGuard && FlowTrigger::IsEmptyGuard(tr.Guard)) != guardProblemBefore)
+            Revalidate();   // UX-01: the empty-guard problem clears as soon as a source is named
 
         if (ImGui::Button("Delete Transition"))
         {
@@ -841,6 +867,116 @@ namespace Starforge
             Revalidate();
         }
         (void)ctx;
+    }
+
+    FlowTrigger::Memory& FlowEditor::TriggerMemory(int stateIdx, int transIdx)
+    {
+        return m_TriggerMemory[{ m_Asset.States[stateIdx].Name, transIdx }];
+    }
+
+    // UX-01 (§1, KI-68): the trigger-kind selector — Event / Key / Timer / When — replaces the
+    // one-way "when (guard only)" radio. Every switch goes through FlowTrigger::SetKind (the
+    // rules live there, ImGui-free, and CosmicTests FE02 drives the same command path).
+    void FlowEditor::DrawTriggerKind(FlowTransition& tr, FlowTrigger::Memory& mem)
+    {
+        using FlowTrigger::Kind;
+        const Kind kind = FlowTrigger::KindOf(tr.On);
+
+        ImGui::TextUnformatted("Trigger");
+        for (Kind k : { Kind::Event, Kind::Key, Kind::Timer, Kind::When })
+        {
+            ImGui::SameLine();
+            if (ImGui::RadioButton(FlowTrigger::Label(k), kind == k) && kind != k)
+            {
+                Snapshot();
+                FlowTrigger::SetKind(tr, k, mem);
+                Revalidate();
+            }
+        }
+
+        switch (FlowTrigger::KindOf(tr.On))
+        {
+        case Kind::Event:
+        {
+            // The scene's UiButton / UiSlider / UiToggle signals + the flow's existing event names.
+            if (ImGui::BeginCombo("On", tr.On.c_str()))
+            {
+                for (const std::string& sig : m_KnownSignals)
+                {
+                    if (FlowTrigger::KindOf(sig) != Kind::Event) continue;
+                    const bool sel = (sig == tr.On);
+                    if (ImGui::Selectable(sig.c_str(), sel) && !sel)
+                    {
+                        Snapshot();
+                        tr.On = sig;
+                    }
+                }
+                ImGui::EndCombo();
+            }
+            char on[96];
+            std::snprintf(on, sizeof(on), "%s", tr.On.c_str());
+            if (ImGui::InputText("On (custom)", on, sizeof(on), ImGuiInputTextFlags_EnterReturnsTrue) && on[0])
+            {
+                Snapshot();
+                tr.On = on;
+                Revalidate();
+            }
+            ImGui::TextDisabled("a signal: a button / slider / toggle Signal, or one a script emits");
+            break;
+        }
+        case Kind::Key:
+        {
+            // A key picker over FlowKeyBridge::KeyCodeFor's table (AP-03 §5).
+            const std::string keyLabel = tr.On.substr(4);
+            if (ImGui::BeginCombo("Key", keyLabel.c_str()))
+            {
+                static const char* kNamed[] = { "Escape", "Space", "Enter", "Tab", "Backspace", "Up", "Down", "Left", "Right" };
+                std::vector<std::string> names(std::begin(kNamed), std::end(kNamed));
+                for (int i = 1; i <= 12; ++i) names.push_back("F" + std::to_string(i));
+                for (char c = 'A'; c <= 'Z'; ++c) names.push_back(std::string(1, c));
+                for (char c = '0'; c <= '9'; ++c) names.push_back(std::string(1, c));
+                for (const std::string& n : names)
+                {
+                    if (FlowKeyBridge::KeyCodeFor(n) < 0) continue;   // only what the bridge resolves
+                    const std::string sig = "key:" + n;
+                    if (ImGui::Selectable(n.c_str(), tr.On == sig) && tr.On != sig)
+                    {
+                        Snapshot();
+                        tr.On = sig;
+                    }
+                }
+                ImGui::EndCombo();
+            }
+            ImGui::TextDisabled("key:<Name> — fires on the key's press (FlowKeyBridge rising edge)");
+            break;
+        }
+        case Kind::Timer:
+        {
+            float seconds = 1.0f;
+            FlowTrigger::TimerSeconds(tr.On, seconds);
+            if (ImGui::InputFloat("Seconds", &seconds, 0.0f, 0.0f, "%g", ImGuiInputTextFlags_EnterReturnsTrue) &&
+                seconds >= 0.0f)
+            {
+                const std::string next = FlowTrigger::TimerOn(seconds);
+                if (next != tr.On)
+                {
+                    Snapshot();
+                    tr.On = next;
+                }
+            }
+            ImGui::TextDisabled("timer:<seconds> — fires that long after the state is entered");
+            break;
+        }
+        case Kind::When:
+        {
+            ImGui::TextDisabled("condition only — fires once the guard below passes");
+            if (!tr.HasGuard || FlowTrigger::IsEmptyGuard(tr.Guard))
+                ImGui::TextColored(ImVec4(1.0f, 0.75f, 0.20f, 1.0f),
+                                   "Name what it waits for: Compare > Channel (a DataBus channel), "
+                                   "Variable or Field.");
+            break;
+        }
+        }
     }
 
     // Q2 — the typed-variables blackboard (shared widget; snapshots for undo).

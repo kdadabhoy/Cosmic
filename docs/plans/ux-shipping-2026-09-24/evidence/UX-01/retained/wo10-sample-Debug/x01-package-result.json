@@ -1,0 +1,32 @@
+{
+  "work_order": "WO-10",
+  "case": "X01 package (editor path)",
+  "config": "Debug",
+  "path": "OpenProjectPath -> StarforgeApp::PackageProject -> BeginPackage -> BuildRunner (cmake configure + build Release, external tree) -> Packager::Stage -> Packager::Finalize",
+  "project": "AnalysisSample",
+  "project_root": "C:\\dev\\Cosmic\\build\\_lanes\\ux-01\\build\\wo10-sample-external\\AnalysisSample",
+  "sdk": "C:\\dev\\Cosmic\\build\\_lanes\\ux-01",
+  "dist": "C:/dev/Cosmic/build/_lanes/ux-01/dist/AnalysisSample",
+  "exe": "C:/dev/Cosmic/build/_lanes/ux-01/dist/AnalysisSample/AnalysisSample.exe",
+  "build_seconds": 77.1155,
+  "total_seconds": 77.2434,
+  "failed_checks": 0,
+  "verdict": "PASS",
+  "payload": [
+    "AnalysisSample.exe",
+    "Cosmic.dll",
+    "AnalysisSample.dll",
+    "boot.cfg",
+    "assets/projects/AnalysisSample/project.cproj",
+    "assets/projects/AnalysisSample/data/trajectory.csv",
+    "assets/shaders"
+  ],
+  "checks_failed": [
+  ],
+  "log": [
+    "armed: result=C:\\dev\\Cosmic\\build\\_lanes\\ux-01\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-10\\x01-Debug\\x01-package-result.json project=C:\\dev\\Cosmic\\build\\_lanes\\ux-01\\build\\wo10-sample-external\\AnalysisSample sdk=C:\\dev\\Cosmic\\build\\_lanes\\ux-01",
+    "opened 'AnalysisSample' @ C:/dev/Cosmic/build/_lanes/ux-01/build/wo10-sample-external/AnalysisSample (external=yes)",
+    "PackageProject(): building 'AnalysisSample' Release then staging (BuildRunner)",
+    "build + stage finished in 77.1 s; dist='C:/dev/Cosmic/build/_lanes/ux-01/dist/AnalysisSample'"
+  ]
+}

@@ -99,6 +99,7 @@ namespace Starforge
             ws->DockWindow("Material Editor", Cosmic::DockPort::RightTop);   // tab
             ws->DockWindow("Content Browser", Cosmic::DockPort::BottomCenter);
             ws->DockWindow("Console",         Cosmic::DockPort::BottomRight);
+            ws->DockWindow("Editors",         Cosmic::DockPort::Center);   // UX-01 — flow/story documents tab with the Viewport
         }
         else if (name == "Animation")
         {
@@ -127,6 +128,7 @@ namespace Starforge
             ws->DockWindow("Console",   Cosmic::DockPort::BottomRight);
             ws->DockWindow("Profiler",  Cosmic::DockPort::BottomRight);   // T17 (tabbed)
             ws->DockWindow("System",    Cosmic::DockPort::BottomRight);   // T18 (tabbed)
+            ws->DockWindow("Editors",   Cosmic::DockPort::Center);        // UX-01 — flow/story documents tab with the Viewport
         }
         else   // "Level" — the classic editing layout (the coded default).
         {
@@ -136,6 +138,7 @@ namespace Starforge
             ws->DockWindow("Inspector",       Cosmic::DockPort::RightTop);
             ws->DockWindow("Content Browser", Cosmic::DockPort::BottomCenter);
             ws->DockWindow("Console",         Cosmic::DockPort::BottomRight);
+            ws->DockWindow("Editors",         Cosmic::DockPort::Center);   // UX-01 — flow/story documents tab with the Viewport
         }
 
         ws->ResetLayout();

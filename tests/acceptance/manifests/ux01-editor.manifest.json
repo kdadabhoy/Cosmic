@@ -1,0 +1,97 @@
+{
+  "manifest": "ux01-editor",
+  "cases": [
+    {
+      "id": "FE01",
+      "description": "UX-01 link routing (catalog FE01 U): NodeCanvas::RouteLink, the TU the editor ships (Projects/Starforge/src/widgets/NodeCanvasRoute.cpp) compiled into CosmicTests — forward, backward same row, backward above, self-loop and vertical stack: 64 samples of each cubic never enter the source node rect grown by 2 px except at its own pin, backward / self-loop / stacked curves pass below the union of both rects, the five control-point pairs are bit-exact, and forward links equal imgui-node-editor's stock Link::GetCurve bit for bit (three more forward geometries).",
+      "tier": "U",
+      "profiles": ["pr", "nightly", "release"],
+      "requires": ["windows"],
+      "command": "powershell",
+      "workingDir": "{BIN}",
+      "args": [
+        "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
+        "{ACCEPTANCE}\\fixtures\\Run-WO10Case.ps1",
+        "-Bin", "{BIN}", "-CaseId", "FE01", "-TestCase", "UX-01 FE01*", "-MinTests", "1", "-DeadlineSec", "120",
+        "-Output", "{RUNTEMP}\\fe01"
+      ],
+      "expectExit": 0,
+      "minTests": 1,
+      "deadlineSec": 180
+    },
+    {
+      "id": "FE02",
+      "description": "UX-01 trigger kinds (catalog FE02 U): the inspector's command path (editors/FlowTrigger.cpp) — Event -> When -> Event restores the transition field for field with no guard and no \"if\", Key / Timer memory per transition, a filled-in guard survives, an existing guard is kept; FlowAsset::Validate refuses `when` without a guard and reports an empty guard on any transition; F-FLOWS — LoadFromString + SaveToString of the 12 tracked .cflow files hash (SHA-256) exactly as the list generated at the base 6021822 (docs/plans/ux-shipping-2026-09-24/evidence/UX-01/fflows-sha256.txt).",
+      "tier": "U",
+      "profiles": ["pr", "nightly", "release"],
+      "requires": ["windows"],
+      "command": "powershell",
+      "workingDir": "{BIN}",
+      "args": [
+        "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
+        "{ACCEPTANCE}\\fixtures\\Run-WO10Case.ps1",
+        "-Bin", "{BIN}", "-CaseId", "FE02", "-TestCase", "UX-01 FE02*", "-MinTests", "3", "-DeadlineSec", "120",
+        "-Output", "{RUNTEMP}\\fe02"
+      ],
+      "expectExit": 0,
+      "minTests": 3,
+      "deadlineSec": 180,
+      "fixture": "../../docs/plans/ux-shipping-2026-09-24/evidence/UX-01/fflows-sha256.txt"
+    },
+    {
+      "id": "FE03-U",
+      "description": "UX-01 Editors host, headless half of FE03 (catalog FE03 U): AssetEditorHost::Open raises the View flag, a cleared flag means the window is not drawn while documents stay open (the rule StarforgeApp now calls), a later Open raises it again without duplicating the document, AnyDirty, CloseAll empties the host.",
+      "tier": "U",
+      "profiles": ["pr", "nightly", "release"],
+      "requires": ["windows"],
+      "command": "powershell",
+      "workingDir": "{BIN}",
+      "args": [
+        "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
+        "{ACCEPTANCE}\\fixtures\\Run-WO10Case.ps1",
+        "-Bin", "{BIN}", "-CaseId", "FE03-U", "-TestCase", "UX-01 FE03*", "-MinTests", "1", "-DeadlineSec", "120",
+        "-Output", "{RUNTEMP}\\fe03u"
+      ],
+      "expectExit": 0,
+      "minTests": 1,
+      "deadlineSec": 180
+    },
+    {
+      "id": "FE05-U",
+      "description": "UX-01 Editors host tab ids, headless half of FE05 (catalog FE05 U): per-document counters assigned at Open — closing a document keeps every other document's id, a reopened document gets a fresh one, the catalog's close-and-reopen-a-second-document sequence keeps the first's id. The not-dirty frames run in the editor case below; tests/test_flowmachine.cpp's EditorPos round trip runs in the retained suites.",
+      "tier": "U",
+      "profiles": ["pr", "nightly", "release"],
+      "requires": ["windows"],
+      "command": "powershell",
+      "workingDir": "{BIN}",
+      "args": [
+        "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
+        "{ACCEPTANCE}\\fixtures\\Run-WO10Case.ps1",
+        "-Bin", "{BIN}", "-CaseId", "FE05-U", "-TestCase", "UX-01 FE05*", "-MinTests", "1", "-DeadlineSec", "120",
+        "-Output", "{RUNTEMP}\\fe05u"
+      ],
+      "expectExit": 0,
+      "minTests": 1,
+      "deadlineSec": 180
+    },
+    {
+      "id": "UX01-EDITOR",
+      "description": "UX-01 editor halves inside the REAL Starforge editor (Projects/Starforge/src/UX01EditorSelfTest.cpp), fresh prefs (child CWD), window 1920x1080, a copy of Projects/PendulumLab: FE04 an injected click on Screens > Flow graph -> the next frame the Editors window is focused and its canvas >= 800x400 px, then every state node inside the canvas (CenterOnContent), PNG saved; FE03 an injected click on the Editors tab's close button -> window absent with the document still open, Screens > Flow graph's command shows it again, Close Project leaves AnyOpen() false after logging the dirty document it drops; FE05 an injected Content Browser right-click > New > Flow, the file opened through the double-click request -> Dirty() false after two drawn frames and ten, an injected node drag dirties it. WO-07 ImGui stack oracle after every step. The wrapper adds the OUT-OF-PROCESS oracles (PNG 1920x1080, flows/Main.cflow never rewritten, exactly one new default flow).",
+      "tier": "I",
+      "profiles": ["gpu", "release"],
+      "requires": ["windows", "gpu-gl"],
+      "command": "powershell",
+      "workingDir": "{BIN}",
+      "args": [
+        "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
+        "{ACCEPTANCE}\\fixtures\\Run-UX01Editor.ps1",
+        "-Bin", "{BIN}",
+        "-Output", "{REPO}\\docs\\plans\\ux-shipping-2026-09-24\\evidence\\UX-01\\ux01-{CONFIG}",
+        "-ProjectRoot", "{RUNTEMP}\\ux01proj"
+      ],
+      "expectExit": 0,
+      "minTests": 4,
+      "deadlineSec": 700
+    }
+  ]
+}
