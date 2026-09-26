@@ -1276,6 +1276,13 @@ recorded in `docs/plans/ux-shipping-2026-09-24/evidence/UX-01/failing-before/fai
 - Regression: none yet (UX-H1).
 - Disposition: open; owner UX-H1 — make these tests robust to a slow or loaded host without hiding real regressions (never just widen the bars blindly). Until then (`work-orders/README.md`, VM section): a failure of only these under load is re-run alone before it counts, and the orchestrator's landing runs are done with no other lane building.
 
+- Update (2026-09-26, landing record): two more members. WO-09 C02 is in the title list above via UX-V0's follow-up;
+  add **wo06 D03-nightly** (the acceptance runner's 60 s case deadline): 62.9 s under load in UX-03's Phase A Release
+  run and again in its re-run, while direct `Run-WO06Fuzz.ps1` runs (no deadline) pass all 50,000 cases in 97–126 s
+  at 39–81 % CPU — on this VM the deadline may be too short even without load; UX-H1 measures it on a quiet machine
+  before deciding. Evidence: `docs/plans/ux-shipping-2026-09-24/evidence/UX-03/phaseA-vm-excerpts.txt` (lands with
+  UX-03).
+
 ## UX-01 findings, Phase B (2026-09-26, the campaign VM)
 
 ### KI-85 — The UX-01 editor self-test truncates its own result JSON on the FAIL path: the result `std::ofstream` is still open (unflushed) when `std::quick_exit(1)` ends the process, so a failing run leaves invalid JSON and the wrapper reports every ID as failed
@@ -1285,3 +1292,13 @@ recorded in `docs/plans/ux-shipping-2026-09-24/evidence/UX-01/failing-before/fai
 - Failing-before: `docs/plans/ux-shipping-2026-09-24/evidence/UX-01/phaseB-vm-excerpts.txt` (section KI-85, the truncated file's tail and the wrapper's summary).
 - Regression: `ux01-editor` on the VM (its FE04 size check fails there, so every run exercises the FAIL path): the result JSON must parse and name FE03 / FE05 PASS.
 - Disposition: fixed in UX-01 `e7f99a8` (branch `ux/01`, registered in `067cd45`) — the result stream is closed before the FAIL exit, which is now `TerminateProcess(GetCurrentProcess(), 1)`; passing-after: the VM runs of `ux01-editor` (Debug and Release) end with exit 1, a result JSON that parses, FE03 PASS / FE05 PASS / FE04 FAIL, and the wrapper summary `4 | 2 passed | 2 failed` (FE04 + the PNG-size oracle). The same `ofstream` + `quick_exit` shape in `AP03AuthoringSelfTest.cpp` / `GuideWalkthroughSelfTest.cpp` is not UX-01's to change (UX-V0 saw AP03's FAIL path end in `0xC0000409` too).
+
+## Landing-record findings (2026-09-26, the campaign VM)
+
+### KI-86 — The AP03 authoring and guide-walkthrough self-tests truncate their result JSON on the FAIL path (the KI-85 pattern): the result `std::ofstream` is still open when `std::quick_exit(1)` ends the process
+- Status: Confirmed by inspection (the same shape KI-85 fixed in `UX01EditorSelfTest.cpp`); consistent with UX-V0's observation that a failing `ap03-editor` Release run ends in `0xC0000409` (`evidence/UX-V0/report.md` caveats). Test harness only; it loses evidence on exactly the runs that need it.
+- Anchor (at `9ecc118`): `Projects/Starforge/src/AP03AuthoringSelfTest.cpp:931` (`std::ofstream f(t.resultPath, ...)` at function scope) and `:966` (`std::quick_exit(1)`); `Projects/Starforge/src/GuideWalkthroughSelfTest.cpp:1131` and `:1155` (same).
+- Repro: make one check of `ap03-editor` (or the guide walkthrough) fail — e.g. under the VM load that made E03 fail for UX-V0 — and read the result JSON: it may be cut off, and the process exits `0xC0000409` instead of 1.
+- Failing-before: to record with the fix (UX-H1): a forced-FAIL run showing the truncated JSON / exit code.
+- Regression: a forced-FAIL run of each self-test must leave parseable JSON and exit 1.
+- Disposition: open; owner UX-H1 (hardening; it already edits `AP03AuthoringSelfTest.cpp` for H1-E) — apply KI-85's fix (close the stream, then `TerminateProcess(GetCurrentProcess(), 1)`). UX-03 and UX-D1 also edit these files; they report it if it bites and do not widen their scope.

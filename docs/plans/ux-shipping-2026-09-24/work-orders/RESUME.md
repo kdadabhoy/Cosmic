@@ -158,3 +158,14 @@ commit on `main`:
 4. Land 01 → 02 → 03 per ORCHESTRATOR.md (verify, rebase, rebuild, `git merge --no-ff`, CosmicTests both configs,
    golden hashes into `evidence/UX-Q1/golden-hashes.txt`), then waves 2–5 as planned. Soaks are **not** in the
    campaign (D-SOAKS); UX-Q1 runs the quick legs only.
+
+## Orchestrator TODOs added at the UX-01 landing (2026-09-26)
+
+- UX-D3: `docs/guide/sprites-and-tilemaps.md:29-32` still calls ForgePong the first-run offer and cites the removed
+  `BuildForgePong` (found by UX-03; D-SAMPLES made PendulumLab the welcome offer). Fix after the `docs/developer/` rename.
+- UX-H1: KI-84 (timing-bound tests incl. wo06 D03-nightly's 60 s deadline — measure on a quiet machine first) and
+  KI-86 (AP03 / guide self-tests truncate their result JSON on FAIL) are its to fix.
+- FE04 (UX-01) is ENVIRONMENT_BLOCKED at the VM's 1718x920 display: re-run `ux01-editor` on `main` once the VM display
+  is ≥ 1920x1080 (Kaden changes the resolution), and record it in `evidence/UX-01/`.
+- The quiet (no other lane) re-run of `ap03-editor` Release on `main` for UX-V0's VM03 is covered by UX-01's retained
+  run (PASS both configs on the VM, E03 passed, no MSB6003) — note it in UX-Q1.
