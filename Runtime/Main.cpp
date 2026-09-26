@@ -167,8 +167,12 @@ int main(int argc, char** argv)
 		if (!app->StartedSuccessfully())
 		{
 			const int code = app->GetExitCode();
-			ReportStartupFailure(app->GetStartupError(), std::filesystem::path(exePath).stem().string());
+			const std::string reason = app->GetStartupError();
+			// Tear down first: the message box must not sit over a frozen, never-
+			// pumped engine window (Windows would ghost it as "Not responding").
 			delete app;
+			app = nullptr;
+			ReportStartupFailure(reason, std::filesystem::path(exePath).stem().string());
 			return code;
 		}
 

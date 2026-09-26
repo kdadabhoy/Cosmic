@@ -561,8 +561,9 @@ app = new Cosmic::Application(startupProject);
 if (!app->StartedSuccessfully())
 {
     const int code = app->GetExitCode();
-    ReportStartupFailure(app->GetStartupError(), appName);   // stderr, or a message box without a console
-    delete app;
+    const std::string reason = app->GetStartupError();
+    delete app;                                   // window gone before any message box
+    ReportStartupFailure(reason, appName);        // stderr, or a message box without a console
     return code;
 }
 ```
