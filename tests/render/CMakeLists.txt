@@ -37,12 +37,22 @@ add_executable(CosmicRenderTests
     # AP-02 (App Platform) — bound widgets on the GPU: one 320x180 golden per kind with
     # sentinel ROIs (V03) and the preview-vs-live A/B pair (E05).
     render_ap02_widgets.cpp
+    # UX-V0 (UX & Shipping, KI-83) — VM02: a broken shader fed through the production
+    # loader (Shader::Create, COSMIC_SHADER_OVERRIDE, a CosmicApp.exe start) never
+    # crashes. Fixture under fixtures/ux_v0.
+    render_ux_v0_shader_failure.cpp
 )
 
 # WO-08 custom-shader fixtures (tint variants of the batch/instanced shaders) live
 # in the SOURCE tree; baked in as an absolute path like the golden dir.
 target_compile_definitions(CosmicRenderTests PRIVATE
-    COSMIC_WO08_FIXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/wo08")
+    COSMIC_WO08_FIXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/wo08"
+    COSMIC_UX_V0_FIXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/ux_v0")
+
+# VM02's start-up case launches the real host next to this exe; build it first.
+if(TARGET CosmicApp)
+    add_dependencies(CosmicRenderTests CosmicApp)
+endif()
 
 target_link_libraries(CosmicRenderTests PRIVATE Cosmic)
 target_include_directories(CosmicRenderTests PRIVATE

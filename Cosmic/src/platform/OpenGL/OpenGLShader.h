@@ -74,6 +74,15 @@ namespace Cosmic
 
 		bool				IsValid() const { return m_RendererID != 0; }
 
+		// UX-V0 / KI-83: why the build failed, in one line — "could not read the
+		// file", "no shader stage found", "<STAGE> stage: <the compiler's first
+		// error line>" or "link: <the linker's first line>". Empty when valid.
+		const std::string&	GetFailureReason() const { return m_FailureReason; }
+
+		// "renderer '<GL_RENDERER>', OpenGL '<GL_VERSION>'" of the current context,
+		// for failure messages that must say which driver refused a shader.
+		static std::string	DescribeContext();
+
 		////////////////////////////////
 		// Virtual Uniform API (Abstraction)
 		///////////////////////////////
@@ -120,8 +129,12 @@ namespace Cosmic
 		// GPU Resource Handles
 		///////////////////////////////
 
-		uint32_t			m_RendererID;
+		// Zero until a link succeeds. It had no initializer before UX-V0 (KI-83): a
+		// failed build left it indeterminate, and a Debug heap fill (0xCDCDCDCD)
+		// made IsValid() report a shader that never compiled as valid.
+		uint32_t			m_RendererID = 0;
 		std::string         m_Name; // Added to store shader identity safely for tracking and log systems
+		std::string         m_FailureReason; // KI-83 — see GetFailureReason()
 
 	private: 
 		std::unordered_map<std::string, GLint>	m_UniformLocationCache;

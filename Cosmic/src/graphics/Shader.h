@@ -46,7 +46,17 @@
  * 4. static Ref<Shader> Create(const std::string& filepath)
  * Pre:  A valid path to a shader source file (containing both Vertex
  * and Fragment logic) is provided.
- * Post: Returns a reference-counted, platform-specific Shader instance.
+ * Post: Returns a reference-counted, platform-specific Shader instance, or
+ * nullptr when the file cannot be read, compiled or linked. A failure logs ONE
+ * error line naming the path, the GL renderer/version and the compiler's first
+ * error line (UX-V0 / KI-83); GetLastCreateError() returns the same text.
+ * Every caller must handle nullptr.
+ *
+ * 5. COSMIC_SHADER_OVERRIDE (environment, read by Create on every call)
+ * "<file name>=<path>[;<file name>=<path>...]" — a Create whose path ends in
+ * <file name> (case-insensitive) loads <path> instead, with a warning in the
+ * log. For trying a shader edit without a rebuild, and for the VM02 render test
+ * that feeds a broken shader through this production loader. Unset = no effect.
  */
 
 #include "core/Core.h"
@@ -88,5 +98,11 @@ namespace Cosmic
 		// Factory Pattern
 		///////////////////////////////
 		static Ref<Shader>		Create(const std::string& filepath);
+
+		// The one-line reason the most recent Create() on this thread returned
+		// nullptr (path, renderer/version, first compiler error); empty after a
+		// successful Create(). Lets a caller that cannot run without its shader
+		// (Renderer2D's batch shader) put the cause in its own fatal message.
+		static const std::string& GetLastCreateError();
 	};
 }

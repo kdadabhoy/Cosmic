@@ -168,6 +168,17 @@ namespace Cosmic
 		void						SetPauseOnMinimize(bool pause)	{ m_PauseOnMinimize = pause; }
 		bool						GetPauseOnMinimize() const		{ return m_PauseOnMinimize; }
 
+		// Start-up failure (UX-V0 / KI-83). When a subsystem the engine cannot run
+		// without fails inside the constructor — today: Renderer2D's batch shader
+		// (a driver that rejects it) — Initialize() stops there, logs one CRITICAL
+		// line naming the cause, and Run() returns at once. The host (Runtime/
+		// Main.cpp) then tells the user, deletes the app (a normal, symmetric
+		// Shutdown) and exits with GetExitCode() — never an access violation.
+		static constexpr int		StartupFailureExitCode = 2;
+		bool						StartedSuccessfully() const		{ return m_StartupError.empty(); }
+		const std::string&			GetStartupError() const			{ return m_StartupError; }
+		int							GetExitCode() const				{ return m_StartupError.empty() ? 0 : StartupFailureExitCode; }
+
 
 	private:
 		/////////////////////////////////////////////////////////////////////////////////
@@ -293,6 +304,10 @@ namespace Cosmic
 		HMODULE				m_PluginHandle = nullptr;  // typed as HMODULE — communicates "loaded DLL handle" clearly
 		Layer*				m_ActivePluginLayer = nullptr;
 		bool				m_PendingReturnToLauncher = false;
+
+		// UX-V0 / KI-83 — see StartedSuccessfully(). Last member on purpose: the
+		// offsets of every older member are unchanged.
+		std::string			m_StartupError;
 
 	};
 

@@ -47,14 +47,63 @@ namespace Cosmic
      */
     OpenGLShader::OpenGLShader(const std::string& filepath)
     {
-        std::string source = ReadFile(filepath);
-        auto shaderSources = PreProcess(source);
-
         // Fix: Extract and store the filename in m_Name before compiling
         std::filesystem::path path = filepath;
         m_Name = path.stem().string();
 
+        std::string source = ReadFile(filepath);
+        if (source.empty())
+        {
+            // KI-83: no GL program from nothing — say so instead of linking an
+            // empty program and reporting a generic link failure.
+            m_FailureReason = "could not read the file (missing, unreadable or empty)";
+            return;
+        }
+
+        auto shaderSources = PreProcess(source);
+        if (shaderSources.empty())
+        {
+            m_FailureReason = "no shader stage found (missing or malformed '#type' blocks)";
+            return;
+        }
+
         Compile(shaderSources);
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////
+
+    namespace
+    {
+        // The first non-blank line of a driver info log, trimmed (KI-83: the one
+        // line a failure message quotes; the full log is still printed above it).
+        std::string FirstLogLine(const std::vector<GLchar>& infoLog)
+        {
+            std::string text(infoLog.data());
+            std::istringstream lines(text);
+            std::string line;
+            while (std::getline(lines, line))
+            {
+                const size_t a = line.find_first_not_of(" \t\r\n");
+                if (a == std::string::npos)
+                    continue;
+                const size_t b = line.find_last_not_of(" \t\r\n");
+                return line.substr(a, b - a + 1);
+            }
+            return "(the driver returned no log)";
+        }
+
+        std::string GlString(GLenum name)
+        {
+            const GLubyte* s = glGetString(name);
+            return s ? std::string(reinterpret_cast<const char*>(s)) : std::string("unknown");
+        }
+    }
+
+    std::string OpenGLShader::DescribeContext()
+    {
+        if (!OpenGLContext::HasCurrentContext())
+            return "no current OpenGL context";
+        return "renderer '" + GlString(GL_RENDERER) + "', OpenGL '" + GlString(GL_VERSION) + "'";
     }
 
     /////////////////////////////////////////////////////////////////////////////////
@@ -424,12 +473,15 @@ namespace Cosmic
                 GLint maxLength = 0;
                 glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &maxLength);
 
-                std::vector<GLchar> infoLog(maxLength);
-                glGetShaderInfoLog(shader, maxLength, &maxLength, &infoLog[0]);
+                // At least one zeroed char: a driver may report no log at all.
+                std::vector<GLchar> infoLog(static_cast<size_t>(std::max<GLint>(maxLength, 1)), '\0');
+                glGetShaderInfoLog(shader, static_cast<GLsizei>(infoLog.size()), nullptr, infoLog.data());
 
-                CS_CORE_ERROR("Shader compilation failure in stage: {0}",
-                    type == GL_VERTEX_SHADER ? "VERTEX" : (type == GL_COMPUTE_SHADER ? "COMPUTE" : "FRAGMENT"));
+                const char* stageName =
+                    type == GL_VERTEX_SHADER ? "VERTEX" : (type == GL_COMPUTE_SHADER ? "COMPUTE" : "FRAGMENT");
+                CS_CORE_ERROR("Shader compilation failure in stage: {0}", stageName);
                 CS_CORE_ERROR("{0}", infoLog.data());
+                m_FailureReason = std::string(stageName) + " stage: " + FirstLogLine(infoLog);
 
                 // Trigger the source code dump to pinpoint line number issues
                 DumpPreprocessedShader(shaderSources);
@@ -454,11 +506,12 @@ namespace Cosmic
             GLint maxLength = 0;
             glGetProgramiv(program, GL_INFO_LOG_LENGTH, &maxLength);
 
-            std::vector<GLchar> infoLog(maxLength);
-            glGetProgramInfoLog(program, maxLength, &maxLength, &infoLog[0]);
+            std::vector<GLchar> infoLog(static_cast<size_t>(std::max<GLint>(maxLength, 1)), '\0');
+            glGetProgramInfoLog(program, static_cast<GLsizei>(infoLog.size()), nullptr, infoLog.data());
 
             CS_CORE_ERROR("Shader link failure!");
             CS_CORE_ERROR("{0}", infoLog.data());
+            m_FailureReason = "link: " + FirstLogLine(infoLog);
 
             // Trigger dump on link validation failure
             DumpPreprocessedShader(shaderSources);

@@ -83,6 +83,9 @@ namespace Cosmic
 		Ref<Shader>       TextureShader;
 		Ref<Texture>      WhiteTexture; // Keeps original base Ref<Texture> typing
 
+		// UX-V0 / KI-83: why the last Init() returned false (empty when it succeeded).
+		std::string       InitError;
+
 		Ref<Material> CurrentMaterial = nullptr;
 		Ref<Material> DefaultMaterial = nullptr;
 
@@ -187,9 +190,10 @@ namespace Cosmic
 	// Lifecycle
 	/////////////////////////////////////////////////////////////////////////////////
 
-	void Renderer2D::Init()
+	bool Renderer2D::Init()
 	{
 		CS_CORE_TRACE("Initializing Renderer2D...");
+		s_Data.InitError.clear();
 
 		// =========================================================================
 		// --- Quad Batch Initialization ---
@@ -234,10 +238,26 @@ namespace Cosmic
 		for (uint32_t i = 0; i < s_Data.MaxTextureSlots; i++)
 			samplers[i] = i;
 
+		// The batch quad shader is the one shader the renderer cannot run without
+		// (every quad, sprite, tile and UI rect goes through it). Its failure is
+		// FATAL but CLEAN (UX-V0 / KI-83): Init finishes building everything else so
+		// Shutdown stays symmetric, Flush skips the quad batch, and Init returns
+		// false with the reason in GetInitError() — Application turns that into a
+		// start-up failure with a readable message and a non-zero exit. (It used to
+		// be a CS_CORE_ASSERT, compiled out in every configuration, followed by a
+		// null dereference.) The other shaders below are optional: each failure
+		// logs and the renderer continues without that feature.
 		s_Data.TextureShader = Shader::Create("assets/shaders/Texture.glsl");
-		CS_CORE_ASSERT(s_Data.TextureShader, "Renderer2D: Failed to load core Texture shader — engine cannot continue.");
-		s_Data.TextureShader->Bind();
-		s_Data.TextureShader->SetIntArray("u_Textures", samplers, s_Data.MaxTextureSlots);
+		if (s_Data.TextureShader)
+		{
+			s_Data.TextureShader->Bind();
+			s_Data.TextureShader->SetIntArray("u_Textures", samplers, s_Data.MaxTextureSlots);
+		}
+		else
+		{
+			s_Data.InitError = "the batch quad shader could not be built (" + Shader::GetLastCreateError() + ")";
+			CS_CORE_CRITICAL("Renderer2D: {0}. Nothing can be drawn without it.", s_Data.InitError);
+		}
 
 		s_Data.DefaultMaterial = Material::Create(s_Data.TextureShader, "Cosmic_Default_Material");
 		s_Data.TextureSlots[0] = s_Data.WhiteTexture;
@@ -264,7 +284,7 @@ namespace Cosmic
 
 		s_Data.LineShader = Shader::Create("assets/shaders/Line.glsl");
 		if (!s_Data.LineShader)
-			CS_CORE_ERROR("Renderer2D: Failed to load Line shader!");
+			CS_CORE_ERROR("Renderer2D: Failed to load Line shader! Lines will not be drawn (KI-83: Flush skips the batch).");
 
 		// =========================================================================
 		// --- Classic Batch Circle Initialization ---
@@ -286,7 +306,7 @@ namespace Cosmic
 		s_Data.DefaultCircleShader = Shader::Create("assets/shaders/Circle.glsl");
 		s_Data.ActiveCircleShader = s_Data.DefaultCircleShader;
 		if (!s_Data.DefaultCircleShader)
-			CS_CORE_ERROR("Renderer2D: Failed to load Engine Default Batch Circle shader!");
+			CS_CORE_ERROR("Renderer2D: Failed to load Engine Default Batch Circle shader! Batched circles without a custom shader will not be drawn (KI-83: Flush skips them).");
 
 		// =========================================================================
 		// --- Text Batch Initialization (world-space SDF) ---
@@ -434,7 +454,16 @@ namespace Cosmic
 		}
 
 
+		if (!s_Data.InitError.empty())
+			return false;   // already logged where it happened (CRITICAL above)
+
 		CS_CORE_INFO("Renderer2D initialized successfully.");
+		return true;
+	}
+
+	const std::string& Renderer2D::GetInitError()
+	{
+		return s_Data.InitError;
 	}
 
 	void Renderer2D::Shutdown()
@@ -645,8 +674,13 @@ namespace Cosmic
 	{
 		if (s_Data.StatsEnabled) s_Data.Stats.Flushes++;
 
+		// KI-83: every batch below is skipped (never dereferenced) when its shader
+		// failed to build — the renderer continues without that feature, and the
+		// failure was logged once, by Shader::Create and Init.
+
 		// --- Draw Quads ---
-		if (s_Data.QuadIndexCount != 0)
+		const Ref<Shader> quadShader = s_Data.CurrentMaterial ? s_Data.CurrentMaterial->GetShader() : s_Data.TextureShader;
+		if (s_Data.QuadIndexCount != 0 && quadShader)
 		{
 			uint32_t dataSize = (uint32_t)((uint8_t*)s_Data.QuadVertexPtr - (uint8_t*)s_Data.QuadVertexBufferBase);
 			s_Data.QuadVertexBuffer->SetData(s_Data.QuadVertexBufferBase, dataSize);
@@ -674,7 +708,7 @@ namespace Cosmic
 		}
 
 		// --- Draw Lines ---
-		if (s_Data.LineVertexCount != 0)
+		if (s_Data.LineVertexCount != 0 && s_Data.LineShader)
 		{
 			uint32_t dataSize = (uint32_t)((uint8_t*)s_Data.LineVertexBufferPtr - (uint8_t*)s_Data.LineVertexBufferBase);
 			s_Data.LineVertexBuffer->SetData(s_Data.LineVertexBufferBase, dataSize);
@@ -688,14 +722,13 @@ namespace Cosmic
 		}
 
 		// --- Draw Circles (SDF) ---
-		if (s_Data.CircleIndexCount != 0)
+		// FIX: Fall back safely to DefaultCircleShader if ActiveCircleShader was cleared out
+		// by the instancing system or not yet assigned.
+		const Ref<Shader> activeCircleShader = s_Data.ActiveCircleShader ? s_Data.ActiveCircleShader : s_Data.DefaultCircleShader;
+		if (s_Data.CircleIndexCount != 0 && activeCircleShader)
 		{
 			uint32_t dataSize = (uint32_t)((uint8_t*)s_Data.CircleVertexBufferPtr - (uint8_t*)s_Data.CircleVertexBufferBase);
 			s_Data.CircleVertexBuffer->SetData(s_Data.CircleVertexBufferBase, dataSize);
-
-			// FIX: Fall back safely to DefaultCircleShader if ActiveCircleShader was cleared out 
-			// by the instancing system or not yet assigned.
-			Ref<Shader> activeCircleShader = s_Data.ActiveCircleShader ? s_Data.ActiveCircleShader : s_Data.DefaultCircleShader;
 
 			activeCircleShader->Bind();
 			activeCircleShader->SetMat4("u_ViewProjection", s_Data.ViewProjectionMatrix);

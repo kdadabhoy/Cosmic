@@ -20,6 +20,32 @@
 //                                          error and falls back to the Launcher.
 //                                          (--project=Name is also accepted.)
 
+// UX-V0 / KI-83: the one readable message for a clean start-up failure. Always to
+// stderr; additionally a message box when nobody can read stderr (a Release
+// GUI-subsystem exe started from Explorer or a shortcut has no std handles), unless
+// COSMIC_NO_FATAL_DIALOG=1 (unattended runs that launch the exe without
+// redirecting its output).
+static void ReportStartupFailure(const std::string& reason, const std::string& appName)
+{
+	std::error_code ec;
+	const std::filesystem::path logs =
+		std::filesystem::absolute(Cosmic::FileSystem::Resolve("user://logs"), ec).lexically_normal();
+	const std::string details = "The log in '" + logs.string() + "' has the details.";
+	std::cerr << "Fatal: " << appName << " could not start: " << reason << "\n" << details << std::endl;
+
+	HANDLE err = GetStdHandle(STD_ERROR_HANDLE);
+	const bool stderrReadable = err != nullptr && err != INVALID_HANDLE_VALUE && GetFileType(err) != FILE_TYPE_UNKNOWN;
+	char noDialog[8] = {};
+	const bool dialogSuppressed = GetEnvironmentVariableA("COSMIC_NO_FATAL_DIALOG", noDialog, sizeof(noDialog)) > 0
+		&& noDialog[0] == '1';
+	if (!stderrReadable && !dialogSuppressed)
+	{
+		const std::string body = appName + " could not start:\n\n" + reason + "\n\n" + details;
+		const std::string title = appName + " - start-up failed";
+		MessageBoxA(nullptr, body.c_str(), title.c_str(), MB_OK | MB_ICONERROR);
+	}
+}
+
 int main(int argc, char** argv)
 {
 	// Force the working directory to the exe's own directory so all relative
@@ -133,6 +159,19 @@ int main(int argc, char** argv)
 		// The startup project must be a constructor argument: Application's
 		// constructor runs Initialize(), which decides Launcher-vs-project boot.
 		app = new Cosmic::Application(startupProject);
+
+		// UX-V0 / KI-83: a subsystem the engine cannot run without failed during
+		// construction (e.g. the graphics driver rejected the batch shader). The
+		// log already names the cause; tell the user, tear down normally and exit
+		// non-zero — never run a frame, never an access violation.
+		if (!app->StartedSuccessfully())
+		{
+			const int code = app->GetExitCode();
+			ReportStartupFailure(app->GetStartupError(), std::filesystem::path(exePath).stem().string());
+			delete app;
+			return code;
+		}
+
 		// Where does this app's writable data live? (H7 — "logs say where they live".)
 		CS_CORE_INFO("user:// root -> {}", Cosmic::FileSystem::GetUserDataRoot());
 		app->Run();

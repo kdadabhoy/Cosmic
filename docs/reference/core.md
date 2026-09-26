@@ -543,12 +543,32 @@ constructor**. In order (`Application.cpp:83-101` → `Initialize()` at `:536-61
 | 6 | create the `Window` at 1280×720, install the event callback | `:550-551` |
 | 7 | boot app icon via `Branding::ResolveProcessIcon()` (no file ⇒ platform default) | `:558-562` |
 | 8 | `SetVSync(true)` | `:566` |
-| 9 | `Renderer::Init()` | `:569` |
+| 9 | `Renderer::Init()` — **false stops the boot here** (see *Start-up failure* below) | `:569` |
 | 10 | create the shared `FrameBuffer` at 1280×720 | `:572-575` |
 | 11 | create + `PushOverlay` the `ImGuiLayer` | `:578-579` |
 | 12 | queue the startup project **or** `PushLayer(new LauncherLayer())` | `:585-593` |
 | 13 | `SynchronizeRenderingState()` — resize to the real framebuffer size | `:604` |
 | 14 | install the modal frame-pump callback on the `Window` | `:611` |
+
+**Start-up failure (UX-V0 / KI-83).** When `Renderer::Init()` returns false (the driver refused the
+batch quad shader), `Initialize()` logs one CRITICAL line, skips steps 10-14 and clears
+`m_Running`. `StartedSuccessfully()` is then false, `GetStartupError()` says why and `GetExitCode()`
+is `Application::StartupFailureExitCode` (2); `Run()` returns at once and `delete` runs the normal,
+symmetric `Shutdown()`. The shipped host checks it right after construction:
+
+```cpp
+app = new Cosmic::Application(startupProject);
+if (!app->StartedSuccessfully())
+{
+    const int code = app->GetExitCode();
+    ReportStartupFailure(app->GetStartupError(), appName);   // stderr, or a message box without a console
+    delete app;
+    return code;
+}
+```
+
+`COSMIC_NO_FATAL_DIALOG=1` suppresses the message box for unattended runs that start a Release
+(GUI-subsystem) host without redirecting its output.
 
 **Why you'd use it** — you construct exactly one, in `main`. `startupProjectDll` is what makes
 `CosmicApp.exe --project <Name>` work; it **must** be a constructor argument rather than a setter
