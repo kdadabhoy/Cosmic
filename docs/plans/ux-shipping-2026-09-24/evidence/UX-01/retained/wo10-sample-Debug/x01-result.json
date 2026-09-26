@@ -1,0 +1,44 @@
+{
+  "work_order": "WO-10",
+  "case": "X01 analysis sample",
+  "config": "Release",
+  "verdict": "PASS",
+  "failed_checks": 0,
+  "total_seconds": 13.0164,
+  "frames": 46,
+  "exe": "C:\\dev\\Cosmic\\build\\_lanes\\ux-01\\dist\\AnalysisSample\\AnalysisSample.exe",
+  "cwd": "C:\\dev\\Cosmic\\build\\_lanes\\ux-01\\dist\\AnalysisSample",
+  "user_root": "./user",
+  "trajectory_csv": "assets/projects/AnalysisSample/data/trajectory.csv",
+  "rows": 1201,
+  "recording_dir": "./user/exports/trajectory-rec",
+  "series_meta": "C:/dev/Cosmic/build/_lanes/ux-01/docs/plans/2d-stability-2026-09-16/evidence/WO-10/x01-Debug/x01-output/series-large.meta.json",
+  "origin_offset_m": 1e+11,
+  "local_conversion_max_err_m": 7.62891e-06,
+  "play": { "frames": 2, "start": 0, "end": 0.769098, "paused_at": 0.769098, "monotonic_violations": 0 },
+  "marker_vs_plot_max_m": 4.57764e-05,
+  "plot_vs_equations_max_m": 9.15527e-05,
+  "scrubs": [
+    { "t": 0, "midpoint": false, "ref": { "x": 0, "y": 0, "vx": 30, "vy": 50, "speed": 58.309518948453004 }, "plot": { "x": 0, "y": 0, "speed": 58.309518948453004 }, "marker": { "x": 0, "y": 0, "vx": 30, "vy": 50 }, "local": { "x": 0, "y": 0 }, "marker_px": [31.9375, 472.0625], "fb": [1022, 504] },
+    { "t": 0.0083333333333333332, "midpoint": false, "ref": { "x": 0.25, "y": 0.41632080078125, "vx": 30, "vy": 49.918277916666668, "speed": 58.23945801744356 }, "plot": { "x": 0.25, "y": 0.41632080078125, "speed": 58.23945801744356 }, "marker": { "x": 0.25, "y": 0.416320801, "vx": 30, "vy": 49.9182777 }, "local": { "x": 0.25, "y": 0.416320801 }, "marker_px": [32.7359, 470.7329], "fb": [1022, 504] },
+    { "t": 0.9916666666666667, "midpoint": false, "ref": { "x": 29.75, "y": 44.761383056640625, "vx": 30, "vy": 40.275072083333335, "speed": 50.220328865089044 }, "plot": { "x": 29.75, "y": 44.761383056640625, "speed": 50.220328865089044 }, "marker": { "x": 29.7499981, "y": 44.7613792, "vx": 30, "vy": 40.2750702 }, "local": { "x": 29.75, "y": 44.7613831 }, "marker_px": [126.9516, 329.1058], "fb": [1022, 504] },
+    { "t": 1, "midpoint": false, "ref": { "x": 30, "y": 45.0966796875, "vx": 30, "vy": 40.193350000000002, "speed": 50.154814167958996 }, "plot": { "x": 30, "y": 45.0966796875, "speed": 50.154814167958996 }, "marker": { "x": 30, "y": 45.0966797, "vx": 30, "vy": 40.1933517 }, "local": { "x": 30, "y": 45.0966797 }, "marker_px": [127.7500, 328.0350], "fb": [1022, 504] },
+    { "t": 5, "midpoint": false, "ref": { "x": 150, "y": 127.4168701171875, "vx": 30, "vy": 0.96675000000000466, "speed": 30.015572717549468 }, "plot": { "x": 150, "y": 127.4168701171875, "speed": 30.015572717549468 }, "marker": { "x": 150, "y": 127.41687, "vx": 30, "vy": 0.966754735 }, "local": { "x": 150, "y": 127.41687 }, "marker_px": [511.0000, 65.1249], "fb": [1022, 504] },
+    { "t": 5.0916666666666668, "midpoint": false, "ref": { "x": 152.75, "y": 127.46429443359375, "vx": 30, "vy": 0.067807083333335072, "speed": 30.000076629911302 }, "plot": { "x": 152.75, "y": 127.46429443359375, "speed": 30.000076629911302 }, "marker": { "x": 152.75, "y": 127.464294, "vx": 30, "vy": 0.0678070858 }, "local": { "x": 152.75, "y": 127.464294 }, "marker_px": [519.7828, 64.9734], "fb": [1022, 504] },
+    { "t": 9.9916666666666671, "midpoint": false, "ref": { "x": 299.75, "y": 10.067718505859375, "vx": 30, "vy": -47.984777916666673, "speed": 56.590979066559903 }, "plot": { "x": 299.75, "y": 10.067718505859375, "speed": 56.590979066559903 }, "marker": { "x": 299.75, "y": 10.0677185, "vx": 30, "vy": -47.9847794 }, "local": { "x": 299.75, "y": 10.0677185 }, "marker_px": [989.2640, 439.9087], "fb": [1022, 504] },
+    { "t": 10, "midpoint": false, "ref": { "x": 300, "y": 9.6674957275390625, "vx": 30, "vy": -48.066499999999991, "speed": 56.660289641423468 }, "plot": { "x": 300, "y": 9.6674957275390625, "speed": 56.660289641423468 }, "marker": { "x": 299.999969, "y": 9.6675415, "vx": 30, "vy": -48.066494 }, "local": { "x": 300, "y": 9.66749573 }, "marker_px": [990.0624, 441.1868], "fb": [1022, 504] },
+    { "t": 0.0041666666666666666, "midpoint": true, "ref": { "x": 0.125, "y": 0.208251953125, "vx": 30, "vy": 49.959138958333334, "speed": 58.274484686336436 }, "plot": { "x": 0.125, "y": 0.208160400390625, "speed": 58.274488482948286 }, "marker": { "x": 0.125, "y": 0.2081604, "vx": 30, "vy": 49.959137 }, "local": { "x": 0.125, "y": 0.208251953 }, "marker_px": [32.3367, 471.3977], "fb": [1022, 504] },
+    { "t": 1.0041666666666667, "midpoint": true, "ref": { "x": 30.125, "y": 45.264068603515625, "vx": 30, "vy": 40.152488958333336, "speed": 50.122074673232355 }, "plot": { "x": 30.125, "y": 45.26397705078125, "speed": 50.122080640072781 }, "marker": { "x": 30.125, "y": 45.2639771, "vx": 30, "vy": 40.1524887 }, "local": { "x": 30.125, "y": 45.2640686 }, "marker_px": [128.1492, 327.5007], "fb": [1022, 504] },
+    { "t": 5.0958333333333332, "midpoint": true, "ref": { "x": 152.875, "y": 127.46449279785156, "vx": 30, "vy": 0.026946041666668918, "speed": 30.000012101483584 }, "plot": { "x": 152.875, "y": 127.46440887451172, "speed": 30.000039928515772 }, "marker": { "x": 152.875, "y": 127.464409, "vx": 30, "vy": 0.0269483812 }, "local": { "x": 152.875, "y": 127.464493 }, "marker_px": [520.1820, 64.9730], "fb": [1022, 504] },
+    { "t": 9.9958333333333336, "midpoint": true, "ref": { "x": 299.875, "y": 9.8676910400390625, "vx": 30, "vy": -48.025638958333332, "speed": 56.625630215973615 }, "plot": { "x": 299.875, "y": 9.8676071166992188, "speed": 56.625634353991686 }, "marker": { "x": 299.875, "y": 9.86763, "vx": 30, "vy": -48.0256348 }, "local": { "x": 299.875, "y": 9.86769104 }, "marker_px": [989.6633, 440.5478], "fb": [1022, 504] }
+  ],
+  "export": { "ok": true, "path": "C:/dev/Cosmic/build/_lanes/ux-01/docs/plans/2d-stability-2026-09-16/evidence/WO-10/x01-Debug/x01-output/x01-trajectory-4.5s.png", "user_copy": "./user/exports/x01-trajectory-4.5s.png", "width": 1022, "height": 504, "t": 4.5, "marker_px": [463.0938, 70.5836], "marker_radius_px": 6.0, "marker_local": [135, 125.707672], "ref_local": [135, 125.70767211914062], "window": { "xmin": -10, "xmax": 310, "ymin": -10, "ymax": 147.8082191780822 }, "marker_color": [255, 64, 26], "clear_color": [26, 26, 26], "pixel_at_marker": [255, 64, 26], "pixel_far": [26, 26, 26] },
+  "checks_failed": [
+  ],
+  "log": [
+    "armed: result=C:\\dev\\Cosmic\\build\\_lanes\\ux-01\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-10\\x01-Debug\\x01-result.json output=C:\\dev\\Cosmic\\build\\_lanes\\ux-01\\docs\\plans\\2d-stability-2026-09-16\\evidence\\WO-10\\x01-Debug\\x01-output",
+    "load ok: 1201 rows, series meta at C:/dev/Cosmic/build/_lanes/ux-01/docs/plans/2d-stability-2026-09-16/evidence/WO-10/x01-Debug/x01-output/series-large.meta.json, recording ./user/exports/trajectory-rec, 1e11 local conversion max err 7.629e-06 m (double ulp at 1e11 = 1.526e-05)",
+    "played 2 frames: head 0.000000 -> 0.769098 s (monotonic violations 0); paused at 0.769098",
+    "export ok: C:/dev/Cosmic/build/_lanes/ux-01/docs/plans/2d-stability-2026-09-16/evidence/WO-10/x01-Debug/x01-output/x01-trajectory-4.5s.png 1022x504, marker px (463.09, 70.58) colour (255,64,26), far (26,26,26)"
+  ]
+}
